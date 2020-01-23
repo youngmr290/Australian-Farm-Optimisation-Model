@@ -53,7 +53,7 @@ Description of this pasture module: This representation includes at optimisation
         Note: There is not a constraint that ensures that the high quality pool is grazed prior to the low quality pool (as there is in the stubble selective grazing)
 
 """
-
+# just a change to check
 '''
 import functions from other modules
 '''
@@ -156,7 +156,7 @@ class PastDetailed:
 ########################
 #methods               #
 ########################
-        
+
     def read_inputs_from_excel(self):
         '''Read inputs for the pasture class from an excel file and store in the object'''
         exceldata = fun.xl_all_named_ranges(self.inputfile, self.landuse)           # read all range names from the Excel file from the specified sheet
@@ -525,7 +525,7 @@ class PastDetailed:
             The quality of pasture on crop paddocks each day before seeding
             - this is adjusted for feed period
         '''
-        md=list(map(fdb.dmd_to_md,  self.feed_period_data['poc_dmd'])) #could use list comp but thought it was a good place to practise map 
+        md=list(map(fdb.dmd_to_md,  self.feed_period_data['poc_dmd'])) #could use list comp but thought it was a good place to practise map
         return dict(enumerate(md))
     def poc_vol(self):
         '''
@@ -539,24 +539,24 @@ class PastDetailed:
         ri_quan = np.asarray([fdb.ri_availability(foo, self.i_ri_foo) for foo in self.feed_period_data['poc_foo']])
         self.poc_vol = dict(enumerate(1/(ri_qual*ri_quan)))
         return self.poc_vol
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
