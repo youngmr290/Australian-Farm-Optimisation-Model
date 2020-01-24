@@ -100,8 +100,6 @@ structure['phase_len'] = 5
 #rotation phases and constraints read in from excel - used in crop module
 # structure['rotations'] = fun.xl_all_named_ranges("Rotation phases complete.xlsx","Phases") 
 
-##after how many yrs is annual resown
-structure['resow_a'] = 4
 
 
 ###############
@@ -225,6 +223,23 @@ yr4 = np.array(['A','Y'])
 arrays=[yr4,yr3,yr2,yr1,yr0]
 phases=fun.cartesian_product_simple_transpose(arrays)
 
+
+###########################################################
+#params used to try make the rules more flexible to change#
+###########################################################
+
+##after how many yrs is annual resown
+resow_a = 4
+a_sow_col=np.size(phases,1)-1-resow_a #difference between history len and resow len -the col of the last phase yr that determines resseding (if 0 it means that all the history must be a crop for pasture to be resown)
+
+'''
+To understand this you must know the following;
+true&false = false
+true+false = true
+true*true*false = false
+'''
+
+
 for i in range(np.size(phases,1)-1):
 ##drop rules 1; unprofitable
     ###no cont canola
@@ -314,48 +329,94 @@ phases = phases[~(~np.isin(phases[:,np.size(phases,1)-2], ['T'])&np.isin(phases[
 
 ##rules where we are interested in all yrs - done this way so that if the len of the phase changes this can remain the same
 ##if history is all crop/T/U you must resow annual
-j=np.size(phases,1)-1-structure['resow_a'] #difference between history len and resow len (if 0 it means that all the history must be a crop for pasture to be resown)
-reseed_index=~np.isin(phases[:,j], ['ar', 'sr','A','A3','A4','A5','M','M3','M4','S','S3','S4','S5']) #just to create an array that can be added to.
+reseed_index=~np.isin(phases[:,a_sow_col], ['ar', 'sr','A','A3','A4','A5','M','M3','M4','S','S3','S4','S5']) #just to create an array that can be added to.
 for i in range(np.size(phases,1)-1):
-    i+=j #to adjust for the diff between hist len and resown len
+    i+=a_sow_col #to adjust for the diff between hist len and resown len
     if i <= np.size(phases,1)-1:
         reseed_index &= ~np.isin(phases[:,i], ['ar', 'sr','A','A3','A4','A5','M','M3','M4','S','S3','S4','S5'])# checks if all the yrs of history are not anual
 reseed_index &= np.isin(phases[:,np.size(phases,1)-1], ['a', 's','m']) #checks if yr0 is not resown annual
 phases = phases[~reseed_index] #if there is an annual after cont crop it must be resown
 
 ##can't have reseeded pasture in yr0 if annual before
-not_reseed_index=np.isin(phases[:,j], ['ar', 'sr','A','A3','A4','A5','M','M3','M4','S','S3','S4','S5']) #just to create an array that can be added to.
+not_reseed_index=np.isin(phases[:,a_sow_col], ['ar', 'sr','A','A3','A4','A5','M','M3','M4','S','S3','S4','S5']) #just to create an array that can be added to.
 for i in range(np.size(phases,1)-1):
-    i+=j #to adjust for the diff between hist len and resown len
+    i+=a_sow_col #to adjust for the diff between hist len and resown len
     if i <= np.size(phases,1)-1:
         not_reseed_index +=  np.isin(phases[:,i], ['ar', 'sr','A','A3','A4','A5','M','M3','M4','S','S3','S4','S5'])# checks if any (or) of the years in the history are not pasture (will result in true if the phase needed resowing)
 not_reseed_index &= np.isin(phases[:,np.size(phases,1)-1], ['ar', 'sr']) #checks if yr0 is not resown annual
 phases = phases[~not_reseed_index] #if there is an annual in the history you don't need to reseed
 
 ##can't have reseeded pasture in yr1 if annual before -couldn't combine with above because i only want to loop through the columns up to the second last one
-not_reseed_index2=np.isin(phases[:,j], ['ar', 'sr','A','A3','A4','A5','M','M3','M4','S','S3','S4','S5']) #just to create an array that can be added to.
+not_reseed_index2=np.isin(phases[:,a_sow_col], ['ar', 'sr','A','A3','A4','A5','M','M3','M4','S','S3','S4','S5']) #just to create an array that can be added to.
 for i in range(np.size(phases,1)-1):
-    i+=j #to adjust for the diff between hist len and resown len
+    i+=a_sow_col #to adjust for the diff between hist len and resown len
     if i <= np.size(phases,1)-2:
         not_reseed_index2 += np.isin(phases[:,i], ['ar', 'sr','A','A3','A4','A5','M','M3','M4','S','S3','S4','S5'])# checks if any (or) of the years in the history are not pasture
 not_reseed_index2 &= np.isin(phases[:,np.size(phases,1)-2], ['ar', 'sr']) #checks if yr1 is resown annual
 phases = phases[~not_reseed_index2] #if there is an annual in the history you don't need to reseed
 
-##X and U can't be in the same phase & T and J can't be in the same phase
-index = []
-for i in range(np.size(phases,0)):
-    x_u = (np.isin(phases[i], ['X','X3','X4','X5','x','xr','x3','x4','x5']).any()&np.isin(phases[i], ['U','U3','U4','U5','u','ur','u3','u4','u5']).any())
-    t_j = (np.isin(phases[i], ['T','t','tr']).any()&np.isin(phases[i], ['J','j','jr']).any())
-    index.append(x_u + t_j)
-phases = phases[~np.array(index)] 
+# ##X and U can't be in the same phase & T and J can't be in the same phase
+# index = []
+# for i in range(np.size(phases,0)):
+#     ##X can't be in the same rotation as U, T, J and A
+#     x_u_t_j_a = (np.isin(phases[i], ['X','X3','X4','X5','x','xr','x3','x4','x5']).any()&np.isin(phases[i], ['U','U3','U4','U5','u','ur','u3','u4','u5']).any())
+#     t_j = (np.isin(phases[i], ['T','t','tr']).any()&np.isin(phases[i], ['J','j','jr']).any())
+#     index.append(x_u + t_j)
+# phases = phases[~np.array(index)] 
+
+
+##X can't be in the same rotation as U, T, J and A
+a_xutj = np.any(np.isin(phases[:,:], ['ar','a','a3','a4','a5','A','A3','A4','A5','m','m3','m4','M','M3','M4','s','sr','s3','s4','s5','S','S3','S4','S5']), axis=1)&np.any(np.isin(phases[:,:], ['X','X3','X4','X5','x','xr','x3','x4','x5','U','U3','U4','U5','u','ur','u3','u4','u5','T','t','tr','J','j','jr']), axis=1)
+x_utj = np.any(np.isin(phases[:,:], ['X','X3','X4','X5','x','xr','x3','x4','x5']), axis=1)&np.any(np.isin(phases[:,:], ['U','U3','U4','U5','u','ur','u3','u4','u5','T','t','tr','J','j','jr']), axis=1)
+u_tj = np.any(np.isin(phases[:,:], ['U','U3','U4','U5','u','ur','u3','u4','u5']), axis=1)&np.any(np.isin(phases[:,:], ['T','t','tr','J','j','jr']), axis=1)
+t_j = (np.isin(phases[i], ['T','t','tr']).any()&np.isin(phases[i], ['J','j','jr']).any())
+phases = phases[~(a_xutj + x_utj + u_tj + t_j)] 
 
 
 
 ################
 #generalisation#
 ################
+##yr 4 generilisation
+g = np.size(phases,1)-1 #gets the number of the last col
+### 'A' can be simplified to 'G' if there is another pasture after it in the history and/or the current yr is not pasture (we only care about it for reseeding)
+a_index = np.isin(phases[:,a_sow_col], ['A'])&(np.any(np.isin(phases[:,a_sow_col+1:g], ['ar', 'sr','A','A3','A4','A5','M','M3','M4','S','S3','S4','S5']), axis=1)+~np.isin(phases[:,g], ['a','ar','a3','a4','a5','s','sr','s3','s4','s5','m','m3','m4']))
+###use the created index to generalise
+phases[a_index,a_sow_col]='G'
+###'Y' can be simplified to 'G' if the current yr is not resown (we only need to distinguish between Y and G for phases where reseeding happens)
+y_index = np.isin(phases[:,a_sow_col], ['Y'])&~np.isin(phases[:,g], ['ar','sr'])
+###use the created index to generalise
+phases[y_index,a_sow_col]='G'
 
+##yr 3 generlisation
+###a numbered annual can be generalised to 'A' if there is another younger annual 
+m_index = np.isin(phases[:,a_sow_col], ['A3','A4','A5','M3','M4','S3','S4','S5'])&np.any(np.isin(phases[:,a_sow_col+1:g+1], ['ar','a','a3','a4','a5','A','A3','A4','A5','m','m3','m4','M','M3','M4','s','sr','s3','s4','s5','S','S3','S4','S5']), axis=1)
+###use the created index to generalise
+phases[m_index,i]='A'
+###a numbered lucerne can be generalised to 'U' if there is another younger lucerne 
+u_index = np.isin(phases[:,a_sow_col], ['U3','U4','U5'])&np.any(np.isin(phases[:,a_sow_col+1:g+1], ['U','U3','U4','U5','u','ur','u3','u4','u5']), axis=1)
+###use the created index to generalise
+phases[u_index,i]='U'
+###a numbered lucerne can be generalised to 'X' if there is another younger lucerne 
+x_index = np.isin(phases[:,a_sow_col], ['X3','X4','X5'])&np.any(np.isin(phases[:,a_sow_col+1:g+1], ['X','X3','X4','X5','x','xr','x3','x4','x5']), axis=1)
+###use the created index to generalise
+phases[x_index,i]='X'
 
+phases = np.unique(phases, axis=0)
+   
+######################################################
+#delete cont rotations that require special handeling#
+######################################################
+##check if every phase in a rotation is either lucerne or G,Y
+xindex=np.all(np.isin(phases[:,:], ['G','Y','X','X3','X4','X5','x','xr','x3','x4','x5']), axis=1) 
+
+##################
+#continuous phase#
+##################
+tc=np.array(['tc','tc','tc','tc','tc'])
+jc=np.array(['jc','jc','jc','jc','jc'])
+uc=np.array(['uc','uc','uc','uc','uc'])
+xc=np.array(['xc','xc','xc','xc','xc'])
 
 ##################
 #history provide #
