@@ -227,61 +227,92 @@ phases=fun.cartesian_product_simple_transpose(arrays)
 
 for i in range(np.size(phases,1)-1):
 ##drop rules 1; unprofitable
-    phases = phases[~(np.isin(phases[:,i], ['N'])&np.isin(phases[:,i+1], ['N','r','z']))] #no cont canola
-    phases = phases[~(np.isin(phases[:,i], ['P'])&np.isin(phases[:,i+1], ['P','l','f']))] #no cont pulse
-    phases = phases[~(np.isin(phases[:,i], ['ar', 'sr','A','A3','A4','A5','M','M3','M4','S','S3','S4','S5','U','U3','U4','U5','T','T3','T4','T5'])&np.isin(phases[:,i+1], ['P','l','f']))] #no pulse after pasture
-    phases = phases[~(np.isin(phases[:,i], ['S','S3','S4','S5'])&np.isin(phases[:,i+1], ['A', 'A3', 'A4', 'A5','M','M3','M4','S','S3','S4','S5','a','ar','a3','a4','a5','s','sr','s3','s4','s5','m','m3','m4']))] #no pasture after spraytoped 
-    phases = phases[~(np.isin(phases[:,i], ['M','M3','M4'])&np.isin(phases[:,i+1], ['A', 'A3', 'A4', 'A5','M','M3','M4','a','ar','a3','a4','a5','m','m3','m4']))] #no pasture after spraytoped or manipulated
-
-##drop rules 2; logical    
-    ##Annual 
-    phases = phases[~(np.isin(phases[:,i], ['A'])&np.isin(phases[:,i+1], ['A4','A5','M4','S4','S5','a4','a5','s4','s5','m4']))] #only A or A3 after A
-    phases = phases[~(np.isin(phases[:,i], ['A3'])&np.isin(phases[:,i+1], ['A', 'A3','A5','M','M3','S','S3','S5','a','ar','a3','a5','s','sr','s3','s5','m','m3']))] #pasture 4 must come after pasture 3
-    phases = phases[~(np.isin(phases[:,i], ['A4'])&np.isin(phases[:,i+1], ['A', 'A3','A4','M','M3','M4','S','S3','S4','a','ar','a3','a4','s','sr','s3','s4','m','m3','m4']))] #pasture 5 must come after pasture 4
-    phases = phases[~(np.isin(phases[:,i], ['A5'])&np.isin(phases[:,i+1], ['A', 'A3','A4','M','M3','M4','S','S3','S4','a','ar','a3','a4','s','sr','s3','s4','m','m3','m4']))] #pasture 5 must come after pasture 5
-    phases = phases[~(~np.isin(phases[:,i], ['A','ar','sr'])&np.isin(phases[:,i+1], ['A3','S3','M3','a3','m3','s3']))] #cant have A3 after anything except A  (have used a double negitive here)
+    ###no cont canola
+    phases = phases[~(np.isin(phases[:,i], ['N'])&np.isin(phases[:,i+1], ['N','r','z']))] 
+    ###no cont pulse
+    phases = phases[~(np.isin(phases[:,i], ['P'])&np.isin(phases[:,i+1], ['P','l','f']))] 
+    ###no pulse after pasture
+    phases = phases[~(np.isin(phases[:,i], ['ar', 'sr','A','A3','A4','A5','M','M3','M4','S','S3','S4','S5','U','U3','U4','U5','T','T3','T4','T5'])&np.isin(phases[:,i+1], ['P','l','f']))] 
+    ###no pasture after spraytoped 
+    phases = phases[~(np.isin(phases[:,i], ['S','S3','S4','S5'])&np.isin(phases[:,i+1], ['A', 'A3', 'A4', 'A5','M','M3','M4','S','S3','S4','S5','a','ar','a3','a4','a5','s','sr','s3','s4','s5','m','m3','m4']))] 
+    ###only spraytopped pasture after manipulated
+    phases = phases[~(np.isin(phases[:,i], ['M','M3','M4'])&np.isin(phases[:,i+1], ['A', 'A3', 'A4', 'A5','M','M3','M4','a','ar','a3','a4','a5','m','m3','m4']))] 
+    ###not going to resown tedera after a tedera (in a cont rotation you resow every 10yrs but that is accounted for with 'tc')
+    phases = phases[~(np.isin(phases[:,i], ['T','J'])&np.isin(phases[:,i+1], ['tr','jr']))] 
+    ###not going to resow lucerne after a lucerne (in a cont rotation you resow every 5yrs but that is accounted for with 'uc' & 'xc')
+    phases = phases[~(np.isin(phases[:,i], ['U','X'])&np.isin(phases[:,i+1], ['xr','ur']))] 
+    ###cant have 1yr of perennial
     try: #used for conditions that are concerned with more than two yrs
-        phases = phases[~(~np.isin(phases[:,i], ['A'])&np.isin(phases[:,i+2], ['A3','S3','M3','a3','m3','s3']))] #cant have A3 after anything except A A (goes with the rule above)
+        phases = phases[~(np.isin(phases[:,i], ['T','J'])&~(np.isin(phases[:,i-1], ['T','J', 'Y']) + np.isin(phases[:,i+1], ['T','J','t','j'])))] 
     except IndexError: pass
-    phases = phases[~(~np.isin(phases[:,i], ['A3'])&np.isin(phases[:,i+1], ['A4','S4','M4','a4','s4','m4']))] #cant have A4 after anything except A3  (have used a double negitive here)
-    phases = phases[~(~np.isin(phases[:,i], ['A4'])&np.isin(phases[:,i+1], ['A5','S5','a5','s5']))] #cant have A5 after anything except A4  (have used a double negitive here)
+    ###cant have 1yr of perennial
     try: #used for conditions that are concerned with more than two yrs
-        phases = phases[~(np.isin(phases[:,i], ['A'])&np.isin(phases[:,i+1], ['A'])&~np.isin(phases[:,i+2], ['A3','S3','M3','a3','m3','s3']))] #can only have A3 after A A (have used a double negitive here)
+        phases = phases[~(np.isin(phases[:,i], ['U','X'])&~(np.isin(phases[:,i-1], ['U','X', 'Y']) + np.isin(phases[:,i+1], ['U','X','u','x'])))] 
+    except IndexError: pass
+   
+    ##drop rules 2; logical
+    ###Annual 
+    if i == 0:
+        pass #A in yr 4 can be followed by any thing
+    else:
+        ###only A or A3 after A
+        phases = phases[~(np.isin(phases[:,i], ['A'])&np.isin(phases[:,i+1], ['A4','A5','M4','S4','S5','a4','a5','s4','s5','m4','ar', 'sr']))] 
+    ###pasture 4 must come after pasture 3    
+    phases = phases[~(np.isin(phases[:,i], ['A3'])&np.isin(phases[:,i+1], ['A', 'A3','A5','M','M3','S','S3','S5','a','ar','a3','a5','s','sr','s3','s5','m','m3']))] 
+    ###pasture 5 must come after pasture 4
+    phases = phases[~(np.isin(phases[:,i], ['A4'])&np.isin(phases[:,i+1], ['A', 'A3','A4','M','M3','M4','S','S3','S4','a','ar','a3','a4','s','sr','s3','s4','m','m3','m4']))] 
+    ###pasture 5 must come after pasture 5
+    phases = phases[~(np.isin(phases[:,i], ['A5'])&np.isin(phases[:,i+1], ['A', 'A3','A4','M','M3','M4','S','S3','S4','a','ar','a3','a4','s','sr','s3','s4','m','m3','m4']))] 
+    ###cant have A3 after anything except A  (have used a double negitive here)
+    phases = phases[~(~np.isin(phases[:,i], ['A','ar','sr'])&np.isin(phases[:,i+1], ['A3','S3','M3','a3','m3','s3']))] 
+    ###cant have A3 after anything except A A (goes with the rule above)
+    try: #used for conditions that are concerned with more than two yrs
+        phases = phases[~(~np.isin(phases[:,i], ['A'])&np.isin(phases[:,i+2], ['A3','S3','M3','a3','m3','s3']))] 
+    except IndexError: pass
+    ###this if statement is required because in yr3 A4 and A5 can follow A
+    if i ==0:
+        ###cant have A4 after anything except A3  (have used a double negitive here)
+        phases = phases[~(~np.isin(phases[:,i], ['A3','A'])&np.isin(phases[:,i+1], ['A4','S4','M4','a4','s4','m4']))] 
+        ###cant have A5 after anything except A4  (have used a double negitive here)
+        phases = phases[~(~np.isin(phases[:,i], ['A4','A'])&np.isin(phases[:,i+1], ['A5','S5','a5','s5']))] 
+    else:
+        ###cant have A4 after anything except A3  (have used a double negitive here)
+        phases = phases[~(~np.isin(phases[:,i], ['A3'])&np.isin(phases[:,i+1], ['A4','S4','M4','a4','s4','m4']))] 
+        ###cant have A5 after anything except A4  (have used a double negitive here)
+        phases = phases[~(~np.isin(phases[:,i], ['A4'])&np.isin(phases[:,i+1], ['A5','S5','a5','s5']))]
+    ###can only have A3 after A A (have used a double negitive here)
+    try: #used for conditions that are concerned with more than two yrs
+        phases = phases[~(np.isin(phases[:,i], ['A'])&np.isin(phases[:,i+1], ['A'])&~np.isin(phases[:,i+2], ['A3','S3','M3','a3','m3','s3']))] 
     except IndexError: pass
     
     ##Lucerne
-    phases = phases[~(np.isin(phases[:,i], ['U'])&np.isin(phases[:,i+1], ['U4','U5','u4','u5']))] #only U or U3 ufter U
-    phases = phases[~(np.isin(phases[:,i], ['U3'])&np.isin(phases[:,i+1], ['U', 'U3','U5','u','ur','u3','u5']))] #pasture 4 muxt come ufter pasture 3
-    phases = phases[~(np.isin(phases[:,i], ['U4'])&np.isin(phases[:,i+1], ['U', 'U3','U4','u','ur','u3','u4']))] #pasture 5 muxt come ufter pasture 4
-    phases = phases[~(np.isin(phases[:,i], ['U5'])&np.isin(phases[:,i+1], ['U', 'U3','U4','u','ur','u3','u4']))] #pasture 5 muxt come ufter pasture 5
-    phases = phases[~(~np.isin(phases[:,i], ['U'])&np.isin(phases[:,i+1], ['U3','u3']))] #cant have U3 after anything except U 
+    if i == 0:
+        pass #U in yr 4 can be followed by anything
+    else:
+        phases = phases[~(np.isin(phases[:,i], ['U','X'])&np.isin(phases[:,i+1], ['U4','U5','X4','X5','u4','u5','x4','x5']))] #only U or U3 ufter U
+    phases = phases[~(np.isin(phases[:,i], ['U3','X3'])&np.isin(phases[:,i+1], ['U', 'U3','U5','X','X3','X5','u','ur','u3','u5','x','xr','x3','x5']))] #pasture 4 muxt come ufter pasture 3
+    phases = phases[~(np.isin(phases[:,i], ['U4','X4'])&np.isin(phases[:,i+1], ['U', 'U3','U4','X','X3','X4','u','ur','u3','u4','x','xr','x3','x4']))] #pasture 5 muxt come ufter pasture 4
+    phases = phases[~(np.isin(phases[:,i], ['U5','X5'])&np.isin(phases[:,i+1], ['U', 'U3','U4','X','X3','X4','u','ur','u3','u4','x','xr','x3','x4']))] #pasture 5 muxt come ufter pasture 5
+    phases = phases[~(~np.isin(phases[:,i], ['U','X'])&np.isin(phases[:,i+1], ['U3','X3','u3','x3']))] #cant have U3 after anything except U 
     try:  #used for conditions that are concerned with more than two yrs
-        phases = phases[~(~np.isin(phases[:,i], ['U'])&np.isin(phases[:,i+2], ['U3','u3']))] #cant have U3 ufter unything except U U (this is the second part to the rule above)
+        phases = phases[~(~np.isin(phases[:,i], ['U','X'])&np.isin(phases[:,i+2], ['U3','X3','u3','x3']))] #cant have U3 ufter unything except U U (this is the second part to the rule above)
     except IndexError: pass
-    phases = phases[~(~np.isin(phases[:,i], ['U3'])&np.isin(phases[:,i+1], ['U4','u4']))] #cant have U4 after anything except U3  
-    phases = phases[~(~np.isin(phases[:,i], ['U4'])&np.isin(phases[:,i+1], ['U5','u5']))] #cant have U5 after anything except U4  
+    ##this if statement is required because in yr3 U4 and U5 can follow U
+    if i == 0:
+        phases = phases[~(~np.isin(phases[:,i], ['U3','X3','U','X'])&np.isin(phases[:,i+1], ['U4','X4','u4','x4']))] #cant have U4 after anything except U3  
+        phases = phases[~(~np.isin(phases[:,i], ['U4','X4','U','X'])&np.isin(phases[:,i+1], ['U5','X5','u5','x5']))] #cant have U5 after anything except U4  
+    else:    
+        phases = phases[~(~np.isin(phases[:,i], ['U3','X3'])&np.isin(phases[:,i+1], ['U4','X4','u4','x4']))] #cant have U4 after anything except U3  
+        phases = phases[~(~np.isin(phases[:,i], ['U4','X4'])&np.isin(phases[:,i+1], ['U5','X5','u5','x5']))] #cant have U5 after anything except U4  
     try:  #used for conditions that are concerned with more than two yrs
-        phases = phases[~(np.isin(phases[:,i], ['U'])&np.isin(phases[:,i+1], ['U'])&~np.isin(phases[:,i+2], ['U3','u3']))] #can only huve U3 ufter U U (huve uxed u double negitive here)
-    except IndexError: pass
-
-    ##Manipulated Lucerne
-    phases = phases[~(np.isin(phases[:,i], ['X'])&np.isin(phases[:,i+1], ['X4','X5','x4','x5']))] #only U or U3 ufter U
-    phases = phases[~(np.isin(phases[:,i], ['X3'])&np.isin(phases[:,i+1], ['X','X3','X5','x','xr','x3','x5']))] #pasture 4 muxt come ufter pasture 3
-    phases = phases[~(np.isin(phases[:,i], ['X4'])&np.isin(phases[:,i+1], ['X','X3','X4','x','xr','x3','x4']))] #pasture 5 muxt come ufter pasture 4
-    phases = phases[~(np.isin(phases[:,i], ['X5'])&np.isin(phases[:,i+1], ['X','X3','X4','x','xr','x3','x4']))] #pasture 5 muxt come ufter pasture 5
-    phases = phases[~(~np.isin(phases[:,i], ['X'])&np.isin(phases[:,i+1], ['X3','x3']))] #cant have U3 after anything except U 
-    try:  #used for conditions that are concerned with more than two yrs
-        phases = phases[~(~np.isin(phases[:,i], ['X'])&np.isin(phases[:,i+2], ['X3','x3']))] #cant have U3 ufter unything except U U (this is the second part to the rule above)
-    except IndexError: pass
-    phases = phases[~(~np.isin(phases[:,i], ['X3'])&np.isin(phases[:,i+1], ['X4','x4']))] #cant have U4 after anything except U3  
-    phases = phases[~(~np.isin(phases[:,i], ['X4'])&np.isin(phases[:,i+1], ['X5','x5']))] #cant have U5 after anything except U4  
-    try:  #used for conditions that are concerned with more than two yrs
-        phases = phases[~(np.isin(phases[:,i], ['X'])&np.isin(phases[:,i+1], ['X'])&~np.isin(phases[:,i+2], ['X3','x3']))] #can only huve U3 ufter U U (huve uxed u double negitive here)
+        phases = phases[~(np.isin(phases[:,i], ['U','X'])&np.isin(phases[:,i+1], ['U','X'])&~np.isin(phases[:,i+2], ['U3','X3','u3','x3']))] #can only huve U3 ufter U U (huve uxed u double negitive here)
     except IndexError: pass
 
+##lucerne and tedera resowing
+phases = phases[~(~np.isin(phases[:,np.size(phases,1)-2], ['U','X'])&np.isin(phases[:,np.size(phases,1)-1], ['U','X','u','x']))] #lucerne after a non lucern must be resown
+phases = phases[~(~np.isin(phases[:,np.size(phases,1)-2], ['T'])&np.isin(phases[:,np.size(phases,1)-1], ['T','J','t','j']))] #Tedera after a non tedera must be resown
 
 ##rules where we are interested in all yrs - done this way so that if the len of the phase changes this can remain the same
-
 ##if history is all crop/T/U you must resow annual
 j=np.size(phases,1)-1-structure['resow_a'] #difference between history len and resow len (if 0 it means that all the history must be a crop for pasture to be resown)
 reseed_index=~np.isin(phases[:,j], ['ar', 'sr','A','A3','A4','A5','M','M3','M4','S','S3','S4','S5']) #just to create an array that can be added to.
@@ -310,21 +341,63 @@ for i in range(np.size(phases,1)-1):
 not_reseed_index2 &= np.isin(phases[:,np.size(phases,1)-2], ['ar', 'sr']) #checks if yr1 is resown annual
 phases = phases[~not_reseed_index2] #if there is an annual in the history you don't need to reseed
 
+##X and U can't be in the same phase & T and J can't be in the same phase
+index = []
+for i in range(np.size(phases,0)):
+    x_u = (np.isin(phases[i], ['X','X3','X4','X5','x','xr','x3','x4','x5']).any()&np.isin(phases[i], ['U','U3','U4','U5','u','ur','u3','u4','u5']).any())
+    t_j = (np.isin(phases[i], ['T','t','tr']).any()&np.isin(phases[i], ['J','j','jr']).any())
+    index.append(x_u + t_j)
+phases = phases[~np.array(index)] 
 
+
+
+################
+#generalisation#
+################
+
+
+
+##################
+#history provide #
+##################
+
+##################
+#history require #
+##################
+'''
+add cont rotations
+'''
+# phases = phases[~(np.isin(phases[:,i], ['U'])&np.isin(phases[:,i+1], ['U4','U5','u4','u5']))] #only U or U3 ufter U
+#     phases = phases[~(np.isin(phases[:,i], ['U3'])&np.isin(phases[:,i+1], ['U', 'U3','U5','u','ur','u3','u5']))] #pasture 4 muxt come ufter pasture 3
+#     phases = phases[~(np.isin(phases[:,i], ['U4'])&np.isin(phases[:,i+1], ['U', 'U3','U4','u','ur','u3','u4']))] #pasture 5 muxt come ufter pasture 4
+#     phases = phases[~(np.isin(phases[:,i], ['U5'])&np.isin(phases[:,i+1], ['U', 'U3','U4','u','ur','u3','u4']))] #pasture 5 muxt come ufter pasture 5
+#     phases = phases[~(~np.isin(phases[:,i], ['U'])&np.isin(phases[:,i+1], ['U3','u3']))] #cant have U3 after anything except U 
+#     try:  #used for conditions that are concerned with more than two yrs
+#         phases = phases[~(~np.isin(phases[:,i], ['U'])&np.isin(phases[:,i+2], ['U3','u3']))] #cant have U3 ufter unything except U U (this is the second part to the rule above)
+#     except IndexError: pass
+#     phases = phases[~(~np.isin(phases[:,i], ['U3'])&np.isin(phases[:,i+1], ['U4','u4']))] #cant have U4 after anything except U3  
+#     phases = phases[~(~np.isin(phases[:,i], ['U4'])&np.isin(phases[:,i+1], ['U5','u5']))] #cant have U5 after anything except U4  
+#     try:  #used for conditions that are concerned with more than two yrs
+#         phases = phases[~(np.isin(phases[:,i], ['U'])&np.isin(phases[:,i+1], ['U'])&~np.isin(phases[:,i+2], ['U3','u3']))] #can only huve U3 ufter U U (huve uxed u double negitive here)
+#     except IndexError: pass
+
+#     ##Manipulated Lucerne
+#     phases = phases[~(np.isin(phases[:,i], ['X'])&np.isin(phases[:,i+1], ['X4','X5','x4','x5']))] #only U or U3 ufter U
+#     phases = phases[~(np.isin(phases[:,i], ['X3'])&np.isin(phases[:,i+1], ['X','X3','X5','x','xr','x3','x5']))] #pasture 4 muxt come ufter pasture 3
+#     phases = phases[~(np.isin(phases[:,i], ['X4'])&np.isin(phases[:,i+1], ['X','X3','X4','x','xr','x3','x4']))] #pasture 5 muxt come ufter pasture 4
+#     phases = phases[~(np.isin(phases[:,i], ['X5'])&np.isin(phases[:,i+1], ['X','X3','X4','x','xr','x3','x4']))] #pasture 5 muxt come ufter pasture 5
+#     phases = phases[~(~np.isin(phases[:,i], ['X'])&np.isin(phases[:,i+1], ['X3','x3']))] #cant have U3 after anything except U 
+#     try:  #used for conditions that are concerned with more than two yrs
+#         phases = phases[~(~np.isin(phases[:,i], ['X'])&np.isin(phases[:,i+2], ['X3','x3']))] #cant have U3 ufter unything except U U (this is the second part to the rule above)
+#     except IndexError: pass
+#     phases = phases[~(~np.isin(phases[:,i], ['X3'])&np.isin(phases[:,i+1], ['X4','x4']))] #cant have U4 after anything except U3  
+#     phases = phases[~(~np.isin(phases[:,i], ['X4'])&np.isin(phases[:,i+1], ['X5','x5']))] #cant have U5 after anything except U4  
+#     try:  #used for conditions that are concerned with more than two yrs
+#         phases = phases[~(np.isin(phases[:,i], ['X'])&np.isin(phases[:,i+1], ['X'])&~np.isin(phases[:,i+2], ['X3','x3']))] #can only huve U3 ufter U U (huve uxed u double negitive here)
+#     except IndexError: pass
+    
 # #Lucerne
-#     phases = phases[~(np.isin(phases[:,i], ['U','X'])&np.isin(phases[:,i+1], ['U4','U5','X4','X5','u4','u5','x4','x5']))] #only U or U3 ufter U
-#     phases = phases[~(np.isin(phases[:,i], ['U3','X3'])&np.isin(phases[:,i+1], ['U', 'U3','U5','X','X3','X5','u','ur','u3','u5','x','xr','x3','x5']))] #pasture 4 muxt come ufter pasture 3
-#     phases = phases[~(np.isin(phases[:,i], ['U4','X4'])&np.isin(phases[:,i+1], ['U', 'U3','U4','X','X3','X4','u','ur','u3','u4','x','xr','x3','x4']))] #pasture 5 muxt come ufter pasture 4
-#     phases = phases[~(np.isin(phases[:,i], ['U5','X5'])&np.isin(phases[:,i+1], ['U', 'U3','U4','X','X3','X4','u','ur','u3','u4','x','xr','x3','x4']))] #pasture 5 muxt come ufter pasture 5
-#     phases = phases[~(~np.isin(phases[:,i], ['U','X'])&np.isin(phases[:,i+1], ['U3','X3','u3','x3']))] #cant have U3 after anything except U 
-#     try:  #used for conditions that are concerned with more than two yrs
-#         phases = phases[~(~np.isin(phases[:,i], ['U','X'])&np.isin(phases[:,i+2], ['U3','X3','u3','x3']))] #cant have U3 ufter unything except U U (this is the second part to the rule above)
-#     except IndexError: pass
-#     phases = phases[~(~np.isin(phases[:,i], ['U3','X3'])&np.isin(phases[:,i+1], ['U4','X4','u4','x4']))] #cant have U4 after anything except U3  
-#     phases = phases[~(~np.isin(phases[:,i], ['U4','X4'])&np.isin(phases[:,i+1], ['U5','X5','u5','x5']))] #cant have U5 after anything except U4  
-#     try:  #used for conditions that are concerned with more than two yrs
-#         phases = phases[~(np.isin(phases[:,i], ['U','X'])&np.isin(phases[:,i+1], ['U','X'])&~np.isin(phases[:,i+2], ['U3','X3','u3','x3']))] #can only huve U3 ufter U U (huve uxed u double negitive here)
-#     except IndexError: pass
+#     
 #########################################################################################################################################################################################################
 #########################################################################################################################################################################################################
 #universal functions that use data from above
