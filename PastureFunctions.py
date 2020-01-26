@@ -94,10 +94,11 @@ def __init__(self,landuse, landuse_set,filename):
     self.i_grn_senesce_eos_f      = np.zeros((                          n_feed_periods              ), dtype=np.float64)  # proportion of green feed that senesces each period (due to old leaf drop)
     self.i_fxg_foo_lfo            = np.zeros((                   n_lmu, n_feed_periods, n_foo_levels), dtype=np.float64)  # numpy array of FOO level       for the FOO/growth/grazing variables.
     self.i_fxg_pgr_lfo            = np.zeros((                   n_lmu, n_feed_periods, n_foo_levels), dtype=np.float64)  # numpy array of PGR level       for the FOO/growth/grazing variables.
-    self.fxg_a_lfo              = np.zeros((                   n_lmu, n_feed_periods, n_foo_levels), dtype=np.float64)  # numpy array of coefficient a   for the FOO/growth/grazing variables. PGR = a + b FOO
-    self.fxg_b_lfo              = np.zeros((                   n_lmu, n_feed_periods, n_foo_levels), dtype=np.float64)  # numpy array of coefficient b   for the FOO/growth/grazing variables. PGR = a + b FOO
-    # self.fxg_ai_lfo             = np.zeros((                   n_lmu, n_feed_periods, n_foo_levels), dtype=np.float64)  # numpy array of coefficient a for the FOO/growth/grazing variables. PGR = a + b FOO
-    # self.fxg_bi_lfo             = np.zeros((                   n_lmu, n_feed_periods, n_foo_levels), dtype=np.float64)  # numpy array of coefficient b for the FOO/growth/grazing variables. PGR = a + b FOO
+    self.c_fxg_foo_lfo            = np.zeros((                   n_lmu, n_feed_periods, n_foo_levels), dtype=np.float64)  # numpy array of FOO level       for the FOO/growth/grazing variables. Includes calculations done for maximum PGR.
+    self.c_fxg_a_lfo              = np.zeros((                   n_lmu, n_feed_periods, n_foo_levels), dtype=np.float64)  # numpy array of coefficient a   for the FOO/growth/grazing variables. PGR = a + b FOO
+    self.c_fxg_b_lfo              = np.zeros((                   n_lmu, n_feed_periods, n_foo_levels), dtype=np.float64)  # numpy array of coefficient b   for the FOO/growth/grazing variables. PGR = a + b FOO
+    # self.c_fxg_ai_lfo             = np.zeros((                   n_lmu, n_feed_periods, n_foo_levels), dtype=np.float64)  # numpy array of coefficient a for the FOO/growth/grazing variables. PGR = a + b FOO
+    # self.c_fxg_bi_lfo             = np.zeros((                   n_lmu, n_feed_periods, n_foo_levels), dtype=np.float64)  # numpy array of coefficient b for the FOO/growth/grazing variables. PGR = a + b FOO
     self.grn_dig_lf             = np.zeros((                   n_lmu, n_feed_periods              ), dtype=np.float64)  # numpy array of inputs for green pasture digestibility on each LMU.
     self.i_grn_trampling_f        = np.zeros((                          n_feed_periods              ), dtype=np.float64)  # ^ should this include the ,1 or just do newaxis when it is used numpy array of inputs for green pasture trampling in each feed period.
     self.i_dry_trampling_f        = np.zeros((                          n_feed_periods              ), dtype=np.float64)  # ^ should this include the ,1 or just do newaxis when it is used numpy array of inputs for dry pasture trampling   in each feed period.
@@ -182,7 +183,6 @@ def read_inputs_from_excel(self):
 
     self.i_fxg_foo_lfo[:,:,0]                         = exceldata['LowFOO'].to_numpy().T
     self.i_fxg_foo_lfo[:,:,1]                         = exceldata['MedFOO'].to_numpy().T
-    self.i_fxg_foo_lfo[:,:,-1]                        = 10000 #large number so that the searchsorted doesn't go above
     ### self.i_fxg_foo_lfo[:,:,-1] is calculated later and is the maximum foo that can be achieved (on that lmu in that period)
     ### it is affected by sa on pgr so it must be calculated during the experiment where sam might be altered.
     self.i_fxg_pgr_lfo[:,:,0]                         = exceldata['LowPGR'].to_numpy().T
@@ -192,17 +192,21 @@ def read_inputs_from_excel(self):
     ## Some one time data manipulation for the inputs just read
     self.i_germ_phase.index = [*range(len(self.i_germ_phase.index))]              # replace index read from Excel with numbers to match later merging
     self.i_germ_phase.columns.values[range(phase_len)] = [*range(phase_len)]         # replace the landuse columns read from Excel with numbers to match later merging
-    self.fxg_b_lfo[:,:,0] =   self.i_fxg_pgr_lfo[:,:,0]     \
-                           /  self.i_fxg_foo_lfo[:,:,0]
-    self.fxg_b_lfo[:,:,1] = ( self.i_fxg_pgr_lfo[:,:,1]
-                             -self.i_fxg_pgr_lfo[:,:,0])    \
-                           /( self.i_fxg_foo_lfo[:,:,1]
-                             -self.i_fxg_foo_lfo[:,:,0])
-    self.fxg_b_lfo[:,:,2] =  0
+    self.c_fxg_foo_lfo          = self.i_fxg_foo_lfo
+    self.c_fxg_foo_lfo[:,:,-1]  = 10000 #large number so that the searchsorted doesn't go above
+    self.c_fxg_b_lfo[:,:,0] =   self.i_fxg_pgr_lfo[:,:,0]       \
+                           /  self.c_fxg_foo_lfo[:,:,0]
+    self.c_fxg_b_lfo[:,:,1] = ( self.i_fxg_pgr_lfo[:,:,1]
+                             -self.i_fxg_pgr_lfo[:,:,0])        \
+                           /( self.c_fxg_foo_lfo[:,:,1]
+                             -self.c_fxg_foo_lfo[:,:,0])
+    self.c_fxg_b_lfo[:,:,2] =  0
 
-    self.fxg_a_lfo[:,:,0] =  0
-    self.fxg_a_lfo[:,:,1] = self.i_fxg_pgr_lfo[:,:,0] - self.fxg_b_lfo[:,:,1] * self.i_fxg_foo_lfo[:,:,0]
-    self.fxg_a_lfo[:,:,2] = self.i_fxg_pgr_lfo[:,:,1] # because slope = 0
+    self.c_fxg_a_lfo[:,:,0] =  0
+    self.c_fxg_a_lfo[:,:,1] =  self.i_fxg_pgr_lfo[:,:,0]        \
+                             -   self.c_fxg_b_lfo[:,:,1]        \
+                             * self.c_fxg_foo_lfo[:,:,0]
+    self.c_fxg_a_lfo[:,:,2] =  self.i_fxg_pgr_lfo[:,:,1] # because slope = 0
 
     self.grn_senesce_f          = 1 - ((1 - i_grn_senesce_daily_f) ** np_period_length_f) # senescence for the period, different formula than excel
 
@@ -341,9 +345,9 @@ def calc_foo_profile(self, germination, consumption, sam_pgr):
         ## alternative approach (a1)
         ## for pgr by creating an index using searchsorted (requires an lmu loop). ^ More readable than other but requires pgr_daily matrix to be predefined
         for l in [*range(n_lmu)]: #loop through lmu
-            idx             = np.searchsorted(self.i_fxg_foo_lfo[l,f,:],foo_start[l,f], side='left')   # find where foo_starts fits into the input data
-            pgr_daily[l]    = sam_pgr[l,f] * (  self.fxg_a_lfo[l,f,idx]
-                                              + self.fxg_b_lfo[l,f,idx] * foo_start[l,f])
+            idx             = np.searchsorted(self.c_fxg_foo_lfo[l,f,:],foo_start[l,f], side='left')   # find where foo_starts fits into the input data
+            pgr_daily[l]    = sam_pgr[l,f] * (  self.c_fxg_a_lfo[l,f,idx]
+                                              + self.c_fxg_b_lfo[l,f,idx] * foo_start[l,f])
         senescence          = (foo_start[:,f] + pgr_daily * np_period_length_f[f]/2 - consumption[:,f]/2) * self.grn_senesce_f[f]
         foo_end[:,f]        = (foo_start[:,f] + pgr_daily * np_period_length_f[f] - senescence - consumption[:,f]) \
                              *(1-self.i_grn_senesce_eos_f[f])
@@ -374,9 +378,9 @@ def green_feed(self):
     ## calculate the maximum foo achievable for each lmu & feed period (ungrazed pasture that germinates at the maximum level on that lmu)
     germination_to_pass                 = np.max(self.p_germination, axis=0)                                    #use p_germination because it includes any sensitivity that is carried out
     foo_start_ungrazed                  = self.calc_foo_profile(germination_to_pass, np.asarray([0]),sam_pgr_lf)# ^ passing the consumption value in a numpy array in an attempt to get the function @jit compatible
-    max_c                               = np.maximum(self.i_fxg_foo_lfo[:,:,-2], foo_start_ungrazed)                  #maximum of ungrazed foo and foo from the medium foo level
-    self.i_fxg_foo_lfo[:,:,-1]            = np.maximum.accumulate(max_c,axis=1)                                #maximum accumulated along the feed periods axis, i.e. max to date
-    self.p_grn_ha_foo_start_lfo         =             self.i_fxg_foo_lfo                                                          #foo_start only has one
+    max_c                               = np.maximum(self.c_fxg_foo_lfo[:,:,-2], foo_start_ungrazed)                  #maximum of ungrazed foo and foo from the medium foo level
+    self.c_fxg_foo_lfo[:,:,-1]            = np.maximum.accumulate(max_c,axis=1)                                #maximum accumulated along the feed periods axis, i.e. max to date
+    self.p_grn_ha_foo_start_lfo         =             self.c_fxg_foo_lfo                                                          #foo_start only has one
     grn_day_pgr_lfo                     = np.maximum(0.01, self.i_fxg_pgr_lfo                  # use maximum to ensure that the pgr is non zero
                                                      *          sam_pgr_lf[...,np.newaxis])
     grn_ha_pgr_lfog                     =           grn_day_pgr_lfo[...,np.newaxis]     \
@@ -427,6 +431,8 @@ def green_feed(self):
     # print('sam_pgr',sam_pgr_lf)
     # for f in range(10): print('f',grn_ha_pgr_lfog[0,f,0,0],'   ',grn_ha_pgr_lfog[0,f,1,0],'   ',grn_ha_pgr_lfog[0,f,2,2])
     # print('pgr',grn_ha_pgr_lfog)
+    # return     self.p_grn_ha_foo_start_lfo, self.p_grn_ha_foo_end_lfog, self.p_grn_ha_me_cons_lfog, self.p_grn_ha_volume_lfog, self.p_grn_ha_senesce_to_h, self.p_grn_ha_senesce_to_l
+
 
 def dry_feed(self):
     ''' Populates the parameter arrays associated with dry feed consumption & deferment
