@@ -107,21 +107,21 @@ def __init__(self,landuse, landuse_set,filename):
     self.p_reseeding_grn_foo    = np.zeros((n_rotn_phases, n_lmu, n_feed_periods), dtype=np.float64)    # parameters for rotation phase variable: feed lost and gained during destocking and then grazing of resown pasture (kg/ha)
     self.p_reseeding_dryh_foo   = np.zeros((n_rotn_phases, n_lmu, n_feed_periods), dtype=np.float64)    # parameters for rotation phase variable: high quality dry feed gained from grazing of resown pasture (kg/ha)
     self.p_reseeding_dryl_foo   = np.zeros((n_rotn_phases, n_lmu, n_feed_periods), dtype=np.float64)    # parameters for rotation phase variable: low quality dry feed gained from grazing of resown pasture (kg/ha)
-    self.p_phase_area_rf        = np.zeros((n_rotn_phases,     1, n_feed_periods), dtype=np.float64)    # parameters for rotation phase variable: area of pasture in each period (is 0 for resown phases during periods that resown pasture is not grazed )
+    self.p_phase_area_rf        = np.zeros((n_rotn_phases,        n_feed_periods), dtype=np.float64)    # parameters for rotation phase variable: area of pasture in each period (is 0 for resown phases during periods that resown pasture is not grazed )
 
     self.i_cons_propn_g         = np.zeros((                                                   n_grazing_int              ), dtype=np.float64)  # numpy array of proportion of available feed consumed for each grazing intensity level.
     self.i_pgr_gi_scalar_fg     = np.zeros((                      n_feed_periods,              n_grazing_int              ), dtype=np.float64)  # numpy array of pgr scalar for foo level.
     self.p_grn_ha_foo_start_lfo = np.zeros((               n_lmu, n_feed_periods,n_foo_levels                             ), dtype=np.float64)   # parameters for the growth/grazing activities: initial FOO
     self.p_grn_ha_foo_end_lfog  = np.zeros((               n_lmu, n_feed_periods,n_foo_levels, n_grazing_int              ), dtype=np.float64)   # parameters for the growth/grazing activities: final FOO
-    self.p_grn_ha_me_cons_lfog  = np.zeros((               n_lmu, n_feed_periods,n_foo_levels, n_grazing_int, n_feed_pools), dtype=np.float64)   # parameters for the growth/grazing activities: Total ME of feed consumed from the hectare
+    self.p_grn_ha_me_cons_lfoge = np.zeros((               n_lmu, n_feed_periods,n_foo_levels, n_grazing_int, n_feed_pools), dtype=np.float64)   # parameters for the growth/grazing activities: Total ME of feed consumed from the hectare
     self.p_grn_ha_volume_lfog   = np.zeros((               n_lmu, n_feed_periods,n_foo_levels, n_grazing_int              ), dtype=np.float64)   # parameters for the growth/grazing activities: Total volume of feed consumed from the hectare
     self.p_grn_ha_senesce_to_h  = np.zeros((               n_lmu, n_feed_periods,n_foo_levels, n_grazing_int              ), dtype=np.float64)   # parameters for the growth/grazing activities: quantity of green that senesces to the high pool
     self.p_grn_ha_senesce_to_l  = np.zeros((               n_lmu, n_feed_periods,n_foo_levels, n_grazing_int              ), dtype=np.float64)   # parameters for the growth/grazing activities: quantity of green that senesces to the low pool
 
-    self.p_dry_t_me_cons        = np.zeros((                      n_feed_periods,n_dry_groups,                n_feed_pools), dtype=np.float64)   # parameters for the dry feed grazing activities: Total ME of the tonne consumed
-    self.p_dry_t_volume         = np.zeros((                      n_feed_periods,n_dry_groups,                            ), dtype=np.float64)   # parameters for the dry feed grazing activities: Total volume of the tonne consumed
-    self.p_dry_t_removal        = np.zeros((                      n_feed_periods,n_dry_groups,                            ), dtype=np.float64)   # parameters for the dry feed grazing activities: Total DM removal from the tonne consumed (includes trampling)
-    self.p_dry_t_transfer       = np.zeros((                      n_feed_periods,n_dry_groups,                            ), dtype=np.float64)   # parameters for the dry feed transfer activities: quantity transferred
+    self.p_dry_t_me_cons_fde    = np.zeros((                      n_feed_periods,n_dry_groups,                n_feed_pools), dtype=np.float64)   # parameters for the dry feed grazing activities: Total ME of the tonne consumed
+    self.p_dry_t_volume_fd      = np.zeros((                      n_feed_periods,n_dry_groups                             ), dtype=np.float64)   # parameters for the dry feed grazing activities: Total volume of the tonne consumed
+    self.p_dry_t_removal_fd     = np.zeros((                      n_feed_periods,n_dry_groups                             ), dtype=np.float64)   # parameters for the dry feed grazing activities: Total DM removal from the tonne consumed (includes trampling)
+    self.p_dry_t_transfer_fd    = np.zeros((                      n_feed_periods,n_dry_groups                             ), dtype=np.float64)   # parameters for the dry feed transfer activities: quantity transferred
     # self.p_
 
 ########################
@@ -368,7 +368,7 @@ def green_feed(self):
     #reset all initial values to 0    ^ probably not necessary now that arrays aren't populated with +=
     self.p_grn_ha_foo_start_lfo[...]    = 0
     self.p_grn_ha_foo_end_lfog[...]     = 0
-    self.p_grn_ha_me_cons_lfog[...]     = 0
+    self.p_grn_ha_me_cons_lfoge[...]     = 0
     self.p_grn_ha_volume_lfog[...]      = 0
     self.p_grn_ha_senesce_to_h[...]     = 0
     self.p_grn_ha_senesce_to_l[...]     = 0
@@ -423,15 +423,16 @@ def green_feed(self):
     diet_dig_a_fog[:,:,2]               = 0
     diet_dig_a_fog[:,:,3]               = +0.5 * self.i_grn_dmd_range_f.reshape(-1,1)
     self.t_diet_dig = diet_dig_a_fog
-    grn_ha_dig_lfog                     = self.grn_dig_lf[...,np.newaxis,np.newaxis] \
-                                         * m_sward_dig_lfo[...,np.newaxis]           \
+    grn_ha_dig_lfog                     = self.grn_dig_lf[...,np.newaxis,np.newaxis]    \
+                                         * m_sward_dig_lfo[...,np.newaxis]              \
                                          +  diet_dig_a_fog
-    self.p_grn_ha_me_cons_lfog          = grn_ha_cons_t_lfog * fdb.dmd_to_md(grn_ha_dig_lfog)
+    self.p_grn_ha_me_cons_lfoge         =             grn_ha_cons_t_lfog                \
+                                         * fdb.dmd_to_md(grn_ha_dig_lfog)
 
     # print('sam_pgr',sam_pgr_lf)
     # for f in range(10): print('f',grn_ha_pgr_lfog[0,f,0,0],'   ',grn_ha_pgr_lfog[0,f,1,0],'   ',grn_ha_pgr_lfog[0,f,2,2])
     # print('pgr',grn_ha_pgr_lfog)
-    # return     self.p_grn_ha_foo_start_lfo, self.p_grn_ha_foo_end_lfog, self.p_grn_ha_me_cons_lfog, self.p_grn_ha_volume_lfog, self.p_grn_ha_senesce_to_h, self.p_grn_ha_senesce_to_l
+    # return     self.p_grn_ha_foo_start_lfo, self.p_grn_ha_foo_end_lfog, self.p_grn_ha_me_cons_lfoge, self.p_grn_ha_volume_lfog, self.p_grn_ha_senesce_to_h, self.p_grn_ha_senesce_to_l
 
 
 def dry_feed(self):
