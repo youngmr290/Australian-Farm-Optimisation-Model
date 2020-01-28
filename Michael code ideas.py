@@ -123,7 +123,6 @@ delete blocks - sometimes the index also needs to be deleted (not sure what that
 
 '''
 
-'''
 
 ############################
 #time code                 #
@@ -131,6 +130,19 @@ delete blocks - sometimes the index also needs to be deleted (not sure what that
 '''
 import timeit
 print(timeit.timeit(test,number=10)/10)
+'''
+
+############################
+#write to existing excel   #
+############################
+'''
+using the standart write method to exvel as used in stybble sim and rotation gen overwrites any existing sheets (even if they have a diff name)
+the method below is a way around, but the workbook must exist already
+    book = load_workbook('Rotation.xlsx')
+    writer = pd.ExcelWriter('Rotation.xlsx', engine='openpyxl') 
+    writer.book = book
+    writer.sheets = dict((ws.title, ws) for ws in book.worksheets)
+    mps_bool.to_excel(writer, 'rotation_con1',index=True,header=False)
 '''
 
 #################################################################################################################################################################

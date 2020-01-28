@@ -60,42 +60,12 @@ print('Status:  running crop')
 #phases                #
 ########################
 ##makes a df of all possible rotation phases
-phases_df =pd.Series(uinp.structure['rotations']['rot_phase']).str.split(expand=True).dropna()
+phases_df =uinp.structure['phases']
 phases_df2=phases_df.copy() #make a copy so that it doesn't alter the phases df that exists outside this func
 phases_df2.columns = pd.MultiIndex.from_product([phases_df2.columns, ['']])  #make the df multi index so that when it merges with other df below the indexs remanin seperate (otherwise it turn into a one leveled tuple)
 
 
 
-#########################
-#yield                  #
-#########################
-
-def rot_yield():
-    '''
-    Returns
-    ----------
-    Dict for pyomo
-        Grain yield for each rotation.
-        Yield includes:
-        -arable area
-        -seeding rate (if farmers use thier own seed)
-        -lmu factor
-        -frost
-    '''
-    ##combines yield and grain price
-    base_yields = pinp.crop['yield'].stack().swaplevel()*1000  #get base yields #swap levels - switches the order of the multi level index, so the yield lines up with the current yr not previos yr #stack to convert to a 1d dataframe so it can be merged using its index
-    yields_lmus = pinp.crop['yield_by_lmu'] #soil yield factor
-    seeding_rate = pinp.crop['seeding_rate'] #seeding rate
-    frost = pinp.crop['frost'] #frost
-    ##calculate yield - base yield * arable area * frost * lmu factor - seeding rate
-    arable = pinp.crop['arable'] #read in arable area df
-    yield_arable_by_soil=yields_lmus.mul(arable).mul(1-frost) #mul arable area to the the lmu factor (easy because dfs have the same axis's). THen mul frost
-    yields=yield_arable_by_soil.reindex(base_yields.index, axis=0, level=1).mul(base_yields,axis=0, level=1) #reindes and mul with base yields
-    seeding_rate=seeding_rate.reindex(yields.index, axis=0, level=1) #minus seeding rate
-    yields=yields.sub(seeding_rate,axis=0, level=1).clip(lower=0) #we don't want negitive yields so clip at 0 (if any values are neg they become 0)
-    yields = pd.merge(phases_df,yields, how='left', left_on=uinp.cols(), right_index = True)
-    return yields.set_index(list(range(uinp.structure['phase_len']))).stack().to_dict()
-#a=yield_income()
 
 def grain_price():
     '''
@@ -125,6 +95,38 @@ def grain_price():
     allocation_cols = pd.MultiIndex.from_product([allocation.columns, farm_gate_price.index])
     allocation = allocation.reindex(allocation_cols, axis=1,level=0)#adds level to header so i can mul in the next step
     return  allocation.mul(farm_gate_price,axis=1,level=1).droplevel(0, axis=1).stack().to_dict()
+
+#########################
+#yield                  #
+#########################
+
+def rot_yield():
+    '''
+    Returns
+    ----------
+    Dict for pyomo
+        Grain yield for each rotation.
+        Yield includes:
+        -arable area
+        -seeding rate (if farmers use thier own seed)
+        -lmu factor
+        -frost
+    '''
+    ##combines yield and grain price
+    base_yields = pinp.crop['yield'].stack().swaplevel()*1000  #get base yields #swap levels - switches the order of the multi level index, so the yield lines up with the current yr not previos yr #stack to convert to a 1d dataframe so it can be merged using its index
+    yields_lmus = pinp.crop['yield_by_lmu'] #soil yield factor
+    seeding_rate = pinp.crop['seeding_rate'] #seeding rate
+    frost = pinp.crop['frost'] #frost
+    ##calculate yield - base yield * arable area * frost * lmu factor - seeding rate
+    arable = pinp.crop['arable'] #read in arable area df
+    yield_arable_by_soil=yields_lmus.mul(arable).mul(1-frost) #mul arable area to the the lmu factor (easy because dfs have the same axis's). THen mul frost
+    yields=yield_arable_by_soil.reindex(base_yields.index, axis=0, level=1).mul(base_yields,axis=0, level=1) #reindes and mul with base yields
+    seeding_rate=seeding_rate.reindex(yields.index, axis=0, level=1) #minus seeding rate
+    yields=yields.sub(seeding_rate,axis=0, level=1).clip(lower=0) #we don't want negitive yields so clip at 0 (if any values are neg they become 0)
+    yields = pd.merge(phases_df,yields, how='left', left_on=uinp.cols(), right_index = True)
+    # return yields.drop(list(range(uinp.structure['phase_len'])), axis=1).stack().to_dict()
+    return yields.set_index(list(range(uinp.structure['phase_len']))).stack().to_dict() #need to use the multiindex to create a multidimensional param for pyomo so i can split it down when indexing
+a=rot_yield()
 
 #######
 #fert #    
@@ -167,7 +169,8 @@ def fert_req():
     fert1=fert.reindex(fert_by_soil.index, axis=1, level=0).mul(fert_by_soil)
     fert1=fert1.mul(arable2,axis=0,level=1) #add arable to df
     fert = pd.merge(phases_df2, fert1, how='left', left_on=uinp.cols(), right_index = True) #merge fert with phases
-    return fert.set_index(list(range(uinp.structure['phase_len']))).stack()
+    return fert.drop(list(range(uinp.structure['phase_len'])), axis=1,level=0).stack() #level is not really needed but stops a performance warning
+    # return fert.set_index(list(range(uinp.structure['phase_len']))).stack()
 # fert=fert_req()
   
 def fert_cost():
@@ -208,7 +211,8 @@ def phase_fert_app_cost():
     fert_cost = passes.reindex(fert_cost.index, axis=1,level=1).mul(fert_cost) #total cost 
     fert_cost=fert_cost.sum(level=[0], axis=1).replace(0, np.nan).unstack() #sum each fert cost - cost doesn't need to be seperated by fert type once joined with passes #sum nan returns 0 therefore i need to convert 0 back to nan so that they are dropped when stacking to reduce dict size.
     phase_fert_cost_ha = pd.merge(phases_df2, fert_cost, how='left', left_on=uinp.cols(), right_index = True) #merge with all the phases, requires because different phases have different application passes
-    phase_fert_cost_ha = phase_fert_cost_ha.set_index(list(range(uinp.structure['phase_len']))).stack([1])
+    # phase_fert_cost_ha = phase_fert_cost_ha.set_index(list(range(uinp.structure['phase_len']))).stack([1])
+    phase_fert_cost_ha = phase_fert_cost_ha.drop(list(range(uinp.structure['phase_len'])),axis=1).stack([1])
     fert_cost_total= fert_app_cost_t.add(phase_fert_cost_ha, fill_value=0) #fill_value replaces any values that don't exist in both df with 0. This avoide getting nan if a cost exists in only one df.
     return fert_cost_total
 
@@ -261,7 +265,8 @@ def phase_stubble_cost():
     stub_cost=probability_handling_lmu.mul(stub_cost_alloc)
     '''add to full phase df'''   
     phases_stub_cost = pd.merge(phases_df2,stub_cost, how='left', left_on=uinp.cols(), right_index = True) #[i-1 for i in uinp.cols()] little for loop is used so that merge is done based on the previous phase. since that is the yield we are interested in for stub 
-    return phases_stub_cost.set_index(list(range(uinp.structure['phase_len']))).stack([1])
+    return phases_stub_cost.drop(list(range(uinp.structure['phase_len'])),axis=1).stack([1])
+    # return phases_stub_cost.set_index(list(range(uinp.structure['phase_len']))).stack([1])
     
    
 

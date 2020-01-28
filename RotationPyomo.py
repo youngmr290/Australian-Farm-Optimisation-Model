@@ -26,8 +26,7 @@ def rotationpyomo():
     
     ##calling a function multiple times takes time. call it once and assign result to a unique variable. 
     ##local variables are easier for pyton to locate
-    h=rps.rot_phase_mps()
-    g=rps.rot_phase_mps2()
+    
 
     ####################
     #define parameters #
@@ -50,14 +49,13 @@ def rotationpyomo():
         model.del_component(model.p_rotphaselink_index)
     except AttributeError:
         pass
-    model.p_rotphaselink= Param(h.keys(), initialize=h, doc='link between rotation history and current rotation')
-    
+    model.p_rotphaselink= Param(rps.rot_con1.keys(), initialize=rps.rot_con1, doc='link between rotation history and current rotation')
     try:
         model.del_component(model.p_rotphaselink2)
         model.del_component(model.p_rotphaselink2_index)
     except AttributeError:
         pass
-    model.p_rotphaselink2= Param(g.keys(), initialize=g, doc='link between rotation history2 and current rotation')
+    model.p_rotphaselink2= Param(rps.rot_con2.keys(), initialize=rps.rot_con2, doc='link between rotation history2 and current rotation')
     
     
     #######################################################################################################################################################
@@ -85,10 +83,14 @@ def rotationpyomo():
     ##alternative method (a1 - michael)
     try:
         model.del_component(model.con_rotationcon1)
+        model.del_component(model.con_rotationcon1_index)
     except AttributeError:
         pass
-    def rot_phase_link(model,l,h1,h2,h3,h4):
-        return sum(model.v_phase_area[r,l]*model.p_rotphaselink[r,h1,h2,h3,h4] for r in model.s_phases if ((r)+(h1,)+(h2,)+(h3,)+(h4,)) in model.p_rotphaselink)<=0
+    # def rot_phase_link(model,l,h1,h2,h3,h4):
+    #     return sum(model.v_phase_area[r,l]*model.p_rotphaselink[r,h1,h2,h3,h4] for r in model.s_phases if ((r)+(h1,)+(h2,)+(h3,)+(h4,)) in model.p_rotphaselink)<=0
+    # model.con_rotationcon1 = Constraint(model.s_lmus, model.s_rotconstraints, rule=rot_phase_link, doc='rotation phases constraint')
+    def rot_phase_link(model,l,h):
+        return sum(model.v_phase_area[r,l]*model.p_rotphaselink[r,h] for r in model.s_phases if ((r)+(h,)) in model.p_rotphaselink)<=0
     model.con_rotationcon1 = Constraint(model.s_lmus, model.s_rotconstraints, rule=rot_phase_link, doc='rotation phases constraint')
     
     ##build and define rotation constraint 2 - used to ensure that the history provided by a rotation is used by another rotation (because one rotation can provide multiple histories)
@@ -96,10 +98,10 @@ def rotationpyomo():
         model.del_component(model.con_rotationcon2)
     except AttributeError:
         pass
-    def rot_phase_link2(model,l,h1,h2,h3,h4):
-        return sum(model.v_phase_area[r,l]*model.p_rotphaselink2[r,h1,h2,h3,h4] for r in model.s_phases if ((r)+(h1,)+(h2,)+(h3,)+(h4,)) in model.p_rotphaselink2)<=0
+    def rot_phase_link2(model,l,h):
+        return sum(model.v_phase_area[r,l]*model.p_rotphaselink2[r,h] for r in model.s_phases if ((r)+(h,)) in model.p_rotphaselink2)<=0
     model.con_rotationcon2 = Constraint(model.s_lmus, model.s_rotconstraints2, rule=rot_phase_link2, doc='rotation phases constraint2')
-
+    # model.con_rotationcon2.pprint()
 
     #####################
     # lo bound rotation #
@@ -109,8 +111,8 @@ def rotationpyomo():
         model.del_component(model.con_rotation_lobound)
     except AttributeError:
         pass
-    def rot_lo_bound(model, r1,r2,r3,r4,r5, l):
-      return model.v_phase_area[r1,r2,r3,r4,r5,l] >= model.p_lo[r1,r2,r3,r4,r5] 
+    def rot_lo_bound(model, r, l):
+      return model.v_phase_area[r,l] >= model.p_lo[r] 
     model.con_rotation_lobound = Constraint(model.s_phases, model.s_lmus, rule=rot_lo_bound, doc='lo bound for the number of each phase')
     
 

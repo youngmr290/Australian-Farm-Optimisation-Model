@@ -43,7 +43,7 @@ def croppyomo_local():
         model.del_component(model.p_rotation_yield)
     except AttributeError:
         pass
-    model.p_rotation_yield = Param(model.s_phases, model.s_lmus, initialize=crp.rot_yield(), default = 0.0, doc='grain production for all crops for 1 unit of rotation')
+    model.p_rotation_yield = Param(model.s_phaseshist, model.s_crops, model.s_lmus, initialize=crp.rot_yield(), default = 0.0, doc='grain production for all crops for 1 unit of rotation')
     
     try:
         model.del_component(model.p_grain_price)
@@ -85,7 +85,7 @@ def croppyomo_local():
 ## slightly more complicated because i have split the rotation set into history and current crop - this is so i get just the grain transfer for each crop which is compatible with yield penalty activities.
 
 def rotation_yield_transfer(model,k):
-    return sum(sum(model.p_rotation_yield[h,k,l]*model.v_phase_area[h,k,l] for h in model.s_rotconstraints if ((h)+(k,)+(l,)) in model.p_rotation_yield and model.p_rotation_yield[h,k,l] != 0)for l in model.s_lmus) #+ model.x[k] >=0 #
+    return sum(sum(model.p_rotation_yield[h,k,l]*model.v_phase_area[r,l] for h, r in model.s_phases if ((h)+(k,)+(l,)) in model.p_rotation_yield and model.p_rotation_yield[h,k,l] != 0)for l in model.s_lmus) #+ model.x[k] >=0 #
 
 # model.x = Var(model.s_crops, bounds=(0,None), doc='delets - used for testing')
 # model.j = Constraint(model.s_crops, rule=rotation_yield_transfer, doc='')
