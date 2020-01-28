@@ -143,12 +143,12 @@ def read_inputs_from_excel(self):
     self.i_grn_propn_reseeding                        = exceldata['FaG_PropnGrn'] # Proportion of the FOO available at the first grazing that is green
     # self.                                           = exceldata['']
     # self.i_feed_period['included']               = exceldata['SA.PastGP_inc']# growth of this pasture in this period is included
-    self.i_feed_period['grn_dmd_redn_senesce']   = exceldata['DigRednSenesce']   # reduction in digestibility of green feed when it senesces
+    self.i_feed_period['grn_dmd_senesce_redn']   = exceldata['DigRednSenesce']   # reduction in digestibility of green feed when it senesces
     self.i_feed_period['dry_dmd_average']        = exceldata['DigDryAve']    # average digestibility of dry feed. Note the reduction in this value determines the reduction in quality of ungrazed dry feed in each of the dry feed quality pools. The average digestibility of the dry feed sward will depend on selective grazing which is an optimised variable.
     self.i_feed_period['dry_dmd_range']          = exceldata['DigDryRange']  # range in digestibility of dry feed if it is not grazed
     self.i_feed_period['dry_foo_high']           = exceldata['FOODryH']      # expected foo for the dry pasture in the high quality pool
-    self.i_feed_period['grn_crude_protein']      = exceldata['CPGrn']        # crude protein content of green feed
-    self.i_feed_period['dry_crude_protein']      = exceldata['CPDry']        # crude protein content of dry feed
+    self.i_feed_period['grn_crudeprotein']       = exceldata['CPGrn']        # crude protein content of green feed
+    self.i_feed_period['dry_crudeprotein']       = exceldata['CPDry']        # crude protein content of dry feed
     self.i_feed_period['poc_dmd']                = exceldata['DigPOC']       # digestibility of pasture consumed on crop paddocks
     self.i_feed_period['poc_foo']                = exceldata['FOOPOC']       # foo of pasture consumed on crop paddocks
     # self.i_feed_period['']                       = exceldata['']
@@ -362,7 +362,7 @@ def calc_foo_profile(self, germination, consumption, sam_pgr):
 ## the following method generates the PGR & FOO parameters for the growth variables. Stored in a numpy array(lmu, feed period, FOO level, grazing intensity)
 ## def green_consumption:
 
-def green_feed(self):
+def green_and_dry(self):
     ''' Populates the parameter arrays for the pasture growth, consumption and senescence of green feed
 
     Returns:
@@ -370,7 +370,7 @@ def green_feed(self):
     The parameters in the existing variables.
     '''
     #initialise numpy arrays used in this method
-    diet_dig_a_fog                      = np.zeros((n_feed_periods, n_foo_levels, n_grazing_int),dtype=float)
+    dmd_selectivity_fog                      = np.zeros((n_feed_periods, n_foo_levels, n_grazing_int),dtype=float)
     #reset all initial values to 0    ^ probably not necessary now that arrays aren't populated with +=
     self.p_foo_start_grnha_lfo[...]    = 0
     self.p_foo_end_grnha_lfog[...]     = 0
@@ -379,14 +379,19 @@ def green_feed(self):
     self.p_senesce2h_grnha_lfog[...]   = 0
     self.p_senesce2l_grnha_lfog[...]   = 0
 
+    self.p_dry_mecons_t_fde[...]   = 0
+    self.p_dry_volume_t_fd[...]    = 0
+    self.p_dry_removal_t_fd[...]   = 0
+    self.p_dry_transfer_t_fd[...]  = 0
+
     sam_pgr_lf                  = np.asfarray(  sen.sam_pgr
                                               * sen.sam_pgr_l.reshape(-1,1)
                                               * sen.sam_pgr_f.reshape(1,-1))
     ## calculate the maximum foo achievable for each lmu & feed period (ungrazed pasture that germinates at the maximum level on that lmu)
-    germination_to_pass         = np.max(self.p_germination_rlf, axis=0)                                    #use p_germination because it includes any sensitivity that is carried out
-    foo_start_ungrazed          = self.calc_foo_profile(germination_to_pass, np.asarray([0]),sam_pgr_lf)# ^ passing the consumption value in a numpy array in an attempt to get the function @jit compatible
-    max_c                       = np.maximum(self.c_fxg_foo_lfo[:,:,-2], foo_start_ungrazed)                  #maximum of ungrazed foo and foo from the medium foo level
-    self.c_fxg_foo_lfo[:,:,-1]  = np.maximum.accumulate(max_c,axis=1)                                #maximum accumulated along the feed periods axis, i.e. max to date
+    germination_pass_lf         = np.max(self.p_germination_rlf, axis=0)                                    #use p_germination because it includes any sensitivity that is carried out
+    foo_start_ungrazed_lf          = self.calc_foo_profile(germination_pass_lf, np.asarray([0]),sam_pgr_lf)# ^ passing the consumption value in a numpy array in an attempt to get the function @jit compatible
+    max_foo_lf                 = np.maximum(self.c_fxg_foo_lfo[:,:,-2], foo_start_ungrazed_lf)                  #maximum of ungrazed foo and foo from the medium foo level
+    self.c_fxg_foo_lfo[:,:,-1]  = np.maximum.accumulate(max_foo_lf,axis=1)                                #maximum accumulated along the feed periods axis, i.e. max to date
     self.p_foo_start_grnha_lfo  = self.c_fxg_foo_lfo                                                          #foo_start only has one
     grn_day_pgr_lfo             = np.maximum(0.01, self.i_fxg_pgr_lfo                  # use maximum to ensure that the pgr is non zero
                                              *            sam_pgr_lf[...,np.newaxis])
@@ -419,14 +424,17 @@ def green_feed(self):
                                            -                  length_f.reshape(-1,1)
                                            ,                  length_f.reshape(-1,1))
     m_sward_dig_lfo              = (1-self.i_grn_dmd_declinefoo_f.reshape(-1,1))**grn_ha_foo_days_lfo    # multiplier on digestibility of the sward due to level of FOO (associated with destocking)
-    diet_dig_a_fog[:,:,1]        = -0.5 * self.i_grn_dmd_range_f.reshape(-1,1)                            # addition to digestibility associated with diet selection (level of grazing)
-    diet_dig_a_fog[:,:,2]        = 0
-    diet_dig_a_fog[:,:,3]        = +0.5 * self.i_grn_dmd_range_f.reshape(-1,1)
-    grn_ha_dig_lfog              = self.i_grn_dig_lf[...,np.newaxis,np.newaxis]    \
-                                  * m_sward_dig_lfo[...,np.newaxis]              \
-                                  +  diet_dig_a_fog
+    dmd_range = (  self.i_grn_dmd_range_f
+                 *sen.sam_grn_dmd_range_f).reshape(-1,1)
+    dmd_selectivity_fog[:,:,1]        = -0.5 * dmd_range                            # addition to digestibility associated with diet selection (level of grazing)
+    dmd_selectivity_fog[:,:,2]        = 0
+    dmd_selectivity_fog[:,:,3]        = +0.5 * dmd_range
+    grn_ha_dig_lfog          =    self.i_grn_dig_lf[...,np.newaxis,np.newaxis]    \
+                              *      m_sward_dig_lfo[...,np.newaxis]              \
+                              +  dmd_selectivity_fog
     self.p_me_cons_grnha_lfoge   =             grn_ha_cons_t_lfog                \
                                   * fdb.dmd_to_md(grn_ha_dig_lfog)
+                                  ''' ^work needed to add the feed pool '''
 
     # print('sam_pgr',sam_pgr_lf)
     # for f in range(10): print('f',grn_ha_pgr_lfog[0,f,0,0],'   ',grn_ha_pgr_lfog[0,f,1,0],'   ',grn_ha_pgr_lfog[0,f,2,2])
@@ -434,29 +442,24 @@ def green_feed(self):
     # return     self.p_foo_start_grnha_lfo, self.p_foo_end_grnha_lfog, self.p_me_cons_grnha_lfoge, self.p_volume_grnha_lfog, self.p_senesce2h_grnha_lfog, self.p_senesce2l_grnha_lfog
 
 
-def dry_feed(self):
-    ''' Populates the parameter arrays associated with dry feed consumption & deferment
+# def dry_feed(self):
+#     ''' Populates the parameter arrays associated with dry feed consumption & deferment
 
-    Returns:
-    -------
-    The parameters in the existing variables.
-    '''
-    #reset all initial values to 0    ^ probably not necessary now that arrays aren't populated with +=
-    self.p_dry_mecons_t_fde[...]   = 0
-    self.p_dry_volume_t_fd[...]    = 0
-    self.p_dry_removal_t_fd[...]   = 0
-    self.p_dry_transfer_t_fd[...]  = 0
+#     Returns:
+#     -------
+#     The parameters in the existing variables.
+#     '''
 
-    # transfer: decline in DM for dry feed (same for high & low pools)
-    dry_decay_daily                         = [self.i_dry_decay] * n_feed_periods
-    dry_decay_daily[0:self.i_end_of_gs-1]   = [1] * (self.i_end_of_gs-1)
-    dry_decay_period                        = [1 - (1 - dry_decay_daily[i])**length_f[i] for i,n in enumerate(dry_decay_daily)]
+    ## transfer: decline in DM for dry feed (same for high & low pools)
+    dry_decay_daily_f                         = [self.i_dry_decay] * n_feed_periods
+    dry_decay_daily_f[0:self.i_end_of_gs-1]   = [1] * (self.i_end_of_gs-1)
+    dry_decay_period                        = [1 - (1 - decay)**length_f[f] for f,decay in enumerate(dry_decay_daily_f)]
     self.p_dry_transfer_t_fd[...]           = 1000 * (1-np.c_[dry_decay_period])
-    # consumption: quality & FOO of the feed consumed
-    ave_dmd          = self.i_feed_period['dry_dmd_average']
-    range_dmd        = self.i_feed_period['dry_dmd_range']
-    dry_dmd_high     = ave_dmd+range_dmd/2
-    dry_dmd_low      = ave_dmd-range_dmd/2
+    ## consumption: quality & FOO of the feed consumed
+    dry_dmd_ave          = self.i_feed_period['dry_dmd_average']
+    dry_dmd_range        = self.i_feed_period['dry_dmd_range']
+    dry_dmd_high     = dry_dmd_ave+dry_dmd_range/2
+    dry_dmd_low      = dry_dmd_ave-dry_dmd_range/2
     dry_dmd_input    = np.c_[dry_dmd_high, dry_dmd_low]      # create a numpy array that arranges the 2 arguments as columns
     dry_dmd          = np.max(dry_dmd_input,axis=0) - (np.max(dry_dmd_input,axis=0) - dry_dmd_input) * sen.sam_dmd_decline_dry  # do sensitivity adjustment for dry_dmd_input based on increasing the reduction in dmd from the maximum (starting value)
 
@@ -464,17 +467,27 @@ def dry_feed(self):
     dry_foo_low      = dry_foo_high / 2                      # assuming half the foo is high quality and the remainder is low quality
     dry_foo_input    = np.c_[dry_foo_high, dry_foo_low]      # create a numpy array that arranges the 2 arguments as columns
     dry_foo          = dry_foo_input                         # do sensitivity adjustment for dry_foo_input. Currently not implemented
-    # ME consumed per tonne of dry feed consumed
+    ## ME consumed per tonne of dry feed consumed
     dry_md                   = fdb.dmd_to_md(dry_dmd)
     self.p_dry_mecons_t_fde  = dry_md * 1000
-    # Volume of feed consumed per tonne
+    ## Volume of feed consumed per tonne
     dry_ri_availability     = fdb.ri_availability(dry_foo,self.i_ri_foo)
     dry_ri_quality          = fdb.ri_quality(dry_dmd, self.i_legume)
     dry_ri                  = dry_ri_quality * dry_ri_availability
     dry_ri[dry_ri<0.05]     = 0.05 #set the minimum RI to 0.05
     self.p_dry_volume_t_fd  = 1000 / dry_ri
-    # Removal of dry feed
+    ## Removal of dry feed
     self.p_dry_removal_t_fd[...]  = 1000 * (1 + self.i_dry_trampling_f.reshape(-1,1))
+    ## Senescence from green to dry
+    senesce_total_lfog  = grn_ha_senesce_lfog + grn_ha_senesce_eos_lfog
+    grn_dmd_senesce_lfog = grn_ha_dig_lfog 
+                          - self.i_feed_period['grn_dmd_senesce_redn'].to_numpy().reshape(-1,1,1)
+    senesce2h_propn_lfog    = ( grn_dmd_senesce_lfog - dry_dmd_low)       \
+                             /( dry_dmd_high         - dry_dmd_low)
+    self.p_senesce2h_grnha_lfog = senesce_total_lfog * senesce2h_propn_lfog
+    self.p_senesce2l_grnha_lfog = senesce_total_lfog * (1-senesce2h_propn_lfog)
+
+
 
 # annual = PastDetailed('annual', {'a', 'ar', 'a3', 'a4', 'a5', 's', 'sr', 's3', 's4', 's5', 'm', 'm3', 'm4'},'GSMInputs.xlsx')        # create an instance of the Pasture class and pass the landuse name and the filename for the Excel file that stores the data
 # annual.read_inputs_from_excel()                         # read inputs from Excel file and map to the python variables
