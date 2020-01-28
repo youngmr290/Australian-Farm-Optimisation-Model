@@ -90,16 +90,17 @@ def rotationpyomo():
     #     return sum(model.v_phase_area[r,l]*model.p_rotphaselink[r,h1,h2,h3,h4] for r in model.s_phases if ((r)+(h1,)+(h2,)+(h3,)+(h4,)) in model.p_rotphaselink)<=0
     # model.con_rotationcon1 = Constraint(model.s_lmus, model.s_rotconstraints, rule=rot_phase_link, doc='rotation phases constraint')
     def rot_phase_link(model,l,h):
-        return sum(model.v_phase_area[r,l]*model.p_rotphaselink[r,h] for r in model.s_phases if ((r)+(h,)) in model.p_rotphaselink)<=0
+        return sum(model.v_phase_area[r,l]*model.p_rotphaselink[r,h] for r in model.s_phases if ((r,)+(h,)) in model.p_rotphaselink)<=0
     model.con_rotationcon1 = Constraint(model.s_lmus, model.s_rotconstraints, rule=rot_phase_link, doc='rotation phases constraint')
     
     ##build and define rotation constraint 2 - used to ensure that the history provided by a rotation is used by another rotation (because one rotation can provide multiple histories)
     try:
         model.del_component(model.con_rotationcon2)
+        model.del_component(model.con_rotationcon2_index)
     except AttributeError:
         pass
     def rot_phase_link2(model,l,h):
-        return sum(model.v_phase_area[r,l]*model.p_rotphaselink2[r,h] for r in model.s_phases if ((r)+(h,)) in model.p_rotphaselink2)<=0
+        return sum(model.v_phase_area[r,l]*model.p_rotphaselink2[r,h] for r in model.s_phases if ((r,)+(h,)) in model.p_rotphaselink2)<=0
     model.con_rotationcon2 = Constraint(model.s_lmus, model.s_rotconstraints2, rule=rot_phase_link2, doc='rotation phases constraint2')
     # model.con_rotationcon2.pprint()
 
@@ -109,6 +110,7 @@ def rotationpyomo():
     #area of rotation on a given soil can't be more than the amount on that soil available on farm
     try:
         model.del_component(model.con_rotation_lobound)
+        model.del_component(model.con_rotation_lobound_index)
     except AttributeError:
         pass
     def rot_lo_bound(model, r, l):
@@ -121,7 +123,11 @@ def rotationpyomo():
 #variables - don't need to be included in the function that is re-run
 #######################################################################################################################################################
 #######################################################################################################################################################
-
+try:
+    model.del_component(model.v_phase_area)
+    model.del_component(model.v_phase_area_index)
+except AttributeError:
+    pass
 ##Amount of each phase on each soil, Positive Variable.
 model.v_phase_area = Var(model.s_phases, model.s_lmus, bounds=(0,None), doc='number of ha of each phase')
 

@@ -34,24 +34,27 @@ def croppyomo_local():
     #param  #
     #########    
     try:
-        model.del_component(model.p_rotation_cost)
+        model.del_component(model.p_rotation_cashflow)
+        model.del_component(model.p_rotation_cashflow_index)
+        model.del_component(model.p_rotation_cashflow_index_index_0)
     except AttributeError:
         pass
-    model.p_rotation_cost = Param(model.s_phases,model.s_lmus,model.s_cashflow_periods, initialize=crp.rot_cost(),default=0, doc='total cashflow for 1 unit of rotation')
+    model.p_rotation_cashflow = Param(model.s_phases,model.s_lmus,model.s_cashflow_periods, initialize=crp.rot_cost(),default=0, doc='total cashflow for 1 unit of rotation')
    
-    try:
-        model.del_component(model.p_rotation_yield)
-    except AttributeError:
-        pass
-    model.p_rotation_yield = Param(model.s_phaseshist, model.s_crops, model.s_lmus, initialize=crp.rot_yield(), default = 0.0, doc='grain production for all crops for 1 unit of rotation')
+    # try:
+    #     model.del_component(model.p_rotation_yield)
+    # except AttributeError:
+    #     pass
+    # model.p_rotation_yield = Param(model.s_phaseshist, model.s_crops, model.s_lmus, initialize=crp.rot_yield(), default = 0.0, doc='grain production for all crops for 1 unit of rotation')
     
     try:
         model.del_component(model.p_grain_price)
+        model.del_component(model.p_grain_price_index)
     except AttributeError:
         pass
-    model.p_grain_price = Param(model.s_cashflow_periods, model.s_crops,  initialize=crp.grain_price(),default = 0.0, doc='farm gate price per tonne of each grain')
+    model.p_grain_price = Param(model.s_cashflow_periods, model.s_crops,  initialize=crp.grain_price().to_dict(),default = 0.0, doc='farm gate price per tonne of each grain')
     try:
-        model.del_component(model.stubble)
+        model.del_component(model.p_stubble)
     except AttributeError:
         pass
     model.p_stubble = Param(model.s_crops, initialize=crp.stubble_production(), default = 0.0, doc='stubble produced / kg grain harvested')
@@ -78,14 +81,14 @@ def croppyomo_local():
 #######################################################################################################################################################
 #######################################################################################################################################################
 
-##############
-#yield       #
-##############
-##total grain transfer for each crop, seperated so it can be combined with untimely sowing and crop grazing penalty before converting to cashflow 
-## slightly more complicated because i have split the rotation set into history and current crop - this is so i get just the grain transfer for each crop which is compatible with yield penalty activities.
+# ##############
+# #yield       #
+# ##############
+# ##total grain transfer for each crop, seperated so it can be combined with untimely sowing and crop grazing penalty before converting to cashflow 
+# ## slightly more complicated because i have split the rotation set into history and current crop - this is so i get just the grain transfer for each crop which is compatible with yield penalty activities.
 
-def rotation_yield_transfer(model,k):
-    return sum(sum(model.p_rotation_yield[h,k,l]*model.v_phase_area[r,l] for h, r in model.s_phases if ((h)+(k,)+(l,)) in model.p_rotation_yield and model.p_rotation_yield[h,k,l] != 0)for l in model.s_lmus) #+ model.x[k] >=0 #
+# def rotation_yield_transfer(model,k):
+#     return sum(sum(model.p_rotation_yield[h,k,l]*model.v_phase_area[r,l] for h, r in model.s_phases if ((h)+(k,)+(l,)) in model.p_rotation_yield and model.p_rotation_yield[h,k,l] != 0)for l in model.s_lmus) #+ model.x[k] >=0 #
 
 # model.x = Var(model.s_crops, bounds=(0,None), doc='delets - used for testing')
 # model.j = Constraint(model.s_crops, rule=rotation_yield_transfer, doc='')
@@ -105,8 +108,8 @@ To add:
     -pas provide by each phase
 '''
 
-def rotation_cost(model,c):
-    return sum(sum(model.p_rotation_cost[r,l,c]*model.v_phase_area[r,l] for r in model.s_phases if model.p_rotation_cost[r,l,c] != 0) for l in model.s_lmus )#+ model.x[c] >=0 #0.10677s
+def rotation_cashflow(model,c):
+    return sum(sum(model.p_rotation_cashflow[r,l,c]*model.v_phase_area[r,l] for r in model.s_phases if model.p_rotation_cashflow[r,l,c] != 0) for l in model.s_lmus )#+ model.x[c] >=0 #0.10677s
 #model.j = Constraint(model.cashflow_periods, rule=rotation_cashflow, doc='')
    
     

@@ -20,9 +20,9 @@ import Functions as fun
 #rotation phase low bound #
 ###########################
 ##debuging rotaion constraints- create dict for each rotation with 0 as default, the loop through changing each value to 1 (this dict will be used as the min bound)
-# phases_df = uinp.structure['phases']
-phase_ind=uinp.structure['phases'].set_index(list(range(uinp.structure['phase_len']))).index
-lo_bound = dict.fromkeys(phase_ind, 0)#create default dict
+phases_df = uinp.structure['phases']
+# phase_ind=uinp.structure['phases'].set_index(list(range(uinp.structure['phase_len']))).index
+lo_bound = dict.fromkeys(phases_df.index, 0)#create default dict
 
 #############################
 #rotation phase constraint1 #

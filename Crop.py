@@ -94,17 +94,17 @@ def grain_price():
     allocation=fun.period_allocation(p_dates, p_name, start, length).set_index('period')
     allocation_cols = pd.MultiIndex.from_product([allocation.columns, farm_gate_price.index])
     allocation = allocation.reindex(allocation_cols, axis=1,level=0)#adds level to header so i can mul in the next step
-    return  allocation.mul(farm_gate_price,axis=1,level=1).droplevel(0, axis=1).stack().to_dict()
-
+    return  allocation.mul(farm_gate_price,axis=1,level=1).droplevel(0, axis=1).stack()
+# a=grain_price()
 #########################
 #yield                  #
 #########################
 
-def rot_yield():
+def rot_income():
     '''
     Returns
     ----------
-    Dict for pyomo
+    Dataframe
         Grain yield for each rotation.
         Yield includes:
         -arable area
@@ -123,10 +123,13 @@ def rot_yield():
     yields=yield_arable_by_soil.reindex(base_yields.index, axis=0, level=1).mul(base_yields,axis=0, level=1) #reindes and mul with base yields
     seeding_rate=seeding_rate.reindex(yields.index, axis=0, level=1) #minus seeding rate
     yields=yields.sub(seeding_rate,axis=0, level=1).clip(lower=0) #we don't want negitive yields so clip at 0 (if any values are neg they become 0)
-    yields = pd.merge(phases_df,yields, how='left', left_on=uinp.cols(), right_index = True)
-    # return yields.drop(list(range(uinp.structure['phase_len'])), axis=1).stack().to_dict()
-    return yields.set_index(list(range(uinp.structure['phase_len']))).stack().to_dict() #need to use the multiindex to create a multidimensional param for pyomo so i can split it down when indexing
-a=rot_yield()
+    yields_income = yields.unstack(level=[1]).stack([0])
+    yields_income = yields_income.reindex(grain_price().index, axis=1, level=1).mul(grain_price()/1000)
+    yields_income = yields_income.unstack(level=[1]).stack([1])
+    yields_income = pd.merge(phases_df2,yields_income, how='left', left_on=uinp.cols(), right_index = True)
+    return yields_income.drop(list(range(uinp.structure['phase_len'])), axis=1).stack()
+    # return yields_income.set_index(list(range(uinp.structure['phase_len']))).stack() #need to use the multiindex to create a multidimensional param for pyomo so i can split it down when indexing
+a=rot_income()
 
 #######
 #fert #    
@@ -291,7 +294,9 @@ includes
 '''
 def rot_cost():
     total_cost = total_phase_fert_cost().add(phase_stubble_cost(), fill_value=0)
-    return total_cost.stack().to_dict()
+    total_income = rot_income()
+    overall = total_income.sub(total_cost, fill_value=0)
+    return overall.stack().to_dict()
 # jj=rot_cost()
 
 #########################

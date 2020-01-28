@@ -77,8 +77,8 @@ def coremodel_all():
     #yield income        #
     ###################### 
     ##combines rotation yield and yield penalties from untimely sowing and crop grazing. Then passes to cashflow constraint
-    def yield_income(model,c):
-        return sum((crppy.rotation_yield_transfer(model,k) - macpy.late_seed_penalty(model,k)) * model.p_grain_price[c,k]/1000 for k in model.s_crops)
+    def yield_penalty_cost(model,c):
+        return sum(( macpy.late_seed_penalty(model,k)) * model.p_grain_price[c,k]/1000 for k in model.s_crops)
     ######################
     #feed                #
     ###################### 
@@ -111,12 +111,13 @@ def coremodel_all():
         #this means the first period doesn't include the previous debit or credit (because it doesn't exist, because it is the first period) 
         j = [1] * len(c)
         j[0] = 0
-        return (yield_income(model,c[i]) - crppy.rotation_cost(model,c[i])  + 
+        return (crppy.rotation_cashflow(model,c[i]) - yield_penalty_cost(model,c[i]) + 
                 model.v_debit[c[i]] - model.v_credit[c[i]]  - model.v_debit[c[i-1]] * fin.debit_interest() * j[i]  + model.v_credit[c[i-1]] * fin.credit_interest() * j[i]) >= 0
     #return (rotation_cashflow(model,c[i]) + labour_cost(model,c[i]) - mach_cost(model,c[i]) + 
     #            model.debit[c[i]] - model.credit[c[i]]  - model.debit[c[i-1]] * fin.debit_interest() * j[i]  + model.credit[c[i-1]] * fin.credit_interest() * j[i]) >= 0
     try:
         model.del_component(model.con_cashflow)
+        model.del_component(model.con_cashflow_index)
     except AttributeError:
         pass
     model.con_cashflow = Constraint(range(len(model.s_cashflow_periods)), rule=cash_flow, doc='cashflow')
@@ -165,12 +166,12 @@ def coremodel_all():
     model.v_credit.pprint()
     if (results.solver.status == SolverStatus.ok) and (results.solver.termination_condition == TerminationCondition.optimal):
         print('solver optimal')# Do something when the solution in optimal and feasible
-        # coremodel_test_var.append(0)
+        coremodel_test_var.append(0)
     elif (results.solver.termination_condition == TerminationCondition.infeasible):
         print ('Solver Status: ',  result.solver.status)
-        # coremodel_test_var.append(1)
-        #print(coremodel_test_var)
-        # sys.exit()
+        coremodel_test_var.append(1)
+        # print(coremodel_test_var)
+        sys.exit()
     else:
         # Something else is wrong
         print ('Solver Status: ',  result.solver.status)

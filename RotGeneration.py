@@ -423,6 +423,8 @@ mps_bool = mps_bool[(mps_bool.iloc[:,2] != 0)]
 Determines what rotation each history2 requires and provides
 con2 is more specific than con1.
 This ensures that each rotation is used to provide another rotation
+
+The sets are altered for yr1 - this is done using if statements which make the sets more specific
 '''
 mps_bool2=[]
 for rot_phase, rot_prov in zip(phases,rot_hist_prov):
