@@ -154,16 +154,16 @@ def coremodel_all():
     
     # print('Status: writing...')
     model.write('test.lp',io_options={'symbolic_solver_labels':True})
-    print('Status: solving...')
+    # print('Status: solving...')
     results = SolverFactory('glpk').solve(model, tee=True)
     # results.write() need to write this somewhere
-    print("\nDisplaying Solution\n" + '-'*60)
-    print(value(model.profit))
+    # print("\nDisplaying Solution\n" + '-'*60)
+    # print(value(model.profit))
     # pyomo_postprocess(None, model, results) #not sure what this is
-    results.write(num=2) #not sure what the num does, if removed it still works the same, maybe this is if there are multiple model instances
+    # results.write(num=2) #not sure what the num does, if removed it still works the same, maybe this is if there are multiple model instances
     
-    model.v_debit.pprint()
-    model.v_credit.pprint()
+    # model.v_debit.pprint()
+    # model.v_credit.pprint()
     if (results.solver.status == SolverStatus.ok) and (results.solver.termination_condition == TerminationCondition.optimal):
         print('solver optimal')# Do something when the solution in optimal and feasible
         coremodel_test_var.append(0)
@@ -171,7 +171,7 @@ def coremodel_all():
         print ('Solver Status: ',  result.solver.status)
         coremodel_test_var.append(1)
         # print(coremodel_test_var)
-        sys.exit()
+        # sys.exit()
     else:
         # Something else is wrong
         print ('Solver Status: ',  result.solver.status)

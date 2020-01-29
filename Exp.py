@@ -51,9 +51,9 @@ for i in rps.lo_bound.keys():#(range(1)): #maybe this should be looping through 
     core.coremodel_all()
     if core.coremodel_test_var[-1]==1:
         con_error.append(i)
+    print(core.coremodel_test_var[-1])
     
-    
-    # crp.lo_bound[i]=0
+    rps.lo_bound[i]=0
     
     
     

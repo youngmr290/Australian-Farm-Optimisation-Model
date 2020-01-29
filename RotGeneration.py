@@ -224,10 +224,15 @@ phases[y_index,a_sow_col]='G'
 ##yr 2&3 generlisation
 for i in range(2):
     gen = a_sow_col+1+i
-    ###any annual can be generalised to 'A' if there is another younger annual 
-    m_index = np.isin(phases[:,gen], ['A3','A4','A5','M','M3','M4','M5','S','S3','S4','S5'])&np.any(np.isin(phases[:,gen+1:g+1], ['AR', 'SR','ar','a','a3','a4','a5','A','A3','A4','A5','m','m3','m4','m5','M','M3','M4','M5','s','sr','s3','s4','s5','S','S3','S4','S5']), axis=1)
+    ###any A? or S? can be generalised to 'A' if there is another younger annual 
+    as_index = np.isin(phases[:,gen], ['A3','A4','A5','S','S3','S4','S5'])&np.any(np.isin(phases[:,gen+1:g+1], ['AR', 'SR','ar','a','a3','a4','a5','A','A3','A4','A5','m','m3','m4','m5','M','M3','M4','M5','s','sr','s3','s4','s5','S','S3','S4','S5']), axis=1)
     ###use the created index to generalise
-    phases[m_index,gen]='A'
+    phases[as_index,gen]='A'
+    ###any M? can be generalised to 'A' in yr3 if there is another younger annual - M needs to be tracked in yr2 because MSb is different to ASb 
+    if i == 0:
+        m_index = np.isin(phases[:,gen], ['M','M3','M4','M5'])&np.any(np.isin(phases[:,gen+1:g+1], ['AR', 'SR','ar','a','a3','a4','a5','A','A3','A4','A5','m','m3','m4','m5','M','M3','M4','M5','s','sr','s3','s4','s5','S','S3','S4','S5']), axis=1)
+        ####use the created index to generalise
+        phases[m_index,gen]='A'
     ###a numbered lucerne can be generalised to 'U' if there is another younger lucerne 
     u_index = np.isin(phases[:,gen], ['U3','U4','U5'])&np.any(np.isin(phases[:,gen+1:g+1], ['U','U3','U4','U5','u','ur','u3','u4','u5']), axis=1)
     ###use the created index to generalise
@@ -236,7 +241,29 @@ for i in range(2):
     x_index = np.isin(phases[:,gen], ['X3','X4','X5'])&np.any(np.isin(phases[:,gen+1:g+1], ['X','X3','X4','X5','x','xr','x3','x4','x5']), axis=1)
     ###use the created index to generalise
     phases[x_index,gen]='X'
-
+    ###any S? can be generalised to 'A?'
+    for S, A in zip(['S','S3','S4','S5'],['A','A3','A4','A5']):
+        s_index = np.isin(phases[:,gen], [S])
+        ###use the created index to generalise
+        phases[s_index,gen]=A
+    ###any M? can be generalised to 'A?' in yr3 and yr2 unless followed by an S
+    if i == 0:
+        for M, A in zip(['M','M3','M4','M5'],['A','A3','A4','A5']):
+            m_index = np.isin(phases[:,gen], [M])
+            ###use the created index to generalise
+            phases[m_index,gen]=A
+    else: 
+        ###if no S after M? then generalise to 'A?'
+        for M, A in zip(['M','M3','M4','M5'],['A','A3','A4','A5']):
+            m_index = np.isin(phases[:,gen], [M]) & ~np.isin(phases[:,gen+1], ['S','SR','S3','S4','S5'])
+            ###use the created index to generalise
+            phases[m_index,gen]=A
+        ###if there is an S after M? then generalise to M
+        for M, A in zip(['M','M3','M4','M5'],['A','A3','A4','A5']):
+            m2_index = np.isin(phases[:,gen], [M]) & np.isin(phases[:,gen+1], ['S','SR','S3','S4','S5'])
+            ###use the created index to generalise
+            phases[m2_index,gen]='M'
+        
 phases = np.unique(phases, axis=0)
    
 
@@ -265,9 +292,14 @@ hist_prov[ag_index,a_sow_col]='Y'
 for i in range(2):
     gen = a_sow_col+1+i
     ###any annual can be generalised to 'A' if there is another younger annual 
-    m_index = np.isin(hist_prov[:,gen], ['A3','A4','A5','M','M3','M4','M5','S','S3','S4','S5'])&np.any(np.isin(hist_prov[:,gen+1:g+1], ['ar','a','a3','a4','a5','A','AR','A3','A4','A5','m','m3','m4','m5','M','M3','M4','M5','s','sr','s3','s4','s5','S','SR','S3','S4','S5']), axis=1)
+    as_index = np.isin(hist_prov[:,gen], ['A3','A4','A5','S','S3','S4','S5'])&np.any(np.isin(hist_prov[:,gen+1:g+1], ['ar','a','a3','a4','a5','A','AR','A3','A4','A5','m','m3','m4','m5','M','M3','M4','M5','s','sr','s3','s4','s5','S','SR','S3','S4','S5']), axis=1)
     ###use the created index to generalise
-    hist_prov[m_index,gen]='A'
+    hist_prov[as_index,gen]='A'
+    if i == 0:
+        m_index = np.isin(phases[:,gen], ['M','M3','M4','M5'])&np.any(np.isin(phases[:,gen+1:g+1], ['AR', 'SR','ar','a','a3','a4','a5','A','A3','A4','A5','m','m3','m4','m5','M','M3','M4','M5','s','sr','s3','s4','s5','S','S3','S4','S5']), axis=1)
+        ####use the created index to generalise
+        phases[m_index,gen]='A'
+
     ###a numbered lucerne can be generalised to 'U' if there is another younger lucerne 
     u_index = np.isin(hist_prov[:,gen], ['U3','U4','U5'])&np.any(np.isin(hist_prov[:,gen+1:g+1], ['U','U3','U4','U5','u','ur','u3','u4','u5']), axis=1)
     ###use the created index to generalise
@@ -276,6 +308,28 @@ for i in range(2):
     x_index = np.isin(hist_prov[:,gen], ['X3','X4','X5'])&np.any(np.isin(hist_prov[:,gen+1:g+1], ['X','X3','X4','X5','x','xr','x3','x4','x5']), axis=1)
     ###use the created index to generalise
     hist_prov[x_index,gen]='X'
+     ###any S? can be generalised to 'A?'
+    for S, A in zip(['S','S3','S4','S5'],['A','A3','A4','A5']):
+        s_index = np.isin(hist_prov[:,gen], [S])
+        ###use the created index to generalise
+        hist_prov[s_index,gen]=A
+    ###any M? can be generalised to 'A?' in yr3 and yr2 unless followed by an S
+    if i == 0:
+        for M, A in zip(['M','M3','M4','M5'],['A','A3','A4','A5']):
+            m_index = np.isin(hist_prov[:,gen], [M])
+            ###use the created index to generalise
+            hist_prov[m_index,gen]=A
+    else: 
+        ###if no S after M? then generalise to 'A?'
+        for M, A in zip(['M','M3','M4','M5'],['A','A3','A4','A5']):
+            m_index = np.isin(hist_prov[:,gen], [M]) & ~np.isin(hist_prov[:,gen+1], ['s','sr','s3','s4','s5','S','SR','S3','S4','S5']) #lowercase also included because yr1 is not yet a capital 
+            ###use the created index to generalise
+            hist_prov[m_index,gen]=A
+        ###if there is an S after M? then generalise to M
+        for M, A in zip(['M','M3','M4','M5'],['A','A3','A4','A5']):
+            m2_index = np.isin(hist_prov[:,gen], [M]) & np.isin(hist_prov[:,gen+1], ['s','sr','s3','s4','s5','S','SR','S3','S4','S5'])
+            ###use the created index to generalise
+            hist_prov[m2_index,gen]='M'
 
 ##change OF, SR and AR back to general for yr2 (these were specilised in yr1)
 of_index = np.isin(hist_prov[:,g-1], ['OF'])
@@ -369,30 +423,8 @@ for rot_phase in phases:
         rot_phase_prov=[]
         l_hist=[]
         for i in range(len(hist)):
-            ##in yr 1 we don't want ar to provide a ie we don't want ar to be in the a set (same for fodder of in the E set) so the hist must be altered in yr1
-            if i == 3 and hist[i] == 'A':
-                hist_set = {'a'}#uinp.structure['A1']
-            elif i == 3 and hist[i] == 'S':
-                hist_set = {'s'}
-            elif i == 3 and hist[i] == 'M':
-                hist_set = {'m'}
-            elif i == 3 and hist[i] == 'E':
-                hist_set = uinp.structure['E1']
-            else: hist_set = uinp.structure[hist[i]]
-            # hist_set = uinp.structure[hist[i]]
-            l_hist.append(hist_set) #deterimines the sets in each constraint
-            
-            ##in yr 1 we don't want ar to provide a ie we don't want ar to be in the a set (same for fodder of in the E set) so the hist must be altered in yr1
-            if i == 3 and rot_phase[i] == 'A':
-                req_set = {'a'}#uinp.structure['A1']
-            elif i == 3 and rot_phase[i] == 'S':
-                req_set = {'s'}
-            elif i == 3 and rot_phase[i] == 'M':
-                req_set = {'m'}
-            elif i == 3 and rot_phase[i] == 'E':
-                req_set = uinp.structure['E1']
-            else: req_set = uinp.structure[rot_phase[i]]            
-            rot_phase_req.append(req_set) #appends each set that corresponds to the letters in the rot_phase (required)
+            l_hist.append(uinp.structure[hist[i]]) #deterimines the sets in each constraint
+            rot_phase_req.append(uinp.structure[rot_phase[i]]) #appends each set that corresponds to the letters in the rot_phase (required)
             rot_phase_prov.append(uinp.structure[rot_phase[i+1]]) #appends each set that corresponds to the letters in the rot_phase (provides)
         req=1
         prov=-1
@@ -480,10 +512,10 @@ for rot_phase, rot_prov in zip(phases,rot_hist_prov):
         test+=prov
         test2+=req
         mps_bool2.append(req+prov)
-    if test==0: #doesn't provide a history
-        print('doesnt require a con2: ',rot_phase)
-    if test2==0: #doesn't provide a history
-        print('rot doesnt req a history: ',rot_phase)
+    if test==0: #check if doesn't provide a history
+        print('doesnt use a con2: ',rot_phase)
+    if test2==0: #check if doesn't provide a history
+        print('rot doesnt give a history: ',rot_phase)
 mps_bool2=pd.Series(mps_bool2) #convert to series because easier to manipulate
 rot_phase_by_constrain2 = pd.DataFrame(list(itertools.product(l_phases,l_hist_prov) ) ) #had to use this cartesian method as i couldn't get the fast function to work
 mps_bool2=pd.concat([rot_phase_by_constrain2, mps_bool2], axis=1) #add two dfs together 
