@@ -58,7 +58,7 @@ n_pasture_types     = 3             # Annual, Lucerne, Tedera
 
 n_foo_levels        = 3             # Low, medium & high FOO level in the growth/grazing activities
 n_grazing_int       = 4             # 0, med & high grazing intensity in the growth/grazing activities
-n_feed-pools        = 4             # number of feed pools (by quality groups)
+n_feed_pools        = 4             # number of feed pools (by quality groups)
 n_dry_groups        = 2             # Low & high quality groups for dry feed
 n_phases_rotn       = len(phases_rotn_df.index)
 n_lmu               = len(pinp.general['lmu_area'])
@@ -395,7 +395,7 @@ def green_and_dry(self):
     max_foo_lf                 = np.maximum(self.c_fxg_foo_lfo[:,:,-2], foo_start_ungrazed_lf)                  #maximum of ungrazed foo and foo from the medium foo level
     self.c_fxg_foo_lfo[:,:,-1]  = np.maximum.accumulate(max_foo_lf,axis=1)                                #maximum accumulated along the feed periods axis, i.e. max to date
     self.p_foo_start_grnha_lfo  = self.c_fxg_foo_lfo                                                          #foo_start only has one
-    pgr_grnday_lfo             = np.maximum(0.01, self.i_fxg_pgr_lfo                  # use maximum to ensure that the pgr is non zero
+    pgr_grnday_lfo             = np.maximum(0.01, self.i_fxg_pgr_lfo                  # use maximum to ensure that the pgr is non zero (because foo_days requires dividing by pgr)
                                              *            sam_pgr_lf[...,np.newaxis])
     pgr_grnha_lfog             =           pgr_grnday_lfo[...,np.newaxis]     \
                                  *               length_f.reshape(-1,1,1)       \
@@ -420,12 +420,21 @@ def green_and_dry(self):
                                  -    senesce_eos_grnha_lfog
     cons_grnha_t_lfog          =          removal_grnha_lfog   \
                                  /(1+self.i_grn_trampling_f.reshape(-1,1,1))
-    foo_days_grnha_lfo         = np.clip((  self.p_foo_start_grnha_lfo
-                                           - self.p_foo_start_grnha_lfo[:,:,1,np.newaxis])   \
-                                           /             pgr_grnday_lfo,
-                                           -                  length_f.reshape(-1,1)
-                                           ,                  length_f.reshape(-1,1))
-                                  ''' ^work needed for double periods '''
+    ## to calculate foo_days requires calculating number of days in current period and adding days from the previous period (if required)
+    min=-1; max = 0         #Clip between -1 and 0
+    if (self.p_foo_start_grnha_lfo > self.p_foo_start_grnha_lfo[:,:,1,np.newaxis]):
+        min += 1; max +=1   #Clip between 0 and 1
+    propn_period_lfo            =(  self.p_foo_start_grnha_lfo
+                                  - self.p_foo_start_grnha_lfo[ : , : ,1:2])    \
+                                 /               pgr_grnha_lfog[: , : , : , 0]
+    propn_periodprev_lfo[:,1:,:] = (  self.p_foo_start_grnha_lfo [:,1:  , : ]
+                                    - self.p_foo_start_grnha_lfo [:,1:  ,1:2]
+                                    -              pgr_grnha_lfo [:,1:  ,: ])   \
+                                   /               pgr_grnha_lfog[:, :-1,: , 0]
+    foo_days_grnha_lfo         = np.clip(propn_period_lfo,min,max)             \
+                                *              length_f.reshape(-1,1)
+    foo_days_grnha_lfo[:,1:,:]+= np.clip(propn_periodprev_lfo[:,1:,:],min,max) \
+                                * length_f[:-1].reshape(-1,1)
     grn_dmd_swardscalar_lfo              = (1-self.i_grn_dmd_declinefoo_f.reshape(-1,1))**foo_days_grnha_lfo    # multiplier on digestibility of the sward due to level of FOO (associated with destocking)
     grn_dmd_range = (  self.i_grn_dmd_range_f
                  *sen.sam_grn_dmd_range_f).reshape(-1,1)
@@ -481,7 +490,7 @@ def green_and_dry(self):
     self.p_dry_removal_t_fd[...]  = 1000 * (1 + self.i_dry_trampling_f.reshape(-1,1))
     ## Senescence from green to dry
     senesce_total_lfog  = senesce_grnha_lfog + senesce_eos_grnha_lfog
-    grn_dmd_senesce_lfog = dmd_grnha_lfog 
+    grn_dmd_senesce_lfog = dmd_grnha_lfog       \
                           - self.i_feed_period['grn_dmd_senesce_redn'].to_numpy().reshape(-1,1,1)
     senesce2h_propn_lfog    = ( grn_dmd_senesce_lfog - dry_dmd_low)       \
                              /( dry_dmd_high         - dry_dmd_low)

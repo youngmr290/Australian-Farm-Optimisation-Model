@@ -4,3 +4,4 @@ __pycache__
 /*.xls*
 /redundant
 .spyproject
+.spyproject\*.*
