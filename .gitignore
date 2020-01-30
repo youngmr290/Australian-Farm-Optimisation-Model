@@ -1,23 +1,6 @@
 __pycache__
 /*.txt
 /*.lp
-<<<<<<< HEAD
-
-# Excel files
-*.xlsx
-*.xlsm
-*.xlsb
-
-#Temporary files created by Excel or Word
-/~*.*
-
-/redundant
-
-# Spyder project settings
-.spyderproject
-.spyproject
-=======
 /*.xls
 /redundant
 /.spyproject
->>>>>>> fadd070be2292a6dd62fded752f64925976c69fc
