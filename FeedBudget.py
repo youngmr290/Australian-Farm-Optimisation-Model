@@ -91,15 +91,14 @@ define ri functions
 ##or use .apply method to apply it to every value in a df or series - this method is faster, i have used it in stubble module (this method removes the need for a loop)
 def ri_quality(dmd,clover_propn): #requires the clover prop and dmd of the feed, this is used in the stub module if an example is needed
     try:
-        if (dmd <= 1).all() : dmd *= 100 # if dmd is a list or an array and is a decimal then convert to percentage (in excel 80% is 0.8 in python)
+        if (dmd >= 1).all() : dmd /= 100 # if dmd is a list or an array and is a percentage then convert to decimal (in excel 80% is 0.8 in python)
     except:
-        if dmd <= 1:          dmd *= 100 # if dmd is a scalar and is a decimal then convert to percentage   ^ alternative would be to convert scalar values to a list (if dmd isinstance not list: dmd=[dmd]) or perhaps type is float]
+        if dmd >= 1:          dmd /= 100 # if dmd is a scalar and is a percentage then convert to decimal   ^ alternative would be to convert scalar values to a list (if dmd isinstance not list: dmd=[dmd]) or perhaps type is float]
     try:
-        return max(0,(min(1,float(1-rih*(rid-dmd/100)+rig*clover_propn)))) #formula 6.8 from SCA 1990 pg 218  ^could be updated with formula from Sheep Explorer
+        return max(0,(min(1,float(1-rih*(rid-dmd)+rig*clover_propn)))) #formula 6.8 from SCA 1990 pg 218  ^could be updated with formula from Sheep Explorer
     except:   # handle a numpy array
-        ri = 1-rih*(rid-dmd/100)+rig*clover_propn                   #formula 6.8 from SCA 1990 pg 218  ^could be updated with formula from Sheep Explorer
-        ri.clip(0,1)                                                #set the maximum value to 1 and the minimum to 0
-        return ri
+        ri = 1-rih*(rid-dmd)+rig*clover_propn                   #formula 6.8 from SCA 1990 pg 218  ^could be updated with formula from Sheep Explorer
+        return ri.clip(0,1)                                                #set the maximum value to 1 and the minimum to 0
 
 #################
 ## availability #
@@ -107,7 +106,7 @@ def ri_quality(dmd,clover_propn): #requires the clover prop and dmd of the feed,
 ##made up of a combination of grazing time and bite size. foori is accounting for difference in foo estimate of model region cf region equation is calibrated for.
 def ri_availability(foo,rifoo=0):
     try:
-        return (1-math.exp(-ria*(foo - rifoo)/1000))*(1+rib*math.exp(-rik*((foo-rifoo)/1000)**2))
+        return (1-math.exp(-ria*(foo - rifoo)/1000))*(1+rib*math.exp(-rik*((foo-rifoo)/1000)**2))    #formula 6.7 from SCA 1990 pg 216  ^could be updated with formula from Sheep Explorer
     except:   # handle a numpy array
         return (1-np.exp(-ria*(foo - rifoo)/1000))*(1+rib*np.exp(-rik*((foo-rifoo)/1000)**2))
 
