@@ -1,10 +1,17 @@
 __pycache__
 /*.txt
 /*.lp
+
+# Excel files
 *.xlsx
 *.xlsm
 *.xlsb
-/redundant
-.spyproject
-/.spyproject
+
+#Temporary files created by Excel or Word
 /~*.*
+
+/redundant
+
+# Spyder project settings
+.spyderproject
+.spyproject

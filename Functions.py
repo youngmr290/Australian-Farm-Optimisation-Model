@@ -324,10 +324,10 @@ def period_proportion(period_dates, periods, date):
 #array is created by matrix multiplication of two or three 1D dataframes
 #The dfs passed becomes axis 0, 1 & 2 of the array. The first & third need to be reshaped
 def create_array_from_dfs(df1,df2,df3=''):         
-    np1=np.array(df1.values).reshape(-1,1)
-    np2=np.array(df2.values)
+    np1=np.array(df1.to_numpy).reshape(-1,1)
+    np2=np.array(df2.to_numpy)
     final=np.multiply(np1,np2)
     if df3:                                         #if there is a 3rd dimension
-        np3=np.array(df3.values).reshape(1,1,-1)
+        np3=np.array(df3.to_numpy).reshape(1,1,-1)
         final=np.multiply(final,np3)    
     return final
