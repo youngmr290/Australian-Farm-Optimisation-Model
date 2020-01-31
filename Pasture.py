@@ -13,39 +13,29 @@ Fixed   Date    ID by   Problem
 @author: John
 """
 
-import PastureFunctions as pf
-
+import PastureFunctions as pfun
 from timeit import default_timer as timer
-time_list = []
-time_was = []
+
+time_list = [] ; time_was = []
 time_list.append(timer()) ; time_was.append("start")
 
 
-annual = pf.PastDetailed('annual', {'a', 'ar', 'a3', 'a4', 'a5', 's', 'sr', 's3', 's4', 's5', 'm', 'm3', 'm4'},'Property.xlsx')        # create an instance of the Pasture class and pass the landuse name and the filename for the Excel file that stores the data
-time_list.append(timer()) ; time_was.append("define annual")
+pfun.init_and_read_excel('Property.xlsx', 'annual')                         # read inputs from Excel file and map to the python variables
+time_list.append(timer()) ; time_was.append("init & read inputs from Excel")
 
-annual.read_inputs_from_excel()                         # read inputs from Excel file and map to the python variables
-time_list.append(timer()) ; time_was.append("read inputs from Excel")
-
-annual.calculate_germination()                          # calculate the germination for each rotation phase
+pfun.calculate_germ_and_reseeding()                          # calculate the germination for each rotation phase
 time_list.append(timer()) ; time_was.append("germination")
 
-annual.calculate_reseeding()                            # calculate the FOO lost when destocked and the FOO gained when grazed after establishment
-time_list.append(timer()) ; time_was.append("reseeding")
-
-annual.dry_feed()                            # calculate the FOO lost when destocked and the FOO gained when grazed after establishment
-time_list.append(timer()) ; time_was.append("dry feed")
-
-annual.green_feed()                            # calculate the FOO lost when destocked and the FOO gained when grazed after establishment
+pfun.green_and_dry()                            # calculate the FOO lost when destocked and the FOO gained when grazed after establishment
 time_list.append(timer()) ; time_was.append("green feed")
 
-annual.poc_con()                            # calculate the FOO lost when destocked and the FOO gained when grazed after establishment
+pfun.poc_con()                            # calculate the FOO lost when destocked and the FOO gained when grazed after establishment
 time_list.append(timer()) ; time_was.append("poc con")
 
-annual.poc_md()                            # calculate the FOO lost when destocked and the FOO gained when grazed after establishment
+pfun.poc_md()                            # calculate the FOO lost when destocked and the FOO gained when grazed after establishment
 time_list.append(timer()) ; time_was.append("poc_md")
 
-annual.poc_vol()                            # calculate the FOO lost when destocked and the FOO gained when grazed after establishment
+pfun.poc_vol()                            # calculate the FOO lost when destocked and the FOO gained when grazed after establishment
 time_list.append(timer()) ; time_was.append("poc_vol")
 
 
