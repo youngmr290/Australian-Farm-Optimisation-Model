@@ -210,42 +210,20 @@ def read_inputs_from_excel(self):
 
     self.grn_senesce_f          =1-((1-i_grn_senesce_daily_f) ** length_f) # senescence for the period, different formula than excel
 
-def calculate_germination(self):
-    ''' create an array called p_germination(r,l) being the parameters to be passed to pyomo.
+def calculate_germ_and_reseed(self):
+    ''' Calculate germination and reseeding parameters
+    
+    germination: create an array called p_germination(r,l) being the parameters to be passed to pyomo.
+    reseeding: generates the green & dry FOO that is lost and gained from reseeding pasture. It is stored in a numpy array (phase, lmu, feed period)
+    Results are stored in p_...._reseeding
 
     requires phases_rotn_df as a global variable
     ^ currently all germination occurs in period 0, however, other code handles germination in other periods if the inputs & this code are changed
+    ## intermediate calculations are not stored, however, if they were stored the 'key variables' could change the values of the intermediate calcs which could then be fed into the parameter calculations (in a separate method)
+    ## the above would provide more options for KVs and provide another step that may not need to be recalculated
     '''
-    # map the germination phases to the rotation phases
-    phase_germ_df      = pd.merge(phases_rotn_df,self.i_phase_germ_df,
-                                   how     = 'left',
-                                   left_on = [*range(phase_len)],
-                                   right_on= [*range(phase_len)],
-                                   sort    = False)
-    self.phase_germ_df = phase_germ_df.set_index([*range(phase_len)])                                     # retain the dataframe for use in reseeding method.
-    rp                  = phase_germ_df['germ_scalar'].to_numpy().reshape(-1,1)                      # extract the germ_scalar from the dataframe and transpose (reshape to a column vector)
-    lmu                 = self.i_lmu['germ_scalar'].to_numpy()  \
-                         * sen.sam_germ_l  # lmu germination scalar x SA on lmu scalar
-    germination         = self.i_germination_std        \
-                         * np.multiply(rp,lmu)          \
-                         * sen.sam_germ                             # create an array rot phase x lmu
-    germination[np.isnan(germination)]  = 0.0
-    self.p_germination_rlf[:,:,0]           = germination                                                                       # set germination in first period to germination
-
-# the following method generates the FOO that is lost and gained from reseeding pasture. It is stored in a numpy array (phase, lmu, feed period)
-# intermediate calculations are not stored, however, if they were stored the 'key variables' could change the values of the intermediate calcs which could then be fed into the parameter calculations (in a separate method)
-# the above would provide more options for KVs and provide another step that may not need to be recalculated
-def calculate_reseeding(self):
-    '''Generates the green & dry FOO that is lost and gained from reseeding pasture
-
-    Results are stored in p_reseeding'''
-    #reset all initial values to 0              ^ required even if deleted in the other functions
-    self.p_foo_grn_reseeding_rlf[...]  = 0          # array has been initialised, reset all values to 0
-    self.p_foo_dryh_reseeding_rlf[...] = 0
-    self.p_foo_dryl_reseeding_rlf[...] = 0
-    self.p_phase_area_rf[...]      = 0
     def update_reseeding_foo(period, proportion, total, propn_grn=1, dmd_dry=0):
-        ''' Populate p_reseeding_grn_foo, p_reseeding_dryh_foo, p_reseeding_dryl_foo with values for destocking & subsequent grazing in the relevant feed periods
+        ''' Update p_reseeding_grn_foo, p_reseeding_dryh_foo, p_reseeding_dryl_foo with values for destocking & subsequent grazing in the relevant feed periods
 
         period & proportion refer to the first period affected by the destocking or subsequent grazing
         total is the foo to be spread between the period and the subsequent period, can be a single value or a list. If list it must be by lmu
@@ -255,7 +233,7 @@ def calculate_reseeding(self):
         the adjustments are spread between periods to allow for the pasture growth that can occur from the green feed
         and the amount of grazing available if the feed is dry
         '''
-        foo_change = self.phase_germ_df['resown'].to_numpy().reshape(-1,1).astype(float) * total                            # create an array (phase x lmu) that is the value to be added for any phase that is resown
+        foo_change = phase_germ_df['resown'].to_numpy().reshape(-1,1).astype(float) * total                            # create an array (phase x lmu) that is the value to be added for any phase that is resown
         foo_change[np.isnan(foo_change)] = 0
 
         next_period = (period+1) % n_feed_periods
@@ -272,6 +250,28 @@ def calculate_reseeding(self):
             self.p_foo_dryh_reseeding_rlf[:,:,next_period]  += foo_change * (1-proportion) * (1-propn_grn) * propn_high        # add the remainder to the next period (wrapped if past the 10th period)
             self.p_foo_dryl_reseeding_rlf[:,:,period]       += foo_change *    proportion  * (1-propn_grn) * propn_low         # add the amount of high quality dry for the first period
             self.p_foo_dryl_reseeding_rlf[:,:,next_period]  += foo_change * (1-proportion) * (1-propn_grn) * propn_low         # add the remainder to the next period (wrapped if past the 10th period)
+
+    ##reset all initial values to 0              ^ required even if deleted in the other functions
+    self.p_foo_grn_reseeding_rlf[...]  = 0          # array has been initialised, reset all values to 0
+    self.p_foo_dryh_reseeding_rlf[...] = 0
+    self.p_foo_dryl_reseeding_rlf[...] = 0
+    self.p_phase_area_rf[...]      = 0
+
+    ## map the germination phases to the rotation phases
+    phase_germ_df      = pd.merge(phases_rotn_df,self.i_phase_germ_df,
+                                   how     = 'left',
+                                   left_on = [*range(phase_len)],
+                                   right_on= [*range(phase_len)],
+                                   sort    = False)
+    phase_germ_df = phase_germ_df.set_index([*range(phase_len)])                                     # ^not sure the reason for the set_index may not be necessary
+    rp                  = phase_germ_df['germ_scalar'].to_numpy().reshape(-1,1)                      # extract the germ_scalar from the dataframe and transpose (reshape to a column vector)
+    lmu                 = self.i_lmu['germ_scalar'].to_numpy()  \
+                         * sen.sam_germ_l  # lmu germination scalar x SA on lmu scalar
+    germination         = self.i_germination_std        \
+                         * np.multiply(rp,lmu)          \
+                         * sen.sam_germ                             # create an array rot phase x lmu
+    germination[np.isnan(germination)]  = 0.0
+    self.p_germination_rlf[:,:,0]           = germination                                                                       # set germination in first period to germination
 
     # retain the (labour) period during which this pasture is reseeded. For machinery expenditure
     period_dates    = per.p_dates_df()['date']

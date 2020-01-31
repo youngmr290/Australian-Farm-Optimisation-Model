@@ -10,7 +10,7 @@ module: exriment module - this is the module that runs everything and controls k
 import pandas as pd
 from pyomo.environ import *
 
-
+import RotationPhases as rps #this won't be here when sa is hooked up properly
 import Sensitivity as sen 
 import CoreModel as core
 import CropPyomo as crppy
@@ -39,21 +39,21 @@ import RotationPyomo as rotpy
 
 con_error=[]
 ##create loop for exp
-for i in (range(1)): #maybe this should be looping through an exp sheet in excel
+for i in rps.lo_bound.keys():#(range(1)): #maybe this should be looping through an exp sheet in excel
     print('Starting exp loop')
     #define any SA - this module will have to import sensitivity module then other module will import sensitivity therefore sensitivity shouldn't inport pre calc modules
-    # crp.lo_bound[i]=0.1 #('A', 'C', 'N', 'OF', 'm')
+    rps.lo_bound[i]=0.1 #('A', 'C', 'N', 'OF', 'm')
     
 
     #call core model function, must call them in the correct order (core must be last)
     rotpy.rotationpyomo()
     crppy.croppyomo_local()
     core.coremodel_all()
-    # if core.coremodel_test_var[-1]==1:
-    #     con_error.append(i)
+    if core.coremodel_test_var[-1]==1:
+        con_error.append(i)
+    print(core.coremodel_test_var[-1])
     
-    
-    # # crp.lo_bound[i]=0
+    rps.lo_bound[i]=0
     
     
     
