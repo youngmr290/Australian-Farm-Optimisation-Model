@@ -324,7 +324,7 @@ def calculate_germ_and_reseed(self):
 # @jit("float64[:,:](float64[:,:],float64[:,:])",nopython=True, nogil=True)
 # @jit(nopython=True, nogil=True)
 # @jit()
-def calc_foo_profile(self, germination, consumption, sam_pgr):
+def calc_foo_profile(self, germination, sam_pgr):
     '''
     Calculate the FOO level at the start of each feed period from the germination, consumption & sam on PGR provided
 
@@ -339,10 +339,7 @@ def calc_foo_profile(self, germination, consumption, sam_pgr):
     An array[lmu, feed_period]: foo at the start of the period.
     '''
     ## reshape the inputs passed and set some initial variables that are required
-    consumption = np.asarray(consumption)                       # check that consumption is an array. To allow a scalar to be based as the value for consumption
     array_shape     = germination.shape
-    if consumption.shape != array_shape:
-        consumption = np.full(array_shape,consumption) # create an array based on shape of germination and fill with the value from consumption
     foo_start       = np.zeros(array_shape, dtype=np.float64)
     foo_end         = np.zeros(array_shape, dtype=np.float64)
     ## loop through the feed periods and calculate the foo at the start of each period
@@ -356,8 +353,8 @@ def calc_foo_profile(self, germination, consumption, sam_pgr):
             idx             = np.searchsorted(self.c_fxg_foo_lfo[l,f,:],foo_start[l,f], side='left')   # find where foo_starts fits into the input data
             pgr_daily[l]    = sam_pgr[l,f] * (  self.c_fxg_a_lfo[l,f,idx]
                                               + self.c_fxg_b_lfo[l,f,idx] * foo_start[l,f])
-        senescence          = (foo_start[:,f] + pgr_daily * length_f[f]/2 - consumption[:,f]/2) * self.grn_senesce_f[f]
-        foo_end[:,f]        = (foo_start[:,f] + pgr_daily * length_f[f] - senescence - consumption[:,f]) \
+        senescence          = (foo_start[:,f] + pgr_daily * length_f[f]/2) * self.grn_senesce_f[f]
+        foo_end[:,f]        = (foo_start[:,f] + pgr_daily * length_f[f] - senescence) \
                              *(1-self.i_grn_senesce_eos_f[f])
     return foo_start
 
