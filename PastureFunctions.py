@@ -326,12 +326,11 @@ def calculate_germ_and_reseed(self):
 # @jit()
 def calc_foo_profile(self, germination, sam_pgr):
     '''
-    Calculate the FOO level at the start of each feed period from the germination, consumption & sam on PGR provided
+    Calculate the FOO level at the start of each feed period from the germination & sam on PGR provided
 
     Parameters
     ----------
     germination - An array[lmu, feed_period]                    : kg of green feed germinating in the period.
-    consumption - An array or broadcastable to [lmu,feed_period]: kg of green feed consumed in the period.
     sam_pgr     - An array[lmu, feed_period]                    : SA multiplier for pgr.
 
     Returns
