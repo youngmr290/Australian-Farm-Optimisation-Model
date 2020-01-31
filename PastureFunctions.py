@@ -28,7 +28,7 @@ This is the version that uses an extra axis on the array rather than a class.
 import functions from other modules
 '''
 # import datetime as dt
-import timeit
+# import timeit
 import pandas as pd
 import numpy as np
 
@@ -88,8 +88,8 @@ def init_and_read_excel(self, filename, landuse):
     global i_fxg_pgr_lfo
     global c_fxg_a_lfo
     global c_fxg_b_lfo
-    global #c_fxg_ai_lfo
-    global #c_fxg_bi_lfo
+    # global c_fxg_ai_lfo
+    # global c_fxg_bi_lfo
     global i_grn_trampling_f
     global i_dry_trampling_f
     global p_germination_rlf
@@ -141,14 +141,14 @@ def init_and_read_excel(self, filename, landuse):
     exceldata = fun.xl_all_named_ranges(filename, landuse)           # read all range names from the Excel file from the specified sheet
     ## map the Excel data into the python variables
     # included :bool                             = exceldata['SA.Past_inc']  # this pasture is included
-    i_germination_std: float                   = exceldata['GermStd']      # standard germination level for the standard soil type in a continuous pasture rotation
-    i_ri_foo: int                              = exceldata['RIFOO']        # to reduce foo to allow for differences in measurement methods for FOO. The target is to convert the measurement to the system developing the intake equations
-    # trampling: float                           = exceldata['Trampling']    # removed in lieu of green & dry array by period. the amount of pasture trampled per unit of pasture consumed
-    i_end_of_gs: int                           = exceldata['EndGS']        # the period number when the pasture senesces
-    i_dry_decay: float                         = exceldata['PastDecay']    # decay rate of dry pasture during the dry feed phase (Note: 100% during growing season)
+    i_germination_std                   = exceldata['GermStd']      # standard germination level for the standard soil type in a continuous pasture rotation
+    i_ri_foo                              = exceldata['RIFOO']        # to reduce foo to allow for differences in measurement methods for FOO. The target is to convert the measurement to the system developing the intake equations
+    # trampling                           = exceldata['Trampling']    # removed in lieu of green & dry array by period. the amount of pasture trampled per unit of pasture consumed
+    i_end_of_gs                           = exceldata['EndGS']        # the period number when the pasture senesces
+    i_dry_decay                         = exceldata['PastDecay']    # decay rate of dry pasture during the dry feed phase (Note: 100% during growing season)
     # poc_days_of_grazing: int                   = exceldata['POCDays']      # number of days after the pasture break that (moist) seeding can begin
     i_poc_intake_daily                           = exceldata['POCCons']      # intake per day of pasture on crop paddocks prior to seeding
-    i_legume: float                              = exceldata['Legume']       # proportion of legume in the sward
+    i_legume                              = exceldata['Legume']       # proportion of legume in the sward
     i_grn_propn_reseeding                        = exceldata['FaG_PropnGrn'] # Proportion of the FOO available at the first grazing that is green
     #                                            = exceldata['']
     # i_feed_period['included']               = exceldata['SA.PastGP_inc']# growth of this pasture in this period is included
