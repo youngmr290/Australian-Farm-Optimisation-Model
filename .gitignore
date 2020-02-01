@@ -1,6 +1,7 @@
 __pycache__
 /*.txt
 /*.lp
+<<<<<<< HEAD
 
 # Excel files
 *.xlsx
@@ -15,3 +16,8 @@ __pycache__
 # Spyder project settings
 .spyderproject
 .spyproject
+=======
+/*.xls
+/redundant
+/.spyproject
+>>>>>>> fadd070be2292a6dd62fded752f64925976c69fc
