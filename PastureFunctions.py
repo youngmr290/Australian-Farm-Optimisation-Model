@@ -110,11 +110,12 @@ def init_and_read_excel(filename, landuse):
     global i_base_f
     global i_grn_dmd_declinefoo_f
     global i_grn_dmd_range_f
-    global i_cons_propn_g
+    global i_foo_end_propn_g
     global i_pgr_gi_scalar_fg
     global i_me_eff_gainlose_f
     global i_me_maintenance_fe
-    global grn_senesce_f
+    global grn_senesce_startfoo_f
+    global grn_senesce_pgrcons_f
     global i_grn_dig_lf
 
 
@@ -135,7 +136,7 @@ def init_and_read_excel(filename, landuse):
     p_foo_grn_reseeding_rlf    = np.zeros((n_phases_rotn, n_lmu, n_feed_periods), dtype=np.float64)    # parameters for rotation phase variable: feed lost and gained during destocking and then grazing of resown pasture (kg/ha)
     p_foo_dryh_reseeding_rlf   = np.zeros((n_phases_rotn, n_lmu, n_feed_periods), dtype=np.float64)    # parameters for rotation phase variable: high quality dry feed gained from grazing of resown pasture (kg/ha)
     p_foo_dryl_reseeding_rlf   = np.zeros((n_phases_rotn, n_lmu, n_feed_periods), dtype=np.float64)    # parameters for rotation phase variable: low quality dry feed gained from grazing of resown pasture (kg/ha)
-    
+
     ## read data from excel file into a dictionary
     exceldata = fun.xl_all_named_ranges(filename, landuse)           # read all range names from the Excel file from the specified sheet
     ## map the Excel data into the python variables
@@ -166,15 +167,15 @@ def init_and_read_excel(filename, landuse):
     i_lmu['dmd_dry']                        = exceldata['FaG_digDry']       # Average digestibility of any dry FOO at the first grazing (if there is any)
     # i_lmu['']                               = exceldata['']
     i_lmu_conservation                      = exceldata['ErosionLimit']     # minimum foo prior at end of each period to reduce risk of wind & water erosion
-    
+
     i_reseeding['seed_date']                   = exceldata['Date_Seeding']         # date of seeding this pasture type (will be read in from inputs)
     i_reseeding['destock_date']                = exceldata['Date_Destocking']      # date of seeding this pasture type (will be read in from inputs)
     i_reseeding['ungrazed_at_destocking']      = exceldata['FOOatSeeding']         # kg of FOO that was not grazed prior to seeding occurring (if spring sown)
     i_reseeding['grazing_date']                = exceldata['Date_ResownGrazing']   # date of first grazing of reseeded pasture (will be read in from inputs)
     i_reseeding['grazing_foo']                 = exceldata['FOOatGrazing']         # FOO at time of first grazing
-    
+
     i_phase_germ_df                            = exceldata['GermPhases']       #DataFrame with germ scalar and resown
-    
+
     ## inputs read into numpy arrays
     i_grn_trampling_f.fill                        (exceldata['Trampling'])
     i_dry_trampling_f.fill                        (exceldata['Trampling'])
@@ -183,10 +184,10 @@ def init_and_read_excel(filename, landuse):
     i_base_f                    = np.asfarray(exceldata['BaseLevelInput'])     #Lowest level that pasture can be consumed in each period
     i_grn_dmd_declinefoo_f          = np.asfarray(exceldata['DigDeclineFOO'])  # decline in digestibility of green feed if pasture is not grazed (and foo increases)
     i_grn_dmd_range_f                = np.asfarray(exceldata['DigSpread'])       # range in digestibility within the sward for green feed
-    i_cons_propn_g                 = np.asfarray(exceldata['FOOGrazePropn'])   # numpy array of proportion of available feed consumed for each grazing intensity level.
-    i_pgr_gi_scalar_fg         =1-i_cons_propn_g**2*        \
+    i_foo_end_propn_g                 = np.asfarray(exceldata['FOOGrazePropn'])   # numpy array of proportion of available feed consumed for each grazing intensity level.
+    i_pgr_gi_scalar_fg         =1-i_foo_end_propn_g**2*        \
                                      (1-exceldata['PGRScalarH'].to_numpy()).reshape(-1,1)      # # numpy array of pgr scalar =f(startFOO) for grazing intensity (due to impact of FOO changing during the period)
-    
+
     i_fxg_foo_lfo[:,:,0]                         = exceldata['LowFOO'].to_numpy().T
     i_fxg_foo_lfo[:,:,1]                         = exceldata['MedFOO'].to_numpy().T
     i_me_eff_gainlose_f                            = exceldata['MaintenanceEff[0]'].to_numpy()     # Reduction in efficiency if M/D is above requirement for target LW pattern
@@ -208,18 +209,20 @@ def init_and_read_excel(filename, landuse):
                            /( i_fxg_foo_lfo[:,:,1]
                              -i_fxg_foo_lfo[:,:,0])
     c_fxg_b_lfo[:,:,2] =  0
-    
+
     c_fxg_a_lfo[:,:,0] =  0
     c_fxg_a_lfo[:,:,1] =  i_fxg_pgr_lfo[:,:,0]        \
                              -   c_fxg_b_lfo[:,:,1]        \
                              * i_fxg_foo_lfo[:,:,0]
     c_fxg_a_lfo[:,:,2] =  i_fxg_pgr_lfo[:,:,1] # because slope = 0
-    
-    grn_senesce_f          =1-((1-i_grn_senesce_daily_f) ** length_f) # senescence for the period, different formula than excel
+
+    grn_senesce_startfoo_f          =1-((1-i_grn_senesce_daily_f) ** length_f)          # proportion of start foo that senescences during the period, different formula than excel
+    grn_senesce_pgrcons_f           =1-((1-(1-i_grn_senesce_daily_f) ** (length_f+1))   \
+                                     /        i_grn_senesce_daily_f -1 ) / length_f     # proportion of the total growth & consumptioin that senescences during the period
 
 def calculate_germ_and_reseed():
     ''' Calculate germination and reseeding parameters
-    
+
     germination: create an array called p_germination(r,l) being the parameters to be passed to pyomo.
     reseeding: generates the green & dry FOO that is lost and gained from reseeding pasture. It is stored in a numpy array (phase, lmu, feed period)
     Results are stored in p_...._reseeding
@@ -234,9 +237,12 @@ def calculate_germ_and_reseed():
     global p_germination_rlf
     global i_reseeding
     global p_phase_area_rf
+    global p_foo_grn_reseeding_rlf
+    global p_foo_dryh_reseeding_rlf
+    global p_foo_dryl_reseeding_rlf
 
     def update_reseeding_foo(period, proportion, total, propn_grn=1, dmd_dry=0):
-        ''' Update p_reseeding_grn_foo, p_reseeding_dryh_foo, p_reseeding_dryl_foo with values for destocking & subsequent grazing in the relevant feed periods
+        ''' Update p_foo_grn_reseeding, p_foo_dryh_reseeding, p_foo_dryl__reseeding with values for destocking & subsequent grazing in the relevant feed periods
 
         period & proportion refer to the first period affected by the destocking or subsequent grazing
         total is the foo to be spread between the period and the subsequent period, can be a single value or a list. If list it must be by lmu
@@ -369,8 +375,8 @@ def calc_foo_profile(germination, sam_pgr):
             idx             = np.searchsorted(i_fxg_foo_lfo[l,f,:],foo_start[l,f], side='left')   # find where foo_starts fits into the input data
             pgr_daily[l]    = sam_pgr[l,f] * (  c_fxg_a_lfo[l,f,idx]
                                               + c_fxg_b_lfo[l,f,idx] * foo_start[l,f])
-        senescence          = (foo_start[:,f] + pgr_daily * length_f[f]/2) * grn_senesce_f[f]
-        foo_end[:,f]        = (foo_start[:,f] + pgr_daily * length_f[f] - senescence) \
+        foo_end[:,f]        = (foo_start[:,f]            * (1-grn_senesce_startfoo_f[f])
+                               + pgr_daily * length_f[f] * (1-grn_senesce_pgrcons_f[f])) \
                              *(1-i_grn_senesce_eos_f[f])
     return foo_start
 
@@ -391,16 +397,17 @@ def green_and_dry():
     global p_volume_grnha_lfoge
     global p_senesce2h_grnha_lfog
     global p_senesce2l_grnha_lfog
+    global p_senesce_grnha_lfogd
     global p_dry_mecons_t_fde
     global p_dry_volume_t_fd
     global p_dry_removal_t_fd
     global p_dry_transfer_t_fd
 
     ## initialise numpy arrays used in this method
-    grn_dmd_selectivity_fog                      = np.zeros((n_feed_periods, n_foo_levels, n_grazing_int),dtype=float)
-    ## reset all initial values to 0    ^ probably not necessary now that arrays aren't populated with +=
+    grn_dmd_selectivity_fog = np.zeros((       n_feed_periods, n_foo_levels, n_grazing_int),               dtype=np.float64)
+    senesce_propn_lfogd     = np.zeros((n_lmu, n_feed_periods, n_foo_levels, n_grazing_int, n_dry_groups), dtype=np.float64)  #
 
-
+    ## set sensitivity variables used
     sam_pgr_lf                  = np.asfarray(  sen.sam_pgr
                                               * sen.sam_pgr_l.reshape(-1,1)
                                               * sen.sam_pgr_f.reshape(1,-1))
@@ -410,32 +417,32 @@ def green_and_dry():
     max_foo_lf                      = np.maximum(i_fxg_foo_lfo[:,:,-2], foo_start_ungrazed_lf)                  #maximum of ungrazed foo and foo from the medium foo level
     p_foo_start_grnha_lfo           = i_fxg_foo_lfo                                                      # parameters for the growth/grazing activities: initial FOO
     p_foo_start_grnha_lfo[:,:,-1]   = np.maximum.accumulate(max_foo_lf,axis=1)                                #maximum accumulated along the feed periods axis, i.e. max to date
-
+    p_foo_start_grnha_lfo           = np.maximum(p_foo_start_grnha_lfo
+                                                 ,          i.base_f.reshape(-1,1))         # to ensure that final foo can not be below 0
+    ## calculate green feed parameters
     pgr_grnday_lfo         = np.maximum(0.01, i_fxg_pgr_lfo                  # use maximum to ensure that the pgr is non zero (because foo_days requires dividing by pgr)
                                              *  sam_pgr_lf[...,np.newaxis])
     pgr_grnha_lfog         =       pgr_grnday_lfo[...,np.newaxis]     \
                             *          length_f.reshape(-1,1,1)       \
                             * i_pgr_gi_scalar_fg[:,np.newaxis,:]
-    senesce_grnha_lfog     = (p_foo_start_grnha_lfo[...,np.newaxis]
-                              +       pgr_grnha_lfog / 2)            \
-                            *       grn_senesce_f.reshape(-1,1,1)
-    removal_grnha_lfog     =np.maximum(0,      i_cons_propn_g                     # removal can't be below 0
-                                        *(p_foo_start_grnha_lfo[...,np.newaxis]
-                                          +       pgr_grnha_lfog
-                                          -   senesce_grnha_lfog
-                                          -          i_base_f.reshape(-1,1,1)))
-    senesce_eos_grnha_lfog =  i_grn_senesce_eos_f.reshape(-1,1,1) \
-                            *(p_foo_start_grnha_lfo[...,np.newaxis]
-                              +       pgr_grnha_lfog
-                              -   senesce_grnha_lfog
-                              -   removal_grnha_lfog)
-    p_foo_end_grnha_lfog   =  p_foo_start_grnha_lfo[...,np.newaxis]    \
-                            +         pgr_grnha_lfog    \
-                            -     senesce_grnha_lfog    \
-                            -     removal_grnha_lfog    \
-                            - senesce_eos_grnha_lfog    # parameters for the growth/grazing activities: final FOO
+    foo_ungrazed_grn_ha_lfo = p_foo_start_grnha_lfo         *(1-grn_senesce_startfoo_f.reshape(-1,1))   \
+                             +        pgr_grnha_lfog[...,0] *(1- grn_senesce_pgrcons_f.reshape(-1,1))
+    foo_endprior_grnha_lfog=    foo_ungrazed_grn_ha_lfo[...,np.newaxis] -   \
+                            -  (foo_ungrazed_grn_ha_lfo[...,np.newaxis]
+                                -            i_base_f.reshape(-1,1,1))      \
+                            *       i_foo_end_propn_g
+    p_foo_end_grnha_lfog   =    foo_endprior_grnha_lfog                   \
+                            * (1-i_grn_senesce_eos_f.reshape(-1,1,1))
+    removal_grnha_lfog     =np.maximum(0, p_foo_start_grnha_lfo[...,np.newaxis] *(1-grn_senesce_startfoo_f.reshape(-1,1,1))
+                                         +        pgr_grnha_lfog                *(1- grn_senesce_pgrcons_f.reshape(-1,1,1))
+                                         -  foo_prior_grnha_lfog)          \
+                            / (1-grn_senesce_pgrcons_f.reshape(-1,1,1))
     cons_grnha_t_lfog      =      removal_grnha_lfog   \
                             /(1+i_grn_trampling_f.reshape(-1,1,1))
+    senesce_total_grnha_lfog  = p_foo_start_grnha_lfo[...,np.newaxis]      \
+                               +        pgr_grnha_lfog
+                               -    removal_grnha_lfog
+                               -  p_foo_end_grnha_lfog
     ## to calculate foo_days requires calculating number of days in current period and adding days from the previous period (if required)
     min=-1; max = 0         #Clip between -1 and 0
     if (p_foo_start_grnha_lfo > p_foo_start_grnha_lfo[:,:,1,np.newaxis]):
@@ -504,13 +511,18 @@ def green_and_dry():
     ## Removal of dry feed
     p_dry_removal_t_fd[...]  = 1000 * (1 + i_dry_trampling_f.reshape(-1,1))   # parameters for the dry feed grazing activities: Total DM removal from the tonne consumed (includes trampling)
     ## Senescence from green to dry
-    senesce_total_lfog  = senesce_grnha_lfog + senesce_eos_grnha_lfog
+    senesce_tota_grnhal_lfog  = senesce_grnha_lfog + senesce_eos_grnha_lfog
     grn_dmd_senesce_lfog = dmd_grnha_lfog       \
                           - i_feed_period['grn_dmd_senesce_redn'].to_numpy().reshape(-1,1,1)
-    senesce2h_propn_lfog    = ( grn_dmd_senesce_lfog - dry_dmd_low)       \
-                             /( dry_dmd_high         - dry_dmd_low)
-    p_senesce2h_grnha_lfog = senesce_total_lfog * senesce2h_propn_lfog     # parameters for the growth/grazing activities: quantity of green that senesces to the high pool
-    p_senesce2l_grnha_lfog = senesce_total_lfog * (1-senesce2h_propn_lfog) # parameters for the growth/grazing activities: quantity of green that senesces to the low pool
+    senesce2h_propn_lfog        = ( grn_dmd_senesce_lfog - dry_dmd_low)       \
+                                 /( dry_dmd_high         - dry_dmd_low)
+    senesce_propn_lfogd[...,1] = ( grn_dmd_senesce_lfog - dry_dmd_low)       \
+                                 /( dry_dmd_high         - dry_dmd_low)             # senescence to high pool
+    senesce_propn_lfogd[...,0] = 1- senesce_propn_lfogd[...,1]                      # senescence to low pool
+    p_senesce2h_grnha_lfog = senesce_total_grnha_lfog *    senesce2h_propn_lfog     # parameters for the growth/grazing activities: quantity of green that senesces to the high pool
+    p_senesce2l_grnha_lfog = senesce_total_grnha_lfog * (1-senesce2h_propn_lfog)    # parameters for the growth/grazing activities: quantity of green that senesces to the low pool
+    p_senesce_grnha_lfogd  = senesce_total_grnha_lfog[np.newaxis]
+                            * senesce_propn_lfogd                                   # ^alternative in one array parameters for the growth/grazing activities: quantity of green that senesces to the high pool
 
 
 def poc_con():
