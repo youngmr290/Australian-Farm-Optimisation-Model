@@ -1,6 +1,9 @@
 __pycache__
 /*.txt
 /*.lp
-/*.xls
+/*.xlsx
+/*.xlsm
+/*.xlsb
+/*.doc*
 /redundant
 /.spyproject

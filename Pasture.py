@@ -8,7 +8,7 @@ Version     Date        Person  Change
 
 Known problems:
 Fixed   Date    ID by   Problem
-        
+
 
 @author: John
 """
@@ -24,10 +24,10 @@ pfun.init_and_read_excel('Property.xlsx', 'annual')                         # re
 time_list.append(timer()) ; time_was.append("init & read inputs from Excel")
 
 pfun.calculate_germ_and_reseeding()                          # calculate the germination for each rotation phase
-time_list.append(timer()) ; time_was.append("germination")
+time_list.append(timer()) ; time_was.append("germination & reseeding")
 
 pfun.green_and_dry()                            # calculate the FOO lost when destocked and the FOO gained when grazed after establishment
-time_list.append(timer()) ; time_was.append("green feed")
+time_list.append(timer()) ; time_was.append("green feed & dry feed")
 
 poc_con_dict = pfun.poc_con()                            # calculate the FOO lost when destocked and the FOO gained when grazed after establishment
 time_list.append(timer()) ; time_was.append("poc con")
@@ -55,6 +55,6 @@ print("elapsed total time for pasture module", f"{time_list[-1] - time_list[0]:0
 #    annual.germ_phase_data.columns.values[range(phase_len)] = [*range(phase_len)]
 #def test2():
 #    annual.germ_phase_data.columns.values[0:phase_len] = [*range(phase_len)]
-#    
+#
 #print(timeit.repeat(test1,number=5,repeat=10))
-#print(timeit.repeat(test2,number=5,repeat=10))    
+#print(timeit.repeat(test2,number=5,repeat=10))
