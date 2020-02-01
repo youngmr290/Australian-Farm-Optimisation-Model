@@ -114,7 +114,6 @@ def init_and_read_excel(filename, landuse):
     global i_pgr_gi_scalar_fg
     global i_me_eff_gainlose_f
     global i_me_maintenance_fe
-    global c_fxg_foo_lfo
     global grn_senesce_f
     global i_grn_dig_lf
 
@@ -201,7 +200,6 @@ def init_and_read_excel(filename, landuse):
     ## Some one time data manipulation for the inputs just read
     i_phase_germ_df.index = [*range(len(i_phase_germ_df.index))]              # replace index read from Excel with numbers to match later merging
     i_phase_germ_df.columns.values[range(phase_len)] = [*range(phase_len)]         # replace the landuse columns read from Excel with numbers to match later merging
-    c_fxg_foo_lfo          = i_fxg_foo_lfo                    # numpy array of FOO level       for the FOO/growth/grazing variables. Includes calculations done for maximum PGR.
     i_fxg_foo_lfo[:,:,-1]  = 10000 #large number so that the searchsorted doesn't go above
     c_fxg_b_lfo[:,:,0] =   i_fxg_pgr_lfo[:,:,0]       \
                            /  i_fxg_foo_lfo[:,:,0]
@@ -397,7 +395,6 @@ def green_and_dry():
     global p_dry_volume_t_fd
     global p_dry_removal_t_fd
     global p_dry_transfer_t_fd
-    global c_fxg_foo_lfo
 
     ## initialise numpy arrays used in this method
     grn_dmd_selectivity_fog                      = np.zeros((n_feed_periods, n_foo_levels, n_grazing_int),dtype=float)
