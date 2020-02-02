@@ -130,7 +130,7 @@ def init_and_read_excel(filename, landuses):
     global i_grn_dmd_range_f
     global i_foo_end_propn_g
     global i_pgr_gi_scalar_fg
-    global i_me_eff_gainlose_f
+    global i_me_eff_gainlose_ft
     global i_me_maintenance_eft
     global grn_senesce_startfoo_f
     global grn_senesce_pgrcons_f
@@ -520,7 +520,7 @@ def green_and_dry():
                                   - np.maximum(0
                                                ,(            grn_md_grnha_goflt
                                                  -  i_me_maintenance_eft[:,np.newaxis,np.newaxis,:,np.newaxis,:])
-                                               *(1-i_me_eff_gainlose_ft[]))           # parameters for the growth/grazing activities: Total ME of feed consumed from the hectare
+                                               *(1-i_me_eff_gainlose_ft[:,np.newaxis,:]))           # parameters for the growth/grazing activities: Total ME of feed consumed from the hectare
     foo_ave_grnha_goflt      = (p_foo_start_grnha_oflt[...,np.newaxis]
                                + p_foo_end_grnha_goflt)/2
     grn_ri_availability_goflt= fdb.ri_availability(foo_ave_grnha_goflt,i_ri_foo)
@@ -546,7 +546,11 @@ def green_and_dry():
     dry_foo_dft          = dry_foo_input_dft                         # do sensitivity adjustment for dry_foo_input. Currently not implemented
     ## ME consumed per tonne of dry feed consumed
     dry_md_dft                   = fdb.dmd_to_md(dry_dmd_dft)
-    p_dry_mecons_t_edft  = np.stack([dry_md * 1000] * n_feed_pools, axis = 0)    # parameters for the dry feed grazing activities: Total ME of the tonne consumed  ^ should be scaled by the feed pool m/d and efficiency
+    p_dry_mecons_t_edft  = np.stack([dry_md_dft * 1000] * n_feed_pools, axis = 0)     \
+                          - np.maximum(0
+                                       ,(             dry_md_dft
+                                         -  i_me_maintenance_eft[:,np.newaxis,...])
+                                       *(1-i_me_eff_gainlose_ft))           # parameters for the dry feed grazing activities: Total ME of the tonne consumed
     ## Volume of feed consumed per tonne
     dry_ri_availability     = fdb.ri_availability(dry_foo,i_ri_foo)
     dry_ri_quality          = fdb.ri_quality(dry_dmd, i_legume)
