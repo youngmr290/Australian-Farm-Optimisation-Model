@@ -29,4 +29,5 @@ sam_grn_dmd_declinefoo_f    = np.ones((len(pinp.feed_inputs['feed_periods']) - 1
 sam_grn_dmd_range_f         = np.ones((len(pinp.feed_inputs['feed_periods']) - 1),   dtype=np.float64)  # SA multiplier on range in digestibility of green feed
 sam_grn_dmd_senesce_f       = np.ones((len(pinp.feed_inputs['feed_periods']) - 1),   dtype=np.float64)  # SA multiplier on reduction in digestibility when senescing
 
-# i_feed_period['included']  = True    # growth of this pasture in this period is included
+# sa_feed_period_inc_t      = True    # growth of this pasture in this period is included
+# sa_lmu_inc_t              = True    # this pasture is included on this lmu
