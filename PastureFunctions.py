@@ -527,7 +527,7 @@ def green_and_dry():
                             * senesce_propn_dgoflt                                   # ^alternative in one array parameters for the growth/grazing activities: quantity of green that senesces to the high pool
 
 
-def poc_con():
+def poc_con():             #^ This doesn't look right. I think that some calculations are required to calculate the area of the triangle
     '''
     Returns
     -------
@@ -546,9 +546,8 @@ def poc_md():
         The quality of pasture on crop paddocks each day before seeding
         - this is adjusted for feed period
     '''
-    md=list(map(fdb.dmd_to_md,  i_feed_period['poc_dmd'])) #could use list comp but thought it was a good place to practise map
-    poc_md = dict(enumerate(md))
-    return poc_md
+    p_md=list(map(fdb.dmd_to_md,  i_feed_period['poc_dmd'])) #could use list comp but thought it was a good place to practise map
+    return dict(enumerate(p_md))
 
 def poc_vol():
     '''
@@ -564,26 +563,5 @@ def poc_vol():
     foo_f = i_feed_period['poc_foo'].to_numpy
     ri_qual = fdb.ri_quality(dmd_f, i_legume)       # passing a numpy array
     ri_quan = fdb.ri_availability(foo_f, i_ri_foo)
-    poc_vol = dict(enumerate(1/(ri_qual*ri_quan)))
-    return poc_vol
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    p_poc_vol = 1/(ri_qual*ri_quan)
+    return dict(enumerate(p_poc_vol))  # may need np.ndenumerate() to use with an array
