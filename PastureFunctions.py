@@ -119,7 +119,7 @@ def init_and_read_excel(filename, landuses):
     global i_ri_foo
     global i_end_of_gs
     global i_dry_decay_t
-    global poc_days_of_grazing
+    # global poc_days_of_grazing
     global i_poc_intake_daily
     global i_legume
     global i_grn_propn_reseeding
@@ -176,6 +176,7 @@ def init_and_read_excel(filename, landuses):
     c_pgr_gi_scalar_gft         = np.zeros()   # numpy array of pgr scalar =f(startFOO) for grazing intensity (due to impact of FOO changing during the period)
     i_me_eff_gainlose_ft                            = np.zeros()     # Reduction in efficiency if M/D is above requirement for target LW pattern
     i_me_maintenance_eft                            = np.zeros()  # M/D level for target LW pattern
+
     i_germination_std                  = np.zeros()  # standard germination level for the standard soil type in a continuous pasture rotation
     i_ri_foo                              = np.zeros()  # to reduce foo to allow for differences in measurement methods for FOO. The target is to convert the measurement to the system developing the intake equations
     i_end_of_gs                           = np.zeros()  # the period number when the pasture senesces
@@ -184,6 +185,7 @@ def init_and_read_excel(filename, landuses):
     i_poc_intake_daily                           = np.zeros()  # intake per day of pasture on crop paddocks prior to seeding
     i_legume                              = np.zeros()  # proportion of legume in the sward
     i_grn_propn_reseeding                 = np.zeros()  # Proportion of the FOO available at the first grazing that is green
+    i_lmu_conservation                 = np.zeros()      # minimum foo prior at end of each period to reduce risk of wind & water erosion
 
     ## define the numpy arrays that will be the output from the pre-calcs for pyomo
     p_germination_flrt          = np.zeros((n_phases_rotn, n_lmu, n_feed_periods), dtype=np.float64)    # parameters for rotation phase variable: germination (kg/ha)
@@ -216,7 +218,7 @@ def init_and_read_excel(filename, landuses):
         i_reseeding_fooscalar_lt[t] = exceldata['FaG_LMU']
         i_dry_dmd_reseeding_lt[t]   = exceldata['FaG_digDry']
         # i_lmu['']                               = exceldata['']
-        i_lmu_conservation                      = exceldata['ErosionLimit']     # minimum foo prior at end of each period to reduce risk of wind & water erosion
+        i_lmu_conservation                      = exceldata['ErosionLimit']
 
         i_reseeding_date_seed_t[t]                   = exceldata['Date_Seeding']
         i_reseeding_date_destock_t[t]                = exceldata['Date_Destocking']
