@@ -53,37 +53,25 @@ phases_rotn_df  = pd.Series(uinp.structure['rotations']['rot_phase']).str.split(
 ########################
 #constants required    #
 ########################
-## define some parameters required to size arrays. Will need to be read in prior to defining the Class
-n_pasture_types     = 3             # Annual, Lucerne, Tedera
+## define some parameters required to size arrays.
+n_pasture_types     = pinp.n_pasture_types
+n_feed_pools        = uinp.n_feed_pools
 
 n_foo_levels        = 3             # Low, medium & high FOO level in the growth/grazing activities
 n_grazing_int       = 4             # 0, med & high grazing intensity in the growth/grazing activities
-n_feed_pools        = 4             # number of feed pools (by quality groups)
 n_dry_groups        = 2             # Low & high quality groups for dry feed
 n_phases_rotn       = len(phases_rotn_df.index)
 n_lmu               = len(pinp.general['lmu_area'])
 n_feed_periods      = len(pinp.feed_inputs['feed_periods']) - 1
 length_f  = np.array(pinp.feed_inputs['feed_periods'].loc[:n_feed_periods-1,'length']) # converted to np. to get @jit working
 
-########################
-#Pasture Class         #
-########################
-'''
-Define the pasture class that contains the input data and the precalcs that generate the arrays of output data that will populate pyomo
-Types are set at initialisation to catch input errors at the time rather than wait till it causes an error
-The class expects the following variables to already be defined
-    n_feed_periods: int (number of feed periods)
-    n_phases_rotn: int (number of rotation phases)
-    phases_rotn_df: dataframe of landuse sequences (rotation phase names)
-    n_lmus: int (number of lmus)
-
-'''
 def init_and_read_excel(filename, landuses):
     '''Instantiate variables required and read inputs for the pasture class from an excel file'''
     ## set global on all variables required outside this function
     global index_l
     global index_t
     global index_f
+    global index_t
     global i_reseeding_date_seed_t
     global i_reseeding_date_destock_t
     global i_reseeding_ungrazed_destock_t
@@ -106,11 +94,11 @@ def init_and_read_excel(filename, landuses):
     global i_grn_trampling_ft
     global i_dry_trampling_ft
     global i_grn_senesce_eos_ft
-    global i_base_f
-    global i_grn_dmd_declinefoo_f
-    global i_grn_dmd_range_f
-    global grn_senesce_startfoo_f
-    global grn_senesce_pgrcons_f
+    global i_base_ft
+    global i_grn_dmd_declinefoo_ft
+    global i_grn_dmd_range_ft
+    global grn_senesce_startfoo_ft
+    global grn_senesce_pgrcons_ft
     global i_me_eff_gainlose_ft
 
     global i_me_maintenance_eft
@@ -130,7 +118,7 @@ def init_and_read_excel(filename, landuses):
     global i_germination_std
     global i_ri_foo
     global i_end_of_gs
-    global i_dry_decay
+    global i_dry_decay_t
     global poc_days_of_grazing
     global i_poc_intake_daily
     global i_legume
@@ -147,7 +135,7 @@ def init_and_read_excel(filename, landuses):
     ## define the vessels that will store the input data that require pre-defining
     index_t                         = np.asarray(landuses)                              # pasture type index description
     i_reseeding_date_seed_t         = np.zeros((n_pasture_types), dtype = np.float64)   # date of seeding this pasture type (will be read in from inputs)
-    i_reseeding_date_destock_t      = np.zeros((n_pasture_types), dtype = np.float64)   # date of seeding this pasture type (will be read in from inputs)
+    i_reseeding_date_destock_t      = np.zeros((n_pasture_types), dtype = np.float64)   # date of destocking this pasture type prior to reseeding (will be read in from inputs)
     i_reseeding_ungrazed_destock_t  = np.zeros((n_pasture_types), dtype = np.float64)   # kg of FOO that was not grazed prior to seeding occurring (if spring sown)
     i_reseeding_date_grazing_t      = np.zeros((n_pasture_types), dtype = np.float64)   # date of first grazing of reseeded pasture (will be read in from inputs)
     i_reseeding_foo_grazing_t       = np.zeros((n_pasture_types), dtype = np.float64)   # FOO at time of first grazing
@@ -167,6 +155,8 @@ def init_and_read_excel(filename, landuses):
     i_poc_dmd_ft                = np.zeros((n_feed_periods, n_pasture_types), dtype = np.float64)      # digestibility of pasture consumed on crop paddocks
     i_poc_foo_ft                = np.zeros((n_feed_periods, n_pasture_types), dtype = np.float64)       # foo of pasture consumed on crop paddocks
 
+    i_grn_dig_flt               =np.zeros()  # numpy array of inputs for green pasture digestibility on each LMU.
+
     i_feed_period       = pd.DataFrame(index = range(n_feed_periods))                   # a dataframe to store data relevant to feed periods
     i_fxg_foo_oflt            = np.zeros((                   n_lmu, n_feed_periods, n_foo_levels), dtype=np.float64)  # numpy array of FOO level       for the FOO/growth/grazing variables.
     i_fxg_pgr_oflt            = np.zeros((                   n_lmu, n_feed_periods, n_foo_levels), dtype=np.float64)  # numpy array of PGR level       for the FOO/growth/grazing variables.
@@ -174,8 +164,27 @@ def init_and_read_excel(filename, landuses):
     c_fxg_b_oflt              = np.zeros((                   n_lmu, n_feed_periods, n_foo_levels), dtype=np.float64)  # numpy array of coefficient b   for the FOO/growth/grazing variables. PGR = a + b FOO
     # c_fxg_ai_oflt             = np.zeros((                   n_lmu, n_feed_periods, n_foo_levels), dtype=np.float64)  # numpy array of coefficient a for the FOO/growth/grazing variables. PGR = a + b FOO
     # c_fxg_bi_oflt             = np.zeros((                   n_lmu, n_feed_periods, n_foo_levels), dtype=np.float64)  # numpy array of coefficient b for the FOO/growth/grazing variables. PGR = a + b FOO
-    i_grn_trampling_ft        = np.zeros((                          n_feed_periods, n_pasture_types              ), dtype=np.float64)  # ^ should this include the ,1 or just do newaxis when it is used numpy array of inputs for green pasture trampling in each feed period.
-    i_dry_trampling_ft        = np.zeros((                          n_feed_periods, n_pasture_types              ), dtype=np.float64)  # ^ should this include the ,1 or just do newaxis when it is used numpy array of inputs for dry pasture trampling   in each feed period.
+    i_grn_trampling_ft        = np.zeros((                          n_feed_periods, n_pasture_types              ), dtype=np.float64)  # numpy array of inputs for green pasture trampling in each feed period.
+    i_dry_trampling_ft        = np.zeros((                          n_feed_periods, n_pasture_types              ), dtype=np.float64)  # numpy array of inputs for dry pasture trampling   in each feed period.
+
+    i_grn_senesce_daily_ft                 = np.zeros()    # proportion of green feed that senesces each period (due to leaf drop)
+    i_grn_senesce_eos_ft              = np.zeros()      # proportion of green feed that senesces in period (due to completing life cycle)
+    i_base_ft                    = np.zeros()     #Lowest level that pasture can be consumed in each period
+    i_grn_dmd_declinefoo_ft          = np.zeros()  # decline in digestibility of green feed if pasture is not grazed (and foo increases)
+    i_grn_dmd_range_ft                = np.zeros()  # range in digestibility within the sward for green feed
+    i_foo_end_propn_gt                 = np.zeros()   # numpy array of proportion of available feed consumed for each grazing intensity level.
+    c_pgr_gi_scalar_gft         = np.zeros()   # numpy array of pgr scalar =f(startFOO) for grazing intensity (due to impact of FOO changing during the period)
+    i_me_eff_gainlose_ft                            = np.zeros()     # Reduction in efficiency if M/D is above requirement for target LW pattern
+    i_me_maintenance_eft                            = np.zeros()  # M/D level for target LW pattern
+    i_germination_std                  = np.zeros()  # standard germination level for the standard soil type in a continuous pasture rotation
+    i_ri_foo                              = np.zeros()  # to reduce foo to allow for differences in measurement methods for FOO. The target is to convert the measurement to the system developing the intake equations
+    i_end_of_gs                           = np.zeros()  # the period number when the pasture senesces
+    i_dry_decay_t                         = np.zeros()  # decay rate of dry pasture during the dry feed phase (Note: 100% during growing season)
+    # poc_days_of_grazing: int                   = np.zeros()  # number of days after the pasture break that (moist) seeding can begin
+    i_poc_intake_daily                           = np.zeros()  # intake per day of pasture on crop paddocks prior to seeding
+    i_legume                              = np.zeros()  # proportion of legume in the sward
+    i_grn_propn_reseeding                 = np.zeros()  # Proportion of the FOO available at the first grazing that is green
+
     ## define the numpy arrays that will be the output from the pre-calcs for pyomo
     p_germination_flrt          = np.zeros((n_phases_rotn, n_lmu, n_feed_periods), dtype=np.float64)    # parameters for rotation phase variable: germination (kg/ha)
     p_foo_grn_reseeding_flrt    = np.zeros((n_phases_rotn, n_lmu, n_feed_periods), dtype=np.float64)    # parameters for rotation phase variable: feed lost and gained during destocking and then grazing of resown pasture (kg/ha)
@@ -186,16 +195,14 @@ def init_and_read_excel(filename, landuses):
     for landuse in landuses:
         exceldata = fun.xl_all_named_ranges(filename, landuse)           # read all range names from the Excel file from the specified sheet
         ## map the Excel data into the python variables
-        # included :bool                             = exceldata['SA.Past_inc']  # this pasture is included
-        i_germination_std                   = exceldata['GermStd']      # standard germination level for the standard soil type in a continuous pasture rotation
-        i_ri_foo                              = exceldata['RIFOO']        # to reduce foo to allow for differences in measurement methods for FOO. The target is to convert the measurement to the system developing the intake equations
-        # trampling                           = exceldata['Trampling']    # removed in lieu of green & dry array by period. the amount of pasture trampled per unit of pasture consumed
-        i_end_of_gs                           = exceldata['EndGS']        # the period number when the pasture senesces
-        i_dry_decay                         = exceldata['PastDecay']    # decay rate of dry pasture during the dry feed phase (Note: 100% during growing season)
-        # poc_days_of_grazing: int                   = exceldata['POCDays']      # number of days after the pasture break that (moist) seeding can begin
-        i_poc_intake_daily                           = exceldata['POCCons']      # intake per day of pasture on crop paddocks prior to seeding
-        i_legume                              = exceldata['Legume']       # proportion of legume in the sward
-        i_grn_propn_reseeding                        = exceldata['FaG_PropnGrn'] # Proportion of the FOO available at the first grazing that is green
+        i_germination_std                   = exceldata['GermStd']
+        i_ri_foo                              = exceldata['RIFOO']
+        i_end_of_gs                           = exceldata['EndGS']
+        i_dry_decay_t[t]                         = exceldata['PastDecay']
+        # poc_days_of_grazing: int                   = exceldata['POCDays']
+        i_poc_intake_daily                           = exceldata['POCCons']
+        i_legume                              = exceldata['Legume']
+        i_grn_propn_reseeding                        = exceldata['FaG_PropnGrn']
         #                                            = exceldata['']
         i_grn_dmd_senesce_redn_ft[t]   = exceldata['DigRednSenesce']
         i_dry_dmd_ave_ft[t]        = exceldata['DigDryAve']
@@ -211,57 +218,57 @@ def init_and_read_excel(filename, landuses):
         # i_lmu['']                               = exceldata['']
         i_lmu_conservation                      = exceldata['ErosionLimit']     # minimum foo prior at end of each period to reduce risk of wind & water erosion
 
-        i_reseeding_date_seed_t[t]                   = exceldata['Date_Seeding']         # date of seeding this pasture type (will be read in from inputs)
-        i_reseeding_date_destock_t[t]                = exceldata['Date_Destocking']      # date of seeding this pasture type (will be read in from inputs)
-        i_reseeding_ungrazed_destock_t[t]      = exceldata['FOOatSeeding']         # kg of FOO that was not grazed prior to seeding occurring (if spring sown)
-        i_reseeding_date_grazing_t[t]                = exceldata['Date_ResownGrazing']   # date of first grazing of reseeded pasture (will be read in from inputs)
-        i_reseeding_foo_grazing_t[t]                 = exceldata['FOOatGrazing']         # FOO at time of first grazing
+        i_reseeding_date_seed_t[t]                   = exceldata['Date_Seeding']
+        i_reseeding_date_destock_t[t]                = exceldata['Date_Destocking']
+        i_reseeding_ungrazed_destock_t[t]      = exceldata['FOOatSeeding']
+        i_reseeding_date_grazing_t[t]                = exceldata['Date_ResownGrazing']
+        i_reseeding_foo_grazing_t[t]                 = exceldata['FOOatGrazing']
 
         i_phase_germ_df                            = exceldata['GermPhases']       #DataFrame with germ scalar and resown
 
         ## inputs read into numpy arrays
         i_grn_trampling_ft[t].fill                        (exceldata['Trampling'])
         i_dry_trampling_ft[t].fill                        (exceldata['Trampling'])
-        i_grn_senesce_daily_f                 = np.asfarray(exceldata['SenescePropn'])    # proportion of green feed that senesces each period (due to leaf drop)
-        i_grn_senesce_eos_ft[t]              = np.asfarray(exceldata['SenesceEOS'])      # proportion of green feed that senesces in period (due to completing life cycle)
-        i_base_f                    = np.asfarray(exceldata['BaseLevelInput'])     #Lowest level that pasture can be consumed in each period
-        i_grn_dmd_declinefoo_f          = np.asfarray(exceldata['DigDeclineFOO'])  # decline in digestibility of green feed if pasture is not grazed (and foo increases)
-        i_grn_dmd_range_f                = np.asfarray(exceldata['DigSpread'])       # range in digestibility within the sward for green feed
-        i_foo_end_propn_gt[t]                 = np.asfarray(exceldata['FOOGrazePropn'])   # numpy array of proportion of available feed consumed for each grazing intensity level.
+        i_grn_senesce_daily_ft[t]                 = np.asfarray(exceldata['SenescePropn'])
+        i_grn_senesce_eos_ft[t]              = np.asfarray(exceldata['SenesceEOS'])
+        i_base_ft[t]                    = np.asfarray(exceldata['BaseLevelInput'])
+        i_grn_dmd_declinefoo_ft[t]          = np.asfarray(exceldata['DigDeclineFOO'])
+        i_grn_dmd_range_ft[t]                = np.asfarray(exceldata['DigSpread'])
+        i_foo_end_propn_gt[t]                 = np.asfarray(exceldata['FOOGrazePropn'])
         c_pgr_gi_scalar_gft[t]         = 1 - i_foo_end_propn_gt[t].reshape(-1,1)**2        \
-                                        * (1 - exceldata['PGRScalarH'].to_numpy())      # # numpy array of pgr scalar =f(startFOO) for grazing intensity (due to impact of FOO changing during the period)
+                                        * (1 - exceldata['PGRScalarH'].to_numpy())
 
-        i_fxg_foo_oflt[0,...]                       = exceldata['LowFOO'].to_numpy()
-        i_fxg_foo_oflt[1,...]                         = exceldata['MedFOO'].to_numpy()
-        i_me_eff_gainlose_ft[t]                            = exceldata['MaintenanceEff[0]'].to_numpy()     # Reduction in efficiency if M/D is above requirement for target LW pattern
-        i_me_maintenance_eft[t]                            = exceldata['MaintenanceEff[1:]'].to_numpy().T  # M/D level for target LW pattern
-        ## # i_fxg_foo_oflt[:,:,-1] is calculated later and is the maximum foo that can be achieved (on that lmu in that period)
+        i_fxg_foo_oflt[0,:,:,t]                       = exceldata['LowFOO'].to_numpy()
+        i_fxg_foo_oflt[1,:,:,t]                         = exceldata['MedFOO'].to_numpy()
+        i_me_eff_gainlose_ft[t]                            = exceldata['MaintenanceEff[0]'].to_numpy()
+        i_me_maintenance_eft[t]                            = exceldata['MaintenanceEff[1:]'].to_numpy().T
+        ## # i_fxg_foo_oflt[-1,...] is calculated later and is the maximum foo that can be achieved (on that lmu in that period)
         ## # it is affected by sa on pgr so it must be calculated during the experiment where sam might be altered.
-        i_fxg_pgr_oflt[0,...]                         = exceldata['LowPGR'].to_numpy()
-        i_fxg_pgr_oflt[1,...]                         = exceldata['MedPGR'].to_numpy()
-        i_fxg_pgr_oflt[-1,...]                        = exceldata['MedPGR'].to_numpy()  #PGR for high (last entry) is the same as PGR for medium
-        i_grn_dig_flt                                 = exceldata['DigGrn'].to_numpy()  # numpy array of inputs for green pasture digestibility on each LMU.
+        i_fxg_pgr_oflt[0,:,:,t]                         = exceldata['LowPGR'].to_numpy()
+        i_fxg_pgr_oflt[1,:,:,t]                         = exceldata['MedPGR'].to_numpy()
+        i_fxg_pgr_oflt[2,:,:,t]                        = exceldata['MedPGR'].to_numpy()  #PGR for high (last entry) is the same as PGR for medium
+        i_grn_dig_flt[t]                                 = exceldata['DigGrn'].to_numpy()  # numpy array of inputs for green pasture digestibility on each LMU.
         ## Some one time data manipulation for the inputs just read
         i_phase_germ_df.index = [*range(len(i_phase_germ_df.index))]              # replace index read from Excel with numbers to match later merging
         i_phase_germ_df.columns.values[range(phase_len)] = [*range(phase_len)]         # replace the landuse columns read from Excel with numbers to match later merging
-        i_fxg_foo_oflt[-1,...]  = 10000 #large number so that the searchsorted doesn't go above
-        c_fxg_b_oflt[0,...] =   i_fxg_pgr_oflt[0,...]       \
-                               /  i_fxg_foo_oflt[0,...]
-        c_fxg_b_oflt[1,...] = ( i_fxg_pgr_oflt[1,...]
-                                 -i_fxg_pgr_oflt[0,...])        \
-                               /( i_fxg_foo_oflt[1,...]
-                                 -i_fxg_foo_oflt[0,...])
-        c_fxg_b_oflt[2,...] =  0
 
-        c_fxg_a_oflt[0,...] =  0
-        c_fxg_a_oflt[1,...] =  i_fxg_pgr_oflt[0,...]        \
-                                 -   c_fxg_b_oflt[1,...]        \
-                                 * i_fxg_foo_oflt[0,...]
-        c_fxg_a_oflt[2,...] =  i_fxg_pgr_oflt[1,...] # because slope = 0
+    i_fxg_foo_oflt[2,...]  = 10000 #large number so that the np.searchsorted doesn't go above
+    c_fxg_b_oflt[0,...] =  i_fxg_pgr_oflt[0,...]       \
+                         / i_fxg_foo_oflt[0,...]
+    c_fxg_b_oflt[1,...] = (   i_fxg_pgr_oflt[1,...]
+                           -  i_fxg_pgr_oflt[0,...])        \
+                           /( i_fxg_foo_oflt[1,...]
+                             -i_fxg_foo_oflt[0,...])
+    c_fxg_b_oflt[2,...] =  0
+    c_fxg_a_oflt[0,...] =  0
+    c_fxg_a_oflt[1,...] =  i_fxg_pgr_oflt[0,...]        \
+                         -   c_fxg_b_oflt[1,...]        \
+                         * i_fxg_foo_oflt[0,...]
+    c_fxg_a_oflt[2,...] =  i_fxg_pgr_oflt[1,...] # because slope = 0
 
-        grn_senesce_startfoo_f          =1-((1-i_grn_senesce_daily_f) ** length_f)          # proportion of start foo that senescences during the period, different formula than excel
-        grn_senesce_pgrcons_f           =1-((1-(1-i_grn_senesce_daily_f) ** (length_f+1))   \
-                                         /        i_grn_senesce_daily_f -1 ) / length_f     # proportion of the total growth & consumptioin that senescences during the period
+    grn_senesce_startfoo_ft =1 -((1 -     i_grn_senesce_daily_ft) ** length_f)          # proportion of start foo that senescences during the period, different formula than excel
+    grn_senesce_pgrcons_ft  =1 -((1 -(1 - i_grn_senesce_daily_ft) ** (length_f+1))   \
+                                 /        i_grn_senesce_daily_ft - 1) / length_f     # proportion of the total growth & consumptioin that senescences during the period
 
 def calculate_germ_and_reseed():
     ''' Calculate germination and reseeding parameters
@@ -285,12 +292,12 @@ def calculate_germ_and_reseed():
     global p_foo_dryl_reseeding_flrt
 
     def update_reseeding_foo(period_t, proportion_t, total, propn_grn_t=1, dmd_dry_lt=0):
-        ''' Update p_foo_grn_reseeding, p_foo_dryh_reseeding, p_foo_dryl__reseeding with values for destocking & subsequent grazing in the relevant feed periods
+        ''' Update p_foo parameters with values for destocking & subsequent grazing (reseeding)
 
-        period_t & proportion_t refer to the first period affected by the destocking or subsequent grazing, both arrays by type
-        total_t is the foo to be spread between the period and the subsequent period, can be an array by type or lmu,type
-        propn_grn_t is an array by type
-        dmd_dry_lt is a list of values by lmu,type
+        period_t & proportion_t - an array [type] : the first period affected by the destocking or subsequent grazing.
+        total_t                 - an array either [lmu] or [lmu,type] : foo to be spread between the period and the subsequent period.
+        propn_grn_t             - an array [type] : proportion of the total feed available for grazing that is green.
+        dmd_dry_lt              - an array [lmu,type] : dmd of dry feed (if any).
 
         the adjustments are spread between periods to allow for the pasture growth that can occur from the green feed
         and the amount of grazing available if the feed is dry
@@ -403,8 +410,8 @@ def calc_foo_profile(germination_flt, sam_pgr):
 
     Parameters
     ----------
-    germination_flt - An array[feed_period,lmu,type]                    : kg of green feed germinating in the period.
-    sam_pgr         - An array[feed_period,lmu,type]                    : SA multiplier for pgr.
+    germination_flt - An array[feed_period,lmu,type] : kg of green feed germinating in the period.
+    sam_pgr         - An array[feed_period,lmu,type] : SA multiplier for pgr.
 
     Returns
     -------
@@ -437,7 +444,11 @@ def calc_foo_profile(germination_flt, sam_pgr):
 ## def green_consumption:
 
 def green_and_dry():
-    ''' Populates the parameter arrays for the pasture growth, consumption and senescence of green feed
+    ''' Populates the parameter arrays for green and dry feed.
+
+    Pasture growth, consumption and senescence of green feed.
+    Consumption & deferment of dry feed.
+
 
     Returns:
     -------
@@ -457,13 +468,14 @@ def green_and_dry():
     global p_dry_transfer_t_dft
 
     ## initialise numpy arrays used in this method
-    grn_dmd_selectivity_fog = np.zeros((       n_feed_periods, n_foo_levels, n_grazing_int),               dtype=np.float64)
+    grn_dmd_selectivity_goft = np.zeros((       n_feed_periods, n_foo_levels, n_grazing_int),               dtype=np.float64)
     senesce_propn_dgoflt     = np.zeros((n_lmu, n_feed_periods, n_foo_levels, n_grazing_int, n_dry_groups), dtype=np.float64)  #
 
     ## set sensitivity variables used
     sam_pgr_flt                  = np.asfarray(  sen.sam_pgr
-                                              * sen.sam_pgr_l.reshape(-1,1)
-                                              * sen.sam_pgr_f.reshape(1,-1))
+                                               * sen.sam_pgr_f.reshape(-1, 1, 1)
+                                               * sen.sam_pgr_l.reshape( 1,-1, 1)
+                                               * sen.sam_pgr_t.reshape( 1, 1,-1))
     ## calculate the maximum foo achievable for each lmu & feed period (ungrazed pasture that germinates at the maximum level on that lmu)
     germination_pass_flt             = np.max(p_germination_flrt, axis=2)                                    #use p_germination because it includes any sensitivity that is carried out
     foo_start_ungrazed_flt           = calc_foo_profile(germination_pass_flt, sam_pgr_flt)# ^ passing the consumption value in a numpy array in an attempt to get the function @jit compatible
@@ -471,28 +483,28 @@ def green_and_dry():
     p_foo_start_grnha_oflt           = i_fxg_foo_oflt                                                      # parameters for the growth/grazing activities: initial FOO
     p_foo_start_grnha_oflt[-1,...]   = np.maximum.accumulate(max_foo_flt,axis=1)                                #maximum accumulated along the feed periods axis, i.e. max to date
     p_foo_start_grnha_oflt           = np.maximum(p_foo_start_grnha_oflt
-                                                 ,          i.base_f.reshape(-1,1))         # to ensure that final foo can not be below 0
+                                                  ,          i.base_ft[:,np.newaxis,:])         # to ensure that final foo can not be below 0
     ## calculate green feed parameters
     pgr_grnday_oflt         = np.maximum(0.01, i_fxg_pgr_oflt                  # use maximum to ensure that the pgr is non zero (because foo_days requires dividing by pgr)
-                                             *  sam_pgr_flt[...,np.newaxis])
+                                              *  sam_pgr_flt)
     pgr_grnha_goflt         =       pgr_grnday_oflt     \
-                            *          length_f.reshape(-1,1,1)       \
-                            * c_pgr_gi_scalar_gft[:,np.newaxis,:,np.newaxis,:]
-    foo_ungrazed_grn_ha_oflt = p_foo_start_grnha_oflt         *(1-grn_senesce_startfoo_f.reshape(-1,1))   \
-                             +        pgr_grnha_goflt[...,0] *(1- grn_senesce_pgrcons_f.reshape(-1,1))
-    foo_endprior_grnha_goflt=    foo_ungrazed_grn_ha_oflt[...,np.newaxis] -   \
-                            -  (foo_ungrazed_grn_ha_oflt[...,np.newaxis]
-                                -            i_base_f.reshape(-1,1,1))      \
-                            *       i_foo_end_propn_gt
-    p_foo_end_grnha_goflt   =    foo_endprior_grnha_goflt                   \
-                            * (1-i_grn_senesce_eos_f.reshape(-1,1,1))
-    removal_grnha_goflt     =np.maximum(0, p_foo_start_grnha_oflt[...,np.newaxis] *(1-grn_senesce_startfoo_f.reshape(-1,1,1))
-                                         +        pgr_grnha_goflt                *(1- grn_senesce_pgrcons_f.reshape(-1,1,1))
-                                         -  foo_prior_grnha_goflt)          \
-                            / (1-grn_senesce_pgrcons_f.reshape(-1,1,1))
-    cons_grnha_t_goflt      =      removal_grnha_goflt   \
-                            /(1+i_grn_trampling_ft[:,np.newaxis,:])
-    senesce_total_grnha_goflt  = p_foo_start_grnha_oflt[...,np.newaxis]      \
+                             *          length_f.reshape(-1,1,1)       \
+                             * c_pgr_gi_scalar_gft[:,np.newaxis,:,np.newaxis,:]
+    foo_ungrazed_grn_ha_oflt = p_foo_start_grnha_oflt         *(1-grn_senesce_startfoo_ft[:,np.newaxis,:])   \
+                              +        pgr_grnha_goflt[0,...] *(1- grn_senesce_pgrcons_ft[:,np.newaxis,:])
+    foo_endprior_grnha_goflt =  foo_ungrazed_grn_ha_oflt   \
+                              -(foo_ungrazed_grn_ha_oflt
+                                -            i_base_ft[:,np.newaxis,:])      \
+                              *     i_foo_end_propn_gt
+    p_foo_end_grnha_goflt   =     foo_endprior_grnha_goflt                   \
+                            * (1 - i_grn_senesce_eos_ft[:,np.newaxis,:])
+    removal_grnha_goflt     =np.maximum(0, p_foo_start_grnha_oflt * (1 - grn_senesce_startfoo_ft[:,np.newaxis,:])
+                                        +          pgr_grnha_goflt *(1 -  grn_senesce_pgrcons_ft[:,np.newaxis,:])
+                                        -    foo_prior_grnha_goflt)          \
+                             /      (1 - grn_senesce_pgrcons_ft[:,np.newaxis,:])
+    cons_grnha_t_goflt =      removal_grnha_goflt   \
+                        /(1+i_grn_trampling_ft[:,np.newaxis,:])
+    senesce_total_grnha_goflt = p_foo_start_grnha_oflt[...,np.newaxis]      \
                                +        pgr_grnha_goflt
                                -    removal_grnha_goflt
                                -  p_foo_end_grnha_goflt
@@ -500,35 +512,38 @@ def green_and_dry():
     min=-1; max = 0         #Clip between -1 and 0
     if (p_foo_start_grnha_oflt > p_foo_start_grnha_oflt[1:2,...]):       # 1:2 to retain the axis, but it only points to index level 1.
         min += 1; max +=1   #Clip between 0 and 1
-    propn_period_oflt          = (  p_foo_start_grnha_oflt
-                                  - p_foo_start_grnha_oflt[1:2,...])    \
-                                /           pgr_grnha_goflt[0,...]
+    propn_period_oflt = (  p_foo_start_grnha_oflt
+                         - p_foo_start_grnha_oflt[1:2,...])    \
+                       /           pgr_grnha_goflt[0,...]
     propn_periodprev_oflt      = (  p_foo_start_grnha_oflt [   : ,1:  ,:,:]
                                   - p_foo_start_grnha_oflt [  1:2,1:  ,:,:]
                                   -         pgr_grnha_goflt[0, : ,1:  ,:,:])    \
                                 /           pgr_grnha_goflt[0, : , :-1,:,:]     # pgr from the previous period
-    foo_days_grnha_oflt         = np.clip(    propn_period_oflt,min,max)             \
-                                *                  length_f.reshape(-1,1)
+    foo_days_grnha_oflt         = np.clip(propn_period_oflt,min,max)             \
+                                 *              length_f.reshape(-1,1,1)
     foo_days_grnha_oflt[:,1:,:,:]+= np.clip(propn_periodprev_oflt,min,max) \
-                                *                  length_f[:-1].reshape(-1,1)      # length from previous period
-    grn_dmd_swardscalar_oflt              = (1-i_grn_dmd_declinefoo_f.reshape(-1,1))**foo_days_grnha_oflt    # multiplier on digestibility of the sward due to level of FOO (associated with destocking)
-    grn_dmd_range = (  i_grn_dmd_range_f
-                 *sen.sam_grn_dmd_range_f).reshape(-1,1)
-    grn_dmd_selectivity_fog[:,:,1]        = -0.5 * grn_dmd_range                            # addition to digestibility associated with diet selection (level of grazing)
-    grn_dmd_selectivity_fog[:,:,2]        = 0
-    grn_dmd_selectivity_fog[:,:,3]        = +0.5 * grn_dmd_range
-    dmd_grnha_goflt          =    i_grn_dig_flt[...,np.newaxis,np.newaxis]    \
-                              *      grn_dmd_swardscalar_oflt[...,np.newaxis]              \
-                              +  grn_dmd_selectivity_fog
+                                   *                  length_f[:-1].reshape(-1,1,1)      # length from previous period
+    grn_dmd_swardscalar_oflt = (1 - i_grn_dmd_declinefoo_ft[:,np.newaxis,:])    \
+                              **          foo_days_grnha_oflt    # multiplier on digestibility of the sward due to level of FOO (associated with destocking)
+    grn_dmd_range_ft = (       i_grn_dmd_range_ft
+                        *sen.sam_grn_dmd_range_f).reshape(-1,1)
+    grn_dmd_selectivity_goft[1,...] = -0.5 * grn_dmd_range_ft                            # addition to digestibility associated with diet selection (level of grazing)
+    grn_dmd_selectivity_goft[2:...] = 0
+    grn_dmd_selectivity_goft[3,...] = +0.5 * grn_dmd_range_ft
+    dmd_grnha_goflt          =            i_grn_dig_flt    \
+                              * grn_dmd_swardscalar_oflt   \
+                              + grn_dmd_selectivity_goft[:,:,:,np.newaxis,:]
     grn_md_grnha_goflt       = fdb.dmd_to_md(dmd_grnha_goflt)
     p_me_cons_grnha_egoflt   =  cons_grnha_t_goflt               \
-                                  * grn_md_grnha_goflt               \
-                                  - np.maximum(0
+                              * grn_md_grnha_goflt               \
+                              * (1 -  i_me_maintenance_eft[:,np.newaxis,np.newaxis,:,np.newaxis,:]
+                                 *(1-i_me_eff_gainlose_ft[:,np.newaxis,:]))           # parameters for the growth/grazing activities: Total ME of feed consumed from the hectare
+                              - np.maximum(0
                                                ,(            grn_md_grnha_goflt
                                                  -  i_me_maintenance_eft[:,np.newaxis,np.newaxis,:,np.newaxis,:])
                                                *(1-i_me_eff_gainlose_ft[:,np.newaxis,:]))           # parameters for the growth/grazing activities: Total ME of feed consumed from the hectare
-    foo_ave_grnha_goflt      = (p_foo_start_grnha_oflt[...,np.newaxis]
-                               + p_foo_end_grnha_goflt)/2
+    foo_ave_grnha_goflt = (p_foo_start_grnha_oflt
+                           + p_foo_end_grnha_goflt)/2
     grn_ri_availability_goflt= fdb.ri_availability(foo_ave_grnha_goflt,i_ri_foo)
     grn_ri_quality_goflt     = fdb.ri_quality(dmd_grnha_goflt, i_legume)
     grn_ri_goflt             = grn_ri_quality_goflt * grn_ri_availability_goflt
@@ -536,20 +551,22 @@ def green_and_dry():
     p_volume_grnha_egoflt   = p_me_cons_grnha_egoflt / grn_ri_goflt[...,np.newaxis]   # parameters for the growth/grazing activities: Total volume of feed consumed from the hectare
 
     ## transfer: decline in DM for dry feed (same for high & low pools)
-    dry_decay_daily_f                         = [i_dry_decay] * n_feed_periods          # create an array like list of list n_feed_periods long on axis 1
-    dry_decay_daily_f[0:i_end_of_gs-1]   = 1
-    dry_decay_period                        = [1 - (1 - decay)**length_f[f] for f,decay in enumerate(dry_decay_daily_f)]
-    p_dry_transfer_t_dft[...]           = 1000 * (1-np.c_[dry_decay_period])  # parameters for the dry feed transfer activities: quantity transferred
+    dry_decay_daily_ft                  = np.stack([i_dry_decay_t] * n_feed_periods, axis = 0)          # create an array like list of list n_feed_periods long on axis 1
+    dry_decay_daily_ft[0:i_end_of_gs-1] = 1
+    dry_decay_period_ft                 = 1 - (1 - dry_decay_daily_ft)             \
+                                          **                length_f.reshape(-1,1)
+    p_dry_transfer_t_dft[...]           = 1000 * (1-dry_decay_period_ft)  # parameters for the dry feed transfer activities: quantity transferred
     ## consumption: quality & FOO of the feed consumed
-    dry_dmd_high_ft     = i_dry_dmd_ave_ft+i_dry_dmd_range_ft/2
-    dry_dmd_low_ft      = i_dry_dmd_ave_ft-i_dry_dmd_range_ft/2
-    dry_dmd_input_dft    = np.stack((dry_dmd_high, dry_dmd_low),axis=0)      # create an array with a new axis 0 by stacking the existing arrays
-    dry_dmd_dft          = np.max(dry_dmd_input,axis=1) - (np.max(dry_dmd_input,axis=1) - dry_dmd_input) * sen.sam_dmd_decline_dry  # do sensitivity adjustment for dry_dmd_input based on increasing the reduction in dmd from the maximum (starting value)
+    dry_dmd_adj_ft  = np.max(i_dry_dmd_ave_ft,axis=0) * (1 -sen.sam_dmd_decline_dry)    \
+                     +      (i_dry_dmd_ave_ft         *     sen.sam_dmd_decline_dry     # do sensitivity adjustment for dry_dmd_input based on increasing/reducing the reduction in dmd from the maximum (starting value)
+    dry_dmd_high_ft = i_dry_dmd_adj_ft + i_dry_dmd_range_ft/2
+    dry_dmd_low_ft  = i_dry_dmd_adj_ft - i_dry_dmd_range_ft/2
+    dry_dmd_dft     = np.stack((dry_dmd_high_ft, dry_dmd_low_ft),axis=0)    # create an array with a new axis 0 by stacking the existing arrays
+    ## # ^ could implement a dry foo sensitivity analysis here
+    dry_foo_high_ft = i_dry_foo_high_ft * 3/4
+    dry_foo_low_ft  = i_dry_foo_high_ft * 1/4                               # assuming half the foo is high quality and the remainder is low quality
+    dry_foo_dft     = np.stack((dry_foo_high_ft, dry_foo_low_ft),axis=0)  # create an array with a new axis 0 by stacking the existing arrays
 
-    dry_foo_high_ft     = i_dry_foo_high_ft
-    dry_foo_low_ft      = i_dry_foo_high_ft / 2                      # assuming half the foo is high quality and the remainder is low quality
-    dry_foo_input_dft    = np.stack((dry_foo_high_ft, dry_foo_low_ft),axis=0)      # create an array with a new axis 0 by stacking the existing arrays
-    dry_foo_dft          = dry_foo_input_dft                         # do sensitivity adjustment for dry_foo_input. Currently not implemented
     ## ME consumed per tonne of dry feed consumed
     dry_md_dft                   = fdb.dmd_to_md(dry_dmd_dft)
     p_dry_mecons_t_edft  = np.stack([dry_md_dft * 1000] * n_feed_pools, axis = 0)     \
@@ -568,16 +585,20 @@ def green_and_dry():
     ## Senescence from green to dry
     senesce_tota_grnhal_goflt  = senesce_grnha_goflt + senesce_eos_grnha_goflt
     grn_dmd_senesce_goflt = dmd_grnha_goflt       \
-                          - i_grn_dmd_senesce_redn_ft[...,np.newaxis,:]
-    senesce2h_propn_goflt        = ( grn_dmd_senesce_goflt - dry_dmd_low)       \
-                                 /( dry_dmd_high         - dry_dmd_low)
-    senesce_propn_dgoflt[...,1] = ( grn_dmd_senesce_goflt - dry_dmd_low)       \
-                                 /( dry_dmd_high         - dry_dmd_low)             # senescence to high pool
-    senesce_propn_dgoflt[...,0] = 1- senesce_propn_dgoflt[...,1]                      # senescence to low pool
+                           - i_grn_dmd_senesce_redn_ft[:,np.newaxis,:]
+    senesce2h_propn_goflt       = ( grn_dmd_senesce_goflt
+                                   -    dry_dmd_low_ft[:,np.newaxis,:])       \
+                                 /(    dry_dmd_high_ft[:,np.newaxis,:]
+                                   -    dry_dmd_low_ft[:,np.newaxis,:])
+    senesce_propn_dgoflt[0,...] = ( grn_dmd_senesce_goflt                     # senescence to high pool
+                                   -    dry_dmd_low_ft[:,np.newaxis,:])       \
+                                 /(    dry_dmd_high_ft[:,np.newaxis,:]
+                                   -    dry_dmd_low_ft[:,np.newaxis,:])
+    senesce_propn_dgoflt[1,...] = 1- senesce_propn_dgoflt[1,...]              # senescence to low pool
     p_senesce2h_grnha_goflt = senesce_total_grnha_goflt *    senesce2h_propn_goflt     # parameters for the growth/grazing activities: quantity of green that senesces to the high pool
     p_senesce2l_grnha_goflt = senesce_total_grnha_goflt * (1-senesce2h_propn_goflt)    # parameters for the growth/grazing activities: quantity of green that senesces to the low pool
-    p_senesce_grnha_dgoflt  = senesce_total_grnha_goflt[np.newaxis]
-                            * senesce_propn_dgoflt                                   # ^alternative in one array parameters for the growth/grazing activities: quantity of green that senesces to the high pool
+    p_senesce_grnha_dgoflt  = senesce_total_grnha_goflt                       \
+                             *      senesce_propn_dgoflt                                   # ^alternative in one array parameters for the growth/grazing activities: quantity of green that senesces to the high pool
 
 
 def poc_con():             #^ This doesn't look right. I think that some calculations are required to calculate the area of the triangle
@@ -599,8 +620,8 @@ def poc_md():
         The quality of pasture on crop paddocks each day before seeding
         - this is adjusted for feed period
     '''
-    p_md=list(map(fdb.dmd_to_md,  i_poc_dmd_ft)) #could use list comp but thought it was a good place to practise map
-    return dict(enumerate(p_md))
+    p_md_fd=list(map(fdb.dmd_to_md,  i_poc_dmd_ft)) #could use list comp but thought it was a good place to practise map
+    return dict(enumerate(p_md_fd))  # may need np.ndenumerate() to use with an array
 
 def poc_vol():
     '''

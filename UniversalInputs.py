@@ -2,7 +2,7 @@
 """
 Created on Tue Oct 22 16:06:06 2019
 
-module: universal module - contains all the core input data - usually held constant/doesn't change between regions or farms' 
+module: universal module - contains all the core input data - usually held constant/doesn't change between regions or farms'
 
 
 Version Control:
@@ -19,7 +19,7 @@ Fixed   Date    ID by   Problem
 """
 #my plan
 # these inputs are initally typed in
-# the data is stored as a variable ie labour cost 
+# the data is stored as a variable ie labour cost
 # then when the model is solving it can change labour cost to a different value specified in the exp section using kv's somehow.
 # there is a different input sheet for each region/farm
 
@@ -35,23 +35,25 @@ import Functions as fun
 #read in excel
 #########################################################################################################################################################################################################
 #########################################################################################################################################################################################################
-price = fun.xl_all_named_ranges("Universal.xlsx","Price") 
+price = fun.xl_all_named_ranges("Universal.xlsx","Price")
 
 ##Finance inputs
-finance = fun.xl_all_named_ranges("Universal.xlsx","Finance") 
+finance = fun.xl_all_named_ranges("Universal.xlsx","Finance")
 
-##mach inputs - general 
-mach_general = fun.xl_all_named_ranges("Universal.xlsx","Mach General") 
+##mach inputs - general
+mach_general = fun.xl_all_named_ranges("Universal.xlsx","Mach General")
 
-##feed inputs 
-feed_inputs = fun.xl_all_named_ranges("Universal.xlsx","Feed Budget") 
+##feed inputs
+feed_inputs = fun.xl_all_named_ranges("Universal.xlsx","Feed Budget")
+n_feed_pools        = 4             # number of feed pools (by quality groups)   ^ Add this to Universal.xlsx
+
 
 ##############
 #mach options#
 ##############
 ##create a dict to store all options - this allows the user to select an option
-machine_options_dict={} 
-machine_options_dict['mach_1'] = fun.xl_all_named_ranges("Universal.xlsx","Mach 1") 
+machine_options_dict={}
+machine_options_dict['mach_1'] = fun.xl_all_named_ranges("Universal.xlsx","Mach 1")
 
 
 
@@ -61,7 +63,7 @@ machine_options_dict['mach_1'] = fun.xl_all_named_ranges("Universal.xlsx","Mach 
 #########################################################################################################################################################################################################
 #########################################################################################################################################################################################################
 
-##create an empty dict to store all structure inputs 
+##create an empty dict to store all structure inputs
 structure = dict()
 
 ###############
@@ -91,13 +93,13 @@ structure['labour_period_len'] = relativedelta(months=1)
 
 
 ##############
-#phases      #        
+#phases      #
 ##############
 
 #number of phases analysed ie rotation length if you will (although not really a rotation)
-structure['phase_len'] = 5 
+structure['phase_len'] = 5
 
-#rotation phases and constraints read in from excel 
+#rotation phases and constraints read in from excel
 structure['phases'] = pd.read_excel('Rotation.xlsx', sheet_name='rotation list', header= None, index_col = 0).T.reset_index(drop=True).T  #reset the col headers to std ie 0,1,2 etc
 
 
@@ -209,12 +211,12 @@ structure['z']={'z'}
 #     phases = phases[~(np.isin(phases[:,i], ['U3'])&np.isin(phases[:,i+1], ['U', 'U3','U5','u','ur','u3','u5']))] #pasture 4 muxt come ufter pasture 3
 #     phases = phases[~(np.isin(phases[:,i], ['U4'])&np.isin(phases[:,i+1], ['U', 'U3','U4','u','ur','u3','u4']))] #pasture 5 muxt come ufter pasture 4
 #     phases = phases[~(np.isin(phases[:,i], ['U5'])&np.isin(phases[:,i+1], ['U', 'U3','U4','u','ur','u3','u4']))] #pasture 5 muxt come ufter pasture 5
-#     phases = phases[~(~np.isin(phases[:,i], ['U'])&np.isin(phases[:,i+1], ['U3','u3']))] #cant have U3 after anything except U 
+#     phases = phases[~(~np.isin(phases[:,i], ['U'])&np.isin(phases[:,i+1], ['U3','u3']))] #cant have U3 after anything except U
 #     try:  #used for conditions that are concerned with more than two yrs
 #         phases = phases[~(~np.isin(phases[:,i], ['U'])&np.isin(phases[:,i+2], ['U3','u3']))] #cant have U3 ufter unything except U U (this is the second part to the rule above)
 #     except IndexError: pass
-#     phases = phases[~(~np.isin(phases[:,i], ['U3'])&np.isin(phases[:,i+1], ['U4','u4']))] #cant have U4 after anything except U3  
-#     phases = phases[~(~np.isin(phases[:,i], ['U4'])&np.isin(phases[:,i+1], ['U5','u5']))] #cant have U5 after anything except U4  
+#     phases = phases[~(~np.isin(phases[:,i], ['U3'])&np.isin(phases[:,i+1], ['U4','u4']))] #cant have U4 after anything except U3
+#     phases = phases[~(~np.isin(phases[:,i], ['U4'])&np.isin(phases[:,i+1], ['U5','u5']))] #cant have U5 after anything except U4
 #     try:  #used for conditions that are concerned with more than two yrs
 #         phases = phases[~(np.isin(phases[:,i], ['U'])&np.isin(phases[:,i+1], ['U'])&~np.isin(phases[:,i+2], ['U3','u3']))] #can only huve U3 ufter U U (huve uxed u double negitive here)
 #     except IndexError: pass
@@ -224,18 +226,18 @@ structure['z']={'z'}
 #     phases = phases[~(np.isin(phases[:,i], ['X3'])&np.isin(phases[:,i+1], ['X','X3','X5','x','xr','x3','x5']))] #pasture 4 muxt come ufter pasture 3
 #     phases = phases[~(np.isin(phases[:,i], ['X4'])&np.isin(phases[:,i+1], ['X','X3','X4','x','xr','x3','x4']))] #pasture 5 muxt come ufter pasture 4
 #     phases = phases[~(np.isin(phases[:,i], ['X5'])&np.isin(phases[:,i+1], ['X','X3','X4','x','xr','x3','x4']))] #pasture 5 muxt come ufter pasture 5
-#     phases = phases[~(~np.isin(phases[:,i], ['X'])&np.isin(phases[:,i+1], ['X3','x3']))] #cant have U3 after anything except U 
+#     phases = phases[~(~np.isin(phases[:,i], ['X'])&np.isin(phases[:,i+1], ['X3','x3']))] #cant have U3 after anything except U
 #     try:  #used for conditions that are concerned with more than two yrs
 #         phases = phases[~(~np.isin(phases[:,i], ['X'])&np.isin(phases[:,i+2], ['X3','x3']))] #cant have U3 ufter unything except U U (this is the second part to the rule above)
 #     except IndexError: pass
-#     phases = phases[~(~np.isin(phases[:,i], ['X3'])&np.isin(phases[:,i+1], ['X4','x4']))] #cant have U4 after anything except U3  
-#     phases = phases[~(~np.isin(phases[:,i], ['X4'])&np.isin(phases[:,i+1], ['X5','x5']))] #cant have U5 after anything except U4  
+#     phases = phases[~(~np.isin(phases[:,i], ['X3'])&np.isin(phases[:,i+1], ['X4','x4']))] #cant have U4 after anything except U3
+#     phases = phases[~(~np.isin(phases[:,i], ['X4'])&np.isin(phases[:,i+1], ['X5','x5']))] #cant have U5 after anything except U4
 #     try:  #used for conditions that are concerned with more than two yrs
 #         phases = phases[~(np.isin(phases[:,i], ['X'])&np.isin(phases[:,i+1], ['X'])&~np.isin(phases[:,i+2], ['X3','x3']))] #can only huve U3 ufter U U (huve uxed u double negitive here)
 #     except IndexError: pass
-    
+
 # #Lucerne
-#     
+#
 #########################################################################################################################################################################################################
 #########################################################################################################################################################################################################
 #universal functions that use data from above
@@ -243,13 +245,13 @@ structure['z']={'z'}
 #########################################################################################################################################################################################################
 
 
-#Function that just uses inout inputs but is used in multiple other pre-calc modules 
+#Function that just uses inout inputs but is used in multiple other pre-calc modules
 #defined here to limit imorting pre calc modules in other precalc modules
 def cols():
     #this is used to make a list of the relevent column numbers used in merge function, to specify the columns that are being matched - it will change if inputs specifying number of phases changes
     cols = []
     for i in reversed(range(structure['num_prev_phase']+1)):
-        cols.append(structure['phase_len']-1-i) 
+        cols.append(structure['phase_len']-1-i)
     return cols
 
 

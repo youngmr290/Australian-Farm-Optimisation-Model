@@ -16,11 +16,13 @@ Fixed   Date    ID by   Problem
 import PastureFunctions as pfun
 from timeit import default_timer as timer
 
+pastures = ['annual','lucerne','tedera']        # ^Probably  should be in UniversalInputs.py
+
 time_list = [] ; time_was = []
 time_list.append(timer()) ; time_was.append("start")
 
 
-pfun.init_and_read_excel('Property.xlsx', ['annual','lucerne','tedera'])                         # read inputs from Excel file and map to the python variables
+pfun.init_and_read_excel('Property.xlsx', pastures)                         # read inputs from Excel file and map to the python variables
 time_list.append(timer()) ; time_was.append("init & read inputs from Excel")
 
 pfun.calculate_germ_and_reseeding()                          # calculate the germination for each rotation phase

@@ -110,11 +110,32 @@ def ri_availability(foo,rifoo=0):
     except:   # handle a numpy array
         return (1-np.exp(-ria*(foo - rifoo)/1000))*(1+rib*np.exp(-rik*((foo-rifoo)/1000)**2))
 
-###########################
-##feed period calculator#
-###########################
+##################
+## effective mei #
+##################
+def effective_mei(dmi, md, threshold, ri=1, eff_above=0.5):
+    """Calculate MEI and scale for reduced efficiency if above animal requirements.
 
+    Parameters
+    ----------
+    dmi       : value or array - Dry matter intake (kg).
+    md        : value or array - M/D of the feed (MJ of ME / kg of DM).
+    threshold : value or array - Diet quality (ME/Vol) required by animals.
+    ri        : value or array, optional (1.0)     - Relative intake (quality and quantity).
+    eff_above : value or array, optional (0.5) - Efficiency
+    that energy is used if above required quality and animals are gaining then losing weight.
 
+    If inputs are provided in arrays then they must be braodcastable.
+
+    Returns
+    -------
+    ME avaialable to the animal to meet their ME requirements, from the quantity of DM consumed.
+
+    """
+    fec = md * ri
+    fec_effective  = np.minimum(fec, threshold + (fec - threshold) * eff_above)
+    md_effective = fec_effective / ri
+    mei_effective = dmi * md_effective
 
 
 
