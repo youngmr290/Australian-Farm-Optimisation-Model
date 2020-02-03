@@ -2,7 +2,7 @@
 """
 Created on Mon Nov 18 11:29:17 2019
 
-module: functions module - contains all the core functions that we have made  
+module: functions module - contains all the core functions that we have made
 
 Version Control:
 Version     Date        Person  Change
@@ -14,14 +14,14 @@ Version     Date        Person  Change
 1.3         12Dec19     MRY     phases: Altered the phase filter to compare the landuse in the following pairs (0,1),(1,2)...(len_phase-2,len_phase-1) so the first and last year are not compared
 1.4         13Dec19     MRY     added cartesian_product_simple_transpose - a fast func for making every possibility of multiple lists
 1.5         22Dec19     John    period_allocation: simplify the function so that it doesn't redefine variable from the parameters passed
-                                range_allocation: added this function fashioned from period_allocation 
+                                range_allocation: added this function fashioned from period_allocation
 1.6         26Dec19     JMY     xl_all_named_ranges: altered 2 comments that were in the wrong position
 1.7         19Jan20     MRY     alted cost period function to handle df with undefined title - because now inputs are read in from excel the column name can vary, which it couldn't before because the df was built from dict hence colum name was always 0
 
 
 Known problems:
 Fixed   Date    ID by   Problem
-    
+
 
 @author: young
 """
@@ -43,21 +43,21 @@ import itertools
 #if you dont want this you can reset index using index.reset or something and probs the similar for cols
 #Testing shpwed readonly = False was quicker than true. But still not as fast as pandas
 # (may not exist anymore) now it causes problems somoetimes locking you out of excel because it is readonly - closing doesn't fix issue (wb._archive.close())
-    
-def xl_all_named_ranges(filename, targetsheet):     # read all range names defined in targetsheet and return a dictionary of lists or dataframes
-    from openpyxl import load_workbook 
-    from openpyxl.worksheet.cell_range import CellRange 
 
-    wb = load_workbook(filename, data_only=True, read_only=False) 
-    parameters = {} 
-    
-    for dn in wb.defined_names.definedName[:]: 
+def xl_all_named_ranges(filename, targetsheet):     # read all range names defined in targetsheet and return a dictionary of lists or dataframes
+    from openpyxl import load_workbook
+    from openpyxl.worksheet.cell_range import CellRange
+
+    wb = load_workbook(filename, data_only=True, read_only=False)
+    parameters = {}
+
+    for dn in wb.defined_names.definedName[:]:
         try:
             sheet_name, cell_range = list(dn.destinations)[0]
 #            print (dn.name, cell_range)
             if sheet_name.casefold() == targetsheet.casefold():     #casefold to make it a caseless match
-                try:    
-                    cr = CellRange(cell_range) 
+                try:
+                    cr = CellRange(cell_range)
                     width = cr.max_col - cr.min_col
                     length = cr.max_row - cr.min_row
                     ws = wb[sheet_name]
@@ -66,7 +66,7 @@ def xl_all_named_ranges(filename, targetsheet):     # read all range names defin
                         parameters[dn.name] = ws[cell_range].value
                     elif not width:                         # the range is only 1 column & is not iterable across the row
                         parameters[dn.name] = [cell.value for cell in [row[0] for row in ws[cell_range]]]
-                    elif not length:                        # the range is 1 row & is iterable across columns 
+                    elif not length:                        # the range is 1 row & is iterable across columns
                         for row in ws[cell_range]:
                             parameters[dn.name] = [cell.value for cell in row]
                     else:                                   # the range is a region & is iterable across rows and columns
@@ -75,11 +75,11 @@ def xl_all_named_ranges(filename, targetsheet):     # read all range names defin
                         #print(df)
                         df.rename(columns=df.iloc[0],inplace=True)
                         #drop row that had header names (renaming is more like a copy than a cut)
-                        df.drop(df.index[0],inplace=True) 
+                        df.drop(df.index[0],inplace=True)
                         df = df.set_index(df.iloc[:,0]) #could use rename ie df.rename(index=df.iloc[:,0],inplace=True)
                         #now have to drop the first col because renaming/set_index is more like copy than cut hence it doenst make the index col one just rename index to match col one
                         df = df.drop(df.columns[[0]],axis=1) #for some reason this will chuck an error in the index values are int and there is nothing in the top left cell of the df...seems like a bug in python
-    #                    manipulate data into cheapest format - results in mainly float32 (strings are still objects) - without this each value is treated as an object (objects use up much more memory) - this change reduced fert df from 150mbs to 20mbs 
+    #                    manipulate data into cheapest format - results in mainly float32 (strings are still objects) - without this each value is treated as an object (objects use up much more memory) - this change reduced fert df from 150mbs to 20mbs
                         parameters[dn.name] = df.apply(pd.to_numeric, errors='ignore', downcast='float')
                 except TypeError:
                     pass
@@ -89,10 +89,10 @@ def xl_all_named_ranges(filename, targetsheet):     # read all range names defin
     return parameters
 
 #def test():
-#    sheettest = xl_all_named_ranges("GSMInputs.xlsx","Annual") #sheettest = xl_all_named_ranges("GSMInputs.xlsx","Annual", True) 
+#    sheettest = xl_all_named_ranges("GSMInputs.xlsx","Annual") #sheettest = xl_all_named_ranges("GSMInputs.xlsx","Annual", True)
 #def test1():
 #    sheettest = xl_all_named_ranges("GSMInputs.xlsx","Annual")  #sheettest = xl_all_named_ranges("GSMInputs.xlsx","Annual", False)
-##exceldata = xl_all_named_ranges('GSMInputs.xlsx', 'Annual')   
+##exceldata = xl_all_named_ranges('GSMInputs.xlsx', 'Annual')
 ##print(exceldataddd)
 #crop_input = dict()
 #crop_input['excel_ranges'] = {'crop inputs.xlsx':(['yield'            #yeild t/ha will be converted to kg in prep calcs
@@ -115,7 +115,7 @@ def xl_all_named_ranges(filename, targetsheet):     # read all range names defin
 # #makes a df of all possible rotation phases
 # #use product function to do a Cartesian product.
 # def phases(landuses,phase_number):
-#     phases = [landuses]*phase_number 
+#     phases = [landuses]*phase_number
 #     df = pd.DataFrame(list(itertools.product(*phases) ) ) # '*' is used to unpack lists into multiple args
 #     #function to remove unrealistic phases using some rules
 #     #not comparing beginning phase with end phase because that ramoves the possibility of longer rotations ie nwbnwbnwb
@@ -137,8 +137,8 @@ def cartesian_product_simple_transpose(arrays):
     return arr.reshape(la, -1).T
 
 #print(timeit.timeit(phases2,number=100)/100)
-#      
-#    
+#
+#
 ##########################
 # period calculators     #
 ##########################
@@ -165,9 +165,9 @@ def period_allocation(period_dates,periods,start,length=''):
     '''
     #gets the dates
     # period_dates = p_dates   # don't need this step if the variables passed in are changed to period_dates from p_dates and periods from p_name
-    #gets the period name 
+    #gets the period name
     # periods = p_name
-    if length: 
+    if length:
     #start empty list to append to
         allocation_period = []
         end = start + length
@@ -208,7 +208,7 @@ def period_allocation(period_dates,periods,start,length=''):
 def dict_period_total(p_dates,p_name,*dicts):
     #create empty numpy array that i will add the labour time in each period to
     array = np.zeros(len(p_name))
-    #have to loops to allow for passing in multiple dicts 
+    #have to loops to allow for passing in multiple dicts
     for dic in dicts:
 #        print(dic)
         for key, value in dic.items():
@@ -251,11 +251,11 @@ def period_allocation_reindex(df, p_dates, p_name, start, length):
     columns = pd.MultiIndex.from_product([allocation.columns, df.index])
     allocation = allocation.reindex(columns,axis=1,level=0) #add level so mul can happen
     allocation.columns = allocation.columns.droplevel(0) #drop added level
-    # cost = df.rename(index={0:'allocation'}).stack()  
+    # cost = df.rename(index={0:'allocation'}).stack()
     df = allocation.mul(df.iloc[:,0],axis=1)
     return df
-      
-#this func returns a df with index name = 
+
+#this func returns a df with index name =
 #column names = keys from dict you entered start date with
 #input two dicts one with the start date and one with the length of the activity
 def period_allocation2(start_df, length_df, p_dates, p_name):
@@ -323,11 +323,11 @@ def period_proportion(period_dates, periods, date):
 #this function returns a 2D or 3D numpy array
 #array is created by matrix multiplication of two or three 1D dataframes
 #The dfs passed becomes axis 0, 1 & 2 of the array. The first & third need to be reshaped
-def create_array_from_dfs(df1,df2,df3=''):         
+def create_array_from_dfs(df1,df2,df3=''):
     np1=np.array(df1.to_numpy).reshape(-1,1)
     np2=np.array(df2.to_numpy)
     final=np.multiply(np1,np2)
     if df3:                                         #if there is a 3rd dimension
         np3=np.array(df3.to_numpy).reshape(1,1,-1)
-        final=np.multiply(final,np3)    
+        final=np.multiply(final,np3)
     return final

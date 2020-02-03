@@ -467,16 +467,16 @@ def green_and_dry():
     global p_dry_removal_t_dft
     global p_dry_transfer_t_dft
 
-    ## initialise numpy arrays used in this method
+    ### _initialise numpy arrays used in this method
     grn_dmd_selectivity_goft = np.zeros((       n_feed_periods, n_foo_levels, n_grazing_int),               dtype=np.float64)
     senesce_propn_dgoflt     = np.zeros((n_lmu, n_feed_periods, n_foo_levels, n_grazing_int, n_dry_groups), dtype=np.float64)  #
 
-    ## set sensitivity variables used
+    ### _set sensitivity variables used
     sam_pgr_flt                  = np.asfarray(  sen.sam_pgr
                                                * sen.sam_pgr_f.reshape(-1, 1, 1)
                                                * sen.sam_pgr_l.reshape( 1,-1, 1)
                                                * sen.sam_pgr_t.reshape( 1, 1,-1))
-    ## calculate the maximum foo achievable for each lmu & feed period (ungrazed pasture that germinates at the maximum level on that lmu)
+    ### _maximum foo achievable for each lmu & feed period (ungrazed pasture that germinates at the maximum level on that lmu)
     germination_pass_flt             = np.max(p_germination_flrt, axis=2)                                    #use p_germination because it includes any sensitivity that is carried out
     foo_start_ungrazed_flt           = calc_foo_profile(germination_pass_flt, sam_pgr_flt)# ^ passing the consumption value in a numpy array in an attempt to get the function @jit compatible
     max_foo_flt                      = np.maximum(i_fxg_foo_oflt[-2,...], foo_start_ungrazed_flt)                  #maximum of ungrazed foo and foo from the medium foo level
@@ -484,31 +484,33 @@ def green_and_dry():
     p_foo_start_grnha_oflt[-1,...]   = np.maximum.accumulate(max_foo_flt,axis=1)                                #maximum accumulated along the feed periods axis, i.e. max to date
     p_foo_start_grnha_oflt           = np.maximum(p_foo_start_grnha_oflt
                                                   ,          i.base_ft[:,np.newaxis,:])         # to ensure that final foo can not be below 0
-    ## calculate green feed parameters
+    ### _green, pasture growth
     pgr_grnday_oflt         = np.maximum(0.01, i_fxg_pgr_oflt                  # use maximum to ensure that the pgr is non zero (because foo_days requires dividing by pgr)
                                               *  sam_pgr_flt)
     pgr_grnha_goflt         =       pgr_grnday_oflt     \
                              *          length_f.reshape(-1,1,1)       \
                              * c_pgr_gi_scalar_gft[:,np.newaxis,:,np.newaxis,:]
-    foo_ungrazed_grn_ha_oflt = p_foo_start_grnha_oflt         *(1-grn_senesce_startfoo_ft[:,np.newaxis,:])   \
+
+    ### _green, final foo from initial, pgr and senescence
+    foo_ungrazed_grnha_oflt = p_foo_start_grnha_oflt         *(1-grn_senesce_startfoo_ft[:,np.newaxis,:])   \
                               +        pgr_grnha_goflt[0,...] *(1- grn_senesce_pgrcons_ft[:,np.newaxis,:])
-    foo_endprior_grnha_goflt =  foo_ungrazed_grn_ha_oflt   \
-                              -(foo_ungrazed_grn_ha_oflt
-                                -            i_base_ft[:,np.newaxis,:])      \
-                              *     i_foo_end_propn_gt
+    foo_endprior_grnha_goflt =  foo_ungrazed_grnha_oflt   \
+                              -(foo_ungrazed_grnha_oflt
+                                -           i_base_ft[:,np.newaxis,:])      \
+                              *    i_foo_end_propn_gt
     p_foo_end_grnha_goflt   =     foo_endprior_grnha_goflt                   \
                             * (1 - i_grn_senesce_eos_ft[:,np.newaxis,:])
+
+    ### _green, removal & dmi
     removal_grnha_goflt     =np.maximum(0, p_foo_start_grnha_oflt * (1 - grn_senesce_startfoo_ft[:,np.newaxis,:])
                                         +          pgr_grnha_goflt *(1 -  grn_senesce_pgrcons_ft[:,np.newaxis,:])
                                         -    foo_prior_grnha_goflt)          \
                              /      (1 - grn_senesce_pgrcons_ft[:,np.newaxis,:])
     cons_grnha_t_goflt =      removal_grnha_goflt   \
                         /(1+i_grn_trampling_ft[:,np.newaxis,:])
-    senesce_total_grnha_goflt = p_foo_start_grnha_oflt[...,np.newaxis]      \
-                               +        pgr_grnha_goflt
-                               -    removal_grnha_goflt
-                               -  p_foo_end_grnha_goflt
-    ## to calculate foo_days requires calculating number of days in current period and adding days from the previous period (if required)
+
+    ### _green, dmd & md from average and change due to foo & grazing intensity
+    ## # to calculate foo_days requires calculating number of days in current period and adding days from the previous period (if required)
     min=-1; max = 0         #Clip between -1 and 0
     if (p_foo_start_grnha_oflt > p_foo_start_grnha_oflt[1:2,...]):       # 1:2 to retain the axis, but it only points to index level 1.
         min += 1; max +=1   #Clip between 0 and 1
@@ -534,29 +536,28 @@ def green_and_dry():
                               * grn_dmd_swardscalar_oflt   \
                               + grn_dmd_selectivity_goft[:,:,:,np.newaxis,:]
     grn_md_grnha_goflt       = fdb.dmd_to_md(dmd_grnha_goflt)
-    p_me_cons_grnha_egoflt   =  cons_grnha_t_goflt               \
-                              * grn_md_grnha_goflt               \
-                              * (1 -  i_me_maintenance_eft[:,np.newaxis,np.newaxis,:,np.newaxis,:]
-                                 *(1-i_me_eff_gainlose_ft[:,np.newaxis,:]))           # parameters for the growth/grazing activities: Total ME of feed consumed from the hectare
-                              - np.maximum(0
-                                               ,(            grn_md_grnha_goflt
-                                                 -  i_me_maintenance_eft[:,np.newaxis,np.newaxis,:,np.newaxis,:])
-                                               *(1-i_me_eff_gainlose_ft[:,np.newaxis,:]))           # parameters for the growth/grazing activities: Total ME of feed consumed from the hectare
+
+    ### _green, mei & volume
     foo_ave_grnha_goflt = (p_foo_start_grnha_oflt
                            + p_foo_end_grnha_goflt)/2
-    grn_ri_availability_goflt= fdb.ri_availability(foo_ave_grnha_goflt,i_ri_foo)
+    grn_ri_availability_goflt= fdb.ri_availability(foo_ave_grnha_goflt, i_ri_foo)
     grn_ri_quality_goflt     = fdb.ri_quality(dmd_grnha_goflt, i_legume)
     grn_ri_goflt             = grn_ri_quality_goflt * grn_ri_availability_goflt
     grn_ri_goflt[grn_ri_goflt<0.05]     = 0.05 #set the minimum RI to 0.05
-    p_volume_grnha_egoflt   = p_me_cons_grnha_egoflt / grn_ri_goflt[...,np.newaxis]   # parameters for the growth/grazing activities: Total volume of feed consumed from the hectare
+    p_me_cons_grnha_egoflt   = fdb.effective_mei(      cons_grnha_t_goflt
+                                                 ,     grn_md_grnha_goflt
+                                                 , i_me_maintenance_eft[:,np.newaxis,np.newaxis,:,np.newaxis,:]
+                                                 ,           grn_ri_goflt
+                                                 ,i_me_eff_gainlose_ft[:,np.newaxis,:])
+    p_volume_grnha_egoflt   = cons_grnha_t_goflt / grn_ri_goflt  # parameters for the growth/grazing activities: Total volume of feed consumed from the hectare
 
-    ## transfer: decline in DM for dry feed (same for high & low pools)
+    ### _dry, DM decline (high = low pools)
     dry_decay_daily_ft                  = np.stack([i_dry_decay_t] * n_feed_periods, axis = 0)          # create an array like list of list n_feed_periods long on axis 1
     dry_decay_daily_ft[0:i_end_of_gs-1] = 1
     dry_decay_period_ft                 = 1 - (1 - dry_decay_daily_ft)             \
                                           **                length_f.reshape(-1,1)
     p_dry_transfer_t_dft[...]           = 1000 * (1-dry_decay_period_ft)  # parameters for the dry feed transfer activities: quantity transferred
-    ## consumption: quality & FOO of the feed consumed
+    ### _dry, dmd & foo of feed consumed
     dry_dmd_adj_ft  = np.max(i_dry_dmd_ave_ft,axis=0) * (1 -sen.sam_dmd_decline_dry)    \
                      +      (i_dry_dmd_ave_ft         *     sen.sam_dmd_decline_dry     # do sensitivity adjustment for dry_dmd_input based on increasing/reducing the reduction in dmd from the maximum (starting value)
     dry_dmd_high_ft = i_dry_dmd_adj_ft + i_dry_dmd_range_ft/2
@@ -567,24 +568,32 @@ def green_and_dry():
     dry_foo_low_ft  = i_dry_foo_high_ft * 1/4                               # assuming half the foo is high quality and the remainder is low quality
     dry_foo_dft     = np.stack((dry_foo_high_ft, dry_foo_low_ft),axis=0)  # create an array with a new axis 0 by stacking the existing arrays
 
-    ## ME consumed per tonne of dry feed consumed
+    ### _dry, volume of feed consumed per tonne
+    dry_ri_availability_dft = fdb.ri_availability(dry_foo_dft,i_ri_foo)
+    dry_ri_quality_dft      = fdb.ri_quality(dry_dmd_dft, i_legume)
+    dry_ri_dft              = dry_ri_quality_dft * dry_ri_availability_dft
+    dry_ri_dft[dry_ri_dft<0.05] = 0.05 #set the minimum RI to 0.05
+    p_dry_volume_t_dft  = 1000 / dry_ri_dft                 # parameters for the dry feed grazing activities: Total volume of the tonne consumed
+
+    ### _dry, ME consumed per tonne consumed
     dry_md_dft                   = fdb.dmd_to_md(dry_dmd_dft)
-    p_dry_mecons_t_edft  = np.stack([dry_md_dft * 1000] * n_feed_pools, axis = 0)     \
-                          - np.maximum(0
-                                       ,(             dry_md_dft
-                                         -  i_me_maintenance_eft[:,np.newaxis,...])
-                                       *(1-i_me_eff_gainlose_ft))                     # parameters for the dry feed grazing activities: Total ME of the tonne consumed
-    ## Volume of feed consumed per tonne
-    dry_ri_availability     = fdb.ri_availability(dry_foo,i_ri_foo)
-    dry_ri_quality          = fdb.ri_quality(dry_dmd, i_legume)
-    dry_ri                  = dry_ri_quality * dry_ri_availability
-    dry_ri[dry_ri<0.05]     = 0.05 #set the minimum RI to 0.05
-    p_dry_volume_t_dft  = 1000 / dry_ri                 # parameters for the dry feed grazing activities: Total volume of the tonne consumed
-    ## Removal of dry feed
+    dry_md_edft  = np.stack([dry_md_dft * 1000] * n_feed_pools, axis = 0)
+    p_dry_mecons_t_edft  = fdb.effective_mei( 1000                                    # parameters for the dry feed grazing activities: Total ME of the tonne consumed
+                                             ,           dry_md_edft
+                                             , i_me_maintenance_eft[:,np.newaxis,:,:]
+                                             ,           dry_ri_dft
+                                             ,i_me_eff_gainlose_ft)
+
+    ### _dry, animal removal
     p_dry_removal_t_dft[...]  = 1000 * (1 + i_dry_trampling_ft)   # parameters for the dry feed grazing activities: Total DM removal from the tonne consumed (includes trampling)
-    ## Senescence from green to dry
-    senesce_tota_grnhal_goflt  = senesce_grnha_goflt + senesce_eos_grnha_goflt
-    grn_dmd_senesce_goflt = dmd_grnha_goflt       \
+
+    ### _senescence from green to dry
+    ## # _green, total senescence
+    senesce_total_grnha_goflt = p_foo_start_grnha_oflt      \
+                               +        pgr_grnha_goflt
+                               -    removal_grnha_goflt
+                               -  p_foo_end_grnha_goflt
+    grn_dmd_senesce_goflt =               dmd_grnha_goflt       \
                            - i_grn_dmd_senesce_redn_ft[:,np.newaxis,:]
     senesce2h_propn_goflt       = ( grn_dmd_senesce_goflt
                                    -    dry_dmd_low_ft[:,np.newaxis,:])       \
@@ -594,7 +603,7 @@ def green_and_dry():
                                    -    dry_dmd_low_ft[:,np.newaxis,:])       \
                                  /(    dry_dmd_high_ft[:,np.newaxis,:]
                                    -    dry_dmd_low_ft[:,np.newaxis,:])
-    senesce_propn_dgoflt[1,...] = 1- senesce_propn_dgoflt[1,...]              # senescence to low pool
+    senesce_propn_dgoflt[1,...] = 1- senesce_propn_dgoflt[0,...]              # senescence to low pool
     p_senesce2h_grnha_goflt = senesce_total_grnha_goflt *    senesce2h_propn_goflt     # parameters for the growth/grazing activities: quantity of green that senesces to the high pool
     p_senesce2l_grnha_goflt = senesce_total_grnha_goflt * (1-senesce2h_propn_goflt)    # parameters for the growth/grazing activities: quantity of green that senesces to the low pool
     p_senesce_grnha_dgoflt  = senesce_total_grnha_goflt                       \
