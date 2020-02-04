@@ -122,7 +122,7 @@ def effective_mei(dmi, md, threshold, ri=1, eff_above=0.5):
     md        : value or array - M/D of the feed (MJ of ME / kg of DM).
     threshold : value or array - Diet quality (ME/Vol) required by animals.
     ri        : value or array, optional (1.0)     - Relative intake (quality and quantity).
-    eff_above : value or array, optional (0.5) - Efficiency
+    eff_above : value or array, optional (0.5) - Efficiency.
     that energy is used if above required quality and animals are gaining then losing weight.
 
     If inputs are provided in arrays then they must be braodcastable.
