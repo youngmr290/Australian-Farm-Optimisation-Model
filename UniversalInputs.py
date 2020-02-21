@@ -151,8 +151,8 @@ structure['X3']={'x3'} #3rd yr lucerne (monoculture)
 structure['X4']={'x4'} #4th yr lucerne (monoculture)
 structure['X5']={'x5'} #5th yr lucerne (monoculture)
 structure['Y']={'b', 'h', 'o','of', 'w', 'f','i', 'k', 'l', 'v', 'z','r'
-                , 'u', 'u3', 'u4', 'u5'
-                , 'x', 'x3', 'x4', 'x5'
+                , 'u', 'ur', 'u3', 'u4', 'u5'
+                , 'x', 'xr', 'x3', 'x4', 'x5'
                 , 'j', 't', 'jr', 'tr'} #anything not A
 
 

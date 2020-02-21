@@ -129,7 +129,7 @@ try:
 except AttributeError:
     pass
 ##Amount of each phase on each soil, Positive Variable.
-model.v_phase_area = Var(model.s_phases, model.s_lmus, bounds=(0,None), doc='number of ha of each phase')
+model.v_phase_area = Var(model.s_phases, model.s_lmus, bounds=(0.00000000,None), doc='number of ha of each phase')
 
 
 

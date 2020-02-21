@@ -168,13 +168,14 @@ def coremodel_all():
         print('solver optimal')# Do something when the solution in optimal and feasible
         coremodel_test_var.append(0)
     elif (results.solver.termination_condition == TerminationCondition.infeasible):
-        print ('Solver Status: ',  result.solver.status)
+        print ('Solver Status: infeasible')#,  result.solver.status)
         coremodel_test_var.append(1)
         # print(coremodel_test_var)
         # sys.exit()
     else:
         # Something else is wrong
-        print ('Solver Status: ',  result.solver.status)
+        print ('Solver Status: error')#,  result.solver.status)
+        coremodel_test_var.append(1)
 
     ##writes variable to txt file to view
     file = open('testfile.txt','w') 
