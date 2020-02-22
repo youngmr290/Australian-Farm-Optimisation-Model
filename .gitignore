@@ -2,9 +2,6 @@ __pycache__
 /John stuff.py
 /*.txt
 /*.lp
-/*.xlsx
-/*.xlsm
-/*.xlsb
-/*.doc*
+/*.xls
 /redundant
 /.spyproject

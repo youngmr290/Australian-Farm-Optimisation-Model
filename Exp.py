@@ -38,22 +38,52 @@ import RotationPyomo as rotpy
 # indices=slice(*map(lambda x: int(x.strip()) if x.strip() else None, x.split(':'))) #doesnt work with multi dimension because only creates one slice
 
 con_error=[]
+con_correct=[]
 ##create loop for exp
-for i in rps.lo_bound.keys():#(range(1)): #maybe this should be looping through an exp sheet in excel
-    print('Starting exp loop')
-    #define any SA - this module will have to import sensitivity module then other module will import sensitivity therefore sensitivity shouldn't inport pre calc modules
-    rps.lo_bound[i]=0.1 #('A', 'C', 'N', 'OF', 'm')
+# for i in rps.lo_bound.keys():#(range(1)): #maybe this should be looping through an exp sheet in excel
+# # for i in (range(1)): #maybe this should be looping through an exp sheet in excel
+# #     print('Starting exp loop')
+# #     #define any SA - this module will have to import sensitivity module then other module will import sensitivity therefore sensitivity shouldn't inport pre calc modules
+#     rps.lo_bound[i]=0.1 #('A', 'C', 'N', 'OF', 'm')
     
 
-    #call core model function, must call them in the correct order (core must be last)
-    rotpy.rotationpyomo()
-    crppy.croppyomo_local()
-    core.coremodel_all()
-    if core.coremodel_test_var[-1]==1:
-        con_error.append(i)
-    print(core.coremodel_test_var[-1])
+#     #call core model function, must call them in the correct order (core must be last)
+#     rotpy.rotationpyomo()
+#     crppy.croppyomo_local()
+#     core.coremodel_all()
+#     if core.coremodel_test_var[-1]==1:
+#         con_error.append(i)
+#     print(core.coremodel_test_var[-1])
     
-    rps.lo_bound[i]=0
+#     rps.lo_bound[i]=0
+import random
+for p in range(1):
+        
+    # for j,i in zip(range(2000,2054), rps.lo_bound.keys()):#(range(1)): #maybe this should be looping through an exp sheet in excel
+    bounded_rots=[]
+    for i in random.sample(range(2661),1):#(range(1)): #maybe this should be looping through an exp sheet in excel
+    # # # for i in (range(1)): #maybe this should be looping through an exp sheet in excel
+    # # #     print('Starting exp loop')
+    # # #     #define any SA - this module will have to import sensitivity module then other module will import sensitivity therefore sensitivity shouldn't inport pre calc modules
+        
+        k=list(rps.lo_bound.keys())[i] #('A', 'C', 'N', 'OF', 'm')
+        bounded_rots.append(k)
+        # rps.lo_bound['GX3NPo']=6 #('A', 'C', 'N', 'OF', 'm')
+        rps.lo_bound['GA5ENw']=6 #('A', 'C', 'N', 'OF', 'm')
+        # rps.lo_bound['GNEPb']=6 #('A', 'C', 'N', 'OF', 'm')
+    # print(rps.lo_bound)
+    
+    #call core model function, must call them in the correct order (core must be last)
+        rotpy.rotationpyomo()
+        crppy.croppyomo_local()
+        core.coremodel_all()
+        if core.coremodel_test_var[-1]==1:
+            con_error.append(k)
+        else: 
+            con_correct.append(k)
+        print(core.coremodel_test_var[-1])
+    
+        rps.lo_bound[k]=0
     
     
     

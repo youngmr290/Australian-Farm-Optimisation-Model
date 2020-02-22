@@ -104,7 +104,7 @@ structure['labour_period_len'] = relativedelta(months=1)
 #number of phases analysed ie rotation length if you will (although not really a rotation)
 structure['phase_len'] = 5
 
-#rotation phases and constraints read in from excel
+#rotation phases and constraints read in from excel 
 structure['phases'] = pd.read_excel('Rotation.xlsx', sheet_name='rotation list', header= None, index_col = 0).T.reset_index(drop=True).T  #reset the col headers to std ie 0,1,2 etc
 
 
@@ -158,8 +158,8 @@ structure['X3']={'x3'} #3rd yr lucerne (monoculture)
 structure['X4']={'x4'} #4th yr lucerne (monoculture)
 structure['X5']={'x5'} #5th yr lucerne (monoculture)
 structure['Y']={'b', 'h', 'o','of', 'w', 'f','i', 'k', 'l', 'v', 'z','r'
-                , 'u', 'u3', 'u4', 'u5'
-                , 'x', 'x3', 'x4', 'x5'
+                , 'u', 'ur', 'u3', 'u4', 'u5'
+                , 'x', 'xr', 'x3', 'x4', 'x5'
                 , 'j', 't', 'jr', 'tr'} #anything not A
 
 
@@ -256,7 +256,7 @@ def cols():
     #this is used to make a list of the relevent column numbers used in merge function, to specify the columns that are being matched - it will change if inputs specifying number of phases changes
     cols = []
     for i in reversed(range(structure['num_prev_phase']+1)):
-        cols.append(structure['phase_len']-1-i)
+        cols.append(structure['phase_len']-1-i) 
     return cols
 
 
