@@ -44,18 +44,24 @@ import itertools
 #Testing shpwed readonly = False was quicker than true. But still not as fast as pandas
 # (may not exist anymore) now it causes problems somoetimes locking you out of excel because it is readonly - closing doesn't fix issue (wb._archive.close())
 
-def xl_all_named_ranges(filename, targetsheet):     # read all range names defined in targetsheet and return a dictionary of lists or dataframes
+def xl_all_named_ranges(filename, targetsheets):     # read all range names defined in the list targetsheets and return a dictionary of lists or dataframes
+    ''' Read data from all named ranges in from an Excel workbook.
+
+    filename is an Excel worbook name (including the extension).
+    targetsheets is a list of (or a single) worksheet names from which to read the range names.
+    '''
     from openpyxl import load_workbook
     from openpyxl.worksheet.cell_range import CellRange
 
     wb = load_workbook(filename, data_only=True, read_only=False)
+    # t_wb = wb
     parameters = {}
 
     for dn in wb.defined_names.definedName[:]:
         try:
-            sheet_name, cell_range = list(dn.destinations)[0]
+            sheet_name, cell_range = list(dn.destinations)[0]        # if it is a non-contiguous range dn.destinations would need to be looped through
 #            print (dn.name, cell_range)
-            if sheet_name.casefold() == targetsheet.casefold():     #casefold to make it a caseless match
+            if sheet_name.casefold() in targetsheets.casefold():     #casefold to make it a caseless match. in to check list of sheet names
                 try:
                     cr = CellRange(cell_range)
                     width = cr.max_col - cr.min_col
@@ -86,7 +92,7 @@ def xl_all_named_ranges(filename, targetsheet):     # read all range names defin
         except IndexError:
             pass
     wb.close
-    return parameters
+    return parameters #t_wb #
 
 #def test():
 #    sheettest = xl_all_named_ranges("GSMInputs.xlsx","Annual") #sheettest = xl_all_named_ranges("GSMInputs.xlsx","Annual", True)

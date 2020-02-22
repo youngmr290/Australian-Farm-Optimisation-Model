@@ -83,7 +83,7 @@ t      = (                                                                      
 
 
 def init_and_read_excel(filename, landuses):
-    '''Instantiate variables required and read inputs for the pasture class from an excel file'''
+    '''Instantiate variables required and read inputs for the pasture variables from an excel file'''
     ## set global on all variables required outside this function
     global i_reseeding_date_seed_t
     global i_reseeding_date_destock_t
@@ -148,8 +148,7 @@ def init_and_read_excel(filename, landuses):
 
 
     ### -define the vessels that will store the input data that require pre-defining
-
-
+    ## all need pre-defining because inputs are read for each pasture type separately
 
     i_me_maintenance_eft            = np.zeros(eft,    dtype = np.float64)  # M/D level for target LW pattern
     c_pgr_gi_scalar_gft             = np.zeros(gft,    dtype = np.float64)  # numpy array of pgr scalar =f(startFOO) for grazing intensity (due to impact of FOO changing during the period)
@@ -219,7 +218,7 @@ def init_and_read_excel(filename, landuses):
     ### _read data for each pasture type from excel file into arrays
     for landuse in landuses:
         exceldata = fun.xl_all_named_ranges(filename, landuse)           # read all range names from the Excel file from the specified sheet
-        ## map the Excel data into the python variables
+        ## map the Excel data into the numpy arrays
         i_germination_std_t[t]              = exceldata['GermStd']
         i_ri_foo_t[t]                       = exceldata['RIFOO']
         i_end_of_gs_t[t]                    = exceldata['EndGS']
@@ -249,10 +248,6 @@ def init_and_read_excel(filename, landuses):
         i_reseeding_date_grazing_t[t]       = exceldata['Date_ResownGrazing']
         i_reseeding_foo_grazing_t[t]        = exceldata['FOOatGrazing']
 
-        ### _NEEDS WORK
-        i_phase_germ_df                     = exceldata['GermPhases']       #DataFrame with germ scalar and resown
-
-        ## inputs read into numpy arrays
         i_grn_trampling_ft[t].fill            (exceldata['Trampling'])
         i_dry_trampling_ft[t].fill            (exceldata['Trampling'])
         i_grn_senesce_daily_ft[t]           = np.asfarray(exceldata['SenescePropn'])
@@ -274,6 +269,9 @@ def init_and_read_excel(filename, landuses):
         i_fxg_pgr_oflt[1,:,:,t]             = exceldata['MedPGR'].to_numpy()
         i_fxg_pgr_oflt[2,:,:,t]             = exceldata['MedPGR'].to_numpy()  #PGR for high (last entry) is the same as PGR for medium
         i_grn_dig_flt[t]                    = exceldata['DigGrn'].to_numpy()  # numpy array of inputs for green pasture digestibility on each LMU.
+
+        ### _NEEDS WORK
+        i_phase_germ_df                     = exceldata['GermPhases']       #DataFrame with germ scalar and resown
 
     ## Some one time data manipulation for the inputs just read
     i_phase_germ_df.index = [*range(len(i_phase_germ_df.index))]              # replace index read from Excel with numbers to match later merging

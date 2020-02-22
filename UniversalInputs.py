@@ -47,6 +47,12 @@ mach_general = fun.xl_all_named_ranges("Universal.xlsx","Mach General")
 feed_inputs = fun.xl_all_named_ranges("Universal.xlsx","Feed Budget")
 n_feed_pools        = 4             # number of feed pools (by quality groups)   ^ Add this to Universal.xlsx
 
+##sheep inputs
+genotype = fun.xl_all_named_ranges('Universal.xlsx', ['Genotypes'])
+parameters = fun.xl_all_named_ranges('Universal.xlsx', ['Parameters'])
+i_oldest_animal = 6.6 #age of oldest animal (years)  ^ Add this to Universal.xlsx
+n_sim_periods_year = 52 # universal data['']   periods per year  ^ Add this to Universal.xlsx
+
 
 ##############
 #mach options#
@@ -54,7 +60,6 @@ n_feed_pools        = 4             # number of feed pools (by quality groups)  
 ##create a dict to store all options - this allows the user to select an option
 machine_options_dict={}
 machine_options_dict['mach_1'] = fun.xl_all_named_ranges("Universal.xlsx","Mach 1")
-
 
 
 #########################################################################################################################################################################################################

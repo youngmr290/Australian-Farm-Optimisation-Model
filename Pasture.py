@@ -13,14 +13,15 @@ Fixed   Date    ID by   Problem
 @author: John
 """
 
-import PastureFunctions as pfun
 from timeit import default_timer as timer
 
-pastures = ['annual','lucerne','tedera']        # ^Probably  should be in UniversalInputs.py
+import PastureFunctions as pfun
 
 time_list = [] ; time_was = []
 time_list.append(timer()) ; time_was.append("start")
 
+
+pastures = ['annual','lucerne','tedera']        # ^Probably  should be in UniversalInputs.py
 
 pfun.init_and_read_excel('Property.xlsx', pastures)                         # read inputs from Excel file and map to the python variables
 time_list.append(timer()) ; time_was.append("init & read inputs from Excel")
