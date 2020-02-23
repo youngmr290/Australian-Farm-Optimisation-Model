@@ -136,7 +136,7 @@ def effective_mei(dmi, md, threshold, ri=1, eff_above=0.5):
     fec_effective  = np.minimum(fec, threshold + (fec - threshold) * eff_above)
     md_effective = fec_effective / ri
     mei_effective = dmi * md_effective
-
+    return mei_effective
 
 
 ##check the feed_allocation function with a random date & length
