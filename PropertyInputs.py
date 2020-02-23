@@ -19,5 +19,8 @@ feed_inputs = fun.xl_all_named_ranges("Property.xlsx","Feed Budget") #automatica
 sheep_management  = fun.xl_all_named_ranges('Property.xlsx', ['Management'])
 sheep_regions  = fun.xl_all_named_ranges('Property.xlsx', ['Regions'])
 
-
-n_pasture_types     = 3             # Annual, Lucerne, Tedera  ^Add this to Property.xlsx (maybe in General) as a list of the pastures to include & this is the length.
+pastures = ['annual','lucerne','tedera']        # ^should be from UniversalInputs.py see also Pasture.py
+n_pasture_types     = len(pastures)             # Annual, Lucerne, Tedera  ^Add this to Property.xlsx (maybe in General) as a list of the pastures to include & this is the length.
+pasture_inputs=dict()
+for t,pasture in enumerate(pastures):
+    pasture_inputs[pasture] = fun.xl_all_named_ranges('Property.xlsx', [pasture])
