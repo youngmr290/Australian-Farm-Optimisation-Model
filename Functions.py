@@ -56,12 +56,17 @@ def xl_all_named_ranges(filename, targetsheets):     # read all range names defi
     wb = load_workbook(filename, data_only=True, read_only=False)
     # t_wb = wb
     parameters = {}
+    ## convert targetsheets to lowercase and handle both an individual name and a list
+    try:
+        targetsheets = targetsheets.lower()
+    except:   #targetsheets is a list
+        targetsheets = [name.lower() for name in targetsheets]
 
     for dn in wb.defined_names.definedName[:]:
         try:
             sheet_name, cell_range = list(dn.destinations)[0]        # if it is a non-contiguous range dn.destinations would need to be looped through
 #            print (dn.name, cell_range)
-            if sheet_name.casefold() in targetsheets.casefold():     #casefold to make it a caseless match. in to check list of sheet names
+            if sheet_name.lower() in targetsheets:     # in to check list of sheet names
                 try:
                     cr = CellRange(cell_range)
                     width = cr.max_col - cr.min_col
