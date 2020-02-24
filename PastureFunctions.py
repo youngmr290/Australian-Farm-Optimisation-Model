@@ -61,7 +61,7 @@ n_foo_levels        = 3             # Low, medium & high FOO level in the growth
 n_feed_periods      = len(pinp.feed_inputs['feed_periods']) - 1
 n_lmu               = len(pinp.general['lmu_area'])
 n_phases_rotn       = len(phases_rotn_df.index)
-n_pasture_types     = pinp.n_pasture_types
+n_pasture_types     = pinp.n_pasture_types   #^ need to sort timing of the definition of pastures
 
 length_f  = np.array(pinp.feed_inputs['feed_periods'].loc[:n_feed_periods-1,'length']) # converted to np. to get @jit working
 
@@ -258,13 +258,13 @@ def init_and_read_excel(filename, landuses):
         i_grn_dmd_declinefoo_ft[...,t]      = np.asfarray(exceldata['DigDeclineFOO'])
         i_grn_dmd_range_ft[...,t]           = np.asfarray(exceldata['DigSpread'])
         i_foo_end_propn_gt[...,t]           = np.asfarray(exceldata['FOOGrazePropn'])
-        c_pgr_gi_scalar_gft[...,t]    = 1 - i_foo_end_propn_gt[t].reshape(-1,1)**2        \
+        c_pgr_gi_scalar_gft[...,t]    = 1 - i_foo_end_propn_gt[...,t].reshape(-1,1)**2        \
                                        * (1 - np.asfarray(exceldata['PGRScalarH']))
 
         i_fxg_foo_oflt[0,:,:,t]             = exceldata['LowFOO'].to_numpy()
         i_fxg_foo_oflt[1,:,:,t]             = exceldata['MedFOO'].to_numpy()
-        i_me_eff_gainlose_ft[...,t]         = exceldata['MaintenanceEff[0]'].to_numpy()
-        i_me_maintenance_eft[...,t]         = exceldata['MaintenanceEff[1:]'].to_numpy().T
+        i_me_eff_gainlose_ft[...,t]         = exceldata['MaintenanceEff'].iloc[:,0].to_numpy()
+        i_me_maintenance_eft[...,t]         = exceldata['MaintenanceEff'].iloc[:,1:].to_numpy().T
         ## # i_fxg_foo_oflt[-1,...] is calculated later and is the maximum foo that can be achieved (on that lmu in that period)
         ## # it is affected by sa on pgr so it must be calculated during the experiment where sam might be altered.
         i_fxg_pgr_oflt[0,:,:,t]             = exceldata['LowPGR'].to_numpy()
@@ -293,9 +293,9 @@ def init_and_read_excel(filename, landuses):
                          * i_fxg_foo_oflt[0,...]
     c_fxg_a_oflt[2,...] =  i_fxg_pgr_oflt[1,...] # because slope = 0
 
-    grn_senesce_startfoo_ft =1 -((1 -     i_grn_senesce_daily_ft) ** length_f)          # proportion of start foo that senescences during the period, different formula than excel
-    grn_senesce_pgrcons_ft  =1 -((1 -(1 - i_grn_senesce_daily_ft) ** (length_f+1))   \
-                                 /        i_grn_senesce_daily_ft - 1) / length_f     # proportion of the total growth & consumptioin that senescences during the period
+    grn_senesce_startfoo_ft =1 -((1 -     i_grn_senesce_daily_ft) **  length_f.reshape(-1,1))          # proportion of start foo that senescences during the period, different formula than excel
+    grn_senesce_pgrcons_ft  =1 -((1 -(1 - i_grn_senesce_daily_ft) ** (length_f.reshape(-1,1)+1))   \
+                                 /        i_grn_senesce_daily_ft-1) / length_f.reshape(-1,1)     # proportion of the total growth & consumption that senescences during the period
 
 def calculate_germ_and_reseed():
     ''' Calculate germination and reseeding parameters
@@ -345,7 +345,7 @@ def calculate_germ_and_reseed():
         for t in range(n_pasture_types):
             proportion  = proportion_t[t]
             propn_grn   =  propn_grn_t[t]
-            foo_change  = foo_change_lrt[t]
+            foo_change  = foo_change_lrt[...,t]
             period      =     period_t[t]
             next_period = (period+1) % n_feed_periods
 
@@ -353,7 +353,7 @@ def calculate_germ_and_reseed():
             range_dmd   = i_dry_dmd_range_ft[period,t]
             high_dmd    = ave_dmd+range_dmd/2
             low_dmd     = ave_dmd-range_dmd/2
-            propn_high_l  = (dmd_dry_lt[t] - low_dmd) /  (high_dmd - low_dmd)
+            propn_high_l  = (dmd_dry_lt[...,t] - low_dmd) /  (high_dmd - low_dmd)
             propn_low_l   = 1 - propn_high_l
 
             p_foo_grn_reseeding_flrt[period,:,:,t]        += foo_change *    proportion  * propn_grn      # add the amount of green for the first period
@@ -369,20 +369,24 @@ def calculate_germ_and_reseed():
     p_foo_dryl_reseeding_flrt[...] = 0
 
     ## map the germination phases to the rotation phases   ^ this needs to be revamped along with the germination inputs (see notes on rotatioin sets in book 2-2-20)
+    # ^ original code
     # phase_germ_df      = pd.merge(phases_rotn_df,i_phase_germ_df,
     #                                how     = 'left',
     #                                left_on = [*range(phase_len)],
     #                                right_on= [*range(phase_len)],
     #                                sort    = False)
-    # phase_germ_df = phase_germ_df.set_index([*range(phase_len)])                                     # ^not sure the reason for the set_index may not be necessary
-    # rp                  = phase_germ_df['germ_scalar'].to_numpy().reshape(-1,1)                      # extract the germ_scalar from the dataframe and transpose (reshape to a column vector)
-    # lmu_lrt             = i_germ_scalar_lt[:,np.newaxis,:]              \
-    #                      * sen.sam_germ_l.reshape(-1,1,1) # lmu germination scalar x SA on lmu scalar
-    # germination_lrt         = i_germination_std_t        \
-    #                      * np.multiply(rp,lmu_lrt)          \
-    #                      * sen.sam_germ                             # create an array rot phase x lmu
-    # germination_lrt[np.isnan(germination_lrt)]  = 0.0
-    # p_germination_flrt[0,...]           = germination                                                                       # set germination in first period to germination
+    # ^ 2 lines of code to bypass & make all 1
+    phase_germ_df = phases_rotn_df
+    phase_germ_df['germ_scalar']=1
+    phase_germ_df = phase_germ_df.set_index([*range(phase_len)])                                     # ^not sure the reason for the set_index may not be necessary
+    rp                  = phase_germ_df['germ_scalar'].to_numpy().reshape(-1,1)                      # extract the germ_scalar from the dataframe and transpose (reshape to a column vector)
+    lmu_lrt             = i_germ_scalar_lt[:,np.newaxis,:]              \
+                          * sen.sam_germ_l.reshape(-1,1,1) # lmu germination scalar x SA on lmu scalar
+    germination_lrt         = i_germination_std_t        \
+                          * np.multiply(rp,lmu_lrt)          \
+                          * sen.sam_germ                             # create an array rot phase x lmu
+    germination_lrt[np.isnan(germination_lrt)]  = 0.0
+    p_germination_flrt[0,...]           = germination_lrt    # set germination in first period to germination
 
     ## retain the (labour) period during which this pasture is reseeded. For machinery expenditure
     period_dates            = per.p_dates_df()['date']
@@ -394,13 +398,17 @@ def calculate_germ_and_reseed():
     feed_period_name    = pinp.feed_inputs['feed_periods'].index
 
     ## calculate the area (for all the phases) that is growing pasture for each feed period. The area can be 0 for a pasture phase if it has been destocked for reseeding.
-    phase_area_df       = pd.merge(phases_rotn_df,i_phase_germ_df
-                                   , how='left'
-                                   , left_on=[*range(phase_len)]
-                                   , right_on=[*range(phase_len)]
-                                   , sort=False)
-    duration            =  i_reseeding_date_grazing_t     \
-                         - i_reseeding_date_destock_t
+    # ^ original code
+    # phase_area_df       = pd.merge(phases_rotn_df,i_phase_germ_df
+    #                                , how='left'
+    #                                , left_on=[*range(phase_len)]
+    #                                , right_on=[*range(phase_len)]
+    #                                , sort=False)
+    # ^ 2 lines of code to bypass & make all False
+    phase_area_df = phases_rotn_df
+    phase_area_df['resown'] = False
+    duration            = (i_reseeding_date_grazing_t
+                         - i_reseeding_date_destock_t)
     periods_destocked   = fun.range_allocation( feed_period_dates     # proportion of each period that is not being grazed because destocked for reseeding
                                                ,feed_period_name
                                                ,i_reseeding_date_destock_t
