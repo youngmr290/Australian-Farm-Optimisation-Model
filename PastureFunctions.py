@@ -107,6 +107,7 @@ def init_and_read_excel(filename, landuses):
     global i_me_eff_gainlose_ft
 
     global i_me_maintenance_eft
+    global p_dry_removal_t_dft
 
     global i_fxg_foo_oflt
     global i_fxg_pgr_oflt
@@ -114,6 +115,7 @@ def init_and_read_excel(filename, landuses):
     global c_fxg_b_oflt
     # global c_fxg_ai_oflt
     # global c_fxg_bi_oflt
+    global p_foo_start_grnha_oflt
 
     global p_germination_flrt
     global p_foo_grn_reseeding_flrt
@@ -308,6 +310,7 @@ def calculate_germ_and_reseed():
     global p_foo_grn_reseeding_flrt
     global p_foo_dryh_reseeding_flrt
     global p_foo_dryl_reseeding_flrt
+    global reseeding_machperiod_t
 
     def update_reseeding_foo(period_t, proportion_t, total, propn_grn_t=1, dmd_dry_lt=0):
         ''' Update p_foo parameters with values for destocking & subsequent grazing (reseeding)
@@ -520,7 +523,7 @@ def green_and_dry():
     max_foo_flt                     = np.maximum(i_fxg_foo_oflt[1,...], foo_start_ungrazed_flt)                  #maximum of ungrazed foo and foo from the medium foo level
     p_foo_start_grnha_oflt[2,...]   = np.maximum.accumulate(max_foo_flt,axis=1)                                #maximum accumulated along the feed periods axis, i.e. max to date
     p_foo_start_grnha_oflt          = np.maximum(p_foo_start_grnha_oflt
-                                                 ,          i.base_ft[:,np.newaxis,:])         # to ensure that final foo can not be below 0
+                                                 ,          i_base_ft[:,np.newaxis,:])         # to ensure that final foo can not be below 0
     ### _green, pasture growth
     pgr_grnday_oflt = np.maximum(0.01, i_fxg_pgr_oflt                  # use maximum to ensure that the pgr is non zero (because foo_days requires dividing by pgr)
                                       *  sam_pgr_flt)
@@ -539,10 +542,12 @@ def green_and_dry():
                               * (1 - i_grn_senesce_eos_ft[:,np.newaxis,:])
 
     ### _green, removal & dmi
-    removal_grnha_goflt =np.maximum(0, p_foo_start_grnha_oflt * (1 - grn_senesce_startfoo_ft[:,np.newaxis,:])
-                                      +        pgr_grnha_goflt *(1 -  grn_senesce_pgrcons_ft[:,np.newaxis,:])
-                                      -  foo_prior_grnha_goflt)          \
-                         /      (1 - grn_senesce_pgrcons_ft[:,np.newaxis,:])
+    removal_grnha_goflt =np.maximum(0,   p_foo_start_grnha_oflt 
+                               * (1 - grn_senesce_startfoo_ft[:,np.newaxis,:])
+                                      +          pgr_grnha_goflt 
+                               * (1 -  grn_senesce_pgrcons_ft[:,np.newaxis,:])
+                                      - foo_endprior_grnha_goflt)          \
+                         /       (1 -  grn_senesce_pgrcons_ft[:,np.newaxis,:])
     cons_grnha_t_goflt  =      removal_grnha_goflt   \
                          /(1+i_grn_trampling_ft[:,np.newaxis,:])
 
@@ -600,8 +605,8 @@ def green_and_dry():
     ### _dry, dmd & foo of feed consumed
     dry_dmd_adj_ft  = np.max(i_dry_dmd_ave_ft,axis=0) * (1 -sen.sam_dry_dmd_decline)   \
                      +       i_dry_dmd_ave_ft         *     sen.sam_dry_dmd_decline    # do sensitivity adjustment for dry_dmd_input based on increasing/reducing the reduction in dmd from the maximum (starting value)
-    dry_dmd_high_ft = i_dry_dmd_adj_ft + i_dry_dmd_range_ft/2
-    dry_dmd_low_ft  = i_dry_dmd_adj_ft - i_dry_dmd_range_ft/2
+    dry_dmd_high_ft = dry_dmd_adj_ft + i_dry_dmd_range_ft/2
+    dry_dmd_low_ft  = dry_dmd_adj_ft - i_dry_dmd_range_ft/2
     dry_dmd_dft     = np.stack((dry_dmd_high_ft, dry_dmd_low_ft),axis=0)    # create an array with a new axis 0 by stacking the existing arrays
     ## # ^ could implement a dry foo sensitivity analysis here
     dry_foo_high_ft = i_dry_foo_high_ft * 3/4
@@ -668,8 +673,8 @@ def poc_md():
         The quality of pasture on crop paddocks each day before seeding
         - this is adjusted for feed period
     '''
-    p_md_flt=list(map(fdb.dmd_to_md,  i_poc_dmd_flt)) #could use list comp but thought it was a good place to practise map
-    return dict(enumerate(p_md_flt))  # may need np.ndenumerate() to use with an array
+    p_md_ft=list(map(fdb.dmd_to_md,  i_poc_dmd_ft)) #could use list comp but thought it was a good place to practise map
+    return dict(enumerate(p_md_ft))  # may need np.ndenumerate() to use with an array
 
 def poc_vol():
     '''
@@ -681,8 +686,7 @@ def poc_vol():
     '''
     # ri_qual = np.asarray([fdb.ri_quality(dmd, i_legume_t) for dmd in i_poc_dmd_ft])       #could use map ie list(map(fdb.ri_quality, md, repeat(annual.legume))) (repeat is imported from itertools)
     # ri_quan = np.asarray([fdb.ri_availability(foo, i_ri_foo_t) for foo in i_poc_foo_ft])
-    foo_f = i_poc_foo_ft.to_numpy()
-    ri_qual_flt = fdb.ri_quality(i_poc_dmd_flt, i_legume_t)       # passing a numpy array
-    ri_quan_flt = fdb.ri_availability(i_poc_foo_flt, i_ri_foo_t)
-    p_poc_vol_flt = 1/(ri_qual_flt*ri_quan_flt)
-    return dict(enumerate(p_poc_vol_flt))  # may need np.ndenumerate() to use with an array
+    ri_qual_ft = fdb.ri_quality(i_poc_dmd_ft, i_legume_t)       # passing a numpy array
+    ri_quan_ft = fdb.ri_availability(i_poc_foo_ft, i_ri_foo_t)
+    p_poc_vol_ft = 1/(ri_qual_ft*ri_quan_ft)
+    return dict(enumerate(p_poc_vol_ft))  # may need np.ndenumerate() to use with an array
