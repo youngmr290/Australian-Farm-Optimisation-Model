@@ -31,7 +31,7 @@ from scipy.optimize import minimize
 
 #midas modules
 import StubbleInputs as si
-import Inputs as inp
+# import Inputs as inp
 import CropInputs as ci
 import FeedBudget as fb
 

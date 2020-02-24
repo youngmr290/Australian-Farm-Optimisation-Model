@@ -81,7 +81,6 @@ model.s_lmus = Set(initialize=pinp.general['lmu_area'].index, doc='defined the s
 
 ##different fert options - used in labourcroppyomo
 model.s_fert_type = Set(initialize=uinp.price['fert_cost'].index, doc='fertiliser options')
->>>>>>> master
 
 ###########
 #rotation #

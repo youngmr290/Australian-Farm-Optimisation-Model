@@ -61,7 +61,7 @@ for p in range(1):
         
     # for j,i in zip(range(2000,2054), rps.lo_bound.keys()):#(range(1)): #maybe this should be looping through an exp sheet in excel
     bounded_rots=[]
-    for i in random.sample(range(2661),1):#(range(1)): #maybe this should be looping through an exp sheet in excel
+    for i in random.sample(range(2441),1):#(range(1)): #maybe this should be looping through an exp sheet in excel
     # # # for i in (range(1)): #maybe this should be looping through an exp sheet in excel
     # # #     print('Starting exp loop')
     # # #     #define any SA - this module will have to import sensitivity module then other module will import sensitivity therefore sensitivity shouldn't inport pre calc modules

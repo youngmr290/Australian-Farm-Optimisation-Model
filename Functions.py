@@ -302,16 +302,17 @@ def period_allocation2(start_df, length_df, p_dates, p_name):
 #similar to period_allocation that is the proportion of the date range that falls in each period
 def range_allocation(period_dates, periods, start, length):
     #start empty list to append to
-    allocation_period = []
+    allocation_period = pd.DataFrame()
     end = start + length
     #check how much of each period falls within the date range
     for i in range(len(periods)-1):
         per_start= period_dates[i]
         per_end = period_dates[i + 1]
-        calc_start = max(per_start,start)       #select the later of the period start or the start of the range
-        calc_end = min(per_end,end)             #select earlier of the period end and the end of the range
-        allocation_period.append(max(0, (calc_end - calc_start) / (per_end - per_start))) #days between calc_end and calc_start (0 if end before start) divided by length of the period
-    return pd.DataFrame(list(zip(periods,allocation_period)), columns= ('period', 'allocation'))
+        calc_start = np.maximum(per_start,start)       #select the later of the period start or the start of the range
+        calc_end = np.minimum(per_end,end)             #select earlier of the period end and the end of the range
+        allocation=max(0, np.divide((calc_end - calc_start) , (per_end - per_start))) #this will be 2d when other pastures are added #days between calc_end and calc_start (0 if end before start) divided by length of the period
+        allocation_period=allocation_period.append(pd.DataFrame(data=[allocation])) 
+    return allocation_period.to_numpy()
 
 #the feed period and position in the feed period that a given date range falls
 def period_proportion(period_dates, periods, date):
@@ -323,22 +324,22 @@ def period_proportion(period_dates, periods, date):
         per_end = period_dates[i + 1]
         if per_start <= date <= per_end:        #date is within the period
             period = i
-            proportion = (date - per_start)/(per_end - per_start)
+            proportion = np.divide(np.subtract(date , per_start),np.subtract(per_end , per_start))
     return period, proportion
 
 
-#################################################
-# create a numpy by broadcasting dataframes     #
-#################################################
+# #################################################
+# # create a numpy by broadcasting dataframes     #
+# #################################################
 
-#this function returns a 2D or 3D numpy array
-#array is created by matrix multiplication of two or three 1D dataframes
-#The dfs passed becomes axis 0, 1 & 2 of the array. The first & third need to be reshaped
-def create_array_from_dfs(df1,df2,df3=''):
-    np1=np.array(df1.to_numpy).reshape(-1,1)
-    np2=np.array(df2.to_numpy)
-    final=np.multiply(np1,np2)
-    if df3:                                         #if there is a 3rd dimension
-        np3=np.array(df3.to_numpy).reshape(1,1,-1)
-        final=np.multiply(final,np3)
-    return final
+# #this function returns a 2D or 3D numpy array
+# #array is created by matrix multiplication of two or three 1D dataframes
+# #The dfs passed becomes axis 0, 1 & 2 of the array. The first & third need to be reshaped
+# def create_array_from_dfs(df1,df2,df3=''):
+#     np1=np.array(df1.to_numpy).reshape(-1,1)
+#     np2=np.array(df2.to_numpy)
+#     final=np.multiply(np1,np2)
+#     if df3:                                         #if there is a 3rd dimension
+#         np3=np.array(df3.to_numpy).reshape(1,1,-1)
+#         final=np.multiply(final,np3)
+#     return final

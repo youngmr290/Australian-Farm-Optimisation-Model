@@ -1,15 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue Nov  5 19:46:24 2019
-module: pasture input module - contains all input data likely to vary for different regions or farms
-
-extra info: - this could eventually interact with a user interface
-            - interacts with kv's
-
-key: green section title is major title
-     '#' around a title is a minor section title
-     std '#' comment about a given line of code
-
 @author: john
 
 Description of this pasture module: This representation includes at optimisation (ie the folowing options are represented in the variables of the model)
@@ -276,7 +267,8 @@ def init_and_read_excel(filename, landuses):
         i_phase_germ_df                     = exceldata['GermPhases']       #DataFrame with germ scalar and resown
 
     ## Some one time data manipulation for the inputs just read
-    i_phase_germ_df.index = [*range(len(i_phase_germ_df.index))]              # replace index read from Excel with numbers to match later merging
+    # i_phase_germ_df.index = [*range(len(i_phase_germ_df.index))]              # replace index read from Excel with numbers to match later merging
+    i_phase_germ_df.reset_index(inplace=True)                                                  # replace index read from Excel with numbers to match later merging
     i_phase_germ_df.columns.values[range(phase_len)] = [*range(phase_len)]         # replace the landuse columns read from Excel with numbers to match later merging
 
     i_fxg_foo_oflt[2,...]  = 10000 #large number so that the np.searchsorted doesn't go above
@@ -310,7 +302,7 @@ def calculate_germ_and_reseed():
     ## the above would provide more options for KVs and provide another step that may not need to be recalculated
     '''
     ## set global on all variables required outside this function
-    global phase_germ_df
+    global phase_germresow_df
     global p_germination_flrt
     global p_phase_area_frt
     global p_foo_grn_reseeding_flrt
@@ -336,7 +328,7 @@ def calculate_germ_and_reseed():
         total_lt      = np.zeros((n_lmu,n_pasture_types), dtype = np.float64)   # create the array total_lt with the required shape
         total_lt[:,:] = total                                                   # broadcast total_t into total_lt (to handle total not having an lmu axis)
 
-        foo_change_lrt = total_lt[:,np.newaxis,:] * phase_germ_df['resown'].to_numpy().reshape(-1,1).astype(float)  # create an array (phase x lmu) that is the value to be added for any phase that is resown
+        foo_change_lrt = total_lt[:,np.newaxis,:] * phase_germresow_df['resown'].to_numpy().reshape(-1,1).astype(float)  # create an array (phase x lmu) that is the value to be added for any phase that is resown
         foo_change_lrt[np.isnan(foo_change_lrt)] = 0
 
         ## ^This loop can be removed - no, advanced indexing returns a copy not a view so it can't be assigned to
@@ -368,18 +360,25 @@ def calculate_germ_and_reseed():
     p_foo_dryh_reseeding_flrt[...] = 0
     p_foo_dryl_reseeding_flrt[...] = 0
 
-    ## map the germination phases to the rotation phases   ^ this needs to be revamped along with the germination inputs (see notes on rotatioin sets in book 2-2-20)
-    # ^ original code
-    # phase_germ_df      = pd.merge(phases_rotn_df,i_phase_germ_df,
-    #                                how     = 'left',
-    #                                left_on = [*range(phase_len)],
-    #                                right_on= [*range(phase_len)],
-    #                                sort    = False)
-    # ^ 2 lines of code to bypass & make all 1
-    phase_germ_df = phases_rotn_df
-    phase_germ_df['germ_scalar']=1
-    phase_germ_df = phase_germ_df.set_index([*range(phase_len)])                                     # ^not sure the reason for the set_index may not be necessary
-    rp                  = phase_germ_df['germ_scalar'].to_numpy().reshape(-1,1)                      # extract the germ_scalar from the dataframe and transpose (reshape to a column vector)
+    ## map the germination and resowing to the rotation phases   ^ this needs to be revamped along with the germination inputs (see notes on rotatioin sets in book 2-2-20)
+    phase_germresow_df = phases_rotn_df.copy() #copy bit needed so future changes dont alter initial df
+    rp=np.empty([len(phase_germresow_df),n_pasture_types])
+    resown_r=np.empty([len(phase_germresow_df),n_pasture_types])
+    ###loop through each phase in the germ df then check if each phase isin the set.
+    for t in range(n_pasture_types):
+        phase_germresow_df['germ_scalar']=0 #set default to 0
+        phase_germresow_df['resown']=False #set default to false
+        for ix_row in i_phase_germ_df.index:
+            ix_bool = pd.Series(data=True,index=range(len(phase_germresow_df)))
+            for ix_col in range(i_phase_germ_df.shape[1]-2):    #-2 because two of the cols are germ and resowing
+                c_set = uinp.structure[i_phase_germ_df.iloc[ix_row,ix_col]]
+                ix_bool &= phase_germresow_df.loc[:,ix_col].reset_index(drop=True).isin(c_set) #had to drop index so that it would work (just said false when the index was different between series)
+            #maps the relevant germ scalar and resown bool to the roation phase
+            phase_germresow_df.loc[list(ix_bool),'germ_scalar'] = i_phase_germ_df.loc[ix_row, 'germ_scalar']  #have to make bool into a list for some reason it doesn't like a series
+            phase_germresow_df.loc[list(ix_bool),'resown'] = i_phase_germ_df.loc[ix_row, 'resown']
+        ###Now convert germ and resow into a numpy - each pasture goes on a different level
+        rp[:,t] = phase_germresow_df['germ_scalar'].to_numpy()#.reshape(-1,1)                      # extract the germ_scalar from the dataframe and transpose (reshape to a column vector)
+        resown_r[:,t] = phase_germresow_df['resown'].to_numpy()#.reshape(-1,1)                      # extract the germ_scalar from the dataframe and transpose (reshape to a column vector)
     lmu_lrt             = i_germ_scalar_lt[:,np.newaxis,:]              \
                           * sen.sam_germ_l.reshape(-1,1,1) # lmu germination scalar x SA on lmu scalar
     germination_lrt         = i_germination_std_t        \
@@ -398,23 +397,14 @@ def calculate_germ_and_reseed():
     feed_period_name    = pinp.feed_inputs['feed_periods'].index
 
     ## calculate the area (for all the phases) that is growing pasture for each feed period. The area can be 0 for a pasture phase if it has been destocked for reseeding.
-    # ^ original code
-    # phase_area_df       = pd.merge(phases_rotn_df,i_phase_germ_df
-    #                                , how='left'
-    #                                , left_on=[*range(phase_len)]
-    #                                , right_on=[*range(phase_len)]
-    #                                , sort=False)
-    # ^ 2 lines of code to bypass & make all False
-    phase_area_df = phases_rotn_df
-    phase_area_df['resown'] = False
     duration            = (i_reseeding_date_grazing_t
                          - i_reseeding_date_destock_t)
     periods_destocked   = fun.range_allocation( feed_period_dates     # proportion of each period that is not being grazed because destocked for reseeding
                                                ,feed_period_name
                                                ,i_reseeding_date_destock_t
                                                ,duration)
-    p_phase_area_frt    = 1 - fun.create_array_from_dfs(phase_area_df['resown']   # parameters for rotation phase variable: area of pasture in each period (is 0 for resown phases during periods that resown pasture is not grazed )
-                                                        ,periods_destocked['allocation'])
+    p_phase_area_frt    = 1 - np.multiply(resown_r,periods_destocked[:,np.newaxis,:])  # parameters for rotation phase variable: area of pasture in each period (is 0 for resown phases during periods that resown pasture is not grazed )
+                                                        
 
     ## calculate the green feed lost when pasture is destocked. Spread between periods based on date destocked
     period, proportion  = fun.period_proportion( feed_period_dates  # which feed period does destocking occur & the proportion that destocking occurs during the period.
