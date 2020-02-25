@@ -312,7 +312,7 @@ def calculate_germ_and_reseed():
     global p_foo_dryl_reseeding_flrt
     global reseeding_machperiod_t
 
-    def update_reseeding_foo(period_t, proportion_t, total, propn_grn_t=1, dmd_dry_lt=0):
+    def update_reseeding_foo(period_t, proportion_t, total, propn_grn=1, dmd_dry=0):
         ''' Update p_foo parameters with values for destocking & subsequent grazing (reseeding)
 
         period_t & proportion_t - an array [type] : the first period affected by the destocking or subsequent grazing.
@@ -328,13 +328,17 @@ def calculate_germ_and_reseed():
         global p_foo_dryh_reseeding_flrt
         global p_foo_dryl_reseeding_flrt
 
-        total_lt      = np.zeros((n_lmu,n_pasture_types), dtype = np.float64)   # create the array total_lt with the required shape
-        total_lt[:,:] = total                                                   # broadcast total_t into total_lt (to handle total not having an lmu axis)
+        total_lt        = np.zeros((n_lmu,n_pasture_types), dtype = np.float64)   # create the array total_lt with the required shape
+        total_lt[:,:]   = total                                                   # broadcast total into total_lt (to handle total not having an lmu axis)
+        propn_grn_t     = np.zeros((      n_pasture_types), dtype = np.float64)   # create the array propn_grn_t with the required shape
+        propn_grn_t[:]  = propn_grn                                               # broadcast propn_grn into propn_grn_t (to handle propn_grn not having an pasture type axis)
+        dmd_dry_lt      = np.zeros((n_lmu,n_pasture_types), dtype = np.float64)   # create the array dmd_dry_lt with the required shape
+        dmd_dry_lt[:,:] = dmd_dry                                                 # broadcast dmd_dry into dmd_dry_lt (to handle dmd_dry not having an lmu axis)
 
         foo_change_lrt = total_lt[:,np.newaxis,:] * phase_germresow_df['resown'].to_numpy().reshape(-1,1).astype(float)  # create an array (phase x lmu) that is the value to be added for any phase that is resown
         foo_change_lrt[np.isnan(foo_change_lrt)] = 0
 
-        ## ^This loop can be removed - no, advanced indexing returns a copy not a view so it can't be assigned to
+        ## ^This loop can be removed - no it can't, advanced indexing returns a copy not a view so it can't be assigned to
         ## # 1. p_foo_grn_reseeding_flrt[period_t,:,:,*range(n_pasture_types)] += might work (see AdvanceIndexing.py)
         ## # 2. removed if on propn_grn_t and doing all the dry calculations even if prop_grn_t = 1. (makes the code look much neater)
         for t in range(n_pasture_types):
@@ -397,17 +401,18 @@ def calculate_germ_and_reseed():
 
     ## set the period definitions to the feed periods
     feed_period_dates   = list(pinp.feed_inputs['feed_periods']['date'])
+    feed_period_dates_f = np.array(feed_period_dates,dtype=np.datetime64)
     feed_period_name    = pinp.feed_inputs['feed_periods'].index
 
     ## calculate the area (for all the phases) that is growing pasture for each feed period. The area can be 0 for a pasture phase if it has been destocked for reseeding.
     duration            = (i_reseeding_date_grazing_t
                          - i_reseeding_date_destock_t)
-    periods_destocked   = fun.range_allocation( feed_period_dates     # proportion of each period that is not being grazed because destocked for reseeding
-                                               ,feed_period_name
-                                               ,i_reseeding_date_destock_t
-                                               ,duration)
+    periods_destocked   = fun.range_allocation_np( feed_period_dates_f     # proportion of each period that is not being grazed because destocked for reseeding
+                                               #  ,feed_period_name
+                                                  ,i_reseeding_date_destock_t
+                                                  ,duration)
     p_phase_area_frt    = 1 - np.multiply(resown_r,periods_destocked[:,np.newaxis,:])  # parameters for rotation phase variable: area of pasture in each period (is 0 for resown phases during periods that resown pasture is not grazed )
-                                                        
+
 
     ## calculate the green feed lost when pasture is destocked. Spread between periods based on date destocked
     period, proportion  = fun.period_proportion( feed_period_dates  # which feed period does destocking occur & the proportion that destocking occurs during the period.
@@ -542,9 +547,9 @@ def green_and_dry():
                               * (1 - i_grn_senesce_eos_ft[:,np.newaxis,:])
 
     ### _green, removal & dmi
-    removal_grnha_goflt =np.maximum(0,   p_foo_start_grnha_oflt 
+    removal_grnha_goflt =np.maximum(0,   p_foo_start_grnha_oflt
                                * (1 - grn_senesce_startfoo_ft[:,np.newaxis,:])
-                                      +          pgr_grnha_goflt 
+                                      +          pgr_grnha_goflt
                                * (1 -  grn_senesce_pgrcons_ft[:,np.newaxis,:])
                                       - foo_endprior_grnha_goflt)          \
                          /       (1 -  grn_senesce_pgrcons_ft[:,np.newaxis,:])

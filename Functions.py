@@ -301,18 +301,54 @@ def period_allocation2(start_df, length_df, p_dates, p_name):
 #proportion of each feed period that falls in a given date range
 #similar to period_allocation that is the proportion of the date range that falls in each period
 def range_allocation(period_dates, periods, start, length):
+    ''' The proportion of each period that falls in the tested date range.
+    Parameters.
+    period_dates: the start of the periods - in a DataFrame.
+    periods: the period descriptions to be returned in the dataframe.
+    start: the date of the beginning of the date range to test.
+    length: the length of the date range to test - a timedelta.days object.
+
+    Returns.
+    a DataFrame with the period description and the proportion of the period
+    '''
     #start empty list to append to
     allocation_period = pd.DataFrame()
     end = start + length
     #check how much of each period falls within the date range
     for i in range(len(periods)-1):
+        per_start= period_dates[i].date()    # convert from TimeStamp to datetime
+        per_end = period_dates[i + 1].date() #   to allow the calculations
+        calc_start = max(per_start,start)       #select the later of the period start or the start of the range
+        calc_end = min(per_end,end)             #select earlier of the period end and the end of the range
+        allocation=max(0, (calc_end - calc_start) / (per_end - per_start)) #this will be 2d when other pastures are added #days between calc_end and calc_start (0 if end before start) divided by length of the period
+        allocation_period=allocation_period.append(pd.DataFrame(data=[allocation]))
+    return allocation_period
+
+def range_allocation_np(period_dates, start, length):
+    ''' Numpy version - The proportion of each period that falls in the tested date range.
+
+    Parameters.
+    period_dates: the start of the periods - in a Numpy array np.datetime64.
+    start: the date of the beginning of the date range to test - a numpy array of dates.
+    length: the length of the date range to test - an array of timedelta.days object.
+       length must be braodcastable into start
+
+    Returns.
+    a Numpy array with shape(period_dates, start array).
+    Containing the proportion of the respective period for that test date
+    '''
+    #start empty list to append to
+    allocation_period=np.zeros(((len(period_dates),) + start.shape),dtype=np.float64)
+    end = start + length
+    #check how much of each period falls within the date range
+    for i in range(len(period_dates)-1):
         per_start= period_dates[i]
         per_end = period_dates[i + 1]
         calc_start = np.maximum(per_start,start)       #select the later of the period start or the start of the range
         calc_end = np.minimum(per_end,end)             #select earlier of the period end and the end of the range
-        allocation=max(0, np.divide((calc_end - calc_start) , (per_end - per_start))) #this will be 2d when other pastures are added #days between calc_end and calc_start (0 if end before start) divided by length of the period
-        allocation_period=allocation_period.append(pd.DataFrame(data=[allocation])) 
-    return allocation_period.to_numpy()
+        allocation_period[i,...] = np.maximum(0, (calc_end - calc_start) / (per_end - per_start)) #days between calc_end and calc_start (0 if end before start) divided by length of the period
+    return allocation_period
+
 
 #the feed period and position in the feed period that a given date range falls
 def period_proportion(period_dates, periods, date):
