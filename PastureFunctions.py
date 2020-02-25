@@ -108,6 +108,7 @@ def init_and_read_excel(filename, landuses):
 
     global i_me_maintenance_eft
     global p_dry_removal_t_dft
+    global p_dry_transfer_t_dft
 
     global i_fxg_foo_oflt
     global i_fxg_pgr_oflt
@@ -189,7 +190,7 @@ def init_and_read_excel(filename, landuses):
     # reseeding_machperiod_t          = np.zeros(n_pasture_types, dtype = 'float64')  # labour/machinery period in which reseeding occurs ^ instantiation may not be required
     i_germination_std_t             = np.zeros(n_pasture_types, dtype = 'float64')  # standard germination level for the standard soil type in a continuous pasture rotation
     i_ri_foo_t                      = np.zeros(n_pasture_types, dtype = 'float64')  # to reduce foo to allow for differences in measurement methods for FOO. The target is to convert the measurement to the system developing the intake equations
-    i_end_of_gs_t                   = np.zeros(n_pasture_types, dtype = 'float64')  # the period number when the pasture senesces
+    i_end_of_gs_t                   = np.zeros(n_pasture_types, dtype = 'int')  # the period number when the pasture senesces
     i_dry_decay_t                   = np.zeros(n_pasture_types, dtype = 'float64')  # decay rate of dry pasture during the dry feed phase (Note: 100% during growing season)
     # poc_days_of_grazing_t           = np.zeros(n_pasture_types, dtype = 'float64')  # number of days after the pasture break that (moist) seeding can begin
     i_legume_t                      = np.zeros(n_pasture_types, dtype = 'float64')  # proportion of legume in the sward
@@ -200,7 +201,8 @@ def init_and_read_excel(filename, landuses):
     p_foo_grn_reseeding_flrt        = np.zeros(flrt,   dtype = 'float64')  # parameters for rotation phase variable: feed lost and gained during destocking and then grazing of resown pasture (kg/ha)
     p_foo_dryh_reseeding_flrt       = np.zeros(flrt,   dtype = 'float64')  # parameters for rotation phase variable: high quality dry feed gained from grazing of resown pasture (kg/ha)
     p_foo_dryl_reseeding_flrt       = np.zeros(flrt,   dtype = 'float64')  # parameters for rotation phase variable: low quality dry feed gained from grazing of resown pasture (kg/ha)
-    p_dry_removal_t_dft             = np.zeros(egoflt, dtype = 'float64')  # parameters for the dry feed grazing activities: Total DM removal from the tonne consumed (includes trampling)
+    p_dry_removal_t_dft             = np.zeros(dft,    dtype = 'float64')  # parameters for the dry feed grazing activities: Total DM removal from the tonne consumed (includes trampling)
+    p_dry_transfer_t_dft            = np.zeros(dft,    dtype = 'float64')  # parameters for the dry feed activities: proportion of DM senescencing
 
     index_t                       = np.asarray(landuses)                      # pasture type index description
     index_l                       = pinp.general['lmu_area'].index.to_numpy() # lmu index description
@@ -560,9 +562,20 @@ def green_and_dry():
 
     ### _green, dmd & md from average and change due to foo & grazing intensity
     ## # to calculate foo_days requires calculating number of days in current period and adding days from the previous period (if required)
-    min=-1; max = 0         #Clip between -1 and 0
-    if (p_foo_start_grnha_oflt > p_foo_start_grnha_oflt[1:2,...]):       # 1:2 to retain the axis, but it only points to index level 1.
-        min += 1; max +=1   #Clip between 0 and 1
+
+    #set the default to Clip between -1 and 0 for low FOO level
+    min_oflt = np.ones(n_foo_levels).reshape(-1,1,1,1) * -1
+    max_oflt = np.zeros(n_foo_levels).reshape(-1,1,1,1)
+    # and clip between 0 and 1 for high FOO level
+    min_oflt[2,...] = 0
+    max_oflt[2,...] = 1
+
+    #Clip between 0 and 1 if the FOO level is greater than medium (ie it is high)
+    # adjust_oflt = (p_foo_start_grnha_oflt > p_foo_start_grnha_oflt[1:2,...])     # 1:2 to retain the axis, but it only points to index level 1.
+    # min_oflt += adjust_oflt
+    # max_oflt += adjust_oflt
+    # ^ is this the same as min_oflt[2,...]=0; max_oflt[2:,...]=1 ? Will there be any exceptions
+
     propn_period_oflt               = (  p_foo_start_grnha_oflt
                                        - p_foo_start_grnha_oflt[1:2,...])            \
                                      /           pgr_grnha_goflt[0,...]
@@ -570,16 +583,16 @@ def green_and_dry():
                                        - p_foo_start_grnha_oflt [  1:2,1:  ,:,:]
                                        -         pgr_grnha_goflt[0, : ,1:  ,:,:])     \
                                      /           pgr_grnha_goflt[0, : , :-1,:,:]      # pgr from the previous period
-    foo_days_grnha_oflt             = np.clip(propn_period_oflt,min,max)              \
+    foo_days_grnha_oflt             = np.clip(propn_period_oflt,min_oflt,max_oflt)              \
                                      *              length_f.reshape(-1,1,1)
-    foo_days_grnha_oflt[:,1:,:,:]  += np.clip(propn_periodprev_oflt,min,max)          \
+    foo_days_grnha_oflt[:,1:,:,:]  += np.clip(propn_periodprev_oflt,min_oflt,max_oflt)          \
                                      *                  length_f[:-1].reshape(-1,1,1) # length from previous period
     grn_dmd_swardscalar_oflt        = (1 - i_grn_dmd_declinefoo_ft[:,np.newaxis,:])   \
                                      **          foo_days_grnha_oflt                  # multiplier on digestibility of the sward due to level of FOO (associated with destocking)
     grn_dmd_range_ft                = (       i_grn_dmd_range_ft
-                                       *sen.sam_grn_dmd_range_f).reshape(-1,1)
+                                       *sen.sam_grn_dmd_range_f.reshape(-1,1))
     grn_dmd_selectivity_goft[1,...] = -0.5 * grn_dmd_range_ft                         # addition to digestibility associated with diet selection (level of grazing)
-    grn_dmd_selectivity_goft[2:...] = 0
+    grn_dmd_selectivity_goft[2,...] = 0
     grn_dmd_selectivity_goft[3,...] = +0.5 * grn_dmd_range_ft
     dmd_grnha_goflt                 =            i_grn_dig_flt                        \
                                      * grn_dmd_swardscalar_oflt                       \
@@ -605,7 +618,9 @@ def green_and_dry():
     ### _dry, DM decline (high = low pools)
     dry_decay_daily_ft                    = np.tile(  i_dry_decay_t                    # fill the _t array to _ft shape ^ alternative is to instantiate the array and assign with [...]
                                                     ,(n_feed_periods,1))
-    dry_decay_daily_ft[0:i_end_of_gs_t-1] = 1
+    for t in range(n_pasture_types):
+        # print (t); print(i_end_of_gs_t[t])
+        dry_decay_daily_ft[0:i_end_of_gs_t[t]-1,t] = 1
     dry_decay_period_ft                   = 1 - (1 - dry_decay_daily_ft)               \
                                            **                 length_f.reshape(-1,1)
     p_dry_transfer_t_dft[...]             = 1000 * (1-dry_decay_period_ft)  # parameters for the dry feed transfer activities: quantity transferred
