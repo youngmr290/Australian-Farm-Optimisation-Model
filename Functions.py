@@ -360,9 +360,21 @@ def period_proportion(period_dates, periods, date):
         per_end = period_dates[i + 1]
         if per_start <= date <= per_end:        #date is within the period
             period = i
-            proportion = np.divide(np.subtract(date , per_start),np.subtract(per_end , per_start))
+            proportion = (date - per_start)/(per_end - per_start)
     return period, proportion
 
+def period_proportion_np(period_dates, date):
+    #check if date falls within period
+    period = np.zeros(date.shape,dtype='int')
+    proportion = np.zeros(date.shape,dtype='float64')
+    for i in range(len(period_dates)-1):
+        per_start= period_dates[i]
+        per_end = period_dates[i + 1]
+        if per_start <= date <= per_end:        #date is within the period
+            period[...] = i
+            # proportion[...] = np.divide(np.subtract(date , per_start),np.subtract(per_end , per_start))
+            proportion[...] = (date - per_start) / (per_end - per_start)
+    return period, proportion
 
 # #################################################
 # # create a numpy by broadcasting dataframes     #
