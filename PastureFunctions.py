@@ -420,8 +420,6 @@ def calculate_germ_and_reseed():
     period, proportion  = fun.period_proportion_np( feed_period_dates_f  # which feed period does destocking occur & the proportion that destocking occurs during the period.
                                                 #  ,feed_period_name
                                                    ,i_reseeding_date_destock_t)
-    print('period',period,type(period))
-    print('proportion',proportion,type(proportion))
     update_reseeding_foo(period, 1-proportion, -i_reseeding_ungrazed_destock_t)                                       # call function to remove the FOO lost for the periods. Assumed that all feed lost is green
 
     ## calculate the green & dry feed available when pasture first grazed after reseeding. Spread between periods based on date grazed
@@ -619,7 +617,6 @@ def green_and_dry():
     dry_decay_daily_ft                    = np.tile(  i_dry_decay_t                    # fill the _t array to _ft shape ^ alternative is to instantiate the array and assign with [...]
                                                     ,(n_feed_periods,1))
     for t in range(n_pasture_types):
-        # print (t); print(i_end_of_gs_t[t])
         dry_decay_daily_ft[0:i_end_of_gs_t[t]-1,t] = 1
     dry_decay_period_ft                   = 1 - (1 - dry_decay_daily_ft)               \
                                            **                 length_f.reshape(-1,1)
@@ -685,7 +682,7 @@ def poc_con():             #^ This doesn't look right. I think that some calcula
         - this is adjusted for lmu and feed period
     '''
     df_poc_con = i_poc_intake_daily_flt
-    return df_poc_con.stack().to_dict()
+    return df_poc_con    #.stack().to_dict()
 
 def poc_md():
     '''
@@ -695,8 +692,9 @@ def poc_md():
         The quality of pasture on crop paddocks each day before seeding
         - this is adjusted for feed period
     '''
-    p_md_ft=list(map(fdb.dmd_to_md,  i_poc_dmd_ft)) #could use list comp but thought it was a good place to practise map
-    return dict(enumerate(p_md_ft))  # may need np.ndenumerate() to use with an array
+    #p_md_ft=list(map(fdb.dmd_to_md,  i_poc_dmd_ft)) #could use list comp but thought it was a good place to practise map
+    p_poc_md_ft = fdb.dmd_to_md(i_poc_dmd_ft)
+    return p_poc_md_ft     #dict(enumerate(p_md_ft))  # may need np.ndenumerate() to use with an array
 
 def poc_vol():
     '''
@@ -711,4 +709,4 @@ def poc_vol():
     ri_qual_ft = fdb.ri_quality(i_poc_dmd_ft, i_legume_t)       # passing a numpy array
     ri_quan_ft = fdb.ri_availability(i_poc_foo_ft, i_ri_foo_t)
     p_poc_vol_ft = 1/(ri_qual_ft*ri_quan_ft)
-    return dict(enumerate(p_poc_vol_ft))  # may need np.ndenumerate() to use with an array
+    return p_poc_vol_ft    #dict(enumerate(p_poc_vol_ft))  # may need np.ndenumerate() to use with an array
