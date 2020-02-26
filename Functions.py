@@ -44,7 +44,7 @@ import itertools
 #Testing shpwed readonly = False was quicker than true. But still not as fast as pandas
 # (may not exist anymore) now it causes problems somoetimes locking you out of excel because it is readonly - closing doesn't fix issue (wb._archive.close())
 
-def xl_all_named_ranges(filename, targetsheets, rangename=''):     # read all range names defined in the list targetsheets and return a dictionary of lists or dataframes
+def xl_all_named_ranges(filename, targetsheets, rangename=None):     # read all range names defined in the list targetsheets and return a dictionary of lists or dataframes
     ''' Read data from named ranges in an Excel workbook.
 
     Parameters:
@@ -161,7 +161,7 @@ def cartesian_product_simple_transpose(arrays):
 # period calculators     #
 ##########################
 
-def period_allocation(period_dates,periods,start,length=''):
+def period_allocation(period_dates,periods,start,length=None):
     '''
     Parameters
     ----------
@@ -185,7 +185,7 @@ def period_allocation(period_dates,periods,start,length=''):
     # period_dates = p_dates   # don't need this step if the variables passed in are changed to period_dates from p_dates and periods from p_name
     #gets the period name
     # periods = p_name
-    if length:
+    if length is not None:
     #start empty list to append to
         allocation_period = []
         end = start + length
