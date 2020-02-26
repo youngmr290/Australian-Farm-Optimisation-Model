@@ -44,11 +44,17 @@ import itertools
 #Testing shpwed readonly = False was quicker than true. But still not as fast as pandas
 # (may not exist anymore) now it causes problems somoetimes locking you out of excel because it is readonly - closing doesn't fix issue (wb._archive.close())
 
-def xl_all_named_ranges(filename, targetsheets):     # read all range names defined in the list targetsheets and return a dictionary of lists or dataframes
-    ''' Read data from all named ranges in from an Excel workbook.
+def xl_all_named_ranges(filename, targetsheets, rangename=None):     # read all range names defined in the list targetsheets and return a dictionary of lists or dataframes
+    ''' Read data from named ranges in an Excel workbook.
 
+    Parameters:
     filename is an Excel worbook name (including the extension).
     targetsheets is a list of (or a single) worksheet names from which to read the range names.
+    rangename is an optional argument. If not included then all rangenames are read.
+    If included only that name is read in.
+
+    Returns:
+    A dictionary that includes key that correspond to the rangenames
     '''
     from openpyxl import load_workbook
     from openpyxl.worksheet.cell_range import CellRange
@@ -63,39 +69,40 @@ def xl_all_named_ranges(filename, targetsheets):     # read all range names defi
         targetsheets = [name.lower() for name in targetsheets]
 
     for dn in wb.defined_names.definedName[:]:
-        try:
-            sheet_name, cell_range = list(dn.destinations)[0]        # if it is a non-contiguous range dn.destinations would need to be looped through
-#            print (dn.name, cell_range)
-            if sheet_name.lower() in targetsheets:     # in to check list of sheet names
-                try:
-                    cr = CellRange(cell_range)
-                    width = cr.max_col - cr.min_col
-                    length = cr.max_row - cr.min_row
-                    ws = wb[sheet_name]
-    #                print (dn.name, sheet_name, cell_range, length, width)
-                    if not width and not length:            # the range is a single cell & is not iterable
-                        parameters[dn.name] = ws[cell_range].value
-                    elif not width:                         # the range is only 1 column & is not iterable across the row
-                        parameters[dn.name] = [cell.value for cell in [row[0] for row in ws[cell_range]]]
-                    elif not length:                        # the range is 1 row & is iterable across columns
-                        for row in ws[cell_range]:
-                            parameters[dn.name] = [cell.value for cell in row]
-                    else:                                   # the range is a region & is iterable across rows and columns
-                        df = pd.DataFrame([cell.value for cell in row] for row in ws[cell_range])
-    #                    df = pd.DataFrame(cells)
-                        #print(df)
-                        df.rename(columns=df.iloc[0],inplace=True)
-                        #drop row that had header names (renaming is more like a copy than a cut)
-                        df.drop(df.index[0],inplace=True)
-                        df = df.set_index(df.iloc[:,0]) #could use rename ie df.rename(index=df.iloc[:,0],inplace=True)
-                        #now have to drop the first col because renaming/set_index is more like copy than cut hence it doenst make the index col one just rename index to match col one
-                        df = df.drop(df.columns[[0]],axis=1) #for some reason this will chuck an error in the index values are int and there is nothing in the top left cell of the df...seems like a bug in python
-    #                    manipulate data into cheapest format - results in mainly float32 (strings are still objects) - without this each value is treated as an object (objects use up much more memory) - this change reduced fert df from 150mbs to 20mbs
-                        parameters[dn.name] = df.apply(pd.to_numeric, errors='ignore', downcast='float')
-                except TypeError:
-                    pass
-        except IndexError:
-            pass
+        if rangename is None or dn.name == rangename:
+            try:
+                sheet_name, cell_range = list(dn.destinations)[0]        # if it is a non-contiguous range dn.destinations would need to be looped through
+                #print (dn.name, cell_range)
+                if sheet_name.lower() in targetsheets:     # in to check list of sheet names
+                    try:
+                        cr = CellRange(cell_range)
+                        width = cr.max_col - cr.min_col
+                        length = cr.max_row - cr.min_row
+                        ws = wb[sheet_name]
+                        #print (dn.name, sheet_name, cell_range, length, width)
+                        if not width and not length:            # the range is a single cell & is not iterable
+                            parameters[dn.name] = ws[cell_range].value
+                        elif not width:                         # the range is only 1 column & is not iterable across the row
+                            parameters[dn.name] = [cell.value for cell in [row[0] for row in ws[cell_range]]]
+                        elif not length:                        # the range is 1 row & is iterable across columns
+                            for row in ws[cell_range]:
+                                parameters[dn.name] = [cell.value for cell in row]
+                        else:                                   # the range is a region & is iterable across rows and columns
+                            df = pd.DataFrame([cell.value for cell in row] for row in ws[cell_range])
+                            #df = pd.DataFrame(cells)
+                            #print(df)
+                            df.rename(columns=df.iloc[0],inplace=True)
+                            ## drop row that had header names (renaming is more like a copy than a cut)
+                            df.drop(df.index[0],inplace=True)
+                            df = df.set_index(df.iloc[:,0]) #could use rename ie df.rename(index=df.iloc[:,0],inplace=True)
+                            ## now have to drop the first col because renaming/set_index is more like copy than cut hence it doenst make the index col one just rename index to match col one
+                            df = df.drop(df.columns[[0]],axis=1) #for some reason this will chuck an error in the index values are int and there is nothing in the top left cell of the df...seems like a bug in python
+                            ## manipulate data into cheapest format - results in mainly float32 (strings are still objects) - without this each value is treated as an object (objects use up much more memory) - this change reduced fert df from 150mbs to 20mbs
+                            parameters[dn.name] = df.apply(pd.to_numeric, errors='ignore', downcast='float')
+                    except TypeError:
+                        pass
+            except IndexError:
+                pass
     wb.close
     return parameters #t_wb #
 
@@ -154,7 +161,7 @@ def cartesian_product_simple_transpose(arrays):
 # period calculators     #
 ##########################
 
-def period_allocation(period_dates,periods,start,length=''):
+def period_allocation(period_dates,periods,start,length=None):
     '''
     Parameters
     ----------
@@ -178,12 +185,17 @@ def period_allocation(period_dates,periods,start,length=''):
     # period_dates = p_dates   # don't need this step if the variables passed in are changed to period_dates from p_dates and periods from p_name
     #gets the period name
     # periods = p_name
-    if length:
+    if length is not None:
     #start empty list to append to
         allocation_period = []
         end = start + length
         #check how much of the range falls into each cash period
         for i in range(len(periods)-1):
+            ## ^might be simpler to do this with allocation_period.append  \
+            ## # (min(per_end,end)-max(per_start,start)/(end-start)) clipped(0,1)
+            ## # would also be quicker if the loop started with i = bisect(period_dates,start)-1
+            ## # and finished when per_end > end
+            ## # perhaps this is a while loop
             per_start= period_dates[i]
             per_end = period_dates[i + 1]
             #if the range lasts longer than one cashflow period then that cashflow period gets allocated a proportion
@@ -204,7 +216,7 @@ def period_allocation(period_dates,periods,start,length=''):
                 allocation_period.append(np.nan)
         return pd.DataFrame(list(zip(periods,allocation_period)), columns= ('period', 'allocation'))
     #returns the period name a given date falls into
-    else:
+    else:    #^ could use the python function allocation_p = bisect.bisect(period_dates,start)-1
         for date, period in zip(period_dates, periods):
             while date <= start:
                 allocation_p = period
@@ -301,18 +313,54 @@ def period_allocation2(start_df, length_df, p_dates, p_name):
 #proportion of each feed period that falls in a given date range
 #similar to period_allocation that is the proportion of the date range that falls in each period
 def range_allocation(period_dates, periods, start, length):
+    ''' The proportion of each period that falls in the tested date range.
+    Parameters.
+    period_dates: the start of the periods - in a DataFrame.
+    periods: the period descriptions to be returned in the dataframe.
+    start: the date of the beginning of the date range to test.
+    length: the length of the date range to test - a timedelta.days object.
+
+    Returns.
+    a DataFrame with the period description and the proportion of the period
+    '''
     #start empty list to append to
     allocation_period = pd.DataFrame()
     end = start + length
     #check how much of each period falls within the date range
     for i in range(len(periods)-1):
+        per_start= period_dates[i].date()    # convert from TimeStamp to datetime
+        per_end = period_dates[i + 1].date() #   to allow the calculations
+        calc_start = max(per_start,start)       #select the later of the period start or the start of the range
+        calc_end = min(per_end,end)             #select earlier of the period end and the end of the range
+        allocation=max(0, (calc_end - calc_start) / (per_end - per_start)) #this will be 2d when other pastures are added #days between calc_end and calc_start (0 if end before start) divided by length of the period
+        allocation_period=allocation_period.append(pd.DataFrame(data=[allocation]))
+    return allocation_period
+
+def range_allocation_np(period_dates, start, length):
+    ''' Numpy version - The proportion of each period that falls in the tested date range.
+
+    Parameters.
+    period_dates: the start of the periods - in a Numpy array np.datetime64.
+    start: the date of the beginning of the date range to test - a numpy array of dates.
+    length: the length of the date range to test - an array of timedelta.days object.
+       length must be braodcastable into start
+
+    Returns.
+    a Numpy array with shape(period_dates, start array).
+    Containing the proportion of the respective period for that test date
+    '''
+    #start empty list to append to
+    allocation_period=np.zeros(((len(period_dates),) + start.shape),dtype=np.float64)
+    end = start + length
+    #check how much of each period falls within the date range
+    for i in range(len(period_dates)-1):
         per_start= period_dates[i]
         per_end = period_dates[i + 1]
         calc_start = np.maximum(per_start,start)       #select the later of the period start or the start of the range
         calc_end = np.minimum(per_end,end)             #select earlier of the period end and the end of the range
-        allocation=max(0, np.divide((calc_end - calc_start) , (per_end - per_start))) #this will be 2d when other pastures are added #days between calc_end and calc_start (0 if end before start) divided by length of the period
-        allocation_period=allocation_period.append(pd.DataFrame(data=[allocation])) 
-    return allocation_period.to_numpy()
+        allocation_period[i,...] = np.maximum(0, (calc_end - calc_start) / (per_end - per_start)) #days between calc_end and calc_start (0 if end before start) divided by length of the period
+    return allocation_period
+
 
 #the feed period and position in the feed period that a given date range falls
 def period_proportion(period_dates, periods, date):
@@ -324,9 +372,21 @@ def period_proportion(period_dates, periods, date):
         per_end = period_dates[i + 1]
         if per_start <= date <= per_end:        #date is within the period
             period = i
-            proportion = np.divide(np.subtract(date , per_start),np.subtract(per_end , per_start))
+            proportion = (date - per_start)/(per_end - per_start)
     return period, proportion
 
+def period_proportion_np(period_dates, date):
+    #check if date falls within period
+    period = np.zeros(date.shape,dtype='int')
+    proportion = np.zeros(date.shape,dtype='float64')
+    for i in range(len(period_dates)-1):
+        per_start= period_dates[i]
+        per_end = period_dates[i + 1]
+        if per_start <= date <= per_end:        #date is within the period
+            period[...] = i
+            # proportion[...] = np.divide(np.subtract(date , per_start),np.subtract(per_end , per_start))
+            proportion[...] = (date - per_start) / (per_end - per_start)
+    return period, proportion
 
 # #################################################
 # # create a numpy by broadcasting dataframes     #

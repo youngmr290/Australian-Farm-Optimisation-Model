@@ -33,14 +33,11 @@ time_list.append(timer()) ; time_was.append("germination & reseeding")
 pfun.green_and_dry()                            # calculate the FOO lost when destocked and the FOO gained when grazed after establishment
 time_list.append(timer()) ; time_was.append("green feed & dry feed")
 
-poc_con_dict = pfun.poc_con()                            # calculate the FOO lost when destocked and the FOO gained when grazed after establishment
-time_list.append(timer()) ; time_was.append("poc con")
-
-poc_md_dict = pfun.poc_md()                            # calculate the FOO lost when destocked and the FOO gained when grazed after establishment
-time_list.append(timer()) ; time_was.append("poc_md")
-
-poc_vol_dict = pfun.poc_vol()                            # calculate the FOO lost when destocked and the FOO gained when grazed after establishment
-time_list.append(timer()) ; time_was.append("poc_vol")
+poc_con_ft = pfun.poc_con()                            # calculate the pasture on crop paddocks
+poc_md_ft = pfun.poc_md()                              # calculate the pasture on crop paddocks
+poc_vol_ft = pfun.poc_vol()                            # calculate the pasture on crop paddocks
+# print(poc_vol_ft)
+time_list.append(timer()) ; time_was.append("poc")
 
 
 
