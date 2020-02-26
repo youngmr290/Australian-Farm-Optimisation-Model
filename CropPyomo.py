@@ -100,12 +100,12 @@ def croppyomo_local():
 
 '''
 To add:
-    - chem cost
+    
     - mach requirement ie sow and harv
     -stub cons
     -seed cost
     -insurance
-    -pas provide by each phase
+    
 '''
 
 def rotation_cashflow(model,c):

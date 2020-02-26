@@ -566,7 +566,47 @@ def fert_app_cost_t():
     return cost_t
 #e=fert_app_t()
     
-    
+#######################################################################################################################################################
+#######################################################################################################################################################
+#chem
+#######################################################################################################################################################
+#######################################################################################################################################################
+
+###########################
+#chem applicaation time   # used in labour crop, defined here because it uses inputs from the differnt mach options which are consolidated at the top of this sheet
+###########################
+
+##time taked to spread 1ha (use efficiency input to allow for driving to and from paddock and filling up)
+## hr/ha= 10/(width*speed*efficiency)
+def spray_time_ha():
+     width_df = mach_opt['sprayer_width']
+     return 10/(width_df*mach_opt['sprayer_speed']*mach_opt['sprayer_eff'])
+
+   
+
+###################
+#application cost # 
+################### *used in crop pyomo
+
+def chem_app_cost_ha():
+    '''
+    Returns
+    -------
+    Float
+         Application cost per ha - account for time to spread 1ha
+        - multiplied by passes to account for the number of application (in crop module)
+    '''
+    ##tractor costs = fuel + r&m + oil&grease
+    tractor_fuel = mach_opt['sprayer_fuel_consumption']*fuel_price()
+    tractor_rm = mach_opt['sprayer_fuel_consumption']*fuel_price() * mach_opt['repair_maint_factor_tractor']
+    tractor_oilgrease = mach_opt['sprayer_fuel_consumption']*fuel_price() * mach_opt['oil_grease_factor_tractor']
+    ##cost/hr= tractor costs + sprayer(r&m) 
+    cost = tractor_fuel + tractor_rm + tractor_oilgrease + mach_opt['sprayer_maint']
+    return cost
+
+
+
+       
 #######################################################################################################################################################
 #######################################################################################################################################################
 #Dep

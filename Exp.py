@@ -75,8 +75,11 @@ for p in range(1):
     
     #call core model function, must call them in the correct order (core must be last)
         rotpy.rotationpyomo()
+        print('rps done')
         crppy.croppyomo_local()
+        print('crop done')
         core.coremodel_all()
+        print('cpre done')
         if core.coremodel_test_var[-1]==1:
             con_error.append(k)
         else: 

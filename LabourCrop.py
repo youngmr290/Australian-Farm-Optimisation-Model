@@ -79,6 +79,49 @@ def fert_app_time_t():
     
 
 
+###########################
+#chem applicaation time   #  this is similar to app cost done in mach sheet
+###########################
+
+def chem_lab_allocation():
+    '''
+    Returns
+    -------
+    DataFrame
+        Collates all the data needed then calls the allocation function, which returns \
+        the allocation of labour for chem application into labour periods.
+    '''
+    start_dict = pinp.crop['chem_info']['app_date'] 
+    length_dict = pinp.crop['chem_info']['app_len'] 
+    p_dates = per.p_date2_df()['date']
+    p_name = per.p_date2_df().index
+    return fun.period_allocation2(start_dict, length_dict, p_dates, p_name)
+
+
+def chem_app_time_ha():  
+    '''
+    Returns
+    ----------
+    Dict for pyomo
+        Labour required by each rotation phase for spraying
+    '''
+    ##adjust passes for arable area.
+    arable = pinp.crop['arable'] #read in arable area df
+    passes = pinp.crop['chem_passes'].reset_index().pivot(index='chem',columns='current yr').T #passes over each ha for each chem type
+    arable3=arable.reindex(passes.index, axis=0, level=1).stack() #reindex so it can be mul with passes
+    passes=passes.reindex(arable3.index).T.mul(arable3).T
+    ##adjust chem labour across each labour period
+    chem_cost = chem_lab_allocation().mul(mac.chem_app_cost_ha()).stack() #cost for 1 pass for each chem.
+    ##adjust for passes
+    chem_cost = passes.reindex(chem_cost.index, axis=1,level=1).mul(chem_cost) #total cost 
+    chem_cost=chem_cost.sum(level=[0], axis=1).replace(0, np.nan).unstack() #sum each chem cost - cost doesn't need to be seperated by chem type once joined with passes #sum nan returns 0 therefore i need to convert 0 back to nan so that they are dropped when stacking to reduce dict size.
+    ##merge to full rotation df
+    phase_chem_cost_ha = pd.merge(phases_df2, chem_cost, how='left', left_on=uinp.cols(), right_index = True) #merge with all the phases, requires because different phases have different application passes
+    phase_chem_cost_ha = phase_chem_cost_ha.drop(list(range(uinp.structure['phase_len'])),axis=1,level=0).stack([1]) #adding level=0 does nothing but if not included you get a preformance warning.
+    return phase_chem_cost_ha
+# t_chemlab=chem_app_time_ha()
+
+    
 
 
 
