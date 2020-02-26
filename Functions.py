@@ -44,11 +44,17 @@ import itertools
 #Testing shpwed readonly = False was quicker than true. But still not as fast as pandas
 # (may not exist anymore) now it causes problems somoetimes locking you out of excel because it is readonly - closing doesn't fix issue (wb._archive.close())
 
-def xl_all_named_ranges(filename, targetsheets):     # read all range names defined in the list targetsheets and return a dictionary of lists or dataframes
-    ''' Read data from all named ranges in from an Excel workbook.
+def xl_all_named_ranges(filename, targetsheets, rangename=''):     # read all range names defined in the list targetsheets and return a dictionary of lists or dataframes
+    ''' Read data from named ranges in an Excel workbook.
 
+    Parameters:
     filename is an Excel worbook name (including the extension).
     targetsheets is a list of (or a single) worksheet names from which to read the range names.
+    rangename is an optional argument. If not included then all rangenames are read.
+    If included only that name is read in.
+
+    Returns:
+    A dictionary that includes key that correspond to the rangenames
     '''
     from openpyxl import load_workbook
     from openpyxl.worksheet.cell_range import CellRange
@@ -63,39 +69,40 @@ def xl_all_named_ranges(filename, targetsheets):     # read all range names defi
         targetsheets = [name.lower() for name in targetsheets]
 
     for dn in wb.defined_names.definedName[:]:
-        try:
-            sheet_name, cell_range = list(dn.destinations)[0]        # if it is a non-contiguous range dn.destinations would need to be looped through
-#            print (dn.name, cell_range)
-            if sheet_name.lower() in targetsheets:     # in to check list of sheet names
-                try:
-                    cr = CellRange(cell_range)
-                    width = cr.max_col - cr.min_col
-                    length = cr.max_row - cr.min_row
-                    ws = wb[sheet_name]
-    #                print (dn.name, sheet_name, cell_range, length, width)
-                    if not width and not length:            # the range is a single cell & is not iterable
-                        parameters[dn.name] = ws[cell_range].value
-                    elif not width:                         # the range is only 1 column & is not iterable across the row
-                        parameters[dn.name] = [cell.value for cell in [row[0] for row in ws[cell_range]]]
-                    elif not length:                        # the range is 1 row & is iterable across columns
-                        for row in ws[cell_range]:
-                            parameters[dn.name] = [cell.value for cell in row]
-                    else:                                   # the range is a region & is iterable across rows and columns
-                        df = pd.DataFrame([cell.value for cell in row] for row in ws[cell_range])
-    #                    df = pd.DataFrame(cells)
-                        #print(df)
-                        df.rename(columns=df.iloc[0],inplace=True)
-                        #drop row that had header names (renaming is more like a copy than a cut)
-                        df.drop(df.index[0],inplace=True)
-                        df = df.set_index(df.iloc[:,0]) #could use rename ie df.rename(index=df.iloc[:,0],inplace=True)
-                        #now have to drop the first col because renaming/set_index is more like copy than cut hence it doenst make the index col one just rename index to match col one
-                        df = df.drop(df.columns[[0]],axis=1) #for some reason this will chuck an error in the index values are int and there is nothing in the top left cell of the df...seems like a bug in python
-    #                    manipulate data into cheapest format - results in mainly float32 (strings are still objects) - without this each value is treated as an object (objects use up much more memory) - this change reduced fert df from 150mbs to 20mbs
-                        parameters[dn.name] = df.apply(pd.to_numeric, errors='ignore', downcast='float')
-                except TypeError:
-                    pass
-        except IndexError:
-            pass
+        if rangename is None or dn.name == rangename:
+            try:
+                sheet_name, cell_range = list(dn.destinations)[0]        # if it is a non-contiguous range dn.destinations would need to be looped through
+                #print (dn.name, cell_range)
+                if sheet_name.lower() in targetsheets:     # in to check list of sheet names
+                    try:
+                        cr = CellRange(cell_range)
+                        width = cr.max_col - cr.min_col
+                        length = cr.max_row - cr.min_row
+                        ws = wb[sheet_name]
+                        #print (dn.name, sheet_name, cell_range, length, width)
+                        if not width and not length:            # the range is a single cell & is not iterable
+                            parameters[dn.name] = ws[cell_range].value
+                        elif not width:                         # the range is only 1 column & is not iterable across the row
+                            parameters[dn.name] = [cell.value for cell in [row[0] for row in ws[cell_range]]]
+                        elif not length:                        # the range is 1 row & is iterable across columns
+                            for row in ws[cell_range]:
+                                parameters[dn.name] = [cell.value for cell in row]
+                        else:                                   # the range is a region & is iterable across rows and columns
+                            df = pd.DataFrame([cell.value for cell in row] for row in ws[cell_range])
+                            #df = pd.DataFrame(cells)
+                            #print(df)
+                            df.rename(columns=df.iloc[0],inplace=True)
+                            ## drop row that had header names (renaming is more like a copy than a cut)
+                            df.drop(df.index[0],inplace=True)
+                            df = df.set_index(df.iloc[:,0]) #could use rename ie df.rename(index=df.iloc[:,0],inplace=True)
+                            ## now have to drop the first col because renaming/set_index is more like copy than cut hence it doenst make the index col one just rename index to match col one
+                            df = df.drop(df.columns[[0]],axis=1) #for some reason this will chuck an error in the index values are int and there is nothing in the top left cell of the df...seems like a bug in python
+                            ## manipulate data into cheapest format - results in mainly float32 (strings are still objects) - without this each value is treated as an object (objects use up much more memory) - this change reduced fert df from 150mbs to 20mbs
+                            parameters[dn.name] = df.apply(pd.to_numeric, errors='ignore', downcast='float')
+                    except TypeError:
+                        pass
+            except IndexError:
+                pass
     wb.close
     return parameters #t_wb #
 
