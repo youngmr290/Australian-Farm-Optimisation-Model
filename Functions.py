@@ -191,6 +191,11 @@ def period_allocation(period_dates,periods,start,length=''):
         end = start + length
         #check how much of the range falls into each cash period
         for i in range(len(periods)-1):
+            ## ^might be simpler to do this with allocation_period.append  \
+            ## # (min(per_end,end)-max(per_start,start)/(end-start)) clipped(0,1)
+            ## # would also be quicker if the loop started with i = bisect(period_dates,start)-1
+            ## # and finished when per_end > end
+            ## # perhaps this is a while loop
             per_start= period_dates[i]
             per_end = period_dates[i + 1]
             #if the range lasts longer than one cashflow period then that cashflow period gets allocated a proportion
@@ -211,7 +216,7 @@ def period_allocation(period_dates,periods,start,length=''):
                 allocation_period.append(np.nan)
         return pd.DataFrame(list(zip(periods,allocation_period)), columns= ('period', 'allocation'))
     #returns the period name a given date falls into
-    else:
+    else:    #^ could use the python function allocation_p = bisect.bisect(period_dates,start)-1
         for date, period in zip(period_dates, periods):
             while date <= start:
                 allocation_p = period
