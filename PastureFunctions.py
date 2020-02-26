@@ -44,15 +44,16 @@ phases_rotn_df  = uinp.structure['phases']
 ########################
 #constants required    #
 ########################
+harvest_period  = 6
 ## define some parameters required to size arrays.
-n_feed_pools        = uinp.n_feed_pools
-n_dry_groups        = 2             # Low & high quality groups for dry feed
-n_grazing_int       = 4             # 0, med & high grazing intensity in the growth/grazing activities
-n_foo_levels        = 3             # Low, medium & high FOO level in the growth/grazing activities
-n_feed_periods      = len(pinp.feed_inputs['feed_periods']) - 1
-n_lmu               = len(pinp.general['lmu_area'])
-n_phases_rotn       = len(phases_rotn_df.index)
-n_pasture_types     = pinp.n_pasture_types   #^ need to sort timing of the definition of pastures
+n_feed_pools    = uinp.n_feed_pools
+n_dry_groups    = 2             # Low & high quality groups for dry feed
+n_grazing_int   = 4             # 0, med & high grazing intensity in the growth/grazing activities
+n_foo_levels    = 3             # Low, medium & high FOO level in the growth/grazing activities
+n_feed_periods  = len(pinp.feed_inputs['feed_periods']) - 1
+n_lmu           = len(pinp.general['lmu_area'])
+n_phases_rotn   = len(phases_rotn_df.index)
+n_pasture_types = pinp.n_pasture_types   #^ need to sort timing of the definition of pastures
 
 length_f  = np.array(pinp.feed_inputs['feed_periods'].loc[:n_feed_periods-1,'length']) # converted to np. to get @jit working
 
@@ -61,6 +62,7 @@ dgoflt = (              n_dry_groups, n_grazing_int, n_foo_levels, n_feed_period
 edft   = (n_feed_pools, n_dry_groups,                              n_feed_periods,                       n_pasture_types)
 eft    = (n_feed_pools,                                            n_feed_periods,                       n_pasture_types)
 dft    = (              n_dry_groups,                              n_feed_periods,                       n_pasture_types)
+dlt    = (              n_dry_groups,                                              n_lmu,                n_pasture_types)
 goflt  = (                            n_grazing_int, n_foo_levels, n_feed_periods, n_lmu,                n_pasture_types)
 goft   = (                            n_grazing_int, n_foo_levels, n_feed_periods,                       n_pasture_types)
 gft    = (                            n_grazing_int,               n_feed_periods,                       n_pasture_types)
@@ -109,6 +111,7 @@ def init_and_read_excel(filename, landuses):
     global i_me_maintenance_eft
     global p_dry_removal_t_dft
     global p_dry_transfer_t_dft
+    global p_nap_dlt
 
     global i_fxg_foo_oflt
     global i_fxg_pgr_oflt
@@ -203,6 +206,7 @@ def init_and_read_excel(filename, landuses):
     p_foo_dryl_reseeding_flrt       = np.zeros(flrt,   dtype = 'float64')  # parameters for rotation phase variable: low quality dry feed gained from grazing of resown pasture (kg/ha)
     p_dry_removal_t_dft             = np.zeros(dft,    dtype = 'float64')  # parameters for the dry feed grazing activities: Total DM removal from the tonne consumed (includes trampling)
     p_dry_transfer_t_dft            = np.zeros(dft,    dtype = 'float64')  # parameters for the dry feed activities: proportion of DM senescencing
+    p_nap_dlt                       = np.zeros(dlt,    dtype = 'float64')  # parameters for the quantity of dry pasture available on non-arable areas of crop paddocks
 
     index_t                       = np.asarray(landuses)                      # pasture type index description
     index_l                       = pinp.general['lmu_area'].index.to_numpy() # lmu index description
@@ -452,7 +456,7 @@ def calculate_germ_and_reseed():
 # @jit("float64[:,:](float64[:,:],float64[:,:])",nopython=True, nogil=True)
 # @jit(nopython=True, nogil=True)
 # @jit()
-def calc_foo_profile(germination_flt, sam_pgr):
+def calc_foo_profile(germination_flt, sam_pgr, dry_decay_ft):
     '''
     Calculate the FOO level at the start of each feed period from the germination & sam on PGR provided
 
@@ -460,33 +464,44 @@ def calc_foo_profile(germination_flt, sam_pgr):
     ----------
     germination_flt - An array[feed_period,lmu,type] : kg of green feed germinating in the period.
     sam_pgr         - An array[feed_period,lmu,type] : SA multiplier for pgr.
+    dry_decay_ft    - An array[feed_period,lmu,type] : decay rate of dry feed
 
     Returns
     -------
     An array[feed_period,lmu,type]: foo at the start of the period.
     '''
     ## reshape the inputs passed and set some initial variables that are required
-    foo_start_flt       = np.zeros(flt, dtype = 'float64')
-    foo_end_flt         = np.zeros(flt, dtype = 'float64')
+    grn_foo_start_flt   = np.zeros(flt, dtype = 'float64')
+    grn_foo_end_flt     = np.zeros(flt, dtype = 'float64')
+    dry_foo_start_flt   = np.zeros(flt, dtype = 'float64')
+    dry_foo_end_flt     = np.zeros(flt, dtype = 'float64')
     pgr_daily_l         = np.zeros(n_lmu,dtype=float)  #only required if using the ## loop on lmu. The boolean filter method creates the array
 
-    foo_end_flt[-1,:,:] = 0 # ensure foo_end[-1] is 0 because it is used in calculation of foo_start[0].
+    grn_foo_end_flt[-1,:,:] = 0 # ensure foo_end[-1] is 0 because it is used in calculation of foo_start[0].
+    dry_foo_end_flt[-1,:,:] = 0 # ensure foo_end[-1] is 0 because it is used in calculation of foo_start[0].
     ## loop through the pasture types
     for t in range(n_pasture_types):   #^ is this loop required?
         ## loop through the feed periods and calculate the foo at the start of each period
         for f in range(n_feed_periods):
-            foo_start_flt[f,:,t]      = germination_flt[f,:,t] + foo_end_flt[f-1,:,t]
+            grn_foo_start_flt[f,:,t]      = germination_flt[f,:,t] + grn_foo_end_flt[f-1,:,t]
+            dry_foo_start_flt[f,:,t]      =                          dry_foo_end_flt[f-1,:,t]
             ## alternative approach (a1)
             ## for pgr by creating an index using searchsorted (requires an lmu loop). ^ More readable than other but requires pgr_daily matrix to be predefined
             for l in [*range(n_lmu)]: #loop through lmu
-                idx             = np.searchsorted(i_fxg_foo_oflt[:,f,l,t], foo_start_flt[f,l,t], side='left')   # find where foo_starts fits into the input data
-                pgr_daily_l[l]  = sam_pgr[f,l,t] * (    c_fxg_a_oflt[idx,f,l,t]
-                                                    +   c_fxg_b_oflt[idx,f,l,t]
-                                                    * foo_start_flt[f,l,t])
-            foo_end_flt[f,:,t]  = (  foo_start_flt[f,:,t]      * (1 - grn_senesce_startfoo_ft[f,t])
-                                   + pgr_daily_l * length_f[f] * (1 -  grn_senesce_pgrcons_ft[f,t])) \
-                                 *                               (1 -    i_grn_senesce_eos_ft[f,t])
-    return foo_start_flt
+                idx             = np.searchsorted(i_fxg_foo_oflt[:,f,l,t], grn_foo_start_flt[f,l,t], side='left')   # find where foo_starts fits into the input data
+                pgr_daily_l[l]  = sam_pgr[f,l,t] * (        c_fxg_a_oflt[idx,f,l,t]
+                                                    +       c_fxg_b_oflt[idx,f,l,t]
+                                                    * grn_foo_start_flt[f,l,t])
+            grn_foo_end_flt[f,:,t] = (grn_foo_start_flt[f,:,t]      * (1 - grn_senesce_startfoo_ft[f,t])
+                                       +  pgr_daily_l * length_f[f] * (1 -  grn_senesce_pgrcons_ft[f,t])) \
+                                    *                                 (1 -    i_grn_senesce_eos_ft[f,t])
+            senescence_l = grn_foo_start_flt[f,:,t]  \
+                          +    pgr_daily_l * length_f[f]  \
+                          -  grn_foo_end_flt[f,:,t]
+            dry_foo_end_flt[f,:,t] =  dry_foo_start_flt[f,:,t]      * (1 -            dry_decay_ft[f,t]) \
+                                    +    senescence_l
+            print('period',f, senescence_l)
+    return grn_foo_start_flt, dry_foo_start_flt
 
 ## the following method generates the PGR & FOO parameters for the growth variables. Stored in a numpy array(lmu, feed period, FOO level, grazing intensity)
 ## def green_consumption:
@@ -514,6 +529,7 @@ def green_and_dry():
     global p_dry_volume_t_dft
     global p_dry_removal_t_dft
     global p_dry_transfer_t_dft
+    global p_nap_dlt
 
     ### _initialise numpy arrays used in this method
     grn_dmd_selectivity_goft = np.zeros(goft,   dtype = 'float64')
@@ -524,10 +540,24 @@ def green_and_dry():
                                                * sen.sam_pgr_f.reshape(-1, 1, 1)
                                                * sen.sam_pgr_l.reshape( 1,-1, 1)
                                                * sen.sam_pgr_t.reshape( 1, 1,-1))
+    ### _dry, DM decline (high = low pools)
+    ## # needed at top so that dry_decay_period_ft is defined for the call to calc_foo_profile
+    dry_decay_daily_ft                    = np.tile(  i_dry_decay_t                    # fill the _t array to _ft shape ^ alternative is to instantiate the array and assign with [...]
+                                                    ,(n_feed_periods,1))
+    for t in range(n_pasture_types):
+        dry_decay_daily_ft[0:i_end_of_gs_t[t]-1,t] = 1
+    dry_decay_period_ft                   = 1 - (1 - dry_decay_daily_ft)               \
+                                           **                 length_f.reshape(-1,1)
+    p_dry_transfer_t_dft[...]             = 1000 * (1-dry_decay_period_ft)  # parameters for the dry feed transfer activities: quantity transferred
+
     ### _maximum foo achievable for each lmu & feed period (ungrazed pasture that germinates at the maximum level on that lmu)
     germination_pass_flt            = np.max(p_germination_flrt, axis=2)                                    #use p_germination because it includes any sensitivity that is carried out
-    foo_start_ungrazed_flt          = calc_foo_profile(germination_pass_flt, sam_pgr_flt)# ^ passing the consumption value in a numpy array in an attempt to get the function @jit compatible
-    max_foo_flt                     = np.maximum(i_fxg_foo_oflt[1,...], foo_start_ungrazed_flt)                  #maximum of ungrazed foo and foo from the medium foo level
+    grn_foo_start_ungrazed_flt , dry_foo_start_ungrazed_flt \
+         = calc_foo_profile(germination_pass_flt, sam_pgr_flt, dry_decay_period_ft)# ^ passing the consumption value in a numpy array in an attempt to get the function @jit compatible
+    ## the annual pasture available on the non-arable areas in a crop paddock
+    ## # is maximum ungrazed pasture in the growing season
+    p_nap_dlt[1,:,0]                = dry_foo_start_ungrazed_flt[harvest_period,np.newaxis,:,0] # to the L pool(1) because it is rank
+    max_foo_flt                     = np.maximum(i_fxg_foo_oflt[1,...], grn_foo_start_ungrazed_flt)                  #maximum of ungrazed foo and foo from the medium foo level
     p_foo_start_grnha_oflt[2,...]   = np.maximum.accumulate(max_foo_flt,axis=1)                                #maximum accumulated along the feed periods axis, i.e. max to date
     p_foo_start_grnha_oflt          = np.maximum(p_foo_start_grnha_oflt
                                                  ,          i_base_ft[:,np.newaxis,:])         # to ensure that final foo can not be below 0
@@ -613,14 +643,6 @@ def green_and_dry():
                                                  ,i_me_eff_gainlose_ft[:,np.newaxis,:])
     p_volume_grnha_egoflt    = np.tile( cons_grnha_t_goflt / grn_ri_goflt              # parameters for the growth/grazing activities: Total volume of feed consumed from the hectare
                                        ,(n_feed_pools,1,1,1,1,1))
-    ### _dry, DM decline (high = low pools)
-    dry_decay_daily_ft                    = np.tile(  i_dry_decay_t                    # fill the _t array to _ft shape ^ alternative is to instantiate the array and assign with [...]
-                                                    ,(n_feed_periods,1))
-    for t in range(n_pasture_types):
-        dry_decay_daily_ft[0:i_end_of_gs_t[t]-1,t] = 1
-    dry_decay_period_ft                   = 1 - (1 - dry_decay_daily_ft)               \
-                                           **                 length_f.reshape(-1,1)
-    p_dry_transfer_t_dft[...]             = 1000 * (1-dry_decay_period_ft)  # parameters for the dry feed transfer activities: quantity transferred
     ### _dry, dmd & foo of feed consumed
     dry_dmd_adj_ft  = np.max(i_dry_dmd_ave_ft,axis=0) * (1 -sen.sam_dry_dmd_decline)   \
                      +       i_dry_dmd_ave_ft         *     sen.sam_dry_dmd_decline    # do sensitivity adjustment for dry_dmd_input based on increasing/reducing the reduction in dmd from the maximum (starting value)
