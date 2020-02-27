@@ -38,7 +38,7 @@ import pandas as pd
 
 #midas modules
 import FeedBudget as fb
-import CropInputs as ci
+import PropertyInputs as pinp
 import Inputs as inp
 import StubbleInputs as si
 import Crop as crp
@@ -83,14 +83,14 @@ def stubble_all():
         for period_num in fp.index:
             if period_num < len(fp)-1:  #because im using the end date of the period, hence the start of the next p, there is an issue for the last period in the df - the last period should ref the date of the first period
                 feed_period_date = fp.loc[period_num+1,'date']
-                harv_start = ci.crop_input['start_harvest_crops'][crop]
+                harv_start = pinp.crop['start_harvest_crops'][crop]
                 if feed_period_date < harv_start:
                     days_since_harv.append(365 + (feed_period_date - harv_start).days) #add a yr because dates before harvest wont have access to stubble until next yr
                 else:  days_since_harv.append((feed_period_date - harv_start).days)
             else: 
                 period_num = fp.index[0]
                 feed_period_date = fp.loc[period_num,'date']
-                harv_start = ci.crop_input['start_harvest_crops'][crop]
+                harv_start = pinp.crop['start_harvest_crops'][crop]
                 if feed_period_date < harv_start:
                     days_since_harv.append(365 + (feed_period_date - harv_start).days) #add a yr because dates before harvest wont have access to stubble until next yr
                 else:  days_since_harv.append((feed_period_date - harv_start).days)
@@ -152,7 +152,7 @@ def stubble_all():
             ##calc ri before converting dmd to md
             ri_quality[crop,cat_name]= dmd[crop,cat_name].apply(fb.ri_quality, args=(si.stubble_inputs['clover_propn_in_sward_stubble'],))
             ##ri availability - first calu stubble foo (stub available)
-            yield_df = ci.crop_input['excel_ranges']['yield']
+            yield_df = pinp.crop['excel_ranges']['yield']
             stub_foo_harv = yield_df[yield_df>0].loc[crop].mean() * stubble_per_grain[crop] *1000
             stubble_foo = stub_foo_harv * (1 - fp['quant_decline_%s' %crop]) * (1 - j)
             ri_availability[crop,cat_name] = stubble_foo.apply(fb.ri_availability)

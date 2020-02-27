@@ -129,7 +129,8 @@ def rot_income():
     yields_income = pd.merge(phases_df2,yields_income, how='left', left_on=uinp.cols(), right_index = True)
     return yields_income.drop(list(range(uinp.structure['phase_len'])), axis=1).stack()
     # return yields_income.set_index(list(range(uinp.structure['phase_len']))).stack() #need to use the multiindex to create a multidimensional param for pyomo so i can split it down when indexing
-a=rot_income()
+# a=rot_income()
+
 
 #######
 #fert #    
@@ -156,7 +157,7 @@ def fert_cost_allocation():
     p_dates = per.cashflow_periods()['start date'] #needed for allocation func
     p_name = per.cashflow_periods()['cash period'] #needed for allocation func
     return fun.period_allocation2(start_df, length_df, p_dates, p_name)
-# allocation=fert_cost_allocation()
+# t_allocation=fert_cost_allocation()
 
 def fert_req():
     '''
@@ -215,9 +216,10 @@ def phase_fert_app_cost():
     fert_cost=fert_cost.sum(level=[0], axis=1).replace(0, np.nan).unstack() #sum each fert cost - cost doesn't need to be seperated by fert type once joined with passes #sum nan returns 0 therefore i need to convert 0 back to nan so that they are dropped when stacking to reduce dict size.
     phase_fert_cost_ha = pd.merge(phases_df2, fert_cost, how='left', left_on=uinp.cols(), right_index = True) #merge with all the phases, requires because different phases have different application passes
     # phase_fert_cost_ha = phase_fert_cost_ha.set_index(list(range(uinp.structure['phase_len']))).stack([1])
-    phase_fert_cost_ha = phase_fert_cost_ha.drop(list(range(uinp.structure['phase_len'])),axis=1).stack([1])
+    phase_fert_cost_ha = phase_fert_cost_ha.drop(list(range(uinp.structure['phase_len'])),axis=1,level=0).stack([1]) #adding level=0 does nothing but if not included you get a preformance warning.
     fert_cost_total= fert_app_cost_t.add(phase_fert_cost_ha, fill_value=0) #fill_value replaces any values that don't exist in both df with 0. This avoide getting nan if a cost exists in only one df.
     return fert_cost_total
+# t_fertapp=phase_fert_app_cost()
 
 def total_phase_fert_cost():
     '''
@@ -268,18 +270,86 @@ def phase_stubble_cost():
     stub_cost=probability_handling_lmu.mul(stub_cost_alloc)
     '''add to full phase df'''   
     phases_stub_cost = pd.merge(phases_df2,stub_cost, how='left', left_on=uinp.cols(), right_index = True) #[i-1 for i in uinp.cols()] little for loop is used so that merge is done based on the previous phase. since that is the yield we are interested in for stub 
-    return phases_stub_cost.drop(list(range(uinp.structure['phase_len'])),axis=1).stack([1])
-    # return phases_stub_cost.set_index(list(range(uinp.structure['phase_len']))).stack([1])
-    
-   
+    return phases_stub_cost.drop(list(range(uinp.structure['phase_len'])),axis=1,level=0).stack([1])
+# t_stubcost=phase_stubble_cost()   
 
 #print(timeit.timeit(fert_cost,number=10)/10)
 #########################
 #chemical               #
 #########################
 
-#app cost is the same for all lmus even if there is a scaler on rate applied because same amount of water is applied just less chem. 
+def chem_cost_allocation():
+    '''
+    Returns
+    ----------
+    Dataframe; multiplied with chem cashflows 
+        Determines the cashflow period allocation for costs associated with each different chem
+    '''
+    start_df = pinp.crop['chem_info']['app_date'] #needed for allocation func
+    length_df = pinp.crop['chem_info']['app_len'].astype('timedelta64[D]') #needed for allocation func
+    p_dates = per.cashflow_periods()['start date'] #needed for allocation func
+    p_name = per.cashflow_periods()['cash period'] #needed for allocation func
+    return fun.period_allocation2(start_df, length_df, p_dates, p_name)
+# t_allocation=chem_cost_allocation()
 
+def chem_cost():
+    '''
+    Returns
+    ----------
+    Dataframe; summed with other chem cashflow items at the end of this section 
+        Calcs the raw chem cost for each rotation phase (ie doesn't include application)
+    '''
+    ##first adjust the chem cost for each rotation by arable area and lmu
+    arable = pinp.crop['arable'] #read in arable area df
+    chem = pinp.crop['chem'].reset_index().pivot(index='chem',columns='current yr').T  #read in and convert input chem df to a shape that can be merged to the phases df
+    chem_by_soil = pinp.crop['chem_by_lmu'].stack() #read in chem by soil
+    arable2=arable.reindex(chem_by_soil.index, axis=1, level=1)
+    chem1=chem.reindex(chem_by_soil.index, axis=1, level=0).mul(chem_by_soil)
+    chem1=chem1.mul(arable2,axis=0,level=1) #add arable to df
+    ##add cashflow periods and sum across each chem
+    c_chem_allocation = chem_cost_allocation().stack()
+    c_cost = chem1.stack().reindex(c_chem_allocation.index, axis=1,level=1).sum(axis=1, level=0).unstack()#first stack is required so that reindexing can occur (ie cant reindex a multi index with a multi index)
+    ##merge to full rotation df
+    c_rotcost = pd.merge(phases_df2, c_cost, how='left', left_on=uinp.cols(), right_index = True) #merge chem with phases
+    return c_rotcost.drop(list(range(uinp.structure['phase_len'])), axis=1,level=0).stack() #level is not really needed but stops a performance warning
+
+    
+    
+
+def phase_chem_app_cost():  
+    '''
+    Application cost per ha ($/rotation)
+        
+    Returns
+    ----------
+    Dataframe; summed with other chem cashflow items at the end of this section 
+    '''
+    ##adjust passes for arable area.
+    arable = pinp.crop['arable'] #read in arable area df
+    passes = pinp.crop['chem_passes'].reset_index().pivot(index='chem',columns='current yr').T #passes over each ha for each chem type
+    arable3=arable.reindex(passes.index, axis=0, level=1).stack() #reindex so it can be mul with passes
+    passes=passes.reindex(arable3.index).T.mul(arable3).T
+    ##adjust chem app cost to each cashflow period
+    chem_cost = chem_cost_allocation().mul(mac.chem_app_cost_ha()).stack() #cost for 1 pass for each chem.
+    ##adjust for passes
+    chem_cost = passes.reindex(chem_cost.index, axis=1,level=1).mul(chem_cost) #total cost 
+    chem_cost=chem_cost.sum(level=[0], axis=1).replace(0, np.nan).unstack() #sum each chem cost - cost doesn't need to be seperated by chem type once joined with passes #sum nan returns 0 therefore i need to convert 0 back to nan so that they are dropped when stacking to reduce dict size.
+    ##merge to full rotation df
+    phase_chem_cost_ha = pd.merge(phases_df2, chem_cost, how='left', left_on=uinp.cols(), right_index = True) #merge with all the phases, requires because different phases have different application passes
+    phase_chem_cost_ha = phase_chem_cost_ha.drop(list(range(uinp.structure['phase_len'])),axis=1,level=0).stack([1]) #adding level=0 does nothing but if not included you get a preformance warning.
+    return phase_chem_cost_ha
+# t_chemapp=phase_chem_app_cost()
+
+def total_phase_chem_cost():
+    '''
+    Sum of application cost and raw chem cost
+        
+    Returns
+    ----------
+    Dataframe; summed with other cashflow items at the end of the module 
+    '''
+    chem_cost_total= chem_cost().add(phase_chem_app_cost(), fill_value=0) #fill_value replaces any values that don't exist in both df with 0. This avoide getting nan if a cost exists in only one df.
+    return chem_cost_total
 
 #########################
 #total rot cashflow     #
@@ -290,10 +360,10 @@ includes
 - grain income
 -fert cost (fert & application)
 -stubble handling cost
--
+- chem cost (inc application)
 '''
 def rot_cost():
-    total_cost = total_phase_fert_cost().add(phase_stubble_cost(), fill_value=0)
+    total_cost = total_phase_fert_cost().add((total_phase_chem_cost().add(phase_stubble_cost(), fill_value=0)), fill_value=0)
     total_income = rot_income()
     overall = total_income.sub(total_cost, fill_value=0)
     return overall.stack().to_dict()
