@@ -185,10 +185,10 @@ def init_and_map_excel(filename, landuses):
     i_poc_dmd_ft                    = np.zeros(ft,     dtype = 'float64')  # digestibility of pasture consumed on crop paddocks
     i_poc_foo_ft                    = np.zeros(ft,     dtype = 'float64')  # foo of pasture consumed on crop paddocks
 
-    i_reseeding_date_seed_t         = np.zeros(n_pasture_types, dtype = 'datetime64[s]')  # date of seeding this pasture type (will be read in from inputs)
-    i_reseeding_date_destock_t      = np.zeros(n_pasture_types, dtype = 'datetime64[s]')  # date of destocking this pasture type prior to reseeding (will be read in from inputs)
+    i_reseeding_date_seed_t         = np.zeros(n_pasture_types, dtype = 'datetime64[D]')  # date of seeding this pasture type (will be read in from inputs)
+    i_reseeding_date_destock_t      = np.zeros(n_pasture_types, dtype = 'datetime64[D]')  # date of destocking this pasture type prior to reseeding (will be read in from inputs)
     i_reseeding_ungrazed_destock_t  = np.zeros(n_pasture_types, dtype = 'float64')  # kg of FOO that was not grazed prior to seeding occurring (if spring sown)
-    i_reseeding_date_grazing_t      = np.zeros(n_pasture_types, dtype = 'datetime64[s]')  # date of first grazing of reseeded pasture (will be read in from inputs)
+    i_reseeding_date_grazing_t      = np.zeros(n_pasture_types, dtype = 'datetime64[D]')  # date of first grazing of reseeded pasture (will be read in from inputs)
     i_reseeding_foo_grazing_t       = np.zeros(n_pasture_types, dtype = 'float64')  # FOO at time of first grazing
     # reseeding_machperiod_t          = np.zeros(n_pasture_types, dtype = 'float64')  # labour/machinery period in which reseeding occurs ^ instantiation may not be required
     i_germination_std_t             = np.zeros(n_pasture_types, dtype = 'float64')  # standard germination level for the standard soil type in a continuous pasture rotation
@@ -407,7 +407,7 @@ def calculate_germ_and_reseed():
 
     ## set the period definitions to the feed periods
     feed_period_dates   = list(pinp.feed_inputs['feed_periods']['date'])
-    feed_period_dates_f = np.array(feed_period_dates,dtype='datetime64[s]')
+    feed_period_dates_f = np.array(feed_period_dates,dtype='datetime64[D]')
     # feed_period_name    = pinp.feed_inputs['feed_periods'].index
 
     ## calculate the area (for all the phases) that is growing pasture for each feed period. The area can be 0 for a pasture phase if it has been destocked for reseeding.
