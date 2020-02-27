@@ -163,7 +163,7 @@ def fert_req():
     '''
     Returns
     ----------
-    Dataframe; used to calc fert cost in the next function 
+    Dataframe; used to calc fert cost in the next function & used in croplabour 
         Fert required by 1ha of each phases (kg/ha)
     '''
     arable = pinp.crop['arable'] #read in arable area df

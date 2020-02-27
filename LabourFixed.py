@@ -24,7 +24,7 @@ import numpy as np
 
 
 #MUDAS modules
-from Inputs import *
+import Inputs  
 from LabourFixedInputs import *
 from Labour import *
 import FeedBudget as fb

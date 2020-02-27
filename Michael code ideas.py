@@ -63,7 +63,11 @@ Df to Series
     -.iloc[:,0]
     -.squeeze()
 
+Index with multi index
+    -weights=data.loc[:,(slice(None),'Weight')] you can use slice(None) when you want all on one level 
 
+Return a list of column names for a given level
+    - list(weights.columns.levels[0])
 
 #delete col with no header #
     this is here becayse dropping a col with no header is not compatible with the usual way

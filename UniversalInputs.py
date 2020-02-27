@@ -30,38 +30,62 @@ import datetime
 from dateutil.relativedelta import relativedelta
 
 import Functions as fun
+import Sensitivity as sen 
+
 
 #########################################################################################################################################################################################################
 #########################################################################################################################################################################################################
 #read in excel
 #########################################################################################################################################################################################################
 #########################################################################################################################################################################################################
-price = fun.xl_all_named_ranges("Universal.xlsx","Price")
+
+##prices
+price_inp = fun.xl_all_named_ranges("Universal.xlsx","Price")
+price = price_inp.copy()
 
 ##Finance inputs
-finance = fun.xl_all_named_ranges("Universal.xlsx","Finance")
+finance_inp = fun.xl_all_named_ranges("Universal.xlsx","Finance")
+finance = finance_inp.copy()
 
 ##mach inputs - general
-mach_general = fun.xl_all_named_ranges("Universal.xlsx","Mach General")
+mach_general_inp = fun.xl_all_named_ranges("Universal.xlsx","Mach General")
+mach_general = mach_general_inp.copy()
 
 ##feed inputs
-feed_inputs = fun.xl_all_named_ranges("Universal.xlsx","Feed Budget")
+feed_inputs_inp = fun.xl_all_named_ranges("Universal.xlsx","Feed Budget")
 n_feed_pools        = 4             # number of feed pools (by quality groups)   ^ Add this to Universal.xlsx
+feed_inputs = feed_inputs_inp.copy()
 
 ##sheep inputs
-genotype = fun.xl_all_named_ranges('Universal.xlsx', ['Genotypes'])
-parameters = fun.xl_all_named_ranges('Universal.xlsx', ['Parameters'])
+genotype_inp = fun.xl_all_named_ranges('Universal.xlsx', ['Genotypes'])
+parameters_inp = fun.xl_all_named_ranges('Universal.xlsx', ['Parameters'])
 i_oldest_animal = 6.6 #age of oldest animal (years)  ^ Add this to Universal.xlsx
 n_sim_periods_year = 52 # universal data['']   periods per year  ^ Add this to Universal.xlsx
+genotype = genotype_inp.copy()
 
+##mach options
+###create a dict to store all options - this allows the user to select an option
+machine_options_dict_inp={}
+machine_options_dict_inp['mach_1'] = fun.xl_all_named_ranges("Universal.xlsx","Mach 1")
+machine_options_dict = machine_options_dict_inp.copy()
 
-##############
-#mach options#
-##############
-##create a dict to store all options - this allows the user to select an option
-machine_options_dict={}
-machine_options_dict['mach_1'] = fun.xl_all_named_ranges("Universal.xlsx","Mach 1")
+#######################
+#apply SA             #
+#######################
+def univeral_inp_sa():
+    '''
+    
+    Returns
+    -------
+    None.
+    
+    Applies sensitivity adjustment to each input.
+    This function gets called at the beginning of each loop in the exp.py module
 
+    '''
+    ##enter sa below
+    
+    
 
 #########################################################################################################################################################################################################
 #########################################################################################################################################################################################################
@@ -73,16 +97,16 @@ machine_options_dict['mach_1'] = fun.xl_all_named_ranges("Universal.xlsx","Mach 
 structure = dict()
 
 ###############
-#crops        #
-###############
-##the number of previous land uses considered for crop inputs - when this changes yeild input and fert and chem will need to be expended to include the extra years previous land use
-structure['num_prev_phase']=1
-
-###############
 # cashflow    #
 ###############
 ##the number of these can change as long as each period is of equal length.
 structure['cashflow_periods']=['JF$FLOW','MA$FLOW','MJ$FLOW','JA$FLOW','SO$FLOW','ND$FLOW']
+
+###############
+# pasture     #
+###############
+##define which pastures are to be included
+structure['pastures'] = ['annual'] # ,'lucerne','tedera'] 
 
 #######
 #sheep#
@@ -101,6 +125,8 @@ structure['labour_period_len'] = relativedelta(months=1)
 ##############
 #phases      #
 ##############
+##the number of previous land uses considered for crop inputs - when this changes yeild input and fert and chem will need to be expended to include the extra years previous land use
+structure['num_prev_phase']=1
 
 #number of phases analysed ie rotation length if you will (although not really a rotation)
 structure['phase_len'] = 5
