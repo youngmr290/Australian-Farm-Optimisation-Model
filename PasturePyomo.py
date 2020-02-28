@@ -11,7 +11,7 @@ from pyomo.environ import *
 from CreateModel import *
 import Pasture as pas
 
-pastures = ['annual']        # ^should be from UniversalInputs.py or perhaps PropertyInputs see also PropertyInputs.py
+pastures = uinp.structure['pastures']       
 
 # Conservation limit over feed period(i) & soil type(j) = 50 constraints
 # Note: the MIDAS version was effectively just 5 constraints achieved

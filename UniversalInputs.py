@@ -30,7 +30,6 @@ import datetime
 from dateutil.relativedelta import relativedelta
 
 import Functions as fun
-import Sensitivity as sen 
 
 
 #########################################################################################################################################################################################################
@@ -83,6 +82,8 @@ def univeral_inp_sa():
     This function gets called at the beginning of each loop in the exp.py module
 
     '''
+    ##have to import it here since sen.py imports this module
+    import Sensitivity as sen 
     ##enter sa below
     
     

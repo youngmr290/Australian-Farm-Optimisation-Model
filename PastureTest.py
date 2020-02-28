@@ -12,6 +12,7 @@ Fixed   Date    ID by   Problem
 
 @author: John
 '''
+import UniversalInputs as uinp
 
 from timeit import default_timer as timer
 
@@ -22,7 +23,7 @@ import Pasture as pas
 
 time_list.append(timer()) ; time_was.append("import other modules")
 
-pastures = ['annual']        # ^should be from UniversalInputs.py or perhaps PropertyInputs see also PropertyInputs.py
+pastures = uinp.structure['pastures']        # ^should be from UniversalInputs.py or perhaps PropertyInputs see also PropertyInputs.py
 
 pas.init_and_map_excel('Property.xlsx', pastures)                         # read inputs from Excel file and map to the python variables
 time_list.append(timer()) ; time_was.append("init & read inputs from Excel")

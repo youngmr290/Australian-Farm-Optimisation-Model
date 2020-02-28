@@ -30,6 +30,66 @@ def rot_phase_link(model,l,h1,h2,h3,h4):
 model.jj = Constraint(model.lmus,model.rot_constraints, rule=rot_phase_link, doc='rotation phases constraint')
 
 
+######################################
+#Write default SA to row1 in exp.xlsx#
+######################################
+##may want to turn this into a function and only call when you want because it might be slow
+import openpyxl
+myworkbook=openpyxl.load_workbook('exp1.xlsx')
+ws= myworkbook['Sheet1']
+c=2
+r=5
+##checks if the column has a sa value
+while not ws.cell(row=1,column=c).value == None:
+    dic=ws.cell(row=1,column=c).value
+    key1=ws.cell(row=2,column=c).value
+    key2=ws.cell(row=3,column=c).value
+    indx=ws.cell(row=4,column=c).value
+    ##checks if both slice and key2 exists
+    if not (indx == None  and key2== None):
+        indices = tuple(slice(*(int(i) if i else None for i in part.strip().split(':'))) for part in indx.split(',')) #creats a slice object from a string - note slice objects are not inclusive ie to select the first number it should look like [0:1]
+        if dic == 'sam':
+            value=sen.sam[(key1,key2)][indices]
+        elif dic == 'saa':
+            value=sen.saa[(key1,key2)][indices]
+        elif dic == 'sap':
+            value=sen.sap[(key1,key2)][indices]
+
+    ##checks if just slice exists
+    elif not indx == None:
+        indices = tuple(slice(*(int(i) if i else None for i in part.strip().split(':'))) for part in indx.split(',')) #creats a slice object from a string - note slice objects are not inclusive ie to select the first number it should look like [0:1]
+        if dic == 'sam':
+            value=sen.sam[key1][indices]
+        elif dic == 'saa':
+            value=sen.saa[key1][indices]
+        elif dic == 'sap':
+            value=sen.sap[key1][indices]
+    ##checks if just key2 exists
+    elif not key2 == None:
+        if dic == 'sam':
+            value=sen.sam[(key1,key2)]
+        elif dic == 'saa':
+            value=sen.saa[(key1,key2)]
+        elif dic == 'sap':
+            value=sen.sap[(key1,key2)]
+    default=value
+    try:
+        ws.cell(row=r,column=c).value = default
+    except ValueError:
+        ws.cell(row=r,column=c).value = default[0] #this is needed if you are assigning one value to multiple spots in an array
+    c+=1
+##it wont save for some reason, it should work but it won't
+myworkbook.save('exp1.xlsx')
+
+# ##can use this method as temp sol but the formatting is lost
+# import xlsxwriter
+# workbook = xlsxwriter.Workbook('hello.xlsx') 
+# worksheet = workbook.add_worksheet() 
+# for row in ws:
+#     for cell in row:
+#         ws2[cell.coordinate].value = cell.value
+#         worksheet.write(cell.coordinate, cell.value) 
+# workbook.close() 
 
 
 

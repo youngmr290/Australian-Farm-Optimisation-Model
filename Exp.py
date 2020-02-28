@@ -24,27 +24,59 @@ import Sensitivity as sen
 #######################
 #eg flk structure, mach option etc - this is set the default, can be changed in runs via saa
         
-        
+
+
+
+
+
+
 
 #########################
 #Exp loop               #
 #########################
+#^maybe there is a cleaner way to do some of the stuff below ie a way that doesn't need as many if statements?
+##read in exp log 
+exp_data = pd.read_excel('exp.xlsx',index_col=0, header=[0,1,2,3])
+for row in range(len(exp_data)):
+    for dic,key1,key2,indx in exp_data:
+        ##extract current value
+        value = exp_data.loc[exp_data.index[row], (dic,key1,key2,indx)]
+        ##checks if both slice and key2 exists
+        if not ('Unnamed' in indx  and 'Unnamed' in key2):
+            indices = tuple(slice(*(int(i) if i else None for i in part.strip().split(':'))) for part in indx.split(',')) #creats a slice object from a string - note slice objects are not inclusive ie to select the first number it should look like [0:1]
+            if dic == 'sam':
+                sen.sam[key1][key2][indices]=value
+            elif dic == 'saa':
+                sen.saa[key1][key2][indices]=value
+            elif dic == 'sap':
+                sen.sap[key1][key2][indices]=value
 
-##read in exp log
-# exp_data = pd.read_excel('exp.xlsx')
-# for row in range(len(exp_data)):
-#     for column in exp_data:
-#         value = exp_data.loc[exp_data.index[row], column]
-#         sen[column]=value
-        ##call sa functions - assigns sa variables to relevant inputs
-    # uinp.univeral_inp_sa()
-    # pinp.property_inp_sa()
-    # ##call core model function, must call them in the correct order (core must be last)
-    # rotpy.rotationpyomo()
-    # crppy.croppyomo_local()
-    # core.coremodel_all()
+        ##checks if just slice exists
+        elif not 'Unnamed' in indx:
+            indices = tuple(slice(*(int(i) if i else None for i in part.strip().split(':'))) for part in indx.split(',')) #creats a slice object from a string - note slice objects are not inclusive ie to select the first number it should look like [0:1]
+            if dic == 'sam':
+                sen.sam[key1][indices]=value
+            elif dic == 'saa':
+                sen.saa[key1][indices]=value
+            elif dic == 'sap':
+                sen.sap[key1][indices]=value
+        ##checks if just key2 exists
+        elif not 'Unnamed' in key2:
+            if dic == 'sam':
+                sen.sam[key1][key2]=value
+            elif dic == 'saa':
+                sen.saa[key1][key2]=value
+            elif dic == 'sap':
+                sen.sap[key1][key2]=value
 
 
+    ##call sa functions - assigns sa variables to relevant inputs
+    uinp.univeral_inp_sa()
+    pinp.property_inp_sa()
+    ##call core model function, must call them in the correct order (core must be last)
+    rotpy.rotationpyomo()
+    crppy.croppyomo_local()
+    core.coremodel_all()
 
 
 ##the stuff below will be superseeded with stuff above 
