@@ -18,18 +18,16 @@ Fixed   Date    ID by   Problem
 
 @author: young
 """
-#my plan
-# these inputs are initally typed in
-# the data is stored as a variable ie labour cost
-# then when the model is solving it can change labour cost to a different value specified in the exp section using kv's somehow.
-# there is a different input sheet for each region/farm
 
+##python modules
+import pickle as pkl
 import pandas as pd
 import numpy as np
 import datetime
 from dateutil.relativedelta import relativedelta
 
 import Functions as fun
+import Controls as con
 
 
 #########################################################################################################################################################################################################
@@ -38,34 +36,63 @@ import Functions as fun
 #########################################################################################################################################################################################################
 #########################################################################################################################################################################################################
 
-##prices
-price_inp = fun.xl_all_named_ranges("Universal.xlsx","Price")
+filename= 'pkl_universal'
+##if inputs are not read from pickle then they are read from excel and written to pickle
+if con.inputs_from_pickle == False:
+    with open(filename, "wb") as f:
+        ##prices
+        price_inp = fun.xl_all_named_ranges("Universal.xlsx","Price")
+        pkl.dump(price_inp, f)
+        
+        ##Finance inputs
+        finance_inp = fun.xl_all_named_ranges("Universal.xlsx","Finance")
+        pkl.dump(finance_inp, f)
+        
+        ##mach inputs - general
+        mach_general_inp = fun.xl_all_named_ranges("Universal.xlsx","Mach General")
+        pkl.dump(mach_general_inp, f)
+        
+        ##feed inputs
+        feed_inputs_inp = fun.xl_all_named_ranges("Universal.xlsx","Feed Budget")
+        pkl.dump(feed_inputs_inp, f)
+        
+        ##sheep inputs
+        genotype_inp = fun.xl_all_named_ranges('Universal.xlsx', ['Genotypes'])
+        pkl.dump(genotype_inp, f)
+        parameters_inp = fun.xl_all_named_ranges('Universal.xlsx', ['Parameters'])
+        pkl.dump(parameters_inp, f)
+        ##mach options
+        ###create a dict to store all options - this allows the user to select an option
+        machine_options_dict_inp={}
+        machine_options_dict_inp['mach_1'] = fun.xl_all_named_ranges("Universal.xlsx","Mach 1")
+        pkl.dump(machine_options_dict_inp, f)
+
+##else the inputs are read in from the pickle file
+##note this must be in the same order as above
+else:
+    with open(filename, "rb") as f:
+        price_inp = pkl.load(f)
+        
+        finance_inp = pkl.load(f)
+        
+        mach_general_inp = pkl.load(f)
+        
+        feed_inputs_inp = pkl.load(f)
+        
+        genotype_inp = pkl.load(f)
+        
+        parameters_inp = pkl.load(f)
+        
+        machine_options_dict_inp  = pkl.load(f)
+        
+        
+        
 price = price_inp.copy()
-
-##Finance inputs
-finance_inp = fun.xl_all_named_ranges("Universal.xlsx","Finance")
 finance = finance_inp.copy()
-
-##mach inputs - general
-mach_general_inp = fun.xl_all_named_ranges("Universal.xlsx","Mach General")
 mach_general = mach_general_inp.copy()
-
-##feed inputs
-feed_inputs_inp = fun.xl_all_named_ranges("Universal.xlsx","Feed Budget")
-n_feed_pools        = 4             # number of feed pools (by quality groups)   ^ Add this to Universal.xlsx
 feed_inputs = feed_inputs_inp.copy()
-
-##sheep inputs
-genotype_inp = fun.xl_all_named_ranges('Universal.xlsx', ['Genotypes'])
-parameters_inp = fun.xl_all_named_ranges('Universal.xlsx', ['Parameters'])
-i_oldest_animal = 6.6 #age of oldest animal (years)  ^ Add this to Universal.xlsx
-n_sim_periods_year = 52 # universal data['']   periods per year  ^ Add this to Universal.xlsx
 genotype = genotype_inp.copy()
-
-##mach options
-###create a dict to store all options - this allows the user to select an option
-machine_options_dict_inp={}
-machine_options_dict_inp['mach_1'] = fun.xl_all_named_ranges("Universal.xlsx","Mach 1")
+parameters = parameters_inp.copy()
 machine_options_dict = machine_options_dict_inp.copy()
 
 #######################
@@ -114,7 +141,9 @@ structure['pastures'] = ['annual'] # ,'lucerne','tedera']
 #######
 ##pools
 structure['sheep_pools']=['pool1', 'pool2', 'pool3', 'pool4']
-
+structure['i_oldest_animal'] = 6.6
+structure['n_sim_periods_year'] = 52 
+        
 
 ########################
 #period                #
