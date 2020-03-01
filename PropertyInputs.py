@@ -111,7 +111,7 @@ def property_inp_sa():
         pasture_inputs[pasture]['LowPGR'] = pasture_inp[pasture]['LowPGR'].mul(sen.sam[('pgr_l',pasture)], axis=1)
         pasture_inputs[pasture]['MedPGR'] = pasture_inp[pasture]['MedPGR'].mul(sen.sam[('pgr_l',pasture)], axis=1)
         pasture_inputs[pasture]['DigDryAve'] = pasture_inp[pasture]['DigDryAve'] * sen.sam[('dry_dmd_decline',pasture)] \
-                                                + max(pasture_inp[pasture]['DigDryAve']) * sen.sam[('dry_dmd_decline',pasture)]
+                                                + max(pasture_inp[pasture]['DigDryAve']) * (1 - sen.sam[('dry_dmd_decline',pasture)])
         pasture_inputs[pasture]['DigSpread'] = pasture_inp[pasture]['DigSpread'].mul(sen.sam[('grn_dmd_range_f',pasture)], axis=0)
         pasture_inputs[pasture]['DigDeclineFOO'] = pasture_inp[pasture]['DigDeclineFOO'].mul(sen.sam[('grn_dmd_declinefoo_f',pasture)], axis=0)
         pasture_inputs[pasture]['DigDeclineFOO'] = pasture_inp[pasture]['DigDeclineFOO'].mul(sen.sam[('grn_dmd_declinefoo_l',pasture)], axis=1)
@@ -123,9 +123,7 @@ def property_inp_sa():
   
 
 
-
-     
-     
+   
      
      
      
