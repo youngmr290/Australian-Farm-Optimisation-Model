@@ -13,12 +13,12 @@ from pyomo.environ import *
 import RotationPhases as rps #this won't be here when sa is hooked up properly
 import UniversalInputs as uinp
 import PropertyInputs as pinp 
+import RotationPyomo as rotpy 
 import CoreModel as core
 import CropPyomo as crppy
-import RotationPyomo as rotpy 
 import Sensitivity as sen 
 
-
+print('running exp')
 #######################
 #key options          #
 #######################

@@ -85,10 +85,10 @@ def ha_pasture_crop_paddocks(model,f,l):
         Total hectares that can be grazed on crop paddocks before harvest
     '''
     ##number of grazable pasture ha provided by contract seeding
-    ha_contract[f]= sum(sum(model.p_seeding_grazingdays[f,p] * model.v_contractseeding_ha[p,k,l] for k in model.s_crops) for p in model.s_periods)
+    ha_contract= sum(sum(model.p_seeding_grazingdays[f,p] * model.v_contractseeding_ha[p,k,l] for k in model.s_crops) for p in model.s_periods)
     ##number of grazable pasture ha provided by farmer seeding
-    ha_personal[f]= sum(sum(model.p_seeding_grazingdays[f,p] * model.p_seeding_rate[k,l] * model.v_seeding_machdays[p,k,l] for k in model.s_crops) for p in model.s_periods)
-    return ha_contract[f,l] +ha_personal[f,l]
+    ha_personal= sum(sum(model.p_seeding_grazingdays[f,p] * model.p_seeding_rate[k,l] * model.v_seeding_machdays[p,k,l] for k in model.s_crops) for p in model.s_periods)
+    return ha_contract[f,l] + ha_personal[f,l]
 
 #function to determine late seeding penalty, this will be passed to core model
 def late_seed_penalty(model,k):

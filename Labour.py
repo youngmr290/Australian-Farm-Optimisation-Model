@@ -23,7 +23,7 @@ from dateutil.relativedelta import relativedelta
 from Inputs import * 
 from LabourInputs import *
 from CropInputs import *
-import Periods 
+import Periods as per
 
 
  
@@ -34,7 +34,7 @@ labour periods and length
 # make a df containing labour availability for each labour period #
 ###################################################################
 
-labour_periods = Periods.p_dates_df() 
+labour_periods = per.p_dates_df() 
 
 #
 #period length (days)
@@ -107,12 +107,12 @@ def owner_hours():
     #loops through each period date
     for i in labour_periods['date']:
         #checks if the date is a seed period
-        if i in Periods.period_dates(Periods.wet_seeding_start_date(),crop_input['seed_period_lengths']):
+        if i in per.period_dates(per.wet_seeding_start_date(),crop_input['seed_period_lengths']):
             #convert the datetime into a float by dividing number of days by 1 day, then multiply by number of hours that can be worked during seeding.
             labour_periods.loc[labour_periods['date']==i , 'farmer hours'] = labour_periods.loc[labour_periods['date']==i , 'farmer weekdays'] / datetime.timedelta(days=1) \
             * labour_input_data['farmer_hours']['seeding'] + labour_periods.loc[labour_periods['date']==i , 'farmer weekend'] / datetime.timedelta(days=1) \
             * labour_input_data['farmer_hours']['seeding'] 
-        elif i in Periods.period_dates(crop_input['harv_date'],crop_input['harv_period_lengths']):
+        elif i in per.period_dates(crop_input['harv_date'],crop_input['harv_period_lengths']):
             labour_periods.loc[labour_periods['date']==i , 'farmer hours'] = labour_periods.loc[labour_periods['date']==i , 'farmer weekdays'] / datetime.timedelta(days=1) \
             * labour_input_data['farmer_hours']['harvest'] + labour_periods.loc[labour_periods['date']==i , 'farmer weekend'] / datetime.timedelta(days=1) \
             * labour_input_data['farmer_hours']['harvest']  
@@ -127,12 +127,12 @@ def permanent_hours():
     #loops through each period date
     for i in labour_periods['date']:
         #checks if the date is a seed period
-        if i in Periods.period_dates(Periods.wet_seeding_start_date(),crop_input['seed_period_lengths']):
+        if i in per.period_dates(per.wet_seeding_start_date(),crop_input['seed_period_lengths']):
             #convert the datetime into a float by dividing number of days by 1 day, then multiply by number of hours that can be worked during seeding then multiply by efficiency to take into account supervision time
             labour_periods.loc[labour_periods['date']==i , 'permanent hours'] = labour_periods.loc[labour_periods['date']==i , 'permanent weekdays'] / datetime.timedelta(days=1) \
             * labour_input_data['permanent_hours']['seeding'] + labour_periods.loc[labour_periods['date']==i , 'permanent weekend'] / datetime.timedelta(days=1) \
             * labour_input_data['permanent_hours']['seeding'] 
-        elif i in Periods.period_dates(crop_input['harv_date'],crop_input['harv_period_lengths']):
+        elif i in per.period_dates(crop_input['harv_date'],crop_input['harv_period_lengths']):
             labour_periods.loc[labour_periods['date']==i , 'permanent hours'] = labour_periods.loc[labour_periods['date']==i , 'permanent weekdays'] / datetime.timedelta(days=1) \
             * labour_input_data['permanent_hours']['harvest'] + labour_periods.loc[labour_periods['date']==i , 'permanent weekend'] / datetime.timedelta(days=1) \
             * labour_input_data['permanent_hours']['harvest']  
@@ -147,12 +147,12 @@ def casual_hours():
     #loops through each period date
     for i in labour_periods['date']:
         #checks if the date is a seed period
-        if i in Periods.period_dates(Periods.wet_seeding_start_date(),crop_input['seed_period_lengths']):
+        if i in per.period_dates(per.wet_seeding_start_date(),crop_input['seed_period_lengths']):
             #convert the datetime into a float by dividing number of days by 1 day, then multiply by number of hours that can be worked during seeding.
             labour_periods.loc[labour_periods['date']==i , 'casual hours'] = labour_periods.loc[labour_periods['date']==i , 'casual weekdays'] / datetime.timedelta(days=1) \
             * labour_input_data['casual_hours']['seeding'] + labour_periods.loc[labour_periods['date']==i , 'casual weekend'] / datetime.timedelta(days=1) \
             * labour_input_data['casual_hours']['seeding'] 
-        elif i in Periods.period_dates(crop_input['harv_date'],crop_input['harv_period_lengths']):
+        elif i in per.period_dates(crop_input['harv_date'],crop_input['harv_period_lengths']):
             labour_periods.loc[labour_periods['date']==i , 'casual hours'] = labour_periods.loc[labour_periods['date']==i , 'casual weekdays'] / datetime.timedelta(days=1) \
             * labour_input_data['casual_hours']['harvest'] + labour_periods.loc[labour_periods['date']==i , 'casual weekend'] / datetime.timedelta(days=1) \
             * labour_input_data['casual_hours']['harvest']  
@@ -167,8 +167,8 @@ def permanent_supervision():
     #loops through each period date
     for i in labour_periods['date']:
         #checks if the date is a seed period
-        if i in Periods.period_dates(Periods.wet_seeding_start_date(),crop_input['seed_period_lengths']) \
-        or i in Periods.period_dates(crop_input['harv_date'],crop_input['harv_period_lengths']):
+        if i in per.period_dates(per.wet_seeding_start_date(),crop_input['seed_period_lengths']) \
+        or i in per.period_dates(crop_input['harv_date'],crop_input['harv_period_lengths']):
             #multiplys number of permanent hours in a given period by the percentage of supervision required for harvest and seeding
             labour_periods.loc[labour_periods['date']==i , 'permanent supervision'] = labour_periods.loc[labour_periods['date']==i , 'permanent hours'] \
             * labour_input_data['permanent_efficienct']['during harvest and seeding'] 
@@ -183,8 +183,8 @@ def casual_supervision():
     #loops through each period date
     for i in labour_periods['date']:
         #checks if the date is a seed period
-        if i in Periods.period_dates(Periods.wet_seeding_start_date(),crop_input['seed_period_lengths'])   \
-        or i in Periods.period_dates(crop_input['harv_date'],crop_input['harv_period_lengths']):
+        if i in per.period_dates(per.wet_seeding_start_date(),crop_input['seed_period_lengths'])   \
+        or i in per.period_dates(crop_input['harv_date'],crop_input['harv_period_lengths']):
             #multiplys number of casual hours in a given period by the percentage of supervision required for harvest and seeding
             labour_periods.loc[labour_periods['date']==i , 'casual supervision'] = labour_periods.loc[labour_periods['date']==i , 'casual hours'] \
             * labour_input_data['casual_efficienct']['during harvest and seeding'] 
@@ -204,8 +204,8 @@ def casual_bound(b):
     #loops through each period date
     for idx, i in enumerate(labour_periods['date']):
         #checks if the date is a seed period or harvest date
-        if i in Periods.period_dates(Periods.wet_seeding_start_date(),crop_input['seed_period_lengths']) \
-        or i in Periods.period_dates(crop_input['harv_date'],crop_input['harv_period_lengths']):
+        if i in per.period_dates(per.wet_seeding_start_date(),crop_input['seed_period_lengths']) \
+        or i in per.period_dates(crop_input['harv_date'],crop_input['harv_period_lengths']):
             #appends upper and lower bounds during seeding dates
             cas_b[idx] = (labour_input_data['%s number casual labour harv seed'% b] )
         else:

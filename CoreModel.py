@@ -56,15 +56,15 @@ def coremodel_all():
     ######################
     #links labour fixed casual supply and requirment. ie fixed labour tasks that can be done by casual or any other staff (casual is the only supply but in the labourpyomo sheet there is a transfer variable that allows the managger and perm staff to complete casual jobs)
     def labour_fixed_casual(model,p):
-        return model.fixed_labour_casual[p] -  model.labour_super[p] - model.labour_tax[p] - model.labour_bas[p] >= 0
-    model.labour_fixed_casual_link = Constraint(model.s_periods, rule = labour_fixed_casual, doc='link between labour supply and requirment by fixed jobs for casual and above')
+        return model.fixed_labour_casual[p] -  model.p_super_labour[p] - model.p_tax_labour[p] - model.p_bas_labour[p] >= 0
+    model.con_labour_fixed_casual_link = Constraint(model.s_periods, rule = labour_fixed_casual, doc='link between labour supply and requirment by fixed jobs for casual and above')
     
     
     
     #links labour fixed manager supply and requirment. ie fixed labour tasks that can be done only by manager.
     def labour_fixed_manager(model,p):
-        return model.fixed_labour_manager[p] -  model.labour_planning [p] - model.labour_learn[p] >= 0
-    model.labour_fixed_manager_link = Constraint(model.s_periods, rule = labour_fixed_manager, doc='link between labour supply and requirment by fixed jobs for manager')
+        return model.fixed_labour_manager[p] -  model.p_planning_labour [p] - model.p_learn_labour[p] >= 0
+    model.con_labour_fixed_manager_link = Constraint(model.s_periods, rule = labour_fixed_manager, doc='link between labour supply and requirment by fixed jobs for manager')
     
     #labour crop - can be done by anyone
     
@@ -77,8 +77,8 @@ def coremodel_all():
     #############################
     #reduction in yield income  #
     #############################
-    ##combines rotation yield penalties from untimely sowing and crop grazing. Then passes to cashflow constraint
-    def yield_penalty_cost(model,c):
+    ##combines rotation yield, on-farm sup feed and yield penalties from untimely sowing and crop grazing. Then passes to cashflow constraint. 
+    def yield_income(model,c):
         return sum(( macpy.late_seed_penalty(model,k)) * model.p_grain_price[c,k]/1000 for k in model.s_crops)
     
     ######################
@@ -113,7 +113,7 @@ def coremodel_all():
         #this means the first period doesn't include the previous debit or credit (because it doesn't exist, because it is the first period) 
         j = [1] * len(c)
         j[0] = 0
-        return (crppy.rotation_cashflow(model,c[i]) - yield_penalty_cost(model,c[i]) + labour_cost(model,c[i]) - mach_cost(model,c[i]) +
+        return (yield_income(model,c[i]) - crppy.rotation_cost(model,c[i])  - labour_cost(model,c[i]) - mach_cost(model,c[i]) +
                 model.v_debit[c[i]] - model.v_credit[c[i]]  - model.v_debit[c[i-1]] * fin.debit_interest() * j[i]  + model.v_credit[c[i-1]] * fin.credit_interest() * j[i]) >= 0
 
     try:

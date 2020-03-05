@@ -24,11 +24,9 @@ import numpy as np
 
 
 #MUDAS modules
-import Inputs  
 from LabourFixedInputs import *
-from Labour import *
-import FeedBudget as fb
-
+import Labour as lab
+import PropertyInputs as pinp
 '''
 this can all be updated to the new labour format using the labour allocation function to 
 determine the period allocation
@@ -38,71 +36,71 @@ determine the period allocation
 
 #add time required for tax to df in corresponding labour periods
 def tax():
-    labour_periods['tax'] = np.nan
+    lab.labour_periods['tax'] = np.nan
     #add the end date of the last labour period to the df. So that i + 1 doesn't give an error on the last period
-    labour_periods.loc[len(labour_periods.index),'date']= fb.feed_inputs['feed_periods'][1] + relativedelta(day=1,month=1,years=1)
-    for i in labour_periods.index:
+    lab.labour_periods.loc[len(lab.labour_periods.index),'date']= pinp.feed_inputs['feed_periods'][1] + relativedelta(day=1,month=1,years=1)
+    for i in lab.labour_periods.index:
         #stops it picking up the last row which is nan (except for date)
         if not math.isnan(i):
              for j in labour_fixed_input_data['labour_tax']:
                 # check if the date falls into period i, if so add the number of tax hours to the tax column corresponding to that period.
-                if labour_periods.loc[i,'date'] <= j < labour_periods.loc[i + 1 ,'date']:
-                    labour_periods.loc[i,'tax'] = labour_fixed_input_data['labour_tax'][j]
+                if lab.labour_periods.loc[i,'date'] <= j < lab.labour_periods.loc[i + 1 ,'date']:
+                    lab.labour_periods.loc[i,'tax'] = labour_fixed_input_data['labour_tax'][j]
     # drop last row, because it has na because it only contains the end date, therefore not a period
-    labour_periods.drop(labour_periods.tail(1).index,inplace=True) 
+    lab.labour_periods.drop(lab.labour_periods.tail(1).index,inplace=True) 
 tax()        
 
 #add time required for planning to df in corresponding labour periods
 def planning():
-    labour_periods['planning'] = np.nan
+    lab.labour_periods['planning'] = np.nan
     #add the end date of the last labour period to the df. So that i + 1 doesn't give an error on the last period
-    labour_periods.loc[len(labour_periods.index),'date']= fb.feed_inputs['feed_periods'][1] + relativedelta(day=1,month=1,years=1)
-    for i in labour_periods.index:
+    lab.labour_periods.loc[len(lab.labour_periods.index),'date']= pinp.feed_inputs['feed_periods'][1] + relativedelta(day=1,month=1,years=1)
+    for i in lab.labour_periods.index:
         #stops it picking up the last row which is nan (except for date)
         if not math.isnan(i):
              for j in labour_fixed_input_data['labour_planning']:
                 # check if the date falls into period i, if so add the number of tax hours to the tax column corresponding to that period.
-                if labour_periods.loc[i,'date'] <= j < labour_periods.loc[i + 1 ,'date']:
-                    labour_periods.loc[i,'planning'] = labour_fixed_input_data['labour_planning'][j]
+                if lab.labour_periods.loc[i,'date'] <= j < lab.labour_periods.loc[i + 1 ,'date']:
+                    lab.labour_periods.loc[i,'planning'] = labour_fixed_input_data['labour_planning'][j]
     # drop last row, because it has na because it only contains the end date, therefore not a period
-    labour_periods.drop(labour_periods.tail(1).index,inplace=True) 
+    lab.labour_periods.drop(lab.labour_periods.tail(1).index,inplace=True) 
 planning()     
 
 #add time required for bas to df in corresponding labour periods
 def bas():
-    labour_periods['bas'] = np.nan
+    lab.labour_periods['bas'] = np.nan
     #add the end date of the last labour period to the df. So that i + 1 doesn't give an error on the last period
-    labour_periods.loc[len(labour_periods.index),'date']= fb.feed_inputs['feed_periods'][1] + relativedelta(day=1,month=1,years=1)
-    for i in labour_periods.index:
+    lab.labour_periods.loc[len(lab.labour_periods.index),'date']= pinp.feed_inputs['feed_periods'][1] + relativedelta(day=1,month=1,years=1)
+    for i in lab.labour_periods.index:
         #stops it picking up the last row which is nan (except for date)
         if not math.isnan(i):
              for j in labour_fixed_input_data['labour_bas']:
                 # check if the date falls into period i, if so add the number of tax hours to the tax column corresponding to that period.
-                if labour_periods.loc[i,'date'] <= j < labour_periods.loc[i + 1 ,'date']:
-                    labour_periods.loc[i,'bas'] = labour_fixed_input_data['labour_bas'][j]
+                if lab.labour_periods.loc[i,'date'] <= j < lab.labour_periods.loc[i + 1 ,'date']:
+                    lab.labour_periods.loc[i,'bas'] = labour_fixed_input_data['labour_bas'][j]
     # drop last row, because it has na because it only contains the end date, therefore not a period
-    labour_periods.drop(labour_periods.tail(1).index,inplace=True) 
+    lab.labour_periods.drop(lab.labour_periods.tail(1).index,inplace=True) 
 bas() 
 
 #add time required for paying staff and super and workers comp to df in corresponding labour periods
 def super_wc():
-    labour_periods['super'] = np.nan
+    lab.labour_periods['super'] = np.nan
     #add the end date of the last labour period to the df. So that i + 1 doesn't give an error on the last period
-    labour_periods.loc[len(labour_periods.index),'date']= fb.feed_inputs['feed_periods'][1] + relativedelta(day=1,month=1,years=1)
-    for i in labour_periods.index:
+    lab.labour_periods.loc[len(lab.labour_periods.index),'date']= pinp.feed_inputs['feed_periods'][1] + relativedelta(day=1,month=1,years=1)
+    for i in lab.labour_periods.index:
         #stops it picking up the last row which is nan (except for date)
         if not math.isnan(i):
              for j in labour_fixed_input_data['labour_super']:
                 # check if the date falls into period i, if so add the number of tax hours to the tax column corresponding to that period.
-                if labour_periods.loc[i,'date'] <= j < labour_periods.loc[i + 1 ,'date']:
-                    labour_periods.loc[i,'super'] = labour_fixed_input_data['labour_super'][j]
+                if lab.labour_periods.loc[i,'date'] <= j < lab.labour_periods.loc[i + 1 ,'date']:
+                    lab.labour_periods.loc[i,'super'] = labour_fixed_input_data['labour_super'][j]
     # drop last row, because it has na because it only contains the end date, therefore not a period
-    labour_periods.drop(labour_periods.tail(1).index,inplace=True) 
+    lab.labour_periods.drop(lab.labour_periods.tail(1).index,inplace=True) 
 super_wc()
 
 #fill blanks with 0
 def fill_blanks():
-    labour_periods[['bas','super','planning','tax']]= labour_periods[['bas','super','planning','tax']].fillna(0)
+    lab.labour_periods[['bas','super','planning','tax']]= lab.labour_periods[['bas','super','planning','tax']].fillna(0)
 fill_blanks()
     
 

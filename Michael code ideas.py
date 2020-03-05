@@ -29,6 +29,24 @@ def rot_phase_link(model,l,h1,h2,h3,h4):
     return  test<=0
 model.jj = Constraint(model.lmus,model.rot_constraints, rule=rot_phase_link, doc='rotation phases constraint')
 
+## another example of dis agregated constraint
+def rotation_yield_transfer2(model,k):
+    i=uinp.structure['phase_len']-1
+    jj=0
+    while jj == 0:
+        for l in model.s_lmus:
+            for h, r in zip(model.s_phases_dis, model.s_phases):
+                print(k,h,r)
+                print(h[i])
+                if ((h[0:i])+(k,)+(l,)) in model.p_rotation_yield:
+                    print('first')
+                    if model.p_rotation_yield[h[0:i],k,l] != 0 :
+                        print('second')
+                        if h[i]==k:
+                            jj=2
+                            print('third')
+                            print(model.p_rotation_yield[h[0:i],k,l],model.v_phase_area[r,l])
+                        else: print('no')
 
 ######################################
 #Write default SA to row1 in exp.xlsx#

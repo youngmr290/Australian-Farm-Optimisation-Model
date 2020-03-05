@@ -86,8 +86,15 @@ model.s_fert_type = Set(initialize=uinp.price['fert_cost'].index, doc='fertilise
 #rotation #
 ###########
 ##phases
-model.s_phases = Set(initialize=uinp.structure['phases'].index, doc='rotation phases set') 
+model.s_phases = Set(ordered=True, initialize=uinp.structure['phases'].index, doc='rotation phases set') 
 # model.s_phases.pprint()
+
+##phases disagregated - used in rot yield transfer
+def phases_dis():
+    phase=uinp.structure['phases'].copy()
+    return phase.set_index(list(range(uinp.structure['phase_len']))).index
+model.s_phases_dis = Set(dimen=uinp.structure['phase_len'], ordered=True, initialize=phases_dis(), doc='rotation phases disagregated') 
+# model.s_phases_dis.pprint()
 
 ##con1 set
 s_rotcon1 = pd.read_excel('Rotation.xlsx', sheet_name='rotation con1 set', header= None, index_col = 0)

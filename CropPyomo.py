@@ -24,6 +24,7 @@ import timeit
 
 #MUDAS modules
 import Crop as crp
+import UniversalInputs as uinp
 from CreateModel import *
 
 print('Status:  running croppyomo')
@@ -34,18 +35,18 @@ def croppyomo_local():
     #param  #
     #########    
     try:
-        model.del_component(model.p_rotation_cashflow)
-        model.del_component(model.p_rotation_cashflow_index)
-        model.del_component(model.p_rotation_cashflow_index_index_0)
+        model.del_component(model.p_rotation_cost)
+        model.del_component(model.p_rotation_cost_index)
+        model.del_component(model.p_rotation_cost_index_index_0)
     except AttributeError:
         pass
-    model.p_rotation_cashflow = Param(model.s_phases,model.s_lmus,model.s_cashflow_periods, initialize=crp.rot_cost(),default=0, doc='total cashflow for 1 unit of rotation')
-   
-    # try:
-    #     model.del_component(model.p_rotation_yield)
-    # except AttributeError:
-    #     pass
-    # model.p_rotation_yield = Param(model.s_phaseshist, model.s_crops, model.s_lmus, initialize=crp.rot_yield(), default = 0.0, doc='grain production for all crops for 1 unit of rotation')
+    model.p_rotation_cost = Param(model.s_phases,model.s_lmus,model.s_cashflow_periods, initialize=crp.rot_cost(),default=0, doc='total cost for 1 unit of rotation')
+       
+    try:
+        model.del_component(model.p_rotation_yield)
+    except AttributeError:
+        pass
+    model.p_rotation_yield = Param(model.s_phases_dis, model.s_lmus, initialize=crp.rot_yield().to_dict(), default = 0.0, doc='grain production for all crops for 1 unit of rotation')
     
     try:
         model.del_component(model.p_grain_price)
@@ -58,10 +59,13 @@ def croppyomo_local():
     except AttributeError:
         pass
     model.p_stubble = Param(model.s_crops, initialize=crp.stubble_production(), default = 0.0, doc='stubble produced / kg grain harvested')
-    #model.rotation_cashflow.pprint()
-    
-    
-    
+    try:
+        model.del_component(model.p_phasefert)
+    except AttributeError:
+        pass
+    ##only used in croplabour pyomo to determine labour per tonne of fert
+    model.p_phasefert = Param(model.s_phases, model.s_lmus, model.s_fert_type, initialize=crp.fert_req().stack().to_dict(), default = 0.0, doc='fert required by 1 unit of phase')
+   
     
     
       
@@ -81,18 +85,27 @@ def croppyomo_local():
 #######################################################################################################################################################
 #######################################################################################################################################################
 
-# ##############
-# #yield       #
-# ##############
-# ##total grain transfer for each crop, seperated so it can be combined with untimely sowing and crop grazing penalty before converting to cashflow 
-# ## slightly more complicated because i have split the rotation set into history and current crop - this is so i get just the grain transfer for each crop which is compatible with yield penalty activities.
+##############
+#yield       #
+##############
+##total grain transfer for each crop, seperated so it can be combined with untimely sowing and crop grazing penalty before converting to cashflow 
+### slightly more complicated because i have to have rotation yield in disagregated format and the rotation variable is aggregated.
+### yield needs to be disaggregated so that it returns the grain transfer for each crop - this is so it is compatible with yield penalty and sup feed activities.
 
-# def rotation_yield_transfer(model,k):
-#     return sum(sum(model.p_rotation_yield[h,k,l]*model.v_phase_area[r,l] for h, r in model.s_phases if ((h)+(k,)+(l,)) in model.p_rotation_yield and model.p_rotation_yield[h,k,l] != 0)for l in model.s_lmus) #+ model.x[k] >=0 #
+def rotation_yield_transfer(model,k):
+    i=uinp.structure['phase_len']-1
+    ##h is a disaggregated version of r, it can be indexed. h[0:i] is the rotation history. Have to check if k==h otherwise when h[0:i] is combined with k you can get the wrong rotation
+    return sum(sum(model.p_rotation_yield[h[0:i],k,l]*model.v_phase_area[r,l] for h, r in zip(model.s_phases_dis, model.s_phases) if h[i]==k and ((h[0:i])+(k,)+(l,)) in model.p_rotation_yield and model.p_rotation_yield[h[0:i],k,l] != 0)for l in model.s_lmus) #+ model.x[k] >=0 #
+
+
+
+
 
 # model.x = Var(model.s_crops, bounds=(0,None), doc='delets - used for testing')
 # model.j = Constraint(model.s_crops, rule=rotation_yield_transfer, doc='')
-# model.j.pprint()
+# # model.j.pprint()
+# model.s_crops.pprint()
+# model.p_rotation_yield[h,'lmu1']
 
 #####################################
 # functions used to define cashflow #
@@ -108,8 +121,8 @@ To add:
     
 '''
 
-def rotation_cashflow(model,c):
-    return sum(sum(model.p_rotation_cashflow[r,l,c]*model.v_phase_area[r,l] for r in model.s_phases if model.p_rotation_cashflow[r,l,c] != 0) for l in model.s_lmus )#+ model.x[c] >=0 #0.10677s
+def rotation_cost(model,c):
+    return sum(sum(model.p_rotation_cost[r,l,c]*model.v_phase_area[r,l] for r in model.s_phases if model.p_rotation_cost[r,l,c] != 0) for l in model.s_lmus )#+ model.x[c] >=0 #0.10677s
 #model.j = Constraint(model.cashflow_periods, rule=rotation_cashflow, doc='')
    
     
