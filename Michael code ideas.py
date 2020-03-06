@@ -126,6 +126,8 @@ phases_df = fun.phases(inp.input_data['phases'],inp.input_data['phase_len'])
 # general coding info 
 #################################################################################################################################################################
 #################################################################################################################################################################
+    ##calling a function multiple times takes time. call it once and assign result to a unique variable. 
+    ##local variables are easier for pyton to locate
 
 ############################
 #df                        #

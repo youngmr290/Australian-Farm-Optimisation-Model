@@ -61,6 +61,7 @@ if con.inputs_from_pickle == False:
         pkl.dump(genotype_inp, f)
         parameters_inp = fun.xl_all_named_ranges('Universal.xlsx', ['Parameters'])
         pkl.dump(parameters_inp, f)
+        
         ##mach options
         ###create a dict to store all options - this allows the user to select an option
         machine_options_dict_inp={}
@@ -93,7 +94,7 @@ mach_general = mach_general_inp.copy()
 feed_inputs = feed_inputs_inp.copy()
 genotype = genotype_inp.copy()
 parameters = parameters_inp.copy()
-machine_options_dict = machine_options_dict_inp.copy()
+machine_options = machine_options_dict_inp.copy()
 
 #######################
 #apply SA             #
@@ -167,7 +168,7 @@ structure['phases'] = pd.read_excel('Rotation.xlsx', sheet_name='rotation list',
 
 
 ###############
-#crops        #
+#landuses     #
 ###############
 '''
 A1, E1 are special sets used in con2 - currently not used
@@ -177,6 +178,10 @@ Note
 - C1 is used just in pasture functions
 - sets now include capitals - this shouldnt effect con1 but it makes building the germ df easier
 '''
+##special sets that are used elsewhere from rotations
+structure['PAS_R']={'ar', 'sr', 'jr', 'tr', 'ur', 'xr', 'tc', 'jc', 'uc', 'xc'} #all reseeded pastures - used to determine pas sow 
+structure['C']={'b', 'h', 'o', 'of', 'w', 'f','i', 'k', 'l', 'v', 'z','r'} #all crops, used in stubble and mach (not used for rotations)
+structure['Hay']={'h'} #all crops that produce hay - used in machpyomo/coremodel for hay con
 
 structure['A']={'a', 'ar','a3', 'a4', 'a5', 's', 'sr','s3', 's4', 's5', 'm','m3', 'm4', 'm5'
                 , 'A', 'AR', 'A3', 'A4', 'A5'
@@ -187,7 +192,6 @@ structure['A3']={'a3', 'A3'}
 structure['A4']={'a4', 'A4'}
 structure['A5']={'a5', 'A5'}
 structure['AR']={'ar', 'AR'} #resown annual
-structure['C']={'b', 'h', 'o', 'of', 'w', 'f','i', 'k', 'l', 'v', 'z','r'} #all crops, used in stubble and mach (not used for rotations)
 structure['C1']={'E', 'N', 'P', 'OF', 'b', 'h', 'o', 'of', 'w', 'f','i', 'k', 'l', 'v', 'z','r'} #had to create a seperate set because don't want the capitatl in the crop set above as it is used to create pyomo set 
 # structure['D']={'b', 'h', 'o', 'of', 'w', 'f', 'i', 'k', 'l', 'v'} #non canola crops (ie E & P)
 structure['E']={'E', 'OF', 'b', 'h', 'o', 'of', 'w'} #cereals

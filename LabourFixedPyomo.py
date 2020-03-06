@@ -17,85 +17,65 @@ formatting; try to avoid capitals (reduces possible mistakes in future)
 from pyomo.environ import *
 
 #MUDAS modules
-from LabourFixed import *
-from LabourPyomo import *
+import LabourFixed as lfix
+import LabourFixedInputs as lfixinp
+# from LabourPyomo import *
 from CreateModel import *
 
 
-'''
-pyomo parameters
-'''
-#hours of labour required to complete super and wc activities
-model.p_super_labour = Param(model.s_periods, initialize= labour_periods['super'].to_dict(), doc='hours of labour required to complete super and wc activities')
+def labfxpyomo_local():
+    #########
+    #param  #
+    #########    
+    ##call labour fixed function then extract info out of df in the section below
+    labour_periods_fx=lfix.fixed()
+    
+    try:
+        model.del_component(model.p_super_labour)
+    except AttributeError:
+        pass
+    model.p_super_labour = Param(model.s_periods, initialize= labour_periods_fx['super'].to_dict(), doc='hours of labour required to complete super and wc activities')
+    
+    try:
+        model.del_component(model.p_bas_labour)
+    except AttributeError:
+        pass
+    model.p_bas_labour = Param(model.s_periods, initialize= labour_periods_fx['bas'].to_dict(), doc='hours of labour required to complete bas activities')
+    
+    try:
+        model.del_component(model.p_planning_labour)
+    except AttributeError:
+        pass
+    model.p_planning_labour = Param(model.s_periods, initialize= labour_periods_fx['planning'].to_dict(), doc='hours of labour required to complete planning activities')
+    
+    try:
+        model.del_component(model.p_tax_labour)
+    except AttributeError:
+        pass
+    model.p_tax_labour = Param(model.s_periods, initialize= labour_periods_fx['tax'].to_dict(), doc='hours of labour required to complete tax activities')
+    
+    try:
+        model.del_component(model.p_learn_labour)
+    except AttributeError:
+        pass
+    model.p_learn_labour = Param(initialize= lfixinp.labour_fixed_input_data['labour_learn'], doc='hours of labour required to complete learning activities')
 
-#hours of labour required to complete bas activities
-model.p_bas_labour = Param(model.s_periods, initialize= labour_periods['bas'].to_dict(), doc='hours of labour required to complete bas activities')
+    ###################################
+    #local constraints                #
+    ###################################
+    ##constraint makes sure the model allocate the labour learn to labour periods, because labour learn timing is optimised (others are fixed timing determined in input sheet)
+    try:
+        model.del_component(model.labour_learn_period)
+    except AttributeError:
+        pass
+    def labour_learn_period(model):
+        return sum(model.v_learn_allocation[i] * model.p_learn_labour for i in model.s_periods ) - model.p_learn_labour >= 0
+    model.labour_learn_period = Constraint(rule = labour_learn_period, doc='constrains the amount of labour learn in each period')
 
-#hours of labour required to complete planning activities
-model.p_planning_labour = Param(model.s_periods, initialize= labour_periods['planning'].to_dict(), doc='hours of labour required to complete planning activities')
-
-#hours of labour required to complete tax activities
-model.p_tax_labour = Param(model.s_periods, initialize= labour_periods['tax'].to_dict(), doc='hours of labour required to complete tax activities')
-
-#hours of labour required to complete learning activities
-model.p_learn_labour = Param(initialize= labour_fixed_input_data['labour_learn'], doc='hours of labour required to complete learning activities')
-
-
-'''
-pyomo variables
-'''
-# #amount of labour learn required in each period, this variable is used in the core model to link labour requirment with labour supply.
-# model.v_labour_learn = Var(model.periods, bounds = (0,None) , doc='proportion of learning done each labour period')
-
-# #amount of labour_planning required in each period, this variable is used in the core model to link labour requirment with labour supply.
-# model.v_labour_planning = Var(model.periods, bounds = (0,None) , doc='proportion of learning done each labour period')
-
-# #amount of labour_super required in each period, this variable is used in the core model to link labour requirment with labour supply.
-# model.v_labour_super = Var(model.periods, bounds = (0,None) , doc='proportion of learning done each labour period')
-
-# #amount of labour tax required in each period, this variable is used in the core model to link labour requirment with labour supply.
-# model.v_labour_tax = Var(model.periods, bounds = (0,None) , doc='proportion of learning done each labour period')
-
-# #amount of labour_bas required in each period, this variable is used in the core model to link labour requirment with labour supply.
-# model.v_labour_bas = Var(model.periods, bounds = (0,None) , doc='proportion of learning done each labour period')
-
-#proportion of required learning done in each period, this variable exists so the model can optimise the timing of labour learn as a farmer would do in real life.
-model.v_quantity_learn = Var(model.s_periods, bounds = (0,1) , doc='proportion of learning done each labour period')
-
-
-'''
-pyomo constraints
-'''
-
-# #constraint to link labour supply with learn labour requirment. labour supplied only by permanent and farmer staff because casual dont need to learn (can be changed though)
-# def labour_learn(model, i):
-#     return model.v_labour_learn[i] - model.quantity_learn[i] * model.learn_labour_requirment >= 0
-# model.labour_learn_con = Constraint(model.periods, rule = labour_learn, doc='requirment of learn is filled by labour learn variable')
-
-# #constraint to link labour supply with planning labour requirment. labour supplied only by permanent and farmer staff because casual dont plan
-# def labour_planning(model, i):
-#     return model.v_labour_planning[i] - model.planning_labour_requirment[i] >= 0
-# model.labour_planning_con = Constraint(model.periods, rule = labour_planning, doc='requirment of planning is filled by labour planning variable')
-
-# #constraint to link labour supply with planning labour requirment. labour supplied only by permanent and farmer staff because casual dont plan
-# def labour_super(model, i):
-#     return model.v_labour_super[i] - model.super_labour_requirment[i] >= 0
-# model.labour_super_con = Constraint(model.periods, rule = labour_super, doc='requirment of super and wc is filled by labour super and wc variable')
-
-# #constraint to link labour supply with planning labour requirment. labour supplied only by permanent and farmer staff because casual dont plan
-# def labour_tax(model, i):
-#     return model.v_labour_tax[i] - model.tax_labour_requirment[i] >= 0
-# model.labour_tax_con = Constraint(model.periods, rule = labour_tax, doc='requirment of tax is filled by labour tax variable')
-
-# #constraint to link labour supply with planning labour requirment. labour supplied only by permanent and farmer staff because casual dont plan
-# def labour_bas(model, i):
-#     return model.v_labour_bas[i] - model.bas_labour_requirment[i] >= 0
-# model.labour_bas_con = Constraint(model.periods, rule = labour_bas, doc='requirment of BAS is filled by labour BAS variable')
-
-#constraint makes sure the model allocate the labour learn to labour periods, because labour learn timing is optimised (others are fixed timing determined in input sheet)
-def labour_learn_period(model):
-    return sum(model.v_quantity_learn[i] * model.p_learn_labour for i in model.s_periods ) - model.p_learn_labour >= 0
-model.labour_learn_period = Constraint(rule = labour_learn_period, doc='constrains the amount of labour learn in each period')
+############
+#variables #
+############  
+model.v_learn_allocation = Var(model.s_periods, bounds = (0,1) , doc='proportion of learning done each labour period')
 
 
-#model.pprint()
+

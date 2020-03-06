@@ -19,7 +19,7 @@ Fixed   Date    ID by   Problem
 """
 #python modules
 import pandas as pd
-#import numpy as np
+import numpy as np
 import datetime
 from dateutil.relativedelta import relativedelta
 
@@ -86,7 +86,7 @@ def period_dates(start, length):
     dates.append(perioddate)
     #loop used to append the rest of the seeding dates to list, doesnt include last seed period length because i only want start dates of seed periods
     for i in length[:-1]:
-        perioddate += datetime.timedelta(days = i)
+        perioddate += datetime.timedelta(days = i.astype(np.float64)) #for some reason the days must be a float64 otherwise you get an error (timedelta is seems only to be compatible with float64)
         dates.append(perioddate)
     return dates
 
@@ -94,7 +94,7 @@ def period_dates(start, length):
 #also used in mach sheet
 def period_end_date(start, length):
     #gets the last date from periods funct then adds the length of last period
-    return period_dates(start,length)[-1] + datetime.timedelta(days = length[-1])
+    return period_dates(start,length)[-1] + datetime.timedelta(days = length[-1].astype(np.float64))
 #print(period_end_date(wet_seeding_start_date(),ci.crop_input['seed_period_lengths']))
         
 

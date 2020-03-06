@@ -17,6 +17,9 @@ from pyomo.environ import *
 
 #MUDAS modules
 from CreateModel import *
+
+print('Status:  running financepyomo')
+
 '''
 #variables
 '''
@@ -27,13 +30,12 @@ model.v_debit = Var(model.s_cashflow_periods, bounds = (0.0, None), doc = 'amoun
 #transfer 
 
 
-
-####################
-#Overdraw constrain#
-####################
-
-#debit can't be more than a specified amount ie farmers will draw a maximum from the bank throughout yr
-def overdraw(model,c): 
-    return model.v_debit[c] <= pinp.finance['overdraw_limit']
-model.con_overdraw = Constraint(model.s_cashflow_periods, rule=overdraw, doc='overdraw limit')
+def finpyomo_local():
+    ####################
+    #Local constrain   #
+    ####################
+    ##debit can't be more than a specified amount ie farmers will draw a maximum from the bank throughout yr
+    def overdraw(model,c): 
+        return model.v_debit[c] <= pinp.finance['overdraw_limit']
+    model.con_overdraw = Constraint(model.s_cashflow_periods, rule=overdraw, doc='overdraw limit')
 

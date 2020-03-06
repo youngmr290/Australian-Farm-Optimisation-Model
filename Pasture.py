@@ -207,14 +207,28 @@ def init_and_map_excel(filename, landuses):
     p_dry_transfer_t_dft            = np.zeros(dft,    dtype = 'float64')  # parameters for the dry feed activities: proportion of DM senescencing
     p_nap_dlt                       = np.zeros(dlt,    dtype = 'float64')  # parameters for the quantity of dry pasture available on non-arable areas of crop paddocks
 
+    #used in idea 1 & 2 below
     index_t                       = np.asarray(landuses)                      # pasture type index description
     index_l                       = pinp.general['lmu_area'].index.to_numpy() # lmu index description
     index_f                       = [*range(n_feed_periods)]
     index_r                       = uinp.structure['phases'].index.to_numpy()
-
+    
     #^ an option to create the index for the parameter arrays is
-    p_index_flrt                    =np.ix_(index_f, index_l, index_r, index_t) #or perhaps the cartesian_products function
+    #idea 1
+    p_index_flrt                    =np.ix_(index_f, index_l, index_r, index_t) 
+    #idea 2
+    ## possible idea to create the dataframe with the key for the dict
+    # m=np.array(['lmu1,','lmu2,','lmu3,'], dtype=np.object)
+    ## if these are the index of a dataframe (df) then m = df.index.to_numpy()
 
+    # n=np.array(['fp1','fpd2','fpd3'], dtype=np.object)
+
+    # names = m.reshape(-1,1) + n.reshape(1,-1)
+
+    #  np.ravel(names)
+    #  array(['lmu1,fp1', 'lmu1,fpd2', 'lmu1,fpd3', 'lmu2,fp1', 'lmu2,fpd2', 'lmu2,fpd3', 'lmu3,fp1', 'lmu3,fpd2', 'lmu3,fpd3'], dtype=object)
+    #idea3
+    #or perhaps the cartesian_products function
     ### _read data for each pasture type from excel file into arrays
     for t,landuse in enumerate(landuses):
         exceldata = pinp.pasture_inputs[landuse]           # assign the pasture data to exceldata
@@ -431,16 +445,6 @@ def calculate_germ_and_reseed():
                                                    ,i_reseeding_date_grazing_t)       # which feed period does grazing occur
     update_reseeding_foo(period, 1-proportion, reseed_foo_lt,
                          propn_grn=i_grn_propn_reseeding_t, dmd_dry=i_dry_dmd_reseeding_lt)                            # call function to update green & dry feed in the periods.
-    ## possible idea to create the dataframe with the key for the dict
-    # m=np.array(['lmu1,','lmu2,','lmu3,'], dtype=np.object)
-    ## if these are the index of a dataframe (df) then m = df.index.to_numpy()
-
-    # n=np.array(['fp1','fpd2','fpd3'], dtype=np.object)
-
-    # names = m.reshape(-1,1) + n.reshape(1,-1)
-
-    #  np.ravel(names)
-    #  array(['lmu1,fp1', 'lmu1,fpd2', 'lmu1,fpd3', 'lmu2,fp1', 'lmu2,fpd2', 'lmu2,fpd3', 'lmu3,fp1', 'lmu3,fpd2', 'lmu3,fpd3'], dtype=object)
 
 
 # define a function that loops through feed periods to generate the foo profile for a specified germination and consumption

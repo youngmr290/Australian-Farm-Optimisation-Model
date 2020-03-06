@@ -54,11 +54,19 @@ def croppyomo_local():
     except AttributeError:
         pass
     model.p_grain_price = Param(model.s_cashflow_periods, model.s_crops,  initialize=crp.grain_price().to_dict(),default = 0.0, doc='farm gate price per tonne of each grain')
+    
     try:
         model.del_component(model.p_stubble)
     except AttributeError:
         pass
     model.p_stubble = Param(model.s_crops, initialize=crp.stubble_production(), default = 0.0, doc='stubble produced / kg grain harvested')
+    
+    try:
+        model.del_component(model.p_landuse)
+    except AttributeError:
+        pass
+    model.p_landusesow = Param(model.s_phases_dis, model.s_lmus, initialize=crp.landuse_sow(), default = 0.0, doc='ha of sow activity required by each rot phase')
+    
     try:
         model.del_component(model.p_phasefert)
     except AttributeError:
@@ -99,13 +107,16 @@ def rotation_yield_transfer(model,k):
 
 
 
+##############
+#sow         #
+##############
+##similar to yield - this is more complex because we want to mul with phase area variable then sum based on the current landuse (k)
+def landuse(model,k,l):
+    i=uinp.structure['phase_len']-1
+    ##h is a disaggregated version of r, it can be indexed. h[0:i] is the rotation history. Have to check if k==h otherwise when h[0:i] is combined with k you can get the wrong rotation
+    return sum(model.p_landusesow[h[0:i],k,l]*model.v_phase_area[r,l] for h, r in zip(model.s_phases_dis, model.s_phases) if h[i]==k and ((h[0:i])+(k,)+(l,)) in model.p_landusesow and model.p_landusesow[h[0:i],k,l] != 0) #+ model.x[k] >=0 #
 
 
-# model.x = Var(model.s_crops, bounds=(0,None), doc='delets - used for testing')
-# model.j = Constraint(model.s_crops, rule=rotation_yield_transfer, doc='')
-# # model.j.pprint()
-# model.s_crops.pprint()
-# model.p_rotation_yield[h,'lmu1']
 
 #####################################
 # functions used to define cashflow #
@@ -114,7 +125,6 @@ def rotation_yield_transfer(model,k):
 '''
 To add:
     
-    - mach requirement ie sow and harv
     -stub cons
     -seed cost
     -insurance

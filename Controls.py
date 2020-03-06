@@ -12,5 +12,5 @@ This module can be used to control things that will effect the whole execution o
 # pickle info#
 ##############
 ##used to determine if the inputs are read in from excel or pickle file
-inputs_from_pickle = True 
+inputs_from_pickle = False 
 

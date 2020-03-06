@@ -17,6 +17,7 @@ import Functions as fun
 import Periods as per
 import Mach as mac
 import PropertyInputs as pinp
+import UniversalInputs as uinp
 
 ########################
 #phases                #
@@ -117,14 +118,14 @@ def chem_app_time_ha():
     arable3=arable.reindex(passes.index, axis=0, level=1).stack() #reindex so it can be mul with passes
     passes=passes.reindex(arable3.index).T.mul(arable3).T
     ##adjust chem labour across each labour period
-    chem_cost = chem_lab_allocation().mul(mac.chem_app_cost_ha()).stack() #cost for 1 pass for each chem.
+    time = chem_lab_allocation().mul(mac.spray_time_ha()).stack() #time for 1 pass for each chem.
     ##adjust for passes
-    chem_cost = passes.reindex(chem_cost.index, axis=1,level=1).mul(chem_cost) #total cost 
-    chem_cost=chem_cost.sum(level=[0], axis=1).replace(0, np.nan).unstack() #sum each chem cost - cost doesn't need to be seperated by chem type once joined with passes #sum nan returns 0 therefore i need to convert 0 back to nan so that they are dropped when stacking to reduce dict size.
+    time = passes.reindex(time.index, axis=1,level=1).mul(time) #total time 
+    time=time.sum(level=[0], axis=1).replace(0, np.nan).unstack() #sum each chem  - time doesn't need to be seperated by chem type once joined with passes #sum nan returns 0 therefore i need to convert 0 back to nan so that they are dropped when stacking to reduce dict size.
     ##merge to full rotation df
-    phase_chem_cost_ha = pd.merge(phases_df2, chem_cost, how='left', left_on=uinp.cols(), right_index = True) #merge with all the phases, requires because different phases have different application passes
-    phase_chem_cost_ha = phase_chem_cost_ha.drop(list(range(uinp.structure['phase_len'])),axis=1,level=0).stack([1]) #adding level=0 does nothing but if not included you get a preformance warning.
-    return phase_chem_cost_ha
+    phase_time = pd.merge(phases_df2, time, how='left', left_on=uinp.cols(), right_index = True) #merge with all the phases, requires because different phases have different application passes
+    phase_time = phase_time.drop(list(range(uinp.structure['phase_len'])),axis=1,level=0).stack([1,0]) #adding level=0 does nothing but if not included you get a preformance warning.
+    return phase_time.to_dict()
 # t_chemlab=chem_app_time_ha()
 
     

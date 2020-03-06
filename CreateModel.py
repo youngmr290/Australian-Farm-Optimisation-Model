@@ -71,9 +71,17 @@ model.s_stub_cat = Set(initialize=sinp.stubble_inputs['crop_stub']['w']['stub_ca
 #######################
 #cropping related     #
 #######################
+#landuses that are harvested - used in harv constraints and variables
+model.s_harvcrops = Set(initialize=uinp.mach_general['contract_harvest_speed'].index, doc='landuses that are harvest')
 
-#types of crops
+##landuses that produce hay - used in hay constraints 
+model.s_haycrops = Set(initialize=uinp.structure['Hay'], doc='landuses that make hay')
+
+##types of crops
 model.s_crops = Set(initialize=uinp.structure['C'], doc='crop types')
+
+
+model.s_landuses = Set(initialize=pinp.crop['arable'].index, doc='landuses')
 
 #soils
 model.s_lmus = Set(initialize=pinp.general['lmu_area'].index, doc='defined the soil type a given rotation is on')

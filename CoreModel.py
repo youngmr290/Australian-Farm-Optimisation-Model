@@ -19,21 +19,17 @@ from pyomo.environ import *
 import sys
 
 #MUDAS modules - should only be pyomo modules
-# from LabourPyomo import *
-# from LabourFixedPyomo import *
-
-# from LabourCropPyomo import *
 from CreateModel import *
-
 import CropPyomo as crppy
 import MachPyomo as macpy
 import FinancePyomo #not used but it needs to be imported so that it is run
 import LabourPyomo as labpy 
+import LabourFixedPyomo as lfixpy 
+import LabourCropPyomo as lcrppy 
 import Finance as fin
 
 print('Status: running coremodel')
 
-coremodel_test_var=[]
 
 def coremodel_all():
     '''
@@ -52,34 +48,88 @@ def coremodel_all():
     
     
     ######################
-    #labour fixed        #
+    #Labour fixed        #
     ######################
-    #links labour fixed casual supply and requirment. ie fixed labour tasks that can be done by casual or any other staff (casual is the only supply but in the labourpyomo sheet there is a transfer variable that allows the managger and perm staff to complete casual jobs)
+    ##Fixed labour jobs that can be completed by anyone ie this constraint links labour fixed casual and perm and manager supply and requirment. 
+    try:
+        model.del_component(model.con_labour_fixed_casual_link)
+    except AttributeError:
+        pass
     def labour_fixed_casual(model,p):
-        return model.fixed_labour_casual[p] -  model.p_super_labour[p] - model.p_tax_labour[p] - model.p_bas_labour[p] >= 0
+        return model.v_fixed_labour_casual[p] + model.v_fixed_labour_permanent[p] + model.v_fixed_labour_manager[p] -  model.p_super_labour[p] - model.p_tax_labour[p] - model.p_bas_labour[p] >= 0
     model.con_labour_fixed_casual_link = Constraint(model.s_periods, rule = labour_fixed_casual, doc='link between labour supply and requirment by fixed jobs for casual and above')
     
-    
-    
-    #links labour fixed manager supply and requirment. ie fixed labour tasks that can be done only by manager.
+    ##Fixed labour jobs that must be completed by the manager ie this constraint links labour fixed manager supply and requirment. 
+    try:
+        model.del_component(model.con_labour_fixed_manager_link)
+    except AttributeError:
+        pass
     def labour_fixed_manager(model,p):
-        return model.fixed_labour_manager[p] -  model.p_planning_labour [p] - model.p_learn_labour[p] >= 0
+        return model.v_fixed_labour_manager[p] -  model.p_planning_labour [p] - (model.p_learn_labour * model.v_learn_allocation[p]) >= 0
     model.con_labour_fixed_manager_link = Constraint(model.s_periods, rule = labour_fixed_manager, doc='link between labour supply and requirment by fixed jobs for manager')
     
-    #labour crop - can be done by anyone
+    ######################
+    #Labour crop         #
+    ######################
+    ##labour crop - can be done by anyone
+    try:
+        model.del_component(model.con_labour_crop_anyone)
+    except AttributeError:
+        pass
+    def labour_crop(model,p):
+        return model.v_crop_labour_casual[p] + model.v_crop_labour_permanent[p] + model.v_crop_labour_manager[p] - lcrppy.mach_labour(model,p)  >= 0
+    model.con_labour_crop_anyone = Constraint(model.s_periods, rule = labour_crop, doc='link between labour supply and requirment by crop jobs for all labour sources')
     
     
     ######################
     #stubble             #
     ###################### 
     
+    ######################
+    #sow landuse        #
+    ###################### 
+    ##links crop & pasture sow req with mach sow provide
+    try:
+        model.del_component(model.con_sow_link)
+    except AttributeError:
+        pass
+    def sow_link(model,k,l):
+        return macpy.sow_supply(model,k,l) - crppy.landuse(model,k, l) >= 0
+    model.con_sow_link = Constraint(model.s_landuses, model.s_lmus, rule = sow_link, doc='link between mach sow provide and rotation (crop and pas) sow require')
+
+    
+    
+    ######################
+    #harvest crops       #
+    ###################### 
+    ##links crop and mach pyomo together
+    try:
+        model.del_component(model.con_harv)
+    except AttributeError:
+        pass
+    def harv(model,k):
+        return  macpy.harv_supply(model,k) - crppy.rotation_yield_transfer(model,k)/1000  >= 0
+    model.con_harv = Constraint(model.s_harvcrops, rule = harv, doc='harvest constraint')
+
+
+    ######################
+    #harvest hay         #
+    ###################### 
+    ##links crop and mach pyomo together
+    try:
+        model.del_component(model.con_makehay)
+    except AttributeError:
+        pass
+    def harv(model,k):
+        return  model.v_hay_made - crppy.rotation_yield_transfer(model,k)/1000  >= 0
+    model.con_makehay = Constraint(model.s_haycrops, rule = harv, doc='make hay constraint')
     
     #############################
     #reduction in yield income  #
     #############################
     ##combines rotation yield, on-farm sup feed and yield penalties from untimely sowing and crop grazing. Then passes to cashflow constraint. 
     def yield_income(model,c):
-        return sum(( macpy.late_seed_penalty(model,k)) * model.p_grain_price[c,k]/1000 for k in model.s_crops)
+        return sum((crppy.rotation_yield_transfer(model,k) - macpy.late_seed_penalty(model,k)) * model.p_grain_price[c,k]/1000 for k in model.s_crops)
     
     ######################
     #feed                #
@@ -113,7 +163,7 @@ def coremodel_all():
         #this means the first period doesn't include the previous debit or credit (because it doesn't exist, because it is the first period) 
         j = [1] * len(c)
         j[0] = 0
-        return (yield_income(model,c[i]) - crppy.rotation_cost(model,c[i])  - labour_cost(model,c[i]) - mach_cost(model,c[i]) +
+        return (yield_income(model,c[i]) - crppy.rotation_cost(model,c[i])  - labpy.labour_cost(model,c[i]) - macpy.mach_cost(model,c[i]) +
                 model.v_debit[c[i]] - model.v_credit[c[i]]  - model.v_debit[c[i-1]] * fin.debit_interest() * j[i]  + model.v_credit[c[i-1]] * fin.credit_interest() * j[i]) >= 0
 
     try:
@@ -153,32 +203,34 @@ def coremodel_all():
     #######################################################################################################################################################
     #######################################################################################################################################################
     
-    # print('Status: writing...')
+    print('Status: writing...')
     model.write('test.lp',io_options={'symbolic_solver_labels':True})
-    # print('Status: solving...')
+    print('Status: solving...')
     results = SolverFactory('glpk').solve(model, tee=True)
-    # results.write() need to write this somewhere
-    # print("\nDisplaying Solution\n" + '-'*60)
-    # print(value(model.profit))
+    results.write() #need to write this somewhere
     # pyomo_postprocess(None, model, results) #not sure what this is
-    # results.write(num=2) #not sure what the num does, if removed it still works the same, maybe this is if there are multiple model instances
+    # results.write(num=1) #not sure what the num does, if removed it still works the same, maybe this is if there are multiple model instances
     
-    # model.v_debit.pprint()
-    # model.v_credit.pprint()
-    if (results.solver.status == SolverStatus.ok) and (results.solver.termination_condition == TerminationCondition.optimal):
-        print('solver optimal')# Do something when the solution in optimal and feasible
-        coremodel_test_var.append(0)
-    elif (results.solver.termination_condition == TerminationCondition.infeasible):
-        print ('Solver Status: infeasible')#,  result.solver.status)
-        coremodel_test_var.append(1)
-        # print(coremodel_test_var)
-        # sys.exit()
-    else:
-        # Something else is wrong
-        print ('Solver Status: error')#,  result.solver.status)
-        coremodel_test_var.append(1)
+    
+    ##you can access the solution for individual variables doing this
+    model.v_debit.pprint()
+    model.v_credit.pprint()
 
-    ##writes variable to txt file to view
+    ##this prints the overall profit
+    print("\nDisplaying Solution\n" + '-'*60)
+    print(value(model.profit))
+    
+    ##this check if the solver is optimal - if infeasible or error the model will quit
+    if (results.solver.status == SolverStatus.ok) and (results.solver.termination_condition == TerminationCondition.optimal):
+        print('solver optimal')# Do nothing when the solution in optimal and feasible
+    elif (results.solver.termination_condition == TerminationCondition.infeasible):
+        print ('Solver Status: infeasible')
+        sys.exit()
+    else: # Something else is wrong
+        print ('Solver Status: error')
+        sys.exit()
+
+    ##This writes variable with value greater than 1 to txt file 
     file = open('testfile.txt','w') 
     for v in model.component_objects(Var, active=True):
         file.write("Variable component object %s\n" %v)   #  \n makes new line
@@ -186,7 +238,7 @@ def coremodel_all():
             try:
                 if v[index].value>0:
                     file.write ("   %s %s\n" %(index, v[index].value))
-            except: pass #print("error on   %s %s\n" %(index, v[index].value))
+            except: pass 
     file.close()
     
     

@@ -83,10 +83,10 @@ def xl_all_named_ranges(filename, targetsheets, rangename=None):     # read all 
                         if not width and not length:            # the range is a single cell & is not iterable
                             parameters[dn.name] = ws[cell_range].value
                         elif not width:                         # the range is only 1 column & is not iterable across the row
-                            parameters[dn.name] = [cell.value for cell in [row[0] for row in ws[cell_range]]]
+                            parameters[dn.name] = np.asarray([cell.value for cell in [row[0] for row in ws[cell_range]]])
                         elif not length:                        # the range is 1 row & is iterable across columns
                             for row in ws[cell_range]:
-                                parameters[dn.name] = [cell.value for cell in row]
+                                parameters[dn.name] = np.asarray([cell.value for cell in row])
                         else:                                   # the range is a region & is iterable across rows and columns
                             df = pd.DataFrame([cell.value for cell in row] for row in ws[cell_range])
                             #df = pd.DataFrame(cells)

@@ -24,7 +24,7 @@ labour_input_data = dict()
 
 
 ########################
-#leave and hours worked#
+#leave and hours worked# Property
 ########################
 
 #sick leave permanent staff, doesn't need to be in timedata format
@@ -34,7 +34,7 @@ labour_input_data['sick_leave_permanent'] = 10
 labour_input_data['leave_permanent_start_date'] = datetime.datetime(2019,1,15)
 labour_input_data['leave_permanent'] = datetime.timedelta(days = 28)
 
-#post harvest leave farmer (usually takes a holiday 14days in feb and 14 days in mar)
+#post harvest leave manager (usually takes a holiday 14days in feb and 14 days in mar)
 labour_input_data['leave_manager_start_date'] = datetime.datetime(2019,2,15)
 labour_input_data['leave_manager'] = datetime.timedelta(days = 28)
 
@@ -58,15 +58,15 @@ labour_input_data['permanent_hours'] = {        'weekdays'	: 8, \
                                          'seeding'	: 9, \
                                          'harvest'   : 9}
 
-#hours worked by farmer 
-labour_input_data['farmer_hours'] = {           'weekdays'	: 9,   \
+#hours worked by manager 
+labour_input_data['manager_hours'] = {           'weekdays'	: 9,   \
                                          'weekends'	: 4.5, \
                                          'seeding'	: 10,  \
                                          'harvest'   : 9}
 
 
 ##########################
-#number of staff (bounds)#
+#number of staff (bounds)# Property
 ##########################
 
 #number of owner staff (usually 1)
@@ -87,11 +87,11 @@ labour_input_data['min number casual labour harv seed'] = 0
 
 
 #######
-#cost #
+#cost # Universal
 #######
 
-#farmer cost per yr
-labour_input_data['farmer_cost'] = 80000
+#manager cost per yr
+labour_input_data['manager_cost'] = 80000
 
 #permanent cost per yr (before super)
 labour_input_data['permanent_cost'] = 80000

@@ -27,7 +27,6 @@ import numpy as np
 #from MachInputs import *
 import UniversalInputs as uinp
 import PropertyInputs as pinp
-import CropInputs as ci
 import Periods as per
 import Functions as fun
 
@@ -36,7 +35,17 @@ import Functions as fun
 ################
 ##this selects the correct mach option from inputs and changes the dict name to mach_input, which is used in this module
 ##to access specific mach input data use mach_opt, and then assign mach_opt with a given option (done in property.xlsx)
-mach_opt = uinp.machine_options_dict['mach_' + str(pinp.mach['mach_option'])]
+mach_opt = uinp.machine_options['mach_' + str(pinp.mach['mach_option'])]
+def select_mach_opt():
+    '''
+    
+    Returns
+    -------
+    None.
+        This function is called from pyomo, which will update the mach option if nessecary
+
+    '''
+    mach_opt = uinp.machine_options['mach_' + str(pinp.mach['mach_option'])]
 
 
 ################
@@ -68,26 +77,41 @@ def seed_days():
         Determines the number of wet and dry seeding days in each period.
     '''
     mach_periods = per.p_dates_df()
-    dry_seed_start = pinp.crop['dry_seed_start']
-    dry_seed_end = pinp.feed_inputs['feed_periods'].loc[0,'date']#dry seeding finishes when the season breaks
-    dry_seed_len = dry_seed_end - dry_seed_start
-    ##determine the days of dry seeding occuring in each mach period
-    dry_days=fun.period_allocation(mach_periods['date'],mach_periods.index,dry_seed_start,dry_seed_len)['allocation']*dry_seed_len #use the period allocation func to determine the proportion of total dry seeding occuring in each period
-    dry_days=dry_days/np.timedelta64(1,'D') #convert to int
-    wet_seed_start = per.wet_seeding_start_date()
-    seed_end = per.period_end_date(wet_seed_start, pinp.crop['seed_period_lengths'])
     for i in range(len(mach_periods['date'])-1):
-        ##check wet seed dates
-        if wet_seed_start<= mach_periods.loc[i,'date'] < seed_end:
-            days = (mach_periods.loc[i+1,'date'] - mach_periods.loc[i,'date']).days
-        else:
-            days = 0
-        mach_periods.loc[i,'wet_seed_days'] = days
-    mach_periods['seed_days'] = mach_periods['wet_seed_days'].add(dry_days,fill_value=0)
+        days = (mach_periods.loc[i+1,'date'] - mach_periods.loc[i,'date']).days
+        mach_periods.loc[i,'seed_days'] = days
     ## drop last row, because it has na because it only contains the end date, therefore not a period
     mach_periods.drop(mach_periods.tail(1).index,inplace=True) 
     return mach_periods
 # seed_days()   
+# def seed_days():
+#     '''
+#     Returns
+#     -------
+#     DataFrame - used in pyomo and also grazing days
+#         Determines the number of wet and dry seeding days in each period.
+#     '''
+#     mach_periods = per.p_dates_df()
+#     dry_seed_start = pinp.crop['dry_seed_start']
+#     dry_seed_end = pinp.feed_inputs['feed_periods'].loc[0,'date']#dry seeding finishes when the season breaks
+#     dry_seed_len = dry_seed_end - dry_seed_start
+#     ##determine the days of dry seeding occuring in each mach period
+#     dry_days=fun.period_allocation(mach_periods['date'],mach_periods.index,dry_seed_start,dry_seed_len)['allocation'].dropna()*dry_seed_len #use the period allocation func to determine the proportion of total dry seeding occuring in each period
+#     dry_days=dry_days/np.timedelta64(1,'D') #convert to int
+#     wet_seed_start = per.wet_seeding_start_date()
+#     seed_end = per.period_end_date(wet_seed_start, pinp.crop['seed_period_lengths'])
+#     for i in range(len(mach_periods['date'])-1):
+#         ##check wet seed dates
+#         if wet_seed_start<= mach_periods.loc[i,'date'] < seed_end:
+#             days = (mach_periods.loc[i+1,'date'] - mach_periods.loc[i,'date']).days
+#         else:
+#             days = 0
+#         mach_periods.loc[i,'wet_seed_days'] = days
+#     mach_periods['seed_days'] = mach_periods['wet_seed_days'].add(dry_days,fill_value=0)
+#     ## drop last row, because it has na because it only contains the end date, therefore not a period
+#     mach_periods.drop(mach_periods.tail(1).index,inplace=True) 
+#     return mach_periods
+# # seed_days()   
 
 def grazing_days():
     '''
@@ -101,22 +125,25 @@ def grazing_days():
     mach_periods = seed_days()
     ##create df which all grazing days are added
     grazing_days_df = pd.DataFrame()
+    ##days between seeding and destocking
+    destock_days = dt.timedelta(days = pinp.crop['poc_destock'])
     ##loop through labour/mach periods.
-    for mach_p_start, seeding_days, mach_p_num in zip(mach_periods['date'], mach_periods['wet_seed_days'],mach_periods.index):
+    for mach_p_start, seeding_days, mach_p_num in zip(mach_periods['date'], mach_periods['seed_days'],mach_periods.index):
         grazing_days_list=[]
         season_break = pinp.feed_inputs['feed_periods'].loc[0,'date']
+        effective_break = season_break + destock_days #accounts for the time before seeding that destocking must occur
         for fp_date, fp_len in zip(pinp.feed_inputs['feed_periods']['date'], pinp.feed_inputs['feed_periods']['length']):
             fp_end_date = fp_date + dt.timedelta(days = fp_len)
             seed_end_date = mach_p_start + dt.timedelta(days = seeding_days)
             ##if the feed period finishes before the start of seeding it will recieve a grazing day for each day since the break of season times the number of seeding days in the current seed period minus the grazing days in the previous periods
             if fp_end_date <= mach_p_start:
-                fp_grazing_days = (fp_end_date- season_break).days * seeding_days - sum(grazing_days_list)
+                fp_grazing_days = max((fp_end_date- effective_break).days * seeding_days - sum(grazing_days_list) , 0) #max required incase fp ends before effective break - don't want a negitive value 
             ##if the end date of the feed period is after the end date of the seeding period it will get the full grazing days minus the grazing days in the previous periods
             elif fp_end_date >= seed_end_date:
-                fp_grazing_days = (mach_p_start- season_break).days * seeding_days + (0.5 * seeding_days * seeding_days)  - sum(grazing_days_list) 
+                fp_grazing_days = max((mach_p_start- effective_break).days * seeding_days + (0.5 * seeding_days * seeding_days)  - sum(grazing_days_list) ,0)
             ##if it isn't one of the conditions above then the feed period date must fall somewhere within the seed periods. This means the grazing days equal to the number of days between the season start and the start of the current seed period plus the diminishing number of days in the current period
             else: 
-                fp_grazing_days = (mach_p_start- season_break).days * seeding_days + (0.5 * seeding_days * seeding_days) -(0.5 * (seed_end_date-fp_end_date).days**2) - sum(grazing_days_list)
+                fp_grazing_days = max((mach_p_start- effective_break).days * seeding_days + (0.5 * seeding_days * seeding_days) -(0.5 * (seed_end_date-fp_end_date).days**2) - sum(grazing_days_list) , 0)
             grazing_days_list.append(fp_grazing_days)
         grazing_days_df[mach_p_num] = grazing_days_list #annoyingly both mach periods and feedperiods are defined as just numbers
         ##have to divide by the seeding days per period to return the grazing days if 1 ha was sown per period - this can now be multiplied by the ha sowed (done in pyomo)
@@ -147,16 +174,15 @@ def overall_seed_rate():
     rate_direct_drill_day : Dict for pyomo
         Combines lmu seeding rate and crop adjustment to determine the seeding rate ha/day on each lmu type for each crop
     '''
-    ##convert seed time (hr/ha) to rate of direct drill per day (ha/day)
-    seed_rate_lmus = 1 / seed_time_lmus() * pinp.mach['daily_seed_hours'] 
-    ##adjusts the seeding rate (ha/day) for each different crop depending on its seeding speed vs wheat
-    seedrate_df = pd.DataFrame(columns=seed_rate_lmus.index, index=mach_opt['seeder_speed_crop_adj'].index) #start empty df with lmus as column names and crop as row names
-    for rel_crop_speed, j in zip(mach_opt['seeder_speed_crop_adj'].iloc[:,0],range(len(mach_opt['seeder_speed_crop_adj']))): #loop through each crop. To obtain the relative crop speed
-        for lmu_rate, i in zip(seed_rate_lmus.iloc[:,0],range(len(seed_rate_lmus))): #loop through different lmus, adjusting each lmu seeding rate for the given crop
-            seeding_rate = lmu_rate * rel_crop_speed
-            seedrate_df.iloc[j,i]=seeding_rate #would have to use index to add values to df (index using i in len(origional df)) 
+    #convert seed time (hr/ha) to rate of direct drill per day (ha/day)
+    seed_rate_lmus = 1 / seed_time_lmus().squeeze() * pinp.mach['daily_seed_hours'] 
+    #adjusts the seeding rate (ha/day) for each different crop depending on its seeding speed vs wheat
+    seedrate_df = pd.concat([mach_opt['seeder_speed_crop_adj']]*len(seed_rate_lmus),axis=1) #expands df for each lmu
+    seedrate_df.columns = seed_rate_lmus.index #rename columns to lmu so i can mul
+    seedrate_df=seedrate_df.mul(seed_rate_lmus)
     return seedrate_df.stack().to_dict()
-
+    
+  
 
 #################################################
 #seeding 1 ha  cost                             #
@@ -232,7 +258,7 @@ def seeding_cost_period():
     ##gets the period name 
     p_name = per.cashflow_periods()['cash period']
     start = per.wet_seeding_start_date()
-    length = dt.timedelta(days = sum(pinp.crop['seed_period_lengths']))
+    length = dt.timedelta(days = sum(pinp.crop['seed_period_lengths']).astype(np.float64))
     return fun.period_allocation_reindex(cost_df, p_dates, p_name, start,length)
 
 def contract_seed_cost():
@@ -269,15 +295,18 @@ def yield_penalty():
     dry_seed_end = pinp.feed_inputs['feed_periods'].loc[0,'date']#dry seeding finishes when the season breaks 
     seed_start = per.wet_seeding_start_date()
     seed_end = per.period_end_date(per.wet_seeding_start_date(),pinp.crop['seed_period_lengths'])
-    penalty_free_days = dt.timedelta(days = pinp.crop['seed_period_lengths'][0])
+    penalty_free_days = dt.timedelta(days = pinp.crop['seed_period_lengths'][0].astype(np.float64))
     yield_penalty_df = pinp.crop['yield_penalty'] 
     ##add the yield penalty for each period and each crop
     for k, wet_penalty, dry_penalty in zip(yield_penalty_df.index, yield_penalty_df['wet_seeding_penalty'],yield_penalty_df['dry_seeding_penalty']):
         for i in range(len(mach_periods['date'])-1):
             period_start_date = mach_periods.loc[i,'date']
             period_end = mach_periods.loc[i+1,'date']
+            ###check penalty free 
+            if seed_start  <= period_start_date  < seed_start + penalty_free_days:
+                penalty =  0  
             ###check wet seeding 
-            if seed_start + penalty_free_days <= period_start_date  < seed_end:
+            elif seed_start + penalty_free_days <= period_start_date:#  < seed_end:
                 #penalty = average penalty of period (= (start day + end day) / 2 * penalty)
                 start_day = 1 + (period_start_date - (seed_start + penalty_free_days)).days
                 end_day = (period_end - (seed_start + penalty_free_days)).days
@@ -285,8 +314,8 @@ def yield_penalty():
             ###check dry seeding
             elif dry_seed_start <= period_start_date <= dry_seed_end:
                 penalty = dry_penalty
-            ###if not no seeding or no penalty then 0
-            else: penalty = 0
+            ###other periods (between season break and seeding start & before dry seeding) get 500 penalty
+            else: penalty = 500
             mach_penalty.loc[i, k] = penalty
     return mach_penalty.stack().to_dict()
 # x = (yield_penalty())   
@@ -310,6 +339,7 @@ def harv_time_ha():
     Dataframe
         Harvest rate for each crop (hr/ha).
         - has to be kept as a seperate function because it is used in multiple places
+        - harv sped is entered relative to a given yield for each crop
     '''
     harv_speed = mach_opt['harvest_speed']
     ##work rate hr/ha, determined from speed, size and eff
@@ -339,7 +369,7 @@ def harv_rate_period():
             if harv_start <= period_start_date  < harv_end:
                 ####if crop harv date is before the end of the current period then it is allowed to be harvested in that period hence it is given a harv rate 
                 if crop_harv_date < period_end: 
-                    harvest_rate =  harv_rate.loc[k][0]
+                    harvest_rate =  harv_rate.squeeze()[k]
                 else: harvest_rate = 0
             else: harvest_rate = 0
             harv_rate_df.loc[i, k] = harvest_rate
@@ -398,7 +428,7 @@ def harvest_cost_period():
     #gets the period name 
     p_name = per.cashflow_periods()['cash period']
     start = pinp.crop['harv_date']
-    length = dt.timedelta(days = sum(pinp.crop['harv_period_lengths']))
+    length = dt.timedelta(days = sum(pinp.crop['harv_period_lengths']).astype(np.float64))
     return fun.period_allocation_reindex(cost_df, p_dates, p_name, start,length).stack().to_dict()
 
 
@@ -436,7 +466,7 @@ def contract_harvest_cost_period():
     #gets the period name 
     p_name = per.cashflow_periods()['cash period']
     start = pinp.crop['harv_date']
-    length = dt.timedelta(days = sum(pinp.crop['harv_period_lengths']))
+    length = dt.timedelta(days = sum(pinp.crop['harv_period_lengths']).astype(np.float64))
     return fun.period_allocation_reindex(cost_df, p_dates, p_name, start,length).stack().to_dict()
 
 
@@ -506,15 +536,15 @@ def stubble_cost_ha():
 #time taked to spread 1ha (not including driving to and from paddock and filling up)
 # hr/ha= 10/(width*speed*efficiency)
 def time_ha():
-     width_df = mach_opt['spreader_width']
-     return 10/(width_df*mach_opt['spreader_speed']*mach_opt['spreader_eff'])
+      width_df = mach_opt['spreader_width']
+      return 10/(width_df*mach_opt['spreader_speed']*mach_opt['spreader_eff'])
 
 #time taken to driving to and from paddock and filling up
 # hr/cubic m = ((ave distacne to paddock *2)/speed + fill up time)/ spreader capacity  # *2 because to and from paddock
 def time_cubic():
-     return (((pinp.mach['ave_pad_distance'] *2) 
-             /mach_opt['spreader_speed'] + mach_opt['time_fill_spreader'])
-             /mach_opt['spreader_cap'])
+      return (((pinp.mach['ave_pad_distance'] *2) 
+              /mach_opt['spreader_speed'] + mach_opt['time_fill_spreader'])
+              /mach_opt['spreader_cap'])
      
 
 ###################
@@ -576,11 +606,11 @@ def fert_app_cost_t():
 #chem applicaation time   # used in labour crop, defined here because it uses inputs from the differnt mach options which are consolidated at the top of this sheet
 ###########################
 
-##time taked to spread 1ha (use efficiency input to allow for driving to and from paddock and filling up)
+##time taked to spray 1ha (use efficiency input to allow for driving to and from paddock and filling up)
 ## hr/ha= 10/(width*speed*efficiency)
 def spray_time_ha():
-     width_df = mach_opt['sprayer_width']
-     return 10/(width_df*mach_opt['sprayer_speed']*mach_opt['sprayer_eff'])
+      width_df = mach_opt['sprayer_width']
+      return 10/(width_df*mach_opt['sprayer_speed']*mach_opt['sprayer_eff'])
 
    
 
@@ -593,7 +623,7 @@ def chem_app_cost_ha():
     Returns
     -------
     Float
-         Application cost per ha - account for time to spread 1ha
+          Application cost per ha - account for time to spread 1ha
         - multiplied by passes to account for the number of application (in crop module)
     '''
     ##tractor costs = fuel + r&m + oil&grease
@@ -672,7 +702,7 @@ def harvest_dep():
     ##second, determine dep per hour - equal to harv gear value x dep % / seeding time
     dep_rate = mach_opt['variable_dep'] - uinp.finance['fixed_dep']
     dep_hourly = mach_opt['clearing_value'].loc['harvester','value'] * dep_rate / average_harv_time
-    return dep_hourly[0]
+    return dep_hourly.iloc[0]
 #print(harv_time_ha())
 #print(harvest_dep())
 

@@ -24,15 +24,9 @@ from CreateModel import *
 print('Status:  running rotationpyomo')
 
 def rotationpyomo():
-    
-    ##calling a function multiple times takes time. call it once and assign result to a unique variable. 
-    ##local variables are easier for pyton to locate
-    
-
     ####################
     #define parameters #
     ####################
-    
     try:
         model.del_component(model.p_area)
     except AttributeError:
