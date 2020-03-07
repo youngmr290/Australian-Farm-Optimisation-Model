@@ -37,5 +37,9 @@ def finpyomo_local():
     ##debit can't be more than a specified amount ie farmers will draw a maximum from the bank throughout yr
     def overdraw(model,c): 
         return model.v_debit[c] <= pinp.finance['overdraw_limit']
+    try:
+        model.del_component(model.con_overdraw)
+    except AttributeError:
+        pass
     model.con_overdraw = Constraint(model.s_cashflow_periods, rule=overdraw, doc='overdraw limit')
 

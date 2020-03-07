@@ -31,6 +31,7 @@ def machpyomo_local():
     #param  #
     #########    
     try:
+        model.del_component(model.p_seeding_rate_index)
         model.del_component(model.p_seeding_rate)
     except AttributeError:
         pass
@@ -43,6 +44,7 @@ def machpyomo_local():
     model.p_seed_days = Param(model.s_periods, initialize=mac.seed_days()['seed_days'].to_dict(), default = 0.0, doc='number of seeding days in each period')
     
     try:
+        model.del_component(model.p_seeding_cost_index)
         model.del_component(model.p_seeding_cost)
     except AttributeError:
         pass
@@ -61,6 +63,7 @@ def machpyomo_local():
     model.p_seeding_dep = Param(model.s_lmus, initialize=mac.seeding_dep(), default = 0.0, doc='depreciation cost of seeding 1ha')
     
     try:
+        model.del_component(model.p_harv_rate_index)
         model.del_component(model.p_harv_rate)
     except AttributeError:
         pass
@@ -79,12 +82,14 @@ def machpyomo_local():
     model.p_harv_hrs_max = Param(model.s_periods, initialize= mac.max_harv_hours(), default = 0.0, doc='max hours of harvest per period')
     
     try:
+        model.del_component(model.p_harv_cost_index)
         model.del_component(model.p_harv_cost)
     except AttributeError:
         pass
     model.p_harv_cost = Param(model.s_cashflow_periods, model.s_crops, initialize=mac.harvest_cost_period(), default = 0.0, doc='cost of harvesting 1hr')
     
     try:
+        model.del_component(model.p_contractharv_cost_index)
         model.del_component(model.p_contractharv_cost)
     except AttributeError:
         pass
@@ -97,12 +102,14 @@ def machpyomo_local():
     model.p_contracthay_cost = Param(model.s_cashflow_periods, initialize=mac.hay_making_cost(), default = 0.0, doc='cost of contract making hay $/t')
     
     try:
+        model.del_component(model.p_yield_penalty_index)
         model.del_component(model.p_yield_penalty)
     except AttributeError:
         pass
     model.p_yield_penalty = Param(model.s_periods, model.s_crops, initialize=mac.yield_penalty(), default = 0.0, doc='kg/ha/day penalty for late sowing in each period')
     
     try:
+        model.del_component(model.p_seeding_grazingdays_index)
         model.del_component(model.p_seeding_grazingdays)
     except AttributeError:
         pass

@@ -42,12 +42,15 @@ print('running exp')
 #^maybe there is a cleaner way to do some of the stuff below ie a way that doesn't need as many if statements?
 ##read in exp log 
 exp_data = pd.read_excel('exp.xlsx',index_col=[0,1], header=[0,1,2,3])
+start_time1 = time.time()
+run=0 #counter to work out average time per loop
 for row in range(len(exp_data)):
     ##start timer for each loop
     start_time = time.time()
     ##check to make sure user wants to run this trial
     if exp_data.index[row][0] == False:
         continue
+    run+=1
     for dic,key1,key2,indx in exp_data:
         ##extract current value
         value = exp_data.loc[exp_data.index[row], (dic,key1,key2,indx)]
@@ -96,6 +99,10 @@ for row in range(len(exp_data)):
     ##last step is to print the time for the current trial to run
     end_time = time.time()
     print("total time taken this loop: ", end_time - start_time)
+
+end_time1 = time.time()
+print('total trials completed: ', run)
+print("average time taken for each loop: ", (end_time1 - start_time1)/run)
 
 # ##the stuff below will be superseeded with stuff above 
 

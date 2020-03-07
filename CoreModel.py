@@ -90,6 +90,7 @@ def coremodel_all():
     ###################### 
     ##links crop & pasture sow req with mach sow provide
     try:
+        model.del_component(model.con_sow_link_index)
         model.del_component(model.con_sow_link)
     except AttributeError:
         pass

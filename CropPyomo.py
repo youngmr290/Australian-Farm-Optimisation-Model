@@ -44,6 +44,7 @@ def croppyomo_local():
        
     try:
         model.del_component(model.p_rotation_yield)
+        model.del_component(model.p_rotation_yield_index)
     except AttributeError:
         pass
     model.p_rotation_yield = Param(model.s_phases_dis, model.s_lmus, initialize=crp.rot_yield().to_dict(), default = 0.0, doc='grain production for all crops for 1 unit of rotation')
@@ -62,12 +63,15 @@ def croppyomo_local():
     model.p_stubble = Param(model.s_crops, initialize=crp.stubble_production(), default = 0.0, doc='stubble produced / kg grain harvested')
     
     try:
-        model.del_component(model.p_landuse)
+        model.del_component(model.p_landusesow_index)
+        model.del_component(model.p_landusesow)
     except AttributeError:
         pass
     model.p_landusesow = Param(model.s_phases_dis, model.s_lmus, initialize=crp.landuse_sow(), default = 0.0, doc='ha of sow activity required by each rot phase')
     
     try:
+        model.del_component(model.p_phasefert_index_index_0)
+        model.del_component(model.p_phasefert_index)
         model.del_component(model.p_phasefert)
     except AttributeError:
         pass

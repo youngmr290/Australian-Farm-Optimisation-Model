@@ -46,6 +46,7 @@ def labpyomo_local():
     model.p_perm_cost = Param(model.s_cashflow_periods, initialize = perm_cost(), default = 0.0, doc = 'cost of a permanent staff for 1 yr')
     
     try:
+        model.del_component(model.p_casual_cost_index)
         model.del_component(model.p_casual_cost)
     except AttributeError:
         pass
