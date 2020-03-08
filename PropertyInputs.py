@@ -23,6 +23,9 @@ if con.inputs_from_pickle == False:
     with open(filename, "wb") as f:
         general_inp = fun.xl_all_named_ranges("Property.xlsx","General")
         pkl.dump(general_inp, f)
+
+        labour_inp = fun.xl_all_named_ranges("Property.xlsx","Labour")
+        pkl.dump(labour_inp, f)
         
         crop_inp = fun.xl_all_named_ranges("Property.xlsx","Crop")
         pkl.dump(crop_inp, f)
@@ -56,6 +59,8 @@ else:
     with open(filename, "rb") as f:
         general_inp = pkl.load(f)
         
+        labour_inp = pkl.load(f)
+        
         crop_inp = pkl.load(f)
         
         mach_inp = pkl.load(f)
@@ -74,6 +79,7 @@ else:
       
 ##create a copy of each input dict - this means there is always a copy of the origional inputs (the second copy has SA applied to it)
 general=general_inp.copy()
+labour=labour_inp.copy()
 crop=crop_inp.copy()
 mach=mach_inp.copy()
 stubble=stubble_inp.copy()

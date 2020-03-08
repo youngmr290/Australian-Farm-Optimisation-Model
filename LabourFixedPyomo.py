@@ -18,7 +18,7 @@ from pyomo.environ import *
 
 #MUDAS modules
 import LabourFixed as lfix
-import LabourFixedInputs as lfixinp
+import PropertyInputs as pinp
 # from LabourPyomo import *
 from CreateModel import *
 
@@ -58,7 +58,7 @@ def labfxpyomo_local():
         model.del_component(model.p_learn_labour)
     except AttributeError:
         pass
-    model.p_learn_labour = Param(initialize= lfixinp.labour_fixed_input_data['labour_learn'], doc='hours of labour required to complete learning activities')
+    model.p_learn_labour = Param(initialize= pinp.labour['learn'], doc='hours of labour required to complete learning activities')
 
     ###################################
     #local constraints                #

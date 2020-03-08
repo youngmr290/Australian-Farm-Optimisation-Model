@@ -12,7 +12,7 @@ import numpy as np#datetime
 import timeit
 
 #MUDAS modules
-from LabourCropInputs import *
+# from LabourCropInputs import *
 import Functions as fun
 import Periods as per
 import Mach as mac
@@ -39,9 +39,9 @@ def prep_labour():
     #gets the period name 
     p_name = per.p_date2_df().index
     #list of all the dicts that i want to combine
-    dicts=crop_labour_input['harvest_prep'],crop_labour_input['fert_prep'] \
-    , crop_labour_input['spray_prep'], crop_labour_input['seed_prep']
-    return fun.dict_period_total(p_dates, p_name, *dicts) # '*' used to unpack list into seperate items for func
+    dfs=pinp.labour['harvest_prep'],pinp.labour['fert_prep'] \
+    , pinp.labour['spray_prep'], pinp.labour['seed_prep']
+    return fun.df_period_total(p_dates, p_name, *dfs) # '*' used to unpack list into seperate items for func
 
 ###########################
 #fert applicaation time   #  this is similar to app cost done in mach sheet

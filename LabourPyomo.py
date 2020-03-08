@@ -19,6 +19,7 @@ from pyomo.environ import *
 #MUDAS modules
 from Labour import *
 from CreateModel import *
+import PropertyInputs as pinp
 
                          
 def labpyomo_local():
@@ -138,10 +139,10 @@ def labpyomo_local():
 model.v_quantity_casual = Var(model.s_periods, bounds = (0,None) , doc='number of casual labour used in each labour period')
 
 #Amount of permanent labour. 
-model.v_quantity_perm = Var(bounds=(labour_input_data['min number permanent labour'],labour_input_data['max number permanent labour']), doc='number of permanent labour used in each labour period')
+model.v_quantity_perm = Var(bounds=(pinp.labour['min_perm'],pinp.labour['max_perm']), doc='number of permanent labour used in each labour period')
 
 #Amount of manager labour 
-model.v_quantity_manager = Var(bounds=(labour_input_data['min number owner labour'],labour_input_data['max number owner labour']), doc='number of manager/owner labour used in each labour period')
+model.v_quantity_manager = Var(bounds=(pinp.labour['min_managers'],pinp.labour['max_managers']), doc='number of manager/owner labour used in each labour period')
 
 #manager pool
 #labour for sheep activities (this variable transfers labour from source to sink)

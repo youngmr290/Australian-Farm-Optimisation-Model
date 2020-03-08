@@ -24,7 +24,6 @@ import numpy as np
 from dateutil.relativedelta import relativedelta
 
 #MUDAS modules
-from LabourFixedInputs import *
 import PropertyInputs as pinp
 import Periods as per
 '''
@@ -44,25 +43,25 @@ def fixed():
     labour_periods_fx['super'] = np.nan
     for i in labour_periods_fx.index:
             ##add time required for tax to df in corresponding labour periods
-            for j in labour_fixed_input_data['labour_tax']:
+            for j in pinp.labour['tax'].index:
                # check if the date falls into period i, if so add the number of tax hours to the tax column corresponding to that period.
                if labour_periods_fx.loc[i,'date'] <= j < labour_periods_fx.loc[i + 1 ,'date']:
-                   labour_periods_fx.loc[i,'tax'] = labour_fixed_input_data['labour_tax'][j]
+                   labour_periods_fx.loc[i,'tax'] = pinp.labour['tax'].loc[j,'hours']
             ##add time required for planning to df in corresponding labour periods
-            for j in labour_fixed_input_data['labour_planning']:
+            for j in pinp.labour['planning'].index:
                # check if the date falls into period i, if so add the number of tax hours to the tax column corresponding to that period.
                if labour_periods_fx.loc[i,'date'] <= j < labour_periods_fx.loc[i + 1 ,'date']:
-                   labour_periods_fx.loc[i,'planning'] = labour_fixed_input_data['labour_planning'][j]
+                   labour_periods_fx.loc[i,'planning'] = pinp.labour['planning'].loc[j,'hours']
             ##add time required for bas to df in corresponding labour periods
-            for j in labour_fixed_input_data['labour_bas']:
+            for j in pinp.labour['bas'].index:
                # check if the date falls into period i, if so add the number of tax hours to the tax column corresponding to that period.
                if labour_periods_fx.loc[i,'date'] <= j < labour_periods_fx.loc[i + 1 ,'date']:
-                   labour_periods_fx.loc[i,'bas'] = labour_fixed_input_data['labour_bas'][j]
+                   labour_periods_fx.loc[i,'bas'] = pinp.labour['bas'].loc[j,'hours']
             #add time required for paying staff and super and workers comp to df in corresponding labour periods
-            for j in labour_fixed_input_data['labour_super']:
+            for j in pinp.labour['super'].index:
                # check if the date falls into period i, if so add the number of tax hours to the tax column corresponding to that period.
                if labour_periods_fx.loc[i,'date'] <= j < labour_periods_fx.loc[i + 1 ,'date']:
-                   labour_periods_fx.loc[i,'super'] = labour_fixed_input_data['labour_super'][j]
+                   labour_periods_fx.loc[i,'super'] = pinp.labour['super'].loc[j,'hours']
     ## drop last row, because it has na because it only contains the end date, therefore not a period
     labour_periods_fx.drop(labour_periods_fx.tail(1).index,inplace=True) 
     ##fill blanks with 0

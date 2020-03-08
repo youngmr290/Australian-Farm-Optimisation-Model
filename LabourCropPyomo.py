@@ -12,7 +12,6 @@ from pyomo.environ import *
 #MUDAS modules
 from MachPyomo import *
 from CreateModel import *
-from LabourCropInputs import *
 import LabourCrop as lcrp
 import PropertyInputs as pinp
 
@@ -25,7 +24,7 @@ def labcrppyomo_local():
         model.del_component(model.p_harv_helper)
     except AttributeError:
         pass
-    model.p_harv_helper = Param(model.s_crops, initialize=crop_labour_input['harvest_helper'], default = 0.0, doc='harvest helper time per crop')
+    model.p_harv_helper = Param(model.s_crops, initialize=pinp.labour['harvest_helper'].squeeze().to_dict(), default = 0.0, doc='harvest helper time per crop')
 
     try:
         model.del_component(model.p_prep_pack)
@@ -78,7 +77,7 @@ def mach_labour(model,p):
         3- chem application
     '''
     seed_labour = sum(sum(model.v_seeding_machdays[p, k, l] for k in model.s_crops) for l in model.s_lmus)        \
-    * pinp.mach['daily_seed_hours'] *(1 + crop_labour_input['seeding_helper'])
+    * pinp.mach['daily_seed_hours'] *(1 + pinp.labour['seeding_helper'])
     harv_labour = sum(model.v_harv_hours[p,k] * (1 + model.p_harv_helper[k])  for k in model.s_harvcrops)  
     prep_labour = model.p_prep_pack[p]
     fert_t_time = sum(sum(sum(model.p_phasefert[r,l,n]*model.v_phase_area[r,l]*(model.p_fert_app_hour_tonne[p,n]/1000)  for r in model.s_phases)for l in model.s_lmus)for n in model.s_fert_type ) 

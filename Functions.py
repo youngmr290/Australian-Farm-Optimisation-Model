@@ -224,20 +224,20 @@ def period_allocation(period_dates,periods,start,length=None):
         return allocation_p
 
 
-#input one or more dicts that have a date as a key and a value that you want to add to a period
+#input one or more df that have a date as a key and a value that you want to add to a period
 #must also input the period dates and names as a list (these get used in the func above which is called by this)
 #function returns a new dict with the sum total of all the values from the input dicts in the corresponding period they were compared to
 #example of this func is in the labourcrop module
-def dict_period_total(p_dates,p_name,*dicts):
+def df_period_total(p_dates,p_name,*dfs):
     #create empty numpy array that i will add the labour time in each period to
     array = np.zeros(len(p_name))
     #have to loops to allow for passing in multiple dicts
-    for dic in dicts:
+    for d in dfs:
 #        print(dic)
-        for key, value in dic.items():
-            date = parse(key, dayfirst = False) #parse - simple way to go from string to datetime
+        for date in d.index:
+            # date = parse(key, dayfirst = False) #parse - simple way to go from string to datetime
             labour_period = period_allocation(p_dates,p_name,date)
-            array[labour_period] += value
+            array[labour_period] += d.loc[date,d.columns]
     return dict(enumerate(array))
 
 
