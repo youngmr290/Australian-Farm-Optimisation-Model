@@ -90,13 +90,13 @@ def coremodel_all():
     ###################### 
     ##links crop & pasture sow req with mach sow provide
     try:
-        model.del_component(model.con_sow_link_index)
-        model.del_component(model.con_sow_link)
+        model.del_component(model.con_sow_index)
+        model.del_component(model.con_sow)
     except AttributeError:
         pass
     def sow_link(model,k,l):
         return macpy.sow_supply(model,k,l) - crppy.landuse(model,k, l) >= 0
-    model.con_sow_link = Constraint(model.s_landuses, model.s_lmus, rule = sow_link, doc='link between mach sow provide and rotation (crop and pas) sow require')
+    model.con_sow = Constraint(model.s_landuses, model.s_lmus, rule = sow_link, doc='link between mach sow provide and rotation (crop and pas) sow require')
 
     
     

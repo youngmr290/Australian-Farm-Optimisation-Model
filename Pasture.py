@@ -45,7 +45,7 @@ phases_rotn_df  = uinp.structure['phases']
 ########################
 harvest_period  = 6
 ## define some parameters required to size arrays.
-n_feed_pools    = uinp.n_feed_pools
+n_feed_pools    = len(uinp.structure['sheep_pools'])
 n_dry_groups    = 2             # Low & high quality groups for dry feed
 n_grazing_int   = 4             # 0, med & high grazing intensity in the growth/grazing activities
 n_foo_levels    = 3             # Low, medium & high FOO level in the growth/grazing activities
@@ -67,6 +67,7 @@ goft   = (                            n_grazing_int, n_foo_levels, n_feed_period
 gft    = (                            n_grazing_int,               n_feed_periods,                       n_pasture_types)
 gt     = (                            n_grazing_int,                                                     n_pasture_types)
 oflt   = (                                           n_foo_levels, n_feed_periods, n_lmu,                n_pasture_types)
+dflrt   = (             n_dry_groups,                              n_feed_periods, n_lmu, n_phases_rotn, n_pasture_types)
 flrt   = (                                                         n_feed_periods, n_lmu, n_phases_rotn, n_pasture_types)
 frt    = (                                                         n_feed_periods,        n_phases_rotn, n_pasture_types)
 flt    = (                                                         n_feed_periods, n_lmu,                n_pasture_types)
@@ -79,6 +80,7 @@ def init_and_map_excel(filename, landuses):
     '''Instantiate variables required and read inputs for the pasture variables from an excel file'''
     ## set global on all variables required outside this function
     global i_reseeding_date_seed_t
+    global i_seeding_end_t
     global i_reseeding_date_destock_t
     global i_reseeding_ungrazed_destock_t
     global i_reseeding_date_grazing_t
@@ -124,6 +126,7 @@ def init_and_map_excel(filename, landuses):
     global p_foo_grn_reseeding_flrt
     global p_foo_dryh_reseeding_flrt
     global p_foo_dryl_reseeding_flrt
+    global p_foo_dry_reseeding_dflrt
 
     global p_index_flrt     # and other indexes that are required
 
@@ -142,7 +145,23 @@ def init_and_map_excel(filename, landuses):
     global i_foo_end_propn_gt
     global c_pgr_gi_scalar_gft
     global i_grn_dig_flt
-
+    
+    ##used to create numpy index for param dicts
+    global index_plrt1                     
+    global index_plrt2                      
+    global index_plrt3                       
+    
+    index_t                       = np.asarray(landuses)                      # pasture type index description
+    index_l                       = pinp.general['lmu_area'].index.to_numpy() # lmu index description
+    index_p                       = np.asarray([*range(len(per.p_dates_df()['date']))])
+    index_f                       = [*range(n_feed_periods)]
+    index_r                       = uinp.structure['phases'].index.to_numpy()
+    
+    arrays=[index_p, index_l, index_r, index_t]
+    index_plrt=fun.cartesian_product_simple_transpose(arrays)
+    index_plrt1=map(tuple, index_plrt)
+    index_plrt2=list(map(tuple, index_plrt))
+    index_plrt3=tuple(map(tuple, index_plrt))
 
     ### -define the vessels that will store the input data that require pre-defining
     ## all need pre-defining because inputs are in separate pasture type arrays
@@ -185,6 +204,7 @@ def init_and_map_excel(filename, landuses):
     i_poc_foo_ft                    = np.zeros(ft,     dtype = 'float64')  # foo of pasture consumed on crop paddocks
 
     i_reseeding_date_seed_t         = np.zeros(n_pasture_types, dtype = 'datetime64[D]')  # date of seeding this pasture type (will be read in from inputs)
+    i_seeding_end_t                 = np.zeros(n_pasture_types, dtype = 'datetime64[D]')  # date of seeding this pasture type (will be read in from inputs)
     i_reseeding_date_destock_t      = np.zeros(n_pasture_types, dtype = 'datetime64[D]')  # date of destocking this pasture type prior to reseeding (will be read in from inputs)
     i_reseeding_ungrazed_destock_t  = np.zeros(n_pasture_types, dtype = 'float64')  # kg of FOO that was not grazed prior to seeding occurring (if spring sown)
     i_reseeding_date_grazing_t      = np.zeros(n_pasture_types, dtype = 'datetime64[D]')  # date of first grazing of reseeded pasture (will be read in from inputs)
@@ -203,32 +223,37 @@ def init_and_map_excel(filename, landuses):
     p_foo_grn_reseeding_flrt        = np.zeros(flrt,   dtype = 'float64')  # parameters for rotation phase variable: feed lost and gained during destocking and then grazing of resown pasture (kg/ha)
     p_foo_dryh_reseeding_flrt       = np.zeros(flrt,   dtype = 'float64')  # parameters for rotation phase variable: high quality dry feed gained from grazing of resown pasture (kg/ha)
     p_foo_dryl_reseeding_flrt       = np.zeros(flrt,   dtype = 'float64')  # parameters for rotation phase variable: low quality dry feed gained from grazing of resown pasture (kg/ha)
+    p_foo_dry_reseeding_dflrt       = np.zeros(dflrt,  dtype = 'float64')  # parameters for rotation phase variable: low & high quality dry feed gained from grazing of resown pasture (kg/ha)
     p_dry_removal_t_dft             = np.zeros(dft,    dtype = 'float64')  # parameters for the dry feed grazing activities: Total DM removal from the tonne consumed (includes trampling)
     p_dry_transfer_t_dft            = np.zeros(dft,    dtype = 'float64')  # parameters for the dry feed activities: proportion of DM senescencing
     p_nap_dlt                       = np.zeros(dlt,    dtype = 'float64')  # parameters for the quantity of dry pasture available on non-arable areas of crop paddocks
 
-    #used in idea 1 & 2 below
-    index_t                       = np.asarray(landuses)                      # pasture type index description
-    index_l                       = pinp.general['lmu_area'].index.to_numpy() # lmu index description
-    index_f                       = [*range(n_feed_periods)]
-    index_r                       = uinp.structure['phases'].index.to_numpy()
-    
-    #^ an option to create the index for the parameter arrays is
-    #idea 1
-    p_index_flrt                    =np.ix_(index_f, index_l, index_r, index_t) 
-    #idea 2
-    ## possible idea to create the dataframe with the key for the dict
+
+    # #^ an option to create the index for the parameter arrays is
+    # #idea 1
+    # p_index_flrt                    =np.ix_(index_f, index_l, index_r, index_t)
+    # #idea 2
+    # ## possible idea to create the dataframe with the key for the dict
     # m=np.array(['lmu1,','lmu2,','lmu3,'], dtype=np.object)
-    ## if these are the index of a dataframe (df) then m = df.index.to_numpy()
+    # ## if these are the index of a dataframe (df) then m = df.index.to_numpy()
 
     # n=np.array(['fp1','fpd2','fpd3'], dtype=np.object)
 
-    # names = m.reshape(-1,1) + n.reshape(1,-1)
+    # # p_index_plrt = index_p.reshape(-1,1) + index_l.reshape(1,-1) ^doesn't work between int and string'
 
-    #  np.ravel(names)
-    #  array(['lmu1,fp1', 'lmu1,fpd2', 'lmu1,fpd3', 'lmu2,fp1', 'lmu2,fpd2', 'lmu2,fpd3', 'lmu3,fp1', 'lmu3,fpd2', 'lmu3,fpd3'], dtype=object)
-    #idea3
-    #or perhaps the cartesian_products function
+    # np.ravel(names)
+    # #  array(['lmu1,fp1', 'lmu1,fpd2', 'lmu1,fpd3', 'lmu2,fp1', 'lmu2,fpd2', 'lmu2,fpd3', 'lmu3,fp1', 'lmu3,fpd2', 'lmu3,fpd3'], dtype=object)
+    # #idea3
+    # #or perhaps the cartesian_products function
+    
+    # # d=dict()
+    # ##idea4 - create an array with the indexes then turn into tuples (not sure how to make the array though)
+    # # arr_flrt= ....
+    # # tuple(test)
+    # tuple(test.tolist())
+
+
+
     ### _read data for each pasture type from excel file into arrays
     for t,landuse in enumerate(landuses):
         exceldata = pinp.pasture_inputs[landuse]           # assign the pasture data to exceldata
@@ -257,6 +282,7 @@ def init_and_map_excel(filename, landuses):
         i_lmu_conservation_flt[...,t]       = exceldata['ErosionLimit']
 
         i_reseeding_date_seed_t[t]          = exceldata['Date_Seeding']
+        i_seeding_end_t[t]                  = exceldata['seeding_length']
         i_reseeding_date_destock_t[t]       = exceldata['Date_Destocking']
         i_reseeding_ungrazed_destock_t[t]   = exceldata['FOOatSeeding']
         i_reseeding_date_grazing_t[t]       = exceldata['Date_ResownGrazing']
@@ -326,6 +352,7 @@ def calculate_germ_and_reseed():
     global phase_germresow_df
     global p_germination_flrt
     global p_phase_area_frt
+    global p_sow_plrt
     global p_foo_grn_reseeding_flrt
     global p_foo_dryh_reseeding_flrt
     global p_foo_dryl_reseeding_flrt
@@ -380,18 +407,21 @@ def calculate_germ_and_reseed():
             p_foo_dryh_reseeding_flrt[next_period,:,:,t]  += foo_change * (1-proportion) * (1-propn_grn) * propn_high_l.reshape(-1,1)  # add the remainder to the next period (wrapped if past the 10th period)
             p_foo_dryl_reseeding_flrt[period,:,:,t]       += foo_change *    proportion  * (1-propn_grn) * propn_low_l.reshape(-1,1)   # add the amount of high quality dry for the first period
             p_foo_dryl_reseeding_flrt[next_period,:,:,t]  += foo_change * (1-proportion) * (1-propn_grn) * propn_low_l.reshape(-1,1)   # add the remainder to the next period (wrapped if past the 10th period)
+            p_foo_dry_reseeding_dflrt[0,...] = p_foo_dryh_reseeding_flrt
+            p_foo_dry_reseeding_dflrt[1,...] = p_foo_dryl_reseeding_flrt
 
     ##reset all initial values to 0              ^ required even if deleted in the other functions
     p_foo_grn_reseeding_flrt[...]  = 0          # array has been initialised, reset all values to 0
     p_foo_dryh_reseeding_flrt[...] = 0
     p_foo_dryl_reseeding_flrt[...] = 0
+    p_foo_dry_reseeding_dflrt[...] = 0
 
     ## map the germination and resowing to the rotation phases   ^ this needs to be revamped along with the germination inputs (see notes on rotatioin sets in book 2-2-20)
     phase_germresow_df = phases_rotn_df.copy() #copy bit needed so future changes dont alter initial df
     rp_rt=np.zeros(([len(phase_germresow_df),n_pasture_types]),dtype='float64')
     resown_rt=np.zeros(([len(phase_germresow_df),n_pasture_types]),dtype='int')
     ###loop through each phase in the germ df then check if each phase isin the set.
-    for t in range(n_pasture_types):
+    for t in range(n_pasture_types): #^might not need this loop when t slicce is added to germ scalar input.
         phase_germresow_df['germ_scalar']=0 #set default to 0
         phase_germresow_df['resown']=False #set default to false
         for ix_row in i_phase_germ_df.index:
@@ -404,18 +434,27 @@ def calculate_germ_and_reseed():
             phase_germresow_df.loc[list(ix_bool),'resown'] = i_phase_germ_df.loc[ix_row, 'resown']
         ###Now convert germ and resow into a numpy - each pasture goes on a different level
         rp_rt[:,t] = phase_germresow_df['germ_scalar'].to_numpy()#.reshape(-1,1)                      # extract the germ_scalar from the dataframe and transpose (reshape to a column vector)
-        resown_rt[:,t] = phase_germresow_df['resown'].to_numpy()#.reshape(-1,1)                      # extract the germ_scalar from the dataframe and transpose (reshape to a column vector)
+        resown_rt[:,t] = phase_germresow_df['resown'].to_numpy()#.reshape(-1,1)                       # extract the resown boolean from the dataframe and transpose (reshape to a column vector)
     lmu_lrt             = i_germ_scalar_lt[:,np.newaxis,:]    # lmu germination scalar x SA on lmu scalar
     germination_lrt         = i_germination_std_t        \
                           * np.multiply(rp_rt,lmu_lrt)      # create an array rot phase x lmu
     germination_lrt[np.isnan(germination_lrt)]  = 0.0
     p_germination_flrt[0,...]           = germination_lrt    # set germination in first period to germination
 
-    ## retain the (labour) period during which this pasture is reseeded. For machinery expenditure
+    ##determine sow param
+    ### determine the labour periods pas seeding occurs
+    i_seeding_length_t = i_seeding_end_t - i_reseeding_date_seed_t
     period_dates            = per.p_dates_df()['date']
-    period_name             = per.p_dates_df().index
-    reseeding_machperiod_t  = fun.period_allocation(period_dates,period_name,i_reseeding_date_seed_t)
-
+    reseeding_machperiod_ft  = fun.range_allocation_np(period_dates,i_reseeding_date_seed_t,i_seeding_length_t,True)
+    ###combine with rotation reseeding requirment
+    i_arable = np.array(pinp.crop['arable'])
+    pas_sown_lrt = np.multiply(resown_rt , i_arable[:,np.newaxis,np.newaxis])
+    p_sow_plrt = np.multiply(pas_sown_lrt, reseeding_machperiod_ft[:,np.newaxis,np.newaxis,:])
+    p_sow_plrt=p_sow_plrt.ravel()
+    ttt=dict.fromkeys(index_plrt1,p_sow_plrt )
+    tttt2=dict( zip(index_plrt2 ,p_sow_plrt))
+    tttt3=dict( zip(index_plrt3 ,p_sow_plrt))
+    
     ## set the period definitions to the feed periods
     feed_period_dates   = list(pinp.feed_inputs['feed_periods']['date'])
     feed_period_dates_f = np.array(feed_period_dates,dtype='datetime64[D]')
@@ -683,8 +722,8 @@ def green_and_dry():
                                   /(    dry_dmd_high_ft[:,np.newaxis,:]
                                     -    dry_dmd_low_ft[:,np.newaxis,:])
     senesce_propn_dgoflt[1,...] = 1- senesce_propn_dgoflt[0,...]              # senescence to low pool
-    p_senesce2h_grnha_goflt     = senesce_total_grnha_goflt *    senesce2h_propn_goflt     # parameters for the growth/grazing activities: quantity of green that senesces to the high pool
-    p_senesce2l_grnha_goflt     = senesce_total_grnha_goflt * (1-senesce2h_propn_goflt)    # parameters for the growth/grazing activities: quantity of green that senesces to the low pool
+    # p_senesce2h_grnha_goflt     = senesce_total_grnha_goflt *    senesce2h_propn_goflt   ^can be deleted  # parameters for the growth/grazing activities: quantity of green that senesces to the high pool
+    # p_senesce2l_grnha_goflt     = senesce_total_grnha_goflt * (1-senesce2h_propn_goflt)   ^can be deleted  # parameters for the growth/grazing activities: quantity of green that senesces to the low pool
     p_senesce_grnha_dgoflt      = senesce_total_grnha_goflt *      senesce_propn_dgoflt                                   # ^alternative in one array parameters for the growth/grazing activities: quantity of green that senesces to the high pool
 
 

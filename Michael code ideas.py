@@ -191,6 +191,11 @@ Convert dt to int
 Access an attribute (ie get the number of days in a dt)
     - Use the dt.days attribute. Access this attribute via: (note if it is 1day 0 seconds, dt.seconds will return 0 not 3600)
         -.dt.days (You can also get the seconds and microseconds attributes in the same way)
+        
+convert timestamp to datetime - example in range function
+    - .date() 
+convert data type- example in range function
+    - astype(.astype('datetime64[D]'))
 '''
 
 ############################

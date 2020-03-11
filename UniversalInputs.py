@@ -179,10 +179,18 @@ Note
 - sets now include capitals - this shouldnt effect con1 but it makes building the germ df easier
 '''
 ##special sets that are used elsewhere from rotations
+structure['All_pas']={'a', 'ar', 'a3', 'a4', 'a5'
+                , 's', 'sr', 's3', 's4', 's5'
+                , 'm', 'm3', 'm4', 'm5'
+                , 'u', 'ur', 'u3', 'u4', 'u5'
+                , 'x', 'xr', 'x3', 'x4', 'x5'
+                , 'j', 't', 'jr', 'tr'
+                , 'jc', 'tc', 'xc', 'uc'}
 structure['PAS_R']={'ar', 'sr', 'jr', 'tr', 'ur', 'xr', 'tc', 'jc', 'uc', 'xc'} #all reseeded pastures - used to determine pas sow 
 structure['C']={'b', 'h', 'o', 'of', 'w', 'f','i', 'k', 'l', 'v', 'z','r'} #all crops, used in stubble and mach (not used for rotations)
 structure['Hay']={'h'} #all crops that produce hay - used in machpyomo/coremodel for hay con
 
+##sets used in to build rotations
 structure['A']={'a', 'ar','a3', 'a4', 'a5', 's', 'sr','s3', 's4', 's5', 'm','m3', 'm4', 'm5'
                 , 'A', 'AR', 'A3', 'A4', 'A5'
                 , 'S', 'SR', 'S3', 'S4', 'S5'

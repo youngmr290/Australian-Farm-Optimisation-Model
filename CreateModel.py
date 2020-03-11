@@ -80,8 +80,8 @@ model.s_haycrops = Set(initialize=uinp.structure['Hay'], doc='landuses that make
 ##types of crops
 model.s_crops = Set(initialize=uinp.structure['C'], doc='crop types')
 
-
-model.s_landuses = Set(initialize=pinp.crop['arable'].index, doc='landuses')
+##all landuses 
+model.s_landuses = Set(initialize=uinp.structure['All'], doc='landuses')
 
 #soils
 model.s_lmus = Set(initialize=pinp.general['lmu_area'].index, doc='defined the soil type a given rotation is on')
