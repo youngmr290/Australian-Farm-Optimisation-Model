@@ -63,9 +63,9 @@ def lab_allocation():
 #also need to account for arable area
 def fert_app_time_ha():
     passes = pinp.crop['passes'].reset_index().pivot(index='fert',columns='index').T
-    arable = pinp.crop['arable']
-    arable=arable.reindex(passes.index, axis=0, level=1).stack()
-    passes=passes.reindex(arable.index).mul(arable,axis=0)
+    arable = pinp.crop['arable'].stack().droplevel(0)
+    col = pd.MultiIndex.from_product([passes.columns, arable.index]) #create a new col index
+    passes=passes.reindex(col,axis=1, level=0).mul(arable,axis=1,level=1).stack()
     time = lab_allocation().mul(mac.time_ha().stack().droplevel(1)).stack()
     time = passes.reindex(time.index, axis=1,level=1).mul(time).unstack().swaplevel(0,2,axis=1) #swaplevel so that i can set index in the last step otherwise error because column names of the phases ie 0 -3 is the same as period numbers and they were both level 0 col index
     time = time.sum(level=[0,2], axis=1).replace(0, np.nan) #sum each fert - labour doesn't need to be seperated by fert type once joined with passes
@@ -113,10 +113,10 @@ def chem_app_time_ha():
         Labour required by each rotation phase for spraying
     '''
     ##adjust passes for arable area.
-    arable = pinp.crop['arable'] #read in arable area df
+    arable = pinp.crop['arable'].stack().droplevel(0)
     passes = pinp.crop['chem_passes'].reset_index().pivot(index='chem',columns='current yr').T #passes over each ha for each chem type
-    arable3=arable.reindex(passes.index, axis=0, level=1).stack() #reindex so it can be mul with passes
-    passes=passes.reindex(arable3.index).mul(arable3,axis=0)
+    col = pd.MultiIndex.from_product([passes.columns, arable.index]) #create a new col index
+    passes=passes.reindex(col,axis=1, level=0).mul(arable,axis=1,level=1).stack()
     ##adjust chem labour across each labour period
     time = chem_lab_allocation().mul(mac.spray_time_ha()).stack() #time for 1 pass for each chem.
     ##adjust for passes

@@ -63,11 +63,11 @@ def croppyomo_local():
     model.p_stubble = Param(model.s_crops, initialize=crp.stubble_production(), default = 0.0, doc='stubble produced / kg grain harvested')
     
     try:
-        model.del_component(model.p_landusesow_index)
-        model.del_component(model.p_landusesow)
+        model.del_component(model.p_cropsow_index)
+        model.del_component(model.p_cropsow)
     except AttributeError:
         pass
-    model.p_landusesow = Param(model.s_phases_dis, model.s_lmus, initialize=crp.landuse_sow(), default = 0.0, doc='ha of sow activity required by each rot phase')
+    model.p_cropsow = Param(model.s_phases_dis, model.s_lmus, initialize=crp.crop_sow(), default = 0.0, doc='ha of sow activity required by each rot phase')
     
     try:
         model.del_component(model.p_phasefert_index_index_0)
@@ -115,10 +115,10 @@ def rotation_yield_transfer(model,k):
 #sow         #
 ##############
 ##similar to yield - this is more complex because we want to mul with phase area variable then sum based on the current landuse (k)
-def landuse(model,k,l):
+def cropsow(model,k,l):
     i=uinp.structure['phase_len']-1
     ##h is a disaggregated version of r, it can be indexed. h[0:i] is the rotation history. Have to check if k==h otherwise when h[0:i] is combined with k you can get the wrong rotation
-    return sum(model.p_landusesow[h[0:i],k,l]*model.v_phase_area[r,l] for h, r in zip(model.s_phases_dis, model.s_phases) if h[i]==k and ((h[0:i])+(k,)+(l,)) in model.p_landusesow and model.p_landusesow[h[0:i],k,l] != 0) #+ model.x[k] >=0 #
+    return sum(model.p_cropsow[h[0:i],k,l]*model.v_phase_area[r,l] for h, r in zip(model.s_phases_dis, model.s_phases) if h[i]==k and ((h[0:i])+(k,)+(l,)) in model.p_cropsow and model.p_cropsow[h[0:i],k,l] != 0) #+ model.x[k] >=0 #
 
 
 

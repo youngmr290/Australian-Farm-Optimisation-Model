@@ -156,7 +156,7 @@ model.v_hay_made = Var(bounds=(0,None), doc='tonnes of hay made')
 ###################################
 #functions for core model         #
 ###################################
-def sow_supply(model,k,l):
+def sow_supply(model,p,k1,l):
     '''
     Parameters
     ----------
@@ -172,7 +172,7 @@ def sow_supply(model,k,l):
         - determine sow supply
         - contract_seed + farmer_seed 
     '''
-    return sum(model.v_contractseeding_ha[p,k,l] + (model.p_seeding_rate[k,l] * model.v_seeding_machdays[p,k,l])  for p in model.s_periods)
+    return model.v_contractseeding_ha[p,k1,l] + (model.p_seeding_rate[k1,l] * model.v_seeding_machdays[p,k1,l])  
      
 
 def ha_pasture_crop_paddocks(model,f,l):
@@ -181,6 +181,7 @@ def ha_pasture_crop_paddocks(model,f,l):
     -------
     Pyomo function.
         Total hectares that can be grazed on crop paddocks before harvest
+        *note poc is only on crop paddocks but the seeding activity includes pastures, to stop pasture paddocks providing poc only loop through the crop set
     '''
     ##number of grazable pasture ha provided by contract seeding
     ha_contract= sum(sum(model.p_seeding_grazingdays[f,p] * model.v_contractseeding_ha[p,k,l] for k in model.s_crops) for p in model.s_periods)
@@ -210,9 +211,9 @@ def harv_supply(model,k):
 #function to determine seeding cost, this will be passed to core model
 def seeding_cost(model,c):
     #contract cost
-    contract_cost = sum(sum(sum(model.v_contractseeding_ha[p,k,l] * model.p_contract_seeding_cost[c] for l in model.s_lmus) for p in model.s_periods) for k in model.s_crops) 
+    contract_cost = sum(sum(sum(model.v_contractseeding_ha[p,k1,l] * model.p_contract_seeding_cost[c] for l in model.s_lmus) for p in model.s_periods) for k1 in model.s_landuses) 
     #cost per ha x number of days seeding x ha per day
-    seeding_cost = sum(sum(sum(model.p_seeding_cost[c,l] * model.v_seeding_machdays[p,k,l] * model.p_seeding_rate[k,l] for l in model.s_lmus) for p in model.s_periods) for k in model.s_crops)  
+    seeding_cost = sum(sum(sum(model.p_seeding_cost[c,l] * model.v_seeding_machdays[p,k1,l] * model.p_seeding_rate[k1,l] for l in model.s_lmus) for p in model.s_periods) for k1 in model.s_landuses)  
     return contract_cost + seeding_cost
  
 #function to determine harv cost, this will be passed to core model

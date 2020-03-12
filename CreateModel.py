@@ -80,7 +80,7 @@ model.s_haycrops = Set(initialize=uinp.structure['Hay'], doc='landuses that make
 ##types of crops
 model.s_crops = Set(initialize=uinp.structure['C'], doc='crop types')
 
-##all landuses 
+##all crops and the pasture types ie annual, tedera, lucerne (not a, a3, a4 etc)
 model.s_landuses = Set(initialize=uinp.structure['All'], doc='landuses')
 
 #soils
@@ -125,8 +125,12 @@ model.s_sheep_pools = Set(initialize=uinp.structure['sheep_pools'], doc='sheep p
 #pasture             #
 #######################
 ##feed periods
-model.s_feed_periods = Set(initialize=pinp.feed_inputs['feed_periods'].index, doc='feed periods')
-
+model.s_feed_periods = Set(initialize=pinp.feed_inputs['feed_periods'].index[:-1], doc='feed periods')
+##pasture types
+model.s_pastures = Set(initialize=uinp.structure['pastures'], doc='feed periods')
+model.s_dry_groups = Set(initialize=uinp.structure['dry_groups'], doc='dry feed pools')
+model.s_grazing_int = Set(initialize=uinp.structure['grazing_int'], doc='grazing intensity in the growth/grazing activities')
+model.s_foo_levels = Set(initialize=uinp.structure['foo_levels'], doc='FOO level in the growth/grazing activities')
 
 
 

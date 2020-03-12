@@ -121,6 +121,8 @@ def grazing_days():
         Grazing days provided by wet seeding activity (ha/day/feed period)
         The maths behind this func is a little hard to explain - chech google doc for better info
     '''
+    ##drop last date from feed periods because it as the start date at the end
+    feed_periods=pinp.feed_inputs['feed_periods'].iloc[:-1]
     ##run mach period func to get all the seeding day info
     mach_periods = seed_days()
     ##create df which all grazing days are added
@@ -130,9 +132,9 @@ def grazing_days():
     ##loop through labour/mach periods.
     for mach_p_start, seeding_days, mach_p_num in zip(mach_periods['date'], mach_periods['seed_days'],mach_periods.index):
         grazing_days_list=[]
-        season_break = pinp.feed_inputs['feed_periods'].loc[0,'date']
+        season_break = feed_periods.loc[0,'date']
         effective_break = season_break + destock_days #accounts for the time before seeding that destocking must occur
-        for fp_date, fp_len in zip(pinp.feed_inputs['feed_periods']['date'], pinp.feed_inputs['feed_periods']['length']):
+        for fp_date, fp_len in zip(feed_periods['date'], feed_periods['length']):
             fp_end_date = fp_date + dt.timedelta(days = fp_len)
             seed_end_date = mach_p_start + dt.timedelta(days = seeding_days)
             ##if the feed period finishes before the start of seeding it will recieve a grazing day for each day since the break of season times the number of seeding days in the current seed period minus the grazing days in the previous periods

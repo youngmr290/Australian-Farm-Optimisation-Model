@@ -223,7 +223,7 @@ def phase_fert_app_cost():
     phase_fert_cost_ha = pd.merge(phases_df, fert_cost_ha, how='left', left_on=uinp.cols(), right_index = True) #merge with all the phases, requires because different phases have different application passes
     # phase_fert_cost_ha = phase_fert_cost_ha.set_index(list(range(uinp.structure['phase_len']))).stack([1])
     phase_fert_cost_ha = phase_fert_cost_ha.drop(list(range(uinp.structure['phase_len'])),axis=1)#.stack([1]) #adding level=0 does nothing but if not included you get a preformance warning.
-    fert_cost_total= fert_app_cost_t.add(phase_fert_cost_ha, fill_value=0) #fill_value replaces any values that don't exist in both df with 0. This avoide getting nan if a cost exists in only one df.
+    fert_cost_total= pd.concat([fert_app_cost_t, phase_fert_cost_ha.reindex(fert_app_cost_t.index, level=0)],axis=1).sum(axis=1,level=0) #had to switch this from .add to concat because for some reason on multiple itterations of the model add stoped working
     return fert_cost_total
 # t_fertapp=phase_fert_app_cost()
 
@@ -235,7 +235,7 @@ def total_phase_fert_cost():
     ----------
     Dataframe; summed with other cashflow items at the end of the module 
     '''
-    fert_cost_total= fert_cost().add(phase_fert_app_cost(), fill_value=0) #fill_value replaces any values that don't exist in both df with 0. This avoide getting nan if a cost exists in only one df.
+    fert_cost_total= pd.concat([fert_cost(), phase_fert_app_cost()],axis=1).sum(axis=1,level=0)  
     return fert_cost_total
 
 def nap_fert_cost():
@@ -386,7 +386,9 @@ def total_phase_chem_cost():
     ----------
     Dataframe; summed with other cashflow items at the end of the module 
     '''
-    chem_cost_total= chem_cost().add(phase_chem_app_cost(), fill_value=0) #fill_value replaces any values that don't exist in both df with 0. This avoide getting nan if a cost exists in only one df.
+    chemcost=chem_cost() # so it is not being called twice below ie quicker to only call once
+    chem_appcost=phase_chem_app_cost()
+    chem_cost_total= pd.concat([chemcost, chem_appcost.reindex(chemcost.index,level=0)],axis=1).sum(axis=1,level=0)
     return chem_cost_total
 
 
@@ -445,16 +447,16 @@ def insurance():
     insurance=farmgate_grain_price()*uinp.price['grain_price']['insurance']/100  #div by 100 because insurance is a percent
     rot_insurance = rot_yield().mul(insurance, axis=0, level = uinp.structure['phase_len']-1)/1000 #divide by 1000 to convert yield to tonnes    
     ##merge - required to get the agregated phase index
-    phases_df.index.rename('agregated', inplace=True) #have to rename index so i can do the next step otherwise col and index had the same name '0'
+    phases_df.index.rename('Index', inplace=True) #have to rename index so i can do the next step otherwise col and index had the same name '0'
     rot_cost = pd.merge(phases_df, rot_insurance.unstack(), how='left', left_on=[*range(uinp.structure['phase_len'])], right_index = True)
     ##cost allocation
-    start = per.wet_seeding_start_date()
+    start = uinp.price['crp_insurance_date']
     p_dates = per.cashflow_periods()['start date']
     p_name = per.cashflow_periods()['cash period']
     allocation=fun.period_allocation(p_dates, p_name, start)
     ##add cashflow period to col index
-    rot_insurance.columns = pd.MultiIndex.from_product([rot_insurance.columns, [allocation]])
-    return rot_cost.drop(list(range(uinp.structure['phase_len'])), axis=1,level=0).stack()
+    rot_cost.columns = pd.MultiIndex.from_product([rot_cost.columns, [allocation]])
+    return rot_cost.drop(list(range(uinp.structure['phase_len'])), axis=1,level=0).stack([0])
 
 
 
@@ -477,12 +479,55 @@ def rot_cost():
     arable = pinp.crop['arable'].stack().droplevel(0) #read in arable area df
     cost=cost.mul(arable, axis=0, level=1)
     ##add insurance - it has already been adjusted by arable area because of the yield
-    cost = cost.add(insurance(), fill_value=0)
+    cost = pd.concat([cost, insurance()],axis=1).sum(axis=1,level=0)#, fill_value=0)
     ##add non arable pasture cost
     nap_cost = nap_fert_cost().mul((1-arable), axis=0, level=1)
-    cost = cost.add(nap_cost, fill_value=0)
-    
-    return total_cost.stack().to_dict()
+    cost = pd.concat([cost, nap_cost],axis=1).sum(axis=1,level=0)#, fill_value=0)
+    ##add cont tedera costs = combination of resown and normal
+    if 'tedera' in uinp.structure['pastures']:
+        germ_df = pinp.pasture_inputs['tedera']['GermPhases']
+        ###determine the proportion of the time tc and jc are resown - this is used as a weighting to determine the input costs
+        tc_inx = germ_df.iloc[:,-3].isin(['tc']) #checks current phase for tc
+        tc_frequency = germ_df.loc[tc_inx,'resown'] #get frequency of resowing
+        jc_inx = germ_df.iloc[:,-3].isin(['jc']) #checks current phase for resown pasture
+        jc_frequency = germ_df.loc[jc_inx,'resown'] #get frequency of resowing
+        ###combine the costs of t and tr with the frequency of tc resowing to get the cost for tc
+        Tt=cost.loc[['GEETt']]*(1-tc_frequency)
+        Tt.rename(index={'GEETt':'tctctctctc'},inplace=True)
+        Etr=cost.loc[['GEEEtr']]*tc_frequency
+        Etr.rename(index={'GEEEtr':'tctctctctc'},inplace=True)
+        tc=Tt+Etr
+        ###combine the costs of j and jr with the frequency of tc resowing to get the cost for tc
+        Jj=cost.loc[['GEEJj']]*(1-jc_frequency)
+        Jj.rename(index={'GEEJj':'jcjcjcjcjc'},inplace=True)
+        Ejr=cost.loc[['GEEEjr']]*jc_frequency
+        Ejr.rename(index={'GEEEjr':'jcjcjcjcjc'},inplace=True)
+        jc=Jj+Ejr
+        ###concat to main cost df
+        cost=pd.concat([cost,tc,jc])
+    ##add cont lucerne costs
+    if 'lucerne' in uinp.structure['pastures']:
+        germ_df = pinp.pasture_inputs['tedera']['GermPhases']
+        ###determine the proportion of the time uc and xc are resown - this is used as a weighting to determine the input costs
+        uc_inx = germ_df.iloc[:,-3].isin(['uc']) #checks current phase for uc
+        uc_frequency = germ_df.loc[uc_inx,'resown'] #get frequency of resowing
+        xc_inx = germ_df.iloc[:,-3].isin(['xc']) #checks current phase for resown pasture
+        xc_frequency = germ_df.loc[xc_inx,'resown'] #get frequency of resowing
+        ###combine the costs of t and tr with the frequency of uc resowing to get the cost for uc
+        Uu=cost.loc[['GEEUu']]*(1-uc_frequency)
+        Uu.rename(index={'GEEUu':'ucucucucuc'},inplace=True)
+        Eur=cost.loc[['GEEEur']]*uc_frequency
+        Eur.rename(index={'GEEEur':'ucucucucuc'},inplace=True)
+        uc=Uu+Eur
+        ###combine the costs of j and jr with the frequency of xc resowing to get the cost for xc
+        Xx=cost.loc[['GEEXx']]*(1-xc_frequency)
+        Xx.rename(index={'GEEXx':'xcxcxcxcxc'},inplace=True)
+        Exr=cost.loc[['GEEExr']]*xc_frequency
+        Exr.rename(index={'GEEExr':'xcxcxcxcxc'},inplace=True)
+        xc=Xx+Exr
+        ###concat to main cost df
+        cost=pd.concat([cost,uc,xc])
+    return cost.stack().to_dict()
 # jj=rot_cost()
 
 #########################
@@ -504,27 +549,21 @@ def stubble_production():
 #sow            #
 #################
     
-def landuse_sow():
+def crop_sow():
     '''
     Returns
     -------
     Dict for pyomo.
-        Crop & pas sow (wet or dry or spring) requirment for each rot phase
+        Crop sow (wet or dry or spring) requirment for each rot phase
 
     '''
     ##create series with crop as index and data as 1 - all crops require 1ha of sow
     cropsow = pd.Series(1,index=uinp.structure['C'])
-    ##create series with crop as index and data as 1 - all pastures require 1ha of sow
-    passow = pd.Series(1,index=uinp.structure['PAS_R'])
-    ##concat series
-    landusesow=pd.concat([cropsow, passow])
-    ##adjust for resow frequency - needed because of cont lucerne and tedera
-    landusesow = landusesow * pinp.crop['seeding_freq'].squeeze()
     ##adjust for arable area
     arable = pinp.crop['arable']
-    landusesow=arable.mul(landusesow,axis=0).dropna()
+    cropsow=arable.mul(cropsow,axis=0).dropna()
     ##merge to rot phases
-    landusesow = pd.merge(phases_df, landusesow, how='left', left_on=uinp.cols()[-1], right_index = True)
-    return landusesow.set_index(list(range(uinp.structure['phase_len']))).stack().to_dict() #need to use the multiindex to create a multidimensional param for pyomo so i can split it down when indexing
+    cropsow = pd.merge(phases_df, cropsow, how='left', left_on=uinp.cols()[-1], right_index = True)
+    return cropsow.set_index(list(range(uinp.structure['phase_len']))).stack().to_dict() #need to use the multiindex to create a multidimensional param for pyomo so i can split it down when indexing
 
 

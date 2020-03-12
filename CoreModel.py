@@ -26,6 +26,7 @@ import FinancePyomo #not used but it needs to be imported so that it is run
 import LabourPyomo as labpy 
 import LabourFixedPyomo as lfixpy 
 import LabourCropPyomo as lcrppy 
+import PasturePyomo as paspy 
 import Finance as fin
 
 print('Status: running coremodel')
@@ -90,13 +91,14 @@ def coremodel_all():
     ###################### 
     ##links crop & pasture sow req with mach sow provide
     try:
+        model.del_component(model.con_sow_index_index_0)
         model.del_component(model.con_sow_index)
         model.del_component(model.con_sow)
     except AttributeError:
         pass
-    def sow_link(model,k,l):
-        return macpy.sow_supply(model,k,l) - crppy.landuse(model,k, l) >= 0
-    model.con_sow = Constraint(model.s_landuses, model.s_lmus, rule = sow_link, doc='link between mach sow provide and rotation (crop and pas) sow require')
+    def sow_link(model,p,k,l):
+        return macpy.sow_supply(model,p,k,l) - crppy.cropsow(model,k, l) - paspy.cropsow(model,p,k,l) >= 0
+    model.con_sow = Constraint(model.s_periods, model.s_landuses, model.s_lmus, rule = sow_link, doc='link between mach sow provide and rotation (crop and pas) sow require')
 
     
     
