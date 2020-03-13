@@ -21,6 +21,7 @@ import FinancePyomo as finpy
 import LabourFixedPyomo as lfixpy 
 import LabourPyomo as labpy 
 import LabourCropPyomo as lcrppy 
+import PasturePyomo as paspy 
 import CoreModel as core
 
 print('running exp')
@@ -94,6 +95,7 @@ for row in range(len(exp_data)):
     lfixpy.labfxpyomo_local()
     labpy.labpyomo_local()
     lcrppy.labcrppyomo_local()
+    paspy.paspyomo_local()
     core.coremodel_all()
     
     ##last step is to print the time for the current trial to run

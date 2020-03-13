@@ -137,6 +137,16 @@ arrays=[index_d, index_l, index_t]
 index_dlt=fun.cartesian_product_simple_transpose(arrays)
 index_dlt=tuple(map(tuple, index_dlt)) #create a tuple rather than a list because tuples are faster
 
+###flt
+arrays=[index_f, index_l, index_t]
+index_flt=fun.cartesian_product_simple_transpose(arrays)
+index_flt=tuple(map(tuple, index_flt)) #create a tuple rather than a list because tuples are faster
+
+###ft
+arrays=[index_f, index_t]
+index_ft=fun.cartesian_product_simple_transpose(arrays)
+index_ft=tuple(map(tuple, index_ft)) #create a tuple rather than a list because tuples are faster
+
 ###frt
 arrays=[index_f, index_r, index_t]
 index_frt=fun.cartesian_product_simple_transpose(arrays)
@@ -204,6 +214,7 @@ def init_and_map_excel(filename, landuses):
     global i_legume_t
     global i_grn_propn_reseeding_t
     global i_lmu_conservation_flt
+    global p_erosion_flt
 
     global i_phase_germ_df
 
@@ -360,10 +371,14 @@ def init_and_map_excel(filename, landuses):
         i_grn_dig_flt[...,t]                = exceldata['DigGrn'].to_numpy()  # numpy array of inputs for green pasture digestibility on each LMU.
 
         ### _NEEDS WORK
-        i_phase_germ_df                     = exceldata['GermPhases']       #DataFrame with germ scalar and resown
+        i_phase_germ_df1                     = exceldata['GermPhases']       #DataFrame with germ scalar and resown
+    
+    i_lmu_conservation_rav_flt=i_lmu_conservation_flt.ravel()
+    p_erosion_flt=dict( zip(index_flt ,i_lmu_conservation_rav_flt))
 
     ## Some one time data manipulation for the inputs just read
     # i_phase_germ_df.index = [*range(len(i_phase_germ_df.index))]              # replace index read from Excel with numbers to match later merging
+    i_phase_germ_df=i_phase_germ_df1.copy() #had to add this so the next step didn't change origional df causing errors in subsequent runs.
     i_phase_germ_df.reset_index(inplace=True)                                                  # replace index read from Excel with numbers to match later merging
     i_phase_germ_df.columns.values[range(phase_len)] = [*range(phase_len)]         # replace the landuse columns read from Excel with numbers to match later merging
 
@@ -474,7 +489,7 @@ def calculate_germ_and_reseed():
 
     ## map the germination and resowing to the rotation phases   ^ this needs to be revamped along with the germination inputs (see notes on rotatioin sets in book 2-2-20)
     phase_germresow_df = phases_rotn_df.copy() #copy bit needed so future changes dont alter initial df
-    rp_rt=np.zeros(([len(phase_germresow_df),n_pasture_types]),dtype='float64')
+    rp_rt=np.zeros(([len(phase_germresow_df.index),n_pasture_types]),dtype='float64')
     resown_rt=np.zeros(([len(phase_germresow_df),n_pasture_types]),dtype='int')
     ###loop through each phase in the germ df then check if each phase isin the set.
     for t in range(n_pasture_types): #^might not need this loop when t slicce is added to germ scalar input.
@@ -821,6 +836,8 @@ def poc_con():             #^ This doesn't look right. I think that some calcula
         - this is adjusted for lmu and feed period
     '''
     df_poc_con = i_poc_intake_daily_flt
+    df_poc_con=df_poc_con.ravel()
+    df_poc_con=dict( zip(index_flt ,df_poc_con))
     return df_poc_con    #.stack().to_dict()
 
 def poc_md():
@@ -833,6 +850,8 @@ def poc_md():
     '''
     #p_md_ft=list(map(fdb.dmd_to_md,  i_poc_dmd_ft)) #could use list comp but thought it was a good place to practise map
     p_poc_md_ft = fdb.dmd_to_md(i_poc_dmd_ft)
+    p_poc_md_ft=p_poc_md_ft.ravel()
+    p_poc_md_ft=dict( zip(index_ft ,p_poc_md_ft))
     return p_poc_md_ft     #dict(enumerate(p_md_ft))  # may need np.ndenumerate() to use with an array
 
 def poc_vol():
@@ -848,4 +867,6 @@ def poc_vol():
     ri_qual_ft = fdb.ri_quality(i_poc_dmd_ft, i_legume_t)       # passing a numpy array
     ri_quan_ft = fdb.ri_availability(i_poc_foo_ft, i_ri_foo_t)
     p_poc_vol_ft = 1/(ri_qual_ft*ri_quan_ft)
+    p_poc_vol_ft=p_poc_vol_ft.ravel()
+    p_poc_vol_ft=dict( zip(index_ft ,p_poc_vol_ft))
     return p_poc_vol_ft    #dict(enumerate(p_poc_vol_ft))  # may need np.ndenumerate() to use with an array

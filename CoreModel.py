@@ -100,8 +100,6 @@ def coremodel_all():
         return macpy.sow_supply(model,p,k,l) - crppy.cropsow(model,k, l) - paspy.cropsow(model,p,k,l) >= 0
     model.con_sow = Constraint(model.s_periods, model.s_landuses, model.s_lmus, rule = sow_link, doc='link between mach sow provide and rotation (crop and pas) sow require')
 
-    
-    
     ######################
     #harvest crops       #
     ###################### 
@@ -138,20 +136,27 @@ def coremodel_all():
     #feed                #
     ###################### 
     ##green grazing on crop paddock before seeding
-    # def graze_pasture_crop_paddocks(model,f):
-    #     return (ha_pasture_crop_paddocks(model,f,l) * foo on crop paddocks)/1000 - model.v_sheep_pascroppaddocks    #divide by 1000 converts to tonnes (maybe do this in pasture sheet before to keep this tidy)
+    try:
+        model.del_component(model.con_poc_available_index_index_0)
+        model.del_component(model.con_poc_available_index)
+        model.del_component(model.con_poc_available)
+    except AttributeError:
+        pass
+    def poc(model,f,l,t):
+        return (macpy.ha_pasture_crop_paddocks(model,f,l) * paspy.model.p_poc_con[f,l,t])/1000 - sum(paspy.model.v_poc[e,f,l] for e in model.s_sheep_pools) >=0   #divide by 1000 converts to tonnes (maybe do this in pasture sheet before to keep this tidy)
+    model.con_poc_available = Constraint(model.s_feed_periods, model.s_lmus, model.s_pastures, rule=poc, doc='constraint between poc available and consumed')
 
-    # ######################
-    # #  ME                #
-    # ###################### 
-    # def sheep_me(model,f):
-    #     model.v_sheep_pascroppaddocks
+    ######################
+    #  ME                #
+    ###################### 
+    def md(model,f,e):
+        paspy.pas_md(e,f) 
 
-    # ######################
-    # #Vol                 #
-    # ###################### 
-    # def sheep_vol(model,f):
-    #     model.v_sheep_pascroppaddocks
+    ######################
+    #Vol                 #
+    ###################### 
+    def md(model,f,e):
+        paspy.pas_vol(e,f)
         
     ######################
     #cashflow constraints#

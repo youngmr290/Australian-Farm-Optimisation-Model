@@ -137,7 +137,7 @@ structure['cashflow_periods']=['JF$FLOW','MA$FLOW','MJ$FLOW','JA$FLOW','SO$FLOW'
 ##define which pastures are to be included
 structure['pastures'] = ['annual'] # ,'lucerne','tedera'] 
 structure['dry_groups'] = ['L', 'H']                             # Low & high quality groups for dry feed
-structure['grazing_int'] =  ['0', '25%', '75%', '100%']          # grazing intensity in the growth/grazing activities
+structure['grazing_int'] =  ['0%', '25%', '75%', '100%']          # grazing intensity in the growth/grazing activities
 structure['foo_levels'] =  ['L', 'M', 'H']                       # Low, medium & high FOO level in the growth/grazing activities
 
 #######
