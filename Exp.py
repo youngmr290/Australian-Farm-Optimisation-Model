@@ -104,10 +104,10 @@ for row in range(len(exp_data)):
     ##last step is to print the time for the current trial to run
     end_time = time.time()
     print("total time taken this loop: ", end_time - start_time)
+
+##store pyomo variable output as a dict
 a=model.component_objects(Var, active=True)
-
 dd={str(v):{s:v[s].value for s in v} for v in a }    #creates dict with variable in it. This is tricky since pyomo returns a generator object
-
 
 end_time1 = time.time()
 print('total trials completed: ', run)
