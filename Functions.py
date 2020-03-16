@@ -390,18 +390,25 @@ def period_proportion(period_dates, periods, date):
             proportion = (date - per_start)/(per_end - per_start)
     return period, proportion
 
-def period_proportion_np(period_dates, date):
-    #check if date falls within period
-    period = np.zeros(date.shape,dtype='int')
-    proportion = np.zeros(date.shape,dtype='float64')
-    for i in range(len(period_dates)-1):
-        per_start= period_dates[i]
-        per_end = period_dates[i + 1]
-        if per_start <= date <= per_end:        #date is within the period
-            period[...] = i
-            # proportion[...] = np.divide(np.subtract(date , per_start),np.subtract(per_end , per_start))
-            proportion[...] = (date - per_start) / (per_end - per_start)
-    return period, proportion
+def period_proportion_np(period_dates, date_array):
+    ''' Numpy version - The period that a given date falls in.
+
+    Parameters.
+    period_dates: the start of the periods - in a Numpy array np.datetime64.
+    date_array: the date to test - a numpy array of dates.
+
+    Returns.
+    Two Numpy arrays with shape(date_array).
+    #1 the period for that test date
+    #2 how far through the period the date occurs
+    '''
+    # period_array = np.zeros(date_array.shape,dtype='int')
+    proportion_array = np.zeros(date_array.shape,dtype='float64')
+    period_array = np.searchsorted(period_dates, date_array, side = 'right')
+    per_start = period_dates[period_array]
+    per_end   = period_dates[period_array + 1]
+    proportion_array = (date_array - per_start) / (per_end - per_start)
+    return period_array, proportion_array
 
 # #################################################
 # # create a numpy by broadcasting dataframes     #
