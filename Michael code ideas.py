@@ -48,6 +48,47 @@ def rotation_yield_transfer2(model,k):
                             print(model.p_rotation_yield[h[0:i],k,l],model.v_phase_area[r,l])
                         else: print('no')
 
+##Run whole module - runs from here                                                                              
+# processes = ('Exp.py', 'Exp.py')                                    
+# def run_process(process):                                                             
+#     os.system('python {}'.format(process))                                       
+                                                                                
+# def main():                                                                               
+#     pool = Pool(processes=2)
+#     # run_process('Exp.py') 
+#     pool.map(run_process, processes) 
+#     print('Done')                                                        
+
+# if __name__ == '__main__':                                                                               
+#     main()
+
+
+##run just the function - has to be done through anaconda prompt
+def main():
+    p = multiprocessing.Process(target=exp.exp, args=(0,))
+    p1 = multiprocessing.Process(target=exp.exp, args=(1,))
+    p2 = multiprocessing.Process(target=exp.exp, args=(1,))
+    p3 = multiprocessing.Process(target=exp.exp, args=(1,))
+    p4 = multiprocessing.Process(target=exp.exp, args=(1,))
+    p5 = multiprocessing.Process(target=exp.exp, args=(1,))
+    p.start()
+    p1.start()
+    p2.start()
+    p3.start()
+    p4.start()
+    p5.start()
+    print('done')
+    # p2 = multiprocessing.Process(target=hang, args=("2"))
+    # p2.start()
+    # p.join()
+    # p1.join()
+    # p2.join()
+
+if __name__ == '__main__':
+    start = time.time()
+    main()
+    end = time.time()
+    print('total time',end-start)
 ######################################
 #Write default SA to row1 in exp.xlsx#
 ######################################
