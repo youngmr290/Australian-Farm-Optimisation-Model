@@ -499,7 +499,8 @@ def calculate_germ_and_reseed():
     i_arable_l = np.array(pinp.crop['arable']).reshape(-1)
     pas_sown_lrt = np.multiply(resown_rt , i_arable_l[:,np.newaxis,np.newaxis])
     pas_sow_plrt = np.multiply(pas_sown_lrt, reseeding_machperiod_pt[:,np.newaxis,np.newaxis,:])
-    p_pas_sow_plrt=dict( zip(index_plrt ,pas_sow_plrt.ravel()))
+    pas_sow_rav_plrt = pas_sow_plrt.ravel()
+    p_pas_sow_plrt=dict( zip(index_plrt ,pas_sow_rav_plrt))
 
     ## set the period definitions to the feed periods
     feed_period_dates   = list(pinp.feed_inputs['feed_periods']['date'])
@@ -515,8 +516,8 @@ def calculate_germ_and_reseed():
                                                   ,duration)
     #^needs lmu added ie index = flrt, once added update pyomo
     phase_area_frt    = 1 - np.multiply(resown_rt,periods_destocked[:,np.newaxis,:])  # parameters for rotation phase variable: area of pasture in each period (is 0 for resown phases during periods that resown pasture is not grazed )
-    # phase_area_rav_frt=phase_area_frt.ravel()
-    p_phase_area_frt=dict( zip(index_frt ,phase_area_frt.ravel()))
+    phase_area_rav_frt=phase_area_frt.ravel()
+    p_phase_area_frt=dict( zip(index_frt ,phase_area_rav_frt))
 
 
     ## calculate the green feed lost when pasture is destocked. Spread between periods based on date destocked
@@ -801,7 +802,7 @@ def green_and_dry():
     p_senesce_grnha_dgoflt=dict( zip(index_dgoflt ,senesce_grnha_rav_dgoflt))
 
 
-def poc_con():             #^ This doesn't look right. I think that some calculations are required to calculate the area of the triangle
+def poc_con():
     '''
     Returns
     -------
@@ -812,7 +813,7 @@ def poc_con():             #^ This doesn't look right. I think that some calcula
     df_poc_con = i_poc_intake_daily_flt
     df_poc_con=df_poc_con.ravel()
     df_poc_con=dict( zip(index_flt ,df_poc_con))
-    return df_poc_con    #.stack().to_dict()
+    return df_poc_con
 
 def poc_md():
     '''
@@ -822,11 +823,10 @@ def poc_md():
         The quality of pasture on crop paddocks each day before seeding
         - this is adjusted for feed period
     '''
-    #p_md_ft=list(map(fdb.dmd_to_md,  i_poc_dmd_ft)) #could use list comp but thought it was a good place to practise map
-    p_poc_md_ft = fdb.dmd_to_md(i_poc_dmd_ft)
-    p_poc_md_ft=p_poc_md_ft.ravel()
-    p_poc_md_ft=dict( zip(index_ft ,p_poc_md_ft))
-    return p_poc_md_ft     #dict(enumerate(p_md_ft))  # may need np.ndenumerate() to use with an array
+    poc_md_ft = fdb.dmd_to_md(i_poc_dmd_ft)
+    poc_md_rav_ft=poc_md_ft.ravel()
+    p_poc_md_ft=dict( zip(index_ft ,poc_md_rav_ft))
+    return p_poc_md_ft
 
 def poc_vol():
     '''
@@ -836,11 +836,9 @@ def poc_vol():
         The relative intake of pasture on crop paddocks each day before seeding
         - this is adjusted for feed period
     '''
-    # ri_qual = np.asarray([fdb.ri_quality(dmd, i_legume_t) for dmd in i_poc_dmd_ft])       #could use map ie list(map(fdb.ri_quality, md, repeat(annual.legume))) (repeat is imported from itertools)
-    # ri_quan = np.asarray([fdb.ri_availability(foo, i_ri_foo_t) for foo in i_poc_foo_ft])
     ri_qual_ft = fdb.ri_quality(i_poc_dmd_ft, i_legume_t)       # passing a numpy array
     ri_quan_ft = fdb.ri_availability(i_poc_foo_ft, i_ri_foo_t)
-    p_poc_vol_ft = 1/(ri_qual_ft*ri_quan_ft)
-    p_poc_vol_ft=p_poc_vol_ft.ravel()
-    p_poc_vol_ft=dict( zip(index_ft ,p_poc_vol_ft))
-    return p_poc_vol_ft    #dict(enumerate(p_poc_vol_ft))  # may need np.ndenumerate() to use with an array
+    poc_vol_ft = 1/(ri_qual_ft*ri_quan_ft)
+    poc_vol_rav_ft = poc_vol_ft.ravel()
+    p_poc_vol_ft=dict( zip(index_ft ,poc_vol_rav_ft))
+    return p_poc_vol_ft

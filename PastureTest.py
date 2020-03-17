@@ -12,16 +12,19 @@ Fixed   Date    ID by   Problem
 
 @author: John
 '''
-import UniversalInputs as uinp
 
 from timeit import default_timer as timer
 
 time_list = [] ; time_was = []
 time_list.append(timer()) ; time_was.append("start")
 
+import UniversalInputs as uinp
+
+time_list.append(timer()) ; time_was.append("import Universal")
+
 import Pasture as pas
 
-time_list.append(timer()) ; time_was.append("import other modules")
+time_list.append(timer()) ; time_was.append("import Pasture")
 
 pastures = uinp.structure['pastures']        
 
