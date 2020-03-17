@@ -11,6 +11,8 @@ import pandas as pd
 from pyomo.environ import *
 import time
 
+from CreateModel import *
+
 import UniversalInputs as uinp
 import PropertyInputs as pinp 
 import Sensitivity as sen 
@@ -30,8 +32,6 @@ print('running exp')
 #######################
 #eg flk structure, mach option etc - this is set the default, can be changed in runs via saa
         
-
-
 
 
 
@@ -88,6 +88,7 @@ for row in range(len(exp_data)):
     uinp.univeral_inp_sa()
     pinp.property_inp_sa()
     ##call core model function, must call them in the correct order (core must be last)
+    start_par=time.time()
     rotpy.rotationpyomo()
     crppy.croppyomo_local()
     macpy.machpyomo_local()
@@ -96,16 +97,21 @@ for row in range(len(exp_data)):
     labpy.labpyomo_local()
     lcrppy.labcrppyomo_local()
     paspy.paspyomo_local()
+    end_para=time.time()
+
     core.coremodel_all()
     
     ##last step is to print the time for the current trial to run
     end_time = time.time()
     print("total time taken this loop: ", end_time - start_time)
 
+##store pyomo variable output as a dict
+a=model.component_objects(Var, active=True)
+dd={str(v):{s:v[s].value for s in v} for v in a }    #creates dict with variable in it. This is tricky since pyomo returns a generator object
+
 end_time1 = time.time()
 print('total trials completed: ', run)
 print("average time taken for each loop: ", (end_time1 - start_time1)/run)
-
 # ##the stuff below will be superseeded with stuff above 
 
 # con_error=[]
@@ -160,12 +166,7 @@ print("average time taken for each loop: ", (end_time1 - start_time1)/run)
 #         rps.lo_bound[k]=0
     
     
-    
-    
-    
-    
-    
-    
+  
     
     
     

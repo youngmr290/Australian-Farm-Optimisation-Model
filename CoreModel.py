@@ -214,12 +214,13 @@ def coremodel_all():
     print('Status: writing...')
     model.write('test.lp',io_options={'symbolic_solver_labels':True})
     print('Status: solving...')
+    model.dual = Suffix(direction=Suffix.IMPORT)
+    model.rc = Suffix(direction=Suffix.IMPORT)
+    model.slack = Suffix(direction=Suffix.IMPORT)
     results = SolverFactory('glpk').solve(model, tee=True)
     results.write() #need to write this somewhere
     # pyomo_postprocess(None, model, results) #not sure what this is
     # results.write(num=1) #not sure what the num does, if removed it still works the same, maybe this is if there are multiple model instances
-    
-    
     ##you can access the solution for individual variables doing this
     model.v_debit.pprint()
     model.v_credit.pprint()
@@ -249,7 +250,11 @@ def coremodel_all():
             except: pass 
     file.close()
     
-    
+    ##code below will access slacks on constraint
+    # for c in model.component_objects(Constraint, active=True):
+    #     print ("   Constraint",c)
+    #     for index in c:
+    #         print ("      ", index, model.dual[c[index]])
     
     
     
