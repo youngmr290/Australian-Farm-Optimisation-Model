@@ -126,7 +126,7 @@ def coremodel_all():
     model.con_makehay = Constraint(model.s_haycrops, rule = harv, doc='make hay constraint')
     
     #############################
-    #reduction in yield income  #
+    #yield income & transfer    #
     #############################
     ##combines rotation yield, on-farm sup feed and yield penalties from untimely sowing and crop grazing. Then passes to cashflow constraint. 
     def yield_income(model,c):

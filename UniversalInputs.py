@@ -190,6 +190,15 @@ structure['All_pas']={'a', 'ar', 'a3', 'a4', 'a5'
                 , 'x', 'xr', 'x3', 'x4', 'x5'
                 , 'j', 't', 'jr', 'tr'
                 }
+##next set is used in pasture.py for germination and phase area
+structure['pastures']={'annual': {'a', 'ar', 'a3', 'a4', 'a5'
+                                , 's', 'sr', 's3', 's4', 's5'
+                                , 'm', 'm3', 'm4', 'm5'}
+                       ,'lucerne':{'u', 'uc', 'ur', 'u3', 'u4', 'u5'
+                                  , 'x', 'xc', 'xr', 'x3', 'x4', 'x5'}
+                       ,'tedera':{'j','jc', 't','tc', 'jr', 'tr'}}
+                
+
 # structure['PAS_R']={'ar', 'sr', 'jr', 'tr', 'ur', 'xr', 'tc', 'jc', 'uc', 'xc'} #all reseeded pastures - used to determine pas sow 
 structure['All']={'b', 'h', 'o', 'of', 'w', 'f','i', 'k', 'l', 'v', 'z','r', 'annual', 'tedera', 'lucerne'} #used in mach sow
 structure['C']={'b', 'h', 'o', 'of', 'w', 'f','i', 'k', 'l', 'v', 'z','r'} #all crops, used in stubble and mach (not used for rotations)
@@ -200,7 +209,7 @@ structure['A']={'a', 'ar','a3', 'a4', 'a5', 's', 'sr','s3', 's4', 's5', 'm','m3'
                 , 'A', 'AR', 'A3', 'A4', 'A5'
                 , 'S', 'SR', 'S3', 'S4', 'S5'
                 , 'M', 'M3', 'M4', 'M5'} #annual
-structure['A1']={'a', 'a3', 'a4', 'a5', 's','s3', 's4', 's5', 'm','m3', 'm4', 'm5'} #annual - special set used in pasture germ and con2 when determining if a rotatin provides a rotation because in yr1 we dont want ar to provide an A bevause we need to distinguish beteween them
+structure['A1']={'a', 'a3', 'a4', 'a5', 's','s3', 's4', 's5', 'm','m3', 'm4', 'm5'} #annual not resown - special set used in pasture germ and con2 when determining if a rotatin provides a rotation because in yr1 we dont want ar to provide an A bevause we need to distinguish beteween them
 structure['A3']={'a3', 'A3'}
 structure['A4']={'a4', 'A4'}
 structure['A5']={'a5', 'A5'}
