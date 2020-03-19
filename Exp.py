@@ -24,6 +24,7 @@ import LabourFixedPyomo as lfixpy
 import LabourPyomo as labpy 
 import LabourCropPyomo as lcrppy 
 import PasturePyomo as paspy 
+import SupFeedPyomo
 import CoreModel as core
 
 print('running exp')

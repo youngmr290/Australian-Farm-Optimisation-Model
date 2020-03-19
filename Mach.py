@@ -24,7 +24,6 @@ import numpy as np
 
 
 #MUDAS modules
-#from MachInputs import *
 import UniversalInputs as uinp
 import PropertyInputs as pinp
 import Periods as per
@@ -321,7 +320,7 @@ def yield_penalty():
             mach_penalty.loc[i, k] = penalty
     return mach_penalty.stack().to_dict()
 # x = (yield_penalty())   
-  
+
 
 #######################################################################################################################################################
 #######################################################################################################################################################

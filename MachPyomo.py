@@ -190,9 +190,9 @@ def ha_pasture_crop_paddocks(model,f,l):
     return ha_contract + ha_personal
 
 #function to determine late seeding penalty, this will be passed to core model
-def late_seed_penalty(model,k):
-    return  sum(sum(model.p_seeding_rate[k,l] * model.v_seeding_machdays[p,k,l] * model.p_yield_penalty[p, k] for l in model.s_lmus) for p in model.s_periods)
-
+def late_seed_penalty(model,g,k):
+    return  sum(sum(model.p_seeding_rate[k,l] * model.v_seeding_machdays[p,k,l] * model.p_yield_penalty[p, k] for l in model.s_lmus) for p in model.s_periods)  \
+                * model.p_grainpool_proportion[k,g]
 #function to determine late seeding stubble penalty, this will be passed to core model
 def stubble_penalty(model,k):
     return  sum(sum(model.p_seeding_rate[k,l] * model.v_seeding_machdays[p,k,l] * model.p_yield_penalty[p, k] for l in model.s_lmus) for p in model.s_periods) \

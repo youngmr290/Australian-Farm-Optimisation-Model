@@ -64,6 +64,10 @@ phases_df =uinp.structure['phases']
 phases_df2=phases_df.copy() #make a copy so that it doesn't alter the phases df that exists outside this func
 phases_df2.columns = pd.MultiIndex.from_product([phases_df2.columns, ['']])  #make the df multi index so that when it merges with other df below the indexs remanin seperate (otherwise it turn into a one leveled tuple)
 
+########################
+#price                 #
+########################
+
 def farmgate_grain_price():
     '''
     Returns
@@ -72,12 +76,12 @@ def farmgate_grain_price():
     '''
     grain_price_info_df=uinp.price['grain_price'] #create a copy of grain price df so you dont have to reference input module each time
     ##multiplies the price and proportion of firsts and seconds for each grain, then sum to get overall price
-    price_df = np.multiply(grain_price_info_df[['firsts','seconds']], grain_price_info_df[['prop_firsts','prop_seconds']]).sum(axis=1)
+    price_df = grain_price_info_df[['firsts','seconds']]
     cartage=(grain_price_info_df['cartage_km_cost']*pinp.general['road_cartage_distance'] 
             + pinp.general['rail_cartage'] + uinp.price['flagfall'])
     tols= grain_price_info_df['grain_tolls']
     total_fees= cartage+tols
-    return (price_df-total_fees).clip(0)
+    return price_df.sub(total_fees, axis=0).clip(0)
 
 
 def grain_price():
@@ -97,11 +101,17 @@ def grain_price():
     p_dates = per.cashflow_periods()['start date']
     p_name = per.cashflow_periods()['cash period']
     farm_gate_price=farmgate_grain_price()
-    allocation=fun.period_allocation(p_dates, p_name, start, length).set_index('period')
-    allocation_cols = pd.MultiIndex.from_product([allocation.columns, farm_gate_price.index])
-    allocation = allocation.reindex(allocation_cols, axis=1,level=0)#adds level to header so i can mul in the next step
-    return  allocation.mul(farm_gate_price,axis=1,level=1).droplevel(0, axis=1).stack()
+    allocation=fun.period_allocation(p_dates, p_name, start, length).set_index('period').squeeze()
+    cols = pd.MultiIndex.from_product([allocation.index, farm_gate_price.columns])
+    farm_gate_price = farm_gate_price.reindex(cols, axis=1,level=1)#adds level to header so i can mul in the next step
+    return  farm_gate_price.mul(allocation,axis=1,level=0).stack([0,1])
 # a=grain_price()
+
+##function to determine the proportion of grain in each pool 
+def grain_pool_proportions():
+    prop = uinp.price['grain_price'][['prop_firsts','prop_seconds']]
+    prop.columns=['firsts','seconds']
+    return dict(prop.stack())
 
 #########################
 #yield                  #
@@ -444,7 +454,9 @@ def insurance():
         - crop insurance
         *note - arable area is already counted for by the yield calculation
     '''
-    insurance=farmgate_grain_price()*uinp.price['grain_price']['insurance']/100  #div by 100 because insurance is a percent
+    ##first need to combine each grain pool to get average price
+    ave_price=np.multiply(farmgate_grain_price(),uinp.price['grain_price'][['prop_firsts','prop_seconds']]).sum(axis=1)#np multiply doen't look at the column names and indexs
+    insurance=ave_price*uinp.price['grain_price']['insurance']/100  #div by 100 because insurance is a percent
     rot_insurance = rot_yield().mul(insurance, axis=0, level = uinp.structure['phase_len']-1)/1000 #divide by 1000 to convert yield to tonnes    
     ##merge - required to get the agregated phase index
     phases_df.index.rename('Index', inplace=True) #have to rename index so i can do the next step otherwise col and index had the same name '0'

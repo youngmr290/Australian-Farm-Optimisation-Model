@@ -195,6 +195,9 @@ Return a list of column names for a given level
     this if statement checks if the column has a header and then deletes the nessecary way
         if list(df.columns)[0]:
             df=df.drop(df.columns[0],axis=1)
+            
+Multiply
+    -can use np.multiply(df1,df2) if you don't want to worry about headers and indexes being the same
 '''
 
 ############################

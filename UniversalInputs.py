@@ -126,6 +126,12 @@ def univeral_inp_sa():
 structure = dict()
 
 ###############
+# crop        #
+###############
+##grain pools there is one transfer constraint for each pool.
+structure['grain_pools']=['firsts','seconds']
+
+###############
 # cashflow    #
 ###############
 ##the number of these can change as long as each period is of equal length.
@@ -191,7 +197,7 @@ structure['All_pas']={'a', 'ar', 'a3', 'a4', 'a5'
                 , 'j', 't', 'jr', 'tr'
                 }
 ##next set is used in pasture.py for germination and phase area
-structure['pastures']={'annual': {'a', 'ar', 'a3', 'a4', 'a5'
+structure['pastures1']={'annual': {'a', 'ar', 'a3', 'a4', 'a5'
                                 , 's', 'sr', 's3', 's4', 's5'
                                 , 'm', 'm3', 'm4', 'm5'}
                        ,'lucerne':{'u', 'uc', 'ur', 'u3', 'u4', 'u5'
