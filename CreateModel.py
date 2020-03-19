@@ -71,6 +71,9 @@ model.s_stub_cat = Set(initialize=sinp.stubble_inputs['crop_stub']['w']['stub_ca
 #######################
 #cropping related     #
 #######################
+#grain pools ie firsts and seconds
+model.s_grain_pools = Set(initialize=uinp.structure['grain_pools'], doc='grain pools')
+
 #landuses that are harvested - used in harv constraints and variables
 model.s_harvcrops = Set(initialize=uinp.mach_general['contract_harvest_speed'].index, doc='landuses that are harvest')
 

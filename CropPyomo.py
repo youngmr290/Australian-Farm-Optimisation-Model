@@ -48,13 +48,21 @@ def croppyomo_local():
     except AttributeError:
         pass
     model.p_rotation_yield = Param(model.s_phases_dis, model.s_lmus, initialize=crp.rot_yield().to_dict(), default = 0.0, doc='grain production for all crops for 1 unit of rotation')
+
+    try:
+        model.del_component(model.p_grainpool_proportion)
+        model.del_component(model.p_grainpool_proportion_index)
+    except AttributeError:
+        pass
+    model.p_grainpool_proportion = Param(model.s_crops, model.s_grain_pools, initialize=crp.grain_pool_proportions(), default = 0.0, doc='proportion of grain in each pool')
     
     try:
         model.del_component(model.p_grain_price)
         model.del_component(model.p_grain_price_index)
+        model.del_component(model.p_grain_price_index_index_0)
     except AttributeError:
         pass
-    model.p_grain_price = Param(model.s_cashflow_periods, model.s_crops,  initialize=crp.grain_price().to_dict(),default = 0.0, doc='farm gate price per tonne of each grain')
+    model.p_grain_price = Param(model.s_crops, model.s_cashflow_periods, model.s_grain_pools, initialize=crp.grain_price().to_dict(),default = 0.0, doc='farm gate price per tonne of each grain')
     
     try:
         model.del_component(model.p_stubble)
@@ -83,11 +91,13 @@ def croppyomo_local():
       
     
     
-    #######################################################################################################################################################
-    #######################################################################################################################################################
-    #local constraints
-    #######################################################################################################################################################
-    #######################################################################################################################################################
+#######################################################################################################################################################
+#######################################################################################################################################################
+#variable
+#######################################################################################################################################################
+#######################################################################################################################################################
+model.v_sell_grain = Var(model.s_crops, model.s_grain_pools, bounds=(0,None), doc='tonnes of grain in each pool sold')
+model.v_buy_grain = Var(model.s_crops, model.s_grain_pools, bounds=(0,None), doc='tonnes of grain in each pool purchased for sup feeding')
     
 
 
@@ -104,11 +114,11 @@ def croppyomo_local():
 ### slightly more complicated because i have to have rotation yield in disagregated format and the rotation variable is aggregated.
 ### yield needs to be disaggregated so that it returns the grain transfer for each crop - this is so it is compatible with yield penalty and sup feed activities.
 
-def rotation_yield_transfer(model,k):
+def rotation_yield_transfer(model,g,k):
     i=uinp.structure['phase_len']-1
     ##h is a disaggregated version of r, it can be indexed. h[0:i] is the rotation history. Have to check if k==h otherwise when h[0:i] is combined with k you can get the wrong rotation
-    return sum(sum(model.p_rotation_yield[h[0:i],k,l]*model.v_phase_area[r,l] for h, r in zip(model.s_phases_dis, model.s_phases) if h[i]==k and ((h[0:i])+(k,)+(l,)) in model.p_rotation_yield and model.p_rotation_yield[h[0:i],k,l] != 0)for l in model.s_lmus) #+ model.x[k] >=0 #
-
+    return sum(sum(model.p_rotation_yield[h[0:i],k,l]*model.v_phase_area[r,l] for h, r in zip(model.s_phases_dis, model.s_phases) if h[i]==k and ((h[0:i])+(k,)+(l,)) in model.p_rotation_yield and model.p_rotation_yield[h[0:i],k,l] != 0)for l in model.s_lmus) \
+                    * model.p_grainpool_proportion[k,g]
 
 
 ##############
@@ -130,8 +140,7 @@ def cropsow(model,k,l):
 To add:
     
     -stub cons
-    -seed cost
-    -insurance
+
     
 '''
 

@@ -109,7 +109,7 @@ def coremodel_all():
     except AttributeError:
         pass
     def harv(model,k):
-        return  macpy.harv_supply(model,k) - crppy.rotation_yield_transfer(model,k)/1000  >= 0
+        return  macpy.harv_supply(model,k) - sum(crppy.rotation_yield_transfer(model,g,k)/1000 for g in model.s_grain_pools)  >= 0
     model.con_harv = Constraint(model.s_harvcrops, rule = harv, doc='harvest constraint')
 
 
@@ -122,15 +122,24 @@ def coremodel_all():
     except AttributeError:
         pass
     def harv(model,k):
-        return  model.v_hay_made - crppy.rotation_yield_transfer(model,k)/1000  >= 0
+        return  sum(model.v_hay_made - crppy.rotation_yield_transfer(model,g,k)/1000 for g in model.s_grain_pools)  >= 0
     model.con_makehay = Constraint(model.s_haycrops, rule = harv, doc='make hay constraint')
     
     #############################
     #yield income & transfer    #
     #############################
     ##combines rotation yield, on-farm sup feed and yield penalties from untimely sowing and crop grazing. Then passes to cashflow constraint. 
+    try:
+        model.del_component(model.con_grain_transfer)
+    except AttributeError:
+        pass
+    def grain_transfer(model,g,k):
+        return crppy.rotation_yield_transfer(model,g,k) - macpy.late_seed_penalty(model,g,k) + model.v_buy_grain[k,g]*1000 - model.v_sell_grain[k,g]*1000 >=0
+    model.con_grain_transfer = Constraint(model.s_grain_pools, model.s_crops, rule=grain_transfer, doc='constrain grain transfer between rotation and sup feeding')
+    
+    ##combined grain sold and purchased to get a $ amount which is added to the cashflow constrain
     def yield_income(model,c):
-        return sum((crppy.rotation_yield_transfer(model,k) - macpy.late_seed_penalty(model,k)) * model.p_grain_price[c,k]/1000 for k in model.s_crops)
+        return sum(model.v_sell_grain[k,g] * model.p_grain_price[k,c,g] - model.v_buy_grain[k,g]* model.p_buy_grain_price[k,c,g] for k in model.s_crops for g in model.s_grain_pools)
     
     ######################
     #feed                #
@@ -161,11 +170,18 @@ def coremodel_all():
     ######################
     #cashflow constraints#
     ######################    
-    #combines all cashflow functions from each module and includes debit and credit to form constraint. 
-    #for each cashflow period dollar flow must be greater than 0. this is accomplished by taking a loan from the bank (if there is more exp than income) or depositing money in the bank. 
-    #the money withdrawn or deposited in the bank (debit or credit) is then carried over to the next period.
-    #the debit and credit carried over is multimpled by j because there is no carry over in the first period (there may be a better way to do it though)
     def cash_flow(model,i): 
+        '''
+        Returns
+        -------
+        Constraint
+            combines all cashflow functions from each module and includes debit and credit to form constraint. 
+            for each cashflow period dollar flow must be greater than 0. this is accomplished by taking a loan from the bank (if there is more exp than income) or depositing money in the bank. 
+            the money withdrawn or deposited in the bank (debit or credit) is then carried over to the next period.
+            the debit and credit carried over is multimpled by j because there is no carry over in the first period (there may be a better way to do it though)
+
+
+        '''
         c = uinp.structure['cashflow_periods']
         #j becomes a list which has 0 as first value and 1 after that. this is then indexed by i and multiplied by previous periods debit and credit.
         #this means the first period doesn't include the previous debit or credit (because it doesn't exist, because it is the first period) 
