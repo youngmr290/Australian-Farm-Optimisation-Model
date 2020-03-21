@@ -24,9 +24,6 @@ from CreateModel import *
 print('Status:  running machpyomo')
 def machpyomo_local():
     
-    ##called here to update mach option if necessary
-    mac.select_mach_opt()
-    
     #########
     #param  #
     #########    

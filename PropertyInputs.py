@@ -42,6 +42,9 @@ if con.inputs_from_pickle == False:
         feed_inp = fun.xl_all_named_ranges("Property.xlsx","Feed Budget") #automatically read in the periods as dates
         pkl.dump(feed_inp, f)
         
+        sup_inp = fun.xl_all_named_ranges("Property.xlsx","Sup Feed") #automatically read in the periods as dates
+        pkl.dump(sup_inp, f)
+        
         sheep_management_inp  = fun.xl_all_named_ranges('Property.xlsx', ['Management'])
         pkl.dump(sheep_management_inp, f)
         
@@ -71,6 +74,8 @@ else:
         
         feed_inp = pkl.load(f)
         
+        sup_inp = pkl.load(f)
+        
         sheep_management_inp  = pkl.load(f)
         
         sheep_regions_inp  = pkl.load(f)
@@ -85,6 +90,7 @@ mach=mach_inp.copy()
 stubble=stubble_inp.copy()
 finance=finance_inp.copy()
 feed_inputs=feed_inp.copy()
+supfeed=sup_inp.copy()
 sheep_management=mach_inp.copy()
 sheep_regions=sheep_regions_inp.copy()
 pasture_inputs=pasture_inp.copy()  
@@ -104,11 +110,10 @@ def property_inp_sa():
 
     '''
     ##have to import it here since sen.py imports this module
-    import Sensitivity as sen 
+    import Sensitivity as sen
     #mach['approx_hay_yield']=mach_inp['approx_hay_yield']+sen.saa['variable'] #just an example, this can be deleted
     ##pasture will have to be added in a loop
     for pasture in uinp.structure['pastures']:
-        pasture_inputs[pasture]['ErosionLimit'] = pasture_inp[pasture]['ErosionLimit'] * sen.sam[('germ',pasture)]
         pasture_inputs[pasture]['GermStd'] = pasture_inp[pasture]['GermStd'] * sen.sam[('germ',pasture)]
         pasture_inputs[pasture]['GermScalarLMU'] = pasture_inp[pasture]['GermScalarLMU'] * sen.sam[('germ_l',pasture)]
         pasture_inputs[pasture]['LowPGR'] = pasture_inp[pasture]['LowPGR'] * sen.sam[('pgr',pasture)]

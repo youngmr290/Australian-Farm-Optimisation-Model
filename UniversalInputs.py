@@ -56,6 +56,10 @@ if con.inputs_from_pickle == False:
         feed_inputs_inp = fun.xl_all_named_ranges("Universal.xlsx","Feed Budget")
         pkl.dump(feed_inputs_inp, f)
         
+        ##sup inputs
+        sup_inp = fun.xl_all_named_ranges("Universal.xlsx","Sup Feed")
+        pkl.dump(sup_inp, f)
+        
         ##sheep inputs
         genotype_inp = fun.xl_all_named_ranges('Universal.xlsx', ['Genotypes'])
         pkl.dump(genotype_inp, f)
@@ -65,7 +69,7 @@ if con.inputs_from_pickle == False:
         ##mach options
         ###create a dict to store all options - this allows the user to select an option
         machine_options_dict_inp={}
-        machine_options_dict_inp['mach_1'] = fun.xl_all_named_ranges("Universal.xlsx","Mach 1")
+        machine_options_dict_inp[1] = fun.xl_all_named_ranges("Universal.xlsx","Mach 1")
         pkl.dump(machine_options_dict_inp, f)
 
 ##else the inputs are read in from the pickle file
@@ -80,6 +84,8 @@ else:
         
         feed_inputs_inp = pkl.load(f)
         
+        sup_inp = pkl.load(f)
+        
         genotype_inp = pkl.load(f)
         
         parameters_inp = pkl.load(f)
@@ -92,9 +98,10 @@ price = price_inp.copy()
 finance = finance_inp.copy()
 mach_general = mach_general_inp.copy()
 feed_inputs = feed_inputs_inp.copy()
+supfeed = sup_inp.copy()
 genotype = genotype_inp.copy()
 parameters = parameters_inp.copy()
-machine_options = machine_options_dict_inp.copy()
+mach = machine_options_dict_inp.copy()
 
 #######################
 #apply SA             #
