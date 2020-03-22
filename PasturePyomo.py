@@ -12,12 +12,10 @@ from CreateModel import model
 import Pasture as pas
 import UniversalInputs as uinp
 
-pastures = uinp.structure['pastures']       
-
-
+print('Status:  running pasturepyomo')
 
 def paspyomo_local():
-    pas.init_and_map_excel('Property.xlsx', pastures)                         # read inputs from Excel file and map to the python variables
+    pas.map_excel('Property.xlsx')                         # read inputs from Excel file and map to the python variables
     pas.calculate_germ_and_reseed()                          # calculate the germination for each rotation phase
     pas.green_and_dry()                            # calculate the FOO lost when destocked and the FOO gained when grazed after establishment
     
@@ -140,12 +138,13 @@ def paspyomo_local():
     model.p_dry_removal_t = pe.Param(model.s_dry_groups, model.s_feed_periods, model.s_pastures, initialize=pas.p_dry_removal_t_dft, default=0, doc='quantity of dry feed removed for sheep to consume 1t')
     
     try:
+        model.del_component(model.p_nap_index_index_0_index_0)  #âdded by John to make it _dlrt
         model.del_component(model.p_nap_index_index_0)
         model.del_component(model.p_nap_index)
         model.del_component(model.p_nap)
     except AttributeError:
         pass
-    model.p_nap = pe.Param(model.s_dry_groups, model.s_lmus, model.s_pastures, initialize=pas.p_nap_dlt, default=0, doc='non arable pasture')
+    model.p_nap = pe.Param(model.s_dry_groups, model.s_lmus, model.s_pastures, initialize=pas.p_nap_dlrt, default=0, doc='non arable pasture')
     
     try:
         model.del_component(model.p_erosion_index_index_0)
@@ -156,12 +155,13 @@ def paspyomo_local():
     model.p_erosion = pe.Param(model.s_feed_periods, model.s_lmus, model.s_pastures, initialize=pas.p_erosion_flt, default=0, doc='erosion limit in each period')
     
     try:
+        model.del_component(model.p_phase_area_index_index_0_index_0)  #âdded by John to make it _flrt
         model.del_component(model.p_phase_area_index_index_0)
         model.del_component(model.p_phase_area_index)
         model.del_component(model.p_phase_area)
     except AttributeError:
         pass
-    model.p_phase_area = pe.Param(model.s_feed_periods, model.s_phases, model.s_pastures, initialize=pas.p_phase_area_frt, default=0, doc='pasture area in each rotation for each feed period')
+    model.p_phase_area = pe.Param(model.s_feed_periods, model.s_phases, model.s_pastures, initialize=pas.p_phase_area_flrt, default=0, doc='pasture area in each rotation for each feed period')
     
     try:
         model.del_component(model.p_pas_sow_index_index_0_index_0)
@@ -173,22 +173,24 @@ def paspyomo_local():
     model.p_pas_sow = pe.Param(model.s_periods, model.s_lmus, model.s_phases, model.s_landuses, initialize=pas.p_pas_sow_plrt, default=0, doc='pasture sown for each rotation')
     
     try:
-        model.del_component(model.p_poc_con_index_index_0)
+        # model.del_component(model.p_poc_con_index_index_0)  ^John, poc_con returns _fl
         model.del_component(model.p_poc_con_index)
         model.del_component(model.p_poc_con)
     except AttributeError:
         pass
     model.p_poc_con = pe.Param(model.s_feed_periods ,model.s_lmus, model.s_pastures, initialize=pas.poc_con(),default=0, doc='consumption of pasture on 1ha of a crop paddock each day for each lmu in each feed period')
-    
+
+    #^ John? Will the POC work if the parameters for poc_md and poc_vol are only _f 
+    #^ whereas poc_con is _fl. _fl is what we need, but _md & _vol don't vary with lmu
     try:
-        model.del_component(model.p_poc_md_index)
+        # model.del_component(model.p_poc_md_index)  ^John, poc_md returns _f
         model.del_component(model.p_poc_md)
     except AttributeError:
         pass
     model.p_poc_md = pe.Param(model.s_feed_periods, model.s_pastures, initialize=pas.poc_md(),default=0, doc='md of pasture on crop paddocks for each feed period')
     
     try:
-        model.del_component(model.p_poc_vol_index)
+        # model.del_component(model.p_poc_vol_index)  ^John, poc_vol returns _f
         model.del_component(model.p_poc_vol)
     except AttributeError:
         pass

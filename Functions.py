@@ -343,16 +343,17 @@ def range_allocation(period_dates, periods, start, length):
 def range_allocation_np(period_dates, start, length, opposite=None):
     ''' Numpy version - The proportion of each period that falls in the tested date range or proportion of date range in each period.
 
-    Parameters.
-    period_dates: the start of the periods - in a Numpy array np.datetime64.
-    start: the date of the beginning of the date range to test - a numpy array of dates.
-    length: the length of the date range to test - an array of timedelta.days object.
-       length must be braodcastable into start
-    ags: input True if you want to return the proportion of date range in each period
+    Parameters. 
+    period_dates: the start of the periods - in a Numpy array np.datetime64. 
+    start: the date of the beginning of the date range to test - a numpy array of dates. 
+    length: the length of the date range to test - an array of timedelta.days object. 
+          : must be broadcastable into start. 
+    ags: input True returns the proportion of date range in each period. 
+       :       False returns the proportion of the period in the date range. 
 
-    Returns.
-    a Numpy array with shape(period_dates, start array).
-    Containing the proportion of the respective period for that test date
+    Returns. 
+    a Numpy array with shape(period_dates, start array). 
+    Containing the proportion of the respective period for that test date. 
     '''
     #start empty list to append to
     allocation_period=np.zeros(((len(period_dates),) + start.shape),dtype=np.float64)
@@ -361,6 +362,7 @@ def range_allocation_np(period_dates, start, length, opposite=None):
     if opposite:
         #check how much of each date range falls within the period
         for i in range(len(period_dates)-1):
+            #^.date() might be required because the array being passed is not a np.datetime64[D]
             per_start= period_dates[i].date() #had to add this and the as type thing below to get it all in the same format so calcs would work
             per_end = period_dates[i + 1].date()
             calc_start = np.maximum(per_start,start).astype('datetime64[D]')       #select the later of the period start or the start of the range
@@ -393,21 +395,22 @@ def period_proportion(period_dates, periods, date):
 def period_proportion_np(period_dates, date_array):
     ''' Numpy version - The period that a given date falls in.
 
-    Parameters.
-    period_dates: the start of the periods - in a Numpy array np.datetime64.
-    date_array: the date to test - a numpy array of dates.
+    Parameters. 
+    period_dates: the start of the periods - in a Numpy array np.datetime64. 
+    date_array: the date to test - a numpy array of dates. 
 
     Returns.
-    Two Numpy arrays with shape(date_array).
-    #1 the period for that test date
-    #2 how far through the period the date occurs
+    Two Numpy arrays with shape(date_array). 
+    #1 the period for that test date. 
+    #2 how far through the period the date occurs. 
     '''
     # period_array = np.zeros(date_array.shape,dtype='int')
     proportion_array = np.zeros(date_array.shape,dtype='float64')
-    period_array = np.searchsorted(period_dates, date_array, side = 'right')
+    period_array = np.searchsorted(period_dates, date_array, side = 'right') - 1
     per_start = period_dates[period_array]
     per_end   = period_dates[period_array + 1]
     proportion_array = (date_array - per_start) / (per_end - per_start)
+    print('propn, date, stat, end, start', proportion_array,date_array,per_start,per_end,per_start)
     return period_array, proportion_array
 
 # #################################################

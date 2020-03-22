@@ -126,12 +126,6 @@ def univeral_inp_sa():
 structure = dict()
 
 ###############
-# crop        #
-###############
-##grain pools there is one transfer constraint for each pool.
-structure['grain_pools']=['firsts','seconds']
-
-###############
 # cashflow    #
 ###############
 ##the number of these can change as long as each period is of equal length.
@@ -141,10 +135,10 @@ structure['cashflow_periods']=['JF$FLOW','MA$FLOW','MJ$FLOW','JA$FLOW','SO$FLOW'
 # pasture     #
 ###############
 ##define which pastures are to be included
-structure['pastures'] = ['annual'] # ,'lucerne','tedera'] 
-structure['dry_groups'] = ['L', 'H']                             # Low & high quality groups for dry feed
-structure['grazing_int'] =  ['0%', '25%', '75%', '100%']          # grazing intensity in the growth/grazing activities
-structure['foo_levels'] =  ['L', 'M', 'H']                       # Low, medium & high FOO level in the growth/grazing activities
+structure['pastures'] = ['annual'] # ,'lucerne','tedera']
+structure['dry_groups'] = ['L', 'H']                       # Low & high quality groups for dry feed
+structure['grazing_int'] =  ['0%', '25%', '75%', '100%']   # grazing intensity in the growth/grazing activities
+structure['foo_levels'] =  ['L', 'M', 'H']                 # Low, medium & high FOO level in the growth/grazing activities
 
 #######
 #sheep#
@@ -197,13 +191,13 @@ structure['All_pas']={'a', 'ar', 'a3', 'a4', 'a5'
                 , 'j', 't', 'jr', 'tr'
                 }
 ##next set is used in pasture.py for germination and phase area
-structure['pastures1']={'annual': {'a', 'ar', 'a3', 'a4', 'a5'
+structure['pasture_sets']={'annual': {'a', 'ar', 'a3', 'a4', 'a5'
                                 , 's', 'sr', 's3', 's4', 's5'
                                 , 'm', 'm3', 'm4', 'm5'}
-                       ,'lucerne':{'u', 'uc', 'ur', 'u3', 'u4', 'u5'
-                                  , 'x', 'xc', 'xr', 'x3', 'x4', 'x5'}
-                       ,'tedera':{'j','jc', 't','tc', 'jr', 'tr'}}
-                
+                        ,'lucerne':{'u', 'uc', 'ur', 'u3', 'u4', 'u5'
+                                   , 'x', 'xc', 'xr', 'x3', 'x4', 'x5'}
+                        ,'tedera':{'j','jc', 't','tc', 'jr', 'tr'}
+                       }
 
 # structure['PAS_R']={'ar', 'sr', 'jr', 'tr', 'ur', 'xr', 'tc', 'jc', 'uc', 'xc'} #all reseeded pastures - used to determine pas sow 
 structure['All']={'b', 'h', 'o', 'of', 'w', 'f','i', 'k', 'l', 'v', 'z','r', 'annual', 'tedera', 'lucerne'} #used in mach sow
@@ -366,4 +360,5 @@ def cols():
     for i in reversed(range(structure['num_prev_phase']+1)):
         cols.append(structure['phase_len']-1-i) 
     return cols
+
 

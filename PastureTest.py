@@ -12,7 +12,7 @@ Fixed   Date    ID by   Problem
 
 @author: John
 '''
-
+import numpy as np
 from timeit import default_timer as timer
 
 time_list = [] ; time_was = []
@@ -26,12 +26,13 @@ import Pasture as pas
 
 time_list.append(timer()) ; time_was.append("import Pasture")
 
-pastures = uinp.structure['pastures']        
-
-pas.init_and_map_excel('Property.xlsx', pastures)                         # read inputs from Excel file and map to the python variables
+pas.map_excel('Property.xlsx')                         # read inputs from Excel file and map to the python variables
 time_list.append(timer()) ; time_was.append("init & read inputs from Excel")
 
 pas.calculate_germ_and_reseed()                          # calculate the germination for each rotation phase
+a = pas.foo_grn_reseeding_flrt
+b = a[:,4,...]
+c = np.sum(b, axis = 1)
 time_list.append(timer()) ; time_was.append("germination & reseeding")
 
 pas.green_and_dry()                            # calculate the FOO lost when destocked and the FOO gained when grazed after establishment
