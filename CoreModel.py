@@ -19,6 +19,7 @@ from pyomo.environ import *
 import sys
 
 #MUDAS modules - should only be pyomo modules
+import UniversalInputs as uinp
 from CreateModel import *
 import CropPyomo as crppy
 import MachPyomo as macpy
@@ -26,7 +27,9 @@ import FinancePyomo #not used but it needs to be imported so that it is run
 import LabourPyomo as labpy 
 import LabourFixedPyomo as lfixpy 
 import LabourCropPyomo as lcrppy 
-import PasturePyomo as paspy 
+import PasturePyomo as paspy
+import SupFeedPyomo as suppy
+ 
 import Finance as fin
 
 print('Status: running coremodel')
@@ -81,6 +84,17 @@ def coremodel_all():
         return model.v_crop_labour_casual[p] + model.v_crop_labour_permanent[p] + model.v_crop_labour_manager[p] - lcrppy.mach_labour(model,p)  >= 0
     model.con_labour_crop_anyone = Constraint(model.s_periods, rule = labour_crop, doc='link between labour supply and requirment by crop jobs for all labour sources')
     
+    ######################
+    #Sheep crop          #
+    ######################
+    ##labour sheep - can be done by anyone
+    try:
+        model.del_component(model.con_labour_sheep_anyone)
+    except AttributeError:
+        pass
+    def labour_crop(model,p):
+        return model.v_sheep_labour_casual[p] + model.v_sheep_labour_permanent[p] + model.v_sheep_labour_manager[p] - suppy.sup_labour(model,p)   >= 0
+    model.con_labour_sheep_anyone = Constraint(model.s_periods, rule = labour_crop, doc='link between labour supply and requirment by sheep jobs for all labour sources')
     
     ######################
     #stubble             #
@@ -130,11 +144,13 @@ def coremodel_all():
     #############################
     ##combines rotation yield, on-farm sup feed and yield penalties from untimely sowing and crop grazing. Then passes to cashflow constraint. 
     try:
+        model.del_component(model.con_grain_transfer_index)
         model.del_component(model.con_grain_transfer)
     except AttributeError:
         pass
     def grain_transfer(model,g,k):
-        return crppy.rotation_yield_transfer(model,g,k) - macpy.late_seed_penalty(model,g,k) + model.v_buy_grain[k,g]*1000 - model.v_sell_grain[k,g]*1000 >=0
+        return crppy.rotation_yield_transfer(model,g,k) - macpy.late_seed_penalty(model,g,k) - sum(model.v_sup_con[k,g,e,f] for e in model.s_sheep_pools for f in model.s_feed_periods)\
+                + model.v_buy_grain[k,g]*1000 - model.v_sell_grain[k,g]*1000 >=0
     model.con_grain_transfer = Constraint(model.s_grain_pools, model.s_crops, rule=grain_transfer, doc='constrain grain transfer between rotation and sup feeding')
     
     ##combined grain sold and purchased to get a $ amount which is added to the cashflow constrain
@@ -159,13 +175,13 @@ def coremodel_all():
     #  ME                #
     ###################### 
     def md(model,f,e):
-        paspy.pas_md(e,f) 
+        paspy.pas_md(e,f) + suppy.sup_md(model,e,f)
 
     ######################
     #Vol                 #
     ###################### 
     def md(model,f,e):
-        paspy.pas_vol(e,f)
+        paspy.pas_vol(e,f) + suppy.sup_vol(model,e,f)
         
     ######################
     #cashflow constraints#
@@ -187,7 +203,7 @@ def coremodel_all():
         #this means the first period doesn't include the previous debit or credit (because it doesn't exist, because it is the first period) 
         j = [1] * len(c)
         j[0] = 0
-        return (yield_income(model,c[i]) - crppy.rotation_cost(model,c[i])  - labpy.labour_cost(model,c[i]) - macpy.mach_cost(model,c[i]) +
+        return (yield_income(model,c[i]) - crppy.rotation_cost(model,c[i])  - labpy.labour_cost(model,c[i]) - macpy.mach_cost(model,c[i]) - suppy.sup_cost(model,c[i]) +
                 model.v_debit[c[i]] - model.v_credit[c[i]]  - model.v_debit[c[i-1]] * fin.debit_interest() * j[i]  + model.v_credit[c[i-1]] * fin.credit_interest() * j[i]) >= 0
 
     try:
@@ -197,6 +213,38 @@ def coremodel_all():
         pass
     model.con_cashflow = Constraint(range(len(model.s_cashflow_periods)), rule=cash_flow, doc='cashflow')
     
+    ######################
+    #dep                 #
+    ###################### 
+    try:
+        model.del_component(model.con_dep)
+    except AttributeError:
+        pass
+    def dep(model):
+        return model.v_dep - macpy.total_dep(model) - suppy.sup_dep(model) >=0   
+    model.con_dep = Constraint( rule=dep, doc='tallies depreciation from all activities so it can be transferd to objective')
+    
+    ######################
+    #asset               #
+    ###################### 
+    try:
+        model.del_component(model.con_asset)
+    except AttributeError:
+        pass
+    def asset(model):
+        return model.v_asset - suppy.sup_asset(model) >=0   
+    model.con_asset = Constraint( rule=asset, doc='tallies asset from all activities so it can be transferd to objective to represent ROE')
+    
+    ######################
+    #Min ROE             #
+    ###################### 
+    try:
+        model.del_component(model.con_minroe)
+    except AttributeError:
+        pass
+    def minroe(model):
+        return model.v_minroe - (sum(crppy.rotation_cost(model,c)  - labpy.labour_cost(model,c) - macpy.mach_cost(model,c) - suppy.sup_cost(model,c) for c in model.s_cashflow_periods) *uinp.finance['minroe']) >=0   
+    model.con_minroe = Constraint(rule=minroe, doc='tallies total expenditure to ensure minimum roe is met')
     
     
     #######################################################################################################################################################
@@ -211,7 +259,7 @@ def coremodel_all():
     def profit(model):
         c = uinp.structure['cashflow_periods']
         i = len(c) - 1 # minus one because index starts from 0
-        return model.v_credit[c[i]]-model.v_debit[c[i]] - macpy.total_dep(model)  #have to include debit otherwise model selects lots of debit to increase credit, hence cant just maximise credit.
+        return model.v_credit[c[i]]-model.v_debit[c[i]] - model.v_dep - (model.v_asset * uinp.finance['opportunity_cost_capital'])  #have to include debit otherwise model selects lots of debit to increase credit, hence cant just maximise credit.
     try:
         model.del_component(model.profit)
     except AttributeError:
@@ -227,11 +275,21 @@ def coremodel_all():
     #######################################################################################################################################################
     #######################################################################################################################################################
     
-    print('Status: writing...')
-    model.write('test.lp',io_options={'symbolic_solver_labels':True})
     print('Status: solving...')
+    try:
+        model.del_component(model.dual)
+    except AttributeError:
+        pass
     model.dual = Suffix(direction=Suffix.IMPORT)
+    try:
+        model.del_component(model.rc)
+    except AttributeError:
+        pass
     model.rc = Suffix(direction=Suffix.IMPORT)
+    try:
+        model.del_component(model.slack)
+    except AttributeError:
+        pass
     model.slack = Suffix(direction=Suffix.IMPORT)
     results = SolverFactory('glpk').solve(model, tee=True)
     results.write() #need to write this somewhere
@@ -255,16 +313,7 @@ def coremodel_all():
         print ('Solver Status: error')
         sys.exit()
 
-    ##This writes variable with value greater than 1 to txt file 
-    file = open('testfile.txt','w') 
-    for v in model.component_objects(Var, active=True):
-        file.write("Variable component object %s\n" %v)   #  \n makes new line
-        for index in v:
-            try:
-                if v[index].value>0:
-                    file.write ("   %s %s\n" %(index, v[index].value))
-            except: pass 
-    file.close()
+    
     
     ##code below will access slacks on constraint
     # for c in model.component_objects(Constraint, active=True):

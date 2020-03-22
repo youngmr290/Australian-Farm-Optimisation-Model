@@ -43,7 +43,7 @@ print('running exp')
 #########################
 #^maybe there is a cleaner way to do some of the stuff below ie a way that doesn't need as many if statements?
 ##read in exp log 
-exp_data = pd.read_excel('exp.xlsx',index_col=[0,1], header=[0,1,2,3])
+exp_data = pd.read_excel('exp.xlsx',index_col=[0,1,2], header=[0,1,2,3])
 start_time1 = time.time()
 run=0 #counter to work out average time per loop
 for row in range(len(exp_data)):
@@ -98,10 +98,25 @@ for row in range(len(exp_data)):
     labpy.labpyomo_local()
     lcrppy.labcrppyomo_local()
     paspy.paspyomo_local()
-    end_para=time.time()
 
     core.coremodel_all()
-    
+    ##check if user wants full solution
+    if exp_data.index[row][1] == True:
+        ##make lp file
+        print('Status: writing lp...')
+        model.write('test.lp',io_options={'symbolic_solver_labels':True})
+        
+        ##This writes variable with value greater than 1 to txt file 
+        print('Status: writing variables to txt...')
+        file = open('testfile.txt','w') 
+        for v in model.component_objects(Var, active=True):
+            file.write("Variable component object %s\n" %v)   #  \n makes new line
+            for index in v:
+                try:
+                    if v[index].value>0:
+                        file.write ("   %s %s\n" %(index, v[index].value))
+                except: pass 
+        file.close()
     ##last step is to print the time for the current trial to run
     end_time = time.time()
     print("total time taken this loop: ", end_time - start_time)

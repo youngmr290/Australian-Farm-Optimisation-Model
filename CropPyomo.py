@@ -97,7 +97,6 @@ def croppyomo_local():
 #######################################################################################################################################################
 #######################################################################################################################################################
 model.v_sell_grain = Var(model.s_crops, model.s_grain_pools, bounds=(0,None), doc='tonnes of grain in each pool sold')
-model.v_buy_grain = Var(model.s_crops, model.s_grain_pools, bounds=(0,None), doc='tonnes of grain in each pool purchased for sup feeding')
     
 
 

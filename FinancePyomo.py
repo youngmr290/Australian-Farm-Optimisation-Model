@@ -27,7 +27,12 @@ print('Status:  running financepyomo')
 model.v_credit = Var(model.s_cashflow_periods, bounds = (0.0, None), doc = 'amount of net positive cashflow in a given period')
 #debit for a given time period (time period defined by cashflow set)
 model.v_debit = Var(model.s_cashflow_periods, bounds = (0.0, None), doc = 'amount of net negitive cashflow in a given period')
-#transfer 
+##dep
+model.v_dep = Var(bounds = (0.0, None), doc = 'transfers total dep to objective')
+##dep
+model.v_asset = Var(bounds = (0.0, None), doc = 'transfers total value of asset to objective to ensure opportuninty cost is represented')
+##minroe
+model.v_minroe = Var(bounds = (0.0, None), doc = 'total expenditure, used to ensure min returen is met')
 
 
 def finpyomo_local():

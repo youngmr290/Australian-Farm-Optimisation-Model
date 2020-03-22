@@ -72,7 +72,7 @@ def farmgate_grain_price():
     '''
     Returns
     -------
-    Dataframe - used below and to calculate insurance.
+    Dataframe - used below and to calculate insurance and sup feed purchase price.
     '''
     grain_price_info_df=uinp.price['grain_price'] #create a copy of grain price df so you dont have to reference input module each time
     ##multiplies the price and proportion of firsts and seconds for each grain, then sum to get overall price

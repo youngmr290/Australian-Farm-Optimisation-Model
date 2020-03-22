@@ -25,7 +25,8 @@ import FinancePyomo as finpy
 import LabourFixedPyomo as lfixpy 
 import LabourPyomo as labpy 
 import LabourCropPyomo as lcrppy 
-import PasturePyomo as paspy 
+import PasturePyomo as paspy
+import SupFeedPyomo
 import CoreModel as core
 
 #######################
@@ -47,7 +48,7 @@ import CoreModel as core
 #^maybe there is a cleaner way to do some of the stuff below ie a way that doesn't need as many if statements?
 
 ##read in exp and drop all false runs ie runs not being run this time
-exp_data = pd.read_excel('exp.xlsx',index_col=[0,1], header=[0,1,2,3])
+exp_data = pd.read_excel('exp.xlsx',index_col=[0,1,2], header=[0,1,2,3])
 exp_data=exp_data.loc[True] #alternative ... exp_data.iloc[exp_data.index.get_level_values(0)index.levels[0]==True]
    
 def exp(row):
@@ -100,8 +101,24 @@ def exp(row):
     paspy.paspyomo_local()
     core.coremodel_all()
      
-      ##need to save results to a dict here - include the trial name as the dict name or key.. probably need to return the dict at the end of the function so it can be joined with other processors
-     
+    ##need to save results to a dict here - include the trial name as the dict name or key.. probably need to return the dict at the end of the function so it can be joined with other processors
+    ##check if user wants full solution
+    if exp_data.index[row][1] == True:
+        ##make lp file
+        print('Status: writing lp...')
+        model.write('test.lp',io_options={'symbolic_solver_labels':True})
+        
+        ##This writes variable with value greater than 1 to txt file 
+        print('Status: writing variables to txt...')
+        file = open('testfile.txt','w') 
+        for v in model.component_objects(Var, active=True):
+            file.write("Variable component object %s\n" %v)   #  \n makes new line
+            for index in v:
+                try:
+                    if v[index].value>0:
+                        file.write ("   %s %s\n" %(index, v[index].value))
+                except: pass 
+        file.close()
     #last step is to print the time for the current trial to run
     end_time = time.time()
     print("total time taken this loop: ", end_time - start_time)
