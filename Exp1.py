@@ -16,15 +16,15 @@ from tqdm import tqdm
 start=time.time()
 from CreateModel import *
 import UniversalInputs as uinp
-import PropertyInputs as pinp 
-import Sensitivity as sen 
-import RotationPyomo as rotpy 
+import PropertyInputs as pinp
+import Sensitivity as sen
+import RotationPyomo as rotpy
 import CropPyomo as crppy
 import MachPyomo as macpy
 import FinancePyomo as finpy
-import LabourFixedPyomo as lfixpy 
-import LabourPyomo as labpy 
-import LabourCropPyomo as lcrppy 
+import LabourFixedPyomo as lfixpy
+import LabourPyomo as labpy
+import LabourCropPyomo as lcrppy
 import PasturePyomo as paspy
 import SupFeedPyomo
 import CoreModel as core
@@ -33,12 +33,12 @@ import CoreModel as core
 #key options          #
 #######################
 #eg flk structure, mach option etc - this is set the default, can be changed in runs via saa
-        
-    
-    
-    
 
-   
+
+
+
+
+
 
 
 
@@ -50,7 +50,7 @@ import CoreModel as core
 ##read in exp and drop all false runs ie runs not being run this time
 exp_data = pd.read_excel('exp.xlsx',index_col=[0,1,2], header=[0,1,2,3])
 exp_data=exp_data.loc[True] #alternative ... exp_data.iloc[exp_data.index.get_level_values(0)index.levels[0]==True]
-   
+
 def exp(row):
     print('running exp: ',exp_data.index[row] )
     ##start timer for each loop
@@ -67,7 +67,7 @@ def exp(row):
                  sen.saa[(key1,key2)][indices]=value
              elif dic == 'sap':
                  sen.sap[(key1,key2)][indices]=value
- 
+
          ##checks if just slice exists
          elif not 'Unnamed' in indx:
              indices = tuple(slice(*(int(i) if i else None for i in part.strip().split(':'))) for part in indx.split(',')) #creats a slice object from a string - note slice objects are not inclusive ie to select the first number it should look like [0:1]
@@ -85,8 +85,8 @@ def exp(row):
                  sen.saa[(key1,key2)]=value
              elif dic == 'sap':
                  sen.sap[(key1,key2)]=value
- 
- 
+
+
      ##call sa functions - assigns sa variables to relevant inputs
     uinp.univeral_inp_sa()
     pinp.property_inp_sa()
@@ -100,30 +100,30 @@ def exp(row):
     lcrppy.labcrppyomo_local()
     paspy.paspyomo_local()
     core.coremodel_all()
-     
+
     ##need to save results to a dict here - include the trial name as the dict name or key.. probably need to return the dict at the end of the function so it can be joined with other processors
     ##check if user wants full solution
     if exp_data.index[row][1] == True:
         ##make lp file
         print('Status: writing lp...')
         model.write('test.lp',io_options={'symbolic_solver_labels':True})
-        
-        ##This writes variable with value greater than 1 to txt file 
+
+        ##This writes variable with value greater than 1 to txt file
         print('Status: writing variables to txt...')
-        file = open('testfile.txt','w') 
+        file = open('testfile.txt','w')
         for v in model.component_objects(Var, active=True):
             file.write("Variable component object %s\n" %v)   #  \n makes new line
             for index in v:
                 try:
                     if v[index].value>0:
                         file.write ("   %s %s\n" %(index, v[index].value))
-                except: pass 
+                except: pass
         file.close()
     #last step is to print the time for the current trial to run
     end_time = time.time()
     print("total time taken this loop: ", end_time - start_time)
-    var = model.component_objects(Var, active=True)
-    return {str(v):{s:v[s].value for s in v} for v in a }     #creates dict with variable in it. This is tricky since pyomo returns a generator object
+    val = model.component_objects(Var, active=True)
+    return {str(v):{s:v[s].value for s in v} for v in val }     #creates dict with variable in it. This is tricky since pyomo returns a generator object
 
 
 
@@ -133,7 +133,7 @@ def exp(row):
 ##the result after the different processes are done is a list of dicts (because each itteration returns a dict and the multiprocess stuff returns a list)
 def main():
       # Define the dataset
-    inputs = (list(range(len(exp_data)))) 
+    inputs = (list(range(len(exp_data))))
     dataset = inputs
 
     # Output the dataset
@@ -153,9 +153,8 @@ if __name__ == '__main__':
 
 
 
-    
-    
-    
-    
-    
-    
+
+
+
+
+
