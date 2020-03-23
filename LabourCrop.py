@@ -52,11 +52,11 @@ def prep_labour():
 
 #allocation of fert costs into each cash period for each fert ie depending on the date diff ferts are in diff cash periods
 def lab_allocation():
-    start_dict = pinp.crop['fert_info']['app_date'] 
-    length_dict = pinp.crop['fert_info']['app_len'].astype('timedelta64[D]') 
-    p_dates = per.p_date2_df()['date']
-    p_name = per.p_date2_df().index
-    return fun.period_allocation2(start_dict, length_dict, p_dates, p_name)
+    start_df = pinp.crop['fert_info']['app_date'] 
+    length_df = pinp.crop['fert_info']['app_len'].astype('timedelta64[D]') 
+    p_dates = per.p_dates_df()['date']
+    p_name = per.p_dates_df().index
+    return fun.period_allocation2(start_df, length_df, p_dates, p_name)
 
 
 #time/per ha - needs to be multiplied by the number of phases and then added to phases df because the previous phases can effect number of passes and hence time
@@ -98,11 +98,11 @@ def chem_lab_allocation():
         Collates all the data needed then calls the allocation function, which returns \
         the allocation of labour for chem application into labour periods.
     '''
-    start_dict = pinp.crop['chem_info']['app_date'] 
-    length_dict = pinp.crop['chem_info']['app_len'].astype('timedelta64[D]') 
-    p_dates = per.p_date2_df()['date']
-    p_name = per.p_date2_df().index
-    return fun.period_allocation2(start_dict, length_dict, p_dates, p_name)
+    start_df = pinp.crop['chem_info']['app_date'] 
+    length_df = pinp.crop['chem_info']['app_len'].astype('timedelta64[D]') 
+    p_dates = per.p_dates_df()['date']
+    p_name = per.p_dates_df().index
+    return fun.period_allocation2(start_df, length_df, p_dates, p_name)
 
 
 def chem_app_time_ha():  
