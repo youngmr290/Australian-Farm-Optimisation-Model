@@ -411,7 +411,7 @@ def calculate_germ_and_reseed():
     global p_pas_sow_plrt
     global p_foo_dry_reseeding_dflrt
     global p_foo_grn_reseeding_flrt
-    global p_erosion_flt
+    global p_erosion_flrt
     # global reseeding_machperiod_t
 
     ## define instantiate arrays that are assigned in slices
@@ -609,7 +609,7 @@ def calculate_germ_and_reseed():
                                     , axis = -1)
     erosion_flrt = arable_erosion_flrt + na_erosion_flrt
     erosion_rav_flrt = erosion_flrt.ravel()
-    p_erosion_flt = dict(zip(index_flrt ,erosion_rav_flrt))
+    p_erosion_flrt = dict(zip(index_flrt ,erosion_rav_flrt))
 
 ## the following method generates the PGR & FOO parameters for the growth variables. Stored in a numpy array(lmu, feed period, FOO level, grazing intensity)
 ## def green_consumption:

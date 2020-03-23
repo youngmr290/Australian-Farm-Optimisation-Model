@@ -133,6 +133,12 @@ def univeral_inp_sa():
 structure = dict()
 
 ###############
+# crop        #
+###############
+##grain pools there is one transfer constraint for each pool.
+structure['grain_pools']=['firsts','seconds']
+
+###############
 # cashflow    #
 ###############
 ##the number of these can change as long as each period is of equal length.

@@ -144,15 +144,16 @@ def paspyomo_local():
         model.del_component(model.p_nap)
     except AttributeError:
         pass
-    model.p_nap = pe.Param(model.s_dry_groups, model.s_lmus, model.s_pastures, initialize=pas.p_nap_dlrt, default=0, doc='non arable pasture')
+    model.p_nap = pe.Param(model.s_dry_groups, model.s_lmus, model.s_phases, model.s_pastures, initialize=pas.p_nap_dlrt, default=0, doc='pasture on non arable areas in crop paddocks')
     
     try:
+        model.del_component(model.p_erosion_index_index_0_index_0)
         model.del_component(model.p_erosion_index_index_0)
         model.del_component(model.p_erosion_index)
         model.del_component(model.p_erosion)
     except AttributeError:
         pass
-    model.p_erosion = pe.Param(model.s_feed_periods, model.s_lmus, model.s_pastures, initialize=pas.p_erosion_flt, default=0, doc='erosion limit in each period')
+    model.p_erosion = pe.Param(model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=pas.p_erosion_flrt, default=0, doc='erosion limit in each period')
     
     try:
         model.del_component(model.p_phase_area_index_index_0_index_0)  #âdded by John to make it _flrt
@@ -161,7 +162,7 @@ def paspyomo_local():
         model.del_component(model.p_phase_area)
     except AttributeError:
         pass
-    model.p_phase_area = pe.Param(model.s_feed_periods, model.s_phases, model.s_pastures, initialize=pas.p_phase_area_flrt, default=0, doc='pasture area in each rotation for each feed period')
+    model.p_phase_area = pe.Param(model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=pas.p_phase_area_flrt, default=0, doc='pasture area in each rotation for each feed period')
     
     try:
         model.del_component(model.p_pas_sow_index_index_0_index_0)
@@ -178,7 +179,7 @@ def paspyomo_local():
         model.del_component(model.p_poc_con)
     except AttributeError:
         pass
-    model.p_poc_con = pe.Param(model.s_feed_periods ,model.s_lmus, model.s_pastures, initialize=pas.poc_con(),default=0, doc='consumption of pasture on 1ha of a crop paddock each day for each lmu in each feed period')
+    model.p_poc_con = pe.Param(model.s_feed_periods ,model.s_lmus, initialize=pas.poc_con(),default=0, doc='consumption of pasture on 1ha of a crop paddock each day for each lmu in each feed period')
 
     #^ John? Will the POC work if the parameters for poc_md and poc_vol are only _f 
     #^ whereas poc_con is _fl. _fl is what we need, but _md & _vol don't vary with lmu
@@ -187,14 +188,14 @@ def paspyomo_local():
         model.del_component(model.p_poc_md)
     except AttributeError:
         pass
-    model.p_poc_md = pe.Param(model.s_feed_periods, model.s_pastures, initialize=pas.poc_md(),default=0, doc='md of pasture on crop paddocks for each feed period')
+    model.p_poc_md = pe.Param(model.s_feed_periods, initialize=pas.poc_md(),default=0, doc='md of pasture on crop paddocks for each feed period')
     
     try:
         # model.del_component(model.p_poc_vol_index)  ^John, poc_vol returns _f
         model.del_component(model.p_poc_vol)
     except AttributeError:
         pass
-    model.p_poc_vol = pe.Param(model.s_feed_periods, model.s_pastures, initialize=pas.poc_vol(),default=0, doc='vol (ri intake) of pasture on crop paddocks for each feed period')
+    model.p_poc_vol = pe.Param(model.s_feed_periods, initialize=pas.poc_vol(),default=0, doc='vol (ri intake) of pasture on crop paddocks for each feed period')
     
     
     #####################################################################################################################################################################################################
@@ -231,19 +232,21 @@ def paspyomo_local():
     except AttributeError:
         pass
     def pasarea(model,f,l,t):
-        return sum(model.v_phase_area[r,l] * model.p_phase_area[f,r,t] for r in model.s_phases)   \
+        return sum(model.v_phase_area[r,l] * model.p_phase_area[f,l,r,t] for r in model.s_phases)   \
                         - sum(model.v_greenpas_ha[e,g,o,f,l,t] for e in model.s_sheep_pools for g in model.s_grazing_int for o in model.s_foo_levels) >=0
     model.con_pasarea = pe.Constraint(model.s_feed_periods, model.s_lmus, model.s_pastures, rule = pasarea, doc='Pasture area row for growth constraint of each type on each soil for each feed period (ha)')
     
     #^once r is added to erosion limit, add an if statement with in sum for r in phases ; if model.p_erosion[f,l,r,t] != 0
     try:
+        model.del_component(model.con_erosion_index_index_0)
+        model.del_component(model.con_erosion_index)
         model.del_component(model.con_erosion)
     except AttributeError:
         pass
-    def erosion(model,t):
-        return sum(sum(sum(model.v_greenpas_ha[e,g,o,f,l,t] for e in model.s_sheep_pools) *  (model.p_foo_end_grnha[g,o,f,l,t] + sum(model.p_senesce_grnha[d,g,o,f,l,t] for d in model.s_dry_groups))for g in model.s_grazing_int for o in model.s_foo_levels) \
-                   - sum(model.v_phase_area[r,l] for r in model.s_phases) * model.p_erosion[f,l,t] for f in model.s_feed_periods for l in model.s_lmus) >=0
-    model.con_erosion = pe.Constraint(model.s_pastures, rule = erosion, doc='total pasture available of each type on each soil type in each feed period')
+    def erosion(model,f,l,t):
+        return sum(sum(model.v_greenpas_ha[e,g,o,f,l,t] for e in model.s_sheep_pools) *  (model.p_foo_end_grnha[g,o,f,l,t] + sum(model.p_senesce_grnha[d,g,o,f,l,t] for d in model.s_dry_groups))for g in model.s_grazing_int for o in model.s_foo_levels) \
+                   - sum(model.v_phase_area[r,l]  * model.p_erosion[f,l,r,t] for r in model.s_phases if model.p_erosion[f,l,r,t] != 0) >=0
+    model.con_erosion = pe.Constraint(model.s_feed_periods, model.s_lmus, model.s_pastures, rule = erosion, doc='total pasture available of each type on each soil type in each feed period')
     
     
 #####################################################################################################################################################################################################
