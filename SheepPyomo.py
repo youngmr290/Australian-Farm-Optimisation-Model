@@ -14,7 +14,7 @@ import SheepSim as ssim
 
 def sheep_pyomo_local():
     ssim.sheep_sim()
-    # ssim.create_masks()
+    ssim.sheep_parameters()
 
     ######################
     ### setup parameters #
