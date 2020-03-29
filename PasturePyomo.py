@@ -138,13 +138,14 @@ def paspyomo_local():
     model.p_dry_removal_t = pe.Param(model.s_dry_groups, model.s_feed_periods, model.s_pastures, initialize=pas.p_dry_removal_t_dft, default=0, doc='quantity of dry feed removed for sheep to consume 1t')
     
     try:
-        model.del_component(model.p_nap_index_index_0_index_0)  #âdded by John to make it _dlrt
+        model.del_component(model.p_nap_index_index_0_index_0_index_0)  
+        model.del_component(model.p_nap_index_index_0_index_0)  
         model.del_component(model.p_nap_index_index_0)
         model.del_component(model.p_nap_index)
         model.del_component(model.p_nap)
     except AttributeError:
         pass
-    model.p_nap = pe.Param(model.s_dry_groups, model.s_lmus, model.s_phases, model.s_pastures, initialize=pas.p_nap_dlrt, default=0, doc='pasture on non arable areas in crop paddocks')
+    model.p_nap = pe.Param(model.s_dry_groups, model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=pas.p_nap_dflrt, default=0, doc='pasture on non arable areas in crop paddocks')
     
     try:
         model.del_component(model.p_erosion_index_index_0_index_0)
@@ -156,7 +157,7 @@ def paspyomo_local():
     model.p_erosion = pe.Param(model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=pas.p_erosion_flrt, default=0, doc='erosion limit in each period')
     
     try:
-        model.del_component(model.p_phase_area_index_index_0_index_0)  #âdded by John to make it _flrt
+        model.del_component(model.p_phase_area_index_index_0_index_0)  
         model.del_component(model.p_phase_area_index_index_0)
         model.del_component(model.p_phase_area_index)
         model.del_component(model.p_phase_area)
@@ -174,24 +175,19 @@ def paspyomo_local():
     model.p_pas_sow = pe.Param(model.s_periods, model.s_lmus, model.s_phases, model.s_landuses, initialize=pas.p_pas_sow_plrt, default=0, doc='pasture sown for each rotation')
     
     try:
-        # model.del_component(model.p_poc_con_index_index_0)  ^John, poc_con returns _fl
         model.del_component(model.p_poc_con_index)
         model.del_component(model.p_poc_con)
     except AttributeError:
         pass
     model.p_poc_con = pe.Param(model.s_feed_periods ,model.s_lmus, initialize=pas.poc_con(),default=0, doc='consumption of pasture on 1ha of a crop paddock each day for each lmu in each feed period')
 
-    #^ John? Will the POC work if the parameters for poc_md and poc_vol are only _f 
-    #^ whereas poc_con is _fl. _fl is what we need, but _md & _vol don't vary with lmu
     try:
-        # model.del_component(model.p_poc_md_index)  ^John, poc_md returns _f
         model.del_component(model.p_poc_md)
     except AttributeError:
         pass
     model.p_poc_md = pe.Param(model.s_feed_periods, initialize=pas.poc_md(),default=0, doc='md of pasture on crop paddocks for each feed period')
     
     try:
-        # model.del_component(model.p_poc_vol_index)  ^John, poc_vol returns _f
         model.del_component(model.p_poc_vol)
     except AttributeError:
         pass
@@ -210,8 +206,10 @@ def paspyomo_local():
     except AttributeError:
         pass
     def greenpas(model,f,l,t):
+        fs = list(model.s_feed_periods)[f-1] #have to convert to a list first beacuse indexing of an ordered set starts at 1
         return sum(model.v_phase_area[r,l] * (model.p_germination[f,l,r,t] + model.p_foo_grn_reseeding[f,l,r,t])for r in model.s_phases if model.p_germination[f,l,r,t] !=0 or model.p_foo_grn_reseeding[f,l,r,t] !=0)         \
-                       + sum(sum(sum(model.v_greenpas_ha[e,g,o,f,l,t] for e in model.s_sheep_pools) * (-model.p_foo_start_grnha[o,f,l,t] + model.p_foo_end_grnha[g,o,f,l,t])for g in model.s_grazing_int) for o in model.s_foo_levels) >=0
+                        + sum(sum(sum(model.v_greenpas_ha[e,g,o,f,l,t] for e in model.s_sheep_pools) * (-model.p_foo_start_grnha[o,f,l,t] )  \
+                        + sum(model.v_greenpas_ha[e,g,o,fs,l,t] for e in model.s_sheep_pools) * ( model.p_foo_end_grnha[g,o,fs,l,t]) for g in model.s_grazing_int) for o in model.s_foo_levels) >=0
     model.con_greenpas = pe.Constraint(model.s_feed_periods, model.s_lmus, model.s_pastures, rule = greenpas, doc='green pasture of each type available on each soil type in each feed period')
     
     try:
@@ -221,8 +219,11 @@ def paspyomo_local():
     except AttributeError:
         pass
     def drypas(model,d,f,t):
-        return sum(sum(model.v_greenpas_ha[e,g,o,f,l,t] * model.p_senesce_grnha[d,g,o,f,l,t] for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus)         \
-                            - model.v_drypas_consumed[e,d,f,t] * model.p_dry_removal_t[d,f,t] for e in model.s_sheep_pools) + model.v_drypas_transfer[d,f,t] * (model.p_dry_transfer_t[d,f,t] -1000) >=0
+        fs = list(model.s_feed_periods)[f-1] #have to convert to a list first beacuse indexing of an ordered set starts at 1
+        return sum(sum(sum(sum(model.v_greenpas_ha[e,g,o,f,l,t] * model.p_senesce_grnha[d,g,o,f,l,t] for g in model.s_grazing_int) for o in model.s_foo_levels )\
+                       + sum(model.v_phase_area[r,l] * model.p_nap[d,f,l,r,t] for r in model.s_phases if model.p_nap[d,f,l,r,t] != 0)for l in model.s_lmus)        \
+                       - model.v_drypas_consumed[e,d,f,t] * model.p_dry_removal_t[d,f,t] for e in model.s_sheep_pools) \
+                       + model.v_drypas_transfer[d,fs,t] * model.p_dry_transfer_t[d,fs,t] - model.v_drypas_transfer[d,f,t] * 1000 >=0 #minus 1000 is what you are transfering into constraint, p_dry_transfer is how much you get in the current period if you transferred 1t from previous period (not 1000 because you have to account for deterioration)
     model.con_drypas = pe.Constraint(model.s_dry_groups, model.s_feed_periods, model.s_pastures, rule = drypas, doc='High and low quality dry pasture of each type available in each period')
     
     try:
@@ -236,7 +237,6 @@ def paspyomo_local():
                         - sum(model.v_greenpas_ha[e,g,o,f,l,t] for e in model.s_sheep_pools for g in model.s_grazing_int for o in model.s_foo_levels) >=0
     model.con_pasarea = pe.Constraint(model.s_feed_periods, model.s_lmus, model.s_pastures, rule = pasarea, doc='Pasture area row for growth constraint of each type on each soil for each feed period (ha)')
     
-    #^once r is added to erosion limit, add an if statement with in sum for r in phases ; if model.p_erosion[f,l,r,t] != 0
     try:
         model.del_component(model.con_erosion_index_index_0)
         model.del_component(model.con_erosion_index)
@@ -270,20 +270,20 @@ model.v_poc = pe.Var(model.s_sheep_pools, model.s_feed_periods, model.s_lmus, bo
 ##############
 #sow         #
 ##############
-def cropsow(model,p,k,l):
+def passow(model,p,k,l):
     return sum(model.p_pas_sow[p,l,r,k]*model.v_phase_area[r,l] for r in model.s_phases if model.p_pas_sow[p,l,r,k] != 0) 
 
 ##############
 #MD          #
 ##############
 def pas_md(model,e,f):
-    return sum(model.v_greenpas_ha[e,g,o,f,l,t] * model.p_me_cons_grnha[e,g,o,f,l,t] + model.v_drypas_consumed[e,d,f,t] * model.p_dry_mecons_t[e,d,f,t] \
-               + model.v_poc[e,f,l] * model.p_poc_md[f] for d in model.s_dry_groups for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus for t in model.s_pastures)
+    return sum(sum(sum(model.v_greenpas_ha[e,g,o,f,l,t] * model.p_me_cons_grnha[e,g,o,f,l,t] for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus) + sum(model.v_drypas_consumed[e,d,f,t] * model.p_dry_mecons_t[e,d,f,t]for d in model.s_dry_groups) for t in model.s_pastures) \
+               + model.v_poc[e,f,l] * model.p_poc_md[f] for l in model.s_lmus )
 
 ##############
 #Vol         #
 ##############
 def pas_vol(model,e,f):
-    return sum(model.v_greenpas_ha[e,g,o,f,l,t] * model.p_volume_grnha[g,o,f,l,t] + model.v_drypas_consumed[e,d,f,t] * model.p_dry_volume_t[d,f,t] \
-               + model.v_poc[e,f,l] * model.p_poc_vol[f] for d in model.s_dry_groups for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus for t in model.s_pastures)
+    return sum(sum(sum(model.v_greenpas_ha[e,g,o,f,l,t] * model.p_volume_grnha[g,o,f,l,t] for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus) + sum(model.v_drypas_consumed[e,d,f,t] * model.p_dry_volume_t[d,f,t] for d in model.s_dry_groups) for t in model.s_pastures)\
+               + model.v_poc[e,f,l] * model.p_poc_vol[f] for l in model.s_lmus )
 

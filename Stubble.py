@@ -34,13 +34,13 @@ Spilt grain as a proportion of the stubble = (HI * spilt %) / (1 - HI(1 - spilt%
 #python modules
 import pandas as pd
 
-
+import pandas as pd
+pd.set_option('mode.chained_assignment', 'raise')
 
 #midas modules
 import FeedBudget as fb
 import PropertyInputs as pinp
-import Inputs as inp
-import StubbleInputs as si
+import UniversalInputs as uinp
 import Crop as crp
 import Sensitivity as SA
 
@@ -60,41 +60,42 @@ def stubble_all():
     #########################
     #dmd deterioration      #
     #########################
-    
+
     #create df with feed periods
-    fp = pd.DataFrame.from_dict(fb.feed_inputs['feed_periods'],orient='index', columns=['date'])[:-1] #removes last row
+    fp = pinp.feed_inputs['feed_periods'].iloc[:-1].copy() #removes last row, some reason i need to copy so that i dont get settingcopywarning
     cat_a_st_req=pd.DataFrame()
-    cat_b_st_prov=dict() #provide tr ie cat A provides stub b tr - done straight as a dict because value doesn't change for different periods
-    cat_b_st_req=dict() #requirment for tr ie cat B requires stub b tr - done straight as a dict because value doesn't change for different periods, this would have to change if trampling was different for periods
-    cat_c_st_prov=dict() 
-    cat_c_st_req=dict() 
-    dmd=pd.DataFrame()
-    md=pd.DataFrame()
-    ri_quality=pd.DataFrame()
-    ri_availability=pd.DataFrame()
-    vol=pd.DataFrame()
-    cons_limit=pd.DataFrame()
+    cat_b_st_prov=pd.DataFrame() #provide tr ie cat A provides stub b tr - done straight as a dict because value doesn't change for different periods
+    cat_b_st_req=pd.DataFrame() #requirment for tr ie cat B requires stub b tr - done straight as a dict because value doesn't change for different periods, this would have to change if trampling was different for periods
+    cat_c_st_prov=pd.DataFrame() 
+    cat_c_st_req=pd.DataFrame() 
+    per_transfer=pd.DataFrame() 
+    dmd=pd.DataFrame(columns=pd.MultiIndex.from_product([pinp.stubble['harvest_index'].index,pinp.stubble['stub_cat_qual']]))
+    md=pd.DataFrame(columns=pd.MultiIndex.from_product([pinp.stubble['harvest_index'].index,pinp.stubble['stub_cat_qual']]))
+    ri_quality=pd.DataFrame(columns=pd.MultiIndex.from_product([pinp.stubble['harvest_index'].index,pinp.stubble['stub_cat_qual']]))
+    ri_availability=pd.DataFrame(columns=pd.MultiIndex.from_product([pinp.stubble['harvest_index'].index,pinp.stubble['stub_cat_qual']]))
+    vol=pd.DataFrame(columns=pd.MultiIndex.from_product([pinp.stubble['harvest_index'].index,pinp.stubble['stub_cat_qual']]))
+    cons_prop=pd.DataFrame()
      #function will start here
     stubble_per_grain = crp.stubble_production() #produces dict with stubble production per kg of yield for each grain used in the ri.availability section
     
-    for crop in si.stubble_inputs['crop_stub'].keys():
+    for crop in pinp.stubble['harvest_index'].index:
         #add column that is days since harvest in each period (calced from the end date of the period)
         days_since_harv=[]
         for period_num in fp.index:
             if period_num < len(fp)-1:  #because im using the end date of the period, hence the start of the next p, there is an issue for the last period in the df - the last period should ref the date of the first period
                 feed_period_date = fp.loc[period_num+1,'date']
-                harv_start = pinp.crop['start_harvest_crops'][crop]
+                harv_start = pinp.crop['start_harvest_crops'].loc[crop,'date']
                 if feed_period_date < harv_start:
                     days_since_harv.append(365 + (feed_period_date - harv_start).days) #add a yr because dates before harvest wont have access to stubble until next yr
                 else:  days_since_harv.append((feed_period_date - harv_start).days)
             else: 
                 period_num = fp.index[0]
                 feed_period_date = fp.loc[period_num,'date']
-                harv_start = pinp.crop['start_harvest_crops'][crop]
+                harv_start = pinp.crop['start_harvest_crops'].loc[crop,'date']
                 if feed_period_date < harv_start:
                     days_since_harv.append(365 + (feed_period_date - harv_start).days) #add a yr because dates before harvest wont have access to stubble until next yr
                 else:  days_since_harv.append((feed_period_date - harv_start).days)
-        fp['days_%s' %crop]=days_since_harv
+        fp.loc[:,'days_%s' %crop]=days_since_harv
         #add the qualntity decline % for each period - used in transfer constraints, need to average the number of days in the period of interest
         quant_decline=[]
         for period_num in fp.index:
@@ -105,28 +106,26 @@ def stubble_all():
                 elif fp.loc[period_num,'date'] < harv_start < fp.loc[period_num+1,'date']:
                     days=fp.loc[period_num,'days_%s' %crop]/2  #divid by two to get the average days on the period to work out average deterioration
                 else: days=fp.loc[period_num-1,'days_%s' %crop]+(fp.loc[period_num,'days_%s' %crop]-fp.loc[period_num-1,'days_%s' %crop])/2
-                quant_decline.append(1-(1-si.stubble_inputs['crop_stub'][crop]['quantity_deterioration']/100)**days)
-        fp['quant_decline_%s' %crop] = quant_decline
+                quant_decline.append(1-(1-pinp.stubble['quantity_deterioration'].loc[crop,'deterioration']/100)**days)
+        fp.loc[:,'quant_decline_%s' %crop] = quant_decline
         #add dmd for each component in each period for each crop
-        for component, dmd_harv in si.stubble_inputs['crop_stub'][crop]['component_dmd'].items():
+        for component, dmd_harv in zip(pinp.stubble['component_dmd'],pinp.stubble['component_dmd'].loc[crop]):
             dmd_component=[]
             day=[]
             for period_num in fp.index:
                 if period_num == 0:
-                     if fp.loc[period_num,'date'] < harv_start < fp.loc[period_num+1,'date']:
-                         days=fp.loc[period_num,'days_%s' %crop]/2  #divid by two to get the average days on the period to work out average deterioration
-                     else: days=fp.loc[len(fp)-1,'days_%s' %crop]+(fp.loc[period_num,'days_%s' %crop]-fp.loc[len(fp)-1,'days_%s' %crop])/2#divid by two to get the average days on the period to work out average deterioration
+                      if fp.loc[period_num,'date'] < harv_start < fp.loc[period_num+1,'date']:
+                          days=fp.loc[period_num,'days_%s' %crop]/2  #divid by two to get the average days on the period to work out average deterioration
+                      else: days=fp.loc[len(fp)-1,'days_%s' %crop]+(fp.loc[period_num,'days_%s' %crop]-fp.loc[len(fp)-1,'days_%s' %crop])/2#divid by two to get the average days on the period to work out average deterioration
                 elif fp.loc[period_num,'date'] < harv_start < fp.loc[period_num+1,'date']:
                     days=fp.loc[period_num,'days_%s' %crop]/2  #divid by two to get the average days on the period to work out average deterioration
                 else: days=fp.loc[period_num-1,'days_%s' %crop]+(fp.loc[period_num,'days_%s' %crop]-fp.loc[period_num-1,'days_%s' %crop])/2
                 day.append(days)
-                deterioration_factor = si.stubble_inputs['crop_stub'][crop]['quality_deterioration'][component]
+                deterioration_factor = pinp.stubble['quality_deterioration'].loc[crop,component]
                 dmd_component.append((1-(deterioration_factor*days)/100)*dmd_harv)
-            fp['%s_%s_dmd' %(crop ,component)]=dmd_component #important as the column names are used in the sim (objective)
+            fp.loc[:,'%s_%s_dmd' %(crop ,component)]=dmd_component #important as the column names are used in the sim (objective)
         
-    
-        
-        
+          
         ###############
         # M/D & vol   #      
         ###############
@@ -140,27 +139,26 @@ def stubble_all():
         4) calcs the md of each stubble category (dmd to MD)
         
         '''    
-        
         stub_cat_component_proportion=pd.read_excel('Stubble Sim.xlsx',sheet_name=crop,header=None)
         ##quality of each category in each period - muliply quality by proportion of components
-        num_stub_cat = len( si.stubble_inputs['crop_stub'][crop]['component_dmd']) #determine number of cats
+        num_stub_cat = len( pinp.stubble['component_dmd'].loc[crop]) #determine number of cats
         comp_dmd_period=fp.iloc[:,-num_stub_cat:] #selects just the dmd from fp df for the crop of interest
         stub_cat_component_proportion.index=comp_dmd_period.columns #makes index = to column names so df mul can be done (quicker than using a loop)
         j=0 #used as scalar for stub available for in each cat below.
-        for cat_inx, cat_name in zip(range(len(si.stubble_inputs['crop_stub'][crop]['stub_cat_qual'])), si.stubble_inputs['crop_stub'][crop]['stub_cat_qual'].keys()):
-            dmd[crop,cat_name]=comp_dmd_period.mul(stub_cat_component_proportion[cat_inx]).sum(axis=1) #dmd by stub category (a, b, c, d)
+        for cat_inx, cat_name in zip(range(len(pinp.stubble['stub_cat_qual'].loc[crop])), pinp.stubble['stub_cat_qual']):
+            dmd.loc[:,(crop,cat_name)]=comp_dmd_period.mul(stub_cat_component_proportion[cat_inx]).sum(axis=1) #dmd by stub category (a, b, c, d)
             ##calc ri before converting dmd to md
-            ri_quality[crop,cat_name]= dmd[crop,cat_name].apply(fb.ri_quality, args=(si.stubble_inputs['clover_propn_in_sward_stubble'],))
+            ri_quality.loc[:,(crop,cat_name)]= dmd.loc[:,(crop,cat_name)].apply(fb.ri_quality, args=(pinp.stubble['clover_propn_in_sward_stubble'],))
             ##ri availability - first calu stubble foo (stub available)
-            yield_df = pinp.crop['excel_ranges']['yield']
-            stub_foo_harv = yield_df[yield_df>0].loc[crop].mean() * stubble_per_grain[crop] *1000
+            yield_df = pinp.crop['yield']
+            stub_foo_harv = yield_df.loc[crop].mean() * stubble_per_grain[(crop,'a')] *1000
             stubble_foo = stub_foo_harv * (1 - fp['quant_decline_%s' %crop]) * (1 - j)
-            ri_availability[crop,cat_name] = stubble_foo.apply(fb.ri_availability)
+            ri_availability.loc[:,(crop,cat_name)] = stubble_foo.apply(fb.ri_availability)
             ##combine ri quality and ri availabitily to calc overall vol (potential intake)
-            vol[crop,cat_name]=(1/(ri_availability[crop,cat_name].mul(ri_quality[crop,cat_name]))*1000/(1+SA.pi))#.replace(np.inf, 10000) #this produces some inf when ri_quality is 0 (1/0)  
-            j+= si.stubble_inputs['crop_stub'][crop]['stub_cat_prop'][cat_name]
+            vol.loc[:,(crop,cat_name)]=(1/(ri_availability.loc[:,(crop,cat_name)].mul(ri_quality.loc[:,(crop,cat_name)]))*1000/(1+SA.sap['pi']))#.replace(np.inf, 10000) #this produces some inf when ri_quality is 0 (1/0)  
+            j+= pinp.stubble['stub_cat_prop'].loc[crop,cat_name]
             #now convert dmd to M/D
-            md[crop,cat_name]=dmd[crop,cat_name].apply(fb.dmd_to_md).mul(1000).clip(lower=0) #mul to convert to tonnes    
+            md.loc[:,(crop,cat_name)]=dmd.loc[:,(crop,cat_name)].apply(fb.dmd_to_md).mul(1000).clip(lower=0) #mul to convert to tonnes    
     
         ###########
         #trampling#
@@ -168,47 +166,67 @@ def stubble_all():
         #for now this is just a single number however the input could be changed to per period, then convert this to a df or array, if this is changed some of the dict below would need to be dfs the stacked - so they acount for period
         tramp_effect=[]
         stub_cat_prop = [] #used in next section but easy to add here in the same loop
-        for cat in si.stubble_inputs['crop_stub'][crop]['stub_cat_prop'].keys():
-            tramp_effect.append(si.stubble_inputs['crop_stub'][crop]['trampling']/100 * si.stubble_inputs['crop_stub'][crop]['stub_cat_prop'][cat])
-            stub_cat_prop.append(si.stubble_inputs['crop_stub'][crop]['stub_cat_prop'][cat])
-       
-        ###########
-        #transfers#   #this is a little inflexible ie you would need to add or remove code if a stubble cat was added or removed
-        ###########
+        for cat in pinp.stubble['stub_cat_prop']:
+            tramp_effect.append(pinp.stubble['trampling'].loc[crop,'trampling']/100 * pinp.stubble['stub_cat_prop'].loc[crop,cat])
+            stub_cat_prop.append(pinp.stubble['stub_cat_prop'].loc[crop,cat])
         
-        cat_a_st_req[crop]= (1/(1-fp['quant_decline_%s' %crop]))*(1+tramp_effect[0])*(1/stub_cat_prop[0])*1000 #*1000 - to convert to tonnes
-        cat_b_st_prov[crop] = stub_cat_prop[1]/stub_cat_prop[0]*1000
-        cat_b_st_req[crop] = 1000*(1+tramp_effect[1])
-        cat_c_st_prov[crop] = stub_cat_prop[2]/stub_cat_prop[1]*1000
-        cat_c_st_req[crop] = 1000*(1+tramp_effect[2])
+        ##############################
+        #transfers between categories#   #this is a little inflexible ie you would need to add or remove code if a stubble cat was added or removed
+        ##############################
+        
+        cat_a_st_req.loc[:,crop]= (1/(1-fp['quant_decline_%s' %crop]))*(1+tramp_effect[0])*(1/stub_cat_prop[0])*1000 #*1000 - to convert to tonnes
+        cat_b_st_prov.loc[crop,'prov'] = stub_cat_prop[1]/stub_cat_prop[0]*1000
+        cat_b_st_req.loc[crop,'req'] = 1000*(1+tramp_effect[1])
+        cat_c_st_prov.loc[crop,'prov'] = stub_cat_prop[2]/stub_cat_prop[1]*1000
+        cat_c_st_req.loc[crop,'req'] = 1000*(1+tramp_effect[2])
+        
+        
+        ##############################
+        #transfers between periods   #   
+        ##############################
+        ##transfer a given cat to the next period. 
+        per_transfer.loc[:,crop]= fp.loc[:,'quant_decline_%s' %crop]*1000 + 1000 
+    
+       
         
         ###############
         #harvest p con# stop sheep consuming more than possible because harvest is not at the start of the period
         ###############
         #how far through each period does harv start? note 0 for each period harv doesn't start in. Used to calc stub consumption limit in harv period
-        
+        #^could just use the period allocation function or period_proportion_np 
         prop=[]
         for i in range(len(fp)):
             if i == len(fp)-1:
                 prop.append(1-(fp.loc[i,'days_%s' %crop] / ((fp.loc[0,'date'] - fp.loc[i,'date']).days+365))) 
             else: prop.append(1-(fp.loc[i,'days_%s' %crop] / (fp.loc[i+1,'date'] - fp.loc[i,'date']).days))
-        cons_limit[crop]= prop
-        cons_limit[crop] =cons_limit[crop].clip(0)
-        cons_limit[crop] =  (cons_limit[crop]/(1-cons_limit[crop]))*1000
+        cons_prop.loc[:,crop]= prop
+        cons_prop.loc[:,crop] =cons_prop.loc[:,crop].clip(0)
+        #cons_limit[crop] =  (cons_limit[crop]/(1-cons_limit[crop]))*1000 ^not needed anymore because only need to proportion of time that sheep can't graze rather than the volume because p7con is now based on md not vol
     
-    #collate all the bits for pyomo 
-    #return everything as a dict which is acessed in pyomo
-    md=pd.concat([md]*len(inp.input_data['sheep_pools']), keys=inp.input_data['sheep_pools']) #add sheep pools here ie add level to df index
+    ##collate all the bits for pyomo 
+    ##return everything as a dict which is acessed in pyomo
+    ###p7con to dict for pyomo
+    cons_prop=cons_prop.stack().to_dict()
+    per_transfer=per_transfer.stack().to_dict()
+    ###add category to transfer 'require' params ie consuming 1t of stubble B requires 1.002t from the constraint (0.002 accounts for trampling)
+    cat_a_st_req=pd.concat([cat_a_st_req], keys='a')
+    cat_b_st_req=pd.concat([cat_b_st_req], keys='b')
+    cat_a_st_req=cat_a_st_req.stack().to_dict()
+    cat_c_st_req=pd.concat([cat_c_st_req], keys='c')
+    transfer_req=pd.concat([cat_b_st_req,cat_c_st_req]).squeeze().to_dict()
+    ###add category to transfer 'provide' params ie transfering 1t from current period to the next - this accounts for deterioration
+    cat_b_st_prov=pd.concat([cat_b_st_prov], keys='b')
+    cat_c_st_prov=pd.concat([cat_c_st_prov], keys='c')
+    transfer_prov=pd.concat([cat_b_st_prov,cat_c_st_prov]).squeeze().to_dict()
+    ###md & vol
+    # md=pd.concat([md]*len(uinp.structure['sheep_pools']), keys=uinp.structure['sheep_pools']) #add sheep pools here ie add level to df index
     md.columns=pd.MultiIndex.from_tuples(md) #converts to multi index so stacking will have crop and cat as seperate keys 
     md = md.stack().stack().to_dict()    #for pyomo
-    
-    #return everything as a nested dict which is acessed in pyomo
-    stub_vol=pd.concat([vol]*len(inp.input_data['sheep_pools']), keys=inp.input_data['sheep_pools']) #add sheep pools here ie add level to df index
-    stub_vol.columns=pd.MultiIndex.from_tuples(stub_vol) #converts to multi index so stacking will have crop and cat as seperate keys 
-    stub_vol = stub_vol.stack().stack().to_dict()    #for pyomo
-    
-    return #return multiple dicts that can be accessed in pyomo    
-        
+    # stub_vol=pd.concat([vol]*len(uinp.structure['sheep_pools']), keys=uinp.structure['sheep_pools']) #add sheep pools here ie add level to df index
+    vol.columns=pd.MultiIndex.from_tuples(vol) #converts to multi index so stacking will have crop and cat as seperate keys 
+    vol = vol.stack().stack().to_dict()    #for pyomo
+
+    return cons_prop, md, vol,cat_a_st_req,transfer_prov,transfer_req,per_transfer #return multiple dicts that can be accessed in pyomo    
         
         
         

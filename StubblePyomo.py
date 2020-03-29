@@ -14,23 +14,95 @@ from CreateModel import *
 
 
 ####################
-#params            #
+#define parameters #
 ####################
+##call the stubble function
+stub=stub.stubble_all()
+try:
+    model.del_component(model.p_harv_prop_index)
+    model.del_component(model.p_harv_prop)
+except AttributeError:
+    pass
+model.p_harv_prop = Param(model.s_feed_periods, model.s_crops, initialize=stub[0], default = 0.0, doc='proportion of the way through each fp harvest occurs (0 if harv doesnt occur in given period)')
 
-#this param has inf values - this may cause a problem, if it does do a replace in the stubble sheet line 151
-model.p_stub_vol = Param(model.s_sheep_pools, model.s_feed_periods, model.s_stub_cat, model.s_crops, initialize=stub.stub_vol, doc='amount of intake volume required by 1t of each stubble category for each crop')
+try:
+    model.del_component(model.p_stub_md_index_index_0)
+    model.del_component(model.p_stub_md_index)
+    model.del_component(model.p_stub_md)
+except AttributeError:
+    pass
+model.p_stub_md = Param(model.s_feed_periods, model.s_stub_cat, model.s_crops, initialize=stub[1], default = 0.0, doc='md from 1t of each stubble categories for each crop')
 
-model.stub_vol.pprint()
+#^this param has inf values - this may cause a problem, if it does do a replace in the stubble sheet line 151
+try:
+    model.del_component(model.p_stub_vol_index_index_0)
+    model.del_component(model.p_stub_vol_index)
+    model.del_component(model.p_stub_vol)
+except AttributeError:
+    pass
+model.p_stub_vol = Param(model.s_feed_periods, model.s_stub_cat, model.s_crops, initialize=stub[2], default = 0.0, doc='amount of intake volume required by 1t of each stubble category for each crop')
 
+try:
+    model.del_component(model.p_a_req_index_index_0)
+    model.del_component(model.p_a_req_index)
+    model.del_component(model.p_a_req)
+except AttributeError:
+    pass
+model.p_a_req = Param(model.s_stub_cat, model.s_feed_periods, model.s_crops, initialize=stub[3], default = 0.0, doc='stubble required in each feed periods in order to consume 1t of cat A')
+
+try:
+    model.del_component(model.p_bc_prov_index)
+    model.del_component(model.p_bc_prov)
+except AttributeError:
+    pass
+model.p_bc_prov = Param(model.s_stub_cat, model.s_crops, initialize=stub[4], default = 0.0, doc='stubble B provided from 1t of cat A and stubble C provided from 1t of cat B')
+
+try:
+    model.del_component(model.p_bc_req_index)
+    model.del_component(model.p_bc_req)
+except AttributeError:
+    pass
+model.p_bc_req = Param(model.s_stub_cat, model.s_crops, initialize=stub[5], default = 0.0, doc='stubble required from the row inorder to consume cat B or cat C')
+
+try:
+    model.del_component(model.p_fp_transfer_index)
+    model.del_component(model.p_fp_transfer)
+except AttributeError:
+    pass
+model.p_fp_transfer = Param(model.s_feed_periods, model.s_crops, initialize=stub[6], default = 0.0, doc='stubble cat B or cat C transferred to the next feed period')
 
 
 ###################
-#local global#
+#variable         #
 ###################
+##stubble consumption
+model.v_stub_con = Var(model.s_sheep_pools, model.s_feed_periods, model.s_crops, model.s_stub_cat, bounds = (0.0, None), doc = 'consumption of stubble')
+##stubble transfer
+model.v_stub_transfer = Var(model.s_feed_periods, model.s_crops, model.s_stub_cat, bounds = (0.0, None), doc = 'transfer of 1t of stubble to following period')
+
+###################
+#local constraint #
+###################
+##stubble transter from category to category and period to period
+def stubble_transfer(model,f,k,s):
+    ss = list(model.s_stub_cat)[list(model.s_stub_cat).index(s)-1] #stubble cat plus one - used to transfer from current cat to the next, list is required because indexing of an ordered set starts at 1 which means index of 0 chucks error 
+    fs = list(model.s_feed_periods)[f-1] #have to convert to a list first beacuse indexing of an ordered set starts at 1
+    return  model.v_stub_transfer[fs,k,s]*1000  - model.p_fp_transfer[f,k]*model.v_stub_transfer[f,k,s] \
+                + sum(model.v_stub_con[e,f,k,ss] * model.p_bc_prov[s,k] - model.v_stub_con[e,f,k,s] * model.p_bc_req[s,k] for e in model.s_sheep_pools) >=0
+model.con_stubble_bcd = Constraint(model.s_feed_periods, model.s_crops, model.s_stub_cat, rule = stubble_transfer, doc='links rotation stubble production with consumption of cat A')
 
 ###################
 #constraint global#
 ###################
-##limit stubble production in harvet period. Sheep must consume a certain amount of pasture to consume stubble in harv period. Ie if harvest occurs 90% of the way through p7 then if a sheep is to consume 1t of stubble they must consume 9t of pasture. because it is incorrect to allow them to fill their p7 intake just from 10t of stubble
-#def harv_st_con_limit():
+##stubble transter from category to category and period to period
+def stubble_req_a(model,k,s):
+    return sum(model.v_stub_con[e,f,k,s] * model.p_a_req[s,f,k] for e in model.s_sheep_pools for f in model.s_feed_periods if model.p_a_req[s,f,k] !=0) 
+
+
+##stubble md
+def stubble_md(model,e,f):
+    return sum(model.v_stub_con[e,f,k,s] * model.p_stub_md[f,s,k] for k in model.s_crops for s in model.s_stub_cat)
     
+##stubble vol
+def stubble_vol(model,e,f):
+    return sum(model.v_stub_con[e,f,k,s] * model.p_stub_vol[f,s,k] for k in model.s_crops for s in model.s_stub_cat)

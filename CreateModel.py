@@ -25,7 +25,6 @@ import UniversalInputs as uinp
 import PropertyInputs as pinp
 import Periods as per
 import Crop as crp
-import StubbleInputs as sinp
 
 
 #from Finance import *
@@ -65,8 +64,8 @@ model.s_cashflow_periods = Set(initialize=uinp.structure['cashflow_periods'], do
 #stubble              #
 #######################
 
-#stubble categories
-model.s_stub_cat = Set(initialize=sinp.stubble_inputs['crop_stub']['w']['stub_cat_qual'].keys(), doc='stubble categories') 
+#stubble categories -  ordered so to allow transfering between categories
+model.s_stub_cat = Set(ordered=True, initialize=pinp.stubble['stub_cat_qual'].columns, doc='stubble categories') 
 
 #######################
 #cropping related     #
@@ -97,14 +96,14 @@ model.s_fert_type = Set(initialize=uinp.price['fert_cost'].index, doc='fertilise
 #rotation #
 ###########
 ##phases
-model.s_phases = Set(ordered=True, initialize=uinp.structure['phases'].index, doc='rotation phases set') 
+model.s_phases = Set(initialize=uinp.structure['phases'].index, doc='rotation phases set') 
 # model.s_phases.pprint()
 
-##phases disagregated - used in rot yield transfer
-def phases_dis():
-    phase=uinp.structure['phases'].copy()
-    return phase.set_index(list(range(uinp.structure['phase_len']))).index
-model.s_phases_dis = Set(dimen=uinp.structure['phase_len'], ordered=True, initialize=phases_dis(), doc='rotation phases disagregated') 
+# ##phases disagregated - used in rot yield transfer
+# def phases_dis():
+#     phase=uinp.structure['phases'].copy()
+#     return phase.set_index(list(range(uinp.structure['phase_len']))).index
+# model.s_phases_dis = Set(dimen=uinp.structure['phase_len'], ordered=True, initialize=phases_dis(), doc='rotation phases disagregated') 
 # model.s_phases_dis.pprint()
 
 ##con1 set
@@ -128,7 +127,7 @@ model.s_sheep_pools = Set(initialize=uinp.structure['sheep_pools'], doc='sheep p
 #pasture             #
 #######################
 ##feed periods
-model.s_feed_periods = Set(initialize=pinp.feed_inputs['feed_periods'].index[:-1], doc='feed periods')
+model.s_feed_periods = Set(ordered=True, initialize=pinp.feed_inputs['feed_periods'].index[:-1], doc='feed periods') #must be ordered so it can be sliced in pasture pyomo to allow feed to be transferred betweeen periods.
 ##pasture types
 model.s_pastures = Set(initialize=uinp.structure['pastures'], doc='feed periods')
 model.s_dry_groups = Set(initialize=uinp.structure['dry_groups'], doc='dry feed pools')

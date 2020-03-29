@@ -32,7 +32,7 @@ import numpy as np
 from scipy.optimize import minimize
 
 #midas modules
-import StubbleInputs as si
+# import StubbleInputs as si
 # import Inputs as inp
 import PropertyInputs as pinp
 
@@ -45,7 +45,7 @@ fp=fp[:-1]
 # Create a Pandas Excel writer using XlsxWriter as the engine. used to write to multiple sheets in excel
 writer = pd.ExcelWriter('stubble sim.xlsx', engine='xlsxwriter')
     
-for crp in si.stubble_inputs['crop_stub'].keys():
+for crp in pinp.stubble['harvest_index'].index:
     
     
     #add column that is days since harvest in each period (calced from the end date of the period)
@@ -66,7 +66,7 @@ for crp in si.stubble_inputs['crop_stub'].keys():
             else:  days_since_harv.append((feed_period_date - harv_start).days)
     fp['days_%s' %crp]=days_since_harv
     #add dmd for each component in each period for each crop
-    for component, dmd_harv in si.stubble_inputs['crop_stub'][crp]['component_dmd'].items():
+    for component, dmd_harv in zip(pinp.stubble['component_dmd'],pinp.stubble['component_dmd'].loc[crp]):
         dmd_component=[]
         for period_num in fp.index:
             if period_num == 0:
@@ -76,7 +76,7 @@ for crp in si.stubble_inputs['crop_stub'].keys():
             elif fp.loc[period_num,'date'] < harv_start < fp.loc[period_num+1,'date']:
                 days=fp.loc[period_num,'days_%s' %crp]/2  #divid by two to get the average days on the period to work out average deterioration
             else: days=fp.loc[period_num-1,'days_%s' %crp]+(fp.loc[period_num,'days_%s' %crp]-fp.loc[period_num-1,'days_%s' %crp])/2
-            deterioration_factor = si.stubble_inputs['crop_stub'][crp]['quality_deterioration'][component]
+            deterioration_factor = pinp.stubble['quality_deterioration'].loc[crp,component]
             dmd_component.append((1-(deterioration_factor*days)/100)*dmd_harv)
         fp['%s_%s_dmd' %(crp ,component)]=dmd_component #important as the column names are used in the sim (objective)
  
@@ -89,8 +89,8 @@ for crp in si.stubble_inputs['crop_stub'].keys():
     #first determine the proportion of grain per straw and leaf
     #then convert to grain proportin of stubble (note stubble definition includes grain but HI is just the ratio of biomass to grain harvested ie doesn't include grain spilt)
     def grain_prop():
-        hi= si.stubble_inputs['crop_stub'][crp]['harvest_index']
-        harv_prop = si.stubble_inputs['crop_stub'][crp]['proportion_grain_harv']
+        hi= pinp.stubble['harvest_index'].loc[crp,'hi']
+        harv_prop = pinp.stubble['proportion_grain_harv'].loc[crp,'prop']
         split_grain_straw = hi*(1-harv_prop)/(1-hi)*100
         return split_grain_straw/(1+split_grain_straw/100)
 
@@ -117,7 +117,7 @@ for crp in si.stubble_inputs['crop_stub'].keys():
         ,'chaff' : c
         ,'stem' :1}
         #sim length
-        sim_length = int(100/si.stubble_inputs['step_size'])
+        sim_length = int(100/pinp.stubble['step_size'])
         #number of components
         number_of_components = len(component_proportion)
         #numpy array for each stubble section used in sim
@@ -143,17 +143,17 @@ for crp in si.stubble_inputs['crop_stub'].keys():
                 if weighted_availability[number_of_components,step] <= 0:
                     consumption[component_num, step] = 0
                 else:
-                    consumption[component_num, step] = (si.stubble_inputs['step_size'] 
+                    consumption[component_num, step] = (pinp.stubble['step_size'] 
                     / weighted_availability[number_of_components,step] * weighted_availability[component_num, step] )
             #cumulative comsumption
             for component, proportion,component_num in zip(component_proportion.keys(),component_proportion.values(),range(len(component_proportion))):
                 cumulative_consumption[component_num, step]= consumption[component_num].sum()
      
-        #determine the actual proportion of componets consumed in each stubble category
-        si.stubble_inputs['crop_stub'][crp]['stub_cat_prop']['d']= (1 - (si.stubble_inputs['crop_stub'][crp]['stub_cat_prop']['a']
-        +si.stubble_inputs['crop_stub'][crp]['stub_cat_prop']['b']+si.stubble_inputs['crop_stub'][crp]['stub_cat_prop']['c']))
-        num_stub_cat = len( si.stubble_inputs['crop_stub'][crp]['stub_cat_prop'])
-        categ_sizes = si.stubble_inputs['crop_stub'][crp]['stub_cat_prop'].values()
+        # #determine the actual proportion of componets consumed in each stubble category
+        # pinp.stubble['crop_stub'][crp]['stub_cat_prop']['d']= (1 - (pinp.stubble['crop_stub'][crp]['stub_cat_prop']['a']
+        # +pinp.stubble['crop_stub'][crp]['stub_cat_prop']['b']+pinp.stubble['crop_stub'][crp]['stub_cat_prop']['c']))
+        num_stub_cat = len( pinp.stubble['stub_cat_prop'].columns)
+        categ_sizes = pinp.stubble['stub_cat_prop'].loc[crp]
         cumulative_cat_size=[]
         for i,j in zip(categ_sizes,range(num_stub_cat)):
             if j > 0: 
@@ -165,9 +165,9 @@ for crp in si.stubble_inputs['crop_stub'].keys():
             for component in range(number_of_components):
                 #ammount of a component consumed in a given category
                 if cat_num == 0: #if not cat A then need to subtract off the consumed amount in the periods before
-                    comp_consumed = cumulative_consumption[component,int(cum_cat_size*100-1)]  #multiplied by 100 to convert the percent to int. it is then use to index the steps in the numpy arrays above, minus 1 because indexing starts from 0
-                else: comp_consumed = (cumulative_consumption[component,int(cum_cat_size*100-1)] #use the cat list so that i can determine the the consumption of a component at in the cat before
-                    - cumulative_consumption[component,int(list(cumulative_cat_size)[cat_num-1]*100-1)])
+                    comp_consumed = cumulative_consumption[component,round(cum_cat_size*100-1)]  #multiplied by 100 to convert the percent to int. it is then use to index the steps in the numpy arrays above, minus 1 because indexing starts from 0
+                else: comp_consumed = (cumulative_consumption[component,round(cum_cat_size*100-1)] #use the cat list so that i can determine the the consumption of a component at in the cat before
+                    - cumulative_consumption[component,round(list(cumulative_cat_size)[cat_num-1]*100-1)])
                 stub_cat_component_proportion[component, cat_num] = comp_consumed/cat_size/100
         return stub_cat_component_proportion
     
@@ -175,7 +175,7 @@ for crp in si.stubble_inputs['crop_stub'].keys():
         #select the dmd from the period of interest (depends on what date the experimental data is for) generally the preiod of harvest ie p7. this is because you want the the categories to be calibrated with the right proportions of each component to match the quality when target qualitied were collected. This is generally not exactly at harvest therefore you need the whole period dmd to account for deterioration
         harv_start = pinp.crop['start_harvest_crops'].loc[crp,'date']
         component_dmd=[]
-        for comp in si.stubble_inputs['crop_stub'][crp]['component_dmd']:
+        for comp in pinp.stubble['component_dmd']:
             m=fp['date'].ge(harv_start) #finds dates that are after harvest (ge->=) - in the next step it selects the first max. this give the row indx for the first date after harv, then minus 1 to give the period harv is in
             dmd = fp.loc[m.idxmax()-1,'%s_%s_dmd'%(crp ,comp)]
             component_dmd.append(dmd)
@@ -191,30 +191,30 @@ for crp in si.stubble_inputs['crop_stub'].keys():
         c=np.dot(cat_c_dmd,component_dmd)
         cat_d_dmd=stubble_sim(x)[:,3]
         d=np.dot(cat_d_dmd,component_dmd)
-        cat_a_target = si.stubble_inputs['crop_stub'][crp]['stub_cat_qual']['a']
-        cat_b_target = si.stubble_inputs['crop_stub'][crp]['stub_cat_qual']['b']
-        cat_c_target = si.stubble_inputs['crop_stub'][crp]['stub_cat_qual']['c']
-        cat_d_target = si.stubble_inputs['crop_stub'][crp]['stub_cat_qual']['d']
+        cat_a_target = pinp.stubble['stub_cat_qual'].loc[crp,'a']
+        cat_b_target = pinp.stubble['stub_cat_qual'].loc[crp,'b']
+        cat_c_target = pinp.stubble['stub_cat_qual'].loc[crp,'c']
+        cat_d_target = pinp.stubble['stub_cat_qual'].loc[crp,'d']
         
         return ((a-cat_a_target)**2+(b-cat_b_target)**2+(c-cat_c_target)**2+(d-cat_d_target)**2)
     #initial guesses    
     x0 = np.ones(7)
     # bounds on variables
-    bndspositive = (10, 100.0) #qualtity of other components must be greater than 10%
+    bndspositive = (0, 100.0) #qualtity of other components must be greater than 10%
     no_upbnds = (1, 1.0e10) #pref has to be greater than stem
     if crp in ('r', 'z', 'l', 'f'):   #because these crops only have 4 stubble components ie no sheath
         var_bound = (0,0)
-    else: var_bound = (10,100)
+    else: var_bound = (0,100)
     bnds = (bndspositive, var_bound, bndspositive, no_upbnds, no_upbnds, no_upbnds, no_upbnds)
     #may have to change around the solver (method) to get the best solution
     solution = minimize(objective, x0, method='SLSQP', bounds=bnds)
     x = solution.x
     stub_cat_component_proportion = pd.DataFrame(stubble_sim(x)) 
     stub_cat_component_proportion.to_excel(writer, sheet_name=crp,index=False,header=False)
+    
     #################################################
     #post calcs to make sure everything looks good  #
     #################################################
-    
     #check the component proportion
     component_proportion={'grain' : grain_prop() 
         ,'blade' : x[0]
@@ -231,7 +231,7 @@ for crp in si.stubble_inputs['crop_stub'].keys():
         #func from above used to determine the final ddm of each cat
         harv_start = pinp.crop['start_harvest_crops'].loc[crp,'date']
         component_dmd=[]
-        for comp in si.stubble_inputs['crop_stub'][crp]['component_dmd']:
+        for comp in pinp.stubble['component_dmd']:
             m=fp['date'].ge(harv_start) #finds dates that are after harvest - in the next step it selects the first max. this give the row indx for the first date after harv, then minus 1 to give the period harv is in
             dmd = fp.loc[m.idxmax()-1,'%s_%s_dmd'%(crp ,comp)]
             component_dmd.append(dmd)
@@ -254,7 +254,7 @@ for crp in si.stubble_inputs['crop_stub'].keys():
     print('component proportions : ',component_proportion.values()) #dict values, check to make sure they look sensible
     print('graxing pref : ',grazing_pref_component.values()) #dict values, check to make sure they look sensible
     print('cat ddm : ',cat_ddm(x))
-    print('Target cat ddm : ',si.stubble_inputs['crop_stub'][crp]['stub_cat_qual']['a'],si.stubble_inputs['crop_stub'][crp]['stub_cat_qual']['b'], si.stubble_inputs['crop_stub'][crp]['stub_cat_qual']['c'],si.stubble_inputs['crop_stub'][crp]['stub_cat_qual']['d'])
+    print('Target cat ddm : ',pinp.stubble['stub_cat_qual'].loc[crp,'a'],pinp.stubble['stub_cat_qual'].loc[crp,'b'], pinp.stubble['stub_cat_qual'].loc[crp,'c'],pinp.stubble['stub_cat_qual'].loc[crp,'d'])
     print('objective : ',objective(x))
     
 writer.save()    

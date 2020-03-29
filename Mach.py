@@ -382,6 +382,8 @@ def harv_rate_period():
     ##loops through dict which contains harv start date for each crop
     ##this determines if the crop is allowed early harv
     for k, crop_harv_date in zip(pinp.crop['start_harvest_crops'].index, pinp.crop['start_harvest_crops']['date']):
+        if k=='h':
+            continue # this is required because hay is included in the harvest dates (needed for stubble) but not in any of the other harvest info
         for i in range(len(mach_periods['date'])-1):
             period_start_date = mach_periods.loc[i,'date']
             period_end = mach_periods.loc[i+1,'date']

@@ -135,12 +135,25 @@ def machpyomo_local():
     def harv_hours_limit(model, p):
         return sum(model.v_harv_hours[p, k] for k in model.s_harvcrops) <= model.p_harv_hrs_max[p] * pinp.mach['number_crop_gear']
     model.harv_hours_limit = Constraint(model.s_periods, rule=harv_hours_limit, doc='constrain the number of hours of harvest x crop gear can provide')
-
+    
+    ##link sow supply to crop and pas variable - this has to be done because crop is not by period and pasture is
+    try:
+        model.del_component(model.con_sow_supply)
+    except AttributeError:
+        pass
+    def sow_supply(model,p,k1,l):
+        return model.v_contractseeding_ha[p,k1,l] + model.p_seeding_rate[k1,l] * model.v_seeding_machdays[p,k1,l]   \
+                - model.v_seeding_pas[p,k1,l] - model.v_seeding_crop[p,k1,l] >=0
+    model.con_sow_supply = Constraint(model.s_periods, model.s_landuses, model.s_lmus, rule=sow_supply, doc='link sow supply to crop and pas variable')
 ############
 #variable  #
 ############    
 #number of seeding days in each period on each crop and lmu
-model.v_seeding_machdays = Var(model.s_periods, model.s_landuses, model.s_lmus, bounds=(0,None), doc='number of ha of each rotation')
+model.v_seeding_machdays = Var(model.s_periods, model.s_landuses, model.s_lmus, bounds=(0,None), doc='number of days of seeding')
+#number of ha seeded for each pasture
+model.v_seeding_pas = Var(model.s_periods, model.s_landuses, model.s_lmus, bounds=(0,None), doc='number of ha of pasture seeded')
+#number of ha seeded for each crop
+model.v_seeding_crop = Var(model.s_periods, model.s_landuses, model.s_lmus, bounds=(0,None), doc='number of ha of crop seeded')
 #number of ha seeded using contractor
 model.v_contractseeding_ha = Var(model.s_periods, model.s_landuses, model.s_lmus, bounds=(0,None), doc='number of ha contract seeding for each crop')
 #number of hours harvesting for each crop - there is a constraint to limit this to the hours available in the harvest period
@@ -149,28 +162,9 @@ model.v_harv_hours = Var(model.s_periods, model.s_harvcrops, bounds=(0,None), do
 model.v_contractharv_hours = Var(model.s_harvcrops, bounds=(0,None), doc='number of contract hours of harvesting')
 #tonnes of hay made
 model.v_hay_made = Var(bounds=(0,None), doc='tonnes of hay made')
-
 ###################################
 #functions for core model         #
-###################################
-def sow_supply(model,p,k1,l):
-    '''
-    Parameters
-    ----------
-    model 
-    k : Set
-        Crop.
-    l : Set
-        LMU.
-
-    Returns
-    -------
-    Function for pyomo
-        - determine sow supply
-        - contract_seed + farmer_seed 
-    '''
-    return model.v_contractseeding_ha[p,k1,l] + (model.p_seeding_rate[k1,l] * model.v_seeding_machdays[p,k1,l])  
-     
+###################################   
 
 def ha_pasture_crop_paddocks(model,f,l):
     '''
@@ -191,9 +185,10 @@ def late_seed_penalty(model,g,k):
     return  sum(sum(model.p_seeding_rate[k,l] * model.v_seeding_machdays[p,k,l] * model.p_yield_penalty[p, k] for l in model.s_lmus) for p in model.s_periods)  \
                 * model.p_grainpool_proportion[k,g]
 #function to determine late seeding stubble penalty, this will be passed to core model
-def stubble_penalty(model,k):
-    return  sum(sum(model.p_seeding_rate[k,l] * model.v_seeding_machdays[p,k,l] * model.p_yield_penalty[p, k] for l in model.s_lmus) for p in model.s_periods) \
-    * model.stubble[k]
+def stubble_penalty(model,k,s):
+    return  sum(sum(model.p_seeding_rate[k,l] * model.v_seeding_machdays[p,k,l] * model.p_yield_penalty[p, k] * model.p_rot_stubble[k,s]\
+                    for l in model.s_lmus) for p in model.s_periods if model.p_rot_stubble[k,s] !=0) \
+    
 
 def harv_supply(model,k):
     #total harvest availability for each crop, period doesn't matter i think hence sum

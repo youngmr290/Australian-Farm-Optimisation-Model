@@ -45,7 +45,6 @@ pastures        = uinp.structure['pastures']
 ########################
 ##constants required   #
 ########################
-harvest_period  = 6
 ## define some parameters required to size arrays.
 n_feed_pools    = len(uinp.structure['sheep_pools'])
 n_dry_groups    = len(uinp.structure['dry_groups'])           # Low & high quality groups for dry feed
@@ -76,7 +75,6 @@ gft    = (n_grazing_int, n_feed_periods, n_pasture_types)
 gt     = (n_grazing_int, n_pasture_types)
 oflt   = (n_foo_levels, n_feed_periods, n_lmu, n_pasture_types)
 dflrt  = (n_dry_groups, n_feed_periods, n_lmu, n_phases_rotn, n_pasture_types)
-dlrt   = (n_dry_groups, n_lmu, n_phases_rotn, n_pasture_types)
 flrt   = (n_feed_periods, n_lmu, n_phases_rotn, n_pasture_types)
 frt    = (n_feed_periods, n_phases_rotn, n_pasture_types)
 rt     = (n_phases_rotn, n_pasture_types)
@@ -170,11 +168,6 @@ index_plrt=tuple(map(tuple, index_plrt)) #create a tuple rather than a list beca
 arrays=[index_f, index_l, index_r, index_t]
 index_flrt=fun.cartesian_product_simple_transpose(arrays)
 index_flrt=tuple(map(tuple, index_flrt)) #create a tuple rather than a list because tuples are faster
-
-## dlrt
-arrays=[index_d, index_l, index_r, index_t]
-index_dlrt=fun.cartesian_product_simple_transpose(arrays)
-index_dlrt=tuple(map(tuple, index_dlrt)) #create a tuple rather than a list because tuples are faster
 
 ## oflt
 arrays=[index_o, index_f, index_l, index_t]
@@ -635,12 +628,12 @@ def green_and_dry():
     global p_dry_volume_t_dft
     global p_dry_removal_t_dft
     global p_dry_transfer_t_dft
-    global p_nap_dlrt
+    global p_nap_dflrt
 
     ### _initialise numpy arrays used only in this method
     grn_dmd_selectivity_goft = np.zeros(goft,   dtype = 'float64')
     senesce_propn_dgoflt     = np.zeros(dgoflt, dtype = 'float64')
-    nap_dlrt                 = np.zeros(dlrt,    dtype = 'float64')
+    nap_dflrt                 = np.zeros(dflrt,    dtype = 'float64')
     dry_transfer_t_dft       = np.zeros(dft,    dtype = 'float64')
     foo_start_grnha_oflt     = np.zeros(oflt,   dtype = 'float64')
 
@@ -657,11 +650,12 @@ def green_and_dry():
     grn_foo_start_ungrazed_flt , dry_foo_start_ungrazed_flt \
          = calc_foo_profile(germination_pass_flt, dry_decay_period_ft, length_f)# ^ passing the consumption value in a numpy array in an attempt to get the function @jit compatible
     ## all pasture from na area into the Low pool (#1) because it is rank
-    nap_dlrt[1,...,0] = dry_foo_start_ungrazed_flt[harvest_period,:,np.newaxis,0]  \
+    harvest_period  = fun.period_allocation(pinp.feed_inputs['feed_periods']['date'], pinp.feed_inputs['feed_periods'].index, pinp.crop['harv_date'])
+    nap_dflrt[1,...,0] = dry_foo_start_ungrazed_flt[harvest_period,:,np.newaxis,0]  \
                        * (1-arable_l.reshape(-1,1))  \
                        * (1-np.sum(pasture_rt, axis=1))
-    nap_rav_dlrt = nap_dlrt.ravel()
-    p_nap_dlrt = dict(zip(index_dlrt ,nap_rav_dlrt))
+    nap_rav_dflrt = nap_dflrt.ravel()
+    p_nap_dflrt = dict(zip(index_dflrt ,nap_rav_dflrt))
 
     ### _green initial FOO
     max_foo_flt                 = np.maximum(i_fxg_foo_oflt[1,...], grn_foo_start_ungrazed_flt)                  #maximum of ungrazed foo and foo from the medium foo level
@@ -747,8 +741,7 @@ def green_and_dry():
     me_cons_grnha_rav_egoflt = me_cons_grnha_egoflt.ravel()
     p_me_cons_grnha_egoflt = dict( zip(index_egoflt ,me_cons_grnha_rav_egoflt))
 
-    volume_grnha_egoflt    = np.tile( cons_grnha_t_goflt / grn_ri_goflt              # parameters for the growth/grazing activities: Total volume of feed consumed from the hectare
-                                       ,(n_feed_pools,1,1,1,1,1))
+    volume_grnha_egoflt    =  cons_grnha_t_goflt / grn_ri_goflt              # parameters for the growth/grazing activities: Total volume of feed consumed from the hectare
     volume_grnha_rav_egoflt = volume_grnha_egoflt.ravel()
     p_volume_grnha_egoflt = dict(zip(index_egoflt ,volume_grnha_rav_egoflt))
 

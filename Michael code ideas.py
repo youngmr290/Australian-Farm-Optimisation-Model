@@ -198,6 +198,12 @@ Return a list of column names for a given level
             
 Multiply
     -can use np.multiply(df1,df2) if you don't want to worry about headers and indexes being the same
+
+Add new col to df without getting settingwithcopy warning
+    - df1.loc[:,'e'] = pd.Series(np.random.randn(sLength), index=df1.index)
+    - df1 = df1.assign(e=pd.Series(np.random.randn(sLength)).values)
+
+
 '''
 
 ############################
@@ -253,7 +259,14 @@ delete blocks - sometimes the index also needs to be deleted (not sure what that
     -model.del_component(model.num_phase_index)
     -model.del_component(model.num_phase)
 
+Summing with constraints:
+    -only sum around parts of the constrain that contain the given set ie sum(rotationcost[r,l]*v_num_rotations[r,l]+othercost[r] for r in rotations)
+    -if you sum around something that doesn't have the given set it will use the parameter for each of the loops ie sum(rotationcost[r,l]*v_num_rotations[r,l]+othercost[l] for r in rotations) this will add the other cost for each rotation which may not be wanted
 
+Solver error
+ERROR: Solver (glpk) returned non-zero return code (1)
+ERROR: See the solver log above for diagnostic information.
+-this may be due to an inf number as a param
 '''
 
 

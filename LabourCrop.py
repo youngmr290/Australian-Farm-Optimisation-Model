@@ -80,7 +80,7 @@ def fert_app_time_ha():
 def fert_app_time_t():
     spreader_proportion = pd.DataFrame([pinp.crop['fert_info']['spreader_proportion']])
     conversion = pd.DataFrame([pinp.crop['fert_info']['fert_density']])
-    time = mac.time_cubic() * conversion * spreader_proportion
+    time = (mac.time_cubic() / conversion).mul(spreader_proportion.squeeze(),axis=1)
     return (time.iloc[0]*lab_allocation()).stack().to_dict()
 #print(fert_app_time_t())    
     

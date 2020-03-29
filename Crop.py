@@ -38,7 +38,6 @@ import datetime as dt
 #MUDAS modules
 import UniversalInputs as uinp
 import PropertyInputs as pinp
-import StubbleInputs as si
 import Functions as fun
 import Periods as per
 import Mach as mac
@@ -144,7 +143,9 @@ def rot_yield():
     # yields_income = yields_income.unstack(level=[1]).stack([1])
     rot_yields = pd.merge(phases_df,yields, how='left', left_on=uinp.cols(), right_index = True)
     # return yields_income.drop(list(range(uinp.structure['phase_len'])), axis=1).stack()
-    return rot_yields.set_index(list(range(uinp.structure['phase_len']))).stack() #need to use the multiindex to create a multidimensional param for pyomo so i can split it down when indexing
+    rot_yields.set_index(uinp.cols()[-1], append=True, inplace=True)
+    return rot_yields.drop(list(range(uinp.structure['phase_len']-1)), axis=1).stack()
+    # return rot_yields.set_index(list(range(uinp.structure['phase_len']))).stack() #need to use the multiindex to create a multidimensional param for pyomo so i can split it down when indexing
 # a=rot_yield().to_dict()
 
 
@@ -458,9 +459,11 @@ def insurance():
     ave_price=np.multiply(farmgate_grain_price(),uinp.price['grain_price'][['prop_firsts','prop_seconds']]).sum(axis=1)#np multiply doen't look at the column names and indexs
     insurance=ave_price*uinp.price['grain_price']['insurance']/100  #div by 100 because insurance is a percent
     rot_insurance = rot_yield().mul(insurance, axis=0, level = uinp.structure['phase_len']-1)/1000 #divide by 1000 to convert yield to tonnes    
+    rot_insurance = rot_insurance.droplevel(1)
     ##merge - required to get the agregated phase index
-    phases_df.index.rename('Index', inplace=True) #have to rename index so i can do the next step otherwise col and index had the same name '0'
-    rot_cost = pd.merge(phases_df, rot_insurance.unstack(), how='left', left_on=[*range(uinp.structure['phase_len'])], right_index = True)
+    # phases_df.index.rename('Index', inplace=True) #have to rename index so i can do the next step otherwise col and index had the same name '0'
+    # rot_cost = pd.merge(phases_df, rot_insurance.unstack(), how='left', left_on=[*range(uinp.structure['phase_len'])], right_index = True)
+    rot_cost = pd.merge(phases_df, rot_insurance.unstack(), how='left', left_index=True, right_index = True)
     ##cost allocation
     start = uinp.price['crp_insurance_date']
     p_dates = per.cashflow_periods()['start date']
@@ -548,12 +551,12 @@ def rot_cost():
 #stubble produced per kg grain harvested
 def stubble_production():
     '''stubble produced by each rotation phase'''
-    stubble = {}
-    for crop in si.stubble_inputs['crop_stub'].keys():
-        harv_index = si.stubble_inputs['crop_stub'][crop]['harvest_index']
-        proportion_harvested = si.stubble_inputs['crop_stub'][crop]['proportion_grain_harv']
-        stubble[crop] = 1/(harv_index * proportion_harvested)-1
-    return stubble
+    stubble = pd.DataFrame()
+    for crop in pinp.stubble['harvest_index'].index:
+        harv_index = pinp.stubble['harvest_index'].loc[crop,'hi']
+        proportion_harvested = pinp.stubble['proportion_grain_harv'].loc[crop,'prop']
+        stubble.loc[crop,'a'] = 1/(harv_index * proportion_harvested)-1 #subtract 1 to account for the tonne of grain that was harvested
+    return stubble.stack().to_dict()
 #print (stubble_production())
 
 
@@ -569,13 +572,13 @@ def crop_sow():
         Crop sow (wet or dry or spring) requirment for each rot phase
 
     '''
-    ##create series with crop as index and data as 1 - all crops require 1ha of sow
-    cropsow = pd.Series(1,index=uinp.structure['C'])
-    ##adjust for arable area
+    ##sow = arable area
     arable = pinp.crop['arable']
-    cropsow=arable.mul(cropsow,axis=0).dropna()
+    cropsow = arable.reindex(pd.MultiIndex.from_product([uinp.structure['C'],arable.index]), axis=0, level=1).droplevel(1)
     ##merge to rot phases
     cropsow = pd.merge(phases_df, cropsow, how='left', left_on=uinp.cols()[-1], right_index = True)
-    return cropsow.set_index(list(range(uinp.structure['phase_len']))).stack().to_dict() #need to use the multiindex to create a multidimensional param for pyomo so i can split it down when indexing
+    ##add current crop to index
+    cropsow.set_index(uinp.cols()[-1], append=True, inplace=True)
+    return cropsow.drop(list(range(uinp.structure['phase_len']-1)), axis=1).stack().to_dict()
 
 

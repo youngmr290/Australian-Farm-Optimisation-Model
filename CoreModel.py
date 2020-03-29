@@ -29,6 +29,7 @@ import LabourFixedPyomo as lfixpy
 import LabourCropPyomo as lcrppy 
 import PasturePyomo as paspy
 import SupFeedPyomo as suppy
+import StubblePyomo as stubpy
  
 import Finance as fin
 
@@ -56,21 +57,21 @@ def coremodel_all():
     ######################
     ##Fixed labour jobs that can be completed by anyone ie this constraint links labour fixed casual and perm and manager supply and requirment. 
     try:
-        model.del_component(model.con_labour_fixed_casual_link)
+        model.del_component(model.con_labour_fixed_anyone)
     except AttributeError:
         pass
     def labour_fixed_casual(model,p):
         return model.v_fixed_labour_casual[p] + model.v_fixed_labour_permanent[p] + model.v_fixed_labour_manager[p] -  model.p_super_labour[p] - model.p_tax_labour[p] - model.p_bas_labour[p] >= 0
-    model.con_labour_fixed_casual_link = Constraint(model.s_periods, rule = labour_fixed_casual, doc='link between labour supply and requirment by fixed jobs for casual and above')
+    model.con_labour_fixed_anyone = Constraint(model.s_periods, rule = labour_fixed_casual, doc='link between labour supply and requirment by fixed jobs for casual and above')
     
     ##Fixed labour jobs that must be completed by the manager ie this constraint links labour fixed manager supply and requirment. 
     try:
-        model.del_component(model.con_labour_fixed_manager_link)
+        model.del_component(model.con_labour_fixed_manager)
     except AttributeError:
         pass
     def labour_fixed_manager(model,p):
         return model.v_fixed_labour_manager[p] -  model.p_planning_labour [p] - (model.p_learn_labour * model.v_learn_allocation[p]) >= 0
-    model.con_labour_fixed_manager_link = Constraint(model.s_periods, rule = labour_fixed_manager, doc='link between labour supply and requirment by fixed jobs for manager')
+    model.con_labour_fixed_manager = Constraint(model.s_periods, rule = labour_fixed_manager, doc='link between labour supply and requirment by fixed jobs for manager')
     
     ######################
     #Labour crop         #
@@ -99,20 +100,50 @@ def coremodel_all():
     ######################
     #stubble             #
     ###################### 
+    try:
+        model.del_component(model.con_harv_stub_cons)
+    except AttributeError:
+        pass
+    def harv_stub_cons(model,e,f):
+        return paspy.pas_md(model,e,f) - sum(model.p_harv_prop[f,k]/(1-model.p_harv_prop[f,k]) * model.v_stub_con[e,f,k,s] * model.p_stub_md[f,s,k] for k in model.s_crops for s in model.s_stub_cat)  >= 0
+    model.con_harv_stub_cons = Constraint(model.s_sheep_pools, model.s_feed_periods, rule = harv_stub_cons, doc='limit stubble consumption in the period harvest occurs')
+  
+    try:
+        model.del_component(model.con_stubble_a_index)
+        model.del_component(model.con_stubble_a)
+    except AttributeError:
+        pass
+    def stubble_a(model,k,s):
+        if model.p_rot_stubble[k,s] !=0:
+            return   crppy.rot_stubble(model,k,s) - macpy.stubble_penalty(model,k,s) - stubpy.stubble_req_a(model,k,s) >= 0
+        else:
+            return Constraint.Skip
+    model.con_stubble_a = Constraint(model.s_crops, model.s_stub_cat.first(), rule = stubble_a, doc='links rotation stubble production with consumption of cat A')
     
     ######################
     #sow landuse        #
     ###################### 
-    ##links crop & pasture sow req with mach sow provide
+   
+    ##links crop sow req with mach sow provide
     try:
-        model.del_component(model.con_sow_index_index_0)
-        model.del_component(model.con_sow_index)
-        model.del_component(model.con_sow)
+        model.del_component(model.con_cropsow_index)
+        model.del_component(model.con_cropsow)
     except AttributeError:
         pass
-    def sow_link(model,p,k,l):
-        return macpy.sow_supply(model,p,k,l) - crppy.cropsow(model,k, l) - paspy.cropsow(model,p,k,l) >= 0
-    model.con_sow = Constraint(model.s_periods, model.s_landuses, model.s_lmus, rule = sow_link, doc='link between mach sow provide and rotation (crop and pas) sow require')
+    def cropsow_link(model,k,l):
+        return sum(model.v_seeding_crop[p,k,l] for p in model.s_periods) - crppy.cropsow(model,k,l)  >= 0
+    model.con_cropsow = Constraint(model.s_crops, model.s_lmus, rule = cropsow_link, doc='link between mach sow provide and rotation crop sow require')
+   
+    ##links pasture sow req with mach sow provide
+    try:
+        model.del_component(model.con_passow_index_index_0)
+        model.del_component(model.con_passow_index)
+        model.del_component(model.con_passow)
+    except AttributeError:
+        pass
+    def passow_link(model,p,k,l):
+        return model.v_seeding_pas[p,k,l]  - paspy.passow(model,p,k,l) >= 0
+    model.con_passow = Constraint( model.s_periods, model.s_pastures, model.s_lmus, rule = passow_link, doc='link between mach sow provide and rotation pas sow require')
 
     ######################
     #harvest crops       #
@@ -149,7 +180,7 @@ def coremodel_all():
     except AttributeError:
         pass
     def grain_transfer(model,g,k):
-        return crppy.rotation_yield_transfer(model,g,k) - macpy.late_seed_penalty(model,g,k) - sum(model.v_sup_con[k,g,e,f] for e in model.s_sheep_pools for f in model.s_feed_periods)\
+        return crppy.rotation_yield_transfer(model,g,k) - macpy.late_seed_penalty(model,g,k) - sum(model.v_sup_con[k,g,e,f]*1000 for e in model.s_sheep_pools for f in model.s_feed_periods)\
                 + model.v_buy_grain[k,g]*1000 - model.v_sell_grain[k,g]*1000 >=0
     model.con_grain_transfer = Constraint(model.s_grain_pools, model.s_crops, rule=grain_transfer, doc='constrain grain transfer between rotation and sup feeding')
     
@@ -174,13 +205,13 @@ def coremodel_all():
     #  ME                #
     ###################### 
     def md(model,f,e):
-        paspy.pas_md(e,f) + suppy.sup_md(model,e,f)
+        paspy.pas_md(e,f) + suppy.sup_md(model,e,f) + stubble_md(model,e,f)
 
     ######################
     #Vol                 #
     ###################### 
     def md(model,f,e):
-        paspy.pas_vol(e,f) + suppy.sup_vol(model,e,f)
+        paspy.pas_vol(e,f) + suppy.sup_vol(model,e,f) + stubble_vol(model,e,f)
         
     ######################
     #cashflow constraints#
@@ -242,7 +273,7 @@ def coremodel_all():
     except AttributeError:
         pass
     def minroe(model):
-        return model.v_minroe - (sum(crppy.rotation_cost(model,c)  - labpy.labour_cost(model,c) - macpy.mach_cost(model,c) - suppy.sup_cost(model,c) for c in model.s_cashflow_periods) *uinp.finance['minroe']) >=0   
+        return model.v_minroe - (sum(crppy.rotation_cost(model,c)  + labpy.labour_cost(model,c) + macpy.mach_cost(model,c) + suppy.sup_cost(model,c) for c in model.s_cashflow_periods) *uinp.finance['minroe']) >=0   
     model.con_minroe = Constraint(rule=minroe, doc='tallies total expenditure to ensure minimum roe is met')
     
     
@@ -258,7 +289,7 @@ def coremodel_all():
     def profit(model):
         c = uinp.structure['cashflow_periods']
         i = len(c) - 1 # minus one because index starts from 0
-        return model.v_credit[c[i]]-model.v_debit[c[i]] - model.v_dep - (model.v_asset * uinp.finance['opportunity_cost_capital'])  #have to include debit otherwise model selects lots of debit to increase credit, hence cant just maximise credit.
+        return model.v_credit[c[i]]-model.v_debit[c[i]] - model.v_dep - model.v_minroe - (model.v_asset * uinp.finance['opportunity_cost_capital'])  #have to include debit otherwise model selects lots of debit to increase credit, hence cant just maximise credit.
     try:
         model.del_component(model.profit)
     except AttributeError:
@@ -273,7 +304,7 @@ def coremodel_all():
     #solve
     #######################################################################################################################################################
     #######################################################################################################################################################
-    
+    model.write('test.lp',io_options={'symbolic_solver_labels':True})
     print('Status: solving...')
     try:
         model.del_component(model.dual)

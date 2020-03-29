@@ -47,7 +47,7 @@ def croppyomo_local():
         model.del_component(model.p_rotation_yield_index)
     except AttributeError:
         pass
-    model.p_rotation_yield = Param(model.s_phases_dis, model.s_lmus, initialize=crp.rot_yield().to_dict(), default = 0.0, doc='grain production for all crops for 1 unit of rotation')
+    model.p_rotation_yield = Param(model.s_phases, model.s_crops, model.s_lmus, initialize=crp.rot_yield().to_dict(), default = 0.0, doc='grain production for all crops for 1 unit of rotation')
 
     try:
         model.del_component(model.p_grainpool_proportion)
@@ -65,17 +65,17 @@ def croppyomo_local():
     model.p_grain_price = Param(model.s_crops, model.s_cashflow_periods, model.s_grain_pools, initialize=crp.grain_price().to_dict(),default = 0.0, doc='farm gate price per tonne of each grain')
     
     try:
-        model.del_component(model.p_stubble)
+        model.del_component(model.p_rot_stubble)
     except AttributeError:
         pass
-    model.p_stubble = Param(model.s_crops, initialize=crp.stubble_production(), default = 0.0, doc='stubble produced / kg grain harvested')
+    model.p_rot_stubble = Param(model.s_crops, model.s_stub_cat, initialize=crp.stubble_production(), default = 0.0, doc='stubble category A produced / kg grain harvested')
     
     try:
         model.del_component(model.p_cropsow_index)
         model.del_component(model.p_cropsow)
     except AttributeError:
         pass
-    model.p_cropsow = Param(model.s_phases_dis, model.s_lmus, initialize=crp.crop_sow(), default = 0.0, doc='ha of sow activity required by each rot phase')
+    model.p_cropsow = Param(model.s_phases, model.s_crops, model.s_lmus, initialize=crp.crop_sow(), default = 0.0, doc='ha of sow activity required by each rot phase')
     
     try:
         model.del_component(model.p_phasefert_index_index_0)
@@ -112,12 +112,13 @@ model.v_sell_grain = Var(model.s_crops, model.s_grain_pools, bounds=(0,None), do
 ##total grain transfer for each crop, seperated so it can be combined with untimely sowing and crop grazing penalty before converting to cashflow 
 ### slightly more complicated because i have to have rotation yield in disagregated format and the rotation variable is aggregated.
 ### yield needs to be disaggregated so that it returns the grain transfer for each crop - this is so it is compatible with yield penalty and sup feed activities.
+###alternative would have been to add another key/index/set to the yield parameter that was k, although i suspect this would make it a bit slower due to being bigger but it might be tidyer
 
 def rotation_yield_transfer(model,g,k):
-    i=uinp.structure['phase_len']-1
+    # i=uinp.structure['phase_len']-1
     ##h is a disaggregated version of r, it can be indexed. h[0:i] is the rotation history. Have to check if k==h otherwise when h[0:i] is combined with k you can get the wrong rotation
-    return sum(sum(model.p_rotation_yield[h[0:i],k,l]*model.v_phase_area[r,l] for h, r in zip(model.s_phases_dis, model.s_phases) if h[i]==k and ((h[0:i])+(k,)+(l,)) in model.p_rotation_yield and model.p_rotation_yield[h[0:i],k,l] != 0)for l in model.s_lmus) \
-                    * model.p_grainpool_proportion[k,g]
+    return sum(sum(model.p_rotation_yield[r,k,l]*model.v_phase_area[r,l] * model.p_grainpool_proportion[k,g] for r in model.s_phases if model.p_rotation_yield[r,k,l] != 0)for l in model.s_lmus) \
+                   
 
 
 ##############
@@ -125,9 +126,7 @@ def rotation_yield_transfer(model,g,k):
 ##############
 ##similar to yield - this is more complex because we want to mul with phase area variable then sum based on the current landuse (k)
 def cropsow(model,k,l):
-    i=uinp.structure['phase_len']-1
-    ##h is a disaggregated version of r, it can be indexed. h[0:i] is the rotation history. Have to check if k==h otherwise when h[0:i] is combined with k you can get the wrong rotation
-    return sum(model.p_cropsow[h[0:i],k,l]*model.v_phase_area[r,l] for h, r in zip(model.s_phases_dis, model.s_phases) if h[i]==k and ((h[0:i])+(k,)+(l,)) in model.p_cropsow and model.p_cropsow[h[0:i],k,l] != 0) #+ model.x[k] >=0 #
+    return sum(model.p_cropsow[r,k,l]*model.v_phase_area[r,l]  for r in model.s_phases if ((r,)+(k,)+(l,)) in model.p_cropsow and model.p_cropsow[r,k,l] != 0) #+ model.x[k] >=0 #
 
 
 
@@ -147,7 +146,9 @@ def rotation_cost(model,c):
     return sum(sum(model.p_rotation_cost[r,l,c]*model.v_phase_area[r,l] for r in model.s_phases if model.p_rotation_cost[r,l,c] != 0) for l in model.s_lmus )#+ model.x[c] >=0 #0.10677s
 #model.j = Constraint(model.cashflow_periods, rule=rotation_cashflow, doc='')
    
-    
+def rot_stubble(model,k,s):
+      return sum(sum(model.p_rotation_yield[r,k,l]*model.v_phase_area[r,l] * model.p_rot_stubble[k,s] for r in model.s_phases if model.p_rotation_yield[r,k,l] != 0)for l in model.s_lmus if model.p_rot_stubble[k,s] !=0 ) \
+                      
 
 
 
