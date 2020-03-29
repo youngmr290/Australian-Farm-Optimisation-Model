@@ -21,7 +21,6 @@ import sys
 import Mach as mac
 from CreateModel import *
 
-print('Status:  running machpyomo')
 def machpyomo_local():
     
     #########
@@ -138,12 +137,14 @@ def machpyomo_local():
     
     ##link sow supply to crop and pas variable - this has to be done because crop is not by period and pasture is
     try:
+        model.del_component(model.con_sow_supply_index_index_0)
+        model.del_component(model.con_sow_supply_index)
         model.del_component(model.con_sow_supply)
     except AttributeError:
         pass
     def sow_supply(model,p,k1,l):
-        return model.v_contractseeding_ha[p,k1,l] + model.p_seeding_rate[k1,l] * model.v_seeding_machdays[p,k1,l]   \
-                - model.v_seeding_pas[p,k1,l] - model.v_seeding_crop[p,k1,l] >=0
+        return -model.v_contractseeding_ha[p,k1,l] - model.p_seeding_rate[k1,l] * model.v_seeding_machdays[p,k1,l]   \
+                + model.v_seeding_pas[p,k1,l] + model.v_seeding_crop[p,k1,l] <=0
     model.con_sow_supply = Constraint(model.s_periods, model.s_landuses, model.s_lmus, rule=sow_supply, doc='link sow supply to crop and pas variable')
 ############
 #variable  #

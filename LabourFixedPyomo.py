@@ -69,7 +69,8 @@ def labfxpyomo_local():
     except AttributeError:
         pass
     def labour_learn_period(model):
-        return sum(model.v_learn_allocation[i] * model.p_learn_labour for i in model.s_periods ) - model.p_learn_labour >= 0
+        # return -sum(model.v_learn_allocation[i] * model.p_learn_labour for i in model.s_periods ) + model.p_learn_labour <= 0
+        return -sum(model.v_learn_allocation[p] for p in model.s_periods)  <= -1
     model.labour_learn_period = Constraint(rule = labour_learn_period, doc='constrains the amount of labour learn in each period')
 
 ############

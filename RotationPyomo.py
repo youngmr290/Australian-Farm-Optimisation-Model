@@ -21,7 +21,6 @@ import RotationPhases as rps
 import PropertyInputs as pinp
 from CreateModel import *
 
-print('Status:  running rotationpyomo')
 
 def rotationpyomo():
     ####################
@@ -70,7 +69,7 @@ def rotationpyomo():
     except AttributeError:
         pass
     def rot_lo_bound(model, r, l):
-      return model.v_phase_area[r,l] >= model.p_lo[r] 
+      return model.p_lo[r] - model.v_phase_area[r,l] <=0 
     model.con_rotation_lobound = Constraint(model.s_phases, model.s_lmus, rule=rot_lo_bound, doc='lo bound for the number of each phase')
 
 

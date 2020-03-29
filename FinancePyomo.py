@@ -18,7 +18,6 @@ from pyomo.environ import *
 #MUDAS modules
 from CreateModel import *
 
-print('Status:  running financepyomo')
 
 '''
 #variables

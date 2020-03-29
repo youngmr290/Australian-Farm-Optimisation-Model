@@ -108,8 +108,8 @@ def labpyomo_local():
     except AttributeError:
         pass
     def labour_transfer_manager(model,p):
-        return (model.v_quantity_manager * model.p_manager_hours[p]) - (model.p_perm_supervison[p] * model.v_quantity_perm) - (model.p_casual_supervison[p] * model.v_quantity_casual[p])      \
-    - model.v_sheep_labour_manager[p] - model.v_crop_labour_manager[p] - model.v_fixed_labour_manager[p]  >= 0
+        return -(model.v_quantity_manager * model.p_manager_hours[p]) + (model.p_perm_supervison[p] * model.v_quantity_perm) + (model.p_casual_supervison[p] * model.v_quantity_casual[p])      \
+    + model.v_sheep_labour_manager[p] + model.v_crop_labour_manager[p] + model.v_fixed_labour_manager[p]  <= 0
     model.labour_transfer_manager = Constraint(model.s_periods, rule = labour_transfer_manager, doc='labour from manager to sheep and crop and fixed')
     
     #permanent 
@@ -118,8 +118,8 @@ def labpyomo_local():
     except AttributeError:
         pass
     def labour_transfer_permanent(model,p):
-        return (model.v_quantity_perm *  model.p_perm_hours[p])    \
-        - model.v_sheep_labour_permanent[p] - model.v_crop_labour_permanent[p] - model.v_fixed_labour_permanent[p] >= 0
+        return -(model.v_quantity_perm *  model.p_perm_hours[p])    \
+        + model.v_sheep_labour_permanent[p] + model.v_crop_labour_permanent[p] + model.v_fixed_labour_permanent[p] <= 0
     model.labour_transfer_permanent = Constraint(model.s_periods, rule = labour_transfer_permanent, doc='labour from permanent staff to sheep and crop and fixed')
     
     #casual note perm and manager can do casual tasks - variables may need to change name so to be less confusing
@@ -128,8 +128,8 @@ def labpyomo_local():
     except AttributeError:
         pass
     def labour_transfer_casual(model,p):
-        return (model.v_quantity_casual[p] *  model.p_casual_hours[p])  \
-            - model.v_sheep_labour_casual[p] - model.v_crop_labour_casual[p] - model.v_fixed_labour_casual[p]  >= 0
+        return -(model.v_quantity_casual[p] *  model.p_casual_hours[p])  \
+            + model.v_sheep_labour_casual[p] + model.v_crop_labour_casual[p] + model.v_fixed_labour_casual[p]  <= 0
     model.labour_transfer_casual = Constraint(model.s_periods, rule = labour_transfer_casual, doc='labour from casual staff to sheep and crop and fixed')
 
 ############

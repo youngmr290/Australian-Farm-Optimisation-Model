@@ -45,9 +45,6 @@ import Crop as crp
 import Sensitivity as SA
 
 
-print('Status:  running stubble')
-
-
 def stubble_all():
     '''
     Wraps all of stubble into a function that is called in pyomo 

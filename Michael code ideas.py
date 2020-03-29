@@ -267,6 +267,27 @@ Solver error
 ERROR: Solver (glpk) returned non-zero return code (1)
 ERROR: See the solver log above for diagnostic information.
 -this may be due to an inf number as a param
+
+ 
+Duals/RC/Slacks  
+ ##code below will access duals on constraint
+    for c in model.component_objects(pe.Constraint, active=True):
+        print ("   Constraint",c)
+        for index in c:
+            print ("      ", index, model.dual[c[index]])
+
+    ##code below will access slacks on constraint
+    for c in model.component_objects(pe.Constraint, active=True):
+        print ("   Constraint",c)
+        for index in c:
+            try:
+                print ("      ", index, c[index].uslack())
+            except: pass
+    ##code below will access rc on variables
+    for v in model.component_objects(pe.Var, active=True):
+        print ("   Constraint",v)
+        for index in v:
+            print ("      ", index, model.rc[v[index]])
 '''
 
 

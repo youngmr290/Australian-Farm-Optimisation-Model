@@ -27,7 +27,6 @@ import Crop as crp
 import UniversalInputs as uinp
 from CreateModel import *
 
-print('Status:  running croppyomo')
 
 def croppyomo_local():
     
@@ -45,6 +44,7 @@ def croppyomo_local():
     try:
         model.del_component(model.p_rotation_yield)
         model.del_component(model.p_rotation_yield_index)
+        model.del_component(model.p_rotation_yield_index_index_0)
     except AttributeError:
         pass
     model.p_rotation_yield = Param(model.s_phases, model.s_crops, model.s_lmus, initialize=crp.rot_yield().to_dict(), default = 0.0, doc='grain production for all crops for 1 unit of rotation')
@@ -65,12 +65,14 @@ def croppyomo_local():
     model.p_grain_price = Param(model.s_crops, model.s_cashflow_periods, model.s_grain_pools, initialize=crp.grain_price().to_dict(),default = 0.0, doc='farm gate price per tonne of each grain')
     
     try:
+        model.del_component(model.p_rot_stubble_index)
         model.del_component(model.p_rot_stubble)
     except AttributeError:
         pass
     model.p_rot_stubble = Param(model.s_crops, model.s_stub_cat, initialize=crp.stubble_production(), default = 0.0, doc='stubble category A produced / kg grain harvested')
     
     try:
+        model.del_component(model.p_cropsow_index_index_0)
         model.del_component(model.p_cropsow_index)
         model.del_component(model.p_cropsow)
     except AttributeError:

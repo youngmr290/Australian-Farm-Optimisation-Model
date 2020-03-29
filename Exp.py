@@ -8,10 +8,11 @@ module: exriment module - this is the module that runs everything and controls k
 """
 #import datetime
 import pandas as pd
-from pyomo.environ import *
+import pyomo.environ as pe
 import time
-
-from CreateModel import *
+import os.path
+from datetime import datetime
+from CreateModel import model
 
 import UniversalInputs as uinp
 import PropertyInputs as pinp 
@@ -24,26 +25,21 @@ import LabourFixedPyomo as lfixpy
 import LabourPyomo as labpy 
 import LabourCropPyomo as lcrppy 
 import PasturePyomo as paspy 
-import SupFeedPyomo
+import SupFeedPyomo as suppy
+import StubblePyomo as stubpy
 import CoreModel as core
 
-print('running exp')
-#######################
-#key options          #
-#######################
-#eg flk structure, mach option etc - this is set the default, can be changed in runs via saa
-        
-
-
-
-
-
+var_dict={}
 #########################
-#Exp loop               #
+#Exp loop               # #^maybe there is a cleaner way to do some of the stuff below ie a way that doesn't need as many if statements?
 #########################
-#^maybe there is a cleaner way to do some of the stuff below ie a way that doesn't need as many if statements?
 ##read in exp log 
 exp_data = pd.read_excel('exp.xlsx',index_col=[0,1,2], header=[0,1,2,3])
+##print out number of trials to run
+total_trials=sum(exp_data.index[row][0] == True for row in range(len(exp_data)))
+print('Number of trials to run: ',total_trials)
+print('Number of full solutions: ',sum(exp_data.index[row][1] == True for row in range(len(exp_data))))
+print('Exp.xlsx last saved: ',datetime.fromtimestamp(round(os.path.getmtime("Exp.xlsx"))))
 start_time1 = time.time()
 run=0 #counter to work out average time per loop
 for row in range(len(exp_data)):
@@ -84,7 +80,6 @@ for row in range(len(exp_data)):
             elif dic == 'sap':
                 sen.sap[(key1,key2)]=value
 
-
     ##call sa functions - assigns sa variables to relevant inputs
     uinp.univeral_inp_sa()
     pinp.property_inp_sa()
@@ -98,91 +93,69 @@ for row in range(len(exp_data)):
     labpy.labpyomo_local()
     lcrppy.labcrppyomo_local()
     paspy.paspyomo_local()
-
+    suppy.suppyomo_local()
+    stubpy.stubpyomo_local()
     core.coremodel_all()
+   
     ##check if user wants full solution
     if exp_data.index[row][1] == True:
         ##make lp file
-        print('Status: writing lp...')
-        model.write('test.lp',io_options={'symbolic_solver_labels':True})
+        model.write('%s.lp' %exp_data.index[row][2],io_options={'symbolic_solver_labels':True})
+           
+        ##write rc and dual to txt file
+        with open('Rc and Duals - %s.txt' %exp_data.index[row][2],'w') as f:
+            f.write('RC\n')        
+            for v in model.component_objects(pe.Var, active=True):
+                f.write("Variable %s\n" %v)   #  \n makes new line
+                for index in v:
+                    try:
+                        print("      ", index, model.rc[v[index]], file=f)
+                    except: pass 
+            f.write('Dual\n')   #this can be used in search to find the start of this in the txt file     
+            for c in model.component_objects(pe.Constraint, active=True):
+                f.write("Constraint %s\n" %c)   #  \n makes new line
+                for index in c:
+                    # try:
+                    print("      ", index, model.dual[c[index]], file=f)
+                    # except: pass 
         
-        ##This writes variable with value greater than 1 to txt file 
-        print('Status: writing variables to txt...')
-        file = open('testfile.txt','w') 
-        for v in model.component_objects(Var, active=True):
-            file.write("Variable component object %s\n" %v)   #  \n makes new line
-            for index in v:
-                try:
-                    if v[index].value>0:
-                        file.write ("   %s %s\n" %(index, v[index].value))
-                except: pass 
-        file.close()
-    ##last step is to print the time for the current trial to run
-    end_time = time.time()
-    print("total time taken this loop: ", end_time - start_time)
+    
+        ##prints what you see from pprint to txt file - you can see the slack on constraints but not the rc or dual
+        with open('full model - %s.txt' %exp_data.index[row][2], 'w') as f:
+            f.write("My description of the instance!\n")
+            model.display(ostream=f)
+    
+    ##This writes variable with value greater than 1 to txt file - used to check stuff out each iteration if you want 
+    file = open('variable summary.txt','w') 
+    file.write('Trial: %s\n'%exp_data.index[row][2]) #the first line is the name of the trial
+    for v in model.component_objects(pe.Var, active=True):
+        file.write("Variable %s\n" %v)   #  \n makes new line
+        for index in v:
+            try:
+                if v[index].value>0:
+                    file.write ("   %s %s\n" %(index, v[index].value))
+            except: pass 
+    file.close()
+    
+    ##this prints stuff for each trial - trial name, overall profit
+    print("\nDisplaying Solution for trial: %s\n" %exp_data.index[row][2] , '-'*60,'\n%s' %pe.value(model.profit))
+    ##determine expected time to completion - trials left multiplied by average time per trial &time for current loop
+    trials_to_go = total_trials - run 
+    time_taken= time.time()
+    average_time = (time_taken- start_time1)/run
+    remaining = trials_to_go * average_time
+    print("total time taken this loop: ", time_taken - start_time)
+    print('Time remaining: %s' %remaining)
+    
 
-##store pyomo variable output as a dict
-a=model.component_objects(Var, active=True)
-dd={str(v):{s:v[s].value for s in v} for v in a }    #creates dict with variable in it. This is tricky since pyomo returns a generator object
+    ##store pyomo variable output as a dict
+    variables=model.component_objects(pe.Var, active=True)
+    var_dict['%s'%exp_data.index[row][2]]={str(v):{s:v[s].value for s in v} for v in variables }    #creates dict with variable in it. This is tricky since pyomo returns a generator object
 
 end_time1 = time.time()
 print('total trials completed: ', run)
 print("average time taken for each loop: ", (end_time1 - start_time1)/run)
 # ##the stuff below will be superseeded with stuff above 
 
-# con_error=[]
-# con_correct=[]
-# ##create loop for exp
-# # for i in rps.lo_bound.keys():#(range(1)): #maybe this should be looping through an exp sheet in excel
-# # # for i in (range(1)): #maybe this should be looping through an exp sheet in excel
-# # #     print('Starting exp loop')
-# # #     #define any SA - this module will have to import sensitivity module then other module will import sensitivity therefore sensitivity shouldn't inport pre calc modules
-# #     rps.lo_bound[i]=0.1 #('A', 'C', 'N', 'OF', 'm')
-    
-
-# #     #call core model function, must call them in the correct order (core must be last)
-# #     rotpy.rotationpyomo()
-# #     crppy.croppyomo_local()
-# #     core.coremodel_all()
-# #     if core.coremodel_test_var[-1]==1:
-# #         con_error.append(i)
-# #     print(core.coremodel_test_var[-1])
-    
-# #     rps.lo_bound[i]=0
-# import random
-# for p in range(1):
-        
-#     # for j,i in zip(range(2000,2054), rps.lo_bound.keys()):#(range(1)): #maybe this should be looping through an exp sheet in excel
-#     bounded_rots=[]
-#     for i in random.sample(range(2441),1):#(range(1)): #maybe this should be looping through an exp sheet in excel
-#     # # # for i in (range(1)): #maybe this should be looping through an exp sheet in excel
-#     # # #     print('Starting exp loop')
-#     # # #     #define any SA - this module will have to import sensitivity module then other module will import sensitivity therefore sensitivity shouldn't inport pre calc modules
-        
-#         k=list(rps.lo_bound.keys())[i] #('A', 'C', 'N', 'OF', 'm')
-#         bounded_rots.append(k)
-#         # rps.lo_bound['GX3NPo']=6 #('A', 'C', 'N', 'OF', 'm')
-#         rps.lo_bound['GA5ENw']=6 #('A', 'C', 'N', 'OF', 'm')
-#         # rps.lo_bound['GNEPb']=6 #('A', 'C', 'N', 'OF', 'm')
-#     # print(rps.lo_bound)
-    
-#     #call core model function, must call them in the correct order (core must be last)
-#         rotpy.rotationpyomo()
-#         print('rps done')
-#         crppy.croppyomo_local()
-#         print('crop done')
-#         core.coremodel_all()
-#         print('cpre done')
-#         if core.coremodel_test_var[-1]==1:
-#             con_error.append(k)
-#         else: 
-#             con_correct.append(k)
-#         print(core.coremodel_test_var[-1])
-    
-#         rps.lo_bound[k]=0
-    
-    
-  
-    
     
     

@@ -6,53 +6,50 @@ module: exriment module - this is the module that runs everything and controls k
 
 @author: young
 """
-import pandas as pd
-from pyomo.environ import *
-import time
-import multiprocessing
-from joblib import Parallel, delayed
-from tqdm import tqdm
 
-start=time.time()
-from CreateModel import *
-import UniversalInputs as uinp
-import PropertyInputs as pinp 
-import Sensitivity as sen 
-import RotationPyomo as rotpy 
-import CropPyomo as crppy
-import MachPyomo as macpy
-import FinancePyomo as finpy
-import LabourFixedPyomo as lfixpy 
-import LabourPyomo as labpy 
-import LabourCropPyomo as lcrppy 
-import PasturePyomo as paspy
-import SupFeedPyomo
-import CoreModel as core
 
-#######################
-#key options          #
-#######################
-#eg flk structure, mach option etc - this is set the default, can be changed in runs via saa
-        
+
+
+
+if __name__ == '__main__':
+    import pandas as pd
+    import pyomo.environ as pe
+    import time
+    import math
+    import os.path
+    from datetime import datetime
+    import multiprocessing
     
-    
-    
-
-   
-
-
+    start=time.time()
+    from CreateModel import model
+    import UniversalInputs as uinp
+    import PropertyInputs as pinp 
+    import Sensitivity as sen 
+    import RotationPyomo as rotpy 
+    import CropPyomo as crppy
+    import MachPyomo as macpy
+    import FinancePyomo as finpy
+    import LabourFixedPyomo as lfixpy 
+    import LabourPyomo as labpy 
+    import LabourCropPyomo as lcrppy 
+    import PasturePyomo as paspy
+    import SupFeedPyomo as suppy
+    import StubblePyomo as stubpy
+    import CoreModel as core
+    ##read in exp and drop all false runs ie runs not being run this time
+    exp_data = pd.read_excel('exp.xlsx',index_col=[0,1,2], header=[0,1,2,3])
+    exp_data=exp_data.loc[True] #alternative ... exp_data.iloc[exp_data.index.get_level_values(0)index.levels[0]==True]
+    ##prints out start status - number of trials to run, date and time exp.xl was last saved and output summary  
+    start_time1 = time.time()
+    print('Number of trials to run: ',len(exp_data))
+    print('Number of full solutions: ',sum(exp_data.index[row][0] == True for row in range(len(exp_data))))
+    print('Exp.xlsx last saved: ',datetime.fromtimestamp(round(os.path.getmtime("Exp.xlsx"))))
 
 #########################
 #Exp loop               #
 #########################
 #^maybe there is a cleaner way to do some of the stuff below ie a way that doesn't need as many if statements?
-
-##read in exp and drop all false runs ie runs not being run this time
-exp_data = pd.read_excel('exp.xlsx',index_col=[0,1,2], header=[0,1,2,3])
-exp_data=exp_data.loc[True] #alternative ... exp_data.iloc[exp_data.index.get_level_values(0)index.levels[0]==True]
-   
 def exp(row):
-    print('running exp: ',exp_data.index[row] )
     ##start timer for each loop
     start_time = time.time()
     for dic,key1,key2,indx in exp_data:
@@ -99,33 +96,70 @@ def exp(row):
     labpy.labpyomo_local()
     lcrppy.labcrppyomo_local()
     paspy.paspyomo_local()
+    suppy.suppyomo_local()
+    stubpy.stubpyomo_local()
+
     core.coremodel_all()
      
     ##need to save results to a dict here - include the trial name as the dict name or key.. probably need to return the dict at the end of the function so it can be joined with other processors
+    
     ##check if user wants full solution
-    if exp_data.index[row][1] == True:
+    if exp_data.index[row][0] == True:
         ##make lp file
-        print('Status: writing lp...')
-        model.write('test.lp',io_options={'symbolic_solver_labels':True})
+        model.write('%s.lp' %exp_data.index[row][1],io_options={'symbolic_solver_labels':True})
         
-        ##This writes variable with value greater than 1 to txt file 
-        print('Status: writing variables to txt...')
-        file = open('testfile.txt','w') 
-        for v in model.component_objects(Var, active=True):
-            file.write("Variable component object %s\n" %v)   #  \n makes new line
-            for index in v:
-                try:
-                    if v[index].value>0:
-                        file.write ("   %s %s\n" %(index, v[index].value))
-                except: pass 
-        file.close()
-    #last step is to print the time for the current trial to run
+        ##write rc and dual to txt file
+        with open('Rc and Duals - %s.txt' %exp_data.index[row][1],'w') as f:
+            f.write('RC\n')        
+            for v in model.component_objects(pe.Var, active=True):
+                f.write("Variable %s\n" %v)   #  \n makes new line
+                for index in v:
+                    try:
+                        print("      ", index, model.rc[v[index]], file=f)
+                    except: pass 
+            f.write('Dual\n')   #this can be used in search to find the start of this in the txt file     
+            for c in model.component_objects(pe.Constraint, active=True):
+                f.write("Constraint %s\n" %c)   #  \n makes new line
+                for index in c:
+                    # try:
+                    print("      ", index, model.dual[c[index]], file=f)
+                    # except: pass 
+        
+        ##prints what you see from pprint to txt file - you can see the slack on constraints but not the rc or dual
+        with open('full model - %s.txt' %exp_data.index[row][1], 'w') as f:
+            f.write("My description of the instance!\n")
+            model.display(ostream=f)
+    
+    ##This writes variable with value greater than 1 to txt file, the file is overwritten each time - used to check stuff out each iteration if you want 
+    file = open('variable summary.txt','w') 
+    file.write('Trial: %s\n'%exp_data.index[row][1]) #the first line is the name of the trial
+    for v in model.component_objects(pe.Var, active=True):
+        file.write("Variable %s\n" %v)   #  \n makes new line
+        for index in v:
+            try:
+                if v[index].value>0:
+                    file.write ("   %s %s\n" %(index, v[index].value))
+            except: pass 
+    file.close()
+    
+       
+    ##this prints stuff for each trial - trial name, overall profit
+    print("\nDisplaying Solution for trial: %s\n" %exp_data.index[row][1] , '-'*60,'\n%s' %pe.value(model.profit))
+    ##determine expected time to completion - trials left multiplied by average time per trial &time for current loop
+    processes = multiprocessing.cpu_count()
+    total_batches = math.ceil(len(exp_data) / processes ) 
+    current_batch = math.ceil( row / processes )
+    remaining_batches = total_batches - current_batch
+    time_taken = time.time() - start_time1
+    batch_time = time_taken / current_batch
+    time_remaining = remaining_batches * batch_time
     end_time = time.time()
     print("total time taken this loop: ", end_time - start_time)
-    var = model.component_objects(Var, active=True)
-    return {str(v):{s:v[s].value for s in v} for v in a }     #creates dict with variable in it. This is tricky since pyomo returns a generator object
-
-
+    print('Time remaining: %s' %time_remaining)
+    
+    #last step is to print the time for the current trial to run
+    variables = model.component_objects(pe.Var, active=True)
+    return {str(v):{s:v[s].value for s in v} for v in variables }     #creates dict with variable in it. This is tricky since pyomo returns a generator object
 
 
 ##3 - works when run through anaconda prompt - if 9 runs and 8 processors, the first processor to finish, will start the 9th run
@@ -145,7 +179,11 @@ def main():
         result = pool.map(exp, dataset)
     return result
 if __name__ == '__main__':
-    a=main() #returns a list is the same order of exp
+    results=main() #returns a list is the same order of exp
+    ##turn list of dicts into nested dict with trial name as key
+    var_results={}
+    for result, trial_row in zip(results,range(len(exp_data))):
+        var_results[exp_data.index[trial_row][1]] = result[trial_row] 
     end=time.time()
     print('total time',end-start)
 

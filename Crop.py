@@ -42,13 +42,7 @@ import Functions as fun
 import Periods as per
 import Mach as mac
 
-print('Status:  running crop')
-
-
-
-
-
-   
+  
 #print(timeit.timeit(test,number=1))
                 
         

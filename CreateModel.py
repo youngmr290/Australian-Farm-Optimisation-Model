@@ -27,14 +27,6 @@ import Periods as per
 import Crop as crp
 
 
-#from Finance import *
-#from LabourFixed import *
-#from Mach import * 
-
-
-print('Status:  running create model')
-
-
 '''
 # Creation of a Concrete Model
 '''

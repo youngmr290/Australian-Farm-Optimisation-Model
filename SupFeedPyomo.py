@@ -11,70 +11,70 @@ from pyomo import environ as pe
 from CreateModel import model
 import SupFeed as sup
 
-
-#########
-#param  #
-######### 
-##call sup functions
-cost_dep_asset = sup.sup_cost() 
-vol_md = sup.sup_md_vol()  
-
-##sup cost
-try:
-    model.del_component(model.p_sup_cost_index_index_0)
-    model.del_component(model.p_sup_cost_index)
-    model.del_component(model.p_sup_cost)
-except AttributeError:
-    pass
-model.p_sup_cost = pe.Param(model.s_cashflow_periods, model.s_feed_periods, model.s_crops, initialize=cost_dep_asset[0], default = 0.0, doc='cost of storing and feeding 1t of sup each period')
-
-##sup dep
-try:
-    model.del_component(model.p_sup_dep_index)
-    model.del_component(model.p_sup_dep)
-except AttributeError:
-    pass
-model.p_sup_dep = pe.Param(model.s_feed_periods, model.s_crops, initialize=cost_dep_asset[1], default = 0.0, doc='depreciation of storing 1t of sup each period')
-
-##sup asset
-try:
-    model.del_component(model.p_sup_asset_index)
-    model.del_component(model.p_sup_asset)
-except AttributeError:
-    pass
-model.p_sup_asset = pe.Param(model.s_feed_periods, model.s_crops, initialize=cost_dep_asset[2], default = 0.0, doc='asset value associated with storing 1t of sup each period')
-
-##sup labour
-try:
-    model.del_component(model.p_sup_labour_index_index_0)
-    model.del_component(model.p_sup_labour_index)
-    model.del_component(model.p_sup_labour)
-except AttributeError:
-    pass
-model.p_sup_labour = pe.Param(model.s_crops, model.s_periods, model.s_feed_periods, initialize=sup.sup_labour(), default = 0.0, doc='labour required to feed each sup in each feed period')
-
-##sup vol
-try:
-    model.del_component(model.p_sup_vol)
-except AttributeError:
-    pass
-model.p_sup_vol = pe.Param(model.s_crops, initialize=vol_md[0], default = 0.0, doc='vol per tonne of grain fed')
-
-##sup md
-try:
-    model.del_component(model.p_sup_md)
-except AttributeError:
-    pass
-model.p_sup_md = pe.Param(model.s_crops, initialize=vol_md[1], default = 0.0, doc='md per tonne of grain fed')
-
-##price buy grain
-try:
-    model.del_component(model.p_buy_grain_price_index_index_0)
-    model.del_component(model.p_buy_grain_price_index)
-    model.del_component(model.p_buy_grain_price)
-except AttributeError:
-    pass
-model.p_buy_grain_price = pe.Param(model.s_crops, model.s_cashflow_periods, model.s_grain_pools, initialize=sup.buy_grain_price().to_dict(), default = 0.0, doc='price to buy grain from neighbour')
+def suppyomo_local():
+    #########
+    #param  #
+    ######### 
+    ##call sup functions
+    cost_dep_asset = sup.sup_cost() 
+    vol_md = sup.sup_md_vol()  
+    
+    ##sup cost
+    try:
+        model.del_component(model.p_sup_cost_index_index_0)
+        model.del_component(model.p_sup_cost_index)
+        model.del_component(model.p_sup_cost)
+    except AttributeError:
+        pass
+    model.p_sup_cost = pe.Param(model.s_cashflow_periods, model.s_feed_periods, model.s_crops, initialize=cost_dep_asset[0], default = 0.0, doc='cost of storing and feeding 1t of sup each period')
+    
+    ##sup dep
+    try:
+        model.del_component(model.p_sup_dep_index)
+        model.del_component(model.p_sup_dep)
+    except AttributeError:
+        pass
+    model.p_sup_dep = pe.Param(model.s_feed_periods, model.s_crops, initialize=cost_dep_asset[1], default = 0.0, doc='depreciation of storing 1t of sup each period')
+    
+    ##sup asset
+    try:
+        model.del_component(model.p_sup_asset_index)
+        model.del_component(model.p_sup_asset)
+    except AttributeError:
+        pass
+    model.p_sup_asset = pe.Param(model.s_feed_periods, model.s_crops, initialize=cost_dep_asset[2], default = 0.0, doc='asset value associated with storing 1t of sup each period')
+    
+    ##sup labour
+    try:
+        model.del_component(model.p_sup_labour_index_index_0)
+        model.del_component(model.p_sup_labour_index)
+        model.del_component(model.p_sup_labour)
+    except AttributeError:
+        pass
+    model.p_sup_labour = pe.Param(model.s_crops, model.s_periods, model.s_feed_periods, initialize=sup.sup_labour(), default = 0.0, doc='labour required to feed each sup in each feed period')
+    
+    ##sup vol
+    try:
+        model.del_component(model.p_sup_vol)
+    except AttributeError:
+        pass
+    model.p_sup_vol = pe.Param(model.s_crops, initialize=vol_md[0], default = 0.0, doc='vol per tonne of grain fed')
+    
+    ##sup md
+    try:
+        model.del_component(model.p_sup_md)
+    except AttributeError:
+        pass
+    model.p_sup_md = pe.Param(model.s_crops, initialize=vol_md[1], default = 0.0, doc='md per tonne of grain fed')
+    
+    ##price buy grain
+    try:
+        model.del_component(model.p_buy_grain_price_index_index_0)
+        model.del_component(model.p_buy_grain_price_index)
+        model.del_component(model.p_buy_grain_price)
+    except AttributeError:
+        pass
+    model.p_buy_grain_price = pe.Param(model.s_crops, model.s_cashflow_periods, model.s_grain_pools, initialize=sup.buy_grain_price().to_dict(), default = 0.0, doc='price to buy grain from neighbour')
 
 
 #######################################################################################################################################################

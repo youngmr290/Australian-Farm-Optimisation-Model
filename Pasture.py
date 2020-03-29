@@ -31,7 +31,6 @@ import UniversalInputs as uinp
 import Functions as fun
 import Periods as per
 
-print('Status:  running pasture')
 
 ########################
 ##phases               #
