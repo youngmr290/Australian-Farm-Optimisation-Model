@@ -74,6 +74,10 @@ def dmd_to_md(dmd):
     dmd can be either a percentage or a decimal
     returns M/D in MJ of ME per kg of DM
     dmd can be a numpy array or a scalar (not sure if it handles lists and data frames)
+
+    ^ this could be expanded to include forage (0.172 * dmd - 1.7)
+       and supplement (.133 * dmd + 23.4 ee + 1.32)
+       using an extra 'type' input that is default 'herbage'
     '''
     try:
         if (dmd <= 1).all() : dmd *= 100 # if dmd is a list or an array and is a decimal then convert to percentage (in excel 80% is 0.8 in python)
