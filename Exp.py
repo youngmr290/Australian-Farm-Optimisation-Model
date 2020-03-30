@@ -13,6 +13,9 @@ import time
 import os.path
 from datetime import datetime
 from CreateModel import model
+import pickle as pkl
+import sys
+
 
 import UniversalInputs as uinp
 import PropertyInputs as pinp 
@@ -29,7 +32,6 @@ import SupFeedPyomo as suppy
 import StubblePyomo as stubpy
 import CoreModel as core
 
-var_dict={}
 #########################
 #Exp loop               # #^maybe there is a cleaner way to do some of the stuff below ie a way that doesn't need as many if statements?
 #########################
@@ -41,6 +43,12 @@ print('Number of trials to run: ',total_trials)
 print('Number of full solutions: ',sum(exp_data.index[row][1] == True for row in range(len(exp_data))))
 print('Exp.xlsx last saved: ',datetime.fromtimestamp(round(os.path.getmtime("Exp.xlsx"))))
 start_time1 = time.time()
+##try to load in results file to dict, if it doesn't exist then create a new dict
+try:
+    with open('pkl_results', "rb") as f:
+        var_results = pkl.load(f)
+except FileNotFoundError:
+    var_results={}
 run=0 #counter to work out average time per loop
 for row in range(len(exp_data)):
     ##start timer for each loop
@@ -95,7 +103,7 @@ for row in range(len(exp_data)):
     paspy.paspyomo_local()
     suppy.suppyomo_local()
     stubpy.stubpyomo_local()
-    core.coremodel_all()
+    results=core.coremodel_all() #have to do this so i can access the solver status
    
     ##check if user wants full solution
     if exp_data.index[row][1] == True:
@@ -139,6 +147,15 @@ for row in range(len(exp_data)):
     
     ##this prints stuff for each trial - trial name, overall profit
     print("\nDisplaying Solution for trial: %s\n" %exp_data.index[row][2] , '-'*60,'\n%s' %pe.value(model.profit))
+    ##this check if the solver is optimal - if infeasible or error the model will quit
+    if (results.solver.status == pe.SolverStatus.ok) and (results.solver.termination_condition == pe.TerminationCondition.optimal):
+        print('solver optimal')# Do nothing when the solution in optimal and feasible
+    elif (results.solver.termination_condition == pe.TerminationCondition.infeasible):
+        print ('Solver Status: infeasible')
+        sys.exit()
+    else: # Something else is wrong
+        print ('Solver Status: error')
+        sys.exit()
     ##determine expected time to completion - trials left multiplied by average time per trial &time for current loop
     trials_to_go = total_trials - run 
     time_taken= time.time()
@@ -150,7 +167,11 @@ for row in range(len(exp_data)):
 
     ##store pyomo variable output as a dict
     variables=model.component_objects(pe.Var, active=True)
-    var_dict['%s'%exp_data.index[row][2]]={str(v):{s:v[s].value for s in v} for v in variables }    #creates dict with variable in it. This is tricky since pyomo returns a generator object
+    var_results['%s'%exp_data.index[row][2]]={str(v):{s:v[s].value for s in v} for v in variables }    #creates dict with variable in it. This is tricky since pyomo returns a generator object
+
+##drop results into pikle file
+with open('pkl_results', "wb") as f:
+    pkl.dump(var_results, f)
 
 end_time1 = time.time()
 print('total trials completed: ', run)

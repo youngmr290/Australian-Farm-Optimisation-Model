@@ -219,11 +219,23 @@ def paspyomo_local():
         pass
     def drypas(model,d,f,t):
         fs = list(model.s_feed_periods)[f-1] #have to convert to a list first beacuse indexing of an ordered set starts at 1
-        return sum(sum(sum(sum(-model.v_greenpas_ha[e,g,o,f,l,t] * model.p_senesce_grnha[d,g,o,f,l,t] for g in model.s_grazing_int) for o in model.s_foo_levels )\
-                       - sum(model.v_phase_area[r,l] * model.p_nap[d,f,l,r,t] for r in model.s_phases if model.p_nap[d,f,l,r,t] != 0)for l in model.s_lmus)        \
+        return sum(sum(model.v_greenpas_ha[e,g,o,f,l,t] * -model.p_senesce_grnha[d,g,o,f,l,t] for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus)        \
                        + model.v_drypas_consumed[e,d,f,t] * model.p_dry_removal_t[d,f,t] for e in model.s_sheep_pools) \
                        - model.v_drypas_transfer[d,fs,t] * model.p_dry_transfer_t[d,fs,t] + model.v_drypas_transfer[d,f,t] * 1000 <=0 #minus 1000 is what you are transfering into constraint, p_dry_transfer is how much you get in the current period if you transferred 1t from previous period (not 1000 because you have to account for deterioration)
     model.con_drypas = pe.Constraint(model.s_dry_groups, model.s_feed_periods, model.s_pastures, rule = drypas, doc='High and low quality dry pasture of each type available in each period')
+    
+    try:
+        model.del_component(model.con_nappas_index_index_0)
+        model.del_component(model.con_nappas_index)
+        model.del_component(model.con_nappas)
+    except AttributeError:
+        pass
+    def nappas(model,d,f,t):
+        fs = list(model.s_feed_periods)[f-1] #have to convert to a list first beacuse indexing of an ordered set starts at 1
+        return sum(sum(sum(model.v_phase_area[r,l] * -model.p_nap[d,f,l,r,t] for r in model.s_phases if model.p_nap[d,f,l,r,t] != 0)for l in model.s_lmus)        \
+                       + model.v_nap_consumed[e,d,f,t] * model.p_dry_removal_t[d,f,t] for e in model.s_sheep_pools) \
+                       - model.v_nap_transfer[d,fs,t] * model.p_dry_transfer_t[d,fs,t] + model.v_drypas_transfer[d,f,t] * 1000 <=0 #minus 1000 is what you are transfering into constraint, p_dry_transfer is how much you get in the current period if you transferred 1t from previous period (not 1000 because you have to account for deterioration)
+    model.con_nappas = pe.Constraint(model.s_dry_groups, model.s_feed_periods, model.s_pastures, rule = drypas, doc='High and low quality dry pasture of each type available in each period')
     
     try:
         model.del_component(model.con_pasarea_index_index_0)
@@ -244,7 +256,8 @@ def paspyomo_local():
         pass
     def erosion(model,f,l,t):
         return sum(sum(model.v_greenpas_ha[e,g,o,f,l,t] for e in model.s_sheep_pools) *  (-model.p_foo_end_grnha[g,o,f,l,t] - sum(model.p_senesce_grnha[d,g,o,f,l,t] for d in model.s_dry_groups))for g in model.s_grazing_int for o in model.s_foo_levels) \
-                   + sum(model.v_phase_area[r,l]  * model.p_erosion[f,l,r,t] for r in model.s_phases if model.p_erosion[f,l,r,t] != 0) <=0
+                -  sum(model.v_drypas_transfer[d,f,t] * 1000 for d in model.s_dry_groups) \
+                + sum(model.v_phase_area[r,l]  * model.p_erosion[f,l,r,t] for r in model.s_phases if model.p_erosion[f,l,r,t] != 0) <=0
     model.con_erosion = pe.Constraint(model.s_feed_periods, model.s_lmus, model.s_pastures, rule = erosion, doc='total pasture available of each type on each soil type in each feed period')
     
     
@@ -257,6 +270,8 @@ def paspyomo_local():
 model.v_greenpas_ha = pe.Var(model.s_sheep_pools, model.s_grazing_int, model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, bounds = (0,None) , doc='hectares grazed each period for each grazing intensity on each soil in each period')
 model.v_drypas_consumed = pe.Var(model.s_sheep_pools, model.s_dry_groups, model.s_feed_periods, model.s_pastures, bounds = (0,None) , doc='tonnes of low and high quality dry feed consumed by each sheep pool in each feed period')
 model.v_drypas_transfer = pe.Var(model.s_dry_groups, model.s_feed_periods, model.s_pastures, bounds = (0,None) , doc='tonnes of low and high quality dry feed transferred to the following periods in each feed period')
+model.v_nap_consumed = pe.Var(model.s_sheep_pools, model.s_dry_groups, model.s_feed_periods, model.s_pastures, bounds = (0,None) , doc='tonnes of low and high quality dry pasture on crop paddocks consumed by each sheep pool in each feed period')
+model.v_nap_transfer = pe.Var(model.s_dry_groups, model.s_feed_periods, model.s_pastures, bounds = (0,None) , doc='tonnes of low and high quality dry pasture on crop paddocks transferred to the following periods in each feed period')
 model.v_poc = pe.Var(model.s_sheep_pools, model.s_feed_periods, model.s_lmus, bounds = (0,None) , doc='tonnes of poc consumed by each sheep pool in each period on each lmu')
 
 
@@ -276,13 +291,17 @@ def passow(model,p,k,l):
 #MD          #
 ##############
 def pas_md(model,e,f):
-    return sum(sum(sum(model.v_greenpas_ha[e,g,o,f,l,t] * model.p_me_cons_grnha[e,g,o,f,l,t] for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus) + sum(model.v_drypas_consumed[e,d,f,t] * model.p_dry_mecons_t[e,d,f,t]for d in model.s_dry_groups) for t in model.s_pastures) \
+    return sum(sum(sum(model.v_greenpas_ha[e,g,o,f,l,t] * model.p_me_cons_grnha[e,g,o,f,l,t] for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus) \
+               + sum(model.v_drypas_consumed[e,d,f,t] * model.p_dry_mecons_t[e,d,f,t] \
+               + model.v_nap_consumed[e,d,f,t] * model.p_dry_mecons_t[e,d,f,t] for d in model.s_dry_groups) for t in model.s_pastures) \
                + model.v_poc[e,f,l] * model.p_poc_md[f] for l in model.s_lmus )
 
 ##############
 #Vol         #
 ##############
 def pas_vol(model,e,f):
-    return sum(sum(sum(model.v_greenpas_ha[e,g,o,f,l,t] * model.p_volume_grnha[g,o,f,l,t] for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus) + sum(model.v_drypas_consumed[e,d,f,t] * model.p_dry_volume_t[d,f,t] for d in model.s_dry_groups) for t in model.s_pastures)\
+    return sum(sum(sum(model.v_greenpas_ha[e,g,o,f,l,t] * model.p_volume_grnha[g,o,f,l,t] for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus) \
+               + sum(model.v_drypas_consumed[e,d,f,t] * model.p_dry_volume_t[d,f,t] \
+               + model.v_nap_consumed[e,d,f,t] * model.p_dry_volume_t[d,f,t] for d in model.s_dry_groups) for t in model.s_pastures)\
                + model.v_poc[e,f,l] * model.p_poc_vol[f] for l in model.s_lmus )
 

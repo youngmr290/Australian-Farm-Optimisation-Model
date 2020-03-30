@@ -15,6 +15,7 @@ formatting; try to avoid capitals (reduces possible mistakes in future)
 
 #MUDAS modules
 import UniversalInputs as uinp
+import PropertyInputs as pinp
 
 '''
 interest
@@ -39,8 +40,12 @@ def credit_interest():
     return (1 + uinp.finance['credit_interest']) ** (1 / len(uinp.structure['cashflow_periods']))
 
 
-
-        
+#################
+#overheads      #
+#################
+def overheads():
+    overheads=pinp.general['overheads'] 
+    return overheads.squeeze().sum()/ len(uinp.structure['cashflow_periods'])    
 
 
 

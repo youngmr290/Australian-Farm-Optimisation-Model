@@ -16,7 +16,6 @@ formatting; try to avoid capitals (reduces possible mistakes in future)
 """
 
 import pyomo.environ as pe
-import sys
 
 #MUDAS modules - should only be pyomo modules
 import UniversalInputs as uinp
@@ -232,8 +231,8 @@ def coremodel_all():
         #this means the first period doesn't include the previous debit or credit (because it doesn't exist, because it is the first period) 
         j = [1] * len(c)
         j[0] = 0
-        return (-yield_income(model,c[i]) + crppy.rotation_cost(model,c[i])  + labpy.labour_cost(model,c[i]) + macpy.mach_cost(model,c[i]) + suppy.sup_cost(model,c[i]) -
-                model.v_debit[c[i]] + model.v_credit[c[i]]  + model.v_debit[c[i-1]] * fin.debit_interest() * j[i]  - model.v_credit[c[i-1]] * fin.credit_interest() * j[i]) <= 0
+        return (-yield_income(model,c[i]) + crppy.rotation_cost(model,c[i])  + labpy.labour_cost(model,c[i]) + macpy.mach_cost(model,c[i]) + suppy.sup_cost(model,c[i]) + model.p_overhead_cost[c[i]]     \
+                - model.v_debit[c[i]] + model.v_credit[c[i]]  + model.v_debit[c[i-1]] * fin.debit_interest() * j[i]  - model.v_credit[c[i-1]] * fin.credit_interest() * j[i]) <= 0
 
     try:
         model.del_component(model.con_cashflow)
@@ -261,7 +260,7 @@ def coremodel_all():
     except AttributeError:
         pass
     def asset(model):
-        return suppy.sup_asset(model) - model.v_asset <=0   
+        return suppy.sup_asset(model) + macpy.mach_asset(model) - model.v_asset <=0   
     model.con_asset = pe.Constraint( rule=asset, doc='tallies asset from all activities so it can be transferd to objective to represent ROE')
     
     ######################
@@ -317,16 +316,5 @@ def coremodel_all():
     model.rc = pe.Suffix(direction=pe.Suffix.IMPORT)
     ##solve - tee=True will print out solver information
     results = pe.SolverFactory('glpk').solve(model, tee=False) #turn to true for solver output - may be useful for troubleshooting
-    ##this check if the solver is optimal - if infeasible or error the model will quit
-    if (results.solver.status == pe.SolverStatus.ok) and (results.solver.termination_condition == pe.TerminationCondition.optimal):
-        print('solver optimal')# Do nothing when the solution in optimal and feasible
-    elif (results.solver.termination_condition == pe.TerminationCondition.infeasible):
-        print ('Solver Status: infeasible')
-        sys.exit()
-    else: # Something else is wrong
-        print ('Solver Status: error')
-        sys.exit()
-
-    
-    
+    return results
     

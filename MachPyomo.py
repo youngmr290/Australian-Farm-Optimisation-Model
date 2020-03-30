@@ -111,6 +111,18 @@ def machpyomo_local():
         pass
     model.p_seeding_grazingdays = Param(model.s_feed_periods, model.s_periods, initialize=mac.grazing_days(), default = 0.0, doc='pasture grazing days per feed period provided by 1ha of seeding in each seed period')
 
+    try:
+        model.del_component(model.p_mach_asset)
+    except AttributeError:
+        pass
+    model.p_mach_asset = Param(initialize=mac.seeding_gear_clearing_value(), default = 0.0, doc='asset value associated with crop gear')
+
+    try:
+        model.del_component(model.p_mach_insurance)
+    except AttributeError:
+        pass
+    model.p_mach_insurance = Param(model.s_cashflow_periods, initialize=mac.insurance(), default = 0.0, doc='insurance paid on all machinery')
+
     ###################################
     #local constraints                #
     ###################################
@@ -217,7 +229,7 @@ def harvesting_cost(model,c):
 #includes hay cost
 def mach_cost(model,c):
     hay_cost = model.v_hay_made * model.p_contracthay_cost[c]
-    return harvesting_cost(model,c) + seeding_cost(model,c) + hay_cost
+    return harvesting_cost(model,c) + seeding_cost(model,c) + hay_cost + model.p_mach_insurance[c]
 
 #function to determine derpriciation cost, this will be passed to core model
 #equals seeding dep plus harv dep plus fixed dep
@@ -230,7 +242,8 @@ def total_dep(model):
     harv_dep= mac.harvest_dep() * sum(sum(model.v_harv_hours[p ,k] for k in model.s_harvcrops) for p in model.s_periods)
     return seeding_depreciation + fixed_dep + harv_dep 
 
-
+def mach_asset(model):
+    return model.p_mach_asset * pinp.mach['number_crop_gear'] 
 
 
 

@@ -8,39 +8,47 @@ module: exriment module - this is the module that runs everything and controls k
 """
 
 
+import pandas as pd
+import pyomo.environ as pe
+import time
+import math
+import os.path
+from datetime import datetime
+import multiprocessing
+import pickle as pkl
+import sys
+
+start=time.time()
+from CreateModel import model
+import UniversalInputs as uinp
+import PropertyInputs as pinp 
+import Sensitivity as sen 
+import RotationPyomo as rotpy 
+import CropPyomo as crppy
+import MachPyomo as macpy
+import FinancePyomo as finpy
+import LabourFixedPyomo as lfixpy 
+import LabourPyomo as labpy 
+import LabourCropPyomo as lcrppy 
+import PasturePyomo as paspy
+import SupFeedPyomo as suppy
+import StubblePyomo as stubpy
+import CoreModel as core
 
 
+##read in exp and drop all false runs ie runs not being run this time
+exp_data = pd.read_excel('exp.xlsx',index_col=[0,1,2], header=[0,1,2,3])
+exp_data=exp_data.loc[True] #alternative ... exp_data.iloc[exp_data.index.get_level_values(0)index.levels[0]==True]
+start_time1 = time.time()
 
 if __name__ == '__main__':
-    import pandas as pd
-    import pyomo.environ as pe
-    import time
-    import math
-    import os.path
-    from datetime import datetime
-    import multiprocessing
-    
-    start=time.time()
-    from CreateModel import model
-    import UniversalInputs as uinp
-    import PropertyInputs as pinp 
-    import Sensitivity as sen 
-    import RotationPyomo as rotpy 
-    import CropPyomo as crppy
-    import MachPyomo as macpy
-    import FinancePyomo as finpy
-    import LabourFixedPyomo as lfixpy 
-    import LabourPyomo as labpy 
-    import LabourCropPyomo as lcrppy 
-    import PasturePyomo as paspy
-    import SupFeedPyomo as suppy
-    import StubblePyomo as stubpy
-    import CoreModel as core
-    ##read in exp and drop all false runs ie runs not being run this time
-    exp_data = pd.read_excel('exp.xlsx',index_col=[0,1,2], header=[0,1,2,3])
-    exp_data=exp_data.loc[True] #alternative ... exp_data.iloc[exp_data.index.get_level_values(0)index.levels[0]==True]
+    ##try to load in results file to dict, if it doesn't exist then create a new dict
+    try:
+        with open('pkl_results', "rb") as f:
+            var_results = pkl.load(f)
+    except FileNotFoundError:
+        var_results={}
     ##prints out start status - number of trials to run, date and time exp.xl was last saved and output summary  
-    start_time1 = time.time()
     print('Number of trials to run: ',len(exp_data))
     print('Number of full solutions: ',sum(exp_data.index[row][0] == True for row in range(len(exp_data))))
     print('Exp.xlsx last saved: ',datetime.fromtimestamp(round(os.path.getmtime("Exp.xlsx"))))
@@ -98,8 +106,7 @@ def exp(row):
     paspy.paspyomo_local()
     suppy.suppyomo_local()
     stubpy.stubpyomo_local()
-
-    core.coremodel_all()
+    results=core.coremodel_all() #required to access the solver status
      
     ##need to save results to a dict here - include the trial name as the dict name or key.. probably need to return the dict at the end of the function so it can be joined with other processors
     
@@ -145,10 +152,19 @@ def exp(row):
        
     ##this prints stuff for each trial - trial name, overall profit
     print("\nDisplaying Solution for trial: %s\n" %exp_data.index[row][1] , '-'*60,'\n%s' %pe.value(model.profit))
+    ##this check if the solver is optimal - if infeasible or error the model will quit
+    if (results.solver.status == pe.SolverStatus.ok) and (results.solver.termination_condition == pe.TerminationCondition.optimal):
+        print('solver optimal')# Do nothing when the solution in optimal and feasible
+    elif (results.solver.termination_condition == pe.TerminationCondition.infeasible):
+        print ('Solver Status: infeasible')
+        sys.exit()
+    else: # Something else is wrong
+        print ('Solver Status: error')
+        sys.exit()
     ##determine expected time to completion - trials left multiplied by average time per trial &time for current loop
     processes = multiprocessing.cpu_count()
     total_batches = math.ceil(len(exp_data) / processes ) 
-    current_batch = math.ceil( row / processes )
+    current_batch = math.ceil( (row+1) / processes ) #add 1 because python starts at 0
     remaining_batches = total_batches - current_batch
     time_taken = time.time() - start_time1
     batch_time = time_taken / current_batch
@@ -170,9 +186,6 @@ def main():
     inputs = (list(range(len(exp_data)))) 
     dataset = inputs
 
-    # Output the dataset
-    print ('Dataset: ' + str(dataset))
-
     # number of agents (processes) should be min of the num of cpus or trial
     agents = min(multiprocessing.cpu_count(),len(inputs))
     with multiprocessing.Pool(processes=agents) as pool:
@@ -181,9 +194,11 @@ def main():
 if __name__ == '__main__':
     results=main() #returns a list is the same order of exp
     ##turn list of dicts into nested dict with trial name as key
-    var_results={}
-    for result, trial_row in zip(results,range(len(exp_data))):
-        var_results[exp_data.index[trial_row][1]] = result[trial_row] 
+    for result, trial_row in zip(results,range(len(results))):
+        var_results[exp_data.index[trial_row][1]] = results[trial_row] 
+    with open('pkl_results', "wb") as f:
+        pkl.dump(var_results, f)
+
     end=time.time()
     print('total time',end-start)
 

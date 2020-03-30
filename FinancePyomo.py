@@ -17,6 +17,7 @@ from pyomo.environ import *
 
 #MUDAS modules
 from CreateModel import *
+import Finance as fin
 
 
 '''
@@ -35,6 +36,16 @@ model.v_minroe = Var(bounds = (0.0, None), doc = 'total expenditure, used to ens
 
 
 def finpyomo_local():
+    
+    ####################
+    #params            #
+    ####################
+    try:
+        model.del_component(model.p_overhead_cost)
+    except AttributeError:
+        pass
+    model.p_overhead_cost = Param(model.s_cashflow_periods, initialize = fin.overheads(), doc = 'cost of overheads each period')
+
     ####################
     #Local constrain   #
     ####################

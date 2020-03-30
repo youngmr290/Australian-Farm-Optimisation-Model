@@ -728,9 +728,30 @@ def harvest_dep():
 #print(harv_time_ha())
 #print(harvest_dep())
 
-
-
-
+#######################################################################################################################################################
+#######################################################################################################################################################
+#insurance on all gear
+#######################################################################################################################################################
+#######################################################################################################################################################
+def insurance():
+    '''
+    
+    Returns
+    -------
+    Dict for pyomo.
+        cost of insurance for all machinery
+    '''
+    ##determine the insurance paid
+    value_all_mach = total_clearing_value()
+    value_crop_gear = seeding_gear_clearing_value()
+    total_value = value_all_mach - value_crop_gear + value_crop_gear * pinp.mach['number_crop_gear'] #accounts for the number of crop gear
+    insurance = total_value * uinp.finance['equip_insurance']
+    ##determine cash period
+    p_dates = per.cashflow_periods()['start date']
+    p_name = per.cashflow_periods()['cash period']
+    start = uinp.mach_general['insurance_date']
+    allocation=fun.period_allocation(p_dates, p_name,start)
+    return {allocation:insurance}
 
 
 
