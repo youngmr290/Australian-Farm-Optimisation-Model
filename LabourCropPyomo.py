@@ -16,7 +16,16 @@ import LabourCrop as lcrp
 import PropertyInputs as pinp
 
 
-def labcrppyomo_local():
+def crplab_precalcs(params):
+    lcrp.prep_labour(params)
+    lcrp.fert_app_time_t(params)
+    lcrp.fert_app_time_ha(params)
+    lcrp.chem_app_time_ha(params)
+    params['harvest_helper'] = pinp.labour['harvest_helper'].squeeze().to_dict()
+    params['daily_seed_hours'] = pinp.mach['daily_seed_hours']
+    params['seeding_helper'] = pinp.labour['seeding_helper']
+    
+def labcrppyomo_local(params):
     #########
     #param  #
     #########    
@@ -24,20 +33,32 @@ def labcrppyomo_local():
         model.del_component(model.p_harv_helper)
     except AttributeError:
         pass
-    model.p_harv_helper = Param(model.s_crops, initialize=pinp.labour['harvest_helper'].squeeze().to_dict(), default = 0.0, doc='harvest helper time per crop')
+    model.p_harv_helper = Param(model.s_crops, initialize=params['harvest_helper'], default = 0.0, doc='harvest helper time per crop')
+    
+    try:
+        model.del_component(model.p_daily_seed_hours)
+    except AttributeError:
+        pass
+    model.p_daily_seed_hours = Param(initialize=params['daily_seed_hours'], default = 0.0, doc='machine hours per day of seeding ie labour required per mach day')
+    
+    try:
+        model.del_component(model.p_seeding_helper)
+    except AttributeError:
+        pass
+    model.p_seeding_helper = Param( initialize=params['seeding_helper'], default = 0.0, doc='proportion of time helper is needed for seeding')
 
     try:
         model.del_component(model.p_prep_pack)
     except AttributeError:
         pass
-    model.p_prep_pack = Param(model.s_periods, initialize=lcrp.prep_labour(), default = 0.0, doc='harvest helper time per crop')
+    model.p_prep_pack = Param(model.s_periods, initialize=params['prep_labour'], default = 0.0, doc='harvest helper time per crop')
     
     try:
         model.del_component(model.p_fert_app_hour_tonne_index)
         model.del_component(model.p_fert_app_hour_tonne)
     except AttributeError:
         pass
-    model.p_fert_app_hour_tonne = Param(model.s_periods, model.s_fert_type, initialize= lcrp.fert_app_time_t(), default = 0.0, doc='time required for fert application per tonne of each fert (filling up and driving to paddock cost)')
+    model.p_fert_app_hour_tonne = Param(model.s_periods, model.s_fert_type, initialize= params['fert_app_time_t'], default = 0.0, doc='time required for fert application per tonne of each fert (filling up and driving to paddock cost)')
  
     try:
         model.del_component(model.p_fert_app_hour_ha_index_index_0)
@@ -45,7 +66,7 @@ def labcrppyomo_local():
         model.del_component(model.p_fert_app_hour_ha)
     except AttributeError:
         pass
-    model.p_fert_app_hour_ha = Param(model.s_phases, model.s_lmus, model.s_periods, initialize= lcrp.fert_app_time_ha(), default = 0.0, doc='time required for fert application per ha of each fert (driving around paddock cost)')
+    model.p_fert_app_hour_ha = Param(model.s_phases, model.s_lmus, model.s_periods, initialize= params['fert_app_time_ha'], default = 0.0, doc='time required for fert application per ha of each fert (driving around paddock cost)')
     
     try:
         model.del_component(model.p_chem_app_lab_index_index_0)
@@ -53,7 +74,7 @@ def labcrppyomo_local():
         model.del_component(model.p_chem_app_lab)
     except AttributeError:
         pass
-    model.p_chem_app_lab = Param(model.s_phases, model.s_lmus, model.s_periods, initialize= lcrp.chem_app_time_ha(), default = 0.0, doc='time required for chem application per ha (hr/ha)')
+    model.p_chem_app_lab = Param(model.s_phases, model.s_lmus, model.s_periods, initialize= params['chem_app_time_ha'], default = 0.0, doc='time required for chem application per ha (hr/ha)')
 
 
 ###################################
@@ -77,7 +98,7 @@ def mach_labour(model,p):
         3- chem application
     '''
     seed_labour = sum(sum(model.v_seeding_machdays[p, k, l] for k in model.s_crops) for l in model.s_lmus)        \
-    * pinp.mach['daily_seed_hours'] *(1 + pinp.labour['seeding_helper'])
+    * model.p_daily_seed_hours *(1 + model.p_seeding_helper)
     harv_labour = sum(model.v_harv_hours[p,k] * (1 + model.p_harv_helper[k])  for k in model.s_harvcrops)  
     prep_labour = model.p_prep_pack[p]
     fert_t_time = sum(sum(sum(model.p_phasefert[r,l,n]*model.v_phase_area[r,l]*(model.p_fert_app_hour_tonne[p,n]/1000)  for r in model.s_phases)for l in model.s_lmus)for n in model.s_fert_type ) 

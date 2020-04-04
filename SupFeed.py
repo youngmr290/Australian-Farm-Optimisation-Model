@@ -26,7 +26,7 @@ import FeedBudget as fdb
 #off farm grain price  #
 ########################
 
-def buy_grain_price():
+def buy_grain_price(params):
     '''
     Returns
     -------
@@ -49,9 +49,9 @@ def buy_grain_price():
     allocation=fun.period_allocation(p_dates, p_name, start, length).set_index('period').squeeze()
     cols = pd.MultiIndex.from_product([allocation.index, price_df.columns])
     price_df = price_df.reindex(cols, axis=1,level=1)#adds level to header so i can mul in the next step
-    return  price_df.mul(allocation,axis=1,level=0).stack([0,1])
+    params['buy_grain_price'] = price_df.mul(allocation,axis=1,level=0).stack([0,1]).to_dict()
 
-def sup_cost():
+def sup_cost(params):
     ##calculate the insurance/dep/asset value per yr for the silos
     silo_info = pinp.supfeed['storage_type']
     silo_info.loc['dep'] = (silo_info.loc['price'] - silo_info.loc['salvage value'])/silo_info.loc['life']
@@ -95,9 +95,12 @@ def sup_cost():
     indx = pd.MultiIndex.from_product([start_df.index, storage_asset.index])
     storage_asset = storage_asset.reindex(indx,axis=0,level=1).to_dict()
     ##return cost, dep and asset value
-    return total_sup_cost, storage_dep, storage_asset
+    params['total_sup_cost'] = total_sup_cost
+    params['storage_dep'] = storage_dep
+    params['storage_asset'] = storage_asset
     
-def sup_md_vol():
+    
+def sup_md_vol(params):
     sup_md_vol = uinp.supfeed['sup_md_vol']    
     ##calc vol
     ###convert md to dmd
@@ -108,9 +111,12 @@ def sup_md_vol():
     vol_tonne=vol_kg*1000*sup_md_vol.loc['prop consumed']/100*sup_md_vol.loc['dry matter content']/100
     ##calc ME
     md_tonne=sup_md_vol.loc['energy']*sup_md_vol.loc['prop consumed']/100*sup_md_vol.loc['dry matter content']/100
-    return vol_tonne.to_dict(),md_tonne.to_dict()
+    ##load into params dict for pyomo
+    params['vol_tonne'] = vol_tonne.to_dict()
+    params['md_tonne'] = md_tonne.to_dict()
     
-def sup_labour():
+    
+def sup_labour(params):
     ##time to fill up
     fill_df= pinp.supfeed['time_fill_feeder']
     fill_time = (fill_df.loc['drive time']+fill_df.loc['fill time'])/fill_df.loc['capacity']
@@ -162,7 +168,7 @@ def sup_labour():
     ###get the time taken in each labour period to feed 1t of feed in each feed period
     time_lab_period=time_lab_period.stack()
     time_lab_feed_period=allocation.reindex(time_lab_period.index, level=1).mul(time_lab_period, axis=0)
-    return time_lab_feed_period.stack().to_dict()
+    params['sup_labour'] = time_lab_feed_period.stack().to_dict()
     
 
 

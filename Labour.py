@@ -36,7 +36,7 @@ labour periods and length
 
 
 
-def labour_general():
+def labour_general(params):
     '''
     Returns
     -------
@@ -188,25 +188,31 @@ def labour_general():
     ##cost of casual for each labour period - wage plus super plus workers comp (multipled by wage because super and others are %)
     ##differect to perm and manager because they are at a fixed level throughout the year ie same number of perm staff all yr.
     labour_periods['casual_cost'] = labour_periods['casual hours'] * (uinp.price['casual_cost'] + uinp.price['casual_cost'] * uinp.price['casual_super'] + uinp.price['casual_cost'] * uinp.price['casual_workers_comp']) 
-    
     ## drop last row, because it has na because it only contains the end date, therefore not a period
     labour_periods.drop(labour_periods.tail(1).index,inplace=True) 
-    
-    return labour_periods
+    ##create dicts for pyomo
+    params['permanent hours'] = labour_periods['permanent hours'].to_dict()
+    params['permanent supervision'] = labour_periods['permanent supervision'].to_dict()
+    params['casual_cost'] = dict(zip(enumerate(labour_periods['cashflow']),labour_periods['casual_cost']))
+    params['casual hours'] = labour_periods['casual hours'].to_dict()
+    params['casual supervision'] = labour_periods['casual supervision'].to_dict()
+    params['manager hours'] = labour_periods['manager hours'].to_dict()
+    params['casual ub'] = labour_periods['casual ub'].to_dict()
+    params['casual lb'] = labour_periods['casual lb'].to_dict()
 
 # t_labour_periods=labour_general()
 
 
 
 #permanent cost per cashflow period - wage plus super plus workers comp and leave ls (multipled by wage because super and others are %)
-def perm_cost():
-    return (uinp.price['permanent_cost'] + uinp.price['permanent_cost'] * uinp.price['permanent_super'] \
+def perm_cost(params):
+    perm_cost = (uinp.price['permanent_cost'] + uinp.price['permanent_cost'] * uinp.price['permanent_super'] \
     + uinp.price['permanent_cost'] * uinp.price['permanent_workers_comp'] + uinp.price['permanent_cost'] * uinp.price['permanent_ls_leave']) / len(uinp.structure['cashflow_periods'])
-
+    params['perm_cost']=perm_cost
     
 #manager cost per cashflow period
-def manager_cost():
-    return uinp.price['manager_cost'] / len(uinp.structure['cashflow_periods'])
+def manager_cost(params):
+    params['manager_cost'] = uinp.price['manager_cost'] / len(uinp.structure['cashflow_periods'])
 
 
 

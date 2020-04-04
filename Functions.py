@@ -432,8 +432,10 @@ def period_proportion_np(period_dates, date_array):
     #1 the period for that test date.
     #2 how far through the period the date occurs.
     '''
-    # period_array = np.zeros(date_array.shape,dtype='int')
-    proportion_array = np.zeros(date_array.shape,dtype='float64')
+    #this is needed when only a single date is passed in because can't do .shape on a single dt object
+    try:
+        proportion_array = np.zeros(date_array.shape,dtype='float64')
+    except AttributeError: pass
     period_array = np.searchsorted(period_dates, date_array, side = 'right') - 1
     per_start = period_dates[period_array]
     per_end   = period_dates[period_array + 1]

@@ -45,7 +45,7 @@ import Crop as crp
 import Sensitivity as SA
 
 
-def stubble_all():
+def stubble_all(params):
     '''
     Wraps all of stubble into a function that is called in pyomo 
     
@@ -223,6 +223,16 @@ def stubble_all():
     vol.columns=pd.MultiIndex.from_tuples(vol) #converts to multi index so stacking will have crop and cat as seperate keys 
     vol = vol.stack().stack().to_dict()    #for pyomo
 
+    ##load params to dict for pyomo
+    params['cons_prop']=cons_prop
+    params['md']=md
+    params['vol']=vol
+    params['cat_a_st_req']=cat_a_st_req
+    params['transfer_prov']=transfer_prov
+    params['transfer_req']=transfer_req
+    params['per_transfer']=per_transfer
+    
+    
     return cons_prop, md, vol,cat_a_st_req,transfer_prov,transfer_req,per_transfer #return multiple dicts that can be accessed in pyomo    
         
         

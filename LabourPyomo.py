@@ -17,77 +17,86 @@ formatting; try to avoid capitals (reduces possible mistakes in future)
 from pyomo.environ import *
 
 #MUDAS modules
-from Labour import *
+import Labour as lab
 from CreateModel import *
 import PropertyInputs as pinp
 
-                         
-def labpyomo_local():
+def lab_precalcs(params):
+    lab.labour_general(params)
+    lab.perm_cost(params)
+    lab.manager_cost(params)
+    params['min_perm'] = pinp.labour['min_perm'] 
+    params['max_perm'] = pinp.labour['max_perm']
+    params['min_managers'] = pinp.labour['min_managers'] 
+    params['max_managers'] = pinp.labour['max_managers']
+                    
+
+
+def labpyomo_local(params):
     #########
     #param  #
     #########    
     ##called here , used below to generate params
-    labour_df=labour_general()
     try:
         model.del_component(model.p_perm_hours)
     except AttributeError:
         pass
-    model.p_perm_hours = Param(model.s_periods, initialize= labour_df['permanent hours'].to_dict(), doc='hours worked by a permanent staff in each period')
+    model.p_perm_hours = Param(model.s_periods, initialize= params['permanent hours'], doc='hours worked by a permanent staff in each period')
     
     try:
         model.del_component(model.p_perm_supervison)
     except AttributeError:
         pass
-    model.p_perm_supervison = Param(model.s_periods, initialize= labour_df['permanent supervision'].to_dict(), doc='hours of supervision required by a permanent staff in each period')
+    model.p_perm_supervison = Param(model.s_periods, initialize= params['permanent supervision'], doc='hours of supervision required by a permanent staff in each period')
     
     try:
         model.del_component(model.p_perm_cost)
     except AttributeError:
         pass
-    model.p_perm_cost = Param(model.s_cashflow_periods, initialize = perm_cost(), default = 0.0, doc = 'cost of a permanent staff for 1 yr')
+    model.p_perm_cost = Param(model.s_cashflow_periods, initialize = params['perm_cost'], default = 0.0, doc = 'cost of a permanent staff for 1 yr')
     
     try:
         model.del_component(model.p_casual_cost_index)
         model.del_component(model.p_casual_cost)
     except AttributeError:
         pass
-    model.p_casual_cost = Param(model.s_periods, model.s_cashflow_periods,  initialize = dict(zip(enumerate(labour_df['cashflow']),labour_df['casual_cost'])), default = 0.0, doc = 'cost of a casual staff for each labour period')
+    model.p_casual_cost = Param(model.s_periods, model.s_cashflow_periods,  initialize = params['casual_cost'], default = 0.0, doc = 'cost of a casual staff for each labour period')
     
     try:
         model.del_component(model.p_casual_hours)
     except AttributeError:
         pass
-    model.p_casual_hours = Param(model.s_periods, initialize= labour_df['casual hours'].to_dict(), doc='hours worked by a casual staff in each period')
+    model.p_casual_hours = Param(model.s_periods, initialize= params['casual hours'], doc='hours worked by a casual staff in each period')
     
     try:
         model.del_component(model.p_casual_supervison)
     except AttributeError:
         pass
-    model.p_casual_supervison = Param(model.s_periods, initialize= labour_df['casual supervision'].to_dict(), doc='hours of supervision required by a casual staff in each period')
+    model.p_casual_supervison = Param(model.s_periods, initialize= params['casual supervision'], doc='hours of supervision required by a casual staff in each period')
     
     try:
         model.del_component(model.p_manager_hours)
     except AttributeError:
         pass
-    model.p_manager_hours = Param(model.s_periods, initialize= labour_df['manager hours'].to_dict(), doc='hours worked by a manager in each period')
+    model.p_manager_hours = Param(model.s_periods, initialize= params['manager hours'], doc='hours worked by a manager in each period')
     
     try:
         model.del_component(model.p_manager_cost)
     except AttributeError:
         pass
-    model.p_manager_cost = Param(model.s_cashflow_periods, initialize = manager_cost(), doc = 'cost of a manager for 1 yr')
+    model.p_manager_cost = Param(model.s_cashflow_periods, initialize = params['manager_cost'], doc = 'cost of a manager for 1 yr')
     
     try:
         model.del_component(model.p_casual_upper)
     except AttributeError:
         pass
-    model.p_casual_upper = Param(model.s_periods, initialize = labour_df['casual ub'].to_dict(),  doc = 'casual availability upper bound')
+    model.p_casual_upper = Param(model.s_periods, initialize = params['casual ub'],  doc = 'casual availability upper bound')
     
     try:
         model.del_component(model.p_casual_lower)
     except AttributeError:
         pass
-    model.p_casual_lower = Param(model.s_periods, initialize = labour_df['casual lb'].to_dict(), doc = 'casual availability lower bound')
+    model.p_casual_lower = Param(model.s_periods, initialize = params['casual lb'], doc = 'casual availability lower bound')
 
 ###############################
 #local constraints            #

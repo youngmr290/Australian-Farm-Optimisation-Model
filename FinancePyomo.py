@@ -19,6 +19,34 @@ from pyomo.environ import *
 from CreateModel import *
 import Finance as fin
 
+def fin_precalcs(params):
+    fin.overheads(params)
+    params['overdraw'] = pinp.finance['overdraw_limit']
+
+
+def finpyomo_local(params):
+    
+    ####################
+    #params            #
+    ####################
+    try:
+        model.del_component(model.p_overhead_cost)
+    except AttributeError:
+        pass
+    model.p_overhead_cost = Param(model.s_cashflow_periods, initialize = params['overheads'], doc = 'cost of overheads each period')
+
+    ####################
+    #Local constrain   #
+    ####################
+    ##debit can't be more than a specified amount ie farmers will draw a maximum from the bank throughout yr
+    def overdraw(model,c): 
+        return model.v_debit[c] <= params['overdraw']
+    try:
+        model.del_component(model.con_overdraw)
+    except AttributeError:
+        pass
+    model.con_overdraw = Constraint(model.s_cashflow_periods, rule=overdraw, doc='overdraw limit')
+
 
 '''
 #variables
@@ -33,28 +61,3 @@ model.v_dep = Var(bounds = (0.0, None), doc = 'transfers total dep to objective'
 model.v_asset = Var(bounds = (0.0, None), doc = 'transfers total value of asset to objective to ensure opportuninty cost is represented')
 ##minroe
 model.v_minroe = Var(bounds = (0.0, None), doc = 'total expenditure, used to ensure min returen is met')
-
-
-def finpyomo_local():
-    
-    ####################
-    #params            #
-    ####################
-    try:
-        model.del_component(model.p_overhead_cost)
-    except AttributeError:
-        pass
-    model.p_overhead_cost = Param(model.s_cashflow_periods, initialize = fin.overheads(), doc = 'cost of overheads each period')
-
-    ####################
-    #Local constrain   #
-    ####################
-    ##debit can't be more than a specified amount ie farmers will draw a maximum from the bank throughout yr
-    def overdraw(model,c): 
-        return model.v_debit[c] <= pinp.finance['overdraw_limit']
-    try:
-        model.del_component(model.con_overdraw)
-    except AttributeError:
-        pass
-    model.con_overdraw = Constraint(model.s_cashflow_periods, rule=overdraw, doc='overdraw limit')
-

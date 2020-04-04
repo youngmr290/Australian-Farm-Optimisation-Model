@@ -22,9 +22,9 @@ import UniversalInputs as uinp
 from CreateModel import model
 import CropPyomo as crppy
 import MachPyomo as macpy
-import FinancePyomo #not used but it needs to be imported so that it is run
+# import FinancePyomo #not used but it needs to be imported so that it is run
 import LabourPyomo as labpy 
-import LabourFixedPyomo as lfixpy 
+# import LabourFixedPyomo as lfixpy 
 import LabourCropPyomo as lcrppy 
 import PasturePyomo as paspy
 import SupFeedPyomo as suppy
@@ -94,17 +94,22 @@ def coremodel_all():
         return -model.v_sheep_labour_casual[p] - model.v_sheep_labour_permanent[p] - model.v_sheep_labour_manager[p] + suppy.sup_labour(model,p)   <= 0
     model.con_labour_sheep_anyone = pe.Constraint(model.s_periods, rule = labour_crop, doc='link between labour supply and requirment by sheep jobs for all labour sources')
     
+    #######################################
+    #stubble & nap consumption at harvest #
+    #######################################
+    try:
+        model.del_component(model.con_harv_stub_nap_cons_index)
+        model.del_component(model.con_harv_stub_nap_cons)
+    except AttributeError:
+        pass
+    def harv_stub_nap_cons(model,e,f):
+        return -paspy.pas_md(model,e,f) + sum(model.p_harv_prop[f,k]/(1-model.p_harv_prop[f,k]) * model.v_stub_con[e,f,k,s] * model.p_stub_md[f,s,k] for k in model.s_crops for s in model.s_stub_cat) \
+                +  model.p_nap_prop[f]/(1-model.p_nap_prop[f]) * paspy.nappas_md(model,e,f) <= 0
+    model.con_harv_stub_nap_cons = pe.Constraint(model.s_sheep_pools, model.s_feed_periods, rule = harv_stub_nap_cons, doc='limit stubble and nap consumption in the period harvest occurs')
+
     ######################
     #stubble             #
     ###################### 
-    try:
-        model.del_component(model.con_harv_stub_cons_index)
-        model.del_component(model.con_harv_stub_cons)
-    except AttributeError:
-        pass
-    def harv_stub_cons(model,e,f):
-        return -paspy.pas_md(model,e,f) + sum(model.p_harv_prop[f,k]/(1-model.p_harv_prop[f,k]) * model.v_stub_con[e,f,k,s] * model.p_stub_md[f,s,k] for k in model.s_crops for s in model.s_stub_cat)  <= 0
-    model.con_harv_stub_cons = pe.Constraint(model.s_sheep_pools, model.s_feed_periods, rule = harv_stub_cons, doc='limit stubble consumption in the period harvest occurs')
   
     try:
         model.del_component(model.con_stubble_a_index)

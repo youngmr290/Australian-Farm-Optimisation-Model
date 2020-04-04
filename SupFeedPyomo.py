@@ -11,13 +11,18 @@ from pyomo import environ as pe
 from CreateModel import model
 import SupFeed as sup
 
-def suppyomo_local():
+def sup_precalcs(params):
+    ##call sup functions
+    sup.sup_cost(params) 
+    vol_md = sup.sup_md_vol(params)  
+    sup.sup_labour(params)
+    sup.buy_grain_price(params)
+    
+    
+def suppyomo_local(params):
     #########
     #param  #
     ######### 
-    ##call sup functions
-    cost_dep_asset = sup.sup_cost() 
-    vol_md = sup.sup_md_vol()  
     
     ##sup cost
     try:
@@ -26,7 +31,7 @@ def suppyomo_local():
         model.del_component(model.p_sup_cost)
     except AttributeError:
         pass
-    model.p_sup_cost = pe.Param(model.s_cashflow_periods, model.s_feed_periods, model.s_crops, initialize=cost_dep_asset[0], default = 0.0, doc='cost of storing and feeding 1t of sup each period')
+    model.p_sup_cost = pe.Param(model.s_cashflow_periods, model.s_feed_periods, model.s_crops, initialize=params['total_sup_cost'], default = 0.0, doc='cost of storing and feeding 1t of sup each period')
     
     ##sup dep
     try:
@@ -34,7 +39,7 @@ def suppyomo_local():
         model.del_component(model.p_sup_dep)
     except AttributeError:
         pass
-    model.p_sup_dep = pe.Param(model.s_feed_periods, model.s_crops, initialize=cost_dep_asset[1], default = 0.0, doc='depreciation of storing 1t of sup each period')
+    model.p_sup_dep = pe.Param(model.s_feed_periods, model.s_crops, initialize= params['storage_dep'], default = 0.0, doc='depreciation of storing 1t of sup each period')
     
     ##sup asset
     try:
@@ -42,7 +47,7 @@ def suppyomo_local():
         model.del_component(model.p_sup_asset)
     except AttributeError:
         pass
-    model.p_sup_asset = pe.Param(model.s_feed_periods, model.s_crops, initialize=cost_dep_asset[2], default = 0.0, doc='asset value associated with storing 1t of sup each period')
+    model.p_sup_asset = pe.Param(model.s_feed_periods, model.s_crops, initialize=params['storage_asset'], default = 0.0, doc='asset value associated with storing 1t of sup each period')
     
     ##sup labour
     try:
@@ -51,21 +56,21 @@ def suppyomo_local():
         model.del_component(model.p_sup_labour)
     except AttributeError:
         pass
-    model.p_sup_labour = pe.Param(model.s_crops, model.s_periods, model.s_feed_periods, initialize=sup.sup_labour(), default = 0.0, doc='labour required to feed each sup in each feed period')
+    model.p_sup_labour = pe.Param(model.s_crops, model.s_periods, model.s_feed_periods, initialize=params['sup_labour'], default = 0.0, doc='labour required to feed each sup in each feed period')
     
     ##sup vol
     try:
         model.del_component(model.p_sup_vol)
     except AttributeError:
         pass
-    model.p_sup_vol = pe.Param(model.s_crops, initialize=vol_md[0], default = 0.0, doc='vol per tonne of grain fed')
+    model.p_sup_vol = pe.Param(model.s_crops, initialize=params['vol_tonne'] , default = 0.0, doc='vol per tonne of grain fed')
     
     ##sup md
     try:
         model.del_component(model.p_sup_md)
     except AttributeError:
         pass
-    model.p_sup_md = pe.Param(model.s_crops, initialize=vol_md[1], default = 0.0, doc='md per tonne of grain fed')
+    model.p_sup_md = pe.Param(model.s_crops, initialize=params['md_tonne'] , default = 0.0, doc='md per tonne of grain fed')
     
     ##price buy grain
     try:
@@ -74,7 +79,7 @@ def suppyomo_local():
         model.del_component(model.p_buy_grain_price)
     except AttributeError:
         pass
-    model.p_buy_grain_price = pe.Param(model.s_crops, model.s_cashflow_periods, model.s_grain_pools, initialize=sup.buy_grain_price().to_dict(), default = 0.0, doc='price to buy grain from neighbour')
+    model.p_buy_grain_price = pe.Param(model.s_crops, model.s_cashflow_periods, model.s_grain_pools, initialize=params['buy_grain_price'], default = 0.0, doc='price to buy grain from neighbour')
 
 
 #######################################################################################################################################################

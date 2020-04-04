@@ -70,7 +70,7 @@ def sup_mach_cost():
     Series.
             Cost of machinery to feed 1t of each grain to sheep.
     '''
-    sup_cost=uinp.mach[pinp.mach['option']]['sup_feed']
+    sup_cost=uinp.mach[pinp.mach['option']]['sup_feed'].copy() #need this so it doesnt alter inputs
     ##add fuel cost
     sup_cost['litres']=sup_cost['litres'] * fuel_price()
     return sup_cost.sum(axis=1)
@@ -87,7 +87,7 @@ def sup_mach_cost():
 ##create a copy of periods df - so it doesn't alter the origional period df that is used for labour stuff
 # mach_periods = per.p_dates_df()#periods.copy()
 
-def seed_days():
+def seed_days(*params):
     '''
     Returns
     -------
@@ -100,7 +100,9 @@ def seed_days():
         mach_periods.loc[i,'seed_days'] = days
     ## drop last row, because it has na because it only contains the end date, therefore not a period
     mach_periods.drop(mach_periods.tail(1).index,inplace=True) 
-    return mach_periods
+    if params:
+        params[0]['seed_days'] = mach_periods['seed_days'].to_dict()
+    else: return mach_periods
 # seed_days()   
 # def seed_days():
 #     '''
@@ -131,7 +133,7 @@ def seed_days():
 #     return mach_periods
 # # seed_days()   
 
-def grazing_days():
+def grazing_days(params):
     '''
     Returns
     -------
@@ -168,7 +170,7 @@ def grazing_days():
         grazing_days_df[mach_p_num] = grazing_days_list #annoyingly both mach periods and feedperiods are defined as just numbers
         ##have to divide by the seeding days per period to return the grazing days if 1 ha was sown per period - this can now be multiplied by the ha sowed (done in pyomo)
         grazing_days_df[mach_p_num] = grazing_days_df[mach_p_num]/ seeding_days 
-    return grazing_days_df.stack().to_dict()
+    params['grazing_days'] = grazing_days_df.stack().to_dict()
         
 #################################################
 #seeding ha/day for each crop on each lmu  type #
@@ -187,7 +189,7 @@ def seed_time_lmus():
     rate_direct_drill = 1 / (speed_lmu_df * uinp.mach[pinp.mach['option']]['seeding_eff'] * uinp.mach[pinp.mach['option']]['seeder_width'] / 10)
     return rate_direct_drill
 
-def overall_seed_rate():
+def overall_seed_rate(params):
     '''
     Returns
     -------
@@ -200,7 +202,7 @@ def overall_seed_rate():
     seedrate_df = pd.concat([uinp.mach[pinp.mach['option']]['seeder_speed_crop_adj']]*len(seed_rate_lmus),axis=1) #expands df for each lmu
     seedrate_df.columns = seed_rate_lmus.index #rename columns to lmu so i can mul
     seedrate_df=seedrate_df.mul(seed_rate_lmus)
-    return seedrate_df.stack().to_dict()
+    params['seed_rate'] = seedrate_df.stack().to_dict()
     
   
 
@@ -265,7 +267,7 @@ def seeding_cost_lmu():
     '''
     return tractor_cost_seeding() + maint_cost_seeder()
 
-def seeding_cost_period():
+def seeding_cost_period(params):
     '''
     Returns
     -------
@@ -279,9 +281,9 @@ def seeding_cost_period():
     p_name = per.cashflow_periods()['cash period']
     start = per.wet_seeding_start_date()
     length = dt.timedelta(days = sum(pinp.crop['seed_period_lengths']).astype(np.float64))
-    return fun.period_allocation_reindex(cost_df, p_dates, p_name, start,length)
+    params['seeding_cost'] = fun.period_allocation_reindex(cost_df, p_dates, p_name, start,length).stack().to_dict()
 
-def contract_seed_cost():
+def contract_seed_cost(params):
     '''
     Returns
     -------
@@ -294,14 +296,14 @@ def contract_seed_cost():
     p_name = per.cashflow_periods()['cash period']
     seed_cost = uinp.price['contract_seed_cost']
     cash_period = fun.period_allocation(p_dates,p_name,per.wet_seeding_start_date())
-    return {cash_period : seed_cost}
+    params['contract_seed_cost'] = {cash_period : seed_cost}
 
 
 ########################################
 #late seeding & dry seeding penalty    #
 ########################################
 
-def yield_penalty():
+def yield_penalty(params):
     '''
     Yields
     ------
@@ -314,7 +316,7 @@ def yield_penalty():
     dry_seed_start = pinp.crop['dry_seed_start']
     dry_seed_end = pinp.feed_inputs['feed_periods'].loc[0,'date']#dry seeding finishes when the season breaks 
     seed_start = per.wet_seeding_start_date()
-    seed_end = per.period_end_date(per.wet_seeding_start_date(),pinp.crop['seed_period_lengths'])
+    # seed_end = per.period_end_date(per.wet_seeding_start_date(),pinp.crop['seed_period_lengths'])
     penalty_free_days = dt.timedelta(days = pinp.crop['seed_period_lengths'][0].astype(np.float64))
     yield_penalty_df = pinp.crop['yield_penalty'] 
     ##add the yield penalty for each period and each crop
@@ -337,7 +339,7 @@ def yield_penalty():
             ###other periods (between season break and seeding start & before dry seeding) get 500 penalty
             else: penalty = 500
             mach_penalty.loc[i, k] = penalty
-    return mach_penalty.stack().to_dict()
+    params['yield_penalty'] = mach_penalty.stack().to_dict()
 # x = (yield_penalty())   
 
 
@@ -365,7 +367,7 @@ def harv_time_ha():
     ##work rate hr/ha, determined from speed, size and eff
     return 10/ (harv_speed * uinp.mach[pinp.mach['option']]['harv_eff'] * uinp.mach[pinp.mach['option']]['harvester_width'])
 
-def harv_rate_period():
+def harv_rate_period(params):
     '''
     Returns
     -------
@@ -395,12 +397,12 @@ def harv_rate_period():
                 else: harvest_rate = 0
             else: harvest_rate = 0
             harv_rate_df.loc[i, k] = harvest_rate
-    return harv_rate_df.stack().to_dict()
+    params['harv_rate_period'] = harv_rate_df.stack().to_dict()
 # harv_rate_period()  
 
 
 #adds the max number of harv hours for each crop for each period to the df  
-def max_harv_hours():
+def max_harv_hours(params):
     mach_periods = per.p_dates_df()
     harv_start = pinp.crop['harv_date']
     harv_end = per.period_end_date(harv_start, pinp.crop['harv_period_lengths'])
@@ -416,7 +418,7 @@ def max_harv_hours():
         mach_periods.loc[i, 'max_harv_hours'] = harv_days * pinp.mach['daily_harvest_hours']
     ## drop last row, because it has na because it only contains the end date, therefore not a period
     mach_periods.drop(mach_periods.tail(1).index,inplace=True) 
-    return mach_periods['max_harv_hours'].to_dict()
+    params['max_harv_hours'] = mach_periods['max_harv_hours'].to_dict()
 #max_harv_hours()
 
 def cost_harv():
@@ -436,7 +438,7 @@ def cost_harv():
     ##return fuel and oil cost plus r & m ($/hr)
     return fuel_oil_cost_hr + uinp.mach[pinp.mach['option']]['harvest_maint']
 
-def harvest_cost_period():
+def harvest_cost_period(params):
     '''
     Returns
     -------
@@ -451,14 +453,14 @@ def harvest_cost_period():
     p_name = per.cashflow_periods()['cash period']
     start = pinp.crop['harv_date']
     length = dt.timedelta(days = sum(pinp.crop['harv_period_lengths']).astype(np.float64))
-    return fun.period_allocation_reindex(cost_df, p_dates, p_name, start,length).stack().to_dict()
+    params['harvest_cost_period'] = fun.period_allocation_reindex(cost_df, p_dates, p_name, start,length).stack().to_dict()
 
 
 #########################
 #contract harvesting    #
 #########################
 
-def contract_harv_rate():
+def contract_harv_rate(params):
     '''
     Returns
     -------
@@ -471,11 +473,11 @@ def contract_harv_rate():
     contract_harv_time_ha = 10 / (harv_speed * uinp.mach_general['contract_harvester_width'] * uinp.mach_general['contract_harv_eff'])
     ##overall t/hr
     harv_rate = yield_approx * (1 / contract_harv_time_ha)
-    return harv_rate.iloc[:,0].to_dict()
+    params['contract_harv_rate'] = harv_rate.iloc[:,0].to_dict()
 #print(contract_harv_rate())
 
 
-def contract_harvest_cost_period():
+def contract_harvest_cost_period(params):
     '''
     Returns
     -------
@@ -489,13 +491,13 @@ def contract_harvest_cost_period():
     p_name = per.cashflow_periods()['cash period']
     start = pinp.crop['harv_date']
     length = dt.timedelta(days = sum(pinp.crop['harv_period_lengths']).astype(np.float64))
-    return fun.period_allocation_reindex(cost_df, p_dates, p_name, start,length).stack().to_dict()
+    params['contract_harvest_cost_period'] = fun.period_allocation_reindex(cost_df, p_dates, p_name, start,length).stack().to_dict()
 
 
 #########################
 #make hay               #
 #########################
-def hay_making_cost():
+def hay_making_cost(params):
     '''
     Returns
     -------
@@ -513,7 +515,7 @@ def hay_making_cost():
     bail_cost =  uinp.price['contract_bail'] 
     cart_cost = uinp.price['cart_hay'] 
     total_cost = mow_cost + bail_cost + cart_cost
-    return (allocation * total_cost).stack().droplevel(1).to_dict() #drop level because i stacked to get it to a series but it was already 1d and i didn't want the col name as a key
+    params['hay_making_cost'] = (allocation * total_cost).stack().droplevel(1).to_dict() #drop level because i stacked to get it to a series but it was already 1d and i didn't want the col name as a key
 
 #######################################################################################################################################################
 #######################################################################################################################################################
@@ -689,7 +691,7 @@ def seeding_gear_clearing_value():
     + uinp.mach[pinp.mach['option']]['clearing_value'].loc['tractor','value'] + uinp.mach[pinp.mach['option']]['clearing_value'].loc['seeder','value']
     
 #
-def seeding_dep():
+def seeding_dep(params):
     '''
     Returns
     -------
@@ -701,10 +703,11 @@ def seeding_dep():
     seeding_time = uinp.mach[pinp.mach['option']]['dep_area'] * average_seed_rate 
     ##second, determine dep per hour - equal to crop gear value x dep % / seeding time
     dep_rate = uinp.mach[pinp.mach['option']]['variable_dep'] - uinp.finance['fixed_dep']
-    dep_hourly = seeding_gear_clearing_value() * dep_rate / seeding_time
+    params['seeding_gear_clearing_value'] = seeding_gear_clearing_value() 
+    dep_hourly = params['seeding_gear_clearing_value'] * dep_rate / seeding_time
     ##third, convert to dep per ha for each soil type - equals cost per hr x seeding rate per hr
     dep_ha = dep_hourly * seed_time_lmus()
-    return dep_ha.iloc[:,0].to_dict()
+    params['seeding_dep'] = dep_ha.iloc[:,0].to_dict()
 
 
 ####################################
@@ -733,7 +736,7 @@ def harvest_dep():
 #insurance on all gear
 #######################################################################################################################################################
 #######################################################################################################################################################
-def insurance():
+def insurance(params):
     '''
     
     Returns
@@ -751,7 +754,7 @@ def insurance():
     p_name = per.cashflow_periods()['cash period']
     start = uinp.mach_general['insurance_date']
     allocation=fun.period_allocation(p_dates, p_name,start)
-    return {allocation:insurance}
+    params['insurance'] = {allocation:insurance}
 
 
 

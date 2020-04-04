@@ -77,7 +77,7 @@ def farmgate_grain_price():
     return price_df.sub(total_fees, axis=0).clip(0)
 
 
-def grain_price():
+def grain_price(params):
     '''
     Returns
     -------
@@ -97,19 +97,19 @@ def grain_price():
     allocation=fun.period_allocation(p_dates, p_name, start, length).set_index('period').squeeze()
     cols = pd.MultiIndex.from_product([allocation.index, farm_gate_price.columns])
     farm_gate_price = farm_gate_price.reindex(cols, axis=1,level=1)#adds level to header so i can mul in the next step
-    return  farm_gate_price.mul(allocation,axis=1,level=0).stack([0,1])
+    params['grain_price'] =  farm_gate_price.mul(allocation,axis=1,level=0).stack([0,1]).to_dict()
 # a=grain_price()
 
 ##function to determine the proportion of grain in each pool 
-def grain_pool_proportions():
+def grain_pool_proportions(params):
     prop = uinp.price['grain_price'][['prop_firsts','prop_seconds']]
     prop.columns=['firsts','seconds']
-    return dict(prop.stack())
+    params['grain_pool_proportions'] = dict(prop.stack())
 
 #########################
 #yield                  #
 #########################
-def rot_yield():
+def rot_yield(*params):
     '''
     Returns
     ----------
@@ -138,7 +138,10 @@ def rot_yield():
     rot_yields = pd.merge(phases_df,yields, how='left', left_on=uinp.cols(), right_index = True)
     # return yields_income.drop(list(range(uinp.structure['phase_len'])), axis=1).stack()
     rot_yields.set_index(uinp.cols()[-1], append=True, inplace=True)
-    return rot_yields.drop(list(range(uinp.structure['phase_len']-1)), axis=1).stack()
+    if params:
+        params[0]['rot_yield'] = rot_yields.drop(list(range(uinp.structure['phase_len']-1)), axis=1).stack().to_dict() #[0] required because when *args are passed in they are passed in as a tuple
+    else:
+        return rot_yields.drop(list(range(uinp.structure['phase_len']-1)), axis=1).stack()
     # return rot_yields.set_index(list(range(uinp.structure['phase_len']))).stack() #need to use the multiindex to create a multidimensional param for pyomo so i can split it down when indexing
 # a=rot_yield().to_dict()
 
@@ -170,7 +173,7 @@ def fert_cost_allocation():
     return fun.period_allocation2(start_df, length_df, p_dates, p_name)
 # t_allocation=fert_cost_allocation()
 
-def fert_req():
+def fert_req(*args):
     '''
     Returns
     ----------
@@ -184,7 +187,11 @@ def fert_req():
     fert1=fert.reindex(fert_by_soil.index, axis=1, level=0).mul(fert_by_soil)
     # fert1=fert1.mul(arable2,axis=0,level=1) #add arable to df
     fert = pd.merge(phases_df2, fert1, how='left', left_on=uinp.cols(), right_index = True) #merge fert with phases
-    return fert.drop(list(range(uinp.structure['phase_len'])), axis=1,level=0).stack() #level is not really needed but stops a performance warning
+    ##this is required because this function is both a parameter and a step used to build another param ie if dict is passed it add param else it returns df for next function
+    if args:
+        args[0]['fert_req'] = fert.drop(list(range(uinp.structure['phase_len'])), axis=1,level=0).stack([1,0]).to_dict() #level is not really needed but stops a performance warning
+    else:
+        return fert.drop(list(range(uinp.structure['phase_len'])), axis=1,level=0).stack() #level is not really needed but stops a performance warning
     # return fert.set_index(list(range(uinp.structure['phase_len']))).stack()
 # fert=fert_req()
   
@@ -482,7 +489,7 @@ includes
 -seed cost
 -crop insurance cost
 '''
-def rot_cost():
+def rot_cost(params):
     cost = pd.concat([total_phase_fert_cost(),total_phase_chem_cost(),phase_stubble_cost(),seedcost()],axis=1).sum(axis=1,level=0)
     ##adjust for arable area
     arable = pinp.crop['arable'].stack().droplevel(0) #read in arable area df
@@ -536,21 +543,23 @@ def rot_cost():
         xc=Xx+Exr
         ###concat to main cost df
         cost=pd.concat([cost,uc,xc])
-    return cost.stack().to_dict()
+    params['rot_cost'] = cost.stack().to_dict()
 # jj=rot_cost()
 
 #########################
 #stubble                #
 #########################
-#stubble produced per kg grain harvested
-def stubble_production():
+#stubble produced per kg grain harvested, used in stubble.py as well
+def stubble_production(*params):
     '''stubble produced by each rotation phase'''
     stubble = pd.DataFrame()
     for crop in pinp.stubble['harvest_index'].index:
         harv_index = pinp.stubble['harvest_index'].loc[crop,'hi']
         proportion_harvested = pinp.stubble['proportion_grain_harv'].loc[crop,'prop']
         stubble.loc[crop,'a'] = 1/(harv_index * proportion_harvested)-1 #subtract 1 to account for the tonne of grain that was harvested
-    return stubble.stack().to_dict()
+    if params:
+        params[0]['stubble_production'] = stubble.stack().to_dict()
+    else: return stubble.stack().to_dict()
 #print (stubble_production())
 
 
@@ -558,7 +567,7 @@ def stubble_production():
 #sow            #
 #################
     
-def crop_sow():
+def crop_sow(params):
     '''
     Returns
     -------
@@ -573,6 +582,6 @@ def crop_sow():
     cropsow = pd.merge(phases_df, cropsow, how='left', left_on=uinp.cols()[-1], right_index = True)
     ##add current crop to index
     cropsow.set_index(uinp.cols()[-1], append=True, inplace=True)
-    return cropsow.drop(list(range(uinp.structure['phase_len']-1)), axis=1).stack().to_dict()
+    params['crop_sow'] = cropsow.drop(list(range(uinp.structure['phase_len']-1)), axis=1).stack().to_dict()
 
 

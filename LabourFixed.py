@@ -33,7 +33,7 @@ determine the period allocation
 '''
 
 
-def fixed():
+def fixed(params):
     ##copy labour periods df
     labour_periods_fx=per.p_dates_df() 
     ##add blank column for the following fixed labour activities - this is populated below
@@ -66,7 +66,11 @@ def fixed():
     labour_periods_fx.drop(labour_periods_fx.tail(1).index,inplace=True) 
     ##fill blanks with 0
     labour_periods_fx[['bas','super','planning','tax']]= labour_periods_fx[['bas','super','planning','tax']].fillna(0)
-    return labour_periods_fx
+    ##make dicts for pyomo
+    params['super'] = labour_periods_fx['super'].to_dict()
+    params['bas'] = labour_periods_fx['bas'].to_dict()
+    params['planning'] = labour_periods_fx['planning'].to_dict()
+    params['tax'] = labour_periods_fx['tax'].to_dict()
 # fixed()
 
 

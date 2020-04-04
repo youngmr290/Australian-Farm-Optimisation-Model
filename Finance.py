@@ -43,10 +43,10 @@ def credit_interest():
 #################
 #overheads      #
 #################
-def overheads():
+def overheads(params):
     overheads=pinp.general['overheads'] 
-    return overheads.squeeze().sum()/ len(uinp.structure['cashflow_periods'])    
-
+    overheads = overheads.squeeze().sum()/ len(uinp.structure['cashflow_periods'])    
+    params['overheads'] = overheads
 
 
 

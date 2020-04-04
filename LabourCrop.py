@@ -8,7 +8,7 @@ Module - calcs for crop labour
 """
 #python modules
 import pandas as pd
-import numpy as np#datetime
+import numpy as np
 import timeit
 
 #MUDAS modules
@@ -34,14 +34,14 @@ phases_df2.columns = pd.MultiIndex.from_product([phases_df2.columns, ['']])  #ma
 #this function just combines all the needed elements to call the dict_period_total function.
 #what is happening; i have a number of dicts that contain dates and the number of hours of labour for that date
 #i want to combine and end up with the total hours of work done for each labour period
-def prep_labour():
+def prep_labour(params):
     p_dates = per.p_date2_df()['date']
     #gets the period name 
     p_name = per.p_date2_df().index
     #list of all the dicts that i want to combine
     dfs=pinp.labour['harvest_prep'],pinp.labour['fert_prep'] \
     , pinp.labour['spray_prep'], pinp.labour['seed_prep']
-    return fun.df_period_total(p_dates, p_name, *dfs) # '*' used to unpack list into seperate items for func
+    params['prep_labour'] = fun.df_period_total(p_dates, p_name, *dfs) # '*' used to unpack list into seperate items for func
 
 ###########################
 #fert applicaation time   #  this is similar to app cost done in mach sheet
@@ -61,7 +61,7 @@ def lab_allocation():
 
 #time/per ha - needs to be multiplied by the number of phases and then added to phases df because the previous phases can effect number of passes and hence time
 #also need to account for arable area
-def fert_app_time_ha():
+def fert_app_time_ha(params):
     passes = pinp.crop['passes'].reset_index().pivot(index='fert',columns='index').T
     arable = pinp.crop['arable'].stack().droplevel(0)
     col = pd.MultiIndex.from_product([passes.columns, arable.index]) #create a new col index
@@ -71,17 +71,17 @@ def fert_app_time_ha():
     time = time.sum(level=[0,2], axis=1).replace(0, np.nan) #sum each fert - labour doesn't need to be seperated by fert type once joined with passes
                                                           #sum nan returns 0 therefore i need to convert 0 back to nan so that they are dropped when stacking to reduce dict size.
     phase_time = pd.merge(phases_df2, time, how='left', left_on=uinp.cols(), right_index = True)
-    return phase_time.drop(list(range(uinp.structure['phase_len'])),axis=1,level=0).stack([0,1]).to_dict()  
+    params['fert_app_time_ha'] = phase_time.drop(list(range(uinp.structure['phase_len'])),axis=1,level=0).stack([0,1]).to_dict()  
     # return phase_time.set_index(list(range(rinp.rotation_data['phase_len']))).stack([0,1]).to_dict() 
 #f=fert_app_time_ha()
 #print(timeit.timeit(fert_app_time_ha,number=20)/20)
 
 #time/t - need to convert m3 to tone and allocate into lab periods
-def fert_app_time_t():
+def fert_app_time_t(params):
     spreader_proportion = pd.DataFrame([pinp.crop['fert_info']['spreader_proportion']])
     conversion = pd.DataFrame([pinp.crop['fert_info']['fert_density']])
     time = (mac.time_cubic() / conversion).mul(spreader_proportion.squeeze(),axis=1)
-    return (time.iloc[0]*lab_allocation()).stack().to_dict()
+    params['fert_app_time_t'] = (time.iloc[0]*lab_allocation()).stack().to_dict()
 #print(fert_app_time_t())    
     
 
@@ -105,7 +105,7 @@ def chem_lab_allocation():
     return fun.period_allocation2(start_df, length_df, p_dates, p_name)
 
 
-def chem_app_time_ha():  
+def chem_app_time_ha(params):  
     '''
     Returns
     ----------
@@ -125,7 +125,7 @@ def chem_app_time_ha():
     ##merge to full rotation df
     phase_time = pd.merge(phases_df2, time, how='left', left_on=uinp.cols(), right_index = True) #merge with all the phases, requires because different phases have different application passes
     phase_time = phase_time.drop(list(range(uinp.structure['phase_len'])),axis=1,level=0).stack([1,0]) #adding level=0 does nothing but if not included you get a preformance warning.
-    return phase_time.to_dict()
+    params['chem_app_time_ha'] = phase_time.to_dict()
 # t_chemlab=chem_app_time_ha()
 
     

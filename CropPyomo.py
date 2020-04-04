@@ -27,8 +27,16 @@ import Crop as crp
 import UniversalInputs as uinp
 from CreateModel import *
 
+def crop_precalcs(params):
+    crp.rot_cost(params)
+    crp.rot_yield(params)
+    crp.grain_pool_proportions(params)
+    crp.grain_price(params)
+    crp.stubble_production(params)
+    crp.crop_sow(params)
+    crp.fert_req(params)
 
-def croppyomo_local():
+def croppyomo_local(params):
     
     #########
     #param  #
@@ -39,7 +47,7 @@ def croppyomo_local():
         model.del_component(model.p_rotation_cost_index_index_0)
     except AttributeError:
         pass
-    model.p_rotation_cost = Param(model.s_phases,model.s_lmus,model.s_cashflow_periods, initialize=crp.rot_cost(),default=0, doc='total cost for 1 unit of rotation')
+    model.p_rotation_cost = Param(model.s_phases,model.s_lmus,model.s_cashflow_periods, initialize=params['rot_cost'], default=0, doc='total cost for 1 unit of rotation')
        
     try:
         model.del_component(model.p_rotation_yield)
@@ -47,14 +55,14 @@ def croppyomo_local():
         model.del_component(model.p_rotation_yield_index_index_0)
     except AttributeError:
         pass
-    model.p_rotation_yield = Param(model.s_phases, model.s_crops, model.s_lmus, initialize=crp.rot_yield().to_dict(), default = 0.0, doc='grain production for all crops for 1 unit of rotation')
+    model.p_rotation_yield = Param(model.s_phases, model.s_crops, model.s_lmus, initialize=params['rot_yield'], default = 0.0, doc='grain production for all crops for 1 unit of rotation')
 
     try:
         model.del_component(model.p_grainpool_proportion)
         model.del_component(model.p_grainpool_proportion_index)
     except AttributeError:
         pass
-    model.p_grainpool_proportion = Param(model.s_crops, model.s_grain_pools, initialize=crp.grain_pool_proportions(), default = 0.0, doc='proportion of grain in each pool')
+    model.p_grainpool_proportion = Param(model.s_crops, model.s_grain_pools, initialize=params['grain_pool_proportions'], default = 0.0, doc='proportion of grain in each pool')
     
     try:
         model.del_component(model.p_grain_price)
@@ -62,14 +70,14 @@ def croppyomo_local():
         model.del_component(model.p_grain_price_index_index_0)
     except AttributeError:
         pass
-    model.p_grain_price = Param(model.s_crops, model.s_cashflow_periods, model.s_grain_pools, initialize=crp.grain_price().to_dict(),default = 0.0, doc='farm gate price per tonne of each grain')
+    model.p_grain_price = Param(model.s_crops, model.s_cashflow_periods, model.s_grain_pools, initialize=params['grain_price'],default = 0.0, doc='farm gate price per tonne of each grain')
     
     try:
         model.del_component(model.p_rot_stubble_index)
         model.del_component(model.p_rot_stubble)
     except AttributeError:
         pass
-    model.p_rot_stubble = Param(model.s_crops, model.s_stub_cat, initialize=crp.stubble_production(), default = 0.0, doc='stubble category A produced / kg grain harvested')
+    model.p_rot_stubble = Param(model.s_crops, model.s_stub_cat, initialize=params['stubble_production'], default = 0.0, doc='stubble category A produced / kg grain harvested')
     
     try:
         model.del_component(model.p_cropsow_index_index_0)
@@ -77,7 +85,7 @@ def croppyomo_local():
         model.del_component(model.p_cropsow)
     except AttributeError:
         pass
-    model.p_cropsow = Param(model.s_phases, model.s_crops, model.s_lmus, initialize=crp.crop_sow(), default = 0.0, doc='ha of sow activity required by each rot phase')
+    model.p_cropsow = Param(model.s_phases, model.s_crops, model.s_lmus, initialize=params['crop_sow'], default = 0.0, doc='ha of sow activity required by each rot phase')
     
     try:
         model.del_component(model.p_phasefert_index_index_0)
@@ -86,7 +94,7 @@ def croppyomo_local():
     except AttributeError:
         pass
     ##only used in croplabour pyomo to determine labour per tonne of fert
-    model.p_phasefert = Param(model.s_phases, model.s_lmus, model.s_fert_type, initialize=crp.fert_req().stack().to_dict(), default = 0.0, doc='fert required by 1 unit of phase')
+    model.p_phasefert = Param(model.s_phases, model.s_lmus, model.s_fert_type, initialize=params['fert_req'], default = 0.0, doc='fert required by 1 unit of phase')
    
     
     
@@ -136,18 +144,12 @@ def cropsow(model,k,l):
 # functions used to define cashflow #
 #####################################
 
-'''
-To add:
-    
-    -stub cons
-
-    
-'''
-
 def rotation_cost(model,c):
     return sum(sum(model.p_rotation_cost[r,l,c]*model.v_phase_area[r,l] for r in model.s_phases if model.p_rotation_cost[r,l,c] != 0) for l in model.s_lmus )#+ model.x[c] >=0 #0.10677s
-#model.j = Constraint(model.cashflow_periods, rule=rotation_cashflow, doc='')
    
+##############
+#stubble     #
+##############
 def rot_stubble(model,k,s):
       return sum(sum(model.p_rotation_yield[r,k,l]*model.v_phase_area[r,l] * model.p_rot_stubble[k,s] for r in model.s_phases if model.p_rotation_yield[r,k,l] != 0)for l in model.s_lmus if model.p_rot_stubble[k,s] !=0 ) \
                       

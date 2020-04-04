@@ -67,7 +67,6 @@ dgoflt = (n_dry_groups, n_grazing_int, n_foo_levels, n_feed_periods, n_lmu, n_pa
 edft   = (n_feed_pools, n_dry_groups, n_feed_periods, n_pasture_types)
 eft    = (n_feed_pools, n_feed_periods, n_pasture_types)
 dft    = (n_dry_groups, n_feed_periods, n_pasture_types)
-dlt    = (n_dry_groups, n_lmu, n_pasture_types)
 goflt  = (n_grazing_int, n_foo_levels, n_feed_periods, n_lmu, n_pasture_types)
 goft   = (n_grazing_int, n_foo_levels, n_feed_periods, n_pasture_types)
 gft    = (n_grazing_int, n_feed_periods, n_pasture_types)
@@ -203,11 +202,6 @@ arrays=[index_d, index_f, index_t]
 index_dft=fun.cartesian_product_simple_transpose(arrays)
 index_dft=tuple(map(tuple, index_dft)) #create a tuple rather than a list because tuples are faster
 
-## dlt
-arrays=[index_d, index_l, index_t]
-index_dlt=fun.cartesian_product_simple_transpose(arrays)
-index_dlt=tuple(map(tuple, index_dlt)) #create a tuple rather than a list because tuples are faster
-
 ## flt
 arrays=[index_f, index_l, index_t]
 index_flt=fun.cartesian_product_simple_transpose(arrays)
@@ -232,8 +226,6 @@ def map_excel(filename):
     '''Instantiate variables required and read inputs for the pasture variables from an excel file'''
     global grn_senesce_startfoo_ft
     global grn_senesce_pgrcons_ft
-    global p_erosion_flt
-
     global i_end_of_gs_t
     global t_list
     ### -define the vessels that will store the input data that require pre-defining
@@ -385,7 +377,7 @@ def calc_foo_profile(germination_flt, dry_decay_ft, length_of_periods_f):
     return grn_foo_start_flt, dry_foo_start_flt
 
 
-def calculate_germ_and_reseed():
+def calculate_germ_and_reseed(params):
     ''' Calculate germination and reseeding parameters
 
     germination: create an array called p_germination_flrt being the parameters to be passed to pyomo.
@@ -397,14 +389,6 @@ def calculate_germ_and_reseed():
     ## intermediate calculations are not stored, however, if they were stored the 'key variables' could change the values of the intermediate calcs which could then be fed into the parameter calculations (in a separate method)
     ## the above would provide more options for KVs and provide another step that may not need to be recalculated
     '''
-    ## set global on all variables required outside this function
-    global p_germination_flrt
-    global p_phase_area_flrt
-    global p_pas_sow_plrt
-    global p_foo_dry_reseeding_dflrt
-    global p_foo_grn_reseeding_flrt
-    global p_erosion_flrt
-    # global reseeding_machperiod_t
 
     ## define instantiate arrays that are assigned in slices
     na_erosion_flrt     = np.zeros(flrt, dtype = 'float64')
@@ -510,7 +494,7 @@ def calculate_germ_and_reseed():
                                 * (1-arable_l.reshape(-1,1)) # add non-arable area
     ##create the pyomo parameter
     germination_rav_flrt = germination_flrt.ravel()
-    p_germination_flrt = dict(zip(index_flrt ,germination_rav_flrt))
+    params['p_germination_flrt'] = dict(zip(index_flrt ,germination_rav_flrt))
 
     ### reseeding impacts due to destoking & then grazing
     ## calculate the green feed lost when pasture is destocked. Spread between periods based on date destocked
@@ -557,10 +541,10 @@ def calculate_germ_and_reseed():
     foo_dry_reseeding_dflrt[0,...] = foo_dry_reseeding_flrt
     foo_dry_reseeding_dflrt[1,...] = foo_dry_reseeding_flrt
     foo_dry_reseeding_rav_dflrt = foo_dry_reseeding_dflrt.ravel()
-    p_foo_dry_reseeding_dflrt = dict(zip(index_dflrt ,foo_dry_reseeding_rav_dflrt))
+    params['p_foo_dry_reseeding_dflrt'] = dict(zip(index_dflrt ,foo_dry_reseeding_rav_dflrt))
     ##convert green seeding pas into pyomo param
     foo_grn_reseeding_rav_flrt = foo_grn_reseeding_flrt.ravel()
-    p_foo_grn_reseeding_flrt = dict(zip(index_flrt ,foo_grn_reseeding_rav_flrt))
+    params['p_foo_grn_reseeding_flrt'] = dict(zip(index_flrt ,foo_grn_reseeding_rav_flrt))
 
     ### sow param determination
     ## determine the labour periods pas seeding occurs
@@ -574,7 +558,7 @@ def calculate_germ_and_reseed():
     pas_sown_lrt = resown_rt * arable_l.reshape(-1,1,1)
     pas_sow_plrt = pas_sown_lrt * reseeding_machperiod_pt[:,np.newaxis,np.newaxis,:]
     pas_sow_rav_plrt = pas_sow_plrt.ravel()
-    p_pas_sow_plrt = dict(zip(index_plrt ,pas_sow_rav_plrt))
+    params['p_pas_sow_plrt'] = dict(zip(index_plrt ,pas_sow_rav_plrt))
 
     ### area of pasture being grazed and growing
     ## calculate the area (for all the phases) that is growing pasture for each feed period. The area can be 0 for a pasture phase if it has been destocked for reseeding.
@@ -589,7 +573,7 @@ def calculate_germ_and_reseed():
                                        , axis = -1)
     phase_area_flrt = arable_phase_area_flrt + na_phase_area_flrt
     phase_area_rav_flrt = phase_area_flrt.ravel()
-    p_phase_area_flrt = dict(zip(index_flrt ,phase_area_rav_flrt))
+    params['p_phase_area_flrt'] = dict(zip(index_flrt ,phase_area_rav_flrt))
 
     ### erosion
     arable_erosion_flrt = i_lmu_conservation_flt[...,np.newaxis,:]  \
@@ -601,12 +585,12 @@ def calculate_germ_and_reseed():
                                     , axis = -1)
     erosion_flrt = arable_erosion_flrt + na_erosion_flrt
     erosion_rav_flrt = erosion_flrt.ravel()
-    p_erosion_flrt = dict(zip(index_flrt ,erosion_rav_flrt))
+    params['p_erosion_flrt'] = dict(zip(index_flrt ,erosion_rav_flrt))
 
 ## the following method generates the PGR & FOO parameters for the growth variables. Stored in a numpy array(lmu, feed period, FOO level, grazing intensity)
 ## def green_consumption:
 
-def green_and_dry():
+def green_and_dry(params):
     ''' Populates the parameter arrays for green and dry feed.
 
     Pasture growth, consumption and senescence of green feed.
@@ -617,17 +601,6 @@ def green_and_dry():
     -------
     The parameters in the existing variables.
     '''
-    ## set global on the parameters (dicts) used in pyomo
-    global p_foo_start_grnha_oflt
-    global p_foo_end_grnha_goflt
-    global p_me_cons_grnha_egoflt
-    global p_volume_grnha_egoflt
-    global p_senesce_grnha_dgoflt
-    global p_dry_mecons_t_edft
-    global p_dry_volume_t_dft
-    global p_dry_removal_t_dft
-    global p_dry_transfer_t_dft
-    global p_nap_dflrt
 
     ### _initialise numpy arrays used only in this method
     grn_dmd_selectivity_goft = np.zeros(goft,   dtype = 'float64')
@@ -639,7 +612,7 @@ def green_and_dry():
     ### _dry, DM decline (high = low pools)
     dry_transfer_t_dft[...] = 1000 * (1-dry_decay_period_ft)
     dry_transfer_t_rav_dft = dry_transfer_t_dft.ravel()
-    p_dry_transfer_t_dft = dict(zip(index_dft ,dry_transfer_t_rav_dft))
+    params['p_dry_transfer_t_dft'] = dict(zip(index_dft ,dry_transfer_t_rav_dft))
 
     ### _non-arable areas in crop paddocks (the annual pasture available if not grazed)
     ## # is maximum ungrazed pasture in the growing season
@@ -650,11 +623,12 @@ def green_and_dry():
          = calc_foo_profile(germination_pass_flt, dry_decay_period_ft, length_f)# ^ passing the consumption value in a numpy array in an attempt to get the function @jit compatible
     ## all pasture from na area into the Low pool (#1) because it is rank
     harvest_period  = fun.period_allocation(pinp.feed_inputs['feed_periods']['date'], pinp.feed_inputs['feed_periods'].index, pinp.crop['harv_date'])
-    nap_dflrt[1,...,0] = dry_foo_start_ungrazed_flt[harvest_period,:,np.newaxis,0]  \
-                       * (1-arable_l.reshape(-1,1))  \
-                       * (1-np.sum(pasture_rt, axis=1))
+    params['p_harvest_period_prop']  = dict([fun.period_proportion_np(pinp.feed_inputs['feed_periods']['date'], pinp.crop['harv_date'])])
+    nap_dflrt[0,harvest_period,...,0] = dry_foo_start_ungrazed_flt[harvest_period,:,np.newaxis,0]  \
+                                           * (1-arable_l.reshape(-1,1))  \
+                                           * (1-np.sum(pasture_rt, axis=1))
     nap_rav_dflrt = nap_dflrt.ravel()
-    p_nap_dflrt = dict(zip(index_dflrt ,nap_rav_dflrt))
+    params['p_nap_dflrt'] = dict(zip(index_dflrt ,nap_rav_dflrt))
 
     ### _green initial FOO
     max_foo_flt                 = np.maximum(i_fxg_foo_oflt[1,...], grn_foo_start_ungrazed_flt)                  #maximum of ungrazed foo and foo from the medium foo level
@@ -662,7 +636,7 @@ def green_and_dry():
     foo_start_grnha_oflt[...]   = np.maximum(foo_start_grnha_oflt
                                              , i_base_ft[:,np.newaxis,:])         # to ensure that final foo can not be below 0
     foo_start_grnha_rav_oflt = foo_start_grnha_oflt.ravel()
-    p_foo_start_grnha_oflt = dict(zip(index_oflt ,foo_start_grnha_rav_oflt))
+    params['p_foo_start_grnha_oflt'] = dict(zip(index_oflt ,foo_start_grnha_rav_oflt))
 
     ### _green, pasture growth
     pgr_grnday_oflt = np.maximum(0.01, i_fxg_pgr_oflt)                  # use maximum to ensure that the pgr is non zero (because foo_days requires dividing by pgr)
@@ -679,7 +653,7 @@ def green_and_dry():
                               * i_foo_end_propn_gt[:,np.newaxis,np.newaxis,np.newaxis,:]
     foo_end_grnha_goflt = foo_endprior_grnha_goflt * (1-i_grn_senesce_eos_ft[:,np.newaxis,:])
     foo_end_grnha_rav_goflt = foo_end_grnha_goflt.ravel()
-    p_foo_end_grnha_goflt = dict( zip(index_goflt ,foo_end_grnha_rav_goflt))
+    params['p_foo_end_grnha_goflt'] = dict( zip(index_goflt ,foo_end_grnha_rav_goflt))
 
     ### _green, removal & dmi
     removal_grnha_goflt =np.maximum(0,   foo_start_grnha_oflt
@@ -738,22 +712,22 @@ def green_and_dry():
                                                  ,           grn_ri_goflt
                                                  ,i_me_eff_gainlose_ft[:,np.newaxis,:])
     me_cons_grnha_rav_egoflt = me_cons_grnha_egoflt.ravel()
-    p_me_cons_grnha_egoflt = dict( zip(index_egoflt ,me_cons_grnha_rav_egoflt))
+    params['p_me_cons_grnha_egoflt'] = dict( zip(index_egoflt ,me_cons_grnha_rav_egoflt))
 
     volume_grnha_egoflt    =  cons_grnha_t_goflt / grn_ri_goflt              # parameters for the growth/grazing activities: Total volume of feed consumed from the hectare
     volume_grnha_rav_egoflt = volume_grnha_egoflt.ravel()
-    p_volume_grnha_egoflt = dict(zip(index_egoflt ,volume_grnha_rav_egoflt))
+    params['p_volume_grnha_egoflt'] = dict(zip(index_egoflt ,volume_grnha_rav_egoflt))
 
     ### _dry, dmd & foo of feed consumed
     dry_dmd_adj_ft  = np.max(i_dry_dmd_ave_ft,axis=0)    \
                      +       i_dry_dmd_ave_ft                               # do sensitivity adjustment for dry_dmd_input based on increasing/reducing the reduction in dmd from the maximum (starting value)
     dry_dmd_high_ft = dry_dmd_adj_ft + i_dry_dmd_range_ft/2
     dry_dmd_low_ft  = dry_dmd_adj_ft - i_dry_dmd_range_ft/2
-    dry_dmd_dft     = np.stack((dry_dmd_high_ft, dry_dmd_low_ft),axis=0)    # create an array with a new axis 0 by stacking the existing arrays
+    dry_dmd_dft     = np.stack((dry_dmd_low_ft, dry_dmd_high_ft),axis=0)    # create an array with a new axis 0 by stacking the existing arrays
 
     dry_foo_high_ft = i_dry_foo_high_ft * 3/4
     dry_foo_low_ft  = i_dry_foo_high_ft * 1/4                               # assuming half the foo is high quality and the remainder is low quality
-    dry_foo_dft     = np.stack((dry_foo_high_ft, dry_foo_low_ft),axis=0)  # create an array with a new axis 0 by stacking the existing arrays
+    dry_foo_dft     = np.stack((dry_foo_low_ft, dry_foo_high_ft),axis=0)  # create an array with a new axis 0 by stacking the existing arrays
 
     ### _dry, volume of feed consumed per tonne
     dry_ri_availability_dft = fdb.ri_availability(dry_foo_dft,i_ri_foo_t)
@@ -762,7 +736,7 @@ def green_and_dry():
     dry_ri_dft[dry_ri_dft<0.05] = 0.05 #set the minimum RI to 0.05
     dry_volume_t_dft  = 1000 / dry_ri_dft                 # parameters for the dry feed grazing activities: Total volume of the tonne consumed
     dry_volume_t_rav_dft = dry_volume_t_dft.ravel()
-    p_dry_volume_t_dft = dict(zip(index_dft ,dry_volume_t_rav_dft))
+    params['p_dry_volume_t_dft'] = dict(zip(index_dft ,dry_volume_t_rav_dft))
 
     ### _dry, ME consumed per tonne consumed
     dry_md_dft           = fdb.dmd_to_md(dry_dmd_dft)
@@ -773,12 +747,12 @@ def green_and_dry():
                             ,           dry_ri_dft
                             ,i_me_eff_gainlose_ft)
     dry_mecons_t_rav_edft = dry_mecons_t_edft.ravel()
-    p_dry_mecons_t_edft = dict(zip(index_edft ,dry_mecons_t_rav_edft))
+    params['p_dry_mecons_t_edft'] = dict(zip(index_edft ,dry_mecons_t_rav_edft))
 
     ### _dry, animal removal
     dry_removal_t_dft[...]  = 1000 * (1 + i_dry_trampling_ft)
     dry_removal_t_rav_dft = dry_removal_t_dft.ravel()
-    p_dry_removal_t_dft = dict( zip(index_dft ,dry_removal_t_rav_dft))
+    params['p_dry_removal_t_dft'] = dict( zip(index_dft ,dry_removal_t_rav_dft))
 
     ### _senescence from green to dry
     ## # _green, total senescence
@@ -788,53 +762,40 @@ def green_and_dry():
                                  -  foo_end_grnha_goflt
     grn_dmd_senesce_goflt       =               dmd_grnha_goflt       \
                                  - i_grn_dmd_senesce_redn_ft[:,np.newaxis,:]
-    senesce_propn_dgoflt[0,...]  = ( grn_dmd_senesce_goflt                     # senescence to high pool
+    senesce_propn_dgoflt[1,...]  = ( grn_dmd_senesce_goflt                     # senescence to high pool
                                     -    dry_dmd_low_ft[:,np.newaxis,:])       \
                                   /(    dry_dmd_high_ft[:,np.newaxis,:]
                                     -    dry_dmd_low_ft[:,np.newaxis,:])
-    senesce_propn_dgoflt[1,...] = 1- senesce_propn_dgoflt[0,...]              # senescence to low pool
+    senesce_propn_dgoflt[0,...] = 1- senesce_propn_dgoflt[1,...]              # senescence to low pool
     senesce_grnha_dgoflt      = senesce_total_grnha_goflt *      senesce_propn_dgoflt                                   # ^alternative in one array parameters for the growth/grazing activities: quantity of green that senesces to the high pool
     senesce_grnha_rav_dgoflt = senesce_grnha_dgoflt.ravel()
-    p_senesce_grnha_dgoflt = dict( zip(index_dgoflt ,senesce_grnha_rav_dgoflt))
+    params['p_senesce_grnha_dgoflt'] = dict( zip(index_dgoflt ,senesce_grnha_rav_dgoflt))
 
 
-def poc_con():
+def poc(params):
     '''
     Returns
     -------
-    Dict for pyomo.
+    None.
         The amount of pasture consumption that can occur on crop paddocks each day before seeding
         - this is adjusted for lmu and feed period
-    '''
-    poc_con_fl = i_poc_intake_daily_flt[...,0]
-    poc_con_rav_fl = poc_con_fl.ravel()
-    p_poc_con_fl = dict(zip(index_fl, poc_con_rav_fl))
-    return p_poc_con_fl
-
-def poc_md():
-    '''
-    Returns
-    -------
-    Dict for pyomo.
         The quality of pasture on crop paddocks each day before seeding
         - this is adjusted for feed period
-    '''
-    poc_md_f = fdb.dmd_to_md(i_poc_dmd_ft[...,0])
-    poc_md_rav_f = poc_md_f.ravel()
-    p_poc_md_f = dict(zip(index_f ,poc_md_rav_f))
-    return p_poc_md_f
-
-def poc_vol():
-    '''
-    Returns
-    -------
-    Dict for pyomo.
         The relative intake of pasture on crop paddocks each day before seeding
         - this is adjusted for feed period
     '''
+    ##con
+    poc_con_fl = i_poc_intake_daily_flt[...,0]
+    poc_con_rav_fl = poc_con_fl.ravel()
+    params['p_poc_con_fl'] = dict(zip(index_fl, poc_con_rav_fl))
+    ##md
+    poc_md_f = fdb.dmd_to_md(i_poc_dmd_ft[...,0])
+    poc_md_rav_f = poc_md_f.ravel()
+    params['p_poc_md_f'] = dict(zip(index_f ,poc_md_rav_f))
+    ##vol
     ri_qual_f = fdb.ri_quality(i_poc_dmd_ft[...,0], i_legume_t[...,0])       # passing a numpy array
     ri_quan_f = fdb.ri_availability(i_poc_foo_ft[...,0], i_ri_foo_t[...,0])
     poc_vol_f = 1/(ri_qual_f*ri_quan_f)
     poc_vol_rav_f = poc_vol_f.ravel()
-    p_poc_vol_f = dict(zip(index_f ,poc_vol_rav_f))
-    return p_poc_vol_f
+    params['p_poc_vol_f'] = dict(zip(index_f ,poc_vol_rav_f))
+    
