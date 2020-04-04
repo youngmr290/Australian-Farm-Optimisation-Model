@@ -40,14 +40,14 @@ import Report as rep
 #########################
 ##try to load in lp variable dict, if it doesn't exist then create a new dict
 try:
-    with open('pkl_lp_vars', "rb") as f:
+    with open('pkl_lp_vars.pkl', "rb") as f:
         lp_vars = pkl.load(f)
 except FileNotFoundError:
     lp_vars={}
 
 ##try to load in params dict, if it doesn't exist then create a new dict
 try:
-    with open('pkl_params', "rb") as f:
+    with open('pkl_params.pkl', "rb") as f:
         params = pkl.load(f)
 except FileNotFoundError:
     params={}
@@ -55,14 +55,14 @@ prev_params = params.copy() #make a copy to compare with
 
 ##try to load in results file to dict, if it doesn't exist then create a new dict
 try:
-    with open('pkl_r_vals', "rb") as f:
+    with open('pkl_r_vals.pkl', "rb") as f:
         r_vals = pkl.load(f)
 except FileNotFoundError:
     r_vals={}
 
 ##try to load in Previous Exp.xlsx file to dict, if it doesn't exist then create a new dict
 try:
-    with open('pkl_exp', "rb") as f:
+    with open('pkl_exp.pkl', "rb") as f:
         prev_exp = pkl.load(f)
 except FileNotFoundError:
     prev_exp=pd.DataFrame()
@@ -297,13 +297,13 @@ for row in range(len(exp_data)):
     lp_vars['%s'%exp_data.index[row][2]]={str(v):{s:v[s].value for s in v} for v in variables }    #creates dict with variable in it. This is tricky since pyomo returns a generator object
 
 ##drop results into pikle file
-with open('pkl_lp_vars', "wb") as f:
+with open('pkl_lp_vars.pkl', "wb") as f:
     pkl.dump(lp_vars, f)
-with open('pkl_params', "wb") as f:
+with open('pkl_params.pkl', "wb") as f:
     pkl.dump(params, f)
-with open('pkl_r_vals', "wb") as f:
+with open('pkl_r_vals.pkl', "wb") as f:
     pkl.dump(r_vals, f)
-with open('pkl_exp', "wb") as f:
+with open('pkl_exp.pkl', "wb") as f:
     pkl.dump(exp_data1, f)
 
 end_time1 = time.time()

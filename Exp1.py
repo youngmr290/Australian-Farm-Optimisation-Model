@@ -46,14 +46,14 @@ start_time1 = time.time()
 #########################
 ##try to load in params dict, if it doesn't exist then create a new dict
 try:
-    with open('pkl_params', "rb") as f:
+    with open('pkl_params.pkl', "rb") as f:
         params = pkl.load(f)
 except FileNotFoundError:
     params={}
 prev_params = params.copy() #make a copy to compare with
 ##try to load in Previous Exp.xlsx file to dict, if it doesn't exist then create a new dict
 try:
-    with open('pkl_exp', "rb") as f:
+    with open('pkl_exp.pkl', "rb") as f:
         prev_exp = pkl.load(f)
 except FileNotFoundError:
     prev_exp=pd.DataFrame()
@@ -61,13 +61,13 @@ except FileNotFoundError:
 if __name__ == '__main__':
     ##try to load in results file to dict, if it doesn't exist then create a new dict - isn't used by multiprocess therefore only needs to be loaded with main
     try:
-        with open('pkl_lp_vars', "rb") as f:
+        with open('pkl_lp_vars.pkl', "rb") as f:
             lp_vars = pkl.load(f)
     except FileNotFoundError:
         lp_vars={}
     ##try to load in results file to dict, if it doesn't exist then create a new dict
     try:
-        with open('pkl_r_vals', "rb") as f:
+        with open('pkl_r_vals.pkl', "rb") as f:
             r_vals = pkl.load(f)
     except FileNotFoundError:
         r_vals={}
@@ -317,13 +317,13 @@ if __name__ == '__main__':
         params[exp_data.index[trial_row][2]] = results[res_num][1] 
         r_vals[exp_data.index[trial_row][2]] = results[res_num][2] 
     ##drop results into pikle file
-    with open('pkl_lp_vars', "wb") as f:
+    with open('pkl_lp_vars.pkl', "wb") as f:
         pkl.dump(lp_vars, f)
-    with open('pkl_params', "wb") as f:
+    with open('pkl_params.pkl', "wb") as f:
         pkl.dump(params, f)
-    with open('pkl_r_vals', "wb") as f:
+    with open('pkl_r_vals.pkl', "wb") as f:
         pkl.dump(r_vals, f)
-    with open('pkl_exp', "wb") as f:
+    with open('pkl_exp.pkl', "wb") as f:
         pkl.dump(exp_data1, f)
 
 
