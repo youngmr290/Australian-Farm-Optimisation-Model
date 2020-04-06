@@ -17,7 +17,7 @@ import Controls as con
 #read inputs #
 ##############
 
-filename= 'pkl_property'
+filename= 'pkl_property.pkl'
 ##if inputs are not read from pickle then they are read from excel and written to pickle
 if con.inputs_from_pickle == False:
     with open(filename, "wb") as f:

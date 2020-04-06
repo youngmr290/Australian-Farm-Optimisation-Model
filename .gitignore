@@ -5,7 +5,5 @@ __pycache__
 /*.xls
 /redundant
 /.spyproject
-/pkl_exp.pkl
-/pkl_params.pkl
-/pkl_r_vals.pkl
-/pkl_lp_vars.pkl
+/*.pkl
+/Michael code ideas.py
