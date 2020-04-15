@@ -60,6 +60,10 @@ if con.inputs_from_pickle == False:
         sup_inp = fun.xl_all_named_ranges("Universal.xlsx","Sup Feed")
         pkl.dump(sup_inp, f)
         
+        ##crop inputs
+        crop_inp = fun.xl_all_named_ranges("Universal.xlsx","Crop Sim")
+        pkl.dump(crop_inp, f)
+        
         ##sheep inputs
         genotype_inp = fun.xl_all_named_ranges('Universal.xlsx', ['Genotypes'])
         pkl.dump(genotype_inp, f)
@@ -86,6 +90,8 @@ else:
         
         sup_inp = pkl.load(f)
         
+        crop_inp = pkl.load(f)
+        
         genotype_inp = pkl.load(f)
         
         parameters_inp = pkl.load(f)
@@ -99,6 +105,7 @@ finance = finance_inp.copy()
 mach_general = mach_general_inp.copy()
 feed_inputs = feed_inputs_inp.copy()
 supfeed = sup_inp.copy()
+crop = crop_inp.copy()
 genotype = genotype_inp.copy()
 parameters = parameters_inp.copy()
 mach = machine_options_dict_inp.copy()
