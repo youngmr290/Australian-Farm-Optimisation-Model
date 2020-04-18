@@ -211,117 +211,91 @@ structure['All_pas']={'a', 'ar', 'a3', 'a4', 'a5'
                 , 'j', 't', 'jr', 'tr'
                 }
 ##next set is used in pasture.py for germination and phase area
-structure['pasture_sets']={'annual': {'a', 'ar', 'a3', 'a4', 'a5'
-                                , 's', 'sr', 's3', 's4', 's5'
-                                , 'm', 'm3', 'm4', 'm5'}
-                        ,'lucerne':{'u', 'uc', 'ur', 'u3', 'u4', 'u5'
-                                   , 'x', 'xc', 'xr', 'x3', 'x4', 'x5'}
+structure['pasture_sets']={'annual': {'a', 'ar'
+                                , 's', 'sr'
+                                , 'm'}
+                        ,'lucerne':{'u', 'uc', 'ur'
+                                   , 'x', 'xc', 'xr'}
                         ,'tedera':{'j','jc', 't','tc', 'jr', 'tr'}
                        }
+##G and C1 are just used in pas.py for germination ^can be removed when germination is calculated from sim
+structure['G']={'b', 'h', 'o','of', 'w', 'f','i', 'k', 'l', 'v', 'z','r'
+                , 'a', 'ar'
+                , 's', 'sr'
+                , 'm'
+                , 'u', 'ur'
+                , 'x', 'xr'
+                , 'j', 't', 'jr', 'tr'
+                , 'G', 'Y', 'E', 'N', 'P', 'OF'
+                , 'A', 'AR'
+                , 'S', 'SR'
+                , 'M'
+                , 'U'
+                , 'X'
+                , 'T', 'J'} #all landuses
+structure['C1']={'E', 'N', 'P', 'OF', 'b', 'h', 'o', 'of', 'w', 'f','i', 'k', 'l', 'v', 'z','r'} #had to create a seperate set because don't want the capitatl in the crop set above as it is used to create pyomo set 
+
 
 # structure['PAS_R']={'ar', 'sr', 'jr', 'tr', 'ur', 'xr', 'tc', 'jc', 'uc', 'xc'} #all reseeded pastures - used to determine pas sow 
 structure['All']={'b', 'h', 'o', 'of', 'w', 'f','i', 'k', 'l', 'v', 'z','r', 'annual', 'tedera', 'lucerne'} #used in mach sow
 structure['C']={'b', 'h', 'o', 'of', 'w', 'f','i', 'k', 'l', 'v', 'z','r'} #all crops, used in stubble and mach (not used for rotations)
 structure['Hay']={'h'} #all crops that produce hay - used in machpyomo/coremodel for hay con
-
+##special sets used in crop sim
+structure['Ys'] = {'Y'}
+structure['As'] = {'A','a'}
+structure['JR'] = {'jr'}
+structure['TR'] = {'tr'}
+structure['UR'] = {'ur'}
+structure['XR'] = {'xr'}
 ##sets used in to build rotations
-structure['A']={'a', 'ar','a3', 'a4', 'a5', 's', 'sr','s3', 's4', 's5', 'm','m3', 'm4', 'm5'
-                , 'A', 'AR', 'A3', 'A4', 'A5'
-                , 'S', 'SR', 'S3', 'S4', 'S5'
-                , 'M', 'M3', 'M4', 'M5'} #annual
-structure['A1']={'a', 'a3', 'a4', 'a5', 's','s3', 's4', 's5', 'm','m3', 'm4', 'm5'} #annual not resown - special set used in pasture germ and con2 when determining if a rotatin provides a rotation because in yr1 we dont want ar to provide an A bevause we need to distinguish beteween them
-structure['A3']={'a3', 'A3'}
-structure['A4']={'a4', 'A4'}
-structure['A5']={'a5', 'A5'}
+structure['A']={'a', 'ar','s', 'sr', 'm'
+                , 'A', 'AR'
+                , 'S', 'SR'
+                , 'M'} #annual
+structure['A1']={'a',  's', 'm'} #annual not resown - special set used in pasture germ and con2 when determining if a rotatin provides a rotation because in yr1 we dont want ar to provide an A bevause we need to distinguish beteween them
 structure['AR']={'ar', 'AR'} #resown annual
-structure['C1']={'E', 'N', 'P', 'OF', 'b', 'h', 'o', 'of', 'w', 'f','i', 'k', 'l', 'v', 'z','r'} #had to create a seperate set because don't want the capitatl in the crop set above as it is used to create pyomo set 
-# structure['D']={'b', 'h', 'o', 'of', 'w', 'f', 'i', 'k', 'l', 'v'} #non canola crops (ie E & P)
 structure['E']={'E', 'OF', 'b', 'h', 'o', 'of', 'w'} #cereals
-# structure['E1']={'b', 'h', 'o', 'w'} #cereal - special set used when determining if a rotatin provides a rotation because in yr1 we dont want OF to provide an E bevause we need to distinguish beteween them
-structure['G']={'b', 'h', 'o','of', 'w', 'f','i', 'k', 'l', 'v', 'z','r'
-                , 'a', 'ar', 'a3', 'a4', 'a5'
-                , 's', 'sr', 's3', 's4', 's5'
-                , 'm', 'm3', 'm4', 'm5'
-                , 'u', 'ur', 'u3', 'u4', 'u5'
-                , 'x', 'xr', 'x3', 'x4', 'x5'
-                , 'j', 't', 'jr', 'tr'
-                , 'G', 'Y', 'E', 'N', 'P', 'OF'
-                , 'A', 'AR', 'A3', 'A4', 'A5'
-                , 'S', 'SR', 'S3', 'S4', 'S5'
-                , 'M', 'M3', 'M4', 'M5'
-                , 'U', 'U3', 'U4', 'U5'
-                , 'X', 'X3', 'X4', 'X5'
-                , 'T', 'J'} #all landuses
-# structure['H']={'h', 'of'} #non harvested cereals
+# # structure['H']={'h', 'of'} #non harvested cereals
 structure['J']={'J', 'j', 'jr'} #tedera
-structure['M']={'m', 'm3', 'm4','m5', 'M', 'M3', 'M4', 'M5'} #manipulated pasture
-structure['M3']={'m3', 'M3'} #3rd yr manipulated pasture
-structure['M4']={'m4', 'M4'} #4th yr manipulated pasture
-structure['M5']={'m5', 'M5'} #5th yr manipulated pasture
+structure['M']={'m', 'M'} #manipulated pasture
 structure['N']={'N', 'z','r'} #canolas
 structure['OF']={'OF', 'of'} #oats fodder
 structure['P']={'P', 'f','i', 'k', 'l', 'v'} #pulses
-structure['S']={'s','sr', 's3', 's4', 's5', 'S', 'SR', 'S3', 'S4', 'S5'} #spray topped pasture
+structure['S']={'s','sr', 'S', 'SR'} #spray topped pasture
 structure['SR']={'sr', 'SR'} #spray topped pasture
-structure['S3']={'s3', 'S3'} #3rd yr spray topped pasture
-structure['S4']={'s4', 'S4'} #4th yr spray topped pasture
-structure['S5']={'s5', 'S5'} #5th yr spray topped pasture
-structure['T']={'T', 't', 'tr'} #tedera
-structure['U']={'u', 'ur', 'u3', 'u4', 'u5', 'U', 'U3', 'U4', 'U5'} #lucerne
-structure['U3']={'u3', 'U3'} #3rd yr lucerne
-structure['U4']={'u4', 'U4'} #4th yr lucerne
-structure['U5']={'u5', 'U5'} #5th yr lucerne
-structure['X']={'x', 'xr', 'x3', 'x4', 'x5', 'X', 'X3', 'X4', 'X5'} #lucerne
-structure['X3']={'x3', 'X3'} #3rd yr lucerne (monoculture)
-structure['X4']={'x4', 'X4'} #4th yr lucerne (monoculture)
-structure['X5']={'x5', 'X5'} #5th yr lucerne (monoculture)
+structure['T']={'T', 't', 'tr','J', 'j', 'jr'} #tedera - also includes manipulated tedera because it is combined in yrs 3,4,5
+structure['U']={'u', 'ur', 'U','x', 'xr', 'X'} #lucerne
+structure['X']={'x', 'xr', 'X'} #lucerne
 structure['Y']={'b', 'h', 'o','of', 'w', 'f','i', 'k', 'l', 'v', 'z','r'
-                , 'u', 'ur', 'u3', 'u4', 'u5'
-                , 'x', 'xr', 'x3', 'x4', 'x5'
-                , 'j', 't', 'jr', 'tr'
-                , 'Y', 'E', 'N', 'P', 'OF'
-                , 'U', 'U3', 'U4', 'U5'
-                , 'X', 'X3', 'X4', 'X5'
-                , 'T', 'J'} #anything not A
+                , 'Y', 'E', 'N', 'P', 'OF'} #anything not pasture
 
 
 '''make each landuse a set so the issuperset func works'''
 structure['a']={'a'}
 structure['ar']={'ar'}
-structure['a3']={'a3'}
-structure['a4']={'a4'}
-structure['a5']={'a5'}
 structure['b']={'b'}
 structure['f']={'f'}
 structure['h']={'h'}
 structure['j']={'j'}
+structure['jc']={'jc'}
 structure['jr']={'jr'}
 structure['l']={'l'}
 structure['m']={'m'}
-structure['m3']={'m3'}
-structure['m4']={'m4'}
-structure['m5']={'m5'}
 structure['o']={'o'}
 structure['of']={'of'}
 structure['r']={'r'}
 structure['s']={'s'}
 structure['sr']={'sr'}
-structure['s3']={'s3'}
-structure['s4']={'s4'}
-structure['s5']={'s5'}
 structure['t']={'t'}
+structure['tc']={'tc'}
 structure['tr']={'tr'}
 structure['u']={'u'}
+structure['uc']={'uc'}
 structure['ur']={'ur'}
-structure['u3']={'u3'}
-structure['u4']={'u4'}
-structure['u5']={'u5'}
 structure['w']={'w'}
 structure['x']={'x'}
+structure['xc']={'xc'}
 structure['xr']={'xr'}
-structure['x3']={'x3'}
-structure['x4']={'x4'}
-structure['x5']={'x5'}
 structure['z']={'z'}
 
 

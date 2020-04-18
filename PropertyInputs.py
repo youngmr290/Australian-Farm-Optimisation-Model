@@ -12,7 +12,6 @@ import Functions as fun
 import UniversalInputs as uinp
 import Controls as con
 
-
 ##############
 #read inputs #
 ##############

@@ -43,8 +43,7 @@ import Periods as per
 import Mach as mac
 
   
-#print(timeit.timeit(test,number=1))
-                
+               
         
 
 
