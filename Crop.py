@@ -60,19 +60,43 @@ phases_df2.columns = pd.MultiIndex.from_product([phases_df2.columns, ['']])  #ma
 #price                 #
 ########################
 
-def farmgate_grain_price():
+def farmgate_grain_price(*args):
     '''
+    
+
+    Parameters
+    ----------
+    *args : Boolean
+        If True is entered it will calculate the grain price for the sim ie including capital sets.
+
     Returns
     -------
-    Dataframe - used below and to calculate insurance and sup feed purchase price.
+    Dataframe - used below and to calculate insurance and sup feed purchase price. If args is True then it returns the overall price accounting for proportion, this is used in sim 
+                Price includes:
+                -offspec grain
+                -cartage cost
+                -other fees ie cbh and levies
     '''
-    grain_price_info_df=uinp.price['grain_price'] #create a copy of grain price df so you dont have to reference input module each time
-    ##multiplies the price and proportion of firsts and seconds for each grain, then sum to get overall price
-    price_df = grain_price_info_df[['firsts','seconds']]
-    cartage=(grain_price_info_df['cartage_km_cost']*pinp.general['road_cartage_distance'] 
-            + pinp.general['rail_cartage'] + uinp.price['flagfall'])
-    tols= grain_price_info_df['grain_tolls']
-    total_fees= cartage+tols
+    if args:
+        ##first concat the df with capital sets and the df with actual crop landuses
+        grain_price_info_df=pd.concat([uinp.price['grain_price_grouped'], uinp.price['grain_price']]) #create a copy of grain price df so you dont have to reference input module each time
+        ##multiplies the price and proportion of firsts and seconds for each grain, then sum to get overall price
+        price_df = np.sum(np.multiply(grain_price_info_df[['firsts','seconds']], grain_price_info_df[['prop_firsts','prop_seconds']]),axis=1)
+        cartage=(grain_price_info_df['cartage_km_cost']*pinp.general['road_cartage_distance'] 
+                + pinp.general['rail_cartage'] + uinp.price['flagfall'])
+        tols= grain_price_info_df['grain_tolls']
+        total_fees= cartage+tols
+    else:
+        grain_price_info_df=uinp.price['grain_price'] #create a copy of grain price df so you dont have to reference input module each time
+        ##delete 'of' as it is not sold
+        grain_price_info_df.drop('of')
+        ##gets the price of firsts and seconds for each grain
+        price_df = grain_price_info_df[['firsts','seconds']]
+        ##determine cost of selling
+        cartage=(grain_price_info_df['cartage_km_cost']*pinp.general['road_cartage_distance'] 
+                + pinp.general['rail_cartage'] + uinp.price['flagfall'])
+        tols= grain_price_info_df['grain_tolls']
+        total_fees= cartage+tols
     return price_df.sub(total_fees, axis=0).clip(0)
 
 
@@ -81,11 +105,8 @@ def grain_price(params):
     Returns
     -------
     Dict.
-        Farm gate price for each grain
-        Price includes:
-        -offspec grain
-        -cartage cost
-        -other fees ie cbh and levies
+        Farm gate price for each grain - allocated into cash periods
+        
     '''
     ##calc farm gate grain price for each cashflow period - accounts for tols and other fees
     start = uinp.price['grain_income_date']
@@ -255,6 +276,7 @@ def nap_fert_cost():
     Returns
     -------
     Dataframe- to be added to total costs at the end.
+        Fert applied to non arable pasture - currently setup so that only pasture phases get fert on the non arable areas 
     '''
     allocation = fert_cost_allocation()
     ##fert cost

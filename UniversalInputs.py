@@ -247,6 +247,7 @@ structure['JR'] = {'jr'}
 structure['TR'] = {'tr'}
 structure['UR'] = {'ur'}
 structure['XR'] = {'xr'}
+structure['PAS'] = {'A', 'AR', 'S', 'SR', 'M','T','J','U','X', 'tc', 'jc', 'uc', 'xc'} 
 ##sets used in to build rotations
 structure['A']={'a', 'ar','s', 'sr', 'm'
                 , 'A', 'AR'
@@ -276,9 +277,11 @@ structure['ar']={'ar'}
 structure['b']={'b'}
 structure['f']={'f'}
 structure['h']={'h'}
+structure['i']={'i'}
 structure['j']={'j'}
 structure['jc']={'jc'}
 structure['jr']={'jr'}
+structure['k']={'k'}
 structure['l']={'l'}
 structure['m']={'m'}
 structure['o']={'o'}
@@ -292,6 +295,7 @@ structure['tr']={'tr'}
 structure['u']={'u'}
 structure['uc']={'uc'}
 structure['ur']={'ur'}
+structure['v']={'v'}
 structure['w']={'w'}
 structure['x']={'x'}
 structure['xc']={'xc'}
