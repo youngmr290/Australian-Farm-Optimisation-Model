@@ -6,4 +6,6 @@ __pycache__
 /redundant
 /.spyproject
 /*.pkl
+/*.npy
+/Crop sim.xlsx
 /Michael code ideas.py

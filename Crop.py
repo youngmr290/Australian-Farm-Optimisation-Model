@@ -133,7 +133,7 @@ def rot_yield(*params):
     '''
     Returns
     ----------
-    Dataframe
+    Dataframe - passed to pyomo and used to calc insurance
         Grain yield for each rotation.
         Yield includes:
         -arable area
@@ -141,27 +141,26 @@ def rot_yield(*params):
         -lmu factor
         -frost
     '''
-    ##combines yield and grain price
-    base_yields = pinp.crop['yield'].stack().swaplevel()*1000  #get base yields #swap levels - switches the order of the multi level index, so the yield lines up with the current yr not previos yr #stack to convert to a 1d dataframe so it can be merged using its index
+    ##read in yields from crop sim.xlsx
+    base_yields = np.load('Yield data.npy')*1000
+    base_yields = pd.Series(base_yields, index = phases_df.iloc[:,-1])
+    ##colate other info
     yields_lmus = pinp.crop['yield_by_lmu'] #soil yield factor
     seeding_rate = pinp.crop['seeding_rate'].mul(pinp.crop['own_seed'],axis=0)#seeding rate adjusted by if the farmer is using their own seed from last yr
     frost = pinp.crop['frost'] #frost
-    ##calculate yield - base yield * arable area * frost * lmu factor - seeding rate
     arable = pinp.crop['arable'].stack().droplevel(0) #read in arable area df
+    ##calculate yield - base yield * arable area * frost * lmu factor - seeding rate
     yield_arable_by_soil=yields_lmus.mul(arable).mul(1-frost) #mul arable area to the the lmu factor (easy because dfs have the same axis's). THen mul frost
-    yields=yield_arable_by_soil.reindex(base_yields.index, axis=0, level=1).mul(base_yields,axis=0, level=1) #reindes and mul with base yields
-    seeding_rate=seeding_rate.reindex(yields.index, axis=0, level=1) #minus seeding rate
-    yields=yields.sub(seeding_rate,axis=0, level=1).clip(lower=0) #we don't want negitive yields so clip at 0 (if any values are neg they become 0)
-    # yields_income = yields.unstack(level=[1]).stack([0])
-   # yields_income = yields_income.reindex(grain_price().index, axis=1, level=1).mul(grain_price()/1000)
-    # yields_income = yields_income.unstack(level=[1]).stack([1])
-    rot_yields = pd.merge(phases_df,yields, how='left', left_on=uinp.cols(), right_index = True)
-    # return yields_income.drop(list(range(uinp.structure['phase_len'])), axis=1).stack()
-    rot_yields.set_index(uinp.cols()[-1], append=True, inplace=True)
+    yields=yield_arable_by_soil.reindex(base_yields.index, axis=0).mul(base_yields,axis=0) #reindes and mul with base yields
+    seeding_rate=seeding_rate.reindex(yields.index, axis=0) #minus seeding rate
+    yields=yields.sub(seeding_rate,axis=0).clip(lower=0) #we don't want negitive yields so clip at 0 (if any values are neg they become 0)
+    ##add the rotation to index - current landuse is also part of the index it is required for pyomo, also used in the insurance calc to multiply on.   
+    yields.set_index(phases_df.index, append=True, inplace=True)
+    yields.index = yields.index.swaplevel(0, 5)
     if params:
-        params[0]['rot_yield'] = rot_yields.drop(list(range(uinp.structure['phase_len']-1)), axis=1).stack().to_dict() #[0] required because when *args are passed in they are passed in as a tuple
+        params[0]['rot_yield'] = yields.stack().to_dict() #[0] required because when *args are passed in they are passed in as a tuple
     else:
-        return rot_yields.drop(list(range(uinp.structure['phase_len']-1)), axis=1).stack()
+        return yields.stack()
     # return rot_yields.set_index(list(range(uinp.structure['phase_len']))).stack() #need to use the multiindex to create a multidimensional param for pyomo so i can split it down when indexing
 # a=rot_yield().to_dict()
 
@@ -480,20 +479,20 @@ def insurance():
     ##first need to combine each grain pool to get average price
     ave_price=np.multiply(farmgate_grain_price(),uinp.price['grain_price'][['prop_firsts','prop_seconds']]).sum(axis=1)#np multiply doen't look at the column names and indexs
     insurance=ave_price*uinp.price['grain_price']['insurance']/100  #div by 100 because insurance is a percent
-    rot_insurance = rot_yield().mul(insurance, axis=0, level = uinp.structure['phase_len']-1)/1000 #divide by 1000 to convert yield to tonnes    
-    rot_insurance = rot_insurance.droplevel(1)
+    rot_insurance = rot_yield().mul(insurance, axis=0, level = 1)/1000 #divide by 1000 to convert yield to tonnes    
+    rot_insurance = rot_insurance.droplevel(1).unstack()
     ##merge - required to get the agregated phase index
     # phases_df.index.rename('Index', inplace=True) #have to rename index so i can do the next step otherwise col and index had the same name '0'
     # rot_cost = pd.merge(phases_df, rot_insurance.unstack(), how='left', left_on=[*range(uinp.structure['phase_len'])], right_index = True)
-    rot_cost = pd.merge(phases_df, rot_insurance.unstack(), how='left', left_index=True, right_index = True)
+    # rot_cost = pd.merge(phases_df, rot_insurance.unstack(), how='left', left_index=True, right_index = True)
     ##cost allocation
     start = uinp.price['crp_insurance_date']
     p_dates = per.cashflow_periods()['start date']
     p_name = per.cashflow_periods()['cash period']
     allocation=fun.period_allocation(p_dates, p_name, start)
     ##add cashflow period to col index
-    rot_cost.columns = pd.MultiIndex.from_product([rot_cost.columns, [allocation]])
-    return rot_cost.drop(list(range(uinp.structure['phase_len'])), axis=1,level=0).stack([0])
+    rot_insurance.columns = pd.MultiIndex.from_product([rot_insurance.columns, [allocation]])
+    return rot_insurance.stack([0])
 
 
 
