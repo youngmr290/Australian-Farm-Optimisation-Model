@@ -8,11 +8,14 @@ import math
 import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
+from scipy.optimize import basinhopping
 import time
+import sys
 
 
 ##midas
 import UniversalInputs as uinp
+import PropertyInputs as pinp
 import Crop as crp
 
 start_time1 = time.time()
@@ -22,25 +25,35 @@ n_sigmoid_params = 3 #this depends on the function that describes the relationsh
 n_yield_params = 2 #this depends on the function that describes the relationship
 n_weedcontrols = len(uinp.crop['weed_params'])
 n_fungicontrols = len(uinp.crop['fungi_control_params'])
-n_controls = n_weedcontrols + n_fungicontrols #add other controls as they exist ie fert
-n_fungi = len(uinp.crop['initial_fungus'].squeeze())
+n_fertilisers = len(uinp.crop['fert_control_params'])
+n_controls = n_weedcontrols + n_fungicontrols + n_fertilisers#add other controls as they exist ie fert
+n_fungi = len(pinp.crop['initial_fungus'])
 n_fungilanduses = len(uinp.crop['fungi_landuse_params']) #just the landuse sets required for fungi, currently only the major capital sets are required
-n_weeds = len(uinp.crop['initial_weed'].squeeze())
-n_weedseed_groups = len(uinp.crop['initial_weed'])
+n_nutrients = 1 #len(pinp.crop['initial_nutrients'])
+n_weeds = len(pinp.crop['initial_weed'].columns)
+n_weedseed_groups = len(pinp.crop['initial_weed'])
 n_croplanduses = len(uinp.crop['weed_yield_params'])
 n_phases = len(uinp.structure['phases'])
 n_years = len(uinp.structure['phases'].columns)
-n_pas = len(uinp.crop['pasture_control'])
+n_all = len(pinp.crop['fixed_control'])
+n_pas = len(uinp.crop['pasture_biomass'])
 
 ##define empty arrays
+biomass_ry = np.zeros((n_phases,n_years),  dtype = 'float64')
 control_bnds_ko = np.zeros((n_croplanduses,n_controls),  dtype = 'float64')
 crop_control_levels_ryo = np.zeros((n_phases,n_years,n_controls),  dtype = 'float64')
 cost_control_o = np.zeros(n_controls,  dtype = 'float64')
 fungibank_die_ku = np.zeros((n_fungilanduses,n_fungi),  dtype = 'float64')
 fungibank_ryu = np.zeros((n_phases,n_years,n_fungi),  dtype = 'float64')
+fixed_control_ko = np.zeros((n_all,n_controls),  dtype = 'float64')
+nutrientbank_ryn = np.zeros((n_phases,n_years,n_nutrients),  dtype = 'float64')
 germ_ew = np.zeros((n_weeds,n_weedseed_groups),  dtype = 'float64')
-pas_control_to = np.zeros((n_pas,n_controls),  dtype = 'float64')
+hi_k = np.zeros(n_croplanduses,  dtype = 'float64')
+biomass_k = np.zeros(n_all,  dtype = 'float64')
+soil_n_slope_k = np.zeros(n_all,  dtype = 'float64')
+soil_n_assintote_k = np.zeros(n_all,  dtype = 'float64')
 past_control_levels_ryo = np.zeros((n_phases,n_years,n_controls),  dtype = 'float64')
+pasture_density_t = np.zeros(n_pas,  dtype = 'float64')
 seedbank_rew = np.zeros((n_phases,n_weedseed_groups,n_weeds),  dtype = 'float64')
 seed_die_ew = np.zeros((n_weedseed_groups,n_weeds),  dtype = 'float64')
 seed_set_max_ew = np.zeros((n_weedseed_groups,n_weeds),  dtype = 'float64')
@@ -55,9 +68,12 @@ t_seed_set_hard_ryw = np.zeros((n_phases,n_years,n_weeds),  dtype = 'float64')
 t_seed_bank_soft_ryw = np.zeros((n_phases,n_years,n_weeds),  dtype = 'float64')
 t_seed_bank_hard_ryw = np.zeros((n_phases,n_years,n_weeds),  dtype = 'float64')
 t_obj_ry = np.zeros((n_phases,n_years),  dtype = 'float64')
+t_rev_ry = np.zeros((n_phases,n_years),  dtype = 'float64')
+t_cost_ry = np.zeros((n_phases,n_years),  dtype = 'float64')
 t_yield_ry = np.zeros((n_phases,n_years),  dtype = 'float64')
 t_yield_remaining_weeds_ry = np.zeros((n_phases,n_years),  dtype = 'float64')
 t_yield_remaining_fungi_ry = np.zeros((n_phases,n_years),  dtype = 'float64')
+t_yield_remaining_nutrient_ry = np.zeros((n_phases,n_years),  dtype = 'float64')
 
 ##make phases df into a array of sets so we can test of the landues sets contain the phase set
 phases = np.array(uinp.structure['phases'])
@@ -76,9 +92,17 @@ phases_crop_ryk[:,-1,0:gen_landuse_slice] = False
 ##create the pasture phase array
 ###first have to build a list of the supersets each set in the list becomes a slice in the landuse axis
 sets = []
-for k in uinp.crop['pasture_control'].index:
+for k in uinp.crop['pasture_biomass'].index:
     sets.append(uinp.structure[k])
 phases_pas_ryt = phases[...,np.newaxis]<=sets
+##create the all phase array
+###first have to build a list of the supersets each set in the list becomes a slice in the landuse axis
+sets = []
+for k in pinp.crop['fixed_control'].index:
+    sets.append(uinp.structure[k])
+phases_all_ryk = phases[...,np.newaxis]<=sets
+###remove true from generalised landuse slice in yr0 - ie for yr0=b, there will be a true in both the slice of E and b but i only want it in the b slice.
+phases_all_ryk[:,-1,0:gen_landuse_slice] = False
 ##create the fungi landuse phase array, a seperate array must be built because the fungi bank params have a simplified landuse index to reduce inputs
 ###first have to build a list of the supersets each set in the list becomes a slice in the landuse axis
 sets = []
@@ -87,11 +111,10 @@ for k in uinp.crop['fungi_landuse_params'].index:
 phases_fungi_ryk = phases[...,np.newaxis]<=sets
 
 ##populate arrays
-control_bnds_ko = np.array(pd.concat([uinp.crop['weed_control_bnds'],uinp.crop['fungi_control_bnds']],axis=1))
-cost_control_o[...] = np.concatenate([uinp.price['herbicide'],uinp.price['fungicide']]) #will have to concat other control costs here too
+control_bnds_ko = np.array(pd.concat([uinp.crop['weed_control_bnds'],uinp.crop['fungi_control_bnds'],uinp.crop['fert_bnds']],axis=1))
+cost_control_o[...] = np.concatenate([uinp.price['herbicide'],uinp.price['fungicide'],np.array(uinp.price['fert_cost']/1000).flatten()]) #divide fert cost by 1000 to convert to kg
 germ_ew[...] = uinp.crop['weed_seed_germ']
-seedbank_rew[...] = uinp.crop['initial_weed'] #divide by 100 to make scale match the function ^this divide should be removed and just factored in the function
-fungibank_ryu[:,0,:] = uinp.crop['initial_fungus'] #divide by 100 to make scale match the function ^this divide should be removed and just factored in the function
+fungibank_ryu[:,0,:] = pinp.crop['initial_fungus'] #shows soil fungi level at beginning of yr
 fungi_params_oup = uinp.crop['fungi_control_params'].values.reshape(n_fungicontrols,n_fungi,n_sigmoid_params)
 fungi_host_params_kup = uinp.crop['fungi_landuse_params'].values.reshape(n_fungilanduses,n_fungi,n_sigmoid_params)
 fungi_host_params_ryup = np.sum(phases_fungi_ryk[...,np.newaxis,np.newaxis] * fungi_host_params_kup, axis =2)
@@ -99,18 +122,45 @@ fungibank_die_ku[...] = uinp.crop['fungi_die']
 fungi_die_ryu = np.sum(phases_fungi_ryk[...,np.newaxis] * fungibank_die_ku, axis =2)
 fungi_yield_params_kup = uinp.crop['fungi_yield_params'].values.reshape(n_croplanduses,n_fungi,n_yield_params)
 fungi_yield_params_ryup = np.sum(phases_crop_ryk[...,np.newaxis,np.newaxis] * fungi_yield_params_kup, axis =2)
+fert_params_on = uinp.crop['fert_control_params'].values.reshape(n_fertilisers,n_nutrients)
+nutrientbank_ryn[:,0,:] = pinp.crop['initial_nutrients'] #shows nutrient level at beginning of yr
+nutrient_yield_params_knp = uinp.crop['nutrient_yield_params'].values.reshape(n_croplanduses,n_nutrients,n_yield_params)
+nutrient_yield_params_rynp = np.sum(phases_crop_ryk[...,np.newaxis,np.newaxis] * nutrient_yield_params_knp, axis =2)
 seed_die_ew[...] = uinp.crop['seeds_die'] #divide by 100 to make scale match the function ^this divide should be removed and just factored in the function
 seed_set_max_ew[...] = uinp.crop['seed_set']
 seed_set_min_w[...] = uinp.crop['seedset_min']
 seed_set_slope_w[...] = uinp.crop['seedset_slope']
 seed_soften_w[...] = uinp.crop['seeds_soften']
+seedbank_rew[...] = pinp.crop['initial_weed'] 
 seedbank_value_ew[...] = uinp.crop['seedbank_value']
 weed_params_owp = uinp.crop['weed_params'].values.reshape(n_weedcontrols,n_weeds,n_sigmoid_params)
 weed_yield_params_kwp = uinp.crop['weed_yield_params'].values.reshape(n_croplanduses,n_weeds,n_yield_params)
 weed_yield_params_rywp = np.sum(phases_crop_ryk[...,np.newaxis,np.newaxis] * weed_yield_params_kwp, axis =2)
-pas_control_to[...] = uinp.crop['pasture_control']
-phases_pas_ryto = phases_pas_ryt[...,np.newaxis] * pas_control_to[np.newaxis,np.newaxis,...] #add control level to pas phase array then sum on pasture axis to return the control level per phase per rotation
-pas_control_levels_ryo = np.sum(phases_pas_ryto,axis=2)
+
+fixed_control_ko[...] = pinp.crop['fixed_control']
+phases_all_ryko = phases_all_ryk[...,np.newaxis] * fixed_control_ko[np.newaxis,np.newaxis,...] #add control level to pas phase array then sum on pasture axis to return the control level per phase per rotation
+pas_control_levels_ryo = np.sum(phases_all_ryko,axis=2)
+
+biomass_k[...] = uinp.crop['Biomass_slope']
+biomass_phases_all_ryk = phases_all_ryk[...] * biomass_k 
+biomass_slope_ry = np.sum(biomass_phases_all_ryk,axis=2)
+
+soil_n_slope_k[...] = uinp.crop['Soil_nitrate_slope']
+soil_n_slope_ryk = phases_all_ryk[...] * soil_n_slope_k 
+soil_n_slope_ry = np.sum(soil_n_slope_ryk,axis=2)
+
+soil_n_assintote_k[...] = uinp.crop['Soil_nitrate_assimtope']
+soil_n_assintote_ryk = phases_all_ryk[...] * soil_n_assintote_k 
+soil_n_assintote_ry = np.sum(soil_n_assintote_ryk,axis=2)
+
+pasture_density_t[...] = uinp.crop['pasture_biomass'].squeeze()
+phases_pasture_ryk = phases_pas_ryt[...] * pasture_density_t[np.newaxis,np.newaxis,...] #add control level to pas phase array then sum on pasture axis to return the control level per phase per rotation
+pas_biomass_ry = np.sum(phases_pasture_ryk,axis=2)
+
+hi_k[...] = uinp.crop['harvest_index'].squeeze()
+phases_hi_ryk = phases_crop_ryk[...] * hi_k[np.newaxis,np.newaxis,...] #add control level to pas phase array then sum on pasture axis to return the control level per phase per rotation
+phases_hi_ry = np.sum(phases_hi_ryk,axis=2)
+
 yield_max_k=pd.concat([uinp.crop['max_yield_gen'],uinp.crop['max_yield_spec']]) #make array for yield
 yield_rev_k[...] = crp.farmgate_grain_price(True)
 ymax_ry = np.sum(phases_crop_ryk * yield_max_k.values.flatten(),axis=2)
@@ -175,7 +225,7 @@ def fungi_density(fungibank_u,x,a_ou,b_ou,c_ou,ax):
     return fungibank_u * prop_remaining_u
 
 
-def yield_n_state(fungibank_u,seedbank_ew,x,a_ow,a_ou,b_ow,b_ou,c_ow,c_ou,d_kw,d_ku,k_kw,k_ku,ymax,ax):
+def yield_n_state(fungibank_u,seedbank_ew,nutrientbank_n,x,a_ow,a_ou,b_ow,b_ou,c_ow,c_ou,d_kw,d_ku,d_kn,k_kw,k_ku,k_kn,ymax,ax):
     '''
     Parameters
     ----------
@@ -204,10 +254,14 @@ def yield_n_state(fungibank_u,seedbank_ew,x,a_ow,a_ou,b_ow,b_ou,c_ow,c_ou,d_kw,d
         yield of given lanuse and the seedset.
 
     '''
-    # print( 'yield remaining',(1-(d+(-d/np.exp(k*weed_density(s,g,x,a,b,c))))))
-    # print('yield: ', np.prod((1-(d+(-d/np.exp(k*weed_density(s,g,x,a,b,c))))),axis=0))
     fungi_density_u = fungi_density(fungibank_u,x[...,n_weedcontrols:(n_fungicontrols+n_weedcontrols)],a_ou,b_ou,c_ou,ax)
     weed_density_w = weed_density(seedbank_ew,x[...,:n_weedcontrols],a_ow,b_ow,c_ow,ax)
+    nutrient_level_n = np.sum(x[...,n_fungicontrols+n_weedcontrols:,None] * fert_params_on, axis=ax) + nutrientbank_n
+    # print(x[...,n_fungicontrols+n_weedcontrols:,None])
+    # print(fert_params_on)
+    # print(x[...,n_fungicontrols+n_weedcontrols:,None]* fert_params_on)
+    # print(np.sum(x[...,n_fungicontrols+n_weedcontrols:,None] * fert_params_on, axis=ax))
+    # print(nutrient_level_n)
     ##when passing the whole rotation array to this function there needs to be a new axis, this is the best way i could think of achieving this given ax is already being passed in
     if ax==0:
         seed_set_plant = (seed_set_max_ew - seed_set_min_w) * np.exp(np.sum(weed_density_w) * seed_set_slope_w) + seed_set_min_w 
@@ -218,10 +272,15 @@ def yield_n_state(fungibank_u,seedbank_ew,x,a_ow,a_ou,b_ow,b_ou,c_ow,c_ou,d_kw,d
     ##determine yield
     yield_remaining_weeds = np.prod(1-(d_kw+(-d_kw/np.exp(k_kw*weed_density_w))),axis =ax)
     yield_remaining_fungi = np.prod(1-(d_ku+(-d_ku/np.exp(k_ku*fungi_density_u))),axis =ax)
-    overall_yield = ymax * yield_remaining_weeds * yield_remaining_fungi
-    return overall_yield, seed_set, weed_density_w,fungi_density_u,yield_remaining_weeds,yield_remaining_fungi
+    yield_remaining_nutrient = np.prod(d_kn+(-d_kn/np.exp(k_kn*nutrient_level_n)),axis =ax)
+    # print(nutrient_level_n)
+    # print(d_kn+(-d_kn/np.exp(k_kn*nutrient_level_n)))
+    # j=j
+    overall_yield = ymax * yield_remaining_weeds * yield_remaining_fungi * yield_remaining_nutrient
+    # print(overall_yield)
+    # j=j
+    return overall_yield, seed_set, weed_density_w,fungi_density_u,yield_remaining_weeds,yield_remaining_fungi,yield_remaining_nutrient
 
-    
 def objective(x,row,k_slice):
     '''
     Parameters
@@ -238,6 +297,7 @@ def objective(x,row,k_slice):
     ##determine all params for functions
     seedbank_ew = seedbank_rew[row,...] 
     fungibank_u = fungibank_ryu[row,yr,...] 
+    nutrientbank_n = nutrientbank_ryn[row,yr,...] 
     a_ow = weed_params_owp[:,:,0]
     a_ou = fungi_params_oup[:,:,0]
     b_ow = weed_params_owp[:,:,1]
@@ -246,41 +306,65 @@ def objective(x,row,k_slice):
     c_ou = fungi_params_oup[:,:,2]
     d_kw = weed_yield_params_rywp[row,yr,:,0]
     d_ku = fungi_yield_params_ryup[row,yr,:,0]
+    d_kn = nutrient_yield_params_rynp[row,yr,:,0]
     k_kw = weed_yield_params_rywp[row,yr,:,1]
     k_ku = fungi_yield_params_ryup[row,yr,:,1]
+    k_kn = nutrient_yield_params_rynp[row,yr,:,1]
     ymax = ymax_ry[row,yr]
     ax=0 #this is the axis being summed or multiplied along - it is inputted because it is different when calculating the overall results for the whole roataion vertorily
     control_cost = cost_control_o * x
-    var = yield_n_state(fungibank_u,seedbank_ew,x,a_ow,a_ou,b_ow,b_ou,c_ow,c_ou,d_kw,d_ku,k_kw,k_ku,ymax,ax)
+    var = yield_n_state(fungibank_u,seedbank_ew,nutrientbank_n,x,a_ow,a_ou,b_ow,b_ou,c_ow,c_ou,d_kw,d_ku,d_kn,k_kw,k_ku,k_kn,ymax,ax)
     crp_yield = var[0]
     seedset_ew = var[1]
     yield_revenue = yield_rev_k[k_slice] * crp_yield
     seedvalue = np.sum(seedset_ew * seedbank_value_ew)
     ##store obj for cheching
     t_obj_ry[row,yr]=-(yield_revenue - np.sum(control_cost) - seedvalue)
+    t_rev_ry[row,yr]=-(yield_revenue )
+    t_cost_ry[row,yr]=-( - np.sum(control_cost))
     return -(yield_revenue - np.sum(control_cost) - seedvalue)
 
 ##initial guesses
 ###load past control levels if they exist - these will be used to 
 try:
     past_control_levels_ryo[...] = np.loadtxt('cropsim solution.txt').reshape(n_phases,n_years,n_controls)
-except OSError: 
-    past_control_levels_ryo[...] = np.array([5,5,5,5,2,2,2])
+except (OSError,ValueError): 
+    print('using default initial guesses')
+    past_control_levels_ryo[...] = np.array([5,5,5,5,5,2,2,2,150,0,0,0])
+    
 
 def minimise(row):
     row=row[0]
-    ##check if any of the crop landuse axis values are True ie is the current phase a crop. If it is then optimise the control levels
-    k_slice = phases_crop_ryk[row,yr,:]
+    ##checks if landuse is crop, if it is pasture inputs dont need to be optimised therefore doesn't solve
+    k_slice = phases_crop_ryk[row,yr,:] 
     if k_slice.any():
+        # print(row)
         ##create bounds from input array
         upper = control_bnds_ko[k_slice,:].flatten()
         lower = np.zeros(n_controls)
+        # lower = np.array([3,3,3,0,0,0,0,0,0,0,0,0])
         bnds=list(zip(lower,upper))
         ##initial guessed - use the solution from the last time if it exists
         x0 = past_control_levels_ryo[row,yr,:]
-        crop_control_levels_ryo[row,yr,:] = minimize(objective, x0,args=(row,k_slice), method='L-BFGS-B', bounds=bnds, tol=1e-5).x #may have to change around the solver (method) to get the best solution - time it and see what is best
+        
+        ##this method only solves for the local minimum - it is very dependent on the initial guesses - it is quite fast
+        result = minimize(objective, x0,args=(row,k_slice), method='L-BFGS-B', bounds=bnds, tol=1e-2) #may have to change around the solver (method) to get the best solution - time it and see what is best
+        
+        ##basinhopping method is used to determine global minimum - it is much slower
+        ### use method L-BFGS-B - this may need to be changed
+        # minimizer_kwargs = dict(method="L-BFGS-B", bounds=bnds,args=(row,k_slice), tol=.0001) #can adjust tol to increase speed but also decreases accuracy.
+        # result = basinhopping(objective, x0, minimizer_kwargs=minimizer_kwargs, stepsize=3, niter=20,T=40,niter_success=3)
+        
+        crop_control_levels_ryo[row,yr,:] = result.x
+        
+        ##use few lines below if you are trying to test different results or check the solver status.
+        # obj = objective(result.x,row,k_slice)
+        # print(result.x)
+        # print(obj)
+        # if not result.success:
+        #     print('solver error')
     
-for yr in range(n_years):
+for yr in range(1):#n_years):
     # yr=5    ##determine all params for vector function
     print(yr)
     a_ow = weed_params_owp[:,:,0]
@@ -291,8 +375,10 @@ for yr in range(n_years):
     c_ou = fungi_params_oup[:,:,2]
     d_kw = weed_yield_params_rywp[:,yr,:,0]
     d_ku = fungi_yield_params_ryup[:,yr,:,0]
+    d_kn = nutrient_yield_params_rynp[:,yr,:,0]
     k_kw = weed_yield_params_rywp[:,yr,:,1]
     k_ku = fungi_yield_params_ryup[:,yr,:,1]
+    k_kn = nutrient_yield_params_rynp[:,yr,:,1]
     ymax = ymax_ry[:,yr]
     ax=1
     row=pd.DataFrame(range(len(phases)))
@@ -300,7 +386,14 @@ for yr in range(n_years):
     ##combine optimised control levels and the inputted ones for pasture.
     rotation_control_levels_ro = pas_control_levels_ryo[:,yr,:] + crop_control_levels_ryo[:,yr,:]
     ##using the optimised level of control calc the yield and seed bank that is used in next yr calcs.
-    cropyield,seedset_rew,weed_density_rw,fungi_level_ru,yield_remaining_weeds,yield_remaining_fungi=yield_n_state(fungibank_ryu[:,yr,:],seedbank_rew,rotation_control_levels_ro,a_ow,a_ou,b_ow,b_ou,c_ow,c_ou,d_kw,d_ku,k_kw,k_ku,ymax,ax)
+    var=yield_n_state(fungibank_ryu[:,yr,:],seedbank_rew,nutrientbank_ryn[:,yr,:],rotation_control_levels_ro,a_ow,a_ou,b_ow,b_ou,c_ow,c_ou,d_kw,d_ku,d_kn,k_kw,k_ku,k_kn,ymax,ax)
+    cropyield = var[0]
+    seedset_rew = var[1]
+    weed_density_rw = var[2]
+    fungi_level_ru = var[3]
+    yield_remaining_weeds = var[4]
+    yield_remaining_fungi = var[5]
+    yield_remaining_nutrient = var[6]
     ##calc seedbank for next yr - do this outside of the objective to save it from being done multiple times.
     ###soft
     seedbank_rew[:,0,:] = (seedset_rew[:,0,:] + seedbank_rew[:,1,:] * seed_soften_w) * (1-seed_die_ew[0,:])
@@ -318,6 +411,16 @@ for yr in range(n_years):
         fungibank_ryu[:,yr+1,:] = fungi_level_ru * (1-die_prop_ru)
     except IndexError:
         pass
+    ##calc nutrient levels for next yr = initial + fert + fixed - removal - leaching - gaseous
+    biomass_ry[:,yr] = (1-phases_hi_ry[:,yr])*cropyield  + pas_biomass_ry[:,yr]/ 1000  #/1000 to convert to t of biomass
+    ### nitrogen fixed depends on biomass of plant and initial soil N.
+    fixed = (biomass_slope_ry[:,yr] * biomass_ry[:,yr]) - (-soil_n_assintote_ry[:,yr] * np.exp(- soil_n_slope_ry[:,yr] * nutrientbank_ryn[:,yr,0]) + soil_n_assintote_ry[:,yr])
+    # removal_yield = cropyield * 
+    try:
+        nutrientbank_ryn[:,yr+1,:]
+    except IndexError:
+        pass
+    
     ##build some arrays that contain data for testing purposes
     ###weed density
     t_weed_density_ryw[:,yr,:] = weed_density_rw
@@ -333,10 +436,12 @@ for yr in range(n_years):
     t_yield_ry[:,yr] = cropyield
     t_yield_remaining_weeds_ry[:,yr] = yield_remaining_weeds
     t_yield_remaining_fungi_ry[:,yr] = yield_remaining_fungi
+    t_yield_remaining_nutrient_ry[:,yr] = yield_remaining_nutrient
 
+    
 ##write solver solution to disk, this is used next time as the initial guesses
-control_solution=crop_control_levels_ryo.ravel() 
-np.savetxt('cropsim solution.txt', control_solution)
+# control_solution=crop_control_levels_ryo.ravel() 
+# np.savetxt('cropsim solution.txt', control_solution)
 
 ##save sim data as binary file - this is fast but you can't view it (if you want to view it - uncomment the code below)
 np.save('Yield data.npy', cropyield)

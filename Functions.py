@@ -161,6 +161,30 @@ def cartesian_product_simple_transpose(arrays):
 
 #print(timeit.timeit(phases2,number=100)/100)
 #
+
+#############################
+#function for fert and chem #
+#############################
+
+def passes(x,step):
+    '''
+    Parameters
+    ----------
+    x : Numpy array
+        Array containing level of something that you want to determine which step it falls onto.
+    step : Numpy array
+        The length of each step.
+
+    Returns
+    -------
+    Numpy array
+        The step each value falls onto, ie if x is 5 and step is 7 then it falls onto step 1 (the function can be made more complex by including other params such as height of each step.
+
+    '''
+    return np.floor(x/step-0.0001)+1 #subtract a small number so that when the input level is 0 it gets 0 passes
+
+
+
 #
 ##########################
 # period calculators     #

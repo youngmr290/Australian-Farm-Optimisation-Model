@@ -112,23 +112,46 @@ def chem_app_time_ha(params):
     Dict for pyomo
         Labour required by each rotation phase for spraying
     '''
+    ##calc passes - this is a bit of a double up since it is also calced in crop.py but couldn't get a nice way to get it from there without splitting up the function and also requires crop to be imported.
+    base_chem = np.load('Chem data.npy')
+    chem_by_soil = pinp.crop['chem_by_lmu'] #read in chem by soil
+    base_chem = pd.DataFrame(base_chem, index = phases_df.index, columns = chem_by_soil.index)
+    ### adjust the chem cost for each rotation by lmu
+    chem_by_soil1 = chem_by_soil.stack()
+    chem=base_chem.mul(chem_by_soil1,axis=1,level=0)
+    x = chem.to_numpy()
+    step = pinp.crop['step_chem_passes'].reindex(chem.columns, axis=0,level=0).values.flatten() #reindex to account for lmu then convert to np
+    chem_passes = fun.passes(x,step)
+    chem_passes = pd.DataFrame(chem_passes, index = phases_df.index, columns = chem.columns) #turn it into df with correct indexes so it can be combined with cost allocation.
     ##adjust passes for arable area.
-    arable = pinp.crop['arable'].stack().droplevel(0)
-    passes = pinp.crop['chem_passes'].reset_index().pivot(index='chem',columns='current yr').T #passes over each ha for each chem type
-    col = pd.MultiIndex.from_product([passes.columns, arable.index]) #create a new col index
-    passes=passes.reindex(col,axis=1, level=0).mul(arable,axis=1,level=1).stack()
+    arable = pinp.crop['arable'].squeeze()
+    passes=chem_passes.mul(arable,axis=1,level=1).stack()
     ##adjust chem labour across each labour period
     time = chem_lab_allocation().mul(mac.spray_time_ha()).stack() #time for 1 pass for each chem.
     ##adjust for passes
-    time = passes.reindex(time.index, axis=1,level=1).mul(time) #total time 
-    time=time.sum(level=[0], axis=1).replace(0, np.nan).unstack() #sum each chem  - time doesn't need to be seperated by chem type once joined with passes #sum nan returns 0 therefore i need to convert 0 back to nan so that they are dropped when stacking to reduce dict size.
-    ##merge to full rotation df
-    phase_time = pd.merge(phases_df2, time, how='left', left_on=uinp.cols(), right_index = True) #merge with all the phases, requires because different phases have different application passes
-    phase_time = phase_time.drop(list(range(uinp.structure['phase_len'])),axis=1,level=0).stack([1,0]) #adding level=0 does nothing but if not included you get a preformance warning.
-    params['chem_app_time_ha'] = phase_time.to_dict()
-# t_chemlab=chem_app_time_ha()
+    time = passes.mul(time, axis=1,level=1) #total time 
+    time=time.sum(level=[0], axis=1).stack()
+    params['chem_app_time_ha'] = time.to_dict()
+    
+# # t_chemlab=chem_app_time_ha()
 
     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
