@@ -61,7 +61,7 @@ n_lactation_number = 5  # y: dry, single, twin, triplet, in utero
 n_sexes = 3             # w: ram, ewe, wether
 # n_sim_periods see below
 n_labour_periods = 16   # q
-i_sim_periods_year = 52 # ^uinp.n_sim_periods_year   will be in structure dict now
+        i_sim_periods_year = 52 # ^uinp.n_sim_periods_year   will be in structure dict now
 i_oldest_animal= 6.5    # ^uinp.i_oldest_animal
 
 birth_date_i = uinp.propertydata['ExcelName']   #Find the ExcelNames
@@ -77,20 +77,29 @@ start_year = np.min(birth_date_jl)
 n_sim_periods, date_p, p_index_p, step \
         = sfun.sim_periods(start_year, i_sim_periods_year, i_oldest_animal)
 ### _array dimensions
-ax      = (n_animal_types
-          ,n_litter_size
+va      = (n_genders
+          ,n_animal_types
           )
-ay      = (n_animal_types
-          ,n_lactation_number
+xa      = (n_litter_size
+          ,n_animal_types
           )
-gw      = (n_genotypes
-          ,n_genders
+ya      = (n_lactation_number
+          ,n_animal_types
           )
-gx      = (n_genotypes
-          ,n_litter_size
+vg      = (n_genders
+          ,n_genotypes
           )
-gy      = (n_genotypes
-          ,n_lactation_number
+xg      = (n_litter_size
+          ,n_genotypes
+          )
+yg      = (n_lactation_number
+          ,n_genotypes
+          )
+##          ,23    #  this dimension represents the subscript from GrazPLan
+                  #  not sure how these values vary with genotype and lactation number
+                  #  so not sure how to pass this to sfun.intake
+## the number required varies with the constatnt= being defined and therefore
+## the value will be specified during the instantiation of the numpy array
           )
 il      = (n_groups_rams
           ,n_groups_lambing
@@ -382,22 +391,22 @@ def simulation():
     ## Instantiate the arrays that are only required within this function
     ## mainly arrays that will store the input data that require pre-defining
     ## # see documentation for a description of each variable
-    a_c_g0              = np.zeros(g0 , dtype = 'float64')
-    a_maternal_g0_g1    = np.zeros(g1 , dtype = 'float64')
-    a_paternal_g0_g1    = np.zeros(g1 , dtype = 'float64')
-    a_maternal_g1_g2    = np.zeros(g2 , dtype = 'float64')
-    a_paternal_g0_g2    = np.zeros(g2 , dtype = 'float64')
+    a_c_g0              = np.zeros(g0, dtype = 'float64')
+    a_maternal_g0_g1    = np.zeros(g1, dtype = 'float64')
+    a_paternal_g0_g1    = np.zeros(g1, dtype = 'float64')
+    a_maternal_g1_g2    = np.zeros(g2, dtype = 'float64')
+    a_paternal_g0_g2    = np.zeros(g2, dtype = 'float64')
 
-    c_cn_g              = np.zeros(n_genotypes , dtype = 'float64')
-    c_cr_g              = np.zeros(n_genotypes , dtype = 'float64')
-    c_ck_g              = np.zeros(n_genotypes , dtype = 'float64')
-    c_cm_g              = np.zeros(n_genotypes , dtype = 'float64')
-    c_cw_g              = np.zeros(n_genotypes , dtype = 'float64')
-    c_cc_g              = np.zeros(n_genotypes , dtype = 'float64')
-    c_cg_g              = np.zeros(n_genotypes , dtype = 'float64')
-    c_ch_g              = np.zeros(n_genotypes , dtype = 'float64')
-    c_cd_g              = np.zeros(n_genotypes , dtype = 'float64')
-    c_sfw_g             = np.zeros(n_genotypes , dtype = 'float64')
+    c_cn_vg             = np.zeros(7, vg, dtype = 'float64')
+    c_cr_g              = np.zeros(23, n_genotypes, dtype = 'float64')
+    c_ck_g              = np.zeros(18, n_genotypes, dtype = 'float64')
+    c_cm_vg             = np.zeros(20, vg, dtype = 'float64')
+    c_cw_g              = np.zeros(15, n_genotypes, dtype = 'float64')
+    c_cc_g              = np.zeros(17, n_genotypes, dtype = 'float64')
+    c_cg_g              = np.zeros(19, n_genotypes, dtype = 'float64')
+    c_ch_g              = np.zeros(n_genotypes, dtype = 'float64')
+    c_cd_g              = np.zeros(n_genotypes, dtype = 'float64')
+    c_sfw_g             = np.zeros(n_genotypes, dtype = 'float64')
     a_g_j               = np.zeros(n_groups_ewes , dtype = 'float64')
     a_w_j               = np.zeros(n_groups_ewes , dtype = 'float64')
     a_g_i               = np.zeros(n_groups_rams , dtype = 'float64')
@@ -782,7 +791,10 @@ a_wean_p_ojel
             # the weighted average of a slice of the array rather than an individual
             # element.
             foo, dmd, supp = sfun.feed_supply(feed_supply_jxyl, foo_std, dmd_std)
-            mei_jexyl = sfun.intake(foo, dmd, supp)
+            #'
+            pi_jexyl = sfun.p_intake(rc, srw, rel_size)
+            ri_jexyl = sfun.r_intake(foo, dmd, supp)
+            mei_jexyl = pi_jexyl - np.newaxis(e, supp_jxyl) * ri_jexyl * nv_jexyl + newaxis(supp_jxyl) * supp_md
             p_mei_pjexyl[p,...] = mei_jexyl
             mem = sfun.energy(....)
             mep, cw = sfun.pregnancy(....)
@@ -831,7 +843,8 @@ a_wean_p_ojel
             lw_ffcf[p,...], mw, aw, bw, zf1, zf2 = sfun.start_weight(lw_ffcf[p-1],...)
             lw_ffcf[p,...], mw, aw, bw, zf1, zf2 = sfun.start_weight(lw_ffcf[p-1],...)
         Feed supply Loop for offspring
-            mei[p,...] = sfun.intake(....)
+            #` mei and rc are not defined
+            mei[p,...] = sfun.intake(rc, c_ci_gy, )
             mem = sfun.energy(....)
             dcfw, new = sfun.wool_growth(....)
             cfw = cfw_start + dcfw

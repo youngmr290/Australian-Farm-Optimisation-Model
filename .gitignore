@@ -5,5 +5,7 @@ __pycache__
 /*.xls
 /redundant
 /.spyproject
+/*.dia
 /*.pkl
 /Michael code ideas.py
+

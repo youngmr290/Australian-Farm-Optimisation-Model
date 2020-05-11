@@ -157,48 +157,85 @@ def feed_supply(feedsupply, foo_std, dmd_std):
     # this is not CSIRO equations. Related to inputs
     return foo, dmd, supp
 
-def intake(feed_supply, srw, rel_size, rc, ):
+def r_intake(rc, c_ci_gy, feed_supply, srw, rel_size,  ):
+    #equations 14 to 30 wihtout d
+
+
+def p_intake(rc, c_ci_gy, feed_supply, srw, rel_size,  ):
     #do potential intake calculations
     #equations 2 to 10 & 72
+    #`
+    # 2 Imax = CI1 * SRWZ ( CI2 - Z ) * CF YF TF LF
+    # 2 mei =
+    # 3 CF = BC
+
+
+
+    gy      = (n_genotypes
+          ,n_lactation_number
+          ,23     #` this dimension represents the subscript from GrazPLan
+
+a_g_j = (n_groups_ewes,
+            n_genotypes)
+
+jexyl   = (n_groups_ewes
+          ,n_max_ecycles
+          ,n_litter_size
+          ,n_lactation_number
+          ,n_groups_lambing
+          )
+
+    c_ci_jy = [c_ci_gy[a_g_j[0],...], c_ci_gy[a_g_j[1],...], c_ci_gy[a_g_j[2],...], c_ci_gy[a_g_j[3],...]]
+    c_ci_jy = c_ci_jy[:, np.newaxis, np.newaxis, :, np.newaxis]
+    picf = rc
+    picf[picf<=1] = 0
+    picf = picf * (c_ci_jy[...,20] - rc) / (c_ci_jy[...,20] - 1)
+    picf[picf==0] = 1
+
+    yf = ( 1 - thetamilk ) / ( 1 + exp (c_ci_jy[...,13] * -1 * (a - c_ci_jy[...,14]))
+
+    tf =
+
     return mei
 
 def energy(dmd, ):
-    #equations 33 to 45
+    ## equations 33 to 45
     km =
     return mem
 
 def foetus():
-    #equations 57 to 65
+    ## equations 57 to 65
     return d_lw_f_jexl, cw_jexl, mec_jexl
 
 def milk():
-    # equations 66 to 75
+    ## equations 66 to 75
     return ldr_jexyl, lb_jexyl, mel_jexyl
 
 def fibre():
-    #equations 77 to 86
+    ## equations 77 to 86
     return d_cfw_wolag, d_cfw, mew, d_fd, d_fl
 
-def chill():  #not for version 1
-    # equations 88 to 100
+def chill():  # do this in v2
+    ## equations 88 to 100
+    ## remember to include the age adjustment for c_cc[3] if <30days old
     return me_cold, kg
 
 def lwc():
-    #equations 101 to 116
-    # note not doing the protein component other than Eqn 105
+    ## equations 101 to 116
+    ## note not doing the protein component other than Eqn 105
     return ebg, pg
 
 def wool_value(cfw, fl, fd, fd_min, wool_prices):
-    # these equations are not documented
+    ## these equations are not documented
     return wool_value
 
 def sale_value(lw, cs):
-    #these equations are not documented
+    ## these equations are not documented
     return sale_value
 
-def emissions_nggi():  #do this in v2
+def emissions_nggi():  # do this in v2
     return 0
 
-def emissions_blaxter():  #do this in v2
+def emissions_blaxter():  # do this in v2
     return 0
 
