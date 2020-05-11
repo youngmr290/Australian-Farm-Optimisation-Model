@@ -23,7 +23,6 @@ Fixed   Date        ID by   Problem
     
 Things to add to this module: some input optimisation
 
-assumption: reseeded pas is 100% arable (this means reseeded pas costs slightly more to sow than reality) - it is difficult to seperate from normal pas and fert application is 100% anyway the only thing not 100% is the seeding.
 
 @author: young
 """
@@ -43,8 +42,7 @@ import Periods as per
 import Mach as mac
 
   
-#print(timeit.timeit(test,number=1))
-                
+               
         
 
 
@@ -57,23 +55,51 @@ phases_df =uinp.structure['phases']
 phases_df2=phases_df.copy() #make a copy so that it doesn't alter the phases df that exists outside this func
 phases_df2.columns = pd.MultiIndex.from_product([phases_df2.columns, ['']])  #make the df multi index so that when it merges with other df below the indexs remanin seperate (otherwise it turn into a one leveled tuple)
 
+
+
+
+
 ########################
 #price                 #
 ########################
 
-def farmgate_grain_price():
+def farmgate_grain_price(*args):
     '''
+    
+
+    Parameters
+    ----------
+    *args : Boolean
+        If True is entered it will calculate the grain price for the sim ie including capital sets.
+
     Returns
     -------
-    Dataframe - used below and to calculate insurance and sup feed purchase price.
+    Dataframe - used below and to calculate insurance and sup feed purchase price. If args is True then it returns the overall price accounting for proportion, this is used in sim 
+                Price includes:
+                -offspec grain
+                -cartage cost
+                -other fees ie cbh and levies
     '''
-    grain_price_info_df=uinp.price['grain_price'] #create a copy of grain price df so you dont have to reference input module each time
-    ##multiplies the price and proportion of firsts and seconds for each grain, then sum to get overall price
-    price_df = grain_price_info_df[['firsts','seconds']]
-    cartage=(grain_price_info_df['cartage_km_cost']*pinp.general['road_cartage_distance'] 
-            + pinp.general['rail_cartage'] + uinp.price['flagfall'])
-    tols= grain_price_info_df['grain_tolls']
-    total_fees= cartage+tols
+    if args:
+        ##first concat the df with capital sets and the df with actual crop landuses
+        grain_price_info_df=pd.concat([uinp.price['grain_price_grouped'], uinp.price['grain_price']]) #create a copy of grain price df so you dont have to reference input module each time
+        ##multiplies the price and proportion of firsts and seconds for each grain, then sum to get overall price
+        price_df = np.sum(np.multiply(grain_price_info_df[['firsts','seconds']], grain_price_info_df[['prop_firsts','prop_seconds']]),axis=1)
+        cartage=(grain_price_info_df['cartage_km_cost']*pinp.general['road_cartage_distance'] 
+                + pinp.general['rail_cartage'] + uinp.price['flagfall'])
+        tols= grain_price_info_df['grain_tolls']
+        total_fees= cartage+tols
+    else:
+        grain_price_info_df=uinp.price['grain_price'] #create a copy of grain price df so you dont have to reference input module each time
+        ##delete 'of' as it is not sold
+        grain_price_info_df.drop('of')
+        ##gets the price of firsts and seconds for each grain
+        price_df = grain_price_info_df[['firsts','seconds']]
+        ##determine cost of selling
+        cartage=(grain_price_info_df['cartage_km_cost']*pinp.general['road_cartage_distance'] 
+                + pinp.general['rail_cartage'] + uinp.price['flagfall'])
+        tols= grain_price_info_df['grain_tolls']
+        total_fees= cartage+tols
     return price_df.sub(total_fees, axis=0).clip(0)
 
 
@@ -82,11 +108,8 @@ def grain_price(params):
     Returns
     -------
     Dict.
-        Farm gate price for each grain
-        Price includes:
-        -offspec grain
-        -cartage cost
-        -other fees ie cbh and levies
+        Farm gate price for each grain - allocated into cash periods
+        
     '''
     ##calc farm gate grain price for each cashflow period - accounts for tols and other fees
     start = uinp.price['grain_income_date']
@@ -113,7 +136,7 @@ def rot_yield(*params):
     '''
     Returns
     ----------
-    Dataframe
+    Dataframe - passed to pyomo and used to calc insurance & stubble handling
         Grain yield for each rotation.
         Yield includes:
         -arable area
@@ -121,27 +144,26 @@ def rot_yield(*params):
         -lmu factor
         -frost
     '''
-    ##combines yield and grain price
-    base_yields = pinp.crop['yield'].stack().swaplevel()*1000  #get base yields #swap levels - switches the order of the multi level index, so the yield lines up with the current yr not previos yr #stack to convert to a 1d dataframe so it can be merged using its index
+    ##read in yields from crop sim.xlsx
+    base_yields = np.load('Yield data.npy')*1000
+    base_yields = pd.Series(base_yields, index = phases_df.iloc[:,-1])
+    ##colate other info
     yields_lmus = pinp.crop['yield_by_lmu'] #soil yield factor
     seeding_rate = pinp.crop['seeding_rate'].mul(pinp.crop['own_seed'],axis=0)#seeding rate adjusted by if the farmer is using their own seed from last yr
     frost = pinp.crop['frost'] #frost
-    ##calculate yield - base yield * arable area * frost * lmu factor - seeding rate
     arable = pinp.crop['arable'].stack().droplevel(0) #read in arable area df
+    ##calculate yield - base yield * arable area * frost * lmu factor - seeding rate
     yield_arable_by_soil=yields_lmus.mul(arable).mul(1-frost) #mul arable area to the the lmu factor (easy because dfs have the same axis's). THen mul frost
-    yields=yield_arable_by_soil.reindex(base_yields.index, axis=0, level=1).mul(base_yields,axis=0, level=1) #reindes and mul with base yields
-    seeding_rate=seeding_rate.reindex(yields.index, axis=0, level=1) #minus seeding rate
-    yields=yields.sub(seeding_rate,axis=0, level=1).clip(lower=0) #we don't want negitive yields so clip at 0 (if any values are neg they become 0)
-    # yields_income = yields.unstack(level=[1]).stack([0])
-   # yields_income = yields_income.reindex(grain_price().index, axis=1, level=1).mul(grain_price()/1000)
-    # yields_income = yields_income.unstack(level=[1]).stack([1])
-    rot_yields = pd.merge(phases_df,yields, how='left', left_on=uinp.cols(), right_index = True)
-    # return yields_income.drop(list(range(uinp.structure['phase_len'])), axis=1).stack()
-    rot_yields.set_index(uinp.cols()[-1], append=True, inplace=True)
+    yields=yield_arable_by_soil.reindex(base_yields.index, axis=0).mul(base_yields,axis=0) #reindes and mul with base yields
+    seeding_rate=seeding_rate.reindex(yields.index, axis=0) #minus seeding rate
+    yields=yields.sub(seeding_rate,axis=0).clip(lower=0) #we don't want negitive yields so clip at 0 (if any values are neg they become 0)
+    ##add the rotation to index - current landuse is also part of the index it is required for pyomo, also used in the insurance calc to multiply on.   
+    yields.set_index(phases_df.index, append=True, inplace=True)
+    yields.index = yields.index.swaplevel(0, 5)
     if params:
-        params[0]['rot_yield'] = rot_yields.drop(list(range(uinp.structure['phase_len']-1)), axis=1).stack().to_dict() #[0] required because when *args are passed in they are passed in as a tuple
+        params[0]['rot_yield'] = yields.stack().to_dict() #[0] required because when *args are passed in they are passed in as a tuple
     else:
-        return rot_yields.drop(list(range(uinp.structure['phase_len']-1)), axis=1).stack()
+        return yields.stack()
     # return rot_yields.set_index(list(range(uinp.structure['phase_len']))).stack() #need to use the multiindex to create a multidimensional param for pyomo so i can split it down when indexing
 # a=rot_yield().to_dict()
 
@@ -179,20 +201,22 @@ def fert_req(*args):
     ----------
     Dataframe; used to calc fert cost in the next function & used in croplabour 
         Fert required by 1ha of each phases (kg/ha)
+        *note arable area is accounted for in the final cost funtion below
     '''
-    # arable = pinp.crop['arable'] #read in arable area df
-    fert = pinp.crop['fert'].reset_index().pivot(index='fert',columns='index').T  #read in and convert input fert df to a shape that can be merged to the phases df
-    fert_by_soil = pinp.crop['fert_by_lmu'].stack() #read in fert by soil
-    # arable2=arable.reindex(fert_by_soil.index, axis=1, level=1)
-    fert1=fert.reindex(fert_by_soil.index, axis=1, level=0).mul(fert_by_soil)
-    # fert1=fert1.mul(arable2,axis=0,level=1) #add arable to df
-    fert = pd.merge(phases_df2, fert1, how='left', left_on=uinp.cols(), right_index = True) #merge fert with phases
+    base_fert = np.load('Fert data.npy')
+    fert_by_soil = pinp.crop['fert_by_lmu'] #read in chem by soil
+    base_fert = pd.DataFrame(base_fert, index = phases_df.index, columns = fert_by_soil.index)
+    ## adjust the fert cost for each rotation by lmu
+    fert_by_soil = fert_by_soil.stack() #read in fert by soil
+    fert=base_fert.mul(fert_by_soil,axis=1,level=0)
     ##this is required because this function is both a parameter and a step used to build another param ie if dict is passed it add param else it returns df for next function
     if args:
-        args[0]['fert_req'] = fert.drop(list(range(uinp.structure['phase_len'])), axis=1,level=0).stack([1,0]).to_dict() #level is not really needed but stops a performance warning
+        ##have to account for arable area - this gets used in labcrppyomo - hence it doesn't get arable area added in the cost funtion at the bottom like the other costs
+        arable = pinp.crop['arable'].squeeze() #read in arable area df
+        fert=fert.mul(arable,axis=1,level=1) #add arable to df
+        args[0]['fert_req'] = fert.stack([1,0]).to_dict() 
     else:
-        return fert.drop(list(range(uinp.structure['phase_len'])), axis=1,level=0).stack() #level is not really needed but stops a performance warning
-    # return fert.set_index(list(range(uinp.structure['phase_len']))).stack()
+        return fert.stack() 
 # fert=fert_req()
   
 def fert_cost():
@@ -200,54 +224,35 @@ def fert_cost():
     Returns
     ----------
     Dataframe; summed with other fert cashflow items at the end of this section 
-        Calcs fert cost for each rotation phase 
-        - per tonne - inc cartage  for each cashflow period
+        Calcs;
+        - cost of actual fertiliser for each rotation phase (including transport)
+        - Application cost per tonne ($/rotation)
+        - Application cost per ha ($/rotation)
+        *note - arable area accounted for in the final function that sums all costs
     '''
+    ##call functions and read inputs used within this function
+    fertreq = fert_req()
+    allocation = fert_cost_allocation()
     cost=uinp.price['fert_cost'].squeeze()
     transport=uinp.price['fert_cartage_cost']  #transport cost 
-    total_cost = fert_cost_allocation().mul(cost+transport).stack() #mul fert cost and transport with fert cost allocation
-    ##now combine with fert cost per tonne with fert requirment of each phase
-    fertreq = fert_req().reindex(total_cost.index, axis=1, level=1)
-    phase_fert_cost_t=fertreq.mul(total_cost/1000).sum(axis=1, level=0) #div by 1000 to convert to $/kg, sum the cost of all the ferts
-    return phase_fert_cost_t
-
-def phase_fert_app_cost():  
-    '''
-    Application cost per tonne ($/rotation)
-        
-    Returns
-    ----------
-    Dataframe; summed with other fert cashflow items at the end of this section 
-    '''
-    allocation = fert_cost_allocation()
+    ##calc cost of actual fertiliser
+    total_cost = allocation.mul(cost+transport).stack() #total cost = fert cost and transport. Here we also account for cost allocation
+    phase_fert_cost_t=fertreq.mul(total_cost/1000,axis=1,level=1).sum(axis=1, level=0) #div by 1000 to convert to $/kg, sum the cost of all the ferts
+    ##aplication cost per tonne
     application_cost = allocation.mul(mac.fert_app_cost_t()).stack() #mul app cost per tonne with fert cost allocation
-    ##now combine with fert cost per tonne with fert requirment of each phase
-    fertreq = fert_req().reindex(application_cost.index, axis=1, level=1)
-    fert_app_cost_t=fertreq.mul(application_cost/1000).sum(axis=1, level=0) #div by 1000 to convert to $/kg
-    ##now add fert app cost per ha 
-    # arable = pinp.crop['arable'] #read in arable area df
-    passes = pinp.crop['passes'].reset_index().pivot(index='fert',columns='index').T #passes over each ha for each fert type
-    # arable3=arable.reindex(passes.index, axis=0, level=1).stack() #reindex so it can be mul with passes
-    # passes=passes.reindex(arable3.index).mul(arable3,axis=0)
+    fert_app_cost_t=fertreq.mul(application_cost/1000,axis=1,level=1).sum(axis=1, level=0) #div by 1000 to convert to $/kg
+    ##app cost per ha 
+    ###calc passes
+    x = fertreq.to_numpy()
+    step = pinp.crop['step_fert_passes']#.reindex(fertreq.columns, axis=0,level=0).values.flatten() #reindex to account for lmu then convert to np
+    fert_passes = fun.passes(x,step)
+    fert_passes = pd.DataFrame(fert_passes, index = fertreq.index, columns = fertreq.columns) #turn it into df with correct indexes so it can be combined with cost allocation.
+    fert_passes['lime'] = fert_passes['lime']/4 #lime is only applied once every 4 years but want the cost spread over all landuses
+    ###add the cost for each pass
     fert_cost_ha = allocation.mul(mac.fert_app_cost_ha()).stack() #cost for 1 pass for each fert.
-    fert_cost_ha = passes.reindex(fert_cost_ha.index, axis=1,level=1).mul(fert_cost_ha) #total cost 
-    fert_cost_ha=fert_cost_ha.sum(level=[0], axis=1).replace(0, np.nan)#.unstack() #sum each fert cost - cost doesn't need to be seperated by fert type once joined with passes #sum nan returns 0 therefore i need to convert 0 back to nan so that they are dropped when stacking to reduce dict size.
-    phase_fert_cost_ha = pd.merge(phases_df, fert_cost_ha, how='left', left_on=uinp.cols(), right_index = True) #merge with all the phases, requires because different phases have different application passes
-    # phase_fert_cost_ha = phase_fert_cost_ha.set_index(list(range(uinp.structure['phase_len']))).stack([1])
-    phase_fert_cost_ha = phase_fert_cost_ha.drop(list(range(uinp.structure['phase_len'])),axis=1)#.stack([1]) #adding level=0 does nothing but if not included you get a preformance warning.
-    fert_cost_total= pd.concat([fert_app_cost_t, phase_fert_cost_ha.reindex(fert_app_cost_t.index, level=0)],axis=1).sum(axis=1,level=0) #had to switch this from .add to concat because for some reason on multiple itterations of the model add stoped working
-    return fert_cost_total
-# t_fertapp=phase_fert_app_cost()
-
-def total_phase_fert_cost():
-    '''
-    Sum off application cost and actual fert cost
-        
-    Returns
-    ----------
-    Dataframe; summed with other cashflow items at the end of the module 
-    '''
-    fert_cost_total= pd.concat([fert_cost(), phase_fert_app_cost()],axis=1).sum(axis=1,level=0)  
+    fert_app_cost_ha = fert_passes.mul(fert_cost_ha,axis=1,level=1).sum(axis=1, level=0) 
+    ##combine all costs - fert, app per ha and app per tonne    
+    fert_cost_total= pd.concat([phase_fert_cost_t,fert_app_cost_t, fert_app_cost_ha],axis=1).sum(axis=1,level=0) #must include level so that all cols dont sum, had to switch this from .add to concat because for some reason on multiple itterations of the model add stoped working
     return fert_cost_total
 
 def nap_fert_cost():
@@ -256,6 +261,7 @@ def nap_fert_cost():
     Returns
     -------
     Dataframe- to be added to total costs at the end.
+        Fert applied to non arable pasture - currently setup so that only pasture phases get fert on the non arable areas 
     '''
     allocation = fert_cost_allocation()
     ##fert cost
@@ -302,25 +308,23 @@ frost is not included because that doesn't reduce biomass
 '''
 
 def phase_stubble_cost():
-    '''first calculate the probability of a rotation phase needing stubble handling'''
-    base_yields = pinp.crop['yield'].T#.stack().swaplevel()*1000
-    stub_handling_threashold = pd.Series(pinp.stubble['stubble_handling']['stubble_threashold'])
-    probability_handling = (base_yields/stub_handling_threashold).stack() #divide here then account for arable and lmu factor next - because either way is mathematically sound and this saves some manipulation.
-    yields_lmus = pinp.crop['yield_by_lmu']
-    # arable = pinp.crop['arable'] #read in arable area df
-    # arable_by_soil=yields_lmus.mul(arable) #this is the lmu yield factor mul lmu arable factor
-    # probability_handling_lmu=arable_by_soil.reindex(probability_handling.index, axis=0, level=1).mul(probability_handling,axis=0, level=1)
-    probability_handling_lmu=yields_lmus.reindex(probability_handling.index, axis=0, level=1).mul(probability_handling,axis=0, level=1)
-    '''add the cost of stubble handling''' #there must be a better way that doesn't require soo much reindexing etc
-    probability_handling_lmu.columns = pd.MultiIndex.from_product([probability_handling_lmu.columns, ['allocation']])  
-    stub_cost_alloc=mac.stubble_cost_ha()
-    stub_cost_alloc=stub_cost_alloc.reindex(probability_handling_lmu.columns, axis=1,level=1)
-    stub_cost_alloc=stub_cost_alloc.droplevel(1, axis=1).stack()
-    probability_handling_lmu=probability_handling_lmu.droplevel(1, axis=1).reindex(stub_cost_alloc.index, axis=1,level=1)
-    stub_cost=probability_handling_lmu.mul(stub_cost_alloc)
-    '''add to full phase df'''   
-    phases_stub_cost = pd.merge(phases_df2,stub_cost, how='left', left_on=uinp.cols(), right_index = True) #[i-1 for i in uinp.cols()] little for loop is used so that merge is done based on the previous phase. since that is the yield we are interested in for stub 
-    return phases_stub_cost.drop(list(range(uinp.structure['phase_len'])),axis=1,level=0).stack([1])
+    '''
+    Yields
+    ------
+    Dataframe
+        Cost to handle stubble for each rotation - summed with other costs in final function below.
+        *note - arable area accounted for the yield (it is the same as accounting for it at the end ie yield x 0.8 / threshold x cost == yield / threshold x cost x 0.8) 
+    '''
+    ##first calculate the probability of a rotation phase needing stubble handling
+    base_yields = rot_yield()
+    stub_handling_threashold = pd.Series(pinp.stubble['stubble_handling']['stubble_threashold'])*1000  #have to convert to kg to match base yield
+    probability_handling = base_yields.div(stub_handling_threashold, level = 1) #divide here then account for arable and lmu factor next - because either way is mathematically sound and this saves some manipulation.
+    probability_handling = probability_handling.droplevel(1).unstack()
+    ##add the cost - this needs to be flexible because the cost may be over multiple periods
+    stub_cost_alloc=mac.stubble_cost_ha().squeeze(axis=1)
+    cols = pd.MultiIndex.from_product([probability_handling.columns, stub_cost_alloc.index])  
+    handling_cost = probability_handling.reindex(cols,axis =1 , level = 0).mul(stub_cost_alloc,axis=1,level=1)
+    return handling_cost.stack([0])
 # t_stubcost=phase_stubble_cost()   
 
 #print(timeit.timeit(fert_cost,number=10)/10)
@@ -341,67 +345,40 @@ def chem_cost_allocation():
     p_name = per.cashflow_periods()['cash period'] #needed for allocation func
     return fun.period_allocation2(start_df, length_df, p_dates, p_name)
 # t_allocation=chem_cost_allocation()
-
-def chem_cost():
+    
+   
+def chem_cost():  
     '''
     Returns
     ----------
-    Dataframe; summed with other chem cashflow items at the end of this section 
-        Calcs the raw chem cost for each rotation phase (ie doesn't include application)
+    Dataframe: Total cost of chemical and application - summed with other cashflow items at the end of this section 
+        -Calcs the raw chem cost for each rotation phase (ie doesn't include application)
+        -Application cost per ha ($/rotation)
+        *note - arable area accounted for in the final function that sums all costs
     '''
-    ##first adjust the chem cost for each rotation by arable area and lmu
-    # arable = pinp.crop['arable'] #read in arable area df
-    chem = pinp.crop['chem'].reset_index().pivot(index='chem',columns='current yr').T  #read in and convert input chem df to a shape that can be merged to the phases df
-    chem_by_soil = pinp.crop['chem_by_lmu'].stack() #read in chem by soil
-    # arable2=arable.reindex(chem_by_soil.index, axis=1, level=1)
-    chem1=chem.reindex(chem_by_soil.index, axis=1, level=0).mul(chem_by_soil)
-    # chem1=chem1.mul(arable2,axis=0,level=1) #add arable to df
+    ##read in neccessary bits and adjust indexed
+    base_chem = np.load('Chem data.npy')
+    chem_by_soil = pinp.crop['chem_by_lmu'] #read in chem by soil
+    base_chem = pd.DataFrame(base_chem, index = phases_df.index, columns = chem_by_soil.index)
+    ## adjust the chem cost for each rotation by lmu
+    chem_by_soil1 = chem_by_soil.stack()
+    chem=base_chem.mul(chem_by_soil1,axis=1,level=0)
+    ##get the cost of chemicals - multiply chemical amount by cost
+    chemical_price = pd.Series(np.concatenate([uinp.price['herbicide'],uinp.price['fungicide']]),index = chem_by_soil.index)
+    chem_cost=chem.mul(chemical_price, axis =1, level=0)
+    ##calc passes
+    x = chem.to_numpy()
+    step = pinp.crop['step_chem_passes'].reindex(chem.columns, axis=0,level=0).values.flatten() #reindex to account for lmu then convert to np
+    chem_passes = fun.passes(x,step)
+    ##add the cost for each pass
+    app_cost_ha = chem_passes * mac.chem_app_cost_ha()
+    app_cost_ha = pd.DataFrame(app_cost_ha, index = phases_df.index, columns = chem.columns) #turn it into df with correct indexes so it can be combined with cost allocation.
+    ##add application cost and chem cost
+    total_cost = chem_cost + app_cost_ha
     ##add cashflow periods and sum across each chem
     c_chem_allocation = chem_cost_allocation().stack()
-    c_cost = chem1.stack().reindex(c_chem_allocation.index, axis=1,level=1).sum(axis=1, level=0).unstack()#first stack is required so that reindexing can occur (ie cant reindex a multi index with a multi index)
-    ##merge to full rotation df
-    c_rotcost = pd.merge(phases_df2, c_cost, how='left', left_on=uinp.cols(), right_index = True) #merge chem with phases
-    return c_rotcost.drop(list(range(uinp.structure['phase_len'])), axis=1,level=0).stack() #level is not really needed but stops a performance warning
-
-    
-    
-
-def phase_chem_app_cost():  
-    '''
-    Application cost per ha ($/rotation)
-        
-    Returns
-    ----------
-    Dataframe; summed with other chem cashflow items at the end of this section 
-    '''
-    ##adjust passes for arable area.
-    # arable = pinp.crop['arable'] #read in arable area df
-    passes = pinp.crop['chem_passes'].reset_index().pivot(index='chem',columns='current yr').T #passes over each ha for each chem type
-    # arable3=arable.reindex(passes.index, axis=0, level=1).stack() #reindex so it can be mul with passes
-    # passes=passes.reindex(arable3.index).mul(arable3,axis=0)
-    ##adjust chem app cost to each cashflow period
-    chem_cost_ha = chem_cost_allocation().mul(mac.chem_app_cost_ha()).stack() #cost for 1 pass for each chem.
-    ##adjust for passes
-    chem_cost_ha = passes.reindex(chem_cost_ha.index, axis=1,level=1).mul(chem_cost_ha) #total cost 
-    chem_cost_ha=chem_cost_ha.sum(level=[0], axis=1).replace(0, np.nan)#.unstack() #sum each chem cost - cost doesn't need to be seperated by chem type once joined with passes #sum nan returns 0 therefore i need to convert 0 back to nan so that they are dropped when stacking to reduce dict size.
-    ##merge to full rotation df
-    phase_chem_cost_ha = pd.merge(phases_df, chem_cost_ha, how='left', left_on=uinp.cols(), right_index = True) #merge with all the phases, requires because different phases have different application passes
-    phase_chem_cost_ha = phase_chem_cost_ha.drop(list(range(uinp.structure['phase_len'])),axis=1)#.stack() #adding level=0 does nothing but if not included you get a preformance warning.
-    return phase_chem_cost_ha
-# t_chemapp=phase_chem_app_cost()
-
-def total_phase_chem_cost():
-    '''
-    Sum of application cost and raw chem cost
-        
-    Returns
-    ----------
-    Dataframe; summed with other cashflow items at the end of the module 
-    '''
-    chemcost=chem_cost() # so it is not being called twice below ie quicker to only call once
-    chem_appcost=phase_chem_app_cost()
-    chem_cost_total= pd.concat([chemcost, chem_appcost.reindex(chemcost.index,level=0)],axis=1).sum(axis=1,level=0)
-    return chem_cost_total
+    chem_cost = total_cost.stack().reindex(c_chem_allocation.index, axis=1,level=1).sum(axis=1, level=0)#first stack is required so that reindexing can occur (ie cant reindex a multi index with a multi index)
+    return chem_cost
 
 
 #########################
@@ -416,6 +393,7 @@ def seedcost():
         - seed treatment
         - raw seed cost (incurred if seed is purchased as aposed to using last yrs seed)
         - crop insurance
+        *note - arable area accounted for in the final function that sums all costs
     '''
     seeding_rate = pinp.crop['seeding_rate']
     seeding_cost = pinp.crop['seed_info']['Seed cost'] #this is 0 if the seed is sourced from last yrs crop ie cost is accounted for by minusing from the yield
@@ -459,20 +437,20 @@ def insurance():
     ##first need to combine each grain pool to get average price
     ave_price=np.multiply(farmgate_grain_price(),uinp.price['grain_price'][['prop_firsts','prop_seconds']]).sum(axis=1)#np multiply doen't look at the column names and indexs
     insurance=ave_price*uinp.price['grain_price']['insurance']/100  #div by 100 because insurance is a percent
-    rot_insurance = rot_yield().mul(insurance, axis=0, level = uinp.structure['phase_len']-1)/1000 #divide by 1000 to convert yield to tonnes    
-    rot_insurance = rot_insurance.droplevel(1)
+    rot_insurance = rot_yield().mul(insurance, axis=0, level = 1)/1000 #divide by 1000 to convert yield to tonnes    
+    rot_insurance = rot_insurance.droplevel(1).unstack()
     ##merge - required to get the agregated phase index
     # phases_df.index.rename('Index', inplace=True) #have to rename index so i can do the next step otherwise col and index had the same name '0'
     # rot_cost = pd.merge(phases_df, rot_insurance.unstack(), how='left', left_on=[*range(uinp.structure['phase_len'])], right_index = True)
-    rot_cost = pd.merge(phases_df, rot_insurance.unstack(), how='left', left_index=True, right_index = True)
+    # rot_cost = pd.merge(phases_df, rot_insurance.unstack(), how='left', left_index=True, right_index = True)
     ##cost allocation
     start = uinp.price['crp_insurance_date']
     p_dates = per.cashflow_periods()['start date']
     p_name = per.cashflow_periods()['cash period']
     allocation=fun.period_allocation(p_dates, p_name, start)
     ##add cashflow period to col index
-    rot_cost.columns = pd.MultiIndex.from_product([rot_cost.columns, [allocation]])
-    return rot_cost.drop(list(range(uinp.structure['phase_len'])), axis=1,level=0).stack([0])
+    rot_insurance.columns = pd.MultiIndex.from_product([rot_insurance.columns, [allocation]])
+    return rot_insurance.stack([0])
 
 
 
@@ -490,12 +468,12 @@ includes
 -crop insurance cost
 '''
 def rot_cost(params):
-    cost = pd.concat([total_phase_fert_cost(),total_phase_chem_cost(),phase_stubble_cost(),seedcost()],axis=1).sum(axis=1,level=0)
+    cost = pd.concat([fert_cost(),chem_cost(),seedcost()],axis=1).sum(axis=1,level=0)
     ##adjust for arable area
     arable = pinp.crop['arable'].stack().droplevel(0) #read in arable area df
     cost=cost.mul(arable, axis=0, level=1)
-    ##add insurance - it has already been adjusted by arable area because of the yield
-    cost = pd.concat([cost, insurance()],axis=1).sum(axis=1,level=0)#, fill_value=0)
+    ##add insurance & stubble - it has already been adjusted by arable area because of the yield
+    cost = pd.concat([cost, insurance(),phase_stubble_cost()],axis=1).sum(axis=1,level=0)#, fill_value=0)
     ##add non arable pasture cost
     nap_cost = nap_fert_cost().mul((1-arable), axis=0, level=1)
     cost = pd.concat([cost, nap_cost],axis=1).sum(axis=1,level=0)#, fill_value=0)
@@ -504,23 +482,19 @@ def rot_cost(params):
         germ_df = pinp.pasture_inputs['tedera']['GermPhases']
         ###determine the proportion of the time tc and jc are resown - this is used as a weighting to determine the input costs
         tc_inx = germ_df.iloc[:,-3].isin(['tc']) #checks current phase for tc
-        tc_frequency = germ_df.loc[tc_inx,'resown'] #get frequency of resowing
-        jc_inx = germ_df.iloc[:,-3].isin(['jc']) #checks current phase for resown pasture
-        jc_frequency = germ_df.loc[jc_inx,'resown'] #get frequency of resowing
+        tc_frequency = germ_df.loc[tc_inx,'resown'] #get frequency of resowing tc
+        jc_inx = germ_df.iloc[:,-3].isin(['jc']) #checks current phase for resown jc
+        jc_frequency = germ_df.loc[jc_inx,'resown'] #get frequency of resowing jc
         ###combine the costs of t and tr with the frequency of tc resowing to get the cost for tc
-        Tt=cost.loc[['GEETt']]*(1-tc_frequency)
-        Tt.rename(index={'GEETt':'tctctctctc'},inplace=True)
-        Etr=cost.loc[['GEEEtr']]*tc_frequency
-        Etr.rename(index={'GEEEtr':'tctctctctc'},inplace=True)
-        tc=Tt+Etr
+        t_cost=cost.loc[['YYEETt']]*(1-tc_frequency[0])
+        tr_cost=cost.loc[['YYEEEtr']]*tc_frequency[0]
+        tc_cost = np.add(t_cost , tr_cost)
+        cost.loc[['tctctctctctc']] = tc_cost.values
         ###combine the costs of j and jr with the frequency of tc resowing to get the cost for tc
-        Jj=cost.loc[['GEEJj']]*(1-jc_frequency)
-        Jj.rename(index={'GEEJj':'jcjcjcjcjc'},inplace=True)
-        Ejr=cost.loc[['GEEEjr']]*jc_frequency
-        Ejr.rename(index={'GEEEjr':'jcjcjcjcjc'},inplace=True)
-        jc=Jj+Ejr
-        ###concat to main cost df
-        cost=pd.concat([cost,tc,jc])
+        j_cost=cost.loc[['YYEEJj']]*(1-jc_frequency[0])
+        jr_cost=cost.loc[['YYEEEjr']]*jc_frequency[0]
+        jc_cost = np.add(j_cost , jr_cost)
+        cost.loc[['jcjcjcjcjcjc']] = jc_cost.values
     ##add cont lucerne costs
     if 'lucerne' in uinp.structure['pastures']:
         germ_df = pinp.pasture_inputs['tedera']['GermPhases']
@@ -530,19 +504,16 @@ def rot_cost(params):
         xc_inx = germ_df.iloc[:,-3].isin(['xc']) #checks current phase for resown pasture
         xc_frequency = germ_df.loc[xc_inx,'resown'] #get frequency of resowing
         ###combine the costs of t and tr with the frequency of uc resowing to get the cost for uc
-        Uu=cost.loc[['GEEUu']]*(1-uc_frequency)
-        Uu.rename(index={'GEEUu':'ucucucucuc'},inplace=True)
-        Eur=cost.loc[['GEEEur']]*uc_frequency
-        Eur.rename(index={'GEEEur':'ucucucucuc'},inplace=True)
-        uc=Uu+Eur
+        u_cost=cost.loc[['YYEEUu']]*(1-uc_frequency[0])
+        ur_cost=cost.loc[['YYEEEur']]*uc_frequency[0]
+        uc_cost = np.add(u_cost , ur_cost)
+        cost.loc[['ucucucucucuc']] = uc_cost.values
         ###combine the costs of j and jr with the frequency of xc resowing to get the cost for xc
-        Xx=cost.loc[['GEEXx']]*(1-xc_frequency)
-        Xx.rename(index={'GEEXx':'xcxcxcxcxc'},inplace=True)
-        Exr=cost.loc[['GEEExr']]*xc_frequency
-        Exr.rename(index={'GEEExr':'xcxcxcxcxc'},inplace=True)
-        xc=Xx+Exr
-        ###concat to main cost df
-        cost=pd.concat([cost,uc,xc])
+        x_cost=cost.loc[['YYEEXx']]*(1-xc_frequency[0])
+        xr_cost=cost.loc[['YYEEExr']]*xc_frequency[0]
+        xc_cost = np.add(x_cost , xr_cost)
+        cost.loc[['xcxcxcxcxcxc']] = xc_cost.values
+
     params['rot_cost'] = cost.stack().to_dict()
 # jj=rot_cost()
 

@@ -14,7 +14,7 @@ This module can be used to control things that will effect the whole execution o
 ##used to determine if the inputs are read in from excel or pickle file
 import os.path
 try:
-    if os.path.getmtime("Property.xlsx") > os.path.getmtime("pkl_property") or os.path.getmtime("Universal.xlsx") > os.path.getmtime("pkl_universal"):
+    if os.path.getmtime("Property.xlsx") > os.path.getmtime("pkl_property.pkl") or os.path.getmtime("Universal.xlsx") > os.path.getmtime("pkl_universal.pkl"):
         inputs_from_pickle = False 
     else: 
         inputs_from_pickle = True

@@ -27,37 +27,39 @@ import UniversalInputs as uinp
 
 
 yr0 = np.array(['b', 'h', 'o','of', 'w', 'f', 'l', 'z','r'
-               , 'a', 'ar', 'a3', 'a4', 'a5'
-               , 's', 'sr', 's3', 's4', 's5'
-               , 'm', 'm3', 'm4', 'm5'
-               , 'u', 'ur', 'u3', 'u4', 'u5'
-               , 'x', 'xr', 'x3', 'x4', 'x5'
-               , 'j', 't', 'jr', 'tr'])
+               , 'a', 'ar' 
+               , 's', 'sr'
+               , 'm'#])
+                , 'u', 'ur'
+                , 'x', 'xr'
+                , 'j', 't', 'jr', 'tr'])
 yr1 = np.array(['AR', 'SR'
        ,'E', 'N', 'P', 'OF'
-       , 'A', 'A3', 'A4', 'A5'
-       , 'S', 'S3', 'S4', 'S5'
-       , 'M', 'M3', 'M4', 'M5'
-       , 'U', 'U3', 'U4', 'U5'
-       , 'X', 'X3', 'X4', 'X5'
-       , 'T', 'J'])
+       , 'A'
+       , 'S' 
+       , 'M'#])
+        , 'U'
+        , 'X' 
+        , 'T', 'J'])
 yr2 = np.array(['E', 'N', 'P'
-       , 'A', 'A3', 'A4', 'A5'
-       , 'S', 'S3', 'S4', 'S5'
-       , 'M', 'M3', 'M4', 'M5'
-       , 'U', 'U3', 'U4', 'U5'
-       , 'X', 'X3', 'X4', 'X5'
-       , 'T', 'J'])
+       , 'A'
+       , 'S' 
+       , 'M'##])
+        , 'U'
+        , 'X' 
+        , 'T', 'J'])
 yr3 = np.array(['E', 'N', 'P'
-       , 'A', 'A3', 'A4', 'A5'
-       , 'S', 'S3', 'S4', 'S5'
-       , 'M', 'M3', 'M4', 'M5'
-       , 'U', 'U3', 'U4', 'U5'
-       , 'X', 'X3', 'X4', 'X5'
-       , 'T', 'J'])
-yr4 = np.array(['A','Y'])
+       , 'A'#])
+        , 'U'
+        , 'T'])
+yr4 = np.array(['A','Y'#])
+        , 'U'
+        , 'T'])
+yr5 = np.array(['A','Y'#])
+        , 'U'
+        , 'T'])
 
-arrays=[yr4,yr3,yr2,yr1,yr0]
+arrays=[yr5,yr4,yr3,yr2,yr1,yr0]
 phases=fun.cartesian_product_simple_transpose(arrays)
 
 
@@ -84,107 +86,111 @@ for i in range(np.size(phases,1)-1):
     ###no cont pulse
     phases = phases[~(np.isin(phases[:,i], ['P'])&np.isin(phases[:,i+1], ['P','l','f']))] 
     ###no pulse after pasture
-    phases = phases[~(np.isin(phases[:,i], ['AR', 'SR','A','A3','A4','A5','M','M3','M4','M5','S','S3','S4','S5','U','U3','U4','U5','X','X3','X4','X5','T','J'])&np.isin(phases[:,i+1], ['P','l','f']))] 
+    phases = phases[~(np.isin(phases[:,i], ['AR', 'SR','A','M','S','U','X','T','J'])&np.isin(phases[:,i+1], ['P','l','f']))] 
     ###no pasture after spraytoped 
-    phases = phases[~(np.isin(phases[:,i], ['S','S3','S4','S5'])&np.isin(phases[:,i+1], ['AR', 'SR','A', 'A3', 'A4', 'A5','M','M3','M4','M5','S','S3','S4','S5','a','ar','a3','a4','a5','s','sr','s3','s4','s5','m','m3','m4','m5']))] 
+    phases = phases[~(np.isin(phases[:,i], ['S','SR'])&np.isin(phases[:,i+1], ['AR', 'SR','A', 'M','S','a','ar','s','sr','m']))] 
     ###only spraytopped pasture after manipulated
-    phases = phases[~(np.isin(phases[:,i], ['M','M3','M4','M5'])&np.isin(phases[:,i+1], ['AR','A', 'A3', 'A4', 'A5','M','M3','M4','M5','a','ar','a3','a4','a5','m','m3','m4','m5']))] 
+    phases = phases[~(np.isin(phases[:,i], ['M'])&np.isin(phases[:,i+1], ['AR', 'A', 'M','a','ar','m']))] 
     ###not going to resown tedera after a tedera (in a cont rotation you resow every 10yrs but that is accounted for with 'tc')
     phases = phases[~(np.isin(phases[:,i], ['T','J'])&np.isin(phases[:,i+1], ['tr','jr']))] 
     ###not going to resow lucerne after a lucerne (in a cont rotation you resow every 5yrs but that is accounted for with 'uc' & 'xc')
     phases = phases[~(np.isin(phases[:,i], ['U','X'])&np.isin(phases[:,i+1], ['xr','ur']))] 
-    ###cant have 1yr of perennial
-    try: #used for conditions that are concerned with more than two yrs
-        phases = phases[~(np.isin(phases[:,i], ['T','J'])&~(np.isin(phases[:,i-1], ['T','J', 'Y']) + np.isin(phases[:,i+1], ['T','J','t','j'])))] 
-    except IndexError: pass
-    ###cant have 1yr of perennial
-    try: #used for conditions that are concerned with more than two yrs
-        phases = phases[~(np.isin(phases[:,i], ['U','X'])&~(np.isin(phases[:,i-1], ['U','X', 'Y']) + np.isin(phases[:,i+1], ['U','X','u','x'])))] 
-    except IndexError: pass
+    ###cant have 1yr of perennial unless it is the earliest yr in the history
+    if i == 0:
+        pass #first yr of rotation can be a perennial because  
+    else:
+        try: #used for conditions that are concerned with more than two yrs
+            phases = phases[~(np.isin(phases[:,i], ['T','J'])&~(np.isin(phases[:,i-1], ['T','J', 'Y']) + np.isin(phases[:,i+1], ['T','J','t','j'])))] 
+        except IndexError: pass
+        ###cant have 1yr of perennial
+        try: #used for conditions that are concerned with more than two yrs
+            phases = phases[~(np.isin(phases[:,i], ['U','X'])&~(np.isin(phases[:,i-1], ['U','X', 'Y']) + np.isin(phases[:,i+1], ['U','X','u','x'])))] 
+        except IndexError: pass
    
     ##drop rules 2; logical
-    ###Annual 
-    if i == 0:
-        pass #A in yr 4 can be followed by any thing
-    else:
-        ###only A or A3 after A
-        phases = phases[~(np.isin(phases[:,i], ['A'])&np.isin(phases[:,i+1], ['A4','A5','M4','M5','S4','S5','a4','a5','s4','s5','m4','m5','ar', 'sr','AR', 'SR']))] 
-    ###pasture 4 must come after pasture 3    
-    phases = phases[~(np.isin(phases[:,i], ['A3','M3'])&np.isin(phases[:,i+1], ['AR', 'SR','A', 'A3','A5','M','M3','M5','S','S3','S5','a','ar','a3','a5','s','sr','s3','s5','m','m3','m5']))] 
-    ###pasture 5 must come after pasture 4
-    phases = phases[~(np.isin(phases[:,i], ['A4','M4'])&np.isin(phases[:,i+1], ['AR', 'SR','A', 'A3','A4','M','M3','M4','S','S3','S4','a','ar','a3','a4','s','sr','s3','s4','m','m3','m4']))] 
-    ###pasture 5 must come after pasture 5
-    phases = phases[~(np.isin(phases[:,i], ['A5','M5'])&np.isin(phases[:,i+1], ['AR', 'SR','A', 'A3','A4','M','M3','M4','S','S3','S4','a','ar','a3','a4','s','sr','s3','s4','m','m3','m4']))] 
-    ###cant have A3 after anything except A  (have used a double negitive here)
-    phases = phases[~(~np.isin(phases[:,i], ['A'])&np.isin(phases[:,i+1], ['A3','S3','M3','a3','m3','s3']))] 
-    ###cant have A3 after anything except A A (goes with the rule above)
-    try: #used for conditions that are concerned with more than two yrs
-        phases = phases[~(~np.isin(phases[:,i], ['A','AR', 'SR'])&np.isin(phases[:,i+2], ['A3','S3','M3','a3','m3','s3']))] 
-    except IndexError: pass
-    ###this if statement is required because in yr3 A4 and A5 can follow A
-    if i ==0:
-        ###cant have A4 after anything except A3  (have used a double negitive here)
-        phases = phases[~(~np.isin(phases[:,i], ['A3','A'])&np.isin(phases[:,i+1], ['A4','S4','M4','a4','s4','m4']))] 
-        ###cant have A5 after anything except A4  (have used a double negitive here)
-        phases = phases[~(~np.isin(phases[:,i], ['A4','A'])&np.isin(phases[:,i+1], ['A5','M5','S5','a5','m5','s5']))] 
-    else:
-        ###cant have A4 after anything except A3  (have used a double negitive here)
-        phases = phases[~(~np.isin(phases[:,i], ['A3'])&np.isin(phases[:,i+1], ['A4','S4','M4','a4','s4','m4']))] 
-        ###cant have A5 after anything except A4  (have used a double negitive here)
-        phases = phases[~(~np.isin(phases[:,i], ['A4','M4','M5','A5'])&np.isin(phases[:,i+1], ['A5','S5','M5','a5','s5','m5']))]
-    ###can't have A after A A 
-    try: #used for conditions that are concerned with more than two yrs
-        phases = phases[~(np.isin(phases[:,i], ['A'])&np.isin(phases[:,i+1], ['A','S','M'])&np.isin(phases[:,i+2], ['A','a','ar','M','m','S','s','sr']))] 
-    except IndexError: pass
+    # ###Annual 
+    # if i == 0:
+    #     pass #A in yr 4 can be followed by any thing
+    # else:
+    #     ###only A or A3 after A
+    #     phases = phases[~(np.isin(phases[:,i], ['A'])&np.isin(phases[:,i+1], ['A4','A5','M4','M5','S4','S5','a4','a5','s4','s5','m4','m5','ar', 'sr','AR', 'SR']))] 
+    # ###pasture 4 must come after pasture 3    
+    # phases = phases[~(np.isin(phases[:,i], ['A3','M3'])&np.isin(phases[:,i+1], ['AR', 'SR','A', 'A3','A5','M','M3','M5','S','S3','S5','a','ar','a3','a5','s','sr','s3','s5','m','m3','m5']))] 
+    # ###pasture 5 must come after pasture 4
+    # phases = phases[~(np.isin(phases[:,i], ['A4','M4'])&np.isin(phases[:,i+1], ['AR', 'SR','A', 'A3','A4','M','M3','M4','S','S3','S4','a','ar','a3','a4','s','sr','s3','s4','m','m3','m4']))] 
+    # ###pasture 5 must come after pasture 5
+    # phases = phases[~(np.isin(phases[:,i], ['A5','M5'])&np.isin(phases[:,i+1], ['AR', 'SR','A', 'A3','A4','M','M3','M4','S','S3','S4','a','ar','a3','a4','s','sr','s3','s4','m','m3','m4']))] 
+    # ###cant have A3 after anything except A  (have used a double negitive here)
+    # phases = phases[~(~np.isin(phases[:,i], ['A'])&np.isin(phases[:,i+1], ['A3','S3','M3','a3','m3','s3']))] 
+    # ###cant have A3 after anything except A A (goes with the rule above)
+    # try: #used for conditions that are concerned with more than two yrs
+    #     phases = phases[~(~np.isin(phases[:,i], ['A','AR', 'SR'])&np.isin(phases[:,i+2], ['A3','S3','M3','a3','m3','s3']))] 
+    # except IndexError: pass
+    # ###this if statement is required because in yr3 A4 and A5 can follow A
+    # if i ==0:
+    #     ###cant have A4 after anything except A3  (have used a double negitive here)
+    #     phases = phases[~(~np.isin(phases[:,i], ['A3','A'])&np.isin(phases[:,i+1], ['A4','S4','M4','a4','s4','m4']))] 
+    #     ###cant have A5 after anything except A4  (have used a double negitive here)
+    #     phases = phases[~(~np.isin(phases[:,i], ['A4','A'])&np.isin(phases[:,i+1], ['A5','M5','S5','a5','m5','s5']))] 
+    # else:
+    #     ###cant have A4 after anything except A3  (have used a double negitive here)
+    #     phases = phases[~(~np.isin(phases[:,i], ['A3'])&np.isin(phases[:,i+1], ['A4','S4','M4','a4','s4','m4']))] 
+    #     ###cant have A5 after anything except A4  (have used a double negitive here)
+    #     phases = phases[~(~np.isin(phases[:,i], ['A4','M4','M5','A5'])&np.isin(phases[:,i+1], ['A5','S5','M5','a5','s5','m5']))]
+    # ###can't have A after A A 
+    # try: #used for conditions that are concerned with more than two yrs
+    #     phases = phases[~(np.isin(phases[:,i], ['A'])&np.isin(phases[:,i+1], ['A','S','M'])&np.isin(phases[:,i+2], ['A','a','ar','M','m','S','s','sr']))] 
+    # except IndexError: pass
     
-    ##Lucerne
-    if i == 0:
-        pass #U in yr 4 can be followed by anything
-    else:
-        ###only U or U3 ufter U
-        phases = phases[~(np.isin(phases[:,i], ['U','X'])&np.isin(phases[:,i+1], ['U4','U5','X4','X5','u4','u5','x4','x5']))] 
-    phases = phases[~(np.isin(phases[:,i], ['U3','X3'])&np.isin(phases[:,i+1], ['U', 'U3','U5','X','X3','X5','u','ur','u3','u5','x','xr','x3','x5']))] #pasture 4 muxt come ufter pasture 3
-    phases = phases[~(np.isin(phases[:,i], ['U4','X4'])&np.isin(phases[:,i+1], ['U', 'U3','U4','X','X3','X4','u','ur','u3','u4','x','xr','x3','x4']))] #pasture 5 muxt come ufter pasture 4
-    phases = phases[~(np.isin(phases[:,i], ['U5','X5'])&np.isin(phases[:,i+1], ['U', 'U3','U4','X','X3','X4','u','ur','u3','u4','x','xr','x3','x4']))] #pasture 5 muxt come ufter pasture 5
-    phases = phases[~(~np.isin(phases[:,i], ['U','X','Y'])&np.isin(phases[:,i+1], ['U3','X3','u3','x3']))] #cant have U3 after anything except U 
-    try:  #used for conditions that are concerned with more than two yrs
-        phases = phases[~(~np.isin(phases[:,i], ['U','X','Y'])&np.isin(phases[:,i+2], ['U3','X3','u3','x3']))] #cant have U3 ufter unything except U U (this is the second part to the rule above)
-    except IndexError: pass
-    ###this if statement is required because in yr3 U4 and U5 can follow U
-    if i == 0:
-        phases = phases[~(~np.isin(phases[:,i], ['U3','X3','Y'])&np.isin(phases[:,i+1], ['U4','X4','u4','x4']))] #cant have U4 after anything except U3  
-        phases = phases[~(~np.isin(phases[:,i], ['U4','X4','Y'])&np.isin(phases[:,i+1], ['U5','X5','u5','x5']))] #cant have U5 after anything except U4  
-    else:    
-        phases = phases[~(~np.isin(phases[:,i], ['U3','X3'])&np.isin(phases[:,i+1], ['U4','X4','u4','x4']))] #cant have U4 after anything except U3  
-        phases = phases[~(~np.isin(phases[:,i], ['U4','X4','U5','X5'])&np.isin(phases[:,i+1], ['U5','X5','u5','x5']))] #cant have U5 after anything except U4 or U5
-    ###can't have U ufter U U 
-    try:  #used for conditions that are concerned with more than two yrs
-        phases = phases[~(np.isin(phases[:,i], ['U','X'])&np.isin(phases[:,i+1], ['U','X'])&np.isin(phases[:,i+2], ['U','X','u','x','ur','xr']))]
-    except IndexError: pass
+    # ##Lucerne
+    # if i == 0:
+    #     pass #U in yr 4 can be followed by anything
+    # else:
+    #     ###only U or U3 ufter U
+    #     phases = phases[~(np.isin(phases[:,i], ['U','X'])&np.isin(phases[:,i+1], ['U4','U5','X4','X5','u4','u5','x4','x5']))] 
+    # phases = phases[~(np.isin(phases[:,i], ['U3','X3'])&np.isin(phases[:,i+1], ['U', 'U3','U5','X','X3','X5','u','ur','u3','u5','x','xr','x3','x5']))] #pasture 4 muxt come ufter pasture 3
+    # phases = phases[~(np.isin(phases[:,i], ['U4','X4'])&np.isin(phases[:,i+1], ['U', 'U3','U4','X','X3','X4','u','ur','u3','u4','x','xr','x3','x4']))] #pasture 5 muxt come ufter pasture 4
+    # phases = phases[~(np.isin(phases[:,i], ['U5','X5'])&np.isin(phases[:,i+1], ['U', 'U3','U4','X','X3','X4','u','ur','u3','u4','x','xr','x3','x4']))] #pasture 5 muxt come ufter pasture 5
+    # phases = phases[~(~np.isin(phases[:,i], ['U','X','Y'])&np.isin(phases[:,i+1], ['U3','X3','u3','x3']))] #cant have U3 after anything except U 
+    # try:  #used for conditions that are concerned with more than two yrs
+    #     phases = phases[~(~np.isin(phases[:,i], ['U','X','Y'])&np.isin(phases[:,i+2], ['U3','X3','u3','x3']))] #cant have U3 ufter unything except U U (this is the second part to the rule above)
+    # except IndexError: pass
+    # ###this if statement is required because in yr3 U4 and U5 can follow U
+    # if i == 0:
+    #     phases = phases[~(~np.isin(phases[:,i], ['U3','X3','Y'])&np.isin(phases[:,i+1], ['U4','X4','u4','x4']))] #cant have U4 after anything except U3  
+    #     phases = phases[~(~np.isin(phases[:,i], ['U4','X4','Y'])&np.isin(phases[:,i+1], ['U5','X5','u5','x5']))] #cant have U5 after anything except U4  
+    # else:    
+    #     phases = phases[~(~np.isin(phases[:,i], ['U3','X3'])&np.isin(phases[:,i+1], ['U4','X4','u4','x4']))] #cant have U4 after anything except U3  
+    #     phases = phases[~(~np.isin(phases[:,i], ['U4','X4','U5','X5'])&np.isin(phases[:,i+1], ['U5','X5','u5','x5']))] #cant have U5 after anything except U4 or U5
+    # ###can't have U ufter U U 
+    # try:  #used for conditions that are concerned with more than two yrs
+    #     phases = phases[~(np.isin(phases[:,i], ['U','X'])&np.isin(phases[:,i+1], ['U','X'])&np.isin(phases[:,i+2], ['U','X','u','x','ur','xr']))]
+    # except IndexError: pass
 
 ##lucerne and tedera resowing
 phases = phases[~(~np.isin(phases[:,np.size(phases,1)-2], ['U','X'])&np.isin(phases[:,np.size(phases,1)-1], ['U','X','u','x']))] #lucerne after a non lucern must be resown
 phases = phases[~(~np.isin(phases[:,np.size(phases,1)-2], ['T','J'])&np.isin(phases[:,np.size(phases,1)-1], ['T','J','t','j']))] #Tedera after a non tedera must be resown
 
 ##annual resowing
-###if there is a previous annual then yr0 doesn't need to be resown
-a_index =np.any(np.isin(phases[:,a_sow_col:np.size(phases,1)-1], ['AR', 'SR','A','A3','A4','A5','M','M3','M4','M5','S','S3','S4','S5']), axis=1)&np.isin(phases[:,np.size(phases,1)-1], ['ar', 'sr'])
-phases = phases[~a_index]
-###if there is a previous annual then yr1 doesn't need to be resown
-a_index1 =np.any(np.isin(phases[:,a_sow_col:np.size(phases,1)-2], ['A','A3','A4','A5','M','M3','M4','M5','S','S3','S4','S5']), axis=1)&np.isin(phases[:,np.size(phases,1)-2], ['AR', 'SR'])
-phases = phases[~a_index1]
-###if there are not annuals in the history then an annual in yr0 must be resown
-a_index2 = np.all(~np.isin(phases[:,a_sow_col:np.size(phases,1)-1], ['AR', 'SR','A','A3','A4','A5','M','M3','M4','M5','S','S3','S4','S5']), axis=1)&np.isin(phases[:,np.size(phases,1)-1], ['a', 's','m'])
-phases = phases[~a_index2]
+resow_cols = 2 #the number of cols where resowing can occur ie in yr0 and 1
+for i in range(resow_cols):
+    i+=1
+    ###if there is a previous annual then yr0 doesn't need to be resown
+    ###if there is a previous annual then yr1 doesn't need to be resown
+    a_index =np.any(np.isin(phases[:,np.size(phases,1)-i-resow_a:np.size(phases,1)-i], ['AR', 'SR','A','M','S']), axis=1)&np.isin(phases[:,np.size(phases,1)-i], ['ar', 'sr','AR', 'SR'])
+    phases = phases[~a_index]
+    ###if there are not annuals in the history then an annual in yr0 or yr1 must be resown
+    a_index2 = np.all(~np.isin(phases[:,np.size(phases,1)-i-resow_a:np.size(phases,1)-i], ['AR', 'SR','A','M','S']), axis=1)&np.isin(phases[:,np.size(phases,1)-i], ['a', 's','m','A','M','S'])
+    phases = phases[~a_index2]
 
 
 
 
 
 ##X can't be in the same rotation as U, T, J and A
-a_xutj = np.any(np.isin(phases[:,:], ['AR', 'SR','ar','a','a3','a4','a5','A','A3','A4','A5','m','m3','m4','m5','M','M3','M4','M5','s','sr','s3','s4','s5','S','S3','S4','S5']), axis=1)&np.any(np.isin(phases[:,:], ['X','X3','X4','X5','x','xr','x3','x4','x5','U','U3','U4','U5','u','ur','u3','u4','u5','T','t','tr','J','j','jr']), axis=1)
-x_utj = np.any(np.isin(phases[:,:], ['X','X3','X4','X5','x','xr','x3','x4','x5']), axis=1)&np.any(np.isin(phases[:,:], ['U','U3','U4','U5','u','ur','u3','u4','u5','T','t','tr','J','j','jr']), axis=1)
-u_tj = np.any(np.isin(phases[:,:], ['U','U3','U4','U5','u','ur','u3','u4','u5']), axis=1)&np.any(np.isin(phases[:,:], ['T','t','tr','J','j','jr']), axis=1)
+a_xutj = np.any(np.isin(phases[:,:], ['AR', 'SR','ar','a','A','m','M','s','sr','S']), axis=1)&np.any(np.isin(phases[:,:], ['X','x','xr','U','u','ur','T','t','tr','J','j','jr']), axis=1)
+x_utj = np.any(np.isin(phases[:,:], ['X','x','xr']), axis=1)&np.any(np.isin(phases[:,:], ['U','u','ur','T','t','tr','J','j','jr']), axis=1)
+u_tj = np.any(np.isin(phases[:,:], ['U','u','ur']), axis=1)&np.any(np.isin(phases[:,:], ['T','t','tr','J','j','jr']), axis=1)
 t_j = np.any(np.isin(phases[:,:], ['T','t','tr']), axis=1)&np.any(np.isin(phases[:,:], ['J','j','jr']), axis=1)
 phases = phases[~(a_xutj + x_utj + u_tj + t_j)] 
 
@@ -199,76 +205,82 @@ remove cont rotations before generilisation
     - this will stop Y X X X3 x4 providing itself ie if you generalied yr1 to X then this rotation would provide itself'
 '''
 ##check if every phase in a rotation is either lucerne or Y
-xindex=np.all(np.isin(phases[:,:], ['Y','X5','x5','U5','u5']), axis=1) 
+xindex=np.all(np.isin(phases[:,:], ['X','x','U','u']), axis=1) 
 phases = phases[~xindex]
 ##check if every phase in a rotation is either T or Y
-tindex=np.all(np.isin(phases[:,:], ['Y','T','J','t','j']), axis=1) 
+tindex=np.all(np.isin(phases[:,:], ['T','J','t','j']), axis=1) 
 phases = phases[~tindex]
 
 
-################
-#generalisation#
-################
-##yr 4 generilisation
-offset = np.size(phases,1)-1 #gets the number of the last col
-### 'A' can be simplified to 'G' if there is another 'younger' pasture in the history and/or the current yr is not pasture (we only care about it for reseeding)
-a_index = np.isin(phases[:,a_sow_col], ['A'])&(np.any(np.isin(phases[:,a_sow_col+1:offset], ['AR', 'SR','A','A3','A4','A5','M','M3','M4','M5','S','S3','S4','S5']), axis=1)+~np.isin(phases[:,offset], ['a','ar','a3','a4','a5','s','sr','s3','s4','s5','m','m3','m4','m5']))
-###use the created index to generalise
-phases[a_index,a_sow_col]='G'
-###'Y' can be simplified to 'G' if the current yr is not resown (we only need to distinguish between Y and G for phases where reseeding happens)
-y_index = np.isin(phases[:,a_sow_col], ['Y'])&~np.isin(phases[:,offset], ['ar','sr'])
-###use the created index to generalise
-phases[y_index,a_sow_col]='G'
+# ################
+# #generalisation#
+# ################
+# # ##yr 4 generilisation
+# offset = np.size(phases,1)-1 #gets the number of the last col
+# # ### 'A' can be simplified to 'G' if there is another 'younger' pasture in the history and/or the current yr is not pasture (we only care about it for reseeding)
+# # a_index = np.isin(phases[:,a_sow_col], ['A'])&(np.any(np.isin(phases[:,a_sow_col+1:offset], ['AR', 'SR','A','A3','A4','A5','M','M3','M4','M5','S','S3','S4','S5']), axis=1)+~np.isin(phases[:,offset], ['a','ar','a3','a4','a5','s','sr','s3','s4','s5','m','m3','m4','m5']))
+# # ###use the created index to generalise
+# # phases[a_index,a_sow_col]='G'
+# # ###'Y' can be simplified to 'G' if the current yr is not resown (we only need to distinguish between Y and G for phases where reseeding happens)
+# # y_index = np.isin(phases[:,a_sow_col], ['Y'])&~np.isin(phases[:,offset], ['ar','sr'])
+# # ###use the created index to generalise
+# # phases[y_index,a_sow_col]='G'
 
-##yr 2&3 generlisation
-for i in range(2):
-    gen = a_sow_col+1+i
+# ##yr 3 generlisation
+# ###all M & S can become A
+# gen = a_sow_col+1
+# ms_index = np.isin(phases[:,gen], ['M','S'])&np.any(np.isin(phases[:,gen+1:offset+1], ['AR', 'SR','ar','a','A','m','M','s','sr','S']), axis=1)
+# phases[ms_index,gen]='A'
+
+# ##yr 2&3 generlisation
+# for i in range(2):
+#     gen = a_sow_col+1+i
     
-    ###any A? or S? can be generalised to 'A' if there is another younger annual 
-    as_index = np.isin(phases[:,gen], ['A3','A4','A5','S','S3','S4','S5'])&np.any(np.isin(phases[:,gen+1:offset+1], ['AR', 'SR','ar','a','a3','a4','a5','A','A3','A4','A5','m','m3','m4','m5','M','M3','M4','M5','s','sr','s3','s4','s5','S','S3','S4','S5']), axis=1)
-    ###use the created index to generalise
-    phases[as_index,gen]='A'
-    ###any M? can be generalised to 'A' in yr3 if there is another younger annual - M needs to be tracked in yr2 because MSb is different to ASb 
-    if i == 0:
-        m_index = np.isin(phases[:,gen], ['M','M3','M4','M5'])&np.any(np.isin(phases[:,gen+1:offset+1], ['AR', 'SR','ar','a','a3','a4','a5','A','A3','A4','A5','m','m3','m4','m5','M','M3','M4','M5','s','sr','s3','s4','s5','S','S3','S4','S5']), axis=1)
-        ####use the created index to generalise
-        phases[m_index,gen]='A'
-    ## in yr2 M? can be generalised to A if S? not following
-    else:
-        m_index = np.isin(phases[:,gen], ['M','M3','M4','M5']) & ~np.isin(phases[:,gen+1], ['S','SR','S3','S4','S5'])
-        ####use the created index to generalise
-        phases[m_index,gen]='A'
-    ###a numbered lucerne can be generalised to 'U' if there is another younger lucerne 
-    u_index = np.isin(phases[:,gen], ['U3','U4','U5'])&np.any(np.isin(phases[:,gen+1:offset+1], ['U','U3','U4','U5','u','ur','u3','u4','u5']), axis=1)
-    ###use the created index to generalise
-    phases[u_index,gen]='U'
-    ###a numbered lucerne can be generalised to 'X' if there is another younger lucerne 
-    x_index = np.isin(phases[:,gen], ['X3','X4','X5'])&np.any(np.isin(phases[:,gen+1:offset+1], ['X','X3','X4','X5','x','xr','x3','x4','x5']), axis=1)
-    ###use the created index to generalise
-    phases[x_index,gen]='X'
-    ###any S? can be generalised to 'A?'
-    for S, A in zip(['S','S3','S4','S5'],['A','A3','A4','A5']):
-        s_index = np.isin(phases[:,gen], [S])
-        ###use the created index to generalise
-        phases[s_index,gen]=A
-    ###any M? can be generalised to 'A?' in yr3, and yr2 unless followed by an S
-    if i == 0:
-        for M, A in zip(['M','M3','M4','M5'],['A','A3','A4','A5']):
-            m_index = np.isin(phases[:,gen], [M])
-            ###use the created index to generalise
-            phases[m_index,gen]=A
-    else: 
-        ###if no S after M? then generalise to 'A?'
-        for M, A in zip(['M','M3','M4','M5'],['A','A3','A4','A5']):
-            m_index = np.isin(phases[:,gen], [M]) & ~np.isin(phases[:,gen+1], ['S','SR','S3','S4','S5'])
-            ###use the created index to generalise
-            phases[m_index,gen]=A
-        ###if there is an S after M? then generalise to M
-        m2_index = np.isin(phases[:,gen], ['M','M3','M4','M5']) & np.isin(phases[:,gen+1], ['S','SR','S3','S4','S5'])
-        ###use the created index to generalise
-        phases[m2_index,gen]='M'
+#     ###any A? or S? can be generalised to 'A' if there is another younger annual 
+#     as_index = np.isin(phases[:,gen], ['A3','A4','A5','S','S3','S4','S5'])&np.any(np.isin(phases[:,gen+1:offset+1], ['AR', 'SR','ar','a','a3','a4','a5','A','A3','A4','A5','m','m3','m4','m5','M','M3','M4','M5','s','sr','s3','s4','s5','S','S3','S4','S5']), axis=1)
+#     ###use the created index to generalise
+#     phases[as_index,gen]='A'
+#     ###any M? can be generalised to 'A' in yr3 if there is another younger annual - M needs to be tracked in yr2 because MSb is different to ASb 
+#     if i == 0:
+#         m_index = np.isin(phases[:,gen], ['M','M3','M4','M5'])&np.any(np.isin(phases[:,gen+1:offset+1], ['AR', 'SR','ar','a','a3','a4','a5','A','A3','A4','A5','m','m3','m4','m5','M','M3','M4','M5','s','sr','s3','s4','s5','S','S3','S4','S5']), axis=1)
+#         ####use the created index to generalise
+#         phases[m_index,gen]='A'
+#     ## in yr2 M? can be generalised to A if S? not following
+#     else:
+#         m_index = np.isin(phases[:,gen], ['M','M3','M4','M5']) & ~np.isin(phases[:,gen+1], ['S','SR','S3','S4','S5'])
+#         ####use the created index to generalise
+#         phases[m_index,gen]='A'
+#     ###a numbered lucerne can be generalised to 'U' if there is another younger lucerne 
+#     u_index = np.isin(phases[:,gen], ['U3','U4','U5'])&np.any(np.isin(phases[:,gen+1:offset+1], ['U','U3','U4','U5','u','ur','u3','u4','u5']), axis=1)
+#     ###use the created index to generalise
+#     phases[u_index,gen]='U'
+#     ###a numbered lucerne can be generalised to 'X' if there is another younger lucerne 
+#     x_index = np.isin(phases[:,gen], ['X3','X4','X5'])&np.any(np.isin(phases[:,gen+1:offset+1], ['X','X3','X4','X5','x','xr','x3','x4','x5']), axis=1)
+#     ###use the created index to generalise
+#     phases[x_index,gen]='X'
+#     ###any S? can be generalised to 'A?'
+#     for S, A in zip(['S','S3','S4','S5'],['A','A3','A4','A5']):
+#         s_index = np.isin(phases[:,gen], [S])
+#         ###use the created index to generalise
+#         phases[s_index,gen]=A
+#     ###any M? can be generalised to 'A?' in yr3, and yr2 unless followed by an S
+#     if i == 0:
+#         for M, A in zip(['M','M3','M4','M5'],['A','A3','A4','A5']):
+#             m_index = np.isin(phases[:,gen], [M])
+#             ###use the created index to generalise
+#             phases[m_index,gen]=A
+#     else: 
+#         ###if no S after M? then generalise to 'A?'
+#         for M, A in zip(['M','M3','M4','M5'],['A','A3','A4','A5']):
+#             m_index = np.isin(phases[:,gen], [M]) & ~np.isin(phases[:,gen+1], ['S','SR','S3','S4','S5'])
+#             ###use the created index to generalise
+#             phases[m_index,gen]=A
+#         ###if there is an S after M? then generalise to M
+#         m2_index = np.isin(phases[:,gen], ['M','M3','M4','M5']) & np.isin(phases[:,gen+1], ['S','SR','S3','S4','S5'])
+#         ###use the created index to generalise
+#         phases[m2_index,gen]='M'
    
-phases = np.unique(phases, axis=0)
+# phases = np.unique(phases, axis=0)
    
 
 # ##################
@@ -521,10 +533,10 @@ The sets are altered for yr1 - this is done using if statements which make the s
 ##################
 #continuous phase#
 ##################
-tc=np.array(['tc','tc','tc','tc','tc'])
-jc=np.array(['jc','jc','jc','jc','jc'])
-uc=np.array(['uc','uc','uc','uc','uc'])
-xc=np.array(['xc','xc','xc','xc','xc'])
+tc=np.array(['tc','tc','tc','tc','tc','tc'])
+jc=np.array(['jc','jc','jc','jc','jc','jc'])
+uc=np.array(['uc','uc','uc','uc','uc','uc'])
+xc=np.array(['xc','xc','xc','xc','xc','xc'])
 ##final list of phases that includes continuous phases - this list is not used when generating constrains because there are no cons associated with cont phases
 phases_cont = np.concatenate((phases, [tc,jc,uc,xc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
 l_phases_cont = [''.join(x) for x in phases_cont.astype(str)]

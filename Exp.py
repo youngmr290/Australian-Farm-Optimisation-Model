@@ -174,6 +174,7 @@ for row in range(len(exp_data)):
     r_vals[exp_data.index[row][2]]={}
     r_vals[exp_data.index[row][2]]['pas']={}
     ##call precalcs
+    precalc_start = time.time()
     paspy.paspyomo_precalcs(params[exp_data.index[row][2]]['pas'],r_vals[exp_data.index[row][2]]['pas'])
     rotpy.rotation_precalcs(params[exp_data.index[row][2]]['rot'])
     crppy.crop_precalcs(params[exp_data.index[row][2]]['crop'])
@@ -184,7 +185,8 @@ for row in range(len(exp_data)):
     lcrppy.crplab_precalcs(params[exp_data.index[row][2]]['crplab'])
     suppy.sup_precalcs(params[exp_data.index[row][2]]['sup'])
     stubpy.stub_precalcs(params[exp_data.index[row][2]]['stub'])
-    
+    precalc_end = time.time()
+    print('precalcs: ', precalc_end - precalc_start)
     
     
     ##does pyomo need to be run?
@@ -219,7 +221,8 @@ for row in range(len(exp_data)):
         # print('run pyomo')
         ###if re-run update runpyomo to false 
         exp_data1.loc[exp_data1.index[row],'runpyomo'] = False
-        ##call core model function, must call them in the correct order (core must be last)
+        ##call pyomo model function, must call them in the correct order (core must be last)
+        precalc_start = time.time()
         rotpy.rotationpyomo(params[exp_data.index[row][2]]['rot'])
         crppy.croppyomo_local(params[exp_data.index[row][2]]['crop'])
         macpy.machpyomo_local(params[exp_data.index[row][2]]['mach'])
@@ -230,6 +233,8 @@ for row in range(len(exp_data)):
         paspy.paspyomo_local(params[exp_data.index[row][2]]['pas'])
         suppy.suppyomo_local(params[exp_data.index[row][2]]['sup'])
         stubpy.stubpyomo_local(params[exp_data.index[row][2]]['stub'])
+        precalc_end = time.time()
+        print('localpyomo: ', precalc_end - precalc_start)
         results=core.coremodel_all() #have to do this so i can access the solver status
        
         ##check if user wants full solution

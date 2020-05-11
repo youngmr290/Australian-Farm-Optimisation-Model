@@ -101,9 +101,9 @@ def mach_labour(model,p):
     * model.p_daily_seed_hours *(1 + model.p_seeding_helper)
     harv_labour = sum(model.v_harv_hours[p,k] * (1 + model.p_harv_helper[k])  for k in model.s_harvcrops)  
     prep_labour = model.p_prep_pack[p]
-    fert_t_time = sum(sum(sum(model.p_phasefert[r,l,n]*model.v_phase_area[r,l]*(model.p_fert_app_hour_tonne[p,n]/1000)  for r in model.s_phases)for l in model.s_lmus)for n in model.s_fert_type ) 
-    fert_ha_time = sum(sum(model.v_phase_area[r,l]*(model.p_fert_app_hour_ha[r,l,p]) for r in model.s_phases) for l in model.s_lmus)   
-    chem_time = sum(sum(model.v_phase_area[r,l]*(model.p_chem_app_lab[r,l,p]) for r in model.s_phases) for l in model.s_lmus)   
+    fert_t_time = sum(sum(sum(model.p_phasefert[r,l,n]*model.v_phase_area[r,l]*(model.p_fert_app_hour_tonne[p,n]/1000)  for r in model.s_phases if model.p_phasefert[r,l,n] != 0)for l in model.s_lmus)for n in model.s_fert_type ) 
+    fert_ha_time = sum(sum(model.v_phase_area[r,l]*(model.p_fert_app_hour_ha[r,l,p]) for r in model.s_phases if model.p_fert_app_hour_ha[r,l,p] != 0) for l in model.s_lmus)   
+    chem_time = sum(sum(model.v_phase_area[r,l]*(model.p_chem_app_lab[r,l,p]) for r in model.s_phases if model.p_chem_app_lab[r,l,p] != 0) for l in model.s_lmus)   
     return seed_labour + harv_labour + prep_labour + fert_t_time + fert_ha_time + chem_time
 
 

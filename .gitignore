@@ -7,5 +7,7 @@ __pycache__
 /.spyproject
 /*.dia
 /*.pkl
+/*.npy
+/Crop sim.xlsx
 /Michael code ideas.py
 

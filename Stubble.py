@@ -32,7 +32,7 @@ Spilt grain as a proportion of the stubble = (HI * spilt %) / (1 - HI(1 - spilt%
 @author: young
 """
 #python modules
-import pandas as pd
+import numpy as np
 
 import pandas as pd
 pd.set_option('mode.chained_assignment', 'raise')
@@ -142,13 +142,14 @@ def stubble_all(params):
         comp_dmd_period=fp.iloc[:,-num_stub_cat:] #selects just the dmd from fp df for the crop of interest
         stub_cat_component_proportion.index=comp_dmd_period.columns #makes index = to column names so df mul can be done (quicker than using a loop)
         j=0 #used as scalar for stub available for in each cat below.
+        base_yields = np.load('Yield data.npy')*1000
+        base_yields = pd.Series(base_yields, index = crp.phases_df.iloc[:,-1])
         for cat_inx, cat_name in zip(range(len(pinp.stubble['stub_cat_qual'].loc[crop])), pinp.stubble['stub_cat_qual']):
             dmd.loc[:,(crop,cat_name)]=comp_dmd_period.mul(stub_cat_component_proportion[cat_inx]).sum(axis=1) #dmd by stub category (a, b, c, d)
             ##calc ri before converting dmd to md
             ri_quality.loc[:,(crop,cat_name)]= dmd.loc[:,(crop,cat_name)].apply(fb.ri_quality, args=(pinp.stubble['clover_propn_in_sward_stubble'],))
-            ##ri availability - first calu stubble foo (stub available)
-            yield_df = pinp.crop['yield']
-            stub_foo_harv = yield_df.loc[crop].mean() * stubble_per_grain[(crop,'a')] *1000
+            ##ri availability - first calc stubble foo (stub available)
+            stub_foo_harv = base_yields.loc[crop].mean() * stubble_per_grain[(crop,'a')]
             stubble_foo = stub_foo_harv * (1 - fp['quant_decline_%s' %crop]) * (1 - j)
             ri_availability.loc[:,(crop,cat_name)] = stubble_foo.apply(fb.ri_availability)
             ##combine ri quality and ri availabitily to calc overall vol (potential intake)

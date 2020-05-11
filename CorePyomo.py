@@ -308,6 +308,10 @@ def coremodel_all():
     #solve
     #######################################################################################################################################################
     #######################################################################################################################################################
+    
+    ##sometimes if there is a bug when solved it is good to write lp here - because the code doesn't run to the other place where lp written
+    # model.write('test.lp',io_options={'symbolic_solver_labels':True})
+    
     ##tells the solver you want duals and rc
     try:
         model.del_component(model.dual)
