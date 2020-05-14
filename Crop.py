@@ -244,7 +244,7 @@ def fert_cost():
     ##app cost per ha 
     ###calc passes
     x = fertreq.to_numpy()
-    step = pinp.crop['step_fert_passes']#.reindex(fertreq.columns, axis=0,level=0).values.flatten() #reindex to account for lmu then convert to np
+    step = pinp.crop['step_fert_passes'] #reindex to account for lmu then convert to np
     fert_passes = fun.passes(x,step)
     fert_passes = pd.DataFrame(fert_passes, index = fertreq.index, columns = fertreq.columns) #turn it into df with correct indexes so it can be combined with cost allocation.
     fert_passes['lime'] = fert_passes['lime']/4 #lime is only applied once every 4 years but want the cost spread over all landuses

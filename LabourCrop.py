@@ -24,8 +24,6 @@ import UniversalInputs as uinp
 ########################
 ##makes a df of all possible rotation phases
 phases_df =uinp.structure['phases']
-phases_df2=phases_df.copy() #make a copy so that it doesn't alter the phases df that exists outside this func
-phases_df2.columns = pd.MultiIndex.from_product([phases_df2.columns, ['']])  #make the df multi index so that when it merges with other df below the indexs remanin seperate (otherwise it turn into a one leveled tuple)
 
 
 #########################
@@ -62,17 +60,26 @@ def lab_allocation():
 #time/per ha - needs to be multiplied by the number of phases and then added to phases df because the previous phases can effect number of passes and hence time
 #also need to account for arable area
 def fert_app_time_ha(params):
-    passes = pinp.crop['passes'].reset_index().pivot(index='fert',columns='index').T
-    arable = pinp.crop['arable'].stack().droplevel(0)
-    col = pd.MultiIndex.from_product([passes.columns, arable.index]) #create a new col index
-    passes=passes.reindex(col,axis=1, level=0).mul(arable,axis=1,level=1).stack()
-    time = lab_allocation().mul(mac.time_ha().stack().droplevel(1)).stack()
-    time = passes.reindex(time.index, axis=1,level=1).mul(time).unstack().swaplevel(0,2,axis=1) #swaplevel so that i can set index in the last step otherwise error because column names of the phases ie 0 -3 is the same as period numbers and they were both level 0 col index
-    time = time.sum(level=[0,2], axis=1).replace(0, np.nan) #sum each fert - labour doesn't need to be seperated by fert type once joined with passes
-                                                          #sum nan returns 0 therefore i need to convert 0 back to nan so that they are dropped when stacking to reduce dict size.
-    phase_time = pd.merge(phases_df2, time, how='left', left_on=uinp.cols(), right_index = True)
-    params['fert_app_time_ha'] = phase_time.drop(list(range(uinp.structure['phase_len'])),axis=1,level=0).stack([0,1]).to_dict()  
-    # return phase_time.set_index(list(range(rinp.rotation_data['phase_len']))).stack([0,1]).to_dict() 
+    ##calc fert amount - it is required to calc the number of passes. (recalculated here so that crop.py isn't imported)
+    base_fert = np.load('Fert data.npy')
+    fert_by_soil = pinp.crop['fert_by_lmu'] #read in chem by soil
+    base_fert = pd.DataFrame(base_fert, index = phases_df.index, columns = fert_by_soil.index)
+    ## adjust the fert cost for each rotation by lmu
+    fert_by_soil = fert_by_soil.stack() #read in fert by soil
+    fert=base_fert.mul(fert_by_soil,axis=1,level=0).stack() #stack lmu
+    x = fert.to_numpy()
+    step = pinp.crop['step_fert_passes']
+    fert_passes = fun.passes(x,step)
+    fert_passes = pd.DataFrame(fert_passes, index = fert.index, columns = fert.columns) #turn it into df with correct indexes so it can be combined with cost allocation.
+    ##adjust passes for arable area.
+    arable = pinp.crop['arable'].squeeze()
+    passes=fert_passes.mul(arable,axis=0,level=1)
+    ##adjust fert labour across each labour period
+    time = lab_allocation().mul(mac.time_ha().squeeze()).stack() #time for 1 pass for each chem.
+    ##adjust for passes
+    time = passes.mul(time, axis=1,level=1) #total time 
+    time=time.sum(level=[0], axis=1).stack() #sum across fert type
+    params['fert_app_time_ha'] = time.to_dict()  #add to precalc dict
 #f=fert_app_time_ha()
 #print(timeit.timeit(fert_app_time_ha,number=20)/20)
 

@@ -71,6 +71,7 @@ t_seed_bank_soft_ryw = np.zeros((n_phases,n_years,n_weeds),  dtype = 'float64')
 t_seed_bank_hard_ryw = np.zeros((n_phases,n_years,n_weeds),  dtype = 'float64')
 t_obj_ry = np.zeros((n_phases,n_years),  dtype = 'float64')
 t_rev_ry = np.zeros((n_phases,n_years),  dtype = 'float64')
+t_seedvalue_ry = np.zeros((n_phases,n_years),  dtype = 'float64')
 t_cost_ry = np.zeros((n_phases,n_years),  dtype = 'float64')
 t_yield_ry = np.zeros((n_phases,n_years),  dtype = 'float64')
 t_yield_remaining_weeds_ry = np.zeros((n_phases,n_years),  dtype = 'float64')
@@ -319,10 +320,6 @@ def objective(x,row,k_slice):
     seedset_ew = var[1]
     yield_revenue = yield_rev_k[k_slice] * crp_yield
     seedvalue = np.sum(seedset_ew * seedbank_value_ew)
-    ##store obj for cheching - might not be optimal if using basinhoppinng method because last set of numbers tested may not be the chosen ones
-    t_obj_ry[row,yr]=-(yield_revenue - np.sum(control_cost) - seedvalue)
-    t_rev_ry[row,yr]=-(yield_revenue )
-    t_cost_ry[row,yr]=-( - np.sum(control_cost))
     return -(yield_revenue - np.sum(control_cost) - seedvalue)
 
 ##initial guesses
@@ -331,7 +328,7 @@ try:
     past_control_levels_ryo[...] = np.loadtxt('cropsim solution.txt').reshape(n_phases,n_years,n_controls)
 except (OSError,ValueError): 
     print('using default initial guesses')
-    past_control_levels_ryo[...] = np.array([5,5,5,5,5,2,2,2,15,0,0,0])
+    past_control_levels_ryo[...] = np.array([5,5,5,5,5,2,2,2,0,0,0,15])
     
 
 def minimise(row):
@@ -347,31 +344,54 @@ def minimise(row):
         bnds=list(zip(lower,upper))
         ##initial guessed - use the solution from the last time if it exists
         x0 = past_control_levels_ryo[row,yr,:]
-        
-        ##this method only solves for the local minimum - it is very dependent on the initial guesses - it is quite fast
+        ##below are some different solving methods
+        ### 1 - this method only solves for the local minimum - it is very dependent on the initial guesses - it is quite fast
         # result = minimize(objective, x0,args=(row,k_slice), method='L-BFGS-B', bounds=bnds, tol=1e-2) #may have to change around the solver (method) to get the best solution - time it and see what is best
-        
-        ##basinhopping method is used to determine global minimum - it is much slower
-        ### use method L-BFGS-B - this may need to be changed
-        minimizer_kwargs = dict(method="L-BFGS-B", bounds=bnds,args=(row,k_slice), tol=1e-4) #can adjust tol to increase speed but also decreases accuracy.
+        ### 2 - basinhopping method is used to determine global minimum - it is much slower
+        minimizer_kwargs = dict(method="L-BFGS-B", bounds=bnds,args=(row,k_slice), tol=1e-4) #can adjust tol to increase speed but also decreases accuracy. May also change the method L-BFGS-B 
         result = basinhopping(objective, x0, minimizer_kwargs=minimizer_kwargs, stepsize=2.5, niter=20,T=40,niter_success=5)
-        
-        ##alternate method - differential evolution
+        ### 3 - differential evolution method
         # result = differential_evolution(objective, bnds,args=(row,k_slice),maxiter=100,popsize=5)
-        
-       
-        
-        
+        ##add solution to array        
         crop_control_levels_ryo[row,yr,:] = result.x
-        
+        ##code below can be run inorder to get extra info - it uses the solution for the current rotation and gets the objective 
+        ###it must be done here for 2 reasons. 
+        ####1- doing these calcs in the objective function would save redoing the code but the problem is that the last itteration of the objective function may not return the optimal solution, ie depending on the global minimisation method the solver may select its results from an earlier itteration of the objective funtion if that local minimum is lower than the current local mimimum.
+        ####2- it will slow down the solving process
+        ###determine all params for functions
+        seedbank_ew = seedbank_rew[row,...] 
+        fungibank_u = fungibank_ryu[row,yr,...] 
+        nutrientbank_n = nutrientbank_ryn[row,yr,...] 
+        a_ow = weed_params_owp[:,:,0]
+        a_ou = fungi_params_oup[:,:,0]
+        b_ow = weed_params_owp[:,:,1]
+        b_ou = fungi_params_oup[:,:,1]
+        c_ow = weed_params_owp[:,:,2]
+        c_ou = fungi_params_oup[:,:,2]
+        d_kw = weed_yield_params_rywp[row,yr,:,0]
+        d_ku = fungi_yield_params_ryup[row,yr,:,0]
+        d_kn = nutrient_yield_params_rynp[row,yr,:,0]
+        k_kw = weed_yield_params_rywp[row,yr,:,1]
+        k_ku = fungi_yield_params_ryup[row,yr,:,1]
+        k_kn = nutrient_yield_params_rynp[row,yr,:,1]
+        ymax = ymax_ry[row,yr]
+        ax=0 #this is the axis being summed or multiplied along - it is inputted because it is different when calculating the overall results for the whole roataion vertorily
+        control_cost = cost_control_o * result.x
+        var = yield_n_state(fungibank_u,seedbank_ew,nutrientbank_n,result.x,a_ow,a_ou,b_ow,b_ou,c_ow,c_ou,d_kw,d_ku,d_kn,k_kw,k_ku,k_kn,ymax,ax)
+        crp_yield = var[0]
+        seedset_ew = var[1]
+        yield_revenue = yield_rev_k[k_slice] * crp_yield
+        seedvalue = np.sum(seedset_ew * seedbank_value_ew)
+        ###store each part of the objective
+        t_obj_ry[row,yr]=-(yield_revenue - np.sum(control_cost) - seedvalue)
+        t_seedvalue_ry[row,yr]=seedvalue
+        t_rev_ry[row,yr]=-(yield_revenue )
+        t_cost_ry[row,yr]= np.sum(control_cost)
         ##use few lines below if you are trying to test different results or check the solver status.
-        # obj = objective(result.x,row,k_slice)
-        # print(result.x)
-        # print(obj)
         # if not result.success:
         #     print('solver error')
     
-for yr in range(1):#n_years):
+for yr in range(n_years):
     # yr=5    ##determine all params for vector function
     print(yr)
     a_ow = weed_params_owp[:,:,0]
@@ -454,7 +474,7 @@ control_solution=crop_control_levels_ryo.ravel()
 np.savetxt('cropsim solution.txt', control_solution)
 
 ##save sim data as binary file - this is fast but you can't view it (if you want to view it - uncomment the code below)
-rotation_control_levels_ro.clip(0)
+rotation_control_levels_ro[rotation_control_levels_ro<0] = 0
 np.save('Yield data.npy', cropyield)
 np.save('Chem data.npy', rotation_control_levels_ro[:,0:n_weedcontrols+n_fungicontrols])
 np.save('Fert data.npy', rotation_control_levels_ro[:,n_weedcontrols+n_fungicontrols:]*10) #*10 to convert fert back to kgs
