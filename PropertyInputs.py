@@ -6,19 +6,28 @@ Created on Mon Jan 13 21:03:30 2020
 """
 ##python modules
 import pickle as pkl
+import os.path
 
 ##Midas modules
 import Functions as fun
 import UniversalInputs as uinp
-import Controls as con
 
 ##############
 #read inputs #
 ##############
+try:
+    if os.path.getmtime("Property.xlsx") > os.path.getmtime("pkl_property.pkl"):
+        inputs_from_pickle = False 
+    else: 
+        inputs_from_pickle = True
+        print( 'Reading property inputs from pickle')
+except FileNotFoundError:      
+    inputs_from_pickle = False
+
 
 filename= 'pkl_property.pkl'
 ##if inputs are not read from pickle then they are read from excel and written to pickle
-if con.inputs_from_pickle == False:
+if inputs_from_pickle == False:
     with open(filename, "wb") as f:
         general_inp = fun.xl_all_named_ranges("Property.xlsx","General")
         pkl.dump(general_inp, f)

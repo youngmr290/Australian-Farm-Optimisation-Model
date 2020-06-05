@@ -27,7 +27,6 @@ import datetime
 from dateutil.relativedelta import relativedelta
 
 import Functions as fun
-import Controls as con
 
 
 #########################################################################################################################################################################################################
@@ -35,10 +34,19 @@ import Controls as con
 #read in excel
 #########################################################################################################################################################################################################
 #########################################################################################################################################################################################################
+import os.path
+try:
+    if os.path.getmtime("Universal.xlsx") > os.path.getmtime("pkl_universal.pkl"):
+        inputs_from_pickle = False 
+    else: 
+        inputs_from_pickle = True
+        print( 'Reading universal inputs from pickle')
+except FileNotFoundError:      
+    inputs_from_pickle = False
 
 filename= 'pkl_universal.pkl'
 ##if inputs are not read from pickle then they are read from excel and written to pickle
-if con.inputs_from_pickle == False:
+if inputs_from_pickle == False:
     with open(filename, "wb") as f:
         ##prices
         price_inp = fun.xl_all_named_ranges("Universal.xlsx","Price")
@@ -127,6 +135,7 @@ def univeral_inp_sa():
     ##have to import it here since sen.py imports this module
     import Sensitivity as sen 
     ##enter sa below
+    
     
     
 

@@ -25,6 +25,8 @@ from openpyxl import load_workbook
 import Functions as fun
 import UniversalInputs as uinp
 
+##if you want to use a customised list of rotations this can be set to false - populate the array further down the module.
+customised_rotations = False
 
 yr0 = np.array(['b', 'h', 'o','of', 'w', 'f', 'l', 'z','r'
                , 'a', 'ar' 
@@ -44,7 +46,7 @@ yr1 = np.array(['AR', 'SR'
 yr2 = np.array(['E', 'N', 'P'
        , 'A'
        , 'S' 
-       , 'M'##])
+       , 'M'#])
         , 'U'
         , 'X' 
         , 'T', 'J'])
@@ -61,6 +63,9 @@ yr5 = np.array(['A','Y'#])
 
 arrays=[yr5,yr4,yr3,yr2,yr1,yr0]
 phases=fun.cartesian_product_simple_transpose(arrays)
+
+
+
 
 
 ###########################################################
@@ -402,13 +407,35 @@ phases = phases[~tindex]
 # ###drop duplicates
 # hist_prov = np.unique(hist_prov, axis=0)
 
-##################
-#history require #
-##################
-hist_req = phases[:,0:np.size(phases,1)-1]
-hist_req = np.unique(hist_req, axis=0)
+######################
+#simplified rotations#
+######################
+'''
+This bit of code can be used to extract custom rotations only.
+You can alter the user_rot array to include to rotations you want to include (all other rotations will be excluded)
+The sequence of the rotation is irrelevant ie b b w w is the same as w b b w.
+'''
 
+##enter the rotaions you want represented in the model
+ds_user_rot_init = np.array([['ar', 'a', 'w', 'w', 'r', 'b']
+                     ,['r', 'w', 'b', 'r', 'w', 'b']])
 
+if customised_rotations:
+    ##roll the rotation to make all the phases required for a given rotation
+    ds_user_rot=ds_user_rot_init
+    for offset in range(1,np.size(ds_user_rot_init,axis=1)):
+        ds_user_rot = np.concatenate((ds_user_rot, np.roll(ds_user_rot_init, offset, axis=1)),axis=0)
+    ##the next code simplifies the full list of phases to only include the neccessary ones to represent the user rotations.
+    ix_bool=np.zeros(len(phases))
+    ###loop through all rotation phases then loop through all of the user rotations.
+    ###this checks if the rotation phases are a superset of any of the user rotations
+    for s_rot_phase, ix_phase in zip(phases,range(len(phases))):
+        for s_user_rot in ds_user_rot:
+            req=1
+            for i in range(np.size(s_user_rot)):
+                req*=uinp.structure[s_rot_phase[i]].issuperset({s_user_rot[i]})
+            ix_bool[ix_phase]=max(req,ix_bool[ix_phase]) 
+    phases=phases[ix_bool>0]
 
 
 ############################################################################################################################################################################################
@@ -418,10 +445,16 @@ hist_req = np.unique(hist_req, axis=0)
 ############################################################################################################################################################################################
 
 
+##history require 
+hist_req = phases[:,0:np.size(phases,1)-1]
+hist_req = np.unique(hist_req, axis=0)
+
+
+##generate a list of the phases and histories (agretated version)
 l_phases = [''.join(x) for x in phases.astype(str)]
 l_hist_req = [''.join(x) for x in hist_req.astype(str)]
 # l_hist_prov = [''.join(x) for x in hist_prov.astype(str)]
-
+j=j
 
 ##################
 #con 1 param     #
