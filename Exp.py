@@ -13,11 +13,11 @@ import time
 import os.path
 import glob
 from datetime import datetime
-from CreateModel import model
 import pickle as pkl
 import sys
 
 
+from CreateModel import model
 import UniversalInputs as uinp
 import PropertyInputs as pinp 
 import Sensitivity as sen 
@@ -236,7 +236,7 @@ for row in range(len(exp_data)):
         precalc_end = time.time()
         print('localpyomo: ', precalc_end - precalc_start)
         results=core.coremodel_all() #have to do this so i can access the solver status
-       
+        print('corepyomo: ',time.time() - precalc_end)
         ##check if user wants full solution
         if exp_data.index[row][1] == True:
             ##make lp file

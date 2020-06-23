@@ -418,7 +418,7 @@ The sequence of the rotation is irrelevant ie b b w w is the same as w b b w.
 
 ##enter the rotaions you want represented in the model
 ds_user_rot_init = np.array([['ar', 'a', 'w', 'w', 'r', 'b']
-                     ,['r', 'w', 'b', 'r', 'w', 'b']])
+                             ,['r', 'w', 'b', 'r', 'w', 'b']])
 
 if customised_rotations:
     ##roll the rotation to make all the phases required for a given rotation

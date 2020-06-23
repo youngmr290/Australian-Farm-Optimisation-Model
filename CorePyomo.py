@@ -14,7 +14,7 @@ formatting; try to avoid capitals (reduces possible mistakes in future)
 
 @author: young
 """
-
+import time 
 import pyomo.environ as pe
 
 #MUDAS modules - should only be pyomo modules
@@ -47,7 +47,6 @@ def coremodel_all():
     #core model (pyomo constraints)
     #######################################################################################################################################################
     #######################################################################################################################################################
-    
     
     ######################
     #Labour fixed        #
@@ -279,7 +278,6 @@ def coremodel_all():
         return (sum(crppy.rotation_cost(model,c)  + labpy.labour_cost(model,c) + macpy.mach_cost(model,c) + suppy.sup_cost(model,c) for c in model.s_cashflow_periods) *uinp.finance['minroe']) \
                 - model.v_minroe <=0   
     model.con_minroe = pe.Constraint(rule=minroe, doc='tallies total expenditure to ensure minimum roe is met')
-    
     
     #######################################################################################################################################################
     #######################################################################################################################################################
