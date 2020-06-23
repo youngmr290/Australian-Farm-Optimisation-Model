@@ -5,10 +5,10 @@ Created on Thu Feb 13 09:35:18 2020
 @author: John
 """
 
-'''
+"""
 import functions from other modules
-'''
-# import datetime as dt
+"""
+import datetime as dt
 import pandas as pd
 import numpy as np
 
@@ -25,18 +25,18 @@ import UniversalInputs as uinp
 ############################
 ### _constants required    #
 ############################
-## define some parameters required to size arrays.
+# ## define some parameters required to size arrays.
 # n_feed_pools        = uinp.n_feed_pools
 # n_feed_periods      = len(pinp.feed_inputs['feed_periods']) - 1
 
-#^ put the values as lists in universal.xlsx (SheepDefinitions!)
+# ^ put the values as lists in universal.xlsx (SheepDefinitions!)
 # then define n by length of the list
 n_animal_types = 2      # a: wool, meat
 n_btrt = 6              # b: 11, 22, 21, 33, 32, 31
 n_genotype_options = 5  # c: number in spreadhseet
 n_dam_ages = 3          # d: yearling, maiden, adult
 n_max_ecycles = 2       # e: max number of estrus cycles they are joined
-n_feed_var_periods = 10 # f:
+n_feed_var_periods = 10  # f:
 n_genotypes = 6         # g: B, M, T, BM, BT, BMT
 n_g0 = 3                # g0: B, M, T
 n_g1 = 2                # g1: BB, BM
@@ -45,7 +45,8 @@ n_husbandry_class = 1   # h
 n_groups_rams = 3       # i & g0: genotypes of rams
 n_groups_ewes = 4       # j: genotype groups of ewes
 n_groups_offspring = 5  # k: genotype groups and growth profile
-n_groups_lambing = 1    # l: lambing groups for the seed animals (1 unless doing a TOL analysis or 8 month joinings)
+n_groups_lambing = 1    # l: lambing groups for the seed animals
+# (1 unless doing a TOL analysis or 8 month joinings)
 n_months = 12           # m: Jan to Dec
 n_feed_periods = 10     # n:
 n_lambing_opps = 15     # o:
@@ -54,23 +55,23 @@ n_labour_periods = 16   # q:
 n_feed_variables        # r:
 n_shearing_occs = 16    # s:
 n_sale_times = 4        # t: weaner, backgrounded, finished, remainder
-n_husbandry_options = 10# u:
+n_husbandry_options = 10  # u:
 n_genders = 3           # w: ewe, wether, ram
 n_litter_size = 5       # x: Dry, single, twin, triplet, not mated
 n_lactation_number = 5  # y: dry, single, twin, triplet, in utero
 n_sexes = 3             # w: ram, ewe, wether
 # n_sim_periods see below
 n_labour_periods = 16   # q
-        i_sim_periods_year = 52 # ^uinp.n_sim_periods_year   will be in structure dict now
-i_oldest_animal= 6.5    # ^uinp.i_oldest_animal
+i_sim_periods_year = 52  # ^uinp.n_sim_periods_year  now in structure dict
+i_oldest_animal = 6.5    # ^uinp.i_oldest_animal
 
-birth_date_i = uinp.propertydata['ExcelName']   #Find the ExcelNames
+birth_date_i = uinp.propertydata['ExcelName']   # Find the ExcelNames
 birth_date_jl = uinp.propertydata['ExcelName']
 birth_date_jel = uinp.propertydata['ExcelName']
 birth_date_kel = uinp.propertydata['ExcelName']
-## Some one time data manipulation for the inputs just read
+# ## Some one time data manipulation for the inputs just read
 start_year = np.min(birth_date_jl)
-## might need to test and rebase the year for the other animal groups
+# ## might need to test and rebase the year for the other animal groups
 
 
 ### _define the periods
@@ -95,12 +96,12 @@ xg      = (n_litter_size
 yg      = (n_lactation_number
           ,n_genotypes
           )
-##          ,23    #  this dimension represents the subscript from GrazPLan
-                  #  not sure how these values vary with genotype and lactation number
-                  #  so not sure how to pass this to sfun.intake
-## the number required varies with the constatnt= being defined and therefore
-## the value will be specified during the instantiation of the numpy array
-          )
+#          ,23    #  this dimension represents the subscript from GrazPLan
+#                 #  not sure how these values vary with genotype and lact no
+#                 #  so not sure how to pass this to sfun.intake
+# the number required varies with the constant being defined and therefore
+# the value will be specified during the instantiation of the numpy array
+
 il      = (n_groups_rams
           ,n_groups_lambing
           )
@@ -238,9 +239,9 @@ pr      = (n_sim_periods
 ###################################
 ### initialise global arrays      #
 ###################################
-## Instantiate the globals arrays
-## # these store the output of simulation and the parameters for pyomo
-## # see documentation for a description of each variable
+# ## Instantiate the globals arrays
+# ## these store the output of simulation and the parameters for pyomo
+# ## see documentation for a description of each variable
 n_i                     = np.zeros(n_groups_rams , dtype = 'float64')
 pi_i                    = np.zeros(n_groups_rams , dtype = 'float64')
 mei_i                   = np.zeros(n_groups_rams , dtype = 'float64')
@@ -739,6 +740,13 @@ a_day90_p_ojel
 a_6weeks_p_ojel
 a_lamb_p_ojel
 a_wean_p_ojel
+
+# maybe this will have to be done by date rather than age
+a_next_o_plc1 = np.apply_along_axis(sfun.f_find_index, 0, i_age_join_olc1,
+                                    age_start_plc1, 0)
+a_prev_o_plc1 = np.apply_along_axis(sfun.f_find_index, 0, i_age_join_olc1,
+                                    age_end_plc1, -1)
+
 
     ### _feed inputs
     sfun.feed_inputs function

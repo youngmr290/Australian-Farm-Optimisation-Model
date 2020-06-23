@@ -5,6 +5,7 @@ __pycache__
 /*.xls
 /redundant
 /.spyproject
+/flowcharts
 /*.dia
 /*.pkl
 /*.npy
