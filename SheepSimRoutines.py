@@ -17,6 +17,80 @@ def RAMP(x,a,b):
     ''' RAMP function CSIRO equation 125a'''
     return
 
+def convert_input_to_g(source, a_g0, a_paternal_g0_g1, a_maternal_g0_g1,
+                                     a_paternal_g0_g2, a_maternal_g1_g2):
+    """
+    Convert numpy array source data to a selected genotype (g) array
+
+    Parameters
+    ----------
+    source : array of data with last axis that is related to g by association.
+    a_g0 : association between the source array and male genotypes (g0).
+    a_paternal_g0_g1 : paternal association for the female (g1).
+    a_maternal_g0_g1 : maternal association for the female (g1).
+    a_paternal_g0_g2 : paternal association for the offspring (g2).
+    a_maternal_g1_g2 : maternal association for the offspring (g2).
+
+    Returns
+    -------
+    g : source data in a ...g array.
+    """
+    g0 = source[...,a_g0]
+    g1 = (g0[a_paternal_g0_g1] + g0[a_maternal_g0_g1]) / 2
+    g2 = (g0[a_paternal_g0_g2] + g1[a_maternal_g1_g2]) / 2
+    g = g0
+    ## requires a method to convert from g0, g1 & g2 to g
+    ## difficulty is that the g slices change depending on the inputs
+    return g
+
+def f_find_index(datearray_slice,*args):
+    '''
+    Parameters
+    ----------
+    datearray_slice : np.datetime64
+        The axis along which the array is being sliced (must be sorted).
+    *args : 1 - 1D array, 2 - integer
+        Arg 1: the 1D array that the index is being found for, note the index is based off the start date therefore must do [1:-1] if you want idx based on end date.
+        Arg 2: period offset. -1 if the previous period is required.
+
+    Returns
+    -------
+    Array
+        The function finds the index value of the datearray which is either the next or previous date for a given input date.
+
+    '''
+    date = args[0]
+    offset = args[1]  # offset is -1 to get the previous datearray period
+    idx_next = np.searchsorted(datearray_slice, date)
+    # ## clip the value between 0 and the length of joining array.
+    idx = np.clip(idx_next + offset, 0, datearray_slice.shape[0] - 1)
+    return idx
+
+def f_k2g(input_k1, a_k1_g0, input_k2=None, a_k2_g0=None, other_associations):
+    """
+    Create parameters by selected genotype from animal type and possible genotypes
+
+    Parameters
+    ----------
+    input_k1 : A parameter array with animal type (u) as last axis.
+    input_k2 : Optional parameter array with possible genotypes (k) as last axis.
+    a_k1_g0 : An association array between animal type (u) and selected genotype (g).
+    a_k2_g0 : Optional association array between input genotypes (k) and selected genotype.
+
+    Returns
+    -------
+    Array of parameters with the last axis being selected genotype (g).
+
+    """
+
+    c_k1_g = convert_input_to_g(input_k1, a_k1_g0, other_associations)
+    try:
+        c_k2_g = convert_input_to_g(input_k2, a_k2_g0, other_associations)
+    except:   #enter exception type so the error catch is specific
+        return c_k1_g
+    c_g = c_k2_g
+    c_g[c_k2_g==0] = c_k1_g[c_k2_g==0]
+    return c_g
 
 def genotype(excelinputs, a_c_g0, a_maternal_g0_g1, a_paternal_g0_g1
              , a_maternal_g1_g2, a_paternal_g0_g2):
@@ -29,19 +103,7 @@ def genotype(excelinputs, a_c_g0, a_maternal_g0_g1, a_paternal_g0_g1
     Arrays:
         c_srw_gw
         c_sfw_g
-        c_cn_g
-        c_ci_gy
-        c_cr_g
-        c_ck_g
-        c_cm_g
-        c_cp_gx
-        c_cl_gy
-        c_cw_g
-        c_cc_g
-        c_cg_g
-        c_ch_g
-        c_cf_gx
-        c_cd_g
+
 
     '''
     ## take the genotype inputs and create the parameters that define the genotypes
@@ -86,8 +148,7 @@ def genotype(excelinputs, a_c_g0, a_maternal_g0_g1, a_paternal_g0_g1
     array_g[0:2] = array_g0  # the 3 ram genotypes
     array_g[3:4] = array_g2[1:3]  #the offspring genotypes excluding the first (B) because it was part of the ram genotypes
 
-    return c_srw_gw, c_sfw_g, c_cn_g, c_ci_gy, c_cr_g, c_ck_g, c_cm_g, \
-           c_cp_gx, c_cl_gy, c_cw_g, c_cc_g, c_cg_g, c_ch_g, c_cf_gx, c_cd_g
+    return c_srw_gw, c_sfw_g
 
 def sim_periods(start_year, periods_per_year, oldest_animal):
     '''Define the dates for the simulation periods.
@@ -106,10 +167,11 @@ def sim_periods(start_year, periods_per_year, oldest_animal):
     n_sim_periods = int(oldest_animal * periods_per_year)
     start_date = np.datetime64(start_year+'01-01','D')   #^ want this to return 1 Jan YYYY, but start year is a date itself
     step = pd.to_timedelta(365.25 / periods_per_year,'D')
-    finish_date = start_date + step * n_sim_periods
-    period_date_p = np.arange(start_date, finish_date, step, dtype='datetime64[D]')
-    index_p = np.arange(n_sim_periods)
-    return n_sim_periods, period_date_p, index_p, step
+    step = step.to_numpy().astype('timedelta64[s]')
+    index_p = np.arange(n_sim_periods + 1)
+    date_p = (start_date + step * index_p).astype('datetime64[D]')
+
+    return n_sim_periods, date_p, index_p, step
 
 def condition_score(ffcflw, normal_weight, cs_propn = 0.19):
     ''' Estimate CS from LW. Works with scalars or arrays - provided they are broadcastable into ffcflw.
