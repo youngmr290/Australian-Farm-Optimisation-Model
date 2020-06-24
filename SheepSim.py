@@ -77,300 +77,23 @@ start_year = np.min(birth_date_jl)
 n_sim_periods, date_p, p_index_p, step \
         = sfun.sim_periods(start_year, i_sim_periods_year, i_oldest_animal)
 ### _array dimensions
-va      = (n_genders
-          ,n_animal_types
-          )
-xa      = (n_litter_size
-          ,n_animal_types
-          )
-ya      = (n_lactation_number
-          ,n_animal_types
-          )
-vg      = (n_genders
-          ,n_genotypes
-          )
-xg      = (n_litter_size
-          ,n_genotypes
-          )
-yg      = (n_lactation_number
-          ,n_genotypes
-          )
-##          ,23    #  this dimension represents the subscript from GrazPLan
-                  #  not sure how these values vary with genotype and lactation number
-                  #  so not sure how to pass this to sfun.intake
-## the number required varies with the constatnt= being defined and therefore
-## the value will be specified during the instantiation of the numpy array
-          )
-il      = (n_groups_rams
-          ,n_groups_lambing
-          )
-d_is    = (n_groups_rams
-          ,n_shearing_occs
-          )
-jel     = (n_groups_ewes
-          ,n_max_ecycles
-          ,n_groups_lambing
-          )
-jewbl   = (n_groups_ewes
-          ,n_max_ecycles
-          ,n_sexes
-          ,n_btrt
-          ,n_groups_lambing
-          )
-jexl    = (n_groups_ewes
-          ,n_max_ecycles
-          ,n_litter_size
-          ,n_groups_lambing
-          )
-jexyl   = (n_groups_ewes
-          ,n_max_ecycles
-          ,n_litter_size
-          ,n_lactation_number
-          ,n_groups_lambing
-          )
-jl      = (n_groups_ewes
-          ,n_groups_lambing
-          )
-jo      = (n_groups_ewes
-          ,n_lambing_opps
-          )
-js      = (n_groups_ewes
-          ,n_shearing_occs
-          )
-jwexyl  = (n_groups_ewes
-          ,n_sexes
-          ,n_max_ecycles
-          ,n_litter_size
-          ,n_lactation_number
-          ,n_groups_lambing
-          )
-jxyl    = (n_groups_ewes
-          ,n_litter_size
-          ,n_lactation_number
-          ,n_groups_lambing
-          )
-kd      = (n_groups_offspring
-          ,n_dam_ages
-          )
-kdwbl   = (n_groups_offspring
-          ,n_dam_ages
-          ,n_sexes
-          ,n_btrt
-          ,n_sexes
-          )
-kdwebl  = (n_groups_offspring
-          ,n_dam_ages
-          ,n_sexes
-          ,n_max_ecycles
-          ,n_btrt
-          ,n_groups_lambing
-          )
-kel     = (n_groups_offspring
-          ,n_max_ecycles
-          ,n_groups_lambing
-          )
-ks      = (n_groups_offspring
-          ,n_shearing_occs
-          )
-ojel    = (n_lambing_opps
-          ,n_groups_ewes
-          ,n_max_ecycles
-          ,n_groups_lambing
-          )
-pi      = (n_sim_periods
-          ,n_groups_rams
-          )
-pil     = (n_sim_periods
-          ,n_groups_rams
-          ,n_groups_lambing
-          )
-pjel    = (n_sim_periods
-          ,n_groups_ewes
-          ,n_max_ecycles
-          ,n_groups_lambing
-          )
-pjl     = (n_sim_periods
-          ,n_max_ecycles
-          ,n_groups_lambing
-          )
-pjxyl   = (n_sim_periods
-          ,n_max_ecycles
-          ,n_litter_size
-          ,n_lactation_number
-          ,n_groups_lambing
-          )
-pjl     = (n_sim_periods
-          ,n_groups_ewes
-          ,n_groups_lambing
-          )
-pkdwbl  = (n_sim_periods
-          ,n_groups_offspring
-          ,n_dam_ages
-          ,n_sexes
-          ,n_btrt
-          ,n_groups_lambing
-          )
-pkdwebl = (n_sim_periods
-          ,n_groups_offspring
-          ,n_dam_ages
-          ,n_sexes
-          ,n_max_ecycles
-          ,n_btrt
-          ,n_groups_lambing
-          )
-pkdwl   = (n_sim_periods
-          ,n_groups_offspring
-          ,n_dam_ages
-          ,n_sexes
-          ,n_groups_lambing
-          )
-pkel    = (n_sim_periods
-          ,n_groups_offspring
-          ,n_max_ecycles
-          ,n_groups_lambing
-          )
-pr      = (n_sim_periods
-          ,n_feed_variables
-          )
+
+
+
+
 
 
 
 ###################################
 ### initialise global arrays      #
 ###################################
+'''only create arrays that are used in sim and post processing.
+'''
 ## Instantiate the globals arrays
 ## # these store the output of simulation and the parameters for pyomo
 ## # see documentation for a description of each variable
-n_i                     = np.zeros(n_groups_rams , dtype = 'float64')
-pi_i                    = np.zeros(n_groups_rams , dtype = 'float64')
-mei_i                   = np.zeros(n_groups_rams , dtype = 'float64')
-lw_ffcf_i               = np.zeros(n_groups_rams , dtype = 'float64')
-lw_i                    = np.zeros(n_groups_rams , dtype = 'float64')
-aw_i                    = np.zeros(n_groups_rams , dtype = 'float64')
-mw_i                    = np.zeros(n_groups_rams , dtype = 'float64')
-bw_i                    = np.zeros(n_groups_rams , dtype = 'float64')
-ww_i                    = np.zeros(n_groups_rams , dtype = 'float64')
-gw_i                    = np.zeros(n_groups_rams , dtype = 'float64')
-ss_i                    = np.zeros(n_groups_rams , dtype = 'float64')
-wool_value_i            = np.zeros(n_groups_rams , dtype = 'float64')
-sale_value_i            = np.zeros(n_groups_rams , dtype = 'float64')
-ch4_nggi_i              = np.zeros(n_groups_rams , dtype = 'float64')
-n20_nggi_i              = np.zeros(n_groups_rams , dtype = 'float64')
-ch4_bc_i                = np.zeros(n_groups_rams , dtype = 'float64')
 
-n_rams_il               = np.zeros(il , dtype = 'float64')
-n_jexyl                 = np.zeros(jexyl , dtype = 'float64')
-pi_jexyl                = np.zeros(jexyl , dtype = 'float64')
-mei_jexyl               = np.zeros(jexyl , dtype = 'float64')
-lw_ffcf_jexyl           = np.zeros(jexyl , dtype = 'float64')
-lw_jexyl                = np.zeros(jexyl , dtype = 'float64')
-aw_jexyl                = np.zeros(jexyl , dtype = 'float64')
-mw_jexyl                = np.zeros(jexyl , dtype = 'float64')
-bw_jexyl                = np.zeros(jexyl , dtype = 'float64')
-ww_jexyl                = np.zeros(jexyl , dtype = 'float64')
-gw_jexyl                = np.zeros(jexyl , dtype = 'float64')
-ss_jexyl                = np.zeros(jexyl , dtype = 'float64')
-wool_value_jexyl        = np.zeros(jexyl , dtype = 'float64')
-sale_value_jexyl        = np.zeros(jexyl , dtype = 'float64')
-ch4_nggi_jexyl          = np.zeros(jexyl , dtype = 'float64')
-n20_nggi_jexyl          = np.zeros(jexyl , dtype = 'float64')
-ch4_bc_jexyl            = np.zeros(jexyl , dtype = 'float64')
-n_jwexyl                = np.zeros(jwexyl , dtype = 'float64')
-pi_jwexyl               = np.zeros(jwexyl , dtype = 'float64')
-mei_jwexyl              = np.zeros(jwexyl , dtype = 'float64')
-lw_ffcf_jwexyl          = np.zeros(jwexyl , dtype = 'float64')
-lw_jwexyl               = np.zeros(jwexyl , dtype = 'float64')
-aw_jwexyl               = np.zeros(jwexyl , dtype = 'float64')
-mw_jwexyl               = np.zeros(jwexyl , dtype = 'float64')
-bw_jwexyl               = np.zeros(jwexyl , dtype = 'float64')
-ww_jwexyl               = np.zeros(jwexyl , dtype = 'float64')
-gw_jwexyl               = np.zeros(jwexyl , dtype = 'float64')
-ss_jwexyl               = np.zeros(jwexyl , dtype = 'float64')
-wool_value_jwexyl       = np.zeros(jwexyl , dtype = 'float64')
-sale_value_jwexyl       = np.zeros(jwexyl , dtype = 'float64')
-ch4_nggi_jwexyl         = np.zeros(jwexyl , dtype = 'float64')
-n20_nggi_jwexyl         = np.zeros(jwexyl , dtype = 'float64')
-ch4_bc_jwexyl           = np.zeros(jwexyl , dtype = 'float64')
-n_kdwebl                = np.zeros(kdwebl , dtype = 'float64')
-pi_kdwebl               = np.zeros(kdwebl , dtype = 'float64')
-mei_kdwebl              = np.zeros(kdwebl , dtype = 'float64')
-lw_ffcf_kdwebl          = np.zeros(kdwebl , dtype = 'float64')
-lw_kdwebl               = np.zeros(kdwebl , dtype = 'float64')
-aw_kdwebl               = np.zeros(kdwebl , dtype = 'float64')
-mw_kdwebl               = np.zeros(kdwebl , dtype = 'float64')
-bw_kdwebl               = np.zeros(kdwebl , dtype = 'float64')
-ww_kdwebl               = np.zeros(kdwebl , dtype = 'float64')
-gw_kdwebl               = np.zeros(kdwebl , dtype = 'float64')
-ss_kdwebl               = np.zeros(kdwebl , dtype = 'float64')
-wool_value_kdwebl       = np.zeros(kdwebl , dtype = 'float64')
-sale_value_kdwebl       = np.zeros(kdwebl , dtype = 'float64')
-ch4_nggi_kdwebl         = np.zeros(kdwebl , dtype = 'float64')
-n20_nggi_kdwebl         = np.zeros(kdwebl , dtype = 'float64')
-ch4_bc_kdwebl           = np.zeros(kdwebl , dtype = 'float64')
-p_n_pi                  = np.zeros(pi , dtype = 'float64')
-p_pi_pi                 = np.zeros(pi , dtype = 'float64')
-p_mei_pi                = np.zeros(pi , dtype = 'float64')
-r_lw_ffcf_pi            = np.zeros(pi , dtype = 'float64')
-r_lw_pi                 = np.zeros(pi , dtype = 'float64')
-r_aw_pi                 = np.zeros(pi , dtype = 'float64')
-r_mw_pi                 = np.zeros(pi , dtype = 'float64')
-r_bw_pi                 = np.zeros(pi , dtype = 'float64')
-r_ww_pi                 = np.zeros(pi , dtype = 'float64')
-r_gw_pi                 = np.zeros(pi , dtype = 'float64')
-p_ss_pi                 = np.zeros(pi , dtype = 'float64')
-p_wool_value_pi         = np.zeros(pi , dtype = 'float64')
-p_sale_value_pi         = np.zeros(pi , dtype = 'float64')
-p_ch4_nggi_pi           = np.zeros(pi , dtype = 'float64')
-p_n20_nggi_pi           = np.zeros(pi , dtype = 'float64')
-p_ch4_bc_pi             = np.zeros(pi , dtype = 'float64')
-p_n_pjexyl              = np.zeros(pjexyl , dtype = 'float64')
-p_pi_pjexyl             = np.zeros(pjexyl , dtype = 'float64')
-p_mei_pjexyl            = np.zeros(pjexyl , dtype = 'float64')
-r_lw_ffcf_pjexyl        = np.zeros(pjexyl , dtype = 'float64')
-r_lw_pjexyl             = np.zeros(pjexyl , dtype = 'float64')
-r_aw_pjexyl             = np.zeros(pjexyl , dtype = 'float64')
-r_mw_pjexyl             = np.zeros(pjexyl , dtype = 'float64')
-r_bw_pjexyl             = np.zeros(pjexyl , dtype = 'float64')
-r_ww_pjexyl             = np.zeros(pjexyl , dtype = 'float64')
-r_gw_pjexyl             = np.zeros(pjexyl , dtype = 'float64')
-p_ss_pjexyl             = np.zeros(pjexyl , dtype = 'float64')
-p_wool_value_pjexyl     = np.zeros(pjexyl , dtype = 'float64')
-p_sale_value_pjexyl     = np.zeros(pjexyl , dtype = 'float64')
-p_ch4_nggi_pjexyl       = np.zeros(pjexyl , dtype = 'float64')
-p_n20_nggi_pjexyl       = np.zeros(pjexyl , dtype = 'float64')
-p_ch4_bc_pjexyl         = np.zeros(pjexyl , dtype = 'float64')
-p_n_pjwexyl             = np.zeros(pjwexyl , dtype = 'float64')
-p_pi_pjwexyl            = np.zeros(pjwexyl , dtype = 'float64')
-p_mei_pjwexyl           = np.zeros(pjwexyl , dtype = 'float64')
-r_lw_ffcf_pjwexyl       = np.zeros(pjwexyl , dtype = 'float64')
-r_lw_pjwexyl            = np.zeros(pjwexyl , dtype = 'float64')
-r_aw_pjwexyl            = np.zeros(pjwexyl , dtype = 'float64')
-r_mw_pjwexyl            = np.zeros(pjwexyl , dtype = 'float64')
-r_bw_pjwexyl            = np.zeros(pjwexyl , dtype = 'float64')
-r_ww_pjwexyl            = np.zeros(pjwexyl , dtype = 'float64')
-r_gw_pjwexyl            = np.zeros(pjwexyl , dtype = 'float64')
-p_ss_pjwexyl            = np.zeros(pjwexyl , dtype = 'float64')
-p_wool_value_pjwexyl    = np.zeros(pjwexyl , dtype = 'float64')
-p_sale_value_pjwexyl    = np.zeros(pjwexyl , dtype = 'float64')
-p_ch4_nggi_pjwexyl      = np.zeros(pjwexyl , dtype = 'float64')
-p_n20_nggi_pjwexyl      = np.zeros(pjwexyl , dtype = 'float64')
-p_ch4_bc_pjwexyl        = np.zeros(pjwexyl , dtype = 'float64')
-p_n_pkdwebl             = np.zeros(pkdwebl , dtype = 'float64')
-p_pi_pkdwebl            = np.zeros(pkdwebl , dtype = 'float64')
-p_mei_pkdwebl           = np.zeros(pkdwebl , dtype = 'float64')
-r_lw_ffcf_pkdwebl       = np.zeros(pkdwebl , dtype = 'float64')
-r_lw_pkdwebl            = np.zeros(pkdwebl , dtype = 'float64')
-r_aw_pkdwebl            = np.zeros(pkdwebl , dtype = 'float64')
-r_mw_pkdwebl            = np.zeros(pkdwebl , dtype = 'float64')
-r_bw_pkdwebl            = np.zeros(pkdwebl , dtype = 'float64')
-r_ww_pkdwebl            = np.zeros(pkdwebl , dtype = 'float64')
-r_gw_pkdwebl            = np.zeros(pkdwebl , dtype = 'float64')
-p_ss_pkdwebl            = np.zeros(pkdwebl , dtype = 'float64')
-p_wool_value_pkdwebl    = np.zeros(pkdwebl , dtype = 'float64')
-p_sale_value_pkdwebl    = np.zeros(pkdwebl , dtype = 'float64')
-p_ch4_nggi_pkdwebl      = np.zeros(pkdwebl , dtype = 'float64')
-p_n20_nggi_pkdwebl      = np.zeros(pkdwebl , dtype = 'float64')
-p_ch4_bc_pkdwebl        = np.zeros(pkdwebl , dtype = 'float64')
+
 
 
 def simulation():
@@ -385,290 +108,83 @@ def simulation():
     -------
     None.
     """
+    ###################################
+    ### reshape neccessary inputs     # 
+    ###################################
+    '''only >2 dim array'''
+
+
     ############################
     ### initialise arrays      #
     ############################
+    '''only if assign with a slice'''
     ## Instantiate the arrays that are only required within this function
     ## mainly arrays that will store the input data that require pre-defining
     ## # see documentation for a description of each variable
-    a_c_g0              = np.zeros(g0, dtype = 'float64')
-    a_maternal_g0_g1    = np.zeros(g1, dtype = 'float64')
-    a_paternal_g0_g1    = np.zeros(g1, dtype = 'float64')
-    a_maternal_g1_g2    = np.zeros(g2, dtype = 'float64')
-    a_paternal_g0_g2    = np.zeros(g2, dtype = 'float64')
-
-    c_cn_vg             = np.zeros(7, vg, dtype = 'float64')
-    c_cr_g              = np.zeros(23, n_genotypes, dtype = 'float64')
-    c_ck_g              = np.zeros(18, n_genotypes, dtype = 'float64')
-    c_cm_vg             = np.zeros(20, vg, dtype = 'float64')
-    c_cw_g              = np.zeros(15, n_genotypes, dtype = 'float64')
-    c_cc_g              = np.zeros(17, n_genotypes, dtype = 'float64')
-    c_cg_g              = np.zeros(19, n_genotypes, dtype = 'float64')
-    c_ch_g              = np.zeros(n_genotypes, dtype = 'float64')
-    c_cd_g              = np.zeros(n_genotypes, dtype = 'float64')
-    c_sfw_g             = np.zeros(n_genotypes, dtype = 'float64')
-    a_g_j               = np.zeros(n_groups_ewes , dtype = 'float64')
-    a_w_j               = np.zeros(n_groups_ewes , dtype = 'float64')
-    a_g_i               = np.zeros(n_groups_rams , dtype = 'float64')
-    a_w_i               = np.zeros(n_groups_rams , dtype = 'float64')
-    mr_cs_i             = np.zeros(n_groups_rams , dtype = 'float64')
-    mr_mu_i             = np.zeros(n_groups_rams , dtype = 'float64')
-    nw_i                = np.zeros(n_groups_rams , dtype = 'float64')
-    lw_ffcf_start_i     = np.zeros(n_groups_rams , dtype = 'float64')
-    aw_start_i          = np.zeros(n_groups_rams , dtype = 'float64')
-    mw_start_i          = np.zeros(n_groups_rams , dtype = 'float64')
-    bw_start_i          = np.zeros(n_groups_rams , dtype = 'float64')
-    relsize_i           = np.zeros(n_groups_rams , dtype = 'float64')
-    relsize1_i          = np.zeros(n_groups_rams , dtype = 'float64')
-    zf1_i               = np.zeros(n_groups_rams , dtype = 'float64')
-    zf2_i               = np.zeros(n_groups_rams , dtype = 'float64')
-    rc_i                = np.zeros(n_groups_rams , dtype = 'float64')
-    cfw_start_i         = np.zeros(n_groups_rams , dtype = 'float64')
-    fl_start_i          = np.zeros(n_groups_rams , dtype = 'float64')
-    fd_start_i          = np.zeros(n_groups_rams , dtype = 'float64')
-    fd_min_start_i      = np.zeros(n_groups_rams , dtype = 'float64')
-    foo_i               = np.zeros(n_groups_rams , dtype = 'float64')
-    dmd_i               = np.zeros(n_groups_rams , dtype = 'float64')
-    md_i                = np.zeros(n_groups_rams , dtype = 'float64')
-    hf_i                = np.zeros(n_groups_rams , dtype = 'float64')
-    meme_i              = np.zeros(n_groups_rams , dtype = 'float64')
-    level_i             = np.zeros(n_groups_rams , dtype = 'float64')
-    d_lw_f_i            = np.zeros(n_groups_rams , dtype = 'float64')
-    cw_i                = np.zeros(n_groups_rams , dtype = 'float64')
-    mec_i               = np.zeros(n_groups_rams , dtype = 'float64')
-    ldr_i               = np.zeros(n_groups_rams , dtype = 'float64')
-    lb_i                = np.zeros(n_groups_rams , dtype = 'float64')
-    mel_i               = np.zeros(n_groups_rams , dtype = 'float64')
-    d_cfw_wolag_i       = np.zeros(n_groups_rams , dtype = 'float64')
-    d_cfw_i             = np.zeros(n_groups_rams , dtype = 'float64')
-    mew_i               = np.zeros(n_groups_rams , dtype = 'float64')
-    d_fd_i              = np.zeros(n_groups_rams , dtype = 'float64')
-    d_fl_i              = np.zeros(n_groups_rams , dtype = 'float64')
-    mecold_i            = np.zeros(n_groups_rams , dtype = 'float64')
-    kg_i                = np.zeros(n_groups_rams , dtype = 'float64')
-    ebg_i               = np.zeros(n_groups_rams , dtype = 'float64')
-    pg_i                = np.zeros(n_groups_rams , dtype = 'float64')
-    lw_ffcf_max_i       = np.zeros(n_groups_rams , dtype = 'float64')
-    fw_end_i            = np.zeros(n_groups_rams , dtype = 'float64')
-    cfw_i               = np.zeros(n_groups_rams , dtype = 'float64')
-    fl_i                = np.zeros(n_groups_rams , dtype = 'float64')
-    fd_min_i            = np.zeros(n_groups_rams , dtype = 'float64')
-    fd_i                = np.zeros(n_groups_rams , dtype = 'float64')
-    ldr_end_i           = np.zeros(n_groups_rams , dtype = 'float64')
-    lb_end_i            = np.zeros(n_groups_rams , dtype = 'float64')
-    date_p              = np.zeros(n_sim_periods , dtype = 'float64')
-    doy_p               = np.zeros(n_sim_periods , dtype = 'float64')
-    lgf_eff_p           = np.zeros(n_sim_periods , dtype = 'float64')
-    dlf_eff_p           = np.zeros(n_sim_periods , dtype = 'float64')
-    dlf_wool_p          = np.zeros(n_sim_periods , dtype = 'float64')
-    chill_p             = np.zeros(n_sim_periods , dtype = 'float64')
 
 
-    c_srw_gw            = np.zeros(gw , dtype = 'float64')
-    c_cp_gx             = np.zeros(gx , dtype = 'float64')
-    c_cf_gx             = np.zeros(gx , dtype = 'float64')
-    c_ci_gy             = np.zeros(gy , dtype = 'float64')
-    c_cl_gy             = np.zeros(gy , dtype = 'float64')
-    i_annual_cull_is    = np.zeros(d_is , dtype = 'float64')
-    mrl_cs_jewbl        = np.zeros(jewbl , dtype = 'float64')
-    mrl_mu_jewbl        = np.zeros(jewbl , dtype = 'float64')
-    lw6_jexl            = np.zeros(jexl , dtype = 'float64')
-    cr_jexyl            = np.zeros(jexyl , dtype = 'float64')
-    mr_cs_jexyl         = np.zeros(jexyl , dtype = 'float64')
-    mrt_cs_jexyl        = np.zeros(jexyl , dtype = 'float64')
-    mrd_cs_jexyl        = np.zeros(jexyl , dtype = 'float64')
-    mr_mu_jexyl         = np.zeros(jexyl , dtype = 'float64')
-    mrt_mu_jexyl        = np.zeros(jexyl , dtype = 'float64')
-    mrd_mu_jexyl        = np.zeros(jexyl , dtype = 'float64')
-    nw_jexyl            = np.zeros(jexyl , dtype = 'float64')
-    lw_ffcf_start_jexyl = np.zeros(jexyl , dtype = 'float64')
-    aw_start_jexyl      = np.zeros(jexyl , dtype = 'float64')
-    mw_start_jexyl      = np.zeros(jexyl , dtype = 'float64')
-    bw_start_jexyl      = np.zeros(jexyl , dtype = 'float64')
-    relsize_jexyl       = np.zeros(jexyl , dtype = 'float64')
-    relsize1_jexyl      = np.zeros(jexyl , dtype = 'float64')
-    rc_jexyl            = np.zeros(jexyl , dtype = 'float64')
-    cfw_start_jexyl     = np.zeros(jexyl , dtype = 'float64')
-    fl_start_jexyl      = np.zeros(jexyl , dtype = 'float64')
-    fd_start_jexyl      = np.zeros(jexyl , dtype = 'float64')
-    fd_min_start_jexyl  = np.zeros(jexyl , dtype = 'float64')
-    ldr_jexyl           = np.zeros(jexyl , dtype = 'float64')
-    lb_jexyl            = np.zeros(jexyl , dtype = 'float64')
-    meme_jexyl          = np.zeros(jexyl , dtype = 'float64')
-    level_jexyl         = np.zeros(jexyl , dtype = 'float64')
-    d_lw_f_jexyl        = np.zeros(jexyl , dtype = 'float64')
-    cw_jexyl            = np.zeros(jexyl , dtype = 'float64')
-    mec_jexyl           = np.zeros(jexyl , dtype = 'float64')
-    ldr_jexyl           = np.zeros(jexyl , dtype = 'float64')
-    lb_jexyl            = np.zeros(jexyl , dtype = 'float64')
-    mel_jexyl           = np.zeros(jexyl , dtype = 'float64')
-    d_cfw_wolag_jexyl   = np.zeros(jexyl , dtype = 'float64')
-    d_cfw_jexyl         = np.zeros(jexyl , dtype = 'float64')
-    mew_jexyl           = np.zeros(jexyl , dtype = 'float64')
-    d_fd_jexyl          = np.zeros(jexyl , dtype = 'float64')
-    d_fl_jexyl          = np.zeros(jexyl , dtype = 'float64')
-    mecold_jexyl        = np.zeros(jexyl , dtype = 'float64')
-    kg_jexyl            = np.zeros(jexyl , dtype = 'float64')
-    ebg_jexyl           = np.zeros(jexyl , dtype = 'float64')
-    pg_jexyl            = np.zeros(jexyl , dtype = 'float64')
-    lw_ffcf_max_jexyl   = np.zeros(jexyl , dtype = 'float64')
-    fw_end_jexyl        = np.zeros(jexyl , dtype = 'float64')
-    cfw_jexyl           = np.zeros(jexyl , dtype = 'float64')
-    fl_jexyl            = np.zeros(jexyl , dtype = 'float64')
-    fd_min_jexyl        = np.zeros(jexyl , dtype = 'float64')
-    fd_jexyl            = np.zeros(jexyl , dtype = 'float64')
-    ldr_end_jexyl       = np.zeros(jexyl , dtype = 'float64')
-    lb_end_jexyl        = np.zeros(jexyl , dtype = 'float64')
-    i_cull_drys_jo      = np.zeros(jo , dtype = 'float64')
-    a_g0_jo             = np.zeros(jo , dtype = 'float64')
-    a_g2_jo             = np.zeros(jo , dtype = 'float64')
-    i_annual_cull_js    = np.zeros(js , dtype = 'float64')
-    mr_cs_jwexyl        = np.zeros(jwexyl , dtype = 'float64')
-    mr_mu_jwexyl        = np.zeros(jwexyl , dtype = 'float64')
-    nw_jwexyl           = np.zeros(jwexyl , dtype = 'float64')
-    lw_ffcf_start_jwexyl = np.zeros(jwexyl , dtype = 'float64')
-    aw_start_jwexyl     = np.zeros(jwexyl , dtype = 'float64')
-    mw_start_jwexyl     = np.zeros(jwexyl , dtype = 'float64')
-    bw_start_jwexyl     = np.zeros(jwexyl , dtype = 'float64')
-    relsize_jwexyl      = np.zeros(jwexyl , dtype = 'float64')
-    relsize1_jwexyl     = np.zeros(jwexyl , dtype = 'float64')
-    rc_jwexyl           = np.zeros(jwexyl , dtype = 'float64')
-    cfw_start_jwexyl    = np.zeros(jwexyl , dtype = 'float64')
-    fl_start_jwexyl     = np.zeros(jwexyl , dtype = 'float64')
-    fd_start_jwexyl     = np.zeros(jwexyl , dtype = 'float64')
-    fd_min_start_jwexyl = np.zeros(jwexyl , dtype = 'float64')
-    meme_jwexyl         = np.zeros(jwexyl , dtype = 'float64')
-    level_jwexyl        = np.zeros(jwexyl , dtype = 'float64')
-    d_lw_f_jwexyl       = np.zeros(jwexyl , dtype = 'float64')
-    cw_jwexyl           = np.zeros(jwexyl , dtype = 'float64')
-    mec_jwexyl          = np.zeros(jwexyl , dtype = 'float64')
-    ldr_jwexyl          = np.zeros(jwexyl , dtype = 'float64')
-    lb_jwexyl           = np.zeros(jwexyl , dtype = 'float64')
-    mel_jwexyl          = np.zeros(jwexyl , dtype = 'float64')
-    d_cfw_wolag_jwexyl  = np.zeros(jwexyl , dtype = 'float64')
-    d_cfw_jwexyl        = np.zeros(jwexyl , dtype = 'float64')
-    mew_jwexyl          = np.zeros(jwexyl , dtype = 'float64')
-    d_fd_jwexyl         = np.zeros(jwexyl , dtype = 'float64')
-    d_fl_jwexyl         = np.zeros(jwexyl , dtype = 'float64')
-    mecold_jwexyl       = np.zeros(jwexyl , dtype = 'float64')
-    kg_jwexyl           = np.zeros(jwexyl , dtype = 'float64')
-    ebg_jwexyl          = np.zeros(jwexyl , dtype = 'float64')
-    pg_jwexyl           = np.zeros(jwexyl , dtype = 'float64')
-    lw_ffcf_max_jwexyl  = np.zeros(jwexyl , dtype = 'float64')
-    fw_end_jwexyl       = np.zeros(jwexyl , dtype = 'float64')
-    cfw_jwexyl          = np.zeros(jwexyl , dtype = 'float64')
-    fl_jwexyl           = np.zeros(jwexyl , dtype = 'float64')
-    fd_min_jwexyl       = np.zeros(jwexyl , dtype = 'float64')
-    fd_jwexyl           = np.zeros(jwexyl , dtype = 'float64')
-    ldr_end_jwexyl      = np.zeros(jwexyl , dtype = 'float64')
-    lb_end_jwexyl       = np.zeros(jwexyl , dtype = 'float64')
-    foo_jxyl            = np.zeros(jxyl , dtype = 'float64')
-    dmd_jxyl            = np.zeros(jxyl , dtype = 'float64')
-    md_jxyl             = np.zeros(jxyl , dtype = 'float64')
-    hf_jxyl             = np.zeros(jxyl , dtype = 'float64')
-    a_j_kd              = np.zeros(kd , dtype = 'float64')
-    a_g_kd              = np.zeros(kd , dtype = 'float64')
-    a_g1_kd             = np.zeros(kd , dtype = 'float64')
-    a_g0_kd             = np.zeros(kd , dtype = 'float64')
-    a_w_kd              = np.zeros(kd , dtype = 'float64')
-    foo_kdwbl           = np.zeros(kdwbl , dtype = 'float64')
-    dmd_kdwbl           = np.zeros(kdwbl , dtype = 'float64')
-    md_kdwbl            = np.zeros(kdwbl , dtype = 'float64')
-    hf_kdwbl            = np.zeros(kdwbl , dtype = 'float64')
-    mr_cs_kdwebl        = np.zeros(kdwebl , dtype = 'float64')
-    mr_mu_kdwebl        = np.zeros(kdwebl , dtype = 'float64')
-    nw_kdwebl           = np.zeros(kdwebl , dtype = 'float64')
-    lw_ffcf_start_kdwebl = np.zeros(kdwebl , dtype = 'float64')
-    aw_start_kdwebl     = np.zeros(kdwebl , dtype = 'float64')
-    mw_start_kdwebl     = np.zeros(kdwebl , dtype = 'float64')
-    bw_start_kdwebl     = np.zeros(kdwebl , dtype = 'float64')
-    relsize_kdwebl      = np.zeros(kdwebl , dtype = 'float64')
-    relsize1_kdwebl     = np.zeros(kdwebl , dtype = 'float64')
-    rc_kdwebl           = np.zeros(kdwebl , dtype = 'float64')
-    cfw_start_kdwebl    = np.zeros(kdwebl , dtype = 'float64')
-    fl_start_kdwebl     = np.zeros(kdwebl , dtype = 'float64')
-    fd_start_kdwebl     = np.zeros(kdwebl , dtype = 'float64')
-    fd_min_start_kdwebl = np.zeros(kdwebl , dtype = 'float64')
-    meme_kdwebl         = np.zeros(kdwebl , dtype = 'float64')
-    level_kdwebl        = np.zeros(kdwebl , dtype = 'float64')
-    d_lw_f_kdwebl       = np.zeros(kdwebl , dtype = 'float64')
-    cw_kdwebl           = np.zeros(kdwebl , dtype = 'float64')
-    mec_kdwebl          = np.zeros(kdwebl , dtype = 'float64')
-    ldr_kdwebl          = np.zeros(kdwebl , dtype = 'float64')
-    lb_kdwebl           = np.zeros(kdwebl , dtype = 'float64')
-    mel_kdwebl          = np.zeros(kdwebl , dtype = 'float64')
-    d_cfw_wolag_kdwebl  = np.zeros(kdwebl , dtype = 'float64')
-    d_cfw_kdwebl        = np.zeros(kdwebl , dtype = 'float64')
-    mew_kdwebl          = np.zeros(kdwebl , dtype = 'float64')
-    d_fd_kdwebl         = np.zeros(kdwebl , dtype = 'float64')
-    d_fl_kdwebl         = np.zeros(kdwebl , dtype = 'float64')
-    mecold_kdwebl       = np.zeros(kdwebl , dtype = 'float64')
-    kg_kdwebl           = np.zeros(kdwebl , dtype = 'float64')
-    ebg_kdwebl          = np.zeros(kdwebl , dtype = 'float64')
-    pg_kdwebl           = np.zeros(kdwebl , dtype = 'float64')
-    lw_ffcf_max_kdwebl  = np.zeros(kdwebl , dtype = 'float64')
-    fw_end_kdwebl       = np.zeros(kdwebl , dtype = 'float64')
-    cfw_kdwebl          = np.zeros(kdwebl , dtype = 'float64')
-    fl_kdwebl           = np.zeros(kdwebl , dtype = 'float64')
-    fd_min_kdwebl       = np.zeros(kdwebl , dtype = 'float64')
-    fd_kdwebl           = np.zeros(kdwebl , dtype = 'float64')
-    ldr_end_kdwebl      = np.zeros(kdwebl , dtype = 'float64')
-    lb_end_kdwebl       = np.zeros(kdwebl , dtype = 'float64')
-    i_annual_cull_ks    = np.zeros(ks , dtype = 'float64')
-    a_join_p_ojel       = np.zeros(ojel , dtype = 'float64')
-    a_day90_p_ojel      = np.zeros(ojel , dtype = 'float64')
-    a_6weeks_p_ojel     = np.zeros(ojel , dtype = 'float64')
-    a_lamb_p_ojel       = np.zeros(ojel , dtype = 'float64')
-    a_wean_p_ojel       = np.zeros(ojel , dtype = 'float64')
-    age_pi              = np.zeros(pi , dtype = 'float64')
-    af_wool_pi          = np.zeros(pi , dtype = 'float64')
-    d_cfw_ave_pi        = np.zeros(pi , dtype = 'float64')
-    nw_max_pi           = np.zeros(pi , dtype = 'float64')
-    feedsupply_pi       = np.zeros(pi , dtype = 'float64')
-    a_s_pil             = np.zeros(pil , dtype = 'float64')
-    age_pjel            = np.zeros(pjel , dtype = 'float64')
-    age_f_pjel          = np.zeros(pjel , dtype = 'float64')
-    pimi_pjel           = np.zeros(pjel , dtype = 'float64')
-    af_wool_pjel        = np.zeros(pjel , dtype = 'float64')
-    ra_pjel             = np.zeros(pjel , dtype = 'float64')
-    age_y_adj_pjel      = np.zeros(pjel , dtype = 'float64')
-    mm_pjel             = np.zeros(pjel , dtype = 'float64')
-    d_cfw_ave_pjel      = np.zeros(pjel , dtype = 'float64')
-    a_join_o_pjel       = np.zeros(pjel , dtype = 'float64')
-    a_join_o_pjel       = np.zeros(pjel , dtype = 'float64')
-    a_join_o_pjel       = np.zeros(pjel , dtype = 'float64')
-    a_join_o_pjel       = np.zeros(pjel , dtype = 'float64')
-    a_join_o_pjel       = np.zeros(pjel , dtype = 'float64')
-    a_join_o_pjel       = np.zeros(pjel , dtype = 'float64')
-    age_pjl             = np.zeros(pjl , dtype = 'float64')
-    af_wool_pjl         = np.zeros(pjl , dtype = 'float64')
-    d_cfw_ave_pjl       = np.zeros(pjl , dtype = 'float64')
-    a_s_pjl             = np.zeros(pjl , dtype = 'float64')
-    nw_max_pjxyl        = np.zeros(pjxyl , dtype = 'float64')
-    feedsupply_pjxyl    = np.zeros(pjxyl , dtype = 'float64')
-    feedsupply_pkdwbl   = np.zeros(pkdwbl , dtype = 'float64')
-    nw_max_pkdwebl      = np.zeros(pkdwebl , dtype = 'float64')
-    a_s_pkdwl           = np.zeros(pkdwl , dtype = 'float64')
-    age_pkel            = np.zeros(pkel , dtype = 'float64')
-    af_wool_pkel        = np.zeros(pkel , dtype = 'float64')
-    d_cfw_ave_pkel      = np.zeros(pkel , dtype = 'float64')
-    foo_std_pr          = np.zeros(pr , dtype = 'float64')
-    dmd_std_pr          = np.zeros(pr , dtype = 'float64')
+    #####################################
+    ### populate the association arrays #
+    #####################################
+    ## the association arrays relate the slices of one array with the slices of another array
+    ##needs to be within the loop because the genotype inputs can change in exp.xlsx
+# a_j_kd
+
+##genotype option of the input genotypes
+a_k2_g0[0] = pinp.sheep['i_genotype_b0']
+a_k2_g0[1] = pinp.sheep['i_genotype_m0']
+a_k2_g0[2] = pinp.sheep['i_genotype_t0	']		
+##Animal type option of the input genotypes
+a_k1_g0[0] = pinp.sheep['i_animaltype_b0']
+a_k1_g0[1] = pinp.sheep['i_animaltype_m0']
+a_k1_g0[2] = pinp.sheep['i_animaltype_t0	']		
+##Maternal genotype of the dams
+a_maternal_g0_g1
+a_paternal_g0_g1
+a_maternal_g1_g2
+a_paternal_g0_g2
 
 
-    ################
-    ### map inputs #
-    ################
-    ## map the sensitivity adjusted Excel data into the numpy arrays
-    i_sf = uinp.propertydata['ExcelName']
-    i_cull_drys_jo = pinp.propertydata['ExcelName']
-    i_annual_cull_is = pinp.propertydata['ExcelName']
-    i_annual_cull_js = pinp.propertydata['ExcelName']
-    i_annual_cull_ks = pinp.propertydata['ExcelName']
+a_g_i
+a_g_j
+a_g0_jo
+a_g2_jo
+a_g_kd
+a_g1_kd
+a_g0_kd
+a_w_i
+a_w_j
+a_w_kd
+a_join_o_pjel
+a_s_pil
+a_s_pjl
+a_s_pkdwl
+a_join_p_ojel
+a_day90_p_ojel
+a_6weeks_p_ojel
+a_lamb_p_ojel
+a_wean_p_ojel
 
-    ### _map the genotype information to the _g arrays
-    ... = sfun.genotype(uinp. sheep_parameters, a_c_g0, a_maternal_g0_g1
-                        , a_paternal_g0_g1, a_maternal_g1_g2, a_paternal_g0_g2)
+    ############################
+    ### management calculations#
+    ############################
+    date_birth_c0 =
+    date_birth_ic1 =
+    date_birth_diec2 =
+    date_birth_y_oiec1 = 
+    startdate = np.minimum(date_birth_c0 , date_birth_ic1 , date_birth_diec2)			
+    step = sfun.sim_periods(start_year, periods_per_year, oldest_animal)[3] #^need to populate function with actual args
+    step_int = step.astype('timedelta64[D]').astype(int)			
+    step_float = step.astype(float)/(24 * 60 * 60)			
+    age_mated_oiec1 = i_age_join_oic1[:, :, na, …] + cf_gc1[4, 0, :] * (index_e + 0.5)			
+    age_scan = age_mated_oiec1 + i_scan_day_oic1[:, :, na, …]			
+    
+
+
+
+
+
+
 
     ###########################
     ### non-loop calculations #
@@ -708,42 +224,15 @@ def simulation():
     nw_max_pi =
     nw_max_pjxyl =
     nw_max_pkdwebl =
-
-    #####################################
-    ### populate the association arrays #
-    #####################################
-    ## the association arrays relate the slices of one array with the slices of another array
-    ##needs to be within the loop because the genotype inputs can change in exp.xlsx
-a_j_kd
-a_c_g0
-a_maternal_g0_g1
-a_paternal_g0_g1
-a_maternal_g1_g2
-a_paternal_g0_g2
-a_g_i
-a_g_j
-a_g0_jo
-a_g2_jo
-a_g_kd
-a_g1_kd
-a_g0_kd
-a_w_i
-a_w_j
-a_w_kd
-a_join_o_pjel
-a_s_pil
-a_s_pjl
-a_s_pkdwl
-a_join_p_ojel
-a_day90_p_ojel
-a_6weeks_p_ojel
-a_lamb_p_ojel
-a_wean_p_ojel
-
     ### _feed inputs
     sfun.feed_inputs function
 
 
+    ##########################################
+    ### Calc standard feed supply for periods#
+    ##########################################
+    '''flow chart 5'''
+    
     ##########################################
     ### Initialise then loop through periods #
     ##########################################
