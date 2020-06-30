@@ -264,7 +264,8 @@ structure['A']={'a', 'ar','s', 'sr', 'm'
                 , 'M'} #annual
 structure['A1']={'a',  's', 'm'} #annual not resown - special set used in pasture germ and con2 when determining if a rotatin provides a rotation because in yr1 we dont want ar to provide an A bevause we need to distinguish beteween them
 structure['AR']={'ar', 'AR'} #resown annual
-structure['E']={'E', 'OF', 'b', 'h', 'o', 'of', 'w'} #cereals
+structure['E']={'E', 'E1', 'OF', 'b', 'h', 'o', 'of', 'w'} #cereals
+structure['E1']={'E', 'b', 'h', 'o', 'w'} #cereals
 # # structure['H']={'h', 'of'} #non harvested cereals
 structure['J']={'J', 'j', 'jr'} #tedera
 structure['M']={'m', 'M'} #manipulated pasture
@@ -277,7 +278,7 @@ structure['T']={'T', 't', 'tr','J', 'j', 'jr'} #tedera - also includes manipulat
 structure['U']={'u', 'ur', 'U','x', 'xr', 'X'} #lucerne
 structure['X']={'x', 'xr', 'X'} #lucerne
 structure['Y']={'b', 'h', 'o','of', 'w', 'f','i', 'k', 'l', 'v', 'z','r'
-                , 'Y', 'E', 'N', 'P', 'OF'} #anything not pasture
+                , 'Y', 'E', 'E1', 'N', 'P', 'OF'} #anything not pasture
 
 
 '''make each landuse a set so the issuperset func works'''

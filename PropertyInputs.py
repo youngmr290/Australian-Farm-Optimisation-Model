@@ -53,10 +53,10 @@ if inputs_from_pickle == False:
         sup_inp = fun.xl_all_named_ranges("Property.xlsx","Sup Feed") #automatically read in the periods as dates
         pkl.dump(sup_inp, f)
 
-        sheep_management_inp  = fun.xl_all_named_ranges('Property.xlsx', ['Management'])
+        sheep_management_inp  = fun.xl_all_named_ranges('Property.xlsx', 'Sheep Management', numpy=True)
         pkl.dump(sheep_management_inp, f)
 
-        sheep_regions_inp  = fun.xl_all_named_ranges('Property.xlsx', ['Regions'])
+        sheep_regions_inp  = fun.xl_all_named_ranges('Property.xlsx', 'Sheep Regions', numpy=True)
         pkl.dump(sheep_regions_inp, f)
 
         pasture_inp=dict()
@@ -91,6 +91,7 @@ else:
         pasture_inp = pkl.load(f)
 
 ##create a copy of each input dict - this means there is always a copy of the origional inputs (the second copy has SA applied to it)
+##the copy created is the one used in the actuall modules
 general=general_inp.copy()
 labour=labour_inp.copy()
 crop=crop_inp.copy()
@@ -126,13 +127,16 @@ def property_inp_sa():
         pasture_inputs[pasture]['GermScalarLMU'] = pasture_inp[pasture]['GermScalarLMU'] * sen.sam[('germ_l',pasture)]
         pasture_inputs[pasture]['LowPGR'] = pasture_inp[pasture]['LowPGR'] * sen.sam[('pgr',pasture)]
         pasture_inputs[pasture]['MedPGR'] = pasture_inp[pasture]['MedPGR'] * sen.sam[('pgr',pasture)]
-        pasture_inputs[pasture]['LowPGR'] = pasture_inputs[pasture]['LowPGR'].mul(sen.sam[('pgr_f',pasture)], axis=0)
-        pasture_inputs[pasture]['MedPGR'] = pasture_inputs[pasture]['MedPGR'].mul(sen.sam[('pgr_f',pasture)], axis=0)
-        pasture_inputs[pasture]['LowPGR'] = pasture_inputs[pasture]['LowPGR'].mul(sen.sam[('pgr_l',pasture)], axis=1)
-        pasture_inputs[pasture]['MedPGR'] = pasture_inputs[pasture]['MedPGR'].mul(sen.sam[('pgr_l',pasture)], axis=1)
+        pasture_inputs[pasture]['LowPGR'] = pasture_inp[pasture]['LowPGR'].mul(sen.sam[('pgr_f',pasture)], axis=0)
+        pasture_inputs[pasture]['MedPGR'] = pasture_inp[pasture]['MedPGR'].mul(sen.sam[('pgr_f',pasture)], axis=0)
+        pasture_inputs[pasture]['LowPGR'] = pasture_inp[pasture]['LowPGR'].mul(sen.sam[('pgr_l',pasture)], axis=1)
+        pasture_inputs[pasture]['MedPGR'] = pasture_inp[pasture]['MedPGR'].mul(sen.sam[('pgr_l',pasture)], axis=1)
         pasture_inputs[pasture]['DigDryAve'] = pasture_inp[pasture]['DigDryAve'] * sen.sam[('dry_dmd_decline',pasture)] \
                                                 + max(pasture_inp[pasture]['DigDryAve']) * (1 - sen.sam[('dry_dmd_decline',pasture)])
         pasture_inputs[pasture]['DigSpread'] = pasture_inp[pasture]['DigSpread'] * sen.sam[('grn_dmd_range_f',pasture)]
         pasture_inputs[pasture]['DigDeclineFOO'] = pasture_inp[pasture]['DigDeclineFOO'] * sen.sam[('grn_dmd_declinefoo_f',pasture)]
         pasture_inputs[pasture]['DigRednSenesce'] = pasture_inp[pasture]['DigRednSenesce'] * sen.sam[('grn_dmd_senesce_f',pasture)]
-
+    ##sheep
+    sheep_management['i_included_g2'][1] = max(1,sheep_management_inp['i_included_g2'][1] + sen.saa['g2_BM_included']) #max incase the option is already turned on in the xl inputs 
+    sheep_management['i_included_g2'][2] = max(1,sheep_management_inp['i_included_g2'][2] + sen.saa['g2_BT_included'])
+    sheep_management['i_included_g2'][3] = max(1,sheep_management_inp['i_included_g2'][3] + sen.saa['g2_BMT_included'])

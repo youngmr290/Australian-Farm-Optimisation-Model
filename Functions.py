@@ -46,14 +46,14 @@ from dateutil import relativedelta as rdelta
 #Testing shpwed readonly = False was quicker than true. But still not as fast as pandas
 # (may not exist anymore) now it causes problems somoetimes locking you out of excel because it is readonly - closing doesn't fix issue (wb._archive.close())
 
-def xl_all_named_ranges(filename, targetsheets, rangename=None):     # read all range names defined in the list targetsheets and return a dictionary of lists or dataframes
+def xl_all_named_ranges(filename, targetsheets, rangename=None,numpy=False):     # read all range names defined in the list targetsheets and return a dictionary of lists or dataframes
     ''' Read data from named ranges in an Excel workbook.
 
     Parameters:
     filename is an Excel worbook name (including the extension).
     targetsheets is a list of (or a single) worksheet names from which to read the range names.
-    rangename is an optional argument. If not included then all rangenames are read.
-    If included only that name is read in.
+    rangename is an optional argument. If not included then all rangenames are read. If included only that name is read in.
+    numpy is an optional boolean argument. If True it will assign the input array to a numpy
 
     Returns:
     A dictionary that includes key that correspond to the rangenames
@@ -89,6 +89,8 @@ def xl_all_named_ranges(filename, targetsheets, rangename=None):     # read all 
                         elif not length:                        # the range is 1 row & is iterable across columns
                             for row in ws[cell_range]:
                                 parameters[dn.name] = np.asarray([cell.value for cell in row])
+                        elif numpy == True:
+                            parameters[dn.name] = np.asarray([[cell.value for cell in row] for row in ws[cell_range]])
                         else:                                   # the range is a region & is iterable across rows and columns
                             df = pd.DataFrame([cell.value for cell in row] for row in ws[cell_range])
                             #df = pd.DataFrame(cells)

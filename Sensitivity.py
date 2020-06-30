@@ -43,3 +43,9 @@ sam['grn_dmd_senesce_f','annual']       = np.ones((len(pinp.feed_inputs['feed_pe
 ######
 #SAA #
 ######
+
+##Sheep
+sam['g2_BM_included']         = 0                                              # SA addition for the inclusion of BM offspring genotype 
+sam['g2_BT_included']         = 0                                              # SA addition for the inclusion of BT offspring genotype 
+sam['g2_BMT_included']        = 0                                              # SA addition for the inclusion of BMT offspring genotype 
+
