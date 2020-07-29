@@ -11,7 +11,7 @@ import functions from other modules
 import datetime as dt
 import pandas as pd
 import numpy as np
-
+from scipy import stats
 # from numba import jit
 
 # import FeedBudget as fdb
@@ -73,6 +73,9 @@ birth_date_kel = uinp.propertydata['ExcelName']
 start_year = np.min(birth_date_jl)
 # ## might need to test and rebase the year for the other animal groups
 
+##can use this when building arrays that require new axis
+na = np.newaxis
+two_na = (np.newaxis,np.newaxis)
 
 ### _define the periods
 n_sim_periods, date_p, p_index_p, step \
@@ -91,7 +94,88 @@ n_sim_periods, date_p, p_index_p, step \
 ## # these store the output of simulation and the parameters for pyomo
 ## # see documentation for a description of each variable
 
+##^this function can possibly be moved to sheep routines once steve is done.
+def f_k2g(params_k2, y, var_pos=0, len_ax1=0, len_ax2=0):
+    '''
+    Parameters
+    ----------
+    params_k2 : array
+        parameter array - input from excel.
+    y : array
+        sensitivity array for genetic merit.
+    var_pos : int
+        position of last axis when inserted into all axis.
+    len_ax1 : int
+        length of axis 1 - used to reshape input array into multi dimension array.
+    len_ax2 : int, optional
+        length of axis 1 - used to reshape input array into multi dimension array. The default is 0.
 
+    Returns
+    -------
+    param array for each genotype. Grouped by sheep group ie sire, offs, dams, yaf.
+
+    '''
+    #^line can be deleted once working.
+    # params_k2=parameters['i_lw_initial_k2']
+    # y=parameters['i_lw_initial_y']
+    # var_pos=parameters['i_cx_pos']
+    # len_ax1=parameters['i_cx_len']
+    # len_ax2=parameters['i_cx_len2']
+
+    ##these inputs are used for each param so they don't need to be passed into the function.
+    a_k2_k0 = pinp.sheep['a_k2_k0']
+    i_g3_inc = pinp.sheep['i_g3_inc']
+    i_mul_g0_k0 = structure['i_mul_g0_k0']   
+    i_mul_g1_k0 = structure['i_mul_g1_k0']   
+    i_mul_g2_k0 = structure['i_mul_g2_k0']  
+    i_mul_g3_k0 = structure['i_mul_g3_k0']  
+    i_mask_g0g3 = structure['i_mask_g0g3']   
+    i_mask_g1g3 = structure['i_mask_g1g3']  
+    i_mask_g2g3 = structure['i_mask_g2g3'] 
+    i_mask_g3g3 = structure['i_mask_g3g3'] 
+
+    ##convert params from k2 to k0
+    params_k0 = params_k2[...,a_k2_k0]
+    ##add y axis
+    na=np.newaxis
+    ###y is a 2d array howvever currently it only has one slice so it is read in as a 1d array. so i need to add second array
+    if y.ndim == 1:
+        y=y[...,na]
+    ###if y is not numpy ie was read in as an int because it was a single cell, it needs to be converted
+    if type(y) == int:
+        y = np.asarray([y])
+    params_k0 = np.multiply(params_k0[...,na,:],  y[...,na]) #na here is to account for k2 axis
+    ##reshape parameter from 2d input to multi dim array
+    len_y = y.shape[-1]
+    ###make tuple of shape depending on the number of axis in input
+    if len_ax2>0:
+        shape=(len_ax1,len_ax2,len_y,3)
+    elif len_ax1 > 0:
+        shape=(len_ax1,len_y,3)
+    else:
+        shape=(len_y,3)
+    params_k0 = params_k0.reshape(shape)
+    ##get axis into correct position
+    if var_pos != None or var_pos != 0:
+        extra_axes = tuple(range((var_pos + 1), -2))
+    else: extra_axes = ()
+    allaxis_params__k0 = np.expand_dims(params_k0, axis = extra_axes)
+    ##create mask g?k0
+    mask_sire_inc_g0 = np.any(i_mask_g0g3 * i_g3_inc, axis =1)
+    mask_dams_inc_g0 = np.any(i_mask_g1g3 * i_g3_inc, axis =1)
+    mask_yaf_inc_g0 = np.any(i_mask_g2g3 * i_g3_inc, axis =1)
+    mask_offs_inc_g0 = np.any(i_mask_g3g3 * i_g3_inc, axis =1)
+    ##create array with the proportion of each pure genotype required to have each actual genotype included in the analysis
+    mul_sire_genotypes_g0k0 = i_mul_g0_k0[mask_sire_inc_g0]
+    mul_dams_genotypes_g0k0 = i_mul_g1_k0[mask_dams_inc_g0]
+    mul_yaf_genotypes_g0k0 = i_mul_g2_k0[mask_yaf_inc_g0]
+    mul_offs_genotypes_g0k0 = i_mul_g3_k0[mask_offs_inc_g0]
+    ##convert params from k0 to g
+    param_sire=np.nansum(allaxis_params__k0[..., na, :] * mul_sire_genotypes_g0k0, axis = -1) 
+    param_dams=np.nansum(allaxis_params__k0[..., na, :] * mul_dams_genotypes_g0k0, axis = -1)
+    param_yaf=np.nansum(allaxis_params__k0[..., na, :] * mul_yaf_genotypes_g0k0, axis = -1)
+    param_offs=np.nansum(allaxis_params__k0[..., na, :] * mul_offs_genotypes_g0k0, axis = -1)
+    return param_sire, param_dams, param_yaf, param_offs
 
 
 def simulation():
@@ -136,91 +220,100 @@ def simulation():
     ##needs to be within the loop because the genotype inputs can change in exp.xlsx
 
     ############################
-    ### sim param arrays       #
+    ### sim param arrays       # '''csiro params '''
     ############################
-    #^check over k2g function... i dont understand it
-    cc_gg	= sfun.f_k2g(i_cc_gk1, a_k1_g0, i_cc_gk2, a_k2_g0, a_maternal_g0_g1, a_paternal_g0_g1, a_maternal_g1_g2, a_paternal_g0_g2)			
-    cd_gg	= sfun.f_k2g(i_cd_gk1, a_k1_g0, i_cd_gk2, a_k2_g0, a_maternal_g0_g1, a_paternal_g0_g1, a_maternal_g1_g2, a_paternal_g0_g2)			
-    cf_gg	= sfun.f_k2g(i_cf_gk1, a_k1_g0, i_cf_gk2, a_k2_g0, a_maternal_g0_g1, a_paternal_g0_g1, a_maternal_g1_g2, a_paternal_g0_g2)			
-    cg_gg	= sfun.f_k2g(i_cg_gk1, a_k1_g0, i_cg_gk2, a_k2_g0, a_maternal_g0_g1, a_paternal_g0_g1, a_maternal_g1_g2, a_paternal_g0_g2)			
-    ch_gg	= sfun.f_k2g(i_ch_gk1, a_k1_g0, i_ch_gk2, a_k2_g0, a_maternal_g0_g1, a_paternal_g0_g1, a_maternal_g1_g2, a_paternal_g0_g2)			
-    ci_gg	= sfun.f_k2g(i_ci_gk1, a_k1_g0, i_ci_gk2, a_k2_g0, a_maternal_g0_g1, a_paternal_g0_g1, a_maternal_g1_g2, a_paternal_g0_g2)			
-    ck_gg	= sfun.f_k2g(i_ck_gk1, a_k1_g0, i_ck_gk2, a_k2_g0, a_maternal_g0_g1, a_paternal_g0_g1, a_maternal_g1_g2, a_paternal_g0_g2)			
-    cl_gg	= sfun.f_k2g(i_cl_gk1, a_k1_g0, i_cl_gk2, a_k2_g0, a_maternal_g0_g1, a_paternal_g0_g1, a_maternal_g1_g2, a_paternal_g0_g2)			
-    cm_gg	= sfun.f_k2g(i_cm_gk1, a_k1_g0, i_cm_gk2, a_k2_g0, a_maternal_g0_g1, a_paternal_g0_g1, a_maternal_g1_g2, a_paternal_g0_g2)			
-    cn_gg	= sfun.f_k2g(i_cn_gk1, a_k1_g0, i_cn_gk2, a_k2_g0, a_maternal_g0_g1, a_paternal_g0_g1, a_maternal_g1_g2, a_paternal_g0_g2)			
-    cp_gg	= sfun.f_k2g(i_cp_gk1, a_k1_g0, i_cp_gk2, a_k2_g0, a_maternal_g0_g1, a_paternal_g0_g1, a_maternal_g1_g2, a_paternal_g0_g2)			
-    cr_gg	= sfun.f_k2g(i_cr_gk1, a_k1_g0, i_cr_gk2, a_k2_g0, a_maternal_g0_g1, a_paternal_g0_g1, a_maternal_g1_g2, a_paternal_g0_g2)			
-    cw_gg	= sfun.f_k2g(i_cw_gk1, a_k1_g0, i_cw_gk2, a_k2_g0, a_maternal_g0_g1, a_paternal_g0_g1, a_maternal_g1_g2, a_paternal_g0_g2)			
-    cb_bgg	= sfun.f_k2g(i_cb_bgk1, a_k1_g0, i_cb_bgk2, a_k2_g0, a_maternal_g0_g1, a_paternal_g0_g1, a_maternal_g1_g2, a_paternal_g0_g2)			
-    ce_dgg	= sfun.f_k2g(i_ce_dgk1, a_k1_g0, i_ce_dgk2, a_k2_g0, a_maternal_g0_g1, a_paternal_g0_g1, a_maternal_g1_g2, a_paternal_g0_g2)			
-    cu1_u1gg	= sfun.f_k2g(i_cu1_u1gk1, a_k1_g0, i_cu1_u1gk2, a_k2_g0, a_maternal_g0_g1, a_paternal_g0_g1, a_maternal_g1_g2, a_paternal_g0_g2)			
-    #^check line below. should it be cu2_u2gg?
-    cu2_u1gg	= sfun.f_k2g(i_cu2_u1gk1, a_k1_g0, i_cu1_u1gk2, a_k2_g0, a_maternal_g0_g1, a_paternal_g0_g1, a_maternal_g1_g2, a_paternal_g0_g2)			
-    cv_vgg	= sfun.f_k2g(i_cv_vgk1, a_k1_g0, i_cv_vgk2, a_k2_g0, a_maternal_g0_g1, a_paternal_g0_g1, a_maternal_g1_g2, a_paternal_g0_g2)			
-    cx_xgg	= sfun.f_k2g(i_cx_xgk1, a_k1_g0, i_cx_xgk2, a_k2_g0, a_maternal_g0_g1, a_paternal_g0_g1, a_maternal_g1_g2, a_paternal_g0_g2)			
-    cy_ygg	= sfun.f_k2g(i_cy_ygk1, a_k1_g0, i_cy_ygk2, a_k2_g0, a_maternal_g0_g1, a_paternal_g0_g1, a_maternal_g1_g2, a_paternal_g0_g2)			
-    cc_gc0 = cc_gg[..., a_g_c0]		
-    cc_gc1 = cc_gg[..., a_g_c1]		
-    cc_gc2 = cc_gg[..., a_g_c2]			
-    cd_gc0 = cd_gg[..., a_g_c0]			
-    cd_gc1	= cd_gg[..., a_g_c1]			
-    cd_gc2	= cd_gg[..., a_g_c2]			
-    cf_gc0 = cf_gg[..., a_g_c0]			
-    cf_gc1 = cf_gg[..., a_g_c1]			
-    cf_gc2 = cf_gg[..., a_g_c2]			
-    cg_gc0 = cg_gg[..., a_g_c0]			
-    cg_gc1 = cg_gg[..., a_g_c1]			
-    cg_gc2 = cg_gg[..., a_g_c2]			
-    ch_gc0 = ch_gg[..., a_g_c0]			
-    ch_gc1 = ch_gg[..., a_g_c1]			
-    ch_gc2 = ch_gg[..., a_g_c2]			
-    ci_gc0 = ci_gg[..., a_g_c0]			
-    ci_gc1 = ci_gg[..., a_g_c1]			
-    ci_gc2 = ci_gg[..., a_g_c2]			
-    ck_gc0 = ck_gg[..., a_g_c0]			
-    ck_gc1 = ck_gg[..., a_g_c1]			
-    ck_gc2 = ck_gg[..., a_g_c2]			
-    cl_gc0 = cl_gg[..., a_g_c0]			
-    cl_gc1 = cl_gg[..., a_g_c1]			
-    cl_gc2 = cl_gg[..., a_g_c2]			
-    cm_gc0 = cm_gg[..., a_g_c0]			
-    cm_gc1 = cm_gg[..., a_g_c1]			
-    cm_gc2 = cm_gg[..., a_g_c2]			
-    cn_gc0 = cn_gg[..., a_g_c0]			
-    cn_gc1 = cn_gg[..., a_g_c1]			
-    cn_gc2 = cn_gg[..., a_g_c2]			
-    cp_gc0 = cp_gg[..., a_g_c0]			
-    cp_gc1 = cp_gg[..., a_g_c1]			
-    cp_gc2 = cp_gg[..., a_g_c2]			
-    cr_gc0 = cr_gg[..., a_g_c0]			
-    cr_gc1 = cr_gg[..., a_g_c1]			
-    cr_gc2 = cr_gg[..., a_g_c2]			
-    cw_gc0 = cw_gg[..., a_g_c0]			
-    cw_gc1 = cw_gg[..., a_g_c1]			
-    cw_gc2 = cw_gg[..., a_g_c2]			
-    cb_bgc0 = cb_bgg[..., a_g_c0]			
-    cb_bgc1 = cb_bgg[..., a_g_c1]			
-    cb_bgc2 = cb_bgg[..., a_g_c2]			
-    ce_bgc0 = ce_dgg[..., a_g_c0]			
-    ce_bgc1 = ce_dgg[..., a_g_c1]			
-    ce_bgc2 = ce_dgg[..., a_g_c2]			
-    cu1_u1gc0 = cu1_u1gg[..., a_g_c0]			
-    cu1_u1gc1 = cu1_u1gg[..., a_g_c1]			
-    cu1_u1gc2 = cu1_u1gg[..., a_g_c2]			
-    cu2_u2gc0 = cu2_u1gg[..., a_g_c0]	#^check cu2_u1gg? or cu2_u2gg?		
-    cu2_u2gc1 = cu2_u1gg[..., a_g_c1]  #^check
-    cu2_u2gc2 = cu2_u1gg[..., a_g_c2]	#^check	
-    cv_vgc0 = cv_vgg[..., a_g_c0]			
-    cv_vgc1 = cv_vgg[..., a_g_c1]			
-    cv_vgc2 = cv_vgg[..., a_g_c2]			
-    cx_xgc0 = cx_xgg[..., a_g_c0]			
-    cx_xgc1 = cx_xgg[..., a_g_c1]			
-    cx_xgc2 = cx_xgg[..., a_g_c2]			
-    cy_ygc0 = cy_ygg[..., a_g_c0]			
-    cy_ygc1 = cy_ygg[..., a_g_c1]			
-    cy_ygc2 = cy_ygg[..., a_g_c2]			
     
+    ##21/7/2020
+    ##convert input parameters from k1 to g?
+    
+    params_k2=parameters['i_cx_k2']
+    y=parameters['i_cx_y']
+    len_ax1 = parameters['i_cx_len'] 
+    len_ax2 = 3 #^this is an input but the next two axis len need to be added
+    len_ax3 = 0
+    var_pos = parameters['i_cx_pos']   
+    a_nfoet_b1 = [1,2,3,2,3,3,1,2,3,0,0] #^come from structure inputs 
+    a_nyatf_b1 = [1,2,3,1,2,1,0,0,0,0,0]                       
+
+    
+    ##convert input params from k to g
+    ###production params
+    cfw_propn_sire, cfw_propn_dams, cfw_propn_yaf, cfw_propn_offs = f_k2g(parameters['i_cfw_propn_k2'], parameters['i_cfw_propn_y'])			
+    fd_sire, fd_dams, fd_yaf, fd_offs = f_k2g(parameters['i_fd_k2'], parameters['i_fd_y'])			
+    sfw_sire, sfw_dams, sfw_yaf, sfw_offs = f_k2g(parameters['i_sfw_k2'], parameters['i_sfw_y'])			
+    srw_sire, srw_dams, srw_yaf, srw_offs = f_k2g(parameters['i_srw_k2'], parameters['i_srw_y'])			
+    
+    ###sim params
+    ca_sire, ca_dams, ca_yaf, ca_offs = f_k2g(parameters['i_ca_k2'], parameters['i_ca_y'], parameters['i_ca_pos'], parameters['i_ca_len'])			
+    cb0_sire, cb0_dams, cb0_yaf, cb0_offs = f_k2g(parameters['i_cb0_k2'], parameters['i_cb0_y'], parameters['i_cb0_pos'], parameters['i_cb0_len'], parameters['i_cb0_len2'])			
+    cc_sire, cc_dams, cc_yaf, cc_offs = f_k2g(parameters['i_cc_k2'], parameters['i_cc_y'], parameters['i_cc_pos'], parameters['i_cc_len'])			
+    cd_sire, cd_dams, cd_yaf, cd_offs = f_k2g(parameters['i_cd_k2'], parameters['i_cd_y'], parameters['i_cd_pos'], parameters['i_cd_len'])			
+    ce_sire, ce_dams, ce_yaf, ce_offs = f_k2g(parameters['i_ce_k2'], parameters['i_ce_y'], parameters['i_ce_pos'], parameters['i_ce_len'], parameters['i_ce_len2'])			
+    cf_sire, cf_dams, cf_yaf, cf_offs = f_k2g(parameters['i_cf_k2'], parameters['i_cf_y'], parameters['i_cf_pos'], parameters['i_cf_len'])			
+    cg_sire, cg_dams, cg_yaf, cg_offs = f_k2g(parameters['i_cg_k2'], parameters['i_cg_y'], parameters['i_cg_pos'], parameters['i_cg_len'])			
+    ch_sire, ch_dams, ch_yaf, ch_offs = f_k2g(parameters['i_ch_k2'], parameters['i_ch_y'], parameters['i_ch_pos'], parameters['i_ch_len'])			
+    ci_sire, ci_dams, ci_yaf, ci_offs = f_k2g(parameters['i_ci_k2'], parameters['i_ci_y'], parameters['i_ci_pos'], parameters['i_ci_len'])			
+    ck_sire, ck_dams, ck_yaf, ck_offs = f_k2g(parameters['i_ck_k2'], parameters['i_ck_y'], parameters['i_ck_pos'], parameters['i_ck_len'])			
+    cl0_sire, cl0_dams, cl0_yaf, cl0_offs = f_k2g(parameters['i_cl0_k2'], parameters['i_cl0_y'], parameters['i_cl0_pos'], parameters['i_cl0_len'], parameters['i_cl0_len2'])			
+    cl1_sire, cl1_dams, cl1_yaf, cl1_offs = f_k2g(parameters['i_cl1_k2'], parameters['i_cl1_y'], parameters['i_cl1_pos'], parameters['i_cl1_len'], parameters['i_cl1_len2'])			
+    cl_sire, cl_dams, cl_yaf, cl_offs = f_k2g(parameters['i_cl_k2'], parameters['i_cl_y'], parameters['i_cl_pos'], parameters['i_cl_len'])			
+    cm_sire, cm_dams, cm_yaf, cm_offs = f_k2g(parameters['i_cm_k2'], parameters['i_cm_y'], parameters['i_cm_pos'], parameters['i_cm_len'])			
+    cn_sire, cn_dams, cn_yaf, cn_offs = f_k2g(parameters['i_cn_k2'], parameters['i_cn_y'], parameters['i_cn_pos'], parameters['i_cn_len'])			
+    cp_sire, cp_dams, cp_yaf, cp_offs = f_k2g(parameters['i_cp_k2'], parameters['i_cp_y'], parameters['i_cp_pos'], parameters['i_cp_len'])			
+    cr_sire, cr_dams, cr_yaf, cr_offs = f_k2g(parameters['i_cr_k2'], parameters['i_cr_y'], parameters['i_cr_pos'], parameters['i_cr_len'])			
+    crd_sire, crd_dams, crd_yaf, crd_offs = f_k2g(parameters['i_crd_k2'], parameters['i_crd_y'], parameters['i_crd_pos'], parameters['i_crd_len'])			
+    cu0_sire, cu0_dams, cu0_yaf, cu0_offs = f_k2g(parameters['i_cu0_k2'], parameters['i_cu0_y'], parameters['i_cu0_pos'], parameters['i_cu0_len'])			
+    cu1_sire, cu1_dams, cu1_yaf, cu1_offs = f_k2g(parameters['i_cu1_k2'], parameters['i_cu1_y'], parameters['i_cu1_pos'], parameters['i_cu1_len'], parameters['i_cu1_len2'])			
+    cu2_sire, cu2_dams, cu2_yaf, cu2_offs = f_k2g(parameters['i_cu2_k2'], parameters['i_cu2_y'], parameters['i_cu2_pos'], parameters['i_cu2_len'], parameters['i_cu2_len2'])			
+    cw_sire, cw_dams, cw_yaf, cw_offs = f_k2g(parameters['i_cw_k2'], parameters['i_cw_y'], parameters['i_cw_pos'], parameters['i_cw_len'])			
+    cx_sire, cx_dams, cx_yaf, cx_offs = f_k2g(parameters['i_cx_k2'], parameters['i_cx_y'], parameters['i_cx_pos'], parameters['i_cx_len'], parameters['i_cx_len2'])			
+    
+    ##Convert the cl0 & cl1 to cb1
+    cb1_sire = cl0_sire[a_nfoet_b1] + cl1_sire[a_nyatf_b1] 
+    cb1srw_dams = cl0_dams[a_nfoet_b1] + cl1_dams[a_nyatf_b1] 
+    cb1_yaf = cl0_yaf[a_nfoet_b1] + cl1_yaf[a_nyatf_b1] 
+    cb1_offs = cl0_offs[a_nfoet_b1] + cl1_offs[a_nyatf_b1] 
+    
+    
+    
+    ####################
+    #initial conditions#
+    ####################
+    ##convert i_adjp to adjp - add necessary axes for 'a' and 'w'
+    adjp_lw_initial_a0e0b0xyg = np.expand_dims(pinp.sheep['i_adjp_lw_initial_a'], axis = tuple(range(1,-pinp.sheep['i_a_pos'])))
+    adjp_lw_initial_wzida0e0b0xyg0 = np.expand_dims(uinp.structure['i_adjp_lw_initial_w0'], axis = tuple(range(1,-pinp.sheep['i_w_pos'])))
+    adjp_lw_initial_wzida0e0b0xyg1 = np.expand_dims(uinp.structure['i_adjp_lw_initial_w1'], axis = tuple(range(1,-pinp.sheep['i_w_pos'])))
+    adjp_lw_initial_wzida0e0b0xyg3 = np.expand_dims(uinp.structure['i_adjp_lw_initial_w3'], axis = tuple(range(1,-pinp.sheep['i_w_pos'])))
+    adjp_cfw_initial_a0e0b0xyg = np.expand_dims(pinp.sheep['i_adjp_cfw_initial_a'], axis = tuple(range(1,-pinp.sheep['i_a_pos'])))
+    adjp_cfw_initial_wzida0e0b0xyg0 = np.expand_dims(uinp.structure['i_adjp_cfw_initial_w0'], axis = tuple(range(1,-pinp.sheep['i_w_pos'])))
+    adjp_cfw_initial_wzida0e0b0xyg1 = np.expand_dims(uinp.structure['i_adjp_cfw_initial_w1'], axis = tuple(range(1,-pinp.sheep['i_w_pos'])))
+    adjp_cfw_initial_wzida0e0b0xyg3 = np.expand_dims(uinp.structure['i_adjp_cfw_initial_w3'], axis = tuple(range(1,-pinp.sheep['i_w_pos'])))
+    adjp_fd_initial_a0e0b0xyg = np.expand_dims(pinp.sheep['i_adjp_fd_initial_a'], axis = tuple(range(1,-pinp.sheep['i_a_pos'])))
+    adjp_fd_initial_wzida0e0b0xyg0 = np.expand_dims(uinp.structure['i_adjp_fd_initial_w0'], axis = tuple(range(1,-pinp.sheep['i_w_pos'])))
+    adjp_fd_initial_wzida0e0b0xyg1 = np.expand_dims(uinp.structure['i_adjp_fd_initial_w1'], axis = tuple(range(1,-pinp.sheep['i_w_pos'])))
+    adjp_fd_initial_wzida0e0b0xyg3 = np.expand_dims(uinp.structure['i_adjp_fd_initial_w3'], axis = tuple(range(1,-pinp.sheep['i_w_pos'])))
+    adjp_fl_initial_a0e0b0xyg = np.expand_dims(pinp.sheep['i_adjp_fl_initial_a'], axis = tuple(range(1,-pinp.sheep['i_a_pos'])))
+    adjp_fl_initial_wzida0e0b0xyg0 = np.expand_dims(uinp.structure['i_adjp_fl_initial_w0'], axis = tuple(range(1,-pinp.sheep['i_w_pos'])))
+    adjp_fl_initial_wzida0e0b0xyg1 = np.expand_dims(uinp.structure['i_adjp_fl_initial_w1'], axis = tuple(range(1,-pinp.sheep['i_w_pos'])))
+    adjp_fl_initial_wzida0e0b0xyg3 = np.expand_dims(uinp.structure['i_adjp_fl_initial_w3'], axis = tuple(range(1,-pinp.sheep['i_w_pos'])))
+
+    
+    ##convert variable from k2 to g (yaf is not used, only here because it is return from the function)
+    lw_initial_yg0, lw_initial_yg1, lw_initial_yaf, lw_initial_yg3 = f_k2g(parameters['i_lw_initial_k2'], parameters['i_lw_initial_y'])			
+    lw_initial_yg0 = lw_initial_yg0 * (1 + adjp_lw_initial_wzida0e0b0xyg0)
+    ##add w axis and account for the range of starting weights
+    lw_initial_sire = lw_initial_sire * (1 + i_sap_lw_initial_wg0)
+    lw_initial_dams
+    lw_initial_yaf
+    lw_initial_offs
+    
+    ##adjustment for weaning age
+    adj_lw_initial_a_sire = i_sap_lw_initial_a
+    
+    
+    
+    
+
 
     ############################
     ### management calculations#
@@ -494,85 +587,129 @@ normale_c	piexbgc1	= cp_gc1[8, ...] * cp_gc1[5, ...] * nw_b_pixbgc1[:, :, na, ..
 
 
 
-    ###########################
-    ### non-loop calculations #
-    ###########################
-    '''Calculations for which the inputs do not depend on previous periods
-    See spreadsheet: Group independent and Age,Date,Timing'''
-
-    doy_p =
-    lgf_eff_p =
-    dlf_eff_p =
-    dlf_wool_p =
-    chill_p =
-    kw =
-    kc =
-    birth_date_i =
-    birth_date_jl =
-    birth_date_jel =
-    birth_date_kel =
-    age_pi =
-    age_pjl =
-    age_pjel =
-    age_pkel =
-    age_f_pjel =
-    age_f_pjel =
-    pimi_pjel =
-    ra_pjel =
-    age_y_adj_pjel =
-    af_wool_pi =
-    af_wool_pjl =
-    af_wool_pjel =
-    af_wool_pkel =
-    mm_pjel =
-    d_cfw_ave_pi =
-    d_cfw_ave_pjl =
-    d_cfw_ave_pjel =
-    d_cfw_ave_pkel =
-    nw_max_pi =
-    nw_max_pjxyl =
-    nw_max_pkdwebl =
-
-    ### _feed inputs
-    sfun.feed_inputs function
-
-
-    ##########################################
-    ### Calc standard feed supply for periods#
-    ##########################################
-    '''flow chart 5'''
+    ##set specific values related to reproduction and yat
+    do some shit
+    ##if offspring, create variables from yaf
+    do offspring shit
+    ##set other variables, including sim parameters
     
-    ##########################################
-    ### Initialise then loop through periods #
-    ##########################################
-    ## initialise the arrays for the first period #
-    lw_ffcf = i.weaning_wt
+    ##calculate numpy arrays that are specific to sheep groulps but mot dependent on previous period values
+    
+    ##calc std feed supply for periods
+    
+    
+    
+    
+
+##^this function can go in the function module at some point.
+f_feedsupply_adjust(attempts,feedsupply,itn):
+    ##create empty array to put new feedsuply into
+    feedsupply = np.zeros_like(feedsupply)
+    ##which feedsupplies can be calculated using binary method
+    binary_mask = np.nanmin(attempts[...,1], axis=-1)/np.nanmax(attempts[...,1], axis=-1) < 0 
+    ##calc new feedsupply binary. Only adds the binary result to slices that have a negitive and a positive value (done using the mask created above)
+    feedsupply[binary_mask] = (np.nanmin(attempts[...,1], axis=-1)/np.nanmax(attempts[...,1], axis=-1))[binary_mask]
+    ##calc feedsupply using interpolation
+    ###first determine the slope, slope is always positive ie as feedsupply increases error increase because error = lwc - target and more feed means hihger lwc.
+    if itn==0:
+        slope=i_std_slope
+    else:
+        ####linregress only works on 1d array and cant use apply_over_axis because needs x and y. maybe there is a beter way but i looked for a while and found nothing
+        slope=np.empty_like(feedsupply)
+        feedsupply_all_itn = attempts[...,1]
+        error_all_itn = attempts[...,1]
+        for i in np.ndindex(error.shape[:-1]): #not exactly sure how this is working but it is creating tupple of each combo of slices in each axis.
+            x= feedsupply_all_itn[i] #indexing with tupple works correctly if we are interested in the last axis otherwise it doesn't work properly for some reason.ie t[(0,0)] == t[0,0,:] but t[:,(0,0)] != t[:,0,0]
+            y= error_all_itn[i]
+            slope[i] = stats.linregress(x,y)
+    ####new feedsupply = minerror / slope. It is assumed that the most recent itn has the most accurate feedsupply
+    feedsupply[~binary_mask] = ((2 * attempts[...,-1,1]) / slope)[~binary_mask] # x2 to overshoot then switch to binary.
+    return feedsupply
+    
+
+
+    ######################
+    ### sim engine       #
+    ######################
+
+    ## initialise the arrays for the first period 
+    lw_ffcf = i_weaning_wt
     mw = 0.7 * lw_ffcf
     aw = 0.2 * lw_ffcf
     bw = 0.1 * lw_ffcf
     cfw = 0.6 #cfw at weaning
     fd = 19 #fd at weaning
     fl = 10 #fl at weaning
-    #set all arrays that are assigned using += to 0.
+    ##set all arrays that are assigned using += to 0.
 
     ## Loop through each week of the simulation (p) for ewes
-    ## # number of periods is a fixed value so I'm thinking a 'for' loop
     for p in range(n_sim_periods):
         if p != 0:  # only carry this out with p<>0
-            ### _conception
+            ##set start values
+            variable_start = variable_end
+            ###check if the previous period was shearing for any of the sheep
+            if np.any(prev period os shearing):
+                ####reset all wool parameters ^i dont get this. what if not all groups were shorn?
+            ###check if previous period was mating or lambing
+            if np.any(previous period mating or lambing):
+                ####calc weight transfers, calc n transfers
+                
+                ####update weights and numbers
+            ###check if period is pre joining FVP
+            if np.any(period is prejoining fvp):
+                ####weights and production
+                weights & prodn[not mated, in utero] = weighted average
+                ####reset animal numbers
+                NM,IU[-1,-1] = 0
+                NM,IU[0:-1,0:-1] = 0
+                ####reset birthweight
+                bw = 0
+                ####reset reproduction params
+                ldr = 1
+                lb = 1
+            ###check if period is new FVP
+            if np.any(period is new FVP): #^not sure why there is the np.any???
+                ####set all numbers a weight values to the prime
+                
+            ###check if period is a new season
+            if np.any(period is a new season):
+                ####set patterns for each seaon type to the same starting point
+                           
+            ##update lw target
+          
+        ##calculate dependent start values
+                
+        ## conception, mortality and numbers
+        ### base mortality
+        mr[p,...] = sfun.mortality_csiro(rc[p-1,...])
+        mr[p,...] = sfun.mortality_mu(rc[p-1,...])
+        ### weaner mortality
+        
+        ###calc preg tox losses if less than 6wks to lambing.
+        if date <= lambing - 42:
+            mr[] += f_preg_tox_cs
+            mr[] += f_preg_tox_mu
+        ###if period is lambing calc dystocia losses
+        if period_date == lambing:
+            mr += f_dystocia_cs
+            mr += f_dystocia_mu
+        ###if previous period was lamning calc ewe mortality
+        if period_date == lambing+7:
+            mry += f_mortality_ewe_cs
+            mry += f_mortality_ewe_mu
+        ###if previous period was mating calc conception and transfers
+        if period_date == mating+7:
             cr_ojexyl[mask] += sfun.conception(lw_ffcf[p,...], srw_j)[mask]
             # with a mask to a
             nlb_ojewbl += cr_ojexyl#convert conception in _xy format to _wb
-            ### _mortality
-            mr[p,...] = sfun.mortality(rc[p-1,...])
-            tem[p,...], dmr[p,...], lmr[p,...] = sfun.ewe_mortality()
-            nlw_ojewbl = nlb_ojewbl &
-            ### _start numbers & weight
-            number[p,...] = sfun.transfers(number[p-1,...], sales
-                            , ewe_mortality, cr, lamb_mortality, ....)  #function call or in global
-            number[p] = (number[p-1] - sales[p-1]) * (1 - mortality) ....
-            lw_ffcf[p,...], mw, aw, bw, zf1, zf2 = sfun.start_weight(lw_ffcf[p-1],...)
-        ### feed supply loop
+        ###calc numbers after mortality and repro
+        number[p,...] = sfun.transfers(number[p-1,...], sales
+                        , ewe_mortality, cr, lamb_mortality, ....)  
+        number[p] = (number[p-1] - sales[p-1]) * (1 - mortality) ....
+        ###equation system loop ^dont know this enough to build it yet
+        
+        
+        ##feed supply loop
         # this loop is only required if a LW target is specified for the animals
         # if there is a target then the loop needs to continue until
         # the feed supply has converged on a value that generates a liveweight
@@ -583,81 +720,73 @@ normale_c	piexbgc1	= cp_gc1[8, ...] * cp_gc1[5, ...] * nw_b_pixbgc1[:, :, na, ..
             then feed_supply_jxyl = feed_supply_pjxyl[p,...]
             otherwise use feedsupply from last period (which was optimised for the target)
         Feed supply loop start
-            # the loop will be a bit tricky because the target is for an array of values
-            # and some parts of the array may be within the tolerance but other parts are not.
-            # To further complicate it the target will often be associated with
-            # the weighted average of a slice of the array rather than an individual
-            # element.
+        ##thought about making this a function but that is more difficult to debug so i just use a break if there is no target/need for a loop
+        ##adjust feed supply
+        ###initial info ^this will need to be hooked up with correct inputs, if they are the same for each period they donn't need to be initilised below
+        target_lwc = 
+        epsilon = 
+        n_max_itn =
+        feedsupply = 
+        attempts = np.zeros(,n_max_itn,2) #^need to add the dimensions of lwc at the beginning
+        for itn in range(n_max_itn):
+            ###calc all functions 
             foo, dmd, supp = sfun.feed_supply(feed_supply_jxyl, foo_std, dmd_std)
-            #'
+            ####potential intake
             pi_jexyl = sfun.p_intake(rc, srw, rel_size)
+            ####intake
             ri_jexyl = sfun.r_intake(foo, dmd, supp)
+            ####energy
             mei_jexyl = pi_jexyl - np.newaxis(e, supp_jxyl) * ri_jexyl * nv_jexyl + newaxis(supp_jxyl) * supp_md
             p_mei_pjexyl[p,...] = mei_jexyl
             mem = sfun.energy(....)
+            ####foetal growth
             mep, cw = sfun.pregnancy(....)
+            ####energy milk production
             mel = sfun.lactation(....)
+            ####energy wool production
             dcfw, new = sfun.wool_growth(....)
+            ####energy to offset chilling
+            ####calc lwc
             ebg, pg = sfun.lw_change(mei, mem, mep, mel, mew, mecold, wmax, zf1, zf2)
             lwc = ebg * (1)
-            if there is a target and abs(lwc-target) > eps:
-                update feed_supply
-                #      feed supply is a number between 0 and 3. We could use a binary
-                #      type process to converge on the feed supply. But given that
-                #      the feed supply was calculated in the previous period and
-                #      it should be close then maybe a step process might be quicker.
-                #      The main advantage of the binary approach is that each element
-                #      of the array should converge at a similar rate, whereas maybe
-                #      not with the step approach
-                #      Open to ideas here.
-            loop if feed_supply was changed
-        lw_ffcf_jexyl = lw_ffcf_start_jexyl + lwc_jexyl * step
-        lw_ffcf_max_jexyl = np.maximum(lw_ffcf_jexyl, lw_ffcf_max_jexyl)
-        aw_jexyl
-        mw_jexyl
-        bw_jexyl
-        ww_jexyl
-        gw_jexyl
-        fw_end_jexyl
-        cfw_jexyl = cfw_start_jexyl + dcfw * step
-        fl_jexyl
-        fd_min_jexyl
-        fd_jexyl
-        ldr_end_jexyl
-        lb_end_jexyl
-        lw_jexyl = lw_ffcf_jexyl + cw_jexyl + cfw_Jexyl
-        r_lw_jexyl[p,...] = lw_jexyl
+            ###if there is a target then adjust feedsuply, if not break out of feedsuply loop
+            if not target:
+                break
+            ###calc error
+            error = lwc - target
+            ###store in attempts array
+            attempts[...,itn,0] = feedsupply
+            attempts[...,itn,1] = error
+            ###is error within tolerance
+            if np.all(np.abs(error) <= epsilon):
+                break
+            ###max attempts reached
+            elif itn == n_max_itn-1:
+                ####select best feed supply option
+                feedsupply = attempts[...,attempts[...,1]==np.nanmin(np.abs(attempts[...,1]),axis=-1),0] #create boolean index using error array then index feedsupply array
+                break
+            feedsupply = f_feedsupply_adjust(attempts,feedsupply,itn)
+        ##emmisions
+        
+        ##end values
+        
+
+   
+    
 
 
-    # repeat loop for rams & then for offspring
-    # these don't require conception, pregnancy, lactation and ewe mortality
-    for p in range(n_sim_periods):
-        if p <>0:  # only carry this out with p<>0
-            ## or pass lw_cfff_end and nw_end & srw and calculate z and rc
-            mr[p,...] = sfun.mortality(rc[p-1,...])   # offspring
-            mr[p,...] = sfun.mortality(rc[p-1,...])   # rams
-            .... = sfun.numbers(....)                 #offspring
-            .... = sfun.numbers(....)                 #rams
-            lw_ffcf[p,...], mw, aw, bw, zf1, zf2 = sfun.start_weight(lw_ffcf[p-1],...)
-            lw_ffcf[p,...], mw, aw, bw, zf1, zf2 = sfun.start_weight(lw_ffcf[p-1],...)
-        Feed supply Loop for offspring
-            #` mei and rc are not defined
-            mei[p,...] = sfun.intake(rc, c_ci_gy, )
-            mem = sfun.energy(....)
-            dcfw, new = sfun.wool_growth(....)
-            cfw = cfw_start + dcfw
-            wmax = np.maximum(lw_ffcf,axis=0)
-            lwc = sfun.lw_change(mei[p,...], mem, new, wmax, zf1, zf2)
-            .... = sfun.end_values
-        Feed supply Loop for rams #Probably will never need to loop this
-            #because not specifying a target for the rams
-            mei[p,...] = sfun.intake(....)
-            mem = sfun.energy(....)
-            dcfw, new = sfun.wool_growth(....)
-            cfw = cfw_start + dcfw
-            wmax = np.maximum(lw_ffcf,axis=0)
-            lwc = sfun.lw_change(mei[p,...], mem, new, wmax, zf1, zf2)
-            .... = sfun.end_values
+
+
+
+
+
+
+
+
+
+
+
+
 
 def parameters():
     """Parameter generation for the pyomo variables

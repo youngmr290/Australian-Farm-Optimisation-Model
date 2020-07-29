@@ -53,6 +53,10 @@ if inputs_from_pickle == False:
         sup_inp = fun.xl_all_named_ranges("Property.xlsx","Sup Feed") #automatically read in the periods as dates
         pkl.dump(sup_inp, f)
 
+        sheep_inp  = fun.xl_all_named_ranges('Inputs parameters.xlsm', 'Property', numpy=True)
+        pkl.dump(sheep_inp, f)
+        
+        ##^the sheep one below might be able to be removed (remeber to delete in the sections below as well)
         sheep_management_inp  = fun.xl_all_named_ranges('Property.xlsx', 'Sheep Management', numpy=True)
         pkl.dump(sheep_management_inp, f)
 
@@ -84,6 +88,8 @@ else:
 
         sup_inp = pkl.load(f)
 
+        sheep_inp  = pkl.load(f)
+        
         sheep_management_inp  = pkl.load(f)
 
         sheep_regions_inp  = pkl.load(f)
@@ -100,7 +106,8 @@ stubble=stubble_inp.copy()
 finance=finance_inp.copy()
 feed_inputs=feed_inp.copy()
 supfeed=sup_inp.copy()
-sheep_management=mach_inp.copy()
+sheep=sheep_inp.copy()
+sheep_management=sheep_management_inp.copy()
 sheep_regions=sheep_regions_inp.copy()
 pasture_inputs=pasture_inp.copy()
 

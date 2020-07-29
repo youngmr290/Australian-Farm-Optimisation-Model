@@ -75,7 +75,7 @@ if inputs_from_pickle == False:
         ##sheep inputs
         genotype_inp = fun.xl_all_named_ranges('Universal.xlsx', ['Genotypes'])
         pkl.dump(genotype_inp, f)
-        parameters_inp = fun.xl_all_named_ranges('Universal.xlsx', ['Parameters'])
+        parameters_inp = fun.xl_all_named_ranges('Inputs parameters.xlsm', ['Parameters'], numpy=True, datatype=float) #dtype included so that blank cells in excel get nan rather than NoneType. NoneType cant be mulitplied or added etc but nan can be.
         pkl.dump(parameters_inp, f)
         
         ##mach options
@@ -176,7 +176,50 @@ structure['foo_levels'] =  ['L', 'M', 'H']                 # Low, medium & high 
 structure['sheep_pools']=['pool1', 'pool2', 'pool3', 'pool4']
 structure['i_oldest_animal'] = 6.6
 structure['n_sim_periods_year'] = 52 
-        
+##genotype
+structure['i_mul_g0_k0'] = np.array([[1,0,0],
+                                     [0,1,0],
+                                     [0,0,1]])    
+structure['i_mul_g1_k0'] = np.array([[1,   0,    0],
+                                     [0.5,  0.5,  0]])    
+structure['i_mul_g2_k0'] = np.array([[1,   0,    0],
+                                     [0.5,  0.5,  0],
+                                     [0.5,  0,    0.5],
+                                     [0.25, 0.25, 0.5]])    
+structure['i_mul_g3_k0'] = np.array([[1,   0,    0],
+                                     [0.5,  0.5,  0],
+                                     [0.5,  0,    0.5],
+                                     [0.25, 0.25, 0.5]])    
+structure['i_mask_g0g3'] = np.array([[True,True,True,True],
+                                     [False,True,False,True],
+                                     [False,False,True,True]])    
+structure['i_mask_g1g3'] = np.array([[True,True,True,True],
+                                     [False,False,False,True]])   
+structure['i_mask_g2g3'] = np.array([[True,True,True,True],
+                                     [False,True,False,True],
+                                     [False,False,True,False],
+                                     [False,False,False,True]])    
+structure['i_mask_g3g3'] = np.array([[True,True,True,True],
+                                    [False,True,False,True],
+                                    [False,False,True,False],
+                                    [False,False,False,True]])  
+##variations between initial patterns
+###lw
+structure['i_adjp_lw_initial_w0'] = np.array([0])        
+structure['i_adjp_lw_initial_w1'] = np.array([0, 0.15, -0.15])        
+structure['i_adjp_lw_initial_w3'] = np.array([0, 0.20, 0.10, -0.10, -0.20])        
+###cfw
+structure['i_adjp_cfw_initial_w0'] = np.array([0])        
+structure['i_adjp_cfw_initial_w1'] = np.array([0, 0.05, -0.05])        
+structure['i_adjp_cfw_initial_w3'] = np.array([0, 0.10, 0.05, -0.05, -0.10])        
+###fd
+structure['i_adjp_fd_initial_w0'] = np.array([0])        
+structure['i_adjp_fd_initial_w1'] = np.array([0, 0.15, -0.15])        
+structure['i_adjp_fd_initial_w3'] = np.array([0, 0.20, 0.10, -0.10, -0.20])        
+###fl
+structure['i_adjp_fl_initial_w0'] = np.array([0])        
+structure['i_adjp_fl_initial_w1'] = np.array([0, 0.10, -0.10])        
+structure['i_adjp_fl_initial_w3'] = np.array([0, 0.15, 0.08, -0.08, -0.15])        
 
 ########################
 #period                #
