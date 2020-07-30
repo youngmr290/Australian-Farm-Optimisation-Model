@@ -204,7 +204,7 @@ structure['i_mask_g3g3'] = np.array([[True,True,True,True],
                                     [False,False,True,False],
                                     [False,False,False,True]])  
 ##variations between initial patterns
-###lw
+structure['i_w_pos'] = -10
 structure['i_adjp_lw_initial_w0'] = np.array([0])        
 structure['i_adjp_lw_initial_w1'] = np.array([0, 0.15, -0.15])        
 structure['i_adjp_lw_initial_w3'] = np.array([0, 0.20, 0.10, -0.10, -0.20])        

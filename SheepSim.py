@@ -116,8 +116,8 @@ def f_k2g(params_k2, y, var_pos=0, len_ax1=0, len_ax2=0):
 
     '''
     #^line can be deleted once working.
-    # params_k2=parameters['i_lw_initial_k2']
-    # y=parameters['i_lw_initial_y']
+    # params_k2=parameters['i_gfw_k2']
+    # y=parameters['i_gfw_y']
     # var_pos=parameters['i_cx_pos']
     # len_ax1=parameters['i_cx_len']
     # len_ax2=parameters['i_cx_len2']
@@ -138,23 +138,24 @@ def f_k2g(params_k2, y, var_pos=0, len_ax1=0, len_ax2=0):
     params_k0 = params_k2[...,a_k2_k0]
     ##add y axis
     na=np.newaxis
-    ###y is a 2d array howvever currently it only has one slice so it is read in as a 1d array. so i need to add second array
-    if y.ndim == 1:
-        y=y[...,na]
     ###if y is not numpy ie was read in as an int because it was a single cell, it needs to be converted
     if type(y) == int:
         y = np.asarray([y])
+    ###y is a 2d array howvever currently it only has one slice so it is read in as a 1d array. so i need to add second array
+    if y.ndim == 1 and params_k0.ndim != 1:
+        y=y[...,na]
     params_k0 = np.multiply(params_k0[...,na,:],  y[...,na]) #na here is to account for k2 axis
     ##reshape parameter from 2d input to multi dim array
     len_y = y.shape[-1]
     ###make tuple of shape depending on the number of axis in input
     if len_ax2>0:
         shape=(len_ax1,len_ax2,len_y,3)
+        params_k0 = params_k0.reshape(shape)
     elif len_ax1 > 0:
         shape=(len_ax1,len_y,3)
+        params_k0 = params_k0.reshape(shape)
     else:
-        shape=(len_y,3)
-    params_k0 = params_k0.reshape(shape)
+        pass#don't need to reshpae
     ##get axis into correct position
     if var_pos != None or var_pos != 0:
         extra_axes = tuple(range((var_pos + 1), -2))
@@ -170,7 +171,7 @@ def f_k2g(params_k2, y, var_pos=0, len_ax1=0, len_ax2=0):
     mul_dams_genotypes_g0k0 = i_mul_g1_k0[mask_dams_inc_g0]
     mul_yaf_genotypes_g0k0 = i_mul_g2_k0[mask_yaf_inc_g0]
     mul_offs_genotypes_g0k0 = i_mul_g3_k0[mask_offs_inc_g0]
-    ##convert params from k0 to g
+    ##convert params from k0 to g. nansum required when the selected k0 info is not filled out ^may be an issue if params are missing and mixed breed sheep is selected because it wont catch the error
     param_sire=np.nansum(allaxis_params__k0[..., na, :] * mul_sire_genotypes_g0k0, axis = -1) 
     param_dams=np.nansum(allaxis_params__k0[..., na, :] * mul_dams_genotypes_g0k0, axis = -1)
     param_yaf=np.nansum(allaxis_params__k0[..., na, :] * mul_yaf_genotypes_g0k0, axis = -1)
@@ -238,10 +239,18 @@ def simulation():
     
     ##convert input params from k to g
     ###production params
+    agedam_propn_sire, agedam_propn_dams, agedam_propn_yaf, agedam_propn_offs = f_k2g(parameters['i_agedam_propn_std_dk2'], parameters['i_agedam_propn_y'], parameters['i_agedam_propn_pos']) #yaf and off never used	
+    aw_propn_sire, aw_propn_dams, aw_propn_yaf, aw_propn_offs = f_k2g(parameters['i_aw_propn'], parameters['i_aw_y']) 
+    bw_propn_sire, bw_propn_dams, bw_propn_yaf, bw_propn_offs = f_k2g(parameters['i_bw_propn'], parameters['i_bw_y']) 
+    btrt_yg0, btrt_yg1, btrt_yg2, btrt_yg3 = f_k2g(parameters['i_scan_std_k2'], parameters['i_scan_std_y']) 
     cfw_propn_sire, cfw_propn_dams, cfw_propn_yaf, cfw_propn_offs = f_k2g(parameters['i_cfw_propn_k2'], parameters['i_cfw_propn_y'])			
     fd_sire, fd_dams, fd_yaf, fd_offs = f_k2g(parameters['i_fd_k2'], parameters['i_fd_y'])			
-    sfw_sire, sfw_dams, sfw_yaf, sfw_offs = f_k2g(parameters['i_sfw_k2'], parameters['i_sfw_y'])			
-    srw_sire, srw_dams, srw_yaf, srw_offs = f_k2g(parameters['i_srw_k2'], parameters['i_srw_y'])			
+    lss_std_sire, lss_std_dams, lss_std_yaf, lss_std_offs = f_k2g(parameters['i_lss_std_k2'], parameters['i_lss_std_y']) 
+    lstr_std_sire, lstr_std_dams, lstr_std_yaf, lstr_std_offs = f_k2g(parameters['i_lstr_std_k2'], parameters['i_lstr_std_y']) 
+    lstw_std_sire, lstw_std_dams, lstw_std_yaf, lstw_std_offs = f_k2g(parameters['i_lstw_std_k2'], parameters['i_lstw_std_y']) 
+    mw_propn_sire, mw_propn_dams, mw_propn_yaf, mw_propn_offs = f_k2g(parameters['i_mw_propn'], parameters['i_mw_y']) 
+    sfw_yg0, sfw_yg1, sfw_yg2, sfw_yg3 = f_k2g(parameters['i_gfw_k2'], parameters['i_gfw_y'])			
+    srw_yg0, srw_yg1, srw_yg2, srw_yg3 = f_k2g(parameters['i_srw_k2'], parameters['i_srw_y'])			
     
     ###sim params
     ca_sire, ca_dams, ca_yaf, ca_offs = f_k2g(parameters['i_ca_k2'], parameters['i_ca_y'], parameters['i_ca_pos'], parameters['i_ca_len'])			
@@ -265,6 +274,8 @@ def simulation():
     cu0_sire, cu0_dams, cu0_yaf, cu0_offs = f_k2g(parameters['i_cu0_k2'], parameters['i_cu0_y'], parameters['i_cu0_pos'], parameters['i_cu0_len'])			
     cu1_sire, cu1_dams, cu1_yaf, cu1_offs = f_k2g(parameters['i_cu1_k2'], parameters['i_cu1_y'], parameters['i_cu1_pos'], parameters['i_cu1_len'], parameters['i_cu1_len2'])			
     cu2_sire, cu2_dams, cu2_yaf, cu2_offs = f_k2g(parameters['i_cu2_k2'], parameters['i_cu2_y'], parameters['i_cu2_pos'], parameters['i_cu2_len'], parameters['i_cu2_len2'])			
+    cu3_sire, cu3_dams, cu3_yaf, cu3_offs = f_k2g(parameters['i_cu3_k2'], parameters['i_cu3_y'], parameters['i_cu3_pos'], parameters['i_cu3_len'], parameters['i_cu3_len2'])			
+    cu4_sire, cu4_dams, cu4_yaf, cu4_offs = f_k2g(parameters['i_cu4_k2'], parameters['i_cu4_y'], parameters['i_cu4_pos'], parameters['i_cu4_len'], parameters['i_cu4_len2'])			
     cw_sire, cw_dams, cw_yaf, cw_offs = f_k2g(parameters['i_cw_k2'], parameters['i_cw_y'], parameters['i_cw_pos'], parameters['i_cw_len'])			
     cx_sire, cx_dams, cx_yaf, cx_offs = f_k2g(parameters['i_cx_k2'], parameters['i_cx_y'], parameters['i_cx_pos'], parameters['i_cx_len'], parameters['i_cx_len2'])			
     
@@ -274,46 +285,130 @@ def simulation():
     cb1_yaf = cl0_yaf[a_nfoet_b1] + cl1_yaf[a_nyatf_b1] 
     cb1_offs = cl0_offs[a_nfoet_b1] + cl1_offs[a_nyatf_b1] 
     
-    
-    
+
     ####################
     #initial conditions#
     ####################
+    ##turn to numpy (currently just an int but if a second option is added this won't be needed)
+    if type(pinp.sheep['i_adjp_lw_initial_a']) == int:
+        i_adjp_lw_initial_a = np.array([pinp.sheep['i_adjp_lw_initial_a']])
+        i_adjp_cfw_initial_a = np.array([pinp.sheep['i_adjp_cfw_initial_a']])
+        i_adjp_fd_initial_a = np.array([pinp.sheep['i_adjp_fd_initial_a']])
+        i_adjp_fl_initial_a = np.array([pinp.sheep['i_adjp_fl_initial_a']])
     ##convert i_adjp to adjp - add necessary axes for 'a' and 'w'
-    adjp_lw_initial_a0e0b0xyg = np.expand_dims(pinp.sheep['i_adjp_lw_initial_a'], axis = tuple(range(1,-pinp.sheep['i_a_pos'])))
-    adjp_lw_initial_wzida0e0b0xyg0 = np.expand_dims(uinp.structure['i_adjp_lw_initial_w0'], axis = tuple(range(1,-pinp.sheep['i_w_pos'])))
-    adjp_lw_initial_wzida0e0b0xyg1 = np.expand_dims(uinp.structure['i_adjp_lw_initial_w1'], axis = tuple(range(1,-pinp.sheep['i_w_pos'])))
-    adjp_lw_initial_wzida0e0b0xyg3 = np.expand_dims(uinp.structure['i_adjp_lw_initial_w3'], axis = tuple(range(1,-pinp.sheep['i_w_pos'])))
-    adjp_cfw_initial_a0e0b0xyg = np.expand_dims(pinp.sheep['i_adjp_cfw_initial_a'], axis = tuple(range(1,-pinp.sheep['i_a_pos'])))
-    adjp_cfw_initial_wzida0e0b0xyg0 = np.expand_dims(uinp.structure['i_adjp_cfw_initial_w0'], axis = tuple(range(1,-pinp.sheep['i_w_pos'])))
-    adjp_cfw_initial_wzida0e0b0xyg1 = np.expand_dims(uinp.structure['i_adjp_cfw_initial_w1'], axis = tuple(range(1,-pinp.sheep['i_w_pos'])))
-    adjp_cfw_initial_wzida0e0b0xyg3 = np.expand_dims(uinp.structure['i_adjp_cfw_initial_w3'], axis = tuple(range(1,-pinp.sheep['i_w_pos'])))
-    adjp_fd_initial_a0e0b0xyg = np.expand_dims(pinp.sheep['i_adjp_fd_initial_a'], axis = tuple(range(1,-pinp.sheep['i_a_pos'])))
-    adjp_fd_initial_wzida0e0b0xyg0 = np.expand_dims(uinp.structure['i_adjp_fd_initial_w0'], axis = tuple(range(1,-pinp.sheep['i_w_pos'])))
-    adjp_fd_initial_wzida0e0b0xyg1 = np.expand_dims(uinp.structure['i_adjp_fd_initial_w1'], axis = tuple(range(1,-pinp.sheep['i_w_pos'])))
-    adjp_fd_initial_wzida0e0b0xyg3 = np.expand_dims(uinp.structure['i_adjp_fd_initial_w3'], axis = tuple(range(1,-pinp.sheep['i_w_pos'])))
-    adjp_fl_initial_a0e0b0xyg = np.expand_dims(pinp.sheep['i_adjp_fl_initial_a'], axis = tuple(range(1,-pinp.sheep['i_a_pos'])))
-    adjp_fl_initial_wzida0e0b0xyg0 = np.expand_dims(uinp.structure['i_adjp_fl_initial_w0'], axis = tuple(range(1,-pinp.sheep['i_w_pos'])))
-    adjp_fl_initial_wzida0e0b0xyg1 = np.expand_dims(uinp.structure['i_adjp_fl_initial_w1'], axis = tuple(range(1,-pinp.sheep['i_w_pos'])))
-    adjp_fl_initial_wzida0e0b0xyg3 = np.expand_dims(uinp.structure['i_adjp_fl_initial_w3'], axis = tuple(range(1,-pinp.sheep['i_w_pos'])))
+    adjp_lw_initial_a0e0b0xyg = np.expand_dims(i_adjp_lw_initial_a, axis = tuple(range(1,-pinp.sheep['i_a_pos'])))
+    adjp_lw_initial_wzida0e0b0xyg0 = np.expand_dims(uinp.structure['i_adjp_lw_initial_w0'], axis = tuple(range(1,-uinp.structure['i_w_pos'])))
+    adjp_lw_initial_wzida0e0b0xyg1 = np.expand_dims(uinp.structure['i_adjp_lw_initial_w1'], axis = tuple(range(1,-uinp.structure['i_w_pos'])))
+    adjp_lw_initial_wzida0e0b0xyg3 = np.expand_dims(uinp.structure['i_adjp_lw_initial_w3'], axis = tuple(range(1,-uinp.structure['i_w_pos'])))
+    adjp_cfw_initial_a0e0b0xyg = np.expand_dims(i_adjp_cfw_initial_a, axis = tuple(range(1,-pinp.sheep['i_a_pos'])))
+    adjp_cfw_initial_wzida0e0b0xyg0 = np.expand_dims(uinp.structure['i_adjp_cfw_initial_w0'], axis = tuple(range(1,-uinp.structure['i_w_pos'])))
+    adjp_cfw_initial_wzida0e0b0xyg1 = np.expand_dims(uinp.structure['i_adjp_cfw_initial_w1'], axis = tuple(range(1,-uinp.structure['i_w_pos'])))
+    adjp_cfw_initial_wzida0e0b0xyg3 = np.expand_dims(uinp.structure['i_adjp_cfw_initial_w3'], axis = tuple(range(1,-uinp.structure['i_w_pos'])))
+    adjp_fd_initial_a0e0b0xyg = np.expand_dims(i_adjp_fd_initial_a, axis = tuple(range(1,-pinp.sheep['i_a_pos'])))
+    adjp_fd_initial_wzida0e0b0xyg0 = np.expand_dims(uinp.structure['i_adjp_fd_initial_w0'], axis = tuple(range(1,-uinp.structure['i_w_pos'])))
+    adjp_fd_initial_wzida0e0b0xyg1 = np.expand_dims(uinp.structure['i_adjp_fd_initial_w1'], axis = tuple(range(1,-uinp.structure['i_w_pos'])))
+    adjp_fd_initial_wzida0e0b0xyg3 = np.expand_dims(uinp.structure['i_adjp_fd_initial_w3'], axis = tuple(range(1,-uinp.structure['i_w_pos'])))
+    adjp_fl_initial_a0e0b0xyg = np.expand_dims(i_adjp_fl_initial_a, axis = tuple(range(1,-pinp.sheep['i_a_pos'])))
+    adjp_fl_initial_wzida0e0b0xyg0 = np.expand_dims(uinp.structure['i_adjp_fl_initial_w0'], axis = tuple(range(1,-uinp.structure['i_w_pos'])))
+    adjp_fl_initial_wzida0e0b0xyg1 = np.expand_dims(uinp.structure['i_adjp_fl_initial_w1'], axis = tuple(range(1,-uinp.structure['i_w_pos'])))
+    adjp_fl_initial_wzida0e0b0xyg3 = np.expand_dims(uinp.structure['i_adjp_fl_initial_w3'], axis = tuple(range(1,-uinp.structure['i_w_pos'])))
 
     
-    ##convert variable from k2 to g (yaf is not used, only here because it is return from the function)
+    ##convert variable from k2 to g (yaf is not used, only here because it is return from the function) then addjust by initial lw pattern
     lw_initial_yg0, lw_initial_yg1, lw_initial_yaf, lw_initial_yg3 = f_k2g(parameters['i_lw_initial_k2'], parameters['i_lw_initial_y'])			
-    lw_initial_yg0 = lw_initial_yg0 * (1 + adjp_lw_initial_wzida0e0b0xyg0)
-    ##add w axis and account for the range of starting weights
-    lw_initial_sire = lw_initial_sire * (1 + i_sap_lw_initial_wg0)
-    lw_initial_dams
-    lw_initial_yaf
-    lw_initial_offs
+    lw_initial_wzida0e0b0xyg0 = lw_initial_yg0 * (1 + adjp_lw_initial_wzida0e0b0xyg0)
+    lw_initial_wzida0e0b0xyg1 = lw_initial_yg1 * (1 + adjp_lw_initial_wzida0e0b0xyg1)
+    lw_initial_wzida0e0b0xyg3 = lw_initial_yg3 * (1 + adjp_lw_initial_wzida0e0b0xyg3)
+    cfw_initial_yg0, cfw_initial_yg1, cfw_initial_yaf, cfw_initial_yg3 = f_k2g(parameters['i_cfw_initial_k2'], parameters['i_cfw_initial_y'])			
+    cfw_initial_wzida0e0b0xyg0 = cfw_initial_yg0 * (1 + adjp_cfw_initial_wzida0e0b0xyg0)
+    cfw_initial_wzida0e0b0xyg1 = cfw_initial_yg1 * (1 + adjp_cfw_initial_wzida0e0b0xyg1)
+    cfw_initial_wzida0e0b0xyg3 = cfw_initial_yg3 * (1 + adjp_cfw_initial_wzida0e0b0xyg3)
+    fd_initial_yg0, fd_initial_yg1, fd_initial_yaf, fd_initial_yg3 = f_k2g(parameters['i_fd_initial_k2'], parameters['i_fd_initial_y'])			
+    fd_initial_wzida0e0b0xyg0 = fd_initial_yg0 * (1 + adjp_fd_initial_wzida0e0b0xyg0)
+    fd_initial_wzida0e0b0xyg1 = fd_initial_yg1 * (1 + adjp_fd_initial_wzida0e0b0xyg1)
+    fd_initial_wzida0e0b0xyg3 = fd_initial_yg3 * (1 + adjp_fd_initial_wzida0e0b0xyg3)
+    fl_initial_yg0, fl_initial_yg1, fl_initial_yaf, fl_initial_yg3 = f_k2g(parameters['i_fl_initial_k2'], parameters['i_fl_initial_y'])			
+    fl_initial_wzida0e0b0xyg0 = fl_initial_yg0 * (1 + adjp_fl_initial_wzida0e0b0xyg0)
+    fl_initial_wzida0e0b0xyg1 = fl_initial_yg1 * (1 + adjp_fl_initial_wzida0e0b0xyg1)
+    fl_initial_wzida0e0b0xyg3 = fl_initial_yg3 * (1 + adjp_fl_initial_wzida0e0b0xyg3)
     
     ##adjustment for weaning age
-    adj_lw_initial_a_sire = i_sap_lw_initial_a
+    adjp_lw_initial_a_a0e0b0xyg0 = adjp_lw_initial_a0e0b0xyg[0:1,...]
+    adjp_lw_initial_a_a0e0b0xyg1 = adjp_lw_initial_a0e0b0xyg[0:1,...]
+    adjp_lw_initial_a_a0e0b0xyg3 = adjp_lw_initial_a0e0b0xyg
+    adjp_cfw_initial_a_a0e0b0xyg0 = adjp_cfw_initial_a0e0b0xyg[0:1,...]
+    adjp_cfw_initial_a_a0e0b0xyg1 = adjp_cfw_initial_a0e0b0xyg[0:1,...]
+    adjp_cfw_initial_a_a0e0b0xyg3 = adjp_cfw_initial_a0e0b0xyg
+    adjp_fd_initial_a_a0e0b0xyg0 = adjp_fd_initial_a0e0b0xyg[0:1,...]
+    adjp_fd_initial_a_a0e0b0xyg1 = adjp_fd_initial_a0e0b0xyg[0:1,...]
+    adjp_fd_initial_a_a0e0b0xyg3 = adjp_fd_initial_a0e0b0xyg
+    adjp_fl_initial_a_a0e0b0xyg0 = adjp_fl_initial_a0e0b0xyg[0:1,...]
+    adjp_fl_initial_a_a0e0b0xyg1 = adjp_fl_initial_a0e0b0xyg[0:1,...]
+    adjp_fl_initial_a_a0e0b0xyg3 = adjp_fl_initial_a0e0b0xyg
+    ##adjustment for gender. Note cfw changes throughout the year therefore the adjustment factor will not be the same all yr hence divide by std_fw (same for fl) eg the impact of gender on cfw will be much less after only a small time (the parameter is a yearly factor eg male sheep have 0.02 kg more wool each yr)
+    adja_lw_initial_x_xyg0 = cx_sire[3, 0:1, ...] #3 is the weaning wt parameter, 0:1 is the sire gender slice (retaining the axis).
+    adja_lw_initial_x_xyg1 = cx_dams[3, 1:2, ...] 
+    adja_lw_initial_x_xyg3 = cx_offs[3, ...] 
+    adja_cfw_initial_x_wzida0e0b0xyg0 = cx_sire[0, 0:1, ...] * cfw_initial_wzida0e0b0xyg0 / sfw_yg0
+    adja_cfw_initial_x_wzida0e0b0xyg1 = cx_dams[0, 1:2, ...] * cfw_initial_wzida0e0b0xyg1 / sfw_yg1
+    adja_cfw_initial_x_wzida0e0b0xyg3 = cx_offs[0, ...] * cfw_initial_wzida0e0b0xyg3 / sfw_yg3
+    adja_fd_initial_x_xyg0 = cx_sire[1, 0:1, ...] 
+    adja_fd_initial_x_xyg1 = cx_dams[1, 1:2, ...] 
+    adja_fd_initial_x_xyg3 = cx_offs[1, ...] 
+    adja_fl_initial_x_wzida0e0b0xyg0 = cx_sire[0, 0:1, ...] * cfw_initial_wzida0e0b0xyg0 / sfw_yg0 
+    adja_fl_initial_x_wzida0e0b0xyg1 = cx_dams[0, 1:2, ...] * cfw_initial_wzida0e0b0xyg1 / sfw_yg1
+    adja_fl_initial_x_wzida0e0b0xyg3 = cx_offs[0, ...] * cfw_initial_wzida0e0b0xyg3 / sfw_yg3
+    ##adjust for dam age. Note cfw changes throughout the year therefore the adjustment factor will not be the same all yr hence divide by std_fw (same for fl) eg the impact of gender on cfw will be much less after only a small time (the parameter is a yearly factor eg male sheep have 0.02 kg more wool each yr)
+    adja_lw_initial_d_a0e0b0xyg0 = np.sum(ce_sire[3, ...] * agedam_propn_sire, axis=0) #d axis lost when summing
+    adja_lw_initial_d_a0e0b0xyg1 = np.sum(ce_dams[3, ...] * agedam_propn_dams, axis=0) 
+    adja_lw_initial_d_da0e0b0xyg3 = ce_offs[3, ...] 
+    adja_cfw_initial_d_wzida0e0b0xyg0 = np.sum(ce_sire[0, ...] * cfw_initial_wzida0e0b0xyg0 / sfw_yg0 * agedam_propn_sire, axis=parameters['i_agedam_propn_pos'], keepdims=True) #d axis lost when summing
+    adja_cfw_initial_d_wzida0e0b0xyg1 = np.sum(ce_dams[0, ...] * cfw_initial_wzida0e0b0xyg1 / sfw_yg1 * agedam_propn_dams, axis=parameters['i_agedam_propn_pos'], keepdims=True) 
+    adja_cfw_initial_d_wzida0e0b0xyg3 = ce_offs[0, ...] * cfw_initial_wzida0e0b0xyg3 / sfw_yg3
+    adja_fd_initial_d_a0e0b0xyg0 = np.sum(ce_sire[1, ...] * agedam_propn_sire, axis=0) #d axis lost when summing
+    adja_fd_initial_d_a0e0b0xyg1 = np.sum(ce_dams[1, ...] * agedam_propn_dams, axis=0) 
+    adja_fd_initial_d_da0e0b0xyg3 = ce_offs[1, ...]  
+    adja_fl_initial_d_wzida0e0b0xyg0 = np.sum(ce_sire[0, ...] * fl_initial_wzida0e0b0xyg0 / sfw_yg0 * agedam_propn_sire, axis=parameters['i_agedam_propn_pos'], keepdims=True) #d axis lost when summing
+    adja_fl_initial_d_wzida0e0b0xyg1 = np.sum(ce_dams[0, ...] * fl_initial_wzida0e0b0xyg1 / sfw_yg1 * agedam_propn_dams, axis=parameters['i_agedam_propn_pos'], keepdims=True) 
+    adja_fl_initial_d_wzida0e0b0xyg3 = ce_offs[0, ...] * fl_initial_wzida0e0b0xyg3 / sfw_yg3 
+    ##adjust for btrt. Note cfw changes throughout the year therefore the adjustment factor will not be the same all yr hence divide by std_fw (same for fl) eg the impact of gender on cfw will be much less after only a small time (the parameter is a yearly factor eg male sheep have 0.02 kg more wool each yr) 
+    adja_lw_initial_b0_xyg0 = np.sum(cb0_sire[3, ...] * btrt_yg0, axis=0) #d axis lost when summing
+    adja_lw_initial_b0_xyg1 = np.sum(cb0_dams[3, ...] * btrt_yg1, axis=0) 
+    adja_lw_initial_b0_b0xyg3 = cb0_offs[3, ...] 
+    adja_cfw_initial_b0_wzida0e0b0xyg0 = np.sum(cb0_sire[0, ...] * cfw_initial_wzida0e0b0xyg0 / sfw_yg0 * btrt_yg0, axis=parameters['i_cb0_pos'], keepdims=True) #d axis lost when summing
+    adja_cfw_initial_b0_wzida0e0b0xyg1 = np.sum(cb0_dams[0, ...] * cfw_initial_wzida0e0b0xyg1 / sfw_yg1 * btrt_yg1, axis=parameters['i_cb0_pos'], keepdims=True) #d axis lost when summing
+    adja_cfw_initial_b0_wzida0e0b0xyg3 = cb0_offs[0, ...] * cfw_initial_wzida0e0b0xyg3 / sfw_yg3
+    adja_fd_initial_b0_xyg0 = np.sum(cb0_sire[1, ...] * btrt_yg0, axis=0) #d axis lost when summing
+    adja_fd_initial_b0_xyg1 = np.sum(cb0_dams[1, ...] * btrt_yg1, axis=0) 
+    adja_fd_initial_b0_b0xyg3 = cb0_offs[1, ...] 
+    adja_fl_initial_b0_wzida0e0b0xyg0 = np.sum(cb0_sire[0, ...] * fl_initial_wzida0e0b0xyg0 / sfw_yg0 * btrt_yg0, axis=parameters['i_cb0_pos'], keepdims=True) #d axis lost when summing
+    adja_fl_initial_b0_wzida0e0b0xyg1 = np.sum(cb0_dams[0, ...] * fl_initial_wzida0e0b0xyg1 / sfw_yg1 * btrt_yg1, axis=parameters['i_cb0_pos'], keepdims=True) #d axis lost when summing
+    adja_fl_initial_b0_wzida0e0b0xyg3 = cb0_offs[0, ...] * fl_initial_wzida0e0b0xyg3 / sfw_yg3
     
-    
-    
-    
+    ##apply adjustments to initial variables
+    lw_initial_wzida0e0b0xyg0 = lw_initial_wzida0e0b0xyg0 * (1 + adjp_lw_initial_a_a0e0b0xyg0) + adja_lw_initial_x_xyg0 + adja_lw_initial_d_a0e0b0xyg0 + adja_lw_initial_b0_xyg0 
+    lw_initial_wzida0e0b0xyg1 = lw_initial_wzida0e0b0xyg1 * (1 + adjp_lw_initial_a_a0e0b0xyg1) + adja_lw_initial_x_xyg1 + adja_lw_initial_d_a0e0b0xyg1 + adja_lw_initial_b0_xyg1 
+    lw_initial_wzida0e0b0xyg3 = lw_initial_wzida0e0b0xyg3 * (1 + adjp_lw_initial_a_a0e0b0xyg3) + adja_lw_initial_x_xyg3 + adja_lw_initial_d_da0e0b0xyg3 + adja_lw_initial_b0_b0xyg3 
+    cfw_initial_wzida0e0b0xyg0 = cfw_initial_wzida0e0b0xyg0 * (1 + adjp_cfw_initial_a_a0e0b0xyg0) + adja_cfw_initial_x_wzida0e0b0xyg0 + adja_cfw_initial_d_wzida0e0b0xyg0 + adja_cfw_initial_b0_wzida0e0b0xyg0 
+    cfw_initial_wzida0e0b0xyg1 = cfw_initial_wzida0e0b0xyg1 * (1 + adjp_cfw_initial_a_a0e0b0xyg1) + adja_cfw_initial_x_wzida0e0b0xyg1 + adja_cfw_initial_d_wzida0e0b0xyg1 + adja_cfw_initial_b0_wzida0e0b0xyg1 
+    cfw_initial_wzida0e0b0xyg3 = cfw_initial_wzida0e0b0xyg3 * (1 + adjp_cfw_initial_a_a0e0b0xyg3) + adja_cfw_initial_x_wzida0e0b0xyg3 + adja_cfw_initial_d_wzida0e0b0xyg3 + adja_cfw_initial_b0_wzida0e0b0xyg3 
+    fd_initial_wzida0e0b0xyg0 = fd_initial_wzida0e0b0xyg0 * (1 + adjp_fd_initial_a_a0e0b0xyg0) + adja_fd_initial_x_xyg0 + adja_fd_initial_d_a0e0b0xyg0 + adja_fd_initial_b0_xyg0 
+    fd_initial_wzida0e0b0xyg1 = fd_initial_wzida0e0b0xyg1 * (1 + adjp_fd_initial_a_a0e0b0xyg1) + adja_fd_initial_x_xyg1 + adja_fd_initial_d_a0e0b0xyg1 + adja_fd_initial_b0_xyg1 
+    fd_initial_wzida0e0b0xyg3 = fd_initial_wzida0e0b0xyg3 * (1 + adjp_fd_initial_a_a0e0b0xyg3) + adja_fd_initial_x_xyg3 + adja_fd_initial_d_da0e0b0xyg3 + adja_fd_initial_b0_b0xyg3 
+    fl_initial_wzida0e0b0xyg0 = fl_initial_wzida0e0b0xyg0 * (1 + adjp_fl_initial_a_a0e0b0xyg0) + adja_fl_initial_x_wzida0e0b0xyg0 + adja_fl_initial_d_wzida0e0b0xyg0 + adja_fl_initial_b0_wzida0e0b0xyg0 
+    fl_initial_wzida0e0b0xyg1 = fl_initial_wzida0e0b0xyg1 * (1 + adjp_fl_initial_a_a0e0b0xyg1) + adja_fl_initial_x_wzida0e0b0xyg1 + adja_fl_initial_d_wzida0e0b0xyg1 + adja_fl_initial_b0_wzida0e0b0xyg1 
+    fl_initial_wzida0e0b0xyg3 = fl_initial_wzida0e0b0xyg3 * (1 + adjp_fl_initial_a_a0e0b0xyg3) + adja_fl_initial_x_wzida0e0b0xyg3 + adja_fl_initial_d_wzida0e0b0xyg3 + adja_fl_initial_b0_wzida0e0b0xyg3 
 
+    ##calc aw, bw and mw (adipose, bone and muscel weight)
+    aw_initial_wzida0e0b0xyg0 = lw_initial_wzida0e0b0xyg0 * aw_propn_sire
+    aw_initial_wzida0e0b0xyg1 = lw_initial_wzida0e0b0xyg1 * aw_propn_dams
+    aw_initial_wzida0e0b0xyg2 = lw_initial_wzida0e0b0xyg2 * aw_propn_offs
+    bw_initial_wzida0e0b0xyg0 = lw_initial_wzida0e0b0xyg0 * bw_propn_sire
+    bw_initial_wzida0e0b0xyg1 = lw_initial_wzida0e0b0xyg1 * bw_propn_dams
+    bw_initial_wzida0e0b0xyg2 = lw_initial_wzida0e0b0xyg2 * bw_propn_offs
+    mw_initial_wzida0e0b0xyg0 = lw_initial_wzida0e0b0xyg0 * mw_propn_sire
+    mw_initial_wzida0e0b0xyg1 = lw_initial_wzida0e0b0xyg1 * mw_propn_dams
+    mw_initial_wzida0e0b0xyg2 = lw_initial_wzida0e0b0xyg2 * mw_propn_offs
 
     ############################
     ### management calculations#
