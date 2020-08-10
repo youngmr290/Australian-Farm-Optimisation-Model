@@ -57,11 +57,11 @@ if inputs_from_pickle == False:
         pkl.dump(sheep_inp, f)
         
         ##^the sheep one below might be able to be removed (remeber to delete in the sections below as well)
-        sheep_management_inp  = fun.xl_all_named_ranges('Property.xlsx', 'Sheep Management', numpy=True)
-        pkl.dump(sheep_management_inp, f)
+        # sheep_management_inp  = fun.xl_all_named_ranges('Property.xlsx', 'Sheep Management', numpy=True)
+        # pkl.dump(sheep_management_inp, f)
 
-        sheep_regions_inp  = fun.xl_all_named_ranges('Property.xlsx', 'Sheep Regions', numpy=True)
-        pkl.dump(sheep_regions_inp, f)
+        # sheep_regions_inp  = fun.xl_all_named_ranges('Property.xlsx', 'Sheep Regions', numpy=True)
+        # pkl.dump(sheep_regions_inp, f)
 
         pasture_inp=dict()
         for pasture in uinp.structure['pastures']:
@@ -90,9 +90,9 @@ else:
 
         sheep_inp  = pkl.load(f)
         
-        sheep_management_inp  = pkl.load(f)
+        # sheep_management_inp  = pkl.load(f)
 
-        sheep_regions_inp  = pkl.load(f)
+        # sheep_regions_inp  = pkl.load(f)
 
         pasture_inp = pkl.load(f)
 
@@ -107,8 +107,8 @@ finance=finance_inp.copy()
 feed_inputs=feed_inp.copy()
 supfeed=sup_inp.copy()
 sheep=sheep_inp.copy()
-sheep_management=sheep_management_inp.copy()
-sheep_regions=sheep_regions_inp.copy()
+# sheep_management=sheep_management_inp.copy()
+# sheep_regions=sheep_regions_inp.copy()
 pasture_inputs=pasture_inp.copy()
 
 #######################
@@ -130,6 +130,7 @@ def property_inp_sa():
     #mach['approx_hay_yield']=mach_inp['approx_hay_yield']+sen.saa['variable'] #just an example, this can be deleted
     ##pasture will have to be added in a loop
     for pasture in uinp.structure['pastures']:
+        ###SAM
         pasture_inputs[pasture]['GermStd'] = pasture_inp[pasture]['GermStd'] * sen.sam[('germ',pasture)]
         pasture_inputs[pasture]['GermScalarLMU'] = pasture_inp[pasture]['GermScalarLMU'] * sen.sam[('germ_l',pasture)]
         pasture_inputs[pasture]['LowPGR'] = pasture_inp[pasture]['LowPGR'] * sen.sam[('pgr',pasture)]
@@ -144,6 +145,12 @@ def property_inp_sa():
         pasture_inputs[pasture]['DigDeclineFOO'] = pasture_inp[pasture]['DigDeclineFOO'] * sen.sam[('grn_dmd_declinefoo_f',pasture)]
         pasture_inputs[pasture]['DigRednSenesce'] = pasture_inp[pasture]['DigRednSenesce'] * sen.sam[('grn_dmd_senesce_f',pasture)]
     ##sheep
-    sheep_management['i_included_g2'][1] = max(1,sheep_management_inp['i_included_g2'][1] + sen.saa['g2_BM_included']) #max incase the option is already turned on in the xl inputs 
-    sheep_management['i_included_g2'][2] = max(1,sheep_management_inp['i_included_g2'][2] + sen.saa['g2_BT_included'])
-    sheep_management['i_included_g2'][3] = max(1,sheep_management_inp['i_included_g2'][3] + sen.saa['g2_BMT_included'])
+    ###SAV
+    sheep['i_mask_i'][0] = sen.sav['TOL_1_inc'] if not sen.sav['TOL_1_inc'] == '-' else sheep_inp['i_mask_i'][0] 
+    sheep['i_mask_i'][1] = sen.sav['TOL_2_inc'] if not sen.sav['TOL_2_inc'] == '-' else sheep_inp['i_mask_i'][1] 
+    sheep['i_includedg3_inc'][1] = sen.sav['g2_BM_included'] if not sen.sav['g2_BM_included'] == '-' else sheep_inp['i_includedg3_inc'][1] 
+    sheep['i_includedg3_inc'][2] = sen.sav['g2_BM_included'] if not sen.sav['g2_BM_included'] == '-' else sheep_inp['i_includedg3_inc'][2] 
+    sheep['i_includedg3_inc'][3] = sen.sav['g2_BM_included'] if not sen.sav['g2_BM_included'] == '-' else sheep_inp['i_includedg3_inc'][3] 
+
+
+

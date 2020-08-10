@@ -8,6 +8,7 @@ Created on Sat Feb 29 08:05:09 2020
 
 import numpy as np
 import pandas as pd
+from dateutil.relativedelta import relativedelta
 
 def f_sig(x,a,b):
     ''' Sig function CSIRO equation 124 ^the equation below is the sig function from sheepexplorer'''
@@ -52,67 +53,46 @@ def daylength(dayOfYear, lat):
         hourAngle = np.rad2deg(np.arccos(-np.tan(latInRad) * np.tan(np.deg2rad(declinationOfEarth))))
         return 2.0*hourAngle/15.0		
 
-def f_next_prev_joining(joining_date,age,offset):
-    '''
-    
-
-    Parameters
-    ----------
-    Params must have identical axis 1 and 2
-    
-    joining_date : Array
-        Joining date.
-    age : Array
-        age of animal at the begining of each period. 
-
-    Returns
-    -------
-    Array.
-
-    '''
-    a_next = np.zeros(len(age[0]) * len(joining_date[1]) * len(joining_date[2])).reshape(len(age[0]), len(joining_date[1]), len(joining_date[2])) 
-    for i in range(len(joining_date[1])):
-        for c in range(len(joining_date[2])):
-            ###next joining date
-            a_next[:,l,c1] = np.searchsorted(joining_date[:,l,c1], age[:,l,c1])
-    ###previous joining date
-    return np.minimum(a_next_o_plc1 - offset, len(age)-1)
-#^function below is no longer used because joining association needs age not date therefore extra axis stop this function working.
-# def f_next_prev_association(datearray_sclice,*args):
+#^this function can handle 2 multi D arrays. not required for P associations because P is 1D array
+# def f_next_prev_joining(joining_date,age,offset):
 #     '''
-#     Depending on the inputs this function will return the next or previous assosiation.
-#     eg it can be used to determine the next lambing opportunity for each period.
-#     See john stuff.py for alternative methods.
     
+
 #     Parameters
 #     ----------
-#     datearray_sclice : Int
-#         This is the axis along which the array is being sliced (this must be sorted).
-#     *args : 1 - array, 2 - int
-#         Arg 1: the period array 1d that is the index is being found for, note the index is based off the start date therefore must do [1:-1] if you want idx based on end date.
-#         Arg 2: period offset (this may be needed if evaluating the end of the period.
+#     Params must have identical axis 1 and 2
+    
+#     joining_date : Array
+#         Joining date.
+#     age : Array
+#         age of animal at the begining of each period. 
 
 #     Returns
 #     -------
-#     Array
-#         The function finds the index value of the datearray which is either the next or previous date for a given input date.
+#     Array.
 
 #     '''
-#     date=args[0]
-#     offset=args[1] #offset is used to get the previous datearray period
-#     idx_next = np.searchsorted(datearray_sclice, date)
-#     idx = np.minimum(idx_next - offset, len(datearray_sclice)-1) #makes the max value equal to the length of joining array, because if the period date is after the last lambing opportunity there is no 'next' 
-#     return idx
+#     a_next = np.zeros(len(age[0]) * len(joining_date[1]) * len(joining_date[2])).reshape(len(age[0]), len(joining_date[1]), len(joining_date[2])) 
+#     for i in range(len(joining_date[1])):
+#         for c in range(len(joining_date[2])):
+#             ###next joining date
+#             a_next[:,l,c1] = np.searchsorted(joining_date[:,l,c1], age[:,l,c1])
+#     ###previous joining date
+#     return np.minimum(a_next_o_plc1 - offset, len(age)-1)
 
-def f_find_index(datearray_slice,*args):
+def f_next_prev_association(datearray_sclice,*args):
     '''
+    Depending on the inputs this function will return the next or previous assosiation.
+    eg it can be used to determine the next lambing opportunity for each period.
+    See john stuff.py for alternative methods.
+    
     Parameters
     ----------
-    datearray_slice : np.datetime64
-        The axis along which the array is being sliced (must be sorted).
-    *args : 1 - 1D array, 2 - integer
-        Arg 1: the 1D array that the index is being found for, note the index is based off the start date therefore must do [1:-1] if you want idx based on end date.
-        Arg 2: period offset. -1 if the previous period is required.
+    datearray_sclice : Int
+        This is the axis along which the array is being sliced (this must be sorted).
+    *args : 1 - array, 2 - int
+        Arg 1: the period array 1d that is the index is being found for, note the index is based off the start date therefore must do [1:-1] if you want idx based on end date.
+        Arg 2: period offset (this may be needed if evaluating the end of the period.
 
     Returns
     -------
@@ -120,12 +100,34 @@ def f_find_index(datearray_slice,*args):
         The function finds the index value of the datearray which is either the next or previous date for a given input date.
 
     '''
-    date = args[0]
-    offset = args[1]  # offset is -1 to get the previous datearray period
-    idx_next = np.searchsorted(datearray_slice, date)
-    # ## clip the value between 0 and the length of joining array.
-    idx = np.clip(idx_next + offset, 0, datearray_slice.shape[0] - 1)
+    date=args[0]
+    offset=args[1] #offset is used to get the previous datearray period
+    idx_next = np.searchsorted(datearray_sclice, date)
+    idx = np.clip(idx_next - offset, 0, len(datearray_sclice)-1) #makes the max value equal to the length of joining array, because if the period date is after the last lambing opportunity there is no 'next' 
     return idx
+
+# def f_find_index(datearray_slice,*args):
+#     '''
+#     Parameters
+#     ----------
+#     datearray_slice : np.datetime64
+#         The axis along which the array is being sliced (must be sorted).
+#     *args : 1 - 1D array, 2 - integer
+#         Arg 1: the 1D array that the index is being found for, note the index is based off the start date therefore must do [1:-1] if you want idx based on end date.
+#         Arg 2: period offset. -1 if the previous period is required.
+
+#     Returns
+#     -------
+#     Array
+#         The function finds the index value of the datearray which is either the next or previous date for a given input date.
+
+#     '''
+#     date = args[0]
+#     offset = args[1]  # offset is -1 to get the previous datearray period
+#     idx_next = np.searchsorted(datearray_slice, date)
+#     # ## clip the value between 0 and the length of joining array.
+#     idx = np.clip(idx_next + offset, 0, datearray_slice.shape[0] - 1)
+#     return idx
 
 def convert_input_to_g(source, a_g0, a_paternal_g0_g1, a_maternal_g0_g1,
                                      a_paternal_g0_g2, a_maternal_g1_g2):
@@ -254,13 +256,13 @@ def sim_periods(start_year, periods_per_year, oldest_animal):
     step - seconds in each period
     '''
     n_sim_periods = int(oldest_animal * periods_per_year)
-    start_date = np.datetime64(start_year+'01-01','D')   #^ want this to return 1 Jan YYYY, but start year is a date itself
+    start_date = start_year + relativedelta(month=1,day=1) 
     step = pd.to_timedelta(365.25 / periods_per_year,'D')
     step = step.to_numpy().astype('timedelta64[s]')
     index_p = np.arange(n_sim_periods + 1)
-    date_p = (start_date + step * index_p).astype('datetime64[D]')
-
-    return n_sim_periods, date_p, index_p, step
+    date_start_p =  (np.datetime64(start_date) + (step * index_p)).astype('datetime64[D]') #astype day rounds the date to the nearest day
+    date_end_p = (np.datetime64(start_date - dt.timedelta(days=1)) + (step * (index_p+1))).astype('datetime64[D]') #adding and then minusing 1 is to keep the slight offset (because step is 7.01 days) of the step length in the same place when the date is rounded to the nearest day.	
+    return n_sim_periods, date_start_p, date_end_p, index_p, step
 
 def condition_score(ffcflw, normal_weight, cs_propn = 0.19):
     ''' Estimate CS from LW. Works with scalars or arrays - provided they are broadcastable into ffcflw.

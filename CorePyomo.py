@@ -89,9 +89,9 @@ def coremodel_all():
         model.del_component(model.con_labour_sheep_anyone)
     except AttributeError:
         pass
-    def labour_crop(model,p):
+    def labour_sheep(model,p):
         return -model.v_sheep_labour_casual[p] - model.v_sheep_labour_permanent[p] - model.v_sheep_labour_manager[p] + suppy.sup_labour(model,p)   <= 0
-    model.con_labour_sheep_anyone = pe.Constraint(model.s_periods, rule = labour_crop, doc='link between labour supply and requirment by sheep jobs for all labour sources')
+    model.con_labour_sheep_anyone = pe.Constraint(model.s_periods, rule = labour_sheep, doc='link between labour supply and requirment by sheep jobs for all labour sources')
     
     #######################################
     #stubble & nap consumption at harvest #

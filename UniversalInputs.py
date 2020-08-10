@@ -176,24 +176,48 @@ structure['foo_levels'] =  ['L', 'M', 'H']                 # Low, medium & high 
 structure['sheep_pools']=['pool1', 'pool2', 'pool3', 'pool4']
 structure['i_oldest_animal'] = 6.6
 structure['n_sim_periods_year'] = 52 
+##associations
+structure['a_nfoet_b1'] = [1,2,3,2,3,3,1,2,3,0,0]
+structure['a_nyatf_b1'] = [1,2,3,1,2,1,0,0,0,0,0]                       
+
 ##genotype
-structure['i_mul_g0_k0'] = np.array([[1,0,0],
+###An array that contains the proportion of each purebred genotype in the sire, dam, yatf or offspring eg:
+# 		            k0	
+# g3		 B	     M	    T	
+# B		    1.0			
+# BM		0.5	    0.5		
+# BT		0.5		0.5	
+# BMT		0.25	0.25	0.5	
+
+structure['i_mul_g0k0'] = np.array([[1,0,0],
                                      [0,1,0],
                                      [0,0,1]])    
-structure['i_mul_g1_k0'] = np.array([[1,   0,    0],
-                                     [0.5,  0.5,  0]])    
-structure['i_mul_g2_k0'] = np.array([[1,   0,    0],
+structure['i_mul_g1k0'] = np.array([[1,   0,    0],
+                                     [1,   0,    0],    
+                                     [1,   0,    0],    
+                                     [0.5, 0.5,  0]])    
+structure['i_mul_g2k0'] = np.array([[1,   0,    0],
                                      [0.5,  0.5,  0],
                                      [0.5,  0,    0.5],
                                      [0.25, 0.25, 0.5]])    
-structure['i_mul_g3_k0'] = np.array([[1,   0,    0],
+structure['i_mul_g3k0'] = np.array([[1,   0,    0],
                                      [0.5,  0.5,  0],
                                      [0.5,  0,    0.5],
-                                     [0.25, 0.25, 0.5]])    
+                                     [0.25, 0.25, 0.5]]) 
+###A mask array that relates i_g3_inc to the genotypes that need to be simulated eg:
+# 		                g3	
+#   g2		BBB	    BBM	    BBT	    BMT	
+# BBB		TRUE	TRUE	TRUE	TRUE	
+# BBM		FALSE	TRUE	FALSE	TRUE	
+# BBT		FALSE	FALSE	TRUE	FALSE	
+# BMT		FALSE	FALSE	FALSE	TRUE	
+  
 structure['i_mask_g0g3'] = np.array([[True,True,True,True],
                                      [False,True,False,True],
                                      [False,False,True,True]])    
 structure['i_mask_g1g3'] = np.array([[True,True,True,True],
+                                     [False,True,False,False],  
+                                     [False,False,True,False],  
                                      [False,False,False,True]])   
 structure['i_mask_g2g3'] = np.array([[True,True,True,True],
                                      [False,True,False,True],
