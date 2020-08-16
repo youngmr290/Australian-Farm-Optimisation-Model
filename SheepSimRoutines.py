@@ -245,7 +245,7 @@ def sim_periods(start_year, periods_per_year, oldest_animal):
     Starts on 1 Jan of the year with the earliest birthdate.
 
     Parameters:
-    start_year = int: year to start simulation. Derived from the birth dates
+    start_year = int: year to start simulation. 
     periods_per_year = int:
     oldest_animal = float: age of the oldest animal to be simulated (yrs)
 
@@ -256,12 +256,12 @@ def sim_periods(start_year, periods_per_year, oldest_animal):
     step - seconds in each period
     '''
     n_sim_periods = int(oldest_animal * periods_per_year)
-    start_date = start_year + relativedelta(month=1,day=1) 
+    start_date = dt.date(year=start_year, month=1,day=1) 
     step = pd.to_timedelta(365.25 / periods_per_year,'D')
     step = step.to_numpy().astype('timedelta64[s]')
     index_p = np.arange(n_sim_periods + 1)
     date_start_p =  (np.datetime64(start_date) + (step * index_p)).astype('datetime64[D]') #astype day rounds the date to the nearest day
-    date_end_p = (np.datetime64(start_date - dt.timedelta(days=1)) + (step * (index_p+1))).astype('datetime64[D]') #adding and then minusing 1 is to keep the slight offset (because step is 7.01 days) of the step length in the same place when the date is rounded to the nearest day.	
+    date_end_p = (np.datetime64(start_date - dt.timedelta(days=1)) + (step * (index_p+1))).astype('datetime64[D]') #minus one day to get the last day in the period not the first day of the next period.	
     return n_sim_periods, date_start_p, date_end_p, index_p, step
 
 def condition_score(ffcflw, normal_weight, cs_propn = 0.19):

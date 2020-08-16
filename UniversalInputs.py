@@ -73,8 +73,8 @@ if inputs_from_pickle == False:
         pkl.dump(crop_inp, f)
         
         ##sheep inputs
-        genotype_inp = fun.xl_all_named_ranges('Universal.xlsx', ['Genotypes'])
-        pkl.dump(genotype_inp, f)
+        sheep_inp = fun.xl_all_named_ranges('Inputs parameters.xlsm', ['Universal'], numpy=True, datatype=float)
+        pkl.dump(sheep_inp, f)
         parameters_inp = fun.xl_all_named_ranges('Inputs parameters.xlsm', ['Parameters'], numpy=True, datatype=float) #dtype included so that blank cells in excel get nan rather than NoneType. NoneType cant be mulitplied or added etc but nan can be.
         pkl.dump(parameters_inp, f)
         
@@ -100,7 +100,7 @@ else:
         
         crop_inp = pkl.load(f)
         
-        genotype_inp = pkl.load(f)
+        sheep_inp = pkl.load(f)
         
         parameters_inp = pkl.load(f)
         
@@ -114,7 +114,7 @@ mach_general = mach_general_inp.copy()
 feed_inputs = feed_inputs_inp.copy()
 supfeed = sup_inp.copy()
 crop = crop_inp.copy()
-genotype = genotype_inp.copy()
+sheep = sheep_inp.copy()
 parameters = parameters_inp.copy()
 mach = machine_options_dict_inp.copy()
 
@@ -172,14 +172,25 @@ structure['foo_levels'] =  ['L', 'M', 'H']                 # Low, medium & high 
 #######
 #sheep#
 #######
+##general
+structure['i_age_max'] = 6.75
+structure['i_sim_periods_year'] = 52
+structure['i_w_pos'] = -10
+structure['i_n_pos'] = -11
+
 ##pools
 structure['sheep_pools']=['pool1', 'pool2', 'pool3', 'pool4']
 structure['i_oldest_animal'] = 6.6
 structure['n_sim_periods_year'] = 52 
 ##associations
-structure['a_nfoet_b1'] = [1,2,3,2,3,3,1,2,3,0,0]
-structure['a_nyatf_b1'] = [1,2,3,1,2,1,0,0,0,0,0]                       
-
+structure['a_nfoet_b1'] = np.array([1,2,3,2,3,3,1,2,3,0,0])
+structure['a_nyatf_b1'] = np.array([1,2,3,1,2,1,0,0,0,0,0])  
+structure['i_mask_b1_b0'] = np.array([True,	True,	True,	True,	True,	True,	False,	False,	False,	False,	False])
+                     
+##feed supply
+structure['i_nut_spread_ng0'] = np.array([0])
+structure['i_nut_spread_ng1'] = np.array([0,0.66,-0.5,1,-1,3.5])
+structure['i_nut_spread_ng3'] = np.array([0,0.33,0.66,1,-0.5,-1,3,3.5])
 ##genotype
 ###An array that contains the proportion of each purebred genotype in the sire, dam, yatf or offspring eg:
 # 		            k0	
@@ -228,7 +239,6 @@ structure['i_mask_g3g3'] = np.array([[True,True,True,True],
                                     [False,False,True,False],
                                     [False,False,False,True]])  
 ##variations between initial patterns
-structure['i_w_pos'] = -10
 structure['i_adjp_lw_initial_w0'] = np.array([0])        
 structure['i_adjp_lw_initial_w1'] = np.array([0, 0.15, -0.15])        
 structure['i_adjp_lw_initial_w3'] = np.array([0, 0.20, 0.10, -0.10, -0.20])        
