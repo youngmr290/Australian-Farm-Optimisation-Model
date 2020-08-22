@@ -177,6 +177,10 @@ structure['i_age_max'] = 6.75
 structure['i_sim_periods_year'] = 52
 structure['i_w_pos'] = -10
 structure['i_n_pos'] = -11
+structure['i_p_pos'] = -15
+structure['i_lag_wool'] = 1 #lags in calculations (number of days over which production is averaged)
+structure['i_lag_wool'] = 1 #lags in calculations (number of days over which production is averaged)
+structure['i_lag_organs'] = 1  #lags in calculations (number of days over which production is averaged)
 
 ##pools
 structure['sheep_pools']=['pool1', 'pool2', 'pool3', 'pool4']
@@ -185,9 +189,16 @@ structure['n_sim_periods_year'] = 52
 ##associations
 structure['a_nfoet_b1'] = np.array([1,2,3,2,3,3,1,2,3,0,0])
 structure['a_nyatf_b1'] = np.array([1,2,3,1,2,1,0,0,0,0,0])  
-structure['i_mask_b1_b0'] = np.array([True,	True,	True,	True,	True,	True,	False,	False,	False,	False,	False])
+structure['i_mask_b0_b1'] = np.array([True,	True,	True,	True,	True,	True,	False,	False,	False,	False,	False])
+structure['ia_b0_b1'] = np.array([0, 1,	2,	3,	4,	5,	0,	0,	0,	0,	0])
                      
-##feed supply
+##feed supply/ nutrition levels
+structure['i_w_len_sire'] = 1
+structure['i_w_len_dams'] = 3
+structure['i_w_len_offs'] = 5
+structure['i_n_len_sire'] = 1
+structure['i_n_len_dams'] = 6
+structure['i_n_len_offs'] = 8
 structure['i_nut_spread_ng0'] = np.array([0])
 structure['i_nut_spread_ng1'] = np.array([0,0.66,-0.5,1,-1,3.5])
 structure['i_nut_spread_ng3'] = np.array([0,0.33,0.66,1,-0.5,-1,3,3.5])
@@ -217,7 +228,7 @@ structure['i_mul_g3k0'] = np.array([[1,   0,    0],
                                      [0.25, 0.25, 0.5]]) 
 ###A mask array that relates i_g3_inc to the genotypes that need to be simulated eg:
 # 		                g3	
-#   g2		BBB	    BBM	    BBT	    BMT	
+#   g2		BBB	    BBM	BBT	    BMT	
 # BBB		TRUE	TRUE	TRUE	TRUE	
 # BBM		FALSE	TRUE	FALSE	TRUE	
 # BBT		FALSE	FALSE	TRUE	FALSE	
@@ -227,7 +238,7 @@ structure['i_mask_g0g3'] = np.array([[True,True,True,True],
                                      [False,True,False,True],
                                      [False,False,True,True]])    
 structure['i_mask_g1g3'] = np.array([[True,True,True,True],
-                                     [False,True,False,False],  
+                                     [False,True,False,True],  
                                      [False,False,True,False],  
                                      [False,False,False,True]])   
 structure['i_mask_g2g3'] = np.array([[True,True,True,True],
@@ -239,6 +250,7 @@ structure['i_mask_g3g3'] = np.array([[True,True,True,True],
                                     [False,False,True,False],
                                     [False,False,False,True]])  
 ##variations between initial patterns
+###lw
 structure['i_adjp_lw_initial_w0'] = np.array([0])        
 structure['i_adjp_lw_initial_w1'] = np.array([0, 0.15, -0.15])        
 structure['i_adjp_lw_initial_w3'] = np.array([0, 0.20, 0.10, -0.10, -0.20])        
@@ -254,6 +266,51 @@ structure['i_adjp_fd_initial_w3'] = np.array([0, 0.20, 0.10, -0.10, -0.20])
 structure['i_adjp_fl_initial_w0'] = np.array([0])        
 structure['i_adjp_fl_initial_w1'] = np.array([0, 0.10, -0.10])        
 structure['i_adjp_fl_initial_w3'] = np.array([0, 0.15, 0.08, -0.08, -0.15])        
+
+##association between management and feedsupply
+structure['i_len_v'] = 2
+structure['i_len_l'] = 4
+structure['i_len_s'] = 5
+structure['ia_c2_vlsb1'] =np.array([[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[2,	2,	2,	2,	2,	2,	2,	2,	2,	1,	1]
+                                 ,[3,	4,	4,	4,	4,	4,	3,	4,	4,	1,	1]
+                                 ,[3,	5,	6,	5,	6,	6,	3,	5,	6,	1,	1]
+                                 ,[3,	5,	6,	5,	6,	6,	3,	5,	6,	1,	1]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[2,	2,	2,	2,	2,	2,	1,	1,	1,	1,	1]
+                                 ,[3,	4,	4,	4,	4,	4,	1,	1,	1,	1,	1]
+                                 ,[3,	5,	6,	5,	6,	6,	1,	1,	1,	1,	1]
+                                 ,[3,	5,	6,	5,	6,	6,	1,	1,	1,	1,	1]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[2,	2,	2,	2,	2,	2,	1,	1,	1,	1,	1]
+                                 ,[3,	4,	4,	3,	4,	3,	1,	1,	1,	1,	1]
+                                 ,[3,	5,	6,	3,	5,	3,	1,	1,	1,	1,	1]
+                                 ,[3,	5,	6,	3,	5,	3,	1,	1,	1,	1,	1]])
 
 ########################
 #period                #

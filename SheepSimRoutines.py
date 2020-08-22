@@ -5,6 +5,7 @@ Created on Sat Feb 29 08:05:09 2020
 
 @author: John
 """
+import datetime as dt
 
 import numpy as np
 import pandas as pd
@@ -156,31 +157,31 @@ def convert_input_to_g(source, a_g0, a_paternal_g0_g1, a_maternal_g0_g1,
     return g
 
 
-def f_k2g(input_k1, a_k1_g0, input_k2=None, a_k2_g0=None, *other_associations):
-    """
-    Create parameters by selected genotype from animal type and possible genotypes
+# def f_k2g(input_k1, a_k1_g0, input_k2=None, a_k2_g0=None, *other_associations):
+#     """
+#     Create parameters by selected genotype from animal type and possible genotypes
 
-    Parameters
-    ----------
-    input_k1 : A parameter array with animal type (u) as last axis.
-    input_k2 : Optional parameter array with possible genotypes (k) as last axis.
-    a_k1_g0 : An association array between animal type (u) and selected genotype (g).
-    a_k2_g0 : Optional association array between input genotypes (k) and selected genotype.
+#     Parameters
+#     ----------
+#     input_k1 : A parameter array with animal type (u) as last axis.
+#     input_k2 : Optional parameter array with possible genotypes (k) as last axis.
+#     a_k1_g0 : An association array between animal type (u) and selected genotype (g).
+#     a_k2_g0 : Optional association array between input genotypes (k) and selected genotype.
 
-    Returns
-    -------
-    Array of parameters with the last axis being selected genotype (g).
+#     Returns
+#     -------
+#     Array of parameters with the last axis being selected genotype (g).
 
-    """
+#     """
 
-    c_k1_g = convert_input_to_g(input_k1, a_k1_g0, other_associations)
-    try:
-        c_k2_g = convert_input_to_g(input_k2, a_k2_g0, other_associations)
-    except:   #^enter exception type so the error catch is specific
-        c_k2_g = c_k1_g
-    c_g = c_k2_g
-    c_g[c_k2_g==0] = c_k1_g[c_k2_g==0]
-    return c_g
+#     c_k1_g = convert_input_to_g(input_k1, a_k1_g0, other_associations)
+#     try:
+#         c_k2_g = convert_input_to_g(input_k2, a_k2_g0, other_associations)
+#     except:   #^enter exception type so the error catch is specific
+#         c_k2_g = c_k1_g
+#     c_g = c_k2_g
+#     c_g[c_k2_g==0] = c_k1_g[c_k2_g==0]
+#     return c_g
 
 # def genotype(excelinputs, a_c_g0, a_maternal_g0_g1, a_paternal_g0_g1
 #              , a_maternal_g1_g2, a_paternal_g0_g2):
@@ -252,6 +253,7 @@ def sim_periods(start_year, periods_per_year, oldest_animal):
     Returns:
     n_sim_periods
     array of period dates (1D periods)
+    array of period end dates (1D periods) (date of the last day in the period)
     index of the periods (for pyomo)
     step - seconds in each period
     '''
@@ -312,7 +314,7 @@ def feed_supply(feedsupply, foo_std, dmd_std):
 
 def r_intake(rc, c_ci_gy, feed_supply, srw, rel_size,  ):
     #equations 14 to 30 wihtout d
-    
+    return
 
 def p_intake(rc, c_ci_gy, feed_supply, srw, rel_size,  ):
     #do potential intake calculations
@@ -347,13 +349,13 @@ def p_intake(rc, c_ci_gy, feed_supply, srw, rel_size,  ):
 
     yf = ( 1 - thetamilk ) / ( 1 + exp (c_ci_jy[...,13] * -1 * (a - c_ci_jy[...,14])))
 
-    tf = 
+    tf  
 
     return mei
 
 def energy(dmd, ):
     ## equations 33 to 45
-    km =
+    km 
     return mem
 
 def foetus():
