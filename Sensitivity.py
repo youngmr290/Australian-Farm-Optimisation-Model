@@ -51,6 +51,7 @@ sam['grn_dmd_senesce_f','annual']       = np.ones((len(pinp.feed_inputs['feed_pe
 ######
 
 ##Sheep
+sav['eqn_compare']      = '-'                                               #SA to alter if the different equation systems in the sheep sim are run and compared 
 sav['TOL_1_inc']         = '-'                                              # SA value for the inclusion of TOL 1 
 sav['TOL_2_inc']         = '-'                                              # SA value for the inclusion of TOL 2 
 sav['g3_BM_included']         = '-'                                              # SA value for the inclusion of BM offspring genotype 

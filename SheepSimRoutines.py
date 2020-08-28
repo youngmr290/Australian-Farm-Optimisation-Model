@@ -44,16 +44,17 @@ def daylength(dayOfYear, lat):
     d : float
         Daylength in hours.
     """
+    dl=np.zeros_like(dayOfYear, dtype='float64')
     latInRad = np.deg2rad(lat)
     declinationOfEarth = 23.45*np.sin(np.deg2rad(360.0*(283.0+dayOfYear)/365.0))
-    if -np.tan(latInRad) * np.tan(np.deg2rad(declinationOfEarth)) <= -1.0:
-        return 24.0
-    elif -np.tan(latInRad) * np.tan(np.deg2rad(declinationOfEarth)) >= 1.0:
-        return 0.0
-    else:
-        hourAngle = np.rad2deg(np.arccos(-np.tan(latInRad) * np.tan(np.deg2rad(declinationOfEarth))))
-        return 2.0*hourAngle/15.0		
-
+    m1 = (-np.tan(latInRad) * np.tan(np.deg2rad(declinationOfEarth))) <= -1.0
+    m2 = (-np.tan(latInRad) * np.tan(np.deg2rad(declinationOfEarth))) >= 1.0
+    hourAngle = np.rad2deg(np.arccos(-np.tan(latInRad) * np.tan(np.deg2rad(declinationOfEarth))))
+    daylen = 2.0*hourAngle/15.0
+    dl[m1] = 24
+    dl[m2] = 0
+    dl[~np.logical_and(m2, m1)] = daylen[~np.logical_and(m2, m1)]
+    return dl
 #^this function can handle 2 multi D arrays. not required for P associations because P is 1D array
 # def f_next_prev_joining(joining_date,age,offset):
 #     '''

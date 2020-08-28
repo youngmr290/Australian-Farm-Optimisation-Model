@@ -152,6 +152,7 @@ def property_inp_sa():
         pasture_inputs[pasture]['DigRednSenesce'] = pasture_inp[pasture]['DigRednSenesce'] * sen.sam[('grn_dmd_senesce_f',pasture)]
     ##sheep
     ###SAV
+    sheep['i_eqn_compare'] = sen.sav['eqn_compare'] if not sen.sav['eqn_compare'] == '-' else sheep_inp['i_eqn_compare']
     sheep['i_mask_i'][0] = sen.sav['TOL_1_inc'] if not sen.sav['TOL_1_inc'] == '-' else sheep_inp['i_mask_i'][0] 
     sheep['i_mask_i'][1] = sen.sav['TOL_2_inc'] if not sen.sav['TOL_2_inc'] == '-' else sheep_inp['i_mask_i'][1] 
     sheep['i_includedg3_inc'][1] = sen.sav['g2_BM_included'] if not sen.sav['g2_BM_included'] == '-' else sheep_inp['i_includedg3_inc'][1] 
