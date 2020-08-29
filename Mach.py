@@ -73,6 +73,7 @@ def sup_mach_cost():
     sup_cost=uinp.mach[pinp.mach['option']]['sup_feed'].copy() #need this so it doesnt alter inputs
     ##add fuel cost
     sup_cost['litres']=sup_cost['litres'] * fuel_price()
+    ##sum the cost of r&m and fuel - note that rm is in the sup_cost df
     return sup_cost.sum(axis=1)
 
 #######################################################################################################################################################

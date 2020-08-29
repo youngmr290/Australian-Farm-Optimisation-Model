@@ -12,9 +12,12 @@ from pyomo.environ import *
 # from CreateModel import *
 import SheepSim as ssim
 
-def sheep_pyomo_local():
+def sheep_precalcs(params,report):
     ssim.sheep_sim()
     ssim.sheep_parameters()
+    
+    
+def sheep_pyomo_local(params):
 
     ######################
     ### setup parameters #

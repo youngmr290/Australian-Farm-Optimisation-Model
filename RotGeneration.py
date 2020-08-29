@@ -36,7 +36,7 @@ yr0 = np.array(['b', 'h', 'o','of', 'w', 'f', 'l', 'z','r'
                 , 'x', 'xr'
                 , 'j', 't', 'jr', 'tr'])
 yr1 = np.array(['AR', 'SR'
-       ,'E', 'N', 'P', 'OF'
+       ,'E1', 'N', 'P', 'OF'
        , 'A'
        , 'S' 
        , 'M'#])
@@ -454,7 +454,7 @@ hist_req = np.unique(hist_req, axis=0)
 l_phases = [''.join(x) for x in phases.astype(str)]
 l_hist_req = [''.join(x) for x in hist_req.astype(str)]
 # l_hist_prov = [''.join(x) for x in hist_prov.astype(str)]
-j=j
+
 
 ##################
 #con 1 param     #

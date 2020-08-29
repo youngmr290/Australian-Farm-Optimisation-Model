@@ -89,9 +89,9 @@ def coremodel_all():
         model.del_component(model.con_labour_sheep_anyone)
     except AttributeError:
         pass
-    def labour_crop(model,p):
+    def labour_sheep(model,p):
         return -model.v_sheep_labour_casual[p] - model.v_sheep_labour_permanent[p] - model.v_sheep_labour_manager[p] + suppy.sup_labour(model,p)   <= 0
-    model.con_labour_sheep_anyone = pe.Constraint(model.s_periods, rule = labour_crop, doc='link between labour supply and requirment by sheep jobs for all labour sources')
+    model.con_labour_sheep_anyone = pe.Constraint(model.s_periods, rule = labour_sheep, doc='link between labour supply and requirment by sheep jobs for all labour sources')
     
     #######################################
     #stubble & nap consumption at harvest #
@@ -227,16 +227,23 @@ def coremodel_all():
             for each cashflow period dollar flow must be greater than 0. this is accomplished by taking a loan from the bank (if there is more exp than income) or depositing money in the bank. 
             the money withdrawn or deposited in the bank (debit or credit) is then carried over to the next period.
             the debit and credit carried over is multimpled by j because there is no carry over in the first period (there may be a better way to do it though)
-
+            Carryover basically represents interest free cash at the start of the year. It requires cash from ND and provides in JF. 
 
         '''
         c = uinp.structure['cashflow_periods']
-        #j becomes a list which has 0 as first value and 1 after that. this is then indexed by i and multiplied by previous periods debit and credit.
-        #this means the first period doesn't include the previous debit or credit (because it doesn't exist, because it is the first period) 
+        ##j becomes a list which has 0 as first value and 1 after that. this is then indexed by i and multiplied by previous periods debit and credit.
+        ##this means the first period doesn't include the previous debit or credit (because it doesn't exist, because it is the first period) 
         j = [1] * len(c)
         j[0] = 0
+        ##carryoverJF to indicate when to include carryover - carryover is removed from last period and added to first period
+        carryoverJF = [0] * len(c)
+        carryoverJF[0] = 1
+        carryoverND = [0] * len(c)
+        carryoverND[-1] = 1
         return (-yield_income(model,c[i]) + crppy.rotation_cost(model,c[i])  + labpy.labour_cost(model,c[i]) + macpy.mach_cost(model,c[i]) + suppy.sup_cost(model,c[i]) + model.p_overhead_cost[c[i]]     \
-                - model.v_debit[c[i]] + model.v_credit[c[i]]  + model.v_debit[c[i-1]] * fin.debit_interest() * j[i]  - model.v_credit[c[i-1]] * fin.credit_interest() * j[i]) <= 0
+                - model.v_debit[c[i]] * j[i] + model.v_credit[c[i]]  + model.v_debit[c[i-1]] * fin.debit_interest() * j[i]  - model.v_credit[c[i-1]] * fin.credit_interest() * j[i]
+                - model.carryover_credit[c[i]] * carryoverJF + model.carryover_credit[c[i]] * carryoverND 
+                + model.carryover_debit[c[i]] * carryoverJF  - model.carryover_debit[c[i]] * carryoverND ) <= 0
 
     try:
         model.del_component(model.con_cashflow)

@@ -73,9 +73,9 @@ if inputs_from_pickle == False:
         pkl.dump(crop_inp, f)
         
         ##sheep inputs
-        genotype_inp = fun.xl_all_named_ranges('Universal.xlsx', ['Genotypes'])
-        pkl.dump(genotype_inp, f)
-        parameters_inp = fun.xl_all_named_ranges('Universal.xlsx', ['Parameters'])
+        sheep_inp = fun.xl_all_named_ranges('Inputs parameters.xlsm', ['Universal'], numpy=True, datatype=float)
+        pkl.dump(sheep_inp, f)
+        parameters_inp = fun.xl_all_named_ranges('Inputs parameters.xlsm', ['Parameters'], numpy=True, datatype=float) #dtype included so that blank cells in excel get nan rather than NoneType. NoneType cant be mulitplied or added etc but nan can be.
         pkl.dump(parameters_inp, f)
         
         ##mach options
@@ -100,7 +100,7 @@ else:
         
         crop_inp = pkl.load(f)
         
-        genotype_inp = pkl.load(f)
+        sheep_inp = pkl.load(f)
         
         parameters_inp = pkl.load(f)
         
@@ -114,7 +114,7 @@ mach_general = mach_general_inp.copy()
 feed_inputs = feed_inputs_inp.copy()
 supfeed = sup_inp.copy()
 crop = crop_inp.copy()
-genotype = genotype_inp.copy()
+sheep = sheep_inp.copy()
 parameters = parameters_inp.copy()
 mach = machine_options_dict_inp.copy()
 
@@ -172,11 +172,145 @@ structure['foo_levels'] =  ['L', 'M', 'H']                 # Low, medium & high 
 #######
 #sheep#
 #######
+##general
+structure['i_age_max'] = 6.75
+structure['i_sim_periods_year'] = 52
+structure['i_w_pos'] = -10
+structure['i_n_pos'] = -11
+structure['i_p_pos'] = -15
+structure['i_lag_wool'] = 1 #lags in calculations (number of days over which production is averaged)
+structure['i_lag_wool'] = 1 #lags in calculations (number of days over which production is averaged)
+structure['i_lag_organs'] = 1  #lags in calculations (number of days over which production is averaged)
+
 ##pools
 structure['sheep_pools']=['pool1', 'pool2', 'pool3', 'pool4']
 structure['i_oldest_animal'] = 6.6
 structure['n_sim_periods_year'] = 52 
-        
+##associations
+structure['a_nfoet_b1'] = np.array([1,2,3,2,3,3,1,2,3,0,0])
+structure['a_nyatf_b1'] = np.array([1,2,3,1,2,1,0,0,0,0,0])  
+structure['i_mask_b0_b1'] = np.array([True,	True,	True,	True,	True,	True,	False,	False,	False,	False,	False])
+structure['ia_b0_b1'] = np.array([0, 1,	2,	3,	4,	5,	0,	0,	0,	0,	0])
+                     
+##feed supply/ nutrition levels
+structure['i_w_len_sire'] = 1
+structure['i_w_len_dams'] = 3
+structure['i_w_len_offs'] = 5
+structure['i_n_len_sire'] = 1
+structure['i_n_len_dams'] = 6
+structure['i_n_len_offs'] = 8
+structure['i_nut_spread_ng0'] = np.array([0])
+structure['i_nut_spread_ng1'] = np.array([0,0.66,-0.5,1,-1,3.5])
+structure['i_nut_spread_ng3'] = np.array([0,0.33,0.66,1,-0.5,-1,3,3.5])
+##genotype
+###An array that contains the proportion of each purebred genotype in the sire, dam, yatf or offspring eg:
+# 		            k0	
+# g3		 B	     M	    T	
+# B		    1.0			
+# BM		0.5	    0.5		
+# BT		0.5		0.5	
+# BMT		0.25	0.25	0.5	
+
+structure['i_mul_g0k0'] = np.array([[1,0,0],
+                                     [0,1,0],
+                                     [0,0,1]])    
+structure['i_mul_g1k0'] = np.array([[1,   0,    0],
+                                     [1,   0,    0],    
+                                     [1,   0,    0],    
+                                     [0.5, 0.5,  0]])    
+structure['i_mul_g2k0'] = np.array([[1,   0,    0],
+                                     [0.5,  0.5,  0],
+                                     [0.5,  0,    0.5],
+                                     [0.25, 0.25, 0.5]])    
+structure['i_mul_g3k0'] = np.array([[1,   0,    0],
+                                     [0.5,  0.5,  0],
+                                     [0.5,  0,    0.5],
+                                     [0.25, 0.25, 0.5]]) 
+###A mask array that relates i_g3_inc to the genotypes that need to be simulated eg:
+# 		                g3	
+#   g2		BBB	    BBM	BBT	    BMT	
+# BBB		TRUE	TRUE	TRUE	TRUE	
+# BBM		FALSE	TRUE	FALSE	TRUE	
+# BBT		FALSE	FALSE	TRUE	FALSE	
+# BMT		FALSE	FALSE	FALSE	TRUE	
+  
+structure['i_mask_g0g3'] = np.array([[True,True,True,True],
+                                     [False,True,False,True],
+                                     [False,False,True,True]])    
+structure['i_mask_g1g3'] = np.array([[True,True,True,True],
+                                     [False,True,False,True],  
+                                     [False,False,True,False],  
+                                     [False,False,False,True]])   
+structure['i_mask_g2g3'] = np.array([[True,True,True,True],
+                                     [False,True,False,True],
+                                     [False,False,True,False],
+                                     [False,False,False,True]])    
+structure['i_mask_g3g3'] = np.array([[True,True,True,True],
+                                    [False,True,False,True],
+                                    [False,False,True,False],
+                                    [False,False,False,True]])  
+##variations between initial patterns
+###lw
+structure['i_adjp_lw_initial_w0'] = np.array([0])        
+structure['i_adjp_lw_initial_w1'] = np.array([0, 0.15, -0.15])        
+structure['i_adjp_lw_initial_w3'] = np.array([0, 0.20, 0.10, -0.10, -0.20])        
+###cfw
+structure['i_adjp_cfw_initial_w0'] = np.array([0])        
+structure['i_adjp_cfw_initial_w1'] = np.array([0, 0.05, -0.05])        
+structure['i_adjp_cfw_initial_w3'] = np.array([0, 0.10, 0.05, -0.05, -0.10])        
+###fd
+structure['i_adjp_fd_initial_w0'] = np.array([0])        
+structure['i_adjp_fd_initial_w1'] = np.array([0, 0.15, -0.15])        
+structure['i_adjp_fd_initial_w3'] = np.array([0, 0.20, 0.10, -0.10, -0.20])        
+###fl
+structure['i_adjp_fl_initial_w0'] = np.array([0])        
+structure['i_adjp_fl_initial_w1'] = np.array([0, 0.10, -0.10])        
+structure['i_adjp_fl_initial_w3'] = np.array([0, 0.15, 0.08, -0.08, -0.15])        
+
+##association between management and feedsupply
+structure['i_len_v'] = 2
+structure['i_len_l'] = 4
+structure['i_len_s'] = 5
+structure['ia_c2_vlsb1'] =np.array([[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[2,	2,	2,	2,	2,	2,	2,	2,	2,	1,	1]
+                                 ,[3,	4,	4,	4,	4,	4,	3,	4,	4,	1,	1]
+                                 ,[3,	5,	6,	5,	6,	6,	3,	5,	6,	1,	1]
+                                 ,[3,	5,	6,	5,	6,	6,	3,	5,	6,	1,	1]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[2,	2,	2,	2,	2,	2,	1,	1,	1,	1,	1]
+                                 ,[3,	4,	4,	4,	4,	4,	1,	1,	1,	1,	1]
+                                 ,[3,	5,	6,	5,	6,	6,	1,	1,	1,	1,	1]
+                                 ,[3,	5,	6,	5,	6,	6,	1,	1,	1,	1,	1]
+                                 ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+                                 ,[2,	2,	2,	2,	2,	2,	1,	1,	1,	1,	1]
+                                 ,[3,	4,	4,	3,	4,	3,	1,	1,	1,	1,	1]
+                                 ,[3,	5,	6,	3,	5,	3,	1,	1,	1,	1,	1]
+                                 ,[3,	5,	6,	3,	5,	3,	1,	1,	1,	1,	1]])
 
 ########################
 #period                #
@@ -264,7 +398,8 @@ structure['A']={'a', 'ar','s', 'sr', 'm'
                 , 'M'} #annual
 structure['A1']={'a',  's', 'm'} #annual not resown - special set used in pasture germ and con2 when determining if a rotatin provides a rotation because in yr1 we dont want ar to provide an A bevause we need to distinguish beteween them
 structure['AR']={'ar', 'AR'} #resown annual
-structure['E']={'E', 'OF', 'b', 'h', 'o', 'of', 'w'} #cereals
+structure['E']={'E', 'E1', 'OF', 'b', 'h', 'o', 'of', 'w'} #cereals
+structure['E1']={'E', 'b', 'h', 'o', 'w'} #cereals
 # # structure['H']={'h', 'of'} #non harvested cereals
 structure['J']={'J', 'j', 'jr'} #tedera
 structure['M']={'m', 'M'} #manipulated pasture
@@ -277,7 +412,7 @@ structure['T']={'T', 't', 'tr','J', 'j', 'jr'} #tedera - also includes manipulat
 structure['U']={'u', 'ur', 'U','x', 'xr', 'X'} #lucerne
 structure['X']={'x', 'xr', 'X'} #lucerne
 structure['Y']={'b', 'h', 'o','of', 'w', 'f','i', 'k', 'l', 'v', 'z','r'
-                , 'Y', 'E', 'N', 'P', 'OF'} #anything not pasture
+                , 'Y', 'E', 'E1', 'N', 'P', 'OF'} #anything not pasture
 
 
 '''make each landuse a set so the issuperset func works'''
