@@ -2,7 +2,7 @@ __pycache__
 /John stuff.py
 /*.txt
 /*.lp
-/*.xls
+/*.xls*
 /redundant
 /.spyproject
 /flowcharts
@@ -11,4 +11,4 @@ __pycache__
 /*.npy
 /Crop sim.xlsx
 /Michael code ideas.py
-
+/.pylint.d
