@@ -499,7 +499,7 @@ date_shear_sida0e0b0xyg3 = f_g2g(pinp.sheep['i_date_shear_sixg3'],'offs',uinp.pa
 ##join
 join_cycles_ida0e0b0xyg1 = f_g2g(pinp.sheep['i_join_cycles_ig1'],'dams',pinp.sheep['i_i_pos'])[pinp.sheep['i_mask_i'],...]
 ##lamb and lost
-lal_oa1e1b1nwzida0e0b0xyg1 = f_g2g(pinp.sheep['i_lal_og1'],'dams',uinp.structure['i_p_pos']) #need axis up to p so that p association can be applied
+gbal_oa1e1b1nwzida0e0b0xyg1 = f_g2g(pinp.sheep['i_gbal_og1'],'dams',uinp.structure['i_p_pos']) #need axis up to p so that p association can be applied
 ##scanning
 scan_oa1e1b1nwzida0e0b0xyg1 = f_g2g(pinp.sheep['i_scan_og1'],'dams',uinp.structure['i_p_pos']) #need axis up to p so that p association can be applied
 ##post weaning management
@@ -536,7 +536,7 @@ a_r2_ida0e0b0c5yg3 = f_g2g(pinp.sheep['ia_r2_ic5g3'],'offs',uinp.parameters['i_x
 
 ##std feed options
 feedoptions_r1pj1 = np.rollaxis(pinp.feedsupply['i_feedoptions_r1pj1'].reshape(pinp.feedsupply['i_j1_len'],pinp.feedsupply['i_r1_len'],pinp.feedsupply['i_feedoptions_r1pj1'].shape[-1]), 0, 3) 
-##an association between the c2 cluster (feed variation) and reproductive management (scanning, lal & weaning). 
+##an association between the c2 cluster (feed variation) and reproductive management (scanning, gbal & weaning). 
 a_c2_vlsb1 = uinp.structure['ia_c2_vlsb1'].reshape(uinp.structure['i_len_v'], uinp.structure['i_len_l'], uinp.structure['i_len_s'], uinp.structure['ia_c2_vlsb1'].shape[-1])
 
 
@@ -657,9 +657,9 @@ a_g3_p7_p = np.apply_along_axis(sfun.f_next_prev_association, 0, pinp.sheep['i_e
 ############################
 ### apply associations     #    
 ############################
-###management for weaning, lal and scan options
+###management for weaning, gbal and scan options
 wean_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(wean_oa1e1b1nwzida0e0b0xyg1,a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
-lal_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(lal_oa1e1b1nwzida0e0b0xyg1,a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
+gbal_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(gbal_oa1e1b1nwzida0e0b0xyg1,a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
 scan_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(scan_oa1e1b1nwzida0e0b0xyg1,a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
 ###date, age, timing
 date_born1st_pa1e1b1nwzida0e0b0xyg2=np.take_along_axis(date_born1st_oa1e1b1nwzida0e0b0xyg2,a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0) 
@@ -1100,7 +1100,7 @@ period_between_joinscan_pa1e1b1nwzida0e0b0xyg1 = f_period_is_('period_is_between
 period_between_scanbirth_pa1e1b1nwzida0e0b0xyg1 = f_period_is_('period_is_between', date_scan_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_born_pa1e1b1nwzida0e0b0xyg2, date_end_pa1e1b1nwzida0e0b0xyg)
 period_between_birthwean_pa1e1b1nwzida0e0b0xyg1 = f_period_is_('period_is_between', date_born_pa1e1b1nwzida0e0b0xyg2, date_start_pa1e1b1nwzida0e0b0xyg, date_weaned_pa1e1b1nwzida0e0b0xyg2, date_end_pa1e1b1nwzida0e0b0xyg)
 period_is_postwean_pa1e1b1nwzida0e0b0xyg1 = f_period_is_('period_is_post', date_weaned_pa1e1b1nwzida0e0b0xyg2, date_start_pa1e1b1nwzida0e0b0xyg)
-period_is_lambing_pa1e1b1nwzida0e0b0xyg1 = f_period_is_('period_is', date_born_pa1e1b1nwzida0e0b0xyg2, date_start_pa1e1b1nwzida0e0b0xyg, date_end_pa1e1b1nwzida0e0b0xyg) #g2 date born is the equivelant of date lambed g1
+period_is_birth_pa1e1b1nwzida0e0b0xyg1 = f_period_is_('period_is', date_born_pa1e1b1nwzida0e0b0xyg2, date_start_pa1e1b1nwzida0e0b0xyg, date_end_pa1e1b1nwzida0e0b0xyg) #g2 date born is the equivelant of date lambed g1
 
 # period_is_postwean_pa1e1b1nwzida0e0b0xyg1 = f_period_is_('period_is_post', date_weaned_pa1e1b1nwzida0e0b0xyg2, date_start_pa1e1b1nwzida0e0b0xyg)
 # period_is_prescan_pa1e1b1nwzida0e0b0xyg1 = f_period_is_('period_is_pre', date_scan_pa1e1b1nwzida0e0b0xyg1 , date_end_p=date_end_pa1e1b1nwzida0e0b0xyg)
@@ -1135,7 +1135,7 @@ t_fs_ageweaned_pc0c1c2j1wzida0e0b0xyg3 = np.rollaxis(pinp.feedsupply['i_feedopti
 t_fs_btrt_pc0c1c2j1wzida0e0b0xyg3 = np.expand_dims(np.rollaxis(pinp.feedsupply['i_feedoptions_var_r2p'][a_r2_ida0e0c4xyg3],-1,0), axis = tuple(range(uinp.structure['i_p_pos']+1,pinp.sheep['i_i_pos']))) #add from i to p
 t_fs_gender_pc0c1c2j1wzida0e0b0xyg3 = np.expand_dims(np.rollaxis(pinp.feedsupply['i_feedoptions_var_r2p'][a_r2_ida0e0b0c5yg3],-1,0), axis = tuple(range(uinp.structure['i_p_pos']+1,pinp.sheep['i_i_pos']))) #add from i to p
 
-##3)Based on the animal management selected (scan, lal and wean) and whether the animals are differentially managed in this trial
+##3)Based on the animal management selected (scan, gbal and wean) and whether the animals are differentially managed in this trial
 ###a) weaning age variation
 a_c0_pa1e1b1nwzida0e0b0xyg1 = period_is_postwean_pa1e1b1nwzida0e0b0xyg1 * pinp.sheep['i_dam_wean_diffman'] * np.arange(len_a)
 t_fs_ageweaned_pa1e1b1j1wzida0e0b0xyg1 = np.take_along_axis(t_fs_ageweaned_pc0c1c2j1wzida0e0b0xyg1[0:a_c0_pa1e1b1nwzida0e0b0xyg1.shape[0]], a_c0_pa1e1b1nwzida0e0b0xyg1, 1) #have to slice off the the extra fs periods.
@@ -1165,10 +1165,10 @@ a_t_pa1e1b1nwzida0e0b0xyg1[period_between_birthwean_mask] = 2 #t = 0 is prescan,
 
 ####dams management in each period
 scan_pa1e1b1nwzida0e0b0xyg1 = (scan_pa1e1b1nwzida0e0b0xyg1) * (a_t_pa1e1b1nwzida0e0b0xyg1 >= 1) * pinp.sheep['i_dams_lsln_diffman_t'][1]
-lal_pa1e1b1nwzida0e0b0xyg1 = (lal_pa1e1b1nwzida0e0b0xyg1 -1 ) * (a_t_pa1e1b1nwzida0e0b0xyg1 >= 2) * pinp.sheep['i_dams_lsln_diffman_t'][2] + 1  #minus 1 then plus 1 ensures that thewean option before lactation is 1 
+gbal_pa1e1b1nwzida0e0b0xyg1 = (gbal_pa1e1b1nwzida0e0b0xyg1 -1 ) * (a_t_pa1e1b1nwzida0e0b0xyg1 >= 2) * pinp.sheep['i_dams_lsln_diffman_t'][2] + 1  #minus 1 then plus 1 ensures that thewean option before lactation is 1 
 wean_pa1e1b1nwzida0e0b0xyg1 = (wean_pa1e1b1nwzida0e0b0xyg1 -1 ) * (a_t_pa1e1b1nwzida0e0b0xyg1 >= 3) * pinp.sheep['i_dams_lsln_diffman_t'][3] + 1  #minus 1 then plus 1 ensures that thewean option before weaning is 1 
 ####a_c2_vlsb1 states the feed variation slice for defferent management. In this step we slice a_c2_vlsb1 for the selected management in each period.
-a_c2_pa1e1b1nwzida0e0b0xyg1 = np.rollaxis(a_c2_vlsb1[wean_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], lal_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], scan_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], ...],-1,3) #remove the singlton b1 axis from the association arrays because a populated b1 axis comes from a_c2_vlsb1
+a_c2_pa1e1b1nwzida0e0b0xyg1 = np.rollaxis(a_c2_vlsb1[wean_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], gbal_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], scan_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], ...],-1,3) #remove the singlton b1 axis from the association arrays because a populated b1 axis comes from a_c2_vlsb1
 ####select feed variation pattern
 t_fs_lsln_pa1e1b1j1wzida0e0b0xyg1 = np.take_along_axis(t_fs_lsln_pc0c1c2j1wzida0e0b0xyg1, a_c2_pa1e1b1nwzida0e0b0xyg1, uinp.parameters['i_b1_pos'])
 
@@ -1443,10 +1443,9 @@ for p in range(1):
     rc_start_yatf = ffcfw_start_yatf / nw_start_yatf		
     rc_start_offs = ffcfw_start_offs / nw_start_offs
     
-    ###Relative conditon of dam at parturition - needs to be remembered between loops (milk production)
-    if np.any(period_is_lambing_pdams[p]):
-        rc_part_dams[period_is_lambing_pa1e1b1nwzida0e0b0xyg1[p, ...]] = rc_start_dams[period_is_lambing_pa1e1b1nwzida0e0b0xyg1[p, ...]] #array period is lamning should have one true per year.
-    
+    ###Relative conditon of dam at parturition - needs to be remembered between loops (milk production)  
+    rc_birth_start_dams = rc_birth_start_dams * ~period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...] + rc_start_dams * period_is_birth_pa1e1b1nwzida0e0b0xyg1[p, ...]
+
     ###Relative size (start) - dams & sires	
     relsize_start_sire = np.minimum(1, nw_start_sire / srw_xyg0)		
     relsize_start_dams = np.minimum(1, nw_start_dams / srw_xyg1)		
