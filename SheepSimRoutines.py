@@ -17,11 +17,11 @@ def f_sig(x,a,b):
 
 def f_ramp(x,a,b):
     ''' RAMP function CSIRO equation 125a'''
-    return  min(1,max(0,(a-x)/(a-b)))
+    return  np.min(1,np.max(0,(a-x)/(a-b)))
 
 def f_dim(x,y):
     '''a function that minimum value of zero otherwise differrrrence between the 2 inputs '''
-    return max(0,x-y)	
+    return np.max(0,x-y)
 
 def daylength(dayOfYear, lat):
     """Computes the length of the day (the time between sunrise and
@@ -58,23 +58,23 @@ def daylength(dayOfYear, lat):
 #^this function can handle 2 multi D arrays. not required for P associations because P is 1D array
 # def f_next_prev_joining(joining_date,age,offset):
 #     '''
-    
+
 
 #     Parameters
 #     ----------
 #     Params must have identical axis 1 and 2
-    
+
 #     joining_date : Array
 #         Joining date.
 #     age : Array
-#         age of animal at the begining of each period. 
+#         age of animal at the begining of each period.
 
 #     Returns
 #     -------
 #     Array.
 
 #     '''
-#     a_next = np.zeros(len(age[0]) * len(joining_date[1]) * len(joining_date[2])).reshape(len(age[0]), len(joining_date[1]), len(joining_date[2])) 
+#     a_next = np.zeros(len(age[0]) * len(joining_date[1]) * len(joining_date[2])).reshape(len(age[0]), len(joining_date[1]), len(joining_date[2]))
 #     for i in range(len(joining_date[1])):
 #         for c in range(len(joining_date[2])):
 #             ###next joining date
@@ -87,7 +87,7 @@ def f_next_prev_association(datearray_sclice,*args):
     Depending on the inputs this function will return the next or previous assosiation.
     eg it can be used to determine the next lambing opportunity for each period.
     See john stuff.py for alternative methods.
-    
+
     Parameters
     ----------
     datearray_sclice : Int
@@ -105,7 +105,7 @@ def f_next_prev_association(datearray_sclice,*args):
     date=args[0]
     offset=args[1] #offset is used to get the previous datearray period
     idx_next = np.searchsorted(datearray_sclice, date)
-    idx = np.clip(idx_next - offset, 0, len(datearray_sclice)-1) #makes the max value equal to the length of joining array, because if the period date is after the last lambing opportunity there is no 'next' 
+    idx = np.clip(idx_next - offset, 0, len(datearray_sclice)-1) #makes the max value equal to the length of joining array, because if the period date is after the last lambing opportunity there is no 'next'
     return idx
 
 # def f_find_index(datearray_slice,*args):
@@ -247,7 +247,7 @@ def sim_periods(start_year, periods_per_year, oldest_animal):
     Starts on 1 Jan of the year with the earliest birthdate.
 
     Parameters:
-    start_year = int: year to start simulation. 
+    start_year = int: year to start simulation.
     periods_per_year = int:
     oldest_animal = float: age of the oldest animal to be simulated (yrs)
 
@@ -259,29 +259,29 @@ def sim_periods(start_year, periods_per_year, oldest_animal):
     step - seconds in each period
     '''
     n_sim_periods = int(oldest_animal * periods_per_year)
-    start_date = dt.date(year=start_year, month=1,day=1) 
+    start_date = dt.date(year=start_year, month=1,day=1)
     step = pd.to_timedelta(365.25 / periods_per_year,'D')
     step = step.to_numpy().astype('timedelta64[s]')
     index_p = np.arange(n_sim_periods + 1)
     date_start_p =  (np.datetime64(start_date) + (step * index_p)).astype('datetime64[D]') #astype day rounds the date to the nearest day
-    date_end_p = (np.datetime64(start_date - dt.timedelta(days=1)) + (step * (index_p+1))).astype('datetime64[D]') #minus one day to get the last day in the period not the first day of the next period.	
+    date_end_p = (np.datetime64(start_date - dt.timedelta(days=1)) + (step * (index_p+1))).astype('datetime64[D]') #minus one day to get the last day in the period not the first day of the next period.
     return n_sim_periods, date_start_p, date_end_p, index_p, step
 
-def condition_score(ffcflw, normal_weight, cs_propn = 0.19):
+def f_condition_score(ffcfw, normal_weight, cs_propn = 0.19):
     ''' Estimate CS from LW. Works with scalars or arrays - provided they are broadcastable into ffcflw.
 
-   ffcflw: (kg) Fleece free, conceptus free liveweight. normal_weight: (kg). cs_propn: (0.19) change in LW
+   ffcfw: (kg) Fleece free, conceptus free liveweight. normal_weight: (kg). cs_propn: (0.19) change in LW
    associated with 1 CS as a proportion of normal_weight.
 
    Returns: condition score - float
    '''
-    return 3 + (ffcflw - normal_weight)/(cs_propn * normal_weight)
+    return 3 + (ffcfw - normal_weight)/(cs_propn * normal_weight)
 
 def feed_inputs():
     return feedsupply_pi, feedsupply_pjxyl, feedsupply_pkdwbl, foo_std_pr, dmd_std_pr
 
 
-def conception(ffcflw, srw):
+def f_conception_cs(ffcflw, srw):
     #equations 122 to 124
     #nlm
     #increment number of rams required for the ewes that are being joined this period
@@ -292,32 +292,23 @@ def conception(ffcflw, srw):
 #                * ram joining percentage_oj
     return nlm
 
-def mortality_csiro(age_days, rc, ebg, nwg):
+def f_mortality_base(age_days, rc, ebg, nwg):
     #equation 125
     return mr
 
-def ewe_mortality_csiro():
+def f_mortality_dam_cs():
     #equations 126 to 129
     return mrt_ojexyl, mrd_ojexyl, mrl_ojewbl
 
-def mortality_mu(age_days, rc, ebg, nwg):
+def f_mortality_weaner_mu(age_days, rc, ebg, nwg):
     # these equations are not documented
     return mr
 
-def ewe_mortality_mu():
+def f_mortality_dam_mu():
     # these equations are not documented
     return mrt_ojexyl, mrd_ojexyl, mrl_ojewbl
 
-def feed_supply(feedsupply, foo_std, dmd_std):
-    # calculate the feed offered to the sheep from the feed supply value
-    # this is not CSIRO equations. Related to inputs
-    return foo, dmd, supp
-
-def r_intake(rc, c_ci_gy, feed_supply, srw, rel_size,  ):
-    #equations 14 to 30 wihtout d
-    return
-
-def p_intake(rc, c_ci_gy, feed_supply, srw, rel_size,  ):
+def f_potential_intake(rc, c_ci_gy, feed_supply, srw, rel_size,  ):
     #do potential intake calculations
     #equations 2 to 10 & 72
     #`
@@ -333,7 +324,7 @@ def p_intake(rc, c_ci_gy, feed_supply, srw, rel_size,  ):
 
     a_g_j = (n_groups_ewes,
                 n_genotypes)
-    
+
     jexyl   = (n_groups_ewes
               ,n_max_ecycles
               ,n_litter_size
@@ -350,36 +341,30 @@ def p_intake(rc, c_ci_gy, feed_supply, srw, rel_size,  ):
 
     yf = ( 1 - thetamilk ) / ( 1 + exp (c_ci_jy[...,13] * -1 * (a - c_ci_jy[...,14])))
 
-    tf  
+    tf
 
     return mei
 
-def energy(dmd, ):
+def f_intake(rc, c_ci_gy, feed_supply, srw, rel_size,  ):
+    #equations 14 to 30 wihtout d
+    return
+
+def f_energy_cs(dmd, ):
     ## equations 33 to 45
-    km 
+    km
     return mem
 
-def foetus():
+def f_foetus_cs():
     ## equations 57 to 65
     return d_lw_f_jexl, cw_jexl, mec_jexl
 
-def milk():
+def f_milk_cs():
     ## equations 66 to 75
     return ldr_jexyl, lb_jexyl, mel_jexyl
 
-def fibre():
+def f_fibre_cs():
     ## equations 77 to 86
     return d_cfw_wolag, d_cfw, mew, d_fd, d_fl
-
-def chill():  # do this in v2
-    ## equations 88 to 100
-    ## remember to include the age adjustment for c_cc[3] if <30days old
-    return me_cold, kg
-
-def lwc():
-    ## equations 101 to 116
-    ## note not doing the protein component other than Eqn 105
-    return ebg, pg
 
 def wool_value(cfw, fl, fd, fd_min, wool_prices):
     ## these equations are not documented
