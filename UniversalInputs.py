@@ -179,7 +179,6 @@ structure['i_w_pos'] = -10
 structure['i_n_pos'] = -11
 structure['i_p_pos'] = -15
 structure['i_lag_wool'] = 1 #lags in calculations (number of days over which production is averaged)
-structure['i_lag_wool'] = 1 #lags in calculations (number of days over which production is averaged)
 structure['i_lag_organs'] = 1  #lags in calculations (number of days over which production is averaged)
 
 ##pools
@@ -187,10 +186,10 @@ structure['sheep_pools']=['pool1', 'pool2', 'pool3', 'pool4']
 structure['i_oldest_animal'] = 6.6
 structure['n_sim_periods_year'] = 52 
 ##associations
-structure['a_nfoet_b1'] = np.array([1,2,3,2,3,3,1,2,3,0,0])
-structure['a_nyatf_b1'] = np.array([1,2,3,1,2,1,0,0,0,0,0])  
-structure['i_mask_b0_b1'] = np.array([True,	True,	True,	True,	True,	True,	False,	False,	False,	False,	False])
-structure['ia_b0_b1'] = np.array([0, 1,	2,	3,	4,	5,	0,	0,	0,	0,	0])
+structure['a_nfoet_b1'] = np.array([0,1,2,3,2,3,3,1,2,3,0])
+structure['a_nyatf_b1'] = np.array([0,1,2,3,1,2,1,0,0,0,0])  
+structure['i_mask_b0_b1'] = np.array([False, True,	True,	True,	True,	True,	True,	False,	False,	False,	False])
+structure['ia_b0_b1'] = np.array([0, 0, 1,	2,	3,	4,	5,	0,	0,	0,	0])
                      
 ##feed supply/ nutrition levels
 structure['i_w_len_sire'] = 1
@@ -199,9 +198,11 @@ structure['i_w_len_offs'] = 5
 structure['i_n_len_sire'] = 1
 structure['i_n_len_dams'] = 6
 structure['i_n_len_offs'] = 8
-structure['i_nut_spread_ng0'] = np.array([0])
-structure['i_nut_spread_ng1'] = np.array([0,0.66,-0.5,1,-1,3.5])
-structure['i_nut_spread_ng3'] = np.array([0,0.33,0.66,1,-0.5,-1,3,3.5])
+structure['i_nut_spread_g0_n'] = np.array([0])
+structure['i_nut_spread_g1_n'] = np.array([0,0.66,-0.5,1,-1,3.5]) #fs adjustment for different n levels - above 3 is absolute not adjustemnt
+structure['i_density_g1_n'] = np.array([1,0.66,1.25,0.5,1.5,100]) #stocking density adjuster for different n levels. An increasing feedsupply (less than 3.0) means that the animals are being offered more feed and therefore density is lower (although it could be with a high density and lots of supplement - we will be assuming that it is lower density and increased FOO). This is represented by scaling the standard stocking density by a number less than 1. Note: Distance walked is scaled by 40/density (if density is > 40). SO trying to make distance a small number for confinement feeding and even smaller for feedlotting
+structure['i_nut_spread_g3_n'] = np.array([0,0.33,0.66,1,-0.5,-1,3,3.5]) #fs adjustment for different n levels - above 3 is absolute not adjustemnt
+structure['i_density_g3_n'] = np.array([1,0.75,0.66,0.5,1.25,1.5,300,100]) #stocking density adjuster for different n levels. An increasing feedsupply (less than 3.0) means that the animals are being offered more feed and therefore density is lower (although it could be with a high density and lots of supplement - we will be assuming that it is lower density and increased FOO). This is represented by scaling the standard stocking density by a number less than 1. Note: Distance walked is scaled by 40/density (if density is > 40). SO trying to make distance a small number for confinement feeding and even smaller for feedlotting
 ##genotype
 ###An array that contains the proportion of each purebred genotype in the sire, dam, yatf or offspring eg:
 # 		            k0	
@@ -297,20 +298,20 @@ structure['ia_c2_vlsb1'] =np.array([[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
                                  ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
                                  ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
                                  ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
-                                 ,[2,	2,	2,	2,	2,	2,	2,	2,	2,	1,	1]
-                                 ,[3,	4,	4,	4,	4,	4,	3,	4,	4,	1,	1]
-                                 ,[3,	5,	6,	5,	6,	6,	3,	5,	6,	1,	1]
-                                 ,[3,	5,	6,	5,	6,	6,	3,	5,	6,	1,	1]
+                                 ,[1,	2,	2,	2,	2,	2,	2,	2,	2,	2,	1]
+                                 ,[1,	3,	4,	4,	4,	4,	3,	4,	4,	4,	1]
+                                 ,[1, 3,	5,	6,	5,	6,	6,	3,	5,	6,	1]
+                                 ,[1, 3,	5,	6,	5,	6,	6,	3,	5,	6,	1]
                                  ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
-                                 ,[2,	2,	2,	2,	2,	2,	1,	1,	1,	1,	1]
-                                 ,[3,	4,	4,	4,	4,	4,	1,	1,	1,	1,	1]
-                                 ,[3,	5,	6,	5,	6,	6,	1,	1,	1,	1,	1]
-                                 ,[3,	5,	6,	5,	6,	6,	1,	1,	1,	1,	1]
+                                 ,[1, 2,	2,	2,	2,	2,	2,	1,	1,	1,	1]
+                                 ,[1, 3,	4,	4,	4,	4,	4,	1,	1,	1,	1]
+                                 ,[1, 3,	5,	6,	5,	6,	6,	1,	1,	1,	1]
+                                 ,[1, 3,	5,	6,	5,	6,	6,	1,	1,	1,	1]
                                  ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
-                                 ,[2,	2,	2,	2,	2,	2,	1,	1,	1,	1,	1]
-                                 ,[3,	4,	4,	3,	4,	3,	1,	1,	1,	1,	1]
-                                 ,[3,	5,	6,	3,	5,	3,	1,	1,	1,	1,	1]
-                                 ,[3,	5,	6,	3,	5,	3,	1,	1,	1,	1,	1]])
+                                 ,[1, 2,	2,	2,	2,	2,	2,	1,	1,	1,	1]
+                                 ,[1, 3,	4,	4,	3,	4,	3,	1,	1,	1,	1]
+                                 ,[1, 3,	5,	6,	3,	5,	3,	1,	1,	1,	1]
+                                 ,[1, 3,	5,	6,	3,	5,	3,	1,	1,	1,	1]])
 
 ########################
 #period                #

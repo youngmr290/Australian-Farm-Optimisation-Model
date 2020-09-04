@@ -23,7 +23,7 @@ def f_dim(x,y):
     '''a function that minimum value of zero otherwise differrrrence between the 2 inputs '''
     return np.max(0,x-y)
 
-def daylength(dayOfYear, lat):
+def f_daylength(dayOfYear, lat):
     """Computes the length of the day (the time between sunrise and
     sunset) given the day of the year and latitude of the location.
     Function uses the Brock model for the computations.

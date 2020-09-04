@@ -32,7 +32,7 @@ import pandas as pd
 import numpy as np
 import timeit
 import datetime as dt
-
+import sys
 
 #MUDAS modules
 import UniversalInputs as uinp
@@ -55,7 +55,20 @@ phases_df =uinp.structure['phases']
 phases_df2=phases_df.copy() #make a copy so that it doesn't alter the phases df that exists outside this func
 phases_df2.columns = pd.MultiIndex.from_product([phases_df2.columns, ['']])  #make the df multi index so that when it merges with other df below the indexs remanin seperate (otherwise it turn into a one leveled tuple)
 
+##check that the rotations match the inputs. If not then quit and leave error message
+if pinp.crop['user_crop_rot']:
+    ### User defined
+    base_yields = pinp.crop['yields']
+else:        
+    ### AusFarm
+    base_yields = np.load('Yield data.npy')*1000
 
+if len(phases_df) != len(base_yields):
+    print ('''Rotations dont match inputs.
+           Things to check: 
+           1. if you have generated new rotations have you re-run AusFarm
+           2. the named ranges in for the user defined rotations and inputs are all correct''')
+    sys.exit()
 
 
 
@@ -144,8 +157,13 @@ def rot_yield(*params):
         -lmu factor
         -frost
     '''
-    ##read in yields from crop sim.xlsx
-    base_yields = np.load('Yield data.npy')*1000
+    ##read in yields 
+    if pinp.crop['user_crop_rot']:
+        ### User defined
+        base_yields = pinp.crop['yields']
+    else:        
+        ### AusFarm
+        base_yields = np.load('Yield data.npy')*1000
     base_yields = pd.Series(base_yields, index = phases_df.iloc[:,-1])
     ##colate other info
     yields_lmus = pinp.crop['yield_by_lmu'] #soil yield factor
@@ -203,9 +221,20 @@ def fert_req(*args):
         Fert required by 1ha of each phases (kg/ha)
         *note arable area is accounted for in the final cost funtion below
     '''
-    base_fert = np.load('Fert data.npy')
+    ##read in yields 
+    if pinp.crop['user_crop_rot']:
+        ### User defined
+        base_fert = pinp.crop['fert'].reset_index()
+    else:        
+        ### AusFarm
+        base_fert = np.load('fert data.npy')*1000
     fert_by_soil = pinp.crop['fert_by_lmu'] #read in chem by soil
-    base_fert = pd.DataFrame(base_fert, index = phases_df.index, columns = fert_by_soil.index)
+    base_fert = pd.DataFrame(base_fert, index = phases_df.iloc[:,-1])  #make the current landuse the index
+    ##add the fixed fert 
+    fixed_fert = pinp.crop['fixed_fert']
+    base_fert = pd.merge(base_fert, fixed_fert, how='left', left_index=True, right_index = True) 
+    ##add the full rotation index eg EEEEEb
+    base_fert.set_index(phases_df.index, append=True, inplace=True)
     ## adjust the fert cost for each rotation by lmu
     fert_by_soil = fert_by_soil.stack() #read in fert by soil
     fert=base_fert.mul(fert_by_soil,axis=1,level=0)
@@ -243,11 +272,22 @@ def fert_cost():
     fert_app_cost_t=fertreq.mul(application_cost/1000,axis=1,level=1).sum(axis=1, level=0) #div by 1000 to convert to $/kg
     ##app cost per ha 
     ###calc passes
-    x = fertreq.to_numpy()
-    step = pinp.crop['step_fert_passes'] #reindex to account for lmu then convert to np
-    fert_passes = fun.passes(x,step)
-    fert_passes = pd.DataFrame(fert_passes, index = fertreq.index, columns = fertreq.columns) #turn it into df with correct indexes so it can be combined with cost allocation.
-    fert_passes['lime'] = fert_passes['lime']/4 #lime is only applied once every 4 years but want the cost spread over all landuses
+    
+    ##read in passes 
+    if pinp.crop['user_crop_rot']:
+        ### User defined
+        fert_passes = pinp.crop['fert_passes'].reset_index()
+    else:        
+        ### AusFarm
+        fert_passes = 
+    fert_passes = pd.DataFrame(fert_passes, index = phases_df.iloc[:,-1])  #make the current landuse the index
+    ##add the fixed fert 
+    fixed_fert_passes = pinp.crop['fixed_fert']
+    fert_passes = pd.merge(fert_passes, fixed_fert, how='left', left_index=True, right_index = True) 
+    ##add the full rotation index eg EEEEEb
+    fert_passes.set_index(phases_df.index, append=True, inplace=True)
+    ## reindex col headers so that lmu is included - note the passes are the same for each lmu
+    fert_passes = fert_passes.reindex(fertreq.columns,axis=1,level=1)
     ###add the cost for each pass
     fert_cost_ha = allocation.mul(mac.fert_app_cost_ha()).stack() #cost for 1 pass for each fert.
     fert_app_cost_ha = fert_passes.mul(fert_cost_ha,axis=1,level=1).sum(axis=1, level=0) 
@@ -357,22 +397,27 @@ def chem_cost():
         *note - arable area accounted for in the final function that sums all costs
     '''
     ##read in neccessary bits and adjust indexed
-    base_chem = np.load('Chem data.npy')
+    chem_cost = pinp.crop['chem_cost']
     chem_by_soil = pinp.crop['chem_by_lmu'] #read in chem by soil
-    base_chem = pd.DataFrame(base_chem, index = phases_df.index, columns = chem_by_soil.index)
+    ##read in chem passes 
+    if pinp.crop['user_crop_rot']:
+        ### User defined
+        base_chem = pinp.crop['chem'].reset_index()
+    else:        
+        ### AusFarm
+        base_chem = 
+    base_chem = pd.DataFrame(base_chem, index = phases_df.iloc[:,-1])  #make the current landuse the index
+    ##adjust for the cost eg cost per application * number of applications
+    chem_cost = base_chem * chem_cost
+    ##add proper rotation index
+    chem_cost.set_index(phases_df.index, append=True, inplace=True)
     ## adjust the chem cost for each rotation by lmu
     chem_by_soil1 = chem_by_soil.stack()
-    chem=base_chem.mul(chem_by_soil1,axis=1,level=0)
-    ##get the cost of chemicals - multiply chemical amount by cost
-    chemical_price = pd.Series(np.concatenate([uinp.price['herbicide'],uinp.price['fungicide']]),index = chem_by_soil.index)
-    chem_cost=chem.mul(chemical_price, axis =1, level=0)
-    ##calc passes
-    x = chem.to_numpy()
-    step = pinp.crop['step_chem_passes'].reindex(chem.columns, axis=0,level=0).values.flatten() #reindex to account for lmu then convert to np
-    chem_passes = fun.passes(x,step)
-    ##add the cost for each pass
-    app_cost_ha = chem_passes * mac.chem_app_cost_ha()
-    app_cost_ha = pd.DataFrame(app_cost_ha, index = phases_df.index, columns = chem.columns) #turn it into df with correct indexes so it can be combined with cost allocation.
+    chem_cost=chem_cost.mul(chem_by_soil1,axis=1,level=0)
+    ##application cost
+    app_cost_ha = base_chem * mac.chem_app_cost_ha()
+    app_cost_ha.set_index(phases_df.index, append=True, inplace=True)
+    app_cost_ha = app_cost_ha.reindex(chem.columns, axis=0,level=0) #reindex to get lmu 
     ##add application cost and chem cost
     total_cost = chem_cost + app_cost_ha
     ##add cashflow periods and sum across each chem
