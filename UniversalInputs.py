@@ -180,9 +180,11 @@ structure['i_n_pos'] = -11
 structure['i_p_pos'] = -15
 structure['i_lag_wool'] = 1 #lags in calculations (number of days over which production is averaged)
 structure['i_lag_organs'] = 1  #lags in calculations (number of days over which production is averaged)
+structure['i_lsln_idx_dams'] = ['00',	'11',	'22',	'33',	'21',	'32',	'31',	'10',	'20',	'30',	'NM']
+structure['i_btrt_idx_offs'] = ['11',	'22',	'33',	'21',	'32',	'31']
 
 ##pools
-structure['sheep_pools']=['pool1', 'pool2', 'pool3', 'pool4']
+structure['sheep_pools']=['pool1', 'pool2', 'pool3', 'pool4'] #nutrition pools
 structure['i_oldest_animal'] = 6.6
 structure['n_sim_periods_year'] = 52 
 ##associations
@@ -193,11 +195,17 @@ structure['ia_b0_b1'] = np.array([0, 0, 1,	2,	3,	4,	5,	0,	0,	0,	0])
                      
 ##feed supply/ nutrition levels
 structure['i_w_len_sire'] = 1
+structure['i_w_idx_sire'] = ['lw1']
 structure['i_w_len_dams'] = 3
+structure['i_w_idx_dams'] = ['lw1', 'lw2', 'lw3']
 structure['i_w_len_offs'] = 5
+structure['i_w_idx_offs'] = ['lw1', 'lw2', 'lw3', 'lw4', 'lw5']
 structure['i_n_len_sire'] = 1
+structure['i_n_idx_sire'] = ['n1']
 structure['i_n_len_dams'] = 6
+structure['i_n_idx_dams'] = ['n1', 'n2', 'n3']
 structure['i_n_len_offs'] = 8
+structure['i_n_idx_offs'] = ['n1', 'n2', 'n3', 'n4', 'n5']
 structure['i_nut_spread_g0_n'] = np.array([0])
 structure['i_nut_spread_g1_n'] = np.array([0,0.66,-0.5,1,-1,3.5]) #fs adjustment for different n levels - above 3 is absolute not adjustemnt
 structure['i_density_g1_n'] = np.array([1,0.66,1.25,0.5,1.5,100]) #stocking density adjuster for different n levels. An increasing feedsupply (less than 3.0) means that the animals are being offered more feed and therefore density is lower (although it could be with a high density and lots of supplement - we will be assuming that it is lower density and increased FOO). This is represented by scaling the standard stocking density by a number less than 1. Note: Distance walked is scaled by 40/density (if density is > 40). SO trying to make distance a small number for confinement feeding and even smaller for feedlotting

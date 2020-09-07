@@ -90,7 +90,7 @@ def stubpyomo_local(params):
         ss = list(model.s_stub_cat)[list(model.s_stub_cat).index(s)-1] #stubble cat plus one - used to transfer from current cat to the next, list is required because indexing of an ordered set starts at 1 which means index of 0 chucks error 
         fs = list(model.s_feed_periods)[f-1] #have to convert to a list first beacuse indexing of an ordered set starts at 1
         return  -model.v_stub_transfer[fs,k,s]*1000  + model.p_fp_transfer[f,k]*model.v_stub_transfer[f,k,s] \
-                    - sum(model.v_stub_con[e,f,k,ss] * model.p_bc_prov[s,k] + model.v_stub_con[e,f,k,s] * model.p_bc_req[s,k] for e in model.s_sheep_pools) <=0
+                    - sum(model.v_stub_con[v,f,k,ss] * model.p_bc_prov[s,k] + model.v_stub_con[v,f,k,s] * model.p_bc_req[s,k] for v in model.s_sheep_pools) <=0
     model.con_stubble_bcd = pe.Constraint(model.s_feed_periods, model.s_crops, model.s_stub_cat, rule = stubble_transfer, doc='links rotation stubble production with consumption of cat A')
 
 
@@ -108,13 +108,13 @@ model.v_stub_transfer = pe.Var(model.s_feed_periods, model.s_crops, model.s_stub
 ###################
 ##stubble transter from category to category and period to period
 def stubble_req_a(model,k,s):
-    return sum(model.v_stub_con[e,f,k,s] * model.p_a_req[s,f,k] for e in model.s_sheep_pools for f in model.s_feed_periods if model.p_a_req[s,f,k] !=0) 
+    return sum(model.v_stub_con[v,f,k,s] * model.p_a_req[s,f,k] for v in model.s_sheep_pools for f in model.s_feed_periods if model.p_a_req[s,f,k] !=0) 
 
 
 ##stubble md
-def stubble_md(model,e,f):
-    return sum(model.v_stub_con[e,f,k,s] * model.p_stub_md[f,s,k] for k in model.s_crops for s in model.s_stub_cat)
+def stubble_me(model,v,f):
+    return sum(model.v_stub_con[v,f,k,s] * model.p_stub_md[f,s,k] for k in model.s_crops for s in model.s_stub_cat)
     
 ##stubble vol
-def stubble_vol(model,e,f):
-    return sum(model.v_stub_con[e,f,k,s] * model.p_stub_vol[f,s,k] for k in model.s_crops for s in model.s_stub_cat)
+def stubble_vol(model,v,f):
+    return sum(model.v_stub_con[v,f,k,s] * model.p_stub_vol[f,s,k] for k in model.s_crops for s in model.s_stub_cat)

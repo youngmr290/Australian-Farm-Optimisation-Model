@@ -85,7 +85,7 @@ ft     = (n_feed_periods, n_pasture_types)
 ## all need pre-defining because inputs are in separate pasture type arrays
 i_phase_germ_dict = dict()
 
-i_me_maintenance_eft            = np.zeros(eft,  dtype = 'float64')  # M/D level for target LW pattern
+i_me_maintenance_vft            = np.zeros(eft,  dtype = 'float64')  # M/D level for target LW pattern
 c_pgr_gi_scalar_gft             = np.zeros(gft,  dtype = 'float64')  # numpy array of pgr scalar =f(startFOO) for grazing intensity (due to impact of FOO changing during the period)
 i_foo_end_propn_gt              = np.zeros(gt,   dtype = 'float64')  # numpy array of proportion of available feed consumed for each grazing intensity level.
 
@@ -148,7 +148,7 @@ pasture_rt                    = np.zeros(rt, dtype = 'float64')
 ### _create numpy index for param dicts ^creating indexes is a bit slow
 ##the array returned must be of type object, if string the dict keys become a numpy string and when indexed in pyomo it doesn't work.
 index_d                       = np.asarray(uinp.structure['dry_groups'])
-index_e                       = np.asarray(uinp.structure['sheep_pools'])
+index_v                       = np.asarray(uinp.structure['sheep_pools'])
 index_f                       = np.asarray([*range(n_feed_periods)], dtype='object')
 index_g                       = np.asarray(uinp.structure['grazing_int'])
 index_l                       = pinp.general['lmu_area'].index.to_numpy() # lmu index description
@@ -178,9 +178,9 @@ index_goflt=fun.cartesian_product_simple_transpose(arrays)
 index_goflt=tuple(map(tuple, index_goflt)) #create a tuple rather than a list because tuples are faster
 
 ## egoflt
-arrays=[index_e, index_g, index_o, index_f, index_l, index_t]
-index_egoflt=fun.cartesian_product_simple_transpose(arrays)
-index_egoflt=tuple(map(tuple, index_egoflt)) #create a tuple rather than a list because tuples are faster
+arrays=[index_v, index_g, index_o, index_f, index_l, index_t]
+index_vgoflt=fun.cartesian_product_simple_transpose(arrays)
+index_vgoflt=tuple(map(tuple, index_vgoflt)) #create a tuple rather than a list because tuples are faster
 
 ## dgoflt
 arrays=[index_d, index_g, index_o, index_f, index_l, index_t]
@@ -193,9 +193,9 @@ index_dflrt=fun.cartesian_product_simple_transpose(arrays)
 index_dflrt=tuple(map(tuple, index_dflrt)) #create a tuple rather than a list because tuples are faster
 
 ## edft
-arrays=[index_e, index_d, index_f, index_t]
-index_edft=fun.cartesian_product_simple_transpose(arrays)
-index_edft=tuple(map(tuple, index_edft)) #create a tuple rather than a list because tuples are faster
+arrays=[index_v, index_d, index_f, index_t]
+index_vdft=fun.cartesian_product_simple_transpose(arrays)
+index_vdft=tuple(map(tuple, index_vdft)) #create a tuple rather than a list because tuples are faster
 
 ## dft
 arrays=[index_d, index_f, index_t]
@@ -286,7 +286,7 @@ def map_excel(filename):
         i_fxg_foo_oflt[0,:,:,t]             = exceldata['LowFOO'].to_numpy()
         i_fxg_foo_oflt[1,:,:,t]             = exceldata['MedFOO'].to_numpy()
         i_me_eff_gainlose_ft[...,t]         = exceldata['MaintenanceEff'].iloc[:,0].to_numpy()
-        i_me_maintenance_eft[...,t]         = exceldata['MaintenanceEff'].iloc[:,1:].to_numpy().T
+        i_me_maintenance_vft[...,t]         = exceldata['MaintenanceEff'].iloc[:,1:].to_numpy().T
         ## # i_fxg_foo_oflt[-1,...] is calculated later and is the maximum foo that can be achieved (on that lmu in that period)
         ## # it is affected by sa on pgr so it must be calculated during the experiment where sam might be altered.
         i_fxg_pgr_oflt[0,:,:,t]             = exceldata['LowPGR'].to_numpy()
@@ -706,17 +706,17 @@ def green_and_dry(params):
                                           ,     grn_ri_quality_goflt
                                           *grn_ri_availability_goflt)
 
-    me_cons_grnha_egoflt   = fdb.effective_mei(      cons_grnha_t_goflt
+    me_cons_grnha_vgoflt   = fdb.effective_mei(      cons_grnha_t_goflt
                                                  ,     grn_md_grnha_goflt
-                                                 , i_me_maintenance_eft[:,np.newaxis,np.newaxis,:,np.newaxis,:]
+                                                 , i_me_maintenance_vft[:,np.newaxis,np.newaxis,:,np.newaxis,:]
                                                  ,           grn_ri_goflt
                                                  ,i_me_eff_gainlose_ft[:,np.newaxis,:])
-    me_cons_grnha_rav_egoflt = me_cons_grnha_egoflt.ravel()
-    params['p_me_cons_grnha_egoflt'] = dict( zip(index_egoflt ,me_cons_grnha_rav_egoflt))
+    me_cons_grnha_rav_vgoflt = me_cons_grnha_vgoflt.ravel()
+    params['p_me_cons_grnha_vgoflt'] = dict( zip(index_vgoflt ,me_cons_grnha_rav_vgoflt))
 
-    volume_grnha_egoflt    =  cons_grnha_t_goflt / grn_ri_goflt              # parameters for the growth/grazing activities: Total volume of feed consumed from the hectare
-    volume_grnha_rav_egoflt = volume_grnha_egoflt.ravel()
-    params['p_volume_grnha_egoflt'] = dict(zip(index_egoflt ,volume_grnha_rav_egoflt))
+    volume_grnha_vgoflt    =  cons_grnha_t_goflt / grn_ri_goflt              # parameters for the growth/grazing activities: Total volume of feed consumed from the hectare
+    volume_grnha_rav_vgoflt = volume_grnha_vgoflt.ravel()
+    params['p_volume_grnha_vgoflt'] = dict(zip(index_vgoflt ,volume_grnha_rav_vgoflt))
 
     ### _dry, dmd & foo of feed consumed
     dry_dmd_adj_ft  = np.max(i_dry_dmd_ave_ft,axis=0)    \
@@ -740,14 +740,14 @@ def green_and_dry(params):
 
     ### _dry, ME consumed per tonne consumed
     dry_md_dft           = fdb.dmd_to_md(dry_dmd_dft)
-    dry_md_edft          = np.stack([dry_md_dft * 1000] * n_feed_pools, axis = 0)
-    dry_mecons_t_edft  = fdb.effective_mei( 1000                                    # parameters for the dry feed grazing activities: Total ME of the tonne consumed
-                            ,           dry_md_edft
-                            , i_me_maintenance_eft[:,np.newaxis,:,:]
+    dry_md_vdft          = np.stack([dry_md_dft * 1000] * n_feed_pools, axis = 0)
+    dry_mecons_t_vdft  = fdb.effective_mei( 1000                                    # parameters for the dry feed grazing activities: Total ME of the tonne consumed
+                            ,           dry_md_vdft
+                            , i_me_maintenance_vft[:,np.newaxis,:,:]
                             ,           dry_ri_dft
                             ,i_me_eff_gainlose_ft)
-    dry_mecons_t_rav_edft = dry_mecons_t_edft.ravel()
-    params['p_dry_mecons_t_edft'] = dict(zip(index_edft ,dry_mecons_t_rav_edft))
+    dry_mecons_t_rav_vdft = dry_mecons_t_vdft.ravel()
+    params['p_dry_mecons_t_vdft'] = dict(zip(index_vdft ,dry_mecons_t_rav_vdft))
 
     ### _dry, animal removal
     dry_removal_t_dft[...]  = 1000 * (1 + i_dry_trampling_ft)

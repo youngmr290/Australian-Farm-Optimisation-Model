@@ -35,25 +35,25 @@ def labfxpyomo_local(params):
         model.del_component(model.p_super_labour)
     except AttributeError:
         pass
-    model.p_super_labour = Param(model.s_periods, initialize= params['super'], doc='hours of labour required to complete super and wc activities')
+    model.p_super_labour = Param(model.s_labperiods, initialize= params['super'], doc='hours of labour required to complete super and wc activities')
     
     try:
         model.del_component(model.p_bas_labour)
     except AttributeError:
         pass
-    model.p_bas_labour = Param(model.s_periods, initialize= params['bas'], doc='hours of labour required to complete bas activities')
+    model.p_bas_labour = Param(model.s_labperiods, initialize= params['bas'], doc='hours of labour required to complete bas activities')
     
     try:
         model.del_component(model.p_planning_labour)
     except AttributeError:
         pass
-    model.p_planning_labour = Param(model.s_periods, initialize= params['planning'], doc='hours of labour required to complete planning activities')
+    model.p_planning_labour = Param(model.s_labperiods, initialize= params['planning'], doc='hours of labour required to complete planning activities')
     
     try:
         model.del_component(model.p_tax_labour)
     except AttributeError:
         pass
-    model.p_tax_labour = Param(model.s_periods, initialize= params['tax'], doc='hours of labour required to complete tax activities')
+    model.p_tax_labour = Param(model.s_labperiods, initialize= params['tax'], doc='hours of labour required to complete tax activities')
     
     try:
         model.del_component(model.p_learn_labour)
@@ -70,14 +70,14 @@ def labfxpyomo_local(params):
     except AttributeError:
         pass
     def labour_learn_period(model):
-        # return -sum(model.v_learn_allocation[i] * model.p_learn_labour for i in model.s_periods ) + model.p_learn_labour <= 0
-        return -sum(model.v_learn_allocation[p] for p in model.s_periods)  <= -1
+        # return -sum(model.v_learn_allocation[i] * model.p_learn_labour for i in model.s_labperiods ) + model.p_learn_labour <= 0
+        return -sum(model.v_learn_allocation[p] for p in model.s_labperiods)  <= -1
     model.labour_learn_period = Constraint(rule = labour_learn_period, doc='constrains the amount of labour learn in each period')
 
 ############
 #variables #
 ############  
-model.v_learn_allocation = Var(model.s_periods, bounds = (0,1) , doc='proportion of learning done each labour period')
+model.v_learn_allocation = Var(model.s_labperiods, bounds = (0,1) , doc='proportion of learning done each labour period')
 
 
 

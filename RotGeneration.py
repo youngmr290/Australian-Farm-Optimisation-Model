@@ -22,6 +22,7 @@ from openpyxl import load_workbook
 #MIDAS modules
 import Functions as fun
 import UniversalInputs as uinp
+import PropertyInputs as pinp
 
 ##if you want to use a customised list of rotations this can be set to false - populate the array further down the module.
 customised_rotations = False
@@ -434,6 +435,11 @@ if customised_rotations:
                 req*=uinp.structure[s_rot_phase[i]].issuperset({s_user_rot[i]})
             ix_bool[ix_phase]=max(req,ix_bool[ix_phase]) 
     phases=phases[ix_bool>0]
+
+
+##if you want to represent the rotations from property.xlsx
+if pinp.crop['user_crop_rot']:
+    phases = np.array([pinp.crop['fixed_rotphases'].reset_index()])    
 
 
 ############################################################################################################################################################################################

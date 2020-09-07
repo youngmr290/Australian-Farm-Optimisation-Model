@@ -71,11 +71,11 @@ def f_feedsupply_adjust(attempts,feedsupply,itn):
     feedsupply[~binary_mask] = ((2 * attempts[...,-1,1]) / slope)[~binary_mask] # x2 to overshoot then switch to binary.
     return feedsupply
 
-def f_k2g(params_k2, y=0, var_pos=0, len_ax1=0, len_ax2=0, group = 'dams'):
+def f_c2g(params_c2, y=0, var_pos=0, len_ax1=0, len_ax2=0, group = 'dams'):
     '''
     Parameters
     ----------
-    params_k2 : array
+    params_c2 : array
         parameter array - input from excel.
     y : array
         sensitivity array for genetic merit.
@@ -96,67 +96,67 @@ def f_k2g(params_k2, y=0, var_pos=0, len_ax1=0, len_ax2=0, group = 'dams'):
 
     '''
     #^line can be deleted once working.
-    # params_k2=parameters['i_gfw_k2']
+    # params_c2=parameters['i_gfw_c2']
     # y=parameters['i_gfw_y']
     # var_pos=parameters['i_cx_pos']
     # len_ax1=parameters['i_cx_len']
     # len_ax2=parameters['i_cx_len2']
 
     ##these inputs are used for each param so they don't need to be passed into the function.
-    a_k2_k0 = pinp.sheep['a_k2_k0']
+    a_c2_c0 = pinp.sheep['a_c2_c0']
     i_g3_inc = pinp.sheep['i_g3_inc']
-    i_mul_g0_k0 = uinp.structure['i_mul_g0k0']
-    i_mul_g1_k0 = uinp.structure['i_mul_g1k0']
-    i_mul_g2_k0 = uinp.structure['i_mul_g2k0']
-    i_mul_g3_k0 = uinp.structure['i_mul_g3k0']
+    i_mul_g0_c0 = uinp.structure['i_mul_g0c0']
+    i_mul_g1_c0 = uinp.structure['i_mul_g1c0']
+    i_mul_g2_c0 = uinp.structure['i_mul_g2c0']
+    i_mul_g3_c0 = uinp.structure['i_mul_g3c0']
     i_mask_g0g3 = uinp.structure['i_mask_g0g3']
     i_mask_g1g3 = uinp.structure['i_mask_g1g3']
     i_mask_g2g3 = uinp.structure['i_mask_g2g3']
     i_mask_g3g3 = uinp.structure['i_mask_g3g3']
 
     
-    ##convert params from k2 to k0
-    params_k0 = params_k2[...,a_k2_k0]
+    ##convert params from c2 to c0
+    params_c0 = params_c2[...,a_c2_c0]
     ##add y axis
     na=np.newaxis
     ###if y is not numpy ie was read in as an int because it was a single cell, it needs to be converted
     if type(y) == int:
         y = np.asarray([y])
     ###y is a 2d array howvever currently it only has one slice so it is read in as a 1d array. so i need to add second array
-    if y.ndim == 1 and params_k0.ndim != 1:
+    if y.ndim == 1 and params_c0.ndim != 1:
         y=y[...,na]
-    params_k0 = np.multiply(params_k0[...,na,:],  y[...,na]) #na here is to account for k2 axis
+    params_c0 = np.multiply(params_c0[...,na,:],  y[...,na]) #na here is to account for c2 axis
     ##reshape parameter from 2d input to multi dim array
     len_y = y.shape[-1]
     ###make tuple of shape depending on the number of axis in input
     if len_ax2>0:
         shape=(len_ax1,len_ax2,len_y,3)
-        params_k0 = params_k0.reshape(shape)
+        params_c0 = params_c0.reshape(shape)
     elif len_ax1 > 0:
         shape=(len_ax1,len_y,3)
-        params_k0 = params_k0.reshape(shape)
+        params_c0 = params_c0.reshape(shape)
     else:
         pass#don't need to reshpae
     ##get axis into correct position
     if var_pos != None or var_pos != 0:
         extra_axes = tuple(range((var_pos + 1), -2))
     else: extra_axes = ()
-    allaxis_params__k0 = np.expand_dims(params_k0, axis = extra_axes)
-    ##create mask g?k0
+    allaxis_params_c0 = np.expand_dims(params_c0, axis = extra_axes)
+    ##create mask g?c0
     mask_sire_inc_g0 = np.any(i_mask_g0g3 * i_g3_inc, axis =1)
     mask_dams_inc_g1 = np.any(i_mask_g1g3 * i_g3_inc, axis =1)
     mask_yatf_inc_g2 = np.any(i_mask_g2g3 * i_g3_inc, axis =1)
     mask_offs_inc_g3 = np.any(i_mask_g3g3 * i_g3_inc, axis =1)
     ##create array with the proportion of each pure genotype required to have each actual genotype included in the analysis
-    mul_sire_genotypes_g0k0 = i_mul_g0_k0[mask_sire_inc_g0]
-    mul_dams_genotypes_g0k0 = i_mul_g1_k0[mask_dams_inc_g1]
-    mul_yatf_genotypes_g0k0 = i_mul_g2_k0[mask_yatf_inc_g2]
-    mul_offs_genotypes_g0k0 = i_mul_g3_k0[mask_offs_inc_g3]
-    ##convert params from k0 to g. nansum required when the selected k0 info is not filled out ^may be an issue if params are missing and mixed breed sheep is selected because it wont catch the error
-    param_sire=np.nansum(allaxis_params__k0[..., na, :] * mul_sire_genotypes_g0k0, axis = -1)
-    param_dams=np.nansum(allaxis_params__k0[..., na, :] * mul_dams_genotypes_g0k0, axis = -1)
-    param_yatf=np.nansum(allaxis_params__k0[..., na, :] * mul_yatf_genotypes_g0k0, axis = -1)
-    param_offs=np.nansum(allaxis_params__k0[..., na, :] * mul_offs_genotypes_g0k0, axis = -1)
+    mul_sire_genotypes_g0c0 = i_mul_g0_c0[mask_sire_inc_g0]
+    mul_dams_genotypes_g0c0 = i_mul_g1_c0[mask_dams_inc_g1]
+    mul_yatf_genotypes_g0c0 = i_mul_g2_c0[mask_yatf_inc_g2]
+    mul_offs_genotypes_g0c0 = i_mul_g3_c0[mask_offs_inc_g3]
+    ##convert params from c0 to g. nansum required when the selected c0 info is not filled out ^may be an issue if params are missing and mixed breed sheep is selected because it wont catch the error
+    param_sire=np.nansum(allaxis_params_c0[..., na, :] * mul_sire_genotypes_g0c0, axis = -1)
+    param_dams=np.nansum(allaxis_params_c0[..., na, :] * mul_dams_genotypes_g0c0, axis = -1)
+    param_yatf=np.nansum(allaxis_params_c0[..., na, :] * mul_yatf_genotypes_g0c0, axis = -1)
+    param_offs=np.nansum(allaxis_params_c0[..., na, :] * mul_offs_genotypes_g0c0, axis = -1)
     return param_sire, param_dams, param_yatf, param_offs
 
 
@@ -407,6 +407,38 @@ def f_period_is_(period_is, date_array, date_start_p=0, date_array2 = 0, date_en
         return period_is_between
 
 
+
+
+#^some of these may have to occur inside the sim function because they may change between trials (it would be good if they didn't though because creating the indexes takes a bit of time)
+### _create numpy index for param dicts ^creating indexes is a bit slow
+##the array returned must be of type object, if string the dict keys become a numpy string and when indexed in pyomo it doesn't work.
+keys_a = pinp.sheep['i_wean_times'][pinp.sheep['i_mask_a']]
+keys_b0 = uinp.structure['i_btrt_idx_offs']
+keys_b1 = uinp.structure['i_lsln_idx_dams']
+keys_e = initialize=np.array(['e' + str(i) for i in np.arange(max(pinp.sheep['i_wean_times']))]) #make set names by joining e with the number of cycles
+keys_g0 = pinp.sheep['i_groups_sire']
+keys_g1 = pinp.sheep['i_groups_dams']
+keys_g3 = pinp.sheep['i_groups_offs']
+keys_i = pinp.sheep['i_tol_idx'][pinp.sheep['i_mask_i']]
+keys_lw0 = uinp.structure['i_w_idx_sire']
+keys_lw1 = uinp.structure['i_w_idx_dams']
+keys_lw3 = uinp.structure['i_w_idx_dams']
+keys_n0 = uinp.structure['i_n_idx_sire']
+keys_n1 = uinp.structure['i_n_idx_dams']
+keys_n3 = uinp.structure['i_n_idx_dams']
+keys_p6 = np.array([pinp.feed_inputs['feed_periods'].index[:-1]])
+keys_v = np.asarray(uinp.structure['sheep_pools'])
+keys_y0 = uinp.parameter['i_gen_merit_sire']
+keys_y1 = uinp.parameter['i_gen_merit_dams']
+keys_y3 = uinp.parameter['i_gen_merit_dams']
+    
+
+
+
+
+
+
+
 # def simulation():
 #     """
 #     A function to wrap the simulation that can be called by SheepPyomo.
@@ -581,21 +613,21 @@ a_r_zida0e0b0xyg0 = f_g2g(pinp.sheep['ia_r1_zig0'],'sire',pinp.sheep['i_i_pos'],
 a_r_zida0e0b0xyg1 = f_g2g(pinp.sheep['ia_r1_zig1'],'dams',pinp.sheep['i_i_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_z_len'],swap=True)
 a_r_zida0e0b0xyg3 = f_g2g(pinp.sheep['ia_r1_zig3'],'offs',pinp.sheep['i_i_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_z_len'],swap=True)
 ###feed variation for dams
-a_r2_c0e1b1nwzida0e0b0xyg1 = f_g2g(pinp.sheep['ia_r2_c0ig1'],'dams',pinp.sheep['i_i_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_c0_len'],swap=True,left_pos2=pinp.sheep['i_a1_pos'],right_pos2=pinp.sheep['i_i_pos'])
-a_r2_c1b1nwzida0e0b0xyg1 = f_g2g(pinp.sheep['ia_r2_c1ig1'],'dams',pinp.sheep['i_i_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_c1_len'],swap=True,left_pos2=pinp.sheep['i_e1_pos'],right_pos2=pinp.sheep['i_i_pos'])
-a_r2_c2nwzida0e0b0xyg1 = f_g2g(pinp.sheep['ia_r2_c2ig1'],'dams',pinp.sheep['i_i_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_c2_len'],swap=True,left_pos2=uinp.parameters['i_b1_pos'],right_pos2=pinp.sheep['i_i_pos'])  #add axis between g and i and i and b1
+a_r2_k0e1b1nwzida0e0b0xyg1 = f_g2g(pinp.sheep['ia_r2_k0ig1'],'dams',pinp.sheep['i_i_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_k0_len'],swap=True,left_pos2=pinp.sheep['i_a1_pos'],right_pos2=pinp.sheep['i_i_pos'])
+a_r2_k1b1nwzida0e0b0xyg1 = f_g2g(pinp.sheep['ia_r2_k1ig1'],'dams',pinp.sheep['i_i_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_k1_len'],swap=True,left_pos2=pinp.sheep['i_e1_pos'],right_pos2=pinp.sheep['i_i_pos'])
+a_r2_k2nwzida0e0b0xyg1 = f_g2g(pinp.sheep['ia_r2_k2ig1'],'dams',pinp.sheep['i_i_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_k2_len'],swap=True,left_pos2=uinp.parameters['i_b1_pos'],right_pos2=pinp.sheep['i_i_pos'])  #add axis between g and i and i and b1
 ###feed variation for offs
-a_r2_idc0e0b0xyg3 = f_g2g(pinp.sheep['ia_r2_ic0g3'],'offs',pinp.sheep['i_a0_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_c0_len'],left_pos2=pinp.sheep['i_i_pos'],right_pos2=pinp.sheep['i_a0_pos'])
-a_r2_ic3a0e0b0xyg3 = f_g2g(pinp.sheep['ia_r2_ic3g3'],'offs',uinp.parameters['i_d_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_c3_len'])
-a_r2_ida0e0c4xyg3 = f_g2g(pinp.sheep['ia_r2_ic4g3'],'offs',uinp.parameters['i_b0_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_c4_len'],left_pos2=pinp.sheep['i_i_pos'],right_pos2=uinp.parameters['i_b0_pos'])  #add axis between g and bo and b0 and i
-a_r2_ida0e0b0c5yg3 = f_g2g(pinp.sheep['ia_r2_ic5g3'],'offs',uinp.parameters['i_x_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_c5_len'],left_pos2=pinp.sheep['i_i_pos'],right_pos2=uinp.parameters['i_x_pos'])  #add axis between g and bo and b0 and i
+a_r2_idk0e0b0xyg3 = f_g2g(pinp.sheep['ia_r2_ik0g3'],'offs',pinp.sheep['i_a0_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_k0_len'],left_pos2=pinp.sheep['i_i_pos'],right_pos2=pinp.sheep['i_a0_pos'])
+a_r2_ik3a0e0b0xyg3 = f_g2g(pinp.sheep['ia_r2_ik3g3'],'offs',uinp.parameters['i_d_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_k3_len'])
+a_r2_ida0e0k4xyg3 = f_g2g(pinp.sheep['ia_r2_ik4g3'],'offs',uinp.parameters['i_b0_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_k4_len'],left_pos2=pinp.sheep['i_i_pos'],right_pos2=uinp.parameters['i_b0_pos'])  #add axis between g and bo and b0 and i
+a_r2_ida0e0b0k5yg3 = f_g2g(pinp.sheep['ia_r2_ik5g3'],'offs',uinp.parameters['i_x_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_k5_len'],left_pos2=pinp.sheep['i_i_pos'],right_pos2=uinp.parameters['i_x_pos'])  #add axis between g and bo and b0 and i
 
 ##std feed options
 feedoptions_r1pj1 = np.rollaxis(pinp.feedsupply['i_feedoptions_r1pj1'].reshape(pinp.feedsupply['i_j1_len'],pinp.feedsupply['i_r1_len'],pinp.feedsupply['i_feedoptions_r1pj1'].shape[-1]), 0, 3)[:,0:len_p,:] #slice off extra p periods so it is the same length as the sim periods
 ##feed variation
 feedoptions_var_r2p = pinp.feedsupply['i_feedoptions_var_r2p'][:,0:len_p] #slice off extra p periods so it is the same length as the sim periods
-##an association between the c2 cluster (feed variation) and reproductive management (scanning, gbal & weaning). 
-a_c2_vlsb1 = uinp.structure['ia_c2_vlsb1'].reshape(uinp.structure['i_len_v'], uinp.structure['i_len_l'], uinp.structure['i_len_s'], uinp.structure['ia_c2_vlsb1'].shape[-1])
+##an association between the k2 cluster (feed variation) and reproductive management (scanning, gbal & weaning). 
+a_k2_vlsb1 = uinp.structure['ia_k2_vlsb1'].reshape(uinp.structure['i_len_v'], uinp.structure['i_len_l'], uinp.structure['i_len_s'], uinp.structure['ia_k2_vlsb1'].shape[-1])
 
 
 ###################################
@@ -631,48 +663,48 @@ lat_rad = np.radians(pinp.sheep['i_latitude'])
 ############################
 ### sim param arrays       # '''csiro params '''
 ############################
-##convert input params from k to g
+##convert input params from c to g
 ###production params
-agedam_propn_da0e0b0xyg0, agedam_propn_da0e0b0xyg1, agedam_propn_da0e0b0xyg2, agedam_propn_da0e0b0xyg03 = f_k2g(uinp.parameters['i_agedam_propn_std_dk2'], uinp.parameters['i_agedam_propn_y'], uinp.parameters['i_agedam_propn_pos']) #yatf and off never used
-aw_propn_yg0, aw_propn_yg1, aw_propn_yg2, aw_propn_yg3 = f_k2g(uinp.parameters['i_aw_propn_wean_k2'], uinp.parameters['i_aw_wean_y'])
-bw_propn_yg0, bw_propn_yg1, bw_propn_yg2, bw_propn_yg3 = f_k2g(uinp.parameters['i_bw_propn_wean_k2'], uinp.parameters['i_bw_wean_y'])
-#^   btrt_yg0, btrt_yg1, btrt_yg2, btrt_yg3 = f_k2g(uinp.parameters['i_scan_std_k2'], uinp.parameters['i_scan_std_y'])
-cfw_propn_yg0, cfw_propn_yg1, cfw_propn_yg2, cfw_propn_yg3 = f_k2g(uinp.parameters['i_cfw_propn_k2'], uinp.parameters['i_cfw_propn_y'])
-scan_std_yg0, scan_std_yg1, scan_std_yg2, scan_std_yg3 = f_k2g(uinp.parameters['i_scan_std_k2'], uinp.parameters['i_scan_std_y'])
-lss_std_yg0, lss_std_yg1, lss_std_yg2, lss_std_yg3 = f_k2g(uinp.parameters['i_lss_std_k2'], uinp.parameters['i_lss_std_y'])
-lstr_std_yg0, lstr_std_yg1, lstr_std_yg2, lstr_std_yg3 = f_k2g(uinp.parameters['i_lstr_std_k2'], uinp.parameters['i_lstr_std_y'])
-lstw_std_yg0, lstw_std_yg1, lstw_std_yg2, lstw_std_yg3 = f_k2g(uinp.parameters['i_lstw_std_k2'], uinp.parameters['i_lstw_std_y'])
-mw_propn_yg0, mw_propn_yg1, mw_propn_yg2, mw_propn_yg3 = f_k2g(uinp.parameters['i_mw_propn_wean_k2'], uinp.parameters['i_mw_wean_y'])
-sfd_yg0, sfd_yg1, sfd_yg2, sfd_yg3 = f_k2g(uinp.parameters['i_sfd_k2'], uinp.parameters['i_sfd_y'])
-sfw_yg0, sfw_yg1, sfw_yg2, sfw_yg3 = f_k2g(uinp.parameters['i_sfw_k2'], uinp.parameters['i_sfw_y'])
-srw_yg0, srw_yg1, srw_yg2, srw_yg3 = f_k2g(uinp.parameters['i_srw_k2'], uinp.parameters['i_srw_y'])
+agedam_propn_da0e0b0xyg0, agedam_propn_da0e0b0xyg1, agedam_propn_da0e0b0xyg2, agedam_propn_da0e0b0xyg03 = f_k2g(uinp.parameters['i_agedam_propn_std_dc2'], uinp.parameters['i_agedam_propn_y'], uinp.parameters['i_agedam_propn_pos']) #yatf and off never used
+aw_propn_yg0, aw_propn_yg1, aw_propn_yg2, aw_propn_yg3 = f_c2g(uinp.parameters['i_aw_propn_wean_c2'], uinp.parameters['i_aw_wean_y'])
+bw_propn_yg0, bw_propn_yg1, bw_propn_yg2, bw_propn_yg3 = f_c2g(uinp.parameters['i_bw_propn_wean_c2'], uinp.parameters['i_bw_wean_y'])
+#^   btrt_yg0, btrt_yg1, btrt_yg2, btrt_yg3 = f_c2g(uinp.parameters['i_scan_std_c2'], uinp.parameters['i_scan_std_y'])
+cfw_propn_yg0, cfw_propn_yg1, cfw_propn_yg2, cfw_propn_yg3 = f_c2g(uinp.parameters['i_cfw_propn_c2'], uinp.parameters['i_cfw_propn_y'])
+scan_std_yg0, scan_std_yg1, scan_std_yg2, scan_std_yg3 = f_c2g(uinp.parameters['i_scan_std_c2'], uinp.parameters['i_scan_std_y'])
+lss_std_yg0, lss_std_yg1, lss_std_yg2, lss_std_yg3 = f_c2g(uinp.parameters['i_lss_std_c2'], uinp.parameters['i_lss_std_y'])
+lstr_std_yg0, lstr_std_yg1, lstr_std_yg2, lstr_std_yg3 = f_c2g(uinp.parameters['i_lstr_std_c2'], uinp.parameters['i_lstr_std_y'])
+lstw_std_yg0, lstw_std_yg1, lstw_std_yg2, lstw_std_yg3 = f_c2g(uinp.parameters['i_lstw_std_c2'], uinp.parameters['i_lstw_std_y'])
+mw_propn_yg0, mw_propn_yg1, mw_propn_yg2, mw_propn_yg3 = f_c2g(uinp.parameters['i_mw_propn_wean_c2'], uinp.parameters['i_mw_wean_y'])
+sfd_yg0, sfd_yg1, sfd_yg2, sfd_yg3 = f_c2g(uinp.parameters['i_sfd_c2'], uinp.parameters['i_sfd_y'])
+sfw_yg0, sfw_yg1, sfw_yg2, sfw_yg3 = f_c2g(uinp.parameters['i_sfw_c2'], uinp.parameters['i_sfw_y'])
+srw_yg0, srw_yg1, srw_yg2, srw_yg3 = f_c2g(uinp.parameters['i_srw_c2'], uinp.parameters['i_srw_y'])
 
 ###sim params
-ca_sire, ca_dams, ca_yatf, ca_offs = f_k2g(uinp.parameters['i_ca_k2'], uinp.parameters['i_ca_y'], uinp.parameters['i_ca_pos'], uinp.parameters['i_ca_len'])
-cb0_sire, cb0_dams, cb0_yatf, cb0_offs = f_k2g(uinp.parameters['i_cb0_k2'], uinp.parameters['i_cb0_y'], uinp.parameters['i_cb0_pos'], uinp.parameters['i_cb0_len'], uinp.parameters['i_cb0_len2'])
-cc_sire, cc_dams, cc_yatf, cc_offs = f_k2g(uinp.parameters['i_cc_k2'], uinp.parameters['i_cc_y'], uinp.parameters['i_cc_pos'], uinp.parameters['i_cc_len'])
-cd_sire, cd_dams, cd_yatf, cd_offs = f_k2g(uinp.parameters['i_cd_k2'], uinp.parameters['i_cd_y'], uinp.parameters['i_cd_pos'], uinp.parameters['i_cd_len'])
-ce_sire, ce_dams, ce_yatf, ce_offs = f_k2g(uinp.parameters['i_ce_k2'], uinp.parameters['i_ce_y'], uinp.parameters['i_ce_pos'], uinp.parameters['i_ce_len'], uinp.parameters['i_ce_len2'])
-cf_sire, cf_dams, cf_yatf, cf_offs = f_k2g(uinp.parameters['i_cf_k2'], uinp.parameters['i_cf_y'], uinp.parameters['i_cf_pos'], uinp.parameters['i_cf_len'])
-cg_sire, cg_dams, cg_yatf, cg_offs = f_k2g(uinp.parameters['i_cg_k2'], uinp.parameters['i_cg_y'], uinp.parameters['i_cg_pos'], uinp.parameters['i_cg_len'])
-ch_sire, ch_dams, ch_yatf, ch_offs = f_k2g(uinp.parameters['i_ch_k2'], uinp.parameters['i_ch_y'], uinp.parameters['i_ch_pos'], uinp.parameters['i_ch_len'])
-ci_sire, ci_dams, ci_yatf, ci_offs = f_k2g(uinp.parameters['i_ci_k2'], uinp.parameters['i_ci_y'], uinp.parameters['i_ci_pos'], uinp.parameters['i_ci_len'])
-ck_sire, ck_dams, ck_yatf, ck_offs = f_k2g(uinp.parameters['i_ck_k2'], uinp.parameters['i_ck_y'], uinp.parameters['i_ck_pos'], uinp.parameters['i_ck_len'])
-cl0_sire, cl0_dams, cl0_yatf, cl0_offs = f_k2g(uinp.parameters['i_cl0_k2'], uinp.parameters['i_cl0_y'], uinp.parameters['i_cl0_pos'], uinp.parameters['i_cl0_len'], uinp.parameters['i_cl0_len2'])
-cl1_sire, cl1_dams, cl1_yatf, cl1_offs = f_k2g(uinp.parameters['i_cl1_k2'], uinp.parameters['i_cl1_y'], uinp.parameters['i_cl1_pos'], uinp.parameters['i_cl1_len'], uinp.parameters['i_cl1_len2'])
-cl_sire, cl_dams, cl_yatf, cl_offs = f_k2g(uinp.parameters['i_cl_k2'], uinp.parameters['i_cl_y'], uinp.parameters['i_cl_pos'], uinp.parameters['i_cl_len'])
-cm_sire, cm_dams, cm_yatf, cm_offs = f_k2g(uinp.parameters['i_cm_k2'], uinp.parameters['i_cm_y'], uinp.parameters['i_cm_pos'], uinp.parameters['i_cm_len'])
-cn_sire, cn_dams, cn_yatf, cn_offs = f_k2g(uinp.parameters['i_cn_k2'], uinp.parameters['i_cn_y'], uinp.parameters['i_cn_pos'], uinp.parameters['i_cn_len'])
-cp_sire, cp_dams, cp_yatf, cp_offs = f_k2g(uinp.parameters['i_cp_k2'], uinp.parameters['i_cp_y'], uinp.parameters['i_cp_pos'], uinp.parameters['i_cp_len'])
-cr_sire, cr_dams, cr_yatf, cr_offs = f_k2g(uinp.parameters['i_cr_k2'], uinp.parameters['i_cr_y'], uinp.parameters['i_cr_pos'], uinp.parameters['i_cr_len'])
-crd_sire, crd_dams, crd_yatf, crd_offs = f_k2g(uinp.parameters['i_crd_k2'], uinp.parameters['i_crd_y'], uinp.parameters['i_crd_pos'], uinp.parameters['i_crd_len'])
-cu0_sire, cu0_dams, cu0_yatf, cu0_offs = f_k2g(uinp.parameters['i_cu0_k2'], uinp.parameters['i_cu0_y'], uinp.parameters['i_cu0_pos'], uinp.parameters['i_cu0_len'])
-cu1_sire, cu1_dams, cu1_yatf, cu1_offs = f_k2g(uinp.parameters['i_cu1_k2'], uinp.parameters['i_cu1_y'], uinp.parameters['i_cu1_pos'], uinp.parameters['i_cu1_len'], uinp.parameters['i_cu1_len2'])
-cu2_sire, cu2_dams, cu2_yatf, cu2_offs = f_k2g(uinp.parameters['i_cu2_k2'], uinp.parameters['i_cu2_y'], uinp.parameters['i_cu2_pos'], uinp.parameters['i_cu2_len'], uinp.parameters['i_cu2_len2'])
-cu3_sire, cu3_dams, cu3_yatf, cu3_offs = f_k2g(uinp.parameters['i_cu3_k2'], uinp.parameters['i_cu3_y'], uinp.parameters['i_cu3_pos'], uinp.parameters['i_cu3_len'], uinp.parameters['i_cu3_len2'])
-cu4_sire, cu4_dams, cu4_yatf, cu4_offs = f_k2g(uinp.parameters['i_cu4_k2'], uinp.parameters['i_cu4_y'], uinp.parameters['i_cu4_pos'], uinp.parameters['i_cu4_len'], uinp.parameters['i_cu4_len2'])
-cw_sire, cw_dams, cw_yatf, cw_offs = f_k2g(uinp.parameters['i_cw_k2'], uinp.parameters['i_cw_y'], uinp.parameters['i_cw_pos'], uinp.parameters['i_cw_len'])
-cx_sire, cx_dams, cx_yatf, cx_offs = f_k2g(uinp.parameters['i_cx_k2'], uinp.parameters['i_cx_y'], uinp.parameters['i_cx_pos'], uinp.parameters['i_cx_len'], uinp.parameters['i_cx_len2'])
+ca_sire, ca_dams, ca_yatf, ca_offs = f_c2g(uinp.parameters['i_ca_c2'], uinp.parameters['i_ca_y'], uinp.parameters['i_ca_pos'], uinp.parameters['i_ca_len'])
+cb0_sire, cb0_dams, cb0_yatf, cb0_offs = f_c2g(uinp.parameters['i_cb0_c2'], uinp.parameters['i_cb0_y'], uinp.parameters['i_cb0_pos'], uinp.parameters['i_cb0_len'], uinp.parameters['i_cb0_len2'])
+cc_sire, cc_dams, cc_yatf, cc_offs = f_c2g(uinp.parameters['i_cc_c2'], uinp.parameters['i_cc_y'], uinp.parameters['i_cc_pos'], uinp.parameters['i_cc_len'])
+cd_sire, cd_dams, cd_yatf, cd_offs = f_c2g(uinp.parameters['i_cd_c2'], uinp.parameters['i_cd_y'], uinp.parameters['i_cd_pos'], uinp.parameters['i_cd_len'])
+ce_sire, ce_dams, ce_yatf, ce_offs = f_c2g(uinp.parameters['i_ce_c2'], uinp.parameters['i_ce_y'], uinp.parameters['i_ce_pos'], uinp.parameters['i_ce_len'], uinp.parameters['i_ce_len2'])
+cf_sire, cf_dams, cf_yatf, cf_offs = f_c2g(uinp.parameters['i_cf_c2'], uinp.parameters['i_cf_y'], uinp.parameters['i_cf_pos'], uinp.parameters['i_cf_len'])
+cg_sire, cg_dams, cg_yatf, cg_offs = f_c2g(uinp.parameters['i_cg_c2'], uinp.parameters['i_cg_y'], uinp.parameters['i_cg_pos'], uinp.parameters['i_cg_len'])
+ch_sire, ch_dams, ch_yatf, ch_offs = f_c2g(uinp.parameters['i_ch_c2'], uinp.parameters['i_ch_y'], uinp.parameters['i_ch_pos'], uinp.parameters['i_ch_len'])
+ci_sire, ci_dams, ci_yatf, ci_offs = f_c2g(uinp.parameters['i_ci_c2'], uinp.parameters['i_ci_y'], uinp.parameters['i_ci_pos'], uinp.parameters['i_ci_len'])
+ck_sire, ck_dams, ck_yatf, ck_offs = f_c2g(uinp.parameters['i_ck_c2'], uinp.parameters['i_ck_y'], uinp.parameters['i_ck_pos'], uinp.parameters['i_ck_len'])
+cl0_sire, cl0_dams, cl0_yatf, cl0_offs = f_c2g(uinp.parameters['i_cl0_c2'], uinp.parameters['i_cl0_y'], uinp.parameters['i_cl0_pos'], uinp.parameters['i_cl0_len'], uinp.parameters['i_cl0_len2'])
+cl1_sire, cl1_dams, cl1_yatf, cl1_offs = f_c2g(uinp.parameters['i_cl1_c2'], uinp.parameters['i_cl1_y'], uinp.parameters['i_cl1_pos'], uinp.parameters['i_cl1_len'], uinp.parameters['i_cl1_len2'])
+cl_sire, cl_dams, cl_yatf, cl_offs = f_c2g(uinp.parameters['i_cl_c2'], uinp.parameters['i_cl_y'], uinp.parameters['i_cl_pos'], uinp.parameters['i_cl_len'])
+cm_sire, cm_dams, cm_yatf, cm_offs = f_c2g(uinp.parameters['i_cm_c2'], uinp.parameters['i_cm_y'], uinp.parameters['i_cm_pos'], uinp.parameters['i_cm_len'])
+cn_sire, cn_dams, cn_yatf, cn_offs = f_c2g(uinp.parameters['i_cn_c2'], uinp.parameters['i_cn_y'], uinp.parameters['i_cn_pos'], uinp.parameters['i_cn_len'])
+cp_sire, cp_dams, cp_yatf, cp_offs = f_c2g(uinp.parameters['i_cp_c2'], uinp.parameters['i_cp_y'], uinp.parameters['i_cp_pos'], uinp.parameters['i_cp_len'])
+cr_sire, cr_dams, cr_yatf, cr_offs = f_c2g(uinp.parameters['i_cr_c2'], uinp.parameters['i_cr_y'], uinp.parameters['i_cr_pos'], uinp.parameters['i_cr_len'])
+crd_sire, crd_dams, crd_yatf, crd_offs = f_c2g(uinp.parameters['i_crd_c2'], uinp.parameters['i_crd_y'], uinp.parameters['i_crd_pos'], uinp.parameters['i_crd_len'])
+cu0_sire, cu0_dams, cu0_yatf, cu0_offs = f_c2g(uinp.parameters['i_cu0_c2'], uinp.parameters['i_cu0_y'], uinp.parameters['i_cu0_pos'], uinp.parameters['i_cu0_len'])
+cu1_sire, cu1_dams, cu1_yatf, cu1_offs = f_c2g(uinp.parameters['i_cu1_c2'], uinp.parameters['i_cu1_y'], uinp.parameters['i_cu1_pos'], uinp.parameters['i_cu1_len'], uinp.parameters['i_cu1_len2'])
+cu2_sire, cu2_dams, cu2_yatf, cu2_offs = f_c2g(uinp.parameters['i_cu2_c2'], uinp.parameters['i_cu2_y'], uinp.parameters['i_cu2_pos'], uinp.parameters['i_cu2_len'], uinp.parameters['i_cu2_len2'])
+cu3_sire, cu3_dams, cu3_yatf, cu3_offs = f_c2g(uinp.parameters['i_cu3_c2'], uinp.parameters['i_cu3_y'], uinp.parameters['i_cu3_pos'], uinp.parameters['i_cu3_len'], uinp.parameters['i_cu3_len2'])
+cu4_sire, cu4_dams, cu4_yatf, cu4_offs = f_c2g(uinp.parameters['i_cu4_c2'], uinp.parameters['i_cu4_y'], uinp.parameters['i_cu4_pos'], uinp.parameters['i_cu4_len'], uinp.parameters['i_cu4_len2'])
+cw_sire, cw_dams, cw_yatf, cw_offs = f_c2g(uinp.parameters['i_cw_c2'], uinp.parameters['i_cw_y'], uinp.parameters['i_cw_pos'], uinp.parameters['i_cw_len'])
+cx_sire, cx_dams, cx_yatf, cx_offs = f_c2g(uinp.parameters['i_cx_c2'], uinp.parameters['i_cx_y'], uinp.parameters['i_cx_pos'], uinp.parameters['i_cx_len'], uinp.parameters['i_cx_len2'])
 
 ##Convert the cl0 & cl1 to cb1 (dams and yatf only need cb1, sires and offs dont have cb1 axis)
 cb1_dams = cl0_dams[:,uinp.structure['a_nfoet_b1']] + cl1_dams[:,uinp.structure['a_nyatf_b1']]
@@ -870,20 +902,20 @@ adjp_fl_initial_wzida0e0b0xyg1 = np.expand_dims(uinp.structure['i_adjp_fl_initia
 adjp_fl_initial_wzida0e0b0xyg3 = np.expand_dims(uinp.structure['i_adjp_fl_initial_w3'], axis = tuple(range(1,-uinp.structure['i_w_pos'])))
 
 
-##convert variable from k2 to g (yatf is not used, only here because it is return from the function) then addjust by initial lw pattern
-lw_initial_yg0, lw_initial_yg1, lw_initial_yatf, lw_initial_yg3 = f_k2g(uinp.parameters['i_lw_initial_k2'], uinp.parameters['i_lw_initial_y'])
+##convert variable from c2 to g (yatf is not used, only here because it is return from the function) then addjust by initial lw pattern
+lw_initial_yg0, lw_initial_yg1, lw_initial_yatf, lw_initial_yg3 = f_c2g(uinp.parameters['i_lw_initial_c2'], uinp.parameters['i_lw_initial_y'])
 lw_initial_wzida0e0b0xyg0 = lw_initial_yg0 * (1 + adjp_lw_initial_wzida0e0b0xyg0)
 lw_initial_wzida0e0b0xyg1 = lw_initial_yg1 * (1 + adjp_lw_initial_wzida0e0b0xyg1)
 lw_initial_wzida0e0b0xyg3 = lw_initial_yg3 * (1 + adjp_lw_initial_wzida0e0b0xyg3)
-cfw_initial_yg0, cfw_initial_yg1, cfw_initial_yatf, cfw_initial_yg3 = f_k2g(uinp.parameters['i_cfw_initial_k2'], uinp.parameters['i_cfw_initial_y'])
+cfw_initial_yg0, cfw_initial_yg1, cfw_initial_yatf, cfw_initial_yg3 = f_c2g(uinp.parameters['i_cfw_initial_c2'], uinp.parameters['i_cfw_initial_y'])
 cfw_initial_wzida0e0b0xyg0 = cfw_initial_yg0 * (1 + adjp_cfw_initial_wzida0e0b0xyg0)
 cfw_initial_wzida0e0b0xyg1 = cfw_initial_yg1 * (1 + adjp_cfw_initial_wzida0e0b0xyg1)
 cfw_initial_wzida0e0b0xyg3 = cfw_initial_yg3 * (1 + adjp_cfw_initial_wzida0e0b0xyg3)
-fd_initial_yg0, fd_initial_yg1, fd_initial_yatf, fd_initial_yg3 = f_k2g(uinp.parameters['i_fd_initial_k2'], uinp.parameters['i_fd_initial_y'])
+fd_initial_yg0, fd_initial_yg1, fd_initial_yatf, fd_initial_yg3 = f_c2g(uinp.parameters['i_fd_initial_c2'], uinp.parameters['i_fd_initial_y'])
 fd_initial_wzida0e0b0xyg0 = fd_initial_yg0 * (1 + adjp_fd_initial_wzida0e0b0xyg0)
 fd_initial_wzida0e0b0xyg1 = fd_initial_yg1 * (1 + adjp_fd_initial_wzida0e0b0xyg1)
 fd_initial_wzida0e0b0xyg3 = fd_initial_yg3 * (1 + adjp_fd_initial_wzida0e0b0xyg3)
-fl_initial_yg0, fl_initial_yg1, fl_initial_yatf, fl_initial_yg3 = f_k2g(uinp.parameters['i_fl_initial_k2'], uinp.parameters['i_fl_initial_y'])
+fl_initial_yg0, fl_initial_yg1, fl_initial_yatf, fl_initial_yg3 = f_c2g(uinp.parameters['i_fl_initial_c2'], uinp.parameters['i_fl_initial_y'])
 fl_initial_wzida0e0b0xyg0 = fl_initial_yg0 * (1 + adjp_fl_initial_wzida0e0b0xyg0)
 fl_initial_wzida0e0b0xyg1 = fl_initial_yg1 * (1 + adjp_fl_initial_wzida0e0b0xyg1)
 fl_initial_wzida0e0b0xyg3 = fl_initial_yg3 * (1 + adjp_fl_initial_wzida0e0b0xyg3)
@@ -1190,7 +1222,7 @@ period_between_birthwean_pa1e1b1nwzida0e0b0xyg1 = f_period_is_('period_is_betwee
 period_is_postwean_pa1e1b1nwzida0e0b0xyg1 = f_period_is_('period_is_post', date_weaned_pa1e1b1nwzida0e0b0xyg2, date_start_pa1e1b1nwzida0e0b0xyg)
 period_is_birth_pa1e1b1nwzida0e0b0xyg1 = f_period_is_('period_is', date_born_pa1e1b1nwzida0e0b0xyg2, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg) #g2 date born is the equivelant of date lambed g1
 period_is_mating_pa1e1b1nwzida0e0b0xyg1 = f_period_is_('period_is', date_mated_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg) #g2 date born is the equivelant of date lambed g1
-
+period_between_birth6wks_pa1e1b1nwzida0e0b0xyg1 = f_period_is_('period_is_between', date_born_pa1e1b1nwzida0e0b0xyg2, date_start_pa1e1b1nwzida0e0b0xyg, date_born_pa1e1b1nwzida0e0b0xyg2+np.array([(6*7)]).astype('timedelta64[D]'), date_end_pa1e1b1nwzida0e0b0xyg) #This is within 6 weeks of the Birth period
 # period_is_postwean_pa1e1b1nwzida0e0b0xyg1 = f_period_is_('period_is_post', date_weaned_pa1e1b1nwzida0e0b0xyg2, date_start_pa1e1b1nwzida0e0b0xyg)
 # period_is_prescan_pa1e1b1nwzida0e0b0xyg1 = f_period_is_('period_is_pre', date_scan_pa1e1b1nwzida0e0b0xyg1 , date_end_p=date_end_pa1e1b1nwzida0e0b0xyg)
 # period_is_postscan_pa1e1b1nwzida0e0b0xyg1 = f_period_is_('period_is_post', date_scan_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg)
@@ -1205,34 +1237,34 @@ period_is_mating_pa1e1b1nwzida0e0b0xyg1 = f_period_is_('period_is', date_mated_p
 ###sire
 t_feedsupply_pj1zida0e0b0xyg0 = np.rollaxis(np.rollaxis(feedoptions_r1pj1[a_r_zida0e0b0xyg0],-1,0),-1,0) #had to rollaxis twice once for p and once for j1 (couldn't find a way to do both at the same time)
 t_feedsupply_pj1wzida0e0b0xyg0 = np.expand_dims(t_feedsupply_pj1zida0e0b0xyg0, axis = tuple(range(uinp.structure['i_n_pos']+1,pinp.sheep['i_z_pos']))) #add w axis
-t_feedsupply_pa1e1b1j1wzida0e0b0xyg0 = np.expand_dims(t_feedsupply_pj1wzida0e0b0xyg0, axis = tuple(range(uinp.structure['i_p_pos']+1,uinp.structure['i_n_pos']))) #add c0,c1,c2 (in the place of a1,e1,b1) axis. Note n and j are the same thing (as far a position goes)
+t_feedsupply_pa1e1b1j1wzida0e0b0xyg0 = np.expand_dims(t_feedsupply_pj1wzida0e0b0xyg0, axis = tuple(range(uinp.structure['i_p_pos']+1,uinp.structure['i_n_pos']))) #add a1,e1,b1 axis. Note n and j are the same thing (as far a position goes)
 ###dams
 t_feedsupply_pj1zida0e0b0xyg1 = np.rollaxis(np.rollaxis(feedoptions_r1pj1[a_r_zida0e0b0xyg1],-1,0),-1,0) #had to rollaxis twice once for p and once for j1 (couldn't find a way to do both at the same time)
 t_feedsupply_pj1wzida0e0b0xyg1 = np.expand_dims(t_feedsupply_pj1zida0e0b0xyg1, axis = tuple(range(uinp.structure['i_n_pos']+1,pinp.sheep['i_z_pos']))) #add w axis
-t_feedsupply_pa1e1b1j1wzida0e0b0xyg1 = np.expand_dims(t_feedsupply_pj1wzida0e0b0xyg1, axis = tuple(range(uinp.structure['i_p_pos']+1,uinp.structure['i_n_pos']))) #add c0,c1,c2 (in the place of a1,e1,b1) axis. Note n and j are the same thing (as far a position goes)
+t_feedsupply_pa1e1b1j1wzida0e0b0xyg1 = np.expand_dims(t_feedsupply_pj1wzida0e0b0xyg1, axis = tuple(range(uinp.structure['i_p_pos']+1,uinp.structure['i_n_pos']))) #add  a1,e1,b1 axis. Note n and j are the same thing (as far a position goes)
 ###offs
 t_feedsupply_pj1zida0e0b0xyg3 = np.rollaxis(np.rollaxis(feedoptions_r1pj1[a_r_zida0e0b0xyg3],-1,0),-1,0) #had to rollaxis twice once for p and once for j1 (couldn't find a way to do both at the same time)
 t_feedsupply_pj1wzida0e0b0xyg3 = np.expand_dims(t_feedsupply_pj1zida0e0b0xyg3, axis = tuple(range(uinp.structure['i_n_pos']+1,pinp.sheep['i_z_pos']))) #add w axis
-t_feedsupply_pa1e1b1j1wzida0e0b0xyg3 = np.expand_dims(t_feedsupply_pj1wzida0e0b0xyg3, axis = tuple(range(uinp.structure['i_p_pos']+1,uinp.structure['i_n_pos']))) #add c0,c1,c2 (in the place of a1,e1,b1) axis. Note n and j are the same thing (as far a position goes)
+t_feedsupply_pa1e1b1j1wzida0e0b0xyg3 = np.expand_dims(t_feedsupply_pj1wzida0e0b0xyg3, axis = tuple(range(uinp.structure['i_p_pos']+1,uinp.structure['i_n_pos']))) #add a1,e1,b1 axis. Note n and j are the same thing (as far a position goes)
 
 ##2) calculate the feedsupply variaiton for each sheep class
-t_fs_ageweaned_pc0c1c2j1wzida0e0b0xyg1 = np.rollaxis(feedoptions_var_r2p[a_r2_c0e1b1nwzida0e0b0xyg1],-1,0)
-t_fs_cycle_pc0c1c2j1wzida0e0b0xyg1 = np.expand_dims(np.rollaxis(feedoptions_var_r2p[a_r2_c1b1nwzida0e0b0xyg1],-1,0), axis = tuple(range(uinp.structure['i_p_pos']+1,pinp.sheep['i_e1_pos']))) #add c0
-t_fs_lsln_pc0c1c2j1wzida0e0b0xyg1 = np.expand_dims(np.rollaxis(feedoptions_var_r2p[a_r2_c2nwzida0e0b0xyg1],-1,0), axis = tuple(range(uinp.structure['i_p_pos']+1,uinp.parameters['i_b1_pos']))) #add c0,c1
-t_fs_agedam_pa1e1b1j1wzic3a0e0b0xyg3 = np.expand_dims(np.rollaxis(feedoptions_var_r2p[a_r2_ic3a0e0b0xyg3],-1,0), axis = tuple(range(uinp.structure['i_p_pos']+1,pinp.sheep['i_i_pos']))) #add from i to p
-t_fs_ageweaned_pa1e1b1j1wzidc0e0b0xyg3 = np.expand_dims(np.rollaxis(feedoptions_var_r2p[a_r2_idc0e0b0xyg3],-1,0), axis = tuple(range(uinp.structure['i_p_pos']+1,pinp.sheep['i_i_pos']))) #add from i to p
-t_fs_btrt_a1e1b1j1wzida0e0c4xyg3 = np.expand_dims(np.rollaxis(feedoptions_var_r2p[a_r2_ida0e0c4xyg3],-1,0), axis = tuple(range(uinp.structure['i_p_pos']+1,pinp.sheep['i_i_pos']))) #add from i to p
-t_fs_gender_pa1e1b1j1wzida0e0b0c5yg3 = np.expand_dims(np.rollaxis(feedoptions_var_r2p[a_r2_ida0e0b0c5yg3],-1,0), axis = tuple(range(uinp.structure['i_p_pos']+1,pinp.sheep['i_i_pos']))) #add from i to p
+t_fs_ageweaned_pk0k1k2j1wzida0e0b0xyg1 = np.rollaxis(feedoptions_var_r2p[a_r2_k0e1b1nwzida0e0b0xyg1],-1,0)
+t_fs_cycle_pk0k1k2j1wzida0e0b0xyg1 = np.expand_dims(np.rollaxis(feedoptions_var_r2p[a_r2_k1b1nwzida0e0b0xyg1],-1,0), axis = tuple(range(uinp.structure['i_p_pos']+1,pinp.sheep['i_e1_pos']))) #add k0
+t_fs_lsln_pk0k1k2j1wzida0e0b0xyg1 = np.expand_dims(np.rollaxis(feedoptions_var_r2p[a_r2_k2nwzida0e0b0xyg1],-1,0), axis = tuple(range(uinp.structure['i_p_pos']+1,uinp.parameters['i_b1_pos']))) #add k0,k1
+t_fs_agedam_pa1e1b1j1wzik3a0e0b0xyg3 = np.expand_dims(np.rollaxis(feedoptions_var_r2p[a_r2_ik3a0e0b0xyg3],-1,0), axis = tuple(range(uinp.structure['i_p_pos']+1,pinp.sheep['i_i_pos']))) #add from i to p
+t_fs_ageweaned_pa1e1b1j1wzidk0e0b0xyg3 = np.expand_dims(np.rollaxis(feedoptions_var_r2p[a_r2_idk0e0b0xyg3],-1,0), axis = tuple(range(uinp.structure['i_p_pos']+1,pinp.sheep['i_i_pos']))) #add from i to p
+t_fs_btrt_a1e1b1j1wzida0e0k4xyg3 = np.expand_dims(np.rollaxis(feedoptions_var_r2p[a_r2_ida0e0k4xyg3],-1,0), axis = tuple(range(uinp.structure['i_p_pos']+1,pinp.sheep['i_i_pos']))) #add from i to p
+t_fs_gender_pa1e1b1j1wzida0e0b0k5yg3 = np.expand_dims(np.rollaxis(feedoptions_var_r2p[a_r2_ida0e0b0k5yg3],-1,0), axis = tuple(range(uinp.structure['i_p_pos']+1,pinp.sheep['i_i_pos']))) #add from i to p
 
 ##3)Based on the animal management selected (scan, gbal and wean) and whether the animals are differentially managed in this trial
 ###a) weaning age variation
-a_c0_pa1e1b1nwzida0e0b0xyg1 = period_is_postwean_pa1e1b1nwzida0e0b0xyg1 * pinp.sheep['i_dam_wean_diffman'] * np.arange(len_a1)
-t_fs_ageweaned_pa1e1b1j1wzida0e0b0xyg1 = np.take_along_axis(t_fs_ageweaned_pc0c1c2j1wzida0e0b0xyg1, a_c0_pa1e1b1nwzida0e0b0xyg1, 1) 
+a_k0_pa1e1b1nwzida0e0b0xyg1 = period_is_postwean_pa1e1b1nwzida0e0b0xyg1 * pinp.sheep['i_dam_wean_diffman'] * np.arange(len_a1)
+t_fs_ageweaned_pa1e1b1j1wzida0e0b0xyg1 = np.take_along_axis(t_fs_ageweaned_pk0k1k2j1wzida0e0b0xyg1, a_k0_pa1e1b1nwzida0e0b0xyg1, 1) 
 
-###b)b.	Dams Cluster c1 – oestrus cycle (e1): The association required is
+###b)b.	Dams Cluster k1 – oestrus cycle (e1): The association required is
 #^Have decided to drop this out of version 1. Will require multiple nutrition patterns in order to test value of scanning for foetal age
 
-###c)Dams Cluster c2 – BTRT (b1)
+###c)Dams Cluster k2 – BTRT (b1)
 ####have to create a_t array so that it is maximum size of the arrays that are used it mask it. Then use broadcasting function to allow a smaller mask to be applied.
 shape = np.maximum.reduce([period_between_joinscan_pa1e1b1nwzida0e0b0xyg1.shape,period_between_scanbirth_pa1e1b1nwzida0e0b0xyg1.shape,period_between_birthwean_pa1e1b1nwzida0e0b0xyg1.shape,period_is_postwean_pa1e1b1nwzida0e0b0xyg1.shape]) #create shape which has the max size
 a_t_pa1e1b1nwzida0e0b0xyg1 = np.zeros(shape)
@@ -1256,16 +1288,16 @@ a_t_pa1e1b1nwzida0e0b0xyg1[period_between_birthwean_mask] = 2 #t = 0 is prescan,
 scan_pa1e1b1nwzida0e0b0xyg1 = (scan_pa1e1b1nwzida0e0b0xyg1) * (a_t_pa1e1b1nwzida0e0b0xyg1 >= 1) * pinp.sheep['i_dam_lsln_diffman_t'][1]
 gbal_pa1e1b1nwzida0e0b0xyg1 = (gbal_pa1e1b1nwzida0e0b0xyg1 -1 ) * (a_t_pa1e1b1nwzida0e0b0xyg1 >= 2) * pinp.sheep['i_dam_lsln_diffman_t'][2] + 1  #minus 1 then plus 1 ensures that thewean option before lactation is 1 
 wean_pa1e1b1nwzida0e0b0xyg1 = (wean_pa1e1b1nwzida0e0b0xyg1 -1 ) * (a_t_pa1e1b1nwzida0e0b0xyg1 >= 3) * pinp.sheep['i_dam_lsln_diffman_t'][3] + 1  #minus 1 then plus 1 ensures that thewean option before weaning is 1 
-####a_c2_vlsb1 states the feed variation slice for defferent management. In this step we slice a_c2_vlsb1 for the selected management in each period.
-a_c2_pa1e1b1nwzida0e0b0xyg1 = np.rollaxis(a_c2_vlsb1[wean_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], gbal_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], scan_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], ...],-1,3) #remove the singlton b1 axis from the association arrays because a populated b1 axis comes from a_c2_vlsb1
+####a_k2_vlsb1 states the feed variation slice for defferent management. In this step we slice a_k2_vlsb1 for the selected management in each period.
+a_k2_pa1e1b1nwzida0e0b0xyg1 = np.rollaxis(a_k2_vlsb1[wean_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], gbal_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], scan_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], ...],-1,3) #remove the singlton b1 axis from the association arrays because a populated b1 axis comes from a_k2_vlsb1
 ####select feed variation pattern
-t_fs_lsln_pa1e1b1j1wzida0e0b0xyg1 = np.take_along_axis(t_fs_lsln_pc0c1c2j1wzida0e0b0xyg1, a_c2_pa1e1b1nwzida0e0b0xyg1, uinp.parameters['i_b1_pos']) 
+t_fs_lsln_pa1e1b1j1wzida0e0b0xyg1 = np.take_along_axis(t_fs_lsln_pk0k1k2j1wzida0e0b0xyg1, a_k2_pa1e1b1nwzida0e0b0xyg1, uinp.parameters['i_b1_pos']) 
 
 ###d) ^come back to offs
-# t_fs_agedam_pj1zida0e0b0xg3 = t_fs_agedam_pj1zic3c0c4c5g3
-# t_fs_ageweaned_pj1zida0e0b0xg3 = t_fs_ageweaned_pj1zic3c0c4c5g3
-# t_fs_btrt_pj1zida0e0b0xg3 = t_fs_btrt_pj1zic3c0c4c5g3
-# t_fs_btrt_pj1zida0e0b0xg3 = t_fs_btrt_pj1zic3c0c4c5g3
+# t_fs_agedam_pj1zida0e0b0xg3 = t_fs_agedam_pj1zik3k0k4k5g3
+# t_fs_ageweaned_pj1zida0e0b0xg3 = t_fs_ageweaned_pj1zik3k0k4k5g3
+# t_fs_btrt_pj1zida0e0b0xg3 = t_fs_btrt_pj1zik3k0k4k5g3
+# t_fs_btrt_pj1zida0e0b0xg3 = t_fs_btrt_pj1zik3k0k4k5g3
 ##4) add variation to std pattern
 t_feedsupply_pa1e1b1j1wzida0e0b0xyg1 = (t_feedsupply_pa1e1b1j1wzida0e0b0xyg1 + t_fs_ageweaned_pa1e1b1j1wzida0e0b0xyg1 + t_fs_lsln_pa1e1b1j1wzida0e0b0xyg1) #cant use += for some reason
 
@@ -1303,20 +1335,20 @@ nut_add_g3_n[i_nut_spread_g3_n >=3] = nut_add_g3_n[i_nut_spread_g3_n >=3]
 nut_mult_g3_j1n[:,i_nut_spread_g3_n >=3] = 0 #if nut_add exists then nut_mult=0
 
 ###c - feedsupply_std with n axis (instead of j axis).
-nut_mult_g0_pc0c1c2j1nwzida0e0b0xyg = np.expand_dims(nut_mult_g0_j1n[na,na,na,na,...], axis = tuple(range(uinp.structure['i_n_pos']+1,0))) #expand axis to line up with feedsupply, add axis from g to n and j1 to p
-nut_add_g0_pc0c1c2nwzida0e0b0xyg = np.expand_dims(nut_add_g0_n, axis = (tuple(range(uinp.structure['i_p_pos'],uinp.structure['i_n_pos'])) + tuple(range(uinp.structure['i_n_pos']+1,0)))) #add axis from p to n and n to g
+nut_mult_g0_pk0k1k2j1nwzida0e0b0xyg = np.expand_dims(nut_mult_g0_j1n[na,na,na,na,...], axis = tuple(range(uinp.structure['i_n_pos']+1,0))) #expand axis to line up with feedsupply, add axis from g to n and j1 to p
+nut_add_g0_pk0k1k2nwzida0e0b0xyg = np.expand_dims(nut_add_g0_n, axis = (tuple(range(uinp.structure['i_p_pos'],uinp.structure['i_n_pos'])) + tuple(range(uinp.structure['i_n_pos']+1,0)))) #add axis from p to n and n to g
 t_feedsupply_pa1e1b1j1nwzida0e0b0xyg0 = np.expand_dims(t_feedsupply_pa1e1b1j1wzida0e0b0xyg0, axis = uinp.structure['i_n_pos']) #add n axis
-feedsupply_std_pa1e1b1nwzida0e0b0xyg0 = np.sum(t_feedsupply_pa1e1b1j1nwzida0e0b0xyg0 * nut_mult_g0_pc0c1c2j1nwzida0e0b0xyg, axis = uinp.structure['i_n_pos']-1 ) + nut_add_g0_pc0c1c2nwzida0e0b0xyg #minus 1 because n axis was added therefore shifting j1 position (it was origionally in the same place). Sum across j1 axis and leave just the n axis
+feedsupply_std_pa1e1b1nwzida0e0b0xyg0 = np.sum(t_feedsupply_pa1e1b1j1nwzida0e0b0xyg0 * nut_mult_g0_pk0k1k2j1nwzida0e0b0xyg, axis = uinp.structure['i_n_pos']-1 ) + nut_add_g0_pk0k1k2nwzida0e0b0xyg #minus 1 because n axis was added therefore shifting j1 position (it was origionally in the same place). Sum across j1 axis and leave just the n axis
 
-nut_mult_g1_pc0c1c2j1nwzida0e0b0xyg = np.expand_dims(nut_mult_g1_j1n[na,na,na,na,...], axis = tuple(range(uinp.structure['i_n_pos']+1,0))) #expand axis to line up with feedsupply, add axis from g to n and j1 to p
-nut_add_g1_pc0c1c2nwzida0e0b0xyg = np.expand_dims(nut_add_g1_n, axis = (tuple(range(uinp.structure['i_p_pos'],uinp.structure['i_n_pos'])) + tuple(range(uinp.structure['i_n_pos']+1,0)))) #add axis from p to n and n to g
+nut_mult_g1_pk0k1k2j1nwzida0e0b0xyg = np.expand_dims(nut_mult_g1_j1n[na,na,na,na,...], axis = tuple(range(uinp.structure['i_n_pos']+1,0))) #expand axis to line up with feedsupply, add axis from g to n and j1 to p
+nut_add_g1_pk0k1k2nwzida0e0b0xyg = np.expand_dims(nut_add_g1_n, axis = (tuple(range(uinp.structure['i_p_pos'],uinp.structure['i_n_pos'])) + tuple(range(uinp.structure['i_n_pos']+1,0)))) #add axis from p to n and n to g
 t_feedsupply_pa1e1b1j1nwzida0e0b0xyg1 = np.expand_dims(t_feedsupply_pa1e1b1j1wzida0e0b0xyg1, axis = uinp.structure['i_n_pos']) #add n axis
-feedsupply_std_pa1e1b1nwzida0e0b0xyg1 = np.sum(t_feedsupply_pa1e1b1j1nwzida0e0b0xyg1 * nut_mult_g1_pc0c1c2j1nwzida0e0b0xyg, axis = uinp.structure['i_n_pos']-1 ) + nut_add_g1_pc0c1c2nwzida0e0b0xyg #minus 1 because n axis was added therefore shifting j1 position (it was origionally in the same place). Sum across j1 axis and leave just the n axis
+feedsupply_std_pa1e1b1nwzida0e0b0xyg1 = np.sum(t_feedsupply_pa1e1b1j1nwzida0e0b0xyg1 * nut_mult_g1_pk0k1k2j1nwzida0e0b0xyg, axis = uinp.structure['i_n_pos']-1 ) + nut_add_g1_pk0k1k2nwzida0e0b0xyg #minus 1 because n axis was added therefore shifting j1 position (it was origionally in the same place). Sum across j1 axis and leave just the n axis
 
-nut_mult_g3_pc0c1c2j1nwzida0e0b0xyg = np.expand_dims(nut_mult_g3_j1n[na,na,na,na,...], axis = tuple(range(uinp.structure['i_n_pos']+1,0))) #expand axis to line up with feedsupply, add axis from g to n and j1 to p
-nut_add_g3_pc0c1c2nwzida0e0b0xyg = np.expand_dims(nut_add_g3_n, axis = (tuple(range(uinp.structure['i_p_pos'],uinp.structure['i_n_pos'])) + tuple(range(uinp.structure['i_n_pos']+1,0)))) #add axis from p to n and n to g
+nut_mult_g3_pk0k1k2j1nwzida0e0b0xyg = np.expand_dims(nut_mult_g3_j1n[na,na,na,na,...], axis = tuple(range(uinp.structure['i_n_pos']+1,0))) #expand axis to line up with feedsupply, add axis from g to n and j1 to p
+nut_add_g3_pk0k1k2nwzida0e0b0xyg = np.expand_dims(nut_add_g3_n, axis = (tuple(range(uinp.structure['i_p_pos'],uinp.structure['i_n_pos'])) + tuple(range(uinp.structure['i_n_pos']+1,0)))) #add axis from p to n and n to g
 t_feedsupply_pa1e1b1j1nwzida0e0b0xyg3 = np.expand_dims(t_feedsupply_pa1e1b1j1wzida0e0b0xyg3, axis = uinp.structure['i_n_pos']) #add n axis
-feedsupply_std_pa1e1b1nwzida0e0b0xyg3 = np.sum(t_feedsupply_pa1e1b1j1nwzida0e0b0xyg3 * nut_mult_g3_pc0c1c2j1nwzida0e0b0xyg, axis = uinp.structure['i_n_pos']-1 ) + nut_add_g3_pc0c1c2nwzida0e0b0xyg #minus 1 because n axis was added therefore shifting j1 position (it was origionally in the same place). Sum across j1 axis and leave just the n axis
+feedsupply_std_pa1e1b1nwzida0e0b0xyg3 = np.sum(t_feedsupply_pa1e1b1j1nwzida0e0b0xyg3 * nut_mult_g3_pk0k1k2j1nwzida0e0b0xyg, axis = uinp.structure['i_n_pos']-1 ) + nut_add_g3_pk0k1k2nwzida0e0b0xyg #minus 1 because n axis was added therefore shifting j1 position (it was origionally in the same place). Sum across j1 axis and leave just the n axis
 
 ##7)Ensure that no feed supplies are outside the range 0 to 4
 feedsupply_std_pa1e1b1nwzida0e0b0xyg0 = np.maximum(0, feedsupply_std_pa1e1b1nwzida0e0b0xyg0)
@@ -1511,7 +1543,7 @@ for p in range(1):
         #     ####set patterns for each seaon type to the same starting point
 
         # ##update lw target
-
+=
     ##calculate dependent start values
     ###GFW (start)
     gfw_start_sire = cfw_start_sire / cw_sire[3, ...]
@@ -1570,11 +1602,45 @@ for p in range(1):
 
 
 
-    # ## conception, mortality and numbers
-    # ### base mortality
-    # mr[p,...] = sfun.mortality_csiro(rc[p-1,...])
-    # mr[p,...] = sfun.mortality_mu(rc[p-1,...])
-    # ### weaner mortality
+    ## conception, mortality and numbers
+    ### base mortality
+    mortality_base_sire = f_mortality_base(cd_sire, cg_sire, rc_start_sire, ebg_start_sire, d_nw_max_pa1e1b1nwzida0e0b0xyg0[p])
+    mortality_base_dams = f_mortality_base(cd_dams, cg_dams, rc_start_dams, ebg_start_dams, d_nw_max_pa1e1b1nwzida0e0b0xyg1[p])
+    mortality_base_yatf = f_mortality_base(cd_yatf, cg_yatf, rc_start_yatf, ebg_start_yatf, d_nw_max_pa1e1b1nwzida0e0b0xyg2[p])
+    mortality_base_offs = f_mortality_base(cd_offs, cg_offs, rc_start_offs, ebg_start_offs, d_nw_max_pa1e1b1nwzida0e0b0xyg3[p])
+    ### weaner mortality 
+    eqn_group = 2
+    eqn_system = 0 # CSIRO = 0
+    ####dams
+    if pinp.sheep['i_eqn_exists_q0q1'][eqn_system, eqn_group]:  # proceed with call & assignment if this system exists for this group
+        eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+        if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
+            temp0 = sfun.f_mortality_base(cd_dams, cg_dams, age_pa1e1b1nwzida0e0b0xyg1[p], ebg_start_dams, d_nw_max_pa1e1b1nwzida0e0b0xyg1[p])
+            if eqn_used:
+                weaner_mortality_dams = temp0
+            if eqn_compare:
+                r_compare_q0q1q2pdams[eqn_system, eqn_group, 0, p, ...] = temp0
+    ####offs
+    if pinp.sheep['i_eqn_exists_q0q1'][eqn_system, eqn_group]:  # proceed with call & assignment if this system exists for this group
+        eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
+        if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
+            temp0 = sfun.f_mortality_base(cd_offs, cg_offs, age_pa1e1b1nwzida0e0b0xyg3[p], ebg_start_offs, d_nw_max_pa1e1b1nwzida0e0b0xyg3[p])
+            if eqn_used:
+                weaner_mortality_offs = temp0
+            if eqn_compare:
+                r_compare_q0q1q2poffs[eqn_system, eqn_group, 0, p, ...] = temp0
+    ### dam mortality 
+    eqn_group = 3
+    eqn_system = 0 # CSIRO = 0
+    if pinp.sheep['i_eqn_exists_q0q1'][eqn_system, eqn_group]:  # proceed with call & assignment if this system exists for this group
+        eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+        if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
+            temp0 = sfun.f_mortality_base(cb1_dams, cg_dams, nw_start_dams, ebg_start_dams, days_periodpa1e1b1nwzida0e0b0xyg1[p], period_between_birth6wks_pa1e1b1nwzida0e0b0xyg1[p])
+            if eqn_used:
+                mortality_dams = temp0
+            if eqn_compare:
+                r_compare_q0q1q2pdams[eqn_system, eqn_group, 0, p, ...] = temp0
+    
 
     # ###calc preg tox losses if less than 6wks to lambing.
     # if date <= lambing - 42:
@@ -1605,7 +1671,7 @@ for p in range(1):
     if pinp.sheep['i_eqn_exists_q0q1'][eqn_system, eqn_group]:  # proceed with call & assignment if this system exists for this group
         eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
         if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-            temp0 = sfun.f_conception_cs(cf_sire, cb1_dams, relsize_start_dams, rc_start_dams, crg_doy_pa1e1b1nwzida0e0b0xyg1[p], period_is_mating_pa1e1b1nwzida0e0b0xyg1[p])
+            temp0 = sfun.f_conception_cs(cf_dams, cb1_dams, relsize_start_dams, rc_start_dams, crg_doy_pa1e1b1nwzida0e0b0xyg1[p], period_is_mating_pa1e1b1nwzida0e0b0xyg1[p])
             if eqn_used:
                 conception_dams = temp0
             if eqn_compare:
@@ -1840,7 +1906,7 @@ for p in range(1):
             if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                 temp0 = sfun.f_potential_intake_cs(ci_yatf, srw_xyg2, relsize_start_yatf, rc_start_yatf, temp_lc_yatf, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p] 
                                                    , temp_min_pa1e1b1nwzida0e0b0xyg[p], rain_intake_pa1e1b1nwzida0e0b0xyg2[p]
-                                                   , lactation_in_period = lactation_in_period_yatf[p], mp2 = mp2_yatf, piyf = piyf_pa1e1b1nwzida0e0b0xyg2[p])
+                                                   , mp2 = mp2_yatf, piyf = piyf_pa1e1b1nwzida0e0b0xyg2[p], lactation_in_period = lactation_in_period_yatf[p])
                 if eqn_used:
                     pi_yatf = temp0
                 if eqn_compare:
@@ -2004,6 +2070,32 @@ for p in range(1):
 
     # ##end values
 
+
+
+def f_mortality_base(cd, cg, rc_start, ebg_start, d_nw_max):
+    return cd[1, ...] + cd[2, ...] * np.max(0, cd[3, ...] - rc_start) * ((cd[16, ...] * d_nw_max) > (ebg_start* cg[18, ...]))
+
+
+
+def f_mortality_weaner_cs(cd, cg, age, ebg_start, d_nw_max):
+    return cd[13, ...] * sfun.f_ramp(age, cd[15, ...], cd[14, ...]) * ((cd[16, ...] * d_nw_max) > (ebg_start* cg[18, ...]))
+
+
+def f_mortality_dam_cs(cb1, cg, nw_start, ebg_start, days_period, period_is_6wpp):
+    ##(Twin) Dam mortality in last 6 weeks (preg tox)
+    t_mort = days_period /42 * f_sig(-42 * ebg_start * cg[18, ...] / nw_start, cb1[4, …], cb1[5, …])
+    ##If not last 6 weeks then = 0
+    mort = t_mort * period_is_6wpp
+    return mort
+    
+
+
+
+
+
+
+
+
 # m = np.arange(2*3*5).reshape((2,3,5))
 # slc = [slice(None)] * len(m.shape)
 # slc[2] = slice( 0,-2)
@@ -2015,7 +2107,6 @@ def f_dynamic_slice(arr, axis, start, stop):
     sl[axis] = slice( start, stop)
     return arr[tuple(sl)]
 
-temp0 = sfun.f_conception_cs(cf_sire, cb1_dams, relsize_start_dams, rc_start_dams, crg_doy_pa1e1b1nwzida0e0b0xyg1, period_is_mating_pa1e1b1nwzida0e0b0xyg1)
 
 def f_conception_cs(cf, cb1, relsize_start, rc_start, crg_doy, period_is_mating):
     ##Conception greater than or equal to x
