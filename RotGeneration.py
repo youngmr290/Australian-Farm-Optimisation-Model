@@ -439,7 +439,7 @@ if customised_rotations:
 
 ##if you want to represent the rotations from property.xlsx
 if pinp.crop['user_crop_rot']:
-    phases = np.array([pinp.crop['fixed_rotphases'].reset_index()])    
+    phases =pinp.crop['fixed_rotphases'].reset_index().values.astype('str')    
 
 
 ############################################################################################################################################################################################
@@ -570,13 +570,21 @@ The sets are altered for yr1 - this is done using if statements which make the s
 ##################
 #continuous phase#
 ##################
-tc=np.array(['tc','tc','tc','tc','tc','tc'])
-jc=np.array(['jc','jc','jc','jc','jc','jc'])
-uc=np.array(['uc','uc','uc','uc','uc','uc'])
-xc=np.array(['xc','xc','xc','xc','xc','xc'])
+##only generate cont phases if there are other phases that contain a resown version of the landuse and a normal version of the landuse because the inputs for the cont phases are generated from a combo of resown and normal phases 
+if np.isin(phases,'tr').any() and np.isin(phases,'t').any():
+    tc=np.array(['tc','tc','tc','tc','tc','tc'])
+    phases = np.concatenate((phases, [tc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
+if np.isin(phases,'jr').any() and np.isin(phases,'j').any():
+    jc=np.array(['jc','jc','jc','jc','jc','jc'])
+    phases = np.concatenate((phases, [jc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
+if np.isin(phases,'ur').any() and np.isin(phases,'u').any():
+    uc=np.array(['uc','uc','uc','uc','uc','uc'])
+    phases = np.concatenate((phases, [uc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
+if np.isin(phases,'xr').any() and np.isin(phases,'x').any():
+    xc=np.array(['xc','xc','xc','xc','xc','xc'])
+    phases = np.concatenate((phases, [xc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
 ##final list of phases that includes continuous phases - this list is not used when generating constrains because there are no cons associated with cont phases
-phases_cont = np.concatenate((phases, [tc,jc,uc,xc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
-l_phases_cont = [''.join(x) for x in phases_cont.astype(str)]
+l_phases_cont = [''.join(x) for x in phases.astype(str)]
 
 ############################################################################################################################################################################################
 ############################################################################################################################################################################################
@@ -587,7 +595,7 @@ l_phases_cont = [''.join(x) for x in phases_cont.astype(str)]
 ##start writing
 writer = pd.ExcelWriter('Rotation.xlsx', engine='xlsxwriter')
 ##list of rotations - index: tupple, values: expanded version of rotation
-rot_phases =  pd.DataFrame(phases_cont, index=l_phases_cont)
+rot_phases =  pd.DataFrame(phases, index=l_phases_cont)
 rot_phases.to_excel(writer, sheet_name='rotation list',index=True,header=False)
 ##con1 - the paramater for which history each rotation provides and requires
 mps_bool.to_excel(writer, sheet_name='rotation con1',index=False,header=False)

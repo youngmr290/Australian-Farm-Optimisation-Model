@@ -29,7 +29,7 @@ import LabourCropPyomo as lcrppy
 import PasturePyomo as paspy
 import SupFeedPyomo as suppy
 import StubblePyomo as stubpy
-import SheepPyomo as shppy
+import StockPyomo as stkpy
  
 import Finance as fin
 
@@ -91,7 +91,7 @@ def coremodel_all():
     except AttributeError:
         pass
     def labour_sheep(model,p):
-        return -model.v_sheep_labour_casual[p] - model.v_sheep_labour_permanent[p] - model.v_sheep_labour_manager[p] + suppy.sup_labour(model,p) + shppy.shp_labour(model,p)   <= 0
+        return -model.v_sheep_labour_casual[p] - model.v_sheep_labour_permanent[p] - model.v_sheep_labour_manager[p] + suppy.sup_labour(model,p) + stkpy.stock_labour(model,p)   <= 0
     model.con_labour_sheep_anyone = pe.Constraint(model.s_labperiods, rule = labour_sheep, doc='link between labour supply and requirment by sheep jobs for all labour sources')
     
     #######################################
@@ -208,13 +208,13 @@ def coremodel_all():
     #  ME                #
     ###################### 
     def me(model,f,v):
-        -paspy.pas_me(v,f) - suppy.sup_me(model,v,f) - stubpy.stubble_me(model,v,f) + shppy.shp_me(model,v,f)
+        -paspy.pas_me(v,f) - suppy.sup_me(model,v,f) - stubpy.stubble_me(model,v,f) + stkpy.stock_me(model,v,f)
 
     ######################
     #Vol                 #
     ###################### 
     def vol(model,f,v):
-        paspy.pas_vol(v,f) + suppy.sup_vol(model,v,f) + stubpy.stubble_vol(model,v,f) - shppy.shp_pi(model,v,f)
+        paspy.pas_vol(v,f) + suppy.sup_vol(model,v,f) + stubpy.stubble_vol(model,v,f) - stkpy.stock_pi(model,v,f)
         
     ######################
     #cashflow constraints#
@@ -241,7 +241,7 @@ def coremodel_all():
         carryoverJF[0] = 1
         carryoverND = [0] * len(c)
         carryoverND[-1] = 1
-        return (-yield_income(model,c[i]) + crppy.rotation_cost(model,c[i])  + labpy.labour_cost(model,c[i]) + macpy.mach_cost(model,c[i]) + suppy.sup_cost(model,c[i]) + model.p_overhead_cost[c[i]] + shppy.shp_cost[c[i]]     \
+        return (-yield_income(model,c[i]) + crppy.rotation_cost(model,c[i])  + labpy.labour_cost(model,c[i]) + macpy.mach_cost(model,c[i]) + suppy.sup_cost(model,c[i]) + model.p_overhead_cost[c[i]] + stkpy.stock_cashflow[c[i]]     \
                 - model.v_debit[c[i]] * j[i] + model.v_credit[c[i]]  + model.v_debit[c[i-1]] * fin.debit_interest() * j[i]  - model.v_credit[c[i-1]] * fin.credit_interest() * j[i]
                 - model.carryover_credit[c[i]] * carryoverJF + model.carryover_credit[c[i]] * carryoverND 
                 + model.carryover_debit[c[i]] * carryoverJF  - model.carryover_debit[c[i]] * carryoverND ) <= 0
@@ -261,7 +261,7 @@ def coremodel_all():
     except AttributeError:
         pass
     def dep(model):
-        return  macpy.total_dep(model) + suppy.sup_dep(model) + shppy.shp_dep(model) - model.v_dep <=0   
+        return  macpy.total_dep(model) + suppy.sup_dep(model) + stkpy.stock_dep(model) - model.v_dep <=0   
     model.con_dep = pe.Constraint( rule=dep, doc='tallies depreciation from all activities so it can be transferd to objective')
     
     ######################
@@ -272,7 +272,7 @@ def coremodel_all():
     except AttributeError:
         pass
     def asset(model):
-        return suppy.sup_asset(model) + macpy.mach_asset(model) + shppy.shp_asset(model) - model.v_asset <=0   
+        return suppy.sup_asset(model) + macpy.mach_asset(model) + stkpy.stock_asset(model) - model.v_asset <=0   
     model.con_asset = pe.Constraint( rule=asset, doc='tallies asset from all activities so it can be transferd to objective to represent ROE')
     
     ######################
@@ -283,7 +283,7 @@ def coremodel_all():
     except AttributeError:
         pass
     def minroe(model):
-        return (sum(crppy.rotation_cost(model,c)  + labpy.labour_cost(model,c) + macpy.mach_cost(model,c) + suppy.sup_cost(model,c) + shppy.shp_cost(model,c) for c in model.s_cashflow_periods) *uinp.finance['minroe']) \
+        return (sum(crppy.rotation_cost(model,c)  + labpy.labour_cost(model,c) + macpy.mach_cost(model,c) + suppy.sup_cost(model,c) for c in model.s_cashflow_periods) + stkpy.stock_cost(model)) *uinp.finance['minroe'] \
                 - model.v_minroe <=0   
     model.con_minroe = pe.Constraint(rule=minroe, doc='tallies total expenditure to ensure minimum roe is met')
     

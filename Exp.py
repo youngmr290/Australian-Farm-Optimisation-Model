@@ -223,6 +223,7 @@ for row in range(len(exp_data)):
         exp_data1.loc[exp_data1.index[row],'runpyomo'] = False
         ##call pyomo model function, must call them in the correct order (core must be last)
         precalc_start = time.time()
+        model.sets() #certain sets have to be updated each iteration of exp
         rotpy.rotationpyomo(params[exp_data.index[row][2]]['rot'])
         crppy.croppyomo_local(params[exp_data.index[row][2]]['crop'])
         macpy.machpyomo_local(params[exp_data.index[row][2]]['mach'])

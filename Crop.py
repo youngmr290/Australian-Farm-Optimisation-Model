@@ -63,7 +63,7 @@ else:
     ### AusFarm
     base_yields = np.load('Yield data.npy')*1000
 
-if len(phases_df) != len(base_yields):
+if len(phases_df) != len(base_yields): 
     print ('''Rotations dont match inputs.
            Things to check: 
            1. if you have generated new rotations have you re-run AusFarm
@@ -279,7 +279,7 @@ def fert_cost():
         fert_passes = pinp.crop['fert_passes'].reset_index()
     else:        
         ### AusFarm
-        fert_passes = 
+        fert_passes 
     fert_passes = pd.DataFrame(fert_passes, index = phases_df.iloc[:,-1])  #make the current landuse the index
     ##add the fixed fert 
     fixed_fert_passes = pinp.crop['fixed_fert']
@@ -405,7 +405,7 @@ def chem_cost():
         base_chem = pinp.crop['chem'].reset_index()
     else:        
         ### AusFarm
-        base_chem = 
+        base_chem 
     base_chem = pd.DataFrame(base_chem, index = phases_df.iloc[:,-1])  #make the current landuse the index
     ##adjust for the cost eg cost per application * number of applications
     chem_cost = base_chem * chem_cost
@@ -531,6 +531,7 @@ def rot_cost(params):
         jc_inx = germ_df.iloc[:,-3].isin(['jc']) #checks current phase for resown jc
         jc_frequency = germ_df.loc[jc_inx,'resown'] #get frequency of resowing jc
         ###combine the costs of t and tr with the frequency of tc resowing to get the cost for tc
+        #^what about lmu? what if landuse below doesnt exist and need to use a different one... would be better to average all landuses on a given lmu...
         t_cost=cost.loc[['YYEETt']]*(1-tc_frequency[0])
         tr_cost=cost.loc[['YYEEEtr']]*tc_frequency[0]
         tc_cost = np.add(t_cost , tr_cost)

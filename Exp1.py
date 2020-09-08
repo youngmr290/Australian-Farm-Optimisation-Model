@@ -213,6 +213,7 @@ def exp(row):
     ##determine if pyomo should run, note if pyomo doesn't run there will be no ful solution (they are the same as before so no need)
     if run_pyomo_params or exp_data1.loc[exp_data1.index[row],'runpyomo'].squeeze():
         ##call core model function, must call them in the correct order (core must be last)
+        model.sets() #certain sets have to be updated each iteration of exp
         rotpy.rotationpyomo(params['rot'])
         crppy.croppyomo_local(params['crop'])
         macpy.machpyomo_local(params['mach'])

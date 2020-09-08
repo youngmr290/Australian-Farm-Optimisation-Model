@@ -38,7 +38,7 @@ from scipy import stats
 # import Functions as fun
 # import Periods as per
 import PropertyInputs as pinp
-import SheepSimRoutines as sfun
+import StockFunctions as sfun
 import UniversalInputs as uinp
 
 
@@ -1611,11 +1611,20 @@ for p in range(1):
     ### weaner mortality 
     eqn_group = 2
     eqn_system = 0 # CSIRO = 0
+    ####sire
+    if pinp.sheep['i_eqn_exists_q0q1'][eqn_system, eqn_group]:  # proceed with call & assignment if this system exists for this group
+        eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
+        if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
+            temp0 = sfun.f_mortality_weaner_cs(cd_sire, cg_sire, age_pa1e1b1nwzida0e0b0xyg0[p], ebg_start_sire, d_nw_max_pa1e1b1nwzida0e0b0xyg0[p])
+            if eqn_used:
+                weaner_mortality_sire = temp0
+            if eqn_compare:
+                r_compare_q0q1q2psire[eqn_system, eqn_group, 0, p, ...] = temp0
     ####dams
     if pinp.sheep['i_eqn_exists_q0q1'][eqn_system, eqn_group]:  # proceed with call & assignment if this system exists for this group
         eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
         if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-            temp0 = sfun.f_mortality_base(cd_dams, cg_dams, age_pa1e1b1nwzida0e0b0xyg1[p], ebg_start_dams, d_nw_max_pa1e1b1nwzida0e0b0xyg1[p])
+            temp0 = sfun.f_mortality_weaner_cs(cd_dams, cg_dams, age_pa1e1b1nwzida0e0b0xyg1[p], ebg_start_dams, d_nw_max_pa1e1b1nwzida0e0b0xyg1[p])
             if eqn_used:
                 weaner_mortality_dams = temp0
             if eqn_compare:
@@ -1629,13 +1638,27 @@ for p in range(1):
                 weaner_mortality_offs = temp0
             if eqn_compare:
                 r_compare_q0q1q2poffs[eqn_system, eqn_group, 0, p, ...] = temp0
-    ### dam mortality 
+
+    ### dam mortality - Peri-natal Dam mortality 
     eqn_group = 3
     eqn_system = 0 # CSIRO = 0
     if pinp.sheep['i_eqn_exists_q0q1'][eqn_system, eqn_group]:  # proceed with call & assignment if this system exists for this group
         eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
         if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-            temp0 = sfun.f_mortality_base(cb1_dams, cg_dams, nw_start_dams, ebg_start_dams, days_periodpa1e1b1nwzida0e0b0xyg1[p], period_between_birth6wks_pa1e1b1nwzida0e0b0xyg1[p])
+            temp0 = sfun.f_mortality_dam_cs(cb1_dams, cg_dams, nw_start_dams, ebg_start_dams, days_periodpa1e1b1nwzida0e0b0xyg1[p], period_between_birth6wks_pa1e1b1nwzida0e0b0xyg1[p], gest_propn_pa1e1b1nwzida0e0b0xyg1[p])
+            if eqn_used:
+                mortalityd_yatf = temp0
+                mortalityl_yatf = temp1
+            if eqn_compare:
+                r_compare_q0q1q2pdams[eqn_system, eqn_group, 0, p, ...] = temp0
+
+    ### Post-natal progeny mortality 
+    eqn_group = 
+    eqn_system = 0 # CSIRO = 0
+    if pinp.sheep['i_eqn_exists_q0q1'][eqn_system, eqn_group]:  # proceed with call & assignment if this system exists for this group
+        eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
+        if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
+            temp0, temp1 = sfun.f_mortality_progeny_cs(cb1_dams, cg_dams, nw_start_dams, ebg_start_dams, days_periodpa1e1b1nwzida0e0b0xyg1[p], period_between_birth6wks_pa1e1b1nwzida0e0b0xyg1[p])
             if eqn_used:
                 mortality_dams = temp0
             if eqn_compare:
@@ -2081,14 +2104,21 @@ def f_mortality_weaner_cs(cd, cg, age, ebg_start, d_nw_max):
     return cd[13, ...] * sfun.f_ramp(age, cd[15, ...], cd[14, ...]) * ((cd[16, ...] * d_nw_max) > (ebg_start* cg[18, ...]))
 
 
-def f_mortality_dam_cs(cb1, cg, nw_start, ebg_start, days_period, period_is_6wpp):
+def f_mortality_dam_cs(cb1, cg, nw_start, ebg_start, days_period, period_is_6wpp, gest_propn):
     ##(Twin) Dam mortality in last 6 weeks (preg tox)
-    t_mort = days_period /42 * f_sig(-42 * ebg_start * cg[18, ...] / nw_start, cb1[4, …], cb1[5, …])
+    t_mort = days_period * gest_propn /42 * f_sig(-42 * ebg_start * cg[18, ...] / nw_start, cb1[4, ...], cb1[5, ...])
     ##If not last 6 weeks then = 0
     mort = t_mort * period_is_6wpp
     return mort
     
-
+def f_mortality_progeny_cs(cb1, cd, ):
+    ##Progeny losses due to large progeny (dystocia)
+    mortalityd = f_sig((w_b / w_b_exp_y * np.maximum(1, rc_start), cb1[6, ...], cb1[7, ...]) * prev_is_birth
+    ##Exposure index
+    xo = cd[8, ..., na] - cd[9, ..., na] * rc_start[..., na] + cd[10, ..., na] * chill_index_panym1 + cb1[11, ..., na]
+    ##Progeny mortality at birth from exposure
+    mortalityl = np.average(np.exp(xo) / (1 - np.exp(xo)) ,axis = -1) * prev_is_birth
+    return mortalityd, mortalityl
 
 
 
