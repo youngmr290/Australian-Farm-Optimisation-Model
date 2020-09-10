@@ -241,7 +241,7 @@ def coremodel_all():
         carryoverJF[0] = 1
         carryoverND = [0] * len(c)
         carryoverND[-1] = 1
-        return (-yield_income(model,c[i]) + crppy.rotation_cost(model,c[i])  + labpy.labour_cost(model,c[i]) + macpy.mach_cost(model,c[i]) + suppy.sup_cost(model,c[i]) + model.p_overhead_cost[c[i]] + stkpy.stock_cashflow[c[i]]     \
+        return (-yield_income(model,c[i]) + crppy.rotation_cost(model,c[i])  + labpy.labour_cost(model,c[i]) + macpy.mach_cost(model,c[i]) + suppy.sup_cost(model,c[i]) + model.p_overhead_cost[c[i]] - stkpy.stock_cashflow[c[i]]     \
                 - model.v_debit[c[i]] * j[i] + model.v_credit[c[i]]  + model.v_debit[c[i-1]] * fin.debit_interest() * j[i]  - model.v_credit[c[i-1]] * fin.credit_interest() * j[i]
                 - model.carryover_credit[c[i]] * carryoverJF + model.carryover_credit[c[i]] * carryoverND 
                 + model.carryover_debit[c[i]] * carryoverJF  - model.carryover_debit[c[i]] * carryoverND ) <= 0

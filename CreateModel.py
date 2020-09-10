@@ -26,6 +26,7 @@ import UniversalInputs as uinp
 import PropertyInputs as pinp
 import Periods as per
 import Crop as crp
+import StockFunctions as sfun
 
 
 '''
@@ -56,6 +57,10 @@ def sets() :
     model.s_gen_merit_sire = Set(initialize=np.append('nondiff',uinp.parameter['i_gen_merit_sire']), doc='genetic merit of sires')
     model.s_gen_merit_dams = Set(initialize=np.append('nondiff',uinp.parameter['i_gen_merit_dams']), doc='genetic merit of dams')
     model.s_gen_merit_offs = Set(initialize=np.append('nondiff',uinp.parameter['i_gen_merit_offs']), doc='genetic merit of offs')
+    model.s_groups_sire = Set(initialize=sfun.f_g2g(pinp.sheep['i_groups_sire'],'sire'), doc='geneotype groups of sires') #have to call the g2g function to apply mask
+    model.s_groups_dams = Set(initialize=sfun.f_g2g(array_gpinp.sheep['i_groups_dams'],'dams'), doc='geneotype groups of dams') #have to call the g2g function to apply mask
+    model.s_groups_offs = Set(initialize=sfun.f_g2g(pinp.sheep['i_groups_offs'],'offs'), doc='geneotype groups of offs')  #have to call the g2g function to apply mask
+
 
     
 #######################
@@ -149,26 +154,24 @@ model.s_co_fl = Set(initialize=, doc='carryover characteristics - Fibre length')
    
 ##sire
 model.s_sale_sire = Set(initialize=, doc='Sales within the year for sires')
-model.s_fvp_sire = Set(initialize=, doc='Feed variation periods for sires')
+model.s_fvp_sire = Set(ordered=True, initialize=, doc='Feed variation periods for sires')
 model.s_nut_sire = Set(initialize=uinp.structure['i_n_idx_sire'], doc='Nutrition levels in each feed period for sires')
 model.s_lw_sire = Set(initialize=uinp.structure['i_w_idx_sire'], doc='Standard LW patterns sires')
-model.s_groups_sire = Set(initialize=pinp.sheep['i_groups_sire'], doc='geneotype groups of sires')
+model.s_sire_periods = Set(initialize=, doc='sire capacity periods')
 ##dams
 model.s_sale_dams = Set(initialize=, doc='Sales within the year for damss')
-model.s_fvp_dams = Set(initialize=, doc='Feed variation periods for damss')
+model.s_fvp_dams = Set(ordered=True, initialize=, doc='Feed variation periods for damss')
 model.s_birth_dams = Set(initialize=, doc='Cluster for LSLN & oestrus cycle based on scanning, global & weaning management')
 model.s_nut_dams = Set(initialize=uinp.structure['i_n_idx_dams'], doc='Nutrition levels in each feed period for dams')
 model.s_lw_dams = Set(initialize=uinp.structure['i_w_idx_dams'], doc='Standard LW patterns damss')
-model.s_groups_dams = Set(initialize=pinp.sheep['i_groups_dams'], doc='geneotype groups of dams')
 ##offs
 model.s_sale_offs = Set(initialize=, doc='Sales within the year for offss')
-model.s_fvp_offs = Set(initialize=, doc='Feed variation periods for offss')
+model.s_fvp_offs = Set(ordered=True, initialize=, doc='Feed variation periods for offss')
 model.s_birth_offs = Set(initialize=, doc='Cluster for BTRT & oestrus cycle based on scanning, global & weaning management')
 model.s_nut_offs = Set(initialize=uinp.structure['i_n_idx_offs'], doc='Nutrition levels in each feed period for offs')
 model.s_lw_offs = Set(initialize=uinp.structure['i_n_idx_offs'], doc='Standard LW patterns offs')
 model.s_damage_offs = Set(initialize=, doc='age of mother - offs')
 model.s_gender_offs = Set(initialize=, doc='gender of offs')
-model.s_groups_offs = Set(initialize=pinp.sheep['i_groups_offs'], doc='geneotype groups of offs')
 
 
 
