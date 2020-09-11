@@ -100,6 +100,11 @@ def f_next_prev_association(datearray_sclice,*args):
     -------
     Array
         The function finds the index value of the datearray which is either the next or previous date for a given input date.
+        ## The previous opportunity is the latest opportunity date that is less than the date at the end of the period
+        ## eg ('end of the period' so that if joining occurs during the period it is the previous
+        ## The next opportunity is the earliest joining date that is greater than the date at the start of the period
+        ## eg So it is the prev + 1 except if the joining is occurring within the period, in which case it points to this one.
+
 
     '''
     date=args[0]

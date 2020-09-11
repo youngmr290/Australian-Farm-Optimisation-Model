@@ -77,6 +77,8 @@ if inputs_from_pickle == False:
         pkl.dump(sheep_inp, f)
         parameters_inp = fun.xl_all_named_ranges('Inputs parameters.xlsm', ['Parameters'], numpy=True, datatype=float) #dtype included so that blank cells in excel get nan rather than NoneType. NoneType cant be mulitplied or added etc but nan can be.
         pkl.dump(parameters_inp, f)
+        pastparameters_inp = fun.xl_all_named_ranges('Inputs parameters.xlsm', ['PastParameters'], numpy=True, datatype=float) #dtype included so that blank cells in excel get nan rather than NoneType. NoneType cant be mulitplied or added etc but nan can be.
+        pkl.dump(pastparameters_inp, f)
         
         ##mach options
         ###create a dict to store all options - this allows the user to select an option
@@ -103,6 +105,7 @@ else:
         sheep_inp = pkl.load(f)
         
         parameters_inp = pkl.load(f)
+        pastparameters_inp = pkl.load(f)
         
         machine_options_dict_inp  = pkl.load(f)
         
@@ -116,6 +119,7 @@ supfeed = sup_inp.copy()
 crop = crop_inp.copy()
 sheep = sheep_inp.copy()
 parameters = parameters_inp.copy()
+pastparameters = pastparameters_inp.copy()
 mach = machine_options_dict_inp.copy()
 
 #######################
@@ -194,22 +198,22 @@ structure['i_mask_b0_b1'] = np.array([False, True,	True,	True,	True,	True,	True,
 structure['ia_b0_b1'] = np.array([0, 0, 1,	2,	3,	4,	5,	0,	0,	0,	0])
                      
 ##feed supply/ nutrition levels
-structure['i_w_len_sire'] = 1
+structure['i_w0_len'] = 1
 structure['i_w_idx_sire'] = ['lw1']
-structure['i_w_len_dams'] = 3
+structure['i_w1_len'] = 3
 structure['i_w_idx_dams'] = ['lw1', 'lw2', 'lw3']
-structure['i_w_len_offs'] = 5
+structure['i_w3_len'] = 5
 structure['i_w_idx_offs'] = ['lw1', 'lw2', 'lw3', 'lw4', 'lw5']
-structure['i_n_len_sire'] = 1
+structure['i_n0_len'] = 1
 structure['i_n_idx_sire'] = ['n1']
-structure['i_n_len_dams'] = 6
+structure['i_n1_len'] = 6
 structure['i_n_idx_dams'] = ['n1', 'n2', 'n3']
-structure['i_n_len_offs'] = 8
+structure['i_n3_len'] = 8
 structure['i_n_idx_offs'] = ['n1', 'n2', 'n3', 'n4', 'n5']
-structure['i_nut_spread_g0_n'] = np.array([0])
-structure['i_nut_spread_g1_n'] = np.array([0,0.66,-0.5,1,-1,3.5]) #fs adjustment for different n levels - above 3 is absolute not adjustemnt
+structure['i_nut_spread_n0'] = np.array([0])
+structure['i_nut_spread_n1'] = np.array([0,0.66,-0.5,1,-1,3.5]) #fs adjustment for different n levels - above 3 is absolute not adjustemnt
 structure['i_density_g1_n'] = np.array([1,0.66,1.25,0.5,1.5,100]) #stocking density adjuster for different n levels. An increasing feedsupply (less than 3.0) means that the animals are being offered more feed and therefore density is lower (although it could be with a high density and lots of supplement - we will be assuming that it is lower density and increased FOO). This is represented by scaling the standard stocking density by a number less than 1. Note: Distance walked is scaled by 40/density (if density is > 40). SO trying to make distance a small number for confinement feeding and even smaller for feedlotting
-structure['i_nut_spread_g3_n'] = np.array([0,0.33,0.66,1,-0.5,-1,3,3.5]) #fs adjustment for different n levels - above 3 is absolute not adjustemnt
+structure['i_nut_spread_n3'] = np.array([0,0.33,0.66,1,-0.5,-1,3,3.5]) #fs adjustment for different n levels - above 3 is absolute not adjustemnt
 structure['i_density_g3_n'] = np.array([1,0.75,0.66,0.5,1.25,1.5,300,100]) #stocking density adjuster for different n levels. An increasing feedsupply (less than 3.0) means that the animals are being offered more feed and therefore density is lower (although it could be with a high density and lots of supplement - we will be assuming that it is lower density and increased FOO). This is represented by scaling the standard stocking density by a number less than 1. Note: Distance walked is scaled by 40/density (if density is > 40). SO trying to make distance a small number for confinement feeding and even smaller for feedlotting
 ##genotype
 ###An array that contains the proportion of each purebred genotype in the sire, dam, yatf or offspring eg:
@@ -220,18 +224,18 @@ structure['i_density_g3_n'] = np.array([1,0.75,0.66,0.5,1.25,1.5,300,100]) #stoc
 # BT		0.5		0.5	
 # BMT		0.25	0.25	0.5	
 
-structure['i_mul_g0k0'] = np.array([[1,0,0],
+structure['i_mul_g0c0'] = np.array([[1,0,0],
                                      [0,1,0],
                                      [0,0,1]])    
-structure['i_mul_g1k0'] = np.array([[1,   0,    0],
+structure['i_mul_g1c0'] = np.array([[1,   0,    0],
                                      [1,   0,    0],    
                                      [1,   0,    0],    
                                      [0.5, 0.5,  0]])    
-structure['i_mul_g2k0'] = np.array([[1,   0,    0],
+structure['i_mul_g2c0'] = np.array([[1,   0,    0],
                                      [0.5,  0.5,  0],
                                      [0.5,  0,    0.5],
                                      [0.25, 0.25, 0.5]])    
-structure['i_mul_g3k0'] = np.array([[1,   0,    0],
+structure['i_mul_g3c0'] = np.array([[1,   0,    0],
                                      [0.5,  0.5,  0],
                                      [0.5,  0,    0.5],
                                      [0.25, 0.25, 0.5]]) 
@@ -280,7 +284,7 @@ structure['i_adjp_fl_initial_w3'] = np.array([0, 0.15, 0.08, -0.08, -0.15])
 structure['i_len_v'] = 2
 structure['i_len_l'] = 4
 structure['i_len_s'] = 5
-structure['ia_c2_vlsb1'] =np.array([[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+structure['ia_k2_vlsb1'] =np.array([[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
                                  ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
                                  ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
                                  ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]

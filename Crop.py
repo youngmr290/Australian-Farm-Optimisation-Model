@@ -66,8 +66,9 @@ else:
 if len(phases_df) != len(base_yields): 
     print ('''Rotations dont match inputs.
            Things to check: 
-           1. if you have generated new rotations have you re-run AusFarm
-           2. the named ranges in for the user defined rotations and inputs are all correct''')
+           1. if you have generated new rotations have you re-run AusFarm?
+           2. if you added new rotations in the user defined section have you re-run the rotation generator?
+           3. the named ranges in for the user defined rotations and inputs are all correct''')
     sys.exit()
 
 
@@ -162,7 +163,7 @@ def rot_yield(*params):
         ### User defined
         base_yields = pinp.crop['yields']
     else:        
-        ### AusFarm
+        ### AusFarm ^need to add code for ausfarm inputs
         base_yields = np.load('Yield data.npy')*1000
     base_yields = pd.Series(base_yields, index = phases_df.iloc[:,-1])
     ##colate other info
@@ -221,20 +222,24 @@ def fert_req(*args):
         Fert required by 1ha of each phases (kg/ha)
         *note arable area is accounted for in the final cost funtion below
     '''
+    ##read in chem by soil
+    fert_by_soil = pinp.crop['fert_by_lmu'] 
     ##read in yields 
     if pinp.crop['user_crop_rot']:
         ### User defined
         base_fert = pinp.crop['fert'].reset_index()
+        base_fert=base_fert.set_index([phases_df.iloc[:,-1]])
     else:        
-        ### AusFarm
+        ### AusFarm ^need to add code for ausfarm inputs
         base_fert = np.load('fert data.npy')*1000
-    fert_by_soil = pinp.crop['fert_by_lmu'] #read in chem by soil
-    base_fert = pd.DataFrame(base_fert, index = phases_df.iloc[:,-1])  #make the current landuse the index
+        base_fert = pd.DataFrame(base_fert, index = phases_df.iloc[:,-1])  #make the current landuse the index
+    ##add the full rotation index eg EEEEEb - done here because merge sorts the order, has to be a col because otherwise cant merge
+    base_fert['rot']=phases_df.index
     ##add the fixed fert 
     fixed_fert = pinp.crop['fixed_fert']
     base_fert = pd.merge(base_fert, fixed_fert, how='left', left_index=True, right_index = True) 
-    ##add the full rotation index eg EEEEEb
-    base_fert.set_index(phases_df.index, append=True, inplace=True)
+    ##replace index
+    base_fert.set_index('rot', inplace=True)
     ## adjust the fert cost for each rotation by lmu
     fert_by_soil = fert_by_soil.stack() #read in fert by soil
     fert=base_fert.mul(fert_by_soil,axis=1,level=0)
@@ -272,22 +277,24 @@ def fert_cost():
     fert_app_cost_t=fertreq.mul(application_cost/1000,axis=1,level=1).sum(axis=1, level=0) #div by 1000 to convert to $/kg
     ##app cost per ha 
     ###calc passes
-    
-    ##read in passes 
+    ####read in passes 
     if pinp.crop['user_crop_rot']:
         ### User defined
         fert_passes = pinp.crop['fert_passes'].reset_index()
+        fert_passes = fert_passes.set_index([phases_df.iloc[:,-1]])  #make the current landuse the index
     else:        
         ### AusFarm
         fert_passes 
-    fert_passes = pd.DataFrame(fert_passes, index = phases_df.iloc[:,-1])  #make the current landuse the index
-    ##add the fixed fert 
-    fixed_fert_passes = pinp.crop['fixed_fert']
-    fert_passes = pd.merge(fert_passes, fixed_fert, how='left', left_index=True, right_index = True) 
-    ##add the full rotation index eg EEEEEb
-    fert_passes.set_index(phases_df.index, append=True, inplace=True)
+        fert_passes = pd.DataFrame(fert_passes, index = phases_df.iloc[:,-1])  #make the current landuse the index
+    ##add the full rotation index eg EEEEEb - done here because merge sorts the order, has to be a col because otherwise cant merge
+    fert_passes['rot']=phases_df.index
+    ####add the fixed fert 
+    fixed_fert_passes = pinp.crop['fixed_fert_passes']
+    fert_passes = pd.merge(fert_passes, fixed_fert_passes, how='left', left_index=True, right_index = True) 
+    ##replace index
+    fert_passes.set_index('rot', inplace=True)
     ## reindex col headers so that lmu is included - note the passes are the same for each lmu
-    fert_passes = fert_passes.reindex(fertreq.columns,axis=1,level=1)
+    fert_passes = fert_passes.reindex(fertreq.index,axis=0,level=0)
     ###add the cost for each pass
     fert_cost_ha = allocation.mul(mac.fert_app_cost_ha()).stack() #cost for 1 pass for each fert.
     fert_app_cost_ha = fert_passes.mul(fert_cost_ha,axis=1,level=1).sum(axis=1, level=0) 
@@ -397,32 +404,37 @@ def chem_cost():
         *note - arable area accounted for in the final function that sums all costs
     '''
     ##read in neccessary bits and adjust indexed
-    chem_cost = pinp.crop['chem_cost']
+    i_chem_cost = pinp.crop['chem_cost']
     chem_by_soil = pinp.crop['chem_by_lmu'] #read in chem by soil
     ##read in chem passes 
     if pinp.crop['user_crop_rot']:
         ### User defined
         base_chem = pinp.crop['chem'].reset_index()
+        base_chem = base_chem.set_index([phases_df.iloc[:,-1]])  #make the current landuse the index
     else:        
-        ### AusFarm
+        ### AusFarm ^need to add code for ausfarm inputs
         base_chem 
-    base_chem = pd.DataFrame(base_chem, index = phases_df.iloc[:,-1])  #make the current landuse the index
-    ##adjust for the cost eg cost per application * number of applications
-    chem_cost = base_chem * chem_cost
-    ##add proper rotation index
-    chem_cost.set_index(phases_df.index, append=True, inplace=True)
+        base_chem = pd.DataFrame(base_chem, index = phases_df.iloc[:,-1])  #make the current landuse the index
+    ##add proper rotation index - need to add this here because the multiplication step re-orders the df
+    base_chem['rot']=phases_df.index
+    ##adjust for the cost eg cost per application * number of applications. This is a bit messy because the order of the df changes therefore need to add the full rotation name, but for merge it can be an index so i add it as a col then merge then add it as index. ^maybe there is a cleaner way to do this.
+    merge_chem = base_chem.merge(i_chem_cost, left_index=True, right_index=True, how='left')
+    merge_chem.set_index('rot', inplace=True)
+    chem_cost = merge_chem.iloc[:,0:len(i_chem_cost.columns)].values * merge_chem.iloc[:,len(i_chem_cost.columns):].values
+    chem_cost = pd.DataFrame(chem_cost, index = merge_chem.index, columns = i_chem_cost.columns )
     ## adjust the chem cost for each rotation by lmu
     chem_by_soil1 = chem_by_soil.stack()
     chem_cost=chem_cost.mul(chem_by_soil1,axis=1,level=0)
     ##application cost
+    base_chem.set_index('rot', inplace=True)
     app_cost_ha = base_chem * mac.chem_app_cost_ha()
-    app_cost_ha.set_index(phases_df.index, append=True, inplace=True)
-    app_cost_ha = app_cost_ha.reindex(chem.columns, axis=0,level=0) #reindex to get lmu 
+    # app_cost_ha.set_index(phases_df.index, append=True, inplace=True)
+    app_cost_ha = app_cost_ha.reindex(chem_cost.columns, axis=1,level=0) #reindex to get lmu 
     ##add application cost and chem cost
-    total_cost = chem_cost + app_cost_ha
+    total_cost = chem_cost.add(app_cost_ha)
     ##add cashflow periods and sum across each chem
     c_chem_allocation = chem_cost_allocation().stack()
-    chem_cost = total_cost.stack().reindex(c_chem_allocation.index, axis=1,level=1).sum(axis=1, level=0)#first stack is required so that reindexing can occur (ie cant reindex a multi index with a multi index)
+    chem_cost = total_cost.stack().reindex(c_chem_allocation.index, axis=1,level=1).mul(c_chem_allocation, axis=1).sum(axis=1, level=0)#first stack is required so that reindexing can occur (ie cant reindex a multi index with a multi index)
     return chem_cost
 
 
