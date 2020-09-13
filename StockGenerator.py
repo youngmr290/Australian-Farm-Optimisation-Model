@@ -14,7 +14,8 @@ Notes
 2. Find and replace all the sheep input dicts so only the final ones used.
 
 
-
+to do:
+    check the inputs in structure. and update them
 
 
 
@@ -28,14 +29,14 @@ Notes
 """
 import functions from other modules
 """
-import datetime as dt
-import pandas as pd
+# import datetime as dt
+# import pandas as pd
 import numpy as np
 from scipy import stats
 # from numba import jit
 
 # import FeedBudget as fdb
-# import Functions as fun
+import Functions as fun
 # import Periods as per
 import PropertyInputs as pinp
 import StockFunctions as sfun
@@ -244,7 +245,7 @@ def f_g2g(array_g,group,left_pos=0,len_ax1=0,len_ax2=0,len_ax3=0,swap=False,righ
 
 
 def f_reshape_expand(array,left_pos=0,len_ax0=0,len_ax1=0,len_ax2=0,swap=False,ax1=0,ax2=1,right_pos=0,left_pos2=0,right_pos2=0
-                     , left_pos3=0,right_pos3=0, condition = 0, axis = 0):
+                     , left_pos3=0,right_pos3=0, condition = None, axis = 0):
     '''
     Parameters
     ----------
@@ -277,7 +278,8 @@ def f_reshape_expand(array,left_pos=0,len_ax0=0,len_ax1=0,len_ax2=0,swap=False,a
     -------
     Reshapes, swaps axis if required, expands and applys a mask to a given axis if required.
     '''
-
+    ##make array incase it is a single number
+    array = np.array([array])
     if len_ax2>0:
         shape=(len_ax0,len_ax1,len_ax2)
         array = array.reshape(shape)
@@ -306,10 +308,14 @@ def f_reshape_expand(array,left_pos=0,len_ax0=0,len_ax1=0,len_ax2=0,swap=False,a
     else: extra_axes = ()
     array = np.expand_dims(array, axis = extra_axes)
     ##apply mask if required
-    if condition != 0:
-        if type(condition) == bool:
-            condition= np.asarray([condition]) #convert to numpy if it is singular input (this will do nothing if already np array)
-        array = np.compress(condition, array, axis)
+    try:
+        if condition != None:
+            if type(condition) == bool:
+                condition= np.asarray([condition]) #convert to numpy if it is singular input (this will do nothing if already np array)
+                array = np.compress(condition, array, axis)
+    except ValueError: 
+        if (condition != None).all():
+            array = np.compress(condition, array, axis)
     return array
 
 def f_DSTw(scan_std):
@@ -384,10 +390,10 @@ def f_period_is_(period_is, date_array, date_start_p=0, date_array2 = 0, date_en
     Returns
     -------
     period_is: boolean array shaped like the date array with the addition of the p axis. This is is true if a given date from date array is within the date of a given period and false if not.
+
     period_is_any: 1D boolean array shape of the period dates array. True if any of the dates in the date array fall into a given period.
-    period_is_pre: boolean array shaped like the date array with the addition of the p axis. This is is true if the end date  of the period date is less than the datearray and false if not.
-    period_is_post: boolean array shaped like the date array with the addition of the p axis. This is is true if the start date of the period date is greater than the datearray and false if not.
-    period_is_between: return true if a the period is between two dates (it is inclusive ie if an activity occurs in a period that period will be treated as between the two dates)
+
+    period_is_between: return true if a the period is between two dates (it is inclusive ie if an activity occurs during the period that period will be treated as between the two dates)
     '''
     if period_is == 'period_is':
         period_is=np.logical_and((date_array>=date_start_p) , (date_array<=date_end_p))
@@ -399,9 +405,6 @@ def f_period_is_(period_is, date_array, date_start_p=0, date_array2 = 0, date_en
     if period_is == 'period_is_pre':
         period_is_pre=(date_array>date_end_p)
         return period_is_pre
-    if period_is == 'period_is_post':
-        period_is_post=(date_array<date_start_p)
-        return period_is_post
     if period_is == 'period_is_between':
         period_is_between= np.logical_and((date_array<=date_end_p) , (date_array2>=date_start_p))
         return period_is_between
@@ -644,7 +647,10 @@ legume_p6a1e1b1nwzida0e0b0xyg = f_reshape_expand(pinp.sheep['i_legume_p6z'], pin
 paststd_foo_p6a1e1b1j0wzida0e0b0xyg = f_reshape_expand(pinp.sheep['i_paststd_foo_p6zj0'], pinp.sheep['i_z_pos'], len_ax0=pinp.sheep['i_p6_len'], len_ax1=pinp.sheep['i_z_len'], len_ax2=pinp.feedsupply['i_j0_len'], swap=True, ax1=1, ax2=2, left_pos2=uinp.structure['i_n_pos'], right_pos2=pinp.sheep['i_z_pos'], left_pos3=uinp.structure['i_p_pos'], right_pos3=uinp.structure['i_n_pos'], condition = pinp.sheep['i_mask_z'], axis = pinp.sheep['i_z_pos']) #p6 axis converted to p axis later (assosiation section), axis order doesnt matter because sliced when used
 paststd_dmd_p6a1e1b1j0wzida0e0b0xyg = f_reshape_expand(pinp.sheep['i_paststd_dmd_p6zj0'], pinp.sheep['i_z_pos'], len_ax0=pinp.sheep['i_p6_len'], len_ax1=pinp.sheep['i_z_len'], len_ax2=pinp.feedsupply['i_j0_len'], swap=True, ax1=1, ax2=2, left_pos2=uinp.structure['i_n_pos'], right_pos2=pinp.sheep['i_z_pos'], left_pos3=uinp.structure['i_p_pos'], right_pos3=uinp.structure['i_n_pos'], condition = pinp.sheep['i_mask_z'], axis = pinp.sheep['i_z_pos']) #p6 axis converted to p axis later (assosiation section), axis order doesnt matter because sliced when used
 pasture_stage_p6a1e1b1j0wzida0e0b0xyg = f_reshape_expand(pinp.sheep['i_pasture_stage_p6z'], pinp.sheep['i_z_pos'], len_ax0=pinp.sheep['i_p6_len'], len_ax1=pinp.sheep['i_z_len'], left_pos2=uinp.structure['i_p_pos'], right_pos2=pinp.sheep['i_z_pos'], condition = pinp.sheep['i_mask_z'], axis = pinp.sheep['i_z_pos']) #p6 axis converted to p axis later (assosiation section)
-
+##season type
+i_season_propn_z=np.array([pinp.sheep['i_season_propn_z']]) #convert to np array - this is required if inputs only have one season
+season_propn_zida0e0b0xyg = f_reshape_expand(i_season_propn_z, pinp.sheep['i_z_pos'], condition = pinp.sheep['i_mask_z'], axis = pinp.sheep['i_z_pos']) #minum 1 because p axis needs to be added
+season_propn_zida0e0b0xyg = season_propn_pa1e1b1nwzida0e0b0xyg/sum(i_season_propn_z[pinp.sheep['i_mask_z']]) #adjust probability of each season to account for some seasons being masked out
 ##wind speed
 ws_m4a1e1b1nwzida0e0b0xyg = f_reshape_expand(pinp.sheep['i_ws_m4'], uinp.structure['i_p_pos']) 
 ##expected stocking density
@@ -723,7 +729,6 @@ cb1_yatf[18, ...] = np.expand_dims(cb0_yatf[18, uinp.structure['ia_b0_b1']], axi
 
 
 
-
 ############################
 ## calc for associations   #
 ############################
@@ -734,13 +739,80 @@ feedperiods_p6 = np.array(pinp.feed_inputs['feed_periods']['date']).astype('date
 feedperiods_p6 = feedperiods_p6 + np.timedelta64(365,'D') * ((date_start_p[0].astype(object).year -1) - feedperiods_p6[0].astype(object).year) #this is to make sure the fisrt sim period date is greater than the first feed period date.
 feedperiods_p6 = np.ravel(feedperiods_p6  + (np.arange(np.ceil(uinp.structure['i_age_max'] +1)) * np.timedelta64(365,'D') )[...,na]) #expand then ravel to return 1d array of the feed period dates expanded the lenght of the sim.
 
+###############################
+# Feed variation period calcs #
+###############################
+##early pregnancy fvp start - The pre-joining accumulation of the dams from the previous reproduction cycle - this date must correspond to the start date of period
+prejoining_aprox_oa1e1b1nwzida0e0b0xyg1 = date_joined_oa1e1b1nwzida0e0b0xyg1 - uinp.structure['prejoin_offset'] #approx date of prejoining - adjusted to be the start of a sim period in the next step
+idx = np.searchsorted(date_start_p, prejoining_aprox_oa1e1b1nwzida0e0b0xyg1)-1 #gets the sim period index for the period before the prejoining
+prejoining_oa1e1b1nwzida0e0b0xyg1 = date_start_p[idx]
+fvp_1_start_oa1e1b1nwzida0e0b0xyg1 = prejoining_oa1e1b1nwzida0e0b0xyg1
+fvp_1_type_oa1e1b1nwzida0e0b0xyg1 = np.full(fvp_1_start_oa1e1b1nwzida0e0b0xyg1.shape,1)
+##late pregnancy fvp start - Scanning if carried out, day 90 from joining (ram in) if not scanned.
+fvp_2_start_oa1e1b1nwzida0e0b0xyg1 = date_joined_oa1e1b1nwzida0e0b0xyg1 + join_cycles_ida0e0b0xyg1 * cf_dams[4, 0:1, :].astype('timedelta64[D]') + pinp.sheep['i_scan_day'][scan_oa1e1b1nwzida0e0b0xyg1].astype('timedelta64[D]') 
+fvp_2_type_oa1e1b1nwzida0e0b0xyg1 = np.full(fvp_2_start_oa1e1b1nwzida0e0b0xyg1.shape,2)
+## lactation fvp start - average date of lambing (with e axis)
+fvp_3_start_oa1e1b1nwzida0e0b0xyg1 = date_born1st_oa1e1b1nwzida0e0b0xyg2 + (index_e1b1nwzida0e0b0xyg + 0.5) * cf_yatf[4, 0:1,:].astype('timedelta64[D]')	
+fvp_3_type_oa1e1b1nwzida0e0b0xyg1 = np.full(fvp_3_start_oa1e1b1nwzida0e0b0xyg1.shape,3)
+##post weaning recovery fvp start - weaning date of offspring
+fvp_4_start_oa1e1b1nwzida0e0b0xyg1 = date_born1st_oa1e1b1nwzida0e0b0xyg2 + age_wean_a0e0b0xyg3	
+fvp_4_type_oa1e1b1nwzida0e0b0xyg1 = np.full(fvp_4_start_oa1e1b1nwzida0e0b0xyg1.shape,4)
+## break of season fvp ^the following two lines of code will have to change once season type is included into the feedperiod inputs (the input will have z axis so the reshaping will need to be done in two steps ie pass in pos2 arg) and apply z mask
+fvp_0_start_y = pinp.feed_inputs['feed_periods'].loc[0,'date'].to_datetime64().astype('datetime64[D]') + (np.arange(np.ceil(uinp.structure['i_age_max'])) * np.timedelta64(365,'D'))
+fvp_0_start_ya1e1b1nwzida0e0b0xyg = f_reshape_expand(fvp_0_start_y, left_pos=uinp.structure['i_p_pos'])
+##first need to manually expand arrays because arrays need to be same size to stack/concat but cant use broadcast function because fvp 4 array has a different length o/y axis
+###create shape which has max size of each fvp array. Exclude the first dimension because that can be different sizes because only the other dimensions need to be the same for stacking
+shape = np.maximum.reduce([fvp_1_start_oa1e1b1nwzida0e0b0xyg1.shape[1:],fvp_2_start_oa1e1b1nwzida0e0b0xyg1.shape[1:], fvp_3_start_oa1e1b1nwzida0e0b0xyg1.shape[1:], fvp_4_start_oa1e1b1nwzida0e0b0xyg1.shape[1:], fvp_0_start_ya1e1b1nwzida0e0b0xyg.shape[1:]]) #create shape which has the max size, this is used for o array
+fvp_0_start_ya1e1b1nwzida0e0b0xyg = np.broadcast_to(fvp_0_start_ya1e1b1nwzida0e0b0xyg,(fvp_0_start_ya1e1b1nwzida0e0b0xyg.shape[0],)+tuple(shape))
+fvp_0_type_ya1e1b1nwzida0e0b0xyg = np.full(fvp_0_start_ya1e1b1nwzida0e0b0xyg.shape,0)
+##broadcast fvp 0-3 - makes sure arrays are same size
+fvp_1234_start_oa1e1b1nwzida0e0b0xyg1 = np.broadcast_arrays(fvp_1_start_oa1e1b1nwzida0e0b0xyg1,fvp_2_start_oa1e1b1nwzida0e0b0xyg1,fvp_3_start_oa1e1b1nwzida0e0b0xyg1,fvp_4_start_oa1e1b1nwzida0e0b0xyg1)
+fvp_1234_type_oa1e1b1nwzida0e0b0xyg1 = np.broadcast_arrays(fvp_1_type_oa1e1b1nwzida0e0b0xyg1,fvp_2_type_oa1e1b1nwzida0e0b0xyg1,fvp_3_type_oa1e1b1nwzida0e0b0xyg1,fvp_4_type_oa1e1b1nwzida0e0b0xyg1)
+##stack sort into date order
+fvp_start_oa1e1b1nwzida0e0b0xyg1 = np.concatenate(([*fvp_1234_start_oa1e1b1nwzida0e0b0xyg1,fvp_0_start_ya1e1b1nwzida0e0b0xyg]),axis=0)
+fvp_type_oa1e1b1nwzida0e0b0xyg1 = np.concatenate(([*fvp_1234_type_oa1e1b1nwzida0e0b0xyg1,fvp_0_type_ya1e1b1nwzida0e0b0xyg]),axis=0)
+ind=np.argsort(fvp_start_oa1e1b1nwzida0e0b0xyg1, axis=0)
+fvp_date_start_fa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(fvp_start_oa1e1b1nwzida0e0b0xyg1, ind, axis=0) 
+fvp_type_fa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(fvp_type_oa1e1b1nwzida0e0b0xyg1, ind, axis=0)
+##proportion of each sim period in each feed period ^might want to swap the f and p axis 
+fvp_length_fa1e1b1nwzida0e0b0xyg1 = np.append(fvp_date_start_fa1e1b1nwzida0e0b0xyg1,np.broadcast_to(date_end_pa1e1b1nwzida0e0b0xyg[-1:]+1,(1,)+tuple(fvp_date_start_fa1e1b1nwzida0e0b0xyg1.shape[1:])),axis=0)[1:]-fvp_date_start_fa1e1b1nwzida0e0b0xyg1
+propn_pfa1e1b1nwzida0e0b0xyg1=fun.range_allocation_np(np.append(date_start_pa1e1b1nwzida0e0b0xyg,date_end_pa1e1b1nwzida0e0b0xyg[-1:]+1,axis=0),fvp_date_start_fa1e1b1nwzida0e0b0xyg1,fvp_length_fa1e1b1nwzida0e0b0xyg1) #the function needs the end of the last period so appended that to the start array. +1 so that i get the start of the next period not the last day of the current period
+
 
 ############################
 ### associations           #
 ############################
+### Aim is to create an association array that points from period to opportunity
+## The date_p array will be the start date for each period.
+## A pointer (association) is required that points from the period to the previous or next lambing opportunity
+## The Lambing opportunity is defined by the joining_date array (which has an 'o' axis)
+## The previous lambing opportunity is the latest joining date that is less than the date at the end of the period (ie previous/current opportunity)
+## # ('end of the period' so that if joining occurs during the period it is the previous
+## The next lambing opportunity is the earliest joining date that is greater than or equal to the end date at the end of the period
+##prev is just next - 1
+'''
+key to help understand the results from the associations
+
+Name         	    When it increments
+Date_joined            Joining
+Date_joined2           prejoining
+Date_mated             Joining
+Date_scan              prejoining
+Date_born              birth
+Date_born2             joining
+Date_wean              birth
+Date_wean2             prejoining
+Date_prejoin_next      prejoining
+Date_prejoin	Joining   prejoining
+
+'''
+
+
 ##joining oppotunity association
+a_nextprejoining_o_pa1e1b1nwzida0e0b0xyg1 = np.apply_along_axis(sfun.f_next_prev_association, 0, prejoining_oa1e1b1nwzida0e0b0xyg1.astype('datetime64[D]'), date_end_p, 0)
+a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1 = np.apply_along_axis(sfun.f_next_prev_association, 0, prejoining_oa1e1b1nwzida0e0b0xyg1.astype('datetime64[D]'), date_end_p, 1)
 a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1 = np.apply_along_axis(sfun.f_next_prev_association, 0, date_joined_oa1e1b1nwzida0e0b0xyg1.astype('datetime64[D]'), date_end_p, 1)
-a_nextjoining_o_pa1e1b1nwzida0e0b0xyg1 = np.apply_along_axis(sfun.f_next_prev_association, 0, date_joined_oa1e1b1nwzida0e0b0xyg1.astype('datetime64[D]'), date_start_p, 0)
+# a_nextjoining_o_pa1e1b1nwzida0e0b0xyg1 = np.apply_along_axis(sfun.f_next_prev_association, 0, date_joined_oa1e1b1nwzida0e0b0xyg1.astype('datetime64[D]'), date_start_p, 0)
 a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2 = np.apply_along_axis(sfun.f_next_prev_association, 0, date_born1st_oa1e1b1nwzida0e0b0xyg2.astype('datetime64[D]'), date_end_p, 1)
 # a_nextyatf_o_pa1e1b1nwzida0e0b0xyg2 = np.apply_along_axis(sfun.f_next_prev_association, 0, date_born1st_oa1e1b1nwzida0e0b0xyg2.astype('datetime64[D]'), date_start_p, 0)
 ##dam age association, note this is the same as joining opp (just using a new variable name to avoid confusion in the rest of the code)
@@ -770,14 +842,22 @@ a_fvp_pa1e1b1nwzida0e0b0xyg1 = np.apply_along_axis(sfun.f_next_prev_association,
 ############################
 ### apply associations     #
 ############################
+'''
+The association applied determines when the increment to the next opportunity will occur:
+    eg if you use a_prev_joining the date in the p slice will increment at joining each time.
+
+'''
 ###management for weaning, gbal and scan options
 wean_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(wean_oa1e1b1nwzida0e0b0xyg1,a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
 gbal_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(gbal_oa1e1b1nwzida0e0b0xyg1,a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
 scan_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(scan_oa1e1b1nwzida0e0b0xyg1,a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
 ###date, age, timing
 date_born1st_pa1e1b1nwzida0e0b0xyg2=np.take_along_axis(date_born1st_oa1e1b1nwzida0e0b0xyg2,a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0)
-###date joined with p axis
+date_born1st2_pa1e1b1nwzida0e0b0xyg2=np.take_along_axis(date_born1st_oa1e1b1nwzida0e0b0xyg2,a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #increments at prejoining
+date_prejoin_next_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(prejoining_oa1e1b1nwzida0e0b0xyg1,a_nextprejoining_o_pa1e1b1nwzida0e0b0xyg1,0)
+date_prejoin_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(prejoining_oa1e1b1nwzida0e0b0xyg1,a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0)
 date_joined_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(date_joined_oa1e1b1nwzida0e0b0xyg1,a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1,0)
+date_joined2_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(date_joined_oa1e1b1nwzida0e0b0xyg1,a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0)
 ##yatf sim params - turn d to p axis
 ce_yatf = np.expand_dims(ce_yatf, axis = tuple(range(uinp.structure['i_p_pos'],uinp.parameters['i_d_pos'])))
 ce_yatf = np.take_along_axis(ce_yatf,a_prevbirth_d_pa1e1b1nwzida0e0b0xyg2[na,...],uinp.parameters['i_d_pos'])
@@ -802,8 +882,9 @@ rain_pa1e1b1nwzida0e0b0xygm1 = rain_m4a1e1b1nwzida0e0b0xygm1[a_m4_p]
 temp_ave_pa1e1b1nwzida0e0b0xyg= temp_ave_m4a1e1b1nwzida0e0b0xyg[a_m4_p]
 temp_max_pa1e1b1nwzida0e0b0xyg= temp_max_m4a1e1b1nwzida0e0b0xyg[a_m4_p]
 temp_min_pa1e1b1nwzida0e0b0xyg= temp_min_m4a1e1b1nwzida0e0b0xyg[a_m4_p]
-##feed variation
+##feed variation ^dont know if these arrays are needed
 fvp_type_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(fvp_type_fa1e1b1nwzida0e0b0xyg1,a_fvp_pa1e1b1nwzida0e0b0xyg1,0)
+fvp_date_start_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(fvp_date_start_fa1e1b1nwzida0e0b0xyg1,a_fvp_pa1e1b1nwzida0e0b0xyg1,0)
 
 ###########################
 ##genotype calculations   #
@@ -1211,33 +1292,45 @@ d_nw_max_pa1e1b1nwzida0e0b0xyg3[0:-1, ...] = (nw_max_pa1e1b1nwzida0e0b0xyg3[1:, 
 # management calc       #
 #########################
 ##date scan
-date_scan_pa1e1b1nwzida0e0b0xyg1 = date_joined_pa1e1b1nwzida0e0b0xyg1 + join_cycles_ida0e0b0xyg1 * cf_dams[4, 0:1, :].astype('timedelta64[D]') + pinp.sheep['i_scan_day'][scan_pa1e1b1nwzida0e0b0xyg1].astype('timedelta64[D]')
+date_scan_pa1e1b1nwzida0e0b0xyg1 = date_joined2_pa1e1b1nwzida0e0b0xyg1 + join_cycles_ida0e0b0xyg1 * cf_dams[4, 0:1, :].astype('timedelta64[D]') + pinp.sheep['i_scan_day'][scan_pa1e1b1nwzida0e0b0xyg1].astype('timedelta64[D]')
 ##Expected stocking density
 density_pa1e1b1nwzida0e0b0xyg0 = density_pa1e1b1nwzida0e0b0xyg
 density_pa1e1b1nwzida0e0b0xyg1 = density_pa1e1b1nwzida0e0b0xyg * density_nwzida0e0b0xyg1
 density_pa1e1b1nwzida0e0b0xyg2 = density_pa1e1b1nwzida0e0b0xyg * density_nwzida0e0b0xyg1  #yes this is meant to be the same as dams
 density_pa1e1b1nwzida0e0b0xyg3 = density_pa1e1b1nwzida0e0b0xyg * density_nwzida0e0b0xyg3
+##numbers
+###Distribution of initial numbers across the a1 axis	
+initial_a1e1b1nwzida0e0b0xyg = f_reshape_expand(pinp.sheep['i_initial_a1'], pinp.sheep['i_a1_pos'], condition = pinp.sheep['i_mask_a'], axis = pinp.sheep['i_a1_pos']) 
+###Distribution of initial numbers across the b1 axis	
+initial_b1nwzida0e0b0xyg = f_reshape_expand(uinp.structure['i_initial_b1'], uinp.parameters['i_b1_pos']) 
+###Distribution of initial numbers across the y axis	
+initial_yg = f_reshape_expand(uinp.parameters['i_initial_y'], pinp.parameters['i_y_pos'], condition = uinp.parameters['i_mask_y'], axis = pinp.parameters['i_y_pos']) 
+###Distribution of initial numbers across the e1 axis	
+initial_e1 = np.zeros(len_e1)
+initial_e1[0] = 1 #create this to look like [1,0,…] with enough zeros to be the length of the e1 axis
+initial_e1b1nwzida0e0b0xyg = f_reshape_expand(initial_e1, pinp.sheep['i_e1_pos']) 
 
 
 
 #########################
 # period is ...         #
 #########################
-period_between_joinscan_pa1e1b1nwzida0e0b0xyg1 = f_period_is_('period_is_between', date_joined_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_scan_pa1e1b1nwzida0e0b0xyg1, date_end_pa1e1b1nwzida0e0b0xyg)
-period_between_scanbirth_pa1e1b1nwzida0e0b0xyg1 = f_period_is_('period_is_between', date_scan_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_born_pa1e1b1nwzida0e0b0xyg2, date_end_pa1e1b1nwzida0e0b0xyg)
+period_between_prejoinscan_pa1e1b1nwzida0e0b0xyg1 = f_period_is_('period_is_between', date_prejoin_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_scan_pa1e1b1nwzida0e0b0xyg1, date_end_pa1e1b1nwzida0e0b0xyg)
+date_born2_pa1e1b1nwzida0e0b0xyg2 = date_born1st2_pa1e1b1nwzida0e0b0xyg2 + (index_e1b1nwzida0e0b0xyg + 0.5) * cf_yatf[4, 0:1,:].astype('timedelta64[D]')	 #times by 0.5 to get the average birth date for all lambs because ewes can be concieved anytime within joining cycle. e_index is to account for ewe cycles.
+period_between_scanbirth_pa1e1b1nwzida0e0b0xyg1 = f_period_is_('period_is_between', date_scan_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_born2_pa1e1b1nwzida0e0b0xyg2, date_end_pa1e1b1nwzida0e0b0xyg) #use date born that increments at joining
 period_between_birthwean_pa1e1b1nwzida0e0b0xyg1 = f_period_is_('period_is_between', date_born_pa1e1b1nwzida0e0b0xyg2, date_start_pa1e1b1nwzida0e0b0xyg, date_weaned_pa1e1b1nwzida0e0b0xyg2, date_end_pa1e1b1nwzida0e0b0xyg)
-period_is_postwean_pa1e1b1nwzida0e0b0xyg1 = f_period_is_('period_is_post', date_weaned_pa1e1b1nwzida0e0b0xyg2, date_start_pa1e1b1nwzida0e0b0xyg)
+date_weaned2_pa1e1b1nwzida0e0b0xyg2 = date_born1st2_pa1e1b1nwzida0e0b0xyg2 + age_wean_a0e0b0xyg3 #this needs to increment at prejoining for period between weaning and prejoining, so that it is false after prejoining and before weaning.
+period_between_weanprejoin_pa1e1b1nwzida0e0b0xyg1 = f_period_is_('period_is_between', date_weaned2_pa1e1b1nwzida0e0b0xyg2, date_start_pa1e1b1nwzida0e0b0xyg, date_prejoin_next_pa1e1b1nwzida0e0b0xyg1, date_end_pa1e1b1nwzida0e0b0xyg)
 period_is_birth_pa1e1b1nwzida0e0b0xyg1 = f_period_is_('period_is', date_born_pa1e1b1nwzida0e0b0xyg2, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg) #g2 date born is the equivelant of date lambed g1
 prev_period_is_birth_pa1e1b1nwzida0e0b0xyg1 = np.roll(period_is_birth_pa1e1b1nwzida0e0b0xyg1,1,axis=uinp.structure['i_p_pos'])
 period_is_mating_pa1e1b1nwzida0e0b0xyg1 = f_period_is_('period_is', date_mated_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg) #g2 date born is the equivelant of date lambed g1
 period_between_birth6wks_pa1e1b1nwzida0e0b0xyg1 = f_period_is_('period_is_between', date_born_pa1e1b1nwzida0e0b0xyg2, date_start_pa1e1b1nwzida0e0b0xyg, date_born_pa1e1b1nwzida0e0b0xyg2+np.array([(6*7)]).astype('timedelta64[D]'), date_end_pa1e1b1nwzida0e0b0xyg) #This is within 6 weeks of the Birth period
-# period_is_postwean_pa1e1b1nwzida0e0b0xyg1 = f_period_is_('period_is_post', date_weaned_pa1e1b1nwzida0e0b0xyg2, date_start_pa1e1b1nwzida0e0b0xyg)
-# period_is_prescan_pa1e1b1nwzida0e0b0xyg1 = f_period_is_('period_is_pre', date_scan_pa1e1b1nwzida0e0b0xyg1 , date_end_p=date_end_pa1e1b1nwzida0e0b0xyg)
-# period_is_postscan_pa1e1b1nwzida0e0b0xyg1 = f_period_is_('period_is_post', date_scan_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg)
-# period_is_postlactation_pa1e1b1nwzida0e0b0xyg1 = f_period_is_('period_is_post', date_born_pa1e1b1nwzida0e0b0xyg2, date_start_pa1e1b1nwzida0e0b0xyg) #g2 date born is the equivelant of date lambed g1
 
-period_is_start_fvp0_pa1e1b1nwzida0e0b0xyg1 =  np.logical_and(fvp_type_pa1e1b1nwzida0e0b0xyg1 == 0, np.roll(fvp_type_pa1e1b1nwzida0e0b0xyg1,1, axis=0)!=0)  #is this sim period the first period in type 0 of fvp's 
 
+period_is_prejoin_pa1e1b1nwzida0e0b0xyg1 = f_period_is_('period_is', date_prejoin_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg) #g2 date born is the equivelant of date lambed g1
+period_is_start_fvp1_pa1e1b1nwzida0e0b0xyg1 =  np.logical_and(fvp_type_pa1e1b1nwzida0e0b0xyg1 == 1, np.roll(fvp_type_pa1e1b1nwzida0e0b0xyg1,1, axis=0)!=1)  #is this sim period the first period in type 1 of fvp's 
+
+=
 ############################
 ### feed supply calcs      # ^apparently need to add something about break of season..? and need to add e variation
 ############################
@@ -1266,7 +1359,7 @@ t_fs_gender_pa1e1b1j0wzida0e0b0k5yg3 = np.expand_dims(np.rollaxis(feedoptions_va
 
 ##3)Based on the animal management selected (scan, gbal and wean) and whether the animals are differentially managed in this trial
 ###a) weaning age variation
-a_k0_pa1e1b1nwzida0e0b0xyg1 = period_is_postwean_pa1e1b1nwzida0e0b0xyg1 * pinp.sheep['i_dam_wean_diffman'] * np.arange(len_a1)
+a_k0_pa1e1b1nwzida0e0b0xyg1 = period_between_weanprejoin_pa1e1b1nwzida0e0b0xyg1 * pinp.sheep['i_dam_wean_diffman'] * f_reshape_expand(np.arange(len_a1)+1, pinp.sheep['i_a1_pos']) #len_a+1 because that is the association between k0 and a1
 t_fs_ageweaned_pa1e1b1j0wzida0e0b0xyg1 = np.take_along_axis(t_fs_ageweaned_pk0k1k2j0wzida0e0b0xyg1, a_k0_pa1e1b1nwzida0e0b0xyg1, 1) 
 
 ###b)b.	Dams Cluster k1 – oestrus cycle (e1): The association required is
@@ -1274,14 +1367,13 @@ t_fs_ageweaned_pa1e1b1j0wzida0e0b0xyg1 = np.take_along_axis(t_fs_ageweaned_pk0k1
 
 ###c)Dams Cluster k2 – BTRT (b1)
 ####have to create a_t array so that it is maximum size of the arrays that are used it mask it. Then use broadcasting function to allow a smaller mask to be applied.
-shape = np.maximum.reduce([period_between_joinscan_pa1e1b1nwzida0e0b0xyg1.shape,period_between_scanbirth_pa1e1b1nwzida0e0b0xyg1.shape,period_between_birthwean_pa1e1b1nwzida0e0b0xyg1.shape,period_is_postwean_pa1e1b1nwzida0e0b0xyg1.shape]) #create shape which has the max size
+shape = np.maximum.reduce([period_between_prejoinscan_pa1e1b1nwzida0e0b0xyg1.shape,period_between_scanbirth_pa1e1b1nwzida0e0b0xyg1.shape,period_between_birthwean_pa1e1b1nwzida0e0b0xyg1.shape]) #create shape which has the max size
 a_t_pa1e1b1nwzida0e0b0xyg1 = np.zeros(shape)
-period_between_joinscan_mask = np.broadcast_arrays(a_t_pa1e1b1nwzida0e0b0xyg1, period_between_joinscan_pa1e1b1nwzida0e0b0xyg1)[1] #mask must be manually broadcasted then applied - for some reason numpy doesnt automatically broadcast them.
+period_between_joinscan_mask = np.broadcast_arrays(a_t_pa1e1b1nwzida0e0b0xyg1, period_between_prejoinscan_pa1e1b1nwzida0e0b0xyg1)[1] #mask must be manually broadcasted then applied - for some reason numpy doesnt automatically broadcast them.
 period_between_scanbirth_mask = np.broadcast_arrays(a_t_pa1e1b1nwzida0e0b0xyg1, period_between_scanbirth_pa1e1b1nwzida0e0b0xyg1)[1]
 period_between_birthwean_mask = np.broadcast_arrays(a_t_pa1e1b1nwzida0e0b0xyg1, period_between_birthwean_pa1e1b1nwzida0e0b0xyg1)[1]
-period_is_postwean_mask = np.broadcast_arrays(a_t_pa1e1b1nwzida0e0b0xyg1, period_is_postwean_pa1e1b1nwzida0e0b0xyg1)[1]
 ####order matters because post wean does not have a cap ie it is over written by others
-a_t_pa1e1b1nwzida0e0b0xyg1[period_is_postwean_mask] = 3 #t = 0 is prescan, 1 is postscan, 2 is lactation, 3 is post wean
+a_t_pa1e1b1nwzida0e0b0xyg1[...] = 3 #t = 0 is prescan, 1 is postscan, 2 is lactation, 3 is post wean
 a_t_pa1e1b1nwzida0e0b0xyg1[period_between_joinscan_mask] = 0 #t = 0 is prescan, 1 is postscan, 2 is lactation, 3 is post wean
 a_t_pa1e1b1nwzida0e0b0xyg1[period_between_scanbirth_mask] = 1 #t = 0 is prescan, 1 is postscan, 2 is lactation, 3 is post wean
 a_t_pa1e1b1nwzida0e0b0xyg1[period_between_birthwean_mask] = 2 #t = 0 is prescan, 1 is postscan, 2 is lactation, 3 is post wean
@@ -1306,6 +1398,7 @@ t_fs_lsln_pa1e1b1j0wzida0e0b0xyg1 = np.take_along_axis(t_fs_lsln_pk0k1k2j0wzida0
 # t_fs_ageweaned_pj0zida0e0b0xg3 = t_fs_ageweaned_pj0zik3k0k4k5g3
 # t_fs_btrt_pj0zida0e0b0xg3 = t_fs_btrt_pj0zik3k0k4k5g3
 # t_fs_btrt_pj0zida0e0b0xg3 = t_fs_btrt_pj0zik3k0k4k5g3
+
 ##4) add variation to std pattern
 t_feedsupply_pa1e1b1j0wzida0e0b0xyg1 = (t_feedsupply_pa1e1b1j0wzida0e0b0xyg1 + t_fs_ageweaned_pa1e1b1j0wzida0e0b0xyg1 + t_fs_lsln_pa1e1b1j0wzida0e0b0xyg1) #cant use += for some reason
 
@@ -1700,7 +1793,7 @@ for p in range(1):
     # ###equation system loop ^dont know this enough to build it yet
 
     ##mating
-    n_sire_a1e1b1nwzida0e0b0xyg1p8 = f_sire_req(sire_propn_pa1e1b1nwzida0e0b0xyg1[p], sire_periods_g0p8, pinp.sheep['i_sire_recovery'], pinp.sheep['i_startyear'], date_end_pa1e1b1nwzida0e0b0xyg[p], period_is_start_fvp0_pa1e1b1nwzida0e0b0xyg1)
+    n_sire_a1e1b1nwzida0e0b0xyg1p8 = f_sire_req(sire_propn_pa1e1b1nwzida0e0b0xyg1[p], sire_periods_g0p8, pinp.sheep['i_sire_recovery'], pinp.sheep['i_startyear'], date_end_pa1e1b1nwzida0e0b0xyg[p], period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p])
 
 
 
@@ -2237,7 +2330,7 @@ def f_fibre(cw, cc, ffcfw_start, relsize_start, d_cfw_history_start_m2pa1e1b1nwz
 
 
 
-def f_foo_convert(cu3, cu4, foo, legume)
+def f_foo_convert(cu3, cu4, foo, legume):
     ##Convert FOO to hand shears measurement
     foo_shears = np.max(0, np.min(foo, cu3[2] + cu3[0] * foo + cu3[1] * legume))
     ##Estimate height of pasture
@@ -2417,16 +2510,27 @@ def f_lwc_cs(cg, rc_start, mei, mem, mew, z1f, z2f, kg, mec = 0,
 
  
 
-def f_sire_req(sire_propn_a1e1b1nwzida0e0b0xyg1, sire_periods_g0p8, i_sire_recovery, i_startyear, date_end_p, period_is_start_fvp0_a1e1b1nwzida0e0b0xyg1)
+def f_sire_req(sire_propn_a1e1b1nwzida0e0b0xyg1, sire_periods_g0p8, i_sire_recovery, i_startyear, date_end_p, period_is_prejoin_a1e1b1nwzida0e0b0xyg1):
     ##Date at end of period adjusted to start year
     t_date_end_a1e1b1nwzida0e0b0xyg = date_end_p - (365 * (date_end_p.astype('datetime64[Y]').astype(int) + 1970 - i_startyear)).astype('timedelta64[D]')
     ##Date_end falls within the ram mating periods
     sire_required_a1e1b1nwzida0e0b0xygp8 = np.logical_and(t_date_end_a1e1b1nwzida0e0b0xyg[...,na] >= sire_periods_g0p8.astype('datetime64[D]') , t_date_end_a1e1b1nwzida0e0b0xyg[...,na] <= (sire_periods_g0p8.astype('datetime64[D]') + i_sire_recovery))
     ##Number of rams required per ewe (if this period is joining)
-    n_sires = sire_required_a1e1b1nwzida0e0b0xygp8 * sire_propn_a1e1b1nwzida0e0b0xyg1[..., na] * period_is_start_fvp0_a1e1b1nwzida0e0b0xyg1[..., na]
+    n_sires = sire_required_a1e1b1nwzida0e0b0xygp8 * sire_propn_a1e1b1nwzida0e0b0xyg1[..., na] * period_is_prejoin_a1e1b1nwzida0e0b0xyg1[..., na]
     return n_sires
 
 
+def f_comb(n,k):
+    if 0 <= k <= n:
+        ntok = 1
+        ktok = 1
+        for t in range(1, min(k, n - k) + 1):
+            ntok *= n
+            ktok *= t
+            n -= 1
+        return ntok // ktok
+    else:
+        return 0
 
 
 
@@ -2463,7 +2567,9 @@ def f_sire_req(sire_propn_a1e1b1nwzida0e0b0xyg1, sire_periods_g0p8, i_sire_recov
 # required row of the array.'''
 
 
-
+##################
+#post processing #
+##################
 
 
 

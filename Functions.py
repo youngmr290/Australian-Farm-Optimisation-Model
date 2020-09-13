@@ -404,7 +404,7 @@ def range_allocation_np(period_dates, start, length, opposite=None):
     length: the length of the date range to test - an array of timedelta.days object.
           : must be broadcastable into start.
     ags: input True returns the proportion of date range in each period.
-       :       False returns the proportion of the period in the date range.
+       :       None returns the proportion of the period in the date range (2nd arg).
 
     Returns.
     a Numpy array with shape(period_dates, start array).

@@ -186,16 +186,18 @@ structure['i_lag_wool'] = 1 #lags in calculations (number of days over which pro
 structure['i_lag_organs'] = 1  #lags in calculations (number of days over which production is averaged)
 structure['i_lsln_idx_dams'] = ['00',	'11',	'22',	'33',	'21',	'32',	'31',	'10',	'20',	'30',	'NM']
 structure['i_btrt_idx_offs'] = ['11',	'22',	'33',	'21',	'32',	'31']
+structure['prejoin_offset'] = 8
 
 ##pools
 structure['sheep_pools']=['pool1', 'pool2', 'pool3', 'pool4'] #nutrition pools
 structure['i_oldest_animal'] = 6.6
 structure['n_sim_periods_year'] = 52 
-##associations
-structure['a_nfoet_b1'] = np.array([0,1,2,3,2,3,3,1,2,3,0])
-structure['a_nyatf_b1'] = np.array([0,1,2,3,1,2,1,0,0,0,0])  
+## DSE group and LSLN (b1)
 structure['i_mask_b0_b1'] = np.array([False, True,	True,	True,	True,	True,	True,	False,	False,	False,	False])
 structure['ia_b0_b1'] = np.array([0, 0, 1,	2,	3,	4,	5,	0,	0,	0,	0])
+structure['a_nfoet_b1'] = np.array([0,1,2,3,2,3,3,1,2,3,0])
+structure['a_nyatf_b1'] = np.array([0,1,2,3,1,2,1,0,0,0,0])  
+structure['i_initial_b1'] = np.array([0,0,0,0,0,0,0,0,0,0,1])  
                      
 ##feed supply/ nutrition levels
 structure['i_w0_len'] = 1

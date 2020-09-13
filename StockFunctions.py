@@ -247,6 +247,7 @@ def convert_input_to_g(source, a_g0, a_paternal_g0_g1, a_maternal_g0_g1,
 
 #     return c_srw_gw, c_sfw_g
 
+
 def sim_periods(start_year, periods_per_year, oldest_animal):
     '''Define the dates for the simulation periods.
     Starts on 1 Jan of the year with the earliest birthdate.
