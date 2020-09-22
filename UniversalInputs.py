@@ -176,6 +176,8 @@ structure['foo_levels'] =  ['L', 'M', 'H']                 # Low, medium & high 
 #######
 #sheep#
 #######
+##axis pos ^maybe move in the ones from the other inputs to here?
+structure['i_e0_pos']=-5
 ##general
 structure['i_age_max'] = 6.75
 structure['i_sim_periods_year'] = 52
@@ -187,6 +189,7 @@ structure['i_lag_organs'] = 1  #lags in calculations (number of days over which 
 structure['i_lsln_idx_dams'] = ['00',	'11',	'22',	'33',	'21',	'32',	'31',	'10',	'20',	'30',	'NM']
 structure['i_btrt_idx_offs'] = ['11',	'22',	'33',	'21',	'32',	'31']
 structure['prejoin_offset'] = 8
+structure['i_feedsupply_itn_max'] = 10
 
 ##pools
 structure['sheep_pools']=['pool1', 'pool2', 'pool3', 'pool4'] #nutrition pools

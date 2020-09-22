@@ -165,27 +165,127 @@ def cartesian_product_simple_transpose(arrays):
 #print(timeit.timeit(phases2,number=100)/100)
 #
 
-#############################
-#function for fert and chem #
-#############################
 
-def passes(x,step):
+
+def f_reshape_expand(array,left_pos=0,len_ax0=0,len_ax1=0,len_ax2=0,swap=False,ax1=0,ax2=1,right_pos=0,left_pos2=0,right_pos2=0
+                     , left_pos3=0,right_pos3=0, condition = None, axis = 0):
     '''
     Parameters
     ----------
-    x : Numpy array
-        Array containing level of something that you want to determine which step it falls onto.
-    step : Numpy array
-        The length of each step.
+    array : array
+        parameter array - input from excel.
+    left_pos : int
+        position of axis to the left of where the new axis will be added.
+    len_ax1 : int
+        length of axis 1 - used to reshape input array into multi dimension array (this should be i_len_?).
+    len_ax2 : int, optional
+        length of axis 3 - used to reshape input array into multi dimension array (this should be i_len_?). The default is 0.
+    len_ax3 : int, optional
+        length of axis 3 - used to reshape input array into multi dimension array (this should be i_len_?). The default is 0.
+    swap : boolean, optional
+        do you want to swap the first tow axis?. The default is False.
+    right_pos : int, optional
+        the position of the axis to the right of the singleton axis being added. The default is -1, for when the axis to the right is g?.
+    left_pos2 : int
+        position of axis to the left of where the new axis will be added.
+    right_pos2 : int, optional
+        the position of the axis to the right of the singleton axis being added. The default is -1, for when the axis to the right is g?.
+    condition: boolean, optional
+        mask used to slice given axis.
+    axis: int, optional
+        axis to apply mask to.
+    *note: if adding two sets of new axis add from right to left (then the pos variables allign)
+    *note: mask applied last (after expanding and reshaping)
 
     Returns
     -------
-    Numpy array
-        The step each value falls onto, ie if x is 5 and step is 7 then it falls onto step 1 (the function can be made more complex by including other params such as height of each step.
-
+    Reshapes, swaps axis if required, expands and applys a mask to a given axis if required.
     '''
-    return np.floor(x/step-0.0001)+1 #subtract a small number so that when the input level is 0 it gets 0 passes
+    ##convert int to 1d array if required
+    if type(array) == int:
+        array = np.array([array])
+    if len_ax2>0:
+        shape=(len_ax0,len_ax1,len_ax2)
+        array = array.reshape(shape)
+    elif len_ax1>0:
+        shape=(len_ax0,len_ax1)
+        array = array.reshape(shape)
+    else:
+        pass#don't need to reshpae
+    ##swap axis if neccessary
+    if swap:
+        array = np.swapaxes(array, ax1, ax2)
+    ##get axis into correct position 1
+    if left_pos != None or left_pos != 0:
+        extra_axes = tuple(range((left_pos + 1), right_pos))
+    else: extra_axes = ()
+    array = np.expand_dims(array, axis = extra_axes)
+    ##get axis into correct position 2 (some arrays need singleton axis added in multiple places ie seperated by a used axis)
+    if left_pos2 != None or left_pos2 != 0:
+        extra_axes = tuple(range((left_pos2 + 1), right_pos2))
+    else: extra_axes = ()
+    array = np.expand_dims(array, axis = extra_axes)
+    ##get axis into correct position 3 (some arrays need singleton axis added in multiple places ie seperated by a used axis)
+    if left_pos3 != None or left_pos3 != 0:
+        extra_axes = tuple(range((left_pos3 + 1), right_pos3))
+    else: extra_axes = ()
+    array = np.expand_dims(array, axis = extra_axes)
+    ##apply mask if required
+    try:
+        if condition != None:
+            if type(condition) == bool:
+                condition= np.asarray([condition]) #convert to numpy if it is singular input (this will do nothing if already np array)
+                array = np.compress(condition, array, axis)
+    except ValueError: 
+        if (condition != None).all():
+            array = np.compress(condition, array, axis)
+    return array
 
+#######################################
+#function for feed budget & livestock #
+#######################################
+def dmd_to_md(dmd):
+    '''define a function to return M/D from DMD
+
+    dmd can be either a percentage or a decimal
+    returns M/D in MJ of ME per kg of DM
+    dmd can be a numpy array or a scalar (not sure if it handles lists and data frames)
+
+    ^ this could be expanded to include forage (0.172 * dmd - 1.7)
+       and supplement (.133 * dmd + 23.4 ee + 1.32)
+       using an extra 'type' input that is default 'herbage'
+    '''
+    try:
+        if (dmd <= 1).all() : dmd *= 100 # if dmd is a list or an array and is a decimal then convert to percentage (in excel 80% is 0.8 in python)
+    except:
+        if dmd <= 1:          dmd *= 100 # if dmd is a scalar and is a decimal then convert to percentage   ^ alternative would be to convert scalar values to a list (if dmd isinstance not list: dmd=[dmd]) or perhaps type is float]
+    return 0.17 * dmd - 2                # formula 1.13C from SCA 1990 pg 9
+
+
+def effective_mei(dmi, md, threshold, ri=1, eff_above=0.5):
+    """Calculate MEI and scale for reduced efficiency if above animal requirements.
+
+    Parameters
+    ----------
+    dmi       : value or array - Dry matter intake (kg).
+    md        : value or array - M/D of the feed (MJ of ME / kg of DM).
+    threshold : value or array - Diet quality (ME/Vol) required by animals.
+    ri        : value or array, optional (1.0)     - Relative intake (quality and quantity).
+    eff_above : value or array, optional (0.5) - Efficiency.
+    that energy is used if above required quality and animals are gaining then losing weight.
+
+    If inputs are provided in arrays then they must be braodcastable.
+
+    Returns
+    -------
+    ME avaialable to the animal to meet their ME requirements, from the quantity of DM consumed.
+
+    """
+    fec = md * ri
+    fec_effective  = np.minimum(fec, threshold + (fec - threshold) * eff_above)
+    md_effective = fec_effective / ri
+    mei_effective = dmi * md_effective
+    return mei_effective
 
 
 #

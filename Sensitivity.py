@@ -15,6 +15,7 @@ sap = dict()
 sam = dict()
 saa = dict()
 sav = dict()
+sar = dict()
 
 ######
 #SAP #
@@ -58,3 +59,10 @@ sav['g3_BM_included']         = '-'                                             
 sav['g3_BT_included']         = '-'                                              # SA value for the inclusion of BT offspring genotype 
 sav['g3_BMT_included']        = '-'                                             # SA value for the inclusion of BMT offspring genotype 
 
+######
+#SAR #
+######
+
+##sheep
+sar['mortalityp'] = 0          #Scale the calculated progeny mortality at birth in the target range 0 to 100% - this is a high level sa it impacts within a calculation not on an input
+sar['mortalitye'] = 0          #Scale the calculated dam mortality at birth in the target range 0 to 100% - this is a high level sa it impacts within a calculation not on an input

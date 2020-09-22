@@ -10,16 +10,16 @@ from timeit import default_timer as timer
 time_list = [] ; time_was = []
 time_list.append(timer()) ; time_was.append("start")
 
-import SheepSim as ssim
+import StockGenerator as sgen
 
 time_list.append(timer()) ; time_was.append("import other modules")
 
 ## call the main simulation loop & update the timer
-ssim.simulation()
+sgen.simulation()
 time_list.append(timer()) ; time_was.append("simulation loops")
 
 ## call the function to create the parameters & update the timer
-ssim.parameters()
+# sgen.parameters()
 time_list.append(timer()) ; time_was.append("masks & parameters")
 
 

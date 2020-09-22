@@ -38,7 +38,8 @@ import pandas as pd
 pd.set_option('mode.chained_assignment', 'raise')
 
 #midas modules
-import FeedBudget as fb
+import Functions as fun
+import StockFunctions as sfun
 import PropertyInputs as pinp
 import UniversalInputs as uinp
 import Crop as crp
@@ -146,17 +147,19 @@ def stubble_all(params):
         base_yields = pd.Series(base_yields, index = crp.phases_df.iloc[:,-1])
         for cat_inx, cat_name in zip(range(len(pinp.stubble['stub_cat_qual'].loc[crop])), pinp.stubble['stub_cat_qual']):
             dmd.loc[:,(crop,cat_name)]=comp_dmd_period.mul(stub_cat_component_proportion[cat_inx]).sum(axis=1) #dmd by stub category (a, b, c, d)
-            ##calc ri before converting dmd to md
-            ri_quality.loc[:,(crop,cat_name)]= dmd.loc[:,(crop,cat_name)].apply(fb.ri_quality, args=(pinp.stubble['clover_propn_in_sward_stubble'],))
+            ##calc relative quality before converting dmd to md - note that the equation system used is the one selected for dams in p1 - currently only cs function exists 
+            if pinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
+                ri_quality.loc[:,(crop,cat_name)]= dmd.loc[:,(crop,cat_name)].apply(sfun.f_rq_cs, args=(pinp.stubble['clover_propn_in_sward_stubble'],))
             ##ri availability - first calc stubble foo (stub available)
             stub_foo_harv = base_yields.loc[crop].mean() * stubble_per_grain[(crop,'a')]
             stubble_foo = stub_foo_harv * (1 - fp['quant_decline_%s' %crop]) * (1 - j)
-            ri_availability.loc[:,(crop,cat_name)] = stubble_foo.apply(fb.ri_availability)
+            if pinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used - note that the equation system used is the one selected for dams in p1
+                ri_availability.loc[:,(crop,cat_name)] = sfun.f_ra_cs(stubble_foo.values, pinp.stubble['i_hf'])
             ##combine ri quality and ri availabitily to calc overall vol (potential intake)
             vol.loc[:,(crop,cat_name)]=(1/(ri_availability.loc[:,(crop,cat_name)].mul(ri_quality.loc[:,(crop,cat_name)]))*1000/(1+SA.sap['pi']))#.replace(np.inf, 10000) #this produces some inf when ri_quality is 0 (1/0)  
             j+= pinp.stubble['stub_cat_prop'].loc[crop,cat_name]
             #now convert dmd to M/D
-            md.loc[:,(crop,cat_name)]=dmd.loc[:,(crop,cat_name)].apply(fb.dmd_to_md).mul(1000).clip(lower=0) #mul to convert to tonnes    
+            md.loc[:,(crop,cat_name)]=dmd.loc[:,(crop,cat_name)].apply(fun.dmd_to_md).mul(1000).clip(lower=0) #mul to convert to tonnes    
     
         ###########
         #trampling#

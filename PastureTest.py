@@ -28,19 +28,19 @@ time_list.append(timer()) ; time_was.append("import Pasture")
 
 pas.map_excel('Property.xlsx')                         # read inputs from Excel file and map to the python variables
 time_list.append(timer()) ; time_was.append("init & read inputs from Excel")
-
-pas.calculate_germ_and_reseed()                          # calculate the germination for each rotation phase
+params=dict()
+pas.calculate_germ_and_reseed(params)                          # calculate the germination for each rotation phase
 a = pas.foo_grn_reseeding_flrt
 b = a[:,4,...]
 c = np.sum(b, axis = 1)
 time_list.append(timer()) ; time_was.append("germination & reseeding")
 
-pas.green_and_dry()                            # calculate the FOO lost when destocked and the FOO gained when grazed after establishment
+pas.green_and_dry(params)                            # calculate the FOO lost when destocked and the FOO gained when grazed after establishment
 time_list.append(timer()) ; time_was.append("green feed & dry feed")
 
-poc_con_ft = pas.poc_con()                            # calculate the pasture on crop paddocks
-poc_md_ft = pas.poc_md()                              # calculate the pasture on crop paddocks
-poc_vol_ft = pas.poc_vol()                            # calculate the pasture on crop paddocks
+poc_con_ft = pas.poc(params)                            # calculate the pasture on crop paddocks
+# poc_md_ft = pas.poc_md()                              # calculate the pasture on crop paddocks
+# poc_vol_ft = pas.poc_vol()                            # calculate the pasture on crop paddocks
 # print(poc_vol_ft)
 time_list.append(timer()) ; time_was.append("poc")
 

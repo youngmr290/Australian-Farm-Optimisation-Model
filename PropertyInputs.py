@@ -53,7 +53,7 @@ if inputs_from_pickle == False:
         sup_inp = fun.xl_all_named_ranges("Property.xlsx","Sup Feed") #automatically read in the periods as dates
         pkl.dump(sup_inp, f)
 
-        sheep_inp  = fun.xl_all_named_ranges('Inputs parameters.xlsm', 'Property', numpy=True)
+        sheep_inp  = fun.xl_all_named_ranges('Inputs parameters.xlsm', 'Sheep', numpy=True)
         pkl.dump(sheep_inp, f)
 
         feedsupply_inp  = fun.xl_all_named_ranges('Inputs parameters.xlsm', 'FeedSupply', numpy=True) #^think this will get combined with the input sheet above

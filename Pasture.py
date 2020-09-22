@@ -26,7 +26,7 @@ import numpy as np
 # from numba import jit
 
 import PropertyInputs as pinp
-import FeedBudget as fdb
+import StockFunctions as sfun
 import UniversalInputs as uinp
 import Functions as fun
 import Periods as per
@@ -129,7 +129,7 @@ i_reseeding_date_grazing_t      = np.zeros(n_pasture_types, dtype = 'datetime64[
 i_reseeding_foo_grazing_t       = np.zeros(n_pasture_types, dtype = 'float64')  # FOO at time of first grazing
 # reseeding_machperiod_t          = np.zeros(n_pasture_types, dtype = 'float64')  # labour/machinery period in which reseeding occurs ^ instantiation may not be required
 i_germination_std_t             = np.zeros(n_pasture_types, dtype = 'float64')  # standard germination level for the standard soil type in a continuous pasture rotation
-i_ri_foo_t                      = np.zeros(n_pasture_types, dtype = 'float64')  # to reduce foo to allow for differences in measurement methods for FOO. The target is to convert the measurement to the system developing the intake equations
+# i_ri_foo_t                      = np.zeros(n_pasture_types, dtype = 'float64')  # to reduce foo to allow for differences in measurement methods for FOO. The target is to convert the measurement to the system developing the intake equations
 # poc_days_of_grazing_t           = np.zeros(n_pasture_types, dtype = 'float64')  # number of days after the pasture break that (moist) seeding can begin
 i_legume_t                      = np.zeros(n_pasture_types, dtype = 'float64')  # proportion of legume in the sward
 i_grn_propn_reseeding_t         = np.zeros(n_pasture_types, dtype = 'float64')  # Proportion of the FOO available at the first grazing that is green
@@ -243,7 +243,7 @@ def map_excel(filename):
         exceldata = pinp.pasture_inputs[pasture]           # assign the pasture data to exceldata
         ## map the Excel data into the numpy arrays
         i_germination_std_t[t]              = exceldata['GermStd']
-        i_ri_foo_t[t]                       = exceldata['RIFOO']
+        # i_ri_foo_t[t]                       = exceldata['RIFOO']
         i_end_of_gs_t[t]                    = exceldata['EndGS']
         i_dry_decay_t[t]                    = exceldata['PastDecay']
         # poc_days_of_grazing_t[t]            = exceldata['POCDays']
@@ -695,18 +695,28 @@ def green_and_dry(params):
     dmd_grnha_goflt                 =            i_grn_dig_flt                        \
                                      * grn_dmd_swardscalar_oflt                       \
                                      + grn_dmd_selectivity_goft[:,:,:,np.newaxis,:]
-    grn_md_grnha_goflt              = fdb.dmd_to_md(dmd_grnha_goflt)
+    grn_md_grnha_goflt              = fun.dmd_to_md(dmd_grnha_goflt)
 
     ### _green, mei & volume
     foo_ave_grnha_goflt      = (foo_start_grnha_oflt
                                 + foo_end_grnha_goflt)/2
-    grn_ri_availability_goflt= fdb.ri_availability(foo_ave_grnha_goflt, i_ri_foo_t)
-    grn_ri_quality_goflt     = fdb.ri_quality(dmd_grnha_goflt, i_legume_t)
+    ###pasture params used to convert foo for rel availability
+    cu3 = uinp.pastparameters['i_cu3_c4'][...,pinp.sheep['i_pasture_type']].reshape(uinp.pastparameters['i_cu3_len'], uinp.pastparameters['i_cu3_len2'])
+    cu4 = uinp.pastparameters['i_cu4_c4'][...,pinp.sheep['i_pasture_type']].reshape(uinp.pastparameters['i_cu4_len'], uinp.pastparameters['i_cu4_len2'])
+    pasture_stage_flt = pinp.sheep['i_pasture_stage_p6z'][:,np.newaxis,np.newaxis]#^this is what the line below will need to look like when season axis is added: pasture_stage_flt = f_reshape_expand(pinp.sheep['i_pasture_stage_p6z'], pinp.sheep['i_z_pos'], len_ax0=pinp.sheep['i_p6_len'], len_ax1=pinp.sheep['i_z_len'], left_pos2=uinp.structure['i_p_pos'], right_pos2=pinp.sheep['i_z_pos'], condition = pinp.sheep['i_mask_z'], axis = pinp.sheep['i_z_pos'])
+    ###adjust foo and calc hf
+    foo_ave_grnha_goflt, hf = sfun.f_foo_convert(cu3, cu4, foo_ave_grnha_goflt, pinp.sheep['i_hr_scalar'], pinp.sheep['i_region'], uinp.pastparameters['i_n_pasture_stage'],uinp.pastparameters['i_hd_std'], i_legume_t, pasture_stage_flt) 
+    ###calc relative availability - note that the equation system used is the one selected for dams in p1 - need to hook up mu function
+    if pinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used
+        grn_ri_availability_goflt = sfun.f_ra_cs(foo_ave_grnha_goflt, hf)
+    ###calc relative quality - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
+    if pinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
+        grn_ri_quality_goflt     = sfun.f_rq_cs(dmd_grnha_goflt, i_legume_t)
     grn_ri_goflt             = np.maximum( 0.05                                        # set the minimum RI to 0.05
                                           ,     grn_ri_quality_goflt
                                           *grn_ri_availability_goflt)
 
-    me_cons_grnha_vgoflt   = fdb.effective_mei(      cons_grnha_t_goflt
+    me_cons_grnha_vgoflt   = fun.effective_mei(      cons_grnha_t_goflt
                                                  ,     grn_md_grnha_goflt
                                                  , i_me_maintenance_vft[:,np.newaxis,np.newaxis,:,np.newaxis,:]
                                                  ,           grn_ri_goflt
@@ -730,8 +740,16 @@ def green_and_dry(params):
     dry_foo_dft     = np.stack((dry_foo_low_ft, dry_foo_high_ft),axis=0)  # create an array with a new axis 0 by stacking the existing arrays
 
     ### _dry, volume of feed consumed per tonne
-    dry_ri_availability_dft = fdb.ri_availability(dry_foo_dft,i_ri_foo_t)
-    dry_ri_quality_dft      = fdb.ri_quality(dry_dmd_dft, i_legume_t)
+    ####adjust foo and calc hf
+    pasture_stage_ft = pinp.sheep['i_pasture_stage_p6z'][:,np.newaxis]#^this is what the line below will need to look like when season axis is added: pasture_stage_flt = f_reshape_expand(pinp.sheep['i_pasture_stage_p6z'], pinp.sheep['i_z_pos'], len_ax0=pinp.sheep['i_p6_len'], len_ax1=pinp.sheep['i_z_len'], left_pos2=uinp.structure['i_p_pos'], right_pos2=pinp.sheep['i_z_pos'], condition = pinp.sheep['i_mask_z'], axis = pinp.sheep['i_z_pos'])
+    dry_foo_dft, hf = sfun.f_foo_convert(cu3, cu4, dry_foo_dft, pinp.sheep['i_hr_scalar'], pinp.sheep['i_region'], uinp.pastparameters['i_n_pasture_stage'],uinp.pastparameters['i_hd_std'], i_legume_t, pasture_stage_ft) 
+    ####calc relative availability - note that the equation system used is the one selected for dams in p1 - need to hook up mu function
+    if pinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used
+        dry_ri_availability_dft = sfun.f_ra_cs(dry_foo_dft, hf)
+
+    ####calc relative quality - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
+    if pinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
+        dry_ri_quality_dft     = sfun.f_rq_cs(dry_dmd_dft, i_legume_t)
     dry_ri_dft              = dry_ri_quality_dft * dry_ri_availability_dft
     dry_ri_dft[dry_ri_dft<0.05] = 0.05 #set the minimum RI to 0.05
     dry_volume_t_dft  = 1000 / dry_ri_dft                 # parameters for the dry feed grazing activities: Total volume of the tonne consumed
@@ -739,9 +757,9 @@ def green_and_dry(params):
     params['p_dry_volume_t_dft'] = dict(zip(index_dft ,dry_volume_t_rav_dft))
 
     ### _dry, ME consumed per tonne consumed
-    dry_md_dft           = fdb.dmd_to_md(dry_dmd_dft)
+    dry_md_dft           = fun.dmd_to_md(dry_dmd_dft)
     dry_md_vdft          = np.stack([dry_md_dft * 1000] * n_feed_pools, axis = 0)
-    dry_mecons_t_vdft  = fdb.effective_mei( 1000                                    # parameters for the dry feed grazing activities: Total ME of the tonne consumed
+    dry_mecons_t_vdft  = fun.effective_mei( 1000                                    # parameters for the dry feed grazing activities: Total ME of the tonne consumed
                             ,           dry_md_vdft
                             , i_me_maintenance_vft[:,np.newaxis,:,:]
                             ,           dry_ri_dft
@@ -784,18 +802,38 @@ def poc(params):
         The relative intake of pasture on crop paddocks each day before seeding
         - this is adjusted for feed period
     '''
+    ##poc is assumed to be annual hence the 0 slice in the last axis
     ##con
     poc_con_fl = i_poc_intake_daily_flt[...,0]
     poc_con_rav_fl = poc_con_fl.ravel()
     params['p_poc_con_fl'] = dict(zip(index_fl, poc_con_rav_fl))
     ##md
-    poc_md_f = fdb.dmd_to_md(i_poc_dmd_ft[...,0])
+    poc_md_f = fun.dmd_to_md(i_poc_dmd_ft[...,0])
     poc_md_rav_f = poc_md_f.ravel()
     params['p_poc_md_f'] = dict(zip(index_f ,poc_md_rav_f))
     ##vol
-    ri_qual_f = fdb.ri_quality(i_poc_dmd_ft[...,0], i_legume_t[...,0])       # passing a numpy array
-    ri_quan_f = fdb.ri_availability(i_poc_foo_ft[...,0], i_ri_foo_t[...,0])
-    poc_vol_f = 1/(ri_qual_f*ri_quan_f)
+    ###calc relative quality - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
+    if pinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
+        ri_qual_f     = sfun.f_rq_cs(i_poc_dmd_ft[...,0], i_legume_t[...,0])
+    
+    ###pasture params used to convert foo for rel availability
+    cu3 = uinp.pastparameters['i_cu3_c4'][...,pinp.sheep['i_pasture_type']].reshape(uinp.pastparameters['i_cu3_len'], uinp.pastparameters['i_cu3_len2'])
+    cu4 = uinp.pastparameters['i_cu4_c4'][...,pinp.sheep['i_pasture_type']].reshape(uinp.pastparameters['i_cu4_len'], uinp.pastparameters['i_cu4_len2'])
+    pasture_stage_flt = pinp.sheep['i_pasture_stage_p6z']# currently no active z ^this is what the line below will need to look like when season axis is added: pasture_stage_flt = f_reshape_expand(pinp.sheep['i_pasture_stage_p6z'], pinp.sheep['i_z_pos'], len_ax0=pinp.sheep['i_p6_len'], len_ax1=pinp.sheep['i_z_len'], left_pos2=uinp.structure['i_p_pos'], right_pos2=pinp.sheep['i_z_pos'], condition = pinp.sheep['i_mask_z'], axis = pinp.sheep['i_z_pos'])
+    ###adjust foo and calc hf
+    i_poc_foo_f, hf = sfun.f_foo_convert(cu3, cu4, i_poc_foo_ft[...,0], pinp.sheep['i_hr_scalar'], pinp.sheep['i_region'], uinp.pastparameters['i_n_pasture_stage'],uinp.pastparameters['i_hd_std'], i_legume_t, pasture_stage_flt) 
+    ###calc relative availability - note that the equation system used is the one selected for dams in p1 - need to hook up mu function
+    if pinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used
+        ri_quan_f = sfun.f_ra_cs(i_poc_foo_f, hf)
+        poc_vol_f = 1/(ri_qual_f*ri_quan_f)
     poc_vol_rav_f = poc_vol_f.ravel()
     params['p_poc_vol_f'] = dict(zip(index_f ,poc_vol_rav_f))
     
+
+
+
+
+
+
+
+

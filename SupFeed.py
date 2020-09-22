@@ -18,7 +18,7 @@ import PropertyInputs as pinp
 import UniversalInputs as uinp
 import Crop as crp
 import Mach as mac
-import FeedBudget as fdb
+import StockFunctions as sfun
 
 
 
@@ -101,12 +101,15 @@ def sup_cost(params):
     
     
 def sup_md_vol(params):
-    sup_md_vol = uinp.supfeed['sup_md_vol']    
     ##calc vol
+    sup_md_vol = uinp.supfeed['sup_md_vol']    
     ###convert md to dmd
     dmd=(sup_md_vol.loc['energy']/1000+2)/17 #rearanged version of dmd to md formula in feed budget
+    ##calc relative quality - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
+    if pinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
+        rq = sfun.f_rq_cs(dmd,0)
     ###use max(1,...) to make it the same as midas - this increases lupin vol slightly from what the equation returns
-    vol_kg=np.maximum(1,1/fdb.ri_quality(dmd,0))
+    vol_kg=np.maximum(1,1/rq)
     ###convert vol per kg to per tonne fed - have to adjust for the actual dry matter content and wastage
     vol_tonne=vol_kg*1000*sup_md_vol.loc['prop consumed']/100*sup_md_vol.loc['dry matter content']/100
     ##calc ME
