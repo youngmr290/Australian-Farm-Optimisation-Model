@@ -231,13 +231,11 @@ def f_reshape_expand(array,left_pos=0,len_ax0=0,len_ax1=0,len_ax2=0,swap=False,a
     else: extra_axes = ()
     array = np.expand_dims(array, axis = extra_axes)
     ##apply mask if required
-    try:
-        if condition != None:
-            if type(condition) == bool:
-                condition= np.asarray([condition]) #convert to numpy if it is singular input (this will do nothing if already np array)
-                array = np.compress(condition, array, axis)
-    except ValueError: 
-        if (condition != None).all():
+    if condition is not None: #see if condition exists
+        if type(condition) == bool: #check if array or single value - note array of T & F is not type bool (it is array)
+            condition= np.asarray([condition]) #convert to numpy if it is singular input
+            array = np.compress(condition, array, axis)
+        else:
             array = np.compress(condition, array, axis)
     return array
 
