@@ -14,3 +14,4 @@ need to plan how this will work:
 
 pasture.py
 1. pasture foo must be greate than 0 after it passes through conversion function.
+foo_shears = np.maximum(0, np.minimum(foo, cu3[2] + cu3[0] * foo + cu3[1] * legume)) #this should be greater than 0

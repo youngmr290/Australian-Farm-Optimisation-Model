@@ -546,7 +546,7 @@ def f_foo_convert(cu3, cu4, foo, i_hr_scalar, i_region, i_n_pasture_stage,i_hd_s
     ##Estimate height of pasture
     height = np.maximum(0, np.exp(cu4[3] + cu4[0] * foo + cu4[1] * legume + cu4[2] * foo * legume) + cu4[5] + cu4[4] * foo)
     ##Height density (height per unit FOO)
-    hd = height / foo_shears  
+    hd = fun.f_divide(height, foo_shears) #handles div0 (eg if in feedlot with no pasture or adjuusted foo is less than 0)
     ##height ratio                    
     hr = i_hr_scalar * hd / i_hd_std
     ##calc hf
@@ -558,15 +558,17 @@ def f_dynamic_slice(arr, axis, start, stop, axis2=None, start2=None, stop2=None)
     if type(arr)==int:
         return arr
     else:
-        ##first axis slice
-        sl = [slice(None)] * arr.ndim
-        sl[axis] = slice( start, stop)
-        arr = arr[tuple(sl)]
-        if axis2 is not None:
-            ##second axis slice if required
+        ##first axis slice if it is not singlton
+        if arr.shape[axis]!=1:
             sl = [slice(None)] * arr.ndim
-            sl[axis2] = slice( start2, stop2)
+            sl[axis] = slice( start, stop)
             arr = arr[tuple(sl)]
+        if axis2 is not None:
+            ##second axis slice if required and not singlton
+            if arr.shape[axis2] != 1:
+                sl = [slice(None)] * arr.ndim
+                sl[axis2] = slice( start2, stop2)
+                arr = arr[tuple(sl)]
         return arr
 
 
@@ -586,7 +588,9 @@ def f_history(history, new_value, days_in_period):
     days_in_period = np.broadcast_to(days_in_period, new_value.shape) #broadcast days array so it can be used to make mask
     new_value[days_in_period.astype(int)==0]=np.nan
     history[:offset, ...] = new_value
-    lagged = np.nanmean(history, axis = 0)
+    weights = history!=np.nan
+    t_history = np.nan_to_num(history) #convert nan to 0
+    lagged = fun.f_weighted_average(t_history, weights=weights, axis = 0)
     return lagged, history
 
 
@@ -633,7 +637,7 @@ def f_update(existing_value, new_value, mask_for_new):
         returns a combination of the two input arrays determined by the mask. Note: multiplying by true return the origional number and multiplying by false results in 0.
 
     '''
-    return existing_value * ~mask_for_new + new_value * mask_for_new
+    return existing_value * np.logical_not(mask_for_new) + new_value * mask_for_new #used not rather than ~ because ~False == -1 not True (not the case for np.arrays only if bool is single - as it is for sire in some situatoins)
 
 
 
@@ -689,15 +693,15 @@ def f_intake(cr, pi, ra, rq, md_herb, feedsupply, intake_s, i_md_supp, legume, m
     ##ME intake of solid food	
     mei_solid = mei_forage + mei_herb + mei_supp
     ##M/D of the diet (solids)	
-    md_solid = mei_solid / (intake_f + intake_s)
+    md_solid = fun.f_divide(mei_solid, intake_f + intake_s) #func to stop div/0 error if fs  = 3 (eg zero feed)
     ##ME intake total	
     mei = mei_solid + mp2
     ##Proportion of ME as milk	
-    mei_propn_milk = mp2 / mei
+    mei_propn_milk = fun.f_divide(mp2, mei) #func to stop div/0 error - if mei is 0 then so is numerator
     ##Proportion of ME as herbage	
-    mei_propn_herb = (mei_herb + mei_forage) / mei
+    mei_propn_herb = fun.f_divide((mei_herb + mei_forage), mei) #func to stop div/0 error - if mei is 0 then so is numerator
     ##Proportion of ME as supp	
-    mei_propn_supp = mei_supp / mei
+    mei_propn_supp = fun.f_divide(mei_supp, mei) #func to stop div/0 error - if mei is 0 then so is numerator
     return mei, intake_f, md_solid, mei_propn_milk, mei_propn_herb, mei_propn_supp
 
 
@@ -801,7 +805,7 @@ def f_foetus_cs(cp, cb1, kc, nfoet, relsize_start, rc_start, nec_cum_start, w_b_
     ##Weight of the gravid uterus (conceptus - mid period)	
     guw = nfoet * (nw_gu + (w_f - nw_f))
     ##Body condition of the foetus	
-    rc_f = w_f / nw_f
+    rc_f = fun.f_divide(w_f, nw_f) #func to handle div0 error
     ##Cumulative ME required for conceptus	
     nec_cum = nfoet * rc_f * normale_gu
     ##NE required for conceptus	
@@ -853,8 +857,8 @@ def f_milk(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_start,
     ##Excess ME available for milk	
     mel_xs = (mei - (meme + mew_min * relsize_start)) * cl[5, ...] * kl
     ##Excess ME as a ratio of MPmax	
-    milk_ratio = mel_xs / mpmax
-    ##Age or energy factor	
+    milk_ratio = fun.f_divide(mel_xs, mpmax) #func stops div0 error - and milk ratio is later discarded because days period f = 0
+    ##Age or energy factor
     ad = np.maximum(age_yatf, milk_ratio / (2 * cl[22, ...]))
     ##Milk production based on energy available	
     mp1 = cl[7, ...] * mpmax / (1 + np.exp(-(-cl[19, ...] + cl[20, ...] * milk_ratio + cl[21, ...] * ad * (milk_ratio - cl[22, ...] * ad) - cl[23, ...] * rc_start * (milk_ratio - cl[24, ...] * rc_start))))
@@ -865,8 +869,8 @@ def f_milk(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_start,
     ##NE for lactation	
     nel = kl * mel
     ##ratio of actual to potential milk	
-    dr = mp2 / mpmax
-    ##Lagged DR (lactation deficit)	
+    dr = fun.f_divide(mp2, mpmax) #div func stops div0 error - and milk ratio is later discarded because days period f = 0
+    ##Lagged DR (lactation deficit)
     ldr = (ldr_start - dr) * (1 - cl[18, ...]) ** days_period_yatf + dr
     ##Loss of potential milk due to consistent under production	
     lb = lb_start - cl[17, ...] / cl[18, ...] * (1 - cl[18, ...]) * (1 - (1 - cl[18, ...]) ** days_period_yatf) * (ldr_start - dr)
@@ -892,11 +896,11 @@ def f_fibre(cw, cc, ffcfw_start, relsize_start, d_cfw_history_start_m2a1e1b1nwzi
     ##ME required for wool (above basal)
     mew = new / kw_yg
     ##Fibre diameter for the days growth
-    d_fd_a1e1b1nwzida0e0b0xyg = sfd_a0e0b0xyg * (d_cfw_a1e1b1nwzida0e0b0xyg / d_cfw_ave_a1e1b1nwzida0e0b0xyg) ** cw[13, ...]
+    d_fd_a1e1b1nwzida0e0b0xyg = sfd_a0e0b0xyg * fun.f_divide(d_cfw_a1e1b1nwzida0e0b0xyg, d_cfw_ave_a1e1b1nwzida0e0b0xyg) ** cw[13, ...]  #func to stop div/0 error when d_cfw_ave=0 so does d_cfw (only have a 0 when day period = 0)
     ##Surface Area
     area = cc[1, ...] * ffcfw_start ** (2/3)
     ##Daily fibre length growth
-    d_fl_a1e1b1nwzida0e0b0xyg = 400 * d_cfw_a1e1b1nwzida0e0b0xyg / (np.pi * cw[10, ...] * cw[11, ...] * area * (d_fd_a1e1b1nwzida0e0b0xyg / 10**6) ** 2)
+    d_fl_a1e1b1nwzida0e0b0xyg = 400 * fun.f_divide(d_cfw_a1e1b1nwzida0e0b0xyg, np.pi * cw[10, ...] * cw[11, ...] * area * (d_fd_a1e1b1nwzida0e0b0xyg / 10**6) ** 2) #func to stop div/0 error when d_fd=0 so does d_cfw
     return d_cfw_a1e1b1nwzida0e0b0xyg, d_fd_a1e1b1nwzida0e0b0xyg, d_fl_a1e1b1nwzida0e0b0xyg, d_cfw_history_m2a1e1b1nwzida0e0b0xyg, mew, new
 
 
@@ -998,7 +1002,7 @@ def f_feedsupply(cu3, cu4, cr, feedsupply_std_a1e1b1nwzida0e0b0xyg, paststd_foo_
     paststd_dmd_next_a1e1b1nwzida0e0b0xyg = np.take_along_axis(paststd_dmd_a1e1b1j0wzida0e0b0xyg, next_level_a1e1b1nwzida0e0b0xyg, uinp.structure['i_n_pos'])
     dmd_a1e1b1nwzida0e0b0xyg = paststd_dmd_a1e1b1nwzida0e0b0xyg + proportion_a1e1b1nwzida0e0b0xyg * (paststd_dmd_next_a1e1b1nwzida0e0b0xyg - paststd_dmd_a1e1b1nwzida0e0b0xyg)
     ##proportion of PI that is offered as supp
-    supp_propn_a1e1b1nwzida0e0b0xyg = proportion_a1e1b1nwzida0e0b0xyg * (feedsupply_std_a1e1b1nwzida0e0b0xyg > 2) + (feedsupply_std_a1e1b1nwzida0e0b0xyg == 4)   # the proportion of diet if the value is above 2 and equal to 1.0 if fs==4
+    supp_propn_a1e1b1nwzida0e0b0xyg = proportion_a1e1b1nwzida0e0b0xyg * (feedsupply_std_a1e1b1nwzida0e0b0xyg > 2) + (feedsupply_std_a1e1b1nwzida0e0b0xyg == 4)   # the proportion of diet if the value is above 2 and equal to 1.0 if fs==4 (at fs 3 sheep have 0 sup and 0 fodder at fs4 sheep have 100% of pi is sup)
     intake_s = pi * supp_propn_a1e1b1nwzida0e0b0xyg
     ##calc herb md
     herb_md = fun.dmd_to_md(dmd_a1e1b1nwzida0e0b0xyg)
@@ -1045,7 +1049,7 @@ def f_conception_ltw(cu0, cs_mating, scan_std, doy_p, period_is_mating):
     slc = [slice(None)] * len(conception.shape)
     slc[pinp.sheep['i_e1_pos']] = slice(0,1)
     slc[uinp.parameters['i_b1_pos']] = slice(-1,None)
-    conception[slc] = -np.sum(f_dynamic_slice(conception, uinp.parameters['i_b1_pos'],0, 4), axis = (pinp.sheep['i_e1_pos'], uinp.parameters['i_b1_pos']), keepdims=True)
+    conception[tuple(slc)] = -np.sum(f_dynamic_slice(conception, uinp.parameters['i_b1_pos'],0, 4), axis = (pinp.sheep['i_e1_pos'], uinp.parameters['i_b1_pos']), keepdims=True)
     return conception
 
 
@@ -1135,19 +1139,21 @@ def f_period_start_prod(numbers, var, prejoin_tup, season_tup, period_is_startfv
     var_start = var 
     ##make sure numbers and var are same shape - this is required for the np.average func below
     numbers, var_start = np.broadcast_arrays(numbers,var_start)
-    ##a) Calculate temporary values as if start of FVP
-    temporary = var_start #this is done to ensure that temp has the same size as var. In the next line np.diagonal removes the n axis so it is added back in using the expand function, but that is a singlton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
-    temporary[...] = np.expand_dims(np.rollaxis(var_start.diagonal(axis1= uinp.structure['i_w_pos'], axis2= uinp.structure['i_n_pos']),-1,uinp.structure['i_w_pos']), uinp.structure['i_n_pos']) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
-    ##Update if the period is start of a FVP	
-    var_start = f_update(var_start, temporary, period_is_startfvp)
+    ##a) Calculate temporary values as if start of FVP, only required if n axis is active
+    if uinp.structure['i_n1_len'] >= uinp.structure['i_w1_len']:
+        temporary = var_start #this is done to ensure that temp has the same size as var. In the next line np.diagonal removes the n axis so it is added back in using the expand function, but that is a singlton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
+        temporary[...] = np.expand_dims(np.rollaxis(var_start.diagonal(axis1= uinp.structure['i_w_pos'], axis2= uinp.structure['i_n_pos']),-1,uinp.structure['i_w_pos']), uinp.structure['i_n_pos']) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
+        ##Update if the period is start of a FVP
+        var_start = f_update(var_start, temporary, period_is_startfvp)
     ##b) Calculate temporary values as if period_is_break
-    temporary = np.expand_dims(np.average(var_start, axis = season_tup, weights=numbers),season_tup) #gets the weighted average of production in the different seasons, have to add axis back because no keepdims arg
-    ##Set values where it is beginning of FVP	
+    temporary = fun.f_weighted_average(var_start, numbers, season_tup, keepdims=True)
+    #temporary = np.expand_dims(np.average(var_start, axis=season_tup, weights=numbers),season_tup) #gets the weighted average of production in the different seasons, have to add axis back because no keepdims arg
+    ##Set values where it is beginning of FVP
     var_start = f_update(var_start, temporary, period_is_break)
     if group==1:
         ##c) Calculate temporary values as if period_is_prejoin	
-        temporary = np.expand_dims(np.average(var_start, axis = prejoin_tup, weights=numbers),prejoin_tup) #gets the weighted average of production in the different seasons, have to add axis back because no keepdims arg
-        ##Set values where it is beginning of FVP	
+        temporary = fun.f_weighted_average(var_start, numbers, prejoin_tup, keepdims=True) #gets the weighted average of production in the different seasons
+        ##Set values where it is beginning of FVP
         var_start = f_update(var_start, temporary, period_is_prejoin)
     return var_start
 
@@ -1157,9 +1163,10 @@ def f_period_start_prod(numbers, var, prejoin_tup, season_tup, period_is_startfv
 def f_period_start_nums(numbers, prejoin_tup, season_tup, period_is_startfvp, period_is_break, season_propn_z, group=None, numbers_initial_repro=0, period_is_prejoin=None):
     ##a) reallocate between w and n if the period is start of a FVP
     ###Calculate temporary values as if start of FVP - colapse n back to standard level (n axis is populated due to mortality)
-    temporary = numbers #this is done to ensure that temp has the same size as var. In the next line np.diagonal removes the n axis so it is added back in using the expand function, but that is a singlton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
-    temporary[...] = np.expand_dims(np.rollaxis(numbers.diagonal(axis1= uinp.structure['i_w_pos'], axis2= uinp.structure['i_n_pos']),-1,uinp.structure['i_w_pos']), uinp.structure['i_n_pos']) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
-    numbers = f_update(numbers, temporary, period_is_startfvp)
+    if uinp.structure['i_n1_len'] >= uinp.structure['i_w1_len']:
+        temporary = numbers #this is done to ensure that temp has the same size as var. In the next line np.diagonal removes the n axis so it is added back in using the expand function, but that is a singlton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
+        temporary[...] = np.expand_dims(np.rollaxis(numbers.diagonal(axis1= uinp.structure['i_w_pos'], axis2= uinp.structure['i_n_pos']),-1,uinp.structure['i_w_pos']), uinp.structure['i_n_pos']) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
+        numbers = f_update(numbers, temporary, period_is_startfvp)
     ##b) realocate for season type
     temporary = np.sum(numbers, axis = season_tup, keepdims=True)  * season_propn_z  #Calculate temporary values as if period_is_break
     numbers = f_update(numbers, temporary, period_is_break)  #Set values where it is beginning of FVP	

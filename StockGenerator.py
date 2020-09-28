@@ -62,15 +62,15 @@ keys_g3 = pinp.sheep['i_groups_offs']
 keys_i = pinp.sheep['i_tol_idx'][pinp.sheep['i_mask_i']]
 keys_lw0 = uinp.structure['i_w_idx_sire']
 keys_lw1 = uinp.structure['i_w_idx_dams']
-keys_lw3 = uinp.structure['i_w_idx_dams']
+keys_lw3 = uinp.structure['i_w_idx_offs']
 keys_n0 = uinp.structure['i_n_idx_sire']
 keys_n1 = uinp.structure['i_n_idx_dams']
-keys_n3 = uinp.structure['i_n_idx_dams']
+keys_n3 = uinp.structure['i_n_idx_offs']
 keys_p6 = np.array([pinp.feed_inputs['feed_periods'].index[:-1]])
 keys_v = np.asarray(uinp.structure['sheep_pools'])
 keys_y0 = uinp.parameters['i_gen_merit_sire']
 keys_y1 = uinp.parameters['i_gen_merit_dams']
-keys_y3 = uinp.parameters['i_gen_merit_dams']
+keys_y3 = uinp.parameters['i_gen_merit_offs']
     
 
 
@@ -129,10 +129,10 @@ len_p = len(date_start_p)
 len_a1 = np.count_nonzero(pinp.sheep['i_mask_a'])
 len_e1 = np.max(pinp.sheep['i_join_cycles_ig1'])
 len_b1 = len(uinp.structure['i_mask_b0_b1'])
-len_n0 = uinp.structure['i_n0_len']
-len_n1 = uinp.structure['i_n1_len']
-len_n2 = uinp.structure['i_n1_len'] #same as dams
-len_n3 = uinp.structure['i_n3_len']
+len_n0 = uinp.structure['i_n0_matrix_len']
+len_n1 = uinp.structure['i_n1_matrix_len']
+len_n2 = uinp.structure['i_n1_matrix_len'] #same as dams
+len_n3 = uinp.structure['i_n3_matrix_len']
 len_w0 = uinp.structure['i_w0_len']
 len_w1 = uinp.structure['i_w1_len']
 len_w2 = uinp.structure['i_w1_len'] #same as dams
@@ -147,7 +147,7 @@ len_x = pinp.sheep['i_x_len']
 len_y = np.count_nonzero(uinp.parameters['i_mask_y'])
 len_g0 = np.count_nonzero(mask_sire_inc_g0)
 len_g1 = np.count_nonzero(mask_dams_inc_g1)
-len_g2 = np.count_nonzero(mask_dams_inc_g1)
+len_g2 = np.count_nonzero(mask_dams_inc_g1) #same as dams
 len_g3 = np.count_nonzero(mask_offs_inc_g3)
 
 ###################################
@@ -160,6 +160,8 @@ index_e0b0xyg = fun.f_reshape_expand(index_e, uinp.structure['i_e0_pos'])
 index_m1 = np.arange(len_m1)
 index_m0 = np.arange(12)*2  #2hourly steps for chill calculations
 index_z = np.arange(len_z)
+index_w1 = np.arange(len_w1)
+index_wzida0e0b0xyg1 = fun.f_reshape_expand(index_w1, uinp.structure['i_w_pos'])
 
 
 
@@ -208,23 +210,16 @@ d_cfw_history_start_m2g3 = np.zeros(m2g3, dtype = 'float64')
 # nw_pa1e1b1nwzida0e0b0xyg3 = np.expand_dims(np.zeros(1, dtype = 'float64'), axis = tuple(range(uinp.structure['i_p_pos']+1, 0)))
 ###report variables
 ###empty arrays to store different return values from the eqation systems in the p loop.
-r_compare_q0q1q2psire = np.zeros(qg0, dtype = 'float64')
-r_compare_q0q1q2pdams = np.zeros(qg1, dtype = 'float64')
-r_compare_q0q1q2pyatf = np.zeros(qg2, dtype = 'float64')
-r_compare_q0q1q2poffs = np.zeros(qg3, dtype = 'float64')
+r_compare_q0q1q2psire = np.zeros(qg0, dtype = 'float32')
+r_compare_q0q1q2pdams = np.zeros(qg1, dtype = 'float32')
+r_compare_q0q1q2pyatf = np.zeros(qg2, dtype = 'float32')
+r_compare_q0q1q2poffs = np.zeros(qg3, dtype = 'float32')
 
 
 
 ################################################
 #  management, age, date, timing inputs inputs #
 ################################################
-##Shearing date
-###sire
-date_shear_sida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['i_date_shear_sixg0'],'sire',uinp.parameters['i_x_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_s_len'], pinp.sheep['i_x_len'],swap=True,left_pos2=pinp.sheep['i_i_pos'],right_pos2=uinp.parameters['i_x_pos'])[:,pinp.sheep['i_mask_i'],...]
-###dam
-date_shear_sida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['i_date_shear_sixg1'],'dams',uinp.parameters['i_x_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_s_len'], pinp.sheep['i_x_len'],swap=True,left_pos2=pinp.sheep['i_i_pos'],right_pos2=uinp.parameters['i_x_pos'])[:,pinp.sheep['i_mask_i'],...]
-###off
-date_shear_sida0e0b0xyg3 = sfun.f_g2g(pinp.sheep['i_date_shear_sixg3'],'offs',uinp.parameters['i_x_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_s_len'], pinp.sheep['i_x_len'],swap=True,left_pos2=pinp.sheep['i_i_pos'],right_pos2=uinp.parameters['i_x_pos'])[:,pinp.sheep['i_mask_i'],...]
 ##join
 join_cycles_ida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['i_join_cycles_ig1'],'dams',pinp.sheep['i_i_pos'])[pinp.sheep['i_mask_i'],...]
 ##lamb and lost
@@ -246,6 +241,20 @@ date_born1st_ida0e0b0xyg3 = sfun.f_g2g(pinp.sheep['i_date_born1st_idg3'],'offs',
 ##mating
 sire_propn_oa1e1b1nwzida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['i_sire_propn_oig1'],'dams',pinp.sheep['i_i_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_o_len'],swap=True,left_pos2=uinp.structure['i_p_pos'],right_pos2=pinp.sheep['i_i_pos'])[:,:,:,:,:,:,:,pinp.sheep['i_mask_i'],...]
 sire_periods_g0p8 = np.swapaxes(pinp.sheep['i_sire_periods_p8g0'][pinp.sheep['i_mask_p8']], 0, 1)
+##Shearing date - set to be on the last day of a sim period
+###sire
+date_shear_sida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['i_date_shear_sixg0'],'sire',uinp.parameters['i_x_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_s_len'], pinp.sheep['i_x_len'],swap=True,left_pos2=pinp.sheep['i_i_pos'],right_pos2=uinp.parameters['i_x_pos'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos'])[...,0:1,:,:] #slice x axis for only female
+idx_sida0e0b0xyg0 = sfun.f_next_prev_association(date_end_p, date_shear_sida0e0b0xyg0.astype('datetime64[D]'),0)#shearing occurs at the end of the next/current generator period therefore 0 offset
+date_shear_sa1e1b1nwzida0e0b0xyg0 = fun.f_reshape_expand(date_end_p[idx_sida0e0b0xyg0], uinp.structure['i_p_pos'], right_pos=pinp.sheep['i_i_pos'])
+###dam
+date_shear_sida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['i_date_shear_sixg1'],'dams',uinp.parameters['i_x_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_s_len'], pinp.sheep['i_x_len'],swap=True,left_pos2=pinp.sheep['i_i_pos'],right_pos2=uinp.parameters['i_x_pos'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos'])[...,1:2,:,:] #slice x axis for only female
+idx_sida0e0b0xyg1 = sfun.f_next_prev_association(date_end_p, date_shear_sida0e0b0xyg1.astype('datetime64[D]'),0)#shearing occurs at the end of the next/current generator period therefore 0 offset
+date_shear_sa1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(date_end_p[idx_sida0e0b0xyg1], uinp.structure['i_p_pos'], right_pos=pinp.sheep['i_i_pos'])
+###off - shearing cant occur as yatf because then need to shear all lambs (ie no scope to not shear the lambs that are going to be fed up and sold) because the offs decision variables for feeding are not linked to the yatf (which are in the dam decision variables)
+date_shear_sida0e0b0xyg3 = sfun.f_g2g(pinp.sheep['i_date_shear_sixg3'],'offs',uinp.parameters['i_x_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_s_len'], pinp.sheep['i_x_len'],swap=True,left_pos2=pinp.sheep['i_i_pos'],right_pos2=uinp.parameters['i_x_pos'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos'])
+date_shear_sida0e0b0xyg3 = np.maximum(date_born1st_ida0e0b0xyg3 + age_wean_a0e0b0xyg3, date_shear_sida0e0b0xyg3.astype('datetime64[D]')) #shearing must be after weaning.
+idx_sida0e0b0xyg3 = sfun.f_next_prev_association(date_end_p, date_shear_sida0e0b0xyg3.astype('datetime64[D]'),0)#shearing occurs at the end of the next/current generator period therefore 0 offset
+date_shear_sa1e1b1nwzida0e0b0xyg3 = fun.f_reshape_expand(date_end_p[idx_sida0e0b0xyg3], uinp.structure['i_p_pos'], right_pos=pinp.sheep['i_i_pos'])
 
 
 ############################
@@ -273,6 +282,12 @@ feedoptions_var_r2p = pinp.feedsupply['i_feedoptions_var_r2p'][:,0:len_p].astype
 ##an association between the k2 cluster (feed variation) and reproductive management (scanning, gbal & weaning). 
 a_k2_vlsb1 = uinp.structure['ia_k2_vlsb1'].reshape(uinp.structure['i_len_v'], uinp.structure['i_len_l'], uinp.structure['i_len_s'], uinp.structure['ia_k2_vlsb1'].shape[-1])
 
+############
+#fvp inputs#
+############
+fvp0_offset_ida0e0b0xyg3 = sfun.f_g2g(pinp.sheep['fvp0_offset_ig3'], 'offs', pinp.sheep['i_i_pos'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos'])
+fvp1_offset_ida0e0b0xyg3 = sfun.f_g2g(pinp.sheep['fvp1_offset_ig3'], 'offs', pinp.sheep['i_i_pos'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos'])
+fvp2_offset_ida0e0b0xyg3 = sfun.f_g2g(pinp.sheep['fvp2_offset_ig3'], 'offs', pinp.sheep['i_i_pos'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos'])
 
 ###################################
 ###group independent              #  type(pinp.sheep['i_mask_z']).dtype
@@ -378,53 +393,55 @@ feedperiods_p6 = np.array(pinp.feed_inputs['feed_periods']['date']).astype('date
 feedperiods_p6 = feedperiods_p6 + np.timedelta64(365,'D') * ((date_start_p[0].astype(object).year -1) - feedperiods_p6[0].astype(object).year) #this is to make sure the fisrt sim period date is greater than the first feed period date.
 feedperiods_p6 = np.ravel(feedperiods_p6  + (np.arange(np.ceil(uinp.structure['i_age_max'] +1)) * np.timedelta64(365,'D') )[...,na]) #expand then ravel to return 1d array of the feed period dates expanded the lenght of the sim.
 
-###################################
-# Feed variation period calcs dams#  ^note if type stuff is used then might need to add a special fvp that is the start of the simulation ie 1/1/19
-###################################
+
 ## break of season fvp ^the following two lines of code will have to change once season type is included into the feedperiod inputs (the input will have z axis so the reshaping will need to be done in two steps ie pass in pos2 arg) and apply z mask
+#^also this may end up being called start of season. because it is used to redivide numbers and production at the start of a new season type.
 breakseason_y = pinp.feed_inputs['feed_periods'].loc[0,'date'].to_datetime64().astype('datetime64[D]') + (np.arange(np.ceil(uinp.structure['i_age_max'])) * np.timedelta64(365,'D'))
 breakseason_ya1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(breakseason_y, left_pos=uinp.structure['i_p_pos'])
 idx_ya1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, breakseason_ya1e1b1nwzida0e0b0xyg)-1 #gets the sim period index for the period when season breaks (eg break of season fvp starts at the begining of the sim period when season breaks)
-fvp_0_start_ya1e1b1nwzida0e0b0xyg = date_start_p[idx_ya1e1b1nwzida0e0b0xyg]
+breakseason_ya1e1b1nwzida0e0b0xyg = date_start_p[idx_ya1e1b1nwzida0e0b0xyg]
+
+
+###################################
+# Feed variation period calcs dams#  ^note if type stuff is used then might need to add a special fvp that is the start of the simulation ie 1/1/19
+###################################
+##beginning - first day of generator
+fvp_begin_start_ba1e1b1nwzida0e0b0xyg1 = date_start_pa1e1b1nwzida0e0b0xyg[0:1]
 ##early pregnancy fvp start - The pre-joining accumulation of the dams from the previous reproduction cycle - this date must correspond to the start date of period
 prejoining_aprox_oa1e1b1nwzida0e0b0xyg1 = date_joined_oa1e1b1nwzida0e0b0xyg1 - uinp.structure['prejoin_offset'] #approx date of prejoining - adjusted to be the start of a sim period in the next step
 idx = np.searchsorted(date_start_p, prejoining_aprox_oa1e1b1nwzida0e0b0xyg1)-1 #gets the sim period index for the period that prejoining occurs (eg prejojining fvp starts at the begining of the sim period when prejoining approx occurs)
 prejoining_oa1e1b1nwzida0e0b0xyg1 = date_start_p[idx]
-fvp_1_start_oa1e1b1nwzida0e0b0xyg1 = prejoining_oa1e1b1nwzida0e0b0xyg1
+fvp_0_start_oa1e1b1nwzida0e0b0xyg1 = prejoining_oa1e1b1nwzida0e0b0xyg1
 ##late pregnancy fvp start - Scanning if carried out, day 90 from joining (ram in) if not scanned.
 late_preg_oa1e1b1nwzida0e0b0xyg1 = date_joined_oa1e1b1nwzida0e0b0xyg1 + join_cycles_ida0e0b0xyg1 * cf_dams[4, 0:1, :].astype('timedelta64[D]') + pinp.sheep['i_scan_day'][scan_oa1e1b1nwzida0e0b0xyg1].astype('timedelta64[D]')
 idx_oa1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, late_preg_oa1e1b1nwzida0e0b0xyg1)-1 #gets the sim period index for the period when dams in late preg (eg late preg fvp starts at the begining of the sim period when late preg occurs)
-fvp_2_start_oa1e1b1nwzida0e0b0xyg1 = date_start_p[idx_oa1e1b1nwzida0e0b0xyg]
+fvp_1_start_oa1e1b1nwzida0e0b0xyg1 = date_start_p[idx_oa1e1b1nwzida0e0b0xyg]
 ## lactation fvp start - average date of lambing (with e axis)
 lactation_date_oa1e1b1nwzida0e0b0xyg1 = date_born1st_oa1e1b1nwzida0e0b0xyg2 + (index_e1b1nwzida0e0b0xyg + 0.5) * cf_yatf[4, 0:1,:].astype('timedelta64[D]')
 idx_oa1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, lactation_date_oa1e1b1nwzida0e0b0xyg1)-1 #gets the sim period index for the period when lactation starts (eg lactation fvp starts at the begining of the sim period when lactation occurs)
-fvp_3_start_oa1e1b1nwzida0e0b0xyg1 = date_start_p[idx_oa1e1b1nwzida0e0b0xyg]
-##post weaning recovery fvp start - weaning date of offspring
-wean_recovery_oa1e1b1nwzida0e0b0xyg1 = date_born1st_oa1e1b1nwzida0e0b0xyg2 + age_wean_a0e0b0xyg3
-idx_oa1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, wean_recovery_oa1e1b1nwzida0e0b0xyg1)-1 #gets the sim period index for the period when weaning recovery starts (eg weanrecovery fvp starts at the begining of the sim period when weaning occurs)
-fvp_4_start_oa1e1b1nwzida0e0b0xyg1 = date_start_p[idx_oa1e1b1nwzida0e0b0xyg]
+fvp_2_start_oa1e1b1nwzida0e0b0xyg1 = date_start_p[idx_oa1e1b1nwzida0e0b0xyg]
+
 ##create shape which has max size of each fvp array. Exclude the first dimension because that can be different sizes because only the other dimensions need to be the same for stacking
-shape = np.maximum.reduce([fvp_1_start_oa1e1b1nwzida0e0b0xyg1.shape[1:],fvp_2_start_oa1e1b1nwzida0e0b0xyg1.shape[1:], fvp_3_start_oa1e1b1nwzida0e0b0xyg1.shape[1:], fvp_4_start_oa1e1b1nwzida0e0b0xyg1.shape[1:], fvp_0_start_ya1e1b1nwzida0e0b0xyg.shape[1:]]) #create shape which has the max size, this is used for o array
+shape = np.maximum.reduce([fvp_0_start_oa1e1b1nwzida0e0b0xyg1.shape[1:],fvp_1_start_oa1e1b1nwzida0e0b0xyg1.shape[1:], fvp_2_start_oa1e1b1nwzida0e0b0xyg1.shape[1:], fvp_begin_start_ba1e1b1nwzida0e0b0xyg1.shape[1:]]) #create shape which has the max size, this is used for o array
+
 ##broadcast the start arrays so that they are all the same size (except axis 0 can be different size)
-fvp_0_start_ya1e1b1nwzida0e0b0xyg = np.broadcast_to(fvp_0_start_ya1e1b1nwzida0e0b0xyg,(fvp_0_start_ya1e1b1nwzida0e0b0xyg.shape[0],)+tuple(shape))
+fvp_0_start_oa1e1b1nwzida0e0b0xyg1 = np.broadcast_to(fvp_0_start_oa1e1b1nwzida0e0b0xyg1,(fvp_0_start_oa1e1b1nwzida0e0b0xyg1.shape[0],)+tuple(shape))
 fvp_1_start_oa1e1b1nwzida0e0b0xyg1 = np.broadcast_to(fvp_1_start_oa1e1b1nwzida0e0b0xyg1,(fvp_1_start_oa1e1b1nwzida0e0b0xyg1.shape[0],)+tuple(shape))
 fvp_2_start_oa1e1b1nwzida0e0b0xyg1 = np.broadcast_to(fvp_2_start_oa1e1b1nwzida0e0b0xyg1,(fvp_2_start_oa1e1b1nwzida0e0b0xyg1.shape[0],)+tuple(shape))
-fvp_3_start_oa1e1b1nwzida0e0b0xyg1 = np.broadcast_to(fvp_3_start_oa1e1b1nwzida0e0b0xyg1,(fvp_3_start_oa1e1b1nwzida0e0b0xyg1.shape[0],)+tuple(shape))
-fvp_4_start_oa1e1b1nwzida0e0b0xyg1 = np.broadcast_to(fvp_4_start_oa1e1b1nwzida0e0b0xyg1,(fvp_4_start_oa1e1b1nwzida0e0b0xyg1.shape[0],)+tuple(shape))
-# ##create fvp type arrays. these are the same shape as the start arrays and are filled with the number coresponding to the fvp number
-# fvp_0_type_ya1e1b1nwzida0e0b0xyg = np.full((fvp_0_start_ya1e1b1nwzida0e0b0xyg.shape[0],)+tuple(shape),0)
-# fvp_1_type_oa1e1b1nwzida0e0b0xyg1 = np.full((fvp_1_start_oa1e1b1nwzida0e0b0xyg1.shape[0],)+tuple(shape),1)
-# fvp_2_type_oa1e1b1nwzida0e0b0xyg1 = np.full((fvp_2_start_oa1e1b1nwzida0e0b0xyg1.shape[0],)+tuple(shape),2)
-# fvp_3_type_oa1e1b1nwzida0e0b0xyg1 = np.full((fvp_3_start_oa1e1b1nwzida0e0b0xyg1.shape[0],)+tuple(shape),3)
-# fvp_4_type_oa1e1b1nwzida0e0b0xyg1 = np.full((fvp_4_start_oa1e1b1nwzida0e0b0xyg1.shape[0],)+tuple(shape),4)
-# fvp_5_type_oa1e1b1nwzida0e0b0xyg1 = np.full((fvp_5_start_oa1e1b1nwzida0e0b0xyg1.shape[0],)+tuple(shape),5)
-##stack 
-fvp_start_fa1e1b1nwzida0e0b0xyg1 = np.concatenate(([fvp_0_start_ya1e1b1nwzida0e0b0xyg,fvp_1_start_oa1e1b1nwzida0e0b0xyg1,fvp_2_start_oa1e1b1nwzida0e0b0xyg1,fvp_3_start_oa1e1b1nwzida0e0b0xyg1,fvp_4_start_oa1e1b1nwzida0e0b0xyg1]),axis=0)
-# fvp_type_fa1e1b1nwzida0e0b0xyg1 = np.concatenate(([fvp_0_type_ya1e1b1nwzida0e0b0xyg,fvp_1_type_oa1e1b1nwzida0e0b0xyg1,fvp_2_type_oa1e1b1nwzida0e0b0xyg1,fvp_3_type_oa1e1b1nwzida0e0b0xyg1,fvp_4_type_oa1e1b1nwzida0e0b0xyg1]),axis=0)
+fvp_begin_start_ba1e1b1nwzida0e0b0xyg1 = np.broadcast_to(fvp_begin_start_ba1e1b1nwzida0e0b0xyg1,(fvp_begin_start_ba1e1b1nwzida0e0b0xyg1.shape[0],)+tuple(shape))
+
+##create fvp type arrays. these are the same shape as the start arrays and are filled with the number coresponding to the fvp number
+fvp_0_type_va1e1b1nwzida0e0b0xyg1 = np.full((fvp_0_start_oa1e1b1nwzida0e0b0xyg1.shape[0],)+tuple(shape),0)
+fvp_1_type_va1e1b1nwzida0e0b0xyg1 = np.full((fvp_1_start_oa1e1b1nwzida0e0b0xyg1.shape[0],)+tuple(shape),1)
+fvp_2_type_va1e1b1nwzida0e0b0xyg1 = np.full((fvp_2_start_oa1e1b1nwzida0e0b0xyg1.shape[0],)+tuple(shape),2)
+fvp_begin_type_va1e1b1nwzida0e0b0xyg1 = np.full((fvp_begin_start_ba1e1b1nwzida0e0b0xyg1.shape[0],)+tuple(shape),2)
+##stack
+fvp_start_fa1e1b1nwzida0e0b0xyg1 = np.concatenate(([fvp_0_start_oa1e1b1nwzida0e0b0xyg1,fvp_1_start_oa1e1b1nwzida0e0b0xyg1,fvp_2_start_oa1e1b1nwzida0e0b0xyg1,fvp_begin_start_ba1e1b1nwzida0e0b0xyg1]),axis=0)
+fvp_type_fa1e1b1nwzida0e0b0xyg1 = np.concatenate(([fvp_0_type_va1e1b1nwzida0e0b0xyg1,fvp_1_type_va1e1b1nwzida0e0b0xyg1,fvp_2_type_va1e1b1nwzida0e0b0xyg1,fvp_begin_type_va1e1b1nwzida0e0b0xyg1]),axis=0)
 ##sort into date order
 ind=np.argsort(fvp_start_fa1e1b1nwzida0e0b0xyg1, axis=0)
-fvp_date_start_fa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(fvp_start_fa1e1b1nwzida0e0b0xyg1, ind, axis=0) 
-# fvp_type_fa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(fvp_type_fa1e1b1nwzida0e0b0xyg1, ind, axis=0)
+fvp_date_start_fa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(fvp_start_fa1e1b1nwzida0e0b0xyg1, ind, axis=0)
+fvp_type_fa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(fvp_type_fa1e1b1nwzida0e0b0xyg1, ind, axis=0)
 #proportion of each sim period in each feed period
 # fvp_length_fa1e1b1nwzida0e0b0xyg1 = np.append(fvp_date_start_fa1e1b1nwzida0e0b0xyg1,np.broadcast_to(date_end_pa1e1b1nwzida0e0b0xyg[-1:]+1,(1,)+tuple(fvp_date_start_fa1e1b1nwzida0e0b0xyg1.shape[1:])),axis=0)[1:]-fvp_date_start_fa1e1b1nwzida0e0b0xyg1 #take the last date in the sim and add one day (because end date_p is the date of the last day in the period so add 1 to get the end), broadcast so is it the same shape as fvp. then append it to the end of the fvp dates (basically adding the end date of the last fvp), then subtract the start dates from the end dates to get the length of each peroid
 # ^might want to swap the f and p axis - decide when this gets used
@@ -433,29 +450,62 @@ fvp_date_start_fa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(fvp_start_fa1e1b1nwzi
 ####################################
 # Feed variation period calcs offs #
 ####################################
-##early in life - these are dependent on the offs age
-###days after weaning when a new fvp starts
-days_fvp = (pinp.sheep['i_offspring_fvp_early'] * np.timedelta64(30,'D')) #times by 30 to convert mo to days
-days_fvp_sa1e1b1nwzida0e0b0xyg3 = fun.f_reshape_expand(days_fvp, left_pos=uinp.structure['i_p_pos'])
-fvp_early_start_sa1e1b1nwzida0e0b0xyg3 = (date_born1st_ida0e0b0xyg3 + age_wean_a0e0b0xyg3) + days_fvp_sa1e1b1nwzida0e0b0xyg3
-idx_oa1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, fvp_early_start_sa1e1b1nwzida0e0b0xyg3)-1 #makes sure fvp starts on the same date as sim period.
-fvp_early_start_sa1e1b1nwzida0e0b0xyg3 = date_start_p[idx_oa1e1b1nwzida0e0b0xyg]
-##late in life - these are dependent on the time of year (these start after the first offs is older than 18mo)
-#^the following two lines of code will have to change once season type is included into the feedperiod inputs (the input will have z axis so the reshaping will need to be done in two steps ie pass in pos2 arg) and apply z mask
-date_late_fvp = (pinp.feed_inputs['feed_periods'].loc[pinp.sheep['i_offspring_fvp_late'],'date'].values.astype('datetime64[D]') + (np.arange(np.ceil(uinp.structure['i_age_max'])) * np.timedelta64(365,'D'))[...,na]).ravel() #use .values to convert from pandas to numpy. ravel to stack the dates into a 1d array.
-fvp_late_start_sa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(date_late_fvp, left_pos=uinp.structure['i_p_pos'])
-idx_oa1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, fvp_late_start_sa1e1b1nwzida0e0b0xyg)-1 #makes sure fvp starts on the same date as sim period.
-fvp_late_start_sa1e1b1nwzida0e0b0xyg = date_start_p[idx_oa1e1b1nwzida0e0b0xyg]
+##fvp's between weaning and first shearing - there will be 3 fvp's equaly spaced between wean and first shearing (unless shearing occurs within 3 perids from weaning - excluded in the stacking process below)
+###0
+fvp_b0_start_ba1e1b1nwzida0e0b0xyg3 = date_start_pa1e1b1nwzida0e0b0xyg[0:1]
+###1
+fvp_b1_start_ba1e1b1nwzida0e0b0xyg3 = (date_born1st_ida0e0b0xyg3 + age_wean_a0e0b0xyg3) + (date_shear_sa1e1b1nwzida0e0b0xyg3[0:1] - (date_born1st_ida0e0b0xyg3 + age_wean_a0e0b0xyg3))/3
+idx_oa1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, fvp_b1_start_ba1e1b1nwzida0e0b0xyg3, side='right')-1 #makes sure fvp starts on the same date as sim period. (-1 get the start date of current period)
+fvp_b1_start_ba1e1b1nwzida0e0b0xyg3 = date_start_p[idx_oa1e1b1nwzida0e0b0xyg]
+###2
+fvp_b2_start_ba1e1b1nwzida0e0b0xyg3 = (date_born1st_ida0e0b0xyg3 + age_wean_a0e0b0xyg3) + 2*(date_shear_sa1e1b1nwzida0e0b0xyg3[0:1] - (date_born1st_ida0e0b0xyg3 + age_wean_a0e0b0xyg3))/3
+idx_oa1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, fvp_b2_start_ba1e1b1nwzida0e0b0xyg3,side='right')-1 #makes sure fvp starts on the same date as sim period. (-1 get the start date of current period)
+fvp_b2_start_ba1e1b1nwzida0e0b0xyg3 = date_start_p[idx_oa1e1b1nwzida0e0b0xyg]
+##fvp0 - date shearing plus 1 day becasue shearing is the last day of period
+fvp_0_start_oa1e1b1nwzida0e0b0xyg3 = date_shear_sa1e1b1nwzida0e0b0xyg3 + np.maximum(1, fvp0_offset_ida0e0b0xyg3) #plus 1 at least 1 because shearing is the last day of the period and the fvp should start after shearing
+idx_oa1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, fvp_0_start_oa1e1b1nwzida0e0b0xyg3)-1 #makes sure fvp starts on the same date as sim period.
+fvp_0_start_oa1e1b1nwzida0e0b0xyg3 = date_start_p[idx_oa1e1b1nwzida0e0b0xyg]
+##fvp1 - date shearing (this is the first day of sim period)
+fvp_1_start_oa1e1b1nwzida0e0b0xyg3 = date_shear_sa1e1b1nwzida0e0b0xyg3 + fvp1_offset_ida0e0b0xyg3
+idx_oa1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, fvp_1_start_oa1e1b1nwzida0e0b0xyg3)-1 #makes sure fvp starts on the same date as sim period.
+fvp_1_start_oa1e1b1nwzida0e0b0xyg3 = date_start_p[idx_oa1e1b1nwzida0e0b0xyg]
+##fvp2 - date shearing (this is the first day of sim period)
+fvp_2_start_oa1e1b1nwzida0e0b0xyg3 = date_shear_sa1e1b1nwzida0e0b0xyg3 + fvp2_offset_ida0e0b0xyg3
+idx_oa1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, fvp_2_start_oa1e1b1nwzida0e0b0xyg3)-1 #makes sure fvp starts on the same date as sim period.
+fvp_2_start_oa1e1b1nwzida0e0b0xyg3 = date_start_p[idx_oa1e1b1nwzida0e0b0xyg]
+
 ##create shape which has max size of each fvp array. Exclude the first dimension because that can be different sizes because only the other dimensions need to be the same for stacking
-shape = np.maximum.reduce([fvp_early_start_sa1e1b1nwzida0e0b0xyg3.shape[1:],fvp_late_start_sa1e1b1nwzida0e0b0xyg.shape[1:]]) #create shape which has the max size, this is used for o array
+shape = np.maximum.reduce([fvp_b0_start_ba1e1b1nwzida0e0b0xyg3.shape[1:], fvp_b1_start_ba1e1b1nwzida0e0b0xyg3.shape[1:], fvp_b2_start_ba1e1b1nwzida0e0b0xyg3.shape[1:]
+                           ,fvp_0_start_oa1e1b1nwzida0e0b0xyg3.shape[1:], fvp_1_start_oa1e1b1nwzida0e0b0xyg3.shape[1:], fvp_2_start_oa1e1b1nwzida0e0b0xyg3.shape[1:]]) #create shape which has the max size, this is used for o array
 ##broadcast the start arrays so that they are all the same size (except axis 0 can be different size)
-fvp_early_start_sa1e1b1nwzida0e0b0xyg3 = np.broadcast_to(fvp_early_start_sa1e1b1nwzida0e0b0xyg3,(fvp_early_start_sa1e1b1nwzida0e0b0xyg3.shape[0],)+tuple(shape))
-fvp_late_start_sa1e1b1nwzida0e0b0xyg = np.broadcast_to(fvp_late_start_sa1e1b1nwzida0e0b0xyg,(fvp_late_start_sa1e1b1nwzida0e0b0xyg.shape[0],)+tuple(shape))
-##stack 
-fvp_start_fa1e1b1nwzida0e0b0xyg3 = np.concatenate(([fvp_early_start_sa1e1b1nwzida0e0b0xyg3,fvp_late_start_sa1e1b1nwzida0e0b0xyg]),axis=0)
+fvp_b0_start_ba1e1b1nwzida0e0b0xyg3 = np.broadcast_to(fvp_b0_start_ba1e1b1nwzida0e0b0xyg3,(fvp_b0_start_ba1e1b1nwzida0e0b0xyg3.shape[0],)+tuple(shape))
+fvp_b1_start_ba1e1b1nwzida0e0b0xyg3 = np.broadcast_to(fvp_b1_start_ba1e1b1nwzida0e0b0xyg3,(fvp_b1_start_ba1e1b1nwzida0e0b0xyg3.shape[0],)+tuple(shape))
+fvp_b2_start_ba1e1b1nwzida0e0b0xyg3 = np.broadcast_to(fvp_b2_start_ba1e1b1nwzida0e0b0xyg3,(fvp_b2_start_ba1e1b1nwzida0e0b0xyg3.shape[0],)+tuple(shape))
+fvp_0_start_oa1e1b1nwzida0e0b0xyg3 = np.broadcast_to(fvp_0_start_oa1e1b1nwzida0e0b0xyg3,(fvp_0_start_oa1e1b1nwzida0e0b0xyg3.shape[0],)+tuple(shape))
+fvp_1_start_oa1e1b1nwzida0e0b0xyg3 = np.broadcast_to(fvp_1_start_oa1e1b1nwzida0e0b0xyg3,(fvp_1_start_oa1e1b1nwzida0e0b0xyg3.shape[0],)+tuple(shape))
+fvp_2_start_oa1e1b1nwzida0e0b0xyg3 = np.broadcast_to(fvp_2_start_oa1e1b1nwzida0e0b0xyg3,(fvp_2_start_oa1e1b1nwzida0e0b0xyg3.shape[0],)+tuple(shape))
+
+fvp_b0_type_va1e1b1nwzida0e0b0xyg3 = np.full((fvp_b0_start_ba1e1b1nwzida0e0b0xyg3.shape[0],)+tuple(shape),0)
+fvp_b1_type_va1e1b1nwzida0e0b0xyg3 = np.full((fvp_b1_start_ba1e1b1nwzida0e0b0xyg3.shape[0],)+tuple(shape),1)
+fvp_b2_type_va1e1b1nwzida0e0b0xyg3 = np.full((fvp_b2_start_ba1e1b1nwzida0e0b0xyg3.shape[0],)+tuple(shape),2)
+fvp_0_type_va1e1b1nwzida0e0b0xyg3 = np.full((fvp_0_start_oa1e1b1nwzida0e0b0xyg3.shape[0],)+tuple(shape),0)
+fvp_1_type_va1e1b1nwzida0e0b0xyg3 = np.full((fvp_1_start_oa1e1b1nwzida0e0b0xyg3.shape[0],)+tuple(shape),1)
+fvp_2_type_va1e1b1nwzida0e0b0xyg3 = np.full((fvp_2_start_oa1e1b1nwzida0e0b0xyg3.shape[0],)+tuple(shape),2)
+
+##stack - extra fvp only included if shearing occurs more than 3 periods after weaning)
+mask = (date_shear_sa1e1b1nwzida0e0b0xyg3[0:1] - (date_born1st_ida0e0b0xyg3 + age_wean_a0e0b0xyg3)) < ((step.astype('timedelta64[D]')+1)*3)  #true if break period fit in.
+fvp_start_fa1e1b1nwzida0e0b0xyg3 = np.concatenate(([fvp_b0_start_ba1e1b1nwzida0e0b0xyg3, fvp_b1_start_ba1e1b1nwzida0e0b0xyg3, fvp_b2_start_ba1e1b1nwzida0e0b0xyg3,
+                                                    fvp_0_start_oa1e1b1nwzida0e0b0xyg3,fvp_1_start_oa1e1b1nwzida0e0b0xyg3,fvp_2_start_oa1e1b1nwzida0e0b0xyg3]),axis=0)
+fvp_type_fa1e1b1nwzida0e0b0xyg3 = np.concatenate(([fvp_b0_type_va1e1b1nwzida0e0b0xyg3, fvp_b1_type_va1e1b1nwzida0e0b0xyg3, fvp_b2_type_va1e1b1nwzida0e0b0xyg3,
+                                                    fvp_0_type_va1e1b1nwzida0e0b0xyg3,fvp_1_type_va1e1b1nwzida0e0b0xyg3,fvp_2_type_va1e1b1nwzida0e0b0xyg3]),axis=0)
+###if shearing is less than 3 sim periods after weaning then set the break fvp dates to the first date of the sim (so they are n used)
+mask, fvp_start_fa1e1b1nwzida0e0b0xyg3 = np.broadcast_arrays(mask, fvp_start_fa1e1b1nwzida0e0b0xyg3)
+fvp_start_fa1e1b1nwzida0e0b0xyg3[mask] = date_start_p[0]
+fvp_type_fa1e1b1nwzida0e0b0xyg3[mask] = date_start_p[0]
 ##sort into date order
 ind=np.argsort(fvp_start_fa1e1b1nwzida0e0b0xyg3, axis=0)
 fvp_start_fa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(fvp_start_fa1e1b1nwzida0e0b0xyg3, ind, axis=0) 
+fvp_type_fa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(fvp_type_fa1e1b1nwzida0e0b0xyg3, ind, axis=0)
 
 
 ############################
@@ -486,12 +536,12 @@ a_breakseason_y_pa1e1b1nwzida0e0b0xyg = np.apply_along_axis(sfun.f_next_prev_ass
 a_prevfeedperiod_p = np.apply_along_axis(sfun.f_next_prev_association, 0, feedperiods_p6, date_end_p, 1) % (len(pinp.feed_inputs['feed_periods'])-1) #% 10 required to convert association back to only the number of feed periods, -1 because the end feed period date is included
 
 ##shearing opp ^possibly need to fill in axis between p and i
-a_prev_s_pida0e0b0xyg0 = np.apply_along_axis(sfun.f_next_prev_association, 0, date_shear_sida0e0b0xyg0.astype('datetime64[D]'), date_end_p, 1)
-a_next_s_pida0e0b0xyg0 = np.apply_along_axis(sfun.f_next_prev_association, 0, date_shear_sida0e0b0xyg0.astype('datetime64[D]'), date_start_p, 0)
-a_prev_s_pida0e0b0xyg1 = np.apply_along_axis(sfun.f_next_prev_association, 0, date_shear_sida0e0b0xyg1.astype('datetime64[D]'), date_end_p, 1)
-a_next_s_pida0e0b0xyg1 = np.apply_along_axis(sfun.f_next_prev_association, 0, date_shear_sida0e0b0xyg1.astype('datetime64[D]'), date_start_p, 0)
-a_prev_s_pida0e0b0xyg3 = np.apply_along_axis(sfun.f_next_prev_association, 0, date_shear_sida0e0b0xyg3.astype('datetime64[D]'), date_end_p, 1)
-a_next_s_pida0e0b0xyg3 = np.apply_along_axis(sfun.f_next_prev_association, 0, date_shear_sida0e0b0xyg3.astype('datetime64[D]'), date_start_p, 0)
+# a_prev_s_pida0e0b0xyg0 = np.apply_along_axis(sfun.f_next_prev_association, 0, date_shear_sida0e0b0xyg0.astype('datetime64[D]'), date_end_p, 1)
+# a_next_s_pida0e0b0xyg0 = np.apply_along_axis(sfun.f_next_prev_association, 0, date_shear_sida0e0b0xyg0.astype('datetime64[D]'), date_start_p, 0)
+# a_prev_s_pida0e0b0xyg1 = np.apply_along_axis(sfun.f_next_prev_association, 0, date_shear_sida0e0b0xyg1.astype('datetime64[D]'), date_end_p, 1)
+# a_next_s_pida0e0b0xyg1 = np.apply_along_axis(sfun.f_next_prev_association, 0, date_shear_sida0e0b0xyg1.astype('datetime64[D]'), date_start_p, 0)
+# a_prev_s_pida0e0b0xyg3 = np.apply_along_axis(sfun.f_next_prev_association, 0, date_shear_sida0e0b0xyg3.astype('datetime64[D]'), date_end_p, 1)
+# a_next_s_pida0e0b0xyg3 = np.apply_along_axis(sfun.f_next_prev_association, 0, date_shear_sida0e0b0xyg3.astype('datetime64[D]'), date_start_p, 0)
 ##p7 to p association - used for equation systems
 a_g0_p7_p = np.apply_along_axis(sfun.f_next_prev_association, 0, pinp.sheep['i_eqn_date_g0_p7'].astype('datetime64[D]'), date_end_p, 1)
 a_g1_p7_p = np.apply_along_axis(sfun.f_next_prev_association, 0, pinp.sheep['i_eqn_date_g1_p7'].astype('datetime64[D]'), date_end_p, 1)
@@ -851,66 +901,81 @@ age_m1_pa1e1b1nwzida0e0b0xyg0m1 = (age_start_open_pa1e1b1nwzida0e0b0xyg0[..., na
 age_m1_pa1e1b1nwzida0e0b0xyg1m1 = (age_start_open_pa1e1b1nwzida0e0b0xyg1[..., na] + index_m1) /np.timedelta64(1, 'D') #divide by 1 day to get int. need int so that i can put np.nan into array
 age_m1_pa1e1b1nwzida0e0b0xyg2m1 = (age_start_open_pa1e1b1nwzida0e0b0xyg2[..., na] + index_m1) /np.timedelta64(1, 'D') #divide by 1 day to get int. need int so that i can put np.nan into array
 age_m1_pa1e1b1nwzida0e0b0xyg3m1 = (age_start_open_pa1e1b1nwzida0e0b0xyg3[..., na] + index_m1) /np.timedelta64(1, 'D') #divide by 1 day to get int. need int so that i can put np.nan into array
-##make if age<=weaning make it nan - need nan so that the values are not included in the mean calculations which determine the average production for a given m1 period.
-age_m1_pa1e1b1nwzida0e0b0xyg0m1[np.less_equal(age_m1_pa1e1b1nwzida0e0b0xyg0m1,age_wean_e0b0xyg0[..., na]/np.timedelta64(1, 'D'))] = np.nan
-age_m1_pa1e1b1nwzida0e0b0xyg1m1[age_m1_pa1e1b1nwzida0e0b0xyg1m1<=(age_wean_e0b0xyg1[..., na]/np.timedelta64(1, 'D'))] = np.nan
-age_m1_pa1e1b1nwzida0e0b0xyg3m1[age_m1_pa1e1b1nwzida0e0b0xyg3m1<=(age_wean_a0e0b0xyg3[..., na]/np.timedelta64(1, 'D'))] = np.nan
-##if age is greater than weaning make nan and <= 0 make nan
-age_m1_pa1e1b1nwzida0e0b0xyg2m1[age_m1_pa1e1b1nwzida0e0b0xyg2m1<=0] = np.nan
-age_m1_pa1e1b1nwzida0e0b0xyg2m1[age_m1_pa1e1b1nwzida0e0b0xyg2m1>=(age_wean_a0e0b0xyg3[..., na]/np.timedelta64(1, 'D'))] = np.nan
+##calc m1 weights - if age<=weaning it has 0 weighting (ie false) else weighting = 1 (ie true) - need so that the values are not included in the mean calculations below which determine the average production for a given m1 period.
+age_m1_weights_pa1e1b1nwzida0e0b0xyg0m1 = age_m1_pa1e1b1nwzida0e0b0xyg0m1>(age_wean_e0b0xyg0[..., na]/np.timedelta64(1, 'D'))
+age_m1_weights_pa1e1b1nwzida0e0b0xyg1m1 = age_m1_pa1e1b1nwzida0e0b0xyg1m1>(age_wean_e0b0xyg1[..., na]/np.timedelta64(1, 'D'))
+age_m1_weights_pa1e1b1nwzida0e0b0xyg3m1 = age_m1_pa1e1b1nwzida0e0b0xyg3m1>(age_wean_a0e0b0xyg3[..., na]/np.timedelta64(1, 'D'))
+#age_m1_pa1e1b1nwzida0e0b0xyg0m1[np.less_equal(age_m1_pa1e1b1nwzida0e0b0xyg0m1,age_wean_e0b0xyg0[..., na]/np.timedelta64(1, 'D'))] = np.nan
+#age_m1_pa1e1b1nwzida0e0b0xyg1m1[age_m1_pa1e1b1nwzida0e0b0xyg1m1<=(age_wean_e0b0xyg1[..., na]/np.timedelta64(1, 'D'))] = np.nan
+#age_m1_pa1e1b1nwzida0e0b0xyg3m1[age_m1_pa1e1b1nwzida0e0b0xyg3m1<=(age_wean_a0e0b0xyg3[..., na]/np.timedelta64(1, 'D'))] = np.nan
+##calc yatf m1 weighting - if age is greater than weaning or less than 0 it will have 0 weighting in the m1 means calculated below else it will have weighting 1
+age_m1_weights_pa1e1b1nwzida0e0b0xyg2m1 = np.logical_and(age_m1_pa1e1b1nwzida0e0b0xyg2m1>0, age_m1_pa1e1b1nwzida0e0b0xyg2m1<=(age_wean_a0e0b0xyg3[..., na]/np.timedelta64(1, 'D')))
+#age_m1_pa1e1b1nwzida0e0b0xyg2m1[age_m1_pa1e1b1nwzida0e0b0xyg2m1<=0] = np.nan
+#age_m1_pa1e1b1nwzida0e0b0xyg2m1[age_m1_pa1e1b1nwzida0e0b0xyg2m1>=(age_wean_a0e0b0xyg3[..., na]/np.timedelta64(1, 'D'))] = np.nan
 ##Age of foetus with minor axis (days)
 age_f_m1_pa1e1b1nwzida0e0b0xyg1m1 = (age_f_start_open_pa1e1b1nwzida0e0b0xyg1[...,na] + index_m1) /np.timedelta64(1, 'D') #divide by 1 day to get int. need int so that i can put np.nan into array
-age_f_m1_pa1e1b1nwzida0e0b0xyg1m1[age_f_m1_pa1e1b1nwzida0e0b0xyg1m1 <= 0] = np.nan
-age_f_m1_pa1e1b1nwzida0e0b0xyg1m1[age_f_m1_pa1e1b1nwzida0e0b0xyg1m1 > cp_dams[1, 0, :, na]] = np.nan
+##calc foetus m1 weighting - if age is greater than weaning or less than 0 it will have 0 weighting in the m1 means calculated below else it will have weighting 1
+age_f_m1_weights_pa1e1b1nwzida0e0b0xyg1m1 = np.logical_and(age_f_m1_pa1e1b1nwzida0e0b0xyg1m1<=0, age_f_m1_pa1e1b1nwzida0e0b0xyg1m1>cp_dams[1, 0, :, na])
+#age_f_m1_pa1e1b1nwzida0e0b0xyg1m1[age_f_m1_pa1e1b1nwzida0e0b0xyg1m1 <= 0] = np.nan
+#age_f_m1_pa1e1b1nwzida0e0b0xyg1m1[age_f_m1_pa1e1b1nwzida0e0b0xyg1m1 > cp_dams[1, 0, :, na]] = np.nan
 ##adjusted age of young (adjusted by intake factor - basically the factor of how age of young effect dam intake, the adjustment factor basically alters the age of the young to influnce intake.)
 age_y_adj_pa1e1b1nwzida0e0b0xyg1m1 = age_m1_pa1e1b1nwzida0e0b0xyg2m1 + np.maximum(0, (date_start_pa1e1b1nwzida0e0b0xygm1 - date_weaned_pa1e1b1nwzida0e0b0xyg2[..., na]) /np.timedelta64(1, 'D')) * (ci_dams[21, ..., na] - 1) #minus 1 because the ci factor is applied to the age post weaning but using the open date means it has already been included once ie we want x + y *ci but using date open gives  x  + y + y*ci, x = age to weaning, y = age between period and weaning, therefore minus 1 x  + y + y*(ci-1)
-age_y_adj_pa1e1b1nwzida0e0b0xyg1m1[age_y_adj_pa1e1b1nwzida0e0b0xyg1m1 <= 0] = np.nan
+##calc young m1 weighting - if age is less than 0 it will have 0 weighting in the m1 means calculated below else it will have weighting 1
+age_y_adj_weights_pa1e1b1nwzida0e0b0xyg1m1 = age_y_adj_pa1e1b1nwzida0e0b0xyg1m1 <= 0  #no max cap (ie represents age young would be if never weaned off mum)
 ##Foetal age relative to parturition with minor axis
 relage_f_pa1e1b1nwzida0e0b0xyg1m1 = age_f_m1_pa1e1b1nwzida0e0b0xyg1m1 / cp_dams[1, 0, :, na]
 ##Age of lamb relative to peak intake-with minor function
 pimi_pa1e1b1nwzida0e0b0xyg1m1 = age_y_adj_pa1e1b1nwzida0e0b0xyg1m1 / ci_dams[8, ..., na]
-##Age of lamb relative to peak lactation-with minor function
+##Age of lamb relative to peak lactation-with minor axis
 lmm_pa1e1b1nwzida0e0b0xyg1m1 = (age_m1_pa1e1b1nwzida0e0b0xyg2m1 + cl_dams[1, ..., na]) / cl_dams[2, ..., na]
 ##Chill index for lamb survival
 chill_index_pa1e1b1nwzida0e0b0xygm1 = (481 + (11.7 + 3.1 * ws_pa1e1b1nwzida0e0b0xyg[..., na] ** 0.5) * (40 - temp_ave_pa1e1b1nwzida0e0b0xyg[..., na]) + 418 * (1-np.exp(-0.04 * rain_pa1e1b1nwzida0e0b0xygm1)))
+
+
 ##Proportion of SRW with age
-srw_age_pa1e1b1nwzida0e0b0xyg0 = np.nanmean(np.exp(-cn_sire[1, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg0m1 / srw_xyg0[..., na] ** cn_sire[2, ..., na]), axis = -1)
-srw_age_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(np.exp(-cn_dams[1, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg1m1 / srw_xyg1[..., na] ** cn_dams[2, ..., na]), axis = -1)
-srw_age_pa1e1b1nwzida0e0b0xyg2 = np.nanmean(np.exp(-cn_yatf[1, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg2m1 / srw_xyg2[..., na] ** cn_yatf[2, ..., na]), axis = -1)
-srw_age_pa1e1b1nwzida0e0b0xyg3 = np.nanmean(np.exp(-cn_offs[1, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg3m1 / srw_xyg3[..., na] ** cn_offs[2, ..., na]), axis = -1)
+srw_age_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(np.exp(-cn_sire[1, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg0m1 / srw_xyg0[..., na] ** cn_sire[2, ..., na]), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg0m1, axis = -1)
+srw_age_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.exp(-cn_dams[1, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg1m1 / srw_xyg1[..., na] ** cn_dams[2, ..., na]), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg1m1, axis = -1)
+srw_age_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(np.exp(-cn_yatf[1, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg2m1 / srw_xyg2[..., na] ** cn_yatf[2, ..., na]), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg2m1, axis = -1)
+srw_age_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(np.exp(-cn_offs[1, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg3m1 / srw_xyg3[..., na] ** cn_offs[2, ..., na]), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg3m1, axis = -1)
+
+#srw_age_pa1e1b1nwzida0e0b0xyg0 = np.nanmean(np.exp(-cn_sire[1, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg0m1 / srw_xyg0[..., na] ** cn_sire[2, ..., na]), axis = -1)
+#srw_age_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(np.exp(-cn_dams[1, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg1m1 / srw_xyg1[..., na] ** cn_dams[2, ..., na]), axis = -1)
+#srw_age_pa1e1b1nwzida0e0b0xyg2 = np.nanmean(np.exp(-cn_yatf[1, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg2m1 / srw_xyg2[..., na] ** cn_yatf[2, ..., na]), axis = -1)
+#srw_age_pa1e1b1nwzida0e0b0xyg3 = np.nanmean(np.exp(-cn_offs[1, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg3m1 / srw_xyg3[..., na] ** cn_offs[2, ..., na]), axis = -1)
+
 ##age factor wool
-af_wool_pa1e1b1nwzida0e0b0xyg0 = np.nanmean(cw_sire[5, ..., na] + (1 - cw_sire[5, ..., na])*(1-np.exp(-cw_sire[12, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg0m1)), axis = -1)
-af_wool_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(cw_dams[5, ..., na] + (1 - cw_dams[5, ..., na])*(1-np.exp(-cw_dams[12, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg1m1)), axis = -1)
-af_wool_pa1e1b1nwzida0e0b0xyg2 = np.nanmean(cw_yatf[5, ..., na] + (1 - cw_yatf[5, ..., na])*(1-np.exp(-cw_yatf[12, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg2m1)), axis = -1)
-af_wool_pa1e1b1nwzida0e0b0xyg3 = np.nanmean(cw_offs[5, ..., na] + (1 - cw_offs[5, ..., na])*(1-np.exp(-cw_offs[12, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg3m1)), axis = -1)
+af_wool_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(cw_sire[5, ..., na] + (1 - cw_sire[5, ..., na])*(1-np.exp(-cw_sire[12, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg0m1)), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg0m1, axis = -1)
+af_wool_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cw_dams[5, ..., na] + (1 - cw_dams[5, ..., na])*(1-np.exp(-cw_dams[12, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg1m1)), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg1m1, axis = -1)
+af_wool_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(cw_yatf[5, ..., na] + (1 - cw_yatf[5, ..., na])*(1-np.exp(-cw_yatf[12, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg2m1)), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg2m1, axis = -1)
+af_wool_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(cw_offs[5, ..., na] + (1 - cw_offs[5, ..., na])*(1-np.exp(-cw_offs[12, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg3m1)), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg3m1, axis = -1)
 ##Day length factor on efficiency
 dlf_eff_pa1e1b1nwzida0e0b0xyg = np.average(lat_deg / 40 * np.sin(2 * np.pi * doy_pa1e1b1nwzida0e0b0xygm1 / 365), axis = -1)
 ##Pattern of maintenance with age
-mr_age_pa1e1b1nwzida0e0b0xyg0 = np.nanmean(np.maximum(cm_sire[4, ..., na], np.exp(-cm_sire[3, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg0m1)), axis = -1)
-mr_age_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(np.maximum(cm_dams[4, ..., na], np.exp(-cm_dams[3, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg1m1)), axis = -1)
-mr_age_pa1e1b1nwzida0e0b0xyg2 = np.nanmean(np.maximum(cm_offs[4, ..., na], np.exp(-cm_offs[3, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg2m1)), axis = -1)
-mr_age_pa1e1b1nwzida0e0b0xyg3 = np.nanmean(np.maximum(cm_yatf[4, ..., na], np.exp(-cm_yatf[3, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg3m1)), axis = -1)
+mr_age_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(np.maximum(cm_sire[4, ..., na], np.exp(-cm_sire[3, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg0m1)), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg0m1, axis = -1)
+mr_age_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.maximum(cm_dams[4, ..., na], np.exp(-cm_dams[3, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg1m1)), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg1m1, axis = -1)
+mr_age_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(np.maximum(cm_offs[4, ..., na], np.exp(-cm_offs[3, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg2m1)), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg2m1, axis = -1)
+mr_age_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(np.maximum(cm_yatf[4, ..., na], np.exp(-cm_yatf[3, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg3m1)), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg3m1, axis = -1)
 ##Impact of rainfall on 'cold' intake increment
-rain_intake_pa1e1b1nwzida0e0b0xyg0 = np.average(np.maximum(0, 1 - rain_pa1e1b1nwzida0e0b0xygm1 / ci_sire[18, ..., na]), axis = -1)
-rain_intake_pa1e1b1nwzida0e0b0xyg1 = np.average(np.maximum(0, 1 - rain_pa1e1b1nwzida0e0b0xygm1 / ci_dams[18, ..., na]), axis = -1)
-rain_intake_pa1e1b1nwzida0e0b0xyg2 = np.average(np.maximum(0, 1 - rain_pa1e1b1nwzida0e0b0xygm1 / ci_offs[18, ..., na]), axis = -1)
-rain_intake_pa1e1b1nwzida0e0b0xyg3 = np.average(np.maximum(0, 1 - rain_pa1e1b1nwzida0e0b0xygm1 / ci_yatf[18, ..., na]), axis = -1)
+rain_intake_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(np.maximum(0, 1 - rain_pa1e1b1nwzida0e0b0xygm1 / ci_sire[18, ..., na]),  weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg0m1, axis = -1)
+rain_intake_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.maximum(0, 1 - rain_pa1e1b1nwzida0e0b0xygm1 / ci_dams[18, ..., na]),  weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg1m1, axis = -1)
+rain_intake_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(np.maximum(0, 1 - rain_pa1e1b1nwzida0e0b0xygm1 / ci_offs[18, ..., na]),  weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg2m1, axis = -1)
+rain_intake_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(np.maximum(0, 1 - rain_pa1e1b1nwzida0e0b0xygm1 / ci_yatf[18, ..., na]),  weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg3m1, axis = -1)
 ##Proportion of peak intake due to time from birth
-pi_age_y_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(cb1_dams[19, ..., na] * (pimi_pa1e1b1nwzida0e0b0xyg1m1) ** ci_dams[9, ..., na] * np.exp(ci_dams[9, ..., na] * (1 - pimi_pa1e1b1nwzida0e0b0xyg1m1)), axis = -1)
+pi_age_y_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cb1_dams[19, ..., na] * np.maximum(0,pimi_pa1e1b1nwzida0e0b0xyg1m1) ** ci_dams[9, ..., na] * np.exp(ci_dams[9, ..., na] * (1 - pimi_pa1e1b1nwzida0e0b0xyg1m1)), weights=age_y_adj_weights_pa1e1b1nwzida0e0b0xyg1m1, axis = -1) #maximum to stop error in power (not sure why the negitives were causing a problem)
 ##Peak milk production pattern (time from birth)
-mp_age_y_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(cb1_dams[0, ..., na] * lmm_pa1e1b1nwzida0e0b0xyg1m1 ** cl_dams[3, ..., na] * np.exp(cl_dams[3, ..., na]* (1 - lmm_pa1e1b1nwzida0e0b0xyg1m1)), axis = -1)
+mp_age_y_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cb1_dams[0, ..., na] * lmm_pa1e1b1nwzida0e0b0xyg1m1 ** cl_dams[3, ..., na] * np.exp(cl_dams[3, ..., na]* (1 - lmm_pa1e1b1nwzida0e0b0xyg1m1)), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg2m1, axis = -1)
 ##Suckling volume pattern
-mp2_age_y_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(nyatf_b1nwzida0e0b0xyg[...,na] * cl_dams[6, ..., na] * ( cl_dams[12, ..., na] + cl_dams[13, ..., na] * np.exp(-cl_dams[14, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg2m1)), axis = -1)
+mp2_age_y_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(nyatf_b1nwzida0e0b0xyg[...,na] * cl_dams[6, ..., na] * ( cl_dams[12, ..., na] + cl_dams[13, ..., na] * np.exp(-cl_dams[14, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg2m1)), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg2m1, axis = -1)
 ##Pattern of conception efficiency (doy)
 crg_doy_pa1e1b1nwzida0e0b0xyg1 = np.average(np.maximum(0,1 - cb1_dams[1, ..., na] * (1 - np.sin(2 * np.pi * (doy_pa1e1b1nwzida0e0b0xygm1 + 10) / 365) * np.sin(lat_rad) / -0.57)), axis = -1)
 ##Rumen development factor on PI - yatf
-piyf_pa1e1b1nwzida0e0b0xyg2 = np.nanmean(1/(1 + np.exp(-ci_yatf[3, ..., na] * (age_m1_pa1e1b1nwzida0e0b0xyg2m1 - ci_yatf[4, ..., na]))), axis = -1)
+piyf_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(1/(1 + np.exp(-ci_yatf[3, ..., na] * (age_m1_pa1e1b1nwzida0e0b0xyg2m1 - ci_yatf[4, ..., na]))), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg2m1, axis = -1)
 ##Foetal normal weight pattern (mid period)
-nwf_age_f_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(np.exp(cp_dams[2, ..., na] * (1 - np.exp(cp_dams[3, ..., na] * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1m1)))), axis = -1)
+nwf_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.exp(cp_dams[2, ..., na] * (1 - np.exp(cp_dams[3, ..., na] * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1m1)))), weights=age_f_m1_weights_pa1e1b1nwzida0e0b0xyg1m1, axis = -1)
 ##Conceptus weight pattern (mid period)
-guw_age_f_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(np.exp(cp_dams[6, ..., na] * (1 - np.exp(cp_dams[7, ..., na] * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1m1)))), axis = -1)
+guw_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.exp(cp_dams[6, ..., na] * (1 - np.exp(cp_dams[7, ..., na] * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1m1)))), weights=age_f_m1_weights_pa1e1b1nwzida0e0b0xyg1m1, axis = -1)
 ##Conceptus energy pattern (end of period)
-ce_age_f_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(np.exp(cp_dams[9, ..., na] * (1 - np.exp(cp_dams[10, ..., na] * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1m1)))), axis = -1)
+ce_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.exp(cp_dams[9, ..., na] * (1 - np.exp(cp_dams[10, ..., na] * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1m1)))), weights=age_f_m1_weights_pa1e1b1nwzida0e0b0xyg1m1, axis = -1)
 
 ##genotype calc that requires af_wool. ME for minimum wool growth (with no intake, relsize = 1)
 mew_min_pa1e1b1nwzida0e0b0xyg0 =cw_sire[14, ...] * sfw_a0e0b0xyg0[0, ...] / 365 * af_wool_pa1e1b1nwzida0e0b0xyg0 * dlf_wool_pa1e1b1nwzida0e0b0xyg0 * cw_sire[1, ...] / kw_yg0
@@ -926,10 +991,10 @@ mew_min_pa1e1b1nwzida0e0b0xyg3 =cw_offs[14, ...] * sfw_da0e0b0xyg3[0, ...] / 365
 days_period_f_pa1e1b1nwzida0e0b0xyg1 = (age_f_end_pa1e1b1nwzida0e0b0xyg1 +1 - age_f_start_pa1e1b1nwzida0e0b0xyg1).astype(int)
 
 ##proportion of days gestating during the period
-gest_propn_pa1e1b1nwzida0e0b0xyg1 = days_period_f_pa1e1b1nwzida0e0b0xyg1 / days_period_pa1e1b1nwzida0e0b0xyg1
+gest_propn_pa1e1b1nwzida0e0b0xyg1 = days_period_f_pa1e1b1nwzida0e0b0xyg1 / np.maximum(1, days_period_pa1e1b1nwzida0e0b0xyg1) #use max to stop div/0 error (when dams days per period =0 then days_f will also be zero)
 
 ##proportion of days of lactating during the period
-lact_propn_pa1e1b1nwzida0e0b0xyg1 = days_period_pa1e1b1nwzida0e0b0xyg2 / days_period_pa1e1b1nwzida0e0b0xyg1
+lact_propn_pa1e1b1nwzida0e0b0xyg1 = days_period_pa1e1b1nwzida0e0b0xyg2 / np.maximum(1, days_period_pa1e1b1nwzida0e0b0xyg1) #use max to stop div/0 error (when dams days per period =0 then days_f will also be zero)
 
 ##Is nutrition effecting lactation
 lact_nut_effect_pa1e1b1nwzida0e0b0xyg1 = (age_pa1e1b1nwzida0e0b0xyg2  > (cl_dams[16, ...] * cl_dams[2, ...]))
@@ -941,9 +1006,9 @@ d_cfw_ave_pa1e1b1nwzida0e0b0xyg2 = cw_yatf[3, ...] * sfw_pa1e1b1nwzida0e0b0xyg2 
 d_cfw_ave_pa1e1b1nwzida0e0b0xyg3 = cw_offs[3, ...] * sfw_da0e0b0xyg3 * af_wool_pa1e1b1nwzida0e0b0xyg3 * days_period_pa1e1b1nwzida0e0b0xyg3.astype(int) / 365
 
 ##Expected relative size
-relsize_exp_a1e1b1nwzida0e0b0xyg0  = (srw_xyg0 - (srw_xyg0 - w_b_std_b0xyg0) * np.exp(cn_sire[1, ...] * (agedam_lamb1st_a1e1b1nwzida0e0b0xyg0 /np.timedelta64(1, 'D')) / (srw_xyg0**cn_sire[2, ...]))) / srw_xyg0
-relsize_exp_a1e1b1nwzida0e0b0xyg1  = (srw_xyg1 - (srw_xyg1 - w_b_std_b0xyg1) * np.exp(cn_dams[1, ...] * (agedam_lamb1st_a1e1b1nwzida0e0b0xyg1/np.timedelta64(1, 'D')) / (srw_xyg1**cn_dams[2, ...]))) / srw_xyg1
-relsize_exp_a1e1b1nwzida0e0b0xyg3  = (srw_xyg3 - (srw_xyg3 - w_b_std_b0xyg3) * np.exp(cn_offs[1, ...] * (agedam_lamb1st_a1e1b1nwzida0e0b0xyg3/np.timedelta64(1, 'D')) / (srw_xyg3**cn_offs[2, ...]))) / srw_xyg3
+relsize_exp_a1e1b1nwzida0e0b0xyg0  = (srw_xyg0 - (srw_xyg0 - w_b_std_b0xyg0) * np.exp(-cn_sire[1, ...] * (agedam_lamb1st_a1e1b1nwzida0e0b0xyg0 /np.timedelta64(1, 'D')) / (srw_xyg0**cn_sire[2, ...]))) / srw_xyg0
+relsize_exp_a1e1b1nwzida0e0b0xyg1  = (srw_xyg1 - (srw_xyg1 - w_b_std_b0xyg1) * np.exp(-cn_dams[1, ...] * (agedam_lamb1st_a1e1b1nwzida0e0b0xyg1/np.timedelta64(1, 'D')) / (srw_xyg1**cn_dams[2, ...]))) / srw_xyg1
+relsize_exp_a1e1b1nwzida0e0b0xyg3  = (srw_xyg3 - (srw_xyg3 - w_b_std_b0xyg3) * np.exp(-cn_offs[1, ...] * (agedam_lamb1st_a1e1b1nwzida0e0b0xyg3/np.timedelta64(1, 'D')) / (srw_xyg3**cn_offs[2, ...]))) / srw_xyg3
 
 ##adjust ce sim param (^ ce12 &13 should be scaled by relsize (similar to ce15)) - couldnt find a good way to do this because get error asigning multiple slices to na. ie if i = 2 (^instead of setting ce with relsize adjustment then akjusting birth weight could just adjust birthweight directly with relsize factor - to avoid doing this code below)
 shape = (ce_sire.shape[0],) + relsize_exp_a1e1b1nwzida0e0b0xyg0.shape #get shape of the new ce array
@@ -976,11 +1041,11 @@ nw_max_pa1e1b1nwzida0e0b0xyg3 = srw_xyg3 * (1 - srw_age_pa1e1b1nwzida0e0b0xyg3) 
 
 ##Change in normal weight max - the last period will be 0 by default but this is okay because nw hits an asymptope so change in will be 0 in the last period.
 d_nw_max_pa1e1b1nwzida0e0b0xyg0 = np.zeros_like(nw_max_pa1e1b1nwzida0e0b0xyg0)
-d_nw_max_pa1e1b1nwzida0e0b0xyg0[0:-1, ...] = (nw_max_pa1e1b1nwzida0e0b0xyg0[1:, ...] - nw_max_pa1e1b1nwzida0e0b0xyg0[0:-1, ...]) / (days_period_pa1e1b1nwzida0e0b0xyg0)[0:-1, ...]
+d_nw_max_pa1e1b1nwzida0e0b0xyg0[0:-1, ...] = (nw_max_pa1e1b1nwzida0e0b0xyg0[1:, ...] - nw_max_pa1e1b1nwzida0e0b0xyg0[0:-1, ...]) / np.maximum(1,days_period_pa1e1b1nwzida0e0b0xyg0[0:-1, ...]) #np max to stop div/0
 d_nw_max_pa1e1b1nwzida0e0b0xyg1 = np.zeros_like(nw_max_pa1e1b1nwzida0e0b0xyg1)
-d_nw_max_pa1e1b1nwzida0e0b0xyg1[0:-1, ...] = (nw_max_pa1e1b1nwzida0e0b0xyg1[1:, ...] - nw_max_pa1e1b1nwzida0e0b0xyg1[0:-1, ...]) / (days_period_pa1e1b1nwzida0e0b0xyg1)[0:-1, ...]
+d_nw_max_pa1e1b1nwzida0e0b0xyg1[0:-1, ...] = (nw_max_pa1e1b1nwzida0e0b0xyg1[1:, ...] - nw_max_pa1e1b1nwzida0e0b0xyg1[0:-1, ...]) / np.maximum(1,days_period_pa1e1b1nwzida0e0b0xyg1[0:-1, ...]) #np max to stop div/0
 d_nw_max_pa1e1b1nwzida0e0b0xyg3 = np.zeros_like(nw_max_pa1e1b1nwzida0e0b0xyg3)
-d_nw_max_pa1e1b1nwzida0e0b0xyg3[0:-1, ...] = (nw_max_pa1e1b1nwzida0e0b0xyg3[1:, ...] - nw_max_pa1e1b1nwzida0e0b0xyg3[0:-1, ...]) / (days_period_pa1e1b1nwzida0e0b0xyg3)[0:-1, ...]
+d_nw_max_pa1e1b1nwzida0e0b0xyg3[0:-1, ...] = (nw_max_pa1e1b1nwzida0e0b0xyg3[1:, ...] - nw_max_pa1e1b1nwzida0e0b0xyg3[0:-1, ...]) / np.maximum(1,days_period_pa1e1b1nwzida0e0b0xyg3[0:-1, ...]) #np max to stop div/0
 
 
 #########################
@@ -1016,7 +1081,7 @@ period_is_mating_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is', date_ma
 period_between_birth6wks_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is_between', date_born_pa1e1b1nwzida0e0b0xyg2, date_start_pa1e1b1nwzida0e0b0xyg, date_born_pa1e1b1nwzida0e0b0xyg2+np.array([(6*7)]).astype('timedelta64[D]'), date_end_pa1e1b1nwzida0e0b0xyg) #This is within 6 weeks of the Birth period
 
 
-period_is_break_pa1e1b1nwzida0e0b0xyg = sfun.f_period_is_('period_is', date_prev_breakseason_pa1e1b1nwzida0e0b0xyg, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg) 
+period_is_break_pa1e1b1nwzida0e0b0xyg = sfun.f_period_is_('period_is', date_prev_breakseason_pa1e1b1nwzida0e0b0xyg, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
 period_is_prejoin_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is', date_prejoin_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg) #g2 date born is the equivelant of date lambed g1
 period_is_startfvp_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is', fvp_date_start_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg) 
 period_is_startfvp_pa1e1b1nwzida0e0b0xyg3 = sfun.f_period_is_('period_is', fvp_date_start_pa1e1b1nwzida0e0b0xyg3, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
@@ -1153,8 +1218,14 @@ feedsupply_std_pa1e1b1nwzida0e0b0xyg3 = np.maximum(0, feedsupply_std_pa1e1b1nwzi
 feedsupply_std_pa1e1b1nwzida0e0b0xyg3 = np.minimum(4, feedsupply_std_pa1e1b1nwzida0e0b0xyg3)
 
 
+#####################################
+##expand feedsupply for all w slices#  see google doc for more info
+#####################################
+##dams
+n_fs_g1 = uinp.structure['i_n1_len']
 
 
+a_n_wg1 = np.trunc(index_wzida0e0b0xyg1 / (n_fs_g1 ** ((n_fs_periods_g1-1) - fs_timing_pg1))) % n_fs_g1
 
 
 
@@ -1237,7 +1308,7 @@ cf_w_w_dams = 0 #this is required as default when mu wean function is not being 
 cf_conception_start_dams = np.array([0])
 conception_dams = 0 #initialise so it can be added to (conception += conception)
 guw_start_dams = np.array([0])
-rc_birth_start_dams = np.array([0])
+rc_birth_start_dams = np.array([1])
 ffcfw_start_dams = fun.f_reshape_expand(lw_initial_wzida0e0b0xyg1 - cfw_initial_wzida0e0b0xyg1, uinp.structure['i_p_pos'], right_pos=uinp.structure['i_w_pos']) #add axis w to a1 because e and b axis are sliced before they are added via calculation
 ffcfw_max_start_dams = ffcfw_start_dams
 ffcfw_mating_dams = 0
@@ -1662,16 +1733,16 @@ for p in range(n_sim_periods):
             ffcfw75_exp_yatf = np.sum(ffcfw_exp_a1e1b1nwzida0e0b0xyg2m1 ** 0.75, axis=-1) / np.maximum(1, days_period_pa1e1b1nwzida0e0b0xyg2[p, ...])
 
             mp2_dams, mel_dams, nel_dams, ldr_dams, lb_dams = sfun.f_milk(cl_dams, srw_xyg1, relsize_start_dams, rc_birth_start_dams, mei_dams, meme_dams, mew_min_pa1e1b1nwzida0e0b0xyg1[p], rc_start_dams, ffcfw75_exp_yatf, lb_start_dams, ldr_start_dams, age_pa1e1b1nwzida0e0b0xyg2[p], mp_age_y_pa1e1b1nwzida0e0b0xyg1[p],  mp2_age_y_pa1e1b1nwzida0e0b0xyg1[p], uinp.parameters['i_x_pos'], days_period_pa1e1b1nwzida0e0b0xyg2[p], kl_dams, lact_nut_effect_pa1e1b1nwzida0e0b0xyg1[p])
-            mp2_yatf = mp2_dams / nyatf_b1nwzida0e0b0xyg
+            mp2_yatf = mp2_dams / np.maximum(0.01,nyatf_b1nwzida0e0b0xyg) * (nyatf_b1nwzida0e0b0xyg>0) #handle div/0 error then convert m2 to 0 if given slice of b1 axis has no yatf
         
         
         ##wool production
         if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-            d_cfw_sire, d_fd_sire, d_fl_sire, d_cfw_history_sire_m2, mew_sire, new_sire = sfun.f_fibre(cw_sire, cc_sire, ffcfw_start_sire, relsize_start_sire, d_cfw_history_start_m2g0, mei_sire, mew_min_pa1e1b1nwzida0e0b0xyg0[p], d_cfw_ave_pa1e1b1nwzida0e0b0xyg0[p, ...], sfd_a0e0b0xyg0, wge_a0e0b0xyg0, af_wool_pa1e1b1nwzida0e0b0xyg0[p, ...], dlf_eff_pa1e1b1nwzida0e0b0xyg[p, ...],  kw_yg0, days_period_pa1e1b1nwzida0e0b0xyg0[p])
+            d_cfw_sire, d_fd_sire, d_fl_sire, d_cfw_history_sire_m2, mew_sire, new_sire = sfun.f_fibre(cw_sire, cc_sire, ffcfw_start_sire, relsize_start_sire, d_cfw_history_start_m2g0, mei_sire, mew_min_pa1e1b1nwzida0e0b0xyg0[p], d_cfw_ave_pa1e1b1nwzida0e0b0xyg0[p, ...], sfd_a0e0b0xyg0, wge_a0e0b0xyg0, af_wool_pa1e1b1nwzida0e0b0xyg0[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg0[p, ...],  kw_yg0, days_period_pa1e1b1nwzida0e0b0xyg0[p])
         if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-            d_cfw_dams, d_fd_dams, d_fl_dams, d_cfw_history_dams_m2, mew_dams, new_dams = sfun.f_fibre(cw_dams, cc_dams, ffcfw_start_dams, relsize_start_dams, d_cfw_history_start_m2g1, mei_dams, mew_min_pa1e1b1nwzida0e0b0xyg1[p], d_cfw_ave_pa1e1b1nwzida0e0b0xyg1[p, ...], sfd_a0e0b0xyg1, wge_a0e0b0xyg1, af_wool_pa1e1b1nwzida0e0b0xyg1[p, ...], dlf_eff_pa1e1b1nwzida0e0b0xyg[p, ...],  kw_yg1, days_period_pa1e1b1nwzida0e0b0xyg1[p], mec_dams, mel_dams, gest_propn_pa1e1b1nwzida0e0b0xyg1[p], lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
+            d_cfw_dams, d_fd_dams, d_fl_dams, d_cfw_history_dams_m2, mew_dams, new_dams = sfun.f_fibre(cw_dams, cc_dams, ffcfw_start_dams, relsize_start_dams, d_cfw_history_start_m2g1, mei_dams, mew_min_pa1e1b1nwzida0e0b0xyg1[p], d_cfw_ave_pa1e1b1nwzida0e0b0xyg1[p, ...], sfd_a0e0b0xyg1, wge_a0e0b0xyg1, af_wool_pa1e1b1nwzida0e0b0xyg1[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg1[p, ...],  kw_yg1, days_period_pa1e1b1nwzida0e0b0xyg1[p], mec_dams, mel_dams, gest_propn_pa1e1b1nwzida0e0b0xyg1[p], lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
         if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-            d_cfw_offs, d_fd_offs, d_fl_offs, d_cfw_history_offs_m2, mew_offs, new_offs = sfun.f_fibre(cw_offs, cc_offs, ffcfw_start_offs, relsize_start_offs, d_cfw_history_start_m2g3, mei_offs, mew_min_pa1e1b1nwzida0e0b0xyg3[p], d_cfw_ave_pa1e1b1nwzida0e0b0xyg3[p, ...], sfd_da0e0b0xyg3, wge_da0e0b0xyg3, af_wool_pa1e1b1nwzida0e0b0xyg3[p, ...], dlf_eff_pa1e1b1nwzida0e0b0xyg[p, ...],  kw_yg3, days_period_pa1e1b1nwzida0e0b0xyg3[p])
+            d_cfw_offs, d_fd_offs, d_fl_offs, d_cfw_history_offs_m2, mew_offs, new_offs = sfun.f_fibre(cw_offs, cc_offs, ffcfw_start_offs, relsize_start_offs, d_cfw_history_start_m2g3, mei_offs, mew_min_pa1e1b1nwzida0e0b0xyg3[p], d_cfw_ave_pa1e1b1nwzida0e0b0xyg3[p, ...], sfd_da0e0b0xyg3, wge_da0e0b0xyg3, af_wool_pa1e1b1nwzida0e0b0xyg3[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg3[p, ...],  kw_yg3, days_period_pa1e1b1nwzida0e0b0xyg3[p])
 
         ##energy to offset chilling
         if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
@@ -1929,7 +2000,7 @@ for p in range(n_sim_periods):
 
     ##wool production - yatf
     if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-        d_cfw_yatf, d_fd_yatf, d_fl_yatf, d_cfw_history_yatf_m2, mew_yatf, new_yatf = sfun.f_fibre(cw_yatf, cc_yatf, ffcfw_start_yatf, relsize_start_yatf, d_cfw_history_start_m2g2, mei_yatf, mew_min_pa1e1b1nwzida0e0b0xyg2[p], d_cfw_ave_pa1e1b1nwzida0e0b0xyg2[p, ...], sfd_pa1e1b1nwzida0e0b0xyg2[p], wge_pa1e1b1nwzida0e0b0xyg2[p], af_wool_pa1e1b1nwzida0e0b0xyg2[p, ...], dlf_eff_pa1e1b1nwzida0e0b0xyg[p, ...],  kw_yg2, days_period_pa1e1b1nwzida0e0b0xyg2[p])
+        d_cfw_yatf, d_fd_yatf, d_fl_yatf, d_cfw_history_yatf_m2, mew_yatf, new_yatf = sfun.f_fibre(cw_yatf, cc_yatf, ffcfw_start_yatf, relsize_start_yatf, d_cfw_history_start_m2g2, mei_yatf, mew_min_pa1e1b1nwzida0e0b0xyg2[p], d_cfw_ave_pa1e1b1nwzida0e0b0xyg2[p, ...], sfd_pa1e1b1nwzida0e0b0xyg2[p], wge_pa1e1b1nwzida0e0b0xyg2[p], af_wool_pa1e1b1nwzida0e0b0xyg2[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg2[p, ...],  kw_yg2, days_period_pa1e1b1nwzida0e0b0xyg2[p])
 
  
     ##energy to offset chilling - yatf
@@ -2415,7 +2486,7 @@ for p in range(n_sim_periods):
         ###Loss of potential milk due to consistent under production
         lb_start_dams = sfun.f_update(lb_start_dams, 1, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1])
         ###Loss of potential milk due to consistent under production
-        rc_birth_start_dams = sfun.f_update(rc_birth_start_dams, rc_start_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1])
+        rc_birth_start_dams = sfun.f_update(rc_birth_start_dams, rc_start_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p+1])
         ###Weight of foetus (start)
         w_f_start_dams = sfun.f_update(w_f_start_dams, 0, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1])
         ###Cumulative energy in conceptus (start)
