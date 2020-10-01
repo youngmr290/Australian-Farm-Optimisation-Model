@@ -702,7 +702,7 @@ def f_intake(cr, pi, ra, rq, md_herb, feedsupply, intake_s, i_md_supp, legume, m
     mei_propn_herb = fun.f_divide((mei_herb + mei_forage), mei) #func to stop div/0 error - if mei is 0 then so is numerator
     ##Proportion of ME as supp	
     mei_propn_supp = fun.f_divide(mei_supp, mei) #func to stop div/0 error - if mei is 0 then so is numerator
-    return mei, intake_f, md_solid, mei_propn_milk, mei_propn_herb, mei_propn_supp
+    return mei, mei_solid, intake_f, md_solid, mei_propn_milk, mei_propn_herb, mei_propn_supp
 
 
 def f_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb
@@ -801,7 +801,7 @@ def f_foetus_cs(cp, cb1, kc, nfoet, relsize_start, rc_start, nec_cum_start, w_b_
     ##change in foetus weight	
     d_w_f = d_nw_f *(1 + np.minimum(cfpreg, cfpreg * cb1[14, ...]))
     ##foetus weight (end of period)	
-    w_f = w_f_start + d_w_f * days_period_f
+    w_f = w_f_start + d_w_f
     ##Weight of the gravid uterus (conceptus - mid period)	
     guw = nfoet * (nw_gu + (w_f - nw_f))
     ##Body condition of the foetus	
@@ -809,7 +809,7 @@ def f_foetus_cs(cp, cb1, kc, nfoet, relsize_start, rc_start, nec_cum_start, w_b_
     ##Cumulative ME required for conceptus	
     nec_cum = nfoet * rc_f * normale_gu
     ##NE required for conceptus	
-    nec = (nec_cum - nec_cum_start) / days_period_f
+    nec = fun.f_divide(nec_cum - nec_cum_start, days_period_f)
     ##ME required for conceptus	
     mec = nec / kc
     return w_f, nec_cum, mec, nec, w_b_exp_y, nw_f, guw
@@ -883,12 +883,12 @@ def f_milk(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_start,
 
 
 def f_fibre(cw, cc, ffcfw_start, relsize_start, d_cfw_history_start_m2a1e1b1nwzida0e0b0xyg, mei, mew_min_a1e1b1nwzida0e0b0xyg, d_cfw_ave_a1e1b1nwzida0e0b0xyg, sfd_a0e0b0xyg, wge_a0e0b0xyg
-            , af_wool_a1e1b1nwzida0e0b0xyg, dlf_eff_a1e1b1nwzida0e0b0xyg,  kw_yg, days_period_a1e1b1nwzida0e0b0xyg
+            , af_wool_a1e1b1nwzida0e0b0xyg, dlf_wool_a1e1b1nwzida0e0b0xyg,  kw_yg, days_period_a1e1b1nwzida0e0b0xyg
             , mec=0, mel=0, gest_propn_a1e1b1nwzida0e0b0xyg=0, lact_propn_a1e1b1nwzida0e0b0xyg=0):
     ##ME available for wool growth
     mew_xs_a1e1b1nwzida0e0b0xyg = np.maximum(mew_min_a1e1b1nwzida0e0b0xyg * relsize_start, mei - (mec * gest_propn_a1e1b1nwzida0e0b0xyg + mel * lact_propn_a1e1b1nwzida0e0b0xyg))
     ##Wool growth (protein weight) wo (without) lag
-    d_cfw_wolag_a1e1b1nwzida0e0b0xyg = cw[8, ...] * wge_a0e0b0xyg * af_wool_a1e1b1nwzida0e0b0xyg * dlf_eff_a1e1b1nwzida0e0b0xyg * mew_xs_a1e1b1nwzida0e0b0xyg
+    d_cfw_wolag_a1e1b1nwzida0e0b0xyg = cw[8, ...] * wge_a0e0b0xyg * af_wool_a1e1b1nwzida0e0b0xyg * dlf_wool_a1e1b1nwzida0e0b0xyg * mew_xs_a1e1b1nwzida0e0b0xyg
     ##Wool growth (protein weight) with and wo lag
     d_cfw_a1e1b1nwzida0e0b0xyg, d_cfw_history_m2a1e1b1nwzida0e0b0xyg = f_history(d_cfw_history_start_m2a1e1b1nwzida0e0b0xyg, d_cfw_wolag_a1e1b1nwzida0e0b0xyg, days_period_a1e1b1nwzida0e0b0xyg)
     ##Net energy required for wool
@@ -919,9 +919,9 @@ def f_chill_cs(cc, ck, ffcfw_start, rc_start, fl_start, mei, meme, mew, new, km,
     ##Proportion of sky that is clear
     sky_clear_a1e1b1nwzida0e0b0xygm1 = 0.7 * np.exp(-0.25 * rain_a1e1b1nwzida0e0b0xygm1)
     ##radius of animal
-    radius = cc[2, ...] * ffcfw_start ** (1/3)
+    radius = np.maximum(0.001,cc[2, ...] * ffcfw_start ** (1/3)) #max because realistic values of radius can be small for lambs - stops div0 error
     ##surface area of animal
-    area = cc[1, ...] * ffcfw_start ** (2/3)
+    area = np.maximum(0.001,cc[1, ...] * ffcfw_start ** (2/3)) #max because area is in m2 so realistic values of area can be small for lambs
     ##Impact of wet fleece on insulation
     wetflc_a1e1b1nwzida0e0b0xygm1 = cc[5, ..., na] + (1 - cc[5, ..., na]) * np.exp(-cc[6, ..., na] * rain_a1e1b1nwzida0e0b0xygm1 / fl_start[..., na])
     ##Insulation of air (2 hourly)
@@ -1006,7 +1006,7 @@ def f_feedsupply(cu3, cu4, cr, feedsupply_std_a1e1b1nwzida0e0b0xyg, paststd_foo_
     intake_s = pi * supp_propn_a1e1b1nwzida0e0b0xyg
     ##calc herb md
     herb_md = fun.dmd_to_md(dmd_a1e1b1nwzida0e0b0xyg)
-    return foo_a1e1b1nwzida0e0b0xyg, hf, dmd_a1e1b1nwzida0e0b0xyg, intake_s, herb_md
+    return foo, hf, dmd_a1e1b1nwzida0e0b0xyg, intake_s, herb_md
 
 
 
@@ -1053,9 +1053,7 @@ def f_conception_ltw(cu0, cs_mating, scan_std, doy_p, period_is_mating):
     return conception
 
 
-def f_mortality_base(cd, cg, rc_start, ebg_start, d_nw_max):
-    return cd[1, ...] + cd[2, ...] * np.maximum(0, cd[3, ...] - rc_start) * ((cd[16, ...] * d_nw_max) > (ebg_start* cg[18, ...]))
- 
+
 
 def f_sire_req(sire_propn_a1e1b1nwzida0e0b0xyg1, sire_periods_g0p8, i_sire_recovery, i_startyear, date_end_p, period_is_prejoin_a1e1b1nwzida0e0b0xyg1):
     ##Date at end of period adjusted to start year
@@ -1067,26 +1065,28 @@ def f_sire_req(sire_propn_a1e1b1nwzida0e0b0xyg1, sire_periods_g0p8, i_sire_recov
     return n_sires
 
 
+def f_mortality_base(cd, cg, rc_start, ebg_start, d_nw_max, days_period):
+    return cd[1, ...] + cd[2, ...] * np.maximum(0, cd[3, ...] - rc_start) * ((cd[16, ...] * d_nw_max) > (ebg_start* cg[18, ...])) * days_period #mul be days period to convert from mort per day to per period
 
 
-def f_mortality_weaner_cs(cd, cg, age, ebg_start, d_nw_max):
-    return cd[13, ...] * f_ramp(age, cd[15, ...], cd[14, ...]) * ((cd[16, ...] * d_nw_max) > (ebg_start* cg[18, ...]))
+def f_mortality_weaner_cs(cd, cg, age, ebg_start, d_nw_max,days_period):
+    return cd[13, ...] * f_ramp(age, cd[15, ...], cd[14, ...]) * ((cd[16, ...] * d_nw_max) > (ebg_start* cg[18, ...]))* days_period #mul be days period to convert from mort per day to per period
 
 
 def f_mortality_dam_cs(cb1, cg, nw_start, ebg, days_period, period_between_birth6wks, gest_propn, sar_mortalitye):
     ##(Twin) Dam mortality in last 6 weeks (preg tox)
-    t_mort = days_period * gest_propn /42 * f_sig(-42 * ebg * cg[18, ...] / nw_start, cb1[4, ...], cb1[5, ...])
+    t_mort = days_period * gest_propn /42 * f_sig(-42 * ebg * cg[18, ...] / nw_start, cb1[4, ...], cb1[5, ...]) #mul be days period to convert from mort per day to per period
     ##If not last 6 weeks then = 0
     mort = t_mort * period_between_birth6wks
     mort = f_sa(mort, sar_mortalitye, sa_type = 4)
     return mort
 
     
-def f_mortality_dam_mu(cu2, cs_birth_dams, period_is_birth, sar_mortalitye):
+def f_mortality_dam_mu(cu2, cs_birth_dams, period_is_birth, days_period, sar_mortalitye):
     ##(Twin) Dam mortality in last 6 weeks (preg tox)	
     t_mortalitye_mu = cu2[22, 0, ...] * cs_birth_dams + cu2[22, 1, ...] * cs_birth_dams ** 2 + cu2[22, -1, ...]
     ##Non-multiple bearing ewes = 0	
-    mortalitye_mu = np.exp(t_mortalitye_mu) / (1 + np.exp(t_mortalitye_mu)) * period_is_birth
+    mortalitye_mu = np.exp(t_mortalitye_mu) / (1 + np.exp(t_mortalitye_mu)) * period_is_birth * days_period #mul be days period to convert from mort per day to per period
     ##Dam (& progeny) losses at birth related to CSL	
     mortalitye_mu = f_sa(mortalitye_mu, sar_mortalitye, sa_type = 4)
     return mortalitye_mu
@@ -1099,7 +1099,7 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, w_b_exp_y, period_is_birth, c
     ##add sensitivity
     mortalityd_yatf = f_sa(mortalityd_yatf, sar_mortalityp, sa_type = 4)
     ##dam mort due to large progeny (dystocia)
-    mortalityd_dams = np.mean(mortalityd_yatf, axis=uinp.parameters['i_x_pos'], keepdims=True) * cd[21,...] / nfoet_b1
+    mortalityd_dams = fun.f_divide(np.mean(mortalityd_yatf, axis=uinp.parameters['i_x_pos'], keepdims=True) * cd[21,...], nfoet_b1)  #returns 0 mort if there is 0 nfoet - this handles div0 error
     ##Progeny losses due to large progeny (dystocia) - so there is no double counting of progeny loses associated with dam mortality
     mortalityd_yatf = mortalityd_yatf * (1- cd[21,...])
     ##Exposure index
@@ -1134,48 +1134,105 @@ def f_comb(n,k):
 
 
 
-def f_period_start_prod(numbers, var, prejoin_tup, season_tup, period_is_startfvp, period_is_break, period_is_prejoin=0, group=None):
+def f_period_start_prod(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_fvp0, period_is_startfvp0, period_is_startseason, period_is_prejoin=0, group=None):
     ##Set variable level = value at end of previous	
-    var_start = var 
+    var_start = var
     ##make sure numbers and var are same shape - this is required for the np.average func below
     numbers, var_start = np.broadcast_arrays(numbers,var_start)
-    ##a) Calculate temporary values as if start of FVP, only required if n axis is active
-    if uinp.structure['i_n1_len'] >= uinp.structure['i_w1_len']:
-        temporary = var_start #this is done to ensure that temp has the same size as var. In the next line np.diagonal removes the n axis so it is added back in using the expand function, but that is a singlton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
-        temporary[...] = np.expand_dims(np.rollaxis(var_start.diagonal(axis1= uinp.structure['i_w_pos'], axis2= uinp.structure['i_n_pos']),-1,uinp.structure['i_w_pos']), uinp.structure['i_n_pos']) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
-        ##Update if the period is start of a FVP
-        var_start = f_update(var_start, temporary, period_is_startfvp)
-    ##b) Calculate temporary values as if period_is_break
-    temporary = fun.f_weighted_average(var_start, numbers, season_tup, keepdims=True)
-    #temporary = np.expand_dims(np.average(var_start, axis=season_tup, weights=numbers),season_tup) #gets the weighted average of production in the different seasons, have to add axis back because no keepdims arg
-    ##Set values where it is beginning of FVP
-    var_start = f_update(var_start, temporary, period_is_break)
-    if group==1:
+    ##a)update var if start of DVP
+    ###test if array has diagonal and calc temp variables as if start of dvp - if there is not a diagonal use the alternative system for reallocting at the end of a DVP
+    if np.any(period_is_startfvp0):
+        if i_n_len >= i_w_len:
+            temporary = var_start #this is done to ensure that temp has the same size as var. In the next line np.diagonal removes the n axis so it is added back in using the expand function, but that is a singlton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
+            temporary[...] = np.expand_dims(np.rollaxis(var_start.diagonal(axis1= uinp.structure['i_w_pos'], axis2= uinp.structure['i_n_pos']),-1,uinp.structure['i_w_pos']), uinp.structure['i_n_pos']) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
+        else:
+            temporary = var_start #required to set the shape
+            temporary[...] = f_dynamic_slice(var_start, uinp.structure['i_w_pos'], int(i_w_len / 2), int(i_w_len / 2)+1) # the pattern that is feed supply 1 (median) for the entire year
+            temporary[0:int(i_w_len / i_n_fvp_period)] = np.mean(f_dynamic_slice(var_start,uinp.structure['i_w_pos'], 0, int(i_w_len/10)), uinp.structure['i_w_pos'],keepdims=True) #average of the top lw patterns
+            low_slice = i_w_len-np.sum(np.sum(numbers, axis=prejoin_tup+ (season_tup,), keepdims=True) / np.sum(numbers_start_fvp0, axis=prejoin_tup+ (season_tup,), keepdims=True) > 0.9, uinp.structure['i_w_pos'], keepdims=True) #returns bool if mort is less the 10% then sums the falses which give the index of the first w pattern that has mort less that 10%
+            temporary[-int(i_w_len / i_n_fvp_period):] = np.take_along_axis(var_start, low_slice, uinp.structure['i_w_pos'])  #production level of the lowest nutrition profile that has a mortality less than 10% for the year
+        ###Update if the period is start of year (shearing for offs and prejoining for dams)
+        var_start = f_update(var_start, temporary, period_is_startfvp0)
+    ##b) Calculate temporary values as if period is start of season
+    if np.any(period_is_startseason):
+        temporary = fun.f_weighted_average(var_start, numbers, season_tup, keepdims=True)#gets the weighted average of production in the different seasons
+        ##Set values where it is beginning of FVP
+        var_start = f_update(var_start, temporary, period_is_startseason)
+    if group==1 and np.any(period_is_prejoin):
         ##c) Calculate temporary values as if period_is_prejoin	
         temporary = fun.f_weighted_average(var_start, numbers, prejoin_tup, keepdims=True) #gets the weighted average of production in the different seasons
         ##Set values where it is beginning of FVP
         var_start = f_update(var_start, temporary, period_is_prejoin)
     return var_start
 
+#^old version
+# def f_period_start_prod(numbers, var, prejoin_tup, season_tup, period_is_startfvp, period_is_break, period_is_prejoin=0, group=None):
+#     ##Set variable level = value at end of previous
+#     var_start = var
+#     ##make sure numbers and var are same shape - this is required for the np.average func below
+#     numbers, var_start = np.broadcast_arrays(numbers,var_start)
+#     ##a) Calculate temporary values as if start of FVP, only required if n axis is active
+#     if uinp.structure['i_n1_len'] >= uinp.structure['i_w1_len']:
+#         temporary = var_start #this is done to ensure that temp has the same size as var. In the next line np.diagonal removes the n axis so it is added back in using the expand function, but that is a singlton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
+#         temporary[...] = np.expand_dims(np.rollaxis(var_start.diagonal(axis1= uinp.structure['i_w_pos'], axis2= uinp.structure['i_n_pos']),-1,uinp.structure['i_w_pos']), uinp.structure['i_n_pos']) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
+#         ##Update if the period is start of a FVP
+#         var_start = f_update(var_start, temporary, period_is_startfvp)
+#     ##b) Calculate temporary values as if period_is_break
+#     temporary = fun.f_weighted_average(var_start, numbers, season_tup, keepdims=True)
+#     #temporary = np.expand_dims(np.average(var_start, axis=season_tup, weights=numbers),season_tup) #gets the weighted average of production in the different seasons, have to add axis back because no keepdims arg
+#     ##Set values where it is beginning of FVP
+#     var_start = f_update(var_start, temporary, period_is_break)
+#     if group==1:
+#         ##c) Calculate temporary values as if period_is_prejoin
+#         temporary = fun.f_weighted_average(var_start, numbers, prejoin_tup, keepdims=True) #gets the weighted average of production in the different seasons
+#         ##Set values where it is beginning of FVP
+#         var_start = f_update(var_start, temporary, period_is_prejoin)
+#     return var_start
 
 
-
-def f_period_start_nums(numbers, prejoin_tup, season_tup, period_is_startfvp, period_is_break, season_propn_z, group=None, numbers_initial_repro=0, period_is_prejoin=None):
-    ##a) reallocate between w and n if the period is start of a FVP
-    ###Calculate temporary values as if start of FVP - colapse n back to standard level (n axis is populated due to mortality)
-    if uinp.structure['i_n1_len'] >= uinp.structure['i_w1_len']:
-        temporary = numbers #this is done to ensure that temp has the same size as var. In the next line np.diagonal removes the n axis so it is added back in using the expand function, but that is a singlton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
-        temporary[...] = np.expand_dims(np.rollaxis(numbers.diagonal(axis1= uinp.structure['i_w_pos'], axis2= uinp.structure['i_n_pos']),-1,uinp.structure['i_w_pos']), uinp.structure['i_n_pos']) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
-        numbers = f_update(numbers, temporary, period_is_startfvp)
+def f_period_start_nums(numbers, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_fvp0, period_is_startfvp0, period_is_startseason, season_propn_z, group=None, numbers_initial_repro=0, period_is_prejoin=0):
+    ##a)update numbers if start of DVP
+    ###test if array has diagonal and calc temp variables as if start of dvp - if there is not a diagonal use the alternative system for reallocting at the end of a DVP
+    if np.any(period_is_startfvp0):
+        if i_n_len >= i_w_len:
+            temporary = numbers #this is done to ensure that temp has the same size as var. In the next line np.diagonal removes the n axis so it is added back in using the expand function, but that is a singlton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
+            temporary[...] = np.expand_dims(np.rollaxis(numbers.diagonal(axis1= uinp.structure['i_w_pos'], axis2= uinp.structure['i_n_pos']),-1,uinp.structure['i_w_pos']), uinp.structure['i_n_pos']) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
+        else:
+            temporary = numbers #required to set the shape
+            temporary[...] = f_dynamic_slice(numbers, uinp.structure['i_w_pos'], int(i_w_len / 2), int(i_w_len / 2)+1) # the pattern that is feed supply 1 (median) for the entire year
+            temporary[0:int(i_w_len / i_n_fvp_period)] = np.mean(f_dynamic_slice(numbers,uinp.structure['i_w_pos'], 0, int(i_w_len/10)), uinp.structure['i_w_pos'],keepdims=True) #average of the top lw patterns
+            low_slice = i_w_len-np.sum(np.sum(numbers, axis=prejoin_tup+ (season_tup,), keepdims=True) / np.sum(numbers_start_fvp0, axis=prejoin_tup+ (season_tup,), keepdims=True) > 0.9, uinp.structure['i_w_pos'], keepdims=True) #returns bool if mort is less the 10% then sums the falses which give the index of the first w pattern that has mort less that 10%
+            temporary[-int(i_w_len / i_n_fvp_period):] = np.take_along_axis(numbers,low_slice, uinp.structure['i_w_pos'])  #production level of the lowest nutrition profile that has a mortality less than 10% for the year
+        ###Update if the period is start of year (shearing for offs and prejoining for dams)
+        numbers = f_update(numbers, temporary, period_is_startfvp0)
     ##b) realocate for season type
-    temporary = np.sum(numbers, axis = season_tup, keepdims=True)  * season_propn_z  #Calculate temporary values as if period_is_break
-    numbers = f_update(numbers, temporary, period_is_break)  #Set values where it is beginning of FVP	
+    if np.any(period_is_startseason):
+        temporary = np.sum(numbers, axis = season_tup, keepdims=True)  * season_propn_z  #Calculate temporary values as if period_is_break
+        numbers = f_update(numbers, temporary, period_is_startseason)  #Set values where it is beginning of FVP
     ##things for dams - prejoining and moving between classes
-    if group==1:    
+    if group==1 and np.any(period_is_prejoin):
         ##d) new repro cycle (prejoining)
         temporary = np.sum(numbers, axis = (prejoin_tup), keepdims=True) * numbers_initial_repro #Calculate temporary values as if period_is_prejoin
-        numbers = f_update(numbers, temporary, period_is_prejoin)  #Set values where it is beginning of FVP	
+        numbers = f_update(numbers, temporary, period_is_prejoin)  #Set values where it is beginning of FVP
     return numbers
+
+
+# def f_period_start_nums(numbers, prejoin_tup, season_tup, period_is_startfvp, period_is_break, season_propn_z, group=None, numbers_initial_repro=0, period_is_prejoin=None):
+#     ##a) reallocate between w and n if the period is start of a FVP
+#     ###Calculate temporary values as if start of FVP - colapse n back to standard level (n axis is populated due to mortality)
+#     if uinp.structure['i_n1_len'] >= uinp.structure['i_w1_len']:
+#         temporary = numbers #this is done to ensure that temp has the same size as var. In the next line np.diagonal removes the n axis so it is added back in using the expand function, but that is a singlton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
+#         temporary[...] = np.expand_dims(np.rollaxis(numbers.diagonal(axis1= uinp.structure['i_w_pos'], axis2= uinp.structure['i_n_pos']),-1,uinp.structure['i_w_pos']), uinp.structure['i_n_pos']) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
+#         numbers = f_update(numbers, temporary, period_is_startfvp)
+#     ##b) realocate for season type
+#     temporary = np.sum(numbers, axis = season_tup, keepdims=True)  * season_propn_z  #Calculate temporary values as if period_is_break
+#     numbers = f_update(numbers, temporary, period_is_break)  #Set values where it is beginning of FVP
+#     ##things for dams - prejoining and moving between classes
+#     if group==1:
+#         ##d) new repro cycle (prejoining)
+#         temporary = np.sum(numbers, axis = (prejoin_tup), keepdims=True) * numbers_initial_repro #Calculate temporary values as if period_is_prejoin
+#         numbers = f_update(numbers, temporary, period_is_prejoin)  #Set values where it is beginning of FVP
+#     return numbers
 
 
 def f_period_end_nums(numbers, mortality, mortality_yatf=0, nfoet_b1 = 0, nyatf_b1 = 0, group=None, conception = 0, scan=0, gbal=0, period_is_mating = False, period_is_birth=False, period_is_scan=False):
