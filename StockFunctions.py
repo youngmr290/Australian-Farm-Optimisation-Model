@@ -426,7 +426,7 @@ def f_period_is_(period_is, date_array, date_start_p=0, date_array2 = 0, date_en
         period_is_pre=(date_array>date_end_p)
         return period_is_pre
     if period_is == 'period_is_between':
-        period_is_between= np.logical_and((date_array<=date_end_p) , (date_array2>=date_start_p))
+        period_is_between= np.logical_and((date_array<=date_end_p) , (date_array2>date_start_p))
         return period_is_between
 
 
@@ -792,7 +792,7 @@ def f_foetus_cs(cp, cb1, kc, nfoet, relsize_start, rc_start, w_b_std_y, w_f_star
     ##change in normal weight of foetus	
     d_nw_f = nw_f - nw_f_start
     ##Proportion of normal foetal and birth weights	
-    nwf_nwb = nw_f / w_b_std_y
+    nwf_nwb = fun.f_divide(nw_f, w_b_std_y)
     ##Normal weight of individual conceptus (mid period)	
     nw_gu = cp[5, ...] * w_b_exp_y * guw_age_f
     ##Normal energy of individual conceptus (end of period)	
@@ -837,9 +837,9 @@ def f_birthweight_mu(cu1_yatf, cb1_yatf, cx_yatf, ce_yatf, w_b, cf_w_b_dams, ffc
     return w_b, cf_w_b_dams
 
 
-def f_weanweight_cs(w_w_yatf, ffcfw_yatf, ebg_yatf, days_period, period_is_wean):
+def f_weanweight_cs(w_w_yatf, ffcfw_yatf, ebg_yatf, days_period, lact_propn, period_is_wean):
     ##set WWt = yatf weight at weaning	
-    t_w_w = (ffcfw_yatf + ebg_yatf * days_period)
+    t_w_w = (ffcfw_yatf + ebg_yatf * days_period * lact_propn)
     ##update weaning weight if it is weaning period
     w_w_yatf = f_update(w_w_yatf, t_w_w, period_is_wean)
     return w_w_yatf
