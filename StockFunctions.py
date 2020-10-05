@@ -1099,7 +1099,7 @@ def f_mortality_dam_mu(cu2, cs_birth_dams, period_is_birth, days_period, sar_mor
     
 def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, w_b_exp_y, period_is_birth, chill_index_m1, nfoet_b1, sar_mortalityp):
     ##Progeny losses due to large progeny (dystocia)
-    mortalityd_yatf = f_sig(w_b / w_b_exp_y * np.maximum(1, rc_birth), cb1[6, ...], cb1[7, ...]) * period_is_birth
+    mortalityd_yatf = f_sig(fun.f_divide(w_b, w_b_exp_y) * np.maximum(1, rc_birth), cb1[6, ...], cb1[7, ...]) * period_is_birth
     ##add sensitivity
     mortalityd_yatf = f_sa(mortalityd_yatf, sar_mortalityp, sa_type = 4)
     ##dam mort due to large progeny (dystocia)
@@ -1144,20 +1144,7 @@ def f_period_start_prod(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len,
     ##make sure numbers and var are same shape - this is required for the np.average func below
     numbers, var_start, numbers_start_fvp0 = np.broadcast_arrays(numbers,var_start,numbers_start_fvp0)
     ##a)update var if start of DVP
-    ###test if array has diagonal and calc temp variables as if start of dvp - if there is not a diagonal use the alternative system for reallocting at the end of a DVP
-    if np.any(period_is_startfvp0):
-        if i_n_len >= i_w_len:
-            temporary = var_start #this is done to ensure that temp has the same size as var. In the next line np.diagonal removes the n axis so it is added back in using the expand function, but that is a singlton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
-            temporary[...] = np.expand_dims(np.rollaxis(var_start.diagonal(axis1= uinp.structure['i_w_pos'], axis2= uinp.structure['i_n_pos']),-1,uinp.structure['i_w_pos']), uinp.structure['i_n_pos']) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
-        else:
-            temporary = f_condensed(numbers, var_start, prejoin_tup, season_tup,  i_w_len, i_n_fvp_period, numbers_start_fvp0)
-            # temporary = var_start #required to set the shape
-            # temporary[...] = f_dynamic_slice(var_start, uinp.structure['i_w_pos'], int(i_w_len / 2), int(i_w_len / 2)+1) # the pattern that is feed supply 1 (median) for the entire year
-            # temporary[0:int(i_w_len / i_n_fvp_period)] = np.mean(f_dynamic_slice(var_start,uinp.structure['i_w_pos'], 0, int(i_w_len/10)), uinp.structure['i_w_pos'],keepdims=True) #average of the top lw patterns
-            # low_slice = i_w_len-np.sum(np.sum(numbers, axis=prejoin_tup+(season_tup,), keepdims=True) / np.sum(numbers_start_fvp0, axis=prejoin_tup+ (season_tup,), keepdims=True) > 0.9, uinp.structure['i_w_pos'], keepdims=True) #returns bool if mort is less the 10% then sums the falses which give the index of the first w pattern that has mort less that 10%
-            # temporary[-int(i_w_len / i_n_fvp_period):] = np.take_along_axis(var_start, low_slice, uinp.structure['i_w_pos'])  #production level of the lowest nutrition profile that has a mortality less than 10% for the year
-        ###Update if the period is start of year (shearing for offs and prejoining for dams)
-        var_start = f_update(var_start, temporary, period_is_startfvp0)
+    var_start = f_condensed(numbers, var_start, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_fvp0, period_is_startfvp0)
     ##b) Calculate temporary values as if period is start of season
     if np.any(period_is_startseason):
         temporary = fun.f_weighted_average(var_start, numbers, season_tup, keepdims=True)#gets the weighted average of production in the different seasons
@@ -1194,45 +1181,46 @@ def f_period_start_prod(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len,
 #         var_start = f_update(var_start, temporary, period_is_prejoin)
 #     return var_start
 
-def f_condensed(numbers, var, prejoin_tup, season_tup, i_w_len, i_n_fvp_period, numbers_start_fvp0):
+def f_condensed(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_fvp0, period_is_startfvp0):
     '''condense variable to 3 common points along the w axis for the start of fvp0'''
     temporary = var.copy()  # required to set the shape
-    ###add high pattern
-    temporary[...] = np.mean(
-        f_dynamic_slice(var, uinp.structure['i_w_pos'], int(i_w_len / i_n_fvp_period), int(i_w_len / i_n_fvp_period) + int(i_w_len / 10)), uinp.structure['i_w_pos'],
-        keepdims=True)  # average of the top lw patterns
-    ###add mid pattern (w 0 - 27) - use slice method incase w axis changes postion (cant use MRYs dynamic slice function because we are assigning)
-    sl = [slice(None)] * temporary.ndim
-    sl[uinp.structure['i_w_pos']] = slice(0, int(i_w_len / i_n_fvp_period))
-    temporary[tuple(sl)] = f_dynamic_slice(var, uinp.structure['i_w_pos'], 0, 1)  # the pattern that is feed supply 1 (median) for the entire year (the top w pattern)
-    ###low pattern
-    ind = np.argsort(var, axis=uinp.structure['i_w_pos'])  #sort into production order so we can select the lowest production with mort less than 10% - note sorts in asending order
-    var_sorted = np.take_along_axis(var, ind, axis=uinp.structure['i_w_pos'])
-    numbers_start_sorted = np.take_along_axis(numbers_start_fvp0, ind, axis=uinp.structure['i_w_pos'])
-    numbers_sorted = np.take_along_axis(numbers, ind, axis=uinp.structure['i_w_pos'])
-    low_slice = i_w_len - np.sum(
-        np.sum(numbers_start_sorted, axis=prejoin_tup + (season_tup,), keepdims=True) / np.sum(numbers_sorted,
-                                                                                  axis=prejoin_tup + (season_tup,),
-                                                                                  keepdims=True) > 0.9,
-        uinp.structure['i_w_pos'],
-        keepdims=True)  # returns bool if mort is less the 10% then sums the falses which give the index of the first w pattern that has mort less that 10%
-    sl = [slice(None)] * temporary.ndim
-    sl[uinp.structure['i_w_pos']] = slice(-int(i_w_len / i_n_fvp_period), None)
-    temporary[tuple(sl)] = np.take_along_axis(var_sorted, low_slice, uinp.structure[
-        'i_w_pos'])  # production level of the lowest nutrition profile that has a mortality less than 10% for the year
-    return temporary
-
-def f_period_start_nums(numbers, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_fvp0, period_is_startfvp0, period_is_startseason, season_propn_z, group=None, numbers_initial_repro=0, period_is_prejoin=0):
-    ##a)update numbers if start of DVP
-    ###test if array has diagonal and calc temp variables as if start of dvp - if there is not a diagonal use the alternative system for reallocting at the end of a DVP
     if np.any(period_is_startfvp0):
+        ###test if array has diagonal and calc temp variables as if start of dvp - if there is not a diagonal use the alternative system for reallocting at the end of a DVP
         if i_n_len >= i_w_len:
             temporary = numbers #this is done to ensure that temp has the same size as var. In the next line np.diagonal removes the n axis so it is added back in using the expand function, but that is a singlton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
             temporary[...] = np.expand_dims(np.rollaxis(numbers.diagonal(axis1= uinp.structure['i_w_pos'], axis2= uinp.structure['i_n_pos']),-1,uinp.structure['i_w_pos']), uinp.structure['i_n_pos']) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
         else:
-            temporary = f_condensed(numbers, numbers, prejoin_tup, season_tup,  i_w_len, i_n_fvp_period, numbers_start_fvp0)
-        ###Update if the period is start of year (shearing for offs and prejoining for dams)
-        numbers = f_update(numbers, temporary, period_is_startfvp0)
+            ###add high pattern
+            temporary[...] = np.mean(
+                f_dynamic_slice(var, uinp.structure['i_w_pos'], int(i_w_len / i_n_fvp_period), int(i_w_len / i_n_fvp_period) + int(i_w_len / 10)), uinp.structure['i_w_pos'],
+                keepdims=True)  # average of the top lw patterns
+            ###add mid pattern (w 0 - 27) - use slice method incase w axis changes postion (cant use MRYs dynamic slice function because we are assigning)
+            sl = [slice(None)] * temporary.ndim
+            sl[uinp.structure['i_w_pos']] = slice(0, int(i_w_len / i_n_fvp_period))
+            temporary[tuple(sl)] = f_dynamic_slice(var, uinp.structure['i_w_pos'], 0, 1)  # the pattern that is feed supply 1 (median) for the entire year (the top w pattern)
+            ###low pattern
+            ind = np.argsort(var, axis=uinp.structure['i_w_pos'])  #sort into production order so we can select the lowest production with mort less than 10% - note sorts in asending order
+            var_sorted = np.take_along_axis(var, ind, axis=uinp.structure['i_w_pos'])
+            numbers_start_sorted = np.take_along_axis(numbers_start_fvp0, ind, axis=uinp.structure['i_w_pos'])
+            numbers_sorted = np.take_along_axis(numbers, ind, axis=uinp.structure['i_w_pos'])
+            low_slice = i_w_len - np.sum(
+                np.sum(numbers_start_sorted, axis=prejoin_tup + (season_tup,), keepdims=True) / np.sum(numbers_sorted,
+                                                                                          axis=prejoin_tup + (season_tup,),
+                                                                                          keepdims=True) > 0.9,
+                uinp.structure['i_w_pos'],
+                keepdims=True)  # returns bool if mort is less the 10% then sums the falses which give the index of the first w pattern that has mort less that 10%
+            sl = [slice(None)] * temporary.ndim
+            sl[uinp.structure['i_w_pos']] = slice(-int(i_w_len / i_n_fvp_period), None)
+            temporary[tuple(sl)] = np.take_along_axis(var_sorted, low_slice, uinp.structure[
+                'i_w_pos'])  # production level of the lowest nutrition profile that has a mortality less than 10% for the year
+    ###Update if the period is start of year (shearing for offs and prejoining for dams)
+    numbers = f_update(var, temporary, period_is_startfvp0)
+
+    return numbers
+
+def f_period_start_nums(numbers, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_fvp0, period_is_startfvp0, period_is_startseason, season_propn_z, group=None, numbers_initial_repro=0, period_is_prejoin=0):
+    ##a)update numbers if start of DVP
+    numbers = f_condensed(numbers, numbers, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_fvp0, period_is_startfvp0)
     ##b) realocate for season type
     if np.any(period_is_startseason):
         temporary = np.sum(numbers, axis = season_tup, keepdims=True)  * season_propn_z  #Calculate temporary values as if period_is_break

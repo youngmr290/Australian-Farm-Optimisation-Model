@@ -33,6 +33,7 @@ import functions from other modules
 # import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 # from numba import jit
 
 import Functions as fun
@@ -227,21 +228,36 @@ r_compare_q0q1q2pyatf = np.zeros(qg2, dtype = 'float32')
 r_compare_q0q1q2poffs = np.zeros(qg3, dtype = 'float32')
 
 ##output variables for postprocessing
+dtype='float32' #using 64 was getting slow
 ###sire
 
 
 ###dams
-r_numbers_start_dams = np.zeros(pg1, dtype ='float64')
-r_numbers_end_dams = np.zeros(pg1, dtype ='float64')
-r_ffcfw_dams = np.zeros(pg1, dtype ='float64')
-r_pi_dams = np.zeros(pg1, dtype ='float64')
-r_mei_solid_dams = np.zeros(pg1, dtype ='float64')
-r_ch4_total_dams = np.zeros(pg1, dtype ='float64')
-r_cfw_dams = np.zeros(pg1, dtype ='float64')
-r_gfw_dams = np.zeros(pg1, dtype ='float64')
-r_fl_dams = np.zeros(pg1, dtype ='float64')
-r_fd_dams = np.zeros(pg1, dtype ='float64')
-r_fd_min_dams = np.zeros(pg1, dtype ='float64')
+o_numbers_start_dams = np.zeros(pg1, dtype =dtype)
+o_numbers_end_dams = np.zeros(pg1, dtype =dtype)
+o_ffcfw_dams = np.zeros(pg1, dtype =dtype)
+o_ffcfw_condensed_dams = np.zeros(pg1, dtype =dtype)
+o_pi_dams = np.zeros(pg1, dtype =dtype)
+o_mei_solid_dams = np.zeros(pg1, dtype =dtype)
+o_ch4_total_dams = np.zeros(pg1, dtype =dtype)
+o_cfw_dams = np.zeros(pg1, dtype =dtype)
+o_gfw_dams = np.zeros(pg1, dtype =dtype)
+o_sl_dams = np.zeros(pg1, dtype =dtype)
+o_fd_dams = np.zeros(pg1, dtype =dtype)
+o_fd_min_dams = np.zeros(pg1, dtype =dtype)
+###offs
+o_numbers_start_offs = np.zeros(pg3, dtype =dtype)
+o_numbers_end_offs = np.zeros(pg3, dtype =dtype)
+o_ffcfw_offs = np.zeros(pg3, dtype =dtype)
+o_ffcfw_condensed_offs = np.zeros(pg3, dtype =dtype)
+o_pi_offs = np.zeros(pg3, dtype =dtype)
+o_mei_solid_offs = np.zeros(pg3, dtype =dtype)
+o_ch4_total_offs = np.zeros(pg3, dtype =dtype)
+o_cfw_offs = np.zeros(pg3, dtype =dtype)
+o_gfw_offs = np.zeros(pg3, dtype =dtype)
+o_sl_offs = np.zeros(pg3, dtype =dtype)
+o_fd_offs = np.zeros(pg3, dtype =dtype)
+o_fd_min_offs = np.zeros(pg3, dtype =dtype)
 
 
 ################################################
@@ -1522,7 +1538,7 @@ numbers_start_fvp0_offs = numbers_initial_zida0e0b0xyg3 #just need a default bec
 
 
 ## Loop through each week of the simulation (p) for ewes
-for p in range(100):
+for p in range(80):
 # for p in range(n_sim_periods):
     print(p)
     if np.any(period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]):
@@ -1542,11 +1558,11 @@ for p in range(100):
     ##sire
     if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
         ###cfw
-        cfw_start_sire = sfun.f_update(cfw_start_sire, 0, period_is_shearing_pa1e1b1nwzida0e0b0xyg0)
+        cfw_start_sire = sfun.f_update(cfw_start_sire, 0, period_is_shearing_pa1e1b1nwzida0e0b0xyg0[p])
         ###fl
-        fl_start_sire = sfun.f_update(fl_start_sire, fl_shear_yg0, period_is_shearing_pa1e1b1nwzida0e0b0xyg0)
+        fl_start_sire = sfun.f_update(fl_start_sire, fl_shear_yg0, period_is_shearing_pa1e1b1nwzida0e0b0xyg0[p])
         ###min fd
-        fd_min_start_sire = sfun.f_update(fd_min_start_sire, 1000, period_is_shearing_pa1e1b1nwzida0e0b0xyg0)
+        fd_min_start_sire = sfun.f_update(fd_min_start_sire, 1000, period_is_shearing_pa1e1b1nwzida0e0b0xyg0[p])
 
     ##dams
     if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
@@ -1574,20 +1590,20 @@ for p in range(100):
 
         ##reset for end of period
         ###cfw
-        cfw_start_dams = sfun.f_update(cfw_start_dams, 0, period_is_shearing_pa1e1b1nwzida0e0b0xyg1)
+        cfw_start_dams = sfun.f_update(cfw_start_dams, 0, period_is_shearing_pa1e1b1nwzida0e0b0xyg1[p])
         ###fl
-        fl_start_dams = sfun.f_update(fl_start_dams, fl_shear_yg1, period_is_shearing_pa1e1b1nwzida0e0b0xyg1)
+        fl_start_dams = sfun.f_update(fl_start_dams, fl_shear_yg1, period_is_shearing_pa1e1b1nwzida0e0b0xyg1[p])
         ###min fd
-        fd_min_start_dams = sfun.f_update(fd_min_start_dams, 1000, period_is_shearing_pa1e1b1nwzida0e0b0xyg1)
+        fd_min_start_dams = sfun.f_update(fd_min_start_dams, 1000, period_is_shearing_pa1e1b1nwzida0e0b0xyg1[p])
 
     ##offs
     if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
         ###cfw
-        cfw_start_offs = sfun.f_update(cfw_start_offs, 0, period_is_shearing_pa1e1b1nwzida0e0b0xyg3)
+        cfw_start_offs = sfun.f_update(cfw_start_offs, 0, period_is_shearing_pa1e1b1nwzida0e0b0xyg3[p])
         ###fl
-        fl_start_offs = sfun.f_update(fl_start_offs, fl_shear_yg3, period_is_shearing_pa1e1b1nwzida0e0b0xyg3)
+        fl_start_offs = sfun.f_update(fl_start_offs, fl_shear_yg3, period_is_shearing_pa1e1b1nwzida0e0b0xyg3[p])
         ###min fd
-        fd_min_start_offs = sfun.f_update(fd_min_start_offs, 1000, period_is_shearing_pa1e1b1nwzida0e0b0xyg3)
+        fd_min_start_offs = sfun.f_update(fd_min_start_offs, 1000, period_is_shearing_pa1e1b1nwzida0e0b0xyg3[p])
 
 
 
@@ -2295,7 +2311,7 @@ for p in range(100):
         if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
             temp0 = sfun.f_conception_cs(cf_dams, cb1_dams, relsize_mating_dams, rc_mating_dams, crg_doy_pa1e1b1nwzida0e0b0xyg1[p], period_is_mating_pa1e1b1nwzida0e0b0xyg1[p])
             if eqn_used:
-                conception_dams += temp0
+                conception_dams = conception_dams + temp0
                 cf_conception_dams = 0 #default set to 0 because required in start production function (only used in lmat conception function)
             if eqn_compare:
                 r_compare_q0q1q2pdams[eqn_system, eqn_group, 0, p, ...] = temp0
@@ -2543,30 +2559,32 @@ for p in range(100):
     ######################################
     ###dams
     if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-        r_numbers_end_dams[p] = numbers_end_dams
-        r_numbers_start_dams[p] = numbers_start_dams
-        r_ffcfw_dams[p] = ffcfw_dams
-        r_pi_dams[p] = pi_dams
-        r_mei_solid_dams[p] = mei_solid_dams
-        r_ch4_total_dams[p] = ch4_total_dams
-        r_cfw_dams[p] = cfw_dams
-        r_gfw_dams[p] = gfw_dams
-        r_fl_dams[p] = fl_dams
-        r_fd_dams[p] = fd_dams
-        r_fd_min_dams[p] = fd_min_dams
+        o_numbers_end_dams[p] = numbers_end_dams
+        o_numbers_start_dams[p] = numbers_start_dams
+        o_ffcfw_dams[p] = ffcfw_dams
+        o_ffcfw_condensed_dams[p+1] = sfun.f_condensed(numbers_end_dams, ffcfw_dams, prejoin_tup, season_tup, uinp.structure['i_n1_len'], uinp.structure['i_w1_len'], uinp.structure['i_n_fvp_period1'], numbers_start_fvp0_dams,
+                            period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1[p+1])  #assigns the condensed lw at the end of the period before fvp0 to the start period (because end lw is same as start of next period)
+        o_pi_dams[p] = pi_dams
+        o_mei_solid_dams[p] = mei_solid_dams
+        o_ch4_total_dams[p] = ch4_total_dams
+        o_cfw_dams[p] = cfw_dams
+        o_gfw_dams[p] = gfw_dams
+        o_sl_dams[p] = fl_dams - fl_shear_yg1
+        o_fd_dams[p] = fd_dams
+        o_fd_min_dams[p] = fd_min_dams
 ###offs
     if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-        r_numbers_end_offs[p] = numbers_end_offs
-        r_numbers_start_offs[p] = numbers_start_offs
-        r_ffcfw_offs[p] = ffcfw_offs
-        r_pi_offs[p] = pi_offs
-        r_mei_solid_offs[p] = mei_solid_offs
-        r_ch4_total_offs[p] = ch4_total_offs
-        r_cfw_offs[p] = cfw_offs
-        r_gfw_offs[p] = gfw_offs
-        r_fl_offs[p] = fl_offs
-        r_fd_offs[p] = fd_offs
-        r_fd_min_offs[p] = fd_min_offs
+        o_numbers_end_offs[p] = numbers_end_offs
+        o_numbers_start_offs[p] = numbers_start_offs
+        o_ffcfw_offs[p] = ffcfw_offs
+        o_pi_offs[p] = pi_offs
+        o_mei_solid_offs[p] = mei_solid_offs
+        o_ch4_total_offs[p] = ch4_total_offs
+        o_cfw_offs[p] = cfw_offs
+        o_gfw_offs[p] = gfw_offs
+        o_sl_offs[p] = fl_offs - fl_shear_yg3
+        o_fd_offs[p] = fd_offs
+        o_fd_min_offs[p] = fd_min_offs
 
         # plt.plot(r_ffcfw_dams[:, 0, 0, 3, 0, 0:3, 0, 0, 0, 0, 0, 0, 0, 0, 0])
         # plt.plot(r_ffcfw_dams[:, 0, 1, 3, 0, 0:3, 0, 0, 0, 0, 0, 0, 0, 0, 0])
@@ -2863,16 +2881,27 @@ def p2v(production,numbers,days_period,on_hand,dvp_pointer,index_v):
     production_tpany = production * numbers * days_period * on_hand * (dvp_pointer==index_v)
     return np.sum(production_tpany, axis=uinp.structure['i_p_pos']) #sum along p axis to leave just a v axis
 
-def p2v_oneoff(production,numbers,period_is,on_hand,dvp_pointer,index_v):
+def p2v_oneoff_2(production,numbers,period_is,on_hand,dvp_pointer,index_v=0):
     production_tpany = production * numbers * period_is * on_hand * (dvp_pointer==index_v)
-    return np.sum(production_tpany, axis=uinp.structure['i_p_pos']) #sum along p axis to leave just a v axis
+    production_tvany = np.sum(production_tpany, axis=uinp.structure['i_p_pos'])  # sum along p axis to leave just a v axis
+    return production_tvany
+
+##the above method was too slow (adding p and v to the array made it too large) - use loop to convert p to t
+def p2v_oneoff(production,numbers,period_is,on_hand,dvp_pointer,index_v=0):
+    production = production * numbers * period_is * on_hand
+    shape = (np.max(dvp_pointer),) + production.shape[0:1] + production.shape[2:]  #bit messy because need v t and all the other axis (but not p)
+    final=np.zeros(shape)
+    for i in range(np.max(dvp_pointer)):
+        temp_prod = np.sum(production * (dvp_pointer==i), axis=uinp.structure['i_p_pos'])
+        final[i] = temp_prod  #asign to correct v slice
+    return final
 
 def cum_dvp(arr,dvp_pointer):
     final = np.zeros_like(arr)
     for i in range(np.max(dvp_pointer)):
-        arr1 = arr * dvp_pointer==i #sets the p slices to 0 if not in the given dvp
+        arr1 = arr * (dvp_pointer==i) #sets the p slices to 0 if not in the given dvp
         arr1 = np.maximum.accumulate(arr,axis=0)
-        arr1 = arr1 * arr * dvp_pointer==i #sets the cum max to 0 for other dvp not of interest
+        arr1 = arr1 * (dvp_pointer==i) #sets the cum max to 0 for other dvp not of interest
         final += arr1
     return final
 
@@ -2881,8 +2910,8 @@ def cum_dvp(arr,dvp_pointer):
 ##for offs there is a new dvp each time fvp type goes back to 0 (eg once per yr)
 a_dvp_pointer_pa1e1b1nwzida0e0b0xyg1 = a_fvp_pa1e1b1nwzida0e0b0xyg1
 a_dvp_pointer_pa1e1b1nwzida0e0b0xyg3 = (a_fvp_pa1e1b1nwzida0e0b0xyg3 / 3).astype(int)  #divide by 3 then round down to the int - because there are 3fvp's per yr but only 1 dvp per yr
-index_v1 = np.max(a_dvp_pointer_pa1e1b1nwzida0e0b0xyg1)
-index_v3 = np.max(a_dvp_pointer_pa1e1b1nwzida0e0b0xyg3)
+index_vpa1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(range(np.max(a_dvp_pointer_pa1e1b1nwzida0e0b0xyg1)), uinp.structure['i_p_pos']-1)
+index_vpa1e1b1nwzida0e0b0xyg3 = fun.f_reshape_expand(range(np.max(a_dvp_pointer_pa1e1b1nwzida0e0b0xyg3)), uinp.structure['i_p_pos']-1)
 ##dvp dates
 ### offs
 date_weaned_a1e1b1nwzida0e0b0xyg3 = np.broadcast_to(date_weaned_ida0e0b0xyg3,fvp_0_start_oa1e1b1nwzida0e0b0xyg3.shape[1:]) #need wean date rather than first day of yr because selling inputs are days from weaning.
@@ -2907,7 +2936,7 @@ sale_date_tpa1e1b1nwzida0e0b0xyg3=np.take_along_axis(sale_date_tsa1e1b1nwzida0e0
 target_weight_tpa1e1b1nwzida0e0b0xyg3=np.take_along_axis(target_weight_tsa1e1b1nwzida0e0b0xyg3,a_dvp_pointer_pa1e1b1nwzida0e0b0xyg3[na],1) #gets the target weight for each gen period
 ##adjust generator lw to reflect the cumulative max per period
 ###lw could go above target then drop back below but it is already sold so the on hand bool shouldnt change. therefore need to use accumulative max and reset each dvp
-weight_pa1e1b1nwzida0e0b0xyg3=cum_dvp(r_ffcfw_offs,a_dvp_pointer_pa1e1b1nwzida0e0b0xyg3)
+weight_pa1e1b1nwzida0e0b0xyg3=cum_dvp(o_ffcfw_offs,a_dvp_pointer_pa1e1b1nwzida0e0b0xyg3)
 ##on hand
 ### t0 slice = True
 ### t1 & t2 slice date_p<sale_date and weight<target weight
@@ -2941,81 +2970,109 @@ sale_delay_sa1e1b1nwzida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['i_sales_delay_sg1'], 
 sale_delay_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(sale_delay_sa1e1b1nwzida0e0b0xyg1, a_prev_s_pa1e1b1nwzida0e0b0xyg1,0)
 next_dvp_index = sfun.f_next_prev_association(date_end_p, dvp_start_date_pa1e1b1nwzida0e0b0xyg1, 0) #points at the next dvp from the date at the end of the period
 periods_to_dvp = next_dvp_index - (p_index_pa1e1b1nwzida0e0b0xyg + 1) #periods to the next dvp. +1 because if the next period is the new dvp you must sell in the current period
-sale_delay_pa1e1b1nwzida0e0b0xyg1 = np.minimum(sale_delay_pa1e1b1nwzida0e0b0xyg1, periods_to_dvp) + p_index_pa1e1b1nwzida0e0b0xyg
-period_is_sale= np.take_along_axis(period_is_shearing_tpa1e1b1nwzida0e0b0xyg1,sale_delay_pa1e1b1nwzida0e0b0xyg1, 0)
+sale_period_pa1e1b1nwzida0e0b0xyg1 = np.minimum(sale_delay_pa1e1b1nwzida0e0b0xyg1, periods_to_dvp) + p_index_pa1e1b1nwzida0e0b0xyg
+period_is_sale= np.take_along_axis(period_is_shearing_tpa1e1b1nwzida0e0b0xyg1,sale_period_pa1e1b1nwzida0e0b0xyg1[na], 1)
 t1_off_hand_pa1e1b1nwzida0e0b0xyg1=cum_dvp(period_is_sale,a_dvp_pointer_pa1e1b1nwzida0e0b0xyg1) #this ensures that once they are sold they remain off hand for the rest of the dvp
 ##determine t2 slice - dry dams sold at scanning
 drys_off_hand_pa1e1b1nwzida0e0b0xyg1 = period_is_scan_pa1e1b1nwzida0e0b0xyg1 * scan_pa1e1b1nwzida0e0b0xyg1>=1 * (not pinp.sheep['i_dry_retained_forced']) #not is required because variable is drys off hand ie sold. if forced to retain the variable wants to be false
-drys_off_hand_pa1e1b1nwzida0e0b0xyg1[:,:,:,uinp.structure['a_nfoet_b1']>0,...] = False #make sure selling is not an option for non drys
+drys_off_hand_pa1e1b1nwzida0e0b0xyg1 = drys_off_hand_pa1e1b1nwzida0e0b0xyg1 * (nfoet_b1nwzida0e0b0xyg>0) #make sure selling is not an option for animals with foet (have to do it this way so that b axis is added)
+drys_off_hand_pa1e1b1nwzida0e0b0xyg1[:,:,:,1:,...] = False #make sure selling is not an option for not mated
 t2_drys_off_hand_pa1e1b1nwzida0e0b0xyg1=cum_dvp(drys_off_hand_pa1e1b1nwzida0e0b0xyg1,a_dvp_pointer_pa1e1b1nwzida0e0b0xyg1) #this ensures that once they are sold they remain off hand for the rest of the dvp
 
 ##on hand
-on_hand_tpa1e1b1nwzida0e0b0xyg1 = np.zeros((3,)+period_is_shearing_tpa1e1b1nwzida0e0b0xyg1.shape[1:]) #initialise on hand array with 3 t slices.
+shape =  tuple(np.maximum.reduce([t1_off_hand_pa1e1b1nwzida0e0b0xyg1.shape[1:], t2_drys_off_hand_pa1e1b1nwzida0e0b0xyg1.shape]))
+on_hand_tpa1e1b1nwzida0e0b0xyg1 = np.zeros((3,)+shape, dtype=bool) #initialise on hand array with 3 t slices.
 on_hand_tpa1e1b1nwzida0e0b0xyg1[0] = True #t0 is the retained slice
-on_hand_tpa1e1b1nwzida0e0b0xyg1[1] = not t1_off_hand_pa1e1b1nwzida0e0b0xyg1 #t1 sale after main shearing
-on_hand_tpa1e1b1nwzida0e0b0xyg1[2] = not t2_drys_off_hand_pa1e1b1nwzida0e0b0xyg1 #t2 sale of drys after scanning
+on_hand_tpa1e1b1nwzida0e0b0xyg1[1] = np.logical_not(t1_off_hand_pa1e1b1nwzida0e0b0xyg1) #t1 sale after main shearing
+on_hand_tpa1e1b1nwzida0e0b0xyg1[2] = np.logical_not(t2_drys_off_hand_pa1e1b1nwzida0e0b0xyg1) #t2 sale of drys after scanning
 
-##adjust shearing so that it cant occur for a dam that is already sold
-period_is_shearing_tpa1e1b1nwzida0e0b0xyg1 = period_is_shearing_tpa1e1b1nwzida0e0b0xyg1 * on_hand_tpa1e1b1nwzida0e0b0xyg1
+# ##adjust shearing so that it cant occur for a dam that is already sold          ^dont think this is needed because it is done in the p2v function
+# period_is_shearing_tpa1e1b1nwzida0e0b0xyg1 = period_is_shearing_tpa1e1b1nwzida0e0b0xyg1 * on_hand_tpa1e1b1nwzida0e0b0xyg1
 
+##convert variables from p to v
+###continuous
 
+###one off
+start1=time.time()
+ffcfw_condensed_va1e1b1nwzida0e0b0xyg1 = p2v_oneoff_2(o_ffcfw_condensed_dams, o_numbers_end_dams, period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1, on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...], a_dvp_pointer_pa1e1b1nwzida0e0b0xyg1,index_vpa1e1b1nwzida0e0b0xyg1) #add v axis to on hand
+start2=time.time()
+ffcfw_condensed_va1e1b1nwzida0e0b0xyg1 = p2v_oneoff(o_ffcfw_condensed_dams, o_numbers_end_dams, period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1, on_hand_tpa1e1b1nwzida0e0b0xyg1, a_dvp_pointer_pa1e1b1nwzida0e0b0xyg1) #add v axis to on hand
+finish=time.time()
+print('loop method: ', finish-start2)
+print('non loop method: ', start2 - start1)
+
+def lw_distribution(ffcfw_condensed_va1e1b1nwzida0e0b0xyg, ffcfw_va1e1b1nwzida0e0b0xyg):
+    ##distriuting animals on LW at the start of dvp0
+    ###Calculate the difference between the 3 weights and the middle weight (slice 0)
+    diff = ffcfw_condensed_va1e1b1nwzida0e0b0xyg - sfun.f_dynamic_slice(ffcfw_condensed_va1e1b1nwzida0e0b0xyg, uinp.structure['i_w_pos'], 0, 1)
+    ###Calculate the spread that would generate the average weight
+    spread =  1 - (ffcfw_condensed_va1e1b1nwzida0e0b0xyg[:, :, na] - ffcfw_va1e1b1nwzida0e0b0xyg[:, na, :]) / diff
+    ###Bound the spread
+    spread_bounded = np.clip(spread, 0, 1)
+    ###Set values for the standard pattern to be the remainder from the closest.
+    spread_bounded[:27, ...] =  1 - np.maximum(spread_bounded[27:54, ...], spread_bounded[54:, ...])
+    ###Set the distribution to 0 if lw_end is below the condensed minimum weight
+    distribution_vww = spread_bounded * (ffcfw_vw[:, na, :] >= np.min(ffcfw_condensed_vw[:, :, na]))
+    return distribution_vww
+
+lw_distribution(ffcfw_condensed_va1e1b1nwzida0e0b0xyg1)
 
 ##clustering
 
 
 #params
 
-model.p_asset_stockinfra
-model.p_dep_stockinfra
-model.p_rm_stockinfra
-model.p_lab_stockinfra
-model.p_asset_sire
-model.p_asset_dams
-model.p_asset_trans_dams
-model.p_asset_offs
-model.p_asset_trans_offs
-model.p_infra_sire
-model.p_infra_dams
-model.p_infra_offs
-model.p_cash_sire
-model.p_cash_dams
-model.p_cash_trans_dams
-model.p_cash_offs
-model.p_cash_trans_offs
-model.p_cost_sire
-model.p_cost_dams
-model.p_cost_trans_dams
-model.p_cost_offs
-model.p_cost_trans_offs
-model.p_mei_sire
-model.p_mei_dams
-model.p_mei_trans_dams
-model.p_mei_offs
-model.p_mei_trans_offs
-model.p_pi_sire
-model.p_pi_dams
-model.p_pi_trans_dams
-model.p_pi_offs
-model.p_pi_trans_offs
-model.p_lab_sire
-model.p_lab_dams
-model.p_lab_trans_dams
-model.p_lab_offs
-
-model.p_lab_trans_offs
-##stock - dams
-model.p_numbers_dams
-model.p_npw
-model.p_n_sires
-
-##stock - offs
-model.p_numbers_offs
-##purchases
-model.p_cost_purch_sire
-model.p_numberpurch_dam
-model.p_cost_purch_dam
-model.p_numberpurch_offs
-model.p_cost_purch_offs
-##transfers
-model.p_offs2dam_numbers
-model.p_dam2sire_numbers
+# model.p_asset_stockinfra
+# model.p_dep_stockinfra
+# model.p_rm_stockinfra
+# model.p_lab_stockinfra
+# model.p_asset_sire
+# model.p_asset_dams
+# model.p_asset_trans_dams
+# model.p_asset_offs
+# model.p_asset_trans_offs
+# model.p_infra_sire
+# model.p_infra_dams
+# model.p_infra_offs
+# model.p_cash_sire
+# model.p_cash_dams
+# model.p_cash_trans_dams
+# model.p_cash_offs
+# model.p_cash_trans_offs
+# model.p_cost_sire
+# model.p_cost_dams
+# model.p_cost_trans_dams
+# model.p_cost_offs
+# model.p_cost_trans_offs
+# model.p_mei_sire
+# model.p_mei_dams
+# model.p_mei_trans_dams
+# model.p_mei_offs
+# model.p_mei_trans_offs
+# model.p_pi_sire
+# model.p_pi_dams
+# model.p_pi_trans_dams
+# model.p_pi_offs
+# model.p_pi_trans_offs
+# model.p_lab_sire
+# model.p_lab_dams
+# model.p_lab_trans_dams
+# model.p_lab_offs
+#
+# model.p_lab_trans_offs
+# ##stock - dams
+# model.p_numbers_dams
+# model.p_npw
+# model.p_n_sires
+#
+# ##stock - offs
+# model.p_numbers_offs
+# ##purchases
+# model.p_cost_purch_sire
+# model.p_numberpurch_dam
+# model.p_cost_purch_dam
+# model.p_numberpurch_offs
+# model.p_cost_purch_offs
+# ##transfers
+# model.p_offs2dam_numbers
+# model.p_dam2sire_numbers
