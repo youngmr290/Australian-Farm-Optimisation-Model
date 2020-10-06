@@ -53,12 +53,12 @@ def sets() :
     ### stock            # 
     ######################
     model.s_tol = Set(initialize=pinp.sheep['i_tol_idx'][pinp.sheep['i_mask_i']], doc='birth groups (times of lambing)')
-    model.s_wean_times = Set(initialize=np.append('nondiff',pinp.sheep['i_wean_times'][pinp.sheep['i_mask_a']]), doc='weaning optoins') #non diff is the optoin required if there is no management differentiation for different weaning times or it is before weaning. Note it is technically incorrect to have multiple weaning times without different activities - this is only used so the user can compare if it is dams or offs that are impacted by weaning time (eg the user can have multiple weaning times and only manage the offs differentially, the ewes will be managed as if it is the std weaning). 
+    model.s_wean_times = Set(initialize=np.append('nondiff',pinp.sheep['i_wean_times'][pinp.sheep['i_mask_a']]), doc='weaning options') #non diff is the optoin required if there is no management differentiation for different weaning times or it is before weaning. Note it is technically incorrect to have multiple weaning times without different activities - this is only used so the user can compare if it is dams or offs that are impacted by weaning time (eg the user can have multiple weaning times and only manage the offs differentially, the ewes will be managed as if it is the std weaning).
     model.s_gen_merit_sire = Set(initialize=np.append('nondiff',uinp.parameter['i_gen_merit_sire']), doc='genetic merit of sires')
     model.s_gen_merit_dams = Set(initialize=np.append('nondiff',uinp.parameter['i_gen_merit_dams']), doc='genetic merit of dams')
     model.s_gen_merit_offs = Set(initialize=np.append('nondiff',uinp.parameter['i_gen_merit_offs']), doc='genetic merit of offs')
     model.s_groups_sire = Set(initialize=sfun.f_g2g(pinp.sheep['i_groups_sire'],'sire'), doc='geneotype groups of sires') #have to call the g2g function to apply mask
-    model.s_groups_dams = Set(initialize=sfun.f_g2g(array_gpinp.sheep['i_groups_dams'],'dams'), doc='geneotype groups of dams') #have to call the g2g function to apply mask
+    model.s_groups_dams = Set(initialize=sfun.f_g2g(pinp.sheep['i_groups_dams'],'dams'), doc='geneotype groups of dams') #have to call the g2g function to apply mask
     model.s_groups_offs = Set(initialize=sfun.f_g2g(pinp.sheep['i_groups_offs'],'offs'), doc='geneotype groups of offs')  #have to call the g2g function to apply mask
 
 
@@ -140,13 +140,13 @@ model.s_rotconstraints = Set(initialize=s_rotcon1.index, doc='rotation constrain
 ##all groups
 model.infrastructure = Set(initialize=, doc='core sheep infrastructure')
 model.s_sheep_pools = Set(initialize=uinp.structure['sheep_pools'], doc='nutritive value pools')
-model.s_co_conception = Set(initialize=, doc='carryover characteristics - conception')
-model.s_co_bw = Set(initialize=, doc='carryover characteristics - Birth weight')
-model.s_co_ww = Set(initialize=, doc='carryover characteristics - Weaning weight')
-model.s_co_cfw = Set(initialize=, doc='carryover characteristics - Clean fleece weight')
-model.s_co_fd = Set(initialize=, doc='carryover characteristics - Fibre diameter')
-model.s_co_min_fd = Set(initialize=, doc='carryover characteristics - Minimum fibre diameter')
-model.s_co_fl = Set(initialize=, doc='carryover characteristics - Fibre length')
+# model.s_co_conception = Set(initialize=, doc='carryover characteristics - conception')
+# model.s_co_bw = Set(initialize=, doc='carryover characteristics - Birth weight')
+# model.s_co_ww = Set(initialize=, doc='carryover characteristics - Weaning weight')
+# model.s_co_cfw = Set(initialize=, doc='carryover characteristics - Clean fleece weight')
+# model.s_co_fd = Set(initialize=, doc='carryover characteristics - Fibre diameter')
+# model.s_co_min_fd = Set(initialize=, doc='carryover characteristics - Minimum fibre diameter')
+# model.s_co_fl = Set(initialize=, doc='carryover characteristics - Fibre length')
 
 ##dams & offs
  

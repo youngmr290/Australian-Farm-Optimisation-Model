@@ -52,29 +52,6 @@ import UniversalInputs as uinp
 
 
 
-#^some of these may have to occur inside the sim function because they may change between trials (it would be good if they didn't though because creating the indexes takes a bit of time)
-### _create numpy index for param dicts ^creating indexes is a bit slow
-##the array returned must be of type object, if string the dict keys become a numpy string and when indexed in pyomo it doesn't work.
-keys_a = pinp.sheep['i_wean_times'][pinp.sheep['i_mask_a']]
-keys_b0 = uinp.structure['i_btrt_idx_offs']
-keys_b1 = uinp.structure['i_lsln_idx_dams']
-keys_g0 = pinp.sheep['i_groups_sire']
-keys_g1 = pinp.sheep['i_groups_dams']
-keys_g3 = pinp.sheep['i_groups_offs']
-keys_i = pinp.sheep['i_tol_idx'][pinp.sheep['i_mask_i']]
-keys_lw0 = uinp.structure['i_w_idx_sire']
-keys_lw1 = uinp.structure['i_w_idx_dams']
-keys_lw3 = uinp.structure['i_w_idx_offs']
-keys_n0 = uinp.structure['i_n_idx_sire']
-keys_n1 = uinp.structure['i_n_idx_dams']
-keys_n3 = uinp.structure['i_n_idx_offs']
-keys_p6 = np.array([pinp.feed_inputs['feed_periods'].index[:-1]])
-keys_v = np.asarray(uinp.structure['sheep_pools'])
-keys_y0 = uinp.parameters['i_gen_merit_sire']
-keys_y1 = uinp.parameters['i_gen_merit_dams']
-keys_y3 = uinp.parameters['i_gen_merit_offs']
-    
-
 
 
 
@@ -117,6 +94,10 @@ dl_pa1e1b1nwzida0e0b0xyg = sfun.f_daylength(doy_pa1e1b1nwzida0e0b0xyg, pinp.shee
 mask_sire_inc_g0 = np.any(uinp.structure['i_mask_g0g3'] * pinp.sheep['i_g3_inc'], axis =1)
 mask_dams_inc_g1 = np.any(uinp.structure['i_mask_g1g3'] * pinp.sheep['i_g3_inc'], axis =1)
 mask_offs_inc_g3 = np.any(uinp.structure['i_mask_g3g3'] * pinp.sheep['i_g3_inc'], axis =1)
+##o/d mask - if dob is after the end of the sim then it is masked out -  the mask is created before the date of birth is adjusted to the start of a period however it is adjusted to the start of the next period so the mask wont cut out a birth event that actually would occur, additionally this is the birth of the first however the matrix sees the birth of average animal which is also later therefore if anything the mask will leave in unneccessary o slices
+date_born1st_oa1e1b1nwzida0e0b0xyg2 = sfun.f_g2g(pinp.sheep['i_date_born1st_oig2'],'yatf',pinp.sheep['i_i_pos'],pinp.sheep['i_i_len'],pinp.sheep['i_o_len'],swap=True,left_pos2=uinp.structure['i_p_pos'],right_pos2=pinp.sheep['i_i_pos'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos']).astype('datetime64[D]') #left2 = e1-1 because e1 needs to be included for the calculation following
+mask_od = np.max(date_born1st_oa1e1b1nwzida0e0b0xyg2<=date_end_p[-1], axis=tuple(range(uinp.structure['i_p_pos']+1, 0))) #compare each birth opp with the end date of the sim and make the mask - the mask is of the longest axis (ie to handle situations where say bbb and bbm have birth at different times so one has 6 opp and the other has 5 opp)
+
 
 # ###################################
 # ### axis len                      #
@@ -142,7 +123,7 @@ len_w2 = uinp.structure['i_w1_len'] #same as dams
 len_w3 = uinp.structure['i_w3_len']
 len_z = np.count_nonzero(pinp.sheep['i_mask_z'])
 len_i = np.count_nonzero(pinp.sheep['i_mask_i'])
-len_d = uinp.parameters['i_d_len']
+len_d = np.count_nonzero(mask_od)
 len_a0 = np.count_nonzero(pinp.sheep['i_mask_a'])
 len_e0 = np.max(pinp.sheep['i_join_cycles_ig1'])
 len_b0 = np.count_nonzero(uinp.structure['i_mask_b0_b1'])
@@ -156,7 +137,10 @@ len_g3 = np.count_nonzero(mask_offs_inc_g3)
 ###################################
 ### index arrays                  #
 ###################################
-index_p = np.arange(300)#asarray(300)
+# index_p = np.arange(300)#asarray(300)
+index_l = np.arange(uinp.structure['i_len_l']) #gbal
+index_s = np.arange(uinp.structure['i_len_s']) #scan
+index_d = np.arange(len_d)
 index_e = np.arange(np.max(pinp.sheep['i_join_cycles_ig1']))
 index_e1b1nwzida0e0b0xyg = fun.f_reshape_expand(index_e, pinp.sheep['i_e1_pos'])
 index_e0b0xyg = fun.f_reshape_expand(index_e, uinp.structure['i_e0_pos'])
@@ -266,11 +250,13 @@ o_fd_min_offs = np.zeros(pg3, dtype =dtype)
 ##join
 join_cycles_ida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['i_join_cycles_ig1'],'dams',pinp.sheep['i_i_pos'])[pinp.sheep['i_mask_i'],...]
 ##lamb and lost
-gbal_oa1e1b1nwzida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['i_gbal_og1'],'dams',uinp.structure['i_p_pos']) #need axis up to p so that p association can be applied
+gbal_oa1e1b1nwzida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['i_gbal_og1'],'dams',uinp.structure['i_p_pos'], condition=mask_od, axis=uinp.structure['i_p_pos']) #need axis up to p so that p association can be applied
+gbal_da0e0b0xyg3 = sfun.f_g2g(pinp.sheep['i_gbal_og1'],'dams',uinp.parameters['i_d_pos'], condition=mask_od, axis=uinp.parameters['i_d_pos']) #need axis up to p so that p association can be applied
 ##scanning
-scan_oa1e1b1nwzida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['i_scan_og1'],'dams',uinp.structure['i_p_pos']) #need axis up to p so that p association can be applied
+scan_oa1e1b1nwzida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['i_scan_og1'],'dams',uinp.structure['i_p_pos'], condition=mask_od, axis=uinp.structure['i_p_pos']) #need axis up to p so that p association can be applied
+scan_da0e0b0xyg3 = sfun.f_g2g(pinp.sheep['i_scan_og1'],'dams',uinp.parameters['i_d_pos'], condition=mask_od, axis=uinp.parameters['i_d_pos']) #need axis up to p so that p association can be applied
 ##post weaning management
-wean_oa1e1b1nwzida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['i_wean_og1'],'dams',uinp.structure['i_p_pos']) #need axis up to p so that p association can be applied
+wean_oa1e1b1nwzida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['i_wean_og1'],'dams',uinp.structure['i_p_pos'], condition=mask_od, axis=uinp.structure['i_p_pos']) #need axis up to p so that p association can be applied
 ##association between offspring and sire/dam (used to determine the wean age of sire and dams based on the inputted wean age of offs)
 a_g3_g0 = sfun.f_g2g(pinp.sheep['ia_g3_g0'],'sire')
 a_g3_g1 = sfun.f_g2g(pinp.sheep['ia_g3_g1'],'dams')
@@ -281,18 +267,24 @@ age_wean1st_e0b0xyg1 = np.rollaxis(age_wean1st_a0e0b0xyg3[0, ...,a_g3_g1],0,age_
 ##date first lamb is born - need to apply i mask to these inputs - make sure animals are born at begining of gen period
 date_born1st_ida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['i_date_born1st_ig0'],'sire',pinp.sheep['i_i_pos'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos']).astype('datetime64[D]')
 date_born1st_ida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['i_date_born1st_ig1'],'dams',pinp.sheep['i_i_pos'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos']).astype('datetime64[D]')
-date_born1st_oa1e1b1nwzida0e0b0xyg2 = sfun.f_g2g(pinp.sheep['i_date_born1st_oig2'],'yatf',pinp.sheep['i_i_pos'],pinp.sheep['i_i_len'],pinp.sheep['i_o_len'],swap=True,left_pos2=uinp.structure['i_p_pos'],right_pos2=pinp.sheep['i_i_pos'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos']).astype('datetime64[D]') #left2 = e1-1 because e1 needs to be included for the calculation following
-date_born1st_ida0e0b0xyg3 = sfun.f_g2g(pinp.sheep['i_date_born1st_idg3'],'offs',uinp.parameters['i_d_pos'],pinp.sheep['i_i_len'],uinp.parameters['i_d_len'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos']).astype('datetime64[D]')
+date_born1st_oa1e1b1nwzida0e0b0xyg2 = date_born1st_oa1e1b1nwzida0e0b0xyg2[mask_od,...] #input read in in the mask section
+date_born1st_ida0e0b0xyg3 = sfun.f_g2g(pinp.sheep['i_date_born1st_idg3'],'offs',uinp.parameters['i_d_pos'],pinp.sheep['i_i_len'],uinp.parameters['i_d_len'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos'], condition2=mask_od, axis2=uinp.parameters['i_d_pos']).astype('datetime64[D]')
 ##mating
-sire_propn_oa1e1b1nwzida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['i_sire_propn_oig1'],'dams',pinp.sheep['i_i_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_o_len'],swap=True,left_pos2=uinp.structure['i_p_pos'],right_pos2=pinp.sheep['i_i_pos'])[:,:,:,:,:,:,:,pinp.sheep['i_mask_i'],...]
+sire_propn_oa1e1b1nwzida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['i_sire_propn_oig1'],'dams',pinp.sheep['i_i_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_o_len'],swap=True,left_pos2=uinp.structure['i_p_pos'],right_pos2=pinp.sheep['i_i_pos'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos'], condition2=mask_od, axis2=uinp.structure['i_p_pos'])
 sire_periods_g0p8 = np.swapaxes(pinp.sheep['i_sire_periods_p8g0'][pinp.sheep['i_mask_p8']], 0, 1)
 ##Shearing date - set to be on the last day of a sim period
 ###sire
-date_shear_sida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['i_date_shear_sixg0'],'sire',uinp.parameters['i_x_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_s_len'], pinp.sheep['i_x_len'],swap=True,left_pos2=pinp.sheep['i_i_pos'],right_pos2=uinp.parameters['i_x_pos'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos'])[...,0:1,:,:] #slice x axis for only female
+date_shear_sida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['i_date_shear_sixg0'],'sire',uinp.parameters['i_x_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_s_len'], pinp.sheep['i_x_len'],swap=True,left_pos2=pinp.sheep['i_i_pos'],right_pos2=uinp.parameters['i_x_pos'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos'])[...,0:1,:,:].astype('datetime64[D]') #slice x axis for only female
+mask_shear_g0 = np.max(date_shear_sida0e0b0xyg0<=date_end_p[-1], axis=tuple(range(pinp.sheep['i_i_pos'], 0))) #mask out shearing opps that occur after gen is done
+date_shear_sida0e0b0xyg0 = date_shear_sida0e0b0xyg0[mask_shear_g0]
 ###dam
-date_shear_sida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['i_date_shear_sixg1'],'dams',uinp.parameters['i_x_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_s_len'], pinp.sheep['i_x_len'],swap=True,left_pos2=pinp.sheep['i_i_pos'],right_pos2=uinp.parameters['i_x_pos'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos'])[...,1:2,:,:] #slice x axis for only female
+date_shear_sida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['i_date_shear_sixg1'],'dams',uinp.parameters['i_x_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_s_len'], pinp.sheep['i_x_len'],swap=True,left_pos2=pinp.sheep['i_i_pos'],right_pos2=uinp.parameters['i_x_pos'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos'])[...,1:2,:,:].astype('datetime64[D]') #slice x axis for only female
+mask_shear_g1 = np.max(date_shear_sida0e0b0xyg1<=date_end_p[-1], axis=tuple(range(pinp.sheep['i_i_pos'], 0))) #mask out shearing opps that occur after gen is done
+date_shear_sida0e0b0xyg1 = date_shear_sida0e0b0xyg1[mask_shear_g1]
 ###off - shearing cant occur as yatf because then need to shear all lambs (ie no scope to not shear the lambs that are going to be fed up and sold) because the offs decision variables for feeding are not linked to the yatf (which are in the dam decision variables)
-date_shear_sida0e0b0xyg3 = sfun.f_g2g(pinp.sheep['i_date_shear_sixg3'],'offs',uinp.parameters['i_x_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_s_len'], pinp.sheep['i_x_len'],swap=True,left_pos2=pinp.sheep['i_i_pos'],right_pos2=uinp.parameters['i_x_pos'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos'])
+date_shear_sida0e0b0xyg3 = sfun.f_g2g(pinp.sheep['i_date_shear_sixg3'],'offs',uinp.parameters['i_x_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_s_len'], pinp.sheep['i_x_len'],swap=True,left_pos2=pinp.sheep['i_i_pos'],right_pos2=uinp.parameters['i_x_pos'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos']).astype('datetime64[D]')
+mask_shear_g3 = np.max(date_shear_sida0e0b0xyg3<=date_end_p[-1], axis=tuple(range(pinp.sheep['i_i_pos'], 0))) #mask out shearing opps that occur after gen is done
+date_shear_sida0e0b0xyg3 = date_shear_sida0e0b0xyg3[mask_shear_g3]
 
 ############################
 ### feed supply inputs     #
@@ -366,7 +358,7 @@ lat_rad = np.radians(pinp.sheep['i_latitude'])
 ############################
 ##convert input params from c to g
 ###production params
-agedam_propn_da0e0b0xyg0, agedam_propn_da0e0b0xyg1, agedam_propn_da0e0b0xyg2, agedam_propn_da0e0b0xyg03 = sfun.f_c2g(uinp.parameters['i_agedam_propn_std_dc2'], uinp.parameters['i_agedam_propn_y'], uinp.parameters['i_agedam_propn_pos']) #yatf and off never used
+agedam_propn_da0e0b0xyg0, agedam_propn_da0e0b0xyg1, agedam_propn_da0e0b0xyg2, agedam_propn_da0e0b0xyg03 = sfun.f_c2g(uinp.parameters['i_agedam_propn_std_dc2'], uinp.parameters['i_agedam_propn_y'], uinp.parameters['i_agedam_propn_pos'], condition=mask_od, axis=uinp.parameters['i_d_pos']) #yatf and off never used
 aw_propn_yg0, aw_propn_yg1, aw_propn_yg2, aw_propn_yg3 = sfun.f_c2g(uinp.parameters['i_aw_propn_wean_c2'], uinp.parameters['i_aw_wean_y'])
 bw_propn_yg0, bw_propn_yg1, bw_propn_yg2, bw_propn_yg3 = sfun.f_c2g(uinp.parameters['i_bw_propn_wean_c2'], uinp.parameters['i_bw_wean_y'])
 cfw_propn_yg0, cfw_propn_yg1, cfw_propn_yg2, cfw_propn_yg3 = sfun.f_c2g(uinp.parameters['i_cfw_propn_c2'], uinp.parameters['i_cfw_propn_y'])
@@ -388,7 +380,7 @@ ca_sire, ca_dams, ca_yatf, ca_offs = sfun.f_c2g(uinp.parameters['i_ca_c2'], uinp
 cb0_sire, cb0_dams, cb0_yatf, cb0_offs = sfun.f_c2g(uinp.parameters['i_cb0_c2'], uinp.parameters['i_cb0_y'], uinp.parameters['i_cb0_pos'], uinp.parameters['i_cb0_len'], uinp.parameters['i_cb0_len2'])
 cc_sire, cc_dams, cc_yatf, cc_offs = sfun.f_c2g(uinp.parameters['i_cc_c2'], uinp.parameters['i_cc_y'], uinp.parameters['i_cc_pos'], uinp.parameters['i_cc_len'])
 cd_sire, cd_dams, cd_yatf, cd_offs = sfun.f_c2g(uinp.parameters['i_cd_c2'], uinp.parameters['i_cd_y'], uinp.parameters['i_cd_pos'], uinp.parameters['i_cd_len'])
-ce_sire, ce_dams, ce_yatf, ce_offs = sfun.f_c2g(uinp.parameters['i_ce_c2'], uinp.parameters['i_ce_y'], uinp.parameters['i_ce_pos'], uinp.parameters['i_ce_len'], uinp.parameters['i_ce_len2'])
+ce_sire, ce_dams, ce_yatf, ce_offs = sfun.f_c2g(uinp.parameters['i_ce_c2'], uinp.parameters['i_ce_y'], uinp.parameters['i_ce_pos'], uinp.parameters['i_ce_len'], uinp.parameters['i_ce_len2'], condition=mask_od, axis=uinp.parameters['i_d_pos'])
 cf_sire, cf_dams, cf_yatf, cf_offs = sfun.f_c2g(uinp.parameters['i_cf_c2'], uinp.parameters['i_cf_y'], uinp.parameters['i_cf_pos'], uinp.parameters['i_cf_len'])
 cg_sire, cg_dams, cg_yatf, cg_offs = sfun.f_c2g(uinp.parameters['i_cg_c2'], uinp.parameters['i_cg_y'], uinp.parameters['i_cg_pos'], uinp.parameters['i_cg_len'])
 ch_sire, ch_dams, ch_yatf, ch_offs = sfun.f_c2g(uinp.parameters['i_ch_c2'], uinp.parameters['i_ch_y'], uinp.parameters['i_ch_pos'], uinp.parameters['i_ch_len'])
@@ -473,14 +465,14 @@ age_wean1st_ida0e0b0xyg3 = date_weaned_ida0e0b0xyg3 - date_born1st_ida0e0b0xyg3
 
 ##Shearing date - set to be on the last day of a sim period
 ###sire
-idx_sida0e0b0xyg0 = sfun.f_next_prev_association(date_end_p, date_shear_sida0e0b0xyg0.astype('datetime64[D]'),0)#shearing occurs at the end of the next/current generator period therefore 0 offset
+idx_sida0e0b0xyg0 = sfun.f_next_prev_association(date_end_p, date_shear_sida0e0b0xyg0,0)#shearing occurs at the end of the next/current generator period therefore 0 offset
 date_shear_sa1e1b1nwzida0e0b0xyg0 = fun.f_reshape_expand(date_end_p[idx_sida0e0b0xyg0], uinp.structure['i_p_pos'], right_pos=pinp.sheep['i_i_pos'])
 ###dam
-idx_sida0e0b0xyg1 = sfun.f_next_prev_association(date_end_p, date_shear_sida0e0b0xyg1.astype('datetime64[D]'),0)#shearing occurs at the end of the next/current generator period therefore 0 offset
+idx_sida0e0b0xyg1 = sfun.f_next_prev_association(date_end_p, date_shear_sida0e0b0xyg1,0)#shearing occurs at the end of the next/current generator period therefore 0 offset
 date_shear_sa1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(date_end_p[idx_sida0e0b0xyg1], uinp.structure['i_p_pos'], right_pos=pinp.sheep['i_i_pos'])
 ###off - shearing cant occur as yatf because then need to shear all lambs (ie no scope to not shear the lambs that are going to be fed up and sold) because the offs decision variables for feeding are not linked to the yatf (which are in the dam decision variables)
 date_shear_sida0e0b0xyg3 = np.maximum(date_born1st_ida0e0b0xyg3 + age_wean1st_ida0e0b0xyg3, date_shear_sida0e0b0xyg3.astype('datetime64[D]')) #shearing must be after weaning.
-idx_sida0e0b0xyg3 = sfun.f_next_prev_association(date_end_p, date_shear_sida0e0b0xyg3.astype('datetime64[D]'),0)#shearing occurs at the end of the next/current generator period therefore 0 offset
+idx_sida0e0b0xyg3 = sfun.f_next_prev_association(date_end_p, date_shear_sida0e0b0xyg3,0)#shearing occurs at the end of the next/current generator period therefore 0 offset
 date_shear_sa1e1b1nwzida0e0b0xyg3 = fun.f_reshape_expand(date_end_p[idx_sida0e0b0xyg3], uinp.structure['i_p_pos'], right_pos=pinp.sheep['i_i_pos'])
 
 
@@ -669,7 +661,7 @@ date_shear_pa1e1b1nwzida0e0b0xyg3=np.take_along_axis(date_shear_sa1e1b1nwzida0e0
 ###management for weaning, gbal and scan options
 wean_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(wean_oa1e1b1nwzida0e0b0xyg1,a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
 gbal_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(gbal_oa1e1b1nwzida0e0b0xyg1,a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
-scan_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(scan_oa1e1b1nwzida0e0b0xyg1,a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
+scan_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(scan_oa1e1b1nwzida0e0b0xyg1,a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
 ###date, age, timing
 date_born1st_pa1e1b1nwzida0e0b0xyg2=np.take_along_axis(date_born1st_oa1e1b1nwzida0e0b0xyg2,a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0)
 date_born_pa1e1b1nwzida0e0b0xyg2=np.take_along_axis(date_born_oa1e1b1nwzida0e0b0xyg2,a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0)
@@ -2572,6 +2564,19 @@ for p in range(80):
         o_sl_dams[p] = fl_dams - fl_shear_yg1
         o_fd_dams[p] = fd_dams
         o_fd_min_dams[p] = fd_min_dams
+    ###yatf
+    if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
+        o_numbers_end_yatf[p] = numbers_end_yatf
+        o_numbers_start_yatf[p] = numbers_start_yatf
+        o_ffcfw_yatf[p] = ffcfw_yatf
+        o_pi_yatf[p] = pi_yatf
+        o_mei_solid_yatf[p] = mei_solid_yatf
+        o_ch4_total_yatf[p] = ch4_total_yatf
+        o_cfw_yatf[p] = cfw_yatf
+        o_gfw_yatf[p] = gfw_yatf
+        o_sl_yatf[p] = fl_yatf - fl_shear_yg1
+        o_fd_yatf[p] = fd_yatf
+        o_fd_min_yatf[p] = fd_min_yatf
 ###offs
     if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
         o_numbers_end_offs[p] = numbers_end_offs
@@ -2872,29 +2877,32 @@ for p in range(80):
 #post processing #
 ##################
 
-###pointer and mask for post processing - points to the first instance of each unique fvp for each pattern
-first_unique = np.trunc(index_wzida0e0b0xyg1 / (n_fs_g1 ** ((n_fvp_periods_g1-1) - fvp_type_pa1e1b1nwzida0e0b0xyg1)))
-first_unique_mask = (index_wzida0e0b0xyg1 == first_unique)
+# ###pointer and mask for post processing - points to the first instance of each unique fvp for each pattern
+# first_unique = np.trunc(index_wzida0e0b0xyg1 / (n_fs_g1 ** ((n_fvp_periods_g1-1) - fvp_type_pa1e1b1nwzida0e0b0xyg1)))
+# first_unique_mask = (index_wzida0e0b0xyg1 == first_unique)
 
 
-def p2v(production,numbers,days_period,on_hand,dvp_pointer,index_v):
-    production_tpany = production * numbers * days_period * on_hand * (dvp_pointer==index_v)
-    return np.sum(production_tpany, axis=uinp.structure['i_p_pos']) #sum along p axis to leave just a v axis
+def p2v(production_p, dvp_pointer_p, index_vp, numbers_p, on_hand_tvp, days_period_p=1, period_is_tvp=True, a_ev_p=1, index_ftvp=1):
+    ##mul everything
+    production_ftvpany = (production_p * numbers_p * days_period_p * period_is_tvp
+                        * on_hand_tvp * (dvp_pointer_p==index_vp) * (a_ev_p==index_ftvp)) #new axis because order goes ftvpa...
+    return np.sum(production_ftpany, axis=uinp.structure['i_p_pos']) #sum along p axis to leave just a v axis
 
-def p2v_oneoff_2(production,numbers,period_is,on_hand,dvp_pointer,index_v=0):
-    production_tpany = production * numbers * period_is * on_hand * (dvp_pointer==index_v)
-    production_tvany = np.sum(production_tpany, axis=uinp.structure['i_p_pos'])  # sum along p axis to leave just a v axis
-    return production_tvany
+#^combined with above
+# def p2v_oneoff(production,period_is,on_hand,dvp_pointer,index_v=0,numbers=1): #numbers is not required for lw because it is not a perhead production variable
+#     production_tpany = production * numbers * period_is * on_hand * (dvp_pointer==index_v)
+#     production_tvany = np.sum(production_tpany, axis=uinp.structure['i_p_pos'])  # sum along p axis to leave just a v axis
+#     return production_tvany
 
-##the above method was too slow (adding p and v to the array made it too large) - use loop to convert p to t
-def p2v_oneoff(production,numbers,period_is,on_hand,dvp_pointer,index_v=0):
-    production = production * numbers * period_is * on_hand
-    shape = (np.max(dvp_pointer),) + production.shape[0:1] + production.shape[2:]  #bit messy because need v t and all the other axis (but not p)
-    final=np.zeros(shape)
-    for i in range(np.max(dvp_pointer)):
-        temp_prod = np.sum(production * (dvp_pointer==i), axis=uinp.structure['i_p_pos'])
-        final[i] = temp_prod  #asign to correct v slice
-    return final
+# ##the above method was too slow (adding p and v to the array made it too large) - use loop to convert p to t - converted to 32bit and a comp with more memory and the first method was faster again
+# def p2v_oneoff(production,numbers,period_is,on_hand,dvp_pointer,index_v=0):
+#     production = production * numbers * period_is * on_hand
+#     shape = (np.max(dvp_pointer),) + production.shape[0:1] + production.shape[2:]  #bit messy because need v t and all the other axis (but not p)
+#     final=np.zeros(shape)
+#     for i in range(np.max(dvp_pointer)):
+#         temp_prod = np.sum(production * (dvp_pointer==i), axis=uinp.structure['i_p_pos'])
+#         final[i] = temp_prod  #asign to correct v slice
+#     return final
 
 def cum_dvp(arr,dvp_pointer):
     final = np.zeros_like(arr)
@@ -2905,32 +2913,94 @@ def cum_dvp(arr,dvp_pointer):
         final += arr1
     return final
 
-##dvp pointer - ^this is inflexible, maybe there is a better way to do this
-##for dams there is a new dvp each fvp
-##for offs there is a new dvp each time fvp type goes back to 0 (eg once per yr)
+def lw_distribution(ffcfw_condensed_tva1e1b1nwzida0e0b0xyg, ffcfw_tva1e1b1nwzida0e0b0xyg, i_w_len, i_n_fvp_period,dvp_type_va1e1b1nwzida0e0b0xyg1):
+    '''distriuting animals on LW at the start of dvp0'''
+    ##add second w axis - the condensed w axis becomes axis -1 and the end of period w stays in the normal place
+    ffcfw_condensed_tva1e1b1nwzida0e0b0xygw = fun.f_reshape_expand(np.moveaxis(ffcfw_condensed_tva1e1b1nwzida0e0b0xyg,uinp.structure['i_w_pos'],-1), uinp.structure['i_n_pos']-1, right_pos=pinp.sheep['i_z_pos']-1)
+    ##Calculate the difference between the 3 (or more if not dvp0) condensed weights and the middle weight (slice 0)
+    diff = ffcfw_condensed_tva1e1b1nwzida0e0b0xygw - sfun.f_dynamic_slice(ffcfw_condensed_tva1e1b1nwzida0e0b0xygw, -1, 0, 1)
+    ##Calculate the spread that would generate the average weight
+    spread =  1 - fun.f_divide((ffcfw_condensed_tva1e1b1nwzida0e0b0xygw - ffcfw_tva1e1b1nwzida0e0b0xyg[..., na]), diff)
+    ##Bound the spread
+    spread_bounded = np.clip(spread, 0, 1)
+    ##Set values for the standard pattern to be the remainder from the closest. (consolidated w axis)
+    spread_bounded[..., :int(i_w_len / i_n_fvp_period)] =  1 - np.maximum(spread_bounded[..., int(i_w_len / i_n_fvp_period):-int(i_w_len / i_n_fvp_period)], spread_bounded[..., -int(i_w_len / i_n_fvp_period):])
+    ##Set the distribution to 0 if lw_end is below the condensed minimum weight
+    distribution_tva1e1b1nwzida0e0b0xygw = spread_bounded * (ffcfw_tva1e1b1nwzida0e0b0xyg[..., na] >= np.min(ffcfw_condensed_tva1e1b1nwzida0e0b0xygw))
+    ##update v slices that are not dvp0 (ie not consolidation periods) to an identity matrix between the two w axis
+    identity = fun.f_reshape_expand(np.identity(i_w_len), uinp.structure['i_w_pos']-1,-1, right_pos=-1)
+    identity_tva1e1b1nwzida0e0b0xyg1w = np.broadcast_to(identity,distribution_tva1e1b1nwzida0e0b0xygw.shape) #mask needs to be same shape for next step
+    dvp_type_tva1e1b1nwzida0e0b0xyg1w = np.broadcast_to(dvp_type_va1e1b1nwzida0e0b0xyg1[...,na],distribution_tva1e1b1nwzida0e0b0xygw.shape) #mask needs to be same shape for next step
+    distribution_tva1e1b1nwzida0e0b0xygw[(dvp_type_tva1e1b1nwzida0e0b0xyg1w!=0)] = identity_tva1e1b1nwzida0e0b0xyg1w[(dvp_type_tva1e1b1nwzida0e0b0xyg1w!=0)]
+    return distribution_tva1e1b1nwzida0e0b0xygw
+
+
+###########################################
+##post processing inputs and associations #
+###########################################
+##general
+a_prevfeedperiod_pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(a_prevfeedperiod_p, uinp.structure['i_p_pos'])
+len_p6=np.max(a_prevfeedperiod_p)
+index_p6pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(np.arange(len_p6), uinp.structure['i_p_pos']-1)
+ev_propn_f = np.array([25, 50, 75])
+index_fpa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(np.arange(len(ev_propn_f.shape)), uinp.structure['i_p_pos']-1)
+##dams - for dams there is a new dvp each fvp
+###dvp pointer - ^this is inflexible, maybe there is a better way to do this
 a_dvp_pointer_pa1e1b1nwzida0e0b0xyg1 = a_fvp_pa1e1b1nwzida0e0b0xyg1
+index_vpa1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(np.arange(np.max(a_dvp_pointer_pa1e1b1nwzida0e0b0xyg1)+1), uinp.structure['i_p_pos']-1) #plus 1 because python index starts at 0
+###dvp are the same as fvp for dams
+dvp_start_date_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(fvp_date_start_fa1e1b1nwzida0e0b0xyg1,a_dvp_pointer_pa1e1b1nwzida0e0b0xyg3,0)
+dvp_type_va1e1b1nwzida0e0b0xyg1=fvp_type_fa1e1b1nwzida0e0b0xyg1 #rename to keep consistent
+
+##offs - for offs there is a new dvp each time fvp type goes back to 0 (eg once per yr)
+###dvp pointer - ^this is inflexible, maybe there is a better way to do this
 a_dvp_pointer_pa1e1b1nwzida0e0b0xyg3 = (a_fvp_pa1e1b1nwzida0e0b0xyg3 / 3).astype(int)  #divide by 3 then round down to the int - because there are 3fvp's per yr but only 1 dvp per yr
-index_vpa1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(range(np.max(a_dvp_pointer_pa1e1b1nwzida0e0b0xyg1)), uinp.structure['i_p_pos']-1)
-index_vpa1e1b1nwzida0e0b0xyg3 = fun.f_reshape_expand(range(np.max(a_dvp_pointer_pa1e1b1nwzida0e0b0xyg3)), uinp.structure['i_p_pos']-1)
-##dvp dates
-### offs
+index_vpa1e1b1nwzida0e0b0xyg3 = fun.f_reshape_expand(np.arange(np.max(a_dvp_pointer_pa1e1b1nwzida0e0b0xyg3)+1), uinp.structure['i_p_pos']-1)
+###dvp dates
 date_weaned_a1e1b1nwzida0e0b0xyg3 = np.broadcast_to(date_weaned_ida0e0b0xyg3,fvp_0_start_oa1e1b1nwzida0e0b0xyg3.shape[1:]) #need wean date rather than first day of yr because selling inputs are days from weaning.
 dvp_start_date_va1e1b1nwzida0e0b0xyg3 = np.concatenate([date_weaned_a1e1b1nwzida0e0b0xyg3[na,...],fvp_0_start_oa1e1b1nwzida0e0b0xyg3], axis=0)
 dvp_start_date_pa1e1b1nwzida0e0b0xyg3=np.take_along_axis(dvp_start_date_va1e1b1nwzida0e0b0xyg3,a_dvp_pointer_pa1e1b1nwzida0e0b0xyg3,0)
-###dams - dvp are the same as fvp for dams
-dvp_start_date_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(fvp_date_start_fa1e1b1nwzida0e0b0xyg1,a_dvp_pointer_pa1e1b1nwzida0e0b0xyg3,0)
 
 
+
+##dams
+###periods after shearing that sale occurs
+sale_delay_sa1e1b1nwzida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['i_sales_delay_sg1'], 'dams', uinp.structure['i_p_pos'])
+###cluster
+a_ppk2g1_slva1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.structure['ia_ppk2g1_vlsb1'], uinp.parameters['i_b1_pos'], swap=True, ax1=0, ax2=2, len_ax0=uinp.structure['i_len_v']
+                                      , len_ax1=uinp.structure['i_len_l'], len_ax2=uinp.structure['i_len_s'], len_ax3=uinp.structure['ia_k2_vlsb1'].shape[-1]
+                                      , left_pos2=uinp.structure['i_p_pos'], right_pos2=uinp.parameters['i_b1_pos'])
+a_ppk2g1_va1e1b1nwzida0e0b0xygsl = np.moveaxis(np.moveaxis(a_ppk2g1_slva1e1b1nwzida0e0b0xyg, 0,-1),0,-1) #put s and l at the end they are summed away shorlty
+a_ppk2g1_va1e1b1nwzida0e0b0xygsl = a_ppk2g1_va1e1b1nwzida0e0b0xygsl[dvp_type_va1e1b1nwzida0e0b0xyg1[...,na,na]] #convert v type axis to normal v axis
+
+##offs
+###dvp mask - basically the shearing mask plus a true for the first dvp which is weaning
+dvp_mask_g3 = np.concatenate([np.array([True]), mask_shear_g3]) #need to add true to the start of the shear mask because the first dvp is weaning
+###days from the start of the dvp when sale occurs
+sales_offset_tsa1e1b1nwzida0e0b0xyg3 = sfun.f_g2g(pinp.sheep['i_sales_offset_tsg3'], 'offs', uinp.structure['i_p_pos'], pinp.sheep['i_t3_len'], pinp.sheep['i_s_len']+1, condition=dvp_mask_g3, axis=uinp.structure['i_p_pos'])
+###target weight in a dvp where sale occurs
+target_weight_tsa1e1b1nwzida0e0b0xyg3 = sfun.f_g2g(pinp.sheep['i_target_weight_tsg3'], 'offs', uinp.structure['i_p_pos'], pinp.sheep['i_t3_len'], pinp.sheep['i_s_len']+1, condition=dvp_mask_g3, axis=uinp.structure['i_p_pos']) #plus 1 because it is shearing opp and weaning (ie the dvp for offs)
+###number of periods before sale that shearing occurs in each dvp
+shearing_offset_tsa1e1b1nwzida0e0b0xyg3= sfun.f_g2g(pinp.sheep['i_shear_prior_tsg3'], 'offs', uinp.structure['i_p_pos'], pinp.sheep['i_t3_len'], pinp.sheep['i_s_len']+1, condition=dvp_mask_g3, axis=uinp.structure['i_p_pos']) #plus 1 because it is shearing opp and weaning (ie the dvp for offs)
+###cluster
+a_k5cluster_lsb0xyg = fun.f_reshape_expand(uinp.structure['ia_ppk5_lsb0'], uinp.parameters['i_b0_pos'], len_ax0=uinp.structure['i_len_l'], len_ax1=uinp.structure['i_len_s']
+                                              , len_ax2=uinp.structure['ia_ppk5_lsb0'].shape[-1])
+a_k5cluster_b0xygls = np.moveaxis(np.moveaxis(a_k5cluster_lsb0xyg, 0,-1),0,-1) #put s and l at the end they are summed away shorlty
+
+
+
+
+#######################
+#on hand / shear mask #
+#######################
 ##offs
 ##calc sale date then determine shearing date
 ##sell - on date
-sales_offset_tsa1e1b1nwzida0e0b0xyg3 = sfun.f_g2g(pinp.sheep['i_sales_offset_tsg3'], 'offs', uinp.structure['i_p_pos'], pinp.sheep['i_t3_len'], pinp.sheep['i_s_len']+1)
 sale_date_tsa1e1b1nwzida0e0b0xyg3 = sales_offset_tsa1e1b1nwzida0e0b0xyg3 + dvp_start_date_va1e1b1nwzida0e0b0xyg3 #date of dvp plus sale offset
 ###adjust sale date to be last day of period
 sale_date_idx_tsa1e1b1nwzida0e0b0xyg3 = sfun.f_next_prev_association(date_end_p, sale_date_tsa1e1b1nwzida0e0b0xyg3,0)#sale occurs at the end of the current generator period therefore 0 offset
 sale_date_tsa1e1b1nwzida0e0b0xyg3 = date_end_p[sale_date_idx_tsa1e1b1nwzida0e0b0xyg3]
 ##sell - weight target
-target_weight_tsa1e1b1nwzida0e0b0xyg3 = sfun.f_g2g(pinp.sheep['i_target_weight_tsg3'], 'offs', uinp.structure['i_p_pos'], pinp.sheep['i_t3_len'], pinp.sheep['i_s_len']+1) #plus 1 because it is shearing opp and weaning (ie the dvp for offs)
 ##convert from shearing/dvp to p array. Increaments at dvp ie point to previous sale opp until new dvp then point at next dvp.
 sale_date_tpa1e1b1nwzida0e0b0xyg3=np.take_along_axis(sale_date_tsa1e1b1nwzida0e0b0xyg3,a_dvp_pointer_pa1e1b1nwzida0e0b0xyg3[na],1)
 target_weight_tpa1e1b1nwzida0e0b0xyg3=np.take_along_axis(target_weight_tsa1e1b1nwzida0e0b0xyg3,a_dvp_pointer_pa1e1b1nwzida0e0b0xyg3[na],1) #gets the target weight for each gen period
@@ -2938,7 +3008,7 @@ target_weight_tpa1e1b1nwzida0e0b0xyg3=np.take_along_axis(target_weight_tsa1e1b1n
 ###lw could go above target then drop back below but it is already sold so the on hand bool shouldnt change. therefore need to use accumulative max and reset each dvp
 weight_pa1e1b1nwzida0e0b0xyg3=cum_dvp(o_ffcfw_offs,a_dvp_pointer_pa1e1b1nwzida0e0b0xyg3)
 ##on hand
-### t0 slice = True
+### t0 slice = True - this is handled by the inputs ie weight and date are high therefore not reached therefore on hand == true
 ### t1 & t2 slice date_p<sale_date and weight<target weight
 on_hand_tpa1e1b1nwzida0e0b0xyg3 = np.logical_and(date_start_pa1e1b1nwzida0e0b0xyg<sale_date_tpa1e1b1nwzida0e0b0xyg3, weight_pa1e1b1nwzida0e0b0xyg3<target_weight_tpa1e1b1nwzida0e0b0xyg3)
 ##period is sale - one true per dvp when sale actually occurs - sale occurs in the period where sheep were on hand at the begining and not on hand at the begining of the next period
@@ -2946,7 +3016,6 @@ period_is_sale_tpa1e1b1nwzida0e0b0xyg3 = np.logical_and(on_hand_tpa1e1b1nwzida0e
 ##period is shearing - one true per dvp when shearing actually occurs
 ##in t0 shearing occurs on specified date, in t1 & t2 it happens a certain number of gen periods before sale.
 ###convert from s/dvp to p
-shearing_offset_tsa1e1b1nwzida0e0b0xyg3= sfun.f_g2g(pinp.sheep['i_shear_prior_tsg3'], 'offs', uinp.structure['i_p_pos'], pinp.sheep['i_t3_len'], pinp.sheep['i_s_len']+1) #plus 1 because it is shearing opp and weaning (ie the dvp for offs)
 shearing_offset_tpa1e1b1nwzida0e0b0xyg3=np.take_along_axis(shearing_offset_tsa1e1b1nwzida0e0b0xyg3,a_dvp_pointer_pa1e1b1nwzida0e0b0xyg3[na],1)
 ###shearing cant occur in a different period to sale therefore need to cap the offset for periods at the begining of the dvp ie if sale occurs in p2 of dvp2 and offset is 3 the offset needs to be reduced because shearing must occur in dvp2
 ####get the period number where dvp changes
@@ -2966,7 +3035,6 @@ period_is_shearing_tpa1e1b1nwzida0e0b0xyg3[0,...] = period_is_shearing_retained_
 period_is_shearing_tpa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is', date_shear_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)[na,...]
 
 ##determine t1 sale slice - note sale must occur in the same dvp as shearing so the offset is capped if shearing occurs near the end of a period
-sale_delay_sa1e1b1nwzida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['i_sales_delay_sg1'], 'dams', uinp.structure['i_p_pos'])
 sale_delay_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(sale_delay_sa1e1b1nwzida0e0b0xyg1, a_prev_s_pa1e1b1nwzida0e0b0xyg1,0)
 next_dvp_index = sfun.f_next_prev_association(date_end_p, dvp_start_date_pa1e1b1nwzida0e0b0xyg1, 0) #points at the next dvp from the date at the end of the period
 periods_to_dvp = next_dvp_index - (p_index_pa1e1b1nwzida0e0b0xyg + 1) #periods to the next dvp. +1 because if the next period is the new dvp you must sell in the current period
@@ -2989,38 +3057,121 @@ on_hand_tpa1e1b1nwzida0e0b0xyg1[2] = np.logical_not(t2_drys_off_hand_pa1e1b1nwzi
 # ##adjust shearing so that it cant occur for a dam that is already sold          ^dont think this is needed because it is done in the p2v function
 # period_is_shearing_tpa1e1b1nwzida0e0b0xyg1 = period_is_shearing_tpa1e1b1nwzida0e0b0xyg1 * on_hand_tpa1e1b1nwzida0e0b0xyg1
 
+
+##add yatf to dams
+o_pi_dams *= (o_mei_solid_dams+o_mei_solid_yatf)/o_mei_solid_dams #done before adding yatf mei. This is instead of adding pi yatf with pi dams because some of the potential intake of the yatf is 'used' consuming milk. Doing it via mei keeps the ratio mei_dams/pi_dams the same before and after adding the yatf. This is what we want because it is saying that there is a given energy intake and it needs to be of a certain quality.
+o_mei_solid_dams = o_mei_solid_dams = o_mei_solid_yatf
+
+##Calculate the feed pools (f) and allocate each intake period to a feed pool based on mei/volume (E/V).
+###calculate ‘ev’ for each animal class.
+ev_dams = o_mei_solid_dams / np.max(0.001, o_pi_dams)
+ev_offs = o_mei_solid_offs / np.max(0.001, o_pi_offs)
+###Find the values that divides the values into 4 equal groups
+t_ev_pa1e1b1nwzida0e0b0xyg1 = ev_dams * (feedsupplyw_pa1e1b1nwzida0e0b0xyg1 < 3) # feedsupply >= 3 (ie the animals are in confinement)
+t_ev_pa1e1b1nwzida0e0b0xyg3 = ev_offs * (feedsupplyw_pa1e1b1nwzida0e0b0xyg3 < 3) # feedsupply >= 3 (ie the animals are in confinement)
+###add matrix feed period
+t_ev_p6a1e1b1nwzida0e0b0xyg1 = np.sum(t_ev_pa1e1b1nwzida0e0b0xyg1 * a_prevfeedperiod_pa1e1b1nwzida0e0b0xyg==index_p6pa1e1b1nwzida0e0b0xyg, axis=uinp.structure['i_p_pos'])
+t_ev_p6a1e1b1nwzida0e0b0xyg3 = np.sum(t_ev_pa1e1b1nwzida0e0b0xyg3 * a_prevfeedperiod_pa1e1b1nwzida0e0b0xyg==index_p6pa1e1b1nwzida0e0b0xyg, axis=uinp.structure['i_p_pos'])
+##broadcast and stack
+t_ev_p6xa1e1b1nwzida0e0b0xyg13 = np.stack(np.broadcast(t_ev_p6a1e1b1nwzida0e0b0xyg1,t_ev_p6a1e1b1nwzida0e0b0xyg3),axis=1)
+# t_ev_p6a1e1b1nwzida0e0b0xyg13 = np.stack(np.broadcast_arrays(t_ev_p6a1e1b1nwzida0e0b0xyg1,t_ev_p6a1e1b1nwzida0e0b0xyg3), axis=1)
+##mask out the 0 then calc the percentiles
+ev_cutoffs_p6f = np.percentile(np.ma.array(t_ev_p6xa1e1b1nwzida0e0b0xyg13, t_ev_p6xa1e1b1nwzida0e0b0xyg13<0), ev_propn_f, axis=tuple(range(uinp.structure['i_p_pos'],0)))  #ma arrays are such that trues are not included hence < rather than >
+##allocate each sheep class to an ev group
+a_ev_pa1e1b1nwzida0e0b0xyg1 = np.searchsorted(ev_cutoffs_p6f[a_prevfeedperiod_p], ev_dams)
+##Any animals with feedsupply >= 3 has ev_group = 4 (the confinement pattern)
+a_ev_pa1e1b1nwzida0e0b0xyg1 = sfun.f_update(ev_group_pdams,4,(feedsupplyw_pa1e1b1nwzida0e0b0xyg1 < 3))
+
 ##convert variables from p to v
-###continuous
+###continuous - with f axis
+####dams
+mei_ftva1e1b1nwzida0e0b0xyg1 = p2v(o_mei_solid_dams, a_dvp_pointer_pa1e1b1nwzida0e0b0xyg1, index_vpa1e1b1nwzida0e0b0xyg1, o_numbers_end_dams
+                                   , on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...], days_period_pa1e1b1nwzida0e0b0xyg1, a_ev_p=a_ev_pa1e1b1nwzida0e0b0xyg1, index_ftvp=index_fpa1e1b1nwzida0e0b0xyg[:,na,na,...])
 
 ###one off
-start1=time.time()
-ffcfw_condensed_va1e1b1nwzida0e0b0xyg1 = p2v_oneoff_2(o_ffcfw_condensed_dams, o_numbers_end_dams, period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1, on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...], a_dvp_pointer_pa1e1b1nwzida0e0b0xyg1,index_vpa1e1b1nwzida0e0b0xyg1) #add v axis to on hand
-start2=time.time()
-ffcfw_condensed_va1e1b1nwzida0e0b0xyg1 = p2v_oneoff(o_ffcfw_condensed_dams, o_numbers_end_dams, period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1, on_hand_tpa1e1b1nwzida0e0b0xyg1, a_dvp_pointer_pa1e1b1nwzida0e0b0xyg1) #add v axis to on hand
-finish=time.time()
-print('loop method: ', finish-start2)
-print('non loop method: ', start2 - start1)
+####dams
+fibre_tva1e1b1nwzida0e0b0xyg1 = p2v(o_cfw_dams, a_dvp_pointer_pa1e1b1nwzida0e0b0xyg1, index_vpa1e1b1nwzida0e0b0xyg1, o_numbers_end_dams
+                                    , on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...], period_is_tvp=period_is_shearing_tpa1e1b1nwzida0e0b0xyg1[:,na,...])
 
-def lw_distribution(ffcfw_condensed_va1e1b1nwzida0e0b0xyg, ffcfw_va1e1b1nwzida0e0b0xyg):
-    ##distriuting animals on LW at the start of dvp0
-    ###Calculate the difference between the 3 weights and the middle weight (slice 0)
-    diff = ffcfw_condensed_va1e1b1nwzida0e0b0xyg - sfun.f_dynamic_slice(ffcfw_condensed_va1e1b1nwzida0e0b0xyg, uinp.structure['i_w_pos'], 0, 1)
-    ###Calculate the spread that would generate the average weight
-    spread =  1 - (ffcfw_condensed_va1e1b1nwzida0e0b0xyg[:, :, na] - ffcfw_va1e1b1nwzida0e0b0xyg[:, na, :]) / diff
-    ###Bound the spread
-    spread_bounded = np.clip(spread, 0, 1)
-    ###Set values for the standard pattern to be the remainder from the closest.
-    spread_bounded[:27, ...] =  1 - np.maximum(spread_bounded[27:54, ...], spread_bounded[54:, ...])
-    ###Set the distribution to 0 if lw_end is below the condensed minimum weight
-    distribution_vww = spread_bounded * (ffcfw_vw[:, na, :] >= np.min(ffcfw_condensed_vw[:, :, na]))
-    return distribution_vww
-
-lw_distribution(ffcfw_condensed_va1e1b1nwzida0e0b0xyg1)
-
-##clustering
+ffcfw_va1e1b1nwzida0e0b0xyg1 = p2v_oneoff(o_ffcfw_dams, a_dvp_pointer_pa1e1b1nwzida0e0b0xyg1,index_vpa1e1b1nwzida0e0b0xyg1, period_is_tvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1) #numbers not required for ffcfw
+ffcfw_condensed_va1e1b1nwzida0e0b0xyg1 = p2v_oneoff(o_ffcfw_condensed_dams, a_dvp_pointer_pa1e1b1nwzida0e0b0xyg1,index_vpa1e1b1nwzida0e0b0xyg1, period_is_tvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1) #numbers not required for ffcfw
+numbers_va1e1b1nwzida0e0b0xyg1 = p2v_oneoff(o_numbers_end_dams, a_dvp_pointer_pa1e1b1nwzida0e0b0xyg1,index_vpa1e1b1nwzida0e0b0xyg1, period_is_tvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1) #numbers not required for ffcfw
+numbers_start_va1e1b1nwzida0e0b0xyg1 = p2v_oneoff(o_numbers_end_dams, a_dvp_pointer_pa1e1b1nwzida0e0b0xyg1,index_vpa1e1b1nwzida0e0b0xyg1, period_is_tvp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1) #numbers not required for ffcfw
 
 
-#params
+####yatf
+#  ffcfw_yatf will need to be distributed to the ffcfw_initial.
+# The numbers of yatf at weaning become npw which is p_npw
+# Need those 2 things for the end of the period birthwean
+
+
+##lw distribution
+lw_distribution(ffcfw_condensed_va1e1b1nwzida0e0b0xyg1, ffcfw_va1e1b1nwzida0e0b0xyg1, uinp.structure['i_w1_len'], uinp.structure['i_n_fvp_period1'],dvp_type_va1e1b1nwzida0e0b0xyg1)
+
+##clustering - dams
+###create k2 association based on scaning and gbal
+a_dvp_p_va1e1b1nwzida0e0b0xyg1 = sfun.f_next_prev_association(date_end_p, dvp_start_date_va1e1b1nwzida0e0b0xyg1, 1) #returns the period index for the start of each dvp
+gbal_va1e1b1nwzida0e0b0xyg1 = gbal_pa1e1b1nwzida0e0b0xyg1[a_dvp_p_va1e1b1nwzida0e0b0xyg1]
+scan_va1e1b1nwzida0e0b0xyg1 = scan_pa1e1b1nwzida0e0b0xyg1[a_dvp_p_va1e1b1nwzida0e0b0xyg1]
+a_k2cluster_va1e1b1nwzida0e0b0xyg1 = np.sum(a_ppk2g1_va1e1b1nwzida0e0b0xygsl * (gbal_va1e1b1nwzida0e0b0xyg1[na,na]==index_l) * (scan_va1e1b1nwzida0e0b0xyg1[na,na]==index_s[na]), axis = (-1,-2))
+a_k2cluster_va1e1b1nwzida0e0b0xyg1 = a_k2cluster_va1e1b1nwzida0e0b0xyg1 + (np.max(np.arange(uinp.structure['a_nfoet_b1'])) * index_e1b1nwzida0e0b0xyg * (scan_va1e1b1nwzida0e0b0xyg1 == 4) * (nfoet_b1nwzida0e0b0xyg >= 1)) #If scanning for foetal age add 10 to the animals in the second & subsequent cycles that were scanned as pregnant (nfoet_b1 >= 1)
+k2_len = np.max(a_k2cluster_ve1b1g1)
+index_k2tva1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(np.arange(k2_len), uinp.structure(['i_k2_pos']))
+###cluster production
+mei_k2tva1e1b1nwzida0e0b0xyg1 = np.sum(mei_tva1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1), axis = (uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)
+
+###cluster number
+p_numbers_dams_k2k2vg1 = np.sum(numbers_v...g1 * distribution_vww * (np.roll(a_clusterk2_ve1b1g1, axis = v) == index_k2[:, na, …]), axis = (e1, b1), keepdim) /
+np.sum(numbers_start_v...g1 * (a_clusterk2_ve1b1g1 == index_k2), axis = (e1, b1), keepdim)
+####add t axis - such that only slice t0 provides numbers
+
+##clustering - offs
+### d cluster
+a_k3cluster_d = np.minimum(2, index_d)
+###b0 and e0 cluster
+a_k5cluster_dia0e0b0xyg3 = np.sum(a_k5cluster_b0xygls * (i_gbal_dia0e0b0xyg3[na,na]==index_l[na]) * (i_scan_dia0e0b0xyg3[na,na]==index_s), axis = (-1,-2))
+a_k5cluster_dia0e0b0xyg3 = a_k5cluster_dia0e0b0xyg3 + (len_b0 * index_e0b0xyg * (i_scan_dia0e0b0xyg3 == 4)) #If scanning for foetal age add 6 to the animals in the second & subsequent cycles. 6 is the number of slices in the b0 axes
+k3_len = np.max(a_k3cluster_d)
+k5_len = np.max(a_k5cluster_de0b0g3)
+###cluster production
+
+
+
+#########
+#params #
+#########
+##build index / pyomo param key - this is a little slow but has to happen each loop of exp incase masks are altered
+### _create numpy index for param dicts ^creating indexes is a bit slow
+##the array returned must be of type object, if string the dict keys become a numpy string and when indexed in pyomo it doesn't work.
+keys_a = np.append('nondiff',pinp.sheep['i_wean_times'][pinp.sheep['i_mask_a']])
+keys_g0 = sfun.f_g2g(pinp.sheep['i_groups_sire'],'sire')
+keys_g1 = sfun.f_g2g(pinp.sheep['i_groups_dams'],'dams')
+keys_g3 = sfun.f_g2g(pinp.sheep['i_groups_offs'],'offs')
+keys_f1 = [[].append('dvp%s'%i) for i in range(dvp_type_va1e1b1nwzida0e0b0xyg1.shape[0])]
+keys_f3 = [[].append('dvp%s'%i) for i in range(dvp_start_date_va1e1b1nwzida0e0b0xyg3.shape[0])]
+keys_i = pinp.sheep['i_tol_idx'][pinp.sheep['i_mask_i']]
+keys_k2 = l
+keys_lw0 = uinp.structure['i_w_idx_sire']
+keys_lw1 = uinp.structure['i_w_idx_dams']
+keys_lw3 = uinp.structure['i_w_idx_offs']
+keys_n0 = uinp.structure['i_n_idx_sire']
+keys_n1 = uinp.structure['i_n_idx_dams']
+keys_n3 = uinp.structure['i_n_idx_offs']
+keys_p6 = np.array([pinp.feed_inputs['feed_periods'].index[:-1]])
+keys_t1 = [[].append('dvp%s'%i) for i in range(pinp.sheep['i_t3_len'])] #same as offs atm
+keys_t3 = [[].append('dvp%s'%i) for i in range(pinp.sheep['i_t3_len'])]
+keys_v = np.asarray(uinp.structure['sheep_pools'])
+keys_y0 = np.append('nondiff',uinp.parameter['i_gen_merit_sire'])
+keys_y1 = np.append('nondiff',uinp.parameter['i_gen_merit_dams'])
+keys_y3 = np.append('nondiff',uinp.parameter['i_gen_merit_offs'])
+keys_z = pinp.general['season_info'].index[pinp.general['season_info']['included']]
+
+## k2tfanwziyg1vp
+arrays = [keys_k2, keys_t1, keys_f1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1, keys_v, keys_p6]
+index_k2tfanwziyg1vp = fun.cartesian_product_simple_transpose(arrays)
+index_k2tfanwziyg1vp = tuple(map(tuple, index_k2tfanwziyg1vp))  # create a tuple rather than a list because tuples are faster
+
+##convert np to dict
 
 # model.p_asset_stockinfra
 # model.p_dep_stockinfra

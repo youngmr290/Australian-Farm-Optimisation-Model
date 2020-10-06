@@ -162,7 +162,7 @@ def f_condition_score(ffcfw, normal_weight, cs_propn = 0.19):
 #input and manipulation functions #
 ###################################
 
-def f_c2g(params_c2, y=0, var_pos=0, len_ax1=0, len_ax2=0, group = 'dams'):
+def f_c2g(params_c2, y=0, var_pos=0, len_ax1=0, len_ax2=0, condition=None, axis=0):
     '''
     Parameters
     ----------
@@ -176,10 +176,7 @@ def f_c2g(params_c2, y=0, var_pos=0, len_ax1=0, len_ax2=0, group = 'dams'):
         length of axis 1 - used to reshape input array into multi dimension array (this should be i_len_?).
     len_ax2 : int, optional
         length of axis 1 - used to reshape input array into multi dimension array (this should be i_len_?). The default is 0.
-    g2g: boolean, optional
-        this determines if the user only wants to convert from g to g (ie select which genotype options need to be represented for the necesary offs) this only happens if the inputs dont have k axis.
-    group:
-        this is used to specify the sheep group that the g2g mask is being applied
+
     Returns
     -------
     param array for each genotype. Grouped by sheep group ie sire, offs, dams, yatf.
@@ -241,10 +238,21 @@ def f_c2g(params_c2, y=0, var_pos=0, len_ax1=0, len_ax2=0, group = 'dams'):
     param_dams=np.nansum(allaxis_params_c0[..., na, :] * mul_dams_genotypes_g0c0, axis = -1)
     param_yatf=np.nansum(allaxis_params_c0[..., na, :] * mul_yatf_genotypes_g0c0, axis = -1)
     param_offs=np.nansum(allaxis_params_c0[..., na, :] * mul_offs_genotypes_g0c0, axis = -1)
+    ##apply mask if required
+    if condition is not None: #see if condition exists
+        if type(condition) == bool: #check if array or single value - note array of T & F is not type bool (it is array)
+            condition= np.asarray([condition]) #convert to numpy if it is singular input
+        ###apply mask
+        param_sire = np.compress(condition, param_sire, axis)
+        param_dams = np.compress(condition, param_dams, axis)
+        param_yatf = np.compress(condition, param_yatf, axis)
+        param_offs = np.compress(condition, param_offs, axis)
+
+
     return param_sire, param_dams, param_yatf, param_offs
 
 
-def f_g2g(array_g,group,left_pos=0,len_ax1=0,len_ax2=0,len_ax3=0,swap=False,right_pos=-1,left_pos2=0,right_pos2=-1, condition = None, axis = 0):
+def f_g2g(array_g,group,left_pos=0,len_ax1=0,len_ax2=0,len_ax3=0,swap=False,right_pos=-1,left_pos2=0,right_pos2=-1, condition = None, axis = 0, condition2 = None, axis2 = 0):
     '''
     Parameters
     ----------
@@ -335,6 +343,12 @@ def f_g2g(array_g,group,left_pos=0,len_ax1=0,len_ax2=0,len_ax3=0,swap=False,righ
             array = np.compress(condition, array, axis)
         else:
             array = np.compress(condition, array, axis)
+    if condition2 is not None: #see if condition exists
+        if type(condition2) == bool: #check if array or single value - note array of T & F is not type bool (it is array)
+            condition2= np.asarray([condition2]) #convert to numpy if it is singular input
+            array = np.compress(condition2, array, axis2)
+        else:
+            array = np.compress(condition2, array, axis2)
     return array
 
 

@@ -168,7 +168,7 @@ def cartesian_product_simple_transpose(arrays):
 
 
 def f_reshape_expand(array,left_pos=0,len_ax0=0,len_ax1=0,len_ax2=0,swap=False,ax1=0,ax2=1,right_pos=0,left_pos2=0,right_pos2=0
-                     , left_pos3=0,right_pos3=0, condition = None, axis = 0):
+                     , left_pos3=0,right_pos3=0, condition = None, axis = 0,len_ax3=0):
     '''
     Parameters
     ----------
@@ -204,6 +204,9 @@ def f_reshape_expand(array,left_pos=0,len_ax0=0,len_ax1=0,len_ax2=0,swap=False,a
     ##convert int to 1d array if required
     if type(array) == int:
         array = np.array([array])
+    if len_ax3>0:
+        shape=(len_ax0,len_ax1,len_ax2,len_ax3)
+        array = array.reshape(shape)
     if len_ax2>0:
         shape=(len_ax0,len_ax1,len_ax2)
         array = array.reshape(shape)
