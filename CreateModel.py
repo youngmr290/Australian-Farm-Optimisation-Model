@@ -52,14 +52,14 @@ def sets() :
     ######################
     ### stock            # 
     ######################
-    model.s_tol = Set(initialize=pinp.sheep['i_tol_idx'][pinp.sheep['i_mask_i']], doc='birth groups (times of lambing)')
-    model.s_wean_times = Set(initialize=np.append('nondiff',pinp.sheep['i_wean_times'][pinp.sheep['i_mask_a']]), doc='weaning options') #non diff is the optoin required if there is no management differentiation for different weaning times or it is before weaning. Note it is technically incorrect to have multiple weaning times without different activities - this is only used so the user can compare if it is dams or offs that are impacted by weaning time (eg the user can have multiple weaning times and only manage the offs differentially, the ewes will be managed as if it is the std weaning).
-    model.s_gen_merit_sire = Set(initialize=np.append('nondiff',uinp.parameter['i_gen_merit_sire']), doc='genetic merit of sires')
-    model.s_gen_merit_dams = Set(initialize=np.append('nondiff',uinp.parameter['i_gen_merit_dams']), doc='genetic merit of dams')
-    model.s_gen_merit_offs = Set(initialize=np.append('nondiff',uinp.parameter['i_gen_merit_offs']), doc='genetic merit of offs')
-    model.s_groups_sire = Set(initialize=sfun.f_g2g(pinp.sheep['i_groups_sire'],'sire'), doc='geneotype groups of sires') #have to call the g2g function to apply mask
-    model.s_groups_dams = Set(initialize=sfun.f_g2g(pinp.sheep['i_groups_dams'],'dams'), doc='geneotype groups of dams') #have to call the g2g function to apply mask
-    model.s_groups_offs = Set(initialize=sfun.f_g2g(pinp.sheep['i_groups_offs'],'offs'), doc='geneotype groups of offs')  #have to call the g2g function to apply mask
+    model.s_tol = Set(initialize=pinp.sheep['i_i_idx'][pinp.sheep['i_mask_i']], doc='birth groups (times of lambing)')
+    model.s_wean_times = Set(initialize=pinp.sheep['i_a_idx'][pinp.sheep['i_mask_a']], doc='weaning options') #non diff is the optoin required if there is no management differentiation for different weaning times or it is before weaning. Note it is technically incorrect to have multiple weaning times without different activities - this is only used so the user can compare if it is dams or offs that are impacted by weaning time (eg the user can have multiple weaning times and only manage the offs differentially, the ewes will be managed as if it is the std weaning).
+    model.s_gen_merit_sire = Set(initialize=uinp.parameter['i_y_idx_sire'][uinp.parameters['i_mask_y']], doc='genetic merit of sires')
+    model.s_gen_merit_dams = Set(initialize=uinp.parameter['i_y_idx_dams'][uinp.parameters['i_mask_y']], doc='genetic merit of dams')
+    model.s_gen_merit_offs = Set(initialize=uinp.parameter['i_y_idx_offs'][uinp.parameters['i_mask_y']], doc='genetic merit of offs')
+    model.s_groups_sire = Set(initialize=sfun.f_g2g(pinp.sheep['i_g_idx_sire'],'sire'), doc='geneotype groups of sires') #have to call the g2g function to apply mask
+    model.s_groups_dams = Set(initialize=sfun.f_g2g(pinp.sheep['i_g_idx_dams'],'dams'), doc='geneotype groups of dams') #have to call the g2g function to apply mask
+    model.s_groups_offs = Set(initialize=sfun.f_g2g(pinp.sheep['i_g_idx_offs'],'offs'), doc='geneotype groups of offs')  #have to call the g2g function to apply mask
 
 
     
@@ -161,7 +161,7 @@ model.s_sire_periods = Set(initialize=, doc='sire capacity periods')
 ##dams
 model.s_sale_dams = Set(initialize=, doc='Sales within the year for damss')
 model.s_fvp_dams = Set(ordered=True, initialize=, doc='Feed variation periods for damss')
-model.s_birth_dams = Set(initialize=, doc='Cluster for LSLN & oestrus cycle based on scanning, global & weaning management')
+
 model.s_nut_dams = Set(initialize=uinp.structure['i_n_idx_dams'], doc='Nutrition levels in each feed period for dams')
 model.s_lw_dams = Set(initialize=uinp.structure['i_w_idx_dams'], doc='Standard LW patterns damss')
 ##offs

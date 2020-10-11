@@ -184,12 +184,12 @@ structure['i_sim_periods_year'] = 52
 structure['i_w_pos'] = -10
 structure['i_n_pos'] = -11
 structure['i_p_pos'] = -15
-structure['i_k2_pos'] = -18
+structure['i_k2_pos'] = -17
 structure['i_k3_pos'] = -19
 structure['i_k5_pos'] = -18
 structure['i_lag_wool'] = 1 #lags in calculations (number of days over which production is averaged)
 structure['i_lag_organs'] = 1  #lags in calculations (number of days over which production is averaged)
-structure['i_lsln_idx_dams'] = ['00',	'11',	'22',	'33',	'21',	'32',	'31',	'10',	'20',	'30',	'NM']
+structure['i_lsln_idx_dams'] = ['NM', '00',	'11',	'22',	'33',	'21',	'32',	'31',	'10',	'20',	'30']
 structure['i_btrt_idx_offs'] = ['11',	'22',	'33',	'21',	'32',	'31']
 structure['prejoin_offset'] = 8
 structure['i_feedsupply_itn_max'] = 10
@@ -200,23 +200,23 @@ structure['i_oldest_animal'] = 6.6
 structure['n_sim_periods_year'] = 52 
 ## DSE group and LSLN (b1)
 structure['i_mask_b0_b1'] = np.array([False, True,	True,	True,	True,	True,	True,	False,	False,	False,	False])
-structure['ia_b0_b1'] = np.array([0, 0, 1,	2,	3,	4,	5,	0,	0,	0,	0])
-structure['a_nfoet_b1'] = np.array([0,1,2,3,2,3,3,1,2,3,0])
-structure['a_nyatf_b1'] = np.array([0,1,2,3,1,2,1,0,0,0,0])  
-structure['i_initial_b1'] = np.array([0,0,0,0,0,0,0,0,0,0,1])  
+structure['ia_b0_b1'] = np.array([0, 0, 0, 1,	2,	3,	4,	5,	0,	0,	0])
+structure['a_nfoet_b1'] = np.array([0,0,1,2,3,2,3,3,1,2,3])
+structure['a_nyatf_b1'] = np.array([0,0,1,2,3,1,2,1,0,0,0])
+structure['i_initial_b1'] = np.array([1,0,0,0,0,0,0,0,0,0,0])
                      
 ##feed supply/ nutrition levels
 structure['i_w0_len'] = 1
 structure['i_w_idx_sire'] = ['lw1']
 structure['i_w1_len'] = 81
-structure['i_w_idx_dams'] = ['lw1', 'lw2', 'lw3'] #^will need to expand to 81
+structure['i_w_idx_dams'] = ['lw1', 'lw2', 'lw3', 'lw4', 'lw5', 'lw6', 'lw7', 'lw8', 'lw9', 'lw10', 'lw11', 'lw12', 'lw13', 'lw14', 'lw15', 'lw16', 'lw17', 'lw18', 'lw19', 'lw20', 'lw21', 'lw22', 'lw23', 'lw24', 'lw25', 'lw26', 'lw27', 'lw28', 'lw29', 'lw30', 'lw31', 'lw32', 'lw33', 'lw34', 'lw35', 'lw36', 'lw37', 'lw38', 'lw39', 'lw40', 'lw41', 'lw42', 'lw43', 'lw44', 'lw45', 'lw46', 'lw47', 'lw48', 'lw49', 'lw50', 'lw51', 'lw52', 'lw53', 'lw54', 'lw55', 'lw56', 'lw57', 'lw58', 'lw59', 'lw60', 'lw61', 'lw62', 'lw63', 'lw64', 'lw65', 'lw66', 'lw67', 'lw68', 'lw69', 'lw70', 'lw71', 'lw72', 'lw73', 'lw74', 'lw75', 'lw76', 'lw77', 'lw78', 'lw79', 'lw80', 'lw81']
 structure['i_w3_len'] = 81
-structure['i_w_idx_offs'] = ['lw1', 'lw2', 'lw3', 'lw4', 'lw5']
-structure['i_n0_len'] = 1  #number of different feedsupplies in each fs period
+structure['i_w_idx_offs'] = ['lw1', 'lw2', 'lw3', 'lw4', 'lw5', 'lw6', 'lw7', 'lw8', 'lw9', 'lw10', 'lw11', 'lw12', 'lw13', 'lw14', 'lw15', 'lw16', 'lw17', 'lw18', 'lw19', 'lw20', 'lw21', 'lw22', 'lw23', 'lw24', 'lw25', 'lw26', 'lw27', 'lw28', 'lw29', 'lw30', 'lw31', 'lw32', 'lw33', 'lw34', 'lw35', 'lw36', 'lw37', 'lw38', 'lw39', 'lw40', 'lw41', 'lw42', 'lw43', 'lw44', 'lw45', 'lw46', 'lw47', 'lw48', 'lw49', 'lw50', 'lw51', 'lw52', 'lw53', 'lw54', 'lw55', 'lw56', 'lw57', 'lw58', 'lw59', 'lw60', 'lw61', 'lw62', 'lw63', 'lw64', 'lw65', 'lw66', 'lw67', 'lw68', 'lw69', 'lw70', 'lw71', 'lw72', 'lw73', 'lw74', 'lw75', 'lw76', 'lw77', 'lw78', 'lw79', 'lw80', 'lw81']
+structure['i_n0_len'] = 1  #number of different feedsupplies in each fv period
 structure['i_n_idx_sire'] = ['n1']
-structure['i_n1_len'] = 3   #number of different feedsupplies in each fs period
+structure['i_n1_len'] = 3   #number of different feedsupplies in each fv period
 structure['i_n_idx_dams'] = ['n1']
-structure['i_n3_len'] = 3  #number of different feedsupplies in each fs period
+structure['i_n3_len'] = 3  #number of different feedsupplies in each fv period
 structure['i_n_idx_offs'] = ['n1']
 structure['i_n0_matrix_len'] = 1 #number of nutrition levels in the matrix
 structure['i_n1_matrix_len'] = 1 #number of nutrition levels in the matrix
@@ -296,10 +296,15 @@ structure['i_adjp_fl_initial_w1'] = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 structure['i_adjp_fl_initial_w3'] = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10])
 
 ##association between management and feedsupply
-structure['i_len_v'] = 2
+structure['i_len_m'] = 2
 structure['i_len_l'] = 4
 structure['i_len_s'] = 5
-structure['ia_k2_vlsb1'] =np.array([[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
+structure['i_k2_idx_dams'] = np.array([
+['00',   '11',	 '22',   '33',   '21',   '32',   '31',   '10',   '20',   '30'],
+['00-1', '11-1', '22-1', '33-1', '21-1', '32-1', '31-1', '10-1', '20-1', '30-1'],
+['00-2', '11-2', '22-2', '33-2', '21-2', '32-2', '31-2', '10-2', '20-2', '30-2']])
+
+structure['ia_k2_mlsb1'] =np.array([[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
                                  ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
                                  ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
                                  ,[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
@@ -341,7 +346,7 @@ structure['ia_k2_vlsb1'] =np.array([[0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
                                  ,[1, 3,	5,	6,	3,	5,	3,	1,	1,	1,	1]])
 
 ##association between management and postprocessing clustering
-structure['i_n_v1type'] = 2
+structure['i_n_v1type'] = 3
 structure['ia_ppk2g1_vlsb1'] = np.array([
                                         [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
                                         [0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0],
@@ -405,7 +410,7 @@ structure['ia_ppk2g1_vlsb1'] = np.array([
                                         [0,	1,	2,	3,	4,	5,	6,	7,	8,	9,	0]])
 
 ##association between management and postprocessing clustering - offs
-structure['ia_ppk5g3_lsb0'] = np.array([
+structure['ia_ppk5_lsb0'] = np.array([
                                         [0,	0,	0,	0,	0,	0],
                                         [0,	0,	0,	0,	0,	0],
                                         [0,	0,	0,	0,	0,	0],

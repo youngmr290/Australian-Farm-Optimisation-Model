@@ -89,7 +89,7 @@ def f_daylength(dayOfYear, lat):
 #     ###previous joining date
 #     return np.minimum(a_next_o_plc1 - offset, len(age)-1)
 
-def f_next_prev_association(datearray_sclice,*args):
+def f_next_prev_association(datearray_slice,*args):
     '''
     Depending on the inputs this function will return the next or previous assosiation.
     eg it can be used to determine the next lambing opportunity for each period.
@@ -97,7 +97,7 @@ def f_next_prev_association(datearray_sclice,*args):
 
     Parameters
     ----------
-    datearray_sclice : Int
+    datearray_slice : Int
         This is the axis along which the array is being sliced (this must be sorted).
     *args : 1 - array, 2 - int
         Arg 1: the period array 1d that is the index is being found for, note the index is based off the start date therefore must do [1:-1] if you want idx based on end date.
@@ -116,8 +116,8 @@ def f_next_prev_association(datearray_sclice,*args):
     '''
     date=args[0]
     offset=args[1] #offset is used to get the previous datearray period
-    idx_next = np.searchsorted(datearray_sclice, date)
-    idx = np.clip(idx_next - offset, 0, len(datearray_sclice)-1) #makes the max value equal to the length of joining array, because if the period date is after the last lambing opportunity there is no 'next'
+    idx_next = np.searchsorted(datearray_slice, date)
+    idx = np.clip(idx_next - offset, 0, len(datearray_slice)-1) #makes the max value equal to the length of joining array, because if the period date is after the last lambing opportunity there is no 'next'
     return idx
 
 
@@ -1197,20 +1197,19 @@ def f_period_start_prod(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len,
 
 def f_condensed(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_fvp0, period_is_startfvp0):
     '''condense variable to 3 common points along the w axis for the start of fvp0'''
-    temporary = var.copy()  # required to set the shape
+    temporary = var.copy()  #this is done to ensure that temp has the same size as var. In the next line np.diagonal removes the n axis so it is added back in using the expand function, but that is a singlton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
     if np.any(period_is_startfvp0):
         ###test if array has diagonal and calc temp variables as if start of dvp - if there is not a diagonal use the alternative system for reallocting at the end of a DVP
         if i_n_len >= i_w_len:
-            temporary = numbers #this is done to ensure that temp has the same size as var. In the next line np.diagonal removes the n axis so it is added back in using the expand function, but that is a singlton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
-            temporary[...] = np.expand_dims(np.rollaxis(numbers.diagonal(axis1= uinp.structure['i_w_pos'], axis2= uinp.structure['i_n_pos']),-1,uinp.structure['i_w_pos']), uinp.structure['i_n_pos']) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
+            temporary[...] = np.expand_dims(np.rollaxis(temporary.diagonal(axis1= uinp.structure['i_w_pos'], axis2= uinp.structure['i_n_pos']),-1,uinp.structure['i_w_pos']), uinp.structure['i_n_pos']) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
         else:
             ###add high pattern
             temporary[...] = np.mean(
-                f_dynamic_slice(var, uinp.structure['i_w_pos'], int(i_w_len / i_n_fvp_period), int(i_w_len / i_n_fvp_period) + int(i_w_len / 10)), uinp.structure['i_w_pos'],
+                f_dynamic_slice(var, uinp.structure['i_w_pos'], int(i_n_len ** i_n_fvp_period), int(i_n_len ** i_n_fvp_period) + int(i_w_len / 10)), uinp.structure['i_w_pos'],
                 keepdims=True)  # average of the top lw patterns
             ###add mid pattern (w 0 - 27) - use slice method incase w axis changes postion (cant use MRYs dynamic slice function because we are assigning)
             sl = [slice(None)] * temporary.ndim
-            sl[uinp.structure['i_w_pos']] = slice(0, int(i_w_len / i_n_fvp_period))
+            sl[uinp.structure['i_w_pos']] = slice(0, int(i_n_len ** i_n_fvp_period))
             temporary[tuple(sl)] = f_dynamic_slice(var, uinp.structure['i_w_pos'], 0, 1)  # the pattern that is feed supply 1 (median) for the entire year (the top w pattern)
             ###low pattern
             ind = np.argsort(var, axis=uinp.structure['i_w_pos'])  #sort into production order so we can select the lowest production with mort less than 10% - note sorts in asending order
@@ -1224,13 +1223,13 @@ def f_condensed(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp
                 uinp.structure['i_w_pos'],
                 keepdims=True)  # returns bool if mort is less the 10% then sums the falses which give the index of the first w pattern that has mort less that 10%
             sl = [slice(None)] * temporary.ndim
-            sl[uinp.structure['i_w_pos']] = slice(-int(i_w_len / i_n_fvp_period), None)
+            sl[uinp.structure['i_w_pos']] = slice(-int(i_n_len ** i_n_fvp_period), None)
             temporary[tuple(sl)] = np.take_along_axis(var_sorted, low_slice, uinp.structure[
                 'i_w_pos'])  # production level of the lowest nutrition profile that has a mortality less than 10% for the year
     ###Update if the period is start of year (shearing for offs and prejoining for dams)
-    numbers = f_update(var, temporary, period_is_startfvp0)
+    var = f_update(var, temporary, period_is_startfvp0)
 
-    return numbers
+    return var
 
 def f_period_start_nums(numbers, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_fvp0, period_is_startfvp0, period_is_startseason, season_propn_z, group=None, numbers_initial_repro=0, period_is_prejoin=0):
     ##a)update numbers if start of DVP
@@ -1265,7 +1264,7 @@ def f_period_start_nums(numbers, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_
 #     return numbers
 
 
-def f_period_end_nums(numbers, mortality, mortality_yatf=0, nfoet_b1 = 0, nyatf_b1 = 0, group=None, conception = 0, scan=0, gbal=0, period_is_mating = False, period_is_birth=False, period_is_scan=False):
+def f_period_end_nums(numbers, mortality, mortality_yatf=0, nfoet_b1 = 0, nyatf_b1 = 0, group=None, conception = 0, scan=0, gbal=0, gender_propn_x=1, period_is_mating = False, period_is_birth=False, period_is_scan=False):
     '''
     This adjusts numbers for things like conception and mortality that happen during a given period
     '''
@@ -1287,7 +1286,7 @@ def f_period_end_nums(numbers, mortality, mortality_yatf=0, nfoet_b1 = 0, nyatf_
         numbers = f_update(numbers, temp, period_is_birth * (gbal>=1)) # has to happen after the dams are moved due to progeny mortality so that gbal drys are also scaled by drys_retained
     ##things just for yatf
     if group==2:
-        temp = nyatf_b1   # nyatf is accounting for peri-natal mortality
+        temp = nyatf_b1 * gender_propn_x   # nyatf is accounting for peri-natal mortality
         f_update(numbers, temp, period_is_birth)
     return numbers
 

@@ -162,6 +162,34 @@ def cartesian_product_simple_transpose(arrays):
         arr[i, ...] = a
     return arr.reshape(la, -1).T
 
+
+def searchsort_multiple_dim(a,v,axis_a,axis_v):
+    '''
+    Find the indices into a sorted array a such that, if the corresponding elements in 'v' were inserted before the indices, the order of 'a' would be preserved.
+    It does this iteratively down the specified axis (therefore the specified axis must be present in both 'a' and 'v'
+
+    Parameters:
+        a: 2-D array_like
+        Input array. Must be sorted in ascending order, otherwise sorter must be an array of indices that sort it.
+
+        v: array_like
+        Values to insert into a.
+
+        axis_a: int
+        The axis to iterate along - should be same as axis_v
+        axis_v: int
+        The axis to iterate along - should be same as axis_a
+
+    '''
+    final = np.zeros_like(v)
+    slc_v = [slice(None)] * len(v.shape)
+    slc_a = [slice(None)] * len(a.shape)
+    for i in range(v.shape[axis_v]):
+        slc_v[axis_v] = slice(i, i+1)
+        slc_a[axis_a] = slice(i, i+1)
+        final[tuple(slc_v)] = np.searchsorted(np.squeeze(a[tuple(slc_a)]), v[tuple(slc_v)])
+    return final
+
 #print(timeit.timeit(phases2,number=100)/100)
 #
 
@@ -207,7 +235,7 @@ def f_reshape_expand(array,left_pos=0,len_ax0=0,len_ax1=0,len_ax2=0,swap=False,a
     if len_ax3>0:
         shape=(len_ax0,len_ax1,len_ax2,len_ax3)
         array = array.reshape(shape)
-    if len_ax2>0:
+    elif len_ax2>0:
         shape=(len_ax0,len_ax1,len_ax2)
         array = array.reshape(shape)
     elif len_ax1>0:
