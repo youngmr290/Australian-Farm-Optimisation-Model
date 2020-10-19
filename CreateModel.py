@@ -45,21 +45,11 @@ def sets() :
     #######################
     ##season types - set only has one season if steady state model is being used
     if pinp.general['steady_state']:
-        model.s_season_types = Set(initialize='season 1', doc='season types')
+        model.s_season_types = Set(initialize=['season 1'], doc='season types')
     else:    
         model.s_season_types = Set(initialize=pinp.general['season_info'].index[pinp.general['season_info']['included']], doc='season types') #mask season types by the ones included
 
-    ######################
-    ### stock            # 
-    ######################
-    model.s_tol = Set(initialize=pinp.sheep['i_i_idx'][pinp.sheep['i_mask_i']], doc='birth groups (times of lambing)')
-    model.s_wean_times = Set(initialize=pinp.sheep['i_a_idx'][pinp.sheep['i_mask_a']], doc='weaning options') #non diff is the optoin required if there is no management differentiation for different weaning times or it is before weaning. Note it is technically incorrect to have multiple weaning times without different activities - this is only used so the user can compare if it is dams or offs that are impacted by weaning time (eg the user can have multiple weaning times and only manage the offs differentially, the ewes will be managed as if it is the std weaning).
-    model.s_gen_merit_sire = Set(initialize=uinp.parameter['i_y_idx_sire'][uinp.parameters['i_mask_y']], doc='genetic merit of sires')
-    model.s_gen_merit_dams = Set(initialize=uinp.parameter['i_y_idx_dams'][uinp.parameters['i_mask_y']], doc='genetic merit of dams')
-    model.s_gen_merit_offs = Set(initialize=uinp.parameter['i_y_idx_offs'][uinp.parameters['i_mask_y']], doc='genetic merit of offs')
-    model.s_groups_sire = Set(initialize=sfun.f_g2g(pinp.sheep['i_g_idx_sire'],'sire'), doc='geneotype groups of sires') #have to call the g2g function to apply mask
-    model.s_groups_dams = Set(initialize=sfun.f_g2g(pinp.sheep['i_g_idx_dams'],'dams'), doc='geneotype groups of dams') #have to call the g2g function to apply mask
-    model.s_groups_offs = Set(initialize=sfun.f_g2g(pinp.sheep['i_g_idx_offs'],'offs'), doc='geneotype groups of offs')  #have to call the g2g function to apply mask
+
 
 
     
@@ -95,13 +85,13 @@ model.s_grain_pools = Set(initialize=uinp.structure['grain_pools'], doc='grain p
 model.s_harvcrops = Set(initialize=uinp.mach_general['contract_harvest_speed'].index, doc='landuses that are harvest')
 
 ##landuses that produce hay - used in hay constraints 
-model.s_haycrops = Set(initialize=uinp.structure['Hay'], doc='landuses that make hay')
+model.s_haycrops = Set(ordered=False, initialize=uinp.structure['Hay'], doc='landuses that make hay')
 
 ##types of crops
-model.s_crops = Set(initialize=uinp.structure['C'], doc='crop types')
+model.s_crops = Set(ordered=False, initialize=uinp.structure['C'], doc='crop types')
 
 ##all crops and the pasture types ie annual, tedera, lucerne (not a, a3, a4 etc)
-model.s_landuses = Set(initialize=uinp.structure['All'], doc='landuses')
+model.s_landuses = Set(ordered=False, initialize=uinp.structure['All'], doc='landuses')
 
 #soils
 model.s_lmus = Set(initialize=pinp.general['lmu_area'].index, doc='defined the soil type a given rotation is on')
@@ -134,11 +124,12 @@ model.s_rotconstraints = Set(initialize=s_rotcon1.index, doc='rotation constrain
 # model.s_rotconstraints2 = Set(initialize=s_rotcon2.index, doc='rotation constraints histories 2')
 
 
+
 #######################
 #sheep                 #
 #######################
 ##all groups
-model.infrastructure = Set(initialize=, doc='core sheep infrastructure')
+model.s_infrastructure = Set(initialize=['shed','yards'], doc='core sheep infrastructure')
 model.s_sheep_pools = Set(initialize=uinp.structure['sheep_pools'], doc='nutritive value pools')
 # model.s_co_conception = Set(initialize=, doc='carryover characteristics - conception')
 # model.s_co_bw = Set(initialize=, doc='carryover characteristics - Birth weight')
@@ -152,26 +143,22 @@ model.s_sheep_pools = Set(initialize=uinp.structure['sheep_pools'], doc='nutriti
  
 
    
-##sire
-model.s_sale_sire = Set(initialize=, doc='Sales within the year for sires')
-model.s_fvp_sire = Set(ordered=True, initialize=, doc='Feed variation periods for sires')
-model.s_nut_sire = Set(initialize=uinp.structure['i_n_idx_sire'], doc='Nutrition levels in each feed period for sires')
-model.s_lw_sire = Set(initialize=uinp.structure['i_w_idx_sire'], doc='Standard LW patterns sires')
-model.s_sire_periods = Set(initialize=, doc='sire capacity periods')
-##dams
-model.s_sale_dams = Set(initialize=, doc='Sales within the year for damss')
-model.s_fvp_dams = Set(ordered=True, initialize=, doc='Feed variation periods for damss')
+##sire ^dont have any sets at the moment
+# model.s_sale_sire = Set(initialize=['t%s'%i for i in range(pinp.sheep['i_t0_len'])], doc='Sales within the year for sires')
+# model.s_dvp_sire = Set(ordered=True, initialize=, doc='Decision variable periods for sires')
+# model.s_nut_sire = Set(initialize=uinp.structure['i_n_idx_sire'], doc='Nutrition levels in each feed period for sires')
+# model.s_lw_sire = Set(initialize=uinp.structure['i_w_idx_sire'], doc='Standard LW patterns sires')
+# model.s_sire_periods = Set(initialize=, doc='sire capacity periods')
 
+##dams
+model.s_sale_dams = Set(initialize=['t%s'%i for i in range(pinp.sheep['i_t1_len'])], doc='Sales within the year for damss')
 model.s_nut_dams = Set(initialize=uinp.structure['i_n_idx_dams'], doc='Nutrition levels in each feed period for dams')
 model.s_lw_dams = Set(initialize=uinp.structure['i_w_idx_dams'], doc='Standard LW patterns damss')
 ##offs
-model.s_sale_offs = Set(initialize=, doc='Sales within the year for offss')
-model.s_fvp_offs = Set(ordered=True, initialize=, doc='Feed variation periods for offss')
-model.s_birth_offs = Set(initialize=, doc='Cluster for BTRT & oestrus cycle based on scanning, global & weaning management')
+model.s_sale_offs = Set(initialize=['t%s'%i for i in range(pinp.sheep['i_t3_len'])], doc='Sales within the year for offss')
 model.s_nut_offs = Set(initialize=uinp.structure['i_n_idx_offs'], doc='Nutrition levels in each feed period for offs')
 model.s_lw_offs = Set(initialize=uinp.structure['i_n_idx_offs'], doc='Standard LW patterns offs')
-model.s_damage_offs = Set(initialize=, doc='age of mother - offs')
-model.s_gender_offs = Set(initialize=, doc='gender of offs')
+model.s_gender_offs = Set(initialize=pinp.sheep['i_x_idx'], doc='gender of offs')
 
 
 

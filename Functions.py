@@ -616,7 +616,7 @@ def period_proportion_np(period_dates, date_array):
 #     return final
 
 
-#weighted average (similar to np.average but it handles situation when sum weights = 0 - used in sheep generator - when sum weights = 0 the numbers being averaged also = 0 so just divide by 1 instead of 0
+##weighted average (similar to np.average but it handles situation when sum weights = 0 - used in sheep generator - when sum weights = 0 the numbers being averaged also = 0 so just divide by 1 instead of 0
 def f_weighted_average(array, weights, axis, keepdims=False):
     '''
     calculates weighted average however this will return 0 if the sum of the weights is 0 (np.average doesnt handle this)
