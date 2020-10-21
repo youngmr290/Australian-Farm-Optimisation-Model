@@ -124,6 +124,7 @@ def generator(params,report):
     len_w3 = uinp.structure['i_w3_len']
     len_z = np.count_nonzero(pinp.sheep['i_mask_z'])
     len_i = np.count_nonzero(pinp.sheep['i_mask_i'])
+    lensire_i = np.count_nonzero(pinp.sheep['i_masksire_i'])
     len_d = np.count_nonzero(mask_od)
     len_a0 = np.count_nonzero(pinp.sheep['i_mask_a'])
     len_e0 = np.max(pinp.sheep['i_join_cycles_ig1'])
@@ -139,6 +140,7 @@ def generator(params,report):
     ### index arrays                  #
     ###################################
     # index_p = np.arange(300)#asarray(300)
+    index_a1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(np.arange(len_a1), pinp.sheep['i_a1_pos'])
     index_l = np.arange(uinp.structure['i_len_l']) #gbal
     index_s = np.arange(uinp.structure['i_len_s']) #scan
     index_d = np.arange(len_d)
@@ -166,20 +168,20 @@ def generator(params,report):
     ############################
     '''only if assigned with a slice'''
     ##unique array shapes required to initialise arrays
-    qg0 = (len_q0, len_q1, len_q2, len_p, 1, 1, 1, 1, 1, len_z, 1, 1, 1, 1, 1, 1, len_y, len_g0)
+    qg0 = (len_q0, len_q1, len_q2, len_p, 1, 1, 1, 1, 1, len_z, lensire_i, 1, 1, 1, 1, 1, len_y, len_g0)
     qg1 = (len_q0, len_q1, len_q2, len_p, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, 1, 1, 1, 1, 1, len_y, len_g1)
     qg2 = (len_q0, len_q1, len_q2, len_p, len_a1, len_e1, len_b1, len_n2, len_w2, len_z, len_i, 1, 1, 1, 1, len_x, len_y, len_g1)
     qg3 = (len_q0, len_q1, len_q2, len_p, 1, 1, 1, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y, len_g3)
-    pg0 = (len_p, 1, 1, 1, 1, 1, len_z, 1, 1, 1, 1, 1, 1, len_y, len_g0)
+    pg0 = (len_p, 1, 1, 1, 1, 1, len_z, lensire_i, 1, 1, 1, 1, 1, len_y, len_g0)
     pg1 = (len_p, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, 1, 1, 1, 1, 1, len_y, len_g1)
     pg2 = (len_p, len_a1, len_e1, len_b1, len_n2, len_w2, len_z, len_i, 1, 1, 1, 1, len_x, len_y, len_g1)
     pg3 = (len_p, 1, 1, 1, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y, len_g3)
     # g1 = (len_p, len_a, len_e, len_b1, len_g1_n, len_g1_w, len_z, len_i, 1, 1, 1, 1, 1, len_y, len_g1)
-    m2g0 = (len_m2, 1, 1, 1, 1, 1, len_z, 1, 1, 1, 1, 1, 1, len_y, len_g0)
+    m2g0 = (len_m2, 1, 1, 1, 1, 1, len_z, lensire_i, 1, 1, 1, 1, 1, len_y, len_g0)
     m2g1 = (len_m2, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, 1, 1, 1, 1, 1, len_y, len_g1)
     m2g2 = (len_m2, len_a1, len_e1, len_b1, len_n2, len_w2, len_z, len_i, 1, 1, 1, 1, len_x, len_y, len_g2)
     m2g3 = (len_m2, 1, 1, 1, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y, len_g3)
-    m3g0 = (len_m3, 1, 1, 1, 1, 1, len_z, 1, 1, 1, 1, 1, 1, len_y, len_g0)
+    m3g0 = (len_m3, 1, 1, 1, 1, 1, len_z, lensire_i, 1, 1, 1, 1, 1, len_y, len_g0)
     m3g1 = (len_m3, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, 1, 1, 1, 1, 1, len_y, len_g1)
     m3g2 = (len_m3, len_a1, len_e1, len_b1, len_n2, len_w2, len_z, len_i, 1, 1, 1, 1, len_x, len_y, len_g2)
     m3g3 = (len_m3, 1, 1, 1, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y, len_g3)
@@ -233,6 +235,7 @@ def generator(params,report):
     o_fd_min_sire = np.zeros(pg0, dtype =dtype)
 
     ###dams
+    t_numbers_start_prejoin = 0
     o_numbers_start_dams = np.zeros(pg1, dtype =dtype)
     o_numbers_end_dams = np.zeros(pg1, dtype =dtype)
     o_ffcfw_dams = np.zeros(pg1, dtype =dtype)
@@ -297,7 +300,7 @@ def generator(params,report):
     age_wean1st_e0b0xyg0 = np.rollaxis(age_wean1st_a0e0b0xyg3[0, ...,a_g3_g0],0,age_wean1st_a0e0b0xyg3.ndim-1) #when you slice one slice of the array and also take multiple sclices from another axis the axis with multiple slices jumps to the front therefore need to roll the g axis back to the end
     age_wean1st_e0b0xyg1 = np.rollaxis(age_wean1st_a0e0b0xyg3[0, ...,a_g3_g1],0,age_wean1st_a0e0b0xyg3.ndim-1) #when you slice one slice of the array and also take multiple sclices from another axis the axis with multiple slices jumps to the front therefore need to roll the g axis back to the end
     ##date first lamb is born - need to apply i mask to these inputs - make sure animals are born at begining of gen period
-    date_born1st_ida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['i_date_born1st_ig0'],'sire',pinp.sheep['i_i_pos'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos']).astype('datetime64[D]')
+    date_born1st_ida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['i_date_born1st_ig0'],'sire',pinp.sheep['i_i_pos'], condition=pinp.sheep['i_masksire_i'], axis=pinp.sheep['i_i_pos']).astype('datetime64[D]')
     date_born1st_ida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['i_date_born1st_ig1'],'dams',pinp.sheep['i_i_pos'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos']).astype('datetime64[D]')
     date_born1st_oa1e1b1nwzida0e0b0xyg2 = date_born1st_oa1e1b1nwzida0e0b0xyg2[mask_od,...] #input read in in the mask section
     date_born1st_ida0e0b0xyg3 = sfun.f_g2g(pinp.sheep['i_date_born1st_idg3'],'offs',uinp.parameters['i_d_pos'],pinp.sheep['i_i_len'],uinp.parameters['i_d_len'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos'], condition2=mask_od, axis2=uinp.parameters['i_d_pos']).astype('datetime64[D]')
@@ -306,7 +309,7 @@ def generator(params,report):
     sire_periods_g0p8 = sfun.f_g2g(pinp.sheep['i_sire_periods_p8g0'], 'sire', swap=True, condition=pinp.sheep['i_mask_p8'], axis=0)
     ##Shearing date - set to be on the last day of a sim period
     ###sire
-    date_shear_sida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['i_date_shear_sixg0'],'sire',uinp.parameters['i_x_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_s_len'], pinp.sheep['i_x_len'],swap=True,left_pos2=pinp.sheep['i_i_pos'],right_pos2=uinp.parameters['i_x_pos'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos'])[...,0:1,:,:].astype('datetime64[D]') #slice x axis for only female
+    date_shear_sida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['i_date_shear_sixg0'],'sire',uinp.parameters['i_x_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_s_len'], pinp.sheep['i_x_len'],swap=True,left_pos2=pinp.sheep['i_i_pos'],right_pos2=uinp.parameters['i_x_pos'], condition=pinp.sheep['i_masksire_i'], axis=pinp.sheep['i_i_pos'])[...,0:1,:,:].astype('datetime64[D]') #slice x axis for only female
     mask_shear_g0 = np.max(date_shear_sida0e0b0xyg0<=date_end_p[-1], axis=tuple(range(pinp.sheep['i_i_pos'], 0))) #mask out shearing opps that occur after gen is done
     date_shear_sida0e0b0xyg0 = date_shear_sida0e0b0xyg0[mask_shear_g0]
     ###dam
@@ -323,7 +326,7 @@ def generator(params,report):
     ############################
     ##feedsupply
     ###feedsupply option selected
-    a_r_zida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['ia_r1_zig0'],'sire',pinp.sheep['i_i_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_z_len'],swap=True, condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos'])
+    a_r_zida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['ia_r1_zig0'],'sire',pinp.sheep['i_i_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_z_len'],swap=True, condition=pinp.sheep['i_masksire_i'], axis=pinp.sheep['i_i_pos'])
     a_r_zida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['ia_r1_zig1'],'dams',pinp.sheep['i_i_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_z_len'],swap=True, condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos'])
     a_r_zida0e0b0xyg3 = sfun.f_g2g(pinp.sheep['ia_r1_zig3'],'offs',pinp.sheep['i_i_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_z_len'],swap=True, condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos'])
     ###feed variation for dams
@@ -983,7 +986,7 @@ def generator(params,report):
     ###sire
     numbers_initial_zida0e0b0xyg0 = season_propn_zida0e0b0xyg * initial_yg0
     ###dams
-    numbers_initial_propn_repro_a1e1b1nwzida0e0b0xyg1 = initial_a1e1b1nwzida0e0b0xyg * initial_e1b1nwzida0e0b0xyg * initial_b1nwzida0e0b0xyg * season_propn_zida0e0b0xyg
+    numbers_initial_propn_repro_a1e1b1nwzida0e0b0xyg1 = initial_a1e1b1nwzida0e0b0xyg * initial_e1b1nwzida0e0b0xyg * initial_b1nwzida0e0b0xyg
     numbers_initial_a1e1b1nwzida0e0b0xyg1 = numbers_initial_propn_repro_a1e1b1nwzida0e0b0xyg1 * season_propn_zida0e0b0xyg * initial_yg1
     ###offs
     ####Initial proportion of offspring if clustered
@@ -1614,8 +1617,6 @@ def generator(params,report):
             cf_w_w_start_dams = sfun.f_update(cf_w_w_start_dams, 0, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1])
             ###Carry forward conception
             cf_conception_start_dams = sfun.f_update(cf_conception_start_dams, 0, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1])
-            ###reste conception to 0 if rejoining
-            conception_dams = sfun.f_update(conception_dams, 0, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1])
 
             ##reset for end of period
             ###cfw
@@ -2341,9 +2342,9 @@ def generator(params,report):
         if pinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
             eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
             if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                temp0 = sfun.f_conception_cs(cf_dams, cb1_dams, relsize_mating_dams, rc_mating_dams, crg_doy_pa1e1b1nwzida0e0b0xyg1[p], uinp.structure['a_prepost_b1'], nfoet_b1nwzida0e0b0xyg, nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p])
+                temp0 = sfun.f_conception_cs(cf_dams, cb1_dams, relsize_mating_dams, rc_mating_dams, crg_doy_pa1e1b1nwzida0e0b0xyg1[p], nfoet_b1nwzida0e0b0xyg, nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p], index_e1b1nwzida0e0b0xyg)
                 if eqn_used:
-                    conception_dams = conception_dams + temp0
+                    conception_dams =  temp0
                     cf_conception_dams = 0 #default set to 0 because required in start production function (only used in lmat conception function)
                 if eqn_compare:
                     r_compare_q0q1q2pdams[eqn_system, eqn_group, 0, p, ...] = temp0
@@ -2351,16 +2352,16 @@ def generator(params,report):
         if pinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
             eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
             if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                temp0 = sfun.f_conception_ltw(cu0_dams, cs_mating_dams, scan_std_yg1, doy_pa1e1b1nwzida0e0b0xyg[p], nfoet_b1nwzida0e0b0xyg, nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p])
+                temp0 = sfun.f_conception_ltw(cu0_dams, cs_mating_dams, scan_std_yg1, doy_pa1e1b1nwzida0e0b0xyg[p], nfoet_b1nwzida0e0b0xyg, nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p], index_e1b1nwzida0e0b0xyg)
                 if eqn_used:
-                    conception_dams += temp0
+                    conception_dams = temp0
                     cf_conception_dams = 0 #default set to 0 because required in start production function (only used in lmat conception function)
                 if eqn_compare:
                     r_compare_q0q1q2pdams[eqn_system, eqn_group, 0, p, ...] = temp0
 
         ##Scanning percentage per ewe scanned (if scanning) -  report variable only
         if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-            t_scanning = np.sum(conception_dams * nfoet_b1nwzida0e0b0xyg, axis = (prejoin_tup), keepdims=True) / np.sum(numbers_start_dams, axis = (prejoin_tup), keepdims=True) * period_is_scan_pa1e1b1nwzida0e0b0xyg1[p]
+            t_scanning = np.sum(numbers_start_dams * nfoet_b1nwzida0e0b0xyg, axis = (prejoin_tup), keepdims=True) / np.sum(numbers_start_dams, axis = (prejoin_tup), keepdims=True) * period_is_scan_pa1e1b1nwzida0e0b0xyg1[p]
             ##Scanning percentage per ewe scanned (if scanning)
             scanning = sfun.f_update(scanning, t_scanning, period_is_scan_pa1e1b1nwzida0e0b0xyg1[p])
 
@@ -2610,11 +2611,16 @@ def generator(params,report):
         o_numbers_start_dams[p] = numbers_start_dams #needed outside if so that dvp0 (p0) has start numbers
         if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
             o_numbers_end_dams[p] = pp_numbers_end_dams
-            if np.any(period_is_mating_pa1e1b1nwzida0e0b0xyg1): #need to back date the numbers from conception to prejoining because otherwise in the matrix there is not a dvp between prejoining and mating therefore this is require so that other slices have energy etc requirment
+            ###store the start numbers at prejoining - used to scale numbers when back dating from mating to prejoining
+            if np.any(period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p]):
+                numbers_start_prejoin = sfun.f_update(t_numbers_start_prejoin, numbers_start_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p])
+            if np.any(period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]): #need to back date the numbers from conception to prejoining because otherwise in the matrix there is not a dvp between prejoining and mating therefore this is require so that other slices have energy etc requirment
                 ###period is between prejoining and the end of current peroid
                 between_prejoinnow = sfun.f_period_is_('period_is_between', date_prejoin_pa1e1b1nwzida0e0b0xyg1[p], date_start_pa1e1b1nwzida0e0b0xyg, date_end_pa1e1b1nwzida0e0b0xyg[p], date_end_pa1e1b1nwzida0e0b0xyg)
                 o_numbers_end_dams = sfun.f_update(o_numbers_end_dams, pp_numbers_end_dams.astype(dtype), (period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p] * between_prejoinnow))
-                o_numbers_start_dams = sfun.f_update(o_numbers_start_dams, numbers_start_dams.astype(dtype), (period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p] * between_prejoinnow))
+                ####scale end numbers before back dating to the start (only start numbers need scaling because end numbers dont need to be correct at the start of the dvp)
+                t_scaled_numbers = pp_numbers_end_dams * (np.sum(numbers_start_prejoin, axis=(pinp.sheep['i_e1_pos'],uinp.parameters['i_b1_pos'])) / np.sum(pp_numbers_end_dams, axis=(pinp.sheep['i_e1_pos'],uinp.parameters['i_b1_pos'])))
+                o_numbers_start_dams = sfun.f_update(o_numbers_start_dams, t_scaled_numbers.astype(dtype), (period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p] * between_prejoinnow))
             o_ffcfw_dams[p] = ffcfw_dams
             o_ffcfw_condensed_dams[p] = sfun.f_condensed(numbers_end_dams, ffcfw_dams, prejoin_tup, season_tup, uinp.structure['i_n1_len'], uinp.structure['i_w1_len'], uinp.structure['i_n_fvp_period1'], numbers_start_fvp0_dams,
                                 period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1[p+1])  #condensed lw at the end of the period before fvp0
@@ -3061,15 +3067,15 @@ def generator(params,report):
     ev_propn_f = np.array([0.25, 0.50, 0.75])
     index_fpa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(np.arange(ev_propn_f.shape[0]+1), uinp.structure['i_p_pos']-1)
     ##sire
-    date_purch_oa1e1b1nwzida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['i_date_purch_g0'], 'sire', uinp.structure['i_p_pos']).astype('datetime64[Y]')
-    date_sale_oa1e1b1nwzida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['i_date_sale_g0'], 'sire', uinp.structure['i_p_pos']).astype('datetime64[Y]')
+    date_purch_oa1e1b1nwzida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['i_date_purch_ig0'], 'sire', pinp.sheep['i_i_pos'], left_pos2=uinp.structure['i_p_pos']-1, right_pos2=pinp.sheep['i_i_pos'], condition=pinp.sheep['i_masksire_i'], axis=pinp.sheep['i_i_pos']).astype('datetime64[D]')
+    date_sale_oa1e1b1nwzida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['i_date_sale_ig0'], 'sire', pinp.sheep['i_i_pos'], left_pos2=uinp.structure['i_p_pos']-1, right_pos2=pinp.sheep['i_i_pos'], condition=pinp.sheep['i_masksire_i'], axis=pinp.sheep['i_i_pos']).astype('datetime64[D]')
     ##dams - for dams there is a new dvp each fvp
     ###dvp pointer - ^this is inflexible, maybe there is a better way to do this
     a_v_pa1e1b1nwzida0e0b0xyg1 = a_fvp_pa1e1b1nwzida0e0b0xyg1.astype(dtypeint)
     index_vpa1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(np.arange(np.max(a_v_pa1e1b1nwzida0e0b0xyg1)+1), uinp.structure['i_p_pos']-1) #plus 1 because python index starts at 0
     ###dvp are the same as fvp for dams
     dvp_date_start_va1e1b1nwzida0e0b0xyg1 = fvp_date_start_fa1e1b1nwzida0e0b0xyg1
-    a_dvp_p_va1e1b1nwzida0e0b0xyg1 = sfun.f_next_prev_association(date_end_p, dvp_date_start_va1e1b1nwzida0e0b0xyg1, 1).astype(dtypeint) #returns the period index for the start of each dvp
+    a_dvp_p_va1e1b1nwzida0e0b0xyg1 = sfun.f_next_prev_association(date_end_p, dvp_date_start_va1e1b1nwzida0e0b0xyg1, 0).astype(dtypeint) #returns the period index for the start of each dvp
     dvp_start_date_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(dvp_date_start_va1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1,0)
     dvp_type_va1e1b1nwzida0e0b0xyg1=fvp_type_fa1e1b1nwzida0e0b0xyg1 #rename to keep consistent
     period_is_startdvp_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is', dvp_start_date_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
@@ -3445,9 +3451,11 @@ def generator(params,report):
     ###combine nm and 00 cluster for prejoining to scanning
     numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xygw9[:,0:1,...] = numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xygw9[:,0:1,...] + numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xygw9[:,1:2,...] * (dvp_type_next_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...,na]==0) #take slice 0 of e (for prejoining all e slices are the same)
     numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xygw9[:,1:2,...] = numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xygw9[:,1:2,...] * (dvp_type_next_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...,na]!=0) #take slice 0 of e (for prejoining all e slices are the same
+    ###combine wean numbers at prejoining to allow the matrix to select a different weaning time for the coming yr.
+    temporary = np.sum(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xygw9, axis=pinp.sheep['i_a1_pos']-1, keepdims=True) * (index_a1e1b1nwzida0e0b0xyg[...,na] == 0)
+    numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xygw9 = sfun.f_update(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xygw9, temporary, dvp_type_next_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...,na] == 0) #take slice 0 of e (for prejoining all e slices are the same
 
-
-###offs
+    ###offs
     numbers_prov_offs_k3k5tva1e1b1nw8zida0e0b0xygw9 = (fun.f_divide(np.sum(numbers_end_va1e1b1nwzida0e0b0xyg3[...,na] * distribution_va1e1b1nw8zida0e0b0xyg3w9
                                                                         * (a_k3cluster_da0e0b0xyg3==index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na]
                                                                         * (a_k5cluster_da0e0b0xyg3==index_k5tva1e1b1nwzida0e0b0xyg3)[...,na]
@@ -3457,9 +3465,18 @@ def generator(params,report):
                                                                          , axis = (uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True)[...,na])
                                                         * mask_prov_w9 * mask_sales_tva1e1b1nw8zida0e0b0xyg3w9)
     ##numbers required
-    numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xygw9 =  np.sum(((a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k28k29tva1e1b1nwzida0e0b0xyg1) * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1))[...,na]
-                                                               * mask_req_va1e1b1nw8zida0e0b0xyg1w9, axis = (uinp.parameters['i_b1_pos']-1, pinp.sheep['i_e1_pos']-1), keepdims=True)>0
+    ###dams
+    numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xygw9 =  1 * (np.sum(((a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k28k29tva1e1b1nwzida0e0b0xyg1) * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1))[...,na]
+                                                               * mask_req_va1e1b1nw8zida0e0b0xyg1w9, axis = (uinp.parameters['i_b1_pos']-1, pinp.sheep['i_e1_pos']-1), keepdims=True)>0)
+    ####combine nm and 00 cluster for prejoining to scanning
+    numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xygw9[:,0:1,...] = numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xygw9[:,0:1,...] + numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xygw9[:,1:2,...] * (dvp_type_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...,na]==0) #take slice 0 of e (for prejoining all e slices are the same)
+    numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xygw9[:,1:2,...] = numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xygw9[:,1:2,...] * (dvp_type_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...,na]!=0) #take slice 0 of e (for prejoining all e slices are the same
+    ####combine wean numbers at prejoining to allow the matrix to select a different weaning time for the coming yr.
+    temporary = np.sum(numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xygw9, axis=pinp.sheep['i_a1_pos']-1, keepdims=True) * (index_a1e1b1nwzida0e0b0xyg[...,na] == 0)
+    numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xygw9 = sfun.f_update(numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xygw9, temporary, dvp_type_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...,na] == 0) #take slice 0 of e (for prejoining all e slices are the same
 
+
+    ###offs
     numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9 =  np.sum((a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)*(a_k5cluster_da0e0b0xyg3==index_k5tva1e1b1nwzida0e0b0xyg3)
                                                              , axis = (uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True)[...,na]\
                                                       * mask_req_w8zida0e0b0xyg3w9
@@ -3537,6 +3554,7 @@ def generator(params,report):
     params['p_numbers_prov_dams'] =dict(zip(tup_k2k2tvanwziyg1w, numbers_prov_dams_k2k2tva1nw8ziygw9))
     ###numbers_req_dams
     mask=numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xygw9!=0
+    params['req_numpyvesion_k2k2va1nw8ziygw9'] = numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xygw9[:,:,0,:,:,0,0,:,:,:,:,0,0,0,0,0,:,:,:]  #cant use squeze here because i need to keep all relevent axis even if singleton. this is used to speed pyomo constraint.
     numbers_req_dams_k2k2va1nw8ziygw9 = numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xygw9[mask].squeeze().ravel() #squeeze removes the singleton axis
     mask=mask.ravel()
     index_k2k2vanwziyg1w=index_k2k2vanwziyg1w[mask,:]

@@ -204,8 +204,8 @@ structure['ia_b0_b1'] = np.array([0, 0, 0, 1,	2,	3,	4,	5,	0,	0,	0])
 structure['a_prepost_b1'] = np.array([0, 1, 2, 3, 4, 3,	4,	4,	2,	3,	4]) #The association of b1 pre lambing pointed to from b1 post lambing
 structure['a_nfoet_b1'] = np.array([0,0,1,2,3,2,3,3,1,2,3])
 structure['a_nyatf_b1'] = np.array([0,0,1,2,3,1,2,1,0,0,0])
-structure['i_initial_b1'] = np.array([1,0.0001,0.0001,0.0001,0.0001,0.0001,0.0001,0.0001,0.0001,0.0001,0.0001])
-structure['i_numbers_min_b1'] = np.array([0.0001,0.0001,0.0001,0.0001,0.0001,0.0001,0.0001,0.0001,0.0001,0.0001,0.0001])
+structure['i_initial_b1'] = np.array([1,0,0,0,0,0,0,0,0,0,0])
+structure['i_numbers_min_b1'] = np.array([0,0,0,0,0,0,0,0,0,0,0])
 
 ##feed supply/ nutrition levels
 structure['i_w0_len'] = 1

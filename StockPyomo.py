@@ -393,32 +393,127 @@ def sheep_pyomo_local(params,report):
     #            for z in model.s_season_types for i in model.s_tol) <=0
     # model.con_stockinfra = pe.Constraint(model.s_infrastructure, rule=stockinfra, doc='Requirement for infrastructure (based on number of times yarded and shearing activity)')
 
+    # try:
+    #     model.del_component(model.con_damR_index)
+    #     model.del_component(model.con_damR)
+    # except AttributeError:
+    #     pass
+    # def damR(model,k29,v1,a,z,i,y1,g1,w9):
+    #     v1_prev = list(model.s_dvp_dams)[list(model.s_dvp_dams).index(v1) - 1]  #used to get the activity number from the last period - to determine the number of dam provided into this period
+    #     con = sum(model.v_dams[k28,t1,v1,a,n1,w8,z,i,y1,g1] * model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9]
+    #                - model.v_dams[k28,t1,v1_prev,a,n1,w8,z,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z,i,y1,g1,w9]
+    #                for t1 in model.s_sale_dams for k28 in model.s_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams
+    #                if model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9] !=0 or model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z,i,y1,g1,w9] !=0) <= 0
+    #         # + sum(model.v_dams2sire[v1,a,b1,n1,w1,z,i,y1,g1,g1_new]
+    #         #       - model.v_dams2sire[v1_prev,a,b1,n1,w1,z,i,y1,g1,g1_new] * model.p_dam2sire_numbers[v1,a,b1,n1,w1,z,i,y1,g1,g1_new]
+    #         #       for n1 in model.s_nut_dams for g1_new in model.s_groups_dams) \
+    #         # - model.v_purchase_dams[v1,w1,z,i,g1] * model.p_numberpurch_dam[v1,a,b1,w1,z,i,y1,g1] \ #p_numpurch allocates the purchased dams into certain sets, in this case it is correct to multiply a var with less sets to a param with more sets
+    #         # - sum(model.v_offs2dam[v3,n3,w3,z3,i3,d,a3,b3,x,y3,g3,g1_off] * model.p_offs2dam_numbers[v3,n3,w3,z3,i3,d,a3,b3,x,y3,g3,g1_off,v1,a,b1,w1,z,i,y1,g1]
+    #         #       for v3 in model.s_dvp_offs for n3 in model.s_nut_offs for w3 in model.s_lw_offs for z3 in model.s_season_types for i3 in model.s_tol for d in model.s_damage_offs for a3 in model.s_wean_times
+    #         #       for b3 in model.s_birth_offs for x in model.s_gender_offs for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs for g1_off in model.s_groups_dams)  #have to track off sets so only they are summed.
+    #     ###if statement required to handle the constraints that dont exist due to lw clustering
+    #     # if sum(model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9] for k28 in model.s_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams if model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9] !=0) ==0 and sum(model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z,i,y1,g1,w9]
+    #     #         for t1 in model.s_sale_dams for k28 in model.s_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams if model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z,i,y1,g1,w9] !=0)==0:
+    #     #     pass
+    #     if type(con)==bool:
+    #         return pe.Constraint.Skip
+    #     else: return con
+
     try:
         model.del_component(model.con_damR_index)
         model.del_component(model.con_damR)
     except AttributeError:
         pass
-    def damR(model,k29,v1,a,z,i,y1,g1,w9):
+    def damR1(model,k29,v1,a,z,i,y1,g1,w9):
         v1_prev = list(model.s_dvp_dams)[list(model.s_dvp_dams).index(v1) - 1]  #used to get the activity number from the last period - to determine the number of dam provided into this period
+        con = sum(model.v_dams[k28,t1,v1,a,n1,w8,z,i,y1,g1] * model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9]
+                   - model.v_dams[k28,t1,v1_prev,a,n1,w8,z,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z,i,y1,g1,w9]
+                   for t1 in model.s_sale_dams for k28 in model.s_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams
+                   if model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9] !=0) <= 0
+        if type(con)==bool:
+            return pe.Constraint.Skip
+        else: return con
+    start=time.time()
+    # model.con_damR = pe.Constraint(model.s_birth_dams, model.s_dvp_dams, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_dams, rule=damR1, doc='transfer of off to dam and dam from last dvp to current dvp.')
+    end=time.time()
+    print('method 1: ',end-start)
+    ##method 2
+    try:
+        model.del_component(model.con_damR_index)
+        model.del_component(model.con_damR)
+    except AttributeError:
+        pass
+    def damR2(model,k29,v1,a,z,i,y1,g1,w9):
+        v1_prev = list(model.s_dvp_dams)[list(model.s_dvp_dams).index(v1) - 1]  #used to get the activity number from the last period - to determine the number of dam provided into this period
+        ##skip constraint if the require param is 0
+        if not any(model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9] for k28 in model.s_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams):
+            return pe.Constraint.Skip
         return sum(model.v_dams[k28,t1,v1,a,n1,w8,z,i,y1,g1] * model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9]
                    - model.v_dams[k28,t1,v1_prev,a,n1,w8,z,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z,i,y1,g1,w9]
                    for t1 in model.s_sale_dams for k28 in model.s_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams
-                   if model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9] !=0 or model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z,i,y1,g1,w9] !=0) <= 0
-            # + sum(model.v_dams2sire[v1,a,b1,n1,w1,z,i,y1,g1,g1_new]
-            #       - model.v_dams2sire[v1_prev,a,b1,n1,w1,z,i,y1,g1,g1_new] * model.p_dam2sire_numbers[v1,a,b1,n1,w1,z,i,y1,g1,g1_new]
-            #       for n1 in model.s_nut_dams for g1_new in model.s_groups_dams) \
-            # - model.v_purchase_dams[v1,w1,z,i,g1] * model.p_numberpurch_dam[v1,a,b1,w1,z,i,y1,g1] \ #p_numpurch allocates the purchased dams into certain sets, in this case it is correct to multiply a var with less sets to a param with more sets
-            # - sum(model.v_offs2dam[v3,n3,w3,z3,i3,d,a3,b3,x,y3,g3,g1_off] * model.p_offs2dam_numbers[v3,n3,w3,z3,i3,d,a3,b3,x,y3,g3,g1_off,v1,a,b1,w1,z,i,y1,g1]
-            #       for v3 in model.s_dvp_offs for n3 in model.s_nut_offs for w3 in model.s_lw_offs for z3 in model.s_season_types for i3 in model.s_tol for d in model.s_damage_offs for a3 in model.s_wean_times
-            #       for b3 in model.s_birth_offs for x in model.s_gender_offs for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs for g1_off in model.s_groups_dams)  #have to track off sets so only they are summed.
+                   if model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9] !=0) <= 0
+    start=time.time()
+    model.con_damR = pe.Constraint(model.s_birth_dams, model.s_dvp_dams, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_dams, rule=damR2, doc='transfer of off to dam and dam from last dvp to current dvp.')
+    end=time.time()
+    print('method 2: ',end-start)
 
-    model.con_damR = pe.Constraint(model.s_birth_dams, model.s_dvp_dams, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_dams, rule=damR, doc='transfer of off to dam and dam from last dvp to current dvp.')
+    ##method 3
+    ##info:
+    ##constraint.skip is fast, the trick is designing the code efficiently so that is knows when to skip.
+    ##in method 2 i use the param to determine when the constraint should be skipped, this still requires looping throught the param
+    ##in method 3 i use the numpy array to determine when the constraint should be skipped. This is messier and requires some extra code but it is much more efficient reducing time 2x.
+    ##for method 3 1second or less is spent skipping the constraints the remaining 10seconds is the time taken to build the remaining 900 constraints.
+    ##to save any further time will require making the building of the constraint faster. however i cant think of a way to do this because i am already including if statements for params with 0 value.
+    ##significant time can be saved by using if statements that only evaluate one item
+    import numpy as np
+    l_k29 = list(model.s_birth_dams)
+    l_v1 = list(model.s_dvp_dams)
+    l_a = list(model.s_wean_times)
+    l_z = list(model.s_season_types)
+    l_i = list(model.s_tol)
+    l_y1 = list(model.s_gen_merit_dams)
+    l_g1 = list(model.s_groups_dams)
+    l_w9 = list(model.s_lw_dams)
+    try:
+        model.del_component(model.con_damR_index)
+        model.del_component(model.con_damR)
+    except AttributeError:
+        pass
+    def damR3(model,k29,v1,a,z,i,y1,g1,w9):
+        v1_prev = l_v1[l_v1.index(v1) - 1]  #used to get the activity number from the last period - to determine the number of dam provided into this period
+        ##skip constraint if the require param is 0 - using the numpy array because it is 2x faster becasue dont need to loop through activity keys eg k28
+        ###get the index number - required so numpy array can be indexed
+        t_k29 = l_k29.index(k29)
+        t_v1 = l_v1.index(v1)
+        t_a = l_a.index(a)
+        t_z = l_z.index(z)
+        t_i = l_i.index(i)
+        t_y1 = l_y1.index(y1)
+        t_g1 = l_g1.index(g1)
+        t_w9 = l_w9.index(w9)
+        if not np.any(params['req_numpyvesion_k2k2va1nw8ziygw9'][:,t_k29,t_v1,t_a,:,:,t_z,t_i,t_y1,t_g1,t_w9]):
+            return pe.Constraint.Skip
+        return sum(model.v_dams[k28,t1,v1,a,n1,w8,z,i,y1,g1] * model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9]
+                   - model.v_dams[k28,t1,v1_prev,a,n1,w8,z,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z,i,y1,g1,w9]
+                    for t1 in model.s_sale_dams for k28 in model.s_birth_dams
+                    for n1 in model.s_nut_dams for w8 in model.s_lw_dams if
+                    model.p_numbers_req_dams[k28, k29, v1, a, n1, w8, z, i, y1, g1, w9] != 0) <=0
+                   # for t1 in model.s_sale_dams for k28 in model.s_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams
+                   # if model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z,i,y1,g1,w9] !=0)) <= 0
+    start=time.time()
+    model.con_damR = pe.Constraint(model.s_birth_dams, model.s_dvp_dams, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_dams, rule=damR3, doc='transfer of off to dam and dam from last dvp to current dvp.')
+    end=time.time()
+    print('method 3: ',end-start)
+
     end_cons=time.time()
     print('time con: ', end_cons-end_params)
 
-    model.con_damR(pe.Constraint, descend_into=True).pprint(filename='test.txt')
-    model.con_damR.pprint(filename='test1.txt')
-    model.write('test.lp', io_options={'symbolic_solver_labels': True})
+    # model.con_damR.pprint(textbuffer)
+    # textbuffer.write('\n')
+    # with open('con_damR.txt', 'w') as outputfile:
+    #     outputfile.write(textbuffer.getvalue())
+
+
 
     # try:
     #     model.del_component(model.con_offsR)
