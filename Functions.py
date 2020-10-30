@@ -616,12 +616,36 @@ def period_proportion_np(period_dates, date_array):
 #     return final
 
 
+def f_update(existing_value, new_value, mask_for_new):
+    '''
+    Parameters
+    ----------
+    existing_value : numpy array
+        values you want when mask = false.
+    new_value : numpy array
+        values you want when mask = true.
+    mask_for_new : boolean mask
+        boolean mask for the final axis of the array (typically the g axis).
+
+    Returns
+    -------
+    Numpy array
+        returns a combination of the two input arrays determined by the mask. Note: multiplying by true return the origional number and multiplying by false results in 0.
+
+    '''
+    return existing_value * np.logical_not(mask_for_new) + new_value * mask_for_new #used not rather than ~ because ~False == -1 not True (not the case for np.arrays only if bool is single - as it is for sire in some situatoins)
+
+
+
 ##weighted average (similar to np.average but it handles situation when sum weights = 0 - used in sheep generator - when sum weights = 0 the numbers being averaged also = 0 so just divide by 1 instead of 0
-def f_weighted_average(array, weights, axis, keepdims=False):
+def f_weighted_average(array, weights, axis, keepdims=False, non_zero=False):
     '''
     calculates weighted average however this will return 0 if the sum of the weights is 0 (np.average doesnt handle this)
     axis averaged along can be retained - default it is dropped
     '''
+    if non_zero:
+        ##for some situations (production) if numbers are 0 we dont want to return 0 we want to return the orgional value
+        weights=f_update(weights,1,np.all(weights==0, axis=axis, keepdims=True))
     weighted_array = np.sum(array * weights, axis=axis, keepdims=keepdims)
     weights = np.broadcast_to(np.sum(weights, axis=axis, keepdims=keepdims), weighted_array.shape)
     averaged_array = np.zeros_like(weighted_array)
@@ -638,3 +662,72 @@ def f_divide(numerator, denominator):
     mask = denominator!=0
     result[mask] = numerator[mask]/denominator[mask]
     return result
+
+
+def f_bilinear_interpolate(im, x_im, y_im, x, y):
+    ##get the index of x and y within the x_im and y_im arrays
+    x= np.interp(x, x_im, np.arange(len(x_im)))
+    y= np.interp(y, y_im, np.arange(len(y_im)))
+    x = np.asarray(x)
+    y = np.asarray(y)
+
+    x0 = np.floor(x).astype(int)
+    x1 = x0 + 1
+    y0 = np.floor(y).astype(int)
+    y1 = y0 + 1
+
+    x0 = np.clip(x0, 0, im.shape[1]-1);
+    x1 = np.clip(x1, 0, im.shape[1]-1);
+    y0 = np.clip(y0, 0, im.shape[0]-1);
+    y1 = np.clip(y1, 0, im.shape[0]-1);
+
+    Ia = im[ y0, x0 ]
+    Ib = im[ y1, x0 ]
+    Ic = im[ y0, x1 ]
+    Id = im[ y1, x1 ]
+
+    wa = (x1-x) * (y1-y)
+    wb = (x1-x) * (y-y0)
+    wc = (x-x0) * (y1-y)
+    wd = (x-x0) * (y-y0)
+
+    return wa*Ia + wb*Ib + wc*Ic + wd*Id
+
+def f_find_closest(A, target):
+    ##info here: https://stackoverflow.com/questions/8914491/finding-the-nearest-value-and-return-the-index-of-array-in-python
+    #A must be sorted
+    idx = A.searchsorted(target)
+    idx = np.clip(idx, 1, len(A)-1)
+    left = A[idx-1]
+    right = A[idx]
+    idx -= target - left < right - target
+    return idx
+
+def f_reduce_skipfew(ufunc, foo, preserveAxis=None):
+    '''performs function on each axis except the axis that a specified as preservAxis'''
+    r = np.arange(foo.ndim)
+    if preserveAxis is not None:
+        preserveAxis = tuple(np.delete(r, preserveAxis))
+    return ufunc(foo, axis=preserveAxis)
+
+def f_sa(value, sa, sa_type=0, target=0, value_min=-np.inf):
+    ##Type 0 is sam (sensitivity multiplier) - default
+    if sa_type == 0:
+        value  = np.maximum(value_min, value * sa)
+    ##Type 1 is sap (sensitivity proportion)
+    elif sa_type == 1:
+         value  = np.maximum(value_min, value * (1 + sa))
+    ##Type 2 is saa (sensitivity addition)
+    elif sa_type == 2:
+         value  = np.maximum(value_min, value + sa)
+    ##Type 3 is sat (sensitivity target)
+    elif sa_type == 3:
+         value  = np.maximum(value_min, value + (target - value) * sa)
+    ##Type 4 is sar (sensitivity range)
+    elif sa_type == 4:
+         value = np.maximum(0, np.minimum(1, value * (1 - np.abs(sa)) + np.maximum(0, sa)))
+    ##Type 5 is value (return the SA value)
+    elif sa_type == 5 and sa!='-':
+        value = f_update(value, sa, sa != '-')
+
+    return value

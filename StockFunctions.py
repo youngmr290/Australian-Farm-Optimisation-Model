@@ -17,6 +17,7 @@ import math
 import Functions as fun
 import PropertyInputs as pinp
 import UniversalInputs as uinp
+import Sensitivity as sen
 
 na=np.newaxis
 
@@ -116,7 +117,8 @@ def f_next_prev_association(datearray_slice,*args):
     '''
     date=args[0]
     offset=args[1] #offset is used to get the previous datearray period
-    idx_next = np.searchsorted(datearray_slice, date)
+    side=args[2]
+    idx_next = np.searchsorted(datearray_slice, date,side)
     idx = np.clip(idx_next - offset, 0, len(datearray_slice)-1) #makes the max value equal to the length of joining array, because if the period date is after the last lambing opportunity there is no 'next'
     return idx
 
@@ -145,16 +147,6 @@ def sim_periods(start_year, periods_per_year, oldest_animal):
     date_start_p =  (np.datetime64(start_date) + (step * index_p)).astype('datetime64[D]') #astype day rounds the date to the nearest day
     date_end_p = (np.datetime64(start_date - dt.timedelta(days=1)) + (step * (index_p+1))).astype('datetime64[D]') #minus one day to get the last day in the period not the first day of the next period.
     return n_sim_periods, date_start_p, date_end_p, index_p, step
-
-def f_condition_score(ffcfw, normal_weight, cs_propn = 0.19):
-    ''' Estimate CS from LW. Works with scalars or arrays - provided they are broadcastable into ffcflw.
-
-   ffcfw: (kg) Fleece free, conceptus free liveweight. normal_weight: (kg). cs_propn: (0.19) change in LW
-   associated with 1 CS as a proportion of normal_weight.
-
-   Returns: condition score - float
-   '''
-    return 3 + (ffcfw - normal_weight)/(cs_propn * normal_weight)
 
 
 
@@ -637,25 +629,6 @@ def roll_slices(array, roll, roll_axis=0):
 
 
 
-def f_update(existing_value, new_value, mask_for_new):
-    '''
-    Parameters
-    ----------
-    existing_value : numpy array
-        values you want when mask = false.
-    new_value : numpy array
-        values you want when mask = true.
-    mask_for_new : boolean mask
-        boolean mask for the final axis of the array (typically the g axis).
-
-    Returns
-    -------
-    Numpy array
-        returns a combination of the two input arrays determined by the mask. Note: multiplying by true return the origional number and multiplying by false results in 0.
-
-    '''
-    return existing_value * np.logical_not(mask_for_new) + new_value * mask_for_new #used not rather than ~ because ~False == -1 not True (not the case for np.arrays only if bool is single - as it is for sire in some situatoins)
-
 
 
 
@@ -765,16 +738,16 @@ def f_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb
     ##Non-lactating, other
     kg_dry = kg_supp * mei_propn_supp + kg_fodd * mei_propn_herb + ck[12, ...] * mei_propn_milk
     ##Compile lactation
-    kg_lact = f_update(kg_lact , kg_lact_lose , belowmaint)
+    kg_lact = fun.f_update(kg_lact , kg_lact_lose , belowmaint)
     ##Compile non-lactating
-    kg_dry = f_update(kg_dry , kg_dry_lose , belowmaint)
+    kg_dry = fun.f_update(kg_dry , kg_dry_lose , belowmaint)
     ##Compile whole formula
     kg = lact_propn * kg_lact + (1 - lact_propn) * kg_dry
     return kg
 
 
 
-def f_energy_cs(ck, cx, cm, lw_start, mr_age, mei, omer_history_start, days_period, md_solid, i_md_supp, md_herb, lgf_eff, dlf_eff, i_steepness, density, foo, feedsupply, intake_f, dmd, mei_propn_milk=0):
+def f_energy_cs(ck, cx, cm, lw_start, ffcfw_start, mr_age, mei, omer_history_start, days_period, md_solid, i_md_supp, md_herb, lgf_eff, dlf_eff, i_steepness, density, foo, feedsupply, intake_f, dmd, mei_propn_milk=0):
     ##Efficiency for maintenance	
     km = (ck[1, ...] + ck[2, ...] * md_solid) * (1-mei_propn_milk) + ck[3, ...] * mei_propn_milk
     ##Efficiency for lactation - dam only	
@@ -784,15 +757,15 @@ def f_energy_cs(ck, cx, cm, lw_start, mr_age, mei, omer_history_start, days_peri
     ##Efficiency for growth (fodder)	
     kg_fodd = ck[13, ...] * lgf_eff * (1+ ck[15, ...] * dlf_eff) * md_herb
     ##Energy required at maint for metabolism	
-    emetab = cx[10, ...] * cm[2, ...] * lw_start ** 0.75 * mr_age * (1 + cm[5, ...] * mei_propn_milk)
+    emetab = cx[10, ...] * cm[2, ...] * ffcfw_start ** 0.75 * mr_age * (1 + cm[5, ...] * mei_propn_milk)
     ##Distance walked (horizontal equivalent)	
-    distance = i_steepness * np.minimum(1, cm[17, ...] / density) / (cm[8, ...] * foo + cm[9, ...])
+    distance = (1 + np.tan(np.deg2rad(i_steepness))) * np.minimum(1, cm[17, ...] / density) / (cm[8, ...] * foo + cm[9, ...])
     ##Set Distance walked to 0 if in confinement	
     distance = distance * (feedsupply < 3)
     ##Energy required for movement	
     emove = cm[16, ...] * distance * lw_start
-    ##Energy required for grazing	
-    egraze = cm[6, ...] * lw_start * intake_f * (cm[7, ...] - dmd) + emove
+    ##Energy required for grazing (chewing and wlking around)
+    egraze = cm[6, ...] * ffcfw_start * intake_f * (cm[7, ...] - dmd) + emove
     ##Energy associated with organ activity
     omer, omer_history = f_history(omer_history_start, cm[1, ...] * mei, days_period)
     ##ME requirement for maintenance (before ECold)
@@ -839,7 +812,7 @@ def f_birthweight_cs(cx, w_b_yatf, w_f_dams, period_is_birth):
     ##set BW = foetal weight at end of period (if born)	
     t_w_b = w_f_dams * cx[15, ...] * period_is_birth
     ##update birth weight if it is birth period
-    w_b_yatf = f_update(w_b_yatf, t_w_b, period_is_birth)
+    w_b_yatf = fun.f_update(w_b_yatf, t_w_b, period_is_birth)
     return w_b_yatf
 
 def f_birthweight_mu(cu1_yatf, cb1_yatf, cx_yatf, ce_yatf, w_b, cf_w_b_dams, ffcfw_birth_dams, ebg_dams, days_period, gest_propn, period_between_joinscan, period_between_scanbirth, period_is_birth):
@@ -850,7 +823,7 @@ def f_birthweight_mu(cu1_yatf, cb1_yatf, cx_yatf, ce_yatf, w_b, cf_w_b_dams, ffc
     ##set BW = foetal weight at end of period (if born)	
     t_w_b_yatf = (cf_w_b_dams + cu1_yatf[16, -1, ...] + cu1_yatf[16, 0, ...] * ffcfw_birth_dams + cb1_yatf[16, ...] + cx_yatf[16, ...] + ce_yatf[16, ...])
     ##Update w_b if it is birth	
-    w_b = f_update(w_b, t_w_b_yatf, period_is_birth)
+    w_b = fun.f_update(w_b, t_w_b_yatf, period_is_birth)
     return w_b, cf_w_b_dams
 
 
@@ -858,7 +831,7 @@ def f_weanweight_cs(w_w_yatf, ffcfw_start_yatf, ebg_yatf, days_period, lact_prop
     ##set WWt = yatf weight at weaning	
     t_w_w = (ffcfw_start_yatf + ebg_yatf * days_period * lact_propn)
     ##update weaning weight if it is weaning period
-    w_w_yatf = f_update(w_w_yatf, t_w_w, period_is_wean)
+    w_w_yatf = fun.f_update(w_w_yatf, t_w_w, period_is_wean)
     return w_w_yatf
 
 def f_weanweight_mu(cu1_yatf, cb1_yatf, cx_yatf, ce_yatf, w_w, cf_w_w_dams, ffcfw_wean_dams, ebg_dams, foo, days_period, lact_propn, period_between_joinscan, period_between_scanbirth, period_between_birthwean, period_is_wean):
@@ -869,7 +842,7 @@ def f_weanweight_mu(cu1_yatf, cb1_yatf, cx_yatf, ce_yatf, w_w, cf_w_w_dams, ffcf
     ##set WWt = yatf weight at weaning	
     t_w_w = (cf_w_w_dams + cu1_yatf[17, -1, ...] + cu1_yatf[17, 0, ...] * ffcfw_wean_dams + cu1_yatf[17, 5, ...] * foo + cu1_yatf[17, 6, ...] * foo** 2 + cb1_yatf[17, ...] + cx_yatf[17, ...] + ce_yatf[17, ...])
     ##Update w_w if it is weaning	
-    w_w = f_update(w_w, t_w_w, period_is_wean)
+    w_w = fun.f_update(w_w, t_w_w, period_is_wean)
     return w_w, cf_w_w_dams
 
 def f_milk(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_start, ffcfw75_exp_yatf, lb_start, ldr_start, age_yatf, mp_age_y,  mp2_age_y, i_x_pos, days_period_yatf, kl, lact_nut_effect):
@@ -921,12 +894,12 @@ def f_fibre(cw, cc, ffcfw_start, relsize_start, d_cfw_history_start_m2a1e1b1nwzi
     ##Surface Area
     area = cc[1, ...] * ffcfw_start ** (2/3)
     ##Daily fibre length growth
-    d_fl_a1e1b1nwzida0e0b0xyg = 400 * fun.f_divide(d_cfw_a1e1b1nwzida0e0b0xyg, np.pi * cw[10, ...] * cw[11, ...] * area * (d_fd_a1e1b1nwzida0e0b0xyg / 10**6) ** 2) #func to stop div/0 error when d_fd=0 so does d_cfw
+    d_fl_a1e1b1nwzida0e0b0xyg = 100 * fun.f_divide(d_cfw_a1e1b1nwzida0e0b0xyg, np.pi * cw[10, ...] * cw[11, ...] * area * (0.5 * d_fd_a1e1b1nwzida0e0b0xyg / 10**6) ** 2) #func to stop div/0 error when d_fd=0 so does d_cfw
     return d_cfw_a1e1b1nwzida0e0b0xyg, d_fd_a1e1b1nwzida0e0b0xyg, d_fl_a1e1b1nwzida0e0b0xyg, d_cfw_history_m2a1e1b1nwzida0e0b0xyg, mew, new
 
 
 
-def f_chill_cs(cc, ck, ffcfw_start, rc_start, fl_start, mei, meme, mew, new, km, kg_supp, kg_fodd, mei_propn_supp, mei_propn_herb, temp_ave_a1e1b1nwzida0e0b0xyg, temp_max_a1e1b1nwzida0e0b0xyg, temp_min_a1e1b1nwzida0e0b0xyg, ws_a1e1b1nwzida0e0b0xyg, rain_a1e1b1nwzida0e0b0xygm1, index_m0, guw	= 0, kl = 0,	mei_propn_milk	= 0, mec = 0, mel = 0, nec = 0, nel = 0, gest_propn	= 0, lact_propn = 0):
+def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, meme, mew, new, km, kg_supp, kg_fodd, mei_propn_supp, mei_propn_herb, temp_ave_a1e1b1nwzida0e0b0xyg, temp_max_a1e1b1nwzida0e0b0xyg, temp_min_a1e1b1nwzida0e0b0xyg, ws_a1e1b1nwzida0e0b0xyg, rain_a1e1b1nwzida0e0b0xygm1, index_m0, guw	= 0, kl = 0,	mei_propn_milk	= 0, mec = 0, mel = 0, nec = 0, nel = 0, gest_propn	= 0, lact_propn = 0):
     ##Animal is below maintenance
     belowmaint = mei < (meme + mec + mel + mew)
     ##Efficiency for growth (before ECold)
@@ -944,11 +917,11 @@ def f_chill_cs(cc, ck, ffcfw_start, rc_start, fl_start, mei, meme, mew, new, km,
     ##surface area of animal
     area = np.maximum(0.001,cc[1, ...] * ffcfw_start ** (2/3)) #max because area is in m2 so realistic values of area can be small for lambs
     ##Impact of wet fleece on insulation
-    wetflc_a1e1b1nwzida0e0b0xygm1 = cc[5, ..., na] + (1 - cc[5, ..., na]) * np.exp(-cc[6, ..., na] * rain_a1e1b1nwzida0e0b0xygm1 / fl_start[..., na])
+    wetflc_a1e1b1nwzida0e0b0xygm1 = cc[5, ..., na] + (1 - cc[5, ..., na]) * np.exp(-cc[6, ..., na] * rain_a1e1b1nwzida0e0b0xygm1 / sl_start[..., na])
     ##Insulation of air (2 hourly)
-    in_air_a1e1b1nwzida0e0b0xygm0 = radius[..., na] / (radius[..., na] + fl_start[..., na]) / (cc[7, ..., na] + cc[8, ..., na] * np.sqrt(wind_a1e1b1nwzida0e0b0xygm0))
+    in_air_a1e1b1nwzida0e0b0xygm0 = radius[..., na] / (radius[..., na] + sl_start[..., na]) / (cc[7, ..., na] + cc[8, ..., na] * np.sqrt(wind_a1e1b1nwzida0e0b0xygm0))
     ##Insulation of coat (2 hourly)
-    in_coat_a1e1b1nwzida0e0b0xygm0 = radius[..., na] * np.log((radius[..., na] + fl_start[..., na]) / radius[..., na]) / (cc[9, ..., na] - cc[10, ..., na] * np.sqrt(wind_a1e1b1nwzida0e0b0xygm0))
+    in_coat_a1e1b1nwzida0e0b0xygm0 = radius[..., na] * np.log((radius[..., na] + sl_start[..., na]) / radius[..., na]) / (cc[9, ..., na] - cc[10, ..., na] * np.sqrt(wind_a1e1b1nwzida0e0b0xygm0))
     ##Insulation of  tissue
     in_tissue = cc[3, ...] * (rc_start - cc[4, ...] * (rc_start - 1))
     ##Insulation of  air + coat (2 hourly)
@@ -1054,7 +1027,7 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
     slc[uinp.parameters['i_b1_pos']] = slice(0,1)
     conception[tuple(slc)] = -np.sum(f_dynamic_slice(conception, uinp.parameters['i_b1_pos'],1, 5), axis = (uinp.parameters['i_b1_pos']), keepdims=True)
     temporary = (index_e1 == 0) * np.sum(conception, axis=pinp.sheep['i_e1_pos'], keepdims=True) #sum across e axis into slice 0
-    conception = f_update(conception, temporary, (nyatf_b1any == 0)) #Put sum of e1 into slice 0 (e1) if nyatf == 0
+    conception = fun.f_update(conception, temporary, (nyatf_b1any == 0)) #Put sum of e1 into slice 0 (e1) if nyatf == 0
     ##Set proportions for dams that gave birth and lost to 0 - this is required so that numbers in pp behave correctly
     conception *= (nfoet_b1any == nyatf_b1any)
     return conception
@@ -1074,7 +1047,7 @@ def f_conception_ltw(cu0, cs_mating, scan_std, doy_p, nfoet_b1any, nyatf_b1any, 
     slc[uinp.parameters['i_b1_pos']] = slice(0,1)
     conception[tuple(slc)] = -np.sum(f_dynamic_slice(conception, uinp.parameters['i_b1_pos'],1, 5), axis = (uinp.parameters['i_b1_pos']), keepdims=True)
     temporary = (index_e1 == 0) * np.sum(conception, axis=pinp.sheep['i_e1_pos'], keepdims=True)  # sum across e axis into slice 0
-    conception = f_update(conception, temporary, (nyatf_b1any == 0))  # Put sum of e1 into slice 0 (e1) if nyatf == 0
+    conception = fun.f_update(conception, temporary, (nyatf_b1any == 0))  # Put sum of e1 into slice 0 (e1) if nyatf == 0
     ##Set proportions for dams that gave birth and lost to 0 - this is required so that numbers in pp behave correctly
     conception *= (nfoet_b1any == nyatf_b1any)
     return conception
@@ -1105,7 +1078,7 @@ def f_mortality_dam_cs(cb1, cg, nw_start, ebg, days_period, period_between_birth
     t_mort = days_period * gest_propn /42 * f_sig(-42 * ebg * cg[18, ...] / nw_start, cb1[4, ...], cb1[5, ...]) #mul be days period to convert from mort per day to per period
     ##If not last 6 weeks then = 0
     mort = t_mort * period_between_birth6wks
-    mort = f_sa(mort, sar_mortalitye, sa_type = 4)
+    mort = fun.f_sa(mort, sar_mortalitye, sa_type = 4)
     return mort
 
     
@@ -1115,7 +1088,7 @@ def f_mortality_dam_mu(cu2, cs_birth_dams, period_is_birth, days_period, sar_mor
     ##Non-multiple bearing ewes = 0	
     mortalitye_mu = np.exp(t_mortalitye_mu) / (1 + np.exp(t_mortalitye_mu)) * period_is_birth * days_period #mul be days period to convert from mort per day to per period
     ##Dam (& progeny) losses at birth related to CSL	
-    mortalitye_mu = f_sa(mortalitye_mu, sar_mortalitye, sa_type = 4)
+    mortalitye_mu = fun.f_sa(mortalitye_mu, sar_mortalitye, sa_type = 4)
     return mortalitye_mu
 
 
@@ -1124,7 +1097,7 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, w_b_exp_y, period_is_birth, c
     ##Progeny losses due to large progeny (dystocia)
     mortalityd_yatf = f_sig(fun.f_divide(w_b, w_b_exp_y) * np.maximum(1, rc_birth), cb1[6, ...], cb1[7, ...]) * period_is_birth
     ##add sensitivity
-    mortalityd_yatf = f_sa(mortalityd_yatf, sar_mortalityp, sa_type = 4)
+    mortalityd_yatf = fun.f_sa(mortalityd_yatf, sar_mortalityp, sa_type = 4)
     ##dam mort due to large progeny (dystocia)
     mortalityd_dams = fun.f_divide(np.mean(mortalityd_yatf, axis=uinp.parameters['i_x_pos'], keepdims=True) * cd[21,...], nfoet_b1)  #returns 0 mort if there is 0 nfoet - this handles div0 error
     ##Progeny losses due to large progeny (dystocia) - so there is no double counting of progeny loses associated with dam mortality
@@ -1134,7 +1107,7 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, w_b_exp_y, period_is_birth, c
     ##Progeny mortality at birth from exposure
     mortalityx = np.average(np.exp(xo) / (1 - np.exp(xo)) ,axis = -1) * period_is_birth #axis -1 is m1
     ##add sensitivity
-    mortalityx = f_sa(mortalityx, sar_mortalityp, sa_type = 4)
+    mortalityx = fun.f_sa(mortalityx, sar_mortalityp, sa_type = 4)
     return mortalityx, mortalityd_yatf, mortalityd_dams
 
 
@@ -1144,7 +1117,7 @@ def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, foo, chill_index_m1, period_is
     ##back tansformed	
     mortalityp_mu = np.average(1 / (1 + np.exp(-t_mortalityp_mu)),axis = -1) * period_is_birth #m1 axis averaged
     ##Progeny mortality at birth (LTW) with SA	
-    mortalityp_mu = f_sa(mortalityp_mu, sar_mortalityp, sa_type = 4)
+    mortalityp_mu = fun.f_sa(mortalityp_mu, sar_mortalityp, sa_type = 4)
     return mortalityp_mu
         
 
@@ -1170,14 +1143,14 @@ def f_period_start_prod(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len,
     var_start = f_condensed(numbers, var_start, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_fvp0, period_is_startfvp0)
     ##b) Calculate temporary values as if period is start of season
     if np.any(period_is_startseason):
-        temporary = fun.f_weighted_average(var_start, numbers, season_tup, keepdims=True)#gets the weighted average of production in the different seasons
+        temporary = fun.f_weighted_average(var_start, numbers, season_tup, keepdims=True, non_zero=True)#gets the weighted average of production in the different seasons
         ##Set values where it is beginning of FVP
-        var_start = f_update(var_start, temporary, period_is_startseason)
+        var_start = fun.f_update(var_start, temporary, period_is_startseason)
     if group==1 and np.any(period_is_prejoin):
         ##c) Calculate temporary values as if period_is_prejoin	
-        temporary = fun.f_weighted_average(var_start, numbers, prejoin_tup, keepdims=True) #gets the weighted average of production in the different seasons
+        temporary = fun.f_weighted_average(var_start, numbers, prejoin_tup, keepdims=True, non_zero=True) #gets the weighted average of production in the different seasons
         ##Set values where it is beginning of FVP
-        var_start = f_update(var_start, temporary, period_is_prejoin)
+        var_start = fun.f_update(var_start, temporary, period_is_prejoin)
     return var_start
 
 #^old version
@@ -1191,17 +1164,17 @@ def f_period_start_prod(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len,
 #         temporary = var_start #this is done to ensure that temp has the same size as var. In the next line np.diagonal removes the n axis so it is added back in using the expand function, but that is a singlton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
 #         temporary[...] = np.expand_dims(np.rollaxis(var_start.diagonal(axis1= uinp.structure['i_w_pos'], axis2= uinp.structure['i_n_pos']),-1,uinp.structure['i_w_pos']), uinp.structure['i_n_pos']) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
 #         ##Update if the period is start of a FVP
-#         var_start = f_update(var_start, temporary, period_is_startfvp)
+#         var_start = fun.f_update(var_start, temporary, period_is_startfvp)
 #     ##b) Calculate temporary values as if period_is_break
 #     temporary = fun.f_weighted_average(var_start, numbers, season_tup, keepdims=True)
 #     #temporary = np.expand_dims(np.average(var_start, axis=season_tup, weights=numbers),season_tup) #gets the weighted average of production in the different seasons, have to add axis back because no keepdims arg
 #     ##Set values where it is beginning of FVP
-#     var_start = f_update(var_start, temporary, period_is_break)
+#     var_start = fun.f_update(var_start, temporary, period_is_break)
 #     if group==1:
 #         ##c) Calculate temporary values as if period_is_prejoin
 #         temporary = fun.f_weighted_average(var_start, numbers, prejoin_tup, keepdims=True) #gets the weighted average of production in the different seasons
 #         ##Set values where it is beginning of FVP
-#         var_start = f_update(var_start, temporary, period_is_prejoin)
+#         var_start = fun.f_update(var_start, temporary, period_is_prejoin)
 #     return var_start
 
 def f_condensed(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_fvp0, period_is_startfvp0):
@@ -1236,7 +1209,7 @@ def f_condensed(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp
             temporary[tuple(sl)] = np.take_along_axis(var_sorted, low_slice, uinp.structure[
                 'i_w_pos'])  # production level of the lowest nutrition profile that has a mortality less than 10% for the year
     ###Update if the period is start of year (shearing for offs and prejoining for dams)
-    var = f_update(var, temporary, period_is_startfvp0)
+    var = fun.f_update(var, temporary, period_is_startfvp0)
 
     return var
 
@@ -1246,12 +1219,12 @@ def f_period_start_nums(numbers, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_
     ##b) realocate for season type
     if np.any(period_is_startseason):
         temporary = np.sum(numbers, axis = season_tup, keepdims=True)  * season_propn_z  #Calculate temporary values as if period_is_break
-        numbers = f_update(numbers, temporary, period_is_startseason)  #Set values where it is beginning of FVP
+        numbers = fun.f_update(numbers, temporary, period_is_startseason)  #Set values where it is beginning of FVP
     ##things for dams - prejoining and moving between classes
     if group==1 and np.any(period_is_prejoin):
         ##d) new repro cycle (prejoining)
         temporary = np.sum(numbers, axis = (prejoin_tup), keepdims=True) * numbers_initial_repro #Calculate temporary values as if period_is_prejoin
-        numbers = f_update(numbers, temporary, period_is_prejoin)  #Set values where it is beginning of FVP
+        numbers = fun.f_update(numbers, temporary, period_is_prejoin)  #Set values where it is beginning of FVP
     return numbers
 
 
@@ -1261,15 +1234,15 @@ def f_period_start_nums(numbers, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_
 #     if uinp.structure['i_n1_len'] >= uinp.structure['i_w1_len']:
 #         temporary = numbers #this is done to ensure that temp has the same size as var. In the next line np.diagonal removes the n axis so it is added back in using the expand function, but that is a singlton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
 #         temporary[...] = np.expand_dims(np.rollaxis(numbers.diagonal(axis1= uinp.structure['i_w_pos'], axis2= uinp.structure['i_n_pos']),-1,uinp.structure['i_w_pos']), uinp.structure['i_n_pos']) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
-#         numbers = f_update(numbers, temporary, period_is_startfvp)
+#         numbers = fun.f_update(numbers, temporary, period_is_startfvp)
 #     ##b) realocate for season type
 #     temporary = np.sum(numbers, axis = season_tup, keepdims=True)  * season_propn_z  #Calculate temporary values as if period_is_break
-#     numbers = f_update(numbers, temporary, period_is_break)  #Set values where it is beginning of FVP
+#     numbers = fun.f_update(numbers, temporary, period_is_break)  #Set values where it is beginning of FVP
 #     ##things for dams - prejoining and moving between classes
 #     if group==1:
 #         ##d) new repro cycle (prejoining)
 #         temporary = np.sum(numbers, axis = (prejoin_tup), keepdims=True) * numbers_initial_repro #Calculate temporary values as if period_is_prejoin
-#         numbers = f_update(numbers, temporary, period_is_prejoin)  #Set values where it is beginning of FVP
+#         numbers = fun.f_update(numbers, temporary, period_is_prejoin)  #Set values where it is beginning of FVP
 #     return numbers
 
 
@@ -1286,76 +1259,217 @@ def f_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfoe
         ###b) conception - conception is the change in numbers +ve for animals getting pregnancy and -ve in the NM e-0 slice (note the conception for e slice 1 and higher puts the negitive numbers in the e-0 nm slice)
         if np.any(period_is_mating):
             temporary = numbers + conception * numbers[:, 0:1, 0:1, ...]  # numbers_dams[..., 0,0, ...] is the NM slice of cycle 0 ie the number of animals yet to be mated (conception will have negitive value in nm slice)
-            numbers = f_update(numbers, temporary, np.any(period_is_mating, axis=pinp.sheep['i_e1_pos'])) #needs to be previous period else conception is not calculated because numbers happens at begining of p loop
+            numbers = fun.f_update(numbers, temporary, np.any(period_is_mating, axis=pinp.sheep['i_e1_pos'])) #needs to be previous period else conception is not calculated because numbers happens at begining of p loop
         ###at the end of mating move any remaining numbers from nm to 00 slice (note only the nm slice for e-0 has numbers - this is handled in the conception function)
         ###Set temporary to copy of current numbers
         if np.any(period_is_matingend):
             temporary  = np.copy(numbers)
             temporary[:, 0:1, 1:2, ...] += numbers[:, 0:1, 0:1, ...]
             temporary[:, 0, 0, ...] = 0.001 #want a small number in nm so it can be activity
-            numbers = f_update(numbers, temporary, period_is_matingend)
+            numbers = fun.f_update(numbers, temporary, period_is_matingend)
         ###d) birth (account for birth status and if drys are retained)
         if np.any(period_is_birth):
             dam_propn_birth_b1 = f_comb(nfoet_b1, nyatf_b1) * (1 - mortality_yatf) ** nyatf_b1 * mortality_yatf ** (nfoet_b1 - nyatf_b1) # the proportion of dams of each LSLN based on (progeny) mortality
             temp = np.mean(dam_propn_birth_b1[...,1:,:,:], axis=uinp.parameters['i_x_pos'], keepdims=True) * numbers[:,:,uinp.structure['a_prepost_b1'],...] #have to average x axis so that it is not active for dams - only average females and weathers (castrates) because entires (rams) not usually included in offs
-            pp_numbers = f_update(numbers, temp, period_is_birth)  # calculated in the period after birth when progeny mortality due to exposure is calculated
+            pp_numbers = fun.f_update(numbers, temp, period_is_birth)  # calculated in the period after birth when progeny mortality due to exposure is calculated
             temp = np.maximum(pinp.sheep['i_drysretained_birth'],np.minimum(1, nyatf_b1)) * pp_numbers
-            numbers = f_update(pp_numbers, temp, period_is_birth * (gbal>=2)) # has to happen after the dams are moved due to progeny mortality so that gbal drys are also scaled by drys_retained
+            numbers = fun.f_update(pp_numbers, temp, period_is_birth * (gbal>=2)) # has to happen after the dams are moved due to progeny mortality so that gbal drys are also scaled by drys_retained
         else:
             ##numbers for post processing - dont include selling drys - asignment required here incase it is not birth
             pp_numbers = numbers
         ###c) scanning
         if np.any(period_is_scan):
             temp = np.maximum(pinp.sheep['i_drysretained_scan'],np.minimum(1, nfoet_b1)) * numbers # scale the level of drys by drys_retained, scale every other slice by 1 except drys if not retained
-            numbers = f_update(numbers, temp, period_is_scan * (scan>=1))
+            numbers = fun.f_update(numbers, temp, period_is_scan * (scan>=1))
         ###e)make the max of number 0.0001
         numbers=np.maximum(numbers_min_b1, numbers)
     ##things just for yatf
     if group==2:
         temp = nyatf_b1 * gender_propn_x   # nyatf is accounting for peri-natal mortality
-        f_update(numbers, temp, period_is_birth)
+        fun.f_update(numbers, temp, period_is_birth)
         pp_numbers = numbers
     return numbers,pp_numbers
 
 
-def f_sa(value, sa, sa_type=0, target=0):
-    ##Type 0 is sam (sensitivity multiplier) - default
-    if sa_type == 0:
-        result = value * sa
-    ##Type 1 is saa (sensitivity addition)
-    elif sa_type == 1:
-         result = value + sa
-    ##Type 2 is sap (sensitivity proportion)
-    elif sa_type == 2:
-         result = value * (1 + sa)
-    ##Type 3 is sat (sensitivity target)
-    elif sa_type == 3:
-         result = value + (target - value) * sa
-    ##Type 4 is sar (sensitivity range)
-    elif sa_type == 4:
-         result = np.maximum(0, np.minimum(1, value * (1 - np.abs(value)) + np.maximum(0, sa)))
-    ##Type 5 is value (return the SA value)
-    elif sa_type == 5:
-         result = sa
-    return result
+
 
 
     
 def f_carryforward_u1(cu1, ebg, period_between_joinstartend, period_between_joinscan, period_between_scanbirth, period_between_birthwean, days_period, period_propn):
     ##First 3 slices of the genotype axis = the sire genotypes	
-    coeff_cf1 = f_update(0, cu1[1,...], period_between_joinstartend) #note cu1 has already had the first axis (animal) sliced when it was passed in 
+    coeff_cf1 = fun.f_update(0, cu1[1,...], period_between_joinstartend) #note cu1 has already had the first axis (animal) sliced when it was passed in
     ##Loop over remaining slices	
-    coeff_cf1 = f_update(coeff_cf1, cu1[2,...], period_between_joinscan)
+    coeff_cf1 = fun.f_update(coeff_cf1, cu1[2,...], period_between_joinscan)
     ##Loop over remaining slices	
-    coeff_cf1 = f_update(coeff_cf1, cu1[3,...], period_between_scanbirth)
+    coeff_cf1 = fun.f_update(coeff_cf1, cu1[3,...], period_between_scanbirth)
     ##Loop over remaining slices	
-    coeff_cf1 = f_update(coeff_cf1, cu1[4,...], period_between_birthwean)
+    coeff_cf1 = fun.f_update(coeff_cf1, cu1[4,...], period_between_birthwean)
     ##Assign values based on maternal and paternal genotype	
     d_cf = coeff_cf1 * ebg * days_period * period_propn
     return d_cf
 
 
+def f_wool_additional(fd, sl, ss, vm,  pmb, cvfd=0.22, cvsl=0.18):
+    cu5_u5c5=uinp.sheep['i_cu5_c5']
+    i_eqn_ph=uinp.sheep['i_eqn_ph']
+    i_eqn_cvh=uinp.sheep['i_eqn_cvh']
+    i_eqn_romaine=uinp.sheep['i_eqn_romaine']
+    ##adjusted pmb
+    pmb = np.maximum(cu5_u5c5[4, i_eqn_ph], pmb)
+    ##predicted hauteur price adj
+    ph = cu5_u5c5[0, i_eqn_ph] * sl + cu5_u5c5[1, i_eqn_ph] * ss + cu5_u5c5[2, i_eqn_ph] * fd + cu5_u5c5[
+        3, i_eqn_ph] * pmb + cu5_u5c5[5, i_eqn_ph] * vm + cu5_u5c5[6, i_eqn_ph] * cvfd + cu5_u5c5[
+          7, i_eqn_ph] * cvsl + cu5_u5c5[8, i_eqn_ph]
+    ##Back transform the ph if using SCIRO equation
+    if i_eqn_ph == 0:
+        ph = 1 / (1 + np.exp(-ph))
+    ##predicted cv hauteur
+    cvh = cu5_u5c5[0, i_eqn_cvh] * sl + cu5_u5c5[1, i_eqn_cvh] * ss + cu5_u5c5[2, i_eqn_cvh] * fd + cu5_u5c5[
+        3, i_eqn_cvh] * pmb + cu5_u5c5[5, i_eqn_cvh] * vm + cu5_u5c5[6, i_eqn_cvh] * cvfd + cu5_u5c5[
+          7, i_eqn_cvh] * cvsl + cu5_u5c5[8, i_eqn_cvh]
+    ##predicted romaine
+    romaine = cu5_u5c5[0, i_eqn_romaine] * sl + cu5_u5c5[1, i_eqn_romaine] * ss + cu5_u5c5[2, i_eqn_romaine] * fd + \
+      cu5_u5c5[3, i_eqn_romaine] * pmb + cu5_u5c5[5, i_eqn_romaine] * vm + cu5_u5c5[6, i_eqn_romaine] * cvfd + \
+      cu5_u5c5[7, i_eqn_romaine] * cvsl + cu5_u5c5[8, i_eqn_romaine]
+    return ph, cvh, romaine
+
+def f_woolprice():
+    ##micron price guide percentile to use
+    mpg_percentile = uinp.sheep['i_woolp_mpg_percentile']
+    ##price for std fd at selected percentile
+    mpg_stdfd = np.interp(mpg_percentile, uinp.sheep['i_woolp_mpg_range_w5'], uinp.sheep['i_woolp_mpg_w5'])
+    ##Price at std FD (adjusted by sav)
+    mpg_stdfd = fun.f_sa(mpg_stdfd, sen.sav['woolp_mpg'], 5)
+    ##Price at std FD (adjusted by sam)
+    mpg_stdfd = fun.f_sa(mpg_stdfd, sen.sam['woolp_mpg'])
+    ##FD percentile to use (adjusted by sav)
+    fd_percentile = uinp.sheep['i_woolp_fdprem_percentile']
+    ##FD premium at selected percentile
+    fdprem_w4 = np.array([np.interp(fd_percentile, uinp.sheep['i_woolp_fdprem_range_w5'], uinp.sheep['i_woolp_fdprem_w4w5'][i]) for i in range(uinp.sheep['i_woolp_fdprem_w4w5'].shape[0])])
+    ##FD premium to use (adjusted by sav)
+    fdprem_w4 = fun.f_sa(fdprem_w4, sen.sav['woolp_fdprem'], 5)
+    ##Wool price for the analysis (note fdprem is the premium per micron - calculate like this because each step is not necciserily 1 micron)
+    woolprice_w4 = mpg_stdfd * (1 + fdprem_w4) ** (uinp.sheep['i_woolp_fd_std'] - uinp.sheep['i_woolp_fd_range_w4'])
+    return woolprice_w4
+
+
+def f_wool_value(mpg_w4, cfw, fd, sl, ss, vm, pmb):
+    ##call function for ph cvh and romaine
+    ph, cvh, romaine = f_wool_additional(fd, sl, ss, vm, pmb)
+    ##STB price for FNF (free or nearly free of fault)
+    fnf = np.interp(fd, uinp.sheep['i_woolp_fd_range_w4'], mpg_w4 * uinp.sheep['i_stb_scalar_w4'])
+    ##vm price adj
+    vm_adj = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_vm_adj_w4w6'], uinp.sheep['i_woolp_vm_range_w6'], uinp.sheep['i_woolp_fd_range_w4'], vm,fd)
+    ##predicted hauteur price adj
+    ph_adj = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_ph_adj_w4w7'], uinp.sheep['i_woolp_ph_range_w7'], uinp.sheep['i_woolp_fd_range_w4'], ph,fd)
+    ##cv hauteur price adj
+    cvh_adj = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_cvh_adj_w4w8'], uinp.sheep['i_woolp_cvh_range_w8'], uinp.sheep['i_woolp_fd_range_w4'], cvh,fd)
+    ##romaine price adj
+    romaine_adj = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_romaine_adj_w4w9'], uinp.sheep['i_woolp_romaine_range_w9'], uinp.sheep['i_woolp_fd_range_w4'], romaine,fd)
+    ##wool price with adjustments
+    woolp_stb = fnf * (1 + vm_adj) * (1 + ph_adj) * (1 - cvh_adj) * (1 - romaine_adj)
+    ##stb net in the bank price
+    woolp_stbnib = woolp_stb * (1 - uinp.sheep['i_wool_cost_pc']) - uinp.sheep['i_wool_costkg']
+    ##wool value if shorn this period
+    wool_value = woolp_stbnib * cfw
+    return wool_value, woolp_stbnib
+
+def f_condition_score(rc, cu0):
+    ''' Estimate CS from LW. Works with scalars or arrays - provided they are broadcastable into ffcflw.
+
+       ffcfw: (kg) Fleece free, conceptus free liveweight. normal_weight: (kg). cs_propn: (0.19) change in LW
+       associated with 1 CS as a proportion of normal_weight.
+
+       long version of the formula (use rc instead of using to following): 3 + (ffcfw - normal_weight) / (cs_propn * normal_weight)
+       Returns: condition score - float
+       '''
+    return 3 + (rc - 1) / cu0[1, ...]
+
+#^needs updating - curently just a copy of the cs function
+def f_fat_score(rc, cu0):
+    return 3 + (rc - 1) / cu0[3, ...]
+
+
+def f_norm_cdf(x, mu, cv):
+    ##standadise x
+    std = (x - mu) / (cv * mu)
+    ##probability (<=x)
+    prob = 1 / (np.exp(-358 / 23 * std + 111 * np.arctan(37 / 294 * std)) + 1)
+    return prob
+
+def f_saleprice():
+    ##Sale price percentile to use (adjusted by sav)
+    salep_percentile = uinp.sheep['i_salep_percentile']
+    ##Max price in grids at selected percentile - 1d inderp over along the s7 axis
+    grid_max_s7 = np.array([np.interp(salep_percentile, uinp.sheep['i_salep_percentile_range_s4'], uinp.sheep['i_salep_percentile_scalar_s7s4'][i])
+                            for i in range(uinp.sheep['i_salep_percentile_scalar_s7s4'].shape[0])]) * uinp.sheep['i_salep_max_s7']
+    ##Max price in grids (adj sav)
+    grid_max_s7 = fun.f_sa(grid_max_s7, sen.sav['salep_max'], 5)
+    ##Max price in grids (adj sam)
+    grid_max_s7 = fun.f_sa(grid_max_s7, sen.sam['salep_max'], 5)
+    ##Scalar for LW impact across the grid (sat adjusted)
+    lw_scalar_s7s5s6 = uinp.sheep['i_salep_lw_scalar_s5s6s7']
+    ##Scalar for score impact across the grid (sat adjusted)
+    score_scalar_s7s5s6 = uinp.sheep['i_salep_score_scalar_s7s5s6']
+    ##Wool price for the analysis
+    grid_s7s5s6 = grid_max_s7[:,na,na] * lw_scalar_s7s5s6 * score_scalar_s7s5s6
+    return grid_s7s5s6
 
 
 
+
+def f_salep_mob(grid_price_s5s6s7, grid_lw_s5s7,ffcfw,):
+    ##prob for each lw step in grid
+    prob_lw_s5s7 = np.max(0, f_np_ncdf(np.roll(grid_lw_s5s7, -1, axis = 0), ffcfw, cvlw) - f_np_ncdf(grid_lw_s5s7, ffcfw, cvlw))
+    ##Probability for each score step in grid (fat score/CS)
+    prob_score_s6s7 = np.max(0, f_np_ncdf(np.roll(grid_score_s6s7, -1, axis = 0), score, cvscore) - f_np_ncdf(grid_score_s6s7, score, cvscore))
+    ##Probability for each cell of grid
+    prob_grid_s5s6s7 = prob_lw_s5s7[:,na,:] * prob_score_s6s7
+    ##Average price for the mob
+    salep_mob_s7 = np.sum(prob_grid_s5s6s7 * grid_price_s5s6s7, axis = (lw(s5), score(s6)))
+    return salep_mob_s7
+
+
+def f_sale_value(cu0, cx, o_rc, dressp_adj_g):
+    ##Calculate condition score
+    cs_p = f_condition_score(cu0, o_rc)
+    ##Calculate fat score
+    fs_p = f_fat_score(cu0, o_rc)
+    ##Combine the scores into single array
+    scores_s8p = np.stack(fs_p, cs_p, axis=0)
+    ##Convert to s7 array - option 1
+    scores_s7p = scores_s8p[uinp.sheep['ia_s8_s7']]
+    ##Dressing percentage to adjust price grid to LW
+    dressp_price_s7s6 = pinp.sheep['i_dressp'] + dressp_adj_g + cx[23, …] + i_salep_dressp_adj_s6 + i_salep_dressp_adj_s7
+    ##Price type scalar (for DW, LW or per head)
+    ##Update the grid prices to $/kg LW
+    ##Interploate DP adjustment due to FS
+    ##Dressing percentage to calculate grid weight
+    ##Price type scalar (for DW, LW or per head)
+    ##Scale ffcfw to grid weight
+    ##Calculate mob average price in each grid
+    ##Scale prices based on month
+    ##Temporary value with age based discount
+    ##Apply discount if age is greater than threshold age
+    ##Price type scalar (for DW, LW or per head)
+    ##Convert to value per head
+    ##Subtract the selling costs
+    ##Mask the grids
+    ##Select the maximum value across the grids
+    = sfun.f_update(dressp_price_s7s6g, 1, i_salep_type_s7 >= 1)
+    = salep_grid_s7s5s6 * dressp_price_s7s6g
+    = interpolation(fs_pg, i_salep_score_range_s8s6[0, …], i_salep_dressp_adj_s6)
+    = i_dressp + dressp_adj_g + cx[23, …] + dressp_adj_fs_pg + i_salep_dressp_adj_s7
+    = sfun.f_update(dressp_wt_s7pg, 1, i_salep_type_s7 >= 1)
+    = o_ffcfw_p * dressp_wt_s7pg
+    = sfun.f_salep_mob(salep_weight_s7pg, scores_s7pg, i_cvlw_s7, i_cvscore_s7, i_salep_lw_range_s7s5,
+                       salep_score_range_s7s6, salep_grid_lw_s7s6g)
+    = salep_mob_s7p * salep_month_scalar_s7m4[:, a_m4_p]
+    = salep_mob_s7p * (1 + salep_month_discount_s7m4[:, a_m4_p])
+    = sfun.f_update(salep_mob_s7p, temporary_s7p, age_end_p > i_salep_discount_age_s7)
+    = sfun.f_update(salep_weight_s7pg, 1, i_salep_type_s7 == 2)
+    = salep_mob_s7p * salep_weighting_s7p
+    = salep_mob_s7p * (1 - i_sale_cost_pc_s7) - i_sale_cost_hd_s7
+    = salep_hdnib_s7p * i_mask_s7x * (age_end_p <= agemax_s7g)
+    = np.max(salep_hdnib_s7p, axis=s7)
 
