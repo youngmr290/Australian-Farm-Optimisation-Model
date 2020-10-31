@@ -3099,7 +3099,12 @@ def generator(params,report):
     index_p6pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(index_p6, uinp.structure['i_p_pos']-1).astype(dtypeint)
     vm_m4a1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(pinp.sheep['i_vm_m4'], uinp.structure['i_p_pos'])
     pmb_m4s4a1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(pinp.sheep['i_pmb_m4s'], uinp.structure['i_p_pos'])
-    salep_months_s7s9m4 = fun.f_reshape_expand(uinp.sheep['i_salep_months_s7s9m4'], len_ax0=uinp.sheep['i_s7_len'],len_ax1=uinp.sheep['i_s9_len'],len_ax2=uinp.sheep['i_salep_months_s7s9m4'].shape[-1])
+    salep_months_s7s9m4a1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_salep_months_s7s9m4'], uinp.structure['i_p_pos'], len_ax0=uinp.sheep['i_s7_len'],len_ax1=uinp.sheep['i_s9_len'],len_ax2=uinp.sheep['i_salep_months_s7s9m4'].shape[-1])
+    salep_dressp_adj_s6pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_salep_dressp_adj_s6'], )
+    salep_dressp_adj_s7s6pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_salep_dressp_adj_s7'], )
+
+    sale_agemax_s7yg0, sale_agemax_s7yg1, sale_agemax_s7yg2, sale_agemax_s7yg3 = sfun.f_c2g(uinp.parameters['i_agemax_s7c2'],uinp.parameters['i_agemax_s7y'])
+    dressp_adj_yg0, dressp_adj_yg1, dressp_adj_yg2, dressp_adj_yg3 = sfun.f_c2g(uinp.parameters['i_dressp_adj_c2'],uinp.parameters['i_dressp_adj_y'])
     ###Set the values for the ranges required (same values for all 10 matrix feed periods). This spreads the feed pools evenly between the highest and lowest quality feed required by any of the animals.
     ev_propn_f = np.array([0.25, 0.50, 0.75])
     index_fpa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(np.arange(ev_propn_f.shape[0]+1), uinp.structure['i_p_pos']-1)
@@ -3242,48 +3247,51 @@ def generator(params,report):
     ######################
     ##calc wool value - To speed the calculation process the p array is condensed to only include periods where shearing occurs. Using a slightly different association it is then converted to a v array (this process usually used a p to v association, in this case we use s to v association).
     ###create mask which is the periods where shearing occurs
-    shear_mask_s50 = np.any(period_is_shearing_pa1e1b1nwzida0e0b0xyg0, axis=tuple(range(uinp.structure['i_p_pos'],0)))
-    shear_mask_s51 = fun.f_reduce_skipfew(np.any, period_is_shearing_tpa1e1b1nwzida0e0b0xyg1, preserveAxis=1)  #preforms np.any on all axis except 1
+    shear_mask_p0 = np.any(period_is_shearing_pa1e1b1nwzida0e0b0xyg0, axis=tuple(range(uinp.structure['i_p_pos'],0)))
+    shear_mask_p1 = fun.f_reduce_skipfew(np.any, period_is_shearing_tpa1e1b1nwzida0e0b0xyg1, preserveAxis=1)  #preforms np.any on all axis except 1
     ###create association between p and s
-    a_p_s5a1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(np.nonzero(shear_mask_s51),uinp.structure['i_p_pos'])
-    index_s5a1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(np.arange(np.count_nonzero(shear_mask_s51)),uinp.structure['i_p_pos'])
+    a_p_p5a1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(np.nonzero(shear_mask_p1),uinp.structure['i_p_pos'])
+    index_p5a1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(np.arange(np.count_nonzero(shear_mask_p51)),uinp.structure['i_p_pos'])
     ###create association between s and v
-    a_v_s5a1e1b1nwzida0e0b0xyg1 = a_v_pa1e1b1nwzida0e0b0xyg1[shear_mask_s51]
+    a_v_p5a1e1b1nwzida0e0b0xyg1 = a_v_pa1e1b1nwzida0e0b0xyg1[shear_mask_p1]
     ###convert period is shearing array to the condensed version
-    period_is_shearing_ts5a1e1b1nwzida0e0b0xyg1 = period_is_shearing_tpa1e1b1nwzida0e0b0xyg1[:,shear_mask_s51,...]
+    period_is_shearing_tp5a1e1b1nwzida0e0b0xyg1 = period_is_shearing_tpa1e1b1nwzida0e0b0xyg1[:,shear_mask_p1,...]
     ###Vegatative Matter if shorn(end)
-    vm_s5a1e1b1nwzida0e0b0xyg1 = vm_m4a1e1b1nwzida0e0b0xyg[a_m4_p,...][shear_mask_s51]
+    vm_p5a1e1b1nwzida0e0b0xyg1 = vm_m4a1e1b1nwzida0e0b0xyg[a_m4_p,...][shear_mask_p1]
     ###pmb
-    pmb_s5s4a1e1b1nwzida0e0b0xyg1 = pmb_m4s4a1e1b1nwzida0e0b0xyg[a_m4_p,...][shear_mask_s51]
-    period_current_shearing_ts5a1e1b1nwzida0e0b0xyg1 = np.maximum.accumulate(a_p_s5a1e1b1nwzida0e0b0xyg1 * period_is_shearing_ts5a1e1b1nwzida0e0b0xyg1, axis=1) #returns the period number that the most recent shearing occured
-    period_previous_shearing_ts5a1e1b1nwzida0e0b0xyg1 = np.roll(period_current_shearing_ts5a1e1b1nwzida0e0b0xyg1, 1, 1)*(index_s5a1e1b1nwzida0e0b0xyg1>0)  #returns the period of the previous shearing and sets slice 0 to 0 (because there is no previous shearing for the first shearing)
-    periods_since_shearing_ts5a1e1b1nwzida0e0b0xyg1 = period_current_shearing_ts5a1e1b1nwzida0e0b0xyg1 - np.maximum(period_previous_shearing_ts5a1e1b1nwzida0e0b0xyg1, date_born_idx_ida0e0b0xyg1)
+    pmb_p5s4a1e1b1nwzida0e0b0xyg1 = pmb_m4s4a1e1b1nwzida0e0b0xyg[a_m4_p,...][shear_mask_p1]
+    period_current_shearing_tp5a1e1b1nwzida0e0b0xyg1 = np.maximum.accumulate(a_p_p5a1e1b1nwzida0e0b0xyg1 * period_is_shearing_tp5a1e1b1nwzida0e0b0xyg1, axis=1) #returns the period number that the most recent shearing occured
+    period_previous_shearing_tp5a1e1b1nwzida0e0b0xyg1 = np.roll(period_current_shearing_tp5a1e1b1nwzida0e0b0xyg1, 1, 1)*(index_p5a1e1b1nwzida0e0b0xyg1>0)  #returns the period of the previous shearing and sets slice 0 to 0 (because there is no previous shearing for the first shearing)
+    periods_since_shearing_tp5a1e1b1nwzida0e0b0xyg1 = period_current_shearing_tp5a1e1b1nwzida0e0b0xyg1 - np.maximum(period_previous_shearing_tp5a1e1b1nwzida0e0b0xyg1, date_born_idx_ida0e0b0xyg1)
     # a_shear_ts5a1e1b1nwzida0e0b0xyg1 = np.maximum.accumulate(t_prevperiod_shear_ts5a1e1b1nwzida0e0b0xyg1,axis=1)
     # date_prevshear_ts5a1e1b1nwzida0e0b0xyg1 = np.take_along_axis(date_shear_pa1e1b1nwzida0e0b0xyg1[shear_mask_s51],a_shear_ts5a1e1b1nwzida0e0b0xyg1,1)
-    months_since_shearing_ts5a1e1b1nwzida0e0b0xyg1 = periods_since_shearing_ts5a1e1b1nwzida0e0b0xyg1 * 7 / 30 #times 7 for day in period and div 30 to convert to months (this doesnt need to be perfect its only an approximation)
-    a_months_since_shearing_ts5a1e1b1nwzida0e0b0xyg1 = fun.f_find_closest(pinp.sheep['i_pmb_interval'], months_since_shearing_ts5a1e1b1nwzida0e0b0xyg1)#provides the index of the index which is closest to the actual months since shearing
-    pmb_ts5a1e1b1nwzida0e0b0xyg1 = np.squeeze(np.take_along_axis(pmb_s5s4a1e1b1nwzida0e0b0xyg1[na],a_months_since_shearing_ts5a1e1b1nwzida0e0b0xyg1[:,:,na,...],2),axis=uinp.structure['i_p_pos']) #select the relevant s4 (pmb interval) then sqeeze that axis
+    months_since_shearing_ts5a1e1b1nwzida0e0b0xyg1 = periods_since_shearing_tp5a1e1b1nwzida0e0b0xyg1 * 7 / 30 #times 7 for day in period and div 30 to convert to months (this doesnt need to be perfect its only an approximation)
+    a_months_since_shearing_tp5a1e1b1nwzida0e0b0xyg1 = fun.f_find_closest(pinp.sheep['i_pmb_interval'], months_since_shearing_tp5a1e1b1nwzida0e0b0xyg1)#provides the index of the index which is closest to the actual months since shearing
+    pmb_tp5a1e1b1nwzida0e0b0xyg1 = np.squeeze(np.take_along_axis(pmb_p5s4a1e1b1nwzida0e0b0xyg1[na],a_months_since_shearing_tp5a1e1b1nwzida0e0b0xyg1[:,:,na,...],2),axis=uinp.structure['i_p_pos']) #select the relevant s4 (pmb interval) then sqeeze that axis
     ###cfw
-    cfw_dams_s1 = o_cfw_dams[shear_mask_s51]
+    cfw_dams_s1 = o_cfw_dams[shear_mask_p1]
     ###fd
-    fd_dams_s1 = o_fd_dams[shear_mask_s51]
+    fd_dams_s1 = o_fd_dams[shear_mask_p1]
     ###sl
-    sl_dams_s1 = o_sl_dams[shear_mask_s51]
+    sl_dams_s1 = o_sl_dams[shear_mask_p1]
     ###ss
-    ss_dams_s1 = o_ss_dams[shear_mask_s51]
+    ss_dams_s1 = o_ss_dams[shear_mask_p1]
     ###micron price guide
     woolp_mpg_w4 = sfun.f_woolprice()/100
-    woolvalue_ts5a1e1b1nwzida0e0b0xyg1, woolp_stbnib_dams = sfun.f_wool_value(woolp_mpg_w4, cfw_dams_s1, fd_dams_s1, sl_dams_s1, ss_dams_s1, vm_s5a1e1b1nwzida0e0b0xyg1, pmb_ts5a1e1b1nwzida0e0b0xyg1)
+    woolvalue_ts5a1e1b1nwzida0e0b0xyg1, woolp_stbnib_dams = sfun.f_wool_value(woolp_mpg_w4, cfw_dams_s1, fd_dams_s1, sl_dams_s1, ss_dams_s1, vm_p5a1e1b1nwzida0e0b0xyg1, pmb_tp5a1e1b1nwzida0e0b0xyg1)
 
     ##Sale value - To speed the calculation process the p array is condensed to only include periods where shearing occurs. Using a slightly different association it is then converted to a v array (this process usually used a p to v association, in this case we use s to v association).
+    ###create mask which is the periods where shearing occurs
+    sale_mask_p0 = np.any(period_is_shearing_pa1e1b1nwzida0e0b0xyg0, axis=tuple(range(uinp.structure['i_p_pos'],0)))
+    sael_mask_p1 = fun.f_reduce_skipfew(np.any, period_is_shearing_tpa1e1b1nwzida0e0b0xyg1, preserveAxis=1)  #preforms np.any on all axis except 1
     ###Convert quality range to an s7 array (option 1)
     salep_score_range = uinp.sheep['i_salep_score_range_s8s6'][uinp.sheep['ia_s8_s7']]
     ###Sale price scalar by month
-    salep_month_scalar = salep_months_s7s9m4[:, 0, :]
+    salep_month_scalar_s7pa1e1b1nwzida0e0b0xyg = salep_months_s7s9m4a1e1b1nwzida0e0b0xyg[:, 0, a_m4_p]
     ###Sale price discount by month
-    salep_month_discount = salep_months_s7s9m4[:, 1, :]
+    salep_month_discount_s7pa1e1b1nwzida0e0b0xyg = salep_months_s7s9m4a1e1b1nwzida0e0b0xyg[:, 1, a_m4_p]
     ###Sale price grids for selected price percentile and the scalars for LW & quality score
-    salep_grid1_s5s6s7 = sfun.f_saleprice()
+    salep_grid1_s5s6s7 = fun.f_reshape_expand(sfun.f_saleprice(),uinp.structure['i_p_pos']-1)
 
 
     # cs_dams = sfun.f_condition_score(o_rc_dams, cu0_dams)

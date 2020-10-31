@@ -1411,18 +1411,19 @@ def f_saleprice():
     lw_scalar_s7s5s6 = uinp.sheep['i_salep_lw_scalar_s5s6s7']
     ##Scalar for score impact across the grid (sat adjusted)
     score_scalar_s7s5s6 = uinp.sheep['i_salep_score_scalar_s7s5s6']
-    ##Wool price for the analysis
+    ##price for the analysis
     grid_s7s5s6 = grid_max_s7[:,na,na] * lw_scalar_s7s5s6 * score_scalar_s7s5s6
     return grid_s7s5s6
 
 
 
 
-def f_salep_mob(grid_price_s5s6s7, grid_lw_s5s7,ffcfw,):
+def f_salep_mob(grid_price_s5s6s7, grid_lw_s5s7,salep_weight_s7s6pa1e1b1nwzida0e0b0xyg,):
     ##prob for each lw step in grid
-    prob_lw_s5s7 = np.max(0, f_np_ncdf(np.roll(grid_lw_s5s7, -1, axis = 0), ffcfw, cvlw) - f_np_ncdf(grid_lw_s5s7, ffcfw, cvlw))
+    prob_lw_s5s7 = np.max(0, f_norm_cdf(np.roll(grid_lw_s5s7, -1, axis = 0), salep_weight_s7s6pa1e1b1nwzida0e0b0xyg, cvlw)
+                          - f_norm_cdf(grid_lw_s5s7, salep_weight_s7s6pa1e1b1nwzida0e0b0xyg, cvlw))
     ##Probability for each score step in grid (fat score/CS)
-    prob_score_s6s7 = np.max(0, f_np_ncdf(np.roll(grid_score_s6s7, -1, axis = 0), score, cvscore) - f_np_ncdf(grid_score_s6s7, score, cvscore))
+    prob_score_s6s7 = np.max(0, f_norm_cdf(np.roll(grid_score_s6s7, -1, axis = 0), score, cvscore) - f_np_ncdf(grid_score_s6s7, score, cvscore))
     ##Probability for each cell of grid
     prob_grid_s5s6s7 = prob_lw_s5s7[:,na,:] * prob_score_s6s7
     ##Average price for the mob
@@ -1430,46 +1431,49 @@ def f_salep_mob(grid_price_s5s6s7, grid_lw_s5s7,ffcfw,):
     return salep_mob_s7
 
 
-def f_sale_value(cu0, cx, o_rc, dressp_adj_g):
+def f_sale_value(cu0, cx, a_m4_p, o_rc, o_ffcfw_pa1e1b1nwzida0e0b0xyg, dressp_adj_yg, salep_dressp_adj_s6pa1e1b1nwzida0e0b0xyg,
+                 salep_dressp_adj_s7s6pa1e1b1nwzida0e0b0xyg,salep_grid_s7s5s6pa1e1b1nwzida0e0b0xyg,salep_month_scalar_s7pa1e1b1nwzida0e0b0xyg,
+                 salep_month_discount_s7pa1e1b1nwzida0e0b0xyg,i_salep_type_s7,i_cvlw_s7, i_cvscore_s7, i_salep_lw_range_s7s5, salep_score_range_s7s6,
+                 age_end_p, i_salep_discount_age_s7,i_sale_cost_pc_s7, i_sale_cost_hd_s7,i_mask_s7x, agemax_s7g):
     ##Calculate condition score
-    cs_p = f_condition_score(cu0, o_rc)
+    cs_pa1e1b1nwzida0e0b0xyg = f_condition_score(cu0, o_rc)
     ##Calculate fat score
-    fs_p = f_fat_score(cu0, o_rc)
+    fs_pa1e1b1nwzida0e0b0xyg = f_fat_score(cu0, o_rc)
     ##Combine the scores into single array
-    scores_s8p = np.stack(fs_p, cs_p, axis=0)
+    scores_s8p = np.stack(fs_pa1e1b1nwzida0e0b0xyg, cs_pa1e1b1nwzida0e0b0xyg, axis=0)
     ##Convert to s7 array - option 1
-    scores_s7p = scores_s8p[uinp.sheep['ia_s8_s7']]
+    scores_s7s6pa1e1b1nwzida0e0b0xyg = scores_s8p[uinp.sheep['ia_s8_s7']][:,na,...]
     ##Dressing percentage to adjust price grid to LW
-    dressp_price_s7s6 = pinp.sheep['i_dressp'] + dressp_adj_g + cx[23, …] + i_salep_dressp_adj_s6 + i_salep_dressp_adj_s7
+    dressp_price_s7s6pa1e1b1nwzida0e0b0xyg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[23, ...] + salep_dressp_adj_s6pa1e1b1nwzida0e0b0xyg + salep_dressp_adj_s7s6pa1e1b1nwzida0e0b0xyg
     ##Price type scalar (for DW, LW or per head)
+    dressp_price_s7s6pa1e1b1nwzida0e0b0xyg = fun.f_update(dressp_price_s7s6pa1e1b1nwzida0e0b0xyg, 1, i_salep_type_s7 >= 1)
     ##Update the grid prices to $/kg LW
+    salep_grid_lw_s7s5s6pa1e1b1nwzida0e0b0xyg = salep_grid_s7s5s6pa1e1b1nwzida0e0b0xyg * dressp_price_s7s6pa1e1b1nwzida0e0b0xyg[:,na,...]
     ##Interploate DP adjustment due to FS
+    dressp_adj_fs_pa1e1b1nwzida0e0b0xyg= np.interp(fs_pa1e1b1nwzida0e0b0xyg, uinp.sheep['i_salep_score_range_s8s6'][0, ...], uinp.sheep['i_salep_dressp_adj_s6'])
     ##Dressing percentage to calculate grid weight
+    dressp_wt_s7s6pa1e1b1nwzida0e0b0xyg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[23, ...] + dressp_adj_fs_pa1e1b1nwzida0e0b0xyg + salep_dressp_adj_s7s6pa1e1b1nwzida0e0b0xyg
     ##Price type scalar (for DW, LW or per head)
+    dressp_wt_s7s6pa1e1b1nwzida0e0b0xyg = fun.f_update(dressp_wt_s7s6pa1e1b1nwzida0e0b0xyg, 1, i_salep_type_s7 >= 1)
     ##Scale ffcfw to grid weight
+    salep_weight_s7s6pa1e1b1nwzida0e0b0xyg = o_ffcfw_pa1e1b1nwzida0e0b0xyg * dressp_wt_s7s6pa1e1b1nwzida0e0b0xyg
     ##Calculate mob average price in each grid
+    salep_mob_s7pa1e1b1nwzida0e0b0xyg = f_salep_mob(salep_weight_s7s6pa1e1b1nwzida0e0b0xyg, scores_s7s6pa1e1b1nwzida0e0b0xyg, i_cvlw_s7s6pa1e1b1nwzida0e0b0xyg, i_cvscore_s7s6pa1e1b1nwzida0e0b0xyg, i_salep_lw_range_s7s5, salep_score_range_s7s6, salep_grid_lw_s7s5s6pa1e1b1nwzida0e0b0xyg)
     ##Scale prices based on month
+    salep_mob_s7pa1e1b1nwzida0e0b0xyg = salep_mob_s7pa1e1b1nwzida0e0b0xyg * salep_month_scalar_s7pa1e1b1nwzida0e0b0xyg
     ##Temporary value with age based discount
+    temporary_s7pa1e1b1nwzida0e0b0xyg = salep_mob_s7pa1e1b1nwzida0e0b0xyg * (1 + salep_month_discount_s7pa1e1b1nwzida0e0b0xyg)
     ##Apply discount if age is greater than threshold age
+    salep_mob_s7pa1e1b1nwzida0e0b0xyg = fun.f_update(salep_mob_s7pa1e1b1nwzida0e0b0xyg, temporary_s7pa1e1b1nwzida0e0b0xyg, age_end_p > i_salep_discount_age_s7)
     ##Price type scalar (for DW, LW or per head)
+    salep_weighting_s7s6pa1e1b1nwzida0e0b0xyg = fun.f_update(salep_weight_s7s6pa1e1b1nwzida0e0b0xyg, 1, i_salep_type_s7 == 2)
     ##Convert to value per head
+    salep_hd_s7s6pa1e1b1nwzida0e0b0xyg = salep_mob_s7pa1e1b1nwzida0e0b0xyg * salep_weighting_s7s6pa1e1b1nwzida0e0b0xyg
     ##Subtract the selling costs
+    salep_hdnib_s7s6pa1e1b1nwzida0e0b0xyg = salep_hd_s7s6pa1e1b1nwzida0e0b0xyg * (1 - i_sale_cost_pc_s7) - i_sale_cost_hd_s7
     ##Mask the grids
+    salep_hdnib_s7s6pa1e1b1nwzida0e0b0xyg = salep_hdnib_s7s6pa1e1b1nwzida0e0b0xyg * i_mask_s7x * (age_end_p <= agemax_s7g)
     ##Select the maximum value across the grids
-    = sfun.f_update(dressp_price_s7s6g, 1, i_salep_type_s7 >= 1)
-    = salep_grid_s7s5s6 * dressp_price_s7s6g
-    = interpolation(fs_pg, i_salep_score_range_s8s6[0, …], i_salep_dressp_adj_s6)
-    = i_dressp + dressp_adj_g + cx[23, …] + dressp_adj_fs_pg + i_salep_dressp_adj_s7
-    = sfun.f_update(dressp_wt_s7pg, 1, i_salep_type_s7 >= 1)
-    = o_ffcfw_p * dressp_wt_s7pg
-    = sfun.f_salep_mob(salep_weight_s7pg, scores_s7pg, i_cvlw_s7, i_cvscore_s7, i_salep_lw_range_s7s5,
-                       salep_score_range_s7s6, salep_grid_lw_s7s6g)
-    = salep_mob_s7p * salep_month_scalar_s7m4[:, a_m4_p]
-    = salep_mob_s7p * (1 + salep_month_discount_s7m4[:, a_m4_p])
-    = sfun.f_update(salep_mob_s7p, temporary_s7p, age_end_p > i_salep_discount_age_s7)
-    = sfun.f_update(salep_weight_s7pg, 1, i_salep_type_s7 == 2)
-    = salep_mob_s7p * salep_weighting_s7p
-    = salep_mob_s7p * (1 - i_sale_cost_pc_s7) - i_sale_cost_hd_s7
-    = salep_hdnib_s7p * i_mask_s7x * (age_end_p <= agemax_s7g)
-    = np.max(salep_hdnib_s7p, axis=s7)
+    sale_value = np.max(salep_hdnib_s7s6pa1e1b1nwzida0e0b0xyg, axis=0) #take max on s6 axis aswell to remove it (it is singlton so no effect)
+    return sale_value
 
