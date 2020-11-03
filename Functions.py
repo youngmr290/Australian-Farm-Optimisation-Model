@@ -33,7 +33,7 @@ import itertools
 import datetime as dt
 from dateutil import relativedelta as rdelta
 
-#this module shouldn't import other midas modules
+#this module shouldn't import other AFO modules
 
 ################################################
 #function to read in excel named ranges to a df#
@@ -87,11 +87,14 @@ def xl_all_named_ranges(filename, targetsheets, rangename=None,numpy=False,datat
                             parameters[dn.name] = ws[cell_range].value
                         elif not width:                         # the range is only 1 column & is not iterable across the row
                             parameters[dn.name] = np.asarray([cell.value for cell in [row[0] for row in ws[cell_range]]],dtype=datatype)
+                            parameters[dn.name] = f_convert_to_inf(parameters[dn.name]) #convert -- and ++ to inf (only for numpy because this is a sheep thing)
                         elif not length:                        # the range is 1 row & is iterable across columns
                             for row in ws[cell_range]:
                                 parameters[dn.name] = np.asarray([cell.value for cell in row],dtype=datatype)
+                            parameters[dn.name] = f_convert_to_inf(parameters[dn.name]) #convert -- and ++ to inf (only for numpy because this is a sheep thing)
                         elif numpy == True:
                             parameters[dn.name] = np.asarray([[cell.value for cell in row] for row in ws[cell_range]],dtype=datatype)
+                            parameters[dn.name] = f_convert_to_inf(parameters[dn.name]) #convert -- and ++ to inf (only for numpy because this is a sheep thing)
                         else:                                   # the range is a region & is iterable across rows and columns
                             df = pd.DataFrame([cell.value for cell in row] for row in ws[cell_range])
                             #df = pd.DataFrame(cells)
@@ -110,6 +113,15 @@ def xl_all_named_ranges(filename, targetsheets, rangename=None,numpy=False,datat
                 pass
     wb.close
     return parameters #t_wb #
+
+def f_convert_to_inf(input):
+    ##convert -- to -inf
+    mask = input=='--'
+    input[mask]=-np.inf
+    ##convert ++ to inf
+    mask = input=='++'
+    input[mask]=np.inf
+    return input
 
 #def test():
 #    sheettest = xl_all_named_ranges("GSMInputs.xlsx","Annual") #sheettest = xl_all_named_ranges("GSMInputs.xlsx","Annual", True)

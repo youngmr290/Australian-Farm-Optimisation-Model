@@ -1369,7 +1369,7 @@ def f_wool_value(mpg_w4, cfw, fd, sl, ss, vm, pmb):
     ##wool price with adjustments
     woolp_stb = fnf * (1 + vm_adj) * (1 + ph_adj) * (1 - cvh_adj) * (1 - romaine_adj)
     ##stb net in the bank price
-    woolp_stbnib = woolp_stb * (1 - uinp.sheep['i_wool_cost_pc']) - uinp.sheep['i_wool_costkg']
+    woolp_stbnib = woolp_stb * (1 - uinp.sheep['i_wool_cost_pc']) - uinp.sheep['i_wool_cost_kg']
     ##wool value if shorn this period
     wool_value = woolp_stbnib * cfw
     return wool_value, woolp_stbnib
@@ -1383,97 +1383,136 @@ def f_condition_score(rc, cu0):
        long version of the formula (use rc instead of using to following): 3 + (ffcfw - normal_weight) / (cs_propn * normal_weight)
        Returns: condition score - float
        '''
-    return 3 + (rc - 1) / cu0[1, ...]
+    return np.maximum(1, 3 + (rc - 1) / cu0[1, ...]) #cs cant be below 1 because theyd be dead
 
 #^needs updating - curently just a copy of the cs function
 def f_fat_score(rc, cu0):
-    return 3 + (rc - 1) / cu0[3, ...]
+    return np.maximum(1, 3 + (rc - 1) / cu0[1, ...]) #fs cant be below 1
 
 
 def f_norm_cdf(x, mu, cv):
+    ##sd - standard deviation - maximum to stop div0 errors in next step.
+    sd = np.maximum(1,mu) * cv
     ##standadise x
-    std = (x - mu) / (cv * mu)
+    std = (x - mu) / sd
     ##probability (<=x)
     prob = 1 / (np.exp(-358 / 23 * std + 111 * np.arctan(37 / 294 * std)) + 1)
     return prob
 
-def f_saleprice():
+def f_saleprice(score_pricescalar_s7s5s6, weight_pricescalar_s7s5s6):
     ##Sale price percentile to use (adjusted by sav)
     salep_percentile = uinp.sheep['i_salep_percentile']
     ##Max price in grids at selected percentile - 1d inderp over along the s7 axis
     grid_max_s7 = np.array([np.interp(salep_percentile, uinp.sheep['i_salep_percentile_range_s4'], uinp.sheep['i_salep_percentile_scalar_s7s4'][i])
-                            for i in range(uinp.sheep['i_salep_percentile_scalar_s7s4'].shape[0])]) * uinp.sheep['i_salep_max_s7']
+                            for i in range(uinp.sheep['i_salep_percentile_scalar_s7s4'].shape[0])]) * uinp.sheep['i_salep_price_max_s7']
     ##Max price in grids (adj sav)
     grid_max_s7 = fun.f_sa(grid_max_s7, sen.sav['salep_max'], 5)
     ##Max price in grids (adj sam)
-    grid_max_s7 = fun.f_sa(grid_max_s7, sen.sam['salep_max'], 5)
-    ##Scalar for LW impact across the grid (sat adjusted)
-    lw_scalar_s7s5s6 = uinp.sheep['i_salep_lw_scalar_s5s6s7']
+    grid_max_s7 = fun.f_sa(grid_max_s7, sen.sam['salep_max'])
+    ##Scalar for weight impact across the grid (sat adjusted)
+    weight_scalar_s7s5s6 = weight_pricescalar_s7s5s6
     ##Scalar for score impact across the grid (sat adjusted)
-    score_scalar_s7s5s6 = uinp.sheep['i_salep_score_scalar_s7s5s6']
+    score_scalar_s7s5s6 = score_pricescalar_s7s5s6
     ##price for the analysis
-    grid_s7s5s6 = grid_max_s7[:,na,na] * lw_scalar_s7s5s6 * score_scalar_s7s5s6
+    grid_s7s5s6 = grid_max_s7[:,na,na] * weight_scalar_s7s5s6 * score_scalar_s7s5s6
     return grid_s7s5s6
 
 
 
 
-def f_salep_mob(grid_price_s5s6s7, grid_lw_s5s7,salep_weight_s7s6pa1e1b1nwzida0e0b0xyg,):
+def f_salep_mob(weight_s7spa1e1b1nwzida0e0b0xyg, scores_s7s6pa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg, cvscore_s7s6pa1e1b1nwzida0e0b0xyg,
+                lw_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p5a1e1b1nwzida0e0b0xyg, grid_priceslw_s7s5s6pa1e1b1nwzida0e0b0xyg):
     ##prob for each lw step in grid
-    prob_lw_s5s7 = np.max(0, f_norm_cdf(np.roll(grid_lw_s5s7, -1, axis = 0), salep_weight_s7s6pa1e1b1nwzida0e0b0xyg, cvlw)
-                          - f_norm_cdf(grid_lw_s5s7, salep_weight_s7s6pa1e1b1nwzida0e0b0xyg, cvlw))
+    prob_lw_s7s5 = np.maximum(0, f_norm_cdf(np.roll(lw_range_s7s5pa1e1b1nwzida0e0b0xyg, -1, axis = 1), weight_s7spa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg)
+                          - f_norm_cdf(lw_range_s7s5pa1e1b1nwzida0e0b0xyg, weight_s7spa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg))
     ##Probability for each score step in grid (fat score/CS)
-    prob_score_s6s7 = np.max(0, f_norm_cdf(np.roll(grid_score_s6s7, -1, axis = 0), score, cvscore) - f_np_ncdf(grid_score_s6s7, score, cvscore))
+    prob_score_s7s6 = np.maximum(0, f_norm_cdf(np.roll(score_range_s7s6p5a1e1b1nwzida0e0b0xyg, -1, axis = 1), scores_s7s6pa1e1b1nwzida0e0b0xyg, cvscore_s7s6pa1e1b1nwzida0e0b0xyg)
+                             - f_norm_cdf(score_range_s7s6p5a1e1b1nwzida0e0b0xyg, scores_s7s6pa1e1b1nwzida0e0b0xyg, cvscore_s7s6pa1e1b1nwzida0e0b0xyg))
     ##Probability for each cell of grid
-    prob_grid_s5s6s7 = prob_lw_s5s7[:,na,:] * prob_score_s6s7
+    prob_grid_s7s5s6 = prob_lw_s7s5[:,:,na] * prob_score_s7s6[:,na,:]
     ##Average price for the mob
-    salep_mob_s7 = np.sum(prob_grid_s5s6s7 * grid_price_s5s6s7, axis = (lw(s5), score(s6)))
-    return salep_mob_s7
+    averagesale_value_mob_s7 = np.sum(prob_grid_s7s5s6 * grid_priceslw_s7s5s6pa1e1b1nwzida0e0b0xyg, axis = (1, 2))
+    return averagesale_value_mob_s7
 
 
-def f_sale_value(cu0, cx, a_m4_p, o_rc, o_ffcfw_pa1e1b1nwzida0e0b0xyg, dressp_adj_yg, salep_dressp_adj_s6pa1e1b1nwzida0e0b0xyg,
-                 salep_dressp_adj_s7s6pa1e1b1nwzida0e0b0xyg,salep_grid_s7s5s6pa1e1b1nwzida0e0b0xyg,salep_month_scalar_s7pa1e1b1nwzida0e0b0xyg,
-                 salep_month_discount_s7pa1e1b1nwzida0e0b0xyg,i_salep_type_s7,i_cvlw_s7, i_cvscore_s7, i_salep_lw_range_s7s5, salep_score_range_s7s6,
-                 age_end_p, i_salep_discount_age_s7,i_sale_cost_pc_s7, i_sale_cost_hd_s7,i_mask_s7x, agemax_s7g):
+def f_sale_value(cu0, cx, o_rc, o_ffcfw_pa1e1b1nwzida0e0b0xyg, dressp_adj_yg, dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg,
+                 dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg, grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg, month_scalar_s7pa1e1b1nwzida0e0b0xyg,
+                 month_discount_s7pa1e1b1nwzida0e0b0xyg, price_type_s7pa1e1b1nwzida0e0b0xyg,a_s8_s7pa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg, cvscore_s7s6pa1e1b1nwzida0e0b0xyg,
+                 lw_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p5a1e1b1nwzida0e0b0xyg, age_end_p5a1e1b1nwzida0e0b0xyg1, discount_age_s7pa1e1b1nwzida0e0b0xyg,sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg,
+                 sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg, mask_s7x_s7pa1e1b1nwzida0e0b0xyg, sale_agemax_s7pa1e1b1nwzida0e0b0xyg1):
     ##Calculate condition score
-    cs_pa1e1b1nwzida0e0b0xyg = f_condition_score(cu0, o_rc)
+    cs_pa1e1b1nwzida0e0b0xyg = f_condition_score(o_rc, cu0)
     ##Calculate fat score
-    fs_pa1e1b1nwzida0e0b0xyg = f_fat_score(cu0, o_rc)
+    fs_pa1e1b1nwzida0e0b0xyg = f_fat_score(o_rc, cu0)
     ##Combine the scores into single array
-    scores_s8p = np.stack(fs_pa1e1b1nwzida0e0b0xyg, cs_pa1e1b1nwzida0e0b0xyg, axis=0)
-    ##Convert to s7 array - option 1
+    scores_s8p = np.stack([fs_pa1e1b1nwzida0e0b0xyg, cs_pa1e1b1nwzida0e0b0xyg], axis=0)
+    ##Convert quality scores to s7 array
     scores_s7s6pa1e1b1nwzida0e0b0xyg = scores_s8p[uinp.sheep['ia_s8_s7']][:,na,...]
     ##Dressing percentage to adjust price grid to LW
-    dressp_price_s7s6pa1e1b1nwzida0e0b0xyg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[23, ...] + salep_dressp_adj_s6pa1e1b1nwzida0e0b0xyg + salep_dressp_adj_s7s6pa1e1b1nwzida0e0b0xyg
+    dresspercent_for_price_s7s6pa1e1b1nwzida0e0b0xyg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[23, ...] + dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg + dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg[:,na,...]
     ##Price type scalar (for DW, LW or per head)
-    dressp_price_s7s6pa1e1b1nwzida0e0b0xyg = fun.f_update(dressp_price_s7s6pa1e1b1nwzida0e0b0xyg, 1, i_salep_type_s7 >= 1)
+    dresspercent_for_price_s7s6pa1e1b1nwzida0e0b0xyg = fun.f_update(dresspercent_for_price_s7s6pa1e1b1nwzida0e0b0xyg, 1, a_s8_s7pa1e1b1nwzida0e0b0xyg[:,na,...] >= 1)
     ##Update the grid prices to $/kg LW
-    salep_grid_lw_s7s5s6pa1e1b1nwzida0e0b0xyg = salep_grid_s7s5s6pa1e1b1nwzida0e0b0xyg * dressp_price_s7s6pa1e1b1nwzida0e0b0xyg[:,na,...]
+    grid_priceslw_s7s5s6pa1e1b1nwzida0e0b0xyg = grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg * dresspercent_for_price_s7s6pa1e1b1nwzida0e0b0xyg[:,na,...]
     ##Interploate DP adjustment due to FS
     dressp_adj_fs_pa1e1b1nwzida0e0b0xyg= np.interp(fs_pa1e1b1nwzida0e0b0xyg, uinp.sheep['i_salep_score_range_s8s6'][0, ...], uinp.sheep['i_salep_dressp_adj_s6'])
     ##Dressing percentage to calculate grid weight
-    dressp_wt_s7s6pa1e1b1nwzida0e0b0xyg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[23, ...] + dressp_adj_fs_pa1e1b1nwzida0e0b0xyg + salep_dressp_adj_s7s6pa1e1b1nwzida0e0b0xyg
+    dresspercent_for_wt_s7pa1e1b1nwzida0e0b0xyg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[23, ...] + dressp_adj_fs_pa1e1b1nwzida0e0b0xyg + dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg
     ##Price type scalar (for DW, LW or per head)
-    dressp_wt_s7s6pa1e1b1nwzida0e0b0xyg = fun.f_update(dressp_wt_s7s6pa1e1b1nwzida0e0b0xyg, 1, i_salep_type_s7 >= 1)
-    ##Scale ffcfw to grid weight
-    salep_weight_s7s6pa1e1b1nwzida0e0b0xyg = o_ffcfw_pa1e1b1nwzida0e0b0xyg * dressp_wt_s7s6pa1e1b1nwzida0e0b0xyg
+    dresspercent_wt_s7pa1e1b1nwzida0e0b0xyg = fun.f_update(dresspercent_for_wt_s7pa1e1b1nwzida0e0b0xyg, 1, a_s8_s7pa1e1b1nwzida0e0b0xyg >= 1)
+    ##Scale ffcfw to the units in the grid
+    weight_for_lookup_s7pa1e1b1nwzida0e0b0xyg = o_ffcfw_pa1e1b1nwzida0e0b0xyg * dresspercent_wt_s7pa1e1b1nwzida0e0b0xyg
     ##Calculate mob average price in each grid
-    salep_mob_s7pa1e1b1nwzida0e0b0xyg = f_salep_mob(salep_weight_s7s6pa1e1b1nwzida0e0b0xyg, scores_s7s6pa1e1b1nwzida0e0b0xyg, i_cvlw_s7s6pa1e1b1nwzida0e0b0xyg, i_cvscore_s7s6pa1e1b1nwzida0e0b0xyg, i_salep_lw_range_s7s5, salep_score_range_s7s6, salep_grid_lw_s7s5s6pa1e1b1nwzida0e0b0xyg)
+    price_mobaverage_s7pa1e1b1nwzida0e0b0xyg = f_salep_mob(weight_for_lookup_s7pa1e1b1nwzida0e0b0xyg[:,na,...], scores_s7s6pa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg, cvscore_s7s6pa1e1b1nwzida0e0b0xyg,
+                                                      lw_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p5a1e1b1nwzida0e0b0xyg, grid_priceslw_s7s5s6pa1e1b1nwzida0e0b0xyg)
     ##Scale prices based on month
-    salep_mob_s7pa1e1b1nwzida0e0b0xyg = salep_mob_s7pa1e1b1nwzida0e0b0xyg * salep_month_scalar_s7pa1e1b1nwzida0e0b0xyg
+    price_mobaverage_s7pa1e1b1nwzida0e0b0xyg = price_mobaverage_s7pa1e1b1nwzida0e0b0xyg * (1+month_scalar_s7pa1e1b1nwzida0e0b0xyg)
     ##Temporary value with age based discount
-    temporary_s7pa1e1b1nwzida0e0b0xyg = salep_mob_s7pa1e1b1nwzida0e0b0xyg * (1 + salep_month_discount_s7pa1e1b1nwzida0e0b0xyg)
+    temporary_s7pa1e1b1nwzida0e0b0xyg = price_mobaverage_s7pa1e1b1nwzida0e0b0xyg * (1 + month_discount_s7pa1e1b1nwzida0e0b0xyg)
     ##Apply discount if age is greater than threshold age
-    salep_mob_s7pa1e1b1nwzida0e0b0xyg = fun.f_update(salep_mob_s7pa1e1b1nwzida0e0b0xyg, temporary_s7pa1e1b1nwzida0e0b0xyg, age_end_p > i_salep_discount_age_s7)
-    ##Price type scalar (for DW, LW or per head)
-    salep_weighting_s7s6pa1e1b1nwzida0e0b0xyg = fun.f_update(salep_weight_s7s6pa1e1b1nwzida0e0b0xyg, 1, i_salep_type_s7 == 2)
-    ##Convert to value per head
-    salep_hd_s7s6pa1e1b1nwzida0e0b0xyg = salep_mob_s7pa1e1b1nwzida0e0b0xyg * salep_weighting_s7s6pa1e1b1nwzida0e0b0xyg
+    price_mobaverage_s7pa1e1b1nwzida0e0b0xyg = fun.f_update(price_mobaverage_s7pa1e1b1nwzida0e0b0xyg, temporary_s7pa1e1b1nwzida0e0b0xyg, age_end_p5a1e1b1nwzida0e0b0xyg1 > discount_age_s7pa1e1b1nwzida0e0b0xyg)
+    ##Convert weight to 1 if price is $/hd
+    weight_for_value_s7pa1e1b1nwzida0e0b0xyg = fun.f_update(weight_for_lookup_s7pa1e1b1nwzida0e0b0xyg, 1, price_type_s7pa1e1b1nwzida0e0b0xyg == 2)
+    ##Calculate value per head (gross)
+    sale_value_s7pa1e1b1nwzida0e0b0xyg = price_mobaverage_s7pa1e1b1nwzida0e0b0xyg * weight_for_value_s7pa1e1b1nwzida0e0b0xyg
     ##Subtract the selling costs
-    salep_hdnib_s7s6pa1e1b1nwzida0e0b0xyg = salep_hd_s7s6pa1e1b1nwzida0e0b0xyg * (1 - i_sale_cost_pc_s7) - i_sale_cost_hd_s7
+    sale_value_s7pa1e1b1nwzida0e0b0xyg = sale_value_s7pa1e1b1nwzida0e0b0xyg * (1 - sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg) - sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg
     ##Mask the grids
-    salep_hdnib_s7s6pa1e1b1nwzida0e0b0xyg = salep_hdnib_s7s6pa1e1b1nwzida0e0b0xyg * i_mask_s7x * (age_end_p <= agemax_s7g)
+    sale_value_s7pa1e1b1nwzida0e0b0xyg = sale_value_s7pa1e1b1nwzida0e0b0xyg * mask_s7x_s7pa1e1b1nwzida0e0b0xyg * (age_end_p5a1e1b1nwzida0e0b0xyg1 <= sale_agemax_s7pa1e1b1nwzida0e0b0xyg1)
     ##Select the maximum value across the grids
-    sale_value = np.max(salep_hdnib_s7s6pa1e1b1nwzida0e0b0xyg, axis=0) #take max on s6 axis aswell to remove it (it is singlton so no effect)
+    sale_value = np.max(sale_value_s7pa1e1b1nwzida0e0b0xyg, axis=0) #take max on s6 axis aswell to remove it (it is singlton so no effect)
     return sale_value
+
+
+
+
+def f_animal_trigger_levels(index_p, age_start, a_prev_s_pida0e0b0xyg, a_next_s_pida0e0b0xyg, a_prevdam_o_pida0e0b0xyg1, period_is_endmating_p,
+                            period_is_wean_p, gender, o_ebg_p, wool_genes, animal_mated=False):
+    ##Trigger value 1 - week of year
+    trigger1_pg = index_p % 52
+    ##Trigger value 2 - age
+    trigger2_pg = np.trunc(age_start / 7)
+    ##Trigger value 3 - Weeks from previous shearing
+    trigger3_pg = index_p - a_prev_s_pida0e0b0xyg
+    ##Trigger value 4 - weeks to next shearing
+    trigger4_pg = index_p - a_next_s_pida0e0b0xyg
+    ##Trigger value 5 - weeks from previous joining
+    trigger5_pg = index_p - a_prevdam_o_pida0e0b0xyg1
+    ##Trigger value 6 - weeks from end of mating
+    trigger6_pg = np.maximum.accumulate(index_p*period_is_endmating_p)
+    ##Trigger value 7 - weeks from previous weaning
+    trigger7_pg = np.maximum.accumulate(index_p*period_is_wean_p)
+    ##Trigger value 8 - whether animals was mated
+    trigger8_pg = animal_mated
+    ##Trigger value 9 - gender of the animal
+    trigger9_pg = gender
+    ##Trigger value 10 - rate of empty body gain
+    trigger10_pg = o_ebg_p
+    ##Trigger value 11 - the 'wooliness' of the genotype
+    trigger11_pg = wool_genes
+    ##Stack the triggers
+    animal_triggervalues_h7pg = np.stack(np.broadcast_arrays((trigger1_pg, trigger2_pg, trigger3_pg, trigger4_pg, trigger5_pg, trigger6_pg, trigger7_pg, trigger8_pg, trigger9_pg, trigger10_pg, trigger11_pg), axis = 0(h7))
+    return animal_triggervalues_h7pg
+
+
 

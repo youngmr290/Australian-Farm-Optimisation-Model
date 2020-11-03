@@ -60,7 +60,7 @@ sam['salep_max'] = 1.0                        #max sale price in grid
 ######
 #SAT #
 ######
-sat['salep_lw_scalar'] = 0 #Scalar for LW impact across grid 1
+sat['salep_weight_scalar'] = 0 #Scalar for LW impact across grid 1
 sat['salep_score_scalar'] = 0 #Scalar for score impact across the grid
 
 
