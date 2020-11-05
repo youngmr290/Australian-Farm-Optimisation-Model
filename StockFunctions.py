@@ -1353,26 +1353,26 @@ def f_woolprice():
     return woolprice_w4
 
 
-def f_wool_value(mpg_w4, cfw, fd, sl, ss, vm, pmb):
+def f_wool_value(mpg_w4, cfw_pg, fd_pg, sl_pg, ss_pg, vm_pg, pmb_pg):
     ##call function for ph cvh and romaine
-    ph, cvh, romaine = f_wool_additional(fd, sl, ss, vm, pmb)
+    ph_pg, cvh_pg, romaine_pg = f_wool_additional(fd_pg, sl_pg, ss_pg, vm_pg, pmb_pg)
     ##STB price for FNF (free or nearly free of fault)
-    fnf = np.interp(fd, uinp.sheep['i_woolp_fd_range_w4'], mpg_w4 * uinp.sheep['i_stb_scalar_w4'])
+    fnf_pg = np.interp(fd_pg, uinp.sheep['i_woolp_fd_range_w4'], mpg_w4 * uinp.sheep['i_stb_scalar_w4'])
     ##vm price adj
-    vm_adj = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_vm_adj_w4w6'], uinp.sheep['i_woolp_vm_range_w6'], uinp.sheep['i_woolp_fd_range_w4'], vm,fd)
+    vm_adj_pg = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_vm_adj_w4w6'], uinp.sheep['i_woolp_vm_range_w6'], uinp.sheep['i_woolp_fd_range_w4'], vm_pg,fd_pg)
     ##predicted hauteur price adj
-    ph_adj = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_ph_adj_w4w7'], uinp.sheep['i_woolp_ph_range_w7'], uinp.sheep['i_woolp_fd_range_w4'], ph,fd)
+    ph_adj_pg = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_ph_adj_w4w7'], uinp.sheep['i_woolp_ph_range_w7'], uinp.sheep['i_woolp_fd_range_w4'], ph_pg,fd_pg)
     ##cv hauteur price adj
-    cvh_adj = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_cvh_adj_w4w8'], uinp.sheep['i_woolp_cvh_range_w8'], uinp.sheep['i_woolp_fd_range_w4'], cvh,fd)
+    cvh_adj_pg = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_cvh_adj_w4w8'], uinp.sheep['i_woolp_cvh_range_w8'], uinp.sheep['i_woolp_fd_range_w4'], cvh_pg,fd_pg)
     ##romaine price adj
-    romaine_adj = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_romaine_adj_w4w9'], uinp.sheep['i_woolp_romaine_range_w9'], uinp.sheep['i_woolp_fd_range_w4'], romaine,fd)
+    romaine_adj_pg = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_romaine_adj_w4w9'], uinp.sheep['i_woolp_romaine_range_w9'], uinp.sheep['i_woolp_fd_range_w4'], romaine_pg,fd_pg)
     ##wool price with adjustments
-    woolp_stb = fnf * (1 + vm_adj) * (1 + ph_adj) * (1 - cvh_adj) * (1 - romaine_adj)
+    woolp_stb_pg = fnf_pg * (1 + vm_adj_pg) * (1 + ph_adj_pg) * (1 - cvh_adj_pg) * (1 - romaine_adj_pg)
     ##stb net in the bank price
-    woolp_stbnib = woolp_stb * (1 - uinp.sheep['i_wool_cost_pc']) - uinp.sheep['i_wool_cost_kg']
+    woolp_stbnib_pg = woolp_stb_pg * (1 - uinp.sheep['i_wool_cost_pc']) - uinp.sheep['i_wool_cost_kg']
     ##wool value if shorn this period
-    wool_value = woolp_stbnib * cfw
-    return wool_value, woolp_stbnib
+    wool_value_pg = woolp_stbnib_pg * cfw_pg
+    return wool_value_pg, woolp_stbnib_pg
 
 def f_condition_score(rc, cu0):
     ''' Estimate CS from LW. Works with scalars or arrays - provided they are broadcastable into ffcflw.
@@ -1420,88 +1420,87 @@ def f_saleprice(score_pricescalar_s7s5s6, weight_pricescalar_s7s5s6):
 
 
 
-def f_salep_mob(weight_s7spa1e1b1nwzida0e0b0xyg, scores_s7s6pa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg, cvscore_s7s6pa1e1b1nwzida0e0b0xyg,
-                lw_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p5a1e1b1nwzida0e0b0xyg, grid_priceslw_s7s5s6pa1e1b1nwzida0e0b0xyg):
+def f_salep_mob(weight_s7spg, scores_s7s6pg, cvlw_s7s5pg, cvscore_s7s6pg,
+                lw_range_s7s5pg, score_range_s7s6p5g, grid_priceslw_s7s5s6pg):
     ##prob for each lw step in grid
-    prob_lw_s7s5 = np.maximum(0, f_norm_cdf(np.roll(lw_range_s7s5pa1e1b1nwzida0e0b0xyg, -1, axis = 1), weight_s7spa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg)
-                          - f_norm_cdf(lw_range_s7s5pa1e1b1nwzida0e0b0xyg, weight_s7spa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg))
+    prob_lw_s7s5pg = np.maximum(0, f_norm_cdf(np.roll(lw_range_s7s5pg, -1, axis = 1), weight_s7spg, cvlw_s7s5pg)
+                          - f_norm_cdf(lw_range_s7s5pg, weight_s7spg, cvlw_s7s5pg))
     ##Probability for each score step in grid (fat score/CS)
-    prob_score_s7s6 = np.maximum(0, f_norm_cdf(np.roll(score_range_s7s6p5a1e1b1nwzida0e0b0xyg, -1, axis = 1), scores_s7s6pa1e1b1nwzida0e0b0xyg, cvscore_s7s6pa1e1b1nwzida0e0b0xyg)
-                             - f_norm_cdf(score_range_s7s6p5a1e1b1nwzida0e0b0xyg, scores_s7s6pa1e1b1nwzida0e0b0xyg, cvscore_s7s6pa1e1b1nwzida0e0b0xyg))
+    prob_score_s7s6pg = np.maximum(0, f_norm_cdf(np.roll(score_range_s7s6p5g, -1, axis = 1), scores_s7s6pg, cvscore_s7s6pg)
+                             - f_norm_cdf(score_range_s7s6p5g, scores_s7s6pg, cvscore_s7s6pg))
     ##Probability for each cell of grid
-    prob_grid_s7s5s6 = prob_lw_s7s5[:,:,na] * prob_score_s7s6[:,na,:]
+    prob_grid_s7s5s6pg = prob_lw_s7s5pg[:,:,na] * prob_score_s7s6pg[:,na,:]
     ##Average price for the mob
-    averagesale_value_mob_s7 = np.sum(prob_grid_s7s5s6 * grid_priceslw_s7s5s6pa1e1b1nwzida0e0b0xyg, axis = (1, 2))
-    return averagesale_value_mob_s7
+    averagesale_value_mob_s7pg = np.sum(prob_grid_s7s5s6pg * grid_priceslw_s7s5s6pg, axis = (1, 2))
+    return averagesale_value_mob_s7pg
 
 
-def f_sale_value(cu0, cx, o_rc, o_ffcfw_pa1e1b1nwzida0e0b0xyg, dressp_adj_yg, dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg,
-                 dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg, grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg, month_scalar_s7pa1e1b1nwzida0e0b0xyg,
-                 month_discount_s7pa1e1b1nwzida0e0b0xyg, price_type_s7pa1e1b1nwzida0e0b0xyg,a_s8_s7pa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg, cvscore_s7s6pa1e1b1nwzida0e0b0xyg,
-                 lw_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p5a1e1b1nwzida0e0b0xyg, age_end_p5a1e1b1nwzida0e0b0xyg1, discount_age_s7pa1e1b1nwzida0e0b0xyg,sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg,
-                 sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg, mask_s7x_s7pa1e1b1nwzida0e0b0xyg, sale_agemax_s7pa1e1b1nwzida0e0b0xyg1):
+def f_sale_value(cu0, cx, o_rc, o_ffcfw_pg, dressp_adj_yg, dresspercent_adj_s6pg,
+                 dresspercent_adj_s7pg, grid_price_s7s5s6pg, month_scalar_s7pg,
+                 month_discount_s7pg, price_type_s7pg,a_s8_s7pg, cvlw_s7s5pg, cvscore_s7s6pg,
+                 lw_range_s7s5pg, score_range_s7s6p5g, age_end_p5g1, discount_age_s7pg,sale_cost_pc_s7pg,
+                 sale_cost_hd_s7pg, mask_s7x_s7pg, sale_agemax_s7pg1):
     ##Calculate condition score
-    cs_pa1e1b1nwzida0e0b0xyg = f_condition_score(o_rc, cu0)
+    cs_pg = f_condition_score(o_rc, cu0)
     ##Calculate fat score
-    fs_pa1e1b1nwzida0e0b0xyg = f_fat_score(o_rc, cu0)
+    fs_pg = f_fat_score(o_rc, cu0)
     ##Combine the scores into single array
-    scores_s8p = np.stack([fs_pa1e1b1nwzida0e0b0xyg, cs_pa1e1b1nwzida0e0b0xyg], axis=0)
+    scores_s8p = np.stack([fs_pg, cs_pg], axis=0)
     ##Convert quality scores to s7 array
-    scores_s7s6pa1e1b1nwzida0e0b0xyg = scores_s8p[uinp.sheep['ia_s8_s7']][:,na,...]
+    scores_s7s6pg = scores_s8p[uinp.sheep['ia_s8_s7']][:,na,...]
     ##Dressing percentage to adjust price grid to LW
-    dresspercent_for_price_s7s6pa1e1b1nwzida0e0b0xyg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[23, ...] + dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg + dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg[:,na,...]
+    dresspercent_for_price_s7s6pg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[23, ...] + dresspercent_adj_s6pg + dresspercent_adj_s7pg[:,na,...]
     ##Price type scalar (for DW, LW or per head)
-    dresspercent_for_price_s7s6pa1e1b1nwzida0e0b0xyg = fun.f_update(dresspercent_for_price_s7s6pa1e1b1nwzida0e0b0xyg, 1, a_s8_s7pa1e1b1nwzida0e0b0xyg[:,na,...] >= 1)
+    dresspercent_for_price_s7s6pg = fun.f_update(dresspercent_for_price_s7s6pg, 1, a_s8_s7pg[:,na,...] >= 1)
     ##Update the grid prices to $/kg LW
-    grid_priceslw_s7s5s6pa1e1b1nwzida0e0b0xyg = grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg * dresspercent_for_price_s7s6pa1e1b1nwzida0e0b0xyg[:,na,...]
+    grid_priceslw_s7s5s6pg = grid_price_s7s5s6pg * dresspercent_for_price_s7s6pg[:,na,...]
     ##Interploate DP adjustment due to FS
-    dressp_adj_fs_pa1e1b1nwzida0e0b0xyg= np.interp(fs_pa1e1b1nwzida0e0b0xyg, uinp.sheep['i_salep_score_range_s8s6'][0, ...], uinp.sheep['i_salep_dressp_adj_s6'])
+    dressp_adj_fs_pg= np.interp(fs_pg, uinp.sheep['i_salep_score_range_s8s6'][0, ...], uinp.sheep['i_salep_dressp_adj_s6'])
     ##Dressing percentage to calculate grid weight
-    dresspercent_for_wt_s7pa1e1b1nwzida0e0b0xyg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[23, ...] + dressp_adj_fs_pa1e1b1nwzida0e0b0xyg + dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg
+    dresspercent_for_wt_s7pg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[23, ...] + dressp_adj_fs_pg + dresspercent_adj_s7pg
     ##Price type scalar (for DW, LW or per head)
-    dresspercent_wt_s7pa1e1b1nwzida0e0b0xyg = fun.f_update(dresspercent_for_wt_s7pa1e1b1nwzida0e0b0xyg, 1, a_s8_s7pa1e1b1nwzida0e0b0xyg >= 1)
+    dresspercent_wt_s7pg = fun.f_update(dresspercent_for_wt_s7pg, 1, a_s8_s7pg >= 1)
     ##Scale ffcfw to the units in the grid
-    weight_for_lookup_s7pa1e1b1nwzida0e0b0xyg = o_ffcfw_pa1e1b1nwzida0e0b0xyg * dresspercent_wt_s7pa1e1b1nwzida0e0b0xyg
+    weight_for_lookup_s7pg = o_ffcfw_pg * dresspercent_wt_s7pg
     ##Calculate mob average price in each grid
-    price_mobaverage_s7pa1e1b1nwzida0e0b0xyg = f_salep_mob(weight_for_lookup_s7pa1e1b1nwzida0e0b0xyg[:,na,...], scores_s7s6pa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg, cvscore_s7s6pa1e1b1nwzida0e0b0xyg,
-                                                      lw_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p5a1e1b1nwzida0e0b0xyg, grid_priceslw_s7s5s6pa1e1b1nwzida0e0b0xyg)
+    price_mobaverage_s7pg = f_salep_mob(weight_for_lookup_s7pg[:,na,...], scores_s7s6pg, cvlw_s7s5pg, cvscore_s7s6pg,
+                                                      lw_range_s7s5pg, score_range_s7s6p5g, grid_priceslw_s7s5s6pg)
     ##Scale prices based on month
-    price_mobaverage_s7pa1e1b1nwzida0e0b0xyg = price_mobaverage_s7pa1e1b1nwzida0e0b0xyg * (1+month_scalar_s7pa1e1b1nwzida0e0b0xyg)
+    price_mobaverage_s7pg = price_mobaverage_s7pg * (1+month_scalar_s7pg)
     ##Temporary value with age based discount
-    temporary_s7pa1e1b1nwzida0e0b0xyg = price_mobaverage_s7pa1e1b1nwzida0e0b0xyg * (1 + month_discount_s7pa1e1b1nwzida0e0b0xyg)
+    temporary_s7pg = price_mobaverage_s7pg * (1 + month_discount_s7pg)
     ##Apply discount if age is greater than threshold age
-    price_mobaverage_s7pa1e1b1nwzida0e0b0xyg = fun.f_update(price_mobaverage_s7pa1e1b1nwzida0e0b0xyg, temporary_s7pa1e1b1nwzida0e0b0xyg, age_end_p5a1e1b1nwzida0e0b0xyg1 > discount_age_s7pa1e1b1nwzida0e0b0xyg)
+    price_mobaverage_s7pg = fun.f_update(price_mobaverage_s7pg, temporary_s7pg, age_end_p5g1 > discount_age_s7pg)
     ##Convert weight to 1 if price is $/hd
-    weight_for_value_s7pa1e1b1nwzida0e0b0xyg = fun.f_update(weight_for_lookup_s7pa1e1b1nwzida0e0b0xyg, 1, price_type_s7pa1e1b1nwzida0e0b0xyg == 2)
+    weight_for_value_s7pg = fun.f_update(weight_for_lookup_s7pg, 1, price_type_s7pg == 2)
     ##Calculate value per head (gross)
-    sale_value_s7pa1e1b1nwzida0e0b0xyg = price_mobaverage_s7pa1e1b1nwzida0e0b0xyg * weight_for_value_s7pa1e1b1nwzida0e0b0xyg
+    sale_value_s7pg = price_mobaverage_s7pg * weight_for_value_s7pg
     ##Subtract the selling costs
-    sale_value_s7pa1e1b1nwzida0e0b0xyg = sale_value_s7pa1e1b1nwzida0e0b0xyg * (1 - sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg) - sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg
+    sale_value_s7pg = sale_value_s7pg * (1 - sale_cost_pc_s7pg) - sale_cost_hd_s7pg
     ##Mask the grids
-    sale_value_s7pa1e1b1nwzida0e0b0xyg = sale_value_s7pa1e1b1nwzida0e0b0xyg * mask_s7x_s7pa1e1b1nwzida0e0b0xyg * (age_end_p5a1e1b1nwzida0e0b0xyg1 <= sale_agemax_s7pa1e1b1nwzida0e0b0xyg1)
+    sale_value_s7pg = sale_value_s7pg * mask_s7x_s7pg * (age_end_p5g1 <= sale_agemax_s7pg1)
     ##Select the maximum value across the grids
-    sale_value = np.max(sale_value_s7pa1e1b1nwzida0e0b0xyg, axis=0) #take max on s6 axis aswell to remove it (it is singlton so no effect)
+    sale_value = np.max(sale_value_s7pg, axis=0) #take max on s6 axis aswell to remove it (it is singlton so no effect)
     return sale_value
 
 
 
-
-def f_animal_trigger_levels(index_p, age_start, a_prev_s_pida0e0b0xyg, a_next_s_pida0e0b0xyg, a_prevdam_o_pida0e0b0xyg1, period_is_endmating_p,
-                            period_is_wean_p, gender, o_ebg_p, wool_genes, animal_mated=False):
+def f_animal_trigger_levels(index_pg, age_start, a_prev_s_pg, a_next_s_pg, period_is_wean_pg, gender,
+                            o_ebg_p, wool_genes, a_prevdam_o_pg1, animal_mated, period_is_endmating_pg):
     ##Trigger value 1 - week of year
-    trigger1_pg = index_p % 52
+    trigger1_pg = index_pg % 52
     ##Trigger value 2 - age
     trigger2_pg = np.trunc(age_start / 7)
     ##Trigger value 3 - Weeks from previous shearing
-    trigger3_pg = index_p - a_prev_s_pida0e0b0xyg
+    trigger3_pg = index_pg - a_prev_s_pg
     ##Trigger value 4 - weeks to next shearing
-    trigger4_pg = index_p - a_next_s_pida0e0b0xyg
+    trigger4_pg = index_pg - a_next_s_pg
     ##Trigger value 5 - weeks from previous joining
-    trigger5_pg = index_p - a_prevdam_o_pida0e0b0xyg1
+    trigger5_pg = index_pg - a_prevdam_o_pg1
     ##Trigger value 6 - weeks from end of mating
-    trigger6_pg = np.maximum.accumulate(index_p*period_is_endmating_p)
+    trigger6_pg = index_pg - np.maximum.accumulate(index_pg*period_is_endmating_pg)
     ##Trigger value 7 - weeks from previous weaning
-    trigger7_pg = np.maximum.accumulate(index_p*period_is_wean_p)
+    trigger7_pg = index_pg - np.maximum.accumulate(index_pg*period_is_wean_pg)
     ##Trigger value 8 - whether animals was mated
     trigger8_pg = animal_mated
     ##Trigger value 9 - gender of the animal
@@ -1511,8 +1510,152 @@ def f_animal_trigger_levels(index_p, age_start, a_prev_s_pida0e0b0xyg, a_next_s_
     ##Trigger value 11 - the 'wooliness' of the genotype
     trigger11_pg = wool_genes
     ##Stack the triggers
-    animal_triggervalues_h7pg = np.stack(np.broadcast_arrays((trigger1_pg, trigger2_pg, trigger3_pg, trigger4_pg, trigger5_pg, trigger6_pg, trigger7_pg, trigger8_pg, trigger9_pg, trigger10_pg, trigger11_pg), axis = 0(h7))
+    animal_triggervalues_h7pg = np.stack(np.broadcast_arrays(trigger1_pg, trigger2_pg, trigger3_pg, trigger4_pg, trigger5_pg, trigger6_pg, trigger7_pg, trigger8_pg, trigger9_pg, trigger10_pg, trigger11_pg), axis = 0)
     return animal_triggervalues_h7pg
+
+
+def f_treatment_unit_numbers(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, a_nyatf_b1g=0):
+    ##Unit 0 - per head
+    unit0_pg = 1
+    ##Unit 1 - adjusted head
+    unit1_pg = unit0_pg * head_adjust
+    ##Unit 2 - mob
+    unit2_pg = unit0_pg / mobsize_pg
+    ##Unit 3 - LW
+    unit3_pg = unit0_pg * o_ffcfw_pg
+    ##Unit 4 - CFW
+    unit4_pg = unit0_pg * o_cfw_pg
+    ##Unit 5 - nyatf
+    unit5_pg = unit0_pg * a_nyatf_b1g
+    ##Stack the triggers
+    treatment_units_h8pg = np.stack(np.broadcast_arrays(unit0_pg, unit1_pg, unit2_pg, unit3_pg, unit4_pg, unit5_pg), axis=0)
+    return treatment_units_h8pg
+
+
+
+def f_operations_triggered(animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg):
+    ##Test slice 0 of h5 axis
+    slice0_h7h2pg = animal_triggervalues_h7pg[:, na, ...] <= operations_triggerlevels_h5h7h2pg[0,...]
+    ##Test slice 1 of h5 axis
+    slice1_h7h2pg = np.logical_or(animal_triggervalues_h7pg[:, na, ...] == operations_triggerlevels_h5h7h2pg[1, ...], operations_triggerlevels_h5h7h2pg[1, ...] == np.inf)
+    ##Test slice 2 of h5 axis
+    slice2_h7h2pg = animal_triggervalues_h7pg[:, na, ...] >= operations_triggerlevels_h5h7h2pg[2,...]
+    ##Test across the conditions
+    slices_all_h7h2pg = np.logical_and(slice0_h7h2pg, slice1_h7h2pg, slice2_h7h2pg)
+    ##Test across the rules (& collapse s7 axis)
+    triggered_h2pg = np.all(slices_all_h7h2pg, axis=0)
+    return triggered_h2pg
+
+
+def f_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg):
+    ##Calculation is required
+    required_le_h7h2pg = np.logical_and(np.logical_and(operation_triggered_h2pg, operations_triggerlevels_h5h7h2pg[3, ...] != np.inf), operations_triggerlevels_h5h7h2pg[0, ...] != np.inf) #logical_or only has two args
+    required_ge_h7h2pg = np.logical_and(np.logical_and(operation_triggered_h2pg, operations_triggerlevels_h5h7h2pg[3, ...] != np.inf), operations_triggerlevels_h5h7h2pg[2, ...] != -np.inf)
+    # ##Create blank versions for assignment
+    # temporary_le_h7h2pg = np.oneslike(required_h7h2pg)
+    # ##Create blank versions for assignment
+    # temporary_ge_h7h2pg = np.oneslike(required_h7h2pg)
+    ##"Level if less than = range This masking needs work. Formula is correct but I think it will be very slow"
+    # temporary_le_h7h2pg[required_h7h2pg] = fun.f_divide_inf(animal_triggervalues_h7pg[:, na, ...] - operations_triggerlevels_h5h7h2pg[0, ...],
+    # operations_triggerlevels_h5h7h2pg[3, ...] - operations_triggerlevels_h5h7h2pg[0, ...])
+    #
+    temporary_le_h7h2pg = np.where(required_le_h7h2pg, [(animal_triggervalues_h7pg[:, na, ...] - operations_triggerlevels_h5h7h2pg[0, ...])/
+                                   (operations_triggerlevels_h5h7h2pg[3, ...] - operations_triggerlevels_h5h7h2pg[0, ...])], 1)
+    ##Level if greater than = range
+    temporary_ge_h7h2pg[required_h7h2pg] = fun.f_divide_inf(animal_triggervalues_h7pg[:, na, ...] - operations_triggerlevels_h5h7h2pg[2, ...],
+    operations_triggerlevels_h5h7h2pg[3, ...] - operations_triggerlevels_h5h7h2pg[2, ...])
+    ##Test across the rules (& collapse s7 axis)
+    level_h7h2pg = np.maximum(0, np.minimum(1, temporary_le_h7h2pg), temporary_ge_h7h2pg)
+    return level_h7h2pg
+
+
+def f_mustering_required(application_level_h2pg, treatment_units_h8pg, husb_operations_muster_propn_h2pg):
+    ##Total mustering required for all operations
+    musters_pg = np.sum(application_level_h2pg * husb_operations_muster_propn_h2pg, axis=0)
+    ##Round up to the next integer
+    musters_pg = np.ceil(musters_pg)
+    ##Number of treatment units for mustering
+    units_h4pg = treatment_units_h8pg[uinp.sheep['ia_h8_h4']]
+    ##Total mustering required for all operations
+    musters_h4pg = musters_pg * units_h4pg
+    return musters_h4pg
+
+
+def f_husbandry_component(level, treatment_units, requirements, association, axes_tup):
+    ##Number of treatment units for contract
+    units = treatment_units[association]
+    ##Infrastructure requirement for each animal class during the period
+    component = np.sum(level * units * requirements, axis=axes_tup)
+    return component
+
+
+def f_husbandry_requisites(level_hpg, treatment_units_h8pg, husb_requisite_cost_h6pg, husb_requisites_prob_h6hpg,a_h8_h):
+    ##Number of treatment units for requisites
+    units_hpg = treatment_units_h8pg[a_h8_h]
+    ##Labour requirement for each animal class during the period
+    cost_pg = np.sum(level_hpg * units_hpg * husb_requisite_cost_h6pg[:,na, ...] *
+                     husb_requisites_prob_h6hpg, axis = (0, 1))
+    return cost_pg
+
+def f_husbandry_labour(level_hpg, treatment_units_h8pg, husb_labourreq_l2hpg, a_h8_h):
+    ##Number of treatment units for contract
+    units_hpg = treatment_units_h8pg[a_h8_h]
+    ##Labour requirement for each animal class during the period
+    hours_l2pg = np.sum(level_hpg * units_hpg * husb_labourreq_l2hpg, axis=1)
+    return hours_l2pg
+
+def f_husbandry_infrastructure(level_hpg, husb_infrastructurereq_h1h2pg):
+    ##Infrastructure requirement for each animal class during the period
+    infrastructure_h1pg = np.sum(level_hpg * husb_infrastructurereq_h1h2pg, axis=1)
+    return infrastructure_h1pg
+
+def f_contract_cost(application_level_h2pg, treatment_units_h8pg, husb_operations_contract_cost_h2pg):
+    ##Number of animal units for contract
+    units_h2pg = treatment_units_h8pg[uinp.sheep['a_h8_h2']]
+    ##Contract cost for each animal class during the period
+    cost_pg = np.sum(application_level_h2pg * units_h2pg * husb_operations_contract_cost_h2pg, axis=0)
+    return cost_pg
+
+def f_husbandry(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, operations_triggerlevels_h5h7h2pg, index_pg,
+                age_start, a_prev_s_pg, a_next_s_pg, period_is_wean_pg, gender, o_ebg_p, wool_genes,
+                husb_operations_muster_propn_h2pg, husb_requisite_cost_h6pg, husb_operations_requisites_prob_h6h2pg,
+                husb_operations_labourreq_l2h2pg, husb_operations_infrastructurereq_h1h2pg,
+                husb_operations_contract_cost_h2pg, husb_muster_requisites_prob_h6h4pg,
+                husb_muster_labourreq_l2h4pg, husb_muster_infrastructurereq_h1h4pg,
+                a_nyatf_b1g=0,a_prevdam_o_pg1=0, animal_mated=False, period_is_endmating_pg=False):
+    ##An array of the trigger values for the animal classes in each period
+    animal_triggervalues_h7pg = f_animal_trigger_levels(index_pg, age_start, a_prev_s_pg, a_next_s_pg, period_is_wean_pg, gender,
+                            o_ebg_p, wool_genes, a_prevdam_o_pg1, animal_mated, period_is_endmating_pg)
+    ##The number of treatment units per animal in each period
+    treatment_units_h8pg = f_treatment_unit_numbers(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, a_nyatf_b1g)
+    ##Is the operation is triggered in the period for each class
+    operation_triggered_h2pg = f_operations_triggered(animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg)
+    ##The level of the operation in each period for the class of livestock
+    application_level_h2pg = f_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg)
+    ##The number of times the mob must be mustered
+    mustering_level_h4pg = f_mustering_required(application_level_h2pg, treatment_units_h8pg, husb_operations_muster_propn_h2pg)
+    ##The cost of requisites for the operations
+    operations_requisites_cost_pg = f_husbandry_requisites(application_level_h2pg, treatment_units_h8pg, husb_requisite_cost_h6pg, husb_operations_requisites_prob_h6h2pg, uinp.sheep['ia_h8_h2'])
+    ##The labour requirement for the operations
+    operations_labourreq_l2pg = f_husbandry_labour(application_level_h2pg, treatment_units_h8pg, husb_operations_labourreq_l2h2pg, uinp.sheep['ia_h8_h2'])
+    ##The infrastructure requirements for the operations
+    operations_infrastructurereq_h1pg = f_husbandry_infrastructure(application_level_h2pg, husb_operations_infrastructurereq_h1h2pg)
+    ##Contract cost for husbandry
+    contract_cost_pg = f_contract_cost(application_level_h2pg, treatment_units_h8pg, husb_operations_contract_cost_h2pg)
+    ##The cost of requisites for mustering
+    mustering_requisites_cost_pg = f_husbandry_requisites(mustering_level_h4pg, treatment_units_h8pg, husb_requisite_cost_h6pg, husb_muster_requisites_prob_h6h4pg, uinp.sheep['ia_h8_h4'])
+    ##The labour requirement for mustering
+    mustering_labourreq_l2pg = f_husbandry_labour(mustering_level_h4pg, treatment_units_h8pg, husb_muster_labourreq_l2h4pg, uinp.sheep['ia_h8_h4'])
+    ##The infrastructure requirements for mustering
+    mustering_infrastructurereq_h1pg = f_husbandry_infrastructure(mustering_level_h4pg, husb_muster_infrastructurereq_h1h4pg)
+    ##Total cost of husbandry
+    husbandry_cost_pg = operations_requisites_cost_pg + mustering_requisites_cost_pg + contract_cost_pg
+    ##Labour requirement for husbandry
+    husbandry_labour_l2pg = operations_labourreq_l2pg + mustering_labourreq_l2pg
+    ##infrastructure requirement for husbandry
+    husbandry_infrastructure_h1pg = operations_infrastructurereq_h1pg + mustering_infrastructurereq_h1pg
+    return husbandry_cost_pg, husbandry_labour_l2pg, husbandry_infrastructure_h1pg
+
 
 
 

@@ -87,14 +87,11 @@ def xl_all_named_ranges(filename, targetsheets, rangename=None,numpy=False,datat
                             parameters[dn.name] = ws[cell_range].value
                         elif not width:                         # the range is only 1 column & is not iterable across the row
                             parameters[dn.name] = np.asarray([cell.value for cell in [row[0] for row in ws[cell_range]]],dtype=datatype)
-                            parameters[dn.name] = f_convert_to_inf(parameters[dn.name]) #convert -- and ++ to inf (only for numpy because this is a sheep thing)
                         elif not length:                        # the range is 1 row & is iterable across columns
                             for row in ws[cell_range]:
                                 parameters[dn.name] = np.asarray([cell.value for cell in row],dtype=datatype)
-                            parameters[dn.name] = f_convert_to_inf(parameters[dn.name]) #convert -- and ++ to inf (only for numpy because this is a sheep thing)
                         elif numpy == True:
                             parameters[dn.name] = np.asarray([[cell.value for cell in row] for row in ws[cell_range]],dtype=datatype)
-                            parameters[dn.name] = f_convert_to_inf(parameters[dn.name]) #convert -- and ++ to inf (only for numpy because this is a sheep thing)
                         else:                                   # the range is a region & is iterable across rows and columns
                             df = pd.DataFrame([cell.value for cell in row] for row in ws[cell_range])
                             #df = pd.DataFrame(cells)
@@ -115,13 +112,20 @@ def xl_all_named_ranges(filename, targetsheets, rangename=None,numpy=False,datat
     return parameters #t_wb #
 
 def f_convert_to_inf(input):
+    input=input.astype('object') #have to convert to object so that when the stuff below is assigned it is not assigned as a string
     ##convert -- to -inf
     mask = input=='--'
     input[mask]=-np.inf
     ##convert ++ to inf
     mask = input=='++'
     input[mask]=np.inf
-    return input
+    ##convert 'True' to True (string to bool) - because array is read in as string
+    mask = input=='True'
+    input[mask]=True
+    ##convert 'Flase' to False (string to bool) - because array is read in as string
+    mask = input=='False'
+    input[mask]=False
+    return input.astype('float')
 
 #def test():
 #    sheettest = xl_all_named_ranges("GSMInputs.xlsx","Annual") #sheettest = xl_all_named_ranges("GSMInputs.xlsx","Annual", True)
@@ -208,7 +212,7 @@ def searchsort_multiple_dim(a,v,axis_a,axis_v):
 
 
 def f_reshape_expand(array,left_pos=0,len_ax0=0,len_ax1=0,len_ax2=0,swap=False,ax1=0,ax2=1,right_pos=0,left_pos2=0,right_pos2=0
-                     , left_pos3=0,right_pos3=0, condition = None, axis = 0,len_ax3=0):
+                     , left_pos3=0,right_pos3=0, condition = None, axis = 0,len_ax3=0,swap2=False,ax1_2=1,ax2_2=2):
     '''
     Parameters
     ----------
@@ -258,6 +262,9 @@ def f_reshape_expand(array,left_pos=0,len_ax0=0,len_ax1=0,len_ax2=0,swap=False,a
     ##swap axis if neccessary
     if swap:
         array = np.swapaxes(array, ax1, ax2)
+    ##swap axis if neccessary
+    if swap2:
+        array = np.swapaxes(array, ax1_2, ax2_2)
     ##get axis into correct position 1
     if left_pos != None or left_pos != 0:
         extra_axes = tuple(range((left_pos + 1), right_pos))
