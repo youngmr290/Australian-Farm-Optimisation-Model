@@ -1594,7 +1594,7 @@ def f_husbandry_labour(level_hpg, treatment_units_h8pg, units_per_labourhour_l2h
     ##Number of treatment units for contract
     units_hpg = treatment_units_h8pg[a_h8_h]
     ##Labour requirement for each animal class during the period
-    hours_l2pg = np.sum(level_hpg * units_hpg / units_per_labourhour_l2hpg, axis=1)  #divide by units_per_labourhour_l2hpg because that is how many units can be done per hour eg how many sheep can be dreched per hr
+    hours_l2pg = np.sum(fun.f_divide(level_hpg * units_hpg , units_per_labourhour_l2hpg), axis=1)  #divide by units_per_labourhour_l2hpg because that is how many units can be done per hour eg how many sheep can be dreched per hr
     return hours_l2pg
 
 def f_husbandry_infrastructure(level_hpg, husb_infrastructurereq_h1h2pg):

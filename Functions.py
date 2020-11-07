@@ -652,7 +652,8 @@ def f_update(existing_value, new_value, mask_for_new):
         returns a combination of the two input arrays determined by the mask. Note: multiplying by true return the origional number and multiplying by false results in 0.
 
     '''
-    return existing_value * np.logical_not(mask_for_new) + new_value * mask_for_new #used not rather than ~ because ~False == -1 not True (not the case for np.arrays only if bool is single - as it is for sire in some situatoins)
+    new = existing_value * np.logical_not(mask_for_new) + new_value * mask_for_new #used not rather than ~ because ~False == -1 not True (not the case for np.arrays only if bool is single - as it is for sire in some situatoins)
+    return new.astype(existing_value.dtype) #convert back to origional dtype because adding float32 and int32 returns float64. And sometimes we dont want this eg postprocessing
 
 
 

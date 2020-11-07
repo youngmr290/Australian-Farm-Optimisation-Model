@@ -3091,9 +3091,7 @@ def generator(params,report):
 
     def f_lw_distribution(ffcfw_condensed_va1e1b1nwzida0e0b0xyg, ffcfw_va1e1b1nwzida0e0b0xyg, i_n_len, i_n_fvp_period,dvp_type_va1e1b1nwzida0e0b0xyg1=2):
         '''distriuting animals on LW at the start of dvp0
-        ^ will this function work with offspring that need distributing at the end of a dvp that is dvp_type == 0
-        ^ dams need distributing after dvp_type == 2. The common thing is that next_dvp_type == 0
-        ^ Do we need to roll the cvp_type and test for != 0 in the last line'''
+        '''
         ##add second w axis - the condensed w axis becomes axis -1 and the end of period w stays in the normal place
         ffcfw_condensed_va1e1b1nwzida0e0b0xygw = fun.f_reshape_expand(np.moveaxis(ffcfw_condensed_va1e1b1nwzida0e0b0xyg,uinp.structure['i_w_pos'],-1), uinp.structure['i_n_pos']-1, right_pos=pinp.sheep['i_z_pos']-1)
         ##Calculate the difference between the 3 (or more if not dvp0) condensed weights and the middle weight (slice 0)
@@ -3108,7 +3106,7 @@ def generator(params,report):
         distribution_va1e1b1nwzida0e0b0xygw = spread_bounded * (ffcfw_va1e1b1nwzida0e0b0xyg[..., na] >= np.min(ffcfw_condensed_va1e1b1nwzida0e0b0xygw, axis = -1, keepdims=True))
         ##update v slices that are not dvp0 (ie not consolidation periods) to a 1 - for offs every slice is dvp0 because there is only one dvp so can skip this step
         if not type(dvp_type_va1e1b1nwzida0e0b0xyg1)==int: #skip if dvptype is int (default value is 0 when nothing is passed to function)
-            distribution_va1e1b1nwzida0e0b0xygw = fun.f_update(distribution_va1e1b1nwzida0e0b0xygw, 1, (dvp_type_va1e1b1nwzida0e0b0xyg1[...,na]!=2)).astype(ffcfw_va1e1b1nwzida0e0b0xyg.dtype) #convert back to origional dtype
+            distribution_va1e1b1nwzida0e0b0xygw = fun.f_update(distribution_va1e1b1nwzida0e0b0xygw, 1, (dvp_type_va1e1b1nwzida0e0b0xyg1[...,na]!=2))
         return distribution_va1e1b1nwzida0e0b0xygw
 
 
@@ -3168,9 +3166,9 @@ def generator(params,report):
     period_is_wean_pa1e1b1nwzida0e0b0xyg0 = sfun.f_period_is_('period_is', date_weaned_ida0e0b0xyg0, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
     period_is_wean_pa1e1b1nwzida0e0b0xyg1 = np.logical_or(period_is_wean_pa1e1b1nwzida0e0b0xyg1, sfun.f_period_is_('period_is', date_weaned_ida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)) #includes the weaning of the dam itself and the yatf because there is husbandry for the ewe when yatf are weaned eg the dams have to be mustered
     period_is_wean_pa1e1b1nwzida0e0b0xyg3 = sfun.f_period_is_('period_is', date_weaned_ida0e0b0xyg3, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
-    a_nextshear_pa1e1b1nwzida0e0b0xyg0 = sfun.f_next_prev_association(date_nextshear_pa1e1b1nwzida0e0b0xyg0, date_end_p, 1,'right') #p indx of next shearing - when period is shearing this returns the current period
-    a_nextshear_pa1e1b1nwzida0e0b0xyg1 = sfun.f_next_prev_association(date_nextshear_pa1e1b1nwzida0e0b0xyg1, date_end_p, 1,'right') #p indx of next shearing - when period is shearing this returns the current period
-    a_nextshear_pa1e1b1nwzida0e0b0xyg3 = sfun.f_next_prev_association(date_nextshear_pa1e1b1nwzida0e0b0xyg3, date_end_p, 1,'right') #p indx of next shearing - when period is shearing this returns the current period
+    a_nextshear_pa1e1b1nwzida0e0b0xyg0 = sfun.f_next_prev_association(date_end_p, date_nextshear_pa1e1b1nwzida0e0b0xyg0, 1,'right') #p indx of next shearing - when period is shearing this returns the current period
+    a_nextshear_pa1e1b1nwzida0e0b0xyg1 = sfun.f_next_prev_association(date_end_p, date_nextshear_pa1e1b1nwzida0e0b0xyg1, 1,'right') #p indx of next shearing - when period is shearing this returns the current period
+    a_nextshear_pa1e1b1nwzida0e0b0xyg3 = sfun.f_next_prev_association(date_end_p, date_nextshear_pa1e1b1nwzida0e0b0xyg3, 1,'right') #p indx of next shearing - when period is shearing this returns the current period
     ###Set the values for the ranges required (same values for all 10 matrix feed periods). This spreads the feed pools evenly between the highest and lowest quality feed required by any of the animals.
     ev_propn_f = np.array([0.25, 0.50, 0.75])
     index_fpa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(np.arange(ev_propn_f.shape[0]+1), uinp.structure['i_p_pos']-1)
@@ -3440,7 +3438,7 @@ def generator(params,report):
     ###Sire: cost, labour and infrastructure requirements
     husbandry_cost_pg0, husbandry_labour_l2pg0, husbandry_infrastructure_h1pg0 = sfun.f_husbandry(
         uinp.sheep['i_head_adjust_sire'], mobsize_pa1e1b1nwzida0e0b0xyg0, o_ffcfw_sire, o_cfw_sire, operations_triggerlevels_h5h7h2pg,
-        p_index_pa1e1b1nwzida0e0b0xyg, age_start_pa1e1b1nwzida0e0b0xyg0, period_is_shearing_pa1e1b1nwzida0e0b0xyg3, a_nextshear_pa1e1b1nwzida0e0b0xyg0,
+        p_index_pa1e1b1nwzida0e0b0xyg, age_start_pa1e1b1nwzida0e0b0xyg0, period_is_shearing_pa1e1b1nwzida0e0b0xyg0, a_nextshear_pa1e1b1nwzida0e0b0xyg0,
         period_is_wean_pa1e1b1nwzida0e0b0xyg0, index_xyg[0], o_ebg_sire, wool_genes_yg0, husb_operations_muster_propn_h2pg,
         husb_requisite_cost_h6pg, husb_operations_requisites_prob_h6h2pg, operations_per_hour_l2h2pg,
         husb_operations_infrastructurereq_h1h2pg, husb_operations_contract_cost_h2pg, husb_muster_requisites_prob_h6h4pg,
