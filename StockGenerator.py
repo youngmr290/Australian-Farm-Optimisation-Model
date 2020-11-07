@@ -3090,7 +3090,10 @@ def generator(params,report):
         return final
 
     def f_lw_distribution(ffcfw_condensed_va1e1b1nwzida0e0b0xyg, ffcfw_va1e1b1nwzida0e0b0xyg, i_n_len, i_n_fvp_period,dvp_type_va1e1b1nwzida0e0b0xyg1=2):
-        '''distriuting animals on LW at the start of dvp0'''
+        '''distriuting animals on LW at the start of dvp0
+        ^ will this function work with offspring that need distributing at the end of a dvp that is dvp_type == 0
+        ^ dams need distributing after dvp_type == 2. The common thing is that next_dvp_type == 0
+        ^ Do we need to roll the cvp_type and test for != 0 in the last line'''
         ##add second w axis - the condensed w axis becomes axis -1 and the end of period w stays in the normal place
         ffcfw_condensed_va1e1b1nwzida0e0b0xygw = fun.f_reshape_expand(np.moveaxis(ffcfw_condensed_va1e1b1nwzida0e0b0xyg,uinp.structure['i_w_pos'],-1), uinp.structure['i_n_pos']-1, right_pos=pinp.sheep['i_z_pos']-1)
         ##Calculate the difference between the 3 (or more if not dvp0) condensed weights and the middle weight (slice 0)
