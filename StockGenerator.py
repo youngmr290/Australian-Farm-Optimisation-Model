@@ -3091,7 +3091,7 @@ def generator(params,report):
 
     def f_lw_distribution(ffcfw_condensed_va1e1b1nwzida0e0b0xyg, ffcfw_va1e1b1nwzida0e0b0xyg, i_n_len, i_n_fvp_period,dvp_type_va1e1b1nwzida0e0b0xyg1=2):
         '''distriuting animals on LW at the start of dvp0
-        '''
+        ^ this function will need altering if the dvp_type definition changes'''
         ##add second w axis - the condensed w axis becomes axis -1 and the end of period w stays in the normal place
         ffcfw_condensed_va1e1b1nwzida0e0b0xygw = fun.f_reshape_expand(np.moveaxis(ffcfw_condensed_va1e1b1nwzida0e0b0xyg,uinp.structure['i_w_pos'],-1), uinp.structure['i_n_pos']-1, right_pos=pinp.sheep['i_z_pos']-1)
         ##Calculate the difference between the 3 (or more if not dvp0) condensed weights and the middle weight (slice 0)
@@ -3104,8 +3104,8 @@ def generator(params,report):
         spread_bounded[..., :int(i_n_len ** i_n_fvp_period)] =  1 - np.maximum(spread_bounded[..., int(i_n_len ** i_n_fvp_period):-int(i_n_len ** i_n_fvp_period)], spread_bounded[..., -int(i_n_len ** i_n_fvp_period):])
         ##Set the distribution to 0 if lw_end is below the condensed minimum weight
         distribution_va1e1b1nwzida0e0b0xygw = spread_bounded * (ffcfw_va1e1b1nwzida0e0b0xyg[..., na] >= np.min(ffcfw_condensed_va1e1b1nwzida0e0b0xygw, axis = -1, keepdims=True))
-        ##update v slices that are not dvp0 (ie not consolidation periods) to a 1 - for offs every slice is dvp0 because there is only one dvp so can skip this step
-        if not type(dvp_type_va1e1b1nwzida0e0b0xyg1)==int: #skip if dvptype is int (default value is 0 when nothing is passed to function)
+        ##update v slices to 1 that are dvp_type != 2 which for dams means dvp_type_next!=0 (ie not consolidation periods). Every slice for offs is dvp_type_next==0 amd the update is skipped because the default type == int
+        if not type(dvp_type_va1e1b1nwzida0e0b0xyg1)==int: #skip if dvptype is int (the default value is an integer (2))
             distribution_va1e1b1nwzida0e0b0xygw = fun.f_update(distribution_va1e1b1nwzida0e0b0xygw, 1, (dvp_type_va1e1b1nwzida0e0b0xyg1[...,na]!=2))
         return distribution_va1e1b1nwzida0e0b0xygw
 
