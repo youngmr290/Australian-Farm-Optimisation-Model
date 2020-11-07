@@ -3122,53 +3122,53 @@ def generator(params,report):
     cash_period_dates_cy = cash_period_dates + (np.arange(np.ceil(uinp.structure['i_age_max'])) * np.timedelta64(365,'D'))[:,na] #expand from single yr to all length of generator
     cash_period_dates_c = cash_period_dates_cy.ravel()
     a_c_p = sfun.f_next_prev_association(cash_period_dates_c, date_end_p, 1,'right') % len(cash_period_dates) #% len required to convert association back to only the number of cash periods
-    a_c_pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(a_c_p, uinp.structure['i_p_pos'])
+    a_c_pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(a_c_p, uinp.structure['i_p_pos']).astype(dtype)
     index_ctvpa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(np.arange(len(cash_period_dates)), uinp.structure['i_p_pos']-3)
     ##wool
-    vm_m4a1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(pinp.sheep['i_vm_m4'], uinp.structure['i_p_pos'])
-    pmb_m4s4a1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(pinp.sheep['i_pmb_m4s'], uinp.structure['i_p_pos'])
+    vm_m4a1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(pinp.sheep['i_vm_m4'], uinp.structure['i_p_pos']).astype(dtype)
+    pmb_m4s4a1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(pinp.sheep['i_pmb_m4s'], uinp.structure['i_p_pos']).astype(dtype)
     ##sale
-    score_range_s8s6pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_salep_score_range_s8s6'], uinp.structure['i_p_pos'] - 1)
-    price_adj_months_s7s9m4a1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_salep_months_priceadj_s7s9m4'], uinp.structure['i_p_pos'], len_ax0=uinp.sheep['i_s7_len'],len_ax1=uinp.sheep['i_s9_len'],len_ax2=uinp.sheep['i_salep_months_priceadj_s7s9m4'].shape[-1])
-    dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_salep_dressp_adj_s6'], uinp.structure['i_p_pos']-1)
-    dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_salep_dressp_adj_s7'], uinp.structure['i_p_pos']-1)
-    score_pricescalar_s7s5s6 = fun.f_reshape_expand(uinp.sheep['i_salep_score_scalar_s7s5s6'], len_ax0=uinp.sheep['i_s7_len'],len_ax1=uinp.sheep['i_s5_len'],len_ax2=uinp.sheep['i_salep_score_scalar_s7s5s6'].shape[-1])
-    weight_pricescalar_s7s5s6 = fun.f_reshape_expand(uinp.sheep['i_salep_weight_scalar_s7s5s6'], len_ax0=uinp.sheep['i_s7_len'],len_ax1=uinp.sheep['i_s5_len'],len_ax2=uinp.sheep['i_salep_weight_scalar_s7s5s6'].shape[-1])
-    lw_range_s7s5pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_salep_weight_range_s7s5'], uinp.structure['i_p_pos']-1,len_ax0=uinp.sheep['i_s7_len'],len_ax1=uinp.sheep['i_s5_len'])
+    score_range_s8s6pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_salep_score_range_s8s6'], uinp.structure['i_p_pos'] - 1).astype(dtype)
+    price_adj_months_s7s9m4a1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_salep_months_priceadj_s7s9m4'], uinp.structure['i_p_pos'], len_ax0=uinp.sheep['i_s7_len'],len_ax1=uinp.sheep['i_s9_len'],len_ax2=uinp.sheep['i_salep_months_priceadj_s7s9m4'].shape[-1]).astype(dtype)
+    dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_salep_dressp_adj_s6'], uinp.structure['i_p_pos']-1).astype(dtype)
+    dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_salep_dressp_adj_s7'], uinp.structure['i_p_pos']-1).astype(dtype)
+    score_pricescalar_s7s5s6 = fun.f_reshape_expand(uinp.sheep['i_salep_score_scalar_s7s5s6'], len_ax0=uinp.sheep['i_s7_len'],len_ax1=uinp.sheep['i_s5_len'],len_ax2=uinp.sheep['i_salep_score_scalar_s7s5s6'].shape[-1]).astype(dtype)
+    weight_pricescalar_s7s5s6 = fun.f_reshape_expand(uinp.sheep['i_salep_weight_scalar_s7s5s6'], len_ax0=uinp.sheep['i_s7_len'],len_ax1=uinp.sheep['i_s5_len'],len_ax2=uinp.sheep['i_salep_weight_scalar_s7s5s6'].shape[-1]).astype(dtype)
+    lw_range_s7s5pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_salep_weight_range_s7s5'], uinp.structure['i_p_pos']-1,len_ax0=uinp.sheep['i_s7_len'],len_ax1=uinp.sheep['i_s5_len']).astype(dtype)
     price_type_s7pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_salep_price_type_s7'], uinp.structure['i_p_pos']-1)
     a_s8_s7pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['ia_s8_s7'], uinp.structure['i_p_pos']-1)
-    cvlw_s7s5pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_cvlw_s7'], uinp.structure['i_p_pos']-2)
-    cvscore_s7s6pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_cvscore_s7'], uinp.structure['i_p_pos']-2)
+    cvlw_s7s5pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_cvlw_s7'], uinp.structure['i_p_pos']-2).astype(dtype)
+    cvscore_s7s6pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_cvscore_s7'], uinp.structure['i_p_pos']-2).astype(dtype)
     discount_age_s7pa1e1b1nwzida0e0b0xyg = fun.f_convert_to_inf(fun.f_reshape_expand(uinp.sheep['i_salep_discount_age_s7'],
-                                                                                     uinp.structure['i_p_pos']-1))  # convert -- and ++ to inf
-    sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_sale_cost_pc_s7'], uinp.structure['i_p_pos']-1)
-    sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_sale_cost_hd_s7'], uinp.structure['i_p_pos']-1)
+                                                                                     uinp.structure['i_p_pos']-1)).astype(dtype)  # convert -- and ++ to inf
+    sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_sale_cost_pc_s7'], uinp.structure['i_p_pos']-1).astype(dtype)
+    sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_sale_cost_hd_s7'], uinp.structure['i_p_pos']-1).astype(dtype)
     mask_s7x_s7pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_mask_s7x'], uinp.parameters['i_x_pos'], left_pos2=uinp.structure['i_p_pos']-1, right_pos2=uinp.parameters['i_x_pos'])
-    sale_agemax_s7pa1e1b1nwzida0e0b0xyg0, sale_agemax_s7pa1e1b1nwzida0e0b0xyg1, sale_agemax_s7pa1e1b1nwzida0e0b0xyg2, sale_agemax_s7pa1e1b1nwzida0e0b0xyg3 = sfun.f_c2g(uinp.parameters['i_agemax_s7c2'],uinp.parameters['i_agemax_s7y'],uinp.structure['i_p_pos']-1)
-    dresspercent_adj_yg0, dresspercent_adj_yg1, dresspercent_adj_yg2, dresspercent_adj_yg3 = sfun.f_c2g(uinp.parameters['i_dressp_adj_c2'],uinp.parameters['i_dressp_adj_y'])
+    sale_agemax_s7pa1e1b1nwzida0e0b0xyg0, sale_agemax_s7pa1e1b1nwzida0e0b0xyg1, sale_agemax_s7pa1e1b1nwzida0e0b0xyg2, sale_agemax_s7pa1e1b1nwzida0e0b0xyg3 = sfun.f_c2g(uinp.parameters['i_agemax_s7c2'],uinp.parameters['i_agemax_s7y'],uinp.structure['i_p_pos']-1, dtype=dtype)
+    dresspercent_adj_yg0, dresspercent_adj_yg1, dresspercent_adj_yg2, dresspercent_adj_yg3 = sfun.f_c2g(uinp.parameters['i_dressp_adj_c2'],uinp.parameters['i_dressp_adj_y'], dtype=dtype)
     ##husbandry
-    wool_genes_yg0, wool_genes_yg1, wool_genes_yg2, wool_genes_yg3 = sfun.f_c2g(uinp.parameters['i_wool_genes_c2'],uinp.parameters['i_wool_genes_y'])
+    wool_genes_yg0, wool_genes_yg1, wool_genes_yg2, wool_genes_yg3 = sfun.f_c2g(uinp.parameters['i_wool_genes_c2'],uinp.parameters['i_wool_genes_y'], dtype=dtype)
     mobsize_pa1e1b1nwzida0e0b0xyg0 = fun.f_reshape_expand(pinp.sheep['i_mobsize_sire_p6'][a_p6_p], uinp.structure['i_p_pos'])
     mobsize_pa1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(pinp.sheep['i_mobsize_dams_p6'][a_p6_p], uinp.structure['i_p_pos'])
     mobsize_pa1e1b1nwzida0e0b0xyg3 = fun.f_reshape_expand(pinp.sheep['i_mobsize_offs_p6'][a_p6_p], uinp.structure['i_p_pos'])
     animal_mated_b1g1 = index_b1nwzida0e0b0xyg!=0 #all dams mated except NM which is slice 0
     operations_triggerlevels_h5h7h2pg = fun.f_convert_to_inf(fun.f_reshape_expand(pinp.sheep['i_husb_operations_triggerlevels_h5h7h2'], uinp.structure['i_p_pos']-1,len_ax0=pinp.sheep['i_h2_len'],len_ax1=pinp.sheep['i_h5_len'],len_ax2=pinp.sheep['i_husb_operations_triggerlevels_h5h7h2'].shape[-1],
                                                                                   swap=True, swap2=True)).astype(dtype)  # convert -- and ++ to inf
-    husb_operations_muster_propn_h2pg = fun.f_reshape_expand(uinp.sheep['i_husb_operations_muster_propn_h2'], uinp.structure['i_p_pos']-1)
-    husb_requisite_cost_h6pg = fun.f_reshape_expand(uinp.sheep['i_husb_requisite_cost_h6'], uinp.structure['i_p_pos']-1)
-    husb_operations_requisites_prob_h6h2pg = fun.f_reshape_expand(uinp.sheep['i_husb_operations_requisites_prob_h6h2'], uinp.structure['i_p_pos']-1,swap=True)
-    operations_per_hour_l2h2pg = fun.f_reshape_expand(uinp.sheep['i_husb_operations_labourreq_l2h2'], uinp.structure['i_p_pos']-1,swap=True)
+    husb_operations_muster_propn_h2pg = fun.f_reshape_expand(uinp.sheep['i_husb_operations_muster_propn_h2'], uinp.structure['i_p_pos']-1).astype(dtype)
+    husb_requisite_cost_h6pg = fun.f_reshape_expand(uinp.sheep['i_husb_requisite_cost_h6'], uinp.structure['i_p_pos']-1).astype(dtype)
+    husb_operations_requisites_prob_h6h2pg = fun.f_reshape_expand(uinp.sheep['i_husb_operations_requisites_prob_h6h2'], uinp.structure['i_p_pos']-1,swap=True).astype(dtype)
+    operations_per_hour_l2h2pg = fun.f_reshape_expand(uinp.sheep['i_husb_operations_labourreq_l2h2'], uinp.structure['i_p_pos']-1,swap=True).astype(dtype)
     husb_operations_infrastructurereq_h1h2pg = fun.f_reshape_expand(uinp.sheep['i_husb_operations_infrastructurereq_h1h2'], uinp.structure['i_p_pos']-1,swap=True)
-    husb_operations_contract_cost_h2pg = fun.f_reshape_expand(uinp.sheep['i_husb_operations_contract_cost_h2'], uinp.structure['i_p_pos']-1)
+    husb_operations_contract_cost_h2pg = fun.f_reshape_expand(uinp.sheep['i_husb_operations_contract_cost_h2'], uinp.structure['i_p_pos']-1).astype(dtype)
     husb_muster_requisites_prob_h6h4pg = fun.f_reshape_expand(uinp.sheep['i_husb_muster_requisites_prob_h6h4'], uinp.structure['i_p_pos']-1,len_ax0=uinp.sheep['i_h4_len'], len_ax1=uinp.sheep['i_husb_muster_requisites_prob_h6h4'].shape[-1],swap=True)
     musters_per_hour_l2h4pg = fun.f_reshape_expand(uinp.sheep['i_husb_muster_labourreq_l2h4'], uinp.structure['i_p_pos']-1,len_ax0=uinp.sheep['i_h4_len'], len_ax1=uinp.sheep['i_husb_muster_labourreq_l2h4'].shape[-1],swap=True)
     husb_muster_infrastructurereq_h1h4pg = fun.f_reshape_expand(uinp.sheep['i_husb_muster_infrastructurereq_h1h4'], uinp.structure['i_p_pos']-1,len_ax0=uinp.sheep['i_h4_len'], len_ax1=uinp.sheep['i_husb_muster_infrastructurereq_h1h4'].shape[-1],swap=True)
     period_is_wean_pa1e1b1nwzida0e0b0xyg0 = sfun.f_period_is_('period_is', date_weaned_ida0e0b0xyg0, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
     period_is_wean_pa1e1b1nwzida0e0b0xyg1 = np.logical_or(period_is_wean_pa1e1b1nwzida0e0b0xyg1, sfun.f_period_is_('period_is', date_weaned_ida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)) #includes the weaning of the dam itself and the yatf because there is husbandry for the ewe when yatf are weaned eg the dams have to be mustered
     period_is_wean_pa1e1b1nwzida0e0b0xyg3 = sfun.f_period_is_('period_is', date_weaned_ida0e0b0xyg3, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
-    a_nextshear_pa1e1b1nwzida0e0b0xyg0 = sfun.f_next_prev_association(date_end_p, date_nextshear_pa1e1b1nwzida0e0b0xyg0, 1,'right') #p indx of next shearing - when period is shearing this returns the current period
-    a_nextshear_pa1e1b1nwzida0e0b0xyg1 = sfun.f_next_prev_association(date_end_p, date_nextshear_pa1e1b1nwzida0e0b0xyg1, 1,'right') #p indx of next shearing - when period is shearing this returns the current period
-    a_nextshear_pa1e1b1nwzida0e0b0xyg3 = sfun.f_next_prev_association(date_end_p, date_nextshear_pa1e1b1nwzida0e0b0xyg3, 1,'right') #p indx of next shearing - when period is shearing this returns the current period
+    a_nextshear_pa1e1b1nwzida0e0b0xyg0 = sfun.f_next_prev_association(date_end_p, date_nextshear_pa1e1b1nwzida0e0b0xyg0, 1,'right').astype(dtypeint) #p indx of next shearing - when period is shearing this returns the current period
+    a_nextshear_pa1e1b1nwzida0e0b0xyg1 = sfun.f_next_prev_association(date_end_p, date_nextshear_pa1e1b1nwzida0e0b0xyg1, 1,'right').astype(dtypeint) #p indx of next shearing - when period is shearing this returns the current period
+    a_nextshear_pa1e1b1nwzida0e0b0xyg3 = sfun.f_next_prev_association(date_end_p, date_nextshear_pa1e1b1nwzida0e0b0xyg3, 1,'right').astype(dtypeint) #p indx of next shearing - when period is shearing this returns the current period
     ###Set the values for the ranges required (same values for all 10 matrix feed periods). This spreads the feed pools evenly between the highest and lowest quality feed required by any of the animals.
     ev_propn_f = np.array([0.25, 0.50, 0.75])
     index_fpa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(np.arange(ev_propn_f.shape[0]+1), uinp.structure['i_p_pos']-1)

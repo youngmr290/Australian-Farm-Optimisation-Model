@@ -154,7 +154,7 @@ def sim_periods(start_year, periods_per_year, oldest_animal):
 #input and manipulation functions #
 ###################################
 
-def f_c2g(params_c2, y=0, var_pos=0, len_ax1=0, len_ax2=0, condition=None, axis=0):
+def f_c2g(params_c2, y=0, var_pos=0, len_ax1=0, len_ax2=0, condition=None, axis=0, dtype=False):
     '''
     Parameters
     ----------
@@ -242,7 +242,12 @@ def f_c2g(params_c2, y=0, var_pos=0, len_ax1=0, len_ax2=0, condition=None, axis=
         param_dams = np.compress(condition, param_dams, axis)
         param_yatf = np.compress(condition, param_yatf, axis)
         param_offs = np.compress(condition, param_offs, axis)
-
+    ##assign dtype
+    if dtype:
+        param_sire = param_sire.astype(dtype)
+        param_dams = param_dams.astype(dtype)
+        param_yatf = param_yatf.astype(dtype)
+        param_offs = param_offs.astype(dtype)
 
     return param_sire, param_dams, param_yatf, param_offs
 
