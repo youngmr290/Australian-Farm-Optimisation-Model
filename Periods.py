@@ -26,8 +26,6 @@ from dateutil.relativedelta import relativedelta
 
 
 #MUDAS modules
-# from Inputs import *
-# from CropInputs import *
 import UniversalInputs as uinp
 import PropertyInputs as pinp
 

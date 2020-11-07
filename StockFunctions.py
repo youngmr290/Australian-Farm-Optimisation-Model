@@ -98,8 +98,8 @@ def f_next_prev_association(datearray_slice,*args):
 
     Parameters
     ----------
-    datearray_slice : Int
-        This is the axis along which the array is being sliced (this must be sorted).
+    datearray_slice : any
+        This is 1d array which is the second array is sorted into (this must be sorted).
     *args : 1 - array, 2 - int
         Arg 1: the period array 1d that is the index is being found for, note the index is based off the start date therefore must do [1:-1] if you want idx based on end date.
         Arg 2: period offset (this may be needed if evaluating the end of the period.
@@ -1485,18 +1485,18 @@ def f_sale_value(cu0, cx, o_rc, o_ffcfw_pg, dressp_adj_yg, dresspercent_adj_s6pg
 
 
 
-def f_animal_trigger_levels(index_pg, age_start, a_prev_s_pg, a_next_s_pg, period_is_wean_pg, gender,
-                            o_ebg_p, wool_genes, a_prevdam_o_pg1, animal_mated, period_is_endmating_pg):
+def f_animal_trigger_levels(index_pg, age_start, period_is_shearing_pg, a_next_s_pg, period_is_wean_pg, gender,
+                            o_ebg_p, wool_genes, period_is_joining_pg, animal_mated, period_is_endmating_pg):
     ##Trigger value 1 - week of year
     trigger1_pg = index_pg % 52
     ##Trigger value 2 - age
     trigger2_pg = np.trunc(age_start / 7)
     ##Trigger value 3 - Weeks from previous shearing
-    trigger3_pg = index_pg - a_prev_s_pg
-    ##Trigger value 4 - weeks to next shearing
-    trigger4_pg = index_pg - a_next_s_pg
+    trigger3_pg = index_pg - np.maximum.accumulate(index_pg*period_is_shearing_pg)
+    ##Trigger value 4 - weeks to next shearing - cant use period is array like in the other situations
+    trigger4_pg = index_pg - a_next_s_pg #this will return 0 when the current peroid is shearing because the next association points at the current period when period is
     ##Trigger value 5 - weeks from previous joining
-    trigger5_pg = index_pg - a_prevdam_o_pg1
+    trigger5_pg = index_pg - np.maximum.accumulate(index_pg*period_is_joining_pg)
     ##Trigger value 6 - weeks from end of mating
     trigger6_pg = index_pg - np.maximum.accumulate(index_pg*period_is_endmating_pg)
     ##Trigger value 7 - weeks from previous weaning
@@ -1548,37 +1548,30 @@ def f_operations_triggered(animal_triggervalues_h7pg, operations_triggerlevels_h
 
 
 def f_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg):
-    ##Calculation is required
+    ##mask - Calculation is required
     required_le_h7h2pg = np.logical_and(np.logical_and(operation_triggered_h2pg, operations_triggerlevels_h5h7h2pg[3, ...] != np.inf), operations_triggerlevels_h5h7h2pg[0, ...] != np.inf) #logical_or only has two args
     required_ge_h7h2pg = np.logical_and(np.logical_and(operation_triggered_h2pg, operations_triggerlevels_h5h7h2pg[3, ...] != np.inf), operations_triggerlevels_h5h7h2pg[2, ...] != -np.inf)
-    # ##Create blank versions for assignment
-    # temporary_le_h7h2pg = np.oneslike(required_h7h2pg)
-    # ##Create blank versions for assignment
-    # temporary_ge_h7h2pg = np.oneslike(required_h7h2pg)
-    ##"Level if less than = range This masking needs work. Formula is correct but I think it will be very slow"
-    # temporary_le_h7h2pg[required_h7h2pg] = fun.f_divide_inf(animal_triggervalues_h7pg[:, na, ...] - operations_triggerlevels_h5h7h2pg[0, ...],
-    # operations_triggerlevels_h5h7h2pg[3, ...] - operations_triggerlevels_h5h7h2pg[0, ...])
-    #
-    temporary_le_h7h2pg = np.where(required_le_h7h2pg, [(animal_triggervalues_h7pg[:, na, ...] - operations_triggerlevels_h5h7h2pg[0, ...])/
-                                   (operations_triggerlevels_h5h7h2pg[3, ...] - operations_triggerlevels_h5h7h2pg[0, ...])], 1)
-    ##Level if greater than = range
-    temporary_ge_h7h2pg[required_h7h2pg] = fun.f_divide_inf(animal_triggervalues_h7pg[:, na, ...] - operations_triggerlevels_h5h7h2pg[2, ...],
-    operations_triggerlevels_h5h7h2pg[3, ...] - operations_triggerlevels_h5h7h2pg[2, ...])
-    ##Test across the rules (& collapse s7 axis)
-    level_h7h2pg = np.maximum(0, np.minimum(1, temporary_le_h7h2pg), temporary_ge_h7h2pg)
-    return level_h7h2pg
+    ##Create blank versions for assignment - one is the default value for the calc below where the mask is false hence initilise with ones
+    temporary_le_h7h2pg = np.ones_like(required_le_h7h2pg, dtype='float32')
+    temporary_ge_h7h2pg = np.ones_like(required_le_h7h2pg, dtype='float32')
+    ##"Level if animal trigger level is <= range  - mask out the infs to stop invalid warning and to speed the calculation
+    operations_triggerlevels_h5h7h2pg=np.broadcast_to(operations_triggerlevels_h5h7h2pg, (operations_triggerlevels_h5h7h2pg.shape[0],)+required_le_h7h2pg.shape)
+    temporary_le_h7h2pg[required_le_h7h2pg] = ((animal_triggervalues_h7pg[:, na, ...] - operations_triggerlevels_h5h7h2pg[0, ...])[required_le_h7h2pg]/
+                                   (operations_triggerlevels_h5h7h2pg[3, required_le_h7h2pg] - operations_triggerlevels_h5h7h2pg[0, required_le_h7h2pg]))
+    ##Level if animal trigger level is >= range   - mask out the infs to stop invalid warning and to speed the calculation
+    temporary_ge_h7h2pg[required_ge_h7h2pg] = ((animal_triggervalues_h7pg[:, na, ...] - operations_triggerlevels_h5h7h2pg[2, ...])[required_ge_h7h2pg]/
+                                   (operations_triggerlevels_h5h7h2pg[3, required_ge_h7h2pg] - operations_triggerlevels_h5h7h2pg[2, required_ge_h7h2pg]))
+    ##Test across the rules (& collapse h7 axis)
+    level_h2pg = np.max(np.maximum(0, np.minimum(1, temporary_le_h7h2pg), temporary_ge_h7h2pg),axis=0) * operation_triggered_h2pg   #mul by operation triggered so that level goes to 0 if opperation is not trigered
+    return level_h2pg
 
 
-def f_mustering_required(application_level_h2pg, treatment_units_h8pg, husb_operations_muster_propn_h2pg):
+def f_mustering_required(application_level_h2pg, husb_operations_muster_propn_h2pg):
     ##Total mustering required for all operations
     musters_pg = np.sum(application_level_h2pg * husb_operations_muster_propn_h2pg, axis=0)
     ##Round up to the next integer
     musters_pg = np.ceil(musters_pg)
-    ##Number of treatment units for mustering
-    units_h4pg = treatment_units_h8pg[uinp.sheep['ia_h8_h4']]
-    ##Total mustering required for all operations
-    musters_h4pg = musters_pg * units_h4pg
-    return musters_h4pg
+    return musters_pg
 
 
 def f_husbandry_component(level, treatment_units, requirements, association, axes_tup):
@@ -1597,11 +1590,11 @@ def f_husbandry_requisites(level_hpg, treatment_units_h8pg, husb_requisite_cost_
                      husb_requisites_prob_h6hpg, axis = (0, 1))
     return cost_pg
 
-def f_husbandry_labour(level_hpg, treatment_units_h8pg, husb_labourreq_l2hpg, a_h8_h):
+def f_husbandry_labour(level_hpg, treatment_units_h8pg, units_per_labourhour_l2hpg, a_h8_h):
     ##Number of treatment units for contract
     units_hpg = treatment_units_h8pg[a_h8_h]
     ##Labour requirement for each animal class during the period
-    hours_l2pg = np.sum(level_hpg * units_hpg * husb_labourreq_l2hpg, axis=1)
+    hours_l2pg = np.sum(level_hpg * units_hpg / units_per_labourhour_l2hpg, axis=1)  #divide by units_per_labourhour_l2hpg because that is how many units can be done per hour eg how many sheep can be dreched per hr
     return hours_l2pg
 
 def f_husbandry_infrastructure(level_hpg, husb_infrastructurereq_h1h2pg):
@@ -1611,43 +1604,43 @@ def f_husbandry_infrastructure(level_hpg, husb_infrastructurereq_h1h2pg):
 
 def f_contract_cost(application_level_h2pg, treatment_units_h8pg, husb_operations_contract_cost_h2pg):
     ##Number of animal units for contract
-    units_h2pg = treatment_units_h8pg[uinp.sheep['a_h8_h2']]
+    units_h2pg = treatment_units_h8pg[uinp.sheep['ia_h8_h2']]
     ##Contract cost for each animal class during the period
     cost_pg = np.sum(application_level_h2pg * units_h2pg * husb_operations_contract_cost_h2pg, axis=0)
     return cost_pg
 
 def f_husbandry(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, operations_triggerlevels_h5h7h2pg, index_pg,
-                age_start, a_prev_s_pg, a_next_s_pg, period_is_wean_pg, gender, o_ebg_p, wool_genes,
+                age_start, period_is_shear_pg, a_next_s_pg, period_is_wean_pg, gender, o_ebg_p, wool_genes,
                 husb_operations_muster_propn_h2pg, husb_requisite_cost_h6pg, husb_operations_requisites_prob_h6h2pg,
-                husb_operations_labourreq_l2h2pg, husb_operations_infrastructurereq_h1h2pg,
+                operations_per_hour_l2h2pg, husb_operations_infrastructurereq_h1h2pg,
                 husb_operations_contract_cost_h2pg, husb_muster_requisites_prob_h6h4pg,
-                husb_muster_labourreq_l2h4pg, husb_muster_infrastructurereq_h1h4pg,
-                a_nyatf_b1g=0,a_prevdam_o_pg1=0, animal_mated=False, period_is_endmating_pg=False):
-    ##An array of the trigger values for the animal classes in each period
-    animal_triggervalues_h7pg = f_animal_trigger_levels(index_pg, age_start, a_prev_s_pg, a_next_s_pg, period_is_wean_pg, gender,
-                            o_ebg_p, wool_genes, a_prevdam_o_pg1, animal_mated, period_is_endmating_pg)
-    ##The number of treatment units per animal in each period
+                musters_per_hour_l2h4pg, husb_muster_infrastructurereq_h1h4pg,
+                a_nyatf_b1g=0,period_is_joining_pg=False, animal_mated=False, period_is_endmating_pg=False):
+    ##An array of the trigger values for the animal classes in each period - these values are compared against a threashold to determine if the husb is required
+    animal_triggervalues_h7pg = f_animal_trigger_levels(index_pg, age_start, period_is_shear_pg, a_next_s_pg, period_is_wean_pg, gender,
+                            o_ebg_p, wool_genes, period_is_joining_pg, animal_mated, period_is_endmating_pg)
+    ##The number of treatment units per animal in each period - each slice has a different unit eg mobsize, nyatf etc the treatment unit can be slected and applied for a given husb operation
     treatment_units_h8pg = f_treatment_unit_numbers(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, a_nyatf_b1g)
-    ##Is the operation is triggered in the period for each class
+    ##Is the husb operation triggered in the period for each class
     operation_triggered_h2pg = f_operations_triggered(animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg)
-    ##The level of the operation in each period for the class of livestock
+    ##The level of the operation in each period for the class of livestock (proportion of animals that recieve treatment) - this accounts for the fact that just because the operation is triggered the opperation may not be done to all animals
     application_level_h2pg = f_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg)
     ##The number of times the mob must be mustered
-    mustering_level_h4pg = f_mustering_required(application_level_h2pg, treatment_units_h8pg, husb_operations_muster_propn_h2pg)
+    mustering_level_pg = f_mustering_required(application_level_h2pg, husb_operations_muster_propn_h2pg)
     ##The cost of requisites for the operations
     operations_requisites_cost_pg = f_husbandry_requisites(application_level_h2pg, treatment_units_h8pg, husb_requisite_cost_h6pg, husb_operations_requisites_prob_h6h2pg, uinp.sheep['ia_h8_h2'])
     ##The labour requirement for the operations
-    operations_labourreq_l2pg = f_husbandry_labour(application_level_h2pg, treatment_units_h8pg, husb_operations_labourreq_l2h2pg, uinp.sheep['ia_h8_h2'])
+    operations_labourreq_l2pg = f_husbandry_labour(application_level_h2pg, treatment_units_h8pg, operations_per_hour_l2h2pg, uinp.sheep['ia_h8_h2'])
     ##The infrastructure requirements for the operations
     operations_infrastructurereq_h1pg = f_husbandry_infrastructure(application_level_h2pg, husb_operations_infrastructurereq_h1h2pg)
     ##Contract cost for husbandry
     contract_cost_pg = f_contract_cost(application_level_h2pg, treatment_units_h8pg, husb_operations_contract_cost_h2pg)
     ##The cost of requisites for mustering
-    mustering_requisites_cost_pg = f_husbandry_requisites(mustering_level_h4pg, treatment_units_h8pg, husb_requisite_cost_h6pg, husb_muster_requisites_prob_h6h4pg, uinp.sheep['ia_h8_h4'])
+    mustering_requisites_cost_pg = f_husbandry_requisites(mustering_level_pg, treatment_units_h8pg, husb_requisite_cost_h6pg, husb_muster_requisites_prob_h6h4pg, uinp.sheep['ia_h8_h4'])
     ##The labour requirement for mustering
-    mustering_labourreq_l2pg = f_husbandry_labour(mustering_level_h4pg, treatment_units_h8pg, husb_muster_labourreq_l2h4pg, uinp.sheep['ia_h8_h4'])
+    mustering_labourreq_l2pg = f_husbandry_labour(mustering_level_pg, treatment_units_h8pg, musters_per_hour_l2h4pg, uinp.sheep['ia_h8_h4'])
     ##The infrastructure requirements for mustering
-    mustering_infrastructurereq_h1pg = f_husbandry_infrastructure(mustering_level_h4pg, husb_muster_infrastructurereq_h1h4pg)
+    mustering_infrastructurereq_h1pg = f_husbandry_infrastructure(mustering_level_pg, husb_muster_infrastructurereq_h1h4pg)
     ##Total cost of husbandry
     husbandry_cost_pg = operations_requisites_cost_pg + mustering_requisites_cost_pg + contract_cost_pg
     ##Labour requirement for husbandry
