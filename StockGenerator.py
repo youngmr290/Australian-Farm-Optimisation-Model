@@ -3080,10 +3080,15 @@ def generator(params,report):
 
 
 
-    def cum_dvp(arr,dvp_pointer,axis=0):
+    def f_cum_dvp(arr,dvp_pointer,axis=0,shift=0):
+        '''This function does accumulative max but it resets at each dvp.
+        '''
         final = np.zeros_like(arr)
         for i in range(np.max(dvp_pointer)+1):  #plus 1 so that the last dvp is counted for
             arr1 = arr * (dvp_pointer==i) #sets the p slices to 0 if not in the given dvp
+            arr1 = np.roll(arr1,shift,axis) #this is only used for the dams on hand calculation, this rolls the period is sale array 1 unit along the p axis.
+                                            # This is required so that period is onhand == true in the period that sale occurs and false after that.
+                                            # Becausee sale occurs at the end of a given period so the sheep are technically onhand for the period sale occurs.
             arr1 = np.maximum.accumulate(arr1,axis=axis)
             arr1 = arr1 * (dvp_pointer==i) #sets the cum max to 0 for other dvp not of interest
             final += arr1
@@ -3158,11 +3163,11 @@ def generator(params,report):
     husb_requisite_cost_h6pg = fun.f_reshape_expand(uinp.sheep['i_husb_requisite_cost_h6'], uinp.structure['i_p_pos']-1).astype(dtype)
     husb_operations_requisites_prob_h6h2pg = fun.f_reshape_expand(uinp.sheep['i_husb_operations_requisites_prob_h6h2'], uinp.structure['i_p_pos']-1,swap=True).astype(dtype)
     operations_per_hour_l2h2pg = fun.f_reshape_expand(uinp.sheep['i_husb_operations_labourreq_l2h2'], uinp.structure['i_p_pos']-1,swap=True).astype(dtype)
-    husb_operations_infrastructurereq_h1h2pg = fun.f_reshape_expand(uinp.sheep['i_husb_operations_infrastructurereq_h1h2'], uinp.structure['i_p_pos']-1,swap=True)
+    husb_operations_infrastructurereq_h1h2pg = fun.f_reshape_expand(uinp.sheep['i_husb_operations_infrastructurereq_h1h2'], uinp.structure['i_p_pos']-1,swap=True).astype(dtype)
     husb_operations_contract_cost_h2pg = fun.f_reshape_expand(uinp.sheep['i_husb_operations_contract_cost_h2'], uinp.structure['i_p_pos']-1).astype(dtype)
-    husb_muster_requisites_prob_h6h4pg = fun.f_reshape_expand(uinp.sheep['i_husb_muster_requisites_prob_h6h4'], uinp.structure['i_p_pos']-1,len_ax0=uinp.sheep['i_h4_len'], len_ax1=uinp.sheep['i_husb_muster_requisites_prob_h6h4'].shape[-1],swap=True)
+    husb_muster_requisites_prob_h6h4pg = fun.f_reshape_expand(uinp.sheep['i_husb_muster_requisites_prob_h6h4'], uinp.structure['i_p_pos']-1,len_ax0=uinp.sheep['i_h4_len'], len_ax1=uinp.sheep['i_husb_muster_requisites_prob_h6h4'].shape[-1],swap=True).astype(dtype)
     musters_per_hour_l2h4pg = fun.f_reshape_expand(uinp.sheep['i_husb_muster_labourreq_l2h4'], uinp.structure['i_p_pos']-1,len_ax0=uinp.sheep['i_h4_len'], len_ax1=uinp.sheep['i_husb_muster_labourreq_l2h4'].shape[-1],swap=True)
-    husb_muster_infrastructurereq_h1h4pg = fun.f_reshape_expand(uinp.sheep['i_husb_muster_infrastructurereq_h1h4'], uinp.structure['i_p_pos']-1,len_ax0=uinp.sheep['i_h4_len'], len_ax1=uinp.sheep['i_husb_muster_infrastructurereq_h1h4'].shape[-1],swap=True)
+    husb_muster_infrastructurereq_h1h4pg = fun.f_reshape_expand(uinp.sheep['i_husb_muster_infrastructurereq_h1h4'], uinp.structure['i_p_pos']-1,len_ax0=uinp.sheep['i_h4_len'], len_ax1=uinp.sheep['i_husb_muster_infrastructurereq_h1h4'].shape[-1],swap=True).astype(dtype)
     period_is_wean_pa1e1b1nwzida0e0b0xyg0 = sfun.f_period_is_('period_is', date_weaned_ida0e0b0xyg0, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
     period_is_wean_pa1e1b1nwzida0e0b0xyg1 = np.logical_or(period_is_wean_pa1e1b1nwzida0e0b0xyg1, sfun.f_period_is_('period_is', date_weaned_ida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)) #includes the weaning of the dam itself and the yatf because there is husbandry for the ewe when yatf are weaned eg the dams have to be mustered
     period_is_wean_pa1e1b1nwzida0e0b0xyg3 = sfun.f_period_is_('period_is', date_weaned_ida0e0b0xyg3, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
@@ -3236,7 +3241,7 @@ def generator(params,report):
     target_weight_tpa1e1b1nwzida0e0b0xyg3=np.take_along_axis(target_weight_tsa1e1b1nwzida0e0b0xyg3,a_v_pa1e1b1nwzida0e0b0xyg3[na],1) #gets the target weight for each gen period
     ####adjust generator lw to reflect the cumulative max per period
     #####lw could go above target then drop back below but it is already sold so the on hand bool shouldnt change. therefore need to use accumulative max and reset each dvp
-    weight_pa1e1b1nwzida0e0b0xyg3=cum_dvp(o_ffcfw_offs,a_v_pa1e1b1nwzida0e0b0xyg3)
+    weight_pa1e1b1nwzida0e0b0xyg3=f_cum_dvp(o_ffcfw_offs,a_v_pa1e1b1nwzida0e0b0xyg3)
     ###on hand
     #### t0 slice = True - this is handled by the inputs ie weight and date are high therefore not reached therefore on hand == true
     #### t1 & t2 slice date_p<sale_date and weight<target weight
@@ -3262,27 +3267,28 @@ def generator(params,report):
 
     ##Dams
     ### calc shearing then determine sale
+    shear_period_pa1e1b1nwzida0e0b0xyg1 = np.maximum.accumulate(p_index_pa1e1b1nwzida0e0b0xyg * period_is_shearing_pa1e1b1nwzida0e0b0xyg1)
     ### all shearing in all t slices is determined by the main shearing date (shearing is the same for all t slices)
-    ###determine t1 sale slice - note sale must occur in the same dvp as shearing so the offset is capped if shearing occurs near the end of a period
+    ###determine t0 sale slice - note sale must occur in the same dvp as shearing so the offset is capped if shearing occurs near the end of a period
     sale_delay_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(sale_delay_sa1e1b1nwzida0e0b0xyg1, a_prev_s_pa1e1b1nwzida0e0b0xyg1,0)
     a_dvpnext_p_va1e1b1nwzida0e0b0xyg1 = np.roll(a_dvp_p_va1e1b1nwzida0e0b0xyg1,-1,0) #roll backwards to get the gen period index of the next dvp
     a_dvpnext_p_va1e1b1nwzida0e0b0xyg1[-1,...] = len_p #set the last element to the length of p (because the end period is the equivilent of the next dvp for the end dvp)
-    next_dvp_index = np.take_along_axis(a_dvpnext_p_va1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, 0) #points at the next dvp from the date at the start of the period
-    periods_to_dvp = next_dvp_index - (p_index_pa1e1b1nwzida0e0b0xyg + 1) #periods to the next dvp. +1 because if the next period is the new dvp you must sell in the current period
-    sale_period_pa1e1b1nwzida0e0b0xyg1 = np.minimum(sale_delay_pa1e1b1nwzida0e0b0xyg1, periods_to_dvp) + p_index_pa1e1b1nwzida0e0b0xyg
+    next_dvp_index_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(a_dvpnext_p_va1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, 0) #points at the next dvp from the date at the start of the period
+    periods_to_dvp = next_dvp_index_pa1e1b1nwzida0e0b0xyg1 - (p_index_pa1e1b1nwzida0e0b0xyg + 1) #periods to the next dvp. +1 because if the next period is the new dvp you must sell in the current period
+    sale_period_pa1e1b1nwzida0e0b0xyg1 = np.minimum(sale_delay_pa1e1b1nwzida0e0b0xyg1, periods_to_dvp) + shear_period_pa1e1b1nwzida0e0b0xyg1
     period_is_sale_t1_pa1e1b1nwzida0e0b0xyg1 = sale_period_pa1e1b1nwzida0e0b0xyg1 == p_index_pa1e1b1nwzida0e0b0xyg
-    ###determine t2 slice - dry dams sold at scanning
+    ###determine t1 slice - dry dams sold at scanning
     period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1 = period_is_scan_pa1e1b1nwzida0e0b0xyg1 * scan_pa1e1b1nwzida0e0b0xyg1>=1 * (not pinp.sheep['i_dry_retained_forced']) #not is required because variable is drys off hand ie sold. if forced to retain the variable wants to be false
-    period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1 = period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1 * (nfoet_b1nwzida0e0b0xyg>0) #make sure selling is not an option for animals with foet (have to do it this way so that b axis is added)
+    period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1 = period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1 * (nfoet_b1nwzida0e0b0xyg==0) #make sure selling is not an option for animals with foet (have to do it this way so that b axis is added)
     period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1[:,:,:,0:1,...] = False #make sure selling is not an option for not mated
     ###combine sale t slices (t1 & t2) to produce period is sale
     shape =  tuple(np.maximum.reduce([period_is_sale_t1_pa1e1b1nwzida0e0b0xyg1.shape, period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1.shape]))
     period_is_sale_tpa1e1b1nwzida0e0b0xyg1 = np.zeros((pinp.sheep['i_t1_len'],)+shape, dtype=bool) #initialise on hand array with 3 t slices.
     period_is_sale_tpa1e1b1nwzida0e0b0xyg1[...]=False
-    period_is_sale_tpa1e1b1nwzida0e0b0xyg1[1] = period_is_sale_t1_pa1e1b1nwzida0e0b0xyg1
-    period_is_sale_tpa1e1b1nwzida0e0b0xyg1[2] = period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1
+    period_is_sale_tpa1e1b1nwzida0e0b0xyg1[0] = period_is_sale_t1_pa1e1b1nwzida0e0b0xyg1
+    period_is_sale_tpa1e1b1nwzida0e0b0xyg1[1] = period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1
     ###on hand - convert period is sale to onhand by taking cumulatinve max
-    off_hand_tpa1e1b1nwzida0e0b0xyg1=cum_dvp(period_is_sale_tpa1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1,axis=1) #this ensures that once they are sold they remain off hand for the rest of the dvp
+    off_hand_tpa1e1b1nwzida0e0b0xyg1=f_cum_dvp(period_is_sale_tpa1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1,axis=1, shift=1) #this ensures that once they are sold they remain off hand for the rest of the dvp
     on_hand_tpa1e1b1nwzida0e0b0xyg1 = np.logical_not(off_hand_tpa1e1b1nwzida0e0b0xyg1) #t1 sale after main shearing
 
     # ###determine t2 slice - dry dams sold at scanning
@@ -3310,6 +3316,7 @@ def generator(params,report):
     ######################
     #calc cost and income#
     ######################
+    calc_cost_start = time.time()
     ##calc wool value - To speed the calculation process the p array is condensed to only include periods where shearing occurs. Using a slightly different association it is then converted to a v array (this process usually used a p to v association, in this case we use s to v association).
     ###create mask which is the periods where shearing occurs
     shear_mask_p0 = np.any(period_is_shearing_pa1e1b1nwzida0e0b0xyg0, axis=tuple(range(uinp.structure['i_p_pos']+1,0)))
@@ -3369,14 +3376,15 @@ def generator(params,report):
     sl_offs_p5 = o_sl_offs[shear_mask_p3]
     ss_offs_p5 = o_ss_offs[shear_mask_p3]
     ###micron price guide
-    woolp_mpg_w4 = sfun.f_woolprice()/100
+    woolp_mpg_w4 = sfun.f_woolprice().astype(dtype)/100
     woolvalue_p5a1e1b1nwzida0e0b0xyg0, woolp_stbnib_sire = sfun.f_wool_value(woolp_mpg_w4, cfw_sire_p5, fd_sire_p5, sl_sire_p5, ss_sire_p5, vm_p5a1e1b1nwzida0e0b0xyg0,
-                                                                             pmb_p5a1e1b1nwzida0e0b0xyg0)
+                                                                             pmb_p5a1e1b1nwzida0e0b0xyg0, dtype)
     woolvalue_p5a1e1b1nwzida0e0b0xyg1, woolp_stbnib_dams = sfun.f_wool_value(woolp_mpg_w4, cfw_dams_p5, fd_dams_p5, sl_dams_p5, ss_dams_p5, vm_p5a1e1b1nwzida0e0b0xyg1,
-                                                                             pmb_p5a1e1b1nwzida0e0b0xyg1)
+                                                                             pmb_p5a1e1b1nwzida0e0b0xyg1, dtype)
     woolvalue_tp5a1e1b1nwzida0e0b0xyg3, woolp_stbnib_offs = sfun.f_wool_value(woolp_mpg_w4, cfw_offs_p5, fd_offs_p5, sl_offs_p5, ss_offs_p5, vm_p5a1e1b1nwzida0e0b0xyg3,
-                                                                             pmb_tp5a1e1b1nwzida0e0b0xyg3)
-
+                                                                             pmb_tp5a1e1b1nwzida0e0b0xyg3, dtype)
+    wool_finish= time.time()
+    print('wool value calcs :', wool_finish - calc_cost_start)
     ##Sale value - To speed the calculation process the p array is condensed to only include periods where shearing occurs. Using a slightly different association it is then converted to a v array (this process usually used a p to v association, in this case we use s to v association).
     ###create mask which is the periods where shearing occurs
     sale_mask_p0 = np.any(period_is_sale_pa1e1b1nwzida0e0b0xyg0, axis=tuple(range(uinp.structure['i_p_pos']+1,0)))
@@ -3387,7 +3395,7 @@ def generator(params,report):
     month_scalar_s7pa1e1b1nwzida0e0b0xyg = price_adj_months_s7s9m4a1e1b1nwzida0e0b0xyg[:, 0, a_m4_p] #month to p
     month_discount_s7pa1e1b1nwzida0e0b0xyg = price_adj_months_s7s9m4a1e1b1nwzida0e0b0xyg[:, 1, a_m4_p] #month to p
     ###Sale price grids for selected price percentile and the scalars for LW & quality score
-    grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(sfun.f_saleprice(score_pricescalar_s7s5s6, weight_pricescalar_s7s5s6),uinp.structure['i_p_pos']-1)
+    grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(sfun.f_saleprice(score_pricescalar_s7s5s6, weight_pricescalar_s7s5s6, dtype),uinp.structure['i_p_pos']-1)
     ###apply condensed periods mask
     month_scalar_s7p5a1e1b1nwzida0e0b0xyg0 = month_scalar_s7pa1e1b1nwzida0e0b0xyg[:,sale_mask_p0] 
     month_scalar_s7p5a1e1b1nwzida0e0b0xyg1 = month_scalar_s7pa1e1b1nwzida0e0b0xyg[:,sale_mask_p1] 
@@ -3406,23 +3414,23 @@ def generator(params,report):
     ffcfw_p5a1e1b1nwzida0e0b0xyg3 = o_ffcfw_offs[sale_mask_p3]
 
     salevalue_p5a1e1b1nwzida0e0b0xyg0 = sfun.f_sale_value(
-        cu0_sire, cx_sire, rc_start_sire_p5, ffcfw_p5a1e1b1nwzida0e0b0xyg0, dresspercent_adj_yg0,
+        cu0_sire.astype(dtype), cx_sire.astype(dtype), rc_start_sire_p5, ffcfw_p5a1e1b1nwzida0e0b0xyg0, dresspercent_adj_yg0,
         dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg,
         grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg, month_scalar_s7p5a1e1b1nwzida0e0b0xyg0,
         month_discount_s7p5a1e1b1nwzida0e0b0xyg0, price_type_s7pa1e1b1nwzida0e0b0xyg, a_s8_s7pa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg,
         cvscore_s7s6pa1e1b1nwzida0e0b0xyg, lw_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p5a1e1b1nwzida0e0b0xyg,
         age_end_p5a1e1b1nwzida0e0b0xyg0, discount_age_s7pa1e1b1nwzida0e0b0xyg,
         sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg,
-        mask_s7x_s7pa1e1b1nwzida0e0b0xyg[...,0:1,:,:], sale_agemax_s7pa1e1b1nwzida0e0b0xyg0)
+        mask_s7x_s7pa1e1b1nwzida0e0b0xyg[...,0:1,:,:], sale_agemax_s7pa1e1b1nwzida0e0b0xyg0, dtype)
     salevalue_p5a1e1b1nwzida0e0b0xyg1 = sfun.f_sale_value(
-        cu0_dams, cx_dams, rc_start_dams_p5, ffcfw_p5a1e1b1nwzida0e0b0xyg1, dresspercent_adj_yg1,
+        cu0_dams.astype(dtype), cx_dams.astype(dtype), rc_start_dams_p5, ffcfw_p5a1e1b1nwzida0e0b0xyg1, dresspercent_adj_yg1,
         dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg,
         grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg, month_scalar_s7p5a1e1b1nwzida0e0b0xyg1,
         month_discount_s7p5a1e1b1nwzida0e0b0xyg1, price_type_s7pa1e1b1nwzida0e0b0xyg, a_s8_s7pa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg,
         cvscore_s7s6pa1e1b1nwzida0e0b0xyg, lw_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p5a1e1b1nwzida0e0b0xyg,
         age_end_p5a1e1b1nwzida0e0b0xyg1, discount_age_s7pa1e1b1nwzida0e0b0xyg,
         sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg,
-        mask_s7x_s7pa1e1b1nwzida0e0b0xyg[...,1:2,:,:], sale_agemax_s7pa1e1b1nwzida0e0b0xyg1)
+        mask_s7x_s7pa1e1b1nwzida0e0b0xyg[...,1:2,:,:], sale_agemax_s7pa1e1b1nwzida0e0b0xyg1, dtype)
     salevalue_p5a1e1b1nwzida0e0b0xyg3 = sfun.f_sale_value(
         cu0_offs, cx_offs, rc_start_offs_p5, ffcfw_p5a1e1b1nwzida0e0b0xyg3, dresspercent_adj_yg3,
         dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg,
@@ -3431,9 +3439,10 @@ def generator(params,report):
         cvscore_s7s6pa1e1b1nwzida0e0b0xyg, lw_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p5a1e1b1nwzida0e0b0xyg,
         age_end_p5a1e1b1nwzida0e0b0xyg3, discount_age_s7pa1e1b1nwzida0e0b0xyg,
         sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg,
-        mask_s7x_s7pa1e1b1nwzida0e0b0xyg, sale_agemax_s7pa1e1b1nwzida0e0b0xyg3)
+        mask_s7x_s7pa1e1b1nwzida0e0b0xyg, sale_agemax_s7pa1e1b1nwzida0e0b0xyg3, dtype)
 
-
+    sale_finish= time.time()
+    print('sale value calcs :', sale_finish - wool_finish)
     ##Husbandry
     ###Sire: cost, labour and infrastructure requirements
     husbandry_cost_pg0, husbandry_labour_l2pg0, husbandry_infrastructure_h1pg0 = sfun.f_husbandry(
@@ -3442,7 +3451,7 @@ def generator(params,report):
         period_is_wean_pa1e1b1nwzida0e0b0xyg0, index_xyg[0], o_ebg_sire, wool_genes_yg0, husb_operations_muster_propn_h2pg,
         husb_requisite_cost_h6pg, husb_operations_requisites_prob_h6h2pg, operations_per_hour_l2h2pg,
         husb_operations_infrastructurereq_h1h2pg, husb_operations_contract_cost_h2pg, husb_muster_requisites_prob_h6h4pg,
-        musters_per_hour_l2h4pg, husb_muster_infrastructurereq_h1h4pg)
+        musters_per_hour_l2h4pg, husb_muster_infrastructurereq_h1h4pg, dtype=dtype)
     ###Dams: cost, labour and infrastructure requirements
     husbandry_cost_pg1, husbandry_labour_l2pg1, husbandry_infrastructure_h1pg1 = sfun.f_husbandry(
         uinp.sheep['i_head_adjust_dams'], mobsize_pa1e1b1nwzida0e0b0xyg1, o_ffcfw_dams, o_cfw_dams, operations_triggerlevels_h5h7h2pg,
@@ -3451,7 +3460,7 @@ def generator(params,report):
         husb_requisite_cost_h6pg, husb_operations_requisites_prob_h6h2pg, operations_per_hour_l2h2pg,
         husb_operations_infrastructurereq_h1h2pg, husb_operations_contract_cost_h2pg, husb_muster_requisites_prob_h6h4pg,
         musters_per_hour_l2h4pg, husb_muster_infrastructurereq_h1h4pg,
-        nyatf_b1nwzida0e0b0xyg, period_is_join_pa1e1b1nwzida0e0b0xyg1, animal_mated_b1g1, period_is_matingend_pa1e1b1nwzida0e0b0xyg1)
+        nyatf_b1nwzida0e0b0xyg, period_is_join_pa1e1b1nwzida0e0b0xyg1, animal_mated_b1g1, period_is_matingend_pa1e1b1nwzida0e0b0xyg1, dtype=dtype)
     ###offs: cost, labour and infrastructure requirements
     husbandry_cost_pg3, husbandry_labour_l2pg3, husbandry_infrastructure_h1pg3 = sfun.f_husbandry(
         uinp.sheep['i_head_adjust_offs'], mobsize_pa1e1b1nwzida0e0b0xyg3, o_ffcfw_offs, o_cfw_offs, operations_triggerlevels_h5h7h2pg,
@@ -3459,9 +3468,10 @@ def generator(params,report):
         period_is_wean_pa1e1b1nwzida0e0b0xyg3, index_xyg, o_ebg_offs, wool_genes_yg3, husb_operations_muster_propn_h2pg,
         husb_requisite_cost_h6pg, husb_operations_requisites_prob_h6h2pg, operations_per_hour_l2h2pg,
         husb_operations_infrastructurereq_h1h2pg, husb_operations_contract_cost_h2pg, husb_muster_requisites_prob_h6h4pg,
-        musters_per_hour_l2h4pg, husb_muster_infrastructurereq_h1h4pg)
+        musters_per_hour_l2h4pg, husb_muster_infrastructurereq_h1h4pg, dtype=dtype)
 
-
+    husb_finish= time.time()
+    print('husb cost calcs :', husb_finish - sale_finish)
 
     ######################
     # add yatf to dams   #
@@ -3924,7 +3934,8 @@ def generator(params,report):
     # model.p_offs2dam_numbers
     # model.p_dam2sire_numbers
     finish = time.time()
-    print('onhand and shearing arrays: ',feedpools_start - onhandshear_start)
+    print('onhand and shearing arrays: ',calc_cost_start - onhandshear_start)
+    print('calc cost and income: ',feedpools_start - calc_cost_start)
     print('feed pools arrays: ',p2v_start - feedpools_start)
     print('amalgamating p to v: ',lwdist_start - p2v_start)
     print('lw distribution: ',cluster_start - lwdist_start)

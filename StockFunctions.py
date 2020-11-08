@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 import math
+import time
 
 
 # from dateutil.relativedelta import relativedelta
@@ -1358,19 +1359,19 @@ def f_woolprice():
     return woolprice_w4
 
 
-def f_wool_value(mpg_w4, cfw_pg, fd_pg, sl_pg, ss_pg, vm_pg, pmb_pg):
+def f_wool_value(mpg_w4, cfw_pg, fd_pg, sl_pg, ss_pg, vm_pg, pmb_pg,dtype=None):
     ##call function for ph cvh and romaine
     ph_pg, cvh_pg, romaine_pg = f_wool_additional(fd_pg, sl_pg, ss_pg, vm_pg, pmb_pg)
     ##STB price for FNF (free or nearly free of fault)
-    fnf_pg = np.interp(fd_pg, uinp.sheep['i_woolp_fd_range_w4'], mpg_w4 * uinp.sheep['i_stb_scalar_w4'])
+    fnf_pg = np.interp(fd_pg, uinp.sheep['i_woolp_fd_range_w4'], mpg_w4 * uinp.sheep['i_stb_scalar_w4']).astype(dtype)
     ##vm price adj
-    vm_adj_pg = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_vm_adj_w4w6'], uinp.sheep['i_woolp_vm_range_w6'], uinp.sheep['i_woolp_fd_range_w4'], vm_pg,fd_pg)
+    vm_adj_pg = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_vm_adj_w4w6'], uinp.sheep['i_woolp_vm_range_w6'], uinp.sheep['i_woolp_fd_range_w4'], vm_pg,fd_pg).astype(dtype)
     ##predicted hauteur price adj
-    ph_adj_pg = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_ph_adj_w4w7'], uinp.sheep['i_woolp_ph_range_w7'], uinp.sheep['i_woolp_fd_range_w4'], ph_pg,fd_pg)
+    ph_adj_pg = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_ph_adj_w4w7'], uinp.sheep['i_woolp_ph_range_w7'], uinp.sheep['i_woolp_fd_range_w4'], ph_pg,fd_pg).astype(dtype)
     ##cv hauteur price adj
-    cvh_adj_pg = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_cvh_adj_w4w8'], uinp.sheep['i_woolp_cvh_range_w8'], uinp.sheep['i_woolp_fd_range_w4'], cvh_pg,fd_pg)
+    cvh_adj_pg = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_cvh_adj_w4w8'], uinp.sheep['i_woolp_cvh_range_w8'], uinp.sheep['i_woolp_fd_range_w4'], cvh_pg,fd_pg).astype(dtype)
     ##romaine price adj
-    romaine_adj_pg = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_romaine_adj_w4w9'], uinp.sheep['i_woolp_romaine_range_w9'], uinp.sheep['i_woolp_fd_range_w4'], romaine_pg,fd_pg)
+    romaine_adj_pg = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_romaine_adj_w4w9'], uinp.sheep['i_woolp_romaine_range_w9'], uinp.sheep['i_woolp_fd_range_w4'], romaine_pg,fd_pg).astype(dtype)
     ##wool price with adjustments
     woolp_stb_pg = fnf_pg * (1 + vm_adj_pg) * (1 + ph_adj_pg) * (1 - cvh_adj_pg) * (1 - romaine_adj_pg)
     ##stb net in the bank price
@@ -1404,12 +1405,12 @@ def f_norm_cdf(x, mu, cv):
     prob = 1 / (np.exp(-358 / 23 * std + 111 * np.arctan(37 / 294 * std)) + 1)
     return prob
 
-def f_saleprice(score_pricescalar_s7s5s6, weight_pricescalar_s7s5s6):
+def f_saleprice(score_pricescalar_s7s5s6, weight_pricescalar_s7s5s6, dtype=None):
     ##Sale price percentile to use (adjusted by sav)
     salep_percentile = uinp.sheep['i_salep_percentile']
     ##Max price in grids at selected percentile - 1d inderp over along the s7 axis
-    grid_max_s7 = np.array([np.interp(salep_percentile, uinp.sheep['i_salep_percentile_range_s4'], uinp.sheep['i_salep_percentile_scalar_s7s4'][i])
-                            for i in range(uinp.sheep['i_salep_percentile_scalar_s7s4'].shape[0])]) * uinp.sheep['i_salep_price_max_s7']
+    grid_max_s7 = (np.array([np.interp(salep_percentile, uinp.sheep['i_salep_percentile_range_s4'], uinp.sheep['i_salep_percentile_scalar_s7s4'][i])
+                            for i in range(uinp.sheep['i_salep_percentile_scalar_s7s4'].shape[0])]) * uinp.sheep['i_salep_price_max_s7']).astype(dtype)
     ##Max price in grids (adj sav)
     grid_max_s7 = fun.f_sa(grid_max_s7, sen.sav['salep_max'], 5)
     ##Max price in grids (adj sam)
@@ -1444,7 +1445,7 @@ def f_sale_value(cu0, cx, o_rc, o_ffcfw_pg, dressp_adj_yg, dresspercent_adj_s6pg
                  dresspercent_adj_s7pg, grid_price_s7s5s6pg, month_scalar_s7pg,
                  month_discount_s7pg, price_type_s7pg,a_s8_s7pg, cvlw_s7s5pg, cvscore_s7s6pg,
                  lw_range_s7s5pg, score_range_s7s6p5g, age_end_p5g1, discount_age_s7pg,sale_cost_pc_s7pg,
-                 sale_cost_hd_s7pg, mask_s7x_s7pg, sale_agemax_s7pg1):
+                 sale_cost_hd_s7pg, mask_s7x_s7pg, sale_agemax_s7pg1, dtype=None):
     ##Calculate condition score
     cs_pg = f_condition_score(o_rc, cu0)
     ##Calculate fat score
@@ -1460,7 +1461,7 @@ def f_sale_value(cu0, cx, o_rc, o_ffcfw_pg, dressp_adj_yg, dresspercent_adj_s6pg
     ##Update the grid prices to $/kg LW
     grid_priceslw_s7s5s6pg = grid_price_s7s5s6pg * dresspercent_for_price_s7s6pg[:,na,...]
     ##Interploate DP adjustment due to FS
-    dressp_adj_fs_pg= np.interp(fs_pg, uinp.sheep['i_salep_score_range_s8s6'][0, ...], uinp.sheep['i_salep_dressp_adj_s6'])
+    dressp_adj_fs_pg= np.interp(fs_pg, uinp.sheep['i_salep_score_range_s8s6'][0, ...], uinp.sheep['i_salep_dressp_adj_s6']).astype(dtype)
     ##Dressing percentage to calculate grid weight
     dresspercent_for_wt_s7pg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[23, ...] + dressp_adj_fs_pg + dresspercent_adj_s7pg
     ##Price type scalar (for DW, LW or per head)
@@ -1620,18 +1621,21 @@ def f_husbandry(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, operations_trigge
                 operations_per_hour_l2h2pg, husb_operations_infrastructurereq_h1h2pg,
                 husb_operations_contract_cost_h2pg, husb_muster_requisites_prob_h6h4pg,
                 musters_per_hour_l2h4pg, husb_muster_infrastructurereq_h1h4pg,
-                a_nyatf_b1g=0,period_is_joining_pg=False, animal_mated=False, period_is_endmating_pg=False):
+                a_nyatf_b1g=0,period_is_joining_pg=False, animal_mated=False, period_is_endmating_pg=False, dtype=None):
+    start=time.time() #^delete this stuff once the function is faster
     ##An array of the trigger values for the animal classes in each period - these values are compared against a threashold to determine if the husb is required
     animal_triggervalues_h7pg = f_animal_trigger_levels(index_pg, age_start, period_is_shear_pg, a_next_s_pg, period_is_wean_pg, gender,
-                            o_ebg_p, wool_genes, period_is_joining_pg, animal_mated, period_is_endmating_pg)
+                            o_ebg_p, wool_genes, period_is_joining_pg, animal_mated, period_is_endmating_pg).astype(dtype)
     ##The number of treatment units per animal in each period - each slice has a different unit eg mobsize, nyatf etc the treatment unit can be slected and applied for a given husb operation
-    treatment_units_h8pg = f_treatment_unit_numbers(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, a_nyatf_b1g)
+    treatment_units_h8pg = f_treatment_unit_numbers(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, a_nyatf_b1g).astype(dtype)
     ##Is the husb operation triggered in the period for each class
     operation_triggered_h2pg = f_operations_triggered(animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg)
     ##The level of the operation in each period for the class of livestock (proportion of animals that recieve treatment) - this accounts for the fact that just because the operation is triggered the opperation may not be done to all animals
     application_level_h2pg = f_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg)
     ##The number of times the mob must be mustered
     mustering_level_pg = f_mustering_required(application_level_h2pg, husb_operations_muster_propn_h2pg)
+    finish1=time.time()
+    print('finish1 - level of husb : ', finish1-start)
     ##The cost of requisites for the operations
     operations_requisites_cost_pg = f_husbandry_requisites(application_level_h2pg, treatment_units_h8pg, husb_requisite_cost_h6pg, husb_operations_requisites_prob_h6h2pg, uinp.sheep['ia_h8_h2'])
     ##The labour requirement for the operations
@@ -1646,12 +1650,16 @@ def f_husbandry(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, operations_trigge
     mustering_labourreq_l2pg = f_husbandry_labour(mustering_level_pg, treatment_units_h8pg, musters_per_hour_l2h4pg, uinp.sheep['ia_h8_h4'])
     ##The infrastructure requirements for mustering
     mustering_infrastructurereq_h1pg = f_husbandry_infrastructure(mustering_level_pg, husb_muster_infrastructurereq_h1h4pg)
+    finish2=time.time()
+    print('finish2: ', finish2-finish1)
     ##Total cost of husbandry
     husbandry_cost_pg = operations_requisites_cost_pg + mustering_requisites_cost_pg + contract_cost_pg
     ##Labour requirement for husbandry
     husbandry_labour_l2pg = operations_labourreq_l2pg + mustering_labourreq_l2pg
     ##infrastructure requirement for husbandry
     husbandry_infrastructure_h1pg = operations_infrastructurereq_h1pg + mustering_infrastructurereq_h1pg
+    finish3=time.time()
+    print('finish3: ', finish3-finish2)
     return husbandry_cost_pg, husbandry_labour_l2pg, husbandry_infrastructure_h1pg
 
 
