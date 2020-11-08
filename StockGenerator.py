@@ -3304,16 +3304,16 @@ def generator(params,report):
     period_is_sale_tpa1e1b1nwzida0e0b0xyg1[0] = period_is_sale_t0_pa1e1b1nwzida0e0b0xyg1
     period_is_sale_tpa1e1b1nwzida0e0b0xyg1[1] = period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1
 
-    ##period_is_transfer calcs
-    ### Create an association a_sire_t_g1 which is between g0 & g1 after both g0 and g1 have been masked and is in the position of the t axis
-    ### this association is the slice of the t axis for dams destined for that g1 slice. Eg BB-B ewes that are transferring to BBT will be in slice 0 of the g1 axis and slice 2 of the t axis
-    ### allow for g0 mask
+    ###period_is_transfer calcs
+    #### Create an association a_sire_t_g1 which is between g0 & g1 after both g0 and g1 have been masked and is in the position of the t axis
+    #### this association is the slice of the t axis for dams destined for that g1 slice. Eg BB-B ewes that are transferring to BBT will be in slice 0 of the g1 axis and slice 2 of the t axis
+    #### allow for g0 mask
     a_g0_g1 = sfun.f_g2g(pinp.sheep['ia_g0_g1'], 'dams')
     prior_sires_excluded_g0 = np.cumsum(~mask_sire_inc_g0)[mask_sire_inc_g0]
     a_sire_t_g1 = a_g0_g1 - prior_sires_excluded_g0[a_g0_g1] + i_n_dam_sales  # +2 to allow for the 2 sale slices
-    ### Calculate the period (finish_transfer) that the dams are transferred from current slice to destination slice
-    ### Select whether passed into the current DVP or the next DVP of the destination slice
-    ### Mask with a np.logical_or the transfers that are not related to a dam remaining in the same ram mating group or the target DVP is pre-joining (dvp_type == 0)
+    #### Calculate the period (finish_transfer) that the dams are transferred from current slice to destination slice
+    #### Select whether passed into the current DVP or the next DVP of the destination slice
+    #### Mask with a np.logical_or the transfers that are not related to a dam remaining in the same ram mating group or the target DVP is pre-joining (dvp_type == 0)
 
     finish_period_thisdvp_tpg1 = np.take_along_axis(a_dvp_p_vg1, a_v_pg1, 0) * (a_sire_t_g1 == index_t) * np.logical_or(
         a_sire_t_g1 == pinp.sheep['ia_g0_g1'][mask_dams_inc_g1], np.take_along_axis(dvp_type_vg1, a_v_pg1, 0))
@@ -3332,17 +3332,6 @@ def generator(params,report):
     on_hand_tpa1e1b1nwzida0e0b0xyg1 = np.logical_not(off_hand_tpa1e1b1nwzida0e0b0xyg1) #t1 sale after main shearing
 
 
-    # ###determine t2 slice - dry dams sold at scanning
-    # period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1 = period_is_scan_pa1e1b1nwzida0e0b0xyg1 * scan_pa1e1b1nwzida0e0b0xyg1>=1 * (not pinp.sheep['i_dry_retained_forced']) #not is required because variable is drys off hand ie sold. if forced to retain the variable wants to be false
-    # period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1 = period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1 * (nfoet_b1nwzida0e0b0xyg>0) #make sure selling is not an option for animals with foet (have to do it this way so that b axis is added)
-    # period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1[:,:,:,0:1,...] = False #make sure selling is not an option for not mated
-    # t2_drys_off_hand_pa1e1b1nwzida0e0b0xyg1=cum_dvp(period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1) #this ensures that once they are sold they remain off hand for the rest of the dvp
-    ###on hand
-    # shape =  tuple(np.maximum.reduce([t1_off_hand_pa1e1b1nwzida0e0b0xyg1.shape, t2_drys_off_hand_pa1e1b1nwzida0e0b0xyg1.shape]))
-    # on_hand_tpa1e1b1nwzida0e0b0xyg1 = np.zeros((pinp.sheep['i_t1_len'],)+shape, dtype=bool) #initialise on hand array with 3 t slices.
-    # on_hand_tpa1e1b1nwzida0e0b0xyg1[...] = True #t0 is the retained slice
-    # on_hand_tpa1e1b1nwzida0e0b0xyg1[1] = np.logical_not(t1_off_hand_pa1e1b1nwzida0e0b0xyg1) #t1 sale after main shearing
-    # on_hand_tpa1e1b1nwzida0e0b0xyg1[2] = np.logical_not(t2_drys_off_hand_pa1e1b1nwzida0e0b0xyg1) #t2 sale of drys after scanning
 
 
     ######################
