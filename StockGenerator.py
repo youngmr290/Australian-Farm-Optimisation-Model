@@ -3129,6 +3129,8 @@ def generator(params,report):
     a_c_p = sfun.f_next_prev_association(cash_period_dates_c, date_end_p, 1,'right') % len(cash_period_dates) #% len required to convert association back to only the number of cash periods
     a_c_pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(a_c_p, uinp.structure['i_p_pos']).astype(dtype)
     index_ctvpa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(np.arange(len(cash_period_dates)), uinp.structure['i_p_pos']-3)
+    ev_propn_f = np.array([0.25, 0.50, 0.75]) #Set the values for the ranges required (same values for all 10 matrix feed periods). This spreads the feed pools evenly between the highest and lowest quality feed required by any of the animals.
+    index_fpa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(np.arange(ev_propn_f.shape[0]+1), uinp.structure['i_p_pos']-1)
     ##wool
     vm_m4a1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(pinp.sheep['i_vm_m4'], uinp.structure['i_p_pos']).astype(dtype)
     pmb_m4s4a1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(pinp.sheep['i_pmb_m4s'], uinp.structure['i_p_pos']).astype(dtype)
@@ -3174,9 +3176,6 @@ def generator(params,report):
     a_nextshear_pa1e1b1nwzida0e0b0xyg0 = sfun.f_next_prev_association(date_end_p, date_nextshear_pa1e1b1nwzida0e0b0xyg0, 1,'right').astype(dtypeint) #p indx of next shearing - when period is shearing this returns the current period
     a_nextshear_pa1e1b1nwzida0e0b0xyg1 = sfun.f_next_prev_association(date_end_p, date_nextshear_pa1e1b1nwzida0e0b0xyg1, 1,'right').astype(dtypeint) #p indx of next shearing - when period is shearing this returns the current period
     a_nextshear_pa1e1b1nwzida0e0b0xyg3 = sfun.f_next_prev_association(date_end_p, date_nextshear_pa1e1b1nwzida0e0b0xyg3, 1,'right').astype(dtypeint) #p indx of next shearing - when period is shearing this returns the current period
-    ###Set the values for the ranges required (same values for all 10 matrix feed periods). This spreads the feed pools evenly between the highest and lowest quality feed required by any of the animals.
-    ev_propn_f = np.array([0.25, 0.50, 0.75])
-    index_fpa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(np.arange(ev_propn_f.shape[0]+1), uinp.structure['i_p_pos']-1)
     ##sire
     date_purch_oa1e1b1nwzida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['i_date_purch_ig0'], 'sire', pinp.sheep['i_i_pos'], left_pos2=uinp.structure['i_p_pos']-1, right_pos2=pinp.sheep['i_i_pos'], condition=pinp.sheep['i_masksire_i'], axis=pinp.sheep['i_i_pos']).astype('datetime64[D]')
     date_sale_oa1e1b1nwzida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['i_date_sale_ig0'], 'sire', pinp.sheep['i_i_pos'], left_pos2=uinp.structure['i_p_pos']-1, right_pos2=pinp.sheep['i_i_pos'], condition=pinp.sheep['i_masksire_i'], axis=pinp.sheep['i_i_pos']).astype('datetime64[D]')
@@ -3276,20 +3275,44 @@ def generator(params,report):
     next_dvp_index_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(a_dvpnext_p_va1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, 0) #points at the next dvp from the date at the start of the period
     periods_to_dvp = next_dvp_index_pa1e1b1nwzida0e0b0xyg1 - (p_index_pa1e1b1nwzida0e0b0xyg + 1) #periods to the next dvp. +1 because if the next period is the new dvp you must sell in the current period
     sale_period_pa1e1b1nwzida0e0b0xyg1 = np.minimum(sale_delay_pa1e1b1nwzida0e0b0xyg1, periods_to_dvp) + shear_period_pa1e1b1nwzida0e0b0xyg1
-    period_is_sale_t1_pa1e1b1nwzida0e0b0xyg1 = sale_period_pa1e1b1nwzida0e0b0xyg1 == p_index_pa1e1b1nwzida0e0b0xyg
+    period_is_sale_t0_pa1e1b1nwzida0e0b0xyg1 = sale_period_pa1e1b1nwzida0e0b0xyg1 == p_index_pa1e1b1nwzida0e0b0xyg
     ###determine t1 slice - dry dams sold at scanning
     period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1 = period_is_scan_pa1e1b1nwzida0e0b0xyg1 * scan_pa1e1b1nwzida0e0b0xyg1>=1 * (not pinp.sheep['i_dry_retained_forced']) #not is required because variable is drys off hand ie sold. if forced to retain the variable wants to be false
     period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1 = period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1 * (nfoet_b1nwzida0e0b0xyg==0) #make sure selling is not an option for animals with foet (have to do it this way so that b axis is added)
     period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1[:,:,:,0:1,...] = False #make sure selling is not an option for not mated
     ###combine sale t slices (t1 & t2) to produce period is sale
-    shape =  tuple(np.maximum.reduce([period_is_sale_t1_pa1e1b1nwzida0e0b0xyg1.shape, period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1.shape]))
-    period_is_sale_tpa1e1b1nwzida0e0b0xyg1 = np.zeros((pinp.sheep['i_t1_len'],)+shape, dtype=bool) #initialise on hand array with 3 t slices.
-    period_is_sale_tpa1e1b1nwzida0e0b0xyg1[...]=False
-    period_is_sale_tpa1e1b1nwzida0e0b0xyg1[0] = period_is_sale_t1_pa1e1b1nwzida0e0b0xyg1
-    period_is_sale_tpa1e1b1nwzida0e0b0xyg1[1] = period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1
+    shape =  tuple(np.maximum.reduce([period_is_sale_t0_pa1e1b1nwzida0e0b0xyg1.shape, period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1.shape]))
+    period_is_finish_tpa1e1b1nwzida0e0b0xyg1 = np.zeros((pinp.sheep['i_t1_len'],)+shape, dtype=bool) #initialise on hand array with 3 t slices.
+    period_is_finish_tpa1e1b1nwzida0e0b0xyg1[...]=False
+    period_is_finish_tpa1e1b1nwzida0e0b0xyg1[0] = period_is_sale_t0_pa1e1b1nwzida0e0b0xyg1
+    period_is_finish_tpa1e1b1nwzida0e0b0xyg1[1] = period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1
     ###on hand - convert period is sale to onhand by taking cumulatinve max
-    off_hand_tpa1e1b1nwzida0e0b0xyg1=f_cum_dvp(period_is_sale_tpa1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1,axis=1, shift=1) #this ensures that once they are sold they remain off hand for the rest of the dvp
+    off_hand_tpa1e1b1nwzida0e0b0xyg1=f_cum_dvp(period_is_finish_tpa1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1,axis=1, shift=1) #this ensures that once they are sold they remain off hand for the rest of the dvp
     on_hand_tpa1e1b1nwzida0e0b0xyg1 = np.logical_not(off_hand_tpa1e1b1nwzida0e0b0xyg1) #t1 sale after main shearing
+
+    ##Calculations for slices[2:]
+    ### Create an association a_sire_t_g1 which is between g0 & g1 after both g0 and g1 have been masked and is in the position of the t axis
+    ### this association is the slice of the t axis for dams destined for that g1 slice. Eg BB-B ewes that are transferring to BBT will be in slice 0 of the g1 axis and slice 2 of the t axis
+    ## allow for g0 mask
+    a_g0_g1 = sfun.f_g2g(pinp.sheep['ia_g0_g1'], 'dams')
+    prior_sires_excluded_g0 = np.cumsum(~mask_sire_inc_g0)[mask_sire_inc_g0]
+    a_sire_t_g1 = a_g0_g1 - prior_sires_excluded_g0[a_g0_g1] + i_n_dam_sales  # +2 to allow for the 2 sale slices
+
+    # Calculate the period (finish_period)  that the dams are transferred from current slice to destination slice
+    ## Select whether passed into the current DVP or the next DVP of the destination slice
+    ## Mask with a np.logical_or the transfers that are not related to a dam remaining in the same ram mating group or the target DVP is pre-joining (dvp_type == 0)
+
+    finish_period_thisdvp_tpg1 = np.take_along_axis(a_dvp_p_vg1, a_v_pg1, 0) * (a_sire_t_g1 == index_t) * np.logical_or(
+        a_sire_t_g1 == pinp.sheep['ia_g0_g1'][mask_dams_inc_g1, np.take_along_axis(dvp_type_vg1, a_v_pg1, 0))
+
+    finish_period_nextdvp_tpg1 = np.take_along_axis(a_dvpnext_p_vg1, a_v_pg1, 0) * (
+                a_sire_t_g1 == index_t) * np.logical_or(
+        a_sire_t_g1 == pinp.sheep['ia_g0_g1'][mask_dams_inc_g1, np.take_along_axis(dvp_type_next_vg1, a_v_pg1, 0))
+
+    finish_period_tpg1 = f_update(finish_period_nextdvp_tpg1, finish_period_thisdvp_tpg1,
+                                  finish_period_thisdvp_tpg1 > index_p)
+
+    period_is_finish_tpg1 = finish_period_tpg1 == index_p
 
     # ###determine t2 slice - dry dams sold at scanning
     # period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1 = period_is_scan_pa1e1b1nwzida0e0b0xyg1 * scan_pa1e1b1nwzida0e0b0xyg1>=1 * (not pinp.sheep['i_dry_retained_forced']) #not is required because variable is drys off hand ie sold. if forced to retain the variable wants to be false
@@ -3375,20 +3398,24 @@ def generator(params,report):
     fd_offs_p5 = o_fd_offs[shear_mask_p3]
     sl_offs_p5 = o_sl_offs[shear_mask_p3]
     ss_offs_p5 = o_ss_offs[shear_mask_p3]
+    ###initialise arrays to store results
+    woolvalue_pa1e1b1nwzida0e0b0xyg0 = np.zeros(pg0, dtype =dtype)
+    woolvalue_pa1e1b1nwzida0e0b0xyg1 = np.zeros(pg1, dtype =dtype)
+    woolvalue_pa1e1b1nwzida0e0b0xyg3 = np.zeros(pg3, dtype =dtype)
     ###micron price guide
     woolp_mpg_w4 = sfun.f_woolprice().astype(dtype)/100
-    woolvalue_p5a1e1b1nwzida0e0b0xyg0, woolp_stbnib_sire = sfun.f_wool_value(woolp_mpg_w4, cfw_sire_p5, fd_sire_p5, sl_sire_p5, ss_sire_p5, vm_p5a1e1b1nwzida0e0b0xyg0,
+    woolvalue_pa1e1b1nwzida0e0b0xyg0[shear_mask_p0], woolp_stbnib_sire = sfun.f_wool_value(woolp_mpg_w4, cfw_sire_p5, fd_sire_p5, sl_sire_p5, ss_sire_p5, vm_p5a1e1b1nwzida0e0b0xyg0,
                                                                              pmb_p5a1e1b1nwzida0e0b0xyg0, dtype)
-    woolvalue_p5a1e1b1nwzida0e0b0xyg1, woolp_stbnib_dams = sfun.f_wool_value(woolp_mpg_w4, cfw_dams_p5, fd_dams_p5, sl_dams_p5, ss_dams_p5, vm_p5a1e1b1nwzida0e0b0xyg1,
+    woolvalue_pa1e1b1nwzida0e0b0xyg1[shear_mask_p1], woolp_stbnib_dams = sfun.f_wool_value(woolp_mpg_w4, cfw_dams_p5, fd_dams_p5, sl_dams_p5, ss_dams_p5, vm_p5a1e1b1nwzida0e0b0xyg1,
                                                                              pmb_p5a1e1b1nwzida0e0b0xyg1, dtype)
-    woolvalue_tp5a1e1b1nwzida0e0b0xyg3, woolp_stbnib_offs = sfun.f_wool_value(woolp_mpg_w4, cfw_offs_p5, fd_offs_p5, sl_offs_p5, ss_offs_p5, vm_p5a1e1b1nwzida0e0b0xyg3,
+    woolvalue_tpa1e1b1nwzida0e0b0xyg3[:,shear_mask_p3], woolp_stbnib_offs = sfun.f_wool_value(woolp_mpg_w4, cfw_offs_p5, fd_offs_p5, sl_offs_p5, ss_offs_p5, vm_p5a1e1b1nwzida0e0b0xyg3,
                                                                              pmb_tp5a1e1b1nwzida0e0b0xyg3, dtype)
     wool_finish= time.time()
     print('wool value calcs :', wool_finish - calc_cost_start)
     ##Sale value - To speed the calculation process the p array is condensed to only include periods where shearing occurs. Using a slightly different association it is then converted to a v array (this process usually used a p to v association, in this case we use s to v association).
     ###create mask which is the periods where shearing occurs
     sale_mask_p0 = np.any(period_is_sale_pa1e1b1nwzida0e0b0xyg0, axis=tuple(range(uinp.structure['i_p_pos']+1,0)))
-    sale_mask_p1 = fun.f_reduce_skipfew(np.any, period_is_sale_tpa1e1b1nwzida0e0b0xyg1, preserveAxis=1)  #preforms np.any on all axis except 1
+    sale_mask_p1 = fun.f_reduce_skipfew(np.any, period_is_finish_tpa1e1b1nwzida0e0b0xyg1[0:i_n_dam_sales], preserveAxis=1)  #preforms np.any on all axis except 1. only use the sale slices from the dam t axis
     sale_mask_p3 = fun.f_reduce_skipfew(np.any, period_is_sale_tpa1e1b1nwzida0e0b0xyg3, preserveAxis=1)  #preforms np.any on all axis except 1
     ###manipulate axis with assocaiations
     score_range_s7s6p5a1e1b1nwzida0e0b0xyg = score_range_s8s6pa1e1b1nwzida0e0b0xyg[uinp.sheep['ia_s8_s7']] #s8 to s7
@@ -3412,8 +3439,12 @@ def generator(params,report):
     ffcfw_p5a1e1b1nwzida0e0b0xyg0 = o_ffcfw_sire[sale_mask_p0]
     ffcfw_p5a1e1b1nwzida0e0b0xyg1 = o_ffcfw_dams[sale_mask_p1]
     ffcfw_p5a1e1b1nwzida0e0b0xyg3 = o_ffcfw_offs[sale_mask_p3]
+    ###initialise arrays to store results
+    salevalue_pa1e1b1nwzida0e0b0xyg0 = np.zeros(pg0, dtype =dtype)
+    salevalue_pa1e1b1nwzida0e0b0xyg1 = np.zeros(pg1, dtype =dtype)
+    salevalue_pa1e1b1nwzida0e0b0xyg3 = np.zeros(pg3, dtype =dtype)
 
-    salevalue_p5a1e1b1nwzida0e0b0xyg0 = sfun.f_sale_value(
+    salevalue_pa1e1b1nwzida0e0b0xyg0[sale_mask_p0] = sfun.f_sale_value(
         cu0_sire.astype(dtype), cx_sire.astype(dtype), rc_start_sire_p5, ffcfw_p5a1e1b1nwzida0e0b0xyg0, dresspercent_adj_yg0,
         dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg,
         grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg, month_scalar_s7p5a1e1b1nwzida0e0b0xyg0,
@@ -3422,7 +3453,7 @@ def generator(params,report):
         age_end_p5a1e1b1nwzida0e0b0xyg0, discount_age_s7pa1e1b1nwzida0e0b0xyg,
         sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg,
         mask_s7x_s7pa1e1b1nwzida0e0b0xyg[...,0:1,:,:], sale_agemax_s7pa1e1b1nwzida0e0b0xyg0, dtype)
-    salevalue_p5a1e1b1nwzida0e0b0xyg1 = sfun.f_sale_value(
+    salevalue_pa1e1b1nwzida0e0b0xyg1[sale_mask_p1] = sfun.f_sale_value(
         cu0_dams.astype(dtype), cx_dams.astype(dtype), rc_start_dams_p5, ffcfw_p5a1e1b1nwzida0e0b0xyg1, dresspercent_adj_yg1,
         dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg,
         grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg, month_scalar_s7p5a1e1b1nwzida0e0b0xyg1,
@@ -3431,7 +3462,7 @@ def generator(params,report):
         age_end_p5a1e1b1nwzida0e0b0xyg1, discount_age_s7pa1e1b1nwzida0e0b0xyg,
         sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg,
         mask_s7x_s7pa1e1b1nwzida0e0b0xyg[...,1:2,:,:], sale_agemax_s7pa1e1b1nwzida0e0b0xyg1, dtype)
-    salevalue_p5a1e1b1nwzida0e0b0xyg3 = sfun.f_sale_value(
+    salevalue_pa1e1b1nwzida0e0b0xyg3[sale_mask_p3] = sfun.f_sale_value(
         cu0_offs, cx_offs, rc_start_offs_p5, ffcfw_p5a1e1b1nwzida0e0b0xyg3, dresspercent_adj_yg3,
         dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg,
         grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg, month_scalar_s7p5a1e1b1nwzida0e0b0xyg3,
@@ -3472,6 +3503,10 @@ def generator(params,report):
 
     husb_finish= time.time()
     print('husb cost calcs :', husb_finish - sale_finish)
+
+    ##combine income and cost from wool, sale and husb.
+
+
 
     ######################
     # add yatf to dams   #
