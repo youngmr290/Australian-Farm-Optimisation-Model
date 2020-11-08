@@ -136,6 +136,7 @@ def generator(params,report):
     len_g1 = np.count_nonzero(mask_dams_inc_g1)
     len_g2 = np.count_nonzero(mask_dams_inc_g1) #same as dams
     len_g3 = np.count_nonzero(mask_offs_inc_g3)
+    t1_len = uinp.structure['i_n_dam_sales '] +
 
     ###################################
     ### index arrays                  #
@@ -158,7 +159,7 @@ def generator(params,report):
     index_wzida0e0b0xyg1 = fun.f_reshape_expand(index_w1, uinp.structure['i_w_pos'])
     index_w3 = np.arange(len_w3)
     index_wzida0e0b0xyg3 = fun.f_reshape_expand(index_w3, uinp.structure['i_w_pos'])
-    index_tva1e1b1nw8zida0e0b0xyg1w9 = fun.f_reshape_expand(np.arange(pinp.sheep['i_t1_len']), uinp.structure['i_p_pos']-2)
+    index_tva1e1b1nw8zida0e0b0xyg1w9 = fun.f_reshape_expand(np.arange(t1_len), uinp.structure['i_p_pos']-2)
     index_tva1e1b1nw8zida0e0b0xyg3w9 = fun.f_reshape_expand(np.arange(pinp.sheep['i_t3_len']), uinp.structure['i_p_pos']-2)
     index_xyg = fun.f_reshape_expand(np.arange(pinp.sheep['i_x_len']), uinp.parameters['i_x_pos'])
 
@@ -2977,7 +2978,7 @@ def generator(params,report):
 
     ##Method 1 (still used)- add p and v axis together then sum p axis - this may be a good method for faster computers with more memory
     def f_p2v_std(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tvp=True, days_period_p=1,
-                period_is_tvp=True, a_ev_p=1, index_ftvp=1, a_p6_p=1, index_p6ftvp=1, a_c_p=1, index_ctvp=1, sumadj=0):
+                period_is_tvp=True, a_any1_p=1, index_any1tvp=1, a_any2_p=1, index_any2any1tvp=1, sumadj=0):
         try:
             days_period_p = days_period_p.astype(
                 'float32')  # convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it cant be converted to float (because int object is not numpy)
@@ -3028,14 +3029,14 @@ def generator(params,report):
     #     return result
 
     ##Method 2 (fastest)- sum sections of p axis to leave v (almost like sum if) this is fast because dont need p and v axis one same array
-    def f_p2v(production_p, dvp_pointer_p=1, numbers_p=1, on_hand_tp=True, days_period_p=1, period_is_tp=True, a_ev_p=1, index_ftp=1, a_p6_p=1, index_p6ftp=1):
+    def f_p2v(production_p, dvp_pointer_p=1, numbers_p=1, on_hand_tp=True, days_period_p=1, period_is_tp=True, a_any1_p=1, index_any1tp=1, a_any2_p=1, index_any2any1tp=1):
         try: days_period_p = days_period_p.astype('float32')  #convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it cant be converted to float (because int object is not numpy)
         except AttributeError:
             pass
         ##mul everything - add t,f and p6 axis
         production_ftpany = (production_p * numbers_p * days_period_p * period_is_tp
-                            * on_hand_tp * (a_ev_p==index_ftp)
-                            * (a_p6_p==index_p6ftp))
+                            * on_hand_tp * (a_any1_p==index_any1tp)
+                            * (a_any2_p==index_any2any1tp))
         ##convert p to v - info at this link https://stackoverflow.com/questions/50121980/numpy-conditional-sum
         ##basically we are summing the p axis for each dvp. the tricky part (which has caused the requirement for the loops) is that dvp pointer is not the same for each axis eg dvp is effected by e axis.
         ##so we need to loop though all the axis in the dvp and sum p and assign to a final array.
@@ -3128,7 +3129,11 @@ def generator(params,report):
     cash_period_dates_c = cash_period_dates_cy.ravel()
     a_c_p = sfun.f_next_prev_association(cash_period_dates_c, date_end_p, 1,'right') % len(cash_period_dates) #% len required to convert association back to only the number of cash periods
     a_c_pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(a_c_p, uinp.structure['i_p_pos']).astype(dtype)
-    index_ctvpa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(np.arange(len(cash_period_dates)), uinp.structure['i_p_pos']-3)
+    index_ctpa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(np.arange(len(cash_period_dates)), uinp.structure['i_p_pos']-2)
+    labour_periods_p5 = np.asarray(lab.labour_periods, dtype=np.datetime64)
+    a_p5_p = sfun.f_next_prev_association(labour_periods_p5, date_end_p, 1, 'right') % (len(labour_periods_p5) - 1)
+    a_p5_pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(a_p5_p, uinp.structure['i_p_pos']).astype(dtype)
+    index_p5tpa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(np.arange(len(labour_periods_p5)), uinp.structure['i_p_pos']-2)
     ev_propn_f = np.array([0.25, 0.50, 0.75]) #Set the values for the ranges required (same values for all 10 matrix feed periods). This spreads the feed pools evenly between the highest and lowest quality feed required by any of the animals.
     index_fpa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(np.arange(ev_propn_f.shape[0]+1), uinp.structure['i_p_pos']-1)
     ##wool
@@ -3227,6 +3232,18 @@ def generator(params,report):
     #on hand / shear mask #
     #######################
     onhandshear_start=time.time()
+
+    ##sire - purchased and sold on given date and shorn at main shearing - sires are simulated from weaning but for the pp we only look at a subset
+    ### shearing - determined by the main shearing date - no t axis so just use the period is shearing from generator
+    ###round purchase and sale date of sire to nearest period
+    date_purch_oa1e1b1nwzida0e0b0xyg0 = sfun.f_next_prev_association(date_start_p, date_purch_oa1e1b1nwzida0e0b0xyg0, 0, 'left') #move input date to the begining of the next generator period
+    date_purch_oa1e1b1nwzida0e0b0xyg0 = date_start_p[date_purch_oa1e1b1nwzida0e0b0xyg0]
+    date_sale_oa1e1b1nwzida0e0b0xyg0 = sfun.f_next_prev_association(date_start_p, date_sale_oa1e1b1nwzida0e0b0xyg0, 0, 'left') #move input date to the begining of the next generator period
+    date_sale_oa1e1b1nwzida0e0b0xyg0 = date_start_p[date_sale_oa1e1b1nwzida0e0b0xyg0]
+    on_hand_pa1e1b1nwzida0e0b0xyg0 = sfun.f_period_is_('period_is_between', date_purch_oa1e1b1nwzida0e0b0xyg0, date_start_pa1e1b1nwzida0e0b0xyg, date_sale_oa1e1b1nwzida0e0b0xyg0, date_end_pa1e1b1nwzida0e0b0xyg)
+    period_is_sale_pa1e1b1nwzida0e0b0xyg0 = np.logical_and(on_hand_pa1e1b1nwzida0e0b0xyg0==True,np.roll(on_hand_pa1e1b1nwzida0e0b0xyg0,-1,axis=0)==False)
+
+
     ##offs
     ###calc sale date then determine shearing date
     ###sale - on date
@@ -3282,37 +3299,38 @@ def generator(params,report):
     period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1[:,:,:,0:1,...] = False #make sure selling is not an option for not mated
     ###combine sale t slices (t1 & t2) to produce period is sale
     shape =  tuple(np.maximum.reduce([period_is_sale_t0_pa1e1b1nwzida0e0b0xyg1.shape, period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1.shape]))
-    period_is_finish_tpa1e1b1nwzida0e0b0xyg1 = np.zeros((pinp.sheep['i_t1_len'],)+shape, dtype=bool) #initialise on hand array with 3 t slices.
-    period_is_finish_tpa1e1b1nwzida0e0b0xyg1[...]=False
-    period_is_finish_tpa1e1b1nwzida0e0b0xyg1[0] = period_is_sale_t0_pa1e1b1nwzida0e0b0xyg1
-    period_is_finish_tpa1e1b1nwzida0e0b0xyg1[1] = period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1
-    ###on hand - convert period is sale to onhand by taking cumulatinve max
-    off_hand_tpa1e1b1nwzida0e0b0xyg1=f_cum_dvp(period_is_finish_tpa1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1,axis=1, shift=1) #this ensures that once they are sold they remain off hand for the rest of the dvp
-    on_hand_tpa1e1b1nwzida0e0b0xyg1 = np.logical_not(off_hand_tpa1e1b1nwzida0e0b0xyg1) #t1 sale after main shearing
+    period_is_sale_tpa1e1b1nwzida0e0b0xyg1 = np.zeros((t1_len,)+shape, dtype=bool) #initialise on hand array with 3 t slices.
+    period_is_sale_tpa1e1b1nwzida0e0b0xyg1[...]=False
+    period_is_sale_tpa1e1b1nwzida0e0b0xyg1[0] = period_is_sale_t0_pa1e1b1nwzida0e0b0xyg1
+    period_is_sale_tpa1e1b1nwzida0e0b0xyg1[1] = period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1
 
-    ##Calculations for slices[2:]
+    ##period_is_transfer calcs
     ### Create an association a_sire_t_g1 which is between g0 & g1 after both g0 and g1 have been masked and is in the position of the t axis
     ### this association is the slice of the t axis for dams destined for that g1 slice. Eg BB-B ewes that are transferring to BBT will be in slice 0 of the g1 axis and slice 2 of the t axis
-    ## allow for g0 mask
+    ### allow for g0 mask
     a_g0_g1 = sfun.f_g2g(pinp.sheep['ia_g0_g1'], 'dams')
     prior_sires_excluded_g0 = np.cumsum(~mask_sire_inc_g0)[mask_sire_inc_g0]
     a_sire_t_g1 = a_g0_g1 - prior_sires_excluded_g0[a_g0_g1] + i_n_dam_sales  # +2 to allow for the 2 sale slices
-
-    # Calculate the period (finish_period)  that the dams are transferred from current slice to destination slice
-    ## Select whether passed into the current DVP or the next DVP of the destination slice
-    ## Mask with a np.logical_or the transfers that are not related to a dam remaining in the same ram mating group or the target DVP is pre-joining (dvp_type == 0)
+    ### Calculate the period (finish_transfer) that the dams are transferred from current slice to destination slice
+    ### Select whether passed into the current DVP or the next DVP of the destination slice
+    ### Mask with a np.logical_or the transfers that are not related to a dam remaining in the same ram mating group or the target DVP is pre-joining (dvp_type == 0)
 
     finish_period_thisdvp_tpg1 = np.take_along_axis(a_dvp_p_vg1, a_v_pg1, 0) * (a_sire_t_g1 == index_t) * np.logical_or(
-        a_sire_t_g1 == pinp.sheep['ia_g0_g1'][mask_dams_inc_g1, np.take_along_axis(dvp_type_vg1, a_v_pg1, 0))
+        a_sire_t_g1 == pinp.sheep['ia_g0_g1'][mask_dams_inc_g1], np.take_along_axis(dvp_type_vg1, a_v_pg1, 0))
 
     finish_period_nextdvp_tpg1 = np.take_along_axis(a_dvpnext_p_vg1, a_v_pg1, 0) * (
                 a_sire_t_g1 == index_t) * np.logical_or(
-        a_sire_t_g1 == pinp.sheep['ia_g0_g1'][mask_dams_inc_g1, np.take_along_axis(dvp_type_next_vg1, a_v_pg1, 0))
+        a_sire_t_g1 == pinp.sheep['ia_g0_g1'][mask_dams_inc_g1], np.take_along_axis(dvp_type_next_vg1, a_v_pg1, 0))
 
     finish_period_tpg1 = f_update(finish_period_nextdvp_tpg1, finish_period_thisdvp_tpg1,
                                   finish_period_thisdvp_tpg1 > index_p)
 
-    period_is_finish_tpg1 = finish_period_tpg1 == index_p
+    period_is_transfer_tpg1 = finish_period_tpg1 == index_p
+
+    ###on hand - combine period_is_sale & period_is_transfer then use cumulatinve max to convert to on_hand
+    off_hand_tpa1e1b1nwzida0e0b0xyg1=f_cum_dvp(np.logical_or(period_is_sale_tpa1e1b1nwzida0e0b0xyg1,period_is_transfer_tpa1e1b1nwzida0e0b0xyg1),a_v_pa1e1b1nwzida0e0b0xyg1,axis=1, shift=1) #this ensures that once they are sold they remain off hand for the rest of the dvp
+    on_hand_tpa1e1b1nwzida0e0b0xyg1 = np.logical_not(off_hand_tpa1e1b1nwzida0e0b0xyg1) #t1 sale after main shearing
+
 
     # ###determine t2 slice - dry dams sold at scanning
     # period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1 = period_is_scan_pa1e1b1nwzida0e0b0xyg1 * scan_pa1e1b1nwzida0e0b0xyg1>=1 * (not pinp.sheep['i_dry_retained_forced']) #not is required because variable is drys off hand ie sold. if forced to retain the variable wants to be false
@@ -3326,15 +3344,6 @@ def generator(params,report):
     # on_hand_tpa1e1b1nwzida0e0b0xyg1[1] = np.logical_not(t1_off_hand_pa1e1b1nwzida0e0b0xyg1) #t1 sale after main shearing
     # on_hand_tpa1e1b1nwzida0e0b0xyg1[2] = np.logical_not(t2_drys_off_hand_pa1e1b1nwzida0e0b0xyg1) #t2 sale of drys after scanning
 
-    ##sire - purchased and sold on given date and shorn at main shearing - sires are simulated from weaning but for the pp we only look at a subset
-    ### shearing - determined by the main shearing date - no t axis so just use the period is shearing from generator
-    ###round purchase and sale date of sire to nearest period
-    date_purch_oa1e1b1nwzida0e0b0xyg0 = sfun.f_next_prev_association(date_start_p, date_purch_oa1e1b1nwzida0e0b0xyg0, 0, 'left') #move input date to the begining of the next generator period
-    date_purch_oa1e1b1nwzida0e0b0xyg0 = date_start_p[date_purch_oa1e1b1nwzida0e0b0xyg0]
-    date_sale_oa1e1b1nwzida0e0b0xyg0 = sfun.f_next_prev_association(date_start_p, date_sale_oa1e1b1nwzida0e0b0xyg0, 0, 'left') #move input date to the begining of the next generator period
-    date_sale_oa1e1b1nwzida0e0b0xyg0 = date_start_p[date_sale_oa1e1b1nwzida0e0b0xyg0]
-    on_hand_pa1e1b1nwzida0e0b0xyg0 = sfun.f_period_is_('period_is_between', date_purch_oa1e1b1nwzida0e0b0xyg0, date_start_pa1e1b1nwzida0e0b0xyg, date_sale_oa1e1b1nwzida0e0b0xyg0, date_end_pa1e1b1nwzida0e0b0xyg)
-    period_is_sale_pa1e1b1nwzida0e0b0xyg0 = np.logical_and(on_hand_pa1e1b1nwzida0e0b0xyg0==True,np.roll(on_hand_pa1e1b1nwzida0e0b0xyg0,-1,axis=0)==False)
 
     ######################
     #calc cost and income#
@@ -3346,129 +3355,131 @@ def generator(params,report):
     shear_mask_p1 = np.any(period_is_shearing_pa1e1b1nwzida0e0b0xyg1, axis=tuple(range(uinp.structure['i_p_pos']+1,0)))
     shear_mask_p3 = fun.f_reduce_skipfew(np.any, period_is_shearing_tpa1e1b1nwzida0e0b0xyg3, preserveAxis=1) #preforms np.any across all axis except axis 1
     ###create association between p and s
-    a_p_p5a1e1b1nwzida0e0b0xyg0 = fun.f_reshape_expand(np.nonzero(shear_mask_p0)[0],uinp.structure['i_p_pos'])  #take [0] because nonzero function returns tuple
-    a_p_p5a1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(np.nonzero(shear_mask_p1)[0],uinp.structure['i_p_pos'])  #take [0] because nonzero function returns tuple
-    a_p_p5a1e1b1nwzida0e0b0xyg3 = fun.f_reshape_expand(np.nonzero(shear_mask_p3)[0],uinp.structure['i_p_pos'])  #take [0] because nonzero function returns tuple
-    index_p5a1e1b1nwzida0e0b0xyg0 = fun.f_reshape_expand(np.arange(np.count_nonzero(shear_mask_p0)),uinp.structure['i_p_pos'])
-    index_p5a1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(np.arange(np.count_nonzero(shear_mask_p1)),uinp.structure['i_p_pos'])
-    index_p5a1e1b1nwzida0e0b0xyg3 = fun.f_reshape_expand(np.arange(np.count_nonzero(shear_mask_p3)),uinp.structure['i_p_pos'])
-    ###create association between p5 (condensed p axis for shearing) and v
-    a_v_p5a1e1b1nwzida0e0b0xyg1 = a_v_pa1e1b1nwzida0e0b0xyg1[shear_mask_p1]
-    a_v_p5a1e1b1nwzida0e0b0xyg3 = a_v_pa1e1b1nwzida0e0b0xyg3[shear_mask_p3]
+    a_p_p9a1e1b1nwzida0e0b0xyg0 = fun.f_reshape_expand(np.nonzero(shear_mask_p0)[0],uinp.structure['i_p_pos'])  #take [0] because nonzero function returns tuple
+    a_p_p9a1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(np.nonzero(shear_mask_p1)[0],uinp.structure['i_p_pos'])  #take [0] because nonzero function returns tuple
+    a_p_p9a1e1b1nwzida0e0b0xyg3 = fun.f_reshape_expand(np.nonzero(shear_mask_p3)[0],uinp.structure['i_p_pos'])  #take [0] because nonzero function returns tuple
+    index_p9a1e1b1nwzida0e0b0xyg0 = fun.f_reshape_expand(np.arange(np.count_nonzero(shear_mask_p0)),uinp.structure['i_p_pos'])
+    index_p9a1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(np.arange(np.count_nonzero(shear_mask_p1)),uinp.structure['i_p_pos'])
+    index_p9a1e1b1nwzida0e0b0xyg3 = fun.f_reshape_expand(np.arange(np.count_nonzero(shear_mask_p3)),uinp.structure['i_p_pos'])
+    
+    ###create association between p9 (condensed p axis for shearing) and v ^might not need this now that p is expanded before p2v conversion
+    # a_v_p9a1e1b1nwzida0e0b0xyg1 = a_v_pa1e1b1nwzida0e0b0xyg1[shear_mask_p1]
+    # a_v_p9a1e1b1nwzida0e0b0xyg3 = a_v_pa1e1b1nwzida0e0b0xyg3[shear_mask_p3]
+    
     ###convert period is shearing array to the condensed version
-    period_is_shearing_p5a1e1b1nwzida0e0b0xyg0 = period_is_shearing_pa1e1b1nwzida0e0b0xyg0[shear_mask_p0,...]
-    period_is_shearing_p5a1e1b1nwzida0e0b0xyg1 = period_is_shearing_pa1e1b1nwzida0e0b0xyg1[shear_mask_p1,...]
-    period_is_shearing_tp5a1e1b1nwzida0e0b0xyg3 = period_is_shearing_tpa1e1b1nwzida0e0b0xyg3[:,shear_mask_p3,...]
+    period_is_shearing_p9a1e1b1nwzida0e0b0xyg0 = period_is_shearing_pa1e1b1nwzida0e0b0xyg0[shear_mask_p0,...]
+    period_is_shearing_p9a1e1b1nwzida0e0b0xyg1 = period_is_shearing_pa1e1b1nwzida0e0b0xyg1[shear_mask_p1,...]
+    period_is_shearing_tp9a1e1b1nwzida0e0b0xyg3 = period_is_shearing_tpa1e1b1nwzida0e0b0xyg3[:,shear_mask_p3,...]
     ###Vegatative Matter if shorn(end)
-    vm_p5a1e1b1nwzida0e0b0xyg0 = vm_m4a1e1b1nwzida0e0b0xyg[a_m4_p,...][shear_mask_p0]
-    vm_p5a1e1b1nwzida0e0b0xyg1 = vm_m4a1e1b1nwzida0e0b0xyg[a_m4_p,...][shear_mask_p1]
-    vm_p5a1e1b1nwzida0e0b0xyg3 = vm_m4a1e1b1nwzida0e0b0xyg[a_m4_p,...][shear_mask_p3]
+    vm_p9a1e1b1nwzida0e0b0xyg0 = vm_m4a1e1b1nwzida0e0b0xyg[a_m4_p,...][shear_mask_p0]
+    vm_p9a1e1b1nwzida0e0b0xyg1 = vm_m4a1e1b1nwzida0e0b0xyg[a_m4_p,...][shear_mask_p1]
+    vm_p9a1e1b1nwzida0e0b0xyg3 = vm_m4a1e1b1nwzida0e0b0xyg[a_m4_p,...][shear_mask_p3]
     ###pmb - a little complex because it is dependent on time since previous shearing
-    pmb_p5s4a1e1b1nwzida0e0b0xyg0 = pmb_m4s4a1e1b1nwzida0e0b0xyg[a_m4_p,...][shear_mask_p0]
-    pmb_p5s4a1e1b1nwzida0e0b0xyg1 = pmb_m4s4a1e1b1nwzida0e0b0xyg[a_m4_p,...][shear_mask_p1]
-    pmb_p5s4a1e1b1nwzida0e0b0xyg3 = pmb_m4s4a1e1b1nwzida0e0b0xyg[a_m4_p,...][shear_mask_p3]
-    period_current_shearing_p5a1e1b1nwzida0e0b0xyg0 = np.maximum.accumulate(a_p_p5a1e1b1nwzida0e0b0xyg0 * period_is_shearing_p5a1e1b1nwzida0e0b0xyg0, axis=0) #returns the period number that the most recent shearing occured
-    period_current_shearing_p5a1e1b1nwzida0e0b0xyg1 = np.maximum.accumulate(a_p_p5a1e1b1nwzida0e0b0xyg1 * period_is_shearing_p5a1e1b1nwzida0e0b0xyg1, axis=0) #returns the period number that the most recent shearing occured
-    period_current_shearing_tp5a1e1b1nwzida0e0b0xyg3 = np.maximum.accumulate(a_p_p5a1e1b1nwzida0e0b0xyg3 * period_is_shearing_tp5a1e1b1nwzida0e0b0xyg3, axis=1) #returns the period number that the most recent shearing occured
-    period_previous_shearing_p5a1e1b1nwzida0e0b0xyg0 = np.roll(period_current_shearing_p5a1e1b1nwzida0e0b0xyg0, 1, axis=0)*(index_p5a1e1b1nwzida0e0b0xyg0>0)  #returns the period of the previous shearing and sets slice 0 to 0 (because there is no previous shearing for the first shearing)
-    period_previous_shearing_p5a1e1b1nwzida0e0b0xyg1 = np.roll(period_current_shearing_p5a1e1b1nwzida0e0b0xyg1, 1, axis=0)*(index_p5a1e1b1nwzida0e0b0xyg1>0)  #returns the period of the previous shearing and sets slice 0 to 0 (because there is no previous shearing for the first shearing)
-    period_previous_shearing_tp5a1e1b1nwzida0e0b0xyg3 = np.roll(period_current_shearing_tp5a1e1b1nwzida0e0b0xyg3, 1, axis=1)*(index_p5a1e1b1nwzida0e0b0xyg3>0)  #returns the period of the previous shearing and sets slice 0 to 0 (because there is no previous shearing for the first shearing)
-    periods_since_shearing_p5a1e1b1nwzida0e0b0xyg0 = a_p_p5a1e1b1nwzida0e0b0xyg0 - np.maximum(period_previous_shearing_p5a1e1b1nwzida0e0b0xyg0, date_born_idx_ida0e0b0xyg0)
-    periods_since_shearing_p5a1e1b1nwzida0e0b0xyg1 = a_p_p5a1e1b1nwzida0e0b0xyg1 - np.maximum(period_previous_shearing_p5a1e1b1nwzida0e0b0xyg1, date_born_idx_ida0e0b0xyg1)
-    periods_since_shearing_tp5a1e1b1nwzida0e0b0xyg3 = a_p_p5a1e1b1nwzida0e0b0xyg3 - np.maximum(period_previous_shearing_tp5a1e1b1nwzida0e0b0xyg3, date_born_idx_ida0e0b0xyg3)
-    months_since_shearing_p5a1e1b1nwzida0e0b0xyg0 = periods_since_shearing_p5a1e1b1nwzida0e0b0xyg0 * 7 / 30 #times 7 for day in period and div 30 to convert to months (this doesnt need to be perfect its only an approximation)
-    months_since_shearing_p5a1e1b1nwzida0e0b0xyg1 = periods_since_shearing_p5a1e1b1nwzida0e0b0xyg1 * 7 / 30 #times 7 for day in period and div 30 to convert to months (this doesnt need to be perfect its only an approximation)
-    months_since_shearing_tp5a1e1b1nwzida0e0b0xyg3 = periods_since_shearing_tp5a1e1b1nwzida0e0b0xyg3 * 7 / 30 #times 7 for day in period and div 30 to convert to months (this doesnt need to be perfect its only an approximation)
-    a_months_since_shearing_p5a1e1b1nwzida0e0b0xyg0 = fun.f_find_closest(pinp.sheep['i_pmb_interval'], months_since_shearing_p5a1e1b1nwzida0e0b0xyg0)#provides the index of the index which is closest to the actual months since shearing
-    a_months_since_shearing_p5a1e1b1nwzida0e0b0xyg1 = fun.f_find_closest(pinp.sheep['i_pmb_interval'], months_since_shearing_p5a1e1b1nwzida0e0b0xyg1)#provides the index of the index which is closest to the actual months since shearing
-    a_months_since_shearing_tp5a1e1b1nwzida0e0b0xyg3 = fun.f_find_closest(pinp.sheep['i_pmb_interval'], months_since_shearing_tp5a1e1b1nwzida0e0b0xyg3)#provides the index of the index which is closest to the actual months since shearing
-    pmb_p5a1e1b1nwzida0e0b0xyg0 = np.squeeze(np.take_along_axis(pmb_p5s4a1e1b1nwzida0e0b0xyg0,a_months_since_shearing_p5a1e1b1nwzida0e0b0xyg0[:,na,...],1),axis=uinp.structure['i_p_pos']) #select the relevant s4 (pmb interval) then sqeeze that axis
-    pmb_p5a1e1b1nwzida0e0b0xyg1 = np.squeeze(np.take_along_axis(pmb_p5s4a1e1b1nwzida0e0b0xyg1,a_months_since_shearing_p5a1e1b1nwzida0e0b0xyg1[:,na,...],1),axis=uinp.structure['i_p_pos']) #select the relevant s4 (pmb interval) then sqeeze that axis
-    pmb_tp5a1e1b1nwzida0e0b0xyg3 = np.squeeze(np.take_along_axis(pmb_p5s4a1e1b1nwzida0e0b0xyg3[na,...],a_months_since_shearing_tp5a1e1b1nwzida0e0b0xyg3[:,:,na,...],2),axis=uinp.structure['i_p_pos']) #select the relevant s4 (pmb interval) then sqeeze that axis
+    pmb_p9s4a1e1b1nwzida0e0b0xyg0 = pmb_m4s4a1e1b1nwzida0e0b0xyg[a_m4_p,...][shear_mask_p0]
+    pmb_p9s4a1e1b1nwzida0e0b0xyg1 = pmb_m4s4a1e1b1nwzida0e0b0xyg[a_m4_p,...][shear_mask_p1]
+    pmb_p9s4a1e1b1nwzida0e0b0xyg3 = pmb_m4s4a1e1b1nwzida0e0b0xyg[a_m4_p,...][shear_mask_p3]
+    period_current_shearing_p9a1e1b1nwzida0e0b0xyg0 = np.maximum.accumulate(a_p_p9a1e1b1nwzida0e0b0xyg0 * period_is_shearing_p9a1e1b1nwzida0e0b0xyg0, axis=0) #returns the period number that the most recent shearing occured
+    period_current_shearing_p9a1e1b1nwzida0e0b0xyg1 = np.maximum.accumulate(a_p_p9a1e1b1nwzida0e0b0xyg1 * period_is_shearing_p9a1e1b1nwzida0e0b0xyg1, axis=0) #returns the period number that the most recent shearing occured
+    period_current_shearing_tp9a1e1b1nwzida0e0b0xyg3 = np.maximum.accumulate(a_p_p9a1e1b1nwzida0e0b0xyg3 * period_is_shearing_tp9a1e1b1nwzida0e0b0xyg3, axis=1) #returns the period number that the most recent shearing occured
+    period_previous_shearing_p9a1e1b1nwzida0e0b0xyg0 = np.roll(period_current_shearing_p9a1e1b1nwzida0e0b0xyg0, 1, axis=0)*(index_p9a1e1b1nwzida0e0b0xyg0>0)  #returns the period of the previous shearing and sets slice 0 to 0 (because there is no previous shearing for the first shearing)
+    period_previous_shearing_p9a1e1b1nwzida0e0b0xyg1 = np.roll(period_current_shearing_p9a1e1b1nwzida0e0b0xyg1, 1, axis=0)*(index_p9a1e1b1nwzida0e0b0xyg1>0)  #returns the period of the previous shearing and sets slice 0 to 0 (because there is no previous shearing for the first shearing)
+    period_previous_shearing_tp9a1e1b1nwzida0e0b0xyg3 = np.roll(period_current_shearing_tp9a1e1b1nwzida0e0b0xyg3, 1, axis=1)*(index_p9a1e1b1nwzida0e0b0xyg3>0)  #returns the period of the previous shearing and sets slice 0 to 0 (because there is no previous shearing for the first shearing)
+    periods_since_shearing_p9a1e1b1nwzida0e0b0xyg0 = a_p_p9a1e1b1nwzida0e0b0xyg0 - np.maximum(period_previous_shearing_p9a1e1b1nwzida0e0b0xyg0, date_born_idx_ida0e0b0xyg0)
+    periods_since_shearing_p9a1e1b1nwzida0e0b0xyg1 = a_p_p9a1e1b1nwzida0e0b0xyg1 - np.maximum(period_previous_shearing_p9a1e1b1nwzida0e0b0xyg1, date_born_idx_ida0e0b0xyg1)
+    periods_since_shearing_tp9a1e1b1nwzida0e0b0xyg3 = a_p_p9a1e1b1nwzida0e0b0xyg3 - np.maximum(period_previous_shearing_tp9a1e1b1nwzida0e0b0xyg3, date_born_idx_ida0e0b0xyg3)
+    months_since_shearing_p9a1e1b1nwzida0e0b0xyg0 = periods_since_shearing_p9a1e1b1nwzida0e0b0xyg0 * 7 / 30 #times 7 for day in period and div 30 to convert to months (this doesnt need to be perfect its only an approximation)
+    months_since_shearing_p9a1e1b1nwzida0e0b0xyg1 = periods_since_shearing_p9a1e1b1nwzida0e0b0xyg1 * 7 / 30 #times 7 for day in period and div 30 to convert to months (this doesnt need to be perfect its only an approximation)
+    months_since_shearing_tp9a1e1b1nwzida0e0b0xyg3 = periods_since_shearing_tp9a1e1b1nwzida0e0b0xyg3 * 7 / 30 #times 7 for day in period and div 30 to convert to months (this doesnt need to be perfect its only an approximation)
+    a_months_since_shearing_p9a1e1b1nwzida0e0b0xyg0 = fun.f_find_closest(pinp.sheep['i_pmb_interval'], months_since_shearing_p9a1e1b1nwzida0e0b0xyg0)#provides the index of the index which is closest to the actual months since shearing
+    a_months_since_shearing_p9a1e1b1nwzida0e0b0xyg1 = fun.f_find_closest(pinp.sheep['i_pmb_interval'], months_since_shearing_p9a1e1b1nwzida0e0b0xyg1)#provides the index of the index which is closest to the actual months since shearing
+    a_months_since_shearing_tp9a1e1b1nwzida0e0b0xyg3 = fun.f_find_closest(pinp.sheep['i_pmb_interval'], months_since_shearing_tp9a1e1b1nwzida0e0b0xyg3)#provides the index of the index which is closest to the actual months since shearing
+    pmb_p9a1e1b1nwzida0e0b0xyg0 = np.squeeze(np.take_along_axis(pmb_p9s4a1e1b1nwzida0e0b0xyg0,a_months_since_shearing_p9a1e1b1nwzida0e0b0xyg0[:,na,...],1),axis=uinp.structure['i_p_pos']) #select the relevant s4 (pmb interval) then sqeeze that axis
+    pmb_p9a1e1b1nwzida0e0b0xyg1 = np.squeeze(np.take_along_axis(pmb_p9s4a1e1b1nwzida0e0b0xyg1,a_months_since_shearing_p9a1e1b1nwzida0e0b0xyg1[:,na,...],1),axis=uinp.structure['i_p_pos']) #select the relevant s4 (pmb interval) then sqeeze that axis
+    pmb_tp9a1e1b1nwzida0e0b0xyg3 = np.squeeze(np.take_along_axis(pmb_p9s4a1e1b1nwzida0e0b0xyg3[na,...],a_months_since_shearing_tp9a1e1b1nwzida0e0b0xyg3[:,:,na,...],2),axis=uinp.structure['i_p_pos']) #select the relevant s4 (pmb interval) then sqeeze that axis
     ###apply period mask to condense p axis
-    cfw_sire_p5 = o_cfw_sire[shear_mask_p0]
-    fd_sire_p5 = o_fd_sire[shear_mask_p0]
-    sl_sire_p5 = o_sl_sire[shear_mask_p0]
-    ss_sire_p5 = o_ss_sire[shear_mask_p0]
-    cfw_dams_p5 = o_cfw_dams[shear_mask_p1]
-    fd_dams_p5 = o_fd_dams[shear_mask_p1]
-    sl_dams_p5 = o_sl_dams[shear_mask_p1]
-    ss_dams_p5 = o_ss_dams[shear_mask_p1]
-    cfw_offs_p5 = o_cfw_offs[shear_mask_p3]
-    fd_offs_p5 = o_fd_offs[shear_mask_p3]
-    sl_offs_p5 = o_sl_offs[shear_mask_p3]
-    ss_offs_p5 = o_ss_offs[shear_mask_p3]
+    cfw_sire_p9 = o_cfw_sire[shear_mask_p0]
+    fd_sire_p9 = o_fd_sire[shear_mask_p0]
+    sl_sire_p9 = o_sl_sire[shear_mask_p0]
+    ss_sire_p9 = o_ss_sire[shear_mask_p0]
+    cfw_dams_p9 = o_cfw_dams[shear_mask_p1]
+    fd_dams_p9 = o_fd_dams[shear_mask_p1]
+    sl_dams_p9 = o_sl_dams[shear_mask_p1]
+    ss_dams_p9 = o_ss_dams[shear_mask_p1]
+    cfw_offs_p9 = o_cfw_offs[shear_mask_p3]
+    fd_offs_p9 = o_fd_offs[shear_mask_p3]
+    sl_offs_p9 = o_sl_offs[shear_mask_p3]
+    ss_offs_p9 = o_ss_offs[shear_mask_p3]
     ###initialise arrays to store results
     woolvalue_pa1e1b1nwzida0e0b0xyg0 = np.zeros(pg0, dtype =dtype)
     woolvalue_pa1e1b1nwzida0e0b0xyg1 = np.zeros(pg1, dtype =dtype)
     woolvalue_pa1e1b1nwzida0e0b0xyg3 = np.zeros(pg3, dtype =dtype)
     ###micron price guide
     woolp_mpg_w4 = sfun.f_woolprice().astype(dtype)/100
-    woolvalue_pa1e1b1nwzida0e0b0xyg0[shear_mask_p0], woolp_stbnib_sire = sfun.f_wool_value(woolp_mpg_w4, cfw_sire_p5, fd_sire_p5, sl_sire_p5, ss_sire_p5, vm_p5a1e1b1nwzida0e0b0xyg0,
-                                                                             pmb_p5a1e1b1nwzida0e0b0xyg0, dtype)
-    woolvalue_pa1e1b1nwzida0e0b0xyg1[shear_mask_p1], woolp_stbnib_dams = sfun.f_wool_value(woolp_mpg_w4, cfw_dams_p5, fd_dams_p5, sl_dams_p5, ss_dams_p5, vm_p5a1e1b1nwzida0e0b0xyg1,
-                                                                             pmb_p5a1e1b1nwzida0e0b0xyg1, dtype)
-    woolvalue_tpa1e1b1nwzida0e0b0xyg3[:,shear_mask_p3], woolp_stbnib_offs = sfun.f_wool_value(woolp_mpg_w4, cfw_offs_p5, fd_offs_p5, sl_offs_p5, ss_offs_p5, vm_p5a1e1b1nwzida0e0b0xyg3,
-                                                                             pmb_tp5a1e1b1nwzida0e0b0xyg3, dtype)
+    woolvalue_pa1e1b1nwzida0e0b0xyg0[shear_mask_p0], woolp_stbnib_sire = sfun.f_wool_value(woolp_mpg_w4, cfw_sire_p9, fd_sire_p9, sl_sire_p9, ss_sire_p9, vm_p9a1e1b1nwzida0e0b0xyg0,
+                                                                             pmb_p9a1e1b1nwzida0e0b0xyg0, dtype)
+    woolvalue_pa1e1b1nwzida0e0b0xyg1[shear_mask_p1], woolp_stbnib_dams = sfun.f_wool_value(woolp_mpg_w4, cfw_dams_p9, fd_dams_p9, sl_dams_p9, ss_dams_p9, vm_p9a1e1b1nwzida0e0b0xyg1,
+                                                                             pmb_p9a1e1b1nwzida0e0b0xyg1, dtype)
+    woolvalue_tpa1e1b1nwzida0e0b0xyg3[:,shear_mask_p3], woolp_stbnib_offs = sfun.f_wool_value(woolp_mpg_w4, cfw_offs_p9, fd_offs_p9, sl_offs_p9, ss_offs_p9, vm_p9a1e1b1nwzida0e0b0xyg3,
+                                                                             pmb_tp9a1e1b1nwzida0e0b0xyg3, dtype)
     wool_finish= time.time()
     print('wool value calcs :', wool_finish - calc_cost_start)
     ##Sale value - To speed the calculation process the p array is condensed to only include periods where shearing occurs. Using a slightly different association it is then converted to a v array (this process usually used a p to v association, in this case we use s to v association).
     ###create mask which is the periods where shearing occurs
     sale_mask_p0 = np.any(period_is_sale_pa1e1b1nwzida0e0b0xyg0, axis=tuple(range(uinp.structure['i_p_pos']+1,0)))
-    sale_mask_p1 = fun.f_reduce_skipfew(np.any, period_is_finish_tpa1e1b1nwzida0e0b0xyg1[0:i_n_dam_sales], preserveAxis=1)  #preforms np.any on all axis except 1. only use the sale slices from the dam t axis
+    sale_mask_p1 = fun.f_reduce_skipfew(np.any, period_is_sale_tpa1e1b1nwzida0e0b0xyg1[0:i_n_dam_sales], preserveAxis=1)  #preforms np.any on all axis except 1. only use the sale slices from the dam t axis
     sale_mask_p3 = fun.f_reduce_skipfew(np.any, period_is_sale_tpa1e1b1nwzida0e0b0xyg3, preserveAxis=1)  #preforms np.any on all axis except 1
     ###manipulate axis with assocaiations
-    score_range_s7s6p5a1e1b1nwzida0e0b0xyg = score_range_s8s6pa1e1b1nwzida0e0b0xyg[uinp.sheep['ia_s8_s7']] #s8 to s7
+    score_range_s7s6p9a1e1b1nwzida0e0b0xyg = score_range_s8s6pa1e1b1nwzida0e0b0xyg[uinp.sheep['ia_s8_s7']] #s8 to s7
     month_scalar_s7pa1e1b1nwzida0e0b0xyg = price_adj_months_s7s9m4a1e1b1nwzida0e0b0xyg[:, 0, a_m4_p] #month to p
     month_discount_s7pa1e1b1nwzida0e0b0xyg = price_adj_months_s7s9m4a1e1b1nwzida0e0b0xyg[:, 1, a_m4_p] #month to p
     ###Sale price grids for selected price percentile and the scalars for LW & quality score
     grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(sfun.f_saleprice(score_pricescalar_s7s5s6, weight_pricescalar_s7s5s6, dtype),uinp.structure['i_p_pos']-1)
     ###apply condensed periods mask
-    month_scalar_s7p5a1e1b1nwzida0e0b0xyg0 = month_scalar_s7pa1e1b1nwzida0e0b0xyg[:,sale_mask_p0] 
-    month_scalar_s7p5a1e1b1nwzida0e0b0xyg1 = month_scalar_s7pa1e1b1nwzida0e0b0xyg[:,sale_mask_p1] 
-    month_scalar_s7p5a1e1b1nwzida0e0b0xyg3 = month_scalar_s7pa1e1b1nwzida0e0b0xyg[:,sale_mask_p3] 
-    month_discount_s7p5a1e1b1nwzida0e0b0xyg0 = month_discount_s7pa1e1b1nwzida0e0b0xyg[:,sale_mask_p0] 
-    month_discount_s7p5a1e1b1nwzida0e0b0xyg1 = month_discount_s7pa1e1b1nwzida0e0b0xyg[:,sale_mask_p1] 
-    month_discount_s7p5a1e1b1nwzida0e0b0xyg3 = month_discount_s7pa1e1b1nwzida0e0b0xyg[:,sale_mask_p3] 
-    rc_start_sire_p5 = o_rc_start_sire[sale_mask_p0]
-    rc_start_dams_p5 = o_rc_start_dams[sale_mask_p1]
-    rc_start_offs_p5 = o_rc_start_offs[sale_mask_p3]
-    age_end_p5a1e1b1nwzida0e0b0xyg0 = age_end_pa1e1b1nwzida0e0b0xyg0[sale_mask_p0]
-    age_end_p5a1e1b1nwzida0e0b0xyg1 = age_end_pa1e1b1nwzida0e0b0xyg1[sale_mask_p1]
-    age_end_p5a1e1b1nwzida0e0b0xyg3 = age_end_pa1e1b1nwzida0e0b0xyg3[sale_mask_p3]
-    ffcfw_p5a1e1b1nwzida0e0b0xyg0 = o_ffcfw_sire[sale_mask_p0]
-    ffcfw_p5a1e1b1nwzida0e0b0xyg1 = o_ffcfw_dams[sale_mask_p1]
-    ffcfw_p5a1e1b1nwzida0e0b0xyg3 = o_ffcfw_offs[sale_mask_p3]
+    month_scalar_s7p9a1e1b1nwzida0e0b0xyg0 = month_scalar_s7pa1e1b1nwzida0e0b0xyg[:,sale_mask_p0] 
+    month_scalar_s7p9a1e1b1nwzida0e0b0xyg1 = month_scalar_s7pa1e1b1nwzida0e0b0xyg[:,sale_mask_p1] 
+    month_scalar_s7p9a1e1b1nwzida0e0b0xyg3 = month_scalar_s7pa1e1b1nwzida0e0b0xyg[:,sale_mask_p3] 
+    month_discount_s7p9a1e1b1nwzida0e0b0xyg0 = month_discount_s7pa1e1b1nwzida0e0b0xyg[:,sale_mask_p0] 
+    month_discount_s7p9a1e1b1nwzida0e0b0xyg1 = month_discount_s7pa1e1b1nwzida0e0b0xyg[:,sale_mask_p1] 
+    month_discount_s7p9a1e1b1nwzida0e0b0xyg3 = month_discount_s7pa1e1b1nwzida0e0b0xyg[:,sale_mask_p3] 
+    rc_start_sire_p9 = o_rc_start_sire[sale_mask_p0]
+    rc_start_dams_p9 = o_rc_start_dams[sale_mask_p1]
+    rc_start_offs_p9 = o_rc_start_offs[sale_mask_p3]
+    age_end_p9a1e1b1nwzida0e0b0xyg0 = age_end_pa1e1b1nwzida0e0b0xyg0[sale_mask_p0]
+    age_end_p9a1e1b1nwzida0e0b0xyg1 = age_end_pa1e1b1nwzida0e0b0xyg1[sale_mask_p1]
+    age_end_p9a1e1b1nwzida0e0b0xyg3 = age_end_pa1e1b1nwzida0e0b0xyg3[sale_mask_p3]
+    ffcfw_p9a1e1b1nwzida0e0b0xyg0 = o_ffcfw_sire[sale_mask_p0]
+    ffcfw_p9a1e1b1nwzida0e0b0xyg1 = o_ffcfw_dams[sale_mask_p1]
+    ffcfw_p9a1e1b1nwzida0e0b0xyg3 = o_ffcfw_offs[sale_mask_p3]
     ###initialise arrays to store results
     salevalue_pa1e1b1nwzida0e0b0xyg0 = np.zeros(pg0, dtype =dtype)
     salevalue_pa1e1b1nwzida0e0b0xyg1 = np.zeros(pg1, dtype =dtype)
     salevalue_pa1e1b1nwzida0e0b0xyg3 = np.zeros(pg3, dtype =dtype)
 
     salevalue_pa1e1b1nwzida0e0b0xyg0[sale_mask_p0] = sfun.f_sale_value(
-        cu0_sire.astype(dtype), cx_sire.astype(dtype), rc_start_sire_p5, ffcfw_p5a1e1b1nwzida0e0b0xyg0, dresspercent_adj_yg0,
+        cu0_sire.astype(dtype), cx_sire.astype(dtype), rc_start_sire_p9, ffcfw_p9a1e1b1nwzida0e0b0xyg0, dresspercent_adj_yg0,
         dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg,
-        grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg, month_scalar_s7p5a1e1b1nwzida0e0b0xyg0,
-        month_discount_s7p5a1e1b1nwzida0e0b0xyg0, price_type_s7pa1e1b1nwzida0e0b0xyg, a_s8_s7pa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg,
-        cvscore_s7s6pa1e1b1nwzida0e0b0xyg, lw_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p5a1e1b1nwzida0e0b0xyg,
-        age_end_p5a1e1b1nwzida0e0b0xyg0, discount_age_s7pa1e1b1nwzida0e0b0xyg,
+        grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg, month_scalar_s7p9a1e1b1nwzida0e0b0xyg0,
+        month_discount_s7p9a1e1b1nwzida0e0b0xyg0, price_type_s7pa1e1b1nwzida0e0b0xyg, a_s8_s7pa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg,
+        cvscore_s7s6pa1e1b1nwzida0e0b0xyg, lw_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p9a1e1b1nwzida0e0b0xyg,
+        age_end_p9a1e1b1nwzida0e0b0xyg0, discount_age_s7pa1e1b1nwzida0e0b0xyg,
         sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg,
         mask_s7x_s7pa1e1b1nwzida0e0b0xyg[...,0:1,:,:], sale_agemax_s7pa1e1b1nwzida0e0b0xyg0, dtype)
     salevalue_pa1e1b1nwzida0e0b0xyg1[sale_mask_p1] = sfun.f_sale_value(
-        cu0_dams.astype(dtype), cx_dams.astype(dtype), rc_start_dams_p5, ffcfw_p5a1e1b1nwzida0e0b0xyg1, dresspercent_adj_yg1,
+        cu0_dams.astype(dtype), cx_dams.astype(dtype), rc_start_dams_p9, ffcfw_p9a1e1b1nwzida0e0b0xyg1, dresspercent_adj_yg1,
         dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg,
-        grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg, month_scalar_s7p5a1e1b1nwzida0e0b0xyg1,
-        month_discount_s7p5a1e1b1nwzida0e0b0xyg1, price_type_s7pa1e1b1nwzida0e0b0xyg, a_s8_s7pa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg,
-        cvscore_s7s6pa1e1b1nwzida0e0b0xyg, lw_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p5a1e1b1nwzida0e0b0xyg,
-        age_end_p5a1e1b1nwzida0e0b0xyg1, discount_age_s7pa1e1b1nwzida0e0b0xyg,
+        grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg, month_scalar_s7p9a1e1b1nwzida0e0b0xyg1,
+        month_discount_s7p9a1e1b1nwzida0e0b0xyg1, price_type_s7pa1e1b1nwzida0e0b0xyg, a_s8_s7pa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg,
+        cvscore_s7s6pa1e1b1nwzida0e0b0xyg, lw_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p9a1e1b1nwzida0e0b0xyg,
+        age_end_p9a1e1b1nwzida0e0b0xyg1, discount_age_s7pa1e1b1nwzida0e0b0xyg,
         sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg,
         mask_s7x_s7pa1e1b1nwzida0e0b0xyg[...,1:2,:,:], sale_agemax_s7pa1e1b1nwzida0e0b0xyg1, dtype)
     salevalue_pa1e1b1nwzida0e0b0xyg3[sale_mask_p3] = sfun.f_sale_value(
-        cu0_offs, cx_offs, rc_start_offs_p5, ffcfw_p5a1e1b1nwzida0e0b0xyg3, dresspercent_adj_yg3,
+        cu0_offs, cx_offs, rc_start_offs_p9, ffcfw_p9a1e1b1nwzida0e0b0xyg3, dresspercent_adj_yg3,
         dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg,
-        grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg, month_scalar_s7p5a1e1b1nwzida0e0b0xyg3,
-        month_discount_s7p5a1e1b1nwzida0e0b0xyg3, price_type_s7pa1e1b1nwzida0e0b0xyg, a_s8_s7pa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg,
-        cvscore_s7s6pa1e1b1nwzida0e0b0xyg, lw_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p5a1e1b1nwzida0e0b0xyg,
-        age_end_p5a1e1b1nwzida0e0b0xyg3, discount_age_s7pa1e1b1nwzida0e0b0xyg,
+        grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg, month_scalar_s7p9a1e1b1nwzida0e0b0xyg3,
+        month_discount_s7p9a1e1b1nwzida0e0b0xyg3, price_type_s7pa1e1b1nwzida0e0b0xyg, a_s8_s7pa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg,
+        cvscore_s7s6pa1e1b1nwzida0e0b0xyg, lw_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p9a1e1b1nwzida0e0b0xyg,
+        age_end_p9a1e1b1nwzida0e0b0xyg3, discount_age_s7pa1e1b1nwzida0e0b0xyg,
         sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg,
         mask_s7x_s7pa1e1b1nwzida0e0b0xyg, sale_agemax_s7pa1e1b1nwzida0e0b0xyg3, dtype)
 
@@ -3577,27 +3588,27 @@ def generator(params,report):
     ##every period - with f & p6 axis
     ###sire - use p2v_std because there is not dvp so this version of the function may as well be used.
     mei_p6fa1e1b1nwzida0e0b0xyg0 = f_p2v_std(o_mei_solid_sire, numbers_p=o_numbers_end_sire, on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0
-                                         , days_period_p=days_period_pa1e1b1nwzida0e0b0xyg0, a_ev_p=a_ev_pa1e1b1nwzida0e0b0xyg0, index_ftvp=index_fpa1e1b1nwzida0e0b0xyg
-                                        , a_p6_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_p6ftvp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,...])
+                                         , days_period_p=days_period_pa1e1b1nwzida0e0b0xyg0, a_any1_p=a_ev_pa1e1b1nwzida0e0b0xyg0, index_any1tvp=index_fpa1e1b1nwzida0e0b0xyg
+                                        , a_any2_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any2any1tvp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,...])
     pi_p6fa1e1b1nwzida0e0b0xyg0 = f_p2v_std(o_pi_sire, numbers_p=o_numbers_end_sire, on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0
-                                         , days_period_p=days_period_pa1e1b1nwzida0e0b0xyg0, a_ev_p=a_ev_pa1e1b1nwzida0e0b0xyg0, index_ftvp=index_fpa1e1b1nwzida0e0b0xyg
-                                        , a_p6_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_p6ftvp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,...])
+                                         , days_period_p=days_period_pa1e1b1nwzida0e0b0xyg0, a_any1_p=a_ev_pa1e1b1nwzida0e0b0xyg0, index_any1tvp=index_fpa1e1b1nwzida0e0b0xyg
+                                        , a_any2_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any2any1tvp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,...])
     ###dams
     mei_p6ftva1e1b1nwzida0e0b0xyg1 = f_p2v(o_mei_solid_dams, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_dams
-                                       , on_hand_tpa1e1b1nwzida0e0b0xyg1, days_period_pa1e1b1nwzida0e0b0xyg1, a_ev_p=a_ev_pa1e1b1nwzida0e0b0xyg1, index_ftp=index_fpa1e1b1nwzida0e0b0xyg[:,na,...]
-                                       , a_p6_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_p6ftp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,na,...])
+                                       , on_hand_tpa1e1b1nwzida0e0b0xyg1, days_period_pa1e1b1nwzida0e0b0xyg1, a_any1_p=a_ev_pa1e1b1nwzida0e0b0xyg1, index_any1tp=index_fpa1e1b1nwzida0e0b0xyg[:,na,...]
+                                       , a_any2_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any2any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,na,...])
 
     pi_p6ftva1e1b1nwzida0e0b0xyg1 = f_p2v(o_pi_dams, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_dams
-                                           , on_hand_tpa1e1b1nwzida0e0b0xyg1, days_period_pa1e1b1nwzida0e0b0xyg1, a_ev_p=a_ev_pa1e1b1nwzida0e0b0xyg1, index_ftp=index_fpa1e1b1nwzida0e0b0xyg[:,na,...]
-                                           , a_p6_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_p6ftp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,na,...])
+                                           , on_hand_tpa1e1b1nwzida0e0b0xyg1, days_period_pa1e1b1nwzida0e0b0xyg1, a_any1_p=a_ev_pa1e1b1nwzida0e0b0xyg1, index_any1tp=index_fpa1e1b1nwzida0e0b0xyg[:,na,...]
+                                           , a_any2_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any2any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,na,...])
 
     ###offs
     mei_p6ftva1e1b1nwzida0e0b0xyg3 = f_p2v(o_mei_solid_offs, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_offs
-                                       , on_hand_tpa1e1b1nwzida0e0b0xyg3, days_period_pa1e1b1nwzida0e0b0xyg3, a_ev_p=a_ev_pa1e1b1nwzida0e0b0xyg3, index_ftp=index_fpa1e1b1nwzida0e0b0xyg[:,na,...]
-                                       , a_p6_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_p6ftp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,na,...])
+                                       , on_hand_tpa1e1b1nwzida0e0b0xyg3, days_period_pa1e1b1nwzida0e0b0xyg3, a_any1_p=a_ev_pa1e1b1nwzida0e0b0xyg3, index_any1tp=index_fpa1e1b1nwzida0e0b0xyg[:,na,...]
+                                       , a_any2_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any2any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,na,...])
     pi_p6ftva1e1b1nwzida0e0b0xyg3 = f_p2v(o_pi_offs, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_offs
-                                           , on_hand_tpa1e1b1nwzida0e0b0xyg3, days_period_pa1e1b1nwzida0e0b0xyg3, a_ev_p=a_ev_pa1e1b1nwzida0e0b0xyg3, index_ftp=index_fpa1e1b1nwzida0e0b0xyg[:,na,...]
-                                           , a_p6_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_p6ftp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,na,...])
+                                           , on_hand_tpa1e1b1nwzida0e0b0xyg3, days_period_pa1e1b1nwzida0e0b0xyg3, a_any1_p=a_ev_pa1e1b1nwzida0e0b0xyg3, index_any1tp=index_fpa1e1b1nwzida0e0b0xyg[:,na,...]
+                                           , a_any2_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any2any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,na,...])
 
     # mei_p6ftva1e1b1nwzida0e0b0xyg3 = f_p2v(o_mei_solid_offs, a_v_pa1e1b1nwzida0e0b0xyg3, index_vpa1e1b1nwzida0e0b0xyg3, o_numbers_end_offs
     #                                    , on_hand_tpa1e1b1nwzida0e0b0xyg3[:,na,...], days_period_pa1e1b1nwzida0e0b0xyg3, a_ev_p=a_ev_pa1e1b1nwzida0e0b0xyg3, index_ftvp=index_fpa1e1b1nwzida0e0b0xyg[:,na,na,...]
@@ -3632,19 +3643,24 @@ def generator(params,report):
 
 
 
-    ##every period - with cost (c) axis
+
 
 
     ##every period - with sire periods
     nsire_tva1e1b1nwzida0e0b0xyg1g0p8 = f_p2v_std(o_n_sire_a1e1b1nwzida0e0b0xyg1g0p8, a_v_pa1e1b1nwzida0e0b0xyg1[...,na,na], index_vpa1e1b1nwzida0e0b0xyg1[...,na,na]
-                                               , o_numbers_end_dams[...,na,na], on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...,na,na], days_period_pa1e1b1nwzida0e0b0xyg1[...,na,na]
-                                                , sumadj=2)
+                                               , o_numbers_end_dams[...,na,na], on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...,na,na], sumadj=2)
 
 
-    ##intermittent - with cost (c) axis - use std version of function because p axis has been condensed so theres no benefit of using the other
-    woolvalue_tva1e1b1nwzida0e0b0xyg1 = f_p2v_std(woolvalue_p5a1e1b1nwzida0e0b0xyg1, a_v_p5a1e1b1nwzida0e0b0xyg1, index_vpa1e1b1nwzida0e0b0xyg1, o_numbers_end_dams,
-                                                  on_hand_tpa1e1b1nwzida0e0b0xyg1[:,shear_mask_p1,...], period_is_tvp=period_is_shearing_p5a1e1b1nwzida0e0b0xyg1,
-                                                  a_c_p=a_c_pa1e1b1nwzida0e0b0xyg,index_ctvp=index_ctvpa1e1b1nwzida0e0b0xyg)
+    ##every period - with cost (c) axis (when combining the cost the period is arrays were already applied therefore converted from 'intermitent' to 'every period'
+    cashflow_ctva1e1b1nwzida0e0b0xyg1 = f_p2v(cashflow_pa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_dams,
+                                                  on_hand_tpa1e1b1nwzida0e0b0xyg1, a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg,index_any1tp=index_ctpa1e1b1nwzida0e0b0xyg)
+
+    ##every period - with labour (p5) axis
+    cashflow_ctva1e1b1nwzida0e0b0xyg1 = f_p2v(cashflow_pa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_dams,
+                                                  on_hand_tpa1e1b1nwzida0e0b0xyg1, a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg,index_any1tp=index_ctpa1e1b1nwzida0e0b0xyg)
+
+
+
 
     ##intermittent
     ###dams
@@ -3848,7 +3864,7 @@ def generator(params,report):
     keys_n3 = uinp.structure['i_n_idx_offs']
     keys_p6 = np.array([pinp.feed_inputs['feed_periods'].index[:-1]])
     keys_p8 = ['sire_per%s'%i for i in range(len_p8)]
-    keys_t1 = ['t%s'%i for i in range(pinp.sheep['i_t1_len'])]
+    keys_t1 = ['t%s'%i for i in range(t1_len)]
     keys_t3 = ['t%s'%i for i in range(pinp.sheep['i_t3_len'])]
     keys_v1 = ['dvp%s'%i for i in range(dvp_type_va1e1b1nwzida0e0b0xyg1.shape[0])]
     keys_v3 = ['dvp%s'%i for i in range(dvp_start_date_va1e1b1nwzida0e0b0xyg3.shape[0])]
