@@ -1555,20 +1555,55 @@ def f_operations_triggered(animal_triggervalues_h7pg, operations_triggerlevels_h
 
 def f_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg):
     ##mask - Calculation is required
-    required_le_h7h2pg = np.logical_and(np.logical_and(operation_triggered_h2pg, operations_triggerlevels_h5h7h2pg[3, ...] != np.inf), operations_triggerlevels_h5h7h2pg[0, ...] != np.inf) #logical_or only has two args
-    required_ge_h7h2pg = np.logical_and(np.logical_and(operation_triggered_h2pg, operations_triggerlevels_h5h7h2pg[3, ...] != np.inf), operations_triggerlevels_h5h7h2pg[2, ...] != -np.inf)
+    mask_start=time.time()
+    temp_mask = np.logical_and(operation_triggered_h2pg, operations_triggerlevels_h5h7h2pg[3, ...] != np.inf) #use this because le and ge are pretty similar so using this saves doing it twice
+    required_le_h7h2pg = np.logical_and(temp_mask, operations_triggerlevels_h5h7h2pg[0, ...] != np.inf) #logical_or only has two args
+    required_ge_h7h2pg = np.logical_and(temp_mask, operations_triggerlevels_h5h7h2pg[2, ...] != -np.inf)
+    mask_end=time.time()
+    print('mask: ',mask_end-mask_start)
     ##Create blank versions for assignment - one is the default value for the calc below where the mask is false hence initilise with ones
     temporary_le_h7h2pg = np.ones_like(required_le_h7h2pg, dtype='float32')
-    temporary_ge_h7h2pg = np.ones_like(required_le_h7h2pg, dtype='float32')
+    temporary_ge_h7h2pg = np.ones_like(required_ge_h7h2pg, dtype='float32')
+    init_end=time.time()
+    print('inint: ',init_end-mask_end)
+    ##set up arrays for calculations - masking done first to save doing it multiple times in the actual calculations
+    operations_triggerlevels_casted_h5h7h2pg=np.broadcast_to(operations_triggerlevels_h5h7h2pg, (operations_triggerlevels_h5h7h2pg.shape[0],)+required_le_h7h2pg.shape)
+    animal_triggervalues_h7h2pg = np.broadcast_to(animal_triggervalues_h7pg[:,na,...], operations_triggerlevels_casted_h5h7h2pg.shape[1:])
+    operations_triggerlevels_le_masked_h5h7h2pg = operations_triggerlevels_casted_h5h7h2pg[:, required_le_h7h2pg]
+    operations_triggerlevels_ge_masked_h5h7h2pg = operations_triggerlevels_casted_h5h7h2pg[:, required_ge_h7h2pg] #i tried creating this after the le one was used and just over writing the le one but that didnt speed the process
+    setup_end=time.time()
+    print('setup: ',setup_end-init_end)
+
+    # operations_triggerlevels_masked_h5h7h2pg = operations_triggerlevels_h5h7h2pg[:, required_le_h7h2pg]
+    # operations_triggerlevels_masked_ge_h5h7h2pg = operations_triggerlevels_h5h7h2pg[:, required_ge_h7h2pg]
+
+    # operations_triggerlevels_h5h7h2pg[operations_triggerlevels_h5h7h2pg==np.inf] = 1
+    # operations_triggerlevels_h5h7h2pg[operations_triggerlevels_h5h7h2pg==-np.inf] = 1
+
     ##"Level if animal trigger level is <= range  - mask out the infs to stop invalid warning and to speed the calculation
-    operations_triggerlevels_h5h7h2pg=np.broadcast_to(operations_triggerlevels_h5h7h2pg, (operations_triggerlevels_h5h7h2pg.shape[0],)+required_le_h7h2pg.shape)
-    temporary_le_h7h2pg[required_le_h7h2pg] = ((animal_triggervalues_h7pg[:, na, ...] - operations_triggerlevels_h5h7h2pg[0, ...])[required_le_h7h2pg]/
-                                   (operations_triggerlevels_h5h7h2pg[3, required_le_h7h2pg] - operations_triggerlevels_h5h7h2pg[0, required_le_h7h2pg]))
+    temporary_le_h7h2pg[required_le_h7h2pg] = np.clip((animal_triggervalues_h7h2pg[required_le_h7h2pg] - operations_triggerlevels_le_masked_h5h7h2pg[0, ...])/
+                                               (operations_triggerlevels_le_masked_h5h7h2pg[3, ...] - operations_triggerlevels_le_masked_h5h7h2pg[0, ...]),0,1)
     ##Level if animal trigger level is >= range   - mask out the infs to stop invalid warning and to speed the calculation
-    temporary_ge_h7h2pg[required_ge_h7h2pg] = ((animal_triggervalues_h7pg[:, na, ...] - operations_triggerlevels_h5h7h2pg[2, ...])[required_ge_h7h2pg]/
-                                   (operations_triggerlevels_h5h7h2pg[3, required_ge_h7h2pg] - operations_triggerlevels_h5h7h2pg[2, required_ge_h7h2pg]))
+    temporary_ge_h7h2pg[required_ge_h7h2pg] = np.clip((animal_triggervalues_h7h2pg[required_ge_h7h2pg] - operations_triggerlevels_ge_masked_h5h7h2pg[2, ...])/
+                                                (operations_triggerlevels_ge_masked_h5h7h2pg[3, ...] - operations_triggerlevels_ge_masked_h5h7h2pg[2, ...]),0,1)
+
+    # ##"Level if animal trigger level is <= range  - mask out the infs to stop invalid warning and to speed the calculation
+    # temporary_le_h7h2pg[required_le_h7h2pg] = ((animal_triggervalues_h7pg[:, na, ...] - operations_triggerlevels_h5h7h2pg[0, ...])[required_le_h7h2pg]/
+    #                                (operations_triggerlevels_masked_h5h7h2pg[3, ...] - operations_triggerlevels_masked_h5h7h2pg[0, ...]))
+    # ##Level if animal trigger level is >= range   - mask out the infs to stop invalid warning and to speed the calculation
+    # temporary_ge_h7h2pg[required_ge_h7h2pg] = ((animal_triggervalues_h7pg[:, na, ...] - operations_triggerlevels_h5h7h2pg[2, ...])[required_ge_h7h2pg]/
+    #                                (operations_triggerlevels_masked_ge_h5h7h2pg[3, ...] - operations_triggerlevels_masked_ge_h5h7h2pg[2, ...]))
+    # ##"Level if animal trigger level is <= range  - mask out the infs to stop invalid warning and to speed the calculation
+    # temporary_le_h7h2pg[required_le_h7h2pg] = ((animal_triggervalues_h7pg[:, na, ...] - operations_triggerlevels_h5h7h2pg[0, ...])[required_le_h7h2pg]/
+    #                                (operations_triggerlevels_h5h7h2pg[3, required_le_h7h2pg] - operations_triggerlevels_h5h7h2pg[0, required_le_h7h2pg]))
+    # ##Level if animal trigger level is >= range   - mask out the infs to stop invalid warning and to speed the calculation
+    # temporary_ge_h7h2pg[required_ge_h7h2pg] = ((animal_triggervalues_h7pg[:, na, ...] - operations_triggerlevels_h5h7h2pg[2, ...])[required_ge_h7h2pg]/
+    #                                (operations_triggerlevels_h5h7h2pg[3, required_ge_h7h2pg] - operations_triggerlevels_h5h7h2pg[2, required_ge_h7h2pg]))
     ##Test across the rules (& collapse h7 axis)
-    level_h2pg = np.max(np.maximum(0, np.minimum(1, temporary_le_h7h2pg), temporary_ge_h7h2pg),axis=0) * operation_triggered_h2pg   #mul by operation triggered so that level goes to 0 if opperation is not trigered
+    level_h2pg = np.max(np.minimum(temporary_le_h7h2pg, temporary_ge_h7h2pg),axis=0) * operation_triggered_h2pg   #mul by operation triggered so that level goes to 0 if opperation is not trigered
+    calc_end = time.time()
+    print('calc: ', calc_end - setup_end)
+
     return level_h2pg
 
 
@@ -1622,7 +1657,6 @@ def f_husbandry(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, operations_trigge
                 husb_operations_contract_cost_h2pg, husb_muster_requisites_prob_h6h4pg,
                 musters_per_hour_l2h4pg, husb_muster_infrastructurereq_h1h4pg,
                 a_nyatf_b1g=0,period_is_joining_pg=False, animal_mated=False, period_is_endmating_pg=False, dtype=None):
-    start=time.time() #^delete this stuff once the function is faster
     ##An array of the trigger values for the animal classes in each period - these values are compared against a threashold to determine if the husb is required
     animal_triggervalues_h7pg = f_animal_trigger_levels(index_pg, age_start, period_is_shear_pg, a_next_s_pg, period_is_wean_pg, gender,
                             o_ebg_p, wool_genes, period_is_joining_pg, animal_mated, period_is_endmating_pg).astype(dtype)
@@ -1631,11 +1665,12 @@ def f_husbandry(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, operations_trigge
     ##Is the husb operation triggered in the period for each class
     operation_triggered_h2pg = f_operations_triggered(animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg)
     ##The level of the operation in each period for the class of livestock (proportion of animals that recieve treatment) - this accounts for the fact that just because the operation is triggered the opperation may not be done to all animals
+    start=time.time() #^delete this stuff once the function is faster
     application_level_h2pg = f_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg)
-    ##The number of times the mob must be mustered
-    mustering_level_pg = f_mustering_required(application_level_h2pg, husb_operations_muster_propn_h2pg)
     finish1=time.time()
     print('finish1 - level of husb : ', finish1-start)
+    ##The number of times the mob must be mustered
+    mustering_level_pg = f_mustering_required(application_level_h2pg, husb_operations_muster_propn_h2pg)
     ##The cost of requisites for the operations
     operations_requisites_cost_pg = f_husbandry_requisites(application_level_h2pg, treatment_units_h8pg, husb_requisite_cost_h6pg, husb_operations_requisites_prob_h6h2pg, uinp.sheep['ia_h8_h2'])
     ##The labour requirement for the operations

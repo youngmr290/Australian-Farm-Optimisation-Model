@@ -151,7 +151,6 @@ model.s_sheep_pools = Set(initialize=uinp.structure['sheep_pools'], doc='nutriti
 # model.s_sire_periods = Set(initialize=, doc='sire capacity periods')
 
 ##dams
-model.s_sale_dams = Set(initialize=['t%s'%i for i in range(pinp.sheep['i_t1_len'])], doc='Sales within the year for damss')
 model.s_nut_dams = Set(initialize=uinp.structure['i_n_idx_dams'], doc='Nutrition levels in each feed period for dams')
 model.s_lw_dams = Set(initialize=uinp.structure['i_w_idx_dams'], doc='Standard LW patterns damss')
 ##offs

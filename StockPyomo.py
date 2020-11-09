@@ -34,6 +34,7 @@ def sheep_pyomo_local(params,report):
     model.s_dvp_dams = pe.Set(ordered=True, initialize=params['dvp_idx_dams'], doc='Decision variable periods for dams') #ordered so they can be indexed in constraint to determine previous period
     model.s_groups_dams = pe.Set(initialize=params['g_idx_dams'], doc='geneotype groups of dams')
     model.s_gen_merit_dams = pe.Set(initialize=params['y_idx_dams'], doc='genetic merit of dams')
+    model.s_sale_dams = pe.Set(initialize=params['t_idx_dams'], doc='Sales within the year for damss')
     model.s_dvp_offs = pe.Set(ordered=True, initialize=params['dvp_idx_offs'], doc='Decision variable periods for offs') #ordered so they can be indexed in constraint to determine previous period
     model.s_damage_offs = pe.Set(initialize=params['k3_idx_offs'], doc='age of mother - offs')
     model.s_birth_offs = pe.Set(initialize=params['k5_idx_offs'], doc='Cluster for BTRT & oestrus cycle based on scanning, global & weaning management')
