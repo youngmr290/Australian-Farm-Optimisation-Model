@@ -3203,6 +3203,23 @@ def generator(params,report):
     #################################
 
     ##dams
+    ###transfer
+    a_g1_tpa1e1b1nwzida0e0b0xyg1 = sfun.f_g2g(uinp.structure['ia_g1_tg1'], 'dams', uinp.structure['i_p_pos']-1)
+    transfer_exists_tpa1e1b1nwzida0e0b0xyg1 = sfun.f_g2g(uinp.structure['i_transfer_exists_tg1'], 'dams', uinp.structure['i_p_pos']-1)
+    #### adjust the pointers for excluded dams
+    prior_dams_excluded_g1 = np.cumsum(~mask_dams_inc_g1)[mask_dams_inc_g1]
+    a_g1_tpa1e1b1nwzida0e0b0xyg1 = a_g1_tpa1e1b1nwzida0e0b0xyg1 - prior_dams_excluded_g1
+    ####mask inputs for g0
+    transfer_exists_tpa1e1b1nwzida0e0b0xyg1 = transfer_exists_tpa1e1b1nwzida0e0b0xyg1[mask_sire_inc_g0]
+    a_g1_tpa1e1b1nwzida0e0b0xyg1 = a_g1_tpa1e1b1nwzida0e0b0xyg1[mask_sire_inc_g0]
+    #### add the sale slices for the t axis
+    slices_to_add = np.full((pinp.sheep['i_n_dam_sales'],)+transfer_exists_tpa1e1b1nwzida0e0b0xyg1.shape[1:], False)
+    transfer_exists_tpa1e1b1nwzida0e0b0xyg1 = np.concatenate([slices_to_add, transfer_exists_tpa1e1b1nwzida0e0b0xyg1],0)
+    slices_to_add = ~slices_to_add * np.arange(len_g1)
+    a_g1_tpa1e1b1nwzida0e0b0xyg1 = np.concatenate([slices_to_add, a_g1_tpa1e1b1nwzida0e0b0xyg1],0)
+
+
+
     ###dvp pointer - for dams there is a new dvp each fvp- ^this is inflexible, maybe there is a better way to do this
     a_v_pa1e1b1nwzida0e0b0xyg1 = a_fvp_pa1e1b1nwzida0e0b0xyg1.astype(dtypeint)
     index_vpa1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(np.arange(np.max(a_v_pa1e1b1nwzida0e0b0xyg1)+1), uinp.structure['i_p_pos']-1) #plus 1 because python index starts at 0
@@ -3215,16 +3232,16 @@ def generator(params,report):
     nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg1 = np.roll(period_is_startdvp_pa1e1b1nwzida0e0b0xyg1,-1,axis=0)
     nextperiod_is_prejoin_pa1e1b1nwzida0e0b0xyg1 = np.roll(period_is_prejoin_pa1e1b1nwzida0e0b0xyg1,-1,axis=0)
     dvp_type_next_va1e1b1nwzida0e0b0xyg1 = np.roll(dvp_type_va1e1b1nwzida0e0b0xyg1, -1, axis=uinp.structure['i_p_pos'])
-    dvp_type_next_tva1e1b1nwzida0e0b0xyg1 = np.take_along_axis(dvp_type_next_va1e1b1nwzida0e0b0xyg1, a_g1_tg1, axis=-1)
+    # dvp_type_next_tva1e1b1nwzida0e0b0xyg1 = np.take_along_axis(dvp_type_next_va1e1b1nwzida0e0b0xyg1[na], a_g1_tpa1e1b1nwzida0e0b0xyg1, axis=-1)
+    temporary_tvg1 = fun.f_reshape_expand(np.identity(t1_len), uinp.structure['i_p_pos']-1)  # with the axis in the position of ‘t’
+    dvp_type_next_tva1e1b1nwzida0e0b0xyg1 = dvp_type_next_va1e1b1nwzida0e0b0xyg1 * temporary_tvg1
+    mask_numbers_t_tvg1 = temporary_tvg1 * dvp_type_next_tva1e1b1nwzida0e0b0xyg1 != 0  #Mask numbers transferred - this mask stops dams transfering to different sires between dvps that are not prejoining
     ###cluster
     a_ppk2g1_slva1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.structure['ia_ppk2g1_vlsb1'], uinp.parameters['i_b1_pos'], swap=True, ax1=0, ax2=2, len_ax0=uinp.structure['i_n_v1type']
                                           , len_ax1=uinp.structure['i_len_l'], len_ax2=uinp.structure['i_len_s'], len_ax3=uinp.structure['ia_ppk2g1_vlsb1'].shape[-1]
                                           , left_pos2=uinp.structure['i_p_pos'], right_pos2=uinp.parameters['i_b1_pos'])
     a_ppk2g1_va1e1b1nwzida0e0b0xygsl = np.moveaxis(np.moveaxis(a_ppk2g1_slva1e1b1nwzida0e0b0xyg, 0,-1),0,-1) #put s and l at the end they are summed away shorlty
     a_ppk2g1_va1e1b1nwzida0e0b0xygsl = np.take_along_axis(a_ppk2g1_va1e1b1nwzida0e0b0xygsl,dvp_type_va1e1b1nwzida0e0b0xyg1[...,na,na], axis=0) #convert v type axis to normal v axis
-    ###transfer
-    a_g1_tpa1e1b1nwzida0e0b0xyg1 = sfun.f_g2g(uinp.structure['ia_g1_tg1'], 'dams', uinp.structure['i_p_pos']-1)
-    transfer_exists_tpa1e1b1nwzida0e0b0xyg1 = sfun.f_g2g(uinp.structure['i_transfer_exists_tg1'], 'dams', uinp.structure['i_p_pos']-1)
 
     ##offs
     ###dvp pointer - for offs there is a new dvp each time fvp type goes back to 0 (eg once per yr)- ^this is inflexible, maybe there is a better way to do this
@@ -3318,19 +3335,7 @@ def generator(params,report):
     period_is_sale_tpa1e1b1nwzida0e0b0xyg1[0] = period_is_sale_t0_pa1e1b1nwzida0e0b0xyg1
     period_is_sale_tpa1e1b1nwzida0e0b0xyg1[1] = period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1
 
-    ###period_is_transfer calcs
-    #### adjust the pointers for excluded dams
-    prior_dams_excluded_g1 = np.cumsum(~mask_dams_inc_g1)[mask_dams_inc_g1]
-    a_g1_tpa1e1b1nwzida0e0b0xyg1 = a_g1_tpa1e1b1nwzida0e0b0xyg1 - prior_dams_excluded_g1
-    ####mask inputs for g0
-    transfer_exists_tpa1e1b1nwzida0e0b0xyg1 = transfer_exists_tpa1e1b1nwzida0e0b0xyg1[mask_sire_inc_g0]
-    a_g1_tpa1e1b1nwzida0e0b0xyg1 = a_g1_tpa1e1b1nwzida0e0b0xyg1[mask_sire_inc_g0]
-    #### add the sale slices for the t axis
-    slices_to_add = np.full((pinp.sheep['i_n_dam_sales'],)+transfer_exists_tpa1e1b1nwzida0e0b0xyg1.shape[1:], False)
-    transfer_exists_tpa1e1b1nwzida0e0b0xyg1 = np.concatenate([slices_to_add, transfer_exists_tpa1e1b1nwzida0e0b0xyg1],0)
-    slices_to_add = ~slices_to_add * np.arange(len_g1)
-    a_g1_tpa1e1b1nwzida0e0b0xyg1 = np.concatenate([slices_to_add, a_g1_tpa1e1b1nwzida0e0b0xyg1],0)
-    #### calculate period_is_finish when the dams are transferred from the current g slice to the destination g slice
+    ####transfer - calculate period_is_finish when the dams are transferred from the current g slice to the destination g slice
     period_is_transfer_tpa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(nextperiod_is_prejoin_pa1e1b1nwzida0e0b0xyg1[na, ...], a_g1_tpa1e1b1nwzida0e0b0xyg1, -1) * transfer_exists_tpa1e1b1nwzida0e0b0xyg1
 
 
@@ -3515,9 +3520,9 @@ def generator(params,report):
                                          + woolvalue_pa1e1b1nwzida0e0b0xyg1 * period_is_shearing_pa1e1b1nwzida0e0b0xyg1
                                          - husbandry_cost_pg1)
     ###offs
-    cashflow_tpa1e1b1nwzida0e0b0xyg3 =  (salevalue_pa1e1b1nwzida0e0b0xyg3 * period_is_sale_tpa1e1b1nwzida0e0b0xyg3
-                                         + woolvalue_pa1e1b1nwzida0e0b0xyg3 * period_is_shearing_pa1e1b1nwzida0e0b0xyg3
-                                         - husbandry_cost_pg3)
+    # cashflow_tpa1e1b1nwzida0e0b0xyg3 =  (salevalue_pa1e1b1nwzida0e0b0xyg3 * period_is_sale_tpa1e1b1nwzida0e0b0xyg3
+    #                                      + woolvalue_pa1e1b1nwzida0e0b0xyg3 * period_is_shearing_pa1e1b1nwzida0e0b0xyg3
+    #                                      - husbandry_cost_pg3)
 
 
     ######################
@@ -3653,28 +3658,28 @@ def generator(params,report):
 
 
     ##every period - with cost (c) axis (when combining the cost the period is arrays were already applied therefore converted from 'intermitent' to 'every period'
-    cashflow_ctva1e1b1nwzida0e0b0xyg0 = f_p2v(cashflow_pa1e1b1nwzida0e0b0xyg0, a_v_pa1e1b1nwzida0e0b0xyg0, o_numbers_end_sire,
-                                              on_hand_pa1e1b1nwzida0e0b0xyg0, a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg,index_any1tp=index_ctpa1e1b1nwzida0e0b0xyg)
+    cashflow_ctva1e1b1nwzida0e0b0xyg0 = f_p2v(cashflow_pa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_sire,
+                                              on_hand_tp=on_hand_pa1e1b1nwzida0e0b0xyg0, a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg,index_any1tp=index_ctpa1e1b1nwzida0e0b0xyg)
     cashflow_ctva1e1b1nwzida0e0b0xyg1 = f_p2v(cashflow_tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_dams,
                                               on_hand_tpa1e1b1nwzida0e0b0xyg1, a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg,index_any1tp=index_ctpa1e1b1nwzida0e0b0xyg)
-    cashflow_ctva1e1b1nwzida0e0b0xyg3 = f_p2v(cashflow_tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_offs,
-                                              on_hand_tpa1e1b1nwzida0e0b0xyg3, a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg,index_any1tp=index_ctpa1e1b1nwzida0e0b0xyg)
+    # cashflow_ctva1e1b1nwzida0e0b0xyg3 = f_p2v(cashflow_tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_offs,
+    #                                           on_hand_tpa1e1b1nwzida0e0b0xyg3, a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg,index_any1tp=index_ctpa1e1b1nwzida0e0b0xyg)
 
     ##every period - with labour (p5) axis
-    labour_l2p5tva1e1b1nwzida0e0b0xyg0 = f_p2v(husbandry_labour_l2pg0[:,na,na,...], a_v_pa1e1b1nwzida0e0b0xyg0, o_numbers_end_sire,
-                                             on_hand_pa1e1b1nwzida0e0b0xyg0, a_any1_p=a_p5_pa1e1b1nwzida0e0b0xyg,index_any1tp=index_p5tpa1e1b1nwzida0e0b0xyg)
+    labour_l2p5tva1e1b1nwzida0e0b0xyg0 = f_p2v(husbandry_labour_l2pg0[:,na,na,...], numbers_p=o_numbers_end_sire,
+                                             on_hand_tp=on_hand_pa1e1b1nwzida0e0b0xyg0, a_any1_p=a_p5_pa1e1b1nwzida0e0b0xyg,index_any1tp=index_p5tpa1e1b1nwzida0e0b0xyg)
     labour_l2p5tva1e1b1nwzida0e0b0xyg1 = f_p2v(husbandry_labour_l2pg0[:,na,na,...], a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_dams,
                                              on_hand_tpa1e1b1nwzida0e0b0xyg1, a_any1_p=a_p5_pa1e1b1nwzida0e0b0xyg,index_any1tp=index_p5tpa1e1b1nwzida0e0b0xyg)
-    labour_l2p5tva1e1b1nwzida0e0b0xyg3 = f_p2v(husbandry_labour_l2pg3[:,na,na,...], a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_offs,
-                                             on_hand_tpa1e1b1nwzida0e0b0xyg3, a_any1_p=a_p5_pa1e1b1nwzida0e0b0xyg,index_any1tp=index_p5tpa1e1b1nwzida0e0b0xyg)
+    # labour_l2p5tva1e1b1nwzida0e0b0xyg3 = f_p2v(husbandry_labour_l2pg3[:,na,na,...], a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_offs,
+    #                                          on_hand_tpa1e1b1nwzida0e0b0xyg3, a_any1_p=a_p5_pa1e1b1nwzida0e0b0xyg,index_any1tp=index_p5tpa1e1b1nwzida0e0b0xyg)
 
     ##every period - with infrastructure (h1) axis
-    infrastructure_h1va1e1b1nwzida0e0b0xyg0 = f_p2v(husbandry_infrastructure_h1pg0, a_v_pa1e1b1nwzida0e0b0xyg0, o_numbers_end_sire,
-                                             on_hand_pa1e1b1nwzida0e0b0xyg0)
+    infrastructure_h1va1e1b1nwzida0e0b0xyg0 = f_p2v(husbandry_infrastructure_h1pg0, numbers_p=o_numbers_end_sire,
+                                             on_hand_tp=on_hand_pa1e1b1nwzida0e0b0xyg0)
     infrastructure_h1tva1e1b1nwzida0e0b0xyg1 = f_p2v(husbandry_infrastructure_h1pg1[:,na,...], a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_dams,
                                              on_hand_tpa1e1b1nwzida0e0b0xyg1)
-    infrastructure_h1tva1e1b1nwzida0e0b0xyg3 = f_p2v(husbandry_infrastructure_h1pg3[:,na,...], a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_offs,
-                                             on_hand_tpa1e1b1nwzida0e0b0xyg3)
+    # infrastructure_h1tva1e1b1nwzida0e0b0xyg3 = f_p2v(husbandry_infrastructure_h1pg3[:,na,...], a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_offs,
+    #                                          on_hand_tpa1e1b1nwzida0e0b0xyg3)
 
 
 
@@ -3790,12 +3795,7 @@ def generator(params,report):
     ##mask the t array so that only slice t0 provides numbers
     mask_numbers_prov_tva1e1b1nw8zida0e0b0xyg3w9 = mask_numbers_prov_w9 * (index_tva1e1b1nw8zida0e0b0xyg3w9 == 0)
 
-    ###########################
-    #Mask numbers transferred #
-    ###########################
-    '''this mask stops dams transfering to different sires between dvps that are not prejoining'''
-    temporary_tvg1 = fun.f_reshape_expand(np.identity(t1_len), uinp.structure['i_p_pos']-1)  # with the axis in the position of ‘t’
-    mask_numbers_t_tvg1 = temporary_tvg1 * dvp_type_next_tva1e1b1nwzida0e0b0xyg1 != 0
+
 
     ###########################
     #create production params #
