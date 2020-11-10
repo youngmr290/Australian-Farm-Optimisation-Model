@@ -1061,13 +1061,13 @@ def f_conception_ltw(cu0, cs_mating, scan_std, doy_p, nfoet_b1any, nyatf_b1any, 
 
 
 
-def f_sire_req(sire_propn_a1e1b1nwzida0e0b0xyg1, sire_periods_g0p8, i_sire_recovery, i_startyear, date_end_p, period_is_prejoin_a1e1b1nwzida0e0b0xyg1):
+def f_sire_req(sire_propn_a1e1b1nwzida0e0b0xyg1g0, sire_periods_g0p8, i_sire_recovery, i_startyear, date_end_p, period_is_prejoin_a1e1b1nwzida0e0b0xyg1):
     ##Date at end of period adjusted to start year
     t_date_end_a1e1b1nwzida0e0b0xyg = date_end_p - (365 * (date_end_p.astype('datetime64[Y]').astype(int) + 1970 - i_startyear)).astype('timedelta64[D]')
     ##Date_end falls within the ram mating periods
     sire_required_a1e1b1nwzida0e0b0xyg1g0p8 = np.logical_and(t_date_end_a1e1b1nwzida0e0b0xyg[...,na,na] >= sire_periods_g0p8.astype('datetime64[D]') , t_date_end_a1e1b1nwzida0e0b0xyg[...,na,na] <= (sire_periods_g0p8.astype('datetime64[D]') + i_sire_recovery)) #add axis for p8 and g1
     ##Number of rams required per ewe (if this period is joining)
-    n_sires = sire_required_a1e1b1nwzida0e0b0xyg1g0p8 * sire_propn_a1e1b1nwzida0e0b0xyg1[..., na,na] * period_is_prejoin_a1e1b1nwzida0e0b0xyg1[..., na,na] #add axis for g1 and p8
+    n_sires = sire_required_a1e1b1nwzida0e0b0xyg1g0p8 * sire_propn_a1e1b1nwzida0e0b0xyg1g0[..., na] * period_is_prejoin_a1e1b1nwzida0e0b0xyg1[..., na,na] #add axis for g1 and p8
     return n_sires
 
 
