@@ -129,7 +129,7 @@ model.s_rotconstraints = Set(initialize=s_rotcon1.index, doc='rotation constrain
 #sheep                 #
 #######################
 ##all groups
-model.s_infrastructure = Set(initialize=['shed','yards'], doc='core sheep infrastructure')
+model.s_infrastructure = Set(initialize=uinp.sheep['i_h1_idx'], doc='core sheep infrastructure')
 model.s_sheep_pools = Set(initialize=uinp.structure['sheep_pools'], doc='nutritive value pools')
 # model.s_co_conception = Set(initialize=, doc='carryover characteristics - conception')
 # model.s_co_bw = Set(initialize=, doc='carryover characteristics - Birth weight')

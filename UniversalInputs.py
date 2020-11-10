@@ -209,7 +209,7 @@ structure['i_feedsupply_itn_max'] = 10
 ##pools
 structure['sheep_pools']=['pool1', 'pool2', 'pool3', 'pool4'] #nutrition pools
 structure['i_oldest_animal'] = 6.6
-structure['n_sim_periods_year'] = 52 
+structure['n_sim_periods_year'] = 52
 ## DSE group and LSLN (b1)
 structure['i_mask_b0_b1'] = np.array([False, False, True,	True,	True,	True,	True,	True,	False,	False,	False])
 structure['ia_b0_b1'] = np.array([0, 0, 0, 1,	2,	3,	4,	5,	0,	0,	0])
@@ -218,6 +218,20 @@ structure['a_nfoet_b1'] = np.array([0,0,1,2,3,2,3,3,1,2,3])
 structure['a_nyatf_b1'] = np.array([0,0,1,2,3,1,2,1,0,0,0])
 structure['i_initial_b1'] = np.array([1,0,0,0,0,0,0,0,0,0,0])
 structure['i_numbers_min_b1'] = np.array([0,0,0,0,0,0,0,0,0,0,0])
+
+                                        #dams
+##dams sire transfer                #bbb bbm bbt bmt
+structure['ia_g1_tg1'] = np.array([                 #sire
+                                    [0,	0,	0,	3],  #b
+                                    [1,	1,	1,	3],  #m
+                                    [2,	2,	2,	3]]) #t
+
+                                               #dams
+##dams sire transfer  mask           #bbb   bbm     bbt     bmt
+structure['i_transfer_exists_tg1'] = np.array([                    #sire
+                                    [True,	True,	True,	False],  #b
+                                    [True,	True,	True,	False],  #m
+                                    [True,	True,	True,	True]])  #t
 
 ##feed supply/ nutrition levels
 structure['i_w0_len'] = 1

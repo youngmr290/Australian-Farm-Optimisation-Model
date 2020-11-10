@@ -387,8 +387,8 @@ def sheep_pyomo_local(params,report):
     #     model.del_component(model.con_stockinfra)
     # except AttributeError:
     #     pass
-    # def stockinfra(model,h3):
-    #     return -model.v_infrastructure[h3] + sum(model.v_sire[g0] * model.p_infra_sire[g0,h3] for g0 in model.s_groups_sire)  \
+    # def stockinfra(model,h1):
+    #     return -model.v_infrastructure[h1] + sum(model.v_sire[g0] * model.p_infra_sire[g0,h1] for g0 in model.s_groups_sire)  \
     #            + sum(sum(sum(model.v_dams[t1,v1,a,b1,n1,w1,z,i,y1,g1,r1,r2,r3,r4,r5,r6,r7] for a in model.s_wean_times for n1 in model.s_nut_dams for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for r1 in model.s_co_conception for r2 in model.s_co_bw for r3 in  model.s_co_ww for r4 in model.s_co_cfw for r5 in model.s_co_fd for r6 in model.s_co_min_fd for r7 in model.s_co_fl)  * model.p_infra_dams[t1,v1,b1,z,i,g1,h3] for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for b1 in model.s_birth_dams for g1 in model.s_groups_dams)  \
     #            + sum(sum(model.v_offs[t3,v3,n3,w3,z,i,d,a,b3,x,y3,g3,r4,r5,r6,r7] for a in model.s_wean_times for n3 in model.s_nut_offs for w3 in model.s_lw_offs for d in model.s_damage_offs for x in model.s_gender_offs for y3 in model.s_gen_merit_offs for r4 in model.s_co_cfw for r5 in model.s_co_fd for r6 in model.s_co_min_fd for r7 in model.s_co_fl) * model.p_infra_offs[t3,v3,b3,z,i,g3,h3] for t3 in model.s_sale_offs for v3 in model.s_dvp_offs for b3 in model.s_birth_offs for g3 in model.s_groups_offs)
     #            for z in model.s_season_types for i in model.s_tol) <=0
@@ -492,7 +492,7 @@ def sheep_pyomo_local(params,report):
         t_y1 = l_y1.index(y1)
         t_g1 = l_g1.index(g1)
         t_w9 = l_w9.index(w9)
-        if not np.any(params['req_numpyvesion_k2k2va1nw8ziygw9'][:,t_k29,t_v1,t_a,:,:,t_z,t_i,t_y1,t_g1,t_w9]):
+        if not np.any(params['numbers_req_numpyvesion_k2k2va1nw8ziygw9'][:,t_k29,t_v1,t_a,:,:,t_z,t_i,t_y1,t_g1,t_w9]):
             return pe.Constraint.Skip
         return sum(model.v_dams[k28,t1,v1,a,n1,w8,z,i,y1,g1] * model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9]
                    - model.v_dams[k28,t1,v1_prev,a,n1,w8,z,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z,i,y1,g1,w9]
