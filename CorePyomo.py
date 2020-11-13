@@ -90,10 +90,26 @@ def coremodel_all():
         model.del_component(model.con_labour_sheep_anyone)
     except AttributeError:
         pass
-    def labour_sheep(model,p):
-        return -model.v_sheep_labour_casual[p] - model.v_sheep_labour_permanent[p] - model.v_sheep_labour_manager[p] + suppy.sup_labour(model,p) + stkpy.stock_labour(model,p)   <= 0
-    model.con_labour_sheep_anyone = pe.Constraint(model.s_labperiods, rule = labour_sheep, doc='link between labour supply and requirment by sheep jobs for all labour sources')
-    
+    def labour_sheep_cas(model,p):
+        return -model.v_sheep_labour_casual[p] - model.v_sheep_labour_permanent[p] - model.v_sheep_labour_manager[p] + suppy.sup_labour(model,p) + stkpy.stock_labour_anyone(model,p)   <= 0
+    model.con_labour_sheep_anyone = pe.Constraint(model.s_labperiods, rule = labour_sheep_cas, doc='link between labour supply and requirment by sheep jobs for all labour sources')
+    ##labour sheep - can be done by permanent and manager staff
+    try:
+        model.del_component(model.con_labour_sheep_perm)
+    except AttributeError:
+        pass
+    def labour_sheep_perm(model,p):
+        return - model.v_sheep_labour_permanent[p] - model.v_sheep_labour_manager[p] + suppy.sup_labour(model,p) + stkpy.stock_labour_perm(model,p)   <= 0
+    model.con_labour_sheep_perm = pe.Constraint(model.s_labperiods, rule = labour_sheep_perm, doc='link between labour supply and requirment by sheep jobs for perm labour sources')
+    ##labour sheep - can be done by manager
+    try:
+        model.del_component(model.con_labour_sheep_manager)
+    except AttributeError:
+        pass
+    def labour_sheep_manager(model,p):
+        return  - model.v_sheep_labour_manager[p] + suppy.sup_labour(model,p) + stkpy.stock_labour_manager(model,p)   <= 0
+    model.con_labour_sheep_manager = pe.Constraint(model.s_labperiods, rule = labour_sheep_manager, doc='link between labour supply and requirment by sheep jobs for manager labour sources')
+
     #######################################
     #stubble & nap consumption at harvest #
     #######################################
@@ -206,16 +222,18 @@ def coremodel_all():
 
     ######################
     #  ME                #
-    ###################### 
+    ######################
     def me(model,f,v):
-        -paspy.pas_me(v,f) - suppy.sup_me(model,v,f) - stubpy.stubble_me(model,v,f) + stkpy.stock_me(model,v,f)
+        return -paspy.pas_me(v,f) - suppy.sup_me(model,v,f) - stubpy.stubble_me(model,v,f) + stkpy.stock_me(model,v,f) <=0
+    model.con_me = pe.Constraint(model.s_feed_periods, model.s_lmus, rule=me, doc='constraint between me available and consumed')
 
     ######################
     #Vol                 #
-    ###################### 
+    ######################
     def vol(model,f,v):
-        paspy.pas_vol(v,f) + suppy.sup_vol(model,v,f) + stubpy.stubble_vol(model,v,f) - stkpy.stock_pi(model,v,f)
-        
+        return paspy.pas_vol(v,f) + suppy.sup_vol(model,v,f) + stubpy.stubble_vol(model,v,f) - stkpy.stock_pi(model,v,f) <=0
+    model.con_vol = pe.Constraint(model.s_feed_periods, model.s_lmus, rule=vol, doc='constraint between me available and consumed')
+
     ######################
     #cashflow constraints#
     ######################    

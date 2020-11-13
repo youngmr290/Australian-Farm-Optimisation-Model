@@ -152,6 +152,9 @@ def generator(params,report):
     index_e1b1nwzida0e0b0xyg = fun.f_reshape_expand(index_e, pinp.sheep['i_e1_pos'])
     index_e0b0xyg = fun.f_reshape_expand(index_e, uinp.structure['i_e0_pos'])
     index_g0 = np.arange(len_g0)
+    index_g1 = np.arange(len_g1)
+    index_g9 = index_g1
+    index_g1g = index_g1[:,na]
     index_m1 = np.arange(len_m1)
     index_m0 = np.arange(12)*2  #2hourly steps for chill calculations
     index_z = np.arange(len_z)
@@ -308,6 +311,7 @@ def generator(params,report):
     ##post weaning management
     wean_oa1e1b1nwzida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['i_wean_og1'],'dams',uinp.structure['i_p_pos'], condition=mask_od, axis=uinp.structure['i_p_pos']) #need axis up to p so that p association can be applied
     ##association between offspring and sire/dam (used to determine the wean age of sire and dams based on the inputted wean age of offs)
+    a_g0_g1 = sfun.f_g2g(pinp.sheep['ia_g0_g1'],'dams')
     a_g3_g0 = sfun.f_g2g(pinp.sheep['ia_g3_g0'],'sire')
     a_g3_g1 = sfun.f_g2g(pinp.sheep['ia_g3_g1'],'dams')
     ##age weaning- used to calc wean date and also to calc m1 stuff, sire and dams have no active a0 slice therefore just take the first slice
@@ -759,7 +763,7 @@ def generator(params,report):
     pasture_stage_pa1e1b1j0wzida0e0b0xyg = pasture_stage_p6a1e1b1j0wzida0e0b0xyg[a_p6_p,...]
     ##mating
     sire_propn_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(sire_propn_oa1e1b1nwzida0e0b0xyg1,a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
-    sire_propn_pa1e1b1nwzida0e0b0xyg1g0=sire_propn_pa1e1b1nwzida0e0b0xyg1[..., na] * (pinp.sheep['ia_g0_g1'][:,na] == index_g0)
+    sire_propn_pa1e1b1nwzida0e0b0xyg1g0=sire_propn_pa1e1b1nwzida0e0b0xyg1[..., na] * (a_g0_g1[:,na] == index_g0)
  #add g0 axis
     ##weather
     ws_pa1e1b1nwzida0e0b0xyg = ws_m4a1e1b1nwzida0e0b0xyg[a_m4_p]
@@ -2699,18 +2703,18 @@ def generator(params,report):
             o_ebg_dams[p] = ebg_dams
         ###yatf
         if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-            o_numbers_end_yatf[p] = pp_numbers_end_yatf
-            o_numbers_start_yatf[p] = numbers_start_yatf
-            o_ffcfw_yatf[p] = ffcfw_yatf
+            # o_numbers_end_yatf[p] = pp_numbers_end_yatf
+            # o_numbers_start_yatf[p] = numbers_start_yatf
+            # o_ffcfw_yatf[p] = ffcfw_yatf
             o_pi_yatf[p] = pi_yatf
             o_mei_solid_yatf[p] = mei_solid_yatf
-            o_ch4_total_yatf[p] = ch4_total_yatf
-            o_cfw_yatf[p] = cfw_yatf
-            o_gfw_yatf[p] = gfw_yatf
-            o_sl_yatf[p] = sl_yatf
-            o_fd_yatf[p] = fd_yatf
-            o_fd_min_yatf[p] = fd_min_yatf
-            o_ss_yatf[p] = ss_yatf
+            # o_ch4_total_yatf[p] = ch4_total_yatf
+            # o_cfw_yatf[p] = cfw_yatf
+            # o_gfw_yatf[p] = gfw_yatf
+            # o_sl_yatf[p] = sl_yatf
+            # o_fd_yatf[p] = fd_yatf
+            # o_fd_min_yatf[p] = fd_min_yatf
+            # o_ss_yatf[p] = ss_yatf
 
     ###offs
         o_numbers_start_offs[p] = numbers_start_offs  # needed outside if so that dvp0 (p0) has start numbers
@@ -3045,7 +3049,7 @@ def generator(params,report):
         ##basically we are summing the p axis for each dvp. the tricky part (which has caused the requirement for the loops) is that dvp pointer is not the same for each axis eg dvp is effected by e axis.
         ##so we need to loop though all the axis in the dvp and sum p and assign to a final array.
         ##if the axis is size 1 (ie singleton) then we want to take all of that axis ie ':' because just because the dvp pointer has singleton doesnt mean param array has singleton so need to take all slice of the param (unless that is an active dvp axis bedcause that means dvp timing may differ for different slices along that axis so it must be summed in the loop)
-        shape = production_ftpany.shape[0:uinp.structure['i_p_pos']] + (np.max(dvp_pointer_p)+1,) + production_p.shape[1:]  # bit messy because need v t and all the other axis (but not p)
+        shape = production_ftpany.shape[0:uinp.structure['i_p_pos']] + (np.max(dvp_pointer_p)+1,) + production_ftpany.shape[uinp.structure['i_p_pos']+1:]  # bit messy because need v t and all the other axis (but not p)
         result=np.zeros(shape).astype('float32')
         shape = dvp_pointer_p.shape
         for a1 in range(shape[-14]):
@@ -3099,7 +3103,7 @@ def generator(params,report):
             final += arr1
         return final
 
-    def f_lw_distribution(ffcfw_condensed_va1e1b1nwzida0e0b0xyg, ffcfw_va1e1b1nwzida0e0b0xyg, i_n_len, i_n_fvp_period, dvp_type_next_tvg=0):
+    def f_lw_distribution(ffcfw_condensed_va1e1b1nwzida0e0b0xyg, ffcfw_va1e1b1nwzida0e0b0xyg, i_n_len, i_n_fvp_period, dvp_type_next_tvgw=0):
         '''distriuting animals on LW at the start of dvp0
         ^ this function will need altering if the dvp_type definition changes'''
         ##add second w axis - the condensed w axis becomes axis -1 and the end of period w stays in the normal place
@@ -3115,7 +3119,7 @@ def generator(params,report):
         ##Set the distribution to 0 if lw_end is below the condensed minimum weight
         distribution_va1e1b1nwzida0e0b0xygw = spread_bounded * (ffcfw_va1e1b1nwzida0e0b0xyg[..., na] >= np.min(ffcfw_condensed_va1e1b1nwzida0e0b0xygw, axis = -1, keepdims=True))
         ##Set default for DVPs that don’t require distributing to 1 (these are masked later to remove those that are not required)
-        distribution_tvw8w9g = f_update(distribution_va1e1b1nwzida0e0b0xygw, 1, dvp_type_next_tvg!=0)
+        distribution_tvw8w9g = fun.f_update(distribution_va1e1b1nwzida0e0b0xygw, 1, dvp_type_next_tvgw!=0)
         return distribution_va1e1b1nwzida0e0b0xygw
 
 
@@ -3236,10 +3240,9 @@ def generator(params,report):
     nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg1 = np.roll(period_is_startdvp_pa1e1b1nwzida0e0b0xyg1,-1,axis=0)
     nextperiod_is_prejoin_pa1e1b1nwzida0e0b0xyg1 = np.roll(period_is_prejoin_pa1e1b1nwzida0e0b0xyg1,-1,axis=0)
     dvp_type_next_va1e1b1nwzida0e0b0xyg1 = np.roll(dvp_type_va1e1b1nwzida0e0b0xyg1, -1, axis=uinp.structure['i_p_pos'])
-    # dvp_type_next_tva1e1b1nwzida0e0b0xyg1 = np.take_along_axis(dvp_type_next_va1e1b1nwzida0e0b0xyg1[na], a_g1_tpa1e1b1nwzida0e0b0xyg1, axis=-1)
-    temporary_tvg1 = fun.f_reshape_expand(np.identity(t1_len), uinp.structure['i_p_pos']-1)  # with the axis in the position of ‘t’
-    dvp_type_next_tva1e1b1nwzida0e0b0xyg1 = dvp_type_next_va1e1b1nwzida0e0b0xyg1 * temporary_tvg1
-    mask_numbers_t_tvg1 = temporary_tvg1 * dvp_type_next_tva1e1b1nwzida0e0b0xyg1 != 0  #Mask numbers transferred - this mask stops dams transfering to different sires between dvps that are not prejoining
+    mask_dvp_type_next_tg1 = transfer_exists_tpa1e1b1nwzida0e0b0xyg1 * (index_g1 == a_g1_tpa1e1b1nwzida0e0b0xyg1) #dvp type next is a little more complex for animals transfering. However the destination for transfer is always dvp type next ==0 (either it is going from dvp 2 to 0 or from 0 to 0.
+    dvp_type_next_tva1e1b1nwzida0e0b0xyg1 = dvp_type_next_va1e1b1nwzida0e0b0xyg1 * mask_dvp_type_next_tg1
+
     ###cluster
     a_ppk2g1_slva1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.structure['ia_ppk2g1_vlsb1'], uinp.parameters['i_b1_pos'], swap=True, ax1=0, ax2=2, len_ax0=uinp.structure['i_n_v1type']
                                           , len_ax1=uinp.structure['i_len_l'], len_ax2=uinp.structure['i_len_s'], len_ax3=uinp.structure['ia_ppk2g1_vlsb1'].shape[-1]
@@ -3662,24 +3665,30 @@ def generator(params,report):
 
 
     ##every period - with cost (c) axis (when combining the cost the period is arrays were already applied therefore converted from 'intermitent' to 'every period'
-    cashflow_ctva1e1b1nwzida0e0b0xyg0 = f_p2v(cashflow_pa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_sire,
-                                              on_hand_tp=on_hand_pa1e1b1nwzida0e0b0xyg0, a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg,index_any1tp=index_ctpa1e1b1nwzida0e0b0xyg)
+    cashflow_ctva1e1b1nwzida0e0b0xyg0 = f_p2v_std(cashflow_pa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_sire,
+                                              on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0, a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg,index_any1tvp=index_ctpa1e1b1nwzida0e0b0xyg)
+    cost_va1e1b1nwzida0e0b0xyg0 = f_p2v_std(husbandry_cost_pg0, numbers_p=o_numbers_end_sire,
+                                              on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0)
     cashflow_ctva1e1b1nwzida0e0b0xyg1 = f_p2v(cashflow_tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_dams,
                                               on_hand_tpa1e1b1nwzida0e0b0xyg1, a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg,index_any1tp=index_ctpa1e1b1nwzida0e0b0xyg)
+    cost_tva1e1b1nwzida0e0b0xyg1 = f_p2v(husbandry_cost_pg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_dams,
+                                              on_hand_tpa1e1b1nwzida0e0b0xyg1)
     # cashflow_ctva1e1b1nwzida0e0b0xyg3 = f_p2v(cashflow_tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_offs,
     #                                           on_hand_tpa1e1b1nwzida0e0b0xyg3, a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg,index_any1tp=index_ctpa1e1b1nwzida0e0b0xyg)
+    # cost_tva1e1b1nwzida0e0b0xyg3 = f_p2v(husbandry_cost_pg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_offs,
+    #                                           on_hand_tpa1e1b1nwzida0e0b0xyg3)
 
     ##every period - with labour (p5) axis
-    labour_l2p5tva1e1b1nwzida0e0b0xyg0 = f_p2v(husbandry_labour_l2pg0[:,na,na,...], numbers_p=o_numbers_end_sire,
-                                             on_hand_tp=on_hand_pa1e1b1nwzida0e0b0xyg0, a_any1_p=a_p5_pa1e1b1nwzida0e0b0xyg,index_any1tp=index_p5tpa1e1b1nwzida0e0b0xyg)
-    labour_l2p5tva1e1b1nwzida0e0b0xyg1 = f_p2v(husbandry_labour_l2pg0[:,na,na,...], a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_dams,
+    labour_l2p5tva1e1b1nwzida0e0b0xyg0 = f_p2v_std(husbandry_labour_l2pg0[:,na,na,...], numbers_p=o_numbers_end_sire,
+                                             on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0, a_any1_p=a_p5_pa1e1b1nwzida0e0b0xyg,index_any1tvp=index_p5tpa1e1b1nwzida0e0b0xyg)
+    labour_l2p5tva1e1b1nwzida0e0b0xyg1 = f_p2v(husbandry_labour_l2pg1[:,na,na,...], a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_dams,
                                              on_hand_tpa1e1b1nwzida0e0b0xyg1, a_any1_p=a_p5_pa1e1b1nwzida0e0b0xyg,index_any1tp=index_p5tpa1e1b1nwzida0e0b0xyg)
     # labour_l2p5tva1e1b1nwzida0e0b0xyg3 = f_p2v(husbandry_labour_l2pg3[:,na,na,...], a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_offs,
     #                                          on_hand_tpa1e1b1nwzida0e0b0xyg3, a_any1_p=a_p5_pa1e1b1nwzida0e0b0xyg,index_any1tp=index_p5tpa1e1b1nwzida0e0b0xyg)
 
     ##every period - with infrastructure (h1) axis
-    infrastructure_h1va1e1b1nwzida0e0b0xyg0 = f_p2v(husbandry_infrastructure_h1pg0, numbers_p=o_numbers_end_sire,
-                                             on_hand_tp=on_hand_pa1e1b1nwzida0e0b0xyg0)
+    infrastructure_h1va1e1b1nwzida0e0b0xyg0 = f_p2v_std(husbandry_infrastructure_h1pg0, numbers_p=o_numbers_end_sire,
+                                             on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0)
     infrastructure_h1tva1e1b1nwzida0e0b0xyg1 = f_p2v(husbandry_infrastructure_h1pg1[:,na,...], a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_dams,
                                              on_hand_tpa1e1b1nwzida0e0b0xyg1)
     # infrastructure_h1tva1e1b1nwzida0e0b0xyg3 = f_p2v(husbandry_infrastructure_h1pg3[:,na,...], a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_offs,
@@ -3722,7 +3731,7 @@ def generator(params,report):
     #lw distribution #
     ##################
     lwdist_start = time.time()
-    distribution_tva1e1b1nw8zida0e0b0xyg1w9 = f_lw_distribution(ffcfw_end_condensed_va1e1b1nwzida0e0b0xyg1, ffcfw_end_tva1e1b1nwzida0e0b0xyg1, uinp.structure['i_n1_len'], uinp.structure['i_n_fvp_period1'], dvp_type_next_tva1e1b1nwzida0e0b0xyg1)
+    distribution_tva1e1b1nw8zida0e0b0xyg1w9 = f_lw_distribution(ffcfw_end_condensed_va1e1b1nwzida0e0b0xyg1, ffcfw_end_tva1e1b1nwzida0e0b0xyg1, uinp.structure['i_n1_len'], uinp.structure['i_n_fvp_period1'], dvp_type_next_tva1e1b1nwzida0e0b0xyg1[...,na])
     distribution_va1e1b1nw8zida0e0b0xyg3w9 = f_lw_distribution(ffcfw_end_condensed_va1e1b1nwzida0e0b0xyg3, ffcfw_end_va1e1b1nwzida0e0b0xyg3, uinp.structure['i_n3_len'], uinp.structure['i_n_fvp_period3'])
 
     ###################################
@@ -3748,8 +3757,16 @@ def generator(params,report):
     scan_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(scan_pa1e1b1nwzida0e0b0xyg1, a_dvp_p_va1e1b1nwzida0e0b0xyg1,0)
     a_k2cluster_va1e1b1nwzida0e0b0xyg1 = np.sum(a_ppk2g1_va1e1b1nwzida0e0b0xygsl * (gbal_va1e1b1nwzida0e0b0xyg1[...,na,na]==index_l) * (scan_va1e1b1nwzida0e0b0xyg1[...,na,na]==index_s[:,na]), axis = (-1,-2))
     a_k2cluster_va1e1b1nwzida0e0b0xyg1 = a_k2cluster_va1e1b1nwzida0e0b0xyg1 + (len(uinp.structure['a_nfoet_b1']) * index_e1b1nwzida0e0b0xyg * (scan_va1e1b1nwzida0e0b0xyg1 == 4) * (nfoet_b1nwzida0e0b0xyg >= 1)) #If scanning for foetal age add 10 to the animals in the second & subsequent cycles that were scanned as pregnant (nfoet_b1 >= 1)
+    ### Cluster with a t axis required for k29 which is associated with tvgg9. na to put result in g9 axis
+    a_k2cluster_tva1e1b1nwzida0e0b0xyg1g9 = np.take_along_axis(a_k2cluster_va1e1b1nwzida0e0b0xyg1[na], a_g1_tpa1e1b1nwzida0e0b0xyg1, axis=0)[..., na, :]
+    ### a temporary array that is the cluster at prejoining with not mated (0) and mated (1) along the b1 axis
+    temporary = np.ones_like(a_k2cluster_tva1e1b1nwzida0e0b0xyg1g9)
+    temporary[:,:,:,:,0,...] = 0
+    a_k2cluster_next_tva1e1b1nwzida0e0b0xyg1g9 = fun.f_update(np.roll(a_k2cluster_tva1e1b1nwzida0e0b0xyg1g9, 1, axis=1), temporary,
+                                          (a_g1_tpa1e1b1nwzida0e0b0xyg1[..., na, :] != index_g1g) * transfer_exists_tpa1e1b1nwzida0e0b0xyg1[..., na])
     k2_len = np.max(a_k2cluster_va1e1b1nwzida0e0b0xyg1)+1  #Added +1 because python starts at 0.
     index_k2tva1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(np.arange(k2_len), uinp.structure['i_k2_pos'])
+    index_k29tva1e1b1nwzida0e0b0xyg1g9 = index_k2tva1e1b1nwzida0e0b0xyg1[...,na]
     index_k28k29tva1e1b1nwzida0e0b0xyg1 = index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...]
 
     ##offs
@@ -3764,9 +3781,9 @@ def generator(params,report):
     index_k5tva1e1b1nwzida0e0b0xyg3 = fun.f_reshape_expand(np.arange(k5_len), uinp.structure['i_k5_pos'])
 
 
-    #############
-    #allocation #
-    #############
+    ######################################
+    #Mask animals to nutrition profiles  #
+    ######################################
     '''creates a mask that removes unneccesary values in the parameters. Because of the lw branching not every activity provides to a unique constraint 
         therefore some activities and constraints can be masked out'''
     allocation_start = time.time()
@@ -3775,38 +3792,106 @@ def generator(params,report):
     ###Steps for ‘Numbers Provides’ is calculated with a t axis (because the t axis can alter the dvp type of the source relative to the destination)
     step_next_con1_tva1e1b1nw8zida0e0b0xyg1w9 = (uinp.structure['i_n1_len'] ** (uinp.structure['i_n_fvp_period1'] - dvp_type_next_tva1e1b1nwzida0e0b0xyg1))[...,na]
     ###Steps for ‘Numbers Requires’ & ‘Decision Variable’ is calculated without a t axis.
-    step_con1_va1e1b1nw8zida0e0b0xyg1w9 = (uinp.structure['i_n1_len'] ** (uinp.structure['i_n_fvp_period1'] - dvp_type_va1e1b1nwzida0e0b0xyg1))[...,na]
-    step_dv1_va1e1b1nw8zida0e0b0xyg1w9 = step_con1_va1e1b1nw8zida0e0b0xyg1w9 / uinp.structure['i_n1_len']
+    step_con1_va1e1b1nw8zida0e0b0xyg1 = (uinp.structure['i_n1_len'] ** (uinp.structure['i_n_fvp_period1'] - dvp_type_va1e1b1nwzida0e0b0xyg1))
+    step_dv1_va1e1b1nw8zida0e0b0xyg1 = step_con1_va1e1b1nw8zida0e0b0xyg1 / uinp.structure['i_n1_len']
     ##Mask the decision variables that are not related to p_numbers (broadcast across t axis)
-    mask_vars_va1e1b1nw8zida0e0b0xyg1w9 = index_wzida0e0b0xyg1[...,na] % step_dv1_va1e1b1nw8zida0e0b0xyg1w9 == 0
+    mask_w8vars_va1e1b1nw8zida0e0b0xyg1 = index_wzida0e0b0xyg1 % step_dv1_va1e1b1nw8zida0e0b0xyg1 == 0
     ##Mask numbers provided based on the steps (with a t axis) and the next dvp type (with a t axis)
-    mask_numbers_prov_tva1e1b1nw8zida0e0b0xyg1w9 = mask_vars_va1e1b1nw8zida0e0b0xyg1w9 * (np.trunc((index_wzida0e0b0xyg1[...,na] * (dvp_type_next_tva1e1b1nwzida0e0b0xyg1[...,na] !=0) +
+    mask_numbers_provw8w9_tva1e1b1nw8zida0e0b0xyg1w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1[...,na] * (np.trunc((index_wzida0e0b0xyg1[...,na] * (dvp_type_next_tva1e1b1nwzida0e0b0xyg1[...,na] !=0) +
                                                      index_w1 * (dvp_type_next_tva1e1b1nwzida0e0b0xyg1[...,na] == 0))
                                                     / step_next_con1_tva1e1b1nw8zida0e0b0xyg1w9) == index_w1 / step_next_con1_tva1e1b1nw8zida0e0b0xyg1w9)
     ##Mask numbers required from the previous period (broadcast across t axis) - Note: req does not need a t axis because the destination decision variable don’t change for the transfer
-    mask_req_va1e1b1nw8zida0e0b0xyg1w9 = mask_vars_va1e1b1nw8zida0e0b0xyg1w9 * (np.trunc(index_wzida0e0b0xyg1[...,na] / step_con1_va1e1b1nw8zida0e0b0xyg1w9) == index_w1 / step_con1_va1e1b1nw8zida0e0b0xyg1w9)
-    ##mask the t array so that only slice t0 provides numbers
-    mask_numbers_prov_tva1e1b1nw8zida0e0b0xyg1w9 = f_update(mask_numbers_prov_tva1e1b1nw8zida0e0b0xyg1w9, 0,index_tva1e1b1nw8zida0e0b0xyg1w9 < pinp.sheep['i_n_dam_sales'])
+    mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1[...,na] * (np.trunc(index_wzida0e0b0xyg1 / step_con1_va1e1b1nw8zida0e0b0xyg1)[...,na] == index_w1 / step_con1_va1e1b1nw8zida0e0b0xyg1[...,na])
 
     ##offs
     ###The gap between the active constraints is required
     step_con3 = uinp.structure['i_n3_len'] ** uinp.structure['i_n_fvp_period3']
     ###The 3 active constraints to leave after masking are 0, 27 & 54
     ####Each of the 81 decision variables in the previous period can have a value in any of these 3 active rows (the actual values are determined in the distribution function) so a mask is not required for these decision variables.
-    mask_numbers_prov_w9 = index_w3 % step_con3 == 0
+    mask_numbers_provw9_w9 = index_w3 % step_con3 == 0
     ###Each of the 81 decision variables in the next period will have a +1 in the constraint that relates to their starting weight.
-    mask_numbers_req_w8zida0e0b0xyg3w9 = np.trunc(index_wzida0e0b0xyg3[:,na] / step_con3) == index_w3 / step_con3 #na for w9
+    mask_numbers_reqw8w9_w8zida0e0b0xyg3w9 = np.trunc(index_wzida0e0b0xyg3[...,na] / step_con3) == index_w3 / step_con3 #na for w9
+
+
+    ###############################
+    #Masking numbers transferred  #
+    ###############################
+    ''' Mask numbers transferred - these mask stops dams transfering to different sires between dvps that are not prejoining'''
+    ##dams
+    temporary = (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na, :]
+    mask_numbers_provt_tpa1e1b1nwzida0e0b0xyg1g9 = fun.f_update(temporary, temporary*(a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na],
+                                         dvp_type_next_tva1e1b1nwzida0e0b0xyg1[..., na] != 0) * transfer_exists_tpa1e1b1nwzida0e0b0xyg1[..., na]
+    temporary = (index_g9 == index_g1g)
+    mask_numbers_reqt_tpa1e1b1nwzida0e0b0xyg1g9 = fun.f_update(temporary, temporary*(index_g1g == a_g1_tpa1e1b1nwzida0e0b0xyg1[...,na,:]), dvp_type_va1e1b1nwzida0e0b0xyg1[...,na] != 0)
+    ##0ffs
     ##mask the t array so that only slice t0 provides numbers
-    mask_numbers_prov_tva1e1b1nw8zida0e0b0xyg3w9 = mask_numbers_prov_w9 * (index_tva1e1b1nw8zida0e0b0xyg3w9 == 0)
-
-
+    mask_numbers_provt_tva1e1b1nw8zida0e0b0xyg3w9 = (index_tva1e1b1nw8zida0e0b0xyg3w9 == 0)
 
     ###########################
     #create production params #
     ###########################
+    '''some sire params dont go through here because no associations are required'''
     production_param_start = time.time()
     ##mei
-    mei_k2p6ftva1e1b1nwzida0e0b0xyg1 = np.sum(mei_p6ftva1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,...]), axis = (uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)
+    mei_k2p6ftva1e1b1nwzida0e0b0xyg1 = np.sum(mei_p6ftva1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,...]) * mask_w8vars_va1e1b1nw8zida0e0b0xyg1
+                                              , axis = (uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)
+    mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3 = np.sum(mei_p6ftva1e1b1nwzida0e0b0xyg3 * (a_k3cluster_da0e0b0xyg3==index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,na,...])
+                                                    * (a_k5cluster_da0e0b0xyg3==index_k5tva1e1b1nwzida0e0b0xyg3[:,na,na,...])
+                                                    , axis = (uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True)
+
+    ##pi
+    pi_k2p6ftva1e1b1nwzida0e0b0xyg1 = np.sum(pi_p6ftva1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,...]) * mask_w8vars_va1e1b1nw8zida0e0b0xyg1
+                                             , axis = (uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)
+    pi_k3k5p6ftva1e1b1nwzida0e0b0xyg3 = np.sum(pi_p6ftva1e1b1nwzida0e0b0xyg3 * (a_k3cluster_da0e0b0xyg3==index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,na,...])
+                                                    * (a_k5cluster_da0e0b0xyg3==index_k5tva1e1b1nwzida0e0b0xyg3[:,na,na,...])
+                                                    , axis = (uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True)
+
+
+    ##cashflow & cost
+    cashflow_k2ctva1e1b1nwzida0e0b0xyg1 = np.sum(cashflow_ctva1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...]) * mask_w8vars_va1e1b1nw8zida0e0b0xyg1
+                                                 , axis = (uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)
+    cashflow_k3k5ctva1e1b1nwzida0e0b0xyg3 = np.sum(cashflow_ctva1e1b1nwzida0e0b0xyg3 * (a_k3cluster_da0e0b0xyg3==index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...])
+                                                    * (a_k5cluster_da0e0b0xyg3==index_k5tva1e1b1nwzida0e0b0xyg3[:,na,...])
+                                                    , axis = (uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True)
+
+    cost_k2tva1e1b1nwzida0e0b0xyg1 = np.sum(cost_tva1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1) * mask_w8vars_va1e1b1nw8zida0e0b0xyg1
+                                             , axis = (uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)
+    cost_k3k5tva1e1b1nwzida0e0b0xyg3 = np.sum(cost_tva1e1b1nwzida0e0b0xyg3 * (a_k3cluster_da0e0b0xyg3==index_k3k5tva1e1b1nwzida0e0b0xyg3)
+                                                    * (a_k5cluster_da0e0b0xyg3==index_k5tva1e1b1nwzida0e0b0xyg3)
+                                                    , axis = (uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True)
+
+
+    ##labour - manager
+    lab_manager_p5tva1e1b1nwzida0e0b0xyg0 = labour_l2p5tva1e1b1nwzida0e0b0xyg0[0]
+    lab_manager_k2p5tva1e1b1nwzida0e0b0xyg1 = np.sum(labour_l2p5tva1e1b1nwzida0e0b0xyg1[0] * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...]) * mask_w8vars_va1e1b1nw8zida0e0b0xyg1
+                                                     , axis = (uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)
+    lab_manager_k3k5p5tva1e1b1nwzida0e0b0xyg3 = np.sum(labour_l2p5tva1e1b1nwzida0e0b0xyg3[0] * (a_k3cluster_da0e0b0xyg3==index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...])
+                                                    * (a_k5cluster_da0e0b0xyg3==index_k5tva1e1b1nwzida0e0b0xyg3[:,na,...])
+                                                    , axis = (uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True)
+
+    ##labour - permenant
+    lab_perm_p5tva1e1b1nwzida0e0b0xyg0 = labour_l2p5tva1e1b1nwzida0e0b0xyg0[1]
+    lab_perm_k2p5tva1e1b1nwzida0e0b0xyg1 = np.sum(labour_l2p5tva1e1b1nwzida0e0b0xyg1[1] * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...]) * mask_w8vars_va1e1b1nw8zida0e0b0xyg1
+                                                  , axis = (uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)
+    lab_perm_k3k5p5tva1e1b1nwzida0e0b0xyg3 = np.sum(labour_l2p5tva1e1b1nwzida0e0b0xyg3[1] * (a_k3cluster_da0e0b0xyg3==index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...])
+                                                    * (a_k5cluster_da0e0b0xyg3==index_k5tva1e1b1nwzida0e0b0xyg3[:,na,...])
+                                                    , axis = (uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True)
+
+    ##labour - anyone
+    lab_anyone_p5tva1e1b1nwzida0e0b0xyg0 = labour_l2p5tva1e1b1nwzida0e0b0xyg0[2]
+    lab_anyone_k2p5tva1e1b1nwzida0e0b0xyg1 = np.sum(labour_l2p5tva1e1b1nwzida0e0b0xyg1[2] * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...]) * mask_w8vars_va1e1b1nw8zida0e0b0xyg1
+                                                    , axis = (uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)
+    lab_anyone_k3k5p5tva1e1b1nwzida0e0b0xyg3 = np.sum(labour_l2p5tva1e1b1nwzida0e0b0xyg3[2] * (a_k3cluster_da0e0b0xyg3==index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...])
+                                                    * (a_k5cluster_da0e0b0xyg3==index_k5tva1e1b1nwzida0e0b0xyg3[:,na,...])
+                                                    , axis = (uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True)
+
+
+    ##infrastructure
+    infrastructure_k2h1tva1e1b1nwzida0e0b0xyg1 = np.sum(infrastructure_h1tva1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...]) * mask_w8vars_va1e1b1nw8zida0e0b0xyg1
+                                                        , axis = (uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)
+    infrastructure_k3k5p5tva1e1b1nwzida0e0b0xyg3 = np.sum(infrastructure_h1tva1e1b1nwzida0e0b0xyg3 * (a_k3cluster_da0e0b0xyg3==index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...])
+                                                    * (a_k5cluster_da0e0b0xyg3==index_k5tva1e1b1nwzida0e0b0xyg3[:,na,...])
+                                                    , axis = (uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True)
 
 
     ###########################
@@ -3815,7 +3900,7 @@ def generator(params,report):
     number_param_start = time.time()
     ##numbers prov - numbers at the end of a dvp with the cluster of the next dvp divided by start numbers with cluster of current period
     ###dams
-    # numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xygw9 = (fun.f_divide(np.sum(numbers_end_va1e1b1nwzida0e0b0xyg1[...,na] * mask_prov_va1e1b1nw8zida0e0b0xyg1w9 * distribution_tva1e1b1nw8zida0e0b0xyg1w9
+    # numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = (fun.f_divide(np.sum(numbers_end_va1e1b1nwzida0e0b0xyg1[...,na] * mask_prov_va1e1b1nw8zida0e0b0xyg1w9 * distribution_tva1e1b1nw8zida0e0b0xyg1w9
     #                                                                     * (np.roll(a_k2cluster_va1e1b1nwzida0e0b0xyg1, -1, axis=0)==index_k28k29tva1e1b1nwzida0e0b0xyg1)[...,na]
     #                                                                         , axis = (uinp.parameters['i_b1_pos']-1, pinp.sheep['i_e1_pos']-1), keepdims=True)
     #                                                             , np.sum(numbers_start_va1e1b1nwzida0e0b0xyg1[...,na] * mask_prov_va1e1b1nw8zida0e0b0xyg1w9 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1)[...,na]
@@ -3823,7 +3908,7 @@ def generator(params,report):
     #                                                      * mask_sales_tva1e1b1nw8zida0e0b0xyg1w9)
     #third option
     # numbers_div_dams = fun.f_divide(numbers_start_next_va1e1b1nwzida0e0b0xyg1 , numbers_start_va1e1b1nwzida0e0b0xyg1)[...,na]
-    # numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xygw9 = fun.f_divide(np.sum(
+    # numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_divide(np.sum(
     #      numbers_div_dams * mask_prov_va1e1b1nw8zida0e0b0xyg1w9 * distribution_tva1e1b1nw8zida0e0b0xyg1w9 * (
     #                 a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k28k29tva1e1b1nwzida0e0b0xyg1)[...,na] * (np.roll(a_k2cluster_va1e1b1nwzida0e0b0xyg1, -1, axis=0) == index_k2tva1e1b1nwzida0e0b0xyg1)[...,na],
     #     axis=(uinp.parameters['i_b1_pos']-1, pinp.sheep['i_e1_pos']-1), keepdims=True) , np.sum(
@@ -3831,53 +3916,59 @@ def generator(params,report):
     #     keepdims=True)) * mask_sales_tva1e1b1nw8zida0e0b0xyg1w9
 
     ##fourth option
-    numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xygw9 = fun.f_divide(
-        np.sum(numbers_start_next_va1e1b1nwzida0e0b0xyg1[..., na]
-               * mask_numbers_prov_tva1e1b1nw8zida0e0b0xyg1w9 * mask_numbers_t_tvg1 * distribution_tva1e1b1nw8zida0e0b0xyg1w9 *
-               (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k28k29tva1e1b1nwzida0e0b0xyg1)[..., na] * (
-                       np.roll(a_k2cluster_va1e1b1nwzida0e0b0xyg1, -1, axis=0) == index_k2tva1e1b1nwzida0e0b0xyg1)[..., na],
-               axis=(uinp.parameters['i_b1_pos'] - 1, pinp.sheep['i_e1_pos'] - 1), keepdims=True)
+    numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_divide(
+        np.sum(numbers_start_next_va1e1b1nwzida0e0b0xyg1[..., na,na]
+               * mask_numbers_provw8w9_tva1e1b1nw8zida0e0b0xyg1w9[..., na,:] * mask_numbers_provt_tpa1e1b1nwzida0e0b0xyg1g9[..., na] * distribution_tva1e1b1nw8zida0e0b0xyg1w9[..., na,:] *
+               (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k28k29tva1e1b1nwzida0e0b0xyg1)[..., na,na] * (                #The numerator has both k2 with g9 axis and without. One to reflect the decison varaible (k28) and one for the constraint (k29). So I think this is all good
+                       a_k2cluster_next_tva1e1b1nwzida0e0b0xyg1g9 == index_k29tva1e1b1nwzida0e0b0xyg1g9)[..., na],
+               axis=(uinp.parameters['i_b1_pos'] - 2, pinp.sheep['i_e1_pos'] - 2), keepdims=True)
         , np.sum(numbers_start_va1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k28k29tva1e1b1nwzida0e0b0xyg1),
-                 axis=(uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)[..., na])
+                 axis=(uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)[..., na,na]) #na for w9 and g9 (use standard cluster without t/g9 axis because the denominator is (the clustering for) the decision variable as at the start of the DVP)
     ###combine nm and 00 cluster for prejoining to scanning
-    numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xygw9[:,0:1,...] = numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xygw9[:,0:1,...] + numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xygw9[:,1:2,...] * (dvp_type_next_tva1e1b1nwzida0e0b0xyg1[:,:,:,0:1,...,na]==0) #take slice 0 of e (for prejoining all e slices are the same)
-    numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xygw9[:,1:2,...] = numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xygw9[:,1:2,...] * (dvp_type_next_tva1e1b1nwzida0e0b0xyg1[:,:,:,0:1,...,na]!=0) #take slice 0 of e (for prejoining all e slices are the same
+    numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,0:1,...] = numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,0:1,...
+                                                                      ] + numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,1:2,...] * (dvp_type_next_tva1e1b1nwzida0e0b0xyg1[:,:,:,0:1,...,na,na]==0) #take slice 0 of e (for prejoining all e slices are the same)
+    numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,1:2,...] = numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,1:2,...] * (dvp_type_next_tva1e1b1nwzida0e0b0xyg1[:,:,:,0:1,...,na,na]!=0) #take slice 0 of e (for prejoining all e slices are the same
     ###combine wean numbers at prejoining to allow the matrix to select a different weaning time for the coming yr.
     #^cant just sum across the a slice (decision variable) so allow a0 to provide a1 we will need another a axis (see google doc)
-    # temporary = np.sum(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xygw9, axis=pinp.sheep['i_a1_pos']-1, keepdims=True) * (index_a1e1b1nwzida0e0b0xyg[...,na] == 0)
-    # numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xygw9 = fun.f_update(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xygw9, temporary, dvp_type_next_tva1e1b1nwzida0e0b0xyg1[:,:,:,0:1,...,na] == 0) #take slice 0 of e (for prejoining all e slices are the same
+    # temporary = np.sum(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, axis=pinp.sheep['i_a1_pos']-1, keepdims=True) * (index_a1e1b1nwzida0e0b0xyg[...,na] == 0)
+    # numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_update(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, temporary, dvp_type_next_tva1e1b1nwzida0e0b0xyg1[:,:,:,0:1,...,na] == 0) #take slice 0 of e (for prejoining all e slices are the same
 
     ###offs
-    numbers_prov_offs_k3k5tva1e1b1nw8zida0e0b0xygw9 = (fun.f_divide(np.sum(numbers_end_va1e1b1nwzida0e0b0xyg3[...,na] * distribution_va1e1b1nw8zida0e0b0xyg3w9
+    numbers_prov_offs_k3k5tva1e1b1nw8zida0e0b0xygw9 = (fun.f_divide(np.sum(numbers_end_va1e1b1nwzida0e0b0xyg3[...,na]  * distribution_va1e1b1nw8zida0e0b0xyg3w9
                                                                         * (a_k3cluster_da0e0b0xyg3==index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na]
                                                                         * (a_k5cluster_da0e0b0xyg3==index_k5tva1e1b1nwzida0e0b0xyg3)[...,na]
                                                                             , axis = (uinp.parameters['i_d_pos']-1, uinp.parameters['i_b0_pos']-1, uinp.structure['i_e0_pos']-1), keepdims=True)
                                                                 , np.sum(numbers_start_va1e1b1nwzida0e0b0xyg3 * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)
                                                                          * (a_k5cluster_da0e0b0xyg3==index_k5tva1e1b1nwzida0e0b0xyg3)
                                                                          , axis = (uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True)[...,na])
-                                                        * mask_prov_w9 * mask_sales_tva1e1b1nw8zida0e0b0xyg3w9)
+                                                       * mask_numbers_provt_tva1e1b1nw8zida0e0b0xyg3w9 * mask_numbers_provw9_w9)
+
+    ##Setting the parameters at the end of the year to 0 removes passing animals into the constraint that links the end of the year with the beginning of the year.
+    numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,:,:,-1,...] = 0
+    numbers_prov_offs_k3k5tva1e1b1nw8zida0e0b0xygw9[:,:,:,-1,...] = 0
+
+
     ##numbers required
     ###dams
-    numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xygw9 =  1 * (np.sum(((a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k28k29tva1e1b1nwzida0e0b0xyg1) * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1))[...,na]
-                                                               * mask_req_va1e1b1nw8zida0e0b0xyg1w9, axis = (uinp.parameters['i_b1_pos']-1, pinp.sheep['i_e1_pos']-1), keepdims=True)>0)
+    numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 =  1 * (np.sum(mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9[...,na,:] * mask_numbers_reqt_tpa1e1b1nwzida0e0b0xyg1g9[...,na]
+                                                                       * ((a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k28k29tva1e1b1nwzida0e0b0xyg1) * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1))[...,na,na]
+                                                                       , axis = (uinp.parameters['i_b1_pos']-2, pinp.sheep['i_e1_pos']-2), keepdims=True)>0)
     ####combine nm and 00 cluster for prejoining to scanning
-    numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xygw9[:,0:1,...] = numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xygw9[:,0:1,...] + numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xygw9[:,1:2,...] * (dvp_type_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...,na]==0) #take slice 0 of e (for prejoining all e slices are the same)
-    numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xygw9[:,1:2,...] = numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xygw9[:,1:2,...] * (dvp_type_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...,na]!=0) #take slice 0 of e (for prejoining all e slices are the same
+    numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,0:1,...] = numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,0:1,...
+                                                                     ] + numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,1:2,...] * (dvp_type_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...,na,na]==0) #take slice 0 of e (for prejoining all e slices are the same)
+    numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,1:2,...] = numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,1:2,...] * (dvp_type_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...,na,na]!=0) #take slice 0 of e (for prejoining all e slices are the same
     ####combine wean numbers at prejoining to allow the matrix to select a different weaning time for the coming yr.
     #^cant just sum across the a slice (decision variable) so allow a0 to provide a1 we will need another a axis (see google doc)
-    # temporary = np.sum(numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xygw9, axis=pinp.sheep['i_a1_pos']-1, keepdims=True) * (index_a1e1b1nwzida0e0b0xyg[...,na] == 0)
-    # numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xygw9 = fun.f_update(numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xygw9, temporary, dvp_type_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...,na] == 0) #take slice 0 of e (for prejoining all e slices are the same
+    # temporary = np.sum(numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, axis=pinp.sheep['i_a1_pos']-1, keepdims=True) * (index_a1e1b1nwzida0e0b0xyg[...,na] == 0)
+    # numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_update(numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, temporary, dvp_type_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...,na] == 0) #take slice 0 of e (for prejoining all e slices are the same
 
 
     ###offs
     numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9 =  np.sum((a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)*(a_k5cluster_da0e0b0xyg3==index_k5tva1e1b1nwzida0e0b0xyg3)
-                                                             , axis = (uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True)[...,na]\
-                                                      * mask_req_w8zida0e0b0xyg3w9
+                                                             , axis = (uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True)[...,na
+                                                      ] * mask_numbers_reqw8w9_w8zida0e0b0xyg3w9
 
 
-    ##Setting the parameters at the end of the year to 0 removes passing animals into the constraint that links the end of the year with the beginning of the year.
-    numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xygw9[:,:,:,-1,...] = 0
-    numbers_prov_offs_k3k5tva1e1b1nw8zida0e0b0xygw9[:,:,:,-1,...] = 0
 
 
 
@@ -3904,6 +3995,7 @@ def generator(params,report):
     keys_n0 = uinp.structure['i_n_idx_sire']
     keys_n1 = uinp.structure['i_n_idx_dams']
     keys_n3 = uinp.structure['i_n_idx_offs']
+    keys_p5 = per.p_date2_df().index
     keys_p6 = np.array([pinp.feed_inputs['feed_periods'].index[:-1]])
     keys_p8 = ['sire_per%s'%i for i in range(len_p8)]
     keys_t1 = ['t%s'%i for i in range(t1_len)]
@@ -3913,6 +4005,7 @@ def generator(params,report):
     keys_y0 = uinp.parameters['i_y_idx_sire'][uinp.parameters['i_mask_y']]
     keys_y1 = uinp.parameters['i_y_idx_dams'][uinp.parameters['i_mask_y']]
     keys_y3 = uinp.parameters['i_y_idx_offs'][uinp.parameters['i_mask_y']]
+    keys_x = pinp.sheep['i_x_idx']
     keys_z = pinp.general['season_info'].index[pinp.general['season_info']['included']]
     ##save k2 set for pyomo - required because this cant easily be built without information in this module
     params['a_idx'] = keys_a
@@ -3931,56 +4024,270 @@ def generator(params,report):
     params['k5_idx_offs'] = keys_k5
     params['y_idx_offs'] = keys_y3
     ##make param indexs
-    ###k2k2tvanwziyg1vp
-    arrays = [keys_k2, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1, keys_lw1]
-    index_k2k2tvanwziyg1w = fun.cartesian_product_simple_transpose(arrays)
-    ###k2k2vanwziyg1vp - no t axis ^this may not be used once t axis has been modified
-    arrays = [keys_k2, keys_k2, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1, keys_lw1]
-    index_k2k2vanwziyg1w = fun.cartesian_product_simple_transpose(arrays)
-    ###ctvanwziyg1vp - cashflow dams
-    arrays = [keys_c, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
-    index_ctvanwziyg1 = fun.cartesian_product_simple_transpose(arrays)
-    ###ctvanwziyg1vp - labour dams
-    arrays = [keys_p5, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
-    index_p5tvanwziyg1 = fun.cartesian_product_simple_transpose(arrays)
-    ###ctvanwziyg1vp - infrasturcture dams
-    arrays = [keys_h1, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
-    index_ctvanwziyg1 = fun.cartesian_product_simple_transpose(arrays)
+    ###k2k2tvanwziyg1g9w9 - numbers dams
+    arrays = [keys_k2, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1, keys_g1, keys_lw1]
+    index_k2k2tvanwziyg1g9w = fun.cartesian_product_simple_transpose(arrays)
+    ###k3k5tvnwziayg3w9 - numbers offs
+    arrays = [keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3, keys_lw3]
+    index_k3k5tvnw8ziaxyg3w9 = fun.cartesian_product_simple_transpose(arrays)
 
-    ##dams - ravel and zip params with keys. This step removes 0's first using a mask because this saves considerable time.
+    ###p6fg0 - mei sire
+    arrays = [keys_p6, keys_f, keys_g0]
+    index_p6fg0 = fun.cartesian_product_simple_transpose(arrays)
+    ###k2p6ftva1nw8ziyg1 - mei dams
+    arrays = [keys_k2, keys_p6, keys_f, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
+    index_k2p6ftva1nw8ziyg1 = fun.cartesian_product_simple_transpose(arrays)
+    ###k3k5p6ftvnw8ziaxyg3 - mei offs
+    arrays = [keys_k3, keys_k5, keys_p6, keys_f, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
+    index_k3k5p6ftvnw8ziaxyg3 = fun.cartesian_product_simple_transpose(arrays)
+
+    ###cg0 - cashflow sire
+    arrays = [keys_c, keys_g0]
+    index_cg0 = fun.cartesian_product_simple_transpose(arrays)
+    ###k2ctvanwziyg1 - cashflow dams
+    arrays = [keys_k2, keys_c, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
+    index_k2ctvanwziyg1 = fun.cartesian_product_simple_transpose(arrays)
+    ###k3k5ctvnw8ziaxyg3 - cashflow offs
+    arrays = [keys_k3, keys_k5, keys_c, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
+    index_k3k5ctvnw8ziaxyg3 = fun.cartesian_product_simple_transpose(arrays)
+
+    ###g0 - cost sire
+    arrays = [keys_g0]
+    index_g0 = fun.cartesian_product_simple_transpose(arrays)
+    ###k2tvanwziyg1 - cost dams
+    arrays = [keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
+    index_k2tvanwziyg1 = fun.cartesian_product_simple_transpose(arrays)
+    ###k3k5tvnw8ziaxyg3 - cost offs
+    arrays = [keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
+    index_k3k5tvnw8ziaxyg3 = fun.cartesian_product_simple_transpose(arrays)
+
+    ###p5g0 - labour sire
+    arrays = [keys_p5, keys_g0]
+    index_p5g0 = fun.cartesian_product_simple_transpose(arrays)
+    ###k2p5tvanwziyg1 - labour dams
+    arrays = [keys_k2, keys_p5, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
+    index_k2p5tvanwziyg1 = fun.cartesian_product_simple_transpose(arrays)
+    ###k3k5p5tvnw8ziaxyg3 - labour offs
+    arrays = [keys_k3, keys_k5, keys_p5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
+    index_k3k5p5tvnw8ziaxyg3 = fun.cartesian_product_simple_transpose(arrays)
+
+    ###h1g0 - infrasturcture dams
+    arrays = [keys_h1, keys_g0]
+    index_h1g0 = fun.cartesian_product_simple_transpose(arrays)
+    ###k2h1tvanwziyg1 - infrasturcture dams
+    arrays = [keys_k2, keys_h1, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
+    index_k2h1tvanwziyg1 = fun.cartesian_product_simple_transpose(arrays)
+    ###k3k5h1tvnw8ziaxyg3 - infrasturcture offs
+    arrays = [keys_k3, keys_k5, keys_h1, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
+    index_k3k5h1tvnw8ziaxyg3 = fun.cartesian_product_simple_transpose(arrays)
+
+    ##ravel and zip params with keys. This step removes 0's first using a mask because this saves considerable time.
     ###numbers_prov_dams
-    mask=numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xygw9!=0
-    numbers_prov_dams_k2k2tva1nw8ziygw9 = numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xygw9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
+    mask=numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9!=0
+    numbers_prov_dams_k2k2tva1nw8ziyg1g9w9 = numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
     mask=mask.ravel()
-    index_cut_k2k2tvanwziyg1w=index_k2k2tvanwziyg1w[mask,:]
-    tup_k2k2tvanwziyg1w = tuple(map(tuple, index_cut_k2k2tvanwziyg1w))
-    params['p_numbers_prov_dams'] =dict(zip(tup_k2k2tvanwziyg1w, numbers_prov_dams_k2k2tva1nw8ziygw9))
+    index_cut_k2k2tvanwziyg1g9w=index_k2k2tvanwziyg1g9w[mask,:]
+    tup_k2k2tvanwziyg1g9w = tuple(map(tuple, index_cut_k2k2tvanwziyg1g9w))
+    params['p_numbers_prov_dams'] =dict(zip(tup_k2k2tvanwziyg1g9w, numbers_prov_dams_k2k2tva1nw8ziyg1g9w9))
+    ###numbers_prov_offs
+    mask=numbers_prov_offs_k3k5tva1e1b1nw8zida0e0b0xygw9!=0
+    numbers_prov_offs_k3k5tvnw8zia0xyg3w9 = numbers_prov_offs_k3k5tva1e1b1nw8zida0e0b0xygw9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
+    mask=mask.ravel()
+    index_cut_k3k5tvnw8ziaxyg3w9=index_k3k5tvnw8ziaxyg3w9[mask,:]
+    tup_k3k5tvnw8ziaxyg3w9 = tuple(map(tuple, index_cut_k3k5tvnw8ziaxyg3w9))
+    params['p_numbers_prov_offs'] =dict(zip(tup_k3k5tvnw8ziaxyg3w9, numbers_prov_offs_k3k5tvnw8ziaxyg3w9))
     ###numbers_req_dams
-    mask=numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xygw9!=0
-    params['numbers_req_numpyvesion_k2k2va1nw8ziygw9'] = numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xygw9[:,:,0,:,:,0,0,:,:,:,:,0,0,0,0,0,:,:,:]  #cant use squeze here because i need to keep all relevent axis even if singleton. this is used to speed pyomo constraint.
-    numbers_req_dams_k2k2va1nw8ziygw9 = numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xygw9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
+    mask=numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9!=0
+    params['numbers_req_numpyvesion_k2k2tva1nw8ziyg1g9w9'] = numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,:,:,:,:,0,0,:,:,:,:,0,0,0,0,0,:,:,:,:]  #cant use squeze here because i need to keep all relevent axis even if singleton. this is used to speed pyomo constraint.
+    numbers_req_dams_k2k2tva1nw8ziyg1g9w9 = numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
     mask=mask.ravel()
-    index_k2k2vanwziyg1w=index_k2k2vanwziyg1w[mask,:]
-    index_cut_k2k2vanwziyg1w = tuple(map(tuple, index_k2k2vanwziyg1w))
-    params['p_numbers_req_dams'] =dict(zip(index_cut_k2k2vanwziyg1w, numbers_req_dams_k2k2va1nw8ziygw9))
-    ###cashflow
-    mask=cashflow_ctva1e1b1nwzida0e0b0xyg1!=0
-    cashflow_dams_ctva1nw8ziyg = cashflow_ctva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and sqeezing of array
-    index_cut_ctvanwziyg1=index_ctvanwziyg1[mask,:]
-    tup_ctvanwziyg1 = tuple(map(tuple, index_cut_ctvanwziyg1))
-    params['p_cashflow_dams'] =dict(zip(tup_ctvanwziyg1, cashflow_dams_ctva1nw8ziyg))
-    ###labour
-    mask=labour_l2p5tva1e1b1nwzida0e0b0xyg1!=0
-    cashflow_dams_ctva1nw8ziyg = labour_l2p5tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and sqeezing of array
-    index_cut_l2tvanwziyg1=index_l2tvanwziyg1[mask,:]
-    tup_l2tvanwziyg1 = tuple(map(tuple, index_cut_l2tvanwziyg1))
-    params['p_labour_dams'] =dict(zip(tup_l2tvanwziyg1, cashflow_dams_l2tva1nw8ziyg))
-    ###infrastructure
-    mask=infrastructure_h1tva1e1b1nwzida0e0b0xyg1!=0
-    infrastructure_dams_h1tva1nw8ziyg = infrastructure_h1tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and sqeezing of array
-    index_cut_h1tvanwziyg1=index_h1tvanwziyg1[mask,:]
-    tup_h1tvanwziyg1 = tuple(map(tuple, index_cut_h1tvanwziyg1))
-    params['p_infrastructure_dams'] =dict(zip(tup_h1tvanwziyg1, infrastructure_dams_h1tva1nw8ziyg))
+    index_cut_k2k2tvanwziyg1g9w=index_k2k2tvanwziyg1g9w[mask,:]
+    tup_k2k2tvanwziyg1g9w = tuple(map(tuple, index_cut_k2k2tvanwziyg1g9w))
+    params['p_numbers_req_dams'] =dict(zip(tup_k2k2tvanwziyg1g9w, numbers_req_dams_k2k2tva1nw8ziyg1g9w9))
+    ###numbers_req_offs
+    mask=numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9!=0
+    params['numbers_req_numpyvesion_k3k5tvnw8zia0xyg3w9'] = numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9[:,:,:,:,0,0,0,:,:,:,:,0,:,0,0,:,:,:,:]  #cant use squeze here because i need to keep all relevent axis even if singleton. this is used to speed pyomo constraint.
+    numbers_req_offs_k3k5tvnw8zia0xyg3w9 = numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
+    mask=mask.ravel()
+    index_cut_k3k5tvnw8ziaxyg3w9=index_k3k5tvnw8ziaxyg3w9[mask,:]
+    tup_k3k5tvnw8ziaxyg3w9 = tuple(map(tuple, index_cut_k3k5tvnw8ziaxyg3w9))
+    params['p_numbers_req_dams'] =dict(zip(tup_k3k5tvnw8ziaxyg3w9, numbers_req_offs_k3k5tvnw8zia0xyg3w9))
+
+    ###mei - sire
+    mask=mei_p6fa1e1b1nwzida0e0b0xyg0!=0
+    mei_sire_p6fg0 = mei_p6fa1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and sqeezing of array
+    mask=mask.ravel()
+    index_cut_p6fg0=index_p6fg0[mask,:]
+    tup_p6fg0 = tuple(map(tuple, index_cut_p6fg0))
+    params['p_mei_sire'] =dict(zip(tup_p6fg0, mei_sire_p6fg0))
+    ###mei - dams
+    mask=mei_k2p6ftva1e1b1nwzida0e0b0xyg1!=0
+    mei_dams_k2p6ftva1nw8ziyg1 = mei_k2p6ftva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and sqeezing of array
+    mask=mask.ravel()
+    index_cut_k2p6ftva1nw8ziyg1=index_k2p6ftva1nw8ziyg1[mask,:]
+    tup_k2p6ftva1nw8ziyg1 = tuple(map(tuple, index_cut_k2p6ftva1nw8ziyg1))
+    params['p_mei_dams'] =dict(zip(tup_k2p6ftva1nw8ziyg1, mei_dams_k2p6ftva1nw8ziyg1))
+    ###mei - offs
+    mask=mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3!=0
+    mei_offs_k3k5p6ftvnw8ziaxyg3 = mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and sqeezing of array
+    mask=mask.ravel()
+    index_cut_k3k5p6ftvnw8ziaxyg3=index_k3k5p6ftvnw8ziaxyg3[mask,:]
+    tup_k3k5p6ftvnw8ziaxyg3 = tuple(map(tuple, index_cut_k3k5p6ftvnw8ziaxyg3))
+    params['p_mei_offs'] =dict(zip(tup_k3k5p6ftvnw8ziaxyg3, mei_offs_k3k5p6ftvnw8ziaxyg3))
+    
+    ###pi - sire
+    mask=pi_p6fa1e1b1nwzida0e0b0xyg0!=0
+    pi_sire_p6fg0 = pi_p6fa1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and sqeezing of array
+    mask=mask.ravel()
+    index_cut_p6fg0=index_p6fg0[mask,:]
+    tup_p6fg0 = tuple(map(tuple, index_cut_p6fg0))
+    params['p_pi_sire'] =dict(zip(tup_p6fg0, pi_sire_p6fg0))
+    ###pi - dams
+    mask=pi_k2p6ftva1e1b1nwzida0e0b0xyg1!=0
+    pi_dams_k2p6ftva1nw8ziyg1 = pi_k2p6ftva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and sqeezing of array
+    mask=mask.ravel()
+    index_cut_k2p6ftva1nw8ziyg1=index_k2p6ftva1nw8ziyg1[mask,:]
+    tup_k2p6ftva1nw8ziyg1 = tuple(map(tuple, index_cut_k2p6ftva1nw8ziyg1))
+    params['p_pi_dams'] =dict(zip(tup_k2p6ftva1nw8ziyg1, pi_dams_k2p6ftva1nw8ziyg1))
+    ###pi - offs
+    mask=pi_k3k5p6ftva1e1b1nwzida0e0b0xyg3!=0
+    pi_offs_k3k5p6ftvnw8ziaxyg3 = pi_k3k5p6ftva1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and sqeezing of array
+    mask=mask.ravel()
+    index_cut_k3k5p6ftvnw8ziaxyg3=index_k3k5p6ftvnw8ziaxyg3[mask,:]
+    tup_k3k5p6ftvnw8ziaxyg3 = tuple(map(tuple, index_cut_k3k5p6ftvnw8ziaxyg3))
+    params['p_pi_offs'] =dict(zip(tup_k3k5p6ftvnw8ziaxyg3, pi_offs_k3k5p6ftvnw8ziaxyg3))
+    
+    ###cashflow - sire
+    mask=cashflow_ctva1e1b1nwzida0e0b0xyg0!=0
+    cashflow_sire_cg0 = cashflow_ctva1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and sqeezing of array
+    mask=mask.ravel()
+    index_cut_cg0=index_cg0[mask,:]
+    tup_cg0 = tuple(map(tuple, index_cut_cg0))
+    params['p_cashflow_sire'] =dict(zip(tup_cg0, cashflow_sire_cg0))
+    ###cashflow - dams
+    mask=cashflow_k2ctva1e1b1nwzida0e0b0xyg1!=0
+    cashflow_dams_k2ctva1nw8ziyg = cashflow_k2ctva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and sqeezing of array
+    mask=mask.ravel()
+    index_cut_k2ctvanwziyg1=index_k2ctvanwziyg1[mask,:]
+    tup_k2ctvanwziyg1 = tuple(map(tuple, index_cut_k2ctvanwziyg1))
+    params['p_cashflow_dams'] =dict(zip(tup_k2ctvanwziyg1, cashflow_dams_k2ctva1nw8ziyg))
+    ###cashflow - offs
+    mask=cashflow_k3k5ctva1e1b1nwzida0e0b0xyg3!=0
+    cashflow_offs_k3k5ctvnw8ziaxyg3 = cashflow_k3k5ctva1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and sqeezing of array
+    mask=mask.ravel()
+    index_cut_k3k5ctvnw8ziaxyg3=index_k3k5ctvnw8ziaxyg3[mask,:]
+    tup_k3k5ctvnw8ziaxyg3 = tuple(map(tuple, index_cut_k3k5ctvnw8ziaxyg3))
+    params['p_cashflow_offs'] =dict(zip(tup_k3k5ctvnw8ziaxyg3, cashflow_offs_k3k5ctvnw8ziaxyg3))
+
+    ###cost - sire
+    mask=cost_tva1e1b1nwzida0e0b0xyg0!=0
+    cost_sire_g0 = cost_tva1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and sqeezing of array
+    mask=mask.ravel()
+    index_cut_g0=index_g0[mask,:]
+    tup_g0 = tuple(map(tuple, index_cut_g0))
+    params['p_cost_sire'] =dict(zip(tup_g0, cost_sire_g0))
+    ###cost - dams
+    mask=cost_k2tva1e1b1nwzida0e0b0xyg1!=0
+    cost_dams_k2tva1nw8ziyg = cost_k2tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and sqeezing of array
+    mask=mask.ravel()
+    index_cut_k2tvanwziyg1=index_k2tvanwziyg1[mask,:]
+    tup_k2tvanwziyg1 = tuple(map(tuple, index_cut_k2tvanwziyg1))
+    params['p_cost_dams'] =dict(zip(tup_k2tvanwziyg1, cost_dams_k2tva1nw8ziyg))
+    ###cost - offs
+    mask=cost_k3k5tva1e1b1nwzida0e0b0xyg3!=0
+    cost_offs_k3k5tvnw8ziaxyg3 = cost_k3k5tva1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and sqeezing of array
+    mask=mask.ravel()
+    index_cut_k3k5tvnw8ziaxyg3=index_k3k5tvnw8ziaxyg3[mask,:]
+    tup_k3k5tvnw8ziaxyg3 = tuple(map(tuple, index_cut_k3k5tvnw8ziaxyg3))
+    params['p_cost_offs'] =dict(zip(tup_k3k5tvnw8ziaxyg3, cost_offs_k3k5tvnw8ziaxyg3))
+
+    ###anyone labour - sire
+    mask=lab_anyone_p5tva1e1b1nwzida0e0b0xyg0!=0
+    lab_any_sire_p5g0 = lab_anyone_p5tva1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and sqeezing of array
+    mask=mask.ravel()
+    index_cut_p5g0=index_p5g0[mask,:]
+    tup_p5g0 = tuple(map(tuple, index_cut_p5g0))
+    params['p_labour_anyone_sire'] =dict(zip(tup_p5g0, lab_any_sire_p5g0))
+    ###perm labour - sire
+    mask=lab_perm_p5tva1e1b1nwzida0e0b0xyg0!=0
+    lab_perm_sire_p5g0 = lab_perm_p5tva1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and sqeezing of array
+    mask=mask.ravel()
+    index_cut_p5g0=index_p5g0[mask,:]
+    tup_p5g0 = tuple(map(tuple, index_cut_p5g0))
+    params['p_labour_perm_sire'] =dict(zip(tup_p5g0, lab_perm_sire_p5g0))
+    ###manager labour - sire
+    mask=lab_manager_p5tva1e1b1nwzida0e0b0xyg0!=0
+    lab_any_sire_p5g0 = lab_manager_p5tva1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and sqeezing of array
+    mask=mask.ravel()
+    index_cut_p5g0=index_p5g0[mask,:]
+    tup_p5g0 = tuple(map(tuple, index_cut_p5g0))
+    params['p_labour_manager_sire'] =dict(zip(tup_p5g0, lab_manager_sire_p5g0))
+    
+    ###anyone labour - dams
+    mask=lab_anyone_k2p5tva1e1b1nwzida0e0b0xyg1!=0
+    lab_any_dams_k2p5tva1nw8ziyg = lab_anyone_k2p5tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and sqeezing of array
+    mask=mask.ravel()
+    index_cut_k2p5tvanwziyg1=index_k2p5tvanwziyg1[mask,:]
+    tup_k2p5tvanwziyg1 = tuple(map(tuple, index_cut_k2p5tvanwziyg1))
+    params['p_labour_anyone_dams'] =dict(zip(tup_k2p5tvanwziyg1, lab_any_dams_k2p5tva1nw8ziyg))
+    ###perm labour - dams
+    mask=lab_perm_k2p5tva1e1b1nwzida0e0b0xyg1!=0
+    lab_perm_dams_k2p5tva1nw8ziyg = lab_perm_k2p5tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and sqeezing of array
+    mask=mask.ravel()
+    index_cut_k2p5tvanwziyg1=index_k2p5tvanwziyg1[mask,:]
+    tup_k2p5tvanwziyg1 = tuple(map(tuple, index_cut_k2p5tvanwziyg1))
+    params['p_labour_anyone_dams'] =dict(zip(tup_k2p5tvanwziyg1, lab_perm_dams_k2p5tva1nw8ziyg))
+    ###manager labour - dams
+    mask=lab_manager_k2p5tva1e1b1nwzida0e0b0xyg1!=0
+    lab_manager_dams_k2p5tva1nw8ziyg = lab_manager_k2p5tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and sqeezing of array
+    mask=mask.ravel()
+    index_cut_k2p5tvanwziyg1=index_k2p5tvanwziyg1[mask,:]
+    tup_k2p5tvanwziyg1 = tuple(map(tuple, index_cut_k2p5tvanwziyg1))
+    params['p_labour_anyone_dams'] =dict(zip(tup_k2p5tvanwziyg1, lab_manager_dams_k2p5tva1nw8ziyg))
+
+    ###anyone labour - offs
+    mask=lab_anyone_k2p5tva1e1b1nwzida0e0b0xyg1!=0
+    lab_any_offs_k2p5tva1nw8ziyg = lab_anyone_k2p5tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and sqeezing of array
+    mask=mask.ravel()
+    index_cut_k2p5tvanwziyg1=index_k2p5tvanwziyg1[mask,:]
+    tup_k2p5tvanwziyg1 = tuple(map(tuple, index_cut_k2p5tvanwziyg1))
+    params['p_labour_anyone_offs'] =dict(zip(tup_k2p5tvanwziyg1, lab_any_offs_k2p5tva1nw8ziyg))
+    ###perm labour - offs
+    mask=lab_perm_k2p5tva1e1b1nwzida0e0b0xyg1!=0
+    lab_perm_offs_k2p5tva1nw8ziyg = lab_perm_k2p5tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and sqeezing of array
+    mask=mask.ravel()
+    index_cut_k2p5tvanwziyg1=index_k2p5tvanwziyg1[mask,:]
+    tup_k2p5tvanwziyg1 = tuple(map(tuple, index_cut_k2p5tvanwziyg1))
+    params['p_labour_anyone_offs'] =dict(zip(tup_k2p5tvanwziyg1, lab_perm_offs_k2p5tva1nw8ziyg))
+    ###manager labour - offs
+    mask=lab_manager_k2p5tva1e1b1nwzida0e0b0xyg1!=0
+    lab_manager_offs_k2p5tva1nw8ziyg = lab_manager_k2p5tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and sqeezing of array
+    mask=mask.ravel()
+    index_cut_k2p5tvanwziyg1=index_k2p5tvanwziyg1[mask,:]
+    tup_k2p5tvanwziyg1 = tuple(map(tuple, index_cut_k2p5tvanwziyg1))
+    params['p_labour_anyone_offs'] =dict(zip(tup_k2p5tvanwziyg1, lab_manager_offs_k2p5tva1nw8ziyg))
+    
+    ###infrastructure - sire
+    mask=infrastructure_h1va1e1b1nwzida0e0b0xyg0!=0
+    infrastructure_sire_h1g0 = infrastructure_h1va1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and sqeezing of array
+    mask=mask.ravel()
+    index_cut_h1g0=index_h1g0[mask,:]
+    tup_h1g0 = tuple(map(tuple, index_cut_h1g0))
+    params['p_infrastructure_sire'] =dict(zip(tup_h1g0, infrastructure_sire_h1g0))
+    ###infrastructure - dams
+    mask=infrastructure_k2h1tva1e1b1nwzida0e0b0xyg1!=0
+    infrastructure_dams_k2h1tva1nw8ziyg = infrastructure_k2h1tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and sqeezing of array
+    mask=mask.ravel()
+    index_cut_k2h1tvanwziyg1=index_k2h1tvanwziyg1[mask,:]
+    tup_k2h1tvanwziyg1 = tuple(map(tuple, index_cut_k2h1tvanwziyg1))
+    params['p_infrastructure_dams'] =dict(zip(tup_k2h1tvanwziyg1, infrastructure_dams_k2h1tva1nw8ziyg))
+    ###infrastructure - offs
+    mask=infrastructure_k3k5p5tva1e1b1nwzida0e0b0xyg3!=0
+    infrastructure_offs_k3k5h1tvnw8ziaxyg3 = infrastructure_k3k5p5tva1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and sqeezing of array
+    mask=mask.ravel()
+    index_cut_k3k5h1tvnw8ziaxyg3=index_k3k5h1tvnw8ziaxyg3[mask,:]
+    tup_k3k5h1tvnw8ziaxyg3 = tuple(map(tuple, index_cut_k3k5h1tvnw8ziaxyg3))
+    params['p_infrastructure_offs'] =dict(zip(tup_k3k5h1tvnw8ziaxyg3, infrastructure_offs_k3k5h1tvnw8ziaxyg3))
 
 
 
@@ -3994,78 +4301,7 @@ def generator(params,report):
 
 
 
-    # sta1=time.time()
-    # print(sta1-sta)
-    # tup_k2k2tvanwziyg1w = tuple(map(tuple, index_k2k2tvanwziyg1w))  # create a tuple rather than a list because tuples are faster
-    # ##convert np to dict
-    # ravel_start=time.time()
-    # ###dam numbers
-    # numbers_prov_dams_k2k2tva1nw8ziygw9 = numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xygw9.squeeze().ravel()
-    # a = dict(zip(tup_k2k2tvanwziyg1w ,numbers_prov_dams_k2k2tva1nw8ziygw9))
-    # params['p_numbers_prov_dams'] = dict(zip(tup_k2k2tvanwziyg1w ,numbers_prov_dams_k2k2tva1nw8ziygw9))
-    # numbers_req_dams_k2k2tva1nw8ziygw9 = numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xygw9.squeeze().ravel()
-    # params['p_numbers_req_dams'] = dict(zip(tup_k2k2tvanwziyg1w ,numbers_req_dams_k2k2tva1nw8ziygw9))
-    #
-    # a={x: y for x, y in a.items() if y != 0}
-    #
-    #
-    #
-    # a__= a==a_
 
-    # model.p_asset_stockinfra
-    # model.p_dep_stockinfra
-    # model.p_rm_stockinfra
-    # model.p_lab_stockinfra
-    # model.p_asset_sire
-    # model.p_asset_dams
-    # model.p_asset_trans_dams
-    # model.p_asset_offs
-    # model.p_asset_trans_offs
-    # model.p_infra_sire
-    # model.p_infra_dams
-    # model.p_infra_offs
-    # model.p_cash_sire
-    # model.p_cash_dams
-    # model.p_cash_trans_dams
-    # model.p_cash_offs
-    # model.p_cash_trans_offs
-    # model.p_cost_sire
-    # model.p_cost_dams
-    # model.p_cost_trans_dams
-    # model.p_cost_offs
-    # model.p_cost_trans_offs
-    # model.p_mei_sire
-    # model.p_mei_dams
-    # model.p_mei_trans_dams
-    # model.p_mei_offs
-    # model.p_mei_trans_offs
-    # model.p_pi_sire
-    # model.p_pi_dams
-    # model.p_pi_trans_dams
-    # model.p_pi_offs
-    # model.p_pi_trans_offs
-    # model.p_lab_sire
-    # model.p_lab_dams
-    # model.p_lab_trans_dams
-    # model.p_lab_offs
-    #
-    # model.p_lab_trans_offs
-    # ##stock - dams
-    # model.p_numbers_dams
-    # model.p_npw
-    # model.p_n_sires
-    #
-    # ##stock - offs
-    # model.p_numbers_offs
-    # ##purchases
-    # model.p_cost_purch_sire
-    # model.p_numberpurch_dam
-    # model.p_cost_purch_dam
-    # model.p_numberpurch_offs
-    # model.p_cost_purch_offs
-    # ##transfers
-    # model.p_offs2dam_numbers
-    # model.p_dam2sire_numbers
     finish = time.time()
     print('onhand and shearing arrays: ',calc_cost_start - onhandshear_start)
     print('calc cost and income: ',feedpools_start - calc_cost_start)
