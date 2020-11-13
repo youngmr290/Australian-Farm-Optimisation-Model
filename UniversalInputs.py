@@ -192,6 +192,7 @@ structure['foo_levels'] =  ['L', 'M', 'H']                 # Low, medium & high 
 structure['i_e0_pos']=-5
 ##general
 structure['i_age_max'] = 6.75
+structure['i_age_max_offs'] = 3.5
 structure['i_sim_periods_year'] = 52
 structure['i_w_pos'] = -10
 structure['i_n_pos'] = -11
@@ -208,8 +209,6 @@ structure['i_feedsupply_itn_max'] = 10
 
 ##pools
 structure['sheep_pools']=['pool1', 'pool2', 'pool3', 'pool4'] #nutrition pools
-structure['i_oldest_animal'] = 6.6
-structure['n_sim_periods_year'] = 52
 ## DSE group and LSLN (b1)
 structure['i_mask_b0_b1'] = np.array([False, False, True,	True,	True,	True,	True,	True,	False,	False,	False])
 structure['ia_b0_b1'] = np.array([0, 0, 0, 1,	2,	3,	4,	5,	0,	0,	0])

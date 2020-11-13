@@ -144,7 +144,7 @@ def sim_periods(start_year, periods_per_year, oldest_animal):
     start_date = dt.date(year=start_year, month=1,day=1)
     step = pd.to_timedelta(365.25 / periods_per_year,'D')
     step = step.to_numpy().astype('timedelta64[s]')
-    index_p = np.arange(n_sim_periods + 1)
+    index_p = np.arange(n_sim_periods)
     date_start_p =  (np.datetime64(start_date) + (step * index_p)).astype('datetime64[D]') #astype day rounds the date to the nearest day
     date_end_p = (np.datetime64(start_date - dt.timedelta(days=1)) + (step * (index_p+1))).astype('datetime64[D]') #minus one day to get the last day in the period not the first day of the next period.
     return n_sim_periods, date_start_p, date_end_p, index_p, step
