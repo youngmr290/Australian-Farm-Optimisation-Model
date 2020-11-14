@@ -68,259 +68,13 @@ def sheep_pyomo_local(params,report):
     model.v_purchase_offs = pe.Var(model.s_dvp_offs, model.s_lw_offs, model.s_season_types, model.s_tol, model.s_groups_offs, bounds = (0,None) , doc='number of purchased offs animals')
     ##mating
     # model.v_sirecap = pe.Var(model.s_groups_sire, model.s_sire_periods, bounds = (0,None) , doc='number of sire animals')
+
     ######################
     ### setup parameters #
     ######################
     print('set up params')
     param_start = time.time()
-    ##infrastructure
-    # try:
-    #     model.del_component(model.p_asset_stockinfra)
-    # except AttributeError:
-    #     pass
-    # model.p_asset_stockinfra = Param(model.s_infrastructure, initialize=, default = 0.0, doc='Asset value per animal mustered  or shorn')
-    # try:
-    #     model.del_component(model.p_dep_stockinfra)
-    # except AttributeError:
-    #     pass
-    # model.p_dep_stockinfra = Param(model.s_infrastructure, initialize=, default = 0.0, doc='Depreciation of the asset value')
-    # try:
-    #     model.del_component(model.p_rm_stockinfra)
-    # except AttributeError:
-    #     pass
-    # model.p_rm_stockinfra = Param(model.s_infrastructure, model.s_cashflow_periods,initialize=, default = 0.0, doc='Cost of R&M of the infrastructure (per animal mustered/shorn)')
-    # try:
-    #     model.del_component(model.p_lab_stockinfra)
-    # except AttributeError:
-    #     pass
-    # model.p_lab_stockinfra = Param(model.s_infrastructure, model.s_labperiods, initialize=, default = 0.0, doc='Labour required for R&M of the infrastructure (per animal mustered/shorn)')
-    ##stock - all
-    # try:
-    #     model.del_component(model.p_asset_sire)
-    # except AttributeError:
-    #     pass
-    # model.p_asset_sire = Param(model.s_groups_sire, initialize=, default = 0.0, doc='Asset value of sire')
-    # try:
-    #     model.del_component(model.p_asset_dams)
-    # except AttributeError:
-    #     pass
-    # model.p_asset_dams = Param(model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_birth_dams, model.s_nut_dams, model.s_lw_dams,
-    #                            model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_co_conception,
-    #                            model.s_co_bw, model.s_co_ww, model.s_co_cfw, model.s_co_fd, model.s_co_min_fd, model.s_co_fl, initialize=, default = 0.0, doc='Asset value of dams')
-    # try:
-    #     model.del_component(model.p_asset_trans_dams)
-    # except AttributeError:
-    #     pass
-    # model.p_asset_trans_dams = Param(model.s_dvp_dams, model.s_wean_times, model.s_birth_dams, model.s_nut_dams, model.s_lw_dams,
-    #                            model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_co_conception,
-    #                            model.s_co_bw, model.s_co_ww, model.s_co_cfw, model.s_co_fd, model.s_co_min_fd, model.s_co_fl, initialize=, default = 0.0, doc='Asset value of transfer dams')
-    # try:
-    #     model.del_component(model.p_asset_offs)
-    # except AttributeError:
-    #     pass
-    # model.p_asset_offs = Param(model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types,
-    #                            model.s_tol, model.s_damage_offs, model.s_wean_times, model.s_birth_offs, model.s_gender_offs, model.s_gen_merit_offs,
-    #                            model.s_groups_offs, model.s_co_cfw, model.s_co_fd, model.s_co_min_fd, model.s_co_fl, initialize=, default = 0.0, doc='Asset value of offs')
-    # try:
-    #     model.del_component(model.p_asset_trans_offs)
-    # except AttributeError:
-    #     pass
-    # model.p_asset_trans_offs = Param(model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types,
-    #                            model.s_tol, model.s_damage_offs, model.s_wean_times, model.s_birth_offs, model.s_gender_offs, model.s_gen_merit_offs,
-    #                            model.s_groups_offs, model.s_co_cfw, model.s_co_fd, model.s_co_min_fd, model.s_co_fl, initialize=, default = 0.0, doc='Asset value of transferred offs')
-    # try:
-    #     model.del_component(model.p_infra_sire)
-    # except AttributeError:
-    #     pass
-    # model.p_infra_sire = Param(model.s_groups_sire, model.s_infrastructure, initialize=, default = 0.0, doc='sire requirement for infrastructure (based on number of times yarded and shearing activity)')
-    # try:
-    #     model.del_component(model.p_infra_dams)
-    # except AttributeError:
-    #     pass
-    # model.p_infra_dams = Param(model.s_sale_dams, model.s_dvp_dams, model.s_birth_dams, model.s_season_types,
-    #                            model.s_tol, model.s_groups_dams, model.s_infrastructure, initialize=, default = 0.0, doc='Dams requirement for infrastructure (based on number of times yarded and shearing activity)')
-    # try:
-    #     model.del_component(model.p_infra_offs)
-    # except AttributeError:
-    #     pass
-    # model.p_infra_offs = Param(model.s_sale_offs, model.s_dvp_offs, model.s_season_types, model.s_tol, model.s_birth_offs,
-    #                           model.s_groups_offs, model.s_infrastructure, initialize=, default = 0.0, doc='offs requirement for infrastructure (based on number of times yarded and shearing activity)')
-    # try:
-    #     model.del_component(model.p_cash_sire)
-    # except AttributeError:
-    #     pass
-    # model.p_cash_sire = Param(model.s_groups_sire, initialize=, default = 0.0, doc='Income (wool and sale sheep) and expenses (husbandry) sire')
-    # try:
-    #     model.del_component(model.p_cash_dams)
-    # except AttributeError:
-    #     pass
-    # model.p_cash_dams = Param(model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_birth_dams, model.s_nut_dams, model.s_lw_dams,
-    #                           model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_co_conception,
-    #                           model.s_co_bw, model.s_co_ww, model.s_co_cfw, model.s_co_fd, model.s_co_min_fd, model.s_co_fl, model.s_cashflow_periods,
-    #                           initialize=, default = 0.0, doc='Income (wool and sale sheep) and expenses (husbandry) dams')
-    # try:
-    #     model.del_component(model.p_cash_trans_dams)
-    # except AttributeError:
-    #     pass
-    # model.p_cash_trans_dams = Param(model.s_dvp_dams, model.s_wean_times, model.s_birth_dams, model.s_nut_dams, model.s_lw_dams,
-    #                           model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_co_conception,
-    #                           model.s_co_bw, model.s_co_ww, model.s_co_cfw, model.s_co_fd, model.s_co_min_fd, model.s_co_fl, model.s_cashflow_periods,
-    #                           initialize=, default = 0.0, doc='Income (wool and sale sheep) and expenses (husbandry) dams')
-    # try:
-    #     model.del_component(model.p_cash_offs)
-    # except AttributeError:
-    #     pass
-    # model.p_cash_offs = Param(model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types,
-    #                           model.s_tol, model.s_damage_offs, model.s_wean_times, model.s_birth_offs, model.s_gender_offs, model.s_gen_merit_offs,
-    #                           model.s_groups_offs, model.s_co_cfw, model.s_co_fd, model.s_co_min_fd, model.s_co_fl, model.s_cashflow_periods,
-    #                           initialize=, default = 0.0, doc='Income (wool and sale sheep) and expenses (husbandry) offs')
-    # try:
-    #     model.del_component(model.p_cash_trans_offs)
-    # except AttributeError:
-    #     pass
-    # model.p_cash_trans_offs = Param(model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types,
-    #                           model.s_tol, model.s_damage_offs, model.s_wean_times, model.s_birth_offs, model.s_gender_offs, model.s_gen_merit_offs,
-    #                           model.s_groups_offs, model.s_co_cfw, model.s_co_fd, model.s_co_min_fd, model.s_co_fl, model.s_cashflow_periods,
-    #                           initialize=, default = 0.0, doc='Income (wool and sale sheep) and expenses (husbandry) offs')
-    # try:
-    #     model.del_component(model.p_cost_sire)
-    # except AttributeError:
-    #     pass
-    # model.p_cost_sire = Param(model.s_groups_sire, initialize=, default = 0.0, doc='husbandry cost sire')
-    # try:
-    #     model.del_component(model.p_cost_dams)
-    # except AttributeError:
-    #     pass
-    # model.p_cost_dams = Param(model.s_sale_dams, model.s_dvp_dams, model.s_birth_dams,
-    #                           model.s_season_types, model.s_tol, model.s_groups_dams,
-    #                           initialize=, default = 0.0, doc='husbandry cost dams')
-    # try:
-    #     model.del_component(model.p_cost_trans_dams)
-    # except AttributeError:
-    #     pass
-    # model.p_cost_trans_dams = Param(model.s_dvp_dams, model.s_birth_dams,
-    #                           model.s_season_types, model.s_tol, model.s_groups_dams,
-    #                           initialize=, default = 0.0, doc='husbandry cost of transfer dams')
-    # try:
-    #     model.del_component(model.p_cost_offs)
-    # except AttributeError:
-    #     pass
-    # model.p_cost_offs = Param(model.s_sale_offs, model.s_dvp_offs, model.s_lw_offs, model.s_season_types,
-    #                           model.s_tol, model.s_birth_offs,
-    #                           model.s_groups_offs, initialize=, default = 0.0, doc='husbandry cost offs')
-    # try:
-    #     model.del_component(model.p_cost_trans_offs)
-    # except AttributeError:
-    #     pass
-    # model.p_cost_trans_offs = Param(model.s_dvp_offs, model.s_lw_offs, model.s_season_types,
-    #                           model.s_tol, model.s_birth_offs,
-    #                           model.s_groups_offs, initialize=, default = 0.0, doc='husbandry cost of transfer offs')
-    # try:
-    #     model.del_component(model.p_mei_sire)
-    # except AttributeError:
-    #     pass
-    # model.p_mei_sire = Param(model.s_groups_sire, model.s_feed_periods, model.s_sheep_pools, initialize=, default = 0.0, doc='energy requirement sire')
-    # try:
-    #     model.del_component(model.p_mei_dams)
-    # except AttributeError:
-    #     pass
-    # model.p_mei_dams = Param(model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_birth_dams, model.s_nut_dams, model.s_lw_dams,
-    #                          model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_feed_periods, model.s_sheep_pools,
-    #                          initialize=, default = 0.0, doc='energy requirement dams')
-    # try:
-    #     model.del_component(model.p_mei_trans_dams)
-    # except AttributeError:
-    #     pass
-    # model.p_mei_trans_dams = Param(model.s_dvp_dams, model.s_wean_times, model.s_birth_dams, model.s_nut_dams, model.s_lw_dams,
-    #                          model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_feed_periods, model.s_sheep_pools,
-    #                          initialize=, default = 0.0, doc='energy requirement of transfered  dams')
-    # try:
-    #     model.del_component(model.p_mei_offs)
-    # except AttributeError:
-    #     pass
-    # model.p_mei_offs = Param(model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types,
-    #                          model.s_tol, model.s_damage_offs, model.s_wean_times, model.s_birth_offs, model.s_gender_offs, model.s_gen_merit_offs,
-    #                          model.s_groups_offs, model.s_feed_periods, model.s_sheep_pools, initialize=, default = 0.0, doc='energy requirement offs')
-    # try:
-    #     model.del_component(model.p_mei_trans_offs)
-    # except AttributeError:
-    #     pass
-    # model.p_mei_trans_offs = Param(model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types,
-    #                          model.s_tol, model.s_damage_offs, model.s_wean_times, model.s_birth_offs, model.s_gender_offs, model.s_gen_merit_offs,
-    #                          model.s_groups_offs, model.s_feed_periods, model.s_sheep_pools, initialize=, default = 0.0, doc='energy requirement transfered offs')
-    # try:
-    #     model.del_component(model.p_pi_sire)
-    # except AttributeError:
-    #     pass
-    # model.p_pi_sire = Param(model.s_groups_sire, model.s_feed_periods, model.s_sheep_pools, initialize=, default = 0.0, doc='intake capacity sire')
-    # try:
-    #     model.del_component(model.p_pi_dams)
-    # except AttributeError:
-    #     pass
-    # model.p_pi_dams = Param(model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_birth_dams, model.s_nut_dams, model.s_lw_dams,
-    #                         model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_feed_periods, model.s_sheep_pools, initialize=, default = 0.0, doc='intake capacity dams')
-    # try:
-    #     model.del_component(model.p_pi_trans_dams)
-    # except AttributeError:
-    #     pass
-    # model.p_pi_trans_dams = Param(model.s_dvp_dams, model.s_wean_times, model.s_birth_dams, model.s_nut_dams, model.s_lw_dams,
-    #                         model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_feed_periods, model.s_sheep_pools,
-    #                         initialize=, default = 0.0, doc='intake capacity of transferred dams')
-    # try:
-    #     model.del_component(model.p_pi_offs)
-    # except AttributeError:
-    #     pass
-    # model.p_pi_offs = Param(model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types,
-    #                          model.s_tol, model.s_damage_offs, model.s_wean_times, model.s_birth_offs, model.s_gender_offs, model.s_gen_merit_offs,
-    #                          model.s_groups_offs, model.s_feed_periods, model.s_sheep_pools, initialize=, default = 0.0, doc='intake capacity offs')
-    # try:
-    #     model.del_component(model.p_pi_trans_offs)
-    # except AttributeError:
-    #     pass
-    # model.p_pi_trans_offs = Param(model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types,
-    #                          model.s_tol, model.s_damage_offs, model.s_wean_times, model.s_birth_offs, model.s_gender_offs, model.s_gen_merit_offs,
-    #                          model.s_groups_offs, model.s_feed_periods, model.s_sheep_pools, initialize=, default = 0.0, doc='intake capacity of transfered offs')
-    try:
-        model.del_component(model.p_lab_anyone_sire)
-    except AttributeError:
-        pass
-    model.p_lab_anyone_sire = pe.Param(model.s_groups_sire, model.s_labperiods, initialize=params['p_labour_anyone_sire'], default = 0.0, doc='labour requirment sire that can be done by anyone')
-    try:
-        model.del_component(model.p_lab_perm_sire)
-    except AttributeError:
-        pass
-    model.p_lab_perm_sire = pe.Param(model.s_groups_sire, model.s_labperiods, initialize=params['p_labour_perm_sire'], default = 0.0, doc='labour requirment sire that can be done by perm staff')
-    try:
-        model.del_component(model.p_lab_manager_sire)
-    except AttributeError:
-        pass
-    model.p_lab_manager_sire = pe.Param(model.s_groups_sire, model.s_labperiods, initialize=params['p_labour_manager_sire'], default = 0.0, doc='labour requirment sire that can be done by manager')
-    try:
-        model.del_component(model.p_lab_anyone_dams)
-    except AttributeError:
-        pass
-    model.p_lab_anyone_dams = pe.Param(model.s_birth_dams, model.s_labperiods, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams,
-                            model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, initialize=params['p_labour_anyone_dams'], default = 0.0, doc='labour requirment dams that can be done by anyone')
-    # try:
-    #     model.del_component(model.p_lab_trans_dams)
-    # except AttributeError:
-    #     pass
-    # model.p_lab_trans_dams = Param(model.s_dvp_dams, model.s_wean_times, model.s_birth_dams, model.s_nut_dams, model.s_lw_dams,
-    #                         model.s_season_types, model.s_tol, model.s_groups_dams, model.s_labperiods, initialize=, default = 0.0, doc='labour requirment transfer dams')
-    # try:
-    #     model.del_component(model.p_lab_offs)
-    # except AttributeError:
-    #     pass
-    # model.p_lab_offs = Param(model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types,
-    #                          model.s_tol, model.s_damage_offs, model.s_wean_times, model.s_birth_offs, model.s_gender_offs,
-    #                          model.s_groups_offs, model.s_labperiods, initialize=, default = 0.0, doc='labour requirment offs')
-    # try:
-    #     model.del_component(model.p_lab_trans_offs)
-    # except AttributeError:
-    #     pass
-    # model.p_lab_trans_offs = Param(model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types,
-    #                          model.s_tol, model.s_damage_offs, model.s_wean_times, model.s_birth_offs, model.s_gender_offs,
-    #                          model.s_groups_offs, model.s_labperiods, initialize=, default = 0.0, doc='labour requirment transfer offs')
+
     ##stock - dams
     try:
         model.del_component(model.p_numbers_prov_dams_index)
@@ -329,7 +83,7 @@ def sheep_pyomo_local(params,report):
         pass
     model.p_numbers_prov_dams = pe.Param(model.s_birth_dams, model.s_birth_dams, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams,
                                          model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_groups_dams, model.s_lw_dams,
-                                         initialize=params['p_numbers_prov_dams'], default = 0.0, doc='numbers provided by each dam activity into the next period')
+                                         initialize=params['p_numbers_prov_dams'], default=0.0, doc='numbers provided by each dam activity into the next period')
 
     try:
         model.del_component(model.p_numbers_req_dams_index)
@@ -338,44 +92,264 @@ def sheep_pyomo_local(params,report):
         pass
     model.p_numbers_req_dams = pe.Param(model.s_birth_dams, model.s_birth_dams, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams,
                                          model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_groups_dams, model.s_lw_dams,
-                                         initialize=params['p_numbers_req_dams'], default = 0.0, doc='numbers required by each dam activity in the current period')
+                                         initialize=params['p_numbers_req_dams'], default=0.0, doc='numbers required by each dam activity in the current period')
 
     # model.p_npw = Param(model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_birth_dams, model.s_nut_dams, model.s_lw_dams,
     #                           model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_dvp_offs, model.s_lw_offs,
     #                           model.s_season_types, model.s_tol, model.s_damage_offs, model.s_wean_times, model.s_birth_offs, model.s_gender_offs,
     #                           model.s_gen_merit_offs, model.s_groups_offs,
-    #                           initialize=, default = 0.0, doc='number of prodgeny weaned in each off class')
-    # model.p_n_sires = Param(model.s_dvp_dams, model.s_birth_dams, model.s_groups_dams, model.s_groups_sire, model.s_sire_periods, initialize=, default = 0.0, doc='requirement for sires for mating')
+    #                           initialize=, default=0.0, doc='number of prodgeny weaned in each off class')
+
+    model.p_n_sires = pe.Param(model.s_birth_dams, model.s_birth_dams, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams,
+                               model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_groups_sire, model.s_sire_periods,
+                               initialize=params['p_nsire_dams'], default=0.0, doc='requirement for sires for mating')
 
     ##stock - offs
     model.p_numbers_prov_offs = pe.Param(model.s_damage_offs, model.s_birth_offs, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types, model.s_tol,
                                  model.s_wean_times, model.s_gender_offs, model.s_gen_merit_offs, model.s_groups_offs, model.s_lw_offs,
-                                 initialize=params['p_numbers_prov_offs'], default = 0.0, doc='numbers provided into the current period from the previous periods activities')
+                                 initialize=params['p_numbers_prov_offs'], default=0.0, doc='numbers provided into the current period from the previous periods activities')
     model.p_numbers_req_offs = pe.Param(model.s_damage_offs, model.s_birth_offs, model.s_lw_offs,
                                         model.s_groups_offs, model.s_lw_offs,
-                                        initialize=params['p_numbers_req_offs'], default = 0.0, doc='requirment of off in the current period')
+                                        initialize=params['p_numbers_req_offs'], default=0.0, doc='requirment of off in the current period')
+
+    ##energy intake
+    try:
+        model.del_component(model.p_mei_sire)
+    except AttributeError:
+        pass
+    model.p_mei_sire = pe.Param(model.s_feed_periods, model.s_sheep_pools, model.s_groups_sire, initialize=params['p_mei_sire'], 
+                                  default=0.0, doc='energy requirement sire')
+    try:
+        model.del_component(model.p_mei_dams)
+    except AttributeError:
+        pass
+    model.p_mei_dams = pe.Param(model.s_birth_dams, model.s_feed_periods, model.s_sheep_pools, model.s_sale_dams, 
+                               model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams, model.s_season_types, 
+                               model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, initialize=params['p_mei_dams'], default=0.0, doc='energy requirement dams')
+    try:
+        model.del_component(model.p_mei_offs)
+    except AttributeError:
+        pass
+    model.p_mei_offs = pe.Param(model.s_damage_offs, model.s_birth_offs, model.s_feed_periods, model.s_sheep_pools, model.s_sale_offs, 
+                               model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types, model.s_tol, model.s_wean_times, 
+                               model.s_gender_offs, model.s_gen_merit_offs, model.s_groups_offs, initialize=params['p_mei_offs'], default=0.0, doc='energy requirement offs')
+
+    ##potential intake
+    try:
+        model.del_component(model.p_pi_sire)
+    except AttributeError:
+        pass
+    model.p_pi_sire = pe.Param(model.s_feed_periods, model.s_sheep_pools, model.s_groups_sire, initialize=params['p_pi_sire'], 
+                                  default=0.0, doc='pi sire')
+    try:
+        model.del_component(model.p_pi_dams)
+    except AttributeError:
+        pass
+    model.p_pi_dams = pe.Param(model.s_birth_dams, model.s_feed_periods, model.s_sheep_pools, model.s_sale_dams, 
+                               model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams, model.s_season_types, 
+                               model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, initialize=params['p_pi_dams'], default=0.0, doc='pi dams')
+    try:
+        model.del_component(model.p_pi_offs)
+    except AttributeError:
+        pass
+    model.p_pi_offs = pe.Param(model.s_damage_offs, model.s_birth_offs, model.s_feed_periods, model.s_sheep_pools, model.s_sale_offs, 
+                               model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types, model.s_tol, model.s_wean_times, 
+                               model.s_gender_offs, model.s_gen_merit_offs, model.s_groups_offs, initialize=params['p_pi_offs'], default=0.0, doc='pi offs')
+
+    
+    ##cashflow
+    try:
+        model.del_component(model.p_cashflow_sire)
+    except AttributeError:
+        pass
+    model.p_cashflow_sire = pe.Param(model.s_cashflow_periods, model.s_groups_sire, initialize=params['p_cashflow_sire'], 
+                                  default=0.0, doc='cashflow sire')
+    try:
+        model.del_component(model.p_cashflow_dams)
+    except AttributeError:
+        pass
+    model.p_cashflow_dams = pe.Param(model.s_birth_dams, model.s_cashflow_periods, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, 
+                                  model.s_lw_dams, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams,
+                                  initialize=params['p_cashflow_dams'], default=0.0, doc='cashflow dams')
+    try:
+        model.del_component(model.p_cashflow_offs)
+    except AttributeError:
+        pass
+    model.p_cashflow_offs = pe.Param(model.s_damage_offs, model.s_birth_offs, model.s_cashflow_periods, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
+                             model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender_offs, model.s_gen_merit_offs, model.s_groups_offs,
+                             initialize=params['p_cashflow_offs'], default=0.0, doc='cashflow offs')
+    ##cost - minroe
+    try:
+        model.del_component(model.p_cost_sire)
+    except AttributeError:
+        pass
+    model.p_cost_sire = pe.Param(model.s_groups_sire, initialize=params['p_cost_sire'], 
+                                  default=0.0, doc='husbandry cost sire')
+    try:
+        model.del_component(model.p_cost_dams)
+    except AttributeError:
+        pass
+    model.p_cost_dams = pe.Param(model.s_birth_dams, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, 
+                                  model.s_lw_dams, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams,
+                                  initialize=params['p_cost_dams'], default=0.0, doc='husbandry cost dams')
+    try:
+        model.del_component(model.p_cost_offs)
+    except AttributeError:
+        pass
+    model.p_cost_offs = pe.Param(model.s_damage_offs, model.s_birth_offs, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
+                             model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender_offs, model.s_gen_merit_offs, model.s_groups_offs,
+                             initialize=params['p_cost_offs'], default=0.0, doc='husbandry cost offs')
+
+    ##labour - sire
+    try:
+        model.del_component(model.p_lab_anyone_sire)
+    except AttributeError:
+        pass
+    model.p_lab_anyone_sire = pe.Param(model.s_labperiods, model.s_groups_sire,  initialize=params['p_labour_anyone_sire'], default=0.0, doc='labour requirment sire that can be done by anyone')
+    try:
+        model.del_component(model.p_lab_perm_sire)
+    except AttributeError:
+        pass
+    model.p_lab_perm_sire = pe.Param(model.s_labperiods, model.s_groups_sire, initialize=params['p_labour_perm_sire'], default=0.0, doc='labour requirment sire that can be done by perm staff')
+    try:
+        model.del_component(model.p_lab_manager_sire)
+    except AttributeError:
+        pass
+    model.p_lab_manager_sire = pe.Param(model.s_labperiods, model.s_groups_sire, initialize=params['p_labour_manager_sire'], default=0.0, doc='labour requirment sire that can be done by manager')
+    
+    ##labour - dams
+    try:
+        model.del_component(model.p_lab_anyone_dams)
+    except AttributeError:
+        pass
+    model.p_lab_anyone_dams = pe.Param(model.s_birth_dams, model.s_labperiods, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams,
+                            model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams,
+                                       initialize=params['p_labour_anyone_dams'], default=0.0, doc='labour requirment dams that can be done by anyone')
+    try:
+        model.del_component(model.p_lab_perm_dams)
+    except AttributeError:
+        pass
+    model.p_lab_perm_dams = pe.Param(model.s_birth_dams, model.s_labperiods, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams,
+                            model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams,
+                                     initialize=params['p_labour_perm_dams'], default=0.0, doc='labour requirment dams that can be done by perm staff')
+    try:
+        model.del_component(model.p_lab_manager_dams)
+    except AttributeError:
+        pass
+    model.p_lab_manager_dams = pe.Param(model.s_birth_dams, model.s_labperiods, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams,
+                            model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams,
+                                        initialize=params['p_labour_manager_dams'], default=0.0, doc='labour requirment dams that can be done by manager')
+    
+    ##labour - offs
+    try:
+        model.del_component(model.p_lab_anyone_offs)
+    except AttributeError:
+        pass
+    model.p_lab_anyone_offs = pe.Param(model.s_damage_offs, model.s_birth_offs, model.s_labperiods, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
+                             model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender_offs, model.s_gen_merit_offs, model.s_groups_offs,
+                             initialize=params['p_labour_anyone_offs'], default=0.0, doc='labour requirment offs - anyone')
+    try:
+        model.del_component(model.p_lab_perm_offs)
+    except AttributeError:
+        pass
+    model.p_lab_perm_offs = pe.Param(model.s_damage_offs, model.s_birth_offs, model.s_labperiods, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
+                             model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender_offs, model.s_gen_merit_offs, model.s_groups_offs,
+                             initialize=params['p_labour_perm_offs'], default=0.0, doc='labour requirment offs - perm')
+    try:
+        model.del_component(model.p_lab_manager_offs)
+    except AttributeError:
+        pass
+    model.p_lab_manager_offs = pe.Param(model.s_damage_offs, model.s_birth_offs, model.s_labperiods, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
+                             model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender_offs, model.s_gen_merit_offs, model.s_groups_offs,
+                             initialize=params['p_labour_manager_offs'], default=0.0, doc='labour requirment offs - manager')
+
+    ##infrastructure
+    try:
+        model.del_component(model.p_infra_sire)
+    except AttributeError:
+        pass
+    model.p_infra_sire = pe.Param(model.s_infrastructure, model.s_groups_sire, initialize=params['p_infrastructure_sire'], 
+                                  default=0.0, doc='sire requirement for infrastructure (based on number of times yarded and shearing activity)')
+    try:
+        model.del_component(model.p_infra_dams)
+    except AttributeError:
+        pass
+    model.p_infra_dams = pe.Param(model.s_birth_dams, model.s_infrastructure, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, 
+                                  model.s_lw_dams, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams,
+                                  initialize=params['p_infrastructure_dams'], default=0.0, doc='Dams requirement for infrastructure (based on number of times yarded and shearing activity)')
+    try:
+        model.del_component(model.p_infra_offs)
+    except AttributeError:
+        pass
+    model.p_infra_offs = pe.Param(model.s_damage_offs, model.s_birth_offs, model.s_infrastructure, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
+                             model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender_offs, model.s_gen_merit_offs, model.s_groups_offs,
+                             initialize=params['p_infrastructure_offs'], default=0.0, doc='offs requirement for infrastructure (based on number of times yarded and shearing activity)')
+
+
+    # try:
+    #     model.del_component(model.p_asset_stockinfra)
+    # except AttributeError:
+    #     pass
+    # model.p_asset_stockinfra = Param(model.s_infrastructure, initialize=, default=0.0, doc='Asset value per animal mustered  or shorn')
+    # try:
+    #     model.del_component(model.p_dep_stockinfra)
+    # except AttributeError:
+    #     pass
+    # model.p_dep_stockinfra = Param(model.s_infrastructure, initialize=, default=0.0, doc='Depreciation of the asset value')
+    # try:
+    #     model.del_component(model.p_rm_stockinfra)
+    # except AttributeError:
+    #     pass
+    # model.p_rm_stockinfra = Param(model.s_infrastructure, model.s_cashflow_periods,initialize=, default=0.0, doc='Cost of R&M of the infrastructure (per animal mustered/shorn)')
+    # try:
+    #     model.del_component(model.p_lab_stockinfra)
+    # except AttributeError:
+    #     pass
+    # model.p_lab_stockinfra = Param(model.s_infrastructure, model.s_labperiods, initialize=, default=0.0, doc='Labour required for R&M of the infrastructure (per animal mustered/shorn)')
+
+    # try:
+    #     model.del_component(model.p_asset_sire)
+    # except AttributeError:
+    #     pass
+    # model.p_asset_sire = Param(model.s_groups_sire, initialize=, default=0.0, doc='Asset value of sire')
+    # try:
+    #     model.del_component(model.p_asset_dams)
+    # except AttributeError:
+    #     pass
+    # model.p_asset_dams = Param(model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_birth_dams, model.s_nut_dams, model.s_lw_dams,
+    #                            model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_co_conception,
+    #                            model.s_co_bw, model.s_co_ww, model.s_co_cfw, model.s_co_fd, model.s_co_min_fd, model.s_co_fl, initialize=, default=0.0, doc='Asset value of dams')
+    # try:
+    #     model.del_component(model.p_asset_offs)
+    # except AttributeError:
+    #     pass
+    # model.p_asset_offs = Param(model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types,
+    #                            model.s_tol, model.s_damage_offs, model.s_wean_times, model.s_birth_offs, model.s_gender_offs, model.s_gen_merit_offs,
+    #                            model.s_groups_offs, model.s_co_cfw, model.s_co_fd, model.s_co_min_fd, model.s_co_fl, initialize=, default=0.0, doc='Asset value of offs')
+
+
     ##purchases
     # model.p_cost_purch_sire = Param(model.s_groups_sire, model.s_cashflow_periods,
-    #                                initialize=, default = 0.0, doc='cost of purchased sires')
+    #                                initialize=, default=0.0, doc='cost of purchased sires')
     # model.p_numberpurch_dam = Param(model.s_dvp_dams, model.s_wean_times, model.s_birth_dams, model.s_lw_dams,
     #                           model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_co_conception,
-    #                           model.s_co_bw, model.s_co_ww, model.s_co_cfw, model.s_co_fd, model.s_co_min_fd, model.s_co_fl, initialize=, default = 0.0, doc='purchase transfer - ie how a purchased dam is allocated into damR')
+    #                           model.s_co_bw, model.s_co_ww, model.s_co_cfw, model.s_co_fd, model.s_co_min_fd, model.s_co_fl, initialize=, default=0.0, doc='purchase transfer - ie how a purchased dam is allocated into damR')
     # model.p_cost_purch_dam = Param(model.s_dvp_dams, model.s_lw_dams, model.s_season_types, model.s_tol, model.s_groups_dams, model.s_cashflow_periods,
-    #                                initialize=, default = 0.0, doc='cost of purchased dams')
+    #                                initialize=, default=0.0, doc='cost of purchased dams')
     # model.p_numberpurch_offs = Param(model.s_dvp_offs, model.s_lw_offs, model.s_season_types, model.s_tol, model.s_damage_offs,
     #                                  model.s_wean_times, model.s_birth_offs, model.s_gender_offs, model.s_gen_merit_offs, model.s_groups_offs,
-    #                                  initialize=, default = 0.0, doc='purchase transfer - ie how a purchased offs is allocated into offsR')
+    #                                  initialize=, default=0.0, doc='purchase transfer - ie how a purchased offs is allocated into offsR')
     # model.p_cost_purch_offs = Param(model.s_dvp_offs, model.s_lw_offs, model.s_season_types, model.s_tol, model.s_groups_offs, model.s_cashflow_periods,
-    #                                initialize=, default = 0.0, doc='cost of purchased offs')
+    #                                initialize=, default=0.0, doc='cost of purchased offs')
     # ##transfers
     # model.p_offs2dam_numbers = Param(model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types, model.s_tol, model.s_damage_offs,
     #                                  model.s_wean_times, model.s_birth_offs, model.s_gender_offs, model.s_gen_merit_offs, model.s_co_cfw,
     #                                  model.s_co_fd, model.s_co_min_fd, model.s_co_fl, model.s_groups_dams, model.s_dvp_dams, model.s_wean_times,
     #                                  model.s_birth_dams, model.s_lw_dams, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams,
-    #                                  initialize=, default = 0.0, doc='Proportion of the offs distributed to each of the starting LWs at the beginning of the current dam feed variation period')
+    #                                  initialize=, default=0.0, doc='Proportion of the offs distributed to each of the starting LWs at the beginning of the current dam feed variation period')
     # model.p_dam2sire_numbers = Param(model.s_dvp_dams, model.s_wean_times, model.s_birth_dams, model.s_lw_dams, model.s_season_types, model.s_tol,
     #                                  model.s_gen_merit_dams, model.s_groups_dams, model.s_groups_dams,
-    #                                  initialize=, default = 0.0, doc='Proportion of the animals distributed to each of the starting LWs of the recipient animals at the beginning of the recipients next feed variation period')
+    #                                  initialize=, default=0.0, doc='Proportion of the animals distributed to each of the starting LWs of the recipient animals at the beginning of the recipients next feed variation period')
 
     textbuffer = StringIO()
     model.p_numbers_prov_dams.pprint(textbuffer)
@@ -391,18 +365,6 @@ def sheep_pyomo_local(params,report):
     ### set up constraints #
     ########################
     print('set up constraints')
-
-    try:
-        model.del_component(model.con_stockinfra)
-    except AttributeError:
-        pass
-    def stockinfra(model,h1):
-        return -model.v_infrastructure[h1] + sum(model.v_sire[g0] * model.p_infra_sire[g0,h1] for g0 in model.s_groups_sire)  \
-               + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] for a in model.s_wean_times for n1 in model.s_nut_dams for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams
-                             * model.p_infra_dams[t1,v1,b1,z,i,g1,h1] for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for b1 in model.s_birth_dams for g1 in model.s_groups_dams)  \
-               + sum(sum(model.v_offs[t3,v3,n3,w3,z,i,d,a,b3,x,y3,g3] for a in model.s_wean_times for n3 in model.s_nut_offs for w3 in model.s_lw_offs for d in model.s_damage_offs for x in model.s_gender_offs for y3 in model.s_gen_merit_offs for r4 in model.s_co_cfw for r5 in model.s_co_fd for r6 in model.s_co_min_fd for r7 in model.s_co_fl) * model.p_infra_offs[t3,v3,b3,z,i,g3,h3] for t3 in model.s_sale_offs for v3 in model.s_dvp_offs for b3 in model.s_birth_offs for g3 in model.s_groups_offs)
-               for z in model.s_season_types for i in model.s_tol) <=0
-    model.con_stockinfra = pe.Constraint(model.s_infrastructure, rule=stockinfra, doc='Requirement for infrastructure (based on number of times yarded and shearing activity)')
 
     # try:
     #     model.del_component(model.con_damR_index)
@@ -565,7 +527,19 @@ def sheep_pyomo_local(params,report):
     #         - model.v_sire[g0] <=0 #p_numpurch allocates the purchased dams into certain sets, in this case it is correct to multiply a var with less sets to a param with more sets
     # model.con_matingR = pe.Constraint(model.s_groups_sire, model.s_sire_periods, rule=mating, doc='sire requirment for mating')
     #
-    #
+    try:
+        model.del_component(model.con_stockinfra)
+    except AttributeError:
+        pass
+    def stockinfra(model,h1):
+        return -model.v_infrastructure[h1] + sum(model.v_sire[g0] * model.p_infra_sire[g0,h1] for g0 in model.s_groups_sire)  \
+               + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] for a in model.s_wean_times for n1 in model.s_nut_dams for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams
+                             * model.p_infra_dams[t1,v1,b1,z,i,g1,h1] for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for b1 in model.s_birth_dams for g1 in model.s_groups_dams)  \
+               + sum(sum(model.v_offs[t3,v3,n3,w3,z,i,d,a,b3,x,y3,g3] for a in model.s_wean_times for n3 in model.s_nut_offs for w3 in model.s_lw_offs for d in model.s_damage_offs for x in model.s_gender_offs for y3 in model.s_gen_merit_offs for r4 in model.s_co_cfw for r5 in model.s_co_fd for r6 in model.s_co_min_fd for r7 in model.s_co_fl) * model.p_infra_offs[t3,v3,b3,z,i,g3,h3] for t3 in model.s_sale_offs for v3 in model.s_dvp_offs for b3 in model.s_birth_offs for g3 in model.s_groups_offs)
+               for z in model.s_season_types for i in model.s_tol) <=0
+    model.con_stockinfra = pe.Constraint(model.s_infrastructure, rule=stockinfra, doc='Requirement for infrastructure (based on number of times yarded and shearing activity)')
+
+
 #####################
 ##  setup variables # these variables only need initialising once ie sets wont change within and iteration of exp.
 #####################
@@ -575,32 +549,36 @@ model.v_infrastructure = pe.Var(model.s_infrastructure, bounds = (0,None) , doc=
 # ##################################
 # ### setup core model constraints #
 # ##################################
-#
-# def stock_dep(model):
-#     return sum(model.p_dep_stockinfra[h3]  * model.v_infrastructure[h3] for h3 in model.s_infrastructure)
 
-#
-# def stock_asset(model):
-#     infastrucure = sum(model.p_asset_stockinfra[h3] * model.v_infrastructure[h3] for h3 in model.s_infrastructure)
-#     stock = sum(model.v_sire[g0] * model.p_asset_sire[g0] for g0 in model.s_groups_sire)
-#           + sum(sum(sum(sum(model.v_dams[t1,v1,a,b1,n1,w1,z,i,y1,g1,r1,r2,r3,r4,r5,r6,r7] for r1 in model.s_co_conception for r2 in model.s_co_bw for r3 in  model.s_co_ww)
-#                     * model.p_asset_dams[t1,v1,a,b1,n1,w1,z,i,y1,g1,r4,r5,r6,r7] for t1 in model.s_sale_dams)
-#                     + sum(model.v_dams2sire[v1,a,b1,n1,w1,z,i,y1,g1,r1,r2,r3,r4,r5,r6,r7,g1_new] for r1 in model.s_co_conception for r2 in model.s_co_bw for r3 in  model.s_co_ww for g1_new in model.s_groups_dams)
-#                     * model.p_asset_trans_dams[v1,a,b1,n1,w1,z,i,y1,g1,r4,r5,r6,r7]
-#                     for v1 in model.s_dvp_dams for b1 in model.s_birth_dams for n1 in model.s_nut_dams for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams)
-#           + sum(sum(model.v_offs[t3,v3,n3,w3,z,i,d,a,b3,x,y3,g3,r4,r5,r6,r7] * model.p_asset_offs[t3,v3,n3,w3,z,i,d,a,b3,x,y3,g3,r4,r5,r6,r7] for t3 in model.s_sale_offs)
-#                 + sum(model.v_offs2dam[v3,n3,w3,z,i,d,a,b3,x,y3,g3,r4,r5,r6,r7,g1_new] for g1_new in model.s_groups_dams)
-#                 * model.p_asset_trans_offs[v3,n3,w3,z,i,d,a,b3,x,y3,g3,r4,r5,r6,r7] for v3 in model.s_dvp_offs  for n3 in model.s_nut_offs for w3 in model.s_lw_offs for d in model.s_damage_offs for b3 in model.s_birth_offs for x in model.s_gender_offs for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs)
-#           for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol for r4 in model.s_co_cfw for r5 in model.s_co_fd for r6 in model.s_co_min_fd for r7 in model.s_co_fl)
-#     return infastrucure + stock
-#
+def stock_me(model,f,p6):
+    return sum(model.v_sire[g0] * model.p_mei_sire[p6,f,g0] for g0 in model.s_groups_sire)\
+          + sum(sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_mei_dams[k2,p6,f,t1,v1,a,n1,w1,z,i,y1,g1]
+                        for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for k2 in model.s_birth_dams for n1 in model.s_nut_dams for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams)
+          + sum(sum(sum(model.v_offs[t3,v3,n3,w3,z,i,d,a,b3,x,y3,g3]
+                * model.p_mei_offs[t3,v3,n3,w3,z,i,d,a,b3,x,y3,g3,p6,v] for t3 in model.s_sale_offs)
+                + model.v_offs2dam[v3,n3,w3,z,i,d,a,b3,x,y3,g3,g1_new] for g1_new in model.s_groups_dams)
+                * model.p_mei_trans_offs[v3,n3,w3,z,i,d,a,b3,x,y3,g3,p6,v] for v3 in model.s_dvp_offs  for n3 in model.s_nut_offs for w3 in model.s_lw_offs for d in model.s_damage_offs for b3 in model.s_birth_offs for x in model.s_gender_offs for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs)
+          for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol)
+
+
+def stock_pi(model,f,p6):
+    return sum(model.v_sire[g0] * model.p_pi_sire[p6,f,g0] for g0 in model.s_groups_sire)\
+        + sum(sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1]
+                    * model.p_pi_dams[k2,p6,f,t1,v1,a,n1,w1,z,i,y1,g1] for t1 in model.s_sale_dams)
+                    # + sum(model.v_dams2sire[v1,a,b1,n1,w1,z,i,y1,g1,r1,r2,r3,r4,r5,r6,r7,g1_new] for r1 in model.s_co_conception for r2 in model.s_co_bw for r3 in  model.s_co_ww for r4 in model.s_co_cfw for r5 in model.s_co_fd for r6 in model.s_co_min_fd for r7 in model.s_co_fl for g1_new in model.s_groups_dams)
+                    # * model.p_pi_trans_dams[v1,a,b1,n1,w1,z,i,y1,g1,p6,v]
+                    for v1 in model.s_dvp_dams for k2 in model.s_birth_dams for n1 in model.s_nut_dams for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams)
+          + sum(sum(model.v_offs[t3,v3,n3,w3,z,i,d,a,b3,x,y3,g3]
+                * model.p_pi_offs[t3,v3,n3,w3,z,i,d,a,b3,x,y3,g3,p6,v] for t3 in model.s_sale_offs)
+                + sum(model.v_offs2dam[v3,n3,w3,z,i,d,a,b3,x,y3,g3,r4,r5,r6,r7,g1_new] for r4 in model.s_co_cfw for r5 in model.s_co_fd for r6 in model.s_co_min_fd for r7 in model.s_co_fl for g1_new in model.s_groups_dams)
+                * model.p_pi_trans_offs[v3,n3,w3,z,i,d,a,b3,x,y3,g3,p6,v] for v3 in model.s_dvp_offs  for n3 in model.s_nut_offs for w3 in model.s_lw_offs for d in model.s_damage_offs for b3 in model.s_birth_offs for x in model.s_gender_offs for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs)
+          for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol)
+
 def stock_cashflow(model,c):
     # infrastructure = sum(model.p_rm_stockinfra[h3,c] * model.v_infrastructure[h3] for h3 in model.s_infrastructure)
     stock = sum(model.v_sire[g0] * model.p_cash_sire[g0,c] for g0 in model.s_groups_sire) \
           + sum(sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1]
                     * model.p_cash_dams[k2,c,t1,v1,a,n1,w1,z,i,y1,g1] for t1 in model.s_sale_dams)
-                    + sum(model.v_dams2sire[v1,a,b1,n1,w1,z,i,y1,g1,g1_new] for g1_new in model.s_groups_dams)
-                    * model.p_cash_trans_dams[v1,a,b1,n1,w1,z,i,y1,g1,r4,r5,r6,r7,c]
                     for v1 in model.s_dvp_dams  for b1 in model.s_birth_dams for n1 in model.s_nut_dams for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams)
           + sum(sum(model.v_offs[t3,v3,n3,w3,z,i,d,a,b3,x,y3,g3,r4,r5,r6,r7] * model.p_cash_offs[t3,v3,n3,w3,z,i,d,a,b3,x,y3,g3,r4,r5,r6,r7] for t3 in model.s_sale_offs)
                 + sum(model.v_offs2dam[v3,n3,w3,z,i,d,a,b3,x,y3,g3,r4,r5,r6,r7,g1_new] for g1_new in model.s_groups_dams)
@@ -661,35 +639,27 @@ def stock_labour_anyone(model,p5):
           for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol)
     return stock
 #
+
+
+# def stock_dep(model):
+#     return sum(model.p_dep_stockinfra[h3]  * model.v_infrastructure[h3] for h3 in model.s_infrastructure)
+
 #
-def stock_me(model,f,p6):
-    return sum(model.v_sire[g0] * model.p_mei_sire[p6,f,g0] for g0 in model.s_groups_sire)\
-          + sum(sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1]
-                    * model.p_mei_dams[k2,p6,f,t1,v1,a,b1,n1,w1,z,i,y1,g1] for t1 in model.s_sale_dams)
-                    # + sum(model.v_dams2sire[v1,a,b1,n1,w1,z,i,y1,g1,g1_new]  for g1_new in model.s_groups_dams)
-                    # * model.p_mei_trans_dams[v1,a,b1,n1,w1,z,i,y1,g1,p6,v]
-                    for v1 in model.s_dvp_dams for k2 in model.s_birth_dams for n1 in model.s_nut_dams for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams)
-          + sum(sum(sum(model.v_offs[t3,v3,n3,w3,z,i,d,a,b3,x,y3,g3]
-                * model.p_mei_offs[t3,v3,n3,w3,z,i,d,a,b3,x,y3,g3,p6,v] for t3 in model.s_sale_offs)
-                + model.v_offs2dam[v3,n3,w3,z,i,d,a,b3,x,y3,g3,g1_new] for g1_new in model.s_groups_dams)
-                * model.p_mei_trans_offs[v3,n3,w3,z,i,d,a,b3,x,y3,g3,p6,v] for v3 in model.s_dvp_offs  for n3 in model.s_nut_offs for w3 in model.s_lw_offs for d in model.s_damage_offs for b3 in model.s_birth_offs for x in model.s_gender_offs for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs)
-          for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol)
-
-
-def stock_pi(model,f,p6):
-    return sum(model.v_sire[g0] * model.p_pi_sire[p6,f,g0] for g0 in model.s_groups_sire)\
-        + sum(sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1]
-                    * model.p_pi_dams[k2,p6,f,t1,v1,a,n1,w1,z,i,y1,g1] for t1 in model.s_sale_dams)
-                    # + sum(model.v_dams2sire[v1,a,b1,n1,w1,z,i,y1,g1,r1,r2,r3,r4,r5,r6,r7,g1_new] for r1 in model.s_co_conception for r2 in model.s_co_bw for r3 in  model.s_co_ww for r4 in model.s_co_cfw for r5 in model.s_co_fd for r6 in model.s_co_min_fd for r7 in model.s_co_fl for g1_new in model.s_groups_dams)
-                    # * model.p_pi_trans_dams[v1,a,b1,n1,w1,z,i,y1,g1,p6,v]
-                    for v1 in model.s_dvp_dams for k2 in model.s_birth_dams for n1 in model.s_nut_dams for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams)
-          + sum(sum(model.v_offs[t3,v3,n3,w3,z,i,d,a,b3,x,y3,g3]
-                * model.p_pi_offs[t3,v3,n3,w3,z,i,d,a,b3,x,y3,g3,p6,v] for t3 in model.s_sale_offs)
-                + sum(model.v_offs2dam[v3,n3,w3,z,i,d,a,b3,x,y3,g3,r4,r5,r6,r7,g1_new] for r4 in model.s_co_cfw for r5 in model.s_co_fd for r6 in model.s_co_min_fd for r7 in model.s_co_fl for g1_new in model.s_groups_dams)
-                * model.p_pi_trans_offs[v3,n3,w3,z,i,d,a,b3,x,y3,g3,p6,v] for v3 in model.s_dvp_offs  for n3 in model.s_nut_offs for w3 in model.s_lw_offs for d in model.s_damage_offs for b3 in model.s_birth_offs for x in model.s_gender_offs for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs)
-          for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol)
-
-
+# def stock_asset(model):
+#     infastrucure = sum(model.p_asset_stockinfra[h3] * model.v_infrastructure[h3] for h3 in model.s_infrastructure)
+#     stock = sum(model.v_sire[g0] * model.p_asset_sire[g0] for g0 in model.s_groups_sire)
+#           + sum(sum(sum(sum(model.v_dams[t1,v1,a,b1,n1,w1,z,i,y1,g1,r1,r2,r3,r4,r5,r6,r7] for r1 in model.s_co_conception for r2 in model.s_co_bw for r3 in  model.s_co_ww)
+#                     * model.p_asset_dams[t1,v1,a,b1,n1,w1,z,i,y1,g1,r4,r5,r6,r7] for t1 in model.s_sale_dams)
+#                     + sum(model.v_dams2sire[v1,a,b1,n1,w1,z,i,y1,g1,r1,r2,r3,r4,r5,r6,r7,g1_new] for r1 in model.s_co_conception for r2 in model.s_co_bw for r3 in  model.s_co_ww for g1_new in model.s_groups_dams)
+#                     * model.p_asset_trans_dams[v1,a,b1,n1,w1,z,i,y1,g1,r4,r5,r6,r7]
+#                     for v1 in model.s_dvp_dams for b1 in model.s_birth_dams for n1 in model.s_nut_dams for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams)
+#           + sum(sum(model.v_offs[t3,v3,n3,w3,z,i,d,a,b3,x,y3,g3,r4,r5,r6,r7] * model.p_asset_offs[t3,v3,n3,w3,z,i,d,a,b3,x,y3,g3,r4,r5,r6,r7] for t3 in model.s_sale_offs)
+#                 + sum(model.v_offs2dam[v3,n3,w3,z,i,d,a,b3,x,y3,g3,r4,r5,r6,r7,g1_new] for g1_new in model.s_groups_dams)
+#                 * model.p_asset_trans_offs[v3,n3,w3,z,i,d,a,b3,x,y3,g3,r4,r5,r6,r7] for v3 in model.s_dvp_offs  for n3 in model.s_nut_offs for w3 in model.s_lw_offs for d in model.s_damage_offs for b3 in model.s_birth_offs for x in model.s_gender_offs for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs)
+#           for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol for r4 in model.s_co_cfw for r5 in model.s_co_fd for r6 in model.s_co_min_fd for r7 in model.s_co_fl)
+#     return infastrucure + stock
+#
+#
 
 
 

@@ -1276,7 +1276,7 @@ def f_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfoe
         ###d) birth (account for birth status and if drys are retained)
         if np.any(period_is_birth):
             dam_propn_birth_b1 = f_comb(nfoet_b1, nyatf_b1) * (1 - mortality_yatf) ** nyatf_b1 * mortality_yatf ** (nfoet_b1 - nyatf_b1) # the proportion of dams of each LSLN based on (progeny) mortality
-            temp = np.mean(dam_propn_birth_b1[...,1:,:,:], axis=uinp.parameters['i_x_pos'], keepdims=True) * numbers[:,:,uinp.structure['a_prepost_b1'],...] #have to average x axis so that it is not active for dams - only average females and weathers (castrates) because entires (rams) not usually included in offs
+            temp = np.sum(dam_propn_birth_b1 * gender_propn_x, axis=uinp.parameters['i_x_pos'], keepdims=True) * numbers[:,:,uinp.structure['a_prepost_b1'],...] #have to average x axis so that it is not active for dams - times by gender propn to give aprox weighting (ie because offs are not usually entire males so they will get low weighting)
             pp_numbers = fun.f_update(numbers, temp, period_is_birth)  # calculated in the period after birth when progeny mortality due to exposure is calculated
             temp = np.maximum(pinp.sheep['i_drysretained_birth'],np.minimum(1, nyatf_b1)) * pp_numbers
             numbers = fun.f_update(pp_numbers, temp, period_is_birth * (gbal>=2)) # has to happen after the dams are moved due to progeny mortality so that gbal drys are also scaled by drys_retained
