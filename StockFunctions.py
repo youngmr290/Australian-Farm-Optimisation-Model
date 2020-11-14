@@ -1291,7 +1291,7 @@ def f_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfoe
         numbers=np.maximum(numbers_min_b1, numbers)
     ##things just for yatf
     if group==2:
-        temp = nyatf_b1 * gender_propn_x   # nyatf is accounting for peri-natal mortality
+        temp = nyatf_b1 * gender_propn_x   # nyatf is accounting for peri-natal mortality. But doesn't include the differential mortality of female and male offspring at birth
         fun.f_update(numbers, temp, period_is_birth)
         pp_numbers = numbers
     return numbers,pp_numbers
