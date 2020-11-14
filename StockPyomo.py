@@ -41,6 +41,7 @@ def sheep_pyomo_local(params,report):
     model.s_birth_offs = pe.Set(initialize=params['k5_idx_offs'], doc='Cluster for BTRT & oestrus cycle based on scanning, global & weaning management')
     model.s_groups_offs = pe.Set(initialize=params['g_idx_offs'], doc='geneotype groups of offs')
     model.s_gen_merit_offs = pe.Set(initialize=params['y_idx_offs'], doc='genetic merit of offs')
+    model.s_gender_offs = pe.Set(initialize=params['x_idx_offs'], doc='gender of offs')
 
     #####################
     ##  setup variables # #variables that use dynamic sets must be defined each itteration of exp
@@ -327,28 +328,18 @@ def sheep_pyomo_local(params,report):
     except AttributeError:
         pass
     model.p_numbers_prov_dams = pe.Param(model.s_birth_dams, model.s_birth_dams, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams,
-                                         model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_dams,
+                                         model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_groups_dams, model.s_lw_dams,
                                          initialize=params['p_numbers_prov_dams'], default = 0.0, doc='numbers provided by each dam activity into the next period')
-
-
-    textbuffer = StringIO()
-    model.p_numbers_prov_dams.pprint(textbuffer)
-    textbuffer.write('\n')
-    with open('number_prov.txt', 'w') as outputfile:
-        outputfile.write(textbuffer.getvalue())
 
     try:
         model.del_component(model.p_numbers_req_dams_index)
         model.del_component(model.p_numbers_req_dams)
     except AttributeError:
         pass
-    model.p_numbers_req_dams = pe.Param(model.s_birth_dams, model.s_birth_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams,
-                                         model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_dams,
+    model.p_numbers_req_dams = pe.Param(model.s_birth_dams, model.s_birth_dams, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams,
+                                         model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_groups_dams, model.s_lw_dams,
                                          initialize=params['p_numbers_req_dams'], default = 0.0, doc='numbers required by each dam activity in the current period')
-    model.p_numbers_req_dams.pprint(textbuffer)
-    textbuffer.write('\n')
-    with open('number_req.txt', 'w') as outputfile:
-        outputfile.write(textbuffer.getvalue())
+
     # model.p_npw = Param(model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_birth_dams, model.s_nut_dams, model.s_lw_dams,
     #                           model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_dvp_offs, model.s_lw_offs,
     #                           model.s_season_types, model.s_tol, model.s_damage_offs, model.s_wean_times, model.s_birth_offs, model.s_gender_offs,
@@ -357,9 +348,12 @@ def sheep_pyomo_local(params,report):
     # model.p_n_sires = Param(model.s_dvp_dams, model.s_birth_dams, model.s_groups_dams, model.s_groups_sire, model.s_sire_periods, initialize=, default = 0.0, doc='requirement for sires for mating')
 
     ##stock - offs
-    # model.p_numbers_offs = pe.Param(model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types, model.s_tol, model.s_damage_offs,
-    #                              model.s_wean_times, model.s_birth_offs, model.s_gender_offs, model.s_gen_merit_offs, model.s_groups_offs,
-    #                              initialize=params['p_numbers_prov_offs'], default = 0.0, doc='transfer of offs activity to the next feed variation period')
+    model.p_numbers_prov_offs = pe.Param(model.s_damage_offs, model.s_birth_offs, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types, model.s_tol,
+                                 model.s_wean_times, model.s_gender_offs, model.s_gen_merit_offs, model.s_groups_offs, model.s_lw_offs,
+                                 initialize=params['p_numbers_prov_offs'], default = 0.0, doc='numbers provided into the current period from the previous periods activities')
+    model.p_numbers_req_offs = pe.Param(model.s_damage_offs, model.s_birth_offs, model.s_lw_offs,
+                                        model.s_groups_offs, model.s_lw_offs,
+                                        initialize=params['p_numbers_req_offs'], default = 0.0, doc='requirment of off in the current period')
     ##purchases
     # model.p_cost_purch_sire = Param(model.s_groups_sire, model.s_cashflow_periods,
     #                                initialize=, default = 0.0, doc='cost of purchased sires')
@@ -382,6 +376,13 @@ def sheep_pyomo_local(params,report):
     # model.p_dam2sire_numbers = Param(model.s_dvp_dams, model.s_wean_times, model.s_birth_dams, model.s_lw_dams, model.s_season_types, model.s_tol,
     #                                  model.s_gen_merit_dams, model.s_groups_dams, model.s_groups_dams,
     #                                  initialize=, default = 0.0, doc='Proportion of the animals distributed to each of the starting LWs of the recipient animals at the beginning of the recipients next feed variation period')
+
+    textbuffer = StringIO()
+    model.p_numbers_prov_dams.pprint(textbuffer)
+    textbuffer.write('\n')
+    with open('number_prov.txt', 'w') as outputfile:
+        outputfile.write(textbuffer.getvalue())
+
 
     end_params = time.time()
     print('params time: ',end_params-param_start)

@@ -106,7 +106,7 @@ def generator(params,report):
     date_born1st_oa1e1b1nwzida0e0b0xyg2 = sfun.f_g2g(pinp.sheep['i_date_born1st_oig2'],'yatf',pinp.sheep['i_i_pos'],pinp.sheep['i_i_len'],pinp.sheep['i_o_len'],swap=True,left_pos2=uinp.structure['i_p_pos'],right_pos2=pinp.sheep['i_i_pos'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos']).astype('datetime64[D]') #left2 = e1-1 because e1 needs to be included for the calculation following
     mask_o_dams = np.max(date_born1st_oa1e1b1nwzida0e0b0xyg2<=date_end_p[-1], axis=tuple(range(uinp.structure['i_p_pos']+1, 0))) #compare each birth opp with the end date of the sim and make the mask - the mask is of the longest axis (ie to handle situations where say bbb and bbm have birth at different times so one has 6 opp and the other has 5 opp)
     mask_d_offs = np.max(date_born1st_oa1e1b1nwzida0e0b0xyg2<=offs_date_end_p[-1], axis=tuple(range(uinp.structure['i_p_pos']+1, 0))) #compare each birth opp with the end date of the sim and make the mask - the mask is of the longest axis (ie to handle situations where say bbb and bbm have birth at different times so one has 6 opp and the other has 5 opp)
-
+    mask_x = pinp.sheep['i_gender_propn_x']>0
 
     # ###################################
     # ### axis len                      #
@@ -139,7 +139,7 @@ def generator(params,report):
     len_a0 = np.count_nonzero(pinp.sheep['i_mask_a'])
     len_e0 = np.max(pinp.sheep['i_join_cycles_ig1'])
     len_b0 = np.count_nonzero(uinp.structure['i_mask_b0_b1'])
-    len_x = pinp.sheep['i_x_len']
+    len_x = np.count_nonzero(mask_x)
     len_y = np.count_nonzero(uinp.parameters['i_mask_y'])
     len_g0 = np.count_nonzero(mask_sire_inc_g0)
     len_g1 = np.count_nonzero(mask_dams_inc_g1)
@@ -175,7 +175,7 @@ def generator(params,report):
     index_wzida0e0b0xyg3 = fun.f_reshape_expand(index_w3, uinp.structure['i_w_pos'])
     index_tva1e1b1nw8zida0e0b0xyg1w9 = fun.f_reshape_expand(np.arange(t1_len), uinp.structure['i_p_pos']-2)
     index_tva1e1b1nw8zida0e0b0xyg3w9 = fun.f_reshape_expand(np.arange(t3_len), uinp.structure['i_p_pos']-2)
-    index_xyg = fun.f_reshape_expand(np.arange(pinp.sheep['i_x_len']), uinp.parameters['i_x_pos'])
+    index_xyg = fun.f_reshape_expand(np.arange(len_x), uinp.parameters['i_x_pos'])
 
 
     prejoin_tup = (pinp.sheep['i_a1_pos'], uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos'])
@@ -308,7 +308,7 @@ def generator(params,report):
     #  management, age, date, timing inputs inputs #
     ################################################
     ##gender propn yatf
-    gender_propn_xyg = fun.f_reshape_expand(pinp.sheep['i_gender_propn_x'], uinp.parameters['i_x_pos']).astype(dtype)
+    gender_propn_xyg = fun.f_reshape_expand(pinp.sheep['i_gender_propn_x'], uinp.parameters['i_x_pos'], condition=mask_x, axis=0).astype(dtype)
     ##join
     join_cycles_ida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['i_join_cycles_ig1'],'dams',pinp.sheep['i_i_pos'])[pinp.sheep['i_mask_i'],...]
     ##lamb and lost
@@ -337,15 +337,21 @@ def generator(params,report):
     sire_periods_g0p8 = sfun.f_g2g(pinp.sheep['i_sire_periods_p8g0'], 'sire', swap=True, condition=pinp.sheep['i_mask_p8'], axis=0)
     ##Shearing date - set to be on the last day of a sim period
     ###sire
-    date_shear_sida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['i_date_shear_sixg0'],'sire',uinp.parameters['i_x_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_s_len'], pinp.sheep['i_x_len'],swap=True,left_pos2=pinp.sheep['i_i_pos'],right_pos2=uinp.parameters['i_x_pos'], condition=pinp.sheep['i_masksire_i'], axis=pinp.sheep['i_i_pos'])[...,0:1,:,:].astype('datetime64[D]') #slice x axis for only female
+    date_shear_sida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['i_date_shear_sixg0'],'sire',uinp.parameters['i_x_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_s_len'], pinp.sheep['i_x_len']
+                                          ,swap=True,left_pos2=pinp.sheep['i_i_pos'],right_pos2=uinp.parameters['i_x_pos'], condition=pinp.sheep['i_masksire_i'], axis=pinp.sheep['i_i_pos']
+                                          )[...,0:1,:,:].astype('datetime64[D]') #slice x axis for only female
     mask_shear_g0 = np.max(date_shear_sida0e0b0xyg0<=date_end_p[-1], axis=tuple(range(pinp.sheep['i_i_pos'], 0))) #mask out shearing opps that occur after gen is done
     date_shear_sida0e0b0xyg0 = date_shear_sida0e0b0xyg0[mask_shear_g0]
     ###dam
-    date_shear_sida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['i_date_shear_sixg1'],'dams',uinp.parameters['i_x_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_s_len'], pinp.sheep['i_x_len'],swap=True,left_pos2=pinp.sheep['i_i_pos'],right_pos2=uinp.parameters['i_x_pos'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos'])[...,1:2,:,:].astype('datetime64[D]') #slice x axis for only female
+    date_shear_sida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['i_date_shear_sixg1'],'dams',uinp.parameters['i_x_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_s_len'], pinp.sheep['i_x_len']
+                                          ,swap=True,left_pos2=pinp.sheep['i_i_pos'],right_pos2=uinp.parameters['i_x_pos'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos']
+                                          )[...,1:2,:,:].astype('datetime64[D]') #slice x axis for only female
     mask_shear_g1 = np.max(date_shear_sida0e0b0xyg1<=date_end_p[-1], axis=tuple(range(pinp.sheep['i_i_pos'], 0))) #mask out shearing opps that occur after gen is done
     date_shear_sida0e0b0xyg1 = date_shear_sida0e0b0xyg1[mask_shear_g1]
     ###off - shearing cant occur as yatf because then need to shear all lambs (ie no scope to not shear the lambs that are going to be fed up and sold) because the offs decision variables for feeding are not linked to the yatf (which are in the dam decision variables)
-    date_shear_sida0e0b0xyg3 = sfun.f_g2g(pinp.sheep['i_date_shear_sixg3'],'offs',uinp.parameters['i_x_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_s_len'], pinp.sheep['i_x_len'],swap=True,left_pos2=pinp.sheep['i_i_pos'],right_pos2=uinp.parameters['i_x_pos'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos']).astype('datetime64[D]')
+    date_shear_sida0e0b0xyg3 = sfun.f_g2g(pinp.sheep['i_date_shear_sixg3'],'offs',uinp.parameters['i_x_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_s_len'], pinp.sheep['i_x_len']
+                                          ,swap=True,left_pos2=pinp.sheep['i_i_pos'],right_pos2=uinp.parameters['i_x_pos'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos']
+                                          , condition2=mask_x, axis2=uinp.parameters['i_x_pos']).astype('datetime64[D]')
     mask_shear_g3 = np.max(date_shear_sida0e0b0xyg3<=offs_date_end_p[-1], axis=tuple(range(pinp.sheep['i_i_pos'], 0))) #mask out shearing opps that occur after gen is done
     date_shear_sida0e0b0xyg3 = date_shear_sida0e0b0xyg3[mask_shear_g3]
 
@@ -364,8 +370,8 @@ def generator(params,report):
     ###feed variation for offs
     a_r2_idk0e0b0xyg3 = sfun.f_g2g(pinp.sheep['ia_r2_ik0g3'],'offs',pinp.sheep['i_a0_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_k0_len'],left_pos2=pinp.sheep['i_i_pos'],right_pos2=pinp.sheep['i_a0_pos'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos'])
     a_r2_ik3a0e0b0xyg3 = sfun.f_g2g(pinp.sheep['ia_r2_ik3g3'],'offs',uinp.parameters['i_d_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_k3_len'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos'])
-    a_r2_ida0e0k4xyg3 = sfun.f_g2g(pinp.sheep['ia_r2_ik4g3'],'offs',uinp.parameters['i_b0_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_k4_len'],left_pos2=pinp.sheep['i_i_pos'],right_pos2=uinp.parameters['i_b0_pos'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos'])  #add axis between g and bo and b0 and i
-    a_r2_ida0e0b0k5yg3 = sfun.f_g2g(pinp.sheep['ia_r2_ik5g3'],'offs',uinp.parameters['i_x_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_k5_len'],left_pos2=pinp.sheep['i_i_pos'],right_pos2=uinp.parameters['i_x_pos'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos'])  #add axis between g and bo and b0 and i
+    a_r2_ida0e0k4xyg3 = sfun.f_g2g(pinp.sheep['ia_r2_ik4g3'],'offs',uinp.parameters['i_b0_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_k4_len'],left_pos2=pinp.sheep['i_i_pos'],right_pos2=uinp.parameters['i_b0_pos'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos'])  #add axis between g and b0 and b0 and i
+    a_r2_ida0e0b0k5yg3 = sfun.f_g2g(pinp.sheep['ia_r2_ik5g3'],'offs',uinp.parameters['i_x_pos'],pinp.sheep['i_i_len'], pinp.sheep['i_k5_len'],left_pos2=pinp.sheep['i_i_pos'],right_pos2=uinp.parameters['i_x_pos'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos'])  #add axis between g and b0 and b0 and i
 
     ##std feed options
     feedoptions_r1j0p = pinp.feedsupply['i_feedoptions_r1pj0'].reshape(pinp.feedsupply['i_r1_len'],pinp.feedsupply['i_j0_len'],pinp.feedsupply['i_feedoptions_r1pj0'].shape[-1])[...,0:len_p].astype(np.float) #slice off extra p periods so it is the same length as the sim periods
@@ -464,7 +470,7 @@ def generator(params,report):
     cu1_sire, cu1_dams, cu1_yatf, cu1_offs = sfun.f_c2g(uinp.parameters['i_cu1_c2'], uinp.parameters['i_cu1_y'], uinp.parameters['i_cu1_pos'], uinp.parameters['i_cu1_len'], uinp.parameters['i_cu1_len2'])
     cu2_sire, cu2_dams, cu2_yatf, cu2_offs = sfun.f_c2g(uinp.parameters['i_cu2_c2'], uinp.parameters['i_cu2_y'], uinp.parameters['i_cu2_pos'], uinp.parameters['i_cu2_len'], uinp.parameters['i_cu2_len2'])
     cw_sire, cw_dams, cw_yatf, cw_offs = sfun.f_c2g(uinp.parameters['i_cw_c2'], uinp.parameters['i_cw_y'], uinp.parameters['i_cw_pos'], uinp.parameters['i_cw_len'])
-    cx_sire, cx_dams, cx_yatf, cx_offs = sfun.f_c2g(uinp.parameters['i_cx_c2'], uinp.parameters['i_cx_y'], uinp.parameters['i_cx_pos'], uinp.parameters['i_cx_len'], uinp.parameters['i_cx_len2'])
+    cx_sire, cx_dams, cx_yatf, cx_offs = sfun.f_c2g(uinp.parameters['i_cx_c2'], uinp.parameters['i_cx_y'], uinp.parameters['i_cx_pos'], uinp.parameters['i_cx_len'], uinp.parameters['i_cx_len2'], condition=mask_x, axis=uinp.parameters['i_x_pos'])
     ##pasture params
     cu3 = uinp.pastparameters['i_cu3_c4'][...,pinp.sheep['i_pasture_type']].reshape(uinp.pastparameters['i_cu3_len'], uinp.pastparameters['i_cu3_len2']).astype(float)
     cu4 = uinp.pastparameters['i_cu4_c4'][...,pinp.sheep['i_pasture_type']].reshape(uinp.pastparameters['i_cu4_len'], uinp.pastparameters['i_cu4_len2']).astype(float)
@@ -1354,6 +1360,7 @@ def generator(params,report):
     t_fs_btrt_a1e1b1j0wzida0e0k4xyg3 = np.expand_dims(np.rollaxis(feedoptions_var_r2p[a_r2_ida0e0k4xyg3],-1,0), axis = tuple(range(uinp.structure['i_p_pos']+1,pinp.sheep['i_i_pos']))) #add from i to p
     t_fs_gender_pa1e1b1j0wzida0e0b0k5yg3 = np.expand_dims(np.rollaxis(feedoptions_var_r2p[a_r2_ida0e0b0k5yg3],-1,0), axis = tuple(range(uinp.structure['i_p_pos']+1,pinp.sheep['i_i_pos']))) #add from i to p
 
+
     ##3)Based on the animal management selected (scan, gbal and wean) and whether the animals are differentially managed in this trial
     ###a) weaning age variation
     a_k0_pa1e1b1nwzida0e0b0xyg1 = period_between_weanprejoin_pa1e1b1nwzida0e0b0xyg1 * pinp.sheep['i_dam_wean_diffman'] * fun.f_reshape_expand(np.arange(len_a1)+1, pinp.sheep['i_a1_pos']) #len_a+1 because that is the association between k0 and a1
@@ -1390,11 +1397,11 @@ def generator(params,report):
     ####select feed variation pattern
     t_fs_lsln_pa1e1b1j0wzida0e0b0xyg1 = np.take_along_axis(t_fs_lsln_pk0k1k2j0wzida0e0b0xyg1, a_k2_pa1e1b1nwzida0e0b0xyg1, uinp.parameters['i_b1_pos'])
 
-    ###d) ^come back to offs
+    ###d) ^come back to offs (rememeber gender needs to be masked)
     # t_fs_agedam_pj0zida0e0b0xg3 = t_fs_agedam_pj0zik3k0k4k5g3
     # t_fs_ageweaned_pj0zida0e0b0xg3 = t_fs_ageweaned_pj0zik3k0k4k5g3
     # t_fs_btrt_pj0zida0e0b0xg3 = t_fs_btrt_pj0zik3k0k4k5g3
-    # t_fs_btrt_pj0zida0e0b0xg3 = t_fs_btrt_pj0zik3k0k4k5g3
+    # t_fs_gender_pj0zida0e0b0xg3 = t_fs_gender_pj0zik3k0k4k5g3
 
     ##4) add variation to std pattern
     t_feedsupply_pa1e1b1j0wzida0e0b0xyg1 = (t_feedsupply_pa1e1b1j0wzida0e0b0xyg1 + t_fs_ageweaned_pa1e1b1j0wzida0e0b0xyg1 + t_fs_lsln_pa1e1b1j0wzida0e0b0xyg1) #cant use += for some reason
@@ -3180,7 +3187,7 @@ def generator(params,report):
                                                                                      uinp.structure['i_p_pos']-1)).astype(dtype)  # convert -- and ++ to inf
     sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_sale_cost_pc_s7'], uinp.structure['i_p_pos']-1).astype(dtype)
     sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_sale_cost_hd_s7'], uinp.structure['i_p_pos']-1).astype(dtype)
-    mask_s7x_s7pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_mask_s7x'], uinp.parameters['i_x_pos'], left_pos2=uinp.structure['i_p_pos']-1, right_pos2=uinp.parameters['i_x_pos'])
+    mask_s7x_s7pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_mask_s7x'], uinp.parameters['i_x_pos'], left_pos2=uinp.structure['i_p_pos']-1, right_pos2=uinp.parameters['i_x_pos'], condition=mask_x, axis=uinp.parameters['i_x_pos'])
     sale_agemax_s7pa1e1b1nwzida0e0b0xyg0, sale_agemax_s7pa1e1b1nwzida0e0b0xyg1, sale_agemax_s7pa1e1b1nwzida0e0b0xyg2, sale_agemax_s7pa1e1b1nwzida0e0b0xyg3 = sfun.f_c2g(uinp.parameters['i_agemax_s7c2'],uinp.parameters['i_agemax_s7y'],uinp.structure['i_p_pos']-1, dtype=dtype)
     dresspercent_adj_yg0, dresspercent_adj_yg1, dresspercent_adj_yg2, dresspercent_adj_yg3 = sfun.f_c2g(uinp.parameters['i_dressp_adj_c2'],uinp.parameters['i_dressp_adj_y'], dtype=dtype)
     ##husbandry
@@ -4021,7 +4028,7 @@ def generator(params,report):
     keys_y0 = uinp.parameters['i_y_idx_sire'][uinp.parameters['i_mask_y']]
     keys_y1 = uinp.parameters['i_y_idx_dams'][uinp.parameters['i_mask_y']]
     keys_y3 = uinp.parameters['i_y_idx_offs'][uinp.parameters['i_mask_y']]
-    keys_x = pinp.sheep['i_x_idx']
+    keys_x = pinp.sheep['i_x_idx'][mask_x]
     keys_z = pinp.general['season_info'].index[pinp.general['season_info']['included']]
     ##save k2 set for pyomo - required because this cant easily be built without information in this module
     params['a_idx'] = keys_a
@@ -4039,6 +4046,7 @@ def generator(params,report):
     params['k3_idx_offs'] = keys_k3
     params['k5_idx_offs'] = keys_k5
     params['y_idx_offs'] = keys_y3
+    params['x_idx_offs'] = keys_x
     ##make param indexs
     ###k2k2tvanwziyg1g9w9 - numbers dams
     arrays = [keys_k2, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1, keys_g1, keys_lw1]

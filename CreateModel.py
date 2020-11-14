@@ -157,7 +157,7 @@ model.s_lw_dams = Set(initialize=uinp.structure['i_w_idx_dams'], doc='Standard L
 model.s_sale_offs = Set(initialize=['t%s'%i for i in range(pinp.sheep['i_t3_len'])], doc='Sales within the year for offss')
 model.s_nut_offs = Set(initialize=uinp.structure['i_n_idx_offs'], doc='Nutrition levels in each feed period for offs')
 model.s_lw_offs = Set(initialize=uinp.structure['i_n_idx_offs'], doc='Standard LW patterns offs')
-model.s_gender_offs = Set(initialize=pinp.sheep['i_x_idx'], doc='gender of offs')
+
 
 
 
