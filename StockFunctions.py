@@ -1560,19 +1560,19 @@ def f_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, ope
     required_le_h7h2pg = np.logical_and(temp_mask, operations_triggerlevels_h5h7h2pg[0, ...] != np.inf) #logical_or only has two args
     required_ge_h7h2pg = np.logical_and(temp_mask, operations_triggerlevels_h5h7h2pg[2, ...] != -np.inf)
     mask_end=time.time()
-    print('mask: ',mask_end-mask_start)
+    # print('mask: ',mask_end-mask_start)
     ##Create blank versions for assignment - one is the default value for the calc below where the mask is false hence initilise with ones
     temporary_le_h7h2pg = np.ones_like(required_le_h7h2pg, dtype='float32')
     temporary_ge_h7h2pg = np.ones_like(required_ge_h7h2pg, dtype='float32')
     init_end=time.time()
-    print('inint: ',init_end-mask_end)
+    # print('inint: ',init_end-mask_end)
     ##set up arrays for calculations - masking done first to save doing it multiple times in the actual calculations
     operations_triggerlevels_casted_h5h7h2pg=np.broadcast_to(operations_triggerlevels_h5h7h2pg, (operations_triggerlevels_h5h7h2pg.shape[0],)+required_le_h7h2pg.shape)
     animal_triggervalues_h7h2pg = np.broadcast_to(animal_triggervalues_h7pg[:,na,...], operations_triggerlevels_casted_h5h7h2pg.shape[1:])
     operations_triggerlevels_le_masked_h5h7h2pg = operations_triggerlevels_casted_h5h7h2pg[:, required_le_h7h2pg]
     operations_triggerlevels_ge_masked_h5h7h2pg = operations_triggerlevels_casted_h5h7h2pg[:, required_ge_h7h2pg] #i tried creating this after the le one was used and just over writing the le one but that didnt speed the process
     setup_end=time.time()
-    print('setup: ',setup_end-init_end)
+    # print('setup: ',setup_end-init_end)
 
     # operations_triggerlevels_masked_h5h7h2pg = operations_triggerlevels_h5h7h2pg[:, required_le_h7h2pg]
     # operations_triggerlevels_masked_ge_h5h7h2pg = operations_triggerlevels_h5h7h2pg[:, required_ge_h7h2pg]
@@ -1602,7 +1602,7 @@ def f_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, ope
     ##Test across the rules (& collapse h7 axis)
     level_h2pg = np.max(np.minimum(temporary_le_h7h2pg, temporary_ge_h7h2pg),axis=0) * operation_triggered_h2pg   #mul by operation triggered so that level goes to 0 if opperation is not trigered
     calc_end = time.time()
-    print('calc: ', calc_end - setup_end)
+    # print('calc: ', calc_end - setup_end)
 
     return level_h2pg
 
@@ -1828,7 +1828,7 @@ def f_lw_distribution(ffcfw_condensed_va1e1b1nwzida0e0b0xyg, ffcfw_va1e1b1nwzida
     ##add second w axis - the condensed w axis becomes axis -1 and the end of period w stays in the normal place
     ffcfw_condensed_va1e1b1nwzida0e0b0xygw = fun.f_reshape_expand(np.moveaxis(ffcfw_condensed_va1e1b1nwzida0e0b0xyg,uinp.structure['i_w_pos'],-1), uinp.structure['i_n_pos']-1, right_pos=pinp.sheep['i_z_pos']-1)
     ##Calculate the difference between the 3 (or more if not dvp0) condensed weights and the middle weight (slice 0)
-    diff = ffcfw_condensed_va1e1b1nwzida0e0b0xygw - sfun.f_dynamic_slice(ffcfw_condensed_va1e1b1nwzida0e0b0xygw, -1, 0, 1)
+    diff = ffcfw_condensed_va1e1b1nwzida0e0b0xygw - f_dynamic_slice(ffcfw_condensed_va1e1b1nwzida0e0b0xygw, -1, 0, 1)
     ##Calculate the spread that would generate the average weight
     spread =  1 - fun.f_divide((ffcfw_condensed_va1e1b1nwzida0e0b0xygw - ffcfw_va1e1b1nwzida0e0b0xyg[..., na]), diff)
     ##Bound the spread
@@ -1841,15 +1841,15 @@ def f_lw_distribution(ffcfw_condensed_va1e1b1nwzida0e0b0xyg, ffcfw_va1e1b1nwzida
     distribution_tvw8w9g = fun.f_update(distribution_va1e1b1nwzida0e0b0xygw, 1, dvp_type_next_tvgw!=0)
     return distribution_va1e1b1nwzida0e0b0xygw
 
-def f_create_production_param(group, production_vg, a_kcluster_vg_1=1, index_ktvg_1=1, a_kcluster_vg_2=1, index_kktvg_2=1, numbers_start_vg=1, mask_vg=True):
+def f_create_production_param(group, production_vg, a_kcluster_vg_1=1, index_ktvg_1=1, numbers_start_vg=1, a_kcluster_vg_2=1, index_kktvg_2=1, mask_vg=True, pos_offset=0):
     '''convert production to per animal including impact of death. And apply the k clustering'''
     if group=='sire':
         return fun.f_divide(production_vg, numbers_start_vg)
     elif group=='dams':
         return fun.f_divide(np.sum(production_vg * (a_kcluster_vg_1 == index_ktvg_1) * mask_vg
-                                  , axis = (uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)
+                                  , axis = (uinp.parameters['i_b1_pos']-pos_offset, pinp.sheep['i_e1_pos']-pos_offset), keepdims=True)
                             , np.sum(numbers_start_vg * (a_kcluster_vg_1 == index_ktvg_1),
-                                     axis=(uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True))
+                                     axis=(uinp.parameters['i_b1_pos']-pos_offset, pinp.sheep['i_e1_pos']-pos_offset), keepdims=True))
     elif group=='offs':
         return fun.f_divide(np.sum(production_vg * (a_kcluster_vg_1 == index_ktvg_1) * (a_kcluster_vg_2 == index_kktvg_2)
                                   , axis = (uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True)
