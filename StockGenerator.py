@@ -3583,10 +3583,10 @@ def generator(params,report):
     cashflow_ctva1e1b1nwzida0e0b0xyg0 = sfun.f_p2v_std(cashflow_pa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_sire,
                                               on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0, a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg,index_any1tvp=index_ctpa1e1b1nwzida0e0b0xyg)
     cost_va1e1b1nwzida0e0b0xyg0 = sfun.f_p2v_std(husbandry_cost_pg0, numbers_p=o_numbers_end_sire,
-                                                 cashflow                               on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0)
+                                              on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0)
     assetvalue_va1e1b1nwzida0e0b0xyg0 = sfun.f_p2v_std(assetvalue_pa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_sire,
                                               on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0)
-    _ctva1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(cashflow_tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_dams,
+    cashflow_ctva1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(cashflow_tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_dams,
                                               on_hand_tpa1e1b1nwzida0e0b0xyg1, a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg,index_any1tp=index_ctpa1e1b1nwzida0e0b0xyg)
     cost_tva1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(husbandry_cost_pg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_dams,
                                               on_hand_tpa1e1b1nwzida0e0b0xyg1)
