@@ -3758,7 +3758,7 @@ def generator(params,report):
     production_param_start = time.time()
 
     ##mei
-    mei_p6ftva1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param('sire', mei_p6fa1e1b1nwzida0e0b0xyg0,numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
+    mei_p6fa1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param('sire', mei_p6fa1e1b1nwzida0e0b0xyg0,numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
     mei_k2p6ftva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams', mei_p6ftva1e1b1nwzida0e0b0xyg1, a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,...],
                                                                  numbers_start_va1e1b1nwzida0e0b0xyg1, mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1)
 
