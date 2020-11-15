@@ -3790,7 +3790,7 @@ def generator(params,report):
 
 
     ##labour - manager
-    lab_manager_p5tva1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param(labour_l2p5tva1e1b1nwzida0e0b0xyg0[0]
+    lab_manager_p5tva1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param(labour_l2p5tva1e1b1nwzida0e0b0xyg0[0])
     lab_manager_k2p5tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param(labour_l2p5tva1e1b1nwzida0e0b0xyg1[0] * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...]) * mask_w8vars_va1e1b1nw8zida0e0b0xyg1
                                                      , axis = (uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)
     lab_manager_k3k5p5tva1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param(labour_l2p5tva1e1b1nwzida0e0b0xyg3[0] * (a_k3cluster_da0e0b0xyg3==index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...])
@@ -3798,7 +3798,7 @@ def generator(params,report):
                                                     , axis = (uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True)
 
     ##labour - permenant
-    lab_perm_p5tva1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param(labour_l2p5tva1e1b1nwzida0e0b0xyg0[1]
+    lab_perm_p5tva1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param(labour_l2p5tva1e1b1nwzida0e0b0xyg0[1])
     lab_perm_k2p5tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param(labour_l2p5tva1e1b1nwzida0e0b0xyg1[1] * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...]) * mask_w8vars_va1e1b1nw8zida0e0b0xyg1
                                                   , axis = (uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)
     lab_perm_k3k5p5tva1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param(labour_l2p5tva1e1b1nwzida0e0b0xyg3[1] * (a_k3cluster_da0e0b0xyg3==index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...])
