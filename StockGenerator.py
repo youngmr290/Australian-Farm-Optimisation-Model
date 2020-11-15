@@ -3190,7 +3190,7 @@ def generator(params,report):
     target_weight_tpa1e1b1nwzida0e0b0xyg3=np.take_along_axis(target_weight_tsa1e1b1nwzida0e0b0xyg3,a_v_pa1e1b1nwzida0e0b0xyg3[na],1) #gets the target weight for each gen period
     ####adjust generator lw to reflect the cumulative max per period
     #####lw could go above target then drop back below but it is already sold so the on hand bool shouldnt change. therefore need to use accumulative max and reset each dvp
-    weight_pa1e1b1nwzida0e0b0xyg3=f_cum_dvp(o_ffcfw_offs,a_v_pa1e1b1nwzida0e0b0xyg3)
+    weight_pa1e1b1nwzida0e0b0xyg3= sfun.f_cum_dvp(o_ffcfw_offs,a_v_pa1e1b1nwzida0e0b0xyg3)
     ###on hand
     #### t0 slice = True - this is handled by the inputs ie weight and date are high therefore not reached therefore on hand == true
     #### t1 & t2 slice date_p<sale_date and weight<target weight
@@ -3239,7 +3239,7 @@ def generator(params,report):
     ####transfer - calculate period_is_finish when the dams are transferred from the current g slice to the destination g slice
     period_is_transfer_tpa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(nextperiod_is_prejoin_pa1e1b1nwzida0e0b0xyg1[na, ...], a_g1_tpa1e1b1nwzida0e0b0xyg1, -1) * transfer_exists_tpa1e1b1nwzida0e0b0xyg1
     ###on hand - combine period_is_sale & period_is_transfer then use cumulatinve max to convert to on_hand
-    off_hand_tpa1e1b1nwzida0e0b0xyg1=f_cum_dvp(np.logical_or(period_is_sale_tpa1e1b1nwzida0e0b0xyg1,period_is_transfer_tpa1e1b1nwzida0e0b0xyg1),a_v_pa1e1b1nwzida0e0b0xyg1,axis=1, shift=1) #this ensures that once they are sold they remain off hand for the rest of the dvp
+    off_hand_tpa1e1b1nwzida0e0b0xyg1= sfun.f_cum_dvp(np.logical_or(period_is_sale_tpa1e1b1nwzida0e0b0xyg1,period_is_transfer_tpa1e1b1nwzida0e0b0xyg1),a_v_pa1e1b1nwzida0e0b0xyg1,axis=1, shift=1) #this ensures that once they are sold they remain off hand for the rest of the dvp
     on_hand_tpa1e1b1nwzida0e0b0xyg1 = np.logical_not(off_hand_tpa1e1b1nwzida0e0b0xyg1) #t1 sale after main shearing
 
     ##Yatf
@@ -3442,8 +3442,9 @@ def generator(params,report):
     cashflow_tpa1e1b1nwzida0e0b0xyg3 =  (salevalue_pa1e1b1nwzida0e0b0xyg3 * period_is_sale_tpa1e1b1nwzida0e0b0xyg3
                                          + woolvalue_tpa1e1b1nwzida0e0b0xyg3 * period_is_shearing_pa1e1b1nwzida0e0b0xyg3
                                          - husbandry_cost_pg3)
+
     assetvalue_tpa1e1b1nwzida0e0b0xyg3 =  ((salevalue_pa1e1b1nwzida0e0b0xyg3 + woolvalue_tpa1e1b1nwzida0e0b0xyg3)
-                                            * period_is_assetvalue_pa1e1b1nwzida0e0b0xyg)
+                                            * period_is_assetvalue_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p])
 
 
     ######################
@@ -3618,6 +3619,8 @@ def generator(params,report):
 
 
     ##intermittent
+    ###sire
+    numbers_start_va1e1b1nwzida0e0b0xyg0 = sfun.f_p2v_std(o_numbers_start_sire, period_is_tvp=period_is_startdvp_purchase_pa1e1b1nwzida0e0b0xyg0) #sires only have one dvp which essentially starts when the activity is purchased
     ###dams
     #### Return the ‘source’ weight of the dams at the end of each period in which they can be transferred
     #### The period is based on period_is_transfer which points at the nextperiod_is_prejoin for the destination g1 slice
@@ -3755,71 +3758,69 @@ def generator(params,report):
     production_param_start = time.time()
 
     ##mei
+    mei_p6ftva1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param('sire', mei_p6fa1e1b1nwzida0e0b0xyg0,numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
     mei_k2p6ftva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams', mei_p6ftva1e1b1nwzida0e0b0xyg1, a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,...],
-                                                                 numbers_start_va1e1b1nwzida0e0b0xyg1, mask_w8vars_va1e1b1nw8zida0e0b0xyg1)
+                                                                 numbers_start_va1e1b1nwzida0e0b0xyg1, mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1)
 
     mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs', mei_p6ftva1e1b1nwzida0e0b0xyg3, a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,na,...],
                                                     a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3[:,na,na,...], numbers_start_va1e1b1nwzida0e0b0xyg3)
 
     ##pi
-    pi_k2p6ftva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param(pi_p6ftva1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,...]) * mask_w8vars_va1e1b1nw8zida0e0b0xyg1
-                                             , axis = (uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)
-    pi_k3k5p6ftva1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param(pi_p6ftva1e1b1nwzida0e0b0xyg3 * (a_k3cluster_da0e0b0xyg3==index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,na,...])
-                                                    * (a_k5cluster_da0e0b0xyg3==index_k5tva1e1b1nwzida0e0b0xyg3[:,na,na,...])
-                                                    , axis = (uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True)
+    pi_p6fa1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param('sire', pi_p6fa1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
+    pi_k2p6ftva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams', pi_p6ftva1e1b1nwzida0e0b0xyg1, a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,...],
+                                                                 numbers_start_va1e1b1nwzida0e0b0xyg1, mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1)
+    pi_k3k5p6ftva1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs', pi_p6ftva1e1b1nwzida0e0b0xyg3, a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,na,...],
+                                                    a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3[:,na,na,...])
 
 
     ##cashflow & cost
-    cashflow_k2ctva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param(cashflow_ctva1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...]) * mask_w8vars_va1e1b1nw8zida0e0b0xyg1
-                                                 , axis = (uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)
-    cashflow_k3k5ctva1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param(cashflow_ctva1e1b1nwzida0e0b0xyg3 * (a_k3cluster_da0e0b0xyg3==index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...])
-                                                    * (a_k5cluster_da0e0b0xyg3==index_k5tva1e1b1nwzida0e0b0xyg3[:,na,...])
-                                                    , axis = (uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True)
+    cashflow_ctva1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param('sire', cashflow_ctva1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
+    cashflow_k2ctva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams', cashflow_ctva1e1b1nwzida0e0b0xyg1, a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],
+                                                                 numbers_start_va1e1b1nwzida0e0b0xyg1, mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1)
+    cashflow_k3k5ctva1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs', cashflow_ctva1e1b1nwzida0e0b0xyg3, a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...],
+                                                    a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3[:,na,...])
 
-    cost_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param(cost_tva1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1) * mask_w8vars_va1e1b1nw8zida0e0b0xyg1
-                                             , axis = (uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)
-    cost_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param(cost_tva1e1b1nwzida0e0b0xyg3 * (a_k3cluster_da0e0b0xyg3==index_k3k5tva1e1b1nwzida0e0b0xyg3)
-                                                    * (a_k5cluster_da0e0b0xyg3==index_k5tva1e1b1nwzida0e0b0xyg3)
-                                                    , axis = (uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True)
+    cost_va1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param('sire', cost_va1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
+    cost_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams', cost_tva1e1b1nwzida0e0b0xyg1, a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1,
+                                                                 numbers_start_va1e1b1nwzida0e0b0xyg1, mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1)
+    cost_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs', cost_tva1e1b1nwzida0e0b0xyg3, a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3,
+                                                    a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3)
 
-    assetvalue_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param(assetvalue_tva1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1) * mask_w8vars_va1e1b1nw8zida0e0b0xyg1
-                                             , axis = (uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)
-    assetvalue_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param(assetvalue_tva1e1b1nwzida0e0b0xyg3 * (a_k3cluster_da0e0b0xyg3==index_k3k5tva1e1b1nwzida0e0b0xyg3)
-                                                    * (a_k5cluster_da0e0b0xyg3==index_k5tva1e1b1nwzida0e0b0xyg3)
-                                                    , axis = (uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True)
+    ##asset value
+    assetvalue_va1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param('sire', assetvalue_va1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
+    assetvalue_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams', assetvalue_tva1e1b1nwzida0e0b0xyg1, a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1,
+                                                                 numbers_start_va1e1b1nwzida0e0b0xyg1, mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1)
+    assetvalue_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs', assetvalue_tva1e1b1nwzida0e0b0xyg3, a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3,
+                                                    a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3)
 
 
     ##labour - manager
-    lab_manager_p5tva1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param(labour_l2p5tva1e1b1nwzida0e0b0xyg0[0])
-    lab_manager_k2p5tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param(labour_l2p5tva1e1b1nwzida0e0b0xyg1[0] * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...]) * mask_w8vars_va1e1b1nw8zida0e0b0xyg1
-                                                     , axis = (uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)
-    lab_manager_k3k5p5tva1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param(labour_l2p5tva1e1b1nwzida0e0b0xyg3[0] * (a_k3cluster_da0e0b0xyg3==index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...])
-                                                    * (a_k5cluster_da0e0b0xyg3==index_k5tva1e1b1nwzida0e0b0xyg3[:,na,...])
-                                                    , axis = (uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True)
+    lab_manager_p5tva1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param('sire', labour_l2p5tva1e1b1nwzida0e0b0xyg0[0], numbers_start_va1e1b1nwzida0e0b0xyg0)
+    lab_manager_k2p5tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams', labour_l2p5tva1e1b1nwzida0e0b0xyg1[0], a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],
+                                                                 numbers_start_va1e1b1nwzida0e0b0xyg1, mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1)
+    lab_manager_k3k5p5tva1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs', labour_l2p5tva1e1b1nwzida0e0b0xyg3[0], a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...],
+                                                    a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3[:,na,...])
 
     ##labour - permenant
-    lab_perm_p5tva1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param(labour_l2p5tva1e1b1nwzida0e0b0xyg0[1])
-    lab_perm_k2p5tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param(labour_l2p5tva1e1b1nwzida0e0b0xyg1[1] * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...]) * mask_w8vars_va1e1b1nw8zida0e0b0xyg1
-                                                  , axis = (uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)
-    lab_perm_k3k5p5tva1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param(labour_l2p5tva1e1b1nwzida0e0b0xyg3[1] * (a_k3cluster_da0e0b0xyg3==index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...])
-                                                    * (a_k5cluster_da0e0b0xyg3==index_k5tva1e1b1nwzida0e0b0xyg3[:,na,...])
-                                                    , axis = (uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True)
-
+    lab_perm_p5tva1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param('sire', labour_l2p5tva1e1b1nwzida0e0b0xyg0[1], numbers_start_va1e1b1nwzida0e0b0xyg0)
+    lab_perm_k2p5tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams', labour_l2p5tva1e1b1nwzida0e0b0xyg1[1], a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],
+                                                                 numbers_start_va1e1b1nwzida0e0b0xyg1, mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1)
+    lab_perm_k3k5p5tva1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs', labour_l2p5tva1e1b1nwzida0e0b0xyg3[1], a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...],
+                                                    a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3[:,na,...])
     ##labour - anyone
-    lab_anyone_p5tva1e1b1nwzida0e0b0xyg0 = labour_l2p5tva1e1b1nwzida0e0b0xyg0[2]
-    lab_anyone_k2p5tva1e1b1nwzida0e0b0xyg1 = np.sum(labour_l2p5tva1e1b1nwzida0e0b0xyg1[2] * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...]) * mask_w8vars_va1e1b1nw8zida0e0b0xyg1
-                                                    , axis = (uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)
-    lab_anyone_k3k5p5tva1e1b1nwzida0e0b0xyg3 = np.sum(labour_l2p5tva1e1b1nwzida0e0b0xyg3[2] * (a_k3cluster_da0e0b0xyg3==index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...])
-                                                    * (a_k5cluster_da0e0b0xyg3==index_k5tva1e1b1nwzida0e0b0xyg3[:,na,...])
-                                                    , axis = (uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True)
+    lab_anyone_p5tva1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param('sire', labour_l2p5tva1e1b1nwzida0e0b0xyg0[2], numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
+    lab_anyone_k2p5tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams', labour_l2p5tva1e1b1nwzida0e0b0xyg1[2], a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],
+                                                                 numbers_start_va1e1b1nwzida0e0b0xyg1, mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1)
+    lab_anyone_k3k5p5tva1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs', labour_l2p5tva1e1b1nwzida0e0b0xyg3[2], a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...],
+                                                    a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3[:,na,...])
 
 
     ##infrastructure
-    infrastructure_k2h1tva1e1b1nwzida0e0b0xyg1 = np.sum(infrastructure_h1tva1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...]) * mask_w8vars_va1e1b1nw8zida0e0b0xyg1
-                                                        , axis = (uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)
-    infrastructure_k3k5p5tva1e1b1nwzida0e0b0xyg3 = np.sum(infrastructure_h1tva1e1b1nwzida0e0b0xyg3 * (a_k3cluster_da0e0b0xyg3==index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...])
-                                                    * (a_k5cluster_da0e0b0xyg3==index_k5tva1e1b1nwzida0e0b0xyg3[:,na,...])
-                                                    , axis = (uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True)
+    infrastructure_h1va1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param('sire', infrastructure_h1va1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
+    infrastructure_k2h1tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams', infrastructure_h1tva1e1b1nwzida0e0b0xyg1, a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],
+                                                                 numbers_start_va1e1b1nwzida0e0b0xyg1, mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1)
+    infrastructure_k3k5p5tva1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs', infrastructure_h1tva1e1b1nwzida0e0b0xyg3, a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...],
+                                                    a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3[:,na,...])
 
 
     ###########################
@@ -3827,8 +3828,8 @@ def generator(params,report):
     ###########################
     number_param_start = time.time()
     ##number of sires for required for mating
-    nsire_k2tva1e1b1nwzida0e0b0xyg1g0p8 = np.sum(nsire_tva1e1b1nwzida0e0b0xyg1g0p8 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1)[...,na,na]
-                                               * mask_w8vars_va1e1b1nw8zida0e0b0xyg1[...,na,na], axis = (uinp.parameters['i_b1_pos']-2, pinp.sheep['i_e1_pos']-2), keepdims=True)
+    nsire_k2tva1e1b1nwzida0e0b0xyg1g0p8 = sfun.f_create_production_param('dams', nsire_tva1e1b1nwzida0e0b0xyg1g0p8, a_k2cluster_va1e1b1nwzida0e0b0xyg1[...,na,na], index_k2tva1e1b1nwzida0e0b0xyg1[...,na,na],
+                                                                 numbers_start_va1e1b1nwzida0e0b0xyg1[...,na,na], mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1[...,na,na], pos_offset=2)
 
     ##number of prodgeny weaned
     # npw_k2tva1e1b1nwzida0e0b0xyg1 = fun.f_divide(np.sum(npw_tva1e1b1nwzida0e0b0xyg1 * numbers_start_va1e1b1nwzida0e0b0xyg1
