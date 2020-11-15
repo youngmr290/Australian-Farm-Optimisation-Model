@@ -51,8 +51,8 @@ def sheep_pyomo_local(params,report):
     model.v_sire = pe.Var(model.s_groups_sire, bounds = (0,None) , doc='number of sire animals')
     model.v_dams = pe.Var(model.s_birth_dams, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams,
                           model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, bounds = (0,None) , doc='number of dam animals')
-    model.v_offs = pe.Var(model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types,
-                          model.s_tol, model.s_damage_offs, model.s_wean_times, model.s_birth_offs, model.s_gender_offs, model.s_gen_merit_offs,
+    model.v_offs = pe.Var(model.s_damage_offs, model.s_birth_offs, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types,
+                          model.s_tol, model.s_wean_times, model.s_gender_offs, model.s_gen_merit_offs,
                           model.s_groups_offs, bounds = (0,None) , doc='number of offs animals')
     ##animal transfers
     model.v_offs2dam = pe.Var(model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types,
@@ -200,6 +200,27 @@ def sheep_pyomo_local(params,report):
                              model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender_offs, model.s_gen_merit_offs, model.s_groups_offs,
                              initialize=params['p_cost_offs'], default=0.0, doc='husbandry cost offs')
 
+    ##asset value stock
+    try:
+        model.del_component(model.p_asset_sire)
+    except AttributeError:
+        pass
+    model.p_asset_sire = pe.Param(model.s_groups_sire, initialize=params['p_assetvalue_sire'], default=0.0, doc='Asset value of sire')
+    try:
+        model.del_component(model.p_asset_dams)
+    except AttributeError:
+        pass
+    model.p_asset_dams = pe.Param(model.s_birth_dams, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams,
+                                  model.s_lw_dams, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams,
+                                  initialize=params['p_assetvalue_dams'], default=0.0, doc='Asset value of dams')
+    try:
+        model.del_component(model.p_asset_offs)
+    except AttributeError:
+        pass
+    model.p_asset_offs = pe.Param(model.s_damage_offs, model.s_birth_offs, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
+                                 model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender_offs, model.s_gen_merit_offs, model.s_groups_offs,
+                                 initialize=params['p_assetvalue_offs'], default=0.0, doc='Asset value of offs')
+
     ##labour - sire
     try:
         model.del_component(model.p_lab_anyone_sire)
@@ -306,26 +327,6 @@ def sheep_pyomo_local(params,report):
     # except AttributeError:
     #     pass
     # model.p_lab_stockinfra = Param(model.s_infrastructure, model.s_labperiods, initialize=, default=0.0, doc='Labour required for R&M of the infrastructure (per animal mustered/shorn)')
-
-    # try:
-    #     model.del_component(model.p_asset_sire)
-    # except AttributeError:
-    #     pass
-    # model.p_asset_sire = Param(model.s_groups_sire, initialize=, default=0.0, doc='Asset value of sire')
-    # try:
-    #     model.del_component(model.p_asset_dams)
-    # except AttributeError:
-    #     pass
-    # model.p_asset_dams = Param(model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_birth_dams, model.s_nut_dams, model.s_lw_dams,
-    #                            model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_co_conception,
-    #                            model.s_co_bw, model.s_co_ww, model.s_co_cfw, model.s_co_fd, model.s_co_min_fd, model.s_co_fl, initialize=, default=0.0, doc='Asset value of dams')
-    # try:
-    #     model.del_component(model.p_asset_offs)
-    # except AttributeError:
-    #     pass
-    # model.p_asset_offs = Param(model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types,
-    #                            model.s_tol, model.s_damage_offs, model.s_wean_times, model.s_birth_offs, model.s_gender_offs, model.s_gen_merit_offs,
-    #                            model.s_groups_offs, model.s_co_cfw, model.s_co_fd, model.s_co_min_fd, model.s_co_fl, initialize=, default=0.0, doc='Asset value of offs')
 
 
     ##purchases
@@ -506,37 +507,30 @@ def sheep_pyomo_local(params,report):
     # model.con_offsR = pe.Constraint(model.s_dvp_offs, model.s_lw_offs, model.s_season_types, model.s_tol, model.s_damage_offs,
     #                                  model.s_wean_times, model.s_birth_offs, model.s_gender_offs, model.s_gen_merit_offs, model.s_groups_offs,
     #                                  model.s_co_cfw, model.s_co_fd, model.s_co_min_fd, model.s_co_fl, rule=offsR, doc='transfer of off to next dvp.')
+
     try:
-        model.del_component(model.con_offsR)
+        model.del_component(model.con_matingR)
     except AttributeError:
         pass
-    def sireR(model,g0):
-        return model.v_sire[g0]
-    model.con_offsR = pe.Constraint(model.s_dvp_offs, model.s_lw_offs, model.s_season_types, model.s_tol, model.s_damage_offs,
-                                     model.s_wean_times, model.s_birth_offs, model.s_gender_offs, model.s_gen_merit_offs, model.s_groups_offs,
-                                     model.s_co_cfw, model.s_co_fd, model.s_co_min_fd, model.s_co_fl, rule=offsR, doc='transfer of off to next dvp.')
-    #
-    #
-    # try:
-    #     model.del_component(model.con_matingR)
-    # except AttributeError:
-    #     pass
-    # def mating(model,g0,p8):
-    #     return sum(sum(model.v_dams[t1,v1,a,b1,n1,w1,z,i,y1,g1,r1,r2,r3,r4,r5,r6,r7] for t1 in model.s_sale_dams for a in model.s_wean_times for n1 in model.s_nut_dams for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for r1 in model.s_co_conception for r2 in model.s_co_bw for r3 in  model.s_co_ww for r4 in model.s_co_cfw for r5 in model.s_co_fd for r6 in model.s_co_min_fd for r7 in model.s_co_fl)
-    #              * p_n_sires[v1,b1,g1,g0,p8] for v1 in model.s_dvp_dams for b1 in model.s_birth_dams for g1 in model.s_groups_dams) \
-    #         - model.v_sire[g0] <=0 #p_numpurch allocates the purchased dams into certain sets, in this case it is correct to multiply a var with less sets to a param with more sets
-    # model.con_matingR = pe.Constraint(model.s_groups_sire, model.s_sire_periods, rule=mating, doc='sire requirment for mating')
-    #
+    def mating(model,g0,p8):
+        return - model.v_sire[g0] + sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_n_sires[k2,t1,v1,a,n1,w1,z,i,y1,g1,g0,p8]
+                  for k2 in model.s_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for a in model.s_wean_times for n1 in model.s_nut_dams
+                   for w1 in model.s_lw_dams for z in model.s_season_types for i in model.s_tol for y1 in model.s_gen_merit_dams  for g1 in model.s_groups_dams) <=0
+    model.con_matingR = pe.Constraint(model.s_groups_sire, model.s_sire_periods, rule=mating, doc='sire requirment for mating')
+
     try:
         model.del_component(model.con_stockinfra)
     except AttributeError:
         pass
     def stockinfra(model,h1):
         return -model.v_infrastructure[h1] + sum(model.v_sire[g0] * model.p_infra_sire[g0,h1] for g0 in model.s_groups_sire)  \
-               + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] for a in model.s_wean_times for n1 in model.s_nut_dams for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams
-                             * model.p_infra_dams[t1,v1,b1,z,i,g1,h1] for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for b1 in model.s_birth_dams for g1 in model.s_groups_dams)  \
-               + sum(sum(model.v_offs[t3,v3,n3,w3,z,i,d,a,b3,x,y3,g3] for a in model.s_wean_times for n3 in model.s_nut_offs for w3 in model.s_lw_offs for d in model.s_damage_offs for x in model.s_gender_offs for y3 in model.s_gen_merit_offs for r4 in model.s_co_cfw for r5 in model.s_co_fd for r6 in model.s_co_min_fd for r7 in model.s_co_fl) * model.p_infra_offs[t3,v3,b3,z,i,g3,h3] for t3 in model.s_sale_offs for v3 in model.s_dvp_offs for b3 in model.s_birth_offs for g3 in model.s_groups_offs)
-               for z in model.s_season_types for i in model.s_tol) <=0
+               + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_infra_dams[k2,h1,t1,v1,a,n1,w1,z,i,y1,g1]
+                         for k2 in model.s_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
+                         for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams)
+                    + sum(model.v_offs[k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_infra_offs[k3,k5,h1,t3,v3,n3,w3,z,i,a,x,y3,g3]
+                          for k3 in model.s_damage_offs for k5 in model.s_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
+                          for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender_offs for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs)
+               for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol) <=0
     model.con_stockinfra = pe.Constraint(model.s_infrastructure, rule=stockinfra, doc='Requirement for infrastructure (based on number of times yarded and shearing activity)')
 
 
@@ -552,91 +546,70 @@ model.v_infrastructure = pe.Var(model.s_infrastructure, bounds = (0,None) , doc=
 
 def stock_me(model,f,p6):
     return sum(model.v_sire[g0] * model.p_mei_sire[p6,f,g0] for g0 in model.s_groups_sire)\
-          + sum(sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_mei_dams[k2,p6,f,t1,v1,a,n1,w1,z,i,y1,g1]
-                        for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for k2 in model.s_birth_dams for n1 in model.s_nut_dams for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams)
-          + sum(sum(sum(model.v_offs[t3,v3,n3,w3,z,i,d,a,b3,x,y3,g3]
-                * model.p_mei_offs[t3,v3,n3,w3,z,i,d,a,b3,x,y3,g3,p6,v] for t3 in model.s_sale_offs)
-                + model.v_offs2dam[v3,n3,w3,z,i,d,a,b3,x,y3,g3,g1_new] for g1_new in model.s_groups_dams)
-                * model.p_mei_trans_offs[v3,n3,w3,z,i,d,a,b3,x,y3,g3,p6,v] for v3 in model.s_dvp_offs  for n3 in model.s_nut_offs for w3 in model.s_lw_offs for d in model.s_damage_offs for b3 in model.s_birth_offs for x in model.s_gender_offs for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs)
-          for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol)
+           + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_mei_dams[k2,p6,f,t1,v1,a,n1,w1,z,i,y1,g1]
+                     for k2 in model.s_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
+                     for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams)
+                + sum(model.v_offs[k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_mei_offs[k3,k5,p6,f,t3,v3,n3,w3,z,i,a,x,y3,g3]
+                      for k3 in model.s_damage_offs for k5 in model.s_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
+                      for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender_offs for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs)
+               for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol)
 
 
 def stock_pi(model,f,p6):
     return sum(model.v_sire[g0] * model.p_pi_sire[p6,f,g0] for g0 in model.s_groups_sire)\
-        + sum(sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1]
-                    * model.p_pi_dams[k2,p6,f,t1,v1,a,n1,w1,z,i,y1,g1] for t1 in model.s_sale_dams)
-                    # + sum(model.v_dams2sire[v1,a,b1,n1,w1,z,i,y1,g1,r1,r2,r3,r4,r5,r6,r7,g1_new] for r1 in model.s_co_conception for r2 in model.s_co_bw for r3 in  model.s_co_ww for r4 in model.s_co_cfw for r5 in model.s_co_fd for r6 in model.s_co_min_fd for r7 in model.s_co_fl for g1_new in model.s_groups_dams)
-                    # * model.p_pi_trans_dams[v1,a,b1,n1,w1,z,i,y1,g1,p6,v]
-                    for v1 in model.s_dvp_dams for k2 in model.s_birth_dams for n1 in model.s_nut_dams for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams)
-          + sum(sum(model.v_offs[t3,v3,n3,w3,z,i,d,a,b3,x,y3,g3]
-                * model.p_pi_offs[t3,v3,n3,w3,z,i,d,a,b3,x,y3,g3,p6,v] for t3 in model.s_sale_offs)
-                + sum(model.v_offs2dam[v3,n3,w3,z,i,d,a,b3,x,y3,g3,r4,r5,r6,r7,g1_new] for r4 in model.s_co_cfw for r5 in model.s_co_fd for r6 in model.s_co_min_fd for r7 in model.s_co_fl for g1_new in model.s_groups_dams)
-                * model.p_pi_trans_offs[v3,n3,w3,z,i,d,a,b3,x,y3,g3,p6,v] for v3 in model.s_dvp_offs  for n3 in model.s_nut_offs for w3 in model.s_lw_offs for d in model.s_damage_offs for b3 in model.s_birth_offs for x in model.s_gender_offs for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs)
-          for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol)
+           + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_pi_dams[k2,p6,f,t1,v1,a,n1,w1,z,i,y1,g1]
+                     for k2 in model.s_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
+                     for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams)
+                + sum(model.v_offs[k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_pi_offs[k3,k5,p6,f,t3,v3,n3,w3,z,i,a,x,y3,g3]
+                      for k3 in model.s_damage_offs for k5 in model.s_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
+                      for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender_offs for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs)
+               for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol)
 
 def stock_cashflow(model,c):
     # infrastructure = sum(model.p_rm_stockinfra[h3,c] * model.v_infrastructure[h3] for h3 in model.s_infrastructure)
-    stock = sum(model.v_sire[g0] * model.p_cash_sire[g0,c] for g0 in model.s_groups_sire) \
-          + sum(sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1]
-                    * model.p_cash_dams[k2,c,t1,v1,a,n1,w1,z,i,y1,g1] for t1 in model.s_sale_dams)
-                    for v1 in model.s_dvp_dams  for b1 in model.s_birth_dams for n1 in model.s_nut_dams for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams)
-          + sum(sum(model.v_offs[t3,v3,n3,w3,z,i,d,a,b3,x,y3,g3,r4,r5,r6,r7] * model.p_cash_offs[t3,v3,n3,w3,z,i,d,a,b3,x,y3,g3,r4,r5,r6,r7] for t3 in model.s_sale_offs)
-                + sum(model.v_offs2dam[v3,n3,w3,z,i,d,a,b3,x,y3,g3,r4,r5,r6,r7,g1_new] for g1_new in model.s_groups_dams)
-                * model.p_cash_trans_offs[v3,n3,w3,z,i,d,a,b3,x,y3,g3,r4,r5,r6,r7,c] for v3 in model.s_dvp_offs  for n3 in model.s_nut_offs for w3 in model.s_lw_offs for d in model.s_damage_offs for b3 in model.s_birth_offs for x in model.s_gender_offs for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs)
-          for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol for r4 in model.s_co_cfw for r5 in model.s_co_fd for r6 in model.s_co_min_fd for r7 in model.s_co_fl)
+    stock = sum(model.v_sire[g0] * model.p_cashflow_sire[g0,c] for g0 in model.s_groups_sire) \
+           + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_cashflow_dams[k2,c,t1,v1,a,n1,w1,z,i,y1,g1]
+                     for k2 in model.s_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
+                     for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams)
+                + sum(model.v_offs[k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_cashflow_offs[k3,k5,c,t3,v3,n3,w3,z,i,a,x,y3,g3]
+                      for k3 in model.s_damage_offs for k5 in model.s_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
+                      for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender_offs for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs)
+               for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol)
 
     return stock #- infastrucure - purchases
 
-# def stock_cashflow(model,c):
-#     infastrucure = sum(model.p_rm_stockinfra[h3,c] * model.v_infrastructure[h3] for h3 in model.s_infrastructure)
-#     stock = sum(model.v_sire[g0] * model.p_cash_sire[g0,c] for g0 in model.s_groups_sire)
-#           + sum(sum(sum(sum(model.v_dams[t1,v1,a,b1,n1,w1,z,i,y1,g1,r1,r2,r3,r4,r5,r6,r7] for r1 in model.s_co_conception for r2 in model.s_co_bw for r3 in model.s_co_ww)
-#                     * model.p_cash_dams[t1,v1,a,b1,n1,w1,z,i,y1,g1,r4,r5,r6,r7,c] for t1 in model.s_sale_dams)
-#                     + sum(model.v_dams2sire[v1,a,b1,n1,w1,z,i,y1,g1,g1_new] for r1 in model.s_co_conception for r2 in model.s_co_bw for r3 in  model.s_co_ww for g1_new in model.s_groups_dams)
-#                     * model.p_cash_trans_dams[v1,a,b1,n1,w1,z,i,y1,g1,r4,r5,r6,r7,c]
-#                     for v1 in model.s_dvp_dams  for b1 in model.s_birth_dams for n1 in model.s_nut_dams for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams)
-#           + sum(sum(model.v_offs[t3,v3,n3,w3,z,i,d,a,b3,x,y3,g3,r4,r5,r6,r7] * model.p_cash_offs[t3,v3,n3,w3,z,i,d,a,b3,x,y3,g3,r4,r5,r6,r7] for t3 in model.s_sale_offs)
-#                 + sum(model.v_offs2dam[v3,n3,w3,z,i,d,a,b3,x,y3,g3,r4,r5,r6,r7,g1_new] for g1_new in model.s_groups_dams)
-#                 * model.p_cash_trans_offs[v3,n3,w3,z,i,d,a,b3,x,y3,g3,r4,r5,r6,r7,c] for v3 in model.s_dvp_offs  for n3 in model.s_nut_offs for w3 in model.s_lw_offs for d in model.s_damage_offs for b3 in model.s_birth_offs for x in model.s_gender_offs for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs)
-#           for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol for r4 in model.s_co_cfw for r5 in model.s_co_fd for r6 in model.s_co_min_fd for r7 in model.s_co_fl)
 #     purchases = sum(model.v_sire[g0] * model.p_cost_purch_sire[g0,c] for g0 in model.s_groups_sire)  \
 #                 + sum(sum(model.v_purchase_dams[v1,w1,z,i,g1] * model.p_cost_purch_dam[v1,w1,z,i,g1,c] for v1 in model.s_dvp_dams for w1 in model.s_lw_dams for g1 in model.s_groups_dams)
 #                     + sum(model.v_purchase_offs[v3,w3,z,i,g3] * model.p_cost_purch_offs[v3,w3,z,i,g3,c] for v3 in model.s_dvp_offs for w3 in model.s_lw_offs for g3 in model.s_groups_offs)
 #                     for z in model.s_season_types for i in model.s_tol)
 #     return stock - infastrucure - purchases
-#
-#
+
+
 def stock_cost(model):
-    infrastrucure = sum(model.p_rm_stockinfra[h3,c] for c in model.s_cashflow_periods * model.v_infrastructure[h3] for h3 in model.s_infrastructure)
-    stock = sum(model.v_sire[g0] * model.p_cost_sire[g0] for g0 in model.s_groups_sire)+\
-            sum(sum(sum(sum(model.v_dams[t1,v1,a,b1,n1,w1,z,i,y1,g1,r1,r2,r3,r4,r5,r6,r7] for a in model.s_wean_times for n1 in model.s_nut_dams for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for r1 in model.s_co_conception for r2 in model.s_co_bw for r3 in  model.s_co_ww for r4 in model.s_co_cfw for r5 in model.s_co_fd for r6 in model.s_co_min_fd for r7 in model.s_co_fl)
-                    * model.p_cost_dams[t1,v1,b1,z,i,g1] for t1 in model.s_sale_dams)
-                    + sum(model.v_dams2sire[v1,a,b1,n1,w1,z,i,y1,g1,r1,r2,r3,r4,r5,r6,r7,g1_new] for a in model.s_wean_times for n1 in model.s_nut_dams for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for r1 in model.s_co_conception for r2 in model.s_co_bw for r3 in  model.s_co_ww for r4 in model.s_co_cfw for r5 in model.s_co_fd for r6 in model.s_co_min_fd for r7 in model.s_co_fl for g1_new in model.s_groups_dams)
-                    * model.p_cost_trans_dams[v1,b1,z,i,g1] for v1 in model.s_dvp_dams for b1 in model.s_birth_dams  for g1 in model.s_groups_dams)
-           + sum(sum(sum(model.v_offs[t3,v3,n3,w3,z,i,d,a,b2,x,y3,g3,r4,r5,r6,r7] for a in model.s_wean_times for n3 in model.s_nut_offs for w3 in model.s_lw_offs for d in model.s_damage_offs for x in model.s_gender_offs for y3 in model.s_gen_merit_offs for r4 in model.s_co_cfw for r5 in model.s_co_fd for r6 in model.s_co_min_fd for r7 in model.s_co_fl)
-                 * model.p_cost_offs[t3,v3,b3,z,i,g3] for t3 in model.s_sale_offs)
-                 + sum(model.v_offs2dam[v3,n3,w3,z,i,d,a,b2,x,y3,g3,r4,r5,r6,r7,g1_new] for a in model.s_wean_times for n3 in model.s_nut_offs for w3 in model.s_lw_offs for d in model.s_damage_offs for x in model.s_gender_offs for y3 in model.s_gen_merit_offs for r4 in model.s_co_cfw for r5 in model.s_co_fd for r6 in model.s_co_min_fd for r7 in model.s_co_fl for g1_new in model.s_groups_dams)
-                 * model.p_cost_trans_offs[v3,b3,z,i,g3] for v3 in model.s_dvp_offs for b3 in model.s_birth_offs for g3 in model.s_groups_offs)
-                 for z in model.s_season_types for i in model.s_tol)
-    purchases = sum(sum(model.v_purchase_dams[v1,w1,z,i,g1] * sum(model.p_cost_purch_dam[v1,w1,z,i,g1,c] for c in model.s_cashflow_periods) for v1 in model.s_dvp_dams for w1 in model.s_lw_dams for g1 in model.s_groups_dams)
-                    +sum(model.v_purchase_offs[v3,w3,z,i,g3] * sum(model.p_cost_purch_offs[v3,w3,z,i,g3,c] for c in model.s_cashflow_periods) for v3 in model.s_dvp_offs for w3 in model.s_lw_offs for g3 in model.s_groups_offs)
-                    for z in model.s_season_types for i in model.s_tol)
-    return infrastrucure + stock + purchases
+    # infrastrucure = sum(model.p_rm_stockinfra[h3,c] for c in model.s_cashflow_periods * model.v_infrastructure[h3] for h3 in model.s_infrastructure)
+    stock = sum(model.v_sire[g0] * model.p_cost_sire[g0] for g0 in model.s_groups_sire) \
+            + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_cost_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1]
+                     for k2 in model.s_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
+                     for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams)
+                + sum(model.v_offs[k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_cost_offs[k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]
+                      for k3 in model.s_damage_offs for k5 in model.s_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
+                      for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender_offs for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs)
+               for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol)
+    # purchases = sum(sum(model.v_purchase_dams[v1,w1,z,i,g1] * sum(model.p_cost_purch_dam[v1,w1,z,i,g1,c] for c in model.s_cashflow_periods) for v1 in model.s_dvp_dams for w1 in model.s_lw_dams for g1 in model.s_groups_dams)
+    #                 +sum(model.v_purchase_offs[v3,w3,z,i,g3] * sum(model.p_cost_purch_offs[v3,w3,z,i,g3,c] for c in model.s_cashflow_periods) for v3 in model.s_dvp_offs for w3 in model.s_lw_offs for g3 in model.s_groups_offs)
+    return  stock #+ infrastrucure + purchases
 #
 #
 def stock_labour_anyone(model,p5):
     # infastrucure = sum(model.p_lab_stockinfra[h3,p5] * model.v_infrastructure[h3,p5] for h3 in model.s_infrastructure)
     stock = sum(model.v_sire[g0] * model.p_lab_anyone_sire[g0,p5] for g0 in model.s_groups_sire)\
-          + sum(sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1]
-                    * model.p_lab_anyone_dams[k2,p5,t1,v1,a,n1,w1,z,i,y1,g1] for t1 in model.s_sale_dams for y1 in model.s_gen_merit_dams)
-                    # + sum(model.v_dams2sire[v1,a,b1,n1,w1,z,i,y1,g1,g1_new] for y1 in model.s_gen_merit_dams for g1_new in model.s_groups_dams)
-                    # * model.p_lab_trans_dams[v1,a,b1,n1,w1,z,i,g1,p5]
-                    for v1 in model.s_dvp_dams for k2 in model.s_birth_dams for n1 in model.s_nut_dams for w1 in model.s_lw_dams for g1 in model.s_groups_dams)
-          # + sum(sum(sum(model.v_offs[t3,v3,n3,w3,z,i,d,a,b3,x,y3,g3] for y3 in model.s_gen_merit_offs for r4 in model.s_co_cfw for r5 in model.s_co_fd for r6 in model.s_co_min_fd for r7 in model.s_co_fl)
-          #       * model.p_lab_offs[t3,v3,n3,w3,z,i,d,a,b3,x,g3,p5] for t3 in model.s_sale_offs)
-          #       + sum(model.v_offs2dam[v3,n3,w3,z,i,d,a,b3,x,y3,g3,g1_new] for y3 in model.s_gen_merit_offs for g1_new in model.s_groups_dams)
-          #       * model.p_lab_trans_offs[v3,n3,w3,z,i,d,a,b3,x,g3,p5] for v3 in model.s_dvp_offs for n3 in model.s_nut_offs for w3 in model.s_lw_offs for d in model.s_damage_offs for b3 in model.s_birth_offs for x in model.s_gender_offs for g3 in model.s_groups_offs)
-          for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol)
+            + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_lab_anyone_dams[k2,p5,t1,v1,a,n1,w1,z,i,y1,g1]
+                     for k2 in model.s_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
+                     for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams)
+                + sum(model.v_offs[k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_lab_anyone_offs[k3,k5,p5,t3,v3,n3,w3,z,i,a,x,y3,g3]
+                      for k3 in model.s_damage_offs for k5 in model.s_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
+                      for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender_offs for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs)
+               for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol)
     return stock
 #
 

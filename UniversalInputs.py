@@ -173,6 +173,9 @@ structure['grain_pools']=['firsts','seconds']
 ###############
 # cashflow    #
 ###############
+##asset value time of yr - this is also the begining of the cashflow periods  ^for now this must be the 1/1/19 but it would be good to make it flexible ie have the capacity to have cashflow periods start on any day of yr
+structure['i_date_assetvalue']= datetime.datetime(2019, 1, 1) #y/m/d
+
 ##the number of these can change as long as each period is of equal length.
 structure['cashflow_periods']=['JF$FLOW','MA$FLOW','MJ$FLOW','JA$FLOW','SO$FLOW','ND$FLOW']
 

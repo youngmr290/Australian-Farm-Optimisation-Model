@@ -1668,7 +1668,7 @@ def f_husbandry(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, operations_trigge
     start=time.time() #^delete this stuff once the function is faster
     application_level_h2pg = f_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg)
     finish1=time.time()
-    print('finish1 - level of husb : ', finish1-start)
+    # print('finish1 - level of husb : ', finish1-start)
     ##The number of times the mob must be mustered
     mustering_level_pg = f_mustering_required(application_level_h2pg, husb_operations_muster_propn_h2pg)
     ##The cost of requisites for the operations
@@ -1686,7 +1686,7 @@ def f_husbandry(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, operations_trigge
     ##The infrastructure requirements for mustering
     mustering_infrastructurereq_h1pg = f_husbandry_infrastructure(mustering_level_pg, husb_muster_infrastructurereq_h1h4pg)
     finish2=time.time()
-    print('finish2: ', finish2-finish1)
+    # print('finish2: ', finish2-finish1)
     ##Total cost of husbandry
     husbandry_cost_pg = operations_requisites_cost_pg + mustering_requisites_cost_pg + contract_cost_pg
     ##Labour requirement for husbandry
@@ -1694,9 +1694,164 @@ def f_husbandry(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, operations_trigge
     ##infrastructure requirement for husbandry
     husbandry_infrastructure_h1pg = operations_infrastructurereq_h1pg + mustering_infrastructurereq_h1pg
     finish3=time.time()
-    print('finish3: ', finish3-finish2)
+    # print('finish3: ', finish3-finish2)
     return husbandry_cost_pg, husbandry_labour_l2pg, husbandry_infrastructure_h1pg
 
 
 
+##################
+#post processing #
+##################
 
+##Method 1 (still used)- add p and v axis together then sum p axis - this may be a good method for faster computers with more memory
+def f_p2v_std(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tvp=True, days_period_p=1,
+            period_is_tvp=True, a_any1_p=1, index_any1tvp=1, a_any2_p=1, index_any2any1tvp=1, sumadj=0):
+    try:
+        days_period_p = days_period_p.astype(
+            'float32')  # convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it cant be converted to float (because int object is not numpy)
+    except AttributeError:
+        pass
+    ##mul everything
+    production_ftvpany = (production_p * numbers_p * days_period_p * period_is_tvp
+                          * on_hand_tvp * (dvp_pointer_p == index_vp) * (a_any1_p == index_any1tvp)
+                          * (a_any2_p == index_any2any1tvp))
+    return np.sum(production_ftvpany, axis=uinp.structure['i_p_pos']-sumadj)  # sum along p axis to leave just a v axis (sumadj is to handle nsire that has a p8 axis at the end)
+
+
+# ##Method 4 - loop over v and sum p - this save p and v axis being on the same array but requires lots of looping so isnt much faster
+# def f_p2v_loop(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tvp=True, days_period_p=1, period_is_tvp=True, a_ev_p=1, index_ftvp=1, a_p6_p=1, index_p6ftvp=1):
+#     try: days_period_p = days_period_p.astype('float32')  #convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it cant be converted to float (because int object is not numpy)
+#     except AttributeError:
+#         pass
+#     ##mul everything
+#     production_ftpany = (production_p * numbers_p * days_period_p * period_is_tvp
+#                         * on_hand_tvp * (a_ev_p==index_ftvp)
+#                         * (a_p6_p==index_p6ftvp))
+#
+#     shape = production_ftpany.shape[0:3] + (np.max(dvp_pointer_p)+1,) + production_ftpany.shape[4:]  # bit messy because need v t and all the other axis (but not p)
+#     final=np.zeros(shape).astype('float32')
+#     for i in range(np.max(dvp_pointer_p)+1):
+#         temp_prod = np.sum(production_ftpany * (dvp_pointer_p==i), axis=uinp.structure['i_p_pos'])
+#         final[:,:,:,i,...] = temp_prod  #asign to correct v slice
+#     return final
+
+# ##Method 3 - use groupby to sum p, this means p and v dont exist on the same array - not as fast as method 2
+# import numpy_indexed as npi
+# def f_p2v_groupby(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tvp=True, days_period_p=1, period_is_tvp=True, a_ev_p=1, index_ftvp=1, a_p6_p=1, index_p6ftvp=1):
+#     try: days_period_p = days_period_p.astype('float32')  #convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it cant be converted to float (because int object is not numpy)
+#     except AttributeError:
+#         pass
+#     ##mul everything
+#     production_ftpany = (production_p * numbers_p * days_period_p * period_is_tvp
+#                         * on_hand_tvp * (a_ev_p==index_ftvp)
+#                         * (a_p6_p==index_p6ftvp))
+#     ##convert p to v
+#     shape = production_ftpany.shape[0:3] + (np.max(dvp_pointer_p)+1,) + production_ftpany.shape[4:]  # bit messy because need v t and all the other axis (but not p)
+#     result=np.zeros(shape).astype('float32')
+#     shape = dvp_pointer_p.shape
+#     for e1 in range(shape[-13]):
+#         for g in range(shape[-1]):
+#             result[:,:,:,:, :, e1:e1+1, :, :, :, :, :, :, :, :, :, :, :, g:g+1] = npi.GroupBy(dvp_pointer_p[:, 0, e1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, g], axis=0).sum(
+#                                                                     production_ftpany[:, :, :, :, :, e1:e1+1, :, :, :, :, :, :, :, :, :, :, :, g:g+1], axis=uinp.structure['i_p_pos'])[1]
+#     return result
+
+##Method 2 (fastest)- sum sections of p axis to leave v (almost like sum if) this is fast because dont need p and v axis one same array
+def f_p2v(production_p, dvp_pointer_p=1, numbers_p=1, on_hand_tp=True, days_period_p=1, period_is_tp=True, a_any1_p=1, index_any1tp=1, a_any2_p=1, index_any2any1tp=1):
+    try: days_period_p = days_period_p.astype('float32')  #convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it cant be converted to float (because int object is not numpy)
+    except AttributeError:
+        pass
+    ##mul everything - add t,f and p6 axis
+    production_ftpany = (production_p * numbers_p * days_period_p * period_is_tp
+                        * on_hand_tp * (a_any1_p==index_any1tp)
+                        * (a_any2_p==index_any2any1tp))
+    ##convert p to v - info at this link https://stackoverflow.com/questions/50121980/numpy-conditional-sum
+    ##basically we are summing the p axis for each dvp. the tricky part (which has caused the requirement for the loops) is that dvp pointer is not the same for each axis eg dvp is effected by e axis.
+    ##so we need to loop though all the axis in the dvp and sum p and assign to a final array.
+    ##if the axis is size 1 (ie singleton) then we want to take all of that axis ie ':' because just because the dvp pointer has singleton doesnt mean param array has singleton so need to take all slice of the param (unless that is an active dvp axis bedcause that means dvp timing may differ for different slices along that axis so it must be summed in the loop)
+    shape = production_ftpany.shape[0:uinp.structure['i_p_pos']] + (np.max(dvp_pointer_p)+1,) + production_ftpany.shape[uinp.structure['i_p_pos']+1:]  # bit messy because need v t and all the other axis (but not p)
+    result=np.zeros(shape).astype('float32')
+    shape = dvp_pointer_p.shape
+    for a1 in range(shape[-14]):
+        a1_slc = slice(a1,a1+1) if shape[-14]>1 else slice(0,None) #used for param because we want to keep axis
+        for e1 in range(shape[-13]):
+            e1_slc = slice(e1, e1 + 1) if shape[-13] > 1 else slice(0, None)
+            for b1 in range(shape[-12]):
+                b1_slc = slice(b1, b1 + 1) if shape[-12] > 1 else slice(0, None)
+                for n in range(shape[-11]):
+                    n_slc = slice(n, n + 1) if shape[-11] > 1 else slice(0, None)
+                    for w in range(shape[-10]):
+                        w_slc = slice(w, w + 1) if shape[-10] > 1 else slice(0, None)
+                        for z in range(shape[-9]):
+                            z_slc = slice(z, z + 1) if shape[-9] > 1 else slice(0, None)
+                            for i in range(shape[-8]):
+                                i_slc = slice(i, i + 1) if shape[-8] > 1 else slice(0, None)
+                                for d in range(shape[-7]):
+                                    d_slc = slice(d, d + 1) if shape[-7] > 1 else slice(0, None)
+                                    for a0 in range(shape[-6]):
+                                        a0_slc = slice(a0, a0 + 1) if shape[-6] > 1 else slice(0, None)
+                                        for e0 in range(shape[-5]):
+                                            e0_slc = slice(e0, e0 + 1) if shape[-5] > 1 else slice(0, None)
+                                            for b0 in range(shape[-4]):
+                                                b0_slc = slice(b0, b0 + 1) if shape[-4] > 1 else slice(0, None)
+                                                for x in range(shape[-3]):
+                                                    x_slc = slice(x, x + 1) if shape[-3] > 1 else slice(0, None)
+                                                    for y in range(shape[-2]):
+                                                        y_slc = slice(y, y + 1) if shape[-2] > 1 else slice(0, None)
+                                                        for g in range(shape[-1]):
+                                                            g_slc = slice(g, g + 1) if shape[-1] > 1 else slice(0, None)
+                                                            result[..., a1_slc, e1_slc, b1_slc, n_slc, w_slc, z_slc, i_slc, d_slc, a0_slc, e0_slc, b0_slc, x_slc, y_slc, g_slc] \
+                                                                = np.add.reduceat(production_ftpany[..., a1_slc, e1_slc, b1_slc, n_slc, w_slc, z_slc, i_slc, d_slc, a0_slc, e0_slc, b0_slc, x_slc, y_slc, g_slc]
+                                                                                  , np.r_[0, np.where(np.diff(dvp_pointer_p[:, a1, e1, b1, n, w, z, i, d, a0, e0, b0, x, y, g]))[0] + 1], axis=uinp.structure['i_p_pos']) #np.r_ basically concats two 1d arrays (so here we are just adding 0 to the start of the array)
+    return result
+
+
+
+
+
+def f_cum_dvp(arr,dvp_pointer,axis=0,shift=0):
+    '''This function does accumulative max but it resets at each dvp.
+    '''
+    final = np.zeros_like(arr)
+    for i in range(np.max(dvp_pointer)+1):  #plus 1 so that the last dvp is counted for
+        arr1 = arr * (dvp_pointer==i) #sets the p slices to 0 if not in the given dvp
+        arr1 = np.roll(arr1,shift,axis) #this is only used for the dams on hand calculation, this rolls the period is sale array 1 unit along the p axis.
+                                        # This is required so that period is onhand == true in the period that sale occurs and false after that.
+                                        # Becausee sale occurs at the end of a given period so the sheep are technically onhand for the period sale occurs.
+        arr1 = np.maximum.accumulate(arr1,axis=axis)
+        arr1 = arr1 * (dvp_pointer==i) #sets the cum max to 0 for other dvp not of interest
+        final += arr1
+    return final
+
+def f_lw_distribution(ffcfw_condensed_va1e1b1nwzida0e0b0xyg, ffcfw_va1e1b1nwzida0e0b0xyg, i_n_len, i_n_fvp_period, dvp_type_next_tvgw=0):
+    '''distriuting animals on LW at the start of dvp0
+    ^ this function will need altering if the dvp_type definition changes'''
+    ##add second w axis - the condensed w axis becomes axis -1 and the end of period w stays in the normal place
+    ffcfw_condensed_va1e1b1nwzida0e0b0xygw = fun.f_reshape_expand(np.moveaxis(ffcfw_condensed_va1e1b1nwzida0e0b0xyg,uinp.structure['i_w_pos'],-1), uinp.structure['i_n_pos']-1, right_pos=pinp.sheep['i_z_pos']-1)
+    ##Calculate the difference between the 3 (or more if not dvp0) condensed weights and the middle weight (slice 0)
+    diff = ffcfw_condensed_va1e1b1nwzida0e0b0xygw - sfun.f_dynamic_slice(ffcfw_condensed_va1e1b1nwzida0e0b0xygw, -1, 0, 1)
+    ##Calculate the spread that would generate the average weight
+    spread =  1 - fun.f_divide((ffcfw_condensed_va1e1b1nwzida0e0b0xygw - ffcfw_va1e1b1nwzida0e0b0xyg[..., na]), diff)
+    ##Bound the spread
+    spread_bounded = np.clip(spread, 0, 1)
+    ##Set values for the standard pattern to be the remainder from the closest. (consolidated w axis)
+    spread_bounded[..., :int(i_n_len ** i_n_fvp_period)] =  1 - np.maximum(spread_bounded[..., int(i_n_len ** i_n_fvp_period):-int(i_n_len ** i_n_fvp_period)], spread_bounded[..., -int(i_n_len ** i_n_fvp_period):])
+    ##Set the distribution to 0 if lw_end is below the condensed minimum weight
+    distribution_va1e1b1nwzida0e0b0xygw = spread_bounded * (ffcfw_va1e1b1nwzida0e0b0xyg[..., na] >= np.min(ffcfw_condensed_va1e1b1nwzida0e0b0xygw, axis = -1, keepdims=True))
+    ##Set default for DVPs that don’t require distributing to 1 (these are masked later to remove those that are not required)
+    distribution_tvw8w9g = fun.f_update(distribution_va1e1b1nwzida0e0b0xygw, 1, dvp_type_next_tvgw!=0)
+    return distribution_va1e1b1nwzida0e0b0xygw
+
+def f_create_production_param(group, production_vg, a_kcluster_vg_1=1, index_ktvg_1=1, a_kcluster_vg_2=1, index_kktvg_2=1, numbers_start_vg=1, mask_vg=True):
+    '''convert production to per animal including impact of death. And apply the k clustering'''
+    if group=='sire':
+        return fun.f_divide(production_vg, numbers_start_vg)
+    elif group=='dams':
+        return fun.f_divide(np.sum(production_vg * (a_kcluster_vg_1 == index_ktvg_1) * mask_vg
+                                  , axis = (uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)
+                            , np.sum(numbers_start_vg * (a_kcluster_vg_1 == index_ktvg_1),
+                                     axis=(uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True))
+    elif group=='offs':
+        return fun.f_divide(np.sum(production_vg * (a_kcluster_vg_1 == index_ktvg_1) * (a_kcluster_vg_2 == index_kktvg_2)
+                                  , axis = (uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True)
+                            , np.sum(numbers_start_vg * (a_kcluster_vg_1 == index_ktvg_1) * (a_kcluster_vg_2 == index_kktvg_2),
+                                     axis=(uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True))

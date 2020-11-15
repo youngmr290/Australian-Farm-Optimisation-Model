@@ -41,7 +41,7 @@ def cashflow_periods():
     #empty list
     cashflow_period_dates = []
     #start date of the current cashflow period (ie start of year)
-    start = pinp.feed_inputs['feed_periods'].loc[1,'date'] + relativedelta(day=1,month=1)
+    start = uinp.structure['i_date_assetvalue']
     cashflow_period_dates.append(start)
     date = start
     #upper date of the current cashflow period (ie end of year)
