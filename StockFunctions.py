@@ -1847,9 +1847,9 @@ def f_create_production_param(group, production_vg, a_kcluster_vg_1=1, index_ktv
         return fun.f_divide(production_vg, numbers_start_vg)
     elif group=='dams':
         return fun.f_divide(np.sum(production_vg * (a_kcluster_vg_1 == index_ktvg_1) * mask_vg
-                                  , axis = (uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']-pos_offset), keepdims=True)
+                                  , axis = (uinp.parameters['i_b1_pos']-pos_offset, pinp.sheep['i_e1_pos']-pos_offset), keepdims=True)
                             , np.sum(numbers_start_vg * (a_kcluster_vg_1 == index_ktvg_1),
-                                     axis=(uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']-pos_offset), keepdims=True))
+                                     axis=(uinp.parameters['i_b1_pos']-pos_offset, pinp.sheep['i_e1_pos']-pos_offset), keepdims=True))
     elif group=='offs':
         return fun.f_divide(np.sum(production_vg * (a_kcluster_vg_1 == index_ktvg_1) * (a_kcluster_vg_2 == index_kktvg_2)
                                   , axis = (uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True)
