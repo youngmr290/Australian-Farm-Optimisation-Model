@@ -736,19 +736,30 @@ def f_reduce_skipfew(ufunc, foo, preserveAxis=None):
         preserveAxis = tuple(np.delete(r, preserveAxis))
     return ufunc(foo, axis=preserveAxis)
 
-def f_sa(value, sa, sa_type=0, target=0, value_min=-np.inf):
+def f_sa(value, sa, sa_type=0, target=0, value_min=-np.inf,pandas=False, axis=0):
+    '''applys SA. Function can handle numpy or pandas'''
+
     ##Type 0 is sam (sensitivity multiplier) - default
     if sa_type == 0:
-        value  = np.maximum(value_min, value * sa)
+        if pandas:
+            value = np.maximum(value_min, value.mul(sa, axis=axis))
+        else:
+            value  = np.maximum(value_min, value * sa)
     ##Type 1 is sap (sensitivity proportion)
     elif sa_type == 1:
-         value  = np.maximum(value_min, value * (1 + sa))
+        if pandas:
+            value = np.maximum(value_min, value.mul(1 + sa, axis=axis))
+        else:
+            value  = np.maximum(value_min, value * (1 + sa))
     ##Type 2 is saa (sensitivity addition)
     elif sa_type == 2:
          value  = np.maximum(value_min, value + sa)
     ##Type 3 is sat (sensitivity target)
     elif sa_type == 3:
-         value  = np.maximum(value_min, value + (target - value) * sa)
+        if pandas:
+            value = np.maximum(value_min, value + (target - value).mul(sa, axis=axis))
+        else:
+            value  = np.maximum(value_min, value + (target - value) * sa)
     ##Type 4 is sar (sensitivity range)
     elif sa_type == 4:
          value = np.maximum(0, np.minimum(1, value * (1 - np.abs(sa)) + np.maximum(0, sa)))

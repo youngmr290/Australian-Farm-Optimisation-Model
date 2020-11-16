@@ -137,27 +137,24 @@ def property_inp_sa():
     ##pasture will have to be added in a loop
     for pasture in uinp.structure['pastures']:
         ###SAM
-        pasture_inputs[pasture]['GermStd'] = pasture_inp[pasture]['GermStd'] * sen.sam[('germ',pasture)]
-        pasture_inputs[pasture]['GermScalarLMU'] = pasture_inp[pasture]['GermScalarLMU'] * sen.sam[('germ_l',pasture)]
-        pasture_inputs[pasture]['LowPGR'] = pasture_inp[pasture]['LowPGR'] * sen.sam[('pgr',pasture)]
-        pasture_inputs[pasture]['MedPGR'] = pasture_inp[pasture]['MedPGR'] * sen.sam[('pgr',pasture)]
-        pasture_inputs[pasture]['LowPGR'] = pasture_inp[pasture]['LowPGR'].mul(sen.sam[('pgr_f',pasture)], axis=0)
-        pasture_inputs[pasture]['MedPGR'] = pasture_inp[pasture]['MedPGR'].mul(sen.sam[('pgr_f',pasture)], axis=0)
-        pasture_inputs[pasture]['LowPGR'] = pasture_inp[pasture]['LowPGR'].mul(sen.sam[('pgr_l',pasture)], axis=1)
-        pasture_inputs[pasture]['MedPGR'] = pasture_inp[pasture]['MedPGR'].mul(sen.sam[('pgr_l',pasture)], axis=1)
+        pasture_inputs[pasture]['GermStd'] = fun.f_sa(pasture_inp[pasture]['GermStd'], sen.sam[('germ',pasture)])
+        pasture_inputs[pasture]['GermScalarLMU'] = fun.f_sa(pasture_inp[pasture]['GermScalarLMU'], sen.sam[('germ_l',pasture)])
+        pasture_inputs[pasture]['LowPGR'] = fun.f_sa(pasture_inp[pasture]['LowPGR'], sen.sam[('pgr',pasture)])
+        pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inp[pasture]['MedPGR'], sen.sam[('pgr',pasture)])
+        pasture_inputs[pasture]['LowPGR'] = fun.f_sa(pasture_inp[pasture]['LowPGR'], sen.sam[('pgr_f',pasture)], pandas=True, axis=0)
+        pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inp[pasture]['MedPGR'], sen.sam[('pgr_f',pasture)], pandas=True, axis=0)
+        pasture_inputs[pasture]['LowPGR'] = fun.f_sa(pasture_inp[pasture]['LowPGR'], sen.sam[('pgr_l',pasture)], pandas=True, axis=1)
+        pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inp[pasture]['MedPGR'], sen.sam[('pgr_l',pasture)], pandas=True, axis=1)
         pasture_inputs[pasture]['DigDryAve'] = pasture_inp[pasture]['DigDryAve'] * sen.sam[('dry_dmd_decline',pasture)] \
                                                 + max(pasture_inp[pasture]['DigDryAve']) * (1 - sen.sam[('dry_dmd_decline',pasture)])
-        pasture_inputs[pasture]['DigSpread'] = pasture_inp[pasture]['DigSpread'] * sen.sam[('grn_dmd_range_f',pasture)]
-        pasture_inputs[pasture]['DigDeclineFOO'] = pasture_inp[pasture]['DigDeclineFOO'] * sen.sam[('grn_dmd_declinefoo_f',pasture)]
-        pasture_inputs[pasture]['DigRednSenesce'] = pasture_inp[pasture]['DigRednSenesce'] * sen.sam[('grn_dmd_senesce_f',pasture)]
+        pasture_inputs[pasture]['DigSpread'] = fun.f_sa(pasture_inp[pasture]['DigSpread'], sen.sam[('grn_dmd_range_f',pasture)])
+        pasture_inputs[pasture]['DigDeclineFOO'] = fun.f_sa(pasture_inp[pasture]['DigDeclineFOO'], sen.sam[('grn_dmd_declinefoo_f',pasture)])
+        pasture_inputs[pasture]['DigRednSenesce'] = fun.f_sa(pasture_inp[pasture]['DigRednSenesce'], sen.sam[('grn_dmd_senesce_f',pasture)])
     ##sheep
     ###SAV
-    sheep['i_eqn_compare'] = sen.sav['eqn_compare'] if not sen.sav['eqn_compare'] == '-' else sheep_inp['i_eqn_compare']
-    sheep['i_mask_i'][0] = sen.sav['TOL_1_inc'] if not sen.sav['TOL_1_inc'] == '-' else sheep_inp['i_mask_i'][0] 
-    sheep['i_mask_i'][1] = sen.sav['TOL_2_inc'] if not sen.sav['TOL_2_inc'] == '-' else sheep_inp['i_mask_i'][1] 
-    sheep['i_includedg3_inc'][1] = sen.sav['g2_BM_included'] if not sen.sav['g2_BM_included'] == '-' else sheep_inp['i_includedg3_inc'][1] 
-    sheep['i_includedg3_inc'][2] = sen.sav['g2_BM_included'] if not sen.sav['g2_BM_included'] == '-' else sheep_inp['i_includedg3_inc'][2] 
-    sheep['i_includedg3_inc'][3] = sen.sav['g2_BM_included'] if not sen.sav['g2_BM_included'] == '-' else sheep_inp['i_includedg3_inc'][3] 
+    sheep['i_eqn_compare'] = fun.f_sa(sheep_inp['i_eqn_compare'], sen.sav['eqn_compare'], 5)
+    sheep['i_mask_i'] = fun.f_sa(sheep_inp['i_mask_i'], sen.sav['TOL_inc'], 5)
+    sheep['i_includedg3_inc'] = fun.f_sa(sheep_inp['i_includedg3_inc'], sen.sav['g3_included'],5)
 
 
 

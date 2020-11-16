@@ -150,6 +150,14 @@ def exp(row):
                  sen.saa[(key1,key2)]=value
              elif dic == 'sap':
                  sen.sap[(key1,key2)]=value
+         ##if just key1 exists
+         else:
+             if dic == 'sam':
+                 sen.sam[key1]=value
+             elif dic == 'saa':
+                 sen.saa[key1]=value
+             elif dic == 'sap':
+                 sen.sap[key1]=value
 
 
      ##call sa functions - assigns sa variables to relevant inputs

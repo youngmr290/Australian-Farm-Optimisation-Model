@@ -77,14 +77,11 @@ sar['mortalitye'] = 0          #Scale the calculated dam mortality at birth in t
 
 ##Sheep
 sav['eqn_compare']      = '-'                  #SA to alter if the different equation systems in the sheep sim are run and compared
-sav['TOL_1_inc']         = '-'                 # SA value for the inclusion of TOL 1
-sav['TOL_2_inc']         = '-'                 # SA value for the inclusion of TOL 2
-sav['g3_BM_included']         = '-'            # SA value for the inclusion of BM offspring genotype
-sav['g3_BT_included']         = '-'            # SA value for the inclusion of BT offspring genotype
-sav['g3_BMT_included']        = '-'            # SA value for the inclusion of BMT offspring genotype
+sav['TOL_inc']         = np.full(pinp.sheep_inp['i_mask_i'].shape,'-')   # SA value for the inclusion of each TOL
+sav['g3_included']         = np.full(pinp.sheep_inp['i_includedg3_inc'].shape,'-') # SA value for the inclusion of each offspring genotype
 sav['woolp_mpg_percentile'] = '-'              #sa value for the wool price percentile
 sav['woolp_mpg'] = '-'                     # sa value for wool price at std micron
-sav['woolp_fdprem_percentile'] = '-'                     # sa value for fd premium percentile (premim recieved by fd compared to std)
+sav['woolp_fdprem_percentile'] = '-'           # sa value for fd premium percentile (premim recieved by fd compared to std)
 sav['woolp_fdprem'] = '-'                     # sa value for fd premium
 sav['salep_percentile'] = '-'                     #Value for percentile for all sale grids
 sav['salep_max'] = '-'                        #max sale price in grid
