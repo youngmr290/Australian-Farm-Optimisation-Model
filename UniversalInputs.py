@@ -256,7 +256,7 @@ structure['i_n_fvp_period1'] = 3 #number of different fs period
 structure['i_n_fvp_period3'] = 3 #number of different fs period
 
 structure['i_nut_spread_n0'] = np.array([0])
-structure['i_nut_spread_n1'] = np.array([0,0,0]) #fs adjustment for different n levels - above 3 is absolute not adjustemnt
+structure['i_nut_spread_n1'] = np.array([0,1,-1]) #fs adjustment for different n levels - above 3 is absolute not adjustemnt
 structure['i_density_g1_n'] = np.array([1,0.5,1.5]) #stocking density adjuster for different n levels. An increasing feedsupply (less than 3.0) means that the animals are being offered more feed and therefore density is lower (although it could be with a high density and lots of supplement - we will be assuming that it is lower density and increased FOO). This is represented by scaling the standard stocking density by a number less than 1. Note: Distance walked is scaled by 40/density (if density is > 40). SO trying to make distance a small number for confinement feeding and even smaller for feedlotting
 structure['i_nut_spread_n3'] = np.array([0,1,-1]) #fs adjustment for different n levels - above 3 is absolute not adjustemnt
 structure['i_density_g3_n'] = np.array([1,0.5,1.5]) #stocking density adjuster for different n levels. An increasing feedsupply (less than 3.0) means that the animals are being offered more feed and therefore density is lower (although it could be with a high density and lots of supplement - we will be assuming that it is lower density and increased FOO). This is represented by scaling the standard stocking density by a number less than 1. Note: Distance walked is scaled by 40/density (if density is > 40). SO trying to make distance a small number for confinement feeding and even smaller for feedlotting
