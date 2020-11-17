@@ -214,6 +214,7 @@ structure['i_feedsupply_itn_max'] = 10
 structure['sheep_pools']=['pool1', 'pool2', 'pool3', 'pool4'] #nutrition pools
 ## DSE group and LSLN (b1)
 structure['i_mask_b0_b1'] = np.array([False, False, True,	True,	True,	True,	True,	True,	False,	False,	False])
+structure['i_mated_b1'] = np.array([False, True, True,	True,	True,	True,	True,	True,	True,	True,	True])
 structure['ia_b0_b1'] = np.array([0, 0, 0, 1,	2,	3,	4,	5,	0,	0,	0])
 structure['a_prepost_b1'] = np.array([0, 1, 2, 3, 4, 3,	4,	4,	2,	3,	4]) #The association of b1 pre lambing pointed to from b1 post lambing
 structure['a_nfoet_b1'] = np.array([0,0,1,2,3,2,3,3,1,2,3])
@@ -224,8 +225,8 @@ structure['i_numbers_min_b1'] = np.array([0,0,0,0,0,0,0,0,0,0,0])
                                         #dams
 ##dams sire transfer                #bbb bbm bbt bmt
 structure['ia_g1_tg1'] = np.array([                 #sire
-                                    [0,	0,	0,	3],  #b
-                                    [1,	1,	1,	3],  #m
+                                    [0,	0,	0,	4],  #b   use 4 - A value greater than the number of slices of the g axis, so that a_g1_tg1 == index_g1 is never True
+                                    [1,	1,	1,	4],  #m
                                     [2,	2,	2,	3]]) #t
 
                                                #dams
@@ -240,6 +241,7 @@ structure['i_w0_len'] = 1
 structure['i_w_idx_sire'] = ['lw0']
 structure['i_w1_len'] = 81
 structure['i_w_idx_dams'] = ['lw0', 'lw1', 'lw2', 'lw3', 'lw4', 'lw5', 'lw6', 'lw7', 'lw8', 'lw9', 'lw10', 'lw11', 'lw12', 'lw13', 'lw14', 'lw15', 'lw16', 'lw17', 'lw18', 'lw19', 'lw20', 'lw21', 'lw22', 'lw23', 'lw24', 'lw25', 'lw26', 'lw27', 'lw28', 'lw29', 'lw30', 'lw31', 'lw32', 'lw33', 'lw34', 'lw35', 'lw36', 'lw37', 'lw38', 'lw39', 'lw40', 'lw41', 'lw42', 'lw43', 'lw44', 'lw45', 'lw46', 'lw47', 'lw48', 'lw49', 'lw50', 'lw51', 'lw52', 'lw53', 'lw54', 'lw55', 'lw56', 'lw57', 'lw58', 'lw59', 'lw60', 'lw61', 'lw62', 'lw63', 'lw64', 'lw65', 'lw66', 'lw67', 'lw68', 'lw69', 'lw70', 'lw71', 'lw72', 'lw73', 'lw74', 'lw75', 'lw76', 'lw77', 'lw78', 'lw79', 'lw80']
+structure['i_progeny_w2_len'] = 10
 structure['i_w3_len'] = 81
 structure['i_w_idx_offs'] = ['lw0', 'lw1', 'lw2', 'lw3', 'lw4', 'lw5', 'lw6', 'lw7', 'lw8', 'lw9', 'lw10', 'lw11', 'lw12', 'lw13', 'lw14', 'lw15', 'lw16', 'lw17', 'lw18', 'lw19', 'lw20', 'lw21', 'lw22', 'lw23', 'lw24', 'lw25', 'lw26', 'lw27', 'lw28', 'lw29', 'lw30', 'lw31', 'lw32', 'lw33', 'lw34', 'lw35', 'lw36', 'lw37', 'lw38', 'lw39', 'lw40', 'lw41', 'lw42', 'lw43', 'lw44', 'lw45', 'lw46', 'lw47', 'lw48', 'lw49', 'lw50', 'lw51', 'lw52', 'lw53', 'lw54', 'lw55', 'lw56', 'lw57', 'lw58', 'lw59', 'lw60', 'lw61', 'lw62', 'lw63', 'lw64', 'lw65', 'lw66', 'lw67', 'lw68', 'lw69', 'lw70', 'lw71', 'lw72', 'lw73', 'lw74', 'lw75', 'lw76', 'lw77', 'lw78', 'lw79', 'lw80']
 structure['i_n0_len'] = 1  #number of different feedsupplies in each fv period

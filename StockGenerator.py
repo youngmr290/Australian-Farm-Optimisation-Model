@@ -173,6 +173,7 @@ def generator(params,report):
     index_wzida0e0b0xyg0 = fun.f_reshape_expand(index_w0, uinp.structure['i_w_pos'])
     index_w1 = np.arange(len_w1)
     index_wzida0e0b0xyg1 = fun.f_reshape_expand(index_w1, uinp.structure['i_w_pos'])
+    index_w2 = np.arange(uinp.structure['i_progeny_w2_len'])
     index_w3 = np.arange(len_w3)
     index_wzida0e0b0xyg3 = fun.f_reshape_expand(index_w3, uinp.structure['i_w_pos'])
     index_tva1e1b1nw8zida0e0b0xyg1w9 = fun.f_reshape_expand(np.arange(t1_len), uinp.structure['i_p_pos']-2)
@@ -267,7 +268,7 @@ def generator(params,report):
     ###yatf
     o_numbers_start_yatf = np.zeros(pg2, dtype =dtype)
     # o_numbers_end_yatf = np.zeros(pg2, dtype =dtype)
-    o_ffcfw_yatf = np.zeros(pg2, dtype =dtype)
+    o_ffcfw_start_yatf = np.zeros(pg2, dtype =dtype)
     # o_ffcfw_condensed_yatf = np.zeros(pg2, dtype =dtype)
     o_pi_yatf = np.zeros(pg2, dtype =dtype)
     o_mei_solid_yatf = np.zeros(pg2, dtype =dtype)
@@ -2732,7 +2733,7 @@ def generator(params,report):
         if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
             # o_numbers_end_yatf[p] = pp_numbers_end_yatf
             o_numbers_start_yatf[p] = numbers_start_yatf #used for npw calculation - use numbers start because weaning is start of period
-            o_ffcfw_yatf[p] = ffcfw_yatf
+            o_ffcfw_start_yatf[p] = ffcfw_start_yatf #use ffcfw_start because weaning start of period
             o_pi_yatf[p] = pi_yatf
             o_mei_solid_yatf[p] = mei_solid_yatf
             # o_ch4_total_yatf[p] = ch4_total_yatf
@@ -3067,7 +3068,7 @@ def generator(params,report):
     mobsize_pa1e1b1nwzida0e0b0xyg0 = fun.f_reshape_expand(pinp.sheep['i_mobsize_sire_p6'][a_p6_p], uinp.structure['i_p_pos'])
     mobsize_pa1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(pinp.sheep['i_mobsize_dams_p6'][a_p6_p], uinp.structure['i_p_pos'])
     mobsize_pa1e1b1nwzida0e0b0xyg3 = fun.f_reshape_expand(pinp.sheep['i_mobsize_offs_p6'][a_p6_p[mask_p_offs_p]], uinp.structure['i_p_pos'])
-    animal_mated_b1g1 = index_b1nwzida0e0b0xyg!=0 #all dams mated except NM which is slice 0
+    animal_mated_b1g1 = fun.f_reshape_expand(uinp.structure['i_mated_b1'], uinp.parameters['i_b1_pos'])
     operations_triggerlevels_h5h7h2pg = fun.f_convert_to_inf(fun.f_reshape_expand(pinp.sheep['i_husb_operations_triggerlevels_h5h7h2'], uinp.structure['i_p_pos']-1,len_ax0=pinp.sheep['i_h2_len'],len_ax1=pinp.sheep['i_h5_len'],len_ax2=pinp.sheep['i_husb_operations_triggerlevels_h5h7h2'].shape[-1],
                                                                                   swap=True, swap2=True)).astype(dtype)  # convert -- and ++ to inf
     husb_operations_muster_propn_h2pg = fun.f_reshape_expand(uinp.sheep['i_husb_operations_muster_propn_h2'], uinp.structure['i_p_pos']-1).astype(dtype)
@@ -3129,10 +3130,13 @@ def generator(params,report):
     a_dvp_p_va1e1b1nwzida0e0b0xyg1 = sfun.f_next_prev_association(date_start_p, dvp_date_start_va1e1b1nwzida0e0b0xyg1, 1, 'right').astype(dtypeint) #returns the period index for the start of each dvp
     dvp_start_date_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(dvp_date_start_va1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1,0)
     dvp_type_va1e1b1nwzida0e0b0xyg1=fvp_type_fa1e1b1nwzida0e0b0xyg1 #rename to keep consistent
+    dvp_type_next_va1e1b1nwzida0e0b0xyg1 = np.roll(dvp_type_va1e1b1nwzida0e0b0xyg1, -1, axis=uinp.structure['i_p_pos'])
+    dvp_type_va1e1b1nwzida0e0b0xyg1[0] = 0 #make dvp_type[0] == 0 to correctly mask the animals in the post weaning period becaue there is only 3 different weights (which is not technically like type 2) but dont want to change fvp type because we still want to trigger the change at the first prejoining.
     period_is_startdvp_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is', dvp_start_date_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
     nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg1 = np.roll(period_is_startdvp_pa1e1b1nwzida0e0b0xyg1,-1,axis=0)
     nextperiod_is_prejoin_pa1e1b1nwzida0e0b0xyg1 = np.roll(period_is_prejoin_pa1e1b1nwzida0e0b0xyg1,-1,axis=0)
-    dvp_type_next_va1e1b1nwzida0e0b0xyg1 = np.roll(dvp_type_va1e1b1nwzida0e0b0xyg1, -1, axis=uinp.structure['i_p_pos'])
+    #### the transfer to a dvp_type other than type==0 only occurs when transferring to and from the same genotype
+    #### this occurs when (index_g1 == a_g1_tg1) and the transfer exists
     mask_dvp_type_next_tg1 = transfer_exists_tpa1e1b1nwzida0e0b0xyg1 * (index_g1 == a_g1_tpa1e1b1nwzida0e0b0xyg1) #dvp type next is a little more complex for animals transfering. However the destination for transfer is always dvp type next ==0 (either it is going from dvp 2 to 0 or from 0 to 0.
     dvp_type_next_tva1e1b1nwzida0e0b0xyg1 = dvp_type_next_va1e1b1nwzida0e0b0xyg1 * mask_dvp_type_next_tg1
 
@@ -3146,7 +3150,7 @@ def generator(params,report):
     ##offs
     ###dvp pointer - for offs there is a new dvp each time fvp type goes back to 0 (eg once per yr)- ^this is inflexible, maybe there is a better way to do this
     a_v_pa1e1b1nwzida0e0b0xyg3 = (a_fvp_pa1e1b1nwzida0e0b0xyg3 / 3).astype(dtypeint)  #divide by 3 then round down to the int - because there are 3fvp's per yr but only 1 dvp per yr
-    index_vpa1e1b1nwzida0e0b0xyg3 = fun.f_reshape_expand(np.arange(np.max(a_v_pa1e1b1nwzida0e0b0xyg3)+1), uinp.structure['i_p_pos']-1)
+    # index_vpa1e1b1nwzida0e0b0xyg3 = fun.f_reshape_expand(np.arange(np.max(a_v_pa1e1b1nwzida0e0b0xyg3)+1), uinp.structure['i_p_pos']-1)
     ###dvp dates
     date_weaned_a1e1b1nwzida0e0b0xyg3 = np.broadcast_to(date_weaned_ida0e0b0xyg3,fvp_0_start_oa1e1b1nwzida0e0b0xyg3.shape[1:]) #need wean date rather than first day of yr because selling inputs are days from weaning.
     dvp_start_date_va1e1b1nwzida0e0b0xyg3 = np.concatenate([date_weaned_a1e1b1nwzida0e0b0xyg3[na,...],fvp_0_start_oa1e1b1nwzida0e0b0xyg3], axis=0)
@@ -3243,10 +3247,10 @@ def generator(params,report):
     on_hand_tpa1e1b1nwzida0e0b0xyg1 = np.logical_not(off_hand_tpa1e1b1nwzida0e0b0xyg1) #t1 sale after main shearing
 
     ##Yatf
-    ###t0 = sold at weaning as sucker, t1 = retained
+    ###t0 = sold at weaning as sucker, t1 & t2 = retained
     period_is_sale_t0_pa1e1b1nwzida0e0b0xyg2 = period_is_wean_pa1e1b1nwzida0e0b0xyg2
-    period_is_sale_t1_pa1e1b1nwzida0e0b0xyg2 = np.full_like(period_is_sale_t0_pa1e1b1nwzida0e0b0xyg2, False)
-    period_is_sale_tpa1e1b1nwzida0e0b0xyg2 = np.stack([period_is_sale_t0_pa1e1b1nwzida0e0b0xyg2 ,period_is_sale_t1_pa1e1b1nwzida0e0b0xyg2],0)
+    # period_is_sale_t1_2_pa1e1b1nwzida0e0b0xyg2 = np.full_like(period_is_sale_t0_pa1e1b1nwzida0e0b0xyg2, False)
+    # period_is_sale_tpa1e1b1nwzida0e0b0xyg2 = np.stack([period_is_sale_t0_pa1e1b1nwzida0e0b0xyg2 ,period_is_sale_t1_2_pa1e1b1nwzida0e0b0xyg2, period_is_sale_t1_2_pa1e1b1nwzida0e0b0xyg2],0)
     # on_hand_tpa1e1b1nwzida0e0b0xyg2 = np.logical_not(period_is_sale_tpa1e1b1nwzida0e0b0xyg2)
 
 
@@ -3324,7 +3328,7 @@ def generator(params,report):
     ###create mask which is the periods where shearing occurs
     sale_mask_p0 = np.any(period_is_sale_pa1e1b1nwzida0e0b0xyg0, axis=tuple(range(uinp.structure['i_p_pos']+1,0)))
     sale_mask_p1 = fun.f_reduce_skipfew(np.any, np.logical_or(period_is_sale_tpa1e1b1nwzida0e0b0xyg1, period_is_assetvalue_pa1e1b1nwzida0e0b0xyg), preserveAxis=1)  #preforms np.any on all axis except 1. only use the sale slices from the dam t axis
-    sale_mask_p2 = fun.f_reduce_skipfew(np.any, np.logical_or(period_is_sale_tpa1e1b1nwzida0e0b0xyg2, period_is_assetvalue_pa1e1b1nwzida0e0b0xyg), preserveAxis=1)  #preforms np.any on all axis except 1. only use the sale slices from the dam t axis
+    sale_mask_p2 = fun.f_reduce_skipfew(np.any, np.logical_or(period_is_sale_t0_pa1e1b1nwzida0e0b0xyg2, period_is_assetvalue_pa1e1b1nwzida0e0b0xyg), preserveAxis=0)  #preforms np.any on all axis except 1. only use the sale slices from the dam t axis
     sale_mask_p3 = fun.f_reduce_skipfew(np.any, np.logical_or(period_is_sale_tpa1e1b1nwzida0e0b0xyg3, period_is_assetvalue_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p]), preserveAxis=1)  #preforms np.any on all axis except 1
     ###manipulate axis with assocaiations
     score_range_s7s6p9a1e1b1nwzida0e0b0xyg = score_range_s8s6pa1e1b1nwzida0e0b0xyg[uinp.sheep['ia_s8_s7']] #s8 to s7
@@ -3351,7 +3355,7 @@ def generator(params,report):
     age_end_p9a1e1b1nwzida0e0b0xyg3 = age_end_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p][sale_mask_p3]#mask p axis with off p mask then mask p axis with sale mask
     ffcfw_p9a1e1b1nwzida0e0b0xyg0 = o_ffcfw_sire[sale_mask_p0]
     ffcfw_p9a1e1b1nwzida0e0b0xyg1 = o_ffcfw_dams[sale_mask_p1]
-    ffcfw_p9a1e1b1nwzida0e0b0xyg2 = o_ffcfw_yatf[sale_mask_p2]
+    ffcfw_p9a1e1b1nwzida0e0b0xyg2 = o_ffcfw_start_yatf[sale_mask_p2]
     ffcfw_p9a1e1b1nwzida0e0b0xyg3 = o_ffcfw_offs[sale_mask_p3]
 
 
@@ -3621,6 +3625,7 @@ def generator(params,report):
     ##intermittent
     ###sire
     numbers_start_va1e1b1nwzida0e0b0xyg0 = sfun.f_p2v_std(o_numbers_start_sire, period_is_tvp=period_is_startdvp_purchase_pa1e1b1nwzida0e0b0xyg0) #sires only have one dvp which essentially starts when the activity is purchased
+
     ###dams
     #### Return the ‘source’ weight of the dams at the end of each period in which they can be transferred
     #### The period is based on period_is_transfer which points at the nextperiod_is_prejoin for the destination g1 slice
@@ -3634,7 +3639,7 @@ def generator(params,report):
     numbers_end_va1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_numbers_end_dams, a_v_pa1e1b1nwzida0e0b0xyg1,period_is_tp=nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
     ###A further adjustment for dam numbers is to calculate the values that would be the start values for the next period if weights & numbers were not condensed at the beginning of the DVP type 0
     temporary = np.sum(numbers_end_va1e1b1nwzida0e0b0xyg1, axis=prejoin_tup, keepdims=True) * numbers_initial_propn_repro_a1e1b1nwzida0e0b0xyg1.astype(dtype)
-    numbers_start_next_va1e1b1nwzida0e0b0xyg1 = fun.f_update(numbers_end_va1e1b1nwzida0e0b0xyg1, temporary, np.roll(dvp_type_va1e1b1nwzida0e0b0xyg1, -1, axis=0) == 0) #basically numbers start without clustering based on lw
+    numbers_start_next_va1e1b1nwzida0e0b0xyg1 = fun.f_update(numbers_end_va1e1b1nwzida0e0b0xyg1, temporary, dvp_type_next_va1e1b1nwzida0e0b0xyg1 == 0) #basically numbers start without clustering based on lw
     numbers_start_va1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_numbers_start_dams, a_v_pa1e1b1nwzida0e0b0xyg1,period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
     ###npw - active d axis
     npw_tva1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_numbers_start_yatf, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_start_dams,
@@ -3648,8 +3653,14 @@ def generator(params,report):
     numbers_start_va1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(o_numbers_start_offs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3)
 
     ###yatf
-    #### Return the weight of the yatf in the period in which they are weaned
-    ffcfw_yatf_va1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_ffcfw_yatf, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_wean_pa1e1b1nwzida0e0b0xyg2)
+    #### Return the weight of the yatf in the period in which they are weaned - with active dam v axis
+    ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_ffcfw_start_yatf, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_wean_pa1e1b1nwzida0e0b0xyg2)
+    #### Return the weight of the yatf in the period in which they are weaned - with axtive d axis
+    ffcfw_start_d_yatf_a1e1b1nwzida0e0b0xyg2 = sfun.f_p2v_std(o_ffcfw_start_yatf, period_is_tvp=period_is_wean_pa1e1b1nwzida0e0b0xyg2,
+                                                           a_any1_p=a_prevbirth_d_pa1e1b1nwzida0e0b0xyg2, index_any1tvp=index_da0e0b0xyg)
+    ####yatf can be sold as sucker, not shorn therefor only include sale value. husbandry is accounted for with dams so dont need that here.
+    salevalue_d_a1e1b1nwzida0e0b0xyg2 = sfun.f_p2v_std(salevalue_p9a1e1b1nwzida0e0b0xyg2, period_is_tvp=period_is_sale_t0_pa1e1b1nwzida0e0b0xyg2[sale_mask_p2],
+                                                   a_any1_p=a_prevbirth_d_pa1e1b1nwzida0e0b0xyg2[sale_mask_p2], index_any1tvp=index_da0e0b0xyg)
 
     ##################
     #lw distribution #
@@ -3911,7 +3922,27 @@ def generator(params,report):
                                                       ] * mask_numbers_reqw8w9_w8zida0e0b0xyg3w9 >0)
 
 
+    #################
+    #prodgeny weaned#
+    #################
+    ##reshape array so to stack/combine some axis - this new axis is called k
+    ffcfw_range_a1zixg2k = np.moveaxis(ffcfw_start_d_yatf_a1e1b1nwzida0e0b0xyg2, [pinp.sheep['i_a1_pos'], pinp.sheep['i_z_pos'], pinp.sheep['i_i_pos'], uinp.parameters['i_x_pos'], -1]
+                                       , [0,1,2,3,4]).reshape(len_a1,len_z,len_i,len_x,len_g2, -1)
+    sale_value_range_a1zixg2k = np.moveaxis(salevalue_d_a1e1b1nwzida0e0b0xyg2, [pinp.sheep['i_a1_pos'], pinp.sheep['i_z_pos'], pinp.sheep['i_i_pos'], uinp.parameters['i_x_pos'], -1]
+                                       , [0,1,2,3,4]).reshape(len_a1,len_z,len_i,len_x,len_g2, -1)
 
+
+    # The index that sorts the weight array
+    ind_sorted = np.argsort(ffcfw_range_a1zixg2k, axis = -1)
+    # Select the values for the 10 equally spaced values spanning lowest to highest inclusive.
+    ind_selected = np.linspace(0, ffcfw_range_a1zixg2k.shape[-1]-1, uinp.structure['i_progeny_w2_len'], dtype = int)
+    # The indices for the required values are the selected values from the sorted indices
+    ind = ind_sorted[..., ind_selected]
+    # Extract the condensed weights and the sale_value of the condensed vars
+    ffcfw_condensed_a1zixg2w9 = np.take_along_axis(ffcfw_range_a1zixg2k, ind, axis = -1)
+    # Later this variable is used with the 10 weights in both the i_w_pos and -1, I have called this
+    # ffcfw_condensed_a1wzixg2 = ffcfw_condensed_a1zixg2w9 (with w9 moved to w pos)
+    sale_value_a1zixg2w9 = np.take_along_axis(sale_value_range_a1zixg2k, ind, axis = -1)
 
 
     #########
