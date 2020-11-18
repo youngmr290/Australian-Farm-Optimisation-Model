@@ -1093,7 +1093,8 @@ def generator(params,report):
     days_period_pa1e1b1nwzida0e0b0xyg0 = age_end_pa1e1b1nwzida0e0b0xyg0 +1 - age_start_pa1e1b1nwzida0e0b0xyg0
     days_period_pa1e1b1nwzida0e0b0xyg1 = age_end_pa1e1b1nwzida0e0b0xyg1 +1 - age_start_pa1e1b1nwzida0e0b0xyg1
     days_period_pa1e1b1nwzida0e0b0xyg2 = age_end_pa1e1b1nwzida0e0b0xyg2 +1 - age_start_pa1e1b1nwzida0e0b0xyg2
-    days_period_pa1e1b1nwzida0e0b0xyg3 = (age_end_pa1e1b1nwzida0e0b0xyg3 +1 - age_start_pa1e1b1nwzida0e0b0xyg3)*mask_p_offs_p #mul by mask to make days per period 0 for period offs is not simulated
+    days_period_pa1e1b1nwzida0e0b0xyg3 = (age_end_pa1e1b1nwzida0e0b0xyg3 +1 - age_start_pa1e1b1nwzida0e0b0xyg3
+                                          ) * (p_index_pa1e1b1nwzida0e0b0xyg<np.count_nonzero(mask_p_offs_p)-1) #make days per period zero if period is not required for offs. -1 because we want days per period to be 0 in the period before the mask turns to false because there are some spots where p+1 is used as the index
     days_period_cut_pa1e1b1nwzida0e0b0xyg3 = days_period_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p] #masked version of p axis
 
     ##Age of foetus (start of period, end of period and mid period - days)
@@ -1632,7 +1633,7 @@ def generator(params,report):
 
 
     ## Loop through each week of the simulation (p) for ewes
-    for p in range(190):
+    for p in range(90):
     #for p in range(n_sim_periods):
         print(p)
         if np.any(period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]):
@@ -1759,7 +1760,7 @@ def generator(params,report):
 
 
     ##offs
-        if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p, ...] > 0):
+        if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p, ...] > 0):
             ###GFW (start)
             gfw_start_offs = cfw_start_offs / cw_offs[3, ...]
             ###LW (start -with fleece & conceptus)
@@ -2749,7 +2750,10 @@ def generator(params,report):
             o_rc_start_yatf[p] = rc_start_yatf
 
     ###offs
-        o_numbers_start_offs[p] = numbers_start_offs  # needed outside if so that dvp0 (p0) has start numbers
+        try:
+            o_numbers_start_offs[p] = numbers_start_offs  # needed outside if so that dvp0 (p0) has start numbers. this will raise exception when p is greater that len offs p
+        except IndexError:
+            pass
         if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
             o_numbers_end_offs[p] = numbers_end_offs
             o_ffcfw_offs[p] = ffcfw_offs
@@ -3951,7 +3955,7 @@ def generator(params,report):
 
     ##transfer yatf to the intermediate progeny activity
     ###create distribution variable so it can be assigned by the slice
-    distribution_2prog_tva1e1b1nw8zida0e0b0xyg1w9 = np.zeros_like(ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1)
+    distribution_2prog_va1e1b1nw8zida0e0b0xyg1 = np.zeros_like(ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1)
     ###Locate position in the list of weights rounded up. Set a minimum value of 1 because next step is to subtract 1
     position_va1e1b1nwzida0e0b0xyg2 = np.zeros_like(ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1, dtype = np.int)
     for a1 in range(len_a1):
@@ -3959,25 +3963,32 @@ def generator(params,report):
             for i in range(len_i):
                 for x in range(len_x):
                     for g2 in range(len_g2):
-    #                    position_va1e1b1nwzida0e0b0xyg2[:,a1,:,:,:,:,z,i,:,:,:,:,x,g2] = np.maximum(1, np.searchsorted(ffcfw_prog_a1zixg2w9[0,a1,0,0,0,0,z,i,0,0,0,0,x,g2], ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1[:,a1,:,:,:,:,z,i,:,:,:,:,x,g2], 'right'))
-                        position_va1e1b1nwzida0e0b0xyg2[:,a1,:,:,:,:,z,i,:,:,:,:,x,g2] = np.maximum(1,
+                        position_va1e1b1nwzida0e0b0xyg2[:,a1,:,:,:,:,z,i,:,:,:,:,x,g2] = np.minimum(uinp.structure['i_progeny_w2_len']-1, np.maximum(1,
                                 np.searchsorted(ffcfw_prog_a1zixg2w9[a1,z,i,x,g2,:],
-                                                ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1[:,a1,:,:,:,:,z,i,:,:,:,:,x,g2],'right'))
+                                                ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1[:,a1,:,:,:,:,z,i,:,:,:,:,x,g2],'right'))) #max postion is the len of w2 (search sorted will go to the next index after the end of the array if v is larger than a)
     ###Reshape the ffcfw_prog array to put axes in place - keeping w9 on the right hand end
-    ffcfw_prog_a1e1b1wnzida0e0b0xg2w9 = ffcfw_prog_a1zixg2w9.reshape(len_a1, 1, 1, 1, 1, len_z, len_i, 1,
-                                                                     1, 1, 1, len_x, len_g2, uinp.structure['i_progeny_w2_len'])
+    ffcfw_prog_a1e1b1wnzida0e0b0xyg2w9 = ffcfw_prog_a1zixg2w9.reshape(len_a1, 1, 1, 1, 1, len_z, len_i, 1,
+                                                                     1, 1, 1, len_x, 1, len_g2, uinp.structure['i_progeny_w2_len'])
+    ###broadcast arrays
+    ffcfw_prog_va1e1b1wnzida0e0b0xyg2w9, position_va1e1b1nwzida0e0b0xyg2w9, distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 = np.broadcast_arrays(ffcfw_prog_a1e1b1wnzida0e0b0xyg2w9, position_va1e1b1nwzida0e0b0xyg2[...,na],distribution_2prog_va1e1b1nw8zida0e0b0xyg1[...,na])
     ###Calculate the gap between the weight & position relative to the spread
-    distribution_2prog_tva1e1b1nw8zida0e0b0xyg1w9[position_va1e1b1nwzida0e0b0xyg2-1] = np.clip((ffcfw_prog_a1zixg2w9 - ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1[..., na]) / (ffcfw_prog_a1zixg2w9[position_va1e1b1nwzida0e0b0xyg2] - ffcfw_prog_a1zixg2w9[position_va1e1b1nwzida0e0b0xyg2 - 1]),0,1)
-    ###Gap at [position] is remainder from 1
-    distribution_2prog_tva1e1b1nw8zida0e0b0xyg1w9[position_va1e1b1nwzida0e0b0xyg2] = 1 - distribution_2prog_tva1e1b1nw8zida0e0b0xyg1w9[position_va1e1b1nwzida0e0b0xyg2 - 1]
+    # distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9[position_va1e1b1nwzida0e0b0xyg2w9-1] = np.clip((ffcfw_prog_va1e1b1wnzida0e0b0xyg2w9 - ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1[..., na])
+    #                                                                                            / (ffcfw_prog_va1e1b1wnzida0e0b0xyg2w9[position_va1e1b1nwzida0e0b0xyg2w9] - ffcfw_prog_va1e1b1wnzida0e0b0xyg2w9[position_va1e1b1nwzida0e0b0xyg2w9 - 1]),0,1)
+    ffcfw_prog_upper_va1e1b1wnzida0e0b0xyg2w9 = np.take_along_axis(ffcfw_prog_va1e1b1wnzida0e0b0xyg2w9, position_va1e1b1nwzida0e0b0xyg2w9, -1) #select progeny weight (w9) that is just below yatf weight
+    ffcfw_prog_lower_va1e1b1wnzida0e0b0xyg2w9 = np.take_along_axis(ffcfw_prog_va1e1b1wnzida0e0b0xyg2w9, position_va1e1b1nwzida0e0b0xyg2w9-1, -1)#select progeny weight (w9) that is just above yatf weight
+    distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 = np.clip((ffcfw_prog_va1e1b1wnzida0e0b0xyg2w9 - ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1[..., na])
+                                                            / (ffcfw_prog_upper_va1e1b1wnzida0e0b0xyg2w9 - ffcfw_prog_lower_va1e1b1wnzida0e0b0xyg2w9),0,1)
+
+    ###Gap at [position] is remainder from 1 ^this will cause error
+    distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9[position_va1e1b1nwzida0e0b0xyg2] = 1 - distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9[position_va1e1b1nwzida0e0b0xyg2 - 1]
     ###Set the distribution proportion to 0 if the initial weight is < lowest weight
-    distribution_2prog_tva1e1b1nw8zida0e0b0xyg1w9 = fun.f_update(distribution_2prog_tva1e1b1nw8zida0e0b0xyg1w9, 0, ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1[..., na] <= np.min(ffcfw_condensed__a1zixg2w9, axis = w9, keepdims=True))
+    distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 = fun.f_update(distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9, 0, ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1[..., na] <= np.min(ffcfw_condensed__a1zixg2w9, axis = w9, keepdims=True))
     ###The association between birth time of the progeny and the birth time and lambing opportunity/dam age
     prior_times_excluded_ida0e0b0xyg = fun.f_reshape_expand(np.cumsum(~pinp.sheep['i_mask_i'])[pinp.sheep['i_mask_i']], pinp.sheep['i_i_pos'])
     a_i_ida0e0b0xyg2 = (a_i_ida0e0b0xyg2 - prior_times_excluded_ida0e0b0xyg)
 
     ###number of progeny weaned
-    npw_k2k5tva1e1b1nwzida0e0b0xyg1w9 = fun.f_divide(np.sum(npw_tva1e1b1nwzida0e0b0xyg1[...,na] * distribution_2prog_tva1e1b1nw8zida0e0b0xyg1w9 * mask_w8vars_va1e1b1nw8zida0e0b0xyg1[...,na]
+    npw_k2k5tva1e1b1nwzida0e0b0xyg1w9 = fun.f_divide(np.sum(npw_tva1e1b1nwzida0e0b0xyg1[...,na] * distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 * mask_w8vars_va1e1b1nw8zida0e0b0xyg1[...,na]
                                                           * (a_k2cluster_va1e1b1nwzida0e0b0xyg1==index_k28k29tva1e1b1nwzida0e0b0xyg1)[...,na]
                                                           * (a_i_ida0e0b0xyg2==index_da0e0b0xyg)[...,na],
                                                             axis=(uinp.parameters['i_b1_pos'] - 1, pinp.sheep['i_e1_pos'] - 1), keepdims=True)
