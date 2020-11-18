@@ -309,6 +309,11 @@ def dmd_to_md(dmd):
         if dmd <= 1:          dmd *= 100 # if dmd is a scalar and is a decimal then convert to percentage   ^ alternative would be to convert scalar values to a list (if dmd isinstance not list: dmd=[dmd]) or perhaps type is float]
     return 0.17 * dmd - 2                # formula 1.13C from SCA 1990 pg 9
 
+def md_to_dmd(md):
+    '''basically a rearanged version of the function above
+    returns dmd as a decimal'''
+    return (md+2)/17
+
 
 def effective_mei(dmi, md, threshold, ri=1, eff_above=0.5):
     """Calculate MEI and scale for reduced efficiency if above animal requirements.

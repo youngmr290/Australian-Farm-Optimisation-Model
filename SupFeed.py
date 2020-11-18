@@ -104,16 +104,16 @@ def sup_md_vol(params):
     ##calc vol
     sup_md_vol = uinp.supfeed['sup_md_vol']    
     ###convert md to dmd
-    dmd=(sup_md_vol.loc['energy']/1000+2)/17 #rearanged version of dmd to md formula in feed budget
+    dmd=(sup_md_vol.loc['energy']/1000).apply(fun.md_to_dmd)
     ##calc relative quality - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
     if pinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
         rq = sfun.f_rq_cs(dmd,0)
     ###use max(1,...) to make it the same as midas - this increases lupin vol slightly from what the equation returns
     vol_kg=np.maximum(1,1/rq)
     ###convert vol per kg to per tonne fed - have to adjust for the actual dry matter content and wastage
-    vol_tonne=vol_kg*1000*sup_md_vol.loc['prop consumed']/100*sup_md_vol.loc['dry matter content']/100
+    vol_tonne=vol_kg*1000*sup_md_vol.loc['prop consumed']*sup_md_vol.loc['dry matter content']
     ##calc ME
-    md_tonne=sup_md_vol.loc['energy']*sup_md_vol.loc['prop consumed']/100*sup_md_vol.loc['dry matter content']/100
+    md_tonne=sup_md_vol.loc['energy']*sup_md_vol.loc['prop consumed']*sup_md_vol.loc['dry matter content']
     ##load into params dict for pyomo
     params['vol_tonne'] = vol_tonne.to_dict()
     params['md_tonne'] = md_tonne.to_dict()
