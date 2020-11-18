@@ -146,6 +146,7 @@ def generator(params,report):
     len_g2 = np.count_nonzero(mask_dams_inc_g1) #same as dams
     len_g3 = np.count_nonzero(mask_offs_inc_g3)
     t1_len = pinp.sheep['i_n_dam_sales'] + len_g0
+    t2_len = pinp.sheep['i_t2_len']
     t3_len = pinp.sheep['i_t3_len']
 
     ###################################
@@ -177,7 +178,7 @@ def generator(params,report):
     index_w3 = np.arange(len_w3)
     index_wzida0e0b0xyg3 = fun.f_reshape_expand(index_w3, uinp.structure['i_w_pos'])
     index_tva1e1b1nw8zida0e0b0xyg1w9 = fun.f_reshape_expand(np.arange(t1_len), uinp.structure['i_p_pos']-2)
-    index_t2 = np.arange(len_t2)
+    index_t2 = np.arange(t2_len)
     index_tva1e1b1nw8zida0e0b0xyg3w9 = fun.f_reshape_expand(np.arange(t3_len), uinp.structure['i_p_pos']-2)
     index_xyg = fun.f_reshape_expand(np.arange(len_x), uinp.parameters['i_x_pos'])
 
@@ -1590,7 +1591,7 @@ def generator(params,report):
     nw_start_yatf = 0
     ffcfw_start_yatf = w_b_std_y_b1nwzida0e0b0xyg1
     ffcfw_max_start_yatf = ffcfw_start_yatf
-    mortality_yatf=0 #required for dam numbers before prodgeny born
+    mortality_yatf=0 #required for dam numbers before progeny born
     cfw_start_yatf = 0
     temp_lc_yatf = np.array([0]) #this is calculated in the chill function but it is required for the intake function so it is set to 0 for the first period.
     numbers_start_yatf = 0
@@ -3819,7 +3820,7 @@ def generator(params,report):
     lab_manager_k3k5p5tva1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs', labour_l2p5tva1e1b1nwzida0e0b0xyg3[0], a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...],
                                                     a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3[:,na,...], numbers_start_va1e1b1nwzida0e0b0xyg3)
 
-    ##labour - permenant
+    ##labour - permanent
     lab_perm_p5tva1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param('sire', labour_l2p5tva1e1b1nwzida0e0b0xyg0[1], numbers_start_va1e1b1nwzida0e0b0xyg0)
     lab_perm_k2p5tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams', labour_l2p5tva1e1b1nwzida0e0b0xyg1[1], a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],
                                                                  numbers_start_va1e1b1nwzida0e0b0xyg1, mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1)
@@ -3924,7 +3925,7 @@ def generator(params,report):
 
 
     #################
-    #prodgeny weaned#
+    #progeny weaned#
     #################
     '''yatf are first transferred to progeny activity then they are either sold as sucker, transferred to dam or transferred to offs'''
     ##condense yatf from 81 finishing lw to 10
@@ -3947,7 +3948,7 @@ def generator(params,report):
     index_ta1zixg2w = fun.f_reshape_expand(index_t2, -len(sale_value_a1zixg2w9.shape))
     sale_value_a1zixg2w9 = sale_value_a1zixg2w9 * (index_ta1zixg2w==0) #add t axis - slice 0 is sold as sucker, slice 1 and 2 are retained
 
-    ##transfer yatf to the intermidiate progeny activity
+    ##transfer yatf to the intermediate progeny activity
     ###Locate position in the list of weights rounded up. Set a minimum value of 1 because next step is to subtract 1
     position_va1e1b1nwzida0e0b0xyg1 = np.zeros_like(ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1)
     for a1 in len_a1:
@@ -3969,7 +3970,7 @@ def generator(params,report):
     prior_times_excluded_ida0e0b0xyg = fun.f_reshape_expand(np.cumsum(~i_mask_i)[i_mask_i], pinp.sheep['i_i_pos'])
     a_i_ida0e0b0xyg2 = (a_i_ida0e0b0xyg2 - prior_times_excluded_ida0e0b0xyg)
 
-    ###number of prodgeny weaned
+    ###number of progeny weaned
     npw_k2k5tva1e1b1nwzida0e0b0xyg1w9 = fun.f_divide(np.sum(npw_tva1e1b1nwzida0e0b0xyg1[...,na] * distribution_tva1e1b1nw8zida0e0b0xyg2w9 * mask_w8vars_va1e1b1nw8zida0e0b0xyg1[...,na]
                                                           * (a_k2cluster_va1e1b1nwzida0e0b0xyg1==index_k28k29tva1e1b1nwzida0e0b0xyg1)[...,na]
                                                           * (a_i_ida0e0b0xyg2==index_da0e0b0xyg)[...,na],
