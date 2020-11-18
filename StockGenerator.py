@@ -3965,7 +3965,8 @@ def generator(params,report):
                     for g2 in range(len_g2):
                         position_va1e1b1nwzida0e0b0xyg2[:,a1,:,:,:,:,z,i,:,:,:,:,x,g2] = np.minimum(uinp.structure['i_progeny_w2_len']-1, np.maximum(1,
                                 np.searchsorted(ffcfw_prog_a1zixg2w9[a1,z,i,x,g2,:],
-                                                ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1[:,a1,:,:,:,:,z,i,:,:,:,:,x,g2],'right'))) #max postion is the len of w2 (search sorted will go to the next index after the end of the array if v is larger than a)
+                                                ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1[:,a1,:,:,:,:,z,i,:,:,:,:,x,g2],'right'))) #min len 1 so that in the next step pos -1 doesnt throw error
+                                                                                                                                    #max postion is the len of w2 (search sorted will go to the next index after the end of the array if v is larger than a)
     ###Reshape the ffcfw_prog array to put axes in place - keeping w9 on the right hand end
     ffcfw_prog_a1e1b1wnzida0e0b0xyg2w9 = ffcfw_prog_a1zixg2w9.reshape(len_a1, 1, 1, 1, 1, len_z, len_i, 1,
                                                                      1, 1, 1, len_x, 1, len_g2, uinp.structure['i_progeny_w2_len'])
