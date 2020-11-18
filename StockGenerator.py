@@ -1034,7 +1034,7 @@ def generator(params,report):
     ###distribution of numbers on the e0 axis
     propn_e_ida0e0b0xyg = fun.f_reshape_expand(pinp.sheep['i_propn_e_i'], pinp.sheep['i_i_pos'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos'])
     ###If 70% of ewes that are not pregnant get pregnant in a cycle then
-    ###first cycke 70% pregnant (30% not pregnant)
+    ###first cycle 70% pregnant (30% not pregnant)
     ###2nd cycle 70% of the 30% get pregnant = 21% (9 % not pregnant)
     ###3rd cycle 70% of the 9% = 6.3% (2.7% not pregnant)
     e0_propn_ida0e0b0xyg = (1 - propn_e_ida0e0b0xyg) ** index_e0b0xyg * propn_e_ida0e0b0xyg #propn off born in each cycle
@@ -1044,7 +1044,8 @@ def generator(params,report):
     numbers_initial_propn_repro_a1e1b1nwzida0e0b0xyg1 = initial_a1e1b1nwzida0e0b0xyg * initial_e1b1nwzida0e0b0xyg * initial_b1nwzida0e0b0xyg
     numbers_initial_a1e1b1nwzida0e0b0xyg1 = numbers_initial_propn_repro_a1e1b1nwzida0e0b0xyg1 * season_propn_zida0e0b0xyg * initial_yg1
     ###offs
-    ####Initial proportion of offspring if clustered
+    ####Initial proportion of offspring if clustered.
+    ####These proportions are used if the offspring are clustered
     numbers_initial_cluster_ida0e0b0xyg3 = btrt_propn_b0xyg3 * e0_propn_ida0e0b0xyg
     ####initial offs numbers
     numbers_initial_zida0e0b0xyg3 = season_propn_zida0e0b0xyg * initial_yg3 * numbers_initial_cluster_ida0e0b0xyg3
@@ -3954,7 +3955,10 @@ def generator(params,report):
             for i in len_i:
                 for x in len_x:
                     for g2 in len_g2:
-                        position_va1e1b1nwzida0e0b0xyg1[:,a1,:,:,:,:,z,i,:,:,:,:,x,g2] = np.maximum(1, np.searchsorted(ffcfw_prog_a1zixg2w9[0,a1,0,0,0,0,z,i,0,0,0,0,x,g2], ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1[:,a1,:,:,:,:,z,i,:,:,:,:,x,g2], 'right'))
+    #                    position_va1e1b1nwzida0e0b0xyg1[:,a1,:,:,:,:,z,i,:,:,:,:,x,g2] = np.maximum(1, np.searchsorted(ffcfw_prog_a1zixg2w9[0,a1,0,0,0,0,z,i,0,0,0,0,x,g2], ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1[:,a1,:,:,:,:,z,i,:,:,:,:,x,g2], 'right'))
+                        position_va1e1b1nwzida0e0b0xyg1[:,a1,:,:,:,:,z,i,:,:,:,:,x,g2] = np.maximum(1,
+                                np.searchsorted(ffcfw_prog_a1zixg2w9[a1,z,i,x,g2,:],
+                                                ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1[:,a1,:,:,:,:,z,i,:,:,:,:,x,g2],'right'))
     ###Calculate the gap between the weight & position relative to the spread
     distribution_tvw8g2w9[position-1]  = np.clip((ffcfw_prog_a1zixg2w9[position] - ffcfw_tvw8g2[..., na]) / (ffcfw_condensed__a1zixg2w9[position] - ffcfw_condensed__a1zixg2w9[position - 1]),0,1)
     ###Gap at [position] is remainder from 1
@@ -3984,10 +3988,10 @@ def generator(params,report):
     ##transfer progney to dam replacements
     ###liveweight distribution
     ffcfw_initial_wzida0e0b0xyg1 = lw_initial_wzida0e0b0xyg1 - cfw_initial_wzida0e0b0xyg1
-    distribution_2dams_a1e1b1nwzida0e0b0xyg1w9 = sfun.f_lw_distribution(ffcfw_initial_wzida0e0b0xyg1, ffcfw_prog_a1zixg2w9, uinp.structure['i_n1_len'], uinp.structure['i_n_fvp_period1'])
+    distribution_2dams_a1e1b1nwzida0e0b0xyg2w9 = sfun.f_lw_distribution(ffcfw_initial_wzida0e0b0xyg1, ffcfw_prog_a1zixg2w9, uinp.structure['i_n1_len'], uinp.structure['i_n_fvp_period1'])
     ###numbers provided
     numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg1w9 = np.sum(
-        distribution_2dams_a1e1b1nwzida0e0b0xyg1w9 * (index_tva1e1b1nwzida0e0b0xyg2 == 1) * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3) * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3),
+        distribution_2dams_a1e1b1nwzida0e0b0xyg2w9 * (index_tva1e1b1nwzida0e0b0xyg2 == 1) * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3) * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3),
         axes=(uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']))
     ###numbers required
     p_numbers_progreq_k28k3k5va1e1b1nw8zida0e0b0xyg1w9 = 1 * (np.sum((mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9[0, ..., na] * index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,..., na] == 0)
@@ -3998,8 +4002,8 @@ def generator(params,report):
     ##transfer progeny to offs
     ###numbers provide
     ffcfw_initial_wzida0e0b0xyg3 = lw_initial_wzida0e0b0xyg3 - cfw_initial_wzida0e0b0xyg3
-    distribution_2offs_a1e1b1nwzida0e0b0xyg3w9 = f_lw_distribution(ffcfw_initial_wzida0e0b0xyg3, ffcfw_prog_a1zixg2w9, uinp.structure['i_n3_len'], uinp.structure['i_n_fvp_period3'])
-    numbers_prog2offs_tva1e1b1nwzida0e0b0xyg3w9 = distribution_2offs_a1e1b1nwzida0e0b0xyg3w9 * (index_tva1e1b1nwzida0e0b0xyg2 == 2)
+    distribution_2offs_a1e1b1nwzida0e0b0xyg2w9 = f_lw_distribution(ffcfw_initial_wzida0e0b0xyg3, ffcfw_prog_a1zixg2w9, uinp.structure['i_n3_len'], uinp.structure['i_n_fvp_period3'])
+    numbers_prog2offs_tva1e1b1nwzida0e0b0xyg2w9 = distribution_2offs_a1e1b1nwzida0e0b0xyg3w9 * (index_tva1e1b1nwzida0e0b0xyg2 == 2)
     ###numbers req
     p_numbers_progreq_w8offsw9 = 1 * (mask_numbers_reqw8w9_w8zida0e0b0xyg3w9 > 0)
 
