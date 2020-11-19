@@ -1189,6 +1189,7 @@ def f_condensed(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp
     if np.any(period_is_startfvp0):
         ###test if array has diagonal and calc temp variables as if start of dvp - if there is not a diagonal use the alternative system for reallocting at the end of a DVP
         if i_n_len >= i_w_len:
+            ####this method was the way we first tried - no longer used (might be used later if we add nutrient options back in)
             temporary[...] = np.expand_dims(np.rollaxis(temporary.diagonal(axis1= uinp.structure['i_w_pos'], axis2= uinp.structure['i_n_pos']),-1,uinp.structure['i_w_pos']), uinp.structure['i_n_pos']) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
         else:
             ###add high pattern
@@ -1292,7 +1293,7 @@ def f_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfoe
     ##things just for yatf
     if group==2:
         temp = nyatf_b1 * gender_propn_x   # nyatf is accounting for peri-natal mortality. But doesn't include the differential mortality of female and male offspring at birth
-        fun.f_update(numbers, temp, period_is_birth)
+        numbers=fun.f_update(numbers, temp, period_is_birth)
         pp_numbers = numbers
     return numbers,pp_numbers
 

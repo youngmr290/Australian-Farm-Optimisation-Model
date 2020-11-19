@@ -580,7 +580,8 @@ def rot_cost(params):
 #########################
 #stubble produced per kg grain harvested, used in stubble.py as well
 def stubble_production(*params):
-    '''stubble produced by each rotation phase'''
+    '''stubble produced by each rotation phase
+        kgs of dry matter'''
     stubble = pd.DataFrame()
     for crop in pinp.stubble['harvest_index'].index:
         harv_index = pinp.stubble['harvest_index'].loc[crop,'hi']
