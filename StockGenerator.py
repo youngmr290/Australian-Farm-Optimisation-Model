@@ -569,7 +569,7 @@ def generator(params,report):
     ##expand feed periods over all the years of the sim so that an association between sim period can be made.
     feedperiods_p6 = np.array(pinp.feed_inputs['feed_periods']['date']).astype('datetime64[D]')[:-1] #convert from df to numpy remove last date because that is the end date of the last period (not required)
     feedperiods_p6 = feedperiods_p6 + np.timedelta64(365,'D') * ((date_start_p[0].astype(object).year -1) - feedperiods_p6[0].astype(object).year) #this is to make sure the fisrt sim period date is greater than the first feed period date.
-    feedperiods_p6 = np.ravel(feedperiods_p6  + (np.arange(np.ceil(uinp.structure['i_age_max'] +1)) * np.timedelta64(365,'D') )[...,na]) #expand then ravel to return 1d array of the feed period dates expanded the lenght of the sim.
+    feedperiods_p6 = np.ravel(feedperiods_p6  + (np.arange(np.ceil(uinp.structure['i_age_max'] +1)) * np.timedelta64(365,'D') )[...,na]) #expand then ravel to return 1d array of the feed period dates expanded the lenght of the sim. +1 because feed periods start and finish mid yr so add one to ensure they go to the end of the sim.
 
 
     ## break of season fvp ^the following two lines of code will have to change once season type is included into the feedperiod inputs (the input will have z axis so the reshaping will need to be done in two steps ie pass in pos2 arg) and apply z mask
@@ -3096,6 +3096,10 @@ def generator(params,report):
     ##sire
     date_purch_oa1e1b1nwzida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['i_date_purch_ig0'], 'sire', pinp.sheep['i_i_pos'], left_pos2=uinp.structure['i_p_pos']-1, right_pos2=pinp.sheep['i_i_pos'], condition=pinp.sheep['i_masksire_i'], axis=pinp.sheep['i_i_pos']).astype('datetime64[D]')
     date_sale_oa1e1b1nwzida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['i_date_sale_ig0'], 'sire', pinp.sheep['i_i_pos'], left_pos2=uinp.structure['i_p_pos']-1, right_pos2=pinp.sheep['i_i_pos'], condition=pinp.sheep['i_masksire_i'], axis=pinp.sheep['i_i_pos']).astype('datetime64[D]')
+    sire_periods_g0p8y = sire_periods_g0p8[..., na].astype('datetime64[D]') + (
+                         np.arange(np.ceil(uinp.structure['i_age_max'])) * np.timedelta64(365, 'D'))
+    period_is_startp8_pa1e1b1nwzida0e0b0xyg0p8y = sfun.f_period_is_('period_is', sire_periods_g0p8y, date_start_pa1e1b1nwzida0e0b0xyg[...,na,na], date_end_p = date_end_pa1e1b1nwzida0e0b0xyg[...,na,na])
+    period_is_startp8_pa1e1b1nwzida0e0b0xyg0p8 = np.any(period_is_startp8_pa1e1b1nwzida0e0b0xyg0p8y, axis=-1) #condense the y axis - it is now accounted for by p axis
     ##dams
     sale_delay_sa1e1b1nwzida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['i_sales_delay_sg1'], 'dams', uinp.structure['i_p_pos']) #periods after shearing that sale occurs
     ##offs
@@ -3637,6 +3641,8 @@ def generator(params,report):
     ##intermittent
     ###sire
     numbers_start_va1e1b1nwzida0e0b0xyg0 = sfun.f_p2v_std(o_numbers_start_sire, period_is_tvp=period_is_startdvp_purchase_pa1e1b1nwzida0e0b0xyg0) #sires only have one dvp which essentially starts when the activity is purchased
+    numbers_startp8_va1e1b1nwzida0e0b0xyg0p8 = sfun.f_p2v_std(o_numbers_start_sire[...,na], on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0[...,na],
+                                                          period_is_tvp=period_is_startp8_pa1e1b1nwzida0e0b0xyg0p8) #sires only have one dvp which essentially starts when the activity is purchased
 
     ###dams
     #### Return the ‘source’ weight of the dams at the end of each period in which they can be transferred
