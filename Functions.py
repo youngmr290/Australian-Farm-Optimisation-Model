@@ -214,6 +214,9 @@ def searchsort_multiple_dim(a,v,axis_a,axis_v):
 def f_reshape_expand(array,left_pos=0,len_ax0=0,len_ax1=0,len_ax2=0,swap=False,ax1=0,ax2=1,right_pos=0,left_pos2=0,right_pos2=0
                      , left_pos3=0,right_pos3=0, condition = None, axis = 0,len_ax3=0,swap2=False,ax1_2=1,ax2_2=2):
     '''
+    *note: if adding two sets of new axis add from right to left (then the pos variables align)
+    *note: mask applied last (after expanding and reshaping)
+
     Parameters
     ----------
     array : array
@@ -238,8 +241,6 @@ def f_reshape_expand(array,left_pos=0,len_ax0=0,len_ax1=0,len_ax2=0,swap=False,a
         mask used to slice given axis.
     axis: int, optional
         axis to apply mask to.
-    *note: if adding two sets of new axis add from right to left (then the pos variables allign)
-    *note: mask applied last (after expanding and reshaping)
 
     Returns
     -------
@@ -707,10 +708,10 @@ def f_bilinear_interpolate(im, x_im, y_im, x, y):
     y0 = np.floor(y).astype(int)
     y1 = y0 + 1
 
-    x0 = np.clip(x0, 0, im.shape[1]-1);
-    x1 = np.clip(x1, 0, im.shape[1]-1);
-    y0 = np.clip(y0, 0, im.shape[0]-1);
-    y1 = np.clip(y1, 0, im.shape[0]-1);
+    x0 = np.clip(x0, 0, im.shape[1]-1)
+    x1 = np.clip(x1, 0, im.shape[1]-1)
+    y0 = np.clip(y0, 0, im.shape[0]-1)
+    y1 = np.clip(y1, 0, im.shape[0]-1)
 
     Ia = im[ y0, x0 ]
     Ib = im[ y1, x0 ]
