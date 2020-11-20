@@ -582,7 +582,7 @@ def generator(params,report):
     # breakseason_y = pinp.feed_inputs['feed_periods'].loc[0,'date'].to_datetime64().astype('datetime64[D]') + (np.arange(np.ceil(uinp.structure['i_age_max'])) * np.timedelta64(365,'D'))
     startseason_y = date_start_p[0] + (np.arange(np.ceil(uinp.structure['i_age_max'])) * np.timedelta64(365,'D'))
     seasonstart_ya1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(startseason_y, left_pos=uinp.structure['i_p_pos'])
-    idx_ya1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, seasonstart_ya1e1b1nwzida0e0b0xyg)-1 #gets the sim period index for the period when season breaks (eg break of season fvp starts at the begining of the sim period when season breaks)
+    idx_ya1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, seasonstart_ya1e1b1nwzida0e0b0xyg, 'right')-1 #gets the sim period index for the period when season breaks (eg break of season fvp starts at the begining of the sim period when season breaks), side=right so that if the date is already the start of a period it remains in that peirod.
     seasonstart_ya1e1b1nwzida0e0b0xyg = date_start_p[idx_ya1e1b1nwzida0e0b0xyg]
 
 
@@ -593,16 +593,16 @@ def generator(params,report):
     fvp_begin_start_ba1e1b1nwzida0e0b0xyg1 = date_start_pa1e1b1nwzida0e0b0xyg[0:1]
     ##early pregnancy fvp start - The pre-joining accumulation of the dams from the previous reproduction cycle - this date must correspond to the start date of period
     prejoining_aprox_oa1e1b1nwzida0e0b0xyg1 = date_joined_oa1e1b1nwzida0e0b0xyg1 - uinp.structure['prejoin_offset'] #approx date of prejoining - adjusted to be the start of a sim period in the next step
-    idx = np.searchsorted(date_start_p, prejoining_aprox_oa1e1b1nwzida0e0b0xyg1)-1 #gets the sim period index for the period that prejoining occurs (eg prejojining fvp starts at the begining of the sim period when prejoining approx occurs)
+    idx = np.searchsorted(date_start_p, prejoining_aprox_oa1e1b1nwzida0e0b0xyg1, 'right')-1 #gets the sim period index for the period that prejoining occurs (eg prejojining fvp starts at the begining of the sim period when prejoining approx occurs), side=right so that if the date is already the start of a period it remains in that peirod.
     prejoining_oa1e1b1nwzida0e0b0xyg1 = date_start_p[idx]
     fvp_0_start_oa1e1b1nwzida0e0b0xyg1 = prejoining_oa1e1b1nwzida0e0b0xyg1
     ##late pregnancy fvp start - Scanning if carried out, day 90 from joining (ram in) if not scanned.
     late_preg_oa1e1b1nwzida0e0b0xyg1 = date_joined_oa1e1b1nwzida0e0b0xyg1 + join_cycles_ida0e0b0xyg1 * cf_dams[4, 0:1, :].astype('timedelta64[D]') + pinp.sheep['i_scan_day'][scan_oa1e1b1nwzida0e0b0xyg1].astype('timedelta64[D]')
-    idx_oa1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, late_preg_oa1e1b1nwzida0e0b0xyg1)-1 #gets the sim period index for the period when dams in late preg (eg late preg fvp starts at the begining of the sim period when late preg occurs)
+    idx_oa1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, late_preg_oa1e1b1nwzida0e0b0xyg1, 'right')-1 #gets the sim period index for the period when dams in late preg (eg late preg fvp starts at the begining of the sim period when late preg occurs), side=right so that if the date is already the start of a period it remains in that peirod.
     fvp_1_start_oa1e1b1nwzida0e0b0xyg1 = date_start_p[idx_oa1e1b1nwzida0e0b0xyg]
     ## lactation fvp start - average date of lambing (with e axis)
     lactation_date_oa1e1b1nwzida0e0b0xyg1 = date_born_oa1e1b1nwzida0e0b0xyg2
-    idx_oa1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, lactation_date_oa1e1b1nwzida0e0b0xyg1)-1 #gets the sim period index for the period when lactation starts (eg lactation fvp starts at the begining of the sim period when lactation occurs)
+    idx_oa1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, lactation_date_oa1e1b1nwzida0e0b0xyg1, 'right')-1 #gets the sim period index for the period when lactation starts (eg lactation fvp starts at the begining of the sim period when lactation occurs), side=right so that if the date is already the start of a period it remains in that peirod.
     fvp_2_start_oa1e1b1nwzida0e0b0xyg1 = date_start_p[idx_oa1e1b1nwzida0e0b0xyg]
 
     ##create shape which has max size of each fvp array. Exclude the first dimension because that can be different sizes because only the other dimensions need to be the same for stacking
@@ -647,15 +647,15 @@ def generator(params,report):
     fvp_b2_start_ba1e1b1nwzida0e0b0xyg3 = offs_date_start_p[idx_oa1e1b1nwzida0e0b0xyg]
     ##fvp0 - date shearing plus 1 day becasue shearing is the last day of period
     fvp_0_start_oa1e1b1nwzida0e0b0xyg3 = date_shear_sa1e1b1nwzida0e0b0xyg3 + np.maximum(1, fvp0_offset_ida0e0b0xyg3) #plus 1 at least 1 because shearing is the last day of the period and the fvp should start after shearing
-    idx_oa1e1b1nwzida0e0b0xyg = np.searchsorted(offs_date_start_p, fvp_0_start_oa1e1b1nwzida0e0b0xyg3)-1 #makes sure fvp starts on the same date as sim period.
+    idx_oa1e1b1nwzida0e0b0xyg = np.searchsorted(offs_date_start_p, fvp_0_start_oa1e1b1nwzida0e0b0xyg3, 'right')-1 #makes sure fvp starts on the same date as sim period. side=right so that if the date is already the start of a period it remains in that peirod.
     fvp_0_start_oa1e1b1nwzida0e0b0xyg3 = offs_date_start_p[idx_oa1e1b1nwzida0e0b0xyg]
     ##fvp1 - date shearing (this is the first day of sim period)
     fvp_1_start_oa1e1b1nwzida0e0b0xyg3 = date_shear_sa1e1b1nwzida0e0b0xyg3 + fvp1_offset_ida0e0b0xyg3
-    idx_oa1e1b1nwzida0e0b0xyg = np.searchsorted(offs_date_start_p, fvp_1_start_oa1e1b1nwzida0e0b0xyg3)-1 #makes sure fvp starts on the same date as sim period.
+    idx_oa1e1b1nwzida0e0b0xyg = np.searchsorted(offs_date_start_p, fvp_1_start_oa1e1b1nwzida0e0b0xyg3, 'right')-1 #makes sure fvp starts on the same date as sim period, side=right so that if the date is already the start of a period it remains in that peirod.
     fvp_1_start_oa1e1b1nwzida0e0b0xyg3 = offs_date_start_p[idx_oa1e1b1nwzida0e0b0xyg]
     ##fvp2 - date shearing (this is the first day of sim period)
     fvp_2_start_oa1e1b1nwzida0e0b0xyg3 = date_shear_sa1e1b1nwzida0e0b0xyg3 + fvp2_offset_ida0e0b0xyg3
-    idx_oa1e1b1nwzida0e0b0xyg = np.searchsorted(offs_date_start_p, fvp_2_start_oa1e1b1nwzida0e0b0xyg3)-1 #makes sure fvp starts on the same date as sim period.
+    idx_oa1e1b1nwzida0e0b0xyg = np.searchsorted(offs_date_start_p, fvp_2_start_oa1e1b1nwzida0e0b0xyg3, 'right')-1 #makes sure fvp starts on the same date as sim period, side=right so that if the date is already the start of a period it remains in that peirod.
     fvp_2_start_oa1e1b1nwzida0e0b0xyg3 = offs_date_start_p[idx_oa1e1b1nwzida0e0b0xyg]
 
     ##create shape which has max size of each fvp array. Exclude the first dimension because that can be different sizes because only the other dimensions need to be the same for stacking
@@ -4051,7 +4051,7 @@ def generator(params,report):
     distribution_2dams_a1e1b1nwzida0e0b0xyg2w9 = sfun.f_lw_distribution(ffcfw_initial_wzida0e0b0xyg1, ffcfw_prog_a1e1b1nwzida0e0b0xyg2, uinp.structure['i_n1_len'], uinp.structure['i_n_fvp_period1'])
     ###numbers provided - active d
     numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2w9 = np.sum(distribution_2dams_a1e1b1nwzida0e0b0xyg2w9
-                                                             * (index_tva1e1b1nwzida0e0b0xyg2w9 == 1) * (gender_xyg == 1) #gender to select the dams from prog
+                                                             * (index_tva1e1b1nwzida0e0b0xyg2w9 == 1) * (gender_xyg[mask_x] == 1)[...,na] #gender to select the dams from prog
                                                              * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na]
                                                              * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[...,na]
                                                              , axis=(uinp.parameters['i_b0_pos']-1, uinp.structure['i_e0_pos']-1))
@@ -4059,14 +4059,14 @@ def generator(params,report):
     numbers_progreq_k28k3k5tva1e1b1nw8zida0e0b0xyg1w9 = 1 * (np.sum(mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9[0, ...] * (index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,..., na] == 0)
                                                                      * btrt_propn_b0xyg1[...,na] * e0_propn_ida0e0b0xyg[...,na] * agedam_propn_da0e0b0xyg1[...,na]
                                                                      * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na]  * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[...,na],
-                                                                     axis=(pinp.sheep['i_e1_pos'], uinp.parameters['i_d_pos']-1, uinp.parameters['i_b0_pos']-1, uinp.structure['i_e0_pos']-1),keepdims=True) > 0)
+                                                                     axis=(pinp.sheep['i_e1_pos']-1, uinp.parameters['i_d_pos']-1, uinp.parameters['i_b0_pos']-1, uinp.structure['i_e0_pos']-1),keepdims=True) > 0)
 
     ##transfer progeny to offs
     ###numbers provide - has d axis
     ffcfw_initial_wzida0e0b0xyg3 = lw_initial_wzida0e0b0xyg3 - cfw_initial_wzida0e0b0xyg3
     distribution_2offs_a1e1b1nwzida0e0b0xyg2w9 = sfun.f_lw_distribution(ffcfw_initial_wzida0e0b0xyg3, ffcfw_prog_a1e1b1nwzida0e0b0xyg2, uinp.structure['i_n3_len'], uinp.structure['i_n_fvp_period3'])
     numbers_prog2offs_k3k5tva1e1b1nwzida0e0b0xyg2w9 = np.sum(distribution_2offs_a1e1b1nwzida0e0b0xyg2w9 * (index_tva1e1b1nwzida0e0b0xyg2w9 == 2)
-                                                            * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)
+                                                            * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na]
                                                             * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[...,na],
                                                              axis=(uinp.parameters['i_b0_pos']-1, uinp.structure['i_e0_pos']-1))
 
@@ -4082,9 +4082,10 @@ def generator(params,report):
     ##the array returned must be of type object, if string the dict keys become a numpy string and when indexed in pyomo it doesn't work.
     keys_a = pinp.sheep['i_a_idx'][pinp.sheep['i_mask_a']]
     keys_c = uinp.structure['cashflow_periods']
-    keys_d = uinp.structure['i_d_idx'][mask_d_offs]
+    keys_d = pinp.sheep['i_d_idx'][mask_d_offs]
     keys_g0 = sfun.f_g2g(pinp.sheep['i_g_idx_sire'],'sire')
     keys_g1 = sfun.f_g2g(pinp.sheep['i_g_idx_dams'],'dams')
+    keys_g2 = keys_g1
     keys_g3 = sfun.f_g2g(pinp.sheep['i_g_idx_offs'],'offs')
     keys_f = np.asarray(uinp.structure['sheep_pools'])
     keys_h1 = np.asarray(uinp.sheep['i_h1_idx'])
@@ -4093,6 +4094,7 @@ def generator(params,report):
     keys_lw0 = uinp.structure['i_w_idx_sire']
     keys_lw1 = uinp.structure['i_w_idx_dams']
     keys_lw3 = uinp.structure['i_w_idx_offs']
+    keys_lw_prog = ['lw%s'%i for i in range(uinp.structure['i_progeny_w2_len'])]
     keys_n0 = uinp.structure['i_n_idx_sire']
     keys_n1 = uinp.structure['i_n_idx_dams']
     keys_n3 = uinp.structure['i_n_idx_offs']
@@ -4117,6 +4119,7 @@ def generator(params,report):
     params['y_idx_sire'] = keys_y0
     params['dvp_idx_dams'] = keys_v1
     params['g_idx_dams'] = keys_g1
+    params['g_idx_yatf'] = keys_g2
     params['k2_idx_dams'] = keys_k2
     params['t_idx_dams'] = keys_t1
     params['y_idx_dams'] = keys_y1
@@ -4135,25 +4138,21 @@ def generator(params,report):
     arrays = [keys_g0, keys_p8]
     index_g0p8 = fun.cartesian_product_simple_transpose(arrays)
 
-    ###k2k5tvanwzidyg1w9i9 - npw
-    arrays = [keys_k2, keys_k5, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_d, keys_y1, keys_g1, keys_lw1, keys_i]
-    index_k2k5tva1nw8zidyg1w9i9 = fun.cartesian_product_simple_transpose(arrays)
+    ###k2k5tvanwzidxyg1w9i9 - npw
+    arrays = [keys_k2, keys_k5, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_d, keys_x, keys_y1, keys_g1, keys_lw_prog, keys_i]
+    index_k2k5tva1nw8zidxyg1w9i9 = fun.cartesian_product_simple_transpose(arrays)
 
-    ###k3k5tva1nw8zidyg1w9 - prog to dams prov
-    arrays = [keys_k2, keys_k5, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_d, keys_y1, keys_g2, keys_lw1]
-    index_k3k5tva1nw8zidyg1w9 = fun.cartesian_product_simple_transpose(arrays)
+    ###k3k5tva1nw8zidyg2w9 - prog to dams prov &  prog to offs prov
+    arrays = [keys_k2, keys_k5, keys_t1, keys_a, keys_n1, keys_lw_prog, keys_z, keys_i, keys_d, keys_y1, keys_g2, keys_lw1]
+    index_k3k5ta1nw8zidyg2w9 = fun.cartesian_product_simple_transpose(arrays)
 
     ###k3k5tva1nw8zidyg1w9 - prog to dams req
-    arrays = [keys_k2, keys_k5, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1, keys_lw1]
-    index_k2k3k5tva1nw8ziyg1w9 = fun.cartesian_product_simple_transpose(arrays)
+    arrays = [keys_k2, keys_k5, keys_t1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1, keys_lw_prog]
+    index_k2k3k5ta1nw8ziyg1w9 = fun.cartesian_product_simple_transpose(arrays)
 
-    ###k3k5tva1nw8zidyg1w9 - prog to offs prov ^fix
-    arrays = [keys_k3, keys_k5, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_d, keys_y1, keys_g2, keys_lw1]
-    index_k3k5tva1nw8zidyg1w9 = fun.cartesian_product_simple_transpose(arrays)
-
-    ###k3k5tva1nw8zidyg1w9 - prog to offs req ^fix
-    arrays = [keys_k2, keys_k5, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g3, keys_lw1]
-    index_k2k3k5tva1nw8ziyg1w9 = fun.cartesian_product_simple_transpose(arrays)
+    ###w8g3w9 - prog to offs req
+    arrays = [keys_lw1, keys_g3, keys_lw_prog]
+    index_w8g3w9 = fun.cartesian_product_simple_transpose(arrays)
 
     ###k2k2tvanwziyg1g9w9 - numbers dams
     arrays = [keys_k2, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1, keys_g1, keys_lw1]
@@ -4234,35 +4233,35 @@ def generator(params,report):
 
     ###nunmber prog weaned
     mask=npw_k2k5tva1e1b1nwzida0e0b0xyg1w9i9!=0
-    npw_k2k5tva1nw8zidyg1w9i9 = npw_k2k5tva1e1b1nwzida0e0b0xyg1w9i9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
+    npw_k2k5tva1nw8zidxyg1w9i9 = npw_k2k5tva1e1b1nwzida0e0b0xyg1w9i9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
     mask=mask.ravel()
-    index_cut_k2k5tva1nw8zidyg1w9i9=index_k2k5tva1nw8zidyg1w9i9[mask,:]
-    tup_k2k5tva1nw8zidyg1w9i9 = tuple(map(tuple, index_cut_k2k5tva1nw8zidyg1w9i9))
-    params['p_npw_dams'] =dict(zip(tup_k2k5tva1nw8zidyg1w9i9, npw_k2k5tva1nw8zidyg1w9i9))
+    index_cut_k2k5tva1nw8zidxyg1w9i9=index_k2k5tva1nw8zidxyg1w9i9[mask,:]
+    tup_k2k5tva1nw8zidxyg1w9i9 = tuple(map(tuple, index_cut_k2k5tva1nw8zidxyg1w9i9))
+    params['p_npw_dams'] =dict(zip(tup_k2k5tva1nw8zidxyg1w9i9, npw_k2k5tva1nw8zidxyg1w9i9))
 
     ###nunmber prog provided to dams
     mask=numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2w9!=0
-    progprov_dams_k3k5tva1nw8zidyg2w9 = numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2w9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
+    progprov_dams_k3k5ta1nw8zidyg2w9 = numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2w9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
     mask=mask.ravel()
-    index_cut_k3k5tva1nw8zidyg2w9=index_k3k5tva1nw8zidyg2w9[mask,:]
-    tup_k3k5tva1nw8zidyg1w9 = tuple(map(tuple, index_cut_k3k5tva1nw8zidyg2w9))
-    params['p_progprov_dams'] =dict(zip(tup_k3k5tva1nw8zidyg2w9, progprov_dams_k3k5tva1nw8zidyg2w9))
+    index_cut_k3k5ta1nw8zidyg2w9=index_k3k5ta1nw8zidyg2w9[mask,:]
+    tup_k3k5ta1nw8zidyg2w9 = tuple(map(tuple, index_cut_k3k5ta1nw8zidyg2w9))
+    params['p_progprov_dams'] =dict(zip(tup_k3k5ta1nw8zidyg2w9, progprov_dams_k3k5ta1nw8zidyg2w9))
 
     ###nunmber prog require by dams
     mask=numbers_progreq_k28k3k5tva1e1b1nw8zida0e0b0xyg1w9!=0
-    progreq_k2k3k5tva1nw8ziyg1w9 = numbers_progreq_k28k3k5tva1e1b1nw8zida0e0b0xyg1w9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
+    progreq_k2k3k5ta1nw8ziyg1w9 = numbers_progreq_k28k3k5tva1e1b1nw8zida0e0b0xyg1w9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
     mask=mask.ravel()
-    index_cut_k2k3k5tva1nw8ziyg1w9=index_k2k3k5tva1nw8ziyg1w9[mask,:]
-    tup_k2k3k5tva1nw8ziyg1w9 = tuple(map(tuple, index_cut_k2k3k5tva1nw8ziyg1w9))
-    params['p_progreq_dams'] =dict(zip(tup_k2k3k5tva1nw8ziyg1w9, progreq_k2k3k5tva1nw8ziyg1w9))
+    index_cut_k2k3k5ta1nw8ziyg1w9=index_k2k3k5ta1nw8ziyg1w9[mask,:]
+    tup_k2k3k5ta1nw8ziyg1w9 = tuple(map(tuple, index_cut_k2k3k5ta1nw8ziyg1w9))
+    params['p_progreq_dams'] =dict(zip(tup_k2k3k5ta1nw8ziyg1w9, progreq_k2k3k5ta1nw8ziyg1w9))
 
     ###number prog provided to offs
     mask=numbers_prog2offs_k3k5tva1e1b1nwzida0e0b0xyg2w9!=0
-    progprov_offs_k3k5tva1nw8zidyg2w9 = numbers_prog2offs_k3k5tva1e1b1nwzida0e0b0xyg2w9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
+    progprov_offs_k3k5ta1nw8zidyg2w9 = numbers_prog2offs_k3k5tva1e1b1nwzida0e0b0xyg2w9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
     mask=mask.ravel()
-    index_cut_k2k5tva1nw8zidyg1w9=index_k3k5tva1nw8zidyg2w9[mask,:]
-    tup_k2k5tva1nw8zidyg1w9 = tuple(map(tuple, index_cut_k2k5tva1nw8zidyg1w9))
-    params['p_progprov_offs'] =dict(zip(tup_k2k5tva1nw8zidyg1w9, progprov_offs_k3k5tva1nw8zidyg2w9))
+    index_cut_k2k5ta1nw8zidyg1w9=index_k3k5ta1nw8zidyg2w9[mask,:]
+    tup_k2k5ta1nw8zidyg1w9 = tuple(map(tuple, index_cut_k2k5ta1nw8zidyg1w9))
+    params['p_progprov_offs'] =dict(zip(tup_k2k5ta1nw8zidyg1w9, progprov_offs_k3k5ta1nw8zidyg2w9))
 
     ###nunmber prog require by offs
     mask=numbers_progreq_w8zida0e0b0xyg3w9!=0
