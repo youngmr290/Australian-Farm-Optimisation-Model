@@ -184,7 +184,7 @@ def generator(params,report):
     index_t2 = np.arange(t2_len)
     index_tva1e1b1nwzida0e0b0xyg2w9 = fun.f_reshape_expand(index_t2, uinp.structure['i_p_pos']-2)
     index_tva1e1b1nw8zida0e0b0xyg3w9 = fun.f_reshape_expand(np.arange(t3_len), uinp.structure['i_p_pos']-2)
-    index_xyg = fun.f_reshape_expand(np.arange(len_x), uinp.parameters['i_x_pos'])
+
 
 
     prejoin_tup = (pinp.sheep['i_a1_pos'], uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos'])
@@ -501,7 +501,7 @@ def generator(params,report):
     ########################################
     #adjust input to align with gen periods#
     ########################################
-    # 1. Adjust date birth (average)
+    # 1. Adjust date born (average) = start period
     # 2. Calc date born1st from slice 0 subtract 8 days
     # 3. Calc wean date
     # 4 adjust wean date to occur at start period
@@ -3079,7 +3079,8 @@ def generator(params,report):
                                                                                      uinp.structure['i_p_pos']-1)).astype(dtype)  # convert -- and ++ to inf
     sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_sale_cost_pc_s7'], uinp.structure['i_p_pos']-1).astype(dtype)
     sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_sale_cost_hd_s7'], uinp.structure['i_p_pos']-1).astype(dtype)
-    mask_s7x_s7pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_mask_s7x'], uinp.parameters['i_x_pos'], left_pos2=uinp.structure['i_p_pos']-1, right_pos2=uinp.parameters['i_x_pos'], condition=mask_x, axis=uinp.parameters['i_x_pos'])
+    mask_s7x_s7pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_mask_s7x'], uinp.parameters['i_x_pos'], left_pos2=uinp.structure['i_p_pos']-1, right_pos2=uinp.parameters['i_x_pos']) #dont mask x axis
+    mask_s7x_s7pa1e1b1nwzida0e0b0xyg3 = fun.f_reshape_expand(uinp.sheep['i_mask_s7x'], uinp.parameters['i_x_pos'], left_pos2=uinp.structure['i_p_pos']-1, right_pos2=uinp.parameters['i_x_pos'], condition=mask_x, axis=uinp.parameters['i_x_pos'])
     sale_agemax_s7pa1e1b1nwzida0e0b0xyg0, sale_agemax_s7pa1e1b1nwzida0e0b0xyg1, sale_agemax_s7pa1e1b1nwzida0e0b0xyg2, sale_agemax_s7pa1e1b1nwzida0e0b0xyg3 = sfun.f_c2g(uinp.parameters['i_agemax_s7c2'],uinp.parameters['i_agemax_s7y'],uinp.structure['i_p_pos']-1, dtype=dtype)
     dresspercent_adj_yg0, dresspercent_adj_yg1, dresspercent_adj_yg2, dresspercent_adj_yg3 = sfun.f_c2g(uinp.parameters['i_dressp_adj_c2'],uinp.parameters['i_dressp_adj_y'], dtype=dtype)
     ##husbandry
@@ -3105,6 +3106,7 @@ def generator(params,report):
     a_nextshear_pa1e1b1nwzida0e0b0xyg0 = sfun.f_next_prev_association(date_end_p, date_nextshear_pa1e1b1nwzida0e0b0xyg0, 1,'right').astype(dtypeint) #p indx of next shearing - when period is shearing this returns the current period
     a_nextshear_pa1e1b1nwzida0e0b0xyg1 = sfun.f_next_prev_association(date_end_p, date_nextshear_pa1e1b1nwzida0e0b0xyg1, 1,'right').astype(dtypeint) #p indx of next shearing - when period is shearing this returns the current period
     a_nextshear_pa1e1b1nwzida0e0b0xyg3 = sfun.f_next_prev_association(offs_date_end_p, date_nextshear_pa1e1b1nwzida0e0b0xyg3, 1,'right').astype(dtypeint) #p indx of next shearing - when period is shearing this returns the current period
+    gender_xyg = fun.f_reshape_expand(np.arange(len(mask_x)), uinp.parameters['i_x_pos'])
     ##sire
     date_purch_oa1e1b1nwzida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['i_date_purch_ig0'], 'sire', pinp.sheep['i_i_pos'], left_pos2=uinp.structure['i_p_pos']-1, right_pos2=pinp.sheep['i_i_pos'], condition=pinp.sheep['i_masksire_i'], axis=pinp.sheep['i_i_pos']).astype('datetime64[D]')
     date_sale_oa1e1b1nwzida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['i_date_sale_ig0'], 'sire', pinp.sheep['i_i_pos'], left_pos2=uinp.structure['i_p_pos']-1, right_pos2=pinp.sheep['i_i_pos'], condition=pinp.sheep['i_masksire_i'], axis=pinp.sheep['i_i_pos']).astype('datetime64[D]')
@@ -3156,7 +3158,7 @@ def generator(params,report):
     dvp_date_start_va1e1b1nwzida0e0b0xyg1 = fvp_date_start_fa1e1b1nwzida0e0b0xyg1
     a_dvp_p_va1e1b1nwzida0e0b0xyg1 = sfun.f_next_prev_association(date_start_p, dvp_date_start_va1e1b1nwzida0e0b0xyg1, 1, 'right').astype(dtypeint) #returns the period index for the start of each dvp
     dvp_start_date_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(dvp_date_start_va1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1,0)
-    dvp_type_va1e1b1nwzida0e0b0xyg1=fvp_type_fa1e1b1nwzida0e0b0xyg1 #rename to keep consistent
+    dvp_type_va1e1b1nwzida0e0b0xyg1=fvp_type_fa1e1b1nwzida0e0b0xyg1  #[:,:,0:1,...] #rename to keep consistent and take e slice 0 because dvp is the same for all
     dvp_type_next_va1e1b1nwzida0e0b0xyg1 = np.roll(dvp_type_va1e1b1nwzida0e0b0xyg1, -1, axis=uinp.structure['i_p_pos'])
     dvp_type_va1e1b1nwzida0e0b0xyg1[0] = 0 #make dvp_type[0] == 0 to correctly mask the animals in the post weaning period becaue there is only 3 different weights (which is not technically like type 2) but dont want to change fvp type because we still want to trigger the change at the first prejoining.
     period_is_startdvp_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is', dvp_start_date_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
@@ -3413,7 +3415,7 @@ def generator(params,report):
         cvscore_s7s6pa1e1b1nwzida0e0b0xyg, lw_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p9a1e1b1nwzida0e0b0xyg,
         age_end_p9a1e1b1nwzida0e0b0xyg2, discount_age_s7pa1e1b1nwzida0e0b0xyg,
         sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg,
-        mask_s7x_s7pa1e1b1nwzida0e0b0xyg, sale_agemax_s7pa1e1b1nwzida0e0b0xyg2, dtype)
+        mask_s7x_s7pa1e1b1nwzida0e0b0xyg3, sale_agemax_s7pa1e1b1nwzida0e0b0xyg2, dtype)
     salevalue_pa1e1b1nwzida0e0b0xyg3[sale_mask_p3] = sfun.f_sale_value(
         cu0_offs, cx_offs.astype(dtype), rc_start_offs_p9, ffcfw_p9a1e1b1nwzida0e0b0xyg3, dresspercent_adj_yg3,
         dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg,
@@ -3422,7 +3424,7 @@ def generator(params,report):
         cvscore_s7s6pa1e1b1nwzida0e0b0xyg, lw_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p9a1e1b1nwzida0e0b0xyg,
         age_end_p9a1e1b1nwzida0e0b0xyg3, discount_age_s7pa1e1b1nwzida0e0b0xyg,
         sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg,
-        mask_s7x_s7pa1e1b1nwzida0e0b0xyg, sale_agemax_s7pa1e1b1nwzida0e0b0xyg3, dtype)
+        mask_s7x_s7pa1e1b1nwzida0e0b0xyg3, sale_agemax_s7pa1e1b1nwzida0e0b0xyg3, dtype)
 
     sale_finish= time.time()
     print('sale value calcs :', sale_finish - wool_finish)
@@ -3432,7 +3434,7 @@ def generator(params,report):
     husbandry_cost_pg0, husbandry_labour_l2pg0, husbandry_infrastructure_h1pg0 = sfun.f_husbandry(
         uinp.sheep['i_head_adjust_sire'], mobsize_pa1e1b1nwzida0e0b0xyg0, o_ffcfw_sire, o_cfw_sire, operations_triggerlevels_h5h7h2pg,
         p_index_pa1e1b1nwzida0e0b0xyg, age_start_pa1e1b1nwzida0e0b0xyg0, period_is_shearing_pa1e1b1nwzida0e0b0xyg0, a_nextshear_pa1e1b1nwzida0e0b0xyg0,
-        period_is_wean_pa1e1b1nwzida0e0b0xyg0, index_xyg[0], o_ebg_sire, wool_genes_yg0, husb_operations_muster_propn_h2pg,
+        period_is_wean_pa1e1b1nwzida0e0b0xyg0, gender_xyg[0], o_ebg_sire, wool_genes_yg0, husb_operations_muster_propn_h2pg,
         husb_requisite_cost_h6pg, husb_operations_requisites_prob_h6h2pg, operations_per_hour_l2h2pg,
         husb_operations_infrastructurereq_h1h2pg, husb_operations_contract_cost_h2pg, husb_muster_requisites_prob_h6h4pg,
         musters_per_hour_l2h4pg, husb_muster_infrastructurereq_h1h4pg, dtype=dtype)
@@ -3440,7 +3442,7 @@ def generator(params,report):
     husbandry_cost_pg1, husbandry_labour_l2pg1, husbandry_infrastructure_h1pg1 = sfun.f_husbandry(
         uinp.sheep['i_head_adjust_dams'], mobsize_pa1e1b1nwzida0e0b0xyg1, o_ffcfw_dams, o_cfw_dams, operations_triggerlevels_h5h7h2pg,
         p_index_pa1e1b1nwzida0e0b0xyg, age_start_pa1e1b1nwzida0e0b0xyg1, period_is_shearing_pa1e1b1nwzida0e0b0xyg1, a_nextshear_pa1e1b1nwzida0e0b0xyg1,
-        period_is_wean_pa1e1b1nwzida0e0b0xyg1, index_xyg[1], o_ebg_dams, wool_genes_yg1, husb_operations_muster_propn_h2pg,
+        period_is_wean_pa1e1b1nwzida0e0b0xyg1, gender_xyg[1], o_ebg_dams, wool_genes_yg1, husb_operations_muster_propn_h2pg,
         husb_requisite_cost_h6pg, husb_operations_requisites_prob_h6h2pg, operations_per_hour_l2h2pg,
         husb_operations_infrastructurereq_h1h2pg, husb_operations_contract_cost_h2pg, husb_muster_requisites_prob_h6h4pg,
         musters_per_hour_l2h4pg, husb_muster_infrastructurereq_h1h4pg,
@@ -3449,7 +3451,7 @@ def generator(params,report):
     husbandry_cost_pg3, husbandry_labour_l2pg3, husbandry_infrastructure_h1pg3 = sfun.f_husbandry(
         uinp.sheep['i_head_adjust_offs'], mobsize_pa1e1b1nwzida0e0b0xyg3, o_ffcfw_offs, o_cfw_offs, operations_triggerlevels_h5h7h2pg,
         p_index_pa1e1b1nwzida0e0b0xyg3, age_start_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p], period_is_shearing_pa1e1b1nwzida0e0b0xyg3, a_nextshear_pa1e1b1nwzida0e0b0xyg3,
-        period_is_wean_pa1e1b1nwzida0e0b0xyg3, index_xyg, o_ebg_offs, wool_genes_yg3, husb_operations_muster_propn_h2pg,
+        period_is_wean_pa1e1b1nwzida0e0b0xyg3, gender_xyg[mask_x], o_ebg_offs, wool_genes_yg3, husb_operations_muster_propn_h2pg,
         husb_requisite_cost_h6pg, husb_operations_requisites_prob_h6h2pg, operations_per_hour_l2h2pg,
         husb_operations_infrastructurereq_h1h2pg, husb_operations_contract_cost_h2pg, husb_muster_requisites_prob_h6h4pg,
         musters_per_hour_l2h4pg, husb_muster_infrastructurereq_h1h4pg, dtype=dtype)
@@ -3654,7 +3656,7 @@ def generator(params,report):
     ###sire
     numbers_start_va1e1b1nwzida0e0b0xyg0 = sfun.f_p2v_std(o_numbers_start_sire, period_is_tvp=period_is_startdvp_purchase_pa1e1b1nwzida0e0b0xyg0) #sires only have one dvp which essentially starts when the activity is purchased
     numbers_startp8_va1e1b1nwzida0e0b0xyg0p8 = sfun.f_p2v_std(o_numbers_start_sire[...,na], on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0[...,na],
-                                                          period_is_tvp=period_is_startp8_pa1e1b1nwzida0e0b0xyg0p8) #sires only have one dvp which essentially starts when the activity is purchased
+                                                          period_is_tvp=period_is_startp8_pa1e1b1nwzida0e0b0xyg0p8, sumadj=1) #sires only have one dvp which essentially starts when the activity is purchased
 
     ###dams
     #### Return the ‘source’ weight of the dams at the end of each period in which they can be transferred
@@ -3970,7 +3972,7 @@ def generator(params,report):
     # ffcfw_condensed_a1wzixg2 = ffcfw_prog_a1zixg2w9 (with w9 moved to w pos)
     sale_value_a1zixg2w9 = np.take_along_axis(sale_value_range_a1zixg2k, ind, axis = -1)
     ###Reshape the ffcfw_prog array to put axes in place - keeping w9 on the right hand end
-    ffcfw_prog_a1e1b1wnzida0e0b0xyg2w9 = ffcfw_prog_a1zixg2w9.reshape(len_a1, 1, 1, 1, 1, len_z, len_i, 1,
+    ffcfw_prog_a1e1b1nwzida0e0b0xyg2w9 = ffcfw_prog_a1zixg2w9.reshape(len_a1, 1, 1, 1, 1, len_z, len_i, 1,
                                                                      1, 1, 1, len_x, 1, len_g2, uinp.structure['i_progeny_w2_len'])
     sale_value_prog_a1e1b1wnzida0e0b0xyg2w9 = sale_value_a1zixg2w9.reshape(len_a1, 1, 1, 1, 1, len_z, len_i, 1,
                                                                      1, 1, 1, len_x, 1, len_g2, uinp.structure['i_progeny_w2_len'])
@@ -3979,8 +3981,8 @@ def generator(params,report):
 
     ##transfer yatf to the intermediate progeny activity
     ###maximum(0, ) removes points where yatf weight is greater than the rolled progeny weight
-    distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 = np.maximum(0,fun.f_divide((np.roll(ffcfw_prog_a1e1b1wnzida0e0b0xyg2w9,-1,axis=-1) - ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1[..., na])
-                                                            , (np.roll(ffcfw_prog_a1e1b1wnzida0e0b0xyg2w9,-1,axis=-1) - ffcfw_prog_a1e1b1wnzida0e0b0xyg2w9)))
+    distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 = np.maximum(0,fun.f_divide((np.roll(ffcfw_prog_a1e1b1nwzida0e0b0xyg2w9,-1,axis=-1) - ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1[..., na])
+                                                            , (np.roll(ffcfw_prog_a1e1b1nwzida0e0b0xyg2w9,-1,axis=-1) - ffcfw_prog_a1e1b1nwzida0e0b0xyg2w9)))
     ###remove points where yatf weight is less than the progeny weight.
     distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9[distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 > 1] = 0
     ###set the distribution for the other of the target pair
@@ -3988,7 +3990,7 @@ def generator(params,report):
     condition = (distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 > 0) * (index_w2 > 0)
     distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 = fun.f_update(distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9, temporary, condition)
     ###Set the distribution proportion to 0 if the initial weight is < lowest weight
-    distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 = fun.f_update(distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9, 0, ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1[..., na] <= np.min(ffcfw_prog_a1e1b1wnzida0e0b0xyg2w9, axis=-1, keepdims=True))
+    distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 = fun.f_update(distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9, 0, ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1[..., na] <= np.min(ffcfw_prog_a1e1b1nwzida0e0b0xyg2w9, axis=-1, keepdims=True))
 
     ###create distribution variable so it can be assigned by the slice
     # distribution_2prog_va1e1b1nw8zida0e0b0xyg1 = np.zeros_like(ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1)
@@ -4032,7 +4034,7 @@ def generator(params,report):
     keys_k5tva1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(keys_k5, uinp.structure['i_k2_pos'])
 
 
-    ###number of progeny weaned
+    ###number of progeny weaned - with d axis
     npw_k2k5tva1e1b1nwzida0e0b0xyg1w9i9 = fun.f_divide(np.sum(npw_tva1e1b1nwzida0e0b0xyg1[...,na,na] * distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9[...,na] * mask_w8vars_va1e1b1nw8zida0e0b0xyg1[...,na,na]
                                                           * (a_k2cluster_va1e1b1nwzida0e0b0xyg1==index_k28k29tva1e1b1nwzida0e0b0xyg1)[...,na,na]
                                                           * (a_i_ida0e0b0xyg2==index_da0e0b0xyg)[...,na,na] * (index_ida0e0b0xyg == index_i9)[...,na,:]  #i9 (like w9 & g9) is the lambing time of the destination weaner. If lambing interval is not 12 months then a dam born in July may be giving birth in March and this weaner need to then become a dam replacement in the 'March' flock. Changing lambing time then requires a second i axis in teh parameter.
@@ -4044,27 +4046,32 @@ def generator(params,report):
 
     ##transfer progney to dam replacements
     ###liveweight distribution
+    ffcfw_prog_a1e1b1nwzida0e0b0xyg2 = np.moveaxis(ffcfw_prog_a1e1b1nwzida0e0b0xyg2w9[:,:,:,:,0,...],-1,uinp.structure['i_w_pos']) #move the w9 axis into the w position
     ffcfw_initial_wzida0e0b0xyg1 = lw_initial_wzida0e0b0xyg1 - cfw_initial_wzida0e0b0xyg1
-    distribution_2dams_a1e1b1nwzida0e0b0xyg2w9 = sfun.f_lw_distribution(ffcfw_initial_wzida0e0b0xyg1, ffcfw_prog_a1e1b1wnzida0e0b0xyg2w9, uinp.structure['i_n1_len'], uinp.structure['i_n_fvp_period1'])
-    ###numbers provided
-    numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg1w9 = np.sum(distribution_2dams_a1e1b1nwzida0e0b0xyg2w9
-                                                             * (index_tva1e1b1nwzida0e0b0xyg2w9 == 1)
-                                                             * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)
-                                                             * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)
-                                                             , axes=(uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']))
-    ###numbers required
-    p_numbers_progreq_k28k3k5va1e1b1nw8zida0e0b0xyg1w9 = 1 * (np.sum((mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9[0, ..., na] * index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,..., na] == 0)
-                                                                     * btrt_propn_b0xyg1 * e0_propn_ida0e0b0xyg * agedam_propn_da0e0b0xyg1
-                                                                     * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)  * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3),
-                                                                     axis=(uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']),keepdims=True) > 0)
+    distribution_2dams_a1e1b1nwzida0e0b0xyg2w9 = sfun.f_lw_distribution(ffcfw_initial_wzida0e0b0xyg1, ffcfw_prog_a1e1b1nwzida0e0b0xyg2, uinp.structure['i_n1_len'], uinp.structure['i_n_fvp_period1'])
+    ###numbers provided - active d
+    numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2w9 = np.sum(distribution_2dams_a1e1b1nwzida0e0b0xyg2w9
+                                                             * (index_tva1e1b1nwzida0e0b0xyg2w9 == 1) * (gender_xyg == 1) #gender to select the dams from prog
+                                                             * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na]
+                                                             * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[...,na]
+                                                             , axis=(uinp.parameters['i_b0_pos']-1, uinp.structure['i_e0_pos']-1))
+    ###numbers required - no d axis
+    numbers_progreq_k28k3k5tva1e1b1nw8zida0e0b0xyg1w9 = 1 * (np.sum(mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9[0, ...] * (index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,..., na] == 0)
+                                                                     * btrt_propn_b0xyg1[...,na] * e0_propn_ida0e0b0xyg[...,na] * agedam_propn_da0e0b0xyg1[...,na]
+                                                                     * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na]  * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[...,na],
+                                                                     axis=(pinp.sheep['i_e1_pos'], uinp.parameters['i_d_pos']-1, uinp.parameters['i_b0_pos']-1, uinp.structure['i_e0_pos']-1),keepdims=True) > 0)
 
     ##transfer progeny to offs
-    ###numbers provide
+    ###numbers provide - has d axis
     ffcfw_initial_wzida0e0b0xyg3 = lw_initial_wzida0e0b0xyg3 - cfw_initial_wzida0e0b0xyg3
-    distribution_2offs_a1e1b1nwzida0e0b0xyg2w9 = sfun.f_lw_distribution(ffcfw_initial_wzida0e0b0xyg3, ffcfw_prog_a1e1b1wnzida0e0b0xyg2w9, uinp.structure['i_n3_len'], uinp.structure['i_n_fvp_period3'])
-    numbers_prog2offs_tva1e1b1nwzida0e0b0xyg2w9 = distribution_2offs_a1e1b1nwzida0e0b0xyg2w9 * (index_tva1e1b1nwzida0e0b0xyg2w9 == 2)
+    distribution_2offs_a1e1b1nwzida0e0b0xyg2w9 = sfun.f_lw_distribution(ffcfw_initial_wzida0e0b0xyg3, ffcfw_prog_a1e1b1nwzida0e0b0xyg2, uinp.structure['i_n3_len'], uinp.structure['i_n_fvp_period3'])
+    numbers_prog2offs_k3k5tva1e1b1nwzida0e0b0xyg2w9 = np.sum(distribution_2offs_a1e1b1nwzida0e0b0xyg2w9 * (index_tva1e1b1nwzida0e0b0xyg2w9 == 2)
+                                                            * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)
+                                                            * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[...,na],
+                                                             axis=(uinp.parameters['i_b0_pos']-1, uinp.structure['i_e0_pos']-1))
+
     ###numbers req
-    p_numbers_progreq_w8offsw9 = 1 * (mask_numbers_reqw8w9_w8zida0e0b0xyg3w9 > 0)
+    numbers_progreq_w8zida0e0b0xyg3w9 = 1 * (mask_numbers_reqw8w9_w8zida0e0b0xyg3w9 > 0)
 
 
     #########
@@ -4075,6 +4082,7 @@ def generator(params,report):
     ##the array returned must be of type object, if string the dict keys become a numpy string and when indexed in pyomo it doesn't work.
     keys_a = pinp.sheep['i_a_idx'][pinp.sheep['i_mask_a']]
     keys_c = uinp.structure['cashflow_periods']
+    keys_d = uinp.structure['i_d_idx'][mask_d_offs]
     keys_g0 = sfun.f_g2g(pinp.sheep['i_g_idx_sire'],'sire')
     keys_g1 = sfun.f_g2g(pinp.sheep['i_g_idx_dams'],'dams')
     keys_g3 = sfun.f_g2g(pinp.sheep['i_g_idx_offs'],'offs')
@@ -4102,6 +4110,7 @@ def generator(params,report):
     keys_z = pinp.general['season_info'].index[pinp.general['season_info']['included']]
     ##save k2 set for pyomo - required because this cant easily be built without information in this module
     params['a_idx'] = keys_a
+    params['d_idx'] = keys_d
     params['i_idx'] = keys_i
     params['p8_idx'] = keys_p8
     params['g_idx_sire'] = keys_g0
@@ -4125,6 +4134,26 @@ def generator(params,report):
     ###g0p8 - nsire
     arrays = [keys_g0, keys_p8]
     index_g0p8 = fun.cartesian_product_simple_transpose(arrays)
+
+    ###k2k5tvanwzidyg1w9i9 - npw
+    arrays = [keys_k2, keys_k5, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_d, keys_y1, keys_g1, keys_lw1, keys_i]
+    index_k2k5tva1nw8zidyg1w9i9 = fun.cartesian_product_simple_transpose(arrays)
+
+    ###k3k5tva1nw8zidyg1w9 - prog to dams prov
+    arrays = [keys_k2, keys_k5, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_d, keys_y1, keys_g2, keys_lw1]
+    index_k3k5tva1nw8zidyg1w9 = fun.cartesian_product_simple_transpose(arrays)
+
+    ###k3k5tva1nw8zidyg1w9 - prog to dams req
+    arrays = [keys_k2, keys_k5, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1, keys_lw1]
+    index_k2k3k5tva1nw8ziyg1w9 = fun.cartesian_product_simple_transpose(arrays)
+
+    ###k3k5tva1nw8zidyg1w9 - prog to offs prov ^fix
+    arrays = [keys_k3, keys_k5, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_d, keys_y1, keys_g2, keys_lw1]
+    index_k3k5tva1nw8zidyg1w9 = fun.cartesian_product_simple_transpose(arrays)
+
+    ###k3k5tva1nw8zidyg1w9 - prog to offs req ^fix
+    arrays = [keys_k2, keys_k5, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g3, keys_lw1]
+    index_k2k3k5tva1nw8ziyg1w9 = fun.cartesian_product_simple_transpose(arrays)
 
     ###k2k2tvanwziyg1g9w9 - numbers dams
     arrays = [keys_k2, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1, keys_g1, keys_lw1]
@@ -4202,6 +4231,47 @@ def generator(params,report):
     index_cut_k2tvanwziyg1g0p8=index_k2tvanwziyg1g0p8[mask,:]
     tup_k2tvanwziyg1g0p8 = tuple(map(tuple, index_cut_k2tvanwziyg1g0p8))
     params['p_nsire_req_dams'] =dict(zip(tup_k2tvanwziyg1g0p8, nsire_k2tva1nw8ziyg1g0p8))
+
+    ###nunmber prog weaned
+    mask=npw_k2k5tva1e1b1nwzida0e0b0xyg1w9i9!=0
+    npw_k2k5tva1nw8zidyg1w9i9 = npw_k2k5tva1e1b1nwzida0e0b0xyg1w9i9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
+    mask=mask.ravel()
+    index_cut_k2k5tva1nw8zidyg1w9i9=index_k2k5tva1nw8zidyg1w9i9[mask,:]
+    tup_k2k5tva1nw8zidyg1w9i9 = tuple(map(tuple, index_cut_k2k5tva1nw8zidyg1w9i9))
+    params['p_npw_dams'] =dict(zip(tup_k2k5tva1nw8zidyg1w9i9, npw_k2k5tva1nw8zidyg1w9i9))
+
+    ###nunmber prog provided to dams
+    mask=numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2w9!=0
+    progprov_dams_k3k5tva1nw8zidyg2w9 = numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2w9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
+    mask=mask.ravel()
+    index_cut_k3k5tva1nw8zidyg2w9=index_k3k5tva1nw8zidyg2w9[mask,:]
+    tup_k3k5tva1nw8zidyg1w9 = tuple(map(tuple, index_cut_k3k5tva1nw8zidyg2w9))
+    params['p_progprov_dams'] =dict(zip(tup_k3k5tva1nw8zidyg2w9, progprov_dams_k3k5tva1nw8zidyg2w9))
+
+    ###nunmber prog require by dams
+    mask=numbers_progreq_k28k3k5tva1e1b1nw8zida0e0b0xyg1w9!=0
+    progreq_k2k3k5tva1nw8ziyg1w9 = numbers_progreq_k28k3k5tva1e1b1nw8zida0e0b0xyg1w9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
+    mask=mask.ravel()
+    index_cut_k2k3k5tva1nw8ziyg1w9=index_k2k3k5tva1nw8ziyg1w9[mask,:]
+    tup_k2k3k5tva1nw8ziyg1w9 = tuple(map(tuple, index_cut_k2k3k5tva1nw8ziyg1w9))
+    params['p_progreq_dams'] =dict(zip(tup_k2k3k5tva1nw8ziyg1w9, progreq_k2k3k5tva1nw8ziyg1w9))
+
+    ###number prog provided to offs
+    mask=numbers_prog2offs_k3k5tva1e1b1nwzida0e0b0xyg2w9!=0
+    progprov_offs_k3k5tva1nw8zidyg2w9 = numbers_prog2offs_k3k5tva1e1b1nwzida0e0b0xyg2w9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
+    mask=mask.ravel()
+    index_cut_k2k5tva1nw8zidyg1w9=index_k3k5tva1nw8zidyg2w9[mask,:]
+    tup_k2k5tva1nw8zidyg1w9 = tuple(map(tuple, index_cut_k2k5tva1nw8zidyg1w9))
+    params['p_progprov_offs'] =dict(zip(tup_k2k5tva1nw8zidyg1w9, progprov_offs_k3k5tva1nw8zidyg2w9))
+
+    ###nunmber prog require by offs
+    mask=numbers_progreq_w8zida0e0b0xyg3w9!=0
+    progreq_w8g3w9 = numbers_progreq_w8zida0e0b0xyg3w9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
+    mask=mask.ravel()
+    index_cut_w8g3w9=index_w8g3w9[mask,:]
+    tup_w8g3w9 = tuple(map(tuple, index_cut_w8g3w9))
+    params['p_progreq_offs'] =dict(zip(tup_w8g3w9, progreq_w8g3w9))
+
 
     ###numbers_prov_dams
     mask=numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9!=0
