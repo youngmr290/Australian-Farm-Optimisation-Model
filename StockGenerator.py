@@ -3987,6 +3987,8 @@ def generator(params,report):
     temporary = 1 - np.roll(distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9, 1, axis=-1)
     condition = (distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 > 0) * (index_w2 > 0)
     distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 = fun.f_update(distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9, temporary, condition)
+    ###Set the distribution proportion to 0 if the initial weight is < lowest weight
+    distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 = fun.f_update(distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9, 0, ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1[..., na] <= np.min(ffcfw_prog_a1e1b1wnzida0e0b0xyg2w9, axis=-1, keepdims=True))
 
     ###create distribution variable so it can be assigned by the slice
     # distribution_2prog_va1e1b1nw8zida0e0b0xyg1 = np.zeros_like(ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1)
@@ -4017,7 +4019,6 @@ def generator(params,report):
     # ###Gap at [position] is remainder from 1 ^this will cause error
     # distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9[position_va1e1b1nwzida0e0b0xyg2] = 1 - distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9[position_va1e1b1nwzida0e0b0xyg2 - 1]
     ###Set the distribution proportion to 0 if the initial weight is < lowest weight
-    # ^ next line removed because it uses progeny distribution
     # distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 = fun.f_update(distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9, 0, ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1[..., na] <= np.min(ffcfw_prog_a1e1b1wnzida0e0b0xyg2w9, axis=-1, keepdims=True))
 
     ###The association between birth time of the progeny and the birth time and lambing opportunity/dam age
