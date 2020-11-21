@@ -55,7 +55,7 @@ def sheep_pyomo_local(params,report):
     model.v_offs = pe.Var(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types,
                           model.s_tol, model.s_wean_times, model.s_gender, model.s_gen_merit_offs,
                           model.s_groups_offs, bounds = (0,None) , doc='number of offs animals')
-    model.v_prog = pe.Var(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_prog, model.s_nut_offs, model.s_lw_prog, model.s_season_types,
+    model.v_prog = pe.Var(model.s_k5_birth_offs, model.s_sale_prog, model.s_lw_prog, model.s_season_types,
                           model.s_tol, model.s_damage, model.s_wean_times, model.s_gender, model.s_gen_merit_offs,
                           model.s_groups_offs, bounds = (0,None) , doc='number of offs animals')
     ##animal transfers
@@ -112,7 +112,7 @@ def sheep_pyomo_local(params,report):
         model.del_component(model.p_npw)
     except AttributeError:
         pass
-    model.p_progprov_dams = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_prog, model.s_wean_times, model.s_nut_dams, model.s_lw_prog,
+    model.p_progprov_dams = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_prog, model.s_wean_times, model.s_lw_prog,
                               model.s_season_types, model.s_tol, model.s_damage, model.s_gender, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_dams,
                               initialize=params['p_progprov_dams'], default=0.0, doc='number of prodgeny provided to dams')
 
@@ -121,7 +121,7 @@ def sheep_pyomo_local(params,report):
         model.del_component(model.p_progreq_dams)
     except AttributeError:
         pass
-    model.p_progreq_dams = pe.Param(model.s_k2_birth_dams, model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_wean_times, model.s_nut_dams, model.s_lw_dams,
+    model.p_progreq_dams = pe.Param(model.s_k2_birth_dams, model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_wean_times, model.s_lw_dams,
                               model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_dams,
                               initialize=params['p_progreq_dams'], default=0.0, doc='number of prodgeny required by dams')
 
@@ -130,7 +130,7 @@ def sheep_pyomo_local(params,report):
         model.del_component(model.p_progprov_offs)
     except AttributeError:
         pass
-    model.p_progprov_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_prog,
+    model.p_progprov_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_dams, model.s_wean_times, model.s_lw_prog,
                               model.s_season_types, model.s_tol, model.s_damage, model.s_gender, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_dams,
                               initialize=params['p_progprov_offs'], default=0.0, doc='number of prodgeny provided to dams')
 
@@ -176,7 +176,7 @@ def sheep_pyomo_local(params,report):
         model.del_component(model.p_numbers_req_offs)
     except AttributeError:
         pass
-    model.p_numbers_req_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_lw_offs,
+    model.p_numbers_req_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_dvp_offs, model.s_lw_offs,
                                         model.s_groups_offs, model.s_lw_offs,
                                         initialize=params['p_numbers_req_offs'], default=0.0, doc='requirment of off in the current period')
 
@@ -537,15 +537,15 @@ def sheep_pyomo_local(params,report):
         t_w9 = l_w9.index(w9)
         if not np.any(params['numbers_req_numpyvesion_k2k2tva1nw8ziyg1g9w9'][:,t_k29,:,t_v1,t_a,:,:,t_z,t_i,t_y1,t_g1,t_g9,t_w9]):
             return pe.Constraint.Skip
-        return sum(model.v_dams[k28,t1,v1,a,n1,w8,z,i,y1,g1] * model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9]
-                   - model.v_dams[k28,t1,v1_prev,a,n1,w8,z,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z,i,y1,g1,w9]
+        return sum(model.v_dams[k28,t1,v1,a,n1,w8,z,i,y1,g1] * model.p_numbers_req_dams[k28,k29,t1,v1,a,n1,w8,z,i,y1,g1,g9,w9]
+                   - model.v_dams[k28,t1,v1_prev,a,n1,w8,z,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z,i,y1,g1,g9,w9]
                     for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams
                     for n1 in model.s_nut_dams for w8 in model.s_lw_dams if
-                    model.p_numbers_req_dams[k28, k29, v1, a, n1, w8, z, i, y1, g1, w9] != 0) <=0
+                    model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, z, i, y1, g1,g9, w9] != 0) <=0
                    # for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams
                    # if model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z,i,y1,g1,w9] !=0)) <= 0
     start=time.time()
-    model.con_damR = pe.Constraint(model.s_k2_birth_dams, model.s_dvp_dams, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_dams, rule=damR, doc='transfer of off to dam and dam from last dvp to current dvp.')
+    model.con_damR = pe.Constraint(model.s_k2_birth_dams, model.s_dvp_dams, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_groups_dams, model.s_lw_dams, rule=damR, doc='transfer of off to dam and dam from last dvp to current dvp.')
     end=time.time()
     print('method 3: ',end-start)
 
@@ -561,22 +561,23 @@ def sheep_pyomo_local(params,report):
     except AttributeError:
         pass
     def progR(model, k3, k5, v1, a, z, i, y1, g1, w9):
-        return sum(sum(- model.v_prog[k3, k5, t2, n1, w28, z, i, d, a, x, y1, g1] * model.p_progprov_dams[k3, k5, t2, a, n1, w28, z, i, d, x, y1, g1, w9]
-                    for d in model.s_damage for x in model.s_gender for w28 in model.s_lw_prog for t2 in model.s_sale_prog)
-                   + sum(sum(model.v_dams[k2, t1, v1, a, n1, w18, z, i, y1, g1] for t1 in model.s_sale_dams)  * model.p_progreq_dams[k2, k3, k5, a, n1, w18, z, i, y1, g1, w9]
-                    for k2 in model.s_k2_birth_dams for w18 in model.s_lw_dams)
-                   for n1 in model.s_nut_dams  if model.p_progreq_dams[k2, k3, k5, a, n1, w18, z, i, y1, g1, w9] != 0) <= 0
-
-
+        if v1==0:
+            return sum(sum(- model.v_prog[k5, t2, w28, z, i, d, a, x, y1, g1] * model.p_progprov_dams[k3, k5, t2, a, w28, z, i, d, x, y1, g1, w9]
+                        for d in model.s_damage for x in model.s_gender for w28 in model.s_lw_prog for t2 in model.s_sale_prog if model.p_progprov_dams[k3, k5, t2, a, w28, z, i, d, x, y1, g1, w9]!= 0)
+                       + sum(sum(model.v_dams[k2, t1, v1, a, n1, w18, z, i, y1, g1] for t1 in model.s_sale_dams)  * model.p_progreq_dams[k2, k3, k5, a, w18, z, i, y1, g1, w9]
+                        for k2 in model.s_k2_birth_dams for w18 in model.s_lw_dams if model.p_progreq_dams[k2, k3, k5, a, n1, w18, z, i, y1, g1, w9]!= 0)
+                       for n1 in model.s_nut_dams ) <= 0
+        else:
+            return pe.Constraint.Skip
     start = time.time()
-    model.con_progR = pe.Constraint(model.s_k2_birth_dams, model.s_dvp_dams, model.s_wean_times, model.s_season_types,
+    model.con_progR = pe.Constraint(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_dvp_dams, model.s_wean_times, model.s_season_types,
                                    model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_dams, rule=progR,
-                                   doc='transfer of off to dam and dam from last dvp to current dvp.')
+                                   doc='transfer prog to dams or offs in dvp 0.')
 
-    # model.con_damR.pprint(textbuffer)
-    # textbuffer.write('\n')
-    # with open('con_damR.txt', 'w') as outputfile:
-    #     outputfile.write(textbuffer.getvalue())
+    model.con_damR.pprint(textbuffer)
+    textbuffer.write('\n')
+    with open('con_damR.txt', 'w') as outputfile:
+        outputfile.write(textbuffer.getvalue())
 
 
 

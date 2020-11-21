@@ -4143,13 +4143,13 @@ def generator(params,report):
     arrays = [keys_k2, keys_k5, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_d, keys_x, keys_y1, keys_g1, keys_lw_prog, keys_i]
     index_k2k5tva1nw8zidxyg1w9i9 = fun.cartesian_product_simple_transpose(arrays)
 
-    ###k3k5tva1nw8zidyg2w9 - prog to dams prov &  prog to offs prov
-    arrays = [keys_k3, keys_k5, keys_t2, keys_a, keys_n1, keys_lw_prog, keys_z, keys_i, keys_d, keys_x, keys_y1, keys_g2, keys_lw1]
-    index_k3k5ta1nw8zidxyg2w9 = fun.cartesian_product_simple_transpose(arrays)
+    ###k3k5tva1w8zidyg2w9 - prog to dams prov &  prog to offs prov
+    arrays = [keys_k3, keys_k5, keys_t2, keys_a, keys_lw_prog, keys_z, keys_i, keys_d, keys_x, keys_y1, keys_g2, keys_lw1]
+    index_k3k5ta1w8zidxyg2w9 = fun.cartesian_product_simple_transpose(arrays)
 
-    ###k3k5tva1nw8zidyg1w9 - prog to dams req
-    arrays = [keys_k2, keys_k3, keys_k5, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1, keys_lw1]
-    index_k2k3k5a1nw8ziyg1w9 = fun.cartesian_product_simple_transpose(arrays)
+    ###k3k5tva1w8zidyg1w9 - prog to dams req
+    arrays = [keys_k2, keys_k3, keys_k5, keys_a, keys_lw1, keys_z, keys_i, keys_y1, keys_g1, keys_lw1]
+    index_k2k3k5a1w8ziyg1w9 = fun.cartesian_product_simple_transpose(arrays)
 
 
     ###w8g3w9 - prog to offs req
@@ -4163,8 +4163,8 @@ def generator(params,report):
     arrays = [keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3, keys_lw3]
     index_k3k5tvnw8ziaxyg3w9 = fun.cartesian_product_simple_transpose(arrays)
     ###k3k5wg3w9 - numbers req offs (doesnt have many active axis)
-    arrays = [keys_k3, keys_k5, keys_lw3, keys_g3, keys_lw3]
-    index_k3k5w8g3w9 = fun.cartesian_product_simple_transpose(arrays)
+    arrays = [keys_k3, keys_k5, keys_v3, keys_lw3, keys_g3, keys_lw3]
+    index_k3k5vw8g3w9 = fun.cartesian_product_simple_transpose(arrays)
 
     ###p6fg0 - mei sire
     arrays = [keys_p6, keys_f, keys_g0]
@@ -4243,27 +4243,27 @@ def generator(params,report):
 
     ###nunmber prog provided to dams
     mask=numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2w9!=0
-    progprov_dams_k3k5ta1nw8zidxyg2w9 = numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2w9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
+    progprov_dams_k3k5ta1w8zidxyg2w9 = numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2w9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
     mask=mask.ravel()
-    index_cut_k3k5ta1nw8zidxyg2w9=index_k3k5ta1nw8zidxyg2w9[mask,:]
-    tup_k3k5ta1nw8zidxyg2w9 = tuple(map(tuple, index_cut_k3k5ta1nw8zidxyg2w9))
-    params['p_progprov_dams'] =dict(zip(tup_k3k5ta1nw8zidxyg2w9, progprov_dams_k3k5ta1nw8zidxyg2w9))
+    index_cut_k3k5ta1w8zidxyg2w9=index_k3k5ta1w8zidxyg2w9[mask,:]
+    tup_k3k5ta1w8zidxyg2w9 = tuple(map(tuple, index_cut_k3k5ta1w8zidxyg2w9))
+    params['p_progprov_dams'] =dict(zip(tup_k3k5ta1w8zidxyg2w9, progprov_dams_k3k5ta1w8zidxyg2w9))
 
     ###nunmber prog require by dams
     mask=numbers_progreq_k28k3k5tva1e1b1nw8zida0e0b0xyg1w9!=0
-    progreq_k2k3k5a1nw8ziyg1w9 = numbers_progreq_k28k3k5tva1e1b1nw8zida0e0b0xyg1w9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
+    progreq_k2k3k5a1w8ziyg1w9 = numbers_progreq_k28k3k5tva1e1b1nw8zida0e0b0xyg1w9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
     mask=mask.ravel()
-    index_cut_k2k3k5a1nw8ziyg1w9=index_k2k3k5a1nw8ziyg1w9[mask,:]
-    tup_k2k3k5a1nw8ziyg1w9 = tuple(map(tuple, index_cut_k2k3k5a1nw8ziyg1w9))
-    params['p_progreq_dams'] =dict(zip(tup_k2k3k5a1nw8ziyg1w9, progreq_k2k3k5a1nw8ziyg1w9))
+    index_cut_k2k3k5a1w8ziyg1w9=index_k2k3k5a1w8ziyg1w9[mask,:]
+    tup_k2k3k5a1w8ziyg1w9 = tuple(map(tuple, index_cut_k2k3k5a1w8ziyg1w9))
+    params['p_progreq_dams'] =dict(zip(tup_k2k3k5a1w8ziyg1w9, progreq_k2k3k5a1w8ziyg1w9))
 
     ###number prog provided to offs
     mask=numbers_prog2offs_k3k5tva1e1b1nwzida0e0b0xyg2w9!=0
-    progprov_offs_k3k5ta1nw8zidxyg2w9 = numbers_prog2offs_k3k5tva1e1b1nwzida0e0b0xyg2w9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
+    progprov_offs_k3k5ta1w8zidxyg2w9 = numbers_prog2offs_k3k5tva1e1b1nwzida0e0b0xyg2w9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
     mask=mask.ravel()
-    index_cut_k3k5ta1nw8zidxyg2w9=index_k3k5ta1nw8zidxyg2w9[mask,:]
-    tup_k3k5ta1nw8zidxyg2w9 = tuple(map(tuple, index_cut_k3k5ta1nw8zidxyg2w9))
-    params['p_progprov_offs'] =dict(zip(tup_k3k5ta1nw8zidxyg2w9, progprov_offs_k3k5ta1nw8zidxyg2w9))
+    index_cut_k3k5ta1w8zidxyg2w9=index_k3k5ta1w8zidxyg2w9[mask,:]
+    tup_k3k5ta1w8zidxyg2w9 = tuple(map(tuple, index_cut_k3k5ta1w8zidxyg2w9))
+    params['p_progprov_offs'] =dict(zip(tup_k3k5ta1w8zidxyg2w9, progprov_offs_k3k5ta1w8zidxyg2w9))
 
     ###nunmber prog require by offs
     mask=numbers_progreq_w8zida0e0b0xyg3w9!=0
@@ -4297,12 +4297,12 @@ def generator(params,report):
     params['p_numbers_req_dams'] =dict(zip(tup_k2k2tvanwziyg1g9w, numbers_req_dams_k2k2tva1nw8ziyg1g9w9)) #same keys as prov so dont need to recalc again
     ###numbers_req_offs
     mask=numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9!=0
-    params['numbers_req_numpyvesion_k3k5w8g3w9'] = numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9[:,:,0,0,0,0,0,0,:,0,0,0,0,0,0,0,0,:,:]  #cant use squeze here because i need to keep all relevent axis even if singleton. this is used to speed pyomo constraint.
-    numbers_req_offs_k3k5w8g3w9 = numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
+    params['numbers_req_numpyvesion_k3k5vw8g3w9'] = numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9[:,:,0,:,0,0,0,0,:,0,0,0,0,0,0,0,0,:,:]  #cant use squeze here because i need to keep all relevent axis even if singleton. this is used to speed pyomo constraint.
+    numbers_req_offs_k3k5vw8g3w9 = numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
     mask=mask.ravel()
-    index_cut_k3k5w8g3w9=index_k3k5w8g3w9[mask,:]
-    tup_k3k5w8g3w9 = tuple(map(tuple, index_cut_k3k5w8g3w9))
-    params['p_numbers_req_offs'] =dict(zip(tup_k3k5w8g3w9, numbers_req_offs_k3k5w8g3w9))
+    index_cut_k3k5vw8g3w9=index_k3k5vw8g3w9[mask,:]
+    tup_k3k5vw8g3w9 = tuple(map(tuple, index_cut_k3k5vw8g3w9))
+    params['p_numbers_req_offs'] =dict(zip(tup_k3k5vw8g3w9, numbers_req_offs_k3k5vw8g3w9))
 
     ###mei - sire
     mask=mei_p6fa1e1b1nwzida0e0b0xyg0!=0
@@ -4449,14 +4449,14 @@ def generator(params,report):
     mask=mask.ravel()
     index_cut_k2p5tvanwziyg1=index_k2p5tvanwziyg1[mask,:]
     tup_k2p5tvanwziyg1 = tuple(map(tuple, index_cut_k2p5tvanwziyg1))
-    params['p_labour_anyone_dams'] =dict(zip(tup_k2p5tvanwziyg1, lab_perm_dams_k2p5tva1nw8ziyg))
+    params['p_labour_perm_dams'] =dict(zip(tup_k2p5tvanwziyg1, lab_perm_dams_k2p5tva1nw8ziyg))
     ###manager labour - dams
     mask=lab_manager_k2p5tva1e1b1nwzida0e0b0xyg1!=0
     lab_manager_dams_k2p5tva1nw8ziyg = lab_manager_k2p5tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and sqeezing of array
     mask=mask.ravel()
     index_cut_k2p5tvanwziyg1=index_k2p5tvanwziyg1[mask,:]
     tup_k2p5tvanwziyg1 = tuple(map(tuple, index_cut_k2p5tvanwziyg1))
-    params['p_labour_anyone_dams'] =dict(zip(tup_k2p5tvanwziyg1, lab_manager_dams_k2p5tva1nw8ziyg))
+    params['p_labour_manager_dams'] =dict(zip(tup_k2p5tvanwziyg1, lab_manager_dams_k2p5tva1nw8ziyg))
 
     ###anyone labour - offs
     mask=lab_anyone_k3k5p5tva1e1b1nwzida0e0b0xyg3!=0
@@ -4471,14 +4471,14 @@ def generator(params,report):
     mask=mask.ravel()
     index_cut_k3k5p5tvnw8ziaxyg3=index_k3k5p5tvnw8ziaxyg3[mask,:]
     tup_k3k5p5tvnw8ziaxyg3 = tuple(map(tuple, index_cut_k3k5p5tvnw8ziaxyg3))
-    params['p_labour_anyone_offs'] =dict(zip(tup_k3k5p5tvnw8ziaxyg3, lab_perm_offs_k3k5p5tvnw8ziaxyg3))
+    params['p_labour_perm_offs'] =dict(zip(tup_k3k5p5tvnw8ziaxyg3, lab_perm_offs_k3k5p5tvnw8ziaxyg3))
     ###manager labour - offs
     mask=lab_manager_k3k5p5tva1e1b1nwzida0e0b0xyg3!=0
     lab_manager_offs_k3k5p5tvnw8ziaxyg3 = lab_manager_k3k5p5tva1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and sqeezing of array
     mask=mask.ravel()
     index_cut_k3k5p5tvnw8ziaxyg3=index_k3k5p5tvnw8ziaxyg3[mask,:]
     tup_k3k5p5tvnw8ziaxyg3 = tuple(map(tuple, index_cut_k3k5p5tvnw8ziaxyg3))
-    params['p_labour_anyone_offs'] =dict(zip(tup_k3k5p5tvnw8ziaxyg3, lab_manager_offs_k3k5p5tvnw8ziaxyg3))
+    params['p_labour_manager_offs'] =dict(zip(tup_k3k5p5tvnw8ziaxyg3, lab_manager_offs_k3k5p5tvnw8ziaxyg3))
     
     ###infrastructure - sire
     mask=infrastructure_h1va1e1b1nwzida0e0b0xyg0!=0

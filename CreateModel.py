@@ -58,7 +58,7 @@ def sets() :
 #######################
 
 #labour periods
-model.s_labperiods = Set(initialize=per.p_date2_df().index)
+model.s_labperiods = Set(initialize=per.p_date2_df().index.astype(str)) #needs to be sring for livestock module
 
 
 #######################
@@ -168,7 +168,7 @@ model.s_lw_prog = Set(initialize=['lw%s'%i for i in range(uinp.structure['i_prog
 #pasture             #
 #######################
 ##feed periods
-model.s_feed_periods = Set(ordered=True, initialize=pinp.feed_inputs['feed_periods'].index[:-1], doc='feed periods') #must be ordered so it can be sliced in pasture pyomo to allow feed to be transferred betweeen periods.
+model.s_feed_periods = Set(ordered=True, initialize=pinp.feed_inputs['feed_periods'].index[:-1].astype(str), doc='feed periods') #must be ordered so it can be sliced in pasture pyomo to allow feed to be transferred betweeen periods. Must be string for livestock
 ##pasture types
 model.s_pastures = Set(initialize=uinp.structure['pastures'], doc='feed periods')
 model.s_dry_groups = Set(initialize=uinp.structure['dry_groups'], doc='dry feed pools')
