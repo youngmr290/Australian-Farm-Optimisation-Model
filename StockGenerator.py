@@ -77,14 +77,21 @@ def generator(params,report):
     ######################
     na=np.newaxis
     ## define the periods - default (dams and ssire)
+    sim_years = uinp.structure['i_age_max']
+    sim_years = 3
+    sim_years_offs = min(uinp.structure['i_age_max_offs'], sim_years)
     n_sim_periods, date_start_p, date_end_p, p_index_p, step \
-    = sfun.sim_periods(pinp.sheep['i_startyear'], uinp.structure['i_sim_periods_year'], uinp.structure['i_age_max'])
+    = sfun.sim_periods(pinp.sheep['i_startyear'], uinp.structure['i_sim_periods_year'], sim_years)
+    # n_sim_periods, date_start_p, date_end_p, p_index_p, step \
+    # = sfun.sim_periods(pinp.sheep['i_startyear'], uinp.structure['i_sim_periods_year'], uinp.structure['i_age_max'])
     date_start_pa1e1b1nwzida0e0b0xyg = np.expand_dims(date_start_p, axis = tuple(range(uinp.structure['i_p_pos']+1, 0)))
     date_end_pa1e1b1nwzida0e0b0xyg = np.expand_dims(date_end_p, axis = tuple(range(uinp.structure['i_p_pos']+1, 0)))
     p_index_pa1e1b1nwzida0e0b0xyg = np.expand_dims(p_index_p, axis = tuple(range(uinp.structure['i_p_pos']+1, 0)))
     ## define the periods - offs - these make the p axis customisable for offs which means they can be smaller
     n_sim_periods_offs, offs_date_start_p, offs_date_end_p, p_index_offs_p, step \
-    = sfun.sim_periods(pinp.sheep['i_startyear'], uinp.structure['i_sim_periods_year'], uinp.structure['i_age_max_offs'])
+    = sfun.sim_periods(pinp.sheep['i_startyear'], uinp.structure['i_sim_periods_year'], sim_years_offs)
+    # n_sim_periods_offs, offs_date_start_p, offs_date_end_p, p_index_offs_p, step \
+    # = sfun.sim_periods(pinp.sheep['i_startyear'], uinp.structure['i_sim_periods_year'], uinp.structure['i_age_max_offs'])
     date_start_pa1e1b1nwzida0e0b0xyg3 = np.expand_dims(offs_date_start_p, axis = tuple(range(uinp.structure['i_p_pos']+1, 0)))
     date_end_pa1e1b1nwzida0e0b0xyg3 = np.expand_dims(offs_date_end_p, axis = tuple(range(uinp.structure['i_p_pos']+1, 0)))
     p_index_pa1e1b1nwzida0e0b0xyg3 = np.expand_dims(p_index_offs_p, axis = tuple(range(uinp.structure['i_p_pos']+1, 0)))
@@ -227,11 +234,15 @@ def generator(params,report):
     d_cfw_history_start_m2g3 = np.zeros(m2g3, dtype = 'float64')
 
     ###report variables
-    ###empty arrays to store different return values from the eqation systems in the p loop.
+    ###empty arrays to store different return values from the equation systems in the p loop.
     r_compare_q0q1q2psire = np.zeros(qg0, dtype = 'float32')
     r_compare_q0q1q2pdams = np.zeros(qg1, dtype = 'float32')
     r_compare_q0q1q2pyatf = np.zeros(qg2, dtype = 'float32')
     r_compare_q0q1q2poffs = np.zeros(qg3, dtype = 'float32')
+    ###empty variables to store report values
+    r_age_start_dams = np.zeros(pg1, dtype = 'float32')
+    r_age_start_yatf = np.zeros(pg2, dtype = 'float32')
+    r_age_start_offs = np.zeros(pg3, dtype = 'float32')
     r_ebg_yatf = np.zeros(pg2, dtype = 'float32')
 
     ##output variables for postprocessing
@@ -574,13 +585,13 @@ def generator(params,report):
     ##expand feed periods over all the years of the sim so that an association between sim period can be made.
     feedperiods_p6 = np.array(pinp.feed_inputs['feed_periods']['date']).astype('datetime64[D]')[:-1] #convert from df to numpy remove last date because that is the end date of the last period (not required)
     feedperiods_p6 = feedperiods_p6 + np.timedelta64(365,'D') * ((date_start_p[0].astype(object).year -1) - feedperiods_p6[0].astype(object).year) #this is to make sure the fisrt sim period date is greater than the first feed period date.
-    feedperiods_p6 = np.ravel(feedperiods_p6  + (np.arange(np.ceil(uinp.structure['i_age_max'] +1)) * np.timedelta64(365,'D') )[...,na]) #expand then ravel to return 1d array of the feed period dates expanded the lenght of the sim. +1 because feed periods start and finish mid yr so add one to ensure they go to the end of the sim.
+    feedperiods_p6 = np.ravel(feedperiods_p6  + (np.arange(np.ceil(sim_years +1)) * np.timedelta64(365,'D') )[...,na]) #expand then ravel to return 1d array of the feed period dates expanded the lenght of the sim. +1 because feed periods start and finish mid yr so add one to ensure they go to the end of the sim.
 
 
     ## break of season fvp ^the following two lines of code will have to change once season type is included into the feedperiod inputs (the input will have z axis so the reshaping will need to be done in two steps ie pass in pos2 arg) and apply z mask
     #numbers and production redivided at the start of a new season type.
-    # breakseason_y = pinp.feed_inputs['feed_periods'].loc[0,'date'].to_datetime64().astype('datetime64[D]') + (np.arange(np.ceil(uinp.structure['i_age_max'])) * np.timedelta64(365,'D'))
-    startseason_y = date_start_p[0] + (np.arange(np.ceil(uinp.structure['i_age_max'])) * np.timedelta64(365,'D'))
+    # breakseason_y = pinp.feed_inputs['feed_periods'].loc[0,'date'].to_datetime64().astype('datetime64[D]') + (np.arange(np.ceil(sim_years)) * np.timedelta64(365,'D'))
+    startseason_y = date_start_p[0] + (np.arange(np.ceil(sim_years)) * np.timedelta64(365,'D'))
     seasonstart_ya1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(startseason_y, left_pos=uinp.structure['i_p_pos'])
     idx_ya1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, seasonstart_ya1e1b1nwzida0e0b0xyg, 'right')-1 #gets the sim period index for the period when season breaks (eg break of season fvp starts at the begining of the sim period when season breaks), side=right so that if the date is already the start of a period it remains in that peirod.
     seasonstart_ya1e1b1nwzida0e0b0xyg = date_start_p[idx_ya1e1b1nwzida0e0b0xyg]
@@ -1638,8 +1649,8 @@ def generator(params,report):
 
 
     ## Loop through each week of the simulation (p) for ewes
-    for p in range(120): # to pick up yatf being weaned in p[94]
-    # for p in range(n_sim_periods-1):   #-1 because error at 351
+    #for p in range(120): # to pick up yatf being weaned in p[94]
+    for p in range(n_sim_periods-1):   #-1 because error at 351
         print(p)
         if np.any(period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]):
             print("period is lactation: ", period_is_birth_pa1e1b1nwzida0e0b0xyg1[p])
@@ -2740,6 +2751,10 @@ def generator(params,report):
             o_n_sire_a1e1b1nwzida0e0b0xyg1g0p8[p] = n_sire_a1e1b1nwzida0e0b0xyg1g0p8
             o_rc_start_dams[p] = rc_start_dams
             o_ebg_dams[p] = ebg_dams
+
+            ###store report variables for dams - individual variables can be deleted if not needed
+            # r_numbers_start_dams[p] = numbers_start_pa1e1b1nwzida0e0b0xyg1
+
         ###yatf
         o_ffcfw_start_yatf[p] = ffcfw_start_yatf #use ffcfw_start because weaning start of period, has to be outside of the loop because days per period = 0 when weaning occurs becasue weaning is first day of period. But we need to know the start ffcfw.
         if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
@@ -2759,6 +2774,7 @@ def generator(params,report):
 
             ###store report variables - individual variables can be deleted if not needed
             r_ebg_yatf[p] = ebg_yatf
+            # r_age_start_yatf[p] = age_start_pa1e1b1nwzida0e0b0xyg2
 
     ###offs
         try:
@@ -2781,10 +2797,8 @@ def generator(params,report):
             o_rc_start_offs[p] = rc_start_offs
             o_ebg_offs[p] = ebg_offs
 
-            # plt.plot(r_ffcfw_dams[:, 0, 0, 3, 0, 0:3, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-            # plt.plot(r_ffcfw_dams[:, 0, 1, 3, 0, 0:3, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-            # plt.show()
-
+            ###store report variables for offspring - individual variables can be deleted if not needed
+            # r_age_start_offs[p] = age_start_pa1e1b1nwzida0e0b0xyg3
 
         ###########################
         #stuff for next period    #
@@ -3038,21 +3052,21 @@ def generator(params,report):
     index_p6pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(index_p6, uinp.structure['i_p_pos']-1).astype(dtypeint)
     ###cash period
     cash_period_dates = per.cashflow_periods().iloc[:-1,0].to_numpy().astype('datetime64[D]') #dont include last cash period date because it is just the end date of the last period
-    cash_period_dates_cy = cash_period_dates + (np.arange(np.ceil(uinp.structure['i_age_max'])) * np.timedelta64(365,'D'))[:,na] #expand from single yr to all length of generator
+    cash_period_dates_cy = cash_period_dates + (np.arange(np.ceil(sim_years)) * np.timedelta64(365,'D'))[:,na] #expand from single yr to all length of generator
     cash_period_dates_c = cash_period_dates_cy.ravel()
     a_c_p = sfun.f_next_prev_association(cash_period_dates_c, date_end_p, 1,'right') % len(cash_period_dates) #% len required to convert association back to only the number of cash periods
     a_c_pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(a_c_p, uinp.structure['i_p_pos']).astype(dtype)
     index_ctpa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(np.arange(len(cash_period_dates)), uinp.structure['i_p_pos']-2)
     ###labour peirod
     labour_periods = per.p_date2_df().iloc[:,0].to_numpy().astype('datetime64[D]') #convert from df to numpy
-    labour_periods_p5y = labour_periods + (np.arange(np.ceil(uinp.structure['i_age_max'])) * np.timedelta64(365,'D'))[:,na] #expand from single yr to all length of generator
+    labour_periods_p5y = labour_periods + (np.arange(np.ceil(sim_years)) * np.timedelta64(365,'D'))[:,na] #expand from single yr to all length of generator
     labour_periods_p5 = labour_periods_p5y.ravel()
     a_p5_p = sfun.f_next_prev_association(labour_periods_p5, date_end_p, 1, 'right') % len(labour_periods)
     a_p5_pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(a_p5_p, uinp.structure['i_p_pos']).astype(dtype)
     index_p5tpa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(np.arange(len(labour_periods)), uinp.structure['i_p_pos']-2)
     ###asset value timing - the date when the asset value is tallied
     assetvalue_timing = np.datetime64(uinp.structure['i_date_assetvalue']).astype('datetime64[D]') #convert from df to numpy
-    assetvalue_timing_y = assetvalue_timing + (np.arange(np.ceil(uinp.structure['i_age_max'])) * np.timedelta64(365,'D')) #timing of asset value calculation each yr
+    assetvalue_timing_y = assetvalue_timing + (np.arange(np.ceil(sim_years)) * np.timedelta64(365,'D')) #timing of asset value calculation each yr
     a_assetvalue_p = sfun.f_next_prev_association(assetvalue_timing_y, date_end_p, 1,'right')
     a_assetvalue_pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(a_assetvalue_p, uinp.structure['i_p_pos'])
     assetvalue_timing_pa1e1b1nwzida0e0b0xyg = assetvalue_timing_y[a_assetvalue_pa1e1b1nwzida0e0b0xyg]
@@ -3111,7 +3125,7 @@ def generator(params,report):
     date_purch_oa1e1b1nwzida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['i_date_purch_ig0'], 'sire', pinp.sheep['i_i_pos'], left_pos2=uinp.structure['i_p_pos']-1, right_pos2=pinp.sheep['i_i_pos'], condition=pinp.sheep['i_masksire_i'], axis=pinp.sheep['i_i_pos']).astype('datetime64[D]')
     date_sale_oa1e1b1nwzida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['i_date_sale_ig0'], 'sire', pinp.sheep['i_i_pos'], left_pos2=uinp.structure['i_p_pos']-1, right_pos2=pinp.sheep['i_i_pos'], condition=pinp.sheep['i_masksire_i'], axis=pinp.sheep['i_i_pos']).astype('datetime64[D]')
     sire_periods_g0p8y = sire_periods_g0p8[..., na].astype('datetime64[D]') + (
-                         np.arange(np.ceil(uinp.structure['i_age_max'])) * np.timedelta64(365, 'D'))
+                         np.arange(np.ceil(sim_years)) * np.timedelta64(365, 'D'))
     period_is_startp8_pa1e1b1nwzida0e0b0xyg0p8y = sfun.f_period_is_('period_is', sire_periods_g0p8y, date_start_pa1e1b1nwzida0e0b0xyg[...,na,na], date_end_p = date_end_pa1e1b1nwzida0e0b0xyg[...,na,na])
     period_is_startp8_pa1e1b1nwzida0e0b0xyg0p8 = np.any(period_is_startp8_pa1e1b1nwzida0e0b0xyg0p8y, axis=-1) #condense the y axis - it is now accounted for by p axis
     ##dams
@@ -4073,6 +4087,10 @@ def generator(params,report):
     ###numbers req
     numbers_progreq_w8zida0e0b0xyg3w9 = 1 * (mask_numbers_reqw8w9_w8zida0e0b0xyg3w9 > 0)
 
+    # plt.plot(o_ffcfw_dams[:, 0, 0:2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    # plt.plot(o_ffcfw_dams[:, 0, 1, 3, 0, 0:3, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    # plt.plot(o_ffcfw_start_yatf[:, 0, 0:2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    # plt.show()
 
     #########
     #params #
