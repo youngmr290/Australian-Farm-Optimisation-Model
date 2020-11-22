@@ -241,6 +241,8 @@ def generator(params,report):
     r_compare_q0q1q2poffs = np.zeros(qg3, dtype = 'float32')
     ###empty variables to store report values
     r_age_start_dams = np.zeros(pg1, dtype = 'float32')
+    r_intake_f_dams = np.zeros(pg1, dtype = 'float32')
+    r_md_solid_dams = np.zeros(pg1, dtype = 'float32')
     r_age_start_yatf = np.zeros(pg2, dtype = 'float32')
     r_age_start_offs = np.zeros(pg3, dtype = 'float32')
     r_ebg_yatf = np.zeros(pg2, dtype = 'float32')
@@ -248,6 +250,7 @@ def generator(params,report):
     ##output variables for postprocessing
     dtype='float32' #using 64 was getting slow
     dtypeint='int32' #using 64 was getting slow
+
     ###sire
     o_numbers_start_sire = np.zeros(pg0, dtype =dtype)
     o_numbers_end_sire = np.zeros(pg0, dtype =dtype)
@@ -283,6 +286,7 @@ def generator(params,report):
     o_rc_start_dams = np.zeros(pg1, dtype =dtype)
     o_ebg_dams = np.zeros(pg1, dtype =dtype)
     o_n_sire_a1e1b1nwzida0e0b0xyg1g0p8 = np.zeros((len_p, 1, 1, 1, 1, 1, len_z, len_i, 1, 1, 1, 1, 1, len_y, len_g1,len_p8,len_g0), dtype =dtype)
+
     ###yatf
     o_numbers_start_yatf = np.zeros(pg2, dtype =dtype)
     # o_numbers_end_yatf = np.zeros(pg2, dtype =dtype)
@@ -298,6 +302,7 @@ def generator(params,report):
     # o_fd_yatf = np.zeros(pg2, dtype =dtype)
     # o_fd_min_yatf = np.zeros(pg2, dtype =dtype)
     o_rc_start_yatf = np.zeros(pg2, dtype =dtype)
+
     ###offs
     o_numbers_start_offs = np.zeros(pg3, dtype =dtype)
     o_numbers_end_offs = np.zeros(pg3, dtype =dtype)
@@ -2753,7 +2758,8 @@ def generator(params,report):
             o_ebg_dams[p] = ebg_dams
 
             ###store report variables for dams - individual variables can be deleted if not needed
-            # r_numbers_start_dams[p] = numbers_start_pa1e1b1nwzida0e0b0xyg1
+            r_intake_f_dams[p] = intake_f_dams
+            r_md_solid_dams[p] = md_solid_dams
 
         ###yatf
         o_ffcfw_start_yatf[p] = ffcfw_start_yatf #use ffcfw_start because weaning start of period, has to be outside of the loop because days per period = 0 when weaning occurs becasue weaning is first day of period. But we need to know the start ffcfw.
@@ -3683,9 +3689,10 @@ def generator(params,report):
     ffcfw_end_condensed_tva1e1b1nwzida0e0b0xyg1 = np.take_along_axis(ffcfw_end_condensed_va1e1b1nwzida0e0b0xyg1[na], a_g1_tpa1e1b1nwzida0e0b0xyg1,-1)
     ###numbers
     numbers_end_va1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_numbers_end_dams, a_v_pa1e1b1nwzida0e0b0xyg1,period_is_tp=nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
-    ###A further adjustment for dam numbers is to calculate the values that would be the start values for the next period if weights & numbers were not condensed at the beginning of the DVP type 0
-    temporary = np.sum(numbers_end_va1e1b1nwzida0e0b0xyg1, axis=prejoin_tup, keepdims=True) * numbers_initial_propn_repro_a1e1b1nwzida0e0b0xyg1.astype(dtype)
-    numbers_start_next_va1e1b1nwzida0e0b0xyg1 = fun.f_update(numbers_end_va1e1b1nwzida0e0b0xyg1, temporary, dvp_type_next_va1e1b1nwzida0e0b0xyg1 == 0) #basically numbers start without clustering based on lw
+    # ###A further adjustment for dam numbers is to calculate the values that would be the start values for the next period if weights & numbers were not condensed at the beginning of the DVP type 0
+    # ^ this does not work because the link with the matrix decision variables is not retained. Summing across axes can only be done as part of clustering which is related to the DVs
+    # temporary = np.sum(numbers_end_va1e1b1nwzida0e0b0xyg1, axis=prejoin_tup, keepdims=True) * numbers_initial_propn_repro_a1e1b1nwzida0e0b0xyg1.astype(dtype)  #total number of ewes allocated to the initial slices (a1, e1 & b1 slice 0)
+    # numbers_start_next_va1e1b1nwzida0e0b0xyg1 = fun.f_update(numbers_end_va1e1b1nwzida0e0b0xyg1, temporary, dvp_type_next_va1e1b1nwzida0e0b0xyg1 == 0)
     numbers_start_va1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_numbers_start_dams, a_v_pa1e1b1nwzida0e0b0xyg1,period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
     ###npw - active d axis
     npw_tva1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_numbers_start_yatf, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_start_dams,
@@ -3743,7 +3750,7 @@ def generator(params,report):
     ### a temporary array that is the cluster at prejoining with not mated (0) and mated (1) along the b1 axis
     temporary = np.ones_like(a_k2cluster_tva1e1b1nwzida0e0b0xyg1g9)
     temporary[:,:,:,:,0,...] = 0
-    a_k2cluster_next_tva1e1b1nwzida0e0b0xyg1g9 = fun.f_update(np.roll(a_k2cluster_tva1e1b1nwzida0e0b0xyg1g9, 1, axis=1), temporary,
+    a_k2cluster_next_tva1e1b1nwzida0e0b0xyg1g9 = fun.f_update(np.roll(a_k2cluster_tva1e1b1nwzida0e0b0xyg1g9, -1, axis=1), temporary,
                                           (a_g1_tpa1e1b1nwzida0e0b0xyg1[..., na, :] != index_g1g) * transfer_exists_tpa1e1b1nwzida0e0b0xyg1[..., na])
     k2_len = np.max(a_k2cluster_va1e1b1nwzida0e0b0xyg1)+1  #Added +1 because python starts at 0.
     index_k2tva1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(np.arange(k2_len), uinp.structure['i_k2_pos'])
@@ -3910,20 +3917,26 @@ def generator(params,report):
     #     keepdims=True)) * mask_sales_tva1e1b1nw8zida0e0b0xyg1w9
 
     ##fourth option
+    # denominator = np.sum(numbers_start_va1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k28k29tva1e1b1nwzida0e0b0xyg1),
+    #              axis=(uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)  # use standard cluster without t/g9 axis because the denominator is (the clustering for) the decision variable as at the start of the DVP)
+    # temporary = np.sum(numbers_start_va1e1b1nwzida0e0b0xyg1, axis=(uinp.parameters['i_a1_pos'], uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True) #to scale to equivalent of the numerator which is shaped using initial_repro when dvp_type_next == 0
+    # denominator = fun.f_update(denominator, temporary, dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == 0)
     numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_divide(
-        np.sum(numbers_start_next_va1e1b1nwzida0e0b0xyg1[..., na,na]
-               * mask_numbers_provw8w9_tva1e1b1nw8zida0e0b0xyg1w9[..., na,:] * mask_numbers_provt_tpa1e1b1nwzida0e0b0xyg1g9[..., na] * distribution_tva1e1b1nw8zida0e0b0xyg1w9[..., na,:] *
-               (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k28k29tva1e1b1nwzida0e0b0xyg1)[..., na,na] * (                #The numerator has both k2 with g9 axis and without. One to reflect the decison varaible (k28) and one for the constraint (k29). So I think this is all good
-                       a_k2cluster_next_tva1e1b1nwzida0e0b0xyg1g9 == index_k29tva1e1b1nwzida0e0b0xyg1g9)[..., na],
-               axis=(uinp.parameters['i_b1_pos'] - 2, pinp.sheep['i_e1_pos'] - 2), keepdims=True)
+          np.sum(numbers_end_va1e1b1nwzida0e0b0xyg1[..., na,na]
+                * mask_numbers_provw8w9_tva1e1b1nw8zida0e0b0xyg1w9[..., na,:]
+                * mask_numbers_provt_tpa1e1b1nwzida0e0b0xyg1g9[..., na]
+                * distribution_tva1e1b1nw8zida0e0b0xyg1w9[..., na,:]
+                * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k28k29tva1e1b1nwzida0e0b0xyg1)[..., na,na]                #The numerator has both k2 with g9 axis and without. One to reflect the decison varaible (k28) and one for the constraint (k29). So I think this is all good
+                * (a_k2cluster_next_tva1e1b1nwzida0e0b0xyg1g9 == index_k29tva1e1b1nwzida0e0b0xyg1g9)[..., na],
+                axis=(uinp.parameters['i_b1_pos'] - 2, pinp.sheep['i_e1_pos'] - 2), keepdims=True)
         , np.sum(numbers_start_va1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k28k29tva1e1b1nwzida0e0b0xyg1),
-                 axis=(uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)[..., na,na]) #na for w9 and g9 (use standard cluster without t/g9 axis because the denominator is (the clustering for) the decision variable as at the start of the DVP)
-    ###combine nm and 00 cluster for prejoining to scanning
-    numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,0:1,...] = numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,0:1,...
-                                                                      ] + numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,1:2,...] * (dvp_type_next_tva1e1b1nwzida0e0b0xyg1[:,:,:,0:1,...,na,na]==0) #take slice 0 of e (for prejoining all e slices are the same)
-    numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,1:2,...] = numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,1:2,...] * (dvp_type_next_tva1e1b1nwzida0e0b0xyg1[:,:,:,0:1,...,na,na]!=0) #take slice 0 of e (for prejoining all e slices are the same
+                axis=(uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)[..., na,na]) #na for w9 and g9 (use standard cluster without t/g9 axis because the denominator is (the clustering for) the decision variable as at the start of the DVP)
+    ###combine nm and 00 cluster for the numbers provided to the prejoining period (so matrix can optimise choice of joining or not)
+    temporary = np.sum(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, axis=1, keepdims=True) * (index_k29tva1e1b1nwzida0e0b0xyg1g9[...,na] == 0)  # put the sum of the k29 in slice 0
+    numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_update(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, temporary,
+                                                                        dvp_type_next_tva1e1b1nwzida0e0b0xyg1[:, :, :, 0:1, ..., na,na] == 0)  #take slice 0 of e (for prejoining all e slices are the same)
     ###combine wean numbers at prejoining to allow the matrix to select a different weaning time for the coming yr.
-    #^cant just sum across the a slice (decision variable) so allow a0 to provide a1 we will need another a axis (see google doc)
+    #^cant just sum across the a slice (decision variable) so allow a0 to provide a1 we will need another a axis (see google doc) - fix this in version 2
     # temporary = np.sum(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, axis=pinp.sheep['i_a1_pos']-1, keepdims=True) * (index_a1e1b1nwzida0e0b0xyg[...,na] == 0)
     # numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_update(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, temporary, dvp_type_next_tva1e1b1nwzida0e0b0xyg1[:,:,:,0:1,...,na] == 0) #take slice 0 of e (for prejoining all e slices are the same
 
@@ -3943,9 +3956,9 @@ def generator(params,report):
                                                                        * ((a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k28k29tva1e1b1nwzida0e0b0xyg1) * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1))[...,na,na]
                                                                        , axis = (uinp.parameters['i_b1_pos']-2, pinp.sheep['i_e1_pos']-2), keepdims=True)>0)
     ####combine nm and 00 cluster for prejoining to scanning
-    numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,0:1,...] = numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,0:1,...
-                                                                     ] + numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,1:2,...] * (dvp_type_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...,na,na]==0) #take slice 0 of e (for prejoining all e slices are the same)
-    numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,1:2,...] = numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,1:2,...] * (dvp_type_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...,na,na]!=0) #take slice 0 of e (for prejoining all e slices are the same
+    temporary = np.sum(numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, axis=1, keepdims=True) * (index_k29tva1e1b1nwzida0e0b0xyg1g9[...,na] == 0)  # put the sum of the k29 in slice 0
+    numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_update(numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, temporary,
+                                                                        dvp_type_va1e1b1nwzida0e0b0xyg1[:, :, 0:1, ..., na,na] == 0)  #take slice 0 of e (for prejoining all e slices are the same)
     ####combine wean numbers at prejoining to allow the matrix to select a different weaning time for the coming yr.
     #^cant just sum across the a slice (decision variable) so allow a0 to provide a1 we will need another a axis (see google doc)
     # temporary = np.sum(numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, axis=pinp.sheep['i_a1_pos']-1, keepdims=True) * (index_a1e1b1nwzida0e0b0xyg[...,na] == 0)
@@ -4087,9 +4100,14 @@ def generator(params,report):
     ###numbers req
     numbers_progreq_w8zida0e0b0xyg3w9 = 1 * (mask_numbers_reqw8w9_w8zida0e0b0xyg3w9 > 0)
 
-    # plt.plot(o_ffcfw_dams[:, 0, 0:2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-    # plt.plot(o_ffcfw_dams[:, 0, 1, 3, 0, 0:3, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-    # plt.plot(o_ffcfw_start_yatf[:, 0, 0:2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    # plt.plot(o_ffcfw_dams[:, 0, 0:2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])         #compare e1 for singles
+    # plt.plot(o_ffcfw_dams[:, 0, 1, 3, 0, 0:3, 0, 0, 0, 0, 0, 0, 0, 0, 0])         #compare w for singles and e1[1]
+    # plt.plot(o_ffcfw_start_yatf[:, 0, 0:2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])   #compare e1 for singles
+    # plt.plot(o_ebg_dams[:, 0, 0:2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])           #compare e1 for singles
+    # plt.plot(o_pi_dams[:, 0, 0:2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])            #compare e1 for singles
+    # plt.plot(o_mei_solid_dams[:, 0, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])           #compare b1 for first cycle
+    # plt.plot(r_intake_f_dams[:, 0, 0:2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])        #compare e1 for singles
+    # plt.plot(r_md_solid_dams[:, 0, 0:2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])        #compare e1 for singles
     # plt.show()
 
     #########

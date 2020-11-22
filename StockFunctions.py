@@ -1272,7 +1272,7 @@ def f_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfoe
         if np.any(period_is_matingend):
             temporary  = np.copy(numbers)
             temporary[:, 0:1, 1:2, ...] += numbers[:, 0:1, 0:1, ...]
-            temporary[:, 0, 0, ...] = 0.001 #want a small number in nm so it can be activity
+            temporary[:, 0, 0, ...] = 0.00001 #so nm can be an activity without nan. want a small number relative to mortality after allowing for multiple slices getting the small number
             numbers = fun.f_update(numbers, temporary, period_is_matingend)
         ###d) birth (account for birth status and if drys are retained)
         if np.any(period_is_birth):
