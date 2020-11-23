@@ -72,6 +72,8 @@ def generator(params,report):
     None.
     """
 
+    generator_start = time.time()
+
     ######################
     ##date               #
     ######################
@@ -3033,6 +3035,8 @@ def generator(params,report):
             ###numbers at the begining of fvp 0 (used to calc mort for the lw patterns to determine the lowest feasible level - used in the start prod func)
             numbers_start_fvp0_offs = fun.f_update(numbers_start_fvp0_offs, numbers_start_off, period_is_startfvp0_pa1e1b1nwzida0e0b0xyg3[p + 1])
 
+    postp_start=time.time()
+    print('generator :', postp_start - generator_start)
 
 
 
@@ -4569,3 +4573,4 @@ def generator(params,report):
     print('number params: ', keys_start - number_param_start)
     # print('key: ',ravel_start - keys_start)
     print('ravel array and zip with key: ',finish - keys_start)
+    print('end of generator')   # a line that can be used to break at the end of the generator
