@@ -658,6 +658,14 @@ def f_update(existing_value, new_value, mask_for_new):
         returns a combination of the two input arrays determined by the mask. Note: multiplying by true return the origional number and multiplying by false results in 0.
 
     '''
+    ##convert '-' to 0 (because '-' * False == '' which causes and error when you add to existing value)
+    ##need a try and except incase the new value is not a numpy array (ie it is a single value)
+    if np.any(new_value=='-'):
+        try:
+            new_value[new_value=='-'] = 0
+            new_value = new_value.astype(float) #need to convert to number because if str it chucks error below
+        except TypeError:
+            new_value = 0
     updated = existing_value * np.logical_not(mask_for_new) + new_value * mask_for_new #used not rather than ~ because ~False == -1 not True (not the case for np.arrays only if bool is single - as it is for sire in some situatoins)
     ##sometimes a single int is update eg in the first iteration on generator. this causes error because only numpy arrays have .dtype
     try:
@@ -770,7 +778,7 @@ def f_sa(value, sa, sa_type=0, target=0, value_min=-np.inf,pandas=False, axis=0)
     elif sa_type == 4:
          value = np.maximum(0, np.minimum(1, value * (1 - np.abs(sa)) + np.maximum(0, sa)))
     ##Type 5 is value (return the SA value)
-    elif sa_type == 5 and sa!='-':
+    elif sa_type == 5:
         value = f_update(value, sa, sa != '-')
 
     return value

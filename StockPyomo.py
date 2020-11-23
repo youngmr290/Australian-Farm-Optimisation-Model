@@ -16,14 +16,12 @@ from CreateModel import model
 import StockGenerator as sgen
 
 
+def stock_precalcs(params, report):
+    sgen.generator(params, report)
 
 
 
-
-def sheep_pyomo_local(params,report):
-
-
-    sgen.generator(params,report)
+def stockpyomo_local(params):
 
     ##these sets require info from the stock module
     model.s_wean_times = pe.Set(initialize=params['a_idx'], doc='weaning options')
@@ -59,20 +57,12 @@ def sheep_pyomo_local(params,report):
     model.v_prog = pe.Var(model.s_k5_birth_offs, model.s_sale_prog, model.s_lw_prog, model.s_season_types,
                           model.s_tol, model.s_damage, model.s_wean_times, model.s_gender,
                           model.s_groups_prog, bounds = (0,None) , doc='number of offs animals')
-    ##animal transfers
-    # model.v_offs2dam = pe.Var(model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types,
-    #                           model.s_tol, model.s_k3_damage_offs, model.s_wean_times, model.s_k5_birth_offs, model.s_gender, model.s_gen_merit_offs,
-    #                           model.s_groups_offs, model.s_groups_dams, bounds = (0,None) , doc='transfer of animals from the offspring variables to the dam variables.')
-    # model.v_dams2sire = pe.Var(model.s_dvp_dams, model.s_wean_times, model.s_k2_birth_dams, model.s_nut_dams, model.s_lw_dams,
-    #                            model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_groups_sire,
-    #                            bounds = (0,None) , doc='transfer of animals from the dam variables of one sire genotype to another sire genotype')
 
 
     ##purchases
     model.v_purchase_dams = pe.Var(model.s_dvp_dams, model.s_lw_dams, model.s_season_types, model.s_tol, model.s_groups_dams, bounds = (0,None) , doc='number of purchased dam animals')
     model.v_purchase_offs = pe.Var(model.s_dvp_offs, model.s_lw_offs, model.s_season_types, model.s_tol, model.s_groups_offs, bounds = (0,None) , doc='number of purchased offs animals')
-    ##mating
-    # model.v_sirecap = pe.Var(model.s_groups_sire, model.s_sire_periods, bounds = (0,None) , doc='number of sire animals')
+
 
     ######################
     ### setup parameters #
@@ -107,7 +97,6 @@ def sheep_pyomo_local(params,report):
     model.p_npw = pe.Param(model.s_k2_birth_dams, model.s_k5_birth_offs, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams,
                               model.s_season_types, model.s_tol, model.s_damage, model.s_gender, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_prog, model.s_tol,
                               initialize=params['p_npw_dams'], default=0.0, doc='number of prodgeny weaned')
-
     try:
         model.del_component(model.p_progprov_dams_index)
         model.del_component(model.p_npp_progprov_damsw)
@@ -116,7 +105,6 @@ def sheep_pyomo_local(params,report):
     model.p_progprov_dams = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_prog, model.s_wean_times, model.s_lw_prog,
                               model.s_season_types, model.s_tol, model.s_damage, model.s_gender, model.s_gen_merit_dams, model.s_groups_prog, model.s_groups_dams, model.s_lw_dams,
                               initialize=params['p_progprov_dams'], default=0.0, doc='number of prodgeny provided to dams')
-
     try:
         model.del_component(model.p_progreq_dams_index)
         model.del_component(model.p_progreq_dams)
@@ -125,7 +113,6 @@ def sheep_pyomo_local(params,report):
     model.p_progreq_dams = pe.Param(model.s_k2_birth_dams, model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_wean_times, model.s_lw_dams,
                               model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_groups_dams, model.s_lw_dams,
                               initialize=params['p_progreq_dams'], default=0.0, doc='number of prodgeny required by dams')
-
     try:
         model.del_component(model.p_progprov_offs_index)
         model.del_component(model.p_progprov_offs)
@@ -134,7 +121,6 @@ def sheep_pyomo_local(params,report):
     model.p_progprov_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_prog, model.s_wean_times, model.s_lw_prog,
                               model.s_season_types, model.s_tol, model.s_damage, model.s_gender, model.s_gen_merit_offs, model.s_groups_offs, model.s_lw_offs,
                               initialize=params['p_progprov_offs'], default=0.0, doc='number of prodgeny provided to dams')
-
     try:
         model.del_component(model.p_progreq_offs_index)
         model.del_component(model.p_progreq_offs)
@@ -421,17 +407,17 @@ def sheep_pyomo_local(params,report):
     #                                  model.s_gen_merit_dams, model.s_groups_dams, model.s_groups_dams,
     #                                  initialize=, default=0.0, doc='Proportion of the animals distributed to each of the starting LWs of the recipient animals at the beginning of the recipients next feed variation period')
 
-    textbuffer = StringIO()
-    model.p_numbers_prov_dams.pprint(textbuffer)
-    textbuffer.write('\n')
-    with open('number_prov.txt', 'w') as outputfile:
-        outputfile.write(textbuffer.getvalue())
-
-    textbuffer = StringIO()
-    model.p_numbers_req_dams.pprint(textbuffer)
-    textbuffer.write('\n')
-    with open('number_prov.txt', 'w') as outputfile:
-        outputfile.write(textbuffer.getvalue())
+    # textbuffer = StringIO()
+    # model.p_numbers_prov_dams.pprint(textbuffer)
+    # textbuffer.write('\n')
+    # with open('number_prov.txt', 'w') as outputfile:
+    #     outputfile.write(textbuffer.getvalue())
+    #
+    # textbuffer = StringIO()
+    # model.p_numbers_req_dams.pprint(textbuffer)
+    # textbuffer.write('\n')
+    # with open('number_prov.txt', 'w') as outputfile:
+    #     outputfile.write(textbuffer.getvalue())
 
 
     end_params = time.time()
@@ -458,72 +444,8 @@ def sheep_pyomo_local(params,report):
 
     print('set up constraints')
 
-    # try:
-    #     model.del_component(model.con_damR_index)
-    #     model.del_component(model.con_damR)
-    # except AttributeError:
-    #     pass
-    # def damR(model,k29,v1,a,z,i,y1,g1,w9):
-    #     v1_prev = list(model.s_dvp_dams)[list(model.s_dvp_dams).index(v1) - 1]  #used to get the activity number from the last period - to determine the number of dam provided into this period
-    #     con = sum(model.v_dams[k28,t1,v1,a,n1,w8,z,i,y1,g1] * model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9]
-    #                - model.v_dams[k28,t1,v1_prev,a,n1,w8,z,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z,i,y1,g1,w9]
-    #                for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams
-    #                if model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9] !=0 or model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z,i,y1,g1,w9] !=0) <= 0
-    #         # + sum(model.v_dams2sire[v1,a,b1,n1,w1,z,i,y1,g1,g1_new]
-    #         #       - model.v_dams2sire[v1_prev,a,b1,n1,w1,z,i,y1,g1,g1_new] * model.p_dam2sire_numbers[v1,a,b1,n1,w1,z,i,y1,g1,g1_new]
-    #         #       for n1 in model.s_nut_dams for g1_new in model.s_groups_dams) \
-    #         # - model.v_purchase_dams[v1,w1,z,i,g1] * model.p_numberpurch_dam[v1,a,b1,w1,z,i,y1,g1] \ #p_numpurch allocates the purchased dams into certain sets, in this case it is correct to multiply a var with less sets to a param with more sets
-    #         # - sum(model.v_offs2dam[v3,n3,w3,z3,i3,d,a3,b3,x,y3,g3,g1_off] * model.p_offs2dam_numbers[v3,n3,w3,z3,i3,d,a3,b3,x,y3,g3,g1_off,v1,a,b1,w1,z,i,y1,g1]
-    #         #       for v3 in model.s_dvp_offs for n3 in model.s_nut_offs for w3 in model.s_lw_offs for z3 in model.s_season_types for i3 in model.s_tol for d in model.s_k3_damage_offs for a3 in model.s_wean_times
-    #         #       for b3 in model.s_k5_birth_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs for g1_off in model.s_groups_dams)  #have to track off sets so only they are summed.
-    #     ###if statement required to handle the constraints that dont exist due to lw clustering
-    #     # if sum(model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9] for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams if model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9] !=0) ==0 and sum(model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z,i,y1,g1,w9]
-    #     #         for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams if model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z,i,y1,g1,w9] !=0)==0:
-    #     #     pass
-    #     if type(con)==bool:
-    #         return pe.Constraint.Skip
-    #     else: return con
 
-    # try:
-    #     model.del_component(model.con_damR_index)
-    #     model.del_component(model.con_damR)
-    # except AttributeError:
-    #     pass
-    # def damR1(model,k29,v1,a,z,i,y1,g1,w9):
-    #     v1_prev = list(model.s_dvp_dams)[list(model.s_dvp_dams).index(v1) - 1]  #used to get the activity number from the last period - to determine the number of dam provided into this period
-    #     con = sum(model.v_dams[k28,t1,v1,a,n1,w8,z,i,y1,g1] * model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9]
-    #                - model.v_dams[k28,t1,v1_prev,a,n1,w8,z,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z,i,y1,g1,w9]
-    #                for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams
-    #                if model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9] !=0) <= 0
-    #     if type(con)==bool:
-    #         return pe.Constraint.Skip
-    #     else: return con
-    # start=time.time()
-    # # model.con_damR = pe.Constraint(model.s_k2_birth_dams, model.s_dvp_dams, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_dams, rule=damR1, doc='transfer of off to dam and dam from last dvp to current dvp.')
-    # end=time.time()
-    # print('method 1: ',end-start)
-
-    # ##method 2
-    # try:
-    #     model.del_component(model.con_damR_index)
-    #     model.del_component(model.con_damR)
-    # except AttributeError:
-    #     pass
-    # def damR2(model,k29,v1,a,z,i,y1,g1,w9):
-    #     v1_prev = list(model.s_dvp_dams)[list(model.s_dvp_dams).index(v1) - 1]  #used to get the activity number from the last period - to determine the number of dam provided into this period
-    #     ##skip constraint if the require param is 0
-    #     if not any(model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9] for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams):
-    #         return pe.Constraint.Skip
-    #     return sum(model.v_dams[k28,t1,v1,a,n1,w8,z,i,y1,g1] * model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9]
-    #                - model.v_dams[k28,t1,v1_prev,a,n1,w8,z,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z,i,y1,g1,w9]
-    #                for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams
-    #                if model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9] !=0) <= 0
-    # start=time.time()
-    # model.con_damR = pe.Constraint(model.s_k2_birth_dams, model.s_dvp_dams, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_dams, rule=damR2, doc='transfer of off to dam and dam from last dvp to current dvp.')
-    # end=time.time()
-    # print('method 2: ',end-start)
-
-    ##method 3
+    ##turn sets into list so they can be indexed (required for advanced mehtod to save time)
     l_k29 = list(model.s_k2_birth_dams)
     l_v1 = list(model.s_dvp_dams)
     l_a = list(model.s_wean_times)
@@ -532,13 +454,13 @@ def sheep_pyomo_local(params,report):
     l_y1 = list(model.s_gen_merit_dams)
     l_g9 = list(model.s_groups_dams)
     l_w9 = list(model.s_lw_dams)
-    l_x = list(model.s_gender)
-    l_d = list(model.s_damage)
     l_k3 = list(model.s_k3_damage_offs)
     l_k5 = list(model.s_k5_birth_offs)
     l_v3 = list(model.s_dvp_offs)
     l_g3 = list(model.s_groups_offs)
     l_w9_offs = list(model.s_lw_offs)
+
+
     try:
         model.del_component(model.con_damR_index)
         model.del_component(model.con_damR)
@@ -659,25 +581,6 @@ def sheep_pyomo_local(params,report):
     print(end-start)
 
 
-
-
-
-    # try:
-    #     model.del_component(model.con_offsR)
-    # except AttributeError:
-    #     pass
-    # def offsR(model,k3,k5,v3,w3,z,i,d,a,b3,x,y3,g3):
-    #     f3_prev = list(model.s_dvp_offs)[list(model.s_dvp_offs).index(v3) - 1]  #used to get the activity number from the last period - to determine the number of off provided into this period
-    #     return sum(model.v_offs2dam[v3,n3,w3,z,i,d,a,b3,x,y3,g3,g1] for n3 in model.s_nut_offs for g1 in model.s_groups_dams) \
-    #         + sum(model.v_offs[k3,k5,t3,v3,n3,w3,z,i,d,a,b3,x,y3,g3]
-    #                - model.v_offs[k3,k5,t3,f3_prev,n3,w3,z,i,d,a,b3,x,y3,g3] * model.p_numbers_prov_offs[k3,k5,t3,v3,n3,w3,z,i,d,a,b3,x,y3,g3]
-    #                for t3 in model.s_sale_offs for n3 in model.s_nut_offs) \
-    #         - model.v_purchase_offs[v3,w3,z,i,g3] * model.p_numberpurch_offs[v3,w3,z,i,d,a,b3,x,y3,g3] \ #p_numpurch allocates the purchased offs into certain sets, in this case it is correct to multiply a var with less sets to a param with more sets
-    #         - sum(model.v_dams[t1,v1,a1,b1,n1,w1,z1,i1,y1,g1] * model.p_npw[t1,v1,a1,b1,n1,w1,z1,i1,y1,g1,v3,w3,z,i,d,a,b3,x,y3,g3] #have to distinguish between a1 and a3 so only the a from dams is summed.
-    #                   for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for a1 in model.s_wean_times for b1 in model.s_k2_birth_dams for n1 in model.s_nut_dams for w1 in model.s_lw_dams for z1 in model.s_season_types for i1 in model.s_tol for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams)   <=0
-    # model.con_offsR = pe.Constraint(model.s_dvp_offs, model.s_lw_offs, model.s_season_types, model.s_tol, model.s_k3_damage_offs,
-    #                                  model.s_wean_times, model.s_k5_birth_offs, model.s_gender, model.s_gen_merit_offs, model.s_groups_offs,
-    #                                  model.s_co_cfw, model.s_co_fd, model.s_co_min_fd, model.s_co_fl, rule=offsR, doc='transfer of off to next dvp.')
 
     try:
         model.del_component(model.con_matingR)
@@ -813,8 +716,74 @@ def stock_labour_anyone(model,p5):
 #
 #
 
+##################################
+# old methods used to find speed #
+##################################
 
+    # try:
+    #     model.del_component(model.con_damR_index)
+    #     model.del_component(model.con_damR)
+    # except AttributeError:
+    #     pass
+    # def damR(model,k29,v1,a,z,i,y1,g1,w9):
+    #     v1_prev = list(model.s_dvp_dams)[list(model.s_dvp_dams).index(v1) - 1]  #used to get the activity number from the last period - to determine the number of dam provided into this period
+    #     con = sum(model.v_dams[k28,t1,v1,a,n1,w8,z,i,y1,g1] * model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9]
+    #                - model.v_dams[k28,t1,v1_prev,a,n1,w8,z,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z,i,y1,g1,w9]
+    #                for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams
+    #                if model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9] !=0 or model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z,i,y1,g1,w9] !=0) <= 0
+    #         # + sum(model.v_dams2sire[v1,a,b1,n1,w1,z,i,y1,g1,g1_new]
+    #         #       - model.v_dams2sire[v1_prev,a,b1,n1,w1,z,i,y1,g1,g1_new] * model.p_dam2sire_numbers[v1,a,b1,n1,w1,z,i,y1,g1,g1_new]
+    #         #       for n1 in model.s_nut_dams for g1_new in model.s_groups_dams) \
+    #         # - model.v_purchase_dams[v1,w1,z,i,g1] * model.p_numberpurch_dam[v1,a,b1,w1,z,i,y1,g1] \ #p_numpurch allocates the purchased dams into certain sets, in this case it is correct to multiply a var with less sets to a param with more sets
+    #         # - sum(model.v_offs2dam[v3,n3,w3,z3,i3,d,a3,b3,x,y3,g3,g1_off] * model.p_offs2dam_numbers[v3,n3,w3,z3,i3,d,a3,b3,x,y3,g3,g1_off,v1,a,b1,w1,z,i,y1,g1]
+    #         #       for v3 in model.s_dvp_offs for n3 in model.s_nut_offs for w3 in model.s_lw_offs for z3 in model.s_season_types for i3 in model.s_tol for d in model.s_k3_damage_offs for a3 in model.s_wean_times
+    #         #       for b3 in model.s_k5_birth_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs for g1_off in model.s_groups_dams)  #have to track off sets so only they are summed.
+    #     ###if statement required to handle the constraints that dont exist due to lw clustering
+    #     # if sum(model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9] for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams if model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9] !=0) ==0 and sum(model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z,i,y1,g1,w9]
+    #     #         for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams if model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z,i,y1,g1,w9] !=0)==0:
+    #     #     pass
+    #     if type(con)==bool:
+    #         return pe.Constraint.Skip
+    #     else: return con
 
+    # try:
+    #     model.del_component(model.con_damR_index)
+    #     model.del_component(model.con_damR)
+    # except AttributeError:
+    #     pass
+    # def damR1(model,k29,v1,a,z,i,y1,g1,w9):
+    #     v1_prev = list(model.s_dvp_dams)[list(model.s_dvp_dams).index(v1) - 1]  #used to get the activity number from the last period - to determine the number of dam provided into this period
+    #     con = sum(model.v_dams[k28,t1,v1,a,n1,w8,z,i,y1,g1] * model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9]
+    #                - model.v_dams[k28,t1,v1_prev,a,n1,w8,z,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z,i,y1,g1,w9]
+    #                for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams
+    #                if model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9] !=0) <= 0
+    #     if type(con)==bool:
+    #         return pe.Constraint.Skip
+    #     else: return con
+    # start=time.time()
+    # # model.con_damR = pe.Constraint(model.s_k2_birth_dams, model.s_dvp_dams, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_dams, rule=damR1, doc='transfer of off to dam and dam from last dvp to current dvp.')
+    # end=time.time()
+    # print('method 1: ',end-start)
+
+    # ##method 2
+    # try:
+    #     model.del_component(model.con_damR_index)
+    #     model.del_component(model.con_damR)
+    # except AttributeError:
+    #     pass
+    # def damR2(model,k29,v1,a,z,i,y1,g1,w9):
+    #     v1_prev = list(model.s_dvp_dams)[list(model.s_dvp_dams).index(v1) - 1]  #used to get the activity number from the last period - to determine the number of dam provided into this period
+    #     ##skip constraint if the require param is 0
+    #     if not any(model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9] for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams):
+    #         return pe.Constraint.Skip
+    #     return sum(model.v_dams[k28,t1,v1,a,n1,w8,z,i,y1,g1] * model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9]
+    #                - model.v_dams[k28,t1,v1_prev,a,n1,w8,z,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z,i,y1,g1,w9]
+    #                for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams
+    #                if model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9] !=0) <= 0
+    # start=time.time()
+    # model.con_damR = pe.Constraint(model.s_k2_birth_dams, model.s_dvp_dams, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_dams, rule=damR2, doc='transfer of off to dam and dam from last dvp to current dvp.')
+    # end=time.time()
+    # print('method 2: ',end-start)
 
 
 

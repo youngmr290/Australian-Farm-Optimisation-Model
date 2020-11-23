@@ -31,6 +31,7 @@ import LabourCropPyomo as lcrppy
 import PasturePyomo as paspy 
 import SupFeedPyomo as suppy
 import StubblePyomo as stubpy
+import StockPyomo as spy
 import CorePyomo as core
 import Report as rep
 
@@ -82,13 +83,13 @@ exp_data1['runpyomo']=False
 keys_hist = list(prev_exp.reset_index().columns[2:-1].values) #:-1 so that the runpyomo col doesn't effect the run pre calcs.
 keys_current = list(exp_data1.reset_index().columns[2:-1].values)
 sorted_list = sorted(glob.iglob('*.py'), key=os.path.getctime)
-####if report.py has been updated precalcs don't need to be re-run therefore newest is equal to the newest py file that isn't report
+####if only report.py has been updated precalcs don't need to be re-run therefore newest is equal to the newest py file that isn't report
 if sorted_list[-1] != 'Repoprt.py':
     newest = sorted_list[-1]
 else: newest = sorted_list[-2]
 newest_pyomo = max(glob.iglob('*pyomo.py'), key=os.path.getctime)
 
-###if pyomo code has not been updated then check each row and see if it needs to be run - if it is a new trial it will need to be run or if it needed to be run last time but didn't get run (this is done by comparing the prev_exp with current exp that has all false) 
+###if pyomo code has not been updated then check each row and see if it needs to be run - if it is a new trial it will need to be run or if it needed to be run last time but didn't get run because user specified not to run that exp (this is done by comparing the prev_exp with current exp that has all false)
 try: #incase pkl_exp doesn't exist
     if os.path.getmtime("pkl_exp") >= os.path.getmtime(newest_pyomo):
         i1 = prev_exp.reset_index().set_index([('level_2', '', '', ''),('runpyomo', '', '', '')]).index #have to reset index because the name of the trial is going to be included in the new index so it must first be dropped from current index
@@ -100,6 +101,7 @@ except FileNotFoundError: exp_data1['runpyomo']=True
 ###if headers are the same,pyomo code is the same and the excel inputs are the same then test if the values in exp.xlxs are the same
 try: #incase pkl_exp doesn't exist
     if keys_current==keys_hist and os.path.getmtime("pkl_exp") >= os.path.getmtime(newest) and os.path.getmtime("pkl_exp") >= os.path.getmtime("Universal.xlsx") and os.path.getmtime("pkl_exp") >= os.path.getmtime("Property.xlsx"):
+        ###check if each exp has the same values in exp.xlsx as last time it was run.
         i3 = prev_exp.reset_index().set_index(keys_hist).index #have to reset index because the name of the trial is going to be included in the new index so it must first be dropped from current index
         i4 = exp_data1.reset_index().set_index(keys_current).index
         exp_data1.loc[~i4.isin(i3),'run'] = True
@@ -178,9 +180,11 @@ for row in range(len(exp_data)):
     params[exp_data.index[row][2]]['crplab']={}
     params[exp_data.index[row][2]]['sup']={}
     params[exp_data.index[row][2]]['stub']={}
+    params[exp_data.index[row][2]]['stock']={}
     ###report values
     r_vals[exp_data.index[row][2]]={}
     r_vals[exp_data.index[row][2]]['pas']={}
+    r_vals[exp_data.index[row][2]]['stock']={}
     ##call precalcs
     precalc_start = time.time()
     paspy.paspyomo_precalcs(params[exp_data.index[row][2]]['pas'],r_vals[exp_data.index[row][2]]['pas'])
@@ -193,6 +197,7 @@ for row in range(len(exp_data)):
     lcrppy.crplab_precalcs(params[exp_data.index[row][2]]['crplab'])
     suppy.sup_precalcs(params[exp_data.index[row][2]]['sup'])
     stubpy.stub_precalcs(params[exp_data.index[row][2]]['stub'])
+    spy.stock_precalcs(params[exp_data.index[row][2]]['stock'], r_vals[exp_data.index[row][2]]['stock'])
     precalc_end = time.time()
     print('precalcs: ', precalc_end - precalc_start)
     
@@ -242,6 +247,7 @@ for row in range(len(exp_data)):
         paspy.paspyomo_local(params[exp_data.index[row][2]]['pas'])
         suppy.suppyomo_local(params[exp_data.index[row][2]]['sup'])
         stubpy.stubpyomo_local(params[exp_data.index[row][2]]['stub'])
+        spy.stockpyomo_local(params[exp_data.index[row][2]]['stock'])
         precalc_end = time.time()
         print('localpyomo: ', precalc_end - precalc_start)
         results=core.coremodel_all() #have to do this so i can access the solver status

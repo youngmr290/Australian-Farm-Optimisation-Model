@@ -14,6 +14,7 @@ import timeit
 #MUDAS modules
 # from LabourCropInputs import *
 import Functions as fun
+import Crop as crp
 import Periods as per
 import Mach as mac
 import PropertyInputs as pinp
@@ -60,24 +61,30 @@ def lab_allocation():
 #time/per ha - needs to be multiplied by the number of phases and then added to phases df because the previous phases can effect number of passes and hence time
 #also need to account for arable area
 def fert_app_time_ha(params):
-    ##calc fert amount - it is required to calc the number of passes. (recalculated here so that crop.py isn't imported)
-    base_fert = np.load('Fert data.npy')
-    fert_by_soil = pinp.crop['fert_by_lmu'] #read in chem by soil
-    base_fert = pd.DataFrame(base_fert, index = phases_df.index, columns = fert_by_soil.index)
-    ## adjust the fert cost for each rotation by lmu
-    fert_by_soil = fert_by_soil.stack() #read in fert by soil
-    fert=base_fert.mul(fert_by_soil,axis=1,level=0).stack() #stack lmu
-    x = fert.to_numpy()
-    step = pinp.crop['step_fert_passes']
-    fert_passes = fun.passes(x,step)
-    fert_passes = pd.DataFrame(fert_passes, index = fert.index, columns = fert.columns) #turn it into df with correct indexes so it can be combined with cost allocation.
-    ##adjust passes for arable area.
+    ##fert passes - arable
+    fert_passes = crp.f_fert_passes()
+    ##arable proportion
     arable = pinp.crop['arable'].squeeze()
+    ##adjust fert passes by arable area
+    index = pd.MultiIndex.from_product([fert_passes.index, arable.index])
+    fert_passes = fert_passes.reindex(index, axis=0,level=0)
     passes=fert_passes.mul(arable,axis=0,level=1)
+    ##passes over non arable area (only for pasture phases becasue for pasture the non arable areas also recieve fert)
+    passes_na = pinp.crop['nap_passes']
+    passes_na= passes_na.mul(1-arable).T #adjust for the non arable area
+    arr=[list(uinp.structure['All_pas']),list(passes_na.index)] #create multi index from lmu and pasture landuse code
+    inx = pd.MultiIndex.from_product(arr)
+    passes_na = passes_na.reindex(inx,axis=0,level=1)
+    passes_na = pd.merge(phases_df2, passes_na.unstack(), how='left', left_on=uinp.cols()[-1], right_index = True) #merge with all the phases, requires because different phases have different application passes
+    passes_na.drop(list(range(uinp.structure['phase_len'])), axis=1, level=0).stack([1]) #drop the segregated landuse cols
+    ##combine arable and non arable passes
+    total_passes = passes + passes_na
+
+
     ##adjust fert labour across each labour period
     time = lab_allocation().mul(mac.time_ha().squeeze()).stack() #time for 1 pass for each chem.
     ##adjust for passes
-    time = passes.mul(time, axis=1,level=1) #total time 
+    time = total_passes.mul(time, axis=1,level=1) #total time
     time=time.sum(level=[0], axis=1).stack() #sum across fert type
     params['fert_app_time_ha'] = time.to_dict()  #add to precalc dict
 #f=fert_app_time_ha()
