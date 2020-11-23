@@ -34,6 +34,7 @@ def sheep_pyomo_local(params,report):
     model.s_k2_birth_dams = pe.Set(initialize=params['k2_idx_dams'], doc='Cluster for LSLN & oestrus cycle based on scanning, global & weaning management')
     model.s_dvp_dams = pe.Set(ordered=True, initialize=params['dvp_idx_dams'], doc='Decision variable periods for dams') #ordered so they can be indexed in constraint to determine previous period
     model.s_groups_dams = pe.Set(initialize=params['g_idx_dams'], doc='geneotype groups of dams')
+    model.s_groups_prog = pe.Set(initialize=params['g_idx_dams'], doc='geneotype groups of prog') #same as dams and offs
     model.s_gen_merit_dams = pe.Set(initialize=params['y_idx_dams'], doc='genetic merit of dams')
     model.s_sale_dams = pe.Set(initialize=params['t_idx_dams'], doc='Sales within the year for damss')
     model.s_dvp_offs = pe.Set(ordered=True, initialize=params['dvp_idx_offs'], doc='Decision variable periods for offs') #ordered so they can be indexed in constraint to determine previous period
@@ -56,8 +57,8 @@ def sheep_pyomo_local(params,report):
                           model.s_tol, model.s_wean_times, model.s_gender, model.s_gen_merit_offs,
                           model.s_groups_offs, bounds = (0,None) , doc='number of offs animals')
     model.v_prog = pe.Var(model.s_k5_birth_offs, model.s_sale_prog, model.s_lw_prog, model.s_season_types,
-                          model.s_tol, model.s_damage, model.s_wean_times, model.s_gender, model.s_gen_merit_offs,
-                          model.s_groups_offs, bounds = (0,None) , doc='number of offs animals')
+                          model.s_tol, model.s_damage, model.s_wean_times, model.s_gender,
+                          model.s_groups_prog, bounds = (0,None) , doc='number of offs animals')
     ##animal transfers
     # model.v_offs2dam = pe.Var(model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types,
     #                           model.s_tol, model.s_k3_damage_offs, model.s_wean_times, model.s_k5_birth_offs, model.s_gender, model.s_gen_merit_offs,
@@ -108,12 +109,12 @@ def sheep_pyomo_local(params,report):
                               initialize=params['p_npw_dams'], default=0.0, doc='number of prodgeny weaned')
 
     try:
-        model.del_component(model.p_npw_index)
-        model.del_component(model.p_npw)
+        model.del_component(model.p_progprov_dams_index)
+        model.del_component(model.p_npp_progprov_damsw)
     except AttributeError:
         pass
     model.p_progprov_dams = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_prog, model.s_wean_times, model.s_lw_prog,
-                              model.s_season_types, model.s_tol, model.s_damage, model.s_gender, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_dams,
+                              model.s_season_types, model.s_tol, model.s_damage, model.s_gender, model.s_gen_merit_dams, model.s_groups_prog, model.s_groups_dams, model.s_lw_dams,
                               initialize=params['p_progprov_dams'], default=0.0, doc='number of prodgeny provided to dams')
 
     try:
@@ -122,7 +123,7 @@ def sheep_pyomo_local(params,report):
     except AttributeError:
         pass
     model.p_progreq_dams = pe.Param(model.s_k2_birth_dams, model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_wean_times, model.s_lw_dams,
-                              model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_dams,
+                              model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_groups_dams, model.s_lw_dams,
                               initialize=params['p_progreq_dams'], default=0.0, doc='number of prodgeny required by dams')
 
     try:
@@ -130,8 +131,8 @@ def sheep_pyomo_local(params,report):
         model.del_component(model.p_progprov_offs)
     except AttributeError:
         pass
-    model.p_progprov_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_dams, model.s_wean_times, model.s_lw_prog,
-                              model.s_season_types, model.s_tol, model.s_damage, model.s_gender, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_dams,
+    model.p_progprov_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_prog, model.s_wean_times, model.s_lw_prog,
+                              model.s_season_types, model.s_tol, model.s_damage, model.s_gender, model.s_gen_merit_offs, model.s_groups_offs, model.s_lw_offs,
                               initialize=params['p_progprov_offs'], default=0.0, doc='number of prodgeny provided to dams')
 
     try:
@@ -139,7 +140,7 @@ def sheep_pyomo_local(params,report):
         model.del_component(model.p_progreq_offs)
     except AttributeError:
         pass
-    model.p_progreq_offs = pe.Param(model.s_lw_dams, model.s_groups_offs, model.s_lw_dams,
+    model.p_progreq_offs = pe.Param(model.s_lw_offs, model.s_groups_offs, model.s_lw_offs,
                               initialize=params['p_progreq_offs'], default=0.0, doc='number of prodgeny required by dams')
 
 
@@ -426,6 +427,12 @@ def sheep_pyomo_local(params,report):
     with open('number_prov.txt', 'w') as outputfile:
         outputfile.write(textbuffer.getvalue())
 
+    textbuffer = StringIO()
+    model.p_numbers_req_dams.pprint(textbuffer)
+    textbuffer.write('\n')
+    with open('number_prov.txt', 'w') as outputfile:
+        outputfile.write(textbuffer.getvalue())
+
 
     end_params = time.time()
     print('params time: ',end_params-param_start)
@@ -433,6 +440,22 @@ def sheep_pyomo_local(params,report):
     ########################
     ### set up constraints #
     ########################
+    '''pyomo summary:
+            - if a set has a 9 on the end of it, it is a special constraint set. And it is used to link with a decision variable set (the corresponding letter without 9 eg g? and g9). The
+              set without a 9 must be summed.
+            - if a given set doesnt have a corresponding 9 set, then you have two options
+                1. transfer from one desision variable to another 1:1 (or at another ratio determined be the param - but it means that it transfers to the same set eg x1_dams transfers to x1_prog)
+                2. treat all decision variable in a set the same. Done by summing. eg the npw provided by each dam t slice can be treated the same because it doesnt make a difference
+                   if the progeny came from a dam that gets sold vs retained. (for most of the livestock it has been built in a way that doesnt need summing except for the sets which have a corresponding 9 set).
+    
+    speed info:
+    - constraint.skip is fast, the trick is designing the code efficiently so that is knows when to skip.
+    - in method 2 i use the param to determine when the constraint should be skipped, this still requires looping through the param
+    - in method 3 i use the numpy array to determine when the constraint should be skipped. This is messier and requires some extra code but it is much more efficient reducing time 2x.
+    - using if statements to save summing 0 values is faster but it still takes time to evaluate the if therefore it saves time to select the minimum number of if statements
+    - constraints can only be skipped on based on the req param. if the provide side is 0 and you skip the constraint then that would mean there would be no restriction for the require variable.
+    '''
+
     print('set up constraints')
 
     # try:
@@ -501,28 +524,27 @@ def sheep_pyomo_local(params,report):
     # print('method 2: ',end-start)
 
     ##method 3
-    ##info:
-    ##constraint.skip is fast, the trick is designing the code efficiently so that is knows when to skip.
-    ##in method 2 i use the param to determine when the constraint should be skipped, this still requires looping throught the param
-    ##in method 3 i use the numpy array to determine when the constraint should be skipped. This is messier and requires some extra code but it is much more efficient reducing time 2x.
-    ##for method 3 1second or less is spent skipping the constraints the remaining 10seconds is the time taken to build the remaining 900 constraints.
-    ##to save any further time will require making the building of the constraint faster. however i cant think of a way to do this because i am already including if statements for params with 0 value.
-    ##significant time can be saved by using if statements that only evaluate one item
     l_k29 = list(model.s_k2_birth_dams)
     l_v1 = list(model.s_dvp_dams)
     l_a = list(model.s_wean_times)
     l_z = list(model.s_season_types)
     l_i = list(model.s_tol)
     l_y1 = list(model.s_gen_merit_dams)
-    l_g1 = list(model.s_groups_dams)
     l_g9 = list(model.s_groups_dams)
     l_w9 = list(model.s_lw_dams)
+    l_x = list(model.s_gender)
+    l_d = list(model.s_damage)
+    l_k3 = list(model.s_k3_damage_offs)
+    l_k5 = list(model.s_k5_birth_offs)
+    l_v3 = list(model.s_dvp_offs)
+    l_g3 = list(model.s_groups_offs)
+    l_w9_offs = list(model.s_lw_offs)
     try:
         model.del_component(model.con_damR_index)
         model.del_component(model.con_damR)
     except AttributeError:
         pass
-    def damR(model,k29,v1,a,z,i,y1,g1,g9,w9):
+    def damR(model,k29,v1,a,z,i,y1,g9,w9):
         v1_prev = l_v1[l_v1.index(v1) - 1]  #used to get the activity number from the last period - to determine the number of dam provided into this period
         ##skip constraint if the require param is 0 - using the numpy array because it is 2x faster becasue dont need to loop through activity keys eg k28
         ###get the index number - required so numpy array can be indexed
@@ -532,27 +554,47 @@ def sheep_pyomo_local(params,report):
         t_z = l_z.index(z)
         t_i = l_i.index(i)
         t_y1 = l_y1.index(y1)
-        t_g1 = l_g1.index(g1)
         t_g9 = l_g9.index(g9)
         t_w9 = l_w9.index(w9)
-        if not np.any(params['numbers_req_numpyvesion_k2k2tva1nw8ziyg1g9w9'][:,t_k29,:,t_v1,t_a,:,:,t_z,t_i,t_y1,t_g1,t_g9,t_w9]):
+        if not np.any(params['numbers_req_numpyvesion_k2k2tva1nw8ziyg1g9w9'][:,t_k29,:,t_v1,t_a,:,:,t_z,t_i,t_y1,:,t_g9,t_w9]):
             return pe.Constraint.Skip
         return sum(model.v_dams[k28,t1,v1,a,n1,w8,z,i,y1,g1] * model.p_numbers_req_dams[k28,k29,t1,v1,a,n1,w8,z,i,y1,g1,g9,w9]
                    - model.v_dams[k28,t1,v1_prev,a,n1,w8,z,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z,i,y1,g1,g9,w9]
                     for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams
-                    for n1 in model.s_nut_dams for w8 in model.s_lw_dams if
-                    model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, z, i, y1, g1,g9, w9] != 0) <=0
-                   # for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams
-                   # if model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z,i,y1,g1,w9] !=0)) <= 0
+                    for n1 in model.s_nut_dams for w8 in model.s_lw_dams for g1 in model.s_groups_dams if
+                    model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, z, i, y1, g1,g9, w9] != 0 or model.p_numbers_prov_dams[k28, k29, t1, v1_prev, a, n1, w8, z, i, y1, g1, g9, w9] != 0) <=0 #need to use both in the if statement (even though it is slower) becasue there are stitustions eg dvp4 (prejoining) where prov will have a value and req will not.
     start=time.time()
-    model.con_damR = pe.Constraint(model.s_k2_birth_dams, model.s_dvp_dams, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_groups_dams, model.s_lw_dams, rule=damR, doc='transfer of off to dam and dam from last dvp to current dvp.')
+    model.con_damR = pe.Constraint(model.s_k2_birth_dams, model.s_dvp_dams, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gen_merit_dams,
+                                   model.s_groups_dams, model.s_lw_dams, rule=damR, doc='transfer dam to dam from last dvp to current dvp.')
     end=time.time()
     print('method 3: ',end-start)
 
-    end_cons=time.time()
-    print('time con: ', end_cons-end_params)
 
-
+    try:
+        model.del_component(model.con_offR_index)
+        model.del_component(model.con_offR)
+    except AttributeError:
+        pass
+    def offR(model,k3,k5,v3,a,z,i,x,y3,g3,w9):
+        v3_prev = l_v1[l_v3.index(v3) - 1]  #used to get the activity number from the last period
+        ##skip constraint if the require param is 0 - using the numpy array because it is 2x faster becasue dont need to loop through activity keys eg k28
+        ###get the index number - required so numpy array can be indexed
+        t_k3 = l_k3.index(k3)
+        t_k5 = l_k5.index(k5)
+        t_v3 = l_v3.index(v3)
+        t_g3 = l_g3.index(g3)
+        t_w9 = l_w9_offs.index(w9)
+        if not np.any(params['numbers_req_numpyvesion_k3k5vw8g3w9'][t_k3,t_k5,t_v3,:,t_g3,t_w9]):
+            return pe.Constraint.Skip
+        return sum(model.v_offs[k3,k5,t3,v3,n3,w8,z,i,a,x,y3,g3] * model.p_numbers_req_offs[k3,k5,v3,w8,g3,w9]
+                   - model.v_offs[k3,k5,t3,v3_prev,n3,w8,z,i,a,x,y3,g3] * model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z,i,a,x,y3,g3,w9]
+                    for t3 in model.s_sale_offs for n3 in model.s_nut_offs for w8 in model.s_lw_offs
+                   if model.p_numbers_req_offs[k3,k5,v3,w8,g3,w9] != 0 or model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z,i,a,x,y3,g3,w9] != 0) <=0 #need to use both in the if statement (even though it is slower) becasue there are stitustions eg dvp4 (prejoining) where prov will have a value and req will not.
+    start=time.time()
+    model.con_offR = pe.Constraint(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_dvp_offs, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gender,
+                                   model.s_gen_merit_dams, model.s_groups_offs, model.s_lw_offs, rule=offR, doc='transfer off to off from last dvp to current dvp.')
+    end=time.time()
+    print('method 3: ',end-start)
 
 
     try:
@@ -560,24 +602,63 @@ def sheep_pyomo_local(params,report):
         model.del_component(model.con_progR)
     except AttributeError:
         pass
-    def progR(model, k3, k5, v1, a, z, i, y1, g1, w9):
-        if v1==0:
-            return sum(sum(- model.v_prog[k5, t2, w28, z, i, d, a, x, y1, g1] * model.p_progprov_dams[k3, k5, t2, a, w28, z, i, d, x, y1, g1, w9]
-                        for d in model.s_damage for x in model.s_gender for w28 in model.s_lw_prog for t2 in model.s_sale_prog if model.p_progprov_dams[k3, k5, t2, a, w28, z, i, d, x, y1, g1, w9]!= 0)
-                       + sum(sum(model.v_dams[k2, t1, v1, a, n1, w18, z, i, y1, g1] for t1 in model.s_sale_dams)  * model.p_progreq_dams[k2, k3, k5, a, w18, z, i, y1, g1, w9]
-                        for k2 in model.s_k2_birth_dams for w18 in model.s_lw_dams if model.p_progreq_dams[k2, k3, k5, a, n1, w18, z, i, y1, g1, w9]!= 0)
-                       for n1 in model.s_nut_dams ) <= 0
+    def progR(model, k5, a, z, i9, d, x, y1, g1, w9):
+        ###cant skip constraints based on the provide param otherwise the model could select the prg variable without restriction (maybe a req param can be added then we could skip on that ??)
+        return (- sum(model.v_dams[k2, t1, v1, a, n1, w18, z, i, y1, g1]  * model.p_npw[k2, k5, t1, v1, a, n1, w18, z, i, d, x, y1, g1, w9, i9]
+                    for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams for w18 in model.s_lw_dams for i in model.s_tol
+                         if model.p_npw[k2, k5, t1, v1, a, n1, w18, z, i, d, x, y1, g1, w9, i9]!= 0)
+                + sum(model.v_prog[k5, t2, w9, z, i9, d, a, x, g1] for t2 in model.s_sale_prog ))<=0
+    start = time.time()
+    model.con_progR = pe.Constraint(model.s_k5_birth_offs, model.s_wean_times, model.s_season_types, model.s_tol,
+                                    model.s_damage, model.s_gender, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_prog, rule=progR,
+                                   doc='transfer npw from dams to prog.')
+    end = time.time()
+    print('con_progR ',end-start)
+
+    try:
+        model.del_component(model.con_prog2damR_index)
+        model.del_component(model.con_prog2damR)
+    except AttributeError:
+        pass
+    def prog2damR(model, k3, k5, v1, a, z, i, y1, g9, w9):
+        if v1=='dvp0' and any(model.p_progreq_dams[k2, k3, k5, a, w18, z, i, y1, g1, g9, w9] for k2 in model.s_k2_birth_dams for w18 in model.s_lw_dams for g1 in model.s_groups_dams):
+            return (sum(- model.v_prog[k5, t2, w28, z, i, d, a, x, g2] * model.p_progprov_dams[k3, k5, t2, a, w28, z, i, d, x, y1, g2,g9,w9]
+                        for d in model.s_damage for x in model.s_gender for w28 in model.s_lw_prog for t2 in model.s_sale_prog for g2 in model.s_groups_prog
+                        if model.p_progprov_dams[k3, k5, t2, a, w28, z, i, d, x, y1, g2, g9, w9]!= 0)
+                       + sum(model.v_dams[k2, t1, v1, a, n1, w18, z, i, y1, g1]  * model.p_progreq_dams[k2, k3, k5, a, w18, z, i, y1, g1, g9, w9]
+                        for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for n1 in model.s_nut_dams for w18 in model.s_lw_dams for g1 in model.s_groups_dams
+                             if model.p_progreq_dams[k2, k3, k5, a, w18, z, i, y1, g1, g9, w9]!= 0))<=0
         else:
             return pe.Constraint.Skip
     start = time.time()
-    model.con_progR = pe.Constraint(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_dvp_dams, model.s_wean_times, model.s_season_types,
-                                   model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_dams, rule=progR,
-                                   doc='transfer prog to dams or offs in dvp 0.')
+    model.con_prog2damR = pe.Constraint(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_dvp_dams, model.s_wean_times, model.s_season_types,
+                                   model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_dams, rule=prog2damR,
+                                   doc='transfer prog to dams in dvp 0.')
+    end = time.time()
+    print('con_prog2damR ',end-start)
 
-    model.con_damR.pprint(textbuffer)
-    textbuffer.write('\n')
-    with open('con_damR.txt', 'w') as outputfile:
-        outputfile.write(textbuffer.getvalue())
+    try:
+        model.del_component(model.con_prog2offsR_index)
+        model.del_component(model.con_prog2offsR)
+    except AttributeError:
+        pass
+    def prog2offsR(model, k3, k5, v3, a, z, i, x, y3, g3, w9):
+        if v3=='dvp0' and any(model.p_progreq_offs[w38, g3, w9] for w38 in model.s_lw_offs):
+            return (sum(- model.v_prog[k5, t2, w28, z, i, d, a, x, g3] * model.p_progprov_offs[k3, k5, t2, a, w28, z, i, d, x, y3, g3, w9]
+                        for d in model.s_damage for w28 in model.s_lw_prog for t2 in model.s_sale_prog
+                        if model.p_progprov_offs[k3, k5, t2, a, w28, z, i, d, x, y3, g3, w9]!= 0)
+                       + sum(model.v_offs[k3,k5,t3,v3,n3,w38,z,i,a,x,y3,g3]  * model.p_progreq_offs[w38, g3, w9]
+                        for t3 in model.s_sale_offs for n3 in model.s_nut_dams for w38 in model.s_lw_offs if model.p_progreq_offs[w38, g3, w9]!= 0))<=0
+        else:
+            return pe.Constraint.Skip
+    start = time.time()
+    model.con_prog2offsR = pe.Constraint(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_dvp_dams, model.s_wean_times, model.s_season_types,
+                                   model.s_tol, model.s_gender, model.s_gen_merit_dams, model.s_groups_offs, model.s_lw_dams, rule=prog2offsR,
+                                   doc='transfer prog to off in dvp 0.')
+    end = time.time()
+    print(end-start)
+
+
 
 
 
@@ -613,7 +694,7 @@ def sheep_pyomo_local(params,report):
     except AttributeError:
         pass
     def stockinfra(model,h1):
-        return -model.v_infrastructure[h1] + sum(model.v_sire[g0] * model.p_infra_sire[g0,h1] for g0 in model.s_groups_sire)  \
+        return -model.v_infrastructure[h1] + sum(model.v_sire[g0] * model.p_infra_sire[h1,g0] for g0 in model.s_groups_sire)  \
                + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_infra_dams[k2,h1,t1,v1,a,n1,w1,z,i,y1,g1]
                          for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                          for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams)
@@ -623,6 +704,14 @@ def sheep_pyomo_local(params,report):
                for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol) <=0
     model.con_stockinfra = pe.Constraint(model.s_infrastructure, rule=stockinfra, doc='Requirement for infrastructure (based on number of times yarded and shearing activity)')
 
+    end_cons=time.time()
+    print('time con: ', end_cons-end_params)
+
+    # textbuffer = StringIO()
+    # model.con_offR.pprint(textbuffer)
+    # textbuffer.write('\n')
+    # with open('cons.txt', 'w') as outputfile:
+    #     outputfile.write(textbuffer.getvalue())
 
 #####################
 ##  setup variables # these variables only need initialising once ie sets wont change within and iteration of exp.
