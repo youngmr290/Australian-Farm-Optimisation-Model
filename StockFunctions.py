@@ -1111,7 +1111,7 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, w_b_exp_y, period_is_birth, c
     ##Exposure index
     xo = cd[8, ..., na] - cd[9, ..., na] * rc_birth[..., na] + cd[10, ..., na] * chill_index_m1 + cb1[11, ..., na]
     ##Progeny mortality at birth from exposure
-    mortalityx = np.average(np.exp(xo) / (1 - np.exp(xo)) ,axis = -1) * period_is_birth #axis -1 is m1
+    mortalityx = np.average(np.exp(xo) / (1 + np.exp(xo)) ,axis = -1) * period_is_birth #axis -1 is m1
     ##add sensitivity
     mortalityx = fun.f_sa(mortalityx, sar_mortalityp, sa_type = 4)
     return mortalityx, mortalityd_yatf, mortalityd_dams
