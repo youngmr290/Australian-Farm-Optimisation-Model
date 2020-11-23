@@ -34,7 +34,7 @@ def crop_precalcs(params):
     crp.grain_price(params)
     crp.stubble_production(params)
     crp.crop_sow(params)
-    crp.fert_req(params)
+    crp.total_fert_req(params)
 
 def croppyomo_local(params):
     
