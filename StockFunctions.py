@@ -1131,10 +1131,16 @@ def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, foo, chill_index_m1, period_is
 
 
 def f_comb(n,k):
-    ##Create an array of factorial values up to n	
-    factorial = np.cumprod(np.arange(np.max(n))+1)
-    ##Combination	
-    combinations = factorial[n-1]/(factorial[k-1]*factorial[n-k-1])
+    # ##Create an array of factorial values up to n
+    # factorial = np.cumprod(np.arange(np.max(n))+1)
+    # ##Combination
+    # combinations = factorial[n-1]/(factorial[k-1]*factorial[n-k-1])
+    ##Create an array of factorial values up to n
+    factorial_range = np.arange(np.max(n)+1)
+    factorial_range[0] = 1
+    factorial = np.cumprod(factorial_range)
+    ##Combination
+    combinations = factorial[n]/(factorial[k]*factorial[n-k])
     return combinations
 
 
