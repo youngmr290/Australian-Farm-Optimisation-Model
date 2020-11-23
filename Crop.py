@@ -215,7 +215,7 @@ def fert_cost_allocation():
 # t_allocation=fert_cost_allocation()
 
 
-def fert_req(*args):
+def fert_req():
     '''
     Returns
     ----------
@@ -342,16 +342,21 @@ def nap_fert_cost():
 def total_fert_req(param):
     '''returns the total fert req after accounting for arable area.
        this is used in the LabourCropPyomo'''
-    fert = fert_req.unstack()
+    fertreq_arable = fert_req().unstack()
     ##have to account for arable area - this gets used in labcrppyomo - hence it doesn't get arable area added in the cost funtion at the bottom like the other costs
     arable = pinp.crop['arable'].squeeze() #read in arable area df
-    fert=fert.mul(arable,axis=1,level=1) #add arable to df
-
-
-    ##fert required on the non arable areas
-    fertreq = pinp.crop['nap_fert']
-
-    param[0]['fert_req'] = fert.stack([1,0]).to_dict()
+    fertreq_arable=fertreq_arable.mul(arable,axis=1,level=1) #add arable to df
+    ##fert required on the non arable areas - only for pasture phases, so need to add pasture as index
+    fertreq_na = pinp.crop['nap_fert']
+    fertreq_na = fertreq_na.mul(1 - arable)
+    arr=[list(uinp.structure['All_pas']),list(fertreq_na.index)] #create multi index from lmu and pasture landuse code
+    inx = pd.MultiIndex.from_product(arr)
+    fertreq_na = fertreq_na.reindex(inx,axis=0,level=1)
+    fertreq_na = pd.merge(phases_df2, fertreq_na.unstack(), how='left', left_on=uinp.cols()[-1], right_index = True) #merge with all the phases, requires because different phases have different application passes
+    fertreq_na = fertreq_na.drop(list(range(uinp.structure['phase_len'])), axis=1, level=0).stack([0]) #drop the segregated landuse cols
+    ##add fert for arable area and fert for nonarable area
+    fert_total = pd.concat([fertreq_arable.stack([1]), fertreq_na], axis=1).sum(axis=1, level=0)
+    param['fert_req'] = fert_total.stack([0]).to_dict()
 
 
 #######################
@@ -413,7 +418,21 @@ def chem_cost_allocation():
     return fun.period_allocation2(start_df, length_df, p_dates, p_name)
 # t_allocation=chem_cost_allocation()
     
-   
+def chem_application():
+    '''number of chemical applications for each rotation'''
+    ##read in chem passes
+    if pinp.crop['user_crop_rot']:
+        ### User defined
+        base_chem = pinp.crop['chem'].reset_index()
+        base_chem = base_chem.set_index([phases_df.iloc[:,-1]])  #make the current landuse the index
+    else:
+        ### AusFarm ^need to add code for ausfarm inputs
+        base_chem
+        base_chem = pd.DataFrame(base_chem, index = phases_df.iloc[:,-1])  #make the current landuse the index
+    ##add proper rotation index - need to add this here because the multiplication step re-orders the df
+    base_chem['rot']=phases_df.index
+    return base_chem
+
 def chem_cost():  
     '''
     Returns
@@ -426,17 +445,8 @@ def chem_cost():
     ##read in neccessary bits and adjust indexed
     i_chem_cost = pinp.crop['chem_cost']
     chem_by_soil = pinp.crop['chem_by_lmu'] #read in chem by soil
-    ##read in chem passes 
-    if pinp.crop['user_crop_rot']:
-        ### User defined
-        base_chem = pinp.crop['chem'].reset_index()
-        base_chem = base_chem.set_index([phases_df.iloc[:,-1]])  #make the current landuse the index
-    else:        
-        ### AusFarm ^need to add code for ausfarm inputs
-        base_chem 
-        base_chem = pd.DataFrame(base_chem, index = phases_df.iloc[:,-1])  #make the current landuse the index
-    ##add proper rotation index - need to add this here because the multiplication step re-orders the df
-    base_chem['rot']=phases_df.index
+    ##number of applications for each rotation
+    base_chem = chem_application()
     ##adjust for the cost eg cost per application * number of applications. This is a bit messy because the order of the df changes therefore need to add the full rotation name, but for merge it can be an index so i add it as a col then merge then add it as index. ^maybe there is a cleaner way to do this.
     merge_chem = base_chem.merge(i_chem_cost, left_index=True, right_index=True, how='left')
     merge_chem.set_index('rot', inplace=True)

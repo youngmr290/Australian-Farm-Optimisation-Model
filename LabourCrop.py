@@ -25,6 +25,8 @@ import UniversalInputs as uinp
 ########################
 ##makes a df of all possible rotation phases
 phases_df =uinp.structure['phases']
+phases_df2=phases_df.copy() #make a copy so that it doesn't alter the phases df that exists outside this func
+phases_df2.columns = pd.MultiIndex.from_product([phases_df2.columns, ['']])  #make the df multi index so that when it merges with other df below the indexs remanin seperate (otherwise it turn into a one leveled tuple)
 
 
 #########################
@@ -68,19 +70,17 @@ def fert_app_time_ha(params):
     ##adjust fert passes by arable area
     index = pd.MultiIndex.from_product([fert_passes.index, arable.index])
     fert_passes = fert_passes.reindex(index, axis=0,level=0)
-    passes=fert_passes.mul(arable,axis=0,level=1)
+    passes_arable=fert_passes.mul(arable,axis=0,level=1)
     ##passes over non arable area (only for pasture phases becasue for pasture the non arable areas also recieve fert)
     passes_na = pinp.crop['nap_passes']
-    passes_na= passes_na.mul(1-arable).T #adjust for the non arable area
+    passes_na= passes_na.mul(1-arable) #adjust for the non arable area
     arr=[list(uinp.structure['All_pas']),list(passes_na.index)] #create multi index from lmu and pasture landuse code
     inx = pd.MultiIndex.from_product(arr)
     passes_na = passes_na.reindex(inx,axis=0,level=1)
     passes_na = pd.merge(phases_df2, passes_na.unstack(), how='left', left_on=uinp.cols()[-1], right_index = True) #merge with all the phases, requires because different phases have different application passes
-    passes_na.drop(list(range(uinp.structure['phase_len'])), axis=1, level=0).stack([1]) #drop the segregated landuse cols
-    ##combine arable and non arable passes
-    total_passes = passes + passes_na
-
-
+    passes_na = passes_na.drop(list(range(uinp.structure['phase_len'])), axis=1, level=0).stack([0]) #drop the segregated landuse cols
+    ##add fert for arable area and fert for nonarable area
+    total_passes = pd.concat([passes_arable, passes_na], axis=1).sum(axis=1, level=0)
     ##adjust fert labour across each labour period
     time = lab_allocation().mul(mac.time_ha().squeeze()).stack() #time for 1 pass for each chem.
     ##adjust for passes
@@ -126,24 +126,19 @@ def chem_app_time_ha(params):
     Dict for pyomo
         Labour required by each rotation phase for spraying
     '''
-    ##calc passes - this is a bit of a double up since it is also calced in crop.py but couldn't get a nice way to get it from there without splitting up the function and also requires crop to be imported.
-    base_chem = np.load('Chem data.npy')
-    chem_by_soil = pinp.crop['chem_by_lmu'] #read in chem by soil
-    base_chem = pd.DataFrame(base_chem, index = phases_df.index, columns = chem_by_soil.index)
-    ### adjust the chem cost for each rotation by lmu
-    chem_by_soil1 = chem_by_soil.stack()
-    chem=base_chem.mul(chem_by_soil1,axis=1,level=0)
-    x = chem.to_numpy()
-    step = pinp.crop['step_chem_passes'].reindex(chem.columns, axis=0,level=0).values.flatten() #reindex to account for lmu then convert to np
-    chem_passes = fun.passes(x,step)
-    chem_passes = pd.DataFrame(chem_passes, index = phases_df.index, columns = chem.columns) #turn it into df with correct indexes so it can be combined with cost allocation.
-    ##adjust passes for arable area.
+    ##passes
+    passes = crp.chem_application()
+    passes.set_index('rot', inplace=True)
+    ##arable area.
     arable = pinp.crop['arable'].squeeze()
-    passes=chem_passes.mul(arable,axis=1,level=1).stack()
+    ##adjust chem passes by arable area
+    index = pd.MultiIndex.from_product([passes.index, arable.index])
+    passes = passes.reindex(index, axis=0,level=0)
+    passes_arable=passes.mul(arable,axis=0,level=1)
     ##adjust chem labour across each labour period
     time = chem_lab_allocation().mul(mac.spray_time_ha()).stack() #time for 1 pass for each chem.
     ##adjust for passes
-    time = passes.mul(time, axis=1,level=1) #total time 
+    time = passes_arable.mul(time, axis=1,level=1) #total time
     time=time.sum(level=[0], axis=1).stack()
     params['chem_app_time_ha'] = time.to_dict()
     
