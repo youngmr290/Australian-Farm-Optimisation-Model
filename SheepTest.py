@@ -19,7 +19,8 @@ report=dict() #^this will come from exp once everything is done
 
 ## call the main simulation loop & update the timer
 model.sets()
-spy.sheep_pyomo_local(params, report)
+spy.stock_precalcs(params,report)
+spy.sheeppyomo_local(params)
 
 
 # time_list.append(timer()) ; time_was.append("simulation loops")

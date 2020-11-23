@@ -503,8 +503,8 @@ def generator(params,report):
     cw_sire, cw_dams, cw_yatf, cw_offs = sfun.f_c2g(uinp.parameters['i_cw_c2'], uinp.parameters['i_cw_y'], uinp.parameters['i_cw_pos'], uinp.parameters['i_cw_len'])
     cx_sire, cx_dams, cx_yatf, cx_offs = sfun.f_c2g(uinp.parameters['i_cx_c2'], uinp.parameters['i_cx_y'], uinp.parameters['i_cx_pos'], uinp.parameters['i_cx_len'], uinp.parameters['i_cx_len2'], condition=mask_x, axis=uinp.parameters['i_x_pos'])
     ##pasture params
-    cu3 = uinp.pastparameters['i_cu3_c4'][...,pinp.sheep['i_pasture_type']].reshape(uinp.pastparameters['i_cu3_len'], uinp.pastparameters['i_cu3_len2']).astype(float)
-    cu4 = uinp.pastparameters['i_cu4_c4'][...,pinp.sheep['i_pasture_type']].reshape(uinp.pastparameters['i_cu4_len'], uinp.pastparameters['i_cu4_len2']).astype(float)
+    cu3 = uinp.pastparameters['i_cu3_c4'][...,pinp.sheep['i_pasture_type']].reshape(uinp.pastparameters['i_cu3_len'], uinp.pastparameters['i_cu3_len2']).astype(float)#have to convert from object to float so it doesnt chuck error in np.exp (np.exp cant handle object arrays)
+    cu4 = uinp.pastparameters['i_cu4_c4'][...,pinp.sheep['i_pasture_type']].reshape(uinp.pastparameters['i_cu4_len'], uinp.pastparameters['i_cu4_len2']).astype(float)#have to convert from object to float so it doesnt chuck error in np.exp (np.exp cant handle object arrays)
     ##Convert the cl0 & cl1 to cb1 (dams and yatf only need cb1, sires and offs dont have b1 axis)
     cb1_dams = cl0_dams[:,uinp.structure['a_nfoet_b1']] + cl1_dams[:,uinp.structure['a_nyatf_b1']]
     cb1_yatf = cl0_yatf[:,uinp.structure['a_nfoet_b1']] + cl1_yatf[:,uinp.structure['a_nyatf_b1']]
@@ -3149,15 +3149,16 @@ def generator(params,report):
     target_weight_tsa1e1b1nwzida0e0b0xyg3 = sfun.f_g2g(pinp.sheep['i_target_weight_tsg3'], 'offs', uinp.structure['i_p_pos'], t3_len, pinp.sheep['i_s_len']+1, condition=dvp_mask_g3, axis=uinp.structure['i_p_pos']) #plus 1 because it is shearing opp and weaning (ie the dvp for offs)
     ###number of periods before sale that shearing occurs in each dvp
     shearing_offset_tsa1e1b1nwzida0e0b0xyg3= sfun.f_g2g(pinp.sheep['i_shear_prior_tsg3'], 'offs', uinp.structure['i_p_pos'], t3_len, pinp.sheep['i_s_len']+1, condition=dvp_mask_g3, axis=uinp.structure['i_p_pos']) #plus 1 because it is shearing opp and weaning (ie the dvp for offs)
-    ##yatf
-    ###association between the birth time of yatf and the birth time of dams
-    a_i_ida0e0b0xyg2 = sfun.f_g2g(pinp.sheep['ia_i_idg2'],'yatf',uinp.parameters['i_d_pos'],pinp.sheep['i_i_len'],uinp.parameters['i_d_len'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos'], condition2=mask_d_offs, axis2=uinp.parameters['i_d_pos'])
 
 
 
     #################################
     ##post processing associations  #
     #################################
+    ##yatf
+    ###association between the birth time of yatf and the birth time of dams
+    a_i_ida0e0b0xyg2 = sfun.f_g2g(pinp.sheep['ia_i_idg2'],'yatf',uinp.parameters['i_d_pos'],pinp.sheep['i_i_len'],uinp.parameters['i_d_len'], condition=pinp.sheep['i_mask_i'], axis=pinp.sheep['i_i_pos'], condition2=mask_d_offs, axis2=uinp.parameters['i_d_pos'])
+    a_g1_g2 = sfun.f_g2g(pinp.sheep['ia_g1_g2'],'yatf')
 
     ##dams
     ###transfer
@@ -4081,16 +4082,17 @@ def generator(params,report):
     ffcfw_initial_wzida0e0b0xyg1 = lw_initial_wzida0e0b0xyg1 - cfw_initial_wzida0e0b0xyg1
     distribution_2dams_a1e1b1nwzida0e0b0xyg2w9 = sfun.f_lw_distribution(ffcfw_initial_wzida0e0b0xyg1, ffcfw_prog_a1e1b1nwzida0e0b0xyg2, uinp.structure['i_n1_len'], uinp.structure['i_n_fvp_period1'])
     ###numbers provided - active d
-    numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2w9 = np.sum(distribution_2dams_a1e1b1nwzida0e0b0xyg2w9
-                                                             * (index_tva1e1b1nwzida0e0b0xyg2w9 == 1) * (gender_xyg[mask_x] == 1)[...,na] #gender to select the dams from prog
-                                                             * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na]
-                                                             * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[...,na]
-                                                             , axis=(uinp.parameters['i_b0_pos']-1, uinp.structure['i_e0_pos']-1))
+    numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2g9w9 = np.sum(distribution_2dams_a1e1b1nwzida0e0b0xyg2w9[...,na,:] * (a_g1_g2[...,na,:]==index_g1)[...,na]
+                                                             * (index_tva1e1b1nwzida0e0b0xyg2w9 == 1) * (gender_xyg[mask_x] == 1)[...,na,na] #gender to select the dams from prog
+                                                             * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na,na]
+                                                             * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[...,na,na]
+                                                             , axis=(uinp.parameters['i_b0_pos']-2, uinp.structure['i_e0_pos']-2))
     ###numbers required - no d axis
-    numbers_progreq_k28k3k5tva1e1b1nw8zida0e0b0xyg1w9 = 1 * (np.sum(mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9[0, ...] * (index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,..., na] == 0)
-                                                                     * btrt_propn_b0xyg1[...,na] * e0_propn_ida0e0b0xyg[...,na] * agedam_propn_da0e0b0xyg1[...,na]
-                                                                     * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na]  * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[...,na],
-                                                                     axis=(pinp.sheep['i_e1_pos']-1, uinp.parameters['i_d_pos']-1, uinp.parameters['i_b0_pos']-1, uinp.structure['i_e0_pos']-1),keepdims=True) > 0)
+    numbers_progreq_k28k3k5tva1e1b1nw8zida0e0b0xyg1g9w9 = 1 * (np.sum(mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9[0, ...,:,na] * (index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,..., na,na] == 0)
+                                                                    * (index_g1[...,na,:]==index_g1)[...,na] * btrt_propn_b0xyg1[...,na,na] * e0_propn_ida0e0b0xyg[...,na,na]
+                                                                    * agedam_propn_da0e0b0xyg1[...,na,na] * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na,na]
+                                                                    * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[...,na,na],
+                                                                     axis=(pinp.sheep['i_e1_pos']-2, uinp.parameters['i_d_pos']-2, uinp.parameters['i_b0_pos']-2, uinp.structure['i_e0_pos']-2),keepdims=True) > 0)
 
     ##transfer progeny to offs
     ###numbers provide - has d axis
@@ -4183,13 +4185,17 @@ def generator(params,report):
     arrays = [keys_k2, keys_k5, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_d, keys_x, keys_y1, keys_g1, keys_lw_prog, keys_i]
     index_k2k5tva1nw8zidxyg1w9i9 = fun.cartesian_product_simple_transpose(arrays)
 
-    ###k3k5tva1w8zidyg2w9 - prog to dams prov &  prog to offs prov
-    arrays = [keys_k3, keys_k5, keys_t2, keys_a, keys_lw_prog, keys_z, keys_i, keys_d, keys_x, keys_y1, keys_g2, keys_lw1]
+    ###k3k5tva1w8zidyg2g9w9 - prog to dams prov
+    arrays = [keys_k3, keys_k5, keys_t2, keys_a, keys_lw_prog, keys_z, keys_i, keys_d, keys_x, keys_y1, keys_g2, keys_g1, keys_lw1]
+    index_k3k5ta1w8zidxyg2g9w9 = fun.cartesian_product_simple_transpose(arrays)
+
+    ###k3k5tva1w8zidyg2w9 - prog to offs prov
+    arrays = [keys_k3, keys_k5, keys_t2, keys_a, keys_lw_prog, keys_z, keys_i, keys_d, keys_x, keys_y1, keys_g3, keys_lw1]
     index_k3k5ta1w8zidxyg2w9 = fun.cartesian_product_simple_transpose(arrays)
 
-    ###k3k5tva1w8zidyg1w9 - prog to dams req
-    arrays = [keys_k2, keys_k3, keys_k5, keys_a, keys_lw1, keys_z, keys_i, keys_y1, keys_g1, keys_lw1]
-    index_k2k3k5a1w8ziyg1w9 = fun.cartesian_product_simple_transpose(arrays)
+    ###k3k5tva1w8zidyg1g9w9 - prog to dams req
+    arrays = [keys_k2, keys_k3, keys_k5, keys_a, keys_lw1, keys_z, keys_i, keys_y1, keys_g1, keys_g1, keys_lw1]
+    index_k2k3k5a1w8ziyg1g9w9 = fun.cartesian_product_simple_transpose(arrays)
 
 
     ###w8g3w9 - prog to offs req
@@ -4282,20 +4288,20 @@ def generator(params,report):
     params['p_npw_dams'] =dict(zip(tup_k2k5tva1nw8zidxyg1w9i9, npw_k2k5tva1nw8zidxyg1w9i9))
 
     ###nunmber prog provided to dams
-    mask=numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2w9!=0
-    progprov_dams_k3k5ta1w8zidxyg2w9 = numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2w9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
+    mask=numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2g9w9!=0
+    progprov_dams_k3k5ta1w8zidxyg2g9w9 = numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2g9w9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
     mask=mask.ravel()
-    index_cut_k3k5ta1w8zidxyg2w9=index_k3k5ta1w8zidxyg2w9[mask,:]
-    tup_k3k5ta1w8zidxyg2w9 = tuple(map(tuple, index_cut_k3k5ta1w8zidxyg2w9))
-    params['p_progprov_dams'] =dict(zip(tup_k3k5ta1w8zidxyg2w9, progprov_dams_k3k5ta1w8zidxyg2w9))
+    index_cut_k3k5ta1w8zidxyg2g9w9=index_k3k5ta1w8zidxyg2g9w9[mask,:]
+    tup_k3k5ta1w8zidxyg2g9w9 = tuple(map(tuple, index_cut_k3k5ta1w8zidxyg2g9w9))
+    params['p_progprov_dams'] =dict(zip(tup_k3k5ta1w8zidxyg2g9w9, progprov_dams_k3k5ta1w8zidxyg2g9w9))
 
     ###nunmber prog require by dams
-    mask=numbers_progreq_k28k3k5tva1e1b1nw8zida0e0b0xyg1w9!=0
-    progreq_k2k3k5a1w8ziyg1w9 = numbers_progreq_k28k3k5tva1e1b1nw8zida0e0b0xyg1w9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
+    mask=numbers_progreq_k28k3k5tva1e1b1nw8zida0e0b0xyg1g9w9!=0
+    progreq_k2k3k5a1w8ziyg1g9w9 = numbers_progreq_k28k3k5tva1e1b1nw8zida0e0b0xyg1g9w9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
     mask=mask.ravel()
-    index_cut_k2k3k5a1w8ziyg1w9=index_k2k3k5a1w8ziyg1w9[mask,:]
-    tup_k2k3k5a1w8ziyg1w9 = tuple(map(tuple, index_cut_k2k3k5a1w8ziyg1w9))
-    params['p_progreq_dams'] =dict(zip(tup_k2k3k5a1w8ziyg1w9, progreq_k2k3k5a1w8ziyg1w9))
+    index_cut_k2k3k5a1w8ziyg1g9w9=index_k2k3k5a1w8ziyg1g9w9[mask,:]
+    tup_k2k3k5a1w8ziyg1g9w9 = tuple(map(tuple, index_cut_k2k3k5a1w8ziyg1g9w9))
+    params['p_progreq_dams'] =dict(zip(tup_k2k3k5a1w8ziyg1g9w9, progreq_k2k3k5a1w8ziyg1g9w9))
 
     ###number prog provided to offs
     mask=numbers_prog2offs_k3k5tva1e1b1nwzida0e0b0xyg2w9!=0

@@ -152,9 +152,8 @@ def property_inp_sa():
         pasture_inputs[pasture]['DigRednSenesce'] = fun.f_sa(pasture_inp[pasture]['DigRednSenesce'], sen.sam[('grn_dmd_senesce_f',pasture)])
     ##sheep
     ###SAV
-    sheep['i_eqn_compare'] = fun.f_sa(sheep_inp['i_eqn_compare'], sen.sav['eqn_compare'], 5)
     sheep['i_mask_i'] = fun.f_sa(sheep_inp['i_mask_i'], sen.sav['TOL_inc'], 5)
-    sheep['i_includedg3_inc'] = fun.f_sa(sheep_inp['i_includedg3_inc'], sen.sav['g3_included'],5)
+    sheep['i_g3_inc'] = fun.f_sa(sheep_inp['i_g3_inc'], sen.sav['g3_included'],5)
 
 
 

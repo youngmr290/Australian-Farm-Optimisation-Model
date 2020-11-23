@@ -35,6 +35,7 @@ import LabourCropPyomo as lcrppy
 import PasturePyomo as paspy
 import SupFeedPyomo as suppy
 import StubblePyomo as stubpy
+import StockPyomo as spy
 import CorePyomo as core
 import Report as rep
 
@@ -88,7 +89,7 @@ exp_data1['runpyomo']=False
 keys_hist = list(prev_exp.reset_index().columns[2:-1].values) #:-1 so that the runpyomo col doesn't effect the run pre calcs.
 keys_current = list(exp_data1.reset_index().columns[2:-1].values)
 sorted_list = sorted(glob.iglob('*.py'), key=os.path.getctime) #gets sorted list of last saved date of all py files (newest file last in the list)
-####if report.py has been updated precalcs don't need to be re-run therefore newest is equal to the newest py file that isn't report
+####if only report.py has been updated precalcs don't need to be re-run therefore newest is equal to the newest py file that isn't report
 if sorted_list[-1] != 'Repoprt.py':
     newest = sorted_list[-1]
 else: newest = sorted_list[-2]
@@ -106,6 +107,7 @@ except FileNotFoundError: exp_data1['runpyomo']=True
 ###if headers are the same,pyomo code is the same and the excel inputs are the same then test if the values in exp.xlxs are the same
 try: #incase pkl_exp doesn't exist
     if keys_current==keys_hist and os.path.getmtime("pkl_exp") >= os.path.getmtime(newest) and os.path.getmtime("pkl_exp") >= os.path.getmtime("Universal.xlsx") and os.path.getmtime("pkl_exp") >= os.path.getmtime("Property.xlsx"):
+        ###check if each exp has the same values in exp.xlsx as last time it was run.
         i3 = prev_exp.reset_index().set_index(keys_hist).index #have to reset index because the name of the trial is going to be included in the new index so it must first be dropped from current index
         i4 = exp_data1.reset_index().set_index(keys_current).index
         exp_data1.loc[~i4.isin(i3),'run'] = True
@@ -176,9 +178,11 @@ def exp(row):
     params['crplab']={}
     params['sup']={}
     params['stub']={}
+    params['stock']={}
     ###report values
     r_vals={}
     r_vals['pas']={}
+    r_vals['stock']={}
     ##call precalcs
     paspy.paspyomo_precalcs(params['pas'],r_vals['pas'])
     rotpy.rotation_precalcs(params['rot'])
@@ -190,7 +194,8 @@ def exp(row):
     lcrppy.crplab_precalcs(params['crplab'])
     suppy.sup_precalcs(params['sup'])
     stubpy.stub_precalcs(params['stub'])
-    
+    spy.stock_precalcs(params['stock'],r_vals['stock'])
+
     ##does pyomo need to be run?
     ##check if two param dicts are the same.
     def findDiff(d1, d2):
@@ -232,6 +237,7 @@ def exp(row):
         paspy.paspyomo_local(params['pas'])
         suppy.suppyomo_local(params['sup'])
         stubpy.stubpyomo_local(params['stub'])
+        spy.stockpyomo_local(params['stock'])
         results=core.coremodel_all() #have to do this so i can access the solver status
  
         ##check if user wants full solution

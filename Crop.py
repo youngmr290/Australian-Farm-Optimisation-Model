@@ -214,6 +214,7 @@ def fert_cost_allocation():
     return fun.period_allocation2(start_df, length_df, p_dates, p_name)
 # t_allocation=fert_cost_allocation()
 
+
 def fert_req(*args):
     '''
     Returns
@@ -224,14 +225,14 @@ def fert_req(*args):
     '''
     ##read in chem by soil
     fert_by_soil = pinp.crop['fert_by_lmu'] 
-    ##read in yields 
+    ##read in fert
     if pinp.crop['user_crop_rot']:
         ### User defined
         base_fert = pinp.crop['fert'].reset_index()
         base_fert=base_fert.set_index([phases_df.iloc[:,-1]])
     else:        
         ### AusFarm ^need to add code for ausfarm inputs
-        base_fert = np.load('fert data.npy')*1000
+        base_fert
         base_fert = pd.DataFrame(base_fert, index = phases_df.iloc[:,-1])  #make the current landuse the index
     ##add the full rotation index eg EEEEEb - done here because merge sorts the order, has to be a col because otherwise cant merge
     base_fert['rot']=phases_df.index
@@ -240,19 +241,40 @@ def fert_req(*args):
     base_fert = pd.merge(base_fert, fixed_fert, how='left', left_index=True, right_index = True) 
     ##replace index
     base_fert.set_index('rot', inplace=True)
-    ## adjust the fert cost for each rotation by lmu
+    ## adjust the fert req for each rotation by lmu
     fert_by_soil = fert_by_soil.stack() #read in fert by soil
     fert=base_fert.mul(fert_by_soil,axis=1,level=0)
-    ##this is required because this function is both a parameter and a step used to build another param ie if dict is passed it add param else it returns df for next function
-    if args:
-        ##have to account for arable area - this gets used in labcrppyomo - hence it doesn't get arable area added in the cost funtion at the bottom like the other costs
-        arable = pinp.crop['arable'].squeeze() #read in arable area df
-        fert=fert.mul(arable,axis=1,level=1) #add arable to df
-        args[0]['fert_req'] = fert.stack([1,0]).to_dict() 
-    else:
-        return fert.stack() 
+    # ##this is required because this function is both a parameter and a step used to build another param ie if dict is passed it add param else it returns df for next function
+    # if args:
+    #     ##have to account for arable area - this gets used in labcrppyomo - hence it doesn't get arable area added in the cost funtion at the bottom like the other costs
+    #     arable = pinp.crop['arable'].squeeze() #read in arable area df
+    #     fert=fert.mul(arable,axis=1,level=1) #add arable to df
+    #     args[0]['fert_req'] = fert.stack([1,0]).to_dict()
+    # else:
+    return fert.stack()
 # fert=fert_req()
-  
+
+def f_fert_passes():
+    '''passes over arable area'''
+    ####read in passes
+    if pinp.crop['user_crop_rot']:
+        ### User defined
+        fert_passes = pinp.crop['fert_passes'].reset_index()
+        fert_passes = fert_passes.set_index([phases_df.iloc[:,-1]])  #make the current landuse the index
+    else:
+        ### AusFarm
+        fert_passes
+        fert_passes = pd.DataFrame(fert_passes, index = phases_df.iloc[:,-1])  #make the current landuse the index
+    ##add the full rotation index eg EEEEEb - done here because merge sorts the order, has to be a col because otherwise cant merge
+    fert_passes['rot']=phases_df.index
+    ####add the fixed fert
+    fixed_fert_passes = pinp.crop['fixed_fert_passes']
+    fert_passes = pd.merge(fert_passes, fixed_fert_passes, how='left', left_index=True, right_index = True)
+    ##replace index
+    fert_passes.set_index('rot', inplace=True)
+    return fert_passes
+
+
 def fert_cost():
     '''
     Returns
@@ -276,24 +298,9 @@ def fert_cost():
     application_cost = allocation.mul(mac.fert_app_cost_t()).stack() #mul app cost per tonne with fert cost allocation
     fert_app_cost_t=fertreq.mul(application_cost/1000,axis=1,level=1).sum(axis=1, level=0) #div by 1000 to convert to $/kg
     ##app cost per ha 
-    ###calc passes
-    ####read in passes 
-    if pinp.crop['user_crop_rot']:
-        ### User defined
-        fert_passes = pinp.crop['fert_passes'].reset_index()
-        fert_passes = fert_passes.set_index([phases_df.iloc[:,-1]])  #make the current landuse the index
-    else:        
-        ### AusFarm
-        fert_passes 
-        fert_passes = pd.DataFrame(fert_passes, index = phases_df.iloc[:,-1])  #make the current landuse the index
-    ##add the full rotation index eg EEEEEb - done here because merge sorts the order, has to be a col because otherwise cant merge
-    fert_passes['rot']=phases_df.index
-    ####add the fixed fert 
-    fixed_fert_passes = pinp.crop['fixed_fert_passes']
-    fert_passes = pd.merge(fert_passes, fixed_fert_passes, how='left', left_index=True, right_index = True) 
-    ##replace index
-    fert_passes.set_index('rot', inplace=True)
-    ## reindex col headers so that lmu is included - note the passes are the same for each lmu
+    ###call passes function (it has to be a seperate function because it is used in crplabour.py as well
+    fert_passes = f_fert_passes()
+    ## reindex col headers so that lmu is included - note the passes are the same for each lmu (just required so it lines up with fert req array)
     fert_passes = fert_passes.reindex(fertreq.index,axis=0,level=0)
     ###add the cost for each pass
     fert_cost_ha = allocation.mul(mac.fert_app_cost_ha()).stack() #cost for 1 pass for each fert.
@@ -302,13 +309,14 @@ def fert_cost():
     fert_cost_total= pd.concat([phase_fert_cost_t,fert_app_cost_t, fert_app_cost_ha],axis=1).sum(axis=1,level=0) #must include level so that all cols dont sum, had to switch this from .add to concat because for some reason on multiple itterations of the model add stoped working
     return fert_cost_total
 
+
 def nap_fert_cost():
     '''
     
     Returns
     -------
     Dataframe- to be added to total costs at the end.
-        Fert applied to non arable pasture - currently setup so that only pasture phases get fert on the non arable areas 
+        Fert applied to non arable pasture - currently setup so that only pasture phases get fert on the non arable areas hence it needs to be a seperate function.
     '''
     allocation = fert_cost_allocation()
     ##fert cost
@@ -331,9 +339,21 @@ def nap_fert_cost():
     phase_total_cost = pd.merge(phases_df2, total_cost.unstack(), how='left', left_on=uinp.cols()[-1], right_index = True) #merge with all the phases, requires because different phases have different application passes
     return phase_total_cost.drop(list(range(uinp.structure['phase_len'])),axis=1, level=0).stack([1]) #adding level=0 does nothing but if not included you get a preformance warning.
   
-     
-    
-    
+def total_fert_req(param):
+    '''returns the total fert req after accounting for arable area.
+       this is used in the LabourCropPyomo'''
+    fert = fert_req.unstack()
+    ##have to account for arable area - this gets used in labcrppyomo - hence it doesn't get arable area added in the cost funtion at the bottom like the other costs
+    arable = pinp.crop['arable'].squeeze() #read in arable area df
+    fert=fert.mul(arable,axis=1,level=1) #add arable to df
+
+
+    ##fert required on the non arable areas
+    fertreq = pinp.crop['nap_fert']
+
+    param[0]['fert_req'] = fert.stack([1,0]).to_dict()
+
+
 #######################
 #stubble handeling    #
 #######################
