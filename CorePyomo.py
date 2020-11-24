@@ -359,6 +359,6 @@ def coremodel_all():
         pass
     model.rc = pe.Suffix(direction=pe.Suffix.IMPORT)
     ##solve - tee=True will print out solver information
-    results = pe.SolverFactory('glpk').solve(model, tee=False) #turn to true for solver output - may be useful for troubleshooting
+    results = pe.SolverFactory('glpk').solve(model, tee=True) #turn to true for solver output - may be useful for troubleshooting
     return results
     

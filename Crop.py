@@ -396,7 +396,7 @@ def phase_stubble_cost():
     '''
     ##first calculate the probability of a rotation phase needing stubble handling
     base_yields = rot_yield()
-    stub_handling_threashold = pd.Series(pinp.stubble['stubble_handling']['stubble_threashold'])*1000  #have to convert to kg to match base yield
+    stub_handling_threashold = pd.Series(pinp.stubble['stubble_handling']['stubble_threshold'])*1000  #have to convert to kg to match base yield
     probability_handling = base_yields.div(stub_handling_threashold, level = 1) #divide here then account for arable and lmu factor next - because either way is mathematically sound and this saves some manipulation.
     probability_handling = probability_handling.droplevel(1).unstack()
     ##add the cost - this needs to be flexible because the cost may be over multiple periods
