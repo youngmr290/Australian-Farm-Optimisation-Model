@@ -272,8 +272,8 @@ def coremodel_all():
         return (-yield_income(model,c[i]) + crppy.rotation_cost(model,c[i])  + labpy.labour_cost(model,c[i]) + macpy.mach_cost(model,c[i]) + suppy.sup_cost(model,c[i]) + model.p_overhead_cost[c[i]]
                 - stkpy.stock_cashflow(model,c[i])
                 - model.v_debit[c[i]] * j[i] + model.v_credit[c[i]]  + model.v_debit[c[i-1]] * fin.debit_interest() * j[i]  - model.v_credit[c[i-1]] * fin.credit_interest() * j[i]
-                - model.carryover_credit[c[i]] * carryoverJF[i] + model.carryover_credit[c[i]] * carryoverND[i]
-                + model.carryover_debit[c[i]] * carryoverJF[i]  - model.carryover_debit[c[i]] * carryoverND[i]) <= 0
+                - model.v_carryover_credit * carryoverJF[i] + model.v_carryover_credit * carryoverND[i]
+                + model.v_carryover_debit * carryoverJF[i]  - model.v_carryover_debit * carryoverND[i]) <= 0
 
     try:
         model.del_component(model.con_cashflow)

@@ -138,6 +138,12 @@ for row in range(len(exp_data)):
                 sen.saa[(key1,key2)][indices]=value
             elif dic == 'sap':
                 sen.sap[(key1,key2)][indices]=value
+            elif dic == 'sar':
+                sen.sar[(key1,key2)][indices]=value
+            elif dic == 'sat':
+                sen.sat[(key1,key2)][indices]=value
+            elif dic == 'sav':
+                sen.sav[(key1,key2)][indices]=value
 
         ##checks if just slice exists
         elif not 'Unnamed' in indx:
@@ -148,6 +154,12 @@ for row in range(len(exp_data)):
                 sen.saa[key1][indices]=value
             elif dic == 'sap':
                 sen.sap[key1][indices]=value
+            elif dic == 'sar':
+                sen.sar[key1][indices]=value
+            elif dic == 'sat':
+                sen.sat[key1][indices]=value
+            elif dic == 'sav':
+                sen.sav[key1][indices]=value
         ##checks if just key2 exists
         elif not 'Unnamed' in key2:
             if dic == 'sam':
@@ -156,6 +168,12 @@ for row in range(len(exp_data)):
                 sen.saa[(key1,key2)]=value
             elif dic == 'sap':
                 sen.sap[(key1,key2)]=value
+            elif dic == 'sar':
+                sen.sar[(key1,key2)]=value
+            elif dic == 'sat':
+                sen.sat[(key1,key2)]=value
+            elif dic == 'sav':
+                sen.sav[(key1,key2)]=value
         ##if just key1 exists
         else:
             if dic == 'sam':
@@ -164,6 +182,12 @@ for row in range(len(exp_data)):
                 sen.saa[key1]=value
             elif dic == 'sap':
                 sen.sap[key1]=value
+            elif dic == 'sar':
+                sen.sar[key1]=value
+            elif dic == 'sat':
+                sen.sat[key1]=value
+            elif dic == 'sav':
+                sen.sav[key1]=value
 
     ##call sa functions - assigns sa variables to relevant inputs
     uinp.univeral_inp_sa()
