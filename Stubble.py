@@ -143,17 +143,20 @@ def stubble_all(params):
         comp_dmd_period=fp.iloc[:,-num_stub_cat:] #selects just the dmd from fp df for the crop of interest
         stub_cat_component_proportion.index=comp_dmd_period.columns #makes index = to column names so df mul can be done (quicker than using a loop)
         j=0 #used as scalar for stub available for in each cat below.
-        base_yields = np.load('Yield data.npy')*1000
-        base_yields = pd.Series(base_yields, index = crp.phases_df.iloc[:,-1])
+        base_yields = base_yields = crp.f_base_yield()
         for cat_inx, cat_name in zip(range(len(pinp.stubble['stub_cat_qual'].loc[crop])), pinp.stubble['stub_cat_qual']):
             dmd.loc[:,(crop,cat_name)]=comp_dmd_period.mul(stub_cat_component_proportion[cat_inx]).sum(axis=1) #dmd by stub category (a, b, c, d)
             ##calc relative quality before converting dmd to md - note that the equation system used is the one selected for dams in p1 - currently only cs function exists 
-            if pinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
+            if uinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
                 ri_quality.loc[:,(crop,cat_name)]= dmd.loc[:,(crop,cat_name)].apply(sfun.f_rq_cs, args=(pinp.stubble['clover_propn_in_sward_stubble'],))
-            ##ri availability - first calc stubble foo (stub available)
-            stub_foo_harv = base_yields.loc[crop].mean() * stubble_per_grain[(crop,'a')]
+            ##ri availability - first calc stubble foo (stub available) this is the average from all rotations because we just need one value for foo
+            ###try calc the base yield for each crop but if the crop is not one of the rotation phases then assign the average foo (this is only to stop error. it doesnt matter because the crop doesnt exist so the stubble is never used)
+            try:
+                stub_foo_harv = base_yields.loc[crop].mean() * stubble_per_grain[(crop,'a')]
+            except KeyError: #if the crop is not in any of the rotations assign average foo to stop error - this is not used so could assign any value.
+                stub_foo_harv = base_yields.mean()
             stubble_foo = stub_foo_harv * (1 - fp['quant_decline_%s' %crop]) * (1 - j)
-            if pinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used - note that the equation system used is the one selected for dams in p1
+            if uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used - note that the equation system used is the one selected for dams in p1
                 ri_availability.loc[:,(crop,cat_name)] = sfun.f_ra_cs(stubble_foo.values, pinp.stubble['i_hf'])
             ##combine ri quality and ri availabitily to calc overall vol (potential intake)
             vol.loc[:,(crop,cat_name)]=(1/(ri_availability.loc[:,(crop,cat_name)].mul(ri_quality.loc[:,(crop,cat_name)]))*1000/(1+SA.sap['pi']))#.replace(np.inf, 10000) #this produces some inf when ri_quality is 0 (1/0)  

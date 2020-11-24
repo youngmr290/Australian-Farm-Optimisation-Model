@@ -146,6 +146,19 @@ def grain_pool_proportions(params):
 #########################
 #yield                  #
 #########################
+def f_base_yield():
+    '''base yield - used in stubble as well to calc foo for relativie availability'''
+
+    ##read in yields
+    if pinp.crop['user_crop_rot']:
+        ### User defined
+        base_yields = pinp.crop['yields']
+    else:
+        ### AusFarm ^need to add code for ausfarm inputs
+        base_yields
+    base_yields = pd.Series(base_yields, index = phases_df.iloc[:,-1])
+    return base_yields
+
 def rot_yield(*params):
     '''
     Returns
@@ -158,14 +171,8 @@ def rot_yield(*params):
         -lmu factor
         -frost
     '''
-    ##read in yields 
-    if pinp.crop['user_crop_rot']:
-        ### User defined
-        base_yields = pinp.crop['yields']
-    else:        
-        ### AusFarm ^need to add code for ausfarm inputs
-        base_yields = np.load('Yield data.npy')*1000
-    base_yields = pd.Series(base_yields, index = phases_df.iloc[:,-1])
+    ##base yields
+    base_yields = f_base_yield()
     ##colate other info
     yields_lmus = pinp.crop['yield_by_lmu'] #soil yield factor
     seeding_rate = pinp.crop['seeding_rate'].mul(pinp.crop['own_seed'],axis=0)#seeding rate adjusted by if the farmer is using their own seed from last yr

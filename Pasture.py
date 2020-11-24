@@ -825,7 +825,7 @@ def poc(params):
     ###calc relative availability - note that the equation system used is the one selected for dams in p1 - need to hook up mu function
     if uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used
         ri_quan_f = sfun.f_ra_cs(i_poc_foo_f, hf)
-        poc_vol_f = 1/(ri_qual_f*ri_quan_f)
+        poc_vol_f = fun.f_divide(1,(ri_qual_f*ri_quan_f))
     poc_vol_rav_f = poc_vol_f.ravel()
     params['p_poc_vol_f'] = dict(zip(index_f ,poc_vol_rav_f))
     

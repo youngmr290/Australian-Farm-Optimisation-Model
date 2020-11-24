@@ -29,15 +29,17 @@ def rot_params(params):
     ###########################
     #rotation phase low bound #
     ###########################
-    ##debuging rotaion constraints- create dict for each rotation with 0 as default, the loop through changing each value to 1 (this dict will be used as the min bound)
+    ##debuging rotaion constraints- create dict for each rotation with 0 as default, then loop through changing each value to 1 (this dict will be used as the min bound)
     phases_df = uinp.structure['phases']
-    # phase_ind=uinp.structure['phases'].set_index(list(range(uinp.structure['phase_len']))).index
-    params['lo_bound'] = dict.fromkeys(phases_df.index, 0)#create default dict
+    params['lo_bound'] = dict.fromkeys(phases_df.index, 0)#create default dict, this is the min bound for each rotatoin. Could change 0 to a SAV which is the low bound for every rotation.
+    ##alter specific rotation min bounds
+    #^still need to determine the best way to do this
     
     #############################
     #rotation phase constraint1 #
     #############################    
     rot_con1 = pd.read_excel('Rotation.xlsx', sheet_name='rotation con1', header= None)#, index_col = [0,1]) #couldn't get it to read in with multiindex for some reason
+    params['hist'] =rot_con1.iloc[:,1] # this is a list of each history for each rotation in con1.
     rot_con1 = rot_con1.set_index([0,1])
     params['rot_con1'] =rot_con1.squeeze().to_dict()
     # rot_con2 = pd.read_excel('Rotation.xlsx', sheet_name='rotation con2', header= None)

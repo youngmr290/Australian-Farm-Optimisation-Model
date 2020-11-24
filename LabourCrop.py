@@ -23,11 +23,6 @@ import UniversalInputs as uinp
 ########################
 #phases                #
 ########################
-##makes a df of all possible rotation phases
-phases_df =uinp.structure['phases']
-phases_df2=phases_df.copy() #make a copy so that it doesn't alter the phases df that exists outside this func
-phases_df2.columns = pd.MultiIndex.from_product([phases_df2.columns, ['']])  #make the df multi index so that when it merges with other df below the indexs remanin seperate (otherwise it turn into a one leveled tuple)
-
 
 #########################
 #pack and prep time     #
@@ -77,7 +72,7 @@ def fert_app_time_ha(params):
     arr=[list(uinp.structure['All_pas']),list(passes_na.index)] #create multi index from lmu and pasture landuse code
     inx = pd.MultiIndex.from_product(arr)
     passes_na = passes_na.reindex(inx,axis=0,level=1)
-    passes_na = pd.merge(phases_df2, passes_na.unstack(), how='left', left_on=uinp.cols()[-1], right_index = True) #merge with all the phases, requires because different phases have different application passes
+    passes_na = pd.merge(crp.phases_df2, passes_na.unstack(), how='left', left_on=uinp.cols()[-1], right_index = True) #merge with all the phases, requires because different phases have different application passes
     passes_na = passes_na.drop(list(range(uinp.structure['phase_len'])), axis=1, level=0).stack([0]) #drop the segregated landuse cols
     ##add fert for arable area and fert for nonarable area
     total_passes = pd.concat([passes_arable, passes_na], axis=1).sum(axis=1, level=0)

@@ -60,7 +60,11 @@ def rotationpyomo(params):
             pass
     except AttributeError:
         def rot_phase_link(model,l,h):
-            return sum(model.v_phase_area[r,l]*model.p_rotphaselink[r,h] for r in model.s_phases if ((r,)+(h,)) in model.p_rotphaselink)<=0
+            ##skip constraint if the history is not used by any of the rotations. This only happens for the continuous rotations because there is not constraint for them because they provide and require themselves, so if no other rotation use the continuous history and error is thrown because constraint is built from nothing. But cant remove continuos histories becasue they can be used by other roations eg AAAAAa has history of AAAAA this history can be used by AAAAAb rotation.
+            if any(params['hist']==h):
+                return sum(model.v_phase_area[r,l]*model.p_rotphaselink[r,h] for r in model.s_phases if ((r,)+(h,)) in model.p_rotphaselink)<=0
+            else:
+                return Constraint.Skip
         model.con_rotationcon1 = Constraint(model.s_lmus, model.s_rotconstraints, rule=rot_phase_link, doc='rotation phases constraint')
 
     ########

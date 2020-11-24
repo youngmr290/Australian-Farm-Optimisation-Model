@@ -93,7 +93,7 @@ def paspyomo_local(params):
         model.del_component(model.p_me_cons_grnha)
     except AttributeError:
         pass
-    model.p_me_cons_grnha = pe.Param(model.s_sheep_pools, model.s_grazing_int, model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, initialize=params['p_me_cons_grnha_egoflt'], default=0, doc='Total ME from grazing a hectare')
+    model.p_me_cons_grnha = pe.Param(model.s_sheep_pools, model.s_grazing_int, model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, initialize=params['p_me_cons_grnha_vgoflt'], default=0, doc='Total ME from grazing a hectare')
     
     try:
         model.del_component(model.p_volume_grnha_index_index_0_index_0_index_0_index_0)
@@ -104,7 +104,7 @@ def paspyomo_local(params):
         model.del_component(model.p_volume_grnha)
     except AttributeError:
         pass
-    model.p_volume_grnha = pe.Param(model.s_sheep_pools, model.s_grazing_int, model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, initialize=params['p_volume_grnha_egoflt'], default=0, doc='Total Vol from grazing a hectare')
+    model.p_volume_grnha = pe.Param(model.s_sheep_pools, model.s_grazing_int, model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, initialize=params['p_volume_grnha_vgoflt'], default=0, doc='Total Vol from grazing a hectare')
     
     try:
         model.del_component(model.p_dry_mecons_t_index_index_0_index_0)
@@ -113,7 +113,7 @@ def paspyomo_local(params):
         model.del_component(model.p_dry_mecons_t)
     except AttributeError:
         pass
-    model.p_dry_mecons_t = pe.Param(model.s_sheep_pools, model.s_dry_groups, model.s_feed_periods, model.s_pastures, initialize=params['p_dry_mecons_t_edft'], default=0, doc='Total ME from grazing a tonne of dry feed')
+    model.p_dry_mecons_t = pe.Param(model.s_sheep_pools, model.s_dry_groups, model.s_feed_periods, model.s_pastures, initialize=params['p_dry_mecons_t_vdft'], default=0, doc='Total ME from grazing a tonne of dry feed')
     
     try:
         model.del_component(model.p_dry_volume_t_index_index_0)
@@ -325,7 +325,7 @@ def nappas_me(model,v,f):
 #Vol         #
 ##############
 def pas_vol(model,v,f):
-    return sum(sum(sum(model.v_greenpas_ha[v,g,o,f,l,t] * model.p_volume_grnha[g,o,f,l,t] for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus) \
+    return sum(sum(sum(model.v_greenpas_ha[v,g,o,f,l,t] * model.p_volume_grnha[v,g,o,f,l,t] for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus) \
                + sum(model.v_drypas_consumed[v,d,f,t] * model.p_dry_volume_t[d,f,t] \
                + model.v_nap_consumed[v,d,f,t] * model.p_dry_volume_t[d,f,t] for d in model.s_dry_groups) for t in model.s_pastures)\
                + model.v_poc[v,f,l] * model.p_poc_vol[f] for l in model.s_lmus )

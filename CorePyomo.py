@@ -119,7 +119,7 @@ def coremodel_all():
     except AttributeError:
         pass
     def harv_stub_nap_cons(model,v,f):
-        return -paspy.pas_me(model,v,f) + sum(model.p_harv_prop[f,k]/(1-model.p_harv_prop[f,k]) * model.v_stub_con[v,f,k,s] * model.p_stub_me[f,s,k] for k in model.s_crops for s in model.s_stub_cat) \
+        return -paspy.pas_me(model,v,f) + sum(model.p_harv_prop[f,k]/(1-model.p_harv_prop[f,k]) * model.v_stub_con[v,f,k,s] * model.p_stub_md[f,s,k] for k in model.s_crops for s in model.s_stub_cat) \
                 +  model.p_nap_prop[f]/(1-model.p_nap_prop[f]) * paspy.nappas_me(model,v,f) <= 0
     model.con_harv_stub_nap_cons = pe.Constraint(model.s_sheep_pools, model.s_feed_periods, rule = harv_stub_nap_cons, doc='limit stubble and nap consumption in the period harvest occurs')
 
@@ -223,16 +223,26 @@ def coremodel_all():
     ######################
     #  ME                #
     ######################
+    try:
+        model.del_component(model.con_me_index)
+        model.del_component(model.con_me)
+    except AttributeError:
+        pass
     def me(model,f,v):
-        return -paspy.pas_me(v,f) - suppy.sup_me(model,v,f) - stubpy.stubble_me(model,v,f) + stkpy.stock_me(model,v,f) <=0
-    model.con_me = pe.Constraint(model.s_feed_periods, model.s_lmus, rule=me, doc='constraint between me available and consumed')
+        return -paspy.pas_me(model,v,f) - suppy.sup_me(model,v,f) - stubpy.stubble_me(model,v,f) + stkpy.stock_me(model,v,f) <=0
+    model.con_me = pe.Constraint(model.s_feed_periods, model.s_sheep_pools, rule=me, doc='constraint between me available and consumed')
 
     ######################
     #Vol                 #
     ######################
+    try:
+        model.del_component(model.con_vol_index)
+        model.del_component(model.con_vol)
+    except AttributeError:
+        pass
     def vol(model,f,v):
-        return paspy.pas_vol(v,f) + suppy.sup_vol(model,v,f) + stubpy.stubble_vol(model,v,f) - stkpy.stock_pi(model,v,f) <=0
-    model.con_vol = pe.Constraint(model.s_feed_periods, model.s_lmus, rule=vol, doc='constraint between me available and consumed')
+        return paspy.pas_vol(model,v,f) + suppy.sup_vol(model,v,f) + stubpy.stubble_vol(model,v,f) - stkpy.stock_pi(model,v,f) <=0
+    model.con_vol = pe.Constraint(model.s_feed_periods, model.s_sheep_pools, rule=vol, doc='constraint between me available and consumed')
 
     ######################
     #cashflow constraints#
@@ -259,10 +269,11 @@ def coremodel_all():
         carryoverJF[0] = 1
         carryoverND = [0] * len(c)
         carryoverND[-1] = 1
-        return (-yield_income(model,c[i]) + crppy.rotation_cost(model,c[i])  + labpy.labour_cost(model,c[i]) + macpy.mach_cost(model,c[i]) + suppy.sup_cost(model,c[i]) + model.p_overhead_cost[c[i]] - stkpy.stock_cashflow[c[i]]     \
+        return (-yield_income(model,c[i]) + crppy.rotation_cost(model,c[i])  + labpy.labour_cost(model,c[i]) + macpy.mach_cost(model,c[i]) + suppy.sup_cost(model,c[i]) + model.p_overhead_cost[c[i]]
+                - stkpy.stock_cashflow(model,c[i])
                 - model.v_debit[c[i]] * j[i] + model.v_credit[c[i]]  + model.v_debit[c[i-1]] * fin.debit_interest() * j[i]  - model.v_credit[c[i-1]] * fin.credit_interest() * j[i]
-                - model.carryover_credit[c[i]] * carryoverJF + model.carryover_credit[c[i]] * carryoverND 
-                + model.carryover_debit[c[i]] * carryoverJF  - model.carryover_debit[c[i]] * carryoverND ) <= 0
+                - model.carryover_credit[c[i]] * carryoverJF[i] + model.carryover_credit[c[i]] * carryoverND[i]
+                + model.carryover_debit[c[i]] * carryoverJF[i]  - model.carryover_debit[c[i]] * carryoverND[i]) <= 0
 
     try:
         model.del_component(model.con_cashflow)
@@ -334,7 +345,7 @@ def coremodel_all():
     #######################################################################################################################################################
     
     ##sometimes if there is a bug when solved it is good to write lp here - because the code doesn't run to the other place where lp written
-    # model.write('test.lp',io_options={'symbolic_solver_labels':True})
+    model.write('test.lp',io_options={'symbolic_solver_labels':True}) #comment this out when not debugging
     
     ##tells the solver you want duals and rc
     try:
