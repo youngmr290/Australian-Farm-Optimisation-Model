@@ -887,7 +887,7 @@ def f_fibre(cw, cc, ffcfw_start, relsize_start, d_cfw_history_start_m2a1e1b1nwzi
             , mec=0, mel=0, gest_propn_a1e1b1nwzida0e0b0xyg=0, lact_propn_a1e1b1nwzida0e0b0xyg=0):
     ##ME available for wool growth
     mew_xs_a1e1b1nwzida0e0b0xyg = np.maximum(mew_min_a1e1b1nwzida0e0b0xyg * relsize_start, mei - (mec * gest_propn_a1e1b1nwzida0e0b0xyg + mel * lact_propn_a1e1b1nwzida0e0b0xyg))
-    ##Wool growth (protein weight) wo (without) lag
+    ##Wool growth (protein weight-as shorn i.e. not DM) wo (without) lag
     d_cfw_wolag_a1e1b1nwzida0e0b0xyg = cw[8, ...] * wge_a0e0b0xyg * af_wool_a1e1b1nwzida0e0b0xyg * dlf_wool_a1e1b1nwzida0e0b0xyg * mew_xs_a1e1b1nwzida0e0b0xyg
     ##Wool growth (protein weight) with and wo lag
     d_cfw_a1e1b1nwzida0e0b0xyg, d_cfw_history_m2a1e1b1nwzida0e0b0xyg = f_history(d_cfw_history_start_m2a1e1b1nwzida0e0b0xyg, d_cfw_wolag_a1e1b1nwzida0e0b0xyg, days_period_a1e1b1nwzida0e0b0xyg)
@@ -900,7 +900,7 @@ def f_fibre(cw, cc, ffcfw_start, relsize_start, d_cfw_history_start_m2a1e1b1nwzi
     ##Surface Area
     area = cc[1, ...] * ffcfw_start ** (2/3)
     ##Daily fibre length growth
-    d_fl_a1e1b1nwzida0e0b0xyg = 100 * fun.f_divide(d_cfw_a1e1b1nwzida0e0b0xyg, np.pi * cw[10, ...] * cw[11, ...] * area * (0.5 * d_fd_a1e1b1nwzida0e0b0xyg / 10**6) ** 2) #func to stop div/0 error when d_fd=0 so does d_cfw
+    d_fl_a1e1b1nwzida0e0b0xyg = 100 * fun.f_divide(d_cfw_a1e1b1nwzida0e0b0xyg, cw[10, ...] * cw[11, ...] * area * np.pi * (0.5 * d_fd_a1e1b1nwzida0e0b0xyg / 10**6) ** 2) #func to stop div/0 error when d_fd=0 so does d_cfw
     return d_cfw_a1e1b1nwzida0e0b0xyg, d_fd_a1e1b1nwzida0e0b0xyg, d_fl_a1e1b1nwzida0e0b0xyg, d_cfw_history_m2a1e1b1nwzida0e0b0xyg, mew, new
 
 
@@ -1111,7 +1111,7 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, w_b_exp_y, period_is_birth, c
     ##Exposure index
     xo = cd[8, ..., na] - cd[9, ..., na] * rc_birth[..., na] + cd[10, ..., na] * chill_index_m1 + cb1[11, ..., na]
     ##Progeny mortality at birth from exposure
-    mortalityx = np.average(np.exp(xo) / (1 - np.exp(xo)) ,axis = -1) * period_is_birth #axis -1 is m1
+    mortalityx = np.average(np.exp(xo) / (1 + np.exp(xo)) ,axis = -1) * period_is_birth #axis -1 is m1
     ##add sensitivity
     mortalityx = fun.f_sa(mortalityx, sar_mortalityp, sa_type = 4)
     return mortalityx, mortalityd_yatf, mortalityd_dams
