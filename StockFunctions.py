@@ -1226,7 +1226,7 @@ def f_condensed(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp
 
     return var
 
-def f_period_start_nums(numbers, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_fvp0, period_is_startfvp0, period_is_startseason, season_propn_z, group=None, numbers_initial_repro=0, period_is_prejoin=0):
+def f_period_start_nums(numbers, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_fvp0, period_is_startfvp0, period_is_startseason, season_propn_z, group=None, nyatf_b1 = 0, numbers_initial_repro=0, gender_propn_x=1, period_is_prejoin=0, period_is_birth=False):
     ##a)update numbers if start of DVP
     numbers = f_condensed(numbers, numbers, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_fvp0, period_is_startfvp0)
     ##b) realocate for season type
@@ -1238,6 +1238,10 @@ def f_period_start_nums(numbers, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_
         ##d) new repro cycle (prejoining)
         temporary = np.sum(numbers, axis = (prejoin_tup), keepdims=True) * numbers_initial_repro #Calculate temporary values as if period_is_prejoin
         numbers = fun.f_update(numbers, temporary, period_is_prejoin)  #Set values where it is beginning of FVP
+    ##things just for yatf
+    if group==2:
+        temp = nyatf_b1 * gender_propn_x   # nyatf is accounting for peri-natal mortality. But doesn't include the differential mortality of female and male offspring at birth
+        numbers=fun.f_update(numbers, temp, period_is_birth)
     return numbers
 
 
@@ -1296,11 +1300,6 @@ def f_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfoe
             numbers = fun.f_update(numbers, temp, period_is_scan * (scan>=1))
         ###e)make the max of number 0.0001
         numbers=np.maximum(numbers_min_b1, numbers)
-    ##things just for yatf
-    if group==2:
-        temp = nyatf_b1 * gender_propn_x   # nyatf is accounting for peri-natal mortality. But doesn't include the differential mortality of female and male offspring at birth
-        numbers=fun.f_update(numbers, temp, period_is_birth)
-        pp_numbers = numbers
     return numbers,pp_numbers
 
 

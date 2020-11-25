@@ -80,7 +80,7 @@ def generator(params,report):
     na=np.newaxis
     ## define the periods - default (dams and ssire)
     sim_years = uinp.structure['i_age_max']
-    sim_years = 3.5
+    sim_years = 6.5
     sim_years_offs = min(uinp.structure['i_age_max_offs'], sim_years)
     n_sim_periods, date_start_p, date_end_p, p_index_p, step \
     = sfun.sim_periods(pinp.sheep['i_startyear'], uinp.structure['i_sim_periods_year'], sim_years)
@@ -1615,7 +1615,7 @@ def generator(params,report):
     nw_start_yatf = 0
     ffcfw_start_yatf = w_b_std_y_b1nwzida0e0b0xyg1
     ffcfw_max_start_yatf = ffcfw_start_yatf
-    mortality_yatf=0 #required for dam numbers before progeny born
+    mortality_birth_yatf=0 #required for dam numbers before progeny born
     cfw_start_yatf = 0
     temp_lc_yatf = np.array([0]) #this is calculated in the chill function but it is required for the intake function so it is set to 0 for the first period.
     numbers_start_yatf = 0
@@ -2535,8 +2535,8 @@ def generator(params,report):
             if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                 temp0, temp1, temp2 = sfun.f_mortality_progeny_cs(cd_yatf, cb1_yatf, w_b_yatf, rc_start_dams, w_b_exp_y_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p], chill_index_pa1e1b1nwzida0e0b0xygm1[p], nfoet_b1nwzida0e0b0xyg,sen.sar['mortalityp'])
                 if eqn_used:
-                    mortality_yatf += temp0 #mortalityx
-                    mortality_yatf += temp1 #mortalityd
+                    mortality_birth_yatf = temp1 #mortalityd, assigne first because it has x axis
+                    mortality_birth_yatf += temp0 #mortalityx
                     mortality_dams += temp2 #mortalityd_dams
                 if eqn_compare:
                     r_compare_q0q1q2pyatf[eqn_system, eqn_group, 0, p, ...] = temp0
@@ -2547,7 +2547,7 @@ def generator(params,report):
             if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                 temp0 = sfun.f_mortality_progeny_mu(cu2_yatf, cb1_yatf, cx_yatf, ce_yatf[:,p,...], w_b_yatf, foo_yatf, chill_index_pa1e1b1nwzida0e0b0xygm1[p], period_is_birth_pa1e1b1nwzida0e0b0xyg1[p], sen.sar['mortalityp'])
                 if eqn_used:
-                    mortality_yatf += temp0 #mortalityd
+                    mortality_birth_yatf = temp0 #mortalityx
                 if eqn_compare:
                     r_compare_q0q1q2pyatf[eqn_system, eqn_group, 0, p, ...] = temp0
 
@@ -2556,13 +2556,13 @@ def generator(params,report):
         if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
             numbers_end_sire, pp_numbers_end_sire = sfun.f_period_end_nums(numbers_start_sire, mortality_sire, numbers_min_b1nwzida0e0b0xyg, group=0)
         if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-            numbers_end_dams, pp_numbers_end_dams = sfun.f_period_end_nums(numbers_start_dams, mortality_dams, numbers_min_b1nwzida0e0b0xyg, mortality_yatf=mortality_yatf, nfoet_b1=nfoet_b1nwzida0e0b0xyg,
+            numbers_end_dams, pp_numbers_end_dams = sfun.f_period_end_nums(numbers_start_dams, mortality_dams, numbers_min_b1nwzida0e0b0xyg, mortality_yatf=mortality_birth_yatf, nfoet_b1=nfoet_b1nwzida0e0b0xyg,
                                                  nyatf_b1=nyatf_b1nwzida0e0b0xyg, group=1, conception=conception_dams, scan= scan_pa1e1b1nwzida0e0b0xyg1[p],
                                                  gbal = gbal_pa1e1b1nwzida0e0b0xyg1[p], gender_propn_x=gender_propn_xyg, period_is_mating = period_is_mating_pa1e1b1nwzida0e0b0xyg1[p],
                                                  period_is_matingend=period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p],
                                                  period_is_birth = period_is_birth_pa1e1b1nwzida0e0b0xyg1[p], period_is_scan=period_is_scan_pa1e1b1nwzida0e0b0xyg1[p])
         if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-            numbers_end_yatf, pp_numbers_end_yatf = sfun.f_period_end_nums(numbers_start_yatf, mortality_yatf, numbers_min_b1nwzida0e0b0xyg, nyatf_b1 = nyatf_b1nwzida0e0b0xyg, group=2, gender_propn_x=gender_propn_xyg, period_is_birth=period_is_birth_pa1e1b1nwzida0e0b0xyg1[p])
+            numbers_end_yatf, pp_numbers_end_yatf = sfun.f_period_end_nums(numbers_start_yatf, mortality_yatf, numbers_min_b1nwzida0e0b0xyg, group=2)
         if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
             numbers_end_offs, pp_numbers_end_offs = sfun.f_period_end_nums(numbers_start_offs, mortality_offs, numbers_min_b1nwzida0e0b0xyg, group=3)
 
@@ -3022,8 +3022,10 @@ def generator(params,report):
             numbers_start_fvp0_dams = fun.f_update(numbers_start_fvp0_dams, numbers_start_dams, period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1[p + 1])
 
         if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-            numbers_start_yatf = sfun.f_period_start_nums(numbers_end_yatf, prejoin_tup, season_tup, uinp.structure['i_n1_len'], uinp.structure['i_w1_len'], uinp.structure['i_n_fvp_period1'], numbers_start_fvp0_yatf,
-                                                          period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1[p], period_is_startseason_pa1e1b1nwzida0e0b0xyg[p], season_propn_zida0e0b0xyg, group=2)
+            numbers_start_yatf = sfun.f_period_start_nums(numbers_end_yatf, prejoin_tup, season_tup, uinp.structure['i_n1_len'], uinp.structure['i_w1_len'],
+                                                          uinp.structure['i_n_fvp_period1'], numbers_start_fvp0_yatf, period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1[p],
+                                                          period_is_startseason_pa1e1b1nwzida0e0b0xyg[p], season_propn_zida0e0b0xyg, nyatf_b1=nyatf_b1nwzida0e0b0xyg,
+                                                          gender_propn_x=gender_propn_xyg, period_is_birth=period_is_birth_pa1e1b1nwzida0e0b0xyg1[p], group=2)
             ###numbers at the begining of fvp 0 (used to calc mort for the lw patterns to determine the lowest feasible level - used in the start prod func)
             numbers_start_fvp0_yatf = fun.f_update(numbers_start_fvp0_yatf, numbers_start_yatf, period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1[p + 1])
 
@@ -4104,7 +4106,7 @@ def generator(params,report):
     numbers_progreq_w8zida0e0b0xyg3w9 = 1 * (mask_numbers_reqw8w9_w8zida0e0b0xyg3w9 > 0)
 
     # plt.plot(o_ffcfw_dams[:, 0, 0:2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])         #compare e1 for singles
-    # plt.plot(o_ffcfw_dams[:, 0, 1, 3, 0, 0:3, 0, 0, 0, 0, 0, 0, 0, 0, 0])         #compare w for singles and e1[1]
+    # plt.plot(o_ffcfw_dams[:, 0, 1, 3, 0, 17:19, 0, 0, 0, 0, 0, 0, 0, 0, 0])         #compare w for singles and e1[1]
     # plt.plot(o_ffcfw_start_yatf[:, 0, 0:2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])   #compare e1 for singles
     # plt.plot(o_ebg_dams[:, 0, 0:2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])           #compare e1 for singles
     # plt.plot(o_pi_dams[:, 0, 0:2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])            #compare e1 for singles
