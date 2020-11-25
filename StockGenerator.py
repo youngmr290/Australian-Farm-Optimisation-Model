@@ -2167,7 +2167,7 @@ def generator(params,report):
             gest_propn_b1sliced = sfun.f_dynamic_slice(gest_propn_pa1e1b1nwzida0e0b0xyg1[p], uinp.parameters['i_b1_pos'], 2, 3) #slice b1 axis
             days_period_b1sliced = sfun.f_dynamic_slice(days_period_pa1e1b1nwzida0e0b0xyg1[p], uinp.parameters['i_b1_pos'], 2, 3) #slice b1 axis
 
-            t_w_mating = np.sum(ffcfw_e1b1sliced + ebg_e1b1sliced * cg_dams[18, ...] * days_period_b1sliced * (1-gest_propn_b1sliced) \
+            t_w_mating = np.sum((ffcfw_e1b1sliced + ebg_e1b1sliced * cg_dams[18, ...] * days_period_b1sliced * (1-gest_propn_b1sliced)) \
                          * period_is_mating_pa1e1b1nwzida0e0b0xyg1[p], axis=pinp.sheep['i_e1_pos'], keepdims=True)#Temporary variable for mating weight
             ffcfw_mating_dams = fun.f_update(ffcfw_mating_dams, t_w_mating, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p])
             ##Relative condition of the dam at mating - required to determine milk production
