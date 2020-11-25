@@ -21,7 +21,8 @@ import CreateModel as crtmod #need bot
 from CreateModel import model
 import UniversalInputs as uinp
 import PropertyInputs as pinp 
-import Sensitivity as sen 
+import Sensitivity as sen
+import Functions as fun
 import RotationPyomo as rotpy 
 import CropPyomo as crppy
 import MachPyomo as macpy
@@ -138,6 +139,12 @@ for row in range(len(exp_data)):
                 sen.saa[(key1,key2)][indices]=value
             elif dic == 'sap':
                 sen.sap[(key1,key2)][indices]=value
+            elif dic == 'sar':
+                sen.sar[(key1,key2)][indices]=value
+            elif dic == 'sat':
+                sen.sat[(key1,key2)][indices]=value
+            elif dic == 'sav':
+                sen.sav[(key1,key2)][indices]=value
 
         ##checks if just slice exists
         elif not 'Unnamed' in indx:
@@ -148,6 +155,12 @@ for row in range(len(exp_data)):
                 sen.saa[key1][indices]=value
             elif dic == 'sap':
                 sen.sap[key1][indices]=value
+            elif dic == 'sar':
+                sen.sar[key1][indices]=value
+            elif dic == 'sat':
+                sen.sat[key1][indices]=value
+            elif dic == 'sav':
+                sen.sav[key1][indices]=value
         ##checks if just key2 exists
         elif not 'Unnamed' in key2:
             if dic == 'sam':
@@ -156,6 +169,12 @@ for row in range(len(exp_data)):
                 sen.saa[(key1,key2)]=value
             elif dic == 'sap':
                 sen.sap[(key1,key2)]=value
+            elif dic == 'sar':
+                sen.sar[(key1,key2)]=value
+            elif dic == 'sat':
+                sen.sat[(key1,key2)]=value
+            elif dic == 'sav':
+                sen.sav[(key1,key2)]=value
         ##if just key1 exists
         else:
             if dic == 'sam':
@@ -164,6 +183,12 @@ for row in range(len(exp_data)):
                 sen.saa[key1]=value
             elif dic == 'sap':
                 sen.sap[key1]=value
+            elif dic == 'sar':
+                sen.sar[key1]=value
+            elif dic == 'sat':
+                sen.sat[key1]=value
+            elif dic == 'sav':
+                sen.sav[key1]=value
 
     ##call sa functions - assigns sa variables to relevant inputs
     uinp.univeral_inp_sa()
@@ -204,30 +229,9 @@ for row in range(len(exp_data)):
     
     
     ##does pyomo need to be run?
-    ##check if two param dicts are the same.
-    def findDiff(d1, d2):
-        a=False
-        for k in d1:
-            # if a != True: #this stops it looping through the rest of the keys once it finds a difference
-                if (k not in d2): #check if the key in current params is in previous params dict.
-                    # print('DIFFERENT')
-                    a = True
-                    return a
-                else:
-                    if type(d1[k]) is dict:
-                        # print('going level deeper',k)
-                        a=findDiff(d1[k],d2[k])
-                        # print(k,a)
-                    else:
-                        if d1[k] != d2[k]: #if keys are the same, check if the values are the same
-                            # print('DIFFERENT',k)
-                            a=(True)
-                            return a
-            # else: return a
-        return a
     ##check if the two dicts are the same, it is possible that the current dict has less keys than the previous dict eg if a value becomes nan (because you removed the cell in exvel inputs) and when it is stacked it disapears (this is very unlikely though so not going to test for it since this step is already slow)
     try: #try required incase the key (trial) doesn't exist in the old dict, if this is the case pyomo must be run
-        run_pyomo_params=findDiff(params[exp_data.index[row][2]], prev_params[exp_data.index[row][2]])
+        run_pyomo_params=fun.findDiff(params[exp_data.index[row][2]], prev_params[exp_data.index[row][2]])
     except KeyError:
         run_pyomo_params= True
     ##determine if pyomo should run, note if pyomo doesn't run there will be no ful solution (they are the same as before so no need)
