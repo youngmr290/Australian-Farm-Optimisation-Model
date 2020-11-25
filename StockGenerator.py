@@ -3030,10 +3030,10 @@ def generator(params,report):
             numbers_start_fvp0_yatf = fun.f_update(numbers_start_fvp0_yatf, numbers_start_yatf, period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1[p + 1])
 
         if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-            numbers_start_off = sfun.f_period_start_nums(numbers_end_offs, prejoin_tup, season_tup, uinp.structure['i_n3_len'], uinp.structure['i_w3_len'], uinp.structure['i_n_fvp_period3'], numbers_start_fvp0_offs,
+            numbers_start_offs = sfun.f_period_start_nums(numbers_end_offs, prejoin_tup, season_tup, uinp.structure['i_n3_len'], uinp.structure['i_w3_len'], uinp.structure['i_n_fvp_period3'], numbers_start_fvp0_offs,
                                                          period_is_startfvp0_pa1e1b1nwzida0e0b0xyg3[p], period_is_startseason_pa1e1b1nwzida0e0b0xyg[p], season_propn_zida0e0b0xyg, group=3)
             ###numbers at the begining of fvp 0 (used to calc mort for the lw patterns to determine the lowest feasible level - used in the start prod func)
-            numbers_start_fvp0_offs = fun.f_update(numbers_start_fvp0_offs, numbers_start_off, period_is_startfvp0_pa1e1b1nwzida0e0b0xyg3[p + 1])
+            numbers_start_fvp0_offs = fun.f_update(numbers_start_fvp0_offs, numbers_start_offs, period_is_startfvp0_pa1e1b1nwzida0e0b0xyg3[p + 1])
 
     postp_start=time.time()
     print('generator :', postp_start - generator_start)
@@ -3210,7 +3210,10 @@ def generator(params,report):
     dvp_start_date_va1e1b1nwzida0e0b0xyg3 = np.concatenate([date_weaned_a1e1b1nwzida0e0b0xyg3[na,...],fvp_0_start_oa1e1b1nwzida0e0b0xyg3], axis=0)
     dvp_start_date_pa1e1b1nwzida0e0b0xyg3=np.take_along_axis(dvp_start_date_va1e1b1nwzida0e0b0xyg3,a_v_pa1e1b1nwzida0e0b0xyg3,0)
     period_is_startdvp_pa1e1b1nwzida0e0b0xyg3 = sfun.f_period_is_('period_is', dvp_start_date_pa1e1b1nwzida0e0b0xyg3, date_start_pa1e1b1nwzida0e0b0xyg3, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3)
-    nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg3 = np.roll(period_is_startdvp_pa1e1b1nwzida0e0b0xyg3,-1,axis=0)
+    dvp_start2_date_va1e1b1nwzida0e0b0xyg3 = np.concatenate([fvp_b0_start_ba1e1b1nwzida0e0b0xyg3,fvp_0_start_oa1e1b1nwzida0e0b0xyg3], axis=0) #use start of year rather than weaning for the start of the dvp becasue for dvp next we dont want to trigger a true at weaning.
+    dvp_start2_date_pa1e1b1nwzida0e0b0xyg3=np.take_along_axis(dvp_start2_date_va1e1b1nwzida0e0b0xyg3,a_v_pa1e1b1nwzida0e0b0xyg3,0) #doesn't include weaning date because dont want to trigger the end of dvp the period before weaning dvp 0 ends before shearing therefore nextdvp is true the period before shearing
+    period_is_startdvp2_pa1e1b1nwzida0e0b0xyg3 = sfun.f_period_is_('period_is', dvp_start2_date_pa1e1b1nwzida0e0b0xyg3, date_start_pa1e1b1nwzida0e0b0xyg3, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3)
+    nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg3 = np.roll(period_is_startdvp2_pa1e1b1nwzida0e0b0xyg3,-1,axis=0)
     ###cluster
     a_k5cluster_lsb0xyg = fun.f_reshape_expand(uinp.structure['ia_ppk5_lsb0'], uinp.parameters['i_b0_pos'], len_ax0=uinp.structure['i_len_l'], len_ax1=uinp.structure['i_len_s']
                                                   , len_ax2=uinp.structure['ia_ppk5_lsb0'].shape[-1])
