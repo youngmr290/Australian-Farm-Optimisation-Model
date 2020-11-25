@@ -2762,11 +2762,11 @@ def generator(params,report):
             r_md_solid_dams[p] = md_solid_dams
 
         ###yatf
-        o_ffcfw_start_yatf[p] = ffcfw_start_yatf #use ffcfw_start because weaning start of period, has to be outside of the loop because days per period = 0 when weaning occurs becasue weaning is first day of period. But we need to know the start ffcfw.
+        o_ffcfw_start_yatf[p] = ffcfw_start_yatf #use ffcfw_start because weaning start of period, has to be outside of the 'if' because days per period = 0 when weaning occurs becasue weaning is first day of period. But we need to know the start ffcfw.
+        o_numbers_start_yatf[p] = numbers_start_yatf #used for npw calculation - use numbers start because weaning is start of period - has to be out of the 'if' because there is 0 days in the peirod when weaning occurs but we still want to store the start weight
         if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
             ###store output variables for the post processing
             # o_numbers_end_yatf[p] = pp_numbers_end_yatf
-            o_numbers_start_yatf[p] = numbers_start_yatf #used for npw calculation - use numbers start because weaning is start of period
             o_pi_yatf[p] = pi_yatf
             o_mei_solid_yatf[p] = mei_solid_yatf
             # o_ch4_total_yatf[p] = ch4_total_yatf
@@ -2791,6 +2791,8 @@ def generator(params,report):
             ###store output variables for the post processing
             o_numbers_end_offs[p] = numbers_end_offs
             o_ffcfw_offs[p] = ffcfw_offs
+            o_ffcfw_condensed_offs[p] = sfun.f_condensed(numbers_end_offs, ffcfw_offs, prejoin_tup, season_tup, uinp.structure['i_n3_len'], uinp.structure['i_w3_len'], uinp.structure['i_n_fvp_period3'], numbers_start_fvp0_offs,
+                                                         period_is_startfvp0_pa1e1b1nwzida0e0b0xyg3[p+1])  #condensed lw at the end of the period before fvp0
             o_pi_offs[p] = pi_offs
             o_mei_solid_offs[p] = mei_solid_offs
             o_ch4_total_offs[p] = ch4_total_offs
@@ -3723,6 +3725,7 @@ def generator(params,report):
     #lw distribution #
     ##################
     lwdist_start = time.time()
+    ##offs are distributed each period dams only distributed when next dvp type == 0. T0 and t1 are always distributed however this is not used because t0 and t1 dont transfer to next dvp
     distribution_tva1e1b1nw8zida0e0b0xyg1w9 = sfun.f_lw_distribution(ffcfw_end_condensed_va1e1b1nwzida0e0b0xyg1, ffcfw_end_tva1e1b1nwzida0e0b0xyg1, uinp.structure['i_n1_len'], uinp.structure['i_n_fvp_period1'], dvp_type_next_tva1e1b1nwzida0e0b0xyg1[...,na])
     distribution_va1e1b1nw8zida0e0b0xyg3w9 = sfun.f_lw_distribution(ffcfw_end_condensed_va1e1b1nwzida0e0b0xyg3, ffcfw_end_va1e1b1nwzida0e0b0xyg3, uinp.structure['i_n3_len'], uinp.structure['i_n_fvp_period3'])
 
