@@ -127,44 +127,10 @@ def f_convert_to_inf(input):
     input[mask]=False
     return input.astype('float')
 
-#def test():
-#    sheettest = xl_all_named_ranges("GSMInputs.xlsx","Annual") #sheettest = xl_all_named_ranges("GSMInputs.xlsx","Annual", True)
-#def test1():
-#    sheettest = xl_all_named_ranges("GSMInputs.xlsx","Annual")  #sheettest = xl_all_named_ranges("GSMInputs.xlsx","Annual", False)
-##exceldata = xl_all_named_ranges('GSMInputs.xlsx', 'Annual')
-##print(exceldataddd)
-#crop_input = dict()
-#crop_input['excel_ranges'] = {'crop inputs.xlsx':(['yield'            #yeild t/ha will be converted to kg in prep calcs
-#                                              ,'frost'              #frost by crop by lmu (% yeildc reduction)
-#                                              ,'yield_by_lmu'      #yeild by soil table
-#                                              ,'seeding_rate'       #seeding rate by crop by lmu
-#                                              ,'fert'               #fert t/ha for each crop includes 1yr previous phase
-#                                              ,'fert_by_lmu'
-#                                              ,'arable'
-#                                              ,'passes'])}    #fert soil factor
-#def test2():
-#    xl_named_range(crop_input['excel_ranges'])
-#
-#print('All ranges True', min(timeit.repeat(test,number=3,repeat=5))/3)
-#print('All ranges False', min(timeit.repeat(test1,number=3,repeat=5))/3)
 
-# ########################
-# #phases                #
-# ########################
-# #makes a df of all possible rotation phases
-# #use product function to do a Cartesian product.
-# def phases(landuses,phase_number):
-#     phases = [landuses]*phase_number
-#     df = pd.DataFrame(list(itertools.product(*phases) ) ) # '*' is used to unpack lists into multiple args
-#     #function to remove unrealistic phases using some rules
-#     #not comparing beginning phase with end phase because that ramoves the possibility of longer rotations ie nwbnwbnwb
-#     #you cant have nwbnnwbn because the rotation phase bnnw is cut out by section below. But nwbn is still relevant as shown above.
-#     cols=list(df.columns)
-#     for i in range(len(cols)-1):
-#         df = df.loc[-((df[cols[i]].isin(['rcanola','tcanola']))&(df[cols[i+1]].isin(['rcanola','tcanola'])))] #no cont canola
-#         df = df.loc[-((df[cols[i]].isin(['lupins','faba']))&(df[cols[i+1]].isin(['lupins','faba'])))] #no cont faba or lupins ie lup lup, faba faba or lup faba etc
-#         df = df.loc[-((df[cols[i]].isin(['barley','oats','fodder','hay']))&(df[cols[i+1]].isin(['wheat'])))] #wheat would be the first cereal in a rotation
-#     return df#.astype('category') - cant do this because then merge doesn't work #use category to reduce size:  https://www.dataquest.io/blog/pandas-big-data/    (i was hoping this would speed up my big df stacking but it didnt make a huge difference)
+###########################
+#general functions        #
+###########################
 
 #this is the fastest function for building cartesian products. Doesn't make much diff for small ones but upto 50% faster for big ones
 def cartesian_product_simple_transpose(arrays):
@@ -289,357 +255,6 @@ def f_reshape_expand(array,left_pos=0,len_ax0=0,len_ax1=0,len_ax2=0,swap=False,a
         else:
             array = np.compress(condition, array, axis)
     return array
-
-#######################################
-#function for feed budget & livestock #
-#######################################
-def dmd_to_md(dmd):
-    '''define a function to return M/D from DMD
-
-    dmd can be either a percentage or a decimal
-    returns M/D in MJ of ME per kg of DM
-    dmd can be a numpy array or a scalar (not sure if it handles lists and data frames)
-
-    ^ this could be expanded to include forage (0.172 * dmd - 1.7)
-       and supplement (.133 * dmd + 23.4 ee + 1.32)
-       using an extra 'type' input that is default 'herbage'
-    '''
-    try:
-        if (dmd <= 1).all() : dmd *= 100 # if dmd is a list or an array and is a decimal then convert to percentage (in excel 80% is 0.8 in python)
-    except:
-        if dmd <= 1:          dmd *= 100 # if dmd is a scalar and is a decimal then convert to percentage   ^ alternative would be to convert scalar values to a list (if dmd isinstance not list: dmd=[dmd]) or perhaps type is float]
-    return 0.17 * dmd - 2                # formula 1.13C from SCA 1990 pg 9
-
-def md_to_dmd(md):
-    '''basically a rearanged version of the function above
-    returns dmd as a decimal'''
-    return (md+2)/17
-
-
-def effective_mei(dmi, md, threshold, ri=1, eff_above=0.5):
-    """Calculate MEI and scale for reduced efficiency if above animal requirements.
-
-    Parameters
-    ----------
-    dmi       : value or array - Dry matter intake (kg).
-    md        : value or array - M/D of the feed (MJ of ME / kg of DM).
-    threshold : value or array - Diet quality (ME/Vol) required by animals.
-    ri        : value or array, optional (1.0)     - Relative intake (quality and quantity).
-    eff_above : value or array, optional (0.5) - Efficiency.
-    that energy is used if above required quality and animals are gaining then losing weight.
-
-    If inputs are provided in arrays then they must be braodcastable.
-
-    Returns
-    -------
-    ME avaialable to the animal to meet their ME requirements, from the quantity of DM consumed.
-
-    """
-    fec = md * ri
-    fec_effective  = np.minimum(fec, threshold + (fec - threshold) * eff_above)
-    md_effective = fec_effective / ri
-    mei_effective = dmi * md_effective
-    return mei_effective
-
-
-#
-##########################
-# period calculators     #
-##########################
-
-def period_allocation(period_dates,periods,start_d,length=None):
-    '''
-    Parameters
-    ----------
-    period_dates : List
-        Dates of the periods you are matching within eg labour periods or cashflow periods
-        *note the start date of the period must added to the end of the period if length is passed in
-    periods : List
-        Name of each period.
-    start_d : Date
-        Date of interest.
-    length : Dt, optional
-        Length of the period of interest. The default is ''.
-
-    Returns
-    -------
-    Proportion of a given date range in each period:
-    Either take a date and returns the period it is in
-    or take a date and a length and return a dataframe with a proportion in each period
-
-    '''
-    #gets the dates
-    # period_dates = p_dates   # don't need this step if the variables passed in are changed to period_dates from p_dates and periods from p_name
-    #gets the period name
-    # periods = p_name
-    if length is not None:
-    #start empty list to append to
-        allocation_period = []
-        end = start_d + length
-        #check how much of the range falls into each cash period
-        for i in range(len(periods)-1):
-            ## ^might be simpler to do this with allocation_period.append  \
-            ## # (min(per_end,end)-max(per_start,start)/(end-start)) clipped(0,1)
-            ## # would also be quicker if the loop started with i = bisect(period_dates,start)-1
-            ## # and finished when per_end > end
-            ## # perhaps this is a while loop
-            per_start = period_dates[i]
-            per_end = period_dates[i + 1]
-
-            ##had to add this if statement to handle feed periods - when using fp convert all dates to 2019 but sometimes the start date plus the length = 2020. there for sometimes the end date need to be adjusted back to 2019, when this happens the start date also needs to go back one yr to 2018
-            if end -  rdelta.relativedelta(years=1) >= per_start:
-                end = (start_d + length) -  rdelta.relativedelta(years=1)
-                start = start_d -  rdelta.relativedelta(years=1)
-            else:
-                end = start_d + length
-                start = start_d
-
-            #if the range lasts longer than one cashflow period then that cashflow period gets allocated a proportion
-            if start <=  per_start and end >= per_end:
-                 allocation_period.append((per_end - per_start) / (end - start))
-            #start of the range is before period and the end of the range is after the start of the period but before the end
-            elif start <=  per_start <= end and end <= per_end:
-                allocation_period.append((end - per_start) / (end - start))
-            #is the start of the range after the start of the period and before the finish of the period
-            #and the end of the range is after the end of the period
-            elif start >=  per_start and start <= per_end <= end :
-                allocation_period.append((per_end - start) / (end - start))
-            #if all of the range occurs within one the period
-            elif start >=  per_start and end <= per_end:
-                allocation_period.append(1)
-            #if the range doesn't occur in a period.
-            else:
-                allocation_period.append(np.nan)
-        return pd.DataFrame(list(zip(periods,allocation_period)), columns= ('period', 'allocation'))
-    #returns the period name a given date falls into
-    else:    #^ could use the python function allocation_p = bisect.bisect(period_dates,start)-1
-        for date, period in zip(period_dates, periods):
-            while date <= start_d:
-                allocation_p = period
-                break
-        return allocation_p
-
-
-def df_period_total(p_dates,p_name,*dfs):
-    '''
-
-
-    Parameters
-    ----------
-    p_dates : List
-        Dates of the period you are matching ie cashflow or labour.
-    p_name : List
-        Names of the period you are matching ie cashflow or labour.
-    *dfs : Dataframe or Series (1d)
-        Each df has dates as a index and a corresponding value in col 0 that you want to add to a period.
-
-    Returns
-    -------
-    Dict.
-        -The function determines what period each date falls into and adds the value to that period. This is repeated for each df.
-        -This func is good if you have multiple df with values that you want to add to the relevant period (you can only add values that are in the same period but you dont know what period the value is in until running the allocation func)
-        #example of this func is in the labourcrop module
-
-    '''
-    #create empty numpy array that i will add the labour time in each period to
-    array = np.zeros(len(p_name))
-    #have to loops to allow for passing in multiple dicts
-    for d in dfs:
-#        print(dic)
-        for date in d.index:
-            # date = parse(key, dayfirst = False) #parse - simple way to go from string to datetime
-            labour_period = period_allocation(p_dates,p_name,date)
-            array[labour_period] += d.loc[date,d.columns]
-    return dict(zip(p_name,array))
-
-
-
-######################
-# functions below are used to manipulate the period allocation from the func above into neccessary format
-#they depend on the input type ie dict of df, and the number of entries
-######################
-#^if this doesn't get used much it should be removed it really doesn't do much
-def period_allocation_reindex(df, p_dates, p_name, start, length):
-    '''
-    Parameters
-    ----------
-    df : Dataframe
-        1d dataframe or series.
-    p_dates : List
-        Dates of the period you are matching ie cashflow or labour.
-    p_name : List
-        Names of the period you are matching ie cashflow or labour.
-    start : Datetime
-        Start date of the df activity ie start date of seeding.
-    length : Datetime
-        Length of the df activity ie length of seeding.
-
-    Returns
-    -------
-    Dataframe 2D
-        This function is used when multiple activities have the same period allocation.
-        - this func basically just calls the main allocation func then reindexes the df so it applies to all activities.
-        eg the cost of seeding for each lmu is incurred over the same period so we just want to return a df with a certain cost in it for each lmu and each cashflow period (the cost may differ but the allocation will be the same for each lmu, so the allocation func is called once then reindexed then multiplied by the differnt costs)
-    '''
-    allocation = period_allocation(p_dates, p_name,start,length)
-    allocation = allocation.set_index('period')
-    columns = pd.MultiIndex.from_product([allocation.columns, df.index])
-    allocation = allocation.reindex(columns,axis=1,level=0) #add level so mul can happen
-    allocation.columns = allocation.columns.droplevel(0) #drop added level
-    # cost = df.rename(index={0:'allocation'}).stack()
-    df = allocation.mul(df.iloc[:,0],axis=1)
-    return df
-
-def period_allocation2(start_df, length_df, p_dates, p_name):
-    '''
-    Parameters
-    ----------
-    start_df : Datetime series
-        Contains the activity start dates ie start date of fert spreading for each fert.
-    length_df : Datetime series
-        Length of the df activity ie length of fert spreading for each fert.
-    p_dates : List
-        Dates of the period you are matching ie cashflow or labour.
-    p_name : List
-        Names of the period you are matching ie cashflow or labour.
-
-    Returns
-    -------
-    Dataframe 2D
-        index = period names you are matching within ie cashflow
-        column names = activities ie fertilisers
-        This function is used when multiple activities have different period allocation.
-        - this func basically just calls the main allocation multiple times and adds the results to one df.
-        eg the cost of fert spreading could be in different periods depending what time of yr that fertiliser is applied
-    '''
-    start_df=start_df.squeeze() #should be a series but incase it is a 1d df
-    length_df=length_df.squeeze() #should be a series but incase it is a 1d df
-    df = pd.DataFrame()
-    for col, start, length in zip(start_df.index, start_df, length_df):
-        allocation = period_allocation(p_dates,p_name,start,length)
-        df[col]=allocation['allocation']
-    df.index=allocation['period']
-    return df
-
-#^replaced with the function below
-# def range_allocation(period_dates, periods, start, length):
-#     ''' The proportion of each period that falls in the tested date range.
-#     Parameters.
-#     period_dates: the start of the periods - in a DataFrame.
-#     periods: the period descriptions to be returned in the dataframe.
-#     start: the date of the beginning of the date range to test.
-#     length: the length of the date range to test - a timedelta.days object.
-
-#     Returns.
-#     a DataFrame with the period description and the proportion of the period
-#         -proportion of each feed period that falls in a given date range
-#         -similar to period_allocation that is the proportion of the date range that falls in each period
-
-#     '''
-#     #start empty list to append to
-#     allocation_period = pd.DataFrame()
-#     end = start + length
-#     #check how much of each period falls within the date range
-#     for i in range(len(periods)-1):
-#         per_start= period_dates[i].date()    # convert from TimeStamp to datetime
-#         per_end = period_dates[i + 1].date() #   to allow the calculations
-#         calc_start = max(per_start,start)       #select the later of the period start or the start of the range
-#         calc_end = min(per_end,end)             #select earlier of the period end and the end of the range
-#         allocation=max(0, (calc_end - calc_start) / (per_end - per_start)) #this will be 2d when other pastures are added #days between calc_end and calc_start (0 if end before start) divided by length of the period
-#         allocation_period=allocation_period.append(pd.DataFrame(data=[allocation]))
-#     return allocation_period
-
-def range_allocation_np(period_dates, start, length, opposite=None):
-    ''' Numpy version - The proportion of each period that falls in the tested date range or proportion of date range in each period.
-
-    Parameters.
-    period_dates: the start of the periods - in a Numpy array np.datetime64.
-    start: the date of the beginning of the date range to test - a numpy array of dates.
-    length: the length of the date range to test - an array of timedelta.days object.
-          : must be broadcastable into start.
-    ags: input True returns the proportion of date range in each period.
-       :       None returns the proportion of the period in the date range (2nd arg).
-
-    Returns.
-    a Numpy array with shape(period_dates, start array).
-    Containing the proportion of the respective period for that test date.
-    '''
-    #start empty list to append to
-    allocation_period=np.zeros(((len(period_dates),) + start.shape),dtype=np.float64)
-    end = start + length
-    ##checks if user wants to the proportion of each period that falls in the tested date range or proportion of date range in each period
-    if opposite:
-        #check how much of each date range falls within the period
-        for i in range(len(period_dates)-1):
-            #^.date() might be required because the array being passed is not a np.datetime64[D]
-            per_start= period_dates[i].date() #had to add this and the as type thing below to get it all in the same format so calcs would work
-            per_end = period_dates[i + 1].date()
-            calc_start = np.maximum(per_start,start).astype('datetime64[D]')       #select the later of the period start or the start of the range
-            calc_end = np.minimum(per_end,end).astype('datetime64[D]')             #select earlier of the period end and the end of the range
-            allocation_period[i,...] = np.maximum(0, (calc_end - calc_start) / (end - start)) #days between calc_end and calc_start (0 if end before start) divided by length of the range
-    else:
-        #check how much of each period falls within the date range
-        for i in range(len(period_dates)-1):
-            per_start= period_dates[i]
-            per_end = period_dates[i + 1]
-            calc_start = np.maximum(per_start,start).astype('datetime64[D]')       #select the later of the period start or the start of the range
-            calc_end = np.minimum(per_end,end).astype('datetime64[D]')             #select earlier of the period end and the end of the range
-            allocation_period[i,...] = np.maximum(0, (calc_end - calc_start) / (per_end - per_start)) #days between calc_end and calc_start (0 if end before start) divided by length of the period
-    return allocation_period
-
-#^replaced with the function below
-# #the feed period and position in the feed period that a given date range falls
-# def period_proportion(period_dates, periods, date):
-#     #check if date falls within period
-#     period = 0
-#     proportion = 0
-#     for i in range(len(periods)-1):
-#         per_start= period_dates[i]
-#         per_end = period_dates[i + 1]
-#         if per_start <= date <= per_end:        #date is within the period
-#             period = i
-#             proportion = (date - per_start)/(per_end - per_start)
-#     return period, proportion
-
-def period_proportion_np(period_dates, date_array):
-    ''' Numpy version - The period that a given date falls in.
-
-    Parameters.
-    period_dates: the start of the periods - in a Numpy array np.datetime64.
-    date_array: the date to test - a numpy array of dates.
-
-    Returns.
-    Two Numpy arrays with shape(date_array).
-    #1 the period for that test date.
-    #2 how far through the period the date occurs.
-    '''
-    #this is needed when only a single date is passed in because can't do .shape on a single dt object
-    try:
-        proportion_array = np.zeros(date_array.shape,dtype='float64')
-    except AttributeError: pass
-    period_array = np.searchsorted(period_dates, date_array, side = 'right') - 1
-    per_start = period_dates[period_array]
-    per_end   = period_dates[period_array + 1]
-    proportion_array = (date_array - per_start) / (per_end - per_start)
-    # print('propn, date, stat, end, start', proportion_array,date_array,per_start,per_end,per_start)
-    return period_array, proportion_array
-
-# #################################################
-# # create a numpy by broadcasting dataframes     #
-# #################################################
-
-# #this function returns a 2D or 3D numpy array
-# #array is created by matrix multiplication of two or three 1D dataframes
-# #The dfs passed becomes axis 0, 1 & 2 of the array. The first & third need to be reshaped
-# def create_array_from_dfs(df1,df2,df3=''):
-#     np1=np.array(df1.to_numpy).reshape(-1,1)
-#     np2=np.array(df2.to_numpy)
-#     final=np.multiply(np1,np2)
-#     if df3:                                         #if there is a 3rd dimension
-#         np3=np.array(df3.to_numpy).reshape(1,1,-1)
-#         final=np.multiply(final,np3)
-#     return final
-
 
 def f_update(existing_value, new_value, mask_for_new):
     '''
@@ -810,3 +425,342 @@ def findDiff(d1, d2):
                     return a
         # else: return a
     return a
+
+
+#######################################
+#function for feed budget & livestock #
+#######################################
+def dmd_to_md(dmd):
+    '''define a function to return M/D from DMD
+
+    dmd can be either a percentage or a decimal
+    returns M/D in MJ of ME per kg of DM
+    dmd can be a numpy array or a scalar (not sure if it handles lists and data frames)
+
+    ^ this could be expanded to include forage (0.172 * dmd - 1.7)
+       and supplement (.133 * dmd + 23.4 ee + 1.32)
+       using an extra 'type' input that is default 'herbage'
+    '''
+    try:
+        if (dmd <= 1).all() : dmd *= 100 # if dmd is a list or an array and is a decimal then convert to percentage (in excel 80% is 0.8 in python)
+    except:
+        if dmd <= 1:          dmd *= 100 # if dmd is a scalar and is a decimal then convert to percentage   ^ alternative would be to convert scalar values to a list (if dmd isinstance not list: dmd=[dmd]) or perhaps type is float]
+    return 0.17 * dmd - 2                # formula 1.13C from SCA 1990 pg 9
+
+def md_to_dmd(md):
+    '''basically a rearanged version of the function above
+    returns dmd as a decimal'''
+    return (md+2)/17
+
+
+def effective_mei(dmi, md, threshold, ri=1, eff_above=0.5):
+    """Calculate MEI and scale for reduced efficiency if above animal requirements.
+
+    Parameters
+    ----------
+    dmi       : value or array - Dry matter intake (kg).
+    md        : value or array - M/D of the feed (MJ of ME / kg of DM).
+    threshold : value or array - Diet quality (ME/Vol) required by animals.
+    ri        : value or array, optional (1.0)     - Relative intake (quality and quantity).
+    eff_above : value or array, optional (0.5) - Efficiency.
+    that energy is used if above required quality and animals are gaining then losing weight.
+
+    If inputs are provided in arrays then they must be braodcastable.
+
+    Returns
+    -------
+    ME avaialable to the animal to meet their ME requirements, from the quantity of DM consumed.
+
+    """
+    fec = md * ri
+    fec_effective  = np.minimum(fec, threshold + (fec - threshold) * eff_above)
+    md_effective = fec_effective / ri
+    mei_effective = dmi * md_effective
+    return mei_effective
+
+
+
+##########################
+# period calculators     #
+##########################
+
+def period_allocation(period_dates,periods,start_d,length=None):
+    '''
+    Parameters
+    ----------
+    period_dates : List
+        Dates of the periods you are matching within eg labour periods or cashflow periods
+        *note the start date of the period must added to the end of the period if length is passed in
+    periods : List
+        Name of each period.
+    start_d : Date
+        Date of interest.
+    length : Dt, optional
+        Length of the period of interest. The default is ''.
+
+    Returns
+    -------
+    Proportion of a given date range in each period:
+    Either take a date and returns the period it is in
+    or take a date and a length and return a dataframe with a proportion in each period
+
+    '''
+    #gets the dates
+    # period_dates = p_dates   # don't need this step if the variables passed in are changed to period_dates from p_dates and periods from p_name
+    #gets the period name
+    # periods = p_name
+    if length is not None:
+    #start empty list to append to
+        allocation_period = []
+        end = start_d + length
+        #check how much of the range falls into each cash period
+        for i in range(len(periods)-1):
+            ## ^might be simpler to do this with allocation_period.append  \
+            ## # (min(per_end,end)-max(per_start,start)/(end-start)) clipped(0,1)
+            ## # would also be quicker if the loop started with i = bisect(period_dates,start)-1
+            ## # and finished when per_end > end
+            ## # perhaps this is a while loop
+            per_start = period_dates[i]
+            per_end = period_dates[i + 1]
+
+            ##had to add this if statement to handle feed periods - when using fp convert all dates to 2019 but sometimes the start date plus the length = 2020. there for sometimes the end date need to be adjusted back to 2019, when this happens the start date also needs to go back one yr to 2018
+            if end -  rdelta.relativedelta(years=1) >= per_start:
+                end = (start_d + length) -  rdelta.relativedelta(years=1)
+                start = start_d -  rdelta.relativedelta(years=1)
+            else:
+                end = start_d + length
+                start = start_d
+
+            #if the range lasts longer than one cashflow period then that cashflow period gets allocated a proportion
+            if start <=  per_start and end >= per_end:
+                 allocation_period.append((per_end - per_start) / (end - start))
+            #start of the range is before period and the end of the range is after the start of the period but before the end
+            elif start <=  per_start <= end and end <= per_end:
+                allocation_period.append((end - per_start) / (end - start))
+            #is the start of the range after the start of the period and before the finish of the period
+            #and the end of the range is after the end of the period
+            elif start >=  per_start and start <= per_end <= end :
+                allocation_period.append((per_end - start) / (end - start))
+            #if all of the range occurs within one the period
+            elif start >=  per_start and end <= per_end:
+                allocation_period.append(1)
+            #if the range doesn't occur in a period.
+            else:
+                allocation_period.append(np.nan)
+        return pd.DataFrame(list(zip(periods,allocation_period)), columns= ('period', 'allocation'))
+    #returns the period name a given date falls into
+    else:    #^ could use the python function allocation_p = bisect.bisect(period_dates,start)-1
+        for date, period in zip(period_dates, periods):
+            while date <= start_d:
+                allocation_p = period
+                break
+        return allocation_p
+
+
+def df_period_total(p_dates,p_name,*dfs):
+    '''
+
+
+    Parameters
+    ----------
+    p_dates : List
+        Dates of the period you are matching ie cashflow or labour.
+    p_name : List
+        Names of the period you are matching ie cashflow or labour.
+    *dfs : Dataframe or Series (1d)
+        Each df has dates as a index and a corresponding value in col 0 that you want to add to a period.
+
+    Returns
+    -------
+    Dict.
+        -The function determines what period each date falls into and adds the value to that period. This is repeated for each df.
+        -This func is good if you have multiple df with values that you want to add to the relevant period (you can only add values that are in the same period but you dont know what period the value is in until running the allocation func)
+        #example of this func is in the labourcrop module
+
+    '''
+    #create empty numpy array that i will add the labour time in each period to
+    array = np.zeros(len(p_name))
+    #have to loops to allow for passing in multiple dicts
+    for d in dfs:
+#        print(dic)
+        for date in d.index:
+            # date = parse(key, dayfirst = False) #parse - simple way to go from string to datetime
+            labour_period = period_allocation(p_dates,p_name,date)
+            array[labour_period] += d.loc[date,d.columns]
+    return dict(zip(p_name,array))
+
+
+
+
+##functions below are used to manipulate the period allocation from the func above into neccessary format
+##they depend on the input type ie dict of df, and the number of entries
+
+#^if this doesn't get used much it should be removed it really doesn't do much
+def period_allocation_reindex(df, p_dates, p_name, start, length):
+    '''
+    Parameters
+    ----------
+    df : Dataframe
+        1d dataframe or series.
+    p_dates : List
+        Dates of the period you are matching ie cashflow or labour.
+    p_name : List
+        Names of the period you are matching ie cashflow or labour.
+    start : Datetime
+        Start date of the df activity ie start date of seeding.
+    length : Datetime
+        Length of the df activity ie length of seeding.
+
+    Returns
+    -------
+    Dataframe 2D
+        This function is used when multiple activities have the same period allocation.
+        - this func basically just calls the main allocation func then reindexes the df so it applies to all activities.
+        eg the cost of seeding for each lmu is incurred over the same period so we just want to return a df with a certain cost in it for each lmu and each cashflow period (the cost may differ but the allocation will be the same for each lmu, so the allocation func is called once then reindexed then multiplied by the differnt costs)
+    '''
+    allocation = period_allocation(p_dates, p_name,start,length)
+    allocation = allocation.set_index('period')
+    columns = pd.MultiIndex.from_product([allocation.columns, df.index])
+    allocation = allocation.reindex(columns,axis=1,level=0) #add level so mul can happen
+    allocation.columns = allocation.columns.droplevel(0) #drop added level
+    # cost = df.rename(index={0:'allocation'}).stack()
+    df = allocation.mul(df.iloc[:,0],axis=1)
+    return df
+
+def period_allocation2(start_df, length_df, p_dates, p_name):
+    '''
+    Parameters
+    ----------
+    start_df : Datetime series
+        Contains the activity start dates ie start date of fert spreading for each fert.
+    length_df : Datetime series
+        Length of the df activity ie length of fert spreading for each fert.
+    p_dates : List
+        Dates of the period you are matching ie cashflow or labour.
+    p_name : List
+        Names of the period you are matching ie cashflow or labour.
+
+    Returns
+    -------
+    Dataframe 2D
+        index = period names you are matching within ie cashflow
+        column names = activities ie fertilisers
+        This function is used when multiple activities have different period allocation.
+        - this func basically just calls the main allocation multiple times and adds the results to one df.
+        eg the cost of fert spreading could be in different periods depending what time of yr that fertiliser is applied
+    '''
+    start_df=start_df.squeeze() #should be a series but incase it is a 1d df
+    length_df=length_df.squeeze() #should be a series but incase it is a 1d df
+    df = pd.DataFrame()
+    for col, start, length in zip(start_df.index, start_df, length_df):
+        allocation = period_allocation(p_dates,p_name,start,length)
+        df[col]=allocation['allocation']
+    df.index=allocation['period']
+    return df
+
+#^replaced with the function below
+# def range_allocation(period_dates, periods, start, length):
+#     ''' The proportion of each period that falls in the tested date range.
+#     Parameters.
+#     period_dates: the start of the periods - in a DataFrame.
+#     periods: the period descriptions to be returned in the dataframe.
+#     start: the date of the beginning of the date range to test.
+#     length: the length of the date range to test - a timedelta.days object.
+
+#     Returns.
+#     a DataFrame with the period description and the proportion of the period
+#         -proportion of each feed period that falls in a given date range
+#         -similar to period_allocation that is the proportion of the date range that falls in each period
+
+#     '''
+#     #start empty list to append to
+#     allocation_period = pd.DataFrame()
+#     end = start + length
+#     #check how much of each period falls within the date range
+#     for i in range(len(periods)-1):
+#         per_start= period_dates[i].date()    # convert from TimeStamp to datetime
+#         per_end = period_dates[i + 1].date() #   to allow the calculations
+#         calc_start = max(per_start,start)       #select the later of the period start or the start of the range
+#         calc_end = min(per_end,end)             #select earlier of the period end and the end of the range
+#         allocation=max(0, (calc_end - calc_start) / (per_end - per_start)) #this will be 2d when other pastures are added #days between calc_end and calc_start (0 if end before start) divided by length of the period
+#         allocation_period=allocation_period.append(pd.DataFrame(data=[allocation]))
+#     return allocation_period
+
+def range_allocation_np(period_dates, start, length, opposite=None):
+    ''' Numpy version - The proportion of each period that falls in the tested date range or proportion of date range in each period.
+
+    Parameters.
+    period_dates: the start of the periods - in a Numpy array np.datetime64.
+    start: the date of the beginning of the date range to test - a numpy array of dates.
+    length: the length of the date range to test - an array of timedelta.days object.
+          : must be broadcastable into start.
+    ags: input True returns the proportion of date range in each period.
+       :       None returns the proportion of the period in the date range (2nd arg).
+
+    Returns.
+    a Numpy array with shape(period_dates, start array).
+    Containing the proportion of the respective period for that test date.
+    '''
+    #start empty list to append to
+    allocation_period=np.zeros(((len(period_dates),) + start.shape),dtype=np.float64)
+    end = start + length
+    ##checks if user wants to the proportion of each period that falls in the tested date range or proportion of date range in each period
+    if opposite:
+        #check how much of each date range falls within the period
+        for i in range(len(period_dates)-1):
+            #^.date() might be required because the array being passed is not a np.datetime64[D]
+            per_start= period_dates[i].date() #had to add this and the as type thing below to get it all in the same format so calcs would work
+            per_end = period_dates[i + 1].date()
+            calc_start = np.maximum(per_start,start).astype('datetime64[D]')       #select the later of the period start or the start of the range
+            calc_end = np.minimum(per_end,end).astype('datetime64[D]')             #select earlier of the period end and the end of the range
+            allocation_period[i,...] = np.maximum(0, (calc_end - calc_start) / (end - start)) #days between calc_end and calc_start (0 if end before start) divided by length of the range
+    else:
+        #check how much of each period falls within the date range
+        for i in range(len(period_dates)-1):
+            per_start= period_dates[i]
+            per_end = period_dates[i + 1]
+            calc_start = np.maximum(per_start,start).astype('datetime64[D]')       #select the later of the period start or the start of the range
+            calc_end = np.minimum(per_end,end).astype('datetime64[D]')             #select earlier of the period end and the end of the range
+            allocation_period[i,...] = np.maximum(0, (calc_end - calc_start) / (per_end - per_start)) #days between calc_end and calc_start (0 if end before start) divided by length of the period
+    return allocation_period
+
+#^replaced with the function below
+# #the feed period and position in the feed period that a given date range falls
+# def period_proportion(period_dates, periods, date):
+#     #check if date falls within period
+#     period = 0
+#     proportion = 0
+#     for i in range(len(periods)-1):
+#         per_start= period_dates[i]
+#         per_end = period_dates[i + 1]
+#         if per_start <= date <= per_end:        #date is within the period
+#             period = i
+#             proportion = (date - per_start)/(per_end - per_start)
+#     return period, proportion
+
+def period_proportion_np(period_dates, date_array):
+    ''' Numpy version - The period that a given date falls in.
+
+    Parameters.
+    period_dates: the start of the periods - in a Numpy array np.datetime64.
+    date_array: the date to test - a numpy array of dates.
+
+    Returns.
+    Two Numpy arrays with shape(date_array).
+    #1 the period for that test date.
+    #2 how far through the period the date occurs.
+    '''
+    #this is needed when only a single date is passed in because can't do .shape on a single dt object
+    try:
+        proportion_array = np.zeros(date_array.shape,dtype='float64')
+    except AttributeError: pass
+    period_array = np.searchsorted(period_dates, date_array, side = 'right') - 1
+    per_start = period_dates[period_array]
+    per_end   = period_dates[period_array + 1]
+    proportion_array = (date_array - per_start) / (per_end - per_start)
+    # print('propn, date, stat, end, start', proportion_array,date_array,per_start,per_end,per_start)
+    return period_array, proportion_array
+
+
+
+
