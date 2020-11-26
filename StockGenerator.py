@@ -242,7 +242,9 @@ def generator(params,report):
     r_compare_q0q1q2pyatf = np.zeros(qg2, dtype = 'float32')
     r_compare_q0q1q2poffs = np.zeros(qg3, dtype = 'float32')
     ###empty variables to store report values
-    r_age_start_dams = np.zeros(pg1, dtype = 'float32')
+    r_foo_dams = np.zeros(pg1, dtype = 'float32')
+    r_dmd_dams = np.zeros(pg1, dtype = 'float32')
+    r_evg_dams = np.zeros(pg1, dtype = 'float32')
     r_intake_f_dams = np.zeros(pg1, dtype = 'float32')
     r_md_solid_dams = np.zeros(pg1, dtype = 'float32')
     r_age_start_yatf = np.zeros(pg2, dtype = 'float32')
@@ -1745,8 +1747,8 @@ def generator(params,report):
             relsize1_start_sire = np.minimum(ffcfw_max_start_sire, nw_max_pa1e1b1nwzida0e0b0xyg0[p]) / srw_xyg0
             ###PI Size factor (for cattle)
             zf_sire = np.maximum(1, 1 + cr_sire[7, ...] - relsize_start_sire)
-            ###EVG Size factor (decreases steadily)
-            z1f_sire = 1 / (1 + np.exp(-cg_sire[4, ...] * (relsize1_start_sire - cg_sire[5, ...])))
+            ###EVG Size factor (decreases steadily - some uncertainty about the sign on cg[4])
+            z1f_sire = 1 / (1 + np.exp(+cg_sire[4, ...] * (relsize1_start_sire - cg_sire[5, ...])))
             ###EVG Size factor (increases at maturity)
             z2f_sire = np.clip((relsize1_start_sire - cg_sire[6, ...]) / (cg_sire[7, ...] - cg_sire[6, ...]), 0 ,1)
 
@@ -1772,8 +1774,8 @@ def generator(params,report):
             relsize1_start_dams = np.minimum(ffcfw_max_start_dams, nw_max_pa1e1b1nwzida0e0b0xyg1[p]) / srw_xyg1
             ###PI Size factor (for cattle)
             zf_dams = np.maximum(1, 1 + cr_dams[7, ...] - relsize_start_dams)
-            ###EVG Size factor (decreases steadily)
-            z1f_dams = 1 / (1 + np.exp(-cg_dams[4, ...] * (relsize1_start_dams - cg_dams[5, ...])))
+            ###EVG Size factor (decreases steadily - some uncertainty about the sign on cg[4])
+            z1f_dams = 1 / (1 + np.exp(+cg_dams[4, ...] * (relsize1_start_dams - cg_dams[5, ...])))
             ###EVG Size factor (increases at maturity)
             z2f_dams = np.clip((relsize1_start_dams - cg_dams[6, ...]) / (cg_dams[7, ...] - cg_dams[6, ...]), 0 ,1)
             ##sires for mating
@@ -1800,8 +1802,8 @@ def generator(params,report):
             relsize1_start_offs = np.minimum(ffcfw_max_start_offs, nw_max_pa1e1b1nwzida0e0b0xyg3[p]) / srw_xyg3
             ###PI Size factor (for cattle)
             zf_offs = np.maximum(1, 1 + cr_offs[7, ...] - relsize_start_offs)
-            ###EVG Size factor (decreases steadily)
-            z1f_offs = 1 / (1 + np.exp(-cg_offs[4, ...] * (relsize1_start_offs - cg_offs[5, ...])))
+            ###EVG Size factor (decreases steadily - some uncertainty about the sign on cg[4])
+            z1f_offs = 1 / (1 + np.exp(+cg_offs[4, ...] * (relsize1_start_offs - cg_offs[5, ...])))
             ###EVG Size factor (increases at maturity)
             z2f_offs = np.clip((relsize1_start_offs - cg_offs[6, ...]) / (cg_offs[7, ...] - cg_offs[6, ...]), 0 ,1)
 
@@ -2259,8 +2261,8 @@ def generator(params,report):
             relsize1_start_yatf = np.minimum(ffcfw_max_start_yatf, nw_max_yatf) / srw_xyg2
             ###PI Size factor (for cattle)
             zf_yatf = np.maximum(1, 1 + cr_yatf[7, ...] - relsize_start_yatf)
-            ###EVG Size factor (decreases steadily)
-            z1f_yatf = 1 / (1 + np.exp(-cg_yatf[4, ...] * (relsize1_start_yatf - cg_yatf[5, ...])))
+            ###EVG Size factor (decreases steadily - some uncertainty about the sign on cg[4])
+            z1f_yatf = 1 / (1 + np.exp(+cg_yatf[4, ...] * (relsize1_start_yatf - cg_yatf[5, ...])))
             ###EVG Size factor (increases at maturity)
             z2f_yatf = np.clip((relsize1_start_yatf - cg_yatf[6, ...]) / (cg_yatf[7, ...] - cg_yatf[6, ...]), 0 ,1)
 
@@ -2760,6 +2762,9 @@ def generator(params,report):
             ###store report variables for dams - individual variables can be deleted if not needed
             r_intake_f_dams[p] = intake_f_dams
             r_md_solid_dams[p] = md_solid_dams
+            r_foo_dams[p] = foo_dams
+            r_dmd_dams[p] = dmd_dams
+            r_evg_dams[p] = evg_dams
 
         ###yatf
         o_ffcfw_start_yatf[p] = ffcfw_start_yatf #use ffcfw_start because weaning start of period, has to be outside of the 'if' because days per period = 0 when weaning occurs becasue weaning is first day of period. But we need to know the start ffcfw.
