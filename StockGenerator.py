@@ -4090,14 +4090,14 @@ def generator(params,report):
     ##transfer progney to dam replacements
     ###liveweight distribution
     ffcfw_prog_a1e1b1nwzida0e0b0xyg2 = np.moveaxis(ffcfw_prog_a1e1b1nwzida0e0b0xyg2w9[:,:,:,:,0,...],-1,uinp.structure['i_w_pos']) #move the w9 axis into the w position
-    ffcfw_initial_wzida0e0b0xyg1 = lw_initial_wzida0e0b0xyg1 - cfw_initial_wzida0e0b0xyg1
+    ffcfw_initial_wzida0e0b0xyg1 = lw_initial_wzida0e0b0xyg1 - cfw_initial_wzida0e0b0xyg1 / cw_dams[3, ...]
     distribution_2dams_a1e1b1nwzida0e0b0xyg2w9 = sfun.f_lw_distribution(ffcfw_initial_wzida0e0b0xyg1, ffcfw_prog_a1e1b1nwzida0e0b0xyg2, uinp.structure['i_n1_len'], uinp.structure['i_n_fvp_period1'])
     ###numbers provided - active d
-    numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2g9w9 = np.sum(distribution_2dams_a1e1b1nwzida0e0b0xyg2w9[...,na,:] * (a_g1_g2[...,na,:]==index_g1)[...,na]
+    numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2g9w9 = 1 * (np.sum(distribution_2dams_a1e1b1nwzida0e0b0xyg2w9[...,na,:] * (a_g1_g2[...,na,:]==index_g1)[...,na]
                                                              * (index_tva1e1b1nwzida0e0b0xyg2w9 == 1)[...,na,:] * (gender_xyg[mask_x] == 1)[...,na,na] #gender to select the dams from prog
                                                              * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na,na]
                                                              * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[...,na,na]
-                                                             , axis=(uinp.parameters['i_b0_pos']-2, uinp.structure['i_e0_pos']-2),keepdims=True)
+                                                             , axis=(uinp.parameters['i_b0_pos']-2, uinp.structure['i_e0_pos']-2),keepdims=True)) > 0
     ###numbers required - no d axis
     numbers_progreq_k28k3k5tva1e1b1nw8zida0e0b0xyg1g9w9 = 1 * (np.sum(mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9[0, ...,:,na] * (index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,..., na,na] == 0)
                                                                     * (index_g1[...,na,:]==index_g1)[...,na] * btrt_propn_b0xyg1[...,na,na] * e0_propn_ida0e0b0xyg[...,na,na]
@@ -4107,7 +4107,7 @@ def generator(params,report):
 
     ##transfer progeny to offs
     ###numbers provide - has d axis
-    ffcfw_initial_wzida0e0b0xyg3 = lw_initial_wzida0e0b0xyg3 - cfw_initial_wzida0e0b0xyg3
+    ffcfw_initial_wzida0e0b0xyg3 = lw_initial_wzida0e0b0xyg3 - cfw_initial_wzida0e0b0xyg3 / cw_offs[3, ...]
     distribution_2offs_a1e1b1nwzida0e0b0xyg2w9 = sfun.f_lw_distribution(ffcfw_initial_wzida0e0b0xyg3, ffcfw_prog_a1e1b1nwzida0e0b0xyg2, uinp.structure['i_n3_len'], uinp.structure['i_n_fvp_period3'])
     numbers_prog2offs_k3k5tva1e1b1nwzida0e0b0xyg2w9 = np.sum(distribution_2offs_a1e1b1nwzida0e0b0xyg2w9 * (index_tva1e1b1nwzida0e0b0xyg2w9 == 2)
                                                             * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na]
