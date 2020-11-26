@@ -4037,6 +4037,13 @@ def generator(params,report):
     # ###Set the distribution proportion to 0 if the initial weight is < lowest weight
     # distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 = fun.f_update(distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9, 0, ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1[..., na] <= np.min(ffcfw_prog_a1e1b1nwzida0e0b0xyg2w9, axis=-1, keepdims=True))
 
+    ##mask w8 (prog) to w9 (dams)
+    step_con_prog2dams = uinp.structure['i_n1_len'] ** uinp.structure['i_n_fvp_period1']
+    mask_numbers_prog2damsw8w9_w9 = (index_w1 % step_con_prog2dams) == 0
+    ##mask w8 (prog) to w9 (offs)
+    step_con_prog2offs = uinp.structure['i_n3_len'] ** uinp.structure['i_n_fvp_period3']
+    mask_numbers_prog2offsw8w9_w9 = (index_w3 % step_con_prog2offs) == 0
+
     ###create distribution variable so it can be assigned by the slice
     # distribution_2prog_va1e1b1nw8zida0e0b0xyg1 = np.zeros_like(ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1)
     # ###Locate position in the list of weights rounded up. Set a minimum value of 1 because next step is to subtract 1
@@ -4088,6 +4095,10 @@ def generator(params,report):
                                                    , np.sum(numbers_start_va1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1==index_k28k29tva1e1b1nwzida0e0b0xyg1),
                                                             axis=(uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)[...,na,na], dtype=dtype)
 
+    ###npw required by prog activity
+    mask_prog_tdx_tva1e1b1nwzida0e0b0xyg2w9 = np.logical_or((index_tva1e1b1nwzida0e0b0xyg2w9 != 1), (gender_xyg[mask_x] == 1)[...,na] * (agedam_propn_da0e0b0xyg1 > 0)[...,na])
+
+    numbers_prog_req_tva1e1b1nwzida0e0b0xyg2w9 = 1 * mask_prog_tdx_tva1e1b1nwzida0e0b0xyg2w9
 
     ##transfer progney to dam replacements
     ###liveweight distribution
@@ -4095,11 +4106,12 @@ def generator(params,report):
     ffcfw_initial_wzida0e0b0xyg1 = lw_initial_wzida0e0b0xyg1 - cfw_initial_wzida0e0b0xyg1 / cw_dams[3, ...]
     distribution_2dams_a1e1b1nwzida0e0b0xyg2w9 = sfun.f_lw_distribution(ffcfw_initial_wzida0e0b0xyg1, ffcfw_prog_a1e1b1nwzida0e0b0xyg2, uinp.structure['i_n1_len'], uinp.structure['i_n_fvp_period1'])
     ###numbers provided - active d
-    numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2g9w9 = 1 * (np.sum(distribution_2dams_a1e1b1nwzida0e0b0xyg2w9[...,na,:] * (a_g1_g2[...,na,:]==index_g1)[...,na]
-                                                             * (index_tva1e1b1nwzida0e0b0xyg2w9 == 1)[...,na,:] * (gender_xyg[mask_x] == 1)[...,na,na] #gender to select the dams from prog
-                                                             * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na,na]
-                                                             * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[...,na,na]
-                                                             , axis=(uinp.parameters['i_b0_pos']-2, uinp.structure['i_e0_pos']-2),keepdims=True)) > 0
+    numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2g9w9 = 1 * (np.sum(distribution_2dams_a1e1b1nwzida0e0b0xyg2w9[...,na,:] * mask_numbers_prog2damsw8w9_w9
+                                                                    * mask_prog_tdx_tva1e1b1nwzida0e0b0xyg2w9 * (a_g1_g2[...,na,:]==index_g1)[...,na]
+                                                                    * (index_tva1e1b1nwzida0e0b0xyg2w9 == 1)[...,na,:] * (gender_xyg[mask_x] == 1)[...,na,na] #gender to select the dams from prog
+                                                                    * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na,na]
+                                                                    * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[...,na,na]
+                                                                    , axis=(uinp.parameters['i_b0_pos']-2, uinp.structure['i_e0_pos']-2),keepdims=True)) > 0
     ###numbers required - no d axis
     numbers_progreq_k28k3k5tva1e1b1nw8zida0e0b0xyg1g9w9 = 1 * (np.sum(mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9[0, ...,:,na] * (index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,..., na,na] == 0)
                                                                     * (index_g1[...,na,:]==index_g1)[...,na] * btrt_propn_b0xyg1[...,na,na] * e0_propn_ida0e0b0xyg[...,na,na]
@@ -4111,9 +4123,10 @@ def generator(params,report):
     ###numbers provide - has d axis
     ffcfw_initial_wzida0e0b0xyg3 = lw_initial_wzida0e0b0xyg3 - cfw_initial_wzida0e0b0xyg3 / cw_offs[3, ...]
     distribution_2offs_a1e1b1nwzida0e0b0xyg2w9 = sfun.f_lw_distribution(ffcfw_initial_wzida0e0b0xyg3, ffcfw_prog_a1e1b1nwzida0e0b0xyg2, uinp.structure['i_n3_len'], uinp.structure['i_n_fvp_period3'])
-    numbers_prog2offs_k3k5tva1e1b1nwzida0e0b0xyg2w9 = np.sum(distribution_2offs_a1e1b1nwzida0e0b0xyg2w9 * (index_tva1e1b1nwzida0e0b0xyg2w9 == 2)
-                                                            * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na]
-                                                            * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[...,na],
+    numbers_prog2offs_k3k5tva1e1b1nwzida0e0b0xyg2w9 = np.sum(distribution_2offs_a1e1b1nwzida0e0b0xyg2w9 * mask_numbers_prog2offsw8w9_w9
+                                                             * (index_tva1e1b1nwzida0e0b0xyg2w9 == 2)
+                                                             * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na]
+                                                             * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[...,na],
                                                              axis=(uinp.parameters['i_b0_pos']-1, uinp.structure['i_e0_pos']-1),keepdims=True)
 
     ###numbers req
@@ -4197,6 +4210,10 @@ def generator(params,report):
     ###k2k5tvanwzidxyg1w9i9 - npw
     arrays = [keys_k2, keys_k5, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_d, keys_x, keys_y1, keys_g1, keys_lw_prog, keys_i]
     index_k2k5tva1nw8zidxyg1w9i9 = fun.cartesian_product_simple_transpose(arrays)
+
+    ###tdx - npwreq
+    arrays = [keys_t2, keys_d, keys_x]
+    index_tdx = fun.cartesian_product_simple_transpose(arrays)
 
     ###k3k5tva1w8zidyg2g9w9 - prog to dams prov
     arrays = [keys_k3, keys_k5, keys_t2, keys_a, keys_lw_prog, keys_z, keys_i, keys_d, keys_x, keys_y1, keys_g2, keys_g1, keys_lw1]
@@ -4299,6 +4316,14 @@ def generator(params,report):
     index_cut_k2k5tva1nw8zidxyg1w9i9=index_k2k5tva1nw8zidxyg1w9i9[mask,:]
     tup_k2k5tva1nw8zidxyg1w9i9 = tuple(map(tuple, index_cut_k2k5tva1nw8zidxyg1w9i9))
     params['p_npw_dams'] =dict(zip(tup_k2k5tva1nw8zidxyg1w9i9, npw_k2k5tva1nw8zidxyg1w9i9))
+
+    ###npw required by prog activity
+    mask=numbers_prog_req_tva1e1b1nwzida0e0b0xyg2w9!=0
+    npw_tdx = numbers_prog_req_tva1e1b1nwzida0e0b0xyg2w9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
+    mask=mask.ravel()
+    index_cut_tdx=index_tdx[mask,:]
+    tup_tdx = tuple(map(tuple, index_cut_tdx))
+    params['p_npw_req_prog'] =dict(zip(tup_tdx, npw_tdx))
 
     ###nunmber prog provided to dams
     mask=numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2g9w9!=0
