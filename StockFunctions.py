@@ -1641,7 +1641,7 @@ def f_husbandry_labour(level_hpg, treatment_units_h8pg, units_per_labourhour_l2h
     ##Number of treatment units for contract
     units_hpg = treatment_units_h8pg[a_h8_h]
     ##Labour requirement for each animal class during the period
-    hours_l2pg = np.sum(fun.f_divide(level_hpg * units_hpg , units_per_labourhour_l2hpg), axis=1)  #divide by units_per_labourhour_l2hpg because that is how many units can be done per hour eg how many sheep can be dreched per hr
+    hours_l2pg = np.sum(fun.f_divide(level_hpg * units_hpg , units_per_labourhour_l2hpg, dtype=level_hpg.dtype), axis=1)  #divide by units_per_labourhour_l2hpg because that is how many units can be done per hour eg how many sheep can be dreched per hr
     return hours_l2pg
 
 def f_husbandry_infrastructure(level_hpg, husb_infrastructurereq_h1h2pg):
@@ -1836,7 +1836,7 @@ def f_lw_distribution(ffcfw_condensed_va1e1b1nwzida0e0b0xyg, ffcfw_va1e1b1nwzida
     ##Calculate the difference between the 3 (or more if not dvp0) condensed weights and the middle weight (slice 0)
     diff = ffcfw_condensed_va1e1b1nwzida0e0b0xygw - f_dynamic_slice(ffcfw_condensed_va1e1b1nwzida0e0b0xygw, -1, 0, 1)
     ##Calculate the spread that would generate the average weight
-    spread =  1 - fun.f_divide((ffcfw_condensed_va1e1b1nwzida0e0b0xygw - ffcfw_va1e1b1nwzida0e0b0xyg[..., na]), diff)
+    spread =  1 - fun.f_divide((ffcfw_condensed_va1e1b1nwzida0e0b0xygw - ffcfw_va1e1b1nwzida0e0b0xyg[..., na]), diff, dtype=diff.dtype)
     ##Bound the spread
     spread_bounded = np.clip(spread, 0, 1)
     ##Set values for the standard pattern to be the remainder from the closest. (consolidated w axis)
@@ -1850,14 +1850,14 @@ def f_lw_distribution(ffcfw_condensed_va1e1b1nwzida0e0b0xyg, ffcfw_va1e1b1nwzida
 def f_create_production_param(group, production_vg, a_kcluster_vg_1=1, index_ktvg_1=1, a_kcluster_vg_2=1, index_kktvg_2=1, numbers_start_vg=1, mask_vg=True, pos_offset=0):
     '''convert production to per animal including impact of death. And apply the k clustering'''
     if group=='sire':
-        return fun.f_divide(production_vg, numbers_start_vg)
+        return fun.f_divide(production_vg, numbers_start_vg, dtype=production_vg.dtype)
     elif group=='dams':
         return fun.f_divide(np.sum(production_vg * (a_kcluster_vg_1 == index_ktvg_1) * mask_vg
                                   , axis = (uinp.parameters['i_b1_pos']-pos_offset, pinp.sheep['i_e1_pos']-pos_offset), keepdims=True)
                             , np.sum(numbers_start_vg * (a_kcluster_vg_1 == index_ktvg_1),
-                                     axis=(uinp.parameters['i_b1_pos']-pos_offset, pinp.sheep['i_e1_pos']-pos_offset), keepdims=True))
+                                     axis=(uinp.parameters['i_b1_pos']-pos_offset, pinp.sheep['i_e1_pos']-pos_offset), keepdims=True), dtype=production_vg.dtype)
     elif group=='offs':
         return fun.f_divide(np.sum(production_vg * (a_kcluster_vg_1 == index_ktvg_1) * (a_kcluster_vg_2 == index_kktvg_2)
                                   , axis = (uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True)
                             , np.sum(numbers_start_vg * (a_kcluster_vg_1 == index_ktvg_1) * (a_kcluster_vg_2 == index_kktvg_2),
-                                     axis=(uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True))
+                                     axis=(uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True), dtype=production_vg.dtype)

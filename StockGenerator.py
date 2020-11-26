@@ -3522,7 +3522,7 @@ def generator(params,report):
     ######################
     o_pi_dams *= fun.f_divide((o_mei_solid_dams + np.sum(o_mei_solid_yatf * gender_propn_xyg,
                                                          axis=uinp.parameters['i_x_pos'], keepdims=True)),
-                              o_mei_solid_dams)  # done before adding yatf mei. This is instead of adding pi yatf with pi dams because some of the potential intake of the yatf is 'used' consuming milk. Doing it via mei keeps the ratio mei_dams/pi_dams the same before and after adding the yatf. This is what we want because it is saying that there is a given energy intake and it needs to be of a certain quality.
+                              o_mei_solid_dams, dtype=dtype)  # done before adding yatf mei. This is instead of adding pi yatf with pi dams because some of the potential intake of the yatf is 'used' consuming milk. Doing it via mei keeps the ratio mei_dams/pi_dams the same before and after adding the yatf. This is what we want because it is saying that there is a given energy intake and it needs to be of a certain quality.
     o_mei_solid_dams = o_mei_solid_dams + np.sum(o_mei_solid_yatf * gender_propn_xyg, axis=uinp.parameters['i_x_pos'],
                                                  keepdims=True)
 
@@ -3533,9 +3533,9 @@ def generator(params,report):
     feedpools_start = time.time()
     ##Calculate the feed pools (f) and allocate each intake period to a feed pool based on mei/volume (E/V). - this is done like this to handle the big arrays easier - also handles situations where offs and dams may have diff length p axis
     ###calculate ‘ev’ for each animal class.
-    ev_sire = fun.f_divide(o_mei_solid_sire, o_pi_sire)
-    ev_dams = fun.f_divide(o_mei_solid_dams, o_pi_dams)
-    ev_offs = fun.f_divide(o_mei_solid_offs, o_pi_offs)
+    ev_sire = fun.f_divide(o_mei_solid_sire, o_pi_sire, dtype=dtype)
+    ev_dams = fun.f_divide(o_mei_solid_dams, o_pi_dams, dtype=dtype)
+    ev_offs = fun.f_divide(o_mei_solid_offs, o_pi_offs, dtype=dtype)
     ###Find the values that divides the values into 4 equal groups
     t_ev_pa1e1b1nwzida0e0b0xyg1 = ev_dams * (feedsupplyw_pa1e1b1nwzida0e0b0xyg1 < 3) # feedsupply >= 3 (ie the animals are in confinement)
     t_ev_pa1e1b1nwzida0e0b0xyg3 = ev_offs * (feedsupplyw_pa1e1b1nwzida0e0b0xyg3 < 3) # feedsupply >= 3 (ie the animals are in confinement)
@@ -3946,7 +3946,7 @@ def generator(params,report):
                 * (a_k2cluster_next_tva1e1b1nwzida0e0b0xyg1g9 == index_k29tva1e1b1nwzida0e0b0xyg1g9)[..., na],
                 axis=(uinp.parameters['i_b1_pos'] - 2, pinp.sheep['i_e1_pos'] - 2), keepdims=True)
         , np.sum(numbers_start_va1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k28k29tva1e1b1nwzida0e0b0xyg1),
-                axis=(uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)[..., na,na]) #na for w9 and g9 (use standard cluster without t/g9 axis because the denominator is (the clustering for) the decision variable as at the start of the DVP)
+                axis=(uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)[..., na,na], dtype=dtype) #na for w9 and g9 (use standard cluster without t/g9 axis because the denominator is (the clustering for) the decision variable as at the start of the DVP)
     ###combine nm and 00 cluster for the numbers provided to the prejoining period (so matrix can optimise choice of joining or not)
     temporary = np.sum(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, axis=1, keepdims=True) * (index_k29tva1e1b1nwzida0e0b0xyg1g9[...,na] == 0)  # put the sum of the k29 in slice 0
     numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_update(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, temporary,
@@ -3963,7 +3963,7 @@ def generator(params,report):
                                                                             , axis = (uinp.parameters['i_d_pos']-1, uinp.parameters['i_b0_pos']-1, uinp.structure['i_e0_pos']-1), keepdims=True)
                                                                 , np.sum(numbers_start_va1e1b1nwzida0e0b0xyg3 * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)
                                                                          * (a_k5cluster_da0e0b0xyg3==index_k5tva1e1b1nwzida0e0b0xyg3)
-                                                                         , axis = (uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True)[...,na])
+                                                                         , axis = (uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True)[...,na], dtype=dtype)
                                                        * mask_numbers_provt_tva1e1b1nw8zida0e0b0xyg3w9 * mask_numbers_provw9_w9)
 
     ##numbers required
@@ -4025,7 +4025,7 @@ def generator(params,report):
     ##transfer yatf to the intermediate progeny activity
     ###maximum(0, ) removes points where yatf weight is greater than the rolled progeny weight
     distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 = np.maximum(0,fun.f_divide((np.roll(ffcfw_prog_a1e1b1nwzida0e0b0xyg2w9,-1,axis=-1) - ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1[..., na])
-                                                            , (np.roll(ffcfw_prog_a1e1b1nwzida0e0b0xyg2w9,-1,axis=-1) - ffcfw_prog_a1e1b1nwzida0e0b0xyg2w9)))
+                                                            , (np.roll(ffcfw_prog_a1e1b1nwzida0e0b0xyg2w9,-1,axis=-1) - ffcfw_prog_a1e1b1nwzida0e0b0xyg2w9), dtype=dtype))
     ###remove points where yatf weight is less than the progeny weight.
     distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9[distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 > 1] = 0
     ###set the distribution for the other of the target pair
@@ -4084,7 +4084,7 @@ def generator(params,report):
                                                           * (keys_k2ktva1e1b1nwzida0e0b0xyg == keys_k5tva1e1b1nwzida0e0b0xyg)[...,na,na],
                                                             axis=(uinp.parameters['i_b1_pos'] - 2, pinp.sheep['i_e1_pos'] - 2), keepdims=True)
                                                    , np.sum(numbers_start_va1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1==index_k28k29tva1e1b1nwzida0e0b0xyg1),
-                                                            axis=(uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)[...,na,na])
+                                                            axis=(uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)[...,na,na], dtype=dtype)
 
 
     ##transfer progney to dam replacements
@@ -4094,10 +4094,10 @@ def generator(params,report):
     distribution_2dams_a1e1b1nwzida0e0b0xyg2w9 = sfun.f_lw_distribution(ffcfw_initial_wzida0e0b0xyg1, ffcfw_prog_a1e1b1nwzida0e0b0xyg2, uinp.structure['i_n1_len'], uinp.structure['i_n_fvp_period1'])
     ###numbers provided - active d
     numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2g9w9 = np.sum(distribution_2dams_a1e1b1nwzida0e0b0xyg2w9[...,na,:] * (a_g1_g2[...,na,:]==index_g1)[...,na]
-                                                             * (index_tva1e1b1nwzida0e0b0xyg2w9 == 1) * (gender_xyg[mask_x] == 1)[...,na,na] #gender to select the dams from prog
+                                                             * (index_tva1e1b1nwzida0e0b0xyg2w9 == 1)[...,na,:] * (gender_xyg[mask_x] == 1)[...,na,na] #gender to select the dams from prog
                                                              * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na,na]
                                                              * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[...,na,na]
-                                                             , axis=(uinp.parameters['i_b0_pos']-2, uinp.structure['i_e0_pos']-2))
+                                                             , axis=(uinp.parameters['i_b0_pos']-2, uinp.structure['i_e0_pos']-2),keepdims=True)
     ###numbers required - no d axis
     numbers_progreq_k28k3k5tva1e1b1nw8zida0e0b0xyg1g9w9 = 1 * (np.sum(mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9[0, ...,:,na] * (index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,..., na,na] == 0)
                                                                     * (index_g1[...,na,:]==index_g1)[...,na] * btrt_propn_b0xyg1[...,na,na] * e0_propn_ida0e0b0xyg[...,na,na]
@@ -4112,7 +4112,7 @@ def generator(params,report):
     numbers_prog2offs_k3k5tva1e1b1nwzida0e0b0xyg2w9 = np.sum(distribution_2offs_a1e1b1nwzida0e0b0xyg2w9 * (index_tva1e1b1nwzida0e0b0xyg2w9 == 2)
                                                             * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na]
                                                             * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[...,na],
-                                                             axis=(uinp.parameters['i_b0_pos']-1, uinp.structure['i_e0_pos']-1))
+                                                             axis=(uinp.parameters['i_b0_pos']-1, uinp.structure['i_e0_pos']-1),keepdims=True)
 
     ###numbers req
     numbers_progreq_w8zida0e0b0xyg3w9 = 1 * (mask_numbers_reqw8w9_w8zida0e0b0xyg3w9 > 0)

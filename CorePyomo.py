@@ -217,7 +217,7 @@ def coremodel_all():
     except AttributeError:
         pass
     def poc(model,f,l):
-        return (-macpy.ha_pasture_crop_paddocks(model,f,l) * paspy.model.p_poc_con[f,l])/1000 + sum(paspy.model.v_poc[v,f,l] for v in model.s_sheep_pools) <=0   #divide by 1000 converts to tonnes (maybe do this in pasture sheet before to keep this tidy)
+        return -macpy.ha_pasture_crop_paddocks(model,f,l) * paspy.model.p_poc_con[f,l] + sum(paspy.model.v_poc[v,f,l] for v in model.s_sheep_pools) <=0
     model.con_poc_available = pe.Constraint(model.s_feed_periods, model.s_lmus, rule=poc, doc='constraint between poc available and consumed')
 
     ######################
