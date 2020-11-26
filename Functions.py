@@ -177,8 +177,8 @@ def searchsort_multiple_dim(a,v,axis_a,axis_v):
 
 
 
-def f_reshape_expand(array,left_pos=0,len_ax0=0,len_ax1=0,len_ax2=0,swap=False,ax1=0,ax2=1,right_pos=0,left_pos2=0,right_pos2=0
-                     , left_pos3=0,right_pos3=0, condition = None, axis = 0,len_ax3=0,swap2=False,ax1_2=1,ax2_2=2):
+def f_reshape_expand(array, left_pos=0, len_ax0=0, len_ax1=0, len_ax2=0, swap=False, ax1=0, ax2=1, right_pos=0, left_pos2=0, right_pos2=0
+                     , left_pos3=0, right_pos3=0, condition = None, axis = 0, len_ax3=0, swap2=False, ax1_2=1, ax2_2=2):
     '''
     *note: if adding two sets of new axis add from right to left (then the pos variables align)
     *note: mask applied last (after expanding and reshaping)
@@ -210,7 +210,7 @@ def f_reshape_expand(array,left_pos=0,len_ax0=0,len_ax1=0,len_ax2=0,swap=False,a
 
     Returns
     -------
-    Reshapes, swaps axis if required, expands and applys a mask to a given axis if required.
+    Reshapes, swaps axis if required, expands and apply a mask to a given axis if required.
     '''
     ##convert int to 1d array if required
     if type(array) == int:
@@ -226,24 +226,24 @@ def f_reshape_expand(array,left_pos=0,len_ax0=0,len_ax1=0,len_ax2=0,swap=False,a
         array = array.reshape(shape)
     else:
         pass#don't need to reshpae
-    ##swap axis if neccessary
+    ##swap axis if necessary
     if swap:
         array = np.swapaxes(array, ax1, ax2)
-    ##swap axis if neccessary
+    ##swap axis if necessary
     if swap2:
         array = np.swapaxes(array, ax1_2, ax2_2)
     ##get axis into correct position 1
-    if left_pos != None or left_pos != 0:
+    if left_pos != 0:
         extra_axes = tuple(range((left_pos + 1), right_pos))
     else: extra_axes = ()
     array = np.expand_dims(array, axis = extra_axes)
-    ##get axis into correct position 2 (some arrays need singleton axis added in multiple places ie seperated by a used axis)
-    if left_pos2 != None or left_pos2 != 0:
+    ##get axis into correct position 2 (some arrays need singleton axis added in multiple places ie separated by a used axis)
+    if left_pos2 != 0:
         extra_axes = tuple(range((left_pos2 + 1), right_pos2))
     else: extra_axes = ()
     array = np.expand_dims(array, axis = extra_axes)
-    ##get axis into correct position 3 (some arrays need singleton axis added in multiple places ie seperated by a used axis)
-    if left_pos3 != None or left_pos3 != 0:
+    ##get axis into correct position 3 (some arrays need singleton axis added in multiple places ie separated by a used axis)
+    if left_pos3 != 0:
         extra_axes = tuple(range((left_pos3 + 1), right_pos3))
     else: extra_axes = ()
     array = np.expand_dims(array, axis = extra_axes)
