@@ -1847,6 +1847,20 @@ def f_lw_distribution(ffcfw_condensed_va1e1b1nwzida0e0b0xyg, ffcfw_va1e1b1nwzida
     distribution_va1e1b1nwzida0e0b0xygw = fun.f_update(distribution_va1e1b1nwzida0e0b0xygw, 1, dvp_type_next_tvgw!=0)
     return distribution_va1e1b1nwzida0e0b0xygw
 
+def f_lw_distribution_2prog(ffcfw_prog_g2w9, ffcfw_yatf_vg1, index_w2)
+    ###maximum(0, ) removes points where yatf weight is greater than the rolled progeny weight
+    distribution_2prog_vg1w9 = np.maximum(0,fun.f_divide((np.roll(ffcfw_prog_g2w9,-1,axis=-1) - ffcfw_yatf_vg1[..., na])
+                                                            , (np.roll(ffcfw_prog_g2w9,-1,axis=-1) - ffcfw_prog_g2w9)))
+    ###remove points where yatf weight is less than the progeny weight.
+    distribution_2prog_vg1w9[distribution_2prog_vg1w9 > 1] = 0
+    ###set the distribution for the other of the target pair
+    temporary = 1 - np.roll(distribution_2prog_vg1w9, 1, axis=-1)
+    condition = (distribution_2prog_vg1w9 > 0) * (index_w2 > 0)
+    distribution_2prog_vg1w9 = fun.f_update(distribution_2prog_vg1w9, temporary, condition)
+    ###Set the distribution proportion to 0 if the initial weight is < lowest weight
+    distribution_2prog_vg1w9 = fun.f_update(distribution_2prog_vg1w9, 0, ffcfw_yatf_vg1[..., na] <= np.min(ffcfw_prog_g2w9, axis=-1, keepdims=True))
+    return distribution_2prog_vg1w9
+
 def f_create_production_param(group, production_vg, a_kcluster_vg_1=1, index_ktvg_1=1, a_kcluster_vg_2=1, index_kktvg_2=1, numbers_start_vg=1, mask_vg=True, pos_offset=0):
     '''convert production to per animal including impact of death. And apply the k clustering'''
     if group=='sire':
