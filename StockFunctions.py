@@ -1829,7 +1829,7 @@ def f_cum_dvp(arr,dvp_pointer,axis=0,shift=0):
     return final
 
 def f_lw_distribution(ffcfw_condensed_va1e1b1nwzida0e0b0xyg, ffcfw_va1e1b1nwzida0e0b0xyg, i_n_len, i_n_fvp_period, dvp_type_next_tvgw=0):
-    '''distriuting animals on LW at the start of dvp0
+    '''distributing animals on LW at the start of dvp0
     ^ this function will need altering if the dvp_type definition changes'''
     ##add second w axis - the condensed w axis becomes axis -1 and the end of period w stays in the normal place
     ffcfw_condensed_va1e1b1nwzida0e0b0xygw = fun.f_reshape_expand(np.moveaxis(ffcfw_condensed_va1e1b1nwzida0e0b0xyg,uinp.structure['i_w_pos'],-1), uinp.structure['i_n_pos']-1, right_pos=pinp.sheep['i_z_pos']-1)
@@ -1847,7 +1847,7 @@ def f_lw_distribution(ffcfw_condensed_va1e1b1nwzida0e0b0xyg, ffcfw_va1e1b1nwzida
     distribution_va1e1b1nwzida0e0b0xygw = fun.f_update(distribution_va1e1b1nwzida0e0b0xygw, 1, dvp_type_next_tvgw!=0)
     return distribution_va1e1b1nwzida0e0b0xygw
 
-def f_lw_distribution_2prog(ffcfw_prog_g2w9, ffcfw_yatf_vg1, index_w2)
+def f_lw_distribution_2prog(ffcfw_prog_g2w9, ffcfw_yatf_vg1, index_w2):
     ###maximum(0, ) removes points where yatf weight is greater than the rolled progeny weight
     distribution_2prog_vg1w9 = np.maximum(0,fun.f_divide((np.roll(ffcfw_prog_g2w9,-1,axis=-1) - ffcfw_yatf_vg1[..., na])
                                                             , (np.roll(ffcfw_prog_g2w9,-1,axis=-1) - ffcfw_prog_g2w9)))
