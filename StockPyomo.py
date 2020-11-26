@@ -98,6 +98,13 @@ def stockpyomo_local(params):
                               model.s_season_types, model.s_tol, model.s_damage, model.s_gender, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_prog, model.s_tol,
                               initialize=params['p_npw_dams'], default=0.0, doc='number of prodgeny weaned')
     try:
+        model.del_component(model.p_npw_req_index)
+        model.del_component(model.p_npw_req)
+    except AttributeError:
+        pass
+    model.p_npw_req = pe.Param(model.s_sale_prog, model.s_damage, model.s_gender,
+                              initialize=params['p_npw_req_prog'], default=0.0, doc='number of yatf required by the prog activity')
+    try:
         model.del_component(model.p_progprov_dams_index)
         model.del_component(model.p_npp_progprov_damsw)
     except AttributeError:
@@ -525,11 +532,13 @@ def stockpyomo_local(params):
     except AttributeError:
         pass
     def progR(model, k5, a, z, i9, d, x, y1, g1, w9):
-        ###cant skip constraints based on the provide param otherwise the model could select the prg variable without restriction (maybe a req param can be added then we could skip on that ??)
-        return (- sum(model.v_dams[k2, t1, v1, a, n1, w18, z, i, y1, g1]  * model.p_npw[k2, k5, t1, v1, a, n1, w18, z, i, d, x, y1, g1, w9, i9]
-                    for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams for w18 in model.s_lw_dams for i in model.s_tol
-                         if model.p_npw[k2, k5, t1, v1, a, n1, w18, z, i, d, x, y1, g1, w9, i9]!= 0)
-                + sum(model.v_prog[k5, t2, w9, z, i9, d, a, x, g1] for t2 in model.s_sale_prog ))<=0
+        if any(model.p_npw_req[t2,d,x] for t2 in model.s_sale_prog):
+            return (- sum(model.v_dams[k2, t1, v1, a, n1, w18, z, i, y1, g1]  * model.p_npw[k2, k5, t1, v1, a, n1, w18, z, i, d, x, y1, g1, w9, i9]
+                        for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams for w18 in model.s_lw_dams for i in model.s_tol
+                             if model.p_npw[k2, k5, t1, v1, a, n1, w18, z, i, d, x, y1, g1, w9, i9]!= 0)
+                    + sum(model.v_prog[k5, t2, w9, z, i9, d, a, x, g1] * model.p_npw_req[t2,d,x] for t2 in model.s_sale_prog))<=0
+        else:
+            return pe.Constraint.Skip
     start = time.time()
     model.con_progR = pe.Constraint(model.s_k5_birth_offs, model.s_wean_times, model.s_season_types, model.s_tol,
                                     model.s_damage, model.s_gender, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_prog, rule=progR,
