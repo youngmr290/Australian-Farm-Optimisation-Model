@@ -187,7 +187,7 @@ def paspyomo_local(params):
         model.del_component(model.p_poc_con)
     except AttributeError:
         pass
-    model.p_poc_con = pe.Param(model.s_feed_periods ,model.s_lmus, initialize=params['p_poc_con_fl'],default=0, doc='consumption of pasture on 1ha of a crop paddock each day for each lmu in each feed period')
+    model.p_poc_con = pe.Param(model.s_feed_periods ,model.s_lmus, initialize=params['p_poc_con_fl'],default=0, doc='available consumption of pasture on 1ha of a crop paddock each day for each lmu in each feed period')
 
     try:
         model.del_component(model.p_poc_md)

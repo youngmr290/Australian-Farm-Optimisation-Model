@@ -309,12 +309,12 @@ def f_weighted_average(array, weights, axis, keepdims=False, non_zero=False):
     averaged_array[mask] = weighted_array[mask] / weights[mask]
     return averaged_array
 
-def f_divide(numerator, denominator):
+def f_divide(numerator, denominator,dtype='float64'):
     '''
     Function divides two arrays. If the denominator = 0 then 0 is return (elementwise)
     '''
     numerator, denominator = np.broadcast_arrays(numerator, denominator)
-    result = np.zeros_like(numerator)
+    result = np.zeros(numerator.shape, dtype=dtype) #make it a float incase the numerator is int
     mask = denominator!=0
     result[mask] = numerator[mask]/denominator[mask]
     return result

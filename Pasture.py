@@ -804,11 +804,11 @@ def poc(params):
     '''
     ### poc is assumed to be annual hence the 0 slice in the last axis
     ## con
-    poc_con_fl = i_poc_intake_daily_flt[...,0]
+    poc_con_fl = i_poc_intake_daily_flt[...,0] / 1000 #divide 1000 to convert to tonnes of foo per ha
     poc_con_rav_fl = poc_con_fl.ravel()
     params['p_poc_con_fl'] = dict(zip(index_fl, poc_con_rav_fl))
-    ## md
-    poc_md_f = fun.dmd_to_md(i_poc_dmd_ft[...,0])
+    ## md per tonne
+    poc_md_f = fun.dmd_to_md(i_poc_dmd_ft[...,0]) * 1000 #times 1000 to convert to mj per tonne
     poc_md_rav_f = poc_md_f.ravel()
     params['p_poc_md_f'] = dict(zip(index_f ,poc_md_rav_f))
     ## vol
@@ -825,7 +825,7 @@ def poc(params):
     ### calc relative availability - note that the equation system used is the one selected for dams in p1 - need to hook up mu function
     if uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used
         ri_quan_f = sfun.f_ra_cs(i_poc_foo_f, hf)
-        poc_vol_f = fun.f_divide(1,(ri_qual_f*ri_quan_f))
+        poc_vol_f = fun.f_divide(1,(ri_qual_f*ri_quan_f)) * 1000 #times 1000 to convert to vol to per tonne
     poc_vol_rav_f = poc_vol_f.ravel()
     params['p_poc_vol_f'] = dict(zip(index_f ,poc_vol_rav_f))
     
