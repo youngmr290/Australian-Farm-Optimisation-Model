@@ -3011,29 +3011,29 @@ def generator(params,report):
         ##start numbers - has to be after production because the numbers are being calced for the current period and are used in the start production function
         if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
             numbers_start_sire = sfun.f_period_start_nums(numbers_end_sire, prejoin_tup, season_tup, uinp.structure['i_n0_len'], uinp.structure['i_w0_len'], uinp.structure['i_n_fvp_period0'], numbers_start_fvp0_sire,
-                                                          False, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p], season_propn_zida0e0b0xyg, group=0)
+                                                          False, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], season_propn_zida0e0b0xyg, group=0)
             ###numbers at the begining of fvp 0 (used to calc mort for the lw patterns to determine the lowest feasible level - used in the start prod func)
             numbers_start_fvp0_sire = fun.f_update(numbers_start_fvp0_sire, numbers_start_sire, False) #currently sire dont have any fvp
 
         if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
             numbers_start_dams = sfun.f_period_start_nums(numbers_end_dams, prejoin_tup, season_tup, uinp.structure['i_n1_len'], uinp.structure['i_w1_len'], uinp.structure['i_n_fvp_period1'], numbers_start_fvp0_dams,
-                                                          period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1[p], period_is_startseason_pa1e1b1nwzida0e0b0xyg[p], season_propn_zida0e0b0xyg, group=1,
+                                                          period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1[p+1], period_is_startseason_pa1e1b1nwzida0e0b0xyg[p], season_propn_zida0e0b0xyg, group=1,
                                                           numbers_initial_repro=numbers_initial_propn_repro_a1e1b1nwzida0e0b0xyg1,
-                                                          period_is_prejoin=period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p])
+                                                          period_is_prejoin=period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1])
             ###numbers at the begining of fvp 0 (used to calc mort for the lw patterns to determine the lowest feasible level - used in the start prod func)
             numbers_start_fvp0_dams = fun.f_update(numbers_start_fvp0_dams, numbers_start_dams, period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1[p + 1])
 
         if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
             numbers_start_yatf = sfun.f_period_start_nums(numbers_end_yatf, prejoin_tup, season_tup, uinp.structure['i_n1_len'], uinp.structure['i_w1_len'],
-                                                          uinp.structure['i_n_fvp_period1'], numbers_start_fvp0_yatf, period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1[p],
-                                                          period_is_startseason_pa1e1b1nwzida0e0b0xyg[p], season_propn_zida0e0b0xyg, nyatf_b1=nyatf_b1nwzida0e0b0xyg,
-                                                          gender_propn_x=gender_propn_xyg, period_is_birth=period_is_birth_pa1e1b1nwzida0e0b0xyg1[p], group=2)
+                                                          uinp.structure['i_n_fvp_period1'], numbers_start_fvp0_yatf, period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1[p+1],
+                                                          period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], season_propn_zida0e0b0xyg, nyatf_b1=nyatf_b1nwzida0e0b0xyg,
+                                                          gender_propn_x=gender_propn_xyg, period_is_birth=period_is_birth_pa1e1b1nwzida0e0b0xyg1[p+1], group=2)
             ###numbers at the begining of fvp 0 (used to calc mort for the lw patterns to determine the lowest feasible level - used in the start prod func)
             numbers_start_fvp0_yatf = fun.f_update(numbers_start_fvp0_yatf, numbers_start_yatf, period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1[p + 1])
 
         if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
             numbers_start_offs = sfun.f_period_start_nums(numbers_end_offs, prejoin_tup, season_tup, uinp.structure['i_n3_len'], uinp.structure['i_w3_len'], uinp.structure['i_n_fvp_period3'], numbers_start_fvp0_offs,
-                                                         period_is_startfvp0_pa1e1b1nwzida0e0b0xyg3[p], period_is_startseason_pa1e1b1nwzida0e0b0xyg[p], season_propn_zida0e0b0xyg, group=3)
+                                                         period_is_startfvp0_pa1e1b1nwzida0e0b0xyg3[p+1], period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], season_propn_zida0e0b0xyg, group=3)
             ###numbers at the begining of fvp 0 (used to calc mort for the lw patterns to determine the lowest feasible level - used in the start prod func)
             numbers_start_fvp0_offs = fun.f_update(numbers_start_fvp0_offs, numbers_start_offs, period_is_startfvp0_pa1e1b1nwzida0e0b0xyg3[p + 1])
 
