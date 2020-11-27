@@ -4023,17 +4023,19 @@ def generator(params,report):
     sale_value_prog_a1e1b1wnzida0e0b0xyg2w9 = sale_value_prog_a1e1b1wnzida0e0b0xyg2w9 * (index_ta1e1b1wnzida0e0b0xyg2w9==0) #add t axis - slice 0 is sold as sucker, slice 1 and 2 are retained
 
     ##transfer yatf to the intermediate progeny activity
-    ###maximum(0, ) removes points where yatf weight is greater than the rolled progeny weight
-    distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 = np.maximum(0,fun.f_divide((np.roll(ffcfw_prog_a1e1b1nwzida0e0b0xyg2w9,-1,axis=-1) - ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1[..., na])
-                                                            , (np.roll(ffcfw_prog_a1e1b1nwzida0e0b0xyg2w9,-1,axis=-1) - ffcfw_prog_a1e1b1nwzida0e0b0xyg2w9), dtype=dtype))
-    ###remove points where yatf weight is less than the progeny weight.
-    distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9[distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 > 1] = 0
-    ###set the distribution for the other of the target pair
-    temporary = 1 - np.roll(distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9, 1, axis=-1)
-    condition = (distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 > 0) * (index_w2 > 0)
-    distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 = fun.f_update(distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9, temporary, condition)
-    ###Set the distribution proportion to 0 if the initial weight is < lowest weight
-    distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 = fun.f_update(distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9, 0, ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1[..., na] <= np.min(ffcfw_prog_a1e1b1nwzida0e0b0xyg2w9, axis=-1, keepdims=True))
+    distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 = sfun.f_lw_distribution_2prog(ffcfw_prog_a1e1b1nwzida0e0b0xyg2w9,ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1, index_w2)
+
+    # ###maximum(0, ) removes points where yatf weight is greater than the rolled progeny weight
+    # distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 = np.maximum(0,fun.f_divide((np.roll(ffcfw_prog_a1e1b1nwzida0e0b0xyg2w9,-1,axis=-1) - ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1[..., na])
+    #                                                         , (np.roll(ffcfw_prog_a1e1b1nwzida0e0b0xyg2w9,-1,axis=-1) - ffcfw_prog_a1e1b1nwzida0e0b0xyg2w9), dtype=dtype))
+    # ###remove points where yatf weight is less than the progeny weight.
+    # distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9[distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 > 1] = 0
+    # ###set the distribution for the other of the target pair
+    # temporary = 1 - np.roll(distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9, 1, axis=-1)
+    # condition = (distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 > 0) * (index_w2 > 0)
+    # distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 = fun.f_update(distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9, temporary, condition)
+    # ###Set the distribution proportion to 0 if the initial weight is < lowest weight
+    # distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 = fun.f_update(distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9, 0, ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1[..., na] <= np.min(ffcfw_prog_a1e1b1nwzida0e0b0xyg2w9, axis=-1, keepdims=True))
 
     ##mask w8 (prog) to w9 (dams)
     step_con_prog2dams = uinp.structure['i_n1_len'] ** uinp.structure['i_n_fvp_period1']
