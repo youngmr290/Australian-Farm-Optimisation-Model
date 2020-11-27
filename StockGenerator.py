@@ -4094,8 +4094,8 @@ def generator(params,report):
                                                             axis=(uinp.parameters['i_b1_pos'], pinp.sheep['i_e1_pos']), keepdims=True)[...,na,na], dtype=dtype)
 
     ###npw required by prog activity
-    mask_prog_tdx_tva1e1b1nwzida0e0b0xyg2w9 = np.logical_or((index_tva1e1b1nwzida0e0b0xyg2w9 != 1), (gender_xyg[mask_x] == 1)[...,na] * (agedam_propn_da0e0b0xyg1 > 0)[...,na])
-
+    ####mask numbers req (also used for prog2dams) - The progeny decision variable can be masked for gender and dam age for t[0] (t[0] are those that get transferred to dams). Gender only requires females, and the age of the dam only requires those that contribute to the initial age structure.
+    mask_prog_tdx_tva1e1b1nwzida0e0b0xyg2w9 = np.logical_or((index_tva1e1b1nwzida0e0b0xyg2w9 != 1), np.logical_and((gender_xyg[mask_x] == 1)[...,na] , (agedam_propn_da0e0b0xyg1 > 0)[...,na]))
     numbers_prog_req_tva1e1b1nwzida0e0b0xyg2w9 = 1 * mask_prog_tdx_tva1e1b1nwzida0e0b0xyg2w9
 
     ##transfer progney to dam replacements
@@ -4105,11 +4105,11 @@ def generator(params,report):
     distribution_2dams_a1e1b1nwzida0e0b0xyg2w9 = sfun.f_lw_distribution(ffcfw_initial_wzida0e0b0xyg1, ffcfw_prog_a1e1b1nwzida0e0b0xyg2, uinp.structure['i_n1_len'], uinp.structure['i_n_fvp_period1'])
     ###numbers provided - active d
     numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2g9w9 = 1 * (np.sum(distribution_2dams_a1e1b1nwzida0e0b0xyg2w9[...,na,:] * mask_numbers_prog2damsw8w9_w9
-                                                                    * mask_prog_tdx_tva1e1b1nwzida0e0b0xyg2w9 * (a_g1_g2[...,na,:]==index_g1)[...,na]
-                                                                    * (index_tva1e1b1nwzida0e0b0xyg2w9 == 1)[...,na,:] * (gender_xyg[mask_x] == 1)[...,na,na] #gender to select the dams from prog
+                                                                    * mask_prog_tdx_tva1e1b1nwzida0e0b0xyg2w9[...,na,:]
+                                                                    * (a_g1_g2[...,na,:]==index_g1)[...,na] * (index_tva1e1b1nwzida0e0b0xyg2w9 == 1)[...,na,:]
                                                                     * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na,na]
                                                                     * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[...,na,na]
-                                                                    , axis=(uinp.parameters['i_b0_pos']-2, uinp.structure['i_e0_pos']-2),keepdims=True)) > 0
+                                                                    , axis=(uinp.parameters['i_b0_pos']-2, uinp.structure['i_e0_pos']-2),keepdims=True) > 0)
     ###numbers required - no d axis
     numbers_progreq_k28k3k5tva1e1b1nw8zida0e0b0xyg1g9w9 = 1 * (np.sum(mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9[0, ...,:,na] * (index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,..., na,na] == 0)
                                                                     * (index_g1[...,na,:]==index_g1)[...,na] * btrt_propn_b0xyg1[...,na,na] * e0_propn_ida0e0b0xyg[...,na,na]

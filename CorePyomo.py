@@ -119,8 +119,11 @@ def coremodel_all():
     except AttributeError:
         pass
     def harv_stub_nap_cons(model,v,f):
-        return -paspy.pas_me(model,v,f) + sum(model.p_harv_prop[f,k]/(1-model.p_harv_prop[f,k]) * model.v_stub_con[v,f,k,s] * model.p_stub_md[f,s,k] for k in model.s_crops for s in model.s_stub_cat) \
-                +  model.p_nap_prop[f]/(1-model.p_nap_prop[f]) * paspy.nappas_me(model,v,f) <= 0
+        if any(model.p_harv_prop[f,k] for k in model.s_crops):
+            return -paspy.pas_me(model,v,f) + sum(model.p_harv_prop[f,k]/(1-model.p_harv_prop[f,k]) * model.v_stub_con[v,f,k,s] * model.p_stub_md[f,s,k] for k in model.s_crops for s in model.s_stub_cat) \
+                    +  model.p_nap_prop[f]/(1-model.p_nap_prop[f]) * paspy.nappas_me(model,v,f) <= 0
+        else:
+            return pe.Constraint.Skip
     model.con_harv_stub_nap_cons = pe.Constraint(model.s_sheep_pools, model.s_feed_periods, rule = harv_stub_nap_cons, doc='limit stubble and nap consumption in the period harvest occurs')
 
     ######################
