@@ -617,6 +617,7 @@ def green_and_dry(params):
     ## non-arable areas in crop paddocks (the annual pasture available if not grazed)
     ### # is maximum ungrazed pasture in the growing season
     ### # _maximum foo achievable for each lmu & feed period (ungrazed pasture that germinates at the maximum level on that lmu)
+    ### non arable pasture becomes available to graze at the begining of the first harvest peroid
     ### ^a potential error here when germination is spread across periods (because taking max of each period)
     germination_pass_flt = np.max(germination_flrt, axis=2)  #use p_germination because it includes any sensitivity that is carried out
     grn_foo_start_ungrazed_flt , dry_foo_start_ungrazed_flt \
