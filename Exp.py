@@ -76,7 +76,7 @@ except FileNotFoundError:
 ##read in exp log 
 exp_data = pd.read_excel('exp.xlsx',index_col=[0,1,2], header=[0,1,2,3])
 exp_data = exp_data.sort_index() #had to sort to stop performance warning, this means runs may not be executed in order of exp.xlsx
-exp_data1=exp_data.copy() #copy made so that the run col can be added - the origional df is used to allocate sa values (would cause an error if run col existed but i cant drop it because it is used to determine if the trial is run)
+exp_data1=exp_data.copy() #copy made so that the run col can be added - the original df is used to allocate sa values (would cause an error if run col existed but i cant drop it because it is used to determine if the trial is run)
 exp_data1['run']=False
 exp_data1['runpyomo']=False
 
@@ -121,11 +121,11 @@ run=0 #counter to work out average time per loop
 for row in range(len(exp_data)):
     ##start timer for each loop
     start_time = time.time()
-    ##check to make sure user wants to run this trial - note pyomo is never run without precalcs being run (this could possibly be change by making a more custom functin to check only precalc module time and then altering the 'continue' call below)
+    ##check to make sure user wants to run this trial - note pyomo is never run without precalcs being run (this could possibly be change by making a more custom function to check only precalc module time and then altering the 'continue' call below)
     if exp_data1.index[row][0] == False or exp_data1.loc[exp_data1.index[row],'run'].squeeze()==False:
         continue
     # print('precalcs',exp_data1.index[row][2])
-    exp_data1.loc[exp_data1.index[row],'run'] = False
+    exp_data1.loc[exp_data1.index[row],('run', '', '', '')] = False
     run+=1
     for dic,key1,key2,indx in exp_data:
         ##extract current value
@@ -238,7 +238,7 @@ for row in range(len(exp_data)):
     if run_pyomo_params or exp_data1.loc[exp_data1.index[row],'runpyomo'].squeeze():
         # print('run pyomo')
         ###if re-run update runpyomo to false 
-        exp_data1.loc[exp_data1.index[row],'runpyomo'] = False
+        exp_data1.loc[exp_data1.index[row],('runpyomo', '', '', '')] = False
         ##call pyomo model function, must call them in the correct order (core must be last)
         precalc_start = time.time()
         crtmod.sets() #certain sets have to be updated each iteration of exp
