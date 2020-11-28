@@ -181,20 +181,6 @@ def paspyomo_local(params):
                         - model.v_greenpas_ha[v,g,o,fs,l,t] * model.p_foo_end_grnha[g,o,fs,l,t] for v in model.s_sheep_pools for g in model.s_grazing_int for o in model.s_foo_levels) <=0
     model.con_greenpas = pe.Constraint(model.s_feed_periods, model.s_lmus, model.s_pastures, rule = greenpas, doc='green pasture of each type available on each soil type in each feed period')
 
-    #^below is the old version of the con above - i think we could simiply summing as seen above but havnt tested
-    # try:
-    #     model.del_component(model.con_greenpas_index_index_0)
-    #     model.del_component(model.con_greenpas_index)
-    #     model.del_component(model.con_greenpas)
-    # except AttributeError:
-    #     pass
-    # def greenpas(model,f,l,t):
-    #     fs = list(model.s_feed_periods)[f-1] #have to convert to a list first beacuse indexing of an ordered set starts at 1
-    #     return sum(model.v_phase_area[r,l] * (-model.p_germination[f,l,r,t] - model.p_foo_grn_reseeding[f,l,r,t])for r in model.s_phases if model.p_germination[f,l,r,t]!=0 or model.p_foo_grn_reseeding[f,l,r,t]!=0)         \
-    #                     + sum(sum(sum(model.v_greenpas_ha[v,g,o,f,l,t] for v in model.s_sheep_pools) * (model.p_foo_start_grnha[o,f,l,t] )  \
-    #                     - sum(model.v_greenpas_ha[v,g,o,fs,l,t] for v in model.s_sheep_pools) * ( model.p_foo_end_grnha[g,o,fs,l,t]) for g in model.s_grazing_int) for o in model.s_foo_levels) <=0
-    # model.con_greenpas = pe.Constraint(model.s_feed_periods, model.s_lmus, model.s_pastures, rule = greenpas, doc='green pasture of each type available on each soil type in each feed period')
-    #
     try:
         model.del_component(model.con_drypas_index)
         model.del_component(model.con_drypas)

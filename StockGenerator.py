@@ -1660,16 +1660,16 @@ def generator(params,report):
     ## Loop through each week of the simulation (p) for ewes
     #for p in range(120): # to pick up yatf being weaned in p[94]
     for p in range(n_sim_periods-1):   #-1 because error at 351
-        print(p)
-        if np.any(period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]):
-            print("period is lactation: ", period_is_birth_pa1e1b1nwzida0e0b0xyg1[p])
-        if np.any(period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]):
-            print("period is gest: ", period_is_mating_pa1e1b1nwzida0e0b0xyg1[p])
-        if np.any(period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1[p]):
-            print("period is fvp0 dams: ", period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1[p])
-        if np.any(period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1[p]):
-            print("period is fvp0 offs: ", period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1[p])
-        # if p != 0:  # only carry this out with p<>0
+        # print(p)
+        # if np.any(period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]):
+        #     print("period is lactation: ", period_is_birth_pa1e1b1nwzida0e0b0xyg1[p])
+        # if np.any(period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]):
+        #     print("period is gest: ", period_is_mating_pa1e1b1nwzida0e0b0xyg1[p])
+        # if np.any(period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1[p]):
+        #     print("period is fvp0 dams: ", period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1[p])
+        # if np.any(period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1[p]):
+        #     print("period is fvp0 offs: ", period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1[p])
+
 
 
         #######
@@ -3388,7 +3388,7 @@ def generator(params,report):
     woolvalue_tpa1e1b1nwzida0e0b0xyg3[:,shear_mask_p3], woolp_stbnib_offs = sfun.f_wool_value(woolp_mpg_w4, cfw_offs_p9, fd_offs_p9, sl_offs_p9, ss_offs_p9, vm_p9a1e1b1nwzida0e0b0xyg3,
                                                                              pmb_tp9a1e1b1nwzida0e0b0xyg3, dtype)
     wool_finish= time.time()
-    print('wool value calcs :', wool_finish - calc_cost_start)
+
 
     ##Sale value - To speed the calculation process the p array is condensed to only include periods where shearing occurs. Using a slightly different association it is then converted to a v array (this process usually used a p to v association, in this case we use s to v association).
     ###create mask which is the periods where shearing occurs
@@ -3463,7 +3463,7 @@ def generator(params,report):
         mask_s7x_s7pa1e1b1nwzida0e0b0xyg3, sale_agemax_s7pa1e1b1nwzida0e0b0xyg3, dtype)
 
     sale_finish= time.time()
-    print('sale value calcs :', sale_finish - wool_finish)
+
 
     ##Husbandry
     ###Sire: cost, labour and infrastructure requirements
@@ -3493,7 +3493,7 @@ def generator(params,report):
         musters_per_hour_l2h4pg, husb_muster_infrastructurereq_h1h4pg, dtype=dtype)
 
     husb_finish= time.time()
-    print('husb cost calcs :', husb_finish - sale_finish)
+
 
     ##combine income and cost from wool, sale and husb.
     ###sire
@@ -4601,6 +4601,9 @@ def generator(params,report):
 
     finish = time.time()
     print('onhand and shearing arrays: ',calc_cost_start - onhandshear_start)
+    print('wool value calcs :', wool_finish - calc_cost_start)
+    print('sale value calcs :', sale_finish - wool_finish)
+    print('husb cost calcs :', husb_finish - sale_finish)
     print('calc cost and income: ',feedpools_start - calc_cost_start)
     print('feed pools arrays: ',p2v_start - feedpools_start)
     print('amalgamating p to v: ',lwdist_start - p2v_start)
@@ -4609,6 +4612,5 @@ def generator(params,report):
     print('allocation: ',production_param_start - allocation_start)
     print('production params: ', number_param_start - production_param_start)
     print('number params: ', keys_start - number_param_start)
-    # print('key: ',ravel_start - keys_start)
     print('ravel array and zip with key: ',finish - keys_start)
     print('end of generator')   # a line that can be used to break at the end of the generator

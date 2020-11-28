@@ -78,35 +78,25 @@ exp_data = pd.read_excel('exp.xlsx',index_col=[0,1,2], header=[0,1,2,3])
 exp_data = exp_data.sort_index() #had to sort to stop performance warning, this means runs may not be executed in order of exp.xlsx
 exp_data1=exp_data.copy() #copy made so that the run col can be added - the original df is used to allocate sa values (would cause an error if run col existed but i cant drop it because it is used to determine if the trial is run)
 exp_data1['run']=False
-exp_data1['runpyomo']=False
+
 
 ##have any sa cols been added or removed, are the values the same, has the py code changed since last run?
 ###get a list of all sa cols (including the name of the trial because two trial may have the same values but have a different name)
-keys_hist = list(prev_exp.reset_index().columns[2:-1].values) #:-1 so that the runpyomo col doesn't effect the run pre calcs.
-keys_current = list(exp_data1.reset_index().columns[2:-1].values)
-sorted_list = sorted(glob.iglob('*.py'), key=os.path.getctime)
+keys_hist = list(prev_exp.reset_index().columns[2:].values)
+keys_current = list(exp_data1.reset_index().columns[2:].values)
+sorted_list = sorted(glob.iglob('*.py'), key=os.path.getmtime)
 ####if only report.py has been updated precalcs don't need to be re-run therefore newest is equal to the newest py file that isn't report
 if sorted_list[-1] != 'Repoprt.py':
     newest = sorted_list[-1]
 else: newest = sorted_list[-2]
-newest_pyomo = max(glob.iglob('*pyomo.py'), key=os.path.getctime)
 
-###if pyomo code has not been updated then check each row and see if it needs to be run - if it is a new trial it will need to be run or if it needed to be run last time but didn't get run because user specified not to run that exp (this is done by comparing the prev_exp with current exp that has all false)
-try: #incase pkl_exp doesn't exist
-    if os.path.getmtime("pkl_exp") >= os.path.getmtime(newest_pyomo):
-        i1 = prev_exp.reset_index().set_index([('level_2', '', '', ''),('runpyomo', '', '', '')]).index #have to reset index because the name of the trial is going to be included in the new index so it must first be dropped from current index
-        i2 = exp_data1.reset_index().set_index([('level_2', '', '', ''),('runpyomo', '', '', '')]).index
-        exp_data1.loc[~i2.isin(i1),'runpyomo'] = True
-    ###if pyomo code has been updated then all pyomo must be updated
-    else: exp_data1['runpyomo']=True
-except FileNotFoundError: exp_data1['runpyomo']=True
+
 ###if headers are the same,pyomo code is the same and the excel inputs are the same then test if the values in exp.xlxs are the same
 try: #incase pkl_exp doesn't exist
-    if keys_current==keys_hist and os.path.getmtime("pkl_exp") >= os.path.getmtime(newest) and os.path.getmtime("pkl_exp") >= os.path.getmtime("Universal.xlsx") and os.path.getmtime("pkl_exp") >= os.path.getmtime("Property.xlsx"):
+    if keys_current==keys_hist and os.path.getmtime('pkl_exp.pkl') >= os.path.getmtime(newest) and os.path.getmtime('pkl_exp.pkl') >= os.path.getmtime("Universal.xlsx") and os.path.getmtime('pkl_exp.pkl') >= os.path.getmtime("Property.xlsx"):
         ###check if each exp has the same values in exp.xlsx as last time it was run.
-        i3 = prev_exp.reset_index().set_index(keys_hist).index #have to reset index because the name of the trial is going to be included in the new index so it must first be dropped from current index
-        i4 = exp_data1.reset_index().set_index(keys_current).index
-        exp_data1.loc[~i4.isin(i3),'run'] = True
+        t_bool=(prev_exp==exp_data1).all(axis=1)
+        exp_data1.loc[~t_bool,('run', '', '', '')] = True
     ###if headers are different or py code has changed then all trials need to be re-run
     else: exp_data1['run']=True
 except FileNotFoundError: exp_data1['run']=True
@@ -235,10 +225,8 @@ for row in range(len(exp_data)):
     except KeyError:
         run_pyomo_params= True
     ##determine if pyomo should run, note if pyomo doesn't run there will be no ful solution (they are the same as before so no need)
-    if run_pyomo_params or exp_data1.loc[exp_data1.index[row],'runpyomo'].squeeze():
+    if run_pyomo_params:
         # print('run pyomo')
-        ###if re-run update runpyomo to false 
-        exp_data1.loc[exp_data1.index[row],('runpyomo', '', '', '')] = False
         ##call pyomo model function, must call them in the correct order (core must be last)
         precalc_start = time.time()
         crtmod.sets() #certain sets have to be updated each iteration of exp
