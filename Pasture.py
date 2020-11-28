@@ -30,6 +30,7 @@ import StockFunctions as sfun
 import UniversalInputs as uinp
 import Functions as fun
 import Periods as per
+import Sensitivity as sen
 
 
 ########################
@@ -603,11 +604,11 @@ def green_and_dry(params):
     '''
 
     ## initialise numpy arrays used only in this method
-    grn_dmd_selectivity_goft = np.zeros(goft,   dtype = 'float64')
-    senesce_propn_dgoflt     = np.zeros(dgoflt, dtype = 'float64')
-    nap_dflrt                 = np.zeros(dflrt,    dtype = 'float64')
-    dry_transfer_t_dft       = np.zeros(dft,    dtype = 'float64')
-    foo_start_grnha_oflt     = np.zeros(oflt,   dtype = 'float64')
+    grn_dmd_selectivity_goflt = np.zeros(goflt,  dtype = 'float64')
+    senesce_propn_dgoflt      = np.zeros(dgoflt, dtype = 'float64')
+    nap_dflrt                 = np.zeros(dflrt,  dtype = 'float64')
+    dry_transfer_t_dft        = np.zeros(dft,    dtype = 'float64')
+    foo_start_grnha_oflt      = np.zeros(oflt,   dtype = 'float64')
 
     ## dry, DM decline (high = low pools)
     dry_transfer_t_dft[...] = 1000 * (1-dry_decay_period_ft)
@@ -621,21 +622,23 @@ def green_and_dry(params):
     ### ^a potential error here when germination is spread across periods (because taking max of each period)
     germination_pass_flt = np.max(germination_flrt, axis=2)  #use p_germination because it includes any sensitivity that is carried out
     grn_foo_start_ungrazed_flt , dry_foo_start_ungrazed_flt \
-         = calc_foo_profile(germination_pass_flt, dry_decay_period_ft, length_f)# ^ passing the consumption value in a numpy array in an attempt to get the function @jit compatible
+         = calc_foo_profile(germination_pass_flt, dry_decay_period_ft, length_f)   # ^ passing the consumption value in a numpy array in an attempt to get the function @jit compatible
     ### all pasture from na area into the Low pool (#1) because it is rank
     harvest_period  = fun.period_allocation(pinp.feed_inputs['feed_periods']['date'], pinp.feed_inputs['feed_periods'].index, pinp.crop['harv_date'])
     params['p_harvest_period_prop']  = dict([fun.period_proportion_np(pinp.feed_inputs['feed_periods']['date'], pinp.crop['harv_date'])])
     nap_dflrt[0,harvest_period,...,0] = dry_foo_start_ungrazed_flt[harvest_period,:,np.newaxis,0]  \
                                            * (1-arable_l.reshape(-1,1))  \
-                                           * (1-np.sum(pasture_rt, axis=1))
+                                           * (1-np.sum(pasture_rt, axis=1))    # sum pasture proportion across the t axis to get area of crop
     nap_rav_dflrt = nap_dflrt.ravel()
     params['p_nap_dflrt'] = dict(zip(index_dflrt ,nap_rav_dflrt))
 
     ## green initial FOO
-    max_foo_flt                 = np.maximum(i_fxg_foo_oflt[1,...], grn_foo_start_ungrazed_flt)                  #maximum of ungrazed foo and foo from the medium foo level
-    foo_start_grnha_oflt[2,...] = np.maximum.accumulate(max_foo_flt,axis=1)                                #maximum accumulated along the feed periods axis, i.e. max to date
-    foo_start_grnha_oflt[...]   = np.maximum(foo_start_grnha_oflt
-                                             , i_base_ft[:,np.newaxis,:])         # to ensure that final foo can not be below 0
+    foo_start_grnha_oflt = np.maximum(i_fxg_foo_oflt
+                                       , i_base_ft[:, np.newaxis, :])  # to ensure that final foo can not be below the base level
+    max_foo_flt                 = np.maximum(i_fxg_foo_oflt[1,...], grn_foo_start_ungrazed_flt)      #maximum of ungrazed foo and foo from the medium foo level
+    foo_start_grnha_oflt[2,...] = np.maximum.accumulate(max_foo_flt,axis=0)                          #maximum accumulated along the feed periods axis, i.e. max to date
+    # foo_start_grnha_oflt[...]   = np.maximum(foo_start_grnha_oflt
+    #                                          , i_base_ft[:,np.newaxis,:])         # to ensure that final foo can not be below 0
     foo_start_grnha_rav_oflt = foo_start_grnha_oflt.ravel()
     params['p_foo_start_grnha_oflt'] = dict(zip(index_oflt ,foo_start_grnha_rav_oflt))
 
@@ -670,32 +673,36 @@ def green_and_dry(params):
     ### # to calculate foo_days requires calculating number of days in current period and adding days from the previous period (if required)
 
     ###set the default to Clip between -1 and 0 for low FOO level
-    min_oflt = np.ones(n_foo_levels).reshape(-1,1,1,1) * -1
-    max_oflt = np.zeros(n_foo_levels).reshape(-1,1,1,1)
-    # and clip between 0 and 1 for high FOO level
-    min_oflt[2,...] = 0
-    max_oflt[2,...] = 1
+    min_oflt = np.zeros(n_foo_levels).reshape(-1,1,1,1)
+    max_oflt = np.ones(n_foo_levels).reshape(-1,1,1,1)
+    # ### and clip between 0 and 1 for high FOO level
+    # min_oflt[0,...] = 0
+    # max_oflt[0,...] = 0
 
     propn_period_oflt               = (  foo_start_grnha_oflt
-                                       - foo_start_grnha_oflt[1:2,...])            \
-                                     /           pgr_grnha_goflt[0,...]
-    propn_periodprev_oflt           = (  foo_start_grnha_oflt [   : ,1:  ,:,:]
-                                       - foo_start_grnha_oflt [  1:2,1:  ,:,:]
-                                       -         pgr_grnha_goflt[0, : ,1:  ,:,:])     \
-                                     /           pgr_grnha_goflt[0, : , :-1,:,:]      # pgr from the previous period
+                                       - foo_start_grnha_oflt [  0:1,...])            \
+                                     /         pgr_grnha_goflt[0, ...]
+    propn_periodprev_oflt           = (  foo_start_grnha_oflt   [ : ,1: ,:,:]
+                                       - foo_start_grnha_oflt   [0:1,1: ,:,:]
+                                       -       pgr_grnha_goflt[0, : ,1:  ,:,:])     \
+                                     /         pgr_grnha_goflt[0, : , :-1,:,:]      # pgr from the previous period
     foo_days_grnha_oflt             = np.clip(propn_period_oflt,min_oflt,max_oflt)              \
                                      *              length_f.reshape(-1,1,1)
     foo_days_grnha_oflt[:,1:,:,:]  += np.clip(propn_periodprev_oflt,min_oflt,max_oflt)          \
                                      *                  length_f[:-1].reshape(-1,1,1) # length from previous period
-    grn_dmd_swardscalar_oflt        = (1 - i_grn_dmd_declinefoo_ft[:,np.newaxis,:])   \
-                                     **          foo_days_grnha_oflt                  # multiplier on digestibility of the sward due to level of FOO (associated with destocking)
-    grn_dmd_range_ft                = (       i_grn_dmd_range_ft)
-    grn_dmd_selectivity_goft[1,...] = -0.5 * grn_dmd_range_ft                         # addition to digestibility associated with diet selection (level of grazing)
-    grn_dmd_selectivity_goft[2,...] = 0
-    grn_dmd_selectivity_goft[3,...] = +0.5 * grn_dmd_range_ft
+    ### convert monthly decline to daily decline
+    grn_dmd_declinefoo_ft           = i_grn_dmd_declinefoo_ft / 30.5
+    ### change in sward average digestibility due to increasing foo
+    grn_dmd_fooadj_oflt             = ((1 - grn_dmd_declinefoo_ft[:,np.newaxis,:])   \
+                                         **     foo_days_grnha_oflt) - 1
+    ### change in digestibility associated with diet selection (altered by level of grazing)
+    grn_dmd_range_oflt              = i_grn_dmd_range_ft[:, np.newaxis, :] - grn_dmd_fooadj_oflt * 2   # Sward ave DMD reduction (due to deferment) increases the range
+    grn_dmd_selectivity_goflt[1,...] = 0.5000 * grn_dmd_range_oflt
+    grn_dmd_selectivity_goflt[2,...] = 0.3333 * grn_dmd_range_oflt              #^ could improve this by making the selectivity proportion a formula based on proportion grazed
+    grn_dmd_selectivity_goflt[3,...] = 0
     dmd_grnha_goflt                 =            i_grn_dig_flt                        \
-                                     * grn_dmd_swardscalar_oflt                       \
-                                     + grn_dmd_selectivity_goft[:,:,:,np.newaxis,:]
+                                     +      grn_dmd_fooadj_oflt                       \
+                                     + grn_dmd_selectivity_goflt
     grn_md_grnha_goflt              = fun.dmd_to_md(dmd_grnha_goflt)
 
     ## green, mei & volume
@@ -730,11 +737,12 @@ def green_and_dry(params):
     params['p_volume_grnha_vgoflt'] = dict(zip(index_vgoflt ,volume_grnha_rav_vgoflt))
 
     ## dry, dmd & foo of feed consumed
-    dry_dmd_adj_ft  = np.max(i_dry_dmd_ave_ft,axis=0)    \
-                     +       i_dry_dmd_ave_ft                               # do sensitivity adjustment for dry_dmd_input based on increasing/reducing the reduction in dmd from the maximum (starting value)
-    dry_dmd_high_ft = dry_dmd_adj_ft + i_dry_dmd_range_ft/2
-    dry_dmd_low_ft  = dry_dmd_adj_ft - i_dry_dmd_range_ft/2
-    dry_dmd_dft     = np.stack((dry_dmd_low_ft, dry_dmd_high_ft),axis=0)    # create an array with a new axis 0 by stacking the existing arrays
+    ### do sensitivity adjustment for dry_dmd_input based on increasing/reducing the reduction in dmd from the maximum (starting value)
+    dry_dmd_adj_ft  = (        i_dry_dmd_ave_ft
+                       -np.max(i_dry_dmd_ave_ft, axis=0)) * sen.sam['dry_dmd_decline','annual']
+    dry_dmd_high_ft = np.max(i_dry_dmd_ave_ft, axis=0) + dry_dmd_adj_ft + i_dry_dmd_range_ft/2
+    dry_dmd_low_ft  = np.max(i_dry_dmd_ave_ft, axis=0) + dry_dmd_adj_ft - i_dry_dmd_range_ft/2
+    dry_dmd_dft     = np.stack((dry_dmd_low_ft, dry_dmd_high_ft), axis=0)    # create an array with a new axis 0 by stacking the existing arrays
 
     dry_foo_high_ft = i_dry_foo_high_ft * 3/4
     dry_foo_low_ft  = i_dry_foo_high_ft * 1/4                               # assuming half the foo is high quality and the remainder is low quality
