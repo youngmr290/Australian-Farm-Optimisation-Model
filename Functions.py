@@ -404,7 +404,7 @@ def f_sa(value, sa, sa_type=0, target=0, value_min=-np.inf,pandas=False, axis=0)
 def findDiff(d1, d2):
     a=False
     for k in d1:
-        # if a != True: #this stops it looping through the rest of the keys once it finds a difference
+        if a != True: #this stops it looping through the rest of the keys once it finds a difference
             if (k not in d2): #check if the key in current params is in previous params dict.
                 # print('DIFFERENT')
                 a = True
@@ -418,12 +418,11 @@ def findDiff(d1, d2):
                     try: #have to try both ways because sometimes param is array and other times it is scalar
                         if any(d1[k] != d2[k]): #if keys are the same, check if the values are the same
                             # print('DIFFERENT',k)
-                            a=(True)
+                            a=True
                     except TypeError:
                         if d1[k] != d2[k]: #if keys are the same, check if the values are the same
-                            a=(True)
+                            a=True
                     return a
-        # else: return a
     return a
 
 

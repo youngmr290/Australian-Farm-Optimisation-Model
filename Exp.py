@@ -95,8 +95,9 @@ else: newest = sorted_list[-2]
 try: #incase pkl_exp doesn't exist
     if keys_current==keys_hist and os.path.getmtime('pkl_exp.pkl') >= os.path.getmtime(newest) and os.path.getmtime('pkl_exp.pkl') >= os.path.getmtime("Universal.xlsx") and os.path.getmtime('pkl_exp.pkl') >= os.path.getmtime("Property.xlsx"):
         ###check if each exp has the same values in exp.xlsx as last time it was run.
-        t_bool=(prev_exp==exp_data1).all(axis=1)
-        exp_data1.loc[~t_bool,('run', '', '', '')] = True
+        i3 = prev_exp.reset_index().set_index(keys_hist).index  # have to reset index because the name of the trial is going to be included in the new index so it must first be dropped from current index
+        i4 = exp_data1.reset_index().set_index(keys_current).index
+        exp_data1.loc[~i4.isin(i3),('run', '', '', '')] = True
     ###if headers are different or py code has changed then all trials need to be re-run
     else: exp_data1['run']=True
 except FileNotFoundError: exp_data1['run']=True
