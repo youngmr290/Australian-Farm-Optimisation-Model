@@ -88,7 +88,7 @@ i_phase_germ_dict = dict()
 
 i_me_maintenance_vft            = np.zeros(eft,  dtype = 'float64')  # M/D level for target LW pattern
 c_pgr_gi_scalar_gft             = np.zeros(gft,  dtype = 'float64')  # numpy array of pgr scalar =f(startFOO) for grazing intensity (due to impact of FOO changing during the period)
-i_foo_end_propn_gt              = np.zeros(gt,   dtype = 'float64')  # numpy array of proportion of available feed consumed for each grazing intensity level.
+i_foo_graze_propn_gt            = np.zeros(gt, dtype ='float64')  # numpy array of proportion of available feed consumed for each grazing intensity level.
 
 i_fxg_foo_oflt                  = np.zeros(oflt, dtype = 'float64')  # numpy array of FOO level       for the FOO/growth/grazing variables.
 i_fxg_pgr_oflt                  = np.zeros(oflt, dtype = 'float64')  # numpy array of PGR level       for the FOO/growth/grazing variables.
@@ -233,7 +233,7 @@ def map_excel(filename):
     ### all need pre-defining because inputs are in separate pasture type arrays
 
     i_grn_senesce_daily_ft          = np.zeros(ft,  dtype = 'float64')  # proportion of green feed that senesces each period (due to leaf drop)
-    i_grn_senesce_eos_ft            = np.zeros(ft,  dtype = 'float64')  # proportion of green feed that senesces in period (due to completing life cycle)
+    # i_grn_senesce_eos_ft            = np.zeros(ft,  dtype = 'float64')  # proportion of green feed that senesces in period (due to completing life cycle)
     dry_decay_daily_ft              = np.zeros(ft,  dtype = 'float64')  # daily decline in dry foo in each period
     i_end_of_gs_t                   = np.zeros(n_pasture_types, dtype = 'int')  # the period number when the pasture senesces
     i_dry_decay_t                   = np.zeros(n_pasture_types, dtype = 'float64')  # decay rate of dry pasture during the dry feed phase (Note: 100% during growing season)
@@ -280,9 +280,10 @@ def map_excel(filename):
         i_base_ft[...,t]                    = np.asfarray(exceldata['BaseLevelInput'])
         i_grn_dmd_declinefoo_ft[...,t]      = np.asfarray(exceldata['DigDeclineFOO'])
         i_grn_dmd_range_ft[...,t]           = np.asfarray(exceldata['DigSpread'])
-        i_foo_end_propn_gt[...,t]           = np.asfarray(exceldata['FOOGrazePropn'])
-        c_pgr_gi_scalar_gft[...,t]    = 1 - i_foo_end_propn_gt[...,t].reshape(-1,1)**2        \
-                                       * (1 - np.asfarray(exceldata['PGRScalarH']))
+        i_foo_graze_propn_gt[..., t]        = np.asfarray(exceldata['FOOGrazePropn'])
+        #### impact of grazing intensity (at the other levels) on PGR during the period
+        c_pgr_gi_scalar_gft[...,t]    = 1 - i_foo_graze_propn_gt[..., t].reshape(-1, 1) ** 2 \
+                                        * (1 - np.asfarray(exceldata['PGRScalarH']))
 
         i_fxg_foo_oflt[0,:,:,t]             = exceldata['LowFOO'].to_numpy()
         i_fxg_foo_oflt[1,:,:,t]             = exceldata['MedFOO'].to_numpy()
@@ -324,9 +325,12 @@ def map_excel(filename):
                          * i_fxg_foo_oflt[0,...]
     c_fxg_a_oflt[2,...] =  i_fxg_pgr_oflt[1,...] # because slope = 0
 
-    grn_senesce_startfoo_ft =1 -((1 -     i_grn_senesce_daily_ft) **  length_f.reshape(-1,1))          # proportion of start foo that senescences during the period, different formula than excel
-    grn_senesce_pgrcons_ft  =1 -((1 -(1 - i_grn_senesce_daily_ft) ** (length_f.reshape(-1,1)+1))   \
-                                 /        i_grn_senesce_daily_ft-1) / length_f.reshape(-1,1)     # proportion of the total growth & consumption that senescences during the period
+    # proportion of start foo that senesceces during the period, different formula than excel
+    grn_senesce_startfoo_ft =1 - ((1 -     i_grn_senesce_daily_ft) **  length_f.reshape(-1,1))
+    # proportion of the total growth & consumption that senesceces during the period
+    grn_senesce_pgrcons_ft  =1 - ((1 -(1 - i_grn_senesce_daily_ft) ** (length_f.reshape(-1,1)+1))
+                                  /        i_grn_senesce_daily_ft-1) / length_f.reshape(-1,1)
+    return
 
 ### define a function that loops through feed periods to generate the foo profile for a specified germination and consumption
 def calc_foo_profile(germination_flt, dry_decay_ft, length_of_periods_f):
@@ -649,12 +653,14 @@ def green_and_dry(params):
                      * c_pgr_gi_scalar_gft[:,np.newaxis,:,np.newaxis,:]
 
     ## green, final foo from initial, pgr and senescence
-    foo_ungrazed_grnha_oflt  = foo_start_grnha_oflt    *(1-grn_senesce_startfoo_ft[:,np.newaxis,:])   \
-                              + pgr_grnha_goflt[0,...] *(1- grn_senesce_pgrcons_ft[:,np.newaxis,:])
-    foo_endprior_grnha_goflt =  foo_ungrazed_grnha_oflt \
-                              -(foo_ungrazed_grnha_oflt
-                                - i_base_ft[:,np.newaxis,:]) \
-                              * i_foo_end_propn_gt[:,np.newaxis,np.newaxis,np.newaxis,:]
+    ### foo at end of period if ungrazed
+    foo_ungrazed_grnha_oflt  = foo_start_grnha_oflt    * (1-grn_senesce_startfoo_ft[:,np.newaxis,:])   \
+                              + pgr_grnha_goflt[0,...] * (1- grn_senesce_pgrcons_ft[:,np.newaxis,:])
+    ### foo at end of period with range of grazing intensity prior to eos senescence
+    foo_endprior_grnha_goflt = foo_ungrazed_grnha_oflt \
+                               - (foo_ungrazed_grnha_oflt
+                                  -           i_base_ft[:,np.newaxis,:]) \
+                               * i_foo_graze_propn_gt[:, np.newaxis, np.newaxis, np.newaxis, :]
     foo_end_grnha_goflt = foo_endprior_grnha_goflt * (1-i_grn_senesce_eos_ft[:,np.newaxis,:])
     foo_end_grnha_rav_goflt = foo_end_grnha_goflt.ravel()
     params['p_foo_end_grnha_goflt'] = dict( zip(index_goflt ,foo_end_grnha_rav_goflt))
@@ -693,7 +699,7 @@ def green_and_dry(params):
     ### convert monthly decline to daily decline
     grn_dmd_declinefoo_ft           = i_grn_dmd_declinefoo_ft / 30.5
     ### change in sward average digestibility due to increasing foo
-    grn_dmd_fooadj_oflt             = ((1 - grn_dmd_declinefoo_ft[:,np.newaxis,:])   \
+    grn_dmd_fooadj_oflt             = ((1 - grn_dmd_declinefoo_ft[:,np.newaxis,:])
                                          **     foo_days_grnha_oflt) - 1
     ### change in digestibility associated with diet selection (altered by level of grazing)
     grn_dmd_range_oflt              = i_grn_dmd_range_ft[:, np.newaxis, :] - grn_dmd_fooadj_oflt * 2   # Sward ave DMD reduction (due to deferment) increases the range
@@ -784,8 +790,8 @@ def green_and_dry(params):
     ## senescence from green to dry
     ### green, total senescence
     senesce_total_grnha_goflt   = foo_start_grnha_oflt    \
-                                 +        pgr_grnha_goflt   \
-                                 -    removal_grnha_goflt   \
+                                 +      pgr_grnha_goflt   \
+                                 -  removal_grnha_goflt   \
                                  -  foo_end_grnha_goflt
     grn_dmd_senesce_goflt       =               dmd_grnha_goflt       \
                                  - i_grn_dmd_senesce_redn_ft[:,np.newaxis,:]
@@ -794,7 +800,7 @@ def green_and_dry(params):
                                   /(    dry_dmd_high_ft[:,np.newaxis,:]
                                     -    dry_dmd_low_ft[:,np.newaxis,:])
     senesce_propn_dgoflt[0,...] = 1- senesce_propn_dgoflt[1,...]              # senescence to low pool
-    senesce_grnha_dgoflt      = senesce_total_grnha_goflt *      senesce_propn_dgoflt                                   # ^alternative in one array parameters for the growth/grazing activities: quantity of green that senesces to the high pool
+    senesce_grnha_dgoflt      = senesce_total_grnha_goflt * senesce_propn_dgoflt                                   # ^alternative in one array parameters for the growth/grazing activities: quantity of green that senesces to the high pool
     senesce_grnha_rav_dgoflt = senesce_grnha_dgoflt.ravel()
     params['p_senesce_grnha_dgoflt'] = dict( zip(index_dgoflt ,senesce_grnha_rav_dgoflt))
 
