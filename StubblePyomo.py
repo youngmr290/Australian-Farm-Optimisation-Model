@@ -30,7 +30,6 @@ def stubpyomo_local(params):
     model.p_harv_prop = pe.Param(model.s_feed_periods, model.s_crops, initialize=params['cons_prop'], default = 0.0, doc='proportion of the way through each fp harvest occurs (0 if harv doesnt occur in given period)')
     
     try:
-        model.del_component(model.p_stub_md_index_index_0)
         model.del_component(model.p_stub_md_index)
         model.del_component(model.p_stub_md)
     except AttributeError:
@@ -39,7 +38,6 @@ def stubpyomo_local(params):
     
     #^this param has inf values - this may cause a problem, if it does do a replace in the stubble sheet line 151
     try:
-        model.del_component(model.p_stub_vol_index_index_0)
         model.del_component(model.p_stub_vol_index)
         model.del_component(model.p_stub_vol)
     except AttributeError:
@@ -47,7 +45,6 @@ def stubpyomo_local(params):
     model.p_stub_vol = pe.Param(model.s_feed_periods, model.s_stub_cat, model.s_crops, initialize=params['vol'], default = 0.0, doc='amount of intake volume required by 1t of each stubble category for each crop')
     
     try:
-        model.del_component(model.p_a_req_index_index_0)
         model.del_component(model.p_a_req_index)
         model.del_component(model.p_a_req)
     except AttributeError:
@@ -81,7 +78,6 @@ def stubpyomo_local(params):
     ###################
     ##stubble transter from category to category and period to period
     try:
-        model.del_component(model.con_stubble_bcd_index_index_0)
         model.del_component(model.con_stubble_bcd_index)
         model.del_component(model.con_stubble_bcd)
     except AttributeError:

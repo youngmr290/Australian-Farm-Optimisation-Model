@@ -44,7 +44,6 @@ def croppyomo_local(params):
     try:
         model.del_component(model.p_rotation_cost)
         model.del_component(model.p_rotation_cost_index)
-        model.del_component(model.p_rotation_cost_index_index_0)
     except AttributeError:
         pass
     model.p_rotation_cost = Param(model.s_phases,model.s_lmus,model.s_cashflow_periods, initialize=params['rot_cost'], default=0, doc='total cost for 1 unit of rotation')
@@ -52,7 +51,6 @@ def croppyomo_local(params):
     try:
         model.del_component(model.p_rotation_yield)
         model.del_component(model.p_rotation_yield_index)
-        model.del_component(model.p_rotation_yield_index_index_0)
     except AttributeError:
         pass
     model.p_rotation_yield = Param(model.s_phases, model.s_crops, model.s_lmus, initialize=params['rot_yield'], default = 0.0, doc='grain production for all crops for 1 unit of rotation')
@@ -67,7 +65,6 @@ def croppyomo_local(params):
     try:
         model.del_component(model.p_grain_price)
         model.del_component(model.p_grain_price_index)
-        model.del_component(model.p_grain_price_index_index_0)
     except AttributeError:
         pass
     model.p_grain_price = Param(model.s_crops, model.s_cashflow_periods, model.s_grain_pools, initialize=params['grain_price'],default = 0.0, doc='farm gate price per tonne of each grain')
@@ -80,7 +77,6 @@ def croppyomo_local(params):
     model.p_rot_stubble = Param(model.s_crops, model.s_stub_cat, initialize=params['stubble_production'], default = 0.0, doc='stubble category A produced / kg grain harvested')
     
     try:
-        model.del_component(model.p_cropsow_index_index_0)
         model.del_component(model.p_cropsow_index)
         model.del_component(model.p_cropsow)
     except AttributeError:
@@ -88,7 +84,6 @@ def croppyomo_local(params):
     model.p_cropsow = Param(model.s_phases, model.s_crops, model.s_lmus, initialize=params['crop_sow'], default = 0.0, doc='ha of sow activity required by each rot phase')
     
     try:
-        model.del_component(model.p_phasefert_index_index_0)
         model.del_component(model.p_phasefert_index)
         model.del_component(model.p_phasefert)
     except AttributeError:
@@ -171,7 +166,7 @@ def rot_stubble(model,k,s):
 
 
 
-# ########
+      ######
     # # Area #
     # ########
     # #area of rotation on a given soil can't be more than the amount on that soil available on farm

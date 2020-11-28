@@ -182,7 +182,6 @@ def machpyomo_local(params):
     
     ##link sow supply to crop and pas variable - this has to be done because crop is not by period and pasture is
     try:
-        model.del_component(model.con_sow_supply_index_index_0)
         model.del_component(model.con_sow_supply_index)
         model.del_component(model.con_sow_supply)
     except AttributeError:

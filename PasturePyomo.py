@@ -10,7 +10,7 @@ from pyomo import environ as pe
 #MUDAS modules
 from CreateModel import model
 import Pasture as pas
-import UniversalInputs as uinp
+# import UniversalInputs as uinp
 
 
 def paspyomo_precalcs(params,report):
@@ -27,8 +27,6 @@ def paspyomo_local(params):
     #####################################################################################################################################################################################################
     #####################################################################################################################################################################################################
     try:
-        model.del_component(model.p_germination_index_index_0_index_0)
-        model.del_component(model.p_germination_index_index_0)
         model.del_component(model.p_germination_index)
         model.del_component(model.p_germination)
     except AttributeError:
@@ -36,8 +34,6 @@ def paspyomo_local(params):
     model.p_germination = pe.Param(model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=params['p_germination_flrt'], default=0, doc='pasture germination for each rotation')
     
     try:
-        model.del_component(model.p_foo_grn_reseeding_index_index_0_index_0)
-        model.del_component(model.p_foo_grn_reseeding_index_index_0)
         model.del_component(model.p_foo_grn_reseeding_index)
         model.del_component(model.p_foo_grn_reseeding)
     except AttributeError:
@@ -45,9 +41,6 @@ def paspyomo_local(params):
     model.p_foo_grn_reseeding = pe.Param(model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=params['p_foo_grn_reseeding_flrt'], default=0, doc='Change in grn FOO due to destocking and seeding of pastures')
     
     try:
-        model.del_component(model.p_foo_dry_reseeding_index_index_0_index_0_index_0)
-        model.del_component(model.p_foo_dry_reseeding_index_index_0_index_0)
-        model.del_component(model.p_foo_dry_reseeding_index_index_0)
         model.del_component(model.p_foo_dry_reseeding_index)
         model.del_component(model.p_foo_dry_reseeding)
     except AttributeError:
@@ -55,9 +48,6 @@ def paspyomo_local(params):
     model.p_foo_dry_reseeding = pe.Param(model.s_dry_groups, model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=params['p_foo_dry_reseeding_dflrt'], default=0, doc='Change in dry FOO due to destocking and seeding of pastures')
     
     try:
-        model.del_component(model.p_foo_end_grnha_index_index_0_index_0_index_0)
-        model.del_component(model.p_foo_end_grnha_index_index_0_index_0)
-        model.del_component(model.p_foo_end_grnha_index_index_0)
         model.del_component(model.p_foo_end_grnha_index)
         model.del_component(model.p_foo_end_grnha)
     except AttributeError:
@@ -65,8 +55,6 @@ def paspyomo_local(params):
     model.p_foo_end_grnha = pe.Param(model.s_grazing_int, model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, initialize=params['p_foo_end_grnha_goflt'], default=0, doc='Green Foo at the end of the period')
     
     try:
-        model.del_component(model.p_foo_start_grnha_index_index_0_index_0)
-        model.del_component(model.p_foo_start_grnha_index_index_0)
         model.del_component(model.p_foo_start_grnha_index)
         model.del_component(model.p_foo_start_grnha)
     except AttributeError:
@@ -74,10 +62,6 @@ def paspyomo_local(params):
     model.p_foo_start_grnha = pe.Param(model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, initialize=params['p_foo_start_grnha_oflt'], default=0, doc='Green Foo at the start of the period')
     
     try:
-        model.del_component(model.p_senesce_grnha_index_index_0_index_0_index_0_index_0)
-        model.del_component(model.p_senesce_grnha_index_index_0_index_0_index_0)
-        model.del_component(model.p_senesce_grnha_index_index_0_index_0)
-        model.del_component(model.p_senesce_grnha_index_index_0)
         model.del_component(model.p_senesce_grnha_index)
         model.del_component(model.p_senesce_grnha)
     except AttributeError:
@@ -85,10 +69,6 @@ def paspyomo_local(params):
     model.p_senesce_grnha = pe.Param(model.s_dry_groups, model.s_grazing_int, model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, initialize=params['p_senesce_grnha_dgoflt'], default=0, doc='Green pasture senescence into high and low quality dry pasture pools')
     
     try:
-        model.del_component(model.p_me_cons_grnha_index_index_0_index_0_index_0_index_0)
-        model.del_component(model.p_me_cons_grnha_index_index_0_index_0_index_0)
-        model.del_component(model.p_me_cons_grnha_index_index_0_index_0)
-        model.del_component(model.p_me_cons_grnha_index_index_0)
         model.del_component(model.p_me_cons_grnha_index)
         model.del_component(model.p_me_cons_grnha)
     except AttributeError:
@@ -96,19 +76,13 @@ def paspyomo_local(params):
     model.p_me_cons_grnha = pe.Param(model.s_sheep_pools, model.s_grazing_int, model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, initialize=params['p_me_cons_grnha_vgoflt'], default=0, doc='Total ME from grazing a hectare')
     
     try:
-        model.del_component(model.p_volume_grnha_index_index_0_index_0_index_0_index_0)
-        model.del_component(model.p_volume_grnha_index_index_0_index_0_index_0)
-        model.del_component(model.p_volume_grnha_index_index_0_index_0)
-        model.del_component(model.p_volume_grnha_index_index_0)
         model.del_component(model.p_volume_grnha_index)
         model.del_component(model.p_volume_grnha)
     except AttributeError:
         pass
-    model.p_volume_grnha = pe.Param(model.s_sheep_pools, model.s_grazing_int, model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, initialize=params['p_volume_grnha_vgoflt'], default=0, doc='Total Vol from grazing a hectare')
+    model.p_volume_grnha = pe.Param(model.s_grazing_int, model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, initialize=params['p_volume_grnha_goflt'], default=0, doc='Total Vol from grazing a hectare')
     
     try:
-        model.del_component(model.p_dry_mecons_t_index_index_0_index_0)
-        model.del_component(model.p_dry_mecons_t_index_index_0)
         model.del_component(model.p_dry_mecons_t_index)
         model.del_component(model.p_dry_mecons_t)
     except AttributeError:
@@ -116,7 +90,6 @@ def paspyomo_local(params):
     model.p_dry_mecons_t = pe.Param(model.s_sheep_pools, model.s_dry_groups, model.s_feed_periods, model.s_pastures, initialize=params['p_dry_mecons_t_vdft'], default=0, doc='Total ME from grazing a tonne of dry feed')
     
     try:
-        model.del_component(model.p_dry_volume_t_index_index_0)
         model.del_component(model.p_dry_volume_t_index)
         model.del_component(model.p_dry_volume_t)
     except AttributeError:
@@ -124,7 +97,6 @@ def paspyomo_local(params):
     model.p_dry_volume_t = pe.Param(model.s_dry_groups, model.s_feed_periods, model.s_pastures, initialize=params['p_dry_volume_t_dft'], default=0, doc='Total Vol from grazing a tonne of dry feed')
     
     try:
-        model.del_component(model.p_dry_transfer_t_index_index_0)
         model.del_component(model.p_dry_transfer_t_index)
         model.del_component(model.p_dry_transfer_t)
     except AttributeError:
@@ -132,7 +104,6 @@ def paspyomo_local(params):
     model.p_dry_transfer_t = pe.Param(model.s_dry_groups, model.s_feed_periods, model.s_pastures, initialize=params['p_dry_transfer_t_dft'], default=0, doc='quantity of dry feed transfered out of the period to the next')
     
     try:
-        model.del_component(model.p_dry_removal_t_index_index_0)
         model.del_component(model.p_dry_removal_t_index)
         model.del_component(model.p_dry_removal_t)
     except AttributeError:
@@ -140,9 +111,6 @@ def paspyomo_local(params):
     model.p_dry_removal_t = pe.Param(model.s_dry_groups, model.s_feed_periods, model.s_pastures, initialize=params['p_dry_removal_t_dft'], default=0, doc='quantity of dry feed removed for sheep to consume 1t')
     
     try:
-        model.del_component(model.p_nap_index_index_0_index_0_index_0)  
-        model.del_component(model.p_nap_index_index_0_index_0)  
-        model.del_component(model.p_nap_index_index_0)
         model.del_component(model.p_nap_index)
         model.del_component(model.p_nap)
     except AttributeError:
@@ -156,8 +124,6 @@ def paspyomo_local(params):
     model.p_nap_prop = pe.Param(model.s_feed_periods, initialize=params['p_harvest_period_prop'], default=0, doc='proportion of the way through each period nap becomes available')
     
     try:
-        model.del_component(model.p_erosion_index_index_0_index_0)
-        model.del_component(model.p_erosion_index_index_0)
         model.del_component(model.p_erosion_index)
         model.del_component(model.p_erosion)
     except AttributeError:
@@ -165,8 +131,6 @@ def paspyomo_local(params):
     model.p_erosion = pe.Param(model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=params['p_erosion_flrt'], default=0, doc='erosion limit in each period')
     
     try:
-        model.del_component(model.p_phase_area_index_index_0_index_0)  
-        model.del_component(model.p_phase_area_index_index_0)
         model.del_component(model.p_phase_area_index)
         model.del_component(model.p_phase_area)
     except AttributeError:
@@ -174,8 +138,6 @@ def paspyomo_local(params):
     model.p_phase_area = pe.Param(model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=params['p_phase_area_flrt'], default=0, doc='pasture area in each rotation for each feed period')
     
     try:
-        model.del_component(model.p_pas_sow_index_index_0_index_0)
-        model.del_component(model.p_pas_sow_index_index_0)
         model.del_component(model.p_pas_sow_index)
         model.del_component(model.p_pas_sow)
     except AttributeError:
@@ -208,7 +170,6 @@ def paspyomo_local(params):
     #####################################################################################################################################################################################################
     #####################################################################################################################################################################################################
     try:
-        model.del_component(model.con_greenpas_index_index_0)
         model.del_component(model.con_greenpas_index)
         model.del_component(model.con_greenpas)
     except AttributeError:
@@ -235,7 +196,6 @@ def paspyomo_local(params):
     # model.con_greenpas = pe.Constraint(model.s_feed_periods, model.s_lmus, model.s_pastures, rule = greenpas, doc='green pasture of each type available on each soil type in each feed period')
     #
     try:
-        model.del_component(model.con_drypas_index_index_0)
         model.del_component(model.con_drypas_index)
         model.del_component(model.con_drypas)
     except AttributeError:
@@ -248,7 +208,6 @@ def paspyomo_local(params):
     model.con_drypas = pe.Constraint(model.s_dry_groups, model.s_feed_periods, model.s_pastures, rule = drypas, doc='High and low quality dry pasture of each type available in each period')
     
     try:
-        model.del_component(model.con_nappas_index_index_0)
         model.del_component(model.con_nappas_index)
         model.del_component(model.con_nappas)
     except AttributeError:
@@ -261,7 +220,6 @@ def paspyomo_local(params):
     model.con_nappas = pe.Constraint(model.s_dry_groups, model.s_feed_periods, model.s_pastures, rule = nappas, doc='High and low quality dry pasture of each type available in each period')
     
     try:
-        model.del_component(model.con_pasarea_index_index_0)
         model.del_component(model.con_pasarea_index)
         model.del_component(model.con_pasarea)
     except AttributeError:
@@ -272,7 +230,6 @@ def paspyomo_local(params):
     model.con_pasarea = pe.Constraint(model.s_feed_periods, model.s_lmus, model.s_pastures, rule = pasarea, doc='Pasture area row for growth constraint of each type on each soil for each feed period (ha)')
     
     try:
-        model.del_component(model.con_erosion_index_index_0)
         model.del_component(model.con_erosion_index)
         model.del_component(model.con_erosion)
     except AttributeError:
@@ -325,7 +282,7 @@ def nappas_me(model,v,f):
 #Vol         #
 ##############
 def pas_vol(model,v,f):
-    return sum(sum(sum(model.v_greenpas_ha[v,g,o,f,l,t] * model.p_volume_grnha[v,g,o,f,l,t] for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus) \
+    return sum(sum(sum(model.v_greenpas_ha[v,g,o,f,l,t] * model.p_volume_grnha[g,o,f,l,t] for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus) \
                + sum(model.v_drypas_consumed[v,d,f,t] * model.p_dry_volume_t[d,f,t] \
                + model.v_nap_consumed[v,d,f,t] * model.p_dry_volume_t[d,f,t] for d in model.s_dry_groups) for t in model.s_pastures)\
                + model.v_poc[v,f,l] * model.p_poc_vol[f] for l in model.s_lmus )

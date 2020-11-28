@@ -725,9 +725,9 @@ def green_and_dry(params):
     me_cons_grnha_rav_vgoflt = me_cons_grnha_vgoflt.ravel()
     params['p_me_cons_grnha_vgoflt'] = dict( zip(index_vgoflt ,me_cons_grnha_rav_vgoflt))
 
-    volume_grnha_vgoflt    =  cons_grnha_t_goflt / grn_ri_goflt              # parameters for the growth/grazing activities: Total volume of feed consumed from the hectare
-    volume_grnha_rav_vgoflt = volume_grnha_vgoflt.ravel()
-    params['p_volume_grnha_vgoflt'] = dict(zip(index_vgoflt ,volume_grnha_rav_vgoflt))
+    volume_grnha_goflt    =  cons_grnha_t_goflt / grn_ri_goflt              # parameters for the growth/grazing activities: Total volume of feed consumed from the hectare
+    volume_grnha_rav_goflt = volume_grnha_goflt.ravel()
+    params['p_volume_grnha_goflt'] = dict(zip(index_goflt ,volume_grnha_rav_goflt))
 
     ## dry, dmd & foo of feed consumed
     dry_dmd_adj_ft  = np.max(i_dry_dmd_ave_ft,axis=0)    \

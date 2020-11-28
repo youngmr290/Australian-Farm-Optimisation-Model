@@ -158,7 +158,6 @@ def coremodel_all():
    
     ##links pasture sow req with mach sow provide
     try:
-        model.del_component(model.con_passow_index_index_0)
         model.del_component(model.con_passow_index)
         model.del_component(model.con_passow)
     except AttributeError:

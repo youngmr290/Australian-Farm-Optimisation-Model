@@ -26,7 +26,6 @@ def suppyomo_local(params):
     
     ##sup cost
     try:
-        model.del_component(model.p_sup_cost_index_index_0)
         model.del_component(model.p_sup_cost_index)
         model.del_component(model.p_sup_cost)
     except AttributeError:
@@ -51,7 +50,6 @@ def suppyomo_local(params):
     
     ##sup labour
     try:
-        model.del_component(model.p_sup_labour_index_index_0)
         model.del_component(model.p_sup_labour_index)
         model.del_component(model.p_sup_labour)
     except AttributeError:
@@ -74,7 +72,6 @@ def suppyomo_local(params):
     
     ##price buy grain
     try:
-        model.del_component(model.p_buy_grain_price_index_index_0)
         model.del_component(model.p_buy_grain_price_index)
         model.del_component(model.p_buy_grain_price)
     except AttributeError:

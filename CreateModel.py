@@ -44,6 +44,10 @@ def sets() :
     #seasons              #
     #######################
     ##season types - set only has one season if steady state model is being used
+    try:
+        model.del_component(model.s_season_types)
+    except AttributeError:
+        pass
     if pinp.general['steady_state']:
         model.s_season_types = Set(initialize=['season 1'], doc='season types')
     else:    
