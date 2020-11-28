@@ -622,7 +622,7 @@ def stockpyomo_local(params):
     model.con_damR = pe.Constraint(model.s_k2_birth_dams, model.s_dvp_dams, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gen_merit_dams,
                                    model.s_groups_dams, model.s_lw_dams, rule=damR, doc='transfer dam to dam from last dvp to current dvp.')
     end=time.time()
-    print('method 3: ',end-start)
+    print('con_damR method 3: ',end-start)
 
 
     try:
@@ -649,7 +649,7 @@ def stockpyomo_local(params):
     model.con_offR = pe.Constraint(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_dvp_offs, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gender,
                                    model.s_gen_merit_dams, model.s_groups_offs, model.s_lw_offs, rule=offR, doc='transfer off to off from last dvp to current dvp.')
     end=time.time()
-    print('method 3: ',end-start)
+    print('con_offR method 3: ',end-start)
 
 
     try:
@@ -713,7 +713,7 @@ def stockpyomo_local(params):
                                    model.s_tol, model.s_gender, model.s_gen_merit_dams, model.s_groups_offs, model.s_lw_dams, rule=prog2offsR,
                                    doc='transfer prog to off in dvp 0.')
     end = time.time()
-    print(end-start)
+    print('con_prog2offR ',end-start)
 
 
 

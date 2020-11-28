@@ -3736,7 +3736,7 @@ def generator(params,report):
     #lw distribution #
     ##################
     lwdist_start = time.time()
-    ##offs are distributed each period dams only distributed when next dvp type == 0. T0 and t1 are always distributed however this is not used because t0 and t1 dont transfer to next dvp
+    ##offs are distributed each period dams only distributed when next dvp type == 0. T0 and t1 are distributed however this is not used because t0 and t1 dont transfer to next dvp
     distribution_tva1e1b1nw8zida0e0b0xyg1w9 = sfun.f_lw_distribution(ffcfw_end_condensed_va1e1b1nwzida0e0b0xyg1, ffcfw_end_tva1e1b1nwzida0e0b0xyg1, uinp.structure['i_n1_len'], uinp.structure['i_n_fvp_period1'], dvp_type_next_tva1e1b1nwzida0e0b0xyg1[...,na])
     distribution_va1e1b1nw8zida0e0b0xyg3w9 = sfun.f_lw_distribution(ffcfw_end_condensed_va1e1b1nwzida0e0b0xyg3, ffcfw_end_va1e1b1nwzida0e0b0xyg3, uinp.structure['i_n3_len'], uinp.structure['i_n_fvp_period3'])
 

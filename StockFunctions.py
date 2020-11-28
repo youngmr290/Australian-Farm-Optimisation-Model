@@ -1836,7 +1836,12 @@ def f_lw_distribution(ffcfw_condensed_va1e1b1nwzida0e0b0xyg, ffcfw_va1e1b1nwzida
     ##Calculate the difference between the 3 (or more if not dvp0) condensed weights and the middle weight (slice 0)
     diff = ffcfw_condensed_va1e1b1nwzida0e0b0xygw - f_dynamic_slice(ffcfw_condensed_va1e1b1nwzida0e0b0xygw, -1, 0, 1)
     ##Calculate the spread that would generate the average weight
-    spread =  1 - fun.f_divide((ffcfw_condensed_va1e1b1nwzida0e0b0xygw - ffcfw_va1e1b1nwzida0e0b0xyg[..., na]), diff, dtype=diff.dtype)
+    # spread =  1 - fun.f_divide((ffcfw_condensed_va1e1b1nwzida0e0b0xygw - ffcfw_va1e1b1nwzida0e0b0xyg[..., na]), diff, dtype=diff.dtype)
+    spread =  fun.f_divide((diff - (ffcfw_condensed_va1e1b1nwzida0e0b0xygw - ffcfw_va1e1b1nwzida0e0b0xyg[..., na])), diff, dtype=diff.dtype)
+    ## select the minimum value that is greater than 0, make others 0
+    temporary = np.copy(spread)
+    temporary[spread <= 0] = np.inf
+    spread = spread * (spread == np.min(temporary, axis=-1, keepdims = True))
     ##Bound the spread
     spread_bounded = np.clip(spread, 0, 1)
     ##Set values for the standard pattern to be the remainder from the closest. (consolidated w axis)
