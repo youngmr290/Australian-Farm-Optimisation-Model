@@ -183,11 +183,11 @@ structure['cashflow_periods']=['JF$FLOW','MA$FLOW','MJ$FLOW','JA$FLOW','SO$FLOW'
 ###############
 # pasture     #
 ###############
-##define which pastures are to be included
-structure['pastures'] = ['annual'] # ,'lucerne','tedera']
-structure['dry_groups'] = ['L', 'H']                       # Low & high quality groups for dry feed
-structure['grazing_int'] =  ['0%', '25%', '75%', '100%']   # grazing intensity in the growth/grazing activities
-structure['foo_levels'] =  ['L', 'M', 'H']                 # Low, medium & high FOO level in the growth/grazing activities
+##sets as well as define the pastures to include
+structure['pastures'] = ['annual'] # ,'lucerne','tedera']    #define which pastures are to be included
+structure['dry_groups'] = ['Dry-L', 'Dry-H']                       # Low & high quality groups for dry feed
+structure['grazing_int'] =  ['Graz 0', 'Graz 25', 'Graz 75', 'Graz 100']   # grazing intensity in the growth/grazing activities
+structure['foo_levels'] =  ['Foo L', 'Foo M', 'Foo H']                 # Low, medium & high FOO level in the growth/grazing activities
 
 #######
 #sheep#
@@ -212,7 +212,7 @@ structure['prejoin_offset'] = 8
 structure['i_feedsupply_itn_max'] = 10
 
 ##pools
-structure['sheep_pools']=['pool1', 'pool2', 'pool3', 'pool4'] #nutrition pools
+structure['sheep_pools']=['pool0', 'pool1', 'pool2', 'pool3'] #nutrition pools
 ## DSE group and LSLN (b1)
 structure['i_mask_b0_b1'] = np.array([False, False, True,	True,	True,	True,	True,	True,	False,	False,	False])
 structure['i_mated_b1'] = np.array([False, True, True,	True,	True,	True,	True,	True,	True,	True,	True])
