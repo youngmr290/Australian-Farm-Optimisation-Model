@@ -310,7 +310,7 @@ def main():
     dataset = list(np.flatnonzero(np.array(exp_data.index.get_level_values(0)) * np.array(exp_data1['run']))) #gets the ordinal index values for the trials the user wants to run that are not upto date
     ##prints out start status - number of trials to run, date and time exp.xl was last saved and output summary  
     print('Number of trials to run: ',len(dataset))
-    print('Number of full solutions: ',sum(exp_data.index[row][1] == True for row in range(len(exp_data))))
+    print('Number of full solutions: ',sum((exp_data.index[row][1] == True) and (exp_data.index[row][0] == True) for row in range(len(exp_data))))
     print('Exp.xlsx last saved: ',datetime.fromtimestamp(round(os.path.getmtime("Exp.xlsx"))))
     ##start multiprocessing
     agents = min(multiprocessing.cpu_count(),len(dataset)) # number of agents (processes) should be min of the num of cpus or trial
