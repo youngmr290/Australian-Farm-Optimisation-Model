@@ -249,6 +249,12 @@ def generator(params,report):
     r_intake_f_dams = np.zeros(pg1, dtype = 'float32')
     r_md_solid_dams = np.zeros(pg1, dtype = 'float32')
     r_mp2_dams = np.zeros(pg1, dtype = 'float32')
+    r_mp2_dams = np.zeros(pg1, dtype = 'float32')
+    r_mp2_yatf = np.zeros(pg1, dtype = 'float32')
+
+    ### temporary variables required while debugging
+    t_ldr_dams = np.zeros(pg1, dtype = 'float32')
+    t_lb_dams = np.zeros(pg1, dtype = 'float32')
 
     r_age_start_yatf = np.zeros(pg2, dtype = 'float32')
     r_age_start_offs = np.zeros(pg3, dtype = 'float32')
@@ -1842,7 +1848,7 @@ def generator(params,report):
                 ###sire
                 eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                    temp0 = sfun.f_potential_intake_cs(ci_sire, srw_xyg0, relsize_start_sire, rc_start_sire, temp_lc_sire, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
+                    temp0 = sfun.f_potential_intake_cs(ci_sire, cl_sire, srw_xyg0, relsize_start_sire, rc_start_sire, temp_lc_sire, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                        , temp_min_pa1e1b1nwzida0e0b0xyg[p], rain_intake_pa1e1b1nwzida0e0b0xyg0[p])
                     if eqn_used:
                         pi_sire = temp0
@@ -1851,7 +1857,7 @@ def generator(params,report):
                 ###dams
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    temp0 = sfun.f_potential_intake_cs(ci_dams, srw_xyg1, relsize_start_dams, rc_start_dams, temp_lc_dams, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
+                    temp0 = sfun.f_potential_intake_cs(ci_dams, cl_dams, srw_xyg1, relsize_start_dams, rc_start_dams, temp_lc_dams, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                       , temp_min_pa1e1b1nwzida0e0b0xyg[p], rain_intake_pa1e1b1nwzida0e0b0xyg1[p], rc_birth_start = rc_birth_dams, pi_age_y = pi_age_y_pa1e1b1nwzida0e0b0xyg1[p]
                                                       , lb_start = lb_start_dams)
                     if eqn_used:
@@ -1861,7 +1867,7 @@ def generator(params,report):
                 ###offs
                 eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                    temp0 = sfun.f_potential_intake_cs(ci_offs, srw_xyg3, relsize_start_offs, rc_start_offs, temp_lc_offs, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
+                    temp0 = sfun.f_potential_intake_cs(ci_offs, cl_offs, srw_xyg3, relsize_start_offs, rc_start_offs, temp_lc_offs, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
                                                         , temp_min_pa1e1b1nwzida0e0b0xyg[p], rain_intake_pa1e1b1nwzida0e0b0xyg3[p])
                     if eqn_used:
                         pi_offs = temp0
@@ -2070,7 +2076,7 @@ def generator(params,report):
 
 
             ##milk production
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
+            if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):         #^ changing to g2 might save time
                 ###Expected ffcfw of yatf with m1 axis - each period
                 ffcfw_exp_a1e1b1nwzida0e0b0xyg2m1 = (ffcfw_start_yatf[..., na] + (index_m1 * cn_yatf[7, ...][...,na])) * (
                             index_m1 < days_period_pa1e1b1nwzida0e0b0xyg2[...,na][p])
@@ -2082,7 +2088,6 @@ def generator(params,report):
                         , lb_start_dams, ldr_start_dams, age_pa1e1b1nwzida0e0b0xyg2[p], mp_age_y_pa1e1b1nwzida0e0b0xyg1[p], mp2_age_y_pa1e1b1nwzida0e0b0xyg1[p]
                         , uinp.parameters['i_x_pos'], days_period_pa1e1b1nwzida0e0b0xyg2[p], kl_dams, lact_nut_effect_pa1e1b1nwzida0e0b0xyg1[p])
                 mp2_yatf = fun.f_divide(mp2_dams , nyatf_b1nwzida0e0b0xyg) # 0 if given slice of b1 axis has no yatf
-
 
             ##wool production
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
@@ -2282,8 +2287,8 @@ def generator(params,report):
         if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
             eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
             if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                temp0 = sfun.f_potential_intake_cs(ci_yatf, srw_xyg2, relsize_start_yatf, rc_start_yatf, temp_lc_yatf, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
-                                                   , temp_min_pa1e1b1nwzida0e0b0xyg[p], rain_intake_pa1e1b1nwzida0e0b0xyg2[p]
+                temp0 = sfun.f_potential_intake_cs(ci_yatf, cl_yatf, srw_xyg2, relsize_start_yatf, rc_start_yatf, temp_lc_yatf, temp_ave_pa1e1b1nwzida0e0b0xyg[p]
+                                                   , temp_max_pa1e1b1nwzida0e0b0xyg[p], temp_min_pa1e1b1nwzida0e0b0xyg[p], rain_intake_pa1e1b1nwzida0e0b0xyg2[p]
                                                    , mp2 = mp2_yatf, piyf = piyf_pa1e1b1nwzida0e0b0xyg2[p], period_between_birthwean = period_between_birthwean_pa1e1b1nwzida0e0b0xyg1[p])
                 if eqn_used:
                     pi_yatf = temp0
@@ -2781,6 +2786,9 @@ def generator(params,report):
             r_evg_dams[p] = evg_dams
             r_mp2_dams[p] = mp2_dams
 
+            t_ldr_dams[p] = ldr_dams
+            t_lb_dams[p] = lb_dams
+
         ###yatf
         o_ffcfw_start_yatf[p] = ffcfw_start_yatf #use ffcfw_start because weaning start of period, has to be outside of the 'if' because days per period = 0 when weaning occurs becasue weaning is first day of period. But we need to know the start ffcfw.
         o_numbers_start_yatf[p] = numbers_start_yatf #used for npw calculation - use numbers start because weaning is start of period - has to be out of the 'if' because there is 0 days in the peirod when weaning occurs but we still want to store the start weight
@@ -2801,6 +2809,7 @@ def generator(params,report):
             ###store report variables - individual variables can be deleted if not needed
             r_ebg_yatf[p] = ebg_yatf
             r_evg_yatf[p] = evg_yatf
+            r_mp2_yatf[p] = mp2_yatf
 
     ###offs
         try:

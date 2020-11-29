@@ -641,7 +641,7 @@ def roll_slices(array, roll, roll_axis=0):
 
 
 
-def f_potential_intake_cs(ci, srw, relsize_start, rc_start, temp_lc_dams, temp_ave, temp_max, temp_min, rain_intake, rc_birth_start = 1, pi_age_y = 0, lb_start = 0, mp2=0,piyf=1,period_between_birthwean=1):
+def f_potential_intake_cs(ci, cl, srw, relsize_start, rc_start, temp_lc_dams, temp_ave, temp_max, temp_min, rain_intake, rc_birth_start = 1, pi_age_y = 0, lb_start = 0, mp2=0,piyf=1,period_between_birthwean=1):
     ##Condition factor on PI
     picf= np.minimum(1, rc_start * (ci[20, ...] - rc_start) / (ci[20, ...] - 1))
     ##Lactation adjustment (BC at parturition) - dam only because lb start = 0 for everything except lb
@@ -661,7 +661,7 @@ def f_potential_intake_cs(ci, srw, relsize_start, rc_start, temp_lc_dams, temp_a
     ##Potential intake
     pi = ci[1, ...] * srw * relsize_start * (ci[2, ...] - relsize_start) * picf * pitf * pilf
     ##Potential intake of pasture - young at foot only
-    pi = (pi - mp2) * piyf
+    pi = (pi - mp2 / cl[6, ...]) * piyf
     ##Potential intake of pasture - young at foot only
     pi = pi * period_between_birthwean
     return np.maximum(0,pi)
@@ -855,7 +855,7 @@ def f_milk(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_start,
     ##Max milk prodn based on dam CS birth	
     mpmax = srw** 0.75 * relsize_start * rc_birth_start * lb_start * mp_age_y
     ##Excess ME available for milk	
-    mel_xs = (mei - (meme + mew_min * relsize_start)) * cl[5, ...] * kl
+    mel_xs = np.maximum(0, (mei - (meme + mew_min * relsize_start))) * cl[5, ...] * kl
     ##Excess ME as a ratio of MPmax	
     milk_ratio = fun.f_divide(mel_xs, mpmax) #func stops div0 error - and milk ratio is later discarded because days period f = 0
     ##Age or energy factor
