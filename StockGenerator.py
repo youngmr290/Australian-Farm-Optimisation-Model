@@ -3263,7 +3263,8 @@ def generator(params,report):
     ###on hand
     #### t0 slice = True - this is handled by the inputs ie weight and date are high therefore not reached therefore on hand == true
     #### t1 & t2 slice date_p<sale_date and weight<target weight
-    on_hand_tpa1e1b1nwzida0e0b0xyg3 = np.logical_and(date_start_pa1e1b1nwzida0e0b0xyg3<sale_date_tpa1e1b1nwzida0e0b0xyg3, weight_pa1e1b1nwzida0e0b0xyg3<target_weight_tpa1e1b1nwzida0e0b0xyg3)
+    on_hand_tpa1e1b1nwzida0e0b0xyg3 = np.logical_and(date_start_pa1e1b1nwzida0e0b0xyg3<sale_date_tpa1e1b1nwzida0e0b0xyg3,
+                                                     weight_pa1e1b1nwzida0e0b0xyg3<target_weight_tpa1e1b1nwzida0e0b0xyg3)
     ###period is sale - one true per dvp when sale actually occurs - sale occurs in the period where sheep were on hand at the begining and not on hand at the begining of the next period
     period_is_sale_tpa1e1b1nwzida0e0b0xyg3 = np.logical_and(on_hand_tpa1e1b1nwzida0e0b0xyg3==True,np.roll(on_hand_tpa1e1b1nwzida0e0b0xyg3,-1,axis=1)==False)
 
@@ -3278,7 +3279,10 @@ def generator(params,report):
     ####period when shearing will occur - this is the min of the shearing offset or the periods since dvp start
     shearing_idx_tpa1e1b1nwzida0e0b0xyg3 = p_index_pa1e1b1nwzida0e0b0xyg3 - np.minimum(shearing_offset_tpa1e1b1nwzida0e0b0xyg3, periods_since_dvp)
     ###period is shearing is the sale array - offset
-    period_is_shearing_tpa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(period_is_sale_tpa1e1b1nwzida0e0b0xyg3,shearing_idx_tpa1e1b1nwzida0e0b0xyg3, 1)
+    shearing_idx_tpa1e1b1nwzida0e0b0xyg3 = period_is_sale_tpa1e1b1nwzida0e0b0xyg3*shearing_idx_tpa1e1b1nwzida0e0b0xyg3.astype(dtype)
+    shearing_idx_tpa1e1b1nwzida0e0b0xyg3[shearing_idx_tpa1e1b1nwzida0e0b0xyg3==0] = np.inf #dont want 0 effecting minimum in next line
+    shearing_idx_tpa1e1b1nwzida0e0b0xyg3= np.flip(np.minimum.accumulate(np.flip(shearing_idx_tpa1e1b1nwzida0e0b0xyg3,1),axis=1),1)
+    period_is_shearing_tpa1e1b1nwzida0e0b0xyg3 = p_index_pa1e1b1nwzida0e0b0xyg3 == shearing_idx_tpa1e1b1nwzida0e0b0xyg3
     ###make slice t0 the shear dates for retained offs
     period_is_shearing_retained_pa1e1b1nwzida0e0b0xyg3 = sfun.f_period_is_('period_is', date_shear_pa1e1b1nwzida0e0b0xyg3, date_start_pa1e1b1nwzida0e0b0xyg3, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3)
     period_is_shearing_tpa1e1b1nwzida0e0b0xyg3[0,...] = period_is_shearing_retained_pa1e1b1nwzida0e0b0xyg3
