@@ -673,8 +673,8 @@ def stockpyomo_local(params):
     print('con_progR ',end-start)
 
     try:
-        model.del_component(model.con_prog2damR_index)
-        model.del_component(model.con_prog2damR)
+        model.del_component(model.con_prog2damsR_index)
+        model.del_component(model.con_prog2damsR)
     except AttributeError:
         pass
     def prog2damR(model, k3, k5, v1, a, z, i, y1, g9, w9):
@@ -688,11 +688,11 @@ def stockpyomo_local(params):
         else:
             return pe.Constraint.Skip
     start = time.time()
-    model.con_prog2damR = pe.Constraint(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_dvp_dams, model.s_wean_times, model.s_season_types,
+    model.con_prog2damsR = pe.Constraint(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_dvp_dams, model.s_wean_times, model.s_season_types,
                                    model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_dams, rule=prog2damR,
                                    doc='transfer prog to dams in dvp 0.')
     end = time.time()
-    print('con_prog2damR ',end-start)
+    print('con_prog2damsR ',end-start)
 
     try:
         model.del_component(model.con_prog2offsR_index)
