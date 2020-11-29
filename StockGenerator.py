@@ -1619,7 +1619,7 @@ def generator(params,report):
     omer_history_start_m3g2[...] = np.nan
     d_cfw_history_start_m2g2[...] = np.nan
     nw_start_yatf = 0.0
-    ffcfw_start_yatf = w_b_std_y_b1nwzida0e0b0xyg1
+    ffcfw_start_yatf = w_b_std_y_b1nwzida0e0b0xyg1 #this is just an estimate it is updated with the real weight at birth - needed to calc milk production the first time (milk prod is calculated before yatf birth)
     ffcfw_max_start_yatf = ffcfw_start_yatf
     mortality_birth_yatf=0.0 #required for dam numbers before progeny born
     cfw_start_yatf = 0.0
@@ -1664,15 +1664,17 @@ def generator(params,report):
     ## Loop through each week of the simulation (p) for ewes
     #for p in range(120): # to pick up yatf being weaned in p[94]
     for p in range(n_sim_periods-1):   #-1 because error at 351
-        # print(p)
-        # if np.any(period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]):
-        #     print("period is lactation: ", period_is_birth_pa1e1b1nwzida0e0b0xyg1[p])
-        # if np.any(period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]):
-        #     print("period is gest: ", period_is_mating_pa1e1b1nwzida0e0b0xyg1[p])
-        # if np.any(period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1[p]):
-        #     print("period is fvp0 dams: ", period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1[p])
-        # if np.any(period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1[p]):
-        #     print("period is fvp0 offs: ", period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1[p])
+        print(p)
+        if np.any(period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]):
+            print("period is lactation: ", period_is_birth_pa1e1b1nwzida0e0b0xyg1[p])
+        if np.any(period_is_wean_pa1e1b1nwzida0e0b0xyg1[p]):
+            print("period is weaning: ", period_is_wean_pa1e1b1nwzida0e0b0xyg1[p])
+        if np.any(period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]):
+            print("period is gest: ", period_is_mating_pa1e1b1nwzida0e0b0xyg1[p])
+        if np.any(period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1[p]):
+            print("period is fvp0 dams: ", period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1[p])
+        if np.any(period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1[p]):
+            print("period is fvp0 offs: ", period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1[p])
 
 
 

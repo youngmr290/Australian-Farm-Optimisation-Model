@@ -416,7 +416,7 @@ def findDiff(d1, d2):
                     # print(k,a)
                 else:
                     try: #have to try both ways because sometimes param is array and other times it is scalar
-                        if any(d1[k] != d2[k]): #if keys are the same, check if the values are the same
+                        if np.any(d1[k] != d2[k]): #if keys are the same, check if the values are the same
                             # print('DIFFERENT',k)
                             a=True
                             return a #only return if true
