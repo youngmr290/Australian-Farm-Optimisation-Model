@@ -70,7 +70,7 @@ labour periods and length
 #also used in mach sheet
 def wet_seeding_start_date():
     #wet seeding starts a specified number of days after season break
-    return pinp.feed_inputs['feed_periods'].loc[0,'date'] +  datetime.timedelta(days = pinp.crop['seeding_after_season_start'])
+    return pinp.feed_inputs['feed_periods'].loc['FP0','date'] +  datetime.timedelta(days = pinp.crop['seeding_after_season_start'])
 
 
 #this function requires start date and length of each period (as a list) and spits out the start dates of each period
@@ -101,7 +101,7 @@ def p_dates_df():
     #create empty list of dates to be filled by this function
     period_start_dates = []
     #determine the start of the first period, this references feed periods so it has the same yr.
-    start_date_period_1 = pinp.feed_inputs['feed_periods'].loc[1,'date'] + relativedelta(day=1,month=1)
+    start_date_period_1 = pinp.feed_inputs['feed_periods'].loc['FP0','date'] + relativedelta(day=1,month=1)
     #end date of all labour periods, simply one yr after start date.
     date_last_period = start_date_period_1 + relativedelta(years=1)
     #start point for the loop counter.

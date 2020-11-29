@@ -59,7 +59,7 @@ i_feed_period_dates   = list(pinp.feed_inputs['feed_periods']['date'])
 t_list = [*range(n_pasture_types)]
 
 arable_l = np.array(pinp.crop['arable']).reshape(-1)
-length_f  = np.array(pinp.feed_inputs['feed_periods'].loc[:n_feed_periods-1,'length']) # converted to np. to get @jit working
+length_f  = np.array(pinp.feed_inputs['feed_periods'].loc[:pinp.feed_inputs['feed_periods'].index[-2],'length']) # not including last row becasue that is the start of the following year. converted to np. to get @jit working
 feed_period_dates_f = np.array(i_feed_period_dates,dtype='datetime64[D]')
 
 
@@ -150,7 +150,7 @@ pasture_rt                    = np.zeros(rt, dtype = 'float64')
 ### the array returned must be of type object, if string the dict keys become a numpy string and when indexed in pyomo it doesn't work.
 index_d                       = np.asarray(uinp.structure['dry_groups'])
 index_v                       = np.asarray(uinp.structure['sheep_pools'])
-index_f                       = np.asarray([*range(n_feed_periods)], dtype='object')
+index_f                       = np.asarray(pinp.feed_inputs['feed_periods'].index[:-1])
 index_g                       = np.asarray(uinp.structure['grazing_int'])
 index_l                       = pinp.general['lmu_area'].index.to_numpy() # lmu index description
 index_o                       = np.asarray(uinp.structure['foo_levels'])
@@ -628,8 +628,9 @@ def green_and_dry(params):
     grn_foo_start_ungrazed_flt , dry_foo_start_ungrazed_flt \
          = calc_foo_profile(germination_pass_flt, dry_decay_period_ft, length_f)   # ^ passing the consumption value in a numpy array in an attempt to get the function @jit compatible
     ### all pasture from na area into the Low pool (#1) because it is rank
-    harvest_period  = fun.period_allocation(pinp.feed_inputs['feed_periods']['date'], pinp.feed_inputs['feed_periods'].index, pinp.crop['harv_date'])
-    params['p_harvest_period_prop']  = dict([fun.period_proportion_np(pinp.feed_inputs['feed_periods']['date'], pinp.crop['harv_date'])])
+    harvest_period  = fun.period_allocation(pinp.feed_inputs['feed_periods']['date'], range(len(pinp.feed_inputs['feed_periods'])), pinp.crop['harv_date']) #use ragne(len()) to get the row number that harvest occurs has to be row number not index name becasue it is used to index numpy below
+    period, proportion = fun.period_proportion_np(pinp.feed_inputs['feed_periods']['date'], pinp.crop['harv_date'])
+    params['p_harvest_period_prop']  = dict([(pinp.feed_inputs['feed_periods'].index[period], proportion)])
     nap_dflrt[0,harvest_period,...,0] = dry_foo_start_ungrazed_flt[harvest_period,:,np.newaxis,0]  \
                                            * (1-arable_l.reshape(-1,1))  \
                                            * (1-np.sum(pasture_rt, axis=1))    # sum pasture proportion across the t axis to get area of crop

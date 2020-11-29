@@ -169,13 +169,14 @@ def paspyomo_local(params):
     ### Local constraints
     #####################################################################################################################################################################################################
     #####################################################################################################################################################################################################
+    l_fp = list(model.s_feed_periods)#have to convert to a list first beacuse indexing of an ordered set starts at 1
     try:
         model.del_component(model.con_greenpas_index)
         model.del_component(model.con_greenpas)
     except AttributeError:
         pass
     def greenpas(model,f,l,t):
-        fs = list(model.s_feed_periods)[f-1] #have to convert to a list first beacuse indexing of an ordered set starts at 1
+        fs = l_fp[l_fp.index(f) - 1] #need the activity level from last feed period
         return sum(model.v_phase_area[r,l] * (-model.p_germination[f,l,r,t] - model.p_foo_grn_reseeding[f,l,r,t]) for r in model.s_phases if model.p_germination[f,l,r,t]!=0 or model.p_foo_grn_reseeding[f,l,r,t]!=0)         \
                         + sum(model.v_greenpas_ha[v,g,o,f,l,t] * model.p_foo_start_grnha[o,f,l,t]   \
                         - model.v_greenpas_ha[v,g,o,fs,l,t] * model.p_foo_end_grnha[g,o,fs,l,t] for v in model.s_sheep_pools for g in model.s_grazing_int for o in model.s_foo_levels) <=0
@@ -187,7 +188,7 @@ def paspyomo_local(params):
     except AttributeError:
         pass
     def drypas(model,d,f,t):
-        fs = list(model.s_feed_periods)[f-1] #have to convert to a list first beacuse indexing of an ordered set starts at 1
+        fs = l_fp[l_fp.index(f) - 1] #need the activity level from last feed period
         return sum(sum(model.v_greenpas_ha[v,g,o,f,l,t] * -model.p_senesce_grnha[d,g,o,f,l,t] for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus)        \
                        + model.v_drypas_consumed[v,d,f,t] * model.p_dry_removal_t[d,f,t] for v in model.s_sheep_pools) \
                        - model.v_drypas_transfer[d,fs,t] * model.p_dry_transfer_t[d,fs,t] + model.v_drypas_transfer[d,f,t] * 1000 <=0 #minus 1000 is what you are transfering into constraint, p_dry_transfer is how much you get in the current period if you transferred 1t from previous period (not 1000 because you have to account for deterioration)
@@ -199,7 +200,7 @@ def paspyomo_local(params):
     except AttributeError:
         pass
     def nappas(model,d,f,t):
-        fs = list(model.s_feed_periods)[f-1] #have to convert to a list first beacuse indexing of an ordered set starts at 1
+        fs = l_fp[l_fp.index(f) - 1] #need the activity level from last feed period
         return sum(sum(sum(model.v_phase_area[r,l] * -model.p_nap[d,f,l,r,t] for r in model.s_phases if model.p_nap[d,f,l,r,t] != 0)for l in model.s_lmus)        \
                        + model.v_nap_consumed[v,d,f,t] * model.p_dry_removal_t[d,f,t] for v in model.s_sheep_pools) \
                        - model.v_nap_transfer[d,fs,t] * model.p_dry_transfer_t[d,fs,t] + model.v_drypas_transfer[d,f,t] * 1000 <=0 #minus 1000 is what you are transfering into constraint, p_dry_transfer is how much you get in the current period if you transferred 1t from previous period (not 1000 because you have to account for deterioration)

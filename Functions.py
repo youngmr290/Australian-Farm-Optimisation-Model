@@ -419,10 +419,11 @@ def findDiff(d1, d2):
                         if any(d1[k] != d2[k]): #if keys are the same, check if the values are the same
                             # print('DIFFERENT',k)
                             a=True
+                            return a #only return if true
                     except TypeError:
                         if d1[k] != d2[k]: #if keys are the same, check if the values are the same
                             a=True
-                    return a
+                            return a #only return if true
     return a
 
 

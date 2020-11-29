@@ -72,23 +72,23 @@ def stubble_all(params):
     ri_quality=pd.DataFrame(columns=pd.MultiIndex.from_product([pinp.stubble['harvest_index'].index,pinp.stubble['stub_cat_qual']]))
     ri_availability=pd.DataFrame(columns=pd.MultiIndex.from_product([pinp.stubble['harvest_index'].index,pinp.stubble['stub_cat_qual']]))
     vol=pd.DataFrame(columns=pd.MultiIndex.from_product([pinp.stubble['harvest_index'].index,pinp.stubble['stub_cat_qual']]))
-    cons_prop=pd.DataFrame()
+    cons_prop=pd.DataFrame(index=fp.index)
      #function will start here
     stubble_per_grain = crp.stubble_production() #produces dict with stubble production per kg of yield for each grain used in the ri.availability section
     
     for crop in pinp.stubble['harvest_index'].index:
         #add column that is days since harvest in each period (calced from the end date of the period)
         days_since_harv=[]
-        for period_num in fp.index:
+        for period_num in range(len(fp)):
             if period_num < len(fp)-1:  #because im using the end date of the period, hence the start of the next p, there is an issue for the last period in the df - the last period should ref the date of the first period
-                feed_period_date = fp.loc[period_num+1,'date']
+                feed_period_date = fp.loc['FP%s' %(period_num+1),'date']
                 harv_start = pinp.crop['start_harvest_crops'].loc[crop,'date']
                 if feed_period_date < harv_start:
                     days_since_harv.append(365 + (feed_period_date - harv_start).days) #add a yr because dates before harvest wont have access to stubble until next yr
                 else:  days_since_harv.append((feed_period_date - harv_start).days)
             else: 
-                period_num = fp.index[0]
-                feed_period_date = fp.loc[period_num,'date']
+                period = fp.index[0]
+                feed_period_date = fp.loc[period,'date']
                 harv_start = pinp.crop['start_harvest_crops'].loc[crop,'date']
                 if feed_period_date < harv_start:
                     days_since_harv.append(365 + (feed_period_date - harv_start).days) #add a yr because dates before harvest wont have access to stubble until next yr
@@ -96,28 +96,28 @@ def stubble_all(params):
         fp.loc[:,'days_%s' %crop]=days_since_harv
         #add the qualntity decline % for each period - used in transfer constraints, need to average the number of days in the period of interest
         quant_decline=[]
-        for period_num in fp.index:
+        for period_num in range(len(fp)):
                 if period_num == 0:
-                     if fp.loc[period_num,'date'] < harv_start < fp.loc[period_num+1,'date']:
-                         days=fp.loc[period_num,'days_%s' %crop]/2  #divid by two to get the average days on the period to work out average deterioration
-                     else: days=fp.loc[len(fp)-1,'days_%s' %crop]+(fp.loc[period_num,'days_%s' %crop]-fp.loc[len(fp)-1,'days_%s' %crop])/2#divid by two to get the average days on the period to work out average deterioration
-                elif fp.loc[period_num,'date'] < harv_start < fp.loc[period_num+1,'date']:
-                    days=fp.loc[period_num,'days_%s' %crop]/2  #divid by two to get the average days on the period to work out average deterioration
-                else: days=fp.loc[period_num-1,'days_%s' %crop]+(fp.loc[period_num,'days_%s' %crop]-fp.loc[period_num-1,'days_%s' %crop])/2
+                     if fp.loc['FP%s' %period_num,'date'] < harv_start < fp.loc['FP%s' %(period_num+1),'date']:
+                         days=fp.loc['FP%s' %period_num,'days_%s' %crop]/2  #divid by two to get the average days on the period to work out average deterioration
+                     else: days=fp.loc[fp.index[len(fp)-1],'days_%s' %crop]+(fp.loc['FP%s' %period_num,'days_%s' %crop]-fp.loc[fp.index[len(fp)-1],'days_%s' %crop])/2#divid by two to get the average days on the period to work out average deterioration
+                elif fp.loc['FP%s' %period_num,'date'] < harv_start < fp.loc['FP%s' %(period_num+1),'date']:
+                    days=fp.loc['FP%s' %period_num,'days_%s' %crop]/2  #divid by two to get the average days on the period to work out average deterioration
+                else: days=fp.loc['FP%s' %(period_num-1),'days_%s' %crop]+(fp.loc['FP%s' %period_num,'days_%s' %crop]-fp.loc['FP%s' %(period_num-1),'days_%s' %crop])/2
                 quant_decline.append(1-(1-pinp.stubble['quantity_deterioration'].loc[crop,'deterioration']/100)**days)
         fp.loc[:,'quant_decline_%s' %crop] = quant_decline
         #add dmd for each component in each period for each crop
         for component, dmd_harv in zip(pinp.stubble['component_dmd'],pinp.stubble['component_dmd'].loc[crop]):
             dmd_component=[]
             day=[]
-            for period_num in fp.index:
+            for period_num in range(len(fp)):
                 if period_num == 0:
-                      if fp.loc[period_num,'date'] < harv_start < fp.loc[period_num+1,'date']:
-                          days=fp.loc[period_num,'days_%s' %crop]/2  #divid by two to get the average days on the period to work out average deterioration
-                      else: days=fp.loc[len(fp)-1,'days_%s' %crop]+(fp.loc[period_num,'days_%s' %crop]-fp.loc[len(fp)-1,'days_%s' %crop])/2#divid by two to get the average days on the period to work out average deterioration
-                elif fp.loc[period_num,'date'] < harv_start < fp.loc[period_num+1,'date']:
-                    days=fp.loc[period_num,'days_%s' %crop]/2  #divid by two to get the average days on the period to work out average deterioration
-                else: days=fp.loc[period_num-1,'days_%s' %crop]+(fp.loc[period_num,'days_%s' %crop]-fp.loc[period_num-1,'days_%s' %crop])/2
+                      if fp.loc['FP%s' %period_num,'date'] < harv_start < fp.loc['FP%s' %(period_num+1),'date']:
+                          days=fp.loc['FP%s' %period_num,'days_%s' %crop]/2  #divid by two to get the average days on the period to work out average deterioration
+                      else: days=fp.loc[fp.index[len(fp)-1],'days_%s' %crop]+(fp.loc['FP%s' %period_num,'days_%s' %crop]-fp.loc[fp.index[len(fp)-1],'days_%s' %crop])/2#divid by two to get the average days on the period to work out average deterioration
+                elif fp.loc['FP%s' %period_num,'date'] < harv_start < fp.loc['FP%s' %(period_num+1),'date']:
+                    days=fp.loc['FP%s' %period_num,'days_%s' %crop]/2  #divid by two to get the average days on the period to work out average deterioration
+                else: days=fp.loc['FP%s' %(period_num-1),'days_%s' %crop]+(fp.loc['FP%s' %period_num,'days_%s' %crop]-fp.loc['FP%s' %(period_num-1),'days_%s' %crop])/2
                 day.append(days)
                 deterioration_factor = pinp.stubble['quality_deterioration'].loc[crop,component]
                 dmd_component.append((1-(deterioration_factor*days)/100)*dmd_harv)
@@ -199,10 +199,10 @@ def stubble_all(params):
         #how far through each period does harv start? note 0 for each period harv doesn't start in. Used to calc stub consumption limit in harv period
         #^could just use the period allocation function or period_proportion_np 
         prop=[]
-        for i in range(len(fp)):
-            if i == len(fp)-1:
-                prop.append(1-(fp.loc[i,'days_%s' %crop] / ((fp.loc[0,'date'] - fp.loc[i,'date']).days+365))) 
-            else: prop.append(1-(fp.loc[i,'days_%s' %crop] / (fp.loc[i+1,'date'] - fp.loc[i,'date']).days))
+        for period_num in range(len(fp)):
+            if period_num == len(fp)-1:
+                prop.append(1-(fp.loc['FP%s' %period_num,'days_%s' %crop] / ((fp.loc['FP0','date'] - fp.loc['FP%s' %period_num,'date']).days+365)))
+            else: prop.append(1-(fp.loc['FP%s' %period_num,'days_%s' %crop] / (fp.loc['FP%s' %(period_num+1),'date'] - fp.loc['FP%s' %period_num,'date']).days))
         cons_prop.loc[:,crop]= prop
         cons_prop.loc[:,crop] =cons_prop.loc[:,crop].clip(0)
         #cons_limit[crop] =  (cons_limit[crop]/(1-cons_limit[crop]))*1000 ^not needed anymore because only need to proportion of time that sheep can't graze rather than the volume because p7con is now based on md not vol

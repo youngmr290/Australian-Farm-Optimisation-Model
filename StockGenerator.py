@@ -81,7 +81,7 @@ def generator(params,report):
     na=np.newaxis
     ## define the periods - default (dams and ssire)
     sim_years = uinp.structure['i_age_max']
-    # sim_years = 3.5
+    sim_years = 3.5
     sim_years_offs = min(uinp.structure['i_age_max_offs'], sim_years)
     n_sim_periods, date_start_p, date_end_p, p_index_p, step \
     = sfun.sim_periods(pinp.sheep['i_startyear'], uinp.structure['i_sim_periods_year'], sim_years)
@@ -4168,7 +4168,7 @@ def generator(params,report):
     keys_n1 = np.array(uinp.structure['i_n_idx_dams'])
     keys_n3 = np.array(uinp.structure['i_n_idx_offs'])
     keys_p5 = per.p_date2_df().index.astype('object') #has to be an object so that when combined with strings it remains a number
-    keys_p6 = pinp.feed_inputs['feed_periods'].index[:-1].astype('object') #has to be an object so that when combined with strings it remains a number
+    keys_p6 = pinp.feed_inputs['feed_periods'].index[:-1]
     keys_p8 = ['sire_per%s'%i for i in range(len_p8)]
     keys_t1 = np.array(['t%s'%i for i in range(t1_len)])
     keys_t2 = np.array(['t%s'%i for i in range(t2_len)])

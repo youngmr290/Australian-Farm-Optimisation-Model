@@ -147,13 +147,13 @@ def grazing_days(params):
     ##run mach period func to get all the seeding day info
     mach_periods = seed_days()
     ##create df which all grazing days are added
-    grazing_days_df = pd.DataFrame()
+    grazing_days_df = pd.DataFrame(index=feed_periods.index)
     ##days between seeding and destocking
     destock_days = dt.timedelta(days = pinp.crop['poc_destock'])
     ##loop through labour/mach periods.
     for mach_p_start, seeding_days, mach_p_num in zip(mach_periods['date'], mach_periods['seed_days'],mach_periods.index):
         grazing_days_list=[]
-        season_break = feed_periods.loc[0,'date']
+        season_break = feed_periods.loc['FP0','date']
         effective_break = season_break + destock_days #accounts for the time before seeding that destocking must occur
         for fp_date, fp_len in zip(feed_periods['date'], feed_periods['length']):
             fp_end_date = fp_date + dt.timedelta(days = fp_len)
@@ -315,7 +315,7 @@ def yield_penalty(params):
     mach_periods = per.p_dates_df()
     mach_penalty = pd.DataFrame()  #adds the average yield penalty for each crop for each period to the df 
     dry_seed_start = pinp.crop['dry_seed_start']
-    dry_seed_end = pinp.feed_inputs['feed_periods'].loc[0,'date']#dry seeding finishes when the season breaks 
+    dry_seed_end = pinp.feed_inputs['feed_periods'].loc['FP0','date']#dry seeding finishes when the season breaks
     seed_start = per.wet_seeding_start_date()
     # seed_end = per.period_end_date(per.wet_seeding_start_date(),pinp.crop['seed_period_lengths'])
     penalty_free_days = dt.timedelta(days = pinp.crop['seed_period_lengths'][0].astype(np.float64))

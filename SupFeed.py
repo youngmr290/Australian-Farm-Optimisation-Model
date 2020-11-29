@@ -71,9 +71,9 @@ def sup_cost(params):
     p_name = per.cashflow_periods()['cash period']
     ##determine cost of feeding in each feed period and cashflow period
     feeding_cost = mac.sup_mach_cost()
-    start_df  = pinp.feed_inputs['feed_periods'].loc[:len(pinp.feed_inputs['feed_periods'])-2,'date']
+    start_df  = pinp.feed_inputs['feed_periods'].loc[:pinp.feed_inputs['feed_periods'].index[-2],'date']
     start_df  =start_df.apply(lambda x: x.replace(year=p_dates[0].year)) #this is required because feed period dates are split over two yrs which causes and error when trying to determine which cashflow period each feed period date falls into
-    length_df = pinp.feed_inputs['feed_periods'].loc[:len(pinp.feed_inputs['feed_periods'])-2,'length'].astype('timedelta64[D]') 
+    length_df = pinp.feed_inputs['feed_periods'].loc[:pinp.feed_inputs['feed_periods'].index[-2],'length'].astype('timedelta64[D]')
     allocation=fun.period_allocation2(start_df, length_df, p_dates, p_name)
     cols = pd.MultiIndex.from_product([allocation.columns, feeding_cost.index])
     allocation = allocation.reindex(cols,axis=1,level=0)
