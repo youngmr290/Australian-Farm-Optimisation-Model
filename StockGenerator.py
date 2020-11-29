@@ -249,17 +249,16 @@ def generator(params,report):
     r_intake_f_dams = np.zeros(pg1, dtype = 'float32')
     r_md_solid_dams = np.zeros(pg1, dtype = 'float32')
     r_mp2_dams = np.zeros(pg1, dtype = 'float32')
-    r_mp2_dams = np.zeros(pg1, dtype = 'float32')
-    r_mp2_yatf = np.zeros(pg1, dtype = 'float32')
 
     ### temporary variables required while debugging
     t_ldr_dams = np.zeros(pg1, dtype = 'float32')
     t_lb_dams = np.zeros(pg1, dtype = 'float32')
 
-    r_age_start_yatf = np.zeros(pg2, dtype = 'float32')
-    r_age_start_offs = np.zeros(pg3, dtype = 'float32')
     r_ebg_yatf = np.zeros(pg2, dtype = 'float32')
     r_evg_yatf = np.zeros(pg2, dtype = 'float32')
+    r_mem_yatf = np.zeros(pg2, dtype = 'float32')
+    r_mp2_yatf = np.zeros(pg2, dtype = 'float32')
+    r_intake_f_yatf = np.zeros(pg2, dtype = 'float32')
 
     ##output variables for postprocessing
     dtype='float32' #using 64 was getting slow
@@ -2810,6 +2809,8 @@ def generator(params,report):
             r_ebg_yatf[p] = ebg_yatf
             r_evg_yatf[p] = evg_yatf
             r_mp2_yatf[p] = mp2_yatf
+            r_mem_yatf[p] = mem_yatf
+
 
     ###offs
         try:
