@@ -248,9 +248,12 @@ def generator(params,report):
     r_evg_dams = np.zeros(pg1, dtype = 'float32')
     r_intake_f_dams = np.zeros(pg1, dtype = 'float32')
     r_md_solid_dams = np.zeros(pg1, dtype = 'float32')
+    r_mp2_dams = np.zeros(pg1, dtype = 'float32')
+
     r_age_start_yatf = np.zeros(pg2, dtype = 'float32')
     r_age_start_offs = np.zeros(pg3, dtype = 'float32')
     r_ebg_yatf = np.zeros(pg2, dtype = 'float32')
+    r_evg_yatf = np.zeros(pg2, dtype = 'float32')
 
     ##output variables for postprocessing
     dtype='float32' #using 64 was getting slow
@@ -1580,23 +1583,23 @@ def generator(params,report):
 
     # ebg_start_sire=0
     ##dams
-    ldr_start_dams = np.array([1])
-    lb_start_dams = np.array([1])
-    w_f_start_dams = np.array([0])
-    nw_f_start_dams = np.array([0])
-    nec_cum_start_dams = np.array([0])
-    cf_w_b_start_dams = np.array([0])
-    cf_w_w_start_dams = np.array([0])
+    ldr_start_dams = np.array([1.0])
+    lb_start_dams = np.array([1.0])
+    w_f_start_dams = np.array([0.0])
+    nw_f_start_dams = np.array([0.0])
+    nec_cum_start_dams = np.array([0.0])
+    cf_w_b_start_dams = np.array([0.0])
+    cf_w_w_start_dams = np.array([0.0])
     cf_w_w_dams = 0 #this is required as default when mu wean function is not being called (it is required in the start production function)
-    cf_conception_start_dams = np.array([0])
-    conception_dams = 0 #initialise so it can be added to (conception += conception)
-    guw_start_dams = np.array([0])
-    rc_birth_start_dams = np.array([1])
+    cf_conception_start_dams = np.array([0.0])
+    conception_dams = 0.0 #initialise so it can be added to (conception += conception)
+    guw_start_dams = np.array([0.0])
+    rc_birth_start_dams = np.array([1.0])
     ffcfw_start_dams = fun.f_reshape_expand(lw_initial_wzida0e0b0xyg1 - cfw_initial_wzida0e0b0xyg1 / cw_dams[3, ...], uinp.structure['i_p_pos'], right_pos=uinp.structure['i_w_pos']) #add axis w to a1 because e and b axis are sliced before they are added via calculation
     ffcfw_max_start_dams = ffcfw_start_dams
-    ffcfw_mating_dams = 0
-    # ffcfw_birth_dams = 0
-    # ffcfw_weaning_dams = 0
+    ffcfw_mating_dams = 0.0
+    # ffcfw_birth_dams = 0.0
+    # ffcfw_weaning_dams = 0.0
     omer_history_start_m3g1[...] = np.nan
     d_cfw_history_start_m2g1[...] = np.nan
     cfw_start_dams = cfw_initial_wzida0e0b0xyg1
@@ -1606,8 +1609,8 @@ def generator(params,report):
     aw_start_dams = aw_initial_wzida0e0b0xyg1
     mw_start_dams = mw_initial_wzida0e0b0xyg1
     bw_start_dams = bw_initial_wzida0e0b0xyg1
-    nw_start_dams = np.array([0])
-    temp_lc_dams = np.array([0]) #this is calculated in the chill function but it is required for the intake function so it is set to 0 for the first period.
+    nw_start_dams = np.array([0.0])
+    temp_lc_dams = np.array([0.0]) #this is calculated in the chill function but it is required for the intake function so it is set to 0 for the first period.
     numbers_start_dams = numbers_initial_a1e1b1nwzida0e0b0xyg1
     numbers_start_fvp0_dams = numbers_initial_a1e1b1nwzida0e0b0xyg1 #just need a default because this is processed using update function.
     scanning = 0 #variable is used only for reporting
@@ -1615,23 +1618,23 @@ def generator(params,report):
     ##yatf
     omer_history_start_m3g2[...] = np.nan
     d_cfw_history_start_m2g2[...] = np.nan
-    nw_start_yatf = 0
+    nw_start_yatf = 0.0
     ffcfw_start_yatf = w_b_std_y_b1nwzida0e0b0xyg1
     ffcfw_max_start_yatf = ffcfw_start_yatf
-    mortality_birth_yatf=0 #required for dam numbers before progeny born
-    cfw_start_yatf = 0
-    temp_lc_yatf = np.array([0]) #this is calculated in the chill function but it is required for the intake function so it is set to 0 for the first period.
-    numbers_start_yatf = 0
-    numbers_start_fvp0_yatf = 0 #just need a default because this is processed using update function.
+    mortality_birth_yatf=0.0 #required for dam numbers before progeny born
+    cfw_start_yatf = 0.0
+    temp_lc_yatf = np.array([0.0]) #this is calculated in the chill function but it is required for the intake function so it is set to 0 for the first period.
+    numbers_start_yatf = 0.0
+    numbers_start_fvp0_yatf = 0.0 #just need a default because this is processed using update function.
     # ebg_start_yatf=0
     fl_start_yatf=fl_birth_yg2 #cant use fl_initial because that is at weaning
-    fd_start_yatf=0
-    fd_min_start_yatf = 1000
-    w_b_start_yatf = 0
-    w_w_start_yatf = 0
-    aw_start_yatf = 0
-    bw_start_yatf = 0
-    mw_start_yatf = 0
+    fd_start_yatf=0.0
+    fd_min_start_yatf = 1000.0
+    w_b_start_yatf = 0.0
+    w_w_start_yatf = 0.0
+    aw_start_yatf = 0.0
+    bw_start_yatf = 0.0
+    mw_start_yatf = 0.0
     ##offs
     ffcfw_start_offs = lw_initial_wzida0e0b0xyg3 - cfw_initial_wzida0e0b0xyg3 / cw_offs[3, ...]
     ffcfw_max_start_offs = ffcfw_start_offs
@@ -1644,8 +1647,8 @@ def generator(params,report):
     aw_start_offs = aw_initial_wzida0e0b0xyg3
     mw_start_offs = mw_initial_wzida0e0b0xyg3
     bw_start_offs = bw_initial_wzida0e0b0xyg3
-    nw_start_offs = 0
-    temp_lc_offs = np.array([0]) #this is calculated in the chill function but it is required for the intake function so it is set to 0 for the first period.
+    nw_start_offs = 0.0
+    temp_lc_offs = np.array([0.0]) #this is calculated in the chill function but it is required for the intake function so it is set to 0 for the first period.
     numbers_start_offs = numbers_initial_zida0e0b0xyg3
     numbers_start_fvp0_offs = numbers_initial_zida0e0b0xyg3 #just need a default because this is processed using update function.
 
@@ -2072,8 +2075,11 @@ def generator(params,report):
                 ###Expected average metabollic LW of yatf during period
                 ffcfw75_exp_yatf = np.sum(ffcfw_exp_a1e1b1nwzida0e0b0xyg2m1 ** 0.75, axis=-1) / np.maximum(1, days_period_pa1e1b1nwzida0e0b0xyg2[p, ...])
 
-                mp2_dams, mel_dams, nel_dams, ldr_dams, lb_dams = sfun.f_milk(cl_dams, srw_xyg1, relsize_start_dams, rc_birth_dams, mei_dams, meme_dams, mew_min_pa1e1b1nwzida0e0b0xyg1[p], rc_start_dams, ffcfw75_exp_yatf, lb_start_dams, ldr_start_dams, age_pa1e1b1nwzida0e0b0xyg2[p], mp_age_y_pa1e1b1nwzida0e0b0xyg1[p],  mp2_age_y_pa1e1b1nwzida0e0b0xyg1[p], uinp.parameters['i_x_pos'], days_period_pa1e1b1nwzida0e0b0xyg2[p], kl_dams, lact_nut_effect_pa1e1b1nwzida0e0b0xyg1[p])
-                mp2_yatf = mp2_dams / np.maximum(0.01,nyatf_b1nwzida0e0b0xyg) * (nyatf_b1nwzida0e0b0xyg>0) #handle div/0 error then convert m2 to 0 if given slice of b1 axis has no yatf
+                mp2_dams, mel_dams, nel_dams, ldr_dams, lb_dams \
+                    = sfun.f_milk(cl_dams, srw_xyg1, relsize_start_dams, rc_birth_dams, mei_dams, meme_dams, mew_min_pa1e1b1nwzida0e0b0xyg1[p], rc_start_dams, ffcfw75_exp_yatf
+                        , lb_start_dams, ldr_start_dams, age_pa1e1b1nwzida0e0b0xyg2[p], mp_age_y_pa1e1b1nwzida0e0b0xyg1[p], mp2_age_y_pa1e1b1nwzida0e0b0xyg1[p]
+                        , uinp.parameters['i_x_pos'], days_period_pa1e1b1nwzida0e0b0xyg2[p], kl_dams, lact_nut_effect_pa1e1b1nwzida0e0b0xyg1[p])
+                mp2_yatf = fun.f_divide(mp2_dams , nyatf_b1nwzida0e0b0xyg) # 0 if given slice of b1 axis has no yatf
 
 
             ##wool production
@@ -2325,7 +2331,9 @@ def generator(params,report):
 
         ##intake - yatf
         if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-            mei_yatf, mei_solid_yatf, intake_f_yatf, md_solid_yatf, mei_propn_milk_yatf, mei_propn_herb_yatf, mei_propn_supp_yatf = sfun.f_intake(cr_yatf, pi_yatf, ra_yatf, rq_yatf,  md_herb_yatf, feedsupplyw_pa1e1b1nwzida0e0b0xyg1[p], intake_s_yatf, pinp.sheep['i_md_supp'], legume_pa1e1b1nwzida0e0b0xyg[p], mp2_yatf)   #same feedsupply as dams
+            mei_yatf, mei_solid_yatf, intake_f_yatf, md_solid_yatf, mei_propn_milk_yatf, mei_propn_herb_yatf, mei_propn_supp_yatf = \
+                    sfun.f_intake(cr_yatf, pi_yatf, ra_yatf, rq_yatf,  md_herb_yatf, feedsupplyw_pa1e1b1nwzida0e0b0xyg1[p]
+                                    , intake_s_yatf, pinp.sheep['i_md_supp'], legume_pa1e1b1nwzida0e0b0xyg[p], mp2_yatf)   #same feedsupply as dams
 
         ##energy - yatf
         eqn_group = 7
@@ -2333,7 +2341,10 @@ def generator(params,report):
         if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
             eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
             if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_energy_cs(ck_yatf, cx_yatf, cm_yatf, lw_start_yatf, ffcfw_start_yatf, mr_age_pa1e1b1nwzida0e0b0xyg2[p], mei_yatf, omer_history_start_m3g2, days_period_pa1e1b1nwzida0e0b0xyg2[p], md_solid_yatf, pinp.sheep['i_md_supp'], md_herb_yatf, lgf_eff_pa1e1b1nwzida0e0b0xyg2[p, ...], dlf_eff_pa1e1b1nwzida0e0b0xyg[p,...], pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg2[p], foo_yatf, feedsupplyw_pa1e1b1nwzida0e0b0xyg1[p], intake_f_yatf, dmd_yatf, mei_propn_milk_yatf)  #same feedsupply as dams
+                temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_energy_cs(ck_yatf, cx_yatf, cm_yatf, lw_start_yatf, ffcfw_start_yatf, mr_age_pa1e1b1nwzida0e0b0xyg2[p]
+                                                            , mei_yatf, omer_history_start_m3g2, days_period_pa1e1b1nwzida0e0b0xyg2[p], md_solid_yatf, pinp.sheep['i_md_supp']
+                                                            , md_herb_yatf, lgf_eff_pa1e1b1nwzida0e0b0xyg2[p, ...], dlf_eff_pa1e1b1nwzida0e0b0xyg[p,...], pinp.sheep['i_steepness']
+                                                            , densityw_pa1e1b1nwzida0e0b0xyg2[p], foo_yatf, feedsupplyw_pa1e1b1nwzida0e0b0xyg1[p], intake_f_yatf, dmd_yatf, mei_propn_milk_yatf)  #same feedsupply as dams
                 if eqn_used:
                     meme_yatf = temp0
                     omer_history_yatf = temp1
@@ -2364,7 +2375,7 @@ def generator(params,report):
                 temp0, temp1, temp2, temp3, temp4 = sfun.f_lwc_cs(cg_yatf, rc_start_yatf, mei_yatf, mem_yatf, mew_yatf, z1f_yatf, z2f_yatf, kg_yatf)
                 if eqn_used:
                     ebg_yatf = temp0
-                    evg_history_yatf = temp1
+                    evg_yatf = temp1
                     pg_yatf = temp2
                     fg_yatf = temp3
                     level_yatf = temp4
@@ -2397,7 +2408,7 @@ def generator(params,report):
 
 
 
-        ##emmisions
+        ##emissions
         eqn_group = 12
         eqn_system = 0 # Baxter and Clapperton = 0
         if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
@@ -2766,6 +2777,7 @@ def generator(params,report):
             r_foo_dams[p] = foo_dams
             r_dmd_dams[p] = dmd_dams
             r_evg_dams[p] = evg_dams
+            r_mp2_dams[p] = mp2_dams
 
         ###yatf
         o_ffcfw_start_yatf[p] = ffcfw_start_yatf #use ffcfw_start because weaning start of period, has to be outside of the 'if' because days per period = 0 when weaning occurs becasue weaning is first day of period. But we need to know the start ffcfw.
@@ -2786,7 +2798,7 @@ def generator(params,report):
 
             ###store report variables - individual variables can be deleted if not needed
             r_ebg_yatf[p] = ebg_yatf
-            # r_age_start_yatf[p] = age_start_pa1e1b1nwzida0e0b0xyg2
+            r_evg_yatf[p] = evg_yatf
 
     ###offs
         try:
@@ -4106,14 +4118,14 @@ def generator(params,report):
     ffcfw_prog_a1e1b1nwzida0e0b0xyg2 = np.moveaxis(ffcfw_prog_a1e1b1nwzida0e0b0xyg2w9[:,:,:,:,0,...],-1,uinp.structure['i_w_pos']) #move the w9 axis into the w position
     ffcfw_initial_wzida0e0b0xyg1 = lw_initial_wzida0e0b0xyg1 - cfw_initial_wzida0e0b0xyg1 / cw_dams[3, ...]
     distribution_2dams_a1e1b1nwzida0e0b0xyg2w9 = sfun.f_lw_distribution(ffcfw_initial_wzida0e0b0xyg1, ffcfw_prog_a1e1b1nwzida0e0b0xyg2, uinp.structure['i_n1_len'], uinp.structure['i_n_fvp_period1'])
-    ###numbers provided - active d
+    ###numbers provided - active d for Prog DVs
     numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2g9w9 = 1 * (np.sum(distribution_2dams_a1e1b1nwzida0e0b0xyg2w9[...,na,:] * mask_numbers_prog2damsw8w9_w9
                                                                     * mask_prog_tdx_tva1e1b1nwzida0e0b0xyg2w9[...,na,:]
                                                                     * (a_g1_g2[...,na,:]==index_g1)[...,na] * (index_tva1e1b1nwzida0e0b0xyg2w9 == 1)[...,na,:]
                                                                     * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na,na]
                                                                     * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[...,na,na]
                                                                     , axis=(uinp.parameters['i_b0_pos']-2, uinp.structure['i_e0_pos']-2),keepdims=True) > 0)
-    ###numbers required - no d axis
+    ###numbers required - no d axis for Dam DVs
     numbers_progreq_k28k3k5tva1e1b1nw8zida0e0b0xyg1g9w9 = 1 * (np.sum(mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9[0, ...,:,na] * (index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,..., na,na] == 0)
                                                                     * (index_g1[...,na,:]==index_g1)[...,na] * btrt_propn_b0xyg1[...,na,na] * e0_propn_ida0e0b0xyg[...,na,na]
                                                                     * agedam_propn_da0e0b0xyg1[...,na,na] * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na,na]
