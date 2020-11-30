@@ -1433,13 +1433,16 @@ def f_saleprice(score_pricescalar_s7s5s6, weight_pricescalar_s7s5s6, dtype=None)
 
 def f_salep_mob(weight_s7spg, scores_s7s6pg, cvlw_s7s5pg, cvscore_s7s6pg,
                 lw_range_s7s5pg, score_range_s7s6p5g, grid_priceslw_s7s5s6pg):
-    ##prob for each lw step in grid
+    '''A function to calculate the average price of the mob based on the average specifications in the mob.
+    This is to represent that the distribution of weight & specification reduces the mob average price
+    This representation allows valuing individual animal management and reducing the mob distribution.'''
+    ##prob for each lw step in grid based on the coefficient of variation (CV) of weight in the mob
     prob_lw_s7s5pg = np.maximum(0, f_norm_cdf(np.roll(lw_range_s7s5pg, -1, axis = 1), weight_s7spg, cvlw_s7s5pg)
                           - f_norm_cdf(lw_range_s7s5pg, weight_s7spg, cvlw_s7s5pg))
-    ##Probability for each score step in grid (fat score/CS)
+    ##Probability for each score step in grid (fat score/CS) based on the CV of quality score in the mob
     prob_score_s7s6pg = np.maximum(0, f_norm_cdf(np.roll(score_range_s7s6p5g, -1, axis = 1), scores_s7s6pg, cvscore_s7s6pg)
                              - f_norm_cdf(score_range_s7s6p5g, scores_s7s6pg, cvscore_s7s6pg))
-    ##Probability for each cell of grid
+    ##Probability for each cell of grid (assuming that weight & score are independent)
     prob_grid_s7s5s6pg = prob_lw_s7s5pg[:,:,na] * prob_score_s7s6pg[:,na,:]
     ##Average price for the mob
     averagesale_value_mob_s7pg = np.sum(prob_grid_s7s5s6pg * grid_priceslw_s7s5s6pg, axis = (1, 2))
@@ -1451,32 +1454,32 @@ def f_sale_value(cu0, cx, o_rc, o_ffcfw_pg, dressp_adj_yg, dresspercent_adj_s6pg
                  month_discount_s7pg, price_type_s7pg,a_s8_s7pg, cvlw_s7s5pg, cvscore_s7s6pg,
                  lw_range_s7s5pg, score_range_s7s6p5g, age_end_p5g1, discount_age_s7pg,sale_cost_pc_s7pg,
                  sale_cost_hd_s7pg, mask_s7x_s7pg, sale_agemax_s7pg1, dtype=None):
-    ##Calculate condition score
+    ##Calculate condition score from relative condition
     cs_pg = f_condition_score(o_rc, cu0)
-    ##Calculate fat score
+    ##Calculate fat score from relative condition
     fs_pg = f_fat_score(o_rc, cu0)
     ##Combine the scores into single array
     scores_s8p = np.stack([fs_pg, cs_pg], axis=0)
-    ##Convert quality scores to s7 array
+    ##Select the quality scores (s8) for each price grid (s7)
     scores_s7s6pg = scores_s8p[uinp.sheep['ia_s8_s7']][:,na,...]
-    ##Dressing percentage to adjust price grid to LW
+    ##Dressing percentage to adjust price grid from $/kg DW to $/kg LW
     dresspercent_for_price_s7s6pg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[23, ...] + dresspercent_adj_s6pg + dresspercent_adj_s7pg[:,na,...]
-    ##Price type scalar (for DW, LW or per head)
+    ##Dressing percentage is 100% if price type is $/kg LW or $/hd
     dresspercent_for_price_s7s6pg = fun.f_update(dresspercent_for_price_s7s6pg, 1, a_s8_s7pg[:,na,...] >= 1)
-    ##Update the grid prices to $/kg LW
+    ##Update the grid prices to $/kg LW because dressing percentage changes with fat score and this effects the price received when a distribution is used
     grid_priceslw_s7s5s6pg = grid_price_s7s5s6pg * dresspercent_for_price_s7s6pg[:,na,...]
     ##Interploate DP adjustment due to FS
     dressp_adj_fs_pg= np.interp(fs_pg, uinp.sheep['i_salep_score_range_s8s6'][0, ...], uinp.sheep['i_salep_dressp_adj_s6']).astype(dtype)
-    ##Dressing percentage to calculate grid weight
+    ##Dressing percentage to calculate weight to lookup in the grid.
     dresspercent_for_wt_s7pg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[23, ...] + dressp_adj_fs_pg + dresspercent_adj_s7pg
-    ##Price type scalar (for DW, LW or per head)
+    ##Dressing percentage is 100% if price type is $/kg LW or $/hd
     dresspercent_wt_s7pg = fun.f_update(dresspercent_for_wt_s7pg, 1, a_s8_s7pg >= 1)
     ##Scale ffcfw to the units in the grid
     weight_for_lookup_s7pg = o_ffcfw_pg * dresspercent_wt_s7pg
     ##Calculate mob average price in each grid
     price_mobaverage_s7pg = f_salep_mob(weight_for_lookup_s7pg[:,na,...], scores_s7s6pg, cvlw_s7s5pg, cvscore_s7s6pg,
                                                       lw_range_s7s5pg, score_range_s7s6p5g, grid_priceslw_s7s5s6pg)
-    ##Scale prices based on month
+    ##Scale price received based on month of sale
     price_mobaverage_s7pg = price_mobaverage_s7pg * (1+month_scalar_s7pg)
     ##Temporary value with age based discount
     temporary_s7pg = price_mobaverage_s7pg * (1 + month_discount_s7pg)
@@ -1491,7 +1494,7 @@ def f_sale_value(cu0, cx, o_rc, o_ffcfw_pg, dressp_adj_yg, dresspercent_adj_s6pg
     ##Mask the grids
     sale_value_s7pg = sale_value_s7pg * mask_s7x_s7pg * (age_end_p5g1/30 <= sale_agemax_s7pg1) #divide 30 to convert to months
     ##Select the maximum value across the grids
-    sale_value = np.max(sale_value_s7pg, axis=0) #take max on s6 axis aswell to remove it (it is singlton so no effect)
+    sale_value = np.max(sale_value_s7pg, axis=0) #take max on s6 axis as well to remove it (it is singleton so no effect)
     return sale_value
 
 
