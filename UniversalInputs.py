@@ -195,7 +195,7 @@ structure['foo_levels'] =  ['Foo L', 'Foo M', 'Foo H']                 # Low, me
 ##axis pos ^maybe move in the ones from the other inputs to here?
 structure['i_e0_pos']=-5
 ##general
-structure['i_age_max'] = 6.75
+structure['i_age_max'] = 7.1  # after shearing for the July lambing at 6.5 yo
 structure['i_age_max_offs'] = 3.5
 structure['i_sim_periods_year'] = 52
 structure['i_w_pos'] = -10

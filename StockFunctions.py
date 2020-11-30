@@ -661,7 +661,7 @@ def f_potential_intake_cs(ci, cl, srw, relsize_start, rc_start, temp_lc_dams, te
     ##Potential intake
     pi = ci[1, ...] * srw * relsize_start * (ci[2, ...] - relsize_start) * picf * pitf * pilf
     ##Potential intake of pasture - young at foot only
-    pi = (pi - mp2 / cl[6, ...]) * piyf
+    pi = (pi - mp2 / cl[6, ...] * cl[25, ...]) * piyf
     ##Potential intake of pasture - young at foot only
     pi = pi * period_between_birthwean
     return np.maximum(0,pi)

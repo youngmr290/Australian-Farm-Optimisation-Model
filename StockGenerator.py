@@ -81,7 +81,7 @@ def generator(params,report):
     na=np.newaxis
     ## define the periods - default (dams and ssire)
     sim_years = uinp.structure['i_age_max']
-    sim_years = 3.5
+    # sim_years = 3.5
     sim_years_offs = min(uinp.structure['i_age_max_offs'], sim_years)
     n_sim_periods, date_start_p, date_end_p, p_index_p, step \
     = sfun.sim_periods(pinp.sheep['i_startyear'], uinp.structure['i_sim_periods_year'], sim_years)
@@ -249,6 +249,7 @@ def generator(params,report):
     r_intake_f_dams = np.zeros(pg1, dtype = 'float32')
     r_md_solid_dams = np.zeros(pg1, dtype = 'float32')
     r_mp2_dams = np.zeros(pg1, dtype = 'float32')
+    r_nw_start_dams = np.zeros(pg1, dtype = 'float32')
 
     ### temporary variables required while debugging
     t_ldr_dams = np.zeros(pg1, dtype = 'float32')
@@ -259,6 +260,8 @@ def generator(params,report):
     r_mem_yatf = np.zeros(pg2, dtype = 'float32')
     r_mp2_yatf = np.zeros(pg2, dtype = 'float32')
     r_intake_f_yatf = np.zeros(pg2, dtype = 'float32')
+    r_nw_start_yatf = np.zeros(pg2, dtype = 'float32')
+
 
     ##output variables for postprocessing
     dtype='float32' #using 64 was getting slow
@@ -875,12 +878,12 @@ def generator(params,report):
     adja_sfw_d_da0e0b0xyg3 = ce_offs[12, ...]
     adja_sfw_b0_xyg0 = np.sum(cb0_sire[12, ...] * btrt_propn_b0xyg0, axis = 0)
     adja_sfw_b0_xyg1 = np.sum(cb0_dams[12, ...] * btrt_propn_b0xyg1, axis = 0)
-    adja_sfw_b0_b0xyg2 = cb1_yatf[12, ...]
+    adja_sfw_b0_b1nwzida0e0b0xyg2 = cb1_yatf[12, ...]
     adja_sfw_b0_b0xyg3 = cb0_offs[12, ...]
     ###apply adjustments sfw
     sfw_a0e0b0xyg0 = sfw_yg0 + adja_sfw_d_a0e0b0xyg0 + adja_sfw_b0_xyg0
     sfw_a0e0b0xyg1 = sfw_yg1 + adja_sfw_d_a0e0b0xyg1 + adja_sfw_b0_xyg1
-    sfw_pa1e1b1nwzida0e0b0xyg2 = sfw_yg2 + adja_sfw_d_pa1e1b1nwzida0e0b0xyg2 + adja_sfw_b0_b0xyg2
+    sfw_pa1e1b1nwzida0e0b0xyg2 = sfw_yg2 + adja_sfw_d_pa1e1b1nwzida0e0b0xyg2 + adja_sfw_b0_b1nwzida0e0b0xyg2
     sfw_da0e0b0xyg3 = sfw_yg3 + adja_sfw_d_da0e0b0xyg3 + adja_sfw_b0_b0xyg3
     ###calc adjustments sfd
     adja_sfd_d_a0e0b0xyg0 = np.sum(ce_sire[13, ...] * agedam_propn_da0e0b0xyg0, axis = 0)
@@ -1901,7 +1904,7 @@ def generator(params,report):
                     if eqn_compare:
                         r_compare_q0q1q2poffs[eqn_system, eqn_group, 0, p, ...] = temp0
 
-            ##feedsupply
+            ##feedsupply - calculated after pi because pi required for intake_s
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                 foo_sire, hf_sire, dmd_sire, intake_s_sire, md_herb_sire = sfun.f_feedsupply(cu3, cu4, cr_sire, feedsupply_std_pa1e1b1nwzida0e0b0xyg0[p], paststd_foo_pa1e1b1j0wzida0e0b0xyg[p], paststd_dmd_pa1e1b1j0wzida0e0b0xyg[p], legume_pa1e1b1nwzida0e0b0xyg[p], pi_sire, pasture_stage_pa1e1b1j0wzida0e0b0xyg[p], pinp.sheep['i_hr_scalar'], pinp.sheep['i_region'], uinp.pastparameters['i_n_pasture_stage'], uinp.pastparameters['i_hd_std'])
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
@@ -2788,6 +2791,7 @@ def generator(params,report):
             r_dmd_dams[p] = dmd_dams
             r_evg_dams[p] = evg_dams
             r_mp2_dams[p] = mp2_dams
+            r_nw_start_dams[p] = nw_start_dams
 
             t_ldr_dams[p] = ldr_dams
             t_lb_dams[p] = lb_dams
@@ -2814,6 +2818,8 @@ def generator(params,report):
             r_evg_yatf[p] = evg_yatf
             r_mp2_yatf[p] = mp2_yatf
             r_mem_yatf[p] = mem_yatf
+            r_intake_f_yatf[p] = intake_f_yatf
+            r_nw_start_yatf[p] = nw_start_yatf
 
 
     ###offs
