@@ -258,6 +258,11 @@ def generator(params,report):
     r_ebg_yatf = np.zeros(pg2, dtype = 'float32')
     r_evg_yatf = np.zeros(pg2, dtype = 'float32')
     r_mem_yatf = np.zeros(pg2, dtype = 'float32')
+    r_mei_yatf = np.zeros(pg2, dtype = 'float32')
+    r_mei_solid_yatf = np.zeros(pg2, dtype = 'float32')
+    r_propn_solid_yatf = np.zeros(pg2, dtype = 'float32')
+    r_pi_yatf = np.zeros(pg2, dtype = 'float32')
+    r_kg_yatf = np.zeros(pg2, dtype = 'float32')
     r_mp2_yatf = np.zeros(pg2, dtype = 'float32')
     r_intake_f_yatf = np.zeros(pg2, dtype = 'float32')
     r_nw_start_yatf = np.zeros(pg2, dtype = 'float32')
@@ -2818,8 +2823,14 @@ def generator(params,report):
             r_evg_yatf[p] = evg_yatf
             r_mp2_yatf[p] = mp2_yatf
             r_mem_yatf[p] = mem_yatf
+            r_mei_yatf[p] = mei_yatf
+            r_mei_solid_yatf[p] = mei_solid_yatf
+            r_propn_solid_yatf[p] = mei_propn_herb_yatf
+            r_pi_yatf[p] = pi_yatf
+            r_kg_yatf[p] = kg_yatf
             r_intake_f_yatf[p] = intake_f_yatf
             r_nw_start_yatf[p] = nw_start_yatf
+
 
 
     ###offs
@@ -4045,7 +4056,8 @@ def generator(params,report):
     ### The index that sorts the weight array
     ind_sorted = np.argsort(ffcfw_range_a1zixg2k, axis = -1)
     ### Select the values for the 10 equally spaced values spanning lowest to highest inclusive.
-    ind_selected = np.linspace(0, ffcfw_range_a1zixg2k.shape[-1]-1, uinp.structure['i_progeny_w2_len'], dtype = int)
+    start = np.max(np.count_nonzero(ffcfw_range_a1zixg2k, axis=-1))
+    ind_selected = np.linspace(start, ffcfw_range_a1zixg2k.shape[-1]-1, uinp.structure['i_progeny_w2_len'], dtype = int)
     ### The indices for the required values are the selected values from the sorted indices
     ind = ind_sorted[..., ind_selected]
     ### Extract the condensed weights and the sale_value of the condensed vars

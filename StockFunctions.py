@@ -852,7 +852,7 @@ def f_weanweight_mu(cu1_yatf, cb1_yatf, cx_yatf, ce_yatf, w_w, cf_w_w_dams, ffcf
     return w_w, cf_w_w_dams
 
 def f_milk(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_start, ffcfw75_exp_yatf, lb_start, ldr_start, age_yatf, mp_age_y,  mp2_age_y, i_x_pos, days_period_yatf, kl, lact_nut_effect):
-    ##Max milk prodn based on dam CS birth	
+    ##Max milk prodn based on dam rc birth
     mpmax = srw** 0.75 * relsize_start * rc_birth_start * lb_start * mp_age_y
     ##Excess ME available for milk	
     mel_xs = np.maximum(0, (mei - (meme + mew_min * relsize_start))) * cl[5, ...] * kl
