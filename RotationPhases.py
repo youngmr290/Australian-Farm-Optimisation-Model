@@ -26,15 +26,7 @@ import PropertyInputs as pinp
 def rot_params(params):
     ##area
     params['lmu_area'] =  pinp.general['lmu_area'].squeeze().to_dict()
-    ###########################
-    #rotation phase low bound #
-    ###########################
-    ##debuging rotaion constraints- create dict for each rotation with 0 as default, then loop through changing each value to 1 (this dict will be used as the min bound)
-    phases_df = uinp.structure['phases']
-    params['lo_bound'] = dict.fromkeys(phases_df.index, 0)#create default dict, this is the min bound for each rotatoin. Could change 0 to a SAV which is the low bound for every rotation.
-    ##alter specific rotation min bounds
-    #^still need to determine the best way to do this
-    
+
     #############################
     #rotation phase constraint1 #
     #############################    

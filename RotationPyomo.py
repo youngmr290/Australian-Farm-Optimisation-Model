@@ -33,12 +33,7 @@ def rotationpyomo(params):
         pass
     model.p_area = Param(model.s_lmus, initialize=params['lmu_area'], doc='available area on farm for each soil')
     
-    try:
-        model.del_component(model.p_lo)
-    except AttributeError:
-        pass
-    model.p_lo = Param(model.s_phases, initialize=params['lo_bound'], doc='lo bound of the number of ha of rot_phase') 
-    
+
     ##only build this param if it doesn't exist already ie the rotation link never changes
     try:
         if model.p_rotphaselink:
@@ -80,18 +75,6 @@ def rotationpyomo(params):
     model.con_area = Constraint(model.s_lmus, rule=area_rule, doc='rotation area constraint')
     
 
-    #####################
-    # lo bound rotation #
-    #####################
-    #area of rotation on a given soil can't be more than the amount on that soil available on farm
-    try:
-        model.del_component(model.con_rotation_lobound)
-        model.del_component(model.con_rotation_lobound_index)
-    except AttributeError:
-        pass
-    def rot_lo_bound(model, r, l):
-      return model.p_lo[r] - model.v_phase_area[r,l] <=0 
-    model.con_rotation_lobound = Constraint(model.s_phases, model.s_lmus, rule=rot_lo_bound, doc='lo bound for the number of each phase')
 
 
 #######################################################################################################################################################

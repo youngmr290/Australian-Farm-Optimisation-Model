@@ -1442,13 +1442,13 @@ def f_salep_mob(weight_s7spg, scores_s7s6pg, cvlw_s7s5pg, cvscore_s7s6pg,
     ##Probability for each cell of grid
     prob_grid_s7s5s6pg = prob_lw_s7s5pg[:,:,na] * prob_score_s7s6pg[:,na,:]
     ##Average price for the mob
-    averagesale_value_mob_s7pg = np.sum(prob_grid_s7s5s6pg * grid_priceslw_s7s5s6pg, axis = (1, 2))
-    return averagesale_value_mob_s7pg
+    averagesale_price_mob_s7pg = np.sum(prob_grid_s7s5s6pg * grid_priceslw_s7s5s6pg, axis = (1, 2))
+    return averagesale_price_mob_s7pg
 
 
 def f_sale_value(cu0, cx, o_rc, o_ffcfw_pg, dressp_adj_yg, dresspercent_adj_s6pg,
                  dresspercent_adj_s7pg, grid_price_s7s5s6pg, month_scalar_s7pg,
-                 month_discount_s7pg, price_type_s7pg,a_s8_s7pg, cvlw_s7s5pg, cvscore_s7s6pg,
+                 month_discount_s7pg, price_type_s7pg, cvlw_s7s5pg, cvscore_s7s6pg,
                  lw_range_s7s5pg, score_range_s7s6p5g, age_end_p5g1, discount_age_s7pg,sale_cost_pc_s7pg,
                  sale_cost_hd_s7pg, mask_s7x_s7pg, sale_agemax_s7pg1, dtype=None):
     ##Calculate condition score
@@ -1462,7 +1462,7 @@ def f_sale_value(cu0, cx, o_rc, o_ffcfw_pg, dressp_adj_yg, dresspercent_adj_s6pg
     ##Dressing percentage to adjust price grid to LW
     dresspercent_for_price_s7s6pg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[23, ...] + dresspercent_adj_s6pg + dresspercent_adj_s7pg[:,na,...]
     ##Price type scalar (for DW, LW or per head)
-    dresspercent_for_price_s7s6pg = fun.f_update(dresspercent_for_price_s7s6pg, 1, a_s8_s7pg[:,na,...] >= 1)
+    dresspercent_for_price_s7s6pg = fun.f_update(dresspercent_for_price_s7s6pg, 1, price_type_s7pg[:,na,...] >= 1)
     ##Update the grid prices to $/kg LW
     grid_priceslw_s7s5s6pg = grid_price_s7s5s6pg * dresspercent_for_price_s7s6pg[:,na,...]
     ##Interploate DP adjustment due to FS
@@ -1470,10 +1470,10 @@ def f_sale_value(cu0, cx, o_rc, o_ffcfw_pg, dressp_adj_yg, dresspercent_adj_s6pg
     ##Dressing percentage to calculate grid weight
     dresspercent_for_wt_s7pg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[23, ...] + dressp_adj_fs_pg + dresspercent_adj_s7pg
     ##Price type scalar (for DW, LW or per head)
-    dresspercent_wt_s7pg = fun.f_update(dresspercent_for_wt_s7pg, 1, a_s8_s7pg >= 1)
+    dresspercent_wt_s7pg = fun.f_update(dresspercent_for_wt_s7pg, 1, price_type_s7pg >= 1)
     ##Scale ffcfw to the units in the grid
     weight_for_lookup_s7pg = o_ffcfw_pg * dresspercent_wt_s7pg
-    ##Calculate mob average price in each grid
+    ##Calculate mob average price in each grid per lw/head
     price_mobaverage_s7pg = f_salep_mob(weight_for_lookup_s7pg[:,na,...], scores_s7s6pg, cvlw_s7s5pg, cvscore_s7s6pg,
                                                       lw_range_s7s5pg, score_range_s7s6p5g, grid_priceslw_s7s5s6pg)
     ##Scale prices based on month
@@ -1482,8 +1482,8 @@ def f_sale_value(cu0, cx, o_rc, o_ffcfw_pg, dressp_adj_yg, dresspercent_adj_s6pg
     temporary_s7pg = price_mobaverage_s7pg * (1 + month_discount_s7pg)
     ##Apply discount if age is greater than threshold age
     price_mobaverage_s7pg = fun.f_update(price_mobaverage_s7pg, temporary_s7pg, age_end_p5g1/30 > discount_age_s7pg)  #divide 30 to convert to months
-    ##Convert weight to 1 if price is $/hd
-    weight_for_value_s7pg = fun.f_update(weight_for_lookup_s7pg, 1, price_type_s7pg == 2)
+    ##Convert weight to 1 if price is $/hd - dont want to mul by weight if $/hd
+    weight_for_value_s7pg = fun.f_update(o_ffcfw_pg, 1, price_type_s7pg == 2)
     ##Calculate value per head (gross)
     sale_value_s7pg = price_mobaverage_s7pg * weight_for_value_s7pg
     ##Subtract the selling costs

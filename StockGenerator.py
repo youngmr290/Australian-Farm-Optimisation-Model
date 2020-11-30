@@ -81,7 +81,7 @@ def generator(params,report):
     na=np.newaxis
     ## define the periods - default (dams and ssire)
     sim_years = uinp.structure['i_age_max']
-    # sim_years = 3.5
+    sim_years = 2
     sim_years_offs = min(uinp.structure['i_age_max_offs'], sim_years)
     n_sim_periods, date_start_p, date_end_p, p_index_p, step \
     = sfun.sim_periods(pinp.sheep['i_startyear'], uinp.structure['i_sim_periods_year'], sim_years)
@@ -3149,7 +3149,7 @@ def generator(params,report):
     weight_pricescalar_s7s5s6 = fun.f_reshape_expand(uinp.sheep['i_salep_weight_scalar_s7s5s6'], len_ax0=uinp.sheep['i_s7_len'],len_ax1=uinp.sheep['i_s5_len'],len_ax2=uinp.sheep['i_salep_weight_scalar_s7s5s6'].shape[-1]).astype(dtype)
     lw_range_s7s5pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_salep_weight_range_s7s5'], uinp.structure['i_p_pos']-1,len_ax0=uinp.sheep['i_s7_len'],len_ax1=uinp.sheep['i_s5_len']).astype(dtype)
     price_type_s7pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_salep_price_type_s7'], uinp.structure['i_p_pos']-1)
-    a_s8_s7pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['ia_s8_s7'], uinp.structure['i_p_pos']-1)
+    # a_s8_s7pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['ia_s8_s7'], uinp.structure['i_p_pos']-1)
     cvlw_s7s5pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_cvlw_s7'], uinp.structure['i_p_pos']-2).astype(dtype)
     cvscore_s7s6pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_cvscore_s7'], uinp.structure['i_p_pos']-2).astype(dtype)
     discount_age_s7pa1e1b1nwzida0e0b0xyg = fun.f_convert_to_inf(fun.f_reshape_expand(uinp.sheep['i_salep_discount_age_s7'],
@@ -3479,7 +3479,7 @@ def generator(params,report):
         cu0_sire.astype(dtype), cx_sire[:,0:1,...].astype(dtype), rc_start_sire_p9, ffcfw_p9a1e1b1nwzida0e0b0xyg0, dresspercent_adj_yg0,
         dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg,
         grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg, month_scalar_s7p9a1e1b1nwzida0e0b0xyg0,
-        month_discount_s7p9a1e1b1nwzida0e0b0xyg0, price_type_s7pa1e1b1nwzida0e0b0xyg, a_s8_s7pa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg,
+        month_discount_s7p9a1e1b1nwzida0e0b0xyg0, price_type_s7pa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg,
         cvscore_s7s6pa1e1b1nwzida0e0b0xyg, lw_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p9a1e1b1nwzida0e0b0xyg,
         age_end_p9a1e1b1nwzida0e0b0xyg0, discount_age_s7pa1e1b1nwzida0e0b0xyg,
         sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg,
@@ -3488,7 +3488,7 @@ def generator(params,report):
         cu0_dams.astype(dtype), cx_dams[:,1:2,...].astype(dtype), rc_start_dams_p9, ffcfw_p9a1e1b1nwzida0e0b0xyg1, dresspercent_adj_yg1,
         dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg,
         grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg, month_scalar_s7p9a1e1b1nwzida0e0b0xyg1,
-        month_discount_s7p9a1e1b1nwzida0e0b0xyg1, price_type_s7pa1e1b1nwzida0e0b0xyg, a_s8_s7pa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg,
+        month_discount_s7p9a1e1b1nwzida0e0b0xyg1, price_type_s7pa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg,
         cvscore_s7s6pa1e1b1nwzida0e0b0xyg, lw_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p9a1e1b1nwzida0e0b0xyg,
         age_end_p9a1e1b1nwzida0e0b0xyg1, discount_age_s7pa1e1b1nwzida0e0b0xyg,
         sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg,
@@ -3497,7 +3497,7 @@ def generator(params,report):
         cu0_yatf.astype(dtype), cx_yatf[:,mask_x,...].astype(dtype), rc_start_yatf_p9, ffcfw_p9a1e1b1nwzida0e0b0xyg2, dresspercent_adj_yg2,
         dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg,
         grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg, month_scalar_s7p9a1e1b1nwzida0e0b0xyg2,
-        month_discount_s7p9a1e1b1nwzida0e0b0xyg2, price_type_s7pa1e1b1nwzida0e0b0xyg, a_s8_s7pa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg,
+        month_discount_s7p9a1e1b1nwzida0e0b0xyg2, price_type_s7pa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg,
         cvscore_s7s6pa1e1b1nwzida0e0b0xyg, lw_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p9a1e1b1nwzida0e0b0xyg,
         age_end_p9a1e1b1nwzida0e0b0xyg2, discount_age_s7pa1e1b1nwzida0e0b0xyg,
         sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg,
@@ -3506,7 +3506,7 @@ def generator(params,report):
         cu0_offs, cx_offs[:,mask_x,...].astype(dtype), rc_start_offs_p9, ffcfw_p9a1e1b1nwzida0e0b0xyg3, dresspercent_adj_yg3,
         dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg,
         grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg, month_scalar_s7p9a1e1b1nwzida0e0b0xyg3,
-        month_discount_s7p9a1e1b1nwzida0e0b0xyg3, price_type_s7pa1e1b1nwzida0e0b0xyg, a_s8_s7pa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg,
+        month_discount_s7p9a1e1b1nwzida0e0b0xyg3, price_type_s7pa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg,
         cvscore_s7s6pa1e1b1nwzida0e0b0xyg, lw_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p9a1e1b1nwzida0e0b0xyg,
         age_end_p9a1e1b1nwzida0e0b0xyg3, discount_age_s7pa1e1b1nwzida0e0b0xyg,
         sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg,

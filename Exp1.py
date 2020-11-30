@@ -22,6 +22,8 @@ import numpy as np
 
 start=time.time()
 from CreateModel import model
+import CreateModel as crtmod
+import BoundsPyomo as bdypy
 import UniversalInputs as uinp
 import PropertyInputs as pinp
 import Sensitivity as sen
@@ -84,7 +86,10 @@ exp_data = pd.read_excel('exp.xlsx',index_col=[0,1,2], header=[0,1,2,3])
 exp_data = exp_data.sort_index() #had to sort to stop performance warning, this means runs may not be executed in order of exp.xlsx
 exp_data1=exp_data.copy() #copy made so that the run col can be added - the origional df is used to allocate sa values (would cause an error if run col existed but i cant drop it because it is used to determine if the trial is run)
 exp_data1['run']=False
+exp_data1['runpyomo']=False
 
+##here we check if precalcs and pyomo need to br recalculated. this is slightly complicated by the fact that columns and rows can be added to exp.xlsx
+##and the fact that a user can opt not to run a trial even if it is out of date so the run requirment must be tracked
 ##have any sa cols been added or removed, are the values the same, has the py code changed since last run?
 ###get a list of all sa cols (including the name of the trial because two trial may have the same values but have a different name)
 keys_hist = list(prev_exp.reset_index().columns[2:].values)
@@ -96,8 +101,8 @@ if sorted_list[-1] != 'Repoprt.py':
 else: newest = sorted_list[-2]
 
 
-###if headers are the same,pyomo code is the same and the excel inputs are the same then test if the values in exp.xlxs are the same
 try: #incase pkl_exp doesn't exist
+    ###if headers are the same, code is the same and the excel inputs are the same then test if the values in exp.xlxs are the same
     if keys_current==keys_hist and os.path.getmtime('pkl_exp.pkl') >= os.path.getmtime(newest) and os.path.getmtime('pkl_exp.pkl') >= os.path.getmtime("Universal.xlsx") and os.path.getmtime('pkl_exp.pkl') >= os.path.getmtime("Property.xlsx"):
         ###check if each exp has the same values in exp.xlsx as last time it was run.
         i3 = prev_exp.reset_index().set_index(keys_hist).index  # have to reset index because the name of the trial is going to be included in the new index so it must first be dropped from current index
@@ -105,7 +110,16 @@ try: #incase pkl_exp doesn't exist
         exp_data1.loc[~i4.isin(i3),('run', '', '', '')] = True
     ###if headers are different or py code has changed then all trials need to be re-run
     else: exp_data1['run']=True
-except FileNotFoundError: exp_data1['run']=True
+    ###pyomo must be run if pyomo modules/code have changed since the trial was last run (also run if params are different - calculated later). Note this will also trigger a re run of pyomo if any value in exp.xlsx change - this is not required because it will be picked up by different param dicts, but it was easy to reuse code
+    if os.path.getmtime('pkl_exp.pkl') >= os.path.getmtime(newest_pyomo):
+        ###check if each exp has the same values in exp.xlsx as last time it was run. - this keeps track of the need to run trials that the user opts not to run.
+        i3 = prev_exp.reset_index().set_index(keys_hist).index  # have to reset index because the name of the trial is going to be included in the new index so it must first be dropped from current index
+        i4 = exp_data1.reset_index().set_index(keys_current).index
+        exp_data1.loc[~i4.isin(i3),('runpyomo', '', '', '')] = True
+    else: exp_data1['runpyomo']=True
+except FileNotFoundError:
+    exp_data1['run']=True
+    exp_data1['runpyomo'] = True
 
 #########################
 #Exp loop               #
@@ -220,9 +234,11 @@ def exp(row):
     except KeyError:
         run_pyomo_params= True
     ##determine if pyomo should run, note if pyomo doesn't run there will be no ful solution (they are the same as before so no need)
-    if run_pyomo_params:
+    if run_pyomo_params or exp_data1.loc[exp_data1.index[row],'runpyomo'].squeeze():
+        ###if re-run update runpyomo to false
+        exp_data1.loc[exp_data1.index[row], ('runpyomo', '', '', '')] = False
         ##call core model function, must call them in the correct order (core must be last)
-        model.sets() #certain sets have to be updated each iteration of exp
+        crtmod.sets() #certain sets have to be updated each iteration of exp
         rotpy.rotationpyomo(params['rot'])
         crppy.croppyomo_local(params['crop'])
         macpy.machpyomo_local(params['mach'])
@@ -234,6 +250,8 @@ def exp(row):
         suppy.suppyomo_local(params['sup'])
         stubpy.stubpyomo_local(params['stub'])
         spy.stockpyomo_local(params['stock'])
+        ###bounds-this must be done last because it uses sets built in some of the other modules
+        bdypy.boundarypyomo_local()
         results=core.coremodel_all() #have to do this so i can access the solver status
  
         ##check if user wants full solution
