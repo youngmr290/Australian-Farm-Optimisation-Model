@@ -99,7 +99,7 @@ sorted_list = sorted(glob.iglob('*.py'), key=os.path.getmtime) #gets sorted list
 if sorted_list[-1] != 'Repoprt.py':
     newest = sorted_list[-1]
 else: newest = sorted_list[-2]
-
+newest_pyomo = max(glob.iglob('*pyomo.py'), key=os.path.getmtime)
 
 try: #incase pkl_exp doesn't exist
     ###if headers are the same, code is the same and the excel inputs are the same then test if the values in exp.xlxs are the same
@@ -255,7 +255,7 @@ def exp(row):
         results=core.coremodel_all() #have to do this so i can access the solver status
  
         ##check if user wants full solution
-        if exp_data.index[row][0] == True:
+        if exp_data.index[row][1] == True:
             ##make lp file
             model.write('%s.lp' %exp_data.index[row][2],io_options={'symbolic_solver_labels':True})
             

@@ -231,7 +231,7 @@ def coremodel_all():
     except AttributeError:
         pass
     def me(model,f,v):
-        return -paspy.pas_me(model,v,f) - suppy.sup_me(model,v,f) - stubpy.stubble_me(model,v,f) + stkpy.stock_me(model,v,f) <=0
+        return -paspy.pas_me(model,v,f) - paspy.nappas_me(model,v,f) - suppy.sup_me(model,v,f) - stubpy.stubble_me(model,v,f) + stkpy.stock_me(model,v,f) <=0
     model.con_me = pe.Constraint(model.s_feed_periods, model.s_sheep_pools, rule=me, doc='constraint between me available and consumed')
 
     ######################

@@ -40,8 +40,9 @@ def boundarypyomo_local():
             These could be adjusted with SA values if you want to alter the bounds for different trials'''
 
         rot_lobound_rl[0,3] = 1 #sets all rotations to a min of 1ha.
-
-
+        # force_sale_drys
+        # fore retain drys
+        # force retention - done in generator this is an input
 
 
         #################################
