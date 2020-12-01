@@ -12,7 +12,7 @@ import pyomo.environ as pe
 import Stubble as stub
 from CreateModel import model
 
-def stub_precalcs(params):
+def stub_precalcs(params, report):
     ##call the stubble function
     stub.stubble_all(params)
     

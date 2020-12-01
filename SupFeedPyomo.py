@@ -11,7 +11,7 @@ from pyomo import environ as pe
 from CreateModel import model
 import SupFeed as sup
 
-def sup_precalcs(params):
+def sup_precalcs(params, report):
     ##call sup functions
     sup.sup_cost(params) 
     vol_md = sup.sup_md_vol(params)  

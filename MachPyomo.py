@@ -21,7 +21,7 @@ import sys
 import Mach as mac
 from CreateModel import *
 
-def mach_precalcs(params):
+def mach_precalcs(params, report):
     mac.overall_seed_rate(params)
     mac.seed_days(params)
     mac.seeding_cost_period(params)

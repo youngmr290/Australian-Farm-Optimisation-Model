@@ -60,8 +60,8 @@ if pinp.crop['user_crop_rot']:
     ### User defined
     base_yields = pinp.crop['yields']
 else:        
-    ### AusFarm
-    base_yields = np.load('Yield data.npy')*1000
+    ### AusFarm ^need to complete
+    base_yields
 
 if len(phases_df) != len(base_yields): 
     print ('''Rotations dont match inputs.

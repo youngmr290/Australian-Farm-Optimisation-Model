@@ -22,7 +22,7 @@ import PropertyInputs as pinp
 # from LabourPyomo import *
 from CreateModel import *
 
-def labfx_precalcs(params):
+def labfx_precalcs(params, report):
     lfix.fixed(params)
     params['learn'] = pinp.labour['learn']
     

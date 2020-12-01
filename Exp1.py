@@ -213,18 +213,27 @@ def exp(row):
     ###report values
     r_vals={}
     r_vals['pas']={}
+    r_vals['rot']={}
+    r_vals['crop']={}
+    r_vals['mach']={}
+    r_vals['fin']={}
+    r_vals['labfx']={}
+    r_vals['lab']={}
+    r_vals['crplab']={}
+    r_vals['sup']={}
+    r_vals['stub']={}
     r_vals['stock']={}
     ##call precalcs
     paspy.paspyomo_precalcs(params['pas'],r_vals['pas'])
-    rotpy.rotation_precalcs(params['rot'])
-    crppy.crop_precalcs(params['crop'])
-    macpy.mach_precalcs(params['mach'])
-    finpy.fin_precalcs(params['fin'])
-    lfixpy.labfx_precalcs(params['labfx'])
-    labpy.lab_precalcs(params['lab'])
-    lcrppy.crplab_precalcs(params['crplab'])
-    suppy.sup_precalcs(params['sup'])
-    stubpy.stub_precalcs(params['stub'])
+    rotpy.rotation_precalcs(params['rot'],r_vals['rot'])
+    crppy.crop_precalcs(params['crop'],r_vals['crop'])
+    macpy.mach_precalcs(params['mach'],r_vals['mach'])
+    finpy.fin_precalcs(params['fin'],r_vals['fin'])
+    lfixpy.labfx_precalcs(params['labfx'],r_vals['labfx'])
+    labpy.lab_precalcs(params['lab'],r_vals['lab'])
+    lcrppy.crplab_precalcs(params['crplab'],r_vals['crplab'])
+    suppy.sup_precalcs(params['sup'],r_vals['sup'])
+    stubpy.stub_precalcs(params['stub'],r_vals['stub'])
     spy.stock_precalcs(params['stock'],r_vals['stock'])
 
     ##does pyomo need to be run?

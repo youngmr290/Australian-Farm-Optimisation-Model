@@ -16,7 +16,7 @@ import LabourCrop as lcrp
 import PropertyInputs as pinp
 
 
-def crplab_precalcs(params):
+def crplab_precalcs(params, report):
     lcrp.prep_labour(params)
     lcrp.fert_app_time_t(params)
     lcrp.fert_app_time_ha(params)

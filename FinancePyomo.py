@@ -20,7 +20,7 @@ from CreateModel import *
 import Finance as fin
 import PropertyInputs as pinp
 
-def fin_precalcs(params):
+def fin_precalcs(params, report):
     fin.overheads(params)
     params['overdraw'] = pinp.finance['overdraw_limit']
 
@@ -59,7 +59,7 @@ model.v_debit = Var(model.s_cashflow_periods, bounds = (0.0, None), doc = 'amoun
 #carryover credit 
 model.v_carryover_credit = Var(bounds = (0.0, max(0,pinp.finance['bank_bal_start'])), doc = 'amount of net positive cashflow brought into each year')
 #carryover debit
-model.v_carryover_debit = Var(bounds = (min(0,pinp.finance['bank_bal_start']), 0.0), doc = 'amount of net negitive cashflow brought into each year')
+model.v_carryover_debit = Var(bounds = (min(0,-pinp.finance['bank_bal_start']), 0.0), doc = 'amount of net negitive cashflow brought into each year')
 ##dep
 model.v_dep = Var(bounds = (0.0, None), doc = 'transfers total dep to objective')
 ##dep

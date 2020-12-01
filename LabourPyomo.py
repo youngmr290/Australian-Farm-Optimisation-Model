@@ -21,7 +21,7 @@ import Labour as lab
 from CreateModel import *
 import PropertyInputs as pinp
 
-def lab_precalcs(params):
+def lab_precalcs(params, report):
     lab.labour_general(params)
     lab.perm_cost(params)
     lab.manager_cost(params)

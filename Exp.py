@@ -217,19 +217,28 @@ for row in range(len(exp_data)):
     ###report values
     r_vals[exp_data.index[row][2]]={}
     r_vals[exp_data.index[row][2]]['pas']={}
+    r_vals[exp_data.index[row][2]]['rot']={}
+    r_vals[exp_data.index[row][2]]['crop']={}
+    r_vals[exp_data.index[row][2]]['mach']={}
+    r_vals[exp_data.index[row][2]]['fin']={}
+    r_vals[exp_data.index[row][2]]['labfx']={}
+    r_vals[exp_data.index[row][2]]['lab']={}
+    r_vals[exp_data.index[row][2]]['crplab']={}
+    r_vals[exp_data.index[row][2]]['sup']={}
+    r_vals[exp_data.index[row][2]]['stub']={}
     r_vals[exp_data.index[row][2]]['stock']={}
     ##call precalcs
     precalc_start = time.time()
     paspy.paspyomo_precalcs(params[exp_data.index[row][2]]['pas'],r_vals[exp_data.index[row][2]]['pas'])
-    rotpy.rotation_precalcs(params[exp_data.index[row][2]]['rot'])
-    crppy.crop_precalcs(params[exp_data.index[row][2]]['crop'])
-    macpy.mach_precalcs(params[exp_data.index[row][2]]['mach'])
-    finpy.fin_precalcs(params[exp_data.index[row][2]]['fin'])
-    lfixpy.labfx_precalcs(params[exp_data.index[row][2]]['labfx'])
-    labpy.lab_precalcs(params[exp_data.index[row][2]]['lab'])
-    lcrppy.crplab_precalcs(params[exp_data.index[row][2]]['crplab'])
-    suppy.sup_precalcs(params[exp_data.index[row][2]]['sup'])
-    stubpy.stub_precalcs(params[exp_data.index[row][2]]['stub'])
+    rotpy.rotation_precalcs(params[exp_data.index[row][2]]['rot'],r_vals[exp_data.index[row][2]]['rot'])
+    crppy.crop_precalcs(params[exp_data.index[row][2]]['crop'],r_vals[exp_data.index[row][2]]['crop'])
+    macpy.mach_precalcs(params[exp_data.index[row][2]]['mach'],r_vals[exp_data.index[row][2]]['mach'])
+    finpy.fin_precalcs(params[exp_data.index[row][2]]['fin'],r_vals[exp_data.index[row][2]]['fin'])
+    lfixpy.labfx_precalcs(params[exp_data.index[row][2]]['labfx'],r_vals[exp_data.index[row][2]]['labfx'])
+    labpy.lab_precalcs(params[exp_data.index[row][2]]['lab'],r_vals[exp_data.index[row][2]]['lab'])
+    lcrppy.crplab_precalcs(params[exp_data.index[row][2]]['crplab'],r_vals[exp_data.index[row][2]]['crplab'])
+    suppy.sup_precalcs(params[exp_data.index[row][2]]['sup'],r_vals[exp_data.index[row][2]]['sup'])
+    stubpy.stub_precalcs(params[exp_data.index[row][2]]['stub'],r_vals[exp_data.index[row][2]]['stub'])
     spy.stock_precalcs(params[exp_data.index[row][2]]['stock'], r_vals[exp_data.index[row][2]]['stock'])
     precalc_end = time.time()
     print('precalcs: ', precalc_end - precalc_start)

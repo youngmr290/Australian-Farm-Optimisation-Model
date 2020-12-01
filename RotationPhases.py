@@ -23,6 +23,12 @@ import timeit
 import UniversalInputs as uinp
 import PropertyInputs as pinp
 
+def report_landuses_phases(report):
+    '''function to store phases into report dictionary'''
+    report['phases']=uinp.structure['phases']
+    report['all_pastures']=uinp.structure['All_pas']
+
+
 def rot_params(params):
     ##area
     params['lmu_area'] =  pinp.general['lmu_area'].squeeze().to_dict()

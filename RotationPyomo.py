@@ -20,8 +20,9 @@ from pyomo.environ import *
 import RotationPhases as rps
 from CreateModel import *
 
-def rotation_precalcs(params):
+def rotation_precalcs(params, report):
     rps.rot_params(params)
+    rps.report_landuses_phases(report)
     
 def rotationpyomo(params):
     ####################
