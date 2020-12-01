@@ -672,7 +672,7 @@ def green_and_dry(params):
                                       +          pgr_grnha_goflt
                                * (1 -  grn_senesce_pgrcons_ft[:,np.newaxis,:])
                                       - foo_endprior_grnha_goflt)          \
-                         /       (1 -  grn_senesce_pgrcons_ft[:,np.newaxis,:])
+                          / (1 -       grn_senesce_pgrcons_ft[:,np.newaxis,:])
     cons_grnha_t_goflt  =      removal_grnha_goflt   \
                          /(1+i_grn_trampling_ft[:,np.newaxis,:])
 
@@ -795,12 +795,12 @@ def green_and_dry(params):
                                  -  removal_grnha_goflt   \
                                  -  foo_end_grnha_goflt
     grn_dmd_senesce_goflt       =               dmd_grnha_goflt       \
-                                 - i_grn_dmd_senesce_redn_ft[:,np.newaxis,:]
-    senesce_propn_dgoflt[1,...]  = ( grn_dmd_senesce_goflt                     # senescence to high pool
-                                    -    dry_dmd_low_ft[:,np.newaxis,:])       \
-                                  /(    dry_dmd_high_ft[:,np.newaxis,:]
-                                    -    dry_dmd_low_ft[:,np.newaxis,:])
-    senesce_propn_dgoflt[0,...] = 1- senesce_propn_dgoflt[1,...]              # senescence to low pool
+                                 + i_grn_dmd_senesce_redn_ft[:,np.newaxis,:]
+    senesce_propn_dgoflt[1,...]  = np.clip(( grn_dmd_senesce_goflt                     # senescence to high pool. np.clip reduces the range of the dmd to the range of dmd in the dry feed pools
+                                            -    dry_dmd_low_ft[:,np.newaxis,:])
+                                          /(    dry_dmd_high_ft[:,np.newaxis,:]
+                                            -    dry_dmd_low_ft[:,np.newaxis,:]), 0, 1)
+    senesce_propn_dgoflt[0,...] = 1- senesce_propn_dgoflt[1,...]                       # senescence to low pool
     senesce_grnha_dgoflt      = senesce_total_grnha_goflt * senesce_propn_dgoflt                                   # ^alternative in one array parameters for the growth/grazing activities: quantity of green that senesces to the high pool
     senesce_grnha_rav_dgoflt = senesce_grnha_dgoflt.ravel()
     params['p_senesce_grnha_dgoflt'] = dict( zip(index_dgoflt ,senesce_grnha_rav_dgoflt))
