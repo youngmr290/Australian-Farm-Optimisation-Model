@@ -22,7 +22,7 @@ from CreateModel import *
 import PropertyInputs as pinp
 
 def lab_precalcs(params, report):
-    lab.labour_general(params)
+    lab.labour_general(params,report)
     lab.perm_cost(params)
     lab.manager_cost(params)
     params['min_perm'] = pinp.labour['min_perm'] 

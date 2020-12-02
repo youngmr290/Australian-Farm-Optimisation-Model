@@ -192,6 +192,10 @@ structure['foo_levels'] =  ['Foo-L', 'Foo-M', 'Foo-H']                 # Low, me
 #######
 #sheep#
 #######
+##dse
+structure['ia_sire_dsegroup'] = 4
+structure['ia_offs_dsegroup'] = 4
+structure['ia_dams_dsegroup_b1'] = np.array([4,	0,	1,	2,	3,	1,	2,	1,	0,	0,	0])
 ##axis pos ^maybe move in the ones from the other inputs to here?
 structure['i_e0_pos']=-5
 ##general

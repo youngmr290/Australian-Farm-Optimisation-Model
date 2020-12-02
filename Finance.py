@@ -30,7 +30,6 @@ interest
 #Converting yeary compound r to some shorter period m, use the following formula:
 #[(1 + r)^(1/m)] - 1
 
-
 #convert pa interest into per cashflow period
 def debit_interest():
     return (1 + uinp.finance['debit_interest']) ** (1 / len(uinp.structure['cashflow_periods']))
@@ -48,8 +47,13 @@ def overheads(params):
     overheads = overheads.squeeze().sum()/ len(uinp.structure['cashflow_periods'])    
     params['overheads'] = overheads
 
+#################
+# report vals   #
+#################
 
-
+def finance_rep(*report):
+    keys_c = uinp.structure['cashflow_periods']
+    report['keys_c'] = keys_c
 
 
 

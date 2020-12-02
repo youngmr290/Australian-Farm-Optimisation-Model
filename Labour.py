@@ -36,7 +36,7 @@ labour periods and length
 
 
 
-def labour_general(params):
+def labour_general(params,report):
     '''
     Returns
     -------
@@ -199,6 +199,7 @@ def labour_general(params):
     params['manager hours'] = labour_periods['manager hours'].to_dict()
     params['casual ub'] = labour_periods['casual ub'].to_dict()
     params['casual lb'] = labour_periods['casual lb'].to_dict()
+    report['keys_p5'] = per.p_date2_df().index.astype('object')
 
 # t_labour_periods=labour_general()
 

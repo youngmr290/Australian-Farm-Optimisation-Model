@@ -85,16 +85,12 @@ def generator(params,report):
     sim_years_offs = min(uinp.structure['i_age_max_offs'], sim_years)
     n_sim_periods, date_start_p, date_end_p, p_index_p, step \
     = sfun.sim_periods(pinp.sheep['i_startyear'], uinp.structure['i_sim_periods_year'], sim_years)
-    # n_sim_periods, date_start_p, date_end_p, p_index_p, step \
-    # = sfun.sim_periods(pinp.sheep['i_startyear'], uinp.structure['i_sim_periods_year'], uinp.structure['i_age_max'])
     date_start_pa1e1b1nwzida0e0b0xyg = np.expand_dims(date_start_p, axis = tuple(range(uinp.structure['i_p_pos']+1, 0)))
     date_end_pa1e1b1nwzida0e0b0xyg = np.expand_dims(date_end_p, axis = tuple(range(uinp.structure['i_p_pos']+1, 0)))
     p_index_pa1e1b1nwzida0e0b0xyg = np.expand_dims(p_index_p, axis = tuple(range(uinp.structure['i_p_pos']+1, 0)))
     ## define the periods - offs - these make the p axis customisable for offs which means they can be smaller
     n_sim_periods_offs, offs_date_start_p, offs_date_end_p, p_index_offs_p, step \
     = sfun.sim_periods(pinp.sheep['i_startyear'], uinp.structure['i_sim_periods_year'], sim_years_offs)
-    # n_sim_periods_offs, offs_date_start_p, offs_date_end_p, p_index_offs_p, step \
-    # = sfun.sim_periods(pinp.sheep['i_startyear'], uinp.structure['i_sim_periods_year'], uinp.structure['i_age_max_offs'])
     date_start_pa1e1b1nwzida0e0b0xyg3 = np.expand_dims(offs_date_start_p, axis = tuple(range(uinp.structure['i_p_pos']+1, 0)))
     date_end_pa1e1b1nwzida0e0b0xyg3 = np.expand_dims(offs_date_end_p, axis = tuple(range(uinp.structure['i_p_pos']+1, 0)))
     p_index_pa1e1b1nwzida0e0b0xyg3 = np.expand_dims(p_index_offs_p, axis = tuple(range(uinp.structure['i_p_pos']+1, 0)))
@@ -103,7 +99,8 @@ def generator(params,report):
     doy_pa1e1b1nwzida0e0b0xyg = (date_start_pa1e1b1nwzida0e0b0xyg - date_start_pa1e1b1nwzida0e0b0xyg.astype('datetime64[Y]')).astype(int) + 1 #plus one to include current day eg 7th - 1st = 6 plus 1 = 7th day of year
     ##day length
     dl_pa1e1b1nwzida0e0b0xyg = sfun.f_daylength(doy_pa1e1b1nwzida0e0b0xyg, pinp.sheep['i_latitude'])
-
+    ##days in each peirod
+    days_period_pa1e1b1nwzida0e0b0xyg = date_end_pa1e1b1nwzida0e0b0xyg - date_start_pa1e1b1nwzida0e0b0xyg
 
     ###################################
     ## calculate masks                #
@@ -190,7 +187,8 @@ def generator(params,report):
     index_w2 = np.arange(uinp.structure['i_progeny_w2_len'])
     index_w3 = np.arange(len_w3)
     index_wzida0e0b0xyg3 = fun.f_reshape_expand(index_w3, uinp.structure['i_w_pos'])
-    index_tva1e1b1nw8zida0e0b0xyg1w9 = fun.f_reshape_expand(np.arange(t1_len), uinp.structure['i_p_pos']-2)
+    index_tva1e1b1nw8zida0e0b0xyg1 = fun.f_reshape_expand(np.arange(t1_len), uinp.structure['i_p_pos']-1)
+    index_tva1e1b1nw8zida0e0b0xyg1w9 = index_tva1e1b1nw8zida0e0b0xyg1[...,na]
     index_t2 = np.arange(t2_len)
     index_tva1e1b1nwzida0e0b0xyg2w9 = fun.f_reshape_expand(index_t2, uinp.structure['i_p_pos']-2)
     index_tva1e1b1nw8zida0e0b0xyg3w9 = fun.f_reshape_expand(np.arange(t3_len), uinp.structure['i_p_pos']-2)
@@ -213,7 +211,6 @@ def generator(params,report):
     pg1 = (len_p, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, 1, 1, 1, 1, 1, len_y, len_g1)
     pg2 = (len_p, len_a1, len_e1, len_b1, len_n2, len_w2, len_z, len_i, 1, 1, 1, 1, len_x, len_y, len_g1)
     pg3 = (len_p3, 1, 1, 1, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y, len_g3)
-    # g1 = (len_p, len_a, len_e, len_b1, len_g1_n, len_g1_w, len_z, len_i, 1, 1, 1, 1, 1, len_y, len_g1)
     m2g0 = (len_m2, 1, 1, 1, 1, 1, len_z, lensire_i, 1, 1, 1, 1, 1, len_y, len_g0)
     m2g1 = (len_m2, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, 1, 1, 1, 1, 1, len_y, len_g1)
     m2g2 = (len_m2, len_a1, len_e1, len_b1, len_n2, len_w2, len_z, len_i, 1, 1, 1, 1, len_x, len_y, len_g2)
@@ -223,56 +220,18 @@ def generator(params,report):
     m3g2 = (len_m3, len_a1, len_e1, len_b1, len_n2, len_w2, len_z, len_i, 1, 1, 1, 1, len_x, len_y, len_g2)
     m3g3 = (len_m3, 1, 1, 1, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y, len_g3)
 
-    ###sires
-    omer_history_start_m3g0 = np.zeros(m3g0, dtype = 'float64')
-    d_cfw_history_start_m2g0 = np.zeros(m2g0, dtype = 'float64')
-    ###Dams
-    omer_history_start_m3g1 = np.zeros(m3g1, dtype = 'float64')
-    d_cfw_history_start_m2g1 = np.zeros(m2g1, dtype = 'float64')
-    ###yatf
-    omer_history_start_m3g2 = np.zeros(m3g2, dtype = 'float64')
-    d_cfw_history_start_m2g2 = np.zeros(m2g2, dtype = 'float64')
-    ###Offspring
-    omer_history_start_m3g3 = np.zeros(m3g3, dtype = 'float64')
-    d_cfw_history_start_m2g3 = np.zeros(m2g3, dtype = 'float64')
 
-    ###report variables
-    ###empty arrays to store different return values from the equation systems in the p loop.
-    r_compare_q0q1q2psire = np.zeros(qg0, dtype = 'float32')
-    r_compare_q0q1q2pdams = np.zeros(qg1, dtype = 'float32')
-    r_compare_q0q1q2pyatf = np.zeros(qg2, dtype = 'float32')
-    r_compare_q0q1q2poffs = np.zeros(qg3, dtype = 'float32')
-    ###empty variables to store report values
-    r_foo_dams = np.zeros(pg1, dtype = 'float32')
-    r_dmd_dams = np.zeros(pg1, dtype = 'float32')
-    r_evg_dams = np.zeros(pg1, dtype = 'float32')
-    r_intake_f_dams = np.zeros(pg1, dtype = 'float32')
-    r_md_solid_dams = np.zeros(pg1, dtype = 'float32')
-    r_mp2_dams = np.zeros(pg1, dtype = 'float32')
-    r_nw_start_dams = np.zeros(pg1, dtype = 'float32')
-
-    ### temporary variables required while debugging
-    t_ldr_dams = np.zeros(pg1, dtype = 'float32')
-    t_lb_dams = np.zeros(pg1, dtype = 'float32')
-
-    r_ebg_yatf = np.zeros(pg2, dtype = 'float32')
-    r_evg_yatf = np.zeros(pg2, dtype = 'float32')
-    r_mem_yatf = np.zeros(pg2, dtype = 'float32')
-    r_mei_yatf = np.zeros(pg2, dtype = 'float32')
-    r_mei_solid_yatf = np.zeros(pg2, dtype = 'float32')
-    r_propn_solid_yatf = np.zeros(pg2, dtype = 'float32')
-    r_pi_yatf = np.zeros(pg2, dtype = 'float32')
-    r_kg_yatf = np.zeros(pg2, dtype = 'float32')
-    r_mp2_yatf = np.zeros(pg2, dtype = 'float32')
-    r_intake_f_yatf = np.zeros(pg2, dtype = 'float32')
-    r_nw_start_yatf = np.zeros(pg2, dtype = 'float32')
-
-
-    ##output variables for postprocessing
+    ##output variables for postprocessing & reporting
     dtype='float32' #using 64 was getting slow
     dtypeint='int32' #using 64 was getting slow
 
-    ###sire
+    ##sire
+    ###array for generator
+    omer_history_start_m3g0 = np.zeros(m3g0, dtype = 'float64')
+    d_cfw_history_start_m2g0 = np.zeros(m2g0, dtype = 'float64')
+    woolvalue_pa1e1b1nwzida0e0b0xyg0 = np.zeros(pg0, dtype =dtype)
+    salevalue_pa1e1b1nwzida0e0b0xyg0 = np.zeros(pg0, dtype =dtype)
+    ###arrays for postprocessing
     o_numbers_start_sire = np.zeros(pg0, dtype =dtype)
     o_numbers_end_sire = np.zeros(pg0, dtype =dtype)
     o_ffcfw_sire = np.zeros(pg0, dtype =dtype)
@@ -281,15 +240,23 @@ def generator(params,report):
     o_mei_solid_sire = np.zeros(pg0, dtype =dtype)
     o_ch4_total_sire = np.zeros(pg0, dtype =dtype)
     o_cfw_sire = np.zeros(pg0, dtype =dtype)
-    # o_gfw_sire = np.zeros(pg0, dtype =dtype)
     o_sl_sire = np.zeros(pg0, dtype =dtype)
     o_ss_sire = np.zeros(pg0, dtype =dtype)
     o_fd_sire = np.zeros(pg0, dtype =dtype)
     o_fd_min_sire = np.zeros(pg0, dtype =dtype)
     o_rc_start_sire = np.zeros(pg0, dtype =dtype)
     o_ebg_sire = np.zeros(pg0, dtype =dtype)
+    ###arrays for report variables
+    r_compare_q0q1q2psire = np.zeros(qg0, dtype = dtype) #empty arrays to store different return values from the equation systems in the p loop.
+    r_nw_start_sire = np.zeros(pg0, dtype=dtype)
 
-    ###dams
+    ##dams
+    ###array for generator
+    omer_history_start_m3g1 = np.zeros(m3g1, dtype = 'float64')
+    d_cfw_history_start_m2g1 = np.zeros(m2g1, dtype = 'float64')
+    woolvalue_pa1e1b1nwzida0e0b0xyg1 = np.zeros(pg1, dtype =dtype)
+    salevalue_pa1e1b1nwzida0e0b0xyg1 = np.zeros(pg1, dtype =dtype)
+    ###arrays for postprocessing
     t_numbers_start_prejoin = 0
     o_numbers_start_dams = np.zeros(pg1, dtype =dtype)
     o_numbers_end_dams = np.zeros(pg1, dtype =dtype)
@@ -307,8 +274,22 @@ def generator(params,report):
     o_rc_start_dams = np.zeros(pg1, dtype =dtype)
     o_ebg_dams = np.zeros(pg1, dtype =dtype)
     o_n_sire_a1e1b1nwzida0e0b0xyg1g0p8 = np.zeros((len_p, 1, 1, 1, 1, 1, len_z, len_i, 1, 1, 1, 1, 1, len_y, len_g1,len_p8,len_g0), dtype =dtype)
+    ###arrays for report variables
+    r_compare_q0q1q2pdams = np.zeros(qg1, dtype = dtype) #empty arrays to store different return values from the equation systems in the p loop.
+    r_foo_dams = np.zeros(pg1, dtype = dtype)
+    r_dmd_dams = np.zeros(pg1, dtype = dtype)
+    r_evg_dams = np.zeros(pg1, dtype = dtype)
+    r_intake_f_dams = np.zeros(pg1, dtype = dtype)
+    r_md_solid_dams = np.zeros(pg1, dtype = dtype)
+    r_mp2_dams = np.zeros(pg1, dtype = dtype)
+    r_nw_start_dams = np.zeros(pg1, dtype = dtype)
 
-    ###yatf
+
+    ##yatf
+    ###array for generator
+    omer_history_start_m3g2 = np.zeros(m3g2, dtype = 'float64')
+    d_cfw_history_start_m2g2 = np.zeros(m2g2, dtype = 'float64')
+    ###array for postprocesing
     o_numbers_start_yatf = np.zeros(pg2, dtype =dtype)
     # o_numbers_end_yatf = np.zeros(pg2, dtype =dtype)
     o_ffcfw_start_yatf = np.zeros(pg2, dtype =dtype)
@@ -323,8 +304,28 @@ def generator(params,report):
     # o_fd_yatf = np.zeros(pg2, dtype =dtype)
     # o_fd_min_yatf = np.zeros(pg2, dtype =dtype)
     o_rc_start_yatf = np.zeros(pg2, dtype =dtype)
+    ###arrays for report variables
+    r_compare_q0q1q2pyatf = np.zeros(qg2, dtype = dtype) #empty arrays to store different return values from the equation systems in the p loop.
+    r_ebg_yatf = np.zeros(pg2, dtype = dtype)
+    r_evg_yatf = np.zeros(pg2, dtype = dtype)
+    r_mem_yatf = np.zeros(pg2, dtype = dtype)
+    r_mei_yatf = np.zeros(pg2, dtype = dtype)
+    r_mei_solid_yatf = np.zeros(pg2, dtype = dtype)
+    r_propn_solid_yatf = np.zeros(pg2, dtype = dtype)
+    r_pi_yatf = np.zeros(pg2, dtype = dtype)
+    r_kg_yatf = np.zeros(pg2, dtype = dtype)
+    r_mp2_yatf = np.zeros(pg2, dtype = dtype)
+    r_intake_f_yatf = np.zeros(pg2, dtype = dtype)
+    r_nw_start_yatf = np.zeros(pg2, dtype = dtype)
 
-    ###offs
+
+    ##offs
+    ###array for generator
+    omer_history_start_m3g3 = np.zeros(m3g3, dtype = 'float64')
+    d_cfw_history_start_m2g3 = np.zeros(m2g3, dtype = 'float64')
+    woolvalue_tpa1e1b1nwzida0e0b0xyg3 = np.zeros((t3_len,)+pg3, dtype =dtype)
+    salevalue_pa1e1b1nwzida0e0b0xyg3 = np.zeros(pg3, dtype =dtype)
+    ###array for postprocesing
     o_numbers_start_offs = np.zeros(pg3, dtype =dtype)
     o_numbers_end_offs = np.zeros(pg3, dtype =dtype)
     o_ffcfw_offs = np.zeros(pg3, dtype =dtype)
@@ -340,15 +341,10 @@ def generator(params,report):
     o_fd_min_offs = np.zeros(pg3, dtype =dtype)
     o_rc_start_offs = np.zeros(pg3, dtype =dtype)
     o_ebg_offs = np.zeros(pg3, dtype =dtype)
+    ###arrays for report variables
+    r_compare_q0q1q2poffs = np.zeros(qg3, dtype = dtype) #empty arrays to store different return values from the equation systems in the p loop.
+    r_nw_start_offs = np.zeros(pg3, dtype=dtype)
 
-    ###initialise arrays to store results
-    woolvalue_pa1e1b1nwzida0e0b0xyg0 = np.zeros(pg0, dtype =dtype)
-    woolvalue_pa1e1b1nwzida0e0b0xyg1 = np.zeros(pg1, dtype =dtype)
-    woolvalue_tpa1e1b1nwzida0e0b0xyg3 = np.zeros((t3_len,)+pg3, dtype =dtype)
-    ###initialise arrays to store results
-    salevalue_pa1e1b1nwzida0e0b0xyg0 = np.zeros(pg0, dtype =dtype)
-    salevalue_pa1e1b1nwzida0e0b0xyg1 = np.zeros(pg1, dtype =dtype)
-    salevalue_pa1e1b1nwzida0e0b0xyg3 = np.zeros(pg3, dtype =dtype)
 
 
 
@@ -2749,7 +2745,6 @@ def generator(params,report):
                 o_mei_solid_sire[p] = mei_solid_sire
                 o_ch4_total_sire[p] = ch4_total_sire
                 o_cfw_sire[p] = cfw_sire
-                # o_gfw_sire[p] = gfw_sire
                 o_sl_sire[p] = sl_sire
                 o_fd_sire[p] = fd_sire
                 o_fd_min_sire[p] = fd_min_sire
@@ -2757,6 +2752,8 @@ def generator(params,report):
                 o_rc_start_sire[p] = rc_start_sire
                 o_ebg_sire[p] = ebg_sire
 
+                ###store report variables for dams - individual variables can be deleted if not needed - store in report dictionary in the report section at end of this module
+                r_nw_start_sire[p] = nw_start_sire
 
     ###dams
         o_numbers_start_dams[p] = numbers_start_dams #needed outside if so that dvp0 (p0) has start numbers
@@ -2789,7 +2786,7 @@ def generator(params,report):
             o_rc_start_dams[p] = rc_start_dams
             o_ebg_dams[p] = ebg_dams
 
-            ###store report variables for dams - individual variables can be deleted if not needed
+            ###store report variables for dams - individual variables can be deleted if not needed - store in report dictionary in the report section at end of this module
             r_intake_f_dams[p] = intake_f_dams
             r_md_solid_dams[p] = md_solid_dams
             r_foo_dams[p] = foo_dams
@@ -2798,8 +2795,6 @@ def generator(params,report):
             r_mp2_dams[p] = mp2_dams
             r_nw_start_dams[p] = nw_start_dams
 
-            t_ldr_dams[p] = ldr_dams
-            t_lb_dams[p] = lb_dams
 
         ###yatf
         o_ffcfw_start_yatf[p] = ffcfw_start_yatf #use ffcfw_start because weaning start of period, has to be outside of the 'if' because days per period = 0 when weaning occurs becasue weaning is first day of period. But we need to know the start ffcfw.
@@ -2818,7 +2813,7 @@ def generator(params,report):
             # o_ss_yatf[p] = ss_yatf
             o_rc_start_yatf[p] = rc_start_yatf
 
-            ###store report variables - individual variables can be deleted if not needed
+            ###store report variables - individual variables can be deleted if not needed - store in report dictionary in the report section at end of this module
             r_ebg_yatf[p] = ebg_yatf
             r_evg_yatf[p] = evg_yatf
             r_mp2_yatf[p] = mp2_yatf
@@ -2856,8 +2851,8 @@ def generator(params,report):
             o_rc_start_offs[p] = rc_start_offs
             o_ebg_offs[p] = ebg_offs
 
-            ###store report variables for offspring - individual variables can be deleted if not needed
-            # r_age_start_offs[p] = age_start_pa1e1b1nwzida0e0b0xyg3
+            ###store report variables - individual variables can be deleted if not needed - store in report dictionary in the report section at end of this module
+            r_nw_start_offs[p] = nw_start_offs
 
         ###########################
         #stuff for next period    #
@@ -3887,13 +3882,9 @@ def generator(params,report):
     #########################################
     ''' Create a mask to remove retaining dry dams when sale of drys is forced'''
     ##dams
-    mask_numbers_provdry_tpa1e1b1nwzida0e0b0xyg1 = not((index_k2tva1e1b1nwzida0e0b0xyg1 == 1) * (index_tpa1e1b1nwzida0e0b0xyg1 >= 2)
-                                                         * (fvp_type_pa1e1b1nwzida0e0b0xyg1 == 1) * (scan_pa1e1b1nwzida0e0b0xyg1 >= 1)
-                                                         * (pinp.sheep['i_dry_sales_forced']))[..., na]
-    ## or do it as mask on the number_prov after they have been through f_p2v using
-    mask_numbers_provdry_k2k5tva1nwzidxyg1 = not((index_k2tva1e1b1nwzida0e0b0xyg1 == 1) * (index_tva1e1b1nwzida0e0b0xyg1 >= 2)
-                                                         * (dvp_type_va1e1b1nwzida0e0b0xyg1 == 1) * (scan_va1e1b1nwzida0e0b0xyg1 >= 1)
-                                                         * (pinp.sheep['i_dry_sales_forced']))[..., na]
+    mask_numbers_provdry_k28k29tva1e1b1nwzida0e0b0xyg1 = np.logical_not((index_k28k29tva1e1b1nwzida0e0b0xyg1 == 1) * (index_tva1e1b1nw8zida0e0b0xyg1 >= 2)
+                                                         * (dvp_type_va1e1b1nwzida0e0b0xyg1 == 1) * (scan_va1e1b1nwzida0e0b0xyg1 >= 1) #dvp1 because thats the scanning dvp
+                                                         * (pinp.sheep['i_dry_sales_forced']))
 
     ###########################
     #create production params #
@@ -4004,6 +3995,7 @@ def generator(params,report):
           np.sum(numbers_end_va1e1b1nwzida0e0b0xyg1[..., na,na]
                 * mask_numbers_provw8w9_tva1e1b1nw8zida0e0b0xyg1w9[..., na,:]
                 * mask_numbers_provt_tpa1e1b1nwzida0e0b0xyg1g9[..., na]
+                * mask_numbers_provdry_k28k29tva1e1b1nwzida0e0b0xyg1[...,na,na]
                 * distribution_tva1e1b1nw8zida0e0b0xyg1w9[..., na,:]
                 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k28k29tva1e1b1nwzida0e0b0xyg1)[..., na,na]                #The numerator has both k2 with g9 axis and without. One to reflect the decison varaible (k28) and one for the constraint (k29). So I think this is all good
                 * (a_k2cluster_next_tva1e1b1nwzida0e0b0xyg1g9 == index_k29tva1e1b1nwzida0e0b0xyg1g9)[..., na],
@@ -4656,12 +4648,91 @@ def generator(params,report):
 
 
 
+    ###############
+    # report      #
+    ###############
+    '''add report values to report dict and do any additional calculations'''
+    ##dse
+    days_p6 = np.array(pinp.feed_inputs['feed_periods'].loc[:pinp.feed_inputs['feed_periods'].index[-2],
+                        'length'])  # not including last row becasue that is the start of the following year.
+    days_p6_p6tva1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(days_p6, uinp.structure['i_p_pos']-2)
+    ###DSE based on MJ/d
+    ####returns the average mj/d for each animal for the each feed period (mei accounts for if the animal is on hand - if the animal is sold the average mei/d will be lower in that dvp)
+    mj_ave_p6ftva1e1b1nwzida0e0b0xyg0 = mei_p6fa1e1b1nwzida0e0b0xyg0[:,:,na,na,...] / days_p6_p6tva1e1b1nwzida0e0b0xyg[:,na,...]
+    mj_ave_k2p6ftva1e1b1nwzida0e0b0xyg1 = mei_k2p6ftva1e1b1nwzida0e0b0xyg1 / days_p6_p6tva1e1b1nwzida0e0b0xyg[:,na,...]
+    mj_ave_k3k5p6ftva1e1b1nwzida0e0b0xyg3 = mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3 / days_p6_p6tva1e1b1nwzida0e0b0xyg[:,na,...]
+    ####returns the number of dse of each animal in each dvp - this is combined with the variable numbers in reporting to get the total dse
+    dsemj_p6tva1e1b1nwzida0e0b0xyg0 = np.sum(mj_ave_p6ftva1e1b1nwzida0e0b0xyg0 / pinp.sheep['i_dse_mj'], axis = 1)
+    dsemj_k2p6tva1e1b1nwzida0e0b0xyg1 = np.sum(mj_ave_k2p6ftva1e1b1nwzida0e0b0xyg1 / pinp.sheep['i_dse_mj'], axis = 2)
+    dsemj_k3k5p6tva1e1b1nwzida0e0b0xyg3 = np.sum(mj_ave_k3k5p6ftva1e1b1nwzida0e0b0xyg3 / pinp.sheep['i_dse_mj'], axis = 3)
 
+    ###DSE based on nw
+    #### cumulative total of nw with p6 axis
+    nw_cum_p6va1e1b1nwzida0e0b0xyg0 = sfun.f_p2v_std(r_nw_start_sire**0.75, on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0,
+                                                  days_period_p=days_period_pa1e1b1nwzida0e0b0xyg0, a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg,
+                                                  index_any1tvp=index_p6pa1e1b1nwzida0e0b0xyg)
+    nw_cum_p6tva1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(r_nw_start_dams**0.75, a_v_pa1e1b1nwzida0e0b0xyg1, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1,
+                                                  days_period_p=days_period_pa1e1b1nwzida0e0b0xyg1, a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg,
+                                                  index_any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,...])
+    nw_cum_p6tva1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(r_nw_start_offs**0.75, a_v_pa1e1b1nwzida0e0b0xyg3, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg3,
+                                                  days_period_p=days_period_pa1e1b1nwzida0e0b0xyg3, a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg,
+                                                  index_any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,...])
+    ####returns the average nw for each animal for the each feed period (cum nw accounts for if the animal is on hand - if the animal is sold the average nw will be lower in that feed period)
+    nw_ave_p6tva1e1b1nwzida0e0b0xyg0 = nw_cum_p6va1e1b1nwzida0e0b0xyg0[:,na,...] / days_p6_p6tva1e1b1nwzida0e0b0xyg
+    nw_ave_p6tva1e1b1nwzida0e0b0xyg1 = nw_cum_p6tva1e1b1nwzida0e0b0xyg1 / days_p6_p6tva1e1b1nwzida0e0b0xyg
+    nw_ave_p6tva1e1b1nwzida0e0b0xyg3 = nw_cum_p6tva1e1b1nwzida0e0b0xyg3 / days_p6_p6tva1e1b1nwzida0e0b0xyg
+    ####convert nw to dse
+    dsehd_p6tva1e1b1nwzida0e0b0xyg0 = nw_ave_p6tva1e1b1nwzida0e0b0xyg0 / pinp.sheep['i_dse_nw']**0.75
+    dsehd_p6tva1e1b1nwzida0e0b0xyg1 = nw_ave_p6tva1e1b1nwzida0e0b0xyg1 / pinp.sheep['i_dse_nw']**0.75
+    dsehd_p6tva1e1b1nwzida0e0b0xyg3 = nw_ave_p6tva1e1b1nwzida0e0b0xyg3 / pinp.sheep['i_dse_nw']**0.75
+    ####account for b1 axis effect on dse & select the dse group (note sire and offs dont have b1 axis so simple slice)
+    dsenw_p6tva1e1b1nwzida0e0b0xyg0 = dsehd_p6tva1e1b1nwzida0e0b0xyg0 * pinp.sheep['i_dse_group'][uinp.structure['ia_sire_dsegroup']]
+    dsenw_p6tva1e1b1nwzida0e0b0xyg1 = dsehd_p6tva1e1b1nwzida0e0b0xyg1 * np.take_along_axis(pinp.sheep['i_dse_group'], uinp.structure['ia_dams_dsegroup_b1'][:,na],0)
+    dsenw_p6tva1e1b1nwzida0e0b0xyg3 = dsehd_p6tva1e1b1nwzida0e0b0xyg3 * pinp.sheep['i_dse_group'][uinp.structure['ia_offs_dsegroup']]
+    ####for dams need to cluster e1 & b1 axis for offs cluster k3k5
+    dsenw_k2p6tva1e1b1nwzida0e0b0xyg1 = np.sum(dsenw_p6tva1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1==index_k2tva1e1b1nwzida0e0b0xyg1)[:,na,...], axis=(uinp.parameters['i_b1_pos'],pinp.sheep['i_e1_pos']))
+    dsenw_k3k5p6tva1e1b1nwzida0e0b0xyg3 = np.sum(dsenw_p6tva1e1b1nwzida0e0b0xyg3 * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[:,:,na,...]
+                                                 * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[:,:,na,...],
+                                                 axis=(uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']))
 
-
-
-
-
+    ##store in report dict
+    ###keys
+    report['keys_a'] = keys_a
+    report['keys_d'] = keys_d
+    report['keys_g0'] = keys_g0
+    report['keys_g1'] = keys_g1
+    report['keys_g2'] = keys_g2
+    report['keys_g3'] = keys_g3
+    report['keys_f'] = keys_f
+    report['keys_h1'] = keys_h1
+    report['keys_i'] = keys_i
+    report['keys_k2'] = keys_k2
+    report['keys_k3'] = keys_k3
+    report['keys_k5'] = keys_k5
+    report['keys_lw1'] = keys_lw1
+    report['keys_lw3'] = keys_lw3
+    report['keys_lw_prog'] = keys_lw_prog
+    report['keys_n1'] = keys_n1
+    report['keys_n3'] = keys_n3
+    report['keys_p8'] = keys_p8
+    report['keys_t1'] = keys_t1
+    report['keys_t2'] = keys_t2
+    report['keys_t3'] = keys_t3
+    report['keys_v1'] = keys_v1
+    report['keys_v3'] = keys_v3
+    report['keys_y0'] = keys_y0
+    report['keys_y1'] = keys_y1
+    report['keys_y3'] = keys_y3
+    report['keys_x'] = keys_x
+    report['keys_z'] = keys_z
+    report['keys_p6'] = keys_p6
+    ###dse
+    report['dsenw_p6g0'] = dsenw_p6tva1e1b1nwzida0e0b0xyg0
+    report['dsemj_p6g0'] = dsemj_p6tva1e1b1nwzida0e0b0xyg0
+    report['dsenw_k2p6tva1nwziyg1'] = dsenw_k2p6tva1e1b1nwzida0e0b0xyg1
+    report['dsemj_k2p6tva1nwziyg1'] = dsemj_k2p6tva1e1b1nwzida0e0b0xyg1
+    report['dsenw_k3k5p6tvnwzixyg3'] = dsenw_k3k5p6tva1e1b1nwzida0e0b0xyg3
+    report['dsemj_k3k5p6tvnwzixyg3'] = dsemj_k3k5p6tva1e1b1nwzida0e0b0xyg3
 
     finish = time.time()
     print('onhand and shearing arrays: ',calc_cost_start - onhandshear_start)

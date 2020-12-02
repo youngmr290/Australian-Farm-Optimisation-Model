@@ -22,6 +22,7 @@ import PropertyInputs as pinp
 
 def fin_precalcs(params, report):
     fin.overheads(params)
+    fin.finance_rep(report)
     params['overdraw'] = pinp.finance['overdraw_limit']
 
 
