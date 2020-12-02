@@ -3868,9 +3868,9 @@ def generator(params,report):
     mask_numbers_reqw8w9_w8zida0e0b0xyg3w9 = np.trunc(index_wzida0e0b0xyg3[...,na] / step_con3) == index_w3 / step_con3 #na for w9
 
 
-    ###############################
-    #Masking numbers transferred  #
-    ###############################
+    ################################################################
+    #Masking numbers transferred  for mating to other ram genotypes#
+    ################################################################
     ''' Mask numbers transferred - these mask stops dams transfering to different sires between dvps that are not prejoining'''
     ##dams
     temporary = (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na, :]
@@ -3881,6 +3881,19 @@ def generator(params,report):
     ##0ffs
     ##mask the t array so that only slice t0 provides numbers
     mask_numbers_provt_tva1e1b1nw8zida0e0b0xyg3w9 = (index_tva1e1b1nw8zida0e0b0xyg3w9 == 0)
+
+    #########################################
+    #Masking numbers for forced sale of drys#
+    #########################################
+    ''' Create a mask to remove retaining dry dams when sale of drys is forced'''
+    ##dams
+    mask_numbers_provdry_tpa1e1b1nwzida0e0b0xyg1 = not((index_k2tva1e1b1nwzida0e0b0xyg1 == 1) * (index_tpa1e1b1nwzida0e0b0xyg1 >= 2)
+                                                         * (fvp_type_pa1e1b1nwzida0e0b0xyg1 == 1) * (scan_pa1e1b1nwzida0e0b0xyg1 >= 1)
+                                                         * (pinp.sheep['i_dry_sales_forced']))[..., na]
+    ## or do it as mask on the number_prov after they have been through f_p2v using
+    mask_numbers_provdry_k2k5tva1nwzidxyg1 = not((index_k2tva1e1b1nwzida0e0b0xyg1 == 1) * (index_tva1e1b1nwzida0e0b0xyg1 >= 2)
+                                                         * (dvp_type_va1e1b1nwzida0e0b0xyg1 == 1) * (scan_va1e1b1nwzida0e0b0xyg1 >= 1)
+                                                         * (pinp.sheep['i_dry_sales_forced']))[..., na]
 
     ###########################
     #create production params #
