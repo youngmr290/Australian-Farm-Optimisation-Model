@@ -59,7 +59,7 @@ import Periods as per
 
 
 
-def generator(params,report):
+def generator(params,r_vals):
     """
     A function to wrap the generator and post processing that can be called by SheepPyomo.
 
@@ -4698,42 +4698,42 @@ def generator(params,report):
 
     ##store in report dict
     ###keys
-    report['keys_a'] = keys_a
-    report['keys_d'] = keys_d
-    report['keys_g0'] = keys_g0
-    report['keys_g1'] = keys_g1
-    report['keys_g2'] = keys_g2
-    report['keys_g3'] = keys_g3
-    report['keys_f'] = keys_f
-    report['keys_h1'] = keys_h1
-    report['keys_i'] = keys_i
-    report['keys_k2'] = keys_k2
-    report['keys_k3'] = keys_k3
-    report['keys_k5'] = keys_k5
-    report['keys_lw1'] = keys_lw1
-    report['keys_lw3'] = keys_lw3
-    report['keys_lw_prog'] = keys_lw_prog
-    report['keys_n1'] = keys_n1
-    report['keys_n3'] = keys_n3
-    report['keys_p8'] = keys_p8
-    report['keys_t1'] = keys_t1
-    report['keys_t2'] = keys_t2
-    report['keys_t3'] = keys_t3
-    report['keys_v1'] = keys_v1
-    report['keys_v3'] = keys_v3
-    report['keys_y0'] = keys_y0
-    report['keys_y1'] = keys_y1
-    report['keys_y3'] = keys_y3
-    report['keys_x'] = keys_x
-    report['keys_z'] = keys_z
-    report['keys_p6'] = keys_p6
+    r_vals['keys_a'] = keys_a
+    r_vals['keys_d'] = keys_d
+    r_vals['keys_g0'] = keys_g0
+    r_vals['keys_g1'] = keys_g1
+    r_vals['keys_g2'] = keys_g2
+    r_vals['keys_g3'] = keys_g3
+    r_vals['keys_f'] = keys_f
+    r_vals['keys_h1'] = keys_h1
+    r_vals['keys_i'] = keys_i
+    r_vals['keys_k2'] = keys_k2
+    r_vals['keys_k3'] = keys_k3
+    r_vals['keys_k5'] = keys_k5
+    r_vals['keys_lw1'] = keys_lw1
+    r_vals['keys_lw3'] = keys_lw3
+    r_vals['keys_lw_prog'] = keys_lw_prog
+    r_vals['keys_n1'] = keys_n1
+    r_vals['keys_n3'] = keys_n3
+    r_vals['keys_p8'] = keys_p8
+    r_vals['keys_t1'] = keys_t1
+    r_vals['keys_t2'] = keys_t2
+    r_vals['keys_t3'] = keys_t3
+    r_vals['keys_v1'] = keys_v1
+    r_vals['keys_v3'] = keys_v3
+    r_vals['keys_y0'] = keys_y0
+    r_vals['keys_y1'] = keys_y1
+    r_vals['keys_y3'] = keys_y3
+    r_vals['keys_x'] = keys_x
+    r_vals['keys_z'] = keys_z
+    r_vals['keys_p6'] = keys_p6
     ###dse
-    report['dsenw_p6g0'] = dsenw_p6tva1e1b1nwzida0e0b0xyg0
-    report['dsemj_p6g0'] = dsemj_p6tva1e1b1nwzida0e0b0xyg0
-    report['dsenw_k2p6tva1nwziyg1'] = dsenw_k2p6tva1e1b1nwzida0e0b0xyg1
-    report['dsemj_k2p6tva1nwziyg1'] = dsemj_k2p6tva1e1b1nwzida0e0b0xyg1
-    report['dsenw_k3k5p6tvnwzixyg3'] = dsenw_k3k5p6tva1e1b1nwzida0e0b0xyg3
-    report['dsemj_k3k5p6tvnwzixyg3'] = dsemj_k3k5p6tva1e1b1nwzida0e0b0xyg3
+    r_vals['dsenw_p6g0'] = dsenw_p6tva1e1b1nwzida0e0b0xyg0
+    r_vals['dsemj_p6g0'] = dsemj_p6tva1e1b1nwzida0e0b0xyg0
+    r_vals['dsenw_k2p6tva1nwziyg1'] = dsenw_k2p6tva1e1b1nwzida0e0b0xyg1
+    r_vals['dsemj_k2p6tva1nwziyg1'] = dsemj_k2p6tva1e1b1nwzida0e0b0xyg1
+    r_vals['dsenw_k3k5p6tvnwzixyg3'] = dsenw_k3k5p6tva1e1b1nwzida0e0b0xyg3
+    r_vals['dsemj_k3k5p6tvnwzixyg3'] = dsemj_k3k5p6tva1e1b1nwzida0e0b0xyg3
 
     finish = time.time()
     print('onhand and shearing arrays: ',calc_cost_start - onhandshear_start)

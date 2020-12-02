@@ -159,7 +159,7 @@ def f_base_yield():
     base_yields = pd.Series(base_yields, index = phases_df.iloc[:,-1])
     return base_yields
 
-def rot_yield(*params):
+def rot_yield(params=False):
     '''
     Returns
     ----------
@@ -187,7 +187,7 @@ def rot_yield(*params):
     yields.set_index(phases_df.index, append=True, inplace=True)
     yields.index = yields.index.swaplevel(0, 5)
     if params:
-        params[0]['rot_yield'] = yields.stack().to_dict() #[0] required because when *args are passed in they are passed in as a tuple
+        params['rot_yield'] = yields.stack().to_dict()
     else:
         return yields.stack()
     # return rot_yields.set_index(list(range(uinp.structure['phase_len']))).stack() #need to use the multiindex to create a multidimensional param for pyomo so i can split it down when indexing
@@ -226,9 +226,9 @@ def fert_req():
     '''
     Returns
     ----------
-    Dataframe; used to calc fert cost in the next function & used in croplabour 
-        Fert required by 1ha of each phases (kg/ha)
-        *note arable area is accounted for in the final cost funtion below
+    Dataframe; used to calc fert cost in the next function
+        Fert required by 1ha of each phases (kg/ha) after accounting for arable area
+
     '''
     ##read in chem by soil
     fert_by_soil = pinp.crop['fert_by_lmu'] 
@@ -250,15 +250,11 @@ def fert_req():
     base_fert.set_index('rot', inplace=True)
     ## adjust the fert req for each rotation by lmu
     fert_by_soil = fert_by_soil.stack() #read in fert by soil
-    fert=base_fert.mul(fert_by_soil,axis=1,level=0)
-    # ##this is required because this function is both a parameter and a step used to build another param ie if dict is passed it add param else it returns df for next function
-    # if args:
-    #     ##have to account for arable area - this gets used in labcrppyomo - hence it doesn't get arable area added in the cost funtion at the bottom like the other costs
-    #     arable = pinp.crop['arable'].squeeze() #read in arable area df
-    #     fert=fert.mul(arable,axis=1,level=1) #add arable to df
-    #     args[0]['fert_req'] = fert.stack([1,0]).to_dict()
-    # else:
-    return fert.stack()
+    fert=base_fert.mul(fert_by_soil,axis=1,level=0).stack()
+    ##account for arable area
+    arable = pinp.crop['arable'].squeeze() #read in arable area df
+    fert=fert.mul(arable,axis=0,level=1) #add arable to df
+    return fert
 # fert=fert_req()
 
 def f_fert_passes():
@@ -279,6 +275,11 @@ def f_fert_passes():
     fert_passes = pd.merge(fert_passes, fixed_fert_passes, how='left', left_index=True, right_index = True)
     ##replace index
     fert_passes.set_index('rot', inplace=True)
+    ##adjust fert passes by arable area
+    arable = pinp.crop['arable'].squeeze()
+    index = pd.MultiIndex.from_product([fert_passes.index, arable.index])
+    fert_passes = fert_passes.reindex(index, axis=0,level=0)
+    fert_passes=fert_passes.mul(arable,axis=0,level=1)
     return fert_passes
 
 
@@ -291,7 +292,6 @@ def fert_cost():
         - cost of actual fertiliser for each rotation phase (including transport)
         - Application cost per tonne ($/rotation)
         - Application cost per ha ($/rotation)
-        *note - arable area accounted for in the final function that sums all costs
     '''
     ##call functions and read inputs used within this function
     fertreq = fert_req()
@@ -307,8 +307,6 @@ def fert_cost():
     ##app cost per ha 
     ###call passes function (it has to be a seperate function because it is used in crplabour.py as well
     fert_passes = f_fert_passes()
-    ## reindex col headers so that lmu is included - note the passes are the same for each lmu (just required so it lines up with fert req array)
-    fert_passes = fert_passes.reindex(fertreq.index,axis=0,level=0)
     ###add the cost for each pass
     fert_cost_ha = allocation.mul(mac.fert_app_cost_ha()).stack() #cost for 1 pass for each fert.
     fert_app_cost_ha = fert_passes.mul(fert_cost_ha,axis=1,level=1).sum(axis=1, level=0) 
@@ -316,6 +314,30 @@ def fert_cost():
     fert_cost_total= pd.concat([phase_fert_cost_t,fert_app_cost_t, fert_app_cost_ha],axis=1).sum(axis=1,level=0) #must include level so that all cols dont sum, had to switch this from .add to concat because for some reason on multiple itterations of the model add stoped working
     return fert_cost_total
 
+def f_nap_fert_req():
+    '''fert applied to non arable pasture area'''
+    arable = pinp.crop['arable'].squeeze()  # read in arable area df
+    fertreq_na = pinp.crop['nap_fert']
+    fertreq_na = fertreq_na.mul(1 - arable)
+    arr=[list(uinp.structure['All_pas']),list(fertreq_na.index)] #create multi index from lmu and pasture landuse code
+    inx = pd.MultiIndex.from_product(arr)
+    fertreq_na = fertreq_na.reindex(inx,axis=0,level=1)
+    fertreq_na = pd.merge(phases_df2, fertreq_na.unstack(), how='left', left_on=uinp.cols()[-1], right_index = True) #merge with all the phases, requires because different phases have different application passes
+    fertreq_na = fertreq_na.drop(list(range(uinp.structure['phase_len'])), axis=1, level=0).stack([0]) #drop the segregated landuse cols
+    return fertreq_na
+
+def f_nap_fert_passes():
+    '''hectares spread on non arable area'''
+    ##passes over non arable pasture area (only for pasture phases becasue for pasture the non arable areas also recieve fert)
+    passes_na = pinp.crop['nap_passes']
+    arable = pinp.crop['arable'].squeeze() #eed to adjust for only non arable area
+    passes_na= passes_na.mul(1-arable) #adjust for the non arable area
+    arr=[list(uinp.structure['All_pas']),list(passes_na.index)] #create multi index from lmu and pasture landuse code
+    inx = pd.MultiIndex.from_product(arr)
+    passes_na = passes_na.reindex(inx,axis=0,level=1)
+    passes_na = pd.merge(phases_df2, passes_na.unstack(), how='left', left_on=uinp.cols()[-1], right_index = True) #merge with all the phases, requires because different phases have different application passes
+    passes_na = passes_na.drop(list(range(uinp.structure['phase_len'])), axis=1, level=0).stack([0]) #drop the segregated landuse cols
+    return passes_na
 
 def nap_fert_cost():
     '''
@@ -327,43 +349,30 @@ def nap_fert_cost():
     '''
     allocation = fert_cost_allocation()
     ##fert cost
-    fertreq = pinp.crop['nap_fert']
+    fertreq = f_nap_fert_req()
     cost=uinp.price['fert_cost'].squeeze()
-    fert_cost_t = fertreq.mul(cost, axis=0)/1000  #div by 1000 to convert to $/kg
+    transport=uinp.price['fert_cartage_cost']  #transport cost
+    total_cost = allocation.mul(cost+transport).stack() #total cost = fert cost and transport. Here we also account for cost allocation
+    fert_cost_t = fertreq.mul(total_cost, axis=1)/1000  #div by 1000 to convert to $/kg
     ##application cost per tonne
-    app_cost_t = fertreq.mul(mac.fert_app_cost_t(), axis=0)/1000  #div by 1000 to convert to $/kg
+    app_cost_t = fertreq.mul(mac.fert_app_cost_t(), axis=1)/1000  #div by 1000 to convert to $/kg
     ##application cost per ha
-    passes = pinp.crop['nap_passes']#.reset_index().pivot(index='fert',columns='index').T #passes over each ha for each fert type
-    app_cost_ha = passes.mul(mac.fert_app_cost_ha(), axis=0) #cost for 1 pass for each fert.
+    passes = f_nap_fert_passes()
+    app_cost_ha = passes.mul(mac.fert_app_cost_ha(), axis=1) #cost for 1 pass for each fert.
     ##total cost and cash period allocation
     total_cost = fert_cost_t+app_cost_t+app_cost_ha
-    total_cost = allocation.mul(total_cost.stack(), level=0).sum(axis=1, level=1).T #mul app cost per tonne with fert cost allocation
-    ##add all pasture phases as new index level - because only nap in a pasture phase recieves fert
-    arr=[list(uinp.structure['All_pas']),list(total_cost.index)]
-    inx = pd.MultiIndex.from_product(arr)
-    total_cost = total_cost.reindex(inx,axis=0,level=1)
-    ##merge to phase df
-    phase_total_cost = pd.merge(phases_df2, total_cost.unstack(), how='left', left_on=uinp.cols()[-1], right_index = True) #merge with all the phases, requires because different phases have different application passes
-    return phase_total_cost.drop(list(range(uinp.structure['phase_len'])),axis=1, level=0).stack([1]) #adding level=0 does nothing but if not included you get a preformance warning.
-  
+    total_cost = allocation.mul(total_cost.stack(), axis=1, level=2).sum(axis=1, level=(0,1)).T #mul app cost per tonne with fert cost allocation
+    return total_cost
+
 def total_fert_req(param):
     '''returns the total fert req after accounting for arable area.
        this is used in the LabourCropPyomo'''
-    fertreq_arable = fert_req().unstack()
-    ##have to account for arable area - this gets used in labcrppyomo - hence it doesn't get arable area added in the cost funtion at the bottom like the other costs
-    arable = pinp.crop['arable'].squeeze() #read in arable area df
-    fertreq_arable=fertreq_arable.mul(arable,axis=1,level=1) #add arable to df
+    fertreq_arable = fert_req()
     ##fert required on the non arable areas - only for pasture phases, so need to add pasture as index
-    fertreq_na = pinp.crop['nap_fert']
-    fertreq_na = fertreq_na.mul(1 - arable)
-    arr=[list(uinp.structure['All_pas']),list(fertreq_na.index)] #create multi index from lmu and pasture landuse code
-    inx = pd.MultiIndex.from_product(arr)
-    fertreq_na = fertreq_na.reindex(inx,axis=0,level=1)
-    fertreq_na = pd.merge(phases_df2, fertreq_na.unstack(), how='left', left_on=uinp.cols()[-1], right_index = True) #merge with all the phases, requires because different phases have different application passes
-    fertreq_na = fertreq_na.drop(list(range(uinp.structure['phase_len'])), axis=1, level=0).stack([0]) #drop the segregated landuse cols
+    fert_na = f_nap_fert_req()
     ##add fert for arable area and fert for nonarable area
-    fert_total = pd.concat([fertreq_arable.stack([1]), fertreq_na], axis=1).sum(axis=1, level=0)
-    param['fert_req'] = fert_total.stack([0]).to_dict()
+    fert_total = pd.concat([fertreq_arable, fert_na], axis=1).sum(axis=1, level=0)
+    param['fert_req'] = fert_total.stack().to_dict()
 
 
 #######################
@@ -392,7 +401,7 @@ def phase_stubble_cost():
     ------
     Dataframe
         Cost to handle stubble for each rotation - summed with other costs in final function below.
-        *note - arable area accounted for the yield (it is the same as accounting for it at the end ie yield x 0.8 / threshold x cost == yield / threshold x cost x 0.8) 
+        *note - arable area accounted for in the yield (it is the same as accounting for it at the end ie yield x 0.8 / threshold x cost == yield / threshold x cost x 0.8)
     '''
     ##first calculate the probability of a rotation phase needing stubble handling
     base_yields = rot_yield()
@@ -561,16 +570,21 @@ includes
 -seed cost
 -crop insurance cost
 '''
-def rot_cost(params):
-    cost = pd.concat([fert_cost(),chem_cost(),seedcost()],axis=1).sum(axis=1,level=0)
+def rot_cost(params, r_vals):
+    cost = pd.concat([fert_cost(r_vals),nap_fert_cost(),chem_cost(),seedcost()],axis=1).sum(axis=1,level=0)
+
+    #^remove after checkign it works
     ##adjust for arable area
-    arable = pinp.crop['arable'].stack().droplevel(0) #read in arable area df
-    cost=cost.mul(arable, axis=0, level=1)
+    # arable = pinp.crop['arable'].squeeze() #read in arable area df
+    # cost=cost.mul(arable, axis=0, level=1)
+
     ##add insurance & stubble - it has already been adjusted by arable area because of the yield
     cost = pd.concat([cost, insurance(),phase_stubble_cost()],axis=1).sum(axis=1,level=0)#, fill_value=0)
-    ##add non arable pasture cost
-    nap_cost = nap_fert_cost().mul((1-arable), axis=0, level=1)
-    cost = pd.concat([cost, nap_cost],axis=1).sum(axis=1,level=0)#, fill_value=0)
+
+    # ##add non arable pasture cost
+    # nap_cost = nap_fert_cost()
+    # cost = pd.concat([cost, nap_cost],axis=1).sum(axis=1,level=0)#, fill_value=0)
+
     ##add cont tedera costs = combination of resown and normal
     if 'tedera' in uinp.structure['pastures']:
         germ_df = pinp.pasture_inputs['tedera']['GermPhases']
@@ -610,6 +624,7 @@ def rot_cost(params):
         cost.loc[['xcxcxcxcxcxc']] = xc_cost.values
 
     params['rot_cost'] = cost.stack().to_dict()
+
 # jj=rot_cost()
 
 #########################

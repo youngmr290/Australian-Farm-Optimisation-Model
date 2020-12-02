@@ -58,22 +58,27 @@ def lab_allocation():
 #time/per ha - needs to be multiplied by the number of phases and then added to phases df because the previous phases can effect number of passes and hence time
 #also need to account for arable area
 def fert_app_time_ha(params):
-    ##fert passes - arable
-    fert_passes = crp.f_fert_passes()
+    ##fert passes - arable (arable area acounted for in passes function)
+    passes_arable = crp.f_fert_passes()
+
     ##arable proportion
-    arable = pinp.crop['arable'].squeeze()
-    ##adjust fert passes by arable area
-    index = pd.MultiIndex.from_product([fert_passes.index, arable.index])
-    fert_passes = fert_passes.reindex(index, axis=0,level=0)
-    passes_arable=fert_passes.mul(arable,axis=0,level=1)
-    ##passes over non arable area (only for pasture phases becasue for pasture the non arable areas also recieve fert)
-    passes_na = pinp.crop['nap_passes']
-    passes_na= passes_na.mul(1-arable) #adjust for the non arable area
-    arr=[list(uinp.structure['All_pas']),list(passes_na.index)] #create multi index from lmu and pasture landuse code
-    inx = pd.MultiIndex.from_product(arr)
-    passes_na = passes_na.reindex(inx,axis=0,level=1)
-    passes_na = pd.merge(crp.phases_df2, passes_na.unstack(), how='left', left_on=uinp.cols()[-1], right_index = True) #merge with all the phases, requires because different phases have different application passes
-    passes_na = passes_na.drop(list(range(uinp.structure['phase_len'])), axis=1, level=0).stack([0]) #drop the segregated landuse cols
+    # ##adjust fert passes by arable area
+    # index = pd.MultiIndex.from_product([fert_passes.index, arable.index])
+    # fert_passes = fert_passes.reindex(index, axis=0,level=0)
+    # passes_arable=fert_passes.mul(arable,axis=0,level=1)
+
+    # ##passes over non arable area (only for pasture phases becasue for pasture the non arable areas also recieve fert)
+    # passes_na = pinp.crop['nap_passes']
+    # arable = pinp.crop['arable'].squeeze() #eed to adjust for only non arable area
+    # passes_na= passes_na.mul(1-arable) #adjust for the non arable area
+    # arr=[list(uinp.structure['All_pas']),list(passes_na.index)] #create multi index from lmu and pasture landuse code
+    # inx = pd.MultiIndex.from_product(arr)
+    # passes_na = passes_na.reindex(inx,axis=0,level=1)
+    # passes_na = pd.merge(crp.phases_df2, passes_na.unstack(), how='left', left_on=uinp.cols()[-1], right_index = True) #merge with all the phases, requires because different phases have different application passes
+    # passes_na = passes_na.drop(list(range(uinp.structure['phase_len'])), axis=1, level=0).stack([0]) #drop the segregated landuse cols
+
+    ##non arable fert passes
+    passes_na = crp.f_nap_fert_passes() #on pasture phases only
     ##add fert for arable area and fert for nonarable area
     total_passes = pd.concat([passes_arable, passes_na], axis=1).sum(axis=1, level=0)
     ##adjust fert labour across each labour period
@@ -82,6 +87,7 @@ def fert_app_time_ha(params):
     time = total_passes.mul(time, axis=1,level=1) #total time
     time=time.sum(level=[0], axis=1).stack() #sum across fert type
     params['fert_app_time_ha'] = time.to_dict()  #add to precalc dict
+
 #f=fert_app_time_ha()
 #print(timeit.timeit(fert_app_time_ha,number=20)/20)
 

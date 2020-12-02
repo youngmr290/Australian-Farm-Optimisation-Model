@@ -20,9 +20,9 @@ from CreateModel import *
 import Finance as fin
 import PropertyInputs as pinp
 
-def fin_precalcs(params, report):
-    fin.overheads(params)
-    fin.finance_rep(report)
+def fin_precalcs(params, r_vals):
+    fin.overheads(params, r_vals)
+    fin.finance_rep(r_vals)
     params['overdraw'] = pinp.finance['overdraw_limit']
 
 

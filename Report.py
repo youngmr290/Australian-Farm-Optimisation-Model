@@ -124,7 +124,7 @@ def intermediates(inter, r_vals, lp_vars):
     dep = lp_vars['v_dep'][None]/len_c #convert to dep per cashflow period
     inter['dep_c'] = pd.DataFrame([dep]*len_c, index=[keys_c])  #convert to df with cashflow period as index
     ##exp
-    # exp_fix =
+    exp_fix = r_vals['overheads']
     # exp_crop_fert =
     # exp_crop_chem =
     # exp_crop_mach =

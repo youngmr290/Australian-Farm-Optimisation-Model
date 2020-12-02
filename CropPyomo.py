@@ -27,8 +27,8 @@ import Crop as crp
 import UniversalInputs as uinp
 from CreateModel import *
 
-def crop_precalcs(params, report):
-    crp.rot_cost(params)
+def crop_precalcs(params, r_vals):
+    crp.rot_cost(params, r_vals)
     crp.rot_yield(params)
     crp.grain_pool_proportions(params)
     crp.grain_price(params)
