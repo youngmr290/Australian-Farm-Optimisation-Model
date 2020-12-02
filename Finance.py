@@ -51,7 +51,7 @@ def overheads(params):
 # report vals   #
 #################
 
-def finance_rep(*report):
+def finance_rep(report):
     keys_c = uinp.structure['cashflow_periods']
     report['keys_c'] = keys_c
 
