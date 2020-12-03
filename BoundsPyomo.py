@@ -37,9 +37,10 @@ def boundarypyomo_local():
         # set bound               #
         ###########################
         '''set the bound here, can do this like assigning any value to numpy.
-            These could be adjusted with SA values if you want to alter the bounds for different trials'''
+            These could be adjusted with SA values if you want to alter the bounds for different trials
+            - The forced sale or retain of drys is controled by livestock generator inputs'''
 
-        rot_lobound_rl[0,2] = 1 #sets all rotations to a min of 1ha.
+        rot_lobound_rl[0,2] = 0 #sets all rotations to a min of 1ha.
         # force_sale_drys
         # fore retain drys
         # force retention - done in generator this is an input
