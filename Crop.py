@@ -436,53 +436,63 @@ def chem_cost_allocation():
     return fun.period_allocation2(start_df, length_df, p_dates, p_name)
 # t_allocation=chem_cost_allocation()
     
-def chem_application():
-    '''number of chemical applications for each rotation'''
+def f_chem_application():
+    '''number of applications for each chemical for each rotation
+        Arable area accounted for here
+    '''
     ##read in chem passes
     if pinp.crop['user_crop_rot']:
         ### User defined
         base_chem = pinp.crop['chem'].reset_index()
-        base_chem = base_chem.set_index([phases_df.iloc[:,-1]])  #make the current landuse the index
+        base_chem = base_chem.set_index([phases_df.index])  #make the current landuse the index
     else:
         ### AusFarm ^need to add code for ausfarm inputs
         base_chem
-        base_chem = pd.DataFrame(base_chem, index = phases_df.iloc[:,-1])  #make the current landuse the index
+        base_chem = pd.DataFrame(base_chem, index = [phases_df.index])  #make the current landuse the index
+    ##arable area.
+    arable = pinp.crop['arable'].squeeze()
+    #adjust chem passes by arable area
+    index = pd.MultiIndex.from_product([base_chem.index, arable.index])
+    base_chem = base_chem.reindex(index, axis=0,level=0)
+    base_chem=base_chem.mul(arable,axis=0,level=1)
+
+    # chem_applications = base_chem.set_index([base_chem.index, 'rot'])
+
     ##add proper rotation index - need to add this here because the multiplication step re-orders the df
-    base_chem['rot']=phases_df.index
+    # base_chem['rot']=phases_df.index
     return base_chem
 
-def chem_cost():  
+def f_chem_cost():
     '''
     Returns
     ----------
     Dataframe: Total cost of chemical and application - summed with other cashflow items at the end of this section 
         -Calcs the raw chem cost for each rotation phase (ie doesn't include application)
         -Application cost per ha ($/rotation)
-        -Arable area accounted here
+        -Arable area accounted for in application funciton above
     '''
     ##read in neccessary bits and adjust indexed
     i_chem_cost = pinp.crop['chem_cost']
     chem_by_soil = pinp.crop['chem_by_lmu'] #read in chem by soil
     ##number of applications for each rotation
-    base_chem = chem_application()
-    ##adjust for the cost eg cost per application * number of applications. This is a bit messy because the order of the df changes therefore need to add the full rotation name, but for merge it can be an index so i add it as a col then merge then add it as index. ^maybe there is a cleaner way to do this.
-    merge_chem = base_chem.merge(i_chem_cost, left_index=True, right_index=True, how='left')
-    merge_chem.set_index('rot', inplace=True)
+    chem_applications = f_chem_application()
+    ##determine the total chemical cost of each rotation. eg: chem cost per application * number of applications
+    index = pd.MultiIndex.from_arrays([phases_df.iloc[:,-1], phases_df.index]) #add phase letter to index so it can be merged with the cost per application for each phase
+    t_chem_applications = chem_applications.unstack().reindex(index, axis=0, level=0).stack() #reindex so the array has same axis so it can be multiplied
+    ###Merge the phase cost with the rotation application number then mul to get final cost. ^i couldnt get reinexing to work so i have ended up merging the mul instead (i think there should be a way to reindex i_cost so it is the same as chem_applications then mul).
+    merge_chem = t_chem_applications.merge(i_chem_cost, left_on=[5], right_index=True, how='left')
     chem_cost = merge_chem.iloc[:,0:len(i_chem_cost.columns)].values * merge_chem.iloc[:,len(i_chem_cost.columns):].values
-    chem_cost = pd.DataFrame(chem_cost, index = merge_chem.index, columns = i_chem_cost.columns )
+    chem_cost = pd.DataFrame(chem_cost, index=chem_applications.index, columns = i_chem_cost.columns)
     ## adjust the chem cost for each rotation by lmu
     chem_by_soil1 = chem_by_soil.stack()
-    chem_cost=chem_cost.mul(chem_by_soil1,axis=1,level=0)
+    chem_cost=chem_cost.unstack().mul(chem_by_soil1,axis=1,level=0).stack()
     ##application cost
-    base_chem.set_index('rot', inplace=True)
-    app_cost_ha = base_chem * mac.chem_app_cost_ha()
-    # app_cost_ha.set_index(phases_df.index, append=True, inplace=True)
-    app_cost_ha = app_cost_ha.reindex(chem_cost.columns, axis=1,level=0) #reindex to get lmu 
+    app_cost_ha = chem_applications * mac.chem_app_cost_ha()
     ##add application cost and chem cost
     total_cost = chem_cost.add(app_cost_ha)
     ##add cashflow periods and sum across each chem
     c_chem_allocation = chem_cost_allocation().stack()
-    chem_cost = total_cost.stack().reindex(c_chem_allocation.index, axis=1,level=1).mul(c_chem_allocation, axis=1).sum(axis=1, level=0)#first stack is required so that reindexing can occur (ie cant reindex a multi index with a multi index)
+    chem_cost = total_cost.mul(c_chem_allocation, axis=1,level=1).sum(axis=1, level=0)#first stack is required so that reindexing can occur (ie cant reindex a multi index with a multi index)
     return chem_cost
 
 
@@ -494,12 +504,13 @@ def seedcost():
     Returns
     ----------
     Dataframe to add with other rotation costs
-        Misc costs
+        Misc costs includes:
         - seed treatment
         - raw seed cost (incurred if seed is purchased as aposed to using last yrs seed)
         - crop insurance
-        *note - arable area accounted for in the final function that sums all costs
+        - arable area
     '''
+    ##inputs
     seeding_rate = pinp.crop['seeding_rate']
     seeding_cost = pinp.crop['seed_info']['Seed cost'] #this is 0 if the seed is sourced from last yrs crop ie cost is accounted for by minusing from the yield
     grading_cost = pinp.crop['seed_info']['Grading'] 
@@ -509,6 +520,9 @@ def seedcost():
     rate1 = pinp.crop['seed_info']['Rate1'] #rate (ml/100g) for dressing 1
     rate2 = pinp.crop['seed_info']['Rate2'] #rate (ml/100g) for dressing 2
     percent_dressed = pinp.crop['seed_info']['percent dressed'] #rate (ml/100g) for dressing 2
+    arable = pinp.crop['arable'].squeeze()
+    ##adjust for arable area.
+    seeding_rate = seeding_rate.mul(arable, axis=1)
     ##overall seed grading cost per tonne
     cost = grading_cost * percent_graded
     ##add seed cost
@@ -573,20 +587,9 @@ includes
 -crop insurance cost
 '''
 def rot_cost(params, r_vals):
-    cost = pd.concat([fert_cost(r_vals),nap_fert_cost(),chem_cost(),seedcost()],axis=1).sum(axis=1,level=0)
-
-    #^remove after checkign it works
-    ##adjust for arable area
-    # arable = pinp.crop['arable'].squeeze() #read in arable area df
-    # cost=cost.mul(arable, axis=0, level=1)
-
+    cost = pd.concat([fert_cost(r_vals),nap_fert_cost(),f_chem_cost(),seedcost()],axis=1).sum(axis=1,level=0)
     ##add insurance & stubble - it has already been adjusted by arable area because of the yield
     cost = pd.concat([cost, insurance(),phase_stubble_cost()],axis=1).sum(axis=1,level=0)#, fill_value=0)
-
-    # ##add non arable pasture cost
-    # nap_cost = nap_fert_cost()
-    # cost = pd.concat([cost, nap_cost],axis=1).sum(axis=1,level=0)#, fill_value=0)
-
     ##add cont tedera costs = combination of resown and normal
     if 'tedera' in uinp.structure['pastures']:
         germ_df = pinp.pasture_inputs['tedera']['GermPhases']

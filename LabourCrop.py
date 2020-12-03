@@ -109,20 +109,14 @@ def chem_app_time_ha(params):
     ----------
     Dict for pyomo
         Labour required by each rotation phase for spraying
+        -arable area accounted for in crop.py
     '''
     ##passes
-    passes = crp.chem_application()
-    passes.set_index('rot', inplace=True)
-    ##arable area.
-    arable = pinp.crop['arable'].squeeze()
-    ##adjust chem passes by arable area
-    index = pd.MultiIndex.from_product([passes.index, arable.index])
-    passes = passes.reindex(index, axis=0,level=0)
-    passes_arable=passes.mul(arable,axis=0,level=1)
+    passes = crp.f_chem_application()
     ##adjust chem labour across each labour period
     time = chem_lab_allocation().mul(mac.spray_time_ha()).stack() #time for 1 pass for each chem.
     ##adjust for passes
-    time = passes_arable.mul(time, axis=1,level=1) #total time
+    time = passes.mul(time, axis=1,level=1) #total time
     time=time.sum(level=[0], axis=1).stack()
     params['chem_app_time_ha'] = time.to_dict()
     

@@ -91,7 +91,7 @@ keys_hist = list(prev_exp.reset_index().columns[2:].values)
 keys_current = list(exp_data1.reset_index().columns[2:].values)
 sorted_list = sorted(glob.iglob('*.py'), key=os.path.getmtime)
 ####if only report.py has been updated precalcs don't need to be re-run therefore newest is equal to the newest py file that isn't report
-if sorted_list[-1] != 'Repoprt.py':
+if sorted_list[-1] != 'Report.py':
     newest = sorted_list[-1]
 else: newest = sorted_list[-2]
 newest_pyomo = max(glob.iglob('*pyomo.py'), key=os.path.getmtime)

@@ -101,7 +101,7 @@ def intermediates(inter, r_vals, lp_vars):
     len_x = len(keys_x)
     len_z = len(keys_z)
     len_p6 = len(keys_p6)
-    len_p6 = len(keys_p5)
+    len_p5 = len(keys_p5)
 
     ##crop & pasture area
     df_rot = pd.DataFrame(lp_vars['v_phase_area'], index=['v_phase_area']).T #create a df of all the phase areas
