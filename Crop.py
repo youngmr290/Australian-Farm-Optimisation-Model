@@ -283,7 +283,7 @@ def f_fert_passes():
     return fert_passes
 
 
-def fert_cost():
+def fert_cost(r_vals):
     '''
     Returns
     ----------
@@ -353,16 +353,18 @@ def nap_fert_cost():
     cost=uinp.price['fert_cost'].squeeze()
     transport=uinp.price['fert_cartage_cost']  #transport cost
     total_cost = allocation.mul(cost+transport).stack() #total cost = fert cost and transport. Here we also account for cost allocation
-    fert_cost_t = fertreq.mul(total_cost, axis=1)/1000  #div by 1000 to convert to $/kg
+    fert_cost_t = fertreq.mul(total_cost, axis=1, level=1)/1000  #div by 1000 to convert to $/kg
     ##application cost per tonne
     app_cost_t = fertreq.mul(mac.fert_app_cost_t(), axis=1)/1000  #div by 1000 to convert to $/kg
     ##application cost per ha
     passes = f_nap_fert_passes()
     app_cost_ha = passes.mul(mac.fert_app_cost_ha(), axis=1) #cost for 1 pass for each fert.
-    ##total cost and cash period allocation
-    total_cost = fert_cost_t+app_cost_t+app_cost_ha
-    total_cost = allocation.mul(total_cost.stack(), axis=1, level=2).sum(axis=1, level=(0,1)).T #mul app cost per tonne with fert cost allocation
-    return total_cost
+    ##total application cost in each cash period
+    total_app_cost = (app_cost_t+app_cost_ha).mul(allocation.stack(), axis=1, level=1)
+    ##total fert and app cost
+    nap_fert_cost = fert_cost_t+total_app_cost
+    nap_fert_cost = nap_fert_cost.sum(axis=1, level=0) #mul app cost per tonne with fert cost allocation
+    return nap_fert_cost
 
 def total_fert_req(param):
     '''returns the total fert req after accounting for arable area.
@@ -406,7 +408,7 @@ def phase_stubble_cost():
     ##first calculate the probability of a rotation phase needing stubble handling
     base_yields = rot_yield()
     stub_handling_threashold = pd.Series(pinp.stubble['stubble_handling']['stubble_threshold'])*1000  #have to convert to kg to match base yield
-    probability_handling = base_yields.div(stub_handling_threashold, level = 1) #divide here then account for arable and lmu factor next - because either way is mathematically sound and this saves some manipulation.
+    probability_handling = base_yields.div(stub_handling_threashold, level = 1) #divide here then account for lmu factor next - because either way is mathematically sound and this saves some manipulation.
     probability_handling = probability_handling.droplevel(1).unstack()
     ##add the cost - this needs to be flexible because the cost may be over multiple periods
     stub_cost_alloc=mac.stubble_cost_ha().squeeze(axis=1)
@@ -456,7 +458,7 @@ def chem_cost():
     Dataframe: Total cost of chemical and application - summed with other cashflow items at the end of this section 
         -Calcs the raw chem cost for each rotation phase (ie doesn't include application)
         -Application cost per ha ($/rotation)
-        *note - arable area accounted for in the final function that sums all costs
+        -Arable area accounted here
     '''
     ##read in neccessary bits and adjust indexed
     i_chem_cost = pinp.crop['chem_cost']
