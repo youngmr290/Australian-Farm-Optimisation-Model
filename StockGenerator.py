@@ -81,7 +81,7 @@ def generator(params,r_vals):
     na=np.newaxis
     ## define the periods - default (dams and ssire)
     sim_years = uinp.structure['i_age_max']
-    sim_years = 2
+    sim_years = 3
     sim_years_offs = min(uinp.structure['i_age_max_offs'], sim_years)
     n_sim_periods, date_start_p, date_end_p, p_index_p, step \
     = sfun.sim_periods(pinp.sheep['i_startyear'], uinp.structure['i_sim_periods_year'], sim_years)
@@ -4180,11 +4180,11 @@ def generator(params,r_vals):
     ###numbers provide - has d axis
     ffcfw_initial_wzida0e0b0xyg3 = lw_initial_wzida0e0b0xyg3 - cfw_initial_wzida0e0b0xyg3 / cw_offs[3, ...]
     distribution_2offs_a1e1b1nwzida0e0b0xyg2w9 = sfun.f_lw_distribution(ffcfw_initial_wzida0e0b0xyg3, ffcfw_prog_a1e1b1nwzida0e0b0xyg2, uinp.structure['i_n3_len'], uinp.structure['i_n_fvp_period3'])
-    numbers_prog2offs_k3k5tva1e1b1nwzida0e0b0xyg2w9 = np.sum(distribution_2offs_a1e1b1nwzida0e0b0xyg2w9 * mask_numbers_prog2offsw8w9_w9
+    numbers_prog2offs_k3k5tva1e1b1nwzida0e0b0xyg2w9 = 1 * (np.sum(distribution_2offs_a1e1b1nwzida0e0b0xyg2w9 * mask_numbers_prog2offsw8w9_w9
                                                              * (index_tva1e1b1nwzida0e0b0xyg2w9 == 2)
                                                              * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na]
                                                              * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[...,na],
-                                                             axis=(uinp.parameters['i_b0_pos']-1, uinp.structure['i_e0_pos']-1),keepdims=True)
+                                                             axis=(uinp.parameters['i_b0_pos']-1, uinp.structure['i_e0_pos']-1),keepdims=True)>0)
 
     ###numbers req
     numbers_progreq_w8zida0e0b0xyg3w9 = 1 * (mask_numbers_reqw8w9_w8zida0e0b0xyg3w9 > 0)

@@ -364,12 +364,12 @@ def coremodel_all():
     pe.SolverFactory()
     # optimizer = pe.SolverFactory('glpk' ) #specify solver
     # optimizer.options['help']=True #add any solver arguments ^this isnt doing anything, i still cant see any output from solver
-    # optimizer.options['tmlim nnn'] = 8# 0#'--nopresol' #add any solver arguments ^this isnt doing anything, i still cant see any output from solver
     # optimizer.options['nopresol'] = True #add any solver arguments ^this isnt doing anything, i still cant see any output from solver
+    # optimizer.options['output'] = 'ttt.txt' #add any solver arguments ^this isnt doing anything, i still cant see any output from solver
     # results = optimizer.solve(model, tee=True) #turn to true for solver output - may be useful for troubleshooting
     results = pe.SolverFactory('glpk').solve(model, tee=True) #turn to true for solver output - may be useful for troubleshooting
     ##print out all infeasible constraints - every constraint is infeasbible when the mode is infeasible so it is not very helpful unless we can force the solver to return the infeasible result
-    from pyomo.util.infeasible import log_infeasible_constraints
-    log_infeasible_constraints(model)
+    # from pyomo.util.infeasible import log_infeasible_constraints
+    # log_infeasible_constraints(model)
     return results
     
