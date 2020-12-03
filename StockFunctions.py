@@ -667,6 +667,10 @@ def f_potential_intake_cs(ci, cl, srw, relsize_start, rc_start, temp_lc_dams, te
     return np.maximum(0,pi)
 
 
+def f_potential_intake_mu():
+    pi = 1.4
+    return np.maximum(0,pi)
+
 
 
 
