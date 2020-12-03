@@ -81,7 +81,7 @@ def generator(params,r_vals):
     na=np.newaxis
     ## define the periods - default (dams and ssire)
     sim_years = uinp.structure['i_age_max']
-    sim_years = 2
+    # sim_years = 2
     sim_years_offs = min(uinp.structure['i_age_max_offs'], sim_years)
     n_sim_periods, date_start_p, date_end_p, p_index_p, step \
     = sfun.sim_periods(pinp.sheep['i_startyear'], uinp.structure['i_sim_periods_year'], sim_years)
@@ -98,7 +98,7 @@ def generator(params,r_vals):
     ##day of the year
     doy_pa1e1b1nwzida0e0b0xyg = (date_start_pa1e1b1nwzida0e0b0xyg - date_start_pa1e1b1nwzida0e0b0xyg.astype('datetime64[Y]')).astype(int) + 1 #plus one to include current day eg 7th - 1st = 6 plus 1 = 7th day of year
     ##day length
-    dl_pa1e1b1nwzida0e0b0xyg = sfun.f_daylength(doy_pa1e1b1nwzida0e0b0xyg, pinp.sheep['i_latitude'])
+    dl_pa1e1b1nwzida0e0b0xyg: np.ndarray = sfun.f_daylength(doy_pa1e1b1nwzida0e0b0xyg, pinp.sheep['i_latitude'])
     ##days in each peirod
     days_period_pa1e1b1nwzida0e0b0xyg = date_end_pa1e1b1nwzida0e0b0xyg - date_start_pa1e1b1nwzida0e0b0xyg
 
@@ -602,7 +602,7 @@ def generator(params,r_vals):
     ## calc for associations   #
     ############################
     ##date joined (when the rams go in)
-    date_joined_oa1e1b1nwzida0e0b0xyg1 = (date_born1st_oa1e1b1nwzida0e0b0xyg2) - cp_dams[1,...,0:1,:].astype('timedelta64[D]') #take slice 0 from y axis because cp1 is not affected by genetic merit
+    date_joined_oa1e1b1nwzida0e0b0xyg1 = date_born1st_oa1e1b1nwzida0e0b0xyg2 - cp_dams[1,...,0:1,:].astype('timedelta64[D]') #take slice 0 from y axis because cp1 is not affected by genetic merit
     ##expand feed periods over all the years of the sim so that an association between sim period can be made.
     feedperiods_p6 = np.array(pinp.feed_inputs['feed_periods']['date']).astype('datetime64[D]')[:-1] #convert from df to numpy remove last date because that is the end date of the last period (not required)
     feedperiods_p6 = feedperiods_p6 + np.timedelta64(365,'D') * ((date_start_p[0].astype(object).year -1) - feedperiods_p6[0].astype(object).year) #this is to make sure the fisrt sim period date is greater than the first feed period date.
@@ -4056,9 +4056,9 @@ def generator(params,r_vals):
     ##condense yatf from 81 finishing lw to 10
     ###reshape array so to stack/combine some axis - this new axis is called k
     ffcfw_range_a1zixg2k = np.moveaxis(ffcfw_start_d_yatf_a1e1b1nwzida0e0b0xyg2, [pinp.sheep['i_a1_pos'], pinp.sheep['i_z_pos'], pinp.sheep['i_i_pos'], uinp.parameters['i_x_pos'], -1]
-                                       , [0,1,2,3,4]).reshape(len_a1,len_z,len_i,len_x,len_g2, -1)
+                                       , [0,1,2,3,4]).reshape((len_a1,len_z,len_i,len_x,len_g2, -1))
     sale_value_range_a1zixg2k = np.moveaxis(salevalue_d_a1e1b1nwzida0e0b0xyg2, [pinp.sheep['i_a1_pos'], pinp.sheep['i_z_pos'], pinp.sheep['i_i_pos'], uinp.parameters['i_x_pos'], -1]
-                                       , [0,1,2,3,4]).reshape(len_a1,len_z,len_i,len_x,len_g2, -1)
+                                       , [0,1,2,3,4]).reshape((len_a1,len_z,len_i,len_x,len_g2, -1))
     ### The index that sorts the weight array
     ind_sorted = np.argsort(ffcfw_range_a1zixg2k, axis = -1)
     ### Select the values for the 10 equally spaced values spanning lowest to highest inclusive.
@@ -4676,7 +4676,7 @@ def generator(params,r_vals):
                                                   days_period_p=days_period_pa1e1b1nwzida0e0b0xyg1, a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg,
                                                   index_any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,...])
     nw_cum_p6tva1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(r_nw_start_offs**0.75, a_v_pa1e1b1nwzida0e0b0xyg3, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg3,
-                                                  days_period_p=days_period_pa1e1b1nwzida0e0b0xyg3, a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg,
+                                                  days_period_p=days_period_cut_pa1e1b1nwzida0e0b0xyg3, a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p],
                                                   index_any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,...])
     ####returns the average nw for each animal for the each feed period (cum nw accounts for if the animal is on hand - if the animal is sold the average nw will be lower in that feed period)
     nw_ave_p6tva1e1b1nwzida0e0b0xyg0 = nw_cum_p6va1e1b1nwzida0e0b0xyg0[:,na,...] / days_p6_p6tva1e1b1nwzida0e0b0xyg
