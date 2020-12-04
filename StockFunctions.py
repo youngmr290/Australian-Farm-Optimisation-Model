@@ -1194,9 +1194,10 @@ def f_period_start_prod(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len,
 
 def f_condensed(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_fvp0, period_is_startfvp0):
     '''condense variable to 3 common points along the w axis for the start of fvp0'''
-    temporary = var.copy()  #this is done to ensure that temp has the same size as var. In the next line np.diagonal removes the n axis so it is added back in using the expand function, but that is a singlton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
     if np.any(period_is_startfvp0):
+        temporary = var.copy()  #this is done to ensure that temp has the same size as var.
         ###test if array has diagonal and calc temp variables as if start of dvp - if there is not a diagonal use the alternative system for reallocting at the end of a DVP
+        ### np.diagonal removes the n axis so it is added back in using the expand function, but that is a singleton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
         if i_n_len >= i_w_len:
             ####this method was the way we first tried - no longer used (might be used later if we add nutrient options back in)
             temporary[...] = np.expand_dims(np.rollaxis(temporary.diagonal(axis1= uinp.structure['i_w_pos'], axis2= uinp.structure['i_n_pos']),-1,uinp.structure['i_w_pos']), uinp.structure['i_n_pos']) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
@@ -1224,8 +1225,8 @@ def f_condensed(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp
             sl[uinp.structure['i_w_pos']] = slice(-int(i_n_len ** i_n_fvp_period), None)
             temporary[tuple(sl)] = np.take_along_axis(var_sorted, low_slice, uinp.structure[
                 'i_w_pos'])  # production level of the lowest nutrition profile that has a mortality less than 10% for the year
-    ###Update if the period is start of year (shearing for offs and prejoining for dams)
-    var = fun.f_update(var, temporary, period_is_startfvp0)
+        ###Update if the period is start of year (shearing for offs and prejoining for dams)
+        var = fun.f_update(var, temporary, period_is_startfvp0)
 
     return var
 
@@ -1860,16 +1861,14 @@ def f_lw_distribution(ffcfw_condensed_va1e1b1nwzida0e0b0xyg, ffcfw_va1e1b1nwzida
 
 def f_lw_distribution_2prog(ffcfw_prog_g2w9, ffcfw_yatf_vg1, index_w2):
     ###maximum(0, ) removes points where yatf weight is greater than the rolled progeny weight
-    distribution_2prog_vg1w9 = np.maximum(0,fun.f_divide((np.roll(ffcfw_prog_g2w9,-1,axis=-1) - ffcfw_yatf_vg1[..., na])
-                                                            , (np.roll(ffcfw_prog_g2w9,-1,axis=-1) - ffcfw_prog_g2w9)))
-    ###remove points where yatf weight is less than the progeny weight.
+    distribution_2prog_vg1w9 = 1- fun.f_divide((ffcfw_yatf_vg1[..., na] - ffcfw_prog_g2w9)
+                                               , np.abs(np.roll(ffcfw_prog_g2w9,-1,axis=-1) - ffcfw_prog_g2w9))
+    ###remove if the yatf weight is above the weight in the next progeny slice (ie the division is >1).
+    distribution_2prog_vg1w9[distribution_2prog_vg1w9 < 0] = 0
+    ###remove if the yatf weight is below the progeny weight in that slice (ie the division is negative).
     distribution_2prog_vg1w9[distribution_2prog_vg1w9 > 1] = 0
     ###set the distribution for the other of the target pair
-    temporary = 1 - np.roll(distribution_2prog_vg1w9, 1, axis=-1)
-    condition = (distribution_2prog_vg1w9 > 0) * (index_w2 > 0)
-    distribution_2prog_vg1w9 = fun.f_update(distribution_2prog_vg1w9, temporary, condition)
-    ###Set the distribution proportion to 0 if the initial weight is < lowest weight
-    distribution_2prog_vg1w9 = fun.f_update(distribution_2prog_vg1w9, 0, ffcfw_yatf_vg1[..., na] <= np.min(ffcfw_prog_g2w9, axis=-1, keepdims=True))
+    distribution_2prog_vg1w9[..., 1:] += (1 - distribution_2prog_vg1w9[..., :-1]) * (distribution_2prog_vg1w9[..., :-1] > 0)
     return distribution_2prog_vg1w9
 
 def f_create_production_param(group, production_vg, a_kcluster_vg_1=1, index_ktvg_1=1, a_kcluster_vg_2=1, index_kktvg_2=1, numbers_start_vg=1, mask_vg=True, pos_offset=0):

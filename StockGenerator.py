@@ -81,7 +81,7 @@ def generator(params,r_vals):
     na=np.newaxis
     ## define the periods - default (dams and ssire)
     sim_years = uinp.structure['i_age_max']
-    sim_years = 2
+    # sim_years = 2
     sim_years_offs = min(uinp.structure['i_age_max_offs'], sim_years)
     n_sim_periods, date_start_p, date_end_p, p_index_p, step \
     = sfun.sim_periods(pinp.sheep['i_startyear'], uinp.structure['i_sim_periods_year'], sim_years)
@@ -1635,6 +1635,7 @@ def generator(params,r_vals):
     temp_lc_yatf = np.array([0.0]) #this is calculated in the chill function but it is required for the intake function so it is set to 0 for the first period.
     numbers_start_yatf = 0.0
     numbers_start_fvp0_yatf = 0.0 #just need a default because this is processed using update function.
+    numbers_end_yatf = 0.0 #need a default because this is required in f_start[p+1] prior to being assigned.
     # ebg_start_yatf=0
     fl_start_yatf=fl_birth_yg2 #cant use fl_initial because that is at weaning
     fd_start_yatf=0.0
@@ -1671,8 +1672,7 @@ def generator(params,r_vals):
 
 
     ## Loop through each week of the simulation (p) for ewes
-    #for p in range(120): # to pick up yatf being weaned in p[94]
-    for p in range(n_sim_periods-1):   #-1 because error at 351
+    for p in range(n_sim_periods-1):   #-1 because assigns to [p+1] for start values
         print(p)
         if np.any(period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]):
             print("period is lactation: ", period_is_birth_pa1e1b1nwzida0e0b0xyg1[p])
@@ -3070,7 +3070,7 @@ def generator(params,r_vals):
             ###numbers at the begining of fvp 0 (used to calc mort for the lw patterns to determine the lowest feasible level - used in the start prod func)
             numbers_start_fvp0_dams = fun.f_update(numbers_start_fvp0_dams, numbers_start_dams, period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1[p + 1])
 
-        if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
+        if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p+1,...] >0):  #Look at days next period so that period_is_birth is triggered in f_period_start_nums
             numbers_start_yatf = sfun.f_period_start_nums(numbers_end_yatf, prejoin_tup, season_tup, uinp.structure['i_n1_len'], uinp.structure['i_w1_len'],
                                                           uinp.structure['i_n_fvp_period1'], numbers_start_fvp0_yatf, period_is_startfvp0_pa1e1b1nwzida0e0b0xyg1[p+1],
                                                           period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], season_propn_zida0e0b0xyg, nyatf_b1=nyatf_b1nwzida0e0b0xyg,
@@ -3776,6 +3776,9 @@ def generator(params,r_vals):
     ####yatf can be sold as sucker, not shorn therefor only include sale value. husbandry is accounted for with dams so dont need that here.
     salevalue_d_a1e1b1nwzida0e0b0xyg2 = sfun.f_p2v_std(salevalue_p9a1e1b1nwzida0e0b0xyg2, period_is_tvp=period_is_sale_t0_pa1e1b1nwzida0e0b0xyg2[sale_mask_p2],
                                                    a_any1_p=a_prevbirth_d_pa1e1b1nwzida0e0b0xyg2[sale_mask_p2], index_any1tvp=index_da0e0b0xyg)
+    #### Return the number of the yatf in the period in which they are weaned - with active d axis
+    numbers_start_d_yatf_a1e1b1nwzida0e0b0xyg2 = sfun.f_p2v_std(o_numbers_start_yatf, period_is_tvp = period_is_wean_pa1e1b1nwzida0e0b0xyg2,
+                                                        a_any1_p = a_prevbirth_d_pa1e1b1nwzida0e0b0xyg2, index_any1tvp = index_da0e0b0xyg)
 
     ##################
     #lw distribution #
@@ -4059,13 +4062,18 @@ def generator(params,r_vals):
                                        , [0,1,2,3,4]).reshape((len_a1,len_z,len_i,len_x,len_g2, -1))
     sale_value_range_a1zixg2k = np.moveaxis(salevalue_d_a1e1b1nwzida0e0b0xyg2, [pinp.sheep['i_a1_pos'], pinp.sheep['i_z_pos'], pinp.sheep['i_i_pos'], uinp.parameters['i_x_pos'], -1]
                                        , [0,1,2,3,4]).reshape((len_a1,len_z,len_i,len_x,len_g2, -1))
+    numbers_range_a1zixg2k = np.moveaxis(numbers_start_d_yatf_a1e1b1nwzida0e0b0xyg2, [pinp.sheep['i_a1_pos'], pinp.sheep['i_z_pos'], pinp.sheep['i_i_pos'], uinp.parameters['i_x_pos'], -1]
+                                         , [0, 1, 2, 3, 4]).reshape((len_a1, len_z, len_i, len_x, len_g2, -1))
+    ### mask the ffcfw for only those that have numbers > 0. Removes animals that have died or don't exist
+    ffcfw_range_a1zixg2k = ffcfw_range_a1zixg2k * (numbers_range_a1zixg2k > 0)
     ### The index that sorts the weight array
-    ind_sorted = np.argsort(ffcfw_range_a1zixg2k, axis = -1)
-    ### Select the values for the 10 equally spaced values spanning lowest to highest inclusive.
-    start = np.max(np.count_nonzero(ffcfw_range_a1zixg2k, axis=-1))
-    ind_selected = np.linspace(start, ffcfw_range_a1zixg2k.shape[-1]-1, uinp.structure['i_progeny_w2_len'], dtype = int)
+    ind_sorted_a1zixg2k = np.argsort(ffcfw_range_a1zixg2k, axis = -1)
+    ### Select the values for the 10 equally spaced values spanning lowest to highest inclusive. Adding axis at -1
+    start_a1zixg2 = ffcfw_range_a1zixg2k.shape[-1] - np.count_nonzero(ffcfw_range_a1zixg2k, axis=-1)
+    ind_selected_a1zixg2w9 = np.linspace(start_a1zixg2, ffcfw_range_a1zixg2k.shape[-1] - 1, uinp.structure['i_progeny_w2_len'], dtype = int, axis=-1)
     ### The indices for the required values are the selected values from the sorted indices
-    ind = ind_sorted[..., ind_selected]
+    # ind = ind_sorted_a1zixg2k[..., ind_selected_a1zixg2]
+    ind = np.take_along_axis(ind_sorted_a1zixg2k, ind_selected_a1zixg2w9, axis=-1)
     ### Extract the condensed weights and the sale_value of the condensed vars
     ffcfw_prog_a1zixg2w9 = np.take_along_axis(ffcfw_range_a1zixg2k, ind, axis = -1)
     ### Later this variable is used with the 10 weights in both the i_w_pos and -1, I have called this
@@ -4167,8 +4175,8 @@ def generator(params,r_vals):
                                                                     * mask_prog_tdx_tva1e1b1nwzida0e0b0xyg2w9[...,na,:]
                                                                     * (a_g1_g2[...,na,:]==index_g1)[...,na] * (index_tva1e1b1nwzida0e0b0xyg2w9 == 1)[...,na,:]
                                                                     * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na,na]
-                                                                    * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[...,na,na]
-                                                                    , axis=(uinp.parameters['i_b0_pos']-2, uinp.structure['i_e0_pos']-2),keepdims=True) > 0)
+                                                                    * np.any(a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3, axis=(uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']),keepdims=True)[...,na,na]
+                                                                    , axis=(uinp.parameters['i_b0_pos']-2, uinp.structure['i_e0_pos']-2),keepdims=True))
     ###numbers required - no d axis for Dam DVs
     numbers_progreq_k28k3k5tva1e1b1nw8zida0e0b0xyg1g9w9 = 1 * (np.sum(mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9[0, ...,:,na] * (index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,..., na,na] == 0)
                                                                     * (index_g1[...,na,:]==index_g1)[...,na] * btrt_propn_b0xyg1[...,na,na] * e0_propn_ida0e0b0xyg[...,na,na]
@@ -4183,7 +4191,7 @@ def generator(params,r_vals):
     numbers_prog2offs_k3k5tva1e1b1nwzida0e0b0xyg2w9 = np.sum(distribution_2offs_a1e1b1nwzida0e0b0xyg2w9 * mask_numbers_prog2offsw8w9_w9
                                                              * (index_tva1e1b1nwzida0e0b0xyg2w9 == 2)
                                                              * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na]
-                                                             * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[...,na],
+                                                             * np.any(a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3, axis=(uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']),keepdims=True)[...,na],
                                                              axis=(uinp.parameters['i_b0_pos']-1, uinp.structure['i_e0_pos']-1),keepdims=True)
 
     ###numbers req
