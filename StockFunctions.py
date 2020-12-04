@@ -1251,7 +1251,7 @@ def f_period_start_nums(numbers, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_
 
 # def f_period_start_nums(numbers, prejoin_tup, season_tup, period_is_startfvp, period_is_break, season_propn_z, group=None, numbers_initial_repro=0, period_is_prejoin=None):
 #     ##a) reallocate between w and n if the period is start of a FVP
-#     ###Calculate temporary values as if start of FVP - colapse n back to standard level (n axis is populated due to mortality)
+#     ###Calculate temporary values as if start of FVP - collapse n back to standard level (n axis is populated due to mortality)
 #     if uinp.structure['i_n1_len'] >= uinp.structure['i_w1_len']:
 #         temporary = numbers #this is done to ensure that temp has the same size as var. In the next line np.diagonal removes the n axis so it is added back in using the expand function, but that is a singlton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
 #         temporary[...] = np.expand_dims(np.rollaxis(numbers.diagonal(axis1= uinp.structure['i_w_pos'], axis2= uinp.structure['i_n_pos']),-1,uinp.structure['i_w_pos']), uinp.structure['i_n_pos']) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
