@@ -163,6 +163,11 @@ arrays=[index_p, index_l, index_r, index_t]
 index_plrt=fun.cartesian_product_simple_transpose(arrays)
 index_plrt=tuple(map(tuple, index_plrt)) #create a tuple rather than a list because tuples are faster
 
+### rt
+arrays=[index_r, index_t]
+index_rt=fun.cartesian_product_simple_transpose(arrays)
+index_rt=tuple(map(tuple, index_rt)) #create a tuple rather than a list because tuples are faster
+
 ### flrt
 arrays=[index_f, index_l, index_r, index_t]
 index_flrt=fun.cartesian_product_simple_transpose(arrays)
@@ -223,7 +228,7 @@ arrays=[index_f, index_r, index_t]
 index_frt=fun.cartesian_product_simple_transpose(arrays)
 index_frt=tuple(map(tuple, index_frt)) #create a tuple rather than a list because tuples are faster
 
-def map_excel(filename):
+def map_excel(params,r_vals):
     '''Instantiate variables required and read inputs for the pasture variables from an excel file'''
     global grn_senesce_startfoo_ft
     global grn_senesce_pgrcons_ft
@@ -302,7 +307,10 @@ def map_excel(filename):
 
         ### define the link between rotation phase and pasture type while looping on pasture
         pasture_rt[:,t] = phases_rotn_df.iloc[:,-1].isin(pasture_sets[pasture])
-
+    ##create pasture area param. used to bound SR.
+    pasture_area = pasture_rt.ravel() * 1 #times 1 to convert from bool to int eg if the phase is pasture then 1ha of pasture is recorded.
+    params['pasture_area_rt'] = dict(zip(index_rt ,pasture_area))
+    r_vals['pasture_area_rt'] = pasture_rt #store for reporting
     ## one time data manipulation for the inputs just read
     ### calculate dry_decay_period (used in reseeding and green&dry)
     dry_decay_daily_ft[...] = i_dry_decay_t

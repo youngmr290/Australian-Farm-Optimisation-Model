@@ -234,7 +234,7 @@ def stockpyomo_local(params):
         model.del_component(model.p_progreq_offs)
     except AttributeError:
         pass
-    model.p_progreq_offs = pe.Param(model.s_lw_offs, model.s_groups_offs, model.s_lw_offs,
+    model.p_progreq_offs = pe.Param(model.s_dvp_offs, model.s_lw_offs, model.s_tol, model.s_gender, model.s_groups_offs, model.s_lw_offs,
                               initialize=params['p_progreq_offs'], default=0.0, doc='number of prodgeny required by dams')
 
 
@@ -272,7 +272,7 @@ def stockpyomo_local(params):
     except AttributeError:
         pass
     model.p_numbers_req_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_dvp_offs, model.s_lw_offs,
-                                        model.s_groups_offs, model.s_lw_offs,
+                                        model.s_gender, model.s_groups_offs, model.s_lw_offs,
                                         initialize=params['p_numbers_req_offs'], default=0.0, doc='requirment of off in the current period')
 
     ##energy intake
@@ -494,6 +494,31 @@ def stockpyomo_local(params):
                              model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender, model.s_gen_merit_offs, model.s_groups_offs,
                              initialize=params['p_infrastructure_offs'], default=0.0, doc='offs requirement for infrastructure (based on number of times yarded and shearing activity)')
 
+    ##dse
+    try:
+        model.del_component(model.p_dse_sire_index)
+        model.del_component(model.p_dse_sire)
+    except AttributeError:
+        pass
+    model.p_dse_sire = pe.Param(model.s_feed_periods, model.s_groups_sire, initialize=params['p_dse_sire'],
+                                  default=0.0, doc='number of dse for each sire activity')
+    try:
+        model.del_component(model.p_dse_dams_index)
+        model.del_component(model.p_dse_dams)
+    except AttributeError:
+        pass
+    model.p_dse_dams = pe.Param(model.s_k2_birth_dams, model.s_feed_periods, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams,
+                                  model.s_lw_dams, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams,
+                                  initialize=params['p_dse_dams'], default=0.0, doc='number of dse for each dam activity')
+    try:
+        model.del_component(model.p_dse_offs_index)
+        model.del_component(model.p_dse_offs)
+    except AttributeError:
+        pass
+    model.p_dse_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_feed_periods, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
+                             model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender, model.s_gen_merit_offs, model.s_groups_offs,
+                             initialize=params['p_dse_offs'], default=0.0, doc='number of dse for each offs activity')
+
 
     # try:
     #     model.del_component(model.p_asset_stockinfra)
@@ -641,10 +666,10 @@ def stockpyomo_local(params):
         t_w9 = l_w9_offs.index(w9)
         if not np.any(params['numbers_req_numpyvesion_k3k5vw8g3w9'][t_k3,t_k5,t_v3,:,t_g3,t_w9]):
             return pe.Constraint.Skip
-        return sum(model.v_offs[k3,k5,t3,v3,n3,w8,z,i,a,x,y3,g3] * model.p_numbers_req_offs[k3,k5,v3,w8,g3,w9]
+        return sum(model.v_offs[k3,k5,t3,v3,n3,w8,z,i,a,x,y3,g3] * model.p_numbers_req_offs[k3,k5,v3,w8,x,g3,w9]
                    - model.v_offs[k3,k5,t3,v3_prev,n3,w8,z,i,a,x,y3,g3] * model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z,i,a,x,y3,g3,w9]
                     for t3 in model.s_sale_offs for n3 in model.s_nut_offs for w8 in model.s_lw_offs
-                   if model.p_numbers_req_offs[k3,k5,v3,w8,g3,w9] != 0 or model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z,i,a,x,y3,g3,w9] != 0) <=0 #need to use both in the if statement (even though it is slower) becasue there are stitustions eg dvp4 (prejoining) where prov will have a value and req will not.
+                   if model.p_numbers_req_offs[k3,k5,v3,w8,x,g3,w9] != 0 or model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z,i,a,x,y3,g3,w9] != 0) <=0 #need to use both in the if statement (even though it is slower) becasue there are stitustions eg dvp4 (prejoining) where prov will have a value and req will not.
     start=time.time()
     model.con_offR = pe.Constraint(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_dvp_offs, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gender,
                                    model.s_gen_merit_dams, model.s_groups_offs, model.s_lw_offs, rule=offR, doc='transfer off to off from last dvp to current dvp.')
@@ -700,12 +725,12 @@ def stockpyomo_local(params):
     except AttributeError:
         pass
     def prog2offsR(model, k3, k5, v3, a, z, i, x, y3, g3, w9):
-        if v3=='dvp0' and any(model.p_progreq_offs[w38, g3, w9] for w38 in model.s_lw_offs):
+        if v3=='dvp0' and any(model.p_progreq_offs[v3, w38, i, x, g3, w9] for w38 in model.s_lw_offs):
             return (sum(- model.v_prog[k5, t2, w28, z, i, d, a, x, g3] * model.p_progprov_offs[k3, k5, t2, a, w28, z, i, d, x, y3, g3, w9]
                         for d in model.s_damage for w28 in model.s_lw_prog for t2 in model.s_sale_prog
                         if model.p_progprov_offs[k3, k5, t2, a, w28, z, i, d, x, y3, g3, w9]!= 0)
-                       + sum(model.v_offs[k3,k5,t3,v3,n3,w38,z,i,a,x,y3,g3]  * model.p_progreq_offs[w38, g3, w9]
-                        for t3 in model.s_sale_offs for n3 in model.s_nut_dams for w38 in model.s_lw_offs if model.p_progreq_offs[w38, g3, w9]!= 0))<=0
+                       + sum(model.v_offs[k3,k5,t3,v3,n3,w38,z,i,a,x,y3,g3]  * model.p_progreq_offs[v3, w38, i, x, g3, w9]
+                        for t3 in model.s_sale_offs for n3 in model.s_nut_dams for w38 in model.s_lw_offs if model.p_progreq_offs[v3, w38, i, x, g3, w9]!= 0))<=0
         else:
             return pe.Constraint.Skip
     start = time.time()
@@ -725,7 +750,8 @@ def stockpyomo_local(params):
     def mating(model,g0,p8):
         return - model.v_sire[g0] + sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_nsires_req[k2,t1,v1,a,n1,w1,z,i,y1,g1,g0,p8]
                   for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for a in model.s_wean_times for n1 in model.s_nut_dams
-                   for w1 in model.s_lw_dams for z in model.s_season_types for i in model.s_tol for y1 in model.s_gen_merit_dams  for g1 in model.s_groups_dams) <=0
+                   for w1 in model.s_lw_dams for z in model.s_season_types for i in model.s_tol for y1 in model.s_gen_merit_dams  for g1 in model.s_groups_dams
+                   if model.p_nsires_req[k2,t1,v1,a,n1,w1,z,i,y1,g1,g0,p8]!=0) <=0
     model.con_matingR = pe.Constraint(model.s_groups_sire, model.s_sire_periods, rule=mating, doc='sire requirment for mating')
 
     try:
@@ -733,13 +759,13 @@ def stockpyomo_local(params):
     except AttributeError:
         pass
     def stockinfra(model,h1):
-        return -model.v_infrastructure[h1] + sum(model.v_sire[g0] * model.p_infra_sire[h1,g0] for g0 in model.s_groups_sire)  \
+        return -model.v_infrastructure[h1] + sum(model.v_sire[g0] * model.p_infra_sire[h1,g0] for g0 in model.s_groups_sire if model.p_infra_sire[h1,g0]!=0)  \
                + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_infra_dams[k2,h1,t1,v1,a,n1,w1,z,i,y1,g1]
                          for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
-                         for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams)
+                         for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams if model.p_infra_dams[k2,h1,t1,v1,a,n1,w1,z,i,y1,g1]!=0)
                     + sum(model.v_offs[k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_infra_offs[k3,k5,h1,t3,v3,n3,w3,z,i,a,x,y3,g3]
                           for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
-                          for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs)
+                          for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs if model.p_infra_offs[k3,k5,h1,t3,v3,n3,w3,z,i,a,x,y3,g3]!=0)
                for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol) <=0
     model.con_stockinfra = pe.Constraint(model.s_infrastructure, rule=stockinfra, doc='Requirement for infrastructure (based on number of times yarded and shearing activity)')
 
