@@ -418,6 +418,10 @@ def f_sa(value, sa, sa_type=0, target=0, value_min=-np.inf,pandas=False, axis=0)
          value = np.maximum(0, np.minimum(1, value * (1 - np.abs(sa)) + np.maximum(0, sa)))
     ##Type 5 is value (return the SA value)
     elif sa_type == 5:
+        try:
+            sa=sa.copy()#have to copy the np arrays so that the origional sa is not changed
+        except:
+            pass
         value = f_update(value, sa, sa != '-')
 
     return value
