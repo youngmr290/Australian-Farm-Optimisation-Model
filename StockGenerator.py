@@ -42,7 +42,7 @@ import PropertyInputs as pinp
 import StockFunctions as sfun
 import UniversalInputs as uinp
 import Periods as per
-
+import PlotViewer as pv
 
 
 # np.seterr(all='raise')
@@ -3859,22 +3859,24 @@ def generator(params,r_vals):
         therefore some activities and constraints can be masked out'''
     allocation_start = time.time()
     ##dams
-    ###mask for nutrition profiles (this is incase the user only wants to examine certain nutrition patterns eg high high high vs low low low) - this mask is combine with the other w8 masks below
-    mask_nut_va1e1b1nwzida0e0b0xyg1 = mask_nut_oa1e1b1nwzida0e0b0xyg1[a_o_v]
-    mask_nut_va1e1b1nwzida0e0b0xyg1[:, :, :, :, :, 0, ...] = True #set pattern 0 to True (this will make sure pattern 27 and 54 are also true) -they all need to be true becasue each yr all patterns are distributed to those three levels
-    a_shortlist_w1 = index_w1 % (uinp.structure['i_n1_len'] ** uinp.structure['i_n_fvp_period1'])
-    mask_nut_va1e1b1nwzida0e0b0xyg1 = mask_nut_va1e1b1nwzida0e0b0xyg1[:,:,:,:,:,a_shortlist_w1,...]  # expands the nutrition mask to all lw patterns.
-    mask_w8nut_va1e1b1nwzida0e0b0xyg1 = np.sum(mask_nut_va1e1b1nwzida0e0b0xyg1[...,na] *
-                                              (np.trunc(index_w1 / uinp.structure['i_n1_len'] ** (2 - dvp_type_va1e1b1nwzida0e0b0xyg1[...,na])
-                                                        ) == index_wzida0e0b0xyg1[...,na] / uinp.structure['i_n1_len'] ** (2 - dvp_type_va1e1b1nwzida0e0b0xyg1[...,na])),
-                                         axis=-1) > 0
     ###Steps for ‘Numbers Provides’ is calculated with a t axis (because the t axis can alter the dvp type of the source relative to the destination)
     step_next_con1_tva1e1b1nw8zida0e0b0xyg1w9 = (uinp.structure['i_n1_len'] ** (uinp.structure['i_n_fvp_period1'] - dvp_type_next_tva1e1b1nwzida0e0b0xyg1))[...,na]
     ###Steps for ‘Numbers Requires’ & ‘Decision Variable’ is calculated without a t axis.
     step_con1_va1e1b1nw8zida0e0b0xyg1 = (uinp.structure['i_n1_len'] ** (uinp.structure['i_n_fvp_period1'] - dvp_type_va1e1b1nwzida0e0b0xyg1))
     step_dv1_va1e1b1nw8zida0e0b0xyg1 = step_con1_va1e1b1nw8zida0e0b0xyg1 / uinp.structure['i_n1_len']
-    ##Mask the decision variables that are not related to p_numbers (broadcast across t axis)
+    ##Mask the decision variables that are not yet active in the matrix because they share a common nutrition history (broadcast across t axis)
     mask_w8vars_va1e1b1nw8zida0e0b0xyg1 = index_wzida0e0b0xyg1 % step_dv1_va1e1b1nw8zida0e0b0xyg1 == 0
+    ##mask for nutrition profiles (this allows the user to examine certain nutrition patterns eg high high high vs low low low) - this mask is combine with the other w8 masks below
+    mask_nut_va1e1b1nwzida0e0b0xyg1 = mask_nut_oa1e1b1nwzida0e0b0xyg1[a_o_v]
+    ###association between the shortlist of nutrition profile inputs and the full range of LW patterns that include starting LW
+    a_shortlist_w1 = index_w1 % (uinp.structure['i_n1_len'] ** uinp.structure['i_n_fvp_period1'])
+    mask_nut_va1e1b1nwzida0e0b0xyg1 = mask_nut_va1e1b1nwzida0e0b0xyg1[:,:,:,:,:,a_shortlist_w1,...]  # expands the nutrition mask to all lw patterns.
+    ### match the pattern requested with the pattern that is the 'history' for that pattern in previous DVPs
+    mask_w8nut_va1e1b1nwzida0e0b0xyg1 = np.sum(mask_nut_va1e1b1nwzida0e0b0xyg1[...,na] *
+                                               (np.trunc(index_wzida0e0b0xyg1[...,na] / step_dv1_va1e1b1nw8zida0e0b0xyg1[..., na])
+                                                == index_w1 / step_dv1_va1e1b1nw8zida0e0b0xyg1[...,na]),
+                                               axis=uinp.structure['i_w_pos']-1) > 0
+    ## Combine the w8vars mask and the user nutrition mask
     mask_w8vars_va1e1b1nw8zida0e0b0xyg1 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_w8nut_va1e1b1nwzida0e0b0xyg1
     ##Mask numbers provided based on the steps (with a t axis) and the next dvp type (with a t axis)
     mask_numbers_provw8w9_tva1e1b1nw8zida0e0b0xyg1w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1[...,na] * (np.trunc((index_wzida0e0b0xyg1[...,na] * (dvp_type_next_tva1e1b1nwzida0e0b0xyg1[...,na] !=0) +
@@ -3884,9 +3886,10 @@ def generator(params,r_vals):
     mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1[...,na] * (np.trunc(index_wzida0e0b0xyg1 / step_con1_va1e1b1nw8zida0e0b0xyg1)[...,na] == index_w1 / step_con1_va1e1b1nw8zida0e0b0xyg1[...,na])
 
     ##offs
-    ###mask for nutrition profiles (this is incase the user only wants to examine certain nutrition patterns eg high high high vs low low low) - this mask is combine with the other w8 masks below
+    ##mask for nutrition profiles (this allows the user to examine certain nutrition patterns eg high high high vs low low low) - this mask is renamed the w8 masks to be consistent with dams
     mask_nut_va1e1b1nwzida0e0b0xyg3 = mask_nut_sa1e1b1nwzida0e0b0xyg3[a_s_v] #shearing opp is the same as dvp
-    a_shortlist_w3 = index_w3 % (uinp.structure['i_n3_len'] ** (uinp.structure['i_n_fvp_period3'] - 1))
+    ###association between the shortlist of nutrition profile inputs and the full range of LW patterns that include starting LW
+    a_shortlist_w3 = index_w3 % (uinp.structure['i_n3_len'] ** uinp.structure['i_n_fvp_period3'])
     mask_w8vars_va1e1b1nw8zida0e0b0xyg3 = mask_nut_va1e1b1nwzida0e0b0xyg3[:,:,:,:,:,a_shortlist_w3,...]  # expands the nutrition mask to all lw patterns.
     ###The gap between the active constraints is required
     step_con3 = uinp.structure['i_n3_len'] ** uinp.structure['i_n_fvp_period3']
@@ -4455,7 +4458,7 @@ def generator(params,r_vals):
 
     ###number prog require by offs
     mask=numbers_progreq_va1e1b1nw8zida0e0b0xyg3w9!=0
-    progreq_w8g3w9 = numbers_progreq_w8zida0e0b0xyg3w9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
+    progreq_w8g3w9 = numbers_progreq_w8zida0e0b0xyg3w9[mask] #applying the mask does the raveling and squeezing of singleton axis
     mask=mask.ravel()
     index_cut_w8g3w9=index_w8g3w9[mask,:]
     tup_w8g3w9 = tuple(map(tuple, index_cut_w8g3w9))
