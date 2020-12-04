@@ -34,6 +34,7 @@ import functions from other modules
 import numpy as np
 import matplotlib.pyplot as plt
 import time
+# import PlotViewer as pv
 # from numba import jit
 
 import Functions as fun
@@ -42,7 +43,6 @@ import PropertyInputs as pinp
 import StockFunctions as sfun
 import UniversalInputs as uinp
 import Periods as per
-import PlotViewer as pv
 
 
 # np.seterr(all='raise')
@@ -3872,10 +3872,11 @@ def generator(params,r_vals):
     a_shortlist_w1 = index_w1 % (uinp.structure['i_n1_len'] ** uinp.structure['i_n_fvp_period1'])
     mask_nut_va1e1b1nwzida0e0b0xyg1 = mask_nut_va1e1b1nwzida0e0b0xyg1[:,:,:,:,:,a_shortlist_w1,...]  # expands the nutrition mask to all lw patterns.
     ### match the pattern requested with the pattern that is the 'history' for that pattern in previous DVPs
-    mask_w8nut_va1e1b1nwzida0e0b0xyg1 = np.sum(mask_nut_va1e1b1nwzida0e0b0xyg1[...,na] *
+    mask_w8nut_va1e1b1nzida0e0b0xyg1w9 = np.sum(mask_nut_va1e1b1nwzida0e0b0xyg1[...,na] *
                                                (np.trunc(index_wzida0e0b0xyg1[...,na] / step_dv1_va1e1b1nw8zida0e0b0xyg1[..., na])
                                                 == index_w1 / step_dv1_va1e1b1nw8zida0e0b0xyg1[...,na]),
-                                               axis=uinp.structure['i_w_pos']-1) > 0
+                                               axis=uinp.structure['i_w_pos']-1) > 0 #dont keepdims
+    mask_w8nut_va1e1b1nwzida0e0b0xyg1 = np.moveaxis(mask_w8nut_va1e1b1nzida0e0b0xyg1w9,-1,uinp.structure['i_w_pos']) #move w9 axis to w position
     ## Combine the w8vars mask and the user nutrition mask
     mask_w8vars_va1e1b1nw8zida0e0b0xyg1 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_w8nut_va1e1b1nwzida0e0b0xyg1
     ##Mask numbers provided based on the steps (with a t axis) and the next dvp type (with a t axis)
