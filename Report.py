@@ -69,6 +69,7 @@ def intermediates(inter, r_vals, lp_vars):
     keys_z = r_vals['stock']['keys_z']
     keys_p6 = r_vals['stock']['keys_p6']
     keys_p5 = r_vals['lab']['keys_p5']
+    keys_pastures = r_vals['pas']['keys_pastures']
 
     ##axis len
     len_c = len(keys_c)
@@ -107,15 +108,14 @@ def intermediates(inter, r_vals, lp_vars):
     phases_df = r_vals['rot']['phases']
 
     ##crop & pasture area
-    #^dict to series?
-    df_rot = pd.DataFrame(lp_vars['v_phase_area'], index=['v_phase_area']).T #create a df of all the phase areas
+    rot_area = pd.Series(lp_vars['v_phase_area']) #create a series of all the phase areas
     # df_rot = df_rot.rename_axis(['rot','lmu'])
     # phase_area = pd.merge(r_vals['rot']['phases'], df_rot, how='left', left_index=True, right_on=['rot']) #merge full phase array with area array
     # phase_is_pasture = phase_area.iloc[:,-2].isin(r_vals['rot']['all_pastures'])
     # inter['pasture_area'] = df_rot[phase_is_pasture].sum()
-    pasture_area = pd.DataFrame(r_vals['pas']['pasture_area_rt'], index=phases_df.index)
-    inter['pasture_area'] = df_rot.mul(pasture_area,axis=0,level=0)
-    inter['crop_area'] = df_rot[~phase_is_pasture].sum()
+    pasture_area = pd.DataFrame(r_vals['pas']['pasture_area_rt'], index=phases_df.index, columns=keys_pastures)
+    inter['pasture_area'] = pasture_area.mul(rot_area,axis=0,level=0).sum(axis=0) #return the area of each pasture type
+    inter['crop_area'] = df_rot[~phase_is_pasture].sum() #^do i have something like pasture already? or do i need to do option 1? how can i get area for each crop set?
 
 
     ##animal numbers

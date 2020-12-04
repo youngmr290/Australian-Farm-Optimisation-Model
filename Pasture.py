@@ -311,6 +311,7 @@ def map_excel(params,r_vals):
     pasture_area = pasture_rt.ravel() * 1 #times 1 to convert from bool to int eg if the phase is pasture then 1ha of pasture is recorded.
     params['pasture_area_rt'] = dict(zip(index_rt ,pasture_area))
     r_vals['pasture_area_rt'] = pasture_rt #store for reporting
+    r_vals['keys_pastures'] = pastures #store for reporting
     ## one time data manipulation for the inputs just read
     ### calculate dry_decay_period (used in reseeding and green&dry)
     dry_decay_daily_ft[...] = i_dry_decay_t
