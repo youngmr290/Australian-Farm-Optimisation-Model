@@ -85,3 +85,5 @@ sav['woolp_fdprem_percentile'] = '-'           # sa value for fd premium percent
 sav['woolp_fdprem'] = '-'                     # sa value for fd premium
 sav['salep_percentile'] = '-'                     #Value for percentile for all sale grids
 sav['salep_max'] = '-'                        #max sale price in grid
+sav['nut_mask_dams'] = np.full(pinp.sheep_inp['i_sai_lw_dams_owi'].shape,'-')  #masks the nutrition options available eg high low high - the options selected are available for each starting weight
+sav['nut_mask_offs'] = np.full(pinp.sheep_inp['i_sai_lw_offs_swix'].shape,'-')  #masks the nutrition options available eg high low high - the options selected are available for each starting weight

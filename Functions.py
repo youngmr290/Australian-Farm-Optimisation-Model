@@ -178,7 +178,8 @@ def searchsort_multiple_dim(a,v,axis_a,axis_v):
 
 
 def f_reshape_expand(array, left_pos=0, len_ax0=0, len_ax1=0, len_ax2=0, swap=False, ax1=0, ax2=1, right_pos=0, left_pos2=0, right_pos2=0
-                     , left_pos3=0, right_pos3=0, condition = None, axis = 0, len_ax3=0, swap2=False, ax1_2=1, ax2_2=2):
+                     , left_pos3=0, right_pos3=0, condition = None, axis = 0, len_ax3=0, swap2=False, ax1_2=1, ax2_2=2,
+                     condition2=None, axis2=0, condition3=None, axis3=0, left_pos4=0, right_pos4=0, move=False, source=0, dest=1):
     '''
     *note: if adding two sets of new axis add from right to left (then the pos variables align)
     *note: mask applied last (after expanding and reshaping)
@@ -232,6 +233,9 @@ def f_reshape_expand(array, left_pos=0, len_ax0=0, len_ax1=0, len_ax2=0, swap=Fa
     ##swap axis if necessary
     if swap2:
         array = np.swapaxes(array, ax1_2, ax2_2)
+    ##move axis if necessary
+    if move:
+        array = np.moveaxis(array, source=source, destination=dest)
     ##get axis into correct position 1
     if left_pos != 0:
         extra_axes = tuple(range((left_pos + 1), right_pos))
@@ -247,6 +251,11 @@ def f_reshape_expand(array, left_pos=0, len_ax0=0, len_ax1=0, len_ax2=0, swap=Fa
         extra_axes = tuple(range((left_pos3 + 1), right_pos3))
     else: extra_axes = ()
     array = np.expand_dims(array, axis = extra_axes)
+    ##get axis into correct position 4 (some arrays need singleton axis added in multiple places ie separated by a used axis)
+    if left_pos4 != 0:
+        extra_axes = tuple(range((left_pos4 + 1), right_pos4))
+    else: extra_axes = ()
+    array = np.expand_dims(array, axis = extra_axes)
     ##apply mask if required
     if condition is not None: #see if condition exists
         if type(condition) == bool: #check if array or single value - note array of T & F is not type bool (it is array)
@@ -254,6 +263,20 @@ def f_reshape_expand(array, left_pos=0, len_ax0=0, len_ax1=0, len_ax2=0, swap=Fa
             array = np.compress(condition, array, axis)
         else:
             array = np.compress(condition, array, axis)
+    ##apply mask if required
+    if condition2 is not None: #see if condition exists
+        if type(condition2) == bool: #check if array or single value - note array of T & F is not type bool (it is array)
+            condition2= np.asarray([condition2]) #convert to numpy if it is singular input
+            array = np.compress(condition2, array, axis2)
+        else:
+            array = np.compress(condition2, array, axis2)
+    ##apply mask if required
+    if condition3 is not None: #see if condition exists
+        if type(condition3) == bool: #check if array or single value - note array of T & F is not type bool (it is array)
+            condition3= np.asarray([condition3]) #convert to numpy if it is singular input
+            array = np.compress(condition3, array, axis3)
+        else:
+            array = np.compress(condition3, array, axis3)
     return array
 
 def f_update(existing_value, new_value, mask_for_new):
