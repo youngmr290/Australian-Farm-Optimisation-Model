@@ -104,11 +104,13 @@ def intermediates(inter, r_vals, lp_vars):
     len_p5 = len(keys_p5)
 
     ##crop & pasture area
+    #^dict to series?
     df_rot = pd.DataFrame(lp_vars['v_phase_area'], index=['v_phase_area']).T #create a df of all the phase areas
-    df_rot = df_rot.rename_axis(['rot','lmu'])
-    phase_area = pd.merge(r_vals['rot']['phases'], df_rot, how='left', left_index=True, right_on=['rot']) #merge full phase array with area array
-    phase_is_pasture = phase_area.iloc[:,-2].isin(r_vals['rot']['all_pastures'])
-    inter['pasture_area'] = df_rot[phase_is_pasture].sum()
+    # df_rot = df_rot.rename_axis(['rot','lmu'])
+    # phase_area = pd.merge(r_vals['rot']['phases'], df_rot, how='left', left_index=True, right_on=['rot']) #merge full phase array with area array
+    # phase_is_pasture = phase_area.iloc[:,-2].isin(r_vals['rot']['all_pastures'])
+    # inter['pasture_area'] = df_rot[phase_is_pasture].sum()
+    inter['pasture_area'] = df_rot * r_vals['pas']['pasture_area_rt']
     inter['crop_area'] = df_rot[~phase_is_pasture].sum()
 
 

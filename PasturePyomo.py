@@ -13,8 +13,8 @@ import Pasture as pas
 # import UniversalInputs as uinp
 
 
-def paspyomo_precalcs(params,report):
-    pas.map_excel('Property.xlsx')                         # read inputs from Excel file and map to the python variables
+def paspyomo_precalcs(params,r_vals):
+    pas.map_excel(params,r_vals)                         # read inputs from Excel file and map to the python variables
     pas.calculate_germ_and_reseed(params)                          # calculate the germination for each rotation phase
     pas.green_and_dry(params)                            # calculate the FOO lost when destocked and the FOO gained when grazed after establishment
     pas.poc(params)                                     # calculate the FOO on crop paddocks and the md and vol
@@ -27,12 +27,19 @@ def paspyomo_local(params):
     #####################################################################################################################################################################################################
     #####################################################################################################################################################################################################
     try:
+        model.del_component(model.p_pasture_area_index)
+        model.del_component(model.p_pasture_area)
+    except AttributeError:
+        pass
+    model.p_pasture_area = pe.Param(model.s_phases, model.s_pastures, initialize=params['pasture_area_rt'], default=0, doc='pasture area of each rotation')
+    
+    try:
         model.del_component(model.p_germination_index)
         model.del_component(model.p_germination)
     except AttributeError:
         pass
     model.p_germination = pe.Param(model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=params['p_germination_flrt'], default=0, doc='pasture germination for each rotation')
-    
+
     try:
         model.del_component(model.p_foo_grn_reseeding_index)
         model.del_component(model.p_foo_grn_reseeding)

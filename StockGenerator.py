@@ -81,7 +81,7 @@ def generator(params,r_vals):
     na=np.newaxis
     ## define the periods - default (dams and sires)
     sim_years = uinp.structure['i_age_max']
-    # sim_years = 2
+    sim_years = 2
     sim_years_offs = min(uinp.structure['i_age_max_offs'], sim_years)
     n_sim_periods, date_start_p, date_end_p, p_index_p, step \
     = sfun.sim_periods(pinp.sheep['i_startyear'], uinp.structure['i_sim_periods_year'], sim_years)
@@ -4236,6 +4236,58 @@ def generator(params,r_vals):
     ###numbers req
     numbers_progreq_va1e1b1nw8zida0e0b0xyg3w9 = 1 * (mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg3w9 > 0)
 
+    #######
+    ##dse #
+    #######
+    days_p6 = np.array(pinp.feed_inputs['feed_periods'].loc[:pinp.feed_inputs['feed_periods'].index[-2],
+                        'length'])  # not including last row becasue that is the start of the following year.
+    days_p6_p6tva1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(days_p6, uinp.structure['i_p_pos']-2)
+    ###DSE based on MJ/d
+    ####returns the average mj/d for each animal for the each feed period (mei accounts for if the animal is on hand - if the animal is sold the average mei/d will be lower in that dvp)
+    mj_ave_p6ftva1e1b1nwzida0e0b0xyg0 = mei_p6fa1e1b1nwzida0e0b0xyg0[:,:,na,na,...] / days_p6_p6tva1e1b1nwzida0e0b0xyg[:,na,...]
+    mj_ave_k2p6ftva1e1b1nwzida0e0b0xyg1 = mei_k2p6ftva1e1b1nwzida0e0b0xyg1 / days_p6_p6tva1e1b1nwzida0e0b0xyg[:,na,...]
+    mj_ave_k3k5p6ftva1e1b1nwzida0e0b0xyg3 = mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3 / days_p6_p6tva1e1b1nwzida0e0b0xyg[:,na,...]
+    ####returns the number of dse of each animal in each dvp - this is combined with the variable numbers in reporting to get the total dse
+    dsemj_p6tva1e1b1nwzida0e0b0xyg0 = np.sum(mj_ave_p6ftva1e1b1nwzida0e0b0xyg0 / pinp.sheep['i_dse_mj'], axis = 1)
+    dsemj_k2p6tva1e1b1nwzida0e0b0xyg1 = np.sum(mj_ave_k2p6ftva1e1b1nwzida0e0b0xyg1 / pinp.sheep['i_dse_mj'], axis = 2)
+    dsemj_k3k5p6tva1e1b1nwzida0e0b0xyg3 = np.sum(mj_ave_k3k5p6ftva1e1b1nwzida0e0b0xyg3 / pinp.sheep['i_dse_mj'], axis = 3)
+
+    ###DSE based on nw
+    #### cumulative total of nw with p6 axis
+    nw_cum_p6a1e1b1nwzida0e0b0xyg0 = sfun.f_p2v_std(r_nw_start_sire**0.75, on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0,
+                                                  days_period_p=days_period_pa1e1b1nwzida0e0b0xyg0, a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg,
+                                                  index_any1tvp=index_p6pa1e1b1nwzida0e0b0xyg)
+    nw_cum_p6tva1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(r_nw_start_dams**0.75, a_v_pa1e1b1nwzida0e0b0xyg1, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1,
+                                                  days_period_p=days_period_pa1e1b1nwzida0e0b0xyg1, a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg,
+                                                  index_any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,...])
+    nw_cum_p6tva1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(r_nw_start_offs**0.75, a_v_pa1e1b1nwzida0e0b0xyg3, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg3,
+                                                  days_period_p=days_period_cut_pa1e1b1nwzida0e0b0xyg3, a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p],
+                                                  index_any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,...])
+    ####returns the average nw for each animal for the each feed period (cum nw accounts for if the animal is on hand - if the animal is sold the average nw will be lower in that feed period)
+    nw_ave_p6tva1e1b1nwzida0e0b0xyg0 = nw_cum_p6a1e1b1nwzida0e0b0xyg0[:,na,na,...] / days_p6_p6tva1e1b1nwzida0e0b0xyg
+    nw_ave_p6tva1e1b1nwzida0e0b0xyg1 = nw_cum_p6tva1e1b1nwzida0e0b0xyg1 / days_p6_p6tva1e1b1nwzida0e0b0xyg
+    nw_ave_p6tva1e1b1nwzida0e0b0xyg3 = nw_cum_p6tva1e1b1nwzida0e0b0xyg3 / days_p6_p6tva1e1b1nwzida0e0b0xyg
+    ####convert nw to dse
+    dsehd_p6tva1e1b1nwzida0e0b0xyg0 = nw_ave_p6tva1e1b1nwzida0e0b0xyg0 / pinp.sheep['i_dse_nw']**0.75
+    dsehd_p6tva1e1b1nwzida0e0b0xyg1 = nw_ave_p6tva1e1b1nwzida0e0b0xyg1 / pinp.sheep['i_dse_nw']**0.75
+    dsehd_p6tva1e1b1nwzida0e0b0xyg3 = nw_ave_p6tva1e1b1nwzida0e0b0xyg3 / pinp.sheep['i_dse_nw']**0.75
+    ####account for b1 axis effect on dse & select the dse group (note sire and offs don't have b1 axis so simple slice)
+    dse_group_dp6tva1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(pinp.sheep['i_dse_group'], uinp.structure['i_p_pos'] - 2)
+    dams_dsegroup_b1p6tva1e1bnwzida0e0b0xyg = fun.f_reshape_expand(uinp.structure['ia_dams_dsegroup_b1'], uinp.structure['i_p_pos']-3) #put the b1 axis in the same place as the dse group axis
+    dsenw_p6tva1e1b1nwzida0e0b0xyg0 = dsehd_p6tva1e1b1nwzida0e0b0xyg0 * dse_group_dp6tva1e1b1nwzida0e0b0xyg[uinp.structure['ia_sire_dsegroup']]
+    dsenw_p6tva1e1b1nwzida0e0b0xyg1 = dsehd_p6tva1e1b1nwzida0e0b0xyg1 * np.moveaxis(np.take_along_axis(dse_group_dp6tva1e1b1nwzida0e0b0xyg, dams_dsegroup_b1p6tva1e1bnwzida0e0b0xyg,0)[...,0], 0, uinp.parameters['i_b1_pos']) #take along the dse group axis, remove the last axis, then move b1 axis into place
+    dsenw_p6tva1e1b1nwzida0e0b0xyg3 = dsehd_p6tva1e1b1nwzida0e0b0xyg3 * dse_group_dp6tva1e1b1nwzida0e0b0xyg[uinp.structure['ia_offs_dsegroup']]
+    ####for dams need to cluster e1 & b1 axis for offs cluster k3k5
+    dsenw_k2p6tva1e1b1nwzida0e0b0xyg1 = np.sum(dsenw_p6tva1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1==index_k2tva1e1b1nwzida0e0b0xyg1)[:,na,...]
+                                               * mask_w8vars_va1e1b1nw8zida0e0b0xyg1, axis=(uinp.parameters['i_b1_pos'],pinp.sheep['i_e1_pos']),keepdims=True)
+    dsenw_k3k5p6tva1e1b1nwzida0e0b0xyg3 = np.sum(dsenw_p6tva1e1b1nwzida0e0b0xyg3 * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[:,:,na,...]
+                                                 * mask_w8vars_va1e1b1nw8zida0e0b0xyg3
+                                                 * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[:,:,na,...],
+                                                 axis=(uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']),keepdims=True)
+
+
+
+
     # plt.plot(o_ffcfw_dams[:, 0, 0:2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])         #compare e1 for singles
     # plt.plot(o_ffcfw_dams[:, 0, 1, 3, 0, 17:19, 0, 0, 0, 0, 0, 0, 0, 0, 0])         #compare w for singles and e1[1]
     # plt.plot(o_ffcfw_start_yatf[:, 0, 0:2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])   #compare e1 for singles
@@ -4333,8 +4385,8 @@ def generator(params,r_vals):
 
 
     ###w8g3w9 - prog to offs req
-    arrays = [keys_lw3, keys_g3, keys_lw3]
-    index_w8g3w9 = fun.cartesian_product_simple_transpose(arrays)
+    arrays = [keys_v3, keys_lw3, keys_i, keys_x, keys_g3, keys_lw3]
+    index_vw8ixg3w9 = fun.cartesian_product_simple_transpose(arrays)
 
     ###k2k2tvanwziyg1g9w9 - numbers dams
     arrays = [keys_k2, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1, keys_g1, keys_lw1]
@@ -4343,8 +4395,8 @@ def generator(params,r_vals):
     arrays = [keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3, keys_lw3]
     index_k3k5tvnw8ziaxyg3w9 = fun.cartesian_product_simple_transpose(arrays)
     ###k3k5wg3w9 - numbers req offs (doesnt have many active axis)
-    arrays = [keys_k3, keys_k5, keys_v3, keys_lw3, keys_g3, keys_lw3]
-    index_k3k5vw8g3w9 = fun.cartesian_product_simple_transpose(arrays)
+    arrays = [keys_k3, keys_k5, keys_v3, keys_lw3, keys_x, keys_g3, keys_lw3]
+    index_k3k5vw8xg3w9 = fun.cartesian_product_simple_transpose(arrays)
 
     ###p6fg0 - mei sire
     arrays = [keys_p6, keys_f, keys_g0]
@@ -4355,6 +4407,16 @@ def generator(params,r_vals):
     ###k3k5p6ftvnw8ziaxyg3 - mei offs
     arrays = [keys_k3, keys_k5, keys_p6, keys_f, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
     index_k3k5p6ftvnw8ziaxyg3 = fun.cartesian_product_simple_transpose(arrays)
+
+    ###p6g0 - dse sire
+    arrays = [keys_p6, keys_g0]
+    index_p6g0 = fun.cartesian_product_simple_transpose(arrays)
+    ###k2p6tva1nw8ziyg1 - dse dams
+    arrays = [keys_k2, keys_p6, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
+    index_k2p6tva1nw8ziyg1 = fun.cartesian_product_simple_transpose(arrays)
+    ###k3k5p6tvnw8ziaxyg3 - dse offs
+    arrays = [keys_k3, keys_k5, keys_p6, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
+    index_k3k5p6tvnw8ziaxyg3 = fun.cartesian_product_simple_transpose(arrays)
 
     ###cg0 - cashflow sire
     arrays = [keys_c, keys_g0]
@@ -4455,11 +4517,11 @@ def generator(params,r_vals):
 
     ###number prog require by offs
     mask=numbers_progreq_va1e1b1nw8zida0e0b0xyg3w9!=0
-    progreq_w8g3w9 = numbers_progreq_w8zida0e0b0xyg3w9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
+    progreq_vw8ixg3w9 = numbers_progreq_va1e1b1nw8zida0e0b0xyg3w9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
     mask=mask.ravel()
-    index_cut_w8g3w9=index_w8g3w9[mask,:]
-    tup_w8g3w9 = tuple(map(tuple, index_cut_w8g3w9))
-    params['p_progreq_offs'] =dict(zip(tup_w8g3w9, progreq_w8g3w9))
+    index_cut_vw8ixg3w9=index_vw8ixg3w9[mask,:]
+    tup_vw8ixg3w9 = tuple(map(tuple, index_cut_vw8ixg3w9))
+    params['p_progreq_offs'] =dict(zip(tup_vw8ixg3w9, progreq_vw8ixg3w9))
 
     ###numbers_prov_dams
     mask=numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9!=0
@@ -4486,11 +4548,11 @@ def generator(params,r_vals):
     ###numbers_req_offs
     mask=numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9!=0
     params['numbers_req_numpyvesion_k3k5vw8g3w9'] = numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9[:,:,0,:,0,0,0,0,:,0,0,0,0,0,0,0,0,:,:]  #cant use squeze here because i need to keep all relevent axis even if singleton. this is used to speed pyomo constraint.
-    numbers_req_offs_k3k5vw8g3w9 = numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
+    numbers_req_offs_k3k5vw8xg3w9 = numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9[mask] #applying the mask does the raveling and sqeezing of singlteon axis
     mask=mask.ravel()
-    index_cut_k3k5vw8g3w9=index_k3k5vw8g3w9[mask,:]
-    tup_k3k5vw8g3w9 = tuple(map(tuple, index_cut_k3k5vw8g3w9))
-    params['p_numbers_req_offs'] =dict(zip(tup_k3k5vw8g3w9, numbers_req_offs_k3k5vw8g3w9))
+    index_cut_k3k5vw8xg3w9=index_k3k5vw8xg3w9[mask,:]
+    tup_k3k5vw8xg3w9 = tuple(map(tuple, index_cut_k3k5vw8xg3w9))
+    params['p_numbers_req_offs'] =dict(zip(tup_k3k5vw8xg3w9, numbers_req_offs_k3k5vw8xg3w9))
 
     ###mei - sire
     mask=mei_p6fa1e1b1nwzida0e0b0xyg0!=0
@@ -4690,7 +4752,39 @@ def generator(params,r_vals):
     tup_k3k5h1tvnw8ziaxyg3 = tuple(map(tuple, index_cut_k3k5h1tvnw8ziaxyg3))
     params['p_infrastructure_offs'] =dict(zip(tup_k3k5h1tvnw8ziaxyg3, infrastructure_offs_k3k5h1tvnw8ziaxyg3))
 
-
+    ##DSE - sire
+    mask=dsemj_p6tva1e1b1nwzida0e0b0xyg0!=0
+    dsemj_sire_p6g0 = dsemj_p6tva1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and sqeezing of array
+    dsenw_sire_p6g0 = dsenw_p6tva1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and sqeezing of array
+    mask=mask.ravel()
+    index_cut_p6g0=index_p6g0[mask,:]
+    tup_p6g0 = tuple(map(tuple, index_cut_p6g0))
+    if pinp.sheep['i_dse_type'] == 0:
+        params['p_dse_sire'] =dict(zip(tup_p6g0, dsemj_sire_p6g0))
+    else:
+        params['p_dse_sire'] =dict(zip(tup_p6g0, dsenw_sire_p6g0))
+    ##DSE - dams
+    mask=dsemj_k2p6tva1e1b1nwzida0e0b0xyg1!=0
+    dsemj_dams_k2p6tva1nw8ziyg1 = dsemj_k2p6tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and sqeezing of array
+    dsenw_dams_k2p6tva1nw8ziyg1 = dsenw_k2p6tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and sqeezing of array
+    mask=mask.ravel()
+    index_cut_k2p6tva1nw8ziyg1=index_k2p6tva1nw8ziyg1[mask,:]
+    tup_k2p6tva1nw8ziyg1 = tuple(map(tuple, index_cut_k2p6tva1nw8ziyg1))
+    if pinp.sheep['i_dse_type'] == 0:
+        params['p_dse_dams'] =dict(zip(tup_k2p6tva1nw8ziyg1, dsemj_dams_k2p6tva1nw8ziyg1))
+    else:
+        params['p_dse_dams'] =dict(zip(tup_k2p6tva1nw8ziyg1, dsenw_dams_k2p6tva1nw8ziyg1))
+    ##DSE - dams
+    mask=dsemj_k3k5p6tva1e1b1nwzida0e0b0xyg3!=0
+    dsemj_dams_k3k5p6tvnw8ziaxyg3 = dsemj_k3k5p6tva1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and sqeezing of array
+    dsenw_dams_k3k5p6tvnw8ziaxyg3 = dsenw_k3k5p6tva1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and sqeezing of array
+    mask=mask.ravel()
+    index_cut_k3k5p6tvnw8ziaxyg3=index_k3k5p6tvnw8ziaxyg3[mask,:]
+    tup_k3k5p6tvnw8ziaxyg3 = tuple(map(tuple, index_cut_k3k5p6tvnw8ziaxyg3))
+    if pinp.sheep['i_dse_type'] == 0:
+        params['p_dse_offs'] =dict(zip(tup_k3k5p6tvnw8ziaxyg3, dsemj_dams_k3k5p6tvnw8ziaxyg3))
+    else:
+        params['p_dse_offs'] =dict(zip(tup_k3k5p6tvnw8ziaxyg3, dsenw_dams_k3k5p6tvnw8ziaxyg3))
 
 
 
@@ -4700,48 +4794,6 @@ def generator(params,r_vals):
     # report      #
     ###############
     '''add report values to report dict and do any additional calculations'''
-    ##dse
-    days_p6 = np.array(pinp.feed_inputs['feed_periods'].loc[:pinp.feed_inputs['feed_periods'].index[-2],
-                        'length'])  # not including last row becasue that is the start of the following year.
-    days_p6_p6tva1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(days_p6, uinp.structure['i_p_pos']-2)
-    ###DSE based on MJ/d
-    ####returns the average mj/d for each animal for the each feed period (mei accounts for if the animal is on hand - if the animal is sold the average mei/d will be lower in that dvp)
-    mj_ave_p6ftva1e1b1nwzida0e0b0xyg0 = mei_p6fa1e1b1nwzida0e0b0xyg0[:,:,na,na,...] / days_p6_p6tva1e1b1nwzida0e0b0xyg[:,na,...]
-    mj_ave_k2p6ftva1e1b1nwzida0e0b0xyg1 = mei_k2p6ftva1e1b1nwzida0e0b0xyg1 / days_p6_p6tva1e1b1nwzida0e0b0xyg[:,na,...]
-    mj_ave_k3k5p6ftva1e1b1nwzida0e0b0xyg3 = mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3 / days_p6_p6tva1e1b1nwzida0e0b0xyg[:,na,...]
-    ####returns the number of dse of each animal in each dvp - this is combined with the variable numbers in reporting to get the total dse
-    dsemj_p6tva1e1b1nwzida0e0b0xyg0 = np.sum(mj_ave_p6ftva1e1b1nwzida0e0b0xyg0 / pinp.sheep['i_dse_mj'], axis = 1)
-    dsemj_k2p6tva1e1b1nwzida0e0b0xyg1 = np.sum(mj_ave_k2p6ftva1e1b1nwzida0e0b0xyg1 / pinp.sheep['i_dse_mj'], axis = 2)
-    dsemj_k3k5p6tva1e1b1nwzida0e0b0xyg3 = np.sum(mj_ave_k3k5p6ftva1e1b1nwzida0e0b0xyg3 / pinp.sheep['i_dse_mj'], axis = 3)
-
-    ###DSE based on nw
-    #### cumulative total of nw with p6 axis
-    nw_cum_p6va1e1b1nwzida0e0b0xyg0 = sfun.f_p2v_std(r_nw_start_sire**0.75, on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0,
-                                                  days_period_p=days_period_pa1e1b1nwzida0e0b0xyg0, a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg,
-                                                  index_any1tvp=index_p6pa1e1b1nwzida0e0b0xyg)
-    nw_cum_p6tva1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(r_nw_start_dams**0.75, a_v_pa1e1b1nwzida0e0b0xyg1, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1,
-                                                  days_period_p=days_period_pa1e1b1nwzida0e0b0xyg1, a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg,
-                                                  index_any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,...])
-    nw_cum_p6tva1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(r_nw_start_offs**0.75, a_v_pa1e1b1nwzida0e0b0xyg3, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg3,
-                                                  days_period_p=days_period_cut_pa1e1b1nwzida0e0b0xyg3, a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p],
-                                                  index_any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,...])
-    ####returns the average nw for each animal for the each feed period (cum nw accounts for if the animal is on hand - if the animal is sold the average nw will be lower in that feed period)
-    nw_ave_p6tva1e1b1nwzida0e0b0xyg0 = nw_cum_p6va1e1b1nwzida0e0b0xyg0[:,na,...] / days_p6_p6tva1e1b1nwzida0e0b0xyg
-    nw_ave_p6tva1e1b1nwzida0e0b0xyg1 = nw_cum_p6tva1e1b1nwzida0e0b0xyg1 / days_p6_p6tva1e1b1nwzida0e0b0xyg
-    nw_ave_p6tva1e1b1nwzida0e0b0xyg3 = nw_cum_p6tva1e1b1nwzida0e0b0xyg3 / days_p6_p6tva1e1b1nwzida0e0b0xyg
-    ####convert nw to dse
-    dsehd_p6tva1e1b1nwzida0e0b0xyg0 = nw_ave_p6tva1e1b1nwzida0e0b0xyg0 / pinp.sheep['i_dse_nw']**0.75
-    dsehd_p6tva1e1b1nwzida0e0b0xyg1 = nw_ave_p6tva1e1b1nwzida0e0b0xyg1 / pinp.sheep['i_dse_nw']**0.75
-    dsehd_p6tva1e1b1nwzida0e0b0xyg3 = nw_ave_p6tva1e1b1nwzida0e0b0xyg3 / pinp.sheep['i_dse_nw']**0.75
-    ####account for b1 axis effect on dse & select the dse group (note sire and offs don't have b1 axis so simple slice)
-    dsenw_p6tva1e1b1nwzida0e0b0xyg0 = dsehd_p6tva1e1b1nwzida0e0b0xyg0 * pinp.sheep['i_dse_group'][uinp.structure['ia_sire_dsegroup']]
-    dsenw_p6tva1e1b1nwzida0e0b0xyg1 = dsehd_p6tva1e1b1nwzida0e0b0xyg1 * np.take_along_axis(pinp.sheep['i_dse_group'], uinp.structure['ia_dams_dsegroup_b1'][:,na],0)
-    dsenw_p6tva1e1b1nwzida0e0b0xyg3 = dsehd_p6tva1e1b1nwzida0e0b0xyg3 * pinp.sheep['i_dse_group'][uinp.structure['ia_offs_dsegroup']]
-    ####for dams need to cluster e1 & b1 axis for offs cluster k3k5
-    dsenw_k2p6tva1e1b1nwzida0e0b0xyg1 = np.sum(dsenw_p6tva1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1==index_k2tva1e1b1nwzida0e0b0xyg1)[:,na,...], axis=(uinp.parameters['i_b1_pos'],pinp.sheep['i_e1_pos']))
-    dsenw_k3k5p6tva1e1b1nwzida0e0b0xyg3 = np.sum(dsenw_p6tva1e1b1nwzida0e0b0xyg3 * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[:,:,na,...]
-                                                 * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[:,:,na,...],
-                                                 axis=(uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']))
 
     ##store in report dict
     ###keys
