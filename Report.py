@@ -69,6 +69,7 @@ def intermediates(inter, r_vals, lp_vars):
     keys_z = r_vals['stock']['keys_z']
     keys_p6 = r_vals['stock']['keys_p6']
     keys_p5 = r_vals['lab']['keys_p5']
+    keys_pastures = r_vals['pas']['keys_pastures']
 
     ##axis len
     len_c = len(keys_c)
@@ -105,17 +106,25 @@ def intermediates(inter, r_vals, lp_vars):
 
     ##rotation
     phases_df = r_vals['rot']['phases']
+    phases_rk = phases_df.set_index(5, append=True)  # add landuse as index level
+
+    ##landuse sets
+    all_pas = r_vals['rot']['all_pastures']
 
     ##crop & pasture area
-    #^dict to series?
-    df_rot = pd.DataFrame(lp_vars['v_phase_area'], index=['v_phase_area']).T #create a df of all the phase areas
+    rot_area = pd.Series(lp_vars['v_phase_area']) #create a series of all the phase areas
+    rot_area_rkl = rot_area.unstack().reindex(phases_rk.index, axis=0, level=0).pivot() #add landuse to the axis
+    landuse_area = rot_area_rkl.sum(axis=0) #area of each landuse
+    ###you can now use isin pasture or crop sets to calc the area of crop or pasture
+    total_pasture_area = landuse_area[landuse_area.isin(all_pas)].sum()
+
     # df_rot = df_rot.rename_axis(['rot','lmu'])
     # phase_area = pd.merge(r_vals['rot']['phases'], df_rot, how='left', left_index=True, right_on=['rot']) #merge full phase array with area array
     # phase_is_pasture = phase_area.iloc[:,-2].isin(r_vals['rot']['all_pastures'])
     # inter['pasture_area'] = df_rot[phase_is_pasture].sum()
-    pasture_area = pd.DataFrame(r_vals['pas']['pasture_area_rt'], index=phases_df.index)
-    inter['pasture_area'] = df_rot.mul(pasture_area,axis=0,level=0)
-    inter['crop_area'] = df_rot[~phase_is_pasture].sum()
+    # pasture_area_rt = pd.DataFrame(r_vals['pas']['pasture_area_rt'], index=phases_df.index, columns=keys_pastures)
+    # inter['pasture_area'] = pasture_area_rt.mul(rot_area,axis=0,level=0).sum(axis=0) #return the area of each pasture type
+    # inter['crop_area'] = df_rot[~phase_is_pasture].sum() #^do i have something like pasture already? or do i need to do option 1? how can i get area for each crop set?
 
 
     ##animal numbers

@@ -686,7 +686,7 @@ def stockpyomo_local(params):
         if any(model.p_npw_req[t2,d,x] for t2 in model.s_sale_prog):
             return (- sum(model.v_dams[k2, t1, v1, a, n1, w18, z, i, y1, g1]  * model.p_npw[k2, k5, t1, v1, a, n1, w18, z, i, d, x, y1, g1, w9, i9]
                         for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams for w18 in model.s_lw_dams for i in model.s_tol
-                             if model.p_npw[k2, k5, t1, v1, a, n1, w18, z, i, d, x, y1, g1, w9, i9]!= 0)
+                             if model.p_npw[k2, k5, t1, v1, a, n1, w18, z, i, d, x, y1, g1, w9, i9]!=0)
                     + sum(model.v_prog[k5, t2, w9, z, i9, d, a, x, g1] * model.p_npw_req[t2,d,x] for t2 in model.s_sale_prog))<=0
         else:
             return pe.Constraint.Skip
