@@ -519,6 +519,14 @@ structure['All_pas']={'a', 'ar', 'a3', 'a4', 'a5'
                 , 'x', 'xr', 'x3', 'x4', 'x5'
                 , 'j', 't', 'jr', 'tr'
                 }
+##all pas2 includes cont pasture - used in reporting
+structure['All_pas2']={'a', 'ar', 'a3', 'a4', 'a5'
+                , 's', 'sr', 's3', 's4', 's5'
+                , 'm', 'm3', 'm4', 'm5'
+                , 'u', 'ur', 'u3', 'u4', 'u5','uc'
+                , 'x', 'xr', 'x3', 'x4', 'x5','xc'
+                , 'j', 't', 'jr', 'tr','tc','jc'
+                }
 ##next set is used in pasture.py for germination and phase area
 structure['pasture_sets']={'annual': {'a', 'ar'
                                 , 's', 'sr'

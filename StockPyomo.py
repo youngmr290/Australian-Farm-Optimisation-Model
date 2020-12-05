@@ -124,14 +124,14 @@ def stockpyomo_local(params):
         model.del_component(model.v_sire)
     except AttributeError:
         pass
-    model.v_sire = pe.Var(model.s_groups_sire, bounds = (0,0) , doc='number of sire animals')
+    model.v_sire = pe.Var(model.s_groups_sire, bounds = (0,None) , doc='number of sire animals')
     try:
         model.del_component(model.v_dams_index)
         model.del_component(model.v_dams)
     except AttributeError:
         pass
     model.v_dams = pe.Var(model.s_k2_birth_dams, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams,
-                          model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, bounds = (0,0) , doc='number of dam animals')
+                          model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, bounds = (0,None) , doc='number of dam animals')
     try:
         model.del_component(model.v_offs_index)
         model.del_component(model.v_offs)
@@ -139,7 +139,7 @@ def stockpyomo_local(params):
         pass
     model.v_offs = pe.Var(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types,
                           model.s_tol, model.s_wean_times, model.s_gender, model.s_gen_merit_offs,
-                          model.s_groups_offs, bounds = (0,0) , doc='number of offs animals')
+                          model.s_groups_offs, bounds = (0,None) , doc='number of offs animals')
     try:
         model.del_component(model.v_prog_index)
         model.del_component(model.v_prog)
@@ -147,7 +147,7 @@ def stockpyomo_local(params):
         pass
     model.v_prog = pe.Var(model.s_k5_birth_offs, model.s_sale_prog, model.s_lw_prog, model.s_season_types,
                           model.s_tol, model.s_damage, model.s_wean_times, model.s_gender,
-                          model.s_groups_prog, bounds = (0,0) , doc='number of offs animals')
+                          model.s_groups_prog, bounds = (0,None) , doc='number of offs animals')
 
 
     ##purchases
@@ -687,7 +687,7 @@ def stockpyomo_local(params):
             return (- sum(model.v_dams[k2, t1, v1, a, n1, w18, z, i, y1, g1]  * model.p_npw[k2, k5, t1, v1, a, n1, w18, z, i, d, x, y1, g1, w9, i9]
                         for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams for w18 in model.s_lw_dams for i in model.s_tol
                              if model.p_npw[k2, k5, t1, v1, a, n1, w18, z, i, d, x, y1, g1, w9, i9]!=0)
-                    + sum(model.v_prog[k5, t2, w9, z, i9, d, a, x, g1] * model.p_npw_req[t2,d,x] for t2 in model.s_sale_prog))<=0
+                    + sum(model.v_prog[k5, t2, w9, z, i9, d, a, x, g1] * model.p_npw_req[t2,d,x] for t2 in model.s_sale_prog if model.p_npw_req[t2,d,x]!=0))<=0
         else:
             return pe.Constraint.Skip
     start = time.time()

@@ -117,6 +117,9 @@ def intermediates(inter, r_vals, lp_vars):
     landuse_area = rot_area_rkl.sum(axis=0) #area of each landuse
     ###you can now use isin pasture or crop sets to calc the area of crop or pasture
     total_pasture_area = landuse_area[landuse_area.isin(all_pas)].sum()
+    total_crop_area = landuse_area[~landuse_area.isin(all_pas)].sum()
+    inter['pasture_area'] = total_pasture_area
+    inter['crop_area'] = total_crop_area
 
     # df_rot = df_rot.rename_axis(['rot','lmu'])
     # phase_area = pd.merge(r_vals['rot']['phases'], df_rot, how='left', left_index=True, right_on=['rot']) #merge full phase array with area array
@@ -140,9 +143,10 @@ def intermediates(inter, r_vals, lp_vars):
     inter['dep_c'] = pd.DataFrame([dep]*len_c, index=[keys_c])  #convert to df with cashflow period as index
     ##exp
     exp_fix = r_vals['overheads']
-    # exp_crop_fert =
-    # exp_crop_chem =
-    # exp_crop_mach =
+    exp_crop_fert = r_vals['phase_fert_cost'] + r_vals['nap_phase_fert_cost']
+    exp_crop_chem = r_vals['chem_cost']
+    exp_crop_mach = r_vals['fert_app_cost'] + r_vals['nap_fert_app_cost'] + r_vals['app_cost_ha']
+    misc_cropping_exp = r_vals['stub_cost'] + r_vals['insurance_cost'] + r_vals['seed_cost']  #stubble, seed & insurance
     # exp_crop_labour =
     # exp_stock_fert =
     # exp_stock_chem =
