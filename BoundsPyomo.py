@@ -49,7 +49,7 @@ def boundarypyomo_local():
         rot_lobound_rl = np.zeros((len(model.s_phases), len(model.s_lmus)))
         pasture_dse_carry = {} #populate straight into dict
         ##landuse area abound - note that setting to zero is the equivelent of no bound
-        landuse_bound_k = pd.Series(0,index=model.s_landuses)
+        landuse_bound_k = pd.Series(0,index=model.s_landuses2) #use landuse2 becasue that is the expanded version of pasture phases eg t, tr not just tedera
 
         ###########################
         # set bound               #
@@ -139,4 +139,4 @@ def boundarypyomo_local():
                            == landuse_area_bound[k])
                 else:
                     pe.Constraint.Skip
-            model.con_pas_bound = pe.Constraint(model.s_landuses, rule=k_bound, doc='bound on total pasture area')
+            model.con_pas_bound = pe.Constraint(model.s_landuses2, rule=k_bound, doc='bound on total pasture area')

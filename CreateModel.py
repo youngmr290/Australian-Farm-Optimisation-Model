@@ -96,6 +96,8 @@ model.s_crops = Set(ordered=False, initialize=uinp.structure['C'], doc='crop typ
 
 ##all crops and the pasture types ie annual, tedera, lucerne (not a, a3, a4 etc)
 model.s_landuses = Set(ordered=False, initialize=uinp.structure['All'], doc='landuses')
+##all crops and each pasture landuse eg t, tr
+model.s_landuses2 = Set(ordered=False, initialize=uinp.structure['All_expanded'], doc='landuses phases - pasture expanded')
 
 #soils
 model.s_lmus = Set(initialize=pinp.general['lmu_area'].index, doc='defined the soil type a given rotation is on')

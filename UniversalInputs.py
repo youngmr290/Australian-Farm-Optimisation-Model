@@ -547,6 +547,7 @@ structure['C1']={'E', 'N', 'P', 'OF', 'b', 'h', 'o', 'of', 'w', 'f','i', 'k', 'l
 
 # structure['PAS_R']={'ar', 'sr', 'jr', 'tr', 'ur', 'xr', 'tc', 'jc', 'uc', 'xc'} #all reseeded pastures - used to determine pas sow 
 structure['All']={'b', 'h', 'o', 'of', 'w', 'f','i', 'k', 'l', 'v', 'z','r', 'annual', 'tedera', 'lucerne'} #used in mach sow
+structure['All_expanded']={'b', 'h', 'o', 'of', 'w', 'f','i', 'k', 'l', 'v', 'z','r', 'a', 'ar', 's', 'sr', 'm', 'u', 'uc', 'ur', 'x', 'xc', 'xr', 'j','jc', 't','tc', 'jr', 'tr'} #used in reporting and bounds
 structure['C']={'b', 'h', 'o', 'of', 'w', 'f','i', 'k', 'l', 'v', 'z','r'} #all crops, used in stubble and mach (not used for rotations)
 structure['Hay']={'h'} #all crops that produce hay - used in machpyomo/coremodel for hay con
 ##special sets used in crop sim
