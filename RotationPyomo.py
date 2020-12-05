@@ -22,7 +22,7 @@ from CreateModel import *
 
 def rotation_precalcs(params, report):
     rps.rot_params(params)
-    rps.report_landuses_phases(params,report)
+    rps.landuses_phases(params,report)
     
 def rotationpyomo(params):
     ####################
@@ -39,7 +39,7 @@ def rotationpyomo(params):
         model.del_component(model.p_landuse_area_index)
     except AttributeError:
         pass
-    model.p_landuse_area = Param(model.s_phases, model.s_landuses, initialize=params['phases_rk'], doc='landuse in each phase')
+    model.p_landuse_area = Param(model.s_phases, model.s_landuses2, initialize=params['phases_rk'], doc='landuse in each phase')
 
 
     ##only build this param if it doesn't exist already ie the rotation link never changes

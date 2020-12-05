@@ -27,7 +27,7 @@ def landuses_phases(params,report):
     '''function to store phases into report dictionary'''
     phases=uinp.structure['phases']
     phases_rk = phases.set_index(5, append=True) #add landuse as index level
-    params['phases_rk'] = dict.from_keys(phases_rk.index,1)
+    params['phases_rk'] = dict.fromkeys(phases_rk.index,1)
     report['phases']=uinp.structure['phases']
     report['all_pastures']=uinp.structure['All_pas']
 

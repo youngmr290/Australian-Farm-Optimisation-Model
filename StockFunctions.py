@@ -1481,7 +1481,7 @@ def f_sale_value(cu0, cx, o_rc, o_ffcfw_pg, dressp_adj_yg, dresspercent_adj_s6pg
     dresspercent_wt_s7pg = fun.f_update(dresspercent_for_wt_s7pg, 1, price_type_s7pg >= 1)
     ##Scale ffcfw to the units in the grid
     weight_for_lookup_s7pg = o_ffcfw_pg * dresspercent_wt_s7pg
-    ##Calculate mob average price in each grid per lw/head
+    ##Calculate mob average price in each grid per lw/head - this accounts for the fact that there is a distribution of weights within a mob so some sheep are discounted
     price_mobaverage_s7pg = f_salep_mob(weight_for_lookup_s7pg[:,na,...], scores_s7s6pg, cvlw_s7s5pg, cvscore_s7s6pg,
                                                       lw_range_s7s5pg, score_range_s7s6p5g, grid_priceslw_s7s5s6pg)
     ##Scale price received based on month of sale
