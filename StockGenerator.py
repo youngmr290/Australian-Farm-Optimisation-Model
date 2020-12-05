@@ -42,7 +42,7 @@ import PropertyInputs as pinp
 import StockFunctions as sfun
 import UniversalInputs as uinp
 import Periods as per
-# import PlotViewer as pv
+import PlotViewer as pv
 
 
 # np.seterr(all='raise')
@@ -3088,7 +3088,14 @@ def generator(params,r_vals):
     postp_start=time.time()
     print('generator :', postp_start - generator_start)
 
-
+    ## Call Steve graphing routine here if Generator is throwing an error in the post processing
+    # yvar, yvar2, xvar, wvar, axes, dimensions = pv.read_spreadsheet()
+    # loc = locals()
+    # try:
+    #     yvar = loc[yvar]; yvar2 = loc[yvar2]; xvar = loc[xvar]; wvar = loc[wvar]
+    # except:
+    #     pass
+    # pv.create_plots(yvar, yvar2, xvar, wvar, axes, dimensions)
 
 
 
@@ -4852,4 +4859,15 @@ def generator(params,r_vals):
     print('production params: ', number_param_start - production_param_start)
     print('number params: ', keys_start - number_param_start)
     print('ravel array and zip with key: ',finish - keys_start)
+
+    # # Call Steve's graph generator
+    # print('Interact with the graph generator using the PlotViewer spreadsheet')
+    # yvar, yvar2, xvar, wvar, axes, dimensions = pv.read_spreadsheet()
+    # loc = locals()
+    # try:
+    #     yvar = loc[yvar]; yvar2 = loc[yvar2]; xvar = loc[xvar]; wvar = loc[wvar]
+    # except:
+    #     pass
+    # pv.create_plots(yvar, yvar2, xvar, wvar, axes, dimensions)
+
     print('end of generator')   # a line that can be used to break at the end of the generator
