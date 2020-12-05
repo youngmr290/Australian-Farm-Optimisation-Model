@@ -6,7 +6,7 @@ bounds are all controlled from this module
 '''
 
 import numpy as np
-
+import pandas as pd
 
 import Functions as fun
 import UniversalInputs as uinp
@@ -28,6 +28,8 @@ note:
 bounds_inc=True #controls all bounds
 rot_lobound_inc = False #controls rot bound
 sr_bound_inc = False #controls sr bound
+total_pasture_bound = False #bound on total pasture (hence also total crop)
+landuse_bound = False #bound on area of each landuse
 
 def boundarypyomo_local():
     if bounds_inc:
@@ -46,6 +48,8 @@ def boundarypyomo_local():
         ##build array
         rot_lobound_rl = np.zeros((len(model.s_phases), len(model.s_lmus)))
         pasture_dse_carry = {} #populate straight into dict
+        ##landuse area abound - note that setting to zero is the equivelent of no bound
+        landuse_bound_k = pd.Series(0,index=model.s_landuses)
 
         ###########################
         # set bound               #
@@ -58,16 +62,20 @@ def boundarypyomo_local():
         ##sr - carry cap of each ha of each pasture
         for t, pasture in enumerate(uinp.structure['pastures']):
             pasture_dse_carry[pasture] = pinp.sheep['i_sr_constraint_t'][t]
-
+        ##total pas area
+        total_pas_area = 1000
+        ##landuse area abound - note that setting to zero is the equivelent of no bound
+        landuse_bound_k.iloc[0] = 50
 
         #################################
-        # ravel and zip bound and index #
+        # ravel and zip bound and dict  #
         #################################
         ##rotation
         rot_lobound = rot_lobound_rl.ravel()
         tup_rl = tuple(map(tuple, index_rl))
         rot_lobound = dict(zip(tup_rl, rot_lobound))
-
+        ##landuse area abound - note that setting to zero is the equivelent of no bound
+        landuse_area_bound = dict(landuse_bound_k)
 
 
         #################################
@@ -106,3 +114,29 @@ def boundarypyomo_local():
             model.con_SR_bound = pe.Constraint(model.s_feed_periods, rule=SR_bound,
                                                 doc='stocking rate bound for each feed peirod')
 
+        ##total pasture area - hence also total crop area
+        if total_pasture_bound:
+            try:
+                model.del_component(model.con_pas_bound)
+            except AttributeError:
+                pass
+            def pas_bound(model):
+                return(
+                       sum(model.v_phase_area[r, l] * model.p_pasture_area[r, t] for r in model.s_phases for l in model.s_lmus for t in model.s_pastures)
+                       == total_pas_area)
+            model.con_pas_bound = pe.Constraint(model, rule=pas_bound, doc='bound on total pasture area')
+
+        ##landuse bound
+        if landuse_bound:
+            try:
+                model.del_component(model.con_landuse_bound)
+            except AttributeError:
+                pass
+            def k_bound(model, k):
+                if landuse_area_bound[k]!=0:  #bound will not be built if param == 0
+                    return(
+                           sum(model.v_phase_area[r, l] * model.p_landuse_area[r, k] for r in model.s_phases for l in model.s_lmus for t in model.s_pastures)
+                           == landuse_area_bound[k])
+                else:
+                    pe.Constraint.Skip
+            model.con_pas_bound = pe.Constraint(model.s_landuses, rule=k_bound, doc='bound on total pasture area')
