@@ -8,6 +8,7 @@ flowcharts
 /redundant
 /.spyproject
 /flowcharts
+/Results Archive
 /*.dia
 /*.pkl
 /*.npy
