@@ -81,7 +81,7 @@ def generator(params,r_vals):
     na=np.newaxis
     ## define the periods - default (dams and sires)
     sim_years = uinp.structure['i_age_max']
-    sim_years = 2
+    # sim_years = 2
     sim_years_offs = min(uinp.structure['i_age_max_offs'], sim_years)
     n_sim_periods, date_start_p, date_end_p, p_index_p, step \
     = sfun.sim_periods(pinp.sheep['i_startyear'], uinp.structure['i_sim_periods_year'], sim_years)
@@ -1076,7 +1076,10 @@ def generator(params,r_vals):
     ###first cycle 70% pregnant (30% not pregnant)
     ###2nd cycle 70% of the 30% get pregnant = 21% (9 % not pregnant)
     ###3rd cycle 70% of the 9% = 6.3% (2.7% not pregnant)
-    e0_propn_ida0e0b0xyg = (1 - propn_e_ida0e0b0xyg) ** index_e0b0xyg * propn_e_ida0e0b0xyg #propn off born in each cycle
+    ###Proportion conceiving in each cycle from the view of the proportion of dams conceiving in each cycle
+    e0_propn_ida0e0b0xyg = (1 - propn_e_ida0e0b0xyg) ** index_e0b0xyg * propn_e_ida0e0b0xyg
+    #propn of the off born in each cycle (propn of dams conceived in each cycle / total number conceiving during the mating period)
+    e0_propn_ida0e0b0xyg = e0_propn_ida0e0b0xyg / np.sum(e0_propn_ida0e0b0xyg, axis = uinp.structure['i_e0_pos'], keepdims=True)
     ###sire
     numbers_initial_zida0e0b0xyg0 = season_propn_zida0e0b0xyg * initial_yg0
     ###dams
@@ -4229,11 +4232,13 @@ def generator(params,r_vals):
                                                                     * np.any(a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3, axis=(uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']),keepdims=True)[...,na,na]
                                                                     , axis=(uinp.parameters['i_b0_pos']-2, uinp.structure['i_e0_pos']-2),keepdims=True))
     ###numbers required - no d axis for Dam DVs
-    numbers_progreq_k28k3k5tva1e1b1nw8zida0e0b0xyg1g9w9 = 1 * (np.sum(mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9[0, ...,:,na] * (index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,..., na,na] == 0)
-                                                                    * (index_g1[...,na,:]==index_g1)[...,na] * btrt_propn_b0xyg1[...,na,na] * e0_propn_ida0e0b0xyg[...,na,na]
+    ####collapse the e1 axis on the mask prior to np.sum because can't test for > 0 as per other numbers_req (because need proportions of age & BTRT)
+    #### but don't want to increase the numbers if joining for multiple cycles
+    numbers_progreq_k28k3k5tva1e1b1nw8zida0e0b0xyg1g9w9 = 1 * (np.sum(np.any(mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9, axis=pinp.sheep['i_e1_pos']-1, keepdims=True)[0, ...,na,:] * (index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,..., na,na] == 0)
+                                                                    * (index_g1[...,na]==index_g1)[...,na] * btrt_propn_b0xyg1[...,na,na] * e0_propn_ida0e0b0xyg[...,na,na]
                                                                     * agedam_propn_da0e0b0xyg1[...,na,na] * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na,na]
                                                                     * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[...,na,na],
-                                                                     axis=(pinp.sheep['i_e1_pos']-2, uinp.parameters['i_d_pos']-2, uinp.parameters['i_b0_pos']-2, uinp.structure['i_e0_pos']-2),keepdims=True) > 0)
+                                                                     axis=(pinp.sheep['i_e1_pos']-2, uinp.parameters['i_d_pos']-2, uinp.parameters['i_b0_pos']-2, uinp.structure['i_e0_pos']-2),keepdims=True))
 
     ##transfer progeny to offs
     ###numbers provide - has d axis
