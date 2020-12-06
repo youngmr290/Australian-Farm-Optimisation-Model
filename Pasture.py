@@ -829,6 +829,7 @@ def green_and_dry(params):
                                             -    dry_dmd_low_ft[:,np.newaxis,:]), 0, 1)
     senesce_propn_dgoflt[0,...] = 1- senesce_propn_dgoflt[1,...]                       # senescence to low pool
     senesce_grnha_dgoflt      = senesce_total_grnha_goflt * senesce_propn_dgoflt       # ^alternative in one array parameters for the growth/grazing activities: quantity of green that senesces to the high pool
+    senesce_grnha_dgoflt = senesce_grnha_dgoflt * mask_greenfeed_exists_ft[:, np.newaxis,:]  # apply mask - green pasture only senesces when green pas exists.
     senesce_grnha_rav_dgoflt = senesce_grnha_dgoflt.ravel()
     params['p_senesce_grnha_dgoflt'] = dict( zip(index_dgoflt ,senesce_grnha_rav_dgoflt))
 
