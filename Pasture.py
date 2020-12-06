@@ -117,6 +117,8 @@ i_dry_dmd_ave_ft                = np.zeros(ft,  dtype = 'float64')  # average di
 i_dry_dmd_range_ft              = np.zeros(ft,  dtype = 'float64')  # range in digestibility of dry feed if it is not grazed
 i_dry_foo_high_ft               = np.zeros(ft,  dtype = 'float64')  # expected foo for the dry pasture in the high quality pool
 dry_decay_period_ft             = np.zeros(ft,  dtype = 'float64')  # decline in dry foo for each period
+mask_dryfeed_exists_ft          = np.zeros(ft,  dtype = bool)  # mask for period when dry feed exists
+mask_greenfeed_exists_ft          = np.zeros(ft,  dtype = bool)  # mask for period when green feed exists
 i_grn_cp_ft                     = np.zeros(ft,  dtype = 'float64')  # crude protein content of green feed
 i_dry_cp_ft                     = np.zeros(ft,  dtype = 'float64')  # crude protein content of dry feed
 i_poc_dmd_ft                    = np.zeros(ft,  dtype = 'float64')  # digestibility of pasture consumed on crop paddocks
@@ -316,10 +318,15 @@ def map_excel(params,r_vals):
     ### calculate dry_decay_period (used in reseeding and green&dry)
     dry_decay_daily_ft[...] = i_dry_decay_t
     for t in range(n_pasture_types):
-        dry_decay_daily_ft[0:i_end_of_gs_t[t]-1,t_list[t]] = 1
+        dry_decay_daily_ft[0:i_end_of_gs_t[t],t_list[t]] = 1
     dry_decay_period_ft[...] = 1 - (1 - dry_decay_daily_ft)               \
                               ** length_f.reshape(-1,1)
 
+    ###create dry pasture exists mask - in the current structure dry pasture only exists after the growing season. ^this is a limitation of pasture (green and dry pasture dont exists similtaneously) this is okay for wa but may need work for places with perennials.
+    mask_dryfeed_exists_ft[...] = dry_decay_period_ft!=1  #decay is 1 during the growing season
+    mask_greenfeed_exists_ft[...] = dry_decay_period_ft==1  #decay is 1 during the growing season
+
+    ###create equation coef for pgr = a+b*foo
     i_fxg_foo_oflt[2,...]  = 100000 #large number so that the np.searchsorted doesn't go above
     c_fxg_b_oflt[0,...] =  i_fxg_pgr_oflt[0,...]       \
                          / i_fxg_foo_oflt[0,...]
@@ -653,6 +660,7 @@ def green_and_dry(params):
     foo_start_grnha_oflt[2,...] = np.maximum.accumulate(max_foo_flt,axis=0)                          #maximum accumulated along the feed periods axis, i.e. max to date
     # foo_start_grnha_oflt[...]   = np.maximum(foo_start_grnha_oflt
     #                                          , i_base_ft[:,np.newaxis,:])         # to ensure that final foo can not be below 0
+    foo_start_grnha_oflt = foo_start_grnha_oflt * mask_greenfeed_exists_ft[:,np.newaxis,:]  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
     foo_start_grnha_rav_oflt = foo_start_grnha_oflt.ravel()
     params['p_foo_start_grnha_oflt'] = dict(zip(index_oflt ,foo_start_grnha_rav_oflt))
 
@@ -672,6 +680,7 @@ def green_and_dry(params):
                                   -           i_base_ft[:,np.newaxis,:]) \
                                * i_foo_graze_propn_gt[:, np.newaxis, np.newaxis, np.newaxis, :]
     foo_end_grnha_goflt = foo_endprior_grnha_goflt * (1-i_grn_senesce_eos_ft[:,np.newaxis,:])
+    foo_end_grnha_goflt = foo_end_grnha_goflt * mask_greenfeed_exists_ft[:,np.newaxis,:]  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
     foo_end_grnha_rav_goflt = foo_end_grnha_goflt.ravel()
     params['p_foo_end_grnha_goflt'] = dict( zip(index_goflt ,foo_end_grnha_rav_goflt))
 
@@ -745,10 +754,12 @@ def green_and_dry(params):
                                                  , i_me_maintenance_vft[:,np.newaxis,np.newaxis,:,np.newaxis,:]
                                                  ,           grn_ri_goflt
                                                  ,i_me_eff_gainlose_ft[:,np.newaxis,:])
+    me_cons_grnha_vgoflt = me_cons_grnha_vgoflt * mask_greenfeed_exists_ft[:,np.newaxis,:]  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
     me_cons_grnha_rav_vgoflt = me_cons_grnha_vgoflt.ravel()
     params['p_me_cons_grnha_vgoflt'] = dict( zip(index_vgoflt ,me_cons_grnha_rav_vgoflt))
 
     volume_grnha_goflt    =  cons_grnha_t_goflt / grn_ri_goflt              # parameters for the growth/grazing activities: Total volume of feed consumed from the hectare
+    volume_grnha_goflt = volume_grnha_goflt * mask_greenfeed_exists_ft[:,np.newaxis,:]  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
     volume_grnha_rav_goflt = volume_grnha_goflt.ravel()
     params['p_volume_grnha_goflt'] = dict(zip(index_goflt ,volume_grnha_rav_goflt))
 
@@ -778,6 +789,7 @@ def green_and_dry(params):
     dry_ri_dft              = dry_ri_quality_dft * dry_ri_availability_dft
     dry_ri_dft[dry_ri_dft<0.05] = 0.05 #set the minimum RI to 0.05
     dry_volume_t_dft  = 1000 / dry_ri_dft                 # parameters for the dry feed grazing activities: Total volume of the tonne consumed
+    dry_volume_t_dft = dry_volume_t_dft * mask_dryfeed_exists_ft  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
     dry_volume_t_rav_dft = dry_volume_t_dft.ravel()
     params['p_dry_volume_t_dft'] = dict(zip(index_dft ,dry_volume_t_rav_dft))
 
@@ -789,6 +801,7 @@ def green_and_dry(params):
                             , i_me_maintenance_vft[:,np.newaxis,:,:]
                             ,           dry_ri_dft
                             ,i_me_eff_gainlose_ft)
+    dry_mecons_t_vdft = dry_mecons_t_vdft * mask_dryfeed_exists_ft  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
     dry_mecons_t_rav_vdft = dry_mecons_t_vdft.ravel()
     params['p_dry_mecons_t_vdft'] = dict(zip(index_vdft ,dry_mecons_t_rav_vdft))
 

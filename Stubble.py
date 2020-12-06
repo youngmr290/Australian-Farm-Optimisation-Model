@@ -55,27 +55,33 @@ def stubble_all(params):
         - md and vol
         - harv con limit
     '''
-    #########################
-    #dmd deterioration      #
-    #########################
 
     #create df with feed periods
     fp = pinp.feed_inputs['feed_periods'].iloc[:-1].copy() #removes last row, some reason i need to copy so that i dont get settingcopywarning
     cat_a_st_req=pd.DataFrame()
     cat_b_st_prov=pd.DataFrame() #provide tr ie cat A provides stub b tr - done straight as a dict because value doesn't change for different periods
     cat_b_st_req=pd.DataFrame() #requirment for tr ie cat B requires stub b tr - done straight as a dict because value doesn't change for different periods, this would have to change if trampling was different for periods
-    cat_c_st_prov=pd.DataFrame() 
-    cat_c_st_req=pd.DataFrame() 
-    per_transfer=pd.DataFrame() 
+    cat_c_st_prov=pd.DataFrame()
+    cat_c_st_req=pd.DataFrame()
+    per_transfer=pd.DataFrame()
     dmd=pd.DataFrame(columns=pd.MultiIndex.from_product([pinp.stubble['harvest_index'].index,pinp.stubble['stub_cat_qual']]))
     md=pd.DataFrame(columns=pd.MultiIndex.from_product([pinp.stubble['harvest_index'].index,pinp.stubble['stub_cat_qual']]))
     ri_quality=pd.DataFrame(index=fp.index, columns=pd.MultiIndex.from_product([pinp.stubble['harvest_index'].index,pinp.stubble['stub_cat_qual']]))
     ri_availability=pd.DataFrame(index=fp.index, columns=pd.MultiIndex.from_product([pinp.stubble['harvest_index'].index,pinp.stubble['stub_cat_qual']]))
     vol=pd.DataFrame(index=fp.index, columns=pd.MultiIndex.from_product([pinp.stubble['harvest_index'].index,pinp.stubble['stub_cat_qual']]))
     cons_prop=pd.DataFrame(index=fp.index)
-     #function will start here
+
+
+    ##create mask which is stubble available. Stubble is available from the period harvest starts to the begining of the following growing season.
+    ##if the end date of the fp is after harvest then stubble is available.
+    harv_date = pinp.crop['harv_date']
+    mask_stubble_exists = pinp.feed_inputs['feed_periods'].loc['FP1':, 'date'] > harv_date  #need to use the full fp array that has the end date of the last period.
+    mask_stubble_exists = mask_stubble_exists.values #convert to numpy
+
+    #########################
+    #dmd deterioration      #
+    #########################
     stubble_per_grain = crp.stubble_production() #produces dict with stubble production per kg of yield for each grain used in the ri.availability section
-    
     for crop in pinp.stubble['harvest_index'].index:
         #add column that is days since harvest in each period (calced from the end date of the period)
         days_since_harv=[]
@@ -174,9 +180,9 @@ def stubble_all(params):
             tramp_effect.append(pinp.stubble['trampling'].loc[crop,'trampling']/100 * pinp.stubble['stub_cat_prop'].loc[crop,cat])
             stub_cat_prop.append(pinp.stubble['stub_cat_prop'].loc[crop,cat])
         
-        ##############################
-        #transfers between categories#   #this is a little inflexible ie you would need to add or remove code if a stubble cat was added or removed
-        ##############################
+        ################################
+        # allow access to next category#   #^this is a little inflexible ie you would need to add or remove code if a stubble cat was added or removed
+        ################################
         
         cat_a_st_req.loc[:,crop]= (1/(1-fp['quant_decline_%s' %crop]))*(1+tramp_effect[0])*(1/stub_cat_prop[0])*1000 #*1000 - to convert to tonnes
         cat_b_st_prov.loc[crop,'prov'] = stub_cat_prop[1]/stub_cat_prop[0]*1000
@@ -206,11 +212,15 @@ def stubble_all(params):
         cons_prop.loc[:,crop]= prop
         cons_prop.loc[:,crop] =cons_prop.loc[:,crop].clip(0)
         #cons_limit[crop] =  (cons_limit[crop]/(1-cons_limit[crop]))*1000 ^not needed anymore because only need to proportion of time that sheep can't graze rather than the volume because p7con is now based on md not vol
-    
-    ##collate all the bits for pyomo 
+
+    ###################################
+    ##collate all the bits for pyomo  #
+    ###################################
+
     ##return everything as a dict which is acessed in pyomo
     ###p7con to dict for pyomo
     cons_prop=cons_prop.stack().to_dict()
+    per_transfer = per_transfer.mul(mask_stubble_exists, axis=0)
     per_transfer=per_transfer.stack().to_dict()
     ###add category to transfer 'require' params ie consuming 1t of stubble B requires 1.002t from the constraint (0.002 accounts for trampling)
     cat_a_st_req=pd.concat([cat_a_st_req], keys='a')
@@ -223,11 +233,11 @@ def stubble_all(params):
     cat_c_st_prov=pd.concat([cat_c_st_prov], keys='c')
     transfer_prov=pd.concat([cat_b_st_prov,cat_c_st_prov]).squeeze().to_dict()
     ###md & vol
-    # md=pd.concat([md]*len(uinp.structure['sheep_pools']), keys=uinp.structure['sheep_pools']) #add sheep pools here ie add level to df index
-    md.columns=pd.MultiIndex.from_tuples(md) #converts to multi index so stacking will have crop and cat as seperate keys 
+    md = md.mul(mask_stubble_exists, axis=0)
+    md.columns=pd.MultiIndex.from_tuples(md) #converts to multi index so stacking will have crop and cat as seperate keys
     md = md.stack().stack().to_dict()    #for pyomo
-    # stub_vol=pd.concat([vol]*len(uinp.structure['sheep_pools']), keys=uinp.structure['sheep_pools']) #add sheep pools here ie add level to df index
-    vol.columns=pd.MultiIndex.from_tuples(vol) #converts to multi index so stacking will have crop and cat as seperate keys 
+    vol = vol.mul(mask_stubble_exists, axis=0)
+    vol.columns=pd.MultiIndex.from_tuples(vol) #converts to multi index so stacking will have crop and cat as seperate keys
     vol = vol.stack().stack().to_dict()    #for pyomo
 
     ##load params to dict for pyomo

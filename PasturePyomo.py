@@ -115,7 +115,7 @@ def paspyomo_local(params):
         model.del_component(model.p_dry_removal_t)
     except AttributeError:
         pass
-    model.p_dry_removal_t = pe.Param(model.s_dry_groups, model.s_feed_periods, model.s_pastures, initialize=params['p_dry_removal_t_dft'], default=0, doc='quantity of dry feed removed for sheep to consume 1t')
+    model.p_dry_removal_t = pe.Param(model.s_dry_groups, model.s_feed_periods, model.s_pastures, initialize=params['p_dry_removal_t_dft'], default=0, doc='quantity of dry feed removed for sheep to consume 1t, accounts for trampling')
     
     try:
         model.del_component(model.p_nap_index)
