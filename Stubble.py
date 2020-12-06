@@ -69,9 +69,9 @@ def stubble_all(params):
     per_transfer=pd.DataFrame() 
     dmd=pd.DataFrame(columns=pd.MultiIndex.from_product([pinp.stubble['harvest_index'].index,pinp.stubble['stub_cat_qual']]))
     md=pd.DataFrame(columns=pd.MultiIndex.from_product([pinp.stubble['harvest_index'].index,pinp.stubble['stub_cat_qual']]))
-    ri_quality=pd.DataFrame(columns=pd.MultiIndex.from_product([pinp.stubble['harvest_index'].index,pinp.stubble['stub_cat_qual']]))
-    ri_availability=pd.DataFrame(columns=pd.MultiIndex.from_product([pinp.stubble['harvest_index'].index,pinp.stubble['stub_cat_qual']]))
-    vol=pd.DataFrame(columns=pd.MultiIndex.from_product([pinp.stubble['harvest_index'].index,pinp.stubble['stub_cat_qual']]))
+    ri_quality=pd.DataFrame(index=fp.index, columns=pd.MultiIndex.from_product([pinp.stubble['harvest_index'].index,pinp.stubble['stub_cat_qual']]))
+    ri_availability=pd.DataFrame(index=fp.index, columns=pd.MultiIndex.from_product([pinp.stubble['harvest_index'].index,pinp.stubble['stub_cat_qual']]))
+    vol=pd.DataFrame(index=fp.index, columns=pd.MultiIndex.from_product([pinp.stubble['harvest_index'].index,pinp.stubble['stub_cat_qual']]))
     cons_prop=pd.DataFrame(index=fp.index)
      #function will start here
     stubble_per_grain = crp.stubble_production() #produces dict with stubble production per kg of yield for each grain used in the ri.availability section
