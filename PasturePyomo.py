@@ -262,7 +262,10 @@ model.v_poc = pe.Var(model.s_sheep_pools, model.s_feed_periods, model.s_lmus, bo
 #sow         #
 ##############
 def passow(model,p,k,l):
-    return sum(model.p_pas_sow[p,l,r,k]*model.v_phase_area[r,l] for r in model.s_phases if model.p_pas_sow[p,l,r,k] != 0) 
+    if any(model.p_pas_sow[p,l,r,k] for r in model.s_phases):
+        return sum(model.p_pas_sow[p,l,r,k]*model.v_phase_area[r,l] for r in model.s_phases if model.p_pas_sow[p,l,r,k] != 0)
+    else:
+        return 0
 
 ##############
 #ME          #

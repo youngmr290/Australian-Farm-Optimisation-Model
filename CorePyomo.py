@@ -153,8 +153,8 @@ def coremodel_all():
     except AttributeError:
         pass
     def cropsow_link(model,k,l):
-        if crppy.cropsow(model,k,l) == 0:
-            return pe.Constraint.Skip #skip constraint if no pasture is being sown
+        if type(crppy.cropsow(model,k,l)) == int: #if crop sow param is zero this will be int (cant do if==0 becasue when it is not 0 it is a complex pyomo object which cant be evaluated)
+            return pe.Constraint.Skip #skip constraint if no crop is being sown on given rotation
         else:
             return sum(-model.v_seeding_crop[p,k,l] for p in model.s_labperiods) + crppy.cropsow(model,k,l)  <= 0
     model.con_cropsow = pe.Constraint(model.s_crops, model.s_lmus, rule = cropsow_link, doc='link between mach sow provide and rotation crop sow require')
@@ -166,7 +166,7 @@ def coremodel_all():
     except AttributeError:
         pass
     def passow_link(model,p,k,l):
-        if paspy.passow(model,p,k,l) == 0:
+        if type(paspy.passow(model,p,k,l)) == int: #if crop sow param is zero this will be int (cant do if==0 becasue when it is not 0 it is a complex pyomo object which cant be evaluated)
             return pe.Constraint.Skip #skip constraint if no pasture is being sown
         else:
             return -model.v_seeding_pas[p,k,l]  + paspy.passow(model,p,k,l) <= 0
