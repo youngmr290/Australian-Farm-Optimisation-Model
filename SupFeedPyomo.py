@@ -11,12 +11,12 @@ from pyomo import environ as pe
 from CreateModel import model
 import SupFeed as sup
 
-def sup_precalcs(params, report):
+def sup_precalcs(params, r_vals):
     ##call sup functions
-    sup.sup_cost(params) 
+    sup.sup_cost(params, r_vals)
     vol_md = sup.sup_md_vol(params)  
     sup.sup_labour(params)
-    sup.buy_grain_price(params)
+    sup.buy_grain_price(params, r_vals)
     
     
 def suppyomo_local(params):

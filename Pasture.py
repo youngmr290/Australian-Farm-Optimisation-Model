@@ -55,6 +55,8 @@ n_lmu           = len(pinp.general['lmu_area'])
 n_phases_rotn   = len(phases_rotn_df.index)
 n_pasture_types = len(pastures)   #^ need to sort timing of the definition of pastures
 
+index_f = np.arange(n_feed_periods)
+
 i_feed_period_dates   = list(pinp.feed_inputs['feed_periods']['date'])
 t_list = [*range(n_pasture_types)]
 
@@ -150,84 +152,84 @@ pasture_rt                    = np.zeros(rt, dtype = 'float64')
 
 ## create numpy index for param dicts ^creating indexes is a bit slow
 ### the array returned must be of type object, if string the dict keys become a numpy string and when indexed in pyomo it doesn't work.
-index_d                       = np.asarray(uinp.structure['dry_groups'])
-index_v                       = np.asarray(uinp.structure['sheep_pools'])
-index_f                       = np.asarray(pinp.feed_inputs['feed_periods'].index[:-1])
-index_g                       = np.asarray(uinp.structure['grazing_int'])
-index_l                       = pinp.general['lmu_area'].index.to_numpy() # lmu index description
-index_o                       = np.asarray(uinp.structure['foo_levels'])
-index_p                       = np.asarray(per.p_date2_df().index)
-index_r                       = phases_rotn_df.index.to_numpy()
-index_t                       = np.asarray(pastures)                      # pasture type index description
-index_k                       = np.asarray(list(uinp.structure['All']))   #landuse
+keys_d                       = np.asarray(uinp.structure['dry_groups'])
+keys_v                       = np.asarray(uinp.structure['sheep_pools'])
+keys_f                       = np.asarray(pinp.feed_inputs['feed_periods'].index[:-1])
+keys_g                       = np.asarray(uinp.structure['grazing_int'])
+keys_l                       = pinp.general['lmu_area'].index.to_numpy() # lmu index description
+keys_o                       = np.asarray(uinp.structure['foo_levels'])
+keys_p                       = np.asarray(per.p_date2_df().index)
+keys_r                       = phases_rotn_df.index.to_numpy()
+keys_t                       = np.asarray(pastures)                      # pasture type index description
+keys_k                       = np.asarray(list(uinp.structure['All']))   #landuse
 
 ### plrt
-arrays=[index_p, index_l, index_r, index_k]
+arrays=[keys_p, keys_l, keys_r, keys_k]
 index_plrk=fun.cartesian_product_simple_transpose(arrays)
 index_plrk=tuple(map(tuple, index_plrk)) #create a tuple rather than a list because tuples are faster
 
 ### rt
-arrays=[index_r, index_t]
+arrays=[keys_r, keys_t]
 index_rt=fun.cartesian_product_simple_transpose(arrays)
 index_rt=tuple(map(tuple, index_rt)) #create a tuple rather than a list because tuples are faster
 
 ### flrt
-arrays=[index_f, index_l, index_r, index_t]
+arrays=[keys_f, keys_l, keys_r, keys_t]
 index_flrt=fun.cartesian_product_simple_transpose(arrays)
 index_flrt=tuple(map(tuple, index_flrt)) #create a tuple rather than a list because tuples are faster
 
 ### oflt
-arrays=[index_o, index_f, index_l, index_t]
+arrays=[keys_o, keys_f, keys_l, keys_t]
 index_oflt=fun.cartesian_product_simple_transpose(arrays)
 index_oflt=tuple(map(tuple, index_oflt)) #create a tuple rather than a list because tuples are faster
 
 ### goflt
-arrays=[index_g, index_o, index_f, index_l, index_t]
+arrays=[keys_g, keys_o, keys_f, keys_l, keys_t]
 index_goflt=fun.cartesian_product_simple_transpose(arrays)
 index_goflt=tuple(map(tuple, index_goflt)) #create a tuple rather than a list because tuples are faster
 
 ### egoflt
-arrays=[index_v, index_g, index_o, index_f, index_l, index_t]
+arrays=[keys_v, keys_g, keys_o, keys_f, keys_l, keys_t]
 index_vgoflt=fun.cartesian_product_simple_transpose(arrays)
 index_vgoflt=tuple(map(tuple, index_vgoflt)) #create a tuple rather than a list because tuples are faster
 
 ### dgoflt
-arrays=[index_d, index_g, index_o, index_f, index_l, index_t]
+arrays=[keys_d, keys_g, keys_o, keys_f, keys_l, keys_t]
 index_dgoflt=fun.cartesian_product_simple_transpose(arrays)
 index_dgoflt=tuple(map(tuple, index_dgoflt)) #create a tuple rather than a list because tuples are faster
 
 ### dflrt
-arrays=[index_d, index_f, index_l, index_r, index_t]
+arrays=[keys_d, keys_f, keys_l, keys_r, keys_t]
 index_dflrt=fun.cartesian_product_simple_transpose(arrays)
 index_dflrt=tuple(map(tuple, index_dflrt)) #create a tuple rather than a list because tuples are faster
 
 ### edft
-arrays=[index_v, index_d, index_f, index_t]
+arrays=[keys_v, keys_d, keys_f, keys_t]
 index_vdft=fun.cartesian_product_simple_transpose(arrays)
 index_vdft=tuple(map(tuple, index_vdft)) #create a tuple rather than a list because tuples are faster
 
 ### dft
-arrays=[index_d, index_f, index_t]
+arrays=[keys_d, keys_f, keys_t]
 index_dft=fun.cartesian_product_simple_transpose(arrays)
 index_dft=tuple(map(tuple, index_dft)) #create a tuple rather than a list because tuples are faster
 
 ### flt
-arrays=[index_f, index_l, index_t]
+arrays=[keys_f, keys_l, keys_t]
 index_flt=fun.cartesian_product_simple_transpose(arrays)
 index_flt=tuple(map(tuple, index_flt)) #create a tuple rather than a list because tuples are faster
 
 ### fl
-arrays=[index_f, index_l]
+arrays=[keys_f, keys_l]
 index_fl=fun.cartesian_product_simple_transpose(arrays)
 index_fl=tuple(map(tuple, index_fl)) #create a tuple rather than a list because tuples are faster
 
 ### ft
-arrays=[index_f, index_t]
+arrays=[keys_f, keys_t]
 index_ft=fun.cartesian_product_simple_transpose(arrays)
 index_ft=tuple(map(tuple, index_ft)) #create a tuple rather than a list because tuples are faster
 
 ### frt
-arrays=[index_f, index_r, index_t]
+arrays=[keys_f, keys_r, keys_t]
 index_frt=fun.cartesian_product_simple_transpose(arrays)
 index_frt=tuple(map(tuple, index_frt)) #create a tuple rather than a list because tuples are faster
 
@@ -324,8 +326,8 @@ def map_excel(params,r_vals):
                               ** length_f.reshape(-1,1)
 
     ###create dry pasture exists mask - in the current structure dry pasture only exists after the growing season. ^this is a limitation of pasture (green and dry pasture dont exists similtaneously) this is okay for wa but may need work for places with perennials.
-    mask_dryfeed_exists_ft[...] = dry_decay_period_ft!=1  #decay is 1 during the growing season
-    mask_greenfeed_exists_ft[...] = dry_decay_period_ft==1  #decay is 1 during the growing season
+    mask_dryfeed_exists_ft[...] = index_f[:,np.newaxis] > i_end_of_gs_t   #green exists in the period which is the end of growing season hence >
+    mask_greenfeed_exists_ft[...] = np.logical_not(mask_dryfeed_exists_ft)
 
     ###create equation coef for pgr = a+b*foo
     i_fxg_foo_oflt[2,...]  = 100000 #large number so that the np.searchsorted doesn't go above
@@ -581,8 +583,8 @@ def calculate_germ_and_reseed(params):
     pas_sown_lrt = resown_rt * arable_l.reshape(-1,1,1)
     pas_sow_plrt = pas_sown_lrt * reseeding_machperiod_pt[:,np.newaxis,np.newaxis,:]
     pas_sow_plr = np.sum(pas_sow_plrt, axis=-1) #sum the t axis. the different pastures are tracked by the rotation.
-    pas_sow_plrk = pas_sow_plr[...,np.newaxis] * (index_k==phases_rotn_df.iloc[:,-1].values[:,np.newaxis]) #add k (landuse axis) this is required for sow param
-    pas_sow_rav_plrk = pas_sow_plrt.ravel()
+    pas_sow_plrk = pas_sow_plr[...,np.newaxis] * (keys_k==phases_rotn_df.iloc[:,-1].values[:,np.newaxis]) #add k (landuse axis) this is required for sow param
+    pas_sow_rav_plrk = pas_sow_plrk.ravel()
     params['p_pas_sow_plrk'] = dict(zip(index_plrk ,pas_sow_rav_plrk))
 
     ## area of pasture being grazed and growing
@@ -858,7 +860,7 @@ def poc(params):
     ## md per tonne
     poc_md_f = fun.dmd_to_md(i_poc_dmd_ft[...,0]) * 1000 #times 1000 to convert to mj per tonne
     poc_md_rav_f = poc_md_f.ravel()
-    params['p_poc_md_f'] = dict(zip(index_f ,poc_md_rav_f))
+    params['p_poc_md_f'] = dict(zip(keys_f ,poc_md_rav_f))
     ## vol
     ### calc relative quality - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
     if uinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
@@ -875,5 +877,5 @@ def poc(params):
         ri_quan_f = sfun.f_ra_cs(i_poc_foo_f, hf)
         poc_vol_f = fun.f_divide(1,(ri_qual_f*ri_quan_f)) * 1000 #times 1000 to convert to vol to per tonne
     poc_vol_rav_f = poc_vol_f.ravel()
-    params['p_poc_vol_f'] = dict(zip(index_f ,poc_vol_rav_f))
+    params['p_poc_vol_f'] = dict(zip(keys_f ,poc_vol_rav_f))
     

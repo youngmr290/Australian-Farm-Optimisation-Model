@@ -21,17 +21,17 @@ import sys
 import Mach as mac
 from CreateModel import *
 
-def mach_precalcs(params, report):
-    mac.overall_seed_rate(params)
+def mach_precalcs(params, r_vals):
+    mac.overall_seed_rate(params, r_vals)
     mac.seed_days(params)
-    mac.seeding_cost_period(params)
-    mac.contract_seed_cost(params)
+    mac.seeding_cost(params, r_vals)
+    mac.contract_seed_cost(params, r_vals)
     mac.seeding_dep(params)
     mac.harv_rate_period(params)
     mac.contract_harv_rate(params)
     mac.max_harv_hours(params)
-    mac.harvest_cost_period(params)
-    mac.contract_harvest_cost_period(params)
+    mac.harvest_cost(params, r_vals)
+    mac.contract_harvest_cost_period(params, r_vals)
     mac.hay_making_cost(params)
     mac.yield_penalty(params)
     mac.grazing_days(params)
@@ -103,14 +103,14 @@ def machpyomo_local(params):
         model.del_component(model.p_harv_cost)
     except AttributeError:
         pass
-    model.p_harv_cost = Param(model.s_cashflow_periods, model.s_crops, initialize=params['harvest_cost_period'], default = 0.0, doc='cost of harvesting 1hr')
+    model.p_harv_cost = Param(model.s_cashflow_periods, model.s_crops, initialize=params['harvest_cost'], default = 0.0, doc='cost of harvesting 1hr')
     
     try:
         model.del_component(model.p_contractharv_cost_index)
         model.del_component(model.p_contractharv_cost)
     except AttributeError:
         pass
-    model.p_contractharv_cost = Param(model.s_cashflow_periods, model.s_crops, initialize=params['contract_harvest_cost_period'], default = 0.0, doc='cost of contract harvesting 1hr')
+    model.p_contractharv_cost = Param(model.s_cashflow_periods, model.s_crops, initialize=params['contract_harvest_cost'], default = 0.0, doc='cost of contract harvesting 1hr')
     
     try:
         model.del_component(model.p_contracthay_cost)

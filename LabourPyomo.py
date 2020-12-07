@@ -21,10 +21,10 @@ import Labour as lab
 from CreateModel import *
 import PropertyInputs as pinp
 
-def lab_precalcs(params, report):
-    lab.labour_general(params,report)
-    lab.perm_cost(params)
-    lab.manager_cost(params)
+def lab_precalcs(params, r_vals):
+    lab.labour_general(params, r_vals)
+    lab.perm_cost(params, r_vals)
+    lab.manager_cost(params, r_vals)
     params['min_perm'] = pinp.labour['min_perm'] 
     params['max_perm'] = pinp.labour['max_perm']
     params['min_managers'] = pinp.labour['min_managers'] 
