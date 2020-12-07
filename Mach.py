@@ -190,7 +190,7 @@ def seed_time_lmus():
     rate_direct_drill = 1 / (speed_lmu_df * uinp.mach[pinp.mach['option']]['seeding_eff'] * uinp.mach[pinp.mach['option']]['seeder_width'] / 10)
     return rate_direct_drill
 
-def overall_seed_rate(params):
+def overall_seed_rate(params, r_vals):
     '''
     Returns
     -------
@@ -200,9 +200,11 @@ def overall_seed_rate(params):
     #convert seed time (hr/ha) to rate of direct drill per day (ha/day)
     seed_rate_lmus = 1 / seed_time_lmus().squeeze() * pinp.mach['daily_seed_hours'] 
     #adjusts the seeding rate (ha/day) for each different crop depending on its seeding speed vs wheat
+
     seedrate_df = pd.concat([uinp.mach[pinp.mach['option']]['seeder_speed_crop_adj']]*len(seed_rate_lmus),axis=1) #expands df for each lmu
     seedrate_df.columns = seed_rate_lmus.index #rename columns to lmu so i can mul
     seedrate_df=seedrate_df.mul(seed_rate_lmus)
+    r_vals['seeding_rate'] = seedrate_df
     params['seed_rate'] = seedrate_df.stack().to_dict()
     
   
@@ -268,7 +270,7 @@ def seeding_cost_lmu():
     '''
     return tractor_cost_seeding() + maint_cost_seeder()
 
-def seeding_cost_period(params):
+def seeding_cost(params, r_vals):
     '''
     Returns
     -------
@@ -282,9 +284,11 @@ def seeding_cost_period(params):
     p_name = per.cashflow_periods()['cash period']
     start = per.wet_seeding_start_date()
     length = dt.timedelta(days = sum(pinp.crop['seed_period_lengths']).astype(np.float64))
-    params['seeding_cost'] = fun.period_allocation_reindex(cost_df, p_dates, p_name, start,length).stack().to_dict()
+    seeding_cost = fun.period_allocation_reindex(cost_df, p_dates, p_name, start,length)
+    params['seeding_cost'] = seeding_cost.stack().to_dict()
+    r_vals['seeding_cost'] = seeding_cost
 
-def contract_seed_cost(params):
+def contract_seed_cost(params, r_vals):
     '''
     Returns
     -------
@@ -298,6 +302,7 @@ def contract_seed_cost(params):
     seed_cost = uinp.price['contract_seed_cost']
     cash_period = fun.period_allocation(p_dates,p_name,per.wet_seeding_start_date())
     params['contract_seed_cost'] = {cash_period : seed_cost}
+    r_vals['contractseed_cost'] = pd.Series({cash_period : seed_cost})
 
 
 ########################################
@@ -439,7 +444,7 @@ def cost_harv():
     ##return fuel and oil cost plus r & m ($/hr)
     return fuel_oil_cost_hr + uinp.mach[pinp.mach['option']]['harvest_maint']
 
-def harvest_cost_period(params):
+def harvest_cost(params, r_vals):
     '''
     Returns
     -------
@@ -454,7 +459,9 @@ def harvest_cost_period(params):
     p_name = per.cashflow_periods()['cash period']
     start = pinp.crop['harv_date']
     length = dt.timedelta(days = sum(pinp.crop['harv_period_lengths']).astype(np.float64))
-    params['harvest_cost_period'] = fun.period_allocation_reindex(cost_df, p_dates, p_name, start,length).stack().to_dict()
+    harvest_cost = fun.period_allocation_reindex(cost_df, p_dates, p_name, start,length)
+    params['harvest_cost'] = harvest_cost.stack().to_dict()
+    r_vals['harvest_cost'] = harvest_cost
 
 
 #########################
@@ -478,7 +485,7 @@ def contract_harv_rate(params):
 #print(contract_harv_rate())
 
 
-def contract_harvest_cost_period(params):
+def contract_harvest_cost_period(params, r_vals):
     '''
     Returns
     -------
@@ -492,7 +499,9 @@ def contract_harvest_cost_period(params):
     p_name = per.cashflow_periods()['cash period']
     start = pinp.crop['harv_date']
     length = dt.timedelta(days = sum(pinp.crop['harv_period_lengths']).astype(np.float64))
-    params['contract_harvest_cost_period'] = fun.period_allocation_reindex(cost_df, p_dates, p_name, start,length).stack().to_dict()
+    contract_harvest_cost = fun.period_allocation_reindex(cost_df, p_dates, p_name, start,length)
+    params['contract_harvest_cost'] = contract_harvest_cost.stack().to_dict()
+    r_vals['contract_harvest_cost'] = contract_harvest_cost
 
 
 #########################

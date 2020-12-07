@@ -104,22 +104,76 @@ def intermediates(inter, r_vals, lp_vars):
     len_p6 = len(keys_p6)
     len_p5 = len(keys_p5)
 
-    ##rotation
-    phases_df = r_vals['rot']['phases']
-    phases_rk = phases_df.set_index(5, append=True)  # add landuse as index level
-
     ##landuse sets
     all_pas = r_vals['rot']['all_pastures']
 
-    ##crop & pasture area
+    ##rotation
+    phases_df = r_vals['rot']['phases']
+    phases_rk = phases_df.set_index(5, append=True)  # add landuse as index level
     rot_area = pd.Series(lp_vars['v_phase_area']) #create a series of all the phase areas
     rot_area_rkl = rot_area.unstack().reindex(phases_rk.index, axis=0, level=0).pivot() #add landuse to the axis
     landuse_area = rot_area_rkl.sum(axis=0) #area of each landuse
-    ###you can now use isin pasture or crop sets to calc the area of crop or pasture
+    ###crop & pasture area
+    ####you can now use isin pasture or crop sets to calc the area of crop or pasture
     total_pasture_area = landuse_area[landuse_area.isin(all_pas)].sum()
     total_crop_area = landuse_area[~landuse_area.isin(all_pas)].sum()
     inter['pasture_area'] = total_pasture_area
     inter['crop_area'] = total_crop_area
+
+    ##mach
+    contractharv_hours = pd.Series(lp_vars['v_contractharv_hours'])
+    harv_hours = pd.Series(lp_vars['v_harv_hours'])
+    harvest_cost = contractharv_hours * r_vals['mach']['contract_harvest_cost'] + harv_hours * r_vals['mach']['harvest_cost']
+    seeding_days = pd.Series(lp_vars['v_seeding_machdays'])
+    contractseeding_ha = pd.Series(lp_vars['v_contractseeding_ha'])
+    seeding_ha = seeding_days *  r_vals['mach']['seeding_rate']
+    seeding_cost = r_vals['mach']['seeding_cost'] * seeding_ha + r_vals['mach']['contractseed_cost'] * contractseeding_ha
+    exp_mach_rkc = (r_vals['crop']['fert_app_cost'] + r_vals['crop']['nap_fert_app_cost'] + r_vals['crop']['chem_app_cost_ha']) * rot_area_rkl +seeding_cost + harvest_cost
+
+
+    ##cropping
+    ###expenses
+    exp_crop_fert = (r_vals['phase_fert_cost'] + r_vals['nap_phase_fert_cost']) * rot_area_rkl
+    exp_crop_chem = r_vals['chem_cost']* rot_area_rkl
+    misc_cropping_exp = (r_vals['stub_cost'] + r_vals['insurance_cost'] + r_vals['seed_cost']) * rot_area_rkl  #stubble, seed & insurance
+    ###revenue. rev = (grain_sold + grain_fed - grain_purchased) * sell_price
+    grain_purchased = pd.Series(lp_vars['v_buy_grain'])
+    grain_sold = pd.Series(lp_vars['v_buy_grain'])
+    grain_fed = pd.Series(lp_vars['v_sup_con'])
+    grains_sale_price = r_vals['crop']['grain_price']
+
+
+    ##stock
+    ###animal numbers
+    sire_numbers = np.array(list(lp_vars['v_sire'].values()))
+    sire_numbers_g0 = sire_numbers.reshape(len_g0)
+    inter['sire_numbers_g0'] = sire_numbers_g0
+    dam_numbers = np.array(list(lp_vars['v_dams'].values()))
+    dam_numbers_k2tvanwziy1g1 = dam_numbers.reshape(len_k2, len_t1, len_v1, len_a, len_n1, len_lw1, len_z, len_i, len_y1, len_g1)
+    inter['dam_numbers_k2tvanwziy1g1'] = dam_numbers_k2tvanwziy1g1
+    offs_numbers = np.array(list(lp_vars['v_offs'].values()))
+    offs_numbers_k3k5tvnwziaxy1g1 = offs_numbers.reshape(len_k3, len_k5, len_t3, len_v3, len_n3, len_lw3, len_z, len_i, len_a, len_x, len_y3, len_g3)
+    inter['offs_numbers_k3k5tvnwziaxy1g1'] = offs_numbers_k3k5tvnwziaxy1g1
+    ###expenses sup feeding
+    grains_buy_price = r_vals['sup']['buy_grain_price']
+    grain_exp= (grain_fed - grain_purchased) * grains_sale_price + grain_purchased * grains_buy_price
+    feeding_exp = grain_fed * r_vals['sup']['total_sup_cost'] #feeding and storage cost related to sup
+    ###husbandry expense
+    sire_cost = r_vals['stock']['cost_cg0 '] * sire_numbers_g0
+    dams_cost = r_vals['stock']['cost_k2ctva1nwziyg1'] * dam_numbers_k2tvanwziy1g1
+    offs_cost = r_vals['stock']['cost_k3k5ctvnwzixyg3'] * offs_numbers_k3k5tvnwziaxy1g1
+    ###sale income
+    sire_sale = r_vals['stock']['sale_cg0 '] * sire_numbers_g0
+    dams_sale = r_vals['stock']['sale_k2ctva1nwziyg1'] * dam_numbers_k2tvanwziy1g1
+    offs_sale = r_vals['stock']['sale_k3k5ctvnwzixyg3'] * offs_numbers_k3k5tvnwziaxy1g1
+    ###wool income
+    sire_wool = r_vals['stock']['wool_cg0 '] * sire_numbers_g0
+    dams_wool = r_vals['stock']['wool_k2ctva1nwziyg1'] * dam_numbers_k2tvanwziy1g1
+    offs_wool = r_vals['stock']['wool_k3k5ctvnwzixyg3'] * offs_numbers_k3k5tvnwziaxy1g1
+
+
+    ##labour
+    r_vals['lab']['casual_cost']
 
     # df_rot = df_rot.rename_axis(['rot','lmu'])
     # phase_area = pd.merge(r_vals['rot']['phases'], df_rot, how='left', left_index=True, right_on=['rot']) #merge full phase array with area array
@@ -130,23 +184,13 @@ def intermediates(inter, r_vals, lp_vars):
     # inter['crop_area'] = df_rot[~phase_is_pasture].sum() #^do i have something like pasture already? or do i need to do option 1? how can i get area for each crop set?
 
 
-    ##animal numbers
-    sire_numbers = np.array(list(lp_vars['v_sire'].values()))
-    inter['sire_numbers_g0'] = sire_numbers.reshape(len_g0)
-    dam_numbers = np.array(list(lp_vars['v_dams'].values()))
-    inter['dam_numbers_k2tvanwziy1g1'] = dam_numbers.reshape(len_k2, len_t1, len_v1, len_a, len_n1, len_lw1, len_z, len_i, len_y1, len_g1)
-    offs_numbers = np.array(list(lp_vars['v_offs'].values()))
-    inter['offs_numbers_k3k5tvnwziaxy1g1'] = offs_numbers.reshape(len_k3, len_k5, len_t3, len_v3, len_n3, len_lw3, len_z, len_i, len_a, len_x, len_y3, len_g3)
 
     ##dep - depreciation is yearly but for the profit and loss it is equally divided into each cash period
     dep = lp_vars['v_dep'][None]/len_c #convert to dep per cashflow period
     inter['dep_c'] = pd.DataFrame([dep]*len_c, index=[keys_c])  #convert to df with cashflow period as index
-    ##exp
+    ##overheads/fixed expenses
     exp_fix = r_vals['overheads']
-    exp_crop_fert = r_vals['phase_fert_cost'] + r_vals['nap_phase_fert_cost']
-    exp_crop_chem = r_vals['chem_cost']
-    exp_crop_mach = r_vals['fert_app_cost'] + r_vals['nap_fert_app_cost'] + r_vals['app_cost_ha']
-    misc_cropping_exp = r_vals['stub_cost'] + r_vals['insurance_cost'] + r_vals['seed_cost']  #stubble, seed & insurance
+
     # exp_crop_labour =
     # exp_stock_fert =
     # exp_stock_chem =

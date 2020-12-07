@@ -512,19 +512,19 @@ Note
 '''
 ##special sets that are used elsewhere from rotations
 ###used to make nap inputs - note cont lucerne and tedera are added seperately at the end of the cost section hence not inlcuded here.
-structure['All_pas']={'a', 'ar', 'a3', 'a4', 'a5'
-                , 's', 'sr', 's3', 's4', 's5'
-                , 'm', 'm3', 'm4', 'm5'
-                , 'u', 'ur', 'u3', 'u4', 'u5'
-                , 'x', 'xr', 'x3', 'x4', 'x5'
-                , 'j', 't', 'jr', 'tr'
-                }
+# structure['All_pas']={'a', 'ar', 'a3', 'a4', 'a5'
+#                 , 's', 'sr', 's3', 's4', 's5'
+#                 , 'm', 'm3', 'm4', 'm5'
+#                 , 'u', 'ur', 'u3', 'u4', 'u5'
+#                 , 'x', 'xr', 'x3', 'x4', 'x5'
+#                 , 'j', 't', 'jr', 'tr'
+#                 }
 ##all pas2 includes cont pasture - used in reporting
-structure['All_pas2']={'a', 'ar', 'a3', 'a4', 'a5'
-                , 's', 'sr', 's3', 's4', 's5'
-                , 'm', 'm3', 'm4', 'm5'
-                , 'u', 'ur', 'u3', 'u4', 'u5','uc'
-                , 'x', 'xr', 'x3', 'x4', 'x5','xc'
+structure['All_pas']={'a', 'ar'
+                , 's', 'sr'
+                , 'm'
+                , 'u', 'ur','uc'
+                , 'x', 'xr','xc'
                 , 'j', 't', 'jr', 'tr','tc','jc'
                 }
 ##next set is used in pasture.py for germination and phase area
@@ -553,9 +553,7 @@ structure['G']={'b', 'h', 'o','of', 'w', 'f','i', 'k', 'l', 'v', 'z','r'
 structure['C1']={'E', 'N', 'P', 'OF', 'b', 'h', 'o', 'of', 'w', 'f','i', 'k', 'l', 'v', 'z','r'} #had to create a seperate set because don't want the capitatl in the crop set above as it is used to create pyomo set 
 
 
-# structure['PAS_R']={'ar', 'sr', 'jr', 'tr', 'ur', 'xr', 'tc', 'jc', 'uc', 'xc'} #all reseeded pastures - used to determine pas sow 
-structure['All']={'b', 'h', 'o', 'of', 'w', 'f','i', 'k', 'l', 'v', 'z','r', 'annual', 'tedera', 'lucerne'} #used in mach sow
-structure['All_expanded']={'b', 'h', 'o', 'of', 'w', 'f','i', 'k', 'l', 'v', 'z','r', 'a', 'ar', 's', 'sr', 'm', 'u', 'uc', 'ur', 'x', 'xc', 'xr', 'j','jc', 't','tc', 'jr', 'tr'} #used in reporting and bounds
+structure['All']={'b', 'h', 'o', 'of', 'w', 'f','i', 'k', 'l', 'v', 'z','r', 'a', 'ar', 's', 'sr', 'm', 'u', 'uc', 'ur', 'x', 'xc', 'xr', 'j','jc', 't','tc', 'jr', 'tr'} #used in reporting and bounds
 structure['C']={'b', 'h', 'o', 'of', 'w', 'f','i', 'k', 'l', 'v', 'z','r'} #all crops, used in stubble and mach (not used for rotations)
 structure['Hay']={'h'} #all crops that produce hay - used in machpyomo/coremodel for hay con
 ##special sets used in crop sim

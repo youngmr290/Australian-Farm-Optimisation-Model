@@ -77,14 +77,8 @@ if len(phases_df) != len(base_yields):
 #price                 #
 ########################
 
-def farmgate_grain_price(*args):
+def farmgate_grain_price():
     '''
-    
-
-    Parameters
-    ----------
-    *args : Boolean
-        If True is entered it will calculate the grain price for the sim ie including capital sets.
 
     Returns
     -------
@@ -94,30 +88,18 @@ def farmgate_grain_price(*args):
                 -cartage cost
                 -other fees ie cbh and levies
     '''
-    if args:
-        ##first concat the df with capital sets and the df with actual crop landuses
-        grain_price_info_df=pd.concat([uinp.price['grain_price_grouped'], uinp.price['grain_price']]) #create a copy of grain price df so you dont have to reference input module each time
-        ##multiplies the price and proportion of firsts and seconds for each grain, then sum to get overall price
-        price_df = np.sum(np.multiply(grain_price_info_df[['firsts','seconds']], grain_price_info_df[['prop_firsts','prop_seconds']]),axis=1)
-        cartage=(grain_price_info_df['cartage_km_cost']*pinp.general['road_cartage_distance'] 
-                + pinp.general['rail_cartage'] + uinp.price['flagfall'])
-        tols= grain_price_info_df['grain_tolls']
-        total_fees= cartage+tols
-    else:
-        grain_price_info_df=uinp.price['grain_price'] #create a copy of grain price df so you dont have to reference input module each time
-        ##delete 'of' as it is not sold
-        grain_price_info_df.drop('of')
-        ##gets the price of firsts and seconds for each grain
-        price_df = grain_price_info_df[['firsts','seconds']]
-        ##determine cost of selling
-        cartage=(grain_price_info_df['cartage_km_cost']*pinp.general['road_cartage_distance'] 
-                + pinp.general['rail_cartage'] + uinp.price['flagfall'])
-        tols= grain_price_info_df['grain_tolls']
-        total_fees= cartage+tols
+    grain_price_info_df=uinp.price['grain_price'] #create a copy of grain price df so you dont have to reference input module each time
+    ##gets the price of firsts and seconds for each grain
+    price_df = grain_price_info_df[['firsts','seconds']]
+    ##determine cost of selling
+    cartage=(grain_price_info_df['cartage_km_cost']*pinp.general['road_cartage_distance']
+            + pinp.general['rail_cartage'] + uinp.price['flagfall'])
+    tols= grain_price_info_df['grain_tolls']
+    total_fees= cartage+tols
     return price_df.sub(total_fees, axis=0).clip(0)
 
 
-def grain_price(params):
+def grain_price(params, r_vals):
     '''
     Returns
     -------
@@ -134,7 +116,9 @@ def grain_price(params):
     allocation=fun.period_allocation(p_dates, p_name, start, length).set_index('period').squeeze()
     cols = pd.MultiIndex.from_product([allocation.index, farm_gate_price.columns])
     farm_gate_price = farm_gate_price.reindex(cols, axis=1,level=1)#adds level to header so i can mul in the next step
+    grain_price =  farm_gate_price.mul(allocation,axis=1,level=0)
     params['grain_price'] =  farm_gate_price.mul(allocation,axis=1,level=0).stack([0,1]).to_dict()
+    r_vals['grain_price'] =  grain_price.T
 # a=grain_price()
 
 ##function to determine the proportion of grain in each pool 
@@ -509,7 +493,7 @@ def f_chem_cost(r_vals):
     chem_cost = chem_cost.mul(c_chem_allocation, axis=1,level=1).sum(axis=1, level=0)#first stack is required so that reindexing can occur (ie cant reindex a multi index with a multi index)
     app_cost_ha = app_cost_ha.mul(c_chem_allocation, axis=1,level=1).sum(axis=1, level=0)#first stack is required so that reindexing can occur (ie cant reindex a multi index with a multi index)
     r_vals['chem_cost'] = chem_cost
-    r_vals['app_cost_ha'] = app_cost_ha
+    r_vals['chem_app_cost_ha'] = app_cost_ha
     ##add application cost and chem cost
     total_cost = chem_cost.add(app_cost_ha)
     return chem_cost

@@ -26,7 +26,7 @@ import StockFunctions as sfun
 #off farm grain price  #
 ########################
 
-def buy_grain_price(params):
+def buy_grain_price(params, r_vals):
     '''
     Returns
     -------
@@ -49,9 +49,11 @@ def buy_grain_price(params):
     allocation=fun.period_allocation(p_dates, p_name, start, length).set_index('period').squeeze()
     cols = pd.MultiIndex.from_product([allocation.index, price_df.columns])
     price_df = price_df.reindex(cols, axis=1,level=1)#adds level to header so i can mul in the next step
-    params['buy_grain_price'] = price_df.mul(allocation,axis=1,level=0).stack([0,1]).to_dict()
+    buy_grain_price = price_df.mul(allocation,axis=1,level=0)
+    params['buy_grain_price'] = buy_grain_price.stack([0,1]).to_dict()
+    r_vals['buy_grain_price'] = buy_grain_price.T
 
-def sup_cost(params):
+def sup_cost(params, r_vals):
     ##calculate the insurance/dep/asset value per yr for the silos
     silo_info = pinp.supfeed['storage_type']
     silo_info.loc['dep'] = (silo_info.loc['price'] - silo_info.loc['salvage value'])/silo_info.loc['life']
@@ -85,7 +87,8 @@ def sup_cost(params):
     indx = pd.MultiIndex.from_product([[allocation],start_df.index, storage_cost.index])
     storage_cost = storage_cost.reindex(indx,axis=0,level=2)
     ##total cost = feeding cost plus storage cost
-    total_sup_cost=feeding_cost.add(storage_cost.unstack([1,2]),axis=1, fill_value=0).stack([0,1]).to_dict()
+    total_sup_cost=feeding_cost.add(storage_cost.unstack([1,2]),axis=1, fill_value=0)
+    r_vals['total_sup_cost'] = total_sup_cost.T
     ##dep
     storage_dep = grain_info.loc['dep']
     indx = pd.MultiIndex.from_product([start_df.index, storage_dep.index])
@@ -95,7 +98,7 @@ def sup_cost(params):
     indx = pd.MultiIndex.from_product([start_df.index, storage_asset.index])
     storage_asset = storage_asset.reindex(indx,axis=0,level=1).to_dict()
     ##return cost, dep and asset value
-    params['total_sup_cost'] = total_sup_cost
+    params['total_sup_cost'] = total_sup_cost.stack([0,1]).to_dict()
     params['storage_dep'] = storage_dep
     params['storage_asset'] = storage_asset
     

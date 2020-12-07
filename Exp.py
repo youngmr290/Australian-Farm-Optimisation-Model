@@ -129,7 +129,7 @@ for row in range(len(exp_data)):
     ##start timer for each loop
     start_time = time.time()
     ##check to make sure user wants to run this trial - note pyomo is never run without precalcs being run (this could possibly be change by making a more custom function to check only precalc module time and then altering the 'continue' call below)
-    if (exp_data1.index[row][0] == False or exp_data1.loc[exp_data1.index[row],'run'].squeeze()==False) and force_run==False:
+    if exp_data1.index[row][0] == False or (exp_data1.loc[exp_data1.index[row],'run'].squeeze()==False and force_run==False):
         continue
     # print('precalcs',exp_data1.index[row][2])
     exp_data1.loc[exp_data1.index[row],('run', '', '', '')] = False

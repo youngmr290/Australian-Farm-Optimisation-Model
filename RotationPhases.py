@@ -29,7 +29,7 @@ def landuses_phases(params,report):
     phases_rk = phases.set_index(5, append=True) #add landuse as index level
     params['phases_rk'] = dict.fromkeys(phases_rk.index,1)
     report['phases']=uinp.structure['phases']
-    report['all_pastures']=uinp.structure['All_pas2'] #all_pas2 includes the cont pasture landuses
+    report['all_pastures']=uinp.structure['All_pas'] #all_pas2 includes the cont pasture landuses
 
 
 def rot_params(params):

@@ -39,7 +39,7 @@ def rotationpyomo(params):
         model.del_component(model.p_landuse_area_index)
     except AttributeError:
         pass
-    model.p_landuse_area = Param(model.s_phases, model.s_landuses2, initialize=params['phases_rk'], doc='landuse in each phase')
+    model.p_landuse_area = Param(model.s_phases, model.s_landuses, initialize=params['phases_rk'], doc='landuse in each phase')
 
 
     ##only build this param if it doesn't exist already ie the rotation link never changes
