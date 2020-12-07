@@ -111,30 +111,33 @@ def intermediates(inter, r_vals, lp_vars):
     phases_df = r_vals['rot']['phases']
     phases_rk = phases_df.set_index(5, append=True)  # add landuse as index level
     rot_area = pd.Series(lp_vars['v_phase_area']) #create a series of all the phase areas
-    rot_area_rkl = rot_area.unstack().reindex(phases_rk.index, axis=0, level=0).pivot() #add landuse to the axis
-    landuse_area = rot_area_rkl.sum(axis=0) #area of each landuse
+    rot_area_rkl = rot_area.unstack().reindex(phases_rk.index, axis=0, level=0).stack() #add landuse to the axis
+    landuse_area_k = rot_area_rkl.sum(axis=0,level=1) #area of each landuse (sum lmu and rotation)
     ###crop & pasture area
     ####you can now use isin pasture or crop sets to calc the area of crop or pasture
-    total_pasture_area = landuse_area[landuse_area.isin(all_pas)].sum()
-    total_crop_area = landuse_area[~landuse_area.isin(all_pas)].sum()
+    total_pasture_area = landuse_area_k[landuse_area_k.index.isin(all_pas)].sum()
+    total_crop_area = landuse_area_k[~landuse_area_k.index.isin(all_pas)].sum()
     inter['pasture_area'] = total_pasture_area
     inter['crop_area'] = total_crop_area
 
     ##mach
     contractharv_hours = pd.Series(lp_vars['v_contractharv_hours'])
-    harv_hours = pd.Series(lp_vars['v_harv_hours'])
-    harvest_cost = contractharv_hours * r_vals['mach']['contract_harvest_cost'] + harv_hours * r_vals['mach']['harvest_cost']
-    seeding_days = pd.Series(lp_vars['v_seeding_machdays'])
-    contractseeding_ha = pd.Series(lp_vars['v_contractseeding_ha'])
-    seeding_ha = seeding_days *  r_vals['mach']['seeding_rate']
-    seeding_cost = r_vals['mach']['seeding_cost'] * seeding_ha + r_vals['mach']['contractseed_cost'] * contractseeding_ha
-    exp_mach_rkc = (r_vals['crop']['fert_app_cost'] + r_vals['crop']['nap_fert_app_cost'] + r_vals['crop']['chem_app_cost_ha']) * rot_area_rkl +seeding_cost + harvest_cost
+    harv_hours = pd.Series(lp_vars['v_harv_hours']).sum(level=1) #sum labour axis
+    harvest_cost = r_vals['mach']['contract_harvest_cost'].mul(contractharv_hours, axis=1)  + r_vals['mach']['harvest_cost'].mul(harv_hours, axis=1)
+    seeding_days = pd.Series(lp_vars['v_seeding_machdays']).sum(level=(1,2)) #sum labour period axis
+    contractseeding_ha = pd.Series(lp_vars['v_contractseeding_ha']).sum(level=1) #sum labour period and lmu axis
+    seeding_ha = r_vals['mach']['seeding_rate'].stack().mul(seeding_days, level=0)
+    seeding_cost_own = r_vals['mach']['seeding_cost'].reindex(seeding_ha.index, axis=1,level=1).mul(seeding_ha,axis=1).sum(axis=1, level=0) #sum lmu axis
+    contractseed_cost_ha = r_vals['mach']['contractseed_cost']
+    idx = pd.MultiIndex.from_product([contractseed_cost_ha.index, contractseeding_ha.index])
+    seeding_cost_contract = contractseed_cost_ha.reindex(idx, level=0).mul(contractseeding_ha, level=1)
+    exp_mach_rkc = (r_vals['crop']['fert_app_cost'] + r_vals['crop']['nap_fert_app_cost'] + r_vals['crop']['chem_app_cost_ha']) * rot_area_rkl +seeding_cost_own + seeding_cost_contract + harvest_cost
 
 
     ##cropping
     ###expenses
     exp_crop_fert = (r_vals['phase_fert_cost'] + r_vals['nap_phase_fert_cost']) * rot_area_rkl
-    exp_crop_chem = r_vals['chem_cost']* rot_area_rkl
+    exp_crop_chem = r_vals['crop']['chem_cost']* rot_area_rkl
     misc_cropping_exp = (r_vals['stub_cost'] + r_vals['insurance_cost'] + r_vals['seed_cost']) * rot_area_rkl  #stubble, seed & insurance
     ###revenue. rev = (grain_sold + grain_fed - grain_purchased) * sell_price
     grain_purchased = pd.Series(lp_vars['v_buy_grain'])

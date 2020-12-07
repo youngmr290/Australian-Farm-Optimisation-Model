@@ -347,7 +347,7 @@ def nap_fert_cost(r_vals):
     transport=uinp.price['fert_cartage_cost']  #transport cost
     total_cost = allocation.mul(cost+transport).stack() #total cost = fert cost and transport. Here we also account for cost allocation
     fert_cost = fertreq.mul(total_cost, axis=1, level=1)/1000  #div by 1000 to convert to $/kg
-    r_vals['nap_phase_fert_cost'] = fert_cost
+    r_vals['nap_phase_fert_cost'] = fert_cost.sum(axis=1, level=0) #sum all fertilisers
     ##application cost per tonne
     app_cost_t = fertreq.mul(mac.fert_app_cost_t(), axis=1)/1000  #div by 1000 to convert to $/kg
     ##application cost per ha
@@ -355,7 +355,7 @@ def nap_fert_cost(r_vals):
     app_cost_ha = passes.mul(mac.fert_app_cost_ha(), axis=1) #cost for 1 pass for each fert.
     ##total application cost in each cash period
     total_app_cost = (app_cost_t+app_cost_ha).mul(allocation.stack(), axis=1, level=1)
-    r_vals['nap_fert_app_cost'] = total_app_cost
+    r_vals['nap_fert_app_cost'] = total_app_cost.sum(axis=1, level=0) #sum all fertilisers
     ##total fert and app cost
     nap_fert_cost = fert_cost+total_app_cost
     nap_fert_cost = nap_fert_cost.sum(axis=1, level=0) #mul app cost per tonne with fert cost allocation
