@@ -4424,9 +4424,12 @@ def generator(params,r_vals):
     arrays = [keys_g0, keys_p8]
     index_g0p8 = fun.cartesian_product_simple_transpose(arrays)
 
-    ###k2k5tvanwzidxyg1w9i9 - npw
-    arrays = [keys_k2, keys_k5, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_d, keys_x, keys_y1, keys_g1, keys_lw_prog, keys_i]
-    index_k2k5tva1nw8zidxyg1w9i9 = fun.cartesian_product_simple_transpose(arrays)
+    ###k5tvanwzidxyg1w9i9 - npw
+    arrays = [keys_k5, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_d, keys_x, keys_y1, keys_g1, keys_lw_prog, keys_i]
+    index_k5tva1nw8zidxyg1w9i9 = fun.cartesian_product_simple_transpose(arrays)
+    # ###k2k5tvanwzidxyg1w9i9 - npw
+    # arrays = [keys_k2, keys_k5, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_d, keys_x, keys_y1, keys_g1, keys_lw_prog, keys_i]
+    # index_k2k5tva1nw8zidxyg1w9i9 = fun.cartesian_product_simple_transpose(arrays)
 
     ###tdx - npwreq
     arrays = [keys_t2, keys_d, keys_x]
@@ -4537,13 +4540,20 @@ def generator(params,r_vals):
     params['p_nsire_req_dams'] =dict(zip(tup_k2tvanwziyg1g0p8, nsire_k2tva1nw8ziyg1g0p8))
 
     ###number prog weaned
-    mask=npw_k2k5tva1e1b1nwzida0e0b0xyg1w9i9!=0
-    npw_k2k5tva1nw8zidxyg1w9i9 = npw_k2k5tva1e1b1nwzida0e0b0xyg1w9i9[mask] #applying the mask does the raveling and squeezing of singleton axis
+    mask=npw_k5tva1e1b1nwzida0e0b0xyg1w9i9!=0
+    npw_k5tva1nw8zidxyg1w9i9 = npw_k5tva1e1b1nwzida0e0b0xyg1w9i9[mask] #applying the mask does the raveling and squeezing of singleton axis
     mask=mask.ravel()
-    index_cut_k2k5tva1nw8zidxyg1w9i9=index_k2k5tva1nw8zidxyg1w9i9[mask,:]
-    tup_k2k5tva1nw8zidxyg1w9i9 = tuple(map(tuple, index_cut_k2k5tva1nw8zidxyg1w9i9))
-    params['p_npw_dams'] =dict(zip(tup_k2k5tva1nw8zidxyg1w9i9, npw_k2k5tva1nw8zidxyg1w9i9))
+    index_cut_k5tva1nw8zidxyg1w9i9=index_k5tva1nw8zidxyg1w9i9[mask,:]
+    tup_k5tva1nw8zidxyg1w9i9 = tuple(map(tuple, index_cut_k5tva1nw8zidxyg1w9i9))
+    params['p_npw_dams'] =dict(zip(tup_k5tva1nw8zidxyg1w9i9, npw_k5tva1nw8zidxyg1w9i9))
 
+    # mask=npw_k2k5tva1e1b1nwzida0e0b0xyg1w9i9!=0
+    # npw_k2k5tva1nw8zidxyg1w9i9 = npw_k2k5tva1e1b1nwzida0e0b0xyg1w9i9[mask] #applying the mask does the raveling and squeezing of singleton axis
+    # mask=mask.ravel()
+    # index_cut_k2k5tva1nw8zidxyg1w9i9=index_k2k5tva1nw8zidxyg1w9i9[mask,:]
+    # tup_k2k5tva1nw8zidxyg1w9i9 = tuple(map(tuple, index_cut_k2k5tva1nw8zidxyg1w9i9))
+    # params['p_npw_dams'] =dict(zip(tup_k2k5tva1nw8zidxyg1w9i9, npw_k2k5tva1nw8zidxyg1w9i9))
+    #
     ###npw required by prog activity
     mask=numbers_prog_req_tva1e1b1nwzida0e0b0xyg2w9!=0
     npw_tdx = numbers_prog_req_tva1e1b1nwzida0e0b0xyg2w9[mask] #applying the mask does the raveling and squeezing of singleton axis

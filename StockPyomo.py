@@ -195,7 +195,7 @@ def stockpyomo_local(params):
         model.del_component(model.p_npw)
     except AttributeError:
         pass
-    model.p_npw = pe.Param(model.s_k2_birth_dams, model.s_k5_birth_offs, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams,
+    model.p_npw = pe.Param(model.s_k5_birth_offs, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams,
                               model.s_season_types, model.s_tol, model.s_damage, model.s_gender, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_prog, model.s_tol,
                               initialize=params['p_npw_dams'], default=0.0, doc='number of prodgeny weaned')
     try:
@@ -686,12 +686,20 @@ def stockpyomo_local(params):
         pass
     def progR(model, k5, a, z, i9, d, x, y1, g1, w9):
         if any(model.p_npw_req[t2,d,x] for t2 in model.s_sale_prog):
-            return (- sum(model.v_dams[k2, t1, v1, a, n1, w18, z, i, y1, g1]  * model.p_npw[k2, k5, t1, v1, a, n1, w18, z, i, d, x, y1, g1, w9, i9]
-                        for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams for w18 in model.s_lw_dams for i in model.s_tol
-                             if model.p_npw[k2, k5, t1, v1, a, n1, w18, z, i, d, x, y1, g1, w9, i9]!=0)
+            return (- sum(model.v_dams[k5, t1, v1, a, n1, w18, z, i, y1, g1]  * model.p_npw[k5, t1, v1, a, n1, w18, z, i, d, x, y1, g1, w9, i9] #pass in the k5 set to dams - each slice of k5 alings with a slice in k2 eg 11 and 22. we dont need other k2 slices eg nm
+                        for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams for w18 in model.s_lw_dams for i in model.s_tol
+                             if model.p_npw[k5, t1, v1, a, n1, w18, z, i, d, x, y1, g1, w9, i9]!=0)
                     + sum(model.v_prog[k5, t2, w9, z, i9, d, a, x, g1] * model.p_npw_req[t2,d,x] for t2 in model.s_sale_prog if model.p_npw_req[t2,d,x]!=0))<=0
         else:
             return pe.Constraint.Skip
+    # def progR(model, k5, a, z, i9, d, x, y1, g1, w9):
+    #     if any(model.p_npw_req[t2,d,x] for t2 in model.s_sale_prog):
+    #         return (- sum(model.v_dams[k2, t1, v1, a, n1, w18, z, i, y1, g1]  * model.p_npw[k2, k5, t1, v1, a, n1, w18, z, i, d, x, y1, g1, w9, i9]
+    #                     for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams for w18 in model.s_lw_dams for i in model.s_tol
+    #                          if model.p_npw[k2, k5, t1, v1, a, n1, w18, z, i, d, x, y1, g1, w9, i9]!=0)
+    #                 + sum(model.v_prog[k5, t2, w9, z, i9, d, a, x, g1] * model.p_npw_req[t2,d,x] for t2 in model.s_sale_prog if model.p_npw_req[t2,d,x]!=0))<=0
+    #     else:
+    #         return pe.Constraint.Skip
     start = time.time()
     model.con_progR = pe.Constraint(model.s_k5_birth_offs, model.s_wean_times, model.s_season_types, model.s_tol,
                                     model.s_damage, model.s_gender, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_prog, rule=progR,
