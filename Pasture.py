@@ -157,13 +157,14 @@ index_g                       = np.asarray(uinp.structure['grazing_int'])
 index_l                       = pinp.general['lmu_area'].index.to_numpy() # lmu index description
 index_o                       = np.asarray(uinp.structure['foo_levels'])
 index_p                       = np.asarray(per.p_date2_df().index)
-index_r                       = uinp.structure['phases'].index.to_numpy()
+index_r                       = phases_rotn_df.index.to_numpy()
 index_t                       = np.asarray(pastures)                      # pasture type index description
+index_k                       = np.asarray(list(uinp.structure['All']))   #landuse
 
 ### plrt
-arrays=[index_p, index_l, index_r, index_t]
-index_plrt=fun.cartesian_product_simple_transpose(arrays)
-index_plrt=tuple(map(tuple, index_plrt)) #create a tuple rather than a list because tuples are faster
+arrays=[index_p, index_l, index_r, index_k]
+index_plrk=fun.cartesian_product_simple_transpose(arrays)
+index_plrk=tuple(map(tuple, index_plrk)) #create a tuple rather than a list because tuples are faster
 
 ### rt
 arrays=[index_r, index_t]
@@ -488,6 +489,7 @@ def calculate_germ_and_reseed(params):
     for t, pasture in enumerate(pastures):
         phase_germresow_df['germ_scalar']=0 #set default to 0
         phase_germresow_df['resown']=False #set default to false
+        ###loop through each combo in of landuses and pastures (i_phase_germ), then check which rotations fall into each germ/resowing catergory. Then populate the rot phase df with the neccesary germination and resowing param.
         for ix_row in i_phase_germ_dict[pasture].index:
             ix_bool = pd.Series(data=True,index=range(len(phase_germresow_df)))
             for ix_col in range(i_phase_germ_dict[pasture].shape[1]-2):    #-2 because two of the cols are germ and resowing
@@ -578,8 +580,10 @@ def calculate_germ_and_reseed(params):
     ### combine with rotation reseeding requirement
     pas_sown_lrt = resown_rt * arable_l.reshape(-1,1,1)
     pas_sow_plrt = pas_sown_lrt * reseeding_machperiod_pt[:,np.newaxis,np.newaxis,:]
-    pas_sow_rav_plrt = pas_sow_plrt.ravel()
-    params['p_pas_sow_plrt'] = dict(zip(index_plrt ,pas_sow_rav_plrt))
+    pas_sow_plr = np.sum(pas_sow_plrt, axis=-1) #sum the t axis. the different pastures are tracked by the rotation.
+    pas_sow_plrk = pas_sow_plr[...,np.newaxis] * (index_k==phases_rotn_df.iloc[:,-1].values[:,np.newaxis]) #add k (landuse axis) this is required for sow param
+    pas_sow_rav_plrk = pas_sow_plrt.ravel()
+    params['p_pas_sow_plrk'] = dict(zip(index_plrk ,pas_sow_rav_plrk))
 
     ## area of pasture being grazed and growing
     ### calculate the area (for all the phases) that is growing pasture for each feed period. The area can be 0 for a pasture phase if it has been destocked for reseeding.

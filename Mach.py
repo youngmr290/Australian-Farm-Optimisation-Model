@@ -200,6 +200,7 @@ def overall_seed_rate(params):
     #convert seed time (hr/ha) to rate of direct drill per day (ha/day)
     seed_rate_lmus = 1 / seed_time_lmus().squeeze() * pinp.mach['daily_seed_hours'] 
     #adjusts the seeding rate (ha/day) for each different crop depending on its seeding speed vs wheat
+
     seedrate_df = pd.concat([uinp.mach[pinp.mach['option']]['seeder_speed_crop_adj']]*len(seed_rate_lmus),axis=1) #expands df for each lmu
     seedrate_df.columns = seed_rate_lmus.index #rename columns to lmu so i can mul
     seedrate_df=seedrate_df.mul(seed_rate_lmus)

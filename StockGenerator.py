@@ -4021,7 +4021,7 @@ def generator(params,r_vals):
     ##number of sires for required for mating - dams
     nsire_k2tva1e1b1nwzida0e0b0xyg1g0p8 = sfun.f_create_production_param('dams', nsire_tva1e1b1nwzida0e0b0xyg1g0p8, a_k2cluster_va1e1b1nwzida0e0b0xyg1[...,na,na], index_k2tva1e1b1nwzida0e0b0xyg1[...,na,na],
                                                                  numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1[...,na,na], mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1[...,na,na], pos_offset=2)
-
+    nsire_k2tva1e1b1nwzida0e0b0xyg1g0p8[0] = 0 #nm animals dont require sires
 
 
     ##numbers prov - numbers at the end of a dvp with the cluster of the next dvp divided by start numbers with cluster of current period

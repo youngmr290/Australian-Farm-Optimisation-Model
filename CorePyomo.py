@@ -146,25 +146,31 @@ def coremodel_all():
     #sow landuse        #
     ###################### 
    
-    ##links crop sow req with mach sow provide
+    ##links crop sow req with mach sow provide - no p set becasue model can optimise crop soeing time
     try:
         model.del_component(model.con_cropsow_index)
         model.del_component(model.con_cropsow)
     except AttributeError:
         pass
     def cropsow_link(model,k,l):
-        return sum(-model.v_seeding_crop[p,k,l] for p in model.s_labperiods) + crppy.cropsow(model,k,l)  <= 0
+        if crppy.cropsow(model,k,l) == 0:
+            return pe.Constraint.Skip #skip constraint if no pasture is being sown
+        else:
+            return sum(-model.v_seeding_crop[p,k,l] for p in model.s_labperiods) + crppy.cropsow(model,k,l)  <= 0
     model.con_cropsow = pe.Constraint(model.s_crops, model.s_lmus, rule = cropsow_link, doc='link between mach sow provide and rotation crop sow require')
    
-    ##links pasture sow req with mach sow provide
+    ##links pasture sow req with mach sow provide - requires a p set because the timing of sowing pasture is not optimisable (pasture sowing can occur in any peirod so the user specifies the periods when a given pasture must be sown)
     try:
         model.del_component(model.con_passow_index)
         model.del_component(model.con_passow)
     except AttributeError:
         pass
     def passow_link(model,p,k,l):
-        return -model.v_seeding_pas[p,k,l]  + paspy.passow(model,p,k,l) <= 0
-    model.con_passow = pe.Constraint( model.s_labperiods, model.s_pastures, model.s_lmus, rule = passow_link, doc='link between mach sow provide and rotation pas sow require')
+        if paspy.passow(model,p,k,l) == 0:
+            return pe.Constraint.Skip #skip constraint if no pasture is being sown
+        else:
+            return -model.v_seeding_pas[p,k,l]  + paspy.passow(model,p,k,l) <= 0
+    model.con_passow = pe.Constraint( model.s_labperiods, model.s_landuses, model.s_lmus, rule = passow_link, doc='link between mach sow provide and rotation pas sow require')
 
     ######################
     #harvest crops       #

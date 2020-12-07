@@ -132,7 +132,7 @@ def rotation_yield_transfer(model,g,k):
 ##############
 ##similar to yield - this is more complex because we want to mul with phase area variable then sum based on the current landuse (k)
 def cropsow(model,k,l):
-    return sum(model.p_cropsow[r,k,l]*model.v_phase_area[r,l]  for r in model.s_phases if ((r,)+(k,)+(l,)) in model.p_cropsow and model.p_cropsow[r,k,l] != 0) #+ model.x[k] >=0 #
+    return sum(model.p_cropsow[r,k,l]*model.v_phase_area[r,l]  for r in model.s_phases if model.p_cropsow[r,k,l] != 0) #+ model.x[k] >=0 # if ((r,)+(k,)+(l,)) in model.p_cropsow
 
 
 

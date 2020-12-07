@@ -509,7 +509,7 @@ def f_chem_cost(r_vals):
     chem_cost = chem_cost.mul(c_chem_allocation, axis=1,level=1).sum(axis=1, level=0)#first stack is required so that reindexing can occur (ie cant reindex a multi index with a multi index)
     app_cost_ha = app_cost_ha.mul(c_chem_allocation, axis=1,level=1).sum(axis=1, level=0)#first stack is required so that reindexing can occur (ie cant reindex a multi index with a multi index)
     r_vals['chem_cost'] = chem_cost
-    r_vals['app_cost_ha'] = app_cost_ha
+    r_vals['chem_app_cost_ha'] = app_cost_ha
     ##add application cost and chem cost
     total_cost = chem_cost.add(app_cost_ha)
     return chem_cost

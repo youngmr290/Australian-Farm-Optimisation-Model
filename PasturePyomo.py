@@ -149,7 +149,7 @@ def paspyomo_local(params):
         model.del_component(model.p_pas_sow)
     except AttributeError:
         pass
-    model.p_pas_sow = pe.Param(model.s_labperiods, model.s_lmus, model.s_phases, model.s_landuses, initialize=params['p_pas_sow_plrt'], default=0, doc='pasture sown for each rotation')
+    model.p_pas_sow = pe.Param(model.s_labperiods, model.s_lmus, model.s_phases, model.s_landuses, initialize=params['p_pas_sow_plrk'], default=0, doc='pasture sown for each rotation')
     
     try:
         model.del_component(model.p_poc_con_index)

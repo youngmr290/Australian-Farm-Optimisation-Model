@@ -35,8 +35,7 @@ def stubpyomo_local(params):
     except AttributeError:
         pass
     model.p_stub_md = pe.Param(model.s_feed_periods, model.s_stub_cat, model.s_crops, initialize=params['md'], default = 0.0, doc='md from 1t of each stubble categories for each crop')
-    
-    #^this param has inf values - this may cause a problem, if it does do a replace in the stubble sheet line 151
+
     try:
         model.del_component(model.p_stub_vol_index)
         model.del_component(model.p_stub_vol)
