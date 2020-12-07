@@ -196,7 +196,7 @@ def coremodel_all():
     def harv(model,k):
         return  sum(-model.v_hay_made + crppy.rotation_yield_transfer(model,g,k)/1000 for g in model.s_grain_pools)  <= 0
     model.con_makehay = pe.Constraint(model.s_haycrops, rule = harv, doc='make hay constraint')
-    
+
     #############################
     #yield income & transfer    #
     #############################
@@ -277,11 +277,10 @@ def coremodel_all():
         carryoverJF[0] = 1
         carryoverND = [0] * len(c)
         carryoverND[-1] = 1
-        return (-yield_income(model,c[i]) + crppy.rotation_cost(model,c[i])  + labpy.labour_cost(model,c[i]) + macpy.mach_cost(model,c[i]) + suppy.sup_cost(model,c[i]) + model.p_overhead_cost[c[i]]
+        return (-yield_income(model,c[i]) + crppy.rotation_cost(model,c[i]) + labpy.labour_cost(model,c[i]) #+ macpy.mach_cost(model,c[i]) + suppy.sup_cost(model,c[i]) + model.p_overhead_cost[c[i]]
                 - stkpy.stock_cashflow(model,c[i])
-                - model.v_debit[c[i]] * j[i] + model.v_credit[c[i]]  + model.v_debit[c[i-1]] * fin.debit_interest() * j[i]  - model.v_credit[c[i-1]] * fin.credit_interest() * j[i]
-                - model.v_carryover_credit * carryoverJF[i] + model.v_carryover_credit * carryoverND[i]
-                + model.v_carryover_debit * carryoverJF[i]  - model.v_carryover_debit * carryoverND[i]) <= 0
+                - model.v_debit[c[i]] + model.v_credit[c[i]]  + model.v_debit[c[i-1]] * fin.debit_interest() - model.v_credit[c[i-1]] * fin.credit_interest() * j[i] #mul by j so that credit in ND doesnt provide into JF otherwise it will be unbounded because it will get interest
+                ) <= 0
 
     try:
         model.del_component(model.con_cashflow)

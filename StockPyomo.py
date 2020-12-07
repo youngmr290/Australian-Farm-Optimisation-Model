@@ -636,7 +636,7 @@ def stockpyomo_local(params):
         t_y1 = l_y1.index(y1)
         t_g9 = l_g9.index(g9)
         t_w9 = l_w9.index(w9)
-        if not np.any(params['numbers_req_numpyvesion_k2k2tva1nw8ziyg1g9w9'][:,t_k29,:,t_v1,t_a,:,:,t_z,t_i,t_y1,:,t_g9,t_w9]):
+        if not np.any(params['numbers_req_numpyversion_k2k2tva1nw8ziyg1g9w9'][:,t_k29,:,t_v1,t_a,:,:,t_z,t_i,t_y1,:,t_g9,t_w9]):
             return pe.Constraint.Skip
         ##need to use both provide & require in this if statement (even though it is slower) because there are situations eg dvp4 (prejoining) where prov will have a value and req will not.
         ##but the prov parameter is necessary as it allows other dam permutations on this constraint
@@ -666,7 +666,7 @@ def stockpyomo_local(params):
         t_v3 = l_v3.index(v3)
         t_g3 = l_g3.index(g3)
         t_w9 = l_w9_offs.index(w9)
-        if not np.any(params['numbers_req_numpyvesion_k3k5vw8g3w9'][t_k3,t_k5,t_v3,:,t_g3,t_w9]):
+        if not np.any(params['numbers_req_numpyversion_k3k5vw8g3w9'][t_k3,t_k5,t_v3,:,t_g3,t_w9]):
             return pe.Constraint.Skip
         return sum(model.v_offs[k3,k5,t3,v3,n3,w8,z,i,a,x,y3,g3] * model.p_numbers_req_offs[k3,k5,v3,w8,x,g3,w9]
                    - model.v_offs[k3,k5,t3,v3_prev,n3,w8,z,i,a,x,y3,g3] * model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z,i,a,x,y3,g3,w9]

@@ -81,7 +81,7 @@ def generator(params,r_vals):
     na=np.newaxis
     ## define the periods - default (dams and sires)
     sim_years = uinp.structure['i_age_max']
-    sim_years = 4
+    sim_years = 3
     sim_years_offs = min(uinp.structure['i_age_max_offs'], sim_years)
     n_sim_periods, date_start_p, date_end_p, p_index_p, step \
     = sfun.sim_periods(pinp.sheep['i_startyear'], uinp.structure['i_sim_periods_year'], sim_years)
@@ -4610,7 +4610,7 @@ def generator(params,r_vals):
     params['p_numbers_prov_offs'] =dict(zip(tup_k3k5tvnw8ziaxyg3w9, numbers_prov_offs_k3k5tvnw8zia0xyg3w9))
     ###numbers_req_dams
     mask=numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9!=0
-    params['numbers_req_numpyvesion_k2k2tva1nw8ziyg1g9w9'] = numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,:,:,:,:,0,0,:,:,:,:,0,0,0,0,0,:,:,:,:]  #cant use squeeze here because i need to keep all relevant axis even if singleton. this is used to speed pyomo constraint.
+    params['numbers_req_numpyversion_k2k2tva1nw8ziyg1g9w9'] = numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,:,:,:,:,0,0,:,:,:,:,0,0,0,0,0,:,:,:,:]  #cant use squeeze here because i need to keep all relevant axis even if singleton. this is used to speed pyomo constraint.
     numbers_req_dams_k2k2tva1nw8ziyg1g9w9 = numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[mask] #applying the mask does the raveling and squeezing of singleton axis
     mask=mask.ravel()
     index_cut_k2k2tvanwziyg1g9w=index_k2k2tvanwziyg1g9w[mask,:]
@@ -4618,7 +4618,7 @@ def generator(params,r_vals):
     params['p_numbers_req_dams'] =dict(zip(tup_k2k2tvanwziyg1g9w, numbers_req_dams_k2k2tva1nw8ziyg1g9w9)) #same keys as prov so don't need to recalc again
     ###numbers_req_offs
     mask=numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9!=0
-    params['numbers_req_numpyvesion_k3k5vw8g3w9'] = numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9[:,:,0,:,0,0,0,0,:,0,0,0,0,0,0,0,0,:,:]  #cant use squeeze here because i need to keep all relevant axis even if singleton. this is used to speed pyomo constraint.
+    params['numbers_req_numpyversion_k3k5vw8g3w9'] = numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9[:,:,0,:,0,0,0,0,:,0,0,0,0,0,0,0,0,:,:]  #cant use squeeze here because i need to keep all relevant axis even if singleton. this is used to speed pyomo constraint.
     numbers_req_offs_k3k5vw8xg3w9 = numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9[mask] #applying the mask does the raveling and squeezing of singleton axis
     mask=mask.ravel()
     index_cut_k3k5vw8xg3w9=index_k3k5vw8xg3w9[mask,:]

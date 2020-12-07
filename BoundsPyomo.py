@@ -25,7 +25,7 @@ note:
 '''
 
 ##set bounds to include
-bounds_inc=True #controls all bounds
+bounds_inc=False #controls all bounds
 rot_lobound_inc = False #controls rot bound
 sr_bound_inc = False #controls sr bound
 total_pasture_bound = False #bound on total pasture (hence also total crop)
