@@ -99,15 +99,15 @@ def coremodel_all():
     except AttributeError:
         pass
     def labour_sheep_perm(model,p,w):
-        return - model.v_sheep_labour_permanent[p,w] - model.v_sheep_labour_manager[p,w] + suppy.sup_labour(model,p) + stkpy.stock_labour_perm(model,p)   <= 0
-    model.con_labour_sheep_perm = pe.Constraint(model.s_labperiods, ['manager'], rule = labour_sheep_perm, doc='link between labour supply and requirment by sheep jobs for perm labour sources')
+        return - model.v_sheep_labour_permanent[p,w] - model.v_sheep_labour_manager[p,w] + stkpy.stock_labour_perm(model,p)   <= 0
+    model.con_labour_sheep_perm = pe.Constraint(model.s_labperiods, ['perm'], rule = labour_sheep_perm, doc='link between labour supply and requirment by sheep jobs for perm labour sources')
     ##labour sheep - can be done by manager
     try:
         model.del_component(model.con_labour_sheep_manager)
     except AttributeError:
         pass
     def labour_sheep_manager(model,p,w):
-        return  - model.v_sheep_labour_manager[p,w] + suppy.sup_labour(model,p) + stkpy.stock_labour_manager(model,p)   <= 0
+        return  - model.v_sheep_labour_manager[p,w] + stkpy.stock_labour_manager(model,p)   <= 0
     model.con_labour_sheep_manager = pe.Constraint(model.s_labperiods, ['manager'], rule = labour_sheep_manager, doc='link between labour supply and requirment by sheep jobs for manager labour sources')
 
     #######################################
