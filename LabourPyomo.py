@@ -147,11 +147,13 @@ def labpyomo_local(params):
 #Amount of casual. Casual labour can be optimised for each period 
 model.v_quantity_casual = Var(model.s_labperiods, bounds = (0,None) , doc='number of casual labour used in each labour period')
 
-#Amount of permanent labour. 
-model.v_quantity_perm = Var(bounds=(pinp.labour['min_perm'],pinp.labour['max_perm']), doc='number of permanent labour used in each labour period')
+#Amount of permanent labour.
+max_perm = pinp.labour['max_perm'] if pinp.labour['max_perm']!='inf' else None #if none convert to python None
+model.v_quantity_perm = Var(bounds=(pinp.labour['min_perm'],max_perm), doc='number of permanent labour used in each labour period')
 
-#Amount of manager labour 
-model.v_quantity_manager = Var(bounds=(pinp.labour['min_managers'],pinp.labour['max_managers']), doc='number of manager/owner labour used in each labour period')
+#Amount of manager labour
+max_managers = pinp.labour['max_managers'] if pinp.labour['max_managers']!='inf' else None #if none convert to python None
+model.v_quantity_manager = Var(bounds=(pinp.labour['min_managers'],max_managers), doc='number of manager/owner labour used in each labour period')
 
 #manager pool
 #labour for sheep activities (this variable transfers labour from source to sink)

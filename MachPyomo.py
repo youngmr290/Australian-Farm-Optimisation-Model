@@ -23,6 +23,7 @@ from CreateModel import *
 
 def mach_precalcs(params, r_vals):
     mac.overall_seed_rate(params, r_vals)
+    mac.contractseeding_occurs(params)
     mac.seed_days(params)
     mac.seeding_cost(params, r_vals)
     mac.contract_seed_cost(params, r_vals)
@@ -55,11 +56,17 @@ def machpyomo_local(params):
     model.p_seeding_rate = Param(model.s_landuses, model.s_lmus, initialize=params['seed_rate'], default = 0.0, doc='rate of seeding ha/day provided by one crop gear')
     
     try:
+        model.del_component(model.p_contractseeding_occur)
+    except AttributeError:
+        pass
+    model.p_contractseeding_occur = Param(model.s_labperiods, initialize=params['contractseeding_occur'], default = 0.0, doc='period/s when contract seeding can occur')
+    
+    try:
         model.del_component(model.p_seed_days)
     except AttributeError:
         pass
     model.p_seed_days = Param(model.s_labperiods, initialize=params['seed_days'], default = 0.0, doc='number of seeding days in each period')
-    
+
     try:
         model.del_component(model.p_seeding_cost_index)
         model.del_component(model.p_seeding_cost)
@@ -187,7 +194,7 @@ def machpyomo_local(params):
     except AttributeError:
         pass
     def sow_supply(model,p,k1,l):
-        return -model.v_contractseeding_ha[p,k1,l] - model.p_seeding_rate[k1,l] * model.v_seeding_machdays[p,k1,l]   \
+        return -model.v_contractseeding_ha[p,k1,l] * model.p_contractseeding_occur[p] - model.p_seeding_rate[k1,l] * model.v_seeding_machdays[p,k1,l]   \
                 + model.v_seeding_pas[p,k1,l] + model.v_seeding_crop[p,k1,l] <=0
     model.con_sow_supply = Constraint(model.s_labperiods, model.s_landuses, model.s_lmus, rule=sow_supply, doc='link sow supply to crop and pas variable')
 ############

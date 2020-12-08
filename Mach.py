@@ -104,7 +104,19 @@ def seed_days(*params):
     if params:
         params[0]['seed_days'] = mach_periods['seed_days'].to_dict()
     else: return mach_periods
-# seed_days()   
+
+def contractseeding_occurs(params):
+    '''
+    This function just sets the peirod when contract seeding must occur. Contract seeding is not hooked up to yield penalty
+    becasue if your going to hire someone you will hire them at the optimum time. Contract seeding is hooked up to poc so
+    this param stops the model having late seeding.
+    '''
+    contract_start = per.wet_seeding_start_date()
+    mach_periods = seed_days()['date']
+    params['contractseeding_occur'] = (mach_periods==contract_start).squeeze().to_dict()
+
+
+# seed_days()
 # def seed_days():
 #     '''
 #     Returns

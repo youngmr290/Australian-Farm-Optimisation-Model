@@ -126,7 +126,7 @@ def intermediates(inter, r_vals, lp_vars):
     harvest_cost = r_vals['mach']['contract_harvest_cost'].mul(contractharv_hours, axis=1)  + r_vals['mach']['harvest_cost'].mul(harv_hours, axis=1)
     seeding_days = pd.Series(lp_vars['v_seeding_machdays']).sum(level=(1,2)) #sum labour period axis
     contractseeding_ha = pd.Series(lp_vars['v_contractseeding_ha']).sum(level=1) #sum labour period and lmu axis
-    seeding_ha = r_vals['mach']['seeding_rate'].stack().mul(seeding_days, level=0)
+    seeding_ha = r_vals['mach']['seeding_rate'].mul(seeding_days.unstack()).stack() #note seeding ha wont equal the rotation area because arable area is included in seed_ha.
     seeding_cost_own = r_vals['mach']['seeding_cost'].reindex(seeding_ha.index, axis=1,level=1).mul(seeding_ha,axis=1).sum(axis=1, level=0) #sum lmu axis
     contractseed_cost_ha = r_vals['mach']['contractseed_cost']
     idx = pd.MultiIndex.from_product([contractseed_cost_ha.index, contractseeding_ha.index])

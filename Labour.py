@@ -104,7 +104,11 @@ def labour_general(params,r_vals):
     ##get cashflow period dates and names - used in the following loop
     p_dates = per.cashflow_periods()['start date']#get cashflow period dates
     p_name = per.cashflow_periods()['cash period']#gets the period name
-    
+
+    ##set upper limits on casual staff
+    max_casual = pinp.labour['max_casual'] if pinp.labour['max_casual']!='inf' else np.inf #if inf need to convert to python inf
+    max_casual_seedharv = pinp.labour['max_casual_seedharv'] if pinp.labour['max_casual']!='inf' else np.inf #if inf need to convert to python inf
+
     for i in labour_periods['date']: #loops through each period date
         ##work out total hours available in each period for manager (owner)
         if i in per.period_dates(per.wet_seeding_start_date(),pinp.crop['seed_period_lengths']): #checks if the date is a seed period
@@ -172,15 +176,15 @@ def labour_general(params,r_vals):
         ###upper bound
         if i in per.period_dates(per.wet_seeding_start_date(),pinp.crop['seed_period_lengths']) \
         or i in per.period_dates(pinp.crop['harv_date'],pinp.crop['harv_period_lengths']): #checks if the date is a seed period or harvest date
-            labour_periods.loc[labour_periods['date']==i , 'casual ub'] =  (pinp.labour['max_casual_seedharv'] )
+            labour_periods.loc[labour_periods['date']==i , 'casual ub'] =  max_casual_seedharv
         else:
-            labour_periods.loc[labour_periods['date']==i , 'casual ub'] = (pinp.labour['max_casual'] )
+            labour_periods.loc[labour_periods['date']==i , 'casual ub'] = max_casual
         ###lower bound
         if i in per.period_dates(per.wet_seeding_start_date(),pinp.crop['seed_period_lengths']) \
         or i in per.period_dates(pinp.crop['harv_date'],pinp.crop['harv_period_lengths']): #checks if the date is a seed period or harvest date
-            labour_periods.loc[labour_periods['date']==i , 'casual lb'] =  (pinp.labour['min_casual_seedharv'] )
+            labour_periods.loc[labour_periods['date']==i , 'casual lb'] =  pinp.labour['min_casual_seedharv']
         else:
-            labour_periods.loc[labour_periods['date']==i , 'casual lb'] = (pinp.labour['min_casual'] )
+            labour_periods.loc[labour_periods['date']==i , 'casual lb'] = pinp.labour['min_casual']
        
         ##determine cashflow period each labour period alines with
         labour_periods.loc[labour_periods['date']==i , 'cashflow'] = fun.period_allocation(p_dates,p_name,i)

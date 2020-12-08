@@ -25,7 +25,7 @@ note:
 '''
 
 ##set bounds to include
-bounds_inc=False #controls all bounds
+bounds_inc=True #controls all bounds
 rot_lobound_inc = False #controls rot bound
 sr_bound_inc = False #controls sr bound
 total_pasture_bound = False #bound on total pasture (hence also total crop)
@@ -58,7 +58,7 @@ def boundarypyomo_local():
             These could be adjusted with SA values if you want to alter the bounds for different trials
             - The forced sale or retain of drys is controled by livestock generator inputs'''
         ##rot
-        rot_lobound_rl[...] = 0
+        rot_lobound_rl[0,2] = 150
         ##sr - carry cap of each ha of each pasture
         for t, pasture in enumerate(uinp.structure['pastures']):
             pasture_dse_carry[pasture] = pinp.sheep['i_sr_constraint_t'][t]
