@@ -42,8 +42,8 @@ import PropertyInputs as pinp
 import StockFunctions as sfun
 import UniversalInputs as uinp
 import Periods as per
-# import PlotViewer as pv
-
+import PlotViewer as pv
+import sys,traceback
 
 # np.seterr(all='raise')
 
@@ -59,7 +59,7 @@ import Periods as per
 
 
 
-def generator(params,r_vals):
+def generator(params,r_vals,plots = False):
     """
     A function to wrap the generator and post processing that can be called by SheepPyomo.
 
@@ -81,7 +81,7 @@ def generator(params,r_vals):
     na=np.newaxis
     ## define the periods - default (dams and sires)
     sim_years = uinp.structure['i_age_max']
-    sim_years = 3
+    # sim_years = 3
     sim_years_offs = min(uinp.structure['i_age_max_offs'], sim_years)
     n_sim_periods, date_start_p, date_end_p, p_index_p, step \
     = sfun.sim_periods(pinp.sheep['i_startyear'], uinp.structure['i_sim_periods_year'], sim_years)
@@ -237,6 +237,7 @@ def generator(params,r_vals):
     o_numbers_end_sire = np.zeros(pg0, dtype =dtype)
     o_ffcfw_sire = np.zeros(pg0, dtype =dtype)
     o_ffcfw_condensed_sire = np.zeros(pg0, dtype =dtype)
+    o_nw_start_sire = np.zeros(pg0, dtype=dtype)
     o_pi_sire = np.zeros(pg0, dtype =dtype)
     o_mei_solid_sire = np.zeros(pg0, dtype =dtype)
     o_ch4_total_sire = np.zeros(pg0, dtype =dtype)
@@ -249,7 +250,6 @@ def generator(params,r_vals):
     o_ebg_sire = np.zeros(pg0, dtype =dtype)
     ###arrays for report variables
     r_compare_q0q1q2psire = np.zeros(qg0, dtype = dtype) #empty arrays to store different return values from the equation systems in the p loop.
-    r_nw_start_sire = np.zeros(pg0, dtype=dtype)
 
     ##dams
     ###array for generator
@@ -262,6 +262,7 @@ def generator(params,r_vals):
     o_numbers_end_dams = np.zeros(pg1, dtype =dtype)
     o_ffcfw_dams = np.zeros(pg1, dtype =dtype)
     o_ffcfw_condensed_dams = np.zeros(pg1, dtype =dtype)
+    o_nw_start_dams = np.zeros(pg1, dtype = dtype)
     o_pi_dams = np.zeros(pg1, dtype =dtype)
     o_mei_solid_dams = np.zeros(pg1, dtype =dtype)
     o_ch4_total_dams = np.zeros(pg1, dtype =dtype)
@@ -282,8 +283,7 @@ def generator(params,r_vals):
     r_intake_f_dams = np.zeros(pg1, dtype = dtype)
     r_md_solid_dams = np.zeros(pg1, dtype = dtype)
     r_mp2_dams = np.zeros(pg1, dtype = dtype)
-    r_nw_start_dams = np.zeros(pg1, dtype = dtype)
-
+    r_d_cfw_dams =  np.zeros(pg1, dtype = dtype)
 
     ##yatf
     ###array for generator
@@ -330,6 +330,7 @@ def generator(params,r_vals):
     o_numbers_end_offs = np.zeros(pg3, dtype =dtype)
     o_ffcfw_offs = np.zeros(pg3, dtype =dtype)
     o_ffcfw_condensed_offs = np.zeros(pg3, dtype =dtype)
+    o_nw_start_offs = np.zeros(pg3, dtype=dtype)
     o_pi_offs = np.zeros(pg3, dtype =dtype)
     o_mei_solid_offs = np.zeros(pg3, dtype =dtype)
     o_ch4_total_offs = np.zeros(pg3, dtype =dtype)
@@ -343,7 +344,6 @@ def generator(params,r_vals):
     o_ebg_offs = np.zeros(pg3, dtype =dtype)
     ###arrays for report variables
     r_compare_q0q1q2poffs = np.zeros(qg3, dtype = dtype) #empty arrays to store different return values from the equation systems in the p loop.
-    r_nw_start_offs = np.zeros(pg3, dtype=dtype)
 
 
 
@@ -2757,7 +2757,7 @@ def generator(params,r_vals):
                 o_ebg_sire[p] = ebg_sire
 
                 ###store report variables for dams - individual variables can be deleted if not needed - store in report dictionary in the report section at end of this module
-                r_nw_start_sire[p] = nw_start_sire
+                o_nw_start_sire[p] = nw_start_sire
 
     ###dams
         o_numbers_start_dams[p] = numbers_start_dams #needed outside if so that dvp0 (p0) has start numbers
@@ -2798,7 +2798,8 @@ def generator(params,r_vals):
             r_dmd_dams[p] = dmd_dams
             r_evg_dams[p] = evg_dams
             r_mp2_dams[p] = mp2_dams
-            r_nw_start_dams[p] = nw_start_dams
+            o_nw_start_dams[p] = nw_start_dams
+            r_d_cfw_dams[p] = d_cfw_dams
 
 
         ###yatf
@@ -2857,7 +2858,7 @@ def generator(params,r_vals):
             o_ebg_offs[p] = ebg_offs
 
             ###store report variables - individual variables can be deleted if not needed - store in report dictionary in the report section at end of this module
-            r_nw_start_offs[p] = nw_start_offs
+            o_nw_start_offs[p] = nw_start_offs
 
         ###########################
         #stuff for next period    #
@@ -3092,14 +3093,19 @@ def generator(params,r_vals):
     print('generator :', postp_start - generator_start)
 
     ## Call Steve graphing routine here if Generator is throwing an error in the post processing
-    # yvar, yvar2, xvar, wvar, axes, dimensions = pv.read_spreadsheet()
-    # loc = locals()
-    # try:
-    #     yvar = loc[yvar]; yvar2 = loc[yvar2]; xvar = loc[xvar]; wvar = loc[wvar]
-    # except:
-    #     pass
-    # pv.create_plots(yvar, yvar2, xvar, wvar, axes, dimensions)
-
+    # scan_spreadsheet = True
+    # while scan_spreadsheet:
+    #     try:
+    #         yvar, yvar2, xvar, wvar, axes, dimensions, verticals = pv.read_spreadsheet();
+    #         loc = locals();
+    #         yvar = loc[yvar];
+    #         yvar2 = loc[yvar2];
+    #         xvar = loc[xvar];
+    #         wvar = loc[wvar];
+    #         pv.create_plots(yvar, yvar2, xvar, wvar, axes, dimensions, verticals)
+    #     except Exception as e:
+    #         traceback.print_exc(file=sys.stdout)
+    #         scan_spreadsheet = input("Enter 1 to rescan spreadsheet for new plots: ")
 
 
 
@@ -4315,13 +4321,13 @@ def generator(params,r_vals):
 
     ###DSE based on nw
     #### cumulative total of nw with p6 axis
-    nw_cum_p6a1e1b1nwzida0e0b0xyg0 = sfun.f_p2v_std(r_nw_start_sire**0.75, on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0,
-                                                  days_period_p=days_period_pa1e1b1nwzida0e0b0xyg0, a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg,
-                                                  index_any1tvp=index_p6pa1e1b1nwzida0e0b0xyg)
-    nw_cum_p6tva1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(r_nw_start_dams**0.75, a_v_pa1e1b1nwzida0e0b0xyg1, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1,
+    nw_cum_p6a1e1b1nwzida0e0b0xyg0 = sfun.f_p2v_std(o_nw_start_sire ** 0.75, on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0,
+                                                    days_period_p=days_period_pa1e1b1nwzida0e0b0xyg0, a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg,
+                                                    index_any1tvp=index_p6pa1e1b1nwzida0e0b0xyg)
+    nw_cum_p6tva1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_nw_start_dams ** 0.75, a_v_pa1e1b1nwzida0e0b0xyg1, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1,
                                                   days_period_p=days_period_pa1e1b1nwzida0e0b0xyg1, a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg,
                                                   index_any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,...])
-    nw_cum_p6tva1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(r_nw_start_offs**0.75, a_v_pa1e1b1nwzida0e0b0xyg3, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg3,
+    nw_cum_p6tva1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(o_nw_start_offs**0.75, a_v_pa1e1b1nwzida0e0b0xyg3, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg3,
                                                   days_period_p=days_period_cut_pa1e1b1nwzida0e0b0xyg3, a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p],
                                                   index_any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,...])
     ####returns the average nw for each animal for the each feed period (cum nw accounts for if the animal is on hand - if the animal is sold the average nw will be lower in that feed period)
@@ -4933,13 +4939,20 @@ def generator(params,r_vals):
     print('ravel array and zip with key: ',finish - keys_start)
 
     # # Call Steve's graph generator
-    # print('Interact with the graph generator using the PlotViewer spreadsheet')
-    # yvar, yvar2, xvar, wvar, axes, dimensions = pv.read_spreadsheet()
-    # loc = locals()
-    # try:
-    #     yvar = loc[yvar]; yvar2 = loc[yvar2]; xvar = loc[xvar]; wvar = loc[wvar]
-    # except:
-    #     pass
-    # pv.create_plots(yvar, yvar2, xvar, wvar, axes, dimensions)
+    print('Interact with the graph generator using the PlotViewer spreadsheet')
+#    scan_spreadsheet = True
+    scan_spreadsheet = plots   # argument passed to the function. True if called from SheepTest
+    while scan_spreadsheet:
+        try:
+            yvar, yvar2, xvar, wvar, axes, dimensions, verticals = pv.read_spreadsheet();
+            loc = locals();
+            yvar = loc[yvar];
+            yvar2 = loc[yvar2];
+            xvar = loc[xvar];
+            wvar = loc[wvar];
+            pv.create_plots(yvar, yvar2, xvar, wvar, axes, dimensions, verticals)
+        except Exception as e:
+            traceback.print_exc(file=sys.stdout)
+            scan_spreadsheet = input("Enter 1 to rescan spreadsheet for new plots: ")
 
     print('end of generator')   # a line that can be used to break at the end of the generator
