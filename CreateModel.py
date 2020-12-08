@@ -62,7 +62,10 @@ def sets() :
 #######################
 
 #labour periods
-model.s_labperiods = Set(initialize=per.p_date2_df().index)
+model.s_labperiods = Set(initialize=per.p_date2_df().index, doc='labour periods')
+##worker levels - levels for the different jobs
+model.s_worker_levels  = Set(initialize=uinp.structure['worker_levels'], doc='worker levels for the different jobs')
+
 
 
 #######################

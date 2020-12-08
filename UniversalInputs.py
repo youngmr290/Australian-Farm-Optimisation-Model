@@ -166,6 +166,11 @@ def univeral_inp_sa():
 structure = dict()
 
 ###############
+# labour      #
+###############
+structure['worker_levels'] = ['anyone', 'perm', 'manager']
+
+###############
 # crop        #
 ###############
 ##grain pools there is one transfer constraint for each pool.

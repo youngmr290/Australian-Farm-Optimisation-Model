@@ -57,18 +57,18 @@ def coremodel_all():
         model.del_component(model.con_labour_fixed_anyone)
     except AttributeError:
         pass
-    def labour_fixed_casual(model,p):
-        return -model.v_fixed_labour_casual[p] - model.v_fixed_labour_permanent[p] - model.v_fixed_labour_manager[p] +  model.p_super_labour[p] + model.p_tax_labour[p] + model.p_bas_labour[p] <= 0
-    model.con_labour_fixed_anyone = pe.Constraint(model.s_labperiods, rule = labour_fixed_casual, doc='link between labour supply and requirment by fixed jobs for casual and above')
+    def labour_fixed_casual(model,p,w):
+        return -model.v_fixed_labour_casual[p,w] - model.v_fixed_labour_permanent[p,w] - model.v_fixed_labour_manager[p,w] +  model.p_super_labour[p] + model.p_tax_labour[p] + model.p_bas_labour[p] <= 0
+    model.con_labour_fixed_anyone = pe.Constraint(model.s_labperiods, ['anyone'], rule = labour_fixed_casual, doc='link between labour supply and requirment by fixed jobs for casual and above')
     
     ##Fixed labour jobs that must be completed by the manager ie this constraint links labour fixed manager supply and requirment. 
     try:
         model.del_component(model.con_labour_fixed_manager)
     except AttributeError:
         pass
-    def labour_fixed_manager(model,p):
-        return -model.v_fixed_labour_manager[p] +  model.p_planning_labour [p] + (model.p_learn_labour * model.v_learn_allocation[p]) <= 0
-    model.con_labour_fixed_manager = pe.Constraint(model.s_labperiods, rule = labour_fixed_manager, doc='link between labour supply and requirment by fixed jobs for manager')
+    def labour_fixed_manager(model,p,w):
+        return -model.v_fixed_labour_manager[p,w] +  model.p_planning_labour[p] + (model.p_learn_labour * model.v_learn_allocation[p]) <= 0
+    model.con_labour_fixed_manager = pe.Constraint(model.s_labperiods, ['manager'], rule = labour_fixed_manager, doc='link between labour supply and requirment by fixed jobs for manager')
     
     ######################
     #Labour crop         #
@@ -78,9 +78,9 @@ def coremodel_all():
         model.del_component(model.con_labour_crop_anyone)
     except AttributeError:
         pass
-    def labour_crop(model,p):
-        return -model.v_crop_labour_casual[p] - model.v_crop_labour_permanent[p] - model.v_crop_labour_manager[p] + lcrppy.mach_labour(model,p)  <= 0
-    model.con_labour_crop_anyone = pe.Constraint(model.s_labperiods, rule = labour_crop, doc='link between labour supply and requirment by crop jobs for all labour sources')
+    def labour_crop(model,p,w):
+        return -model.v_crop_labour_casual[p,w] - model.v_crop_labour_permanent[p,w] - model.v_crop_labour_manager[p,w] + lcrppy.mach_labour(model,p)  <= 0
+    model.con_labour_crop_anyone = pe.Constraint(model.s_labperiods, ['anyone'], rule = labour_crop, doc='link between labour supply and requirment by crop jobs for all labour sources')
     
     ######################
     #labour Sheep        #
@@ -90,25 +90,25 @@ def coremodel_all():
         model.del_component(model.con_labour_sheep_anyone)
     except AttributeError:
         pass
-    def labour_sheep_cas(model,p):
-        return -model.v_sheep_labour_casual[p] - model.v_sheep_labour_permanent[p] - model.v_sheep_labour_manager[p] + suppy.sup_labour(model,p) + stkpy.stock_labour_anyone(model,p)   <= 0
-    model.con_labour_sheep_anyone = pe.Constraint(model.s_labperiods, rule = labour_sheep_cas, doc='link between labour supply and requirment by sheep jobs for all labour sources')
+    def labour_sheep_cas(model,p,w):
+        return -model.v_sheep_labour_casual[p,w] - model.v_sheep_labour_permanent[p,w] - model.v_sheep_labour_manager[p,w] + suppy.sup_labour(model,p) + stkpy.stock_labour_anyone(model,p)   <= 0
+    model.con_labour_sheep_anyone = pe.Constraint(model.s_labperiods, ['anyone'], rule = labour_sheep_cas, doc='link between labour supply and requirment by sheep jobs for all labour sources')
     ##labour sheep - can be done by permanent and manager staff
     try:
         model.del_component(model.con_labour_sheep_perm)
     except AttributeError:
         pass
-    def labour_sheep_perm(model,p):
-        return - model.v_sheep_labour_permanent[p] - model.v_sheep_labour_manager[p] + suppy.sup_labour(model,p) + stkpy.stock_labour_perm(model,p)   <= 0
-    model.con_labour_sheep_perm = pe.Constraint(model.s_labperiods, rule = labour_sheep_perm, doc='link between labour supply and requirment by sheep jobs for perm labour sources')
+    def labour_sheep_perm(model,p,w):
+        return - model.v_sheep_labour_permanent[p,w] - model.v_sheep_labour_manager[p,w] + suppy.sup_labour(model,p) + stkpy.stock_labour_perm(model,p)   <= 0
+    model.con_labour_sheep_perm = pe.Constraint(model.s_labperiods, ['manager'], rule = labour_sheep_perm, doc='link between labour supply and requirment by sheep jobs for perm labour sources')
     ##labour sheep - can be done by manager
     try:
         model.del_component(model.con_labour_sheep_manager)
     except AttributeError:
         pass
-    def labour_sheep_manager(model,p):
-        return  - model.v_sheep_labour_manager[p] + suppy.sup_labour(model,p) + stkpy.stock_labour_manager(model,p)   <= 0
-    model.con_labour_sheep_manager = pe.Constraint(model.s_labperiods, rule = labour_sheep_manager, doc='link between labour supply and requirment by sheep jobs for manager labour sources')
+    def labour_sheep_manager(model,p,w):
+        return  - model.v_sheep_labour_manager[p,w] + suppy.sup_labour(model,p) + stkpy.stock_labour_manager(model,p)   <= 0
+    model.con_labour_sheep_manager = pe.Constraint(model.s_labperiods, ['manager'], rule = labour_sheep_manager, doc='link between labour supply and requirment by sheep jobs for manager labour sources')
 
     #######################################
     #stubble & nap consumption at harvest #
