@@ -4915,7 +4915,7 @@ def generator(params,r_vals,plots = False):
     r_vals['cost_k2ctva1nwziyg1'] = cost_k2ctva1e1b1nwzida0e0b0xyg1
     r_vals['cost_k3k5ctvnwzixyg3'] =cost_k3k5ctva1e1b1nwzida0e0b0xyg3
 
-    r_vals['salevalue_cg0 '] = salevalue_ctva1e1b1nwzida0e0b0xyg0
+    r_vals['salevalue_cg0'] = salevalue_ctva1e1b1nwzida0e0b0xyg0
     r_vals['salevalue_k2ctva1nwziyg1'] = salevalue_k2ctva1e1b1nwzida0e0b0xyg1
     r_vals['salevalue_k3k5ctvnwzixyg3'] =salevalue_k3k5ctva1e1b1nwzida0e0b0xyg3
 

@@ -28,9 +28,9 @@ def intermediates(inter, r_vals, lp_vars):
 
     Returns
     -------
-    Here we manipulate r_vals variables and lp result variables.
+    Here we manipulate r_vals variables and combine with the lp result variables.
     Everything is stored in the 'inter' dict which is passed into each
-    function which builds a table or figure.
+    function which preforms any niche calculations & builds the relevant table or figure.
 
     There are two options
         1.convert the dict to pandas dataframe: see crop and pasture area
@@ -111,7 +111,7 @@ def intermediates(inter, r_vals, lp_vars):
     phases_df = r_vals['rot']['phases']
     phases_rk = phases_df.set_index(5, append=True)  # add landuse as index level
     rot_area = pd.Series(lp_vars['v_phase_area']) #create a series of all the phase areas
-    rot_area_rkl = rot_area.unstack().reindex(phases_rk.index, axis=0, level=0).stack() #add landuse to the axis
+    rot_area_rkl = rot_area.unstack().reindex(phases_rk.index, axis=0, level=0) #add landuse to the axis
     landuse_area_k = rot_area_rkl.sum(axis=0,level=1) #area of each landuse (sum lmu and rotation)
     ###crop & pasture area
     ####you can now use isin pasture or crop sets to calc the area of crop or pasture
@@ -130,53 +130,83 @@ def intermediates(inter, r_vals, lp_vars):
     seeding_cost_own = r_vals['mach']['seeding_cost'].reindex(seeding_ha.index, axis=1,level=1).mul(seeding_ha,axis=1).sum(axis=1, level=0) #sum lmu axis
     contractseed_cost_ha = r_vals['mach']['contractseed_cost']
     idx = pd.MultiIndex.from_product([contractseed_cost_ha.index, contractseeding_ha.index])
-    seeding_cost_contract = contractseed_cost_ha.reindex(idx, level=0).mul(contractseeding_ha, level=1)
-    exp_mach_rkc = (r_vals['crop']['fert_app_cost'] + r_vals['crop']['nap_fert_app_cost'] + r_vals['crop']['chem_app_cost_ha']) * rot_area_rkl +seeding_cost_own + seeding_cost_contract + harvest_cost
+    seeding_cost_contract = contractseed_cost_ha.reindex(idx, level=0).mul(contractseeding_ha, level=1).unstack()
+    exp_mach_ha_rlc = pd.concat([r_vals['crop']['fert_app_cost'], r_vals['crop']['nap_fert_app_cost'], r_vals['crop']['chem_app_cost_ha']],axis=1).sum(axis=1,level=0) #cost per ha
+    exp_mach_kc = exp_mach_ha_rlc.unstack().reindex(rot_area_rkl.unstack().index,axis=0).stack().mul(rot_area_rkl,axis=0).sum(axis=0,level=1) #reindex to include landuse then mul area and sum lmu and rot
+    exp_mach_kc = pd.concat([exp_mach_kc.T, seeding_cost_own, seeding_cost_contract, harvest_cost],axis=0).sum(axis=0,level=0).T
 
 
     ##cropping
     ###expenses
-    exp_crop_fert = (r_vals['phase_fert_cost'] + r_vals['nap_phase_fert_cost']) * rot_area_rkl
-    exp_crop_chem = r_vals['crop']['chem_cost']* rot_area_rkl
-    misc_cropping_exp = (r_vals['stub_cost'] + r_vals['insurance_cost'] + r_vals['seed_cost']) * rot_area_rkl  #stubble, seed & insurance
+    exp_crop_fert_ha = pd.concat([r_vals['crop']['phase_fert_cost'], r_vals['crop']['nap_phase_fert_cost']],axis=1).sum(axis=1,level=0)
+    exp_crop_fert = exp_crop_fert_ha.unstack().reindex(rot_area_rkl.unstack().index,axis=0).stack().mul(rot_area_rkl,axis=0).sum(axis=0,level=1) #reindex to include landuse then mul area and sum lmu and rot
+    exp_crop_chem = r_vals['crop']['chem_cost'].unstack().reindex(rot_area_rkl.unstack().index,axis=0).stack().mul(rot_area_rkl,axis=0).sum(axis=0,level=1) #reindex to include landuse then mul area and sum lmu and rot
+    misc_cropping_exp_ha = pd.concat([r_vals['crop']['stub_cost'], r_vals['crop']['insurance_cost'], r_vals['crop']['seedcost']],axis=1).sum(axis=1,level=0) #stubble, seed & insurance
+    misc_cropping_exp = misc_cropping_exp_ha.unstack().reindex(rot_area_rkl.unstack().index,axis=0).stack().mul(rot_area_rkl,axis=0).sum(axis=0,level=1) #reindex to include landuse then mul area and sum lmu and rot
     ###revenue. rev = (grain_sold + grain_fed - grain_purchased) * sell_price
     grain_purchased = pd.Series(lp_vars['v_buy_grain'])
-    grain_sold = pd.Series(lp_vars['v_buy_grain'])
-    grain_fed = pd.Series(lp_vars['v_sup_con'])
-    grains_sale_price = r_vals['crop']['grain_price']
-
+    grain_sold = pd.Series(lp_vars['v_sell_grain'])
+    grain_fed_kg = pd.Series(lp_vars['v_sup_con']).sum(level=(0,1)) #sum feed pool and feed period
+    grain_fed_kp5 = pd.Series(lp_vars['v_sup_con']).sum(level=(0,3)).swaplevel() #sum feed pool and grain pool
+    total_grain = grain_sold + grain_fed_kg - grain_purchased #total grain produced by crop enterprise
+    grains_sale_price = r_vals['crop']['grain_price'].T.stack()
+    grain_rev = grains_sale_price.mul(total_grain.reindex(grains_sale_price.index), axis=0).sum(axis=0,level=0) #sum grain pool, have to reindex (not really sure why since it is the same index - maybe one has been condensed ie index with nan removed)
 
     ##stock
     ###animal numbers
+    sire_shape = len_g0
+    dams_shape = len_k2, len_t1, len_v1, len_a, len_n1, len_lw1, len_z, len_i, len_y1, len_g1
+    offs_shape = len_k3, len_k5, len_t3, len_v3, len_n3, len_lw3, len_z, len_i, len_a, len_x, len_y3, len_g3
+
     sire_numbers = np.array(list(lp_vars['v_sire'].values()))
-    sire_numbers_g0 = sire_numbers.reshape(len_g0)
+    sire_numbers_g0 = sire_numbers.reshape(sire_shape)
+    sire_numbers_g0[sire_numbers_g0==None] = 0 #replace None with 0
     inter['sire_numbers_g0'] = sire_numbers_g0
     dam_numbers = np.array(list(lp_vars['v_dams'].values()))
-    dam_numbers_k2tvanwziy1g1 = dam_numbers.reshape(len_k2, len_t1, len_v1, len_a, len_n1, len_lw1, len_z, len_i, len_y1, len_g1)
+    dam_numbers_k2tvanwziy1g1 = dam_numbers.reshape(dams_shape)
+    dam_numbers_k2tvanwziy1g1[dam_numbers_k2tvanwziy1g1==None] = 0 #replace None with 0
     inter['dam_numbers_k2tvanwziy1g1'] = dam_numbers_k2tvanwziy1g1
     offs_numbers = np.array(list(lp_vars['v_offs'].values()))
-    offs_numbers_k3k5tvnwziaxy1g1 = offs_numbers.reshape(len_k3, len_k5, len_t3, len_v3, len_n3, len_lw3, len_z, len_i, len_a, len_x, len_y3, len_g3)
+    offs_numbers_k3k5tvnwziaxy1g1 = offs_numbers.reshape(offs_shape)
+    offs_numbers_k3k5tvnwziaxy1g1[offs_numbers_k3k5tvnwziaxy1g1==None] = 0 #replace None with 0
     inter['offs_numbers_k3k5tvnwziaxy1g1'] = offs_numbers_k3k5tvnwziaxy1g1
     ###expenses sup feeding
-    grains_buy_price = r_vals['sup']['buy_grain_price']
-    grain_exp= (grain_fed - grain_purchased) * grains_sale_price + grain_purchased * grains_buy_price
-    feeding_exp = grain_fed * r_vals['sup']['total_sup_cost'] #feeding and storage cost related to sup
+    grains_buy_price = r_vals['sup']['buy_grain_price'].T.stack()
+    grain_exp = (grains_sale_price.mul((grain_fed_kg - grain_purchased).reindex(grains_sale_price.index), axis=0)
+                + grains_buy_price.mul(grain_purchased.reindex(grains_sale_price.index), axis=0)).sum(axis=0,level=0) #sum grain pool
+    feeding_exp_kp5c = r_vals['sup']['total_sup_cost'] #feeding and storage cost related to sup per tonne, sum fp axis
+    feeding_exp =  feeding_exp_kp5c.mul(grain_fed_kp5,axis=0).sum(axis=0, level=0)
     ###husbandry expense
-    sire_cost = r_vals['stock']['cost_cg0 '] * sire_numbers_g0
-    dams_cost = r_vals['stock']['cost_k2ctva1nwziyg1'] * dam_numbers_k2tvanwziy1g1
-    offs_cost = r_vals['stock']['cost_k3k5ctvnwzixyg3'] * offs_numbers_k3k5tvnwziaxy1g1
+    sirecost_shape = len_c, len_g0
+    damscost_shape = len_k2, len_c, len_t1, len_v1, len_a, len_n1, len_lw1, len_z, len_i, len_y1, len_g1
+    offscost_shape = len_k3, len_k5, len_c, len_t3, len_v3, len_n3, len_lw3, len_z, len_i, len_a, len_x, len_y3, len_g3
+
+    sire_cost = r_vals['stock']['cost_cg0 '].reshape(sirecost_shape) * sire_numbers_g0
+    dams_cost = r_vals['stock']['cost_k2ctva1nwziyg1'].reshape(damscost_shape) * dam_numbers_k2tvanwziy1g1[:,na,...]
+    offs_cost = r_vals['stock']['cost_k3k5ctvnwzixyg3'].reshape(offscost_shape) * offs_numbers_k3k5tvnwziaxy1g1[:,:,na,...]
     ###sale income
-    sire_sale = r_vals['stock']['sale_cg0 '] * sire_numbers_g0
-    dams_sale = r_vals['stock']['sale_k2ctva1nwziyg1'] * dam_numbers_k2tvanwziy1g1
-    offs_sale = r_vals['stock']['sale_k3k5ctvnwzixyg3'] * offs_numbers_k3k5tvnwziaxy1g1
+    sire_sale = r_vals['stock']['salevalue_cg0'].reshape(sirecost_shape) * sire_numbers_g0
+    dams_sale = r_vals['stock']['salevalue_k2ctva1nwziyg1'].reshape(damscost_shape) * dam_numbers_k2tvanwziy1g1[:,na,...]
+    offs_sale = r_vals['stock']['salevalue_k3k5ctvnwzixyg3'].reshape(offscost_shape) * offs_numbers_k3k5tvnwziaxy1g1[:,:,na,...]
     ###wool income
-    sire_wool = r_vals['stock']['wool_cg0 '] * sire_numbers_g0
-    dams_wool = r_vals['stock']['wool_k2ctva1nwziyg1'] * dam_numbers_k2tvanwziy1g1
-    offs_wool = r_vals['stock']['wool_k3k5ctvnwzixyg3'] * offs_numbers_k3k5tvnwziaxy1g1
+    sire_wool = r_vals['stock']['woolvalue_cg0'].reshape(sirecost_shape) * sire_numbers_g0
+    dams_wool = r_vals['stock']['woolvalue_k2ctva1nwziyg1'].reshape(damscost_shape) * dam_numbers_k2tvanwziy1g1[:,na,...]
+    offs_wool = r_vals['stock']['woolvalue_k3k5ctvnwzixyg3'].reshape(offscost_shape) * offs_numbers_k3k5tvnwziaxy1g1[:,:,na,...]
 
 
     ##labour
-    r_vals['lab']['casual_cost']
+    cas_cost = r_vals['lab']['casual_cost'].mul(pd.Series(lp_vars['v_quantity_casual']),level=0)
+    perm_cost = r_vals['lab']['perm_cost'] * pd.Series(lp_vars['v_quantity_perm']).values
+    manager_cost = r_vals['lab']['perm_cost'] * pd.Series(lp_vars['v_quantity_manager']).values
+
+    ##dep - depreciation is yearly but for the profit and loss it is equally divided into each cash period
+    dep = lp_vars['v_dep'][None]/len_c #convert to dep per cashflow period
+    inter['dep_c'] = pd.DataFrame([dep]*len_c, index=[keys_c])  #convert to df with cashflow period as index
+    ##overheads/fixed expenses
+    exp_fix = r_vals['overheads']
+
+
+
 
     # df_rot = df_rot.rename_axis(['rot','lmu'])
     # phase_area = pd.merge(r_vals['rot']['phases'], df_rot, how='left', left_index=True, right_on=['rot']) #merge full phase array with area array
@@ -188,22 +218,8 @@ def intermediates(inter, r_vals, lp_vars):
 
 
 
-    ##dep - depreciation is yearly but for the profit and loss it is equally divided into each cash period
-    dep = lp_vars['v_dep'][None]/len_c #convert to dep per cashflow period
-    inter['dep_c'] = pd.DataFrame([dep]*len_c, index=[keys_c])  #convert to df with cashflow period as index
-    ##overheads/fixed expenses
-    exp_fix = r_vals['overheads']
 
-    # exp_crop_labour =
-    # exp_stock_fert =
-    # exp_stock_chem =
-    # exp_stock_mach =
-    # exp_stock_labour =
 
-    ##rev
-    # rev_grain =
-    # rev_wool =
-    # rev_sale =
 
 
 
@@ -264,4 +280,4 @@ def f_profitloss_table(inter):
     r_vals (table or figure etc).
 
     '''
-    # exp_dep =
+    # fun.f_reduce_skipfew(np.sum, , preserveaxis=0)
