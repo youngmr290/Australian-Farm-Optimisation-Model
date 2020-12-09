@@ -14,6 +14,63 @@ import numpy as np
 import Functions as fun
 na=np.newaxis
 
+
+
+#################
+# Final reports #
+#################
+def f_errors(r_vals, exp_data, trial_outdated, trials):
+    ##first check if data exists for each desired trial
+    try:
+        for row in trials:
+            r_vals[exp_data.index[row][2]]
+        status = 'good'
+    except:
+        print('''
+
+              reporting for trials that dont exist    
+
+              ''')
+        status='bad'  # exit function
+    ##second check if generating results using out of date data.
+    if any(trial_outdated[trials]):
+        print('''
+
+              Generating reports from out dated data
+
+              ''')
+    return status
+
+def pnl(lp_vars, r_vals, exp_data, trial_outdated, trials):
+    '''Returns profit and loss statement for selected trials. Multiple trials result in a stacked pnl table'''
+    ##check for errors
+    status = f_errors(r_vals, exp_data, trial_outdated, trials)
+    if status=='bad':
+        return #exit function if data doesnt exist
+
+
+##between trial functions
+###could use automatic trial selection.
+rep.f_across_trials_summary(inter, trials, criterea)
+##create intermidiates for each trial
+for row in range(len(exp_data)):
+    ##check to make sure user wants to run this trial
+    if exp_data.index[row][0] == True:
+        inter[exp_data.index[row][2]]={}
+        rep.intermediates(inter[exp_data.index[row][2]], r_vals[exp_data.index[row][2]], lp_vars[exp_data.index[row][2]])
+        ##within trial reports
+        rep.f_dse(inter[exp_data.index[row][2]])
+        rep.f_profitloss_table(inter[exp_data.index[row][2]])
+
+
+
+
+#########################################
+# intermidiate report building functions#
+#########################################
+
+
+
 def intermediates(inter, r_vals, lp_vars):
     '''
 
@@ -109,22 +166,53 @@ def intermediates(inter, r_vals, lp_vars):
     len_p5 = len(keys_p5)
 
 
+def f_rotation_landuse_summary(lp_vars, r_vals, inter, option=0):
+    '''
+    Rotation summary. With multiple output levels.
+    return options:
+    0- tuple: all results wraped in tuple
+    0- table: all rotations by lmu
+    1- table: selected rotations by lmu
+    2- table: crop and pasture area by lmu
+    3- float: total pasture area
+    4- float: total crop area
+
+    Note: variable stored in inter dict are accesible in the between trial functions
+    '''
 
     ##landuse sets
     all_pas = r_vals['rot']['all_pastures']
-    inter['pas_set'] = all_pas
     ##rotation
     phases_df = r_vals['rot']['phases']
     phases_rk = phases_df.set_index(5, append=True)  # add landuse as index level
-    rot_area = pd.Series(lp_vars['v_phase_area']) #create a series of all the phase areas
-    rot_area_rkl = rot_area.unstack().reindex(phases_rk.index, axis=0, level=0).stack() #add landuse to the axis
-    landuse_area_k = rot_area_rkl.sum(axis=0,level=1) #area of each landuse (sum lmu and rotation)
+    rot_area_rl = pd.Series(lp_vars['v_phase_area']) #create a series of all the phase areas
+    rot_area_rkl = rot_area_rl.unstack().reindex(phases_rk.index, axis=0, level=0).stack() #add landuse to the axis
+    landuse_area_kl = rot_area_rkl.sum(axis=0,level=(1,2)).unstack() #area of each landuse (sum lmu and rotation)
+    ##all rotations by lmu
+    rot_area_rl = rot_area_rl.unstack()
+    if option==1:
+        return rot_area_rl
+    ##selected rotations by lmu
+    rot_area_selected_rl = rot_area_rl[any(rot_area_rl,axis=1)]
+    if option==2:
+        return rot_area_selected_rl
     ###crop & pasture area
     ####you can now use isin pasture or crop sets to calc the area of crop or pasture
-    total_pasture_area = landuse_area_k[landuse_area_k.index.isin(all_pas)].sum()
-    total_crop_area = landuse_area_k[~landuse_area_k.index.isin(all_pas)].sum()
-    inter['pasture_area'] = total_pasture_area
-    inter['crop_area'] = total_crop_area
+    total_pasture_area_l = landuse_area_kl[landuse_area_kl.index.isin(all_pas)].sum()
+    total_crop_area_l = landuse_area_kl[~landuse_area_kl.index.isin(all_pas)].sum()
+    ##crop & pasture area by lmu
+    croppas_area = pd.DataFrame()
+    croppas_area.loc['pasture'] = inter['pasture_area_l']
+    croppas_area.loc['crop'] = inter['crop_area_l']
+    if option==3:
+        return croppas_area
+    ##store any values which are used in the between trial reports
+    inter['rot_area_rl'] = rot_area_rl
+    inter['pasture_area_l'] = total_pasture_area_l
+    inter['crop_area_l'] = total_crop_area_l
+    inter['pasture_area'] = total_pasture_area_l.sum()
+    inter['crop_area'] = total_crop_area_l.sum()
+
 
     ##mach
     contractharv_hours = pd.Series(lp_vars['v_contractharv_hours'])
@@ -362,3 +450,36 @@ def f_profitloss_table(inter):
     pnl = pnl.round(1)
     return pnl
 
+def f_landuse_summary(inter, option=0):
+    '''returns 3 tables:
+    0- all rotations by lmu
+    1- selected rotations by lmu
+    2- crop and pasture area by lmu
+    '''
+    ##all rotations by lmu
+    rot_area_rl = inter['rot_area_rl'].unstack()
+    if option==0:
+        return rot_area_rl
+    ##selected rotations by lmu
+    rot_area_selected_rl = rot_area_rl[any(rot_area_rl,axis=1)]
+    if option==1:
+        return rot_area_selected_rl
+    ##crop & pasture area by lmu
+    croppas_area = pd.DataFrame()
+    croppas_area.loc['pasture'] = inter['pasture_area_l']
+    croppas_area.loc['crop'] = inter['crop_area_l']
+    if option==2:
+        return croppas_area
+
+def f_labour_summary(inter):
+    '''Labour summary
+    0- quantity of each labour source in each period
+    1- yearly labour cost for each labour source
+    '''
+
+def f_input_summary_prices(inter):
+    '''summary of the inputs used in a trial - this is reported after SA has been applied'''
+
+
+def f_across_trials_summary(inter):
+    '''Returns results summary for all of the trials in exp'''

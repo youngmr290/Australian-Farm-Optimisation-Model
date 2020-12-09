@@ -11,10 +11,9 @@ import pandas as pd
 import pyomo.environ as pe
 import time
 import os.path
-import glob
+import sys
 from datetime import datetime
 import pickle as pkl
-import sys
 
 
 import CreateModel as crtmod
@@ -36,7 +35,7 @@ import SupFeedPyomo as suppy
 import StubblePyomo as stubpy
 import StockPyomo as spy
 import CorePyomo as core
-import Report as rep
+import ReportFunctions as rep
 
 force_run=True #force precalcs to be run
 
@@ -83,40 +82,13 @@ exp_data1['run']=False
 exp_data1['runpyomo']=False
 
 
-##here we check if precalcs and pyomo need to br recalculated. this is slightly complicated by the fact that columns and rows can be added to exp.xlsx
-##and the fact that a user can opt not to run a trial even if it is out of date so the run requirment must be tracked
-##have any sa cols been added or removed, are the values the same, has the py code changed since last run?
-###get a list of all sa cols (including the name of the trial because two trial may have the same values but have a different name)
-keys_hist = list(prev_exp.reset_index().columns[2:].values)
-keys_current = list(exp_data1.reset_index().columns[2:].values)
-sorted_list = sorted(glob.iglob('*.py'), key=os.path.getmtime)
-####if only report.py has been updated precalcs don't need to be re-run therefore newest is equal to the newest py file that isn't report
-if sorted_list[-1] != 'Report.py':
-    newest = sorted_list[-1]
-else: newest = sorted_list[-2]
-newest_pyomo = max(glob.iglob('*pyomo.py'), key=os.path.getmtime)
+##check if precalcs and pyomo need to be recalculated.
+##precalcs are rerun if
+##  1. exp.xlsx has changed
+##  2. any python module has been updated
+##  3. the trial needed to be run last time but the user opted not to run that trial
 
-try: #incase pkl_exp doesn't exist
-    ###if headers are the same, code is the same and the excel inputs are the same then test if the values in exp.xlxs are the same
-    if keys_current==keys_hist and os.path.getmtime('pkl_exp.pkl') >= os.path.getmtime(newest) and os.path.getmtime('pkl_exp.pkl') >= os.path.getmtime("Universal.xlsx") and os.path.getmtime('pkl_exp.pkl') >= os.path.getmtime("Property.xlsx"):
-        ###check if each exp has the same values in exp.xlsx as last time it was run.
-        i3 = prev_exp.reset_index().set_index(keys_hist).index  # have to reset index because the name of the trial is going to be included in the new index so it must first be dropped from current index
-        i4 = exp_data1.reset_index().set_index(keys_current).index
-        exp_data1.loc[~i4.isin(i3),('run', '', '', '')] = True
-    ###if headers are different or py code has changed then all trials need to be re-run
-    else: exp_data1['run']=True
-    ###pyomo must be run if pyomo modules/code have changed since the trial was last run (also run if params are different - calculated later). Note this will also trigger a re run of pyomo if any value in exp.xlsx change - this is not required because it will be picked up by different param dicts, but it was easy to reuse code
-    if os.path.getmtime('pkl_exp.pkl') >= os.path.getmtime(newest_pyomo):
-        ###check if each exp has the same values in exp.xlsx as last time it was run. - this keeps track of the need to run trials that the user opts not to run.
-        i3 = prev_exp.reset_index().set_index(keys_hist).index  # have to reset index because the name of the trial is going to be included in the new index so it must first be dropped from current index
-        i4 = exp_data1.reset_index().set_index(keys_current).index
-        exp_data1.loc[~i4.isin(i3),('runpyomo', '', '', '')] = True
-    else: exp_data1['runpyomo']=True
-except FileNotFoundError:
-    exp_data1['run']=True
-    exp_data1['runpyomo'] = True
-
-
+exp_data1 = fun.f_run_required(prev_exp, exp_data1)
 
 ##print out number of trials to run
 total_trials=sum(exp_data.index[row][0] == True for row in range(len(exp_data)))
@@ -338,7 +310,7 @@ for row in range(len(exp_data)):
 
     ##store pyomo variable output as a dict
     variables=model.component_objects(pe.Var, active=True)
-    lp_vars['%s'%exp_data.index[row][2]]={str(v):{s:v[s].value for s in v} for v in variables }    #creates dict with variable in it. This is tricky since pyomo returns a generator object
+    lp_vars['%s'%exp_data.index[row][2]]={str(v):{s:v[s].value for s in v} for v in variables}    #creates dict with variable in it. This is tricky since pyomo returns a generator object
 
 ##drop results into pikle file
 with open('pkl_lp_vars.pkl', "wb") as f:
@@ -355,17 +327,4 @@ print('total trials completed: ', run)
 try:
     print("average time taken for each loop: ", (end_time1 - start_time1)/run)
 except ZeroDivisionError: pass
-    
-#############################
-# Reports and intermidiates #
-#############################
-inter={}
-##create intermidiates for each trial
-for row in range(len(exp_data)):
-    ##check to make sure user wants to run this trial
-    if exp_data1.index[row][0] == True:
-        inter[exp_data.index[row][2]]={}
-        rep.intermediates(inter[exp_data.index[row][2]], r_vals[exp_data.index[row][2]], lp_vars[exp_data.index[row][2]])  
-##create reports
-rep.report1(inter)
     
