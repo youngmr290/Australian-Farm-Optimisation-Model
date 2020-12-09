@@ -2740,24 +2740,24 @@ def generator(params,r_vals,plots = False):
         #store postprocessing and report vars#
         ######################################
         ###sire
-            o_numbers_start_sire[p] = numbers_start_sire  # needed outside if so that dvp0 (p0) has start numbers
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p, ...] > 0):
-                ###store output variables for the post processing
-                o_numbers_end_sire[p] = pp_numbers_end_sire
-                o_ffcfw_sire[p] = ffcfw_sire
-                o_pi_sire[p] = pi_sire
-                o_mei_solid_sire[p] = mei_solid_sire
-                o_ch4_total_sire[p] = ch4_total_sire
-                o_cfw_sire[p] = cfw_sire
-                o_sl_sire[p] = sl_sire
-                o_fd_sire[p] = fd_sire
-                o_fd_min_sire[p] = fd_min_sire
-                o_ss_sire[p] = ss_sire
-                o_rc_start_sire[p] = rc_start_sire
-                o_ebg_sire[p] = ebg_sire
+        o_numbers_start_sire[p] = numbers_start_sire  # needed outside if so that dvp0 (p0) has start numbers
+        if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p, ...] > 0):
+            ###store output variables for the post processing
+            o_numbers_end_sire[p] = pp_numbers_end_sire
+            o_ffcfw_sire[p] = ffcfw_sire
+            o_pi_sire[p] = pi_sire
+            o_mei_solid_sire[p] = mei_solid_sire
+            o_ch4_total_sire[p] = ch4_total_sire
+            o_cfw_sire[p] = cfw_sire
+            o_sl_sire[p] = sl_sire
+            o_fd_sire[p] = fd_sire
+            o_fd_min_sire[p] = fd_min_sire
+            o_ss_sire[p] = ss_sire
+            o_rc_start_sire[p] = rc_start_sire
+            o_ebg_sire[p] = ebg_sire
 
-                ###store report variables for dams - individual variables can be deleted if not needed - store in report dictionary in the report section at end of this module
-                o_nw_start_sire[p] = nw_start_sire
+            ###store report variables for dams - individual variables can be deleted if not needed - store in report dictionary in the report section at end of this module
+            o_nw_start_sire[p] = nw_start_sire
 
     ###dams
         o_numbers_start_dams[p] = numbers_start_dams #needed outside if so that dvp0 (p0) has start numbers
@@ -4911,7 +4911,7 @@ def generator(params,r_vals,plots = False):
     r_vals['dsenw_k3k5p6tvnwzixyg3'] = dsenw_k3k5p6tva1e1b1nwzida0e0b0xyg3
     r_vals['dsemj_k3k5p6tvnwzixyg3'] = dsemj_k3k5p6tva1e1b1nwzida0e0b0xyg3
 
-    r_vals['cost_cg0 '] = cost_ctva1e1b1nwzida0e0b0xyg0
+    r_vals['cost_cg0'] = cost_ctva1e1b1nwzida0e0b0xyg0
     r_vals['cost_k2ctva1nwziyg1'] = cost_k2ctva1e1b1nwzida0e0b0xyg1
     r_vals['cost_k3k5ctvnwzixyg3'] =cost_k3k5ctva1e1b1nwzida0e0b0xyg3
 
@@ -4919,7 +4919,7 @@ def generator(params,r_vals,plots = False):
     r_vals['salevalue_k2ctva1nwziyg1'] = salevalue_k2ctva1e1b1nwzida0e0b0xyg1
     r_vals['salevalue_k3k5ctvnwzixyg3'] =salevalue_k3k5ctva1e1b1nwzida0e0b0xyg3
 
-    r_vals['woolvalue_cg0 '] = woolvalue_ctva1e1b1nwzida0e0b0xyg0
+    r_vals['woolvalue_cg0'] = woolvalue_ctva1e1b1nwzida0e0b0xyg0
     r_vals['woolvalue_k2ctva1nwziyg1'] = woolvalue_k2ctva1e1b1nwzida0e0b0xyg1
     r_vals['woolvalue_k3k5ctvnwzixyg3'] =woolvalue_k3k5ctva1e1b1nwzida0e0b0xyg3
 

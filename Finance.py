@@ -12,8 +12,10 @@ formatting; try to avoid capitals (reduces possible mistakes in future)
 
 @author: young
 """
+##python modules
+import pandas as pd
 
-#MUDAS modules
+##MUDAS modules
 import UniversalInputs as uinp
 import PropertyInputs as pinp
 
@@ -44,9 +46,10 @@ def credit_interest():
 #################
 def overheads(params, r_vals):
     overheads=pinp.general['overheads'] 
-    overheads = overheads.squeeze().sum()/ len(uinp.structure['cashflow_periods'])    
+    overheads = overheads.squeeze().sum()/ len(uinp.structure['cashflow_periods'])
+    overheads = dict.fromkeys(uinp.structure['cashflow_periods'], overheads)
     params['overheads'] = overheads
-    r_vals['overheads'] = overheads
+    r_vals['overheads'] = pd.Series(overheads)
 
 #################
 # report vals   #

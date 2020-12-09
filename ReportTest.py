@@ -30,6 +30,6 @@ for row in range(len(exp_data)):
     if exp_data.index[row][0] == True:
         inter[exp_data.index[row][2]]={}
         rep.intermediates(inter[exp_data.index[row][2]], r_vals[exp_data.index[row][2]], lp_vars[exp_data.index[row][2]])
-##create reports
-rep.dse(inter, r_vals)
-rep.profitloss_table(inter)
+        ##create reports
+        rep.f_dse(inter[exp_data.index[row][2]])
+        rep.f_profitloss_table(inter[exp_data.index[row][2]])
