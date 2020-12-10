@@ -478,7 +478,7 @@ def findDiff(d1, d2):
                 a = True
                 return a
             else:
-                if type(d1[k]) is dict:
+                if type(d1[k]) is dict and type(d2[k]) is dict: #need to check both are dicts incase extra level was added.
                     # print('going level deeper',k)
                     a=findDiff(d1[k],d2[k])
                     # print(k,a)
