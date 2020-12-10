@@ -3460,6 +3460,8 @@ def generator(params,r_vals,plots = False):
     ss_offs_p9 = o_ss_offs[shear_mask_p3]
     ###micron price guide
     woolp_mpg_w4 = sfun.f_woolprice().astype(dtype)/100
+    r_vals['woolp_mpg_w4'] = woolp_mpg_w4
+    r_vals['fd_range'] = uinp.sheep['i_woolp_fd_range_w4']
     woolvalue_pa1e1b1nwzida0e0b0xyg0[shear_mask_p0], woolp_stbnib_sire = sfun.f_wool_value(woolp_mpg_w4, cfw_sire_p9, fd_sire_p9, sl_sire_p9, ss_sire_p9, vm_p9a1e1b1nwzida0e0b0xyg0,
                                                                              pmb_p9a1e1b1nwzida0e0b0xyg0, dtype)
     woolvalue_pa1e1b1nwzida0e0b0xyg1[shear_mask_p1], woolp_stbnib_dams = sfun.f_wool_value(woolp_mpg_w4, cfw_dams_p9, fd_dams_p9, sl_dams_p9, ss_dams_p9, vm_p9a1e1b1nwzida0e0b0xyg1,
@@ -3480,7 +3482,11 @@ def generator(params,r_vals,plots = False):
     month_scalar_s7pa1e1b1nwzida0e0b0xyg = price_adj_months_s7s9m4a1e1b1nwzida0e0b0xyg[:, 0, a_m4_p] #month to p
     month_discount_s7pa1e1b1nwzida0e0b0xyg = price_adj_months_s7s9m4a1e1b1nwzida0e0b0xyg[:, 1, a_m4_p] #month to p
     ###Sale price grids for selected price percentile and the scalars for LW & quality score
-    grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(sfun.f_saleprice(score_pricescalar_s7s5s6, weight_pricescalar_s7s5s6, dtype),uinp.structure['i_p_pos']-1)
+    grid_price_s7s5s6 = sfun.f_saleprice(score_pricescalar_s7s5s6, weight_pricescalar_s7s5s6, dtype)
+    r_vals['grid_price_s7s5s6'] = grid_price_s7s5s6
+    r_vals['weight_range_s7s5'] = uinp.sheep['i_salep_weight_range_s7s5'].reshape(uinp.sheep['i_s7_len'], uinp.sheep['i_s5_len'])
+    r_vals['salegrid_keys'] = uinp.sheep['i_salegrid_keys']
+    grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(grid_price_s7s5s6,uinp.structure['i_p_pos']-1)
     ###apply condensed periods mask
     month_scalar_s7p9a1e1b1nwzida0e0b0xyg0 = month_scalar_s7pa1e1b1nwzida0e0b0xyg[:,sale_mask_p0] 
     month_scalar_s7p9a1e1b1nwzida0e0b0xyg1 = month_scalar_s7pa1e1b1nwzida0e0b0xyg[:,sale_mask_p1] 

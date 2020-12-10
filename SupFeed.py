@@ -37,7 +37,7 @@ def buy_grain_price(params, r_vals):
         -cartage cost
     '''
     ##purchase price from neighbour is farm gate price plus transaction and transport
-    price_df = crp.farmgate_grain_price()
+    price_df = crp.f_farmgate_grain_price()
     cartage=uinp.price['sup_cartage']
     transaction_fee=uinp.price['sup_transaction']
     price_df = price_df + cartage + transaction_fee

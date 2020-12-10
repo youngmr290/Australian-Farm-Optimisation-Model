@@ -277,6 +277,8 @@ def exp(row):
                         file.write ("   %s %s\n" %(index, v[index].value))
                 except: pass 
         file.close()
+        ##store profit
+        r_vals['profit'] = pe.value(model.profit)
         ##this prints stuff for each trial - trial name, overall profit
         print("\nDisplaying Solution for trial: %s\n" %exp_data.index[row][2] , '-'*60,'\n%s' %pe.value(model.profit))
         ##this check if the solver is optimal - if infeasible or error the model will quit

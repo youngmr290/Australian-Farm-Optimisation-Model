@@ -429,7 +429,7 @@ def f_sa(value, sa, sa_type=0, target=0, value_min=-np.inf,pandas=False, axis=0)
 
     return value
 
-def f_run_required(prev_exp, exp_data1):
+def f_run_required(prev_exp, exp_data1, check_pyomo=True):
     '''
     here we check if precalcs and pyomo need to be recalculated. this is slightly complicated by the fact that columns and rows can be added to exp.xlsx
     and the fact that a user can opt not to run a trial even if it is out of date so the run requirment must be tracked
@@ -457,7 +457,7 @@ def f_run_required(prev_exp, exp_data1):
         ###if headers are different or py code has changed then all trials need to be re-run
         else: exp_data1['run']=True
         ###pyomo must be run if pyomo modules/code have changed since the trial was last run (also run if params are different - calculated later). Note this will also trigger a re run of pyomo if any value in exp.xlsx change - this is not required because it will be picked up by different param dicts, but it was easy to reuse code
-        if os.path.getmtime('pkl_exp.pkl') >= os.path.getmtime(newest_pyomo):
+        if os.path.getmtime('pkl_exp.pkl') >= os.path.getmtime(newest_pyomo) and check_pyomo==True:
             ###check if each trial has the same values in exp.xlsx as last time it was run. - this keeps track of the need to run trials that the user opts not to run.
             i3 = prev_exp.reset_index().set_index(keys_hist).index  # have to reset index because the name of the trial is going to be included in the new index so it must first be dropped from current index
             i4 = exp_data1.reset_index().set_index(keys_current).index

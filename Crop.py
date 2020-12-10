@@ -77,12 +77,12 @@ if len(phases_df) != len(base_yields):
 #price                 #
 ########################
 
-def farmgate_grain_price():
+def f_farmgate_grain_price(r_vals={}):
     '''
 
     Returns
     -------
-    Dataframe - used below and to calculate insurance and sup feed purchase price. If args is True then it returns the overall price accounting for proportion, this is used in sim 
+    Dataframe - used below and to calculate insurance and sup feed purchase price.
                 Price includes:
                 -offspec grain
                 -cartage cost
@@ -96,7 +96,9 @@ def farmgate_grain_price():
             + pinp.general['rail_cartage'] + uinp.price['flagfall'])
     tols= grain_price_info_df['grain_tolls']
     total_fees= cartage+tols
-    return price_df.sub(total_fees, axis=0).clip(0)
+    farmgate_price = price_df.sub(total_fees, axis=0).clip(0)
+    r_vals['farmgate_price'] = farmgate_price
+    return farmgate_price
 
 
 def grain_price(params, r_vals):
@@ -112,7 +114,7 @@ def grain_price(params, r_vals):
     length = dt.timedelta(days=uinp.price['grain_income_length'])
     p_dates = per.cashflow_periods()['start date']
     p_name = per.cashflow_periods()['cash period']
-    farm_gate_price=farmgate_grain_price()
+    farm_gate_price=f_farmgate_grain_price(r_vals)
     allocation=fun.period_allocation(p_dates, p_name, start, length).set_index('period').squeeze()
     cols = pd.MultiIndex.from_product([allocation.index, farm_gate_price.columns])
     farm_gate_price = farm_gate_price.reindex(cols, axis=1,level=1)#adds level to header so i can mul in the next step
@@ -561,7 +563,7 @@ def insurance(r_vals):
         *note - arable area is already counted for by the yield calculation.
     '''
     ##first need to combine each grain pool to get average price
-    ave_price=np.multiply(farmgate_grain_price(),uinp.price['grain_price'][['prop_firsts','prop_seconds']]).sum(axis=1)#np multiply doen't look at the column names and indexs
+    ave_price=np.multiply(f_farmgate_grain_price(),uinp.price['grain_price'][['prop_firsts','prop_seconds']]).sum(axis=1)#np multiply doen't look at the column names and indexs
     insurance=ave_price*uinp.price['grain_price']['insurance']/100  #div by 100 because insurance is a percent
     rot_insurance = rot_yield().mul(insurance, axis=0, level = 1)/1000 #divide by 1000 to convert yield to tonnes    
     rot_insurance = rot_insurance.droplevel(1).unstack()
