@@ -33,17 +33,6 @@ def f_errors(r_vals, exp_data_index, trial_outdated, trials):
               ''')
     return
 
-def f_make_table(data, index, header):
-    '''function to return table
-    ^currently just returns a df but there are python packages which make nice tables'''
-    return pd.DataFrame(data, index=index, columns=header)
-
-def produce_df(data, rows, columns, row_names=None, column_names=None):
-    """rows is a list of lists that will be used to build a MultiIndex
-    columns is a list of lists that will be used to build a MultiIndex"""
-    row_index = pd.MultiIndex.from_product(rows, names=row_names)
-    col_index = pd.MultiIndex.from_product(columns, names=column_names)
-    return pd.DataFrame(data, index=row_index, columns=col_index)
 
 #################
 # Final reports #
@@ -110,35 +99,6 @@ def f_croparea_profit(lp_vars, r_vals, trial_outdated, exp_data_index, trials, a
         area.append(f_area_summary(lp_vars[exp_data_index[row][2]], r_vals[exp_data_index[row][2]], option=area_option))
     plt.plot(area, profit)
     plt.show()
-
-# def f_saleprice(r_vals, trial_outdated, exp_data_index, trials, option, grid, weight, fs):
-#     '''Returns price summaries
-#     :param r_vals: dict - report variable
-#     :param trial_outdated: series indicating which trials are outdated
-#     :param exp_data_index: trial names - in the same order as exp.xlsx
-#     :param trials: trials to return info for
-#     :param option:
-#             0: farmgate grain price
-#             1: wool price STB price for FNF (free or nearly free of fault)
-#             2: sale price for specified grid at given weight and fat score
-#     :param grid: list - sale prices grids you want to view the price for
-#     :param weight: float/int - weight you want to view the price for
-#     :param fs: int - fat score you want to view the price for
-#     :return: df
-#     '''
-#
-#     ##check for errors
-#     try:
-#         f_errors(r_vals, exp_data_index, trial_outdated, trials)
-#     except exc.TrialError:
-#         print('''Trials for reporting dont all exist''')
-#         return
-#     ##loop through trials and generate pnl table
-#     price_stacked = pd.DataFrame() #create df to append pnl table from each trial
-#     for row in trials:
-#         price = f_price_summary(r_vals[exp_data_index[row][2]], **kwargs)
-#         price = pd.concat([price], keys=[exp_data_index[row][2]], names=['Trial']) #add trial name as index level
-#         price_stacked.append(price)
 
 
 

@@ -497,6 +497,18 @@ def findDiff(d1, d2):
                             return a #only return if true
     return a
 
+def f_make_table(data, index, header):
+    '''function to return table
+    ^currently just returns a df but there are python packages which make nice tables'''
+    return pd.DataFrame(data, index=index, columns=header)
+
+def produce_df(data, rows, columns, row_names=None, column_names=None):
+    """rows is a list of lists that will be used to build a MultiIndex
+    columns is a list of lists that will be used to build a MultiIndex"""
+    row_index = pd.MultiIndex.from_product(rows, names=row_names)
+    col_index = pd.MultiIndex.from_product(columns, names=column_names)
+    return pd.DataFrame(data, index=row_index, columns=col_index)
+
 
 #######################################
 #function for feed budget & livestock #

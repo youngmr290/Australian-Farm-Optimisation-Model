@@ -210,7 +210,7 @@ def stockpyomo_local(params):
         model.del_component(model.p_progprov_dams)
     except AttributeError:
         pass
-    model.p_progprov_dams = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_prog, model.s_wean_times, model.s_lw_prog,
+    model.p_progprov_dams = pe.Param(model.s_k3_damage_offs, model.s_sale_prog, model.s_wean_times, model.s_lw_prog,
                               model.s_season_types, model.s_tol, model.s_damage, model.s_gender, model.s_gen_merit_dams, model.s_groups_prog, model.s_groups_dams, model.s_lw_dams,
                               initialize=params['p_progprov_dams'], default=0.0, doc='number of prodgeny provided to dams')
     try:
@@ -226,7 +226,7 @@ def stockpyomo_local(params):
         model.del_component(model.p_progprov_offs)
     except AttributeError:
         pass
-    model.p_progprov_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_prog, model.s_wean_times, model.s_lw_prog,
+    model.p_progprov_offs = pe.Param(model.s_k3_damage_offs, model.s_sale_prog, model.s_wean_times, model.s_lw_prog,
                               model.s_season_types, model.s_tol, model.s_damage, model.s_gender, model.s_gen_merit_offs, model.s_groups_offs, model.s_lw_offs,
                               initialize=params['p_progprov_offs'], default=0.0, doc='number of prodgeny provided to dams')
     try:
@@ -714,9 +714,9 @@ def stockpyomo_local(params):
         pass
     def prog2damR(model, k3, k5, v1, a, z, i, y1, g9, w9):
         if v1=='dvp0' and any(model.p_progreq_dams[k2, k3, k5, a, w18, z, i, y1, g1, g9, w9] for k2 in model.s_k2_birth_dams for w18 in model.s_lw_dams for g1 in model.s_groups_dams):
-            return (sum(- model.v_prog[k5, t2, w28, z, i, d, a, x, g2] * model.p_progprov_dams[k3, k5, t2, a, w28, z, i, d, x, y1, g2,g9,w9]
+            return (sum(- model.v_prog[k5, t2, w28, z, i, d, a, x, g2] * model.p_progprov_dams[k3, t2, a, w28, z, i, d, x, y1, g2,g9,w9]
                         for d in model.s_damage for x in model.s_gender for w28 in model.s_lw_prog for t2 in model.s_sale_prog for g2 in model.s_groups_prog
-                        if model.p_progprov_dams[k3, k5, t2, a, w28, z, i, d, x, y1, g2, g9, w9]!= 0)
+                        if model.p_progprov_dams[k3, t2, a, w28, z, i, d, x, y1, g2, g9, w9]!= 0)
                        + sum(model.v_dams[k2, t1, v1, a, n1, w18, z, i, y1, g1]  * model.p_progreq_dams[k2, k3, k5, a, w18, z, i, y1, g1, g9, w9]
                         for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for n1 in model.s_nut_dams for w18 in model.s_lw_dams for g1 in model.s_groups_dams
                              if model.p_progreq_dams[k2, k3, k5, a, w18, z, i, y1, g1, g9, w9]!= 0))<=0
@@ -736,9 +736,9 @@ def stockpyomo_local(params):
         pass
     def prog2offsR(model, k3, k5, v3, a, z, i, x, y3, g3, w9):
         if v3=='dvp0' and any(model.p_progreq_offs[v3, w38, i, x, g3, w9] for w38 in model.s_lw_offs):
-            return (sum(- model.v_prog[k5, t2, w28, z, i, d, a, x, g3] * model.p_progprov_offs[k3, k5, t2, a, w28, z, i, d, x, y3, g3, w9]
+            return (sum(- model.v_prog[k5, t2, w28, z, i, d, a, x, g3] * model.p_progprov_offs[k3, t2, a, w28, z, i, d, x, y3, g3, w9]
                         for d in model.s_damage for w28 in model.s_lw_prog for t2 in model.s_sale_prog
-                        if model.p_progprov_offs[k3, k5, t2, a, w28, z, i, d, x, y3, g3, w9]!= 0)
+                        if model.p_progprov_offs[k3, t2, a, w28, z, i, d, x, y3, g3, w9]!= 0)
                        + sum(model.v_offs[k3,k5,t3,v3,n3,w38,z,i,a,x,y3,g3]  * model.p_progreq_offs[v3, w38, i, x, g3, w9]
                         for t3 in model.s_sale_offs for n3 in model.s_nut_dams for w38 in model.s_lw_offs if model.p_progreq_offs[v3, w38, i, x, g3, w9]!= 0))<=0
         else:
