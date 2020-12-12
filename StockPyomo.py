@@ -343,6 +343,14 @@ def stockpyomo_local(params):
                                   model.s_lw_dams, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams,
                                   initialize=params['p_cashflow_dams'], default=0.0, doc='cashflow dams')
     try:
+        model.del_component(model.p_cashflow_prog_index)
+        model.del_component(model.p_cashflow_prog)
+    except AttributeError:
+        pass
+    model.p_cashflow_prog = pe.Param(model.s_cashflow_periods, model.s_sale_prog, model.s_wean_times, model.s_lw_prog,
+                                     model.s_season_types, model.s_tol, model.s_gender, model.s_groups_dams,
+                                  initialize=params['p_cashflow_prog'], default=0.0, doc='cashflow prog - made up from just sale value')
+    try:
         model.del_component(model.p_cashflow_offs_index)
         model.del_component(model.p_cashflow_offs)
     except AttributeError:
@@ -736,7 +744,7 @@ def stockpyomo_local(params):
         pass
     def prog2offsR(model, k3, k5, v3, a, z, i, x, y3, g3, w9):
         if v3=='dvp0' and any(model.p_progreq_offs[v3, w38, i, x, g3, w9] for w38 in model.s_lw_offs):
-            return (sum(- model.v_prog[k5, t2, w28, z, i, d, a, x, g3] * model.p_progprov_offs[k3, t2, a, w28, z, i, d, x, y3, g3, w9]
+            return (sum(- model.v_prog[k5, t2, w28, z, i, d, a, x, g3] * model.p_progprov_offs[k3, t2, a, w28, z, i, d, x, y3, g3, w9] #use g3 (same as g2)
                         for d in model.s_damage for w28 in model.s_lw_prog for t2 in model.s_sale_prog
                         if model.p_progprov_offs[k3, t2, a, w28, z, i, d, x, y3, g3, w9]!= 0)
                        + sum(model.v_offs[k3,k5,t3,v3,n3,w38,z,i,a,x,y3,g3]  * model.p_progreq_offs[v3, w38, i, x, g3, w9]
@@ -823,8 +831,11 @@ def stock_cashflow(model,c):
     # infrastructure = sum(model.p_rm_stockinfra[h3,c] * model.v_infrastructure[h3] for h3 in model.s_infrastructure)
     stock = sum(model.v_sire[g0] * model.p_cashflow_sire[c,g0] for g0 in model.s_groups_sire) \
            + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_cashflow_dams[k2,c,t1,v1,a,n1,w1,z,i,y1,g1]
-                     for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
-                     for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams)
+                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
+                      for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams)
+                + sum(model.v_prog[k5, t2, w2, z, i, d, a, x, g2] * model.p_cashflow_prog[t2, a, w2, z, i, x, g2]
+                      for k5 in model.s_k5_birth_offs for t2 in model.s_sale_prog for w2 in model.s_lw_prof for d in model.s_damage
+                      for x in model.s_gender for g2 in model.s_groups_prog)
                 + sum(model.v_offs[k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_cashflow_offs[k3,k5,c,t3,v3,n3,w3,z,i,a,x,y3,g3]
                       for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
                       for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs)
