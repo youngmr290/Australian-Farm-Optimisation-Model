@@ -38,23 +38,42 @@ trial_outdated = exp_data['run'] #returns true if trial is out of date
 
 run_pnl = True #table of profit and loss
 run_profitarea = False #graph profit by crop area
-run_saleprice = False #table of saleprices
+run_saleprice = True #table of saleprices
+run_cfw_dams = True #table of cfw
 
 
 ##run report functions
 if run_pnl:
-    rep.f_pnl(lp_vars, r_vals, trial_outdated, exp_data_index, trials=[1,2])
+    func = rep.f_profitloss_table
+    trials = [1, 1]
+    pnl = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials)
 
 if run_profitarea:
-    rep.f_croparea_profit(lp_vars, r_vals, trial_outdated, exp_data_index, trials=[1,2], option=0)
+    profit_option = 0
+    area_option = 4
+    trials = [1]
+    rep.f_croparea_profit(lp_vars, r_vals, trial_outdated, exp_data_index, trials, area_option, profit_option)
 
 if run_saleprice:
-    ##select which grids, weights and fat scores to return
-    grid = [0,5,6] #has to be int between 0 and 7 inclusive
-    weight = [22,40,25] #can be anything, weight is interpolated
-    fs = [2,3,2] #must be int between 1 and 5 inclusive
-    rep.f_saleprice(lp_vars, r_vals, trial_outdated, exp_data_index, trials=[1,2], grid=grid, weight=weight, fs=fs)
+    func = rep.f_price_summary
+    trials = [1, 1]
+    option = 0
+    grid = [0,5,6]
+    weight = [22,40,25]
+    fs = [2,3,2]
+    rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, option=option, grid=grid, weight=weight, fs=fs)
 
-
-
+if run_cfw_dams:
+    func = rep.f_stock_summary
+    trials = [1, 1]
+    prod = 'cfw_hdmob_k2tva1nwziyg1' #keys for r_vals
+    group = 'dams'
+    arith = 1
+    arith_axis = [6]
+    index =[0,1,5]
+    cols =[2]
+    axis_slice = {}
+    axis_slice[0] = [0, 2, 1]
+    cfw_dams = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, prod=prod, group=group,
+                           arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
 
