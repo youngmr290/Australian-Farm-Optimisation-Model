@@ -458,6 +458,62 @@ def f_stock_reshape(lp_vars, r_vals):
     stock_vars['woolvalue_k3k5ctvnwziaxyg3'] = r_vals['stock']['woolvalue_k3k5ctvnwziaxyg3'].reshape(offscost_shape)
     return stock_vars
 
+def f_pasture_reshape(lp_vars, r_vals):
+    '''
+    Reshape pasture lp variables into numpy array
+
+    :param lp_vars: lp variables
+    :return: dict
+    '''
+    keys_d = r_vals['pas']['keys_d']
+    keys_v = r_vals['pas']['keys_v']
+    keys_f = r_vals['pas']['keys_f']
+    keys_g = r_vals['pas']['keys_g']
+    keys_l = r_vals['pas']['keys_l']
+    keys_o = r_vals['pas']['keys_o']
+    keys_p = r_vals['pas']['keys_p']
+    keys_r = r_vals['pas']['keys_r']
+    keys_t = r_vals['pas']['keys_t']
+    keys_k = r_vals['pas']['keys_k']
+
+    len_d = len(keys_d)
+    len_v = len(keys_v)
+    len_f = len(keys_f)
+    len_g = len(keys_g)
+    len_l = len(keys_l)
+    len_o = len(keys_o)
+    len_p = len(keys_p)
+    len_r = len(keys_r)
+    len_t = len(keys_t)
+    len_k = len(keys_k)
+
+    ##dict to store reshaped pasture stuff in
+    pas_vars = {}
+
+    ##shapes
+    vgoflt = len_v, len_g, len_o, len_f, len_l, len_t
+    dft = len_d, len_f, len_t
+
+    ##reshape green pasture hectare variable
+    greenpas_ha = np.array(list(lp_vars['v_greenpas_ha'].values()))
+    greenpas_ha_vgoflt = greenpas_ha.reshape(vgoflt)
+    greenpas_ha_vgoflt[greenpas_ha_vgoflt==None] = 0 #replace None with 0
+    pas_vars['greenpas_ha_vgoflt'] = greenpas_ha_vgoflt
+
+    ##reshape green pasture hectare variable
+    drypas_transfer = np.array(list(lp_vars['v_drypas_transfer'].values()))
+    drypas_transfer_dft = drypas_transfer.reshape(dft)
+    drypas_transfer_dft[drypas_transfer_dft==None] = 0 #replace None with 0
+    pas_vars['drypas_transfer_dft'] = drypas_transfer_dft
+
+    ##reshape green pasture hectare variable
+    nap_transfer = np.array(list(lp_vars['v_nap_transfer'].values()))
+    nap_transfer_dft = nap_transfer.reshape(dft)
+    nap_transfer_dft[nap_transfer_dft==None] = 0 #replace None with 0
+    pas_vars['nap_transfer_dft'] = nap_transfer_dft
+
+    return pas_vars
+
 def f_stock_cash_summary(lp_vars, r_vals):
     '''
     Returns:
@@ -515,8 +571,26 @@ def f_stock_cash_summary(lp_vars, r_vals):
 
     return stocksale_c, wool_c, sirecost_c, stockcost_c, sup_cost_c
 
-def f_pasture_summary():
-    ''''''
+def f_foo_summary(lp_vars, r_vals):
+    '''
+    Returns total foo at the end of each feed period.
+    '''
+    ##get reshaped variable
+    pas_vars = f_pasture_reshape(lp_vars, r_vals)
+
+    ##green ha
+    greenpas_ha_vgoflt = pas_vars['greenpas_ha_vgoflt']
+
+    ##dry transfer eg tonnes of dry at end of period
+    drypas_transfer_dft = pas_vars['drypas_transfer_dft']
+
+    ##dry transfer eg tonnes of dry at end of period
+    nap_transfer_dft = pas_vars['nap_transfer_dft']
+
+    ##green foo
+
+    ##order array and keys and make table
+    f_numpy2df()
 
 def f_labour_summary(lp_vars, r_vals, option=0):
     '''
@@ -709,6 +783,7 @@ def f_stock_summary(lp_vars, r_vals, **kwargs):
             1: production multipled by numbers and summed
             2: production weighted average with numbers
     :key arith_axis: list: axis to preform arithmetic operation along.
+    :key keepdims: bool: keep axis in the arith opteration.
     :key index: list: axis you want as the index of pandas df (order of list is the index level order).
     :key cols: list: axis you want as the cols of pandas df (order of list is the col level order).
     :key axis_slice: dict: keys (int) is the axis. value (list) is the start, stop and step of the slice
@@ -717,6 +792,7 @@ def f_stock_summary(lp_vars, r_vals, **kwargs):
     ##unpack dict
     arith = kwargs['arith']
     arith_axis = kwargs['arith_axis']
+    keepdims = kwargs['keepdims']
     index = kwargs['index']
     cols = kwargs['cols']
     prod_key = kwargs['prod']
@@ -753,6 +829,7 @@ def f_stock_summary(lp_vars, r_vals, **kwargs):
         numbers = stock_vars['offs_numbers_k3k5tvnwziaxyg3']
         keys = stock_vars['offs_keys_k3k5tvnwziaxy1g3']
 
+
     ##slice axis - slice the keys and the array - if user hasnt specified slice the whole axis will be included
     sl = [slice(None)] * prod.ndim
     for axis, slc in axis_slice.items():
@@ -765,13 +842,31 @@ def f_stock_summary(lp_vars, r_vals, **kwargs):
     numbers = numbers[tuple(sl)]
     prod = prod[tuple(sl)]
 
+    prod = f_arith(prod, numbers, arith, arith_axis, keepdims)
+    prod = f_numpy2df(prod, keys, index, cols)
+    return prod
+
+def f_arith(prod, weight, arith, axis, keepdims):
+    '''
+
+    :param prod: array: production param
+    :param weight: array: weights (typically the variable associated with the prod param)
+    :param arith: int: arith option
+    :param axis: list: axes to preform arith along
+    :param keepdims:
+    :return: array
+    '''
     ##option 1
     if arith == 1:
-        prod = fun.f_weighted_average(prod, numbers, tuple(arith_axis), keepdims=True)
+        prod = fun.f_weighted_average(prod, weight, tuple(axis), keepdims=keepdims)
     ##option 2
     if arith == 2:
-        prod = np.sum(prod * numbers, tuple(arith_axis), keepdims=True)
+        prod = np.sum(prod * weight, tuple(axis), keepdims=keepdims)
+    return prod
 
+def f_numpy2df(prod, keys, index, cols):
+    if prod.size <=1 and prod.ndim <=1:
+        return pd.DataFrame(prod) #dont need to reshape etc if everything is summed and prod is just one number
     ##move x axis to front
     dest = list(range(len(index)))
     prod = np.moveaxis(prod, index, dest)
@@ -801,6 +896,7 @@ def f_stock_summary(lp_vars, r_vals, **kwargs):
     prod = prod.reshape(x_len, y_len)
 
     ##make df
-    prod = produce_df(prod, x_keys, y_keys)
+    prod = fun.f_produce_df(prod, x_keys, y_keys)
+
     return prod
 

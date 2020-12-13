@@ -81,7 +81,7 @@ def generator(params,r_vals,plots = False):
     na=np.newaxis
     ## define the periods - default (dams and sires)
     sim_years = uinp.structure['i_age_max']
-    sim_years = 3
+    # sim_years = 3
     sim_years_offs = min(uinp.structure['i_age_max_offs'], sim_years)
     n_sim_periods, date_start_p, date_end_p, p_index_p, step \
     = sfun.sim_periods(pinp.sheep['i_startyear'], uinp.structure['i_sim_periods_year'], sim_years)
@@ -4538,11 +4538,11 @@ def generator(params,r_vals,plots = False):
 
     ###number prog provided to offs
     mask=numbers_prog2offs_k3k5tva1e1b1nwzida0e0b0xyg2w9!=0
-    progprov_offs_k3taw8zidxyg2w9 = numbers_prog2offs_k3k5tva1e1b1nwzida0e0b0xyg2w9[mask] #applying the mask does the raveling and squeezing of singleton axis
+    progprov_offs_k3k5tw8zidaxyg2w9 = numbers_prog2offs_k3k5tva1e1b1nwzida0e0b0xyg2w9[mask] #applying the mask does the raveling and squeezing of singleton axis
     mask=mask.ravel()
-    index_cut_k3taw8zidxyg2w9=index_k3taw8zidxyg2w9[mask,:]
-    tup_k3taw8zidxyg2w9 = tuple(map(tuple, index_cut_k3taw8zidxyg2w9))
-    params['p_progprov_offs'] =dict(zip(tup_k3taw8zidxyg2w9, progprov_offs_k3taw8zidxyg2w9))
+    index_cut_k3k5tw8zidaxyg2w9=index_k3k5tw8zidaxyg2w9[mask,:]
+    tup_k3k5tw8zidaxyg2w9 = tuple(map(tuple, index_cut_k3k5tw8zidaxyg2w9))
+    params['p_progprov_offs'] =dict(zip(tup_k3k5tw8zidaxyg2w9, progprov_offs_k3k5tw8zidaxyg2w9))
 
     ###number prog require by offs
     mask=numbers_progreq_va1e1b1nw8zida0e0b0xyg3w9!=0

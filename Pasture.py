@@ -315,8 +315,6 @@ def map_excel(params,r_vals):
     ##create pasture area param. used to bound SR.
     pasture_area = pasture_rt.ravel() * 1 #times 1 to convert from bool to int eg if the phase is pasture then 1ha of pasture is recorded.
     params['pasture_area_rt'] = dict(zip(index_rt ,pasture_area))
-    r_vals['pasture_area_rt'] = pasture_rt #store for reporting
-    r_vals['keys_pastures'] = pastures #store for reporting
     ## one time data manipulation for the inputs just read
     ### calculate dry_decay_period (used in reseeding and green&dry)
     dry_decay_daily_ft[...] = i_dry_decay_t
@@ -349,6 +347,10 @@ def map_excel(params,r_vals):
     # proportion of the total growth & consumption that senesceces during the period
     grn_senesce_pgrcons_ft  =1 - ((1 -(1 - i_grn_senesce_daily_ft) ** (length_f.reshape(-1,1)+1))
                                   /        i_grn_senesce_daily_ft-1) / length_f.reshape(-1,1)
+
+    ##store report vals
+    r_vals['pasture_area_rt'] = pasture_rt #store for reporting
+    r_vals['keys_pastures'] = pastures #store for reporting
     return
 
 ### define a function that loops through feed periods to generate the foo profile for a specified germination and consumption
@@ -617,7 +619,7 @@ def calculate_germ_and_reseed(params):
 ## the following method generates the PGR & FOO parameters for the growth variables. Stored in a numpy array(lmu, feed period, FOO level, grazing intensity)
 ## def green_consumption:
 
-def green_and_dry(params):
+def green_and_dry(params, r_vals):
     ''' Populates the parameter arrays for green and dry feed.
 
     Pasture growth, consumption and senescence of green feed.
@@ -839,6 +841,10 @@ def green_and_dry(params):
     senesce_grnha_rav_dgoflt = senesce_grnha_dgoflt.ravel()
     params['p_senesce_grnha_dgoflt'] = dict( zip(index_dgoflt ,senesce_grnha_rav_dgoflt))
 
+    ##store report vals
+    r_vals['pgr_grnha_goflt'] = pgr_grnha_goflt #store for reporting
+    r_vals['foo_end_grnha_goflt'] = foo_end_grnha_goflt #store for reporting
+    return
 
 def poc(params):
     '''
@@ -879,3 +885,16 @@ def poc(params):
     poc_vol_rav_f = poc_vol_f.ravel()
     params['p_poc_vol_f'] = dict(zip(keys_f ,poc_vol_rav_f))
     
+def report_global(r_vals):
+    '''report some of the global variables'''
+
+    r_vals['keys_d'] = keys_d
+    r_vals['keys_v'] = keys_v
+    r_vals['keys_f'] = keys_f
+    r_vals['keys_g'] =  keys_g
+    r_vals['keys_l'] = keys_l
+    r_vals['keys_o'] = keys_o
+    r_vals['keys_p'] = keys_p
+    r_vals['keys_r'] = keys_r
+    r_vals['keys_t'] = keys_t
+    r_vals['keys_k'] = keys_k

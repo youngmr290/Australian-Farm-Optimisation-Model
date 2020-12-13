@@ -226,8 +226,8 @@ def stockpyomo_local(params):
         model.del_component(model.p_progprov_offs)
     except AttributeError:
         pass
-    model.p_progprov_offs = pe.Param(model.s_k3_damage_offs, model.s_sale_prog, model.s_wean_times, model.s_lw_prog,
-                              model.s_season_types, model.s_tol, model.s_damage, model.s_gender, model.s_gen_merit_offs, model.s_groups_offs, model.s_lw_offs,
+    model.p_progprov_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_prog, model.s_lw_prog, model.s_season_types,
+                              model.s_tol, model.s_damage, model.s_wean_times, model.s_gender, model.s_gen_merit_offs, model.s_groups_offs, model.s_lw_offs,
                               initialize=params['p_progprov_offs'], default=0.0, doc='number of prodgeny provided to dams')
     try:
         model.del_component(model.p_progreq_offs_index)
@@ -744,9 +744,9 @@ def stockpyomo_local(params):
         pass
     def prog2offsR(model, k3, k5, v3, a, z, i, x, y3, g3, w9):
         if v3=='dvp0' and any(model.p_progreq_offs[v3, w38, i, x, g3, w9] for w38 in model.s_lw_offs):
-            return (sum(- model.v_prog[k5, t2, w28, z, i, d, a, x, g3] * model.p_progprov_offs[k3, t2, a, w28, z, i, d, x, y3, g3, w9] #use g3 (same as g2)
+            return (sum(- model.v_prog[k5, t2, w28, z, i, d, a, x, g3] * model.p_progprov_offs[k3, k5, t2, w28, z, i, d, a, x, y3, g3, w9] #use g3 (same as g2)
                         for d in model.s_damage for w28 in model.s_lw_prog for t2 in model.s_sale_prog
-                        if model.p_progprov_offs[k3, t2, a, w28, z, i, d, x, y3, g3, w9]!= 0)
+                        if model.p_progprov_offs[k3, k5, t2, w28, z, i, d, a, x, y3, g3, w9]!= 0)
                        + sum(model.v_offs[k3,k5,t3,v3,n3,w38,z,i,a,x,y3,g3]  * model.p_progreq_offs[v3, w38, i, x, g3, w9]
                         for t3 in model.s_sale_offs for n3 in model.s_nut_dams for w38 in model.s_lw_offs if model.p_progreq_offs[v3, w38, i, x, g3, w9]!= 0))<=0
         else:

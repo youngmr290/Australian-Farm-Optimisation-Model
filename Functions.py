@@ -502,7 +502,7 @@ def f_make_table(data, index, header):
     ^currently just returns a df but there are python packages which make nice tables'''
     return pd.DataFrame(data, index=index, columns=header)
 
-def produce_df(data, rows, columns, row_names=None, column_names=None):
+def f_produce_df(data, rows, columns, row_names=None, column_names=None):
     """rows is a list of lists that will be used to build a MultiIndex
     columns is a list of lists that will be used to build a MultiIndex"""
     row_index = pd.MultiIndex.from_product(rows, names=row_names)
