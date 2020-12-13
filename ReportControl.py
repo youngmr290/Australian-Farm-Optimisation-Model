@@ -40,6 +40,7 @@ run_pnl = True #table of profit and loss
 run_profitarea = False #graph profit by crop area
 run_saleprice = True #table of saleprices
 run_cfw_dams = True #table of cfw
+run_grnfoo = True #table of green foo at end of fp
 
 
 ##run report functions
@@ -67,13 +68,35 @@ if run_cfw_dams:
     func = rep.f_stock_summary
     trials = [1, 1]
     prod = 'cfw_hdmob_k2tva1nwziyg1' #keys for r_vals
-    group = 'dams'
+    weights = 'numbers_k2tva1nwziyg1' #keys for r_vals
+    key = 'keys_k2tva1nwziyg1' #keys for r_vals
     arith = 1
     arith_axis = [6]
     index =[0,1,5]
     cols =[2]
     axis_slice = {}
     axis_slice[0] = [0, 2, 1]
-    cfw_dams = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, prod=prod, group=group,
-                           arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+    cfw_dams = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, prod=prod, weights=weights,
+                           key=key, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
 
+if run_grnfoo:
+    #returns foo at end of each fp
+    func = rep.f_pasture_summary()
+    trials = [1]
+    prod = 'greenpas_ha_vgoflt' #keys for r_vals
+    weights = 'v_greenpas_ha' #keys for r_vals
+    key = 'keys_vgoflt' #keys for r_vals
+    arith = 2
+    arith_axis = [0,1,2,4,5]
+    index =[3]
+    cols =[]
+    axis_slice = {}
+    # axis_slice[0] = [0, 2, 1]
+    grnfoo_dams = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, prod=prod, weights=weights,
+                           key=key, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+
+    # ##dry transfer eg tonnes of dry at end of period
+    # drypas_transfer_dft = pas_vars['drypas_transfer_dft']
+    #
+    # ##dry transfer eg tonnes of dry at end of period
+    # nap_transfer_dft = pas_vars['nap_transfer_dft']

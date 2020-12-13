@@ -844,6 +844,7 @@ def green_and_dry(params, r_vals):
     ##store report vals
     r_vals['pgr_grnha_goflt'] = pgr_grnha_goflt #store for reporting
     r_vals['foo_end_grnha_goflt'] = foo_end_grnha_goflt #store for reporting
+    r_vals['cons_grnha_t_goflt'] = cons_grnha_t_goflt #store for reporting
     return
 
 def poc(params):

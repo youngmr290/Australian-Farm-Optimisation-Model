@@ -20,7 +20,7 @@ class TrialError(Error):
 
 
 class ArithError(Error):
-    """Raised when user is preforming arithmetic on invalid axis"""
+    """Raised when user has incorrect specifications for preforming arithmetic"""
     pass
 
 
