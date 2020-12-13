@@ -24,9 +24,13 @@ time_list.append(timer()) ; time_was.append("import Universal")
 
 import Pasture as pas
 
+params={}
+r_vals={}
+
 time_list.append(timer()) ; time_was.append("import Pasture")
 
-pas.map_excel('Property.xlsx')                         # read inputs from Excel file and map to the python variables
+pas.map_excel(params,r_vals)
+#pas.map_excel('Property.xlsx')                         # read inputs from Excel file and map to the python variables
 time_list.append(timer()) ; time_was.append("init & read inputs from Excel")
 params=dict()
 pas.calculate_germ_and_reseed(params)                          # calculate the germination for each rotation phase
