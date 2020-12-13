@@ -81,7 +81,7 @@ def generator(params,r_vals,plots = False):
     na=np.newaxis
     ## define the periods - default (dams and sires)
     sim_years = uinp.structure['i_age_max']
-    # sim_years = 3
+    sim_years = 3
     sim_years_offs = min(uinp.structure['i_age_max_offs'], sim_years)
     n_sim_periods, date_start_p, date_end_p, p_index_p, step \
     = sfun.sim_periods(pinp.sheep['i_startyear'], uinp.structure['i_sim_periods_year'], sim_years)
@@ -161,6 +161,7 @@ def generator(params,r_vals,plots = False):
     ### index arrays                  #
     ###################################
     # index_p = np.arange(300)#asarray(300)
+    index_a0e0b0xyg = fun.f_reshape_expand(np.arange(len_a1), pinp.sheep['i_a0_pos'])
     index_a1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(np.arange(len_a1), pinp.sheep['i_a1_pos'])
     index_b0xyg = fun.f_reshape_expand(np.arange(len_b0), uinp.parameters['i_b0_pos'])
     index_b1nwzida0e0b0xyg = fun.f_reshape_expand(np.arange(len_b1), uinp.parameters['i_b1_pos'])
@@ -4125,42 +4126,40 @@ def generator(params,r_vals,plots = False):
     '''yatf are first transferred to progeny activity then they are either sold as sucker, transferred to dam or transferred to offs'''
     ##condense yatf from 81 finishing lw to 10
     ###reshape array so to stack/combine some axis - this new axis is called k
-    ffcfw_range_a1zixg2k = np.moveaxis(ffcfw_start_d_yatf_a1e1b1nwzida0e0b0xyg2, [pinp.sheep['i_a1_pos'], pinp.sheep['i_z_pos'], pinp.sheep['i_i_pos'], uinp.parameters['i_x_pos'], -1]
-                                       , [0,1,2,3,4]).reshape((len_a1,len_z,len_i,len_x,len_g2, -1))
-    salevalue_range_a1zixg2k = np.moveaxis(salevalue_d_a1e1b1nwzida0e0b0xyg2, [pinp.sheep['i_a1_pos'], pinp.sheep['i_z_pos'], pinp.sheep['i_i_pos'], uinp.parameters['i_x_pos'], -1]
-                                       , [0,1,2,3,4]).reshape((len_a1,len_z,len_i,len_x,len_g2, -1))
-    numbers_range_a1zixg2k = np.moveaxis(numbers_start_d_yatf_a1e1b1nwzida0e0b0xyg2, [pinp.sheep['i_a1_pos'], pinp.sheep['i_z_pos'], pinp.sheep['i_i_pos'], uinp.parameters['i_x_pos'], -1]
-                                         , [0, 1, 2, 3, 4]).reshape((len_a1, len_z, len_i, len_x, len_g2, -1))
+    ffcfw_range_zia0xg2k = np.moveaxis(ffcfw_start_d_yatf_a1e1b1nwzida0e0b0xyg2, [pinp.sheep['i_a1_pos'], pinp.sheep['i_z_pos'], pinp.sheep['i_i_pos'], uinp.parameters['i_x_pos'], -1]
+                                       , [2,0,1,3,4]).reshape((len_z,len_i,len_a1,len_x,len_g2, -1))
+    salevalue_range_zia0xg2k = np.moveaxis(salevalue_d_a1e1b1nwzida0e0b0xyg2, [pinp.sheep['i_a1_pos'], pinp.sheep['i_z_pos'], pinp.sheep['i_i_pos'], uinp.parameters['i_x_pos'], -1]
+                                       , [2,0,1,3,4]).reshape((len_z,len_i,len_a1,len_x,len_g2, -1))
+    numbers_range_zia0xg2k = np.moveaxis(numbers_start_d_yatf_a1e1b1nwzida0e0b0xyg2, [pinp.sheep['i_a1_pos'], pinp.sheep['i_z_pos'], pinp.sheep['i_i_pos'], uinp.parameters['i_x_pos'], -1]
+                                         , [2,0,1,3,4]).reshape((len_z, len_i, len_a1, len_x, len_g2, -1))
     ### mask the ffcfw & salevalue for only those that have numbers > 0. Removes animals that have died or don't exist
-    ffcfw_range_a1zixg2k = ffcfw_range_a1zixg2k * (numbers_range_a1zixg2k > 0)
-    salevalue_range_a1zixg2k = salevalue_range_a1zixg2k * (numbers_range_a1zixg2k > 0)
+    ffcfw_range_zia0xg2k = ffcfw_range_zia0xg2k * (numbers_range_zia0xg2k > 0)
+    salevalue_range_zia0xg2k = salevalue_range_zia0xg2k * (numbers_range_zia0xg2k > 0)
     ### The index that sorts the weight array
-    ind_sorted_a1zixg2k = np.argsort(ffcfw_range_a1zixg2k, axis = -1)
+    ind_sorted_a1zixg2k = np.argsort(ffcfw_range_zia0xg2k, axis = -1)
     ### Select the values for the 10 equally spaced values spanning lowest to highest inclusive. Adding axis at -1
-    start_a1zixg2 = ffcfw_range_a1zixg2k.shape[-1] - np.count_nonzero(ffcfw_range_a1zixg2k, axis=-1)
-    ind_selected_a1zixg2w9 = np.linspace(start_a1zixg2, ffcfw_range_a1zixg2k.shape[-1] - 1, uinp.structure['i_progeny_w2_len'], dtype = int, axis=-1)
+    start_a1zixg2 = ffcfw_range_zia0xg2k.shape[-1] - np.count_nonzero(ffcfw_range_zia0xg2k, axis=-1)
+    ind_selected_a1zixg2w9 = np.linspace(start_a1zixg2, ffcfw_range_zia0xg2k.shape[-1] - 1, uinp.structure['i_progeny_w2_len'], dtype = int, axis=-1)
     ### The indices for the required values are the selected values from the sorted indices
     ind = np.take_along_axis(ind_sorted_a1zixg2k, ind_selected_a1zixg2w9, axis=-1)
     ### Extract the condensed weights, the numbers and the sale_value of the condensed vars
     #### Later these variables are used with the 10 weights in the i_w_pos, so note whether w9 on end or not
-    ffcfw_prog_a1zixg2w9 = np.take_along_axis(ffcfw_range_a1zixg2k, ind, axis = -1)
-    salevalue_a1zixg2w9 = np.take_along_axis(salevalue_range_a1zixg2k, ind, axis = -1)
+    ffcfw_prog_zia0xg2w9 = np.take_along_axis(ffcfw_range_zia0xg2k, ind, axis = -1)
+    salevalue_zia0xg2w9 = np.take_along_axis(salevalue_range_zia0xg2k, ind, axis = -1)
     ###Reshape the progeny arrays to put axes in place - keeping w9 on the right hand end
-    ffcfw_prog_a1e1b1nwzida0e0b0xyg2w9 = ffcfw_prog_a1zixg2w9.reshape(len_a1, 1, 1, 1, 1, len_z, len_i, 1,
-                                                                     1, 1, 1, len_x, 1, len_g2, uinp.structure['i_progeny_w2_len'])
-    salevalue_prog_a1e1b1wnzida0e0b0xyg2w9 = salevalue_a1zixg2w9.reshape(len_a1, 1, 1, 1, 1, len_z, len_i, 1,
-                                                                     1, 1, 1, len_x, 1, len_g2, uinp.structure['i_progeny_w2_len'])
+    ffcfw_prog_zida0e0b0xyg2w9 = ffcfw_prog_zia0xg2w9.reshape(len_z, len_i, 1, len_a1, 1, 1, len_x, 1, len_g2, uinp.structure['i_progeny_w2_len'])
+    salevalue_prog_zida0e0b0xyg2w9 = salevalue_zia0xg2w9.reshape(len_z, len_i, 1, len_a1, 1, 1, len_x, 1, len_g2, uinp.structure['i_progeny_w2_len'])
 
     ##distribute the yatf to the intermediate progeny activity
-    distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 = sfun.f_lw_distribution_2prog(ffcfw_prog_a1e1b1nwzida0e0b0xyg2w9,ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1, index_w2)
+    distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 = sfun.f_lw_distribution_2prog(ffcfw_prog_zida0e0b0xyg2w9,ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1, index_w2)
 
     ## move progeny weight axis to normal position for distribution to dams & offs at beginning of dvp0
-    ffcfw_prog_a1e1b1nwzida0e0b0xyg2 = np.moveaxis(ffcfw_prog_a1e1b1nwzida0e0b0xyg2w9[:,:,:,:,0,...],-1,uinp.structure['i_w_pos'])
-    salevalue_prog_a1e1b1nwzida0e0b0xyg2 = np.moveaxis(salevalue_prog_a1e1b1wnzida0e0b0xyg2w9[:,:,:,:,0,...],-1,uinp.structure['i_w_pos'])
+    ffcfw_prog_wzida0e0b0xyg2 = np.moveaxis(ffcfw_prog_zida0e0b0xyg2w9,-1,uinp.structure['i_w_pos'])
+    salevalue_prog_wzida0e0b0xyg2 = np.moveaxis(salevalue_prog_zida0e0b0xyg2w9,-1,uinp.structure['i_w_pos'])
 
     ##add t axis to progeny - slice 0 is sold as sucker, slice 1 and 2 are retained
-    index_tpa1e1b1nwzida0e0b0xyg2 = fun.f_reshape_expand(index_t2, -(salevalue_prog_a1e1b1nwzida0e0b0xyg2.ndim+2))
-    salevalue_prog_tpa1e1b1nwzida0e0b0xyg2 = salevalue_prog_a1e1b1nwzida0e0b0xyg2 * (index_tpa1e1b1nwzida0e0b0xyg2==0)
+    index_tpa1e1b1nwzida0e0b0xyg2 = fun.f_reshape_expand(index_t2, uinp.structure['i_p_pos']-1)
+    salevalue_prog_tpa1e1b1nwzida0e0b0xyg2 = salevalue_prog_wzida0e0b0xyg2 * (index_tpa1e1b1nwzida0e0b0xyg2==0)
 
     ##add c axis to prog - using period_is_wean so that correct c slice is activated
     salevalue_prog_cta1e1b1nwzida0e0b0xyg2 = sfun.f_p2v_std(salevalue_prog_tpa1e1b1nwzida0e0b0xyg2, period_is_tvp=period_is_wean_pa1e1b1nwzida0e0b0xyg2[:,:,0:1,...], #weaning is same for all e slices
@@ -4210,7 +4209,7 @@ def generator(params,r_vals,plots = False):
     ##transfer progeny to dam replacements
     ###liveweight distribution
     ffcfw_initial_wzida0e0b0xyg1 = lw_initial_wzida0e0b0xyg1 - cfw_initial_wzida0e0b0xyg1 / cw_dams[3, ...]
-    distribution_2dams_a1e1b1nwzida0e0b0xyg2w9 = sfun.f_lw_distribution(ffcfw_initial_wzida0e0b0xyg1, ffcfw_prog_a1e1b1nwzida0e0b0xyg2, uinp.structure['i_n1_len'], uinp.structure['i_n_fvp_period1'])
+    distribution_2dams_wzida0e0b0xyg2w9 = sfun.f_lw_distribution(ffcfw_initial_wzida0e0b0xyg1, ffcfw_prog_wzida0e0b0xyg2, uinp.structure['i_n1_len'], uinp.structure['i_n_fvp_period1'])
     ###numbers provided - active d for Prog DVs
     # numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2g9w9 = 1 * (np.sum(distribution_2dams_a1e1b1nwzida0e0b0xyg2w9[...,na,:] * mask_numbers_prog2damsw8w9_w9
     #                                                                 * mask_prog_tdx_tva1e1b1nwzida0e0b0xyg2w9[...,na,:]
@@ -4218,15 +4217,16 @@ def generator(params,r_vals,plots = False):
     #                                                                 * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na,na]
     #                                                                 * np.any(a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3, axis=(uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']),keepdims=True)[...,na,na]
     #                                                                 , axis=(uinp.parameters['i_b0_pos']-2, uinp.structure['i_e0_pos']-2),keepdims=True))
-    numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2g9w9 = 1 * (np.sum(distribution_2dams_a1e1b1nwzida0e0b0xyg2w9[...,na,:] * mask_numbers_prog2damsw8w9_w9
+    numbers_prog2dams_k3tva1e1b1nwzida0e0b0xyg2g9w9 = 1 * (np.sum(distribution_2dams_wzida0e0b0xyg2w9[...,na,:] * mask_numbers_prog2damsw8w9_w9
                                                                     * mask_prog_tdx_tva1e1b1nwzida0e0b0xyg2w9[...,na,:]
+                                                                    * (index_a0e0b0xyg == 0) #only a[0] prog can provide dams
                                                                     * (a_g1_g2[...,na,:]==index_g1)[...,na] * (index_tva1e1b1nwzida0e0b0xyg2w9 == 1)[...,na,:]
                                                                     * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na,na]
                                                                     , axis=(uinp.parameters['i_b0_pos']-2, uinp.structure['i_e0_pos']-2),keepdims=True))
     ###numbers required - no d axis for Dam DVs
     ####collapse the e1 axis on the mask prior to np.sum because can't test for > 0 as per other numbers_req (because need proportions of age & BTRT)
     #### but don't want to increase the numbers if joining for multiple cycles
-    numbers_progreq_k28k3k5tva1e1b1nw8zida0e0b0xyg1g9w9 = 1 * (np.sum(np.any(mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9, axis=pinp.sheep['i_e1_pos']-1, keepdims=True)[0, ...,na,:] * (index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,..., na,na] == 0)
+    numbers_progreq_k2k3k5tva1e1b1nw8zida0e0b0xyg1g9w9 = 1 * (np.sum(np.any(mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9, axis=pinp.sheep['i_e1_pos']-1, keepdims=True)[0, ...,na,:] * (index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,..., na,na] == 0)
                                                                     * (index_g1[...,na]==index_g1)[...,na] * btrt_propn_b0xyg1[...,na,na] * e0_propn_ida0e0b0xyg[...,na,na]
                                                                     * agedam_propn_da0e0b0xyg1[...,na,na] * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na,na]
                                                                     * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[...,na,na],
@@ -4237,7 +4237,7 @@ def generator(params,r_vals,plots = False):
     ffcfw_initial_wzida0e0b0xyg3 = lw_initial_wzida0e0b0xyg3 - cfw_initial_wzida0e0b0xyg3 / cw_offs[3, ...]
     ffcfw_initial_k5tva1e1b1nwzida0e0b0xyg3 = np.mean(ffcfw_initial_wzida0e0b0xyg3 * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)
                                                       , axis=(uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']),keepdims=True)
-    distribution_2offs_k5tva1e1b1nwzida0e0b0xyg2w9 = sfun.f_lw_distribution(ffcfw_initial_k5tva1e1b1nwzida0e0b0xyg3, ffcfw_prog_a1e1b1nwzida0e0b0xyg2, uinp.structure['i_n3_len'], uinp.structure['i_n_fvp_period3'])
+    distribution_2offs_k5tva1e1b1nwzida0e0b0xyg2w9 = sfun.f_lw_distribution(ffcfw_initial_k5tva1e1b1nwzida0e0b0xyg3, ffcfw_prog_wzida0e0b0xyg2, uinp.structure['i_n3_len'], uinp.structure['i_n_fvp_period3'])
     numbers_prog2offs_k3k5tva1e1b1nwzida0e0b0xyg2w9 = (distribution_2offs_k5tva1e1b1nwzida0e0b0xyg2w9
                                                              * mask_numbers_prog2offsw8w9_w9
                                                              * (index_tva1e1b1nwzida0e0b0xyg2w9 == 2)
@@ -4397,17 +4397,17 @@ def generator(params,r_vals,plots = False):
     arrays = [keys_t2, keys_d, keys_x]
     index_tdx = fun.cartesian_product_simple_transpose(arrays)
 
-    ###k3tva1w8zidyg2g9w9 - prog to dams prov
-    arrays = [keys_k3, keys_t2, keys_a, keys_lw_prog, keys_z, keys_i, keys_d, keys_x, keys_y1, keys_g2, keys_g1, keys_lw1]
-    index_k3ta1w8zidxyg2g9w9 = fun.cartesian_product_simple_transpose(arrays)
+    ###k3tvw8zidaxyg2g9w9 - prog to dams prov
+    arrays = [keys_k3, keys_t2, keys_lw_prog, keys_z, keys_i, keys_d, keys_a, keys_x, keys_y1, keys_g2, keys_g1, keys_lw1]
+    index_k3tw8zida0xyg2g9w9 = fun.cartesian_product_simple_transpose(arrays)
 
-    ###k3tva1w8zidyg2w9 - prog to offs prov
-    arrays = [keys_k3, keys_t2, keys_a, keys_lw_prog, keys_z, keys_i, keys_d, keys_x, keys_y1, keys_g3, keys_lw1]
-    index_k3taw8zidxyg2w9 = fun.cartesian_product_simple_transpose(arrays)
+    ###k3tvw8zidyg2w9 - prog to offs prov
+    arrays = [keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i, keys_d, keys_a, keys_x, keys_y1, keys_g3, keys_lw1]
+    index_k3k5tw8zidaxyg2w9 = fun.cartesian_product_simple_transpose(arrays)
 
     ###k3k5tva1w8zidyg1g9w9 - prog to dams req
-    arrays = [keys_k2, keys_k3, keys_k5, keys_a, keys_lw1, keys_z, keys_i, keys_y1, keys_g1, keys_g1, keys_lw1]
-    index_k2k3k5a1w8ziyg1g9w9 = fun.cartesian_product_simple_transpose(arrays)
+    arrays = [keys_k2, keys_k3, keys_k5, keys_lw1, keys_z, keys_i, keys_y1, keys_g1, keys_g1, keys_lw1]
+    index_k2k3k5w8ziyg1g9w9 = fun.cartesian_product_simple_transpose(arrays)
 
 
     ###w8g3w9 - prog to offs req
@@ -4450,9 +4450,9 @@ def generator(params,r_vals,plots = False):
     ###k2ctvanwziyg1 - cashflow dams
     arrays = [keys_k2, keys_c, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
     index_k2ctvanwziyg1 = fun.cartesian_product_simple_transpose(arrays)
-    ###ctawzixg2 - cashflow prog
-    arrays = [keys_c, keys_t2, keys_a, keys_lw_prog, keys_z, keys_i, keys_x, keys_g2]
-    index_cta1wzixg2 = fun.cartesian_product_simple_transpose(arrays)
+    ###ctwziaxg2 - cashflow prog
+    arrays = [keys_c, keys_t2, keys_lw_prog, keys_z, keys_i, keys_a, keys_x, keys_g2]
+    index_ctwzia0xg2 = fun.cartesian_product_simple_transpose(arrays)
     ###k3k5ctvnw8ziaxyg3 - cashflow offs
     arrays = [keys_k3, keys_k5, keys_c, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
     index_k3k5ctvnw8ziaxyg3 = fun.cartesian_product_simple_transpose(arrays)
@@ -4521,20 +4521,20 @@ def generator(params,r_vals,plots = False):
     params['p_npw_req_prog'] =dict(zip(tup_tdx, npw_tdx))
 
     ###number prog provided to dams
-    mask=numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2g9w9!=0
-    progprov_dams_k3ta1w8zidxyg2g9w9 = numbers_prog2dams_k3k5tva1e1b1nwzida0e0b0xyg2g9w9[mask] #applying the mask does the raveling and squeezing of singleton axis
+    mask=numbers_prog2dams_k3tva1e1b1nwzida0e0b0xyg2g9w9!=0
+    progprov_dams_k3tw8zida0xyg2g9w9 = numbers_prog2dams_k3tva1e1b1nwzida0e0b0xyg2g9w9[mask] #applying the mask does the raveling and squeezing of singleton axis
     mask=mask.ravel()
-    index_cut_k3ta1w8zidxyg2g9w9=index_k3ta1w8zidxyg2g9w9[mask,:]
-    tup_k3ta1w8zidxyg2g9w9 = tuple(map(tuple, index_cut_k3ta1w8zidxyg2g9w9))
-    params['p_progprov_dams'] =dict(zip(tup_k3ta1w8zidxyg2g9w9, progprov_dams_k3ta1w8zidxyg2g9w9))
+    index_cut_k3tw8zida0xyg2g9w9=index_k3tw8zida0xyg2g9w9[mask,:]
+    tup_k3tw8zida0xyg2g9w9 = tuple(map(tuple, index_cut_k3tw8zida0xyg2g9w9))
+    params['p_progprov_dams'] =dict(zip(tup_k3tw8zida0xyg2g9w9, progprov_dams_k3tw8zida0xyg2g9w9))
 
     ###number prog require by dams
-    mask=numbers_progreq_k28k3k5tva1e1b1nw8zida0e0b0xyg1g9w9!=0
-    progreq_k2k3k5a1w8ziyg1g9w9 = numbers_progreq_k28k3k5tva1e1b1nw8zida0e0b0xyg1g9w9[mask] #applying the mask does the raveling and squeezing of singleton axis
+    mask=numbers_progreq_k2k3k5tva1e1b1nw8zida0e0b0xyg1g9w9!=0
+    progreq_k2k3k5w8ziyg1g9w9 = numbers_progreq_k2k3k5tva1e1b1nw8zida0e0b0xyg1g9w9[mask] #applying the mask does the raveling and squeezing of singleton axis
     mask=mask.ravel()
-    index_cut_k2k3k5a1w8ziyg1g9w9=index_k2k3k5a1w8ziyg1g9w9[mask,:]
-    tup_k2k3k5a1w8ziyg1g9w9 = tuple(map(tuple, index_cut_k2k3k5a1w8ziyg1g9w9))
-    params['p_progreq_dams'] =dict(zip(tup_k2k3k5a1w8ziyg1g9w9, progreq_k2k3k5a1w8ziyg1g9w9))
+    index_cut_k2k3k5w8ziyg1g9w9=index_k2k3k5w8ziyg1g9w9[mask,:]
+    tup_k2k3k5w8ziyg1g9w9 = tuple(map(tuple, index_cut_k2k3k5w8ziyg1g9w9))
+    params['p_progreq_dams'] =dict(zip(tup_k2k3k5w8ziyg1g9w9, progreq_k2k3k5w8ziyg1g9w9))
 
     ###number prog provided to offs
     mask=numbers_prog2offs_k3k5tva1e1b1nwzida0e0b0xyg2w9!=0
@@ -4644,11 +4644,11 @@ def generator(params,r_vals,plots = False):
     params['p_cashflow_dams'] =dict(zip(tup_k2ctvanwziyg1, cashflow_dams_k2ctva1nw8ziyg))
     ###cashflow - prog - only consists of sale value
     mask=salevalue_prog_cta1e1b1nwzida0e0b0xyg2!=0
-    cashflow_prog_cta1wzixg2 = salevalue_prog_cta1e1b1nwzida0e0b0xyg2[mask] #applying the mask does the raveling and squeezing of array
+    cashflow_prog_ctwzia0xg2 = salevalue_prog_cta1e1b1nwzida0e0b0xyg2[mask] #applying the mask does the raveling and squeezing of array
     mask=mask.ravel()
-    index_cut_cta1wzixg2=index_cta1wzixg2[mask,:]
-    tup_cta1wzixg2 = tuple(map(tuple, index_cut_cta1wzixg2))
-    params['p_cashflow_prog'] =dict(zip(tup_cta1wzixg2, cashflow_prog_cta1wzixg2))
+    index_cut_ctwzia0xg2=index_ctwzia0xg2[mask,:]
+    tup_ctwzia0xg2 = tuple(map(tuple, index_cut_ctwzia0xg2))
+    params['p_cashflow_prog'] =dict(zip(tup_ctwzia0xg2, cashflow_prog_ctwzia0xg2))
     ###cashflow - offs
     mask=cashflow_k3k5ctva1e1b1nwzida0e0b0xyg3!=0
     cashflow_offs_k3k5ctvnw8ziaxyg3 = cashflow_k3k5ctva1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
@@ -4907,18 +4907,18 @@ def generator(params,r_vals,plots = False):
     print('number params: ', keys_start - number_param_start)
     print('ravel array and zip with key: ',finish - keys_start)
 
-    # # Call Steve's graph generator
-    if plots:
-        print('Interact with the graph generator using the PlotViewer spreadsheet')
-#    scan_spreadsheet = True
-    scan_spreadsheet = plots   # argument passed to the function. True if called from SheepTest
-    while scan_spreadsheet:
-        try:
-            yvar1, yvar2, xlabels, wvar, xvar, axes, dimensions, verticals = pv.read_spreadsheet(); loc = locals();
-            yvar1 = loc[yvar1]; yvar2 = loc[yvar2]; xlabels = loc[xlabels]; wvar = loc[wvar]; xvar = loc[xvar];
-            pv.create_plots(yvar1, yvar2, xlabels, wvar, xvar, axes, dimensions, verticals)
-        except Exception as e:
-            traceback.print_exc(file=sys.stdout)
-            scan_spreadsheet = input("Enter 1 to rescan spreadsheet for new plots: ")
+#     # # Call Steve's graph generator
+#     if plots:
+#         print('Interact with the graph generator using the PlotViewer spreadsheet')
+# #    scan_spreadsheet = True
+#     scan_spreadsheet = plots   # argument passed to the function. True if called from SheepTest
+#     while scan_spreadsheet:
+#         try:
+#             yvar1, yvar2, xlabels, wvar, xvar, axes, dimensions, verticals = pv.read_spreadsheet(); loc = locals();
+#             yvar1 = loc[yvar1]; yvar2 = loc[yvar2]; xlabels = loc[xlabels]; wvar = loc[wvar]; xvar = loc[xvar];
+#             pv.create_plots(yvar1, yvar2, xlabels, wvar, xvar, axes, dimensions, verticals)
+#         except Exception as e:
+#             traceback.print_exc(file=sys.stdout)
+#             scan_spreadsheet = input("Enter 1 to rescan spreadsheet for new plots: ")
 
     print('end of generator')   # a line that can be used to break at the end of the generator

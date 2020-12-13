@@ -210,15 +210,15 @@ def stockpyomo_local(params):
         model.del_component(model.p_progprov_dams)
     except AttributeError:
         pass
-    model.p_progprov_dams = pe.Param(model.s_k3_damage_offs, model.s_sale_prog, model.s_wean_times, model.s_lw_prog,
-                              model.s_season_types, model.s_tol, model.s_damage, model.s_gender, model.s_gen_merit_dams, model.s_groups_prog, model.s_groups_dams, model.s_lw_dams,
+    model.p_progprov_dams = pe.Param(model.s_k3_damage_offs, model.s_sale_prog, model.s_lw_prog,model.s_season_types, model.s_tol,
+                              model.s_damage, model.s_wean_times, model.s_gender, model.s_gen_merit_dams, model.s_groups_prog, model.s_groups_dams, model.s_lw_dams,
                               initialize=params['p_progprov_dams'], default=0.0, doc='number of prodgeny provided to dams')
     try:
         model.del_component(model.p_progreq_dams_index)
         model.del_component(model.p_progreq_dams)
     except AttributeError:
         pass
-    model.p_progreq_dams = pe.Param(model.s_k2_birth_dams, model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_wean_times, model.s_lw_dams,
+    model.p_progreq_dams = pe.Param(model.s_k2_birth_dams, model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_lw_dams,
                               model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_groups_dams, model.s_lw_dams,
                               initialize=params['p_progreq_dams'], default=0.0, doc='number of prodgeny required by dams')
     try:
@@ -347,8 +347,8 @@ def stockpyomo_local(params):
         model.del_component(model.p_cashflow_prog)
     except AttributeError:
         pass
-    model.p_cashflow_prog = pe.Param(model.s_cashflow_periods, model.s_sale_prog, model.s_wean_times, model.s_lw_prog,
-                                     model.s_season_types, model.s_tol, model.s_gender, model.s_groups_dams,
+    model.p_cashflow_prog = pe.Param(model.s_cashflow_periods, model.s_sale_prog, model.s_lw_prog, model.s_season_types,
+                                     model.s_tol, model.s_wean_times, model.s_gender, model.s_groups_dams,
                                   initialize=params['p_cashflow_prog'], default=0.0, doc='cashflow prog - made up from just sale value')
     try:
         model.del_component(model.p_cashflow_offs_index)
@@ -720,18 +720,18 @@ def stockpyomo_local(params):
         model.del_component(model.con_prog2damsR)
     except AttributeError:
         pass
-    def prog2damR(model, k3, k5, v1, a, z, i, y1, g9, w9):
-        if v1=='dvp0' and any(model.p_progreq_dams[k2, k3, k5, a, w18, z, i, y1, g1, g9, w9] for k2 in model.s_k2_birth_dams for w18 in model.s_lw_dams for g1 in model.s_groups_dams):
-            return (sum(- model.v_prog[k5, t2, w28, z, i, d, a, x, g2] * model.p_progprov_dams[k3, t2, a, w28, z, i, d, x, y1, g2,g9,w9]
-                        for d in model.s_damage for x in model.s_gender for w28 in model.s_lw_prog for t2 in model.s_sale_prog for g2 in model.s_groups_prog
-                        if model.p_progprov_dams[k3, t2, a, w28, z, i, d, x, y1, g2, g9, w9]!= 0)
-                       + sum(model.v_dams[k2, t1, v1, a, n1, w18, z, i, y1, g1]  * model.p_progreq_dams[k2, k3, k5, a, w18, z, i, y1, g1, g9, w9]
-                        for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for n1 in model.s_nut_dams for w18 in model.s_lw_dams for g1 in model.s_groups_dams
-                             if model.p_progreq_dams[k2, k3, k5, a, w18, z, i, y1, g1, g9, w9]!= 0))<=0
+    def prog2damR(model, k3, k5, v1, z, i, y1, g9, w9):
+        if v1=='dvp0' and any(model.p_progreq_dams[k2, k3, k5, w18, z, i, y1, g1, g9, w9] for k2 in model.s_k2_birth_dams for w18 in model.s_lw_dams for g1 in model.s_groups_dams):
+            return (sum(- model.v_prog[k5, t2, w28, z, i, d, a0, x, g2] * model.p_progprov_dams[k3, t2, w28, z, i, d, a0, x, y1, g2,g9,w9]
+                        for d in model.s_damage for a0 in model.s_wean_times for x in model.s_gender for w28 in model.s_lw_prog for t2 in model.s_sale_prog for g2 in model.s_groups_prog
+                        if model.p_progprov_dams[k3, t2, w28, z, i, d, a0, x, y1, g2,g9,w9]!= 0)
+                       + sum(model.v_dams[k2, t1, v1, a1, n1, w18, z, i, y1, g1]  * model.p_progreq_dams[k2, k3, k5, w18, z, i, y1, g1, g9, w9]
+                        for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for a1 in model.s_wean_times for n1 in model.s_nut_dams for w18 in model.s_lw_dams for g1 in model.s_groups_dams
+                             if model.p_progreq_dams[k2, k3, k5, w18, z, i, y1, g1, g9, w9]!= 0))<=0
         else:
             return pe.Constraint.Skip
     start = time.time()
-    model.con_prog2damsR = pe.Constraint(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_dvp_dams, model.s_wean_times, model.s_season_types,
+    model.con_prog2damsR = pe.Constraint(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_dvp_dams, model.s_season_types,
                                    model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_dams, rule=prog2damR,
                                    doc='transfer prog to dams in dvp 0.')
     end = time.time()
@@ -742,7 +742,7 @@ def stockpyomo_local(params):
         model.del_component(model.con_prog2offsR)
     except AttributeError:
         pass
-    def prog2offsR(model, k3, k5, v3, a, z, i, x, y3, g3, w9):
+    def prog2offsR(model, k3, k5, v3, z, i, a, x, y3, g3, w9):
         if v3=='dvp0' and any(model.p_progreq_offs[v3, w38, i, x, g3, w9] for w38 in model.s_lw_offs):
             return (sum(- model.v_prog[k5, t2, w28, z, i, d, a, x, g3] * model.p_progprov_offs[k3, k5, t2, w28, z, i, d, a, x, y3, g3, w9] #use g3 (same as g2)
                         for d in model.s_damage for w28 in model.s_lw_prog for t2 in model.s_sale_prog
@@ -752,8 +752,8 @@ def stockpyomo_local(params):
         else:
             return pe.Constraint.Skip
     start = time.time()
-    model.con_prog2offsR = pe.Constraint(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_dvp_dams, model.s_wean_times, model.s_season_types,
-                                   model.s_tol, model.s_gender, model.s_gen_merit_dams, model.s_groups_offs, model.s_lw_dams, rule=prog2offsR,
+    model.con_prog2offsR = pe.Constraint(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_dvp_dams, model.s_season_types, model.s_tol,
+                                   model.s_wean_times, model.s_gender, model.s_gen_merit_dams, model.s_groups_offs, model.s_lw_dams, rule=prog2offsR,
                                    doc='transfer prog to off in dvp 0.')
     end = time.time()
     print('con_prog2offR ',end-start)
@@ -833,8 +833,8 @@ def stock_cashflow(model,c):
            + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_cashflow_dams[k2,c,t1,v1,a,n1,w1,z,i,y1,g1]
                       for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                       for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams)
-                + sum(model.v_prog[k5, t2, w2, z, i, d, a, x, g2] * model.p_cashflow_prog[t2, a, w2, z, i, x, g2]
-                      for k5 in model.s_k5_birth_offs for t2 in model.s_sale_prog for w2 in model.s_lw_prof for d in model.s_damage
+                + sum(model.v_prog[k5, t2, w2, z, i, d, a, x, g2] * model.p_cashflow_prog[c, t2, w2, z, i, a, x, g2]
+                      for k5 in model.s_k5_birth_offs for t2 in model.s_sale_prog for w2 in model.s_lw_prog for d in model.s_damage
                       for x in model.s_gender for g2 in model.s_groups_prog)
                 + sum(model.v_offs[k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_cashflow_offs[k3,k5,c,t3,v3,n3,w3,z,i,a,x,y3,g3]
                       for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
