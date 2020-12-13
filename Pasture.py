@@ -728,7 +728,7 @@ def green_and_dry(params):
     ### change in sward average digestibility due to increasing foo
     grn_dmd_fooadj_oflt             = ((1 - grn_dmd_declinefoo_ft[:,np.newaxis,:])
                                          **     foo_days_grnha_oflt) - 1
-    dmd_sward_grnha_goflt                 =            i_grn_dig_flt                        \
+    dmd_sward_grnha_goflt           =            i_grn_dig_flt                        \
                                      +      grn_dmd_fooadj_oflt                       \
     ### change in digestibility associated with diet selection (altered by level of grazing)
     grn_dmd_range_oflt              = i_grn_dmd_range_ft[:, np.newaxis, :] - grn_dmd_fooadj_oflt * 2   # Sward ave DMD reduction (due to deferment) increases the range
@@ -758,7 +758,7 @@ def green_and_dry(params):
                                           ,     grn_ri_quality_goflt
                                           *grn_ri_availability_goflt)
 
-    me_cons_grnha_vgoflt   = fun.effective_mei(      cons_grnha_t_goflt
+    me_cons_grnha_vgoflt     = fun.effective_mei(      cons_grnha_t_goflt
                                                  ,     grn_md_grnha_goflt
                                                  , i_me_maintenance_vft[:,np.newaxis,np.newaxis,:,np.newaxis,:]
                                                  ,           grn_ri_goflt
@@ -802,9 +802,10 @@ def green_and_dry(params):
     dry_volume_t_rav_dft = dry_volume_t_dft.ravel()
     params['p_dry_volume_t_dft'] = dict(zip(index_dft ,dry_volume_t_rav_dft))
 
-    ## dry, ME consumed per tonne consumed
+    ## dry, ME consumed per kg consumed
     dry_md_dft           = fun.dmd_to_md(dry_dmd_dft)
-    dry_md_vdft          = np.stack([dry_md_dft * 1000] * n_feed_pools, axis = 0)
+    dry_md_vdft          = np.stack([dry_md_dft] * n_feed_pools, axis = 0)
+    ## convert to effective quality per tonne
     dry_mecons_t_vdft  = fun.effective_mei( 1000                                    # parameters for the dry feed grazing activities: Total ME of the tonne consumed
                             ,           dry_md_vdft
                             , i_me_maintenance_vft[:,np.newaxis,:,:]
@@ -827,17 +828,17 @@ def green_and_dry(params):
     #                              -  foo_end_grnha_goflt
     ## the senesced feed that is available to stock is that which senesces at the end of the growing season (i.e. not during the growing season)
     ##^ may need revisiting for perennial pastures where green & dry feed are part of a mixed diet.
-    senesce_total_grnha_goflt = senesce_eos_grnha_goflt
-    grn_dmd_senesce_goflt       =               dmd_sward_grnha_goflt       \
-                                 + i_grn_dmd_senesce_redn_ft[:,np.newaxis,:]
+    senesce_total_grnha_goflt    = senesce_eos_grnha_goflt
+    grn_dmd_senesce_goflt        =               dmd_sward_grnha_goflt       \
+                                  + i_grn_dmd_senesce_redn_ft[:,np.newaxis,:]
     senesce_propn_dgoflt[1,...]  = np.clip(( grn_dmd_senesce_goflt                     # senescence to high pool. np.clip reduces the range of the dmd to the range of dmd in the dry feed pools
                                             -    dry_dmd_low_ft[:,np.newaxis,:])
                                           /(    dry_dmd_high_ft[:,np.newaxis,:]
                                             -    dry_dmd_low_ft[:,np.newaxis,:]), 0, 1)
     senesce_propn_dgoflt[0,...] = 1- senesce_propn_dgoflt[1,...]                       # senescence to low pool
-    senesce_grnha_dgoflt      = senesce_total_grnha_goflt * senesce_propn_dgoflt       # ^alternative in one array parameters for the growth/grazing activities: quantity of green that senesces to the high pool
-    senesce_grnha_dgoflt = senesce_grnha_dgoflt * mask_greenfeed_exists_ft[:, np.newaxis,:]  # apply mask - green pasture only senesces when green pas exists.
-    senesce_grnha_rav_dgoflt = senesce_grnha_dgoflt.ravel()
+    senesce_grnha_dgoflt        = senesce_total_grnha_goflt * senesce_propn_dgoflt       # ^alternative in one array parameters for the growth/grazing activities: quantity of green that senesces to the high pool
+    senesce_grnha_dgoflt        = senesce_grnha_dgoflt * mask_greenfeed_exists_ft[:, np.newaxis,:]  # apply mask - green pasture only senesces when green pas exists.
+    senesce_grnha_rav_dgoflt    = senesce_grnha_dgoflt.ravel()
     params['p_senesce_grnha_dgoflt'] = dict( zip(index_dgoflt ,senesce_grnha_rav_dgoflt))
 
 
