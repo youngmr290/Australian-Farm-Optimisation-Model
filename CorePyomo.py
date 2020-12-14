@@ -54,6 +54,8 @@ def coremodel_all():
     ######################
     ##Fixed labour jobs that can be completed by anyone ie this constraint links labour fixed casual and perm and manager supply and requirment. 
     try:
+        model.del_component(model.con_labour_fixed_anyone_index_1)
+        model.del_component(model.con_labour_fixed_anyone_index)
         model.del_component(model.con_labour_fixed_anyone)
     except AttributeError:
         pass
@@ -63,6 +65,8 @@ def coremodel_all():
     
     ##Fixed labour jobs that must be completed by the manager ie this constraint links labour fixed manager supply and requirment. 
     try:
+        model.del_component(model.con_labour_fixed_manager_index_1)
+        model.del_component(model.con_labour_fixed_manager_index)
         model.del_component(model.con_labour_fixed_manager)
     except AttributeError:
         pass
@@ -75,6 +79,8 @@ def coremodel_all():
     ######################
     ##labour crop - can be done by anyone
     try:
+        model.del_component(model.con_labour_crop_anyone_index_1)
+        model.del_component(model.con_labour_crop_anyone_index)
         model.del_component(model.con_labour_crop_anyone)
     except AttributeError:
         pass
@@ -87,6 +93,8 @@ def coremodel_all():
     ######################
     ##labour sheep - can be done by anyone
     try:
+        model.del_component(model.con_labour_sheep_anyone_index_1)
+        model.del_component(model.con_labour_sheep_anyone_index)
         model.del_component(model.con_labour_sheep_anyone)
     except AttributeError:
         pass
@@ -96,6 +104,8 @@ def coremodel_all():
 
     ##labour sheep - can be done by permanent and manager staff
     try:
+        model.del_component(model.con_labour_sheep_perm_index_1)
+        model.del_component(model.con_labour_sheep_perm_index)
         model.del_component(model.con_labour_sheep_perm)
     except AttributeError:
         pass
@@ -105,6 +115,8 @@ def coremodel_all():
 
     ##labour sheep - can be done by manager
     try:
+        model.del_component(model.con_labour_sheep_manager_index_1)
+        model.del_component(model.con_labour_sheep_manager_index)
         model.del_component(model.con_labour_sheep_manager)
     except AttributeError:
         pass
@@ -116,6 +128,7 @@ def coremodel_all():
     #stubble & nap consumption at harvest #
     #######################################
     try:
+        model.del_component(model.con_harv_stub_nap_cons_index_1)
         model.del_component(model.con_harv_stub_nap_cons_index)
         model.del_component(model.con_harv_stub_nap_cons)
     except AttributeError:
@@ -179,6 +192,7 @@ def coremodel_all():
     ###################### 
     ##links crop and mach pyomo together
     try:
+        model.del_component(model.con_harv_index)
         model.del_component(model.con_harv)
     except AttributeError:
         pass
@@ -192,6 +206,7 @@ def coremodel_all():
     ###################### 
     ##links crop and mach pyomo together
     try:
+        model.del_component(model.con_makehay_index)
         model.del_component(model.con_makehay)
     except AttributeError:
         pass

@@ -72,8 +72,11 @@ def f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, **kwa
         return
     return result_stacked
 
-def f_croparea_profit(lp_vars, r_vals, trial_outdated, exp_data_index, trials, area_option, profit_option):
+def f_xy_graph(func0, func1, lp_vars, r_vals, trial_outdated, exp_data_index, trials, func0_options, func1_options):
     '''returns graph of crop area (x - axis) by profit (y - axis)
+
+    :param func0: func to generate x values
+    :param func1:func to generate y values
     :param lp_vars: dict - results from pyomo
     :param r_vals: dict - report variable
     :param trial_outdated: series indicating which trials are outdated
@@ -93,13 +96,42 @@ def f_croparea_profit(lp_vars, r_vals, trial_outdated, exp_data_index, trials, a
         print('''Trials for reporting dont all exist''')
         return
     ##loop through trials and generate pnl table
-    profit = [] #create list to append pnl table from each trial
-    area = [] #create list to append pnl table from each trial
+    y_vals = [] #create list to append pnl table from each trial
+    x_vals = [] #create list to append pnl table from each trial
     for row in trials:
-        profit.append(f_profit(lp_vars[exp_data_index[row][2]], r_vals[exp_data_index[row][2]], option=profit_option))
-        area.append(f_area_summary(lp_vars[exp_data_index[row][2]], r_vals[exp_data_index[row][2]], option=area_option))
-    plt.plot(area, profit)
+        x_vals.append(func0(lp_vars[exp_data_index[row][2]], r_vals[exp_data_index[row][2]], option=func0_options))
+        y_vals.append(func1(lp_vars[exp_data_index[row][2]], r_vals[exp_data_index[row][2]], option=func1_options))
+    plt.plot(x_vals, y_vals)
     plt.show()
+
+# def f_croparea_profit(lp_vars, r_vals, trial_outdated, exp_data_index, trials, area_option, profit_option):
+#     '''returns graph of crop area (x - axis) by profit (y - axis)
+#     :param lp_vars: dict - results from pyomo
+#     :param r_vals: dict - report variable
+#     :param trial_outdated: series indicating which trials are outdated
+#     :param exp_data_index: trial names - in the same order as exp.xlsx
+#     :param trials: trials to return info for
+#     :param area_option:
+#             3: total pasture area
+#             4: total crop area
+#     :param profit_option:
+#             0: profit = rev - (exp + minroe + asset_opp +dep)
+#             1: profit = rev - (exp + dep)
+#     '''
+#     ##check for errors
+#     try:
+#         f_errors(r_vals, exp_data_index, trial_outdated, trials)
+#     except exc.TrialError:
+#         print('''Trials for reporting dont all exist''')
+#         return
+#     ##loop through trials and generate pnl table
+#     profit = [] #create list to append pnl table from each trial
+#     area = [] #create list to append pnl table from each trial
+#     for row in trials:
+#         profit.append(f_profit(lp_vars[exp_data_index[row][2]], r_vals[exp_data_index[row][2]], option=profit_option))
+#         area.append(f_area_summary(lp_vars[exp_data_index[row][2]], r_vals[exp_data_index[row][2]], option=area_option))
+#     plt.plot(area, profit)
+#     plt.show()
 
 
 
@@ -647,7 +679,6 @@ def f_pasture_summary(lp_vars, r_vals, **kwargs):
     prod = f_numpy2df(prod, keys, index, cols)
     return prod
 
-
 def f_labour_summary(lp_vars, r_vals, option=0):
     '''
     :return:
@@ -798,7 +829,7 @@ def f_profitloss_table(lp_vars, r_vals):
     pnl['Full year'] = pnl.sum(axis=1)
 
     ##round numbers in df
-    pnl = pnl.round(1)
+    pnl = pnl.astype(float).round(1) #have to go to float so rounding works
     return pnl
 
 def f_profit(lp_vars, r_vals, option=0):
@@ -813,7 +844,6 @@ def f_profit(lp_vars, r_vals, option=0):
         return obj_profit
     else:
         return obj_profit + minroe - (asset_opportunity_cost * r_vals['opportunity_cost_capital'])
-
 
 def f_stock_summary(lp_vars, r_vals, **kwargs):
     '''

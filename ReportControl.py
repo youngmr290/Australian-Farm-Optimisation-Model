@@ -49,12 +49,15 @@ if run_pnl:
     func = rep.f_profitloss_table
     trials = [0, 1]
     pnl = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials)
+    pnl.to_excel('Output\Report.xlsx', 'pnl')
 
 if run_profitarea:
-    profit_option = 0
-    area_option = 4
+    func0 = rep.f_area_summary
+    func1 = rep.f_profit
+    func0_option = 4
+    func1_option = 0
     trials = [25,26,27,28]
-    rep.f_croparea_profit(lp_vars, r_vals, trial_outdated, exp_data_index, trials, area_option, profit_option)
+    rep.f_xy_graph(func0, func1, lp_vars, r_vals, trial_outdated, exp_data_index, trials, func0_option, func1_option)
 
 if run_saleprice:
     func = rep.f_price_summary
