@@ -493,6 +493,7 @@ def f_pasture_reshape(lp_vars, r_vals):
 
     #store keys - must be in axis order
     pas_vars['keys_vgoflt'] = [keys_v, keys_g, keys_o, keys_f, keys_l, keys_t]
+    pas_vars['keys_dft'] = [keys_d, keys_f, keys_t]
 
     ##shapes
     vgoflt = len_v, len_g, len_o, len_f, len_l, len_t

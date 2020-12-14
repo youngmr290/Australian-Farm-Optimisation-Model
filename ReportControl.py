@@ -39,9 +39,9 @@ trial_outdated = exp_data['run'] #returns true if trial is out of date
 run_pnl = True #table of profit and loss
 run_profitarea = False #graph profit by crop area
 run_saleprice = True #table of saleprices
-run_cfw_dams = False #table of cfw
-run_grnfoo = True #table of green foo at end of fp
-run_dryfoo = True #table of dry foo at end of fp
+run_cfw_dams = True #table of cfw
+run_grnfoo = False #table of green foo at end of fp
+run_dryfoo = False #table of dry foo at end of fp
 
 
 ##run report functions
@@ -69,7 +69,7 @@ if run_cfw_dams:
     func = rep.f_stock_summary
     trials = [1, 1]
     prod = 'cfw_hdmob_k2tva1nwziyg1'
-    weights = 'numbers_k2tva1nwziyg1'
+    weights = 'dams_numbers_k2tvanwziy1g1'
     keys = 'dams_keys_k2tvanwziy1g1'
     arith = 1
     arith_axis = [6]
@@ -93,27 +93,25 @@ if run_grnfoo:
     cols =[]
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
-    grnfoo_dams = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, prod=prod, weights=weights,
+    grnfoo = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, prod=prod, weights=weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
 
 if run_dryfoo:
     #returns foo at end of each fp
     func = rep.f_pasture_summary
     trials = [1]
-    prod = 'foo_end_grnha_goflt'
+    prod = 1000
     weights = 'drypas_transfer_dft'
-    keys = 'keys_vgoflt'
-    arith = 3
-    arith_axis = [0,1,2,4,5]
-    index =[3]
+    keys = 'keys_dft'
+    arith = 2
+    arith_axis = [0,2]
+    index =[1]
     cols =[]
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
-    grnfoo_dams = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, prod=prod, weights=weights,
+    dryfoo = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, prod=prod, weights=weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
 
-    # ##dry transfer eg tonnes of dry at end of period
-    # drypas_transfer_dft = pas_vars['drypas_transfer_dft']
-    #
+
     # ##dry transfer eg tonnes of dry at end of period
     # nap_transfer_dft = pas_vars['nap_transfer_dft']
