@@ -190,9 +190,9 @@ structure['cashflow_periods']=['JF$FLOW','MA$FLOW','MJ$FLOW','JA$FLOW','SO$FLOW'
 ###############
 ##sets as well as define the pastures to include
 structure['pastures'] = ['annual'] # ,'lucerne','tedera']    #define which pastures are to be included
-structure['dry_groups'] = ['Dry-L', 'Dry-H']                       # Low & high quality groups for dry feed
+structure['dry_groups'] = ['DryL', 'DryH']                       # Low & high quality groups for dry feed
 structure['grazing_int'] =  ['Graz0', 'Graz25', 'Graz50', 'Graz100']   # grazing intensity in the growth/grazing activities
-structure['foo_levels'] =  ['Foo-L', 'Foo-M', 'Foo-H']                 # Low, medium & high FOO level in the growth/grazing activities
+structure['foo_levels'] =  ['FooL', 'FooM', 'FooH']                 # Low, medium & high FOO level in the growth/grazing activities
 
 #######
 #sheep#
@@ -390,8 +390,8 @@ structure['ia_k2_mlsb1'] =np.array([
 structure['i_n_v1type'] = 3
 structure['i_k2_idx_dams'] = np.array([
 ['NM',   '00',   '11',	 '22',   '33',   '21',   '32',   '31',   '10',   '20',   '30'],
-['NM-1', '00-1', '11-1', '22-1', '33-1', '21-1', '32-1', '31-1', '10-1', '20-1', '30-1'],
-['NM-2', '00-2', '11-2', '22-2', '33-2', '21-2', '32-2', '31-2', '10-2', '20-2', '30-2']])
+['NM1', '001', '111', '221', '331', '211', '321', '311', '101', '201', '301'],
+['NM2', '002', '112', '222', '332', '212', '322', '312', '102', '202', '302']])
 
 structure['ia_ppk2g1_vlsb1'] = np.array([
                                         [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
@@ -456,8 +456,8 @@ structure['ia_ppk2g1_vlsb1'] = np.array([
                                         , [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]])
 ##association between management and postprocessing clustering - offs
 structure['i_k5_idx_offs'] = np.array([['11',	'22',	'33',	'21',	'32',	'31'],
-                                       ['00-1',	'11-1',	'22-1',	'33-1',	'21-1',	'32-1'],
-                                       ['00-2',	'11-2',	'22-2',	'33-2',	'21-2',	'32-2']])
+                                       ['001',	'111',	'221',	'331',	'211',	'321'],
+                                       ['002',	'112',	'222',	'332',	'212',	'322']])
 
 structure['ia_ppk5_lsb0'] = np.array([
                                         [0,	0,	0,	0,	0,	0],

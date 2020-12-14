@@ -39,7 +39,7 @@ b = a[:,4,...]
 c = np.sum(b, axis = 1)
 time_list.append(timer()) ; time_was.append("germination & reseeding")
 
-pas.green_and_dry(params)                            # calculate the FOO lost when destocked and the FOO gained when grazed after establishment
+pas.green_and_dry(params, r_vals)                            # calculate the FOO lost when destocked and the FOO gained when grazed after establishment
 time_list.append(timer()) ; time_was.append("green feed & dry feed")
 
 poc_con_ft = pas.poc(params)                            # calculate the pasture on crop paddocks
