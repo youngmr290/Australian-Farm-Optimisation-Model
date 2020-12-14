@@ -3093,26 +3093,23 @@ def generator(params,r_vals,plots = False):
     postp_start=time.time()
     print('generator :', postp_start - generator_start)
 
-    ## Call Steve graphing routine here if Generator is throwing an error in the post processing
-    # scan_spreadsheet = True
-    # while scan_spreadsheet:
-    #     try:
-    #         yvar, yvar2, xvar, wvar, axes, dimensions, verticals = pv.read_spreadsheet();
-    #         loc = locals();
-    #         yvar = loc[yvar];
-    #         yvar2 = loc[yvar2];
-    #         xvar = loc[xvar];
-    #         wvar = loc[wvar];
-    #         pv.create_plots(yvar, yvar2, xvar, wvar, axes, dimensions, verticals)
-    #     except Exception as e:
-    #         traceback.print_exc(file=sys.stdout)
-    #         scan_spreadsheet = input("Enter 1 to rescan spreadsheet for new plots: ")
 
-
-
-
-
-
+    ## Call Steve graphing routine here if Generator is throwing an error in the post processing.
+    ### Change scan-spreadsheet to True to activate
+    scan_spreadsheet = False
+    while scan_spreadsheet:
+        try:
+            yvar1, yvar2, xlabels, wvar, xvar, axes, dimensions, verticals = pv.read_spreadsheet()
+            loc = locals()
+            yvar1 = loc[yvar1]
+            yvar2 = loc[yvar2]
+            xlabels = loc[xlabels]
+            wvar = loc[wvar]
+            xvar = loc[xvar]
+            pv.create_plots(yvar1, yvar2, xlabels, wvar, xvar, axes, dimensions, verticals)
+        except Exception as e:
+            traceback.print_exc(file=sys.stdout)
+            scan_spreadsheet = input("Enter 1 to rescan spreadsheet for new plots: ")
 
 
 
@@ -4907,18 +4904,24 @@ def generator(params,r_vals,plots = False):
     print('number params: ', keys_start - number_param_start)
     print('ravel array and zip with key: ',finish - keys_start)
 
-#     # # Call Steve's graph generator
-#     if plots:
-#         print('Interact with the graph generator using the PlotViewer spreadsheet')
-# #    scan_spreadsheet = True
-#     scan_spreadsheet = plots   # argument passed to the function. True if called from SheepTest
-#     while scan_spreadsheet:
-#         try:
-#             yvar1, yvar2, xlabels, wvar, xvar, axes, dimensions, verticals = pv.read_spreadsheet(); loc = locals();
-#             yvar1 = loc[yvar1]; yvar2 = loc[yvar2]; xlabels = loc[xlabels]; wvar = loc[wvar]; xvar = loc[xvar];
-#             pv.create_plots(yvar1, yvar2, xlabels, wvar, xvar, axes, dimensions, verticals)
-#         except Exception as e:
-#             traceback.print_exc(file=sys.stdout)
-#             scan_spreadsheet = input("Enter 1 to rescan spreadsheet for new plots: ")
+    ## Call Steve's graph generator.
+    ## Will be bypassed unless called from SheepTest.py or line below is uncommented
+    if plots:
+        print('Interact with the graph generator using the PlotViewer spreadsheet')
+    scan_spreadsheet = plots   # argument passed to the StockGen function. True if called from SheepTest
+    #    scan_spreadsheet = True    #make line active to generate plots when called from exp.py
+    while scan_spreadsheet:
+        try:
+            yvar1, yvar2, xlabels, wvar, xvar, axes, dimensions, verticals = pv.read_spreadsheet()
+            loc = locals()
+            yvar1 = loc[yvar1]
+            yvar2 = loc[yvar2]
+            xlabels = loc[xlabels]
+            wvar = loc[wvar]
+            xvar = loc[xvar]
+            pv.create_plots(yvar1, yvar2, xlabels, wvar, xvar, axes, dimensions, verticals)
+        except Exception as e:
+            traceback.print_exc(file=sys.stdout)
+            scan_spreadsheet = input("Enter 1 to rescan spreadsheet for new plots: ")
 
     print('end of generator')   # a line that can be used to break at the end of the generator
