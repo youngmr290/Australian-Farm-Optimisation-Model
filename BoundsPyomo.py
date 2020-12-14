@@ -26,10 +26,10 @@ note:
 '''
 
 ##set bounds to include
-bounds_inc=False #controls all bounds
+bounds_inc=True #controls all bounds (typically on)
 rot_lobound_inc = False #controls rot bound
 sr_bound_inc = False #controls sr bound
-total_pasture_bound = sen.sav['bnd_pasarea_inc'] #bound on total pasture (hence also total crop)
+total_pasture_bound = fun.f_sa(False, sen.sav['bnd_pasarea_inc'], 5)  #bound on total pasture (hence also total crop)
 landuse_bound = False #bound on area of each landuse
 
 def boundarypyomo_local():
@@ -118,7 +118,7 @@ def boundarypyomo_local():
                                                 doc='stocking rate bound for each feed peirod')
 
         ##total pasture area - hence also total crop area
-        if total_pasture_bound:
+        if total_pasture_bound != False:
             try:
                 model.del_component(model.con_pas_bound)
             except AttributeError:

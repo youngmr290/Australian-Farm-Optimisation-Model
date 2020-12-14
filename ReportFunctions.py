@@ -72,8 +72,11 @@ def f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, **kwa
         return
     return result_stacked
 
-def f_croparea_profit(lp_vars, r_vals, trial_outdated, exp_data_index, trials, area_option, profit_option):
+def f_xy_graph(func0, func1, lp_vars, r_vals, trial_outdated, exp_data_index, trials, func0_options, func1_options):
     '''returns graph of crop area (x - axis) by profit (y - axis)
+
+    :param func0: func to generate x values
+    :param func1:func to generate y values
     :param lp_vars: dict - results from pyomo
     :param r_vals: dict - report variable
     :param trial_outdated: series indicating which trials are outdated
@@ -93,13 +96,14 @@ def f_croparea_profit(lp_vars, r_vals, trial_outdated, exp_data_index, trials, a
         print('''Trials for reporting dont all exist''')
         return
     ##loop through trials and generate pnl table
-    profit = [] #create list to append pnl table from each trial
-    area = [] #create list to append pnl table from each trial
+    y_vals = [] #create list to append pnl table from each trial
+    x_vals = [] #create list to append pnl table from each trial
     for row in trials:
-        profit.append(f_profit(lp_vars[exp_data_index[row][2]], r_vals[exp_data_index[row][2]], option=profit_option))
-        area.append(f_area_summary(lp_vars[exp_data_index[row][2]], r_vals[exp_data_index[row][2]], option=area_option))
-    plt.plot(area, profit)
-    plt.show()
+        x_vals.append(func0(lp_vars[exp_data_index[row][2]], r_vals[exp_data_index[row][2]], option=func0_options))
+        y_vals.append(func1(lp_vars[exp_data_index[row][2]], r_vals[exp_data_index[row][2]], option=func1_options))
+    plt.plot(x_vals, y_vals)
+    return plt
+
 
 
 
@@ -493,7 +497,9 @@ def f_pasture_reshape(lp_vars, r_vals):
 
     #store keys - must be in axis order
     pas_vars['keys_vgoflt'] = [keys_v, keys_g, keys_o, keys_f, keys_l, keys_t]
+    pas_vars['keys_vdft'] = [keys_v, keys_d, keys_f, keys_t]
     pas_vars['keys_dft'] = [keys_d, keys_f, keys_t]
+    pas_vars['keys_vfl'] = [keys_v, keys_f, keys_l]
 
     ##shapes
     vgoflt = len_v, len_g, len_o, len_f, len_l, len_t
@@ -647,7 +653,6 @@ def f_pasture_summary(lp_vars, r_vals, **kwargs):
     prod = f_numpy2df(prod, keys, index, cols)
     return prod
 
-
 def f_labour_summary(lp_vars, r_vals, option=0):
     '''
     :return:
@@ -798,7 +803,7 @@ def f_profitloss_table(lp_vars, r_vals):
     pnl['Full year'] = pnl.sum(axis=1)
 
     ##round numbers in df
-    pnl = pnl.round(1)
+    pnl = pnl.astype(float).round(1) #have to go to float so rounding works
     return pnl
 
 def f_profit(lp_vars, r_vals, option=0):
@@ -813,7 +818,6 @@ def f_profit(lp_vars, r_vals, option=0):
         return obj_profit
     else:
         return obj_profit + minroe - (asset_opportunity_cost * r_vals['opportunity_cost_capital'])
-
 
 def f_stock_summary(lp_vars, r_vals, **kwargs):
     '''

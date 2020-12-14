@@ -10,6 +10,8 @@ import pandas as pd
 import ReportFunctions as rep
 import Functions as fun
 
+## Create a Pandas Excel writer using XlsxWriter as the engine. used to write to multiple sheets in excel
+writer = pd.ExcelWriter('Output\Report.xlsx', engine='xlsxwriter')
 
 ##read in exp log
 exp_data_nosort = pd.read_excel('exp.xlsx',index_col=[0,1,2], header=[0,1,2,3])
@@ -40,8 +42,13 @@ run_pnl = True #table of profit and loss
 run_profitarea = True #graph profit by crop area
 run_saleprice = True #table of saleprices
 run_cfw_dams = True #table of cfw
-run_grnfoo = False #table of green foo at end of fp
-run_dryfoo = False #table of dry foo at end of fp
+run_grnfoo = True #table of green foo at end of fp
+run_dryfoo = True #table of dry foo at end of fp
+run_napfoo = True #table of nap foo at end of fp
+run_grncon = True #table of green con at end of fp
+run_drycon = True #table of dry con at end of fp
+run_napcon = True #table of nap con at end of fp
+run_poccon = True #table of poc con at end of fp
 
 
 ##run report functions
@@ -49,12 +56,16 @@ if run_pnl:
     func = rep.f_profitloss_table
     trials = [0, 1]
     pnl = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials)
+    pnl.to_excel(writer, 'pnl')
 
 if run_profitarea:
-    profit_option = 0
-    area_option = 4
+    func0 = rep.f_area_summary
+    func1 = rep.f_profit
+    func0_option = 4
+    func1_option = 0
     trials = [25,26,27,28]
-    rep.f_croparea_profit(lp_vars, r_vals, trial_outdated, exp_data_index, trials, area_option, profit_option)
+    plt = rep.f_xy_graph(func0, func1, lp_vars, r_vals, trial_outdated, exp_data_index, trials, func0_option, func1_option)
+    plt.savefig('Output\profitarea_curve.png')
 
 if run_saleprice:
     func = rep.f_price_summary
@@ -63,7 +74,8 @@ if run_saleprice:
     grid = [0,5,6]
     weight = [22,40,25]
     fs = [2,3,2]
-    rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, option=option, grid=grid, weight=weight, fs=fs)
+    saleprice = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, option=option, grid=grid, weight=weight, fs=fs)
+    saleprice.to_excel(writer, 'saleprice')
 
 if run_cfw_dams:
     func = rep.f_stock_summary
@@ -79,6 +91,7 @@ if run_cfw_dams:
     axis_slice[0] = [0, 2, 1]
     cfw_dams = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, prod=prod, weights=weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+    cfw_dams.to_excel(writer, 'cfw_dams')
 
 if run_grnfoo:
     #returns foo at end of each fp
@@ -95,6 +108,7 @@ if run_grnfoo:
     # axis_slice[0] = [0, 2, 1]
     grnfoo = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, prod=prod, weights=weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+    grnfoo.to_excel(writer, 'grnfoo')
 
 if run_dryfoo:
     #returns foo at end of each fp
@@ -111,7 +125,94 @@ if run_dryfoo:
     # axis_slice[0] = [0, 2, 1]
     dryfoo = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, prod=prod, weights=weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+    dryfoo.to_excel(writer, 'dryfoo')
+
+if run_napfoo:
+    #returns foo at end of each fp
+    func = rep.f_pasture_summary
+    trials = [0,1]
+    prod = 1000
+    weights = 'nap_transfer_dft'
+    keys = 'keys_dft'
+    arith = 2
+    arith_axis = [0,2]
+    index =[1]
+    cols =[]
+    axis_slice = {}
+    # axis_slice[0] = [0, 2, 1]
+    napfoo = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, prod=prod, weights=weights,
+                           keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+    napfoo.to_excel(writer, 'napfoo')
+
+if run_grncon:
+    #returns foo at end of each fp
+    func = rep.f_pasture_summary
+    trials = [0,1]
+    prod = 'cons_grnha_t_goflt'
+    weights = 'greenpas_ha_vgoflt'
+    keys = 'keys_vgoflt'
+    arith = 2
+    arith_axis = [0,1,2,4,5]
+    index =[3]
+    cols =[]
+    axis_slice = {}
+    # axis_slice[0] = [0, 2, 1]
+    grncon = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, prod=prod, weights=weights,
+                           keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+    grncon.to_excel(writer, 'grncon')
+
+if run_drycon:
+    #returns foo at end of each fp
+    func = rep.f_pasture_summary
+    trials = [0,1]
+    prod = 1000
+    weights = 'drypas_consumed_vdft'
+    keys = 'keys_vdft'
+    arith = 2
+    arith_axis = [0,1,3]
+    index =[2]
+    cols =[]
+    axis_slice = {}
+    # axis_slice[0] = [0, 2, 1]
+    drycon = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, prod=prod, weights=weights,
+                           keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+    drycon.to_excel(writer, 'drycon')
+
+if run_napcon:
+    #returns foo at end of each fp
+    func = rep.f_pasture_summary
+    trials = [0,1]
+    prod = 1000
+    weights = 'nap_consumed_vdft'
+    keys = 'keys_vdft'
+    arith = 2
+    arith_axis = [0,1,3]
+    index =[2]
+    cols =[]
+    axis_slice = {}
+    # axis_slice[0] = [0, 2, 1]
+    napcon = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, prod=prod, weights=weights,
+                           keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+    napcon.to_excel(writer, 'napcon')
+
+if run_poccon:
+    #returns foo at end of each fp
+    func = rep.f_pasture_summary
+    trials = [0,1]
+    prod = 1000
+    weights = 'poc_consumed_vfl'
+    keys = 'keys_vfl'
+    arith = 2
+    arith_axis = [0,2]
+    index =[1]
+    cols =[]
+    axis_slice = {}
+    # axis_slice[0] = [0, 2, 1]
+    poccon = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, prod=prod, weights=weights,
+                           keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+    poccon.to_excel(writer, 'poccon')
 
 
-    # ##dry transfer eg tonnes of dry at end of period
-    # nap_transfer_dft = pas_vars['nap_transfer_dft']
+
+
+writer.save()

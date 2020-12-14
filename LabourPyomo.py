@@ -104,51 +104,51 @@ def labpyomo_local(params):
 #to constrain the amount of casual labour in each period
 #this can't be done with variable bounds because it's not a constant value for each period (seeding and harv may differ)
     try:
-        model.del_component(model.casual_bounds)
+        model.del_component(model.con_casual_bounds)
     except AttributeError:
         pass
     def casual_labour_availability(model, p):
         return  (model.p_casual_lower[p], model.v_quantity_casual[p], model.p_casual_upper[p]) #pyomos way of: lower <= x <= upper
-    model.casual_bounds = Constraint(model.s_labperiods, rule = casual_labour_availability, doc='bounds the casual labour in each period')
+    model.con_casual_bounds = Constraint(model.s_labperiods, rule = casual_labour_availability, doc='bounds the casual labour in each period')
     
     ##casual supervision - can be done by either perm or manager
     try:
-        model.del_component(model.labour_transfer_manager)
+        model.del_component(model.con_casual_supervision)
     except AttributeError:
         pass
     def transfer_casual_supervision(model,p):
         return -model.v_casualsuperision_manager[p] - model.v_casualsuperision_perm[p] + (model.p_casual_supervison[p] * model.v_quantity_casual[p]) <= 0
-    model.casual_supervision = Constraint(model.s_labperiods, rule = transfer_casual_supervision, doc='casual require supervision from perm or manager')
+    model.con_casual_supervision = Constraint(model.s_labperiods, rule = transfer_casual_supervision, doc='casual require supervision from perm or manager')
 
     #manager, this is a little more complex because also need to subtract the supervision hours off of the manager supply of workable hours
     try:
-        model.del_component(model.labour_transfer_manager)
+        model.del_component(model.con_labour_transfer_manager)
     except AttributeError:
         pass
     def labour_transfer_manager(model,p):
         return -(model.v_quantity_manager * model.p_manager_hours[p]) + (model.p_perm_supervison[p] * model.v_quantity_perm) + model.v_casualsuperision_manager[p]      \
         + sum(model.v_sheep_labour_manager[p,w] + model.v_crop_labour_manager[p,w] + model.v_fixed_labour_manager[p,w] for w in model.s_worker_levels)  <= 0
-    model.labour_transfer_manager = Constraint(model.s_labperiods, rule = labour_transfer_manager, doc='labour from manager to sheep and crop and fixed')
+    model.con_labour_transfer_manager = Constraint(model.s_labperiods, rule = labour_transfer_manager, doc='labour from manager to sheep and crop and fixed')
 
     #permanent 
     try:
-        model.del_component(model.labour_transfer_permanent)
+        model.del_component(model.con_labour_transfer_permanent)
     except AttributeError:
         pass
     def labour_transfer_permanent(model,p):
         return -(model.v_quantity_perm * model.p_perm_hours[p]) + model.v_casualsuperision_perm[p]  \
         + sum(model.v_sheep_labour_permanent[p,w] + model.v_crop_labour_permanent[p,w] + model.v_fixed_labour_permanent[p,w] for w in model.s_worker_levels if w in ['anyone', 'perm']) <= 0 #if statment just to remove unnessecary activities from lp output
-    model.labour_transfer_permanent = Constraint(model.s_labperiods, rule = labour_transfer_permanent, doc='labour from permanent staff to sheep and crop and fixed')
+    model.con_labour_transfer_permanent = Constraint(model.s_labperiods, rule = labour_transfer_permanent, doc='labour from permanent staff to sheep and crop and fixed')
     
     #casual note perm and manager can do casual tasks - variables may need to change name so to be less confusing
     try:
-        model.del_component(model.labour_transfer_casual)
+        model.del_component(model.con_labour_transfer_casual)
     except AttributeError:
         pass
     def labour_transfer_casual(model,p):
         return -(model.v_quantity_casual[p] *  model.p_casual_hours[p])  \
             + sum(model.v_sheep_labour_casual[p,w] + model.v_crop_labour_casual[p,w] + model.v_fixed_labour_casual[p,w] for w in model.s_worker_levels if w in 'anyone')  <= 0  #if statment just to remove unnessecary activities from lp output
-    model.labour_transfer_casual = Constraint(model.s_labperiods, rule = labour_transfer_casual, doc='labour from casual staff to sheep and crop and fixed')
+    model.con_labour_transfer_casual = Constraint(model.s_labperiods, rule = labour_transfer_casual, doc='labour from casual staff to sheep and crop and fixed')
 
 ############
 #variable  #
