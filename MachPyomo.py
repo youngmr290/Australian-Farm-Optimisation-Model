@@ -263,7 +263,7 @@ def seeding_cost(model,c):
 #function to determine harv cost, this will be passed to core model
 def harvesting_cost(model,c):
     ##contract cost and owner cost (cost per hr x number of hours)
-    return sum(sum(model.v_contractharv_hours[k] * model.p_contractharv_cost[c,k] + model.p_harv_cost[c,k] * model.v_harv_hours[p, k] for k in model.s_harvcrops) for p in model.s_labperiods)
+    return sum(model.v_contractharv_hours[k] * model.p_contractharv_cost[c,k] + sum(model.p_harv_cost[c,k] * model.v_harv_hours[p, k] for p in model.s_labperiods) for k in model.s_harvcrops)
 
 #includes hay cost
 def mach_cost(model,c):

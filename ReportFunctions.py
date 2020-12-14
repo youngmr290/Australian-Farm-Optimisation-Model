@@ -602,13 +602,14 @@ def f_pasture_summary(lp_vars, r_vals, **kwargs):
 
     :param lp_vars: dict: results from pyomo
     :param r_vals: dict: report variable
-    :key prod: str: with key for stock_vars
+    :key prod: report variable to mul with weights (lp variable). Prod can be set to 1 if you simply want to return the lp var.
     :key weights (optional): str: weights to be used in arith (typically a lp variable eg numbers). Only required when arith>0
     :key key: str: dict key for the axis keys
     :key arith: int: arithmetic operation used.
             0: production param (nothing)
             1: production multipled by numbers and summed
             2: production weighted average with numbers
+            3: prod * weights (r_vals * lp_vars)
     :key arith_axis: list: axis to preform arithmetic operation along.
     :key index: list: axis you want as the index of pandas df (order of list is the index level order).
     :key cols: list: axis you want as the cols of pandas df (order of list is the col level order).
@@ -627,11 +628,16 @@ def f_pasture_summary(lp_vars, r_vals, **kwargs):
 
     ##read from stock reshape function
     pas_vars = f_pasture_reshape(lp_vars, r_vals)
-    prod = r_vals['pas'][prod_key]
     keys = pas_vars[keys_key]
-    try:
+    ##if production doesnt exist eg it is 1
+    if type(prod_key) == int:
+        prod = np.array([prod_key])
+    else:
+        prod = r_vals['pas'][prod_key]
+    ##if no weights then make None
+    if kwargs['weights'] is not None:
         weights = pas_vars[kwargs['weights']]
-    except KeyError:
+    else:
         weights = None
 
     f_numpy2df_error(prod, weights, arith, arith_axis, index, cols)
@@ -685,10 +691,6 @@ def f_overhead_summary(r_vals):
     ##overheads/fixed expenses
     exp_fix_c = r_vals['fin']['overheads']
     return exp_fix_c
-
-
-
-
 
 def f_dse(inter,method=0,per_ha=False):
     '''
@@ -826,6 +828,7 @@ def f_stock_summary(lp_vars, r_vals, **kwargs):
             0: production param (nothing)
             1: production multipled by numbers and summed
             2: production weighted average with numbers
+            3: prod * weights (r_vals * lp_vars)
     :key arith_axis: list: axis to preform arithmetic operation along.
     :key index: list: axis you want as the index of pandas df (order of list is the index level order).
     :key cols: list: axis you want as the cols of pandas df (order of list is the col level order).
@@ -845,9 +848,9 @@ def f_stock_summary(lp_vars, r_vals, **kwargs):
     stock_vars = f_stock_reshape(lp_vars, r_vals)
     prod = stock_vars[prod_key]
     keys = stock_vars[keys_key]
-    try:
+    if kwargs['weights'] is not None:
         weights = stock_vars[kwargs['weights']]
-    except KeyError:
+    else:
         weights = None
 
     f_numpy2df_error(prod, weights, arith, arith_axis, index, cols)
@@ -935,6 +938,9 @@ def f_arith(prod, weight, arith, axis):
     ##option 2
     if arith == 2:
         prod = np.sum(prod * weight, tuple(axis), keepdims=keepdims)
+    ##option 3
+    if arith == 3:
+        prod = prod * weight
     return prod
 
 def f_numpy2df(prod, keys, index, cols):

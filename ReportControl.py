@@ -41,6 +41,7 @@ run_profitarea = False #graph profit by crop area
 run_saleprice = True #table of saleprices
 run_cfw_dams = False #table of cfw
 run_grnfoo = True #table of green foo at end of fp
+run_dryfoo = True #table of dry foo at end of fp
 
 
 ##run report functions
@@ -67,9 +68,9 @@ if run_saleprice:
 if run_cfw_dams:
     func = rep.f_stock_summary
     trials = [1, 1]
-    prod = 'cfw_hdmob_k2tva1nwziyg1' #keys for r_vals
-    weights = 'numbers_k2tva1nwziyg1' #keys for r_vals
-    keys = 'dams_keys_k2tvanwziy1g1' #keys for r_vals
+    prod = 'cfw_hdmob_k2tva1nwziyg1'
+    weights = 'numbers_k2tva1nwziyg1'
+    keys = 'dams_keys_k2tvanwziy1g1'
     arith = 1
     arith_axis = [6]
     index =[0,1,5]
@@ -83,10 +84,26 @@ if run_grnfoo:
     #returns foo at end of each fp
     func = rep.f_pasture_summary
     trials = [1]
-    prod = 'foo_end_grnha_goflt' #keys for r_vals
-    weights = 'greenpas_ha_vgoflt' #keys for r_vals
-    keys = 'keys_vgoflt' #keys for r_vals
+    prod = 'foo_end_grnha_goflt'
+    weights = 'greenpas_ha_vgoflt'
+    keys = 'keys_vgoflt'
     arith = 2
+    arith_axis = [0,1,2,4,5]
+    index =[3]
+    cols =[]
+    axis_slice = {}
+    # axis_slice[0] = [0, 2, 1]
+    grnfoo_dams = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, prod=prod, weights=weights,
+                           keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+
+if run_dryfoo:
+    #returns foo at end of each fp
+    func = rep.f_pasture_summary
+    trials = [1]
+    prod = 'foo_end_grnha_goflt'
+    weights = 'drypas_transfer_dft'
+    keys = 'keys_vgoflt'
+    arith = 3
     arith_axis = [0,1,2,4,5]
     index =[3]
     cols =[]
