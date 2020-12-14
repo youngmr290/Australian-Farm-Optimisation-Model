@@ -286,9 +286,9 @@ def f_update(existing_value, new_value, mask_for_new):
     '''
     Parameters
     ----------
-    existing_value : numpy array
+    existing_value : numpy array or float or int
         values you want when mask = false.
-    new_value : numpy array
+    new_value : numpy array or float or int
         values you want when mask = true.
     mask_for_new : boolean mask
         boolean mask for the final axis of the array (typically the g axis).
@@ -299,6 +299,11 @@ def f_update(existing_value, new_value, mask_for_new):
         returns a combination of the two input arrays determined by the mask. Note: multiplying by true return the origional number and multiplying by false results in 0.
 
     '''
+    ##dtype for output (only needed for pp when int32 and float32 create float64 which we dont want)
+    try:
+        dtype = max(existing_value.dtype, new_value.dtype)
+    except:
+        pass
     ##convert '-' to 0 (because '-' * False == '' which causes and error when you add to existing value)
     ##need a try and except incase the new value is not a numpy array (ie it is a single value)
     try:
@@ -309,14 +314,17 @@ def f_update(existing_value, new_value, mask_for_new):
         if new_value=='-':
             new_value = 0
     updated = existing_value * np.logical_not(mask_for_new) + new_value * mask_for_new #used not rather than ~ because ~False == -1 not True (not the case for np.arrays only if bool is single - as it is for sire in some situatoins)
-    ##sometimes a single int is update eg in the first iteration on generator. this causes error because only numpy arrays have .dtype
+
+    ##convert back to origional dtype because adding float32 and int32 returns float64. And sometimes we dont want this eg postprocessing
+    ###use try except becasue sometimes a single int is update eg in the first iteration on generator. this causes error because only numpy arrays have .dtype.
     try:
-        updated = updated.astype(
-            existing_value.dtype)  # convert back to origional dtype because adding float32 and int32 returns float64. And sometimes we dont want this eg postprocessing
+        updated = updated.astype(dtype)
     except AttributeError:
         pass
-    return updated
+    except UnboundLocalError:
+        pass
 
+    return updated
 
 
 ##weighted average (similar to np.average but it handles situation when sum weights = 0 - used in sheep generator - when sum weights = 0 the numbers being averaged also = 0 so just divide by 1 instead of 0
@@ -442,7 +450,7 @@ def f_run_required(prev_exp, exp_data1, check_pyomo=True):
     keys_current = list(exp_data1.reset_index().columns[2:].values)
     sorted_list = sorted(glob.iglob('*.py'), key=os.path.getmtime)
     ####if only report.py has been updated precalcs don't need to be re-run therefore newest is equal to the newest py file that isn't report
-    if sorted_list[-1] != 'ReportFunctions.py':
+    if sorted_list[-1] != 'ReportFunctions.py' or sorted_list[-1] != 'ReportControl.py':
         newest = sorted_list[-1]
     else: newest = sorted_list[-2]
     newest_pyomo = max(glob.iglob('*pyomo.py'), key=os.path.getmtime)

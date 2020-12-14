@@ -698,8 +698,9 @@ def f_overhead_summary(r_vals):
     exp_fix_c = r_vals['fin']['overheads']
     return exp_fix_c
 
-def f_dse(inter,method=0,per_ha=False):
+def f_dse(inter, **kwargs):
     '''
+    DSE calculation
 
     :param
     inter: dict
@@ -710,6 +711,9 @@ def f_dse(inter,method=0,per_ha=False):
         if true it returns DSE/ha else it returns total dse
     :return DSE per pasture hectare for each sheep group:
     '''
+    method = kwargs['method']
+    per_ha = kwargs['per_ha']
+
     if method==0:
         ##sire
         dse_sire = inter['sire_numbers_g0'] * inter['dsenw_p6g0']
@@ -735,7 +739,10 @@ def f_dse(inter,method=0,per_ha=False):
     dse_sire = fun.f_make_table(dse_sire, inter['keys_p6'], ['Sire DSE'])
     dse_dams = fun.f_make_table(dse_dams, inter['keys_p6'], ['Dams DSE'])
     dse_offs = fun.f_make_table(dse_offs, inter['keys_p6'], ['Offs DSE'])
-    return dse_sire, dse_dams, dse_offs
+
+    ##concat
+    dse = pd.concat([dse_sire, dse_dams, dse_offs], axis=0)
+    return dse
 
 def f_profitloss_table(lp_vars, r_vals):
     '''

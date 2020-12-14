@@ -42,6 +42,7 @@ run_pnl = True #table of profit and loss
 run_profitarea = True #graph profit by crop area
 run_saleprice = True #table of saleprices
 run_cfw_dams = True #table of cfw
+run_run_dse = True #table of dse
 run_grnfoo = True #table of green foo at end of fp
 run_dryfoo = True #table of dry foo at end of fp
 run_napfoo = True #table of nap foo at end of fp
@@ -92,6 +93,14 @@ if run_cfw_dams:
     cfw_dams = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, prod=prod, weights=weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
     cfw_dams.to_excel(writer, 'cfw_dams')
+
+if run_dse:
+    func = rep.f_dse
+    trials = [0, 1]
+    method = 0
+    per_ha = True
+    dse = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, method = method, per_ha = per_ha)
+    dse.to_excel(writer, 'dse')
 
 if run_grnfoo:
     #returns foo at end of each fp

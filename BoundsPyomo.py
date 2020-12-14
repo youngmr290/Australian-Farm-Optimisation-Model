@@ -25,14 +25,17 @@ note:
 -forcing sale/retention of drys is done in the stock module (there are inputs which user can control this with)
 '''
 
-##set bounds to include
-bounds_inc=True #controls all bounds (typically on)
-rot_lobound_inc = False #controls rot bound
-sr_bound_inc = False #controls sr bound
-total_pasture_bound = fun.f_sa(False, sen.sav['bnd_pasarea_inc'], 5)  #bound on total pasture (hence also total crop)
-landuse_bound = False #bound on area of each landuse
 
 def boundarypyomo_local():
+
+    ##set bounds to include
+    bounds_inc=True #controls all bounds (typically on)
+    rot_lobound_inc = False #controls rot bound
+    sr_bound_inc = False #controls sr bound
+    total_pasture_bound = fun.f_sa(False, sen.sav['bnd_pasarea_inc'], 5)  #bound on total pasture (hence also total crop)
+    landuse_bound = False #bound on area of each landuse
+
+
     if bounds_inc:
         print('bounds implemented - make sure they are correct')
 
@@ -127,7 +130,7 @@ def boundarypyomo_local():
                 return(
                        sum(model.v_phase_area[r, l] * model.p_pasture_area[r, t] for r in model.s_phases for l in model.s_lmus for t in model.s_pastures)
                        == total_pas_area)
-            model.con_pas_bound = pe.Constraint(model, rule=pas_bound, doc='bound on total pasture area')
+            model.con_pas_bound = pe.Constraint(rule=pas_bound, doc='bound on total pasture area')
 
         ##landuse bound
         if landuse_bound:

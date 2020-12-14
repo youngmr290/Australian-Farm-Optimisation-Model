@@ -239,7 +239,7 @@ def coremodel_all():
     except AttributeError:
         pass
     def poc(model,f,l):
-        return -macpy.ha_pasture_crop_paddocks(model,f,l) * paspy.model.p_poc_con[f,l] + sum(paspy.model.v_poc[v,f,l] for v in model.s_sheep_pools) <=0
+        return -macpy.ha_pasture_crop_paddocks(model,f,l) * model.p_poc_con[f,l] + sum(model.v_poc[v,f,l] for v in model.s_sheep_pools) <=0
     model.con_poc_available = pe.Constraint(model.s_feed_periods, model.s_lmus, rule=poc, doc='constraint between poc available and consumed')
 
     ######################
@@ -375,6 +375,6 @@ def coremodel_all():
         pass
     model.rc = pe.Suffix(direction=pe.Suffix.IMPORT)
     ##solve - tee=True will print out solver information
-    results = pe.SolverFactory('glpk').solve(model, tee=False) #turn to true for solver output - may be useful for troubleshooting
+    results = pe.SolverFactory('glpk').solve(model, tee=True) #turn to true for solver output - may be useful for troubleshooting
     return results
     
