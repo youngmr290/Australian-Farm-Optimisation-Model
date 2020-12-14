@@ -81,7 +81,7 @@ def generator(params,r_vals,plots = False):
     na=np.newaxis
     ## define the periods - default (dams and sires)
     sim_years = uinp.structure['i_age_max']
-    sim_years = 3
+    # sim_years = 3
     sim_years_offs = min(uinp.structure['i_age_max_offs'], sim_years)
     n_sim_periods, date_start_p, date_end_p, p_index_p, step \
     = sfun.sim_periods(pinp.sheep['i_startyear'], uinp.structure['i_sim_periods_year'], sim_years)
@@ -4877,7 +4877,7 @@ def generator(params,r_vals,plots = False):
 
     r_vals['salevalue_cg0'] = r_salevalue_ctva1e1b1nwzida0e0b0xyg0
     r_vals['salevalue_k2ctva1nwziyg1'] = r_salevalue_k2ctva1e1b1nwzida0e0b0xyg1
-    r_vals['salevalue_cta1wzixg2'] = salevalue_prog_cta1e1b1nwzida0e0b0xyg2
+    r_vals['salevalue_ctwzia0xg2'] = salevalue_prog_cta1e1b1nwzida0e0b0xyg2
     r_vals['salevalue_k3k5ctvnwziaxyg3'] = r_salevalue_k3k5ctva1e1b1nwzida0e0b0xyg3
 
     r_vals['woolvalue_cg0'] = r_woolvalue_ctva1e1b1nwzida0e0b0xyg0

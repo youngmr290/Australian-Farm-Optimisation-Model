@@ -505,6 +505,11 @@ def f_make_table(data, index, header):
 def f_produce_df(data, rows, columns, row_names=None, column_names=None):
     """rows is a list of lists that will be used to build a MultiIndex
     columns is a list of lists that will be used to build a MultiIndex"""
+    ##if either cols or rows dont exist then add a default 0 as name
+    if len(rows) == 0:
+        rows=[[0]]
+    if len(columns) == 0:
+        columns=[[0]]
     row_index = pd.MultiIndex.from_product(rows, names=row_names)
     col_index = pd.MultiIndex.from_product(columns, names=column_names)
     return pd.DataFrame(data, index=row_index, columns=col_index)
