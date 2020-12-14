@@ -37,7 +37,7 @@ exp_data = fun.f_run_required(prev_exp, exp_data, check_pyomo=False)
 trial_outdated = exp_data['run'] #returns true if trial is out of date
 
 run_pnl = True #table of profit and loss
-run_profitarea = False #graph profit by crop area
+run_profitarea = True #graph profit by crop area
 run_saleprice = True #table of saleprices
 run_cfw_dams = True #table of cfw
 run_grnfoo = False #table of green foo at end of fp
@@ -47,18 +47,18 @@ run_dryfoo = False #table of dry foo at end of fp
 ##run report functions
 if run_pnl:
     func = rep.f_profitloss_table
-    trials = [1, 1]
+    trials = [0, 1]
     pnl = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials)
 
 if run_profitarea:
     profit_option = 0
     area_option = 4
-    trials = [1]
+    trials = [25,26,27,28]
     rep.f_croparea_profit(lp_vars, r_vals, trial_outdated, exp_data_index, trials, area_option, profit_option)
 
 if run_saleprice:
     func = rep.f_price_summary
-    trials = [1, 1]
+    trials = [0, 1]
     option = 0
     grid = [0,5,6]
     weight = [22,40,25]
@@ -67,7 +67,7 @@ if run_saleprice:
 
 if run_cfw_dams:
     func = rep.f_stock_summary
-    trials = [1, 1]
+    trials = [0, 1]
     prod = 'cfw_hdmob_k2tva1nwziyg1'
     weights = 'dams_numbers_k2tvanwziy1g1'
     keys = 'dams_keys_k2tvanwziy1g1'
@@ -83,7 +83,7 @@ if run_cfw_dams:
 if run_grnfoo:
     #returns foo at end of each fp
     func = rep.f_pasture_summary
-    trials = [1]
+    trials = [0,1]
     prod = 'foo_end_grnha_goflt'
     weights = 'greenpas_ha_vgoflt'
     keys = 'keys_vgoflt'
@@ -99,7 +99,7 @@ if run_grnfoo:
 if run_dryfoo:
     #returns foo at end of each fp
     func = rep.f_pasture_summary
-    trials = [1]
+    trials = [0,1]
     prod = 1000
     weights = 'drypas_transfer_dft'
     keys = 'keys_dft'

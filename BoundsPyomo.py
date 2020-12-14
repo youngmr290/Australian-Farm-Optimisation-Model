@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 
 import Functions as fun
+import Sensitivity as sen
 import UniversalInputs as uinp
 import PropertyInputs as pinp
 from CreateModel import model
@@ -28,7 +29,7 @@ note:
 bounds_inc=False #controls all bounds
 rot_lobound_inc = False #controls rot bound
 sr_bound_inc = False #controls sr bound
-total_pasture_bound = False #bound on total pasture (hence also total crop)
+total_pasture_bound = sen.sav['bnd_pasarea_inc'] #bound on total pasture (hence also total crop)
 landuse_bound = False #bound on area of each landuse
 
 def boundarypyomo_local():
@@ -62,8 +63,10 @@ def boundarypyomo_local():
         ##sr - carry cap of each ha of each pasture
         for t, pasture in enumerate(uinp.structure['pastures']):
             pasture_dse_carry[pasture] = pinp.sheep['i_sr_constraint_t'][t]
+
         ##total pas area
-        total_pas_area = 1000
+        total_pas_area = sen.sav['bnd_total_pas_area']
+
         ##landuse area abound - note that setting to zero is the equivelent of no bound
         landuse_bound_k.iloc[0] = 50
 

@@ -4,6 +4,9 @@ Created on Mon Jan  6 10:57:56 2020
 
 
 @author: young
+
+This is where all sensitivity values must be initialised.
+
 """
 
 import numpy as np
@@ -23,7 +26,7 @@ sar = dict()
 ######
 
 ##Global
-sap['pi']=0 #global potential intake
+sap['pi']=0 #global potential intake ^this has not been applied globally to the model yet (currently only in stubble)
 
 ######
 #SAM #
@@ -74,7 +77,9 @@ sar['mortalitye'] = 0          #Scale the calculated dam mortality at birth in t
 ######
 #SAV #
 ######
-
+##area
+sav['bnd_total_pas_area'] = '-'  #Total pasture area for bound. '-' is default so it will chuck an error if the bound is turned on without a specified area
+sav['bnd_pasarea_inc'] = False   #SA to turn on the pasture area bound
 ##Sheep
 sav['eqn_compare']      = '-'                  #SA to alter if the different equation systems in the sheep sim are run and compared
 sav['TOL_inc']         = np.full(pinp.sheep_inp['i_mask_i'].shape,'-')   # SA value for the inclusion of each TOL

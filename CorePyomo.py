@@ -79,7 +79,7 @@ def coremodel_all():
     except AttributeError:
         pass
     def labour_crop(model,p,w):
-        return -model.v_crop_labour_casual[p,w] - model.v_crop_labour_permanent[p,w] - model.v_crop_labour_manager[p,w] + lcrppy.mach_labour(model,p)  <= 0
+        return -model.v_crop_labour_casual[p,w] - model.v_crop_labour_permanent[p,w] - model.v_crop_labour_manager[p,w] + lcrppy.mach_labour(model,p) <= 0
     model.con_labour_crop_anyone = pe.Constraint(model.s_labperiods, ['anyone'], rule = labour_crop, doc='link between labour supply and requirment by crop jobs for all labour sources')
     
     ######################
@@ -91,16 +91,18 @@ def coremodel_all():
     except AttributeError:
         pass
     def labour_sheep_cas(model,p,w):
-        return -model.v_sheep_labour_casual[p,w] - model.v_sheep_labour_permanent[p,w] - model.v_sheep_labour_manager[p,w] + suppy.sup_labour(model,p) + stkpy.stock_labour_anyone(model,p)   <= 0
+        return -model.v_sheep_labour_casual[p,w] - model.v_sheep_labour_permanent[p,w] - model.v_sheep_labour_manager[p,w] + suppy.sup_labour(model,p) + stkpy.stock_labour_anyone(model,p) <= 0
     model.con_labour_sheep_anyone = pe.Constraint(model.s_labperiods, ['anyone'], rule = labour_sheep_cas, doc='link between labour supply and requirment by sheep jobs for all labour sources')
+
     ##labour sheep - can be done by permanent and manager staff
     try:
         model.del_component(model.con_labour_sheep_perm)
     except AttributeError:
         pass
     def labour_sheep_perm(model,p,w):
-        return - model.v_sheep_labour_permanent[p,w] - model.v_sheep_labour_manager[p,w] + stkpy.stock_labour_perm(model,p)   <= 0
+        return - model.v_sheep_labour_permanent[p,w] - model.v_sheep_labour_manager[p,w] + stkpy.stock_labour_perm(model,p) <= 0
     model.con_labour_sheep_perm = pe.Constraint(model.s_labperiods, ['perm'], rule = labour_sheep_perm, doc='link between labour supply and requirment by sheep jobs for perm labour sources')
+
     ##labour sheep - can be done by manager
     try:
         model.del_component(model.con_labour_sheep_manager)
@@ -272,11 +274,6 @@ def coremodel_all():
         ##this means the first period doesn't include the previous debit or credit (because it doesn't exist, because it is the first period) 
         j = [1] * len(c)
         j[0] = 0
-        ##carryoverJF to indicate when to include carryover - carryover is removed from last period and added to first period
-        carryoverJF = [0] * len(c)
-        carryoverJF[0] = 1
-        carryoverND = [0] * len(c)
-        carryoverND[-1] = 1
         return (-yield_income(model,c[i]) + crppy.rotation_cost(model,c[i]) + labpy.labour_cost(model,c[i]) + macpy.mach_cost(model,c[i]) + suppy.sup_cost(model,c[i]) + model.p_overhead_cost[c[i]]
                 - stkpy.stock_cashflow(model,c[i])
                 - model.v_debit[c[i]] + model.v_credit[c[i]]  + model.v_debit[c[i-1]] * fin.debit_interest() - model.v_credit[c[i-1]] * fin.credit_interest() * j[i] #mul by j so that credit in ND doesnt provide into JF otherwise it will be unbounded because it will get interest
@@ -366,15 +363,6 @@ def coremodel_all():
         pass
     model.rc = pe.Suffix(direction=pe.Suffix.IMPORT)
     ##solve - tee=True will print out solver information
-    pe.SolverFactory()
-    # optimizer = pe.SolverFactory('glpk' ) #specify solver
-    # optimizer.options['help']=True #add any solver arguments ^this isnt doing anything, i still cant see any output from solver
-    # optimizer.options['nopresol'] = True #add any solver arguments ^this isnt doing anything, i still cant see any output from solver
-    # optimizer.options['output'] = 'ttt.txt' #add any solver arguments ^this isnt doing anything, i still cant see any output from solver
-    # results = optimizer.solve(model, tee=True) #turn to true for solver output - may be useful for troubleshooting
-    results = pe.SolverFactory('glpk').solve(model, tee=True) #turn to true for solver output - may be useful for troubleshooting
-    ##print out all infeasible constraints - every constraint is infeasbible when the mode is infeasible so it is not very helpful unless we can force the solver to return the infeasible result
-    # from pyomo.util.infeasible import log_infeasible_constraints
-    # log_infeasible_constraints(model)
+    results = pe.SolverFactory('glpk').solve(model, tee=False) #turn to true for solver output - may be useful for troubleshooting
     return results
     
