@@ -26,7 +26,7 @@ note:
 '''
 
 ##set bounds to include
-bounds_inc=False #controls all bounds
+bounds_inc=True #controls all bounds (typically on)
 rot_lobound_inc = False #controls rot bound
 sr_bound_inc = False #controls sr bound
 total_pasture_bound = fun.f_sa(False, sen.sav['bnd_pasarea_inc'], 5)  #bound on total pasture (hence also total crop)

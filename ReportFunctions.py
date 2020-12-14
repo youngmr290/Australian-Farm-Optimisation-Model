@@ -102,36 +102,8 @@ def f_xy_graph(func0, func1, lp_vars, r_vals, trial_outdated, exp_data_index, tr
         x_vals.append(func0(lp_vars[exp_data_index[row][2]], r_vals[exp_data_index[row][2]], option=func0_options))
         y_vals.append(func1(lp_vars[exp_data_index[row][2]], r_vals[exp_data_index[row][2]], option=func1_options))
     plt.plot(x_vals, y_vals)
-    plt.show()
+    return plt
 
-# def f_croparea_profit(lp_vars, r_vals, trial_outdated, exp_data_index, trials, area_option, profit_option):
-#     '''returns graph of crop area (x - axis) by profit (y - axis)
-#     :param lp_vars: dict - results from pyomo
-#     :param r_vals: dict - report variable
-#     :param trial_outdated: series indicating which trials are outdated
-#     :param exp_data_index: trial names - in the same order as exp.xlsx
-#     :param trials: trials to return info for
-#     :param area_option:
-#             3: total pasture area
-#             4: total crop area
-#     :param profit_option:
-#             0: profit = rev - (exp + minroe + asset_opp +dep)
-#             1: profit = rev - (exp + dep)
-#     '''
-#     ##check for errors
-#     try:
-#         f_errors(r_vals, exp_data_index, trial_outdated, trials)
-#     except exc.TrialError:
-#         print('''Trials for reporting dont all exist''')
-#         return
-#     ##loop through trials and generate pnl table
-#     profit = [] #create list to append pnl table from each trial
-#     area = [] #create list to append pnl table from each trial
-#     for row in trials:
-#         profit.append(f_profit(lp_vars[exp_data_index[row][2]], r_vals[exp_data_index[row][2]], option=profit_option))
-#         area.append(f_area_summary(lp_vars[exp_data_index[row][2]], r_vals[exp_data_index[row][2]], option=area_option))
-#     plt.plot(area, profit)
-#     plt.show()
 
 
 
@@ -525,7 +497,9 @@ def f_pasture_reshape(lp_vars, r_vals):
 
     #store keys - must be in axis order
     pas_vars['keys_vgoflt'] = [keys_v, keys_g, keys_o, keys_f, keys_l, keys_t]
+    pas_vars['keys_vdft'] = [keys_v, keys_d, keys_f, keys_t]
     pas_vars['keys_dft'] = [keys_d, keys_f, keys_t]
+    pas_vars['keys_vfl'] = [keys_v, keys_f, keys_l]
 
     ##shapes
     vgoflt = len_v, len_g, len_o, len_f, len_l, len_t

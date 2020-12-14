@@ -128,7 +128,6 @@ def coremodel_all():
     #stubble & nap consumption at harvest #
     #######################################
     try:
-        model.del_component(model.con_harv_stub_nap_cons_index_1)
         model.del_component(model.con_harv_stub_nap_cons_index)
         model.del_component(model.con_harv_stub_nap_cons)
     except AttributeError:
@@ -192,7 +191,6 @@ def coremodel_all():
     ###################### 
     ##links crop and mach pyomo together
     try:
-        model.del_component(model.con_harv_index)
         model.del_component(model.con_harv)
     except AttributeError:
         pass
@@ -206,7 +204,6 @@ def coremodel_all():
     ###################### 
     ##links crop and mach pyomo together
     try:
-        model.del_component(model.con_makehay_index)
         model.del_component(model.con_makehay)
     except AttributeError:
         pass
