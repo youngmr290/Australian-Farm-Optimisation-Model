@@ -170,22 +170,22 @@ def machpyomo_local(params):
     ##constraint to limit the number of seed days in each period ()
     ##includes a factor to account for days that are too wet or dry to seed (this used to be accounted for in seeding rate, but that meant a labour cost was occured for time that was too wet or dry)
     try:
-        model.del_component(model.seed_period_days)
+        model.del_component(model.con_seed_period_days)
     except AttributeError:
         pass
     def seed_period_days(model,p):
         return sum(sum(model.v_seeding_machdays[p,k,l] for k in model.s_crops)for l in model.s_lmus) <= \
         model.p_seed_days[p] * model.p_number_crop_gear * model.p_seeding_occur
-    model.seed_period_days = Constraint(model.s_labperiods, rule=seed_period_days, doc='constrain the number of seeding days per seed period')
+    model.con_seed_period_days = Constraint(model.s_labperiods, rule=seed_period_days, doc='constrain the number of seeding days per seed period')
     
     ##constraint to limit the number of hours of harvest to the amount that can be supplied by x crop gear
     try:
-        model.del_component(model.harv_hours_limit)
+        model.del_component(model.con_harv_hours_limit)
     except AttributeError:
         pass
     def harv_hours_limit(model, p):
         return sum(model.v_harv_hours[p, k] for k in model.s_harvcrops) <= model.p_harv_hrs_max[p] * model.p_number_crop_gear
-    model.harv_hours_limit = Constraint(model.s_labperiods, rule=harv_hours_limit, doc='constrain the number of hours of harvest x crop gear can provide')
+    model.con_harv_hours_limit = Constraint(model.s_labperiods, rule=harv_hours_limit, doc='constrain the number of hours of harvest x crop gear can provide')
     
     ##link sow supply to crop and pas variable - this has to be done because crop is not by period and pasture is
     try:

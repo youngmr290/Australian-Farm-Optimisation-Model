@@ -13,12 +13,12 @@ import pyomo.environ as pe
 import time
 import math
 import os.path
-import glob
 from datetime import datetime
 import multiprocessing
 import pickle as pkl
 import sys
 import numpy as np
+from random import randrange
 
 start=time.time()
 from CreateModel import model
@@ -40,7 +40,6 @@ import SupFeedPyomo as suppy
 import StubblePyomo as stubpy
 import StockPyomo as spy
 import CorePyomo as core
-import ReportFunctions as rep
 
 start_time1 = time.time()
 
@@ -103,6 +102,9 @@ exp_data1 = fun.f_run_required(prev_exp, exp_data1)
 #########################
 #^maybe there is a cleaner way to do some of the stuff below ie a way that doesn't need as many if statements?
 def exp(row):
+    ##sleep for random length of time. This is to offset processes with a goal of spreading the RAM load
+    time.sleep(randrange(20))
+
     ##start timer for each loop
     start_time = time.time()
     for dic,key1,key2,indx in exp_data:
@@ -221,8 +223,8 @@ def exp(row):
         run_pyomo_params= True
     ##determine if pyomo should run, note if pyomo doesn't run there will be no ful solution (they are the same as before so no need)
     if run_pyomo_params or exp_data1.loc[exp_data1.index[row],'runpyomo'].squeeze():
-        ###if re-run update runpyomo to false
-        exp_data1.loc[exp_data1.index[row], ('runpyomo', '', '', '')] = False
+        # ###if re-run update runpyomo to false
+        # exp_data1.loc[exp_data1.index[row], ('runpyomo', '', '', '')] = False
         ##call core model function, must call them in the correct order (core must be last)
         crtmod.sets() #certain sets have to be updated each iteration of exp
         rotpy.rotationpyomo(params['rot'])
@@ -243,10 +245,10 @@ def exp(row):
         ##check if user wants full solution
         if exp_data.index[row][1] == True:
             ##make lp file
-            model.write('%s.lp' %exp_data.index[row][2],io_options={'symbolic_solver_labels':True})
+            model.write('Output\%s.lp' %exp_data.index[row][2],io_options={'symbolic_solver_labels':True})  #file name has to have capital
             
             ##write rc and dual to txt file
-            with open('Rc and Duals - %s.txt' %exp_data.index[row][2],'w') as f:
+            with open('Output\Rc and Duals - %s.txt' %exp_data.index[row][2],'w') as f:  #file name has to have capital
                 f.write('RC\n')        
                 for v in model.component_objects(pe.Var, active=True):
                     f.write("Variable %s\n" %v)   #  \n makes new line
@@ -262,12 +264,12 @@ def exp(row):
                         print("      ", index, model.dual[c[index]], file=f)
                         # except: pass 
             ##prints what you see from pprint to txt file - you can see the slack on constraints but not the rc or dual
-            with open('full model - %s.txt' %exp_data.index[row][2], 'w') as f:
+            with open('Output\Full model - %s.txt' %exp_data.index[row][2], 'w') as f:  #file name has to have capital
                 f.write("My description of the instance!\n")
                 model.display(ostream=f)
     
         ##This writes variable with value greater than 1 to txt file, the file is overwritten each time - used to check stuff out each iteration if you want 
-        file = open('variable summary.txt','w') 
+        file = open('Output\Variable summary.txt','w') #file name has to have capital
         file.write('Trial: %s\n'%exp_data.index[row][2]) #the first line is the name of the trial
         for v in model.component_objects(pe.Var, active=True):
             file.write("Variable %s\n" %v)   #  \n makes new line
@@ -312,7 +314,7 @@ def exp(row):
 #using map it returns outputs in the order they go in ie in the order of the exp
 ##the result after the different processes are done is a list of dicts (because each itteration returns a dict and the multiprocess stuff returns a list)
 def main():
-    ## Define the dataset - trials that require at least the precalcs done
+    ## Define the dataset - trials that require at least the precalcs done (user wants it run and it is out of date)
     dataset = list(np.flatnonzero(np.array(exp_data.index.get_level_values(0)) * np.array(exp_data1['run']))) #gets the ordinal index values for the trials the user wants to run that are not upto date
     ##prints out start status - number of trials to run, date and time exp.xl was last saved and output summary  
     print('Number of trials to run: ',len(dataset))
@@ -324,10 +326,11 @@ def main():
         result = pool.map(exp, dataset)
     ##update run require status - trials just run are now upto date for both pyomo and precalcs - all trials that the user wanted to run are now up to date (even if they didn't run because they were already up to date)
     exp_data1.loc[exp_data1.index[dataset],['run']] = False
+    exp_data1.loc[exp_data1.index[dataset],['runpyomo']] = False
     ##return pyomo results and params dict
-    return dataset, result
+    return dataset, result, exp_data1
 if __name__ == '__main__':
-    dataset, results =main() #returns a list is the same order of exp
+    dataset, results, exp_data1 = main() #returns a list is the same order of exp
     ##turn list of dicts into nested dict with trial name as key
     for trial_row, result, res_num in zip(dataset,results,range(len(results))):
         lp_vars[exp_data.index[trial_row][2]] = results[res_num][0] 

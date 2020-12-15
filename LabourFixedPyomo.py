@@ -66,13 +66,13 @@ def labfxpyomo_local(params):
     ###################################
     ##constraint makes sure the model allocate the labour learn to labour periods, because labour learn timing is optimised (others are fixed timing determined in input sheet)
     try:
-        model.del_component(model.labour_learn_period)
+        model.del_component(model.con_labour_learn_period)
     except AttributeError:
         pass
     def labour_learn_period(model):
         # return -sum(model.v_learn_allocation[i] * model.p_learn_labour for i in model.s_labperiods ) + model.p_learn_labour <= 0
         return -sum(model.v_learn_allocation[p] for p in model.s_labperiods)  <= -1
-    model.labour_learn_period = Constraint(rule = labour_learn_period, doc='constrains the amount of labour learn in each period')
+    model.con_labour_learn_period = Constraint(rule = labour_learn_period, doc='constrains the amount of labour learn in each period')
 
 ############
 #variables #
