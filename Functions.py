@@ -485,7 +485,7 @@ def f_run_required(prev_exp, exp_data1, check_pyomo=True):
 
 def f_read_exp():
     exp_data = pd.read_excel('exp.xlsx', index_col=None, header=[0,1,2,3])
-    exp_data = exp_data.loc[:,exp_data.columns.get_level_values(0)!='Drop']
+    exp_data = exp_data.iloc[:,exp_data.columns.get_level_values(0)!='Drop']
     exp_data = exp_data.set_index(list(exp_data.columns[0:3]))
 
     # exp_data = pd.read_excel('exp.xlsx', index_col=None, header=None)

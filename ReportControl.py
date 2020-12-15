@@ -38,18 +38,19 @@ with open('pkl_exp.pkl', "rb") as f:
 exp_data = fun.f_run_required(prev_exp, exp_data, check_pyomo=False)
 trial_outdated = exp_data['run'] #returns true if trial is out of date
 
-run_pnl = True #table of profit and loss
-run_profitarea = True #graph profit by crop area
-run_saleprice = True #table of saleprices
-run_cfw_dams = True #table of cfw
-run_dse = True #table of dse
-run_grnfoo = True #table of green foo at end of fp
-run_dryfoo = True #table of dry foo at end of fp
-run_napfoo = True #table of nap foo at end of fp
-run_grncon = True #table of green con at end of fp
-run_drycon = True #table of dry con at end of fp
-run_napcon = True #table of nap con at end of fp
-run_poccon = True #table of poc con at end of fp
+run_pnl = False #table of profit and loss
+run_profitarea = False #graph profit by crop area
+run_saleprice = False #table of saleprices
+run_cfw_dams = False #table of cfw
+run_daily_mei_dams = True #table of mei
+run_dse = False #table of dse
+run_grnfoo = False #table of green foo at end of fp
+run_dryfoo = False #table of dry foo at end of fp
+run_napfoo = False #table of nap foo at end of fp
+run_grncon = False #table of green con at end of fp
+run_drycon = False #table of dry con at end of fp
+run_napcon = False #table of nap con at end of fp
+run_poccon = False #table of poc con at end of fp
 
 
 ##run report functions
@@ -65,13 +66,13 @@ if run_profitarea:
     func0_option = 4
     func1_option = 0
     trials = [25,26,27,28]
-    plt = rep.f_xy_graph(func0, func1, lp_vars, r_vals, trial_outdated, exp_data_index, trials, func0_option, func1_option)
-    plt.savefig('Output\profitarea_curve.png')
+    plot = rep.f_xy_graph(func0, func1, lp_vars, r_vals, trial_outdated, exp_data_index, trials, func0_option, func1_option)
+    plot.savefig('Output\profitarea_curve.png')
 
 if run_saleprice:
     func = rep.f_price_summary
     trials = [0, 25,26,27,28]
-    option = 0
+    option = 2
     grid = [0,5,6]
     weight = [22,40,25]
     fs = [2,3,2]
@@ -81,6 +82,7 @@ if run_saleprice:
 if run_cfw_dams:
     func = rep.f_stock_summary
     trials = [0, 25,26,27,28]
+    type = 'stock'
     prod = 'cfw_hdmob_k2tva1nwziyg1'
     weights = 'dams_numbers_k2tvanwziy1g1'
     keys = 'dams_keys_k2tvanwziy1g1'
@@ -90,14 +92,34 @@ if run_cfw_dams:
     cols =[2]
     axis_slice = {}
     axis_slice[0] = [0, 2, 1]
-    cfw_dams = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, prod=prod, weights=weights,
+    cfw_dams = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
     cfw_dams.to_excel(writer, 'cfw_dams')
 
+if run_daily_mei_dams:
+    func = rep.f_stock_pasture_summary
+    trials = [0,28]
+    type = 'stock'
+    prod = 'dams_mei_k2p6ftva1nwziyg1'
+    weights = 'dams_numbers_k2tvanwziy1g1'
+    weights_axis = [1, 2]
+    keys = 'dams_keys_k2p6ftvanwziy1g1'
+    arith = 2
+    arith_axis = [2,3,4,5,6,7,8,9,10,11]
+    denom = 'pas', 'days_p6'
+    index =[1]
+    cols =[0]
+    axis_slice = {}
+    # axis_slice[0] = [0, 2, 1]
+    daily_mei_dams = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights,
+                           weights_axis=weights_axis, keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols,
+                           axis_slice=axis_slice)
+    daily_mei_dams.to_excel(writer, 'daily_mei_dams')
+
 if run_dse:
     func = rep.f_dse
-    trials = [0]
-    method = 0
+    trials = [0,25,26,27,28]
+    method = 1
     per_ha = True
     dse = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, method = method, per_ha = per_ha)
     dse.to_excel(writer, 'dse')
@@ -106,6 +128,7 @@ if run_grnfoo:
     #returns foo at end of each fp
     func = rep.f_pasture_summary
     trials = [0,25,26,27,28]
+    type = 'stock'
     prod = 'foo_end_grnha_goflt'
     weights = 'greenpas_ha_vgoflt'
     keys = 'keys_vgoflt'

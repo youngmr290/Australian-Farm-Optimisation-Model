@@ -349,8 +349,9 @@ def map_excel(params,r_vals):
                                   /        i_grn_senesce_daily_ft-1) / length_f.reshape(-1,1)
 
     ##store report vals
-    r_vals['pasture_area_rt'] = pasture_rt #store for reporting
-    r_vals['keys_pastures'] = pastures #store for reporting
+    r_vals['pasture_area_rt'] = pasture_rt
+    r_vals['keys_pastures'] = pastures
+    r_vals['days_p6'] = length_f
     return
 
 ### define a function that loops through feed periods to generate the foo profile for a specified germination and consumption

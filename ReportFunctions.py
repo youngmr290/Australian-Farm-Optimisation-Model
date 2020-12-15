@@ -135,7 +135,7 @@ def f_price_summary(lp_vars, r_vals, **kwargs):
 
     ##wool price - grid price
     if option==1:
-        return pd.Series(r_vals['woolp_mpg_w4'], index= r_vals['fd_range'])
+        return pd.Series(r_vals['stock']['woolp_mpg_w4'], index= r_vals['fd_range'])
 
     ##sale price - grid price
     if option==2:
@@ -145,9 +145,9 @@ def f_price_summary(lp_vars, r_vals, **kwargs):
                                  names=['Grid', 'Weight', 'Fat Score'])
         saleprice = pd.DataFrame(index=sale_index, columns=['Price $/kg', 'Price $/hd']) #need to initilise df with multiindex so rows can be added
 
-        grid_price_s7s5s6 = r_vals['grid_price_s7s5s6']
-        weight_range_s7s5 = r_vals['weight_range_s7s5']
-        grid_keys = r_vals['salegrid_keys']
+        grid_price_s7s5s6 = r_vals['stock']['grid_price_s7s5s6']
+        weight_range_s7s5 = r_vals['stock']['weight_range_s7s5']
+        grid_keys = r_vals['stock']['salegrid_keys']
         for t_grid, t_weight, t_fs in zip(grid, weight, fs):
             ##grid name - used in table index
             grid_name = grid_keys[t_grid]
@@ -389,8 +389,11 @@ def f_stock_reshape(lp_vars, r_vals):
 
     #store keys - must be in axis order
     stock_vars['sire_keys_g0'] = [keys_g0]
+    stock_vars['sire_keys_p6fg0'] = [keys_p6, keys_f, keys_g0]
     stock_vars['dams_keys_k2tvanwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
+    stock_vars['dams_keys_k2p6ftvanwziy1g1'] = [keys_k2, keys_p6, keys_f, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
     stock_vars['offs_keys_k3k5tvnwziaxy1g3'] = [keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
+    stock_vars['offs_keys_k3k5p6ftvnwziaxy1g3'] = [keys_k3, keys_k5, keys_p6, keys_f, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
 
     ##animal numbers
     ###shapes
@@ -442,6 +445,15 @@ def f_stock_reshape(lp_vars, r_vals):
     stock_vars['cfw_hd_g0'] = r_vals['stock']['r_cfw_hd_g0'].reshape(sire_shape)
     stock_vars['cfw_hd_k2tva1nwziyg1'] = r_vals['stock']['r_cfw_hd_k2ctva1nwziyg1'].reshape(dams_shape)
     stock_vars['cfw_hd_k3k5tvnwziaxyg3'] = r_vals['stock']['r_cfw_hd_k3k5ctvnwziaxyg3'].reshape(offs_shape)
+
+    ##mei
+    siremei_shape = len_p6, len_f, len_g0
+    damsmei_shape = len_k2, len_p6, len_f, len_t1, len_v1, len_a, len_n1, len_lw1, len_z, len_i, len_y1, len_g1
+    offsmei_shape = len_k3, len_k5, len_p6, len_f, len_t3, len_v3, len_n3, len_lw3, len_z, len_i, len_a, len_x, len_y3, len_g3
+
+    stock_vars['sire_mei_p6fg0'] = r_vals['stock']['mei_sire_p6fg0'].reshape(siremei_shape)
+    stock_vars['dams_mei_k2p6ftva1nwziyg1'] = r_vals['stock']['mei_dams_k2p6ftva1nw8ziyg1'].reshape(damsmei_shape)
+    stock_vars['offs_mei_k3k5p6ftvnwziaxyg3'] = r_vals['stock']['mei_offs_k3k5p6ftvnw8ziaxyg3'].reshape(offsmei_shape)
 
     ##husbandry expense
     sirecost_shape = len_c, len_g0
@@ -601,57 +613,6 @@ def f_stock_cash_summary(lp_vars, r_vals):
 
 
     return stocksale_c, wool_c, sirecost_c, stockcost_c, sup_cost_c
-
-def f_pasture_summary(lp_vars, r_vals, **kwargs):
-    '''
-        Returns summary of a numpy array in a pandas table.
-    Note: 1. prod and weights must be broadcastable. 2. Sepecify axes the broadcasted version.
-
-    :param lp_vars: dict: results from pyomo
-    :param r_vals: dict: report variable
-    :key prod: report variable to mul with weights (lp variable). Prod can be set to 1 if you simply want to return the lp var.
-    :key weights (optional): str: weights to be used in arith (typically a lp variable eg numbers). Only required when arith>0
-    :key key: str: dict key for the axis keys
-    :key arith: int: arithmetic operation used.
-            0: production param (nothing)
-            1: production multipled by numbers and summed
-            2: production weighted average with numbers
-            3: prod * weights (r_vals * lp_vars)
-    :key arith_axis: list: axis to preform arithmetic operation along.
-    :key index: list: axis you want as the index of pandas df (order of list is the index level order).
-    :key cols: list: axis you want as the cols of pandas df (order of list is the col level order).
-    :key axis_slice: dict: keys (int) is the axis. value (list) is the start, stop and step of the slice
-    :return: pandas df
-
-    '''
-    ##unpack dict
-    arith = kwargs['arith']
-    arith_axis = kwargs['arith_axis']
-    index = kwargs['index']
-    cols = kwargs['cols']
-    prod_key = kwargs['prod']
-    keys_key = kwargs['keys']
-    axis_slice = kwargs['axis_slice']
-
-    ##read from stock reshape function
-    pas_vars = f_pasture_reshape(lp_vars, r_vals)
-    keys = pas_vars[keys_key]
-    ##if production doesnt exist eg it is 1
-    if type(prod_key) == int:
-        prod = np.array([prod_key])
-    else:
-        prod = r_vals['pas'][prod_key]
-    ##if no weights then make None
-    if kwargs['weights'] is not None:
-        weights = pas_vars[kwargs['weights']]
-    else:
-        weights = None
-
-    f_numpy2df_error(prod, weights, arith, arith_axis, index, cols)
-    prod, weights = f_slice(prod, weights, keys, arith, axis_slice)
-    prod = f_arith(prod, weights, arith, arith_axis)
-    prod = f_numpy2df(prod, keys, index, cols)
-    return prod
 
 def f_labour_summary(lp_vars, r_vals, option=0):
     '''
@@ -829,48 +790,113 @@ def f_profit(lp_vars, r_vals, option=0):
     else:
         return obj_profit + minroe - (asset_opportunity_cost * r_vals['opportunity_cost_capital'])
 
-def f_stock_summary(lp_vars, r_vals, **kwargs):
+def f_stock_pasture_summary(lp_vars, r_vals, **kwargs):
     '''
     Returns summary of a numpy array in a pandas table.
-    Note: 1. prod and weights must be broadcastable. 2. Sepecify axes the broadcasted version.
+    Note: 1. prod and weights must be broadcastable.
+          2. Sepecify axes the broadcasted/expanded version.
 
     :param lp_vars: dict: results from pyomo
     :param r_vals: dict: report variable
-    :key prod: str: with key for stock_vars
+    :key type: str: either 'stock' or 'pas' to indicate calc type
+    :key prod (optional): str: with key for stock_vars
+    :key prod_axis (optional): list: position to add new axis
     :key weights (optional): str: weights to be used in arith (typically a lp variable eg numbers). Only required when arith>0
+    :key weights_axis (optional): list: position to add new axis
     :key key: str: dict key for the axis keys
-    :key arith: int: arithmetic operation used.
+    :key arith (optional): int: arithmetic operation used.
             0: production param (nothing)
             1: production multipled by numbers and summed
             2: production weighted average with numbers
             3: prod * weights (r_vals * lp_vars)
-    :key arith_axis: list: axis to preform arithmetic operation along.
-    :key index: list: axis you want as the index of pandas df (order of list is the index level order).
-    :key cols: list: axis you want as the cols of pandas df (order of list is the col level order).
-    :key axis_slice: dict: keys (int) is the axis. value (list) is the start, stop and step of the slice
+    :key arith_axis (optional): list: axis to preform arithmetic operation along.
+    :key denom (optional): str: keys to r_vals indicating denominator to divide production by (after other operations have been applied).
+    :key index (optional): list: axis you want as the index of pandas df (order of list is the index level order).
+    :key cols (optional): list: axis you want as the cols of pandas df (order of list is the col level order).
+    :key axis_slice (optional): dict: keys (int) is the axis. value (list) is the start, stop and step of the slice
     :return: pandas df
     '''
-    ##unpack dict
-    arith = kwargs['arith']
-    arith_axis = kwargs['arith_axis']
-    index = kwargs['index']
-    cols = kwargs['cols']
-    prod_key = kwargs['prod']
+    ##unpack dict adding default values
+    ###no default value (must exist)
     keys_key = kwargs['keys']
-    axis_slice = kwargs['axis_slice']
+    type = kwargs['type']
+    ###default values exist
+    try:
+        weights_axis = kwargs['weights_axis']
+    except KeyError:
+        weights_axis = []
+
+    try:
+        prod_axis = kwargs['prod_axis']
+    except KeyError:
+        prod_axis = []
+
+    try:
+        arith = kwargs['arith']
+    except KeyError:
+        arith = 0
+
+    try:
+        arith_axis = kwargs['arith_axis']
+    except KeyError:
+        arith_axis = []
+
+    try:
+        denom = r_vals[kwargs['denom'][0], kwargs['denom'][1]]
+    except KeyError:
+        denom = 1
+
+    try:
+        index = kwargs['index']
+    except KeyError:
+        index = []
+
+    try:
+        cols = kwargs['cols']
+    except KeyError:
+        cols = []
+
+    try:
+        prod_key = kwargs['prod']
+    except KeyError:
+        prod_key = 1
+
+    try:
+        axis_slice = kwargs['axis_slice']
+    except KeyError:
+        axis_slice = {}
 
     ##read from stock reshape function
-    stock_vars = f_stock_reshape(lp_vars, r_vals)
-    prod = stock_vars[prod_key]
-    keys = stock_vars[keys_key]
-    if kwargs['weights'] is not None:
-        weights = stock_vars[kwargs['weights']]
+    if type == 'stock':
+        vars = f_stock_reshape(lp_vars, r_vals)
+        ###if production doesnt exist eg it is 1 or some other number (this means you can preform arith with any number - mainly used for pasture when there is no production param)
+        if isinstance(prod_key, str):
+            prod = vars[prod_key]  #for stock all production params must go through reshape function
+        else:
+            prod = np.array([prod_key])
     else:
+        vars = f_pasture_reshape(lp_vars, r_vals)
+        ###if production doesnt exist eg it is 1 or some other number (this means you can preform arith with any number - mainly used for pasture when there is no production param)
+        if isinstance(prod_key, str):
+            prod = r_vals['pas'][prod_key]
+        else:
+            prod = np.array([prod_key])
+
+    ##keys that will become the index and cols for table
+    keys = vars[keys_key]
+
+    ##if no weights then make None
+    try:
+        weights = vars[kwargs['weights']]
+    except KeyError:
         weights = None
 
+    ##other manipulation
     f_numpy2df_error(prod, weights, arith, arith_axis, index, cols)
+    prod, weights = f_add_axis(prod, weights, weights_axis, prod_axis)
     prod, weights = f_slice(prod, weights, keys, arith, axis_slice)
     prod = f_arith(prod, weights, arith, arith_axis)
+    prod = fun.f_divide(prod, denom)
     prod = f_numpy2df(prod, keys, index, cols)
     return prod
 
@@ -899,6 +925,20 @@ def f_numpy2df_error(prod, weights, arith, arith_axis, index, cols):
     ##error 3: preforming arith with no weights
     if arith_occur and weights is None:
         raise exc.ArithError
+
+def f_add_axis(prod, weights, weights_axis, prod_axis):
+    '''
+    Adds new axis if required.
+
+    :param weights: array
+    :param weights_axis: list: position to add new axis
+    :param prod: array
+    :param prod_axis: list: position to add new axis
+    :return: expanded array
+    '''
+    weights = np.expand_dims(weights, weights_axis)
+    prod = np.expand_dims(prod, prod_axis)
+    return prod, weights
 
 
 def f_slice(prod, weights, keys, arith, axis_slice):

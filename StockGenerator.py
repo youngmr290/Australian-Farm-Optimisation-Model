@@ -4889,6 +4889,10 @@ def generator(params,r_vals,plots = False):
     r_vals['r_cfw_hd_k2ctva1nwziyg1'] = r_cfw_hd_k2tva1e1b1nwzida0e0b0xyg1
     r_vals['r_cfw_hd_k3k5ctvnwziaxyg3'] = r_cfw_hd_k3k5tva1e1b1nwzida0e0b0xyg3
 
+    r_vals['mei_sire_p6fg0'] = mei_p6fa1e1b1nwzida0e0b0xyg0
+    r_vals['mei_dams_k2p6ftva1nw8ziyg1'] = mei_k2p6ftva1e1b1nwzida0e0b0xyg1
+    r_vals['mei_offs_k3k5p6ftvnw8ziaxyg3'] = mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3
+
     finish = time.time()
     print('onhand and shearing arrays: ',calc_cost_start - onhandshear_start)
     print('wool value calcs :', wool_finish - calc_cost_start)
