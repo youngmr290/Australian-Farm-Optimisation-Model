@@ -445,14 +445,21 @@ def f_run_required(prev_exp, exp_data1, check_pyomo=True):
 
     this function is also used by report.py to calculate if reports are being generated with out of date data.
     '''
-    ###get a list of all sa cols (including the name of the trial because two trial may have the same values but have a different name)
+    ##add run cols to be populated
+    exp_data1['run'] = False
+    exp_data1['runpyomo'] = False
+
+    ##get a list of all sa cols (including the name of the trial because two trial may have the same values but have a different name)
     keys_hist = list(prev_exp.reset_index().columns[2:].values)
     keys_current = list(exp_data1.reset_index().columns[2:].values)
     sorted_list = sorted(glob.iglob('*.py'), key=os.path.getmtime)
-    ####if only report.py has been updated precalcs don't need to be re-run therefore newest is equal to the newest py file that isn't report
-    if sorted_list[-1] != 'ReportFunctions.py' or sorted_list[-1] != 'ReportControl.py':
+    ###if only report.py has been updated precalcs don't need to be re-run therefore newest is equal to the newest py file that isn't report
+    if sorted_list[-1] != 'ReportFunctions.py' and sorted_list[-1] != 'ReportControl.py':
         newest = sorted_list[-1]
-    else: newest = sorted_list[-2]
+    elif sorted_list[-2] != 'ReportFunctions.py' and sorted_list[-2] != 'ReportControl.py':
+        newest = sorted_list[-2]
+    else:
+        newest = sorted_list[-3]
     newest_pyomo = max(glob.iglob('*pyomo.py'), key=os.path.getmtime)
 
     try: #incase pkl_exp doesn't exist
@@ -475,6 +482,17 @@ def f_run_required(prev_exp, exp_data1, check_pyomo=True):
         exp_data1['run']=True
         exp_data1['runpyomo'] = True
     return exp_data1
+
+def f_read_exp():
+    exp_data = pd.read_excel('exp.xlsx', index_col=None, header=[0,1,2,3])
+    exp_data = exp_data.loc[:,exp_data.columns.get_level_values(0)!='Drop']
+    exp_data = exp_data.set_index(list(exp_data.columns[0:3]))
+
+    # exp_data = pd.read_excel('exp.xlsx', index_col=None, header=None)
+    # exp_data = exp_data.loc[:,exp_data.loc[0,:]!='Drop']
+    # exp_data = exp_data.set_index(list(exp_data.columns[0:3]))
+    # exp_data = exp_data.T.set_index(list(exp_data.T.columns[0:4])).T
+    return exp_data
 
 ##check if two param dicts are the same.
 def findDiff(d1, d2):

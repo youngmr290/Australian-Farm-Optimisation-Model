@@ -14,10 +14,10 @@ import Functions as fun
 writer = pd.ExcelWriter('Output\Report.xlsx', engine='xlsxwriter')
 
 ##read in exp log
-exp_data_nosort = pd.read_excel('exp.xlsx',index_col=[0,1,2], header=[0,1,2,3])
+exp_data_nosort = fun.f_read_exp()
 exp_data_index = exp_data_nosort.index #need to use this so user can specify the trial number as per exp.xlsx
 exp_data = exp_data_nosort.sort_index() #had to sort to stop performance warning, this means runs may not be executed in order of exp.xlsx
-exp_data['run']=False
+
 
 
 
@@ -42,7 +42,7 @@ run_pnl = True #table of profit and loss
 run_profitarea = True #graph profit by crop area
 run_saleprice = True #table of saleprices
 run_cfw_dams = True #table of cfw
-run_run_dse = True #table of dse
+run_dse = True #table of dse
 run_grnfoo = True #table of green foo at end of fp
 run_dryfoo = True #table of dry foo at end of fp
 run_napfoo = True #table of nap foo at end of fp
@@ -55,7 +55,7 @@ run_poccon = True #table of poc con at end of fp
 ##run report functions
 if run_pnl:
     func = rep.f_profitloss_table
-    trials = [0, 1]
+    trials = [0, 25,26,27,28]
     pnl = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials)
     pnl.to_excel(writer, 'pnl')
 
@@ -70,7 +70,7 @@ if run_profitarea:
 
 if run_saleprice:
     func = rep.f_price_summary
-    trials = [0, 1]
+    trials = [0, 25,26,27,28]
     option = 0
     grid = [0,5,6]
     weight = [22,40,25]
@@ -80,7 +80,7 @@ if run_saleprice:
 
 if run_cfw_dams:
     func = rep.f_stock_summary
-    trials = [0, 1]
+    trials = [0, 25,26,27,28]
     prod = 'cfw_hdmob_k2tva1nwziyg1'
     weights = 'dams_numbers_k2tvanwziy1g1'
     keys = 'dams_keys_k2tvanwziy1g1'
@@ -96,7 +96,7 @@ if run_cfw_dams:
 
 if run_dse:
     func = rep.f_dse
-    trials = [0, 1]
+    trials = [0]
     method = 0
     per_ha = True
     dse = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, method = method, per_ha = per_ha)
@@ -105,7 +105,7 @@ if run_dse:
 if run_grnfoo:
     #returns foo at end of each fp
     func = rep.f_pasture_summary
-    trials = [0,1]
+    trials = [0,25,26,27,28]
     prod = 'foo_end_grnha_goflt'
     weights = 'greenpas_ha_vgoflt'
     keys = 'keys_vgoflt'
@@ -122,7 +122,7 @@ if run_grnfoo:
 if run_dryfoo:
     #returns foo at end of each fp
     func = rep.f_pasture_summary
-    trials = [0,1]
+    trials = [0,25,26,27,28]
     prod = 1000
     weights = 'drypas_transfer_dft'
     keys = 'keys_dft'
@@ -139,7 +139,7 @@ if run_dryfoo:
 if run_napfoo:
     #returns foo at end of each fp
     func = rep.f_pasture_summary
-    trials = [0,1]
+    trials = [0,25,26,27,28]
     prod = 1000
     weights = 'nap_transfer_dft'
     keys = 'keys_dft'
@@ -156,7 +156,7 @@ if run_napfoo:
 if run_grncon:
     #returns foo at end of each fp
     func = rep.f_pasture_summary
-    trials = [0,1]
+    trials = [0,25,26,27,28]
     prod = 'cons_grnha_t_goflt'
     weights = 'greenpas_ha_vgoflt'
     keys = 'keys_vgoflt'
@@ -173,7 +173,7 @@ if run_grncon:
 if run_drycon:
     #returns foo at end of each fp
     func = rep.f_pasture_summary
-    trials = [0,1]
+    trials = [0,25,26,27,28]
     prod = 1000
     weights = 'drypas_consumed_vdft'
     keys = 'keys_vdft'
@@ -190,7 +190,7 @@ if run_drycon:
 if run_napcon:
     #returns foo at end of each fp
     func = rep.f_pasture_summary
-    trials = [0,1]
+    trials = [0,25,26,27,28]
     prod = 1000
     weights = 'nap_consumed_vdft'
     keys = 'keys_vdft'
@@ -207,7 +207,7 @@ if run_napcon:
 if run_poccon:
     #returns foo at end of each fp
     func = rep.f_pasture_summary
-    trials = [0,1]
+    trials = [0,25,26,27,28]
     prod = 1000
     weights = 'poc_consumed_vfl'
     keys = 'keys_vfl'

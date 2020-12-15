@@ -13,8 +13,7 @@ import time
 import os.path
 import sys
 from datetime import datetime
-import pickle as pkl
-
+import pickle as pkl # todo if pickle gets too slow we should update to json or ujson (note cpickle has been merged with pickle so that it not an option)
 
 import CreateModel as crtmod
 import BoundsPyomo as bdypy
@@ -38,7 +37,6 @@ import CorePyomo as core
 
 force_run=True #force precalcs to be run
 
-cur_path = os.path.dirname(__file__)
 
 #########################
 #load pickle            # 
@@ -76,11 +74,10 @@ except FileNotFoundError:
 #Exp loop               # #^maybe there is a cleaner way to do some of the stuff below ie a way that doesn't need as many if statements?
 #########################
 ##read in exp log 
-exp_data = pd.read_excel('exp.xlsx',index_col=[0,1,2], header=[0,1,2,3])
+
+exp_data = fun.f_read_exp()
 exp_data = exp_data.sort_index() #had to sort to stop performance warning, this means runs may not be executed in order of exp.xlsx
-exp_data1=exp_data.copy() #copy made so that the run col can be added - the original df is used to allocate sa values (would cause an error if run col existed but i cant drop it because it is used to determine if the trial is run)
-exp_data1['run']=False
-exp_data1['runpyomo']=False
+exp_data1=exp_data.copy() #copy made so that the run and runpyomo cols can be added - the original df is used to allocate sa values (would cause an error if run col existed but i cant drop it because it is used to determine if the trial is run)
 
 
 ##check if precalcs and pyomo need to be recalculated.

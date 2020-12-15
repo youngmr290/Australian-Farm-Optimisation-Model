@@ -23,7 +23,7 @@ def f_errors(r_vals, exp_data_index, trial_outdated, trials):
         for row in trials:
             r_vals[exp_data_index[row][2]]
     except KeyError:
-        raise exc.TrialException
+        raise exc.TrialError
     ##second check if generating results using out of date data.
     if any(trial_outdated.loc[exp_data_index[trials]]): #have to use the trial name because the order is different
         print('''
@@ -698,50 +698,53 @@ def f_overhead_summary(r_vals):
     exp_fix_c = r_vals['fin']['overheads']
     return exp_fix_c
 
-def f_dse(inter, **kwargs):
+def f_dse(lp_vars, r_vals, **kwargs):
     '''
     DSE calculation
 
-    :param
-    inter: dict
-    method: int
+    :param lp_vars: dict: results from pyomo
+    :param r_vals: dict: report variable
+    :key method: int
             0 - dse by normal weight
             1 - dse by mei
-    per_ha: Bool
+    :key per_ha: Bool
         if true it returns DSE/ha else it returns total dse
     :return DSE per pasture hectare for each sheep group:
     '''
     method = kwargs['method']
     per_ha = kwargs['per_ha']
+    stock_vars = f_stock_reshape(lp_vars, r_vals)
 
     if method==0:
         ##sire
-        dse_sire = inter['sire_numbers_g0'] * inter['dsenw_p6g0']
+        dse_sire = stock_vars['sire_numbers_g0'] * stock_vars['dsenw_p6g0']
         ##dams
-        dse_dams = fun.f_reduce_skipfew(np.sum, inter['dams_numbers_k2tvanwziy1g1'][:,na,...] * inter['dsenw_k2p6tva1nwziyg1'], preserveAxis=1) #sum all axis except p6
+        dse_dams = fun.f_reduce_skipfew(np.sum, stock_vars['dams_numbers_k2tvanwziy1g1'][:,na,...] * stock_vars['dsenw_k2p6tva1nwziyg1'], preserveAxis=1) #sum all axis except p6
         ##dams
-        dse_offs = fun.f_reduce_skipfew(np.sum, inter['offs_numbers_k3k5tvnwziaxyg3'][:,:,na,...] * inter['dsenw_k3k5p6tvnwzixyg3'], preserveAxis=2) #sum all axis except p6
+        dse_offs = fun.f_reduce_skipfew(np.sum, stock_vars['offs_numbers_k3k5tvnwziaxyg3'][:,:,na,...] * stock_vars['dsenw_k3k5p6tvnwziaxyg3'], preserveAxis=2) #sum all axis except p6
     else:
         ##sire
-        dse_sire = inter['sire_numbers_g0'] * inter['dsemj_p6g0']
+        dse_sire = stock_vars['sire_numbers_g0'] * stock_vars['dsemj_p6g0']
         ##dams
-        dse_dams = fun.f_reduce_skipfew(np.sum, inter['dams_numbers_k2tvanwziy1g1'][:,na,...] * inter['dsemj_k2p6tva1nwziyg1'], preserveAxis=1) #sum all axis except p6
+        dse_dams = fun.f_reduce_skipfew(np.sum, stock_vars['dams_numbers_k2tvanwziy1g1'][:,na,...] * stock_vars['dsemj_k2p6tva1nwziyg1'], preserveAxis=1) #sum all axis except p6
         ##dams
-        dse_offs = fun.f_reduce_skipfew(np.sum, inter['offs_numbers_k3k5tvnwziaxyg3'][:,:,na,...] * inter['dsemj_k3k5p6tvnwzixyg3'], preserveAxis=2) #sum all axis except p6
+        dse_offs = fun.f_reduce_skipfew(np.sum, stock_vars['offs_numbers_k3k5tvnwziaxyg3'][:,:,na,...] * stock_vars['dsemj_k3k5p6tvnwziaxyg3'], preserveAxis=2) #sum all axis except p6
 
     ##dse per ha if user opts for this level of detail
     if per_ha:
-        dse_sire = dse_sire/inter['pasture_area']
-        dse_dams = dse_dams/inter['pasture_area']
-        dse_offs = dse_offs/inter['pasture_area']
+        pasture_area = f_area_summary(lp_vars, r_vals, option=3)
+        dse_sire = dse_sire/pasture_area
+        dse_dams = dse_dams/pasture_area
+        dse_offs = dse_offs/pasture_area
 
     ##turn to table
-    dse_sire = fun.f_make_table(dse_sire, inter['keys_p6'], ['Sire DSE'])
-    dse_dams = fun.f_make_table(dse_dams, inter['keys_p6'], ['Dams DSE'])
-    dse_offs = fun.f_make_table(dse_offs, inter['keys_p6'], ['Offs DSE'])
+    key_p6 = r_vals['stock']['keys_p6']
+    dse_sire = fun.f_make_table(dse_sire, key_p6, ['Sire DSE'])
+    dse_dams = fun.f_make_table(dse_dams, key_p6, ['Dams DSE'])
+    dse_offs = fun.f_make_table(dse_offs, key_p6, ['Offs DSE'])
 
     ##concat
-    dse = pd.concat([dse_sire, dse_dams, dse_offs], axis=0)
+    dse = pd.concat([dse_sire, dse_dams, dse_offs], axis=1)
     return dse
 
 def f_profitloss_table(lp_vars, r_vals):
@@ -870,13 +873,6 @@ def f_stock_summary(lp_vars, r_vals, **kwargs):
     prod = f_arith(prod, weights, arith, arith_axis)
     prod = f_numpy2df(prod, keys, index, cols)
     return prod
-
-# def f_broadcast_arrays(prod, weights, arith):
-#     if arith == 1 or arith == 2:
-#         prod, weights = np.broadcast_arrays(prod, weights)
-#         return prod, weights
-
-
 
 
 

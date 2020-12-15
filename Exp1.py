@@ -80,12 +80,10 @@ if __name__ == '__main__':
 #load exp               # 
 #########################
 ##read in exp and drop all false runs ie runs not being run this time
-exp_data = pd.read_excel('exp.xlsx',index_col=[0,1,2], header=[0,1,2,3])
-# exp_data=exp_data.loc[True] #alternative ... exp_data.iloc[exp_data.index.get_level_values(0)index.levels[0]==True]
+exp_data = fun.f_read_exp()
 exp_data = exp_data.sort_index() #had to sort to stop performance warning, this means runs may not be executed in order of exp.xlsx
 exp_data1=exp_data.copy() #copy made so that the run col can be added - the origional df is used to allocate sa values (would cause an error if run col existed but i cant drop it because it is used to determine if the trial is run)
-exp_data1['run']=False
-exp_data1['runpyomo']=False
+
 
 
 ##check if precalcs and pyomo need to be recalculated.
@@ -103,7 +101,7 @@ exp_data1 = fun.f_run_required(prev_exp, exp_data1)
 #^maybe there is a cleaner way to do some of the stuff below ie a way that doesn't need as many if statements?
 def exp(row):
     ##sleep for random length of time. This is to offset processes with a goal of spreading the RAM load
-    time.sleep(randrange(20))
+    time.sleep(randrange(30))
 
     ##start timer for each loop
     start_time = time.time()
@@ -223,8 +221,6 @@ def exp(row):
         run_pyomo_params= True
     ##determine if pyomo should run, note if pyomo doesn't run there will be no ful solution (they are the same as before so no need)
     if run_pyomo_params or exp_data1.loc[exp_data1.index[row],'runpyomo'].squeeze():
-        # ###if re-run update runpyomo to false
-        # exp_data1.loc[exp_data1.index[row], ('runpyomo', '', '', '')] = False
         ##call core model function, must call them in the correct order (core must be last)
         crtmod.sets() #certain sets have to be updated each iteration of exp
         rotpy.rotationpyomo(params['rot'])
@@ -329,6 +325,7 @@ def main():
     exp_data1.loc[exp_data1.index[dataset],['runpyomo']] = False
     ##return pyomo results and params dict
     return dataset, result, exp_data1
+
 if __name__ == '__main__':
     dataset, results, exp_data1 = main() #returns a list is the same order of exp
     ##turn list of dicts into nested dict with trial name as key
