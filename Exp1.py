@@ -2,7 +2,7 @@
 """
 Created on Wed Oct 23 21:00:13 2019
 
-module: exriment module - this is the module that runs everything and controls kv's
+module: experiment module - this is the module that runs everything and controls kv's
 
 @author: young
 """
@@ -20,7 +20,10 @@ import sys
 import numpy as np
 from random import randrange
 
+#report the clock time that the experiment was started
+print("Experiment commenced at: ", time.ctime())
 start=time.time()
+
 from CreateModel import model
 import CreateModel as crtmod
 import BoundsPyomo as bdypy
@@ -82,7 +85,7 @@ if __name__ == '__main__':
 ##read in exp and drop all false runs ie runs not being run this time
 exp_data = fun.f_read_exp()
 exp_data = exp_data.sort_index() #had to sort to stop performance warning, this means runs may not be executed in order of exp.xlsx
-exp_data1=exp_data.copy() #copy made so that the run col can be added - the origional df is used to allocate sa values (would cause an error if run col existed but i cant drop it because it is used to determine if the trial is run)
+exp_data1=exp_data.copy() #copy made so that the run col can be added - the original df is used to allocate sa values (would cause an error if run col existed but i cant drop it because it is used to determine if the trial is run)
 
 
 
@@ -111,7 +114,7 @@ def exp(row):
          ##checks if both slice and key2 exists
          if not ('Unnamed' in indx or 'Unnamed' in key2):
              indices = tuple(slice(*(int(i) if i else None for i in part.strip().split(':'))) for part in indx.split(
-                 ','))  # creats a slice object from a string - note slice objects are not inclusive ie to select the first number it should look like [0:1]
+                 ','))  # creates a slice object from a string - note slice objects are not inclusive ie to select the first number it should look like [0:1]
              if dic == 'sam':
                  sen.sam[(key1, key2)][indices] = value
              elif dic == 'saa':
@@ -128,7 +131,7 @@ def exp(row):
          ##checks if just slice exists
          elif not 'Unnamed' in indx:
              indices = tuple(slice(*(int(i) if i else None for i in part.strip().split(':'))) for part in indx.split(
-                 ','))  # creats a slice object from a string - note slice objects are not inclusive ie to select the first number it should look like [0:1]
+                 ','))  # creates a slice object from a string - note slice objects are not inclusive ie to select the first number it should look like [0:1]
              if dic == 'sam':
                  sen.sam[key1][indices] = value
              elif dic == 'saa':
@@ -214,8 +217,8 @@ def exp(row):
     spy.stock_precalcs(params['stock'],r_vals['stock'])
 
     ##does pyomo need to be run?
-    ##check if the two dicts are the same, it is possible that the current dict has less keys than the previous dict eg if a value becomes nan (because you removed the cell in exvel inputs) and when it is stacked it disapears (this is very unlikely though so not going to test for it since this step is already slow)
-    try: #try required incase the key (trial) doesn't exist in the old dict, if this is the case pyomo must be run
+    ##check if the two dicts are the same, it is possible that the current dict has less keys than the previous dict eg if a value becomes nan (because you removed the cell in excel inputs) and when it is stacked it disappears (this is very unlikely though so not going to test for it since this step is already slow)
+    try: #try required in case the key (trial) doesn't exist in the old dict, if this is the case pyomo must be run
         run_pyomo_params=fun.findDiff(params, prev_params[exp_data.index[row][2]])
     except KeyError:
         run_pyomo_params= True
@@ -289,7 +292,7 @@ def exp(row):
             print ('Solver Status: error')
             sys.exit()
     ##determine expected time to completion - trials left multiplied by average time per trial &time for current loop
-    dataset = list(np.flatnonzero(np.array(exp_data.index.get_level_values(0)) * np.array(exp_data1['run']))) #gets the ordinal index values for the trials the user wants to run that are not upto date
+    dataset = list(np.flatnonzero(np.array(exp_data.index.get_level_values(0)) * np.array(exp_data1['run']))) #gets the ordinal index values for the trials the user wants to run that are not up to date
     processes = multiprocessing.cpu_count()
     total_batches = math.ceil(len(dataset) / processes ) 
     current_batch = math.ceil( (dataset.index(row)+1) / processes ) #add 1 because python starts at 0
@@ -308,10 +311,10 @@ def exp(row):
 
 ##3 - works when run through anaconda prompt - if 9 runs and 8 processors, the first processor to finish, will start the 9th run
 #using map it returns outputs in the order they go in ie in the order of the exp
-##the result after the different processes are done is a list of dicts (because each itteration returns a dict and the multiprocess stuff returns a list)
+##the result after the different processes are done is a list of dicts (because each iteration returns a dict and the multiprocess stuff returns a list)
 def main():
     ## Define the dataset - trials that require at least the precalcs done (user wants it run and it is out of date)
-    dataset = list(np.flatnonzero(np.array(exp_data.index.get_level_values(0)) * np.array(exp_data1['run']))) #gets the ordinal index values for the trials the user wants to run that are not upto date
+    dataset = list(np.flatnonzero(np.array(exp_data.index.get_level_values(0)) * np.array(exp_data1['run']))) #gets the ordinal index values for the trials the user wants to run that are not up to date
     ##prints out start status - number of trials to run, date and time exp.xl was last saved and output summary  
     print('Number of trials to run: ',len(dataset))
     print('Number of full solutions: ',sum((exp_data.index[row][1] == True) and (exp_data.index[row][0] == True) for row in range(len(exp_data))))
@@ -320,7 +323,7 @@ def main():
     agents = min(multiprocessing.cpu_count(),len(dataset)) # number of agents (processes) should be min of the num of cpus or trial
     with multiprocessing.Pool(processes=agents) as pool:
         result = pool.map(exp, dataset)
-    ##update run require status - trials just run are now upto date for both pyomo and precalcs - all trials that the user wanted to run are now up to date (even if they didn't run because they were already up to date)
+    ##update run require status - trials just run are now up to date for both pyomo and precalcs - all trials that the user wanted to run are now up to date (even if they didn't run because they were already up to date)
     exp_data1.loc[exp_data1.index[dataset],['run']] = False
     exp_data1.loc[exp_data1.index[dataset],['runpyomo']] = False
     ##return pyomo results and params dict
@@ -333,7 +336,7 @@ if __name__ == '__main__':
         lp_vars[exp_data.index[trial_row][2]] = results[res_num][0] 
         params[exp_data.index[trial_row][2]] = results[res_num][1] 
         r_vals[exp_data.index[trial_row][2]] = results[res_num][2] 
-    ##drop results into pikle file
+    ##drop results into pickle file
     with open('pkl_lp_vars.pkl', "wb") as f:
         pkl.dump(lp_vars, f)
     with open('pkl_params.pkl', "wb") as f:

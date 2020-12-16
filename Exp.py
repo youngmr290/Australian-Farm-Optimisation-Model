@@ -2,7 +2,7 @@
 """
 Created on Wed Oct 23 21:00:13 2019
 
-module: exriment module - this is the module that runs everything and controls kv's
+module: experiment module - this is the module that runs everything and controls kv's
 
 @author: young
 """
@@ -14,6 +14,9 @@ import os.path
 import sys
 from datetime import datetime
 import pickle as pkl # todo if pickle gets too slow we should update to json or ujson (note cpickle has been merged with pickle so that it not an option)
+
+#report the clock time that the experiment was started
+print("Experiment commenced at: ", time.ctime())
 
 import CreateModel as crtmod
 import BoundsPyomo as bdypy
@@ -215,8 +218,8 @@ for row in range(len(exp_data)):
     
     
     ##does pyomo need to be run?
-    ##check if the two dicts are the same, it is possible that the current dict has less keys than the previous dict eg if a value becomes nan (because you removed the cell in exvel inputs) and when it is stacked it disapears (this is very unlikely though so not going to test for it since this step is already slow)
-    try: #try required incase the key (trial) doesn't exist in the old dict, if this is the case pyomo must be run
+    ##check if the two dicts are the same, it is possible that the current dict has less keys than the previous dict eg if a value becomes nan (because you removed the cell in excel inputs) and when it is stacked it disappears (this is very unlikely though so not going to test for it since this step is already slow)
+    try: #try required in case the key (trial) doesn't exist in the old dict, if this is the case pyomo must be run
         run_pyomo_params=fun.findDiff(params[exp_data.index[row][2]], prev_params[exp_data.index[row][2]])
     except KeyError:
         run_pyomo_params= True
@@ -311,7 +314,7 @@ for row in range(len(exp_data)):
     variables=model.component_objects(pe.Var, active=True)
     lp_vars['%s'%exp_data.index[row][2]]={str(v):{s:v[s].value for s in v} for v in variables}    #creates dict with variable in it. This is tricky since pyomo returns a generator object
 
-##drop results into pikle file
+##drop results into pickle file
 with open('pkl_lp_vars.pkl', "wb") as f:
     pkl.dump(lp_vars, f)
 with open('pkl_params.pkl', "wb") as f:
