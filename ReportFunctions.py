@@ -254,7 +254,15 @@ def f_mach_summary(lp_vars, r_vals, option=0):
     if option==0:
         return exp_mach_kc
 
-def f_grain_sup_summary(lp_vars, r_vals):
+def f_grain_sup_summary(lp_vars, r_vals, option=0):
+    '''
+    Summary of grain, supplement and their costs
+
+    :param option: int:
+            0: return dict with various elements
+            1: return total supplement fed in each feed period
+
+    '''
     ##create dict to store grain variables
     grain = {}
 
@@ -270,8 +278,10 @@ def f_grain_sup_summary(lp_vars, r_vals):
 
     ##grain fed
     grain_fed_kg = pd.Series(lp_vars['v_sup_con']).sum(level=(0,1)) #sum feed pool and feed period
-    grain_fed_kp5 = pd.Series(lp_vars['v_sup_con']).sum(level=(0,3)).swaplevel() #sum feed pool and grain pool
-
+    grain_fed_kp6 = pd.Series(lp_vars['v_sup_con']).sum(level=(0,3)).swaplevel() #sum feed pool and grain pool
+    grain_fed_p6 = pd.Series(lp_vars['v_sup_con']).sum(level=(0,2,3)).swaplevel() #sum feed pool, landuse and grain pool
+    if option == 1:
+        return grain_fed_p6
     ##total grain produced by crop enterprise
     total_grain_produced = grain_sold_kg + grain_fed_kg - grain_purchased_kg #total grain produced by crop enterprise
     rev_grain_c = grains_sale_price_kgc.mul(total_grain_produced.reindex(grains_sale_price_kgc.index), axis=0).sum(axis=0,level=0) #sum grain pool, have to reindex (not really sure why since it is the same index - maybe one has been condensed ie index with nan removed)
@@ -392,8 +402,8 @@ def f_stock_reshape(lp_vars, r_vals):
     stock_vars['sire_keys_p6fg0'] = [keys_p6, keys_f, keys_g0]
     stock_vars['dams_keys_k2tvanwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
     stock_vars['dams_keys_k2p6ftvanwziy1g1'] = [keys_k2, keys_p6, keys_f, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
-    stock_vars['offs_keys_k3k5tvnwziaxy1g3'] = [keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
-    stock_vars['offs_keys_k3k5p6ftvnwziaxy1g3'] = [keys_k3, keys_k5, keys_p6, keys_f, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
+    stock_vars['offs_keys_k3k5tvnwziaxyg3'] = [keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
+    stock_vars['offs_keys_k3k5p6ftvnwziaxyg3'] = [keys_k3, keys_k5, keys_p6, keys_f, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
 
     ##animal numbers
     ###shapes
@@ -436,10 +446,10 @@ def f_stock_reshape(lp_vars, r_vals):
     stock_vars['dsemj_k2p6tva1nwziyg1'] = r_vals['stock']['dsemj_k2p6tva1nwziyg1'].reshape(damsdse_shape)
     stock_vars['dsemj_k3k5p6tvnwziaxyg3'] = r_vals['stock']['dsemj_k3k5p6tvnwziaxyg3'].reshape(offsdse_shape)
 
-    ##propn p6
-    stock_vars['propn_p6_p6g0'] = r_vals['stock']['propn_p6_p6g0'].reshape(siredse_shape)
-    stock_vars['propn_p6_k2p6tva1nwziyg1'] = r_vals['stock']['propn_p6_k2p6tva1nwziyg1'].reshape(damsdse_shape)
-    stock_vars['propn_p6_k3k5p6tvnwziaxyg3'] = r_vals['stock']['propn_p6_k3k5p6tvnwziaxyg3'].reshape(offsdse_shape)
+    ##stock days
+    stock_vars['stock_days_p6g0'] = r_vals['stock']['stock_days_p6g0'].reshape(siredse_shape)
+    stock_vars['stock_days_k2p6tva1nwziyg1'] = r_vals['stock']['stock_days_k2p6tva1nwziyg1'].reshape(damsdse_shape)
+    stock_vars['stock_days_k3k5p6tvnwziaxyg3'] = r_vals['stock']['stock_days_k3k5p6tvnwziaxyg3'].reshape(offsdse_shape)
 
     ##cfw
     ###cfw per head average for the mob - includes the mortality factor
@@ -814,7 +824,7 @@ def f_stock_pasture_summary(lp_vars, r_vals, **kwargs):
     :key arith (optional, default = 0): int: arithmetic operation used.
             option 0: return production param
             option 1: return weighted average of production param (using denominator weight return production per day the animal is on hand)
-            option 2: total production for a given axis
+            option 2: total production for a given axis np.sum(prod * weight, axis)
             option 3: total production for each activity
             option 4: return weighted average of production param (using denominator weight returns the average production for period eg less if animal is sold part way through)
     :key arith_axis (optional, default = []): list: axis to preform arithmetic operation along.

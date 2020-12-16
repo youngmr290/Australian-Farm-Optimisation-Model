@@ -43,8 +43,9 @@ run_profitarea = False #graph profit by crop area
 run_saleprice = False #table of saleprices
 run_cfw_dams = False #table of cfw
 run_daily_mei_dams = True #table of mei
-run_numbers_dams = True #table of mei
-run_dse = False #table of dse
+run_numbers_dams = True #table of numbers
+run_numbers_offs = True #table of numbers
+run_dse = True #table of dse
 run_grnfoo = False #table of green foo at end of fp
 run_dryfoo = False #table of dry foo at end of fp
 run_napfoo = False #table of nap foo at end of fp
@@ -52,6 +53,7 @@ run_grncon = False #table of green con at end of fp
 run_drycon = False #table of dry con at end of fp
 run_napcon = False #table of nap con at end of fp
 run_poccon = False #table of poc con at end of fp
+run_supcon = False #table of sup con at end of fp
 
 
 ##run report functions
@@ -104,26 +106,26 @@ if run_daily_mei_dams:
     prod = 'dams_mei_k2p6ftva1nwziyg1'
     weights = 'dams_numbers_k2tvanwziy1g1'
     na_weights = [1, 2]
-    den_weights = 'propn_p6_k2p6tva1nwziyg1'
+    den_weights = 'stock_days_k2p6tva1nwziyg1'
     na_denweights = [2]
     keys = 'dams_keys_k2p6ftvanwziy1g1'
     arith = 1
     arith_axis = [2,3,5,6,7,8,9,10,11]
-    denom = 'pas', 'days_p6'
-    denom_pos = -11
+    # denom = 'pas', 'days_p6'
+    # denom_pos = -11
     index =[1,4]
     cols =[0]
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
     daily_mei_dams = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights,
                            na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights, keys=keys, arith=arith,
-                           arith_axis=arith_axis, denom=denom, denom_pos=denom_pos, index=index, cols=cols,
+                           arith_axis=arith_axis, index=index, cols=cols,
                            axis_slice=axis_slice)
     daily_mei_dams.to_excel(writer, 'daily_mei_dams')
 
 if run_numbers_dams:
     func = rep.f_stock_pasture_summary
-    trials = [0,28]
+    trials = [0]
     type = 'stock'
     weights = 'dams_numbers_k2tvanwziy1g1'
     keys = 'dams_keys_k2tvanwziy1g1'
@@ -138,10 +140,27 @@ if run_numbers_dams:
                            axis_slice=axis_slice)
     numbers_dams.to_excel(writer, 'numbers_dams')
 
+if run_numbers_offs:
+    func = rep.f_stock_pasture_summary
+    trials = [0]
+    type = 'stock'
+    weights = 'offs_numbers_k3k5tvnwziaxyg3'
+    keys = 'offs_keys_k3k5tvnwziaxyg3'
+    arith = 2
+    arith_axis = [0,1,4,5,6,7,8,9,10,11]
+    index =[3]
+    cols =[2]
+    axis_slice = {}
+    # axis_slice[0] = [0, 2, 1]
+    numbers_offs = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, type=type, weights=weights,
+                           keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols,
+                           axis_slice=axis_slice)
+    numbers_offs.to_excel(writer, 'numbers_offs')
+
 if run_dse:
     func = rep.f_dse
-    trials = [0,25,26,27,28]
-    method = 1
+    trials = [0]
+    method = 0
     per_ha = True
     dse = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, method = method, per_ha = per_ha)
     dse.to_excel(writer, 'dse')
@@ -265,6 +284,14 @@ if run_poccon:
     poccon = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, prod=prod, weights=weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
     poccon.to_excel(writer, 'poccon')
+
+if run_supcon:
+    #returns foo at end of each fp
+    func = rep.f_grain_sup_summary
+    trials = [0]
+    option = 1
+    supcon = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, option=option)
+    supcon.to_excel(writer, 'supcon')
 
 
 
