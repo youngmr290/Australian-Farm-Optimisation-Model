@@ -104,7 +104,7 @@ exp_data1 = fun.f_run_required(prev_exp, exp_data1)
 #^maybe there is a cleaner way to do some of the stuff below ie a way that doesn't need as many if statements?
 def exp(row):
     ##sleep for random length of time. This is to offset processes with a goal of spreading the RAM load
-    time.sleep(randrange(60))
+    time.sleep(randrange(80))
 
     ##start timer for each loop
     start_time = time.time()

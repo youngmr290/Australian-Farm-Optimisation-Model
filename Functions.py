@@ -328,16 +328,25 @@ def f_update(existing_value, new_value, mask_for_new):
 
 
 ##weighted average (similar to np.average but it handles situation when sum weights = 0 - used in sheep generator - when sum weights = 0 the numbers being averaged also = 0 so just divide by 1 instead of 0
-def f_weighted_average(array, weights, axis, keepdims=False, non_zero=False):
+def f_weighted_average(array, weights, axis, keepdims=False, non_zero=False, den_weights=1):
     '''
     calculates weighted average however this will return 0 if the sum of the weights is 0 (np.average doesnt handle this)
-    axis averaged along can be retained - default it is dropped
+    axis averaged along can be retained - default it is dropped.
+
+    :param array:
+    :param weights:
+    :param axis:
+    :param keepdims:
+    :param non_zero:
+    :param den_weights: array: broadcastable to weights. This is used to weight the denominator (used in reporting)
+    :return:
     '''
     if non_zero:
         ##for some situations (production) if numbers are 0 we dont want to return 0 we want to return the orgional value
         weights=f_update(weights,1,np.all(weights==0, axis=axis, keepdims=True))
     weighted_array = np.sum(array * weights, axis=axis, keepdims=keepdims)
-    weights = np.broadcast_to(np.sum(weights, axis=axis, keepdims=keepdims), weighted_array.shape)
+    weights = np.broadcast_to(np.sum(weights * den_weights, axis=axis, keepdims=keepdims), weighted_array.shape)
+    # den_weight = np.broadcast_to(np.sum(den_weight, axis=axis, keepdims=keepdims), weighted_array.shape)
     averaged_array = np.zeros_like(weighted_array)
     mask = weighted_array!=0
     averaged_array[mask] = weighted_array[mask] / weights[mask]

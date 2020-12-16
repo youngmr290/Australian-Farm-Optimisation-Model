@@ -4308,7 +4308,32 @@ def generator(params,r_vals,plots = False):
                                                  * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[:,:,na,...],
                                                  axis=(uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']),keepdims=True)
 
+    ############################################
+    #proportion of feed period animal exists in#
+    ############################################
+    ##this needs to be accounted for when reporting things that have p6 and v axis becasue they are both periods that do not align and the number variable
+    ##returned from pyomo does not have p6 axis. So need to account for the propn of the dvp that the feed period exists.
+    onhand_cum_p6a1e1b1nwzida0e0b0xyg0 = sfun.f_p2v_std(on_hand_pa1e1b1nwzida0e0b0xyg0,
+                                                    days_period_p=days_period_pa1e1b1nwzida0e0b0xyg0, a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg,
+                                                    index_any1tvp=index_p6pa1e1b1nwzida0e0b0xyg)
+    onhand_cum_p6tva1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(on_hand_tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1,
+                                                      days_period_p=days_period_pa1e1b1nwzida0e0b0xyg1, a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg,
+                                                      index_any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,...])
+    onhand_cum_p6tva1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(on_hand_tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3,
+                                                  days_period_p=days_period_cut_pa1e1b1nwzida0e0b0xyg3, a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p],
+                                                  index_any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,...])
 
+    propn_p6_p6tva1e1b1nwzida0e0b0xyg0 = onhand_cum_p6a1e1b1nwzida0e0b0xyg0[:,na,na,...] / days_p6_p6tva1e1b1nwzida0e0b0xyg
+    propn_p6_p6tva1e1b1nwzida0e0b0xyg1 = onhand_cum_p6tva1e1b1nwzida0e0b0xyg1 / days_p6_p6tva1e1b1nwzida0e0b0xyg
+    propn_p6_p6tva1e1b1nwzida0e0b0xyg3 = onhand_cum_p6tva1e1b1nwzida0e0b0xyg3 / days_p6_p6tva1e1b1nwzida0e0b0xyg
+
+    ####for dams need to cluster e1 & b1 axis for offs cluster k3k5
+    propn_p6_k2p6tva1e1b1nwzida0e0b0xyg1 = np.sum(propn_p6_p6tva1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1==index_k2tva1e1b1nwzida0e0b0xyg1)[:,na,...]
+                                               * mask_w8vars_va1e1b1nw8zida0e0b0xyg1, axis=(uinp.parameters['i_b1_pos'],pinp.sheep['i_e1_pos']),keepdims=True)
+    propn_p6_k3k5p6tva1e1b1nwzida0e0b0xyg3 = np.sum(propn_p6_p6tva1e1b1nwzida0e0b0xyg3 * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[:,:,na,...]
+                                                 * mask_w8vars_va1e1b1nw8zida0e0b0xyg3
+                                                 * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[:,:,na,...],
+                                                 axis=(uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']),keepdims=True)
 
 
     # plt.plot(o_ffcfw_dams[:, 0, 0:2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])         #compare e1 for singles
@@ -4868,6 +4893,12 @@ def generator(params,r_vals,plots = False):
     r_vals['dsenw_k3k5p6tvnwziaxyg3'] = dsenw_k3k5p6tva1e1b1nwzida0e0b0xyg3
     r_vals['dsemj_k3k5p6tvnwziaxyg3'] = dsemj_k3k5p6tva1e1b1nwzida0e0b0xyg3
 
+    ###propn p6
+    r_vals['propn_p6_p6g0'] = propn_p6_p6tva1e1b1nwzida0e0b0xyg0
+    r_vals['propn_p6_k2p6tva1nwziyg1'] = propn_p6_k2p6tva1e1b1nwzida0e0b0xyg1
+    r_vals['propn_p6_k3k5p6tvnwziaxyg3'] = propn_p6_k3k5p6tva1e1b1nwzida0e0b0xyg3
+
+    ##cashflow
     r_vals['cost_cg0'] = cost_ctva1e1b1nwzida0e0b0xyg0
     r_vals['cost_k2ctva1nwziyg1'] = cost_k2ctva1e1b1nwzida0e0b0xyg1
     r_vals['cost_k3k5ctvnwziaxyg3'] =cost_k3k5ctva1e1b1nwzida0e0b0xyg3
@@ -4892,6 +4923,7 @@ def generator(params,r_vals,plots = False):
     r_vals['mei_sire_p6fg0'] = mei_p6fa1e1b1nwzida0e0b0xyg0
     r_vals['mei_dams_k2p6ftva1nw8ziyg1'] = mei_k2p6ftva1e1b1nwzida0e0b0xyg1
     r_vals['mei_offs_k3k5p6ftvnw8ziaxyg3'] = mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3
+
 
     finish = time.time()
     print('onhand and shearing arrays: ',calc_cost_start - onhandshear_start)

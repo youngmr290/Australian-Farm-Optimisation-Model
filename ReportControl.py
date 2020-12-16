@@ -43,6 +43,7 @@ run_profitarea = False #graph profit by crop area
 run_saleprice = False #table of saleprices
 run_cfw_dams = False #table of cfw
 run_daily_mei_dams = True #table of mei
+run_numbers_dams = True #table of mei
 run_dse = False #table of dse
 run_grnfoo = False #table of green foo at end of fp
 run_dryfoo = False #table of dry foo at end of fp
@@ -80,7 +81,7 @@ if run_saleprice:
     saleprice.to_excel(writer, 'saleprice')
 
 if run_cfw_dams:
-    func = rep.f_stock_summary
+    func = rep.f_stock_pasture_summary
     trials = [0, 25,26,27,28]
     type = 'stock'
     prod = 'cfw_hdmob_k2tva1nwziyg1'
@@ -98,23 +99,44 @@ if run_cfw_dams:
 
 if run_daily_mei_dams:
     func = rep.f_stock_pasture_summary
-    trials = [0,28]
+    trials = [0]
     type = 'stock'
     prod = 'dams_mei_k2p6ftva1nwziyg1'
     weights = 'dams_numbers_k2tvanwziy1g1'
-    weights_axis = [1, 2]
+    na_weights = [1, 2]
+    den_weights = 'propn_p6_k2p6tva1nwziyg1'
+    na_denweights = [2]
     keys = 'dams_keys_k2p6ftvanwziy1g1'
-    arith = 2
-    arith_axis = [2,3,4,5,6,7,8,9,10,11]
+    arith = 1
+    arith_axis = [2,3,5,6,7,8,9,10,11]
     denom = 'pas', 'days_p6'
-    index =[1]
+    denom_pos = -11
+    index =[1,4]
     cols =[0]
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
     daily_mei_dams = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights,
-                           weights_axis=weights_axis, keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols,
+                           na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights, keys=keys, arith=arith,
+                           arith_axis=arith_axis, denom=denom, denom_pos=denom_pos, index=index, cols=cols,
                            axis_slice=axis_slice)
     daily_mei_dams.to_excel(writer, 'daily_mei_dams')
+
+if run_numbers_dams:
+    func = rep.f_stock_pasture_summary
+    trials = [0,28]
+    type = 'stock'
+    weights = 'dams_numbers_k2tvanwziy1g1'
+    keys = 'dams_keys_k2tvanwziy1g1'
+    arith = 2
+    arith_axis = [1,3,4,5,6,7,8,9]
+    index =[2]
+    cols =[0]
+    axis_slice = {}
+    # axis_slice[0] = [0, 2, 1]
+    numbers_dams = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, type=type, weights=weights,
+                           keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols,
+                           axis_slice=axis_slice)
+    numbers_dams.to_excel(writer, 'numbers_dams')
 
 if run_dse:
     func = rep.f_dse
