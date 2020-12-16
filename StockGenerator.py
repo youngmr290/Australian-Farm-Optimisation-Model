@@ -3257,11 +3257,11 @@ def generator(params,r_vals,plots = False):
     ###dvp are the same as fvp for dams
     dvp_date_start_va1e1b1nwzida0e0b0xyg1 = fvp_date_start_fa1e1b1nwzida0e0b0xyg1
     a_dvp_p_va1e1b1nwzida0e0b0xyg1 = sfun.f_next_prev_association(date_start_p, dvp_date_start_va1e1b1nwzida0e0b0xyg1, 1, 'right').astype(dtypeint) #returns the period index for the start of each dvp
-    dvp_start_date_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(dvp_date_start_va1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1,0)
+    dvp_date_start_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(dvp_date_start_va1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1,0)
     dvp_type_va1e1b1nwzida0e0b0xyg1=fvp_type_fa1e1b1nwzida0e0b0xyg1  #[:,:,0:1,...] #rename to keep consistent and take e slice 0 because dvp is the same for all
     dvp_type_next_va1e1b1nwzida0e0b0xyg1 = np.roll(dvp_type_va1e1b1nwzida0e0b0xyg1, -1, axis=uinp.structure['i_p_pos'])
     dvp_type_va1e1b1nwzida0e0b0xyg1[0] = 0 #make dvp_type[0] == 0 to correctly mask the animals in the post weaning period because there is only 3 different weights (which is not technically like type 2) but don't want to change fvp type because we still want to trigger the change at the first prejoining.
-    period_is_startdvp_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is', dvp_start_date_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
+    period_is_startdvp_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is', dvp_date_start_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
     nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg1 = np.roll(period_is_startdvp_pa1e1b1nwzida0e0b0xyg1,-1,axis=0)
     nextperiod_is_prejoin_pa1e1b1nwzida0e0b0xyg1 = np.roll(period_is_prejoin_pa1e1b1nwzida0e0b0xyg1,-1,axis=0)
     #### the transfer to a dvp_type other than type==0 only occurs when transferring to and from the same genotype
@@ -3284,9 +3284,9 @@ def generator(params,r_vals,plots = False):
     index_vpa1e1b1nwzida0e0b0xyg3 = fun.f_reshape_expand(np.arange(np.max(a_v_pa1e1b1nwzida0e0b0xyg3)+1), uinp.structure['i_p_pos']-1)
     ###dvp dates
     date_weaned_a1e1b1nwzida0e0b0xyg3 = np.broadcast_to(date_weaned_ida0e0b0xyg3,fvp_0_start_oa1e1b1nwzida0e0b0xyg3.shape[1:]) #need wean date rather than first day of yr because selling inputs are days from weaning.
-    dvp_start_date_va1e1b1nwzida0e0b0xyg3 = np.concatenate([date_weaned_a1e1b1nwzida0e0b0xyg3[na,...],fvp_0_start_oa1e1b1nwzida0e0b0xyg3], axis=0)
-    dvp_start_date_pa1e1b1nwzida0e0b0xyg3=np.take_along_axis(dvp_start_date_va1e1b1nwzida0e0b0xyg3,a_v_pa1e1b1nwzida0e0b0xyg3,0)
-    period_is_startdvp_pa1e1b1nwzida0e0b0xyg3 = sfun.f_period_is_('period_is', dvp_start_date_pa1e1b1nwzida0e0b0xyg3, date_start_pa1e1b1nwzida0e0b0xyg3, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3)
+    dvp_date_start_va1e1b1nwzida0e0b0xyg3 = np.concatenate([date_weaned_a1e1b1nwzida0e0b0xyg3[na,...],fvp_0_start_oa1e1b1nwzida0e0b0xyg3], axis=0)
+    dvp_date_start_pa1e1b1nwzida0e0b0xyg3=np.take_along_axis(dvp_date_start_va1e1b1nwzida0e0b0xyg3,a_v_pa1e1b1nwzida0e0b0xyg3,0)
+    period_is_startdvp_pa1e1b1nwzida0e0b0xyg3 = sfun.f_period_is_('period_is', dvp_date_start_pa1e1b1nwzida0e0b0xyg3, date_start_pa1e1b1nwzida0e0b0xyg3, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3)
     dvp_start2_date_va1e1b1nwzida0e0b0xyg3 = np.concatenate([fvp_b0_start_ba1e1b1nwzida0e0b0xyg3,fvp_0_start_oa1e1b1nwzida0e0b0xyg3], axis=0) #use start of year rather than weaning for the start of the dvp because for dvp next we don't want to trigger a true at weaning.
     dvp_start2_date_pa1e1b1nwzida0e0b0xyg3=np.take_along_axis(dvp_start2_date_va1e1b1nwzida0e0b0xyg3,a_v_pa1e1b1nwzida0e0b0xyg3,0) #doesn't include weaning date because don't want to trigger the end of dvp the period before weaning dvp 0 ends before shearing therefore nextdvp is true the period before shearing
     period_is_startdvp2_pa1e1b1nwzida0e0b0xyg3 = sfun.f_period_is_('period_is', dvp_start2_date_pa1e1b1nwzida0e0b0xyg3, date_start_pa1e1b1nwzida0e0b0xyg3, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3)
@@ -3321,7 +3321,7 @@ def generator(params,r_vals,plots = False):
     ##offs
     ###calc sale date then determine shearing date
     ###sale - on date
-    sale_date_tsa1e1b1nwzida0e0b0xyg3 = sales_offset_tsa1e1b1nwzida0e0b0xyg3 + dvp_start_date_va1e1b1nwzida0e0b0xyg3 #date of dvp plus sale offset
+    sale_date_tsa1e1b1nwzida0e0b0xyg3 = sales_offset_tsa1e1b1nwzida0e0b0xyg3 + dvp_date_start_va1e1b1nwzida0e0b0xyg3 #date of dvp plus sale offset
     ####adjust sale date to be last day of period
     sale_date_idx_tsa1e1b1nwzida0e0b0xyg3 = sfun.f_next_prev_association(offs_date_end_p, sale_date_tsa1e1b1nwzida0e0b0xyg3,0, 'left')#sale occurs at the end of the current generator period therefore 0 offset
     sale_date_tsa1e1b1nwzida0e0b0xyg3 = offs_date_end_p[sale_date_idx_tsa1e1b1nwzida0e0b0xyg3]
@@ -3346,7 +3346,7 @@ def generator(params,r_vals,plots = False):
     shearing_offset_tpa1e1b1nwzida0e0b0xyg3=np.take_along_axis(shearing_offset_tsa1e1b1nwzida0e0b0xyg3,a_v_pa1e1b1nwzida0e0b0xyg3[na],1)
     ###shearing cant occur in a different period to sale therefore need to cap the offset for periods at the beginning of the dvp ie if sale occurs in p2 of dvp2 and offset is 3 the offset needs to be reduced because shearing must occur in dvp2
     ####get the period number where dvp changes
-    prev_dvp_index = sfun.f_next_prev_association(offs_date_start_p, dvp_start_date_pa1e1b1nwzida0e0b0xyg3, 1, 'right')
+    prev_dvp_index = sfun.f_next_prev_association(offs_date_start_p, dvp_date_start_pa1e1b1nwzida0e0b0xyg3, 1, 'right')
     periods_since_dvp = np.maximum(0,p_index_pa1e1b1nwzida0e0b0xyg3 - prev_dvp_index)  #first dvp starts at weaning so just put in the max 0 to stop negative results when the p date is less than weaning
     ####period when shearing will occur - this is the min of the shearing offset or the periods since dvp start
     shearing_idx_tpa1e1b1nwzida0e0b0xyg3 = p_index_pa1e1b1nwzida0e0b0xyg3 - np.minimum(shearing_offset_tpa1e1b1nwzida0e0b0xyg3, periods_since_dvp)
@@ -4352,7 +4352,7 @@ def generator(params,r_vals,plots = False):
     keys_t2 = np.array(['t%s'%i for i in range(t2_len)])
     keys_t3 = np.array(['t%s'%i for i in range(t3_len)])
     keys_v1 = np.array(['dvp%s'%i for i in range(dvp_type_va1e1b1nwzida0e0b0xyg1.shape[0])])
-    keys_v3 = np.array(['dvp%s'%i for i in range(dvp_start_date_va1e1b1nwzida0e0b0xyg3.shape[0])])
+    keys_v3 = np.array(['dvp%s'%i for i in range(dvp_date_start_va1e1b1nwzida0e0b0xyg3.shape[0])])
     keys_y0 = uinp.parameters['i_y_idx_sire'][uinp.parameters['i_mask_y']]
     keys_y1 = uinp.parameters['i_y_idx_dams'][uinp.parameters['i_mask_y']]
     keys_y3 = uinp.parameters['i_y_idx_offs'][uinp.parameters['i_mask_y']]
