@@ -85,7 +85,7 @@ def suppyomo_local(params):
 #######################################################################################################################################################
 #######################################################################################################################################################
 model.v_buy_grain = pe.Var(model.s_crops, model.s_grain_pools, bounds=(0,None), doc='tonnes of grain in each pool purchased for sup feeding')
-model.v_sup_con = pe.Var(model.s_crops,  model.s_grain_pools, model.s_sheep_pools, model.s_feed_periods, bounds=(0,None), doc='tonnes of grain consumed in each pool')
+model.v_sup_con = pe.Var(model.s_crops,  model.s_grain_pools, model.s_feed_pools, model.s_feed_periods, bounds=(0,None), doc='tonnes of grain consumed in each pool')
 
 #######################################################################################################################################################
 #######################################################################################################################################################
@@ -93,7 +93,7 @@ model.v_sup_con = pe.Var(model.s_crops,  model.s_grain_pools, model.s_sheep_pool
 #######################################################################################################################################################
 #######################################################################################################################################################
 def sup_cost(model,c):
-    return sum(model.v_sup_con[k,g,v,f] * model.p_sup_cost[c,f,k] for v in model.s_sheep_pools for g in model.s_grain_pools for k in model.s_crops for f in model.s_feed_periods)
+    return sum(model.v_sup_con[k,g,v,f] * model.p_sup_cost[c,f,k] for v in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for f in model.s_feed_periods)
 
 def sup_me(model,v,f):
     return sum(model.v_sup_con[k,g,v,f] * model.p_sup_md[k]for g in model.s_grain_pools for k in model.s_crops)
@@ -102,13 +102,13 @@ def sup_vol(model,v,f):
     return sum(model.v_sup_con[k,g,v,f] * model.p_sup_vol[k] for g in model.s_grain_pools for k in model.s_crops)
 
 def sup_dep(model):
-    return sum(model.v_sup_con[k,g,v,f] * model.p_sup_dep[f,k] for v in model.s_sheep_pools for g in model.s_grain_pools for k in model.s_crops for f in model.s_feed_periods)
+    return sum(model.v_sup_con[k,g,v,f] * model.p_sup_dep[f,k] for v in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for f in model.s_feed_periods)
 
 def sup_asset(model):
-    return sum(model.v_sup_con[k,g,v,f] * model.p_sup_asset[f,k] for v in model.s_sheep_pools for g in model.s_grain_pools for k in model.s_crops for f in model.s_feed_periods)
+    return sum(model.v_sup_con[k,g,v,f] * model.p_sup_asset[f,k] for v in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for f in model.s_feed_periods)
     
 def sup_labour(model,p):
-    return sum(model.v_sup_con[k,g,v,f] * model.p_sup_labour[k,p,f] for v in model.s_sheep_pools for g in model.s_grain_pools for k in model.s_crops for f in model.s_feed_periods)
+    return sum(model.v_sup_con[k,g,v,f] * model.p_sup_labour[k,p,f] for v in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for f in model.s_feed_periods)
     
     
     
