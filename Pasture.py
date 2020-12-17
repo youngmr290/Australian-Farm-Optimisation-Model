@@ -342,9 +342,9 @@ def map_excel(params,r_vals):
                          * i_fxg_foo_oflt[0,...]
     c_fxg_a_oflt[2,...] =  i_fxg_pgr_oflt[1,...] # because slope = 0
 
-    # proportion of start foo that senesceces during the period, different formula than excel
+    # proportion of start foo that senesces during the period, different formula than excel
     grn_senesce_startfoo_ft =1 - ((1 -     i_grn_senesce_daily_ft) **  length_f.reshape(-1,1))
-    # proportion of the total growth & consumption that senesceces during the period
+    # average senescence over the period for the growth and consumption
     grn_senesce_pgrcons_ft  =1 - ((1 -(1 - i_grn_senesce_daily_ft) ** (length_f.reshape(-1,1)+1))
                                   /        i_grn_senesce_daily_ft-1) / length_f.reshape(-1,1)
 
@@ -684,10 +684,11 @@ def green_and_dry(params, r_vals):
     foo_ungrazed_grnha_oflt  = foo_start_grnha_oflt    * (1-grn_senesce_startfoo_ft[:,np.newaxis,:])   \
                               + pgr_grnha_goflt[0,...] * (1- grn_senesce_pgrcons_ft[:,np.newaxis,:])
     ### foo at end of period with range of grazing intensity prior to eos senescence
-    foo_endprior_grnha_goflt = foo_ungrazed_grnha_oflt \
+    foo_endprior_grnha_goflt =    foo_ungrazed_grnha_oflt \
                                - (foo_ungrazed_grnha_oflt
                                   -           i_base_ft[:,np.newaxis,:]) \
-                               * i_foo_graze_propn_gt[:, np.newaxis, np.newaxis, np.newaxis, :]
+                                *  i_foo_graze_propn_gt[:, np.newaxis, np.newaxis, np.newaxis, :] \
+                               +              i_base_ft[:, np.newaxis, :]
     senesce_eos_grnha_goflt = foo_endprior_grnha_goflt * i_grn_senesce_eos_ft[:,np.newaxis,:]
     foo_end_grnha_goflt = foo_endprior_grnha_goflt - senesce_eos_grnha_goflt
     foo_end_grnha_goflt = foo_end_grnha_goflt * mask_greenfeed_exists_ft[:,np.newaxis,:]  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
@@ -701,7 +702,7 @@ def green_and_dry(params, r_vals):
                                       +          pgr_grnha_goflt
                                * (1 -  grn_senesce_pgrcons_ft[:,np.newaxis,:])
                                       - foo_endprior_grnha_goflt)          \
-                          / (1 -       grn_senesce_pgrcons_ft[:,np.newaxis,:]) * length_f[:, np.newaxis, np.newaxis]
+                          / (1 -       grn_senesce_pgrcons_ft[:,np.newaxis,:])
     cons_grnha_t_goflt  =      removal_grnha_goflt   \
                          /(1+i_grn_trampling_ft[:,np.newaxis,:])
 
