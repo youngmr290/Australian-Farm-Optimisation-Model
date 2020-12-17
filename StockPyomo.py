@@ -281,14 +281,14 @@ def stockpyomo_local(params):
         model.del_component(model.p_mei_sire)
     except AttributeError:
         pass
-    model.p_mei_sire = pe.Param(model.s_feed_periods, model.s_sheep_pools, model.s_groups_sire, initialize=params['p_mei_sire'], 
+    model.p_mei_sire = pe.Param(model.s_feed_periods, model.s_feed_pools, model.s_groups_sire, initialize=params['p_mei_sire'],
                                   default=0.0, doc='energy requirement sire')
     try:
         model.del_component(model.p_mei_dams_index)
         model.del_component(model.p_mei_dams)
     except AttributeError:
         pass
-    model.p_mei_dams = pe.Param(model.s_k2_birth_dams, model.s_feed_periods, model.s_sheep_pools, model.s_sale_dams, 
+    model.p_mei_dams = pe.Param(model.s_k2_birth_dams, model.s_feed_periods, model.s_feed_pools, model.s_sale_dams,
                                model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams, model.s_season_types, 
                                model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, initialize=params['p_mei_dams'], default=0.0, doc='energy requirement dams')
     try:
@@ -296,7 +296,7 @@ def stockpyomo_local(params):
         model.del_component(model.p_mei_offs)
     except AttributeError:
         pass
-    model.p_mei_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_feed_periods, model.s_sheep_pools, model.s_sale_offs, 
+    model.p_mei_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_feed_periods, model.s_feed_pools, model.s_sale_offs,
                                model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types, model.s_tol, model.s_wean_times, 
                                model.s_gender, model.s_gen_merit_offs, model.s_groups_offs, initialize=params['p_mei_offs'], default=0.0, doc='energy requirement offs')
 
@@ -306,14 +306,14 @@ def stockpyomo_local(params):
         model.del_component(model.p_pi_sire)
     except AttributeError:
         pass
-    model.p_pi_sire = pe.Param(model.s_feed_periods, model.s_sheep_pools, model.s_groups_sire, initialize=params['p_pi_sire'], 
+    model.p_pi_sire = pe.Param(model.s_feed_periods, model.s_feed_pools, model.s_groups_sire, initialize=params['p_pi_sire'],
                                   default=0.0, doc='pi sire')
     try:
         model.del_component(model.p_pi_dams_index)
         model.del_component(model.p_pi_dams)
     except AttributeError:
         pass
-    model.p_pi_dams = pe.Param(model.s_k2_birth_dams, model.s_feed_periods, model.s_sheep_pools, model.s_sale_dams, 
+    model.p_pi_dams = pe.Param(model.s_k2_birth_dams, model.s_feed_periods, model.s_feed_pools, model.s_sale_dams,
                                model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams, model.s_season_types, 
                                model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, initialize=params['p_pi_dams'], default=0.0, doc='pi dams')
     try:
@@ -321,7 +321,7 @@ def stockpyomo_local(params):
         model.del_component(model.p_pi_offs)
     except AttributeError:
         pass
-    model.p_pi_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_feed_periods, model.s_sheep_pools, model.s_sale_offs, 
+    model.p_pi_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_feed_periods, model.s_feed_pools, model.s_sale_offs,
                                model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs, model.s_season_types, model.s_tol, model.s_wean_times, 
                                model.s_gender, model.s_gen_merit_offs, model.s_groups_offs, initialize=params['p_pi_offs'], default=0.0, doc='pi offs')
 

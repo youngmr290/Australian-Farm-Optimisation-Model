@@ -132,13 +132,13 @@ def coremodel_all():
         model.del_component(model.con_harv_stub_nap_cons)
     except AttributeError:
         pass
-    def harv_stub_nap_cons(model,v,f):
+    def harv_stub_nap_cons(model,f):
         if any(model.p_nap_prop[f] or model.p_harv_prop[f,k] for k in model.s_crops):
-            return -paspy.pas_me(model,v,f) + sum(model.p_harv_prop[f,k]/(1-model.p_harv_prop[f,k]) * model.v_stub_con[v,f,k,s] * model.p_stub_md[f,s,k] for k in model.s_crops for s in model.s_stub_cat) \
-                    +  model.p_nap_prop[f]/(1-model.p_nap_prop[f]) * paspy.nappas_me(model,v,f) <= 0
+            return sum(-paspy.pas_me(model,v,f) + sum(model.p_harv_prop[f,k]/(1-model.p_harv_prop[f,k]) * model.v_stub_con[v,f,k,s] * model.p_stub_md[f,s,k] for k in model.s_crops for s in model.s_stub_cat)
+                    +  model.p_nap_prop[f]/(1-model.p_nap_prop[f]) * paspy.nappas_me(model,v,f) for v in model.s_feed_pools) <= 0
         else:
             return pe.Constraint.Skip
-    model.con_harv_stub_nap_cons = pe.Constraint(model.s_sheep_pools, model.s_feed_periods, rule = harv_stub_nap_cons, doc='limit stubble and nap consumption in the period harvest occurs')
+    model.con_harv_stub_nap_cons = pe.Constraint(model.s_feed_periods, rule = harv_stub_nap_cons, doc='limit stubble and nap consumption in the period harvest occurs')
 
     ######################
     #stubble             #
@@ -221,7 +221,7 @@ def coremodel_all():
     except AttributeError:
         pass
     def grain_transfer(model,g,k):
-        return -crppy.rotation_yield_transfer(model,g,k) + macpy.late_seed_penalty(model,g,k) + sum(model.v_sup_con[k,g,v,f]*1000 for v in model.s_sheep_pools for f in model.s_feed_periods)\
+        return -crppy.rotation_yield_transfer(model,g,k) + macpy.late_seed_penalty(model,g,k) + sum(model.v_sup_con[k,g,v,f]*1000 for v in model.s_feed_pools for f in model.s_feed_periods)\
                 - model.v_buy_grain[k,g]*1000 + model.v_sell_grain[k,g]*1000 <=0
     model.con_grain_transfer = pe.Constraint(model.s_grain_pools, model.s_crops, rule=grain_transfer, doc='constrain grain transfer between rotation and sup feeding')
     
@@ -239,7 +239,7 @@ def coremodel_all():
     except AttributeError:
         pass
     def poc(model,f,l):
-        return -macpy.ha_pasture_crop_paddocks(model,f,l) * model.p_poc_con[f,l] + sum(model.v_poc[v,f,l] for v in model.s_sheep_pools) <=0
+        return -macpy.ha_pasture_crop_paddocks(model,f,l) * model.p_poc_con[f,l] + sum(model.v_poc[v,f,l] for v in model.s_feed_pools) <=0
     model.con_poc_available = pe.Constraint(model.s_feed_periods, model.s_lmus, rule=poc, doc='constraint between poc available and consumed')
 
     ######################
@@ -252,7 +252,7 @@ def coremodel_all():
         pass
     def me(model,f,v):
         return -paspy.pas_me(model,v,f) - paspy.nappas_me(model,v,f) - suppy.sup_me(model,v,f) - stubpy.stubble_me(model,v,f) + stkpy.stock_me(model,v,f) <=0
-    model.con_me = pe.Constraint(model.s_feed_periods, model.s_sheep_pools, rule=me, doc='constraint between me available and consumed')
+    model.con_me = pe.Constraint(model.s_feed_periods, model.s_feed_pools, rule=me, doc='constraint between me available and consumed')
 
     ######################
     #Vol                 #
@@ -264,7 +264,7 @@ def coremodel_all():
         pass
     def vol(model,f,v):
         return paspy.pas_vol(model,v,f) + suppy.sup_vol(model,v,f) + stubpy.stubble_vol(model,v,f) - stkpy.stock_pi(model,v,f) <=0
-    model.con_vol = pe.Constraint(model.s_feed_periods, model.s_sheep_pools, rule=vol, doc='constraint between me available and consumed')
+    model.con_vol = pe.Constraint(model.s_feed_periods, model.s_feed_pools, rule=vol, doc='constraint between me available and consumed')
 
     ######################
     #cashflow constraints#
