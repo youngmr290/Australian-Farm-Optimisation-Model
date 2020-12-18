@@ -24,8 +24,7 @@ def f_errors(r_vals, exp_data_index, trial_outdated, trials):
         for row in trials:
             r_vals[exp_data_index[row][2]]
     except KeyError:
-        raise exc.TrialError
-        print('''Trials for reporting dont all exist''')
+        raise exc.TrialError('''Trials for reporting dont all exist''')
     ##second check if generating results using out of date data.
     if any(trial_outdated.loc[exp_data_index[trials]]):  # have to use the trial name because the order is different
         print('''
@@ -60,6 +59,7 @@ def f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, **kwa
         result = func(lp_vars[exp_data_index[row][2]], r_vals[exp_data_index[row][2]], **kwargs)
         result = pd.concat([result], keys=[exp_data_index[row][2]], names=['Trial'])  # add trial name as index level
         result_stacked = result_stacked.append(result)
+
     return result_stacked
 
 
@@ -148,7 +148,7 @@ def f_price_summary(lp_vars, r_vals, **kwargs):
                 col = 'Price $/kg'
             else:
                 col = 'Price $/hd'
-            saleprice[(grid_name, t_weight, t_fs), col] = price
+            saleprice.loc[(grid_name, t_weight, t_fs), col] = price
         return saleprice
 
 
@@ -170,43 +170,54 @@ def f_rotation(lp_vars, r_vals):
     return phases_rk, rot_area_rl, rot_area_rkl
 
 
-def f_area_summary(lp_vars, r_vals, option=0):
+def f_area_summary(lp_vars, r_vals, **kwargs):
     '''
     Rotation & landuse area summary. With multiple output levels.
     return options:
-    0- tuple: all results wraped in tuple
-    1- table: all rotations by lmu
-    2- table: selected rotations by lmu
-    3- float: total pasture area
-    4- float: total crop area
-    5- table: crop and pasture area by lmu
 
+    :param lp_vars: dict
+    :param r_vals: dict
+    :key option:
+        0: tuple all results wraped in tuple
+        1: table all rotations by lmu
+        2: table selected rotations by lmu
+        3: float total pasture area
+        4: float total crop area
+        5: table crop and pasture area by lmu
     '''
+    ##unpack kwargs
+    option = kwargs['option']
+
+    ##read from other functions
     rot_area_rl, rot_area_rkl = f_rotation(lp_vars, r_vals)[1:3]
     landuse_area_kl = rot_area_rkl.sum(axis=0, level=(1, 2)).unstack()  # area of each landuse (sum lmu and rotation)
+
     ##all rotations by lmu
     rot_area_rl = rot_area_rl.unstack()
     if option == 1:
-        return rot_area_rl
+        return rot_area_rl.round(0)
+
     ##selected rotations by lmu
     rot_area_selected_rl = rot_area_rl[rot_area_rl.any(axis=1)]
     if option == 2:
-        return rot_area_selected_rl
+        return rot_area_selected_rl.round(0)
     ###crop & pasture area
     ####you can now use isin pasture or crop sets to calc the area of crop or pasture
     all_pas = r_vals['rot']['all_pastures']  # landuse sets
     pasture_area_l = landuse_area_kl[landuse_area_kl.index.isin(all_pas)].sum()  # sum landuse
     if option == 3:
-        return pasture_area_l.sum()
+        return pasture_area_l.sum().round(0)
     crop_area_l = landuse_area_kl[~landuse_area_kl.index.isin(all_pas)].sum()  # sum landuse
     if option == 4:
-        return crop_area_l.sum()
+        return crop_area_l.sum().round(0)
+
     ##crop & pasture area by lmu
     croppas_area_l = pd.DataFrame()
     croppas_area_l.loc['pasture'] = pasture_area_l
     croppas_area_l.loc['crop'] = crop_area_l
     if option == 5:
-        return croppas_area_l
+        return croppas_area_l.round(0)
+
     ##return all if option==0
     if option == 0:
         return rot_area_rl, rot_area_selected_rl, pasture_area_l, crop_area_l, croppas_area_l
@@ -378,8 +389,8 @@ def f_stock_reshape(lp_vars, r_vals):
     keys_pastures = r_vals['pas']['keys_pastures']
 
     ##axis len
-    len_c = len(keys_c)
     len_a = len(keys_a)
+    len_c = len(keys_c)
     len_d = len(keys_d)
     len_g0 = len(keys_g0)
     len_g1 = len(keys_g1)
@@ -451,6 +462,30 @@ def f_stock_reshape(lp_vars, r_vals):
     offs_numbers_k3k5tvnwziaxyg3 = offs_numbers.reshape(offs_shape)
     offs_numbers_k3k5tvnwziaxyg3[offs_numbers_k3k5tvnwziaxyg3 == None] = 0  # replace None with 0
     stock_vars['offs_numbers_k3k5tvnwziaxyg3'] = offs_numbers_k3k5tvnwziaxyg3
+
+    ##feed energy content - not clustered
+    stock_vars['fec_sire_pg0'] = r_vals['stock']['fec_sire_pg0'][:,0,0,0,0,0,0,0,0,0,0,0,0,0,:]
+    stock_vars['fec_dams_pa1e1b1nw8ziyg1'] = r_vals['stock']['fec_dams_pa1e1b1nw8ziyg1'][:,:,:,:,:,:,:,:,0,0,0,0,0,:,:]
+    stock_vars['fec_offs_pnw8zida0e0b0xyg3'] = r_vals['stock']['fec_offs_pnw8zida0e0b0xyg3'][:,0,0,0,:,:,:,:,:,:,:,:,:,:]
+
+    ##lw - not clustered
+    stock_vars['lw_sire_pg0'] = r_vals['stock']['lw_sire_pg0'][:,0,0,0,0,0,0,0,0,0,0,0,0,0,:]
+    stock_vars['lw_dams_k2vpa1e1b1nw8ziyg1'] = r_vals['stock']['lw_dams_k2vpa1e1b1nw8ziyg1'][:,:,:,:,:,:,:,:,:,:,0,0,0,0,0,:,:]
+    stock_vars['lw_offs_k3k5vpnw8zia0e0b0xyg3'] = r_vals['stock']['lw_offs_k3k5vpnw8zida0e0b0xyg3'][:,:,:,0,0,0,:,:,:,:,:,:,:,:,:,:]
+
+
+    ##numbers with k2, e and b axis
+    stock_vars['numbers_start_k2tva1e1b1nw8ziyg1'] = r_vals['stock']['numbers_start_k2tva1e1b1nw8ziyg1'][:,:,:,:,:,:,:,:,:,:,0,0,0,0,0,:,:]
+
+    ##nfoet and nyatf used for lamb survival
+    stock_vars['nfoet_birth_vb'] = r_vals['stock']['nfoet_birth_tvb'].reshape(len_v1,11) # todo convert 11 to len(b1)
+    stock_vars['nyaft_birth_vb'] = r_vals['stock']['nyaft_birth_tvb'].reshape(len_v1,11) # todo convert 11 to len(b1)
+
+    ##scan percent per dam joined (eg accounts for mortality)
+    stock_vars['scanper_tva1nw8ziyg1'] = r_vals['stock']['scanper_tva1nw8ziyg1'].reshape(dams_shape[1:])
+
+    ##wean percent
+    stock_vars['weanper_k2tva1nw8ziyg1'] = r_vals['stock']['weanper_k2tva1nw8ziyg1'].reshape(dams_shape)
 
     ##dse
     ###shape
@@ -856,7 +891,7 @@ def f_stock_pasture_summary(lp_vars, r_vals, **kwargs):
     :key index (optional, default = []): list: axis you want as the index of pandas df (order of list is the index level order).
     :key cols (optional, default = []): list: axis you want as the cols of pandas df (order of list is the col level order).
     :key arith (optional, default = 0): int: arithmetic operation used.
-            option 0: return production param
+            option 0: return production param, averaged on given axis
             option 1: return weighted average of production param (using denominator weight return production per day the animal is on hand)
             option 2: total production for a given axis np.sum(prod * weight, axis)
             option 3: total production for each activity
@@ -985,11 +1020,10 @@ def f_stock_pasture_summary(lp_vars, r_vals, **kwargs):
 
 def f_numpy2df_error(prod, weights, arith, arith_axis, index, cols):
     ##error handle 1: cant preform arithmetic along an axis and also report that axis and the index or col
-    arith_occur = arith >= 1
+    arith_occur = len(arith_axis) >= 1
     arith_error = any(item in index for item in arith_axis) or any(item in cols for item in arith_axis)
     if arith_occur and arith_error:  # if arith is happening and there is an error in selected axis
-        raise exc.ArithError
-        print('''Arith error: can't preform operation along an axis that is going to be reported as the index or col''')
+        raise exc.ArithError('''Arith error: can't preform operation along an axis that is going to be reported as the index or col''')
 
     ##error handle 2: once arith has been completed all axis that are not singleton must be used in either the index or cols
     if arith_occur:
@@ -998,13 +1032,11 @@ def f_numpy2df_error(prod, weights, arith, arith_axis, index, cols):
         nonzero_idx = index + cols  # join lists
     error = [prod.shape.index(size) not in nonzero_idx for size in prod.shape if size > 1]
     if any(error):
-        raise exc.AxisError
-        print('''Axis error: active axes exist that are not used in arith or being reported as index or columns''')
+        raise exc.AxisError('''Axis error: active axes exist that are not used in arith or being reported as index or columns''')
 
     ##error 3: preforming arith with no weights
     if arith_occur and weights is None:
-        raise exc.ArithError
-        print('''Arith error: weights are not included''')
+        raise exc.ArithError('''Arith error: weights are not included''')
     return
 
 
@@ -1057,7 +1089,7 @@ def f_slice(prod, weights, den_weights, keys, arith, axis_slice):
 
 def f_arith(prod, weight, den_weights, arith, axis):
     '''
-    option 0: return production param
+    option 0: return production param averaged on specified axis
     option 1: return weighted average of production param (using denominator weight return production per day the animal is on hand)
     option 2: total production for a given axis
     option 3: total production for each activity
@@ -1071,10 +1103,11 @@ def f_arith(prod, weight, den_weights, arith, axis):
     '''
     ##calc if keep dims
     keepdims = len(axis) != len(prod.shape)
+    ##option 0
+    if arith == 0:
+        prod = np.mean(prod, tuple(axis), keepdims=keepdims)
     ##option 1
     if arith == 1:
-        # prod = fun.f_weighted_average(prod, weight, tuple(axis), keepdims=keepdims, den_weights=den_weights)
-        # prod = fun.f_weighted_average(prod, weight, tuple(axis), keepdims=keepdims, den_weights=(den_weights*(prod>0)))
         prod = fun.f_weighted_average(prod, weight, tuple(axis), keepdims=keepdims, den_weights=den_weights)
     ##option 2
     if arith == 2:

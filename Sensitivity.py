@@ -77,18 +77,20 @@ sar['mortalitye'] = 0          #Scale the calculated dam mortality at birth in t
 ######
 #SAV #
 ######
+##if you initiliase an array it must be type object (so that you can assign int/float/bool into the array)
 ##area
 sav['bnd_total_pas_area'] = '-'  #Total pasture area for bound. '-' is default so it will chuck an error if the bound is turned on without a specified area
 sav['bnd_pasarea_inc'] = '-'   #SA to turn on the pasture area bound
 ##Sheep
 sav['eqn_compare']      = '-'                  #SA to alter if the different equation systems in the sheep sim are run and compared
-sav['TOL_inc']         = np.full(pinp.sheep_inp['i_mask_i'].shape,'-')   # SA value for the inclusion of each TOL
-sav['g3_included']         = np.full(pinp.sheep_inp['i_g3_inc'].shape,'-') # SA value for the inclusion of each offspring genotype
+sav['TOL_inc']         = np.full(pinp.sheep_inp['i_mask_i'].shape, '-', dtype=object)   # SA value for the inclusion of each TOL
+sav['g3_included']         = np.full(pinp.sheep_inp['i_g3_inc'].shape, '-', dtype=object) # SA value for the inclusion of each offspring genotype
+sav['scan_og1']         = np.full(pinp.sheep_inp['i_scan_og1'].shape, '-', dtype=object) # SA value for the scaning management option
 sav['woolp_mpg_percentile'] = '-'              #sa value for the wool price percentile
 sav['woolp_mpg'] = '-'                     # sa value for wool price at std micron
 sav['woolp_fdprem_percentile'] = '-'           # sa value for fd premium percentile (premim recieved by fd compared to std)
 sav['woolp_fdprem'] = '-'                     # sa value for fd premium
 sav['salep_percentile'] = '-'                     #Value for percentile for all sale grids
 sav['salep_max'] = '-'                        #max sale price in grid
-sav['nut_mask_dams'] = np.full(pinp.sheep_inp['i_sai_lw_dams_owi'].shape,'-')  #masks the nutrition options available eg high low high - the options selected are available for each starting weight
-sav['nut_mask_offs'] = np.full(pinp.sheep_inp['i_sai_lw_offs_swix'].shape,'-')  #masks the nutrition options available eg high low high - the options selected are available for each starting weight
+sav['nut_mask_dams'] = np.full(pinp.sheep_inp['i_sai_lw_dams_owi'].shape, '-', dtype=object)  #masks the nutrition options available eg high low high - the options selected are available for each starting weight
+sav['nut_mask_offs'] = np.full(pinp.sheep_inp['i_sai_lw_offs_swix'].shape, '-', dtype=object)  #masks the nutrition options available eg high low high - the options selected are available for each starting weight

@@ -288,8 +288,6 @@ for row in range(len(exp_data)):
                         file.write ("   %s %s\n" %(index, v[index].value))
                 except: pass 
         file.close()
-        ##store profit
-        r_vals[exp_data.index[row][2]]['profit'] = pe.value(model.profit)
         ##this prints stuff for each trial - trial name, overall profit
         print("\nDisplaying Solution for trial: %s\n" %exp_data.index[row][2] , '-'*60,'\n%s' %pe.value(model.profit))
         ##this check if the solver is optimal - if infeasible or error the model will quit
@@ -301,18 +299,20 @@ for row in range(len(exp_data)):
         else: # Something else is wrong
             print ('Solver Status: error')
             sys.exit()
+        ##store profit
+        r_vals[exp_data.index[row][2]]['profit'] = pe.value(model.profit)
+        ##store pyomo variable output as a dict
+        variables=model.component_objects(pe.Var, active=True)
+        lp_vars['%s'%exp_data.index[row][2]]={str(v):{s:v[s].value for s in v} for v in variables}    #creates dict with variable in it. This is tricky since pyomo returns a generator object
     ##determine expected time to completion - trials left multiplied by average time per trial &time for current loop
-    trials_to_go = total_trials - run 
+    trials_to_go = total_trials - run
     time_taken= time.time()
     average_time = (time_taken- start_time1)/run
     remaining = trials_to_go * average_time
     print("total time taken this loop: ", time_taken - start_time)
     print('Time remaining: %s' %remaining)
-    
 
-    ##store pyomo variable output as a dict
-    variables=model.component_objects(pe.Var, active=True)
-    lp_vars['%s'%exp_data.index[row][2]]={str(v):{s:v[s].value for s in v} for v in variables}    #creates dict with variable in it. This is tricky since pyomo returns a generator object
+
 
 ##drop results into pickle file
 with open('pkl_lp_vars.pkl', "wb") as f:

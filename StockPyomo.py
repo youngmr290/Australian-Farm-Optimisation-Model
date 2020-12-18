@@ -272,7 +272,7 @@ def stockpyomo_local(params):
     except AttributeError:
         pass
     model.p_numbers_req_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_dvp_offs, model.s_lw_offs,
-                                        model.s_gender, model.s_groups_offs, model.s_lw_offs,
+                                        model.s_tol, model.s_gender, model.s_groups_offs, model.s_lw_offs,
                                         initialize=params['p_numbers_req_offs'], default=0.0, doc='requirment of off in the current period')
 
     ##energy intake
@@ -617,6 +617,7 @@ def stockpyomo_local(params):
     l_a = list(model.s_wean_times)
     l_z = list(model.s_season_types)
     l_i = list(model.s_tol)
+    l_x = list(model.s_gender)
     l_y1 = list(model.s_gen_merit_dams)
     l_g9 = list(model.s_groups_dams)
     l_w9 = list(model.s_lw_dams)
@@ -672,14 +673,16 @@ def stockpyomo_local(params):
         t_k3 = l_k3.index(k3)
         t_k5 = l_k5.index(k5)
         t_v3 = l_v3.index(v3)
+        t_i = l_i.index(i)
+        t_x = l_x.index(x)
         t_g3 = l_g3.index(g3)
         t_w9 = l_w9_offs.index(w9)
-        if not np.any(params['numbers_req_numpyversion_k3k5vw8g3w9'][t_k3,t_k5,t_v3,:,t_g3,t_w9]):
+        if not np.any(params['numbers_req_numpyversion_k3k5vw8ixg3w9'][t_k3,t_k5,t_v3,:,t_i,t_x,t_g3,t_w9]):
             return pe.Constraint.Skip
-        return sum(model.v_offs[k3,k5,t3,v3,n3,w8,z,i,a,x,y3,g3] * model.p_numbers_req_offs[k3,k5,v3,w8,x,g3,w9]
+        return sum(model.v_offs[k3,k5,t3,v3,n3,w8,z,i,a,x,y3,g3] * model.p_numbers_req_offs[k3,k5,v3,w8,i,x,g3,w9]
                    - model.v_offs[k3,k5,t3,v3_prev,n3,w8,z,i,a,x,y3,g3] * model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z,i,a,x,y3,g3,w9]
                     for t3 in model.s_sale_offs for n3 in model.s_nut_offs for w8 in model.s_lw_offs
-                   if model.p_numbers_req_offs[k3,k5,v3,w8,x,g3,w9] != 0 or model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z,i,a,x,y3,g3,w9] != 0) <=0 #need to use both in the if statement (even though it is slower) becasue there are stitustions eg dvp4 (prejoining) where prov will have a value and req will not.
+                   if model.p_numbers_req_offs[k3,k5,v3,w8,i,x,g3,w9] != 0 or model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z,i,a,x,y3,g3,w9] != 0) <=0 #need to use both in the if statement (even though it is slower) becasue there are stitustions eg dvp4 (prejoining) where prov will have a value and req will not.
     start=time.time()
     model.con_offR = pe.Constraint(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_dvp_offs, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gender,
                                    model.s_gen_merit_dams, model.s_groups_offs, model.s_lw_offs, rule=offR, doc='transfer off to off from last dvp to current dvp.')

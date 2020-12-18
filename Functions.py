@@ -299,10 +299,14 @@ def f_update(existing_value, new_value, mask_for_new):
         returns a combination of the two input arrays determined by the mask. Note: multiplying by true return the origional number and multiplying by false results in 0.
 
     '''
-    ##dtype for output (only needed for pp when int32 and float32 create float64 which we dont want)
+    ##dtype for output (primarily needed for pp when int32 and float32 create float64 which we dont want)
+    ##if the new value is an object (eg contains '-') then we want to return the origional dtype otherwise return the biggest dtype
     try:
-        dtype = max(existing_value.dtype, new_value.dtype)
-    except:
+        if new_value.dtype == object:
+            dtype = existing_value.dtype
+        else:
+            dtype = max(existing_value.dtype, new_value.dtype)
+    except AttributeError:
         pass
     ##convert '-' to 0 (because '-' * False == '' which causes and error when you add to existing value)
     ##need a try and except incase the new value is not a numpy array (ie it is a single value)
@@ -323,6 +327,10 @@ def f_update(existing_value, new_value, mask_for_new):
         pass
     except UnboundLocalError:
         pass
+    try:
+        if updated.dtype == object:
+            print('dtype error in f_update') #will give warning if ever returning a numpy object
+    except: pass
 
     return updated
 
@@ -480,11 +488,12 @@ def f_run_required(prev_exp, exp_data1, check_pyomo=True):
             exp_data1.loc[~i4.isin(i3),('run', '', '', '')] = True
         ###if headers are different or py code has changed then all trials need to be re-run
         else: exp_data1['run']=True
-        ###pyomo must be run if pyomo modules/code have changed since the trial was last run (also run if params are different - calculated later). Note this will also trigger a re run of pyomo if any value in exp.xlsx change - this is not required because it will be picked up by different param dicts, but it was easy to reuse code
+        ###pyomo must be run if pyomo modules have changed since the trial was last run, if the precalc params are different (tested later) or if the trial needed to run last time but the user opted not to.
         if os.path.getmtime('pkl_exp.pkl') >= os.path.getmtime(newest_pyomo) and check_pyomo==True:
-            ###check if each trial has the same values in exp.xlsx as last time it was run. - this keeps track of the need to run trials that the user opts not to run.
-            i3 = prev_exp.reset_index().set_index(keys_hist).index  # have to reset index because the name of the trial is going to be included in the new index so it must first be dropped from current index
-            i4 = exp_data1.reset_index().set_index(keys_current).index
+            ###check if trial needed to be run last time but user opted not to run.
+            ###compare trial name and pyomorun status with previous
+            i3 = prev_exp.reset_index().set_index([keys_hist[0],keys_hist[-1]]).index  # have to reset index because the name of the trial is going to be included in the new index so it must first be dropped from current index
+            i4 = exp_data1.reset_index().set_index([keys_current[0],keys_current[-1]]).index
             exp_data1.loc[~i4.isin(i3),('runpyomo', '', '', '')] = True
         else: exp_data1['runpyomo']=True
     except FileNotFoundError:

@@ -223,6 +223,7 @@ def exp(row):
     except KeyError:
         run_pyomo_params= True
     ##determine if pyomo should run, note if pyomo doesn't run there will be no ful solution (they are the same as before so no need)
+    lp_vars={} #create empty dict to return if pyomo isnt run
     if run_pyomo_params or exp_data1.loc[exp_data1.index[row],'runpyomo'].squeeze():
         ##call core model function, must call them in the correct order (core must be last)
         crtmod.sets() #certain sets have to be updated each iteration of exp
@@ -278,8 +279,6 @@ def exp(row):
                         file.write ("   %s %s\n" %(index, v[index].value))
                 except: pass 
         file.close()
-        ##store profit
-        r_vals['profit'] = pe.value(model.profit)
         ##this prints stuff for each trial - trial name, overall profit
         print("\nDisplaying Solution for trial: %s\n" %exp_data.index[row][2] , '-'*60,'\n%s' %pe.value(model.profit))
         ##this check if the solver is optimal - if infeasible or error the model will quit
@@ -291,10 +290,15 @@ def exp(row):
         else: # Something else is wrong
             print ('Solver Status: error')
             sys.exit()
+        ##store profit
+        r_vals['profit'] = pe.value(model.profit)
+        #last step is to print the time for the current trial to run
+        variables = model.component_objects(pe.Var, active=True)
+        lp_vars = {str(v):{s:v[s].value for s in v} for v in variables }     #creates dict with variable in it. This is tricky since pyomo returns a generator object
     ##determine expected time to completion - trials left multiplied by average time per trial &time for current loop
     dataset = list(np.flatnonzero(np.array(exp_data.index.get_level_values(0)) * np.array(exp_data1['run']))) #gets the ordinal index values for the trials the user wants to run that are not up to date
     processes = multiprocessing.cpu_count()
-    total_batches = math.ceil(len(dataset) / processes ) 
+    total_batches = math.ceil(len(dataset) / processes )
     current_batch = math.ceil( (dataset.index(row)+1) / processes ) #add 1 because python starts at 0
     remaining_batches = total_batches - current_batch
     time_taken = time.time() - start_time1
@@ -303,10 +307,7 @@ def exp(row):
     end_time = time.time()
     print("total time taken this loop: ", end_time - start_time)
     print('Time remaining: %s' %time_remaining)
-    
-    #last step is to print the time for the current trial to run
-    variables = model.component_objects(pe.Var, active=True)
-    lp_vars = {str(v):{s:v[s].value for s in v} for v in variables }     #creates dict with variable in it. This is tricky since pyomo returns a generator object
+
     return lp_vars, params, r_vals
 
 ##3 - works when run through anaconda prompt - if 9 runs and 8 processors, the first processor to finish, will start the 9th run
@@ -333,7 +334,8 @@ if __name__ == '__main__':
     dataset, results, exp_data1 = main() #returns a list is the same order of exp
     ##turn list of dicts into nested dict with trial name as key
     for trial_row, result, res_num in zip(dataset,results,range(len(results))):
-        lp_vars[exp_data.index[trial_row][2]] = results[res_num][0] 
+        if any(results[res_num][0]):  # only do this if pyomo was run and the dict contains values
+            lp_vars[exp_data.index[trial_row][2]] = results[res_num][0]
         params[exp_data.index[trial_row][2]] = results[res_num][1] 
         r_vals[exp_data.index[trial_row][2]] = results[res_num][2] 
     ##drop results into pickle file
