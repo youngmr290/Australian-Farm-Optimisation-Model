@@ -424,17 +424,6 @@ def f_stock_reshape(lp_vars, r_vals):
     ##create dict to stick reshaped variable is
     stock_vars = {}
 
-    # store keys - must be in axis order
-    stock_vars['sire_keys_g0'] = [keys_g0]
-    stock_vars['sire_keys_p6fg0'] = [keys_p6, keys_f, keys_g0]
-    stock_vars['dams_keys_k2tvanwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i,
-                                             keys_y1, keys_g1]
-    stock_vars['dams_keys_k2p6ftvanwziy1g1'] = [keys_k2, keys_p6, keys_f, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1,
-                                                keys_z, keys_i, keys_y1, keys_g1]
-    stock_vars['offs_keys_k3k5tvnwziaxyg3'] = [keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i,
-                                               keys_a, keys_x, keys_y3, keys_g3]
-    stock_vars['offs_keys_k3k5p6ftvnwziaxyg3'] = [keys_k3, keys_k5, keys_p6, keys_f, keys_t3, keys_v3, keys_n3,
-                                                  keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
 
     ##animal numbers
     ###shapes
@@ -446,108 +435,24 @@ def f_stock_reshape(lp_vars, r_vals):
     sire_numbers = np.array(list(lp_vars['v_sire'].values()))
     sire_numbers_g0 = sire_numbers.reshape(sire_shape)
     sire_numbers_g0[sire_numbers_g0 == None] = 0  # replace None with 0
-    stock_vars['sire_numbers_g0'] = sire_numbers_g0
+    stock_vars['sire_numbers_g0'] = sire_numbers_g0.astype(float)
     ###dams
     dams_numbers = np.array(list(lp_vars['v_dams'].values()))
     dams_numbers_k2tvanwziy1g1 = dams_numbers.reshape(dams_shape)
     dams_numbers_k2tvanwziy1g1[dams_numbers_k2tvanwziy1g1 == None] = 0  # replace None with 0
-    stock_vars['dams_numbers_k2tvanwziy1g1'] = dams_numbers_k2tvanwziy1g1
+    stock_vars['dams_numbers_k2tvanwziy1g1'] = dams_numbers_k2tvanwziy1g1.astype(float)
+    stock_vars['dams_numbers_tvanwziy1g1'] = np.sum(dams_numbers_k2tvanwziy1g1.astype(float), axis=0)
     ###prog
     prog_numbers = np.array(list(lp_vars['v_prog'].values()))
     prog_numbers_k5twzida0xg2 = prog_numbers.reshape(prog_shape)
     prog_numbers_k5twzida0xg2[prog_numbers_k5twzida0xg2 == None] = 0  # replace None with 0
-    stock_vars['prog_numbers_k5twzida0xg2'] = prog_numbers_k5twzida0xg2
+    stock_vars['prog_numbers_k5twzida0xg2'] = prog_numbers_k5twzida0xg2.astype(float)
     ###offs
     offs_numbers = np.array(list(lp_vars['v_offs'].values()))
     offs_numbers_k3k5tvnwziaxyg3 = offs_numbers.reshape(offs_shape)
     offs_numbers_k3k5tvnwziaxyg3[offs_numbers_k3k5tvnwziaxyg3 == None] = 0  # replace None with 0
-    stock_vars['offs_numbers_k3k5tvnwziaxyg3'] = offs_numbers_k3k5tvnwziaxyg3
+    stock_vars['offs_numbers_k3k5tvnwziaxyg3'] = offs_numbers_k3k5tvnwziaxyg3.astype(float)
 
-    ##feed energy content - not clustered
-    stock_vars['fec_sire_pg0'] = r_vals['stock']['fec_sire_pg0'][:,0,0,0,0,0,0,0,0,0,0,0,0,0,:]
-    stock_vars['fec_dams_pa1e1b1nw8ziyg1'] = r_vals['stock']['fec_dams_pa1e1b1nw8ziyg1'][:,:,:,:,:,:,:,:,0,0,0,0,0,:,:]
-    stock_vars['fec_offs_pnw8zida0e0b0xyg3'] = r_vals['stock']['fec_offs_pnw8zida0e0b0xyg3'][:,0,0,0,:,:,:,:,:,:,:,:,:,:]
-
-    ##lw - not clustered
-    stock_vars['lw_sire_pg0'] = r_vals['stock']['lw_sire_pg0'][:,0,0,0,0,0,0,0,0,0,0,0,0,0,:]
-    stock_vars['lw_dams_k2vpa1e1b1nw8ziyg1'] = r_vals['stock']['lw_dams_k2vpa1e1b1nw8ziyg1'][:,:,:,:,:,:,:,:,:,:,0,0,0,0,0,:,:]
-    stock_vars['lw_offs_k3k5vpnw8zia0e0b0xyg3'] = r_vals['stock']['lw_offs_k3k5vpnw8zida0e0b0xyg3'][:,:,:,0,0,0,:,:,:,:,:,:,:,:,:,:]
-
-
-    ##numbers with k2, e and b axis
-    stock_vars['numbers_start_k2tva1e1b1nw8ziyg1'] = r_vals['stock']['numbers_start_k2tva1e1b1nw8ziyg1'][:,:,:,:,:,:,:,:,:,:,0,0,0,0,0,:,:]
-
-    ##nfoet and nyatf used for lamb survival
-    stock_vars['nfoet_birth_vb'] = r_vals['stock']['nfoet_birth_tvb'].reshape(len_v1,11) # todo convert 11 to len(b1)
-    stock_vars['nyaft_birth_vb'] = r_vals['stock']['nyaft_birth_tvb'].reshape(len_v1,11) # todo convert 11 to len(b1)
-
-    ##scan percent per dam joined (eg accounts for mortality)
-    stock_vars['scanper_tva1nw8ziyg1'] = r_vals['stock']['scanper_tva1nw8ziyg1'].reshape(dams_shape[1:])
-
-    ##wean percent
-    stock_vars['weanper_k2tva1nw8ziyg1'] = r_vals['stock']['weanper_k2tva1nw8ziyg1'].reshape(dams_shape)
-
-    ##dse
-    ###shape
-    siredse_shape = len_p6, len_g0
-    damsdse_shape = len_k2, len_p6, len_t1, len_v1, len_a, len_n1, len_lw1, len_z, len_i, len_y1, len_g1
-    offsdse_shape = len_k3, len_k5, len_p6, len_t3, len_v3, len_n3, len_lw3, len_z, len_i, len_a, len_x, len_y3, len_g3
-    ###nw dse
-    stock_vars['dsenw_p6g0'] = r_vals['stock']['dsenw_p6g0'].reshape(siredse_shape)
-    stock_vars['dsenw_k2p6tva1nwziyg1'] = r_vals['stock']['dsenw_k2p6tva1nwziyg1'].reshape(damsdse_shape)
-    stock_vars['dsenw_k3k5p6tvnwziaxyg3'] = r_vals['stock']['dsenw_k3k5p6tvnwziaxyg3'].reshape(offsdse_shape)
-    ###mj dse
-    stock_vars['dsemj_p6g0'] = r_vals['stock']['dsemj_p6g0'].reshape(siredse_shape)
-    stock_vars['dsemj_k2p6tva1nwziyg1'] = r_vals['stock']['dsemj_k2p6tva1nwziyg1'].reshape(damsdse_shape)
-    stock_vars['dsemj_k3k5p6tvnwziaxyg3'] = r_vals['stock']['dsemj_k3k5p6tvnwziaxyg3'].reshape(offsdse_shape)
-
-    ##cfw
-    ###cfw per head average for the mob - includes the mortality factor
-    stock_vars['cfw_hdmob_g0'] = r_vals['stock']['r_cfw_hdmob_g0'].reshape(sire_shape)
-    stock_vars['cfw_hdmob_k2tva1nwziyg1'] = r_vals['stock']['r_cfw_hdmob_k2ctva1nwziyg1'].reshape(dams_shape)
-    stock_vars['cfw_hdmob_k3k5tvnwziaxyg3'] = r_vals['stock']['r_cfw_hdmob_k3k5ctvnwziaxyg3'].reshape(offs_shape)
-    ###cfw per head - wool cut for 1 whole animal, no account for mortality (numbers)
-    stock_vars['cfw_hd_g0'] = r_vals['stock']['r_cfw_hd_g0'].reshape(sire_shape)
-    stock_vars['cfw_hd_k2tva1nwziyg1'] = r_vals['stock']['r_cfw_hd_k2ctva1nwziyg1'].reshape(dams_shape)
-    stock_vars['cfw_hd_k3k5tvnwziaxyg3'] = r_vals['stock']['r_cfw_hd_k3k5ctvnwziaxyg3'].reshape(offs_shape)
-
-    ##mei/pi
-    siremei_shape = len_p6, len_f, len_g0
-    damsmei_shape = len_k2, len_p6, len_f, len_t1, len_v1, len_a, len_n1, len_lw1, len_z, len_i, len_y1, len_g1
-    offsmei_shape = len_k3, len_k5, len_p6, len_f, len_t3, len_v3, len_n3, len_lw3, len_z, len_i, len_a, len_x, len_y3, len_g3
-
-    stock_vars['sire_mei_p6fg0'] = r_vals['stock']['mei_sire_p6fg0'].reshape(siremei_shape)
-    stock_vars['dams_mei_k2p6ftva1nwziyg1'] = r_vals['stock']['mei_dams_k2p6ftva1nw8ziyg1'].reshape(damsmei_shape)
-    stock_vars['offs_mei_k3k5p6ftvnwziaxyg3'] = r_vals['stock']['mei_offs_k3k5p6ftvnw8ziaxyg3'].reshape(offsmei_shape)
-
-    stock_vars['sire_pi_p6fg0'] = r_vals['stock']['pi_sire_p6fg0'].reshape(siremei_shape)
-    stock_vars['dams_pi_k2p6ftva1nwziyg1'] = r_vals['stock']['pi_dams_k2p6ftva1nw8ziyg1'].reshape(damsmei_shape)
-    stock_vars['offs_pi_k3k5p6ftvnwziaxyg3'] = r_vals['stock']['pi_offs_k3k5p6ftvnw8ziaxyg3'].reshape(offsmei_shape)
-
-    ##stock days
-    stock_vars['stock_days_p6fg0'] = r_vals['stock']['stock_days_p6fg0'].reshape(siremei_shape)
-    stock_vars['stock_days_k2p6ftva1nwziyg1'] = r_vals['stock']['stock_days_k2p6ftva1nwziyg1'].reshape(damsmei_shape)
-    stock_vars['stock_days_k3k5p6ftvnwziaxyg3'] = r_vals['stock']['stock_days_k3k5p6ftvnwziaxyg3'].reshape(
-        offsmei_shape)
-
-    ##husbandry expense
-    sirecost_shape = len_c, len_g0
-    damscost_shape = len_k2, len_c, len_t1, len_v1, len_a, len_n1, len_lw1, len_z, len_i, len_y1, len_g1
-    progcost_shape = len_c, len_t2, len_lw_prog, len_z, len_i, len_a, len_x, len_g2
-    offscost_shape = len_k3, len_k5, len_c, len_t3, len_v3, len_n3, len_lw3, len_z, len_i, len_a, len_x, len_y3, len_g3
-
-    stock_vars['sire_cost_cg0'] = r_vals['stock']['cost_cg0'].reshape(sirecost_shape)
-    stock_vars['dams_cost_k2ctva1nwziyg1'] = r_vals['stock']['cost_k2ctva1nwziyg1'].reshape(damscost_shape)
-    stock_vars['offs_cost_k3k5ctvnwziaxyg3'] = r_vals['stock']['cost_k3k5ctvnwziaxyg3'].reshape(offscost_shape)
-    ###sale income
-    stock_vars['salevalue_cg0'] = r_vals['stock']['salevalue_cg0'].reshape(sirecost_shape)
-    stock_vars['salevalue_k2ctva1nwziyg1'] = r_vals['stock']['salevalue_k2ctva1nwziyg1'].reshape(damscost_shape)
-    stock_vars['salevalue_ctwzia0xg2'] = r_vals['stock']['salevalue_ctwzia0xg2'].reshape(progcost_shape)
-    stock_vars['salevalue_k3k5ctvnwziaxyg3'] = r_vals['stock']['salevalue_k3k5ctvnwziaxyg3'].reshape(offscost_shape)
-    ###wool income
-    stock_vars['woolvalue_cg0'] = r_vals['stock']['woolvalue_cg0'].reshape(sirecost_shape)
-    stock_vars['woolvalue_k2ctva1nwziyg1'] = r_vals['stock']['woolvalue_k2ctva1nwziyg1'].reshape(damscost_shape)
-    stock_vars['woolvalue_k3k5ctvnwziaxyg3'] = r_vals['stock']['woolvalue_k3k5ctvnwziaxyg3'].reshape(offscost_shape)
     return stock_vars
 
 
@@ -650,21 +555,21 @@ def f_stock_cash_summary(lp_vars, r_vals):
     offs_numbers_k3k5tvnwziaxyg3 = stock_vars['offs_numbers_k3k5tvnwziaxyg3']
 
     ##husb cost
-    sire_cost_cg0 = stock_vars['sire_cost_cg0'] * sire_numbers_g0
-    dams_cost_k2ctva1nwziyg1 = stock_vars['dams_cost_k2ctva1nwziyg1'] * dams_numbers_k2tvanwziy1g1[:, na, ...]
-    offs_cost_k3k5ctvnwziaxyg3 = stock_vars['offs_cost_k3k5ctvnwziaxyg3'] * offs_numbers_k3k5tvnwziaxyg3[:, :, na, ...]
+    sire_cost_cg0 = r_vals['stock']['sire_cost_cg0'] * sire_numbers_g0
+    dams_cost_k2ctva1nwziyg1 = r_vals['stock']['dams_cost_k2ctva1nwziyg1'] * dams_numbers_k2tvanwziy1g1[:, na, ...]
+    offs_cost_k3k5ctvnwziaxyg3 = r_vals['stock']['offs_cost_k3k5ctvnwziaxyg3'] * offs_numbers_k3k5tvnwziaxyg3[:, :, na, ...]
 
     ##sale income
-    salevalue_cg0 = stock_vars['salevalue_cg0'] * sire_numbers_g0
-    salevalue_k2ctva1nwziyg1 = stock_vars['salevalue_k2ctva1nwziyg1'] * dams_numbers_k2tvanwziy1g1[:, na, ...]
-    salevalue_k5ctwzida0xg2 = stock_vars['salevalue_ctwzia0xg2'][..., na, :, :, :] * prog_numbers_k5twzida0xg2[:, na,
+    salevalue_cg0 = r_vals['stock']['salevalue_cg0'] * sire_numbers_g0
+    salevalue_k2ctva1nwziyg1 = r_vals['stock']['salevalue_k2ctva1nwziyg1'] * dams_numbers_k2tvanwziy1g1[:, na, ...]
+    salevalue_k5ctwzida0xg2 = r_vals['stock']['salevalue_ctwzia0xg2'][..., na, :, :, :] * prog_numbers_k5twzida0xg2[:, na,
                                                                                      ...]
-    salevalue_k3k5ctvnwziaxyg3 = stock_vars['salevalue_k3k5ctvnwziaxyg3'] * offs_numbers_k3k5tvnwziaxyg3[:, :, na, ...]
+    salevalue_k3k5ctvnwziaxyg3 = r_vals['stock']['salevalue_k3k5ctvnwziaxyg3'] * offs_numbers_k3k5tvnwziaxyg3[:, :, na, ...]
 
     ##wool income
-    woolvalue_cg0 = stock_vars['woolvalue_cg0'] * sire_numbers_g0
-    woolvalue_k2ctva1nwziyg1 = stock_vars['woolvalue_k2ctva1nwziyg1'] * dams_numbers_k2tvanwziy1g1[:, na, ...]
-    woolvalue_k3k5ctvnwziaxyg3 = stock_vars['woolvalue_k3k5ctvnwziaxyg3'] * offs_numbers_k3k5tvnwziaxyg3[:, :, na, ...]
+    woolvalue_cg0 = r_vals['stock']['woolvalue_cg0'] * sire_numbers_g0
+    woolvalue_k2ctva1nwziyg1 = r_vals['stock']['woolvalue_k2ctva1nwziyg1'] * dams_numbers_k2tvanwziy1g1[:, na, ...]
+    woolvalue_k3k5ctvnwziaxyg3 = r_vals['stock']['woolvalue_k3k5ctvnwziaxyg3'] * offs_numbers_k3k5tvnwziaxyg3[:, :, na, ...]
 
     ###sum axis to return total income in each cash peirod 
     siresale_c = fun.f_reduce_skipfew(np.sum, salevalue_cg0, preserveAxis=0)  # sum all axis except c
@@ -759,21 +664,21 @@ def f_dse(lp_vars, r_vals, **kwargs):
 
     if method == 0:
         ##sire
-        dse_sire = stock_vars['sire_numbers_g0'] * stock_vars['dsenw_p6g0']
+        dse_sire = stock_vars['sire_numbers_g0'] * r_vals['stock']['dsenw_p6g0']
         ##dams
-        dse_dams = fun.f_reduce_skipfew(np.sum, stock_vars['dams_numbers_k2tvanwziy1g1'][:, na, ...] * stock_vars[
+        dse_dams = fun.f_reduce_skipfew(np.sum, stock_vars['dams_numbers_k2tvanwziy1g1'][:, na, ...] * r_vals['stock'][
             'dsenw_k2p6tva1nwziyg1'], preserveAxis=1)  # sum all axis except p6
         ##dams
-        dse_offs = fun.f_reduce_skipfew(np.sum, stock_vars['offs_numbers_k3k5tvnwziaxyg3'][:, :, na, ...] * stock_vars[
+        dse_offs = fun.f_reduce_skipfew(np.sum, stock_vars['offs_numbers_k3k5tvnwziaxyg3'][:, :, na, ...] * r_vals['stock'][
             'dsenw_k3k5p6tvnwziaxyg3'], preserveAxis=2)  # sum all axis except p6
     else:
         ##sire
-        dse_sire = stock_vars['sire_numbers_g0'] * stock_vars['dsemj_p6g0']
+        dse_sire = stock_vars['sire_numbers_g0'] * r_vals['stock']['dsemj_p6g0']
         ##dams
-        dse_dams = fun.f_reduce_skipfew(np.sum, stock_vars['dams_numbers_k2tvanwziy1g1'][:, na, ...] * stock_vars[
+        dse_dams = fun.f_reduce_skipfew(np.sum, stock_vars['dams_numbers_k2tvanwziy1g1'][:, na, ...] * r_vals['stock'][
             'dsemj_k2p6tva1nwziyg1'], preserveAxis=1)  # sum all axis except p6
         ##dams
-        dse_offs = fun.f_reduce_skipfew(np.sum, stock_vars['offs_numbers_k3k5tvnwziaxyg3'][:, :, na, ...] * stock_vars[
+        dse_offs = fun.f_reduce_skipfew(np.sum, stock_vars['offs_numbers_k3k5tvnwziaxyg3'][:, :, na, ...] * r_vals['stock'][
             'dsemj_k3k5p6tvnwziaxyg3'], preserveAxis=2)  # sum all axis except p6
 
     ##dse per ha if user opts for this level of detail
@@ -978,12 +883,12 @@ def f_stock_pasture_summary(lp_vars, r_vals, **kwargs):
         vars = f_stock_reshape(lp_vars, r_vals)
         ###if production doesnt exist eg it is 1 or some other number (this means you can preform arith with any number - mainly used for pasture when there is no production param)
         if isinstance(prod_key, str):
-            prod = vars[prod_key]  # for stock all production params must go through reshape function
+            prod = r_vals['stock'][prod_key]
         else:
             prod = np.array([prod_key])
         ###den weight - used in weighted average calc (default is 1)
         if isinstance(den_weights, str):
-            den_weights = vars[den_weights]  # for stock all production params must go through reshape function
+            den_weights = r_vals['stock'][den_weights]
     else:
         vars = f_pasture_reshape(lp_vars, r_vals)
         ###if production doesnt exist eg it is 1 or some other number (this means you can preform arith with any number - mainly used for pasture when there is no production param)
@@ -1005,7 +910,7 @@ def f_stock_pasture_summary(lp_vars, r_vals, **kwargs):
         weights = None
 
     ##other manipulation
-    f_numpy2df_error(prod, weights, arith, arith_axis, index, cols)
+    f_numpy2df_error(prod, weights, arith_axis, index, cols)
     prod, weights, den_weights, denom = f_add_axis(prod, weights, den_weights, denom, na_weights, na_prod, na_denweights, na_denom)
     prod, weights, den_weights = f_slice(prod, weights, den_weights, keys, arith, axis_slice)
     prod = f_arith(prod, weights, den_weights, arith, arith_axis)
@@ -1013,12 +918,109 @@ def f_stock_pasture_summary(lp_vars, r_vals, **kwargs):
     prod = f_numpy2df(prod, keys, index, cols)
     return prod
 
+def f_survival(lp_vars, r_vals, **kwargs):
+    '''
+
+    :param lp_vars: dict: results from pyomo
+    :param r_vals: dict: report variable
+    :key key: str: dict key for the axis keys
+    :key index (optional, default = []): list: axis you want as the index of pandas df (order of list is the index level order).
+    :key cols (optional, default = []): list: axis you want as the cols of pandas df (order of list is the col level order).
+    :key arith (optional, default = 0): int: arithmetic operation used.
+            option 0: return production param, averaged on given axis
+            option 1: return weighted average of production param (using denominator weight return production per day the animal is on hand)
+            option 2: total production for a given axis np.sum(prod * weight, axis)
+            option 3: total production for each activity
+            option 4: return weighted average of production param (using denominator weight returns the average production for period eg less if animal is sold part way through)
+    :key arith_axis (optional, default = []): list: axis to preform arithmetic operation along.
+    :key prod (optional, default = 1): str/int/float: if it is a string then it is used as a key for stock_vars, if it is an number that number is used as the prod value
+    :key na_prod (optional, default = []): list: position to add new axis
+    :key weights (optional, default = None): str: weights to be used in arith (typically a lp variable eg numbers). Only required when arith>0
+    :key na_weights (optional, default = []): list: position to add new axis
+    :key den_weights (optional, default = 1): str: key to variable used to weight the denominator in the weighted average (required p6 reporting)
+    :key na_denweights (optional, default = []): list: position to add new axis
+    :key denom (optional, default = 1): str: keys to r_vals indicating denominator to divide production by (after other operations have been applied).
+    :key na_denom (optional, default = []): list: position to add new axis
+    :key axis_slice (optional, default = {}): dict: keys (int) is the axis. value (list) is the start, stop and step of the slice
+    :return: pandas df
+    '''
+    ##unpack dict adding default values
+    ###default values exist
+    # try:
+    #     na_weights = kwargs['na_weights']
+    # except KeyError:
+    #     na_weights = []
+    #
+    # try:
+    #     na_prod = kwargs['na_prod']
+    # except KeyError:
+    #     na_prod = []
+    #
+    # try:
+    #     na_denweights = kwargs['na_denweights']
+    # except KeyError:
+    #     na_denweights = []
+    #
+    # try:
+    #     den_weights = kwargs['den_weights']
+    # except KeyError:
+    #     den_weights = 1
+
+    try:
+        arith = kwargs['arith']
+    except KeyError:
+        arith = 0
+
+    try:
+        arith_axis = kwargs['arith_axis']
+    except KeyError:
+        arith_axis = []
+
+
+    try:
+        index = kwargs['index']
+    except KeyError:
+        index = []
+
+    try:
+        cols = kwargs['cols']
+    except KeyError:
+        cols = []
+
+    try:
+        axis_slice = kwargs['axis_slice']
+    except KeyError:
+        axis_slice = {}
+
+    ##read from stock reshape function
+
+
+    vars = f_stock_reshape(lp_vars, r_vals)
+    v_dams_k2tvaebnwziy1g1 = vars['dams_numbers_k2tvanwziy1g1'][:,:,:,:,na,na,...] #add na for e and b
+
+    ##number of prog in each e/b slice for each cluster.
+    prog_born = np.sum(r_vals['stock']['prog_born_k2tva1e1b1nw8ziyg1'] * v_dams_k2tvaebnwziy1g1, axis= tuple([0,1,3,6,7,8,9,10,11]),keepdims=True)
+    prog_alive = np.sum(r_vals['stock']['prog_alive_k2tva1e1b1nw8ziyg1'] * v_dams_k2tvaebnwziy1g1, axis= tuple([0,1,3,6,7,8,9,10,11]),keepdims=True)
+    # index_b9
+    survival=prog_born/prog_alive
+    # ##keys that will become the index and cols for table
+    # keys = vars[keys_key]
+    #
+    # ##other manipulation
+    # f_numpy2df_error(numbers_start_k2tva1e1b1nw8ziyg1, v_dams, arith_axis, index, cols)
+    #
+    # prod, weights, den_weights = f_slice(prod, weights, den_weights, keys, arith, axis_slice)
+    # prod = f_arith(prod, weights, den_weights, arith, arith_axis)
+    # prod = fun.f_divide(prod, denom)
+    # prod = f_numpy2df(prod, keys, index, cols)
+    return prod
+
 
 ############################
 # functions for numpy arrays#
 ############################
 
-def f_numpy2df_error(prod, weights, arith, arith_axis, index, cols):
+def f_numpy2df_error(prod, weights, arith_axis, index, cols):
     ##error handle 1: cant preform arithmetic along an axis and also report that axis and the index or col
     arith_occur = len(arith_axis) >= 1
     arith_error = any(item in index for item in arith_axis) or any(item in cols for item in arith_axis)
@@ -1124,7 +1126,7 @@ def f_arith(prod, weight, den_weights, arith, axis):
 
 def f_numpy2df(prod, keys, index, cols):
     if prod.size <= 1 and prod.ndim <= 1:
-        return pd.DataFrame(prod)  # dont need to reshape etc if everything is summed and prod is just one number
+        return pd.DataFrame([prod])  # dont need to reshape etc if everything is summed and prod is just one number
     ##move x axis to front
     dest = list(range(len(index)))
     prod = np.moveaxis(prod, index, dest)

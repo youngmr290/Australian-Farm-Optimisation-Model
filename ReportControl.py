@@ -43,7 +43,10 @@ run_pnl = False #table of profit and loss
 run_profitarea = False #graph profit by crop area
 run_saleprice = False #table of saleprices
 run_cfw_dams = False #table of cfw
-run_weanper = True #table of cfw
+run_fec_dams = False #fec
+run_weanper = True #table of weaning percent
+run_scanper = True #table of scan percent
+run_lamb_survival = True #table of lamb survival
 run_daily_mei_dams = False #table of mei
 run_daily_pi_dams = False #table of mei
 run_numbers_dams = False #table of numbers
@@ -172,11 +175,29 @@ if run_cfw_dams:
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
     cfw_dams.to_excel(writer, 'cfw_dams')
 
+if run_fec_dams:
+    func = rep.f_stock_pasture_summary
+    trials = [0]
+    prod = 'fec_dams_k2vpa1e1b1nw8ziyg1'
+    na_prod = [1]
+    weights = 'dams_numbers_k2tvanwziy1g1'
+    na_weights = [2,5,6]
+    keys = 'dams_keys_k2tvpaebnwziy1g1'
+    arith = 1
+    arith_axis = [0,1,2,4,5,7,8,9,10,11,12]
+    index =[3]
+    cols =[6]
+    axis_slice = {}
+    # axis_slice[0] = [0, 2, 1]
+    cfw_dams = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, prod=prod, weights=weights, na_prod=na_prod, na_weights=na_weights,
+                           keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+    cfw_dams.to_excel(writer, 'cfw_dams')
+
 if run_weanper:
     func = rep.f_stock_pasture_summary
     trials = [0]
     type = 'stock'
-    prod = 'weanper_k2tva1nw8ziyg1'
+    prod = 'weanper_k2tva1nw8ziyg1' # todo check weanper back in generator to fid the problem
     weights = 'dams_numbers_k2tvanwziy1g1'
     keys = 'dams_keys_k2tvanwziy1g1'
     arith = 1
@@ -185,9 +206,32 @@ if run_weanper:
     cols =[0]
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
-    cfw_dams = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights,
+    weanper = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
-    cfw_dams.to_excel(writer, 'cfw_dams')
+    weanper.to_excel(writer, 'weanper')
+
+if run_scanper:
+    func = rep.f_stock_pasture_summary
+    trials = [0]
+    type = 'stock'
+    prod = 'scanper_tva1nw8ziyg1'
+    weights = 'dams_numbers_tvanwziy1g1'
+    keys = 'dams_keys_tvanwziy1g1'
+    arith = 1
+    arith_axis = [0,2,3,4,5,6,7,8]
+    index =[1]
+    cols =[]
+    axis_slice = {}
+    # axis_slice[0] = [0, 2, 1]
+    scanper = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights,
+                           keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+    scanper.to_excel(writer, 'scanper')
+
+if run_lamb_survival:
+    func = rep.f_survival
+    trials = [0]
+    lamb_survival = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials)
+
 
 if run_daily_mei_dams:
     func = rep.f_stock_pasture_summary

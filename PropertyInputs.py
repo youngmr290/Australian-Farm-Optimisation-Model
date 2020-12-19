@@ -32,6 +32,9 @@ if inputs_from_pickle == False:
         general_inp = fun.xl_all_named_ranges("Property.xlsx","General")
         pkl.dump(general_inp, f)
 
+        rep_inp = fun.xl_all_named_ranges("Property.xlsx","Report Settings")
+        pkl.dump(rep_inp, f)
+
         labour_inp = fun.xl_all_named_ranges("Property.xlsx","Labour")
         pkl.dump(labour_inp, f)
 
@@ -77,6 +80,8 @@ else:
     with open(filename, "rb") as f:
         general_inp = pkl.load(f)
 
+        rep_inp = pkl.load(f)
+
         labour_inp = pkl.load(f)
 
         crop_inp = pkl.load(f)
@@ -104,6 +109,7 @@ else:
 ##create a copy of each input dict - this means there is always a copy of the origional inputs (the second copy has SA applied to it)
 ##the copy created is the one used in the actuall modules
 general=general_inp.copy()
+rep=rep_inp.copy()
 labour=labour_inp.copy()
 crop=crop_inp.copy()
 mach=mach_inp.copy()
@@ -158,5 +164,8 @@ def property_inp_sa():
     sheep['i_sai_lw_dams_owi'] = fun.f_sa(sheep_inp['i_sai_lw_dams_owi'], sen.sav['nut_mask_dams'],5)
     sheep['i_sai_lw_offs_swix'] = fun.f_sa(sheep_inp['i_sai_lw_offs_swix'], sen.sav['nut_mask_offs'],5)
 
+    ##report controls
+    ###SAV
+    rep['i_store_fec_rep'] = fun.f_sa(rep_inp['i_store_fec_rep'], sen.sav['fec_inc'], 5)
 
 
