@@ -98,7 +98,6 @@ def f_df2xl(writer, df, sheet, rowstart=0, colstart=0, option=0):
             if (df.iloc[row]==0).all():
                 offset = df.columns.nlevels #number of columns used for names
                 worksheet.set_row(row+offset,None,None,{'level': 1, 'hidden': True}) #set hidden to true to colaps the level initially
-            # worksheet.set_row(row+offset,None,None,{'collapsed': True})
 
         for col in range(len(df.columns)):
             if (df.iloc[:,col]==0).all():
@@ -106,8 +105,9 @@ def f_df2xl(writer, df, sheet, rowstart=0, colstart=0, option=0):
                 col = xlsxwriter.utility.xl_col_to_name(col+offset) + ':' + xlsxwriter.utility.xl_col_to_name(col+offset) #conver col number to excel col reference eg 'A:B'
                 worksheet.set_column(col,None,None,{'level': 1, 'hidden': True})
         return
+
     ##apply filter
-    if option==2:  # todo this code need work
+    if option==2:
         # Activate autofilter
         worksheet.autofilter(f'B1:B{len(df)}')
         worksheet.filter_column('B', 'x < 5') # todo this will need to become function argument
@@ -136,13 +136,12 @@ if run_areasum:
     option = 2
     areasum = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, option=option)
     f_df2xl(writer, areasum, 'areasum', option=1)
-    # areasum.to_excel(writer, 'areasum')
 
 if run_pnl:
     func = rep.f_profitloss_table
     trials = [0]
     pnl = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials)
-    pnl.to_excel(writer, 'pnl')
+    f_df2xl(writer, pnl, 'pnl', option=1)
 
 if run_profitarea:
     func0 = rep.f_area_summary
@@ -161,7 +160,7 @@ if run_saleprice:
     weight = [22,40,25]
     fs = [2,3,2]
     saleprice = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, option=option, grid=grid, weight=weight, fs=fs)
-    saleprice.to_excel(writer, 'saleprice')
+    f_df2xl(writer, saleprice, 'saleprice', option=1)
 
 if run_cfw_dams:
     func = rep.f_stock_pasture_summary
@@ -178,7 +177,7 @@ if run_cfw_dams:
     # axis_slice[0] = [0, 2, 1]
     cfw_dams = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
-    cfw_dams.to_excel(writer, 'cfw_dams')
+    f_df2xl(writer, cfw_dams, 'cfw_dams', option=1)
 
 if run_fec_dams:
     func = rep.f_stock_pasture_summary
@@ -199,7 +198,7 @@ if run_fec_dams:
     fec_dams = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights,
                            den_weights=den_weights, na_prod=na_prod, na_weights=na_weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
-    fec_dams.to_excel(writer, 'fec_dams')
+    f_df2xl(writer, fec_dams, 'fec_dams', option=1)
 
 if run_weanper:
     func = rep.f_stock_pasture_summary
@@ -216,7 +215,7 @@ if run_weanper:
     # axis_slice[0] = [0, 2, 1]
     weanper = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
-    weanper.to_excel(writer, 'weanper')
+    f_df2xl(writer, weanper, 'weanper', option=1)
 
 if run_scanper:
     func = rep.f_stock_pasture_summary
@@ -233,7 +232,7 @@ if run_scanper:
     # axis_slice[0] = [0, 2, 1]
     scanper = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
-    scanper.to_excel(writer, 'scanper')
+    f_df2xl(writer, scanper, 'scanper', option=1)
 
 if run_lamb_survival:
     func = rep.f_survival
@@ -243,8 +242,8 @@ if run_lamb_survival:
     cols =[6]
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
-
     lamb_survival = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials)
+    f_df2xl(writer, lamb_survival, 'lamb_survival', option=1)
 
 
 if run_daily_mei_dams:
@@ -266,7 +265,6 @@ if run_daily_mei_dams:
                            na_weights=na_weights, den_weights=den_weights, keys=keys, arith=arith,
                            arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
     f_df2xl(writer, daily_mei_dams, 'daily_mei_dams', option=1)
-    # daily_mei_dams.to_excel(writer, 'daily_mei_dams')
 
 if run_daily_pi_dams:
     func = rep.f_stock_pasture_summary
@@ -287,7 +285,7 @@ if run_daily_pi_dams:
                            na_weights=na_weights, den_weights=den_weights, keys=keys, arith=arith,
                            arith_axis=arith_axis, index=index, cols=cols,
                            axis_slice=axis_slice)
-    daily_pi_dams.to_excel(writer, 'daily_pi_dams')
+    f_df2xl(writer, daily_pi_dams, 'daily_pi_dams', option=1)
 
 if run_numbers_dams:
     func = rep.f_stock_pasture_summary
@@ -304,7 +302,7 @@ if run_numbers_dams:
     numbers_dams = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, type=type, weights=weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols,
                            axis_slice=axis_slice)
-    numbers_dams.to_excel(writer, 'numbers_dams')
+    f_df2xl(writer, numbers_dams, 'numbers_dams', option=1)
 
 if run_numbers_offs:
     func = rep.f_stock_pasture_summary
@@ -321,7 +319,7 @@ if run_numbers_offs:
     numbers_offs = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, type=type, weights=weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols,
                            axis_slice=axis_slice)
-    numbers_offs.to_excel(writer, 'numbers_offs')
+    f_df2xl(writer, numbers_offs, 'numbers_offs', option=1)
 
 if run_dse:
     func = rep.f_dse
@@ -329,7 +327,7 @@ if run_dse:
     method = 0
     per_ha = True
     dse = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, method = method, per_ha = per_ha)
-    dse.to_excel(writer, 'dse')
+    f_df2xl(writer, dse, 'dse', option=1)
 
 if run_grnfoo:
     #returns foo at end of each fp
@@ -347,7 +345,7 @@ if run_grnfoo:
     # axis_slice[0] = [0, 2, 1]
     grnfoo = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, prod=prod, type=type, weights=weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
-    grnfoo.to_excel(writer, 'grnfoo')
+    f_df2xl(writer, grnfoo, 'grnfoo', option=1)
 
 if run_dryfoo:
     #returns foo at end of each fp
@@ -365,7 +363,7 @@ if run_dryfoo:
     # axis_slice[0] = [0, 2, 1]
     dryfoo = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, prod=prod, type=type, weights=weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
-    dryfoo.to_excel(writer, 'dryfoo')
+    f_df2xl(writer, dryfoo, 'dryfoo', option=1)
 
 if run_napfoo:
     #returns foo at end of each fp
@@ -383,7 +381,7 @@ if run_napfoo:
     # axis_slice[0] = [0, 2, 1]
     napfoo = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, prod=prod, type=type, weights=weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
-    napfoo.to_excel(writer, 'napfoo')
+    f_df2xl(writer, napfoo, 'napfoo', option=1)
 
 if run_grncon:
     #returns consumption in each fp
@@ -401,7 +399,7 @@ if run_grncon:
     # axis_slice[0] = [0, 2, 1]
     grncon = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, prod=prod, type=type, weights=weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
-    grncon.to_excel(writer, 'grncon')
+    f_df2xl(writer, grncon, 'grncon', option=1)
 
 if run_drycon:
     #returns consumption in each fp
@@ -419,7 +417,7 @@ if run_drycon:
     # axis_slice[0] = [0, 2, 1]
     drycon = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, prod=prod, type=type, weights=weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
-    drycon.to_excel(writer, 'drycon')
+    f_df2xl(writer, drycon, 'drycon', option=1)
 
 if run_napcon:
     #returns consumption in each fp
@@ -437,7 +435,7 @@ if run_napcon:
     # axis_slice[0] = [0, 2, 1]
     napcon = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, prod=prod, type=type, weights=weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
-    napcon.to_excel(writer, 'napcon')
+    f_df2xl(writer, napcon, 'napcon', option=1)
 
 if run_poccon:
     #returns consumption in each fp
@@ -455,7 +453,7 @@ if run_poccon:
     # axis_slice[0] = [0, 2, 1]
     poccon = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, prod=prod, type=type, weights=weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
-    poccon.to_excel(writer, 'poccon')
+    f_df2xl(writer, poccon, 'poccon', option=1)
 
 if run_supcon:
     #returns consumption in each fp
@@ -463,14 +461,14 @@ if run_supcon:
     trials = [0]
     option = 1
     supcon = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, option=option)
-    supcon.to_excel(writer, 'supcon')
+    f_df2xl(writer, supcon, 'supcon', option=1)
 
 if run_stubcon:
     #returns consumption in each fp
     func = rep.f_stubble_summary
     trials = [0]
     stubcon = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials)
-    stubcon.to_excel(writer, 'stubcon')
+    f_df2xl(writer, stubcon, 'stubcon', option=1)
 
 
 
