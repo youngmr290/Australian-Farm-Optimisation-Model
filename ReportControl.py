@@ -48,7 +48,7 @@ run_weanper = False #table of weaning percent
 run_scanper = False #table of scan percent
 run_lamb_survival = False #table of lamb survival
 run_daily_mei_dams = True #table of mei
-run_daily_pi_dams = True #table of mei
+run_daily_pi_dams = False #table of mei
 run_numbers_dams = False #table of numbers
 run_numbers_offs = False #table of numbers
 run_dse = False #table of dse
@@ -82,19 +82,20 @@ def f_df2xl(writer, df, sheet, rowstart=0, colstart=0, option=0):
     :param option: int: specifying the writing option
     '''
     ## simple write df to xl
-    if option==0:
-        df.to_excel(writer, sheet, rowstart, colstart)
+    df.to_excel(writer, sheet, startrow=rowstart, startcol=colstart)
 
     #^add this?    :param condense: bool that controls if rows and cols full of 0's are dropped.
 
     ##set up xlsxwriter stuff needed for advanced options
     workbook = writer.book
-    worksheet = writer.sheets['areasum']
+    worksheet = writer.sheets[sheet]
 
     ## collapse rows and cols with all 0's
     if option==1:
-        for row in len(df):
-            worksheet.set_row(1,None,None,{'level': 2})
+        df = df.round(5)  # round so that very small numbers are dropped out in the next step
+        for row in range(len(df)):
+            worksheet.set_row(row,None,None,{'level': 2})
+        return
 
     ##apply filter
     if option==2:  # todo this code need work
@@ -108,12 +109,6 @@ def f_df2xl(writer, df, sheet, rowstart=0, colstart=0, option=0):
             if not (region < 5):
                 # We need to hide rows that don't match the filter.
                 worksheet1.set_row(idx + 1,options={'hidden': True})
-
-    ##condense table - remove rows and cols that have all 0's if user wants
-    if condense:
-        result_stacked = result_stacked.round(5) #round so that very small numbers are dropped out in the next step
-        result_stacked = result_stacked.loc[result_stacked.any(axis=1),result_stacked.any(axis=0)]
-
 
     ##create chart
     if option==3:
@@ -177,12 +172,13 @@ if run_cfw_dams:
 
 if run_fec_dams:
     func = rep.f_stock_pasture_summary
-    trials = [0]
+    trials = [31]
     type = 'stock'
     prod = 'fec_dams_k2vpa1e1b1nw8ziyg1'
     na_prod = [1]
     weights = 'dams_numbers_k2tvanwziy1g1'
-    na_weights = [2,5,6]
+    na_weights = [3,5,6]
+    den_weights = 'pe1b1_denom_weights_k2tvpa1e1b1nw8ziyg1'
     keys = 'dams_keys_k2tvpaebnwziy1g1'
     arith = 1
     arith_axis = [0,1,2,4,5,7,8,9,10,11,12]
@@ -190,7 +186,8 @@ if run_fec_dams:
     cols =[6]
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
-    fec_dams = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights, na_prod=na_prod, na_weights=na_weights,
+    fec_dams = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights,
+                           den_weights=den_weights, na_prod=na_prod, na_weights=na_weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
     fec_dams.to_excel(writer, 'fec_dams')
 
@@ -238,7 +235,7 @@ if run_daily_mei_dams:
     func = rep.f_stock_pasture_summary
     trials = [0]
     type = 'stock'
-    prod = 'dams_mei_k2p6ftva1nwziyg1'
+    prod = 'mei_dams_k2p6ftva1nw8ziyg1'
     weights = 'dams_numbers_k2tvanwziy1g1'
     na_weights = [1, 2]
     den_weights = 'stock_days_k2p6ftva1nwziyg1'
@@ -252,7 +249,8 @@ if run_daily_mei_dams:
     daily_mei_dams = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights,
                            na_weights=na_weights, den_weights=den_weights, keys=keys, arith=arith,
                            arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
-    daily_mei_dams.to_excel(writer, 'daily_mei_dams')
+    f_df2xl(writer, daily_mei_dams, 'daily_mei_dams', option=1)
+    # daily_mei_dams.to_excel(writer, 'daily_mei_dams')
 
 if run_daily_pi_dams:
     func = rep.f_stock_pasture_summary

@@ -881,27 +881,23 @@ def f_stock_pasture_summary(lp_vars, r_vals, **kwargs):
     ##read from stock reshape function
     if type == 'stock':
         vars = f_stock_reshape(lp_vars, r_vals)
-        ###if production doesnt exist eg it is 1 or some other number (this means you can preform arith with any number - mainly used for pasture when there is no production param)
-        if isinstance(prod_key, str):
-            prod = r_vals['stock'][prod_key]
-        else:
-            prod = np.array([prod_key])
-        ###den weight - used in weighted average calc (default is 1)
-        if isinstance(den_weights, str):
-            den_weights = r_vals['stock'][den_weights]
+        r_vals = r_vals['stock']
     else:
         vars = f_pasture_reshape(lp_vars, r_vals)
-        ###if production doesnt exist eg it is 1 or some other number (this means you can preform arith with any number - mainly used for pasture when there is no production param)
-        if isinstance(prod_key, str):
-            prod = r_vals['pas'][prod_key]
-        else:
-            prod = np.array([prod_key])
-        ###den weight - used in weighted average calc (default is 1)
-        if isinstance(den_weights, str):
-            den_weights = r_vals['pas'][den_weights]  # pasture params don't need to go through reshape function
+        r_vals = r_vals['pas']
 
-    ##keys that will become the index and cols for table
-    keys = vars[keys_key]
+
+    ###if production doesnt exist eg it is 1 or some other number (this means you can preform arith with any number - mainly used for pasture when there is no production param)
+    if isinstance(prod_key, str):
+        prod = r_vals[prod_key]
+    else:
+        prod = np.array([prod_key])
+    ###den weight - used in weighted average calc (default is 1)
+    if isinstance(den_weights, str):
+        den_weights = r_vals[den_weights]
+
+    ###keys that will become the index and cols for table
+    keys = r_vals[keys_key]
 
     ##if no weights then make None
     try:

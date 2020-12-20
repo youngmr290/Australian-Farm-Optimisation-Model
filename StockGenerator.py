@@ -302,7 +302,7 @@ def generator(params,r_vals,plots = False):
     o_fd_min_dams = np.zeros(pg1, dtype =dtype)
     o_rc_start_dams = np.zeros(pg1, dtype =dtype)
     o_ebg_dams = np.zeros(pg1, dtype =dtype)
-    o_n_sire_a1e1b1nwzida0e0b0xyg1g0p8 = np.zeros((len_p, 1, 1, 1, 1, 1, len_z, len_i, 1, 1, 1, 1, 1, len_y1, len_g1,len_p8,len_g0), dtype =dtype)
+    o_n_sire_a1e1b1nwzida0e0b0xyg1g0p8 = np.zeros((len_p, 1, 1, 1, 1, 1, len_z, len_i, 1, 1, 1, 1, 1, len_y1, len_g1,len_g0,len_p8), dtype =dtype)
     ###arrays for report variables
     r_compare_q0q1q2pdams = np.zeros(qg1, dtype = dtype) #empty arrays to store different return values from the equation systems in the p loop.
     r_foo_dams = np.zeros(pg1, dtype = dtype)
@@ -407,7 +407,8 @@ def generator(params,r_vals,plots = False):
     date_born1st_ida0e0b0xyg3 = sfun.f_g2g(pinp.sheep['i_date_born1st_idg3'],'offs',d_pos,pinp.sheep['i_i_len'],uinp.parameters['i_d_len'], condition=pinp.sheep['i_mask_i'], axis=i_pos, condition2=mask_d_offs, axis2=d_pos).astype('datetime64[D]')
     ##mating
     sire_propn_oa1e1b1nwzida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['i_sire_propn_oig1'],'dams',i_pos,pinp.sheep['i_i_len'], pinp.sheep['i_o_len'],swap=True,left_pos2=p_pos,right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos, condition2=mask_o_dams, axis2=p_pos)
-    sire_periods_g0p8 = sfun.f_g2g(pinp.sheep['i_sire_periods_p8g0'], 'sire', swap=True, condition=pinp.sheep['i_mask_p8'], axis=0)
+    sire_periods_p8g0 = sfun.f_g2g(pinp.sheep['i_sire_periods_p8g0'], 'sire', condition=pinp.sheep['i_mask_p8'], axis=0)
+    sire_periods_g0p8 = np.swapaxes(sire_periods_p8g0, 0, 1) #cant swap in function above because g needs to be in pos-1
     ##Shearing date - set to be on the last day of a sim period
     ###sire
     date_shear_sida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['i_date_shear_sixg0'],'sire',x_pos,pinp.sheep['i_i_len'], pinp.sheep['i_s_len'], pinp.sheep['i_x_len']
@@ -5048,8 +5049,8 @@ def generator(params,r_vals,plots = False):
 
     ####kpveb
     pg0_shape = len_p, len_g0
-    k2tpva1e1b1nwziyg1_shape = len_k2, len_t1, len_p, len_v1, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
-    k3k5tpvnwziae0b0xyg3_shape = len_k3, len_k5, len_t3, len_p3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_e0, len_b0, len_x, len_y3, len_g3   # todo should this have a d axis?
+    k2vpa1e1b1nwziyg1_shape = len_k2, len_v1, len_p, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
+    k3k5vpnwzidae0b0xyg3_shape = len_k3, len_k5, len_v3, len_p3, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3   # todo should this have a d axis?
 
     ####p6
     p6g0_shape = len_p6, len_g0
@@ -5127,22 +5128,31 @@ def generator(params,r_vals,plots = False):
     ###lw - with p, e, b
     if pinp.rep['i_store_lw_rep']:
         r_vals['lw_sire_pg0'] = r_lw_sire_pg.reshape(pg0_shape)
-        r_vals['lw_dams_k2vpa1e1b1nw8ziyg1'] = r_lw_dams_k2tvpg.reshape(k2tpva1e1b1nwziyg1_shape)
-        r_vals['lw_offs_k3k5vpnw8zida0e0b0xyg3'] = r_lw_offs_k3k5tvpg.reshape(k3k5tpvnwziae0b0xyg3_shape)
+        r_vals['lw_dams_k2vpa1e1b1nw8ziyg1'] = r_lw_dams_k2tvpg.reshape(k2vpa1e1b1nwziyg1_shape)
+        r_vals['lw_offs_k3k5vpnw8zida0e0b0xyg3'] = r_lw_offs_k3k5tvpg.reshape(k3k5vpnwzidae0b0xyg3_shape)
 
     ###fec - with p, e, b
     if pinp.rep['i_store_fec_rep']:
-        fec_sire = np.squeeze(r_fec_sire_pg,axis=(a1_pos, e1_pos, b1_pos, n_pos, w_pos, z_pos, i_pos, d_pos, a0_pos, e0_pos, b0_pos, x_pos, y_pos))
+        # fec_sire = np.squeeze(r_fec_sire_pg,axis=(a1_pos, e1_pos, b1_pos, n_pos, w_pos, z_pos, i_pos, d_pos, a0_pos, e0_pos, b0_pos, x_pos, y_pos))
+        #
+        # fec_dams = np.moveaxis(r_fec_dams_k2tvpg, [p_pos],[p_pos-1])   # todo perhaps this could be a function and then called in the r_vals assignment below (rather than as separte steps)
+        # fec_dams = np.squeeze(fec_dams,axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos))
+        #
+        # fec_offs = np.moveaxis(r_fec_offs_k3k5tvpg, [p_pos],[p_pos-1])
+        # fec_offs = np.squeeze(fec_offs,axis=(a1_pos, e1_pos, b1_pos))   # todo look at inclusion of d axis, can't be squeezed because size is >1
+        #
+        # r_vals['fec_sire_pg0'] = fec_sire
+        # r_vals['fec_dams_k2vpa1e1b1nw8ziyg1'] = fec_dams
+        # r_vals['fec_offs_k3k5vpnw8zida0e0b0xyg3'] = fec_offs
 
-        fec_dams = np.moveaxis(r_fec_dams_k2tvpg, [p_pos],[p_pos-1])   # todo perhaps this could be a function and then called in the r_vals assignment below (rather than as separte steps)
-        fec_dams = np.squeeze(fec_dams,axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos))
+        r_vals['pe1b1_denom_weights_k2tvpa1e1b1nw8ziyg1'] = ((a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+        *(a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...])).squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos))
 
-        fec_offs = np.moveaxis(r_fec_offs_k3k5tvpg, [p_pos],[p_pos-1])
-        fec_offs = np.squeeze(fec_offs,axis=(a1_pos, e1_pos, b1_pos))   # todo look at inclusion of d axis, can't be squeezed because size is >1
 
-        r_vals['fec_sire_pg0'] = fec_sire
-        r_vals['fec_dams_k2vpa1e1b1nw8ziyg1'] = fec_dams
-        r_vals['fec_offs_k3k5vpnw8zida0e0b0xyg3'] = fec_offs
+
+        r_vals['fec_sire_pg0'] = r_fec_sire_pg.reshape(pg0_shape)
+        r_vals['fec_dams_k2vpa1e1b1nw8ziyg1'] = r_fec_dams_k2tvpg.reshape(k2vpa1e1b1nwziyg1_shape)
+        r_vals['fec_offs_k3k5vpnw8zida0e0b0xyg3'] = r_fec_offs_k3k5tvpg.reshape(k3k5vpnwzidae0b0xyg3_shape)
 
 
 
