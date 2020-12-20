@@ -278,7 +278,7 @@ for row in range(len(exp_data)):
                 model.display(ostream=f)
         
         ##This writes variable with value greater than 1 to txt file - used to check stuff out each iteration if you want 
-        file = open('Variable summary.txt','w') #file name has to have capital
+        file = open('Output\Variable summary.txt','w') #file name has to have capital
         file.write('Trial: %s\n'%exp_data.index[row][2]) #the first line is the name of the trial
         for v in model.component_objects(pe.Var, active=True):
             file.write("Variable %s\n" %v)   #  \n makes new line

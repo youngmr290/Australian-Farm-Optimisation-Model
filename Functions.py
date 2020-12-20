@@ -16,7 +16,7 @@ Version     Date        Person  Change
 1.5         22Dec19     John    period_allocation: simplify the function so that it doesn't redefine variable from the parameters passed
                                 range_allocation: added this function fashioned from period_allocation
 1.6         26Dec19     JMY     xl_all_named_ranges: altered 2 comments that were in the wrong position
-1.7         19Jan20     MRY     alted cost period function to handle df with undefined title - because now inputs are read in from excel the column name can vary, which it couldn't before because the df was built from dict hence colum name was always 0
+1.7         19Jan20     MRY     altered cost period function to handle df with undefined title - because now inputs are read in from excel the column name can vary, which it couldn't before because the df was built from dict hence column name was always 0
 
 
 Known problems:
@@ -45,15 +45,15 @@ import glob
 #returns a dict with the key being the excel rangename
 #the dict includes: numbers (where the rangename is a single cell), lists (where the rangename is one dimensional) and dataframes (where the range is 2 dimensional)
 #If the range is 2D the function converts the first row to the dataframe column names and the first col to index names
-#if you dont want this you can reset index using index.reset or something and probs the similar for cols
-#Testing shpwed readonly = False was quicker than true. But still not as fast as pandas
-# (may not exist anymore) now it causes problems somoetimes locking you out of excel because it is readonly - closing doesn't fix issue (wb._archive.close())
+#if you don't want this you can reset index using index.reset or something and probs the similar for cols
+#Testing showed readonly = False was quicker than true. But still not as fast as pandas
+# (may not exist anymore) now it causes problems sometimes locking you out of excel because it is readonly - closing doesn't fix issue (wb._archive.close())
 
 def xl_all_named_ranges(filename, targetsheets, rangename=None,numpy=False,datatype=None):     # read all range names defined in the list targetsheets and return a dictionary of lists or dataframes
     ''' Read data from named ranges in an Excel workbook.
 
     Parameters:
-    filename is an Excel worbook name (including the extension).
+    filename is an Excel workbook name (including the extension).
     targetsheets is a list of (or a single) worksheet names from which to read the range names.
     rangename is an optional argument. If not included then all rangenames are read. If included only that name is read in.
     numpy is an optional boolean argument. If True it will assign the input array to a numpy
@@ -103,7 +103,7 @@ def xl_all_named_ranges(filename, targetsheets, rangename=None,numpy=False,datat
                             ## drop row that had header names (renaming is more like a copy than a cut)
                             df.drop(df.index[0],inplace=True)
                             df = df.set_index(df.iloc[:,0]) #could use rename ie df.rename(index=df.iloc[:,0],inplace=True)
-                            ## now have to drop the first col because renaming/set_index is more like copy than cut hence it doenst make the index col one just rename index to match col one
+                            ## now have to drop the first col because renaming/set_index is more like copy than cut hence it doesn't make the index col one just rename index to match col one
                             df = df.drop(df.columns[[0]],axis=1) #for some reason this will chuck an error in the index values are int and there is nothing in the top left cell of the df...seems like a bug in python
                             ## manipulate data into cheapest format - results in mainly float32 (strings are still objects) - without this each value is treated as an object (objects use up much more memory) - this change reduced fert df from 150mbs to 20mbs
                             parameters[dn.name] = df.apply(pd.to_numeric, errors='ignore', downcast='float')
@@ -111,7 +111,7 @@ def xl_all_named_ranges(filename, targetsheets, rangename=None,numpy=False,datat
                         pass
             except IndexError:
                 pass
-    wb.close
+    wb.close()
     return parameters #t_wb #
 
 def f_convert_to_inf(input):
@@ -125,7 +125,7 @@ def f_convert_to_inf(input):
     ##convert 'True' to True (string to bool) - because array is read in as string
     mask = input=='True'
     input[mask]=True
-    ##convert 'Flase' to False (string to bool) - because array is read in as string
+    ##convert 'False' to False (string to bool) - because array is read in as string
     mask = input=='False'
     input[mask]=False
     return input.astype('float')
@@ -135,7 +135,7 @@ def f_convert_to_inf(input):
 #general functions        #
 ###########################
 
-#this is the fastest function for building cartesian products. Doesn't make much diff for small ones but upto 50% faster for big ones
+#this is the fastest function for building cartesian products. Doesn't make much diff for small ones but up to 50% faster for big ones
 def cartesian_product_simple_transpose(arrays):
     la = len(arrays)
     try:
@@ -229,7 +229,7 @@ def f_reshape_expand(array, left_pos=0, len_ax0=0, len_ax1=0, len_ax2=0, swap=Fa
         shape=(len_ax0,len_ax1)
         array = array.reshape(shape)
     else:
-        pass#don't need to reshpae
+        pass#don't need to reshape
     ##swap axis if necessary
     if swap:
         array = np.swapaxes(array, ax1, ax2)
@@ -296,11 +296,11 @@ def f_update(existing_value, new_value, mask_for_new):
     Returns
     -------
     Numpy array
-        returns a combination of the two input arrays determined by the mask. Note: multiplying by true return the origional number and multiplying by false results in 0.
+        returns a combination of the two input arrays determined by the mask. Note: multiplying by true return the original number and multiplying by false results in 0.
 
     '''
-    ##dtype for output (primarily needed for pp when int32 and float32 create float64 which we dont want)
-    ##if the new value is an object (eg contains '-') then we want to return the origional dtype otherwise return the biggest dtype
+    ##dtype for output (primarily needed for pp when int32 and float32 create float64 which we don't want)
+    ##if the new value is an object (eg contains '-') then we want to return the original dtype otherwise return the biggest dtype
     try:
         if new_value.dtype == object:
             dtype = existing_value.dtype
@@ -309,7 +309,7 @@ def f_update(existing_value, new_value, mask_for_new):
     except AttributeError:
         pass
     ##convert '-' to 0 (because '-' * False == '' which causes and error when you add to existing value)
-    ##need a try and except incase the new value is not a numpy array (ie it is a single value)
+    ##need a try and except in case the new value is not a numpy array (ie it is a single value)
     try:
         if np.any(new_value.astype('object')=='-'): #needs to be an object to preform elementwise comparison
                 new_value[new_value=='-'] = 0
@@ -317,10 +317,10 @@ def f_update(existing_value, new_value, mask_for_new):
     except AttributeError:
         if new_value=='-':
             new_value = 0
-    updated = existing_value * np.logical_not(mask_for_new) + new_value * mask_for_new #used not rather than ~ because ~False == -1 not True (not the case for np.arrays only if bool is single - as it is for sire in some situatoins)
+    updated = existing_value * np.logical_not(mask_for_new) + new_value * mask_for_new #used not rather than ~ because ~False == -1 not True (not the case for np.arrays only if bool is single - as it is for sire in some situations)
 
-    ##convert back to origional dtype because adding float32 and int32 returns float64. And sometimes we dont want this eg postprocessing
-    ###use try except becasue sometimes a single int is update eg in the first iteration on generator. this causes error because only numpy arrays have .dtype.
+    ##convert back to original dtype because adding float32 and int32 returns float64. And sometimes we don't want this eg postprocessing
+    ###use try except because sometimes a single int is update eg in the first iteration on generator. this causes error because only numpy arrays have .dtype.
     try:
         updated = updated.astype(dtype)
     except AttributeError:
@@ -350,7 +350,7 @@ def f_weighted_average(array, weights, axis, keepdims=False, non_zero=False, den
     :return:
     '''
     if non_zero:
-        ##for some situations (production) if numbers are 0 we dont want to return 0 we want to return the orgional value
+        ##for some situations (production) if numbers are 0 we don't want to return 0 we want to return the original value
         weights=f_update(weights,1,np.all(weights==0, axis=axis, keepdims=True))
     weighted_array = np.sum(array * weights, axis=axis, keepdims=keepdims)
     weights = np.broadcast_to(np.sum(weights * den_weights, axis=axis, keepdims=keepdims), weighted_array.shape)
@@ -365,7 +365,7 @@ def f_divide(numerator, denominator,dtype='float64'):
     Function divides two arrays. If the denominator = 0 then 0 is return (elementwise)
     '''
     numerator, denominator = np.broadcast_arrays(numerator, denominator)
-    result = np.zeros(numerator.shape, dtype=dtype) #make it a float incase the numerator is int
+    result = np.zeros(numerator.shape, dtype=dtype) #make it a float in case the numerator is int
     mask = denominator!=0
     result[mask] = numerator[mask]/denominator[mask]
     return result
@@ -411,14 +411,14 @@ def f_find_closest(A, target):
     return idx
 
 def f_reduce_skipfew(ufunc, foo, preserveAxis=None):
-    '''performs function on each axis except the axis that a specified as preservAxis'''
+    '''performs function on each axis except the axis that a specified as preserveAxis'''
     r = np.arange(foo.ndim)
     if preserveAxis is not None:
         preserveAxis = tuple(np.delete(r, preserveAxis))
     return ufunc(foo, axis=preserveAxis)
 
 def f_sa(value, sa, sa_type=0, target=0, value_min=-np.inf,pandas=False, axis=0):
-    '''applys SA. Function can handle numpy or pandas'''
+    '''applies SA. Function can handle numpy or pandas'''
 
     ##Type 0 is sam (sensitivity multiplier) - default
     if sa_type == 0:
@@ -447,7 +447,7 @@ def f_sa(value, sa, sa_type=0, target=0, value_min=-np.inf,pandas=False, axis=0)
     ##Type 5 is value (return the SA value)
     elif sa_type == 5:
         try:
-            sa=sa.copy()#have to copy the np arrays so that the origional sa is not changed
+            sa=sa.copy()#have to copy the np arrays so that the original sa is not changed
         except:
             pass
         value = f_update(value, sa, sa != '-')
@@ -457,7 +457,7 @@ def f_sa(value, sa, sa_type=0, target=0, value_min=-np.inf,pandas=False, axis=0)
 def f_run_required(prev_exp, exp_data1, check_pyomo=True):
     '''
     here we check if precalcs and pyomo need to be recalculated. this is slightly complicated by the fact that columns and rows can be added to exp.xlsx
-    and the fact that a user can opt not to run a trial even if it is out of date so the run requirment must be tracked
+    and the fact that a user can opt not to run a trial even if it is out of date so the run requirement must be tracked
     have any sa cols been added or removed, are the values the same, has the py code changed since last run?
 
     this function is also used by report.py to calculate if reports are being generated with out of date data.
@@ -479,8 +479,8 @@ def f_run_required(prev_exp, exp_data1, check_pyomo=True):
         newest = sorted_list[-3]
     newest_pyomo = max(glob.iglob('*pyomo.py'), key=os.path.getmtime)
 
-    try: #incase pkl_exp doesn't exist
-        ###if headers are the same, code is the same and the excel inputs are the same then test if the values in exp.xlxs are the same
+    try: #in case pkl_exp doesn't exist
+        ###if headers are the same, code is the same and the excel inputs are the same then test if the values in exp.xlsx are the same
         if keys_current==keys_hist and os.path.getmtime('pkl_exp.pkl') >= os.path.getmtime(newest) and os.path.getmtime('pkl_exp.pkl') >= os.path.getmtime("Universal.xlsx") and os.path.getmtime('pkl_exp.pkl') >= os.path.getmtime("Property.xlsx"):
             ###check if each exp has the same values in exp.xlsx as last time it was run.
             i3 = prev_exp.reset_index().set_index(keys_hist).index  # have to reset index because the name of the trial is going to be included in the new index so it must first be dropped from current index
@@ -491,7 +491,7 @@ def f_run_required(prev_exp, exp_data1, check_pyomo=True):
         ###pyomo must be run if pyomo modules have changed since the trial was last run, if the precalc params are different (tested later) or if the trial needed to run last time but the user opted not to.
         if os.path.getmtime('pkl_exp.pkl') >= os.path.getmtime(newest_pyomo) and check_pyomo==True:
             ###check if trial needed to be run last time but user opted not to run.
-            ###compare trial name and pyomorun status with previous
+            ###compare trial name and runpyomo status with previous
             i3 = prev_exp.reset_index().set_index([keys_hist[0],keys_hist[-1]]).index  # have to reset index because the name of the trial is going to be included in the new index so it must first be dropped from current index
             i4 = exp_data1.reset_index().set_index([keys_current[0],keys_current[-1]]).index
             exp_data1.loc[~i4.isin(i3),('runpyomo', '', '', '')] = True
@@ -522,7 +522,7 @@ def findDiff(d1, d2):
                 a = True
                 return a
             else:
-                if type(d1[k]) is dict and type(d2[k]) is dict: #need to check both are dicts incase extra level was added.
+                if type(d1[k]) is dict and type(d2[k]) is dict: #need to check both are dicts in case extra level was added.
                     # print('going level deeper',k)
                     a=findDiff(d1[k],d2[k])
                     # print(k,a)
@@ -532,7 +532,7 @@ def findDiff(d1, d2):
                             # print('DIFFERENT',k)
                             a=True
                             return a #only return if true
-                    except ValueError: #if the array is a different length then we get valueerror
+                    except ValueError: #if the array is a different length then we get value error
                         a = True
                         return a  # only return if true
                     except TypeError:
@@ -549,7 +549,7 @@ def f_make_table(data, index, header):
 def f_produce_df(data, rows, columns, row_names=None, column_names=None):
     """rows is a list of lists that will be used to build a MultiIndex
     columns is a list of lists that will be used to build a MultiIndex"""
-    ##if either cols or rows dont exist then add a default 0 as name
+    ##if either cols or rows don't exist then add a default 0 as name
     if len(rows) == 0:
         rows=[[0]]
     if len(columns) == 0:
@@ -580,7 +580,7 @@ def dmd_to_md(dmd):
     return np.maximum(0,0.17 * dmd - 2)                # formula 1.13C from SCA 1990 pg 9
 
 def md_to_dmd(md):
-    '''basically a rearanged version of the function above
+    '''basically a rearranged version of the function above
     returns dmd as a decimal'''
     return (md+2)/17
 
@@ -597,11 +597,11 @@ def effective_mei(dmi, md, threshold, ri=1, eff_above=0.5):
     eff_above : value or array, optional (0.5) - Efficiency.
     that energy is used if above required quality and animals are gaining then losing weight.
 
-    If inputs are provided in arrays then they must be braodcastable.
+    If inputs are provided in arrays then they must be broadcastable.
 
     Returns
     -------
-    ME avaialable to the animal to meet their ME requirements, from the quantity of DM consumed.
+    ME available to the animal to meet their ME requirements, from the quantity of DM consumed.
 
     """
     fec = md * ri
@@ -706,7 +706,7 @@ def df_period_total(p_dates,p_name,*dfs):
     -------
     Dict.
         -The function determines what period each date falls into and adds the value to that period. This is repeated for each df.
-        -This func is good if you have multiple df with values that you want to add to the relevant period (you can only add values that are in the same period but you dont know what period the value is in until running the allocation func)
+        -This func is good if you have multiple df with values that you want to add to the relevant period (you can only add values that are in the same period but you don't know what period the value is in until running the allocation func)
         #example of this func is in the labourcrop module
 
     '''
@@ -724,7 +724,7 @@ def df_period_total(p_dates,p_name,*dfs):
 
 
 
-##functions below are used to manipulate the period allocation from the func above into neccessary format
+##functions below are used to manipulate the period allocation from the func above into necessary format
 ##they depend on the input type ie dict of df, and the number of entries
 
 #^if this doesn't get used much it should be removed it really doesn't do much
@@ -748,7 +748,7 @@ def period_allocation_reindex(df, p_dates, p_name, start, length):
     Dataframe 2D
         This function is used when multiple activities have the same period allocation.
         - this func basically just calls the main allocation func then reindexes the df so it applies to all activities.
-        eg the cost of seeding for each lmu is incurred over the same period so we just want to return a df with a certain cost in it for each lmu and each cashflow period (the cost may differ but the allocation will be the same for each lmu, so the allocation func is called once then reindexed then multiplied by the differnt costs)
+        eg the cost of seeding for each lmu is incurred over the same period so we just want to return a df with a certain cost in it for each lmu and each cashflow period (the cost may differ but the allocation will be the same for each lmu, so the allocation func is called once then reindexed then multiplied by the different costs)
     '''
     allocation = period_allocation(p_dates, p_name,start,length)
     allocation = allocation.set_index('period')
@@ -781,8 +781,8 @@ def period_allocation2(start_df, length_df, p_dates, p_name):
         - this func basically just calls the main allocation multiple times and adds the results to one df.
         eg the cost of fert spreading could be in different periods depending what time of yr that fertiliser is applied
     '''
-    start_df=start_df.squeeze() #should be a series but incase it is a 1d df
-    length_df=length_df.squeeze() #should be a series but incase it is a 1d df
+    start_df=start_df.squeeze() #should be a series but in case it is a 1d df
+    length_df=length_df.squeeze() #should be a series but in case it is a 1d df
     df = pd.DataFrame()
     for col, start, length in zip(start_df.index, start_df, length_df):
         allocation = period_allocation(p_dates,p_name,start,length)
