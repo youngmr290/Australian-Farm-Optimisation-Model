@@ -6,6 +6,7 @@ Created on Thu Dec 2 09:35:26 2020
 
 import pickle as pkl
 import pandas as pd
+import xlsxwriter
 
 import ReportFunctions as rep
 import Functions as fun
@@ -43,7 +44,7 @@ run_pnl = False #table of profit and loss
 run_profitarea = False #graph profit by crop area
 run_saleprice = False #table of saleprices
 run_cfw_dams = False #table of cfw
-run_fec_dams = True #fec
+run_fec_dams = False #fec
 run_weanper = False #table of weaning percent
 run_scanper = False #table of scan percent
 run_lamb_survival = False #table of lamb survival
@@ -80,11 +81,11 @@ def f_df2xl(writer, df, sheet, rowstart=0, colstart=0, option=0):
     :param rowstart: start row in excel
     :param colstart: start col in excel
     :param option: int: specifying the writing option
+                    0: df straight into excel
+                    1: df into excel colapsing empty rows and cols
     '''
     ## simple write df to xl
     df.to_excel(writer, sheet, startrow=rowstart, startcol=colstart)
-
-    #^add this?    :param condense: bool that controls if rows and cols full of 0's are dropped.
 
     ##set up xlsxwriter stuff needed for advanced options
     workbook = writer.book
@@ -94,9 +95,17 @@ def f_df2xl(writer, df, sheet, rowstart=0, colstart=0, option=0):
     if option==1:
         df = df.round(5)  # round so that very small numbers are dropped out in the next step
         for row in range(len(df)):
-            worksheet.set_row(row,None,None,{'level': 2})
-        return
+            if (df.iloc[row]==0).all():
+                offset = df.columns.nlevels #number of columns used for names
+                worksheet.set_row(row+offset,None,None,{'level': 1, 'hidden': True}) #set hidden to true to colaps the level initially
+            # worksheet.set_row(row+offset,None,None,{'collapsed': True})
 
+        for col in range(len(df.columns)):
+            if (df.iloc[:,col]==0).all():
+                offset = df.index.nlevels
+                col = xlsxwriter.utility.xl_col_to_name(col+offset) + ':' + xlsxwriter.utility.xl_col_to_name(col+offset) #conver col number to excel col reference eg 'A:B'
+                worksheet.set_column(col,None,None,{'level': 1, 'hidden': True})
+        return
     ##apply filter
     if option==2:  # todo this code need work
         # Activate autofilter
@@ -108,7 +117,7 @@ def f_df2xl(writer, df, sheet, rowstart=0, colstart=0, option=0):
             region = row_data['Data']
             if not (region < 5):
                 # We need to hide rows that don't match the filter.
-                worksheet1.set_row(idx + 1,options={'hidden': True})
+                worksheet.set_row(idx + 1,options={'hidden': True})
 
     ##create chart
     if option==3:
@@ -126,7 +135,8 @@ if run_areasum:
     trials = [0]
     option = 2
     areasum = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, option=option)
-    areasum.to_excel(writer, 'areasum')
+    f_df2xl(writer, areasum, 'areasum', option=1)
+    # areasum.to_excel(writer, 'areasum')
 
 if run_pnl:
     func = rep.f_profitloss_table
@@ -195,7 +205,7 @@ if run_weanper:
     func = rep.f_stock_pasture_summary
     trials = [0]
     type = 'stock'
-    prod = 'weanper_k2tva1nw8ziyg1' # todo check weanper back in generator to fid the problem
+    prod = 'weanper_k2tva1nw8ziyg1' # todo check weanper back in generator to find the problem
     weights = 'dams_numbers_k2tvanwziy1g1'
     keys = 'dams_keys_k2tvanwziy1g1'
     arith = 1
@@ -228,6 +238,12 @@ if run_scanper:
 if run_lamb_survival:
     func = rep.f_survival
     trials = [0]
+    arith_axis = [0,1,2,4,5,7,8,9,10,11,12]
+    index =[3]
+    cols =[6]
+    axis_slice = {}
+    # axis_slice[0] = [0, 2, 1]
+
     lamb_survival = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials)
 
 

@@ -783,7 +783,7 @@ def f_profit(lp_vars, r_vals, option=0):
         return obj_profit + minroe - (asset_opportunity_cost * r_vals['opportunity_cost_capital'])
 
 
-def f_stock_pasture_summary(lp_vars, r_vals, **kwargs):
+def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, **kwargs):
     '''
     Returns summary of a numpy array in a pandas table.
     Note: 1. prod and weights must be broadcastable.
@@ -791,6 +791,7 @@ def f_stock_pasture_summary(lp_vars, r_vals, **kwargs):
 
     :param lp_vars: dict: results from pyomo
     :param r_vals: dict: report variable
+    :param build_df: bool: return df
     :key type: str: either 'stock' or 'pas' to indicate calc type
     :key key: str: dict key for the axis keys
     :key index (optional, default = []): list: axis you want as the index of pandas df (order of list is the index level order).
@@ -910,8 +911,9 @@ def f_stock_pasture_summary(lp_vars, r_vals, **kwargs):
     prod, weights, den_weights, denom = f_add_axis(prod, weights, den_weights, denom, na_weights, na_prod, na_denweights, na_denom)
     prod, weights, den_weights = f_slice(prod, weights, den_weights, keys, arith, axis_slice)
     prod = f_arith(prod, weights, den_weights, arith, arith_axis)
-    prod = fun.f_divide(prod, denom)
-    prod = f_numpy2df(prod, keys, index, cols)
+    # prod = fun.f_divide(prod, denom)
+    if build_df:
+        prod = f_numpy2df(prod, keys, index, cols)
     return prod
 
 def f_survival(lp_vars, r_vals, **kwargs):
@@ -963,15 +965,9 @@ def f_survival(lp_vars, r_vals, **kwargs):
     #     den_weights = 1
 
     try:
-        arith = kwargs['arith']
-    except KeyError:
-        arith = 0
-
-    try:
         arith_axis = kwargs['arith_axis']
     except KeyError:
         arith_axis = []
-
 
     try:
         index = kwargs['index']
@@ -989,26 +985,25 @@ def f_survival(lp_vars, r_vals, **kwargs):
         axis_slice = {}
 
     ##read from stock reshape function
+    type = 'stock'
+    prod = 'prog_born_k2tva1e1b1nw8ziyg1'
+    prod2 = 'prog_alive_k2tva1e1b1nw8ziyg1'
+    weights = 'dams_numbers_k2tvanwziy1g1'
+    na_weights = [4,5]
+    den_weights = 'pe1b1_denom_weights_k2tvpa1e1b1nw8ziyg1'
+    keys = 'dams_keys_k2tvaebnwziy1g1'
+    arith = 2
+    prog_born = f_stock_pasture_summary(lp_vars, r_vals, build_df=False, type=type, prod=prod, weights=weights,
+                           den_weights=den_weights, na_weights=na_weights,
+                           keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+    prog_alive = f_stock_pasture_summary(lp_vars, r_vals, build_df=False, type=type, prod=prod2, weights=weights,
+                           den_weights=den_weights, na_weights=na_weights,
+                           keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+    prog_born_k2tvpa1e1b1nw8ziyg1 = np.moveaxis(np.sum(prog_born[...,na] * r_vals['stock']['nfoet_b1nwziygb9'], axis=-8), -1, -7)
+    prog_alive_k2tvpa1e1b1nw8ziyg1 = np.moveaxis(np.sum(prog_alive[...,na] * r_vals['stock']['nyatf_b1nwziygb9'], axis=-8), -1, -7)
 
-
-    vars = f_stock_reshape(lp_vars, r_vals)
-    v_dams_k2tvaebnwziy1g1 = vars['dams_numbers_k2tvanwziy1g1'][:,:,:,:,na,na,...] #add na for e and b
-
-    ##number of prog in each e/b slice for each cluster.
-    prog_born = np.sum(r_vals['stock']['prog_born_k2tva1e1b1nw8ziyg1'] * v_dams_k2tvaebnwziy1g1, axis= tuple([0,1,3,6,7,8,9,10,11]),keepdims=True)
-    prog_alive = np.sum(r_vals['stock']['prog_alive_k2tva1e1b1nw8ziyg1'] * v_dams_k2tvaebnwziy1g1, axis= tuple([0,1,3,6,7,8,9,10,11]),keepdims=True)
-    # index_b9
-    survival=prog_born/prog_alive
-    # ##keys that will become the index and cols for table
-    # keys = vars[keys_key]
-    #
-    # ##other manipulation
-    # f_numpy2df_error(numbers_start_k2tva1e1b1nw8ziyg1, v_dams, arith_axis, index, cols)
-    #
-    # prod, weights, den_weights = f_slice(prod, weights, den_weights, keys, arith, axis_slice)
-    # prod = f_arith(prod, weights, den_weights, arith, arith_axis)
-    # prod = fun.f_divide(prod, denom)
-    # prod = f_numpy2df(prod, keys, index, cols)
+    survival= prog_alive_k2tvpa1e1b1nw8ziyg1/prog_born_k2tvpa1e1b1nw8ziyg1
+    survival = f_numpy2df(survival, keys, index, cols)
     return survival
 
 

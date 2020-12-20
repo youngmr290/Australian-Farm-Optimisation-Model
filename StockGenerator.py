@@ -4362,12 +4362,12 @@ def generator(params,r_vals,plots = False):
     r_numbers_birth_k2tva1e1b1nwzida0e0b0xyg1 = r_numbers_birth_va1e1b1nwzida0e0b0xyg1 * (
                 a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1)
 
-    ##prog born per ewe mated ewe in cluster - nfoet has been adjusted to align with v_dams
+    ##prog born per ewe mated ewe in cluster - nfoet has been adjusted to align with v_dams   #todo i feel like a problem is that we are returning number of prog per ewe mated but v_dams at birth(start of dvp) does not represent ewes mated if drys have been sold.
     r_prog_born_k2tva1e1b1nwzida0e0b0xyg1 = fun.f_divide(r_nfoet_birth_tva1e1b1nwzida0e0b0xyg1 * r_numbers_birth_k2tva1e1b1nwzida0e0b0xyg1
-                                         , np.sum(r_numbers_birth_k2tva1e1b1nwzida0e0b0xyg1, axis=(0, e1_pos, uinp.parameters['i_b1_pos']), keepdims=True))
+                                         , np.sum(r_numbers_birth_k2tva1e1b1nwzida0e0b0xyg1, axis=(0, e1_pos, uinp.parameters['i_b1_pos']), keepdims=True)) # todo should we be summing k axis??
     ##prog alive (alive after birth) per ewe in cluster - nyatf has been adjusted to align with v_dams
     r_prog_alive_k2tva1e1b1nwzida0e0b0xyg1 = fun.f_divide(r_nyatf_birth_tva1e1b1nwzida0e0b0xyg1 * r_numbers_birth_k2tva1e1b1nwzida0e0b0xyg1
-                                          , np.sum(r_numbers_birth_k2tva1e1b1nwzida0e0b0xyg1, axis=(0, e1_pos, uinp.parameters['i_b1_pos']), keepdims=True))
+                                          , np.sum(r_numbers_birth_k2tva1e1b1nwzida0e0b0xyg1, axis=(0, e1_pos, uinp.parameters['i_b1_pos']), keepdims=True)) # todo should we be summing k axis??
 
     ###lw - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. Don't need t because it doesnt effect lw
     if pinp.rep['i_store_lw_rep']:
@@ -5026,6 +5026,8 @@ def generator(params,r_vals,plots = False):
                                              keys_y1, keys_g1]
     r_vals['dams_keys_k2tvanwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i,
                                              keys_y1, keys_g1]
+    r_vals['dams_keys_k2tvaebnwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_a, keys_e, keys_b, keys_n1, keys_lw1, keys_z, keys_i,
+                                             keys_y1, keys_g1]
     r_vals['dams_keys_k2tvpaebnwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1, keys_z, keys_i,
                                              keys_y1, keys_g1]
     r_vals['dams_keys_k2p6ftvanwziy1g1'] = [keys_k2, keys_p6, keys_f, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1,
@@ -5042,7 +5044,7 @@ def generator(params,r_vals,plots = False):
     g0_shape = len_g0
     k2tva1nwziyg1_shape = len_k2, len_t1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
     k5twzidaxyg2_shape = len_k5, len_t2, len_w_prog, len_z, len_i, len_d, len_a1, len_x, len_g2
-    k3k5tvnwziaxyg3_shape = len_k3, len_k5, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3   # todo should this have a d axis?
+    k3k5tvnwziaxyg3_shape = len_k3, len_k5, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
     ####kveb
     k2tva1e1b1nwziyg1_shape = len_k2, len_t1, len_v1, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
@@ -5050,22 +5052,22 @@ def generator(params,r_vals,plots = False):
     ####kpveb
     pg0_shape = len_p, len_g0
     k2vpa1e1b1nwziyg1_shape = len_k2, len_v1, len_p, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
-    k3k5vpnwzidae0b0xyg3_shape = len_k3, len_k5, len_v3, len_p3, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3   # todo should this have a d axis?
+    k3k5vpnwzidae0b0xyg3_shape = len_k3, len_k5, len_v3, len_p3, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3
 
     ####p6
     p6g0_shape = len_p6, len_g0
     k2p6tva1nwziyg1_shape = len_k2, len_p6, len_t1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
-    k3k5p6tvnwziaxyg3_shape = len_k3, len_k5, len_p6, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3   # todo should this have a d axis?
+    k3k5p6tvnwziaxyg3_shape = len_k3, len_k5, len_p6, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
     ####p6f
     p6fg0_shape = len_p6, len_f, len_g0
     k2p6ftva1nwziyg1_shape = len_k2, len_p6, len_f, len_t1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
-    k3k5p6ftvnwziaxyg3_shape = len_k3, len_k5, len_p6, len_f, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3   # todo should this have a d axis?
+    k3k5p6ftvnwziaxyg3_shape = len_k3, len_k5, len_p6, len_f, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
     cg0_shape = len_c, len_g0
     k2ctva1nwziyg1_shape = len_k2, len_c, len_t1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
-    k5ctwzidaxyg2_shape = len_c, len_t2, len_w_prog, len_z, len_i, len_a1, len_x, len_g2
-    k3k5ctvnwziaxyg3_shape = len_k3, len_k5, len_c, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3   # todo should this have a d axis?
+    k5ctwziaxyg2_shape = len_c, len_t2, len_w_prog, len_z, len_i, len_a1, len_x, len_g2
+    k3k5ctvnwziaxyg3_shape = len_k3, len_k5, len_c, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
 
 
@@ -5089,7 +5091,7 @@ def generator(params,r_vals,plots = False):
 
     r_vals['salevalue_cg0'] = r_salevalue_ctva1e1b1nwzida0e0b0xyg0.reshape(cg0_shape)
     r_vals['salevalue_k2ctva1nwziyg1'] = r_salevalue_k2ctva1e1b1nwzida0e0b0xyg1.reshape(k2ctva1nwziyg1_shape)
-    r_vals['salevalue_ctwzia0xg2'] = salevalue_prog_cta1e1b1nwzida0e0b0xyg2.reshape(k5ctwzidaxyg2_shape)
+    r_vals['salevalue_ctwzia0xg2'] = salevalue_prog_cta1e1b1nwzida0e0b0xyg2.reshape(k5ctwziaxyg2_shape)
     r_vals['salevalue_k3k5ctvnwziaxyg3'] = r_salevalue_k3k5ctva1e1b1nwzida0e0b0xyg3.reshape(k3k5ctvnwziaxyg3_shape)
 
     r_vals['woolvalue_cg0'] = r_woolvalue_ctva1e1b1nwzida0e0b0xyg0.reshape(cg0_shape)
@@ -5124,6 +5126,25 @@ def generator(params,r_vals,plots = False):
     ###nfoet and nyatf used to calc lamb survival and mortality
     r_vals['prog_born_k2tva1e1b1nw8ziyg1'] = r_prog_born_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1e1b1nwziyg1_shape)
     r_vals['prog_alive_k2tva1e1b1nw8ziyg1'] = r_prog_alive_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1e1b1nwziyg1_shape)
+    index_b9 = [0,1,2,3]
+    nfoet_b1nwzida0e0b0xygb9 = nfoet_b1nwzida0e0b0xyg[...,na] == index_b9
+    nyatf_b1nwzida0e0b0xygb9 = nyatf_b1nwzida0e0b0xyg[...,na] == index_b9
+    r_vals['nfoet_b1nwziygb9'] = nfoet_b1nwzida0e0b0xygb9.squeeze(axis=(d_pos-1, a0_pos-1, e0_pos-1, b0_pos-1, x_pos-1))
+    r_vals['nyatf_b1nwziygb9'] = nyatf_b1nwzida0e0b0xygb9.squeeze(axis=(d_pos-1, a0_pos-1, e0_pos-1, b0_pos-1, x_pos-1))
+
+    ###denom weights for arrays that keep axis that are not present in lp array.
+    r_vals['pe1b1_denom_weights_k2tvpa1e1b1nw8ziyg1'] = ((a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+    *(a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...])).squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos))
+
+    r_vals['pde0b0_denom_weights_k3k5tvpnw8zida0e0b0xyg3'] = ((a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
+                                                        *(a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
+                                                        *(a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...])).squeeze(axis=(a1_pos, e1_pos, b1_pos))
+
+    r_vals['e1b1_denom_weights_k2tva1e1b1nw8ziyg1'] = (
+    (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...])).squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos))
+
+    r_vals['de0b0_denom_weights_k3k5tvnw8zida0e0b0xyg3'] = ((a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
+                                                        *(a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...])).squeeze(axis=(a1_pos, e1_pos, b1_pos))
 
     ###lw - with p, e, b
     if pinp.rep['i_store_lw_rep']:
@@ -5133,21 +5154,6 @@ def generator(params,r_vals,plots = False):
 
     ###fec - with p, e, b
     if pinp.rep['i_store_fec_rep']:
-        # fec_sire = np.squeeze(r_fec_sire_pg,axis=(a1_pos, e1_pos, b1_pos, n_pos, w_pos, z_pos, i_pos, d_pos, a0_pos, e0_pos, b0_pos, x_pos, y_pos))
-        #
-        # fec_dams = np.moveaxis(r_fec_dams_k2tvpg, [p_pos],[p_pos-1])   # todo perhaps this could be a function and then called in the r_vals assignment below (rather than as separte steps)
-        # fec_dams = np.squeeze(fec_dams,axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos))
-        #
-        # fec_offs = np.moveaxis(r_fec_offs_k3k5tvpg, [p_pos],[p_pos-1])
-        # fec_offs = np.squeeze(fec_offs,axis=(a1_pos, e1_pos, b1_pos))   # todo look at inclusion of d axis, can't be squeezed because size is >1
-        #
-        # r_vals['fec_sire_pg0'] = fec_sire
-        # r_vals['fec_dams_k2vpa1e1b1nw8ziyg1'] = fec_dams
-        # r_vals['fec_offs_k3k5vpnw8zida0e0b0xyg3'] = fec_offs
-
-        r_vals['pe1b1_denom_weights_k2tvpa1e1b1nw8ziyg1'] = ((a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
-        *(a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...])).squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos))
-
 
 
         r_vals['fec_sire_pg0'] = r_fec_sire_pg.reshape(pg0_shape)
