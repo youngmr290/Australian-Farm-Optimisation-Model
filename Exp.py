@@ -171,7 +171,7 @@ for row in range(len(exp_data)):
                 sen.sav[key1]=value
 
     ##call sa functions - assigns sa variables to relevant inputs
-    uinp.univeral_inp_sa()
+    uinp.universal_inp_sa()
     pinp.property_inp_sa()
     ##create empty dicts - have to do it here because need the trial as the first key, so whole trial can be compared when determining if pyomo needs to be run
     ###params
@@ -278,13 +278,13 @@ for row in range(len(exp_data)):
                 model.display(ostream=f)
         
         ##This writes variable with value greater than 1 to txt file - used to check stuff out each iteration if you want 
-        file = open('Output\Variable summary.txt','w') #file name has to have capital
+        file = open('Variable summary.txt','w') #file name has to have capital
         file.write('Trial: %s\n'%exp_data.index[row][2]) #the first line is the name of the trial
         for v in model.component_objects(pe.Var, active=True):
             file.write("Variable %s\n" %v)   #  \n makes new line
             for index in v:
                 try:
-                    if v[index].value>0:
+                    if v[index].value>0.0001:
                         file.write ("   %s %s\n" %(index, v[index].value))
                 except: pass 
         file.close()

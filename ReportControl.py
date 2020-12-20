@@ -38,17 +38,17 @@ with open('pkl_exp.pkl', "rb") as f:
 exp_data = fun.f_run_required(prev_exp, exp_data, check_pyomo=False)
 trial_outdated = exp_data['run'] #returns true if trial is out of date
 
-run_areasum = False #area summary
+run_areasum = True #area summary
 run_pnl = False #table of profit and loss
 run_profitarea = False #graph profit by crop area
 run_saleprice = False #table of saleprices
 run_cfw_dams = False #table of cfw
-run_fec_dams = False #fec
-run_weanper = True #table of weaning percent
-run_scanper = True #table of scan percent
-run_lamb_survival = True #table of lamb survival
-run_daily_mei_dams = False #table of mei
-run_daily_pi_dams = False #table of mei
+run_fec_dams = True #fec
+run_weanper = False #table of weaning percent
+run_scanper = False #table of scan percent
+run_lamb_survival = False #table of lamb survival
+run_daily_mei_dams = True #table of mei
+run_daily_pi_dams = True #table of mei
 run_numbers_dams = False #table of numbers
 run_numbers_offs = False #table of numbers
 run_dse = False #table of dse
@@ -87,11 +87,11 @@ def f_df2xl(writer, df, sheet, rowstart=0, colstart=0, option=0):
 
     #^add this?    :param condense: bool that controls if rows and cols full of 0's are dropped.
 
-    ##set up xlwriter stuff needed for advanced options
+    ##set up xlsxwriter stuff needed for advanced options
     workbook = writer.book
     worksheet = writer.sheets['areasum']
 
-    ## colapse rows and cols with all 0's
+    ## collapse rows and cols with all 0's
     if option==1:
         for row in len(df):
             worksheet.set_row(1,None,None,{'level': 2})
@@ -178,6 +178,7 @@ if run_cfw_dams:
 if run_fec_dams:
     func = rep.f_stock_pasture_summary
     trials = [0]
+    type = 'stock'
     prod = 'fec_dams_k2vpa1e1b1nw8ziyg1'
     na_prod = [1]
     weights = 'dams_numbers_k2tvanwziy1g1'
@@ -189,9 +190,9 @@ if run_fec_dams:
     cols =[6]
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
-    cfw_dams = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, prod=prod, weights=weights, na_prod=na_prod, na_weights=na_weights,
+    fec_dams = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights, na_prod=na_prod, na_weights=na_weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
-    cfw_dams.to_excel(writer, 'cfw_dams')
+    fec_dams.to_excel(writer, 'fec_dams')
 
 if run_weanper:
     func = rep.f_stock_pasture_summary

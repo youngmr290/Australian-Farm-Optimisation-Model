@@ -40,13 +40,14 @@ try:
         inputs_from_pickle = False 
     else: 
         inputs_from_pickle = True
-        print( 'Reading universal inputs from pickle')
+        print('Reading universal inputs from pickle', end=' ', flush=True)
 except FileNotFoundError:      
     inputs_from_pickle = False
 
 filename= 'pkl_universal.pkl'
 ##if inputs are not read from pickle then they are read from excel and written to pickle
 if inputs_from_pickle == False:
+    print('Reading universal inputs from Excel', end=' ', flush=True)
     with open(filename, "wb") as f:
         ##prices
         price_inp = fun.xl_all_named_ranges("Universal.xlsx","Price")
@@ -108,7 +109,7 @@ else:
         pastparameters_inp = pkl.load(f)
         
         machine_options_dict_inp  = pkl.load(f)
-        
+print('- finished')
         
         
 price = price_inp.copy()
@@ -125,7 +126,7 @@ mach = machine_options_dict_inp.copy()
 #######################
 #apply SA             #
 #######################
-def univeral_inp_sa():
+def universal_inp_sa():
     '''
     
     Returns
@@ -158,7 +159,7 @@ def univeral_inp_sa():
 
 #########################################################################################################################################################################################################
 #########################################################################################################################################################################################################
-#general - used to determine model structure (these will stay in python to keep seperate from excel inputs which can be adjusted by any user)
+#general - used to determine model structure (these will stay in python to keep separate from excel inputs which can be adjusted by any user)
 #########################################################################################################################################################################################################
 #########################################################################################################################################################################################################
 
@@ -179,7 +180,7 @@ structure['grain_pools']=['firsts','seconds']
 ###############
 # cashflow    #
 ###############
-##asset value time of yr - this is also the begining of the cashflow periods  ^for now this must be the 1/1/19 but it would be good to make it flexible ie have the capacity to have cashflow periods start on any day of yr
+##asset value time of yr - this is also the beginning of the cashflow periods  ^for now this must be the 1/1/19 but it would be good to make it flexible ie have the capacity to have cashflow periods start on any day of yr
 structure['i_date_assetvalue']= datetime.datetime(2019, 1, 1) #y/m/d
 
 ##the number of these can change as long as each period is of equal length.
@@ -268,9 +269,9 @@ structure['i_n_fvp_period1'] = 3 #number of different fs period
 structure['i_n_fvp_period3'] = 3 #number of different fs period
 
 structure['i_nut_spread_n0'] = np.array([0])
-structure['i_nut_spread_n1'] = np.array([0,1,-1]) #fs adjustment for different n levels - above 3 is absolute not adjustemnt
+structure['i_nut_spread_n1'] = np.array([0,1,-1]) #fs adjustment for different n levels - above 3 is absolute not adjustment
 structure['i_density_g1_n'] = np.array([1,0.5,1.5]) #stocking density adjuster for different n levels. An increasing feedsupply (less than 3.0) means that the animals are being offered more feed and therefore density is lower (although it could be with a high density and lots of supplement - we will be assuming that it is lower density and increased FOO). This is represented by scaling the standard stocking density by a number less than 1. Note: Distance walked is scaled by 40/density (if density is > 40). SO trying to make distance a small number for confinement feeding and even smaller for feedlotting
-structure['i_nut_spread_n3'] = np.array([0,1,-1]) #fs adjustment for different n levels - above 3 is absolute not adjustemnt
+structure['i_nut_spread_n3'] = np.array([0,1,-1]) #fs adjustment for different n levels - above 3 is absolute not adjustment
 structure['i_density_g3_n'] = np.array([1,0.5,1.5]) #stocking density adjuster for different n levels. An increasing feedsupply (less than 3.0) means that the animals are being offered more feed and therefore density is lower (although it could be with a high density and lots of supplement - we will be assuming that it is lower density and increased FOO). This is represented by scaling the standard stocking density by a number less than 1. Note: Distance walked is scaled by 40/density (if density is > 40). SO trying to make distance a small number for confinement feeding and even smaller for feedlotting
 ##genotype
 ###An array that contains the proportion of each purebred genotype in the sire, dam, yatf or offspring eg:
@@ -493,7 +494,7 @@ structure['labour_period_len'] = relativedelta(months=1)
 ##############
 #phases      #
 ##############
-##the number of previous land uses considered for crop inputs - when this changes yeild input and fert and chem will need to be expended to include the extra years previous land use
+##the number of previous land uses considered for crop inputs - when this changes yield input and fert and chem will need to be expended to include the extra years previous land use
 structure['num_prev_phase']=1
 
 #number of phases analysed ie rotation length if you will (although not really a rotation)
@@ -513,10 +514,10 @@ Note
 - A1 is also used in pasture functions to build the germ df, so it cant be deleted
 - C is used in stubble module, createmodel & mach
 - C1 is used just in pasture functions
-- sets now include capitals - this shouldnt effect con1 but it makes building the germ df easier
+- sets now include capitals - this shouldn't effect con1 but it makes building the germ df easier
 '''
 ##special sets that are used elsewhere from rotations
-###used to make nap inputs - note cont lucerne and tedera are added seperately at the end of the cost section hence not inlcuded here.
+###used to make nap inputs - note cont lucerne and tedera are added separately at the end of the cost section hence not included here.
 # structure['All_pas']={'a', 'ar', 'a3', 'a4', 'a5'
 #                 , 's', 'sr', 's3', 's4', 's5'
 #                 , 'm', 'm3', 'm4', 'm5'
@@ -555,7 +556,7 @@ structure['G']={'b', 'h', 'o','of', 'w', 'f','i', 'k', 'l', 'v', 'z','r'
                 , 'U'
                 , 'X'
                 , 'T', 'J'} #all landuses
-structure['C1']={'E', 'N', 'P', 'OF', 'b', 'h', 'o', 'of', 'w', 'f','i', 'k', 'l', 'v', 'z','r'} #had to create a seperate set because don't want the capitatl in the crop set above as it is used to create pyomo set 
+structure['C1']={'E', 'N', 'P', 'OF', 'b', 'h', 'o', 'of', 'w', 'f','i', 'k', 'l', 'v', 'z','r'} #had to create a separate set because don't want the capital in the crop set above as it is used to create pyomo set 
 
 
 structure['All']={'b', 'h', 'o', 'of', 'w', 'f','i', 'k', 'l', 'v', 'z','r', 'a', 'ar', 's', 'sr', 'm', 'u', 'uc', 'ur', 'x', 'xc', 'xr', 'j','jc', 't','tc', 'jr', 'tr'} #used in reporting and bounds
@@ -574,7 +575,7 @@ structure['A']={'a', 'ar','s', 'sr', 'm'
                 , 'A', 'AR'
                 , 'S', 'SR'
                 , 'M'} #annual
-structure['A1']={'a',  's', 'm'} #annual not resown - special set used in pasture germ and con2 when determining if a rotatin provides a rotation because in yr1 we dont want ar to provide an A bevause we need to distinguish beteween them
+structure['A1']={'a',  's', 'm'} #annual not resown - special set used in pasture germ and con2 when determining if a rotation provides a rotation because in yr1 we don't want ar to provide an A because we need to distinguish between them
 structure['AR']={'ar', 'AR'} #resown annual
 structure['E']={'E', 'E1', 'OF', 'b', 'h', 'o', 'of', 'w'} #cereals
 structure['E1']={'E', 'b', 'h', 'o', 'w'} #cereals
@@ -634,33 +635,33 @@ structure['z']={'z'}
 
 
 
-# phases = phases[~(np.isin(phases[:,i], ['U'])&np.isin(phases[:,i+1], ['U4','U5','u4','u5']))] #only U or U3 ufter U
-#     phases = phases[~(np.isin(phases[:,i], ['U3'])&np.isin(phases[:,i+1], ['U', 'U3','U5','u','ur','u3','u5']))] #pasture 4 muxt come ufter pasture 3
-#     phases = phases[~(np.isin(phases[:,i], ['U4'])&np.isin(phases[:,i+1], ['U', 'U3','U4','u','ur','u3','u4']))] #pasture 5 muxt come ufter pasture 4
-#     phases = phases[~(np.isin(phases[:,i], ['U5'])&np.isin(phases[:,i+1], ['U', 'U3','U4','u','ur','u3','u4']))] #pasture 5 muxt come ufter pasture 5
+# phases = phases[~(np.isin(phases[:,i], ['U'])&np.isin(phases[:,i+1], ['U4','U5','u4','u5']))] #only U or U3 after U
+#     phases = phases[~(np.isin(phases[:,i], ['U3'])&np.isin(phases[:,i+1], ['U', 'U3','U5','u','ur','u3','u5']))] #pasture 4 must come after pasture 3
+#     phases = phases[~(np.isin(phases[:,i], ['U4'])&np.isin(phases[:,i+1], ['U', 'U3','U4','u','ur','u3','u4']))] #pasture 5 must come after pasture 4
+#     phases = phases[~(np.isin(phases[:,i], ['U5'])&np.isin(phases[:,i+1], ['U', 'U3','U4','u','ur','u3','u4']))] #pasture 5 must come after pasture 5
 #     phases = phases[~(~np.isin(phases[:,i], ['U'])&np.isin(phases[:,i+1], ['U3','u3']))] #cant have U3 after anything except U
 #     try:  #used for conditions that are concerned with more than two yrs
-#         phases = phases[~(~np.isin(phases[:,i], ['U'])&np.isin(phases[:,i+2], ['U3','u3']))] #cant have U3 ufter unything except U U (this is the second part to the rule above)
+#         phases = phases[~(~np.isin(phases[:,i], ['U'])&np.isin(phases[:,i+2], ['U3','u3']))] #cant have U3 after anything except U U (this is the second part to the rule above)
 #     except IndexError: pass
 #     phases = phases[~(~np.isin(phases[:,i], ['U3'])&np.isin(phases[:,i+1], ['U4','u4']))] #cant have U4 after anything except U3
 #     phases = phases[~(~np.isin(phases[:,i], ['U4'])&np.isin(phases[:,i+1], ['U5','u5']))] #cant have U5 after anything except U4
 #     try:  #used for conditions that are concerned with more than two yrs
-#         phases = phases[~(np.isin(phases[:,i], ['U'])&np.isin(phases[:,i+1], ['U'])&~np.isin(phases[:,i+2], ['U3','u3']))] #can only huve U3 ufter U U (huve uxed u double negitive here)
+#         phases = phases[~(np.isin(phases[:,i], ['U'])&np.isin(phases[:,i+1], ['U'])&~np.isin(phases[:,i+2], ['U3','u3']))] #can only have U3 after U U (have used a double negative here)
 #     except IndexError: pass
 
 #     ##Manipulated Lucerne
-#     phases = phases[~(np.isin(phases[:,i], ['X'])&np.isin(phases[:,i+1], ['X4','X5','x4','x5']))] #only U or U3 ufter U
-#     phases = phases[~(np.isin(phases[:,i], ['X3'])&np.isin(phases[:,i+1], ['X','X3','X5','x','xr','x3','x5']))] #pasture 4 muxt come ufter pasture 3
-#     phases = phases[~(np.isin(phases[:,i], ['X4'])&np.isin(phases[:,i+1], ['X','X3','X4','x','xr','x3','x4']))] #pasture 5 muxt come ufter pasture 4
-#     phases = phases[~(np.isin(phases[:,i], ['X5'])&np.isin(phases[:,i+1], ['X','X3','X4','x','xr','x3','x4']))] #pasture 5 muxt come ufter pasture 5
+#     phases = phases[~(np.isin(phases[:,i], ['X'])&np.isin(phases[:,i+1], ['X4','X5','x4','x5']))] #only U or U3 after U
+#     phases = phases[~(np.isin(phases[:,i], ['X3'])&np.isin(phases[:,i+1], ['X','X3','X5','x','xr','x3','x5']))] #pasture 4 must come after pasture 3
+#     phases = phases[~(np.isin(phases[:,i], ['X4'])&np.isin(phases[:,i+1], ['X','X3','X4','x','xr','x3','x4']))] #pasture 5 must come after pasture 4
+#     phases = phases[~(np.isin(phases[:,i], ['X5'])&np.isin(phases[:,i+1], ['X','X3','X4','x','xr','x3','x4']))] #pasture 5 must come after pasture 5
 #     phases = phases[~(~np.isin(phases[:,i], ['X'])&np.isin(phases[:,i+1], ['X3','x3']))] #cant have U3 after anything except U
 #     try:  #used for conditions that are concerned with more than two yrs
-#         phases = phases[~(~np.isin(phases[:,i], ['X'])&np.isin(phases[:,i+2], ['X3','x3']))] #cant have U3 ufter unything except U U (this is the second part to the rule above)
+#         phases = phases[~(~np.isin(phases[:,i], ['X'])&np.isin(phases[:,i+2], ['X3','x3']))] #cant have U3 after anything except U U (this is the second part to the rule above)
 #     except IndexError: pass
 #     phases = phases[~(~np.isin(phases[:,i], ['X3'])&np.isin(phases[:,i+1], ['X4','x4']))] #cant have U4 after anything except U3
 #     phases = phases[~(~np.isin(phases[:,i], ['X4'])&np.isin(phases[:,i+1], ['X5','x5']))] #cant have U5 after anything except U4
 #     try:  #used for conditions that are concerned with more than two yrs
-#         phases = phases[~(np.isin(phases[:,i], ['X'])&np.isin(phases[:,i+1], ['X'])&~np.isin(phases[:,i+2], ['X3','x3']))] #can only huve U3 ufter U U (huve uxed u double negitive here)
+#         phases = phases[~(np.isin(phases[:,i], ['X'])&np.isin(phases[:,i+1], ['X'])&~np.isin(phases[:,i+2], ['X3','x3']))] #can only have U3 after U U (have used a double negative here)
 #     except IndexError: pass
 
 # #Lucerne
@@ -673,9 +674,9 @@ structure['z']={'z'}
 
 
 #Function that just uses inout inputs but is used in multiple other pre-calc modules
-#defined here to limit imorting pre calc modules in other precalc modules
+#defined here to limit importing pre calc modules in other precalc modules
 def cols():
-    #this is used to make a list of the relevent column numbers used in merge function, to specify the columns that are being matched - it will change if inputs specifying number of phases changes
+    #this is used to make a list of the relevant column numbers used in merge function, to specify the columns that are being matched - it will change if inputs specifying number of phases changes
     cols = []
     for i in reversed(range(structure['num_prev_phase']+1)):
         cols.append(structure['phase_len']-1-i) 

@@ -20,7 +20,7 @@ try:
         inputs_from_pickle = False 
     else: 
         inputs_from_pickle = True
-        print( 'Reading property inputs from pickle')
+        print('Reading property inputs from pickle', end=' ', flush=True)
 except FileNotFoundError:      
     inputs_from_pickle = False
 
@@ -28,6 +28,7 @@ except FileNotFoundError:
 filename= 'pkl_property.pkl'
 ##if inputs are not read from pickle then they are read from excel and written to pickle
 if inputs_from_pickle == False:
+    print('Reading property inputs from Excel', end=' ', flush=True)
     with open(filename, "wb") as f:
         general_inp = fun.xl_all_named_ranges("Property.xlsx","General")
         pkl.dump(general_inp, f)
@@ -62,7 +63,7 @@ if inputs_from_pickle == False:
         feedsupply_inp  = fun.xl_all_named_ranges('Inputs parameters.xlsm', 'FeedSupply', numpy=True) #^think this will get combined with the input sheet above
         pkl.dump(feedsupply_inp, f)
         
-        ##^the sheep one below might be able to be removed (remeber to delete in the sections below as well)
+        ##^the sheep one below might be able to be removed (remember to delete in the sections below as well)
         # sheep_management_inp  = fun.xl_all_named_ranges('Property.xlsx', 'Sheep Management', numpy=True)
         # pkl.dump(sheep_management_inp, f)
 
@@ -106,8 +107,10 @@ else:
 
         pasture_inp = pkl.load(f)
 
-##create a copy of each input dict - this means there is always a copy of the origional inputs (the second copy has SA applied to it)
-##the copy created is the one used in the actuall modules
+print('- finished')
+
+##create a copy of each input dict - this means there is always a copy of the original inputs (the second copy has SA applied to it)
+##the copy created is the one used in the actual modules
 general=general_inp.copy()
 rep=rep_inp.copy()
 labour=labour_inp.copy()
