@@ -97,7 +97,7 @@ def f_df2xl(writer, df, sheet, rowstart=0, colstart=0, option=0):
         for row in range(len(df)):
             if (df.iloc[row]==0).all():
                 offset = df.columns.nlevels #number of columns used for names
-                worksheet.set_row(row+offset,None,None,{'level': 1, 'hidden': True}) #set hidden to true to colaps the level initially
+                worksheet.set_row(row+offset+1,None,None,{'level': 1, 'hidden': True}) #set hidden to true to colaps the level initially
 
         for col in range(len(df.columns)):
             if (df.iloc[:,col]==0).all():
