@@ -109,7 +109,7 @@ for row in range(len(exp_data)):
     run+=1
     for dic,key1,key2,indx in exp_data:
         ##extract current value
-        value = exp_data.loc[exp_data.index[row], (dic,key1,key2,indx)].squeeze() #squeeze to remove exp header/index leaving just the value
+        value = exp_data.loc[exp_data.index[row], (dic,key1,key2,indx)]#.squeeze() #squeeze to remove exp header/index leaving just the value
         ##checks if both slice and key2 exists
         if not ('Unnamed' in indx  or 'Unnamed' in key2):
             indices = tuple(slice(*(int(i) if i else None for i in part.strip().split(':'))) for part in indx.split(',')) #creats a slice object from a string - note slice objects are not inclusive ie to select the first number it should look like [0:1]
