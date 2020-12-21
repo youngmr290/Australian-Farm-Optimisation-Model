@@ -237,12 +237,13 @@ if run_scanper:
 if run_lamb_survival:
     func = rep.f_survival
     trials = [0]
-    arith_axis = [0,1,2,4,5,7,8,9,10,11,12]
-    index =[3]
-    cols =[6]
+    arith_axis = [0,1,3,4,6,7,8,9,10]
+    index =[2]
+    cols =[5]
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
-    lamb_survival = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials)
+    lamb_survival = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, arith_axis=arith_axis,
+                                index=index, cols=cols, axis_slice=axis_slice)
     f_df2xl(writer, lamb_survival, 'lamb_survival', option=1)
 
 
@@ -270,7 +271,7 @@ if run_daily_pi_dams:
     func = rep.f_stock_pasture_summary
     trials = [0]
     type = 'stock'
-    prod = 'dams_pi_k2p6ftva1nwziyg1'
+    prod = 'pi_dams_k2p6ftva1nw8ziyg1'
     weights = 'dams_numbers_k2tvanwziy1g1'
     na_weights = [1, 2]
     den_weights = 'stock_days_k2p6ftva1nwziyg1'
@@ -282,9 +283,9 @@ if run_daily_pi_dams:
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
     daily_pi_dams = rep.f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights,
-                           na_weights=na_weights, den_weights=den_weights, keys=keys, arith=arith,
-                           arith_axis=arith_axis, index=index, cols=cols,
-                           axis_slice=axis_slice)
+                               na_weights=na_weights, den_weights=den_weights, keys=keys, arith=arith,
+                               arith_axis=arith_axis, index=index, cols=cols,
+                               axis_slice=axis_slice)
     f_df2xl(writer, daily_pi_dams, 'daily_pi_dams', option=1)
 
 if run_numbers_dams:

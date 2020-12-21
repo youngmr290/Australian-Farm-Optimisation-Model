@@ -51,41 +51,41 @@ if inputs_from_pickle == False:
     with open(filename, "wb") as f:
         ##prices
         price_inp = fun.xl_all_named_ranges("Universal.xlsx","Price")
-        pkl.dump(price_inp, f)
+        pkl.dump(price_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
         
         ##Finance inputs
         finance_inp = fun.xl_all_named_ranges("Universal.xlsx","Finance")
-        pkl.dump(finance_inp, f)
+        pkl.dump(finance_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
         
         ##mach inputs - general
         mach_general_inp = fun.xl_all_named_ranges("Universal.xlsx","Mach General")
-        pkl.dump(mach_general_inp, f)
+        pkl.dump(mach_general_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
         
         ##feed inputs
         feed_inputs_inp = fun.xl_all_named_ranges("Universal.xlsx","Feed Budget")
-        pkl.dump(feed_inputs_inp, f)
+        pkl.dump(feed_inputs_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
         
         ##sup inputs
         sup_inp = fun.xl_all_named_ranges("Universal.xlsx","Sup Feed")
-        pkl.dump(sup_inp, f)
+        pkl.dump(sup_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
         
         ##crop inputs
         crop_inp = fun.xl_all_named_ranges("Universal.xlsx","Crop Sim")
-        pkl.dump(crop_inp, f)
+        pkl.dump(crop_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
         
         ##sheep inputs
         sheep_inp = fun.xl_all_named_ranges('Inputs parameters.xlsm', ['Universal'], numpy=True)
-        pkl.dump(sheep_inp, f)
+        pkl.dump(sheep_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
         parameters_inp = fun.xl_all_named_ranges('Inputs parameters.xlsm', ['Parameters'], numpy=True)
-        pkl.dump(parameters_inp, f)
+        pkl.dump(parameters_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
         pastparameters_inp = fun.xl_all_named_ranges('Inputs parameters.xlsm', ['PastParameters'], numpy=True)
-        pkl.dump(pastparameters_inp, f)
+        pkl.dump(pastparameters_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
         
         ##mach options
         ###create a dict to store all options - this allows the user to select an option
         machine_options_dict_inp={}
         machine_options_dict_inp[1] = fun.xl_all_named_ranges("Universal.xlsx","Mach 1")
-        pkl.dump(machine_options_dict_inp, f)
+        pkl.dump(machine_options_dict_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
 ##else the inputs are read in from the pickle file
 ##note this must be in the same order as above

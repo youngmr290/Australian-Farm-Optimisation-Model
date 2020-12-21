@@ -110,7 +110,7 @@ def exp(row):
     start_time = time.time()
     for dic,key1,key2,indx in exp_data:
          ##extract current value
-         value = exp_data.loc[exp_data.index[row], (dic,key1,key2,indx)]#.squeeze() #squeeze to remove exp header/index leaving just the value
+         value = exp_data.loc[exp_data.index[row], (dic,key1,key2,indx)]
          ##checks if both slice and key2 exists
          if not ('Unnamed' in indx or 'Unnamed' in key2):
              indices = tuple(slice(*(int(i) if i else None for i in part.strip().split(':'))) for part in indx.split(
@@ -174,7 +174,7 @@ def exp(row):
                  sen.sav[key1] = value
 
     ##call sa functions - assigns sa variables to relevant inputs
-    uinp.univeral_inp_sa()
+    uinp.universal_inp_sa()
     pinp.property_inp_sa()
     ##create empty dicts - have to do it here because need the trial as the first key, so whole trial can be compared when determining if pyomo needs to be run
     ###params
@@ -223,7 +223,7 @@ def exp(row):
     except KeyError:
         run_pyomo_params= True
     ##determine if pyomo should run, note if pyomo doesn't run there will be no ful solution (they are the same as before so no need)
-    lp_vars={} #create empty dict to return if pyomo isnt run
+    lp_vars={} #create empty dict to return if pyomo isnt run. If dict is empty it doesnt overwrite the previous main lp_vars dict66
     if run_pyomo_params or exp_data1.loc[exp_data1.index[row],'runpyomo'].squeeze():
         ##call core model function, must call them in the correct order (core must be last)
         crtmod.sets() #certain sets have to be updated each iteration of exp
@@ -290,11 +290,11 @@ def exp(row):
         else: # Something else is wrong
             print ('Solver Status: error')
             sys.exit()
-        ##store profit
-        r_vals['profit'] = pe.value(model.profit)
         #last step is to print the time for the current trial to run
         variables = model.component_objects(pe.Var, active=True)
         lp_vars = {str(v):{s:v[s].value for s in v} for v in variables }     #creates dict with variable in it. This is tricky since pyomo returns a generator object
+        ##store profit
+        lp_vars['profit'] = pe.value(model.profit)
     ##determine expected time to completion - trials left multiplied by average time per trial &time for current loop
     dataset = list(np.flatnonzero(np.array(exp_data.index.get_level_values(0)) * np.array(exp_data1['run']))) #gets the ordinal index values for the trials the user wants to run that are not up to date
     processes = multiprocessing.cpu_count()
@@ -340,13 +340,13 @@ if __name__ == '__main__':
         r_vals[exp_data.index[trial_row][2]] = results[res_num][2] 
     ##drop results into pickle file
     with open('pkl_lp_vars.pkl', "wb") as f:
-        pkl.dump(lp_vars, f)
+        pkl.dump(lp_vars, f, protocol=pkl.HIGHEST_PROTOCOL)
     with open('pkl_params.pkl', "wb") as f:
-        pkl.dump(params, f)
+        pkl.dump(params, f, protocol=pkl.HIGHEST_PROTOCOL)
     with open('pkl_r_vals.pkl', "wb") as f:
-        pkl.dump(r_vals, f)
+        pkl.dump(r_vals, f, protocol=pkl.HIGHEST_PROTOCOL)
     with open('pkl_exp.pkl', "wb") as f:
-        pkl.dump(exp_data1, f)
+        pkl.dump(exp_data1, f, protocol=pkl.HIGHEST_PROTOCOL)
 
 
     end=time.time()

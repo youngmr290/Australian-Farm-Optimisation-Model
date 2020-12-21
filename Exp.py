@@ -109,7 +109,7 @@ for row in range(len(exp_data)):
     run+=1
     for dic,key1,key2,indx in exp_data:
         ##extract current value
-        value = exp_data.loc[exp_data.index[row], (dic,key1,key2,indx)]#.squeeze() #squeeze to remove exp header/index leaving just the value
+        value = exp_data.loc[exp_data.index[row], (dic,key1,key2,indx)]
         ##checks if both slice and key2 exists
         if not ('Unnamed' in indx  or 'Unnamed' in key2):
             indices = tuple(slice(*(int(i) if i else None for i in part.strip().split(':'))) for part in indx.split(',')) #creats a slice object from a string - note slice objects are not inclusive ie to select the first number it should look like [0:1]
@@ -299,11 +299,11 @@ for row in range(len(exp_data)):
         else: # Something else is wrong
             print ('Solver Status: error')
             sys.exit()
-        ##store profit
-        r_vals[exp_data.index[row][2]]['profit'] = pe.value(model.profit)
         ##store pyomo variable output as a dict
         variables=model.component_objects(pe.Var, active=True)
         lp_vars['%s'%exp_data.index[row][2]]={str(v):{s:v[s].value for s in v} for v in variables}    #creates dict with variable in it. This is tricky since pyomo returns a generator object
+        ##store profit
+        lp_vars[exp_data.index[row][2]]['profit'] = pe.value(model.profit)
     ##determine expected time to completion - trials left multiplied by average time per trial &time for current loop
     trials_to_go = total_trials - run
     time_taken= time.time()
@@ -316,13 +316,13 @@ for row in range(len(exp_data)):
 
 ##drop results into pickle file
 with open('pkl_lp_vars.pkl', "wb") as f:
-    pkl.dump(lp_vars, f)
+    pkl.dump(lp_vars, f, protocol=pkl.HIGHEST_PROTOCOL)
 with open('pkl_params.pkl', "wb") as f:
-    pkl.dump(params, f)
+    pkl.dump(params, f, protocol=pkl.HIGHEST_PROTOCOL)
 with open('pkl_r_vals.pkl', "wb") as f:
-    pkl.dump(r_vals, f)
+    pkl.dump(r_vals, f, protocol=pkl.HIGHEST_PROTOCOL)
 with open('pkl_exp.pkl', "wb") as f:
-    pkl.dump(exp_data1, f)
+    pkl.dump(exp_data1, f, protocol=pkl.HIGHEST_PROTOCOL)
 
 end_time1 = time.time()
 print('total trials completed: ', run)

@@ -26,12 +26,13 @@ def f_errors(r_vals, exp_data_index, trial_outdated, trials):
     except KeyError:
         raise exc.TrialError('''Trials for reporting don't all exist''')
     ##second check if generating results using out of date data.
+    outdatedbool = trial_outdated.loc[exp_data_index[trials]]  # have to use the trial name because the order is different
     if any(trial_outdated.loc[exp_data_index[trials]]):  # have to use the trial name because the order is different
         print('''
 
-              Generating reports from out dated data
-
-              ''')
+              Generating reports from out dated data: Trial %s
+                
+              ''' %np.array(trials)[outdatedbool.squeeze()])
     return
 
 
@@ -774,7 +775,7 @@ def f_profit(lp_vars, r_vals, option=0):
     0- rev - (exp + minroe + asset_opp +dep)
     1- rev - (exp + dep)
     '''
-    obj_profit = r_vals['profit']
+    obj_profit = lp_vars['profit']
     minroe = pd.Series(lp_vars['v_minroe'])
     asset_opportunity_cost = pd.Series(lp_vars['v_asset'])
     if option == 0:
@@ -883,9 +884,13 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, **kwargs):
     if type == 'stock':
         vars = f_stock_reshape(lp_vars, r_vals)
         r_vals = r_vals['stock']
+        ###keys that will become the index and cols for table
+        keys = r_vals[keys_key]
     else:
         vars = f_pasture_reshape(lp_vars, r_vals)
         r_vals = r_vals['pas']
+        ###keys that will become the index and cols for table
+        keys = vars[keys_key]
 
 
     ###if production doesnt exist eg it is 1 or some other number (this means you can preform arith with any number - mainly used for pasture when there is no production param)
@@ -897,8 +902,6 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, **kwargs):
     if isinstance(den_weights, str):
         den_weights = r_vals[den_weights]
 
-    ###keys that will become the index and cols for table
-    keys = r_vals[keys_key]
 
     ##if no weights then make None
     try:
@@ -909,12 +912,14 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, **kwargs):
     ##other manipulation
     f_numpy2df_error(prod, weights, arith_axis, index, cols)
     prod, weights, den_weights, denom = f_add_axis(prod, weights, den_weights, denom, na_weights, na_prod, na_denweights, na_denom)
-    prod, weights, den_weights = f_slice(prod, weights, den_weights, keys, arith, axis_slice)
+    prod, weights, den_weights, keys = f_slice(prod, weights, den_weights, keys, arith, axis_slice)
     prod = f_arith(prod, weights, den_weights, arith, arith_axis)
     # prod = fun.f_divide(prod, denom)
     if build_df:
         prod = f_numpy2df(prod, keys, index, cols)
-    return prod
+        return prod
+    else:
+        return prod, keys
 
 def f_survival(lp_vars, r_vals, **kwargs):
     '''
@@ -990,20 +995,21 @@ def f_survival(lp_vars, r_vals, **kwargs):
     prod2 = 'prog_alive_k2tva1e1b1nw8ziyg1'
     weights = 'dams_numbers_k2tvanwziy1g1'
     na_weights = [4,5]
-    den_weights = 'pe1b1_denom_weights_k2tvpa1e1b1nw8ziyg1'
+    den_weights = 'e1b1_denom_weights_k2tva1e1b1nw8ziyg1'
     keys = 'dams_keys_k2tvaebnwziy1g1'
     arith = 2
-    prog_born = f_stock_pasture_summary(lp_vars, r_vals, build_df=False, type=type, prod=prod, weights=weights,
+    prog_born, keys_sliced = f_stock_pasture_summary(lp_vars, r_vals, build_df=False, type=type, prod=prod, weights=weights,
                            den_weights=den_weights, na_weights=na_weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
-    prog_alive = f_stock_pasture_summary(lp_vars, r_vals, build_df=False, type=type, prod=prod2, weights=weights,
+    prog_alive, keys_sliced = f_stock_pasture_summary(lp_vars, r_vals, build_df=False, type=type, prod=prod2, weights=weights,
                            den_weights=den_weights, na_weights=na_weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
     prog_born_k2tvpa1e1b1nw8ziyg1 = np.moveaxis(np.sum(prog_born[...,na] * r_vals['stock']['nfoet_b1nwziygb9'], axis=-8), -1, -7)
     prog_alive_k2tvpa1e1b1nw8ziyg1 = np.moveaxis(np.sum(prog_alive[...,na] * r_vals['stock']['nyatf_b1nwziygb9'], axis=-8), -1, -7)
+    keys_sliced[5] = keys_sliced[5][0:4] #have to slice the b axis so it is the same size as b9
 
-    survival= prog_alive_k2tvpa1e1b1nw8ziyg1/prog_born_k2tvpa1e1b1nw8ziyg1
-    survival = f_numpy2df(survival, keys, index, cols)
+    survival= fun.f_divide(prog_alive_k2tvpa1e1b1nw8ziyg1, prog_born_k2tvpa1e1b1nw8ziyg1)
+    survival = f_numpy2df(survival, keys_sliced, index, cols)
     return survival
 
 
@@ -1077,7 +1083,7 @@ def f_slice(prod, weights, den_weights, keys, arith, axis_slice):
         prod = prod[tuple(sl)]
         weights = weights[tuple(sl)]
         den_weights = den_weights[tuple(sl)]
-    return prod, weights, den_weights
+    return prod, weights, den_weights, keys
 
 
 def f_arith(prod, weight, den_weights, arith, axis):

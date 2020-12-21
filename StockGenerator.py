@@ -5099,13 +5099,13 @@ def generator(params,r_vals,plots = False):
     r_vals['woolvalue_k3k5ctvnwziaxyg3'] =r_woolvalue_k3k5ctva1e1b1nwzida0e0b0xyg3.reshape(k3k5ctvnwziaxyg3_shape)
 
     ###cfw
-    r_vals['r_cfw_hdmob_g0'] = r_cfw_hdmob_tva1e1b1nwzida0e0b0xyg0.reshape(g0_shape)
-    r_vals['r_cfw_hdmob_k2tva1nwziyg1'] = r_cfw_hdmob_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
-    r_vals['r_cfw_hdmob_k3k5tvnwziaxyg3'] = r_cfw_hdmob_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
+    r_vals['cfw_hdmob_g0'] = r_cfw_hdmob_tva1e1b1nwzida0e0b0xyg0.reshape(g0_shape)
+    r_vals['cfw_hdmob_k2tva1nwziyg1'] = r_cfw_hdmob_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
+    r_vals['cfw_hdmob_k3k5tvnwziaxyg3'] = r_cfw_hdmob_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
 
-    r_vals['r_cfw_hd_g0'] = r_cfw_hd_tva1e1b1nwzida0e0b0xyg0.reshape(g0_shape)
-    r_vals['r_cfw_hd_k2tva1nwziyg1'] = r_cfw_hd_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
-    r_vals['r_cfw_hd_k3k5tvnwziaxyg3'] = r_cfw_hd_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
+    r_vals['cfw_hd_g0'] = r_cfw_hd_tva1e1b1nwzida0e0b0xyg0.reshape(g0_shape)
+    r_vals['cfw_hd_k2tva1nwziyg1'] = r_cfw_hd_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
+    r_vals['cfw_hd_k3k5tvnwziaxyg3'] = r_cfw_hd_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
 
     ###mei and pi and fec (feed energy concentration)
     r_vals['mei_sire_p6fg0'] = mei_p6fa1e1b1nwzida0e0b0xyg0.reshape(p6fg0_shape)
@@ -5141,10 +5141,10 @@ def generator(params,r_vals,plots = False):
                                                         *(a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...])).squeeze(axis=(a1_pos, e1_pos, b1_pos))
 
     r_vals['e1b1_denom_weights_k2tva1e1b1nw8ziyg1'] = (
-    (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...])).squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos))
+    (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1)).squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos))
 
-    r_vals['de0b0_denom_weights_k3k5tvnw8zida0e0b0xyg3'] = ((a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
-                                                        *(a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...])).squeeze(axis=(a1_pos, e1_pos, b1_pos))
+    r_vals['de0b0_denom_weights_k3k5tvnw8zida0e0b0xyg3'] = ((a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)
+                                                        *(a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)).squeeze(axis=(a1_pos, e1_pos, b1_pos))
 
     ###lw - with p, e, b
     if pinp.rep['i_store_lw_rep']:
@@ -5154,8 +5154,6 @@ def generator(params,r_vals,plots = False):
 
     ###fec - with p, e, b
     if pinp.rep['i_store_fec_rep']:
-
-
         r_vals['fec_sire_pg0'] = r_fec_sire_pg.reshape(pg0_shape)
         r_vals['fec_dams_k2vpa1e1b1nw8ziyg1'] = r_fec_dams_k2tvpg.reshape(k2vpa1e1b1nwziyg1_shape)
         r_vals['fec_offs_k3k5vpnw8zida0e0b0xyg3'] = r_fec_offs_k3k5tvpg.reshape(k3k5vpnwzidae0b0xyg3_shape)

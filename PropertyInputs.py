@@ -31,37 +31,37 @@ if inputs_from_pickle == False:
     print('Reading property inputs from Excel', end=' ', flush=True)
     with open(filename, "wb") as f:
         general_inp = fun.xl_all_named_ranges("Property.xlsx","General")
-        pkl.dump(general_inp, f)
+        pkl.dump(general_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
         rep_inp = fun.xl_all_named_ranges("Property.xlsx","Report Settings")
-        pkl.dump(rep_inp, f)
+        pkl.dump(rep_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
         labour_inp = fun.xl_all_named_ranges("Property.xlsx","Labour")
-        pkl.dump(labour_inp, f)
+        pkl.dump(labour_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
         crop_inp = fun.xl_all_named_ranges("Property.xlsx","Crop")
-        pkl.dump(crop_inp, f)
+        pkl.dump(crop_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
         mach_inp = fun.xl_all_named_ranges("Property.xlsx","Mach")
-        pkl.dump(mach_inp, f)
+        pkl.dump(mach_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
         stubble_inp = fun.xl_all_named_ranges("Property.xlsx","Stubble")
-        pkl.dump(stubble_inp, f)
+        pkl.dump(stubble_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
         finance_inp = fun.xl_all_named_ranges("Property.xlsx","Finance")
-        pkl.dump(finance_inp, f)
+        pkl.dump(finance_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
         feed_inp = fun.xl_all_named_ranges("Property.xlsx","Feed Budget") #automatically read in the periods as dates
-        pkl.dump(feed_inp, f)
+        pkl.dump(feed_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
         sup_inp = fun.xl_all_named_ranges("Property.xlsx","Sup Feed") #automatically read in the periods as dates
-        pkl.dump(sup_inp, f)
+        pkl.dump(sup_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
         sheep_inp  = fun.xl_all_named_ranges('Inputs parameters.xlsm', 'Sheep', numpy=True)
-        pkl.dump(sheep_inp, f)
+        pkl.dump(sheep_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
         feedsupply_inp  = fun.xl_all_named_ranges('Inputs parameters.xlsm', 'FeedSupply', numpy=True) #^think this will get combined with the input sheet above
-        pkl.dump(feedsupply_inp, f)
+        pkl.dump(feedsupply_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
         
         ##^the sheep one below might be able to be removed (remember to delete in the sections below as well)
         # sheep_management_inp  = fun.xl_all_named_ranges('Property.xlsx', 'Sheep Management', numpy=True)
@@ -73,7 +73,7 @@ if inputs_from_pickle == False:
         pasture_inp=dict()
         for pasture in uinp.structure['pastures']:
             pasture_inp[pasture] = fun.xl_all_named_ranges('Property.xlsx', pasture)
-        pkl.dump(pasture_inp, f)
+        pkl.dump(pasture_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
 ##else the inputs are read in from the pickle file
 ##note this must be in the same order as above
