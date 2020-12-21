@@ -40,28 +40,28 @@ exp_data = fun.f_run_required(prev_exp, exp_data, check_pyomo=False)
 trial_outdated = exp_data['run'] #returns true if trial is out of date
 
 run_areasum = True #area summary
-run_pnl = False #table of profit and loss
-run_profitarea = False #graph profit by crop area
-run_saleprice = False #table of saleprices
-run_cfw_dams = False #table of cfw
-run_fec_dams = False #fec
-run_weanper = False #table of weaning percent
-run_scanper = False #table of scan percent
-run_lamb_survival = False #table of lamb survival
+run_pnl = True #table of profit and loss
+run_profitarea = True #graph profit by crop area
+run_saleprice = True #table of saleprices
+run_cfw_dams = True #table of cfw
+run_fec_dams = True #fec
+run_weanper = True #table of weaning percent
+run_scanper = True #table of scan percent
+run_lamb_survival = True #table of lamb survival
 run_daily_mei_dams = True #table of mei
-run_daily_pi_dams = False #table of mei
-run_numbers_dams = False #table of numbers
-run_numbers_offs = False #table of numbers
-run_dse = False #table of dse
-run_grnfoo = False #table of green foo at end of fp
-run_dryfoo = False #table of dry foo at end of fp
-run_napfoo = False #table of nap foo at end of fp
-run_grncon = False #table of green con at end of fp
-run_drycon = False #table of dry con at end of fp
-run_napcon = False #table of nap con at end of fp
-run_poccon = False #table of poc con at end of fp
-run_supcon = False #table of sup con at end of fp
-run_stubcon = False #table of sup con at end of fp
+run_daily_pi_dams = True #table of mei
+run_numbers_dams = True #table of numbers
+run_numbers_offs = True #table of numbers
+run_dse = True #table of dse
+run_grnfoo = True #table of green foo at end of fp
+run_dryfoo = True #table of dry foo at end of fp
+run_napfoo = True #table of nap foo at end of fp
+run_grncon = True #table of green con at end of fp
+run_drycon = True #table of dry con at end of fp
+run_napcon = True #table of nap con at end of fp
+run_poccon = True #table of poc con at end of fp
+run_supcon = True #table of sup con at end of fp
+run_stubcon = True #table of sup con at end of fp
 
 
 

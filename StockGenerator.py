@@ -5085,9 +5085,9 @@ def generator(params,r_vals,plots = False):
     r_vals['stock_days_k3k5p6ftvnwziaxyg3'] = stock_days_k3k5p6ftva1e1b1nwzida0e0b0xyg3.reshape(k3k5p6ftvnwziaxyg3_shape)
 
     ###cashflow
-    r_vals['cost_cg0'] = cost_ctva1e1b1nwzida0e0b0xyg0.reshape(cg0_shape)
-    r_vals['cost_k2ctva1nwziyg1'] = cost_k2ctva1e1b1nwzida0e0b0xyg1.reshape(k2ctva1nwziyg1_shape)
-    r_vals['cost_k3k5ctvnwziaxyg3'] =cost_k3k5ctva1e1b1nwzida0e0b0xyg3.reshape(k3k5ctvnwziaxyg3_shape)
+    r_vals['sire_cost_cg0'] = cost_ctva1e1b1nwzida0e0b0xyg0.reshape(cg0_shape)
+    r_vals['dams_cost_k2ctva1nwziyg1'] = cost_k2ctva1e1b1nwzida0e0b0xyg1.reshape(k2ctva1nwziyg1_shape)
+    r_vals['offs_cost_k3k5ctvnwziaxyg3'] =cost_k3k5ctva1e1b1nwzida0e0b0xyg3.reshape(k3k5ctvnwziaxyg3_shape)
 
     r_vals['salevalue_cg0'] = r_salevalue_ctva1e1b1nwzida0e0b0xyg0.reshape(cg0_shape)
     r_vals['salevalue_k2ctva1nwziyg1'] = r_salevalue_k2ctva1e1b1nwzida0e0b0xyg1.reshape(k2ctva1nwziyg1_shape)
