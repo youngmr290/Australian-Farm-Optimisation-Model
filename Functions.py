@@ -550,12 +550,22 @@ def f_produce_df(data, rows, columns, row_names=None, column_names=None):
     """rows is a list of lists that will be used to build a MultiIndex
     columns is a list of lists that will be used to build a MultiIndex"""
     ##if either cols or rows don't exist then add a default 0 as name
-    if len(rows) == 0:
-        rows=[[0]]
-    if len(columns) == 0:
-        columns=[[0]]
-    row_index = pd.MultiIndex.from_product(rows, names=row_names)
-    col_index = pd.MultiIndex.from_product(columns, names=column_names)
+    if len(rows) == 0:  #check if no index
+        row_index=[0]
+    elif not any(isinstance(i, (list, np.ndarray,object)) for i in rows): #check if nested list
+        row_index = rows
+    elif len(rows)==1: #check if nested list with one element eg dont need to create multiindex
+        row_index = rows[0]
+    else:
+        row_index = pd.MultiIndex.from_product(rows, names=row_names)
+    if len(columns) == 0: #check if no index
+        col_index=[0]
+    elif not any(isinstance(i, (list, np.ndarray,object)) for i in columns): #check if nested list
+        col_index = columns
+    elif len(columns)==1: #check if nested list with one element eg dont need to create multiindex
+        col_index = columns[0]
+    else:
+        col_index = pd.MultiIndex.from_product(columns, names=column_names)
     return pd.DataFrame(data, index=row_index, columns=col_index)
 
 

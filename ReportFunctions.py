@@ -27,7 +27,7 @@ def f_errors(r_vals, exp_data_index, trial_outdated, trials):
         raise exc.TrialError('''Trials for reporting don't all exist''')
     ##second check if generating results using out of date data.
     outdatedbool = trial_outdated.loc[exp_data_index[trials]]  # have to use the trial name because the order is different
-    if any(trial_outdated.loc[exp_data_index[trials]]):  # have to use the trial name because the order is different
+    if any(outdatedbool):  # have to use the trial name because the order is different
         print('''
 
               Generating reports from out dated data: Trial %s
