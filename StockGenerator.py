@@ -394,8 +394,8 @@ def generator(params,r_vals,plots = False):
     wean_oa1e1b1nwzida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['i_wean_og1'],'dams',p_pos, condition=mask_o_dams, axis=p_pos) #need axis up to p so that p association can be applied
     ##association between offspring and sire/dam (used to determine the wean age of sire and dams based on the inputted wean age of offs)
     a_g0_g1 = sfun.f_g2g(pinp.sheep['ia_g0_g1'],'dams')
-    a_g3_g0 = sfun.f_g2g(pinp.sheep['ia_g3_g0'],'sire')
-    a_g3_g1 = sfun.f_g2g(pinp.sheep['ia_g3_g1'],'dams')
+    a_g3_g0 = sfun.f_g2g(pinp.sheep['ia_g3_g0'],'sire')  # the sire association (pure bred B, M & T) are all based on purebred B because there are no pure bred M & T inputs
+    a_g3_g1 = sfun.f_g2g(pinp.sheep['ia_g3_g1'],'dams')  # if BMT exist then BBM exist and they will be in slice 1, therefore the association value doesn't need to be adjusted for "prior exclusions"
     ##age weaning- used to calc wean date and also to calc m1 stuff, sire and dams have no active a0 slice therefore just take the first slice
     age_wean1st_a0e0b0xyg3 = sfun.f_g2g(pinp.sheep['i_age_wean_a0g3'],'offs',a0_pos).astype('timedelta64[D]')[pinp.sheep['i_mask_a']]
     age_wean1st_e0b0xyg0 = np.rollaxis(age_wean1st_a0e0b0xyg3[0, ...,a_g3_g0],0,age_wean1st_a0e0b0xyg3.ndim-1) #when you slice one slice of the array and also take multiple slices from another axis the axis with multiple slices jumps to the front therefore need to roll the g axis back to the end
@@ -4181,7 +4181,10 @@ def generator(params,r_vals,plots = False):
 
     ###npw required by prog activity
     ####mask numbers req (also used for prog2dams) - The progeny decision variable can be masked for gender and dam age for t[1] (t[1] are those that get transferred to dams). Gender only requires females, and the age of the dam only requires those that contribute to the initial age structure.
-    mask_prog_tdx_tva1e1b1nwzida0e0b0xyg2w9 = np.logical_or((index_tva1e1b1nwzida0e0b0xyg2w9 != 1), np.logical_and((gender_xyg[mask_x] == 1)[...,na] , (agedam_propn_da0e0b0xyg1 > 0)[...,na]))
+    mask_prog_tdx_tva1e1b1nwzida0e0b0xyg2w9 = np.logical_or((index_tva1e1b1nwzida0e0b0xyg2w9 != 1),
+                                                            np.logical_and((gender_xyg[mask_x] == 1)[...,na] ,
+                                                                           (agedam_propn_da0e0b0xyg1 > 0)[...,na]),
+                                                                           (np.isin(index_g1, a_g1_g2)))
     numbers_prog_req_tva1e1b1nwzida0e0b0xyg2w9 = 1 * mask_prog_tdx_tva1e1b1nwzida0e0b0xyg2w9
 
     ##transfer progeny to dam replacements
