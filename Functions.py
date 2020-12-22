@@ -514,7 +514,7 @@ def f_update_sen(row, exp_data, sam, saa, sap, sar, sat, sav):
 
         ##value needs to be single ie dont want a single value series (for some reason sometimes we are getting series)
         if isinstance(value, pd.Series):
-            value.squeeze()
+            value = value.squeeze()
 
         ##change indx to str so the following if statements work
         indx = str(indx) #change to string because sometimes blank is read in as nan
