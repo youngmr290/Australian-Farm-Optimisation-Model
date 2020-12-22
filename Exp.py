@@ -96,7 +96,7 @@ exp_data1 = fun.f_run_required(prev_exp, exp_data1)
 total_trials=sum(exp_data.index[row][0] == True for row in range(len(exp_data)))
 print('Number of trials to run: ',total_trials)
 print('Number of full solutions: ',sum((exp_data.index[row][1] == True) and (exp_data.index[row][0] == True) for row in range(len(exp_data))))
-print('Exp.xlsx last saved: ',datetime.fromtimestamp(round(os.path.getmtime("Exp.xlsx"))))
+print('exp.xlsx last saved: ',datetime.fromtimestamp(round(os.path.getmtime("exp.xlsx"))))
 start_time1 = time.time()
 run=0 #counter to work out average time per loop
 for row in range(len(exp_data)):

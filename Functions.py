@@ -511,7 +511,14 @@ def f_update_sen(row, exp_data, sam, saa, sap, sar, sat, sav):
     for dic,key1,key2,indx in exp_data:
         ##extract current value
         value = exp_data.loc[exp_data.index[row], (dic,key1,key2,indx)]
+
+        ##value needs to be single ie dont want a single value series (for some reason sometimes we are getting series)
+        if isinstance(value, pd.Series):
+            value.squeeze()
+
+        ##change indx to str so the following if statements work
         indx = str(indx) #change to string because sometimes blank is read in as nan
+
         ##checks if both slice and key2 exists
         if not ('Unnamed' in indx  or 'nan' in indx or 'Unnamed' in key2):
             indices = tuple(slice(*(int(i) if i else None for i in part.strip().split(':'))) for part in indx.split(',')) #creats a slice object from a string - note slice objects are not inclusive ie to select the first number it should look like [0:1]

@@ -3933,7 +3933,7 @@ def generator(params,r_vals,plots = False):
     ''' Mask numbers transferred - these mask stops dams transferring to different sires between dvps that are not prejoining'''
     ##dams
     temporary = (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na, :]
-    mask_numbers_provt_tpa1e1b1nwzida0e0b0xyg1g9 = fun.f_update(temporary, temporary*(a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na],
+    mask_numbers_provt_tva1e1b1nwzida0e0b0xyg1g9 = fun.f_update(temporary, temporary*(a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na],
                                          dvp_type_next_tva1e1b1nwzida0e0b0xyg1[..., na] != 0) * transfer_exists_tpa1e1b1nwzida0e0b0xyg1[..., na]
     temporary = (index_g9 == index_g1g)
     mask_numbers_reqt_tpa1e1b1nwzida0e0b0xyg1g9 = fun.f_update(temporary, temporary*(index_g1g == a_g1_tpa1e1b1nwzida0e0b0xyg1[...,na,:]), dvp_type_va1e1b1nwzida0e0b0xyg1[...,na] != 0)
@@ -4052,7 +4052,7 @@ def generator(params,r_vals,plots = False):
     numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_divide(
           np.sum(numbers_end_va1e1b1nwzida0e0b0xyg1[..., na,na]
                 * mask_numbers_provw8w9_tva1e1b1nw8zida0e0b0xyg1w9[..., na,:]
-                * mask_numbers_provt_tpa1e1b1nwzida0e0b0xyg1g9[..., na]
+                * mask_numbers_provt_tva1e1b1nwzida0e0b0xyg1g9[..., na]
                 * mask_numbers_provdry_k28k29tva1e1b1nwzida0e0b0xyg1[...,na,na]
                 * distribution_tva1e1b1nw8zida0e0b0xyg1w9[..., na,:]
                 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k28k29tva1e1b1nwzida0e0b0xyg1)[..., na,na]                #The numerator has both k2 with g9 axis and without. One to reflect the decision variable (k28) and one for the constraint (k29). So I think this is all good
