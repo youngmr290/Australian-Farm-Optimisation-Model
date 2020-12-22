@@ -302,7 +302,7 @@ def generator(params,r_vals,plots = False):
     o_fd_min_dams = np.zeros(pg1, dtype =dtype)
     o_rc_start_dams = np.zeros(pg1, dtype =dtype)
     o_ebg_dams = np.zeros(pg1, dtype =dtype)
-    o_n_sire_a1e1b1nwzida0e0b0xyg1g0p8 = np.zeros((len_p, 1, 1, 1, 1, 1, len_z, len_i, 1, 1, 1, 1, 1, len_y1, len_g1,len_g0,len_p8), dtype =dtype)
+    o_n_sire_pa1e1b1nwzida0e0b0xyg1g0p8 = np.zeros((len_p, 1, 1, 1, 1, 1, len_z, len_i, 1, 1, 1, 1, 1, len_y1, len_g1,len_g0,len_p8), dtype =dtype)
     ###arrays for report variables
     r_compare_q0q1q2pdams = np.zeros(qg1, dtype = dtype) #empty arrays to store different return values from the equation systems in the p loop.
     r_foo_dams = np.zeros(pg1, dtype = dtype)
@@ -861,7 +861,8 @@ def generator(params,r_vals,plots = False):
     pasture_stage_pa1e1b1j0wzida0e0b0xyg = pasture_stage_p6a1e1b1j0wzida0e0b0xyg[a_p6_p,...]
     ##mating
     sire_propn_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(sire_propn_oa1e1b1nwzida0e0b0xyg1,a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1,0) #np.take_along uses the number in the second array as the index for the first array. and returns a same shaped array
-    sire_propn_pa1e1b1nwzida0e0b0xyg1g0=sire_propn_pa1e1b1nwzida0e0b0xyg1[..., na] * (a_g0_g1[:,na] == index_g0)
+    sire_include_idx = np.arange(len(mask_sire_inc_g0))[mask_sire_inc_g0]
+    sire_propn_pa1e1b1nwzida0e0b0xyg1g0=sire_propn_pa1e1b1nwzida0e0b0xyg1[..., na] * (a_g0_g1[:,na] == sire_include_idx)
  #add g0 axis
     ##weather
     ws_pa1e1b1nwzida0e0b0xyg = ws_m4a1e1b1nwzida0e0b0xyg[a_m4_p]
@@ -1831,7 +1832,8 @@ def generator(params,r_vals,plots = False):
             ###EVG Size factor (increases at maturity)
             z2f_dams = np.clip((relsize1_start_dams - cg_dams[6, ...]) / (cg_dams[7, ...] - cg_dams[6, ...]), 0 ,1)
             ##sires for mating
-            n_sire_a1e1b1nwzida0e0b0xyg1g0p8 = sfun.f_sire_req(sire_propn_pa1e1b1nwzida0e0b0xyg1g0[p], sire_periods_g0p8, pinp.sheep['i_sire_recovery'], pinp.sheep['i_startyear'], date_end_pa1e1b1nwzida0e0b0xyg[p], period_is_join_pa1e1b1nwzida0e0b0xyg1[p])
+            n_sire_a1e1b1nwzida0e0b0xyg1g0p8 = sfun.f_sire_req(sire_propn_pa1e1b1nwzida0e0b0xyg1g0[p], sire_periods_g0p8, pinp.sheep['i_sire_recovery'],
+                                                               pinp.sheep['i_startyear'], date_end_pa1e1b1nwzida0e0b0xyg[p], period_is_join_pa1e1b1nwzida0e0b0xyg1[p])
 
 
     ##offs
@@ -2824,7 +2826,7 @@ def generator(params,r_vals,plots = False):
             o_fd_dams[p] = fd_dams
             o_fd_min_dams[p] = fd_min_dams
             o_ss_dams[p] = ss_dams
-            o_n_sire_a1e1b1nwzida0e0b0xyg1g0p8[p] = n_sire_a1e1b1nwzida0e0b0xyg1g0p8
+            o_n_sire_pa1e1b1nwzida0e0b0xyg1g0p8[p] = n_sire_a1e1b1nwzida0e0b0xyg1g0p8
             o_rc_start_dams[p] = rc_start_dams
             o_ebg_dams[p] = ebg_dams
 
@@ -3734,7 +3736,7 @@ def generator(params,r_vals,plots = False):
                                            , a_any2_p=a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p], index_any2any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,na,...])
 
     ##every period - with sire periods
-    nsire_tva1e1b1nwzida0e0b0xyg1g0p8 = sfun.f_p2v_std(o_n_sire_a1e1b1nwzida0e0b0xyg1g0p8, a_v_pa1e1b1nwzida0e0b0xyg1[...,na,na], index_vpa1e1b1nwzida0e0b0xyg1[...,na,na]
+    nsire_tva1e1b1nwzida0e0b0xyg1g0p8 = sfun.f_p2v_std(o_n_sire_pa1e1b1nwzida0e0b0xyg1g0p8, a_v_pa1e1b1nwzida0e0b0xyg1[...,na,na], index_vpa1e1b1nwzida0e0b0xyg1[...,na,na]
                                                , o_numbers_end_dams[...,na,na], on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...,na,na], sumadj=2)
 
 

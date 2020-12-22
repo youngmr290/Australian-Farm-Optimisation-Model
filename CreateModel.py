@@ -123,7 +123,7 @@ model.s_phases = Set(initialize=uinp.structure['phases'].index, doc='rotation ph
 # model.s_phases_dis.pprint()
 
 ##con1 set
-s_rotcon1 = pd.read_excel('Rotation.xlsx', sheet_name='rotation con1 set', header= None, index_col = 0)
+s_rotcon1 = pd.read_excel('Rotation.xlsx', sheet_name='rotation con1 set', header= None, index_col = 0, engine='openpyxl')
 model.s_rotconstraints = Set(initialize=s_rotcon1.index, doc='rotation constraints histories')
 # model.s_rotconstraints.pprint()
 

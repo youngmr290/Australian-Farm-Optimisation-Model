@@ -39,7 +39,7 @@ def rot_params(params):
     #############################
     #rotation phase constraint1 #
     #############################    
-    rot_con1 = pd.read_excel('Rotation.xlsx', sheet_name='rotation con1', header= None)#, index_col = [0,1]) #couldn't get it to read in with multiindex for some reason
+    rot_con1 = pd.read_excel('Rotation.xlsx', sheet_name='rotation con1', header= None, engine='openpyxl')#, index_col = [0,1]) #couldn't get it to read in with multiindex for some reason
     params['hist'] =rot_con1.iloc[:,1] # this is a list of each history for each rotation in con1.
     rot_con1 = rot_con1.set_index([0,1])
     params['rot_con1'] =rot_con1.squeeze().to_dict()

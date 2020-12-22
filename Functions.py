@@ -477,7 +477,7 @@ def f_run_required(prev_exp, exp_data1, check_pyomo=True):
         newest = sorted_list[-2]
     else:
         newest = sorted_list[-3]
-    newest_pyomo = max(glob.iglob('*pyomo.py'), key=os.path.getmtime)
+    newest_pyomo = max(glob.iglob('*Pyomo.py'), key=os.path.getmtime)
 
     try: #in case pkl_exp doesn't exist
         ###if headers are the same, code is the same and the excel inputs are the same then test if the values in exp.xlsx are the same
@@ -502,15 +502,76 @@ def f_run_required(prev_exp, exp_data1, check_pyomo=True):
     return exp_data1
 
 def f_read_exp():
-    exp_data = pd.read_excel('exp.xlsx', index_col=None, header=[0,1,2,3])
+    exp_data = pd.read_excel('exp.xlsx', index_col=None, header=[0,1,2,3], engine='openpyxl')
     exp_data = exp_data.iloc[:,exp_data.columns.get_level_values(0)!='Drop']
     exp_data = exp_data.set_index(list(exp_data.columns[0:3]))
-
-    # exp_data = pd.read_excel('exp.xlsx', index_col=None, header=None)
-    # exp_data = exp_data.loc[:,exp_data.loc[0,:]!='Drop']
-    # exp_data = exp_data.set_index(list(exp_data.columns[0:3]))
-    # exp_data = exp_data.T.set_index(list(exp_data.T.columns[0:4])).T
     return exp_data
+
+def f_update_sen(row, exp_data, sam, saa, sap, sar, sat, sav):
+    for dic,key1,key2,indx in exp_data:
+        ##extract current value
+        value = exp_data.loc[exp_data.index[row], (dic,key1,key2,indx)]
+        indx = str(indx) #change to string because sometimes blank is read in as nan
+        ##checks if both slice and key2 exists
+        if not ('Unnamed' in indx  or 'nan' in indx or 'Unnamed' in key2):
+            indices = tuple(slice(*(int(i) if i else None for i in part.strip().split(':'))) for part in indx.split(',')) #creats a slice object from a string - note slice objects are not inclusive ie to select the first number it should look like [0:1]
+            if dic == 'sam':
+                sam[(key1,key2)][indices]=value
+            elif dic == 'saa':
+                saa[(key1,key2)][indices]=value
+            elif dic == 'sap':
+                sap[(key1,key2)][indices]=value
+            elif dic == 'sar':
+                sar[(key1,key2)][indices]=value
+            elif dic == 'sat':
+                sat[(key1,key2)][indices]=value
+            elif dic == 'sav':
+                sav[(key1,key2)][indices]=value
+
+        ##checks if just slice exists
+        elif not ('Unnamed' in indx  or 'nan' in indx):
+            indices = tuple(slice(*(int(i) if i else None for i in part.strip().split(':'))) for part in indx.split(',')) #creats a slice object from a string - note slice objects are not inclusive ie to select the first number it should look like [0:1]
+            if dic == 'sam':
+                sam[key1][indices]=value
+            elif dic == 'saa':
+                saa[key1][indices]=value
+            elif dic == 'sap':
+                sap[key1][indices]=value
+            elif dic == 'sar':
+                sar[key1][indices]=value
+            elif dic == 'sat':
+                sat[key1][indices]=value
+            elif dic == 'sav':
+                sav[key1][indices]=value
+        ##checks if just key2 exists
+        elif not 'Unnamed' in key2:
+            if dic == 'sam':
+                sam[(key1,key2)]=value
+            elif dic == 'saa':
+                saa[(key1,key2)]=value
+            elif dic == 'sap':
+                sap[(key1,key2)]=value
+            elif dic == 'sar':
+                sar[(key1,key2)]=value
+            elif dic == 'sat':
+                sat[(key1,key2)]=value
+            elif dic == 'sav':
+                sav[(key1,key2)]=value
+        ##if just key1 exists
+        else:
+            if dic == 'sam':
+                sam[key1]=value
+            elif dic == 'saa':
+                saa[key1]=value
+            elif dic == 'sap':
+                sap[key1]=value
+            elif dic == 'sar':
+                sar[key1]=value
+            elif dic == 'sat':
+                sat[key1]=value
+            elif dic == 'sav':
+                sav[key1]=value
+
 
 ##check if two param dicts are the same.
 def findDiff(d1, d2):

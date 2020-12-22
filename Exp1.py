@@ -108,70 +108,9 @@ def exp(row):
 
     ##start timer for each loop
     start_time = time.time()
-    for dic,key1,key2,indx in exp_data:
-         ##extract current value
-         value = exp_data.loc[exp_data.index[row], (dic,key1,key2,indx)]
-         ##checks if both slice and key2 exists
-         if not ('Unnamed' in indx or 'Unnamed' in key2):
-             indices = tuple(slice(*(int(i) if i else None for i in part.strip().split(':'))) for part in indx.split(
-                 ','))  # creates a slice object from a string - note slice objects are not inclusive ie to select the first number it should look like [0:1]
-             if dic == 'sam':
-                 sen.sam[(key1, key2)][indices] = value
-             elif dic == 'saa':
-                 sen.saa[(key1, key2)][indices] = value
-             elif dic == 'sap':
-                 sen.sap[(key1, key2)][indices] = value
-             elif dic == 'sar':
-                 sen.sar[(key1, key2)][indices] = value
-             elif dic == 'sat':
-                 sen.sat[(key1, key2)][indices] = value
-             elif dic == 'sav':
-                 sen.sav[(key1, key2)][indices] = value
 
-         ##checks if just slice exists
-         elif not 'Unnamed' in indx:
-             indices = tuple(slice(*(int(i) if i else None for i in part.strip().split(':'))) for part in indx.split(
-                 ','))  # creates a slice object from a string - note slice objects are not inclusive ie to select the first number it should look like [0:1]
-             if dic == 'sam':
-                 sen.sam[key1][indices] = value
-             elif dic == 'saa':
-                 sen.saa[key1][indices] = value
-             elif dic == 'sap':
-                 sen.sap[key1][indices] = value
-             elif dic == 'sar':
-                 sen.sar[key1][indices] = value
-             elif dic == 'sat':
-                 sen.sat[key1][indices] = value
-             elif dic == 'sav':
-                 sen.sav[key1][indices] = value
-         ##checks if just key2 exists
-         elif not 'Unnamed' in key2:
-             if dic == 'sam':
-                 sen.sam[(key1, key2)] = value
-             elif dic == 'saa':
-                 sen.saa[(key1, key2)] = value
-             elif dic == 'sap':
-                 sen.sap[(key1, key2)] = value
-             elif dic == 'sar':
-                 sen.sar[(key1, key2)] = value
-             elif dic == 'sat':
-                 sen.sat[(key1, key2)] = value
-             elif dic == 'sav':
-                 sen.sav[(key1, key2)] = value
-         ##if just key1 exists
-         else:
-             if dic == 'sam':
-                 sen.sam[key1] = value
-             elif dic == 'saa':
-                 sen.saa[key1] = value
-             elif dic == 'sap':
-                 sen.sap[key1] = value
-             elif dic == 'sar':
-                 sen.sar[key1] = value
-             elif dic == 'sat':
-                 sen.sat[key1] = value
-             elif dic == 'sav':
-                 sen.sav[key1] = value
+    ##updaye sensitivity values
+    fun.f_update_sen(row,exp_data,sen.sam,sen.saa,sen.sap,sen.sar,sen.sat,sen.sav)
 
     ##call sa functions - assigns sa variables to relevant inputs
     uinp.universal_inp_sa()

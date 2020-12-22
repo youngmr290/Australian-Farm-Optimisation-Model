@@ -501,7 +501,7 @@ structure['num_prev_phase']=1
 structure['phase_len'] = 6
 
 #rotation phases and constraints read in from excel 
-structure['phases'] = pd.read_excel('Rotation.xlsx', sheet_name='rotation list', header= None, index_col = 0).T.reset_index(drop=True).T  #reset the col headers to std ie 0,1,2 etc
+structure['phases'] = pd.read_excel('Rotation.xlsx', sheet_name='rotation list', header= None, index_col = 0, engine='openpyxl').T.reset_index(drop=True).T  #reset the col headers to std ie 0,1,2 etc
 
 
 
