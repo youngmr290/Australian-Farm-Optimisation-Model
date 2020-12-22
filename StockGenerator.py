@@ -4190,8 +4190,8 @@ def generator(params,r_vals,plots = False):
 
     ###npw required by prog activity
     ####mask numbers req (also used for prog2dams) - The progeny decision variable can be masked for gender and dam age for t[1] (t[1] are those that get transferred to dams). Gender only requires females, and the age of the dam only requires those that contribute to the initial age structure.
-    mask_prog_tdx_tva1e1b1nwzida0e0b0xyg2w9 = np.logical_or(np.logical_or((index_tva1e1b1nwzida0e0b0xyg2w9 != 1),
-                                                            np.logical_and((gender_xyg[mask_x] == 1)[...,na] ,
+    mask_prog_tdx_tva1e1b1nwzida0e0b0xyg2w9 = np.logical_or((index_tva1e1b1nwzida0e0b0xyg2w9 != 1),
+                                                            np.logical_and(np.logical_and((gender_xyg[mask_x] == 1)[...,na] ,
                                                                            (agedam_propn_da0e0b0xyg1 > 0)[...,na]),
                                                                            np.isin(index_g1, a_g1_g2)[...,na]))
     numbers_prog_req_tva1e1b1nwzida0e0b0xyg2w9 = 1 * mask_prog_tdx_tva1e1b1nwzida0e0b0xyg2w9
