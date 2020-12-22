@@ -203,7 +203,7 @@ def stockpyomo_local(params):
         model.del_component(model.p_npw_req)
     except AttributeError:
         pass
-    model.p_npw_req = pe.Param(model.s_sale_prog, model.s_damage, model.s_gender,
+    model.p_npw_req = pe.Param(model.s_sale_prog, model.s_damage, model.s_gender, model.s_groups_prog,
                               initialize=params['p_npw_req_prog'], default=0.0, doc='number of yatf required by the prog activity')
     try:
         model.del_component(model.p_progprov_dams_index)
@@ -234,7 +234,7 @@ def stockpyomo_local(params):
         model.del_component(model.p_progreq_offs)
     except AttributeError:
         pass
-    model.p_progreq_offs = pe.Param(model.s_dvp_offs, model.s_lw_offs, model.s_tol, model.s_gender, model.s_groups_offs, model.s_lw_offs,
+    model.p_progreq_offs = pe.Param(model.s_dvp_offs, model.s_lw_offs, model.s_tol, model.s_gender, model.s_lw_offs,
                               initialize=params['p_progreq_offs'], default=0.0, doc='number of prodgeny required by dams')
 
 
@@ -696,11 +696,11 @@ def stockpyomo_local(params):
     except AttributeError:
         pass
     def progR(model, k5, a, z, i9, d, x, y1, g1, w9):
-        if any(model.p_npw_req[t2,d,x] for t2 in model.s_sale_prog):
+        if any(model.p_npw_req[t2,d,x,g1] for t2 in model.s_sale_prog):
             return (- sum(model.v_dams[k5, t1, v1, a, n1, w18, z, i, y1, g1]  * model.p_npw[k5, t1, v1, a, n1, w18, z, i, d, x, y1, g1, w9, i9] #pass in the k5 set to dams - each slice of k5 alings with a slice in k2 eg 11 and 22. we dont need other k2 slices eg nm
                         for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams for w18 in model.s_lw_dams for i in model.s_tol
                              if model.p_npw[k5, t1, v1, a, n1, w18, z, i, d, x, y1, g1, w9, i9]!=0)
-                    + sum(model.v_prog[k5, t2, w9, z, i9, d, a, x, g1] * model.p_npw_req[t2,d,x] for t2 in model.s_sale_prog if model.p_npw_req[t2,d,x]!=0))<=0
+                    + sum(model.v_prog[k5, t2, w9, z, i9, d, a, x, g1] * model.p_npw_req[t2,d,x,g1] for t2 in model.s_sale_prog if model.p_npw_req[t2,d,x,g1]!=0))<=0
         else:
             return pe.Constraint.Skip
     # def progR(model, k5, a, z, i9, d, x, y1, g1, w9):
@@ -746,12 +746,12 @@ def stockpyomo_local(params):
     except AttributeError:
         pass
     def prog2offsR(model, k3, k5, v3, z, i, a, x, y3, g3, w9):
-        if v3=='dvp0' and any(model.p_progreq_offs[v3, w38, i, x, g3, w9] for w38 in model.s_lw_offs):
+        if v3=='dvp0' and any(model.p_progreq_offs[v3, w38, i, x, w9] for w38 in model.s_lw_offs):
             return (sum(- model.v_prog[k5, t2, w28, z, i, d, a, x, g3] * model.p_progprov_offs[k3, k5, t2, w28, z, i, d, a, x, y3, g3, w9] #use g3 (same as g2)
                         for d in model.s_damage for w28 in model.s_lw_prog for t2 in model.s_sale_prog
                         if model.p_progprov_offs[k3, k5, t2, w28, z, i, d, a, x, y3, g3, w9]!= 0)
-                       + sum(model.v_offs[k3,k5,t3,v3,n3,w38,z,i,a,x,y3,g3]  * model.p_progreq_offs[v3, w38, i, x, g3, w9]
-                        for t3 in model.s_sale_offs for n3 in model.s_nut_dams for w38 in model.s_lw_offs if model.p_progreq_offs[v3, w38, i, x, g3, w9]!= 0))<=0
+                       + sum(model.v_offs[k3,k5,t3,v3,n3,w38,z,i,a,x,y3,g3]  * model.p_progreq_offs[v3, w38, i, x, w9]
+                        for t3 in model.s_sale_offs for n3 in model.s_nut_dams for w38 in model.s_lw_offs if model.p_progreq_offs[v3, w38, i, x, w9]!= 0))<=0
         else:
             return pe.Constraint.Skip
     start = time.time()

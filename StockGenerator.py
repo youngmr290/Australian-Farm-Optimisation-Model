@@ -100,7 +100,7 @@ def generator(params,r_vals,plots = False):
     ######################
     ## define the periods - default (dams and sires)
     sim_years = uinp.structure['i_age_max']
-    # sim_years = 3
+    # sim_years = 4
     sim_years_offs = min(uinp.structure['i_age_max_offs'], sim_years)
     n_sim_periods, date_start_p, date_end_p, p_index_p, step \
     = sfun.sim_periods(pinp.sheep['i_startyear'], uinp.structure['i_sim_periods_year'], sim_years)
@@ -3277,9 +3277,9 @@ def generator(params,r_vals,plots = False):
     ###transfer
     a_g1_tpa1e1b1nwzida0e0b0xyg1 = sfun.f_g2g(uinp.structure['ia_g1_tg1'], 'dams', p_pos-1)
     transfer_exists_tpa1e1b1nwzida0e0b0xyg1 = sfun.f_g2g(uinp.structure['i_transfer_exists_tg1'], 'dams', p_pos-1)
-    #### adjust the pointers for excluded dams
-    prior_dams_excluded_g1 = np.cumsum(~mask_dams_inc_g1)[mask_dams_inc_g1]
-    a_g1_tpa1e1b1nwzida0e0b0xyg1 = a_g1_tpa1e1b1nwzida0e0b0xyg1 - prior_dams_excluded_g1
+    #### adjust the pointers for excluded sires (t axis starts as just the sires eg dams transfer to different sire type)
+    prior_sire_excluded_tpa1e1b1nwzida0e0b0xyg0 = fun.f_reshape_expand(np.cumsum(~mask_sire_inc_g0), p_pos-1) #put the g0 axis in the t position
+    a_g1_tpa1e1b1nwzida0e0b0xyg1 = a_g1_tpa1e1b1nwzida0e0b0xyg1 - prior_sire_excluded_tpa1e1b1nwzida0e0b0xyg0
     ####mask inputs for g0
     transfer_exists_tpa1e1b1nwzida0e0b0xyg1 = transfer_exists_tpa1e1b1nwzida0e0b0xyg1[mask_sire_inc_g0]
     a_g1_tpa1e1b1nwzida0e0b0xyg1 = a_g1_tpa1e1b1nwzida0e0b0xyg1[mask_sire_inc_g0]
@@ -3853,7 +3853,7 @@ def generator(params,r_vals,plots = False):
     a_k2cluster_va1e1b1nwzida0e0b0xyg1 = np.sum(a_ppk2g1_va1e1b1nwzida0e0b0xygsl * (gbal_va1e1b1nwzida0e0b0xyg1[...,na,na]==index_l) * (scan_va1e1b1nwzida0e0b0xyg1[...,na,na]==index_s[:,na]), axis = (-1,-2))
     a_k2cluster_va1e1b1nwzida0e0b0xyg1 = a_k2cluster_va1e1b1nwzida0e0b0xyg1 + (len(uinp.structure['a_nfoet_b1']) * index_e1b1nwzida0e0b0xyg * (scan_va1e1b1nwzida0e0b0xyg1 == 4) * (nfoet_b1nwzida0e0b0xyg >= 1)) #If scanning for foetal age add 10 to the animals in the second & subsequent cycles that were scanned as pregnant (nfoet_b1 >= 1)
     ### Cluster with a t axis required for k29 which is associated with tvgg9. na to put result in g9 axis
-    a_k2cluster_tva1e1b1nwzida0e0b0xyg1g9 = np.take_along_axis(a_k2cluster_va1e1b1nwzida0e0b0xyg1[na], a_g1_tpa1e1b1nwzida0e0b0xyg1, axis=0)[..., na, :]
+    a_k2cluster_tva1e1b1nwzida0e0b0xyg1g9 = np.take_along_axis(a_k2cluster_va1e1b1nwzida0e0b0xyg1[na], a_g1_tpa1e1b1nwzida0e0b0xyg1, axis=-1)[..., na, :]
     ### a temporary array that is the cluster at prejoining with not mated (0) and mated (1) along the b1 axis
     temporary = np.ones_like(a_k2cluster_tva1e1b1nwzida0e0b0xyg1g9)
     temporary[:,:,:,:,0,...] = 0
@@ -4038,7 +4038,7 @@ def generator(params,r_vals,plots = False):
     ###########################
     number_param_start = time.time()
     ##number of sires available at mating - sire
-    numbers_startp8_va1e1b1nwzida0e0b0xyg0p8 = sfun.f_create_production_param('sire', numbers_startp8_va1e1b1nwzida0e0b0xyg0p8, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
+    numbers_startp8_va1e1b1nwzida0e0b0xyg0p8 = sfun.f_create_production_param('sire', numbers_startp8_va1e1b1nwzida0e0b0xyg0p8, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0[...,na])
     ##number of sires for required for mating - dams
     nsire_k2tva1e1b1nwzida0e0b0xyg1g0p8 = sfun.f_create_production_param('dams', nsire_tva1e1b1nwzida0e0b0xyg1g0p8, a_k2cluster_va1e1b1nwzida0e0b0xyg1[...,na,na], index_k2tva1e1b1nwzida0e0b0xyg1[...,na,na],
                                                                  numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1[...,na,na], mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1[...,na,na], pos_offset=2)
@@ -4544,9 +4544,9 @@ def generator(params,r_vals,plots = False):
     arrays = [keys_k5, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_d, keys_x, keys_y1, keys_g1, keys_lw_prog, keys_i]
     index_k5tva1nw8zidxyg1w9i9 = fun.cartesian_product_simple_transpose(arrays)
 
-    ###tdx - npw req
-    arrays = [keys_t2, keys_d, keys_x]
-    index_tdx = fun.cartesian_product_simple_transpose(arrays)
+    ###tdxg - npw req
+    arrays = [keys_t2, keys_d, keys_x, keys_g2]
+    index_tdxg = fun.cartesian_product_simple_transpose(arrays)
 
     ###k3tvw8zidaxyg2g9w9 - prog to dams prov
     arrays = [keys_k3, keys_t2, keys_lw_prog, keys_z, keys_i, keys_d, keys_a, keys_x, keys_y1, keys_g2, keys_g1, keys_lw1]
@@ -4561,9 +4561,9 @@ def generator(params,r_vals,plots = False):
     index_k2k3k5w8ziyg1g9w9 = fun.cartesian_product_simple_transpose(arrays)
 
 
-    ###w8g3w9 - prog to offs req
-    arrays = [keys_v3, keys_lw3, keys_i, keys_x, keys_g3, keys_lw3]
-    index_vw8ixg3w9 = fun.cartesian_product_simple_transpose(arrays)
+    ###vw8ixw9 - prog to offs req
+    arrays = [keys_v3, keys_lw3, keys_i, keys_x, keys_lw3]
+    index_vw8ixw9 = fun.cartesian_product_simple_transpose(arrays)
 
     ###k2k2tvanwziyg1g9w9 - numbers dams
     arrays = [keys_k2, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1, keys_g1, keys_lw1]
@@ -4665,11 +4665,11 @@ def generator(params,r_vals,plots = False):
 
     ###npw required by prog activity
     mask=numbers_prog_req_tva1e1b1nwzida0e0b0xyg2w9!=0
-    npw_tdx = numbers_prog_req_tva1e1b1nwzida0e0b0xyg2w9[mask] #applying the mask does the raveling and squeezing of singleton axis
+    npw_tdxg = numbers_prog_req_tva1e1b1nwzida0e0b0xyg2w9[mask] #applying the mask does the raveling and squeezing of singleton axis
     mask=mask.ravel()
-    index_cut_tdx=index_tdx[mask,:]
-    tup_tdx = tuple(map(tuple, index_cut_tdx))
-    params['p_npw_req_prog'] =dict(zip(tup_tdx, npw_tdx))
+    index_cut_tdxg=index_tdxg[mask,:]
+    tup_tdxg = tuple(map(tuple, index_cut_tdxg))
+    params['p_npw_req_prog'] =dict(zip(tup_tdxg, npw_tdxg))
 
     ###number prog provided to dams
     mask=numbers_prog2dams_k3tva1e1b1nwzida0e0b0xyg2g9w9!=0
@@ -4697,11 +4697,11 @@ def generator(params,r_vals,plots = False):
 
     ###number prog require by offs
     mask=numbers_progreq_va1e1b1nw8zida0e0b0xyg3w9!=0
-    progreq_vw8ixg3w9 = numbers_progreq_va1e1b1nw8zida0e0b0xyg3w9[mask] #applying the mask does the raveling and squeezing of singleton axis
+    progreq_vw8ixw9 = numbers_progreq_va1e1b1nw8zida0e0b0xyg3w9[mask] #applying the mask does the raveling and squeezing of singleton axis
     mask=mask.ravel()
-    index_cut_vw8ixg3w9=index_vw8ixg3w9[mask,:]
-    tup_vw8ixg3w9 = tuple(map(tuple, index_cut_vw8ixg3w9))
-    params['p_progreq_offs'] =dict(zip(tup_vw8ixg3w9, progreq_vw8ixg3w9))
+    index_cut_vw8ixw9=index_vw8ixw9[mask,:]
+    tup_vw8ixw9 = tuple(map(tuple, index_cut_vw8ixw9))
+    params['p_progreq_offs'] =dict(zip(tup_vw8ixw9, progreq_vw8ixw9))
 
     ###numbers_prov_dams
     mask=numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9!=0
