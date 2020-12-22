@@ -143,7 +143,7 @@ def stubble_all(params):
         4) calcs the md of each stubble category (dmd to MD)
         
         '''    
-        stub_cat_component_proportion=pd.read_excel('Stubble Sim.xlsx',sheet_name=crop,header=None, engine='openpyxl')
+        stub_cat_component_proportion=pd.read_excel('stubble sim.xlsx',sheet_name=crop,header=None, engine='openpyxl')
         ##quality of each category in each period - muliply quality by proportion of components
         num_stub_cat = len( pinp.stubble['component_dmd'].loc[crop]) #determine number of cats
         comp_dmd_period=fp.iloc[:,-num_stub_cat:] #selects just the dmd from fp df for the crop of interest

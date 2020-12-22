@@ -100,7 +100,7 @@ def generator(params,r_vals,plots = False):
     ######################
     ## define the periods - default (dams and sires)
     sim_years = uinp.structure['i_age_max']
-    # sim_years = 4
+    sim_years = 4
     sim_years_offs = min(uinp.structure['i_age_max_offs'], sim_years)
     n_sim_periods, date_start_p, date_end_p, p_index_p, step \
     = sfun.sim_periods(pinp.sheep['i_startyear'], uinp.structure['i_sim_periods_year'], sim_years)
@@ -1133,7 +1133,10 @@ def generator(params,r_vals,plots = False):
     date_mated_pa1e1b1nwzida0e0b0xyg1 = date_joined_pa1e1b1nwzida0e0b0xyg1.astype('datetime64[D]') + (cf_dams[4, ..., 0:1, :] * (index_e1b1nwzida0e0b0xyg + 0.5)).astype('timedelta64[D]')
     ##Age of dam when first lamb is born
     agedam_lamb1st_a1e1b1nwzida0e0b0xyg3 = np.swapaxes(date_born1st_oa1e1b1nwzida0e0b0xyg2 - date_born1st_ida0e0b0xyg1,0,d_pos)[0,...] #replace the d axis with the o axis then remove the d axis by taking slice 0 (note the d axis was not active)
-    agedam_lamb1st_a1e1b1nwzida0e0b0xyg0 = np.compress(pinp.sheep['i_masksire_i'][pinp.sheep['i_mask_i']], agedam_lamb1st_a1e1b1nwzida0e0b0xyg3[...,a_g3_g0], i_pos) #have to mask masksire_i  because it needs to be the same length as i
+    if np.count_nonzero(pinp.sheep['i_mask_i']) > 1: #complicated by the fact that sire tol is not neccessarily the same as dams and off
+        agedam_lamb1st_a1e1b1nwzida0e0b0xyg0 = np.compress(pinp.sheep['i_masksire_i'], agedam_lamb1st_a1e1b1nwzida0e0b0xyg3[...,a_g3_g0], i_pos) #dont mask if both tol are included
+    else:
+        agedam_lamb1st_a1e1b1nwzida0e0b0xyg0 = np.compress(pinp.sheep['i_masksire_i'][pinp.sheep['i_masksire_i']], agedam_lamb1st_a1e1b1nwzida0e0b0xyg3[...,a_g3_g0], i_pos) #have to mask masksire_i  because it needs to be the same length as i
     agedam_lamb1st_a1e1b1nwzida0e0b0xyg1 = agedam_lamb1st_a1e1b1nwzida0e0b0xyg3[...,a_g3_g1]
     agedam_lamb1st_a1e1b1nwzida0e0b0xyg3 = np.compress(mask_d_offs, agedam_lamb1st_a1e1b1nwzida0e0b0xyg3, d_pos) #mask d axis (compress function masks a specific axis)
 
@@ -3932,9 +3935,15 @@ def generator(params,r_vals,plots = False):
     ################################################################
     ''' Mask numbers transferred - these mask stops dams transferring to different sires between dvps that are not prejoining'''
     ##dams
+    # temporary = (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na]
+    # mask_numbers_provt_tva1e1b1nwzida0e0b0xyg1g9 = fun.f_update(temporary, temporary * (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na, :],
+    #                                      dvp_type_next_va1e1b1nwzida0e0b0xyg1[..., na,:] != 0) * transfer_exists_tpa1e1b1nwzida0e0b0xyg1[..., na]
+    # temporary = (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na, :]
+    # mask_numbers_provt_tva1e1b1nwzida0e0b0xyg1g9 = fun.f_update(temporary, temporary * (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na],
+    #                                      dvp_type_next_tva1e1b1nwzida0e0b0xyg1[..., na] != 0) * transfer_exists_tpa1e1b1nwzida0e0b0xyg1[..., na]
     temporary = (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na, :]
-    mask_numbers_provt_tva1e1b1nwzida0e0b0xyg1g9 = fun.f_update(temporary, temporary*(a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na],
-                                         dvp_type_next_tva1e1b1nwzida0e0b0xyg1[..., na] != 0) * transfer_exists_tpa1e1b1nwzida0e0b0xyg1[..., na]
+    mask_numbers_provt_tva1e1b1nwzida0e0b0xyg1g9 = fun.f_update(temporary, temporary * (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na],
+                                         dvp_type_next_va1e1b1nwzida0e0b0xyg1[..., na] != 0) * transfer_exists_tpa1e1b1nwzida0e0b0xyg1[..., na]
     temporary = (index_g9 == index_g1g)
     mask_numbers_reqt_tpa1e1b1nwzida0e0b0xyg1g9 = fun.f_update(temporary, temporary*(index_g1g == a_g1_tpa1e1b1nwzida0e0b0xyg1[...,na,:]), dvp_type_va1e1b1nwzida0e0b0xyg1[...,na] != 0)
     ##0ffs
@@ -4181,10 +4190,10 @@ def generator(params,r_vals,plots = False):
 
     ###npw required by prog activity
     ####mask numbers req (also used for prog2dams) - The progeny decision variable can be masked for gender and dam age for t[1] (t[1] are those that get transferred to dams). Gender only requires females, and the age of the dam only requires those that contribute to the initial age structure.
-    mask_prog_tdx_tva1e1b1nwzida0e0b0xyg2w9 = np.logical_or((index_tva1e1b1nwzida0e0b0xyg2w9 != 1),
+    mask_prog_tdx_tva1e1b1nwzida0e0b0xyg2w9 = np.logical_or(np.logical_or((index_tva1e1b1nwzida0e0b0xyg2w9 != 1),
                                                             np.logical_and((gender_xyg[mask_x] == 1)[...,na] ,
-                                                                           (agedam_propn_da0e0b0xyg1 > 0)[...,na]),
-                                                                           (np.isin(index_g1, a_g1_g2)))
+                                                                           (agedam_propn_da0e0b0xyg1 > 0)[...,na])),
+                                                                           np.isin(index_g1, a_g1_g2)[...,na])
     numbers_prog_req_tva1e1b1nwzida0e0b0xyg2w9 = 1 * mask_prog_tdx_tva1e1b1nwzida0e0b0xyg2w9
 
     ##transfer progeny to dam replacements

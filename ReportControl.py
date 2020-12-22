@@ -12,7 +12,7 @@ import ReportFunctions as rep
 import Functions as fun
 
 ## Create a Pandas Excel writer using XlsxWriter as the engine. used to write to multiple sheets in excel
-writer = pd.ExcelWriter('Output\Report.xlsx',engine='xlsxwriter')
+writer = pd.ExcelWriter('Output/Report.xlsx',engine='xlsxwriter')
 
 ##read in exp log
 exp_data_nosort = fun.f_read_exp()
@@ -150,7 +150,7 @@ if run_profitarea:
     func1_option = 0
     trials = [32]
     plot = rep.f_xy_graph(func0, func1, lp_vars, r_vals, trial_outdated, exp_data_index, trials, func0_option, func1_option)
-    plot.savefig('Output\profitarea_curve.png')
+    plot.savefig('Output/profitarea_curve.png')
 
 if run_saleprice:
     func = rep.f_price_summary

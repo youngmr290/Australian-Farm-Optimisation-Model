@@ -184,10 +184,10 @@ def exp(row):
         ##check if user wants full solution
         if exp_data.index[row][1] == True:
             ##make lp file
-            model.write('Output\%s.lp' %exp_data.index[row][2],io_options={'symbolic_solver_labels':True})  #file name has to have capital
+            model.write('Output/%s.lp' %exp_data.index[row][2],io_options={'symbolic_solver_labels':True})  #file name has to have capital
             
             ##write rc and dual to txt file
-            with open('Output\Rc and Duals - %s.txt' %exp_data.index[row][2],'w') as f:  #file name has to have capital
+            with open('Output/Rc and Duals - %s.txt' %exp_data.index[row][2],'w') as f:  #file name has to have capital
                 f.write('RC\n')        
                 for v in model.component_objects(pe.Var, active=True):
                     f.write("Variable %s\n" %v)   #  \n makes new line
@@ -203,12 +203,12 @@ def exp(row):
                         print("      ", index, model.dual[c[index]], file=f)
                         # except: pass 
             ##prints what you see from pprint to txt file - you can see the slack on constraints but not the rc or dual
-            with open('Output\Full model - %s.txt' %exp_data.index[row][2], 'w') as f:  #file name has to have capital
+            with open('Output/Full model - %s.txt' %exp_data.index[row][2], 'w') as f:  #file name has to have capital
                 f.write("My description of the instance!\n")
                 model.display(ostream=f)
     
         ##This writes variable with value greater than 1 to txt file, the file is overwritten each time - used to check stuff out each iteration if you want 
-        file = open('Output\Variable summary.txt','w') #file name has to have capital
+        file = open('Output/Variable summary.txt','w') #file name has to have capital
         file.write('Trial: %s\n'%exp_data.index[row][2]) #the first line is the name of the trial
         for v in model.component_objects(pe.Var, active=True):
             file.write("Variable %s\n" %v)   #  \n makes new line
