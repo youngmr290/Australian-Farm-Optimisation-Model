@@ -583,6 +583,14 @@ def f_update_sen(row, exp_data, sam, saa, sap, sar, sat, sav):
 ##check if two param dicts are the same.
 def findDiff(d1, d2):
     a=False
+    ##check if all the keys in d2 exist in d1
+    for k in d2:
+        if (k not in d1):  # check if the key in current params is in previous params dict.
+            # print('DIFFERENT')
+            a = True
+            return a
+
+    ##checks if all the keys in d1 exist in d2. if so it check the value stored is the same
     for k in d1:
         if a != True: #this stops it looping through the rest of the keys once it finds a difference
             if (k not in d2): #check if the key in current params is in previous params dict.
