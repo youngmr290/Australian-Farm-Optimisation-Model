@@ -1133,7 +1133,7 @@ def generator(params,r_vals,plots = False):
     date_mated_pa1e1b1nwzida0e0b0xyg1 = date_joined_pa1e1b1nwzida0e0b0xyg1.astype('datetime64[D]') + (cf_dams[4, ..., 0:1, :] * (index_e1b1nwzida0e0b0xyg + 0.5)).astype('timedelta64[D]')
     ##Age of dam when first lamb is born
     agedam_lamb1st_a1e1b1nwzida0e0b0xyg3 = np.swapaxes(date_born1st_oa1e1b1nwzida0e0b0xyg2 - date_born1st_ida0e0b0xyg1,0,d_pos)[0,...] #replace the d axis with the o axis then remove the d axis by taking slice 0 (note the d axis was not active)
-    if np.count_nonzero(pinp.sheep['i_mask_i']) > 1: #complicated by the fact that sire tol is not neccessarily the same as dams and off
+    if np.count_nonzero(pinp.sheep['i_mask_i']) > 1: #complicated by the fact that sire tol is not necessarily the same as dams and off
         agedam_lamb1st_a1e1b1nwzida0e0b0xyg0 = np.compress(pinp.sheep['i_masksire_i'], agedam_lamb1st_a1e1b1nwzida0e0b0xyg3[...,a_g3_g0], i_pos) #dont mask if both tol are included
     else:
         agedam_lamb1st_a1e1b1nwzida0e0b0xyg0 = np.compress(pinp.sheep['i_masksire_i'][pinp.sheep['i_masksire_i']], agedam_lamb1st_a1e1b1nwzida0e0b0xyg3[...,a_g3_g0], i_pos) #have to mask masksire_i  because it needs to be the same length as i
@@ -2530,7 +2530,7 @@ def generator(params,r_vals,plots = False):
 
         ##Scanning percentage per ewe scanned (if scanning) -  report variable only
         if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-            t_scanning = np.sum(numbers_start_dams * nfoet_b1nwzida0e0b0xyg, axis = (prejoin_tup), keepdims=True) / np.sum(numbers_start_dams, axis = (prejoin_tup), keepdims=True) * period_is_scan_pa1e1b1nwzida0e0b0xyg1[p]
+            t_scanning = np.sum(numbers_start_dams * nfoet_b1nwzida0e0b0xyg, axis=prejoin_tup, keepdims=True) / np.sum(numbers_start_dams, axis=prejoin_tup, keepdims=True) * period_is_scan_pa1e1b1nwzida0e0b0xyg1[p]
             ##Scanning percentage per ewe scanned (if scanning)
             scanning = fun.f_update(scanning, t_scanning, period_is_scan_pa1e1b1nwzida0e0b0xyg1[p])
 
@@ -3800,12 +3800,16 @@ def generator(params,r_vals,plots = False):
     #### The period is based on period_is_transfer which points at the nextperiod_is_prejoin for the destination g1 slice
     ffcfw_end_tva1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_ffcfw_dams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_transfer_tpa1e1b1nwzida0e0b0xyg1) #numbers not required for ffcfw
     ffcfw_end_va1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(o_ffcfw_offs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg3) #numbers not required for ffcfw
-    #### Return the ‘destination’ weight of each group of animal at the beginning of prejoining
-    #### The period is based on nextperiod_is_prejoin for the destination slice (pointed at from the destination slice)
-    ffcfw_end_condensed_va1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_ffcfw_condensed_dams, a_v_pa1e1b1nwzida0e0b0xyg1,period_is_tp=nextperiod_is_prejoin_pa1e1b1nwzida0e0b0xyg1) #numbers not required for ffcfw
-    ffcfw_end_condensed_va1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(o_ffcfw_condensed_offs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg3) #numbers not required for ffcfw
+
+    #### Return the ‘destination’ weight of each group of animal at the end of the period prior to the transfer (transfer is next period is prejoining for the destination animal)
     ##### for dams select the ‘destination’ condensed weight for the ‘source’ slices using a_g1_tg1
-    ffcfw_end_condensed_tva1e1b1nwzida0e0b0xyg1 = np.take_along_axis(ffcfw_end_condensed_va1e1b1nwzida0e0b0xyg1[na], a_g1_tpa1e1b1nwzida0e0b0xyg1,-1)
+    ffcfw_condensed_tdams = np.take_along_axis(o_ffcfw_condensed_dams[na,...], a_g1_tpa1e1b1nwzida0e0b0xyg1, -1)
+    ##### Convert from p to v.
+    ###### for dams the period is based on period_is_transfer which points at the nextperiod_is_prejoin for the destination g1 slice
+    ffcfw_end_condensed_tva1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(ffcfw_condensed_tdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_transfer_tpa1e1b1nwzida0e0b0xyg1)  #numbers not required for ffcfw
+    ###### for offs the period is based on next period is prejoin
+    ffcfw_end_condensed_va1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(o_ffcfw_condensed_offs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg3) #numbers not required for ffcfw
+
     #### Return the weight of the yatf in the period in which they are weaned - with active dam v axis
     ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_ffcfw_start_yatf, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_wean_pa1e1b1nwzida0e0b0xyg2)
     #### Return the weight of the yatf in the period in which they are weaned - with active d axis
