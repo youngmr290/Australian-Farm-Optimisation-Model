@@ -3934,30 +3934,35 @@ def generator(params,r_vals,plots = False):
     mask_numbers_reqw8w9_w8zida0e0b0xyg3w9 = np.trunc(index_wzida0e0b0xyg3[...,na] / step_con3) == index_w3 / step_con3 #na for w9
     mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg3w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg3[...,na] * mask_numbers_reqw8w9_w8zida0e0b0xyg3w9 #add the nut mask
 
-    ################################################################
-    #Masking numbers transferred  for mating to other ram genotypes#
-    ################################################################
+    ####################################################
+    #Masking numbers transferred to other ram groups   #
+    ####################################################
     ''' Mask numbers transferred - these mask stops dams transferring to different sires between dvps that are not prejoining'''
     ##dams
+    ###create a t mask for dam decision variables - a transferring animal it only has parameters in the period that is transfer
+    period_is_transfer_tva1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(period_is_transfer_tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1)
+    mask_tvars_tva1e1b1nw8zida0e0b0xyg1 = np.logical_or(period_is_transfer_tva1e1b1nwzida0e0b0xyg1, (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1))
+
     # temporary = (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na]
     # mask_numbers_provt_tva1e1b1nwzida0e0b0xyg1g9 = fun.f_update(temporary, temporary * (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na, :],
     #                                      dvp_type_next_va1e1b1nwzida0e0b0xyg1[..., na,:] != 0) * transfer_exists_tpa1e1b1nwzida0e0b0xyg1[..., na]
     # temporary = (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na, :]
     # mask_numbers_provt_tva1e1b1nwzida0e0b0xyg1g9 = fun.f_update(temporary, temporary * (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na],
     #                                      dvp_type_next_tva1e1b1nwzida0e0b0xyg1[..., na] != 0) * transfer_exists_tpa1e1b1nwzida0e0b0xyg1[..., na]
-    period_is_transfer_tva1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(period_is_transfer_tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1)
-    temporary = (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na, :]
-    mask_numbers_provt_tva1e1b1nwzida0e0b0xyg1g9 = fun.f_update(temporary, temporary * (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na],
-                                         np.logical_not(period_is_transfer_tva1e1b1nwzida0e0b0xyg1)[..., na]) * transfer_exists_tpa1e1b1nwzida0e0b0xyg1[..., na]
+
+    ###numbers are provided in the identity array between g1 & g9 when the transfer exists and the decision variables exist
+    mask_numbers_provt_tva1e1b1nwzida0e0b0xyg1g9 = mask_tvars_tva1e1b1nw8zida0e0b0xyg1[...,na] * transfer_exists_tpa1e1b1nwzida0e0b0xyg1[..., na]  \
+                                                      * (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na, :]
+        # fun.f_update(temporary, temporary * (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na],
+        #                                  np.logical_not(period_is_transfer_tva1e1b1nwzida0e0b0xyg1)[..., na]) * transfer_exists_tpa1e1b1nwzida0e0b0xyg1[..., na]
     # temporary = (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na, :]
     # mask_numbers_provt_tva1e1b1nwzida0e0b0xyg1g9 = fun.f_update(temporary, temporary * (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na],
     #                                      dvp_type_next_va1e1b1nwzida0e0b0xyg1[..., na] != 0) * transfer_exists_tpa1e1b1nwzida0e0b0xyg1[..., na]
-    temporary = (index_g9 == index_g1g)
-    mask_numbers_reqt_tpa1e1b1nwzida0e0b0xyg1g9 = fun.f_update(temporary, temporary*(index_g1g == a_g1_tpa1e1b1nwzida0e0b0xyg1[...,na,:]),
-                                                               np.logical_not(period_is_transfer_tva1e1b1nwzida0e0b0xyg1)[..., na])
-
-    ###create a t mask for production parameters - for a transfering animal it only has production in the period that is transfer
-    mask_tvars_tva1e1b1nw8zida0e0b0xyg1 = np.logical_or(period_is_transfer_tva1e1b1nwzida0e0b0xyg1, (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1))
+    # temporary = (index_g9 == index_g1g)
+    mask_numbers_reqt_tva1e1b1nwzida0e0b0xyg1g9 = mask_tvars_tva1e1b1nw8zida0e0b0xyg1[...,na] \
+                                                    * (index_g9 == index_g1g)
+        # fun.f_update(temporary, temporary*(index_g1g == a_g1_tpa1e1b1nwzida0e0b0xyg1[...,na,:]),
+        #                                                       np.logical_not(period_is_transfer_tva1e1b1nwzida0e0b0xyg1)[..., na])
 
     ##0ffs
     ##mask the t array so that only slice t0 provides numbers
@@ -4073,8 +4078,12 @@ def generator(params,r_vals,plots = False):
     ##number of sires available at mating - sire
     numbers_startp8_va1e1b1nwzida0e0b0xyg0p8 = sfun.f_create_production_param('sire', numbers_startp8_va1e1b1nwzida0e0b0xyg0p8, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0[...,na])
     ##number of sires for required for mating - dams
-    nsire_k2tva1e1b1nwzida0e0b0xyg1g0p8 = sfun.f_create_production_param('dams', nsire_tva1e1b1nwzida0e0b0xyg1g0p8, a_k2cluster_va1e1b1nwzida0e0b0xyg1[...,na,na], index_k2tva1e1b1nwzida0e0b0xyg1[...,na,na],
-                                                                 numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1[...,na,na], mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1[...,na,na], pos_offset=2)
+    ### mask the dams for w8 vars, t_vars. Also not mated if they are being transferred to another ram group. A transfer in the mating period indicates that the dam is going to be mated to another sire at a later date within the same DVP
+    t_mask = (mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_tvars_tva1e1b1nw8zida0e0b0xyg1 * (a_g1_tpa1e1b1nwzida0e0b0xyg1 != index_g1))[...,na,na]
+    nsire_k2tva1e1b1nwzida0e0b0xyg1g0p8 = sfun.f_create_production_param('dams', nsire_tva1e1b1nwzida0e0b0xyg1g0p8,
+                                                a_k2cluster_va1e1b1nwzida0e0b0xyg1[...,na,na], index_k2tva1e1b1nwzida0e0b0xyg1[...,na,na],
+                                                numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1[...,na,na],
+                                                mask_vg=t_mask, pos_offset=2)
     nsire_k2tva1e1b1nwzida0e0b0xyg1g0p8[0] = 0 #nm animals don't require sires
 
 
@@ -4112,7 +4121,7 @@ def generator(params,r_vals,plots = False):
 
     ##numbers required
     ###dams
-    numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 =  1 * (np.sum(mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9[...,na,:] * mask_numbers_reqt_tpa1e1b1nwzida0e0b0xyg1g9[...,na]
+    numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 =  1 * (np.sum(mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9[...,na,:] * mask_numbers_reqt_tva1e1b1nwzida0e0b0xyg1g9[...,na]
                                                                        * ((a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k28k29tva1e1b1nwzida0e0b0xyg1) * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1))[...,na,na]
                                                                        , axis = (b1_pos-2, e1_pos-2), keepdims=True)>0)
     ####combine nm and 00 cluster for prejoining to scanning
