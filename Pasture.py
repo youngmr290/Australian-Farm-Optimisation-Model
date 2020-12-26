@@ -58,7 +58,7 @@ n_pasture_types = len(pastures)   #^ need to sort timing of the definition of pa
 index_f = np.arange(n_feed_periods)
 
 i_feed_period_dates   = list(pinp.feed_inputs['feed_periods']['date'])
-t_list = [*range(n_pasture_types)]
+t_list = np.arange(n_pasture_types)
 
 arable_l = np.array(pinp.crop['arable']).reshape(-1)
 length_f  = np.array(pinp.feed_inputs['feed_periods'].loc[:pinp.feed_inputs['feed_periods'].index[-2],'length']) # not including last row because that is the start of the following year. converted to np. to get @jit working
@@ -125,6 +125,8 @@ i_grn_cp_ft                     = np.zeros(ft,  dtype = 'float64')  # crude prot
 i_dry_cp_ft                     = np.zeros(ft,  dtype = 'float64')  # crude protein content of dry feed
 i_poc_dmd_ft                    = np.zeros(ft,  dtype = 'float64')  # digestibility of pasture consumed on crop paddocks
 i_poc_foo_ft                    = np.zeros(ft,  dtype = 'float64')  # foo of pasture consumed on crop paddocks
+grn_senesce_startfoo_ft         = np.zeros(ft,  dtype = 'float64')  # proportion of the FOO at the start of the period that senesces during the period
+grn_senesce_pgrcons_ft          = np.zeros(ft,  dtype = 'float64')  # proportion of the (total or average daily) PGR that senesces during the period (consumption leads to a reduction in senescence)
 
 i_reseeding_date_seed_t         = np.zeros(n_pasture_types, dtype = 'datetime64[D]')  # date of seeding this pasture type (will be read in from inputs)
 i_seeding_end_t                 = np.zeros(n_pasture_types, dtype = 'datetime64[D]')  # date of seeding this pasture type (will be read in from inputs)
@@ -237,7 +239,7 @@ def map_excel(params,r_vals):
     '''Instantiate variables required and read inputs for the pasture variables from an excel file'''
     global grn_senesce_startfoo_ft
     global grn_senesce_pgrcons_ft
-    global i_end_of_gs_t
+#    global i_end_of_gs_t
     global t_list
     ## define the vessels that will store the input data that require pre-defining
     ### all need pre-defining because inputs are in separate pasture type arrays
@@ -423,7 +425,7 @@ def calculate_germ_and_reseed(params):
     na_phase_area_flrt  = np.zeros(flrt, dtype = 'float64')
     grn_destock_foo_flt = np.zeros(flt,  dtype = 'float64')
     dry_destock_foo_flt = np.zeros(flt,  dtype = 'float64')
-    foo_na_flt          = np.zeros(flt,   dtype = 'float64')
+#    foo_na_flt          = np.zeros(flt,   dtype = 'float64')
     foo_na_destock_ft   = np.zeros(ft,   dtype = 'float64')
     germ_scalar_rt      = np.zeros(rt, dtype='float64')
     resown_rt           = np.zeros(rt, dtype='int')
@@ -638,7 +640,7 @@ def green_and_dry(params, r_vals):
     senesce_propn_dgoflt      = np.zeros(dgoflt, dtype = 'float64')
     nap_dflrt                 = np.zeros(dflrt,  dtype = 'float64')
     dry_transfer_t_dft        = np.zeros(dft,    dtype = 'float64')
-    foo_start_grnha_oflt      = np.zeros(oflt,   dtype = 'float64')
+#    foo_start_grnha_oflt      = np.zeros(oflt,   dtype = 'float64')
 
     ## dry, DM decline (high = low pools)
     dry_transfer_t_dft[...] = 1000 * (1-dry_decay_period_ft)
@@ -677,7 +679,7 @@ def green_and_dry(params, r_vals):
     ## green, pasture growth
     pgr_grnday_oflt = np.maximum(0.01, i_fxg_pgr_oflt)                  # use maximum to ensure that the pgr is non zero (because foo_days requires dividing by pgr)
     pgr_grnha_goflt =       pgr_grnday_oflt     \
-                     *          length_f.reshape(-1,1,1)       \
+                     *          length_f.reshape((-1,1,1))      \
                      * c_pgr_gi_scalar_gft[:,np.newaxis,:,np.newaxis,:]
 
     ## green, final foo from initial, pgr and senescence
@@ -711,8 +713,8 @@ def green_and_dry(params, r_vals):
     ### # to calculate foo_days requires calculating number of days in current period and adding days from the previous period (if required)
 
     ###set the default to Clip between -1 and 0 for low FOO level
-    min_oflt = np.zeros(n_foo_levels).reshape(-1,1,1,1)
-    max_oflt = np.ones(n_foo_levels).reshape(-1,1,1,1)
+    min_oflt = np.zeros(n_foo_levels).reshape((-1,1,1,1))
+    max_oflt = np.ones(n_foo_levels).reshape((-1,1,1,1))
     # ### and clip between 0 and 1 for high FOO level
     # min_oflt[0,...] = 0
     # max_oflt[0,...] = 0
@@ -725,7 +727,7 @@ def green_and_dry(params, r_vals):
                                        -       pgr_grnha_goflt[0, : ,1:  ,:,:])     \
                                      /         pgr_grnha_goflt[0, : , :-1,:,:]      # pgr from the previous period
     foo_days_grnha_oflt             = np.clip(propn_period_oflt,min_oflt,max_oflt)              \
-                                     *              length_f.reshape(-1,1,1)
+                                     *              length_f.reshape((-1,1,1))
     foo_days_grnha_oflt[:,1:,:,:]  += np.clip(propn_periodprev_oflt,min_oflt,max_oflt)          \
                                      *                  length_f[:-1].reshape(-1,1,1) # length from previous period
     ### convert monthly decline to daily decline
