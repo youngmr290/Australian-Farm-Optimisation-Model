@@ -53,7 +53,7 @@ def boundarypyomo_local():
         rot_lobound_rl = np.zeros((len(model.s_phases), len(model.s_lmus)))
         pasture_dse_carry = {} #populate straight into dict
         ##landuse area abound - note that setting to zero is the equivelent of no bound
-        landuse_bound_k = pd.Series(0,index=model.s_landuses) #use landuse2 becasue that is the expanded version of pasture phases eg t, tr not just tedera
+        landuse_bound_k = pd.Series(0,index=model.s_landuses) #use landuse2 because that is the expanded version of pasture phases eg t, tr not just tedera
 
         ###########################
         # set bound               #
@@ -118,7 +118,7 @@ def boundarypyomo_local():
                           for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs if model.p_dse_offs[k3,k5,p6,t3,v3,n3,w3,z,i,a,x,y3,g3]!=0)
                for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol) ==0)
             model.con_SR_bound = pe.Constraint(model.s_feed_periods, rule=SR_bound,
-                                                doc='stocking rate bound for each feed peirod')
+                                                doc='stocking rate bound for each feed period')
 
         ##total pasture area - hence also total crop area
         if total_pasture_bound != False:

@@ -8,7 +8,7 @@ Created on Sun Nov 24 09:10:55 2019
 #python modules
 import pyomo.environ as pe
 
-#MUDAS modules
+#AFO modules
 import Stubble as stub
 from CreateModel import model
 

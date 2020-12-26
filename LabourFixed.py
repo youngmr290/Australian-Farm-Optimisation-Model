@@ -23,7 +23,7 @@ import math
 import numpy as np
 from dateutil.relativedelta import relativedelta
 
-#MUDAS modules
+#AFO modules
 import PropertyInputs as pinp
 import Periods as per
 '''

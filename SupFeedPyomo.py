@@ -7,7 +7,7 @@ Created on Thu Mar 19 08:03:17 2020
 #python modules
 from pyomo import environ as pe
 
-#MUDAS modules
+#AFO modules
 from CreateModel import model
 import SupFeed as sup
 

@@ -512,7 +512,7 @@ def f_update_sen(row, exp_data, sam, saa, sap, sar, sat, sav):
         ##extract current value
         value = exp_data.loc[exp_data.index[row], (dic,key1,key2,indx)]
 
-        ##value needs to be single ie dont want a single value series (for some reason sometimes we are getting series)
+        ##value needs to be single ie don't want a single value series (for some reason sometimes we are getting series)
         if isinstance(value, pd.Series):
             value = value.squeeze()
 
@@ -630,7 +630,7 @@ def f_produce_df(data, rows, columns, row_names=None, column_names=None):
         row_index=[0]
     elif not any(isinstance(i, (list, np.ndarray,object)) for i in rows): #check if nested list
         row_index = rows
-    elif len(rows)==1: #check if nested list with one element eg dont need to create multiindex
+    elif len(rows)==1: #check if nested list with one element eg don't need to create multiindex
         row_index = rows[0]
     else:
         row_index = pd.MultiIndex.from_product(rows, names=row_names)
@@ -638,7 +638,7 @@ def f_produce_df(data, rows, columns, row_names=None, column_names=None):
         col_index=[0]
     elif not any(isinstance(i, (list, np.ndarray,object)) for i in columns): #check if nested list
         col_index = columns
-    elif len(columns)==1: #check if nested list with one element eg dont need to create multiindex
+    elif len(columns)==1: #check if nested list with one element eg don't need to create multiindex
         col_index = columns[0]
     else:
         col_index = pd.MultiIndex.from_product(columns, names=column_names)

@@ -7,7 +7,7 @@ module: labour pyomo module - contains pyomo params, variables and constraits
 Version Control:
 Version     Date        Person  Change
 1.1         11Dec19     M        update pyomo constrain rule structure - increase constrain building time by using smart (sparse) set indexing
-1.2         16Jan20     M        removed yield from cashflow con - it is now seperate so it can be combined with yield penalty and crop grazing yield penalty before being multiplied by price.
+1.2         16Jan20     M        removed yield from cashflow con - it is now separate so it can be combined with yield penalty and crop grazing yield penalty before being multiplied by price.
 
 Known problems:
 Fixed   Date    ID by   Problem
@@ -22,7 +22,7 @@ from pyomo.environ import *
 #import numpy as np
 import timeit
 
-#MUDAS modules
+#AFO modules
 import Crop as crp
 import UniversalInputs as uinp
 from CreateModel import *
@@ -115,7 +115,7 @@ model.v_sell_grain = Var(model.s_crops, model.s_grain_pools, bounds=(0,None), do
 ##############
 #yield       #
 ##############
-##total grain transfer for each crop, seperated so it can be combined with untimely sowing and crop grazing penalty before converting to cashflow 
+##total grain transfer for each crop, separated so it can be combined with untimely sowing and crop grazing penalty before converting to cashflow
 ### slightly more complicated because i have to have rotation yield in disagregated format and the rotation variable is aggregated.
 ### yield needs to be disaggregated so that it returns the grain transfer for each crop - this is so it is compatible with yield penalty and sup feed activities.
 ###alternative would have been to add another key/index/set to the yield parameter that was k, although i suspect this would make it a bit slower due to being bigger but it might be tidyer
@@ -346,7 +346,7 @@ def rot_stubble(model,k,s):
     # #define parameters, this method of defining params is 20-30% faster, doesn't need to calc the .keys method as above.
     # '''
     
-    #requirment parameters for rotations are read in from csv but to complete model i have hand inputted some parameters
+    #requirement parameters for rotations are read in from csv but to complete model i have hand inputted some parameters
     #    model.rotationyield = Param(model.phases, model.lmus, initialize=crp.phase_yields(), default = 0.0, doc='grain production for all crops for 1 unit of rotation')
     #    model.phasefert = Param(model.phases, model.lmus, model.fert_type, initialize=crp.fert(), default = 0.0, doc='fert required by 1 unit of phase')
     #    model.stubble_handling_prob = Param(model.phases, model.lmus, initialize=crp.stubble_handling_prob(), default = 0.0, doc='probability of each phase that requires stubble handling')

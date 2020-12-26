@@ -15,7 +15,7 @@ formatting; try to avoid capitals (reduces possible mistakes in future)
 #python modules
 from pyomo.environ import *
 
-#MUDAS modules
+#AFO modules
 from CreateModel import *
 import Finance as fin
 import PropertyInputs as pinp

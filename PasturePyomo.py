@@ -7,7 +7,7 @@ Created on Sat Dec 28 15:00:25 2019
 #python modules
 from pyomo import environ as pe
 
-#MUDAS modules
+#AFO modules
 from CreateModel import model
 import Pasture as pas
 # import UniversalInputs as uinp

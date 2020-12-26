@@ -3,10 +3,10 @@
 Created on Tue Nov  5 19:46:24 2019
 @author: john
 
-Description of this pasture module: This representation includes at optimisation (ie the folowing options are represented in the variables of the model)
+Description of this pasture module: This representation includes at optimisation (ie the following options are represented in the variables of the model)
     Growth rate of pasture (PGR) varies with FOO at the start of the period and grazing intensity during the period
         Grazing intensity operates by altering the average FOO during the period
-    The nutritive value of the green feed consumed (as represneted by ME & volume) varies with FOO & grazing intensity.
+    The nutritive value of the green feed consumed (as represented by ME & volume) varies with FOO & grazing intensity.
         Grazing intensity alters the average FOO during the period and the capacity of the animals to select a higher quality diet.
     Selective grazing of dry pasture. 2 dry pasture quality pools are represented and either can be selected for grazing
         Note: There is not a constraint that ensures that the high quality pool is grazed prior to the low quality pool (as there is in the stubble selective grazing)
@@ -61,7 +61,7 @@ i_feed_period_dates   = list(pinp.feed_inputs['feed_periods']['date'])
 t_list = [*range(n_pasture_types)]
 
 arable_l = np.array(pinp.crop['arable']).reshape(-1)
-length_f  = np.array(pinp.feed_inputs['feed_periods'].loc[:pinp.feed_inputs['feed_periods'].index[-2],'length']) # not including last row becasue that is the start of the following year. converted to np. to get @jit working
+length_f  = np.array(pinp.feed_inputs['feed_periods'].loc[:pinp.feed_inputs['feed_periods'].index[-2],'length']) # not including last row because that is the start of the following year. converted to np. to get @jit working
 feed_period_dates_f = np.array(i_feed_period_dates,dtype='datetime64[D]')
 
 
@@ -119,8 +119,8 @@ i_dry_dmd_ave_ft                = np.zeros(ft,  dtype = 'float64')  # average di
 i_dry_dmd_range_ft              = np.zeros(ft,  dtype = 'float64')  # range in digestibility of dry feed if it is not grazed
 i_dry_foo_high_ft               = np.zeros(ft,  dtype = 'float64')  # expected foo for the dry pasture in the high quality pool
 dry_decay_period_ft             = np.zeros(ft,  dtype = 'float64')  # decline in dry foo for each period
-mask_dryfeed_exists_ft          = np.zeros(ft,  dtype = bool)  # mask for period when dry feed exists
-mask_greenfeed_exists_ft          = np.zeros(ft,  dtype = bool)  # mask for period when green feed exists
+mask_dryfeed_exists_ft          = np.zeros(ft,  dtype = bool)       # mask for period when dry feed exists
+mask_greenfeed_exists_ft        = np.zeros(ft,  dtype = bool)       # mask for period when green feed exists
 i_grn_cp_ft                     = np.zeros(ft,  dtype = 'float64')  # crude protein content of green feed
 i_dry_cp_ft                     = np.zeros(ft,  dtype = 'float64')  # crude protein content of dry feed
 i_poc_dmd_ft                    = np.zeros(ft,  dtype = 'float64')  # digestibility of pasture consumed on crop paddocks
@@ -323,11 +323,12 @@ def map_excel(params,r_vals):
     dry_decay_period_ft[...] = 1 - (1 - dry_decay_daily_ft)               \
                               ** length_f.reshape(-1,1)
 
-    ###create dry pasture exists mask - in the current structure dry pasture only exists after the growing season. ^this is a limitation of pasture (green and dry pasture dont exists similtaneously) this is okay for wa but may need work for places with perennials.
+    ###create dry pasture exists mask - in the current structure dry pasture only exists after the growing season.
+    # todo this is a limitation of pasture (green and dry pasture don't exist simultaneously) this is okay for wa but may need work for places with perennials.
     mask_dryfeed_exists_ft[...] = index_f[:,np.newaxis] > i_end_of_gs_t   #green exists in the period which is the end of growing season hence >
     mask_greenfeed_exists_ft[...] = np.logical_not(mask_dryfeed_exists_ft)
 
-    ###create equation coef for pgr = a+b*foo
+    ###create equation coefficients for pgr = a+b*foo
     i_fxg_foo_oflt[2,...]  = 100000 #large number so that the np.searchsorted doesn't go above
     c_fxg_b_oflt[0,...] =  i_fxg_pgr_oflt[0,...]       \
                          / i_fxg_foo_oflt[0,...]
@@ -494,7 +495,7 @@ def calculate_germ_and_reseed(params):
     for t, pasture in enumerate(pastures):
         phase_germresow_df['germ_scalar']=0 #set default to 0
         phase_germresow_df['resown']=False #set default to false
-        ###loop through each combo in of landuses and pastures (i_phase_germ), then check which rotations fall into each germ/resowing catergory. Then populate the rot phase df with the neccesary germination and resowing param.
+        ###loop through each combo in of landuses and pastures (i_phase_germ), then check which rotations fall into each germ/resowing category. Then populate the rot phase df with the necessary germination and resowing param.
         for ix_row in i_phase_germ_dict[pasture].index:
             ix_bool = pd.Series(data=True,index=range(len(phase_germresow_df)))
             for ix_col in range(i_phase_germ_dict[pasture].shape[1]-2):    #-2 because two of the cols are germ and resowing
@@ -647,13 +648,13 @@ def green_and_dry(params, r_vals):
     ## non-arable areas in crop paddocks (the annual pasture available if not grazed)
     ### # is maximum ungrazed pasture in the growing season
     ### # _maximum foo achievable for each lmu & feed period (ungrazed pasture that germinates at the maximum level on that lmu)
-    ### non arable pasture becomes available to graze at the begining of the first harvest peroid
+    ### non arable pasture becomes available to graze at the beginning of the first harvest period
     ### ^a potential error here when germination is spread across periods (because taking max of each period)
     germination_pass_flt = np.max(germination_flrt, axis=2)  #use p_germination because it includes any sensitivity that is carried out
     grn_foo_start_ungrazed_flt , dry_foo_start_ungrazed_flt \
          = calc_foo_profile(germination_pass_flt, dry_decay_period_ft, length_f)   # ^ passing the consumption value in a numpy array in an attempt to get the function @jit compatible
     ### all pasture from na area into the Low pool (#1) because it is rank
-    harvest_period  = fun.period_allocation(pinp.feed_inputs['feed_periods']['date'], range(len(pinp.feed_inputs['feed_periods'])), pinp.crop['harv_date']) #use ragne(len()) to get the row number that harvest occurs has to be row number not index name becasue it is used to index numpy below
+    harvest_period  = fun.period_allocation(pinp.feed_inputs['feed_periods']['date'], range(len(pinp.feed_inputs['feed_periods'])), pinp.crop['harv_date']) #use range(len()) to get the row number that harvest occurs has to be row number not index name because it is used to index numpy below
     period, proportion = fun.period_proportion_np(pinp.feed_inputs['feed_periods']['date'], pinp.crop['harv_date'])
     params['p_harvest_period_prop']  = dict([(pinp.feed_inputs['feed_periods'].index[period], proportion)])
     nap_dflrt[0,harvest_period,...,0] = dry_foo_start_ungrazed_flt[harvest_period,:,np.newaxis,0]  \

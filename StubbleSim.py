@@ -37,7 +37,7 @@ from scipy.optimize import minimize
 import PropertyInputs as pinp
 
 #this first section is just to get the ddm of the diff components in the first period 
-#this is also used in the stubble module but i wanted to keep it seperate from here so i have just re-used code
+#this is also used in the stubble module but i wanted to keep it separate from here so i have just re-used code
 
 fp = pd.DataFrame(pinp.feed_inputs['feed_periods'], columns=['date'])
 fp=fp[:-1]

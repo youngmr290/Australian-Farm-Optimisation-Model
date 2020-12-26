@@ -6,7 +6,7 @@ module: create the model. this then gets used in all sheets that use pyomo
 
 Version Control:
 Version     Date        Person  Change
-1.1         22/02/202   MRY      commented out con2 as it is not needed - don't delete incase we are wrong and it is required.
+1.1         22/02/202   MRY      commented out con2 as it is not needed - don't delete in case we are wrong and it is required.
 
 Known problems:
 Fixed   Date    ID by   Problem
@@ -21,7 +21,7 @@ from pyomo.environ import *
 import pandas as pd
 import numpy as np
 
-#MUDAS modules
+#AFO modules
 import UniversalInputs as uinp
 import PropertyInputs as pinp
 import Periods as per
@@ -151,7 +151,7 @@ model.s_feed_pools = Set(initialize=uinp.structure['sheep_pools'], doc='nutritiv
  
 
    
-##sire ^dont have any sets at the moment
+##sire ^don't have any sets at the moment
 # model.s_sale_sire = Set(initialize=['t%s'%i for i in range(pinp.sheep['i_t0_len'])], doc='Sales within the year for sires')
 # model.s_dvp_sire = Set(ordered=True, initialize=, doc='Decision variable periods for sires')
 # model.s_nut_sire = Set(initialize=uinp.structure['i_n_idx_sire'], doc='Nutrition levels in each feed period for sires')

@@ -25,7 +25,7 @@ from dateutil.relativedelta import relativedelta
 
 
 
-#MUDAS modules
+#AFO modules
 import UniversalInputs as uinp
 import PropertyInputs as pinp
 
@@ -95,7 +95,7 @@ def period_end_date(start, length):
 #print(period_end_date(wet_seeding_start_date(),ci.crop_input['seed_period_lengths']))
 
 
-#This function determines the start dates of the labour periods. generally each period begins at the start of the month except seeding and harvest periods (which need to be seperate because the labour force works more hours during those periods)
+#This function determines the start dates of the labour periods. generally each period begins at the start of the month except seeding and harvest periods (which need to be separate because the labour force works more hours during those periods)
 def p_dates_df():
     periods = pd.DataFrame(columns=['date'])
     #create empty list of dates to be filled by this function

@@ -23,7 +23,7 @@ import numpy as np
 
 
 
-#MUDAS modules
+#AFO modules
 import UniversalInputs as uinp
 import PropertyInputs as pinp
 import Periods as per
@@ -107,8 +107,8 @@ def seed_days(*params):
 
 def contractseeding_occurs(params):
     '''
-    This function just sets the peirod when contract seeding must occur. Contract seeding is not hooked up to yield penalty
-    becasue if your going to hire someone you will hire them at the optimum time. Contract seeding is hooked up to poc so
+    This function just sets the period when contract seeding must occur. Contract seeding is not hooked up to yield penalty
+    because if your going to hire someone you will hire them at the optimum time. Contract seeding is hooked up to poc so
     this param stops the model having late seeding.
     '''
     contract_start = per.wet_seeding_start_date()
@@ -172,7 +172,7 @@ def grazing_days(params):
             seed_end_date = mach_p_start + dt.timedelta(days = seeding_days)
             ##if the feed period finishes before the start of seeding it will recieve a grazing day for each day since the break of season times the number of seeding days in the current seed period minus the grazing days in the previous periods
             if fp_end_date <= mach_p_start:
-                fp_grazing_days = max((fp_end_date- effective_break).days * seeding_days - sum(grazing_days_list) , 0) #max required incase fp ends before effective break - don't want a negitive value 
+                fp_grazing_days = max((fp_end_date- effective_break).days * seeding_days - sum(grazing_days_list) , 0) #max required in case fp ends before effective break - don't want a negitive value
             ##if the end date of the feed period is after the end date of the seeding period it will get the full grazing days minus the grazing days in the previous periods
             elif fp_end_date >= seed_end_date:
                 fp_grazing_days = max((mach_p_start- effective_break).days * seeding_days + (0.5 * seeding_days * seeding_days)  - sum(grazing_days_list) ,0)
@@ -378,7 +378,7 @@ def harv_time_ha():
     -------
     Dataframe
         Harvest rate for each crop (hr/ha).
-        - has to be kept as a seperate function because it is used in multiple places
+        - has to be kept as a separate function because it is used in multiple places
         - harv sped is entered relative to a given yield for each crop
     '''
     harv_speed = uinp.mach[pinp.mach['option']]['harvest_speed']
@@ -576,7 +576,7 @@ def stubble_cost_ha():
 #######################################################################################################################################################
 
 ###########################
-#fert applicaation time   # used in labour crop also, defined here because it uses inputs from the differnt mach options which are consolidated at the top of this sheet
+#fert application time   # used in labour crop also, defined here because it uses inputs from the differnt mach options which are consolidated at the top of this sheet
 ###########################
 
 #time taked to spread 1ha (not including driving to and from paddock and filling up)
@@ -649,7 +649,7 @@ def fert_app_cost_t():
 #######################################################################################################################################################
 
 ###########################
-#chem applicaation time   # used in labour crop, defined here because it uses inputs from the differnt mach options which are consolidated at the top of this sheet
+#chem application time   # used in labour crop, defined here because it uses inputs from the differnt mach options which are consolidated at the top of this sheet
 ###########################
 
 ##time taked to spray 1ha (use efficiency input to allow for driving to and from paddock and filling up)

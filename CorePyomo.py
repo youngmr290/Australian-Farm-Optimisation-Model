@@ -17,7 +17,7 @@ formatting; try to avoid capitals (reduces possible mistakes in future)
 import time 
 import pyomo.environ as pe
 
-#MUDAS modules - should only be pyomo modules
+#AFO modules - should only be pyomo modules
 import UniversalInputs as uinp
 from CreateModel import model
 import CropPyomo as crppy
@@ -52,7 +52,7 @@ def coremodel_all():
     ######################
     #Labour fixed        #
     ######################
-    ##Fixed labour jobs that can be completed by anyone ie this constraint links labour fixed casual and perm and manager supply and requirment. 
+    ##Fixed labour jobs that can be completed by anyone ie this constraint links labour fixed casual and perm and manager supply and requirement.
     try:
         model.del_component(model.con_labour_fixed_anyone_index_1)
         model.del_component(model.con_labour_fixed_anyone_index)
@@ -61,9 +61,9 @@ def coremodel_all():
         pass
     def labour_fixed_casual(model,p,w):
         return -model.v_fixed_labour_casual[p,w] - model.v_fixed_labour_permanent[p,w] - model.v_fixed_labour_manager[p,w] +  model.p_super_labour[p] + model.p_tax_labour[p] + model.p_bas_labour[p] <= 0
-    model.con_labour_fixed_anyone = pe.Constraint(model.s_labperiods, ['anyone'], rule = labour_fixed_casual, doc='link between labour supply and requirment by fixed jobs for casual and above')
+    model.con_labour_fixed_anyone = pe.Constraint(model.s_labperiods, ['anyone'], rule = labour_fixed_casual, doc='link between labour supply and requirement by fixed jobs for casual and above')
     
-    ##Fixed labour jobs that must be completed by the manager ie this constraint links labour fixed manager supply and requirment. 
+    ##Fixed labour jobs that must be completed by the manager ie this constraint links labour fixed manager supply and requirement.
     try:
         model.del_component(model.con_labour_fixed_manager_index_1)
         model.del_component(model.con_labour_fixed_manager_index)
@@ -72,7 +72,7 @@ def coremodel_all():
         pass
     def labour_fixed_manager(model,p,w):
         return -model.v_fixed_labour_manager[p,w] +  model.p_planning_labour[p] + (model.p_learn_labour * model.v_learn_allocation[p]) <= 0
-    model.con_labour_fixed_manager = pe.Constraint(model.s_labperiods, ['manager'], rule = labour_fixed_manager, doc='link between labour supply and requirment by fixed jobs for manager')
+    model.con_labour_fixed_manager = pe.Constraint(model.s_labperiods, ['manager'], rule = labour_fixed_manager, doc='link between labour supply and requirement by fixed jobs for manager')
     
     ######################
     #Labour crop         #
@@ -86,7 +86,7 @@ def coremodel_all():
         pass
     def labour_crop(model,p,w):
         return -model.v_crop_labour_casual[p,w] - model.v_crop_labour_permanent[p,w] - model.v_crop_labour_manager[p,w] + lcrppy.mach_labour(model,p) <= 0
-    model.con_labour_crop_anyone = pe.Constraint(model.s_labperiods, ['anyone'], rule = labour_crop, doc='link between labour supply and requirment by crop jobs for all labour sources')
+    model.con_labour_crop_anyone = pe.Constraint(model.s_labperiods, ['anyone'], rule = labour_crop, doc='link between labour supply and requirement by crop jobs for all labour sources')
     
     ######################
     #labour Sheep        #
@@ -100,7 +100,7 @@ def coremodel_all():
         pass
     def labour_sheep_cas(model,p,w):
         return -model.v_sheep_labour_casual[p,w] - model.v_sheep_labour_permanent[p,w] - model.v_sheep_labour_manager[p,w] + suppy.sup_labour(model,p) + stkpy.stock_labour_anyone(model,p) <= 0
-    model.con_labour_sheep_anyone = pe.Constraint(model.s_labperiods, ['anyone'], rule = labour_sheep_cas, doc='link between labour supply and requirment by sheep jobs for all labour sources')
+    model.con_labour_sheep_anyone = pe.Constraint(model.s_labperiods, ['anyone'], rule = labour_sheep_cas, doc='link between labour supply and requirement by sheep jobs for all labour sources')
 
     ##labour sheep - can be done by permanent and manager staff
     try:
@@ -111,7 +111,7 @@ def coremodel_all():
         pass
     def labour_sheep_perm(model,p,w):
         return - model.v_sheep_labour_permanent[p,w] - model.v_sheep_labour_manager[p,w] + stkpy.stock_labour_perm(model,p) <= 0
-    model.con_labour_sheep_perm = pe.Constraint(model.s_labperiods, ['perm'], rule = labour_sheep_perm, doc='link between labour supply and requirment by sheep jobs for perm labour sources')
+    model.con_labour_sheep_perm = pe.Constraint(model.s_labperiods, ['perm'], rule = labour_sheep_perm, doc='link between labour supply and requirement by sheep jobs for perm labour sources')
 
     ##labour sheep - can be done by manager
     try:
@@ -122,7 +122,7 @@ def coremodel_all():
         pass
     def labour_sheep_manager(model,p,w):
         return  - model.v_sheep_labour_manager[p,w] + stkpy.stock_labour_manager(model,p)   <= 0
-    model.con_labour_sheep_manager = pe.Constraint(model.s_labperiods, ['manager'], rule = labour_sheep_manager, doc='link between labour supply and requirment by sheep jobs for manager labour sources')
+    model.con_labour_sheep_manager = pe.Constraint(model.s_labperiods, ['manager'], rule = labour_sheep_manager, doc='link between labour supply and requirement by sheep jobs for manager labour sources')
 
     #######################################
     #stubble & nap consumption at harvest #
@@ -160,27 +160,27 @@ def coremodel_all():
     #sow landuse        #
     ###################### 
    
-    ##links crop sow req with mach sow provide - no p set becasue model can optimise crop soeing time
+    ##links crop sow req with mach sow provide - no p set because model can optimise crop sowing time
     try:
         model.del_component(model.con_cropsow_index)
         model.del_component(model.con_cropsow)
     except AttributeError:
         pass
     def cropsow_link(model,k,l):
-        if type(crppy.cropsow(model,k,l)) == int: #if crop sow param is zero this will be int (cant do if==0 becasue when it is not 0 it is a complex pyomo object which cant be evaluated)
+        if type(crppy.cropsow(model,k,l)) == int: #if crop sow param is zero this will be int (cant do if==0 because when it is not 0 it is a complex pyomo object which cant be evaluated)
             return pe.Constraint.Skip #skip constraint if no crop is being sown on given rotation
         else:
             return sum(-model.v_seeding_crop[p,k,l] for p in model.s_labperiods) + crppy.cropsow(model,k,l)  <= 0
     model.con_cropsow = pe.Constraint(model.s_crops, model.s_lmus, rule = cropsow_link, doc='link between mach sow provide and rotation crop sow require')
    
-    ##links pasture sow req with mach sow provide - requires a p set because the timing of sowing pasture is not optimisable (pasture sowing can occur in any peirod so the user specifies the periods when a given pasture must be sown)
+    ##links pasture sow req with mach sow provide - requires a p set because the timing of sowing pasture is not optimisable (pasture sowing can occur in any period so the user specifies the periods when a given pasture must be sown)
     try:
         model.del_component(model.con_passow_index)
         model.del_component(model.con_passow)
     except AttributeError:
         pass
     def passow_link(model,p,k,l):
-        if type(paspy.passow(model,p,k,l)) == int: #if crop sow param is zero this will be int (cant do if==0 becasue when it is not 0 it is a complex pyomo object which cant be evaluated)
+        if type(paspy.passow(model,p,k,l)) == int: #if crop sow param is zero this will be int (cant do if==0 because when it is not 0 it is a complex pyomo object which cant be evaluated)
             return pe.Constraint.Skip #skip constraint if no pasture is being sown
         else:
             return -model.v_seeding_pas[p,k,l]  + paspy.passow(model,p,k,l) <= 0
@@ -277,7 +277,7 @@ def coremodel_all():
             combines all cashflow functions from each module and includes debit and credit to form constraint. 
             for each cashflow period dollar flow must be greater than 0. this is accomplished by taking a loan from the bank (if there is more exp than income) or depositing money in the bank. 
             the money withdrawn or deposited in the bank (debit or credit) is then carried over to the next period.
-            the debit and credit carried over is multimpled by j because there is no carry over in the first period (there may be a better way to do it though)
+            the debit and credit carried over is multiplied by j because there is no carry over in the first period (there may be a better way to do it though)
             Carryover basically represents interest free cash at the start of the year. It requires cash from ND and provides in JF. 
 
         '''
@@ -307,7 +307,7 @@ def coremodel_all():
         pass
     def dep(model):
         return  macpy.total_dep(model) + suppy.sup_dep(model) + stkpy.stock_dep(model) - model.v_dep <=0   
-    model.con_dep = pe.Constraint( rule=dep, doc='tallies depreciation from all activities so it can be transferd to objective')
+    model.con_dep = pe.Constraint( rule=dep, doc='tallies depreciation from all activities so it can be transferred to objective')
     
     ######################
     #asset               #
@@ -318,7 +318,7 @@ def coremodel_all():
         pass
     def asset(model):
         return suppy.sup_asset(model) + macpy.mach_asset(model) + stkpy.stock_asset(model) - model.v_asset <=0   
-    model.con_asset = pe.Constraint( rule=asset, doc='tallies asset from all activities so it can be transferd to objective to represent ROE')
+    model.con_asset = pe.Constraint( rule=asset, doc='tallies asset from all activities so it can be transferred to objective to represent ROE')
     
     ######################
     #Min ROE             #
@@ -338,7 +338,7 @@ def coremodel_all():
     #######################################################################################################################################################
     #######################################################################################################################################################
     '''
-    maximise credit in the last period of cashflow (rather than indexing directly with ND$FLOW, i index with the last name in the cashflow periods incase cashflow periods change) 
+    maximise credit in the last period of cashflow (rather than indexing directly with ND$FLOW, i index with the last name in the cashflow periods in case cashflow periods change) 
     minus dep (variable and fixed)
     '''
     def profit(model):

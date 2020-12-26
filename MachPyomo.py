@@ -17,7 +17,7 @@ formatting; try to avoid capitals (reduces possible mistakes in future)
 #python modules
 from pyomo.environ import *
 import sys
-#MUDAS modules
+#AFO modules
 import Mach as mac
 from CreateModel import *
 
@@ -273,7 +273,7 @@ def mach_cost(model,c):
 #function to determine derpriciation cost, this will be passed to core model
 #equals seeding dep plus harv dep plus fixed dep
 def total_dep(model):
-    #fixed dep = total sale value of equipment x fixed rate of dep, number of crop fear acounted for before this step
+    #fixed dep = total sale value of equipment x fixed rate of dep, number of crop fear accounted for before this step
     fixed_dep = mac.fix_dep()
     #cost per ha seeding dep x number of days seeding x ha per day
     seeding_depreciation = sum(sum(sum(model.p_seeding_dep[l] * model.v_seeding_machdays[p,k,l] * model.p_seeding_rate[k,l] for l in model.s_lmus) for p in  model.s_labperiods) for k in model.s_crops) 

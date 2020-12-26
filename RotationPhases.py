@@ -4,7 +4,7 @@ Created on Wed Jan  8 10:00:30 2020
 
 Version Control:
 Version     Date        Person  Change
-1.1         22/02/202   MRY      commented out con2 as it is not needed - don't delete incase we are wrong and it is required.
+1.1         22/02/202   MRY      commented out con2 as it is not needed - don't delete in case we are wrong and it is required.
 
 Known problems:
 Fixed   Date    ID by   Problem
@@ -19,7 +19,7 @@ import numpy as np
 import timeit
 
 
-#MUDAS modules
+#AFO modules
 import UniversalInputs as uinp
 import PropertyInputs as pinp
 

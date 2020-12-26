@@ -11,7 +11,7 @@ import time
 from io import StringIO
 import numpy as np
 
-#MUDAS modules
+#AFO modules
 from CreateModel import model
 import StockGenerator as sgen
 
@@ -273,7 +273,7 @@ def stockpyomo_local(params):
         pass
     model.p_numbers_req_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_dvp_offs, model.s_lw_offs,
                                         model.s_tol, model.s_gender, model.s_groups_offs, model.s_lw_offs,
-                                        initialize=params['p_numbers_req_offs'], default=0.0, doc='requirment of off in the current period')
+                                        initialize=params['p_numbers_req_offs'], default=0.0, doc='requirement of off in the current period')
 
     ##energy intake
     try:
@@ -411,19 +411,19 @@ def stockpyomo_local(params):
         model.del_component(model.p_lab_anyone_sire)
     except AttributeError:
         pass
-    model.p_lab_anyone_sire = pe.Param(model.s_labperiods, model.s_groups_sire,  initialize=params['p_labour_anyone_sire'], default=0.0, doc='labour requirment sire that can be done by anyone')
+    model.p_lab_anyone_sire = pe.Param(model.s_labperiods, model.s_groups_sire,  initialize=params['p_labour_anyone_sire'], default=0.0, doc='labour requirement sire that can be done by anyone')
     try:
         model.del_component(model.p_lab_perm_sire_index)
         model.del_component(model.p_lab_perm_sire)
     except AttributeError:
         pass
-    model.p_lab_perm_sire = pe.Param(model.s_labperiods, model.s_groups_sire, initialize=params['p_labour_perm_sire'], default=0.0, doc='labour requirment sire that can be done by perm staff')
+    model.p_lab_perm_sire = pe.Param(model.s_labperiods, model.s_groups_sire, initialize=params['p_labour_perm_sire'], default=0.0, doc='labour requirement sire that can be done by perm staff')
     try:
         model.del_component(model.p_lab_manager_sire_index)
         model.del_component(model.p_lab_manager_sire)
     except AttributeError:
         pass
-    model.p_lab_manager_sire = pe.Param(model.s_labperiods, model.s_groups_sire, initialize=params['p_labour_manager_sire'], default=0.0, doc='labour requirment sire that can be done by manager')
+    model.p_lab_manager_sire = pe.Param(model.s_labperiods, model.s_groups_sire, initialize=params['p_labour_manager_sire'], default=0.0, doc='labour requirement sire that can be done by manager')
     
     ##labour - dams
     try:
@@ -433,7 +433,7 @@ def stockpyomo_local(params):
         pass
     model.p_lab_anyone_dams = pe.Param(model.s_k2_birth_dams, model.s_labperiods, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams,
                             model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams,
-                                       initialize=params['p_labour_anyone_dams'], default=0.0, doc='labour requirment dams that can be done by anyone')
+                                       initialize=params['p_labour_anyone_dams'], default=0.0, doc='labour requirement dams that can be done by anyone')
     try:
         model.del_component(model.p_lab_perm_dams_index)
         model.del_component(model.p_lab_perm_dams)
@@ -441,7 +441,7 @@ def stockpyomo_local(params):
         pass
     model.p_lab_perm_dams = pe.Param(model.s_k2_birth_dams, model.s_labperiods, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams,
                             model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams,
-                                     initialize=params['p_labour_perm_dams'], default=0.0, doc='labour requirment dams that can be done by perm staff')
+                                     initialize=params['p_labour_perm_dams'], default=0.0, doc='labour requirement dams that can be done by perm staff')
     try:
         model.del_component(model.p_lab_manager_dams_index)
         model.del_component(model.p_lab_manager_dams)
@@ -449,7 +449,7 @@ def stockpyomo_local(params):
         pass
     model.p_lab_manager_dams = pe.Param(model.s_k2_birth_dams, model.s_labperiods, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams,
                             model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams,
-                                        initialize=params['p_labour_manager_dams'], default=0.0, doc='labour requirment dams that can be done by manager')
+                                        initialize=params['p_labour_manager_dams'], default=0.0, doc='labour requirement dams that can be done by manager')
     
     ##labour - offs
     try:
@@ -459,7 +459,7 @@ def stockpyomo_local(params):
         pass
     model.p_lab_anyone_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_labperiods, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
                              model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender, model.s_gen_merit_offs, model.s_groups_offs,
-                             initialize=params['p_labour_anyone_offs'], default=0.0, doc='labour requirment offs - anyone')
+                             initialize=params['p_labour_anyone_offs'], default=0.0, doc='labour requirement offs - anyone')
     try:
         model.del_component(model.p_lab_perm_offs_index)
         model.del_component(model.p_lab_perm_offs)
@@ -467,7 +467,7 @@ def stockpyomo_local(params):
         pass
     model.p_lab_perm_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_labperiods, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
                              model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender, model.s_gen_merit_offs, model.s_groups_offs,
-                             initialize=params['p_labour_perm_offs'], default=0.0, doc='labour requirment offs - perm')
+                             initialize=params['p_labour_perm_offs'], default=0.0, doc='labour requirement offs - perm')
     try:
         model.del_component(model.p_lab_manager_offs_index)
         model.del_component(model.p_lab_manager_offs)
@@ -475,7 +475,7 @@ def stockpyomo_local(params):
         pass
     model.p_lab_manager_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_labperiods, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
                              model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender, model.s_gen_merit_offs, model.s_groups_offs,
-                             initialize=params['p_labour_manager_offs'], default=0.0, doc='labour requirment offs - manager')
+                             initialize=params['p_labour_manager_offs'], default=0.0, doc='labour requirement offs - manager')
 
     ##infrastructure
     try:
@@ -635,7 +635,7 @@ def stockpyomo_local(params):
         pass
     def damR(model,k29,v1,a,z,i,y1,g9,w9):
         v1_prev = l_v1[l_v1.index(v1) - 1]  #used to get the activity number from the last period - to determine the number of dam provided into this period
-        ##skip constraint if the require param is 0 - using the numpy array because it is 2x faster becasue dont need to loop through activity keys eg k28
+        ##skip constraint if the require param is 0 - using the numpy array because it is 2x faster because don't need to loop through activity keys eg k28
         ###get the index number - required so numpy array can be indexed
         t_k29 = l_k29.index(k29)
         t_v1 = l_v1.index(v1)
@@ -668,7 +668,7 @@ def stockpyomo_local(params):
         pass
     def offR(model,k3,k5,v3,a,z,i,x,y3,g3,w9):
         v3_prev = l_v1[l_v3.index(v3) - 1]  #used to get the activity number from the last period
-        ##skip constraint if the require param is 0 - using the numpy array because it is 2x faster becasue dont need to loop through activity keys eg k28
+        ##skip constraint if the require param is 0 - using the numpy array because it is 2x faster because don't need to loop through activity keys eg k28
         ###get the index number - required so numpy array can be indexed
         t_k3 = l_k3.index(k3)
         t_k5 = l_k5.index(k5)
@@ -682,7 +682,7 @@ def stockpyomo_local(params):
         return sum(model.v_offs[k3,k5,t3,v3,n3,w8,z,i,a,x,y3,g3] * model.p_numbers_req_offs[k3,k5,v3,w8,i,x,g3,w9]
                    - model.v_offs[k3,k5,t3,v3_prev,n3,w8,z,i,a,x,y3,g3] * model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z,i,a,x,y3,g3,w9]
                     for t3 in model.s_sale_offs for n3 in model.s_nut_offs for w8 in model.s_lw_offs
-                   if model.p_numbers_req_offs[k3,k5,v3,w8,i,x,g3,w9] != 0 or model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z,i,a,x,y3,g3,w9] != 0) <=0 #need to use both in the if statement (even though it is slower) becasue there are stitustions eg dvp4 (prejoining) where prov will have a value and req will not.
+                   if model.p_numbers_req_offs[k3,k5,v3,w8,i,x,g3,w9] != 0 or model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z,i,a,x,y3,g3,w9] != 0) <=0 #need to use both in the if statement (even though it is slower) because there are situations eg dvp4 (prejoining) where prov will have a value and req will not.
     start=time.time()
     model.con_offR = pe.Constraint(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_dvp_offs, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gender,
                                    model.s_gen_merit_dams, model.s_groups_offs, model.s_lw_offs, rule=offR, doc='transfer off to off from last dvp to current dvp.')
@@ -697,7 +697,7 @@ def stockpyomo_local(params):
         pass
     def progR(model, k5, a, z, i9, d, x, y1, g1, w9):
         if any(model.p_npw_req[t2,d,x,g1] for t2 in model.s_sale_prog):
-            return (- sum(model.v_dams[k5, t1, v1, a, n1, w18, z, i, y1, g1]  * model.p_npw[k5, t1, v1, a, n1, w18, z, i, d, x, y1, g1, w9, i9] #pass in the k5 set to dams - each slice of k5 alings with a slice in k2 eg 11 and 22. we dont need other k2 slices eg nm
+            return (- sum(model.v_dams[k5, t1, v1, a, n1, w18, z, i, y1, g1]  * model.p_npw[k5, t1, v1, a, n1, w18, z, i, d, x, y1, g1, w9, i9] #pass in the k5 set to dams - each slice of k5 alings with a slice in k2 eg 11 and 22. we don't need other k2 slices eg nm
                         for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams for w18 in model.s_lw_dams for i in model.s_tol
                              if model.p_npw[k5, t1, v1, a, n1, w18, z, i, d, x, y1, g1, w9, i9]!=0)
                     + sum(model.v_prog[k5, t2, w9, z, i9, d, a, x, g1] * model.p_npw_req[t2,d,x,g1] for t2 in model.s_sale_prog if model.p_npw_req[t2,d,x,g1]!=0))<=0
@@ -773,7 +773,7 @@ def stockpyomo_local(params):
                   for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for a in model.s_wean_times for n1 in model.s_nut_dams
                    for w1 in model.s_lw_dams for z in model.s_season_types for i in model.s_tol for y1 in model.s_gen_merit_dams  for g1 in model.s_groups_dams
                    if model.p_nsires_req[k2,t1,v1,a,n1,w1,z,i,y1,g1,g0,p8]!=0) <=0
-    model.con_matingR = pe.Constraint(model.s_groups_sire, model.s_sire_periods, rule=mating, doc='sire requirment for mating')
+    model.con_matingR = pe.Constraint(model.s_groups_sire, model.s_sire_periods, rule=mating, doc='sire requirement for mating')
 
     try:
         model.del_component(model.con_stockinfra)
@@ -975,7 +975,7 @@ def stock_asset(model):
     #         # - sum(model.v_offs2dam[v3,n3,w3,z3,i3,d,a3,b3,x,y3,g3,g1_off] * model.p_offs2dam_numbers[v3,n3,w3,z3,i3,d,a3,b3,x,y3,g3,g1_off,v1,a,b1,w1,z,i,y1,g1]
     #         #       for v3 in model.s_dvp_offs for n3 in model.s_nut_offs for w3 in model.s_lw_offs for z3 in model.s_season_types for i3 in model.s_tol for d in model.s_k3_damage_offs for a3 in model.s_wean_times
     #         #       for b3 in model.s_k5_birth_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs for g1_off in model.s_groups_dams)  #have to track off sets so only they are summed.
-    #     ###if statement required to handle the constraints that dont exist due to lw clustering
+    #     ###if statement required to handle the constraints that don't exist due to lw clustering
     #     # if sum(model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9] for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams if model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,z,i,y1,g1,w9] !=0) ==0 and sum(model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z,i,y1,g1,w9]
     #     #         for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams if model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z,i,y1,g1,w9] !=0)==0:
     #     #     pass

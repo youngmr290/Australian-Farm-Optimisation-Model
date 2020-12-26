@@ -76,7 +76,7 @@ def f_daylength(dayOfYear, lat):
 #     joining_date : Array
 #         Joining date.
 #     age : Array
-#         age of animal at the begining of each period.
+#         age of animal at the beginning of each period.
 
 #     Returns
 #     -------
@@ -315,7 +315,7 @@ def f_g2g(array_g,group,left_pos=0,len_ax1=0,len_ax2=0,len_ax3=0,swap=False,righ
     else: extra_axes = ()
     array_g = np.expand_dims(array_g, axis = extra_axes)
 
-    ##get axis into correct position 2 (some arrays need singleton axis added in multiple places ie seperated by a used axis)
+    ##get axis into correct position 2 (some arrays need singleton axis added in multiple places ie separated by a used axis)
     if left_pos2 != None or left_pos2 != 0:
         extra_axes = tuple(range((left_pos2 + 1), right_pos2))
     else: extra_axes = ()
@@ -1206,7 +1206,7 @@ def f_condensed(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp
             temporary[...] = np.mean(
                 f_dynamic_slice(var, uinp.structure['i_w_pos'], int(i_n_len ** i_n_fvp_period), int(i_n_len ** i_n_fvp_period) + int(i_w_len / 10)), uinp.structure['i_w_pos'],
                 keepdims=True)  # average of the top lw patterns
-            ###add mid pattern (w 0 - 27) - use slice method incase w axis changes postion (cant use MRYs dynamic slice function because we are assigning)
+            ###add mid pattern (w 0 - 27) - use slice method in case w axis changes postion (cant use MRYs dynamic slice function because we are assigning)
             sl = [slice(None)] * temporary.ndim
             sl[uinp.structure['i_w_pos']] = slice(0, int(i_n_len ** i_n_fvp_period))
             temporary[tuple(sl)] = f_dynamic_slice(var, uinp.structure['i_w_pos'], 0, 1)  # the pattern that is feed supply 1 (median) for the entire year (the top w pattern)
@@ -1273,14 +1273,14 @@ def f_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfoe
     '''
     ##a) mortality
     numbers = numbers * (1-mortality)
-    ##numbers for post processing - dont include selling drys - asignment required here for when it is not group 1 or 2
+    ##numbers for post processing - don't include selling drys - asignment required here for when it is not group 1 or 2
     pp_numbers = numbers
     ##things for dams - prejoining and moving between classes
     if group==1:
         ###b) conception - conception is the change in numbers +ve for animals getting pregnancy and -ve in the NM e-0 slice (note the conception for e slice 1 and higher puts the negitive numbers in the e-0 nm slice)
         if np.any(period_is_mating):
             temporary = numbers + conception * numbers[:, 0:1, 0:1, ...]  # numbers_dams[..., 0,0, ...] is the NM slice of cycle 0 ie the number of animals yet to be mated (conception will have negitive value in nm slice)
-            numbers = fun.f_update(numbers, temporary, np.any(period_is_mating, axis=pinp.sheep['i_e1_pos'])) #needs to be previous period else conception is not calculated because numbers happens at begining of p loop
+            numbers = fun.f_update(numbers, temporary, np.any(period_is_mating, axis=pinp.sheep['i_e1_pos'])) #needs to be previous period else conception is not calculated because numbers happens at beginning of p loop
         ###at the end of mating move any remaining numbers from nm to 00 slice (note only the nm slice for e-0 has numbers - this is handled in the conception function)
         ###Set temporary to copy of current numbers
         if np.any(period_is_matingend):
@@ -1296,7 +1296,7 @@ def f_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfoe
             temp = np.maximum(pinp.sheep['i_drysretained_birth'],np.minimum(1, nyatf_b1)) * pp_numbers
             numbers = fun.f_update(pp_numbers, temp, period_is_birth * (gbal>=2)) # has to happen after the dams are moved due to progeny mortality so that gbal drys are also scaled by drys_retained
         else:
-            ##numbers for post processing - dont include selling drys - asignment required here incase it is not birth
+            ##numbers for post processing - don't include selling drys - asignment required here in case it is not birth
             pp_numbers = numbers
         ###c) scanning
         if np.any(period_is_scan):
@@ -1490,7 +1490,7 @@ def f_sale_value(cu0, cx, o_rc, o_ffcfw_pg, dressp_adj_yg, dresspercent_adj_s6pg
     temporary_s7pg = price_mobaverage_s7pg * (1 + month_discount_s7pg)
     ##Apply discount if age is greater than threshold age
     price_mobaverage_s7pg = fun.f_update(price_mobaverage_s7pg, temporary_s7pg, age_end_p5g1/30 > discount_age_s7pg)  #divide 30 to convert to months
-    ##Convert weight to 1 if price is $/hd - dont want to mul by weight if $/hd
+    ##Convert weight to 1 if price is $/hd - don't want to mul by weight if $/hd
     weight_for_value_s7pg = fun.f_update(o_ffcfw_pg, 1, price_type_s7pg == 2)
     ##Calculate value per head (gross)
     sale_value_s7pg = price_mobaverage_s7pg * weight_for_value_s7pg
@@ -1513,7 +1513,7 @@ def f_animal_trigger_levels(index_pg, age_start, period_is_shearing_pg, a_next_s
     ##Trigger value 3 - Weeks from previous shearing
     trigger3_pg = index_pg - np.maximum.accumulate(index_pg*period_is_shearing_pg)
     ##Trigger value 4 - weeks to next shearing - cant use period is array like in the other situations
-    trigger4_pg = index_pg - a_next_s_pg #this will return 0 when the current peroid is shearing because the next association points at the current period when period is
+    trigger4_pg = index_pg - a_next_s_pg #this will return 0 when the current period is shearing because the next association points at the current period when period is
     ##Trigger value 5 - weeks from previous joining
     trigger5_pg = index_pg - np.maximum.accumulate(index_pg*period_is_joining_pg)
     ##Trigger value 6 - weeks from end of mating
@@ -1731,7 +1731,7 @@ def f_p2v_std(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tv
     return np.sum(production_ftvpany, axis=uinp.structure['i_p_pos']-sumadj)  # sum along p axis to leave just a v axis (sumadj is to handle nsire that has a p8 axis at the end)
 
 
-# ##Method 4 - loop over v and sum p - this save p and v axis being on the same array but requires lots of looping so isnt much faster
+# ##Method 4 - loop over v and sum p - this save p and v axis being on the same array but requires lots of looping so isn't much faster
 # def f_p2v_loop(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tvp=True, days_period_p=1, period_is_tvp=True, a_ev_p=1, index_ftvp=1, a_p6_p=1, index_p6ftvp=1):
 #     try: days_period_p = days_period_p.astype('float32')  #convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it cant be converted to float (because int object is not numpy)
 #     except AttributeError:
@@ -1748,7 +1748,7 @@ def f_p2v_std(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tv
 #         final[:,:,:,i,...] = temp_prod  #asign to correct v slice
 #     return final
 
-# ##Method 3 - use groupby to sum p, this means p and v dont exist on the same array - not as fast as method 2
+# ##Method 3 - use groupby to sum p, this means p and v don't exist on the same array - not as fast as method 2
 # import numpy_indexed as npi
 # def f_p2v_groupby(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tvp=True, days_period_p=1, period_is_tvp=True, a_ev_p=1, index_ftvp=1, a_p6_p=1, index_p6ftvp=1):
 #     try: days_period_p = days_period_p.astype('float32')  #convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it cant be converted to float (because int object is not numpy)
@@ -1768,7 +1768,7 @@ def f_p2v_std(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tv
 #                                                                     production_ftpany[:, :, :, :, :, e1:e1+1, :, :, :, :, :, :, :, :, :, :, :, g:g+1], axis=uinp.structure['i_p_pos'])[1]
 #     return result
 
-##Method 2 (fastest)- sum sections of p axis to leave v (almost like sum if) this is fast because dont need p and v axis one same array
+##Method 2 (fastest)- sum sections of p axis to leave v (almost like sum if) this is fast because don't need p and v axis one same array
 def f_p2v(production_p, dvp_pointer_p=1, numbers_p=1, on_hand_tp=True, days_period_p=1, period_is_tp=True, a_any1_p=1, index_any1tp=1, a_any2_p=1, index_any2any1tp=1):
     try: days_period_p = days_period_p.astype('float32')  #convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it cant be converted to float (because int object is not numpy)
     except AttributeError:

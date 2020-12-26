@@ -19,7 +19,7 @@ import numpy as np
 import datetime 
 from dateutil.relativedelta import relativedelta
 
-#MUDAS modules
+#AFO modules
 # from LabourInputs import *
 import PropertyInputs as pinp
 import UniversalInputs as uinp
@@ -172,7 +172,7 @@ def labour_general(params,r_vals):
             labour_periods.loc[labour_periods['date']==i , 'casual supervision'] = labour_periods.loc[labour_periods['date']==i , 'casual hours'] \
             * pinp.labour['labour_eff'].loc['normal', 'Casual']   
 
-        ##determine bounds for casual labour, this is needed because casual labour requirments may be different during seeding and harvest compared to the rest
+        ##determine bounds for casual labour, this is needed because casual labour requirements may be different during seeding and harvest compared to the rest
         ###upper bound
         if i in per.period_dates(per.wet_seeding_start_date(),pinp.crop['seed_period_lengths']) \
         or i in per.period_dates(pinp.crop['harv_date'],pinp.crop['harv_period_lengths']): #checks if the date is a seed period or harvest date

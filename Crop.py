@@ -10,9 +10,9 @@ key: green section title is major title
  
 Version Control:
 Version     Date        Person  Change
-1.1         27Dec19     MRY     Updated rotation phase function, and crop functions (individual costs seperated and one funct to sum them all at the bottom)
+1.1         27Dec19     MRY     Updated rotation phase function, and crop functions (individual costs separated and one funct to sum them all at the bottom)
 1.1         28Dec19     MRY     alterd stubble handling to work with new rotation system (stubble handling cost is now associated with the current phase rather than the previous phase)
-1.2         16Jan20     M       seperated grain price from yield - it is now seperate so it can be combined with yield penalty and crop grazing yield penalty before being multiplied by price.
+1.2         16Jan20     M       separated grain price from yield - it is now separate so it can be combined with yield penalty and crop grazing yield penalty before being multiplied by price.
 
 Known problems:
 Fixed   Date        ID by   Problem
@@ -34,7 +34,7 @@ import timeit
 import datetime as dt
 import sys
 
-#MUDAS modules
+#AFO modules
 import UniversalInputs as uinp
 import PropertyInputs as pinp
 import Functions as fun
@@ -53,7 +53,7 @@ import Mach as mac
 ##makes a df of all possible rotation phases
 phases_df =uinp.structure['phases']
 phases_df2=phases_df.copy() #make a copy so that it doesn't alter the phases df that exists outside this func
-phases_df2.columns = pd.MultiIndex.from_product([phases_df2.columns, ['']])  #make the df multi index so that when it merges with other df below the indexs remanin seperate (otherwise it turn into a one leveled tuple)
+phases_df2.columns = pd.MultiIndex.from_product([phases_df2.columns, ['']])  #make the df multi index so that when it merges with other df below the indexs remanin separate (otherwise it turn into a one leveled tuple)
 
 ##check that the rotations match the inputs. If not then quit and leave error message
 if pinp.crop['user_crop_rot']:
@@ -64,7 +64,7 @@ else:
     base_yields
 
 if len(phases_df) != len(base_yields): 
-    print ('''Rotations dont match inputs.
+    print ('''Rotations don't match inputs.
            Things to check: 
            1. if you have generated new rotations have you re-run AusFarm?
            2. if you added new rotations in the user defined section have you re-run the rotation generator?
@@ -88,7 +88,7 @@ def f_farmgate_grain_price(r_vals={}):
                 -cartage cost
                 -other fees ie cbh and levies
     '''
-    grain_price_info_df=uinp.price['grain_price'] #create a copy of grain price df so you dont have to reference input module each time
+    grain_price_info_df=uinp.price['grain_price'] #create a copy of grain price df so you don't have to reference input module each time
     ##gets the price of firsts and seconds for each grain
     price_df = grain_price_info_df[['firsts','seconds']]
     ##determine cost of selling
@@ -185,7 +185,7 @@ def rot_yield(params=False):
 #######    
 '''
 1) determines fert cost allocation 
-2) fert requirment for each rot phase
+2) fert requirement for each rot phase
 3) cost of fert for each rotation 
 4) application cost per kg and application cost per ha 
     -per tonne; represents the difference in application time based on fert density - represents the filling up and traveling to the paddock time, ie it would require more filling and traveling time to spread 1t of a lighter (less dense) fert.
@@ -299,14 +299,14 @@ def fert_cost(r_vals):
     application_cost = allocation.mul(mac.fert_app_cost_t()).stack() #mul app cost per tonne with fert cost allocation
     fert_app_cost_t=fertreq.mul(application_cost/1000,axis=1,level=1).sum(axis=1, level=0) #div by 1000 to convert to $/kg
     ##app cost per ha 
-    ###call passes function (it has to be a seperate function because it is used in crplabour.py as well
+    ###call passes function (it has to be a separate function because it is used in crplabour.py as well
     fert_passes = f_fert_passes()
     ###add the cost for each pass
     fert_cost_ha = allocation.mul(mac.fert_app_cost_ha()).stack() #cost for 1 pass for each fert.
     fert_app_cost_ha = fert_passes.mul(fert_cost_ha,axis=1,level=1).sum(axis=1, level=0)
     r_vals['fert_app_cost'] = fert_app_cost_ha
     ##combine all costs - fert, app per ha and app per tonne    
-    fert_cost_total= pd.concat([phase_fert_cost,fert_app_cost_t, fert_app_cost_ha],axis=1).sum(axis=1,level=0) #must include level so that all cols dont sum, had to switch this from .add to concat because for some reason on multiple itterations of the model add stoped working
+    fert_cost_total= pd.concat([phase_fert_cost,fert_app_cost_t, fert_app_cost_ha],axis=1).sum(axis=1,level=0) #must include level so that all cols don't sum, had to switch this from .add to concat because for some reason on multiple itterations of the model add stoped working
     return fert_cost_total
 
 def f_nap_fert_req():
@@ -323,7 +323,7 @@ def f_nap_fert_req():
 
 def f_nap_fert_passes():
     '''hectares spread on non arable area'''
-    ##passes over non arable pasture area (only for pasture phases becasue for pasture the non arable areas also recieve fert)
+    ##passes over non arable pasture area (only for pasture phases because for pasture the non arable areas also recieve fert)
     passes_na = pinp.crop['nap_passes'].reset_index().set_index(['fert','landuse'])
     arable = pinp.crop['arable'].squeeze() #eed to adjust for only non arable area
     passes_na= passes_na.mul(1-arable) #adjust for the non arable area
@@ -340,7 +340,7 @@ def nap_fert_cost(r_vals):
     Returns
     -------
     Dataframe- to be added to total costs at the end.
-        Fert applied to non arable pasture - currently setup so that only pasture phases get fert on the non arable areas hence it needs to be a seperate function.
+        Fert applied to non arable pasture - currently setup so that only pasture phases get fert on the non arable areas hence it needs to be a separate function.
     '''
     allocation = fert_cost_allocation()
     ##fert cost
@@ -490,7 +490,7 @@ def f_chem_cost(r_vals):
     chem_cost=chem_cost.unstack().mul(chem_by_soil1,axis=1,level=0).stack()
     ##application cost
     app_cost_ha = chem_applications * mac.chem_app_cost_ha()
-    ##add cashflow periods and sum across each chem - have to do this to both chem cost and application so i can report them seperately
+    ##add cashflow periods and sum across each chem - have to do this to both chem cost and application so i can report them separately
     c_chem_allocation = chem_cost_allocation().stack()
     chem_cost = chem_cost.mul(c_chem_allocation, axis=1,level=1).sum(axis=1, level=0)#first stack is required so that reindexing can occur (ie cant reindex a multi index with a multi index)
     app_cost_ha = app_cost_ha.mul(c_chem_allocation, axis=1,level=1).sum(axis=1, level=0)#first stack is required so that reindexing can occur (ie cant reindex a multi index with a multi index)
@@ -626,7 +626,7 @@ def crop_sow(params):
     Returns
     -------
     Dict for pyomo.
-        Crop sow (wet or dry or spring) requirment for each rot phase
+        Crop sow (wet or dry or spring) requirement for each rot phase
 
     '''
     ##sow = arable area

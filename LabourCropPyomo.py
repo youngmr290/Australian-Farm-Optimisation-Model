@@ -9,7 +9,7 @@ module - labour crop pyomo stuff
 #python modules
 from pyomo.environ import *
 
-#MUDAS modules
+#AFO modules
 from MachPyomo import *
 from CreateModel import *
 import LabourCrop as lcrp

@@ -16,7 +16,7 @@ formatting; try to avoid capitals (reduces possible mistakes in future)
 #python modules
 from pyomo.environ import *
 
-#MUDAS modules
+#AFO modules
 import LabourFixed as lfix
 import PropertyInputs as pinp
 # from LabourPyomo import *

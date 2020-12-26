@@ -11,7 +11,7 @@ import pandas as pd
 import numpy as np
 import timeit
 
-#MUDAS modules
+#AFO modules
 # from LabourCropInputs import *
 import Functions as fun
 import Crop as crp
@@ -37,10 +37,10 @@ def prep_labour(params):
     #list of all the dicts that i want to combine
     dfs=pinp.labour['harvest_prep'],pinp.labour['fert_prep'] \
     , pinp.labour['spray_prep'], pinp.labour['seed_prep']
-    params['prep_labour'] = fun.df_period_total(p_dates, p_name, *dfs) # '*' used to unpack list into seperate items for func
+    params['prep_labour'] = fun.df_period_total(p_dates, p_name, *dfs) # '*' used to unpack list into separate items for func
 
 ###########################
-#fert applicaation time   #  this is similar to app cost done in mach sheet
+#fert application time   #  this is similar to app cost done in mach sheet
 ###########################
 #this is split into two sections - new feature of midas
 # 1- time to drive around 1ha
@@ -58,7 +58,7 @@ def lab_allocation():
 #time/per ha - needs to be multiplied by the number of phases and then added to phases df because the previous phases can effect number of passes and hence time
 #also need to account for arable area
 def fert_app_time_ha(params):
-    ##fert passes - arable (arable area acounted for in passes function)
+    ##fert passes - arable (arable area accounted for in passes function)
     passes_arable = crp.f_fert_passes()
     ##non arable fert passes
     passes_na = crp.f_nap_fert_passes() #on pasture phases only
@@ -85,7 +85,7 @@ def fert_app_time_t(params):
 
 
 ###########################
-#chem applicaation time   #  this is similar to app cost done in mach sheet
+#chem application time   #  this is similar to app cost done in mach sheet
 ###########################
 
 def chem_lab_allocation():

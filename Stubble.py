@@ -6,13 +6,13 @@ Version Control:
 Version     Date        Person  Change
 1.1         29Dec19     JMY     Altered feed periods in FeedBudget, therefore had to remove last row in the fp df used in this module
 1.2         4Jan20      MRY     Documented me and vol section and changed definitions of dmd and md
-1.3         6Jan20      MRY     clip the vol and me df at 0 (dont want negitive me and negitive vol could lead to potential issue) & add vol = 1000/(ri_quality * availability) to be used in pyomo
+1.3         6Jan20      MRY     clip the vol and me df at 0 (don't want negitive me and negitive vol could lead to potential issue) & add vol = 1000/(ri_quality * availability) to be used in pyomo
 
 
 Known problems:
 Fixed   Date        ID by   Problem
        4Jan20       MRY     ^ protien stuff needs to be added still, when the emmisions are done
-1.3    4Jan20       MRY     ^ need to clip the vol and me df at 0 (dont want negitive me and negitive vol could lead to potential issue)
+1.3    4Jan20       MRY     ^ need to clip the vol and me df at 0 (don't want negitive me and negitive vol could lead to potential issue)
        4Jan20       JMY     ^ could possibly convert this numpy to make it more simple 
 1.3    4Jan20       JMY     ^need to add vol = 1000/(ri_quality * availability) to be used in pyomo
 
@@ -57,10 +57,10 @@ def stubble_all(params):
     '''
 
     #create df with feed periods
-    fp = pinp.feed_inputs['feed_periods'].iloc[:-1].copy() #removes last row, some reason i need to copy so that i dont get settingcopywarning
+    fp = pinp.feed_inputs['feed_periods'].iloc[:-1].copy() #removes last row, some reason i need to copy so that i don't get settingcopywarning
     cat_a_st_req=pd.DataFrame()
     cat_b_st_prov=pd.DataFrame() #provide tr ie cat A provides stub b tr - done straight as a dict because value doesn't change for different periods
-    cat_b_st_req=pd.DataFrame() #requirment for tr ie cat B requires stub b tr - done straight as a dict because value doesn't change for different periods, this would have to change if trampling was different for periods
+    cat_b_st_req=pd.DataFrame() #requirement for tr ie cat B requires stub b tr - done straight as a dict because value doesn't change for different periods, this would have to change if trampling was different for periods
     cat_c_st_prov=pd.DataFrame()
     cat_c_st_req=pd.DataFrame()
     per_transfer=pd.DataFrame()
@@ -72,7 +72,7 @@ def stubble_all(params):
     cons_prop=pd.DataFrame(index=fp.index)
 
 
-    ##create mask which is stubble available. Stubble is available from the period harvest starts to the begining of the following growing season.
+    ##create mask which is stubble available. Stubble is available from the period harvest starts to the beginning of the following growing season.
     ##if the end date of the fp is after harvest then stubble is available.
     harv_date = pinp.crop['harv_date']
     mask_stubble_exists = pinp.feed_inputs['feed_periods'].loc['FP1':, 'date'] > harv_date  #need to use the full fp array that has the end date of the last period.
@@ -173,7 +173,7 @@ def stubble_all(params):
         ###########
         #trampling#
         ###########
-        #for now this is just a single number however the input could be changed to per period, then convert this to a df or array, if this is changed some of the dict below would need to be dfs the stacked - so they acount for period
+        #for now this is just a single number however the input could be changed to per period, then convert this to a df or array, if this is changed some of the dict below would need to be dfs the stacked - so they account for period
         tramp_effect=[]
         stub_cat_prop = [] #used in next section but easy to add here in the same loop
         for cat in pinp.stubble['stub_cat_prop']:
@@ -234,10 +234,10 @@ def stubble_all(params):
     transfer_prov=pd.concat([cat_b_st_prov,cat_c_st_prov]).squeeze().to_dict()
     ###md & vol
     md = md.mul(mask_stubble_exists, axis=0)
-    md.columns=pd.MultiIndex.from_tuples(md) #converts to multi index so stacking will have crop and cat as seperate keys
+    md.columns=pd.MultiIndex.from_tuples(md) #converts to multi index so stacking will have crop and cat as separate keys
     md = md.stack().stack().to_dict()    #for pyomo
     vol = vol.mul(mask_stubble_exists, axis=0)
-    vol.columns=pd.MultiIndex.from_tuples(vol) #converts to multi index so stacking will have crop and cat as seperate keys
+    vol.columns=pd.MultiIndex.from_tuples(vol) #converts to multi index so stacking will have crop and cat as separate keys
     vol = vol.stack().stack().to_dict()    #for pyomo
 
     ##load params to dict for pyomo
