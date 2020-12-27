@@ -3939,10 +3939,12 @@ def generator(params,r_vals,plots = False):
     ####################################################
     ''' Mask numbers transferred - these mask stops dams transferring to different sires between dvps that are not prejoining'''
     ##dams
-    ###create a t mask for dam decision variables - a transferring animal it only has parameters in the period that is transfer
+    ###create a t mask for dam decision variables - an animal that is transferring between ram groups only has parameters in the dvp that is transfer
     period_is_transfer_tva1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(period_is_transfer_tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1)
+    #todo: consider masking transfers between ram genotypes in DVP0. So they are allocated direct rather than transferring in dvp0
+    ##something like np.logical_or(np.logical_and(period_is_transfer_tva1e1b1nwzida0e0b0xyg1, index_v != 0), (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1))
     mask_tvars_tva1e1b1nw8zida0e0b0xyg1 = np.logical_or(period_is_transfer_tva1e1b1nwzida0e0b0xyg1, (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1))
-
+    # todo: tidy up unused code after it is tested
     # temporary = (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na]
     # mask_numbers_provt_tva1e1b1nwzida0e0b0xyg1g9 = fun.f_update(temporary, temporary * (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na, :],
     #                                      dvp_type_next_va1e1b1nwzida0e0b0xyg1[..., na,:] != 0) * transfer_exists_tpa1e1b1nwzida0e0b0xyg1[..., na]
@@ -3950,7 +3952,7 @@ def generator(params,r_vals,plots = False):
     # mask_numbers_provt_tva1e1b1nwzida0e0b0xyg1g9 = fun.f_update(temporary, temporary * (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na],
     #                                      dvp_type_next_tva1e1b1nwzida0e0b0xyg1[..., na] != 0) * transfer_exists_tpa1e1b1nwzida0e0b0xyg1[..., na]
 
-    ###numbers are provided in the identity array between g1 & g9 when the transfer exists and the decision variables exist
+    ###numbers are provided by g1 to g9 (a_g1_tg1) when that transfer exists and the transfer decision variables exist
     mask_numbers_provt_tva1e1b1nwzida0e0b0xyg1g9 = mask_tvars_tva1e1b1nw8zida0e0b0xyg1[...,na] * transfer_exists_tpa1e1b1nwzida0e0b0xyg1[..., na]  \
                                                       * (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na, :]
         # fun.f_update(temporary, temporary * (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na],
@@ -3959,6 +3961,7 @@ def generator(params,r_vals,plots = False):
     # mask_numbers_provt_tva1e1b1nwzida0e0b0xyg1g9 = fun.f_update(temporary, temporary * (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na],
     #                                      dvp_type_next_va1e1b1nwzida0e0b0xyg1[..., na] != 0) * transfer_exists_tpa1e1b1nwzida0e0b0xyg1[..., na]
     # temporary = (index_g9 == index_g1g)
+    ###numbers are required across the identity array between g1 & g9 in the periods that the transfer decision variable exists exists
     mask_numbers_reqt_tva1e1b1nwzida0e0b0xyg1g9 = mask_tvars_tva1e1b1nw8zida0e0b0xyg1[...,na] \
                                                     * (index_g9 == index_g1g)
         # fun.f_update(temporary, temporary*(index_g1g == a_g1_tpa1e1b1nwzida0e0b0xyg1[...,na,:]),
@@ -4242,7 +4245,9 @@ def generator(params,r_vals,plots = False):
     ###numbers required - no d axis for Dam DVs
     ####collapse the e1 axis on the mask prior to np.sum because can't test for > 0 as per other numbers_req (because need proportions of age & BTRT)
     #### but don't want to increase the numbers if joining for multiple cycles
-    numbers_progreq_k2k3k5tva1e1b1nw8zida0e0b0xyg1g9w9 = 1 * (np.sum(np.any(mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9, axis=e1_pos-1, keepdims=True)[0, ...,na,:] * (index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,..., na,na] == 0)
+    numbers_progreq_k2k3k5tva1e1b1nw8zida0e0b0xyg1g9w9 = 1 * (np.sum(np.any(mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9, axis=e1_pos-1, keepdims=True)[0, ...,na,:]
+                                                                    * mask_tvars_tva1e1b1nw8zida0e0b0xyg1[:,0:1,...,na,na]  # mask based on the t axis for dvp0
+                                                                    * (index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,..., na,na] == 0)
                                                                     * (index_g1[...,na]==index_g1)[...,na] * btrt_propn_b0xyg1[...,na,na] * e0_propn_ida0e0b0xyg[...,na,na]
                                                                     * agedam_propn_da0e0b0xyg1[...,na,na] * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na,na]
                                                                     * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[...,na,na],
@@ -4541,7 +4546,7 @@ def generator(params,r_vals,plots = False):
     # keys_lw0 = np.array(uinp.structure['i_w_idx_sire'])
     keys_lw1 = np.array(uinp.structure['i_w_idx_dams'])
     keys_lw3 = np.array(uinp.structure['i_w_idx_offs'])
-    keys_lw_prog = ['lw%s'%i for i in range(len_w_prog)]
+    keys_lw_prog = ['lw%02d'%i for i in range(len_w_prog)]
     # keys_n0 = uinp.structure['i_n_idx_sire']
     keys_n1 = np.array(uinp.structure['i_n_idx_dams'])
     keys_n3 = np.array(uinp.structure['i_n_idx_offs'])
@@ -4599,11 +4604,11 @@ def generator(params,r_vals,plots = False):
     index_k3tw8zida0xyg2g9w9 = fun.cartesian_product_simple_transpose(arrays)
 
     ###k3tvw8zidyg2w9 - prog to offs prov
-    arrays = [keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i, keys_d, keys_a, keys_x, keys_y1, keys_g3, keys_lw1]
+    arrays = [keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i, keys_d, keys_a, keys_x, keys_y1, keys_g3, keys_lw3]
     index_k3k5tw8zidaxyg2w9 = fun.cartesian_product_simple_transpose(arrays)
 
     ###k3k5tva1w8zidyg1g9w9 - prog to dams req
-    arrays = [keys_k2, keys_k3, keys_k5, keys_lw1, keys_z, keys_i, keys_y1, keys_g1, keys_g1, keys_lw1]
+    arrays = [keys_k2, keys_k3, keys_k5, keys_t1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1, keys_g1, keys_lw1]
     index_k2k3k5w8ziyg1g9w9 = fun.cartesian_product_simple_transpose(arrays)
 
 

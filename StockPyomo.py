@@ -218,7 +218,7 @@ def stockpyomo_local(params):
         model.del_component(model.p_progreq_dams)
     except AttributeError:
         pass
-    model.p_progreq_dams = pe.Param(model.s_k2_birth_dams, model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_lw_dams,
+    model.p_progreq_dams = pe.Param(model.s_k2_birth_dams, model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_dams, model.s_lw_dams,
                               model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_groups_dams, model.s_lw_dams,
                               initialize=params['p_progreq_dams'], default=0.0, doc='number of prodgeny required by dams')
     try:
@@ -724,11 +724,11 @@ def stockpyomo_local(params):
     except AttributeError:
         pass
     def prog2damR(model, k3, k5, v1, z, i, y1, g9, w9):
-        if v1=='dvp0' and any(model.p_progreq_dams[k2, k3, k5, w18, z, i, y1, g1, g9, w9] for k2 in model.s_k2_birth_dams for w18 in model.s_lw_dams for g1 in model.s_groups_dams):
+        if v1=='dvp0' and any(model.p_progreq_dams[k2, k3, k5, t1, w18, z, i, y1, g1, g9, w9] for k2 in model.s_k2_birth_dams for t1 in model.s.sale_dams for w18 in model.s_lw_dams for g1 in model.s_groups_dams):
             return (sum(- model.v_prog[k5, t2, w28, z, i, d, a0, x, g2] * model.p_progprov_dams[k3, t2, w28, z, i, d, a0, x, y1, g2,g9,w9]
                         for d in model.s_damage for a0 in model.s_wean_times for x in model.s_gender for w28 in model.s_lw_prog for t2 in model.s_sale_prog for g2 in model.s_groups_prog
                         if model.p_progprov_dams[k3, t2, w28, z, i, d, a0, x, y1, g2,g9,w9]!= 0)
-                       + sum(model.v_dams[k2, t1, v1, a1, n1, w18, z, i, y1, g1]  * model.p_progreq_dams[k2, k3, k5, w18, z, i, y1, g1, g9, w9]
+                       + sum(model.v_dams[k2, t1, v1, a1, n1, w18, z, i, y1, g1]  * model.p_progreq_dams[k2, k3, k5, t1, w18, z, i, y1, g1, g9, w9]
                         for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for a1 in model.s_wean_times for n1 in model.s_nut_dams for w18 in model.s_lw_dams for g1 in model.s_groups_dams
                              if model.p_progreq_dams[k2, k3, k5, w18, z, i, y1, g1, g9, w9]!= 0))<=0
         else:

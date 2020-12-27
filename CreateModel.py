@@ -160,14 +160,14 @@ model.s_feed_pools = Set(initialize=uinp.structure['sheep_pools'], doc='nutritiv
 
 ##dams
 model.s_nut_dams = Set(initialize=uinp.structure['i_n_idx_dams'], doc='Nutrition levels in each feed period for dams')
-model.s_lw_dams = Set(initialize=uinp.structure['i_w_idx_dams'], doc='Standard LW patterns damss')
+model.s_lw_dams = Set(initialize=uinp.structure['i_w_idx_dams'], doc='Standard LW patterns dams')
 ##offs
-model.s_sale_offs = Set(initialize=['t%s'%i for i in range(pinp.sheep['i_t3_len'])], doc='Sales within the year for offss')
+model.s_sale_offs = Set(initialize=['t%s'%i for i in range(pinp.sheep['i_t3_len'])], doc='Sales within the year for offs')
 model.s_nut_offs = Set(initialize=uinp.structure['i_n_idx_offs'], doc='Nutrition levels in each feed period for offs')
 model.s_lw_offs = Set(initialize=uinp.structure['i_w_idx_offs'], doc='Standard LW patterns offs')
 ##prog
 model.s_sale_prog = Set(initialize=['t%s'%i for i in range(pinp.sheep['i_t2_len'])], doc='Sales and transfers options for yatf')
-model.s_lw_prog = Set(initialize=['lw%s'%i for i in range(uinp.structure['i_progeny_w2_len'])], doc='Standard LW patterns prog')
+model.s_lw_prog = Set(initialize=['lw%02d'%i for i in range(uinp.structure['i_progeny_w2_len'])], doc='Standard LW patterns prog')  #todo This is also defined in StockGenerator (keys_lw_prog)
 
 
 
