@@ -482,9 +482,21 @@ def f_run_required(prev_exp, exp_data1, check_pyomo=True):
     try: #in case pkl_exp doesn't exist
         ###if headers are the same, code is the same and the excel inputs are the same then test if the values in exp.xlsx are the same
         if keys_current==keys_hist and os.path.getmtime('pkl_exp.pkl') >= os.path.getmtime(newest) and os.path.getmtime('pkl_exp.pkl') >= os.path.getmtime("Universal.xlsx") and os.path.getmtime('pkl_exp.pkl') >= os.path.getmtime("Property.xlsx"):
+            # ##update prev_exp run column - check if trial was run then model crashed before pickling prev_exp
+            # run_crash = []
+            # for trial in prev_exp.index.get_level_values(2):
+            #     try:
+            #         if os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime('pkl/lp_vars_{0}.pkl'.format(trial)):
+            #             run_crash = run_crash.append(True)
+            #         else:
+            #             run_crash = run_crash.append(False)
+            #     except FileNotFoundError:
+            #         run_crash = run_crash.append(False)
+            # prev_exp.loc[:, ]
             ###check if each exp has the same values in exp.xlsx as last time it was run.
             i3 = prev_exp.reset_index().set_index(keys_hist).index  # have to reset index because the name of the trial is going to be included in the new index so it must first be dropped from current index
             i4 = exp_data1.reset_index().set_index(keys_current).index
+            run_bool = i4.isin(i3)
             exp_data1.loc[~i4.isin(i3),('run', '', '', '')] = True
         ###if headers are different or py code has changed then all trials need to be re-run
         else: exp_data1['run']=True

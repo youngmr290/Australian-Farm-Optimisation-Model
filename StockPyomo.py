@@ -724,13 +724,13 @@ def stockpyomo_local(params):
     except AttributeError:
         pass
     def prog2damR(model, k3, k5, v1, z, i, y1, g9, w9):
-        if v1=='dvp0' and any(model.p_progreq_dams[k2, k3, k5, t1, w18, z, i, y1, g1, g9, w9] for k2 in model.s_k2_birth_dams for t1 in model.s.sale_dams for w18 in model.s_lw_dams for g1 in model.s_groups_dams):
+        if v1==l_v1[0] and any(model.p_progreq_dams[k2, k3, k5, t1, w18, z, i, y1, g1, g9, w9] for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for w18 in model.s_lw_dams for g1 in model.s_groups_dams):
             return (sum(- model.v_prog[k5, t2, w28, z, i, d, a0, x, g2] * model.p_progprov_dams[k3, t2, w28, z, i, d, a0, x, y1, g2,g9,w9]
                         for d in model.s_damage for a0 in model.s_wean_times for x in model.s_gender for w28 in model.s_lw_prog for t2 in model.s_sale_prog for g2 in model.s_groups_prog
                         if model.p_progprov_dams[k3, t2, w28, z, i, d, a0, x, y1, g2,g9,w9]!= 0)
                        + sum(model.v_dams[k2, t1, v1, a1, n1, w18, z, i, y1, g1]  * model.p_progreq_dams[k2, k3, k5, t1, w18, z, i, y1, g1, g9, w9]
                         for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for a1 in model.s_wean_times for n1 in model.s_nut_dams for w18 in model.s_lw_dams for g1 in model.s_groups_dams
-                             if model.p_progreq_dams[k2, k3, k5, w18, z, i, y1, g1, g9, w9]!= 0))<=0
+                             if model.p_progreq_dams[k2, k3, k5, t1, w18, z, i, y1, g1, g9, w9]!= 0))<=0
         else:
             return pe.Constraint.Skip
     start = time.time()
@@ -746,7 +746,7 @@ def stockpyomo_local(params):
     except AttributeError:
         pass
     def prog2offsR(model, k3, k5, v3, z, i, a, x, y3, g3, w9):
-        if v3=='dvp0' and any(model.p_progreq_offs[v3, w38, i, x, w9] for w38 in model.s_lw_offs):
+        if v3==l_v3[0] and any(model.p_progreq_offs[v3, w38, i, x, w9] for w38 in model.s_lw_offs):
             return (sum(- model.v_prog[k5, t2, w28, z, i, d, a, x, g3] * model.p_progprov_offs[k3, k5, t2, w28, z, i, d, a, x, y3, g3, w9] #use g3 (same as g2)
                         for d in model.s_damage for w28 in model.s_lw_prog for t2 in model.s_sale_prog
                         if model.p_progprov_offs[k3, k5, t2, w28, z, i, d, a, x, y3, g3, w9]!= 0)

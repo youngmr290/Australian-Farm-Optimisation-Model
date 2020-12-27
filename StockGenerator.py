@@ -3941,8 +3941,7 @@ def generator(params,r_vals,plots = False):
     ##dams
     ###create a t mask for dam decision variables - an animal that is transferring between ram groups only has parameters in the dvp that is transfer
     period_is_transfer_tva1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(period_is_transfer_tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1)
-    #todo: consider masking transfers between ram genotypes in DVP0. So they are allocated direct rather than transferring in dvp0
-    ##something like np.logical_or(np.logical_and(period_is_transfer_tva1e1b1nwzida0e0b0xyg1, index_v != 0), (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1))
+    #todo: consider masking transfers between ram genotypes in DVP0. So they are allocated direct rather than transferring in dvp0 - something like np.logical_or(np.logical_and(period_is_transfer_tva1e1b1nwzida0e0b0xyg1, index_v != 0), (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1))
     mask_tvars_tva1e1b1nw8zida0e0b0xyg1 = np.logical_or(period_is_transfer_tva1e1b1nwzida0e0b0xyg1, (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1))
     # todo: tidy up unused code after it is tested
     # temporary = (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na]
@@ -4609,7 +4608,7 @@ def generator(params,r_vals,plots = False):
 
     ###k3k5tva1w8zidyg1g9w9 - prog to dams req
     arrays = [keys_k2, keys_k3, keys_k5, keys_t1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1, keys_g1, keys_lw1]
-    index_k2k3k5w8ziyg1g9w9 = fun.cartesian_product_simple_transpose(arrays)
+    index_k2k3k5tw8ziyg1g9w9 = fun.cartesian_product_simple_transpose(arrays)
 
 
     ###vw8ixw9 - prog to offs req
@@ -4733,11 +4732,11 @@ def generator(params,r_vals,plots = False):
 
     ###number prog require by dams
     mask=numbers_progreq_k2k3k5tva1e1b1nw8zida0e0b0xyg1g9w9!=0
-    progreq_k2k3k5w8ziyg1g9w9 = numbers_progreq_k2k3k5tva1e1b1nw8zida0e0b0xyg1g9w9[mask] #applying the mask does the raveling and squeezing of singleton axis
+    progreq_k2k3k5tw8ziyg1g9w9 = numbers_progreq_k2k3k5tva1e1b1nw8zida0e0b0xyg1g9w9[mask] #applying the mask does the raveling and squeezing of singleton axis
     mask=mask.ravel()
-    index_cut_k2k3k5w8ziyg1g9w9=index_k2k3k5w8ziyg1g9w9[mask,:]
-    tup_k2k3k5w8ziyg1g9w9 = tuple(map(tuple, index_cut_k2k3k5w8ziyg1g9w9))
-    params['p_progreq_dams'] =dict(zip(tup_k2k3k5w8ziyg1g9w9, progreq_k2k3k5w8ziyg1g9w9))
+    index_cut_k2k3k5tw8ziyg1g9w9=index_k2k3k5tw8ziyg1g9w9[mask,:]
+    tup_k2k3k5tw8ziyg1g9w9 = tuple(map(tuple, index_cut_k2k3k5tw8ziyg1g9w9))
+    params['p_progreq_dams'] =dict(zip(tup_k2k3k5tw8ziyg1g9w9, progreq_k2k3k5tw8ziyg1g9w9))
 
     ###number prog provided to offs
     mask=numbers_prog2offs_k3k5tva1e1b1nwzida0e0b0xyg2w9!=0
@@ -5213,19 +5212,20 @@ def generator(params,r_vals,plots = False):
 
 
     finish = time.time()
-    print('onhand and shearing arrays: ',calc_cost_start - onhandshear_start)
-    print('wool value calcs :', wool_finish - calc_cost_start)
-    print('sale value calcs :', sale_finish - wool_finish)
-    print('husb cost calcs :', husb_finish - sale_finish)
+    # print('onhand and shearing arrays: ',calc_cost_start - onhandshear_start)
+    # print('wool value calcs :', wool_finish - calc_cost_start)
+    # print('sale value calcs :', sale_finish - wool_finish)
+    # print('husb cost calcs :', husb_finish - sale_finish)
     print('calc cost and income: ',feedpools_start - calc_cost_start)
-    print('feed pools arrays: ',p2v_start - feedpools_start)
-    print('amalgamating p to v: ',lwdist_start - p2v_start)
-    print('lw distribution: ',cluster_start - lwdist_start)
-    print('clustering: ',allocation_start - cluster_start)
-    print('allocation: ',production_param_start - allocation_start)
+    # print('feed pools arrays: ',p2v_start - feedpools_start)
+    # print('p2v: ',lwdist_start - p2v_start)
+    # print('lw distribution: ',cluster_start - lwdist_start)
+    # print('clustering: ',allocation_start - cluster_start)
+    # print('allocation: ',production_param_start - allocation_start)
+    print('p2v and building masks: ',lwdist_start - p2v_start)
     print('production params: ', number_param_start - production_param_start)
     print('number params: ', keys_start - number_param_start)
-    print('ravel array and zip with key: ',finish - keys_start)
+    print('convert numpy to pyomo dict and reporting: ',finish - keys_start)
 
     ## Call Steve's graph generator.
     ## Will be bypassed unless called from SheepTest.py or line below is uncommented

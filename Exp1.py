@@ -44,6 +44,11 @@ import StubblePyomo as stubpy
 import StockPyomo as spy
 import CorePyomo as core
 
+##used to get status on multiprocessing
+# import logging
+# logger = multiprocessing.log_to_stderr(logging.DEBUG)
+
+
 start_time1 = time.time()
 
 
@@ -57,12 +62,15 @@ try:
 except FileNotFoundError:
     params={}
 prev_params = params.copy() #make a copy to compare with
+
+
 ##try to load in Previous Exp.xlsx file to dict, if it doesn't exist then create a new dict
 try:
     with open('pkl_exp.pkl', "rb") as f:
         prev_exp = pkl.load(f)
 except FileNotFoundError:
     prev_exp=pd.DataFrame()
+
 
 if __name__ == '__main__':
     ##try to load in results file to dict, if it doesn't exist then create a new dict - isn't used by multiprocess therefore only needs to be loaded with main
@@ -97,6 +105,8 @@ exp_data1=exp_data.copy() #copy made so that the run col can be added - the orig
 
 exp_data1 = fun.f_run_required(prev_exp, exp_data1)
 
+##plk a copy of exp incase the code crashes before the end. (this is th
+if __name__ == '__main__':
 
 #########################
 #Exp loop               #
@@ -104,8 +114,10 @@ exp_data1 = fun.f_run_required(prev_exp, exp_data1)
 #^maybe there is a cleaner way to do some of the stuff below ie a way that doesn't need as many if statements?
 def exp(row):
     ##sleep for random length of time. This is to offset processes with a goal of spreading the RAM load
-    time.sleep(randrange(80))
+    # time.sleep(randrange(30))
 
+    ##can use logger to get status on multiprocessing
+    # logger.info('Received {}'.format(row))
     ##start timer for each loop
     start_time = time.time()
 
@@ -261,9 +273,10 @@ def main():
     print('Number of full solutions: ',sum((exp_data.index[row][1] == True) and (exp_data.index[row][0] == True) for row in range(len(exp_data))))
     print('Exp.xlsx last saved: ',datetime.fromtimestamp(round(os.path.getmtime("exp.xlsx"))))
     ##start multiprocessing
-    agents = min(multiprocessing.cpu_count(),len(dataset)) # number of agents (processes) should be min of the num of cpus or trial
+    agents = min(multiprocessing.cpu_count(),len(dataset),4) # number of agents (processes) should be min of the num of cpus or trial
     with multiprocessing.Pool(processes=agents) as pool:
         result = pool.map(exp, dataset)
+
     ##update run require status - trials just run are now up to date for both pyomo and precalcs - all trials that the user wanted to run are now up to date (even if they didn't run because they were already up to date)
     exp_data1.loc[exp_data1.index[dataset],['run']] = False
     exp_data1.loc[exp_data1.index[dataset],['runpyomo']] = False
@@ -276,8 +289,8 @@ if __name__ == '__main__':
     for trial_row, result, res_num in zip(dataset,results,range(len(results))):
         if any(results[res_num][0]):  # only do this if pyomo was run and the dict contains values
             lp_vars[exp_data.index[trial_row][2]] = results[res_num][0]
-        params[exp_data.index[trial_row][2]] = results[res_num][1] 
-        r_vals[exp_data.index[trial_row][2]] = results[res_num][2] 
+        params[exp_data.index[trial_row][2]] = results[res_num][1]
+        r_vals[exp_data.index[trial_row][2]] = results[res_num][2]
     ##drop results into pickle file
     with open('pkl_lp_vars.pkl', "wb") as f:
         pkl.dump(lp_vars, f, protocol=pkl.HIGHEST_PROTOCOL)
