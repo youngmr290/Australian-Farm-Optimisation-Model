@@ -215,9 +215,9 @@ def exp(row):
                         print("      ", index, model.dual[c[index]], file=f)
                         # except: pass 
             ##prints what you see from pprint to txt file - you can see the slack on constraints but not the rc or dual
-            with open('Output/Full model - %s.txt' %exp_data.index[row][2], 'w') as f:  #file name has to have capital
-                f.write("My description of the instance!\n")
-                model.display(ostream=f)
+            # with open('Output/Full model - %s.txt' %exp_data.index[row][2], 'w') as f:  #file name has to have capital
+            #     f.write("My description of the instance!\n")
+            #     model.display(ostream=f)
     
             ##This writes variable with value greater than 1 to txt file, the file is overwritten each time - used to check stuff out each iteration if you want
             file = open('Output/Variable summary - %s.txt' %exp_data.index[row][2],'w') #file name has to have capital
