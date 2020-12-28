@@ -361,7 +361,7 @@ def coremodel_all():
     #######################################################################################################################################################
     
     ##sometimes if there is a bug when solved it is good to write lp here - because the code doesn't run to the other place where lp written
-    model.write('Output/test.lp',io_options={'symbolic_solver_labels':True}) #comment this out when not debugging
+    # model.write('Output/test.lp',io_options={'symbolic_solver_labels':True}) #comment this out when not debugging
     
     ##tells the solver you want duals and rc
     try:
