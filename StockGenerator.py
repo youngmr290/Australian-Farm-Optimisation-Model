@@ -3421,7 +3421,7 @@ def generator(params,r_vals,plots = False):
     ###determine t1 slice - dry dams sold at scanning
     period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1 = period_is_scan_pa1e1b1nwzida0e0b0xyg1 * scan_pa1e1b1nwzida0e0b0xyg1>=1 * (not pinp.sheep['i_dry_retained_forced']) #not is required because variable is drys off hand ie sold. if forced to retain the variable wants to be false
     period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1 = period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1 * (nfoet_b1nwzida0e0b0xyg==0) #make sure selling is not an option for animals with foet (have to do it this way so that b axis is added)
-    period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1[:,:,:,0:1,...] = False #make sure selling is not an option for not mated
+    period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1[:,:,:,0:1,...] = False #make sure selling is not an option for not mated ^ may turn on again in seasonality version
     ###combine sale t slices (t1 & t2) to produce period is sale
     shape =  tuple(np.maximum.reduce([period_is_sale_t0_pa1e1b1nwzida0e0b0xyg1.shape, period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1.shape]))
     period_is_sale_tpa1e1b1nwzida0e0b0xyg1 = np.zeros((len_t1,)+shape, dtype=bool) #initialise on hand array with 3 t slices.
@@ -3938,12 +3938,19 @@ def generator(params,r_vals,plots = False):
     ####################################################
     #Masking numbers transferred to other ram groups   #
     ####################################################
-    ''' Mask numbers transferred - these mask stops dams transferring to different sires between dvps that are not prejoining'''
+    ''' Mask numbers transferred - these mask remove unnecessary decision variables for:
+               transfers to different sires between dvps that are not prejoining
+               sales in dvps that are not shearing (t[0]) or not scanning (t[1])'''
     ##dams
     ###create a t mask for dam decision variables - an animal that is transferring between ram groups only has parameters in the dvp that is transfer
     ###dvp0 has no transfer even though it is dvp type 0
+    ###animals that are sold t[0] & t[1] only exist if the period is sale. Note t[1] sale is already masked for scan>=1 & for dry ewes only
     period_is_transfer_tva1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(period_is_transfer_tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1)
-    mask_tvars_tva1e1b1nw8zida0e0b0xyg1 = np.logical_or(np.logical_and(period_is_transfer_tva1e1b1nwzida0e0b0xyg1, index_va1e1b1nwzida0e0b0xyg1 != 0), (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1))
+#    mask_tvars_tva1e1b1nw8zida0e0b0xyg1 = np.logical_or(np.logical_and(period_is_transfer_tva1e1b1nwzida0e0b0xyg1, index_va1e1b1nwzida0e0b0xyg1 != 0), (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1))
+    period_is_sale_tva1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(period_is_sale_tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1)
+    period_is_sale_k2tva1e1b1nwzida0e0b0xyg1 = np.sum(period_is_sale_tva1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1), axis=(e1_pos, b1_pos), keepdims=True)>0
+    mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1 = np.logical_and(np.logical_or(np.logical_and(period_is_transfer_tva1e1b1nwzida0e0b0xyg1, index_va1e1b1nwzida0e0b0xyg1 != 0), (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)),
+                                                         np.logical_or(period_is_sale_k2tva1e1b1nwzida0e0b0xyg1, index_tva1e1b1nw8zida0e0b0xyg1 >= 2))
     # mask_tvars_tva1e1b1nw8zida0e0b0xyg1 = np.logical_or(period_is_transfer_tva1e1b1nwzida0e0b0xyg1, (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1))
     # todo: tidy up unused code after it is tested
     # temporary = (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na]
@@ -3955,7 +3962,7 @@ def generator(params,r_vals,plots = False):
 
     ###numbers are provided by g1 to g9 (a_g1_tg1) when that transfer exists and the transfer decision variables exist
     mask_numbers_provt_tva1e1b1nwzida0e0b0xyg1g9 = mask_tvars_tva1e1b1nw8zida0e0b0xyg1[...,na] * transfer_exists_tpa1e1b1nwzida0e0b0xyg1[..., na]  \
-                                                      * (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na, :]
+                                                      * (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na, :]  #todo decide whether this code is correct or (a_g1_tg1[...,na] == index_g1[...,na,:])
         # fun.f_update(temporary, temporary * (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na],
         #                                  np.logical_not(period_is_transfer_tva1e1b1nwzida0e0b0xyg1)[..., na]) * transfer_exists_tpa1e1b1nwzida0e0b0xyg1[..., na]
     # temporary = (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na, :]
@@ -5193,8 +5200,7 @@ def generator(params,r_vals,plots = False):
                                                         *(a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
                                                         *(a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...])).squeeze(axis=(a1_pos, e1_pos, b1_pos))
 
-    r_vals['e1b1_denom_weights_k2tva1e1b1nw8ziyg1'] = (
-    (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1)).squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos))
+    r_vals['e1b1_denom_weights_k2tva1e1b1nw8ziyg1'] = (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1).squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos))
 
     r_vals['de0b0_denom_weights_k3k5tvnw8zida0e0b0xyg3'] = ((a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)
                                                         *(a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)).squeeze(axis=(a1_pos, e1_pos, b1_pos))
