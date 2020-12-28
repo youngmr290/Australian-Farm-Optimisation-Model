@@ -42,37 +42,37 @@ import CorePyomo as core
 force_run=True #force precalcs to be run
 
 
-#########################
-#load pickle            # 
-#########################
-##try to load in lp variable dict, if it doesn't exist then create a new dict
-try:
-    with open('pkl_lp_vars.pkl', "rb") as f:
-        lp_vars = pkl.load(f)
-except FileNotFoundError:
-    lp_vars={}
-
-##try to load in params dict, if it doesn't exist then create a new dict
-try:
-    with open('pkl_params.pkl', "rb") as f:
-        params = pkl.load(f)
-except FileNotFoundError:
-    params={}
-prev_params = params.copy() #make a copy to compare with
-
-##try to load in results file to dict, if it doesn't exist then create a new dict
-try:
-    with open('pkl_r_vals.pkl', "rb") as f:
-        r_vals = pkl.load(f)
-except FileNotFoundError:
-    r_vals={}
-
-##try to load in Previous Exp.xlsx file to dict, if it doesn't exist then create a new dict
-try:
-    with open('pkl_exp.pkl', "rb") as f:
-        prev_exp = pkl.load(f)
-except FileNotFoundError:
-    prev_exp=pd.DataFrame()
+# #########################
+# #load pickle            #
+# #########################
+# ##try to load in lp variable dict, if it doesn't exist then create a new dict
+# try:
+#     with open('pkl_lp_vars.pkl', "rb") as f:
+#         lp_vars = pkl.load(f)
+# except FileNotFoundError:
+#     lp_vars={}
+#
+# ##try to load in params dict, if it doesn't exist then create a new dict
+# try:
+#     with open('pkl_params.pkl', "rb") as f:
+#         params = pkl.load(f)
+# except FileNotFoundError:
+#     params={}
+# prev_params = params.copy() #make a copy to compare with
+#
+# ##try to load in results file to dict, if it doesn't exist then create a new dict
+# try:
+#     with open('pkl_r_vals.pkl', "rb") as f:
+#         r_vals = pkl.load(f)
+# except FileNotFoundError:
+#     r_vals={}
+#
+# ##try to load in Previous Exp.xlsx file to dict, if it doesn't exist then create a new dict
+# try:
+#     with open('pkl_exp.pkl', "rb") as f:
+#         prev_exp = pkl.load(f)
+# except FileNotFoundError:
+#     prev_exp=pd.DataFrame()
     
 #########################
 #Exp loop               # #^maybe there is a cleaner way to do some of the stuff below ie a way that doesn't need as many if statements?
@@ -90,7 +90,13 @@ exp_data1=exp_data.copy() #copy made so that the run and runpyomo cols can be ad
 ##  2. any python module has been updated
 ##  3. the trial needed to be run last time but the user opted not to run that trial
 
-exp_data1 = fun.f_run_required(prev_exp, exp_data1)
+exp_data1 = fun.f_run_required(exp_data1)
+
+##plk a copy of exp incase the code crashes before the end. (this is tracks if a trial needed to be run)
+if __name__ == '__main__':
+    with open('pkl_exp.pkl', "wb") as f:
+        pkl.dump(exp_data1, f, protocol=pkl.HIGHEST_PROTOCOL)
+
 
 ##print out number of trials to run
 total_trials=sum(exp_data.index[row][0] == True for row in range(len(exp_data)))
@@ -102,6 +108,10 @@ run=0 #counter to work out average time per loop
 for row in range(len(exp_data)):
     ##start timer for each loop
     start_time = time.time()
+
+    ##get trial name - used for outputs
+    trial_name = exp_data.index[row][2]
+
     ##check to make sure user wants to run this trial - note pyomo is never run without precalcs being run (this could possibly be change by making a more custom function to check only precalc module time and then altering the 'continue' call below)
     if exp_data1.index[row][0] == False or (exp_data1.loc[exp_data1.index[row],'run'].squeeze()==False and force_run==False):
         continue
@@ -109,7 +119,7 @@ for row in range(len(exp_data)):
     exp_data1.loc[exp_data1.index[row],('run', '', '', '')] = False
     run+=1
 
-    ##updaye sensitivity values
+    ##update sensitivity values
     fun.f_update_sen(row,exp_data,sen.sam,sen.saa,sen.sap,sen.sar,sen.sat,sen.sav)
 
     ##call sa functions - assigns sa variables to relevant inputs
@@ -117,73 +127,81 @@ for row in range(len(exp_data)):
     pinp.property_inp_sa()
     ##create empty dicts - have to do it here because need the trial as the first key, so whole trial can be compared when determining if pyomo needs to be run
     ###params
-    params[exp_data.index[row][2]]={}
-    params[exp_data.index[row][2]]['pas']={}
-    params[exp_data.index[row][2]]['rot']={}
-    params[exp_data.index[row][2]]['crop']={}
-    params[exp_data.index[row][2]]['mach']={}
-    params[exp_data.index[row][2]]['fin']={}
-    params[exp_data.index[row][2]]['labfx']={}
-    params[exp_data.index[row][2]]['lab']={}
-    params[exp_data.index[row][2]]['crplab']={}
-    params[exp_data.index[row][2]]['sup']={}
-    params[exp_data.index[row][2]]['stub']={}
-    params[exp_data.index[row][2]]['stock']={}
+    params={}
+    params['pas']={}
+    params['rot']={}
+    params['crop']={}
+    params['mach']={}
+    params['fin']={}
+    params['labfx']={}
+    params['lab']={}
+    params['crplab']={}
+    params['sup']={}
+    params['stub']={}
+    params['stock']={}
     ###report values
-    r_vals[exp_data.index[row][2]]={}
-    r_vals[exp_data.index[row][2]]['pas']={}
-    r_vals[exp_data.index[row][2]]['rot']={}
-    r_vals[exp_data.index[row][2]]['crop']={}
-    r_vals[exp_data.index[row][2]]['mach']={}
-    r_vals[exp_data.index[row][2]]['fin']={}
-    r_vals[exp_data.index[row][2]]['labfx']={}
-    r_vals[exp_data.index[row][2]]['lab']={}
-    r_vals[exp_data.index[row][2]]['crplab']={}
-    r_vals[exp_data.index[row][2]]['sup']={}
-    r_vals[exp_data.index[row][2]]['stub']={}
-    r_vals[exp_data.index[row][2]]['stock']={}
+    r_vals={}
+    r_vals['pas']={}
+    r_vals['rot']={}
+    r_vals['crop']={}
+    r_vals['mach']={}
+    r_vals['fin']={}
+    r_vals['labfx']={}
+    r_vals['lab']={}
+    r_vals['crplab']={}
+    r_vals['sup']={}
+    r_vals['stub']={}
+    r_vals['stock']={}
     ##call precalcs
     precalc_start = time.time()
-    paspy.paspyomo_precalcs(params[exp_data.index[row][2]]['pas'],r_vals[exp_data.index[row][2]]['pas'])
-    rotpy.rotation_precalcs(params[exp_data.index[row][2]]['rot'],r_vals[exp_data.index[row][2]]['rot'])
-    crppy.crop_precalcs(params[exp_data.index[row][2]]['crop'],r_vals[exp_data.index[row][2]]['crop'])
-    macpy.mach_precalcs(params[exp_data.index[row][2]]['mach'],r_vals[exp_data.index[row][2]]['mach'])
-    finpy.fin_precalcs(params[exp_data.index[row][2]]['fin'],r_vals[exp_data.index[row][2]]['fin'])
-    lfixpy.labfx_precalcs(params[exp_data.index[row][2]]['labfx'],r_vals[exp_data.index[row][2]]['labfx'])
-    labpy.lab_precalcs(params[exp_data.index[row][2]]['lab'],r_vals[exp_data.index[row][2]]['lab'])
-    lcrppy.crplab_precalcs(params[exp_data.index[row][2]]['crplab'],r_vals[exp_data.index[row][2]]['crplab'])
-    suppy.sup_precalcs(params[exp_data.index[row][2]]['sup'],r_vals[exp_data.index[row][2]]['sup'])
-    stubpy.stub_precalcs(params[exp_data.index[row][2]]['stub'],r_vals[exp_data.index[row][2]]['stub'])
-    spy.stock_precalcs(params[exp_data.index[row][2]]['stock'], r_vals[exp_data.index[row][2]]['stock'])
+    paspy.paspyomo_precalcs(params['pas'],r_vals['pas'])
+    rotpy.rotation_precalcs(params['rot'],r_vals['rot'])
+    crppy.crop_precalcs(params['crop'],r_vals['crop'])
+    macpy.mach_precalcs(params['mach'],r_vals['mach'])
+    finpy.fin_precalcs(params['fin'],r_vals['fin'])
+    lfixpy.labfx_precalcs(params['labfx'],r_vals['labfx'])
+    labpy.lab_precalcs(params['lab'],r_vals['lab'])
+    lcrppy.crplab_precalcs(params['crplab'],r_vals['crplab'])
+    suppy.sup_precalcs(params['sup'],r_vals['sup'])
+    stubpy.stub_precalcs(params['stub'],r_vals['stub'])
+    spy.stock_precalcs(params['stock'],r_vals['stock'])
     precalc_end = time.time()
     print('precalcs: ', precalc_end - precalc_start)
     
     
     ##does pyomo need to be run?
     ##check if the two dicts are the same, it is possible that the current dict has less keys than the previous dict eg if a value becomes nan (because you removed the cell in excel inputs) and when it is stacked it disappears (this is very unlikely though so not going to test for it since this step is already slow)
+    ##try to load in params dict, if it doesn't exist then create a new dict
+    try:
+        with open('pkl/pkl_params_{0}.pkl'.format(trial_name),"rb") as f:
+            prev_params = pkl.load(f)
+    except FileNotFoundError:
+        prev_params = {}
+    ##check if the two dicts are the same, it is possible that the current dict has less keys than the previous dict eg if a value becomes nan (because you removed the cell in excel inputs) and when it is stacked it disappears (this is very unlikely though so not going to test for it since this step is already slow)
     try: #try required in case the key (trial) doesn't exist in the old dict, if this is the case pyomo must be run
-        run_pyomo_params=fun.findDiff(params[exp_data.index[row][2]], prev_params[exp_data.index[row][2]])
+        run_pyomo_params=fun.findDiff(params, prev_params)
     except KeyError:
         run_pyomo_params= True
+    lp_vars={} #create empty dict to return if pyomo isn't run. If dict is empty it doesnt overwrite the previous main lp_vars
     ##determine if pyomo should run, note if pyomo doesn't run there will be no ful solution (they are the same as before so no need)
     if run_pyomo_params or exp_data1.loc[exp_data1.index[row],'runpyomo'].squeeze():
         # print('run pyomo')
-        ###if re-run update runpyomo to false
-        exp_data1.loc[exp_data1.index[row], ('runpyomo', '', '', '')] = False
         ##call pyomo model function, must call them in the correct order (core must be last)
         pyomocalc_start = time.time()
         crtmod.sets() #certain sets have to be updated each iteration of exp
-        rotpy.rotationpyomo(params[exp_data.index[row][2]]['rot'])
-        crppy.croppyomo_local(params[exp_data.index[row][2]]['crop'])
-        macpy.machpyomo_local(params[exp_data.index[row][2]]['mach'])
-        finpy.finpyomo_local(params[exp_data.index[row][2]]['fin'])
-        lfixpy.labfxpyomo_local(params[exp_data.index[row][2]]['labfx'])
-        labpy.labpyomo_local(params[exp_data.index[row][2]]['lab'])
-        lcrppy.labcrppyomo_local(params[exp_data.index[row][2]]['crplab'])
-        paspy.paspyomo_local(params[exp_data.index[row][2]]['pas'])
-        suppy.suppyomo_local(params[exp_data.index[row][2]]['sup'])
-        stubpy.stubpyomo_local(params[exp_data.index[row][2]]['stub'])
-        spy.stockpyomo_local(params[exp_data.index[row][2]]['stock'])
+        rotpy.rotationpyomo(params['rot'])
+        crppy.croppyomo_local(params['crop'])
+        macpy.machpyomo_local(params['mach'])
+        finpy.finpyomo_local(params['fin'])
+        lfixpy.labfxpyomo_local(params['labfx'])
+        labpy.labpyomo_local(params['lab'])
+        lcrppy.labcrppyomo_local(params['crplab'])
+        paspy.paspyomo_local(params['pas'])
+        suppy.suppyomo_local(params['sup'])
+        stubpy.stubpyomo_local(params['stub'])
+        spy.stockpyomo_local(params['stock'])
+        ###if re-run update runpyomo to false
+        exp_data1.loc[exp_data1.index[row], ('runpyomo', '', '', '')] = False
         ###bounds-this must be done last because it uses sets built in some of the other modules
         bdypy.boundarypyomo_local()
 
@@ -191,6 +209,7 @@ for row in range(len(exp_data)):
         print('localpyomo: ', pyomocalc_end - pyomocalc_start)
         results=core.coremodel_all() #have to do this so i can access the solver status
         print('corepyomo: ',time.time() - pyomocalc_end)
+
         ##check if user wants full solution
         if exp_data.index[row][1] == True:
             ##make lp file
@@ -247,6 +266,16 @@ for row in range(len(exp_data)):
         lp_vars['%s'%exp_data.index[row][2]]={str(v):{s:v[s].value for s in v} for v in variables}    #creates dict with variable in it. This is tricky since pyomo returns a generator object
         ##store profit
         lp_vars[exp_data.index[row][2]]['profit'] = pe.value(model.profit)
+
+    ##pickle trial info
+    if any(lp_vars):  # only do this if pyomo was run and the dict contains values
+        with open('pkl/pkl_lp_vars_{0}.pkl'.format(trial_name),"wb") as f:
+            pkl.dump(lp_vars,f,protocol=pkl.HIGHEST_PROTOCOL)
+    with open('pkl/pkl_params_{0}.pkl'.format(trial_name),"wb") as f:
+        pkl.dump(params,f,protocol=pkl.HIGHEST_PROTOCOL)
+    with open('pkl/pkl_r_vals_{0}.pkl'.format(trial_name),"wb") as f:
+        pkl.dump(r_vals,f,protocol=pkl.HIGHEST_PROTOCOL)
+
     ##determine expected time to completion - trials left multiplied by average time per trial &time for current loop
     trials_to_go = total_trials - run
     time_taken= time.time()
@@ -258,12 +287,6 @@ for row in range(len(exp_data)):
 
 
 ##drop results into pickle file
-with open('pkl_lp_vars.pkl', "wb") as f:
-    pkl.dump(lp_vars, f, protocol=pkl.HIGHEST_PROTOCOL)
-with open('pkl_params.pkl', "wb") as f:
-    pkl.dump(params, f, protocol=pkl.HIGHEST_PROTOCOL)
-with open('pkl_r_vals.pkl', "wb") as f:
-    pkl.dump(r_vals, f, protocol=pkl.HIGHEST_PROTOCOL)
 with open('pkl_exp.pkl', "wb") as f:
     pkl.dump(exp_data1, f, protocol=pkl.HIGHEST_PROTOCOL)
 

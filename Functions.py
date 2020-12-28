@@ -28,6 +28,7 @@ Fixed   Date    ID by   Problem
 import pandas as pd
 # import timeit
 import numpy as np
+import pickle as pkl
 # from dateutil.parser import parse
 # import itertools
 # import datetime as dt
@@ -454,7 +455,7 @@ def f_sa(value, sa, sa_type=0, target=0, value_min=-np.inf,pandas=False, axis=0)
 
     return value
 
-def f_run_required(prev_exp, exp_data1, check_pyomo=True):
+def f_run_required(exp_data1, check_pyomo=True):
     '''
     here we check if precalcs and pyomo need to be recalculated. this is slightly complicated by the fact that columns and rows can be added to exp.xlsx
     and the fact that a user can opt not to run a trial even if it is out of date so the run requirement must be tracked
@@ -466,11 +467,8 @@ def f_run_required(prev_exp, exp_data1, check_pyomo=True):
     exp_data1['run'] = False
     exp_data1['runpyomo'] = False
 
-    ##get a list of all sa cols (including the name of the trial because two trial may have the same values but have a different name)
-    keys_hist = list(prev_exp.reset_index().columns[2:].values)
-    keys_current = list(exp_data1.reset_index().columns[2:].values)
+    ###if only report.py or reportfunction.py has been updated precalcs don't need to be re-run therefore newest is equal to the newest py file that isn't report
     sorted_list = sorted(glob.iglob('*.py'), key=os.path.getmtime)
-    ###if only report.py has been updated precalcs don't need to be re-run therefore newest is equal to the newest py file that isn't report
     if sorted_list[-1] != 'ReportFunctions.py' and sorted_list[-1] != 'ReportControl.py':
         newest = sorted_list[-1]
     elif sorted_list[-2] != 'ReportFunctions.py' and sorted_list[-2] != 'ReportControl.py':
@@ -480,28 +478,36 @@ def f_run_required(prev_exp, exp_data1, check_pyomo=True):
     newest_pyomo = max(glob.iglob('*Pyomo.py'), key=os.path.getmtime)
 
     try: #in case pkl_exp doesn't exist
-        ###if headers are the same, code is the same and the excel inputs are the same then test if the values in exp.xlsx are the same
-        if keys_current==keys_hist and os.path.getmtime('pkl_exp.pkl') >= os.path.getmtime(newest) and os.path.getmtime('pkl_exp.pkl') >= os.path.getmtime("Universal.xlsx") and os.path.getmtime('pkl_exp.pkl') >= os.path.getmtime("Property.xlsx"):
-            # ##update prev_exp run column - check if trial was run then model crashed before pickling prev_exp
-            # run_crash = []
-            # for trial in prev_exp.index.get_level_values(2):
-            #     try:
-            #         if os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime('pkl/lp_vars_{0}.pkl'.format(trial)):
-            #             run_crash = run_crash.append(True)
-            #         else:
-            #             run_crash = run_crash.append(False)
-            #     except FileNotFoundError:
-            #         run_crash = run_crash.append(False)
-            # prev_exp.loc[:, ]
+        with open('pkl/pkl_exp.pkl',"rb") as f:
+            prev_exp = pkl.load(f)
+
+        ##get a list of all sa cols (including the name of the trial because two trial may have the same values but have a different name)
+        keys_hist = list(prev_exp.reset_index().columns[2:].values)
+        keys_current = list(exp_data1.reset_index().columns[2:].values)
+
+        ##update prev_exp run column - check if trial was run then model crashed before pickling prev_exp
+        run_crash = []
+        for trial in prev_exp.index.get_level_values(2):
+            try:
+                if os.path.getmtime('pkl/pkl_exp.pkl') <= os.path.getmtime('pkl/pkl_params_{0}.pkl'.format(trial)):
+                    run_crash.append(True)
+                else:
+                    run_crash.append(False)
+            except FileNotFoundError:
+                run_crash.append(False)
+        prev_exp.loc[run_crash, ('run', '', '', '')] = False
+        prev_exp.loc[run_crash, ('runpyomo', '', '', '')] = False
+
+        ##if headers are the same, code is the same and the excel inputs are the same then test if the values in exp.xlsx are the same
+        if keys_current==keys_hist and os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime(newest) and os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime("Universal.xlsx") and os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime("Property.xlsx"):
             ###check if each exp has the same values in exp.xlsx as last time it was run.
             i3 = prev_exp.reset_index().set_index(keys_hist).index  # have to reset index because the name of the trial is going to be included in the new index so it must first be dropped from current index
             i4 = exp_data1.reset_index().set_index(keys_current).index
-            run_bool = i4.isin(i3)
             exp_data1.loc[~i4.isin(i3),('run', '', '', '')] = True
-        ###if headers are different or py code has changed then all trials need to be re-run
+        ##if headers are different or py code has changed then all trials need to be re-run
         else: exp_data1['run']=True
-        ###pyomo must be run if pyomo modules have changed since the trial was last run, if the precalc params are different (tested later) or if the trial needed to run last time but the user opted not to.
-        if os.path.getmtime('pkl_exp.pkl') >= os.path.getmtime(newest_pyomo) and check_pyomo==True:
+        ##pyomo must be run if pyomo modules have changed since the trial was last run, if the precalc params are different (tested later) or if the trial needed to run last time but the user opted not to.
+        if os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime(newest_pyomo) and check_pyomo==True:
             ###check if trial needed to be run last time but user opted not to run.
             ###compare trial name and runpyomo status with previous
             i3 = prev_exp.reset_index().set_index([keys_hist[0],keys_hist[-1]]).index  # have to reset index because the name of the trial is going to be included in the new index so it must first be dropped from current index

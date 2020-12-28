@@ -11,6 +11,8 @@ When creating r_vals values try and do it in obvious spots even if you need to g
 import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
+import pickle as pkl
+import os.path
 
 import Functions as fun
 import Exceptions as exc
@@ -18,13 +20,14 @@ import Exceptions as exc
 na = np.newaxis
 
 
-def f_errors(r_vals, exp_data_index, trial_outdated, trials):
+def f_errors(exp_data_index, trial_outdated, trials):
     ##first check if data exists for each desired trial
-    try:
-        for row in trials:
-            r_vals[exp_data_index[row][2]]
-    except KeyError:
-        raise exc.TrialError('''Trials for reporting don't all exist''')
+    for row in trials:
+        trial_name = exp_data_index[row][2]
+        if os.path.isfile('pkl/pkl_r_vals_{0}.pkl'.format(trial_name)):
+            pass
+        else:
+            raise exc.TrialError('''Trials for reporting don't all exist''')
     ##second check if generating results using out of date data.
     outdatedbool = trial_outdated.loc[exp_data_index[trials]]  # have to use the trial name because the order is different
     if any(outdatedbool):  # have to use the trial name because the order is different
@@ -35,12 +38,19 @@ def f_errors(r_vals, exp_data_index, trial_outdated, trials):
               ''' %np.array(trials)[outdatedbool.squeeze()])
     return
 
+def load_pkl(trial_name):
+    ##load in params dict, if it doesn't exist then create a new dict
+    with open('pkl/pkl_lp_vars_{0}.pkl'.format(trial_name),"rb") as f:
+        lp_vars = pkl.load(f)
+    with open('pkl/pkl_r_vals_{0}.pkl'.format(trial_name),"rb") as f:
+        r_vals = pkl.load(f)
+    return lp_vars, r_vals
 
 #################
 # Final reports #
 #################
 
-def f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, **kwargs):
+def f_stack(func, trial_outdated, exp_data_index, trials, **kwargs):
     '''
     Returns dataframe for specified function. Multiple trials result in a stacked table with trial name as index level.
 
@@ -53,12 +63,14 @@ def f_stack(func, lp_vars, r_vals, trial_outdated, exp_data_index, trials, **kwa
     :param kwargs: args for specified function. This is optional.
     '''
     ##check for errors
-    f_errors(r_vals, exp_data_index, trial_outdated, trials)
+    f_errors(exp_data_index, trial_outdated, trials)
     ##loop through trials and generate pnl table
     result_stacked = pd.DataFrame()  # create df to append table from each trial
     for row in trials:
-        result = func(lp_vars[exp_data_index[row][2]], r_vals[exp_data_index[row][2]], **kwargs)
-        result = pd.concat([result], keys=[exp_data_index[row][2]], names=['Trial'])  # add trial name as index level
+        trial_name = exp_data_index[row][2]
+        lp_vars, r_vals = load_pkl(trial_name)
+        result = func(lp_vars, r_vals, **kwargs)
+        result = pd.concat([result], keys=[trial_name], names=['Trial'])  # add trial name as index level
         result_stacked = result_stacked.append(result)
 
     return result_stacked
@@ -82,13 +94,15 @@ def f_xy_graph(func0, func1, lp_vars, r_vals, trial_outdated, exp_data_index, tr
             1: profit = rev - (exp + dep)
     '''
     ##check for errors
-    f_errors(r_vals, exp_data_index, trial_outdated, trials)
+    f_errors(exp_data_index, trial_outdated, trials)
     ##loop through trials and generate pnl table
     y_vals = []  # create list to append pnl table from each trial
     x_vals = []  # create list to append pnl table from each trial
     for row in trials:
-        x_vals.append(func0(lp_vars[exp_data_index[row][2]], r_vals[exp_data_index[row][2]], option=func0_options))
-        y_vals.append(func1(lp_vars[exp_data_index[row][2]], r_vals[exp_data_index[row][2]], option=func1_options))
+        trial_name = exp_data_index[row][2]
+        lp_vars, r_vals = load_pkl(trial_name)
+        x_vals.append(func0(lp_vars, r_vals, option=func0_options))
+        y_vals.append(func1(lp_vars, r_vals, option=func1_options))
     plt.plot(x_vals, y_vals)
     return plt
 
