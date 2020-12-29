@@ -43,7 +43,7 @@ def stockpyomo_local(params):
         model.del_component(model.s_groups_sire)
     except AttributeError:
         pass
-    model.s_groups_sire = pe.Set(initialize=params['g_idx_sire'], doc='geneotype groups of sires')
+    model.s_groups_sire = pe.Set(initialize=params['g_idx_sire'], doc='genotype groups of sires')
     try:
         model.del_component(model.s_gen_merit_sire)
     except AttributeError:
@@ -63,12 +63,12 @@ def stockpyomo_local(params):
         model.del_component(model.s_groups_dams)
     except AttributeError:
         pass
-    model.s_groups_dams = pe.Set(initialize=params['g_idx_dams'], doc='geneotype groups of dams')
+    model.s_groups_dams = pe.Set(initialize=params['g_idx_dams'], doc='genotype groups of dams')
     try:
         model.del_component(model.s_groups_prog)
     except AttributeError:
         pass
-    model.s_groups_prog = pe.Set(initialize=params['g_idx_dams'], doc='geneotype groups of prog') #same as dams and offs
+    model.s_groups_prog = pe.Set(initialize=params['g_idx_dams'], doc='genotype groups of prog') #same as dams and offs
     try:
         model.del_component(model.s_gen_merit_dams)
     except AttributeError:
@@ -78,7 +78,7 @@ def stockpyomo_local(params):
         model.del_component(model.s_sale_dams)
     except AttributeError:
         pass
-    model.s_sale_dams = pe.Set(initialize=params['t_idx_dams'], doc='Sales within the year for damss')
+    model.s_sale_dams = pe.Set(initialize=params['t_idx_dams'], doc='Sales within the year for dams')
     try:
         model.del_component(model.s_dvp_offs)
     except AttributeError:
@@ -103,7 +103,7 @@ def stockpyomo_local(params):
         model.del_component(model.s_groups_offs)
     except AttributeError:
         pass
-    model.s_groups_offs = pe.Set(initialize=params['g_idx_offs'], doc='geneotype groups of offs')
+    model.s_groups_offs = pe.Set(initialize=params['g_idx_offs'], doc='genotype groups of offs')
     try:
         model.del_component(model.s_gen_merit_offs)
     except AttributeError:
@@ -116,7 +116,7 @@ def stockpyomo_local(params):
     model.s_gender = pe.Set(initialize=params['x_idx_offs'], doc='gender of offs')
 
     #####################
-    ##  setup variables # #variables that use dynamic sets must be defined each itteration of exp
+    ##  setup variables # #variables that use dynamic sets must be defined each iteration of exp
     #####################
     print('set up variables')
     ##animals
@@ -197,7 +197,7 @@ def stockpyomo_local(params):
         pass
     model.p_npw = pe.Param(model.s_k5_birth_offs, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams,
                               model.s_season_types, model.s_tol, model.s_damage, model.s_gender, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_prog, model.s_tol,
-                              initialize=params['p_npw_dams'], default=0.0, doc='number of prodgeny weaned')
+                              initialize=params['p_npw_dams'], default=0.0, doc='number of progeny weaned')
     try:
         model.del_component(model.p_npw_req_index)
         model.del_component(model.p_npw_req)
@@ -212,7 +212,7 @@ def stockpyomo_local(params):
         pass
     model.p_progprov_dams = pe.Param(model.s_k3_damage_offs, model.s_sale_prog, model.s_lw_prog,model.s_season_types, model.s_tol,
                               model.s_damage, model.s_wean_times, model.s_gender, model.s_gen_merit_dams, model.s_groups_prog, model.s_groups_dams, model.s_lw_dams,
-                              initialize=params['p_progprov_dams'], default=0.0, doc='number of prodgeny provided to dams')
+                              initialize=params['p_progprov_dams'], default=0.0, doc='number of progeny provided to dams')
     try:
         model.del_component(model.p_progreq_dams_index)
         model.del_component(model.p_progreq_dams)
@@ -220,7 +220,7 @@ def stockpyomo_local(params):
         pass
     model.p_progreq_dams = pe.Param(model.s_k2_birth_dams, model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_dams, model.s_lw_dams,
                               model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_groups_dams, model.s_lw_dams,
-                              initialize=params['p_progreq_dams'], default=0.0, doc='number of prodgeny required by dams')
+                              initialize=params['p_progreq_dams'], default=0.0, doc='number of progeny required by dams')
     try:
         model.del_component(model.p_progprov_offs_index)
         model.del_component(model.p_progprov_offs)
@@ -228,14 +228,14 @@ def stockpyomo_local(params):
         pass
     model.p_progprov_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_prog, model.s_lw_prog, model.s_season_types,
                               model.s_tol, model.s_damage, model.s_wean_times, model.s_gender, model.s_gen_merit_offs, model.s_groups_offs, model.s_lw_offs,
-                              initialize=params['p_progprov_offs'], default=0.0, doc='number of prodgeny provided to dams')
+                              initialize=params['p_progprov_offs'], default=0.0, doc='number of progeny provided to dams')
     try:
         model.del_component(model.p_progreq_offs_index)
         model.del_component(model.p_progreq_offs)
     except AttributeError:
         pass
     model.p_progreq_offs = pe.Param(model.s_dvp_offs, model.s_lw_offs, model.s_tol, model.s_gender, model.s_lw_offs,
-                              initialize=params['p_progreq_offs'], default=0.0, doc='number of prodgeny required by dams')
+                              initialize=params['p_progreq_offs'], default=0.0, doc='number of progeny required by dams')
 
 
     ##stock - dams
@@ -247,6 +247,18 @@ def stockpyomo_local(params):
     model.p_numbers_prov_dams = pe.Param(model.s_k2_birth_dams, model.s_k2_birth_dams, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams,
                                          model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_groups_dams, model.s_lw_dams,
                                          initialize=params['p_numbers_prov_dams'], default=0.0, doc='numbers provided by each dam activity into the next period')
+
+    try:
+        model.del_component(model.p_numbers_provthis_dams_index)
+        model.del_component(model.p_numbers_provthis_dams)
+    except AttributeError:
+        pass
+    model.p_numbers_provthis_dams = pe.Param(model.s_k2_birth_dams, model.s_k2_birth_dams, model.s_sale_dams,
+                                         model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams,
+                                         model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams,
+                                         model.s_groups_dams, model.s_lw_dams,
+                                         initialize=params['p_numbers_provthis_dams'], default=0.0,
+                                         doc='numbers provided by each dam transfer activity into this period')
 
     try:
         model.del_component(model.p_numbers_req_dams_index)
@@ -596,7 +608,7 @@ def stockpyomo_local(params):
             - if a set has a 9 on the end of it, it is a special constraint set. And it is used to link with a decision variable set (the corresponding letter without 9 eg g? and g9). The
               set without a 9 must be summed.
             - if a given set doesnt have a corresponding 9 set, then you have two options
-                1. transfer from one desision variable to another 1:1 (or at another ratio determined be the param - but it means that it transfers to the same set eg x1_dams transfers to x1_prog)
+                1. transfer from one decision variable to another 1:1 (or at another ratio determined be the param - but it means that it transfers to the same set eg x1_dams transfers to x1_prog)
                 2. treat all decision variable in a set the same. Done by summing. eg the npw provided by each dam t slice can be treated the same because it doesnt make a difference
                    if the progeny came from a dam that gets sold vs retained. (for most of the livestock it has been built in a way that doesnt need summing except for the sets which have a corresponding 9 set).
     
@@ -611,7 +623,7 @@ def stockpyomo_local(params):
     print('set up constraints')
 
 
-    ##turn sets into list so they can be indexed (required for advanced mehtod to save time)
+    ##turn sets into list so they can be indexed (required for advanced method to save time)
     l_k29 = list(model.s_k2_birth_dams)
     l_v1 = list(model.s_dvp_dams)
     l_a = list(model.s_wean_times)
@@ -651,9 +663,13 @@ def stockpyomo_local(params):
         ##but the prov parameter is necessary as it allows other dam permutations on this constraint
         return sum(model.v_dams[k28,t1,v1,a,n1,w8,z,i,y1,g1] * model.p_numbers_req_dams[k28,k29,t1,v1,a,n1,w8,z,i,y1,g1,g9,w9]
                    - model.v_dams[k28,t1,v1_prev,a,n1,w8,z,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z,i,y1,g1,g9,w9]
-                    for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams
-                    for n1 in model.s_nut_dams for w8 in model.s_lw_dams for g1 in model.s_groups_dams if
-                    model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, z, i, y1, g1,g9, w9] != 0 or model.p_numbers_prov_dams[k28, k29, t1, v1_prev, a, n1, w8, z, i, y1, g1, g9, w9] != 0) <=0
+                   - model.v_dams[k28,t1,v1,a,n1,w8,z,i,y1,g1] * model.p_numbers_provthis_dams[k28,k29,t1,v1,a,n1,w8,z,i,y1,g1,g9,w9]
+                   for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams
+                   for n1 in model.s_nut_dams for w8 in model.s_lw_dams for g1 in model.s_groups_dams
+                   if model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, z, i, y1, g1,g9, w9] != 0
+                   or model.p_numbers_prov_dams[k28, k29, t1, v1_prev, a, n1, w8, z, i, y1, g1, g9, w9] != 0
+                   or model.p_numbers_provthis_dams[k28, k29, t1, v1_prev, a, n1, w8, z, i, y1, g1, g9, w9] != 0) <=0
+
     start=time.time()
     model.con_damR = pe.Constraint(model.s_k2_birth_dams, model.s_dvp_dams, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gen_merit_dams,
                                    model.s_groups_dams, model.s_lw_dams, rule=damR, doc='transfer dam to dam from last dvp to current dvp.')
@@ -697,7 +713,7 @@ def stockpyomo_local(params):
         pass
     def progR(model, k5, a, z, i9, d, x, y1, g1, w9):
         if any(model.p_npw_req[t2,d,x,g1] for t2 in model.s_sale_prog):
-            return (- sum(model.v_dams[k5, t1, v1, a, n1, w18, z, i, y1, g1]  * model.p_npw[k5, t1, v1, a, n1, w18, z, i, d, x, y1, g1, w9, i9] #pass in the k5 set to dams - each slice of k5 alings with a slice in k2 eg 11 and 22. we don't need other k2 slices eg nm
+            return (- sum(model.v_dams[k5, t1, v1, a, n1, w18, z, i, y1, g1]  * model.p_npw[k5, t1, v1, a, n1, w18, z, i, d, x, y1, g1, w9, i9] #pass in the k5 set to dams - each slice of k5 aligns with a slice in k2 eg 11 and 22. we don't need other k2 slices eg nm
                         for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams for w18 in model.s_lw_dams for i in model.s_tol
                              if model.p_npw[k5, t1, v1, a, n1, w18, z, i, d, x, y1, g1, w9, i9]!=0)
                     + sum(model.v_prog[k5, t2, w9, z, i9, d, a, x, g1] * model.p_npw_req[t2,d,x,g1] for t2 in model.s_sale_prog if model.p_npw_req[t2,d,x,g1]!=0))<=0
@@ -803,7 +819,7 @@ def stockpyomo_local(params):
 ##  setup variables # these variables only need initialising once ie sets wont change within and iteration of exp.
 #####################
 ##infrastructure
-model.v_infrastructure = pe.Var(model.s_infrastructure, bounds = (0,None) , doc='amount of infustructure required for given animal enterprise (based on number of sheep through infra)')
+model.v_infrastructure = pe.Var(model.s_infrastructure, bounds = (0,None) , doc='amount of infrastructure required for given animal enterprise (based on number of sheep through infra)')
 
 # ##################################
 # ### setup core model constraints #
@@ -850,17 +866,17 @@ def stock_cashflow(model,c):
                       if model.p_cashflow_offs[k3,k5,c,t3,v3,n3,w3,z,i,a,x,y3,g3] != 0)
                for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol)
 
-    return stock #- infastrucure - purchases
+    return stock #- infrastructure - purchases
 
 #     purchases = sum(model.v_sire[g0] * model.p_cost_purch_sire[g0,c] for g0 in model.s_groups_sire)  \
 #                 + sum(sum(model.v_purchase_dams[v1,w1,z,i,g1] * model.p_cost_purch_dam[v1,w1,z,i,g1,c] for v1 in model.s_dvp_dams for w1 in model.s_lw_dams for g1 in model.s_groups_dams)
 #                     + sum(model.v_purchase_offs[v3,w3,z,i,g3] * model.p_cost_purch_offs[v3,w3,z,i,g3,c] for v3 in model.s_dvp_offs for w3 in model.s_lw_offs for g3 in model.s_groups_offs)
 #                     for z in model.s_season_types for i in model.s_tol)
-#     return stock - infastrucure - purchases
+#     return stock - infrastructure - purchases
 
 
 def stock_cost(model):
-    # infrastrucure = sum(model.p_rm_stockinfra[h3,c] for c in model.s_cashflow_periods * model.v_infrastructure[h3] for h3 in model.s_infrastructure)
+    # infrastructure = sum(model.p_rm_stockinfra[h3,c] for c in model.s_cashflow_periods * model.v_infrastructure[h3] for h3 in model.s_infrastructure)
     stock = sum(model.v_sire[g0] * model.p_cost_sire[g0] for g0 in model.s_groups_sire) \
             + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_cost_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
@@ -871,11 +887,11 @@ def stock_cost(model):
                       for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
                       if model.p_cost_offs[k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3] != 0)
                for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol)
-    return  stock #+ infrastrucure + purchases
+    return  stock #+ infrastructure + purchases
 #
 #
 def stock_labour_anyone(model,p5):
-    # infastrucure = sum(model.p_lab_stockinfra[h3,p5] * model.v_infrastructure[h3,p5] for h3 in model.s_infrastructure)
+    # infrastructure = sum(model.p_lab_stockinfra[h3,p5] * model.v_infrastructure[h3,p5] for h3 in model.s_infrastructure)
     stock = sum(model.v_sire[g0] * model.p_lab_anyone_sire[p5,g0] for g0 in model.s_groups_sire)\
             + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_lab_anyone_dams[k2,p5,t1,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
@@ -889,7 +905,7 @@ def stock_labour_anyone(model,p5):
     return stock
 
 def stock_labour_perm(model,p5):
-    # infastrucure = sum(model.p_lab_stockinfra[h3,p5] * model.v_infrastructure[h3,p5] for h3 in model.s_infrastructure)
+    # infrastructure = sum(model.p_lab_stockinfra[h3,p5] * model.v_infrastructure[h3,p5] for h3 in model.s_infrastructure)
     stock = sum(model.v_sire[g0] * model.p_lab_perm_sire[p5,g0] for g0 in model.s_groups_sire)\
             + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_lab_perm_dams[k2,p5,t1,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
@@ -903,7 +919,7 @@ def stock_labour_perm(model,p5):
     return stock
 
 def stock_labour_manager(model,p5):
-    # infastrucure = sum(model.p_lab_stockinfra[h3,p5] * model.v_infrastructure[h3,p5] for h3 in model.s_infrastructure)
+    # infrastructure = sum(model.p_lab_stockinfra[h3,p5] * model.v_infrastructure[h3,p5] for h3 in model.s_infrastructure)
     stock = sum(model.v_sire[g0] * model.p_lab_manager_sire[p5,g0] for g0 in model.s_groups_sire)\
             + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_lab_manager_dams[k2,p5,t1,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
@@ -922,7 +938,7 @@ def stock_dep(model):
     return sum(model.p_dep_stockinfra[h3]  * model.v_infrastructure[h3] for h3 in model.s_infrastructure)
 
 def stock_asset(model):
-    # infrastrucure = sum(model.p_rm_stockinfra[h3,c] for c in model.s_cashflow_periods * model.v_infrastructure[h3] for h3 in model.s_infrastructure)
+    # infrastructure = sum(model.p_rm_stockinfra[h3,c] for c in model.s_cashflow_periods * model.v_infrastructure[h3] for h3 in model.s_infrastructure)
     stock = sum(model.v_sire[g0] * model.p_asset_sire[g0] for g0 in model.s_groups_sire) \
             + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_asset_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
@@ -935,10 +951,10 @@ def stock_asset(model):
                for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol)
     # purchases = sum(sum(model.v_purchase_dams[v1,w1,z,i,g1] * sum(model.p_cost_purch_dam[v1,w1,z,i,g1,c] for c in model.s_cashflow_periods) for v1 in model.s_dvp_dams for w1 in model.s_lw_dams for g1 in model.s_groups_dams)
     #                 +sum(model.v_purchase_offs[v3,w3,z,i,g3] * sum(model.p_cost_purch_offs[v3,w3,z,i,g3,c] for c in model.s_cashflow_periods) for v3 in model.s_dvp_offs for w3 in model.s_lw_offs for g3 in model.s_groups_offs)
-    return  stock #+ infrastrucure + purchases
+    return  stock #+ infrastructure + purchases
 #
 # def stock_asset(model):
-#     infastrucure = sum(model.p_asset_stockinfra[h3] * model.v_infrastructure[h3] for h3 in model.s_infrastructure)
+#     infrastructure = sum(model.p_asset_stockinfra[h3] * model.v_infrastructure[h3] for h3 in model.s_infrastructure)
 #     stock = sum(model.v_sire[g0] * model.p_asset_sire[g0] for g0 in model.s_groups_sire)
 #           + sum(sum(sum(sum(model.v_dams[t1,v1,a,b1,n1,w1,z,i,y1,g1,r1,r2,r3,r4,r5,r6,r7] for r1 in model.s_co_conception for r2 in model.s_co_bw for r3 in  model.s_co_ww)
 #                     * model.p_asset_dams[t1,v1,a,b1,n1,w1,z,i,y1,g1,r4,r5,r6,r7] for t1 in model.s_sale_dams)
@@ -949,7 +965,7 @@ def stock_asset(model):
 #                 + sum(model.v_offs2dam[v3,n3,w3,z,i,d,a,b3,x,y3,g3,r4,r5,r6,r7,g1_new] for g1_new in model.s_groups_dams)
 #                 * model.p_asset_trans_offs[v3,n3,w3,z,i,d,a,b3,x,y3,g3,r4,r5,r6,r7] for v3 in model.s_dvp_offs  for n3 in model.s_nut_offs for w3 in model.s_lw_offs for d in model.s_k3_damage_offs for b3 in model.s_k5_birth_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs)
 #           for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol for r4 in model.s_co_cfw for r5 in model.s_co_fd for r6 in model.s_co_min_fd for r7 in model.s_co_fl)
-#     return infastrucure + stock
+#     return infrastructure + stock
 #
 #
 
