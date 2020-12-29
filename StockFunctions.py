@@ -1513,7 +1513,7 @@ def f_animal_trigger_levels(index_pg, age_start, period_is_shearing_pg, a_next_s
     ##Trigger value 3 - Weeks from previous shearing
     trigger3_pg = index_pg - np.maximum.accumulate(index_pg*period_is_shearing_pg)
     ##Trigger value 4 - weeks to next shearing - cant use period is array like in the other situations
-    trigger4_pg = index_pg - a_next_s_pg #this will return 0 when the current period is shearing because the next association points at the current period when period is
+    trigger4_pg = a_next_s_pg - index_pg #this will return 0 when the current period is shearing because the next association points at the current period when period is
     ##Trigger value 5 - weeks from previous joining
     trigger5_pg = index_pg - np.maximum.accumulate(index_pg*period_is_joining_pg)
     ##Trigger value 6 - weeks from end of mating
@@ -1560,7 +1560,7 @@ def f_operations_triggered(animal_triggervalues_h7pg, operations_triggerlevels_h
     ##Test slice 2 of h5 axis
     slice2_h7h2pg = animal_triggervalues_h7pg[:, na, ...] >= operations_triggerlevels_h5h7h2pg[2,...]
     ##Test across the conditions
-    slices_all_h7h2pg = np.logical_and(slice0_h7h2pg, slice1_h7h2pg, slice2_h7h2pg)
+    slices_all_h7h2pg = np.logical_and(slice0_h7h2pg, np.logical_and(slice1_h7h2pg, slice2_h7h2pg))
     ##Test across the rules (& collapse s7 axis)
     triggered_h2pg = np.all(slices_all_h7h2pg, axis=0)
     return triggered_h2pg

@@ -3215,7 +3215,7 @@ def generator(params,r_vals,plots = False):
     dresspercent_adj_yg0, dresspercent_adj_yg1, dresspercent_adj_yg2, dresspercent_adj_yg3 = sfun.f_c2g(uinp.parameters['i_dressp_adj_c2'],uinp.parameters['i_dressp_adj_y'], dtype=dtype)
     ##husbandry
     wool_genes_yg0, wool_genes_yg1, wool_genes_yg2, wool_genes_yg3 = sfun.f_c2g(uinp.parameters['i_wool_genes_c2'],uinp.parameters['i_wool_genes_y'], dtype=dtype)
-    mobsize_pa1e1b1nwzida0e0b0xyg0 = fun.f_reshape_expand(pinp.sheep['i_mobsize_sire_p6'][a_p6_p], p_pos)
+    mobsize_pa1e1b1nwzida0e0b0xyg0 = fun.f_reshape_expand(pinp.sheep['i_mobsize_sire_p6'][a_p6_p], p_pos) #todo it would be good to have i axis on mobsize so we can test mob size on tol
     mobsize_pa1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(pinp.sheep['i_mobsize_dams_p6'][a_p6_p], p_pos)
     mobsize_pa1e1b1nwzida0e0b0xyg3 = fun.f_reshape_expand(pinp.sheep['i_mobsize_offs_p6'][a_p6_p[mask_p_offs_p]], p_pos)
     animal_mated_b1g1 = fun.f_reshape_expand(uinp.structure['i_mated_b1'], b1_pos)
@@ -3356,7 +3356,7 @@ def generator(params,r_vals,plots = False):
     date_sale_oa1e1b1nwzida0e0b0xyg0 = sfun.f_next_prev_association(date_start_p, date_sale_oa1e1b1nwzida0e0b0xyg0, 0, 'left') #move input date to the beginning of the next generator period
     date_sale_oa1e1b1nwzida0e0b0xyg0 = date_start_p[date_sale_oa1e1b1nwzida0e0b0xyg0]
     on_hand_pa1e1b1nwzida0e0b0xyg0 = sfun.f_period_is_('period_is_between', date_purch_oa1e1b1nwzida0e0b0xyg0, date_start_pa1e1b1nwzida0e0b0xyg, date_sale_oa1e1b1nwzida0e0b0xyg0, date_end_pa1e1b1nwzida0e0b0xyg)
-    period_is_sale_pa1e1b1nwzida0e0b0xyg0 = np.logical_and(on_hand_pa1e1b1nwzida0e0b0xyg0==True,np.roll(on_hand_pa1e1b1nwzida0e0b0xyg0,-1,axis=0)==False)
+    period_is_sale_pa1e1b1nwzida0e0b0xyg0 = np.logical_and(on_hand_pa1e1b1nwzida0e0b0xyg0==True, np.roll(on_hand_pa1e1b1nwzida0e0b0xyg0,-1,axis=0)==False)
     ###the dvp start for the sires is essentially the date they are purchased
     period_is_startdvp_purchase_pa1e1b1nwzida0e0b0xyg0 = sfun.f_period_is_('period_is', date_purch_oa1e1b1nwzida0e0b0xyg0, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
 
@@ -3381,7 +3381,7 @@ def generator(params,r_vals,plots = False):
     on_hand_tpa1e1b1nwzida0e0b0xyg3 = np.logical_and(date_start_pa1e1b1nwzida0e0b0xyg3<sale_date_tpa1e1b1nwzida0e0b0xyg3,
                                                      weight_pa1e1b1nwzida0e0b0xyg3<target_weight_tpa1e1b1nwzida0e0b0xyg3)
     ###period is sale - one true per dvp when sale actually occurs - sale occurs in the period where sheep were on hand at the beginning and not on hand at the beginning of the next period
-    period_is_sale_tpa1e1b1nwzida0e0b0xyg3 = np.logical_and(on_hand_tpa1e1b1nwzida0e0b0xyg3==True,np.roll(on_hand_tpa1e1b1nwzida0e0b0xyg3,-1,axis=1)==False)
+    period_is_sale_tpa1e1b1nwzida0e0b0xyg3 = np.logical_and(on_hand_tpa1e1b1nwzida0e0b0xyg3==True, np.roll(on_hand_tpa1e1b1nwzida0e0b0xyg3,-1,axis=1)==False)
 
     ###shearing - one true per dvp when shearing actually occurs
     ###in t0 shearing occurs on specified date, in t1 & t2 it happens a certain number of gen periods before sale.
@@ -3594,7 +3594,7 @@ def generator(params,r_vals,plots = False):
     sale_finish= time.time()
 
 
-    ##Husbandry
+    ##Husbandry #todo add feedbudgeting labour
     ###Sire: cost, labour and infrastructure requirements
     husbandry_cost_pg0, husbandry_labour_l2pg0, husbandry_infrastructure_h1pg0 = sfun.f_husbandry(
         uinp.sheep['i_head_adjust_sire'], mobsize_pa1e1b1nwzida0e0b0xyg0, o_ffcfw_sire, o_cfw_sire, operations_triggerlevels_h5h7h2pg,
