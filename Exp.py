@@ -287,7 +287,7 @@ for row in range(len(exp_data)):
 
 
 ##drop results into pickle file
-with open('pkl_exp.pkl', "wb") as f:
+with open('pkl/pkl_exp.pkl', "wb") as f:
     pkl.dump(exp_data1, f, protocol=pkl.HIGHEST_PROTOCOL)
 
 end_time1 = time.time()
