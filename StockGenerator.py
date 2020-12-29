@@ -3310,7 +3310,7 @@ def generator(params,r_vals,plots = False):
     #### the transfer to a dvp_type other than type==0 only occurs when transferring to and from the same genotype
     #### this occurs when (index_g1 == a_g1_tg1) and the transfer exists
     mask_dvp_type_next_tg1 = transfer_exists_tpa1e1b1nwzida0e0b0xyg1 * (index_g1 == a_g1_tpa1e1b1nwzida0e0b0xyg1) #dvp type next is a little more complex for animals transferring. However the destination for transfer is always dvp type next ==0 (either it is going from dvp 2 to 0 or from 0 to 0.
-    dvp_type_next_tva1e1b1nwzida0e0b0xyg1 = dvp_type_next_va1e1b1nwzida0e0b0xyg1 * mask_dvp_type_next_tg1
+    dvp_type_next_tva1e1b1nwzida0e0b0xyg1 = dvp_type_next_va1e1b1nwzida0e0b0xyg1 * mask_dvp_type_next_tg1   # todo calling this dvp_type_next is bad terminology. It is not the type of the next dvp it is now a flag as to whether a transfer can occur (tvg)
     ####association between dvp and lambing opp
     index_v1 = np.arange(index_vpa1e1b1nwzida0e0b0xyg1.shape[0])
     a_o_v = (np.trunc((index_v1 - 1) / uinp.structure['i_n_fvp_period1'])).astype(dtypeint)
@@ -3787,7 +3787,7 @@ def generator(params,r_vals,plots = False):
                                                           period_is_tvp=period_is_startdvp_purchase_pa1e1b1nwzida0e0b0xyg0) #sires only have one dvp which essentially starts when the activity is purchased
     numbers_startp8_va1e1b1nwzida0e0b0xyg0p8 = sfun.f_p2v_std(o_numbers_start_sire[...,na], on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0[...,na],
                                                           period_is_tvp=period_is_startp8_pa1e1b1nwzida0e0b0xyg0p8, sumadj=1) #sires only have one dvp which essentially starts when the activity is purchased
-    numbers_end_va1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_numbers_end_dams, a_v_pa1e1b1nwzida0e0b0xyg1,period_is_tp=nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
+    numbers_end_va1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_numbers_end_dams, a_v_pa1e1b1nwzida0e0b0xyg1,period_is_tp=nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg1)  #todo: This needs a t axis so that the early termination of a dvp is accounted for when transferring between ram groups
     numbers_start_va1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_numbers_start_dams, a_v_pa1e1b1nwzida0e0b0xyg1,period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
     r_numbers_join_va1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_numbers_join_dams, a_v_pa1e1b1nwzida0e0b0xyg1,period_is_tp=period_is_join_pa1e1b1nwzida0e0b0xyg1) #used to calc wean %
     r_numbers_birth_va1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_numbers_end_dams, a_v_pa1e1b1nwzida0e0b0xyg1,period_is_tp=period_is_birth_pa1e1b1nwzida0e0b0xyg1) #need to use numbers end so that the numbers represent the different b1 slices after birth
@@ -4114,7 +4114,7 @@ def generator(params,r_vals,plots = False):
 
 
     ##numbers prov - numbers at the end of a dvp with the cluster of the next dvp divided by start numbers with cluster of current period
-    ###dams
+    ###dams total provided from this period
     numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_divide(
           np.sum(numbers_end_va1e1b1nwzida0e0b0xyg1[..., na,na]
                 * mask_numbers_provw8w9_tva1e1b1nw8zida0e0b0xyg1w9[..., na,:]
@@ -4126,10 +4126,21 @@ def generator(params,r_vals,plots = False):
                 axis=(b1_pos - 2, e1_pos - 2), keepdims=True)
         , np.sum(numbers_start_va1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k28k29tva1e1b1nwzida0e0b0xyg1),
                 axis=(b1_pos, e1_pos), keepdims=True)[..., na,na], dtype=dtype) #na for w9 and g9 (use standard cluster without t/g9 axis because the denominator is (the clustering for) the decision variable as at the start of the DVP)
+    ####dams transferring between ram groups in the same DVP.
+    #### This occurs if the transfer is to a different ram group (a_g1_tg1 != g1) and is occurring from a prejoining dvp (type == 0) which indicates that the transfer is from prejoining dvp to prejoining dvp because the destination ram group is joining after the source
+    numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = (numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9
+                                                                * ((dvp_type_va1e1b1nwzida0e0b0xyg1[:, :, 0:1, ...] == 0)
+                                                                   * (a_g1_tpa1e1b1nwzida0e0b0xyg1 != index_g1))[...,na,na])   #take slice 0 of e (for prejoining all e slices are the same)
+    ####dams providing to the next period (the norm)
+    ####Only different from the total because it excludes those providing to the same period
+    numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = (numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9
+                                                            - numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9)
     ###combine nm and 00 cluster for the numbers provided to the prejoining period (so matrix can optimise choice of joining or not)
     temporary = np.sum(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, axis=1, keepdims=True) * (index_k29tva1e1b1nwzida0e0b0xyg1g9[...,na] == 0)  # put the sum of the k29 in slice 0
     numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_update(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, temporary,
                                                                         dvp_type_next_tva1e1b1nwzida0e0b0xyg1[:, :, :, 0:1, ..., na,na] == 0)  #take slice 0 of e (for prejoining all e slices are the same)
+    ###combine nm and 00 cluster (so matrix can optimise choice of joining or not). DVP type of destination is always 0 for the "provide this period" so don't need to test
+    numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = np.sum(numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, axis=1, keepdims=True) * (index_k29tva1e1b1nwzida0e0b0xyg1g9[...,na] == 0)  # put the sum of the k29 in slice 0
     ###combine wean numbers at prejoining to allow the matrix to select a different weaning time for the coming yr.
     #^cant just sum across the a slice (decision variable) so allow a0 to provide a1 we will need another a axis (see google doc) - fix this in version 2
     # temporary = np.sum(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9, axis=a1_pos-1, keepdims=True) * (index_a1e1b1nwzida0e0b0xyg[...,na] == 0)
@@ -4167,6 +4178,7 @@ def generator(params,r_vals,plots = False):
 
     ##Setting the parameters at the end of the generator to 0 removes passing animals into the constraint that links the end of life with the beginning of life.
     numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,:,:,-1,...] = 0
+    numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,:,:,-1,...] = 0
     numbers_prov_offs_k3k5tva1e1b1nw8zida0e0b0xygw9[:,:,:,-1,...] = 0
     numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,:,:,0,...] = 0
     numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9[:,:,:,0,...] = 0
@@ -4573,7 +4585,7 @@ def generator(params,r_vals,plots = False):
     # keys_n0 = uinp.structure['i_n_idx_sire']
     keys_n1 = np.array(uinp.structure['i_n_idx_dams'])
     keys_n3 = np.array(uinp.structure['i_n_idx_offs'])
-    keys_p5 = per.p_date2_df().index.astype('object') #has to be an object so that when combined with strings it remains a number
+    keys_p5 = per.p_date2_df().index.astype('object') #has to be an object so that when combined with strings it remains a number #todo change this to 00 formatting
     keys_p6 = pinp.feed_inputs['feed_periods'].index[:-1]
     keys_p8 = ['sire_per%s'%i for i in range(len_p8)]
     keys_t1 = np.array(['t%s'%i for i in range(len_t1)])
@@ -4779,12 +4791,18 @@ def generator(params,r_vals,plots = False):
     params['p_progreq_offs'] =dict(zip(tup_vw8ixw9, progreq_vw8ixw9))
 
     ###numbers_prov_dams
+    ####numbers provided into next period (the norm)
     mask=numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9!=0
     numbers_prov_dams_k2k2tva1nw8ziyg1g9w9 = numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[mask] #applying the mask does the raveling and squeezing of singleton axis
     mask=mask.ravel()
     index_cut_k2k2tvanwziyg1g9w=index_k2k2tvanwziyg1g9w[mask,:]
     tup_k2k2tvanwziyg1g9w = tuple(map(tuple, index_cut_k2k2tvanwziyg1g9w))
     params['p_numbers_prov_dams'] =dict(zip(tup_k2k2tvanwziyg1g9w, numbers_prov_dams_k2k2tva1nw8ziyg1g9w9))
+    #### provided into this period (when transferring from an earlier lambing ram group to a later lambing)
+    mask=numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9!=0
+    numbers_provthis_dams_k2k2tva1nw8ziyg1g9w9 = numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[mask] #applying the mask does the raveling and squeezing of singleton axis
+    mask=mask.ravel()
+    params['p_numbers_provthis_dams'] =dict(zip(tup_k2k2tvanwziyg1g9w, numbers_provthis_dams_k2k2tva1nw8ziyg1g9w9))
     ###numbers_prov_offs
     mask=numbers_prov_offs_k3k5tva1e1b1nw8zida0e0b0xygw9!=0
     numbers_prov_offs_k3k5tvnw8zia0xyg3w9 = numbers_prov_offs_k3k5tva1e1b1nw8zida0e0b0xygw9[mask] #applying the mask does the raveling and squeezing of singleton axis
