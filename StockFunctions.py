@@ -1457,7 +1457,7 @@ def f_salep_mob(weight_s7spg, scores_s7s6pg, cvlw_s7s5pg, cvscore_s7s6pg,
 def f_sale_value(cu0, cx, o_rc, o_ffcfw_pg, dressp_adj_yg, dresspercent_adj_s6pg,
                  dresspercent_adj_s7pg, grid_price_s7s5s6pg, month_scalar_s7pg,
                  month_discount_s7pg, price_type_s7pg, cvlw_s7s5pg, cvscore_s7s6pg,
-                 lw_range_s7s5pg, score_range_s7s6p5g, age_end_p5g1, discount_age_s7pg,sale_cost_pc_s7pg,
+                 w_range_s7s5pg, score_range_s7s6p5g, age_end_p5g1, discount_age_s7pg,sale_cost_pc_s7pg,
                  sale_cost_hd_s7pg, mask_s7x_s7pg, sale_agemax_s7pg1, dtype=None):
     ##Calculate condition score from relative condition
     cs_pg = f_condition_score(o_rc, cu0)
@@ -1481,12 +1481,12 @@ def f_sale_value(cu0, cx, o_rc, o_ffcfw_pg, dressp_adj_yg, dresspercent_adj_s6pg
     dresspercent_wt_s7pg = fun.f_update(dresspercent_for_wt_s7pg, 1, price_type_s7pg >= 1)
     ##Scale ffcfw to the units in the grid
     weight_for_lookup_s7pg = o_ffcfw_pg * dresspercent_wt_s7pg
-    ##Calculate mob average price in each grid per lw/head - this accounts for the fact that there is a distribution of weights within a mob so some sheep are discounted
+    ##Calculate mob average price in each grid per lw/head (this is just the price, not the total animal value) - this accounts for the fact that there is a distribution of weights within a mob so some sheep are discounted
     price_mobaverage_s7pg = f_salep_mob(weight_for_lookup_s7pg[:,na,...], scores_s7s6pg, cvlw_s7s5pg, cvscore_s7s6pg,
-                                                      lw_range_s7s5pg, score_range_s7s6p5g, grid_priceslw_s7s5s6pg)
+                                                      w_range_s7s5pg, score_range_s7s6p5g, grid_priceslw_s7s5s6pg)
     ##Scale price received based on month of sale
     price_mobaverage_s7pg = price_mobaverage_s7pg * (1+month_scalar_s7pg)
-    ##Temporary value with age based discount
+    ##Temporary value with age based discount (discount above a certain age that varies by month)
     temporary_s7pg = price_mobaverage_s7pg * (1 + month_discount_s7pg)
     ##Apply discount if age is greater than threshold age
     price_mobaverage_s7pg = fun.f_update(price_mobaverage_s7pg, temporary_s7pg, age_end_p5g1/30 > discount_age_s7pg)  #divide 30 to convert to months

@@ -1669,6 +1669,7 @@ def generator(params,r_vals,plots = False):
     omer_history_start_m3g2[...] = np.nan
     d_cfw_history_start_m2g2[...] = np.nan
     nw_start_yatf = 0.0
+    rc_start_yatf = 0.0
     ffcfw_start_yatf = w_b_std_y_b1nwzida0e0b0xyg1 #this is just an estimate it is updated with the real weight at birth - needed to calc milk production the first time (milk prod is calculated before yatf birth)
     ffcfw_max_start_yatf = ffcfw_start_yatf
     mortality_birth_yatf=0.0 #required for dam numbers before progeny born
@@ -2308,8 +2309,9 @@ def generator(params,r_vals,plots = False):
             lw_start_yatf = ffcfw_start_yatf + gfw_start_yatf
             ###Normal weight (start)
             nw_start_yatf = np.minimum(nw_max_yatf, np.maximum(nw_start_yatf, ffcfw_start_yatf + cn_yatf[3, ...] * (nw_max_yatf  - ffcfw_start_yatf)))
-            ###Relative condition (start)
-            rc_start_yatf = ffcfw_start_yatf / nw_start_yatf
+            ###Relative condition (start) - use update function so that when 0 days/period we keep the rc of the last period because it is used to calc sale value which is period_is_weaning which has 0 days because sold at begining.
+            temp_rc_start_yatf = ffcfw_start_yatf / nw_start_yatf
+            rc_start_yatf = fun.f_update(rc_start_yatf, temp_rc_start_yatf, days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0)
             ##Condition score of the dam at  start of p
             cs_start_yatf = sfun.f_condition_score(rc_start_yatf, cu0_yatf)
             ###staple length
@@ -2847,6 +2849,7 @@ def generator(params,r_vals,plots = False):
         ###yatf
         o_ffcfw_start_yatf[p] = ffcfw_start_yatf #use ffcfw_start because weaning start of period, has to be outside of the 'if' because days per period = 0 when weaning occurs because weaning is first day of period. But we need to know the start ffcfw.
         o_numbers_start_yatf[p] = numbers_start_yatf #used for npw calculation - use numbers start because weaning is start of period - has to be out of the 'if' because there is 0 days in the period when weaning occurs but we still want to store the start weight
+        o_rc_start_yatf[p] = rc_start_yatf #outside because used for sale value which is weaning which has 0 days per period because weaning is first day (this means the rc at weaning is actually the rc at the start of the previous period because it doesnt recalculate once days per period goes to 0)
         if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
             ###store output variables for the post processing
             # o_numbers_end_yatf[p] = pp_numbers_end_yatf
@@ -2859,7 +2862,6 @@ def generator(params,r_vals,plots = False):
             # o_fd_yatf[p] = fd_yatf
             # o_fd_min_yatf[p] = fd_min_yatf
             # o_ss_yatf[p] = ss_yatf
-            o_rc_start_yatf[p] = rc_start_yatf
 
             ###store report variables - individual variables can be deleted if not needed - store in report dictionary in the report section at end of this module
             r_ebg_yatf[p] = ebg_yatf
@@ -3200,7 +3202,7 @@ def generator(params,r_vals,plots = False):
     dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_salep_dressp_adj_s7'], p_pos-1).astype(dtype)
     score_pricescalar_s7s5s6 = fun.f_reshape_expand(uinp.sheep['i_salep_score_scalar_s7s5s6'], len_ax0=uinp.sheep['i_s7_len'],len_ax1=uinp.sheep['i_s5_len'],len_ax2=uinp.sheep['i_salep_score_scalar_s7s5s6'].shape[-1]).astype(dtype)
     weight_pricescalar_s7s5s6 = fun.f_reshape_expand(uinp.sheep['i_salep_weight_scalar_s7s5s6'], len_ax0=uinp.sheep['i_s7_len'],len_ax1=uinp.sheep['i_s5_len'],len_ax2=uinp.sheep['i_salep_weight_scalar_s7s5s6'].shape[-1]).astype(dtype)
-    lw_range_s7s5pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_salep_weight_range_s7s5'], p_pos-1,len_ax0=uinp.sheep['i_s7_len'],len_ax1=uinp.sheep['i_s5_len']).astype(dtype)
+    w_range_s7s5pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_salep_weight_range_s7s5'], p_pos-1,len_ax0=uinp.sheep['i_s7_len'],len_ax1=uinp.sheep['i_s5_len']).astype(dtype)
     price_type_s7pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_salep_price_type_s7'], p_pos-1)
     # a_s8_s7pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['ia_s8_s7'], p_pos-1)
     cvlw_s7s5pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_cvlw_s7'], p_pos-2).astype(dtype)
@@ -3444,7 +3446,7 @@ def generator(params,r_vals,plots = False):
 
 
     ######################
-    #calc cost and income#
+    #calc cost and income#  #todo add infrastructure cost, and sire purchase
     ######################
     calc_cost_start = time.time()
     ##calc wool value - To speed the calculation process the p array is condensed to only include periods where shearing occurs. Using a slightly different association it is then converted to a v array (this process usually used a p to v association, in this case we use s to v association).
@@ -3559,7 +3561,7 @@ def generator(params,r_vals,plots = False):
         dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg,
         grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg, month_scalar_s7p9a1e1b1nwzida0e0b0xyg0,
         month_discount_s7p9a1e1b1nwzida0e0b0xyg0, price_type_s7pa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg,
-        cvscore_s7s6pa1e1b1nwzida0e0b0xyg, lw_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p9a1e1b1nwzida0e0b0xyg,
+        cvscore_s7s6pa1e1b1nwzida0e0b0xyg, w_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p9a1e1b1nwzida0e0b0xyg,
         age_end_p9a1e1b1nwzida0e0b0xyg0, discount_age_s7pa1e1b1nwzida0e0b0xyg,
         sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg,
         mask_s7x_s7pa1e1b1nwzida0e0b0xyg[...,0:1,:,:], sale_agemax_s7pa1e1b1nwzida0e0b0xyg0, dtype)
@@ -3568,7 +3570,7 @@ def generator(params,r_vals,plots = False):
         dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg,
         grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg, month_scalar_s7p9a1e1b1nwzida0e0b0xyg1,
         month_discount_s7p9a1e1b1nwzida0e0b0xyg1, price_type_s7pa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg,
-        cvscore_s7s6pa1e1b1nwzida0e0b0xyg, lw_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p9a1e1b1nwzida0e0b0xyg,
+        cvscore_s7s6pa1e1b1nwzida0e0b0xyg, w_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p9a1e1b1nwzida0e0b0xyg,
         age_end_p9a1e1b1nwzida0e0b0xyg1, discount_age_s7pa1e1b1nwzida0e0b0xyg,
         sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg,
         mask_s7x_s7pa1e1b1nwzida0e0b0xyg[...,1:2,:,:], sale_agemax_s7pa1e1b1nwzida0e0b0xyg1, dtype)
@@ -3577,7 +3579,7 @@ def generator(params,r_vals,plots = False):
         dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg,
         grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg, month_scalar_s7p9a1e1b1nwzida0e0b0xyg2,
         month_discount_s7p9a1e1b1nwzida0e0b0xyg2, price_type_s7pa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg,
-        cvscore_s7s6pa1e1b1nwzida0e0b0xyg, lw_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p9a1e1b1nwzida0e0b0xyg,
+        cvscore_s7s6pa1e1b1nwzida0e0b0xyg, w_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p9a1e1b1nwzida0e0b0xyg,
         age_end_p9a1e1b1nwzida0e0b0xyg2, discount_age_s7pa1e1b1nwzida0e0b0xyg,
         sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg,
         mask_s7x_s7pa1e1b1nwzida0e0b0xyg3, sale_agemax_s7pa1e1b1nwzida0e0b0xyg2, dtype)
@@ -3586,7 +3588,7 @@ def generator(params,r_vals,plots = False):
         dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg,
         grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg, month_scalar_s7p9a1e1b1nwzida0e0b0xyg3,
         month_discount_s7p9a1e1b1nwzida0e0b0xyg3, price_type_s7pa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg,
-        cvscore_s7s6pa1e1b1nwzida0e0b0xyg, lw_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p9a1e1b1nwzida0e0b0xyg,
+        cvscore_s7s6pa1e1b1nwzida0e0b0xyg, w_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p9a1e1b1nwzida0e0b0xyg,
         age_end_p9a1e1b1nwzida0e0b0xyg3, discount_age_s7pa1e1b1nwzida0e0b0xyg,
         sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg,
         mask_s7x_s7pa1e1b1nwzida0e0b0xyg3, sale_agemax_s7pa1e1b1nwzida0e0b0xyg3, dtype)
@@ -3594,7 +3596,7 @@ def generator(params,r_vals,plots = False):
     sale_finish= time.time()
 
 
-    ##Husbandry #todo add feedbudgeting labour
+    ##Husbandry #todo add feedbudgeting and infra labour
     ###Sire: cost, labour and infrastructure requirements
     husbandry_cost_pg0, husbandry_labour_l2pg0, husbandry_infrastructure_h1pg0 = sfun.f_husbandry(
         uinp.sheep['i_head_adjust_sire'], mobsize_pa1e1b1nwzida0e0b0xyg0, o_ffcfw_sire, o_cfw_sire, operations_triggerlevels_h5h7h2pg,
@@ -4200,12 +4202,12 @@ def generator(params,r_vals,plots = False):
     ffcfw_range_zia0xg2k = ffcfw_range_zia0xg2k * (numbers_range_zia0xg2k > 0)
     salevalue_range_zia0xg2k = salevalue_range_zia0xg2k * (numbers_range_zia0xg2k > 0)
     ### The index that sorts the weight array
-    ind_sorted_a1zixg2k = np.argsort(ffcfw_range_zia0xg2k, axis = -1)
-    ### Select the values for the 10 equally spaced values spanning lowest to highest inclusive. Adding axis at -1
-    start_a1zixg2 = ffcfw_range_zia0xg2k.shape[-1] - np.count_nonzero(ffcfw_range_zia0xg2k, axis=-1)
-    ind_selected_a1zixg2w9 = np.linspace(start_a1zixg2, ffcfw_range_zia0xg2k.shape[-1] - 1, uinp.structure['i_progeny_w2_len'], dtype = int, axis=-1)
+    ind_sorted_zia0xg2k = np.argsort(ffcfw_range_zia0xg2k, axis = -1)
+    ### Select the values for the 10 equally spaced values spanning lowest to highest inclusive. Adding w9 axis at -1
+    start_zia0xg2 = ffcfw_range_zia0xg2k.shape[-1] - np.count_nonzero(ffcfw_range_zia0xg2k, axis=-1)
+    ind_selected_a1zixg2w9 = np.linspace(start_zia0xg2, ffcfw_range_zia0xg2k.shape[-1] - 1, uinp.structure['i_progeny_w2_len'], dtype = int, axis=-1)
     ### The indices for the required values are the selected values from the sorted indices
-    ind = np.take_along_axis(ind_sorted_a1zixg2k, ind_selected_a1zixg2w9, axis=-1)
+    ind = np.take_along_axis(ind_sorted_zia0xg2k, ind_selected_a1zixg2w9, axis=-1)
     ### Extract the condensed weights, the numbers and the sale_value of the condensed vars
     #### Later these variables are used with the 10 weights in the i_w_pos, so note whether w9 on end or not
     ffcfw_prog_zia0xg2w9 = np.take_along_axis(ffcfw_range_zia0xg2k, ind, axis = -1)
@@ -4227,7 +4229,7 @@ def generator(params,r_vals,plots = False):
 
     ##add c axis to prog - using period_is_wean so that correct c slice is activated
     salevalue_prog_cta1e1b1nwzida0e0b0xyg2 = sfun.f_p2v_std(salevalue_prog_tpa1e1b1nwzida0e0b0xyg2, period_is_tvp=period_is_wean_pa1e1b1nwzida0e0b0xyg2[:,:,0:1,...], #weaning is same for all e slices
-                                     a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg,index_any1tvp=index_ctpa1e1b1nwzida0e0b0xyg)
+                                     a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg,index_any1tvp=index_ctpa1e1b1nwzida0e0b0xyg) / np.count_nonzero(period_is_wean_pa1e1b1nwzida0e0b0xyg2[:,:,0:1,...], axis=0) #divide by the number of weaning times down the p axis because all weaning times for lambs with different age mums are combined into single activity.
 
     ##mask w8 (prog) to w9 (dams)
     step_con_prog2dams = uinp.structure['i_n1_len'] ** uinp.structure['i_n_fvp_period1']
