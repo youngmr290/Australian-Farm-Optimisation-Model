@@ -124,7 +124,7 @@ for i in range(np.size(phases,1)-1):
     # phases = phases[~(np.isin(phases[:,i], ['A4','M4'])&np.isin(phases[:,i+1], ['AR', 'SR','A', 'A3','A4','M','M3','M4','S','S3','S4','a','ar','a3','a4','s','sr','s3','s4','m','m3','m4']))] 
     # ###pasture 5 must come after pasture 5
     # phases = phases[~(np.isin(phases[:,i], ['A5','M5'])&np.isin(phases[:,i+1], ['AR', 'SR','A', 'A3','A4','M','M3','M4','S','S3','S4','a','ar','a3','a4','s','sr','s3','s4','m','m3','m4']))] 
-    # ###cant have A3 after anything except A  (have used a double negitive here)
+    # ###cant have A3 after anything except A  (have used a double negative here)
     # phases = phases[~(~np.isin(phases[:,i], ['A'])&np.isin(phases[:,i+1], ['A3','S3','M3','a3','m3','s3']))] 
     # ###cant have A3 after anything except A A (goes with the rule above)
     # try: #used for conditions that are concerned with more than two yrs
@@ -132,14 +132,14 @@ for i in range(np.size(phases,1)-1):
     # except IndexError: pass
     # ###this if statement is required because in yr3 A4 and A5 can follow A
     # if i ==0:
-    #     ###cant have A4 after anything except A3  (have used a double negitive here)
+    #     ###cant have A4 after anything except A3  (have used a double negative here)
     #     phases = phases[~(~np.isin(phases[:,i], ['A3','A'])&np.isin(phases[:,i+1], ['A4','S4','M4','a4','s4','m4']))] 
-    #     ###cant have A5 after anything except A4  (have used a double negitive here)
+    #     ###cant have A5 after anything except A4  (have used a double negative here)
     #     phases = phases[~(~np.isin(phases[:,i], ['A4','A'])&np.isin(phases[:,i+1], ['A5','M5','S5','a5','m5','s5']))] 
     # else:
-    #     ###cant have A4 after anything except A3  (have used a double negitive here)
+    #     ###cant have A4 after anything except A3  (have used a double negative here)
     #     phases = phases[~(~np.isin(phases[:,i], ['A3'])&np.isin(phases[:,i+1], ['A4','S4','M4','a4','s4','m4']))] 
-    #     ###cant have A5 after anything except A4  (have used a double negitive here)
+    #     ###cant have A5 after anything except A4  (have used a double negative here)
     #     phases = phases[~(~np.isin(phases[:,i], ['A4','M4','M5','A5'])&np.isin(phases[:,i+1], ['A5','S5','M5','a5','s5','m5']))]
     # ###can't have A after A A 
     # try: #used for conditions that are concerned with more than two yrs
@@ -424,7 +424,7 @@ if customised_rotations:
     ds_user_rot=ds_user_rot_init
     for offset in range(1,np.size(ds_user_rot_init,axis=1)):
         ds_user_rot = np.concatenate((ds_user_rot, np.roll(ds_user_rot_init, offset, axis=1)),axis=0)
-    ##the next code simplifies the full list of phases to only include the neccessary ones to represent the user rotations.
+    ##the next code simplifies the full list of phases to only include the necessary ones to represent the user rotations.
     ix_bool=np.zeros(len(phases))
     ###loop through all rotation phases then loop through all of the user rotations.
     ###this checks if the rotation phases are a superset of any of the user rotations
@@ -594,7 +594,7 @@ l_phases_cont = [''.join(x) for x in phases.astype(str)]
 
 ##start writing
 writer = pd.ExcelWriter('Rotation.xlsx', engine='xlsxwriter')
-##list of rotations - index: tupple, values: expanded version of rotation
+##list of rotations - index: tuple, values: expanded version of rotation
 rot_phases =  pd.DataFrame(phases, index=l_phases_cont)
 rot_phases.to_excel(writer, sheet_name='rotation list',index=True,header=False)
 ##con1 - the paramater for which history each rotation provides and requires

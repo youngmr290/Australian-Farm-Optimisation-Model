@@ -2105,7 +2105,9 @@ def generator(params,r_vals,plots = False):
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     ##first method is using the nec_cum method
                     # temp0, temp1, temp2, temp3, temp4, temp5, temp6 = sfun.f_foetus_cs(cp_dams, cb1_dams, kc_yg1, nfoet_b1nwzida0e0b0xyg, relsize_start_dams, rc_start_dams, nec_cum_start_dams, w_b_std_y_b1nwzida0e0b0xyg1, w_f_start_dams, nw_f_start_dams, nwf_age_f_pa1e1b1nwzida0e0b0xyg1[p], guw_age_f_pa1e1b1nwzida0e0b0xyg1[p], dce_age_f_pa1e1b1nwzida0e0b0xyg1[p], days_period_f_pa1e1b1nwzida0e0b0xyg1[p])
-                    temp0, temp2, temp3, temp4, temp5, temp6 = sfun.f_foetus_cs(cp_dams, cb1_dams, kc_yg1, nfoet_b1nwzida0e0b0xyg, relsize_start_dams, rc_start_dams, w_b_std_y_b1nwzida0e0b0xyg1, w_f_start_dams, nw_f_start_dams, nwf_age_f_pa1e1b1nwzida0e0b0xyg1[p], guw_age_f_pa1e1b1nwzida0e0b0xyg1[p], dce_age_f_pa1e1b1nwzida0e0b0xyg1[p], days_period_f_pa1e1b1nwzida0e0b0xyg1[p])
+                    temp0, temp2, temp3, temp4, temp5, temp6 = sfun.f_foetus_cs(cp_dams, cb1_dams, kc_yg1, nfoet_b1nwzida0e0b0xyg, relsize_start_dams
+                                    , rc_start_dams, w_b_std_y_b1nwzida0e0b0xyg1, w_f_start_dams, nw_f_start_dams, nwf_age_f_pa1e1b1nwzida0e0b0xyg1[p]
+                                    , guw_age_f_pa1e1b1nwzida0e0b0xyg1[p], dce_age_f_pa1e1b1nwzida0e0b0xyg1[p], days_period_f_pa1e1b1nwzida0e0b0xyg1[p])  #todo: days_period is not used in f_foetus_cs
                     if eqn_used:
                         w_f_dams = temp0
                         # nec_cum_dams = temp1
@@ -3200,7 +3202,7 @@ def generator(params,r_vals,plots = False):
     dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_salep_dressp_adj_s7'], p_pos-1).astype(dtype)
     score_pricescalar_s7s5s6 = fun.f_reshape_expand(uinp.sheep['i_salep_score_scalar_s7s5s6'], len_ax0=uinp.sheep['i_s7_len'],len_ax1=uinp.sheep['i_s5_len'],len_ax2=uinp.sheep['i_salep_score_scalar_s7s5s6'].shape[-1]).astype(dtype)
     weight_pricescalar_s7s5s6 = fun.f_reshape_expand(uinp.sheep['i_salep_weight_scalar_s7s5s6'], len_ax0=uinp.sheep['i_s7_len'],len_ax1=uinp.sheep['i_s5_len'],len_ax2=uinp.sheep['i_salep_weight_scalar_s7s5s6'].shape[-1]).astype(dtype)
-    lw_range_s7s5pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_salep_weight_range_s7s5'], p_pos-1,len_ax0=uinp.sheep['i_s7_len'],len_ax1=uinp.sheep['i_s5_len']).astype(dtype)
+    grid_weightrange_s7s5pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_salep_weight_range_s7s5'], p_pos-1,len_ax0=uinp.sheep['i_s7_len'],len_ax1=uinp.sheep['i_s5_len']).astype(dtype)
     price_type_s7pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_salep_price_type_s7'], p_pos-1)
     # a_s8_s7pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['ia_s8_s7'], p_pos-1)
     cvlw_s7s5pa1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.sheep['i_cvlw_s7'], p_pos-2).astype(dtype)
@@ -3522,7 +3524,7 @@ def generator(params,r_vals,plots = False):
     sale_mask_p2 = fun.f_reduce_skipfew(np.any, np.logical_or(period_is_sale_t0_pa1e1b1nwzida0e0b0xyg2, period_is_assetvalue_pa1e1b1nwzida0e0b0xyg), preserveAxis=0)  #preforms np.any on all axis except 1. only use the sale slices from the dam t axis
     sale_mask_p3 = fun.f_reduce_skipfew(np.any, np.logical_or(period_is_sale_tpa1e1b1nwzida0e0b0xyg3, period_is_assetvalue_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p]), preserveAxis=1)  #preforms np.any on all axis except 1
     ###manipulate axis with associations
-    score_range_s7s6p9a1e1b1nwzida0e0b0xyg = score_range_s8s6pa1e1b1nwzida0e0b0xyg[uinp.sheep['ia_s8_s7']] #s8 to s7
+    grid_scorerange_s7s6pa1e1b1nwzida0e0b0xyg = score_range_s8s6pa1e1b1nwzida0e0b0xyg[uinp.sheep['ia_s8_s7']] #s8 to s7
     month_scalar_s7pa1e1b1nwzida0e0b0xyg = price_adj_months_s7s9m4a1e1b1nwzida0e0b0xyg[:, 0, a_m4_p] #month to p
     month_discount_s7pa1e1b1nwzida0e0b0xyg = price_adj_months_s7s9m4a1e1b1nwzida0e0b0xyg[:, 1, a_m4_p] #month to p
     ###Sale price grids for selected price percentile and the scalars for LW & quality score
@@ -3559,7 +3561,7 @@ def generator(params,r_vals,plots = False):
         dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg,
         grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg, month_scalar_s7p9a1e1b1nwzida0e0b0xyg0,
         month_discount_s7p9a1e1b1nwzida0e0b0xyg0, price_type_s7pa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg,
-        cvscore_s7s6pa1e1b1nwzida0e0b0xyg, lw_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p9a1e1b1nwzida0e0b0xyg,
+        cvscore_s7s6pa1e1b1nwzida0e0b0xyg, grid_weightrange_s7s5pa1e1b1nwzida0e0b0xyg, grid_scorerange_s7s6pa1e1b1nwzida0e0b0xyg,
         age_end_p9a1e1b1nwzida0e0b0xyg0, discount_age_s7pa1e1b1nwzida0e0b0xyg,
         sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg,
         mask_s7x_s7pa1e1b1nwzida0e0b0xyg[...,0:1,:,:], sale_agemax_s7pa1e1b1nwzida0e0b0xyg0, dtype)
@@ -3568,7 +3570,7 @@ def generator(params,r_vals,plots = False):
         dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg,
         grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg, month_scalar_s7p9a1e1b1nwzida0e0b0xyg1,
         month_discount_s7p9a1e1b1nwzida0e0b0xyg1, price_type_s7pa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg,
-        cvscore_s7s6pa1e1b1nwzida0e0b0xyg, lw_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p9a1e1b1nwzida0e0b0xyg,
+        cvscore_s7s6pa1e1b1nwzida0e0b0xyg, grid_weightrange_s7s5pa1e1b1nwzida0e0b0xyg, grid_scorerange_s7s6pa1e1b1nwzida0e0b0xyg,
         age_end_p9a1e1b1nwzida0e0b0xyg1, discount_age_s7pa1e1b1nwzida0e0b0xyg,
         sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg,
         mask_s7x_s7pa1e1b1nwzida0e0b0xyg[...,1:2,:,:], sale_agemax_s7pa1e1b1nwzida0e0b0xyg1, dtype)
@@ -3577,7 +3579,7 @@ def generator(params,r_vals,plots = False):
         dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg,
         grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg, month_scalar_s7p9a1e1b1nwzida0e0b0xyg2,
         month_discount_s7p9a1e1b1nwzida0e0b0xyg2, price_type_s7pa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg,
-        cvscore_s7s6pa1e1b1nwzida0e0b0xyg, lw_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p9a1e1b1nwzida0e0b0xyg,
+        cvscore_s7s6pa1e1b1nwzida0e0b0xyg, grid_weightrange_s7s5pa1e1b1nwzida0e0b0xyg, grid_scorerange_s7s6pa1e1b1nwzida0e0b0xyg,
         age_end_p9a1e1b1nwzida0e0b0xyg2, discount_age_s7pa1e1b1nwzida0e0b0xyg,
         sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg,
         mask_s7x_s7pa1e1b1nwzida0e0b0xyg3, sale_agemax_s7pa1e1b1nwzida0e0b0xyg2, dtype)
@@ -3586,7 +3588,7 @@ def generator(params,r_vals,plots = False):
         dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg,
         grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg, month_scalar_s7p9a1e1b1nwzida0e0b0xyg3,
         month_discount_s7p9a1e1b1nwzida0e0b0xyg3, price_type_s7pa1e1b1nwzida0e0b0xyg, cvlw_s7s5pa1e1b1nwzida0e0b0xyg,
-        cvscore_s7s6pa1e1b1nwzida0e0b0xyg, lw_range_s7s5pa1e1b1nwzida0e0b0xyg, score_range_s7s6p9a1e1b1nwzida0e0b0xyg,
+        cvscore_s7s6pa1e1b1nwzida0e0b0xyg, grid_weightrange_s7s5pa1e1b1nwzida0e0b0xyg, grid_scorerange_s7s6pa1e1b1nwzida0e0b0xyg,
         age_end_p9a1e1b1nwzida0e0b0xyg3, discount_age_s7pa1e1b1nwzida0e0b0xyg,
         sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg,
         mask_s7x_s7pa1e1b1nwzida0e0b0xyg3, sale_agemax_s7pa1e1b1nwzida0e0b0xyg3, dtype)
@@ -4215,7 +4217,7 @@ def generator(params,r_vals,plots = False):
     salevalue_prog_zida0e0b0xyg2w9 = salevalue_zia0xg2w9.reshape(len_z, len_i, 1, len_a1, 1, 1, len_x, 1, len_g2, uinp.structure['i_progeny_w2_len'])
 
     ##distribute the yatf to the intermediate progeny activity
-    distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 = sfun.f_lw_distribution_2prog(ffcfw_prog_zida0e0b0xyg2w9,ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1, index_w2)
+    distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 = sfun.f_lw_distribution_2prog(ffcfw_prog_zida0e0b0xyg2w9,ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1, index_w2)  #todo: index_w2 is not used in f_lw_distribution_2prog
 
     ## move progeny weight axis to normal position for distribution to dams & offs at beginning of dvp0
     ffcfw_prog_wzida0e0b0xyg2 = np.moveaxis(ffcfw_prog_zida0e0b0xyg2w9,-1,w_pos)
