@@ -56,7 +56,7 @@ def finpyomo_local(params):
 #credit for a given time period (time period defined by cashflow set)
 model.v_credit = Var(model.s_cashflow_periods, bounds = (0.0, None), doc = 'amount of net positive cashflow in a given period')
 #debit for a given time period (time period defined by cashflow set)
-model.v_debit = Var(model.s_cashflow_periods, bounds = (0.0, None), doc = 'amount of net negitive cashflow in a given period')
+model.v_debit = Var(model.s_cashflow_periods, bounds = (0.0, None), doc = 'amount of net negative cashflow in a given period')
 ##dep
 model.v_dep = Var(bounds = (0.0, None), doc = 'transfers total dep to objective')
 ##dep
@@ -66,4 +66,4 @@ model.v_minroe = Var(bounds = (0.0, None), doc = 'total expenditure, used to ens
 # #carryover credit
 # model.v_carryover_credit = Var(bounds = (0.0, max(0,pinp.finance['bank_bal_start'])), doc = 'amount of net positive cashflow brought into each year')
 # #carryover debit
-# model.v_carryover_debit = Var(bounds = (min(0,-pinp.finance['bank_bal_start']), 0.0), doc = 'amount of net negitive cashflow brought into each year')
+# model.v_carryover_debit = Var(bounds = (min(0,-pinp.finance['bank_bal_start']), 0.0), doc = 'amount of net negative cashflow brought into each year')

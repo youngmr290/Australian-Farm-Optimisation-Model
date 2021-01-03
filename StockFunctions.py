@@ -23,7 +23,7 @@ import Sensitivity as sen
 na=np.newaxis
 
 def f_sig(x,a,b):
-    ''' Sig function CSIRO equation 124 ^the equation below is the sig function from sheepexplorer'''
+    ''' Sig function CSIRO equation 124 ^the equation below is the sig function from SheepExplorer'''
     return  1/(1+np.exp(-((2*(np.log(0.95) - np.log(0.05))/(b-a))*(x-(a+b)/2))))
 
 def f_ramp(x,a,b):
@@ -31,7 +31,7 @@ def f_ramp(x,a,b):
     return  np.minimum(1,np.maximum(0,(a-x)/(a-b)))
 
 def f_dim(x,y):
-    '''a function that minimum value of zero otherwise differrrrence between the 2 inputs '''
+    '''a function that minimum value of zero otherwise difference between the 2 inputs '''
     return np.maximum(0,x-y)
 
 def f_daylength(dayOfYear, lat):
@@ -93,7 +93,7 @@ def f_daylength(dayOfYear, lat):
 
 def f_next_prev_association(datearray_slice,*args):
     '''
-    Depending on the inputs this function will return the next or previous assosiation.
+    Depending on the inputs this function will return the next or previous association.
     eg it can be used to determine the next lambing opportunity for each period.
     See john stuff.py for alternative methods.
 
@@ -190,14 +190,14 @@ def f_c2g(params_c2, y=0, var_pos=0, len_ax1=0, len_ax2=0, condition=None, axis=
     i_mask_g3g3 = uinp.structure['i_mask_g3g3']
 
     ##convert params from c2 to c0
-    params_c2 = params_c2.astype(float) #this is so that blank cells are converted to nan not none type because nonetype cant be multiplied etc
+    params_c2 = params_c2.astype(float) #this is so that blank cells are converted to nan not none type because none type cant be multiplied etc
     params_c0 = params_c2[...,a_c2_c0]
     ##add y axis
     na=np.newaxis
     ###if y is not numpy ie was read in as an int because it was a single cell, it needs to be converted
     if type(y) == int:
         y = np.asarray([y])
-    ###y is a 2d array howvever currently it only has one slice so it is read in as a 1d array. so i need to add second array
+    ###y is a 2d array however currently it only has one slice so it is read in as a 1d array. so i need to add second array
     if y.ndim == 1 and params_c0.ndim != 1:
         y=y[...,na]
     ###apply y mask
@@ -213,7 +213,7 @@ def f_c2g(params_c2, y=0, var_pos=0, len_ax1=0, len_ax2=0, condition=None, axis=
         shape=(len_ax1,len_y,3)
         params_c0 = params_c0.reshape(shape)
     else:
-        pass#don't need to reshpae
+        pass#don't need to reshape
     ##get axis into correct position
     if var_pos != None or var_pos != 0:
         extra_axes = tuple(range((var_pos + 1), -2))
@@ -282,7 +282,7 @@ def f_g2g(array_g,group,left_pos=0,len_ax1=0,len_ax2=0,len_ax3=0,swap=False,righ
     axis: int, optional
         axis to apply mask to.
 
-    *note: if adding two sets of new axis add from right to left (then the pos variables allign)
+    *note: if adding two sets of new axis add from right to left (then the pos variables align)
 
     Returns
     -------
@@ -305,8 +305,8 @@ def f_g2g(array_g,group,left_pos=0,len_ax1=0,len_ax2=0,len_ax3=0,swap=False,righ
         shape=(len_ax1,array_g.shape[-1])
         array_g = array_g.reshape(shape)
     else:
-        pass#don't need to reshpae
-    ##swap axis if neccessary
+        pass#don't need to reshape
+    ##swap axis if necessary
     if swap:
         array_g = np.swapaxes(array_g, 0, 1)
     ##get axis into correct position 1
@@ -357,7 +357,7 @@ def f_DSTw(scan_std_yg):
     '''
     Parameters
     ----------
-    scan_std : np array
+    scan_std_yg : np array
         scanning percentage of genotypes.
 
     Returns
@@ -370,7 +370,7 @@ def f_DSTw(scan_std_yg):
     dstwtr_ygl0 = np.sum(uinp.sheep['i_scan_coeff_l0s'] * scan_power_ygs[...,na,:], axis = -1) #add the coefficients and sum all the elements of the equation ie int+ax+bx^2+cx^3+dx^4
     return dstwtr_ygl0
 
-def f_btrt0(dstwtr,lss,lstw,lstr): #^this function is inflexible ie if you want to add qradruplets
+def f_btrt0(dstwtr,lss,lstw,lstr): #^this function is inflexible ie if you want to add quadruplets
     '''
     Parameters
     ----------
@@ -449,32 +449,32 @@ def f_period_is_(period_is, date_array, date_start_p=0, date_array2 = 0, date_en
 #Sim functions #
 ################
 def f_feedsupply_adjust(attempts,feedsupply,itn):
-    ##create empty array to put new feedsuply into, this is done so it doesnt have the itn axis (probably could just create from attempts array shape without last axis)
+    ##create empty array to put new feedsupply into, this is done so it doesnt have the itn axis (probably could just create from attempts array shape without last axis)
     feedsupply = np.zeros_like(feedsupply)
-    ##which feedsupplies can be calculated using binary method - must have a negitive and positive error
-    binary_mask = np.nanmin(attempts[...,1], axis=-1)/np.nanmax(attempts[...,1], axis=-1) < 0 #axis -1 is the itn axix ie take the min and max error from the previous itterations
-    ##calc new feedsupply binary - take half of the two feedsupplys that have resulted in the error closest to 0. Only adds the binary result to slices that have a negitive and a positive value (done using the mask created above)
-    ###feedsuply with negitive error that is closest to 0 - this is a little complex because applying a max function to a masked array
+    ##which feedsupplies can be calculated using binary method - must have a negative and positive error
+    binary_mask = np.nanmin(attempts[...,1], axis=-1)/np.nanmax(attempts[...,1], axis=-1) < 0 #axis -1 is the itn axis ie take the min and max error from the previous iterations
+    ##calc new feedsupply binary - take half of the two feedsupplies that have resulted in the error closest to 0. Only adds the binary result to slices that have a negative and a positive value (done using the mask created above)
+    ###feedsupply with negative error that is closest to 0 - this is a little complex because applying a max function to a masked array
     mask_attempts= np.ma.masked_array(attempts[...,1],attempts[...,1]>0) #np.ma has a true and false the other way around (eg false means keep data) therefore the <> sign is opposite to what you want
-    neg_bool=np.ma.getdata(mask_attempts.max(axis=-1,keepdims=True)==attempts[...,1]) #returns a maks that states the error that is negitive but closest to 0
-    neg_bool = neg_bool * binary_mask[...,na] #this just makes sure the neg mask only has a true in the same slice as the pos array (so it can be applied to the ffed supply array below)
-    ###feedsuply with positive error that is closest to 0 - this is a little complex because applying a max function to a masked array
+    neg_bool=np.ma.getdata(mask_attempts.max(axis=-1,keepdims=True)==attempts[...,1]) #returns a maks that states the error that is negative but closest to 0
+    neg_bool = neg_bool * binary_mask[...,na] #this just makes sure the neg mask only has a true in the same slice as the pos array (so it can be applied to the feed supply array below)
+    ###feedsupply with positive error that is closest to 0 - this is a little complex because applying a max function to a masked array
     mask_attempts= np.ma.masked_array(attempts[...,1],attempts[...,1]<0) #np.ma has a true and false the other way around (eg false means keep data) therefore the <> sign is opposite to what you want
-    pos_bool=np.ma.getdata(mask_attempts.min(axis=-1,keepdims=True)==attempts[...,1]) #returns a maks that states the error that is negitive but closest to 0
+    pos_bool=np.ma.getdata(mask_attempts.min(axis=-1,keepdims=True)==attempts[...,1]) #returns a maks that states the error that is negative but closest to 0
     pos_bool = pos_bool * binary_mask[...,na] #this just makes sure the pos mask only has a true in the same place as the neg mask. 
     ##calc feedsupply
     feedsupply[binary_mask] = (attempts[...,0][neg_bool] + attempts[...,0][pos_bool])/2    
     ##calc feedsupply using interpolation
-    ###first determine the slope, slope is always positive ie as feedsupply increases error increase because error = lwc - target and more feed means hihger lwc.
+    ###first determine the slope, slope is always positive ie as feedsupply increases error increase because error = lwc - target and more feed means higher lwc.
     if itn==0:
         slope=pinp.sheep['i_feedsupply_slope_std']
     else:
-        ####linregress only works on 1d array and cant use apply_over_axis because needs x and y. maybe there is a beter way but i looked for a while and found nothing
+        ####linregress only works on 1d array and cant use apply_over_axis because needs x and y. maybe there is a better way but i looked for a while and found nothing
         slope=np.empty_like(feedsupply)
         feedsupply_all_itn = attempts[...,0]
         error_all_itn = attempts[...,1]
-        for i in np.ndindex(error_all_itn.shape[:-1]): #not exactly sure how this is working but it is creating tupple of each combo of slices in each axis.
-            x= feedsupply_all_itn[i] #indexing with tupple works correctly if we are interested in the last axis otherwise it doesn't work properly for some reason.ie t[(0,0)] == t[0,0,:] but t[:,(0,0)] != t[:,0,0]
+        for i in np.ndindex(error_all_itn.shape[:-1]): #not exactly sure how this is working but it is creating tuple of each combo of slices in each axis.
+            x= feedsupply_all_itn[i] #indexing with tuple works correctly if we are interested in the last axis otherwise it doesn't work properly for some reason.ie t[(0,0)] == t[0,0,:] but t[:,(0,0)] != t[:,0,0]
             y= error_all_itn[i]
             slope[i] = stats.linregress(x,y)
     ####new feedsupply = minerror / slope. It is assumed that the most recent itn has the most accurate feedsupply
@@ -561,7 +561,7 @@ def f_foo_convert(cu3, cu4, foo, i_hr_scalar, i_region, i_n_pasture_stage,i_hd_s
     ##Estimate height of pasture
     height = np.maximum(0, np.exp(cu4[3] + cu4[0] * foo + cu4[1] * legume + cu4[2] * foo * legume) + cu4[5] + cu4[4] * foo)
     ##Height density (height per unit FOO)
-    hd = fun.f_divide(height, foo_shears) #handles div0 (eg if in feedlot with no pasture or adjuusted foo is less than 0)
+    hd = fun.f_divide(height, foo_shears) #handles div0 (eg if in feedlot with no pasture or adjusted foo is less than 0)
     ##height ratio                    
     hr = i_hr_scalar * hd / i_hd_std
     ##calc hf
@@ -569,17 +569,17 @@ def f_foo_convert(cu3, cu4, foo, i_hr_scalar, i_region, i_n_pasture_stage,i_hd_s
     return foo_shears, hf
 
 def f_dynamic_slice(arr, axis, start, stop, axis2=None, start2=None, stop2=None):
-    ##check if arr is int - this is the case for the first loop because arr may be initilised as 0
+    ##check if arr is int - this is the case for the first loop because arr may be initialised as 0
     if type(arr)==int:
         return arr
     else:
-        ##first axis slice if it is not singlton
+        ##first axis slice if it is not singleton
         if arr.shape[axis]!=1:
             sl = [slice(None)] * arr.ndim
             sl[axis] = slice( start, stop)
             arr = arr[tuple(sl)]
         if axis2 is not None:
-            ##second axis slice if required and not singlton
+            ##second axis slice if required and not singleton
             if arr.shape[axis2] != 1:
                 sl = [slice(None)] * arr.ndim
                 sl[axis2] = slice( start2, stop2)
@@ -616,7 +616,7 @@ def roll_slices(array, roll, roll_axis=0):
     you can roll different slices by different amounts
     :param array: array to be rolled
     :param roll: number of times the slice is to be rolled - this array should have one less dim than the main array
-    :param axis: axis to roll down
+    :param roll_axis: axis to roll down
     :return:
     '''
     #flattern array if multi dim
@@ -774,7 +774,7 @@ def f_energy_cs(ck, cx, cm, lw_start, ffcfw_start, mr_age, mei, omer_history_sta
     distance = distance * (feedsupply < 3)
     ##Energy required for movement	
     emove = cm[16, ...] * distance * lw_start
-    ##Energy required for grazing (chewing and wlking around)
+    ##Energy required for grazing (chewing and walking around)
     egraze = cm[6, ...] * ffcfw_start * intake_f * (cm[7, ...] - dmd) + emove
     ##Energy associated with organ activity
     omer, omer_history = f_history(omer_history_start, cm[1, ...] * mei, days_period)
@@ -860,7 +860,7 @@ def f_milk(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_start,
     mpmax = srw** 0.75 * relsize_start * rc_birth_start * lb_start * mp_age_y
     ##Excess ME available for milk	
     mel_xs = np.maximum(0, (mei - (meme + mew_min * relsize_start))) * cl[5, ...] * kl
-    ##Excess ME as a ratio of MPmax	
+    ##Excess ME as a ratio of mpmax
     milk_ratio = fun.f_divide(mel_xs, mpmax) #func stops div0 error - and milk ratio is later discarded because days period f = 0
     ##Age or energy factor
     ad = np.maximum(age_yatf, milk_ratio / (2 * cl[22, ...]))
@@ -898,7 +898,7 @@ def f_fibre(cw, cc, ffcfw_start, relsize_start, d_cfw_history_start_m2a1e1b1nwzi
     ##Net energy required for wool
     new = cw[1, ...] * (d_cfw_a1e1b1nwzida0e0b0xyg - cw[2, ...] * relsize_start) / cw[3, ...]
     ##ME required for wool (above basal)
-    mew = new / kw_yg #can be negitive because mem assumes 4g of wool is grown therefore if less energy is used mew essentially gives the energy back.
+    mew = new / kw_yg #can be negative because mem assumes 4g of wool is grown therefore if less energy is used mew essentially gives the energy back.
     ##Fibre diameter for the days growth
     d_fd_a1e1b1nwzida0e0b0xyg = sfd_a0e0b0xyg * fun.f_divide(d_cfw_a1e1b1nwzida0e0b0xyg, d_cfw_ave_a1e1b1nwzida0e0b0xyg) ** cw[13, ...]  #func to stop div/0 error when d_cfw_ave=0 so does d_cfw (only have a 0 when day period = 0)
     ##Surface Area
@@ -989,7 +989,7 @@ def f_emissions_bc(ch, intake_f, intake_s, md_solid, level):
 
 def f_feedsupply(cu3, cu4, cr, feedsupply_std_a1e1b1nwzida0e0b0xyg, paststd_foo_a1e1b1j0wzida0e0b0xyg, paststd_dmd_a1e1b1j0wzida0e0b0xyg, legume_a1e1b1nwzida0e0b0xyg, pi, pasture_stage_a1e1b1j0wzida0e0b0xyg, i_hr_scalar, i_region, i_n_pasture_stage, i_hd_std):
     ##level of pasture
-    level_a1e1b1nwzida0e0b0xyg = np.trunc(np.minimum(2, feedsupply_std_a1e1b1nwzida0e0b0xyg)).astype('int') #note np.trunc rounds down to the nerest int (need to specify int type for the take along axis functin below)
+    level_a1e1b1nwzida0e0b0xyg = np.trunc(np.minimum(2, feedsupply_std_a1e1b1nwzida0e0b0xyg)).astype('int') #note np.trunc rounds down to the nearest int (need to specify int type for the take along axis function below)
     ##next level up of pasture
     next_level_a1e1b1nwzida0e0b0xyg = np.minimum(2, level_a1e1b1nwzida0e0b0xyg + 1)
     ##decimal component of feedsupply
@@ -1015,7 +1015,7 @@ def f_feedsupply(cu3, cu4, cr, feedsupply_std_a1e1b1nwzida0e0b0xyg, paststd_foo_
 
 
 def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, nyatf_b1any, period_is_mating, index_e1):
-    ##Conception greater than or equal to 1,2,3 foetus (what is chance you have more than x number of feotuses)
+    ##Conception greater than or equal to 1,2,3 foetus (what is chance you have more than x number of foetuses)
     relsize_mating_e1b1sliced = f_dynamic_slice(relsize_mating, pinp.sheep['i_e1_pos'], 0, 1, uinp.parameters['i_b1_pos'], 0, 1) #take slice from e1 & b1 axis
     rc_mating_e1b1sliced = f_dynamic_slice(rc_mating, pinp.sheep['i_e1_pos'], 0, 1, uinp.parameters['i_b1_pos'], 0, 1) #take slice from e1 & b1 axis
     crg = crg_doy * f_sig(relsize_mating_e1b1sliced * rc_mating_e1b1sliced, cb1[2, ...], cb1[3, ...])
@@ -1123,7 +1123,7 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, w_b_exp_y, period_is_birth, c
 def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, foo, chill_index_m1, period_is_birth, sar_mortalityp):
     ##transformed survival	
     t_mortalityp_mu = cu2[8, 0, ..., na] * w_b[..., na] + cu2[8, 1, ..., na] * w_b[..., na] ** 2 + cu2[8, 2, ..., na] * chill_index_m1 + cu2[8, 3, ..., na] * foo[..., na] + cu2[8, 4, ..., na] * foo[..., na] ** 2 + cu2[8, 5, ..., na] + cb1[8, ..., na] + cx[8, ..., na] + cx[9, ..., na] * chill_index_m1 + ce[8, ..., na]
-    ##back tansformed	
+    ##back transformed
     mortalityp_mu = np.average(1 / (1 + np.exp(-t_mortalityp_mu)),axis = -1) * period_is_birth #m1 axis averaged
     ##Progeny mortality at birth (LTW) with SA	
     mortalityp_mu = fun.f_sa(mortalityp_mu, sar_mortalityp, sa_type = 4)
@@ -1176,7 +1176,7 @@ def f_period_start_prod(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len,
 #     numbers, var_start = np.broadcast_arrays(numbers,var_start)
 #     ##a) Calculate temporary values as if start of FVP, only required if n axis is active
 #     if uinp.structure['i_n1_len'] >= uinp.structure['i_w1_len']:
-#         temporary = var_start #this is done to ensure that temp has the same size as var. In the next line np.diagonal removes the n axis so it is added back in using the expand function, but that is a singlton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
+#         temporary = var_start #this is done to ensure that temp has the same size as var. In the next line np.diagonal removes the n axis so it is added back in using the expand function, but that is a singleton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
 #         temporary[...] = np.expand_dims(np.rollaxis(var_start.diagonal(axis1= uinp.structure['i_w_pos'], axis2= uinp.structure['i_n_pos']),-1,uinp.structure['i_w_pos']), uinp.structure['i_n_pos']) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
 #         ##Update if the period is start of a FVP
 #         var_start = fun.f_update(var_start, temporary, period_is_startfvp)
@@ -1196,7 +1196,7 @@ def f_condensed(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp
     '''condense variable to 3 common points along the w axis for the start of fvp0'''
     if np.any(period_is_startfvp0):
         temporary = var.copy()  #this is done to ensure that temp has the same size as var.
-        ###test if array has diagonal and calc temp variables as if start of dvp - if there is not a diagonal use the alternative system for reallocting at the end of a DVP
+        ###test if array has diagonal and calc temp variables as if start of dvp - if there is not a diagonal use the alternative system for reallocating at the end of a DVP
         ### np.diagonal removes the n axis so it is added back in using the expand function, but that is a singleton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
         if i_n_len >= i_w_len:
             ####this method was the way we first tried - no longer used (might be used later if we add nutrient options back in)
@@ -1206,12 +1206,12 @@ def f_condensed(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp
             temporary[...] = np.mean(
                 f_dynamic_slice(var, uinp.structure['i_w_pos'], int(i_n_len ** i_n_fvp_period), int(i_n_len ** i_n_fvp_period) + int(i_w_len / 10)), uinp.structure['i_w_pos'],
                 keepdims=True)  # average of the top lw patterns
-            ###add mid pattern (w 0 - 27) - use slice method in case w axis changes postion (cant use MRYs dynamic slice function because we are assigning)
+            ###add mid pattern (w 0 - 27) - use slice method in case w axis changes position (cant use MRYs dynamic slice function because we are assigning)
             sl = [slice(None)] * temporary.ndim
             sl[uinp.structure['i_w_pos']] = slice(0, int(i_n_len ** i_n_fvp_period))
             temporary[tuple(sl)] = f_dynamic_slice(var, uinp.structure['i_w_pos'], 0, 1)  # the pattern that is feed supply 1 (median) for the entire year (the top w pattern)
             ###low pattern
-            ind = np.argsort(var, axis=uinp.structure['i_w_pos'])  #sort into production order so we can select the lowest production with mort less than 10% - note sorts in asending order
+            ind = np.argsort(var, axis=uinp.structure['i_w_pos'])  #sort into production order so we can select the lowest production with mort less than 10% - note sorts in ascending order
             var_sorted = np.take_along_axis(var, ind, axis=uinp.structure['i_w_pos'])
             numbers_start_sorted = np.take_along_axis(numbers_start_fvp0, ind, axis=uinp.structure['i_w_pos'])
             numbers_sorted = np.take_along_axis(numbers, ind, axis=uinp.structure['i_w_pos'])
@@ -1233,7 +1233,7 @@ def f_condensed(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp
 def f_period_start_nums(numbers, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_fvp0, period_is_startfvp0, period_is_startseason, season_propn_z, group=None, nyatf_b1 = 0, numbers_initial_repro=0, gender_propn_x=1, period_is_prejoin=0, period_is_birth=False):
     ##a)update numbers if start of DVP
     numbers = f_condensed(numbers, numbers, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_fvp0, period_is_startfvp0)
-    ##b) realocate for season type
+    ##b) reallocate for season type
     if np.any(period_is_startseason):
         temporary = np.sum(numbers, axis = season_tup, keepdims=True)  * season_propn_z  #Calculate temporary values as if period_is_break
         numbers = fun.f_update(numbers, temporary, period_is_startseason)  #Set values where it is beginning of FVP
@@ -1253,10 +1253,10 @@ def f_period_start_nums(numbers, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_
 #     ##a) reallocate between w and n if the period is start of a FVP
 #     ###Calculate temporary values as if start of FVP - collapse n back to standard level (n axis is populated due to mortality)
 #     if uinp.structure['i_n1_len'] >= uinp.structure['i_w1_len']:
-#         temporary = numbers #this is done to ensure that temp has the same size as var. In the next line np.diagonal removes the n axis so it is added back in using the expand function, but that is a singlton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
+#         temporary = numbers #this is done to ensure that temp has the same size as var. In the next line np.diagonal removes the n axis so it is added back in using the expand function, but that is a singleton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
 #         temporary[...] = np.expand_dims(np.rollaxis(numbers.diagonal(axis1= uinp.structure['i_w_pos'], axis2= uinp.structure['i_n_pos']),-1,uinp.structure['i_w_pos']), uinp.structure['i_n_pos']) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
 #         numbers = fun.f_update(numbers, temporary, period_is_startfvp)
-#     ##b) realocate for season type
+#     ##b) reallocate for season type
 #     temporary = np.sum(numbers, axis = season_tup, keepdims=True)  * season_propn_z  #Calculate temporary values as if period_is_break
 #     numbers = fun.f_update(numbers, temporary, period_is_break)  #Set values where it is beginning of FVP
 #     ##things for dams - prejoining and moving between classes
@@ -1273,13 +1273,13 @@ def f_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfoe
     '''
     ##a) mortality
     numbers = numbers * (1-mortality)
-    ##numbers for post processing - don't include selling drys - asignment required here for when it is not group 1 or 2
+    ##numbers for post processing - don't include selling drys - assignment required here for when it is not group 1 or 2
     pp_numbers = numbers
     ##things for dams - prejoining and moving between classes
     if group==1:
-        ###b) conception - conception is the change in numbers +ve for animals getting pregnancy and -ve in the NM e-0 slice (note the conception for e slice 1 and higher puts the negitive numbers in the e-0 nm slice)
+        ###b) conception - conception is the change in numbers +ve for animals getting pregnancy and -ve in the NM e-0 slice (note the conception for e slice 1 and higher puts the negative numbers in the e-0 nm slice)
         if np.any(period_is_mating):
-            temporary = numbers + conception * numbers[:, 0:1, 0:1, ...]  # numbers_dams[..., 0,0, ...] is the NM slice of cycle 0 ie the number of animals yet to be mated (conception will have negitive value in nm slice)
+            temporary = numbers + conception * numbers[:, 0:1, 0:1, ...]  # numbers_dams[..., 0,0, ...] is the NM slice of cycle 0 ie the number of animals yet to be mated (conception will have negative value in nm slice)
             numbers = fun.f_update(numbers, temporary, np.any(period_is_mating, axis=pinp.sheep['i_e1_pos'])) #needs to be previous period else conception is not calculated because numbers happens at beginning of p loop
         ###at the end of mating move any remaining numbers from nm to 00 slice (note only the nm slice for e-0 has numbers - this is handled in the conception function)
         ###Set temporary to copy of current numbers
@@ -1291,12 +1291,12 @@ def f_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfoe
         ###d) birth (account for birth status and if drys are retained)
         if np.any(period_is_birth):
             dam_propn_birth_b1 = f_comb(nfoet_b1, nyatf_b1) * (1 - mortality_yatf) ** nyatf_b1 * mortality_yatf ** (nfoet_b1 - nyatf_b1) # the proportion of dams of each LSLN based on (progeny) mortality
-            temp = np.sum(dam_propn_birth_b1 * gender_propn_x, axis=uinp.parameters['i_x_pos'], keepdims=True) * numbers[:,:,uinp.structure['a_prepost_b1'],...] #have to average x axis so that it is not active for dams - times by gender propn to give aprox weighting (ie because offs are not usually entire males so they will get low weighting)
+            temp = np.sum(dam_propn_birth_b1 * gender_propn_x, axis=uinp.parameters['i_x_pos'], keepdims=True) * numbers[:,:,uinp.structure['a_prepost_b1'],...] #have to average x axis so that it is not active for dams - times by gender propn to give approx weighting (ie because offs are not usually entire males so they will get low weighting)
             pp_numbers = fun.f_update(numbers, temp, period_is_birth)  # calculated in the period after birth when progeny mortality due to exposure is calculated
             temp = np.maximum(pinp.sheep['i_drysretained_birth'],np.minimum(1, nyatf_b1)) * pp_numbers
             numbers = fun.f_update(pp_numbers, temp, period_is_birth * (gbal>=2)) # has to happen after the dams are moved due to progeny mortality so that gbal drys are also scaled by drys_retained
         else:
-            ##numbers for post processing - don't include selling drys - asignment required here in case it is not birth
+            ##numbers for post processing - don't include selling drys - assignment required here in case it is not birth
             pp_numbers = numbers
         ###c) scanning
         if np.any(period_is_scan):
@@ -1336,7 +1336,7 @@ def f_wool_additional(fd, sl, ss, vm,  pmb, cvfd=0.22, cvsl=0.18):
     ph = cu5_u5c5[0, i_eqn_ph] * sl + cu5_u5c5[1, i_eqn_ph] * ss + cu5_u5c5[2, i_eqn_ph] * fd + cu5_u5c5[
         3, i_eqn_ph] * pmb + cu5_u5c5[5, i_eqn_ph] * vm + cu5_u5c5[6, i_eqn_ph] * cvfd + cu5_u5c5[
           7, i_eqn_ph] * cvsl + cu5_u5c5[8, i_eqn_ph]
-    ##Back transform the ph if using SCIRO equation
+    ##Back transform the ph if using CSIRO equation
     if i_eqn_ph == 0:
         ph = 1 / (1 + np.exp(-ph))
     ##predicted cv hauteur
@@ -1364,7 +1364,7 @@ def f_woolprice():
     fdprem_w4 = np.array([np.interp(fd_percentile, uinp.sheep['i_woolp_fdprem_range_w5'], uinp.sheep['i_woolp_fdprem_w4w5'][i]) for i in range(uinp.sheep['i_woolp_fdprem_w4w5'].shape[0])])
     ##FD premium to use (adjusted by sav)
     fdprem_w4 = fun.f_sa(fdprem_w4, sen.sav['woolp_fdprem'], 5)
-    ##Wool price for the analysis (note fdprem is the premium per micron - calculate like this because each step is not necciserily 1 micron)
+    ##Wool price for the analysis (note fdprem is the premium per micron - calculate like this because each step is not necessarily 1 micron)
     woolprice_w4 = mpg_stdfd * (1 + fdprem_w4) ** (uinp.sheep['i_woolp_fd_std'] - uinp.sheep['i_woolp_fd_range_w4'])
     return woolprice_w4
 
@@ -1391,7 +1391,7 @@ def f_wool_value(mpg_w4, cfw_pg, fd_pg, sl_pg, ss_pg, vm_pg, pmb_pg,dtype=None):
     return wool_value_pg, woolp_stbnib_pg
 
 def f_condition_score(rc, cu0):
-    ''' Estimate CS from LW. Works with scalars or arrays - provided they are broadcastable into ffcflw.
+    ''' Estimate CS from LW. Works with scalars or arrays - provided they are broadcastable into ffcfw.
 
        ffcfw: (kg) Fleece free, conceptus free liveweight. normal_weight: (kg). cs_propn: (0.19) change in LW
        associated with 1 CS as a proportion of normal_weight.
@@ -1399,9 +1399,9 @@ def f_condition_score(rc, cu0):
        long version of the formula (use rc instead of using to following): 3 + (ffcfw - normal_weight) / (cs_propn * normal_weight)
        Returns: condition score - float
        '''
-    return np.maximum(1, 3 + (rc - 1) / cu0[1, ...]) #cs cant be below 1 because theyd be dead
+    return np.maximum(1, 3 + (rc - 1) / cu0[1, ...]) #cs cant be below 1 because the animal would be dead
 
-#^needs updating - curently just a copy of the cs function
+#todo needs updating - currently just a copy of the cs function
 def f_fat_score(rc, cu0):
     return np.maximum(1, 3 + (rc - 1) / cu0[1, ...]) #fs cant be below 1
 
@@ -1418,7 +1418,7 @@ def f_norm_cdf(x, mu, cv):
 def f_saleprice(score_pricescalar_s7s5s6, weight_pricescalar_s7s5s6, dtype=None):
     ##Sale price percentile to use (adjusted by sav)
     salep_percentile = uinp.sheep['i_salep_percentile']
-    ##Max price in grids at selected percentile - 1d inderp over along the s7 axis
+    ##Max price in grids at selected percentile - 1d interpolation along the s4 axis for each grid (s7 axis)
     grid_max_s7 = (np.array([np.interp(salep_percentile, uinp.sheep['i_salep_percentile_range_s4'], uinp.sheep['i_salep_percentile_scalar_s7s4'][i])
                             for i in range(uinp.sheep['i_salep_percentile_scalar_s7s4'].shape[0])]) * uinp.sheep['i_salep_price_max_s7']).astype(dtype)
     ##Max price in grids (adj sav)
@@ -1437,27 +1437,31 @@ def f_saleprice(score_pricescalar_s7s5s6, weight_pricescalar_s7s5s6, dtype=None)
 
 
 def f_salep_mob(weight_s7spg, scores_s7s6pg, cvlw_s7s5pg, cvscore_s7s6pg,
-                lw_range_s7s5pg, score_range_s7s6p5g, grid_priceslw_s7s5s6pg):
+                grid_weightrange_s7s5pg, grid_scorerange_s7s6p5g, grid_priceslw_s7s5s6pg):
     '''A function to calculate the average price of the mob based on the average specifications in the mob.
     This is to represent that the distribution of weight & specification reduces the mob average price
-    This representation allows valuing individual animal management and reducing the mob distribution.'''
-    ##prob for each lw step in grid based on the coefficient of variation (CV) of weight in the mob
-    prob_lw_s7s5pg = np.maximum(0, f_norm_cdf(np.roll(lw_range_s7s5pg, -1, axis = 1), weight_s7spg, cvlw_s7s5pg)
-                          - f_norm_cdf(lw_range_s7s5pg, weight_s7spg, cvlw_s7s5pg))
-    ##Probability for each score step in grid (fat score/CS) based on the CV of quality score in the mob
-    prob_score_s7s6pg = np.maximum(0, f_norm_cdf(np.roll(score_range_s7s6p5g, -1, axis = 1), scores_s7s6pg, cvscore_s7s6pg)
-                             - f_norm_cdf(score_range_s7s6p5g, scores_s7s6pg, cvscore_s7s6pg))
-    ##Probability for each cell of grid (assuming that weight & score are independent)
-    prob_grid_s7s5s6pg = prob_lw_s7s5pg[:,:,na] * prob_score_s7s6pg[:,na,:]
-    ##Average price for the mob
-    averagesale_price_mob_s7pg = np.sum(prob_grid_s7s5s6pg * grid_priceslw_s7s5s6pg, axis = (1, 2))
-    return averagesale_price_mob_s7pg
+    This representation allows valuing individual animal management and reducing the mob distribution.
+    Note: if the distribution extends below the lower range of weight or score in the grid these animals have zero value (ncv)'''
+
+    ## Probability for each lw step in grid based on the mob average weight and the coefficient of variation (CV) of weight
+    ### probability of being less than the upper value of the step (roll) - probability of less than the lower value of the step
+    prob_lw_s7s5pg = np.maximum(0, f_norm_cdf(np.roll(grid_weightrange_s7s5pg, -1, axis = 1), weight_s7spg, cvlw_s7s5pg)
+                          - f_norm_cdf(grid_weightrange_s7s5pg, weight_s7spg, cvlw_s7s5pg))
+    ## Probability for each score step in grid (fat score/CS) based on the mob average score and the CV of quality score
+    prob_score_s7s6pg = np.maximum(0, f_norm_cdf(np.roll(grid_scorerange_s7s6p5g, -1, axis = 1), scores_s7s6pg, cvscore_s7s6pg)
+                             - f_norm_cdf(grid_scorerange_s7s6p5g, scores_s7s6pg, cvscore_s7s6pg))
+    ##Probability for each cell of grid (assuming that weight & score are independent allows multiplying weight and score probabilities)
+    prob_grid_s7s5s6pg = prob_lw_s7s5pg[:,:,na, ...] * prob_score_s7s6pg[:,na,...]
+
+    ##Average price for the mob is the sum of the probabilities in each cell of the grid and the price in that cell
+    saleprice_mobaverage_s7pg = np.sum(prob_grid_s7s5s6pg * grid_priceslw_s7s5s6pg, axis = (1, 2))
+    return saleprice_mobaverage_s7pg
 
 
 def f_sale_value(cu0, cx, o_rc, o_ffcfw_pg, dressp_adj_yg, dresspercent_adj_s6pg,
                  dresspercent_adj_s7pg, grid_price_s7s5s6pg, month_scalar_s7pg,
                  month_discount_s7pg, price_type_s7pg, cvlw_s7s5pg, cvscore_s7s6pg,
-                 w_range_s7s5pg, score_range_s7s6p5g, age_end_p5g1, discount_age_s7pg,sale_cost_pc_s7pg,
+                 grid_weightrange_s7s5pg, grid_scorerange_s7s6pg, age_end_p5g1, discount_age_s7pg,sale_cost_pc_s7pg,
                  sale_cost_hd_s7pg, mask_s7x_s7pg, sale_agemax_s7pg1, dtype=None):
     ##Calculate condition score from relative condition
     cs_pg = f_condition_score(o_rc, cu0)
@@ -1468,37 +1472,52 @@ def f_sale_value(cu0, cx, o_rc, o_ffcfw_pg, dressp_adj_yg, dresspercent_adj_s6pg
     ##Select the quality scores (s8) for each price grid (s7)
     scores_s7s6pg = scores_s8p[uinp.sheep['ia_s8_s7']][:,na,...]
     ##Dressing percentage to adjust price grid from $/kg DW to $/kg LW
+    ### It is easier to convert the price to $/kg LW than it is to convert a distribution of LW and fat score to a distribution of dressed weight and fat score
+    ### because dressing percentage changes with fat score.
     dresspercent_for_price_s7s6pg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[23, ...] + dresspercent_adj_s6pg + dresspercent_adj_s7pg[:,na,...]
-    ##Dressing percentage is 100% if price type is $/kg LW or $/hd
+    ##Dressing percentage is set to 100% if price type is $/kg LW or $/hd
     dresspercent_for_price_s7s6pg = fun.f_update(dresspercent_for_price_s7s6pg, 1, price_type_s7pg[:,na,...] >= 1)
-    ##Update the grid prices to $/kg LW because dressing percentage changes with fat score and this effects the price received when a distribution is used
+    ##Create the grid prices in $/kg LW
     grid_priceslw_s7s5s6pg = grid_price_s7s5s6pg * dresspercent_for_price_s7s6pg[:,na,...]
-    ##Interploate DP adjustment due to FS
+
+    ## Calculate the 'lookup' weight of the average animal in the units of each grid (some grids the weight is dressed weight other grids are LW)
+    ## start with dressing percentage and set to 1 later if the grid is kg LW
+    ###Interploate DP adjustment based on the average FS of the animals
     dressp_adj_fs_pg= np.interp(fs_pg, uinp.sheep['i_salep_score_range_s8s6'][0, ...], uinp.sheep['i_salep_dressp_adj_s6']).astype(dtype)
-    ##Dressing percentage to calculate weight to lookup in the grid.
+    ###Average Dressing percentage including effects of genotype, fat score and age (which varies with the grid).
     dresspercent_for_wt_s7pg = pinp.sheep['i_dressp'] + dressp_adj_yg + cx[23, ...] + dressp_adj_fs_pg + dresspercent_adj_s7pg
-    ##Dressing percentage is 100% if price type is $/kg LW or $/hd
+    ###Dressing percentage is 100% if price type is $/kg LW or $/hd
     dresspercent_wt_s7pg = fun.f_update(dresspercent_for_wt_s7pg, 1, price_type_s7pg >= 1)
-    ##Scale ffcfw to the units in the grid
+    ###Scale ffcfw to the units in the grid
     weight_for_lookup_s7pg = o_ffcfw_pg * dresspercent_wt_s7pg
-    ##Calculate mob average price in each grid per lw/head (this is just the price, not the total animal value) - this accounts for the fact that there is a distribution of weights within a mob so some sheep are discounted
+
+    ##Calculate mob average price in each grid from the mob average and the distribution of weight & score within the mob (this is just the price, not the total animal value)
     price_mobaverage_s7pg = f_salep_mob(weight_for_lookup_s7pg[:,na,...], scores_s7s6pg, cvlw_s7s5pg, cvscore_s7s6pg,
-                                                      w_range_s7s5pg, score_range_s7s6p5g, grid_priceslw_s7s5s6pg)
+                                                      grid_weightrange_s7s5pg, grid_scorerange_s7s6pg, grid_priceslw_s7s5s6pg)
+
     ##Scale price received based on month of sale
     price_mobaverage_s7pg = price_mobaverage_s7pg * (1+month_scalar_s7pg)
-    ##Temporary value with age based discount (discount above a certain age that varies by month)
+
+    ## Apply the age based discount if the animal is greater than the threshold age
+    ### Temporary value of the age based discount from the relevant month
     temporary_s7pg = price_mobaverage_s7pg * (1 + month_discount_s7pg)
-    ##Apply discount if age is greater than threshold age
+    ###Apply discount if age is greater than threshold age
     price_mobaverage_s7pg = fun.f_update(price_mobaverage_s7pg, temporary_s7pg, age_end_p5g1/30 > discount_age_s7pg)  #divide 30 to convert to months
-    ##Convert weight to 1 if price is $/hd - don't want to mul by weight if $/hd
+
+    ## Some grids are in $/hd. For these grids don't want to multiply grid value by weight (so set weight to 1)
+    ### Convert weight to 1 if price is $/hd (price_type == 2)
     weight_for_value_s7pg = fun.f_update(o_ffcfw_pg, 1, price_type_s7pg == 2)
-    ##Calculate value per head (gross)
+
+    ## Calculate the net value per head from the gross value minus the selling costs
+    ### Calculate gross value per head
     sale_value_s7pg = price_mobaverage_s7pg * weight_for_value_s7pg
-    ##Subtract the selling costs
+    ###Subtract the selling costs (some are percentage costs some are $/hd)
     sale_value_s7pg = sale_value_s7pg * (1 - sale_cost_pc_s7pg) - sale_cost_hd_s7pg
-    ##Mask the grids
+
+    ## Select the best net sale price from the relevant grids
+    ###Mask the grids based on the maximum age and the gender for each grid
     sale_value_s7pg = sale_value_s7pg * mask_s7x_s7pg * (age_end_p5g1/30 <= sale_agemax_s7pg1) #divide 30 to convert to months
-    ##Select the maximum value across the grids
+    ###Select the maximum value across the grids
     sale_value = np.max(sale_value_s7pg, axis=0) #take max on s6 axis as well to remove it (it is singleton so no effect)
     return sale_value
 
@@ -1574,16 +1593,16 @@ def f_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, ope
     required_ge_h7h2pg = np.logical_and(temp_mask, operations_triggerlevels_h5h7h2pg[2, ...] != -np.inf)
     mask_end=time.time()
     # print('mask: ',mask_end-mask_start)
-    ##Create blank versions for assignment - one is the default value for the calc below where the mask is false hence initilise with ones
+    ##Create blank versions for assignment - one is the default value for the calc below where the mask is false hence initialise with ones
     temporary_le_h7h2pg = np.ones_like(required_le_h7h2pg, dtype='float32')
     temporary_ge_h7h2pg = np.ones_like(required_ge_h7h2pg, dtype='float32')
     init_end=time.time()
-    # print('inint: ',init_end-mask_end)
+    # print('init: ',init_end-mask_end)
     ##set up arrays for calculations - masking done first to save doing it multiple times in the actual calculations
     operations_triggerlevels_casted_h5h7h2pg=np.broadcast_to(operations_triggerlevels_h5h7h2pg, (operations_triggerlevels_h5h7h2pg.shape[0],)+required_le_h7h2pg.shape)
     animal_triggervalues_h7h2pg = np.broadcast_to(animal_triggervalues_h7pg[:,na,...], operations_triggerlevels_casted_h5h7h2pg.shape[1:])
     operations_triggerlevels_le_masked_h5h7h2pg = operations_triggerlevels_casted_h5h7h2pg[:, required_le_h7h2pg]
-    operations_triggerlevels_ge_masked_h5h7h2pg = operations_triggerlevels_casted_h5h7h2pg[:, required_ge_h7h2pg] #i tried creating this after the le one was used and just over writing the le one but that didnt speed the process
+    operations_triggerlevels_ge_masked_h5h7h2pg = operations_triggerlevels_casted_h5h7h2pg[:, required_ge_h7h2pg] #i tried creating this after the le one was used and just over writing the le one but that didn't speed the process
     setup_end=time.time()
     # print('setup: ',setup_end-init_end)
 
@@ -1613,7 +1632,7 @@ def f_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, ope
     # temporary_ge_h7h2pg[required_ge_h7h2pg] = ((animal_triggervalues_h7pg[:, na, ...] - operations_triggerlevels_h5h7h2pg[2, ...])[required_ge_h7h2pg]/
     #                                (operations_triggerlevels_h5h7h2pg[3, required_ge_h7h2pg] - operations_triggerlevels_h5h7h2pg[2, required_ge_h7h2pg]))
     ##Test across the rules (& collapse h7 axis)
-    level_h2pg = np.max(np.minimum(temporary_le_h7h2pg, temporary_ge_h7h2pg),axis=0) * operation_triggered_h2pg   #mul by operation triggered so that level goes to 0 if opperation is not trigered
+    level_h2pg = np.max(np.minimum(temporary_le_h7h2pg, temporary_ge_h7h2pg),axis=0) * operation_triggered_h2pg   #mul by operation triggered so that level goes to 0 if operation is not triggered
     calc_end = time.time()
     # print('calc: ', calc_end - setup_end)
 
@@ -1648,7 +1667,7 @@ def f_husbandry_labour(level_hpg, treatment_units_h8pg, units_per_labourhour_l2h
     ##Number of treatment units for contract
     units_hpg = treatment_units_h8pg[a_h8_h]
     ##Labour requirement for each animal class during the period
-    hours_l2pg = np.sum(fun.f_divide(level_hpg * units_hpg , units_per_labourhour_l2hpg, dtype=level_hpg.dtype), axis=1)  #divide by units_per_labourhour_l2hpg because that is how many units can be done per hour eg how many sheep can be dreched per hr
+    hours_l2pg = np.sum(fun.f_divide(level_hpg * units_hpg , units_per_labourhour_l2hpg, dtype=level_hpg.dtype), axis=1)  #divide by units_per_labourhour_l2hpg because that is how many units can be done per hour eg how many sheep can be drenched per hr
     return hours_l2pg
 
 def f_husbandry_infrastructure(level_hpg, husb_infrastructurereq_h1h2pg):
@@ -1670,14 +1689,14 @@ def f_husbandry(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, operations_trigge
                 husb_operations_contract_cost_h2pg, husb_muster_requisites_prob_h6h4pg,
                 musters_per_hour_l2h4pg, husb_muster_infrastructurereq_h1h4pg,
                 a_nyatf_b1g=0,period_is_joining_pg=False, animal_mated=False, period_is_endmating_pg=False, dtype=None):
-    ##An array of the trigger values for the animal classes in each period - these values are compared against a threashold to determine if the husb is required
+    ##An array of the trigger values for the animal classes in each period - these values are compared against a threshold to determine if the husb is required
     animal_triggervalues_h7pg = f_animal_trigger_levels(index_pg, age_start, period_is_shear_pg, a_next_s_pg, period_is_wean_pg, gender,
                             o_ebg_p, wool_genes, period_is_joining_pg, animal_mated, period_is_endmating_pg).astype(dtype)
-    ##The number of treatment units per animal in each period - each slice has a different unit eg mobsize, nyatf etc the treatment unit can be slected and applied for a given husb operation
+    ##The number of treatment units per animal in each period - each slice has a different unit eg mobsize, nyatf etc the treatment unit can be selected and applied for a given husb operation
     treatment_units_h8pg = f_treatment_unit_numbers(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, a_nyatf_b1g).astype(dtype)
     ##Is the husb operation triggered in the period for each class
     operation_triggered_h2pg = f_operations_triggered(animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg)
-    ##The level of the operation in each period for the class of livestock (proportion of animals that recieve treatment) - this accounts for the fact that just because the operation is triggered the opperation may not be done to all animals
+    ##The level of the operation in each period for the class of livestock (proportion of animals that receive treatment) - this accounts for the fact that just because the operation is triggered the operation may not be done to all animals
     start=time.time() #^delete this stuff once the function is faster
     application_level_h2pg = f_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg)
     finish1=time.time()
@@ -1780,7 +1799,7 @@ def f_p2v(production_p, dvp_pointer_p=1, numbers_p=1, on_hand_tp=True, days_peri
     ##convert p to v - info at this link https://stackoverflow.com/questions/50121980/numpy-conditional-sum
     ##basically we are summing the p axis for each dvp. the tricky part (which has caused the requirement for the loops) is that dvp pointer is not the same for each axis eg dvp is effected by e axis.
     ##so we need to loop though all the axis in the dvp and sum p and assign to a final array.
-    ##if the axis is size 1 (ie singleton) then we want to take all of that axis ie ':' because just because the dvp pointer has singleton doesnt mean param array has singleton so need to take all slice of the param (unless that is an active dvp axis bedcause that means dvp timing may differ for different slices along that axis so it must be summed in the loop)
+    ##if the axis is size 1 (ie singleton) then we want to take all of that axis ie ':' because just because the dvp pointer has singleton doesnt mean param array has singleton so need to take all slice of the param (unless that is an active dvp axis because that means dvp timing may differ for different slices along that axis so it must be summed in the loop)
     shape = production_ftpany.shape[0:uinp.structure['i_p_pos']] + (np.max(dvp_pointer_p)+1,) + production_ftpany.shape[uinp.structure['i_p_pos']+1:]  # bit messy because need v t and all the other axis (but not p)
     result=np.zeros(shape).astype('float32')
     shape = dvp_pointer_p.shape
@@ -1829,7 +1848,7 @@ def f_cum_dvp(arr,dvp_pointer,axis=0,shift=0):
         arr1 = arr * (dvp_pointer==i) #sets the p slices to 0 if not in the given dvp
         arr1 = np.roll(arr1,shift,axis) #this is only used for the dams on hand calculation, this rolls the period is sale array 1 unit along the p axis.
                                         # This is required so that period is onhand == true in the period that sale occurs and false after that.
-                                        # Becausee sale occurs at the end of a given period so the sheep are technically onhand for the period sale occurs.
+                                        # Because sale occurs at the end of a given period so the sheep are technically onhand for the period sale occurs.
         arr1 = np.maximum.accumulate(arr1,axis=axis)
         arr1 = arr1 * (dvp_pointer==i) #sets the cum max to 0 for other dvp not of interest
         final += arr1

@@ -6,13 +6,13 @@ Version Control:
 Version     Date        Person  Change
 1.1         29Dec19     JMY     Altered feed periods in FeedBudget, therefore had to remove last row in the fp df used in this module
 1.2         4Jan20      MRY     Documented me and vol section and changed definitions of dmd and md
-1.3         6Jan20      MRY     clip the vol and me df at 0 (don't want negitive me and negitive vol could lead to potential issue) & add vol = 1000/(ri_quality * availability) to be used in pyomo
+1.3         6Jan20      MRY     clip the vol and me df at 0 (don't want negative me and negative vol could lead to potential issue) & add vol = 1000/(ri_quality * availability) to be used in pyomo
 
 
 Known problems:
 Fixed   Date        ID by   Problem
        4Jan20       MRY     ^ protien stuff needs to be added still, when the emmisions are done
-1.3    4Jan20       MRY     ^ need to clip the vol and me df at 0 (don't want negitive me and negitive vol could lead to potential issue)
+1.3    4Jan20       MRY     ^ need to clip the vol and me df at 0 (don't want negative me and negative vol could lead to potential issue)
        4Jan20       JMY     ^ could possibly convert this numpy to make it more simple 
 1.3    4Jan20       JMY     ^need to add vol = 1000/(ri_quality * availability) to be used in pyomo
 

@@ -89,7 +89,7 @@ sav['g3_included']         = np.full(pinp.sheep_inp['i_g3_inc'].shape, '-', dtyp
 sav['scan_og1']         = np.full(pinp.sheep_inp['i_scan_og1'].shape, '-', dtype=object) # SA value for the scaning management option
 sav['woolp_mpg_percentile'] = '-'              #sa value for the wool price percentile
 sav['woolp_mpg'] = '-'                     # sa value for wool price at std micron
-sav['woolp_fdprem_percentile'] = '-'           # sa value for fd premium percentile (premim recieved by fd compared to std)
+sav['woolp_fdprem_percentile'] = '-'           # sa value for fd premium percentile (premim received by fd compared to std)
 sav['woolp_fdprem'] = '-'                     # sa value for fd premium
 sav['salep_percentile'] = '-'                     #Value for percentile for all sale grids
 sav['salep_max'] = '-'                        #max sale price in grid

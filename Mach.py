@@ -170,9 +170,9 @@ def grazing_days(params):
         for fp_date, fp_len in zip(feed_periods['date'], feed_periods['length']):
             fp_end_date = fp_date + dt.timedelta(days = fp_len)
             seed_end_date = mach_p_start + dt.timedelta(days = seeding_days)
-            ##if the feed period finishes before the start of seeding it will recieve a grazing day for each day since the break of season times the number of seeding days in the current seed period minus the grazing days in the previous periods
+            ##if the feed period finishes before the start of seeding it will receive a grazing day for each day since the break of season times the number of seeding days in the current seed period minus the grazing days in the previous periods
             if fp_end_date <= mach_p_start:
-                fp_grazing_days = max((fp_end_date- effective_break).days * seeding_days - sum(grazing_days_list) , 0) #max required in case fp ends before effective break - don't want a negitive value
+                fp_grazing_days = max((fp_end_date- effective_break).days * seeding_days - sum(grazing_days_list) , 0) #max required in case fp ends before effective break - don't want a negative value
             ##if the end date of the feed period is after the end date of the seeding period it will get the full grazing days minus the grazing days in the previous periods
             elif fp_end_date >= seed_end_date:
                 fp_grazing_days = max((mach_p_start- effective_break).days * seeding_days + (0.5 * seeding_days * seeding_days)  - sum(grazing_days_list) ,0)

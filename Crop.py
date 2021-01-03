@@ -17,7 +17,7 @@ Version     Date        Person  Change
 Known problems:
 Fixed   Date        ID by   Problem
         28/12/19    MRY     No input optimisation (solution is to convert crop into a simulation)
-        28/12/19    MRY     All lmus recieve a fert app cost per ha even if the fert applied to that lmu is 0 (generally not a problem bevause all lmus recieve some fert. and the per tonne cost accounts for variable lmu rates)
+        28/12/19    MRY     All lmus receive a fert app cost per ha even if the fert applied to that lmu is 0 (generally not a problem bevause all lmus receive some fert. and the per tonne cost accounts for variable lmu rates)
         28/12/19    MRY     Stubble handeling cost still aplies even if the next phase would be pasture (difficult to fix but only a minor issue)
 
     
@@ -168,7 +168,7 @@ def rot_yield(params=False):
     yield_arable_by_soil=yields_lmus.mul(arable).mul(1-frost) #mul arable area to the the lmu factor (easy because dfs have the same axis's). THen mul frost
     yields=yield_arable_by_soil.reindex(base_yields.index, axis=0).mul(base_yields,axis=0) #reindes and mul with base yields
     seeding_rate=seeding_rate.reindex(yields.index, axis=0) #minus seeding rate
-    yields=yields.sub(seeding_rate,axis=0).clip(lower=0) #we don't want negitive yields so clip at 0 (if any values are neg they become 0)
+    yields=yields.sub(seeding_rate,axis=0).clip(lower=0) #we don't want negative yields so clip at 0 (if any values are neg they become 0)
     ##add the rotation to index - current landuse is also part of the index it is required for pyomo, also used in the insurance calc to multiply on.   
     yields.set_index(phases_df.index, append=True, inplace=True)
     yields.index = yields.index.swaplevel(0, 5)
@@ -306,7 +306,7 @@ def fert_cost(r_vals):
     fert_app_cost_ha = fert_passes.mul(fert_cost_ha,axis=1,level=1).sum(axis=1, level=0)
     r_vals['fert_app_cost'] = fert_app_cost_ha
     ##combine all costs - fert, app per ha and app per tonne    
-    fert_cost_total= pd.concat([phase_fert_cost,fert_app_cost_t, fert_app_cost_ha],axis=1).sum(axis=1,level=0) #must include level so that all cols don't sum, had to switch this from .add to concat because for some reason on multiple itterations of the model add stoped working
+    fert_cost_total= pd.concat([phase_fert_cost,fert_app_cost_t, fert_app_cost_ha],axis=1).sum(axis=1,level=0) #must include level so that all cols don't sum, had to switch this from .add to concat because for some reason on multiple iterations of the model add stoped working
     return fert_cost_total
 
 def f_nap_fert_req():
@@ -323,7 +323,7 @@ def f_nap_fert_req():
 
 def f_nap_fert_passes():
     '''hectares spread on non arable area'''
-    ##passes over non arable pasture area (only for pasture phases because for pasture the non arable areas also recieve fert)
+    ##passes over non arable pasture area (only for pasture phases because for pasture the non arable areas also receive fert)
     passes_na = pinp.crop['nap_passes'].reset_index().set_index(['fert','landuse'])
     arable = pinp.crop['arable'].squeeze() #eed to adjust for only non arable area
     passes_na= passes_na.mul(1-arable) #adjust for the non arable area
@@ -404,8 +404,8 @@ def phase_stubble_cost(r_vals):
     '''
     ##first calculate the probability of a rotation phase needing stubble handling
     base_yields = rot_yield()
-    stub_handling_threashold = pd.Series(pinp.stubble['stubble_handling']['stubble_threshold'])*1000  #have to convert to kg to match base yield
-    probability_handling = base_yields.div(stub_handling_threashold, level = 1) #divide here then account for lmu factor next - because either way is mathematically sound and this saves some manipulation.
+    stub_handling_threshold = pd.Series(pinp.stubble['stubble_handling']['stubble_threshold'])*1000  #have to convert to kg to match base yield
+    probability_handling = base_yields.div(stub_handling_threshold, level = 1) #divide here then account for lmu factor next - because either way is mathematically sound and this saves some manipulation.
     probability_handling = probability_handling.droplevel(1).unstack()
     ##add the cost - this needs to be flexible because the cost may be over multiple periods
     stub_cost_alloc=mac.stubble_cost_ha().squeeze(axis=1)
@@ -471,7 +471,7 @@ def f_chem_cost(r_vals):
         -Application cost per ha ($/rotation)
         -Arable area accounted for in application funciton above
     '''
-    ##read in neccessary bits and adjust indexed
+    ##read in necessary bits and adjust indexed
     i_chem_cost = pinp.crop['chem_cost']
     chem_by_soil = pinp.crop['chem_by_lmu'] #read in chem by soil
     ##add cont pasture to chem cost array
