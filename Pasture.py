@@ -357,6 +357,8 @@ def map_excel(params,r_vals):
     r_vals['days_p6'] = length_f
     return
 
+#todo pasture needs to be updated with the ev (feed pools) format that sheep uses
+#todo foo needs to go through the convert function like sheep does
 ### define a function that loops through feed periods to generate the foo profile for a specified germination and consumption
 def calc_foo_profile(germination_flt, dry_decay_ft, length_of_periods_f):
     '''

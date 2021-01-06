@@ -784,7 +784,7 @@ def f_energy_cs(ck, cx, cm, lw_start, ffcfw_start, mr_age, mei, omer_history_sta
 
 
 # def f_foetus_cs(cp, cb1, kc, nfoet, relsize_start, rc_start, nec_cum_start, w_b_std_y, w_f_start, nw_f_start, nwf_age_f, guw_age_f, dce_age_f, days_period_f):
-def f_foetus_cs(cp, cb1, kc, nfoet, relsize_start, rc_start, w_b_std_y, w_f_start, nw_f_start, nwf_age_f, guw_age_f, dce_age_f, days_period_f):
+def f_foetus_cs(cp, cb1, kc, nfoet, relsize_start, rc_start, w_b_std_y, w_f_start, nw_f_start, nwf_age_f, guw_age_f, dce_age_f):
     ##expected normal birth weight with dam age adj.
     w_b_exp_y = (1 - cp[4, ...] * (1 - relsize_start)) * w_b_std_y
     ##Normal weight of foetus (mid period - dam calcs)	
@@ -1878,7 +1878,7 @@ def f_lw_distribution(ffcfw_condensed_va1e1b1nwzida0e0b0xyg, ffcfw_va1e1b1nwzida
     distribution_va1e1b1nwzida0e0b0xygw = fun.f_update(distribution_va1e1b1nwzida0e0b0xygw, 1, dvp_type_next_tvgw!=0)
     return distribution_va1e1b1nwzida0e0b0xygw
 
-def f_lw_distribution_2prog(ffcfw_prog_g2w9, ffcfw_yatf_vg1, index_w2):
+def f_lw_distribution_2prog(ffcfw_prog_g2w9, ffcfw_yatf_vg1):
     ###maximum(0, ) removes points where yatf weight is greater than the rolled progeny weight
     distribution_2prog_vg1w9 = 1- fun.f_divide((ffcfw_yatf_vg1[..., na] - ffcfw_prog_g2w9)
                                                , np.abs(np.roll(ffcfw_prog_g2w9,-1,axis=-1) - ffcfw_prog_g2w9))

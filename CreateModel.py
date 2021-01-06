@@ -167,7 +167,7 @@ model.s_nut_offs = Set(initialize=uinp.structure['i_n_idx_offs'], doc='Nutrition
 model.s_lw_offs = Set(initialize=uinp.structure['i_w_idx_offs'], doc='Standard LW patterns offs')
 ##prog
 model.s_sale_prog = Set(initialize=['t%s'%i for i in range(pinp.sheep['i_t2_len'])], doc='Sales and transfers options for yatf')
-model.s_lw_prog = Set(initialize=['lw%02d'%i for i in range(uinp.structure['i_progeny_w2_len'])], doc='Standard LW patterns prog')  #todo This is also defined in StockGenerator (keys_lw_prog)
+model.s_lw_prog = Set(initialize=['lw%02d'%i for i in range(uinp.structure['i_progeny_w2_len'])], doc='Standard LW patterns prog')
 
 
 

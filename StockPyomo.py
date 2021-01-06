@@ -668,7 +668,7 @@ def stockpyomo_local(params):
                    for n1 in model.s_nut_dams for w8 in model.s_lw_dams for g1 in model.s_groups_dams
                    if model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, z, i, y1, g1,g9, w9] != 0
                    or model.p_numbers_prov_dams[k28, k29, t1, v1_prev, a, n1, w8, z, i, y1, g1, g9, w9] != 0
-                   or model.p_numbers_provthis_dams[k28, k29, t1, v1, a, n1, w8, z, i, y1, g1, g9, w9] != 0) <=0 #todo test how time changes if the if statments are removed
+                   or model.p_numbers_provthis_dams[k28, k29, t1, v1, a, n1, w8, z, i, y1, g1, g9, w9] != 0) <=0
 
     start=time.time()
     model.con_damR = pe.Constraint(model.s_k2_birth_dams, model.s_dvp_dams, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gen_merit_dams,
