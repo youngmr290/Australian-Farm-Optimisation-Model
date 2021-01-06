@@ -785,7 +785,7 @@ def stockpyomo_local(params):
     except AttributeError:
         pass
     def mating(model,g0,p8):
-        return - model.v_sire[g0] + sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_nsires_req[k2,t1,v1,a,n1,w1,z,i,y1,g1,g0,p8]
+        return - model.v_sire[g0] * model.p_nsires_prov[g0, p8] + sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_nsires_req[k2,t1,v1,a,n1,w1,z,i,y1,g1,g0,p8]
                   for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for a in model.s_wean_times for n1 in model.s_nut_dams
                    for w1 in model.s_lw_dams for z in model.s_season_types for i in model.s_tol for y1 in model.s_gen_merit_dams  for g1 in model.s_groups_dams
                    if model.p_nsires_req[k2,t1,v1,a,n1,w1,z,i,y1,g1,g0,p8]!=0) <=0
