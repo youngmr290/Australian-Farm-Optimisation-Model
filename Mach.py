@@ -97,8 +97,8 @@ def seed_days(*params):
     '''
     mach_periods = per.p_dates_df()
     for i in range(len(mach_periods['date'])-1):
-        days = (mach_periods.loc[i+1,'date'] - mach_periods.loc[i,'date']).days
-        mach_periods.loc[i,'seed_days'] = days
+        days = (mach_periods.loc[mach_periods.index[i+1],'date'] - mach_periods.loc[mach_periods.index[i],'date']).days
+        mach_periods.loc[mach_periods.index[i],'seed_days'] = days
     ## drop last row, because it has na because it only contains the end date, therefore not a period
     mach_periods.drop(mach_periods.tail(1).index,inplace=True) 
     if params:
@@ -256,7 +256,7 @@ def tractor_cost_seeding():
     ##Tractor r&m during seeding for each lmu
     r_m_cost = fuel_used * fuel_price() * uinp.mach[pinp.mach['option']]['repair_maint_factor_tractor']
     ##determine the $ cost of tractor fuel 
-    tractor_fuel_cost = fuel_used * fuel_price() * uinp.mach[pinp.mach['option']]['oil_grease_factor_tractor']
+    tractor_fuel_cost = fuel_used * fuel_price()
     ##determine the $ cost of tractor oil and grease for seeding
     tractor_oil_cost = fuel_used * fuel_price() * uinp.mach[pinp.mach['option']]['oil_grease_factor_tractor']
     return r_m_cost + tractor_fuel_cost + tractor_oil_cost
@@ -340,8 +340,8 @@ def yield_penalty(params):
     ##add the yield penalty for each period and each crop
     for k, wet_penalty, dry_penalty in zip(yield_penalty_df.index, yield_penalty_df['wet_seeding_penalty'],yield_penalty_df['dry_seeding_penalty']):
         for i in range(len(mach_periods['date'])-1):
-            period_start_date = mach_periods.loc[i,'date']
-            period_end = mach_periods.loc[i+1,'date']
+            period_start_date = mach_periods.loc[mach_periods.index[i],'date']
+            period_end = mach_periods.loc[mach_periods.index[i+1],'date']
             ###check penalty free 
             if seed_start  <= period_start_date  < seed_start + penalty_free_days:
                 penalty =  0  
@@ -405,8 +405,8 @@ def harv_rate_period(params):
         if k=='h':
             continue # this is required because hay is included in the harvest dates (needed for stubble) but not in any of the other harvest info
         for i in range(len(mach_periods['date'])-1):
-            period_start_date = mach_periods.loc[i,'date']
-            period_end = mach_periods.loc[i+1,'date']
+            period_start_date = mach_periods.loc[mach_periods.index[i],'date']
+            period_end = mach_periods.loc[mach_periods.index[i+1],'date']
             ###if the period is a harvest period
             if harv_start <= period_start_date  < harv_end:
                 ####if crop harv date is before the end of the current period then it is allowed to be harvested in that period hence it is given a harv rate 
@@ -427,8 +427,8 @@ def max_harv_hours(params):
     #loops through dict which contains harv start date for each crop
     #this determines if the crop is allowed early harv
     for i in range(len(mach_periods['date'])-1):
-        period_start_date = mach_periods.loc[i,'date']
-        period_end = mach_periods.loc[i+1,'date']
+        period_start_date = mach_periods.loc[mach_periods.index[i],'date']
+        period_end = mach_periods.loc[mach_periods.index[i+1],'date']
         if harv_start <= period_start_date  < harv_end:
             harv_days =  (period_end - period_start_date).days 
         else: harv_days = 0
@@ -690,29 +690,47 @@ def chem_app_cost_ha():
 #######################################################################################################################################################
 
 #########################
+#mach value             #
+#########################
+##harvest machine cost
+def harvest_gear_clearing_value():
+    value = sum(uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'value'] * uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'harvest allocation'])
+    total_value = value * pinp.mach['number_harv_gear']
+    return total_value
+
+
+##value of gear used for seed. This is used to calculate the variable depreciation linked to seeding activity
+def seeding_gear_clearing_value():
+    value = sum(uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'value'] * uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'seeding allocation'])
+    total_value = value * pinp.mach['number_seeding_gear']
+    return total_value
+
+    # sprayer_cost = uinp.mach[pinp.mach['option']]['clearing_value'].loc['sprayer','value'] * pinp.mach['sprayer_crop_allocation']
+    # ##tractor
+    # return sprayer_cost + uinp.mach[pinp.mach['option']]['clearing_value'].loc['silo','value'] + uinp.mach[pinp.mach['option']]['clearing_value'].loc['auger','value'] \
+    # + uinp.mach[pinp.mach['option']]['clearing_value'].loc['tractor','value'] + uinp.mach[pinp.mach['option']]['clearing_value'].loc['seeder','value']
+
+##total machine value - used to calc asset value, fixed dep and insurance
+def total_clearing_value():
+    harv_value = harvest_gear_clearing_value()
+    seed_value = seeding_gear_clearing_value()
+    other_value = sum(uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'value'] * uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'remaining allocation'])
+    return harv_value + seed_value + other_value
+
+#########################
 #fixed depreciation     #
 #########################
-    
-def total_clearing_value():
-    return sum(uinp.mach[pinp.mach['option']]['clearing_value']['value'])
+
 
 #total valye of crop gear x dep rate x numver of crop gear
-def fix_dep():
-    return total_clearing_value() * uinp.finance['fixed_dep'] * pinp.mach['number_crop_gear']
+def fix_dep(params):
+    params['fixed_dep'] = total_clearing_value() * uinp.finance['fixed_dep']
 
 
 ####################################
 #variable seeding depreciation     #
 ####################################
     
-#not including harvester
-def seeding_gear_clearing_value():
-    #sprayer used for crop and pasture, so determine crop allocation
-    sprayer_cost = uinp.mach[pinp.mach['option']]['clearing_value'].loc['sprayer','value'] * pinp.mach['sprayer_crop_allocation']
-    return sprayer_cost + uinp.mach[pinp.mach['option']]['clearing_value'].loc['silo','value'] + uinp.mach[pinp.mach['option']]['clearing_value'].loc['auger','value'] \
-    + uinp.mach[pinp.mach['option']]['clearing_value'].loc['tractor','value'] + uinp.mach[pinp.mach['option']]['clearing_value'].loc['seeder','value']
-    
-#
 def seeding_dep(params):
     '''
     Returns
@@ -736,7 +754,7 @@ def seeding_dep(params):
 #variable harvest depreciation     #
 ####################################
 
-def harvest_dep():
+def harvest_dep(params):
     '''
     Returns
     -------
@@ -748,8 +766,8 @@ def harvest_dep():
     average_harv_time = uinp.mach[pinp.mach['option']]['dep_area'] * average_harv_rate 
     ##second, determine dep per hour - equal to harv gear value x dep % / seeding time
     dep_rate = uinp.mach[pinp.mach['option']]['variable_dep'] - uinp.finance['fixed_dep']
-    dep_hourly = uinp.mach[pinp.mach['option']]['clearing_value'].loc['harvester','value'] * dep_rate / average_harv_time
-    return dep_hourly.iloc[0]
+    dep_hourly = harvest_gear_clearing_value() * dep_rate / average_harv_time
+    params['harv_dep'] = dep_hourly.iloc[0]
 #print(harv_time_ha())
 #print(harvest_dep())
 
@@ -760,7 +778,7 @@ def harvest_dep():
 #######################################################################################################################################################
 def insurance(params):
     '''
-    
+
     Returns
     -------
     Dict for pyomo.
@@ -768,9 +786,7 @@ def insurance(params):
     '''
     ##determine the insurance paid
     value_all_mach = total_clearing_value()
-    value_crop_gear = seeding_gear_clearing_value()
-    total_value = value_all_mach - value_crop_gear + value_crop_gear * pinp.mach['number_crop_gear'] #accounts for the number of crop gear
-    insurance = total_value * uinp.finance['equip_insurance']
+    insurance = value_all_mach * uinp.finance['equip_insurance']
     ##determine cash period
     p_dates = per.cashflow_periods()['start date']
     p_name = per.cashflow_periods()['cash period']
@@ -778,5 +794,12 @@ def insurance(params):
     allocation=fun.period_allocation(p_dates, p_name,start)
     params['insurance'] = {allocation:insurance}
 
+#######################################################################################################################################################
+#######################################################################################################################################################
+#asset value of all gear
+#######################################################################################################################################################
+#######################################################################################################################################################
 
+def f_mach_asset_value(params):
+    params['mach_asset_value'] = total_clearing_value()
 

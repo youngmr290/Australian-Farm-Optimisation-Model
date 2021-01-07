@@ -58,7 +58,6 @@ import sys,traceback
 
 
 
-
 def generator(params,r_vals,plots = False):
     """
     A function to wrap the generator and post processing that can be called by SheepPyomo.
@@ -4330,7 +4329,7 @@ def generator(params,r_vals,plots = False):
     ###########################
     # create report params    #
     ###########################
-
+    print('reporting')
     ##sale value - needed for reporting
     r_salevalue_ctva1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param('sire',r_salevalue_ctva1e1b1nwzida0e0b0xyg0,
                                                                           numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
@@ -4543,6 +4542,7 @@ def generator(params,r_vals,plots = False):
     #########
     #params #
     #########
+    print('params')
     keys_start=time.time()
 
     ##the array returned must be of type object, if string the dict keys become a numpy string and when indexed in pyomo it doesn't work.
@@ -5055,6 +5055,7 @@ def generator(params,r_vals,plots = False):
     ###############
     # report      #
     ###############
+    print('reporting2')
     '''add report values to report dict and do any additional calculations'''
 
     ##store in report dict

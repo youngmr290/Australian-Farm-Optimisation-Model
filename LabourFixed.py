@@ -26,51 +26,16 @@ from dateutil.relativedelta import relativedelta
 #AFO modules
 import PropertyInputs as pinp
 import Periods as per
-'''
-this can all be updated to the new labour format using the labour allocation function to 
-determine the period allocation
+import Functions as fun
 
-'''
 
 
 def fixed(params):
-    ##copy labour periods df
-    labour_periods_fx=per.p_dates_df() 
-    ##add blank column for the following fixed labour activities - this is populated below
-    labour_periods_fx['tax'] = np.nan
-    labour_periods_fx['planning'] = np.nan
-    labour_periods_fx['bas'] = np.nan
-    labour_periods_fx['super'] = np.nan
-    for i in labour_periods_fx.index:
-            ##add time required for tax to df in corresponding labour periods
-            for j in pinp.labour['tax'].index:
-               # check if the date falls into period i, if so add the number of tax hours to the tax column corresponding to that period.
-               if labour_periods_fx.loc[i,'date'] <= j < labour_periods_fx.loc[i + 1 ,'date']:
-                   labour_periods_fx.loc[i,'tax'] = pinp.labour['tax'].loc[j,'hours']
-            ##add time required for planning to df in corresponding labour periods
-            for j in pinp.labour['planning'].index:
-               # check if the date falls into period i, if so add the number of tax hours to the tax column corresponding to that period.
-               if labour_periods_fx.loc[i,'date'] <= j < labour_periods_fx.loc[i + 1 ,'date']:
-                   labour_periods_fx.loc[i,'planning'] = pinp.labour['planning'].loc[j,'hours']
-            ##add time required for bas to df in corresponding labour periods
-            for j in pinp.labour['bas'].index:
-               # check if the date falls into period i, if so add the number of tax hours to the tax column corresponding to that period.
-               if labour_periods_fx.loc[i,'date'] <= j < labour_periods_fx.loc[i + 1 ,'date']:
-                   labour_periods_fx.loc[i,'bas'] = pinp.labour['bas'].loc[j,'hours']
-            #add time required for paying staff and super and workers comp to df in corresponding labour periods
-            for j in pinp.labour['super'].index:
-               # check if the date falls into period i, if so add the number of tax hours to the tax column corresponding to that period.
-               if labour_periods_fx.loc[i,'date'] <= j < labour_periods_fx.loc[i + 1 ,'date']:
-                   labour_periods_fx.loc[i,'super'] = pinp.labour['super'].loc[j,'hours']
-    ## drop last row, because it has na because it only contains the end date, therefore not a period
-    labour_periods_fx.drop(labour_periods_fx.tail(1).index,inplace=True) 
-    ##fill blanks with 0
-    labour_periods_fx[['bas','super','planning','tax']]= labour_periods_fx[['bas','super','planning','tax']].fillna(0)
-    ##make dicts for pyomo
-    params['super'] = labour_periods_fx['super'].to_dict()
-    params['bas'] = labour_periods_fx['bas'].to_dict()
-    params['planning'] = labour_periods_fx['planning'].to_dict()
-    params['tax'] = labour_periods_fx['tax'].to_dict()
+    params['super'] = fun.df_period_total(per.p_dates_df()['date'],per.p_dates_df().index,pinp.labour['super'])
+    params['bas'] = fun.df_period_total(per.p_dates_df()['date'],per.p_dates_df().index,pinp.labour['bas'])
+    params['planning'] = fun.df_period_total(per.p_dates_df()['date'],per.p_dates_df().index,pinp.labour['planning'])
+    params['tax'] = fun.df_period_total(per.p_dates_df()['date'],per.p_dates_df().index,pinp.labour['tax'])
+
 # fixed()
 
 

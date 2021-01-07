@@ -786,9 +786,9 @@ def period_allocation(period_dates,periods,start_d,length=None):
         return pd.DataFrame(list(zip(periods,allocation_period)), columns= ('period', 'allocation'))
     #returns the period name a given date falls into
     else:    #^ could use the python function allocation_p = bisect.bisect(period_dates,start)-1
-        for date, period in zip(period_dates, periods):
+        for date, period_idx in zip(period_dates, range(len(periods))):
             while date <= start_d:
-                allocation_p = period
+                allocation_p = period_idx
                 break
         return allocation_p
 
@@ -800,9 +800,9 @@ def df_period_total(p_dates,p_name,*dfs):
     Parameters
     ----------
     p_dates : List
-        Dates of the period you are matching ie cashflow or labour.
+        Dates of the period you are matching ie cashflow or labour. Includes the end date of the last period
     p_name : List
-        Names of the period you are matching ie cashflow or labour.
+        Names of the period you are matching ie cashflow or labour. Includes the a name for the last date which is not a period (it is just the end date of the last period)
     *dfs : Dataframe or Series (1d)
         Each df has dates as a index and a corresponding value in col 0 that you want to add to a period.
 
@@ -814,6 +814,8 @@ def df_period_total(p_dates,p_name,*dfs):
         #example of this func is in the labourcrop module
 
     '''
+    ## drop last row, because it has na because it only contains the end date, therefore not a period
+    p_name = p_name[0:-1]
     #create empty numpy array that i will add the labour time in each period to
     array = np.zeros(len(p_name))
     #have to loops to allow for passing in multiple dicts
@@ -821,8 +823,8 @@ def df_period_total(p_dates,p_name,*dfs):
 #        print(dic)
         for date in d.index:
             # date = parse(key, dayfirst = False) #parse - simple way to go from string to datetime
-            labour_period = period_allocation(p_dates,p_name,date)
-            array[labour_period] += d.loc[date,d.columns]
+            period_idx = period_allocation(p_dates,p_name,date)
+            array[period_idx] += d.loc[date,d.columns]
     return dict(zip(p_name,array))
 
 
@@ -839,9 +841,9 @@ def period_allocation_reindex(df, p_dates, p_name, start, length):
     df : Dataframe
         1d dataframe or series.
     p_dates : List
-        Dates of the period you are matching ie cashflow or labour.
+        Dates of the period you are matching ie cashflow or labour. Includes the end date of the last period
     p_name : List
-        Names of the period you are matching ie cashflow or labour.
+        Names of the period you are matching ie cashflow or labour. Includes the a name for the last date which is not a period (it is just the end date of the last period)
     start : Datetime
         Start date of the df activity ie start date of seeding.
     length : Datetime
@@ -872,9 +874,9 @@ def period_allocation2(start_df, length_df, p_dates, p_name):
     length_df : Datetime series
         Length of the df activity ie length of fert spreading for each fert.
     p_dates : List
-        Dates of the period you are matching ie cashflow or labour.
+        Dates of the period you are matching ie cashflow or labour. Includes the end date of the last period
     p_name : List
-        Names of the period you are matching ie cashflow or labour.
+        Names of the period you are matching ie cashflow or labour. Includes the a name for the last date which is not a period (it is just the end date of the last period)
 
     Returns
     -------
@@ -894,33 +896,6 @@ def period_allocation2(start_df, length_df, p_dates, p_name):
     df.index=allocation['period']
     return df
 
-#^replaced with the function below
-# def range_allocation(period_dates, periods, start, length):
-#     ''' The proportion of each period that falls in the tested date range.
-#     Parameters.
-#     period_dates: the start of the periods - in a DataFrame.
-#     periods: the period descriptions to be returned in the dataframe.
-#     start: the date of the beginning of the date range to test.
-#     length: the length of the date range to test - a timedelta.days object.
-
-#     Returns.
-#     a DataFrame with the period description and the proportion of the period
-#         -proportion of each feed period that falls in a given date range
-#         -similar to period_allocation that is the proportion of the date range that falls in each period
-
-#     '''
-#     #start empty list to append to
-#     allocation_period = pd.DataFrame()
-#     end = start + length
-#     #check how much of each period falls within the date range
-#     for i in range(len(periods)-1):
-#         per_start= period_dates[i].date()    # convert from TimeStamp to datetime
-#         per_end = period_dates[i + 1].date() #   to allow the calculations
-#         calc_start = max(per_start,start)       #select the later of the period start or the start of the range
-#         calc_end = min(per_end,end)             #select earlier of the period end and the end of the range
-#         allocation=max(0, (calc_end - calc_start) / (per_end - per_start)) #this will be 2d when other pastures are added #days between calc_end and calc_start (0 if end before start) divided by length of the period
-#         allocation_period=allocation_period.append(pd.DataFrame(data=[allocation]))
-#     return allocation_period
 
 def range_allocation_np(period_dates, start, length, opposite=None):
     ''' Numpy version - The proportion of each period that falls in the tested date range or proportion of date range in each period.

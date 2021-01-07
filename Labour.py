@@ -50,37 +50,37 @@ def labour_general(params,r_vals):
 
     '''
     labour_periods = per.p_dates_df() 
-    for i in range(len(labour_periods['date'])-1):
+    for i, j in zip(labour_periods.index[:-1], labour_periods.index[1:]): #i is current period index, j is next period index
         ##period length (days)
-        days = labour_periods.loc[i+1,'date'] - labour_periods.loc[i,'date']
+        days = labour_periods.loc[j,'date'] - labour_periods.loc[i,'date']
         labour_periods.loc[i,'days'] = days
         
         ##leave manager, this only works if leave is taken in one chuck, if it were taken in two lots this would have to be altered
         ###if the end of labour period i is before leave begins or labour period starts after leave finished then there is 0 leave for that period
-        if labour_periods.loc[i + 1 , 'date'] < pinp.labour['leave_manager_start_date'] or labour_periods.loc[i , 'date'] > pinp.labour['leave_manager_start_date'] + datetime.timedelta(days = pinp.labour['leave_manager']):
+        if labour_periods.loc[j , 'date'] < pinp.labour['leave_manager_start_date'] or labour_periods.loc[i , 'date'] > pinp.labour['leave_manager_start_date'] + datetime.timedelta(days = pinp.labour['leave_manager']):
            labour_periods.loc[i , 'manager leave'] = datetime.timedelta(days = 0) 
         ###if labour i period starts before leave starts and leave finishes before the labour period finished then that period gets all the leave.
-        elif labour_periods.loc[i , 'date'] < pinp.labour['leave_manager_start_date'] and labour_periods.loc[i + 1 , 'date'] > pinp.labour['leave_manager_start_date'] + datetime.timedelta(days = pinp.labour['leave_manager']):
+        elif labour_periods.loc[i , 'date'] < pinp.labour['leave_manager_start_date'] and labour_periods.loc[j, 'date'] > pinp.labour['leave_manager_start_date'] + datetime.timedelta(days = pinp.labour['leave_manager']):
             labour_periods.loc[i , 'manager leave'] = datetime.timedelta(days = pinp.labour['leave_manager'])
         ###if labour i period starts before leave starts and leave finishes after the labour period finished then that period gets leave from the start date of leave to the end of the labour period.
-        elif labour_periods.loc[i , 'date'] < pinp.labour['leave_manager_start_date'] and labour_periods.loc[i + 1 , 'date'] < pinp.labour['leave_manager_start_date'] + datetime.timedelta(days = pinp.labour['leave_manager']):
-            labour_periods.loc[i , 'manager leave'] = labour_periods.loc[i + 1 , 'date'] - pinp.labour['leave_manager_start_date']            
+        elif labour_periods.loc[i , 'date'] < pinp.labour['leave_manager_start_date'] and labour_periods.loc[j, 'date'] < pinp.labour['leave_manager_start_date'] + datetime.timedelta(days = pinp.labour['leave_manager']):
+            labour_periods.loc[i , 'manager leave'] = labour_periods.loc[j, 'date'] - pinp.labour['leave_manager_start_date']
         ###if labour i period starts after leave starts and leave finishes before the labour period finished then that period gets leave from the beginning on the labour period to the end date of leave.
-        elif labour_periods.loc[i , 'date'] > pinp.labour['leave_manager_start_date'] and labour_periods.loc[i + 1 , 'date'] > pinp.labour['leave_manager_start_date'] + datetime.timedelta(days = pinp.labour['leave_manager']):
+        elif labour_periods.loc[i , 'date'] > pinp.labour['leave_manager_start_date'] and labour_periods.loc[j, 'date'] > pinp.labour['leave_manager_start_date'] + datetime.timedelta(days = pinp.labour['leave_manager']):
             labour_periods.loc[i , 'manager leave'] = pinp.labour['leave_manager_start_date'] + datetime.timedelta(days = pinp.labour['leave_manager']) - labour_periods.loc[i , 'date']             
         
         ##leave permanent, very similar to above but also includes sick leave (10days/year split over each period), this only works if leave is taken in one chuck, if it were taken in two lots this would have to be altered
         ###if the end of labour period i is before leave begins or labour period starts after leave finished then there is 0 leave for that period
-        if labour_periods.loc[i + 1 , 'date'] < pinp.labour['leave_permanent_start_date'] or labour_periods.loc[i , 'date'] > pinp.labour['leave_permanent_start_date'] + datetime.timedelta(days = pinp.labour['leave_permanent']):
+        if labour_periods.loc[j, 'date'] < pinp.labour['leave_permanent_start_date'] or labour_periods.loc[i , 'date'] > pinp.labour['leave_permanent_start_date'] + datetime.timedelta(days = pinp.labour['leave_permanent']):
            labour_periods.loc[i , 'permanent leave'] = labour_periods.loc[i , 'days'] * (pinp.labour['sick_leave_permanent']/365)
         ###if labour i period starts before leave starts and leave finishes before the labour period finished then that period gets all the leave.
-        elif labour_periods.loc[i , 'date'] < pinp.labour['leave_permanent_start_date'] and labour_periods.loc[i + 1 , 'date'] > pinp.labour['leave_permanent_start_date'] + datetime.timedelta(days = pinp.labour['leave_permanent']):
+        elif labour_periods.loc[i , 'date'] < pinp.labour['leave_permanent_start_date'] and labour_periods.loc[j, 'date'] > pinp.labour['leave_permanent_start_date'] + datetime.timedelta(days = pinp.labour['leave_permanent']):
             labour_periods.loc[i , 'permanent leave'] = datetime.timedelta(days = pinp.labour['leave_permanent']) + labour_periods.loc[i , 'days'] * (pinp.labour['sick_leave_permanent']/365)
         ###if labour i period starts before leave starts and leave finishes after the labour period finished then that period gets leave from the start date of leave to the end of the labour period.
-        elif labour_periods.loc[i , 'date'] < pinp.labour['leave_permanent_start_date'] and labour_periods.loc[i + 1 , 'date'] < pinp.labour['leave_permanent_start_date'] + datetime.timedelta(days = pinp.labour['leave_permanent']):
-            labour_periods.loc[i , 'permanent leave'] = labour_periods.loc[i + 1 , 'date'] - pinp.labour['leave_permanent_start_date']  + labour_periods.loc[i , 'days'] * (pinp.labour['sick_leave_permanent']/365)          
+        elif labour_periods.loc[i , 'date'] < pinp.labour['leave_permanent_start_date'] and labour_periods.loc[j, 'date'] < pinp.labour['leave_permanent_start_date'] + datetime.timedelta(days = pinp.labour['leave_permanent']):
+            labour_periods.loc[i , 'permanent leave'] = labour_periods.loc[j, 'date'] - pinp.labour['leave_permanent_start_date']  + labour_periods.loc[i , 'days'] * (pinp.labour['sick_leave_permanent']/365)
         ###if labour i period starts after leave starts and leave finishes before the labour period finished then that period gets leave from the beginning on the labour period to the end date of leave.
-        elif labour_periods.loc[i , 'date'] > pinp.labour['leave_permanent_start_date'] and labour_periods.loc[i + 1 , 'date'] > pinp.labour['leave_permanent_start_date'] + datetime.timedelta(days = pinp.labour['leave_permanent']):
+        elif labour_periods.loc[i , 'date'] > pinp.labour['leave_permanent_start_date'] and labour_periods.loc[j, 'date'] > pinp.labour['leave_permanent_start_date'] + datetime.timedelta(days = pinp.labour['leave_permanent']):
             labour_periods.loc[i , 'permanent leave'] = pinp.labour['leave_permanent_start_date'] + datetime.timedelta(days = pinp.labour['leave_permanent']) - labour_periods.loc[i , 'date']  + labour_periods.loc[i , 'days'] * (pinp.labour['sick_leave_permanent']/365)          
 
     ##determine possible labour days worked by the manager during the week and on weekend in a given labour periods
