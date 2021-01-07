@@ -57,7 +57,9 @@ import sys,traceback
 
 
 
-
+# from memory_profiler import profile
+#
+# @profile
 def generator(params,r_vals,plots = False):
     """
     A function to wrap the generator and post processing that can be called by SheepPyomo.

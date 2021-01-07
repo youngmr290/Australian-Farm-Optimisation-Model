@@ -197,7 +197,7 @@ def labour_general(params,r_vals):
     ##create dicts for pyomo
     params['permanent hours'] = labour_periods['permanent hours'].to_dict()
     params['permanent supervision'] = labour_periods['permanent supervision'].to_dict()
-    params['casual_cost'] = dict(zip(enumerate(labour_periods['cashflow']),labour_periods['casual_cost']))
+    params['casual_cost'] = dict(zip(zip(labour_periods['cashflow'].index,labour_periods['cashflow']),labour_periods['casual_cost']))
     r_vals['casual_cost'] = pd.Series(params['casual_cost'])
     params['casual hours'] = labour_periods['casual hours'].to_dict()
     params['casual supervision'] = labour_periods['casual supervision'].to_dict()

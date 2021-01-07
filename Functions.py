@@ -786,9 +786,9 @@ def period_allocation(period_dates,periods,start_d,length=None):
         return pd.DataFrame(list(zip(periods,allocation_period)), columns= ('period', 'allocation'))
     #returns the period name a given date falls into
     else:    #^ could use the python function allocation_p = bisect.bisect(period_dates,start)-1
-        for date, period_idx in zip(period_dates, range(len(periods))):
+        for date, period_name in zip(period_dates, periods):
             while date <= start_d:
-                allocation_p = period_idx
+                allocation_p = period_name
                 break
         return allocation_p
 
@@ -823,7 +823,8 @@ def df_period_total(p_dates,p_name,*dfs):
 #        print(dic)
         for date in d.index:
             # date = parse(key, dayfirst = False) #parse - simple way to go from string to datetime
-            period_idx = period_allocation(p_dates,p_name,date)
+            period_name = period_allocation(p_dates,p_name,date)
+            period_idx = list(p_name).index(period_name)
             array[period_idx] += d.loc[date,d.columns]
     return dict(zip(p_name,array))
 

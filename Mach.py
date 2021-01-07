@@ -356,7 +356,7 @@ def yield_penalty(params):
                 penalty = dry_penalty
             ###other periods (between season break and seeding start & before dry seeding) get 500 penalty
             else: penalty = 500
-            mach_penalty.loc[i, k] = penalty
+            mach_penalty.loc[mach_periods.index[i], k] = penalty
     params['yield_penalty'] = mach_penalty.stack().to_dict()
 # x = (yield_penalty())   
 
@@ -414,7 +414,7 @@ def harv_rate_period(params):
                     harvest_rate =  harv_rate.squeeze()[k]
                 else: harvest_rate = 0
             else: harvest_rate = 0
-            harv_rate_df.loc[i, k] = harvest_rate
+            harv_rate_df.loc[mach_periods.index[i], k] = harvest_rate
     params['harv_rate_period'] = harv_rate_df.stack().to_dict()
 # harv_rate_period()  
 
@@ -433,7 +433,7 @@ def max_harv_hours(params):
             harv_days =  (period_end - period_start_date).days 
         else: harv_days = 0
         #convert to hours.
-        mach_periods.loc[i, 'max_harv_hours'] = harv_days * pinp.mach['daily_harvest_hours']
+        mach_periods.loc[mach_periods.index[i], 'max_harv_hours'] = harv_days * pinp.mach['daily_harvest_hours']
     ## drop last row, because it has na because it only contains the end date, therefore not a period
     mach_periods.drop(mach_periods.tail(1).index,inplace=True) 
     params['max_harv_hours'] = mach_periods['max_harv_hours'].to_dict()
