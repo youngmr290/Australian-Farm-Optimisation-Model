@@ -784,7 +784,7 @@ def f_energy_cs(ck, cx, cm, lw_start, ffcfw_start, mr_age, mei, omer_history_sta
 
 
 # def f_foetus_cs(cp, cb1, kc, nfoet, relsize_start, rc_start, nec_cum_start, w_b_std_y, w_f_start, nw_f_start, nwf_age_f, guw_age_f, dce_age_f, days_period_f):
-def f_foetus_cs(cp, cb1, kc, nfoet, relsize_start, rc_start, w_b_std_y, w_f_start, nw_f_start, nwf_age_f, guw_age_f, dce_age_f, days_period_f):
+def f_foetus_cs(cp, cb1, kc, nfoet, relsize_start, rc_start, w_b_std_y, w_f_start, nw_f_start, nwf_age_f, guw_age_f, dce_age_f):
     ##expected normal birth weight with dam age adj.
     w_b_exp_y = (1 - cp[4, ...] * (1 - relsize_start)) * w_b_std_y
     ##Normal weight of foetus (mid period - dam calcs)	
@@ -1491,7 +1491,7 @@ def f_sale_value(cu0, cx, o_rc, o_ffcfw_pg, dressp_adj_yg, dresspercent_adj_s6pg
     ###Scale ffcfw to the units in the grid
     weight_for_lookup_s7pg = o_ffcfw_pg * dresspercent_wt_s7pg
 
-    ##Calculate mob average price in each grid from the mob average and the distribution of weight & score within the mob
+    ##Calculate mob average price in each grid from the mob average and the distribution of weight & score within the mob (this is just the price, not the total animal value)
     price_mobaverage_s7pg = f_salep_mob(weight_for_lookup_s7pg[:,na,...], scores_s7s6pg, cvlw_s7s5pg, cvscore_s7s6pg,
                                                       grid_weightrange_s7s5pg, grid_scorerange_s7s6pg, grid_priceslw_s7s5s6pg)
 
@@ -1588,16 +1588,15 @@ from memory_profiler import profile
 
 @profile
 def f_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg):
-    mask_start=time.time()
     ## mask & remove the slices of the h7 axis that don't require calculation of the application level (not required because inputs do not include a range input)
     ## must be same mask for 'le' and 'ge'
-    maskh7_h7pg = np.broadcast_to(np.any(operations_triggerlevels_h5h7h2pg[3,...] != np.inf, axis=1, keepdims=False), animal_triggervalues_h7pg.shape)
+    maskh7_h7 = fun.f_reduce_skipfew(np.any, operations_triggerlevels_h5h7h2pg[3,...] != np.inf, preserveAxis=0)#, keepdims=False), animal_triggervalues_h7pg.shape)
     ### mask the input arrays to minimise slices of h7
-    animal_triggervalues_h7mask_h7pg = animal_triggervalues_h7pg[maskh7_h7pg]
-    operations_triggerlevels_h7mask_h5h7h2pg = operations_triggerlevels_h5h7h2pg[maskh7_h7pg]
+    animal_triggervalues_h7mask_h7pg = animal_triggervalues_h7pg[maskh7_h7]
+    operations_triggerlevels_h7mask_h5h7h2pg = operations_triggerlevels_h5h7h2pg[:, maskh7_h7, ...]
 
     ##broadcast the input arrays so the 'required' mask can be applied
-    operations_triggerlevels_casted_h5h7h2pg=np.broadcast_to(operations_triggerlevels_h7mask_h5h7h2pg, (operations_triggerlevels_h7mask_h5h7h2pg.shape[0:2],)+operation_triggered_h2pg.shape)
+    operations_triggerlevels_casted_h5h7h2pg=np.broadcast_to(operations_triggerlevels_h7mask_h5h7h2pg, operations_triggerlevels_h7mask_h5h7h2pg.shape[0:2]+operation_triggered_h2pg.shape)
     animal_triggervalues_h7mask_h7h2pg = np.broadcast_to(animal_triggervalues_h7mask_h7pg[:,na,...], operations_triggerlevels_casted_h5h7h2pg.shape[1:])
 
 
@@ -1639,9 +1638,6 @@ def f_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, ope
 
     ##Select the maximum of the 'le' and 'ge' value
     level_h2pg = np.maximum(level_h2pg, temporary_h2pg)
-
-    calc_end = time.time()
-    # print('calc: ', calc_end - setup_end)
 
     return level_h2pg
 
@@ -1707,7 +1703,7 @@ def f_husbandry(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, operations_trigge
     start=time.time() #^delete this stuff once the function is faster
     application_level_h2pg = f_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg)
     finish1=time.time()
-    # print('finish1 - level of husb : ', finish1-start)
+    print('finish1 - level of husb : ', finish1-start)
     ##The number of times the mob must be mustered
     mustering_level_pg = f_mustering_required(application_level_h2pg, husb_operations_muster_propn_h2pg)
     ##The cost of requisites for the operations
@@ -1725,7 +1721,7 @@ def f_husbandry(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, operations_trigge
     ##The infrastructure requirements for mustering
     mustering_infrastructurereq_h1pg = f_husbandry_infrastructure(mustering_level_pg, husb_muster_infrastructurereq_h1h4pg)
     finish2=time.time()
-    # print('finish2: ', finish2-finish1)
+    print('finish2: ', finish2-finish1)
     ##Total cost of husbandry
     husbandry_cost_pg = operations_requisites_cost_pg + mustering_requisites_cost_pg + contract_cost_pg
     ##Labour requirement for husbandry
@@ -1733,7 +1729,7 @@ def f_husbandry(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, operations_trigge
     ##infrastructure requirement for husbandry
     husbandry_infrastructure_h1pg = operations_infrastructurereq_h1pg + mustering_infrastructurereq_h1pg
     finish3=time.time()
-    # print('finish3: ', finish3-finish2)
+    print('finish3: ', finish3-finish2)
     return husbandry_cost_pg, husbandry_labour_l2pg, husbandry_infrastructure_h1pg
 
 
