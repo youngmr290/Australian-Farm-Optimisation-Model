@@ -137,7 +137,7 @@ def labpyomo_local(params):
         pass
     def labour_transfer_permanent(model,p):
         return -(model.v_quantity_perm * model.p_perm_hours[p]) + model.v_casualsupervision_perm[p]  \
-        + sum(model.v_sheep_labour_permanent[p,w] + model.v_crop_labour_permanent[p,w] + model.v_fixed_labour_permanent[p,w] for w in model.s_worker_levels if w in ['anyone', 'perm']) <= 0 #if statement just to remove unnecessary activities from lp output
+        + sum(model.v_sheep_labour_permanent[p,w] + model.v_crop_labour_permanent[p,w] + model.v_fixed_labour_permanent[p,w] for w in model.s_worker_levels if w in uinp.structure['worker_levels'][0:-1]) <= 0 #if statement just to remove unnecessary activities from lp output
     model.con_labour_transfer_permanent = Constraint(model.s_labperiods, rule = labour_transfer_permanent, doc='labour from permanent staff to sheep and crop and fixed')
     
     #casual note perm and manager can do casual tasks - variables may need to change name so to be less confusing
@@ -147,7 +147,7 @@ def labpyomo_local(params):
         pass
     def labour_transfer_casual(model,p):
         return -(model.v_quantity_casual[p] *  model.p_casual_hours[p])  \
-            + sum(model.v_sheep_labour_casual[p,w] + model.v_crop_labour_casual[p,w] + model.v_fixed_labour_casual[p,w] for w in model.s_worker_levels if w in 'anyone')  <= 0  #if statement just to remove unnecessary activities from lp output
+            + sum(model.v_sheep_labour_casual[p,w] + model.v_crop_labour_casual[p,w] + model.v_fixed_labour_casual[p,w] for w in model.s_worker_levels if w in uinp.structure['worker_levels'][0])  <= 0  #if statement just to remove unnecessary activities from lp output
     model.con_labour_transfer_casual = Constraint(model.s_labperiods, rule = labour_transfer_casual, doc='labour from casual staff to sheep and crop and fixed')
 
 ############
