@@ -1584,60 +1584,71 @@ def f_operations_triggered(animal_triggervalues_h7pg, operations_triggerlevels_h
     triggered_h2pg = np.all(slices_all_h7h2pg, axis=0)
     return triggered_h2pg
 
-from memory_profiler import profile
-
-@profile
 def f_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg):
-    ## mask & remove the slices of the h7 axis that don't require calculation of the application level (not required because inputs do not include a range input)
-    ## must be same mask for 'le' and 'ge'
-    maskh7_h7 = fun.f_reduce_skipfew(np.any, operations_triggerlevels_h5h7h2pg[3,...] != np.inf, preserveAxis=0)#, keepdims=False), animal_triggervalues_h7pg.shape)
-    ### mask the input arrays to minimise slices of h7
-    animal_triggervalues_h7mask_h7pg = animal_triggervalues_h7pg[maskh7_h7]
-    operations_triggerlevels_h7mask_h5h7h2pg = operations_triggerlevels_h5h7h2pg[:, maskh7_h7, ...]
+    ##loop on h2 axis to save memory
+    level_h2pg = np.ones_like(operation_triggered_h2pg, dtype='float32')
+    for h2 in range(operation_triggered_h2pg.shape[0]):
 
-    ##broadcast the input arrays so the 'required' mask can be applied
-    operations_triggerlevels_casted_h5h7h2pg=np.broadcast_to(operations_triggerlevels_h7mask_h5h7h2pg, operations_triggerlevels_h7mask_h5h7h2pg.shape[0:2]+operation_triggered_h2pg.shape)
-    animal_triggervalues_h7mask_h7h2pg = np.broadcast_to(animal_triggervalues_h7mask_h7pg[:,na,...], operations_triggerlevels_casted_h5h7h2pg.shape[1:])
+        ## mask & remove the slices of the h7 axis that don't require calculation of the application level (not required because inputs do not include a range input)
+        ## must be same mask for 'le' and 'ge'
+        maskh7_h7 = fun.f_reduce_skipfew(np.any, operations_triggerlevels_h5h7h2pg[3,:, h2, ...] != np.inf, preserveAxis=0)
 
+        ##slice opperation_triggered array
+        operation_triggered_pg = operation_triggered_h2pg[h2,...]
 
-    ## Calculate the application level for "less than or equal"
-    ### The 'le' calculation is required only if the 'range' input is less than the le trigger value and both are not inf.
-    required_h7h2pg = (operation_triggered_h2pg * (operations_triggerlevels_h7mask_h5h7h2pg[0, ...] != np.inf)
-                       * (operations_triggerlevels_h7mask_h5h7h2pg[3, ...] != np.inf)
-                       * (operations_triggerlevels_h7mask_h5h7h2pg[3, ...] < operations_triggerlevels_h7mask_h5h7h2pg[0, ...]))
-
-    ##Create blank versions for assignment - one is the default value for the calc below where the mask is false hence initialise with ones
-    temporary_h7h2pg = np.ones_like(required_h7h2pg, dtype='float32')
-
-    ##Level if animal trigger level is between 'range' and 'le'
-    ### calculate the masked version of the triggerlevels because required 3 times in the calculation
-    operations_triggerlevels_masked_h5h7h2pg = operations_triggerlevels_casted_h5h7h2pg[:, required_h7h2pg]
-    temporary_h7h2pg[required_h7h2pg] = np.clip((animal_triggervalues_h7mask_h7h2pg[required_h7h2pg] - operations_triggerlevels_masked_h5h7h2pg[0, ...])/
-                                                (operations_triggerlevels_masked_h5h7h2pg[3, ...] - operations_triggerlevels_masked_h5h7h2pg[0, ...]),0,1)
-    ##Select the maximum across the h7 axis if the operation is triggered
-    level_h2pg = np.max(temporary_h7h2pg,axis=0) * operation_triggered_h2pg   #mul by operation triggered so that level goes to 0 if operation is not triggered
+        ##if all values in mask are false (eg no range level needs to be calculated) then skip to next h2 (final array has 1 as defaut value so nothing needs to happen)
+        if any(maskh7_h7):
+            ### mask the input arrays to minimise slices of h7
+            animal_triggervalues_h7mask_h7pg = animal_triggervalues_h7pg[maskh7_h7]
+            operations_triggerlevels_h7mask_h5h7pg = operations_triggerlevels_h5h7h2pg[:, maskh7_h7, h2, ...]
 
 
-    ## Repeat for 'ge' using same variable names as for 'le'
-    ## Calculate the application level for "greater than or equal"
-    ### The 'ge' calculation is required only if the 'range' input is greater than the ge trigger value and both are not inf.
-    required_h7h2pg = (operation_triggered_h2pg * (operations_triggerlevels_h7mask_h5h7h2pg[2, ...] != -np.inf)
-                       * (operations_triggerlevels_h7mask_h5h7h2pg[3, ...] != np.inf)
-                       * (operations_triggerlevels_h7mask_h5h7h2pg[3, ...] > operations_triggerlevels_h7mask_h5h7h2pg[2, ...]))
+            ##broadcast the input arrays so the 'required' mask can be applied
+            operations_triggerlevels_casted_h5h7pg=np.broadcast_to(operations_triggerlevels_h7mask_h5h7pg, operations_triggerlevels_h7mask_h5h7pg.shape[0:2]+operation_triggered_pg.shape)
+            animal_triggervalues_h7mask_h7pg = np.broadcast_to(animal_triggervalues_h7mask_h7pg, operations_triggerlevels_casted_h5h7pg.shape[1:])
 
-    ##Create blank versions for assignment - one is the default value for the calc below where the mask is false hence initialise with ones
-    ### calculate the masked version of the triggerlevels because required 3 times in the calculation
-    operations_triggerlevels_masked_h5h7h2pg = operations_triggerlevels_casted_h5h7h2pg[:, required_h7h2pg]
-    temporary_h7h2pg = np.ones_like(required_h7h2pg, dtype='float32')
 
-    ##Level if animal trigger level is between 'range' and 'le'
-    temporary_h7h2pg[required_h7h2pg] = np.clip((animal_triggervalues_h7mask_h7h2pg[required_h7h2pg] - operations_triggerlevels_masked_h5h7h2pg[2, ...])/
-                                                (operations_triggerlevels_masked_h5h7h2pg[3, ...] - operations_triggerlevels_masked_h5h7h2pg[2, ...]),0,1)
-    ##Select the maximum across the h7 axis if the operation is triggered
-    temporary_h2pg = np.max(temporary_h7h2pg,axis=0) * operation_triggered_h2pg   #mul by operation triggered so that level goes to 0 if operation is not triggered
+            ## Calculate the application level for "less than or equal"
+            ### The 'le' calculation is required only if the 'range' input is less than the le trigger value and both are not inf.
+            required_h7pg = (operation_triggered_pg * (operations_triggerlevels_h7mask_h5h7pg[0, ...] != np.inf)
+                               * (operations_triggerlevels_h7mask_h5h7pg[3, ...] != np.inf)
+                               * (operations_triggerlevels_h7mask_h5h7pg[3, ...] < operations_triggerlevels_h7mask_h5h7pg[0, ...]))
 
-    ##Select the maximum of the 'le' and 'ge' value
-    level_h2pg = np.maximum(level_h2pg, temporary_h2pg)
+            ##Create blank versions for assignment - one is the default value for the calc below where the mask is false hence initialise with ones
+            temporary_h7pg = np.ones_like(required_h7pg, dtype='float32')
+
+            ##Level if animal trigger level is between 'range' and 'le'
+            ### calculate the masked version of the triggerlevels because required 3 times in the calculation
+            operations_triggerlevels_masked_h5h7pg = operations_triggerlevels_casted_h5h7pg[:, required_h7pg]
+            temporary_h7pg[required_h7pg] = np.clip((animal_triggervalues_h7mask_h7pg[required_h7pg] - operations_triggerlevels_masked_h5h7pg[0, ...])/
+                                                        (operations_triggerlevels_masked_h5h7pg[3, ...] - operations_triggerlevels_masked_h5h7pg[0, ...]),0,1)
+            ##Select the maximum across the h7 axis if the operation is triggered
+            level_pg = np.max(temporary_h7pg,axis=0) * operation_triggered_pg   #mul by operation triggered so that level goes to 0 if operation is not triggered
+
+
+            ## Repeat for 'ge' using same variable names as for 'le'
+            ## Calculate the application level for "greater than or equal"
+            ### The 'ge' calculation is required only if the 'range' input is greater than the ge trigger value and both are not inf.
+            required_h7pg = (operation_triggered_pg * (operations_triggerlevels_h7mask_h5h7pg[2, ...] != -np.inf)
+                               * (operations_triggerlevels_h7mask_h5h7pg[3, ...] != np.inf)
+                               * (operations_triggerlevels_h7mask_h5h7pg[3, ...] > operations_triggerlevels_h7mask_h5h7pg[2, ...]))
+
+            ##Create blank versions for assignment - one is the default value for the calc below where the mask is false hence initialise with ones
+            ### calculate the masked version of the triggerlevels because required 3 times in the calculation
+            operations_triggerlevels_masked_h5h7pg = operations_triggerlevels_casted_h5h7pg[:, required_h7pg]
+            temporary_h7pg = np.ones_like(required_h7pg, dtype='float32')
+
+            ##Level if animal trigger level is between 'range' and 'le'
+            temporary_h7pg[required_h7pg] = np.clip((animal_triggervalues_h7mask_h7pg[required_h7pg] - operations_triggerlevels_masked_h5h7pg[2, ...])/
+                                                        (operations_triggerlevels_masked_h5h7pg[3, ...] - operations_triggerlevels_masked_h5h7pg[2, ...]),0,1)
+            ##Select the maximum across the h7 axis if the operation is triggered
+            temporary_pg = np.max(temporary_h7pg,axis=0) * operation_triggered_pg   #mul by operation triggered so that level goes to 0 if operation is not triggered
+
+            ##Select the maximum of the 'le' and 'ge' value
+            level_h2pg[h2,...] = np.maximum(level_pg, temporary_pg)
+        ##if there is no range then level is just 1 * triggered
+        else:
+            level_h2pg[h2,...] = level_h2pg[h2,...] * operation_triggered_pg
 
     return level_h2pg
 
@@ -1658,24 +1669,40 @@ def f_husbandry_component(level, treatment_units, requirements, association, axe
     return component
 
 
+
 def f_husbandry_requisites(level_hpg, treatment_units_h8pg, husb_requisite_cost_h6pg, husb_requisites_prob_h6hpg,a_h8_h):
     ##Number of treatment units for requisites
-    units_hpg = treatment_units_h8pg[a_h8_h]
+    if type(a_h8_h)==int:
+        units_hpg = treatment_units_h8pg[a_h8_h:a_h8_h+1] #so the h axis is kept
+    else:
+        units_hpg = treatment_units_h8pg[a_h8_h]
     ##Labour requirement for each animal class during the period
-    cost_pg = np.sum(level_hpg * units_hpg * husb_requisite_cost_h6pg[:,na, ...] *
-                     husb_requisites_prob_h6hpg, axis = (0, 1))
+    ##calculated using loop to reduce memory
+    cost_pg = 0
+    for h in range(level_hpg.shape[0]):
+        cost_pg += np.sum(level_hpg[h] * units_hpg[h] * husb_requisite_cost_h6pg *
+                     husb_requisites_prob_h6hpg[:,h], axis = 0)
     return cost_pg
 
 def f_husbandry_labour(level_hpg, treatment_units_h8pg, units_per_labourhour_l2hpg, a_h8_h):
     ##Number of treatment units for contract
-    units_hpg = treatment_units_h8pg[a_h8_h]
+    if type(a_h8_h)==int:
+        units_hpg = treatment_units_h8pg[a_h8_h:a_h8_h+1] #so the h axis is kept
+    else:
+        units_hpg = treatment_units_h8pg[a_h8_h]
     ##Labour requirement for each animal class during the period
-    hours_l2pg = np.sum(fun.f_divide(level_hpg * units_hpg , units_per_labourhour_l2hpg, dtype=level_hpg.dtype), axis=1)  #divide by units_per_labourhour_l2hpg because that is how many units can be done per hour eg how many sheep can be drenched per hr
+    ##calculated using loop to reduce memory
+    hours_l2pg = 0
+    for h2 in range(level_hpg.shape[0]):
+        hours_l2pg += fun.f_divide(level_hpg[h2] * units_hpg[h2] , units_per_labourhour_l2hpg[:,h2], dtype=level_hpg.dtype) #divide by units_per_labourhour_l2hpg because that is how many units can be done per hour eg how many sheep can be drenched per hr
     return hours_l2pg
 
 def f_husbandry_infrastructure(level_hpg, husb_infrastructurereq_h1h2pg):
     ##Infrastructure requirement for each animal class during the period
-    infrastructure_h1pg = np.sum(level_hpg * husb_infrastructurereq_h1h2pg, axis=1)
+    ##calculated using loop to reduce memory
+    infrastructure_h1pg = 0
+    for h2 in range(level_hpg.shape[0]):
+        infrastructure_h1pg += level_hpg[h2] * husb_infrastructurereq_h1h2pg[:,h2]
     return infrastructure_h1pg
 
 def f_contract_cost(application_level_h2pg, treatment_units_h8pg, husb_operations_contract_cost_h2pg):
@@ -1700,12 +1727,9 @@ def f_husbandry(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, operations_trigge
     ##Is the husb operation triggered in the period for each class
     operation_triggered_h2pg = f_operations_triggered(animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg)
     ##The level of the operation in each period for the class of livestock (proportion of animals that receive treatment) - this accounts for the fact that just because the operation is triggered the operation may not be done to all animals
-    start=time.time() #^delete this stuff once the function is faster
     application_level_h2pg = f_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg)
-    finish1=time.time()
-    print('finish1 - level of husb : ', finish1-start)
     ##The number of times the mob must be mustered
-    mustering_level_pg = f_mustering_required(application_level_h2pg, husb_operations_muster_propn_h2pg)
+    mustering_level_h4pg = f_mustering_required(application_level_h2pg, husb_operations_muster_propn_h2pg)[na,...] #needs a h4 axis for the functions below
     ##The cost of requisites for the operations
     operations_requisites_cost_pg = f_husbandry_requisites(application_level_h2pg, treatment_units_h8pg, husb_requisite_cost_h6pg, husb_operations_requisites_prob_h6h2pg, uinp.sheep['ia_h8_h2'])
     ##The labour requirement for the operations
@@ -1715,21 +1739,17 @@ def f_husbandry(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, operations_trigge
     ##Contract cost for husbandry
     contract_cost_pg = f_contract_cost(application_level_h2pg, treatment_units_h8pg, husb_operations_contract_cost_h2pg)
     ##The cost of requisites for mustering
-    mustering_requisites_cost_pg = f_husbandry_requisites(mustering_level_pg, treatment_units_h8pg, husb_requisite_cost_h6pg, husb_muster_requisites_prob_h6h4pg, uinp.sheep['ia_h8_h4'])
+    mustering_requisites_cost_pg = f_husbandry_requisites(mustering_level_h4pg, treatment_units_h8pg, husb_requisite_cost_h6pg, husb_muster_requisites_prob_h6h4pg, uinp.sheep['ia_h8_h4'])
     ##The labour requirement for mustering
-    mustering_labourreq_l2pg = f_husbandry_labour(mustering_level_pg, treatment_units_h8pg, musters_per_hour_l2h4pg, uinp.sheep['ia_h8_h4'])
+    mustering_labourreq_l2pg = f_husbandry_labour(mustering_level_h4pg, treatment_units_h8pg, musters_per_hour_l2h4pg, uinp.sheep['ia_h8_h4'])
     ##The infrastructure requirements for mustering
-    mustering_infrastructurereq_h1pg = f_husbandry_infrastructure(mustering_level_pg, husb_muster_infrastructurereq_h1h4pg)
-    finish2=time.time()
-    print('finish2: ', finish2-finish1)
+    mustering_infrastructurereq_h1pg = f_husbandry_infrastructure(mustering_level_h4pg, husb_muster_infrastructurereq_h1h4pg)
     ##Total cost of husbandry
     husbandry_cost_pg = operations_requisites_cost_pg + mustering_requisites_cost_pg + contract_cost_pg
     ##Labour requirement for husbandry
     husbandry_labour_l2pg = operations_labourreq_l2pg + mustering_labourreq_l2pg
     ##infrastructure requirement for husbandry
     husbandry_infrastructure_h1pg = operations_infrastructurereq_h1pg + mustering_infrastructurereq_h1pg
-    finish3=time.time()
-    print('finish3: ', finish3-finish2)
     return husbandry_cost_pg, husbandry_labour_l2pg, husbandry_infrastructure_h1pg
 
 
