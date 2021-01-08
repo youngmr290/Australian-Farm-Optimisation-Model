@@ -3300,7 +3300,7 @@ def generator(params,r_vals,plots = False):
     a_v_pa1e1b1nwzida0e0b0xyg1 = a_fvp_pa1e1b1nwzida0e0b0xyg1.astype(dtypeint)
     index_va1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(np.arange(np.max(a_v_pa1e1b1nwzida0e0b0xyg1)+1), p_pos)
     index_vpa1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(np.arange(np.max(a_v_pa1e1b1nwzida0e0b0xyg1)+1), p_pos-1)
-    ###dvp are the same as fvp for dams
+    ###dvp are the same as fvp for dams    #todo we should create some variable eg scan_dvp=1 then where we do dvp_type==1 we can change it to dvp_type==scan dvp - this will make it easier to change dvps in future
     dvp_date_start_va1e1b1nwzida0e0b0xyg1 = fvp_date_start_fa1e1b1nwzida0e0b0xyg1
     a_dvp_p_va1e1b1nwzida0e0b0xyg1 = sfun.f_next_prev_association(date_start_p, dvp_date_start_va1e1b1nwzida0e0b0xyg1, 1, 'right').astype(dtypeint) #returns the period index for the start of each dvp
     dvp_date_start_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(dvp_date_start_va1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1,0)
@@ -3979,6 +3979,7 @@ def generator(params,r_vals,plots = False):
     #########################################
     ''' Create a mask to remove retaining dry dams when sale of drys is forced
     The transfer is removed if all the following are true: they are in the dry cluster that is not a sale group, DVP is scanning, ewes are scanned, dry sales are forced '''
+    #todo add force sale of drys at shearing - bit more complex because shearing could be in different dvps. therefore might need period_is_shear_tvg. Also need to workout which way to handle how to allow model to choose if it wants to sell at scaning or shearing (could do this by just forcing sale at shearing then the model chooses if it does it at scanning or shearing)
     ##dams
     mask_numbers_provdry_k28k29tva1e1b1nwzida0e0b0xyg1 = np.logical_not((index_k28k29tva1e1b1nwzida0e0b0xyg1 == 1) * (index_tva1e1b1nw8zida0e0b0xyg1 >= 2)
                                                          * (dvp_type_va1e1b1nwzida0e0b0xyg1 == 1) * (scan_va1e1b1nwzida0e0b0xyg1 >= 1) #dvp1 because that's the scanning dvp

@@ -784,7 +784,7 @@ def f_energy_cs(ck, cx, cm, lw_start, ffcfw_start, mr_age, mei, omer_history_sta
 
 
 # def f_foetus_cs(cp, cb1, kc, nfoet, relsize_start, rc_start, nec_cum_start, w_b_std_y, w_f_start, nw_f_start, nwf_age_f, guw_age_f, dce_age_f, days_period_f):
-def f_foetus_cs(cp, cb1, kc, nfoet, relsize_start, rc_start, w_b_std_y, w_f_start, nw_f_start, nwf_age_f, guw_age_f, dce_age_f):
+def f_foetus_cs(cp, cb1, kc, nfoet, relsize_start, rc_start, w_b_std_y, w_f_start, nw_f_start, nwf_age_f, guw_age_f, dce_age_f, days_period_f):
     ##expected normal birth weight with dam age adj.
     w_b_exp_y = (1 - cp[4, ...] * (1 - relsize_start)) * w_b_std_y
     ##Normal weight of foetus (mid period - dam calcs)	
@@ -1491,7 +1491,7 @@ def f_sale_value(cu0, cx, o_rc, o_ffcfw_pg, dressp_adj_yg, dresspercent_adj_s6pg
     ###Scale ffcfw to the units in the grid
     weight_for_lookup_s7pg = o_ffcfw_pg * dresspercent_wt_s7pg
 
-    ##Calculate mob average price in each grid from the mob average and the distribution of weight & score within the mob (this is just the price, not the total animal value)
+    ##Calculate mob average price in each grid from the mob average and the distribution of weight & score within the mob
     price_mobaverage_s7pg = f_salep_mob(weight_for_lookup_s7pg[:,na,...], scores_s7s6pg, cvlw_s7s5pg, cvscore_s7s6pg,
                                                       grid_weightrange_s7s5pg, grid_scorerange_s7s6pg, grid_priceslw_s7s5s6pg)
 
@@ -1588,55 +1588,60 @@ from memory_profiler import profile
 
 @profile
 def f_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg):
-    ##mask - Calculation is required
     mask_start=time.time()
-    temp_mask = np.logical_and(operation_triggered_h2pg, operations_triggerlevels_h5h7h2pg[3, ...] != np.inf) #use this because le and ge are pretty similar so using this saves doing it twice
-    required_le_h7h2pg = np.logical_and(temp_mask, operations_triggerlevels_h5h7h2pg[0, ...] != np.inf) #logical_or only has two args
-    required_ge_h7h2pg = np.logical_and(temp_mask, operations_triggerlevels_h5h7h2pg[2, ...] != -np.inf)
-    mask_end=time.time()
-    print('mask: ',mask_end-mask_start)
+    ## mask & remove the slices of the h7 axis that don't require calculation of the application level (not required because inputs do not include a range input)
+    ## must be same mask for 'le' and 'ge'
+    maskh7_h7pg = np.broadcast_to(np.any(operations_triggerlevels_h5h7h2pg[3,...] != np.inf, axis=1, keepdims=False), animal_triggervalues_h7pg.shape)
+    ### mask the input arrays to minimise slices of h7
+    animal_triggervalues_h7mask_h7pg = animal_triggervalues_h7pg[maskh7_h7pg]
+    operations_triggerlevels_h7mask_h5h7h2pg = operations_triggerlevels_h5h7h2pg[maskh7_h7pg]
+
+    ##broadcast the input arrays so the 'required' mask can be applied
+    operations_triggerlevels_casted_h5h7h2pg=np.broadcast_to(operations_triggerlevels_h7mask_h5h7h2pg, (operations_triggerlevels_h7mask_h5h7h2pg.shape[0:2],)+operation_triggered_h2pg.shape)
+    animal_triggervalues_h7mask_h7h2pg = np.broadcast_to(animal_triggervalues_h7mask_h7pg[:,na,...], operations_triggerlevels_casted_h5h7h2pg.shape[1:])
+
+
+    ## Calculate the application level for "less than or equal"
+    ### The 'le' calculation is required only if the 'range' input is less than the le trigger value and both are not inf.
+    required_h7h2pg = (operation_triggered_h2pg * (operations_triggerlevels_h7mask_h5h7h2pg[0, ...] != np.inf)
+                       * (operations_triggerlevels_h7mask_h5h7h2pg[3, ...] != np.inf)
+                       * (operations_triggerlevels_h7mask_h5h7h2pg[3, ...] < operations_triggerlevels_h7mask_h5h7h2pg[0, ...]))
+
     ##Create blank versions for assignment - one is the default value for the calc below where the mask is false hence initialise with ones
-    temporary_le_h7h2pg = np.ones_like(required_le_h7h2pg, dtype='float32')
-    temporary_ge_h7h2pg = np.ones_like(required_ge_h7h2pg, dtype='float32')
-    init_end=time.time()
-    # print('init: ',init_end-mask_end)
-    ##set up arrays for calculations - masking done first to save doing it multiple times in the actual calculations
-    operations_triggerlevels_casted_h5h7h2pg=np.broadcast_to(operations_triggerlevels_h5h7h2pg, (operations_triggerlevels_h5h7h2pg.shape[0],)+required_le_h7h2pg.shape)
-    animal_triggervalues_h7h2pg = np.broadcast_to(animal_triggervalues_h7pg[:,na,...], operations_triggerlevels_casted_h5h7h2pg.shape[1:])
-    operations_triggerlevels_le_masked_h5h7h2pg = operations_triggerlevels_casted_h5h7h2pg[:, required_le_h7h2pg]
-    operations_triggerlevels_ge_masked_h5h7h2pg = operations_triggerlevels_casted_h5h7h2pg[:, required_ge_h7h2pg] #i tried creating this after the le one was used and just over writing the le one but that didn't speed the process
-    setup_end=time.time()
-    print('setup: ',setup_end-init_end)
+    temporary_h7h2pg = np.ones_like(required_h7h2pg, dtype='float32')
 
-    # operations_triggerlevels_masked_h5h7h2pg = operations_triggerlevels_h5h7h2pg[:, required_le_h7h2pg]
-    # operations_triggerlevels_masked_ge_h5h7h2pg = operations_triggerlevels_h5h7h2pg[:, required_ge_h7h2pg]
+    ##Level if animal trigger level is between 'range' and 'le'
+    ### calculate the masked version of the triggerlevels because required 3 times in the calculation
+    operations_triggerlevels_masked_h5h7h2pg = operations_triggerlevels_casted_h5h7h2pg[:, required_h7h2pg]
+    temporary_h7h2pg[required_h7h2pg] = np.clip((animal_triggervalues_h7mask_h7h2pg[required_h7h2pg] - operations_triggerlevels_masked_h5h7h2pg[0, ...])/
+                                                (operations_triggerlevels_masked_h5h7h2pg[3, ...] - operations_triggerlevels_masked_h5h7h2pg[0, ...]),0,1)
+    ##Select the maximum across the h7 axis if the operation is triggered
+    level_h2pg = np.max(temporary_h7h2pg,axis=0) * operation_triggered_h2pg   #mul by operation triggered so that level goes to 0 if operation is not triggered
 
-    # operations_triggerlevels_h5h7h2pg[operations_triggerlevels_h5h7h2pg==np.inf] = 1
-    # operations_triggerlevels_h5h7h2pg[operations_triggerlevels_h5h7h2pg==-np.inf] = 1
 
-    ##"Level if animal trigger level is <= range  - mask out the infs to stop invalid warning and to speed the calculation
-    temporary_le_h7h2pg[required_le_h7h2pg] = np.clip((animal_triggervalues_h7h2pg[required_le_h7h2pg] - operations_triggerlevels_le_masked_h5h7h2pg[0, ...])/
-                                               (operations_triggerlevels_le_masked_h5h7h2pg[3, ...] - operations_triggerlevels_le_masked_h5h7h2pg[0, ...]),0,1)
-    ##Level if animal trigger level is >= range   - mask out the infs to stop invalid warning and to speed the calculation
-    temporary_ge_h7h2pg[required_ge_h7h2pg] = np.clip((animal_triggervalues_h7h2pg[required_ge_h7h2pg] - operations_triggerlevels_ge_masked_h5h7h2pg[2, ...])/
-                                                (operations_triggerlevels_ge_masked_h5h7h2pg[3, ...] - operations_triggerlevels_ge_masked_h5h7h2pg[2, ...]),0,1)
+    ## Repeat for 'ge' using same variable names as for 'le'
+    ## Calculate the application level for "greater than or equal"
+    ### The 'ge' calculation is required only if the 'range' input is greater than the ge trigger value and both are not inf.
+    required_h7h2pg = (operation_triggered_h2pg * (operations_triggerlevels_h7mask_h5h7h2pg[2, ...] != -np.inf)
+                       * (operations_triggerlevels_h7mask_h5h7h2pg[3, ...] != np.inf)
+                       * (operations_triggerlevels_h7mask_h5h7h2pg[3, ...] > operations_triggerlevels_h7mask_h5h7h2pg[2, ...]))
 
-    # ##"Level if animal trigger level is <= range  - mask out the infs to stop invalid warning and to speed the calculation
-    # temporary_le_h7h2pg[required_le_h7h2pg] = ((animal_triggervalues_h7pg[:, na, ...] - operations_triggerlevels_h5h7h2pg[0, ...])[required_le_h7h2pg]/
-    #                                (operations_triggerlevels_masked_h5h7h2pg[3, ...] - operations_triggerlevels_masked_h5h7h2pg[0, ...]))
-    # ##Level if animal trigger level is >= range   - mask out the infs to stop invalid warning and to speed the calculation
-    # temporary_ge_h7h2pg[required_ge_h7h2pg] = ((animal_triggervalues_h7pg[:, na, ...] - operations_triggerlevels_h5h7h2pg[2, ...])[required_ge_h7h2pg]/
-    #                                (operations_triggerlevels_masked_ge_h5h7h2pg[3, ...] - operations_triggerlevels_masked_ge_h5h7h2pg[2, ...]))
-    # ##"Level if animal trigger level is <= range  - mask out the infs to stop invalid warning and to speed the calculation
-    # temporary_le_h7h2pg[required_le_h7h2pg] = ((animal_triggervalues_h7pg[:, na, ...] - operations_triggerlevels_h5h7h2pg[0, ...])[required_le_h7h2pg]/
-    #                                (operations_triggerlevels_h5h7h2pg[3, required_le_h7h2pg] - operations_triggerlevels_h5h7h2pg[0, required_le_h7h2pg]))
-    # ##Level if animal trigger level is >= range   - mask out the infs to stop invalid warning and to speed the calculation
-    # temporary_ge_h7h2pg[required_ge_h7h2pg] = ((animal_triggervalues_h7pg[:, na, ...] - operations_triggerlevels_h5h7h2pg[2, ...])[required_ge_h7h2pg]/
-    #                                (operations_triggerlevels_h5h7h2pg[3, required_ge_h7h2pg] - operations_triggerlevels_h5h7h2pg[2, required_ge_h7h2pg]))
-    ##Test across the rules (& collapse h7 axis)
-    level_h2pg = np.max(np.minimum(temporary_le_h7h2pg, temporary_ge_h7h2pg),axis=0) * operation_triggered_h2pg   #mul by operation triggered so that level goes to 0 if operation is not triggered
+    ##Create blank versions for assignment - one is the default value for the calc below where the mask is false hence initialise with ones
+    ### calculate the masked version of the triggerlevels because required 3 times in the calculation
+    operations_triggerlevels_masked_h5h7h2pg = operations_triggerlevels_casted_h5h7h2pg[:, required_h7h2pg]
+    temporary_h7h2pg = np.ones_like(required_h7h2pg, dtype='float32')
+
+    ##Level if animal trigger level is between 'range' and 'le'
+    temporary_h7h2pg[required_h7h2pg] = np.clip((animal_triggervalues_h7mask_h7h2pg[required_h7h2pg] - operations_triggerlevels_masked_h5h7h2pg[2, ...])/
+                                                (operations_triggerlevels_masked_h5h7h2pg[3, ...] - operations_triggerlevels_masked_h5h7h2pg[2, ...]),0,1)
+    ##Select the maximum across the h7 axis if the operation is triggered
+    temporary_h2pg = np.max(temporary_h7h2pg,axis=0) * operation_triggered_h2pg   #mul by operation triggered so that level goes to 0 if operation is not triggered
+
+    ##Select the maximum of the 'le' and 'ge' value
+    level_h2pg = np.maximum(level_h2pg, temporary_h2pg)
+
     calc_end = time.time()
-    print('calc: ', calc_end - setup_end)
+    # print('calc: ', calc_end - setup_end)
 
     return level_h2pg
 
