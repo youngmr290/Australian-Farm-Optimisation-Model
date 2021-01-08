@@ -100,7 +100,6 @@ def coremodel_all():
     ######################
     ##labour sheep - can be done by anyone
     try:
-        model.del_component(model.con_labour_sheep_anyone_index_1)
         model.del_component(model.con_labour_sheep_anyone_index)
         model.del_component(model.con_labour_sheep_anyone)
     except AttributeError:
