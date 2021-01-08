@@ -169,7 +169,7 @@ structure = dict()
 ###############
 # labour      #
 ###############
-structure['worker_levels'] = ['anyone', 'perm', 'manager']
+structure['worker_levels'] = ['any', 'perm', 'mngr']
 
 ###############
 # crop        #
@@ -184,7 +184,7 @@ structure['grain_pools']=['firsts','seconds']
 structure['i_date_assetvalue']= datetime.datetime(2019, 1, 1) #y/m/d
 
 ##the number of these can change as long as each period is of equal length.
-structure['cashflow_periods']=['JF$FLOW','MA$FLOW','MJ$FLOW','JA$FLOW','SO$FLOW','ND$FLOW']
+structure['cashflow_periods']=['JF','MA','MJ','JA','SO','ND']
 
 ###############
 # pasture     #

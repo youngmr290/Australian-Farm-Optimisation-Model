@@ -263,7 +263,7 @@ def main():
     print('Number of full solutions: ',sum((exp_data.index[row][1] == True) and (exp_data.index[row][0] == True) for row in range(len(exp_data))))
     print('Exp.xlsx last saved: ',datetime.fromtimestamp(round(os.path.getmtime("exp.xlsx"))))
     ##start multiprocessing
-    agents = min(multiprocessing.cpu_count(),len(dataset),4) # number of agents (processes) should be min of the num of cpus or trial
+    agents = min(multiprocessing.cpu_count(),len(dataset)) # number of agents (processes) should be min of the num of cpus or trial
     with multiprocessing.Pool(processes=agents) as pool:
         pool.map(exp, dataset)
 

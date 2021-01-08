@@ -1584,7 +1584,9 @@ def f_operations_triggered(animal_triggervalues_h7pg, operations_triggerlevels_h
     triggered_h2pg = np.all(slices_all_h7h2pg, axis=0)
     return triggered_h2pg
 
+from memory_profiler import profile
 
+@profile
 def f_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg):
     ##mask - Calculation is required
     mask_start=time.time()
@@ -1592,7 +1594,7 @@ def f_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, ope
     required_le_h7h2pg = np.logical_and(temp_mask, operations_triggerlevels_h5h7h2pg[0, ...] != np.inf) #logical_or only has two args
     required_ge_h7h2pg = np.logical_and(temp_mask, operations_triggerlevels_h5h7h2pg[2, ...] != -np.inf)
     mask_end=time.time()
-    # print('mask: ',mask_end-mask_start)
+    print('mask: ',mask_end-mask_start)
     ##Create blank versions for assignment - one is the default value for the calc below where the mask is false hence initialise with ones
     temporary_le_h7h2pg = np.ones_like(required_le_h7h2pg, dtype='float32')
     temporary_ge_h7h2pg = np.ones_like(required_ge_h7h2pg, dtype='float32')
@@ -1604,7 +1606,7 @@ def f_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, ope
     operations_triggerlevels_le_masked_h5h7h2pg = operations_triggerlevels_casted_h5h7h2pg[:, required_le_h7h2pg]
     operations_triggerlevels_ge_masked_h5h7h2pg = operations_triggerlevels_casted_h5h7h2pg[:, required_ge_h7h2pg] #i tried creating this after the le one was used and just over writing the le one but that didn't speed the process
     setup_end=time.time()
-    # print('setup: ',setup_end-init_end)
+    print('setup: ',setup_end-init_end)
 
     # operations_triggerlevels_masked_h5h7h2pg = operations_triggerlevels_h5h7h2pg[:, required_le_h7h2pg]
     # operations_triggerlevels_masked_ge_h5h7h2pg = operations_triggerlevels_h5h7h2pg[:, required_ge_h7h2pg]
@@ -1634,7 +1636,7 @@ def f_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, ope
     ##Test across the rules (& collapse h7 axis)
     level_h2pg = np.max(np.minimum(temporary_le_h7h2pg, temporary_ge_h7h2pg),axis=0) * operation_triggered_h2pg   #mul by operation triggered so that level goes to 0 if operation is not triggered
     calc_end = time.time()
-    # print('calc: ', calc_end - setup_end)
+    print('calc: ', calc_end - setup_end)
 
     return level_h2pg
 

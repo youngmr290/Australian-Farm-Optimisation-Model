@@ -4547,9 +4547,9 @@ def generator(params,r_vals,plots = False):
     print('params')
     keys_start=time.time()
 
-    ##the array returned must be of type object, if string the dict keys become a numpy string and when indexed in pyomo it doesn't work.
+    ##param keys - make numpy str to keep size small
     keys_a = pinp.sheep['i_a_idx'][pinp.sheep['i_mask_a']]
-    keys_c = uinp.structure['cashflow_periods']
+    keys_c = np.array(uinp.structure['cashflow_periods'])
     keys_d = pinp.sheep['i_d_idx'][mask_d_offs]
     keys_g0 = sfun.f_g2g(pinp.sheep['i_g_idx_sire'],'sire')
     keys_g1 = sfun.f_g2g(pinp.sheep['i_g_idx_dams'],'dams')
@@ -4562,13 +4562,13 @@ def generator(params,r_vals,plots = False):
     # keys_lw0 = np.array(uinp.structure['i_w_idx_sire'])
     keys_lw1 = np.array(uinp.structure['i_w_idx_dams'])
     keys_lw3 = np.array(uinp.structure['i_w_idx_offs'])
-    keys_lw_prog = ['lw%02d'%i for i in range(len_w_prog)]
+    keys_lw_prog = np.array(['lw%02d'%i for i in range(len_w_prog)])
     # keys_n0 = uinp.structure['i_n_idx_sire']
     keys_n1 = np.array(uinp.structure['i_n_idx_dams'])
     keys_n3 = np.array(uinp.structure['i_n_idx_offs'])
-    keys_p5 = per.p_date2_df().index.astype('object') #has to be an object so that when combined with strings it remains a number #todo change this to 00 formatting
-    keys_p6 = pinp.feed_inputs['feed_periods'].index[:-1]
-    keys_p8 = ['sire_per%s'%i for i in range(len_p8)]
+    keys_p5 = np.array(per.p_date2_df().index).astype('str')
+    keys_p6 = np.array(pinp.feed_inputs['feed_periods'].index[:-1]).astype('str')
+    keys_p8 = np.array(['sire_per%s'%i for i in range(len_p8)])
     keys_t1 = np.array(['t%s'%i for i in range(len_t1)])
     keys_t2 = np.array(['t%s'%i for i in range(len_t2)])
     keys_t3 = np.array(['t%s'%i for i in range(len_t3)])
@@ -4578,7 +4578,7 @@ def generator(params,r_vals,plots = False):
     keys_y1 = uinp.parameters['i_y_idx_dams'][uinp.parameters['i_mask_y']]
     keys_y3 = uinp.parameters['i_y_idx_offs'][uinp.parameters['i_mask_y']]
     keys_x = pinp.sheep['i_x_idx'][mask_x]
-    keys_z = pinp.general['season_info'].index[pinp.general['season_info']['included']]
+    keys_z = np.array(pinp.general['season_info'].index[pinp.general['season_info']['included']]).astype('str')
     ##save k2 set for pyomo - required because this cant easily be built without information in this module
     params['a_idx'] = keys_a
     params['d_idx'] = keys_d

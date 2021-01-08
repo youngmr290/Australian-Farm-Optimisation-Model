@@ -88,7 +88,7 @@ def labcrppyomo_local(params):
 #functions for core model         #
 ###################################
 #labour req by 
-def mach_labour(model,p):
+def mach_labour_anyone(model,p):
     '''
     Parameters
     ----------
@@ -103,7 +103,6 @@ def mach_labour(model,p):
         1- seeding and harv, includes helper time
         2- fert application, per tonne & per ha 
         3- chem application
-        4- crop monitoring time
     '''
     seed_labour = sum(sum(model.v_seeding_machdays[p, k, l] for k in model.s_landuses) for l in model.s_lmus)        \
     * model.p_daily_seed_hours *(1 + model.p_seeding_helper)
@@ -112,8 +111,26 @@ def mach_labour(model,p):
     fert_t_time = sum(sum(sum(model.p_phasefert[r,l,n]*model.v_phase_area[r,l]*(model.p_fert_app_hour_tonne[p,n]/1000)  for r in model.s_phases if model.p_phasefert[r,l,n] != 0)for l in model.s_lmus)for n in model.s_fert_type )
     fert_ha_time = sum(sum(model.v_phase_area[r,l]*(model.p_fert_app_hour_ha[r,l,p]) for r in model.s_phases if model.p_fert_app_hour_ha[r,l,p] != 0) for l in model.s_lmus)
     chem_time = sum(sum(model.v_phase_area[r,l]*(model.p_chem_app_lab[r,l,p]) for r in model.s_phases if model.p_chem_app_lab[r,l,p] != 0) for l in model.s_lmus)
+    return seed_labour + harv_labour + prep_labour + fert_t_time + fert_ha_time + chem_time
+
+
+#labour req by
+def mach_labour_perm(model,p):
+    '''
+    Parameters
+    ----------
+
+    p : Set
+        Period set from pyomo.
+
+    Returns
+    -------
+    Pyomo function for core model
+        mach labour done by perm and manager;
+        1- crop monitoring time
+    '''
     monitor_time = sum(model.p_crop_monitor[r,p] * model.v_phase_area[r,l]  for r in model.s_phases for l in model.s_lmus if model.p_crop_monitor[r,p] != 0)
-    return seed_labour + harv_labour + prep_labour + fert_t_time + fert_ha_time + chem_time + monitor_time
+    return monitor_time
 
 
 
