@@ -74,11 +74,11 @@ if inputs_from_pickle == False:
         pkl.dump(crop_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
         
         ##sheep inputs
-        sheep_inp = fun.xl_all_named_ranges('Inputs parameters.xlsm', ['Universal'], numpy=True)
+        sheep_inp = fun.xl_all_named_ranges('Universal.xlsx', 'Universal', numpy=True)
         pkl.dump(sheep_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
-        parameters_inp = fun.xl_all_named_ranges('Inputs parameters.xlsm', ['Parameters'], numpy=True)
+        parameters_inp = fun.xl_all_named_ranges('Universal.xlsx', 'Parameters', numpy=True)
         pkl.dump(parameters_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
-        pastparameters_inp = fun.xl_all_named_ranges('Inputs parameters.xlsm', ['PastParameters'], numpy=True)
+        pastparameters_inp = fun.xl_all_named_ranges('Universal.xlsx', 'PastParameters', numpy=True)
         pkl.dump(pastparameters_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
         
         ##mach options

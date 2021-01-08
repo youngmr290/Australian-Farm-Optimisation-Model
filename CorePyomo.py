@@ -54,7 +54,6 @@ def coremodel_all():
     ######################
     ##Fixed labour jobs that can be completed by anyone ie this constraint links labour fixed casual and perm and manager supply and requirement.
     try:
-        model.del_component(model.con_labour_fixed_anyone_index_1)
         model.del_component(model.con_labour_fixed_anyone_index)
         model.del_component(model.con_labour_fixed_anyone)
     except AttributeError:
@@ -65,7 +64,6 @@ def coremodel_all():
     
     ##Fixed labour jobs that must be completed by the manager ie this constraint links labour fixed manager supply and requirement.
     try:
-        model.del_component(model.con_labour_fixed_manager_index_1)
         model.del_component(model.con_labour_fixed_manager_index)
         model.del_component(model.con_labour_fixed_manager)
     except AttributeError:
@@ -79,7 +77,6 @@ def coremodel_all():
     ######################
     ##labour crop - can be done by anyone
     try:
-        model.del_component(model.con_labour_crop_anyone_index_1)
         model.del_component(model.con_labour_crop_anyone_index)
         model.del_component(model.con_labour_crop_anyone)
     except AttributeError:
@@ -90,7 +87,6 @@ def coremodel_all():
     
     ##labour crop - can be done by perm and manager
     try:
-        # model.del_component(model.con_labour_crop_perm_index_1)
         model.del_component(model.con_labour_crop_perm_index)
         model.del_component(model.con_labour_crop_perm)
     except AttributeError:

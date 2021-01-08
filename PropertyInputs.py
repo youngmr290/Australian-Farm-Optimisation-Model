@@ -57,18 +57,11 @@ if inputs_from_pickle == False:
         sup_inp = fun.xl_all_named_ranges("Property.xlsx","Sup Feed") #automatically read in the periods as dates
         pkl.dump(sup_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
-        sheep_inp  = fun.xl_all_named_ranges('Inputs parameters.xlsm', 'Sheep', numpy=True)
+        sheep_inp  = fun.xl_all_named_ranges('Property.xlsx', 'Sheep', numpy=True)
         pkl.dump(sheep_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
-        feedsupply_inp  = fun.xl_all_named_ranges('Inputs parameters.xlsm', 'FeedSupply', numpy=True) #^think this will get combined with the input sheet above
+        feedsupply_inp  = fun.xl_all_named_ranges('Property.xlsx', 'FeedSupply', numpy=True) #^think this will get combined with the input sheet above
         pkl.dump(feedsupply_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
-        
-        ##^the sheep one below might be able to be removed (remember to delete in the sections below as well)
-        # sheep_management_inp  = fun.xl_all_named_ranges('Property.xlsx', 'Sheep Management', numpy=True)
-        # pkl.dump(sheep_management_inp, f)
-
-        # sheep_regions_inp  = fun.xl_all_named_ranges('Property.xlsx', 'Sheep Regions', numpy=True)
-        # pkl.dump(sheep_regions_inp, f)
 
         pasture_inp=dict()
         for pasture in uinp.structure['pastures']:
@@ -100,10 +93,6 @@ else:
         sheep_inp  = pkl.load(f)
         
         feedsupply_inp  = pkl.load(f)
-        
-        # sheep_management_inp  = pkl.load(f)
-
-        # sheep_regions_inp  = pkl.load(f)
 
         pasture_inp = pkl.load(f)
 
