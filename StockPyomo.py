@@ -668,7 +668,7 @@ def stockpyomo_local(params):
                    for n1 in model.s_nut_dams for w8 in model.s_lw_dams for g1 in model.s_groups_dams
                    if model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, z, i, y1, g1,g9, w9] != 0
                    or model.p_numbers_prov_dams[k28, k29, t1, v1_prev, a, n1, w8, z, i, y1, g1, g9, w9] != 0
-                   or model.p_numbers_provthis_dams[k28, k29, t1, v1, a, n1, w8, z, i, y1, g1, g9, w9] != 0) <=0 #todo test how time changes if the if statments are removed
+                   or model.p_numbers_provthis_dams[k28, k29, t1, v1, a, n1, w8, z, i, y1, g1, g9, w9] != 0) <=0
 
     start=time.time()
     model.con_damR = pe.Constraint(model.s_k2_birth_dams, model.s_dvp_dams, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gen_merit_dams,
@@ -785,7 +785,7 @@ def stockpyomo_local(params):
     except AttributeError:
         pass
     def mating(model,g0,p8):
-        return - model.v_sire[g0] + sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_nsires_req[k2,t1,v1,a,n1,w1,z,i,y1,g1,g0,p8]
+        return - model.v_sire[g0] * model.p_nsires_prov[g0, p8] + sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_nsires_req[k2,t1,v1,a,n1,w1,z,i,y1,g1,g0,p8]
                   for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for a in model.s_wean_times for n1 in model.s_nut_dams
                    for w1 in model.s_lw_dams for z in model.s_season_types for i in model.s_tol for y1 in model.s_gen_merit_dams  for g1 in model.s_groups_dams
                    if model.p_nsires_req[k2,t1,v1,a,n1,w1,z,i,y1,g1,g0,p8]!=0) <=0

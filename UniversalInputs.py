@@ -74,11 +74,11 @@ if inputs_from_pickle == False:
         pkl.dump(crop_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
         
         ##sheep inputs
-        sheep_inp = fun.xl_all_named_ranges('Inputs parameters.xlsm', ['Universal'], numpy=True)
+        sheep_inp = fun.xl_all_named_ranges('Universal.xlsx', 'Universal', numpy=True)
         pkl.dump(sheep_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
-        parameters_inp = fun.xl_all_named_ranges('Inputs parameters.xlsm', ['Parameters'], numpy=True)
+        parameters_inp = fun.xl_all_named_ranges('Universal.xlsx', 'Parameters', numpy=True)
         pkl.dump(parameters_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
-        pastparameters_inp = fun.xl_all_named_ranges('Inputs parameters.xlsm', ['PastParameters'], numpy=True)
+        pastparameters_inp = fun.xl_all_named_ranges('Universal.xlsx', 'PastParameters', numpy=True)
         pkl.dump(pastparameters_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
         
         ##mach options
@@ -169,7 +169,7 @@ structure = dict()
 ###############
 # labour      #
 ###############
-structure['worker_levels'] = ['anyone', 'perm', 'manager']
+structure['worker_levels'] = ['any', 'perm', 'mngr']
 
 ###############
 # crop        #
@@ -184,7 +184,7 @@ structure['grain_pools']=['firsts','seconds']
 structure['i_date_assetvalue']= datetime.datetime(2019, 1, 1) #y/m/d
 
 ##the number of these can change as long as each period is of equal length.
-structure['cashflow_periods']=['JF$FLOW','MA$FLOW','MJ$FLOW','JA$FLOW','SO$FLOW','ND$FLOW']
+structure['cashflow_periods']=['JF','MA','MJ','JA','SO','ND']
 
 ###############
 # pasture     #

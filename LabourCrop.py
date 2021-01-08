@@ -9,6 +9,7 @@ Module - calcs for crop labour
 #python modules
 import pandas as pd
 import numpy as np
+import datetime as dt
 import timeit
 
 #AFO modules
@@ -125,8 +126,41 @@ def chem_app_time_ha(params):
     
 
 
+###########################
+#crop monitoring time     #
+###########################
 
+def f_crop_monitoring(params):
+    '''
+    Returns
+    -------
+    Dict for pyomo
+    '''
+    ##allocation
+    crop_monitor = pinp.labour['crop_monitoring']
+    date_start_d = crop_monitor.columns.values.astype('datetime64[D]')
+    date_end_d = np.roll(date_start_d, -1)
+    date_end_d[-1] = date_end_d[-1] + 365 #increment the first date by 1yr so it becomes the end date for the last period
+    length_d = date_end_d - date_start_d
+    monitoring_allocation_pd = fun.range_allocation_np(per.p_dates_df()['date']
+                                                    , date_start_d, length_d, opposite=True)
 
+    ## drop last row, because it has na because it only contains the end date, therefore not a period
+    monitoring_allocation_pd = monitoring_allocation_pd[:-1]
+
+    ##adjust to monitoring time per ha
+    crop_monitor_kd = crop_monitor.values #convert to numpy
+    crop_monitor_kd = crop_monitor_kd/pinp.general['pad_size'] * length_d.astype(float)/7
+
+    ##convert date range to labour periods
+    crop_monitor_kp = np.sum(crop_monitor_kd[:,np.newaxis,:] * monitoring_allocation_pd, axis=-1) #sum the d axis (monitoring date axis)
+
+    ##convert to dict and expand landuse to rotation
+    crop_monitor = pd.DataFrame(crop_monitor_kp, index=crop_monitor.index, columns=per.p_dates_df().index[:-1])
+    phases_df = uinp.structure['phases']
+    crop_monitor = pd.merge(phases_df, crop_monitor, how='left', left_on=uinp.cols()[-1], right_index = True) #merge with all the phases
+
+    params['crop_monitoring'] = crop_monitor.drop(list(range(uinp.structure['phase_len'])), axis=1).stack().to_dict()
 
 
 

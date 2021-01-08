@@ -57,8 +57,9 @@ import sys,traceback
 
 
 
-
-
+# from memory_profiler import profile
+#
+# @profile
 def generator(params,r_vals,plots = False):
     """
     A function to wrap the generator and post processing that can be called by SheepPyomo.
@@ -1669,6 +1670,7 @@ def generator(params,r_vals,plots = False):
     omer_history_start_m3g2[...] = np.nan
     d_cfw_history_start_m2g2[...] = np.nan
     nw_start_yatf = 0.0
+    rc_start_yatf = 0.0
     ffcfw_start_yatf = w_b_std_y_b1nwzida0e0b0xyg1 #this is just an estimate it is updated with the real weight at birth - needed to calc milk production the first time (milk prod is calculated before yatf birth)
     ffcfw_max_start_yatf = ffcfw_start_yatf
     mortality_birth_yatf=0.0 #required for dam numbers before progeny born
@@ -2104,18 +2106,16 @@ def generator(params,r_vals,plots = False):
                 eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     ##first method is using the nec_cum method
-                    # temp0, temp1, temp2, temp3, temp4, temp5, temp6 = sfun.f_foetus_cs(cp_dams, cb1_dams, kc_yg1, nfoet_b1nwzida0e0b0xyg, relsize_start_dams, rc_start_dams, nec_cum_start_dams, w_b_std_y_b1nwzida0e0b0xyg1, w_f_start_dams, nw_f_start_dams, nwf_age_f_pa1e1b1nwzida0e0b0xyg1[p], guw_age_f_pa1e1b1nwzida0e0b0xyg1[p], dce_age_f_pa1e1b1nwzida0e0b0xyg1[p], days_period_f_pa1e1b1nwzida0e0b0xyg1[p])
-                    temp0, temp2, temp3, temp4, temp5, temp6 = sfun.f_foetus_cs(cp_dams, cb1_dams, kc_yg1, nfoet_b1nwzida0e0b0xyg, relsize_start_dams
+                    temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_foetus_cs(cp_dams, cb1_dams, kc_yg1, nfoet_b1nwzida0e0b0xyg, relsize_start_dams
                                     , rc_start_dams, w_b_std_y_b1nwzida0e0b0xyg1, w_f_start_dams, nw_f_start_dams, nwf_age_f_pa1e1b1nwzida0e0b0xyg1[p]
-                                    , guw_age_f_pa1e1b1nwzida0e0b0xyg1[p], dce_age_f_pa1e1b1nwzida0e0b0xyg1[p], days_period_f_pa1e1b1nwzida0e0b0xyg1[p])  #todo: days_period is not used in f_foetus_cs
+                                    , guw_age_f_pa1e1b1nwzida0e0b0xyg1[p], dce_age_f_pa1e1b1nwzida0e0b0xyg1[p])
                     if eqn_used:
                         w_f_dams = temp0
-                        # nec_cum_dams = temp1
-                        mec_dams = temp2
-                        nec_dams = temp3
-                        w_b_exp_y_dams = temp4
-                        nw_f_dams = temp5
-                        guw_dams = temp6
+                        mec_dams = temp1
+                        nec_dams = temp2
+                        w_b_exp_y_dams = temp3
+                        nw_f_dams = temp4
+                        guw_dams = temp5
                     if eqn_compare:
                         r_compare_q0q1q2pdams[eqn_system, eqn_group, 0, p, ...] = temp0
                         # r_compare_q0q1q2pdams[eqn_system, eqn_group, 1, p, ...] = temp1
@@ -2123,7 +2123,7 @@ def generator(params,r_vals,plots = False):
 
 
             ##milk production
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):         #^ changing to g2 might save time
+            if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                 ###Expected ffcfw of yatf with m1 axis - each period
                 ffcfw_exp_a1e1b1nwzida0e0b0xyg2m1 = (ffcfw_start_yatf[..., na] + (index_m1 * cn_yatf[7, ...][...,na])) * (
                             index_m1 < days_period_pa1e1b1nwzida0e0b0xyg2[...,na][p])
@@ -2310,8 +2310,9 @@ def generator(params,r_vals,plots = False):
             lw_start_yatf = ffcfw_start_yatf + gfw_start_yatf
             ###Normal weight (start)
             nw_start_yatf = np.minimum(nw_max_yatf, np.maximum(nw_start_yatf, ffcfw_start_yatf + cn_yatf[3, ...] * (nw_max_yatf  - ffcfw_start_yatf)))
-            ###Relative condition (start)
-            rc_start_yatf = ffcfw_start_yatf / nw_start_yatf
+            ###Relative condition (start) - use update function so that when 0 days/period we keep the rc of the last period because it is used to calc sale value which is period_is_weaning which has 0 days because sold at begining.
+            temp_rc_start_yatf = ffcfw_start_yatf / nw_start_yatf
+            rc_start_yatf = fun.f_update(rc_start_yatf, temp_rc_start_yatf, days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0)
             ##Condition score of the dam at  start of p
             cs_start_yatf = sfun.f_condition_score(rc_start_yatf, cu0_yatf)
             ###staple length
@@ -2849,6 +2850,7 @@ def generator(params,r_vals,plots = False):
         ###yatf
         o_ffcfw_start_yatf[p] = ffcfw_start_yatf #use ffcfw_start because weaning start of period, has to be outside of the 'if' because days per period = 0 when weaning occurs because weaning is first day of period. But we need to know the start ffcfw.
         o_numbers_start_yatf[p] = numbers_start_yatf #used for npw calculation - use numbers start because weaning is start of period - has to be out of the 'if' because there is 0 days in the period when weaning occurs but we still want to store the start weight
+        o_rc_start_yatf[p] = rc_start_yatf #outside because used for sale value which is weaning which has 0 days per period because weaning is first day (this means the rc at weaning is actually the rc at the start of the previous period because it doesnt recalculate once days per period goes to 0)
         if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
             ###store output variables for the post processing
             # o_numbers_end_yatf[p] = pp_numbers_end_yatf
@@ -2861,7 +2863,6 @@ def generator(params,r_vals,plots = False):
             # o_fd_yatf[p] = fd_yatf
             # o_fd_min_yatf[p] = fd_min_yatf
             # o_ss_yatf[p] = ss_yatf
-            o_rc_start_yatf[p] = rc_start_yatf
 
             ###store report variables - individual variables can be deleted if not needed - store in report dictionary in the report section at end of this module
             r_ebg_yatf[p] = ebg_yatf
@@ -3312,7 +3313,7 @@ def generator(params,r_vals,plots = False):
     #### the transfer to a dvp_type other than type==0 only occurs when transferring to and from the same genotype
     #### this occurs when (index_g1 == a_g1_tg1) and the transfer exists
     mask_dvp_type_next_tg1 = transfer_exists_tpa1e1b1nwzida0e0b0xyg1 * (index_g1 == a_g1_tpa1e1b1nwzida0e0b0xyg1) #dvp type next is a little more complex for animals transferring. However the destination for transfer is always dvp type next ==0 (either it is going from dvp 2 to 0 or from 0 to 0.
-    dvp_type_next_tva1e1b1nwzida0e0b0xyg1 = dvp_type_next_va1e1b1nwzida0e0b0xyg1 * mask_dvp_type_next_tg1   # todo calling this dvp_type_next is bad terminology. It is not the type of the next dvp it is now a flag as to whether a transfer can occur (tvg)
+    dvp_type_next_tva1e1b1nwzida0e0b0xyg1 = dvp_type_next_va1e1b1nwzida0e0b0xyg1 * mask_dvp_type_next_tg1
     ####association between dvp and lambing opp
     index_v1 = np.arange(index_vpa1e1b1nwzida0e0b0xyg1.shape[0])
     a_o_v = (np.trunc((index_v1 - 1) / uinp.structure['i_n_fvp_period1'])).astype(dtypeint)
@@ -3446,7 +3447,7 @@ def generator(params,r_vals,plots = False):
 
 
     ######################
-    #calc cost and income#
+    #calc cost and income#  #todo add infrastructure cost, and sire purchase
     ######################
     calc_cost_start = time.time()
     ##calc wool value - To speed the calculation process the p array is condensed to only include periods where shearing occurs. Using a slightly different association it is then converted to a v array (this process usually used a p to v association, in this case we use s to v association).
@@ -3596,7 +3597,7 @@ def generator(params,r_vals,plots = False):
     sale_finish= time.time()
 
 
-    ##Husbandry #todo add feedbudgeting labour
+    ##Husbandry #todo add feedbudgeting and infra labour
     ###Sire: cost, labour and infrastructure requirements
     husbandry_cost_pg0, husbandry_labour_l2pg0, husbandry_infrastructure_h1pg0 = sfun.f_husbandry(
         uinp.sheep['i_head_adjust_sire'], mobsize_pa1e1b1nwzida0e0b0xyg0, o_ffcfw_sire, o_cfw_sire, operations_triggerlevels_h5h7h2pg,
@@ -3789,7 +3790,8 @@ def generator(params,r_vals,plots = False):
                                                           period_is_tvp=period_is_startdvp_purchase_pa1e1b1nwzida0e0b0xyg0) #sires only have one dvp which essentially starts when the activity is purchased
     numbers_startp8_va1e1b1nwzida0e0b0xyg0p8 = sfun.f_p2v_std(o_numbers_start_sire[...,na], on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0[...,na],
                                                           period_is_tvp=period_is_startp8_pa1e1b1nwzida0e0b0xyg0p8, sumadj=1) #sires only have one dvp which essentially starts when the activity is purchased
-    numbers_end_va1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_numbers_end_dams, a_v_pa1e1b1nwzida0e0b0xyg1,period_is_tp=nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg1)  #todo: This needs a t axis so that the early termination of a dvp is accounted for when transferring between ram groups
+    numbers_end_tva1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_numbers_end_dams, a_v_pa1e1b1nwzida0e0b0xyg1, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1,
+                                                     period_is_tp=np.logical_or(period_is_transfer_tpa1e1b1nwzida0e0b0xyg1, nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg1))  #t axis so that the early termination of a dvp is accounted for when transferring between ram groups
     numbers_start_va1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_numbers_start_dams, a_v_pa1e1b1nwzida0e0b0xyg1,period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
     r_numbers_join_va1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_numbers_join_dams, a_v_pa1e1b1nwzida0e0b0xyg1,period_is_tp=period_is_join_pa1e1b1nwzida0e0b0xyg1) #used to calc wean %
     r_numbers_birth_va1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_numbers_end_dams, a_v_pa1e1b1nwzida0e0b0xyg1,period_is_tp=period_is_birth_pa1e1b1nwzida0e0b0xyg1) #need to use numbers end so that the numbers represent the different b1 slices after birth
@@ -3960,37 +3962,13 @@ def generator(params,r_vals,plots = False):
                                                            np.logical_or(period_is_sale_k5tva1e1b1nwzida0e0b0xyg1,
                                                                          index_tva1e1b1nw8zida0e0b0xyg1 >= 2))
 
-    # mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1 = np.logical_and(np.logical_or(np.logical_and(period_is_transfer_tva1e1b1nwzida0e0b0xyg1, index_va1e1b1nwzida0e0b0xyg1 != 0),
-    #                                                                      (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)),
-    #                                                        np.logical_or(period_is_sale_k2tva1e1b1nwzida0e0b0xyg1, index_tva1e1b1nw8zida0e0b0xyg1 >= 2))
-    #
-    # mask_tvars_tva1e1b1nw8zida0e0b0xyg1 = np.logical_or(period_is_transfer_tva1e1b1nwzida0e0b0xyg1, (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1))
-    # todo: tidy up unused code after it is tested
-    # temporary = (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na]
-    # mask_numbers_provt_tva1e1b1nwzida0e0b0xyg1g9 = fun.f_update(temporary, temporary * (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na, :],
-    #                                      dvp_type_next_va1e1b1nwzida0e0b0xyg1[..., na,:] != 0) * transfer_exists_tpa1e1b1nwzida0e0b0xyg1[..., na]
-    # temporary = (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na, :]
-    # mask_numbers_provt_tva1e1b1nwzida0e0b0xyg1g9 = fun.f_update(temporary, temporary * (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na],
-    #                                      dvp_type_next_tva1e1b1nwzida0e0b0xyg1[..., na] != 0) * transfer_exists_tpa1e1b1nwzida0e0b0xyg1[..., na]
-
     ###numbers are provided by g1 to g9 (a_g1_tg1) when that transfer exists and the transfer decision variables exist
     mask_numbers_provt_k2tva1e1b1nwzida0e0b0xyg1g9 = mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[...,na] * transfer_exists_tpa1e1b1nwzida0e0b0xyg1[..., na]  \
                                                       * (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na, :]  #todo decide whether this code is correct or (a_g1_tg1[...,na] == index_g1[...,na,:])
-    # mask_numbers_provt_tva1e1b1nwzida0e0b0xyg1g9 = mask_tvars_tva1e1b1nw8zida0e0b0xyg1[...,na] * transfer_exists_tpa1e1b1nwzida0e0b0xyg1[..., na]  \
-    #                                                   * (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na, :]  #todo decide whether this code is correct or (a_g1_tg1[...,na] == index_g1[...,na,:])
-        # fun.f_update(temporary, temporary * (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na],
-        #                                  np.logical_not(period_is_transfer_tva1e1b1nwzida0e0b0xyg1)[..., na]) * transfer_exists_tpa1e1b1nwzida0e0b0xyg1[..., na]
-    # temporary = (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na, :]
-    # mask_numbers_provt_tva1e1b1nwzida0e0b0xyg1g9 = fun.f_update(temporary, temporary * (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na],
-    #                                      dvp_type_next_va1e1b1nwzida0e0b0xyg1[..., na] != 0) * transfer_exists_tpa1e1b1nwzida0e0b0xyg1[..., na]
-    # temporary = (index_g9 == index_g1g)
+
     ###numbers are required across the identity array between g1 & g9 in the periods that the transfer decision variable exists exists
     mask_numbers_reqt_k2tva1e1b1nwzida0e0b0xyg1g9 = mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[...,na] \
                                                     * (index_g9 == index_g1g)
-    # mask_numbers_reqt_tva1e1b1nwzida0e0b0xyg1g9 = mask_tvars_tva1e1b1nw8zida0e0b0xyg1[...,na] \
-    #                                                 * (index_g9 == index_g1g)
-        # fun.f_update(temporary, temporary*(index_g1g == a_g1_tpa1e1b1nwzida0e0b0xyg1[...,na,:]),
-        #                                                       np.logical_not(period_is_transfer_tva1e1b1nwzida0e0b0xyg1)[..., na])
 
     ##0ffs
     ##mask the t array so that only slice t0 provides numbers
@@ -4108,7 +4086,7 @@ def generator(params,r_vals,plots = False):
     numbers_startp8_va1e1b1nwzida0e0b0xyg0p8 = sfun.f_create_production_param('sire', numbers_startp8_va1e1b1nwzida0e0b0xyg0p8, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0[...,na])
     ##number of sires for required for mating - dams
     ### mask the dams for w8 vars, t_vars. Also not mated if they are being transferred to another ram group. A transfer in the mating period indicates that the dam is going to be mated to another sire at a later date within the same DVP
-    t_mask_k2tva1e1b1nw8zida0e0b0xyg1g0p8 = (mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1 * (a_g1_tpa1e1b1nwzida0e0b0xyg1 != index_g1))[...,na,na]
+    t_mask_k2tva1e1b1nw8zida0e0b0xyg1g0p8 = (mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1 * (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1))[...,na,na]
     nsire_k2tva1e1b1nwzida0e0b0xyg1g0p8 = sfun.f_create_production_param('dams', nsire_tva1e1b1nwzida0e0b0xyg1g0p8,
                                                 a_k2cluster_va1e1b1nwzida0e0b0xyg1[...,na,na], index_k2tva1e1b1nwzida0e0b0xyg1[...,na,na],
                                                 numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1[...,na,na],
@@ -4119,7 +4097,7 @@ def generator(params,r_vals,plots = False):
     ##numbers prov - numbers at the end of a dvp with the cluster of the next dvp divided by start numbers with cluster of current period
     ###dams total provided from this period
     numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_divide(
-          np.sum(numbers_end_va1e1b1nwzida0e0b0xyg1[..., na,na]
+          np.sum(numbers_end_tva1e1b1nwzida0e0b0xyg1[..., na,na]
                 * mask_numbers_provw8w9_tva1e1b1nw8zida0e0b0xyg1w9[..., na,:]
                 * mask_numbers_provt_k2tva1e1b1nwzida0e0b0xyg1g9[:,na,..., na]
                 * mask_numbers_provdry_k28k29tva1e1b1nwzida0e0b0xyg1[...,na,na]
@@ -4203,12 +4181,12 @@ def generator(params,r_vals,plots = False):
     ffcfw_range_zia0xg2k = ffcfw_range_zia0xg2k * (numbers_range_zia0xg2k > 0)
     salevalue_range_zia0xg2k = salevalue_range_zia0xg2k * (numbers_range_zia0xg2k > 0)
     ### The index that sorts the weight array
-    ind_sorted_a1zixg2k = np.argsort(ffcfw_range_zia0xg2k, axis = -1)
-    ### Select the values for the 10 equally spaced values spanning lowest to highest inclusive. Adding axis at -1
-    start_a1zixg2 = ffcfw_range_zia0xg2k.shape[-1] - np.count_nonzero(ffcfw_range_zia0xg2k, axis=-1)
-    ind_selected_a1zixg2w9 = np.linspace(start_a1zixg2, ffcfw_range_zia0xg2k.shape[-1] - 1, uinp.structure['i_progeny_w2_len'], dtype = int, axis=-1)
+    ind_sorted_zia0xg2k = np.argsort(ffcfw_range_zia0xg2k, axis = -1)
+    ### Select the values for the 10 equally spaced values spanning lowest to highest inclusive. Adding w9 axis at -1
+    start_zia0xg2 = ffcfw_range_zia0xg2k.shape[-1] - np.count_nonzero(ffcfw_range_zia0xg2k, axis=-1)
+    ind_selected_a1zixg2w9 = np.linspace(start_zia0xg2, ffcfw_range_zia0xg2k.shape[-1] - 1, uinp.structure['i_progeny_w2_len'], dtype = int, axis=-1)
     ### The indices for the required values are the selected values from the sorted indices
-    ind = np.take_along_axis(ind_sorted_a1zixg2k, ind_selected_a1zixg2w9, axis=-1)
+    ind = np.take_along_axis(ind_sorted_zia0xg2k, ind_selected_a1zixg2w9, axis=-1)
     ### Extract the condensed weights, the numbers and the sale_value of the condensed vars
     #### Later these variables are used with the 10 weights in the i_w_pos, so note whether w9 on end or not
     ffcfw_prog_zia0xg2w9 = np.take_along_axis(ffcfw_range_zia0xg2k, ind, axis = -1)
@@ -4218,7 +4196,7 @@ def generator(params,r_vals,plots = False):
     salevalue_prog_zida0e0b0xyg2w9 = salevalue_zia0xg2w9.reshape(len_z, len_i, 1, len_a1, 1, 1, len_x, 1, len_g2, uinp.structure['i_progeny_w2_len'])
 
     ##distribute the yatf to the intermediate progeny activity
-    distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 = sfun.f_lw_distribution_2prog(ffcfw_prog_zida0e0b0xyg2w9,ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1, index_w2)  #todo: index_w2 is not used in f_lw_distribution_2prog
+    distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 = sfun.f_lw_distribution_2prog(ffcfw_prog_zida0e0b0xyg2w9,ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1)
 
     ## move progeny weight axis to normal position for distribution to dams & offs at beginning of dvp0
     ffcfw_prog_wzida0e0b0xyg2 = np.moveaxis(ffcfw_prog_zida0e0b0xyg2w9,-1,w_pos)
@@ -4230,7 +4208,7 @@ def generator(params,r_vals,plots = False):
 
     ##add c axis to prog - using period_is_wean so that correct c slice is activated
     salevalue_prog_cta1e1b1nwzida0e0b0xyg2 = sfun.f_p2v_std(salevalue_prog_tpa1e1b1nwzida0e0b0xyg2, period_is_tvp=period_is_wean_pa1e1b1nwzida0e0b0xyg2[:,:,0:1,...], #weaning is same for all e slices
-                                     a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg,index_any1tvp=index_ctpa1e1b1nwzida0e0b0xyg)
+                                     a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg,index_any1tvp=index_ctpa1e1b1nwzida0e0b0xyg) / np.count_nonzero(period_is_wean_pa1e1b1nwzida0e0b0xyg2[:,:,0:1,...], axis=0) #divide by the number of weaning times down the p axis because all weaning times for lambs with different age mums are combined into single activity.
 
     ##mask w8 (prog) to w9 (dams)
     step_con_prog2dams = uinp.structure['i_n1_len'] ** uinp.structure['i_n_fvp_period1']
@@ -4354,7 +4332,7 @@ def generator(params,r_vals,plots = False):
     ###########################
     # create report params    #
     ###########################
-
+    print('reporting')
     ##sale value - needed for reporting
     r_salevalue_ctva1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param('sire',r_salevalue_ctva1e1b1nwzida0e0b0xyg0,
                                                                           numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
@@ -4567,11 +4545,12 @@ def generator(params,r_vals,plots = False):
     #########
     #params #
     #########
+    print('params')
     keys_start=time.time()
 
-    ##the array returned must be of type object, if string the dict keys become a numpy string and when indexed in pyomo it doesn't work.
+    ##param keys - make numpy str to keep size small
     keys_a = pinp.sheep['i_a_idx'][pinp.sheep['i_mask_a']]
-    keys_c = uinp.structure['cashflow_periods']
+    keys_c = np.array(uinp.structure['cashflow_periods'])
     keys_d = pinp.sheep['i_d_idx'][mask_d_offs]
     keys_g0 = sfun.f_g2g(pinp.sheep['i_g_idx_sire'],'sire')
     keys_g1 = sfun.f_g2g(pinp.sheep['i_g_idx_dams'],'dams')
@@ -4584,13 +4563,13 @@ def generator(params,r_vals,plots = False):
     # keys_lw0 = np.array(uinp.structure['i_w_idx_sire'])
     keys_lw1 = np.array(uinp.structure['i_w_idx_dams'])
     keys_lw3 = np.array(uinp.structure['i_w_idx_offs'])
-    keys_lw_prog = ['lw%02d'%i for i in range(len_w_prog)]
+    keys_lw_prog = np.array(['lw%02d'%i for i in range(len_w_prog)])
     # keys_n0 = uinp.structure['i_n_idx_sire']
     keys_n1 = np.array(uinp.structure['i_n_idx_dams'])
     keys_n3 = np.array(uinp.structure['i_n_idx_offs'])
-    keys_p5 = per.p_date2_df().index.astype('object') #has to be an object so that when combined with strings it remains a number #todo change this to 00 formatting
-    keys_p6 = pinp.feed_inputs['feed_periods'].index[:-1]
-    keys_p8 = ['sire_per%s'%i for i in range(len_p8)]
+    keys_p5 = np.array(per.p_date2_df().index).astype('str')
+    keys_p6 = np.array(pinp.feed_inputs['feed_periods'].index[:-1]).astype('str')
+    keys_p8 = np.array(['sire_per%s'%i for i in range(len_p8)])
     keys_t1 = np.array(['t%s'%i for i in range(len_t1)])
     keys_t2 = np.array(['t%s'%i for i in range(len_t2)])
     keys_t3 = np.array(['t%s'%i for i in range(len_t3)])
@@ -4600,7 +4579,7 @@ def generator(params,r_vals,plots = False):
     keys_y1 = uinp.parameters['i_y_idx_dams'][uinp.parameters['i_mask_y']]
     keys_y3 = uinp.parameters['i_y_idx_offs'][uinp.parameters['i_mask_y']]
     keys_x = pinp.sheep['i_x_idx'][mask_x]
-    keys_z = pinp.general['season_info'].index[pinp.general['season_info']['included']]
+    keys_z = np.array(pinp.general['season_info'].index[pinp.general['season_info']['included']]).astype('str')
     ##save k2 set for pyomo - required because this cant easily be built without information in this module
     params['a_idx'] = keys_a
     params['d_idx'] = keys_d
@@ -5079,6 +5058,7 @@ def generator(params,r_vals,plots = False):
     ###############
     # report      #
     ###############
+    print('reporting2')
     '''add report values to report dict and do any additional calculations'''
 
     ##store in report dict
@@ -5114,9 +5094,9 @@ def generator(params,r_vals,plots = False):
     r_vals['keys_p6'] = keys_p6
 
     ##key lists used to form table headers and indexs
-    keys_e= list(range(len_e1)) # todo make a better idx for b and e. maybe from inputs
-    keys_b= list(range(len_b1))
-    keys_p= list(range(len_p))
+    keys_e= ['e%s'%i for i in range(len_e1)]
+    keys_b= uinp.structure['i_lsln_idx_dams']
+    keys_p= ['p%s'%i for i in range(len_p)]
 
     r_vals['sire_keys_g0'] = [keys_g0]
     r_vals['sire_keys_p6fg0'] = [keys_p6, keys_f, keys_g0]

@@ -133,6 +133,9 @@ def p_dates_df():
             date = period_end_date(start, length) + uinp.structure['labour_period_len'] + relativedelta(day=1)
     #add the list of dates to the labour dataframe
     periods['date']=period_start_dates
+    ##modify index
+    index = ['P%02d' % i for i in range(len(periods))]
+    periods.index = index
     return periods
 
 # drop last row, because it only contains the end date, this version of the df is used for creating the period set and when determining labour allocation

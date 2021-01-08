@@ -14,7 +14,7 @@ import time
 import os.path
 import sys
 from datetime import datetime
-import pickle as pkl # todo if pickle gets too slow we should update to json or ujson (note cpickle has been merged with pickle so that it not an option)
+import pickle as pkl
 
 #report the clock time that the experiment was started
 print("Experiment commenced at: ", time.ctime())
@@ -94,7 +94,7 @@ exp_data1 = fun.f_run_required(exp_data1)
 
 ##plk a copy of exp incase the code crashes before the end. (this is tracks if a trial needed to be run)
 if __name__ == '__main__':
-    with open('pkl_exp.pkl', "wb") as f:
+    with open('pkl/pkl_exp.pkl', "wb") as f:
         pkl.dump(exp_data1, f, protocol=pkl.HIGHEST_PROTOCOL)
 
 

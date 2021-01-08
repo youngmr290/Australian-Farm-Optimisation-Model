@@ -27,7 +27,6 @@ def mach_precalcs(params, r_vals):
     mac.seed_days(params)
     mac.seeding_cost(params, r_vals)
     mac.contract_seed_cost(params, r_vals)
-    mac.seeding_dep(params)
     mac.harv_rate_period(params)
     mac.contract_harv_rate(params)
     mac.max_harv_hours(params)
@@ -36,10 +35,15 @@ def mach_precalcs(params, r_vals):
     mac.hay_making_cost(params)
     mac.yield_penalty(params)
     mac.grazing_days(params)
+    mac.fix_dep(params)
+    mac.harvest_dep(params)
+    mac.seeding_dep(params)
     mac.insurance(params)
-    
+    mac.f_mach_asset_value(params)
+
     ##add inputs that are params to dict
-    params['number_crop_gear'] = pinp.mach['number_crop_gear']
+    params['number_seeding_gear'] = pinp.mach['number_seeding_gear']
+    params['number_harv_gear'] = pinp.mach['number_harv_gear']
     params['seeding_occur'] = pinp.mach['seeding_occur']
 
 
@@ -79,12 +83,6 @@ def machpyomo_local(params):
     except AttributeError:
         pass
     model.p_contract_seeding_cost = Param(model.s_cashflow_periods, initialize=params['contract_seed_cost'], default = 0.0, doc='cost of contract seeding 1ha')
-    
-    try:
-        model.del_component(model.p_seeding_dep)
-    except AttributeError:
-        pass
-    model.p_seeding_dep = Param(model.s_lmus, initialize=params['seeding_dep'], default = 0.0, doc='depreciation cost of seeding 1ha')
     
     try:
         model.del_component(model.p_harv_rate_index)
@@ -140,10 +138,29 @@ def machpyomo_local(params):
     model.p_seeding_grazingdays = Param(model.s_feed_periods, model.s_labperiods, initialize=params['grazing_days'], default = 0.0, doc='pasture grazing days per feed period provided by 1ha of seeding in each seed period')
 
     try:
+        model.del_component(model.p_fixed_dep)
+    except AttributeError:
+        pass
+    model.p_fixed_dep = Param(initialize=params['fixed_dep'],default=0.0, doc='fixed depreciation of all machinery for 1 yr')
+
+    try:
+        model.del_component(model.p_seeding_dep)
+    except AttributeError:
+        pass
+    model.p_seeding_dep = Param(model.s_lmus,initialize=params['seeding_dep'],default=0.0,
+                                doc='depreciation cost of seeding 1ha')
+
+    try:
+        model.del_component(model.p_harv_dep)
+    except AttributeError:
+        pass
+    model.p_harv_dep = Param(initialize=params['harv_dep'],default=0.0, doc='depreciation cost of harvesting 1hr')
+
+    try:
         model.del_component(model.p_mach_asset)
     except AttributeError:
         pass
-    model.p_mach_asset = Param(initialize=params['seeding_gear_clearing_value'], default = 0.0, doc='asset value associated with crop gear')
+    model.p_mach_asset = Param(initialize=params['mach_asset_value'], default = 0.0, doc='asset value associated with crop gear')
 
     try:
         model.del_component(model.p_mach_insurance)
@@ -152,11 +169,17 @@ def machpyomo_local(params):
     model.p_mach_insurance = Param(model.s_cashflow_periods, initialize=params['insurance'], default = 0.0, doc='insurance paid on all machinery')
     
     try:
-        model.del_component(model.p_number_crop_gear)
+        model.del_component(model.p_number_seeding_gear)
     except AttributeError:
         pass
-    model.p_number_crop_gear = Param(initialize=params['number_crop_gear'], default = 0.0, doc='number of crop gear')
+    model.p_number_seeding_gear = Param(initialize=params['number_seeding_gear'], default = 0.0, doc='number of crop gear')
     
+    try:
+        model.del_component(model.p_number_harv_gear)
+    except AttributeError:
+        pass
+    model.p_number_harv_gear = Param(initialize=params['number_harv_gear'], default = 0.0, doc='number of crop gear')
+
     try:
         model.del_component(model.p_seeding_occur)
     except AttributeError:
@@ -175,7 +198,7 @@ def machpyomo_local(params):
         pass
     def seed_period_days(model,p):
         return sum(sum(model.v_seeding_machdays[p,k,l] for k in model.s_crops)for l in model.s_lmus) <= \
-        model.p_seed_days[p] * model.p_number_crop_gear * model.p_seeding_occur
+        model.p_seed_days[p] * model.p_number_seeding_gear * model.p_seeding_occur
     model.con_seed_period_days = Constraint(model.s_labperiods, rule=seed_period_days, doc='constrain the number of seeding days per seed period')
     
     ##constraint to limit the number of hours of harvest to the amount that can be supplied by x crop gear
@@ -184,7 +207,7 @@ def machpyomo_local(params):
     except AttributeError:
         pass
     def harv_hours_limit(model, p):
-        return sum(model.v_harv_hours[p, k] for k in model.s_harvcrops) <= model.p_harv_hrs_max[p] * model.p_number_crop_gear
+        return sum(model.v_harv_hours[p, k] for k in model.s_harvcrops) <= model.p_harv_hrs_max[p] * model.p_number_harv_gear
     model.con_harv_hours_limit = Constraint(model.s_labperiods, rule=harv_hours_limit, doc='constrain the number of hours of harvest x crop gear can provide')
     
     ##link sow supply to crop and pas variable - this has to be done because crop is not by period and pasture is
@@ -274,15 +297,15 @@ def mach_cost(model,c):
 #equals seeding dep plus harv dep plus fixed dep
 def total_dep(model):
     #fixed dep = total sale value of equipment x fixed rate of dep, number of crop fear accounted for before this step
-    fixed_dep = mac.fix_dep()
+    fixed_dep = model.p_fixed_dep
     #cost per ha seeding dep x number of days seeding x ha per day
     seeding_depreciation = sum(sum(sum(model.p_seeding_dep[l] * model.v_seeding_machdays[p,k,l] * model.p_seeding_rate[k,l] for l in model.s_lmus) for p in  model.s_labperiods) for k in model.s_crops) 
     #cost of harv dep = hourly dep x early and late harv hours 
-    harv_dep= mac.harvest_dep() * sum(sum(model.v_harv_hours[p ,k] for k in model.s_harvcrops) for p in model.s_labperiods)
-    return seeding_depreciation + fixed_dep + harv_dep 
+    harv_dep = model.p_harv_dep * sum(sum(model.v_harv_hours[p ,k] for k in model.s_harvcrops) for p in model.s_labperiods)
+    return seeding_depreciation + fixed_dep + harv_dep
 
 def mach_asset(model):
-    return model.p_mach_asset * model.p_number_crop_gear
+    return model.p_mach_asset
 
 
 
