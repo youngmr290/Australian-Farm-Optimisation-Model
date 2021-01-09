@@ -1434,27 +1434,28 @@ def f_saleprice(score_pricescalar_s7s5s6, weight_pricescalar_s7s5s6, dtype=None)
     return grid_s7s5s6
 
 
-
-
-def f_salep_mob(weight_s7spg, scores_s7s6pg, cvlw_s7s5pg, cvscore_s7s6pg,
+def f_salep_mob(weight_s7pg, scores_s7s6pg, cvlw_s7s5pg, cvscore_s7s6pg,
                 grid_weightrange_s7s5pg, grid_scorerange_s7s6p5g, grid_priceslw_s7s5s6pg):
     '''A function to calculate the average price of the mob based on the average specifications in the mob.
     This is to represent that the distribution of weight & specification reduces the mob average price
     This representation allows valuing individual animal management and reducing the mob distribution.
     Note: if the distribution extends below the lower range of weight or score in the grid these animals have zero value (ncv)'''
 
-    ## Probability for each lw step in grid based on the mob average weight and the coefficient of variation (CV) of weight
-    ### probability of being less than the upper value of the step (roll) - probability of less than the lower value of the step
-    prob_lw_s7s5pg = np.maximum(0, f_norm_cdf(np.roll(grid_weightrange_s7s5pg, -1, axis = 1), weight_s7spg, cvlw_s7s5pg)
-                          - f_norm_cdf(grid_weightrange_s7s5pg, weight_s7spg, cvlw_s7s5pg))
-    ## Probability for each score step in grid (fat score/CS) based on the mob average score and the CV of quality score
-    prob_score_s7s6pg = np.maximum(0, f_norm_cdf(np.roll(grid_scorerange_s7s6p5g, -1, axis = 1), scores_s7s6pg, cvscore_s7s6pg)
-                             - f_norm_cdf(grid_scorerange_s7s6p5g, scores_s7s6pg, cvscore_s7s6pg))
-    ##Probability for each cell of grid (assuming that weight & score are independent allows multiplying weight and score probabilities)
-    prob_grid_s7s5s6pg = prob_lw_s7s5pg[:,:,na, ...] * prob_score_s7s6pg[:,na,...]
+    ##loop on s7 to reduce memory
+    saleprice_mobaverage_s7pg = np.zeros_like(weight_s7pg)
+    for s7 in range(weight_s7pg.shape[0]):
+        ## Probability for each lw step in grid based on the mob average weight and the coefficient of variation (CV) of weight
+        ### probability of being less than the upper value of the step (roll) - probability of less than the lower value of the step
+        prob_lw_s5pg = np.maximum(0, f_norm_cdf(np.roll(grid_weightrange_s7s5pg[s7,...], -1, axis = 0), weight_s7pg[s7,...], cvlw_s7s5pg[s7,...])
+                              - f_norm_cdf(grid_weightrange_s7s5pg[s7,...], weight_s7pg[s7,...], cvlw_s7s5pg[s7,...]))
+        ## Probability for each score step in grid (fat score/CS) based on the mob average score and the CV of quality score
+        prob_score_s6pg = np.maximum(0, f_norm_cdf(np.roll(grid_scorerange_s7s6p5g[s7,...], -1, axis = 0), scores_s7s6pg[s7,...], cvscore_s7s6pg[s7,...])
+                                 - f_norm_cdf(grid_scorerange_s7s6p5g[s7,...], scores_s7s6pg[s7,...], cvscore_s7s6pg[s7,...]))
+        ##Probability for each cell of grid (assuming that weight & score are independent allows multiplying weight and score probabilities)
+        prob_grid_s5s6pg = prob_lw_s5pg[:,na, ...] * prob_score_s6pg
 
-    ##Average price for the mob is the sum of the probabilities in each cell of the grid and the price in that cell
-    saleprice_mobaverage_s7pg = np.sum(prob_grid_s7s5s6pg * grid_priceslw_s7s5s6pg, axis = (1, 2))
+        ##Average price for the mob is the sum of the probabilities in each cell of the grid and the price in that cell
+        saleprice_mobaverage_s7pg[s7,...] = np.sum(prob_grid_s5s6pg * grid_priceslw_s7s5s6pg[s7,...], axis = (0, 1))
     return saleprice_mobaverage_s7pg
 
 
@@ -1492,7 +1493,7 @@ def f_sale_value(cu0, cx, o_rc, o_ffcfw_pg, dressp_adj_yg, dresspercent_adj_s6pg
     weight_for_lookup_s7pg = o_ffcfw_pg * dresspercent_wt_s7pg
 
     ##Calculate mob average price in each grid from the mob average and the distribution of weight & score within the mob (this is just the price, not the total animal value)
-    price_mobaverage_s7pg = f_salep_mob(weight_for_lookup_s7pg[:,na,...], scores_s7s6pg, cvlw_s7s5pg, cvscore_s7s6pg,
+    price_mobaverage_s7pg = f_salep_mob(weight_for_lookup_s7pg, scores_s7s6pg, cvlw_s7s5pg, cvscore_s7s6pg,
                                                       grid_weightrange_s7s5pg, grid_scorerange_s7s6pg, grid_priceslw_s7s5s6pg)
 
     ##Scale price received based on month of sale
@@ -1520,8 +1521,6 @@ def f_sale_value(cu0, cx, o_rc, o_ffcfw_pg, dressp_adj_yg, dresspercent_adj_s6pg
     ###Select the maximum value across the grids
     sale_value = np.max(sale_value_s7pg, axis=0) #take max on s6 axis as well to remove it (it is singleton so no effect)
     return sale_value
-
-
 
 def f_animal_trigger_levels(index_pg, age_start, period_is_shearing_pg, a_next_s_pg, period_is_wean_pg, gender,
                             o_ebg_p, wool_genes, period_is_joining_pg, animal_mated, period_is_endmating_pg):
@@ -1569,19 +1568,21 @@ def f_treatment_unit_numbers(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, a_ny
     treatment_units_h8pg = np.stack(np.broadcast_arrays(unit0_pg, unit1_pg, unit2_pg, unit3_pg, unit4_pg, unit5_pg), axis=0)
     return treatment_units_h8pg
 
-
-
 def f_operations_triggered(animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg):
-    ##Test slice 0 of h5 axis
-    slice0_h7h2pg = animal_triggervalues_h7pg[:, na, ...] <= operations_triggerlevels_h5h7h2pg[0,...]
-    ##Test slice 1 of h5 axis
-    slice1_h7h2pg = np.logical_or(animal_triggervalues_h7pg[:, na, ...] == operations_triggerlevels_h5h7h2pg[1, ...], operations_triggerlevels_h5h7h2pg[1, ...] == np.inf)
-    ##Test slice 2 of h5 axis
-    slice2_h7h2pg = animal_triggervalues_h7pg[:, na, ...] >= operations_triggerlevels_h5h7h2pg[2,...]
-    ##Test across the conditions
-    slices_all_h7h2pg = np.logical_and(slice0_h7h2pg, np.logical_and(slice1_h7h2pg, slice2_h7h2pg))
-    ##Test across the rules (& collapse s7 axis)
-    triggered_h2pg = np.all(slices_all_h7h2pg, axis=0)
+    shape = (operations_triggerlevels_h5h7h2pg.shape[2],) + animal_triggervalues_h7pg.shape[1:]
+    triggered_h2pg = np.zeros(shape, dtype=bool)
+    for h2 in range(operations_triggerlevels_h5h7h2pg.shape[2]):
+        ##Test slice 0 of h5 axis
+        slice0_h7pg = animal_triggervalues_h7pg[:, ...] <= operations_triggerlevels_h5h7h2pg[0, :, h2, ...]
+        ##Test slice 1 of h5 axis
+        slice1_h7pg = np.logical_or(animal_triggervalues_h7pg[:, ...] == operations_triggerlevels_h5h7h2pg[1, :, h2, ...],
+                                    operations_triggerlevels_h5h7h2pg[1, :, h2, ...] == np.inf)
+        ##Test slice 2 of h5 axis
+        slice2_h7pg = animal_triggervalues_h7pg[:, ...] >= operations_triggerlevels_h5h7h2pg[2, :, h2, ...]
+        ##Test across the conditions
+        slices_all_h7pg = np.logical_and(slice0_h7pg, np.logical_and(slice1_h7pg, slice2_h7pg))
+        ##Test across the rules (& collapse s7 axis)
+        triggered_h2pg[h2,...] = np.all(slices_all_h7pg, axis=0)
     return triggered_h2pg
 
 def f_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg):
@@ -1652,7 +1653,6 @@ def f_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, ope
 
     return level_h2pg
 
-
 def f_mustering_required(application_level_h2pg, husb_operations_muster_propn_h2pg):
     ##Total mustering required for all operations
     musters_pg = np.sum(application_level_h2pg * husb_operations_muster_propn_h2pg, axis=0)
@@ -1667,8 +1667,6 @@ def f_husbandry_component(level, treatment_units, requirements, association, axe
     ##Infrastructure requirement for each animal class during the period
     component = np.sum(level * units * requirements, axis=axes_tup)
     return component
-
-
 
 def f_husbandry_requisites(level_hpg, treatment_units_h8pg, husb_requisite_cost_h6pg, husb_requisites_prob_h6hpg,a_h8_h):
     ##Number of treatment units for requisites
