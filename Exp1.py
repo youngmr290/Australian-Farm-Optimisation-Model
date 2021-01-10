@@ -237,6 +237,9 @@ def exp(row):
     with open('pkl/pkl_r_vals_{0}.pkl'.format(trial_name),"wb") as f:
         pkl.dump(r_vals,f,protocol=pkl.HIGHEST_PROTOCOL)
 
+    ##track the successful execution of trial - so we dont update a trial that didnt finish for some reason
+    trials_successfully_run = row
+
     ##determine expected time to completion - trials left multiplied by average time per trial &time for current loop
     dataset = list(np.flatnonzero(np.array(exp_data.index.get_level_values(0)) * np.array(exp_data1['run']))) #gets the ordinal index values for the trials the user wants to run that are not up to date
     processes = multiprocessing.cpu_count()
@@ -250,7 +253,7 @@ def exp(row):
     print("total time taken this loop: ", end_time - start_time)
     print('Time remaining: %s' %time_remaining)
 
-    return
+    return trials_successfully_run
 
 ##3 - works when run through anaconda prompt - if 9 runs and 8 processors, the first processor to finish, will start the 9th run
 #using map it returns outputs in the order they go in ie in the order of the exp
@@ -265,11 +268,11 @@ def main():
     ##start multiprocessing
     agents = min(multiprocessing.cpu_count(),len(dataset)) # number of agents (processes) should be min of the num of cpus or trial
     with multiprocessing.Pool(processes=agents) as pool:
-        pool.map(exp, dataset)
+        trials_successfully_run = pool.map(exp, dataset)
 
     ##update run require status - trials just run are now up to date for both pyomo and precalcs - all trials that the user wanted to run are now up to date (even if they didn't run because they were already up to date)
-    exp_data1.loc[exp_data1.index[dataset],['run']] = False
-    exp_data1.loc[exp_data1.index[dataset],['runpyomo']] = False
+    exp_data1.loc[exp_data1.index[trials_successfully_run],['run']] = False
+    exp_data1.loc[exp_data1.index[trials_successfully_run],['runpyomo']] = False
     ##return pyomo results and params dict
     return exp_data1
 
