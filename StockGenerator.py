@@ -4073,7 +4073,6 @@ def generator(params,r_vals,plots = False):
 
 
 
-    print('numbers params')
     ###########################
     #create numbers params    #
     ###########################
@@ -4091,18 +4090,34 @@ def generator(params,r_vals,plots = False):
 
     ##numbers prov - numbers at the end of a dvp with the cluster of the next dvp divided by start numbers with cluster of current period
     ###dams total provided from this period
-    numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_divide(
-          np.sum(numbers_end_tva1e1b1nwzida0e0b0xyg1[..., na,na]
-                * mask_numbers_provw8w9_tva1e1b1nw8zida0e0b0xyg1w9[..., na,:]
-                * mask_numbers_provt_k2tva1e1b1nwzida0e0b0xyg1g9[:,na,..., na]
-                * mask_numbers_provdry_k28k29tva1e1b1nwzida0e0b0xyg1[...,na,na]
-                * distribution_tva1e1b1nw8zida0e0b0xyg1w9[..., na,:]
-                * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k28k29tva1e1b1nwzida0e0b0xyg1)[..., na,na]                #The numerator has both k2 with g9 axis and without. One to reflect the decision variable (k28) and one for the constraint (k29). So I think this is all good
-                * (a_k2cluster_next_tva1e1b1nwzida0e0b0xyg1g9 == index_k29tva1e1b1nwzida0e0b0xyg1g9)[..., na],
-                axis=(b1_pos - 2, e1_pos - 2), keepdims=True)
-        , np.sum(numbers_start_va1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k28k29tva1e1b1nwzida0e0b0xyg1),
-                axis=(b1_pos, e1_pos), keepdims=True)[..., na,na], dtype=dtype) #na for w9 and g9 (use standard cluster without t/g9 axis because the denominator is (the clustering for) the decision variable as at the start of the DVP)
-    print('dams done')
+    # numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9_old = fun.f_divide(
+    #       np.sum(numbers_end_tva1e1b1nwzida0e0b0xyg1[..., na,na]
+    #             * mask_numbers_provw8w9_tva1e1b1nw8zida0e0b0xyg1w9[..., na,:]
+    #             * mask_numbers_provt_k2tva1e1b1nwzida0e0b0xyg1g9[:,na,..., na]
+    #             * mask_numbers_provdry_k28k29tva1e1b1nwzida0e0b0xyg1[...,na,na]
+    #             * distribution_tva1e1b1nw8zida0e0b0xyg1w9[..., na,:]
+    #             * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k28k29tva1e1b1nwzida0e0b0xyg1)[..., na,na]                #The numerator has both k2 with g9 axis and without. One to reflect the decision variable (k28) and one for the constraint (k29). So I think this is all good
+    #             * (a_k2cluster_next_tva1e1b1nwzida0e0b0xyg1g9 == index_k29tva1e1b1nwzida0e0b0xyg1g9)[..., na],
+    #             axis=(b1_pos - 2, e1_pos - 2), keepdims=True)
+    #     , np.sum(numbers_start_va1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k28k29tva1e1b1nwzida0e0b0xyg1),
+    #             axis=(b1_pos, e1_pos), keepdims=True)[..., na,na], dtype=dtype) #na for w9 and g9 (use standard cluster without t/g9 axis because the denominator is (the clustering for) the decision variable as at the start of the DVP)
+
+
+    numerator  = 0
+    denominator = 0
+    for b1 in range(len_b1): #loop on b1 to reduce memory
+        numerator += (np.sum(numbers_end_tva1e1b1nwzida0e0b0xyg1[:,:,:,:,b1:b1+1,..., na,na]
+                    * mask_numbers_provw8w9_tva1e1b1nw8zida0e0b0xyg1w9[..., na,:]
+                    * mask_numbers_provt_k2tva1e1b1nwzida0e0b0xyg1g9[:,na,..., na]
+                    * mask_numbers_provdry_k28k29tva1e1b1nwzida0e0b0xyg1[...,na,na]
+                    * distribution_tva1e1b1nw8zida0e0b0xyg1w9[:,:,:,:,b1:b1+1,..., na,:]
+                    * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,:,:,b1:b1+1,...] == index_k28k29tva1e1b1nwzida0e0b0xyg1)[..., na,na]                #The numerator has both k2 with g9 axis and without. One to reflect the decision variable (k28) and one for the constraint (k29). So I think this is all good
+                    * (a_k2cluster_next_tva1e1b1nwzida0e0b0xyg1g9[:,:,:,:,b1:b1+1,...] == index_k29tva1e1b1nwzida0e0b0xyg1g9)[..., na],
+                    axis=(e1_pos - 2), keepdims=True))
+        denominator += (np.sum(numbers_start_va1e1b1nwzida0e0b0xyg1[:,:,:,b1:b1+1,...] * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,:,:,b1:b1+1,...] == index_k28k29tva1e1b1nwzida0e0b0xyg1),
+                    axis=e1_pos, keepdims=True)[..., na,na]) #na for w9 and g9 (use standard cluster without t/g9 axis because the denominator is (the clustering for) the decision variable as at the start of the DVP)
+    numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_divide(numerator,denominator, dtype=dtype)
+
     ####dams transferring between ram groups in the same DVP.
     #### This occurs if the transfer is to a different ram group (a_g1_tg1 != g1) and is occurring from a prejoining dvp (type == 0) which indicates that the transfer is from prejoining dvp to prejoining dvp because the destination ram group is joining after the source
     numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = (numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9
@@ -4327,7 +4342,6 @@ def generator(params,r_vals,plots = False):
     ###########################
     # create report params    #
     ###########################
-    print('reporting')
     ##sale value - needed for reporting
     r_salevalue_ctva1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param('sire',r_salevalue_ctva1e1b1nwzida0e0b0xyg0,
                                                                           numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
@@ -4540,7 +4554,6 @@ def generator(params,r_vals,plots = False):
     #########
     #params #
     #########
-    print('params')
     keys_start=time.time()
 
     ##param keys - make numpy str to keep size small
@@ -4702,7 +4715,6 @@ def generator(params,r_vals,plots = False):
     arrays = [keys_k3, keys_k5, keys_h1, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
     index_k3k5h1tvnw8ziaxyg3 = fun.cartesian_product_simple_transpose(arrays)
 
-    print('params names done')
     ##ravel and zip params with keys. This step removes 0's first using a mask because this saves considerable time.
     ##note need to do the tups each time even if same keys because the mask may be different
     ###nsire_sire
@@ -5096,7 +5108,6 @@ def generator(params,r_vals,plots = False):
     ###############
     # report      #
     ###############
-    print('reporting2')
     '''add report values to report dict and do any additional calculations'''
 
     ##store in report dict

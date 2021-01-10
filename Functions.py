@@ -305,6 +305,8 @@ def f_update(existing_value, new_value, mask_for_new):
     try:
         if new_value.dtype == object:
             dtype = existing_value.dtype
+        # elif type(new_value)==int:
+        #     dtype = new_value.dtype
         else:
             dtype = max(existing_value.dtype, new_value.dtype)
     except AttributeError:
