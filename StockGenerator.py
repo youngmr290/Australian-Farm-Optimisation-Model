@@ -4090,19 +4090,6 @@ def generator(params,r_vals,plots = False):
 
     ##numbers prov - numbers at the end of a dvp with the cluster of the next dvp divided by start numbers with cluster of current period
     ###dams total provided from this period
-    # numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9_old = fun.f_divide(
-    #       np.sum(numbers_end_tva1e1b1nwzida0e0b0xyg1[..., na,na]
-    #             * mask_numbers_provw8w9_tva1e1b1nw8zida0e0b0xyg1w9[..., na,:]
-    #             * mask_numbers_provt_k2tva1e1b1nwzida0e0b0xyg1g9[:,na,..., na]
-    #             * mask_numbers_provdry_k28k29tva1e1b1nwzida0e0b0xyg1[...,na,na]
-    #             * distribution_tva1e1b1nw8zida0e0b0xyg1w9[..., na,:]
-    #             * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k28k29tva1e1b1nwzida0e0b0xyg1)[..., na,na]                #The numerator has both k2 with g9 axis and without. One to reflect the decision variable (k28) and one for the constraint (k29). So I think this is all good
-    #             * (a_k2cluster_next_tva1e1b1nwzida0e0b0xyg1g9 == index_k29tva1e1b1nwzida0e0b0xyg1g9)[..., na],
-    #             axis=(b1_pos - 2, e1_pos - 2), keepdims=True)
-    #     , np.sum(numbers_start_va1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k28k29tva1e1b1nwzida0e0b0xyg1),
-    #             axis=(b1_pos, e1_pos), keepdims=True)[..., na,na], dtype=dtype) #na for w9 and g9 (use standard cluster without t/g9 axis because the denominator is (the clustering for) the decision variable as at the start of the DVP)
-
-
     numerator  = 0
     denominator = 0
     for b1 in range(len_b1): #loop on b1 to reduce memory

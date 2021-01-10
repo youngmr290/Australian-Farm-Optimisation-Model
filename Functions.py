@@ -302,15 +302,26 @@ def f_update(existing_value, new_value, mask_for_new):
     '''
     ##dtype for output (primarily needed for pp when int32 and float32 create float64 which we don't want)
     ##if the new value is an object (eg contains '-') then we want to return the original dtype otherwise return the biggest dtype
-    try:
+
+    # try:
+    #     if new_value.dtype == object:
+    #         dtype = existing_value.dtype
+    #     else:
+    #         dtype = max(existing_value.dtype, new_value.dtype)
+    # except AttributeError:
+    #     pass
+
+    if isinstance(new_value,np.ndarray) and isinstance(existing_value,np.ndarray):
         if new_value.dtype == object:
             dtype = existing_value.dtype
-        # elif type(new_value)==int:
-        #     dtype = new_value.dtype
         else:
             dtype = max(existing_value.dtype, new_value.dtype)
-    except AttributeError:
-        pass
+    elif isinstance(new_value,np.ndarray):
+        dtype = new_value.dtype
+    elif isinstance(existing_value,np.ndarray):
+        dtype = existing_value.dtype
+
+
     ##convert '-' to 0 (because '-' * False == '' which causes and error when you add to existing value)
     ##need a try and except in case the new value is not a numpy array (ie it is a single value)
     try:
