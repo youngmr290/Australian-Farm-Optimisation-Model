@@ -137,8 +137,9 @@ def f_crop_monitoring(params):
     Dict for pyomo
     '''
     ##allocation
-    crop_monitor = pinp.labour['crop_monitoring']
-    date_start_d = crop_monitor.columns.values.astype('datetime64[D]')
+    fixed_crop_monitor = pinp.labour['fixed_crop_monitoring']
+    variable_crop_monitor = pinp.labour['variable_crop_monitoring']
+    date_start_d = fixed_crop_monitor.columns.values.astype('datetime64[D]')
     date_end_d = np.roll(date_start_d, -1)
     date_end_d[-1] = date_end_d[-1] + 365 #increment the first date by 1yr so it becomes the end date for the last period
     length_d = date_end_d - date_start_d
@@ -148,19 +149,26 @@ def f_crop_monitoring(params):
     ## drop last row, because it has na because it only contains the end date, therefore not a period
     monitoring_allocation_pd = monitoring_allocation_pd[:-1]
 
-    ##adjust to monitoring time per ha
-    crop_monitor_kd = crop_monitor.values #convert to numpy
-    crop_monitor_kd = crop_monitor_kd/pinp.general['pad_size'] * length_d.astype(float)/7
-
-    ##convert date range to labour periods
-    crop_monitor_kp = np.sum(crop_monitor_kd[:,np.newaxis,:] * monitoring_allocation_pd, axis=-1) #sum the d axis (monitoring date axis)
-
-    ##convert to dict and expand landuse to rotation
-    crop_monitor = pd.DataFrame(crop_monitor_kp, index=crop_monitor.index, columns=per.p_dates_df().index[:-1])
+    ##variable monitoring
+    ###adjust to monitoring time per ha
+    variable_crop_monitor_kd = variable_crop_monitor.values #convert to numpy
+    variable_crop_monitor_kd = variable_crop_monitor_kd/pinp.general['pad_size'] * length_d.astype(float)/7
+    ###convert date range to labour periods
+    variable_crop_monitor_kp = np.sum(variable_crop_monitor_kd[:,np.newaxis,:] * monitoring_allocation_pd, axis=-1) #sum the d axis (monitoring date axis)
+    ###convert to dict and expand landuse to rotation
+    variable_crop_monitor = pd.DataFrame(variable_crop_monitor_kp, index=variable_crop_monitor.index, columns=per.p_dates_df().index[:-1])
     phases_df = uinp.structure['phases']
-    crop_monitor = pd.merge(phases_df, crop_monitor, how='left', left_on=uinp.cols()[-1], right_index = True) #merge with all the phases
+    variable_crop_monitor = pd.merge(phases_df, variable_crop_monitor, how='left', left_on=uinp.cols()[-1], right_index = True) #merge with all the phases
+    params['variable_crop_monitor'] = variable_crop_monitor.drop(list(range(uinp.structure['phase_len'])), axis=1).stack().to_dict()
 
-    params['crop_monitoring'] = crop_monitor.drop(list(range(uinp.structure['phase_len'])), axis=1).stack().to_dict()
+    ##fixed monitoring
+    ###adjust from hrs/week to hrs/period
+    fixed_crop_monitor_d = fixed_crop_monitor.values
+    fixed_crop_monitor_d = fixed_crop_monitor_d * length_d.astype(float)/7
+    ###convert date range to labour periods
+    fixed_crop_monitor_p = np.sum(fixed_crop_monitor_d * monitoring_allocation_pd, axis=-1) #sum the d axis (monitoring date axis)
+
+    params['fixed_crop_monitor'] = dict(zip(per.p_dates_df().index[:-1],fixed_crop_monitor_p))
 
 
 

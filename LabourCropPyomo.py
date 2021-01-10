@@ -77,11 +77,17 @@ def labcrppyomo_local(params):
     model.p_chem_app_lab = Param(model.s_phases, model.s_lmus, model.s_labperiods, initialize= params['chem_app_time_ha'], default = 0.0, doc='time required for chem application per ha (hr/ha)')
 
     try:
-        model.del_component(model.p_crop_monitor_index)
-        model.del_component(model.p_crop_monitor)
+        model.del_component(model.p_variable_crop_monitor_index)
+        model.del_component(model.p_variable_crop_monitor)
     except AttributeError:
         pass
-    model.p_crop_monitor = Param(model.s_phases, model.s_labperiods, initialize= params['crop_monitoring'], default = 0.0, doc='time required for crop monitoring (hr/ha)')
+    model.p_variable_crop_monitor = Param(model.s_phases, model.s_labperiods, initialize= params['variable_crop_monitor'], default = 0.0, doc='time required for crop monitoring (hr/ha)')
+
+    try:
+        model.del_component(model.p_fixed_crop_monitor)
+    except AttributeError:
+        pass
+    model.p_fixed_crop_monitor = Param(model.s_labperiods, initialize= params['fixed_crop_monitor'], default = 0.0, doc='fixed time required for crop monitoring (hr/period)')
 
 
 ###################################
@@ -129,8 +135,9 @@ def mach_labour_perm(model,p):
         mach labour done by perm and manager;
         1- crop monitoring time
     '''
-    monitor_time = sum(model.p_crop_monitor[r,p] * model.v_phase_area[r,l]  for r in model.s_phases for l in model.s_lmus if model.p_crop_monitor[r,p] != 0)
-    return monitor_time
+    fixed_monitor_time = model.p_fixed_crop_monitor[p]
+    variable_monitor_time = sum(model.p_variable_crop_monitor[r,p] * model.v_phase_area[r,l]  for r in model.s_phases for l in model.s_lmus if model.p_variable_crop_monitor[r,p] != 0)
+    return variable_monitor_time + fixed_monitor_time
 
 
 
