@@ -57,9 +57,8 @@ import sys,traceback
 
 
 
-# from memory_profiler import profile
-#
-# @profile
+from memory_profiler import profile
+@profile
 def generator(params,r_vals,plots = False):
     """
     A function to wrap the generator and post processing that can be called by SheepPyomo.
@@ -4603,9 +4602,9 @@ def generator(params,r_vals,plots = False):
     arrays = [keys_g0, keys_p8]
     index_g0p8 = fun.cartesian_product_simple_transpose(arrays)
 
-    ###k5tvanwzidxyg1w9i9 - npw
-    arrays = [keys_k5, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_d, keys_x, keys_y1, keys_g1, keys_lw_prog, keys_i]
-    index_k5tva1nw8zidxyg1w9i9 = fun.cartesian_product_simple_transpose(arrays)
+    # ###k5tvanwzidxyg1w9i9 - npw
+    # arrays = [keys_k5, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_d, keys_x, keys_y1, keys_g1, keys_lw_prog, keys_i]
+    # index_k5tva1nw8zidxyg1w9i9 = fun.cartesian_product_simple_transpose(arrays)
 
     ###tdxg - npw req
     arrays = [keys_t2, keys_d, keys_x, keys_g2]
@@ -4720,10 +4719,22 @@ def generator(params,r_vals,plots = False):
     params['p_nsire_req_dams'] =dict(zip(tup_k2tvanwziyg1g0p8, nsire_k2tva1nw8ziyg1g0p8))
 
     ###number prog weaned
-    mask=npw_k5tva1e1b1nwzida0e0b0xyg1w9i9!=0
-    npw_k5tva1nw8zidxyg1w9i9 = npw_k5tva1e1b1nwzida0e0b0xyg1w9i9[mask] #applying the mask does the raveling and squeezing of singleton axis
-    mask=mask.ravel()
-    index_cut_k5tva1nw8zidxyg1w9i9=index_k5tva1nw8zidxyg1w9i9[mask,:]
+    # mask=npw_k5tva1e1b1nwzida0e0b0xyg1w9i9!=0
+    # npw_k5tva1nw8zidxyg1w9i9 = npw_k5tva1e1b1nwzida0e0b0xyg1w9i9[mask] #applying the mask does the raveling and squeezing of singleton axis
+    # mask=mask.ravel()
+    # index_cut_k5tva1nw8zidxyg1w9i9=index_k5tva1nw8zidxyg1w9i9[mask,:]
+    # tup_k5tva1nw8zidxyg1w9i9 = tuple(map(tuple, index_cut_k5tva1nw8zidxyg1w9i9))
+    # params['p_npw_dams'] =dict(zip(tup_k5tva1nw8zidxyg1w9i9, npw_k5tva1nw8zidxyg1w9i9))
+
+    npw_k5tva1nw8zidxyg1w9i9 = np.array([])
+    index_cut_k5tva1nw8zidxyg1w9i9 = np.array([])
+    for k5 in range(len(keys_k5)):
+        mask=npw_k5tva1e1b1nwzida0e0b0xyg1w9i9[k5,...]!=0
+        npw_k5tva1nw8zidxyg1w9i9 = np.concatenate([npw_k5tva1nw8zidxyg1w9i9,npw_k5tva1e1b1nwzida0e0b0xyg1w9i9[k5,mask]],0) #applying the mask does the raveling and squeezing of singleton axis
+        mask=mask.ravel()
+        arrays = [keys_k5[k5:k5+1], keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_d, keys_x, keys_y1, keys_g1, keys_lw_prog, keys_i]
+        index_tva1nw8zidxyg1w9i9 = fun.cartesian_product_simple_transpose(arrays)
+        index_cut_k5tva1nw8zidxyg1w9i9 = np.vstack([index_cut_k5tva1nw8zidxyg1w9i9,index_tva1nw8zidxyg1w9i9[mask,:]]) if index_cut_k5tva1nw8zidxyg1w9i9.size else index_tva1nw8zidxyg1w9i9[mask,:]
     tup_k5tva1nw8zidxyg1w9i9 = tuple(map(tuple, index_cut_k5tva1nw8zidxyg1w9i9))
     params['p_npw_dams'] =dict(zip(tup_k5tva1nw8zidxyg1w9i9, npw_k5tva1nw8zidxyg1w9i9))
 
@@ -4769,13 +4780,6 @@ def generator(params,r_vals,plots = False):
 
     ###numbers_prov_dams
     ####numbers provided into next period (the norm)
-    # mask=numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9!=0
-    # numbers_prov_dams_k2k2tva1nw8ziyg1g9w9 = numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[mask] #applying the mask does the raveling and squeezing of singleton axis
-    # mask=mask.ravel()
-    # index_cut_k2k2tvanwziyg1g9w=index_k2k2tvanwziyg1g9w[mask,:]
-    # tup_k2k2tvanwziyg1g9w = tuple(map(tuple, index_cut_k2k2tvanwziyg1g9w))
-    # params['p_numbers_prov_dams'] =dict(zip(tup_k2k2tvanwziyg1g9w, numbers_prov_dams_k2k2tva1nw8ziyg1g9w9))
-
     numbers_prov_dams_k2k2tva1nw8ziyg1g9w9 = np.array([])
     index_cut_k2k2tvanwziyg1g9w = np.array([])
     for w in range(len(keys_lw1)):
