@@ -541,8 +541,7 @@ def f_read_exp():
     if  len(exp_data.index.get_level_values(2)) == len(set(exp_data.index.get_level_values(2))):
         pass
     else:
-        raise exc.TrialError('''Exp.xlsx has multiple trials with the same name. 
-                                Duplicate trials are highlighted red in the name column''')
+        raise exc.TrialError('''Exp.xlsx has multiple trials with the same name.''')
 
     return exp_data
 
