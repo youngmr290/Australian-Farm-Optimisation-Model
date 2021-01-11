@@ -26,7 +26,7 @@ start=time.time()
 
 from CreateModel import model
 import CreateModel as crtmod
-import BoundsPyomo as bdypy
+import BoundsPyomo as bndpy
 import UniversalInputs as uinp
 import PropertyInputs as pinp
 import Sensitivity as sen
@@ -169,7 +169,7 @@ def exp(row):
         stubpy.stubpyomo_local(params['stub'])
         spy.stockpyomo_local(params['stock'])
         ###bounds-this must be done last because it uses sets built in some of the other modules
-        bdypy.boundarypyomo_local()
+        bndpy.boundarypyomo_local()
         results=core.coremodel_all() #have to do this so i can access the solver status
  
         ##check if user wants full solution

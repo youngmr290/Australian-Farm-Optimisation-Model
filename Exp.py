@@ -20,7 +20,7 @@ import pickle as pkl
 print("Experiment commenced at: ", time.ctime())
 
 import CreateModel as crtmod
-import BoundsPyomo as bdypy
+import BoundsPyomo as bndpy
 from CreateModel import model
 import UniversalInputs as uinp
 import PropertyInputs as pinp 
@@ -203,7 +203,7 @@ for row in range(len(exp_data)):
         ###if re-run update runpyomo to false
         exp_data1.loc[exp_data1.index[row], ('runpyomo', '', '', '')] = False
         ###bounds-this must be done last because it uses sets built in some of the other modules
-        bdypy.boundarypyomo_local()
+        bndpy.boundarypyomo_local()
 
         pyomocalc_end = time.time()
         print('localpyomo: ', pyomocalc_end - pyomocalc_start)
