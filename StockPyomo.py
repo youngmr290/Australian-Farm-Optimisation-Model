@@ -8,7 +8,6 @@ Created on Thu Feb 27 16:03:35 2020
 #python modules
 import pyomo.environ as pe
 import time
-from io import StringIO
 import numpy as np
 
 #AFO modules

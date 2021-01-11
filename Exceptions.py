@@ -5,6 +5,7 @@ Created on Sat Apr  4 09:58:05 2020
 @author: young
 
 Add model exceptions here
+This module can't import other AFO modules
 
 """
 
@@ -26,4 +27,9 @@ class ArithError(Error):
 
 class AxisError(Error):
     """Raised when incorrect axis exist"""
+    pass
+
+
+class Exp(Error):
+    """Raised when user has specified duplicate trials in exp.xlsx"""
     pass

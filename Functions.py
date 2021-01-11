@@ -36,8 +36,8 @@ from dateutil import relativedelta as rdelta
 import os.path
 import glob
 
-
 #this module shouldn't import other AFO modules
+import Exceptions as exc #can import exceptions because exceptions imports no modules
 
 ################################################
 #function to read in excel named ranges to a df#
@@ -533,9 +533,17 @@ def f_run_required(exp_data1, check_pyomo=True):
     return exp_data1
 
 def f_read_exp():
+    ##read and drop irrelevant cols
     exp_data = pd.read_excel('exp.xlsx', index_col=None, header=[0,1,2,3], engine='openpyxl')
     exp_data = exp_data.iloc[:,exp_data.columns.get_level_values(0)!='Drop']
     exp_data = exp_data.set_index(list(exp_data.columns[0:3]))
+    ##check if any trials have the same name
+    if  len(exp_data.index.get_level_values(2)) == len(set(exp_data.index.get_level_values(2))):
+        pass
+    else:
+        raise exc.TrialError('''Exp.xlsx has multiple trials with the same name. 
+                                Duplicate trials are highlighted red in the name column''')
+
     return exp_data
 
 def f_update_sen(row, exp_data, sam, saa, sap, sar, sat, sav):
