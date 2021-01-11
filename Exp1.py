@@ -12,6 +12,7 @@ import pandas as pd
 import pyomo.environ as pe
 import time
 import math
+import os
 import os.path
 from datetime import datetime
 import multiprocessing
@@ -73,8 +74,13 @@ exp_data1 = fun.f_run_required(exp_data1)
 
 ##plk a copy of exp incase the code crashes before the end. (this is tracks if a trial needed to be run)
 if __name__ == '__main__':
-    with open('pkl/pkl_exp.pkl', "wb") as f:
-        pkl.dump(exp_data1, f, protocol=pkl.HIGHEST_PROTOCOL)
+    try:
+        with open('pkl/pkl_exp.pkl', "wb") as f:
+            pkl.dump(exp_data1, f, protocol=pkl.HIGHEST_PROTOCOL)
+    except FileNotFoundError:
+        os.mkdir('pkl')
+        with open('pkl/pkl_exp.pkl', "wb") as f:
+            pkl.dump(exp_data1, f, protocol=pkl.HIGHEST_PROTOCOL)
 
 
 #########################
