@@ -42,7 +42,7 @@ import Functions as fun
 #     Returns
 #     -------
 #     None.
-#         This function is called from pyomo, which will update the mach option if nessecary
+#         This function is called from pyomo, which will update the mach option if necessary
 
 #     '''
 #     mach_opt = uinp.machine_options['mach_' + str(pinp.mach['mach_option'])]
@@ -85,7 +85,7 @@ def sup_mach_cost():
 #######################
 #seed days per period #
 #######################
-##create a copy of periods df - so it doesn't alter the origional period df that is used for labour stuff
+##create a copy of periods df - so it doesn't alter the original period df that is used for labour stuff
 # mach_periods = per.p_dates_df()#periods.copy()
 
 def seed_days(*params):
@@ -128,8 +128,8 @@ def contractseeding_occurs(params):
 #     dry_seed_start = pinp.crop['dry_seed_start']
 #     dry_seed_end = pinp.feed_inputs['feed_periods'].loc[0,'date']#dry seeding finishes when the season breaks
 #     dry_seed_len = dry_seed_end - dry_seed_start
-#     ##determine the days of dry seeding occuring in each mach period
-#     dry_days=fun.period_allocation(mach_periods['date'],mach_periods.index,dry_seed_start,dry_seed_len)['allocation'].dropna()*dry_seed_len #use the period allocation func to determine the proportion of total dry seeding occuring in each period
+#     ##determine the days of dry seeding occurring in each mach period
+#     dry_days=fun.period_allocation(mach_periods['date'],mach_periods.index,dry_seed_start,dry_seed_len)['allocation'].dropna()*dry_seed_len #use the period allocation func to determine the proportion of total dry seeding occurring in each period
 #     dry_days=dry_days/np.timedelta64(1,'D') #convert to int
 #     wet_seed_start = per.wet_seeding_start_date()
 #     seed_end = per.period_end_date(wet_seed_start, pinp.crop['seed_period_lengths'])
@@ -152,7 +152,7 @@ def grazing_days(params):
     -------
     Dict for pyomo.
         Grazing days provided by wet seeding activity (ha/day/feed period)
-        The maths behind this func is a little hard to explain - chech google doc for better info
+        The maths behind this func is a little hard to explain - check google doc for better info
     '''
     ##drop last date from feed periods because it as the start date at the end
     feed_periods=pinp.feed_inputs['feed_periods'].iloc[:-1]
@@ -576,17 +576,17 @@ def stubble_cost_ha():
 #######################################################################################################################################################
 
 ###########################
-#fert application time   # used in labour crop also, defined here because it uses inputs from the differnt mach options which are consolidated at the top of this sheet
+#fert application time   # used in labour crop also, defined here because it uses inputs from the different mach options which are consolidated at the top of this sheet
 ###########################
 
-#time taked to spread 1ha (not including driving to and from paddock and filling up)
+#time taken to spread 1ha (not including driving to and from paddock and filling up)
 # hr/ha= 10/(width*speed*efficiency)
 def time_ha():
       width_df = uinp.mach[pinp.mach['option']]['spreader_width']
       return 10/(width_df*uinp.mach[pinp.mach['option']]['spreader_speed']*uinp.mach[pinp.mach['option']]['spreader_eff'])
 
 #time taken to driving to and from paddock and filling up
-# hr/cubic m = ((ave distacne to paddock *2)/speed + fill up time)/ spreader capacity  # *2 because to and from paddock
+# hr/cubic m = ((ave distance to paddock *2)/speed + fill up time)/ spreader capacity  # *2 because to and from paddock
 def time_cubic():
       return (((pinp.mach['ave_pad_distance'] *2) 
               /uinp.mach[pinp.mach['option']]['spreader_speed'] + uinp.mach[pinp.mach['option']]['time_fill_spreader'])
@@ -649,10 +649,10 @@ def fert_app_cost_t():
 #######################################################################################################################################################
 
 ###########################
-#chem application time   # used in labour crop, defined here because it uses inputs from the differnt mach options which are consolidated at the top of this sheet
+#chem application time   # used in labour crop, defined here because it uses inputs from the different mach options which are consolidated at the top of this sheet
 ###########################
 
-##time taked to spray 1ha (use efficiency input to allow for driving to and from paddock and filling up)
+##time taken to spray 1ha (use efficiency input to allow for driving to and from paddock and filling up)
 ## hr/ha= 10/(width*speed*efficiency)
 def spray_time_ha():
       width_df = uinp.mach[pinp.mach['option']]['sprayer_width']
@@ -722,7 +722,7 @@ def total_clearing_value():
 #########################
 
 
-#total valye of crop gear x dep rate x numver of crop gear
+#total value of crop gear x dep rate x number of crop gear
 def fix_dep(params):
     params['fixed_dep'] = total_clearing_value() * uinp.finance['fixed_dep']
 
