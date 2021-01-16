@@ -536,13 +536,13 @@ def f_ra_cs(foo, hf, cr=None, zf=1):
     return ra
 
 
-def f_foo_convert(cu3, cu4, foo, i_hr_scalar, i_region, i_n_pasture_stage,i_hd_std, legume=0, pasture_stage=1, cr=None): 
+def f_foo_convert(cu3, cu4, foo, i_hr_scalar, i_region, i_n_pasture_stage,i_hd_std, legume=0, pasture_stage=1, cr=None):
     '''
     Parameters
     ----------
-    cu3 : 
+    cu3 :
         this parameter should already be slice on the c4 axis.
-    cu4 : 
+    cu4 :
         this parameter should already be slice on the c4 axis.
     '''
     ##create scalar cr if not passed in
@@ -562,7 +562,7 @@ def f_foo_convert(cu3, cu4, foo, i_hr_scalar, i_region, i_n_pasture_stage,i_hd_s
     height = np.maximum(0, np.exp(cu4[3] + cu4[0] * foo + cu4[1] * legume + cu4[2] * foo * legume) + cu4[5] + cu4[4] * foo)
     ##Height density (height per unit FOO)
     hd = fun.f_divide(height, foo_shears) #handles div0 (eg if in feedlot with no pasture or adjusted foo is less than 0)
-    ##height ratio                    
+    ##height ratio
     hr = i_hr_scalar * hd / i_hd_std
     ##calc hf
     hf = 1 + cr12 * (hr -1)
@@ -1594,10 +1594,10 @@ def f_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, ope
         ## must be same mask for 'le' and 'ge'
         maskh7_h7 = fun.f_reduce_skipfew(np.any, operations_triggerlevels_h5h7h2pg[3,:, h2, ...] != np.inf, preserveAxis=0)
 
-        ##slice opperation_triggered array
+        ##slice operation_triggered array
         operation_triggered_pg = operation_triggered_h2pg[h2,...]
 
-        ##if all values in mask are false (eg no range level needs to be calculated) then skip to next h2 (final array has 1 as defaut value so nothing needs to happen)
+        ##if all values in mask are false (eg no range level needs to be calculated) then skip to next h2 (final array has 1 as default value so nothing needs to happen)
         if any(maskh7_h7):
             ### mask the input arrays to minimise slices of h7
             animal_triggervalues_h7mask_h7pg = animal_triggervalues_h7pg[maskh7_h7]

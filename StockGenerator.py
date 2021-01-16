@@ -3697,7 +3697,7 @@ def generator(params,r_vals,plots = False):
     ###Calculate the overall min & max for p6 by taking min & max of dams & offs
     t_evmax_p6 = np.maximum(t_evmax_p6dams, t_evmax_p6offs)
     t_evmin_p6 = np.minimum(t_evmin_p6dams, t_evmin_p6offs)
-    ###Calculate the level of EV for each cutoff for each matrix feed period
+    ###Calculate the EV for each cutoff (upper value) for each matrix feed period (based on equal spacing, not equal numbers)
     ev_cutoff_p6f = t_evmax_p6[:,na] * ev_propn_f + t_evmin_p6[:,na] * (1 - ev_propn_f)
     ##allocate each sheep class to an ev group - use MRY version of searchsort which handles 2d array
     a_ev_pa1e1b1nwzida0e0b0xyg0 = fun.searchsort_multiple_dim(ev_cutoff_p6f[a_p6_p], ev_sire, 0, 0)

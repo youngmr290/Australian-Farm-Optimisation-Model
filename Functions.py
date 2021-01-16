@@ -709,17 +709,16 @@ def md_to_dmd(md):
     return (md+2)/17
 
 
-def effective_mei(dmi, md, threshold, ri=1, eff_above=0.5):
-    """Calculate MEI and scale for reduced efficiency if above animal requirements.
+def f_effective_mei(dmi, md, threshold, ri=1, eff_above=0.5):
+    """Calculate MEI and scale for reduced efficiency if quality is above animal requirements.
 
     Parameters
     ----------
     dmi       : value or array - Dry matter intake (kg).
     md        : value or array - M/D of the feed (MJ of ME / kg of DM).
-    threshold : value or array - Diet quality (ME/Vol) required by animals.
-    ri        : value or array, optional (1.0)     - Relative intake (quality and quantity).
-    eff_above : value or array, optional (0.5) - Efficiency.
-    that energy is used if above required quality and animals are gaining then losing weight.
+    threshold : value or array - Diet quality (ME/Vol) required by animals. Below the threshold: effective m/d == m/d
+    ri        : value or array, optional (1.0) - Relative intake (quality and quantity).
+    eff_above : value or array, optional (0.5) - Efficiency that energy is used if above required quality, and animals are gaining then losing weight.
 
     If inputs are provided in arrays then they must be broadcastable.
 

@@ -222,7 +222,7 @@ structure['prejoin_offset'] = 8
 structure['i_feedsupply_itn_max'] = 10
 
 ##pools
-structure['sheep_pools']=['pool0', 'pool1', 'pool2', 'pool3'] #nutrition pools
+structure['sheep_pools']=['pool0', 'pool1', 'pool2', 'pool3'] #nutritive value pools (MEI/Vol). A 5th pool would be added here for the confinement feeding pool.
 ## DSE group and LSLN (b1)
 structure['i_mask_b0_b1'] = np.array([False, False, True,	True,	True,	True,	True,	True,	False,	False,	False])
 structure['i_mated_b1'] = np.array([False, True, True,	True,	True,	True,	True,	True,	True,	True,	True])

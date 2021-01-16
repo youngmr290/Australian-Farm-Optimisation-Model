@@ -79,7 +79,7 @@ model.s_cashflow_periods = Set(initialize=uinp.structure['cashflow_periods'], do
 #stubble              #
 #######################
 
-#stubble categories -  ordered so to allow transfering between categories
+#stubble categories -  ordered so to allow transferring between categories
 model.s_stub_cat = Set(ordered=True, initialize=pinp.stubble['stub_cat_qual'].columns, doc='stubble categories') 
 
 #######################
