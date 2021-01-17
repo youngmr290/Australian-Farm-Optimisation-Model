@@ -3217,9 +3217,9 @@ def generator(params,r_vals,ev,plots = False):
     dresspercent_adj_yg0, dresspercent_adj_yg1, dresspercent_adj_yg2, dresspercent_adj_yg3 = sfun.f_c2g(uinp.parameters['i_dressp_adj_c2'],uinp.parameters['i_dressp_adj_y'], dtype=dtype)
     ##husbandry
     wool_genes_yg0, wool_genes_yg1, wool_genes_yg2, wool_genes_yg3 = sfun.f_c2g(uinp.parameters['i_wool_genes_c2'],uinp.parameters['i_wool_genes_y'], dtype=dtype)
-    mobsize_pa1e1b1nwzida0e0b0xyg0 = fun.f_reshape_expand(pinp.sheep['i_mobsize_sire_p6'][a_p6_p], p_pos) #todo it would be good to have i axis on mobsize so we can test mob size on tol
-    mobsize_pa1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(pinp.sheep['i_mobsize_dams_p6'][a_p6_p], p_pos)
-    mobsize_pa1e1b1nwzida0e0b0xyg3 = fun.f_reshape_expand(pinp.sheep['i_mobsize_offs_p6'][a_p6_p[mask_p_offs_p]], p_pos)
+    mobsize_pa1e1b1nwzida0e0b0xyg0 = fun.f_reshape_expand(pinp.sheep['i_mobsize_sire_p6i'][a_p6_p], i_pos, left_pos2=p_pos, right_pos2=i_pos, condition=pinp.sheep['i_masksire_i'], axis=i_pos)
+    mobsize_pa1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(pinp.sheep['i_mobsize_dams_p6i'][a_p6_p], i_pos, left_pos2=p_pos, right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
+    mobsize_pa1e1b1nwzida0e0b0xyg3 = fun.f_reshape_expand(pinp.sheep['i_mobsize_offs_p6i'][a_p6_p[mask_p_offs_p]], i_pos, left_pos2=p_pos, right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
     animal_mated_b1g1 = fun.f_reshape_expand(uinp.structure['i_mated_b1'], b1_pos)
     operations_triggerlevels_h5h7h2pg = fun.f_convert_to_inf(fun.f_reshape_expand(pinp.sheep['i_husb_operations_triggerlevels_h5h7h2'], p_pos-1,len_ax0=pinp.sheep['i_h2_len'],len_ax1=pinp.sheep['i_h5_len'],len_ax2=pinp.sheep['i_husb_operations_triggerlevels_h5h7h2'].shape[-1],
                                                                                   swap=True, swap2=True)).astype(dtype)  # convert -- and ++ to inf
@@ -3709,7 +3709,7 @@ def generator(params,r_vals,ev,plots = False):
     a_ev_pa1e1b1nwzida0e0b0xyg3 = fun.f_update(a_ev_pa1e1b1nwzida0e0b0xyg3,4,(feedsupplyw_pa1e1b1nwzida0e0b0xyg3 >= 3)).astype(dtypeint) #for some reason adding float32 with int32 results in float64
     ##add ev params to dict for use in pasture.py
     ev['ev_cutoff_p6f'] = ev_cutoff_p6f
-    ev['t_ev_max_p6'] = t_evmax_p6
+    ev['ev_max_p6'] = t_evmax_p6
 
     ################################
     #convert variables from p to v #
