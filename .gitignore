@@ -18,3 +18,5 @@ flowcharts
 /.pylint.d
 /.idea
 /pkl
+/*.json
+/*.csv

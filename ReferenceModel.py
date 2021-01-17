@@ -1,5 +1,6 @@
 from pyomo.core import *
 import random
+import networkx
 
 #
 # Model
@@ -27,7 +28,7 @@ model.PurchasePrice = {'WHEAT': 238.0,'CORN': 210.0,'SUGAR_BEETS': 100000.0}
 
 model.PlantingCostPerAcre = {'WHEAT': 150.0,'CORN': 230.0,'SUGAR_BEETS': 260.0}
 
-model.Yield = Param(model.CROPS,within=NonNegativeReals,initialize=0.0,mutable=True)
+model.Yield = Param(model.CROPS,within=NonNegativeReals,initialize={'WHEAT':2.0,'CORN':2.4,'SUGAR_BEETS':16.0},mutable=True) #can initilise with std param data. Then adjust in the tree function
 
 # stages=['Scenario1','Scenario2','Scenario3'] #must be titled ScenarioX when using CreateConcreteTwoStageScenarioTreeModel func
 # model.stages = Set(initialize=stages)
@@ -149,41 +150,88 @@ model.Total_Cost_Objective = Objective(rule=total_cost_rule,sense=minimize)
 #
 # Stochastic Data
 #
-stages=['Scenario1','Scenario2','Scenario3'] #must be titled ScenarioX when using CreateConcreteTwoStageScenarioTreeModel func
+stages=['BelowAverageScenario','AverageScenario','AboveAverageScenario'] #must be titled ScenarioX when using CreateConcreteTwoStageScenarioTreeModel func
 Yield = {}
-Yield['Scenario1'] = \
+Yield['BelowAverageScenario'] = \
     {'WHEAT':2.0,'CORN':2.4,'SUGAR_BEETS':16.0}
-Yield['Scenario2'] = \
+Yield['AverageScenario'] = \
     {'WHEAT':2.5,'CORN':3.0,'SUGAR_BEETS':20.0}
-Yield['Scenario3'] = \
+Yield['AboveAverageScenario'] = \
     {'WHEAT':3.0,'CORN':3.6,'SUGAR_BEETS':24.0}
+# stages=['Scenario1','Scenario2','Scenario3'] #must be titled ScenarioX when using CreateConcreteTwoStageScenarioTreeModel func
+# Yield = {}
+# Yield['Scenario1'] = \
+#     {'WHEAT':2.0,'CORN':2.4,'SUGAR_BEETS':16.0}
+# Yield['Scenario2'] = \
+#     {'WHEAT':2.5,'CORN':3.0,'SUGAR_BEETS':20.0}
+# Yield['Scenario3'] = \
+#     {'WHEAT':3.0,'CORN':3.6,'SUGAR_BEETS':24.0}
 
+#
+# def pysp_scenario_tree_model_callback():
+#     from pyomo.pysp.scenariotree.tree_structure_model \
+#         import CreateConcreteTwoStageScenarioTreeModel
+#
+#     st_model = CreateConcreteTwoStageScenarioTreeModel(len(stages))
+#
+#     first_stage = st_model.Stages.first()
+#     second_stage = st_model.Stages.last()
+#
+#     # First Stage
+#     st_model.StageCost[first_stage] = 'FirstStageCost'
+#     # st_model.StageCost[first_stage] = 0.0
+#     # st_model.StageVariables[first_stage].add('DevotedAcreage[WHEAT]')
+#     st_model.StageVariables[first_stage].add('DevotedAcreage[*]')
+#
+#     # Second Stage
+#     # st_model.StageVariables[second_stage].add('DevotedAcreage[CORN]')
+#     # st_model.StageVariables[first_stage].add('DevotedAcreage[SUGAR_BEETS]') #^how to combine
+#     st_model.StageCost[second_stage] = 'SecondStageCost'
+#     st_model.StageVariables[second_stage].add('QuantitySubQuotaSold[*]')
+#     st_model.StageVariables[second_stage].add('QuantitySuperQuotaSold[*]')
+#     st_model.StageVariables[second_stage].add('QuantityPurchased[*]')
+#
+#     return st_model
+
+##access duals
+model.dual = Suffix(direction=Suffix.IMPORT)
 
 def pysp_scenario_tree_model_callback():
-    from pyomo.pysp.scenariotree.tree_structure_model \
-        import CreateConcreteTwoStageScenarioTreeModel
+    # Return a NetworkX scenario tree.
+    g = networkx.DiGraph()
 
-    st_model = CreateConcreteTwoStageScenarioTreeModel(len(stages))
+    ce1 = 'FirstStageCost'
+    g.add_node("Root",
+               cost = ce1,
+               variables = ["DevotedAcreage[*]"],
+               derived_variables = [])
 
-    first_stage = st_model.Stages.first()
-    second_stage = st_model.Stages.last()
+    ce2 = 'SecondStageCost'
+    g.add_node("BelowAverageScenario",
+               cost = ce2,
+               variables = ["QuantitySubQuotaSold[*]",
+                            "QuantitySuperQuotaSold[*]",
+                            "QuantityPurchased[*]"],
+               derived_variables = [])
+    g.add_edge("Root", "BelowAverageScenario", weight=0.3333)
 
-    # First Stage
-    st_model.StageCost[first_stage] = 'FirstStageCost'
-    # st_model.StageCost[first_stage] = 0.0
-    # st_model.StageVariables[first_stage].add('DevotedAcreage[WHEAT]')
-    st_model.StageVariables[first_stage].add('DevotedAcreage[*]')
+    g.add_node("AverageScenario",
+               cost = ce2,
+               variables = ["QuantitySubQuotaSold[*]",
+                            "QuantitySuperQuotaSold[*]",
+                            "QuantityPurchased[*]"],
+               derived_variables = [])
+    g.add_edge("Root", "AverageScenario", weight=0.3333)
 
-    # Second Stage
-    # st_model.StageVariables[second_stage].add('DevotedAcreage[CORN]')
-    # st_model.StageVariables[first_stage].add('DevotedAcreage[SUGAR_BEETS]') #^how to combine
-    st_model.StageCost[second_stage] = 'SecondStageCost'
-    st_model.StageVariables[second_stage].add('QuantitySubQuotaSold[*]')
-    st_model.StageVariables[second_stage].add('QuantitySuperQuotaSold[*]')
-    st_model.StageVariables[second_stage].add('QuantityPurchased[*]')
+    g.add_node("AboveAverageScenario",
+               cost = ce2,
+               variables = ["QuantitySubQuotaSold[*]",
+                            "QuantitySuperQuotaSold[*]",
+                            "QuantityPurchased[*]"],
+               derived_variables = [])
+    g.add_edge("Root", "AboveAverageScenario", weight=0.3334)
 
-    return st_model
-
+    return g
 
 def pysp_instance_creation_callback(scenario_name,node_names):
     instance = model.clone()
@@ -195,6 +243,7 @@ def pysp_instance_creation_callback(scenario_name,node_names):
     # #       is very fickle in Python3.x
     # for key in sorted(RandomYield.keys()):
     #     instance.Yield[key] = random.normalvariate(*RandomYield[key])
+
     return instance
 
 
