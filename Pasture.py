@@ -306,7 +306,7 @@ def map_excel(params,r_vals):
         i_fxg_foo_oflt[1,:,:,t]             = exceldata['MedFOO'].to_numpy()
         i_me_eff_gainlose_ft[...,t]         = exceldata['MaintenanceEff'].iloc[:,0].to_numpy()
         # i_me_maintenance_vft[...,t]         = exceldata['MaintenanceEff'].iloc[:,1:].to_numpy().T
-        i_fec_maintenance_t[t]               = exceldata[MaintenanceFEC]
+        i_fec_maintenance_t[t]               = exceldata['MaintenanceFEC']
         ## # i_fxg_foo_oflt[-1,...] is calculated later and is the maximum foo that can be achieved (on that lmu in that period)
         ## # it is affected by sa on pgr so it must be calculated during the experiment where sam might be altered.
         i_fxg_pgr_oflt[0,:,:,t]             = exceldata['LowPGR'].to_numpy()
