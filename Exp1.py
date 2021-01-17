@@ -204,19 +204,12 @@ def exp(row):
             # with open('Output/Full model - %s.txt' %trial_name, 'w') as f:  #file name has to have capital
             #     f.write("My description of the instance!\n")
             #     model.display(ostream=f)
-    
-            ##This writes variable with value greater than 1 to txt file, the file is overwritten each time - used to check stuff out each iteration if you want
-            file = open('Output/Variable summary - %s.txt' %trial_name,'w') #file name has to have capital
-            file.write('Trial: %s\n'%trial_name) #the first line is the name of the trial
-            file.write('{0} profit: {1}\n'.format(trial_name, pe.value(model.profit))) #the second line is profit
-            for v in model.component_objects(pe.Var, active=True):
-                file.write("Variable %s\n" %v)   #  \n makes new line
-                for index in v:
-                    try:
-                        if v[index].value>0:
-                            file.write ("   %s %s\n" %(index, v[index].value))
-                    except: pass
-            file.close()
+
+            ##This writes variable summary for full solution
+            fun.write_variablesummary(model,row,exp_data)
+
+        ##This writes variable summary each itteration with generic file name so it is overwritten each itteration
+        fun.write_variablesummary(model,row,exp_data,1)
 
         ##this prints stuff for each trial - trial name, overall profit
         print("\nDisplaying Solution for trial: %s\n" %trial_name , '-'*60,'\n%s' %pe.value(model.profit))

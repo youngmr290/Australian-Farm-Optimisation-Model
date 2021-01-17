@@ -3240,6 +3240,7 @@ def generator(params,r_vals,ev,plots = False):
     a_nextshear_pa1e1b1nwzida0e0b0xyg3 = sfun.f_next_prev_association(offs_date_end_p, date_nextshear_pa1e1b1nwzida0e0b0xyg3, 1,'right').astype(dtypeint) #p indx of next shearing - when period is shearing this returns the current period
     gender_xyg = fun.f_reshape_expand(np.arange(len(mask_x)), x_pos)
     ##sire
+    purchcost_g0 = sfun.f_g2g(pinp.sheep['i_purchcost_sire_ig0'], 'sire', condition=pinp.sheep['i_masksire_i'], axis=0)
     date_purch_oa1e1b1nwzida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['i_date_purch_ig0'], 'sire', i_pos, left_pos2=p_pos-1, right_pos2=i_pos, condition=pinp.sheep['i_masksire_i'], axis=i_pos).astype('datetime64[D]')
     date_sale_oa1e1b1nwzida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['i_date_sale_ig0'], 'sire', i_pos, left_pos2=p_pos-1, right_pos2=i_pos, condition=pinp.sheep['i_masksire_i'], axis=i_pos).astype('datetime64[D]')
     sire_periods_g0p8y = sire_periods_g0p8[..., na].astype('datetime64[D]') + (
@@ -3623,6 +3624,15 @@ def generator(params,r_vals,ev,plots = False):
 
     husb_finish= time.time()
 
+    ##asset value infra
+    assetvalue_infra_h1 = uinp.sheep['i_infrastructure_asset_h1']
+
+    ##infra r&m cost - cost allocated equally into each cashflow period
+    rm_stockinfra_var = uinp.sheep['i_infrastructure_costvariable_h1'] / len(uinp.structure['cashflow_periods'])
+    rm_stockinfra_var_h1c = rm_stockinfra_var[:,na] * np.ones(len(uinp.structure['cashflow_periods']))
+    rm_stockinfra_fix = uinp.sheep['i_infrastructure_costfixed_h1'] / len(uinp.structure['cashflow_periods'])
+    rm_stockinfra_fix_h1c = rm_stockinfra_fix[:,na] * np.ones(len(uinp.structure['cashflow_periods']))
+
     ##combine income and cost from wool, sale and husb.
     ###sire
     assetvalue_pa1e1b1nwzida0e0b0xyg0 =  ((salevalue_pa1e1b1nwzida0e0b0xyg0 + woolvalue_pa1e1b1nwzida0e0b0xyg0) #calc asset value before adjusting by period is sale and shearing
@@ -3646,6 +3656,8 @@ def generator(params,r_vals,ev,plots = False):
     cashflow_tpa1e1b1nwzida0e0b0xyg3 =  (salevalue_tpa1e1b1nwzida0e0b0xyg3 + woolvalue_tpa1e1b1nwzida0e0b0xyg3
                                          - husbandry_cost_pg3)
 
+    ##purchase cost
+    purchcost_pa1e1b1nwzida0e0b0xyg0 = purchcost_g0 / np.sum(on_hand_pa1e1b1nwzida0e0b0xyg0, axis=0)/365 #divide cost by years onhand
 
     ######################
     # add yatf to dams   #
@@ -3747,6 +3759,8 @@ def generator(params,r_vals,ev,plots = False):
 
     ##every period - with cost (c) axis (when combining the cost the period is arrays were already applied therefore converted from 'intermittent' to 'every period'
     ##cost requires a c axis for reporting - it is summed before converting to a param because MINROE doesnt need c axis
+    purchcost_cva1e1b1nwzida0e0b0xyg0 = sfun.f_p2v_std(purchcost_g0, numbers_p=o_numbers_end_sire, period_is_tvp=period_is_startdvp_purchase_pa1e1b1nwzida0e0b0xyg0,
+                                                       a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg, index_any1tvp=index_ctpa1e1b1nwzida0e0b0xyg)
     cashflow_ctva1e1b1nwzida0e0b0xyg0 = sfun.f_p2v_std(cashflow_pa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_sire,
                                               on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0, a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg,index_any1tvp=index_ctpa1e1b1nwzida0e0b0xyg)
     cost_ctva1e1b1nwzida0e0b0xyg0 = sfun.f_p2v_std(husbandry_cost_pg0, numbers_p=o_numbers_end_sire,
@@ -4014,6 +4028,7 @@ def generator(params,r_vals,ev,plots = False):
                                                     mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3)
 
     ##cashflow & cost
+    purchcost_cva1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param('sire', purchcost_cva1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
     cashflow_ctva1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param('sire', cashflow_ctva1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
     cashflow_k2ctva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams', cashflow_ctva1e1b1nwzida0e0b0xyg1, a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],
                                                                  numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1,
@@ -4546,9 +4561,9 @@ def generator(params,r_vals,ev,plots = False):
     # plt.plot(r_md_solid_dams[:, 0, 0:2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])        #compare e1 for singles
     # plt.show()
 
-    #########
-    #params #
-    #########
+    #############
+    #params keys#
+    #############
     keys_start=time.time()
 
     ##param keys - make numpy str to keep size small
@@ -4710,6 +4725,14 @@ def generator(params,r_vals,ev,plots = False):
     arrays = [keys_k3, keys_k5, keys_h1, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
     index_k3k5h1tvnw8ziaxyg3 = fun.cartesian_product_simple_transpose(arrays)
 
+    ###h1c - infrastructure
+    arrays = [keys_h1, keys_c]
+    index_h1c = fun.cartesian_product_simple_transpose(arrays)
+
+
+    ################
+    #create params #
+    ################
     ##ravel and zip params with keys. This step removes 0's first using a mask because this saves considerable time.
     ##note need to do the tups each time even if same keys because the mask may be different
     ###nsire_sire
@@ -4957,6 +4980,20 @@ def generator(params,r_vals,ev,plots = False):
     tup_k3k5tvnw8ziaxyg3 = tuple(map(tuple, index_cut_k3k5tvnw8ziaxyg3))
     params['p_cost_offs'] =dict(zip(tup_k3k5tvnw8ziaxyg3, cost_offs_k3k5tvnw8ziaxyg3))
 
+    ###purchcost - sire
+    mask=purchcost_cva1e1b1nwzida0e0b0xyg0!=0
+    purchcost_sire_cg0 = purchcost_cva1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
+    mask=mask.ravel()
+    index_cut_cg0=index_cg0[mask,:]
+    tup_cg0 = tuple(map(tuple, index_cut_cg0))
+    params['p_purchcost_sire'] =dict(zip(tup_cg0, purchcost_sire_cg0))
+
+    ###infra r&m cost
+    tup_h1c = tuple(map(tuple,index_h1c))
+    params['p_rm_stockinfra_var'] = dict(zip(tup_h1c, rm_stockinfra_var_h1c.ravel()))
+    params['p_rm_stockinfra_fix'] = dict(zip(tup_h1c,rm_stockinfra_fix_h1c.ravel()))
+
+    
     ###assetvalue - sire
     mask=assetvalue_va1e1b1nwzida0e0b0xyg0!=0
     assetvalue_sire_g0 = assetvalue_va1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
@@ -4978,6 +5015,9 @@ def generator(params,r_vals,ev,plots = False):
     index_cut_k3k5tvnw8ziaxyg3=index_k3k5tvnw8ziaxyg3[mask,:]
     tup_k3k5tvnw8ziaxyg3 = tuple(map(tuple, index_cut_k3k5tvnw8ziaxyg3))
     params['p_assetvalue_offs'] =dict(zip(tup_k3k5tvnw8ziaxyg3, assetvalue_offs_k3k5tvnw8ziaxyg3))
+
+    ##asset value infra
+    params['p_infra'] = dict(zip(keys_h1, assetvalue_infra_h1))
 
     ###anyone labour - sire
     mask=lab_anyone_p5tva1e1b1nwzida0e0b0xyg0!=0

@@ -5,16 +5,6 @@ Created on Tue Oct 22 16:06:06 2019
 module: universal module - contains all the core input data - usually held constant/doesn't change between regions or farms'
 
 
-Version Control:
-Version     Date        Person  Change
-1.1         25Dec19     John    structure['phase_len'] = 5 (rather than 4)
-1.2         27Dec19     MRY     moved rotation input data from crop to here
-1.3         13Jan20     MRY     changed input.py to universal - and added other bits such as price, interest rates and mach options
-1.4         24Feb20     MRY     Added the capital set names to the set definition - this is required to build the pasture germination df without to many loops
-
-Known problems:
-Fixed   Date    ID by   Problem
-1.2     25Dec19 John    The phase description in inputs are the full word whereas in the rotation phase it is just the letter.
 
 @author: young
 """
@@ -74,7 +64,7 @@ if inputs_from_pickle == False:
         pkl.dump(crop_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
         
         ##sheep inputs
-        sheep_inp = fun.xl_all_named_ranges('Universal.xlsx', 'Universal', numpy=True)
+        sheep_inp = fun.xl_all_named_ranges('Universal.xlsx', 'Sheep', numpy=True)
         pkl.dump(sheep_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
         parameters_inp = fun.xl_all_named_ranges('Universal.xlsx', 'Parameters', numpy=True)
         pkl.dump(parameters_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
