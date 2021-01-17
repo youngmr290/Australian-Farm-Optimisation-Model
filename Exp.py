@@ -156,10 +156,10 @@ for row in range(len(exp_data)):
     r_vals['crplab']={}
     r_vals['sup']={}
     r_vals['stub']={}
-    r_vals['stock']={}
+    r_vals[ 'stock']={}
+    ev = {} #dict to store ev params from stockgen to be used in pasture
     ##call precalcs
     precalc_start = time.time()
-    paspy.paspyomo_precalcs(params['pas'],r_vals['pas'])
     rotpy.rotation_precalcs(params['rot'],r_vals['rot'])
     crppy.crop_precalcs(params['crop'],r_vals['crop'])
     macpy.mach_precalcs(params['mach'],r_vals['mach'])
@@ -169,7 +169,8 @@ for row in range(len(exp_data)):
     lcrppy.crplab_precalcs(params['crplab'],r_vals['crplab'])
     suppy.sup_precalcs(params['sup'],r_vals['sup'])
     stubpy.stub_precalcs(params['stub'],r_vals['stub'])
-    spy.stock_precalcs(params['stock'],r_vals['stock'])
+    spy.stock_precalcs(params['stock'],r_vals['stock'],ev)
+    paspy.paspyomo_precalcs(params['pas'],r_vals['pas'],ev)
     precalc_end = time.time()
     print('precalcs: ', precalc_end - precalc_start)
     

@@ -15,8 +15,8 @@ from CreateModel import model
 import StockGenerator as sgen
 
 
-def stock_precalcs(params, r_vals):
-    sgen.generator(params, r_vals)
+def stock_precalcs(params, r_vals, ev):
+    sgen.generator(params, r_vals, ev)
 
 
 

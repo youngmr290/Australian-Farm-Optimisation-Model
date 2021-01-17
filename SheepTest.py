@@ -16,13 +16,14 @@ import StockGenerator as sgen
 
 params=dict() #^this will come from exp once everything is done
 r_vals=dict() #^this will come from exp once everything is done
+ev={}
 
 # time_list.append(timer()) ; time_was.append("import other modules")
 
 ## call the main simulation loop & update the timer
 model.sets()
 # spy.stock_precalcs(params,report)
-sgen.generator(params, r_vals, plots=True)  # call generator direct so StockPyomo code is not cluttered
+sgen.generator(params, r_vals, ev, plots=True)  # call generator direct so StockPyomo code is not cluttered
 spy.stockpyomo_local(params)
 
 

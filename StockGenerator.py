@@ -59,7 +59,7 @@ import sys,traceback
 
 # from memory_profiler import profile
 # @profile
-def generator(params,r_vals,plots = False):
+def generator(params,r_vals,ev,plots = False):
     """
     A function to wrap the generator and post processing that can be called by SheepPyomo.
 
@@ -3707,7 +3707,9 @@ def generator(params,r_vals,plots = False):
     a_ev_pa1e1b1nwzida0e0b0xyg0 = fun.f_update(a_ev_pa1e1b1nwzida0e0b0xyg0,4,(feedsupplyw_pa1e1b1nwzida0e0b0xyg0 >= 3)).astype(dtypeint) #for some reason adding float32 with int32 results in float64
     a_ev_pa1e1b1nwzida0e0b0xyg1 = fun.f_update(a_ev_pa1e1b1nwzida0e0b0xyg1,4,(feedsupplyw_pa1e1b1nwzida0e0b0xyg1 >= 3)).astype(dtypeint) #for some reason adding float32 with int32 results in float64
     a_ev_pa1e1b1nwzida0e0b0xyg3 = fun.f_update(a_ev_pa1e1b1nwzida0e0b0xyg3,4,(feedsupplyw_pa1e1b1nwzida0e0b0xyg3 >= 3)).astype(dtypeint) #for some reason adding float32 with int32 results in float64
-
+    ##add ev params to dict for use in pasture.py
+    ev['ev_cutoff_p6f'] = ev_cutoff_p6f
+    ev['t_ev_max_p6'] = t_evmax_p6
 
     ################################
     #convert variables from p to v #
