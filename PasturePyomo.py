@@ -16,7 +16,7 @@ import Pasture as pas
 def paspyomo_precalcs(params,r_vals,ev):
     pas.map_excel(params,r_vals)                         # read inputs from Excel file and map to the python variables
     pas.calculate_germ_and_reseed(params)                          # calculate the germination for each rotation phase
-    pas.green_and_dry(params, r_vals)                            # calculate the FOO lost when destocked and the FOO gained when grazed after establishment
+    pas.green_and_dry(params, r_vals, ev)                            # calculate the FOO lost when destocked and the FOO gained when grazed after establishment
     pas.poc(params)                                     # calculate the FOO on crop paddocks and the md and vol
     pas.report_global(r_vals)                       #assign some global pas variable to r_vals
 

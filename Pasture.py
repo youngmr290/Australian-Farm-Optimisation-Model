@@ -144,6 +144,7 @@ i_germination_std_t             = np.zeros(n_pasture_types, dtype = 'float64')  
 # poc_days_of_grazing_t           = np.zeros(n_pasture_types, dtype = 'float64')  # number of days after the pasture break that (moist) seeding can begin
 i_legume_t                      = np.zeros(n_pasture_types, dtype = 'float64')  # proportion of legume in the sward
 i_grn_propn_reseeding_t         = np.zeros(n_pasture_types, dtype = 'float64')  # Proportion of the FOO available at the first grazing that is green
+i_fec_maintenance_t             = np.zeros(n_pasture_types, dtype = 'float64')  # approximate M/D for maintenance
 
 ### define the numpy arrays that will be the output from the pre-calcs for pyomo
 germination_flrt              = np.zeros(flrt,  dtype = 'float64')  # parameters for rotation phase variable: germination (kg/ha)
@@ -245,8 +246,8 @@ def map_excel(params,r_vals):
     global grn_senesce_pgrcons_ft
 #    global i_end_of_gs_t
     global t_list
-    ## define the vessels that will store the input data that require pre-defining
-    ### all need pre-defining because inputs are in separate pasture type arrays
+    ## define the numpy arrays for the input data that are only used in this function
+    ### all the numpy arrays need pre-defining because inputs are assigned to slices of the pasture type axis
 
     i_grn_senesce_daily_ft          = np.zeros(ft,  dtype = 'float64')  # proportion of green feed that senesces each period (due to leaf drop)
     # i_grn_senesce_eos_ft            = np.zeros(ft,  dtype = 'float64')  # proportion of green feed that senesces in period (due to completing life cycle)
@@ -304,7 +305,8 @@ def map_excel(params,r_vals):
         i_fxg_foo_oflt[0,:,:,t]             = exceldata['LowFOO'].to_numpy()
         i_fxg_foo_oflt[1,:,:,t]             = exceldata['MedFOO'].to_numpy()
         i_me_eff_gainlose_ft[...,t]         = exceldata['MaintenanceEff'].iloc[:,0].to_numpy()
-        i_me_maintenance_vft[...,t]         = exceldata['MaintenanceEff'].iloc[:,1:].to_numpy().T
+        # i_me_maintenance_vft[...,t]         = exceldata['MaintenanceEff'].iloc[:,1:].to_numpy().T
+        i_fec_maintenance_t[t]               = exceldata[MaintenanceFEC]
         ## # i_fxg_foo_oflt[-1,...] is calculated later and is the maximum foo that can be achieved (on that lmu in that period)
         ## # it is affected by sa on pgr so it must be calculated during the experiment where sam might be altered.
         i_fxg_pgr_oflt[0,:,:,t]             = exceldata['LowPGR'].to_numpy()
@@ -490,14 +492,10 @@ def calculate_germ_and_reseed(params):
             period      =     period_t[t]
             next_period = (period+1) % n_feed_periods
 
-            foo_grn_reseeding_flrt[period,:,:,t]        \
-              += foo_change *    proportion  * propn_grn      # add the amount of green for the first period
-            foo_grn_reseeding_flrt[next_period,:,:,t]   \
-              += foo_change * (1-proportion) * propn_grn  # add the remainder to the next period (wrapped if past the 10th period)
-            foo_dry_reseeding_flrt[period,:,:,t]       \
-              += foo_change *    proportion  * (1-propn_grn) * 0.5  # assume 50% in high & 50% into low pool. for the first period
-            foo_dry_reseeding_flrt[next_period,:,:,t]  \
-              += foo_change * (1-proportion) * (1-propn_grn) * 0.5  # add the remainder to the next period (wrapped if past the 10th period)
+            foo_grn_reseeding_flrt[period,:,:,t]      += foo_change *    proportion  * propn_grn      # add the amount of green for the first period
+            foo_grn_reseeding_flrt[next_period,:,:,t] += foo_change * (1-proportion) * propn_grn  # add the remainder to the next period (wrapped if past the 10th period)
+            foo_dry_reseeding_flrt[period,:,:,t]      += foo_change *    proportion  * (1-propn_grn) * 0.5  # assume 50% in high & 50% into low pool. for the first period
+            foo_dry_reseeding_flrt[next_period,:,:,t] += foo_change * (1-proportion) * (1-propn_grn) * 0.5  # add the remainder to the next period (wrapped if past the 10th period)
 
     ## germination and resowing to the rotation phases
     for t, pasture in enumerate(pastures):
@@ -629,7 +627,7 @@ def calculate_germ_and_reseed(params):
 ## the following method generates the PGR & FOO parameters for the growth variables. Stored in a numpy array(lmu, feed period, FOO level, grazing intensity)
 ## def green_consumption:
 
-def green_and_dry(params, r_vals):
+def green_and_dry(params, r_vals, ev):
     ''' Populates the parameter arrays for green and dry feed.
 
     Pasture growth, consumption and senescence of green feed.
@@ -646,7 +644,13 @@ def green_and_dry(params, r_vals):
     senesce_propn_dgoflt      = np.zeros(dgoflt, dtype = 'float64')
     nap_dflrt                 = np.zeros(dflrt,  dtype = 'float64')
     dry_transfer_t_dft        = np.zeros(dft,    dtype = 'float64')
+    me_maintenance_vft        = np.zeros(vft,    dtype = 'float64')
 #    foo_start_grnha_oflt      = np.zeros(oflt,   dtype = 'float64')
+
+    ## create numpy array of threshold values from the ev dictionary
+    me_maintenance_vft[0:-1, ...] = ev['ev_cutoff_p6f'].T[..., na]
+    me_maintenance_vft[-1, ...] = ev['ev_max_p6'][..., na]
+    me_maintenance_vft[me_maintenance_vft < i_fec_maintenance_t] = i_fec_maintenance_t
 
     ## dry, DM decline (high = low pools)
     dry_transfer_t_dft[...] = 1000 * (1-dry_decay_period_ft)
@@ -773,7 +777,7 @@ def green_and_dry(params, r_vals):
     #todo set me_cons to 0 in the confinement pool when the pool is added
     me_cons_grnha_vgoflt     = fun.f_effective_mei(      cons_grnha_t_goflt
                                                  ,     grn_md_grnha_goflt
-                                                 , i_me_maintenance_vft[:, na, na,:, na,:]
+                                                 ,   me_maintenance_vft[:, na, na,:, na,:]
                                                  ,           grn_ri_goflt
                                                  ,i_me_eff_gainlose_ft[:, na,:])
     me_cons_grnha_vgoflt = me_cons_grnha_vgoflt * mask_greenfeed_exists_ft[:, na,:]  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
@@ -821,7 +825,7 @@ def green_and_dry(params, r_vals):
     ## convert to effective quality per tonne
     dry_mecons_t_vdft  = fun.f_effective_mei( 1000                                    # parameters for the dry feed grazing activities: Total ME of the tonne consumed
                             ,           dry_md_vdft
-                            , i_me_maintenance_vft[:, na,:,:]
+                            ,   me_maintenance_vft[:, na,:,:]
                             ,           dry_ri_dft
                             ,i_me_eff_gainlose_ft)
     dry_mecons_t_vdft = dry_mecons_t_vdft * mask_dryfeed_exists_ft  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
