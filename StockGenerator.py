@@ -3240,7 +3240,7 @@ def generator(params,r_vals,ev,plots = False):
     a_nextshear_pa1e1b1nwzida0e0b0xyg3 = sfun.f_next_prev_association(offs_date_end_p, date_nextshear_pa1e1b1nwzida0e0b0xyg3, 1,'right').astype(dtypeint) #p indx of next shearing - when period is shearing this returns the current period
     gender_xyg = fun.f_reshape_expand(np.arange(len(mask_x)), x_pos)
     ##sire
-    purchcost_g0 = sfun.f_g2g(pinp.sheep['i_purchcost_sire_ig0'], 'sire', condition=pinp.sheep['i_masksire_i'], axis=0)
+    purchcost_g0 = sfun.f_g2g(pinp.sheep['i_purchcost_sire_ig0'], 'sire', condition=pinp.sheep['i_masksire_i'], axis=0) #Not divided by number of years onhand because the number of years of use is reflected in the number of dams that are serviced (because one sire can service multiple dam ages)
     date_purch_oa1e1b1nwzida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['i_date_purch_ig0'], 'sire', i_pos, left_pos2=p_pos-1, right_pos2=i_pos, condition=pinp.sheep['i_masksire_i'], axis=i_pos).astype('datetime64[D]')
     date_sale_oa1e1b1nwzida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['i_date_sale_ig0'], 'sire', i_pos, left_pos2=p_pos-1, right_pos2=i_pos, condition=pinp.sheep['i_masksire_i'], axis=i_pos).astype('datetime64[D]')
     sire_periods_g0p8y = sire_periods_g0p8[..., na].astype('datetime64[D]') + (
@@ -3656,9 +3656,6 @@ def generator(params,r_vals,ev,plots = False):
     cashflow_tpa1e1b1nwzida0e0b0xyg3 =  (salevalue_tpa1e1b1nwzida0e0b0xyg3 + woolvalue_tpa1e1b1nwzida0e0b0xyg3
                                          - husbandry_cost_pg3)
 
-    ##purchase cost
-    purchcost_pa1e1b1nwzida0e0b0xyg0 = purchcost_g0 / np.sum(on_hand_pa1e1b1nwzida0e0b0xyg0, axis=0)/365 #divide cost by years onhand
-
     ######################
     # add yatf to dams   #
     ######################
@@ -3759,7 +3756,7 @@ def generator(params,r_vals,ev,plots = False):
 
     ##every period - with cost (c) axis (when combining the cost the period is arrays were already applied therefore converted from 'intermittent' to 'every period'
     ##cost requires a c axis for reporting - it is summed before converting to a param because MINROE doesnt need c axis
-    purchcost_cva1e1b1nwzida0e0b0xyg0 = sfun.f_p2v_std(purchcost_pa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_sire,
+    purchcost_cva1e1b1nwzida0e0b0xyg0 = sfun.f_p2v_std(purchcost_g0, numbers_p=o_numbers_end_sire,
                                                        period_is_tvp=period_is_startdvp_purchase_pa1e1b1nwzida0e0b0xyg0,
                                                        a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg, index_any1tvp=index_ctpa1e1b1nwzida0e0b0xyg)
     cashflow_ctva1e1b1nwzida0e0b0xyg0 = sfun.f_p2v_std(cashflow_pa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_sire,
