@@ -3447,7 +3447,7 @@ def generator(params,r_vals,ev,plots = False):
 
 
     ######################
-    #calc cost and income#  #todo add infrastructure cost, and sire purchase
+    #calc cost and income#
     ######################
     calc_cost_start = time.time()
     ##calc wool value - To speed the calculation process the p array is condensed to only include periods where shearing occurs. Using a slightly different association it is then converted to a v array (this process usually used a p to v association, in this case we use s to v association).

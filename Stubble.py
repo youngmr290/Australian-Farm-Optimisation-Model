@@ -149,7 +149,7 @@ def stubble_all(params):
         comp_dmd_period=fp.iloc[:,-num_stub_cat:] #selects just the dmd from fp df for the crop of interest
         stub_cat_component_proportion.index=comp_dmd_period.columns #makes index = to column names so df mul can be done (quicker than using a loop)
         j=0 #used as scalar for stub available for in each cat below.
-        base_yields = base_yields = crp.f_base_yield()  #todo is this correct?
+        base_yields = crp.f_base_yield()
         for cat_inx, cat_name in zip(range(len(pinp.stubble['stub_cat_qual'].loc[crop])), pinp.stubble['stub_cat_qual']):
             dmd.loc[:,(crop,cat_name)]=comp_dmd_period.mul(stub_cat_component_proportion[cat_inx]).sum(axis=1) #dmd by stub category (a, b, c, d)
             ##calc relative quality before converting dmd to md - note that the equation system used is the one selected for dams in p1 - currently only cs function exists 
