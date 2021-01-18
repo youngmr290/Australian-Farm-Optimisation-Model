@@ -156,10 +156,10 @@ for row in range(len(exp_data)):
     r_vals['crplab']={}
     r_vals['sup']={}
     r_vals['stub']={}
-    r_vals['stock']={}
+    r_vals[ 'stock']={}
+    ev = {} #dict to store ev params from stockgen to be used in pasture
     ##call precalcs
     precalc_start = time.time()
-    paspy.paspyomo_precalcs(params['pas'],r_vals['pas'])
     rotpy.rotation_precalcs(params['rot'],r_vals['rot'])
     crppy.crop_precalcs(params['crop'],r_vals['crop'])
     macpy.mach_precalcs(params['mach'],r_vals['mach'])
@@ -169,7 +169,8 @@ for row in range(len(exp_data)):
     lcrppy.crplab_precalcs(params['crplab'],r_vals['crplab'])
     suppy.sup_precalcs(params['sup'],r_vals['sup'])
     stubpy.stub_precalcs(params['stub'],r_vals['stub'])
-    spy.stock_precalcs(params['stock'],r_vals['stock'])
+    spy.stock_precalcs(params['stock'],r_vals['stock'],ev)
+    paspy.paspyomo_precalcs(params['pas'],r_vals['pas'],ev)
     precalc_end = time.time()
     print('precalcs: ', precalc_end - precalc_start)
     
@@ -243,18 +244,12 @@ for row in range(len(exp_data)):
             #     f.write("My description of the instance!\n")
             #     model.display(ostream=f)
         
-            ##This writes variable with value greater than 1 to txt file - used to check stuff out each iteration if you want
-            file = open('Output/Variable summary %s.txt' %exp_data.index[row][2],'w') #file name has to have capital
-            file.write('Trial: %s\n'%exp_data.index[row][2]) #the first line is the name of the trial
-            file.write('{0} profit: {1}\n'.format(exp_data.index[row][2], pe.value(model.profit))) #the second line is profit
-            for v in model.component_objects(pe.Var, active=True):
-                file.write("Variable %s\n" %v)   #  \n makes new line
-                for index in v:
-                    try:
-                        if v[index].value>0.0001:
-                            file.write ("   %s %s\n" %(index, v[index].value))
-                    except: pass
-            file.close()
+            ##This writes variable summary for full solution
+            fun.write_variablesummary(model, row, exp_data)
+
+        ##This writes variable summary each itteration with generic file name so it is overwritten each itteration
+        fun.write_variablesummary(model, row, exp_data, 1)
+
         ##this prints stuff for each trial - trial name, overall profit
         print("\nDisplaying Solution for trial: %s\n" %exp_data.index[row][2] , '-'*60,'\n%s' %pe.value(model.profit))
         ##this check if the solver is optimal - if infeasible or error the model will quit

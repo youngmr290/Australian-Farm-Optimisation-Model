@@ -13,10 +13,10 @@ import Pasture as pas
 # import UniversalInputs as uinp
 
 
-def paspyomo_precalcs(params,r_vals):
+def paspyomo_precalcs(params,r_vals,ev):
     pas.map_excel(params,r_vals)                         # read inputs from Excel file and map to the python variables
     pas.calculate_germ_and_reseed(params)                          # calculate the germination for each rotation phase
-    pas.green_and_dry(params, r_vals)                            # calculate the FOO lost when destocked and the FOO gained when grazed after establishment
+    pas.green_and_dry(params, r_vals, ev)                            # calculate the FOO lost when destocked and the FOO gained when grazed after establishment
     pas.poc(params)                                     # calculate the FOO on crop paddocks and the md and vol
     pas.report_global(r_vals)                       #assign some global pas variable to r_vals
 
@@ -202,7 +202,7 @@ def paspyomo_local(params):
         fs = l_fp[l_fp.index(f) - 1] #need the activity level from last feed period
         return sum(sum(model.v_greenpas_ha[v,g,o,f,l,t] * -model.p_senesce_grnha[d,g,o,f,l,t] for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus)        \
                        + model.v_drypas_consumed[v,d,f,t] * model.p_dry_removal_t[d,f,t] for v in model.s_feed_pools) \
-                       - model.v_drypas_transfer[d,fs,t] * model.p_dry_transfer_t[d,fs,t] + model.v_drypas_transfer[d,f,t] * 1000 <=0 #minus 1000 is what you are transfering into constraint, p_dry_transfer is how much you get in the current period if you transferred 1t from previous period (not 1000 because you have to account for deterioration)
+                       - model.v_drypas_transfer[d,fs,t] * model.p_dry_transfer_t[d,fs,t] + model.v_drypas_transfer[d,f,t] * 1000 <=0 #minus 1000 is what you are transferring into constraint, p_dry_transfer is how much you get in the current period if you transferred 1t from previous period (not 1000 because you have to account for deterioration)
     model.con_drypas = pe.Constraint(model.s_dry_groups, model.s_feed_periods, model.s_pastures, rule = drypas, doc='High and low quality dry pasture of each type available in each period')
     
     try:
@@ -214,7 +214,7 @@ def paspyomo_local(params):
         fs = l_fp[l_fp.index(f) - 1] #need the activity level from last feed period
         return sum(sum(sum(model.v_phase_area[r,l] * -model.p_nap[d,f,l,r,t] for r in model.s_phases if model.p_nap[d,f,l,r,t] != 0)for l in model.s_lmus)        \
                        + model.v_nap_consumed[v,d,f,t] * model.p_dry_removal_t[d,f,t] for v in model.s_feed_pools) \
-                       - model.v_nap_transfer[d,fs,t] * model.p_dry_transfer_t[d,fs,t] + model.v_nap_transfer[d,f,t] * 1000 <=0 #minus 1000 is what you are transfering into constraint, p_dry_transfer is how much you get in the current period if you transferred 1t from previous period (not 1000 because you have to account for deterioration)
+                       - model.v_nap_transfer[d,fs,t] * model.p_dry_transfer_t[d,fs,t] + model.v_nap_transfer[d,f,t] * 1000 <=0 #minus 1000 is what you are transferring into constraint, p_dry_transfer is how much you get in the current period if you transferred 1t from previous period (not 1000 because you have to account for deterioration)
     model.con_nappas = pe.Constraint(model.s_dry_groups, model.s_feed_periods, model.s_pastures, rule = nappas, doc='High and low quality dry pasture of each type available in each period')
     
     try:

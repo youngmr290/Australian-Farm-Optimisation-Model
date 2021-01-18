@@ -59,7 +59,7 @@ import sys,traceback
 
 # from memory_profiler import profile
 # @profile
-def generator(params,r_vals,plots = False):
+def generator(params,r_vals,ev,plots = False):
     """
     A function to wrap the generator and post processing that can be called by SheepPyomo.
 
@@ -3217,9 +3217,9 @@ def generator(params,r_vals,plots = False):
     dresspercent_adj_yg0, dresspercent_adj_yg1, dresspercent_adj_yg2, dresspercent_adj_yg3 = sfun.f_c2g(uinp.parameters['i_dressp_adj_c2'],uinp.parameters['i_dressp_adj_y'], dtype=dtype)
     ##husbandry
     wool_genes_yg0, wool_genes_yg1, wool_genes_yg2, wool_genes_yg3 = sfun.f_c2g(uinp.parameters['i_wool_genes_c2'],uinp.parameters['i_wool_genes_y'], dtype=dtype)
-    mobsize_pa1e1b1nwzida0e0b0xyg0 = fun.f_reshape_expand(pinp.sheep['i_mobsize_sire_p6'][a_p6_p], p_pos) #todo it would be good to have i axis on mobsize so we can test mob size on tol
-    mobsize_pa1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(pinp.sheep['i_mobsize_dams_p6'][a_p6_p], p_pos)
-    mobsize_pa1e1b1nwzida0e0b0xyg3 = fun.f_reshape_expand(pinp.sheep['i_mobsize_offs_p6'][a_p6_p[mask_p_offs_p]], p_pos)
+    mobsize_pa1e1b1nwzida0e0b0xyg0 = fun.f_reshape_expand(pinp.sheep['i_mobsize_sire_p6i'][a_p6_p], i_pos, left_pos2=p_pos, right_pos2=i_pos, condition=pinp.sheep['i_masksire_i'], axis=i_pos)
+    mobsize_pa1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(pinp.sheep['i_mobsize_dams_p6i'][a_p6_p], i_pos, left_pos2=p_pos, right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
+    mobsize_pa1e1b1nwzida0e0b0xyg3 = fun.f_reshape_expand(pinp.sheep['i_mobsize_offs_p6i'][a_p6_p[mask_p_offs_p]], i_pos, left_pos2=p_pos, right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
     animal_mated_b1g1 = fun.f_reshape_expand(uinp.structure['i_mated_b1'], b1_pos)
     operations_triggerlevels_h5h7h2pg = fun.f_convert_to_inf(fun.f_reshape_expand(pinp.sheep['i_husb_operations_triggerlevels_h5h7h2'], p_pos-1,len_ax0=pinp.sheep['i_h2_len'],len_ax1=pinp.sheep['i_h5_len'],len_ax2=pinp.sheep['i_husb_operations_triggerlevels_h5h7h2'].shape[-1],
                                                                                   swap=True, swap2=True)).astype(dtype)  # convert -- and ++ to inf
@@ -3240,6 +3240,7 @@ def generator(params,r_vals,plots = False):
     a_nextshear_pa1e1b1nwzida0e0b0xyg3 = sfun.f_next_prev_association(offs_date_end_p, date_nextshear_pa1e1b1nwzida0e0b0xyg3, 1,'right').astype(dtypeint) #p indx of next shearing - when period is shearing this returns the current period
     gender_xyg = fun.f_reshape_expand(np.arange(len(mask_x)), x_pos)
     ##sire
+    purchcost_g0 = sfun.f_g2g(pinp.sheep['i_purchcost_sire_ig0'], 'sire', condition=pinp.sheep['i_masksire_i'], axis=0) #Not divided by number of years onhand because the number of years of use is reflected in the number of dams that are serviced (because one sire can service multiple dam ages)
     date_purch_oa1e1b1nwzida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['i_date_purch_ig0'], 'sire', i_pos, left_pos2=p_pos-1, right_pos2=i_pos, condition=pinp.sheep['i_masksire_i'], axis=i_pos).astype('datetime64[D]')
     date_sale_oa1e1b1nwzida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['i_date_sale_ig0'], 'sire', i_pos, left_pos2=p_pos-1, right_pos2=i_pos, condition=pinp.sheep['i_masksire_i'], axis=i_pos).astype('datetime64[D]')
     sire_periods_g0p8y = sire_periods_g0p8[..., na].astype('datetime64[D]') + (
@@ -3295,7 +3296,7 @@ def generator(params,r_vals,plots = False):
     transfer_exists_tpa1e1b1nwzida0e0b0xyg1 = np.concatenate([slices_to_add, transfer_exists_tpa1e1b1nwzida0e0b0xyg1],0)
     slices_to_add = ~slices_to_add * np.arange(len_g1)
     a_g1_tpa1e1b1nwzida0e0b0xyg1 = np.concatenate([slices_to_add, a_g1_tpa1e1b1nwzida0e0b0xyg1],0)
-    ###dvp pointer - for dams there is a new dvp each fvp- ^this is inflexible, maybe there is a better way to do this
+    ###dvp pointer - for dams there is a new dvp each fvp- #todo this is inflexible, maybe there is a better way to do this
     a_v_pa1e1b1nwzida0e0b0xyg1 = a_fvp_pa1e1b1nwzida0e0b0xyg1.astype(dtypeint)
     index_va1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(np.arange(np.max(a_v_pa1e1b1nwzida0e0b0xyg1)+1), p_pos)
     index_vpa1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(np.arange(np.max(a_v_pa1e1b1nwzida0e0b0xyg1)+1), p_pos-1)
@@ -3446,7 +3447,7 @@ def generator(params,r_vals,plots = False):
 
 
     ######################
-    #calc cost and income#  #todo add infrastructure cost, and sire purchase
+    #calc cost and income#
     ######################
     calc_cost_start = time.time()
     ##calc wool value - To speed the calculation process the p array is condensed to only include periods where shearing occurs. Using a slightly different association it is then converted to a v array (this process usually used a p to v association, in this case we use s to v association).
@@ -3623,6 +3624,15 @@ def generator(params,r_vals,plots = False):
 
     husb_finish= time.time()
 
+    ##asset value infra
+    assetvalue_infra_h1 = uinp.sheep['i_infrastructure_asset_h1']
+
+    ##infra r&m cost - cost allocated equally into each cashflow period
+    rm_stockinfra_var = uinp.sheep['i_infrastructure_costvariable_h1'] / len(uinp.structure['cashflow_periods'])
+    rm_stockinfra_var_h1c = rm_stockinfra_var[:,na] * np.ones(len(uinp.structure['cashflow_periods']))
+    rm_stockinfra_fix = uinp.sheep['i_infrastructure_costfixed_h1'] / len(uinp.structure['cashflow_periods'])
+    rm_stockinfra_fix_h1c = rm_stockinfra_fix[:,na] * np.ones(len(uinp.structure['cashflow_periods']))
+
     ##combine income and cost from wool, sale and husb.
     ###sire
     assetvalue_pa1e1b1nwzida0e0b0xyg0 =  ((salevalue_pa1e1b1nwzida0e0b0xyg0 + woolvalue_pa1e1b1nwzida0e0b0xyg0) #calc asset value before adjusting by period is sale and shearing
@@ -3645,7 +3655,6 @@ def generator(params,r_vals,plots = False):
     woolvalue_tpa1e1b1nwzida0e0b0xyg3 = woolvalue_tpa1e1b1nwzida0e0b0xyg3 * period_is_shearing_pa1e1b1nwzida0e0b0xyg3
     cashflow_tpa1e1b1nwzida0e0b0xyg3 =  (salevalue_tpa1e1b1nwzida0e0b0xyg3 + woolvalue_tpa1e1b1nwzida0e0b0xyg3
                                          - husbandry_cost_pg3)
-
 
     ######################
     # add yatf to dams   #
@@ -3697,7 +3706,7 @@ def generator(params,r_vals,plots = False):
     ###Calculate the overall min & max for p6 by taking min & max of dams & offs
     t_evmax_p6 = np.maximum(t_evmax_p6dams, t_evmax_p6offs)
     t_evmin_p6 = np.minimum(t_evmin_p6dams, t_evmin_p6offs)
-    ###Calculate the level of EV for each cutoff for each matrix feed period
+    ###Calculate the EV for each cutoff (upper value) for each matrix feed period (based on equal spacing, not equal numbers)
     ev_cutoff_p6f = t_evmax_p6[:,na] * ev_propn_f + t_evmin_p6[:,na] * (1 - ev_propn_f)
     ##allocate each sheep class to an ev group - use MRY version of searchsort which handles 2d array
     a_ev_pa1e1b1nwzida0e0b0xyg0 = fun.searchsort_multiple_dim(ev_cutoff_p6f[a_p6_p], ev_sire, 0, 0)
@@ -3707,7 +3716,9 @@ def generator(params,r_vals,plots = False):
     a_ev_pa1e1b1nwzida0e0b0xyg0 = fun.f_update(a_ev_pa1e1b1nwzida0e0b0xyg0,4,(feedsupplyw_pa1e1b1nwzida0e0b0xyg0 >= 3)).astype(dtypeint) #for some reason adding float32 with int32 results in float64
     a_ev_pa1e1b1nwzida0e0b0xyg1 = fun.f_update(a_ev_pa1e1b1nwzida0e0b0xyg1,4,(feedsupplyw_pa1e1b1nwzida0e0b0xyg1 >= 3)).astype(dtypeint) #for some reason adding float32 with int32 results in float64
     a_ev_pa1e1b1nwzida0e0b0xyg3 = fun.f_update(a_ev_pa1e1b1nwzida0e0b0xyg3,4,(feedsupplyw_pa1e1b1nwzida0e0b0xyg3 >= 3)).astype(dtypeint) #for some reason adding float32 with int32 results in float64
-
+    ##add ev params to dict for use in pasture.py
+    ev['ev_cutoff_p6f'] = ev_cutoff_p6f
+    ev['ev_max_p6'] = t_evmax_p6
 
     ################################
     #convert variables from p to v #
@@ -3745,6 +3756,9 @@ def generator(params,r_vals,plots = False):
 
     ##every period - with cost (c) axis (when combining the cost the period is arrays were already applied therefore converted from 'intermittent' to 'every period'
     ##cost requires a c axis for reporting - it is summed before converting to a param because MINROE doesnt need c axis
+    purchcost_cva1e1b1nwzida0e0b0xyg0 = sfun.f_p2v_std(purchcost_g0, numbers_p=o_numbers_end_sire,
+                                                       period_is_tvp=period_is_startdvp_purchase_pa1e1b1nwzida0e0b0xyg0,
+                                                       a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg, index_any1tvp=index_ctpa1e1b1nwzida0e0b0xyg)
     cashflow_ctva1e1b1nwzida0e0b0xyg0 = sfun.f_p2v_std(cashflow_pa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_sire,
                                               on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0, a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg,index_any1tvp=index_ctpa1e1b1nwzida0e0b0xyg)
     cost_ctva1e1b1nwzida0e0b0xyg0 = sfun.f_p2v_std(husbandry_cost_pg0, numbers_p=o_numbers_end_sire,
@@ -3945,21 +3959,28 @@ def generator(params,r_vals,plots = False):
     ###dvp0 has no transfer even though it is dvp type 0
     ###animals that are sold t[0] & t[1] only exist if the period is sale. Note t[1] sale is already masked for scan>=1 & for dry ewes only
     period_is_transfer_tva1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(period_is_transfer_tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1)
-    mask_tvars_tva1e1b1nw8zida0e0b0xyg1 = np.logical_or(np.logical_and(period_is_transfer_tva1e1b1nwzida0e0b0xyg1, index_va1e1b1nwzida0e0b0xyg1 != 0), (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1))
+    mask_tvars_tva1e1b1nw8zida0e0b0xyg1 = np.logical_or(np.logical_and(period_is_transfer_tva1e1b1nwzida0e0b0xyg1, index_va1e1b1nwzida0e0b0xyg1 != 0)
+                                                        , (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1))
     period_is_sale_tva1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(period_is_sale_tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1)
-    period_is_sale_k2tva1e1b1nwzida0e0b0xyg1 = np.sum(period_is_sale_tva1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1), axis=(e1_pos, b1_pos), keepdims=True)>0
+    period_is_sale_k2tva1e1b1nwzida0e0b0xyg1 = np.sum(period_is_sale_tva1e1b1nwzida0e0b0xyg1
+                                                      * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1)
+                                                      , axis=(e1_pos, b1_pos), keepdims=True)>0
     mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1 = np.logical_and(mask_tvars_tva1e1b1nw8zida0e0b0xyg1,
                                                            np.logical_or(period_is_sale_k2tva1e1b1nwzida0e0b0xyg1,
                                                                          index_tva1e1b1nw8zida0e0b0xyg1 >= 2))
     ####make k5 version of mask (used for npw), index_k5 + 2 is allowing for NM & 00 that are 1st 2 entries in the k2cluster that don't exist in the k5cluster
-    period_is_sale_k5tva1e1b1nwzida0e0b0xyg1 = np.sum(period_is_sale_tva1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k5tva1e1b1nwzida0e0b0xyg3+2), axis=(e1_pos, b1_pos), keepdims=True)>0
+    #### #todo alternative is mask_tvars_k5 = mask_tvars_k2[2:8] this is not any less flexible than '+2' in formula
+    period_is_sale_k5tva1e1b1nwzida0e0b0xyg1 = np.sum(period_is_sale_tva1e1b1nwzida0e0b0xyg1
+                                                      * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k5tva1e1b1nwzida0e0b0xyg3+2)
+                                                      , axis=(e1_pos, b1_pos), keepdims=True)>0
     mask_tvars_k5tva1e1b1nw8zida0e0b0xyg1 = np.logical_and(mask_tvars_tva1e1b1nw8zida0e0b0xyg1,
                                                            np.logical_or(period_is_sale_k5tva1e1b1nwzida0e0b0xyg1,
                                                                          index_tva1e1b1nw8zida0e0b0xyg1 >= 2))
 
-    ###numbers are provided by g1 to g9 (a_g1_tg1) when that transfer exists and the transfer decision variables exist
+    ###numbers are provided by g1 to g9 (a_g1_tg1) in the dvps that are transfer periods (mask_tvars) for the t slices that are not sale (transfer exists)
+    #### the association is being used as (a_g9_tg1 == index_g9)
     mask_numbers_provt_k2tva1e1b1nwzida0e0b0xyg1g9 = mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[...,na] * transfer_exists_tpa1e1b1nwzida0e0b0xyg1[..., na]  \
-                                                      * (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)[..., na, :]  #todo decide whether this code is correct or (a_g1_tg1[...,na] == index_g1[...,na,:])
+                                                      * (a_g1_tpa1e1b1nwzida0e0b0xyg1[..., na] == index_g1[..., na, :])
 
     ###numbers are required across the identity array between g1 & g9 in the periods that the transfer decision variable exists exists
     mask_numbers_reqt_k2tva1e1b1nwzida0e0b0xyg1g9 = mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[...,na] \
@@ -4005,6 +4026,7 @@ def generator(params,r_vals,plots = False):
                                                     mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3)
 
     ##cashflow & cost
+    purchcost_cva1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param('sire', purchcost_cva1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
     cashflow_ctva1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param('sire', cashflow_ctva1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
     cashflow_k2ctva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams', cashflow_ctva1e1b1nwzida0e0b0xyg1, a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...],
                                                                  numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1,
@@ -4079,7 +4101,7 @@ def generator(params,r_vals,plots = False):
     ##number of sires available at mating - sire
     numbers_startp8_va1e1b1nwzida0e0b0xyg0p8 = sfun.f_create_production_param('sire', numbers_startp8_va1e1b1nwzida0e0b0xyg0p8, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0[...,na])
     ##number of sires for required for mating - dams
-    ### mask the dams for w8 vars, t_vars. Also not mated if they are being transferred to another ram group. A transfer in the mating period indicates that the dam is going to be mated to another sire at a later date within the same DVP
+    ### mask the dams for w8 vars, t_vars. Also not mated if they are being transferred to another ram group. A transfer in the mating period (a_g1_tg1!=index_g1) indicates that the dam is going to be mated to another sire at a later date within the same DVP
     t_mask_k2tva1e1b1nw8zida0e0b0xyg1g0p8 = (mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1 * (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1))[...,na,na]
     nsire_k2tva1e1b1nwzida0e0b0xyg1g0p8 = sfun.f_create_production_param('dams', nsire_tva1e1b1nwzida0e0b0xyg1g0p8,
                                                 a_k2cluster_va1e1b1nwzida0e0b0xyg1[...,na,na], index_k2tva1e1b1nwzida0e0b0xyg1[...,na,na],
@@ -4537,9 +4559,9 @@ def generator(params,r_vals,plots = False):
     # plt.plot(r_md_solid_dams[:, 0, 0:2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])        #compare e1 for singles
     # plt.show()
 
-    #########
-    #params #
-    #########
+    #############
+    #params keys#
+    #############
     keys_start=time.time()
 
     ##param keys - make numpy str to keep size small
@@ -4701,6 +4723,14 @@ def generator(params,r_vals,plots = False):
     arrays = [keys_k3, keys_k5, keys_h1, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
     index_k3k5h1tvnw8ziaxyg3 = fun.cartesian_product_simple_transpose(arrays)
 
+    ###h1c - infrastructure
+    arrays = [keys_h1, keys_c]
+    index_h1c = fun.cartesian_product_simple_transpose(arrays)
+
+
+    ################
+    #create params #
+    ################
     ##ravel and zip params with keys. This step removes 0's first using a mask because this saves considerable time.
     ##note need to do the tups each time even if same keys because the mask may be different
     ###nsire_sire
@@ -4948,6 +4978,20 @@ def generator(params,r_vals,plots = False):
     tup_k3k5tvnw8ziaxyg3 = tuple(map(tuple, index_cut_k3k5tvnw8ziaxyg3))
     params['p_cost_offs'] =dict(zip(tup_k3k5tvnw8ziaxyg3, cost_offs_k3k5tvnw8ziaxyg3))
 
+    ###purchcost - sire
+    mask=purchcost_cva1e1b1nwzida0e0b0xyg0!=0
+    purchcost_sire_cg0 = purchcost_cva1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
+    mask=mask.ravel()
+    index_cut_cg0=index_cg0[mask,:]
+    tup_cg0 = tuple(map(tuple, index_cut_cg0))
+    params['p_purchcost_sire'] =dict(zip(tup_cg0, purchcost_sire_cg0))
+
+    ###infra r&m cost
+    tup_h1c = tuple(map(tuple,index_h1c))
+    params['p_rm_stockinfra_var'] = dict(zip(tup_h1c, rm_stockinfra_var_h1c.ravel()))
+    params['p_rm_stockinfra_fix'] = dict(zip(tup_h1c,rm_stockinfra_fix_h1c.ravel()))
+
+    
     ###assetvalue - sire
     mask=assetvalue_va1e1b1nwzida0e0b0xyg0!=0
     assetvalue_sire_g0 = assetvalue_va1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
@@ -4969,6 +5013,9 @@ def generator(params,r_vals,plots = False):
     index_cut_k3k5tvnw8ziaxyg3=index_k3k5tvnw8ziaxyg3[mask,:]
     tup_k3k5tvnw8ziaxyg3 = tuple(map(tuple, index_cut_k3k5tvnw8ziaxyg3))
     params['p_assetvalue_offs'] =dict(zip(tup_k3k5tvnw8ziaxyg3, assetvalue_offs_k3k5tvnw8ziaxyg3))
+
+    ##asset value infra
+    params['p_infra'] = dict(zip(keys_h1, assetvalue_infra_h1))
 
     ###anyone labour - sire
     mask=lab_anyone_p5tva1e1b1nwzida0e0b0xyg0!=0

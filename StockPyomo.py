@@ -15,8 +15,8 @@ from CreateModel import model
 import StockGenerator as sgen
 
 
-def stock_precalcs(params, r_vals):
-    sgen.generator(params, r_vals)
+def stock_precalcs(params, r_vals, ev):
+    sgen.generator(params, r_vals, ev)
 
 
 
@@ -147,7 +147,6 @@ def stockpyomo_local(params):
     model.v_prog = pe.Var(model.s_k5_birth_offs, model.s_sale_prog, model.s_lw_prog, model.s_season_types,
                           model.s_tol, model.s_damage, model.s_wean_times, model.s_gender,
                           model.s_groups_prog, bounds = (0,None) , doc='number of offs animals')
-
 
     ##purchases
     try:
@@ -538,22 +537,28 @@ def stockpyomo_local(params):
                              model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender, model.s_gen_merit_offs, model.s_groups_offs,
                              initialize=params['p_dse_offs'], default=0.0, doc='number of dse for each offs activity')
 
+    try:
+        model.del_component(model.p_asset_stockinfra)
+    except AttributeError:
+        pass
+    model.p_asset_stockinfra = pe.Param(model.s_infrastructure, initialize=params['p_infra'], default=0.0, doc='Asset value of infra')
 
-    # try:
-    #     model.del_component(model.p_asset_stockinfra)
-    # except AttributeError:
-    #     pass
-    # model.p_asset_stockinfra = Param(model.s_infrastructure, initialize=, default=0.0, doc='Asset value per animal mustered  or shorn')
     try:
         model.del_component(model.p_dep_stockinfra)
     except AttributeError:
         pass
     model.p_dep_stockinfra = pe.Param(model.s_infrastructure, initialize=0, default=0.0, doc='Depreciation of the asset value')
-    # try:
-    #     model.del_component(model.p_rm_stockinfra)
-    # except AttributeError:
-    #     pass
-    # model.p_rm_stockinfra = Param(model.s_infrastructure, model.s_cashflow_periods,initialize=, default=0.0, doc='Cost of R&M of the infrastructure (per animal mustered/shorn)')
+
+    try:
+        model.del_component(model.p_rm_stockinfra_fix)
+    except AttributeError:
+        pass
+    model.p_rm_stockinfra_fix = pe.Param(model.s_infrastructure, model.s_cashflow_periods,initialize=params['p_rm_stockinfra_fix'], default=0.0, doc='Fixed cost of R&M of the infrastructure')
+    try:
+        model.del_component(model.p_rm_stockinfra_var)
+    except AttributeError:
+        pass
+    model.p_rm_stockinfra_var = pe.Param(model.s_infrastructure, model.s_cashflow_periods,initialize=params['p_rm_stockinfra_var'], default=0.0, doc='Variable cost of R&M of the infrastructure (per animal mustered/shorn)')
     # try:
     #     model.del_component(model.p_lab_stockinfra)
     # except AttributeError:
@@ -562,8 +567,12 @@ def stockpyomo_local(params):
 
 
     ##purchases
-    # model.p_cost_purch_sire = Param(model.s_groups_sire, model.s_cashflow_periods,
-    #                                initialize=, default=0.0, doc='cost of purchased sires')
+    try:
+        model.del_component(model.p_cost_purch_sire)
+    except AttributeError:
+        pass
+    model.p_cost_purch_sire = pe.Param(model.s_cashflow_periods, model.s_groups_sire,
+                                   initialize=params['p_purchcost_sire'], default=0.0, doc='cost of purchased sires')
     # model.p_numberpurch_dam = Param(model.s_dvp_dams, model.s_wean_times, model.s_k2_birth_dams, model.s_lw_dams,
     #                           model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_co_conception,
     #                           model.s_co_bw, model.s_co_ww, model.s_co_cfw, model.s_co_fd, model.s_co_min_fd, model.s_co_fl, initialize=, default=0.0, doc='purchase transfer - ie how a purchased dam is allocated into damR')
@@ -850,7 +859,8 @@ def stock_pi(model,f,p6):
                for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol)
 
 def stock_cashflow(model,c):
-    # infrastructure = sum(model.p_rm_stockinfra[h3,c] * model.v_infrastructure[h3] for h3 in model.s_infrastructure)
+    infrastructure = sum(model.p_rm_stockinfra_fix[h1,c] + model.p_rm_stockinfra_var[h1,c] * model.v_infrastructure[h1]
+                         for h1 in model.s_infrastructure)
     stock = sum(model.v_sire[g0] * model.p_cashflow_sire[c,g0] for g0 in model.s_groups_sire) \
            + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_cashflow_dams[k2,c,t1,v1,a,n1,w1,z,i,y1,g1]
                       for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
@@ -864,8 +874,8 @@ def stock_cashflow(model,c):
                       for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
                       if model.p_cashflow_offs[k3,k5,c,t3,v3,n3,w3,z,i,a,x,y3,g3] != 0)
                for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol)
-
-    return stock #- infrastructure - purchases
+    purchases = sum(model.v_sire[g0] * model.p_cost_purch_sire[c,g0] for g0 in model.s_groups_sire)
+    return stock - infrastructure - purchases
 
 #     purchases = sum(model.v_sire[g0] * model.p_cost_purch_sire[g0,c] for g0 in model.s_groups_sire)  \
 #                 + sum(sum(model.v_purchase_dams[v1,w1,z,i,g1] * model.p_cost_purch_dam[v1,w1,z,i,g1,c] for v1 in model.s_dvp_dams for w1 in model.s_lw_dams for g1 in model.s_groups_dams)
@@ -875,7 +885,8 @@ def stock_cashflow(model,c):
 
 
 def stock_cost(model):
-    # infrastructure = sum(model.p_rm_stockinfra[h3,c] for c in model.s_cashflow_periods * model.v_infrastructure[h3] for h3 in model.s_infrastructure)
+    infrastructure = sum(model.p_rm_stockinfra_fix[h1,c] + model.p_rm_stockinfra_var[h1,c] * model.v_infrastructure[h1]
+                         for h1 in model.s_infrastructure for c in model.s_cashflow_periods)
     stock = sum(model.v_sire[g0] * model.p_cost_sire[g0] for g0 in model.s_groups_sire) \
             + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_cost_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
@@ -886,11 +897,12 @@ def stock_cost(model):
                       for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
                       if model.p_cost_offs[k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3] != 0)
                for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol)
-    return  stock #+ infrastructure + purchases
+    purchases = sum(model.v_sire[g0] * model.p_cost_purch_sire[c,g0] for g0 in model.s_groups_sire for c in model.s_cashflow_periods)
+    return  stock + infrastructure + purchases
 #
 #
 def stock_labour_anyone(model,p5):
-    # infrastructure = sum(model.p_lab_stockinfra[h3,p5] * model.v_infrastructure[h3,p5] for h3 in model.s_infrastructure)
+    # infrastructure = sum(model.p_lab_stockinfra[h1,p5] * model.v_infrastructure[h1,p5] for h1 in model.s_infrastructure)
     stock = sum(model.v_sire[g0] * model.p_lab_anyone_sire[p5,g0] for g0 in model.s_groups_sire)\
             + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_lab_anyone_dams[k2,p5,t1,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
@@ -904,7 +916,7 @@ def stock_labour_anyone(model,p5):
     return stock
 
 def stock_labour_perm(model,p5):
-    # infrastructure = sum(model.p_lab_stockinfra[h3,p5] * model.v_infrastructure[h3,p5] for h3 in model.s_infrastructure)
+    # infrastructure = sum(model.p_lab_stockinfra[h1,p5] * model.v_infrastructure[h1,p5] for h1 in model.s_infrastructure)
     stock = sum(model.v_sire[g0] * model.p_lab_perm_sire[p5,g0] for g0 in model.s_groups_sire)\
             + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_lab_perm_dams[k2,p5,t1,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
@@ -918,7 +930,7 @@ def stock_labour_perm(model,p5):
     return stock
 
 def stock_labour_manager(model,p5):
-    # infrastructure = sum(model.p_lab_stockinfra[h3,p5] * model.v_infrastructure[h3,p5] for h3 in model.s_infrastructure)
+    # infrastructure = sum(model.p_lab_stockinfra[h1,p5] * model.v_infrastructure[h1,p5] for h1 in model.s_infrastructure)
     stock = sum(model.v_sire[g0] * model.p_lab_manager_sire[p5,g0] for g0 in model.s_groups_sire)\
             + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_lab_manager_dams[k2,p5,t1,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
@@ -934,10 +946,10 @@ def stock_labour_manager(model,p5):
 
 
 def stock_dep(model):
-    return sum(model.p_dep_stockinfra[h3]  * model.v_infrastructure[h3] for h3 in model.s_infrastructure)
+    return sum(model.p_dep_stockinfra[h1]  * model.v_infrastructure[h1] for h1 in model.s_infrastructure)
 
 def stock_asset(model):
-    # infrastructure = sum(model.p_rm_stockinfra[h3,c] for c in model.s_cashflow_periods * model.v_infrastructure[h3] for h3 in model.s_infrastructure)
+    infrastructure = sum(model.p_asset_stockinfra[h1] for h1 in model.s_infrastructure)
     stock = sum(model.v_sire[g0] * model.p_asset_sire[g0] for g0 in model.s_groups_sire) \
             + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_asset_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
@@ -950,23 +962,8 @@ def stock_asset(model):
                for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol)
     # purchases = sum(sum(model.v_purchase_dams[v1,w1,z,i,g1] * sum(model.p_cost_purch_dam[v1,w1,z,i,g1,c] for c in model.s_cashflow_periods) for v1 in model.s_dvp_dams for w1 in model.s_lw_dams for g1 in model.s_groups_dams)
     #                 +sum(model.v_purchase_offs[v3,w3,z,i,g3] * sum(model.p_cost_purch_offs[v3,w3,z,i,g3,c] for c in model.s_cashflow_periods) for v3 in model.s_dvp_offs for w3 in model.s_lw_offs for g3 in model.s_groups_offs)
-    return  stock #+ infrastructure + purchases
-#
-# def stock_asset(model):
-#     infrastructure = sum(model.p_asset_stockinfra[h3] * model.v_infrastructure[h3] for h3 in model.s_infrastructure)
-#     stock = sum(model.v_sire[g0] * model.p_asset_sire[g0] for g0 in model.s_groups_sire)
-#           + sum(sum(sum(sum(model.v_dams[t1,v1,a,b1,n1,w1,z,i,y1,g1,r1,r2,r3,r4,r5,r6,r7] for r1 in model.s_co_conception for r2 in model.s_co_bw for r3 in  model.s_co_ww)
-#                     * model.p_asset_dams[t1,v1,a,b1,n1,w1,z,i,y1,g1,r4,r5,r6,r7] for t1 in model.s_sale_dams)
-#                     + sum(model.v_dams2sire[v1,a,b1,n1,w1,z,i,y1,g1,r1,r2,r3,r4,r5,r6,r7,g1_new] for r1 in model.s_co_conception for r2 in model.s_co_bw for r3 in  model.s_co_ww for g1_new in model.s_groups_dams)
-#                     * model.p_asset_trans_dams[v1,a,b1,n1,w1,z,i,y1,g1,r4,r5,r6,r7]
-#                     for v1 in model.s_dvp_dams for b1 in model.s_k2_birth_dams for n1 in model.s_nut_dams for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams)
-#           + sum(sum(model.v_offs[t3,v3,n3,w3,z,i,d,a,b3,x,y3,g3,r4,r5,r6,r7] * model.p_asset_offs[t3,v3,n3,w3,z,i,d,a,b3,x,y3,g3,r4,r5,r6,r7] for t3 in model.s_sale_offs)
-#                 + sum(model.v_offs2dam[v3,n3,w3,z,i,d,a,b3,x,y3,g3,r4,r5,r6,r7,g1_new] for g1_new in model.s_groups_dams)
-#                 * model.p_asset_trans_offs[v3,n3,w3,z,i,d,a,b3,x,y3,g3,r4,r5,r6,r7] for v3 in model.s_dvp_offs  for n3 in model.s_nut_offs for w3 in model.s_lw_offs for d in model.s_k3_damage_offs for b3 in model.s_k5_birth_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs)
-#           for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol for r4 in model.s_co_cfw for r5 in model.s_co_fd for r6 in model.s_co_min_fd for r7 in model.s_co_fl)
-#     return infrastructure + stock
-#
-#
+    return  stock + infrastructure #+ purchases
+
 
 ##################################
 # old methods used to find speed #

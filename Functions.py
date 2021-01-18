@@ -35,6 +35,7 @@ import pickle as pkl
 from dateutil import relativedelta as rdelta
 import os.path
 import glob
+import pyomo.environ as pe
 
 #this module shouldn't import other AFO modules
 import Exceptions as exc #can import exceptions because exceptions imports no modules
@@ -178,9 +179,6 @@ def searchsort_multiple_dim(a,v,axis_a,axis_v):
 
 #print(timeit.timeit(phases2,number=100)/100)
 #
-
-
-
 def f_reshape_expand(array, left_pos=0, len_ax0=0, len_ax1=0, len_ax2=0, swap=False, ax1=0, ax2=1, right_pos=0, left_pos2=0, right_pos2=0
                      , left_pos3=0, right_pos3=0, condition = None, axis = 0, len_ax3=0, swap2=False, ax1_2=1, ax2_2=2,
                      condition2=None, axis2=0, condition3=None, axis3=0, left_pos4=0, right_pos4=0, move=False, source=0, dest=1):
@@ -349,9 +347,9 @@ def f_update(existing_value, new_value, mask_for_new):
     return updated
 
 
-##weighted average (similar to np.average but it handles situation when sum weights = 0 - used in sheep generator - when sum weights = 0 the numbers being averaged also = 0 so just divide by 1 instead of 0
 def f_weighted_average(array, weights, axis, keepdims=False, non_zero=False, den_weights=1):
     '''
+    weighted average (similar to np.average but it handles situation when sum weights = 0 - used in sheep generator - when sum weights = 0 the numbers being averaged also = 0 so just divide by 1 instead of 0
     calculates weighted average however this will return 0 if the sum of the weights is 0 (np.average doesnt handle this)
     axis averaged along can be retained - default it is dropped.
 
@@ -383,7 +381,6 @@ def f_divide(numerator, denominator,dtype='float64'):
     mask = denominator!=0
     result[mask] = numerator[mask]/denominator[mask]
     return result
-
 
 def f_bilinear_interpolate(im, x_im, y_im, x, y):
     ##get the index of x and y within the x_im and y_im arrays
@@ -682,6 +679,33 @@ def f_produce_df(data, rows, columns, row_names=None, column_names=None):
         col_index = pd.MultiIndex.from_product(columns, names=column_names)
     return pd.DataFrame(data, index=row_index, columns=col_index)
 
+def write_variablesummary(model, row, exp_data, option=0):
+    '''
+
+    :param model: pyomo model
+    :param row: trial row
+    :param exp_data: exp info
+    :param option: 0: trial name will be included in file name
+                   1: file name will be generic
+    :return:
+    '''
+    ##This writes variable with value greater than 1 to txt file - used to check stuff out each iteration if you want
+    if option == 0:
+        file = open('Output/Variable summary %s.txt' % exp_data.index[row][2],'w')  # file name has to have capital
+    else:
+        file = open('Output/Variable summary.txt','w')  # file name has to have capital
+    file.write('Trial: %s\n' % exp_data.index[row][2])  # the first line is the name of the trial
+    file.write('{0} profit: {1}\n'.format(exp_data.index[row][2],pe.value(model.profit)))  # the second line is profit
+    for v in model.component_objects(pe.Var,active=True):
+        file.write("Variable %s\n" % v)  # \n makes new line
+        for index in v:
+            try:
+                if v[index].value > 0.0001:
+                    file.write("   %s %s\n" % (index,v[index].value))
+            except:
+                pass
+    file.close()
+
 
 #######################################
 #function for feed budget & livestock #
@@ -709,17 +733,16 @@ def md_to_dmd(md):
     return (md+2)/17
 
 
-def effective_mei(dmi, md, threshold, ri=1, eff_above=0.5):
-    """Calculate MEI and scale for reduced efficiency if above animal requirements.
+def f_effective_mei(dmi, md, threshold, ri=1, eff_above=0.5):
+    """Calculate MEI and scale for reduced efficiency if quality is above animal requirements.
 
     Parameters
     ----------
     dmi       : value or array - Dry matter intake (kg).
     md        : value or array - M/D of the feed (MJ of ME / kg of DM).
-    threshold : value or array - Diet quality (ME/Vol) required by animals.
-    ri        : value or array, optional (1.0)     - Relative intake (quality and quantity).
-    eff_above : value or array, optional (0.5) - Efficiency.
-    that energy is used if above required quality and animals are gaining then losing weight.
+    threshold : value or array - Diet quality (ME/Vol) required by animals. Below the threshold: effective m/d == m/d
+    ri        : value or array, optional (1.0) - Relative intake (quality and quantity).
+    eff_above : value or array, optional (0.5) - Efficiency that energy is used if above required quality, and animals are gaining then losing weight.
 
     If inputs are provided in arrays then they must be broadcastable.
 
@@ -848,9 +871,6 @@ def df_period_total(p_dates,p_name,*dfs):
             array[period_idx] += d.loc[date,d.columns]
     return dict(zip(p_name,array))
 
-
-
-
 ##functions below are used to manipulate the period allocation from the func above into necessary format
 ##they depend on the input type ie dict of df, and the number of entries
 
@@ -917,7 +937,6 @@ def period_allocation2(start_df, length_df, p_dates, p_name):
     df.index=allocation['period']
     return df
 
-
 def range_allocation_np(period_dates, start, length, opposite=None):
     ''' Numpy version - The proportion of each period that falls in the tested date range or proportion of date range in each period.
 
@@ -955,20 +974,6 @@ def range_allocation_np(period_dates, start, length, opposite=None):
             calc_end = np.minimum(per_end,end).astype('datetime64[D]')             #select earlier of the period end and the end of the range
             allocation_period[i,...] = np.maximum(0, (calc_end - calc_start) / (per_end - per_start)) #days between calc_end and calc_start (0 if end before start) divided by length of the period
     return allocation_period
-
-#^replaced with the function below
-# #the feed period and position in the feed period that a given date range falls
-# def period_proportion(period_dates, periods, date):
-#     #check if date falls within period
-#     period = 0
-#     proportion = 0
-#     for i in range(len(periods)-1):
-#         per_start= period_dates[i]
-#         per_end = period_dates[i + 1]
-#         if per_start <= date <= per_end:        #date is within the period
-#             period = i
-#             proportion = (date - per_start)/(per_end - per_start)
-#     return period, proportion
 
 def period_proportion_np(period_dates, date_array):
     ''' Numpy version - The period that a given date falls in.
