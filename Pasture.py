@@ -54,18 +54,18 @@ n_feed_pools    = len(uinp.structure['sheep_pools'])
 n_dry_groups    = len(uinp.structure['dry_groups'])           # Low & high quality groups for dry feed
 n_grazing_int   = len(uinp.structure['grazing_int'])          # grazing intensity in the growth/grazing activities
 n_foo_levels    = len(uinp.structure['foo_levels'])           # Low, medium & high FOO level in the growth/grazing activities
-n_feed_periods  = len(pinp.feed_inputs['feed_periods']) - 1
+n_feed_periods  = len(pinp.period['feed_periods']) - 1
 n_lmu           = len(pinp.general['lmu_area'])
 n_phases_rotn   = len(phases_rotn_df.index)
 n_pasture_types = len(pastures)   #^ need to sort timing of the definition of pastures
 
 index_f = np.arange(n_feed_periods)
 
-i_feed_period_dates   = list(pinp.feed_inputs['feed_periods']['date'])
+i_feed_period_dates   = list(pinp.period['feed_periods']['date'])
 t_list = np.arange(n_pasture_types)
 
 arable_l = np.array(pinp.crop['arable']).reshape(-1)
-length_f  = np.array(pinp.feed_inputs['feed_periods'].loc[:pinp.feed_inputs['feed_periods'].index[-2],'length']) # not including last row because that is the start of the following year. converted to np. to get @jit working
+length_f  = np.array(pinp.period['feed_periods'].loc[:pinp.period['feed_periods'].index[-2],'length']) # not including last row because that is the start of the following year. converted to np. to get @jit working
 feed_period_dates_f = np.array(i_feed_period_dates,dtype='datetime64[D]')
 
 
@@ -161,7 +161,7 @@ pasture_rt                    = np.zeros(rt, dtype = 'float64')
 ### the array returned must be of type object, if string the dict keys become a numpy string and when indexed in pyomo it doesn't work.
 keys_d                       = np.asarray(uinp.structure['dry_groups'])
 keys_v                       = np.asarray(uinp.structure['sheep_pools'])
-keys_f                       = np.asarray(pinp.feed_inputs['feed_periods'].index[:-1])
+keys_f                       = np.asarray(pinp.period['feed_periods'].index[:-1])
 keys_g                       = np.asarray(uinp.structure['grazing_int'])
 keys_l                       = pinp.general['lmu_area'].index.to_numpy() # lmu index description
 keys_o                       = np.asarray(uinp.structure['foo_levels'])
@@ -665,9 +665,9 @@ def green_and_dry(params, r_vals, ev):
     grn_foo_start_ungrazed_flt , dry_foo_start_ungrazed_flt \
          = calc_foo_profile(germination_pass_flt, dry_decay_period_ft, length_f)   # ^ passing the consumption value in a numpy array in an attempt to get the function @jit compatible
     ### all pasture from na area into the Low pool (#1) because it is rank
-    harvest_period  = fun.period_allocation(pinp.feed_inputs['feed_periods']['date'], range(len(pinp.feed_inputs['feed_periods'])), pinp.crop['harv_date']) #use range(len()) to get the row number that harvest occurs has to be row number not index name because it is used to index numpy below
-    period, proportion = fun.period_proportion_np(pinp.feed_inputs['feed_periods']['date'], pinp.crop['harv_date'])
-    params['p_harvest_period_prop']  = dict([(pinp.feed_inputs['feed_periods'].index[period], proportion)])
+    harvest_period  = fun.period_allocation(pinp.period['feed_periods']['date'], range(len(pinp.period['feed_periods'])), pinp.crop['harv_date']) #use range(len()) to get the row number that harvest occurs has to be row number not index name because it is used to index numpy below
+    period, proportion = fun.period_proportion_np(pinp.period['feed_periods']['date'], pinp.crop['harv_date'])
+    params['p_harvest_period_prop']  = dict([(pinp.period['feed_periods'].index[period], proportion)])
     nap_dflrt[0,harvest_period,...,0] = dry_foo_start_ungrazed_flt[harvest_period,:, na,0]  \
                                            * (1-arable_l.reshape(-1,1))  \
                                            * (1-np.sum(pasture_rt, axis=1))    # sum pasture proportion across the t axis to get area of crop

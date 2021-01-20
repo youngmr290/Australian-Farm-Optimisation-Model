@@ -51,8 +51,8 @@ if inputs_from_pickle == False:
         finance_inp = fun.xl_all_named_ranges("Property.xlsx","Finance")
         pkl.dump(finance_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
-        feed_inp = fun.xl_all_named_ranges("Property.xlsx","Feed Budget") #automatically read in the periods as dates
-        pkl.dump(feed_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
+        period_inp = fun.xl_all_named_ranges("Property.xlsx","Periods") #automatically read in the periods as dates
+        pkl.dump(period_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
         sup_inp = fun.xl_all_named_ranges("Property.xlsx","Sup Feed") #automatically read in the periods as dates
         pkl.dump(sup_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
@@ -86,7 +86,7 @@ else:
 
         finance_inp = pkl.load(f)
 
-        feed_inp = pkl.load(f)
+        period_inp = pkl.load(f)
 
         sup_inp = pkl.load(f)
 
@@ -107,7 +107,7 @@ crop=crop_inp.copy()
 mach=mach_inp.copy()
 stubble=stubble_inp.copy()
 finance=finance_inp.copy()
-feed_inputs=feed_inp.copy()
+period=period_inp.copy()
 supfeed=sup_inp.copy()
 sheep=sheep_inp.copy()
 feedsupply=feedsupply_inp.copy()

@@ -635,14 +635,14 @@ def generator(params,r_vals,ev,plots = False):
     ##date joined (when the rams go in)
     date_joined_oa1e1b1nwzida0e0b0xyg1 = date_born1st_oa1e1b1nwzida0e0b0xyg2 - cp_dams[1,...,0:1,:].astype('timedelta64[D]') #take slice 0 from y axis because cp1 is not affected by genetic merit
     ##expand feed periods over all the years of the sim so that an association between sim period can be made.
-    feedperiods_p6 = np.array(pinp.feed_inputs['feed_periods']['date']).astype('datetime64[D]')[:-1] #convert from df to numpy remove last date because that is the end date of the last period (not required)
+    feedperiods_p6 = np.array(pinp.period['feed_periods']['date']).astype('datetime64[D]')[:-1] #convert from df to numpy remove last date because that is the end date of the last period (not required)
     feedperiods_p6 = feedperiods_p6 + np.timedelta64(365,'D') * ((date_start_p[0].astype(object).year -1) - feedperiods_p6[0].astype(object).year) #this is to make sure the first sim period date is greater than the first feed period date.
     feedperiods_p6 = np.ravel(feedperiods_p6  + (np.arange(np.ceil(sim_years +1)) * np.timedelta64(365,'D') )[...,na]) #expand then ravel to return 1d array of the feed period dates expanded the length of the sim. +1 because feed periods start and finish mid yr so add one to ensure they go to the end of the sim.
 
 
     ## break of season fvp ^the following two lines of code will have to change once season type is included into the feedperiod inputs (the input will have z axis so the reshaping will need to be done in two steps ie pass in pos2 arg) and apply z mask
     #numbers and production redivided at the start of a new season type.
-    # breakseason_y = pinp.feed_inputs['feed_periods'].loc[0,'date'].to_datetime64().astype('datetime64[D]') + (np.arange(np.ceil(sim_years)) * np.timedelta64(365,'D'))
+    # breakseason_y = pinp.period['feed_periods'].loc[0,'date'].to_datetime64().astype('datetime64[D]') + (np.arange(np.ceil(sim_years)) * np.timedelta64(365,'D'))
     startseason_y = date_start_p[0] + (np.arange(np.ceil(sim_years)) * np.timedelta64(365,'D'))
     seasonstart_ya1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(startseason_y, left_pos=p_pos)
     idx_ya1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, seasonstart_ya1e1b1nwzida0e0b0xyg, 'right')-1 #gets the sim period index for the period when season breaks (eg break of season fvp starts at the beginning of the sim period when season breaks), side=right so that if the date is already the start of a period it remains in that period.
@@ -783,7 +783,7 @@ def generator(params,r_vals,ev,plots = False):
     ##start of season
     a_seasonstart_pa1e1b1nwzida0e0b0xyg = np.apply_along_axis(sfun.f_next_prev_association, 0, seasonstart_ya1e1b1nwzida0e0b0xyg, date_end_p, 1,'right')
     ##MIDAS feed period for each sim period
-    a_p6_p = sfun.f_next_prev_association(feedperiods_p6, date_end_p, 1,'right') % (len(pinp.feed_inputs['feed_periods'])-1) #% 10 required to convert association back to only the number of feed periods, -1 because the end feed period date is included
+    a_p6_p = sfun.f_next_prev_association(feedperiods_p6, date_end_p, 1,'right') % (len(pinp.period['feed_periods'])-1) #% 10 required to convert association back to only the number of feed periods, -1 because the end feed period date is included
 
     ##shearing opp (previous/current)
     a_prev_s_pa1e1b1nwzida0e0b0xyg0 = np.apply_along_axis(sfun.f_next_prev_association, 0, date_shear_sa1e1b1nwzida0e0b0xyg0, date_end_p, 1,'right')
@@ -4474,7 +4474,7 @@ def generator(params,r_vals,ev,plots = False):
     ###############
     ## report dse #
     ###############
-    days_p6 = np.array(pinp.feed_inputs['feed_periods'].loc[:pinp.feed_inputs['feed_periods'].index[-2], 'length'])  # not including last row because that is the start of the following year.
+    days_p6 = np.array(pinp.period['feed_periods'].loc[:pinp.period['feed_periods'].index[-2], 'length'])  # not including last row because that is the start of the following year.
     days_p6_p6tva1e1b1nwzida0e0b0xyg = fun.f_reshape_expand(days_p6, p_pos-2)
     ###DSE based on MJ/d
     ####returns the average mj/d for each animal for the each feed period (mei accounts for if the animal is on hand - if the animal is sold the average mei/d will be lower in that dvp)
@@ -4584,7 +4584,7 @@ def generator(params,r_vals,ev,plots = False):
     keys_n1 = np.array(uinp.structure['i_n_idx_dams'])
     keys_n3 = np.array(uinp.structure['i_n_idx_offs'])
     keys_p5 = np.array(per.p_date2_df().index).astype('str')
-    keys_p6 = np.array(pinp.feed_inputs['feed_periods'].index[:-1]).astype('str')
+    keys_p6 = np.array(pinp.period['feed_periods'].index[:-1]).astype('str')
     keys_p8 = np.array(['sire_per%s'%i for i in range(len_p8)])
     keys_t1 = np.array(['t%s'%i for i in range(len_t1)])
     keys_t2 = np.array(['t%s'%i for i in range(len_t2)])

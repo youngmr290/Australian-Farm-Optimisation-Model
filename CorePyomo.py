@@ -370,22 +370,116 @@ def coremodel_all():
     #solve
     #######################################################################################################################################################
     #######################################################################################################################################################
+
+    if pinp.general['steady_state']:
     
-    ##sometimes if there is a bug when solved it is good to write lp here - because the code doesn't run to the other place where lp written
-    # model.write('Output/test.lp',io_options={'symbolic_solver_labels':True}) #comment this out when not debugging
-    
-    ##tells the solver you want duals and rc
-    try:
-        model.del_component(model.dual)
-    except AttributeError:
-        pass
-    model.dual = pe.Suffix(direction=pe.Suffix.IMPORT)
-    try:
-        model.del_component(model.rc)
-    except AttributeError:
-        pass
-    model.rc = pe.Suffix(direction=pe.Suffix.IMPORT)
-    ##solve - tee=True will print out solver information
-    results = pe.SolverFactory('glpk').solve(model, tee=True) #turn to true for solver output - may be useful for troubleshooting
-    return results
+        ##sometimes if there is a bug when solved it is good to write lp here - because the code doesn't run to the other place where lp written
+        # model.write('Output/test.lp',io_options={'symbolic_solver_labels':True}) #comment this out when not debugging
+
+        ##tells the solver you want duals and rc
+        try:
+            model.del_component(model.dual)
+        except AttributeError:
+            pass
+        model.dual = pe.Suffix(direction=pe.Suffix.IMPORT)
+        try:
+            model.del_component(model.rc)
+        except AttributeError:
+            pass
+        model.rc = pe.Suffix(direction=pe.Suffix.IMPORT)
+        ##solve - tee=True will print out solver information
+        results = pe.SolverFactory('glpk').solve(model, tee=True) #turn to true for solver output - may be useful for troubleshooting
+        return results
+
+    else:
+        #todo include some error handling - eg cant run multiple TOL at the same time. Need different stage allocation for each tol. thus could use an if statement to pick the allocation used
+        #todo each variable needs to assigned to stage - give error if that does not happen
+        #todo cant allocate one variable to multiple stages
+        #allocate labour provide variables to the last stage??
+        #stage definitions differ for different nodes to the allocation will need to be based on the node as well eg for ealry break labour period 3 might be in stage 2 but for late break it might be in stage 3
+        ##specify stages for variables when all variables go into the same stage
+        root_vars=['v_quantity_perm[*]','v_quantity_manager[*]']
+        root_sets=['FP9']
+        stage1_node1_vars=[]
+        stage1_node2_vars=[]
+        stage1_node1_sets=['FP0', 'FP1','P']
+        stage1_node2_sets=['FP0', 'FP1','P']
+        stage2_vars=['v_phase_area[*]']
+        stage2_sets=['FP2','FP3','FP4','FP5','FP6','FP7','FP8']
+        stage3_vars=['v_sell_grain[*]', 'v_credit[*]', 'v_debit[*]', 'v_dep[*]', 'v_asset[*]', 'v_minroe[*]', 'v_buy_grain[*]'] #buy grain may not be in stage 3, i feel like you retain grain for the year ahead without knowing the type of season. but then the model will just counter by altering sale of grain.
+        stage3_sets=['FP9']
+
+
+        for v in model.component_objects(pe.Var,active=True):
+            for index in v:
+
+        def pysp_scenario_tree_model_callback():
+            # Return a NetworkX scenario tree.
+            g = networkx.DiGraph()
+
+            ce1 = 'FirstStageCost'
+            g.add_node("Root",
+                       cost=ce1,
+                       variables=["DevotedAcreage[*]"],
+                       derived_variables=[])
+
+            ce2 = 'SecondStageCost'
+            g.add_node("BelowAverageScenario",
+                       cost=ce2,
+                       variables=["QuantitySubQuotaSold[*]",
+                                  "QuantitySuperQuotaSold[*]",
+                                  "QuantityPurchased[*]"],
+                       derived_variables=[])
+            g.add_edge("Root","BelowAverageScenario",weight=0.3333)
+
+            g.add_node("AverageScenario",
+                       cost=ce2,
+                       variables=["QuantitySubQuotaSold[*]",
+                                  "QuantitySuperQuotaSold[*]",
+                                  "QuantityPurchased[*]"],
+                       derived_variables=[])
+            g.add_edge("Root","AverageScenario",weight=0.3333)
+
+            g.add_node("AboveAverageScenario",
+                       cost=ce2,
+                       variables=["QuantitySubQuotaSold[*]",
+                                  "QuantitySuperQuotaSold[*]",
+                                  "QuantityPurchased[*]"],
+                       derived_variables=[])
+            g.add_edge("Root","AboveAverageScenario",weight=0.3334)
+
+            return g
+
+        def pysp_instance_creation_callback(scenario_name,node_names):
+            instance = model.clone()
+            instance.Yield.store_values(Yield[scenario_name])
+            # seed_random(scenario_name)
+            # # Note: Must sort the iteration order so that
+            # #       data is generated deterministically
+            # #       across runs. Iteration over dict and set
+            # #       is very fickle in Python3.x
+            # for key in sorted(RandomYield.keys()):
+            #     instance.Yield[key] = random.normalvariate(*RandomYield[key])
+
+            return instance
+
+    concrete_tree = pysp_scenario_tree_model_callback()
+    stsolver = rapper.StochSolver(None,tree_model=concrete_tree,fsfct=pysp_instance_creation_callback)
+    ef_sol = stsolver.solve_ef('glpk',tee=True)
+    print(ef_sol.solver.termination_condition)
+    obj = stsolver.root_E_obj()
+    print("Expecatation take over scenarios=",obj)
+    for varname,varval in stsolver.root_Var_solution():  # doctest: +SKIP
+        print(varname,str(varval))
+
+    ##saves file to csv
+    csvw.write_csv_soln(stsolver.scenario_tree,"solution")
+    ##saves file to json
+    jsonw.JSONSolutionWriter.write('',stsolver.scenario_tree,
+                                   'ef')  # i dont know what the first arg does?? it needs to exist but can put any string without changing output
+
+    ##load json back in
+    with open('ef_solution.json') as f:
+        data = json.load(f)
+
     

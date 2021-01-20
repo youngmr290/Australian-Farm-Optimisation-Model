@@ -57,7 +57,7 @@ def stubble_all(params):
     '''
 
     #create df with feed periods
-    fp = pinp.feed_inputs['feed_periods'].iloc[:-1].copy() #removes last row, some reason i need to copy so that i don't get settingcopywarning
+    fp = pinp.period['feed_periods'].iloc[:-1].copy() #removes last row, some reason i need to copy so that i don't get settingcopywarning
     cat_a_st_req=pd.DataFrame()
     cat_b_st_prov=pd.DataFrame() #provide tr ie cat A provides stub b tr - done straight as a dict because value doesn't change for different periods
     cat_b_st_req=pd.DataFrame() #requirement for tr ie cat B requires stub b tr - done straight as a dict because value doesn't change for different periods, this would have to change if trampling was different for periods
@@ -75,7 +75,7 @@ def stubble_all(params):
     ##create mask which is stubble available. Stubble is available from the period harvest starts to the beginning of the following growing season.
     ##if the end date of the fp is after harvest then stubble is available.
     harv_date = pinp.crop['harv_date']
-    mask_stubble_exists = pinp.feed_inputs['feed_periods'].loc['FP1':, 'date'] > harv_date  #need to use the full fp array that has the end date of the last period.
+    mask_stubble_exists = pinp.period['feed_periods'].loc['FP1':, 'date'] > harv_date  #need to use the full fp array that has the end date of the last period.
     mask_stubble_exists = mask_stubble_exists.values #convert to numpy
 
     #########################

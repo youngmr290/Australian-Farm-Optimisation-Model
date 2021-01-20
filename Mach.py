@@ -126,7 +126,7 @@ def contractseeding_occurs(params):
 #     '''
 #     mach_periods = per.p_dates_df()
 #     dry_seed_start = pinp.crop['dry_seed_start']
-#     dry_seed_end = pinp.feed_inputs['feed_periods'].loc[0,'date']#dry seeding finishes when the season breaks
+#     dry_seed_end = pinp.period['feed_periods'].loc[0,'date']#dry seeding finishes when the season breaks
 #     dry_seed_len = dry_seed_end - dry_seed_start
 #     ##determine the days of dry seeding occurring in each mach period
 #     dry_days=fun.period_allocation(mach_periods['date'],mach_periods.index,dry_seed_start,dry_seed_len)['allocation'].dropna()*dry_seed_len #use the period allocation func to determine the proportion of total dry seeding occurring in each period
@@ -155,7 +155,7 @@ def grazing_days(params):
         The maths behind this func is a little hard to explain - check google doc for better info
     '''
     ##drop last date from feed periods because it as the start date at the end
-    feed_periods=pinp.feed_inputs['feed_periods'].iloc[:-1]
+    feed_periods=pinp.period['feed_periods'].iloc[:-1]
     ##run mach period func to get all the seeding day info
     mach_periods = seed_days()
     ##create df which all grazing days are added
@@ -332,7 +332,7 @@ def yield_penalty(params):
     mach_periods = per.p_dates_df()
     mach_penalty = pd.DataFrame()  #adds the average yield penalty for each crop for each period to the df 
     dry_seed_start = pinp.crop['dry_seed_start']
-    dry_seed_end = pinp.feed_inputs['feed_periods'].loc['FP0','date']#dry seeding finishes when the season breaks
+    dry_seed_end = pinp.period['feed_periods'].loc['FP0','date']#dry seeding finishes when the season breaks
     seed_start = per.wet_seeding_start_date()
     # seed_end = per.period_end_date(per.wet_seeding_start_date(),pinp.crop['seed_period_lengths'])
     penalty_free_days = dt.timedelta(days = pinp.crop['seed_period_lengths'][0].astype(np.float64))

@@ -45,7 +45,7 @@ jsonw.JSONSolutionWriter.write('',stsolver.scenario_tree,'ef') #i dont know what
 ##load json back in
 with open('ef_solution.json') as f:
   data = json.load(f)
-d
+
 # print(value(refm.model.Total_Cost_Objective))
 # model.Total_Cost_Objective.pprint()
 #

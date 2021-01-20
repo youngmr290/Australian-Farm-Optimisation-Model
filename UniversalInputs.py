@@ -51,10 +51,6 @@ if inputs_from_pickle == False:
         mach_general_inp = fun.xl_all_named_ranges("Universal.xlsx","Mach General")
         pkl.dump(mach_general_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
         
-        ##feed inputs
-        feed_inputs_inp = fun.xl_all_named_ranges("Universal.xlsx","Feed Budget")
-        pkl.dump(feed_inputs_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
-        
         ##sup inputs
         sup_inp = fun.xl_all_named_ranges("Universal.xlsx","Sup Feed")
         pkl.dump(sup_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
@@ -87,8 +83,6 @@ else:
         
         mach_general_inp = pkl.load(f)
         
-        feed_inputs_inp = pkl.load(f)
-        
         sup_inp = pkl.load(f)
         
         crop_inp = pkl.load(f)
@@ -105,7 +99,6 @@ print('- finished')
 price = price_inp.copy()
 finance = finance_inp.copy()
 mach_general = mach_general_inp.copy()
-feed_inputs = feed_inputs_inp.copy()
 supfeed = sup_inp.copy()
 crop = crop_inp.copy()
 sheep = sheep_inp.copy()

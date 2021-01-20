@@ -70,7 +70,7 @@ labour periods and length
 #also used in mach sheet
 def wet_seeding_start_date():
     #wet seeding starts a specified number of days after season break
-    return pinp.feed_inputs['feed_periods'].loc['FP0','date'] +  datetime.timedelta(days = pinp.crop['seeding_after_season_start'])
+    return pinp.period['feed_periods'].loc['FP0','date'] +  datetime.timedelta(days = pinp.crop['seeding_after_season_start'])
 
 
 #this function requires start date and length of each period (as a list) and spits out the start dates of each period
@@ -97,45 +97,48 @@ def period_end_date(start, length):
 
 #This function determines the start dates of the labour periods. generally each period begins at the start of the month except seeding and harvest periods (which need to be separate because the labour force works more hours during those periods)
 def p_dates_df():
-    periods = pd.DataFrame(columns=['date'])
-    #create empty list of dates to be filled by this function
-    period_start_dates = []
-    #determine the start of the first period, this references feed periods so it has the same yr.
-    start_date_period_1 = pinp.feed_inputs['feed_periods'].loc['FP0','date'] + relativedelta(day=1,month=1)
-    #end date of all labour periods, simply one yr after start date.
-    date_last_period = start_date_period_1 + relativedelta(years=1)
-    #start point for the loop counter.
-    date = start_date_period_1
-    #loop that runs until the loop counter reached the end date.
-    while date <= date_last_period:
-        #if not a seed period then
-        if date < wet_seeding_start_date() or date > period_end_date(wet_seeding_start_date(),pinp.crop['seed_period_lengths']):
-            #if not a harvest period then just simply add 1 month and append that date to the list
-            if date < pinp.crop['harv_date'] or date > period_end_date(pinp.crop['harv_date'],pinp.crop['harv_period_lengths']):
-                period_start_dates.append(date)
-                date += uinp.structure['labour_period_len']
-            #if harvest period then append the harvest dates to the list and adjust the loop counter (date) to the start of the following time period (time period is determined by standard period length in the input sheet).
+    if pinp.general['steady_state']:
+        periods = pd.DataFrame(columns=['date'])
+        #create empty list of dates to be filled by this function
+        period_start_dates = []
+        #determine the start of the first period, this references feed periods so it has the same yr.
+        start_date_period_1 = pinp.period['feed_periods'].loc['FP0','date'] + relativedelta(day=1,month=1)
+        #end date of all labour periods, simply one yr after start date.
+        date_last_period = start_date_period_1 + relativedelta(years=1)
+        #start point for the loop counter.
+        date = start_date_period_1
+        #loop that runs until the loop counter reached the end date.
+        while date <= date_last_period:
+            #if not a seed period then
+            if date < wet_seeding_start_date() or date > period_end_date(wet_seeding_start_date(),pinp.crop['seed_period_lengths']):
+                #if not a harvest period then just simply add 1 month and append that date to the list
+                if date < pinp.crop['harv_date'] or date > period_end_date(pinp.crop['harv_date'],pinp.crop['harv_period_lengths']):
+                    period_start_dates.append(date)
+                    date += uinp.structure['labour_period_len']
+                #if harvest period then append the harvest dates to the list and adjust the loop counter (date) to the start of the following time period (time period is determined by standard period length in the input sheet).
+                else:
+                    start = pinp.crop['harv_date']
+                    length = pinp.crop['harv_period_lengths']
+                    for i in range(len(period_dates(start, length))):
+                        period_start_dates.append(period_dates(start, length)[i])
+                    #end period can't be included in harvest date function above because then when that function is used to determine labour hours available in each period the period following harvest will also get more hours.
+                    period_start_dates.append(period_end_date(start, length))
+                    date = period_end_date(start, length) + uinp.structure['labour_period_len'] + relativedelta(day=1)
+            #if seed period then append the seed dates to the list and adjust the loop counter (date) to the start of the following time period (time period is determined by standard period length in the input sheet).
             else:
-                start = pinp.crop['harv_date']
-                length = pinp.crop['harv_period_lengths']
+                start = wet_seeding_start_date()
+                length = pinp.crop['seed_period_lengths']
                 for i in range(len(period_dates(start, length))):
                     period_start_dates.append(period_dates(start, length)[i])
-                #end period can't be included in harvest date function above because then when that function is used to determine labour hours available in each period the period following harvest will also get more hours.
                 period_start_dates.append(period_end_date(start, length))
                 date = period_end_date(start, length) + uinp.structure['labour_period_len'] + relativedelta(day=1)
-        #if seed period then append the seed dates to the list and adjust the loop counter (date) to the start of the following time period (time period is determined by standard period length in the input sheet).
-        else:
-            start = wet_seeding_start_date()
-            length = pinp.crop['seed_period_lengths']
-            for i in range(len(period_dates(start, length))):
-                period_start_dates.append(period_dates(start, length)[i])
-            period_start_dates.append(period_end_date(start, length))
-            date = period_end_date(start, length) + uinp.structure['labour_period_len'] + relativedelta(day=1)
-    #add the list of dates to the labour dataframe
-    periods['date']=period_start_dates
-    ##modify index
-    index = ['P%02d' % i for i in range(len(periods))]
-    periods.index = index
+        #add the list of dates to the labour dataframe
+        periods['date']=period_start_dates
+        ##modify index
+        index = ['P%02d' % i for i in range(len(periods))]
+        periods.index = index
+    else:
+        periods = pinp.period['i_dsp_lp']
     return periods
 
 # drop last row, because it only contains the end date, this version of the df is used for creating the period set and when determining labour allocation
@@ -143,4 +146,4 @@ def p_date2_df():
     periods=p_dates_df()
     return periods.drop(periods.tail(1).index)
 
-
+# print(p_date2_df())
