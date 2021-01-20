@@ -3203,7 +3203,8 @@ def generator(params,r_vals,ev,plots = False):
         a_nextisprejoin_pa1e1b1nwzida0e0b0xyg3 = sfun.f_next_prev_association(offs_date_end_p, date_prejoin_next_pa1e1b1nwzida0e0b0xyg1, 1, 'right').astype(dtypeint) - 1  #p indx of next period is prejoining - when nextperiod is prejoining this returns the current period
 
         ## the dam lifetime adjustment (for the p, e1, b1 & w axes) are based on the LW profile of the dams themselves and scaled by the number of progeny they rear as a proportion of the total number weaned.
-        sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1 = o_cfw_ltwadj_pdams[a_nextisprejoin_pa1e1b1nwzida0e0b0xyg1] * nyatf_b1nwzida0e0b0xyg / npw_std_xyg1
+        sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1 = 1 + (o_cfw_ltwadj_pdams[a_nextisprejoin_pa1e1b1nwzida0e0b0xyg1] * nyatf_b1nwzida0e0b0xyg
+                                                 / npw_std_xyg1 / sfw_a0e0b0xyg1)
         sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = o_fd_ltwadj_pdams[a_nextisprejoin_pa1e1b1nwzida0e0b0xyg1] * nyatf_b1nwzida0e0b0xyg / npw_std_xyg1
 
 
@@ -3217,7 +3218,7 @@ def generator(params,r_vals,ev,plots = False):
         temporary = np.swapaxes(temporary, e1_pos, e0_pos)
         temporary = np.sum(temporary * (a_b0_b1nwzida0e0b0xyg == index_b0xyg), axis=b1_pos, keepdims=True)
         temporary = np.average(temporary, season_propn_zida0e0b0xyg, keepdims=True)
-        sfw_ltwadj_a1e1b1nwzida0e0b0xyg3 = temporary[:, :, :, :, 0:1, ...]
+        sfw_ltwadj_a1e1b1nwzida0e0b0xyg3 = 1 + temporary[:, :, :, :, 0:1, ...] / sfw_a0e0b0xyg3
 
         ## repeat for FD
         temporary = np.sum(o_fd_ltwadj_pdams[a_nextisprejoin_pa1e1b1nwzida0e0b0xyg1] * (a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1 == index_d), axis = 0)
