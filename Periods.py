@@ -147,3 +147,12 @@ def p_date2_df():
     return periods.drop(periods.tail(1).index)
 
 # print(p_date2_df())
+
+###############
+#feed periods #
+###############
+def feed_periods():
+    idx = pd.IndexSlice
+    df.loc[idx[:, 'date'], :].values
+
+    np.array(pinp.period['feed_periods'].loc[:pinp.period['feed_periods'].index[-2],'length'])

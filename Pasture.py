@@ -32,223 +32,226 @@ import Functions as fun
 import Periods as per
 import Sensitivity as sen
 
-######################
-##background vars    #
-######################
-na = np.newaxis
+def f_pasture(params, r_vals,ev):
+    ######################
+    ##background vars    #
+    ######################
+    na = np.newaxis
 
-########################
-##phases               #
-########################
-## read the rotation phases information from inputs
-phase_len       = uinp.structure['phase_len']
-phases_rotn_df  = uinp.structure['phases']
-pasture_sets    = uinp.structure['pasture_sets']
-pastures        = uinp.structure['pastures']
+    ########################
+    ##phases               #
+    ########################
+    ## read the rotation phases information from inputs
+    phase_len       = uinp.structure['phase_len']
+    phases_rotn_df  = uinp.structure['phases']
+    pasture_sets    = uinp.structure['pasture_sets']
+    pastures        = uinp.structure['pastures'][pinp.general['pas_inc']]
 
-########################
-##constants required   #
-########################
-## define some parameters required to size arrays.
-n_feed_pools    = len(uinp.structure['sheep_pools'])
-n_dry_groups    = len(uinp.structure['dry_groups'])           # Low & high quality groups for dry feed
-n_grazing_int   = len(uinp.structure['grazing_int'])          # grazing intensity in the growth/grazing activities
-n_foo_levels    = len(uinp.structure['foo_levels'])           # Low, medium & high FOO level in the growth/grazing activities
-n_feed_periods  = len(pinp.period['feed_periods']) - 1
-n_lmu           = len(pinp.general['lmu_area'])
-n_phases_rotn   = len(phases_rotn_df.index)
-n_pasture_types = len(pastures)   #^ need to sort timing of the definition of pastures
+    ########################
+    ##constants required   #
+    ########################
+    ## define some parameters required to size arrays.
+    n_feed_pools    = len(uinp.structure['sheep_pools'])
+    n_dry_groups    = len(uinp.structure['dry_groups'])           # Low & high quality groups for dry feed
+    n_grazing_int   = len(uinp.structure['grazing_int'])          # grazing intensity in the growth/grazing activities
+    n_foo_levels    = len(uinp.structure['foo_levels'])           # Low, medium & high FOO level in the growth/grazing activities
+    n_feed_periods  = len(pinp.period['feed_periods']) - 1
+    n_lmu           = len(pinp.general['lmu_area'])
+    n_phases_rotn   = len(phases_rotn_df.index)
+    n_pasture_types = len(pastures)   #^ need to sort timing of the definition of pastures
 
-index_f = np.arange(n_feed_periods)
+    index_f = np.arange(n_feed_periods)
 
-i_feed_period_dates   = list(pinp.period['feed_periods']['date'])
-t_list = np.arange(n_pasture_types)
+    # i_feed_period_dates   = list(pinp.period['feed_periods']['date']) #todo this will need z axis. it is a df so convert to numpy: idx = pd.IndexSlice then: df.loc[idx[:, 'date'], :].values
+    t_list = np.arange(n_pasture_types)
 
-arable_l = np.array(pinp.crop['arable']).reshape(-1)
-length_f  = np.array(pinp.period['feed_periods'].loc[:pinp.period['feed_periods'].index[-2],'length']) # not including last row because that is the start of the following year. converted to np. to get @jit working
-feed_period_dates_f = np.array(i_feed_period_dates,dtype='datetime64[D]')
-
-
-vgoflt = (n_feed_pools, n_grazing_int, n_foo_levels, n_feed_periods, n_lmu, n_pasture_types)
-dgoflt = (n_dry_groups, n_grazing_int, n_foo_levels, n_feed_periods, n_lmu, n_pasture_types)
-vdft   = (n_feed_pools, n_dry_groups, n_feed_periods, n_pasture_types)
-vft    = (n_feed_pools, n_feed_periods, n_pasture_types)
-dft    = (n_dry_groups, n_feed_periods, n_pasture_types)
-goflt  = (n_grazing_int, n_foo_levels, n_feed_periods, n_lmu, n_pasture_types)
-goft   = (n_grazing_int, n_foo_levels, n_feed_periods, n_pasture_types)
-gft    = (n_grazing_int, n_feed_periods, n_pasture_types)
-gt     = (n_grazing_int, n_pasture_types)
-oflt   = (n_foo_levels, n_feed_periods, n_lmu, n_pasture_types)
-dflrt  = (n_dry_groups, n_feed_periods, n_lmu, n_phases_rotn, n_pasture_types)
-flrt   = (n_feed_periods, n_lmu, n_phases_rotn, n_pasture_types)
-frt    = (n_feed_periods, n_phases_rotn, n_pasture_types)
-rt     = (n_phases_rotn, n_pasture_types)
-flt    = (n_feed_periods, n_lmu, n_pasture_types)
-lt     = (n_lmu, n_pasture_types)
-ft     = (n_feed_periods, n_pasture_types)
-# t      = (n_pasture_types)
-
-## define the vessels that will store the input data that require pre-defining
-### all need pre-defining because inputs are in separate pasture type arrays
-i_phase_germ_dict = dict()
-
-i_me_maintenance_vft            = np.zeros(vft,  dtype = 'float64')  # M/D level for target LW pattern
-c_pgr_gi_scalar_gft             = np.zeros(gft,  dtype = 'float64')  # numpy array of pgr scalar =f(startFOO) for grazing intensity (due to impact of FOO changing during the period)
-i_foo_graze_propn_gt            = np.zeros(gt, dtype ='float64')  # numpy array of proportion of available feed consumed for each grazing intensity level.
-
-i_fxg_foo_oflt                  = np.zeros(oflt, dtype = 'float64')  # numpy array of FOO level       for the FOO/growth/grazing variables.
-i_fxg_pgr_oflt                  = np.zeros(oflt, dtype = 'float64')  # numpy array of PGR level       for the FOO/growth/grazing variables.
-c_fxg_a_oflt                    = np.zeros(oflt, dtype = 'float64')  # numpy array of coefficient a   for the FOO/growth/grazing variables. PGR = a + b FOO
-c_fxg_b_oflt                    = np.zeros(oflt, dtype = 'float64')  # numpy array of coefficient b   for the FOO/growth/grazing variables. PGR = a + b FOO
-# c_fxg_ai_oflt                   = np.zeros(oflt, dtype = 'float64')  # numpy array of coefficient a for the FOO/growth/grazing variables. PGR = a + b FOO
-# c_fxg_bi_oflt                   = np.zeros(oflt, dtype = 'float64')  # numpy array of coefficient b for the FOO/growth/grazing variables. PGR = a + b FOO
-
-i_grn_dig_flt                   = np.zeros(flt, dtype = 'float64')  # numpy array of inputs for green pasture digestibility on each LMU.
-i_poc_intake_daily_flt          = np.zeros(flt, dtype = 'float64')  # intake per day of pasture on crop paddocks prior to seeding
-i_lmu_conservation_flt          = np.zeros(flt, dtype = 'float64')  # minimum foo prior at end of each period to reduce risk of wind & water erosion
-
-i_germ_scalar_lt                = np.zeros(lt,  dtype = 'float64')  # scale the germination levels for each lmu
-i_reseeding_fooscalar_lt        = np.zeros(lt,  dtype = 'float64')  # scalar for FOO at the first grazing for the lmus
-i_dry_dmd_reseeding_lt          = np.zeros(lt,  dtype = 'float64')  # Average digestibility of any dry FOO at the first grazing (if there is any)
-
-i_me_eff_gainlose_ft            = np.zeros(ft,  dtype = 'float64')  # Reduction in efficiency if M/D is above requirement for target LW pattern
-i_grn_trampling_ft              = np.zeros(ft,  dtype = 'float64')  # numpy array of inputs for green pasture trampling in each feed period.
-i_dry_trampling_ft              = np.zeros(ft,  dtype = 'float64')  # numpy array of inputs for dry pasture trampling   in each feed period.
-i_grn_senesce_eos_ft            = np.zeros(ft,  dtype = 'float64')  # proportion of green feed that senesces in period (due to completing life cycle)
-i_base_ft                       = np.zeros(ft,  dtype = 'float64')  # lowest level that pasture can be consumed in each period
-i_grn_dmd_declinefoo_ft         = np.zeros(ft,  dtype = 'float64')  # decline in digestibility of green feed if pasture is not grazed (and foo increases)
-i_grn_dmd_range_ft              = np.zeros(ft,  dtype = 'float64')  # range in digestibility within the sward for green feed
-i_grn_dmd_senesce_redn_ft       = np.zeros(ft,  dtype = 'float64')  # reduction in digestibility of green feed when it senesces
-i_dry_dmd_ave_ft                = np.zeros(ft,  dtype = 'float64')  # average digestibility of dry feed. Note the reduction in this value determines the reduction in quality of ungrazed dry feed in each of the dry feed quality pools. The average digestibility of the dry feed sward will depend on selective grazing which is an optimised variable.
-i_dry_dmd_range_ft              = np.zeros(ft,  dtype = 'float64')  # range in digestibility of dry feed if it is not grazed
-i_dry_foo_high_ft               = np.zeros(ft,  dtype = 'float64')  # expected foo for the dry pasture in the high quality pool
-dry_decay_period_ft             = np.zeros(ft,  dtype = 'float64')  # decline in dry foo for each period
-mask_dryfeed_exists_ft          = np.zeros(ft,  dtype = bool)       # mask for period when dry feed exists
-mask_greenfeed_exists_ft        = np.zeros(ft,  dtype = bool)       # mask for period when green feed exists
-i_grn_cp_ft                     = np.zeros(ft,  dtype = 'float64')  # crude protein content of green feed
-i_dry_cp_ft                     = np.zeros(ft,  dtype = 'float64')  # crude protein content of dry feed
-i_poc_dmd_ft                    = np.zeros(ft,  dtype = 'float64')  # digestibility of pasture consumed on crop paddocks
-i_poc_foo_ft                    = np.zeros(ft,  dtype = 'float64')  # foo of pasture consumed on crop paddocks
-grn_senesce_startfoo_ft         = np.zeros(ft,  dtype = 'float64')  # proportion of the FOO at the start of the period that senesces during the period
-grn_senesce_pgrcons_ft          = np.zeros(ft,  dtype = 'float64')  # proportion of the (total or average daily) PGR that senesces during the period (consumption leads to a reduction in senescence)
-
-i_reseeding_date_seed_t         = np.zeros(n_pasture_types, dtype = 'datetime64[D]')  # date of seeding this pasture type (will be read in from inputs)
-i_seeding_end_t                 = np.zeros(n_pasture_types, dtype = 'datetime64[D]')  # date of seeding this pasture type (will be read in from inputs)
-i_reseeding_date_destock_t      = np.zeros(n_pasture_types, dtype = 'datetime64[D]')  # date of destocking this pasture type prior to reseeding (will be read in from inputs)
-i_reseeding_ungrazed_destock_t  = np.zeros(n_pasture_types, dtype = 'float64')  # kg of FOO that was not grazed prior to seeding occurring (if spring sown)
-i_reseeding_date_grazing_t      = np.zeros(n_pasture_types, dtype = 'datetime64[D]')  # date of first grazing of reseeded pasture (will be read in from inputs)
-i_reseeding_foo_grazing_t       = np.zeros(n_pasture_types, dtype = 'float64')  # FOO at time of first grazing
-# reseeding_machperiod_t          = np.zeros(n_pasture_types, dtype = 'float64')  # labour/machinery period in which reseeding occurs ^ instantiation may not be required
-i_germination_std_t             = np.zeros(n_pasture_types, dtype = 'float64')  # standard germination level for the standard soil type in a continuous pasture rotation
-# i_ri_foo_t                      = np.zeros(n_pasture_types, dtype = 'float64')  # to reduce foo to allow for differences in measurement methods for FOO. The target is to convert the measurement to the system developing the intake equations
-# poc_days_of_grazing_t           = np.zeros(n_pasture_types, dtype = 'float64')  # number of days after the pasture break that (moist) seeding can begin
-i_legume_t                      = np.zeros(n_pasture_types, dtype = 'float64')  # proportion of legume in the sward
-i_grn_propn_reseeding_t         = np.zeros(n_pasture_types, dtype = 'float64')  # Proportion of the FOO available at the first grazing that is green
-i_fec_maintenance_t             = np.zeros(n_pasture_types, dtype = 'float64')  # approximate M/D for maintenance
-
-### define the numpy arrays that will be the output from the pre-calcs for pyomo
-germination_flrt              = np.zeros(flrt,  dtype = 'float64')  # parameters for rotation phase variable: germination (kg/ha)
-foo_grn_reseeding_flrt        = np.zeros(flrt,  dtype = 'float64')  # parameters for rotation phase variable: feed lost and gained during destocking and then grazing of resown pasture (kg/ha)
-foo_dry_reseeding_flrt        = np.zeros(flrt,  dtype = 'float64')  # parameters for rotation phase variable: high quality dry feed gained from grazing of resown pasture (kg/ha)
-foo_dry_reseeding_dflrt       = np.zeros(dflrt, dtype = 'float64')  # parameters for rotation phase variable: low & high quality dry feed gained from grazing of resown pasture (kg/ha)
-dry_removal_t_dft             = np.zeros(dft,   dtype = 'float64')  # parameters for the dry feed grazing activities: Total DM removal from the tonne consumed (includes trampling)
-
-### define the array that links rotation phase and pasture type
-pasture_rt                    = np.zeros(rt, dtype = 'float64')
+    arable_l = np.array(pinp.crop['arable']).reshape(-1)
+    length_f  = np.array(pinp.period['feed_periods'].loc[:pinp.period['feed_periods'].index[-2],'length']) # not including last row because that is the start of the following year. #todo as above this will need z axis
+    feed_period_dates_f = np.array(i_feed_period_dates,dtype='datetime64[D]')
 
 
-## create numpy index for param dicts ^creating indexes is a bit slow
-### the array returned must be of type object, if string the dict keys become a numpy string and when indexed in pyomo it doesn't work.
-keys_d                       = np.asarray(uinp.structure['dry_groups'])
-keys_v                       = np.asarray(uinp.structure['sheep_pools'])
-keys_f                       = np.asarray(pinp.period['feed_periods'].index[:-1])
-keys_g                       = np.asarray(uinp.structure['grazing_int'])
-keys_l                       = pinp.general['lmu_area'].index.to_numpy() # lmu index description
-keys_o                       = np.asarray(uinp.structure['foo_levels'])
-keys_p                       = np.asarray(per.p_date2_df().index)
-keys_r                       = phases_rotn_df.index.to_numpy()
-keys_t                       = np.asarray(pastures)                      # pasture type index description
-keys_k                       = np.asarray(list(uinp.structure['All']))   #landuse
+    vgoflt = (n_feed_pools, n_grazing_int, n_foo_levels, n_feed_periods, n_lmu, n_pasture_types)
+    dgoflt = (n_dry_groups, n_grazing_int, n_foo_levels, n_feed_periods, n_lmu, n_pasture_types)
+    vdft   = (n_feed_pools, n_dry_groups, n_feed_periods, n_pasture_types)
+    vft    = (n_feed_pools, n_feed_periods, n_pasture_types)
+    dft    = (n_dry_groups, n_feed_periods, n_pasture_types)
+    goflt  = (n_grazing_int, n_foo_levels, n_feed_periods, n_lmu, n_pasture_types)
+    goft   = (n_grazing_int, n_foo_levels, n_feed_periods, n_pasture_types)
+    gft    = (n_grazing_int, n_feed_periods, n_pasture_types)
+    gt     = (n_grazing_int, n_pasture_types)
+    oflt   = (n_foo_levels, n_feed_periods, n_lmu, n_pasture_types)
+    dflrt  = (n_dry_groups, n_feed_periods, n_lmu, n_phases_rotn, n_pasture_types)
+    flrt   = (n_feed_periods, n_lmu, n_phases_rotn, n_pasture_types)
+    frt    = (n_feed_periods, n_phases_rotn, n_pasture_types)
+    rt     = (n_phases_rotn, n_pasture_types)
+    flt    = (n_feed_periods, n_lmu, n_pasture_types)
+    lt     = (n_lmu, n_pasture_types)
+    ft     = (n_feed_periods, n_pasture_types)
+    # t      = (n_pasture_types)
 
-### plrt
-arrays=[keys_p, keys_l, keys_r, keys_k]
-index_plrk=fun.cartesian_product_simple_transpose(arrays)
-index_plrk=tuple(map(tuple, index_plrk)) #create a tuple rather than a list because tuples are faster
+    ## define the vessels that will store the input data that require pre-defining
+    ### all need pre-defining because inputs are in separate pasture type arrays
+    i_phase_germ_dict = dict()
 
-### rt
-arrays=[keys_r, keys_t]
-index_rt=fun.cartesian_product_simple_transpose(arrays)
-index_rt=tuple(map(tuple, index_rt)) #create a tuple rather than a list because tuples are faster
+    i_me_maintenance_vft            = np.zeros(vft,  dtype = 'float64')  # M/D level for target LW pattern
+    c_pgr_gi_scalar_gft             = np.zeros(gft,  dtype = 'float64')  # numpy array of pgr scalar =f(startFOO) for grazing intensity (due to impact of FOO changing during the period)
+    i_foo_graze_propn_gt            = np.zeros(gt, dtype ='float64')  # numpy array of proportion of available feed consumed for each grazing intensity level.
 
-### flrt
-arrays=[keys_f, keys_l, keys_r, keys_t]
-index_flrt=fun.cartesian_product_simple_transpose(arrays)
-index_flrt=tuple(map(tuple, index_flrt)) #create a tuple rather than a list because tuples are faster
+    i_fxg_foo_oflt                  = np.zeros(oflt, dtype = 'float64')  # numpy array of FOO level       for the FOO/growth/grazing variables.
+    i_fxg_pgr_oflt                  = np.zeros(oflt, dtype = 'float64')  # numpy array of PGR level       for the FOO/growth/grazing variables.
+    c_fxg_a_oflt                    = np.zeros(oflt, dtype = 'float64')  # numpy array of coefficient a   for the FOO/growth/grazing variables. PGR = a + b FOO
+    c_fxg_b_oflt                    = np.zeros(oflt, dtype = 'float64')  # numpy array of coefficient b   for the FOO/growth/grazing variables. PGR = a + b FOO
+    # c_fxg_ai_oflt                   = np.zeros(oflt, dtype = 'float64')  # numpy array of coefficient a for the FOO/growth/grazing variables. PGR = a + b FOO
+    # c_fxg_bi_oflt                   = np.zeros(oflt, dtype = 'float64')  # numpy array of coefficient b for the FOO/growth/grazing variables. PGR = a + b FOO
 
-### oflt
-arrays=[keys_o, keys_f, keys_l, keys_t]
-index_oflt=fun.cartesian_product_simple_transpose(arrays)
-index_oflt=tuple(map(tuple, index_oflt)) #create a tuple rather than a list because tuples are faster
+    i_grn_dig_flt                   = np.zeros(flt, dtype = 'float64')  # numpy array of inputs for green pasture digestibility on each LMU.
+    i_poc_intake_daily_flt          = np.zeros(flt, dtype = 'float64')  # intake per day of pasture on crop paddocks prior to seeding
+    i_lmu_conservation_flt          = np.zeros(flt, dtype = 'float64')  # minimum foo prior at end of each period to reduce risk of wind & water erosion
 
-### goflt
-arrays=[keys_g, keys_o, keys_f, keys_l, keys_t]
-index_goflt=fun.cartesian_product_simple_transpose(arrays)
-index_goflt=tuple(map(tuple, index_goflt)) #create a tuple rather than a list because tuples are faster
+    i_germ_scalar_lt                = np.zeros(lt,  dtype = 'float64')  # scale the germination levels for each lmu
+    i_reseeding_fooscalar_lt        = np.zeros(lt,  dtype = 'float64')  # scalar for FOO at the first grazing for the lmus
+    i_dry_dmd_reseeding_lt          = np.zeros(lt,  dtype = 'float64')  # Average digestibility of any dry FOO at the first grazing (if there is any)
 
-### vgoflt
-arrays=[keys_v, keys_g, keys_o, keys_f, keys_l, keys_t]
-index_vgoflt=fun.cartesian_product_simple_transpose(arrays)
-index_vgoflt=tuple(map(tuple, index_vgoflt)) #create a tuple rather than a list because tuples are faster
+    i_me_eff_gainlose_ft            = np.zeros(ft,  dtype = 'float64')  # Reduction in efficiency if M/D is above requirement for target LW pattern
+    i_grn_trampling_ft              = np.zeros(ft,  dtype = 'float64')  # numpy array of inputs for green pasture trampling in each feed period.
+    i_dry_trampling_ft              = np.zeros(ft,  dtype = 'float64')  # numpy array of inputs for dry pasture trampling   in each feed period.
+    i_grn_senesce_eos_ft            = np.zeros(ft,  dtype = 'float64')  # proportion of green feed that senesces in period (due to completing life cycle)
+    i_base_ft                       = np.zeros(ft,  dtype = 'float64')  # lowest level that pasture can be consumed in each period
+    i_grn_dmd_declinefoo_ft         = np.zeros(ft,  dtype = 'float64')  # decline in digestibility of green feed if pasture is not grazed (and foo increases)
+    i_grn_dmd_range_ft              = np.zeros(ft,  dtype = 'float64')  # range in digestibility within the sward for green feed
+    i_grn_dmd_senesce_redn_ft       = np.zeros(ft,  dtype = 'float64')  # reduction in digestibility of green feed when it senesces
+    i_dry_dmd_ave_ft                = np.zeros(ft,  dtype = 'float64')  # average digestibility of dry feed. Note the reduction in this value determines the reduction in quality of ungrazed dry feed in each of the dry feed quality pools. The average digestibility of the dry feed sward will depend on selective grazing which is an optimised variable.
+    i_dry_dmd_range_ft              = np.zeros(ft,  dtype = 'float64')  # range in digestibility of dry feed if it is not grazed
+    i_dry_foo_high_ft               = np.zeros(ft,  dtype = 'float64')  # expected foo for the dry pasture in the high quality pool
+    dry_decay_period_ft             = np.zeros(ft,  dtype = 'float64')  # decline in dry foo for each period
+    mask_dryfeed_exists_ft          = np.zeros(ft,  dtype = bool)       # mask for period when dry feed exists
+    mask_greenfeed_exists_ft        = np.zeros(ft,  dtype = bool)       # mask for period when green feed exists
+    i_grn_cp_ft                     = np.zeros(ft,  dtype = 'float64')  # crude protein content of green feed
+    i_dry_cp_ft                     = np.zeros(ft,  dtype = 'float64')  # crude protein content of dry feed
+    i_poc_dmd_ft                    = np.zeros(ft,  dtype = 'float64')  # digestibility of pasture consumed on crop paddocks
+    i_poc_foo_ft                    = np.zeros(ft,  dtype = 'float64')  # foo of pasture consumed on crop paddocks
+    grn_senesce_startfoo_ft         = np.zeros(ft,  dtype = 'float64')  # proportion of the FOO at the start of the period that senesces during the period
+    grn_senesce_pgrcons_ft          = np.zeros(ft,  dtype = 'float64')  # proportion of the (total or average daily) PGR that senesces during the period (consumption leads to a reduction in senescence)
 
-### dgoflt
-arrays=[keys_d, keys_g, keys_o, keys_f, keys_l, keys_t]
-index_dgoflt=fun.cartesian_product_simple_transpose(arrays)
-index_dgoflt=tuple(map(tuple, index_dgoflt)) #create a tuple rather than a list because tuples are faster
+    i_reseeding_date_seed_t         = np.zeros(n_pasture_types, dtype = 'datetime64[D]')  # date of seeding this pasture type (will be read in from inputs)
+    i_seeding_end_t                 = np.zeros(n_pasture_types, dtype = 'datetime64[D]')  # date of seeding this pasture type (will be read in from inputs)
+    i_reseeding_date_destock_t      = np.zeros(n_pasture_types, dtype = 'datetime64[D]')  # date of destocking this pasture type prior to reseeding (will be read in from inputs)
+    i_reseeding_ungrazed_destock_t  = np.zeros(n_pasture_types, dtype = 'float64')  # kg of FOO that was not grazed prior to seeding occurring (if spring sown)
+    i_reseeding_date_grazing_t      = np.zeros(n_pasture_types, dtype = 'datetime64[D]')  # date of first grazing of reseeded pasture (will be read in from inputs)
+    i_reseeding_foo_grazing_t       = np.zeros(n_pasture_types, dtype = 'float64')  # FOO at time of first grazing
+    # reseeding_machperiod_t          = np.zeros(n_pasture_types, dtype = 'float64')  # labour/machinery period in which reseeding occurs ^ instantiation may not be required
+    i_germination_std_t             = np.zeros(n_pasture_types, dtype = 'float64')  # standard germination level for the standard soil type in a continuous pasture rotation
+    # i_ri_foo_t                      = np.zeros(n_pasture_types, dtype = 'float64')  # to reduce foo to allow for differences in measurement methods for FOO. The target is to convert the measurement to the system developing the intake equations
+    # poc_days_of_grazing_t           = np.zeros(n_pasture_types, dtype = 'float64')  # number of days after the pasture break that (moist) seeding can begin
+    i_legume_t                      = np.zeros(n_pasture_types, dtype = 'float64')  # proportion of legume in the sward
+    i_grn_propn_reseeding_t         = np.zeros(n_pasture_types, dtype = 'float64')  # Proportion of the FOO available at the first grazing that is green
+    i_fec_maintenance_t             = np.zeros(n_pasture_types, dtype = 'float64')  # approximate M/D for maintenance
 
-### dflrt
-arrays=[keys_d, keys_f, keys_l, keys_r, keys_t]
-index_dflrt=fun.cartesian_product_simple_transpose(arrays)
-index_dflrt=tuple(map(tuple, index_dflrt)) #create a tuple rather than a list because tuples are faster
+    ### define the numpy arrays that will be the output from the pre-calcs for pyomo
+    germination_flrt              = np.zeros(flrt,  dtype = 'float64')  # parameters for rotation phase variable: germination (kg/ha)
+    foo_grn_reseeding_flrt        = np.zeros(flrt,  dtype = 'float64')  # parameters for rotation phase variable: feed lost and gained during destocking and then grazing of resown pasture (kg/ha)
+    foo_dry_reseeding_flrt        = np.zeros(flrt,  dtype = 'float64')  # parameters for rotation phase variable: high quality dry feed gained from grazing of resown pasture (kg/ha)
+    foo_dry_reseeding_dflrt       = np.zeros(dflrt, dtype = 'float64')  # parameters for rotation phase variable: low & high quality dry feed gained from grazing of resown pasture (kg/ha)
+    dry_removal_t_dft             = np.zeros(dft,   dtype = 'float64')  # parameters for the dry feed grazing activities: Total DM removal from the tonne consumed (includes trampling)
 
-### vdft
-arrays=[keys_v, keys_d, keys_f, keys_t]
-index_vdft=fun.cartesian_product_simple_transpose(arrays)
-index_vdft=tuple(map(tuple, index_vdft)) #create a tuple rather than a list because tuples are faster
+    ### define the array that links rotation phase and pasture type
+    pasture_rt                    = np.zeros(rt, dtype = 'float64')
 
-### dft
-arrays=[keys_d, keys_f, keys_t]
-index_dft=fun.cartesian_product_simple_transpose(arrays)
-index_dft=tuple(map(tuple, index_dft)) #create a tuple rather than a list because tuples are faster
 
-### flt
-arrays=[keys_f, keys_l, keys_t]
-index_flt=fun.cartesian_product_simple_transpose(arrays)
-index_flt=tuple(map(tuple, index_flt)) #create a tuple rather than a list because tuples are faster
+    ## create numpy index for param dicts ^creating indexes is a bit slow
+    ### the array returned must be of type object, if string the dict keys become a numpy string and when indexed in pyomo it doesn't work.
+    keys_d                       = np.asarray(uinp.structure['dry_groups'])
+    keys_v                       = np.asarray(uinp.structure['sheep_pools'])
+    keys_f                       = np.asarray(pinp.period['feed_periods'].index[:-1])
+    keys_g                       = np.asarray(uinp.structure['grazing_int'])
+    keys_l                       = pinp.general['lmu_area'].index.to_numpy() # lmu index description
+    keys_o                       = np.asarray(uinp.structure['foo_levels'])
+    keys_p                       = np.asarray(per.p_date2_df().index)
+    keys_r                       = phases_rotn_df.index.to_numpy()
+    keys_t                       = np.asarray(pastures)                      # pasture type index description
+    keys_k                       = np.asarray(list(uinp.structure['All']))   #landuse
 
-### fl
-arrays=[keys_f, keys_l]
-index_fl=fun.cartesian_product_simple_transpose(arrays)
-index_fl=tuple(map(tuple, index_fl)) #create a tuple rather than a list because tuples are faster
+    ### plrk
+    arrays=[keys_p, keys_l, keys_r, keys_k]
+    index_plrk=fun.cartesian_product_simple_transpose(arrays)
+    index_plrk=tuple(map(tuple, index_plrk)) #create a tuple rather than a list because tuples are faster
 
-### ft
-arrays=[keys_f, keys_t]
-index_ft=fun.cartesian_product_simple_transpose(arrays)
-index_ft=tuple(map(tuple, index_ft)) #create a tuple rather than a list because tuples are faster
+    ### rt
+    arrays=[keys_r, keys_t]
+    index_rt=fun.cartesian_product_simple_transpose(arrays)
+    index_rt=tuple(map(tuple, index_rt)) #create a tuple rather than a list because tuples are faster
 
-### frt
-arrays=[keys_f, keys_r, keys_t]
-index_frt=fun.cartesian_product_simple_transpose(arrays)
-index_frt=tuple(map(tuple, index_frt)) #create a tuple rather than a list because tuples are faster
+    ### flrt
+    arrays=[keys_f, keys_l, keys_r, keys_t]
+    index_flrt=fun.cartesian_product_simple_transpose(arrays)
+    index_flrt=tuple(map(tuple, index_flrt)) #create a tuple rather than a list because tuples are faster
 
-def map_excel(params,r_vals):
+    ### oflt
+    arrays=[keys_o, keys_f, keys_l, keys_t]
+    index_oflt=fun.cartesian_product_simple_transpose(arrays)
+    index_oflt=tuple(map(tuple, index_oflt)) #create a tuple rather than a list because tuples are faster
+
+    ### goflt
+    arrays=[keys_g, keys_o, keys_f, keys_l, keys_t]
+    index_goflt=fun.cartesian_product_simple_transpose(arrays)
+    index_goflt=tuple(map(tuple, index_goflt)) #create a tuple rather than a list because tuples are faster
+
+    ### vgoflt
+    arrays=[keys_v, keys_g, keys_o, keys_f, keys_l, keys_t]
+    index_vgoflt=fun.cartesian_product_simple_transpose(arrays)
+    index_vgoflt=tuple(map(tuple, index_vgoflt)) #create a tuple rather than a list because tuples are faster
+
+    ### dgoflt
+    arrays=[keys_d, keys_g, keys_o, keys_f, keys_l, keys_t]
+    index_dgoflt=fun.cartesian_product_simple_transpose(arrays)
+    index_dgoflt=tuple(map(tuple, index_dgoflt)) #create a tuple rather than a list because tuples are faster
+
+    ### dflrt
+    arrays=[keys_d, keys_f, keys_l, keys_r, keys_t]
+    index_dflrt=fun.cartesian_product_simple_transpose(arrays)
+    index_dflrt=tuple(map(tuple, index_dflrt)) #create a tuple rather than a list because tuples are faster
+
+    ### vdft
+    arrays=[keys_v, keys_d, keys_f, keys_t]
+    index_vdft=fun.cartesian_product_simple_transpose(arrays)
+    index_vdft=tuple(map(tuple, index_vdft)) #create a tuple rather than a list because tuples are faster
+
+    ### dft
+    arrays=[keys_d, keys_f, keys_t]
+    index_dft=fun.cartesian_product_simple_transpose(arrays)
+    index_dft=tuple(map(tuple, index_dft)) #create a tuple rather than a list because tuples are faster
+
+    ### flt
+    arrays=[keys_f, keys_l, keys_t]
+    index_flt=fun.cartesian_product_simple_transpose(arrays)
+    index_flt=tuple(map(tuple, index_flt)) #create a tuple rather than a list because tuples are faster
+
+    ### fl
+    arrays=[keys_f, keys_l]
+    index_fl=fun.cartesian_product_simple_transpose(arrays)
+    index_fl=tuple(map(tuple, index_fl)) #create a tuple rather than a list because tuples are faster
+
+    ### ft
+    arrays=[keys_f, keys_t]
+    index_ft=fun.cartesian_product_simple_transpose(arrays)
+    index_ft=tuple(map(tuple, index_ft)) #create a tuple rather than a list because tuples are faster
+
+    ### frt
+    arrays=[keys_f, keys_r, keys_t]
+    index_frt=fun.cartesian_product_simple_transpose(arrays)
+    index_frt=tuple(map(tuple, index_frt)) #create a tuple rather than a list because tuples are faster
+
+    ###########
+    #map_excel#
+    ###########
     '''Instantiate variables required and read inputs for the pasture variables from an excel file'''
-    global grn_senesce_startfoo_ft
-    global grn_senesce_pgrcons_ft
-#    global i_end_of_gs_t
-    global t_list
-    ## define the numpy arrays for the input data that are only used in this function
-    ### all the numpy arrays need pre-defining because inputs are assigned to slices of the pasture type axis
+#     global grn_senesce_startfoo_ft
+#     global grn_senesce_pgrcons_ft
+# #    global i_end_of_gs_t
+#     global t_list
 
+    ## define the numpy arrays for the input data that are used in this section
+    ### all the numpy arrays need pre-defining because inputs are assigned to slices of the pasture type axis
     i_grn_senesce_daily_ft          = np.zeros(ft,  dtype = 'float64')  # proportion of green feed that senesces each period (due to leaf drop)
     # i_grn_senesce_eos_ft            = np.zeros(ft,  dtype = 'float64')  # proportion of green feed that senesces in period (due to completing life cycle)
     dry_decay_daily_ft              = np.zeros(ft,  dtype = 'float64')  # daily decline in dry foo in each period

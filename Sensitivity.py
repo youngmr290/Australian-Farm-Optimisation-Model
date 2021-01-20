@@ -81,6 +81,8 @@ sar['mortalitye'] = 0          #Scale the calculated dam mortality at birth in t
 ##area
 sav['bnd_total_pas_area'] = '-'  #Total pasture area for bound. '-' is default so it will chuck an error if the bound is turned on without a specified area
 sav['bnd_pasarea_inc'] = '-'   #SA to turn on the pasture area bound
+##pasture
+sav['pas_inc'] = np.full(pinp.general_inp['pas_inc'].shape, '-', dtype=object) #SA value for pastures included mask
 ##Sheep
 sav['fec_inc'] = '-'   #SA to store fec report report values
 sav['eqn_compare']      = '-'                  #SA to alter if the different equation systems in the sheep sim are run and compared

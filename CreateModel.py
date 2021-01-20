@@ -178,7 +178,7 @@ model.s_lw_prog = Set(initialize=['lw%02d'%i for i in range(uinp.structure['i_pr
 ##feed periods
 model.s_feed_periods = Set(ordered=True, initialize=pinp.period['feed_periods'].index[:-1], doc='feed periods') #must be ordered so it can be sliced in pasture pyomo to allow feed to be transferred betweeen periods.
 ##pasture types
-model.s_pastures = Set(initialize=uinp.structure['pastures'], doc='feed periods')
+model.s_pastures = Set(initialize=uinp.structure['pastures'][pinp.general['pas_inc']], doc='feed periods')
 model.s_dry_groups = Set(initialize=uinp.structure['dry_groups'], doc='dry feed pools')
 model.s_grazing_int = Set(initialize=uinp.structure['grazing_int'], doc='grazing intensity in the growth/grazing activities')
 model.s_foo_levels = Set(initialize=uinp.structure['foo_levels'], doc='FOO level in the growth/grazing activities')

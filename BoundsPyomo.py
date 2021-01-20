@@ -64,7 +64,7 @@ def boundarypyomo_local():
         ##rot
         rot_lobound_rl[0,2] = 150
         ##sr - carry cap of each ha of each pasture
-        for t, pasture in enumerate(uinp.structure['pastures']):
+        for t, pasture in enumerate(uinp.structure['pastures'][pinp.general['pas_inc']]):
             pasture_dse_carry[pasture] = pinp.sheep['i_sr_constraint_t'][t]
 
         ##total pas area

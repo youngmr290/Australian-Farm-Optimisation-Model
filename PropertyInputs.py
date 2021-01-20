@@ -64,7 +64,7 @@ if inputs_from_pickle == False:
         pkl.dump(feedsupply_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
         pasture_inp=dict()
-        for pasture in uinp.structure['pastures']:
+        for pasture in uinp.structure['pastures']:#all pasture inputs are adjusted even if a given pasture is not included
             pasture_inp[pasture] = fun.xl_all_named_ranges('Property.xlsx', pasture)
         pkl.dump(pasture_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
@@ -131,9 +131,9 @@ def property_inp_sa():
     '''
     ##have to import it here since sen.py imports this module
     import Sensitivity as sen
-    #mach['approx_hay_yield']=mach_inp['approx_hay_yield']+sen.saa['variable'] #just an example, this can be deleted
-    ##pasture will have to be added in a loop
-    for pasture in uinp.structure['pastures']:
+    ##pasture
+    general['pas_inc'] = fun.f_sa(general_inp['pas_inc'],sen.sav['pas_inc'],5)
+    for pasture in uinp.structure['pastures']: #all pasture inputs are adjusted even if a given pasture is not included
         ###SAM
         pasture_inputs[pasture]['GermStd'] = fun.f_sa(pasture_inp[pasture]['GermStd'], sen.sam[('germ',pasture)])
         pasture_inputs[pasture]['GermScalarLMU'] = fun.f_sa(pasture_inp[pasture]['GermScalarLMU'], sen.sam[('germ_l',pasture)])

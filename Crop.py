@@ -657,8 +657,9 @@ def f_cont_pas(cost_array):
     :param
     cost_array - df with landues axis. this array will be returned with the addition of the continuos pasture landuse
     '''
+    pastures = uinp.structure['pastures'][pinp.general['pas_inc']]
     ##if cont tedera is in rotion list and tedera is included in the pasture modules then generate the inputs for it
-    if any(phases_df.iloc[:,-1].isin(['tc'])) and 'tedera' in uinp.structure['pastures']:
+    if any(phases_df.iloc[:,-1].isin(['tc'])) and 'tedera' in pastures:
         germ_df = pinp.pasture_inputs['tedera']['GermPhases']
         ##determine the proportion of the time tc and jc are resown - this is used as a weighting to determine the input costs
         tc_idx = germ_df.iloc[:,-3].isin(['tc']) #checks current phase for tc
@@ -681,7 +682,7 @@ def f_cont_pas(cost_array):
         cost_array.loc['tc', :] = tc_cost
 
     ##if cont tedera is in rotion list and tedera is included in the pasture modules then generate the inputs for it
-    if any(phases_df.iloc[:,-1].isin(['jc'])) and 'tedera' in uinp.structure['pastures']:
+    if any(phases_df.iloc[:,-1].isin(['jc'])) and 'tedera' in pastures:
         germ_df = pinp.pasture_inputs['tedera']['GermPhases']
         ##determine the proportion of the time jc and jc are resown - this is used as a weighting to determine the input costs
         jc_idx = germ_df.iloc[:,-3].isin(['jc']) #checks current phase for jc
@@ -704,7 +705,7 @@ def f_cont_pas(cost_array):
         cost_array.loc['jc', :] = jc_cost
 
     ##if cont lucerne is in rotion list and lucerne is included in the pasture modules then generate the inputs for it
-    if any(phases_df.iloc[:,-1].isin(['uc'])) and 'lucerne' in uinp.structure['pastures']:
+    if any(phases_df.iloc[:,-1].isin(['uc'])) and 'lucerne' in pastures:
         germ_df = pinp.pasture_inputs['tedera']['GermPhases']
         ##determine the proportion of the time uc and xc are resown - this is used as a weighting to determine the input costs
         uc_idx = germ_df.iloc[:,-3].isin(['uc']) #checks current phase for uc
@@ -727,7 +728,7 @@ def f_cont_pas(cost_array):
         cost_array.loc['uc', :] = uc_cost
 
     ##if cont lucerne is in rotion list and lucerne is included in the pasture modules then generate the inputs for it
-    if any(phases_df.iloc[:,-1].isin(['xc'])) and 'lucerne' in uinp.structure['pastures']:
+    if any(phases_df.iloc[:,-1].isin(['xc'])) and 'lucerne' in pastures:
         germ_df = pinp.pasture_inputs['tedera']['GermPhases']
         ##determine the proportion of the time xc and xc are resown - this is used as a weighting to determine the input costs
         xc_idx = germ_df.iloc[:,-3].isin(['xc']) #checks current phase for xc
