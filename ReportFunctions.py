@@ -179,8 +179,7 @@ def f_rotation(lp_vars, r_vals):
     ##rotation
     phases_df = r_vals['rot']['phases']
     phases_rk = phases_df.set_index(5, append=True)  # add landuse as index level
-    rot_area_rl = pd.Series(lp_vars[
-                                'v_phase_area']).sort_index()  # create a series of all the phase areas, need to sort the index because it was chuck error for some calculations
+    rot_area_rl = pd.Series(lp_vars['v_phase_area']).sort_index()  # create a series of all the phase areas, need to sort the index because it was chuck error for some calculations
     rot_area_rkl = rot_area_rl.unstack().reindex(phases_rk.index, axis=0, level=0).stack()  # add landuse to the axis
     return phases_rk, rot_area_rl, rot_area_rkl
 

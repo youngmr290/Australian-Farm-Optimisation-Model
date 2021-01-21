@@ -139,7 +139,7 @@ if run_areasum:
 
 if run_pnl:
     func = rep.f_profitloss_table
-     trials = [0]
+    trials = [0]
     pnl = rep.f_stack(func, trial_outdated, exp_data_index, trials)
     f_df2xl(writer, pnl, 'pnl', option=1)
 
@@ -148,13 +148,13 @@ if run_profitarea:
     func1 = rep.f_profit
     func0_option = 4
     func1_option = 0
-     trials = [0]
+    trials = [0]
     plot = rep.f_xy_graph(func0, func1, trial_outdated, exp_data_index, trials, func0_option, func1_option)
     plot.savefig('Output/profitarea_curve.png')
 
 if run_saleprice:
     func = rep.f_price_summary
-     trials = [0]
+    trials = [0]
     option = 2
     grid = [0,5,6]
     weight = [22,40,25]
@@ -164,7 +164,7 @@ if run_saleprice:
 
 if run_cfw_dams:
     func = rep.f_stock_pasture_summary
-     trials = [0]
+    trials = [0]
     type = 'stock'
     prod = 'cfw_hdmob_k2tva1nwziyg1'
     weights = 'dams_numbers_k2tvanwziy1g1'
@@ -181,7 +181,7 @@ if run_cfw_dams:
 
 if run_fec_dams:
     func = rep.f_stock_pasture_summary
-     trials = [0]
+    trials = [0]
     type = 'stock'
     prod = 'fec_dams_k2vpa1e1b1nw8ziyg1'
     na_prod = [1]
@@ -202,7 +202,7 @@ if run_fec_dams:
 
 if run_weanper:  # as it is it is number of lambs weaned rather than weaning percentage todo add a second stage to divide by number of dams mated
     func = rep.f_stock_pasture_summary
-     trials = [0]
+    trials = [0]
     type = 'stock'
     prod = 'nyatf_wean_k2tva1nw8ziyg1'
     weights = 'dams_numbers_k2tvanwziy1g1'
@@ -219,7 +219,7 @@ if run_weanper:  # as it is it is number of lambs weaned rather than weaning per
 
 if run_scanper:  # as it is it is number of foetuses scanned rather than scanning percentage todo add a second stage to divide by number of dams mated
     func = rep.f_stock_pasture_summary
-     trials = [0]
+    trials = [0]
     type = 'stock'
     prod = 'nfoet_scan_tva1nw8ziyg1'
     weights = 'dams_numbers_tvanwziy1g1'
@@ -236,7 +236,7 @@ if run_scanper:  # as it is it is number of foetuses scanned rather than scannin
 
 if run_lamb_survival:
     func = rep.f_survival
-     trials = [0]
+    trials = [0]
     arith_axis = [0,1,3,4,6,7,8,9,10]
     index =[2]
     cols =[5]
@@ -249,7 +249,7 @@ if run_lamb_survival:
 
 if run_daily_mei_dams:
     func = rep.f_stock_pasture_summary
-     trials = [0]
+    trials = [0]
     type = 'stock'
     prod = 'mei_dams_k2p6ftva1nw8ziyg1'
     weights = 'dams_numbers_k2tvanwziy1g1'
@@ -269,7 +269,7 @@ if run_daily_mei_dams:
 
 if run_daily_pi_dams:
     func = rep.f_stock_pasture_summary
-     trials = [0]
+    trials = [0]
     type = 'stock'
     prod = 'pi_dams_k2p6ftva1nw8ziyg1'
     weights = 'dams_numbers_k2tvanwziy1g1'
@@ -290,7 +290,7 @@ if run_daily_pi_dams:
 
 if run_numbers_dams:
     func = rep.f_stock_pasture_summary
-     trials = [0]
+    trials = [0]
     type = 'stock'
     weights = 'dams_numbers_k2tvanwziy1g1'
     keys = 'dams_keys_k2tvanwziy1g1'
@@ -307,7 +307,7 @@ if run_numbers_dams:
 
 if run_numbers_offs:
     func = rep.f_stock_pasture_summary
-     trials = [0]
+    trials = [0]
     type = 'stock'
     weights = 'offs_numbers_k3k5tvnwziaxyg3'
     keys = 'offs_keys_k3k5tvnwziaxyg3'
@@ -324,7 +324,7 @@ if run_numbers_offs:
 
 if run_dse:
     func = rep.f_dse
-     trials = [0]
+    trials = [0]
     method = 0
     per_ha = True
     dse = rep.f_stack(func, trial_outdated, exp_data_index, trials, method = method, per_ha = per_ha)
@@ -333,7 +333,7 @@ if run_dse:
 if run_grnfoo:
     #returns foo at end of each fp
     func = rep.f_stock_pasture_summary
-     trials = [0]
+    trials = [0]
     type = 'pas'
     prod = 'foo_end_grnha_goflt'
     weights = 'greenpas_ha_vgoflt'
@@ -351,7 +351,7 @@ if run_grnfoo:
 if run_dryfoo:
     #returns foo at end of each fp
     func = rep.f_stock_pasture_summary
-     trials = [0]
+    trials = [0]
     prod = 1000
     type = 'pas'
     weights = 'drypas_transfer_dft'
@@ -369,7 +369,7 @@ if run_dryfoo:
 if run_napfoo:
     #returns foo at end of each fp
     func = rep.f_stock_pasture_summary
-     trials = [0]
+    trials = [0]
     prod = 1000
     type = 'pas'
     weights = 'nap_transfer_dft'
@@ -387,7 +387,7 @@ if run_napfoo:
 if run_grncon:
     #returns consumption in each fp
     func = rep.f_stock_pasture_summary
-     trials = [0]
+    trials = [0]
     prod = 'cons_grnha_t_goflt'
     type = 'pas'
     weights = 'greenpas_ha_vgoflt'
@@ -405,7 +405,7 @@ if run_grncon:
 if run_drycon:
     #returns consumption in each fp
     func = rep.f_stock_pasture_summary
-     trials = [0]
+    trials = [0]
     prod = 1000
     type = 'pas'
     weights = 'drypas_consumed_vdft'
@@ -423,7 +423,7 @@ if run_drycon:
 if run_napcon:
     #returns consumption in each fp
     func = rep.f_stock_pasture_summary
-     trials = [0]
+    trials = [0]
     prod = 1000
     type = 'pas'
     weights = 'nap_consumed_vdft'
@@ -441,7 +441,7 @@ if run_napcon:
 if run_poccon:
     #returns consumption in each fp
     func = rep.f_stock_pasture_summary
-     trials = [0]
+    trials = [0]
     prod = 1000
     type = 'pas'
     weights = 'poc_consumed_vfl'
@@ -459,7 +459,7 @@ if run_poccon:
 if run_supcon:
     #returns consumption in each fp
     func = rep.f_grain_sup_summary
-     trials = [0]
+    trials = [0]
     option = 1
     supcon = rep.f_stack(func, trial_outdated, exp_data_index, trials, option=option)
     f_df2xl(writer, supcon, 'supcon', option=1)
@@ -467,7 +467,7 @@ if run_supcon:
 if run_stubcon:
     #returns consumption in each fp
     func = rep.f_stubble_summary
-     trials = [0]
+    trials = [0]
     stubcon = rep.f_stack(func, trial_outdated, exp_data_index, trials)
     f_df2xl(writer, stubcon, 'stubcon', option=1)
 
