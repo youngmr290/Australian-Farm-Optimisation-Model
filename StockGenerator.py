@@ -93,7 +93,7 @@ def generator(params,r_vals,ev,plots = False):
     b0_pos = uinp.parameters['i_b0_pos']
     x_pos = uinp.parameters['i_x_pos']
     y_pos = uinp.parameters['i_y_pos']
-    # g_pos = 0  #todo (JMY) not used but should it be -1
+    # g_pos = 0  #todo (JMY) not used but should it be -1 if it was
     
     ######################
     ##date               #
@@ -916,7 +916,7 @@ def generator(params,r_vals,ev,plots = False):
     # btrt_b1nwzida0e0b0xy2 = f_btrt1(dstwtr_l0yg2,pss_std_yg2,pstw_std_yg2,pstr_std_yg2)
     # btrt_b1nwzida0e0b0xy3 = f_btrt1(dstwtr_l0yg3,pss_std_yg3,pstw_std_yg3,pstr_std_yg3)
 
-    ###calc adjustments sfw # todo examine whether ce12 & 13 are double counting when the LTW impacts are included
+    ###calc adjustments sfw
     adja_sfw_d_a0e0b0xyg0 = np.sum(ce_sire[12, ...] * agedam_propn_da0e0b0xyg0, axis = 0)
     adja_sfw_d_a0e0b0xyg1 = np.sum(ce_dams[12, ...] * agedam_propn_da0e0b0xyg1, axis = 0)
     adja_sfw_d_pa1e1b1nwzida0e0b0xyg2 = ce_yatf[12,...]
@@ -3690,7 +3690,7 @@ def generator(params,r_vals,ev,plots = False):
 
     sale_finish= time.time()
 
-    ##Husbandry #todo add feedbudgeting and infra labour
+    ##Husbandry #todo add feedbudgeting and labour for maintenance of infrastructure (it is currently has a cost that is representing materials and labour)
     ###Sire: cost, labour and infrastructure requirements
     husbandry_cost_pg0, husbandry_labour_l2pg0, husbandry_infrastructure_h1pg0 = sfun.f_husbandry(
         uinp.sheep['i_head_adjust_sire'], mobsize_pa1e1b1nwzida0e0b0xyg0, o_ffcfw_psire, o_cfw_psire, operations_triggerlevels_h5h7h2pg,
@@ -3897,7 +3897,7 @@ def generator(params,r_vals,ev,plots = False):
                                                      period_is_tp=np.logical_or(period_is_transfer_tpa1e1b1nwzida0e0b0xyg1, nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg1))  #t axis so that the early termination of a dvp is accounted for when transferring between ram groups
     numbers_start_va1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_numbers_start_pdams, a_v_pa1e1b1nwzida0e0b0xyg1,period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
     r_numbers_join_va1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_numbers_join_pdams, a_v_pa1e1b1nwzida0e0b0xyg1,period_is_tp=period_is_join_pa1e1b1nwzida0e0b0xyg1) #used to calc wean %
-    r_numbers_birth_va1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_numbers_end_pdams, a_v_pa1e1b1nwzida0e0b0xyg1,period_is_tp=period_is_birth_pa1e1b1nwzida0e0b0xyg1) #need to use numbers end so that the numbers represent the different b1 slices after birth
+    # r_numbers_birth_va1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_numbers_end_pdams, a_v_pa1e1b1nwzida0e0b0xyg1,period_is_tp=period_is_birth_pa1e1b1nwzida0e0b0xyg1) #need to use numbers end so that the numbers represent the different b1 slices after birth
     numbers_end_va1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(o_numbers_end_poffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg3)
     numbers_start_va1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(o_numbers_start_poffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3)
     numbers_start_d_yatf_a1e1b1nwzida0e0b0xyg2 = sfun.f_p2v_std(o_numbers_start_pyatf, period_is_tvp = period_is_wean_pa1e1b1nwzida0e0b0xyg2,
@@ -4495,7 +4495,7 @@ def generator(params,r_vals,ev,plots = False):
                                                                              numbers_start_va1e1b1nwzida0e0b0xyg3,
                                                                              mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3)
 
-    ##cfw per head - wool cut for 1 whole animal, no account for mortality (numbers)
+    ##cfw per head - wool cut per animal at shearing, no account for mortality (numbers)
     r_cfw_hd_tva1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param('sire',r_cfw_hd_vg0)
     r_cfw_hd_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams',r_cfw_hd_tvg1,
                                                                         a_k2cluster_va1e1b1nwzida0e0b0xyg1,
@@ -4507,20 +4507,19 @@ def generator(params,r_vals,ev,plots = False):
                                                                           index_k5tva1e1b1nwzida0e0b0xyg3,
                                                                           mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3)
 
-    ##scanning percent - scanning percent per ewe at start of dvp (ie accounting for dam mortality) # todo it would be better if this was scanning percent per ewe scanned (possibly could do this by dividing again by numbers at scanning ??)
-    r_scanper_tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams',r_nfoet_scan_tvg1,
+    ##scanning percent - foetuses scanned per ewe at start of dvp (ie accounting for dam mortality)
+    r_nfoet_scan_tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams',r_nfoet_scan_tvg1,
                                                                        numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1,
                                                                        mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1)  # no clustering required for scanning percent because it is a measure of all dams
 
     ###############################
     #weaning %, and lamb survival #
     ###############################
-    ##wean percent - weaning percent - npw per ewe joined per ewe at weaning (start of dvp) (ie accounting for mortality)
-    ###first adjust npw for total dam numbers at joining
-    r_npw_joining_tvg1 = fun.f_divide(npw2_tva1e1b1nwzida0e0b0xyg1,np.sum(r_numbers_join_va1e1b1nwzida0e0b0xyg1,
-                                                                          axis=(a1_pos, b1_pos, e1_pos),keepdims=True))
-    ###cluster and account for mortality between start of dvp and weaning so it is compatible with the dams variable
-    r_weanper_tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams',r_npw_joining_tvg1,
+    # ##wean percent - weaning percent - npw per ewe at start of dvp (ie accounting for mortality)
+    # r_npw_joining_tvg1 = fun.f_divide(npw2_tva1e1b1nwzida0e0b0xyg1,np.sum(r_numbers_join_va1e1b1nwzida0e0b0xyg1,
+    #                                                                       axis=(a1_pos, b1_pos, e1_pos),keepdims=True))
+    ###number of progeny weaned. Cluster and account for mortality between start of dvp and weaning so it is compatible with the dams variable
+    r_nyatf_wean_tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams',npw2_tva1e1b1nwzida0e0b0xyg1,  #todo this name looks like it should include k2
                                                                        a_k2cluster_va1e1b1nwzida0e0b0xyg1,
                                                                        index_k2tva1e1b1nwzida0e0b0xyg1,
                                                                        numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1,
@@ -4528,23 +4527,30 @@ def generator(params,r_vals,ev,plots = False):
 
 
     ##nfoet - nfoet per ewe at start of dvp (ie accounting for dam mortality - so it can be multiplied by the v_dams from lp solution)
-    r_nfoet_birth_tva1e1b1nwzida0e0b0xyg1 = fun.f_divide(r_nfoet_birth_tvg1, np.sum(numbers_start_va1e1b1nwzida0e0b0xyg1,
-                                                                                    axis=(b1_pos, e1_pos),keepdims=True))
+    r_nfoet_birth_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams',r_nfoet_birth_tvg1,
+                                                                       a_k2cluster_va1e1b1nwzida0e0b0xyg1,
+                                                                       index_k2tva1e1b1nwzida0e0b0xyg1,
+                                                                       numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1,
+                                                                       mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1)
+
     ##nyatf - nyatf per ewe at start of dvp (ie accounting for dam mortality - so it can be multiplied by the v_dams from lp solution)
-    r_nyatf_birth_tva1e1b1nwzida0e0b0xyg1 = fun.f_divide(r_nyatf_birth_tvg1, np.sum(numbers_start_va1e1b1nwzida0e0b0xyg1,
-                                                                                    axis=(b1_pos, e1_pos),keepdims=True))
+    r_nyatf_birth_tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams',r_nyatf_birth_tvg1,
+                                                                       a_k2cluster_va1e1b1nwzida0e0b0xyg1,
+                                                                       index_k2tva1e1b1nwzida0e0b0xyg1,
+                                                                       numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1,
+                                                                       mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1)
 
-
-    ##number of dams at birth with k, e1 & b1 axes
-    r_numbers_birth_k2tva1e1b1nwzida0e0b0xyg1 = r_numbers_birth_va1e1b1nwzida0e0b0xyg1 * (
-                a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1)
-
-    ##prog born per ewe mated ewe in cluster - nfoet has been adjusted to align with v_dams   #todo i feel like a problem is that we are returning number of prog per ewe mated but v_dams at birth(start of dvp) does not represent ewes mated if drys have been sold.
-    r_prog_born_k2tva1e1b1nwzida0e0b0xyg1 = fun.f_divide(r_nfoet_birth_tva1e1b1nwzida0e0b0xyg1 * r_numbers_birth_k2tva1e1b1nwzida0e0b0xyg1
-                                         , np.sum(r_numbers_birth_k2tva1e1b1nwzida0e0b0xyg1, axis=(0, e1_pos, uinp.parameters['i_b1_pos']), keepdims=True)) # todo should we be summing k axis??
-    ##prog alive (alive after birth) per ewe in cluster - nyatf has been adjusted to align with v_dams
-    r_prog_alive_k2tva1e1b1nwzida0e0b0xyg1 = fun.f_divide(r_nyatf_birth_tva1e1b1nwzida0e0b0xyg1 * r_numbers_birth_k2tva1e1b1nwzida0e0b0xyg1
-                                          , np.sum(r_numbers_birth_k2tva1e1b1nwzida0e0b0xyg1, axis=(0, e1_pos, uinp.parameters['i_b1_pos']), keepdims=True)) # todo should we be summing k axis??
+    # ##number of dams at birth with k, e1 & b1 axes
+    # r_numbers_birth_k2tva1e1b1nwzida0e0b0xyg1 = r_numbers_birth_va1e1b1nwzida0e0b0xyg1 * (
+    #             a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1)
+    #
+    # ##prog born per ewe mated ewe in cluster - nfoet has been adjusted to align with v_dams
+    # ### It isn't possible to multiply the number of progeny per dam and sum to get to a average progeny per dam  todo i feel like a problem is that we are returning number of prog per ewe mated but v_dams at birth(start of dvp) does not represent ewes mated if drys have been sold.
+    # r_prog_born_k2tva1e1b1nwzida0e0b0xyg1 = fun.f_divide(r_nfoet_birth_tva1e1b1nwzida0e0b0xyg1 * r_numbers_birth_k2tva1e1b1nwzida0e0b0xyg1
+    #                                      , np.sum(r_numbers_birth_k2tva1e1b1nwzida0e0b0xyg1, axis=(0, e1_pos, b1_pos), keepdims=True)) # summing the k axis so that total number of dams is included (including drys)
+    # ##prog alive (alive after birth) per ewe in cluster - nyatf has been adjusted to align with v_dams
+    # r_prog_alive_k2tva1e1b1nwzida0e0b0xyg1 = fun.f_divide(r_nyatf_birth_tva1e1b1nwzida0e0b0xyg1 * r_numbers_birth_k2tva1e1b1nwzida0e0b0xyg1
+    #                                       , np.sum(r_numbers_birth_k2tva1e1b1nwzida0e0b0xyg1, axis=(0, e1_pos, b1_pos), keepdims=True))
 
     ###lw - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. Don't need t because it doesnt effect lw
     if pinp.rep['i_store_lw_rep']:
@@ -5375,15 +5381,17 @@ def generator(params,r_vals,ev,plots = False):
     r_vals['pi_offs_k3k5p6ftvnw8ziaxyg3'] = pi_k3k5p6ftva1e1b1nwzida0e0b0xyg3.reshape(k3k5p6ftvnwziaxyg3_shape)
 
 
-    ###scan percent per dam joined (eg accounts for mortality)
-    r_vals['scanper_tva1nw8ziyg1'] = r_scanper_tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape[1:])
+    ###number of foetuses scanned per dam at beginning of the period (eg accounts for mortality)
+    r_vals['nfoet_scan_tva1nw8ziyg1'] = r_nfoet_scan_tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape[1:])
 
     ###wean percent
-    r_vals['weanper_k2tva1nw8ziyg1'] = r_weanper_tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
+    r_vals['nyatf_wean_k2tva1nw8ziyg1'] = r_nyatf_wean_tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)  #todo does this need [1:] like nfoet_scan above
 
     ###nfoet and nyatf used to calc lamb survival and mortality
-    r_vals['prog_born_k2tva1e1b1nw8ziyg1'] = r_prog_born_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1e1b1nwziyg1_shape)
-    r_vals['prog_alive_k2tva1e1b1nw8ziyg1'] = r_prog_alive_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1e1b1nwziyg1_shape)
+    rvals['nfoet_birth_k2tva1e1b1nw8ziyg1'] = r_nfoet_birth_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1e1b1nwziyg1_shape)
+    rvals['nyatf_birth_k2tva1e1b1nw8ziyg1'] = r_nyatf_birth_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1e1b1nwziyg1_shape)
+    # r_vals['prog_born_k2tva1e1b1nw8ziyg1'] = r_prog_born_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1e1b1nwziyg1_shape)
+    # r_vals['prog_alive_k2tva1e1b1nw8ziyg1'] = r_prog_alive_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1e1b1nwziyg1_shape)
     index_b9 = [0,1,2,3]
     nfoet_b1nwzida0e0b0xygb9 = nfoet_b1nwzida0e0b0xyg[...,na] == index_b9
     nyatf_b1nwzida0e0b0xygb9 = nyatf_b1nwzida0e0b0xyg[...,na] == index_b9

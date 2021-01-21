@@ -1005,8 +1005,8 @@ def f_survival(lp_vars, r_vals, **kwargs):
 
     ##read from stock reshape function
     type = 'stock'
-    prod = 'prog_born_k2tva1e1b1nw8ziyg1'
-    prod2 = 'prog_alive_k2tva1e1b1nw8ziyg1'
+    prod = 'nfoet_birth_k2tva1e1b1nw8ziyg1'
+    prod2 = 'nyatf_birth_k2tva1e1b1nw8ziyg1'
     weights = 'dams_numbers_k2tvanwziy1g1'
     na_weights = [4,5]
     den_weights = 'e1b1_denom_weights_k2tva1e1b1nw8ziyg1'
