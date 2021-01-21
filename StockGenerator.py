@@ -3199,13 +3199,14 @@ def generator(params,r_vals,ev,plots = False):
         ## The LTW adjuster for a period within the range pre-joining to next_period_is_prejoining, is the value from that lambing
         ### The LTW adjuster is retained in the variable through until period_is_prejoining, so it can be accessed when next_period_is_prejoining
         ### Create the association between nextperiod_is_prejoin and the current period
-        a_nextisprejoin_pa1e1b1nwzida0e0b0xyg1 = sfun.f_next_prev_association(date_end_p, date_prejoin_next_pa1e1b1nwzida0e0b0xyg1, 1, 'right').astype(dtypeint) - 1 #p indx of next period is prejoining - when nextperiod is prejoining this returns the current period
-        a_nextisprejoin_pa1e1b1nwzida0e0b0xyg3 = sfun.f_next_prev_association(offs_date_end_p, date_prejoin_next_pa1e1b1nwzida0e0b0xyg1, 1, 'right').astype(dtypeint) - 1  #p indx of next period is prejoining - when nextperiod is prejoining this returns the current period
+        a_nextisprejoin_pa1e1b1nwzida0e0b0xyg1 = sfun.f_next_prev_association(date_end_p, date_prejoin_next_pa1e1b1nwzida0e0b0xyg1, 1, 'right').astype(dtypeint) #p indx of period before prejoining - when nextperiod is prejoining this returns the current period
 
         ## the dam lifetime adjustment (for the p, e1, b1 & w axes) are based on the LW profile of the dams themselves and scaled by the number of progeny they rear as a proportion of the total number weaned.
-        sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1 = 1 + (o_cfw_ltwadj_pdams[a_nextisprejoin_pa1e1b1nwzida0e0b0xyg1] * nyatf_b1nwzida0e0b0xyg
+        o_cfw_ltwadj_pdams = np.take_along_axis(o_cfw_ltwadj_pdams, a_nextisprejoin_pa1e1b1nwzida0e0b0xyg1, axis=0) #adjust p axis so it is the cfw in the period before prejoining
+        sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1 = 1 + (o_cfw_ltwadj_pdams * nyatf_b1nwzida0e0b0xyg
                                                  / npw_std_xyg1 / sfw_a0e0b0xyg1)
-        sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = o_fd_ltwadj_pdams[a_nextisprejoin_pa1e1b1nwzida0e0b0xyg1] * nyatf_b1nwzida0e0b0xyg / npw_std_xyg1
+        o_fd_ltwadj_pdams = np.take_along_axis(o_fd_ltwadj_pdams, a_nextisprejoin_pa1e1b1nwzida0e0b0xyg1, axis=0) #adjust p axis so it is the fd in the period before prejoining
+        sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = o_fd_ltwadj_pdams * nyatf_b1nwzida0e0b0xyg / npw_std_xyg1
 
 
         ## the offspring lifetime adjustment is based on LW pattern 0
@@ -3214,18 +3215,21 @@ def generator(params,r_vals,ev,plots = False):
         ###         b1 axis in the position of b0 and simplified using a_b0_b1
         ###         w axis to only have slice 0
         ###         z axis is the weighted average
-        temporary = np.sum(o_cfw_ltwadj_pdams[a_nextisprejoin_pa1e1b1nwzida0e0b0xyg1] * (a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1 == index_d), axis = 0)
+        temporary = np.sum(o_cfw_ltwadj_pdams * (a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1 == index_da0e0b0xyg)
+                           * period_is_join_pa1e1b1nwzida0e0b0xyg1, axis = 0)
         temporary = np.swapaxes(temporary, e1_pos, e0_pos)
         temporary = np.sum(temporary * (a_b0_b1nwzida0e0b0xyg == index_b0xyg), axis=b1_pos, keepdims=True)
-        temporary = np.average(temporary, season_propn_zida0e0b0xyg, keepdims=True)
-        sfw_ltwadj_a1e1b1nwzida0e0b0xyg3 = 1 + temporary[:, :, :, :, 0:1, ...] / sfw_a0e0b0xyg3
+        t_season_propn_pg = np.broadcast_to(season_propn_zida0e0b0xyg, temporary.shape)
+        temporary = np.average(temporary, axis=z_pos, weights=t_season_propn_pg)
+        sfw_ltwadj_a1e1b1nwzida0e0b0xyg3 = 1 + temporary[:, :, :, :, 0:1, ...] / sfw_da0e0b0xyg3
 
         ## repeat for FD
-        temporary = np.sum(o_fd_ltwadj_pdams[a_nextisprejoin_pa1e1b1nwzida0e0b0xyg1] * (a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1 == index_d), axis = 0)
+        temporary = np.sum(o_fd_ltwadj_pdams * (a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1 == index_da0e0b0xyg), axis = 0)
         temporary = np.swapaxes(temporary, e1_pos, e0_pos)
         temporary = np.sum(temporary * (a_b0_b1nwzida0e0b0xyg == index_b0xyg), axis=b1_pos, keepdims=True)
-        temporary = np.average(temporary, season_propn_zida0e0b0xyg, keepdims=True)
-        sfd_ltwadj_a1e1b1nwzida0e0b0xyg3 = temporary[:, :, :, :, 0, ...]
+        t_season_propn_pg = np.broadcast_to(season_propn_zida0e0b0xyg, temporary.shape)
+        temporary = np.average(temporary, axis=z_pos, weights=t_season_propn_pg)
+        sfd_ltwadj_a1e1b1nwzida0e0b0xyg3 = temporary[:, :, :, :, 0:1, ...]
 
     postp_start=time.time()
     print('generator :', postp_start - generator_start)

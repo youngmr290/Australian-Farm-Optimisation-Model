@@ -100,7 +100,7 @@ def f_next_prev_association(datearray_slice,*args):
     Parameters
     ----------
     datearray_slice : any
-        This is 1d array which is the second array is sorted into (this must be sorted).
+        This is 1d array which the second array is sorted into (this must be sorted).
     *args : 1 - array, 2 - int
         Arg 1: the period array 1d that is the index is being found for, note the index is based off the start date therefore must do [1:-1] if you want idx based on end date.
         Arg 2: period offset (this may be needed if evaluating the end of the period.
