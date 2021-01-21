@@ -93,7 +93,7 @@ def generator(params,r_vals,ev,plots = False):
     b0_pos = uinp.parameters['i_b0_pos']
     x_pos = uinp.parameters['i_x_pos']
     y_pos = uinp.parameters['i_y_pos']
-    g_pos = 0
+    # g_pos = 0  #todo (JMY) not used but should it be -1
     
     ######################
     ##date               #
@@ -2252,7 +2252,6 @@ def generator(params,r_vals,ev,plots = False):
                 # ffcfw_weaning_dams = fun.f_update(ffcfw_weaning_dams, t_w_weaning, period_is_wean_pa1e1b1nwzida0e0b0xyg1[p])
 
 
-            #todo is this the correct indent? Should this only be carried out when days per period_dams is >0 - which is indented one more - MRY if does get the if statment just not first (could rearange but that needs to be done everywhere)
             ##birth weight yatf - calculated when dams days per period > 0  - calced for start of period (ebg is mul by gest propn so not included for period when birth happens)
             eqn_group = 10
             eqn_system = 0 # CSIRO = 0
@@ -2276,7 +2275,6 @@ def generator(params,r_vals,ev,plots = False):
                     if eqn_compare:
                         r_compare_q0q1q2pyatf[eqn_system, eqn_group, 0, p, ...] = temp0
 
-            #todo this only needs to be calculated if days_period_dams >0 - MRY and that is exactly what is happening see 6 lines down. Howver maybe could put the if day per period first (but that will mean changing it everywhere)
             ##progeny fleece prodn adjustment due to dam profile (LTW adjustment)
             eqn_group = 13
             eqn_system = 0 # CSIRO = 0 - doesn't exist for LTW impacts on progeny
@@ -4537,7 +4535,7 @@ def generator(params,r_vals,ev,plots = False):
                                                                                     axis=(b1_pos, e1_pos),keepdims=True))
 
 
-    ##numbers birth with k axis
+    ##number of dams at birth with k, e1 & b1 axes
     r_numbers_birth_k2tva1e1b1nwzida0e0b0xyg1 = r_numbers_birth_va1e1b1nwzida0e0b0xyg1 * (
                 a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1)
 
