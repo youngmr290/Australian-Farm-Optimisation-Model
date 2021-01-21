@@ -436,7 +436,7 @@ def f_stock_reshape(lp_vars, r_vals):
     len_p6 = len(keys_p6)
     len_p5 = len(keys_p5)
 
-    ##create dict to stick reshaped variable is
+    ##create dict for reshaped variables
     stock_vars = {}
 
 
@@ -830,7 +830,7 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, **kwargs):
     :return: pandas df
     '''
     ##unpack dict adding default values
-    ###no default value (must exist)
+    ###no default value (therefore argument must exist)
     keys_key = kwargs['keys']
     type = kwargs['type']
     ###default values exist
