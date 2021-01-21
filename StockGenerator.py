@@ -462,7 +462,7 @@ def generator(params,r_vals,ev,plots = False):
     fvp2_offset_ida0e0b0xyg3 = sfun.f_g2g(pinp.sheep['i_fvp2_offset_ig3'], 'offs', i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
 
     ###################################
-    ###group independent              #  type(pinp.sheep['i_mask_z']).dtype
+    ###group independent              #  todo move this (i_mask_z) mask from sheep to general sheep
     ###################################
     nyatf_b1nwzida0e0b0xyg = fun.f_reshape_expand(uinp.structure['a_nyatf_b1'], b1_pos)
     ##nfoet expanded
@@ -4595,7 +4595,7 @@ def generator(params,r_vals,ev,plots = False):
     keys_y1 = uinp.parameters['i_y_idx_dams'][uinp.parameters['i_mask_y']]
     keys_y3 = uinp.parameters['i_y_idx_offs'][uinp.parameters['i_mask_y']]
     keys_x = pinp.sheep['i_x_idx'][mask_x]
-    keys_z = np.array(pinp.general['season_info'].index[pinp.general['season_info']['included']]).astype('str')
+    keys_z = np.array(pinp.general['i_z_idx'].index[pinp.general['i_mask_z']]).astype('str')
     ##save k2 set for pyomo - required because this cant easily be built without information in this module
     params['a_idx'] = keys_a
     params['d_idx'] = keys_d

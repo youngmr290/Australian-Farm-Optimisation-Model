@@ -49,9 +49,9 @@ def sets() :
     except AttributeError:
         pass
     if pinp.general['steady_state']:
-        model.s_season_types = Set(initialize=[pinp.general['season_info'].index[0]], doc='season types')
+        model.s_season_types = Set(initialize=[pinp.general['i_z_idx'][0]], doc='season types')
     else:    
-        model.s_season_types = Set(initialize=pinp.general['season_info'].index[pinp.general['season_info']['included']], doc='season types') #mask season types by the ones included
+        model.s_season_types = Set(initialize=pinp.general['i_z_idx'][pinp.general['i_mask_z']], doc='season types') #mask season types by the ones included
 
 
 
@@ -176,7 +176,7 @@ model.s_lw_prog = Set(initialize=['lw%02d'%i for i in range(uinp.structure['i_pr
 #pasture             #
 #######################
 ##feed periods
-model.s_feed_periods = Set(ordered=True, initialize=pinp.period['feed_periods'].index[:-1], doc='feed periods') #must be ordered so it can be sliced in pasture pyomo to allow feed to be transferred betweeen periods.
+model.s_feed_periods = Set(ordered=True, initialize=per.f_feed_periods().index[:-1], doc='feed periods') #must be ordered so it can be sliced in pasture pyomo to allow feed to be transferred betweeen periods.
 ##pasture types
 model.s_pastures = Set(initialize=uinp.structure['pastures'][pinp.general['pas_inc']], doc='feed periods')
 model.s_dry_groups = Set(initialize=uinp.structure['dry_groups'], doc='dry feed pools')

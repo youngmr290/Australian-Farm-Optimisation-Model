@@ -11,7 +11,8 @@ This is where all sensitivity values must be initialised.
 
 import numpy as np
 import PropertyInputs as pinp
-import UniversalInputs as uinp 
+import UniversalInputs as uinp
+import Periods as per
 
 ##create dict - store sa variables in dict so they can easily be changed in the exp loop
 sam = dict()
@@ -35,12 +36,12 @@ sap['pi']=0 #global potential intake ^this has not been applied globally to the 
 sam['germ','annual']                    = 1.0                                                                       # SA multiplier for germination on all lmus in all periods
 sam['germ_l','annual']                  = np.ones((len(pinp.general['lmu_area'])),              dtype=np.float64)  # SA multiplier for germination on each lmus in all periods
 sam['pgr','annual']                     = 1.0                                                                       # SA multiplier for growth on all lmus in all periods
-sam['pgr_f','annual']                   = np.ones((len(pinp.period['feed_periods']) - 1),  dtype=np.float64)  # SA multiplier for growth in each feed period
+sam['pgr_f','annual']                   = np.ones((len(per.f_feed_periods()) - 1),  dtype=np.float64)  # SA multiplier for growth in each feed period
 sam['pgr_l','annual']                   = np.ones((len(pinp.general['lmu_area'])),              dtype=np.float64)  # SA multiplier for growth on each lmus in all periods
 sam['dry_dmd_decline','annual']         = 1.0                                                                       # SA multiplier for the decline in digestibility of dry feed
-sam['grn_dmd_declinefoo_f','annual']    = np.ones((len(pinp.period['feed_periods']) - 1),  dtype=np.float64)  # SA multiplier on decline in digestibility if green feed is not grazed (to increase FOO)
-sam['grn_dmd_range_f','annual']         = np.ones((len(pinp.period['feed_periods']) - 1),  dtype=np.float64)  # SA multiplier on range in digestibility of green feed
-sam['grn_dmd_senesce_f','annual']       = np.ones((len(pinp.period['feed_periods']) - 1),  dtype=np.float64)  # SA multiplier on reduction in digestibility when senescing
+sam['grn_dmd_declinefoo_f','annual']    = np.ones((len(per.f_feed_periods()) - 1),  dtype=np.float64)  # SA multiplier on decline in digestibility if green feed is not grazed (to increase FOO)
+sam['grn_dmd_range_f','annual']         = np.ones((len(per.f_feed_periods()) - 1),  dtype=np.float64)  # SA multiplier on range in digestibility of green feed
+sam['grn_dmd_senesce_f','annual']       = np.ones((len(per.f_feed_periods()) - 1),  dtype=np.float64)  # SA multiplier on reduction in digestibility when senescing
 # sa_feed_period_inc_t      = True    # growth of this pasture in this period is included
 # sa_lmu_inc_t              = True    # this pasture is included on this lmu
 
@@ -82,7 +83,7 @@ sar['mortalitye'] = 0          #Scale the calculated dam mortality at birth in t
 sav['bnd_total_pas_area'] = '-'  #Total pasture area for bound. '-' is default so it will chuck an error if the bound is turned on without a specified area
 sav['bnd_pasarea_inc'] = '-'   #SA to turn on the pasture area bound
 ##pasture
-sav['pas_inc'] = np.full(pinp.general_inp['pas_inc'].shape, '-', dtype=object) #SA value for pastures included mask
+sav['pas_inc'] = np.full_like(pinp.general_inp['pas_inc'], '-', dtype=object) #SA value for pastures included mask
 ##Sheep
 sav['fec_inc'] = '-'   #SA to store fec report report values
 sav['eqn_compare']      = '-'                  #SA to alter if the different equation systems in the sheep sim are run and compared

@@ -31,8 +31,9 @@ import UniversalInputs as uinp
 import Functions as fun
 import Periods as per
 import Sensitivity as sen
+import PastureFunctions as pfun
 
-def f_pasture(params, r_vals,ev):
+def f_pasture(params, r_vals, ev):
     ######################
     ##background vars    #
     ######################
@@ -55,7 +56,7 @@ def f_pasture(params, r_vals,ev):
     n_dry_groups    = len(uinp.structure['dry_groups'])           # Low & high quality groups for dry feed
     n_grazing_int   = len(uinp.structure['grazing_int'])          # grazing intensity in the growth/grazing activities
     n_foo_levels    = len(uinp.structure['foo_levels'])           # Low, medium & high FOO level in the growth/grazing activities
-    n_feed_periods  = len(pinp.period['feed_periods']) - 1
+    n_feed_periods  = len(per.f_feed_periods()) - 1
     n_lmu           = len(pinp.general['lmu_area'])
     n_phases_rotn   = len(phases_rotn_df.index)
     n_pasture_types = len(pastures)   #^ need to sort timing of the definition of pastures
@@ -66,8 +67,10 @@ def f_pasture(params, r_vals,ev):
     t_list = np.arange(n_pasture_types)
 
     arable_l = np.array(pinp.crop['arable']).reshape(-1)
-    length_f  = np.array(pinp.period['feed_periods'].loc[:pinp.period['feed_periods'].index[-2],'length']) # not including last row because that is the start of the following year. #todo as above this will need z axis
-    feed_period_dates_f = np.array(i_feed_period_dates,dtype='datetime64[D]')
+    # length_f  = np.array(pinp.period['feed_periods'].loc[:pinp.period['feed_periods'].index[-2],'length']) # not including last row because that is the start of the following year. #todo as above this will need z axis
+    # feed_period_dates_f = np.array(i_feed_period_dates,dtype='datetime64[D]')
+    length_fz  = np.array(per.f_feed_periods(option=1),dtype='float64')
+    feed_period_dates_fz = np.array(per.f_feed_periods(option=2),dtype='datetime64[D]')
 
 
     vgoflt = (n_feed_pools, n_grazing_int, n_foo_levels, n_feed_periods, n_lmu, n_pasture_types)
@@ -167,7 +170,7 @@ def f_pasture(params, r_vals,ev):
     ### the array returned must be of type object, if string the dict keys become a numpy string and when indexed in pyomo it doesn't work.
     keys_d                       = np.asarray(uinp.structure['dry_groups'])
     keys_v                       = np.asarray(uinp.structure['sheep_pools'])
-    keys_f                       = np.asarray(pinp.period['feed_periods'].index[:-1])
+    keys_f                       = np.asarray(per.f_feed_periods().index[:-1])
     keys_g                       = np.asarray(uinp.structure['grazing_int'])
     keys_l                       = pinp.general['lmu_area'].index.to_numpy() # lmu index description
     keys_o                       = np.asarray(uinp.structure['foo_levels'])

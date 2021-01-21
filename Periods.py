@@ -139,6 +139,8 @@ def p_dates_df():
         periods.index = index
     else:
         periods = pinp.period['i_dsp_lp']
+        ##apply season mask
+        periods = periods.loc[:, pinp.general['i_mask_z']]
     return periods
 
 # drop last row, because it only contains the end date, this version of the df is used for creating the period set and when determining labour allocation
@@ -151,8 +153,40 @@ def p_date2_df():
 ###############
 #feed periods #
 ###############
-def feed_periods():
+def f_feed_periods(option=0):
+    '''
+    :param option: int:
+        0 = return all
+        1 = return feed period length
+        2= rerturn feed period date
+    '''
     idx = pd.IndexSlice
-    df.loc[idx[:, 'date'], :].values
+    fp = pinp.period['i_dsp_fp']
+    fp = fp.T.set_index(['period'],append=True).T
+    ##apply season mask - more complicated becasue masking levl 0 of multilevel df
+    fp = fp.loc[:,idx[:,pinp.general['i_mask_z']]]
 
-    np.array(pinp.period['feed_periods'].loc[:pinp.period['feed_periods'].index[-2],'length'])
+    if pinp.general['steady_state']:
+        # fp = pinp.period['feed_periods']
+
+        n_fp = fp.values.astype(np.int64)
+        np.average(n_fp, axis=1, weights=z_prob)
+        n_fp = pd.to_datetime(n_fp.mean(axis=1))
+        fp = pd.DataFrame(n_fp, index=fp.index, columns=fp.columns[0])
+
+    #todo make wa function. it needs to adjust the z_prob then apply the wa. then add to here.
+    #todo there will be three levels of inputs now - season ones, typical and then weighted average
+
+    else:
+        fp = pinp.period['i_dsp_fp']
+        fp = fp.T.set_index(['period'], append=True).T
+        ##apply season mask - more complicated becasue masking levl 0 of multilevel df
+        fp = fp.loc[:, idx[:, pinp.general['i_mask_z']]]
+
+    if option==0: #return date and length
+        return fp
+    elif option==1: #return length
+        return fp.loc[:fp.index[-2], idx[:, 'length']] #last row not included becasue that only contains the end date of last period
+    else: #return date
+        return fp.loc[:, idx[:, 'date']]
+

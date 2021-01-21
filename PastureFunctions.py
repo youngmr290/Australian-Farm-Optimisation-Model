@@ -3,6 +3,7 @@ import numpy as np
 
 ##import AFO modules
 import PropertyInputs as pinp
+import Periods as per
 
 na = np.newaxis
 
@@ -23,7 +24,7 @@ def calc_foo_profile(germination_flt, dry_decay_ft, length_of_periods_f,
     -------
     An array[feed_period,lmu,type]: foo at the start of the period.
     '''
-    n_feed_periods = len(pinp.period['feed_periods']) - 1
+    n_feed_periods = len(per.f_feed_periods()) - 1
     n_lmu = len(pinp.general['lmu_area'])
     n_pasture_types = np.count_nonzero(pinp.general['pas_inc'])
     ### reshape the inputs passed and set some initial variables that are required
@@ -77,7 +78,7 @@ def update_reseeding_foo(foo_grn_reseeding_flrt, foo_dry_reseeding_flrt,
     and the amount of grazing available if the feed is dry
     '''
     ##base inputs
-    n_feed_periods = len(pinp.period['feed_periods']) - 1
+    n_feed_periods = len(per.f_feed_periods()) - 1
     n_pasture_types = np.count_nonzero(pinp.general['pas_inc'])
     n_lmu = len(pinp.general['lmu_area'])
     arable_l = np.array(pinp.crop['arable']).reshape(-1)
