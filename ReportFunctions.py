@@ -984,30 +984,30 @@ def f_survival_wean_scan(lp_vars, r_vals, **kwargs):
         weights = 'dams_numbers_k2tvanwziy1g1'
         na_weights = [4,5]
         keys = 'dams_keys_k2tvaebnwziy1g1'
+        # den_weights = 'e1b1_denom_weights_k2tva1e1b1nw8ziyg1'
     elif option == 1:
         prod = 'nyatf_wean_tva1nw8ziyg1'
         prod2 = 1      #prod = 1 to return the number of dams
         weights = 'dams_numbers_tvanwziy1g1'
         na_weights = []
         keys = 'dams_keys_tvanwziy1g1'
+        # den_weights = 1
     elif option == 2:
         prod = 'nfoet_scan_tva1nw8ziyg1'
         prod2 = 1      #prod = 1 to return the number of dams
         weights = 'dams_numbers_tvanwziy1g1'
         na_weights = []
         keys = 'dams_keys_tvanwziy1g1'
+        # den_weights = 1
 
     ##params for all options
-    den_weights = 'e1b1_denom_weights_k2tva1e1b1nw8ziyg1'
     arith = 2
 
     ##colate the lp and report vals using f_stock_pasture_summary
     numerator, keys_sliced = f_stock_pasture_summary(lp_vars, r_vals, build_df=False, type=type, prod=prod, weights=weights,
-                           den_weights=den_weights, na_weights=na_weights,
-                           keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+                           na_weights=na_weights, keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
     denominator, keys_sliced = f_stock_pasture_summary(lp_vars, r_vals, build_df=False, type=type, prod=prod2, weights=weights,
-                           den_weights=den_weights, na_weights=na_weights,
-                           keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+                           na_weights=na_weights, keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
 
     ##calcs for survival
     if option == 0:

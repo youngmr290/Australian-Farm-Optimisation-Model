@@ -200,40 +200,6 @@ if run_fec_dams:
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
     f_df2xl(writer, fec_dams, 'fec_dams', option=1)
 
-# if run_weanper:  # as it is it is number of lambs weaned rather than weaning percentage todo add a second stage to divide by number of dams mated
-#     func = rep.f_stock_pasture_summary
-#     trials = [0]
-#     type = 'stock'
-#     prod = 'nyatf_wean_k2tva1nw8ziyg1'
-#     weights = 'dams_numbers_k2tvanwziy1g1'
-#     keys = 'dams_keys_k2tvanwziy1g1'
-#     arith = 1
-#     arith_axis = [1,3,4,5,6,7,8,9]
-#     index =[2]
-#     cols =[0]
-#     axis_slice = {}
-#     # axis_slice[0] = [0, 2, 1]
-#     weanper = rep.f_stack(func, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights,
-#                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
-#     f_df2xl(writer, weanper, 'weanper', option=1)
-
-# if run_scanper:  # as it is it is number of foetuses scanned rather than scanning percentage todo add a second stage to divide by number of dams mated
-#     func = rep.f_stock_pasture_summary
-#     trials = [0]
-#     type = 'stock'
-#     prod = 'nfoet_scan_tva1nw8ziyg1'
-#     weights = 'dams_numbers_tvanwziy1g1'
-#     keys = 'dams_keys_tvanwziy1g1'
-#     arith = 1
-#     arith_axis = [0,2,3,4,5,6,7,8]
-#     index =[1]
-#     cols =[]
-#     axis_slice = {}
-#     # axis_slice[0] = [0, 2, 1]
-#     scanper = rep.f_stack(func, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights,
-#                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
-#     f_df2xl(writer, scanper, 'scanper', option=1)
-
 if run_lamb_survival:
     func = rep.f_survival_wean_scan
     trials = [0]
