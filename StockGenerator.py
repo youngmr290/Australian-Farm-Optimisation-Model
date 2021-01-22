@@ -3896,7 +3896,7 @@ def generator(params,r_vals,ev,plots = False):
     numbers_end_tva1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_numbers_end_pdams, a_v_pa1e1b1nwzida0e0b0xyg1, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1,
                                                      period_is_tp=np.logical_or(period_is_transfer_tpa1e1b1nwzida0e0b0xyg1, nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg1))  #t axis so that the early termination of a dvp is accounted for when transferring between ram groups
     numbers_start_va1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_numbers_start_pdams, a_v_pa1e1b1nwzida0e0b0xyg1,period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
-    r_numbers_join_va1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_numbers_join_pdams, a_v_pa1e1b1nwzida0e0b0xyg1,period_is_tp=period_is_join_pa1e1b1nwzida0e0b0xyg1) #used to calc wean %
+    # r_numbers_join_va1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_numbers_join_pdams, a_v_pa1e1b1nwzida0e0b0xyg1,period_is_tp=period_is_join_pa1e1b1nwzida0e0b0xyg1) #used to calc wean %
     # r_numbers_birth_va1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_numbers_end_pdams, a_v_pa1e1b1nwzida0e0b0xyg1,period_is_tp=period_is_birth_pa1e1b1nwzida0e0b0xyg1) #need to use numbers end so that the numbers represent the different b1 slices after birth
     numbers_end_va1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(o_numbers_end_poffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg3)
     numbers_start_va1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(o_numbers_start_poffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3)
@@ -4507,38 +4507,44 @@ def generator(params,r_vals,ev,plots = False):
                                                                           index_k5tva1e1b1nwzida0e0b0xyg3,
                                                                           mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3)
 
+
+    ######################################
+    #weaning %, scan % and lamb survival #
+    ######################################
+    # ##wean percent - weaning percent - npw per ewe at start of dvp (ie accounting for mortality)
+    # r_npw_joining_tvg1 = fun.f_divide(npw2_tva1e1b1nwzida0e0b0xyg1,np.sum(r_numbers_join_va1e1b1nwzida0e0b0xyg1,
+    #                                                                       axis=(a1_pos, b1_pos, e1_pos),keepdims=True))
+    ###number of progeny weaned. Cluster and account for mortality between start of dvp and weaning so it is compatible with the dams variable
+    r_nyatf_wean_tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams',npw2_tva1e1b1nwzida0e0b0xyg1,
+                                                                       numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1,
+                                                                       mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1) # no clustering required for wean percent because it is a measure of all dams
+
     ##scanning percent - foetuses scanned per ewe at start of dvp (ie accounting for dam mortality)
     r_nfoet_scan_tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams',r_nfoet_scan_tvg1,
                                                                        numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1,
                                                                        mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1)  # no clustering required for scanning percent because it is a measure of all dams
 
-    ###############################
-    #weaning %, and lamb survival #
-    ###############################
-    # ##wean percent - weaning percent - npw per ewe at start of dvp (ie accounting for mortality)
-    # r_npw_joining_tvg1 = fun.f_divide(npw2_tva1e1b1nwzida0e0b0xyg1,np.sum(r_numbers_join_va1e1b1nwzida0e0b0xyg1,
-    #                                                                       axis=(a1_pos, b1_pos, e1_pos),keepdims=True))
-    ###number of progeny weaned. Cluster and account for mortality between start of dvp and weaning so it is compatible with the dams variable
-    r_nyatf_wean_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams',npw2_tva1e1b1nwzida0e0b0xyg1,
-                                                                       a_k2cluster_va1e1b1nwzida0e0b0xyg1,
-                                                                       index_k2tva1e1b1nwzida0e0b0xyg1,
-                                                                       numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1,
-                                                                       mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1)
-
-
     ##nfoet - nfoet per ewe at start of dvp (ie accounting for dam mortality - so it can be multiplied by the v_dams from lp solution)
-    r_nfoet_birth_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams',r_nfoet_birth_tvg1,
-                                                                       a_k2cluster_va1e1b1nwzida0e0b0xyg1,
-                                                                       index_k2tva1e1b1nwzida0e0b0xyg1,
-                                                                       numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1,
-                                                                       mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1)
+    # r_nfoet_birth_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams',r_nfoet_birth_tvg1,
+    #                                                                    a_k2cluster_va1e1b1nwzida0e0b0xyg1,
+    #                                                                    index_k2tva1e1b1nwzida0e0b0xyg1,
+    #                                                                    numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1,
+    #                                                                    mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1)
+
+    r_nfoet_birth_k2tva1e1b1nwzida0e0b0xyg1 = fun.f_divide(r_nfoet_birth_tvg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1) #cant use param function because we need to keep e and b axis
+                                                           * mask_w8vars_va1e1b1nw8zida0e0b0xyg1
+                                                            , numbers_start_va1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1))
 
     ##nyatf - nyatf per ewe at start of dvp (ie accounting for dam mortality - so it can be multiplied by the v_dams from lp solution)
-    r_nyatf_birth_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams',r_nyatf_birth_tvg1,
-                                                                       a_k2cluster_va1e1b1nwzida0e0b0xyg1,
-                                                                       index_k2tva1e1b1nwzida0e0b0xyg1,
-                                                                       numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1,
-                                                                       mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1)
+    # r_nyatf_birth_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams',r_nyatf_birth_tvg1,
+    #                                                                    a_k2cluster_va1e1b1nwzida0e0b0xyg1,
+    #                                                                    index_k2tva1e1b1nwzida0e0b0xyg1,
+    #                                                                    numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1,
+    #                                                                    mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1)
+
+    r_nyatf_birth_k2tva1e1b1nwzida0e0b0xyg1 = fun.f_divide(r_nyatf_birth_tvg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1) #cant use param function because we need to keep e and b axis
+                                                           * mask_w8vars_va1e1b1nw8zida0e0b0xyg1
+                                                            , numbers_start_va1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1))
 
     # ##number of dams at birth with k, e1 & b1 axes
     # r_numbers_birth_k2tva1e1b1nwzida0e0b0xyg1 = r_numbers_birth_va1e1b1nwzida0e0b0xyg1 * (
@@ -5385,11 +5391,11 @@ def generator(params,r_vals,ev,plots = False):
     r_vals['nfoet_scan_tva1nw8ziyg1'] = r_nfoet_scan_tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape[1:])
 
     ###wean percent
-    r_vals['nyatf_wean_k2tva1nw8ziyg1'] = r_nyatf_wean_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
+    r_vals['nyatf_wean_tva1nw8ziyg1'] = r_nyatf_wean_tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape[1:])
 
     ###nfoet and nyatf used to calc lamb survival and mortality
-    r_vals['nfoet_birth_k2tva1e1b1nw8ziyg1'] = r_nfoet_birth_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
-    r_vals['nyatf_birth_k2tva1e1b1nw8ziyg1'] = r_nyatf_birth_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
+    r_vals['nfoet_birth_k2tva1e1b1nw8ziyg1'] = r_nfoet_birth_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1e1b1nwziyg1_shape)
+    r_vals['nyatf_birth_k2tva1e1b1nw8ziyg1'] = r_nyatf_birth_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1e1b1nwziyg1_shape)
     # r_vals['prog_born_k2tva1e1b1nw8ziyg1'] = r_prog_born_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1e1b1nwziyg1_shape)
     # r_vals['prog_alive_k2tva1e1b1nw8ziyg1'] = r_prog_alive_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1e1b1nwziyg1_shape)
     index_b9 = [0,1,2,3]
