@@ -983,7 +983,7 @@ def f_survival_wean_scan(lp_vars, r_vals, **kwargs):
         prod2 = 'nfoet_birth_k2tva1e1b1nw8ziyg1'
         weights = 'dams_numbers_k2tvanwziy1g1'
         na_weights = [4,5]
-        keys = 'dams_keys_k2tvaebnwziy1g1'
+        keys = 'dams_keys_k2tvaeb9nwziy1g1'
         # den_weights = 'e1b1_denom_weights_k2tva1e1b1nw8ziyg1'
     elif option == 1:
         prod = 'nyatf_wean_tva1nw8ziyg1'
@@ -1011,15 +1011,21 @@ def f_survival_wean_scan(lp_vars, r_vals, **kwargs):
 
     ##calcs for survival
     if option == 0:
-        prog_alive_k2tvpa1e1b1nw8ziyg1 = np.moveaxis(np.sum(numerator[...,na] * r_vals['stock']['nyatf_b1nwziygb9'], axis=-8), -1, -7) #b9 axis is shorten b axis: [0,1,2,3]
-        prog_born_k2tvpa1e1b1nw8ziyg1 = np.moveaxis(np.sum(denominator[...,na] * r_vals['stock']['nfoet_b1nwziygb9'], axis=-8), -1, -7)
-        keys_sliced[5] = keys_sliced[5][0:4] #have to slice the b axis so it is the same size as b9
+        prog_alive_k2tvpa1e1b1nw8ziyg1 = np.moveaxis(np.sum(numerator[...,na] * r_vals['stock']['mask_b1b9_preg_b1nwziygb9'], axis=-8), -1, -7) #b9 axis is shorten b axis: [0,1,2,3]
+        prog_born_k2tvpa1e1b1nw8ziyg1 = np.moveaxis(np.sum(denominator[...,na] * r_vals['stock']['mask_b1b9_preg_b1nwziygb9'], axis=-8), -1, -7)
         percentage = fun.f_divide(prog_alive_k2tvpa1e1b1nw8ziyg1, prog_born_k2tvpa1e1b1nw8ziyg1)
 
-    ##calc for wean and scan %
-    else:
+    ##calc for wean %
+    elif option == 1:
         ##roll the number of dams along the v axis to align the joining number with the numerator
-        roll = 1  # 2 for weaning %
+        roll = 2
+        denominator = np.roll(denominator,roll,axis=-8)
+        percentage= fun.f_divide(numerator, denominator)
+
+    ##calc for scan %
+    elif option == 2:
+        ##roll the number of dams along the v axis to align the joining number with the numerator
+        roll = 1
         denominator = np.roll(denominator,roll,axis=-8)
         percentage= fun.f_divide(numerator, denominator)
 
@@ -1027,42 +1033,6 @@ def f_survival_wean_scan(lp_vars, r_vals, **kwargs):
     percentage = f_numpy2df(percentage, keys_sliced, index, cols)
     return percentage
 
-
-# def f_scan_and_wean(lp_vars, r_vals, **kwargs):
-#     # rough code for what needs to happen to calculate scanning percentage and weaning percentage
-#     # Calculations required are:
-#     #       number of progeny weaned / number of dams at joining
-#     #       where: number of progeny weaned = number of progeny per dam at birth * lp_vars dams at birth
-#     #              number of dams at joining = lp_vars dams at birth
-#     #There might be an issue to divide the number of progeny in the weaning DVP by the number of dams in the joining DVP
-#
-#     ##read from stock reshape function
-#     type = 'stock'
-#     prod = 1      #prod = 1 to return the number of dams
-#     prod2 = 'nfoet_scan_tva1e1b1nw8ziyg1'   # = 'nyatf_wean_tva1e1b1nw8ziyg1 for weaning percentage
-#     weights = 'dams_numbers_tvanwziy1g1'
-#     na_weights = [4,5]
-#     den_weights = 'e1b1_denom_weights_k2tva1e1b1nw8ziyg1'   #don't think this is required except to stop 'no argument' causing an error
-#     keys = 'dams_keys_k2tvaebnwziy1g1'
-#     arith = 2
-#     denominator, keys_sliced = f_stock_pasture_summary(lp_vars, r_vals, build_df=False, type=type, prod=prod, weights=weights,
-#                            den_weights=den_weights, na_weights=na_weights,
-#                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
-#     numerator, keys_sliced = f_stock_pasture_summary(lp_vars, r_vals, build_df=False, type=type, prod=prod2, weights=weights,
-#                            den_weights=den_weights, na_weights=na_weights,
-#                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
-#     # these steps related to converting the b axis are not required.
-#     # prog_born_k2tvpa1e1b1nw8ziyg1 = np.moveaxis(np.sum(prog_born[...,na] * r_vals['stock']['nfoet_b1nwziygb9'], axis=-8), -1, -7)
-#     # prog_alive_k2tvpa1e1b1nw8ziyg1 = np.moveaxis(np.sum(prog_alive[...,na] * r_vals['stock']['nyatf_b1nwziygb9'], axis=-8), -1, -7)
-#     # keys_sliced[5] = keys_sliced[5][0:4] #have to slice the b axis so it is the same size as b9
-#
-#     ##roll the number of dams along the v axis to align the joining number with the numerator
-#     roll = 1   # 2 for weaning %
-#     denominator = np.roll(denominator, roll, axis=-10)
-#
-#     percentage= fun.f_divide(numerator, denominator)
-#     percentage = f_numpy2df(percentage, keys_sliced, index, cols)
-#     return percentage
 
 
 ############################

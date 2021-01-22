@@ -97,6 +97,8 @@ def f_df2xl(writer, df, sheet, rowstart=0, colstart=0, option=0):
         for row in range(len(df)):
             if (df.iloc[row]==0).all():
                 offset = df.columns.nlevels #number of columns used for names
+                if offset>1:
+                    offset += 1 #for some reason if the cols are multiindex the an extra row gets added when writing to excel
                 worksheet.set_row(row+offset,None,None,{'level': 1, 'hidden': True}) #set hidden to true to colaps the level initially
 
         for col in range(len(df.columns)):
@@ -222,7 +224,7 @@ if run_weanper:
     axis_slice = {}
     lamb_survival = rep.f_stack(func, trial_outdated, exp_data_index, trials, option=option, arith_axis=arith_axis,
                                 index=index, cols=cols, axis_slice=axis_slice)
-    f_df2xl(writer, lamb_survival, 'lamb_survival', option=1)
+    f_df2xl(writer, lamb_survival, 'wean_per', option=1)
 
 if run_scanper:
     func = rep.f_survival_wean_scan
@@ -234,7 +236,7 @@ if run_scanper:
     axis_slice = {}
     lamb_survival = rep.f_stack(func, trial_outdated, exp_data_index, trials, option=option, arith_axis=arith_axis,
                                 index=index, cols=cols, axis_slice=axis_slice)
-    f_df2xl(writer, lamb_survival, 'lamb_survival', option=1)
+    f_df2xl(writer, lamb_survival, 'scan_per', option=1)
 
 
 if run_daily_mei_dams:

@@ -4533,7 +4533,9 @@ def generator(params,r_vals,ev,plots = False):
 
     r_nfoet_birth_k2tva1e1b1nwzida0e0b0xyg1 = fun.f_divide(r_nfoet_birth_tvg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1) #cant use param function because we need to keep e and b axis
                                                            * mask_w8vars_va1e1b1nw8zida0e0b0xyg1
-                                                            , numbers_start_va1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1))
+                                                            , np.sum(numbers_start_va1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1),
+                                                                     axis = (e1_pos, b1_pos), keepdims=True))
+
 
     ##nyatf - nyatf per ewe at start of dvp (ie accounting for dam mortality - so it can be multiplied by the v_dams from lp solution)
     # r_nyatf_birth_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams',r_nyatf_birth_tvg1,
@@ -4544,7 +4546,8 @@ def generator(params,r_vals,ev,plots = False):
 
     r_nyatf_birth_k2tva1e1b1nwzida0e0b0xyg1 = fun.f_divide(r_nyatf_birth_tvg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1) #cant use param function because we need to keep e and b axis
                                                            * mask_w8vars_va1e1b1nw8zida0e0b0xyg1
-                                                            , numbers_start_va1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1))
+                                                            , np.sum(numbers_start_va1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1),
+                                                                     axis = (e1_pos, b1_pos), keepdims=True))
 
     # ##number of dams at birth with k, e1 & b1 axes
     # r_numbers_birth_k2tva1e1b1nwzida0e0b0xyg1 = r_numbers_birth_va1e1b1nwzida0e0b0xyg1 * (
@@ -5286,9 +5289,10 @@ def generator(params,r_vals,ev,plots = False):
     r_vals['keys_p6'] = keys_p6
 
     ##key lists used to form table headers and indexs
-    keys_e= ['e%s'%i for i in range(len_e1)]
-    keys_b= uinp.structure['i_lsln_idx_dams']
-    keys_p= ['p%s'%i for i in range(len_p)]
+    keys_e = ['e%s'%i for i in range(len_e1)]
+    keys_b = uinp.structure['i_lsln_idx_dams']
+    keys_b9 = uinp.structure['i_lsln_idx_dams'][1:5]
+    keys_p = ['p%s'%i for i in range(len_p)]
 
     r_vals['sire_keys_g0'] = [keys_g0]
     r_vals['sire_keys_p6fg0'] = [keys_p6, keys_f, keys_g0]
@@ -5296,7 +5300,7 @@ def generator(params,r_vals,ev,plots = False):
                                              keys_y1, keys_g1]
     r_vals['dams_keys_k2tvanwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i,
                                              keys_y1, keys_g1]
-    r_vals['dams_keys_k2tvaebnwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_a, keys_e, keys_b, keys_n1, keys_lw1, keys_z, keys_i,
+    r_vals['dams_keys_k2tvaeb9nwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_a, keys_e, keys_b9, keys_n1, keys_lw1, keys_z, keys_i,
                                              keys_y1, keys_g1]
     r_vals['dams_keys_k2tvpaebnwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1, keys_z, keys_i,
                                              keys_y1, keys_g1]
@@ -5401,8 +5405,7 @@ def generator(params,r_vals,ev,plots = False):
     index_b9 = [0,1,2,3]
     nfoet_b1nwzida0e0b0xygb9 = nfoet_b1nwzida0e0b0xyg[...,na] == index_b9
     nyatf_b1nwzida0e0b0xygb9 = nyatf_b1nwzida0e0b0xyg[...,na] == index_b9
-    r_vals['nfoet_b1nwziygb9'] = nfoet_b1nwzida0e0b0xygb9.squeeze(axis=(d_pos-1, a0_pos-1, e0_pos-1, b0_pos-1, x_pos-1))
-    r_vals['nyatf_b1nwziygb9'] = nyatf_b1nwzida0e0b0xygb9.squeeze(axis=(d_pos-1, a0_pos-1, e0_pos-1, b0_pos-1, x_pos-1))
+    r_vals['mask_b1b9_preg_b1nwziygb9'] = nfoet_b1nwzida0e0b0xygb9.squeeze(axis=(d_pos-1, a0_pos-1, e0_pos-1, b0_pos-1, x_pos-1))
 
     ###denom weights for arrays that keep axis that are not present in lp array.
     r_vals['pe1b1_denom_weights_k2tvpa1e1b1nw8ziyg1'] = ((a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
