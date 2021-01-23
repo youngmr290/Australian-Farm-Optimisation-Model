@@ -353,22 +353,37 @@ def f_g2g(array_g,group,left_pos=0,len_ax1=0,len_ax2=0,len_ax3=0,swap=False,righ
     return array
 
 
-def f_DSTw(scan_std_yg):
+def f_DSTw(scan_g, cycles=1):
     '''
+    A numpy based calculation of the proportion of dry, single, twin & triplet bearing dams from a scanning percentage.
+    Prediction is a polynomial formula y=intercept+ax+bx^2+cx^3+dx^4, where x is the scanning %
+    The coefficients for the prediction are assumed to have been derived from mating for 2 cycles.
+
     Parameters
     ----------
-    scan_std_yg : np array
-        scanning percentage of genotypes.
-
+    scan_g : np array - scanning percentage of genotypes if mated for the number of calibration cycles.
+    cycles: int, optional - the number of calibration cycles relative to the number of prediction cycles.
     Returns
     -------
-    Proportion of dry, single, twins & triplets. Using a Numpy way of making this formula: y=int+ax+bx^2+cx^3+dx^4
+    Proportion of dry, single, twins & triplets.
 
     '''
+    ## predict the proportion of dry, single, twins & triplets if the dams were mated for the calibration period (n cycles)
     scan_powers_s = uinp.sheep['i_scan_powers']  #scan powers are the exponential powers used in the quadratic formula ie ^0, ^1, ^2, ^3, ^4
-    scan_power_ygs = scan_std_yg[...,na] ** scan_powers_s #raises scan_std to scan_powers_s ie x^0, x^1, x^2, x^3, x^4
-    dstwtr_ygl0 = np.sum(uinp.sheep['i_scan_coeff_l0s'] * scan_power_ygs[...,na,:], axis = -1) #add the coefficients and sum all the elements of the equation ie int+ax+bx^2+cx^3+dx^4
-    return dstwtr_ygl0
+    scan_power_gs = scan_g[...,na] ** scan_powers_s #raises scan_std to scan_powers_s ie x^0, x^1, x^2, x^3, x^4
+    dstwtr_n_gl0 = np.sum(uinp.sheep['i_scan_coeff_l0s'] * scan_power_gs[...,na,:], axis = -1) #add the coefficients and sum all the elements of the equation ie int+ax+bx^2+cx^3+dx^4
+
+    ##convert the litter size proportion for the calibration period to the prediction period (1 cycle)
+    dstwtr_1_gl0 = np.zeros_like(dstwtr_n_gl0)
+    dry_propn_1 = dstwtr_n_gl0[...,0:1]**(1 / cycles)
+    dstwtr_1_gl0[..., 0:1] = dry_propn_1
+    dstwtr_1_gl0[...,1:] = dstwtr_n_gl0[...,1:] * (1 - dry_propn_1) / (1 - dry_propn_1**cycles)
+
+    ##set values between 0 & 1 and adjust singles so that total is 1
+    dstwtr_1_gl0 = np.clip(dstwtr_1_gl0, 0, 1)
+    t_mask = [True, False, True, True]
+    dstwtr_1_gl0[..., 1] = 1 - np.sum(dstwtr_1_gl0 * t_mask, axis = -1) # mask out the Singles value in the sum of the array across the l0 axis
+    return dstwtr_1_gl0
 
 def f_btrt0(dstwtr_propn,lss,lstw,lstr): #^this function is inflexible ie if you want to add quadruplets
     '''
@@ -953,13 +968,13 @@ def f_milk(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_start,
 
 
 def f_fibre(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_m2g, mei_g, mew_min_g, d_cfw_ave_g
-            , sfd_a0e0b0xyg, wge_a0e0b0xyg, af_wool_g, dlf_wool_g,  kw_yg, days_period_g, cfwltw_adj_g, fdltw_adj_g
+            , sfd_a0e0b0xyg, wge_a0e0b0xyg, af_wool_g, dlf_wool_g,  kw_yg, days_period_g, sfw_ltwadj_g, sfd_ltwadj_g
             , mec_g1=0, mel_g1=0, gest_propn_g1=0, lact_propn_g1=0):
     ##adjust wge, cfw_ave, mew_min & sfd for the LTW adjustments (CFW is a scalar and FD is an addition)
-    wge_a0e0b0xyg = wge_a0e0b0xyg * cfwltw_adj_g
-    d_cfw_ave_g = d_cfw_ave_g * cfwltw_adj_g
-    mew_min_g = mew_min_g * cfwltw_adj_g
-    sfd_a0e0b0xyg = sfd_a0e0b0xyg + fdltw_adj_g
+    wge_a0e0b0xyg = wge_a0e0b0xyg * sfw_ltwadj_g
+    d_cfw_ave_g = d_cfw_ave_g * sfw_ltwadj_g
+    mew_min_g = mew_min_g * sfw_ltwadj_g
+    sfd_a0e0b0xyg = sfd_a0e0b0xyg + sfd_ltwadj_g
     ##ME available for wool growth
     mew_xs_g = np.maximum(mew_min_g * relsize_start_g, mei_g - (mec_g1 * gest_propn_g1 + mel_g1 * lact_propn_g1))
     ##Wool growth (protein weight-as shorn i.e. not DM) if there was no lag
@@ -1086,9 +1101,16 @@ def f_feedsupply(cu3, cu4, cr, feedsupply_std_a1e1b1nwzida0e0b0xyg, paststd_foo_
 
 
 def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, nyatf_b1any, period_is_mating, index_e1):
-    ##Conception greater than or equal to 1,2,3 foetus (what is chance you have more than x number of foetuses)
+    '''CSIRO system: The general calculation is probability of conception greater than or equal to 1,2,3 foetuses
+    Probability is calculated from a sigmoid relationship based on relative size * relative condition at birth
+    The cumulative probability is scaled by a factor that varies with (litter size * latitude * day of the year)
+    The probability is an estimate of the number of dams carrying that number in the third trimester.
+    Some dams conceive (and don't return to service) but don't carry to the third trimester, this is taken into account.
+    '''
+    ## relative size and relative condition at birth are the determinants of conception
     relsize_mating_e1b1sliced = f_dynamic_slice(relsize_mating, pinp.sheep['i_e1_pos'], 0, 1, uinp.parameters['i_b1_pos'], 0, 1) #take slice from e1 & b1 axis
     rc_mating_e1b1sliced = f_dynamic_slice(rc_mating, pinp.sheep['i_e1_pos'], 0, 1, uinp.parameters['i_b1_pos'], 0, 1) #take slice from e1 & b1 axis
+    ## probability of at least a given number of foetuses
     crg = crg_doy * f_sig(relsize_mating_e1b1sliced * rc_mating_e1b1sliced, cb1[2, ...], cb1[3, ...])
     ##Define the temp array shape
     t_cr = crg.copy()
@@ -1101,19 +1123,26 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
     t_cr[tuple(slc)] = np.minimum(1 - f_dynamic_slice(crg, uinp.parameters['i_b1_pos'], 2, 3), f_dynamic_slice(crg, uinp.parameters['i_b1_pos'], 2, 3) * (cf[5, ...] / (1 - cf[5, ...])))
     ##Proportion of animals with conception equal to x (if this period is mating)
     conception = t_cr * period_is_mating
-    ##Subtract conception of 00, 11, 22 & 33 from the NM slice (in e = 0)
+    ##Subtract conception of 00, 11, 22 & 33 from the NM slice (in e1[0])
     slc = [slice(None)] * len(conception.shape)
     # slc[pinp.sheep['i_e1_pos']] = slice(0,1)
     slc[uinp.parameters['i_b1_pos']] = slice(0,1)
     conception[tuple(slc)] = -np.sum(f_dynamic_slice(conception, uinp.parameters['i_b1_pos'],1, 5), axis = (uinp.parameters['i_b1_pos']), keepdims=True)
-    temporary = (index_e1 == 0) * np.sum(conception, axis=pinp.sheep['i_e1_pos'], keepdims=True) #sum across e axis into slice 0
-    conception = fun.f_update(conception, temporary, (nyatf_b1any == 0)) #Put sum of e1 into slice 0 (e1) if nyatf == 0
-    ##Set proportions for dams that gave birth and lost to 0 - this is required so that numbers in pp behave correctly
+    temporary = (index_e1 == 0) * np.sum(conception, axis=pinp.sheep['i_e1_pos'], keepdims=True) #sum across e axis into slice e[0]
+    conception = fun.f_update(conception, temporary, (nyatf_b1any == 0)) #Put sum of e1 into slice e1[0] if nyatf == 0
+    ##Set proportions to 0 for dams that gave birth and lost - this is required so that numbers in pp behave correctly
     conception *= (nfoet_b1any == nyatf_b1any)
     return conception
 
-def f_conception_ltw(cu0, cs_mating, scan_std, doy_p, nfoet_b1any, nyatf_b1any, period_is_mating, index_e1):
-    ##Slope of the RR vs CS relationship	
+def f_conception_ltw(cu0, relsize_mating, cs_mating, scan_std, doy_p, nfoet_b1any, nyatf_b1any, period_is_mating, index_e1):
+    ''' LTW system: The general calculation is scanning percentage is defined by a linear function of CS
+    The slope varies with day of year
+    The proportion of dry, single, twin & triplet is estimated based on a function of the scanning percentage.
+    '''
+    ##Adjust standard scanning percentage based on relative size (to reduce scanning percentage of younger animals)
+    ## #todo scan_std probably should change based on date of joining
+    scan_std = scan_std * relsize_mating
+    ##Slope of the RR vs CS relationship
     slope = np.maximum(cu0[4, ...], cu0[2, ...] + np.sin(2 * np.pi * doy_p / 365) * cu0[3, ...])
     ##Reproduction rate
     cs_mating_e1b1sliced = f_dynamic_slice(cs_mating, pinp.sheep['i_e1_pos'], 0, 1, uinp.parameters['i_b1_pos'], 0, 1) #take slice from e1 & b1 axis (take slice from not mated to get cs because they are about to be mated)
@@ -1121,7 +1150,9 @@ def f_conception_ltw(cu0, cs_mating, scan_std, doy_p, nfoet_b1any, nyatf_b1any, 
     ###remove b1 axis by squeezing
     repro_rate = np.squeeze(repro_rate, axis=uinp.parameters['i_b1_pos'])
     ##Conception - propn dry/single/twin for given repro rate
-    conception = np.moveaxis(f_DSTw(repro_rate)[...,uinp.structure['a_nfoet_b1']], -1, uinp.parameters['i_b1_pos']) * period_is_mating #move the l0 axis into the b1 position. and expand to b1 size.
+    ### Return the litter size proportion for a single cycle
+    ### The proportions returned are in the axis -1 and needs altering and moving to b1 position.
+    conception = np.moveaxis(f_DSTw(repro_rate, uinp.sheep['i_scan_coeff_cycles'])[...,uinp.structure['a_nfoet_b1']], -1, uinp.parameters['i_b1_pos']) * period_is_mating #move the l0 axis into the b1 position. and expand to b1 size.
     ##Number remaining not-mated (cr[-1])
     slc = [slice(None)] * len(conception.shape)
     slc[uinp.parameters['i_b1_pos']] = slice(0,1)
