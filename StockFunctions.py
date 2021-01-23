@@ -1107,60 +1107,82 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
     The probability is an estimate of the number of dams carrying that number in the third trimester.
     Some dams conceive (and don't return to service) but don't carry to the third trimester, this is taken into account.
     '''
-    ## relative size and relative condition at birth are the determinants of conception
-    relsize_mating_e1b1sliced = f_dynamic_slice(relsize_mating, pinp.sheep['i_e1_pos'], 0, 1, uinp.parameters['i_b1_pos'], 0, 1) #take slice from e1 & b1 axis
-    rc_mating_e1b1sliced = f_dynamic_slice(rc_mating, pinp.sheep['i_e1_pos'], 0, 1, uinp.parameters['i_b1_pos'], 0, 1) #take slice from e1 & b1 axis
-    ## probability of at least a given number of foetuses
-    crg = crg_doy * f_sig(relsize_mating_e1b1sliced * rc_mating_e1b1sliced, cb1[2, ...], cb1[3, ...])
-    ##Define the temp array shape
-    t_cr = crg.copy()
-    ##Conception equal to x (temporary array as if this period is joining)
-    slc = [slice(None)] * len(t_cr.shape)
-    slc[uinp.parameters['i_b1_pos']] = slice(1,4)
-    t_cr[tuple(slc)] = np.maximum(0, f_dynamic_slice(crg, uinp.parameters['i_b1_pos'], 1, 4) - f_dynamic_slice(crg, uinp.parameters['i_b1_pos'], 2, 5))    # (difference between '>x' and '>x+1')
-    ##Dams that don't retain to 3rd trimester but do not return to service (because they got pregnant) are added to 00 slice rather than staying in NM slice
-    slc[uinp.parameters['i_b1_pos']] = slice(1,2)
-    t_cr[tuple(slc)] = np.minimum(1 - f_dynamic_slice(crg, uinp.parameters['i_b1_pos'], 2, 3), f_dynamic_slice(crg, uinp.parameters['i_b1_pos'], 2, 3) * (cf[5, ...] / (1 - cf[5, ...])))
-    ##Proportion of animals with conception equal to x (if this period is mating)
-    conception = t_cr * period_is_mating
-    ##Subtract conception of 00, 11, 22 & 33 from the NM slice (in e1[0])
-    slc = [slice(None)] * len(conception.shape)
-    # slc[pinp.sheep['i_e1_pos']] = slice(0,1)
-    slc[uinp.parameters['i_b1_pos']] = slice(0,1)
-    conception[tuple(slc)] = -np.sum(f_dynamic_slice(conception, uinp.parameters['i_b1_pos'],1, 5), axis = (uinp.parameters['i_b1_pos']), keepdims=True)
-    temporary = (index_e1 == 0) * np.sum(conception, axis=pinp.sheep['i_e1_pos'], keepdims=True) #sum across e axis into slice e[0]
-    conception = fun.f_update(conception, temporary, (nyatf_b1any == 0)) #Put sum of e1 into slice e1[0] if nyatf == 0
-    ##Set proportions to 0 for dams that gave birth and lost - this is required so that numbers in pp behave correctly
-    conception *= (nfoet_b1any == nyatf_b1any)
+    if ~np.any(period_is_mating):
+        conception = np.zeros_like(relsize_mating)
+    else:
+        ## relative size and relative condition of the dams at mating are the determinants of conception
+        ### the dams being mated are those in slices e1[0] and b1[0] (first cyle, not mated)
+        relsize_mating_e1b1sliced = f_dynamic_slice(relsize_mating, pinp.sheep['i_e1_pos'], 0, 1, uinp.parameters['i_b1_pos'], 0, 1) #take slice from e1 & b1 axis
+        rc_mating_e1b1sliced = f_dynamic_slice(rc_mating, pinp.sheep['i_e1_pos'], 0, 1, uinp.parameters['i_b1_pos'], 0, 1) #take slice from e1 & b1 axis
+        ## probability of at least a given number of foetuses
+        crg = crg_doy * f_sig(relsize_mating_e1b1sliced * rc_mating_e1b1sliced, cb1[2, ...], cb1[3, ...])
+        ##Set proportions to 0 for dams that gave birth and lost - this is required so that numbers in pp behave correctly
+        crg *= (nfoet_b1any == nyatf_b1any)
+        ##Define the temp array shape & populate with values from crg (values are required for the proportion of the highest parity dams)
+        t_cr = crg.copy()
+        ##probability of a given number of foetuses (calculated from the difference in the cumulative probability)
+        slc = [slice(None)] * len(t_cr.shape)
+        slc[uinp.parameters['i_b1_pos']] = slice(1,-1)
+        t_cr[tuple(slc)] = np.maximum(0, f_dynamic_slice(crg, uinp.parameters['i_b1_pos'], 1, -1) - f_dynamic_slice(crg, uinp.parameters['i_b1_pos'], 2, None))    # (difference between '>x' and '>x+1')
+        ##Dams that implant (i.e. do not return to service) but don't retain to 3rd trimester are added to 00 slice rather than staying in NM slice
+        ###Number is based on a proportion (cf[5]) of the ewes that implant (propn_preg) losing their foetuses/embryos
+        ###The number can't be more than the number of ewes that are not pregnant in the 3rd trimester (1 - propn_preg).
+        propn_pregnant = f_dynamic_slice(crg, uinp.parameters['i_b1_pos'], 2, 3)
+        slc[uinp.parameters['i_b1_pos']] = slice(1,2)
+        t_cr[tuple(slc)] = np.minimum((cf[5, ...] / (1 - cf[5, ...])) * propn_pregnant, 1 - propn_pregnant)
+        ##If the period is mating then set conception = temporary probability array
+        conception = t_cr * period_is_mating
+        ##Subtract conception of 00, 11, 22 & 33 from the NM slice (in e1[0])
+        slc = [slice(None)] * len(conception.shape)
+        slc[uinp.parameters['i_b1_pos']] = slice(0,1)
+        conception[tuple(slc)] = -np.sum(f_dynamic_slice(conception, uinp.parameters['i_b1_pos'],1, None), axis = (uinp.parameters['i_b1_pos']), keepdims=True)
+        temporary = (index_e1 == 0) * np.sum(conception, axis=pinp.sheep['i_e1_pos'], keepdims=True) #sum across e axis into slice e[0]
+        conception = fun.f_update(conception, temporary, (nyatf_b1any == 0)) #Put sum of e1 into slice e1[0] and don't overwrite the slices where nyatf != 0
     return conception
 
-def f_conception_ltw(cu0, relsize_mating, cs_mating, scan_std, doy_p, nfoet_b1any, nyatf_b1any, period_is_mating, index_e1):
+def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, nfoet_b1any, nyatf_b1any, period_is_mating, index_e1):
     ''' LTW system: The general calculation is scanning percentage is defined by a linear function of CS
+    The standard value (CS 3) is determined by the genotype and relative size
     The slope varies with day of year
-    The proportion of dry, single, twin & triplet is estimated based on a function of the scanning percentage.
+    The proportion of dry, single, twin & triplet is estimated as a function of the scanning percentage.
     '''
-    ##Adjust standard scanning percentage based on relative size (to reduce scanning percentage of younger animals)
-    ## #todo scan_std probably should change based on date of joining
-    scan_std = scan_std * relsize_mating
-    ##Slope of the RR vs CS relationship
-    slope = np.maximum(cu0[4, ...], cu0[2, ...] + np.sin(2 * np.pi * doy_p / 365) * cu0[3, ...])
-    ##Reproduction rate
-    cs_mating_e1b1sliced = f_dynamic_slice(cs_mating, pinp.sheep['i_e1_pos'], 0, 1, uinp.parameters['i_b1_pos'], 0, 1) #take slice from e1 & b1 axis (take slice from not mated to get cs because they are about to be mated)
-    repro_rate = scan_std + (cs_mating_e1b1sliced - 3) * slope
-    ###remove b1 axis by squeezing
-    repro_rate = np.squeeze(repro_rate, axis=uinp.parameters['i_b1_pos'])
-    ##Conception - propn dry/single/twin for given repro rate
-    ### Return the litter size proportion for a single cycle
-    ### The proportions returned are in the axis -1 and needs altering and moving to b1 position.
-    conception = np.moveaxis(f_DSTw(repro_rate, uinp.sheep['i_scan_coeff_cycles'])[...,uinp.structure['a_nfoet_b1']], -1, uinp.parameters['i_b1_pos']) * period_is_mating #move the l0 axis into the b1 position. and expand to b1 size.
-    ##Number remaining not-mated (cr[-1])
-    slc = [slice(None)] * len(conception.shape)
-    slc[uinp.parameters['i_b1_pos']] = slice(0,1)
-    conception[tuple(slc)] = -np.sum(f_dynamic_slice(conception, uinp.parameters['i_b1_pos'],1, 5), axis = (uinp.parameters['i_b1_pos']), keepdims=True)
-    temporary = (index_e1 == 0) * np.sum(conception, axis=pinp.sheep['i_e1_pos'], keepdims=True)  # sum across e axis into slice 0
-    conception = fun.f_update(conception, temporary, (nyatf_b1any == 0))  # Put sum of e1 into slice 0 (e1) if nyatf == 0
-    ##Set proportions for dams that gave birth and lost to 0 - this is required so that numbers in pp behave correctly
-    conception *= (nfoet_b1any == nyatf_b1any)
+    if ~np.any(period_is_mating):
+        conception = np.zeros_like(relsize_mating)
+    else:
+        ## relative size and condition score of the dams at mating are the determinants of conception
+        ### the dams being mated are those in slices e1[0] and b1[0] (first cyle, not mated)
+        ## #todo scan_std probably should change based on date of joining
+        relsize_mating_e1b1sliced = f_dynamic_slice(relsize_mating, pinp.sheep['i_e1_pos'], 0, 1, uinp.parameters['i_b1_pos'], 0, 1) #take slice e1[0] & b1[0]
+        cs_mating_e1b1sliced = f_dynamic_slice(cs_mating, pinp.sheep['i_e1_pos'], 0, 1, uinp.parameters['i_b1_pos'], 0, 1) #take slice e1[0] & b1[0]
+        ##Adjust standard scanning percentage based on relative size (to reduce scanning percentage of younger animals)
+        scan_std = scan_std * relsize_mating_e1b1sliced
+        ##Slope of the RR vs CS relationship based on time of the year
+        slope = np.maximum(cu0[4, ...], cu0[2, ...] + np.sin(2 * np.pi * doy_p / 365) * cu0[3, ...])
+        ##Reproduction rate for dams as if mated for the number of cycles in the calibration data.
+        repro_rate = scan_std + (cs_mating_e1b1sliced - 3) * slope
+        ###remove singleton b1 axis by squeezing because it is replaced by the l0 axis (the proportions generated in f_DSTw)
+        repro_rate = np.squeeze(repro_rate, axis=uinp.parameters['i_b1_pos'])
+        ##Conception - propn dry/single/twin for given repro rate
+        ### Return the litter size proportion for 1 cycle
+        ### The proportions returned are in axis -1 and needs the slices altered (shape of l0 to b1) and moving to b1 position.
+        t_cr = np.moveaxis(f_DSTw(repro_rate, uinp.sheep['i_scan_coeff_cycles'])[...,uinp.structure['a_nfoet_b1']], -1, uinp.parameters['i_b1_pos']) #move the l0 axis into the b1 position. and expand to b1 size.
+        ##Set proportions to 0 for dams that gave birth and lost - this is required so that numbers in pp behave correctly
+        t_cr *= (nfoet_b1any == nyatf_b1any)
+        ##Dams that implant (i.e. do not return to service) but don't retain to 3rd trimester are added to 00 slice rather than staying in NM slice
+        ###Number is based on a proportion (cf[5]) of the ewes that implant (propn_preg) losing their foetuses/embryos
+        ###The number can't be more than the number of ewes that are not pregnant in the 3rd trimester (1 - propn_preg).
+        propn_pregnant = np.sum(f_dynamic_slice(t_cr, uinp.parameters['i_b1_pos'], 2, None), axis = uinp.parameters['i_b1_pos'], keepdims = True)
+        slc = [slice(None)] * len(t_cr.shape)
+        slc[uinp.parameters['i_b1_pos']] = slice(1,2)
+        t_cr[tuple(slc)] = np.minimum((cf[5, ...] / (1 - cf[5, ...])) * propn_pregnant, 1 - propn_pregnant)
+        ##If the period is mating then set conception = temporary probability array
+        conception = t_cr * period_is_mating
+        ##Subtract conception of 00, 11, 22 & 33 from the NM slice (in e1[0])
+        slc = [slice(None)] * len(conception.shape)
+        slc[uinp.parameters['i_b1_pos']] = slice(0,1)
+        conception[tuple(slc)] = -np.sum(f_dynamic_slice(conception, uinp.parameters['i_b1_pos'],1, None), axis = (uinp.parameters['i_b1_pos']), keepdims=True)
+        temporary = (index_e1 == 0) * np.sum(conception, axis=pinp.sheep['i_e1_pos'], keepdims=True)  # sum across e axis into slice e[0]
+        conception = fun.f_update(conception, temporary, (nyatf_b1any == 0))  #Put sum of e1 into slice e1[0] and don't overwrite the slices where nyatf != 0
     return conception
 
 
