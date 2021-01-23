@@ -132,7 +132,6 @@ def f_convert_to_inf(input):
     input[mask]=False
     return input.astype('float')
 
-
 ###########################
 #general functions        #
 ###########################
