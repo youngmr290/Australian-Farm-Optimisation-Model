@@ -149,31 +149,41 @@ def cartesian_product_simple_transpose(arrays):
     return arr.reshape(la, -1).T
 
 
-def searchsort_multiple_dim(a,v,axis_a,axis_v):
+def searchsort_multiple_dim(a,v,axis_a0,axis_a1,axis_v0,axis_v1):
     '''
     Find the indices into a sorted array a such that, if the corresponding elements in 'v' were inserted before the indices, the order of 'a' would be preserved.
     It does this iteratively down the specified axis (therefore the specified axis must be present in both 'a' and 'v'
 
     Parameters:
-        a: 2-D array_like
-        Input array. Must be sorted in ascending order, otherwise sorter must be an array of indices that sort it.
+        a: 3-D array_like
+        Input array. Must be sorted in ascending order.
 
         v: array_like
         Values to insert into a.
 
-        axis_a: int
-        The axis to iterate along - should be same as axis_v
-        axis_v: int
-        The axis to iterate along - should be same as axis_a
+        axis_a0: int
+        The position of axis to iterate along. a1 & v1 axis must be same length
+        axis_a1: int
+        The position of axis to iterate along. a1 & v1 axis must be same length
 
     '''
+    # final = np.zeros_like(v)
+    # slc_v = [slice(None)] * len(v.shape)
+    # slc_a = [slice(None)] * len(a.shape)
+    # for i in range(v.shape[axis_v]):
+    #     slc_v[axis_v] = slice(i, i+1)
+    #     slc_a[axis_a] = slice(i, i+1)
+    #     final[tuple(slc_v)] = np.searchsorted(np.squeeze(a[tuple(slc_a)]), v[tuple(slc_v)])
     final = np.zeros_like(v)
-    slc_v = [slice(None)] * len(v.shape)
     slc_a = [slice(None)] * len(a.shape)
-    for i in range(v.shape[axis_v]):
-        slc_v[axis_v] = slice(i, i+1)
-        slc_a[axis_a] = slice(i, i+1)
-        final[tuple(slc_v)] = np.searchsorted(np.squeeze(a[tuple(slc_a)]), v[tuple(slc_v)])
+    slc_v = [slice(None)] * len(v.shape)
+    for i in range(v.shape[axis_a0]):
+        for j in range(v.shape[axis_a1]):
+            slc_a[axis_a0] = slice(i, i+1)
+            slc_a[axis_a1] = slice(j, j+1)
+            slc_v[axis_v0] = slice(i, i+1)
+            slc_v[axis_v1] = slice(j, j+1)
+            final[tuple(slc_v)] = np.searchsorted(np.squeeze(a[tuple(slc_a)]), v[tuple(slc_v)])
     return final
 
 #print(timeit.timeit(phases2,number=100)/100)

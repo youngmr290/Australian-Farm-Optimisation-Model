@@ -412,7 +412,7 @@ def coremodel_all():
 
         for v in model.component_objects(pe.Var,active=True):
             for index in v:
-
+                print(v)
         def pysp_scenario_tree_model_callback():
             # Return a NetworkX scenario tree.
             g = networkx.DiGraph()

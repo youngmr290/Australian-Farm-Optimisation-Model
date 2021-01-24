@@ -66,7 +66,7 @@ if inputs_from_pickle == False:
         pkl.dump(feedsupply_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
         pasture_inp=dict()
-        for pasture in uinp.structure['pastures']:#all pasture inputs are adjusted even if a given pasture is not included
+        for pasture in uinp.structure['pastures'][uinp.structure['pastures_exist']]:#all pasture inputs are adjusted even if a given pasture is not included
             pasture_inp[pasture] = fun.xl_all_named_ranges('Property.xlsx', pasture)
         pkl.dump(pasture_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
@@ -135,7 +135,7 @@ def property_inp_sa():
     import Sensitivity as sen
     ##pasture
     general['pas_inc'] = fun.f_sa(general_inp['pas_inc'],sen.sav['pas_inc'],5)
-    for pasture in uinp.structure['pastures']: #all pasture inputs are adjusted even if a given pasture is not included
+    for pasture in uinp.structure['pastures'][general['pas_inc']]: #all pasture inputs are adjusted even if a given pasture is not included
         ###SAM
         pasture_inputs[pasture]['GermStd'] = fun.f_sa(pasture_inp[pasture]['GermStd'], sen.sam[('germ',pasture)])
         pasture_inputs[pasture]['GermScalarLMU'] = fun.f_sa(pasture_inp[pasture]['GermScalarLMU'], sen.sam[('germ_l',pasture)])
@@ -198,7 +198,7 @@ def f_seasonal_inp(inp, numpy=False, axis=0):
         ##weighted average if steady state
         if general['steady_state']:
             try: #incase df is datearray
-                inp = inp.mul(z_prob, axis=1, level=0).sum(axis=1, level=0)
+                inp = inp.mul(z_prob, axis=1, level=0).sum(axis=1, level=1)
             except TypeError:
                 #this wont work if columns have two levels (would need to reshape into multi d numpy do the average then reshape to 2-d)
                 n_inp = inp.values.astype(np.int64)

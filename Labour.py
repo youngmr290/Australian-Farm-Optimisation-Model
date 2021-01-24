@@ -111,11 +111,11 @@ def labour_general(params,r_vals):
 
     for i in labour_periods['date']: #loops through each period date
         ##work out total hours available in each period for manager (owner)
-        if i in per.period_dates(per.wet_seeding_start_date(),pinp.crop['seed_period_lengths']): #checks if the date is a seed period
+        if i in per.period_dates(per.wet_seeding_start_date(),pinp.period['seed_period_lengths']): #checks if the date is a seed period
             labour_periods.loc[labour_periods['date']==i , 'manager hours'] = labour_periods.loc[labour_periods['date']==i , 'manager weekdays'] / datetime.timedelta(days=1) \
             * pinp.labour['daily_hours'].loc['seeding', 'Manager'] + labour_periods.loc[labour_periods['date']==i , 'manager weekend'] / datetime.timedelta(days=1) \
             * pinp.labour['daily_hours'].loc['seeding', 'Manager'] #convert the datetime into a float by dividing number of days by 1 day, then multiply by number of hours that can be worked during seeding.
-        elif i in per.period_dates(pinp.crop['harv_date'],pinp.crop['harv_period_lengths']):
+        elif i in per.period_dates(pinp.period['harv_date'],pinp.period['harv_period_lengths']):
             labour_periods.loc[labour_periods['date']==i , 'manager hours'] = labour_periods.loc[labour_periods['date']==i , 'manager weekdays'] / datetime.timedelta(days=1) \
             * pinp.labour['daily_hours'].loc['harvest', 'Manager'] + labour_periods.loc[labour_periods['date']==i , 'manager weekend'] / datetime.timedelta(days=1) \
             * pinp.labour['daily_hours'].loc['harvest', 'Manager']  
@@ -124,11 +124,11 @@ def labour_general(params,r_vals):
             * pinp.labour['daily_hours'].loc['weekdays', 'Manager'] + labour_periods.loc[labour_periods['date']==i , 'manager weekend'] / datetime.timedelta(days=1) \
             * pinp.labour['daily_hours'].loc['weekends', 'Manager']  
         ##work out total hours available in each period for permanent staff
-        if i in per.period_dates(per.wet_seeding_start_date(),pinp.crop['seed_period_lengths']): #checks if the date is a seed period
+        if i in per.period_dates(per.wet_seeding_start_date(),pinp.period['seed_period_lengths']): #checks if the date is a seed period
             labour_periods.loc[labour_periods['date']==i , 'permanent hours'] = labour_periods.loc[labour_periods['date']==i , 'permanent weekdays'] / datetime.timedelta(days=1) \
             * pinp.labour['daily_hours'].loc['seeding', 'Permanent'] + labour_periods.loc[labour_periods['date']==i , 'permanent weekend'] / datetime.timedelta(days=1) \
             * pinp.labour['daily_hours'].loc['seeding', 'Permanent'] #convert the datetime into a float by dividing number of days by 1 day, then multiply by number of hours that can be worked during seeding 
-        elif i in per.period_dates(pinp.crop['harv_date'],pinp.crop['harv_period_lengths']):
+        elif i in per.period_dates(pinp.period['harv_date'],pinp.period['harv_period_lengths']):
             labour_periods.loc[labour_periods['date']==i , 'permanent hours'] = labour_periods.loc[labour_periods['date']==i , 'permanent weekdays'] / datetime.timedelta(days=1) \
             * pinp.labour['daily_hours'].loc['harvest', 'Permanent'] + labour_periods.loc[labour_periods['date']==i , 'permanent weekend'] / datetime.timedelta(days=1) \
             * pinp.labour['daily_hours'].loc['harvest', 'Permanent']  
@@ -137,11 +137,11 @@ def labour_general(params,r_vals):
             * pinp.labour['daily_hours'].loc['weekdays', 'Permanent'] + labour_periods.loc[labour_periods['date']==i , 'permanent weekend'] / datetime.timedelta(days=1) \
             * pinp.labour['daily_hours'].loc['weekends', 'Permanent']  
         ##work out total hours available in each period for casual staff
-        if i in per.period_dates(per.wet_seeding_start_date(),pinp.crop['seed_period_lengths']): #checks if the date is a seed period
+        if i in per.period_dates(per.wet_seeding_start_date(),pinp.period['seed_period_lengths']): #checks if the date is a seed period
             labour_periods.loc[labour_periods['date']==i , 'casual hours'] = labour_periods.loc[labour_periods['date']==i , 'casual weekdays'] / datetime.timedelta(days=1) \
             * pinp.labour['daily_hours'].loc['seeding', 'Casual'] + labour_periods.loc[labour_periods['date']==i , 'casual weekend'] / datetime.timedelta(days=1) \
             * pinp.labour['daily_hours'].loc['seeding', 'Casual'] #convert the datetime into a float by dividing number of days by 1 day, then multiply by number of hours that can be worked during seeding.
-        elif i in per.period_dates(pinp.crop['harv_date'],pinp.crop['harv_period_lengths']):
+        elif i in per.period_dates(pinp.period['harv_date'],pinp.period['harv_period_lengths']):
             labour_periods.loc[labour_periods['date']==i , 'casual hours'] = labour_periods.loc[labour_periods['date']==i , 'casual weekdays'] / datetime.timedelta(days=1) \
             * pinp.labour['daily_hours'].loc['harvest', 'Casual'] + labour_periods.loc[labour_periods['date']==i , 'casual weekend'] / datetime.timedelta(days=1) \
             * pinp.labour['daily_hours'].loc['harvest', 'Casual']  
@@ -151,8 +151,8 @@ def labour_general(params,r_vals):
             * pinp.labour['daily_hours'].loc['weekends', 'Casual']  
 
         ##work out the number of hours of supervision needed by permanent staff
-        if i in per.period_dates(per.wet_seeding_start_date(),pinp.crop['seed_period_lengths']) \
-        or i in per.period_dates(pinp.crop['harv_date'],pinp.crop['harv_period_lengths']): #checks if the date is a seed period or harvest period
+        if i in per.period_dates(per.wet_seeding_start_date(),pinp.period['seed_period_lengths']) \
+        or i in per.period_dates(pinp.period['harv_date'],pinp.period['harv_period_lengths']): #checks if the date is a seed period or harvest period
             ###multiplys number of permanent hours in a given period by the percentage of supervision required for harvest and seeding
             labour_periods.loc[labour_periods['date']==i , 'permanent supervision'] = labour_periods.loc[labour_periods['date']==i , 'permanent hours'] \
             * pinp.labour['labour_eff'].loc['seedingharv', 'Permanent'] 
@@ -162,8 +162,8 @@ def labour_general(params,r_vals):
             * pinp.labour['labour_eff'].loc['normal', 'Permanent']   
 
         ##function to work out the number of hours of supervision needed by casual staff
-        if i in per.period_dates(per.wet_seeding_start_date(),pinp.crop['seed_period_lengths'])   \
-        or i in per.period_dates(pinp.crop['harv_date'],pinp.crop['harv_period_lengths']): #checks if the date is a seed period or harvest period
+        if i in per.period_dates(per.wet_seeding_start_date(),pinp.period['seed_period_lengths'])   \
+        or i in per.period_dates(pinp.period['harv_date'],pinp.period['harv_period_lengths']): #checks if the date is a seed period or harvest period
             ###multiplys number of casual hours in a given period by the percentage of supervision required for harvest and seeding
             labour_periods.loc[labour_periods['date']==i , 'casual supervision'] = labour_periods.loc[labour_periods['date']==i , 'casual hours'] \
             * pinp.labour['labour_eff'].loc['seedingharv', 'Casual'] 
@@ -174,14 +174,14 @@ def labour_general(params,r_vals):
 
         ##determine bounds for casual labour, this is needed because casual labour requirements may be different during seeding and harvest compared to the rest
         ###upper bound
-        if i in per.period_dates(per.wet_seeding_start_date(),pinp.crop['seed_period_lengths']) \
-        or i in per.period_dates(pinp.crop['harv_date'],pinp.crop['harv_period_lengths']): #checks if the date is a seed period or harvest date
+        if i in per.period_dates(per.wet_seeding_start_date(),pinp.period['seed_period_lengths']) \
+        or i in per.period_dates(pinp.period['harv_date'],pinp.period['harv_period_lengths']): #checks if the date is a seed period or harvest date
             labour_periods.loc[labour_periods['date']==i , 'casual ub'] =  max_casual_seedharv
         else:
             labour_periods.loc[labour_periods['date']==i , 'casual ub'] = max_casual
         ###lower bound
-        if i in per.period_dates(per.wet_seeding_start_date(),pinp.crop['seed_period_lengths']) \
-        or i in per.period_dates(pinp.crop['harv_date'],pinp.crop['harv_period_lengths']): #checks if the date is a seed period or harvest date
+        if i in per.period_dates(per.wet_seeding_start_date(),pinp.period['seed_period_lengths']) \
+        or i in per.period_dates(pinp.period['harv_date'],pinp.period['harv_period_lengths']): #checks if the date is a seed period or harvest date
             labour_periods.loc[labour_periods['date']==i , 'casual lb'] =  pinp.labour['min_casual_seedharv']
         else:
             labour_periods.loc[labour_periods['date']==i , 'casual lb'] = pinp.labour['min_casual']

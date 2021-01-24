@@ -102,11 +102,11 @@ def p_dates_df():
         #create empty list of dates to be filled by this function
         period_start_dates = []
         #determine the start of the first period, this references feed periods so it has the same yr.
-        start_date_period_1 = f_feed_periods().iloc[0].squeeze() + relativedelta(day=1,month=1)
+        start_date_period_0 = f_feed_periods().iloc[0].squeeze() + relativedelta(day=1,month=1,hour=0, minute=0, second=0, microsecond=0)
         #end date of all labour periods, simply one yr after start date.
-        date_last_period = start_date_period_1 + relativedelta(years=1)
+        date_last_period = start_date_period_0 + relativedelta(years=1)
         #start point for the loop counter.
-        date = start_date_period_1
+        date = start_date_period_0
         #loop that runs until the loop counter reached the end date.
         while date <= date_last_period:
             #if not a seed period then
@@ -156,19 +156,19 @@ def p_date2_df():
 def f_feed_periods(option=0):
     '''
     :param option: int:
-        0 = return feed period length
-        1 = rerturn feed period date
+        0 = return feed period date
+        1 = return feed period length (days)
     '''
     idx = pd.IndexSlice
     fp = pinp.period['i_dsp_fp']
     fp = fp.T.set_index(['period'],append=True).T
 
     ## return array of fp dates
-    if option==0: #return length
-        fp = fp.loc[:fp.index[-2], idx[:, 'date']]
+    if option==0:
+        fp = fp.loc[:, idx[:, 'date']]
         fp = pinp.f_seasonal_inp(fp)
         return fp
-
+    ## return length
     else:
         fp = fp.loc[:fp.index[-2], idx[:, 'length']] #last row not included becasue that only contains the end date of last period
         fp = pinp.f_seasonal_inp(fp)

@@ -570,8 +570,8 @@ def f_pasture(params, r_vals, ev):
                                  i_fxg_foo_oflt, c_fxg_a_oflt, c_fxg_b_oflt, i_grn_senesce_eos_ft,
                                  grn_senesce_startfoo_ft, grn_senesce_pgrcons_ft)
     ### all pasture from na area into the Low pool (#1) because it is rank
-    harvest_period  = fun.period_allocation(pinp.period['feed_periods']['date'], range(len(pinp.period['feed_periods'])), pinp.crop['harv_date']) #use range(len()) to get the row number that harvest occurs has to be row number not index name because it is used to index numpy below
-    period, proportion = fun.period_proportion_np(pinp.period['feed_periods']['date'], pinp.crop['harv_date'])
+    harvest_period  = fun.period_allocation(pinp.period['feed_periods']['date'], range(len(pinp.period['feed_periods'])), pinp.period['harv_date']) #use range(len()) to get the row number that harvest occurs has to be row number not index name because it is used to index numpy below
+    period, proportion = fun.period_proportion_np(pinp.period['feed_periods']['date'], pinp.period['harv_date'])
     params['p_harvest_period_prop']  = dict([(pinp.period['feed_periods'].index[period], proportion)])
     nap_dflrt[0,harvest_period,...,0] = dry_foo_start_ungrazed_flt[harvest_period,:, na,0]  \
                                            * (1-arable_l.reshape(-1,1))  \

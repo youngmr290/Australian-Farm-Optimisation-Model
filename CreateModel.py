@@ -49,7 +49,7 @@ def sets() :
     except AttributeError:
         pass
     if pinp.general['steady_state']:
-        model.s_season_types = Set(initialize=[pinp.general['i_z_idx'][0]], doc='season types')
+        model.s_season_types = Set(initialize=[pinp.general['i_z_idx'][pinp.general['i_mask_z']][0]], doc='season types')
     else:    
         model.s_season_types = Set(initialize=pinp.general['i_z_idx'][pinp.general['i_mask_z']], doc='season types') #mask season types by the ones included
 

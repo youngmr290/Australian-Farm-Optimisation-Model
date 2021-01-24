@@ -155,20 +155,21 @@ def grazing_days(params):
         The maths behind this func is a little hard to explain - check google doc for better info
     '''
     ##drop last date from feed periods because it as the start date at the end
-    feed_periods=pinp.period['feed_periods'].iloc[:-1]
+    feed_periods_date = per.f_feed_periods().iloc[:-1]
+    feed_periods_length = per.f_feed_periods(option=1)
     ##run mach period func to get all the seeding day info
     mach_periods = seed_days()
     ##create df which all grazing days are added
-    grazing_days_df = pd.DataFrame(index=feed_periods.index)
+    grazing_days_df = pd.DataFrame(index=feed_periods_date.index)
     ##days between seeding and destocking
     destock_days = dt.timedelta(days = pinp.crop['poc_destock'])
     ##loop through labour/mach periods.
     for mach_p_start, seeding_days, mach_p_num in zip(mach_periods['date'], mach_periods['seed_days'],mach_periods.index):
         grazing_days_list=[]
-        season_break = feed_periods.loc['FP0','date']
+        season_break = feed_periods_date.iloc[0].squeeze() #todo probs wont handle z axis
         effective_break = season_break + destock_days #accounts for the time before seeding that destocking must occur
-        for fp_date, fp_len in zip(feed_periods['date'], feed_periods['length']):
-            fp_end_date = fp_date + dt.timedelta(days = fp_len)
+        for i in range(len(feed_periods_date)):
+            fp_end_date = feed_periods_date.iloc[i,0] + dt.timedelta(days = feed_periods_length.iloc[i,0]) #todo this will not handle Z axis either need to loop or maybe use numpy
             seed_end_date = mach_p_start + dt.timedelta(days = seeding_days)
             ##if the feed period finishes before the start of seeding it will receive a grazing day for each day since the break of season times the number of seeding days in the current seed period minus the grazing days in the previous periods
             if fp_end_date <= mach_p_start:
@@ -295,7 +296,7 @@ def seeding_cost(params, r_vals):
     ##gets the period name 
     p_name = per.cashflow_periods()['cash period']
     start = per.wet_seeding_start_date()
-    length = dt.timedelta(days = sum(pinp.crop['seed_period_lengths']).astype(np.float64))
+    length = dt.timedelta(days = sum(pinp.period['seed_period_lengths']).astype(np.float64))
     seeding_cost = fun.period_allocation_reindex(cost_df, p_dates, p_name, start,length)
     params['seeding_cost'] = seeding_cost.stack().to_dict()
     r_vals['seeding_cost'] = seeding_cost
@@ -332,10 +333,10 @@ def yield_penalty(params):
     mach_periods = per.p_dates_df()
     mach_penalty = pd.DataFrame()  #adds the average yield penalty for each crop for each period to the df 
     dry_seed_start = pinp.crop['dry_seed_start']
-    dry_seed_end = pinp.period['feed_periods'].loc['FP0','date']#dry seeding finishes when the season breaks
+    dry_seed_end = per.f_feed_periods().iloc[0].squeeze()#dry seeding finishes when the season breaks
     seed_start = per.wet_seeding_start_date()
     # seed_end = per.period_end_date(per.wet_seeding_start_date(),pinp.crop['seed_period_lengths'])
-    penalty_free_days = dt.timedelta(days = pinp.crop['seed_period_lengths'][0].astype(np.float64))
+    penalty_free_days = dt.timedelta(days = pinp.period['seed_period_lengths'][0].astype(np.float64))
     yield_penalty_df = pinp.crop['yield_penalty'] 
     ##add the yield penalty for each period and each crop
     for k, wet_penalty, dry_penalty in zip(yield_penalty_df.index, yield_penalty_df['wet_seeding_penalty'],yield_penalty_df['dry_seeding_penalty']):
@@ -395,8 +396,8 @@ def harv_rate_period(params):
     '''
     mach_periods = per.p_dates_df()
     harv_rate_df = pd.DataFrame()
-    harv_start = pinp.crop['harv_date']
-    harv_end = per.period_end_date(harv_start, pinp.crop['harv_period_lengths'])
+    harv_start = pinp.period['harv_date']
+    harv_end = per.period_end_date(harv_start, pinp.period['harv_period_lengths'])
     ##Grain harvested per hr (t/hr) for each crop.
     harv_rate = uinp.mach_general['harvest_yield'] * (1 / harv_time_ha())
     ##loops through dict which contains harv start date for each crop
@@ -422,8 +423,8 @@ def harv_rate_period(params):
 #adds the max number of harv hours for each crop for each period to the df  
 def max_harv_hours(params):
     mach_periods = per.p_dates_df()
-    harv_start = pinp.crop['harv_date']
-    harv_end = per.period_end_date(harv_start, pinp.crop['harv_period_lengths'])
+    harv_start = pinp.period['harv_date']
+    harv_end = per.period_end_date(harv_start, pinp.period['harv_period_lengths'])
     #loops through dict which contains harv start date for each crop
     #this determines if the crop is allowed early harv
     for i in range(len(mach_periods['date'])-1):
@@ -469,8 +470,8 @@ def harvest_cost(params, r_vals):
     p_dates = per.cashflow_periods()['start date']
     #gets the period name 
     p_name = per.cashflow_periods()['cash period']
-    start = pinp.crop['harv_date']
-    length = dt.timedelta(days = sum(pinp.crop['harv_period_lengths']).astype(np.float64))
+    start = pinp.period['harv_date']
+    length = dt.timedelta(days = sum(pinp.period['harv_period_lengths']).astype(np.float64))
     harvest_cost = fun.period_allocation_reindex(cost_df, p_dates, p_name, start,length)
     params['harvest_cost'] = harvest_cost.stack().to_dict()
     r_vals['harvest_cost'] = harvest_cost
@@ -509,8 +510,8 @@ def contract_harvest_cost_period(params, r_vals):
     p_dates = per.cashflow_periods()['start date']
     #gets the period name 
     p_name = per.cashflow_periods()['cash period']
-    start = pinp.crop['harv_date']
-    length = dt.timedelta(days = sum(pinp.crop['harv_period_lengths']).astype(np.float64))
+    start = pinp.period['harv_date']
+    length = dt.timedelta(days = sum(pinp.period['harv_period_lengths']).astype(np.float64))
     contract_harvest_cost = fun.period_allocation_reindex(cost_df, p_dates, p_name, start,length)
     params['contract_harvest_cost'] = contract_harvest_cost.stack().to_dict()
     r_vals['contract_harvest_cost'] = contract_harvest_cost

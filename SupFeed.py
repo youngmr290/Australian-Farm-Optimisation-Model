@@ -73,9 +73,9 @@ def sup_cost(params, r_vals):
     p_name = per.cashflow_periods()['cash period']
     ##determine cost of feeding in each feed period and cashflow period
     feeding_cost = mac.sup_mach_cost()
-    start_df  = pinp.period['feed_periods'].loc[:pinp.period['feed_periods'].index[-2],'date']
-    start_df  =start_df.apply(lambda x: x.replace(year=p_dates[0].year)) #this is required because feed period dates are split over two yrs which causes and error when trying to determine which cashflow period each feed period date falls into
-    length_df = pinp.period['feed_periods'].loc[:pinp.period['feed_periods'].index[-2],'length'].astype('timedelta64[D]')
+    start_df  = per.f_feed_periods().iloc[:-1].squeeze()
+    start_df = start_df.apply(lambda x: x.replace(year=p_dates[0].year)) #this is required because feed period dates are split over two yrs which causes and error when trying to determine which cashflow period each feed period date falls into
+    length_df = per.f_feed_periods(option=1).astype('timedelta64[D]')
     allocation=fun.period_allocation2(start_df, length_df, p_dates, p_name)
     cols = pd.MultiIndex.from_product([allocation.columns, feeding_cost.index])
     allocation = allocation.reindex(cols,axis=1,level=0)
@@ -167,9 +167,10 @@ def sup_labour(params):
     ##link feed periods to labour periods, ie determine the proportion of each feed period in each labour period so the time taken to sup feed can be divided up accordingly
     p_dates = per.p_dates_df()['date']
     p_name = per.p_dates_df().index
-    fp=pinp.period['feed_periods'].iloc[:-1]  #don't want the end date of the last period included
-    start_df = fp['date'].apply(lambda x: x.replace(year=p_dates[0].year))
-    length_df =  fp['length'].astype('timedelta64[D]') 
+    fp_date = per.f_feed_periods().iloc[:-1].squeeze()  #don't want the end date of the last period included
+    fp_len = per.f_feed_periods(option=1)
+    start_df = fp_date.apply(lambda x: x.replace(year=p_dates[0].year))
+    length_df =  fp_len.astype('timedelta64[D]')
     allocation=fun.period_allocation2(start_df, length_df, p_dates, p_name)
     ###get the time taken in each labour period to feed 1t of feed in each feed period
     time_lab_period=time_lab_period.stack()
