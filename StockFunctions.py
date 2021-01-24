@@ -880,11 +880,11 @@ def f_birthweight_cs(cx, w_b_yatf, w_f_dams, period_is_birth):
 def f_birthweight_mu(cu1_yatf, cb1_yatf, cx_yatf, ce_yatf, w_b, cf_w_b_dams, ffcfw_birth_dams, ebg_dams, days_period, gest_propn, period_between_joinscan, period_between_scanbirth, period_is_birth):
     ##Carry forward BW increment	
     d_cf_w_b = f_carryforward_u1(cu1_yatf[16, ...], ebg_dams, False, period_between_joinscan, period_between_scanbirth, False, days_period, gest_propn)
-    ##Increment the total Carry forward BW
+    ##Increment the total carry forward BW
     cf_w_b_dams = cf_w_b_dams + d_cf_w_b
-    ##set BW = foetal weight at end of period (if born)	
+    ##estimate BW by including the intercept, the effect of dam weight at birth and other non-LW coefficients
     t_w_b_yatf = (cf_w_b_dams + cu1_yatf[16, -1, ...] + cu1_yatf[16, 0, ...] * ffcfw_birth_dams + cb1_yatf[16, ...] + cx_yatf[16, ...] + ce_yatf[16, ...])
-    ##Update w_b if it is birth	
+    ##Update w_b if period is birth
     w_b = fun.f_update(w_b, t_w_b_yatf, period_is_birth)
     return w_b, cf_w_b_dams
 
@@ -1111,7 +1111,7 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         conception = np.zeros_like(relsize_mating)
     else:
         ## relative size and relative condition of the dams at mating are the determinants of conception
-        ### the dams being mated are those in slices e1[0] and b1[0] (first cyle, not mated)
+        ### the dams being mated are those in slices e1[0] and b1[0] (first cycle, not mated)
         relsize_mating_e1b1sliced = f_dynamic_slice(relsize_mating, pinp.sheep['i_e1_pos'], 0, 1, uinp.parameters['i_b1_pos'], 0, 1) #take slice from e1 & b1 axis
         rc_mating_e1b1sliced = f_dynamic_slice(rc_mating, pinp.sheep['i_e1_pos'], 0, 1, uinp.parameters['i_b1_pos'], 0, 1) #take slice from e1 & b1 axis
         ## probability of at least a given number of foetuses
@@ -1150,7 +1150,7 @@ def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, nfoet_
         conception = np.zeros_like(relsize_mating)
     else:
         ## relative size and condition score of the dams at mating are the determinants of conception
-        ### the dams being mated are those in slices e1[0] and b1[0] (first cyle, not mated)
+        ### the dams being mated are those in slices e1[0] and b1[0] (first cycle, not mated)
         ## #todo scan_std probably should change based on date of joining
         relsize_mating_e1b1sliced = f_dynamic_slice(relsize_mating, pinp.sheep['i_e1_pos'], 0, 1, uinp.parameters['i_b1_pos'], 0, 1) #take slice e1[0] & b1[0]
         cs_mating_e1b1sliced = f_dynamic_slice(cs_mating, pinp.sheep['i_e1_pos'], 0, 1, uinp.parameters['i_b1_pos'], 0, 1) #take slice e1[0] & b1[0]
@@ -1239,19 +1239,27 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, w_b_exp_y, period_is_birth, c
     xo = cd[8, ..., na] - cd[9, ..., na] * rc_birth[..., na] + cd[10, ..., na] * chill_index_m1 + cb1[11, ..., na]
     ##Progeny mortality at birth from exposure
     mortalityx = np.average(np.exp(xo) / (1 + np.exp(xo)) ,axis = -1) * period_is_birth #axis -1 is m1
-    ##add sensitivity
+    ##Apply SA to progeny mortality due to exposure
     mortalityx = fun.f_sa(mortalityx, sar_mortalityp, sa_type = 4)
     return mortalityx, mortalityd_yatf, mortalityd_dams
 
 
-def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, foo, chill_index_m1, period_is_birth, sar_mortalityp):
-    ##transformed survival	
-    t_mortalityp_mu = cu2[8, 0, ..., na] * w_b[..., na] + cu2[8, 1, ..., na] * w_b[..., na] ** 2 + cu2[8, 2, ..., na] * chill_index_m1 + cu2[8, 3, ..., na] * foo[..., na] + cu2[8, 4, ..., na] * foo[..., na] ** 2 + cu2[8, 5, ..., na] + cb1[8, ..., na] + cx[8, ..., na] + cx[9, ..., na] * chill_index_m1 + ce[8, ..., na]
-    ##back transformed
-    mortalityp_mu = np.average(1 / (1 + np.exp(-t_mortalityp_mu)),axis = -1) * period_is_birth #m1 axis averaged
-    ##Progeny mortality at birth (LTW) with SA	
-    mortalityp_mu = fun.f_sa(mortalityp_mu, sar_mortalityp, sa_type = 4)
-    return mortalityp_mu
+def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, foo, chill_index_m1, period_is_birth, sar_mortalityp):
+    ##transformed survival for actual & standard
+    t_survival = cu2[8, 0, ..., na] * w_b[..., na] + cu2[8, 1, ..., na] * w_b[..., na] ** 2 + cu2[8, 2, ..., na] * chill_index_m1  \
+                      + cu2[8, 3, ..., na] * foo[..., na] + cu2[8, 4, ..., na] * foo[..., na] ** 2 + cu2[8, 5, ..., na]   \
+                      + cb1[8, ..., na] + cx[8, ..., na] + cx[9, ..., na] * chill_index_m1 + ce[8, ..., na]
+    t_survival_std = cu2[8, 0, ..., na] * w_b_std[..., na] + cu2[8, 1, ..., na] * w_b_std[..., na] ** 2 + cu2[8, 2, ..., na] * chill_index_m1  \
+                      + cu2[8, 3, ..., na] * foo[..., na] + cu2[8, 4, ..., na] * foo[..., na] ** 2 + cu2[8, 5, ..., na]   \
+                      + cb1[8, ..., na] + cx[8, ..., na] + cx[9, ..., na] * chill_index_m1 + ce[8, ..., na]
+    ##back transformed & converted to mortality
+    mortality = (1 - np.average(1 / (1 + np.exp(-t_survival)),axis = -1)) * period_is_birth #m1 axis averaged
+    mortality_std = (1 - np.average(1 / (1 + np.exp(-t_survival_std)),axis = -1)) * period_is_birth #m1 axis averaged
+    ##Scale progeny survival using paddock level scalars
+    mortality = mortality_std + (mortality - mortality_std) * cb1[9, ...]
+    ##Apply SA to progeny mortality at birth (LTW)
+    mortality = fun.f_sa(mortality, sar_mortalityp, sa_type = 4)
+    return mortality
         
 
 
@@ -1433,15 +1441,13 @@ def f_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfoe
 
     
 def f_carryforward_u1(cu1, ebg, period_between_joinstartend, period_between_joinscan, period_between_scanbirth, period_between_birthwean, days_period, period_propn):
-    ##First 3 slices of the genotype axis = the sire genotypes	
-    coeff_cf1 = fun.f_update(0, cu1[1,...], period_between_joinstartend) #note cu1 has already had the first axis (animal) sliced when it was passed in
-    ##Loop over remaining slices	
+    ##Select coefficient to increment the carry forward quantity based on the current period
+    ### can only be the coefficient from one of the periods and the later period overwrites the earlier period.
+    coeff_cf1 = fun.f_update(0, cu1[1,...], period_between_joinstartend) #note cu1 has already had the first axis (production parameter) sliced when it was passed in
     coeff_cf1 = fun.f_update(coeff_cf1, cu1[2,...], period_between_joinscan)
-    ##Loop over remaining slices	
     coeff_cf1 = fun.f_update(coeff_cf1, cu1[3,...], period_between_scanbirth)
-    ##Loop over remaining slices	
     coeff_cf1 = fun.f_update(coeff_cf1, cu1[4,...], period_between_birthwean)
-    ##Assign values based on maternal and paternal genotype	
+    ##Calculate the increment (d_cf) from the coefficient, the change in LW (kg/d) and the days per period
     d_cf = coeff_cf1 * ebg * days_period * period_propn
     return d_cf
 
