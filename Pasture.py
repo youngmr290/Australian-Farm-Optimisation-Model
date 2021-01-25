@@ -290,7 +290,7 @@ def f_pasture(params, r_vals, ev):
         i_reseeding_date_seed_t[t]          = exceldata['Date_Seeding']
         i_seeding_end_t[t]                  = exceldata['seeding_length']
         i_reseeding_date_destock_t[t]       = exceldata['Date_Destocking']
-        i_reseeding_ungrazed_destock_t[t]   = exceldata['FOOatSeeding']
+        i_reseeding_ungrazed_destock_t[t]   = exceldata['FOOatSeeding'] #ungrazed foo when destocked for reseeding
         i_reseeding_date_grazing_t[t]       = exceldata['Date_ResownGrazing']
         i_reseeding_foo_grazing_t[t]        = exceldata['FOOatGrazing']
 
@@ -393,10 +393,10 @@ def f_pasture(params, r_vals, ev):
     germ_scalar_rt      = np.zeros(rt, dtype='float64')
     resown_rt           = np.zeros(rt, dtype='int')
 
-    ### set initial values to 0 because function is called multiple times
-    foo_grn_reseeding_flrt[...] = 0          # array has been initialised, reset all values to 0
-    foo_dry_reseeding_flrt[...] = 0
-    germination_flrt[...]       = 0
+    # ### set initial values to 0 because function is called multiple times
+    # foo_grn_reseeding_flrt[...] = 0          # array has been initialised, reset all values to 0
+    # foo_dry_reseeding_flrt[...] = 0
+    # germination_flrt[...]       = 0
 
     ### set variables used in multiple locations
     destock_duration_t = (i_reseeding_date_grazing_t
@@ -449,33 +449,34 @@ def f_pasture(params, r_vals, ev):
                                                                                resown_rt, period_t, 1-proportion_t,
                                                                                -foo_arable_destock_t, -foo_na_destock_t) # call function to remove the FOO lost for the periods. Assumed that all feed lost is green
 
-    ### calculate the green & dry feed available when pasture first grazed after reseeding. Spread between periods based on date grazed
+    ### calculate the green & dry foo when pasture first grazed after reseeding. Spread between periods based on date grazed
+    #### foo for the reseeded area is simply an input adjusted for each lmu
     foo_arable_reseed_lt = i_reseeding_fooscalar_lt       \
                           * i_reseeding_foo_grazing_t                 # FOO at the first grazing for each lmu (kg/ha)
-    ### calculate the foo at the end of the destock period on the ungrazed area
-    ### # foo at destocking plus growth from destocking to grazing
+    #### for non arable area (not resown) foo at first grazing is foo at destocking plus growth from destocking to grazing
+    foo_na_destock_ft[period_t,t_list] = foo_na_destock_t
+    #####  growth from destocking to grazing
     periods_destocked_ft = fun.range_allocation_np(feed_period_dates_f
                     , i_reseeding_date_destock_t
                     , destock_duration_t)[0:n_feed_periods]
-    foo_na_destock_ft[period_t,t_list] = foo_na_destock_t
     days_each_period_ft = periods_destocked_ft  \
                          * length_f[:, na]
     period_t, proportion_t = fun.period_proportion_np(feed_period_dates_f
                                                       ,i_reseeding_date_grazing_t)       # which feed period does grazing occur
-    ###  growth from destocking to grazing
-    ### # growth of annual but with start foo varying with pasture type
+    ##### growth of annual but with start foo varying with pasture type
     for t in range(n_pasture_types):
         foo_na_flt = foo_na_destock_ft[:, na,t:t+1]  #broadcast into array
         grn_destock, dry_destock = pfun.calc_foo_profile(foo_na_flt, dry_decay_period_ft, days_each_period_ft[t],
                                                          i_fxg_foo_oflt, c_fxg_a_oflt, c_fxg_b_oflt, i_grn_senesce_eos_ft,
                                                          grn_senesce_startfoo_ft, grn_senesce_pgrcons_ft)
-        ## # assign the growth from the annual slice
+        ###### assign the growth from the annual slice
         grn_destock_foo_flt[...,t] = grn_destock[...,0]
         dry_destock_foo_flt[...,t] = dry_destock[...,0]
     grn_destock_foo_lt = grn_destock_foo_flt[period_t+1,...]
     dry_destock_foo_lt = dry_destock_foo_flt[period_t+1,...]
     foo_na_reseed_lt =  grn_destock_foo_lt + dry_destock_foo_lt
 
+    ###combine the non-arable and arable foo to get the resulting foo in the green and dry pools after reseeding
     foo_grn_reseeding_flrt, foo_dry_reseeding_flrt = pfun.update_reseeding_foo(foo_grn_reseeding_flrt, foo_dry_reseeding_flrt,
                                                                                resown_rt, period_t, 1-proportion_t, foo_arable_reseed_lt,
                                                                                foo_na_reseed_lt, propn_grn=i_grn_propn_reseeding_t) # call function to update green & dry feed in the periods.
@@ -520,7 +521,9 @@ def f_pasture(params, r_vals, ev):
     phase_area_rav_flrt = phase_area_flrt.ravel()
     params['p_phase_area_flrt'] = dict(zip(index_flrt ,phase_area_rav_flrt))
 
-    ## erosion
+    ############
+    ## erosion #
+    ############
     arable_erosion_flrt = i_lmu_conservation_flt[..., na,:]  \
                          * arable_l.reshape(-1,1,1)  \
                          * pasture_rt
