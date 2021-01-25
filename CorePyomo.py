@@ -452,6 +452,14 @@ def coremodel_all():
 
         def pysp_instance_creation_callback(scenario_name,node_names):
             instance = model.clone()
+            ##stubble
+            model.p_fp_transfer.store_values(params[scenario_name]['per_transfer'])
+            model.p_a_req.store_values(params[scenario_name]['cat_a_st_req'])
+            model.p_stub_vol.store_values(params[scenario_name]['vol'])
+            model.p_stub_md.store_values(params[scenario_name]['md'])
+            model.p_harv_prop.store_values(params[scenario_name]['cons_prop'])
+
+
             instance.Yield.store_values(Yield[scenario_name])
             # seed_random(scenario_name)
             # # Note: Must sort the iteration order so that

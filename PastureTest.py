@@ -34,7 +34,7 @@ r_vals={}
 ### create ev dict
 ev={}
 ### read values from the pasture_inputs dictionary
-pas_inc = np.array([pinp.general['pas_inc']])
+pas_inc = np.array(pinp.general['pas_inc'])
 pastures = uinp.structure['pastures'][pas_inc]
 exceldata = pinp.pasture_inputs[pastures[0]]           # assign the pasture data to exceldata for the first pasture type
 i_me_maintenance_vf = exceldata['MaintenanceEff'].iloc[:, 1:].to_numpy().T

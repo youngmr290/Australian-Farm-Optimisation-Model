@@ -968,7 +968,7 @@ def range_allocation_np(period_dates, start, length, opposite=None):
     if opposite:
         #check how much of each date range falls within the period
         for i in range(len(period_dates)-1):
-            #^.date() might be required because the array being passed is not a np.datetime64[D]
+            #^.date() required because the array being passed is not a np.datetime64[D]
             per_start= period_dates[i].date() #had to add this and the as type thing below to get it all in the same format so calcs would work
             per_end = period_dates[i + 1].date()
             calc_start = np.maximum(per_start,start).astype('datetime64[D]')       #select the later of the period start or the start of the range

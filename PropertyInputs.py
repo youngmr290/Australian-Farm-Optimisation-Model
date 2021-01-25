@@ -47,7 +47,7 @@ if inputs_from_pickle == False:
         mach_inp = fun.xl_all_named_ranges("Property.xlsx","Mach")
         pkl.dump(mach_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
-        stubble_inp = fun.xl_all_named_ranges("Property.xlsx","Stubble")
+        stubble_inp = fun.xl_all_named_ranges("Property.xlsx","Stubble", numpy=True)
         pkl.dump(stubble_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
         finance_inp = fun.xl_all_named_ranges("Property.xlsx","Finance")

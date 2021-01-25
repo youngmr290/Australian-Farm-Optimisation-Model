@@ -404,7 +404,7 @@ def phase_stubble_cost(r_vals):
     '''
     ##first calculate the probability of a rotation phase needing stubble handling
     base_yields = rot_yield()
-    stub_handling_threshold = pd.Series(pinp.stubble['stubble_handling']['stubble_threshold'])*1000  #have to convert to kg to match base yield
+    stub_handling_threshold = pd.Series(pinp.stubble['stubble_handling'], index=pinp.crop['start_harvest_crops'].index)*1000  #have to convert to kg to match base yield
     probability_handling = base_yields.div(stub_handling_threshold, level = 1) #divide here then account for lmu factor next - because either way is mathematically sound and this saves some manipulation.
     probability_handling = probability_handling.droplevel(1).unstack()
     ##add the cost - this needs to be flexible because the cost may be over multiple periods
@@ -603,16 +603,13 @@ def rot_cost(params, r_vals):
 #stubble                #
 #########################
 #stubble produced per kg grain harvested, used in stubble.py as well
-def stubble_production(*params):
+def stubble_production(params=False):
     '''stubble produced by each rotation phase
         kgs of dry matter'''
-    stubble = pd.DataFrame()
-    for crop in pinp.stubble['harvest_index'].index:
-        harv_index = pinp.stubble['harvest_index'].loc[crop,'hi']
-        proportion_harvested = pinp.stubble['proportion_grain_harv'].loc[crop,'prop']
-        stubble.loc[crop,'a'] = 1/(harv_index * proportion_harvested)-1 #subtract 1 to account for the tonne of grain that was harvested
+    stubble = pd.DataFrame(index=pinp.crop['start_harvest_crops'].index, columns=['a'])
+    stubble['a'] = 1 / (pinp.stubble['harvest_index'] * pinp.stubble['proportion_grain_harv']) - 1  # subtract 1 to account for the tonne of grain that was harvested
     if params:
-        params[0]['stubble_production'] = stubble.stack().to_dict()
+        params['stubble_production'] = stubble.stack().to_dict()
     else: return stubble.stack().to_dict()
 #print (stubble_production())
 
