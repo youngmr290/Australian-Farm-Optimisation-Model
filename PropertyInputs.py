@@ -53,7 +53,7 @@ if inputs_from_pickle == False:
         finance_inp = fun.xl_all_named_ranges("Property.xlsx","Finance")
         pkl.dump(finance_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
-        period_inp = fun.xl_all_named_ranges("Property.xlsx","Periods") #automatically read in the periods as dates
+        period_inp = fun.xl_all_named_ranges("Property.xlsx","Periods", numpy=True) #automatically read in the periods as dates
         pkl.dump(period_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
         sup_inp = fun.xl_all_named_ranges("Property.xlsx","Sup Feed") #automatically read in the periods as dates
@@ -133,7 +133,13 @@ def property_inp_sa():
     '''
     ##have to import it here since sen.py imports this module
     import Sensitivity as sen
+    ##general
+    ###sav
+    general['steady_state'] = fun.f_sa(general_inp['steady_state'],sen.sav['steady_state'],5)
+
+
     ##pasture
+    ###sav
     general['pas_inc'] = fun.f_sa(general_inp['pas_inc'],sen.sav['pas_inc'],5)
     for pasture in uinp.structure['pastures'][general['pas_inc']]: #all pasture inputs are adjusted even if a given pasture is not included
         ###SAM
@@ -150,6 +156,7 @@ def property_inp_sa():
         pasture_inputs[pasture]['DigSpread'] = fun.f_sa(pasture_inp[pasture]['DigSpread'], sen.sam[('grn_dmd_range_f',pasture)])
         pasture_inputs[pasture]['DigDeclineFOO'] = fun.f_sa(pasture_inp[pasture]['DigDeclineFOO'], sen.sam[('grn_dmd_declinefoo_f',pasture)])
         pasture_inputs[pasture]['DigRednSenesce'] = fun.f_sa(pasture_inp[pasture]['DigRednSenesce'], sen.sam[('grn_dmd_senesce_f',pasture)])
+
     ##sheep
     ###SAV
     sheep['i_mask_i'] = fun.f_sa(sheep_inp['i_mask_i'], sen.sav['TOL_inc'], 5)
@@ -185,7 +192,13 @@ def f_seasonal_inp(inp, numpy=False, axis=0):
 
         ##weighted average if steady state
         if general['steady_state']:
-            inp = np.average(inp, axis=axis, weights=z_prob)
+            try:  # incase array is datearray
+                inp = np.average(inp, axis=axis, weights=z_prob)
+            except TypeError:
+                n_inp = inp.astype("datetime64[ns]").astype(np.int64)
+                n_inp = np.average(n_inp, axis=axis, weights=z_prob)
+                n_inp = n_inp.astype("datetime64[ns]")
+                inp = n_inp.astype('M8[us]').astype('O') #converts to datetime
 
     else:
         ##mask the season types

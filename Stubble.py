@@ -42,33 +42,15 @@ def stubble_all(params):
         - harv con limit
     '''
 
-    #create df with feed periods
-    # fp = per.f_feed_periods().iloc[:-1] #removes last row
-    # cat_a_st_req=pd.DataFrame()
-    # cat_b_st_prov=pd.DataFrame() #provide tr ie cat A provides stub b tr - done straight as a dict because value doesn't change for different periods
-    # cat_b_st_req=pd.DataFrame() #requirement for tr ie cat B requires stub b tr - done straight as a dict because value doesn't change for different periods, this would have to change if trampling was different for periods
-    # cat_c_st_prov=pd.DataFrame()
-    # cat_c_st_req=pd.DataFrame()
-    # per_transfer=pd.DataFrame()
-    # dmd=pd.DataFrame(columns=pd.MultiIndex.from_product([pinp.stubble['harvest_index'].index,pinp.stubble['stub_cat_qual']]))
-    # md=pd.DataFrame(columns=pd.MultiIndex.from_product([pinp.stubble['harvest_index'].index,pinp.stubble['stub_cat_qual']]))
-    # ri_quality=pd.DataFrame(index=fp.index, columns=pd.MultiIndex.from_product([pinp.stubble['harvest_index'].index,pinp.stubble['stub_cat_qual']]))
-    # ri_availability=pd.DataFrame(index=fp.index, columns=pd.MultiIndex.from_product([pinp.stubble['harvest_index'].index,pinp.stubble['stub_cat_qual']]))
-    # vol=pd.DataFrame(index=fp.index, columns=pd.MultiIndex.from_product([pinp.stubble['harvest_index'].index,pinp.stubble['stub_cat_qual']]))
-    # cons_prop=pd.DataFrame(index=fp.index)
-
-
     ##create mask which is stubble available. Stubble is available from the period harvest starts to the beginning of the following growing season.
     ##if the end date of the fp is after harvest then stubble is available.
     harv_date_k = pinp.crop['start_harvest_crops'].squeeze().values.astype('datetime64[D]')
     mask_stubble_exists_p6zk = per.f_feed_periods().values[1:,:,na] > harv_date_k  #need to use the full fp array that has the end date of the last period.
 
-
     #########################
     #dmd deterioration      #
     #########################
     stubble_per_grain = crp.stubble_production() #produces dict with stubble production per kg of yield for each grain used in the ri.availability section
-
 
     ##days since harvest (calculated from the end date of each fp)
     fp_end_p6z = per.f_feed_periods().iloc[1:].values.astype('datetime64[D]')
@@ -77,6 +59,7 @@ def stubble_all(params):
     days_since_harv_p6zk[days_since_harv_p6zk.astype(int)<0] = days_since_harv_p6zk[days_since_harv_p6zk.astype(int)<0] + 365  #add 365 to the periods at the start of the year becasue as far as stubble goes they are after harvest
     average_days_since_harv_p6zk = days_since_harv_p6zk - np.minimum(days_since_harv_p6zk, (fp_end_p6z - fp_start_p6z)[...,na])/2 #subtract half the length of current period to get the average days since harv. Minimum is to handle the period when harvest occurs.
     average_days_since_harv_p6zk = average_days_since_harv_p6zk.astype(float)
+
     ##calc the quantity decline % for each period - used in transfer constraints, need to average the number of days in the period of interest
     quant_decline_p6zk = 1 - (1 - pinp.stubble['quantity_deterioration']) ** average_days_since_harv_p6zk.astype(float)
 
@@ -109,6 +92,7 @@ def stubble_all(params):
             stub_cat_component_proportion_ks0s1[crop_idx,...] = pd.read_excel('stubble sim.xlsx',sheet_name=crop,header=None, engine='openpyxl')
         except KeyError:
             pass
+
     ##quality of each category in each period - multiply quality by proportion of components in each category (a, b, c, d) then sum the components axis
     dmd_cat_p6zks1 = np.sum(dmd_component_p6zks0[...,na] * stub_cat_component_proportion_ks0s1, axis=-2)
 
@@ -255,25 +239,3 @@ def stubble_all(params):
         params[scenario]['vol'] =dict(zip(tup_p6ks1, vol_p6ks1))
 
 
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    

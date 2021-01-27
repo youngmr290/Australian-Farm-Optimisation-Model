@@ -79,6 +79,8 @@ sar['mortalitye'] = 0          #Scale the calculated dam mortality at birth in t
 #SAV #
 ######
 ##if you initiliase an array it must be type object (so that you can assign int/float/bool into the array)
+##general
+sav['steady_state']      = '-'                  #SA to alter if the model is steady state
 ##area
 sav['bnd_total_pas_area'] = '-'  #Total pasture area for bound. '-' is default so it will chuck an error if the bound is turned on without a specified area
 sav['bnd_pasarea_inc'] = '-'   #SA to turn on the pasture area bound

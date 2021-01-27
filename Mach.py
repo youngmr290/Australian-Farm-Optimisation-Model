@@ -155,21 +155,21 @@ def grazing_days(params):
         The maths behind this func is a little hard to explain - check google doc for better info
     '''
     ##drop last date from feed periods because it as the start date at the end
-    feed_periods_date = per.f_feed_periods().iloc[:-1]
+    feed_periods_date = per.f_feed_periods()[:-1]
     feed_periods_length = per.f_feed_periods(option=1)
     ##run mach period func to get all the seeding day info
     mach_periods = seed_days()
     ##create df which all grazing days are added
-    grazing_days_df = pd.DataFrame(index=feed_periods_date.index)
+    grazing_days_df = pd.DataFrame(index=pinp.period['i_fp_idx'])
     ##days between seeding and destocking
     destock_days = dt.timedelta(days = pinp.crop['poc_destock'])
     ##loop through labour/mach periods.
     for mach_p_start, seeding_days, mach_p_num in zip(mach_periods['date'], mach_periods['seed_days'],mach_periods.index):
         grazing_days_list=[]
-        season_break = feed_periods_date.iloc[0].squeeze() #todo probs wont handle z axis
+        season_break = feed_periods_date[0] #todo probs wont handle z axis
         effective_break = season_break + destock_days #accounts for the time before seeding that destocking must occur
         for i in range(len(feed_periods_date)):
-            fp_end_date = feed_periods_date.iloc[i,0] + dt.timedelta(days = feed_periods_length.iloc[i,0]) #todo this will not handle Z axis either need to loop or maybe use numpy
+            fp_end_date = feed_periods_date[i] + dt.timedelta(days = feed_periods_length[i]) #todo this will not handle Z axis either need to loop or maybe use numpy
             seed_end_date = mach_p_start + dt.timedelta(days = seeding_days)
             ##if the feed period finishes before the start of seeding it will receive a grazing day for each day since the break of season times the number of seeding days in the current seed period minus the grazing days in the previous periods
             if fp_end_date <= mach_p_start:
@@ -290,14 +290,18 @@ def seeding_cost(params, r_vals):
     Dataframe for pyomo
         Returns the seeding cost allocation into cashflow periods.
     '''
+    ##put inputs through season function
+    seed_period_lengths_p5z = pinp.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
+    length = np.sum(seed_period_lengths_p5z, axis=0)
     cost_df = seeding_cost_lmu()
     ##gets the date column of the cashflow periods df
     p_dates = per.cashflow_periods()['start date']
     ##gets the period name 
     p_name = per.cashflow_periods()['cash period']
     start = per.wet_seeding_start_date()
-    length = dt.timedelta(days = sum(pinp.period['seed_period_lengths']).astype(np.float64))
+    length = dt.timedelta(days = length) #todo will need to get this so it can handle multi-d
     seeding_cost = fun.period_allocation_reindex(cost_df, p_dates, p_name, start,length)
+    # seeding_cost = fun.period_allocation_reindex(cost_df, p_dates, p_name, start,length)
     params['seeding_cost'] = seeding_cost.stack().to_dict()
     r_vals['seeding_cost'] = seeding_cost
 
@@ -330,13 +334,17 @@ def yield_penalty(params):
         Calcs the penalty in each mach period (dry seeding and wet) - kg/ha/period/crop.
         Used in pyomo to calculate loss of cashflow and reduction in stubble
     '''
+    ##inputs through season input func
+    seed_period_lengths_pz = pinp.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
+
+    ##calc yield penalty
     mach_periods = per.p_dates_df()
     mach_penalty = pd.DataFrame()  #adds the average yield penalty for each crop for each period to the df 
     dry_seed_start = pinp.crop['dry_seed_start']
-    dry_seed_end = per.f_feed_periods().iloc[0].squeeze()#dry seeding finishes when the season breaks
+    dry_seed_end = per.f_feed_periods()[0] #dry seeding finishes when the season breaks
     seed_start = per.wet_seeding_start_date()
     # seed_end = per.period_end_date(per.wet_seeding_start_date(),pinp.crop['seed_period_lengths'])
-    penalty_free_days = dt.timedelta(days = pinp.period['seed_period_lengths'][0].astype(np.float64))
+    penalty_free_days = dt.timedelta(days = seed_period_lengths_pz[0])
     yield_penalty_df = pinp.crop['yield_penalty'] 
     ##add the yield penalty for each period and each crop
     for k, wet_penalty, dry_penalty in zip(yield_penalty_df.index, yield_penalty_df['wet_seeding_penalty'],yield_penalty_df['dry_seeding_penalty']):
@@ -394,22 +402,26 @@ def harv_rate_period(params):
         Harv rate in each mach period for each crops.
         - account for crops that can be harvested early ie crops that can't be harvested early are given 0 harv rate in the first harv period
     '''
+    ##season inputs through function
+    harv_start_z = pinp.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0)
+    harv_period_lengths_pz = pinp.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1)
+    start_harvest_crops_z = pinp.f_seasonal_inp(pinp.crop['start_harvest_crops'].values, numpy=True, axis=1)
+
     mach_periods = per.p_dates_df()
     harv_rate_df = pd.DataFrame()
-    harv_start = pinp.period['harv_date']
-    harv_end = per.period_end_date(harv_start, pinp.period['harv_period_lengths'])
+    harv_end = per.period_end_date(harv_start_z, harv_period_lengths_pz)
     ##Grain harvested per hr (t/hr) for each crop.
     harv_rate = uinp.mach_general['harvest_yield'] * (1 / harv_time_ha())
     ##loops through dict which contains harv start date for each crop
     ##this determines if the crop is allowed early harv
-    for k, crop_harv_date in zip(pinp.crop['start_harvest_crops'].index, pinp.crop['start_harvest_crops']['date']):
+    for k, crop_harv_date in zip(pinp.crop['start_harvest_crops'].index, start_harvest_crops_z):
         if k=='h':
             continue # this is required because hay is included in the harvest dates (needed for stubble) but not in any of the other harvest info
         for i in range(len(mach_periods['date'])-1):
             period_start_date = mach_periods.loc[mach_periods.index[i],'date']
             period_end = mach_periods.loc[mach_periods.index[i+1],'date']
             ###if the period is a harvest period
-            if harv_start <= period_start_date  < harv_end:
+            if harv_start_z <= period_start_date  < harv_end:
                 ####if crop harv date is before the end of the current period then it is allowed to be harvested in that period hence it is given a harv rate 
                 if crop_harv_date < period_end: 
                     harvest_rate =  harv_rate.squeeze()[k]
@@ -422,15 +434,16 @@ def harv_rate_period(params):
 
 #adds the max number of harv hours for each crop for each period to the df  
 def max_harv_hours(params):
+    harv_start_z = pinp.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0)
+    harv_period_lengths_pz = pinp.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1)
     mach_periods = per.p_dates_df()
-    harv_start = pinp.period['harv_date']
-    harv_end = per.period_end_date(harv_start, pinp.period['harv_period_lengths'])
+    harv_end = per.period_end_date(harv_start_z, harv_period_lengths_pz)
     #loops through dict which contains harv start date for each crop
     #this determines if the crop is allowed early harv
     for i in range(len(mach_periods['date'])-1):
         period_start_date = mach_periods.loc[mach_periods.index[i],'date']
         period_end = mach_periods.loc[mach_periods.index[i+1],'date']
-        if harv_start <= period_start_date  < harv_end:
+        if harv_start_z <= period_start_date  < harv_end:
             harv_days =  (period_end - period_start_date).days 
         else: harv_days = 0
         #convert to hours.
@@ -465,14 +478,15 @@ def harvest_cost(params, r_vals):
         Cost of harvest in each cashflow period ($/hr).
 
     '''
+    harv_start_z = pinp.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0)
+    harv_period_lengths_pz = pinp.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1)
     cost_df = cost_harv()
     #gets the date column of the cashflow periods df
     p_dates = per.cashflow_periods()['start date']
     #gets the period name 
     p_name = per.cashflow_periods()['cash period']
-    start = pinp.period['harv_date']
-    length = dt.timedelta(days = sum(pinp.period['harv_period_lengths']).astype(np.float64))
-    harvest_cost = fun.period_allocation_reindex(cost_df, p_dates, p_name, start,length)
+    length = dt.timedelta(days = sum(harv_period_lengths_pz).astype(np.float64))
+    harvest_cost = fun.period_allocation_reindex(cost_df, p_dates, p_name, harv_start_z,length)
     params['harvest_cost'] = harvest_cost.stack().to_dict()
     r_vals['harvest_cost'] = harvest_cost
 
@@ -505,14 +519,17 @@ def contract_harvest_cost_period(params, r_vals):
     Dict for pyomo
         Cost of contract harvest in each cashflow period ($/hr).
     '''
+    ##inputs through season input funciton
+    harv_start_z = pinp.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0)
+    harv_period_lengths_pz = pinp.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1)
+    ##calc contract cost
     cost_df = uinp.price['contract_harv_cost'] #contract harvesting cost for each crop ($/hr)
     #gets the date column of the cashflow periods df
     p_dates = per.cashflow_periods()['start date']
     #gets the period name 
     p_name = per.cashflow_periods()['cash period']
-    start = pinp.period['harv_date']
-    length = dt.timedelta(days = sum(pinp.period['harv_period_lengths']).astype(np.float64))
-    contract_harvest_cost = fun.period_allocation_reindex(cost_df, p_dates, p_name, start,length)
+    length = dt.timedelta(days = sum(harv_period_lengths_pz).astype(np.float64))
+    contract_harvest_cost = fun.period_allocation_reindex(cost_df, p_dates, p_name, harv_start_z,length)
     params['contract_harvest_cost'] = contract_harvest_cost.stack().to_dict()
     r_vals['contract_harvest_cost'] = contract_harvest_cost
 

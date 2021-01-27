@@ -69,8 +69,11 @@ labour periods and length
 #function to determine seeding start - starts a specified number of days after season break
 #also used in mach sheet
 def wet_seeding_start_date():
+    seeding_after_season_start_z = pinp.f_seasonal_inp(pinp.period['seeding_after_season_start'], numpy=True, axis=0)
+    seeding_after_season_start_z = pd.to_timedelta(seeding_after_season_start_z,unit='D')
     #wet seeding starts a specified number of days after season break
-    return f_feed_periods().iloc[0].squeeze() +  datetime.timedelta(days = pinp.period['seeding_after_season_start'])
+    return f_feed_periods()[0] +  seeding_after_season_start_z
+    # return f_feed_periods().iloc[0].squeeze() +  datetime.timedelta(days = pinp.period['seeding_after_season_start'])
 
 
 #this function requires start date and length of each period (as a list) and spits out the start dates of each period
@@ -98,11 +101,16 @@ def period_end_date(start, length):
 #This function determines the start dates of the labour periods. generally each period begins at the start of the month except seeding and harvest periods (which need to be separate because the labour force works more hours during those periods)
 def p_dates_df():
     if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_season_propn_z'])==0:
+        ##put season inputs through season input function
+        harv_date = pinp.f_seasonal_inp(pinp.period['harv_date'],numpy=True,axis=0)
+        seed_period_lengths = pinp.f_seasonal_inp(pinp.period['seed_period_lengths'],numpy=True,axis=1)
+        harv_period_lengths = pinp.f_seasonal_inp(pinp.period['harv_period_lengths'],numpy=True,axis=1)
+        ##calc period
         periods = pd.DataFrame(columns=['date'])
         #create empty list of dates to be filled by this function
         period_start_dates = []
         #determine the start of the first period, this references feed periods so it has the same yr.
-        start_date_period_0 = f_feed_periods().iloc[0].squeeze() + relativedelta(day=1,month=1,hour=0, minute=0, second=0, microsecond=0)
+        start_date_period_0 = f_feed_periods()[0] + relativedelta(day=1,month=1,hour=0, minute=0, second=0, microsecond=0)
         #end date of all labour periods, simply one yr after start date.
         date_last_period = start_date_period_0 + relativedelta(years=1)
         #start point for the loop counter.
@@ -110,15 +118,15 @@ def p_dates_df():
         #loop that runs until the loop counter reached the end date.
         while date <= date_last_period:
             #if not a seed period then
-            if date < wet_seeding_start_date() or date > period_end_date(wet_seeding_start_date(),pinp.period['seed_period_lengths']):
+            if date < wet_seeding_start_date() or date > period_end_date(wet_seeding_start_date(),seed_period_lengths):
                 #if not a harvest period then just simply add 1 month and append that date to the list
-                if date < pinp.period['harv_date'] or date > period_end_date(pinp.period['harv_date'],pinp.period['harv_period_lengths']):
+                if date < harv_date or date > period_end_date(harv_date,harv_period_lengths):
                     period_start_dates.append(date)
                     date += uinp.structure['labour_period_len']
                 #if harvest period then append the harvest dates to the list and adjust the loop counter (date) to the start of the following time period (time period is determined by standard period length in the input sheet).
                 else:
-                    start = pinp.period['harv_date']
-                    length = pinp.period['harv_period_lengths']
+                    start = harv_date
+                    length = harv_period_lengths
                     for i in range(len(period_dates(start, length))):
                         period_start_dates.append(period_dates(start, length)[i])
                     #end period can't be included in harvest date function above because then when that function is used to determine labour hours available in each period the period following harvest will also get more hours.
@@ -127,7 +135,7 @@ def p_dates_df():
             #if seed period then append the seed dates to the list and adjust the loop counter (date) to the start of the following time period (time period is determined by standard period length in the input sheet).
             else:
                 start = wet_seeding_start_date()
-                length = pinp.period['seed_period_lengths']
+                length = seed_period_lengths
                 for i in range(len(period_dates(start, length))):
                     period_start_dates.append(period_dates(start, length)[i])
                 period_start_dates.append(period_end_date(start, length))
@@ -139,6 +147,10 @@ def p_dates_df():
         periods.index = index
     else:
         periods = pinp.period['i_dsp_lp']
+        ##make df
+        index = ['P%02d' % i for i in range(len(periods))]
+        cols = pinp.general['i_z_idx']
+        periods = pd.DataFrame(periods, index=index, columns=cols)
         ##apply season mask
         periods = periods.loc[:, pinp.general['i_mask_z']]
     return periods
@@ -159,19 +171,21 @@ def f_feed_periods(option=0):
         0 = return feed period date
         1 = return feed period length (days)
     '''
-    idx = pd.IndexSlice
-    fp = pinp.period['i_dsp_fp']
-    fp = fp.T.set_index(['period'],append=True).T
+    # idx = pd.IndexSlice
+    # fp = pinp.period['i_dsp_fp']
+    # fp = fp.T.set_index(['period'],append=True).T
 
     ## return array of fp dates
     if option==0:
-        fp = fp.loc[:, idx[:, 'date']]
-        fp = pinp.f_seasonal_inp(fp)
+        # fp = fp.loc[:, idx[:, 'date']]
+        fp = pinp.period['i_dsp_fp_date']
+        fp = pinp.f_seasonal_inp(fp, numpy=True, axis=1)
         return fp
     ## return length
     else:
-        fp = fp.loc[:fp.index[-2], idx[:, 'length']] #last row not included becasue that only contains the end date of last period
-        fp = pinp.f_seasonal_inp(fp)
+        # fp = fp.loc[:fp.index[-2], idx[:, 'length']] #last row not included becasue that only contains the end date of last period
+        fp = pinp.period['i_dsp_fp_len']
+        fp = pinp.f_seasonal_inp(fp, numpy=True, axis=1)
         return fp
 
     #     if pinp.general['steady_state']:
@@ -182,8 +196,7 @@ def f_feed_periods(option=0):
     #         n_fp = pd.to_datetime(n_fp.mean(axis=1))
     #         fp = pd.DataFrame(n_fp, index=fp.index, columns=fp.columns[0])
     #
-    # #todo make wa function. it needs to adjust the z_prob then apply the wa. then add to here.
-    # #todo there will be three levels of inputs now - season ones, typical and then weighted average
+
     #
     #     else:
     #         fp = pinp.period['i_dsp_fp']

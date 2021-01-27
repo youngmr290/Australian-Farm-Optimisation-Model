@@ -951,7 +951,7 @@ def range_allocation_np(period_dates, start, length, opposite=None):
 
     Parameters.
     period_dates: the start of the periods - in a Numpy array np.datetime64.
-    start: the date of the beginning of the date range to test - a numpy array of dates.
+    start: the date of the beginning of the date range to test - a numpy array of dates or single value.
     length: the length of the date range to test - an array of timedelta.days object.
           : must be broadcastable into start.
     ags: input True returns the proportion of date range in each period.
@@ -961,16 +961,20 @@ def range_allocation_np(period_dates, start, length, opposite=None):
     a Numpy array with shape(period_dates, start array).
     Containing the proportion of the respective period for that test date.
     '''
-    #start empty list to append to
-    allocation_period=np.zeros(((len(period_dates),) + start.shape),dtype=np.float64)
+    ##make start numpy incase start is a single value
+    start = np.datetime64(start)
     end = start + length
+    end = np.datetime64(end) #convert to numpy datetime
+
+    #start empty array to assign to
+    allocation_period=np.zeros((period_dates.shape + start.shape),dtype=np.float64)
     ##checks if user wants to the proportion of each period that falls in the tested date range or proportion of date range in each period
     if opposite:
         #check how much of each date range falls within the period
         for i in range(len(period_dates)-1):
             #^.date() required because the array being passed is not a np.datetime64[D]
-            per_start= period_dates[i].date() #had to add this and the as type thing below to get it all in the same format so calcs would work
-            per_end = period_dates[i + 1].date()
+            per_start= period_dates[i]#.date() #had to add this and the astype thing below to get it all in the same format so calcs would work
+            per_end = period_dates[i + 1]#.date()
             calc_start = np.maximum(per_start,start).astype('datetime64[D]')       #select the later of the period start or the start of the range
             calc_end = np.minimum(per_end,end).astype('datetime64[D]')             #select earlier of the period end and the end of the range
             allocation_period[i,...] = np.maximum(0, (calc_end - calc_start) / (end - start)) #days between calc_end and calc_start (0 if end before start) divided by length of the range
