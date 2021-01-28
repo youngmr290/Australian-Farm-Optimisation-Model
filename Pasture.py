@@ -291,7 +291,6 @@ def map_excel(params,r_vals):
         i_reseeding_foo_grazing_t[t]        = exceldata['FOOatGrazing']
 
         i_grn_trampling_ft[...,t].fill       (exceldata['Trampling'])
-        i_dry_trampling_ft[...,t].fill       (exceldata['Trampling'])
         i_grn_senesce_daily_ft[...,t]       = np.asfarray(exceldata['SenescePropn'])
         i_grn_senesce_eos_ft[...,t]         = np.asfarray(exceldata['SenesceEOS'])
         i_base_ft[...,t]                    = np.asfarray(exceldata['BaseLevelInput'])
