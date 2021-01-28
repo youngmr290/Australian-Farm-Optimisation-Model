@@ -951,7 +951,7 @@ def range_allocation_np(period_dates, start, length, opposite=None):
 
     Parameters.
     period_dates: the start of the periods - in a Numpy array np.datetime64.
-    start: the date of the beginning of the date range to test - a numpy array of dates or single value.
+    start: the date of the beginning of the date range to test - a numpy array of dates (np.datetime64)
     length: the length of the date range to test - an array of timedelta.days object.
           : must be broadcastable into start.
     ags: input True returns the proportion of date range in each period.
@@ -961,10 +961,8 @@ def range_allocation_np(period_dates, start, length, opposite=None):
     a Numpy array with shape(period_dates, start array).
     Containing the proportion of the respective period for that test date.
     '''
-    ##make start numpy incase start is a single value
-    start = np.datetime64(start)
+    ##end of period
     end = start + length
-    end = np.datetime64(end) #convert to numpy datetime
 
     #start empty array to assign to
     allocation_period=np.zeros((period_dates.shape + start.shape),dtype=np.float64)

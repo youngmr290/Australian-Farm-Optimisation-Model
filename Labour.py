@@ -67,15 +67,18 @@ def labour_general(params,r_vals):
     ########
     
     ##manager leave
-    length = pd.to_timedelta(pinp.labour['leave_manager'], unit='D')
-    manager_leave_alloc_p5z = fun.range_allocation_np(lp_p5z,pinp.labour['leave_manager_start_date'],length,True)
+    # length = pd.to_timedelta(pinp.labour['leave_manager'], unit='D')
+    length = np.array([pinp.labour['leave_manager']]).astype('timedelta64[D]')
+    start = np.datetime64(pinp.labour['leave_manager_start_date'])
+    manager_leave_alloc_p5z = fun.range_allocation_np(lp_p5z, start, length, True)
     manager_leave_p5z = manager_leave_alloc_p5z * length.days
     manager_leave_p5z = manager_leave_p5z[:-1] #drop last row because it is just the end date of last period
 
     ##perm leave
     ###normal leave
-    length = pd.to_timedelta(pinp.labour['leave_permanent'], unit='D')
-    perm_leave_alloc_p5z = fun.range_allocation_np(lp_p5z,pinp.labour['leave_permanent_start_date'],length,True)
+    length = np.array([pinp.labour['leave_permanent']]).astype('timedelta64[D]')
+    start = np.datetime64(pinp.labour['leave_permanent_start_date'])
+    perm_leave_alloc_p5z = fun.range_allocation_np(lp_p5z, start, length, True)
     perm_leave_p5z = perm_leave_alloc_p5z * length.days
     perm_leave_p5z = perm_leave_p5z[:-1] #drop last row because it is just the end date of last period
     ###sick leave - x days split equaly into each period
@@ -208,8 +211,8 @@ def labour_general(params,r_vals):
     ##create season params in loop
     for z in range(len(keys_z)):
         ##create season key for params dict
-        params[keys_z[z]] = {}
         scenario = keys_z[z]
+        params[scenario] = {}
 
         params[scenario]['permanent hours'] = dict(zip(keys_p5, perm_hrs_total_p5z[:,z]))
         params[scenario]['permanent supervision'] = dict(zip(keys_p5, perm_supervision_p5z[:,z]))
@@ -222,7 +225,7 @@ def labour_general(params,r_vals):
 
 
         ##report values that are season affected
-        r_vals[scenario]['casual_cost'] = pd.Series(params['casual_cost'])
+        r_vals[scenario]['casual_cost'] = pd.Series(params[scenario]['casual_cost'])
 
     ##report values that are not season affected
     r_vals['keys_p5'] = keys_p5
@@ -234,165 +237,165 @@ def labour_general(params,r_vals):
 
 
 
-    labour_periods = per.p_dates_df()
-
-    for i, j in zip(labour_periods.index[:-1], labour_periods.index[1:]): #i is current period index, j is next period index
-        ##period length (days)
-        days = labour_periods.loc[j,'date'] - labour_periods.loc[i,'date']
-        labour_periods.loc[i,'days'] = days
-
-        ##leave manager, this only works if leave is taken in one chuck, if it were taken in two lots this would have to be altered
-        ###if the end of labour period i is before leave begins or labour period starts after leave finished then there is 0 leave for that period
-        if labour_periods.loc[j , 'date'] < pinp.labour['leave_manager_start_date'] or labour_periods.loc[i , 'date'] > pinp.labour['leave_manager_start_date'] + datetime.timedelta(days = pinp.labour['leave_manager']):
-           labour_periods.loc[i , 'manager leave'] = datetime.timedelta(days = 0)
-        ###if labour i period starts before leave starts and leave finishes before the labour period finished then that period gets all the leave.
-        elif labour_periods.loc[i , 'date'] < pinp.labour['leave_manager_start_date'] and labour_periods.loc[j, 'date'] > pinp.labour['leave_manager_start_date'] + datetime.timedelta(days = pinp.labour['leave_manager']):
-            labour_periods.loc[i , 'manager leave'] = datetime.timedelta(days = pinp.labour['leave_manager'])
-        ###if labour i period starts before leave starts and leave finishes after the labour period finished then that period gets leave from the start date of leave to the end of the labour period.
-        elif labour_periods.loc[i , 'date'] < pinp.labour['leave_manager_start_date'] and labour_periods.loc[j, 'date'] < pinp.labour['leave_manager_start_date'] + datetime.timedelta(days = pinp.labour['leave_manager']):
-            labour_periods.loc[i , 'manager leave'] = labour_periods.loc[j, 'date'] - pinp.labour['leave_manager_start_date']
-        ###if labour i period starts after leave starts and leave finishes before the labour period finished then that period gets leave from the beginning on the labour period to the end date of leave.
-        elif labour_periods.loc[i , 'date'] > pinp.labour['leave_manager_start_date'] and labour_periods.loc[j, 'date'] > pinp.labour['leave_manager_start_date'] + datetime.timedelta(days = pinp.labour['leave_manager']):
-            labour_periods.loc[i , 'manager leave'] = pinp.labour['leave_manager_start_date'] + datetime.timedelta(days = pinp.labour['leave_manager']) - labour_periods.loc[i , 'date']             
-        
-        ##leave permanent, very similar to above but also includes sick leave (10days/year split over each period), this only works if leave is taken in one chuck, if it were taken in two lots this would have to be altered
-        ###if the end of labour period i is before leave begins or labour period starts after leave finished then there is 0 leave for that period
-        if labour_periods.loc[j, 'date'] < pinp.labour['leave_permanent_start_date'] or labour_periods.loc[i , 'date'] > pinp.labour['leave_permanent_start_date'] + datetime.timedelta(days = pinp.labour['leave_permanent']):
-           labour_periods.loc[i , 'permanent leave'] = labour_periods.loc[i , 'days'] * (pinp.labour['sick_leave_permanent']/365)
-        ###if labour i period starts before leave starts and leave finishes before the labour period finished then that period gets all the leave.
-        elif labour_periods.loc[i , 'date'] < pinp.labour['leave_permanent_start_date'] and labour_periods.loc[j, 'date'] > pinp.labour['leave_permanent_start_date'] + datetime.timedelta(days = pinp.labour['leave_permanent']):
-            labour_periods.loc[i , 'permanent leave'] = datetime.timedelta(days = pinp.labour['leave_permanent']) + labour_periods.loc[i , 'days'] * (pinp.labour['sick_leave_permanent']/365)
-        ###if labour i period starts before leave starts and leave finishes after the labour period finished then that period gets leave from the start date of leave to the end of the labour period.
-        elif labour_periods.loc[i , 'date'] < pinp.labour['leave_permanent_start_date'] and labour_periods.loc[j, 'date'] < pinp.labour['leave_permanent_start_date'] + datetime.timedelta(days = pinp.labour['leave_permanent']):
-            labour_periods.loc[i , 'permanent leave'] = labour_periods.loc[j, 'date'] - pinp.labour['leave_permanent_start_date']  + labour_periods.loc[i , 'days'] * (pinp.labour['sick_leave_permanent']/365)
-        ###if labour i period starts after leave starts and leave finishes before the labour period finished then that period gets leave from the beginning on the labour period to the end date of leave.
-        elif labour_periods.loc[i , 'date'] > pinp.labour['leave_permanent_start_date'] and labour_periods.loc[j, 'date'] > pinp.labour['leave_permanent_start_date'] + datetime.timedelta(days = pinp.labour['leave_permanent']):
-            labour_periods.loc[i , 'permanent leave'] = pinp.labour['leave_permanent_start_date'] + datetime.timedelta(days = pinp.labour['leave_permanent']) - labour_periods.loc[i , 'date']  + labour_periods.loc[i , 'days'] * (pinp.labour['sick_leave_permanent']/365)          
-
-    ##determine possible labour days worked by the manager during the week and on weekend in a given labour periods
-    ###available days in the period minus leave multiplied by fraction of weekdays
-    labour_periods['manager weekdays'] = (labour_periods['days'] - labour_periods['manager leave']) * 5/7
-    ###available days in the period minus leave multiplied by fraction of weekend days
-    labour_periods['manager weekend'] = (labour_periods['days'] - labour_periods['manager leave']) * 2/7
-
-    ##determine possible labour days worked by permanent staff during the week and on weekend in a given labour perios
-    ###available days in the period minus leave multiplied by fraction of weekdays
-    labour_periods['permanent weekdays'] = (labour_periods['days'] - labour_periods['permanent leave']) * 5/7
-    ###available days in the period minus leave multiplied by fraction of weekend days
-    labour_periods['permanent weekend'] = (labour_periods['days'] - labour_periods['permanent leave']) * 2/7
-
-    ##function to determine possible labour days worked by casual staff during the week and on weekend in a given labour perios
-    ###available days in the period multiplied by fraction of weekdays
-    labour_periods['casual weekdays'] = labour_periods['days'] * 5/7
-    ###available days in the period multiplied by fraction of weekend days
-    labour_periods['casual weekend'] = labour_periods['days'] * 2/7
-
-    ##set upper limits on casual staff
-    max_casual = pinp.labour['max_casual'] if pinp.labour['max_casual']!='inf' else np.inf #if inf need to convert to python inf
-    max_casual_seedharv = pinp.labour['max_casual_seedharv'] if pinp.labour['max_casual']!='inf' else np.inf #if inf need to convert to python inf
-
-    ##get cashflow period dates and names - used in the following loop
-    p_dates = per.cashflow_periods()['start date']#get cashflow period dates
-    p_name = per.cashflow_periods()['cash period']#gets the period name
-
-    for i in labour_periods['date']: #loops through each period date
-        ##work out total hours available in each period for manager (owner)
-        if i in per.period_dates(per.wet_seeding_start_date(),seed_period_lengths_pz): #checks if the date is a seed period
-            labour_periods.loc[labour_periods['date']==i , 'manager hours'] = labour_periods.loc[labour_periods['date']==i , 'manager weekdays'] / datetime.timedelta(days=1) \
-            * pinp.labour['daily_hours'].loc['seeding', 'Manager'] + labour_periods.loc[labour_periods['date']==i , 'manager weekend'] / datetime.timedelta(days=1) \
-            * pinp.labour['daily_hours'].loc['seeding', 'Manager'] #convert the datetime into a float by dividing number of days by 1 day, then multiply by number of hours that can be worked during seeding.
-        elif i in per.period_dates(harv_date_z,harv_period_lengths_pz):
-            labour_periods.loc[labour_periods['date']==i , 'manager hours'] = labour_periods.loc[labour_periods['date']==i , 'manager weekdays'] / datetime.timedelta(days=1) \
-            * pinp.labour['daily_hours'].loc['harvest', 'Manager'] + labour_periods.loc[labour_periods['date']==i , 'manager weekend'] / datetime.timedelta(days=1) \
-            * pinp.labour['daily_hours'].loc['harvest', 'Manager']  
-        else:
-            labour_periods.loc[labour_periods['date']==i , 'manager hours'] = labour_periods.loc[labour_periods['date']==i , 'manager weekdays'] / datetime.timedelta(days=1) \
-            * pinp.labour['daily_hours'].loc['weekdays', 'Manager'] + labour_periods.loc[labour_periods['date']==i , 'manager weekend'] / datetime.timedelta(days=1) \
-            * pinp.labour['daily_hours'].loc['weekends', 'Manager']  
-        ##work out total hours available in each period for permanent staff
-        if i in per.period_dates(per.wet_seeding_start_date(),seed_period_lengths_pz): #checks if the date is a seed period
-            labour_periods.loc[labour_periods['date']==i , 'permanent hours'] = labour_periods.loc[labour_periods['date']==i , 'permanent weekdays'] / datetime.timedelta(days=1) \
-            * pinp.labour['daily_hours'].loc['seeding', 'Permanent'] + labour_periods.loc[labour_periods['date']==i , 'permanent weekend'] / datetime.timedelta(days=1) \
-            * pinp.labour['daily_hours'].loc['seeding', 'Permanent'] #convert the datetime into a float by dividing number of days by 1 day, then multiply by number of hours that can be worked during seeding 
-        elif i in per.period_dates(harv_date_z,harv_period_lengths_pz):
-            labour_periods.loc[labour_periods['date']==i , 'permanent hours'] = labour_periods.loc[labour_periods['date']==i , 'permanent weekdays'] / datetime.timedelta(days=1) \
-            * pinp.labour['daily_hours'].loc['harvest', 'Permanent'] + labour_periods.loc[labour_periods['date']==i , 'permanent weekend'] / datetime.timedelta(days=1) \
-            * pinp.labour['daily_hours'].loc['harvest', 'Permanent']  
-        else:
-            labour_periods.loc[labour_periods['date']==i , 'permanent hours'] = labour_periods.loc[labour_periods['date']==i , 'permanent weekdays'] / datetime.timedelta(days=1) \
-            * pinp.labour['daily_hours'].loc['weekdays', 'Permanent'] + labour_periods.loc[labour_periods['date']==i , 'permanent weekend'] / datetime.timedelta(days=1) \
-            * pinp.labour['daily_hours'].loc['weekends', 'Permanent']  
-        ##work out total hours available in each period for casual staff
-        if i in per.period_dates(per.wet_seeding_start_date(),seed_period_lengths_pz): #checks if the date is a seed period
-            labour_periods.loc[labour_periods['date']==i , 'casual hours'] = labour_periods.loc[labour_periods['date']==i , 'casual weekdays'] / datetime.timedelta(days=1) \
-            * pinp.labour['daily_hours'].loc['seeding', 'Casual'] + labour_periods.loc[labour_periods['date']==i , 'casual weekend'] / datetime.timedelta(days=1) \
-            * pinp.labour['daily_hours'].loc['seeding', 'Casual'] #convert the datetime into a float by dividing number of days by 1 day, then multiply by number of hours that can be worked during seeding.
-        elif i in per.period_dates(harv_date_z,harv_period_lengths_pz):
-            labour_periods.loc[labour_periods['date']==i , 'casual hours'] = labour_periods.loc[labour_periods['date']==i , 'casual weekdays'] / datetime.timedelta(days=1) \
-            * pinp.labour['daily_hours'].loc['harvest', 'Casual'] + labour_periods.loc[labour_periods['date']==i , 'casual weekend'] / datetime.timedelta(days=1) \
-            * pinp.labour['daily_hours'].loc['harvest', 'Casual']  
-        else:
-            labour_periods.loc[labour_periods['date']==i , 'casual hours'] = labour_periods.loc[labour_periods['date']==i , 'casual weekdays'] / datetime.timedelta(days=1) \
-            * pinp.labour['daily_hours'].loc['weekdays', 'Casual'] + labour_periods.loc[labour_periods['date']==i , 'casual weekend'] / datetime.timedelta(days=1) \
-            * pinp.labour['daily_hours'].loc['weekends', 'Casual']  
-
-        ##work out the number of hours of supervision needed by permanent staff
-        if i in per.period_dates(per.wet_seeding_start_date(),seed_period_lengths_pz) \
-        or i in per.period_dates(harv_date_z,harv_period_lengths_pz): #checks if the date is a seed period or harvest period
-            ###multiplys number of permanent hours in a given period by the percentage of supervision required for harvest and seeding
-            labour_periods.loc[labour_periods['date']==i , 'permanent supervision'] = labour_periods.loc[labour_periods['date']==i , 'permanent hours'] \
-            * pinp.labour['labour_eff'].loc['seedingharv', 'Permanent'] 
-        else:
-            ###multiplys number of permanent hours in a given period by the percentage of supervision required for normal activities
-            labour_periods.loc[labour_periods['date']==i , 'permanent supervision'] = labour_periods.loc[labour_periods['date']==i , 'permanent hours'] \
-            * pinp.labour['labour_eff'].loc['normal', 'Permanent']   
-
-        ##function to work out the number of hours of supervision needed by casual staff
-        if i in per.period_dates(per.wet_seeding_start_date(),seed_period_lengths_pz)   \
-        or i in per.period_dates(harv_date_z,harv_period_lengths_pz): #checks if the date is a seed period or harvest period
-            ###multiplys number of casual hours in a given period by the percentage of supervision required for harvest and seeding
-            labour_periods.loc[labour_periods['date']==i , 'casual supervision'] = labour_periods.loc[labour_periods['date']==i , 'casual hours'] \
-            *pinp.labour['labour_eff'].loc['seedingharv', 'Casual']
-        else:
-            ###multiplys number of casual hours in a given period by the percentage of supervision required for normal activities
-            labour_periods.loc[labour_periods['date']==i , 'casual supervision'] = labour_periods.loc[labour_periods['date']==i , 'casual hours'] \
-            *pinp.labour['labour_eff'].loc['normal', 'Casual']
-
-        ##determine bounds for casual labour, this is needed because casual labour requirements may be different during seeding and harvest compared to the rest
-        ###upper bound
-        if i in per.period_dates(per.wet_seeding_start_date(),seed_period_lengths_pz) \
-        or i in per.period_dates(harv_date_z,harv_period_lengths_pz): #checks if the date is a seed period or harvest date
-            labour_periods.loc[labour_periods['date']==i , 'casual ub'] =  max_casual_seedharv
-        else:
-            labour_periods.loc[labour_periods['date']==i , 'casual ub'] = max_casual
-        ###lower bound
-        if i in per.period_dates(per.wet_seeding_start_date(),seed_period_lengths_pz) \
-        or i in per.period_dates(harv_date_z,harv_period_lengths_pz): #checks if the date is a seed period or harvest date
-            labour_periods.loc[labour_periods['date']==i , 'casual lb'] =  pinp.labour['min_casual_seedharv']
-        else:
-            labour_periods.loc[labour_periods['date']==i , 'casual lb'] = pinp.labour['min_casual']
-       
-        ##determine cashflow period each labour period alines with
-        labour_periods.loc[labour_periods['date']==i , 'cashflow'] = fun.period_allocation(p_dates,p_name,i)
-
-    ##cost of casual for each labour period - wage plus super plus workers comp (multipled by wage because super and others are %)
-    ##differect to perm and manager because they are at a fixed level throughout the year ie same number of perm staff all yr.
-    labour_periods['casual_cost'] = labour_periods['casual hours'] * (uinp.price['casual_cost'] + uinp.price['casual_cost'] * uinp.price['casual_super'] + uinp.price['casual_cost'] * uinp.price['casual_workers_comp']) 
-    ## drop last row, because it has na because it only contains the end date, therefore not a period
-    labour_periods.drop(labour_periods.tail(1).index,inplace=True) 
-    ##create dicts for pyomo
-    params['permanent hours'] = labour_periods['permanent hours'].to_dict()
-    params['permanent supervision'] = labour_periods['permanent supervision'].to_dict()
-    params['casual_cost'] = dict(zip(zip(labour_periods['cashflow'].index,labour_periods['cashflow']),labour_periods['casual_cost']))
-    r_vals['casual_cost'] = pd.Series(params['casual_cost'])
-    params['casual hours'] = labour_periods['casual hours'].to_dict()
-    params['casual supervision'] = labour_periods['casual supervision'].to_dict()
-    params['manager hours'] = labour_periods['manager hours'].to_dict()
-    params['casual ub'] = labour_periods['casual ub'].to_dict()
-    params['casual lb'] = labour_periods['casual lb'].to_dict()
-    r_vals['keys_p5'] = per.p_date2_df().index.astype('object')
-
-# t_labour_periods=labour_general()
+#     labour_periods = per.p_dates_df()
+#
+#     for i, j in zip(labour_periods.index[:-1], labour_periods.index[1:]): #i is current period index, j is next period index
+#         ##period length (days)
+#         days = labour_periods.loc[j,'date'] - labour_periods.loc[i,'date']
+#         labour_periods.loc[i,'days'] = days
+#
+#         ##leave manager, this only works if leave is taken in one chuck, if it were taken in two lots this would have to be altered
+#         ###if the end of labour period i is before leave begins or labour period starts after leave finished then there is 0 leave for that period
+#         if labour_periods.loc[j , 'date'] < pinp.labour['leave_manager_start_date'] or labour_periods.loc[i , 'date'] > pinp.labour['leave_manager_start_date'] + datetime.timedelta(days = pinp.labour['leave_manager']):
+#            labour_periods.loc[i , 'manager leave'] = datetime.timedelta(days = 0)
+#         ###if labour i period starts before leave starts and leave finishes before the labour period finished then that period gets all the leave.
+#         elif labour_periods.loc[i , 'date'] < pinp.labour['leave_manager_start_date'] and labour_periods.loc[j, 'date'] > pinp.labour['leave_manager_start_date'] + datetime.timedelta(days = pinp.labour['leave_manager']):
+#             labour_periods.loc[i , 'manager leave'] = datetime.timedelta(days = pinp.labour['leave_manager'])
+#         ###if labour i period starts before leave starts and leave finishes after the labour period finished then that period gets leave from the start date of leave to the end of the labour period.
+#         elif labour_periods.loc[i , 'date'] < pinp.labour['leave_manager_start_date'] and labour_periods.loc[j, 'date'] < pinp.labour['leave_manager_start_date'] + datetime.timedelta(days = pinp.labour['leave_manager']):
+#             labour_periods.loc[i , 'manager leave'] = labour_periods.loc[j, 'date'] - pinp.labour['leave_manager_start_date']
+#         ###if labour i period starts after leave starts and leave finishes before the labour period finished then that period gets leave from the beginning on the labour period to the end date of leave.
+#         elif labour_periods.loc[i , 'date'] > pinp.labour['leave_manager_start_date'] and labour_periods.loc[j, 'date'] > pinp.labour['leave_manager_start_date'] + datetime.timedelta(days = pinp.labour['leave_manager']):
+#             labour_periods.loc[i , 'manager leave'] = pinp.labour['leave_manager_start_date'] + datetime.timedelta(days = pinp.labour['leave_manager']) - labour_periods.loc[i , 'date']
+#
+#         ##leave permanent, very similar to above but also includes sick leave (10days/year split over each period), this only works if leave is taken in one chuck, if it were taken in two lots this would have to be altered
+#         ###if the end of labour period i is before leave begins or labour period starts after leave finished then there is 0 leave for that period
+#         if labour_periods.loc[j, 'date'] < pinp.labour['leave_permanent_start_date'] or labour_periods.loc[i , 'date'] > pinp.labour['leave_permanent_start_date'] + datetime.timedelta(days = pinp.labour['leave_permanent']):
+#            labour_periods.loc[i , 'permanent leave'] = labour_periods.loc[i , 'days'] * (pinp.labour['sick_leave_permanent']/365)
+#         ###if labour i period starts before leave starts and leave finishes before the labour period finished then that period gets all the leave.
+#         elif labour_periods.loc[i , 'date'] < pinp.labour['leave_permanent_start_date'] and labour_periods.loc[j, 'date'] > pinp.labour['leave_permanent_start_date'] + datetime.timedelta(days = pinp.labour['leave_permanent']):
+#             labour_periods.loc[i , 'permanent leave'] = datetime.timedelta(days = pinp.labour['leave_permanent']) + labour_periods.loc[i , 'days'] * (pinp.labour['sick_leave_permanent']/365)
+#         ###if labour i period starts before leave starts and leave finishes after the labour period finished then that period gets leave from the start date of leave to the end of the labour period.
+#         elif labour_periods.loc[i , 'date'] < pinp.labour['leave_permanent_start_date'] and labour_periods.loc[j, 'date'] < pinp.labour['leave_permanent_start_date'] + datetime.timedelta(days = pinp.labour['leave_permanent']):
+#             labour_periods.loc[i , 'permanent leave'] = labour_periods.loc[j, 'date'] - pinp.labour['leave_permanent_start_date']  + labour_periods.loc[i , 'days'] * (pinp.labour['sick_leave_permanent']/365)
+#         ###if labour i period starts after leave starts and leave finishes before the labour period finished then that period gets leave from the beginning on the labour period to the end date of leave.
+#         elif labour_periods.loc[i , 'date'] > pinp.labour['leave_permanent_start_date'] and labour_periods.loc[j, 'date'] > pinp.labour['leave_permanent_start_date'] + datetime.timedelta(days = pinp.labour['leave_permanent']):
+#             labour_periods.loc[i , 'permanent leave'] = pinp.labour['leave_permanent_start_date'] + datetime.timedelta(days = pinp.labour['leave_permanent']) - labour_periods.loc[i , 'date']  + labour_periods.loc[i , 'days'] * (pinp.labour['sick_leave_permanent']/365)
+#
+#     ##determine possible labour days worked by the manager during the week and on weekend in a given labour periods
+#     ###available days in the period minus leave multiplied by fraction of weekdays
+#     labour_periods['manager weekdays'] = (labour_periods['days'] - labour_periods['manager leave']) * 5/7
+#     ###available days in the period minus leave multiplied by fraction of weekend days
+#     labour_periods['manager weekend'] = (labour_periods['days'] - labour_periods['manager leave']) * 2/7
+#
+#     ##determine possible labour days worked by permanent staff during the week and on weekend in a given labour perios
+#     ###available days in the period minus leave multiplied by fraction of weekdays
+#     labour_periods['permanent weekdays'] = (labour_periods['days'] - labour_periods['permanent leave']) * 5/7
+#     ###available days in the period minus leave multiplied by fraction of weekend days
+#     labour_periods['permanent weekend'] = (labour_periods['days'] - labour_periods['permanent leave']) * 2/7
+#
+#     ##function to determine possible labour days worked by casual staff during the week and on weekend in a given labour perios
+#     ###available days in the period multiplied by fraction of weekdays
+#     labour_periods['casual weekdays'] = labour_periods['days'] * 5/7
+#     ###available days in the period multiplied by fraction of weekend days
+#     labour_periods['casual weekend'] = labour_periods['days'] * 2/7
+#
+#     ##set upper limits on casual staff
+#     max_casual = pinp.labour['max_casual'] if pinp.labour['max_casual']!='inf' else np.inf #if inf need to convert to python inf
+#     max_casual_seedharv = pinp.labour['max_casual_seedharv'] if pinp.labour['max_casual']!='inf' else np.inf #if inf need to convert to python inf
+#
+#     ##get cashflow period dates and names - used in the following loop
+#     p_dates = per.cashflow_periods()['start date']#get cashflow period dates
+#     p_name = per.cashflow_periods()['cash period']#gets the period name
+#
+#     for i in labour_periods['date']: #loops through each period date
+#         ##work out total hours available in each period for manager (owner)
+#         if i in per.period_dates(per.wet_seeding_start_date(),seed_period_lengths_pz): #checks if the date is a seed period
+#             labour_periods.loc[labour_periods['date']==i , 'manager hours'] = labour_periods.loc[labour_periods['date']==i , 'manager weekdays'] / datetime.timedelta(days=1) \
+#             * pinp.labour['daily_hours'].loc['seeding', 'Manager'] + labour_periods.loc[labour_periods['date']==i , 'manager weekend'] / datetime.timedelta(days=1) \
+#             * pinp.labour['daily_hours'].loc['seeding', 'Manager'] #convert the datetime into a float by dividing number of days by 1 day, then multiply by number of hours that can be worked during seeding.
+#         elif i in per.period_dates(harv_date_z,harv_period_lengths_pz):
+#             labour_periods.loc[labour_periods['date']==i , 'manager hours'] = labour_periods.loc[labour_periods['date']==i , 'manager weekdays'] / datetime.timedelta(days=1) \
+#             * pinp.labour['daily_hours'].loc['harvest', 'Manager'] + labour_periods.loc[labour_periods['date']==i , 'manager weekend'] / datetime.timedelta(days=1) \
+#             * pinp.labour['daily_hours'].loc['harvest', 'Manager']
+#         else:
+#             labour_periods.loc[labour_periods['date']==i , 'manager hours'] = labour_periods.loc[labour_periods['date']==i , 'manager weekdays'] / datetime.timedelta(days=1) \
+#             * pinp.labour['daily_hours'].loc['weekdays', 'Manager'] + labour_periods.loc[labour_periods['date']==i , 'manager weekend'] / datetime.timedelta(days=1) \
+#             * pinp.labour['daily_hours'].loc['weekends', 'Manager']
+#         ##work out total hours available in each period for permanent staff
+#         if i in per.period_dates(per.wet_seeding_start_date(),seed_period_lengths_pz): #checks if the date is a seed period
+#             labour_periods.loc[labour_periods['date']==i , 'permanent hours'] = labour_periods.loc[labour_periods['date']==i , 'permanent weekdays'] / datetime.timedelta(days=1) \
+#             * pinp.labour['daily_hours'].loc['seeding', 'Permanent'] + labour_periods.loc[labour_periods['date']==i , 'permanent weekend'] / datetime.timedelta(days=1) \
+#             * pinp.labour['daily_hours'].loc['seeding', 'Permanent'] #convert the datetime into a float by dividing number of days by 1 day, then multiply by number of hours that can be worked during seeding
+#         elif i in per.period_dates(harv_date_z,harv_period_lengths_pz):
+#             labour_periods.loc[labour_periods['date']==i , 'permanent hours'] = labour_periods.loc[labour_periods['date']==i , 'permanent weekdays'] / datetime.timedelta(days=1) \
+#             * pinp.labour['daily_hours'].loc['harvest', 'Permanent'] + labour_periods.loc[labour_periods['date']==i , 'permanent weekend'] / datetime.timedelta(days=1) \
+#             * pinp.labour['daily_hours'].loc['harvest', 'Permanent']
+#         else:
+#             labour_periods.loc[labour_periods['date']==i , 'permanent hours'] = labour_periods.loc[labour_periods['date']==i , 'permanent weekdays'] / datetime.timedelta(days=1) \
+#             * pinp.labour['daily_hours'].loc['weekdays', 'Permanent'] + labour_periods.loc[labour_periods['date']==i , 'permanent weekend'] / datetime.timedelta(days=1) \
+#             * pinp.labour['daily_hours'].loc['weekends', 'Permanent']
+#         ##work out total hours available in each period for casual staff
+#         if i in per.period_dates(per.wet_seeding_start_date(),seed_period_lengths_pz): #checks if the date is a seed period
+#             labour_periods.loc[labour_periods['date']==i , 'casual hours'] = labour_periods.loc[labour_periods['date']==i , 'casual weekdays'] / datetime.timedelta(days=1) \
+#             * pinp.labour['daily_hours'].loc['seeding', 'Casual'] + labour_periods.loc[labour_periods['date']==i , 'casual weekend'] / datetime.timedelta(days=1) \
+#             * pinp.labour['daily_hours'].loc['seeding', 'Casual'] #convert the datetime into a float by dividing number of days by 1 day, then multiply by number of hours that can be worked during seeding.
+#         elif i in per.period_dates(harv_date_z,harv_period_lengths_pz):
+#             labour_periods.loc[labour_periods['date']==i , 'casual hours'] = labour_periods.loc[labour_periods['date']==i , 'casual weekdays'] / datetime.timedelta(days=1) \
+#             * pinp.labour['daily_hours'].loc['harvest', 'Casual'] + labour_periods.loc[labour_periods['date']==i , 'casual weekend'] / datetime.timedelta(days=1) \
+#             * pinp.labour['daily_hours'].loc['harvest', 'Casual']
+#         else:
+#             labour_periods.loc[labour_periods['date']==i , 'casual hours'] = labour_periods.loc[labour_periods['date']==i , 'casual weekdays'] / datetime.timedelta(days=1) \
+#             * pinp.labour['daily_hours'].loc['weekdays', 'Casual'] + labour_periods.loc[labour_periods['date']==i , 'casual weekend'] / datetime.timedelta(days=1) \
+#             * pinp.labour['daily_hours'].loc['weekends', 'Casual']
+#
+#         ##work out the number of hours of supervision needed by permanent staff
+#         if i in per.period_dates(per.wet_seeding_start_date(),seed_period_lengths_pz) \
+#         or i in per.period_dates(harv_date_z,harv_period_lengths_pz): #checks if the date is a seed period or harvest period
+#             ###multiplys number of permanent hours in a given period by the percentage of supervision required for harvest and seeding
+#             labour_periods.loc[labour_periods['date']==i , 'permanent supervision'] = labour_periods.loc[labour_periods['date']==i , 'permanent hours'] \
+#             * pinp.labour['labour_eff'].loc['seedingharv', 'Permanent']
+#         else:
+#             ###multiplys number of permanent hours in a given period by the percentage of supervision required for normal activities
+#             labour_periods.loc[labour_periods['date']==i , 'permanent supervision'] = labour_periods.loc[labour_periods['date']==i , 'permanent hours'] \
+#             * pinp.labour['labour_eff'].loc['normal', 'Permanent']
+#
+#         ##function to work out the number of hours of supervision needed by casual staff
+#         if i in per.period_dates(per.wet_seeding_start_date(),seed_period_lengths_pz)   \
+#         or i in per.period_dates(harv_date_z,harv_period_lengths_pz): #checks if the date is a seed period or harvest period
+#             ###multiplys number of casual hours in a given period by the percentage of supervision required for harvest and seeding
+#             labour_periods.loc[labour_periods['date']==i , 'casual supervision'] = labour_periods.loc[labour_periods['date']==i , 'casual hours'] \
+#             *pinp.labour['labour_eff'].loc['seedingharv', 'Casual']
+#         else:
+#             ###multiplys number of casual hours in a given period by the percentage of supervision required for normal activities
+#             labour_periods.loc[labour_periods['date']==i , 'casual supervision'] = labour_periods.loc[labour_periods['date']==i , 'casual hours'] \
+#             *pinp.labour['labour_eff'].loc['normal', 'Casual']
+#
+#         ##determine bounds for casual labour, this is needed because casual labour requirements may be different during seeding and harvest compared to the rest
+#         ###upper bound
+#         if i in per.period_dates(per.wet_seeding_start_date(),seed_period_lengths_pz) \
+#         or i in per.period_dates(harv_date_z,harv_period_lengths_pz): #checks if the date is a seed period or harvest date
+#             labour_periods.loc[labour_periods['date']==i , 'casual ub'] =  max_casual_seedharv
+#         else:
+#             labour_periods.loc[labour_periods['date']==i , 'casual ub'] = max_casual
+#         ###lower bound
+#         if i in per.period_dates(per.wet_seeding_start_date(),seed_period_lengths_pz) \
+#         or i in per.period_dates(harv_date_z,harv_period_lengths_pz): #checks if the date is a seed period or harvest date
+#             labour_periods.loc[labour_periods['date']==i , 'casual lb'] =  pinp.labour['min_casual_seedharv']
+#         else:
+#             labour_periods.loc[labour_periods['date']==i , 'casual lb'] = pinp.labour['min_casual']
+#
+#         ##determine cashflow period each labour period alines with
+#         labour_periods.loc[labour_periods['date']==i , 'cashflow'] = fun.period_allocation(p_dates,p_name,i)
+#
+#     ##cost of casual for each labour period - wage plus super plus workers comp (multipled by wage because super and others are %)
+#     ##differect to perm and manager because they are at a fixed level throughout the year ie same number of perm staff all yr.
+#     labour_periods['casual_cost'] = labour_periods['casual hours'] * (uinp.price['casual_cost'] + uinp.price['casual_cost'] * uinp.price['casual_super'] + uinp.price['casual_cost'] * uinp.price['casual_workers_comp'])
+#     ## drop last row, because it has na because it only contains the end date, therefore not a period
+#     labour_periods.drop(labour_periods.tail(1).index,inplace=True)
+#     ##create dicts for pyomo
+#     params['permanent hours'] = labour_periods['permanent hours'].to_dict()
+#     params['permanent supervision'] = labour_periods['permanent supervision'].to_dict()
+#     params['casual_cost'] = dict(zip(zip(labour_periods['cashflow'].index,labour_periods['cashflow']),labour_periods['casual_cost']))
+#     r_vals['casual_cost'] = pd.Series(params['casual_cost'])
+#     params['casual hours'] = labour_periods['casual hours'].to_dict()
+#     params['casual supervision'] = labour_periods['casual supervision'].to_dict()
+#     params['manager hours'] = labour_periods['manager hours'].to_dict()
+#     params['casual ub'] = labour_periods['casual ub'].to_dict()
+#     params['casual lb'] = labour_periods['casual lb'].to_dict()
+#     r_vals['keys_p5'] = per.p_date2_df().index.astype('object')
+#
+# # t_labour_periods=labour_general()
 
 
 

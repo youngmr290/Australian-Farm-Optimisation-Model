@@ -202,11 +202,15 @@ def f_seasonal_inp(inp, numpy=False, axis=0):
 
     else:
         ##mask the season types
+        keys_z = general['i_z_idx'][z_mask]
         if inp.columns.nlevels > 2: #if statement required becasue cant convert one element to tuple
             slc_none = tuple([slice(None)] * (inp.columns.nlevels - 1)) #makes a slice(none) for each column level except season.
-        else:
+            inp = inp.loc[:, (keys_z, slc_none)]
+        elif inp.columns.nlevels > 1:
             slc_none = slice(None)
-        inp = inp.loc[:, (z_mask, slc_none)]
+            inp = inp.loc[:, (keys_z, slc_none)]
+        else:
+            inp = inp.loc[:,z_mask]
 
         ##weighted average if steady state
         if general['steady_state']:

@@ -170,7 +170,7 @@ for row in range(len(exp_data)):
     suppy.sup_precalcs(params['sup'],r_vals['sup'])
     stubpy.stub_precalcs(params['stub'],r_vals['stub'])
     spy.stock_precalcs(params['stock'],r_vals['stock'],ev)
-    paspy.paspyomo_precalcs(params['pas'],r_vals['pas'],ev)
+    paspy.paspyomo_precalcs(params['pas'],r_vals['pas'],ev) #pas must be after stock becasue it uses ev dict which is populated in stock.py
     precalc_end = time.time()
     print('precalcs: ', precalc_end - precalc_start)
     

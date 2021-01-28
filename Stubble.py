@@ -50,7 +50,7 @@ def stubble_all(params):
     #########################
     #dmd deterioration      #
     #########################
-    stubble_per_grain = crp.stubble_production() #produces dict with stubble production per kg of yield for each grain used in the ri.availability section
+    stubble_per_grain = crp.f_stubble_production() #produces dict with stubble production per kg of yield for each grain used in the ri.availability section
 
     ##days since harvest (calculated from the end date of each fp)
     fp_end_p6z = per.f_feed_periods().iloc[1:].values.astype('datetime64[D]')
@@ -102,7 +102,7 @@ def stubble_all(params):
 
     ##ri availability - first calc stubble foo (stub available) this is the average from all rotations because we just need one value for foo
     ###try calc the base yield for each crop but if the crop is not one of the rotation phases then assign the average foo (this is only to stop error. it doesnt matter because the crop doesnt exist so the stubble is never used)
-    base_yields = crp.f_base_yield()
+    base_yields = crp.f_base_yield().droplevel(0, axis=0) #drop rotation index
     stub_foo_harv_k = np.zeros(n_crops)
     for crop, crop_idx in zip(pinp.crop['start_harvest_crops'].index, range(len(pinp.crop['start_harvest_crops']))):
         try:

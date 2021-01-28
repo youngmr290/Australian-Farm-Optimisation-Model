@@ -459,6 +459,19 @@ def coremodel_all():
             model.p_stub_md.store_values(params[scenario_name]['md'])
             model.p_harv_prop.store_values(params[scenario_name]['cons_prop'])
 
+            ##labour
+            params[scenario_name]['permanent hours']
+            params[scenario_name]['permanent supervision']
+            params[scenario_name]['casual_cost']
+            params[scenario_name]['casual hours']
+            params[scenario_name]['casual supervision']
+            params[scenario_name]['manager hours']
+            params[scenario_name]['casual ub']
+            params[scenario_name]['casual lb']
+
+            ##crop
+            params[scenario_name]['rot_cost']
+
 
             instance.Yield.store_values(Yield[scenario_name])
             # seed_random(scenario_name)

@@ -70,8 +70,10 @@ labour periods and length
 #also used in mach sheet
 def wet_seeding_start_date():
     seeding_after_season_start_z = pinp.f_seasonal_inp(pinp.period['seeding_after_season_start'], numpy=True, axis=0)
-    seeding_after_season_start_z = pd.to_timedelta(seeding_after_season_start_z,unit='D')
-    #wet seeding starts a specified number of days after season break
+    seeding_after_season_start_z = (seeding_after_season_start_z * 24).astype('timedelta64[h]')
+    seeding_after_season_start_z = seeding_after_season_start_z.astype(datetime.datetime)
+    # seeding_after_season_start_z = pd.to_timedelta(seeding_after_season_start_z,unit='D')
+    ##wet seeding starts a specified number of days after season break
     return f_feed_periods()[0] +  seeding_after_season_start_z
     # return f_feed_periods().iloc[0].squeeze() +  datetime.timedelta(days = pinp.period['seeding_after_season_start'])
 

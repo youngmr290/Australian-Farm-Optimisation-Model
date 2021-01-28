@@ -52,8 +52,10 @@ import Mach as mac
 ########################
 ##makes a df of all possible rotation phases
 phases_df =uinp.structure['phases']
-phases_df2=phases_df.copy() #make a copy so that it doesn't alter the phases df that exists outside this func
+phases_df2=phases_df.copy() #make a copy so that it doesn't alter the phases df that exists outside this func #todo once season finished check if df2 is getting used anywhere
 phases_df2.columns = pd.MultiIndex.from_product([phases_df2.columns, ['']])  #make the df multi index so that when it merges with other df below the indexs remanin separate (otherwise it turn into a one leveled tuple)
+phases_df3=phases_df.copy() #make a copy so that it doesn't alter the phases df that exists outside this func
+phases_df3.columns = pd.MultiIndex.from_product([phases_df3.columns, [''], ['']])  #make the df multi index so that when it merges with other df below the indexs remanin separate (otherwise it turn into a one leveled tuple)
 
 ##check that the rotations match the inputs. If not then quit and leave error message
 if pinp.crop['user_crop_rot']:
@@ -101,7 +103,7 @@ def f_farmgate_grain_price(r_vals={}):
     return farmgate_price
 
 
-def grain_price(params, r_vals):
+def f_grain_price(r_vals):
     '''
     Returns
     -------
@@ -119,15 +121,15 @@ def grain_price(params, r_vals):
     cols = pd.MultiIndex.from_product([allocation.index, farm_gate_price.columns])
     farm_gate_price = farm_gate_price.reindex(cols, axis=1,level=1)#adds level to header so i can mul in the next step
     grain_price =  farm_gate_price.mul(allocation,axis=1,level=0)
-    params['grain_price'] =  farm_gate_price.mul(allocation,axis=1,level=0).stack([0,1]).to_dict()
     r_vals['grain_price'] =  grain_price.T
+    return grain_price.stack([0,1])
 # a=grain_price()
 
 ##function to determine the proportion of grain in each pool 
-def grain_pool_proportions(params):
+def grain_pool_proportions():
     prop = uinp.price['grain_price'][['prop_firsts','prop_seconds']]
     prop.columns=['firsts','seconds']
-    params['grain_pool_proportions'] = dict(prop.stack())
+    return prop.stack()
 
 #########################
 #yield                  #
@@ -139,13 +141,15 @@ def f_base_yield():
     if pinp.crop['user_crop_rot']:
         ### User defined
         base_yields = pinp.crop['yields']
+        base_yields = pinp.f_seasonal_inp(base_yields)
+        base_yields = base_yields.set_index([phases_df.index, phases_df.iloc[:,-1]])
     else:
         ### AusFarm ^need to add code for ausfarm inputs
         base_yields
-    base_yields = pd.Series(base_yields, index = phases_df.iloc[:,-1])
+    # base_yields = pd.Series(base_yields, index = phases_df.iloc[:,-1])
     return base_yields
 
-def rot_yield(params=False):
+def f_rot_yield():
     '''
     Returns
     ----------
@@ -158,26 +162,19 @@ def rot_yield(params=False):
         -frost
     '''
     ##base yields
-    base_yields = f_base_yield()
+    base_yields = f_base_yield().stack()
     ##colate other info
     yields_lmus = pinp.crop['yield_by_lmu'] #soil yield factor
     seeding_rate = pinp.crop['seeding_rate'].mul(pinp.crop['own_seed'],axis=0)#seeding rate adjusted by if the farmer is using their own seed from last yr
     frost = pinp.crop['frost'] #frost
     arable = pinp.crop['arable'].stack().droplevel(0) #read in arable area df
     ##calculate yield - base yield * arable area * frost * lmu factor - seeding rate
-    yield_arable_by_soil=yields_lmus.mul(arable).mul(1-frost) #mul arable area to the the lmu factor (easy because dfs have the same axis's). THen mul frost
-    yields=yield_arable_by_soil.reindex(base_yields.index, axis=0).mul(base_yields,axis=0) #reindes and mul with base yields
-    seeding_rate=seeding_rate.reindex(yields.index, axis=0) #minus seeding rate
+    yield_arable_by_soil = yields_lmus.mul(arable).mul(1-frost) #mul arable area to the the lmu factor (easy because dfs have the same axis's). THen mul frost
+    yields=yield_arable_by_soil.reindex(base_yields.index, axis=0, level=1).mul(base_yields,axis=0) #reindes and mul with base yields
+    seeding_rate=seeding_rate.reindex(yields.index, axis=0, level=1) #minus seeding rate
     yields=yields.sub(seeding_rate,axis=0).clip(lower=0) #we don't want negative yields so clip at 0 (if any values are neg they become 0)
-    ##add the rotation to index - current landuse is also part of the index it is required for pyomo, also used in the insurance calc to multiply on.   
-    yields.set_index(phases_df.index, append=True, inplace=True)
-    yields.index = yields.index.swaplevel(0, 5)
-    if params:
-        params['rot_yield'] = yields.stack().to_dict()
-    else:
-        return yields.stack()
-    # return rot_yields.set_index(list(range(uinp.structure['phase_len']))).stack() #need to use the multiindex to create a multidimensional param for pyomo so i can split it down when indexing
-# a=rot_yield().to_dict()
+    return yields.stack()
+
 
 
 #######
@@ -211,7 +208,7 @@ def fert_cost_allocation():
 # t_allocation=fert_cost_allocation()
 
 
-def fert_req():
+def f_fert_req():
     '''
     Returns
     ----------
@@ -219,12 +216,14 @@ def fert_req():
         Fert required by 1ha of each phases (kg/ha) after accounting for arable area
 
     '''
-    ##read in chem by soil
+    ##read in fert by soil
     fert_by_soil = pinp.crop['fert_by_lmu'] 
     ##read in fert
     if pinp.crop['user_crop_rot']:
         ### User defined
-        base_fert = pinp.crop['fert'].reset_index()
+        base_fert = pinp.crop['fert']
+        base_fert = base_fert.T.set_index(['fert'], append=True).T
+        base_fert = pinp.f_seasonal_inp(base_fert)
         base_fert=base_fert.set_index([phases_df.index,phases_df.iloc[:,-1]])
     else:        
         ### AusFarm ^need to add code for ausfarm inputs
@@ -232,8 +231,11 @@ def fert_req():
         base_fert = pd.DataFrame(base_fert, index = phases_df.iloc[:,-1])  #make the rotation and current landuse the index
     ##rename index
     base_fert.index.rename(['rot','landuse'],inplace=True)
-    ##add the fixed fert
+    ##add the fixed fert - currently this does not have season axis so need to reindex to add season axis
     fixed_fert = pinp.crop['fixed_fert']
+    keys_z = pinp.general['i_z_idx'][pinp.general['i_mask_z']]
+    columns = pd.MultiIndex.from_product([keys_z, fixed_fert.columns])
+    fixed_fert = fixed_fert.reindex(columns, axis=1, level=1)
     base_fert = pd.merge(base_fert, fixed_fert, how='left', left_on='landuse', right_index = True)
     ##add cont pasture fert req
     base_fert = f_cont_pas(base_fert.unstack(0)).stack() #unstack for function then stack
@@ -241,19 +243,21 @@ def fert_req():
     base_fert = base_fert.droplevel(0,axis=0)
     ## adjust the fert req for each rotation by lmu
     fert_by_soil = fert_by_soil.stack() #read in fert by soil
-    fert=base_fert.mul(fert_by_soil,axis=1,level=0).stack()
+    fert=base_fert.stack(level=0).mul(fert_by_soil,axis=1,level=0).stack()
     ##account for arable area
     arable = pinp.crop['arable'].squeeze() #read in arable area df
-    fert=fert.mul(arable,axis=0,level=1) #add arable to df
+    fert=fert.mul(arable, axis=0, level=2) #add arable to df
     return fert
-# fert=fert_req()
+
 
 def f_fert_passes():
     '''passes over arable area'''
     ####read in passes
     if pinp.crop['user_crop_rot']:
         ### User defined
-        fert_passes = pinp.crop['fert_passes'].reset_index()
+        fert_passes = pinp.crop['fert_passes']
+        fert_passes = fert_passes.T.set_index(['passes'], append=True).T
+        fert_passes = pinp.f_seasonal_inp(fert_passes)
         fert_passes = fert_passes.set_index([phases_df.index, phases_df.iloc[:,-1]])  #make the rotation and current landuse the index
     else:
         ### AusFarm
@@ -263,6 +267,9 @@ def f_fert_passes():
     fert_passes.index.rename(['rot','landuse'],inplace=True)
     ####add the fixed fert
     fixed_fert_passes = pinp.crop['fixed_fert_passes']
+    keys_z = pinp.general['i_z_idx'][pinp.general['i_mask_z']]
+    columns = pd.MultiIndex.from_product([keys_z, fixed_fert_passes.columns])
+    fixed_fert_passes = fixed_fert_passes.reindex(columns, axis=1, level=1)
     fert_passes = pd.merge(fert_passes, fixed_fert_passes, how='left', left_on='landuse', right_index = True)
     ##add cont pasture fert passes
     fert_passes = f_cont_pas(fert_passes.unstack(0)).stack() #unstack for function then stack
@@ -273,7 +280,7 @@ def f_fert_passes():
     index = pd.MultiIndex.from_product([fert_passes.index, arable.index])
     fert_passes = fert_passes.reindex(index, axis=0,level=0)
     fert_passes=fert_passes.mul(arable,axis=0,level=1)
-    return fert_passes
+    return fert_passes.stack(level=0).swaplevel(1,2, axis=0) #stack season axis and swap the order so season is level==1
 
 
 def fert_cost(r_vals):
@@ -287,7 +294,7 @@ def fert_cost(r_vals):
         - Application cost per ha ($/rotation)
     '''
     ##call functions and read inputs used within this function
-    fertreq = fert_req()
+    fertreq = f_fert_req()
     allocation = fert_cost_allocation()
     cost=uinp.price['fert_cost'].squeeze()
     transport=uinp.price['fert_cartage_cost']  #transport cost 
@@ -325,7 +332,7 @@ def f_nap_fert_passes():
     '''hectares spread on non arable area'''
     ##passes over non arable pasture area (only for pasture phases because for pasture the non arable areas also receive fert)
     passes_na = pinp.crop['nap_passes'].reset_index().set_index(['fert','landuse'])
-    arable = pinp.crop['arable'].squeeze() #eed to adjust for only non arable area
+    arable = pinp.crop['arable'].squeeze() #need to adjust for only non arable area
     passes_na= passes_na.mul(1-arable) #adjust for the non arable area
     ##add cont pasture fert req
     passes_na = f_cont_pas(passes_na.unstack(0))
@@ -361,17 +368,24 @@ def nap_fert_cost(r_vals):
     ##total fert and app cost
     nap_fert_cost = fert_cost+total_app_cost
     nap_fert_cost = nap_fert_cost.sum(axis=1, level=0) #mul app cost per tonne with fert cost allocation
-    return nap_fert_cost
+    ##currently the non-arable fert inputs are the same for each season type. but need season axis so it can combine with other costs. So simply reindex to include season.
+    nap_fert_cost = nap_fert_cost.unstack()
+    keys_z = pinp.general['i_z_idx'][pinp.general['i_mask_z']]
+    index = pd.MultiIndex.from_product([nap_fert_cost.index, keys_z])
+    nap_fert_cost = nap_fert_cost.reindex(index,axis=0, level=0)
+    return nap_fert_cost.stack()
 
-def total_fert_req(param):
+def f_total_fert_req():
     '''returns the total fert req after accounting for arable area.
        this is used in the LabourCropPyomo'''
-    fertreq_arable = fert_req()
-    ##fert required on the non arable areas - only for pasture phases, so need to add pasture as index
+    fertreq_arable = f_fert_req()
+    ##fert required on the non arable areas - only for pasture phases. Currently no season axis so need to reindex
     fert_na = f_nap_fert_req()
+    fert_na = fert_na.unstack().reindex(fertreq_arable.unstack().index, axis=0).stack()
     ##add fert for arable area and fert for nonarable area
     fert_total = pd.concat([fertreq_arable, fert_na], axis=1).sum(axis=1, level=0)
-    param['fert_req'] = fert_total.stack().to_dict()
+    fert_req = fert_total.stack()
+    return fert_req
 
 
 #######################
@@ -403,7 +417,7 @@ def phase_stubble_cost(r_vals):
         *note - arable area accounted for in the yield (it is the same as accounting for it at the end ie yield x 0.8 / threshold x cost == yield / threshold x cost x 0.8)
     '''
     ##first calculate the probability of a rotation phase needing stubble handling
-    base_yields = rot_yield()
+    base_yields = f_rot_yield()
     stub_handling_threshold = pd.Series(pinp.stubble['stubble_handling'], index=pinp.crop['start_harvest_crops'].index)*1000  #have to convert to kg to match base yield
     probability_handling = base_yields.div(stub_handling_threshold, level = 1) #divide here then account for lmu factor next - because either way is mathematically sound and this saves some manipulation.
     probability_handling = probability_handling.droplevel(1).unstack()
@@ -442,7 +456,9 @@ def f_chem_application():
     ##read in chem passes
     if pinp.crop['user_crop_rot']:
         ### User defined
-        base_chem = pinp.crop['chem'].reset_index()
+        base_chem = pinp.crop['chem']
+        base_chem = base_chem.T.set_index(['chem'], append=True).T
+        base_chem = pinp.f_seasonal_inp(base_chem)
         base_chem = base_chem.set_index([phases_df.index, phases_df.iloc[:,-1]])  #make the current landuse the index
     else:
         ### AusFarm ^need to add code for ausfarm inputs
@@ -460,7 +476,7 @@ def f_chem_application():
     index = pd.MultiIndex.from_product([base_chem.index, arable.index])
     base_chem = base_chem.reindex(index, axis=0,level=0)
     base_chem=base_chem.mul(arable,axis=0,level=1)
-    return base_chem
+    return base_chem.stack(level=0).swaplevel(1,2, axis=0) #stack season axis and swap order
 
 def f_chem_cost(r_vals):
     '''
@@ -480,7 +496,7 @@ def f_chem_cost(r_vals):
     chem_applications = f_chem_application()
     ##determine the total chemical cost of each rotation. eg: chem cost per application * number of applications
     index = pd.MultiIndex.from_arrays([phases_df.iloc[:,-1], phases_df.index]) #add phase letter to index so it can be merged with the cost per application for each phase
-    t_chem_applications = chem_applications.unstack().reindex(index, axis=0, level=0).stack() #reindex so the array has same axis so it can be multiplied
+    t_chem_applications = chem_applications.unstack(level=(1,2)).reindex(index, axis=0, level=0).stack(level=(1,2)) #reindex so the array has same axis so it can be multiplied
     ###Merge the phase cost with the rotation application number then mul to get final cost. ^i couldnt get reinexing to work so i have ended up merging the mul instead (i think there should be a way to reindex i_cost so it is the same as chem_applications then mul).
     merge_chem = t_chem_applications.merge(i_chem_cost, left_on=[5], right_index=True, how='left')
     chem_cost = merge_chem.iloc[:,0:len(i_chem_cost.columns)].values * merge_chem.iloc[:,len(i_chem_cost.columns):].values
@@ -498,7 +514,7 @@ def f_chem_cost(r_vals):
     r_vals['chem_app_cost_ha'] = app_cost_ha
     ##add application cost and chem cost
     total_cost = chem_cost.add(app_cost_ha)
-    return chem_cost
+    return total_cost
 
 
 #########################
@@ -515,6 +531,9 @@ def seedcost(r_vals):
         - crop insurance
         - arable area
     '''
+    ##seasonal inputs
+    seed_period_lengths = pinp.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
+    i_z_idx = pinp.general['i_z_idx'][pinp.general['i_mask_z']]
     ##inputs
     seeding_rate = pinp.crop['seeding_rate']
     seeding_cost = pinp.crop['seed_info']['Seed cost'] #this is 0 if the seed is sourced from last yrs crop ie cost is accounted for by minusing from the yield
@@ -541,15 +560,19 @@ def seedcost(r_vals):
     ##add cost for cont pasture
     phase_cost = f_cont_pas(phase_cost)
     ##cost allocation
-    start = per.wet_seeding_start_date()
-    p_dates = per.cashflow_periods()['start date']
-    p_name = per.cashflow_periods()['cash period']
-    allocation=fun.period_allocation(p_dates, p_name, start)
-    ##add cashflow period to col index
-    phase_cost.columns = pd.MultiIndex.from_product([phase_cost.columns, [allocation]])
+    start_z = per.wet_seeding_start_date().astype(np.datetime64)
+    length_z = np.sum(seed_period_lengths, axis=0).astype('timedelta64[D]')
+    p_dates_c = per.cashflow_periods()['start date']
+    p_name_c = per.cashflow_periods()['cash period'].iloc[:-1]
+    allocation_cz = fun.range_allocation_np(p_dates_c, start_z, length_z, True)[:-1,:] #drop last row because that is just the end date of last period
+    allocation_cz = pd.DataFrame(allocation_cz, index=p_name_c, columns=i_z_idx).stack()
+    ##mul cost by allocation - need to align column headers first
+    columns = pd.MultiIndex.from_product([phase_cost.columns, p_name_c, i_z_idx])
+    phase_cost = phase_cost.reindex(columns, axis=1, level=0)
+    phase_cost = phase_cost.stack(level=0).mul(allocation_cz, axis=1).unstack()
     ##merge
-    rot_cost = pd.merge(phases_df2, phase_cost, how='left', left_on=uinp.cols()[-1], right_index = True)
-    seedcost = rot_cost.drop(list(range(uinp.structure['phase_len'])), axis=1).stack([0])
+    rot_cost = pd.merge(phases_df3, phase_cost, how='left', left_on=uinp.cols()[-1], right_index = True)
+    seedcost = rot_cost.drop(list(range(uinp.structure['phase_len'])), axis=1).stack([1,2])
     r_vals['seedcost'] = seedcost
     return seedcost
 
@@ -561,11 +584,15 @@ def insurance(r_vals):
         Misc costs
         - crop insurance
         *note - arable area is already counted for by the yield calculation.
+    Crop insurance is typically based off the farmers estimaiton of yield in mid spring.
+    This is not going to exactly be equal to final yield but it is closer than using the average yield.
+    The small amount of error in this assumption will have little impact due to the small magnitude of
+    financial impact of insurance.
     '''
     ##first need to combine each grain pool to get average price
     ave_price=np.multiply(f_farmgate_grain_price(),uinp.price['grain_price'][['prop_firsts','prop_seconds']]).sum(axis=1)#np multiply doen't look at the column names and indexs
     insurance=ave_price*uinp.price['grain_price']['insurance']/100  #div by 100 because insurance is a percent
-    rot_insurance = rot_yield().mul(insurance, axis=0, level = 1)/1000 #divide by 1000 to convert yield to tonnes    
+    rot_insurance = f_rot_yield().mul(insurance, axis=0, level = 1)/1000 #divide by 1000 to convert yield to tonnes
     rot_insurance = rot_insurance.droplevel(1).unstack()
     ##cost allocation
     start = uinp.price['crp_insurance_date']
@@ -593,24 +620,22 @@ includes
 -seed cost
 -crop insurance cost
 '''
-def rot_cost(params, r_vals):
+def f_rot_cost(r_vals):
+    '''collates all the rotation costs'''
     cost = pd.concat([fert_cost(r_vals),nap_fert_cost(r_vals),f_chem_cost(r_vals),seedcost(r_vals), insurance(r_vals),phase_stubble_cost(r_vals)],axis=1).sum(axis=1,level=0)
-    params['rot_cost'] = cost.stack().to_dict()
+    return cost
 
-# jj=rot_cost()
 
 #########################
 #stubble                #
 #########################
 #stubble produced per kg grain harvested, used in stubble.py as well
-def stubble_production(params=False):
+def f_stubble_production():
     '''stubble produced by each rotation phase
         kgs of dry matter'''
     stubble = pd.DataFrame(index=pinp.crop['start_harvest_crops'].index, columns=['a'])
     stubble['a'] = 1 / (pinp.stubble['harvest_index'] * pinp.stubble['proportion_grain_harv']) - 1  # subtract 1 to account for the tonne of grain that was harvested
-    if params:
-        params['stubble_production'] = stubble.stack().to_dict()
-    else: return stubble.stack().to_dict()
+    return stubble.stack().to_dict()
 #print (stubble_production())
 
 
@@ -618,7 +643,7 @@ def stubble_production(params=False):
 #sow            #
 #################
     
-def crop_sow(params):
+def f_crop_sow():
     '''
     Returns
     -------
@@ -633,7 +658,41 @@ def crop_sow(params):
     cropsow = pd.merge(phases_df, cropsow, how='left', left_on=uinp.cols()[-1], right_index = True)
     ##add current crop to index
     cropsow.set_index(uinp.cols()[-1], append=True, inplace=True)
-    params['crop_sow'] = cropsow.drop(list(range(uinp.structure['phase_len']-1)), axis=1).stack().to_dict()
+    crop_sow = cropsow.drop(list(range(uinp.structure['phase_len']-1)), axis=1).stack()
+    return crop_sow
+
+#########
+#params #
+#########
+##collates all the params
+def crop_params(params,r_vals):
+    cost = f_rot_cost(r_vals).stack().unstack(1)  # to make season axis the columns so it can easily be sliced when building params
+    yields = f_rot_yield().unstack(2)  # to make season axis the columns so it can easily be sliced when building params
+    propn = grain_pool_proportions()
+    grain_price = f_grain_price(r_vals)
+    stubble_production = f_stubble_production()
+    cropsow = f_crop_sow()
+    fert_total = f_total_fert_req().unstack(1)
+
+    ##create non seasonal params
+    params['grain_pool_proportions'] = propn.to_dict()
+    params['grain_price'] = grain_price.to_dict()
+    params['stubble_production'] = stubble_production #already a dict
+    params['crop_sow'] = cropsow.to_dict()
+
+    ##create season params in loop
+    if pinp.general['steady_state']:
+        keys_z = np.array([pinp.general['i_z_idx'][pinp.general['i_mask_z']][0]]).astype('str')
+    else:
+        keys_z = pinp.general['i_z_idx'][pinp.general['i_mask_z']].astype('str')
+    for z in range(len(keys_z)):
+        ##create season key for params dict
+        scenario = keys_z[z]
+        params[scenario] = {}
+        params[scenario]['rot_cost'] = cost[scenario].to_dict()
+        params[scenario]['rot_yield'] = yields[scenario].to_dict()
+        params[scenario]['fert_req'] = fert_total[scenario].to_dict()
+
 
 
 

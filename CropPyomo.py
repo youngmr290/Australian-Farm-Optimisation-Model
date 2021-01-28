@@ -28,13 +28,7 @@ import UniversalInputs as uinp
 from CreateModel import *
 
 def crop_precalcs(params, r_vals):
-    crp.rot_cost(params, r_vals)
-    crp.rot_yield(params)
-    crp.grain_pool_proportions(params)
-    crp.grain_price(params, r_vals)
-    crp.stubble_production(params)
-    crp.crop_sow(params)
-    crp.total_fert_req(params)
+    crp.crop_params(params, r_vals)
 
 
 def croppyomo_local(params):
