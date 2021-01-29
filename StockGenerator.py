@@ -4600,10 +4600,7 @@ def generator(params,r_vals,ev,plots = False):
     keys_y1 = uinp.parameters['i_y_idx_dams'][uinp.parameters['i_mask_y']]
     keys_y3 = uinp.parameters['i_y_idx_offs'][uinp.parameters['i_mask_y']]
     keys_x = pinp.sheep['i_x_idx'][mask_x]
-    if pinp.general['steady_state']:
-        keys_z = np.array([pinp.general['i_z_idx'][pinp.general['i_mask_z']][0]]).astype('str')
-    else:
-        keys_z = pinp.general['i_z_idx'][pinp.general['i_mask_z']].astype('str')
+    keys_z = pinp.f_keys_z()
     ##save k2 set for pyomo - required because this cant easily be built without information in this module
     params['a_idx'] = keys_a
     params['d_idx'] = keys_d

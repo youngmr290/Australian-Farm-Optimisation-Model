@@ -233,7 +233,7 @@ def f_fert_req():
     base_fert.index.rename(['rot','landuse'],inplace=True)
     ##add the fixed fert - currently this does not have season axis so need to reindex to add season axis
     fixed_fert = pinp.crop['fixed_fert']
-    keys_z = pinp.general['i_z_idx'][pinp.general['i_mask_z']]
+    keys_z = pinp.f_keys_z()
     columns = pd.MultiIndex.from_product([keys_z, fixed_fert.columns])
     fixed_fert = fixed_fert.reindex(columns, axis=1, level=1)
     base_fert = pd.merge(base_fert, fixed_fert, how='left', left_on='landuse', right_index = True)
@@ -267,7 +267,7 @@ def f_fert_passes():
     fert_passes.index.rename(['rot','landuse'],inplace=True)
     ####add the fixed fert
     fixed_fert_passes = pinp.crop['fixed_fert_passes']
-    keys_z = pinp.general['i_z_idx'][pinp.general['i_mask_z']]
+    keys_z = pinp.f_keys_z()
     columns = pd.MultiIndex.from_product([keys_z, fixed_fert_passes.columns])
     fixed_fert_passes = fixed_fert_passes.reindex(columns, axis=1, level=1)
     fert_passes = pd.merge(fert_passes, fixed_fert_passes, how='left', left_on='landuse', right_index = True)
@@ -370,7 +370,7 @@ def nap_fert_cost(r_vals):
     nap_fert_cost = nap_fert_cost.sum(axis=1, level=0) #mul app cost per tonne with fert cost allocation
     ##currently the non-arable fert inputs are the same for each season type. but need season axis so it can combine with other costs. So simply reindex to include season.
     nap_fert_cost = nap_fert_cost.unstack()
-    keys_z = pinp.general['i_z_idx'][pinp.general['i_mask_z']]
+    keys_z = pinp.f_keys_z()
     index = pd.MultiIndex.from_product([nap_fert_cost.index, keys_z])
     nap_fert_cost = nap_fert_cost.reindex(index,axis=0, level=0)
     return nap_fert_cost.stack()
@@ -533,7 +533,7 @@ def seedcost(r_vals):
     '''
     ##seasonal inputs
     seed_period_lengths = pinp.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
-    i_z_idx = pinp.general['i_z_idx'][pinp.general['i_mask_z']]
+    i_z_idx = pinp.f_keys_z()
     ##inputs
     seeding_rate = pinp.crop['seeding_rate']
     seeding_cost = pinp.crop['seed_info']['Seed cost'] #this is 0 if the seed is sourced from last yrs crop ie cost is accounted for by minusing from the yield
@@ -681,10 +681,7 @@ def crop_params(params,r_vals):
     params['crop_sow'] = cropsow.to_dict()
 
     ##create season params in loop
-    if pinp.general['steady_state']:
-        keys_z = np.array([pinp.general['i_z_idx'][pinp.general['i_mask_z']][0]]).astype('str')
-    else:
-        keys_z = pinp.general['i_z_idx'][pinp.general['i_mask_z']].astype('str')
+    keys_z = pinp.f_keys_z()
     for z in range(len(keys_z)):
         ##create season key for params dict
         scenario = keys_z[z]

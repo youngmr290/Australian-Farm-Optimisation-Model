@@ -22,29 +22,8 @@ import Mach as mac
 from CreateModel import *
 
 def mach_precalcs(params, r_vals):
-    mac.overall_seed_rate(params, r_vals)
-    mac.contractseeding_occurs(params)
-    mac.seed_days(params)
-    mac.seeding_cost(params, r_vals)
-    mac.contract_seed_cost(params, r_vals)
-    mac.harv_rate_period(params)
-    mac.contract_harv_rate(params)
-    mac.max_harv_hours(params)
-    mac.harvest_cost(params, r_vals)
-    mac.contract_harvest_cost_period(params, r_vals)
-    mac.hay_making_cost(params)
-    mac.yield_penalty(params)
-    mac.grazing_days(params)
-    mac.fix_dep(params)
-    mac.harvest_dep(params)
-    mac.seeding_dep(params)
-    mac.insurance(params)
-    mac.f_mach_asset_value(params)
+    mac.f_mach_params(params, r_vals)
 
-    ##add inputs that are params to dict
-    params['number_seeding_gear'] = pinp.mach['number_seeding_gear']
-    params['number_harv_gear'] = pinp.mach['number_harv_gear']
-    params['seeding_occur'] = pinp.mach['seeding_occur']
 
 
 def machpyomo_local(params):

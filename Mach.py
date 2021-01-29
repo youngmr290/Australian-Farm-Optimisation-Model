@@ -29,6 +29,7 @@ import PropertyInputs as pinp
 import Periods as per
 import Functions as fun
 
+na = np.newaxis
 # ################
 # #mach option   #
 # ################
@@ -88,7 +89,7 @@ def sup_mach_cost():
 ##create a copy of periods df - so it doesn't alter the original period df that is used for labour stuff
 # mach_periods = per.p_dates_df()#periods.copy()
 
-def seed_days(*params):
+def f_seed_days():
     '''
     Returns
     -------
@@ -96,24 +97,36 @@ def seed_days(*params):
         Determines the number of wet and dry seeding days in each period.
     '''
     mach_periods = per.p_dates_df()
-    for i in range(len(mach_periods['date'])-1):
-        days = (mach_periods.loc[mach_periods.index[i+1],'date'] - mach_periods.loc[mach_periods.index[i],'date']).days
-        mach_periods.loc[mach_periods.index[i],'seed_days'] = days
-    ## drop last row, because it has na because it only contains the end date, therefore not a period
-    mach_periods.drop(mach_periods.tail(1).index,inplace=True) 
-    if params:
-        params[0]['seed_days'] = mach_periods['seed_days'].to_dict()
-    else: return mach_periods
+    start_pz = mach_periods.values[:-1]
+    end_pz = mach_periods.values[1:]
+    length_pz = (end_pz - start_pz)#.astype('timedelta64[D]').astype(int)
+    days = pd.DataFrame(length_pz, index=mach_periods.index[:-1], columns=mach_periods.columns)
+    return days
 
-def contractseeding_occurs(params):
+
+    # for i in range(len(mach_periods)-1):
+    #     days = (mach_periods.loc[mach_periods.index[i+1],'date'] - mach_periods.loc[mach_periods.index[i],'date']).days
+    #     mach_periods.loc[mach_periods.index[i],'seed_days'] = days
+    # ## drop last row, because it has na because it only contains the end date, therefore not a period
+    # mach_periods.drop(mach_periods.tail(1).index,inplace=True)
+    # if params:
+    #     params[0]['seed_days'] = mach_periods['seed_days'].to_dict()
+    # else: return mach_periods
+
+def f_contractseeding_occurs():
     '''
-    This function just sets the period when contract seeding must occur. Contract seeding is not hooked up to yield penalty
-    because if your going to hire someone you will hire them at the optimum time. Contract seeding is hooked up to poc so
-    this param stops the model having late seeding.
+    This function just sets the period when contract seeding must occur (period when wet seeding begins).
+    Contract seeding is not hooked up to yield penalty because if your going to hire someone you will hire
+    them at the optimum time. Contract seeding is hooked up to poc so this param stops the model having late seeding.
     '''
-    contract_start = per.wet_seeding_start_date()
-    mach_periods = seed_days()['date']
-    params['contractseeding_occur'] = (mach_periods==contract_start).squeeze().to_dict()
+    contract_start_z = per.wet_seeding_start_date()
+    mach_periods = per.p_dates_df()
+    start_pz = mach_periods.values[:-1]
+    end_pz = mach_periods.values[1:]
+    contractseeding_occur_pz = np.logical_and(start_pz <= contract_start_z.astype('datetime64'), contract_start_z.astype('datetime64') < end_pz)
+    contractseeding_occur_pz = pd.DataFrame(contractseeding_occur_pz,index=mach_periods.index[:-1],columns=mach_periods.columns)
+    return contractseeding_occur_pz
+    # params['contractseeding_occur'] = (mach_periods==contract_start).squeeze().to_dict()
 
 
 # seed_days()
@@ -158,7 +171,7 @@ def grazing_days(params):
     feed_periods_date = per.f_feed_periods()[:-1]
     feed_periods_length = per.f_feed_periods(option=1)
     ##run mach period func to get all the seeding day info
-    mach_periods = seed_days()
+    mach_periods = f_seed_days()
     ##create df which all grazing days are added
     grazing_days_df = pd.DataFrame(index=pinp.period['i_fp_idx'])
     ##days between seeding and destocking
@@ -203,7 +216,7 @@ def seed_time_lmus():
     rate_direct_drill = 1 / (speed_lmu_df * uinp.mach[pinp.mach['option']]['seeding_eff'] * uinp.mach[pinp.mach['option']]['seeder_width'] / 10)
     return rate_direct_drill
 
-def overall_seed_rate(params, r_vals):
+def f_overall_seed_rate(r_vals):
     '''
     Returns
     -------
@@ -218,7 +231,8 @@ def overall_seed_rate(params, r_vals):
     seedrate_df.columns = seed_rate_lmus.index #rename columns to lmu so i can mul
     seedrate_df=seedrate_df.mul(seed_rate_lmus)
     r_vals['seeding_rate'] = seedrate_df
-    params['seed_rate'] = seedrate_df.stack().to_dict()
+    return seedrate_df.stack()
+
     
   
 
@@ -274,53 +288,69 @@ def maint_cost_seeder():
     tillage_lmu_df = uinp.mach[pinp.mach['option']]['tillage_maint'] * pinp.mach['tillage_maint_lmu_adj']
     return  tillage_lmu_df
 
-def seeding_cost_lmu():
-    '''
-    Returns
-    -------
-    DataFrame
-        Total cost seeding on each lmu $/ha.
-    '''
-    return tractor_cost_seeding() + maint_cost_seeder()
+# def seeding_cost_lmu():
+#     '''
+#     Returns
+#     -------
+#     DataFrame
+#         Total cost seeding on each lmu $/ha.
+#     '''
+#     return tractor_cost_seeding() + maint_cost_seeder()
 
-def seeding_cost(params, r_vals):
+def f_seed_cost_alloc():
+    '''period allocation for seeding costs'''
+    ##put inputs through season function
+    seed_period_lengths_p5z = pinp.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
+    length_z = np.sum(seed_period_lengths_p5z, axis=0)
+    ##gets the cost allocation
+    p_dates_c = per.cashflow_periods()['start date'].values
+    p_name_c = per.cashflow_periods()['cash period']
+    length_z = length_z.astype('timedelta64[D]')
+    start_z = per.wet_seeding_start_date().astype('datetime64')
+    alloc_cz = fun.range_allocation_np(p_dates_c, start_z, length_z, True)
+    keys_z = pinp.f_keys_z()
+    alloc_cz = pd.DataFrame(alloc_cz, index=p_name_c, columns=keys_z)
+    ## drop last row, because it has na because it only contains the end date, therefore not a period
+    alloc_cz.drop(alloc_cz.tail(1).index,inplace=True)
+    return alloc_cz
+
+def f_seeding_cost(r_vals):
     '''
     Returns
     -------
     Dataframe for pyomo
         Returns the seeding cost allocation into cashflow periods.
     '''
-    ##put inputs through season function
-    seed_period_lengths_p5z = pinp.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
-    length = np.sum(seed_period_lengths_p5z, axis=0)
-    cost_df = seeding_cost_lmu()
-    ##gets the date column of the cashflow periods df
-    p_dates = per.cashflow_periods()['start date']
-    ##gets the period name 
-    p_name = per.cashflow_periods()['cash period']
-    start = per.wet_seeding_start_date()
-    length = dt.timedelta(days = length) #todo will need to get this so it can handle multi-d
-    seeding_cost = fun.period_allocation_reindex(cost_df, p_dates, p_name, start,length)
-    # seeding_cost = fun.period_allocation_reindex(cost_df, p_dates, p_name, start,length)
-    params['seeding_cost'] = seeding_cost.stack().to_dict()
-    r_vals['seeding_cost'] = seeding_cost
+    ##Total cost seeding on each lmu $/ha.
+    seeding_cost_l = tractor_cost_seeding() + maint_cost_seeder()
+    seeding_cost_l = seeding_cost_l.squeeze()
+    ##gets the cost allocation
+    alloc_cz = f_seed_cost_alloc()
+    ##reindex with lmu so alloc can be mul with seeding_cost_l
+    columns = pd.MultiIndex.from_product([seeding_cost_l.index, alloc_cz.columns])
+    alloc_czl = alloc_cz.reindex(columns, axis=1, level=1)
+    seeding_cost_czl = alloc_czl.mul(seeding_cost_l, axis=1, level=0)
+    r_vals['seeding_cost'] = seeding_cost_czl
+    return seeding_cost_czl
 
-def contract_seed_cost(params, r_vals):
+
+
+
+
+def f_contract_seed_cost(r_vals):
     '''
     Returns
     -------
     Dict
         Contract seeding cost in each cashflow period, currently, contract cost is the same for all lmus and crops.
     '''
-    ##gets the date column of the cashflow periods df
-    p_dates = per.cashflow_periods()['start date']
-    ##gets the period name 
-    p_name = per.cashflow_periods()['cash period']
+    ##gets the cost allocation
+    alloc_cz = f_seed_cost_alloc()
+    ##cost to contract seed 1ha
     seed_cost = uinp.price['contract_seed_cost']
-    cash_period = fun.period_allocation(p_dates,p_name,per.wet_seeding_start_date())
-    params['contract_seed_cost'] = {cash_period : seed_cost}
-    r_vals['contractseed_cost'] = pd.Series({cash_period : seed_cost})
-
+    contract_seed_cost = alloc_cz * seed_cost
+    r_vals['contractseed_cost'] = contract_seed_cost
+    return contract_seed_cost
 
 ########################################
 #late seeding & dry seeding penalty    #
@@ -394,7 +424,9 @@ def harv_time_ha():
     ##work rate hr/ha, determined from speed, size and eff
     return 10/ (harv_speed * uinp.mach[pinp.mach['option']]['harv_eff'] * uinp.mach[pinp.mach['option']]['harvester_width'])
 
-def harv_rate_period(params):
+
+
+def f_harv_rate_period():
     '''
     Returns
     -------
@@ -403,37 +435,83 @@ def harv_rate_period(params):
         - account for crops that can be harvested early ie crops that can't be harvested early are given 0 harv rate in the first harv period
     '''
     ##season inputs through function
-    harv_start_z = pinp.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0)
-    harv_period_lengths_pz = pinp.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1)
-    start_harvest_crops_z = pinp.f_seasonal_inp(pinp.crop['start_harvest_crops'].values, numpy=True, axis=1)
+    harv_start_z = pinp.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0) #when the first crop begins to be harvested (eg when harv periods start)
+    harv_period_lengths_z = np.sum(pinp.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1), axis=0)
+    harv_end_z = harv_start_z.astype('datetime64') + harv_period_lengths_z.astype('timedelta64[D]') #when all harv is done
+    start_harvest_crops = pinp.crop['start_harvest_crops']
+    start_harvest_crops_kz = pinp.f_seasonal_inp(start_harvest_crops.values, numpy=True, axis=1) #start harvest for each crop
 
-    mach_periods = per.p_dates_df()
-    harv_rate_df = pd.DataFrame()
-    harv_end = per.period_end_date(harv_start_z, harv_period_lengths_pz)
+    ##harv occur - note: some crops are not harvested in the early harv period
+    mach_periods_start_pz = per.p_dates_df().values[:-1]
+    mach_periods_end_pz = per.p_dates_df().values[1:]
+    harv_occur_pkz = np.logical_and(mach_periods_start_pz[:,na,:] < harv_end_z,
+                                    mach_periods_end_pz[:,na,:] > start_harvest_crops_kz)
+    ##make df
+    keys_z = pinp.f_keys_z()
+    col = pd.MultiIndex.from_product([start_harvest_crops.index, keys_z])
+    harv_occur = harv_occur_pkz.reshape(harv_occur_pkz.shape[0],-1)
+    harv_occur = pd.DataFrame(harv_occur, index=per.p_dates_df().index[1:], columns=col)
+
     ##Grain harvested per hr (t/hr) for each crop.
-    harv_rate = uinp.mach_general['harvest_yield'] * (1 / harv_time_ha())
-    ##loops through dict which contains harv start date for each crop
-    ##this determines if the crop is allowed early harv
-    for k, crop_harv_date in zip(pinp.crop['start_harvest_crops'].index, start_harvest_crops_z):
-        if k=='h':
-            continue # this is required because hay is included in the harvest dates (needed for stubble) but not in any of the other harvest info
-        for i in range(len(mach_periods['date'])-1):
-            period_start_date = mach_periods.loc[mach_periods.index[i],'date']
-            period_end = mach_periods.loc[mach_periods.index[i+1],'date']
-            ###if the period is a harvest period
-            if harv_start_z <= period_start_date  < harv_end:
-                ####if crop harv date is before the end of the current period then it is allowed to be harvested in that period hence it is given a harv rate 
-                if crop_harv_date < period_end: 
-                    harvest_rate =  harv_rate.squeeze()[k]
-                else: harvest_rate = 0
-            else: harvest_rate = 0
-            harv_rate_df.loc[mach_periods.index[i], k] = harvest_rate
-    params['harv_rate_period'] = harv_rate_df.stack().to_dict()
+    harv_rate = (uinp.mach_general['harvest_yield'] * (1 / harv_time_ha())).squeeze()
+
+    ##combine harv rate and harv_occur
+    harv_rate_period = harv_occur.mul(harv_rate, axis=1, level=0)
+    return harv_rate_period.stack(0)
+
+    # mach_periods = per.p_dates_df()
+    # harv_rate_df = pd.DataFrame()
+    # harv_end = per.period_end_date(harv_start_z, harv_period_lengths_pz)
+    # ##Grain harvested per hr (t/hr) for each crop.
+    # harv_rate = (uinp.mach_general['harvest_yield'] * (1 / harv_time_ha())).squeeze()
+    # ##loops through dict which contains harv start date for each crop
+    # ##this determines if the crop is allowed early harv
+    # for k, crop_harv_date in zip(pinp.crop['start_harvest_crops'].index, start_harvest_crops_kz):
+    #     if k=='h':
+    #         continue # this is required because hay is included in the harvest dates (needed for stubble) but not in any of the other harvest info
+    #     for i in range(len(mach_periods['date'])-1):
+    #         period_start_date = mach_periods.loc[mach_periods.index[i],'date']
+    #         period_end = mach_periods.loc[mach_periods.index[i+1],'date']
+    #         ###if the period is a harvest period
+    #         if harv_start_z <= period_start_date  < harv_end:
+    #             ####if crop harv date is before the end of the current period then it is allowed to be harvested in that period hence it is given a harv rate
+    #             if crop_harv_date < period_end:
+    #                 harvest_rate =  harv_rate.squeeze()[k]
+    #             else: harvest_rate = 0
+    #         else: harvest_rate = 0
+    #         harv_rate_df.loc[mach_periods.index[i], k] = harvest_rate
+    # params['harv_rate_period'] = harv_rate_df.stack().to_dict()
 # harv_rate_period()  
 
 
 #adds the max number of harv hours for each crop for each period to the df  
 def max_harv_hours(params):
+    def f_harv_occur():
+        '''
+        Does harvest occur in a given period.
+        Returns boolean df. With p5 as index and crop and season as columns.
+
+        -------
+        Dict for pyomo
+            Harv rate in each mach period for each crops.
+            - account for crops that can be harvested early ie crops that can't be harvested early are given 0 harv rate in the first harv period
+        '''
+        ##season inputs through function
+        harv_start_z = pinp.f_seasonal_inp(pinp.period['harv_date'],numpy=True,
+                                           axis=0)  # when the first crop begins to be harvested (eg when harv periods start)
+        harv_period_lengths_z = np.sum(pinp.f_seasonal_inp(pinp.period['harv_period_lengths'],numpy=True,axis=1),axis=0)
+        harv_end_z = harv_start_z.astype('datetime64') + harv_period_lengths_z.astype(
+            'timedelta64[D]')  # when all harv is done
+        start_harvest_crops = pinp.crop['start_harvest_crops']
+        start_harvest_crops_kz = pinp.f_seasonal_inp(start_harvest_crops.values,numpy=True,
+                                                     axis=1)  # start harvest for each crop
+
+        ##harv occur - note: some crops are not harvested in the early harv period
+        mach_periods_start_pz = per.p_dates_df().values[:-1]
+        mach_periods_end_pz = per.p_dates_df().values[1:]
+        harv_occur_pkz = np.logical_and(mach_periods_start_pz[:,na,:] < harv_end_z,
+                                        mach_periods_end_pz[:,na,:] > start_harvest_crops_kz)
+
     harv_start_z = pinp.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0)
     harv_period_lengths_pz = pinp.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1)
     mach_periods = per.p_dates_df()
@@ -495,7 +573,7 @@ def harvest_cost(params, r_vals):
 #contract harvesting    #
 #########################
 
-def contract_harv_rate(params):
+def f_contract_harv_rate():
     '''
     Returns
     -------
@@ -507,8 +585,8 @@ def contract_harv_rate(params):
     ##work rate hr/ha, determined from speed, size and eff
     contract_harv_time_ha = 10 / (harv_speed * uinp.mach_general['contract_harvester_width'] * uinp.mach_general['contract_harv_eff'])
     ##overall t/hr
-    harv_rate = yield_approx * (1 / contract_harv_time_ha)
-    params['contract_harv_rate'] = harv_rate.iloc[:,0].to_dict()
+    harv_rate = (yield_approx * (1 / contract_harv_time_ha)).squeeze()
+    return harv_rate
 #print(contract_harv_rate())
 
 
@@ -820,4 +898,54 @@ def insurance(params):
 
 def f_mach_asset_value(params):
     params['mach_asset_value'] = total_clearing_value()
+
+
+#######################################################################################################################################################
+#######################################################################################################################################################
+#params
+#######################################################################################################################################################
+#######################################################################################################################################################
+
+##collates all the params
+def f_mach_params(params,r_vals):
+    seed_days = f_seed_days()
+    contractseeding_occur = f_contractseeding_occurs()
+    seedrate = f_overall_seed_rate(r_vals)
+    seeding_cost = f_seeding_cost(r_vals).stack(0)
+    contract_seed_cost = f_contract_seed_cost(r_vals)
+    harv_rate_period = f_harv_rate_period()
+    contract_harv_rate = f_contract_harv_rate()
+    max_harv_hours(params)
+    harvest_cost(params, r_vals)
+    contract_harvest_cost_period(params, r_vals)
+    hay_making_cost(params)
+    yield_penalty(params)
+    grazing_days(params)
+    fix_dep(params)
+    harvest_dep(params)
+    seeding_dep(params)
+    insurance(params)
+    f_mach_asset_value(params)
+
+    ##add inputs that are params to dict
+    params['number_seeding_gear'] = pinp.mach['number_seeding_gear']
+    params['number_harv_gear'] = pinp.mach['number_harv_gear']
+    params['seeding_occur'] = pinp.mach['seeding_occur']
+
+    ##create non seasonal params
+    params['seed_rate'] = seedrate.to_dict()
+    params['contract_harv_rate'] = contract_harv_rate.to_dict()
+
+    ##create season params in loop
+    keys_z = pinp.f_keys_z()
+    for z in range(len(keys_z)):
+        ##create season key for params dict
+        scenario = keys_z[z]
+        params[scenario] = {}
+        params[scenario]['seed_days'] = seed_days[scenario].to_dict()
+        params[scenario]['contractseeding_occur'] = contractseeding_occur[scenario].to_dict()
+        params[scenario]['seeding_cost'] = seeding_cost[scenario].to_dict()
+        params[scenario]['contract_seed_cost'] = contract_seed_cost[scenario].to_dict()
+        params[scenario]['harv_rate_period'] = harv_rate_period[scenario].to_dict()
+
 

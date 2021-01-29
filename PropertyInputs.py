@@ -227,4 +227,11 @@ def f_seasonal_inp(inp, numpy=False, axis=0):
 
     return inp
 
+def f_keys_z():
+    '''returns the index/keys for z axis'''
+    if general['steady_state']:
+        keys_z = np.array([general['i_z_idx'][general['i_mask_z']][0]]).astype('str')
+    else:
+        keys_z = general['i_z_idx'][general['i_mask_z']].astype('str')
+    return keys_z
 

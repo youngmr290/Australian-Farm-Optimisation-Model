@@ -171,10 +171,7 @@ def stubble_all(params):
     keys_s1_cut2 = np.array(['a'])
     keys_s1 = pinp.stubble['stub_cat_idx']
     keys_p6 = np.asarray(per.f_feed_periods().index[:-1])
-    if pinp.general['steady_state']:
-        keys_z = np.array([pinp.general['i_z_idx'][pinp.general['i_mask_z']][0]]).astype('str')
-    else:
-        keys_z = pinp.general['i_z_idx'][pinp.general['i_mask_z']].astype('str')
+    keys_z = pinp.f_keys_z()
 
 
     ##array indexes

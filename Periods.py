@@ -151,10 +151,11 @@ def p_dates_df():
         periods = pinp.period['i_dsp_lp']
         ##make df
         index = ['P%02d' % i for i in range(len(periods))]
-        cols = pinp.general['i_z_idx']
+        cols = pinp.general['i_z_idx'][1:] #need to slice off 'typical' becasue no labour period inputs for typical becasue it is automatically generated
         periods = pd.DataFrame(periods, index=index, columns=cols)
         ##apply season mask
-        periods = periods.loc[:, pinp.general['i_mask_z']]
+        mask_z = pinp.general['i_mask_z'][1:] #need to slice off 'typical' becasue no labour period inputs for typical becasue it is automatically generated
+        periods = periods.loc[:, mask_z]
     return periods
 
 # drop last row, because it only contains the end date, this version of the df is used for creating the period set and when determining labour allocation

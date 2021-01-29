@@ -199,10 +199,7 @@ def labour_general(params,r_vals):
     #########
     ##keys
     keys_p5 = np.asarray(per.p_dates_df().index).astype('str')
-    if pinp.general['steady_state']:
-        keys_z = np.array([pinp.general['i_z_idx'][pinp.general['i_mask_z']][0]]).astype('str')
-    else:
-        keys_z = pinp.general['i_z_idx'][pinp.general['i_mask_z']].astype('str')
+    keys_z = pinp.f_keys_z()
 
     ################
     ##pyomo params #
