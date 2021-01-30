@@ -33,7 +33,7 @@ labour periods and length
 ###################################################################
 # make a df containing labour availability for each labour period #
 ###################################################################
-
+na = np.newaxis
 
 
 def labour_general(params,r_vals):
@@ -71,7 +71,7 @@ def labour_general(params,r_vals):
     length = np.array([pinp.labour['leave_manager']]).astype('timedelta64[D]')
     start = np.datetime64(pinp.labour['leave_manager_start_date'])
     manager_leave_alloc_p5z = fun.range_allocation_np(lp_p5z, start, length, True)
-    manager_leave_p5z = manager_leave_alloc_p5z * length.days
+    manager_leave_p5z = manager_leave_alloc_p5z * length.astype(float)
     manager_leave_p5z = manager_leave_p5z[:-1] #drop last row because it is just the end date of last period
 
     ##perm leave
@@ -79,7 +79,7 @@ def labour_general(params,r_vals):
     length = np.array([pinp.labour['leave_permanent']]).astype('timedelta64[D]')
     start = np.datetime64(pinp.labour['leave_permanent_start_date'])
     perm_leave_alloc_p5z = fun.range_allocation_np(lp_p5z, start, length, True)
-    perm_leave_p5z = perm_leave_alloc_p5z * length.days
+    perm_leave_p5z = perm_leave_alloc_p5z * length.astype(float)
     perm_leave_p5z = perm_leave_p5z[:-1] #drop last row because it is just the end date of last period
     ###sick leave - x days split equaly into each period
     perm_sick_leave_p5z = pinp.labour['sick_leave_permanent']/365 * lp_len_p5z
@@ -102,12 +102,12 @@ def labour_general(params,r_vals):
 
     ##set up stuff to calc hours work per period be each source
     seed_period_lengths_pz = pinp.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
-    seeding_start_z = np.datetime64(per.wet_seeding_start_date())
-    seeding_end_z = np.datetime64(seeding_start_z + pd.to_timedelta(np.sum(seed_period_lengths_pz, axis=0), unit='D')) #todo does this work with 2d array of length?
+    seeding_start_z = per.wet_seeding_start_date().astype(np.datetime64)
+    seeding_end_z = seeding_start_z + np.sum(seed_period_lengths_pz, axis=0).astype('timedelta64[D]')
     seeding_occur_p5z =  np.logical_and(seeding_start_z <= lp_start_p5z, lp_start_p5z < seeding_end_z)
     harv_period_lengths_pz = pinp.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1)
-    harv_start_z = np.datetime64(harv_date_z)
-    harv_end_z = np.datetime64(harv_start_z + pd.to_timedelta(np.sum(harv_period_lengths_pz, axis=0), unit='D')) #todo does this work with 2d array of length?
+    harv_start_z = harv_date_z.astype(np.datetime64)
+    harv_end_z = harv_start_z + np.sum(harv_period_lengths_pz, axis=0).astype('timedelta64[D]')
     harv_occur_p5z =  np.logical_and(harv_start_z <= lp_start_p5z, lp_start_p5z < harv_end_z)
 
     ##manager hours
@@ -182,11 +182,15 @@ def labour_general(params,r_vals):
     ##determine cashflow period each labour period alines with
     ###get cashflow period dates and names - used in the following loop
     p_dates = per.cashflow_periods()['start date']#get cashflow period dates
-    p_name = per.cashflow_periods()['cash period']#gets the period name
+    p_dates_start_c = p_dates.values[:-1]
+    p_dates_end_c = p_dates.values[1:]
+    p_name = per.cashflow_periods()['cash period'].values[:-1]#gets the period name
+    p_name = np.broadcast_to(p_name[:,na], (p_name.shape + (lp_start_p5z.shape[-1],)))
     ###loop thorugh and determine period for each cashflow
     cashflow_alloc_p5z = np.empty(lp_start_p5z.shape, dtype='S2')
-    for i, j in zip(lp_p5z, np.arange(len(lp_start_p5z))):
-        cashflow_alloc_p5z[j]= fun.period_allocation(p_dates, p_name, i)
+    for lp_date_z, lp_idx in zip(lp_start_p5z, np.arange(len(lp_start_p5z))):
+        alloc_cz = np.logical_and(p_dates_start_c[:,na] <= lp_date_z, lp_date_z < p_dates_end_c[:,na])
+        cashflow_alloc_p5z[lp_idx] = p_name[alloc_cz]
 
     ##cost of casual for each labour period - wage plus super plus workers comp (multipled by wage because super and others are %)
     ##differect to perm and manager because they are at a fixed level throughout the year ie same number of perm staff all yr.
@@ -198,7 +202,7 @@ def labour_general(params,r_vals):
     ##keys  #
     #########
     ##keys
-    keys_p5 = np.asarray(per.p_dates_df().index).astype('str')
+    keys_p5 = np.asarray(per.p_dates_df().index[:-1]).astype('str')
     keys_z = pinp.f_keys_z()
 
     ################
@@ -221,11 +225,10 @@ def labour_general(params,r_vals):
         params[scenario]['casual lb'] = dict(zip(keys_p5, lb_cas_pz[:,z]))
 
 
-        ##report values that are season affected
-        r_vals[scenario]['casual_cost'] = pd.Series(params[scenario]['casual_cost'])
 
     ##report values that are not season affected
     r_vals['keys_p5'] = keys_p5
+    r_vals['casual_cost'] = pd.DataFrame(casual_cost_p5z, index=keys_p5, columns=keys_z)
 
 
 

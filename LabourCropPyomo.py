@@ -16,16 +16,9 @@ import LabourCrop as lcrp
 import PropertyInputs as pinp
 
 
-def crplab_precalcs(params, report):
-    lcrp.prep_labour(params)
-    lcrp.fert_app_time_t(params)
-    lcrp.fert_app_time_ha(params)
-    lcrp.chem_app_time_ha(params)
-    lcrp.f_crop_monitoring(params)
-    params['harvest_helper'] = pinp.labour['harvest_helper'].squeeze().to_dict()
-    params['daily_seed_hours'] = pinp.mach['daily_seed_hours']
-    params['seeding_helper'] = pinp.labour['seeding_helper']
-    
+def crplab_precalcs(params, r_vals):
+    lcrp.f_labcrop_params(params, r_vals)
+
 def labcrppyomo_local(params):
     #########
     #param  #
