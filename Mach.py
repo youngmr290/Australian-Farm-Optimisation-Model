@@ -980,8 +980,7 @@ def f_harvest_dep():
     dep_rate = uinp.mach[pinp.mach['option']]['variable_dep'] - uinp.finance['fixed_dep']
     dep_hourly = harvest_gear_clearing_value() * dep_rate / average_harv_time
     return dep_hourly
-#print(harv_time_ha())
-#print(harvest_dep())
+
 
 #######################################################################################################################################################
 #######################################################################################################################################################
