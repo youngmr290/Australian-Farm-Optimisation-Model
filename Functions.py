@@ -884,36 +884,36 @@ def df_period_total(p_dates,p_name,*dfs):
 ##they depend on the input type ie dict of df, and the number of entries
 
 #^if this doesn't get used much it should be removed it really doesn't do much
-def period_allocation_reindex(df, p_dates, p_name, start, length):
-    '''
-    Parameters
-    ----------
-    df : Dataframe
-        1d dataframe or series.
-    p_dates : List
-        Dates of the period you are matching ie cashflow or labour. Includes the end date of the last period
-    p_name : List
-        Names of the period you are matching ie cashflow or labour. Includes the a name for the last date which is not a period (it is just the end date of the last period)
-    start : Datetime
-        Start date of the df activity ie start date of seeding.
-    length : Datetime
-        Length of the df activity ie length of seeding.
-
-    Returns
-    -------
-    Dataframe 2D
-        This function is used when multiple activities have the same period allocation.
-        - this func basically just calls the main allocation func then reindexes the df so it applies to all activities.
-        eg the cost of seeding for each lmu is incurred over the same period so we just want to return a df with a certain cost in it for each lmu and each cashflow period (the cost may differ but the allocation will be the same for each lmu, so the allocation func is called once then reindexed then multiplied by the different costs)
-    '''
-    allocation = period_allocation(p_dates, p_name,start,length)
-    allocation = allocation.set_index('period')
-    columns = pd.MultiIndex.from_product([allocation.columns, df.index])
-    allocation = allocation.reindex(columns,axis=1,level=0) #add level so mul can happen
-    allocation.columns = allocation.columns.droplevel(0) #drop added level
-    # cost = df.rename(index={0:'allocation'}).stack()
-    df = allocation.mul(df.iloc[:,0],axis=1)
-    return df
+# def period_allocation_reindex(df, p_dates, p_name, start, length):
+#     '''
+#     Parameters
+#     ----------
+#     df : Dataframe
+#         1d dataframe or series.
+#     p_dates : List
+#         Dates of the period you are matching ie cashflow or labour. Includes the end date of the last period
+#     p_name : List
+#         Names of the period you are matching ie cashflow or labour. Includes the a name for the last date which is not a period (it is just the end date of the last period)
+#     start : Datetime
+#         Start date of the df activity ie start date of seeding.
+#     length : Datetime
+#         Length of the df activity ie length of seeding.
+#
+#     Returns
+#     -------
+#     Dataframe 2D
+#         This function is used when multiple activities have the same period allocation.
+#         - this func basically just calls the main allocation func then reindexes the df so it applies to all activities.
+#         eg the cost of seeding for each lmu is incurred over the same period so we just want to return a df with a certain cost in it for each lmu and each cashflow period (the cost may differ but the allocation will be the same for each lmu, so the allocation func is called once then reindexed then multiplied by the different costs)
+#     '''
+#     allocation = period_allocation(p_dates, p_name,start,length)
+#     allocation = allocation.set_index('period')
+#     columns = pd.MultiIndex.from_product([allocation.columns, df.index])
+#     allocation = allocation.reindex(columns,axis=1,level=0) #add level so mul can happen
+#     allocation.columns = allocation.columns.droplevel(0) #drop added level
+#     # cost = df.rename(index={0:'allocation'}).stack()
+#     df = allocation.mul(df.iloc[:,0],axis=1)
+#     return df
 
 def period_allocation2(start_df, length_df, p_dates, p_name):
     '''
