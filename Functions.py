@@ -988,7 +988,7 @@ def range_allocation_np(period_dates, start, length, opposite=None, shape=None):
             per_end = period_dates[i + 1]
             calc_start = np.maximum(per_start,start).astype('datetime64[D]')       #select the later of the period start or the start of the range
             calc_end = np.minimum(per_end,end).astype('datetime64[D]')             #select earlier of the period end and the end of the range
-            allocation_period[i,...] = np.maximum(0, (calc_end - calc_start) / (per_end - per_start)) #days between calc_end and calc_start (0 if end before start) divided by length of the period
+            allocation_period[i,...] = np.maximum(0, (calc_end - calc_start) / (per_end - per_start)) #days between calc_end and calc_start (0 if end before start) divided by length of the period, use f_divide incase any period lengths are 0 (this is likely to occur in season version)
     return allocation_period
 
 def period_proportion_np(period_dates, date_array):

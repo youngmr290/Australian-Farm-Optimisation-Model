@@ -240,7 +240,6 @@ def f_crop_monitoring(params):
     ###convert date range to labour periods
     fixed_crop_monitor_pz = np.sum(fixed_crop_monitor_d * monitoring_allocation_pzd, axis=-1) #sum the d axis (monitoring date axis)
     fixed_crop_monitor = pd.DataFrame(fixed_crop_monitor_pz, index=keys_p5, columns=keys_z)
-    # params['fixed_crop_monitor'] = dict(zip(per.p_dates_df().index[:-1],fixed_crop_monitor_pz))
     return variable_crop_monitor, fixed_crop_monitor
 
 ##collates all the params

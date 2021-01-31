@@ -44,7 +44,7 @@ def stubble_all(params):
 
     ##create mask which is stubble available. Stubble is available from the period harvest starts to the beginning of the following growing season.
     ##if the end date of the fp is after harvest then stubble is available.
-    harv_date_k = pinp.crop['start_harvest_crops'].squeeze().values.astype('datetime64[D]')
+    harv_date_k = pinp.crop['start_harvest_crops'].values.astype('datetime64[D]')
     mask_stubble_exists_p6zk = per.f_feed_periods().values[1:,:,na] > harv_date_k  #need to use the full fp array that has the end date of the last period.
 
     #########################
