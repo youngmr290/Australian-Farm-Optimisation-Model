@@ -76,7 +76,7 @@ def f_stack(func, trial_outdated, exp_data_index, trials, **kwargs):
     return result_stacked
 
 
-def f_xy_graph(func0, func1, lp_vars, r_vals, trial_outdated, exp_data_index, trials, func0_options, func1_options):
+def f_xy_graph(func0, func1, trial_outdated, exp_data_index, trials, func0_options, func1_options):
     '''returns graph of crop area (x - axis) by profit (y - axis)
 
     :param func0: func to generate x values
@@ -179,8 +179,7 @@ def f_rotation(lp_vars, r_vals):
     ##rotation
     phases_df = r_vals['rot']['phases']
     phases_rk = phases_df.set_index(5, append=True)  # add landuse as index level
-    rot_area_rl = pd.Series(lp_vars[
-                                'v_phase_area']).sort_index()  # create a series of all the phase areas, need to sort the index because it was chuck error for some calculations
+    rot_area_rl = pd.Series(lp_vars['v_phase_area']).sort_index()  # create a series of all the phase areas, need to sort the index because it was chuck error for some calculations
     rot_area_rkl = rot_area_rl.unstack().reindex(phases_rk.index, axis=0, level=0).stack()  # add landuse to the axis
     return phases_rk, rot_area_rl, rot_area_rkl
 
@@ -436,7 +435,7 @@ def f_stock_reshape(lp_vars, r_vals):
     len_p6 = len(keys_p6)
     len_p5 = len(keys_p5)
 
-    ##create dict to stick reshaped variable is
+    ##create dict for reshaped variables
     stock_vars = {}
 
 
@@ -830,7 +829,7 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, **kwargs):
     :return: pandas df
     '''
     ##unpack dict adding default values
-    ###no default value (must exist)
+    ###no default value (therefore argument must exist)
     keys_key = kwargs['keys']
     type = kwargs['type']
     ###default values exist
@@ -935,53 +934,27 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, **kwargs):
     else:
         return prod, keys
 
-def f_survival(lp_vars, r_vals, **kwargs):
+def f_survival_wean_scan(lp_vars, r_vals, **kwargs):
     '''
 
     :param lp_vars: dict: results from pyomo
     :param r_vals: dict: report variable
-    :key key: str: dict key for the axis keys
+    :key option (optional, default = 0): int:
+            option 0: survival %
+            option 1: wean %
+            option 2: scan %
     :key index (optional, default = []): list: axis you want as the index of pandas df (order of list is the index level order).
     :key cols (optional, default = []): list: axis you want as the cols of pandas df (order of list is the col level order).
-    :key arith (optional, default = 0): int: arithmetic operation used.
-            option 0: return production param, averaged on given axis
-            option 1: return weighted average of production param (using denominator weight return production per day the animal is on hand)
-            option 2: total production for a given axis np.sum(prod * weight, axis)
-            option 3: total production for each activity
-            option 4: return weighted average of production param (using denominator weight returns the average production for period eg less if animal is sold part way through)
     :key arith_axis (optional, default = []): list: axis to preform arithmetic operation along.
-    :key prod (optional, default = 1): str/int/float: if it is a string then it is used as a key for stock_vars, if it is an number that number is used as the prod value
-    :key na_prod (optional, default = []): list: position to add new axis
-    :key weights (optional, default = None): str: weights to be used in arith (typically a lp variable eg numbers). Only required when arith>0
-    :key na_weights (optional, default = []): list: position to add new axis
-    :key den_weights (optional, default = 1): str: key to variable used to weight the denominator in the weighted average (required p6 reporting)
-    :key na_denweights (optional, default = []): list: position to add new axis
-    :key denom (optional, default = 1): str: keys to r_vals indicating denominator to divide production by (after other operations have been applied).
-    :key na_denom (optional, default = []): list: position to add new axis
     :key axis_slice (optional, default = {}): dict: keys (int) is the axis. value (list) is the start, stop and step of the slice
     :return: pandas df
     '''
     ##unpack dict adding default values
     ###default values exist
-    # try:
-    #     na_weights = kwargs['na_weights']
-    # except KeyError:
-    #     na_weights = []
-    #
-    # try:
-    #     na_prod = kwargs['na_prod']
-    # except KeyError:
-    #     na_prod = []
-    #
-    # try:
-    #     na_denweights = kwargs['na_denweights']
-    # except KeyError:
-    #     na_denweights = []
-    #
-    # try:
-    #     den_weights = kwargs['den_weights']
-    # except KeyError:
-    #     den_weights = 1
+    try:
+        option = kwargs['option']
+    except KeyError:
+        option = 0
 
     try:
         arith_axis = kwargs['arith_axis']
@@ -1003,28 +976,63 @@ def f_survival(lp_vars, r_vals, **kwargs):
     except KeyError:
         axis_slice = {}
 
-    ##read from stock reshape function
+    ##params for specific options
     type = 'stock'
-    prod = 'prog_born_k2tva1e1b1nw8ziyg1'
-    prod2 = 'prog_alive_k2tva1e1b1nw8ziyg1'
-    weights = 'dams_numbers_k2tvanwziy1g1'
-    na_weights = [4,5]
-    den_weights = 'e1b1_denom_weights_k2tva1e1b1nw8ziyg1'
-    keys = 'dams_keys_k2tvaebnwziy1g1'
-    arith = 2
-    prog_born, keys_sliced = f_stock_pasture_summary(lp_vars, r_vals, build_df=False, type=type, prod=prod, weights=weights,
-                           den_weights=den_weights, na_weights=na_weights,
-                           keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
-    prog_alive, keys_sliced = f_stock_pasture_summary(lp_vars, r_vals, build_df=False, type=type, prod=prod2, weights=weights,
-                           den_weights=den_weights, na_weights=na_weights,
-                           keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
-    prog_born_k2tvpa1e1b1nw8ziyg1 = np.moveaxis(np.sum(prog_born[...,na] * r_vals['stock']['nfoet_b1nwziygb9'], axis=-8), -1, -7)
-    prog_alive_k2tvpa1e1b1nw8ziyg1 = np.moveaxis(np.sum(prog_alive[...,na] * r_vals['stock']['nyatf_b1nwziygb9'], axis=-8), -1, -7)
-    keys_sliced[5] = keys_sliced[5][0:4] #have to slice the b axis so it is the same size as b9
+    if option == 0:
+        prod = 'nyatf_birth_k2tva1e1b1nw8ziyg1'
+        prod2 = 'nfoet_birth_k2tva1e1b1nw8ziyg1'
+        weights = 'dams_numbers_k2tvanwziy1g1'
+        na_weights = [4,5]
+        keys = 'dams_keys_k2tvaeb9nwziy1g1'
+        # den_weights = 'e1b1_denom_weights_k2tva1e1b1nw8ziyg1'
+    elif option == 1:
+        prod = 'nyatf_wean_tva1nw8ziyg1'
+        prod2 = 1      #prod = 1 to return the number of dams
+        weights = 'dams_numbers_tvanwziy1g1'
+        na_weights = []
+        keys = 'dams_keys_tvanwziy1g1'
+        # den_weights = 1
+    elif option == 2:
+        prod = 'nfoet_scan_tva1nw8ziyg1'
+        prod2 = 1      #prod = 1 to return the number of dams
+        weights = 'dams_numbers_tvanwziy1g1'
+        na_weights = []
+        keys = 'dams_keys_tvanwziy1g1'
+        # den_weights = 1
 
-    survival= fun.f_divide(prog_alive_k2tvpa1e1b1nw8ziyg1, prog_born_k2tvpa1e1b1nw8ziyg1)
-    survival = f_numpy2df(survival, keys_sliced, index, cols)
-    return survival
+    ##params for all options
+    arith = 2
+
+    ##colate the lp and report vals using f_stock_pasture_summary
+    numerator, keys_sliced = f_stock_pasture_summary(lp_vars, r_vals, build_df=False, type=type, prod=prod, weights=weights,
+                           na_weights=na_weights, keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+    denominator, keys_sliced = f_stock_pasture_summary(lp_vars, r_vals, build_df=False, type=type, prod=prod2, weights=weights,
+                           na_weights=na_weights, keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+
+    ##calcs for survival
+    if option == 0:
+        prog_alive_k2tvpa1e1b1nw8ziyg1 = np.moveaxis(np.sum(numerator[...,na] * r_vals['stock']['mask_b1b9_preg_b1nwziygb9'], axis=-8), -1, -7) #b9 axis is shorten b axis: [0,1,2,3]
+        prog_born_k2tvpa1e1b1nw8ziyg1 = np.moveaxis(np.sum(denominator[...,na] * r_vals['stock']['mask_b1b9_preg_b1nwziygb9'], axis=-8), -1, -7)
+        percentage = fun.f_divide(prog_alive_k2tvpa1e1b1nw8ziyg1, prog_born_k2tvpa1e1b1nw8ziyg1)
+
+    ##calc for wean %
+    elif option == 1:
+        ##roll the number of dams along the v axis to align the joining number with the numerator
+        roll = 2
+        denominator = np.roll(denominator,roll,axis=-8)
+        percentage= fun.f_divide(numerator, denominator)
+
+    ##calc for scan %
+    elif option == 2:
+        ##roll the number of dams along the v axis to align the joining number with the numerator
+        roll = 1
+        denominator = np.roll(denominator,roll,axis=-8)
+        percentage= fun.f_divide(numerator, denominator)
+
+    ##make table
+    percentage = f_numpy2df(percentage, keys_sliced, index, cols)
+    return percentage
+
 
 
 ############################

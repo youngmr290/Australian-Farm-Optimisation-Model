@@ -448,7 +448,7 @@ def f_sa(value, sa, sa_type=0, target=0, value_min=-np.inf,pandas=False, axis=0)
             value = np.maximum(value_min, value.mul(sa, axis=axis))
         else:
             value  = np.maximum(value_min, value * sa)
-    ##Type 1 is sap (sensitivity proportion)
+    ##Type 1 is sap (sensitivity proportion, sa = 0 no change, sa = 1 doubles the value)
     elif sa_type == 1:
         if pandas:
             value = np.maximum(value_min, value.mul(1 + sa, axis=axis))
@@ -457,16 +457,16 @@ def f_sa(value, sa, sa_type=0, target=0, value_min=-np.inf,pandas=False, axis=0)
     ##Type 2 is saa (sensitivity addition)
     elif sa_type == 2:
          value  = np.maximum(value_min, value + sa)
-    ##Type 3 is sat (sensitivity target)
+    ##Type 3 is sat (sensitivity target, sa = 1 returns the target)
     elif sa_type == 3:
         if pandas:
             value = np.maximum(value_min, value + (target - value).mul(sa, axis=axis))
         else:
             value  = np.maximum(value_min, value + (target - value) * sa)
-    ##Type 4 is sar (sensitivity range)
+    ##Type 4 is sar (sensitivity range. sa=-1 returns 0, sa=1 returns 1)
     elif sa_type == 4:
          value = np.maximum(0, np.minimum(1, value * (1 - np.abs(sa)) + np.maximum(0, sa)))
-    ##Type 5 is value (return the SA value)
+    ##Type 5 is sav (return the SA value)
     elif sa_type == 5:
         try:
             sa=sa.copy()#have to copy the np arrays so that the original sa is not changed

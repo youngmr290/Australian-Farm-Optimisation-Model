@@ -78,7 +78,7 @@ sar['mortalitye'] = 0          #Scale the calculated dam mortality at birth in t
 ######
 #SAV #
 ######
-##if you initiliase an array it must be type object (so that you can assign int/float/bool into the array)
+##if you initialise an array it must be type object (so that you can assign int/float/bool into the array)
 ##general
 sav['steady_state']      = '-'                  #SA to alter if the model is steady state
 ##area
@@ -89,12 +89,16 @@ sav['pas_inc'] = np.full_like(pinp.general_inp['pas_inc'], '-', dtype=object) #S
 ##Sheep
 sav['fec_inc'] = '-'   #SA to store fec report report values
 sav['eqn_compare']      = '-'                  #SA to alter if the different equation systems in the sheep sim are run and compared
+sav['eqn_used_g0_q1p7'] = np.full(uinp.sheep['i_eqn_used_g0_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
+sav['eqn_used_g1_q1p7'] = np.full(uinp.sheep['i_eqn_used_g1_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
+sav['eqn_used_g2_q1p7'] = np.full(uinp.sheep['i_eqn_used_g2_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
+sav['eqn_used_g3_q1p7'] = np.full(uinp.sheep['i_eqn_used_g3_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
 sav['TOL_inc']         = np.full(pinp.sheep_inp['i_mask_i'].shape, '-', dtype=object)   # SA value for the inclusion of each TOL
 sav['g3_included']         = np.full(pinp.sheep_inp['i_g3_inc'].shape, '-', dtype=object) # SA value for the inclusion of each offspring genotype
-sav['scan_og1']         = np.full(pinp.sheep_inp['i_scan_og1'].shape, '-', dtype=object) # SA value for the scaning management option
+sav['scan_og1']         = np.full(pinp.sheep_inp['i_scan_og1'].shape, '-', dtype=object) # SA value for the scanning management option
 sav['woolp_mpg_percentile'] = '-'              #sa value for the wool price percentile
 sav['woolp_mpg'] = '-'                     # sa value for wool price at std micron
-sav['woolp_fdprem_percentile'] = '-'           # sa value for fd premium percentile (premim received by fd compared to std)
+sav['woolp_fdprem_percentile'] = '-'           # sa value for fd premium percentile (premium received by fd compared to std)
 sav['woolp_fdprem'] = '-'                     # sa value for fd premium
 sav['salep_percentile'] = '-'                     #Value for percentile for all sale grids
 sav['salep_max'] = '-'                        #max sale price in grid

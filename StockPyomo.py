@@ -550,11 +550,13 @@ def stockpyomo_local(params):
     model.p_dep_stockinfra = pe.Param(model.s_infrastructure, initialize=0, default=0.0, doc='Depreciation of the asset value')
 
     try:
+        model.del_component(model.p_rm_stockinfra_fix_index)
         model.del_component(model.p_rm_stockinfra_fix)
     except AttributeError:
         pass
     model.p_rm_stockinfra_fix = pe.Param(model.s_infrastructure, model.s_cashflow_periods,initialize=params['p_rm_stockinfra_fix'], default=0.0, doc='Fixed cost of R&M of the infrastructure')
     try:
+        model.del_component(model.p_rm_stockinfra_var_index)
         model.del_component(model.p_rm_stockinfra_var)
     except AttributeError:
         pass
@@ -568,6 +570,7 @@ def stockpyomo_local(params):
 
     ##purchases
     try:
+        model.del_component(model.p_cost_purch_sire_index)
         model.del_component(model.p_cost_purch_sire)
     except AttributeError:
         pass

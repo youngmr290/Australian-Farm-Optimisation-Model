@@ -263,9 +263,9 @@ for row in range(len(exp_data)):
             sys.exit()
         ##store pyomo variable output as a dict
         variables=model.component_objects(pe.Var, active=True)
-        lp_vars['%s'%exp_data.index[row][2]]={str(v):{s:v[s].value for s in v} for v in variables}    #creates dict with variable in it. This is tricky since pyomo returns a generator object
+        lp_vars = {str(v):{s:v[s].value for s in v} for v in variables}     #creates dict with variable in it. This is tricky since pyomo returns a generator object
         ##store profit
-        lp_vars[exp_data.index[row][2]]['profit'] = pe.value(model.profit)
+        lp_vars['profit'] = pe.value(model.profit)
 
     ##pickle trial info
     if any(lp_vars):  # only do this if pyomo was run and the dict contains values

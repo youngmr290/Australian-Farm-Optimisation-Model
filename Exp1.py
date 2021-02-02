@@ -49,6 +49,8 @@ import CorePyomo as core
 # import logging
 # logger = multiprocessing.log_to_stderr(logging.DEBUG)
 
+## the upper limit of number of processes based on the memory capacity of this machine
+memory_limit = 10
 
 start_time1 = time.time()
 
@@ -237,7 +239,7 @@ def exp(row):
     with open('pkl/pkl_r_vals_{0}.pkl'.format(trial_name),"wb") as f:
         pkl.dump(r_vals,f,protocol=pkl.HIGHEST_PROTOCOL)
 
-    ##track the successful execution of trial - so we dont update a trial that didnt finish for some reason
+    ##track the successful execution of trial - so we don't update a trial that didn't finish for some reason
     trials_successfully_run = row
 
     ##determine expected time to completion - trials left multiplied by average time per trial &time for current loop
@@ -266,7 +268,7 @@ def main():
     print('Number of full solutions: ',sum((exp_data.index[row][1] == True) and (exp_data.index[row][0] == True) for row in range(len(exp_data))))
     print('Exp.xlsx last saved: ',datetime.fromtimestamp(round(os.path.getmtime("exp.xlsx"))))
     ##start multiprocessing
-    agents = min(multiprocessing.cpu_count(),len(dataset)) # number of agents (processes) should be min of the num of cpus or trial
+    agents = min(multiprocessing.cpu_count(), len(dataset), memory_limit) # number of agents (processes) should be min of the num of cpus, number of trials trial or the user specified memory capacity
     with multiprocessing.Pool(processes=agents) as pool:
         trials_successfully_run = pool.map(exp, dataset)
 

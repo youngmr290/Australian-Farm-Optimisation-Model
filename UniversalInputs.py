@@ -126,13 +126,17 @@ def universal_inp_sa():
 
     ##sheep
     ###SAT
-    sheep['i_salep_weight_scalar_s7s5s6'] = fun.f_sa(sheep['i_salep_weight_scalar_s7s5s6'], sen.sat['salep_weight_scalar'], 3, 1, 0) #Scalar for LW impact across grid 1 (sat adjusted)
-    sheep['i_salep_score_scalar_s7s5s6'] = fun.f_sa(sheep['i_salep_score_scalar_s7s5s6'], sen.sat['salep_score_scalar'], 3, 1, 0) #Scalar for score impact across the grid (sat adjusted)
+    sheep['i_salep_weight_scalar_s7s5s6'] = fun.f_sa(sheep_inp['i_salep_weight_scalar_s7s5s6'], sen.sat['salep_weight_scalar'], 3, 1, 0) #Scalar for LW impact across grid 1 (sat adjusted)
+    sheep['i_salep_score_scalar_s7s5s6'] = fun.f_sa(sheep_inp['i_salep_score_scalar_s7s5s6'], sen.sat['salep_score_scalar'], 3, 1, 0) #Scalar for score impact across the grid (sat adjusted)
     ###SAV
-    sheep['i_eqn_compare'] = fun.f_sa(sheep_inp['i_eqn_compare'], sen.sav['eqn_compare'], 5)
-    sheep['i_woolp_mpg_percentile'] = fun.f_sa(sheep['i_woolp_mpg_percentile'], sen.sav['woolp_mpg_percentile'], 5) #replaces the std percentile input with the sa value
-    sheep['i_woolp_fdprem_percentile'] = fun.f_sa(sheep['i_woolp_fdprem_percentile'], sen.sav['woolp_fdprem_percentile'], 5) #replaces the std percentile input with the sa value
-    sheep['i_salep_percentile'] = fun.f_sa(sheep['i_salep_percentile'], sen.sav['salep_percentile'], 5) #Value for percentile for all sale grids
+    sheep['i_eqn_compare'] = fun.f_sa(sheep_inp['i_eqn_compare'], sen.sav['eqn_compare'], 5)  #determines if both equation systems are being run and compared
+    sheep['i_eqn_used_g0_q1p7'] = fun.f_sa(sheep_inp['i_eqn_used_g0_q1p7'], sen.sav['eqn_used_g0_q1p7'], 5)  #determines if both equation systems are being run and compared
+    sheep['i_eqn_used_g1_q1p7'] = fun.f_sa(sheep_inp['i_eqn_used_g1_q1p7'], sen.sav['eqn_used_g1_q1p7'], 5)  #determines if both equation systems are being run and compared
+    sheep['i_eqn_used_g2_q1p7'] = fun.f_sa(sheep_inp['i_eqn_used_g2_q1p7'], sen.sav['eqn_used_g2_q1p7'], 5)  #determines if both equation systems are being run and compared
+    sheep['i_eqn_used_g3_q1p7'] = fun.f_sa(sheep_inp['i_eqn_used_g3_q1p7'], sen.sav['eqn_used_g3_q1p7'], 5)  #determines if both equation systems are being run and compared
+    sheep['i_woolp_mpg_percentile'] = fun.f_sa(sheep_inp['i_woolp_mpg_percentile'], sen.sav['woolp_mpg_percentile'], 5) #replaces the std percentile input with the sa value
+    sheep['i_woolp_fdprem_percentile'] = fun.f_sa(sheep_inp['i_woolp_fdprem_percentile'], sen.sav['woolp_fdprem_percentile'], 5) #replaces the std percentile input with the sa value
+    sheep['i_salep_percentile'] = fun.f_sa(sheep_inp['i_salep_percentile'], sen.sav['salep_percentile'], 5) #Value for percentile for all sale grids
 
 
 
@@ -214,6 +218,7 @@ structure['ia_b0_b1'] = np.array([0, 0, 0, 1,	2,	3,	4,	5,	0,	0,	0])
 structure['a_prepost_b1'] = np.array([0, 1, 2, 3, 4, 3,	4,	4,	2,	3,	4]) #The association of b1 pre lambing pointed to from b1 post lambing
 structure['a_nfoet_b1'] = np.array([0,0,1,2,3,2,3,3,1,2,3])
 structure['a_nyatf_b1'] = np.array([0,0,1,2,3,1,2,1,0,0,0])
+#structure['a_nyatf_b0'] = np.array([1,2,3,1,2,1])  #added for standard weaning % but not required
 structure['i_initial_b1'] = np.array([1,0,0,0,0,0,0,0,0,0,0])
 structure['i_numbers_min_b1'] = np.array([0,0,0,0,0,0,0,0,0,0,0])
 
