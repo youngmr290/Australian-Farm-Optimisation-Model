@@ -173,7 +173,7 @@ structure['cashflow_periods']=['JF','MA','MJ','JA','SO','ND']
 # pasture     #
 ###############
 ##sets as well as define the pastures to include
-structure['pastures'] = np.array(['annual' ,'lucerne','tedera'])
+structure['pastures'] = np.array(['annual' ,'lucerne','tedera']) #annual must be first in the list
 structure['pastures_exist'] = np.array([True , False, False])    #define which pastures exist (inputs must exist). SA can be used to adjust which pastures included (property input)
 structure['dry_groups'] = ['DryL', 'DryH']                       # Low & high quality groups for dry feed
 structure['grazing_int'] =  ['Graz0', 'Graz25', 'Graz50', 'Graz100']   # grazing intensity in the growth/grazing activities

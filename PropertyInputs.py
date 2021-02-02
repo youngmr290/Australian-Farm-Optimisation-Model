@@ -14,6 +14,8 @@ import pandas as pd
 import Functions as fun
 import UniversalInputs as uinp
 
+na = np.newaxis
+
 ##############
 #read inputs #
 ##############
@@ -56,18 +58,18 @@ if inputs_from_pickle == False:
         period_inp = fun.xl_all_named_ranges("Property.xlsx","Periods", numpy=True) #automatically read in the periods as dates
         pkl.dump(period_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
-        sup_inp = fun.xl_all_named_ranges("Property.xlsx","Sup Feed") #automatically read in the periods as dates
+        sup_inp = fun.xl_all_named_ranges("Property.xlsx","Sup Feed")
         pkl.dump(sup_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
         sheep_inp  = fun.xl_all_named_ranges('Property.xlsx', 'Sheep', numpy=True)
         pkl.dump(sheep_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
-        feedsupply_inp  = fun.xl_all_named_ranges('Property.xlsx', 'FeedSupply', numpy=True) #^think this will get combined with the input sheet above
+        feedsupply_inp  = fun.xl_all_named_ranges('Property.xlsx', 'FeedSupply', numpy=True)
         pkl.dump(feedsupply_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
         pasture_inp=dict()
-        for pasture in uinp.structure['pastures'][uinp.structure['pastures_exist']]:#all pasture inputs are adjusted even if a given pasture is not included
-            pasture_inp[pasture] = fun.xl_all_named_ranges('Property.xlsx', pasture)
+        for pasture in uinp.structure['pastures'][uinp.structure['pastures_exist']]:
+            pasture_inp[pasture] = fun.xl_all_named_ranges('Property.xlsx', pasture, numpy=True)
         pkl.dump(pasture_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
 ##else the inputs are read in from the pickle file
@@ -99,6 +101,26 @@ else:
         pasture_inp = pkl.load(f)
 
 print('- finished')
+##reshape required inputs
+###lengths
+len_p6 = len(period_inp['i_fp_idx'])
+len_z = len(general_inp['i_mask_z'])
+len_l = len(general_inp['lmu_area'])
+###shapes
+zp6 = (len_z, len_p6)
+zp6l = (len_z, len_p6, len_l)
+###pasture
+for t,pasture in enumerate(uinp.structure['pastures'][uinp.structure['pastures_exist']]):
+    inp = pasture_inp[pasture]
+    inp['DigRednSenesce'] = np.reshape(inp['DigRednSenesce'], zp6)
+    inp['DigDryAve'] = np.reshape(inp['DigDryAve'], zp6)
+    inp['DigDryRange'] = np.reshape(inp['DigDryRange'], zp6)
+    inp['FOODryH'] = np.reshape(inp['FOODryH'], zp6)
+    inp['LowFOO'] = np.reshape(inp['LowFOO'], zp6l)
+    inp['MedFOO'] = np.reshape(inp['MedFOO'], zp6l)
+    inp['LowPGR'] = np.reshape(inp['LowPGR'], zp6l)
+    inp['MedPGR'] = np.reshape(inp['MedPGR'], zp6l)
+    inp['DigGrn'] = np.reshape(inp['DigGrn'], zp6l)
 
 ##create a copy of each input dict - this means there is always a copy of the original inputs (the second copy has SA applied to it)
 ##the copy created is the one used in the actual modules
@@ -113,8 +135,6 @@ period=period_inp.copy()
 supfeed=sup_inp.copy()
 sheep=sheep_inp.copy()
 feedsupply=feedsupply_inp.copy()
-# sheep_management=sheep_management_inp.copy()
-# sheep_regions=sheep_regions_inp.copy()
 pasture_inputs=pasture_inp.copy()
 
 #######################
@@ -147,12 +167,12 @@ def property_inp_sa():
         pasture_inputs[pasture]['GermScalarLMU'] = fun.f_sa(pasture_inp[pasture]['GermScalarLMU'], sen.sam[('germ_l',pasture)])
         pasture_inputs[pasture]['LowPGR'] = fun.f_sa(pasture_inp[pasture]['LowPGR'], sen.sam[('pgr',pasture)])
         pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inp[pasture]['MedPGR'], sen.sam[('pgr',pasture)])
-        pasture_inputs[pasture]['LowPGR'] = fun.f_sa(pasture_inp[pasture]['LowPGR'], sen.sam[('pgr_f',pasture)], pandas=True, axis=0)
-        pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inp[pasture]['MedPGR'], sen.sam[('pgr_f',pasture)], pandas=True, axis=0)
-        pasture_inputs[pasture]['LowPGR'] = fun.f_sa(pasture_inp[pasture]['LowPGR'], sen.sam[('pgr_l',pasture)], pandas=True, axis=1)
-        pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inp[pasture]['MedPGR'], sen.sam[('pgr_l',pasture)], pandas=True, axis=1)
-        pasture_inputs[pasture]['DigDryAve'] = pasture_inp[pasture]['DigDryAve'] * sen.sam[('dry_dmd_decline',pasture)] \
-                                                + max(pasture_inp[pasture]['DigDryAve']) * (1 - sen.sam[('dry_dmd_decline',pasture)])
+        pasture_inputs[pasture]['LowPGR'] = fun.f_sa(pasture_inp[pasture]['LowPGR'], sen.sam[('pgr_f',pasture)][...,na])
+        pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inp[pasture]['MedPGR'], sen.sam[('pgr_f',pasture)][...,na])
+        pasture_inputs[pasture]['LowPGR'] = fun.f_sa(pasture_inp[pasture]['LowPGR'], sen.sam[('pgr_l',pasture)])
+        pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inp[pasture]['MedPGR'], sen.sam[('pgr_l',pasture)])
+        pasture_inputs[pasture]['DigDryAve'] = (pasture_inp[pasture]['DigDryAve'] * sen.sam[('dry_dmd_decline',pasture)]
+                                                + np.max(pasture_inp[pasture]['DigDryAve'],axis=1) * (1 - sen.sam[('dry_dmd_decline',pasture)]))
         pasture_inputs[pasture]['DigSpread'] = fun.f_sa(pasture_inp[pasture]['DigSpread'], sen.sam[('grn_dmd_range_f',pasture)])
         pasture_inputs[pasture]['DigDeclineFOO'] = fun.f_sa(pasture_inp[pasture]['DigDeclineFOO'], sen.sam[('grn_dmd_declinefoo_f',pasture)])
         pasture_inputs[pasture]['DigRednSenesce'] = fun.f_sa(pasture_inp[pasture]['DigRednSenesce'], sen.sam[('grn_dmd_senesce_f',pasture)])

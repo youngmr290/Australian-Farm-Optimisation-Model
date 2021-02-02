@@ -201,10 +201,12 @@ def f_reshape_expand(array, left_pos=0, len_ax0=0, len_ax1=0, len_ax2=0, swap=Fa
         parameter array - input from excel.
     left_pos : int
         position of axis to the left of where the new axis will be added.
+    len_ax0 : int
+        length of axis 0 - used to reshape input array into multi dimension array (this should be i_len_?).
     len_ax1 : int
         length of axis 1 - used to reshape input array into multi dimension array (this should be i_len_?).
     len_ax2 : int, optional
-        length of axis 3 - used to reshape input array into multi dimension array (this should be i_len_?). The default is 0.
+        length of axis 2 - used to reshape input array into multi dimension array (this should be i_len_?). The default is 0.
     len_ax3 : int, optional
         length of axis 3 - used to reshape input array into multi dimension array (this should be i_len_?). The default is 0.
     swap : boolean, optional
@@ -992,24 +994,42 @@ def range_allocation_np(period_dates, start, length, opposite=None, shape=None):
     return allocation_period
 
 def period_proportion_np(period_dates, date_array):
-    ''' Numpy version - The period that a given date falls in.
+    ''' Numpy version - The period that a given date falls in. and the proportion of the way through the period the date occurs.
 
     Parameters.
-    period_dates: the start of the periods - in a Numpy array np.datetime64.
-    date_array: the date to test - a numpy array of dates.
+    period_dates: Numpy array np.datetime64
+        The dates of the periods to search.
+        Must contain the end date of the last period.
+        If multi-D period axis must be pos 0.
+    date_array: Numpy array np.datetime64
+        The dates to allocate.
+
+    Note: period_dates and date_array must be broadcastable.
 
     Returns.
     Two Numpy arrays with shape(date_array).
-    #1 the period for that test date.
-    #2 how far through the period the date occurs.
+        1 period_array - the period which the values in date_array occur.
+        2 proportion_array - how far through the period the date occurs.
     '''
-    #this is needed when only a single date is passed in because can't do .shape on a single dt object
-    try:
-        proportion_array = np.zeros(date_array.shape,dtype='float64')
-    except AttributeError: pass
-    period_array = np.searchsorted(period_dates, date_array, side = 'right') - 1
-    per_start = period_dates[period_array]
-    per_end   = period_dates[period_array + 1]
+
+    ##broadcast period_dates so that it has same size axis as date_array - so slicing works
+    shape = (period_dates.shape[0],) + date_array.shape
+    period_dates = np.broadcast_to(period_dates, shape)
+
+    ##calc the period each value in the date array falls within (cant use np.searchsorted because date array has z axis)
+    ###occur is bool array which is true for the period that the date array fall into
+    occur = np.logical_and(period_dates[:-1] <= date_array, date_array < period_dates[1:])
+    ###period index
+    p_idx = np.arange(period_dates[:-1].shape[0])
+    ###mul occur and idx to return the period number the date falls in else a 0. then sum the period axis to return the period array
+    occur = np.moveaxis(occur,0,-1) #so that period axis is at end
+    period_array = np.sum(occur * p_idx, axis=-1)
+
+    ##calc proportion
+    per_start = np.take_along_axis(period_dates,period_array[None,...],0)[0]
+    per_end = np.take_along_axis(period_dates,period_array[None,...]+1,0)[0]
+    # per_start = period_dates[period_array, np.arange(date_array.shape[0])[:,None], np.arange(date_array.shape[1])] #problem is that this is fixed to 3d
+    # per_end   = period_array[period_array + 1]
     proportion_array = (date_array - per_start) / (per_end - per_start)
     # print('propn, date, stat, end, start', proportion_array,date_array,per_start,per_end,per_start)
     return period_array, proportion_array
