@@ -155,7 +155,7 @@ def sim_periods(start_year, periods_per_year, oldest_animal):
 #input and manipulation functions #
 ###################################
 
-def f_c2g(params_c2, y=0, var_pos=0, len_ax1=0, len_ax2=0, condition=None, axis=0, dtype=False):
+def f_c2g(params_c2, y=0, var_pos=0, condition=None, axis=0, dtype=False):
     '''
     Parameters
     ----------
@@ -165,15 +165,10 @@ def f_c2g(params_c2, y=0, var_pos=0, len_ax1=0, len_ax2=0, condition=None, axis=
         sensitivity array for genetic merit.
     var_pos : int
         position of last axis when inserted into all axis.
-    len_ax1 : int
-        length of axis 1 - used to reshape input array into multi dimension array (this should be i_len_?).
-    len_ax2 : int, optional
-        length of axis 1 - used to reshape input array into multi dimension array (this should be i_len_?). The default is 0.
 
     Returns
     -------
     param array for each genotype. Grouped by sheep group ie sire, offs, dams, yatf.
-    If g2g is selected then only the conversion from all g? to relevant g? is done using the g?g3 mask
 
     '''
 
@@ -193,7 +188,6 @@ def f_c2g(params_c2, y=0, var_pos=0, len_ax1=0, len_ax2=0, condition=None, axis=
     params_c2 = params_c2.astype(float) #this is so that blank cells are converted to nan not none type because none type cant be multiplied etc
     params_c0 = params_c2[...,a_c2_c0]
     ##add y axis
-    na=np.newaxis
     ###if y is not numpy ie was read in as an int because it was a single cell, it needs to be converted
     if type(y) == int:
         y = np.asarray([y])
@@ -202,18 +196,7 @@ def f_c2g(params_c2, y=0, var_pos=0, len_ax1=0, len_ax2=0, condition=None, axis=
         y=y[...,na]
     ###apply y mask
     y=y[...,uinp.parameters['i_mask_y']]
-    params_c0 = np.multiply(params_c0[...,na,:],  y[...,na]) #na here is to account for c2 axis
-    ##reshape parameter from 2d input to multi dim array
-    len_y = y.shape[-1]
-    ###make tuple of shape depending on the number of axis in input
-    if len_ax2>0:
-        shape=(len_ax1,len_ax2,len_y,3)
-        params_c0 = params_c0.reshape(shape)
-    elif len_ax1 > 0:
-        shape=(len_ax1,len_y,3)
-        params_c0 = params_c0.reshape(shape)
-    else:
-        pass#don't need to reshape
+    params_c0 = np.multiply(params_c0[...,na,:],  y[...,na]) #na here is to account for c0 axis
     ##get axis into correct position
     if var_pos != None or var_pos != 0:
         extra_axes = tuple(range((var_pos + 1), -2))
@@ -253,7 +236,7 @@ def f_c2g(params_c2, y=0, var_pos=0, len_ax1=0, len_ax2=0, condition=None, axis=
     return param_sire, param_dams, param_yatf, param_offs
 
 
-def f_g2g(array_g,group,left_pos=0,len_ax1=0,len_ax2=0,len_ax3=0,swap=False,right_pos=-1,left_pos2=0,right_pos2=-1, condition = None, axis = 0, condition2 = None, axis2 = 0):
+def f_g2g(array_g,group,left_pos=0,swap=False,right_pos=-1,left_pos2=0,right_pos2=-1, condition = None, axis = 0, condition2 = None, axis2 = 0):
     '''
     Parameters
     ----------
@@ -263,12 +246,6 @@ def f_g2g(array_g,group,left_pos=0,len_ax1=0,len_ax2=0,len_ax3=0,swap=False,righ
         DESCRIPTION.
     left_pos : int
         position of axis to the left of where the new axis will be added.
-    len_ax1 : int
-        length of axis 1 - used to reshape input array into multi dimension array (this should be i_len_?).
-    len_ax2 : int, optional
-        length of axis 3 - used to reshape input array into multi dimension array (this should be i_len_?). The default is 0.
-    len_ax3 : int, optional
-        length of axis 3 - used to reshape input array into multi dimension array (this should be i_len_?). The default is 0.
     swap : boolean, optional
         do you want to swap the first tow axis?. The default is False.
     right_pos : int, optional
@@ -295,17 +272,6 @@ def f_g2g(array_g,group,left_pos=0,len_ax1=0,len_ax2=0,len_ax3=0,swap=False,righ
     i_mask_g2g3 = uinp.structure['i_mask_g2g3']
     i_mask_g3g3 = uinp.structure['i_mask_g3g3']
 
-    if len_ax3>0:
-        shape=(len_ax1,len_ax2,len_ax3,array_g.shape[-1])
-        array_g = array_g.reshape(shape)
-    elif len_ax2>0:
-        shape=(len_ax1,len_ax2,array_g.shape[-1])
-        array_g = array_g.reshape(shape)
-    elif len_ax1 > 0:
-        shape=(len_ax1,array_g.shape[-1])
-        array_g = array_g.reshape(shape)
-    else:
-        pass#don't need to reshape
     ##swap axis if necessary
     if swap:
         array_g = np.swapaxes(array_g, 0, 1)

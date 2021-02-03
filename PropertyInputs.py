@@ -103,12 +103,34 @@ else:
 print('- finished')
 ##reshape required inputs
 ###lengths
-len_p6 = len(period_inp['i_fp_idx'])
-len_z = len(general_inp['i_mask_z'])
+len_h2 = sheep_inp['i_h2_len']
+len_h5 = sheep_inp['i_h5_len']
+len_h7 = sheep_inp['i_husb_operations_triggerlevels_h5h7h2'].shape[-1]
+len_i = sheep_inp['i_i_len']
+len_j0 = feedsupply_inp['i_j0_len']
 len_l = len(general_inp['lmu_area'])
+len_n1 = uinp.structure['i_n1_len']
+len_n3 = uinp.structure['i_n3_len']
+len_o = sheep_inp['i_o_len']
+len_p6 = len(period_inp['i_fp_idx'])
+len_s = sheep_inp['i_s_len']
+len_w1 = uinp.structure['i_w1_len']
+len_w3 = uinp.structure['i_w3_len']
+len_w1_cut = int(len_w1 / len_n1)
+len_w3_cut = int(len_w3 / len_n3)
+len_x = sheep_inp['i_x_len']
+len_z = len(general_inp['i_mask_z'])
+
+
+
 ###shapes
 zp6 = (len_z, len_p6)
 zp6l = (len_z, len_p6, len_l)
+zp6j0 = (len_z, len_p6, len_j0)
+h2h5h7 = (len_h2, len_h5, len_h7)
+ioW1 = (len_i, len_o, len_w1_cut)
+isxW1 = (len_i, len_s, len_x, len_w3_cut)
+
 ###pasture
 for t,pasture in enumerate(uinp.structure['pastures'][uinp.structure['pastures_exist']]):
     inp = pasture_inp[pasture]
@@ -122,8 +144,18 @@ for t,pasture in enumerate(uinp.structure['pastures'][uinp.structure['pastures_e
     inp['MedPGR'] = np.reshape(inp['MedPGR'], zp6l)
     inp['DigGrn'] = np.reshape(inp['DigGrn'], zp6l)
 
-##stock
+###stock
 sheep_inp['i_pasture_stage_p6z'] = np.reshape(sheep_inp['i_pasture_stage_p6z'], zp6)
+sheep_inp['i_legume_p6z'] = np.reshape(sheep_inp['i_legume_p6z'], zp6)
+sheep_inp['i_paststd_foo_p6zj0'] = np.reshape(sheep_inp['i_paststd_foo_p6zj0'], zp6j0)
+sheep_inp['i_paststd_dmd_p6zj0'] = np.reshape(sheep_inp['i_paststd_dmd_p6zj0'], zp6j0)
+sheep_inp['i_density_p6z'] = np.reshape(sheep_inp['i_density_p6z'], zp6)
+sheep_inp['i_husb_operations_triggerlevels_h5h7h2'] = np.reshape(sheep_inp['i_husb_operations_triggerlevels_h5h7h2'], h2h5h7)
+sheep_inp['i_sai_lw_dams_owi'] = np.reshape(sheep_inp['i_sai_lw_dams_owi'], ioW1)
+sheep_inp['i_sai_lw_offs_swix'] = np.reshape(sheep_inp['i_sai_lw_offs_swix'], isxW1)
+
+
+
 
 ##create a copy of each input dict - this means there is always a copy of the original inputs (the second copy has SA applied to it)
 ##the copy created is the one used in the actual modules

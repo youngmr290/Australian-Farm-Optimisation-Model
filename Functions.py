@@ -188,8 +188,8 @@ def searchsort_multiple_dim(a,v,axis_a0,axis_a1,axis_v0,axis_v1):
 
 #print(timeit.timeit(phases2,number=100)/100)
 #
-def f_reshape_expand(array, left_pos=0, len_ax0=0, len_ax1=0, len_ax2=0, swap=False, ax1=0, ax2=1, right_pos=0, left_pos2=0, right_pos2=0
-                     , left_pos3=0, right_pos3=0, condition = None, axis = 0, len_ax3=0, swap2=False, ax1_2=1, ax2_2=2,
+def f_expand(array, left_pos=0, swap=False, ax1=0, ax2=1, right_pos=0, left_pos2=0, right_pos2=0
+                     , left_pos3=0, right_pos3=0, condition = None, axis = 0, swap2=False, ax1_2=1, ax2_2=2,
                      condition2=None, axis2=0, condition3=None, axis3=0, left_pos4=0, right_pos4=0, move=False, source=0, dest=1):
     '''
     *note: if adding two sets of new axis add from right to left (then the pos variables align)
@@ -201,14 +201,6 @@ def f_reshape_expand(array, left_pos=0, len_ax0=0, len_ax1=0, len_ax2=0, swap=Fa
         parameter array - input from excel.
     left_pos : int
         position of axis to the left of where the new axis will be added.
-    len_ax0 : int
-        length of axis 0 - used to reshape input array into multi dimension array (this should be i_len_?).
-    len_ax1 : int
-        length of axis 1 - used to reshape input array into multi dimension array (this should be i_len_?).
-    len_ax2 : int, optional
-        length of axis 2 - used to reshape input array into multi dimension array (this should be i_len_?). The default is 0.
-    len_ax3 : int, optional
-        length of axis 3 - used to reshape input array into multi dimension array (this should be i_len_?). The default is 0.
     swap : boolean, optional
         do you want to swap the first tow axis?. The default is False.
     right_pos : int, optional
@@ -224,22 +216,11 @@ def f_reshape_expand(array, left_pos=0, len_ax0=0, len_ax1=0, len_ax2=0, swap=Fa
 
     Returns
     -------
-    Reshapes, swaps axis if required, expands and apply a mask to a given axis if required.
+    expands, swaps axis if required and apply a mask to a given axis if required.
     '''
     ##convert int to 1d array if required
     if type(array) == int:
         array = np.array([array])
-    if len_ax3>0:
-        shape=(len_ax0,len_ax1,len_ax2,len_ax3)
-        array = array.reshape(shape)
-    elif len_ax2>0:
-        shape=(len_ax0,len_ax1,len_ax2)
-        array = array.reshape(shape)
-    elif len_ax1>0:
-        shape=(len_ax0,len_ax1)
-        array = array.reshape(shape)
-    else:
-        pass#don't need to reshape
     ##swap axis if necessary
     if swap:
         array = np.swapaxes(array, ax1, ax2)
@@ -291,6 +272,109 @@ def f_reshape_expand(array, left_pos=0, len_ax0=0, len_ax1=0, len_ax2=0, swap=Fa
         else:
             array = np.compress(condition3, array, axis3)
     return array
+# def f_reshape_expand(array, left_pos=0, len_ax0=0, len_ax1=0, len_ax2=0, swap=False, ax1=0, ax2=1, right_pos=0, left_pos2=0, right_pos2=0
+#                      , left_pos3=0, right_pos3=0, condition = None, axis = 0, len_ax3=0, swap2=False, ax1_2=1, ax2_2=2,
+#                      condition2=None, axis2=0, condition3=None, axis3=0, left_pos4=0, right_pos4=0, move=False, source=0, dest=1):
+#     '''
+#     *note: if adding two sets of new axis add from right to left (then the pos variables align)
+#     *note: mask applied last (after expanding and reshaping)
+#
+#     Parameters
+#     ----------
+#     array : array
+#         parameter array - input from excel.
+#     left_pos : int
+#         position of axis to the left of where the new axis will be added.
+#     len_ax0 : int
+#         length of axis 0 - used to reshape input array into multi dimension array (this should be i_len_?).
+#     len_ax1 : int
+#         length of axis 1 - used to reshape input array into multi dimension array (this should be i_len_?).
+#     len_ax2 : int, optional
+#         length of axis 2 - used to reshape input array into multi dimension array (this should be i_len_?). The default is 0.
+#     len_ax3 : int, optional
+#         length of axis 3 - used to reshape input array into multi dimension array (this should be i_len_?). The default is 0.
+#     swap : boolean, optional
+#         do you want to swap the first tow axis?. The default is False.
+#     right_pos : int, optional
+#         the position of the axis to the right of the singleton axis being added. The default is -1, for when the axis to the right is g?.
+#     left_pos2 : int
+#         position of axis to the left of where the new axis will be added.
+#     right_pos2 : int, optional
+#         the position of the axis to the right of the singleton axis being added. The default is -1, for when the axis to the right is g?.
+#     condition: boolean, optional
+#         mask used to slice given axis.
+#     axis: int, optional
+#         axis to apply mask to.
+#
+#     Returns
+#     -------
+#     Reshapes, swaps axis if required, expands and apply a mask to a given axis if required.
+#     '''
+#     ##convert int to 1d array if required
+#     if type(array) == int:
+#         array = np.array([array])
+#     if len_ax3>0:
+#         shape=(len_ax0,len_ax1,len_ax2,len_ax3)
+#         array = array.reshape(shape)
+#     elif len_ax2>0:
+#         shape=(len_ax0,len_ax1,len_ax2)
+#         array = array.reshape(shape)
+#     elif len_ax1>0:
+#         shape=(len_ax0,len_ax1)
+#         array = array.reshape(shape)
+#     else:
+#         pass#don't need to reshape
+#     ##swap axis if necessary
+#     if swap:
+#         array = np.swapaxes(array, ax1, ax2)
+#     ##swap axis if necessary
+#     if swap2:
+#         array = np.swapaxes(array, ax1_2, ax2_2)
+#     ##move axis if necessary
+#     if move:
+#         array = np.moveaxis(array, source=source, destination=dest)
+#     ##get axis into correct position 1
+#     if left_pos != 0:
+#         extra_axes = tuple(range((left_pos + 1), right_pos))
+#     else: extra_axes = ()
+#     array = np.expand_dims(array, axis = extra_axes)
+#     ##get axis into correct position 2 (some arrays need singleton axis added in multiple places ie separated by a used axis)
+#     if left_pos2 != 0:
+#         extra_axes = tuple(range((left_pos2 + 1), right_pos2))
+#     else: extra_axes = ()
+#     array = np.expand_dims(array, axis = extra_axes)
+#     ##get axis into correct position 3 (some arrays need singleton axis added in multiple places ie separated by a used axis)
+#     if left_pos3 != 0:
+#         extra_axes = tuple(range((left_pos3 + 1), right_pos3))
+#     else: extra_axes = ()
+#     array = np.expand_dims(array, axis = extra_axes)
+#     ##get axis into correct position 4 (some arrays need singleton axis added in multiple places ie separated by a used axis)
+#     if left_pos4 != 0:
+#         extra_axes = tuple(range((left_pos4 + 1), right_pos4))
+#     else: extra_axes = ()
+#     array = np.expand_dims(array, axis = extra_axes)
+#     ##apply mask if required
+#     if condition is not None: #see if condition exists
+#         if type(condition) == bool: #check if array or single value - note array of T & F is not type bool (it is array)
+#             condition= np.asarray([condition]) #convert to numpy if it is singular input
+#             array = np.compress(condition, array, axis)
+#         else:
+#             array = np.compress(condition, array, axis)
+#     ##apply mask if required
+#     if condition2 is not None: #see if condition exists
+#         if type(condition2) == bool: #check if array or single value - note array of T & F is not type bool (it is array)
+#             condition2= np.asarray([condition2]) #convert to numpy if it is singular input
+#             array = np.compress(condition2, array, axis2)
+#         else:
+#             array = np.compress(condition2, array, axis2)
+#     ##apply mask if required
+#     if condition3 is not None: #see if condition exists
+#         if type(condition3) == bool: #check if array or single value - note array of T & F is not type bool (it is array)
+#             condition3= np.asarray([condition3]) #convert to numpy if it is singular input
+#             array = np.compress(condition3, array, axis3)
+#         else:
+#             array = np.compress(condition3, array, axis3)
+#     return array
 
 def f_update(existing_value, new_value, mask_for_new):
     '''

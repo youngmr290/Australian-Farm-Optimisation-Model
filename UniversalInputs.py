@@ -9,7 +9,7 @@ module: universal module - contains all the core input data - usually held const
 @author: young
 """
 
-##python modules
+##python modules (CANT import propertyinputs)
 import pickle as pkl
 import pandas as pd
 import numpy as np
@@ -94,8 +94,51 @@ else:
         
         machine_options_dict_inp  = pkl.load(f)
 print('- finished')
-        
-        
+
+##reshape require inputs
+###lengths
+len_b0 = structure_inp['ia_ppk5_lsb0'].shape[-1]
+len_b1 = structure_inp['ia_ppk2g1_vlsb1'].shape[-1]
+len_h1 = sheep_inp['i_husb_muster_infrastructurereq_h1h4'].shape[-1]
+len_h4 = sheep_inp['i_h4_len']
+len_h6 = sheep_inp['i_husb_muster_requisites_prob_h6h4'].shape[-1]
+len_l = structure_inp['i_len_l'],
+len_l2 = sheep_inp['i_husb_muster_labourreq_l2h4'].shape[-1]
+len_m4 = sheep_inp['i_salep_months_priceadj_s7s9m4'].shape[-1]
+len_s = structure_inp['i_len_s'],
+len_s5 = sheep_inp['i_s5_len'],
+len_s6 = sheep_inp['i_salep_score_scalar_s7s5s6'].shape[-1]
+len_s7 = sheep_inp['i_s7_len']
+len_s9 = sheep_inp['i_s9_len']
+len_v = structure_inp['i_n_v1type']
+
+
+
+
+
+###shapes
+h4h1 = (len_h4, len_h1)
+h4h6 = (len_h4, len_h6)
+h4l2 = (len_h4, len_l2)
+s7s9m4 = (len_s7, len_s9, len_m4)
+s7s5s6 = (len_s7, len_s5, len_s6)
+s7s5 = (len_s7, len_s5)
+slvb1 = (len_s, len_l, len_v, len_b1)
+lsb0 = (len_s, len_l, len_v, len_b1)
+
+###stock
+sheep_inp['i_salep_months_priceadj_s7s9m4'] = np.reshape(sheep_inp['i_salep_months_priceadj_s7s9m4'], s7s9m4)
+sheep_inp['i_salep_score_scalar_s7s5s6'] = np.reshape(sheep_inp['i_salep_score_scalar_s7s5s6'], s7s5s6)
+sheep_inp['i_salep_weight_scalar_s7s5s6'] = np.reshape(sheep_inp['i_salep_weight_scalar_s7s5s6'], s7s5s6)
+sheep_inp['i_salep_weight_range_s7s5'] = np.reshape(sheep_inp['i_salep_weight_range_s7s5'], s7s5)
+sheep_inp['i_husb_muster_requisites_prob_h6h4'] = np.reshape(sheep_inp['i_husb_muster_requisites_prob_h6h4'], h4h6)
+sheep_inp['i_husb_muster_labourreq_l2h4'] = np.reshape(sheep_inp['i_husb_muster_labourreq_l2h4'], h4l2)
+sheep_inp['i_husb_muster_infrastructurereq_h1h4'] = np.reshape(sheep_inp['i_husb_muster_infrastructurereq_h1h4'], h4h1)
+sheep_inp['ia_ppk2g1_vlsb1'] = np.reshape(sheep_inp['ia_ppk2g1_vlsb1'], slvb1) #todo check input shape
+sheep_inp['ia_ppk2g1_vlsb1'] = np.reshape(sheep_inp['ia_ppk5_lsb0'], lsb0)
+
+
+##copy inputs so there is an origional (before SA) version
 price = price_inp.copy()
 finance = finance_inp.copy()
 mach_general = mach_general_inp.copy()
