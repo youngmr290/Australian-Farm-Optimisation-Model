@@ -143,6 +143,8 @@ for t,pasture in enumerate(uinp.structure['pastures'][uinp.structure['pastures_e
     inp['LowPGR'] = np.reshape(inp['LowPGR'], zp6l)
     inp['MedPGR'] = np.reshape(inp['MedPGR'], zp6l)
     inp['DigGrn'] = np.reshape(inp['DigGrn'], zp6l)
+cu3 = uinp.pastparameters['i_cu3_c4'][...,pinp.sheep['i_pasture_type']].reshape(uinp.pastparameters['i_cu3_len'], uinp.pastparameters['i_cu3_len2']).astype(float)#have to convert from object to float so it doesnt chuck error in np.exp (np.exp cant handle object arrays)
+cu4 = uinp.pastparameters['i_cu4_c4'][...,pinp.sheep['i_pasture_type']].reshape(uinp.pastparameters['i_cu4_len'], uinp.pastparameters['i_cu4_len2']).astype(float)#have to convert from object to float so it doesnt chuck error in np.exp (np.exp cant handle object arrays)
 
 ###stock
 sheep_inp['i_pasture_stage_p6z'] = np.reshape(sheep_inp['i_pasture_stage_p6z'], zp6)
