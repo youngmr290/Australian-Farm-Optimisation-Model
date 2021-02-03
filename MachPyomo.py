@@ -20,6 +20,7 @@ import sys
 #AFO modules
 import Mach as mac
 from CreateModel import *
+import PropertyInputs as pinp
 
 def mach_precalcs(params, r_vals):
     mac.f_mach_params(params, r_vals)
@@ -30,7 +31,11 @@ def machpyomo_local(params):
     
     #########
     #param  #
-    #########    
+    #########
+
+    ##used to index the season key in params
+    season = pinp.general['i_z_idx'][pinp.general['i_mask_z']][0]
+
     try:
         model.del_component(model.p_seeding_rate_index)
         model.del_component(model.p_seeding_rate)
@@ -42,33 +47,33 @@ def machpyomo_local(params):
         model.del_component(model.p_contractseeding_occur)
     except AttributeError:
         pass
-    model.p_contractseeding_occur = Param(model.s_labperiods, initialize=params['contractseeding_occur'], default = 0.0, doc='period/s when contract seeding can occur')
+    model.p_contractseeding_occur = Param(model.s_labperiods, initialize=params[season]['contractseeding_occur'], default = 0.0, doc='period/s when contract seeding can occur')
     
     try:
         model.del_component(model.p_seed_days)
     except AttributeError:
         pass
-    model.p_seed_days = Param(model.s_labperiods, initialize=params['seed_days'], default = 0.0, doc='number of seeding days in each period')
+    model.p_seed_days = Param(model.s_labperiods, initialize=params[season]['seed_days'], default = 0.0, doc='number of seeding days in each period')
 
     try:
         model.del_component(model.p_seeding_cost_index)
         model.del_component(model.p_seeding_cost)
     except AttributeError:
         pass
-    model.p_seeding_cost = Param(model.s_cashflow_periods, model.s_lmus, initialize=params['seeding_cost'], default = 0.0, doc='cost of seeding 1ha')
+    model.p_seeding_cost = Param(model.s_cashflow_periods, model.s_lmus, initialize=params[season]['seeding_cost'], default = 0.0, doc='cost of seeding 1ha')
     
     try:
         model.del_component(model.p_contract_seeding_cost)
     except AttributeError:
         pass
-    model.p_contract_seeding_cost = Param(model.s_cashflow_periods, initialize=params['contract_seed_cost'], default = 0.0, doc='cost of contract seeding 1ha')
+    model.p_contract_seeding_cost = Param(model.s_cashflow_periods, initialize=params[season]['contract_seed_cost'], default = 0.0, doc='cost of contract seeding 1ha')
     
     try:
         model.del_component(model.p_harv_rate_index)
         model.del_component(model.p_harv_rate)
     except AttributeError:
         pass
-    model.p_harv_rate = Param(model.s_labperiods, model.s_crops, initialize=params['harv_rate_period'], default = 0.0, doc='rate of harv t/hr provided by one crop gear each period')
+    model.p_harv_rate = Param(model.s_labperiods, model.s_crops, initialize=params[season]['harv_rate_period'], default = 0.0, doc='rate of harv t/hr provided by one crop gear each period')
     
     try:
         model.del_component(model.p_contractharv_rate)
@@ -80,21 +85,21 @@ def machpyomo_local(params):
         model.del_component(model.p_harv_hrs_max)
     except AttributeError:
         pass
-    model.p_harv_hrs_max = Param(model.s_labperiods, initialize= params['max_harv_hours'], default = 0.0, doc='max hours of harvest per period')
+    model.p_harv_hrs_max = Param(model.s_labperiods, initialize= params[season]['max_harv_hours'], default = 0.0, doc='max hours of harvest per period')
     
     try:
         model.del_component(model.p_harv_cost_index)
         model.del_component(model.p_harv_cost)
     except AttributeError:
         pass
-    model.p_harv_cost = Param(model.s_cashflow_periods, model.s_crops, initialize=params['harvest_cost'], default = 0.0, doc='cost of harvesting 1hr')
+    model.p_harv_cost = Param(model.s_cashflow_periods, model.s_crops, initialize=params[season]['harvest_cost'], default = 0.0, doc='cost of harvesting 1hr')
     
     try:
         model.del_component(model.p_contractharv_cost_index)
         model.del_component(model.p_contractharv_cost)
     except AttributeError:
         pass
-    model.p_contractharv_cost = Param(model.s_cashflow_periods, model.s_crops, initialize=params['contract_harvest_cost'], default = 0.0, doc='cost of contract harvesting 1hr')
+    model.p_contractharv_cost = Param(model.s_cashflow_periods, model.s_crops, initialize=params[season]['contract_harvest_cost'], default = 0.0, doc='cost of contract harvesting 1hr')
     
     try:
         model.del_component(model.p_contracthay_cost)
@@ -107,14 +112,14 @@ def machpyomo_local(params):
         model.del_component(model.p_yield_penalty)
     except AttributeError:
         pass
-    model.p_yield_penalty = Param(model.s_labperiods, model.s_crops, initialize=params['yield_penalty'], default = 0.0, doc='kg/ha/day penalty for late sowing in each period')
+    model.p_yield_penalty = Param(model.s_labperiods, model.s_crops, initialize=params[season]['yield_penalty'], default = 0.0, doc='kg/ha/day penalty for late sowing in each period')
     
     try:
         model.del_component(model.p_seeding_grazingdays_index)
         model.del_component(model.p_seeding_grazingdays)
     except AttributeError:
         pass
-    model.p_seeding_grazingdays = Param(model.s_feed_periods, model.s_labperiods, initialize=params['grazing_days'], default = 0.0, doc='pasture grazing days per feed period provided by 1ha of seeding in each seed period')
+    model.p_seeding_grazingdays = Param(model.s_feed_periods, model.s_labperiods, initialize=params[season]['grazing_days'], default = 0.0, doc='pasture grazing days per feed period provided by 1ha of seeding in each seed period')
 
     try:
         model.del_component(model.p_fixed_dep)

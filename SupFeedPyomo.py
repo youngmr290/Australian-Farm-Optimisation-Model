@@ -10,6 +10,7 @@ from pyomo import environ as pe
 #AFO modules
 from CreateModel import model
 import SupFeed as sup
+import PropertyInputs as pinp
 
 def sup_precalcs(params, r_vals):
     ##call sup functions
@@ -20,14 +21,17 @@ def suppyomo_local(params):
     #########
     #param  #
     ######### 
-    
+
+    ##used to index the season key in params
+    season = pinp.general['i_z_idx'][pinp.general['i_mask_z']][0]
+
     ##sup cost
     try:
         model.del_component(model.p_sup_cost_index)
         model.del_component(model.p_sup_cost)
     except AttributeError:
         pass
-    model.p_sup_cost = pe.Param(model.s_cashflow_periods, model.s_feed_periods, model.s_crops, initialize=params['total_sup_cost'], default = 0.0, doc='cost of storing and feeding 1t of sup each period')
+    model.p_sup_cost = pe.Param(model.s_cashflow_periods, model.s_feed_periods, model.s_crops, initialize=params[season]['total_sup_cost'], default = 0.0, doc='cost of storing and feeding 1t of sup each period')
     
     ##sup dep
     try:
@@ -51,7 +55,7 @@ def suppyomo_local(params):
         model.del_component(model.p_sup_labour)
     except AttributeError:
         pass
-    model.p_sup_labour = pe.Param(model.s_crops, model.s_labperiods, model.s_feed_periods, initialize=params['sup_labour'], default = 0.0, doc='labour required to feed each sup in each feed period')
+    model.p_sup_labour = pe.Param(model.s_crops, model.s_labperiods, model.s_feed_periods, initialize=params[season]['sup_labour'], default = 0.0, doc='labour required to feed each sup in each feed period')
     
     ##sup vol
     try:

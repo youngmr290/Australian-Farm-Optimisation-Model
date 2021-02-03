@@ -1042,7 +1042,6 @@ def f_mach_params(params,r_vals):
     ##create non seasonal params
     params['seed_rate'] = seedrate.to_dict()
     params['contract_harv_rate'] = contract_harv_rate.to_dict()
-    params['max_harv_hours'] = max_harv_hours.to_dict()
     params['hay_making_cost'] = hay_making_cost.to_dict()
     params['fixed_dep'] = fixed_dep
     params['harv_dep'] = harv_dep
@@ -1063,6 +1062,7 @@ def f_mach_params(params,r_vals):
         params[scenario]['contract_seed_cost'] = contract_seed_cost[scenario].to_dict()
         params[scenario]['harv_rate_period'] = harv_rate_period[scenario].to_dict()
         params[scenario]['harvest_cost'] = harvest_cost[scenario].to_dict()
+        params[scenario]['max_harv_hours'] = max_harv_hours[scenario].to_dict()
         params[scenario]['contract_harvest_cost'] = contract_harvest_cost[scenario].to_dict()
         params[scenario]['yield_penalty'] = yield_penalty[scenario].to_dict()
         params[scenario]['grazing_days'] = grazing_days[scenario].to_dict()
