@@ -977,9 +977,13 @@ def range_allocation_np(period_dates, start, length, opposite=None, shape=None):
     if opposite:
         #check how much of each date range falls within the period
         for i in range(len(period_dates)-1):
-            #^.date() required because the array being passed is not a np.datetime64[D]
-            per_start= period_dates[i]#.date() #had to add this and the astype thing below to get it all in the same format so calcs would work
-            per_end = period_dates[i + 1]#.date()
+            per_start= period_dates[i]
+            per_end = period_dates[i + 1].copy() #so origional date array isnt altered when updating year in next step
+            ###to handle situations where base yr version of feed period is used. In these case the year does not increment
+            ###at the start of a new year eg at the start of the ny it goes back to 2019 instead of 2020
+            ###in these cases when the end date is less than start it means a ny has started so we temporarily increase end date by 1yr.
+            mask = per_end < per_start
+            per_end[mask] = per_end[mask] + np.timedelta64(365, 'D')
             calc_start = np.maximum(per_start,start).astype('datetime64[D]')       #select the later of the period start or the start of the range
             calc_end = np.minimum(per_end,end).astype('datetime64[D]')             #select earlier of the period end and the end of the range
             allocation_period[i,...] = np.maximum(0, (calc_end - calc_start) / (end - start)) #days between calc_end and calc_start (0 if end before start) divided by length of the range
@@ -987,7 +991,12 @@ def range_allocation_np(period_dates, start, length, opposite=None, shape=None):
         #check how much of each period falls within the date range
         for i in range(len(period_dates)-1):
             per_start= period_dates[i]
-            per_end = period_dates[i + 1]
+            per_end = period_dates[i + 1].copy() #so origional date array isnt altered when updating year in next step
+            ###to handle situations where base yr version of feed period is used. In these case the year does not increment
+            ###at the start of a new year eg at the start of the ny it goes back to 2019 instead of 2020
+            ###in these cases when the end date is less than start it means a ny has started so we temporarily increase end date by 1yr.
+            mask = per_end < per_start
+            per_end[mask] = per_end[mask] + np.timedelta64(365, 'D')
             calc_start = np.maximum(per_start,start).astype('datetime64[D]')       #select the later of the period start or the start of the range
             calc_end = np.minimum(per_end,end).astype('datetime64[D]')             #select earlier of the period end and the end of the range
             allocation_period[i,...] = np.maximum(0, (calc_end - calc_start) / (per_end - per_start)) #days between calc_end and calc_start (0 if end before start) divided by length of the period, use f_divide incase any period lengths are 0 (this is likely to occur in season version)
@@ -1016,9 +1025,19 @@ def period_proportion_np(period_dates, date_array):
     shape = (period_dates.shape[0],) + date_array.shape
     period_dates = np.broadcast_to(period_dates, shape)
 
+    ##dates
+    dates_start = period_dates[:-1]
+    dates_end = period_dates[1:].copy() #so origional date array isnt altered when updating year in next step
+
+    ##to handle situations where base yr version of feed period is used. In these case the year does not increment
+    ##at the start of a new year eg at the start of the ny it goes back to 2019 instead of 2020
+    ##in these cases when the end date is less than start it means a ny has started so we temporarily increase end date by 1yr.
+    mask = dates_end < dates_start
+    dates_end[mask] = dates_end[mask] + np.timedelta64(365,'D')
+
     ##calc the period each value in the date array falls within (cant use np.searchsorted because date array has z axis)
     ###occur is bool array which is true for the period that the date array fall into
-    occur = np.logical_and(period_dates[:-1] <= date_array, date_array < period_dates[1:])
+    occur = np.logical_and(dates_start <= date_array, date_array < dates_end)
     ###period index
     p_idx = np.arange(period_dates[:-1].shape[0])
     ###mul occur and idx to return the period number the date falls in else a 0. then sum the period axis to return the period array

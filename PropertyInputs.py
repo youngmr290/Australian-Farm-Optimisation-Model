@@ -122,6 +122,9 @@ for t,pasture in enumerate(uinp.structure['pastures'][uinp.structure['pastures_e
     inp['MedPGR'] = np.reshape(inp['MedPGR'], zp6l)
     inp['DigGrn'] = np.reshape(inp['DigGrn'], zp6l)
 
+##stock
+sheep_inp['i_pasture_stage_p6z'] = np.reshape(sheep_inp['i_pasture_stage_p6z'], zp6)
+
 ##create a copy of each input dict - this means there is always a copy of the original inputs (the second copy has SA applied to it)
 ##the copy created is the one used in the actual modules
 general=general_inp.copy()
