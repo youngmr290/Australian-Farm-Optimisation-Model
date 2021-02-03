@@ -137,6 +137,16 @@ sheep_inp['i_husb_muster_infrastructurereq_h1h4'] = np.reshape(sheep_inp['i_husb
 sheep_inp['ia_ppk2g1_vlsb1'] = np.reshape(sheep_inp['ia_ppk2g1_vlsb1'], slvb1) #todo check input shape
 sheep_inp['ia_ppk2g1_vlsb1'] = np.reshape(sheep_inp['ia_ppk5_lsb0'], lsb0)
 
+parameters['i_cb0_c2'], uinp.parameters['i_cb0_len'], uinp.parameters['i_cb0_len2']
+parameters['i_cb0_y']
+parameters['i_ce_c2'], uinp.parameters['i_ce_len'], uinp.parameters['i_ce_len2']
+parameters['i_ce_y']
+parameters['i_cl0_c2'], uinp.parameters['i_cl0_y'] , uinp.parameters['i_cl0_len'], uinp.parameters['i_cl0_len2']
+parameters['i_cl1_c2'], uinp.parameters['i_cl1_y'], uinp.parameters['i_cl1_len'], uinp.parameters['i_cl1_len2']
+parameters['i_cu1_c2'], uinp.parameters['i_cu1_y'], uinp.parameters['i_cu1_len'], uinp.parameters['i_cu1_len2']
+parameters['i_cu2_c2'], uinp.parameters['i_cu2_y'], uinp.parameters['i_cu2_len'], uinp.parameters['i_cu2_len2']
+parameters['i_cx_c2'], uinp.parameters['i_cx_y'] uinp.parameters['i_cx_len'], uinp.parameters['i_cx_len2']
+
 
 ##copy inputs so there is an origional (before SA) version
 price = price_inp.copy()
