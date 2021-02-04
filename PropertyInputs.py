@@ -103,17 +103,25 @@ else:
 print('- finished')
 ##reshape required inputs
 ###lengths
+len_d = len(sheep_inp['i_d_idx'])
 len_h2 = sheep_inp['i_h2_len']
 len_h5 = sheep_inp['i_h5_len']
 len_h7 = sheep_inp['i_husb_operations_triggerlevels_h5h7h2'].shape[-1]
 len_i = sheep_inp['i_i_len']
 len_j0 = feedsupply_inp['i_j0_len']
+len_k0 = sheep_inp['i_k0_len']
+len_k1 = sheep_inp['i_k1_len']
+len_k2 = sheep_inp['i_k2_len']
+len_k3 = sheep_inp['i_k3_len']
+len_k4 = sheep_inp['i_k4_len']
+len_k5 = sheep_inp['i_k5_len']
 len_l = len(general_inp['lmu_area'])
 len_n1 = uinp.structure['i_n1_len']
 len_n3 = uinp.structure['i_n3_len']
 len_o = sheep_inp['i_o_len']
 len_p6 = len(period_inp['i_fp_idx'])
 len_s = sheep_inp['i_s_len']
+len_t3 = sheep_inp['i_t3_len']
 len_w1 = uinp.structure['i_w1_len']
 len_w3 = uinp.structure['i_w3_len']
 len_w1_cut = int(len_w1 / len_n1)
@@ -130,6 +138,18 @@ zp6j0 = (len_z, len_p6, len_j0)
 h2h5h7 = (len_h2, len_h5, len_h7)
 ioW1 = (len_i, len_o, len_w1_cut)
 isxW1 = (len_i, len_s, len_x, len_w3_cut)
+iog = (len_i, len_o, -1)
+idg = (len_i, len_d, -1)
+isxg = (len_i, len_s, len_x, -1)
+izg = (len_i, len_z, -1)
+ik0g = (len_i, len_k0, -1)
+ik1g = (len_i, len_k1, -1)
+ik2g = (len_i, len_k2, -1)
+ik3g = (len_i, len_k3, -1)
+ik4g = (len_i, len_k4, -1)
+ik5g = (len_i, len_k5, -1)
+t3Sg = (len_t3, len_s+1, -1) #capital S to indicate this is special eg not normal becasue +1
+
 
 ###pasture
 for t,pasture in enumerate(uinp.structure['pastures'][uinp.structure['pastures_exist']]):
@@ -143,8 +163,6 @@ for t,pasture in enumerate(uinp.structure['pastures'][uinp.structure['pastures_e
     inp['LowPGR'] = np.reshape(inp['LowPGR'], zp6l)
     inp['MedPGR'] = np.reshape(inp['MedPGR'], zp6l)
     inp['DigGrn'] = np.reshape(inp['DigGrn'], zp6l)
-cu3 = uinp.pastparameters['i_cu3_c4'][...,pinp.sheep['i_pasture_type']].reshape(uinp.pastparameters['i_cu3_len'], uinp.pastparameters['i_cu3_len2']).astype(float)#have to convert from object to float so it doesnt chuck error in np.exp (np.exp cant handle object arrays)
-cu4 = uinp.pastparameters['i_cu4_c4'][...,pinp.sheep['i_pasture_type']].reshape(uinp.pastparameters['i_cu4_len'], uinp.pastparameters['i_cu4_len2']).astype(float)#have to convert from object to float so it doesnt chuck error in np.exp (np.exp cant handle object arrays)
 
 ###stock
 sheep_inp['i_pasture_stage_p6z'] = np.reshape(sheep_inp['i_pasture_stage_p6z'], zp6)
@@ -156,6 +174,26 @@ sheep_inp['i_husb_operations_triggerlevels_h5h7h2'] = np.reshape(sheep_inp['i_hu
 sheep_inp['i_sai_lw_dams_owi'] = np.reshape(sheep_inp['i_sai_lw_dams_owi'], ioW1)
 sheep_inp['i_sai_lw_offs_swix'] = np.reshape(sheep_inp['i_sai_lw_offs_swix'], isxW1)
 
+sheep_inp['i_date_born1st_oig2'] = np.reshape(sheep_inp['i_date_born1st_oig2'], iog)
+sheep_inp['i_date_born1st_idg3'] = np.reshape(sheep_inp['i_date_born1st_idg3'], idg)
+sheep_inp['i_sire_propn_oig1'] = np.reshape(sheep_inp['i_sire_propn_oig1'], iog)
+sheep_inp['i_date_shear_sixg0'] = np.reshape(sheep_inp['i_date_shear_sixg0'], isxg)
+sheep_inp['i_date_shear_sixg1'] = np.reshape(sheep_inp['i_date_shear_sixg1'], isxg)
+sheep_inp['i_date_shear_sixg3'] = np.reshape(sheep_inp['i_date_shear_sixg3'], isxg)
+sheep_inp['ia_r1_zig0'] = np.reshape(sheep_inp['ia_r1_zig0'], izg)
+sheep_inp['ia_r1_zig1'] = np.reshape(sheep_inp['ia_r1_zig1'], izg)
+sheep_inp['ia_r1_zig3'] = np.reshape(sheep_inp['ia_r1_zig3'], izg)
+sheep_inp['ia_r2_k0ig1'] = np.reshape(sheep_inp['ia_r2_k0ig1'], ik0g)
+sheep_inp['ia_r2_k1ig1'] = np.reshape(sheep_inp['ia_r2_k1ig1'], ik1g)
+sheep_inp['ia_r2_k2ig1'] = np.reshape(sheep_inp['ia_r2_k2ig1'], ik2g)
+sheep_inp['ia_r2_ik0g3'] = np.reshape(sheep_inp['ia_r2_ik0g3'], ik0g)
+sheep_inp['ia_r2_ik3g3'] = np.reshape(sheep_inp['ia_r2_ik3g3'], ik3g)
+sheep_inp['ia_r2_ik4g3'] = np.reshape(sheep_inp['ia_r2_ik4g3'], ik4g)
+sheep_inp['ia_r2_ik5g3'] = np.reshape(sheep_inp['ia_r2_ik5g3'], ik5g)
+sheep_inp['i_sales_offset_tsg3'] = np.reshape(sheep_inp['i_sales_offset_tsg3'], t3Sg)
+sheep_inp['i_target_weight_tsg3'] = np.reshape(sheep_inp['i_target_weight_tsg3'], t3Sg)
+sheep_inp['i_shear_prior_tsg3'] = np.reshape(sheep_inp['i_shear_prior_tsg3'], t3Sg)
+sheep_inp['ia_i_idg2'] = np.reshape(sheep_inp['ia_i_idg2'], idg)
 
 
 

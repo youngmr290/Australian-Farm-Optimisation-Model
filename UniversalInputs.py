@@ -115,7 +115,6 @@ len_v = structure_inp['i_n_v1type']
 
 
 
-
 ###shapes
 h4h1 = (len_h4, len_h1)
 h4h6 = (len_h4, len_h6)
@@ -125,6 +124,13 @@ s7s5s6 = (len_s7, len_s5, len_s6)
 s7s5 = (len_s7, len_s5)
 slvb1 = (len_s, len_l, len_v, len_b1)
 lsb0 = (len_s, len_l, len_v, len_b1)
+cb0 = (parameters_inp['i_cb0_len'], parameters_inp['i_cb0_len2'],-1)
+ce = (parameters_inp['i_ce_len'], parameters_inp['i_ce_len2'],-1)
+cl0 = (parameters_inp['i_cl0_len'], parameters_inp['i_cl0_len2'],-1)
+cl1 = (parameters_inp['i_cl1_len'], parameters_inp['i_cl1_len2'],-1)
+cu1 = (parameters_inp['i_cu1_len'], parameters_inp['i_cu1_len2'],-1)
+cu2 = (parameters_inp['i_cu2_len'], parameters_inp['i_cu2_len2'],-1)
+cx = (parameters_inp['i_cx_len'], parameters_inp['i_cx_len2'],-1)
 
 ###stock
 sheep_inp['i_salep_months_priceadj_s7s9m4'] = np.reshape(sheep_inp['i_salep_months_priceadj_s7s9m4'], s7s9m4)
@@ -136,16 +142,24 @@ sheep_inp['i_husb_muster_labourreq_l2h4'] = np.reshape(sheep_inp['i_husb_muster_
 sheep_inp['i_husb_muster_infrastructurereq_h1h4'] = np.reshape(sheep_inp['i_husb_muster_infrastructurereq_h1h4'], h4h1)
 sheep_inp['ia_ppk2g1_vlsb1'] = np.reshape(sheep_inp['ia_ppk2g1_vlsb1'], slvb1) #todo check input shape
 sheep_inp['ia_ppk2g1_vlsb1'] = np.reshape(sheep_inp['ia_ppk5_lsb0'], lsb0)
+parameters_inp['i_cb0_c2'] = np.reshape(parameters_inp['i_cb0_c2'], cb0)
+parameters_inp['i_cb0_y'] = np.reshape(parameters_inp['i_cb0_y'], cb0)
+parameters_inp['i_ce_c2'] = np.reshape(parameters_inp['i_ce_c2'], ce)
+parameters_inp['i_ce_y'] = np.reshape(parameters_inp['i_ce_y'], ce)
+parameters_inp['i_cl0_c2'] = np.reshape(parameters_inp['i_cl0_c2'], cl0)
+parameters_inp['i_cl0_y'] = np.reshape(parameters_inp['i_cl0_y'], cl0)
+parameters_inp['i_cl1_c2'] = np.reshape(parameters_inp['i_cl1_c2'], cl1)
+parameters_inp['i_cl1_y'] = np.reshape(parameters_inp['i_cl1_y'], cl1)
+parameters_inp['i_cu1_c2'] = np.reshape(parameters_inp['i_cu1_c2'], cu1)
+parameters_inp['i_cu1_y'] = np.reshape(parameters_inp['i_cu1_y'], cu1)
+parameters_inp['i_cu2_c2'] = np.reshape(parameters_inp['i_cu2_c2'], cu2)
+parameters_inp['i_cu2_y'] = np.reshape(parameters_inp['i_cu2_y'], cu2)
+parameters_inp['i_cx_c2'] = np.reshape(parameters_inp['i_cx_c2'], cx)
+parameters_inp['i_cx_y'] = np.reshape(parameters_inp['i_cx_y'], cx)
 
-parameters['i_cb0_c2'], uinp.parameters['i_cb0_len'], uinp.parameters['i_cb0_len2']
-parameters['i_cb0_y']
-parameters['i_ce_c2'], uinp.parameters['i_ce_len'], uinp.parameters['i_ce_len2']
-parameters['i_ce_y']
-parameters['i_cl0_c2'], uinp.parameters['i_cl0_y'] , uinp.parameters['i_cl0_len'], uinp.parameters['i_cl0_len2']
-parameters['i_cl1_c2'], uinp.parameters['i_cl1_y'], uinp.parameters['i_cl1_len'], uinp.parameters['i_cl1_len2']
-parameters['i_cu1_c2'], uinp.parameters['i_cu1_y'], uinp.parameters['i_cu1_len'], uinp.parameters['i_cu1_len2']
-parameters['i_cu2_c2'], uinp.parameters['i_cu2_y'], uinp.parameters['i_cu2_len'], uinp.parameters['i_cu2_len2']
-parameters['i_cx_c2'], uinp.parameters['i_cx_y'] uinp.parameters['i_cx_len'], uinp.parameters['i_cx_len2']
+##pasture
+pastparameters_inp['i_cu3_c4'] = pastparameters_inp['i_cu3_c4'].reshape(pastparameters_inp['i_cu3_len'], pastparameters_inp['i_cu3_len2'], -1)
+pastparameters_inp['i_cu4_c4'] = pastparameters_inp['i_cu4_c4'].reshape(pastparameters_inp['i_cu4_len'], pastparameters_inp['i_cu4_len2'], -1)
 
 
 ##copy inputs so there is an origional (before SA) version

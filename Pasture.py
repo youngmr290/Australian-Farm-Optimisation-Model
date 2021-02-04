@@ -333,6 +333,9 @@ def f_pasture(params, r_vals, ev):
     harv_date_z = pinp.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0).astype(np.datetime64)
     i_pasture_stage_p6z = pinp.f_seasonal_inp(np.moveaxis(pinp.sheep['i_pasture_stage_p6z'],0,-1), numpy=True, axis=-1)
 
+    ### pasture params used to convert foo for rel availability
+    cu3 = uinp.pastparameters['i_cu3_c4'][...,pinp.sheep['i_pasture_type']].astype(float)
+    cu4 = uinp.pastparameters['i_cu4_c4'][...,pinp.sheep['i_pasture_type']].astype(float)
 
     ## one time data manipulation for the inputs just read
     ### calculate dry_decay_period (used in reseeding and green&dry)
@@ -662,8 +665,6 @@ def f_pasture(params, r_vals, ev):
     foo_ave_grnha_goflzt      = (foo_start_grnha_oflzt
                                 + foo_end_grnha_goflzt)/2
     ### pasture params used to convert foo for rel availability
-    cu3 = uinp.pastparameters['i_cu3_c4'][...,pinp.sheep['i_pasture_type']].reshape(uinp.pastparameters['i_cu3_len'], uinp.pastparameters['i_cu3_len2']).astype(float) #have to convert from object to float so it doesnt chuck error in np.exp (np.exp cant handle object arrays)
-    cu4 = uinp.pastparameters['i_cu4_c4'][...,pinp.sheep['i_pasture_type']].reshape(uinp.pastparameters['i_cu4_len'], uinp.pastparameters['i_cu4_len2']).astype(float) #have to convert from object to float so it doesnt chuck error in np.exp (np.exp cant handle object arrays)
     pasture_stage_flzt = i_pasture_stage_p6z[:, na, :, na]
     ### adjust foo and calc hf
     foo_ave_grnha_goflzt, hf = sfun.f_foo_convert(cu3, cu4, foo_ave_grnha_goflzt, pinp.sheep['i_hr_scalar'],
@@ -767,9 +768,6 @@ def f_pasture(params, r_vals, ev):
     if uinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
         ri_qual_fz     = sfun.f_rq_cs(i_poc_dmd_ft[...,na,0], i_legume_zt[...,0])
     
-    ### pasture params used to convert foo for rel availability
-    cu3 = uinp.pastparameters['i_cu3_c4'][...,pinp.sheep['i_pasture_type']].reshape(uinp.pastparameters['i_cu3_len'], uinp.pastparameters['i_cu3_len2']).astype(float) #have to convert from object to float so it doesnt chuck error in np.exp (np.exp cant handle object arrays)
-    cu4 = uinp.pastparameters['i_cu4_c4'][...,pinp.sheep['i_pasture_type']].reshape(uinp.pastparameters['i_cu4_len'], uinp.pastparameters['i_cu4_len2']).astype(float) #have to convert from object to float so it doesnt chuck error in np.exp (np.exp cant handle object arrays)
     ### adjust foo and calc hf
     i_poc_foo_fz, hf = sfun.f_foo_convert(cu3, cu4, i_poc_foo_ft[:,na,na,0], pinp.sheep['i_hr_scalar'], pinp.sheep['i_region'],
                                          uinp.pastparameters['i_n_pasture_stage'],uinp.pastparameters['i_hd_std'], i_legume_zt, i_pasture_stage_p6z)
