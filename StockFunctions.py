@@ -719,8 +719,8 @@ def f_potential_intake_cs(ci, cl, srw, relsize_start, rc_start, temp_lc_dams, te
     return np.maximum(0,pi)
 
 
-def f_potential_intake_mu():
-    pi = 1.4
+def f_potential_intake_mu(srw):
+    pi = 0.028 * srw
     return np.maximum(0,pi)
 
 
@@ -877,61 +877,65 @@ def f_birthweight_cs(cx, w_b_yatf, w_f_dams, period_is_birth):
     w_b_yatf = fun.f_update(w_b_yatf, t_w_b, period_is_birth)
     return w_b_yatf
 
-def f_birthweight_mu(cu1_yatf, cb1_yatf, cx_yatf, ce_yatf, w_b, cf_w_b_dams, ffcfw_birth_dams, ebg_dams, days_period, gest_propn, period_between_joinscan, period_between_scanbirth, period_is_birth):
+def f_birthweight_mu(cu1, cb1, cx, ce, w_b, cf_w_b_dams, ffcfw_birth_dams, ebg_dams, days_period, gest_propn, period_between_joinscan, period_between_scanbirth, period_is_birth):
     ##Carry forward BW increment	
-    d_cf_w_b = f_carryforward_u1(cu1_yatf[16, ...], ebg_dams, False, period_between_joinscan, period_between_scanbirth, False, days_period, gest_propn)
+    d_cf_w_b = f_carryforward_u1(cu1[16, ...], ebg_dams, False, period_between_joinscan, period_between_scanbirth, False, days_period, gest_propn)
     ##Increment the total carry forward BW
     cf_w_b_dams = cf_w_b_dams + d_cf_w_b
     ##estimate BW by including the intercept, the effect of dam weight at birth and other non-LW coefficients
-    t_w_b_yatf = (cf_w_b_dams + cu1_yatf[16, -1, ...] + cu1_yatf[16, 0, ...] * ffcfw_birth_dams + cb1_yatf[16, ...] + cx_yatf[16, ...] + ce_yatf[16, ...])
+    t_w_b_yatf = (cf_w_b_dams + cu1[16, -1, ...] + cu1[16, 0, ...] * ffcfw_birth_dams + cb1[16, ...] + cx[16, ...] + ce[16, ...])
     ##Update w_b if period is birth
     w_b = fun.f_update(w_b, t_w_b_yatf, period_is_birth)
     return w_b, cf_w_b_dams
 
 
-def f_weanweight_cs(w_w_yatf, ffcfw_start_yatf, ebg_yatf, days_period, lact_propn, period_is_wean):
+def f_weanweight_cs(w_w_yatf, ffcfw_start_yatf, ebg_yatf, days_period, period_is_wean):
     ##set WWt = yatf weight at weaning	
-    t_w_w = (ffcfw_start_yatf + ebg_yatf * days_period * lact_propn)
+    t_w_w = (ffcfw_start_yatf + ebg_yatf * days_period)
     ##update weaning weight if it is weaning period
     w_w_yatf = fun.f_update(w_w_yatf, t_w_w, period_is_wean)
     return w_w_yatf
 
-def f_weanweight_mu(cu1_yatf, cb1_yatf, cx_yatf, ce_yatf, w_w, cf_w_w_dams, ffcfw_wean_dams, ebg_dams, foo, days_period, lact_propn, period_between_joinscan, period_between_scanbirth, period_between_birthwean, period_is_wean):
-    ##Carry forward WWt increment	
-    d_cf_w_w = f_carryforward_u1(cu1_yatf[17, ...], ebg_dams, False, period_between_joinscan, period_between_scanbirth, period_between_birthwean, days_period, lact_propn)
+def f_weanweight_mu(cu1, cb1, cx, ce, nyatf, w_w, cf_w_w_dams, ffcfw_wean_dams, ebg_dams, foo, foo_ave_start, days_period, day_of_lactation
+                    , period_between_joinscan, period_between_scanbirth, period_between_birthwean, period_is_wean):
+    ##Calculate average FOO to end of this period
+    foo_ave_end = fun.f_divide(foo_ave_start * day_of_lactation + foo * days_period, day_of_lactation + days_period)
+    ##Carry forward WWt increment
+    d_cf_w_w = f_carryforward_u1(cu1[17, ...], ebg_dams, False, period_between_joinscan, period_between_scanbirth, period_between_birthwean, days_period)
     ##Increment the total Carry forward WWt
     cf_w_w_dams = cf_w_w_dams + d_cf_w_w
-    ##set WWt = yatf weight at weaning	
-    t_w_w = (cf_w_w_dams + cu1_yatf[17, -1, ...] + cu1_yatf[17, 0, ...] * ffcfw_wean_dams + cu1_yatf[17, 5, ...] * foo + cu1_yatf[17, 6, ...] * foo** 2 + cb1_yatf[17, ...] + cx_yatf[17, ...] + ce_yatf[17, ...])
+    ##add intercept, impact of dam LW at weaning, FOO, BTRT, gender and dam age effects to the carry forward value
+    t_w_w = (cf_w_w_dams + cu1[17, -1, ...] + cu1[17, 0, ...] * ffcfw_wean_dams + cu1[17, 5, ...] * foo_ave_end
+             + cu1[17, 6, ...] * foo_ave_end ** 2 + cb1[17, ...] + cx[17, ...] + ce[17, ...]) * (nyatf > 0)
     ##Update w_w if it is weaning	
     w_w = fun.f_update(w_w, t_w_w, period_is_wean)
-    return w_w, cf_w_w_dams
+    return w_w, cf_w_w_dams, foo_ave_end
 
 #todo Consider combining into 1 function f_progenyltw
-def f_progenycfw_mu(cu1_yatf, cfw_adj, cf_cfw_dams, ffcfw_birth_dams, ffcfw_birth_std_dams, ebg_dams, days_period, gest_propn, period_between_joinscan, period_between_scanbirth, period_is_birth):
+def f_progenycfw_mu(cu1, cfw_adj, cf_cfw_dams, ffcfw_birth_dams, ffcfw_birth_std_dams, ebg_dams, days_period, gest_propn, period_between_joinscan, period_between_scanbirth, period_is_birth):
     ##impact on progeny CFW of the dam LW profile being different from the standard pattern
     ### LTW coefficients are multiplied by the difference in the LW profile from the standard profile. This only requires representing explicitly for LW at birth because the std LW change is 0. Std pattern is lambing in CS 3, so LW = normal weight
     ##Carry forward CFW increment
-    d_cf_cfw = f_carryforward_u1(cu1_yatf[12, ...], ebg_dams, False, period_between_joinscan, period_between_scanbirth, False, days_period, gest_propn)
+    d_cf_cfw = f_carryforward_u1(cu1[12, ...], ebg_dams, False, period_between_joinscan, period_between_scanbirth, False, days_period, gest_propn)
     ##Increment the total Carry forward CFW
     cf_cfw_dams = cf_cfw_dams + d_cf_cfw
     ##temporary calculation including difference in current dam LW (only used if period is birth)
     ### Birth coefficient multiplied by the difference from the standard pattern rather than absolute weight
-    t_cfw_yatf = (cf_cfw_dams + cu1_yatf[12, -1, ...] + cu1_yatf[12, 0, ...] * (ffcfw_birth_dams - ffcfw_birth_std_dams))
+    t_cfw_yatf = (cf_cfw_dams + cu1[12, -1, ...] + cu1[12, 0, ...] * (ffcfw_birth_dams - ffcfw_birth_std_dams))
     ##Update CFW if it is birth
     cfw_adj = fun.f_update(cfw_adj, t_cfw_yatf, period_is_birth)
     return cfw_adj, cf_cfw_dams
 
-def f_progenyfd_mu(cu1_yatf, fd_adj, cf_fd_dams, ffcfw_birth_dams, ffcfw_birth_std_dams, ebg_dams, days_period, gest_propn, period_between_joinscan, period_between_scanbirth, period_is_birth):
+def f_progenyfd_mu(cu1, fd_adj, cf_fd_dams, ffcfw_birth_dams, ffcfw_birth_std_dams, ebg_dams, days_period, gest_propn, period_between_joinscan, period_between_scanbirth, period_is_birth):
     ##impact on progeny FD of the dam LW profile being different from the standard pattern
     ### LTW coefficients are multiplied by the difference in the LW profile from the standard profile. This only requires representing explicitly for LW at birth because the std LW change is 0. Std pattern is lambing in CS 3, so LW = normal weight
     ##Carry forward FD increment
-    d_cf_fd = f_carryforward_u1(cu1_yatf[13, ...], ebg_dams, False, period_between_joinscan, period_between_scanbirth, False, days_period, gest_propn)
+    d_cf_fd = f_carryforward_u1(cu1[13, ...], ebg_dams, False, period_between_joinscan, period_between_scanbirth, False, days_period, gest_propn)
     ##Increment the total Carry forward FD
     cf_fd_dams = cf_fd_dams + d_cf_fd
     ##temporary calculation including difference in current dam LW (only used if period is birth)
     ### Birth coefficient multiplied by the difference from the standard pattern rather than absolute weight
-    t_fd_yatf = (cf_fd_dams + cu1_yatf[13, -1, ...] + cu1_yatf[13, 0, ...] * (ffcfw_birth_dams - ffcfw_birth_std_dams))
+    t_fd_yatf = (cf_fd_dams + cu1[13, -1, ...] + cu1[13, 0, ...] * (ffcfw_birth_dams - ffcfw_birth_std_dams))
     ##Update FD if it is birth
     fd_adj = fun.f_update(fd_adj, t_fd_yatf, period_is_birth)
     return fd_adj, cf_fd_dams
@@ -1199,18 +1203,24 @@ def f_sire_req(sire_propn_a1e1b1nwzida0e0b0xyg1g0, sire_periods_g0p8, i_sire_rec
 
 
 def f_mortality_base(cd, cg, rc_start, ebg_start, d_nw_max, days_period):
-    return (cd[1, ...] + cd[2, ...] * np.maximum(0, cd[3, ...] - rc_start) * ((cd[16, ...] * d_nw_max) > (ebg_start* cg[18, ...]))) * days_period #mul be days period to convert from mort per day to per period
+    ## a minimum level of mortality per day that is increased if RC is below a threshold and LWG is below a threshold
+    ### i.e. increased mortality only for thin animals that are growing slowly (< 20% of normal growth rate)
+    return (cd[1, ...] + cd[2, ...] * np.maximum(0, cd[3, ...] - rc_start) * ((cd[16, ...] * d_nw_max) > (ebg_start * cg[18, ...]))) * days_period #mul by days period to convert from mort per day to per period
 
 
 def f_mortality_weaner_cs(cd, cg, age, ebg_start, d_nw_max,days_period):
-    return cd[13, ...] * f_ramp(age, cd[15, ...], cd[14, ...]) * ((cd[16, ...] * d_nw_max) > (ebg_start* cg[18, ...]))* days_period #mul be days period to convert from mort per day to per period
+    ## mortality increases (cd[13]) for slow growing young animals (< 20% of normal growth rate).
+    ### mortality does not increase with severity of under-nutrition, simply a switch based on growth rate
+    ### the mortality increment varies with age. Full increment below 300 days (cd[14]) and ramping down to 0 at 365 days (cd[15])
+    return cd[13, ...] * f_ramp(age, cd[15, ...], cd[14, ...]) * ((cd[16, ...] * d_nw_max) > (ebg_start * cg[18, ...]))* days_period #mul by days period to convert from mort per day to per period
 
 
 def f_mortality_dam_cs(cb1, cg, nw_start, ebg, days_period, period_between_birth6wks, gest_propn, sar_mortalitye):
     ##(Twin) Dam mortality in last 6 weeks (preg tox)
-    t_mort = days_period * gest_propn /42 * f_sig(-42 * ebg * cg[18, ...] / nw_start, cb1[4, ...], cb1[5, ...]) #mul be days period to convert from mort per day to per period
+    t_mort = days_period * gest_propn /42 * f_sig(-42 * ebg * cg[18, ...] / nw_start, cb1[4, ...], cb1[5, ...]) #mul by days period to convert from mort per day to per period
     ##If not last 6 weeks then = 0
     mort = t_mort * period_between_birth6wks
+    ##Adjust by sensitivity on dam mortality
     mort = fun.f_sa(mort, sar_mortalitye, sa_type = 4)
     return mort
 
@@ -1415,7 +1425,7 @@ def f_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfoe
         if np.any(period_is_matingend):
             temporary  = np.copy(numbers)
             temporary[:, 0:1, 1:2, ...] += numbers[:, 0:1, 0:1, ...]
-            temporary[:, 0, 0, ...] = 0.00001 #so nm can be an activity without nan. want a small number relative to mortality after allowing for multiple slices getting the small number
+            temporary[:, 0, 0, ...] = 0.00001 #so nm can be an activity without nan. want a small number relative to mortality (after allowing for multiple slices getting the small number)
             numbers = fun.f_update(numbers, temporary, period_is_matingend)
         ###d) birth (account for birth status and if drys are retained)
         if np.any(period_is_birth):
@@ -1440,7 +1450,7 @@ def f_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfoe
 
 
     
-def f_carryforward_u1(cu1, ebg, period_between_joinstartend, period_between_joinscan, period_between_scanbirth, period_between_birthwean, days_period, period_propn):
+def f_carryforward_u1(cu1, ebg, period_between_joinstartend, period_between_joinscan, period_between_scanbirth, period_between_birthwean, days_period, period_propn=1):
     ##Select coefficient to increment the carry forward quantity based on the current period
     ### can only be the coefficient from one of the periods and the later period overwrites the earlier period.
     coeff_cf1 = fun.f_update(0, cu1[1,...], period_between_joinstartend) #note cu1 has already had the first axis (production parameter) sliced when it was passed in
@@ -1886,16 +1896,17 @@ def f_husbandry(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, operations_trigge
 ##Method 1 (still used)- add p and v axis together then sum p axis - this may be a good method for faster computers with more memory
 def f_p2v_std(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tvp=True, days_period_p=1,
             period_is_tvp=True, a_any1_p=1, index_any1tvp=1, a_any2_p=1, index_any2any1tvp=1, sumadj=0):
+    ## convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it can't be converted to float (because int object is not numpy)
     try:
-        days_period_p = days_period_p.astype(
-            'float32')  # convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it cant be converted to float (because int object is not numpy)
+        days_period_p = days_period_p.astype('float32')
     except AttributeError:
         pass
     ##mul everything
     production_ftvpany = (production_p * numbers_p * days_period_p * period_is_tvp
                           * on_hand_tvp * (dvp_pointer_p == index_vp) * (a_any1_p == index_any1tvp)
                           * (a_any2_p == index_any2any1tvp))
-    return np.sum(production_ftvpany, axis=uinp.structure['i_p_pos']-sumadj)  # sum along p axis to leave just a v axis (sumadj is to handle nsire that has a p8 axis at the end)
+    ## sum along p axis to leave just a v axis (sumadj is to handle nsire that has a p8 axis at the end)
+    return np.sum(production_ftvpany, axis=uinp.structure['i_p_pos']-sumadj)
 
 
 # ##Method 4 - loop over v and sum p - this save p and v axis being on the same array but requires lots of looping so isn't much faster
@@ -1935,9 +1946,11 @@ def f_p2v_std(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tv
 #                                                                     production_ftpany[:, :, :, :, :, e1:e1+1, :, :, :, :, :, :, :, :, :, :, :, g:g+1], axis=uinp.structure['i_p_pos'])[1]
 #     return result
 
-##Method 2 (fastest)- sum sections of p axis to leave v (almost like sum if) this is fast because don't need p and v axis one same array
+##Method 2 (fastest)- sum sections of p axis to leave v (almost like sum if) this is fast because don't need p and v axis in same array
 def f_p2v(production_p, dvp_pointer_p=1, numbers_p=1, on_hand_tp=True, days_period_p=1, period_is_tp=True, a_any1_p=1, index_any1tp=1, a_any2_p=1, index_any2any1tp=1):
-    try: days_period_p = days_period_p.astype('float32')  #convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it cant be converted to float (because int object is not numpy)
+    #convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it cant be converted to float (because int object is not numpy)
+    try:
+        days_period_p = days_period_p.astype('float32')
     except AttributeError:
         pass
     ##mul everything - add t,f and p6 axis
