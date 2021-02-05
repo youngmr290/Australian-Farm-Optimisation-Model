@@ -17,6 +17,7 @@ import pandas as pd
 
 ##AFO modules
 import UniversalInputs as uinp
+import StructuralInputs as sinp
 import PropertyInputs as pinp
 
 '''
@@ -34,11 +35,11 @@ interest
 
 #convert pa interest into per cashflow period
 def debit_interest():
-    return (1 + uinp.finance['debit_interest']) ** (1 / len(uinp.structure['cashflow_periods']))
+    return (1 + uinp.finance['debit_interest']) ** (1 / len(sinp.general['cashflow_periods']))
 
 
 def credit_interest():
-    return (1 + uinp.finance['credit_interest']) ** (1 / len(uinp.structure['cashflow_periods']))
+    return (1 + uinp.finance['credit_interest']) ** (1 / len(sinp.general['cashflow_periods']))
 
 
 #################
@@ -46,8 +47,8 @@ def credit_interest():
 #################
 def overheads(params, r_vals):
     overheads=pinp.general['overheads'] 
-    overheads = overheads.squeeze().sum()/ len(uinp.structure['cashflow_periods'])
-    overheads = dict.fromkeys(uinp.structure['cashflow_periods'], overheads)
+    overheads = overheads.squeeze().sum()/ len(sinp.general['cashflow_periods'])
+    overheads = dict.fromkeys(sinp.general['cashflow_periods'], overheads)
     params['overheads'] = overheads
     r_vals['overheads'] = pd.Series(overheads)
 
@@ -56,7 +57,7 @@ def overheads(params, r_vals):
 #################
 
 def finance_rep(r_vals):
-    keys_c = uinp.structure['cashflow_periods']
+    keys_c = sinp.general['cashflow_periods']
     r_vals['keys_c'] = keys_c
     r_vals['opportunity_cost_capital'] = uinp.finance['opportunity_cost_capital']
 

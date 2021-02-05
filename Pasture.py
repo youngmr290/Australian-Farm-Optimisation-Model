@@ -28,6 +28,7 @@ import numpy as np
 import PropertyInputs as pinp
 import StockFunctions as sfun
 import UniversalInputs as uinp
+import StructuralInputs as sinp
 import Functions as fun
 import Periods as per
 import Sensitivity as sen
@@ -43,24 +44,24 @@ def f_pasture(params, r_vals, ev):
     ##phases               #
     ########################
     ## read the rotation phases information from inputs
-    phase_len       = uinp.structure['phase_len']
-    phases_rotn_df  = uinp.structure['phases']
-    pasture_sets    = uinp.structure['pasture_sets']
-    pastures        = uinp.structure['pastures'][pinp.general['pas_inc']]
+    # phase_len       = sinp.general['phase_len']
+    phases_rotn_df  = sinp.phases['phases']
+    pasture_sets    = sinp.landuse['pasture_sets']
+    pastures        = sinp.general['pastures'][pinp.general['pas_inc']]
 
     ########################
     ##constants required   #
     ########################
     ## define some parameters required to size arrays.
-    n_feed_pools    = len(uinp.structure['sheep_pools'])
-    n_dry_groups    = len(uinp.structure['dry_groups'])           # Low & high quality groups for dry feed
-    n_grazing_int   = len(uinp.structure['grazing_int'])          # grazing intensity in the growth/grazing activities
-    n_foo_levels    = len(uinp.structure['foo_levels'])           # Low, medium & high FOO level in the growth/grazing activities
+    n_feed_pools    = len(sinp.general['sheep_pools'])
+    n_dry_groups    = len(sinp.general['dry_groups'])           # Low & high quality groups for dry feed
+    n_grazing_int   = len(sinp.general['grazing_int'])          # grazing intensity in the growth/grazing activities
+    n_foo_levels    = len(sinp.general['foo_levels'])           # Low, medium & high FOO level in the growth/grazing activities
     n_feed_periods  = len(per.f_feed_periods()) - 1
     n_lmu           = len(pinp.general['lmu_area'])
     n_phases_rotn   = len(phases_rotn_df.index)
     n_pasture_types = len(pastures)   #^ need to sort timing of the definition of pastures
-    n_total_seasons = len(pinp.general['i_mask_z']) #used to reshape inputs
+    # n_total_seasons = len(pinp.general['i_mask_z']) #used to reshape inputs
     if pinp.general['steady_state']:
         n_season_types = 1
     else:
@@ -183,16 +184,16 @@ def f_pasture(params, r_vals, ev):
 
     ## create numpy index for param dicts ^creating indexes is a bit slow
     ### the array returned must be of type object, if string the dict keys become a numpy string and when indexed in pyomo it doesn't work.
-    keys_d                       = np.asarray(uinp.structure['dry_groups'])
-    keys_v                       = np.asarray(uinp.structure['sheep_pools'])
+    keys_d                       = np.asarray(sinp.general['dry_groups'])
+    keys_v                       = np.asarray(sinp.general['sheep_pools'])
     keys_f                       = pinp.period['i_fp_idx']
-    keys_g                       = np.asarray(uinp.structure['grazing_int'])
+    keys_g                       = np.asarray(sinp.general['grazing_int'])
     keys_l                       = np.array(pinp.general['lmu_area'].index).astype('str')    # lmu index description
-    keys_o                       = np.asarray(uinp.structure['foo_levels'])
+    keys_o                       = np.asarray(sinp.general['foo_levels'])
     keys_p                       = np.array(per.p_date2_df().index).astype('str')
     keys_r                       = np.array(phases_rotn_df.index).astype('str')
     keys_t                       = np.asarray(pastures)                      # pasture type index description
-    keys_k                       = np.asarray(list(uinp.structure['All']))   #landuse
+    keys_k                       = np.asarray(list(sinp.landuse['All']))   #landuse
     keys_z                       = pinp.f_keys_z()
 
     ### plrk
@@ -415,7 +416,7 @@ def f_pasture(params, r_vals, ev):
         for ix_row in i_phase_germ_dict[pasture].index:
             ix_bool = pd.Series(data=True,index=range(len(phase_germresow_df)))
             for ix_col in range(i_phase_germ_dict[pasture].shape[1]-2):    #-2 because two of the cols are germ and resowing
-                c_set = uinp.structure[i_phase_germ_dict[pasture].iloc[ix_row,ix_col]]
+                c_set = sinp.landuse[i_phase_germ_dict[pasture].iloc[ix_row,ix_col]]
                 ix_bool &= phase_germresow_df.loc[:,ix_col].reset_index(drop=True).isin(c_set) #had to drop index so that it would work (just said false when the index was different between series)
             ### maps the relevant germ scalar and resown bool to the rotation phase
             phase_germresow_df.loc[list(ix_bool),'germ_scalar'] = i_phase_germ_dict[pasture].iloc[ix_row, -2]  #have to make bool into a list for some reason it doesn't like a series

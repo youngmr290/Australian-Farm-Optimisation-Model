@@ -19,6 +19,7 @@ import pyomo.environ as pe
 
 #AFO modules - should only be pyomo modules
 import UniversalInputs as uinp
+import StructuralInputs as sinp
 from CreateModel import model
 import CropPyomo as crppy
 import MachPyomo as macpy
@@ -292,7 +293,7 @@ def coremodel_all():
             Carryover basically represents interest free cash at the start of the year. It requires cash from ND and provides in JF. 
 
         '''
-        c = uinp.structure['cashflow_periods']
+        c = sinp.general['cashflow_periods']
         ##j becomes a list which has 0 as first value and 1 after that. this is then indexed by i and multiplied by previous periods debit and credit.
         ##this means the first period doesn't include the previous debit or credit (because it doesn't exist, because it is the first period) 
         j = [1] * len(c)
@@ -353,7 +354,7 @@ def coremodel_all():
     minus dep (variable and fixed)
     '''
     def profit(model):
-        c = uinp.structure['cashflow_periods']
+        c = sinp.general['cashflow_periods']
         i = len(c) - 1 # minus one because index starts from 0
         return model.v_credit[c[i]]-model.v_debit[c[i]] - model.v_dep - model.v_minroe - (model.v_asset * uinp.finance['opportunity_cost_capital'])  #have to include debit otherwise model selects lots of debit to increase credit, hence cant just maximise credit.
     try:

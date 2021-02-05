@@ -402,16 +402,16 @@ def labour_general(params,r_vals):
 #permanent cost per cashflow period - wage plus super plus workers comp and leave ls (multipled by wage because super and others are %)
 def perm_cost(params, r_vals):
     perm_cost = (uinp.price['permanent_cost'] + uinp.price['permanent_cost'] * uinp.price['permanent_super'] \
-    + uinp.price['permanent_cost'] * uinp.price['permanent_workers_comp'] + uinp.price['permanent_cost'] * uinp.price['permanent_ls_leave']) / len(uinp.structure['cashflow_periods'])
-    perm_cost=dict.fromkeys(uinp.structure['cashflow_periods'], perm_cost)
+    + uinp.price['permanent_cost'] * uinp.price['permanent_workers_comp'] + uinp.price['permanent_cost'] * uinp.price['permanent_ls_leave']) / len(sinp.general['cashflow_periods'])
+    perm_cost=dict.fromkeys(sinp.general['cashflow_periods'], perm_cost)
     params['perm_cost']=perm_cost
     r_vals['perm_cost']=pd.Series(perm_cost)
 
 
 #manager cost per cashflow period
 def manager_cost(params, r_vals):
-    manager_cost = uinp.price['manager_cost'] / len(uinp.structure['cashflow_periods'])
-    manager_cost=dict.fromkeys(uinp.structure['cashflow_periods'], manager_cost)
+    manager_cost = uinp.price['manager_cost'] / len(sinp.general['cashflow_periods'])
+    manager_cost=dict.fromkeys(sinp.general['cashflow_periods'], manager_cost)
     params['manager_cost']=manager_cost
     r_vals['manager_cost']=pd.Series(manager_cost)
 

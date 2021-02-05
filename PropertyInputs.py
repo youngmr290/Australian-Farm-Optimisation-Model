@@ -12,7 +12,7 @@ import pandas as pd
 
 ##Midas modules
 import Functions as fun
-import UniversalInputs as uinp
+import StructuralInputs as sinp
 
 na = np.newaxis
 
@@ -68,7 +68,7 @@ if inputs_from_pickle == False:
         pkl.dump(feedsupply_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
         pasture_inp=dict()
-        for pasture in uinp.structure['pastures'][uinp.structure['pastures_exist']]:
+        for pasture in sinp.general['pastures'][sinp.general['pastures_exist']]:
             pasture_inp[pasture] = fun.xl_all_named_ranges('Property.xlsx', pasture, numpy=True)
         pkl.dump(pasture_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
@@ -116,19 +116,19 @@ len_k3 = sheep_inp['i_k3_len']
 len_k4 = sheep_inp['i_k4_len']
 len_k5 = sheep_inp['i_k5_len']
 len_l = len(general_inp['lmu_area'])
-len_n1 = uinp.structure['i_n1_len']
-len_n3 = uinp.structure['i_n3_len']
+len_n1 = sinp.stock['i_n1_len']
+len_n3 = sinp.stock['i_n3_len']
 len_o = sheep_inp['i_o_len']
 len_p6 = len(period_inp['i_fp_idx'])
+len_r1 = feedsupply_inp['i_r1_len']
 len_s = sheep_inp['i_s_len']
 len_t3 = sheep_inp['i_t3_len']
-len_w1 = uinp.structure['i_w1_len']
-len_w3 = uinp.structure['i_w3_len']
+len_w1 = sinp.stock['i_w1_len']
+len_w3 = sinp.stock['i_w3_len']
 len_w1_cut = int(len_w1 / len_n1)
 len_w3_cut = int(len_w3 / len_n3)
 len_x = sheep_inp['i_x_len']
 len_z = len(general_inp['i_mask_z'])
-
 
 
 ###shapes
@@ -149,10 +149,11 @@ ik3g = (len_i, len_k3, -1)
 ik4g = (len_i, len_k4, -1)
 ik5g = (len_i, len_k5, -1)
 t3Sg = (len_t3, len_s+1, -1) #capital S to indicate this is special eg not normal becasue +1
+r1j0P = (len_r1, len_j0, -1) #capital p to indicate this is just the remaining length of input, it is p axis but input is longer
 
 
 ###pasture
-for t,pasture in enumerate(uinp.structure['pastures'][uinp.structure['pastures_exist']]):
+for t,pasture in enumerate(sinp.general['pastures'][sinp.general['pastures_exist']]):
     inp = pasture_inp[pasture]
     inp['DigRednSenesce'] = np.reshape(inp['DigRednSenesce'], zp6)
     inp['DigDryAve'] = np.reshape(inp['DigDryAve'], zp6)
@@ -173,7 +174,6 @@ sheep_inp['i_density_p6z'] = np.reshape(sheep_inp['i_density_p6z'], zp6)
 sheep_inp['i_husb_operations_triggerlevels_h5h7h2'] = np.reshape(sheep_inp['i_husb_operations_triggerlevels_h5h7h2'], h2h5h7)
 sheep_inp['i_sai_lw_dams_owi'] = np.reshape(sheep_inp['i_sai_lw_dams_owi'], ioW1)
 sheep_inp['i_sai_lw_offs_swix'] = np.reshape(sheep_inp['i_sai_lw_offs_swix'], isxW1)
-
 sheep_inp['i_date_born1st_oig2'] = np.reshape(sheep_inp['i_date_born1st_oig2'], iog)
 sheep_inp['i_date_born1st_idg3'] = np.reshape(sheep_inp['i_date_born1st_idg3'], idg)
 sheep_inp['i_sire_propn_oig1'] = np.reshape(sheep_inp['i_sire_propn_oig1'], iog)
@@ -194,6 +194,8 @@ sheep_inp['i_sales_offset_tsg3'] = np.reshape(sheep_inp['i_sales_offset_tsg3'], 
 sheep_inp['i_target_weight_tsg3'] = np.reshape(sheep_inp['i_target_weight_tsg3'], t3Sg)
 sheep_inp['i_shear_prior_tsg3'] = np.reshape(sheep_inp['i_shear_prior_tsg3'], t3Sg)
 sheep_inp['ia_i_idg2'] = np.reshape(sheep_inp['ia_i_idg2'], idg)
+sheep_inp['i_feedoptions_r1pj0'] = np.reshape(sheep_inp['i_feedoptions_r1pj0'], r1j0P)
+
 
 
 
@@ -236,7 +238,7 @@ def property_inp_sa():
     ##pasture
     ###sav
     general['pas_inc'] = fun.f_sa(general_inp['pas_inc'],sen.sav['pas_inc'],5)
-    for pasture in uinp.structure['pastures'][general['pas_inc']]: #all pasture inputs are adjusted even if a given pasture is not included
+    for pasture in sinp.general['pastures'][general['pas_inc']]: #all pasture inputs are adjusted even if a given pasture is not included
         ###SAM
         pasture_inputs[pasture]['GermStd'] = fun.f_sa(pasture_inp[pasture]['GermStd'], sen.sam[('germ',pasture)])
         pasture_inputs[pasture]['GermScalarLMU'] = fun.f_sa(pasture_inp[pasture]['GermScalarLMU'], sen.sam[('germ_l',pasture)])

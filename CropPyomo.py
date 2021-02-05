@@ -119,7 +119,7 @@ model.v_sell_grain = Var(model.s_crops, model.s_grain_pools, bounds=(0,None), do
 ###alternative would have been to add another key/index/set to the yield parameter that was k, although i suspect this would make it a bit slower due to being bigger but it might be tidyer
 
 def rotation_yield_transfer(model,g,k):
-    # i=uinp.structure['phase_len']-1
+    # i=sinp.general['phase_len']-1
     ##h is a disaggregated version of r, it can be indexed. h[0:i] is the rotation history. Have to check if k==h otherwise when h[0:i] is combined with k you can get the wrong rotation
     return sum(sum(model.p_rotation_yield[r,k,l]*model.v_phase_area[r,l] * model.p_grainpool_proportion[k,g] for r in model.s_phases if model.p_rotation_yield[r,k,l] != 0)for l in model.s_lmus) \
                    

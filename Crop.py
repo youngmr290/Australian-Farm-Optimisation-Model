@@ -36,6 +36,7 @@ import sys
 
 #AFO modules
 import UniversalInputs as uinp
+import StructuralInputs as sinp
 import PropertyInputs as pinp
 import Functions as fun
 import Periods as per
@@ -51,7 +52,7 @@ import Mach as mac
 #phases                #
 ########################
 ##makes a df of all possible rotation phases
-phases_df =uinp.structure['phases']
+phases_df =sinp.phases['phases']
 phases_df2=phases_df.copy() #make a copy so that it doesn't alter the phases df that exists outside this func #todo once season finished check if df2 is getting used anywhere
 phases_df2.columns = pd.MultiIndex.from_product([phases_df2.columns, ['']])  #make the df multi index so that when it merges with other df below the indexs remanin separate (otherwise it turn into a one leveled tuple)
 phases_df3=phases_df.copy() #make a copy so that it doesn't alter the phases df that exists outside this func
@@ -324,8 +325,8 @@ def f_nap_fert_req():
     ##add cont pasture fert req
     fertreq_na = f_cont_pas(fertreq_na.unstack(0))
     ##merge with full df
-    fertreq_na = pd.merge(phases_df2, fertreq_na, how='left', left_on=uinp.cols()[-1], right_index = True) #merge with all the phases, requires because different phases have different application passes
-    fertreq_na = fertreq_na.drop(list(range(uinp.structure['phase_len'])), axis=1, level=0).stack([0]) #drop the segregated landuse cols
+    fertreq_na = pd.merge(phases_df2, fertreq_na, how='left', left_on=uinp.end_col(), right_index = True) #merge with all the phases, requires because different phases have different application passes
+    fertreq_na = fertreq_na.drop(list(range(sinp.general['phase_len'])), axis=1, level=0).stack([0]) #drop the segregated landuse cols
     return fertreq_na
 
 def f_nap_fert_passes():
@@ -337,8 +338,8 @@ def f_nap_fert_passes():
     ##add cont pasture fert req
     passes_na = f_cont_pas(passes_na.unstack(0))
     ##merge with full df
-    passes_na = pd.merge(phases_df2, passes_na, how='left', left_on=uinp.cols()[-1], right_index = True) #merge with all the phases, requires because different phases have different application passes
-    passes_na = passes_na.drop(list(range(uinp.structure['phase_len'])), axis=1, level=0).stack([0]) #drop the segregated landuse cols
+    passes_na = pd.merge(phases_df2, passes_na, how='left', left_on=uinp.end_col(), right_index = True) #merge with all the phases, requires because different phases have different application passes
+    passes_na = passes_na.drop(list(range(sinp.general['phase_len'])), axis=1, level=0).stack([0]) #drop the segregated landuse cols
     return passes_na
 
 def nap_fert_cost(r_vals):
@@ -571,8 +572,8 @@ def seedcost(r_vals):
     phase_cost = phase_cost.reindex(columns, axis=1, level=0)
     phase_cost = phase_cost.stack(level=0).mul(allocation_cz, axis=1).unstack()
     ##merge
-    rot_cost = pd.merge(phases_df3, phase_cost, how='left', left_on=uinp.cols()[-1], right_index = True)
-    seedcost = rot_cost.drop(list(range(uinp.structure['phase_len'])), axis=1).stack([1,2])
+    rot_cost = pd.merge(phases_df3, phase_cost, how='left', left_on=uinp.end_col(), right_index = True)
+    seedcost = rot_cost.drop(list(range(sinp.general['phase_len'])), axis=1).stack([1,2])
     r_vals['seedcost'] = seedcost
     return seedcost
 
@@ -653,12 +654,12 @@ def f_crop_sow():
     '''
     ##sow = arable area
     arable = pinp.crop['arable']
-    cropsow = arable.reindex(pd.MultiIndex.from_product([uinp.structure['C'],arable.index]), axis=0, level=1).droplevel(1)
+    cropsow = arable.reindex(pd.MultiIndex.from_product([sinp.landuse['C'],arable.index]), axis=0, level=1).droplevel(1)
     ##merge to rot phases
-    cropsow = pd.merge(phases_df, cropsow, how='left', left_on=uinp.cols()[-1], right_index = True)
+    cropsow = pd.merge(phases_df, cropsow, how='left', left_on=uinp.end_col(), right_index = True)
     ##add current crop to index
-    cropsow.set_index(uinp.cols()[-1], append=True, inplace=True)
-    crop_sow = cropsow.drop(list(range(uinp.structure['phase_len']-1)), axis=1).stack()
+    cropsow.set_index(uinp.end_col(), append=True, inplace=True)
+    crop_sow = cropsow.drop(list(range(sinp.general['phase_len']-1)), axis=1).stack()
     return crop_sow
 
 #########
@@ -710,7 +711,7 @@ def f_cont_pas(cost_array):
     :param
     cost_array - df with landues axis. this array will be returned with the addition of the continuos pasture landuse
     '''
-    pastures = uinp.structure['pastures'][pinp.general['pas_inc']]
+    pastures = sinp.general['pastures'][pinp.general['pas_inc']]
     ##if cont tedera is in rotion list and tedera is included in the pasture modules then generate the inputs for it
     if any(phases_df.iloc[:,-1].isin(['tc'])) and 'tedera' in pastures:
         germ_df = pinp.pasture_inputs['tedera']['GermPhases']

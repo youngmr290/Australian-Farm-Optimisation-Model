@@ -18,6 +18,7 @@ import time
 import Functions as fun
 import PropertyInputs as pinp
 import UniversalInputs as uinp
+import StructuralInputs as sinp
 import Sensitivity as sen
 
 na=np.newaxis
@@ -175,14 +176,14 @@ def f_c2g(params_c2, y=0, var_pos=0, condition=None, axis=0, dtype=False):
     ##these inputs are used for each param so they don't need to be passed into the function.
     a_c2_c0 = pinp.sheep['a_c2_c0']
     i_g3_inc = pinp.sheep['i_g3_inc']
-    i_mul_g0_c0 = uinp.structure['i_mul_g0c0']
-    i_mul_g1_c0 = uinp.structure['i_mul_g1c0']
-    i_mul_g2_c0 = uinp.structure['i_mul_g2c0']
-    i_mul_g3_c0 = uinp.structure['i_mul_g3c0']
-    i_mask_g0g3 = uinp.structure['i_mask_g0g3']
-    i_mask_g1g3 = uinp.structure['i_mask_g1g3']
-    i_mask_g2g3 = uinp.structure['i_mask_g2g3']
-    i_mask_g3g3 = uinp.structure['i_mask_g3g3']
+    i_mul_g0_c0 = sinp.stock['i_mul_g0c0']
+    i_mul_g1_c0 = sinp.stock['i_mul_g1c0']
+    i_mul_g2_c0 = sinp.stock['i_mul_g2c0']
+    i_mul_g3_c0 = sinp.stock['i_mul_g3c0']
+    i_mask_g0g3 = sinp.stock['i_mask_g0g3']
+    i_mask_g1g3 = sinp.stock['i_mask_g1g3']
+    i_mask_g2g3 = sinp.stock['i_mask_g2g3']
+    i_mask_g3g3 = sinp.stock['i_mask_g3g3']
 
     ##convert params from c2 to c0
     params_c2 = params_c2.astype(float) #this is so that blank cells are converted to nan not none type because none type cant be multiplied etc
@@ -267,10 +268,10 @@ def f_g2g(array_g,group,left_pos=0,swap=False,right_pos=-1,left_pos2=0,right_pos
     '''
 
     i_g3_inc = pinp.sheep['i_g3_inc']
-    i_mask_g0g3 = uinp.structure['i_mask_g0g3']
-    i_mask_g1g3 = uinp.structure['i_mask_g1g3']
-    i_mask_g2g3 = uinp.structure['i_mask_g2g3']
-    i_mask_g3g3 = uinp.structure['i_mask_g3g3']
+    i_mask_g0g3 = sinp.stock['i_mask_g0g3']
+    i_mask_g1g3 = sinp.stock['i_mask_g1g3']
+    i_mask_g2g3 = sinp.stock['i_mask_g2g3']
+    i_mask_g3g3 = sinp.stock['i_mask_g3g3']
 
     ##swap axis if necessary
     if swap:
@@ -377,7 +378,7 @@ def f_btrt0(dstwtr_propn,lss,lstw,lstr): #^this function is inflexible ie if you
     progeny_numbers_b0yg[4,...] = 2 * (3* lstr**2 * (1 - lstr))  #the 2x is because there are 2 progeny surviving in the litter and the 3x because it could be either progeny 1, 2 or 3 that dies
     progeny_numbers_b0yg[5,...] = 3* lstr * (1 - lstr)**2  #the 3x because it could be either progeny 1, 2 or 3 that survives
     ##mul progeny numbers array with number of dams giving birth to that litter size to get the number of progeny surviving per dam giving birth.
-    a_nfoet_b0 = uinp.structure['a_nfoet_b1'][uinp.structure['i_mask_b0_b1']] #create association between l0 and b0
+    a_nfoet_b0 = sinp.stock['a_nfoet_b1'][sinp.stock['i_mask_b0_b1']] #create association between l0 and b0
     btrt_b0yg = progeny_numbers_b0yg * dstwtr_propn[a_nfoet_b0]
     ##add singleton x axis
     btrt_b0xyg = np.expand_dims(btrt_b0yg, axis = tuple(range((uinp.parameters['i_cb0_pos'] + 1), -2))) #note i_cb0_pos refers to b0 position
@@ -420,7 +421,7 @@ def f_btrt0(dstwtr_propn,lss,lstw,lstr): #^this function is inflexible ie if you
 #     lamb_numbers_b1yg[4,...] = (3* pstr**2 * (1 - pstr))  # 3x because it could be either lamb 1, 2 or 3 that dies
 #     lamb_numbers_b1yg[5,...] = 3* pstr * (1 - pstr)**2  #the 3x because it could be either lamb 1, 2 or 3 that survives
 #     ##mul lamb numbers array with lambing percentage to get overall btrt
-#     btrt_b1yg = lamb_numbers_b1yg * dstwtr_l0yg[uinp.structure['a_nfoet_b1'] ]
+#     btrt_b1yg = lamb_numbers_b1yg * dstwtr_l0yg[sinp.stock['a_nfoet_b1'] ]
 #     ##add singleton x axis
 #     btrt_b1nwzida0e0b0xyg = np.expand_dims(btrt_b1yg, axis = tuple(range((uinp.parameters['i_cl1_pos'] + 1), -2))) #note i_cl1_pos refers to b1 position
 #     return btrt_b1nwzida0e0b0xyg
@@ -1051,14 +1052,14 @@ def f_feedsupply(cu3, cu4, cr, feedsupply_std_a1e1b1nwzida0e0b0xyg, paststd_foo_
     ##decimal component of feedsupply
     proportion_a1e1b1nwzida0e0b0xyg = feedsupply_std_a1e1b1nwzida0e0b0xyg % 1
     ##foo as measured
-    paststd_foo_a1e1b1nwzida0e0b0xyg = np.take_along_axis(paststd_foo_a1e1b1j0wzida0e0b0xyg, level_a1e1b1nwzida0e0b0xyg, uinp.structure['i_n_pos'])
-    paststd_foo_next_a1e1b1nwzida0e0b0xyg = np.take_along_axis(paststd_foo_a1e1b1j0wzida0e0b0xyg, next_level_a1e1b1nwzida0e0b0xyg, uinp.structure['i_n_pos'])
+    paststd_foo_a1e1b1nwzida0e0b0xyg = np.take_along_axis(paststd_foo_a1e1b1j0wzida0e0b0xyg, level_a1e1b1nwzida0e0b0xyg, sinp.stock['i_n_pos'])
+    paststd_foo_next_a1e1b1nwzida0e0b0xyg = np.take_along_axis(paststd_foo_a1e1b1j0wzida0e0b0xyg, next_level_a1e1b1nwzida0e0b0xyg, sinp.stock['i_n_pos'])
     foo_a1e1b1nwzida0e0b0xyg = paststd_foo_a1e1b1nwzida0e0b0xyg + proportion_a1e1b1nwzida0e0b0xyg * (paststd_foo_next_a1e1b1nwzida0e0b0xyg - paststd_foo_a1e1b1nwzida0e0b0xyg)
     ##foo corrected to hand shears and estimated height
     foo, hf = f_foo_convert(cu3, cu4, foo_a1e1b1nwzida0e0b0xyg, i_hr_scalar,i_region, i_n_pasture_stage,i_hd_std, legume_a1e1b1nwzida0e0b0xyg, pasture_stage_a1e1b1j0wzida0e0b0xyg, cr)
     ##dmd
-    paststd_dmd_a1e1b1nwzida0e0b0xyg = np.take_along_axis(paststd_dmd_a1e1b1j0wzida0e0b0xyg, level_a1e1b1nwzida0e0b0xyg, uinp.structure['i_n_pos'])
-    paststd_dmd_next_a1e1b1nwzida0e0b0xyg = np.take_along_axis(paststd_dmd_a1e1b1j0wzida0e0b0xyg, next_level_a1e1b1nwzida0e0b0xyg, uinp.structure['i_n_pos'])
+    paststd_dmd_a1e1b1nwzida0e0b0xyg = np.take_along_axis(paststd_dmd_a1e1b1j0wzida0e0b0xyg, level_a1e1b1nwzida0e0b0xyg, sinp.stock['i_n_pos'])
+    paststd_dmd_next_a1e1b1nwzida0e0b0xyg = np.take_along_axis(paststd_dmd_a1e1b1j0wzida0e0b0xyg, next_level_a1e1b1nwzida0e0b0xyg, sinp.stock['i_n_pos'])
     dmd_a1e1b1nwzida0e0b0xyg = paststd_dmd_a1e1b1nwzida0e0b0xyg + proportion_a1e1b1nwzida0e0b0xyg * (paststd_dmd_next_a1e1b1nwzida0e0b0xyg - paststd_dmd_a1e1b1nwzida0e0b0xyg)
     ##proportion of PI that is offered as supp
     supp_propn_a1e1b1nwzida0e0b0xyg = proportion_a1e1b1nwzida0e0b0xyg * (feedsupply_std_a1e1b1nwzida0e0b0xyg > 2) + (feedsupply_std_a1e1b1nwzida0e0b0xyg == 4)   # the proportion of diet if the value is above 2 and equal to 1.0 if fs==4 (at fs 3 sheep have 0 sup and 0 fodder at fs4 sheep have 100% of pi is sup)
@@ -1082,8 +1083,8 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
     else:
         ## relative size and relative condition of the dams at mating are the determinants of conception
         ### the dams being mated are those in slices e1[0] and b1[0] (first cycle, not mated)
-        relsize_mating_e1b1sliced = f_dynamic_slice(relsize_mating, pinp.sheep['i_e1_pos'], 0, 1, uinp.parameters['i_b1_pos'], 0, 1) #take slice from e1 & b1 axis
-        rc_mating_e1b1sliced = f_dynamic_slice(rc_mating, pinp.sheep['i_e1_pos'], 0, 1, uinp.parameters['i_b1_pos'], 0, 1) #take slice from e1 & b1 axis
+        relsize_mating_e1b1sliced = f_dynamic_slice(relsize_mating, sinp.stock['i_e1_pos'], 0, 1, sinp.stock['i_b1_pos'], 0, 1) #take slice from e1 & b1 axis
+        rc_mating_e1b1sliced = f_dynamic_slice(rc_mating, sinp.stock['i_e1_pos'], 0, 1, sinp.stock['i_b1_pos'], 0, 1) #take slice from e1 & b1 axis
         ## probability of at least a given number of foetuses
         crg = crg_doy * f_sig(relsize_mating_e1b1sliced * rc_mating_e1b1sliced, cb1[2, ...], cb1[3, ...])
         ##Set proportions to 0 for dams that gave birth and lost - this is required so that numbers in pp behave correctly
@@ -1092,21 +1093,21 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         t_cr = crg.copy()
         ##probability of a given number of foetuses (calculated from the difference in the cumulative probability)
         slc = [slice(None)] * len(t_cr.shape)
-        slc[uinp.parameters['i_b1_pos']] = slice(1,-1)
-        t_cr[tuple(slc)] = np.maximum(0, f_dynamic_slice(crg, uinp.parameters['i_b1_pos'], 1, -1) - f_dynamic_slice(crg, uinp.parameters['i_b1_pos'], 2, None))    # (difference between '>x' and '>x+1')
+        slc[sinp.stock['i_b1_pos']] = slice(1,-1)
+        t_cr[tuple(slc)] = np.maximum(0, f_dynamic_slice(crg, sinp.stock['i_b1_pos'], 1, -1) - f_dynamic_slice(crg, uinp.parameters['i_b1_pos'], 2, None))    # (difference between '>x' and '>x+1')
         ##Dams that implant (i.e. do not return to service) but don't retain to 3rd trimester are added to 00 slice rather than staying in NM slice
         ###Number is based on a proportion (cf[5]) of the ewes that implant (propn_preg) losing their foetuses/embryos
         ###The number can't be more than the number of ewes that are not pregnant in the 3rd trimester (1 - propn_preg).
-        propn_pregnant = f_dynamic_slice(crg, uinp.parameters['i_b1_pos'], 2, 3)
-        slc[uinp.parameters['i_b1_pos']] = slice(1,2)
+        propn_pregnant = f_dynamic_slice(crg, sinp.stock['i_b1_pos'], 2, 3)
+        slc[sinp.stock['i_b1_pos']] = slice(1,2)
         t_cr[tuple(slc)] = np.minimum((cf[5, ...] / (1 - cf[5, ...])) * propn_pregnant, 1 - propn_pregnant)
         ##If the period is mating then set conception = temporary probability array
         conception = t_cr * period_is_mating
         ##Subtract conception of 00, 11, 22 & 33 from the NM slice (in e1[0])
         slc = [slice(None)] * len(conception.shape)
-        slc[uinp.parameters['i_b1_pos']] = slice(0,1)
-        conception[tuple(slc)] = -np.sum(f_dynamic_slice(conception, uinp.parameters['i_b1_pos'],1, None), axis = (uinp.parameters['i_b1_pos']), keepdims=True)
-        temporary = (index_e1 == 0) * np.sum(conception, axis=pinp.sheep['i_e1_pos'], keepdims=True) #sum across e axis into slice e[0]
+        slc[sinp.stock['i_b1_pos']] = slice(0,1)
+        conception[tuple(slc)] = -np.sum(f_dynamic_slice(conception, sinp.stock['i_b1_pos'],1, None), axis = (uinp.parameters['i_b1_pos']), keepdims=True)
+        temporary = (index_e1 == 0) * np.sum(conception, axis=sinp.stock['i_e1_pos'], keepdims=True) #sum across e axis into slice e[0]
         conception = fun.f_update(conception, temporary, (nyatf_b1any == 0)) #Put sum of e1 into slice e1[0] and don't overwrite the slices where nyatf != 0
     return conception
 
@@ -1122,8 +1123,8 @@ def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, nfoet_
         ## relative size and condition score of the dams at mating are the determinants of conception
         ### the dams being mated are those in slices e1[0] and b1[0] (first cycle, not mated)
         ## #todo scan_std probably should change based on date of joining
-        relsize_mating_e1b1sliced = f_dynamic_slice(relsize_mating, pinp.sheep['i_e1_pos'], 0, 1, uinp.parameters['i_b1_pos'], 0, 1) #take slice e1[0] & b1[0]
-        cs_mating_e1b1sliced = f_dynamic_slice(cs_mating, pinp.sheep['i_e1_pos'], 0, 1, uinp.parameters['i_b1_pos'], 0, 1) #take slice e1[0] & b1[0]
+        relsize_mating_e1b1sliced = f_dynamic_slice(relsize_mating, sinp.stock['i_e1_pos'], 0, 1, sinp.stock['i_b1_pos'], 0, 1) #take slice e1[0] & b1[0]
+        cs_mating_e1b1sliced = f_dynamic_slice(cs_mating, sinp.stock['i_e1_pos'], 0, 1, sinp.stock['i_b1_pos'], 0, 1) #take slice e1[0] & b1[0]
         ##Adjust standard scanning percentage based on relative size (to reduce scanning percentage of younger animals)
         scan_std = scan_std * relsize_mating_e1b1sliced
         ##Slope of the RR vs CS relationship based on time of the year
@@ -1131,27 +1132,27 @@ def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, nfoet_
         ##Reproduction rate for dams as if mated for the number of cycles in the calibration data.
         repro_rate = scan_std + (cs_mating_e1b1sliced - 3) * slope
         ###remove singleton b1 axis by squeezing because it is replaced by the l0 axis (the proportions generated in f_DSTw)
-        repro_rate = np.squeeze(repro_rate, axis=uinp.parameters['i_b1_pos'])
+        repro_rate = np.squeeze(repro_rate, axis=sinp.stock['i_b1_pos'])
         ##Conception - propn dry/single/twin for given repro rate
         ### Return the litter size proportion for 1 cycle
         ### The proportions returned are in axis -1 and needs the slices altered (shape of l0 to b1) and moving to b1 position.
-        t_cr = np.moveaxis(f_DSTw(repro_rate, uinp.sheep['i_scan_coeff_cycles'])[...,uinp.structure['a_nfoet_b1']], -1, uinp.parameters['i_b1_pos']) #move the l0 axis into the b1 position. and expand to b1 size.
+        t_cr = np.moveaxis(f_DSTw(repro_rate, uinp.sheep['i_scan_coeff_cycles'])[...,sinp.stock['a_nfoet_b1']], -1, sinp.stock['i_b1_pos']) #move the l0 axis into the b1 position. and expand to b1 size.
         ##Set proportions to 0 for dams that gave birth and lost - this is required so that numbers in pp behave correctly
         t_cr *= (nfoet_b1any == nyatf_b1any)
         ##Dams that implant (i.e. do not return to service) but don't retain to 3rd trimester are added to 00 slice rather than staying in NM slice
         ###Number is based on a proportion (cf[5]) of the ewes that implant (propn_preg) losing their foetuses/embryos
         ###The number can't be more than the number of ewes that are not pregnant in the 3rd trimester (1 - propn_preg).
-        propn_pregnant = np.sum(f_dynamic_slice(t_cr, uinp.parameters['i_b1_pos'], 2, None), axis = uinp.parameters['i_b1_pos'], keepdims = True)
+        propn_pregnant = np.sum(f_dynamic_slice(t_cr, sinp.stock['i_b1_pos'], 2, None), axis = uinp.parameters['i_b1_pos'], keepdims = True)
         slc = [slice(None)] * len(t_cr.shape)
-        slc[uinp.parameters['i_b1_pos']] = slice(1,2)
+        slc[sinp.stock['i_b1_pos']] = slice(1,2)
         t_cr[tuple(slc)] = np.minimum((cf[5, ...] / (1 - cf[5, ...])) * propn_pregnant, 1 - propn_pregnant)
         ##If the period is mating then set conception = temporary probability array
         conception = t_cr * period_is_mating
         ##Subtract conception of 00, 11, 22 & 33 from the NM slice (in e1[0])
         slc = [slice(None)] * len(conception.shape)
-        slc[uinp.parameters['i_b1_pos']] = slice(0,1)
-        conception[tuple(slc)] = -np.sum(f_dynamic_slice(conception, uinp.parameters['i_b1_pos'],1, None), axis = (uinp.parameters['i_b1_pos']), keepdims=True)
-        temporary = (index_e1 == 0) * np.sum(conception, axis=pinp.sheep['i_e1_pos'], keepdims=True)  # sum across e axis into slice e[0]
+        slc[sinp.stock['i_b1_pos']] = slice(0,1)
+        conception[tuple(slc)] = -np.sum(f_dynamic_slice(conception, sinp.stock['i_b1_pos'],1, None), axis = (uinp.parameters['i_b1_pos']), keepdims=True)
+        temporary = (index_e1 == 0) * np.sum(conception, axis=sinp.stock['i_e1_pos'], keepdims=True)  # sum across e axis into slice e[0]
         conception = fun.f_update(conception, temporary, (nyatf_b1any == 0))  #Put sum of e1 into slice e1[0] and don't overwrite the slices where nyatf != 0
     return conception
 
@@ -1208,7 +1209,7 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, w_b_exp_y, period_is_birth, c
     ##add sensitivity
     mortalityd_yatf = fun.f_sa(mortalityd_yatf, sar_mortalityp, sa_type = 4)
     ##dam mort due to large progeny (dystocia)
-    mortalityd_dams = fun.f_divide(np.mean(mortalityd_yatf, axis=uinp.parameters['i_x_pos'], keepdims=True) * cd[21,...], nfoet_b1)  #returns 0 mort if there is 0 nfoet - this handles div0 error
+    mortalityd_dams = fun.f_divide(np.mean(mortalityd_yatf, axis=sinp.stock['i_x_pos'], keepdims=True) * cd[21,...], nfoet_b1)  #returns 0 mort if there is 0 nfoet - this handles div0 error
     ##Progeny losses due to large progeny (dystocia) - so there is no double counting of progeny loses associated with dam mortality
     mortalityd_yatf = mortalityd_yatf * (1- cd[21,...])
     ##Exposure index
@@ -1283,9 +1284,9 @@ def f_period_start_prod(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len,
 #     ##make sure numbers and var are same shape - this is required for the np.average func below
 #     numbers, var_start = np.broadcast_arrays(numbers,var_start)
 #     ##a) Calculate temporary values as if start of FVP, only required if n axis is active
-#     if uinp.structure['i_n1_len'] >= uinp.structure['i_w1_len']:
+#     if sinp.stock['i_n1_len'] >= sinp.stock['i_w1_len']:
 #         temporary = var_start #this is done to ensure that temp has the same size as var. In the next line np.diagonal removes the n axis so it is added back in using the expand function, but that is a singleton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
-#         temporary[...] = np.expand_dims(np.rollaxis(var_start.diagonal(axis1= uinp.structure['i_w_pos'], axis2= uinp.structure['i_n_pos']),-1,uinp.structure['i_w_pos']), uinp.structure['i_n_pos']) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
+#         temporary[...] = np.expand_dims(np.rollaxis(var_start.diagonal(axis1= sinp.stock['i_w_pos'], axis2= sinp.stock['i_n_pos']),-1,sinp.stock['i_w_pos']), sinp.stock['i_n_pos']) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
 #         ##Update if the period is start of a FVP
 #         var_start = fun.f_update(var_start, temporary, period_is_startfvp)
 #     ##b) Calculate temporary values as if period_is_break
@@ -1308,28 +1309,28 @@ def f_condensed(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp
         ### np.diagonal removes the n axis so it is added back in using the expand function, but that is a singleton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
         if i_n_len >= i_w_len:
             ####this method was the way we first tried - no longer used (might be used later if we add nutrient options back in)
-            temporary[...] = np.expand_dims(np.rollaxis(temporary.diagonal(axis1= uinp.structure['i_w_pos'], axis2= uinp.structure['i_n_pos']),-1,uinp.structure['i_w_pos']), uinp.structure['i_n_pos']) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
+            temporary[...] = np.expand_dims(np.rollaxis(temporary.diagonal(axis1= sinp.stock['i_w_pos'], axis2= sinp.stock['i_n_pos']),-1,sinp.stock['i_w_pos']), sinp.stock['i_n_pos']) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
         else:
             ###add high pattern
             temporary[...] = np.mean(
-                f_dynamic_slice(var, uinp.structure['i_w_pos'], int(i_n_len ** i_n_fvp_period), int(i_n_len ** i_n_fvp_period) + int(i_w_len / 10)), uinp.structure['i_w_pos'],
+                f_dynamic_slice(var, sinp.stock['i_w_pos'], int(i_n_len ** i_n_fvp_period), int(i_n_len ** i_n_fvp_period) + int(i_w_len / 10)), sinp.stock['i_w_pos'],
                 keepdims=True)  # average of the top lw patterns
             ###add mid pattern (w 0 - 27) - use slice method in case w axis changes position (cant use MRYs dynamic slice function because we are assigning)
             sl = [slice(None)] * temporary.ndim
-            sl[uinp.structure['i_w_pos']] = slice(0, int(i_n_len ** i_n_fvp_period))
-            temporary[tuple(sl)] = f_dynamic_slice(var, uinp.structure['i_w_pos'], 0, 1)  # the pattern that is feed supply 1 (median) for the entire year (the top w pattern)
+            sl[sinp.stock['i_w_pos']] = slice(0, int(i_n_len ** i_n_fvp_period))
+            temporary[tuple(sl)] = f_dynamic_slice(var, sinp.stock['i_w_pos'], 0, 1)  # the pattern that is feed supply 1 (median) for the entire year (the top w pattern)
             ###low pattern
-            ind = np.argsort(var, axis=uinp.structure['i_w_pos'])  #sort into production order so we can select the lowest production with mort less than 10% - note sorts in ascending order
-            var_sorted = np.take_along_axis(var, ind, axis=uinp.structure['i_w_pos'])
-            numbers_start_sorted = np.take_along_axis(numbers_start_fvp0, ind, axis=uinp.structure['i_w_pos'])
-            numbers_sorted = np.take_along_axis(numbers, ind, axis=uinp.structure['i_w_pos'])
+            ind = np.argsort(var, axis=sinp.stock['i_w_pos'])  #sort into production order so we can select the lowest production with mort less than 10% - note sorts in ascending order
+            var_sorted = np.take_along_axis(var, ind, axis=sinp.stock['i_w_pos'])
+            numbers_start_sorted = np.take_along_axis(numbers_start_fvp0, ind, axis=sinp.stock['i_w_pos'])
+            numbers_sorted = np.take_along_axis(numbers, ind, axis=sinp.stock['i_w_pos'])
             low_slice = i_w_len - np.sum(np.sum(numbers_start_sorted, axis=prejoin_tup + (season_tup,), keepdims=True)
                                          / np.sum(numbers_sorted, axis=prejoin_tup + (season_tup,), keepdims=True) > 0.9
-                                         , uinp.structure['i_w_pos'], keepdims=True)  # returns bool if mort is less the 10% then sums the falses which give the index of the first w pattern that has mort less that 10%
+                                         , sinp.stock['i_w_pos'], keepdims=True)  # returns bool if mort is less the 10% then sums the falses which give the index of the first w pattern that has mort less that 10%
             sl = [slice(None)] * temporary.ndim
-            sl[uinp.structure['i_w_pos']] = slice(-int(i_n_len ** i_n_fvp_period), None)
+            sl[sinp.stock['i_w_pos']] = slice(-int(i_n_len ** i_n_fvp_period), None)
             ## production level of the lowest nutrition profile that has a mortality less than 10% for the year
-            temporary[tuple(sl)] = np.take_along_axis(var_sorted, low_slice, uinp.structure['i_w_pos'])
+            temporary[tuple(sl)] = np.take_along_axis(var_sorted, low_slice, sinp.stock['i_w_pos'])
         ###Update if the period is start of year (shearing for offs and prejoining for dams)
         var = fun.f_update(var, temporary, period_is_startfvp0)
 
@@ -1357,9 +1358,9 @@ def f_period_start_nums(numbers, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_
 # def f_period_start_nums(numbers, prejoin_tup, season_tup, period_is_startfvp, period_is_break, season_propn_z, group=None, numbers_initial_repro=0, period_is_prejoin=None):
 #     ##a) reallocate between w and n if the period is start of a FVP
 #     ###Calculate temporary values as if start of FVP - collapse n back to standard level (n axis is populated due to mortality)
-#     if uinp.structure['i_n1_len'] >= uinp.structure['i_w1_len']:
+#     if sinp.stock['i_n1_len'] >= sinp.stock['i_w1_len']:
 #         temporary = numbers #this is done to ensure that temp has the same size as var. In the next line np.diagonal removes the n axis so it is added back in using the expand function, but that is a singleton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
-#         temporary[...] = np.expand_dims(np.rollaxis(numbers.diagonal(axis1= uinp.structure['i_w_pos'], axis2= uinp.structure['i_n_pos']),-1,uinp.structure['i_w_pos']), uinp.structure['i_n_pos']) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
+#         temporary[...] = np.expand_dims(np.rollaxis(numbers.diagonal(axis1= sinp.stock['i_w_pos'], axis2= sinp.stock['i_n_pos']),-1,sinp.stock['i_w_pos']), sinp.stock['i_n_pos']) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
 #         numbers = fun.f_update(numbers, temporary, period_is_startfvp)
 #     ##b) reallocate for season type
 #     temporary = np.sum(numbers, axis = season_tup, keepdims=True)  * season_propn_z  #Calculate temporary values as if period_is_break
@@ -1385,7 +1386,7 @@ def f_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfoe
         ###b) conception - conception is the change in numbers +ve for animals getting pregnancy and -ve in the NM e-0 slice (note the conception for e slice 1 and higher puts the negative numbers in the e-0 nm slice)
         if np.any(period_is_mating):
             temporary = numbers + conception * numbers[:, 0:1, 0:1, ...]  # numbers_dams[..., 0,0, ...] is the NM slice of cycle 0 ie the number of animals yet to be mated (conception will have negative value in nm slice)
-            numbers = fun.f_update(numbers, temporary, np.any(period_is_mating, axis=pinp.sheep['i_e1_pos'])) #needs to be previous period else conception is not calculated because numbers happens at beginning of p loop
+            numbers = fun.f_update(numbers, temporary, np.any(period_is_mating, axis=sinp.stock['i_e1_pos'])) #needs to be previous period else conception is not calculated because numbers happens at beginning of p loop
         ###at the end of mating move any remaining numbers from nm to 00 slice (note only the nm slice for e-0 has numbers - this is handled in the conception function)
         ###Set temporary to copy of current numbers
         if np.any(period_is_matingend):
@@ -1396,7 +1397,7 @@ def f_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfoe
         ###d) birth (account for birth status and if drys are retained)
         if np.any(period_is_birth):
             dam_propn_birth_b1 = f_comb(nfoet_b1, nyatf_b1) * (1 - mortality_yatf) ** nyatf_b1 * mortality_yatf ** (nfoet_b1 - nyatf_b1) # the proportion of dams of each LSLN based on (progeny) mortality
-            temp = np.sum(dam_propn_birth_b1 * gender_propn_x, axis=uinp.parameters['i_x_pos'], keepdims=True) * numbers[:,:,uinp.structure['a_prepost_b1'],...] #have to average x axis so that it is not active for dams - times by gender propn to give approx weighting (ie because offs are not usually entire males so they will get low weighting)
+            temp = np.sum(dam_propn_birth_b1 * gender_propn_x, axis=sinp.stock['i_x_pos'], keepdims=True) * numbers[:,:,sinp.stock['a_prepost_b1'],...] #have to average x axis so that it is not active for dams - times by gender propn to give approx weighting (ie because offs are not usually entire males so they will get low weighting)
             pp_numbers = fun.f_update(numbers, temp, period_is_birth)  # calculated in the period after birth when progeny mortality due to exposure is calculated
             temp = np.maximum(pinp.sheep['i_drysretained_birth'],np.minimum(1, nyatf_b1)) * pp_numbers
             numbers = fun.f_update(pp_numbers, temp, period_is_birth * (gbal>=2)) # has to happen after the dams are moved due to progeny mortality so that gbal drys are also scaled by drys_retained
@@ -1872,7 +1873,7 @@ def f_p2v_std(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tv
                           * on_hand_tvp * (dvp_pointer_p == index_vp) * (a_any1_p == index_any1tvp)
                           * (a_any2_p == index_any2any1tvp))
     ## sum along p axis to leave just a v axis (sumadj is to handle nsire that has a p8 axis at the end)
-    return np.sum(production_ftvpany, axis=uinp.structure['i_p_pos']-sumadj)
+    return np.sum(production_ftvpany, axis=sinp.stock['i_p_pos']-sumadj)
 
 
 # ##Method 4 - loop over v and sum p - this save p and v axis being on the same array but requires lots of looping so isn't much faster
@@ -1888,7 +1889,7 @@ def f_p2v_std(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tv
 #     shape = production_ftpany.shape[0:3] + (np.max(dvp_pointer_p)+1,) + production_ftpany.shape[4:]  # bit messy because need v t and all the other axis (but not p)
 #     final=np.zeros(shape).astype('float32')
 #     for i in range(np.max(dvp_pointer_p)+1):
-#         temp_prod = np.sum(production_ftpany * (dvp_pointer_p==i), axis=uinp.structure['i_p_pos'])
+#         temp_prod = np.sum(production_ftpany * (dvp_pointer_p==i), axis=sinp.stock['i_p_pos'])
 #         final[:,:,:,i,...] = temp_prod  #asign to correct v slice
 #     return final
 
@@ -1909,7 +1910,7 @@ def f_p2v_std(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tv
 #     for e1 in range(shape[-13]):
 #         for g in range(shape[-1]):
 #             result[:,:,:,:, :, e1:e1+1, :, :, :, :, :, :, :, :, :, :, :, g:g+1] = npi.GroupBy(dvp_pointer_p[:, 0, e1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, g], axis=0).sum(
-#                                                                     production_ftpany[:, :, :, :, :, e1:e1+1, :, :, :, :, :, :, :, :, :, :, :, g:g+1], axis=uinp.structure['i_p_pos'])[1]
+#                                                                     production_ftpany[:, :, :, :, :, e1:e1+1, :, :, :, :, :, :, :, :, :, :, :, g:g+1], axis=sinp.stock['i_p_pos'])[1]
 #     return result
 
 ##Method 2 (fastest)- sum sections of p axis to leave v (almost like sum if) this is fast because don't need p and v axis in same array
@@ -1927,7 +1928,7 @@ def f_p2v(production_p, dvp_pointer_p=1, numbers_p=1, on_hand_tp=True, days_peri
     ##basically we are summing the p axis for each dvp. the tricky part (which has caused the requirement for the loops) is that dvp pointer is not the same for each axis eg dvp is effected by e axis.
     ##so we need to loop though all the axis in the dvp and sum p and assign to a final array.
     ##if the axis is size 1 (ie singleton) then we want to take all of that axis ie ':' because just because the dvp pointer has singleton doesnt mean param array has singleton so need to take all slice of the param (unless that is an active dvp axis because that means dvp timing may differ for different slices along that axis so it must be summed in the loop)
-    shape = production_ftpany.shape[0:uinp.structure['i_p_pos']] + (np.max(dvp_pointer_p)+1,) + production_ftpany.shape[uinp.structure['i_p_pos']+1:]  # bit messy because need v t and all the other axis (but not p)
+    shape = production_ftpany.shape[0:sinp.stock['i_p_pos']] + (np.max(dvp_pointer_p)+1,) + production_ftpany.shape[sinp.stock['i_p_pos']+1:]  # bit messy because need v t and all the other axis (but not p)
     result=np.zeros(shape).astype('float32')
     shape = dvp_pointer_p.shape
     for a1 in range(shape[-14]):
@@ -1960,7 +1961,7 @@ def f_p2v(production_p, dvp_pointer_p=1, numbers_p=1, on_hand_tp=True, days_peri
                                                             g_slc = slice(g, g + 1) if shape[-1] > 1 else slice(0, None)
                                                             result[..., a1_slc, e1_slc, b1_slc, n_slc, w_slc, z_slc, i_slc, d_slc, a0_slc, e0_slc, b0_slc, x_slc, y_slc, g_slc] \
                                                                 = np.add.reduceat(production_ftpany[..., a1_slc, e1_slc, b1_slc, n_slc, w_slc, z_slc, i_slc, d_slc, a0_slc, e0_slc, b0_slc, x_slc, y_slc, g_slc]
-                                                                                  , np.r_[0, np.where(np.diff(dvp_pointer_p[:, a1, e1, b1, n, w, z, i, d, a0, e0, b0, x, y, g]))[0] + 1], axis=uinp.structure['i_p_pos']) #np.r_ basically concats two 1d arrays (so here we are just adding 0 to the start of the array)
+                                                                                  , np.r_[0, np.where(np.diff(dvp_pointer_p[:, a1, e1, b1, n, w, z, i, d, a0, e0, b0, x, y, g]))[0] + 1], axis=sinp.stock['i_p_pos']) #np.r_ basically concats two 1d arrays (so here we are just adding 0 to the start of the array)
     return result
 
 
@@ -1985,7 +1986,7 @@ def f_lw_distribution(ffcfw_condensed_va1e1b1nwzida0e0b0xyg, ffcfw_va1e1b1nwzida
     '''distributing animals on LW at the start of dvp0
     ^ this function will need altering if the dvp_type definition changes'''
     ##add second w axis - the condensed w axis becomes axis -1 and the end of period w stays in the normal place
-    ffcfw_condensed_va1e1b1nwzida0e0b0xygw = fun.f_reshape_expand(np.moveaxis(ffcfw_condensed_va1e1b1nwzida0e0b0xyg,uinp.structure['i_w_pos'],-1), uinp.structure['i_n_pos']-1, right_pos=pinp.sheep['i_z_pos']-1)
+    ffcfw_condensed_va1e1b1nwzida0e0b0xygw = fun.f_reshape_expand(np.moveaxis(ffcfw_condensed_va1e1b1nwzida0e0b0xyg,sinp.stock['i_w_pos'],-1), sinp.stock['i_n_pos']-1, right_pos=sinp.stock['i_z_pos']-1)
     ##Calculate the difference between the 3 (or more if not dvp0) condensed weights and the middle weight (slice 0)
     diff = ffcfw_condensed_va1e1b1nwzida0e0b0xygw - f_dynamic_slice(ffcfw_condensed_va1e1b1nwzida0e0b0xygw, -1, 0, 1)
     ##Calculate the spread that would generate the average weight
@@ -2023,11 +2024,11 @@ def f_create_production_param(group, production_vg, a_kcluster_vg_1=1, index_ktv
         return fun.f_divide(production_vg, numbers_start_vg, dtype=production_vg.dtype)
     elif group=='dams':
         return fun.f_divide(np.sum(production_vg * (a_kcluster_vg_1 == index_ktvg_1) * mask_vg
-                                  , axis = (uinp.parameters['i_b1_pos']-pos_offset, pinp.sheep['i_e1_pos']-pos_offset), keepdims=True)
+                                  , axis = (sinp.stock['i_b1_pos']-pos_offset, sinp.stock['i_e1_pos']-pos_offset), keepdims=True)
                             , np.sum(numbers_start_vg * (a_kcluster_vg_1 == index_ktvg_1),
-                                     axis=(uinp.parameters['i_b1_pos']-pos_offset, pinp.sheep['i_e1_pos']-pos_offset), keepdims=True), dtype=production_vg.dtype)
+                                     axis=(sinp.stock['i_b1_pos']-pos_offset, sinp.stock['i_e1_pos']-pos_offset), keepdims=True), dtype=production_vg.dtype)
     elif group=='offs':
         return fun.f_divide(np.sum(production_vg * (a_kcluster_vg_1 == index_ktvg_1) * (a_kcluster_vg_2 == index_kktvg_2)
-                                  , axis = (uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True)
+                                  , axis = (sinp.stock['i_d_pos'], sinp.stock['i_b0_pos'], sinp.stock['i_e0_pos']), keepdims=True)
                             , np.sum(numbers_start_vg * (a_kcluster_vg_1 == index_ktvg_1) * (a_kcluster_vg_2 == index_kktvg_2),
-                                     axis=(uinp.parameters['i_d_pos'], uinp.parameters['i_b0_pos'], uinp.structure['i_e0_pos']), keepdims=True), dtype=production_vg.dtype)
+                                     axis=(sinp.stock['i_d_pos'], sinp.stock['i_b0_pos'], sinp.stock['i_e0_pos']), keepdims=True), dtype=production_vg.dtype)

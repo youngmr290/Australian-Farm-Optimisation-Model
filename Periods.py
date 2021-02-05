@@ -27,6 +27,7 @@ from dateutil.relativedelta import relativedelta
 
 #AFO modules
 import UniversalInputs as uinp
+import StructuralInputs as sinp
 import PropertyInputs as pinp
 
 
@@ -41,18 +42,18 @@ def cashflow_periods():
     #empty list
     cashflow_period_dates = []
     #start date of the current cashflow period (ie start of year)
-    start = uinp.structure['i_date_assetvalue']
+    start = sinp.general['i_date_assetvalue']
     cashflow_period_dates.append(start)
     date = start
     #upper date of the current cashflow period (ie end of year)
     #upper = lower + relativedelta(days=(365 / len(inp.structure['cashflow_periods'])))
-    while i < len(uinp.structure['cashflow_periods']):
-        cash_period_length = relativedelta(days=(365 / len(uinp.structure['cashflow_periods'])))
+    while i < len(sinp.general['cashflow_periods']):
+        cash_period_length = relativedelta(days=(365 / len(sinp.general['cashflow_periods'])))
         date += cash_period_length
         cashflow_period_dates.append(date)
         i += 1
     #made df this way so the columns could be diff len
-    cashflow_dates = pd.DataFrame({'start date' : pd.Series(cashflow_period_dates),'cash period' : pd.Series(uinp.structure['cashflow_periods'])})
+    cashflow_dates = pd.DataFrame({'start date' : pd.Series(cashflow_period_dates),'cash period' : pd.Series(sinp.general['cashflow_periods'])})
     return cashflow_dates
 
 
@@ -124,7 +125,7 @@ def p_dates_df():
                 #if not a harvest period then just simply add 1 month and append that date to the list
                 if date < harv_date or date > period_end_date(harv_date,harv_period_lengths):
                     period_start_dates.append(date)
-                    date += uinp.structure['labour_period_len']
+                    date += relativedelta(months=sinp.general['labour_period_len'])
                 #if harvest period then append the harvest dates to the list and adjust the loop counter (date) to the start of the following time period (time period is determined by standard period length in the input sheet).
                 else:
                     start = harv_date
@@ -133,7 +134,7 @@ def p_dates_df():
                         period_start_dates.append(period_dates(start, length)[i])
                     #end period can't be included in harvest date function above because then when that function is used to determine labour hours available in each period the period following harvest will also get more hours.
                     period_start_dates.append(period_end_date(start, length))
-                    date = period_end_date(start, length) + uinp.structure['labour_period_len'] + relativedelta(day=1)
+                    date = period_end_date(start, length) + relativedelta(months=sinp.general['labour_period_len']) + relativedelta(day=1)
             #if seed period then append the seed dates to the list and adjust the loop counter (date) to the start of the following time period (time period is determined by standard period length in the input sheet).
             else:
                 start = wet_seeding_start_date()
@@ -141,7 +142,7 @@ def p_dates_df():
                 for i in range(len(period_dates(start, length))):
                     period_start_dates.append(period_dates(start, length)[i])
                 period_start_dates.append(period_end_date(start, length))
-                date = period_end_date(start, length) + uinp.structure['labour_period_len'] + relativedelta(day=1)
+                date = period_end_date(start, length) + relativedelta(months=sinp.general['labour_period_len']) + relativedelta(day=1)
         #add the list of dates to the labour dataframe
         periods['date']=period_start_dates
         ##modify index

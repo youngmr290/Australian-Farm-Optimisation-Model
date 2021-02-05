@@ -11,6 +11,7 @@ import pandas as pd
 import Functions as fun
 import Sensitivity as sen
 import UniversalInputs as uinp
+import StructuralInputs as sinp
 import PropertyInputs as pinp
 from CreateModel import model
 import pyomo.environ as pe
@@ -64,7 +65,7 @@ def boundarypyomo_local():
         ##rot
         rot_lobound_rl[0,2] = 150
         ##sr - carry cap of each ha of each pasture
-        for t, pasture in enumerate(uinp.structure['pastures'][pinp.general['pas_inc']]):
+        for t, pasture in enumerate(sinp.general['pastures'][pinp.general['pas_inc']]):
             pasture_dse_carry[pasture] = pinp.sheep['i_sr_constraint_t'][t]
 
         ##total pas area

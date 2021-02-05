@@ -20,16 +20,16 @@ import timeit
 
 
 #AFO modules
-import UniversalInputs as uinp
+import StructuralInputs as sinp
 import PropertyInputs as pinp
 
 def landuses_phases(params,report):
     '''function to store phases into report dictionary'''
-    phases=uinp.structure['phases']
+    phases=sinp.phases['phases']
     phases_rk = phases.set_index(5, append=True) #add landuse as index level
     params['phases_rk'] = dict.fromkeys(phases_rk.index,1)
-    report['phases']=uinp.structure['phases']
-    report['all_pastures']=uinp.structure['All_pas'] #all_pas2 includes the cont pasture landuses
+    report['phases']=sinp.phases['phases']
+    report['all_pastures']=sinp.landuse['All_pas'] #all_pas2 includes the cont pasture landuses
 
 
 def rot_params(params):

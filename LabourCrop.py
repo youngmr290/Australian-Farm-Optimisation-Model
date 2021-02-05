@@ -20,6 +20,7 @@ import Periods as per
 import Mach as mac
 import PropertyInputs as pinp
 import UniversalInputs as uinp
+import StructuralInputs as sinp
 
 na = np.newaxis
 
@@ -195,7 +196,7 @@ def f_chem_app_time_ha():
 #crop monitoring time     #
 ###########################
 
-def f_crop_monitoring(params):
+def f_crop_monitoring():
     '''
     Returns
     -------
@@ -228,10 +229,10 @@ def f_crop_monitoring(params):
     keys_p5 = per.p_dates_df().index[:-1]
     cols = pd.MultiIndex.from_product([keys_p5, keys_z])
     variable_crop_monitor = pd.DataFrame(variable_crop_monitor_kpz, index=variable_crop_monitor.index, columns=cols)
-    phases_df = uinp.structure['phases']
+    phases_df = sinp.phases['phases']
     phases_df.columns = pd.MultiIndex.from_product([phases_df.columns,['']])
-    variable_crop_monitor = pd.merge(phases_df, variable_crop_monitor, how='left', left_on=uinp.cols()[-1], right_index = True) #merge with all the phases
-    variable_crop_monitor = variable_crop_monitor.drop(list(range(uinp.structure['phase_len'])), axis=1).stack(0)
+    variable_crop_monitor = pd.merge(phases_df, variable_crop_monitor, how='left', left_on=uinp.end_col(), right_index = True) #merge with all the phases
+    variable_crop_monitor = variable_crop_monitor.drop(list(range(sinp.general['phase_len'])), axis=1).stack(0)
 
     ##fixed monitoring
     ###adjust from hrs/week to hrs/period

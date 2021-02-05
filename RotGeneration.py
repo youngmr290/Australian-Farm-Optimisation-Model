@@ -21,7 +21,7 @@ from openpyxl import load_workbook
 
 #MIDAS modules
 import Functions as fun
-import UniversalInputs as uinp
+import StructuralInputs as sinp
 import PropertyInputs as pinp
 
 ##if you want to use a customised list of rotations this can be set to false - populate the array further down the module.
@@ -416,7 +416,7 @@ The sequence of the rotation is irrelevant ie b b w w is the same as w b b w.
 '''
 
 ##enter the rotaions you want represented in the model
-ds_user_rot_init = np.array([['ar', 'a', 'w', 'w', 'r', 'b']
+ds_user_rot_init = np.array([['ar', 'a', 'w', 'w', 'r', 'b'] #todo should this become an input?
                              ,['r', 'w', 'b', 'r', 'w', 'b']])
 
 if customised_rotations:
@@ -432,7 +432,7 @@ if customised_rotations:
         for s_user_rot in ds_user_rot:
             req=1
             for i in range(np.size(s_user_rot)):
-                req*=uinp.structure[s_rot_phase[i]].issuperset({s_user_rot[i]})
+                req*=sinp.landuse[s_rot_phase[i]].issuperset({s_user_rot[i]})
             ix_bool[ix_phase]=max(req,ix_bool[ix_phase]) 
     phases=phases[ix_bool>0]
 
@@ -473,9 +473,9 @@ for rot_phase in phases:
         rot_phase_prov=[]
         l_hist=[]
         for i in range(len(hist)):
-            l_hist.append(uinp.structure[hist[i]]) #deterimines the sets in each constraint
-            rot_phase_req.append(uinp.structure[rot_phase[i]]) #appends each set that corresponds to the letters in the rot_phase (required)
-            rot_phase_prov.append(uinp.structure[rot_phase[i+1]]) #appends each set that corresponds to the letters in the rot_phase (provides)
+            l_hist.append(sinp.landuse[hist[i]]) #deterimines the sets in each constraint
+            rot_phase_req.append(sinp.landuse[rot_phase[i]]) #appends each set that corresponds to the letters in the rot_phase (required)
+            rot_phase_prov.append(sinp.landuse[rot_phase[i+1]]) #appends each set that corresponds to the letters in the rot_phase (provides)
         req=1
         prov=-1
         for i in range(len(hist)):
@@ -516,38 +516,38 @@ The sets are altered for yr1 - this is done using if statements which make the s
 #         for i in range(len(hist)):
 #             ##in yr 1 we don't want ar to provide a ie we don't want ar to be in the a set (same for fodder of in the E set)
 #             if  rot_prov[i] == 'A':
-#                 prov_set = {'a'}#uinp.structure['A1']
+#                 prov_set = {'a'}#sinp.landuse['A1']
 #             elif  rot_prov[i] == 'S':
 #                 prov_set = {'s'}
 #             elif  rot_prov[i] == 'M':
 #                 prov_set = {'m'}
 #             elif  rot_prov[i] == 'E':
-#                 prov_set = uinp.structure['E1']
-#             else: prov_set = uinp.structure[rot_prov[i]]
+#                 prov_set = sinp.landuse['E1']
+#             else: prov_set = sinp.landuse[rot_prov[i]]
 #             rot_phase_prov.append(prov_set) #appends each set that corresponds to the letters in the rot_phase (required)
 #             ##in yr 1 we don't want ar to provide a ie we don't want ar to be in the a set (same for fodder of in the E set)
 #             if rot_phase[i] == 'A':
-#                 req_set = {'a'}#uinp.structure['A1']
+#                 req_set = {'a'}#sinp.landuse['A1']
 #             elif  rot_phase[i] == 'S':
 #                 req_set = {'s'}
 #             elif  rot_phase[i] == 'M':
 #                 req_set = {'m'}
 #             elif rot_phase[i] == 'E':
-#                 req_set = uinp.structure['E1']
-#             else: req_set = uinp.structure[rot_phase[i]]
+#                 req_set = sinp.landuse['E1']
+#             else: req_set = sinp.landuse[rot_phase[i]]
 #             rot_phase_req.append(req_set) #appends each set that corresponds to the letters in the rot_phase (required)
 #             ##in yr 1 we don't want ar to provide a ie we don't want ar to be in the a set (same for fodder of in the E set) so the hist must be altered in yr1
 #             if  hist[i] == 'A':
-#                 hist_set = {'a'}#uinp.structure['A1']
+#                 hist_set = {'a'}#sinp.landuse['A1']
 #             elif  hist[i] == 'S':
 #                 hist_set = {'s'}
 #             elif  hist[i] == 'M':
 #                 hist_set = {'m'}
 #             # if i == 3 and hist[i] == 'A':
-#             # hist_set = uinp.structure['A1']
+#             # hist_set = sinp.landuse['A1']
 #             elif  hist[i] == 'E':
-#                 hist_set = uinp.structure['E1']
-#             else: hist_set = uinp.structure[hist[i]]
+#                 hist_set = sinp.landuse['E1']
+#             else: hist_set = sinp.landuse[hist[i]]
 #             l_hist.append(hist_set) #deterimines the sets in each constraint
 #         prov=-1
 #         req=1
