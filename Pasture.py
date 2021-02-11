@@ -34,6 +34,8 @@ import Periods as per
 import Sensitivity as sen
 import PastureFunctions as pfun
 
+#todo Will need to add the foo reduction in the current year for manipulated pasture and a germination reduction in the following year.
+
 def f_pasture(params, r_vals, ev):
     ######################
     ##background vars    #
