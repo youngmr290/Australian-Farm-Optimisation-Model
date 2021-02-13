@@ -353,8 +353,8 @@ def map_excel(params,r_vals):
     # proportion of start foo that senesces during the period, different formula than excel
     grn_senesce_startfoo_ft =1 - ((1 -     i_grn_senesce_daily_ft) **  length_f.reshape(-1,1))
     # average senescence over the period for the growth and consumption
-    grn_senesce_pgrcons_ft  =1 - ((1 -(1 - i_grn_senesce_daily_ft) ** (length_f.reshape(-1,1)+1))
-                                  /        i_grn_senesce_daily_ft-1) / length_f.reshape(-1,1)
+    grn_senesce_pgrcons_ft  =1 - ((1 -(1 - i_grn_senesce_daily_ft) ** (length_f.reshape(-1,1)))
+                                  /        i_grn_senesce_daily_ft)   / length_f.reshape(-1,1)
 
     ##store report vals
     r_vals['pasture_area_rt'] = pasture_rt

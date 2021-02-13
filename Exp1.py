@@ -100,6 +100,7 @@ def exp(row):
 
     ##get trial name - used for outputs
     trial_name = exp_data.index[row][2]
+    print("Starting row %d, %s" %(row, trial_name))
 
     ##updaye sensitivity values
     fun.f_update_sen(row,exp_data,sen.sam,sen.saa,sen.sap,sen.sar,sen.sat,sen.sav)

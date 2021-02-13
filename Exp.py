@@ -116,6 +116,7 @@ for row in range(len(exp_data)):
 
     ##get trial name - used for outputs
     trial_name = exp_data.index[row][2]
+    print("Starting row %d, %s" %(row, trial_name))
 
     ##check to make sure user wants to run this trial - note pyomo is never run without precalcs being run (this could possibly be change by making a more custom function to check only precalc module time and then altering the 'continue' call below)
     if exp_data1.index[row][0] == False or (exp_data1.loc[exp_data1.index[row],'run'].squeeze()==False and force_run==False):

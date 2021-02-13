@@ -1487,40 +1487,61 @@ def f_wool_additional(fd, sl, ss, vm,  pmb, cvfd=0.22, cvsl=0.18):
     return ph, cvh, romaine
 
 def f_woolprice():
-    ##micron price guide percentile to use
+    '''Calculate the micron price guide (MPG) for a range of FD (where the FD is of the fleece component of the clip)
+    Includes sensitivity on the average micron price guide (MPG) and the premium for finer wool
+    The inputs for the function are:
+    i_woolp_mpg_range_w5 - the percentile values for which the MPG is input
+    i_woolp_mpg_w5 - the MPG for the base FD at each of the percentile levels
+    i_woolp_mpg_percentile - the percentile level to use for this trial
+    i_woolp_fdprem_range_w5 - the percentile values for which the FD premium is input
+    i_woolp_fdprem_w4w5 - the FD premium at each of the percentile levels
+    i_woolp_fdprem_percentile - the percentile level to use for this trial
+    '''
+    ##input value for micron price guide percentile to use (adjusted by SAV during the input process)
     mpg_percentile = uinp.sheep['i_woolp_mpg_percentile']
-    ##price for std fd at selected percentile
+    ##price for the std FD at selected percentile
     mpg_stdfd = np.interp(mpg_percentile, uinp.sheep['i_woolp_mpg_range_w5'], uinp.sheep['i_woolp_mpg_w5'])
-    ##Price at std FD (adjusted by sav)
+    ##adjust price for the std FD using sav
     mpg_stdfd = fun.f_sa(mpg_stdfd, sen.sav['woolp_mpg'], 5)
-    ##Price at std FD (adjusted by sam)
+    ##adjust price for the std FD using sam
     mpg_stdfd = fun.f_sa(mpg_stdfd, sen.sam['woolp_mpg'])
-    ##FD percentile to use (adjusted by sav)
+    ##FD percentile to use (adjusted by SAV during the input process)
     fd_percentile = uinp.sheep['i_woolp_fdprem_percentile']
-    ##FD premium at selected percentile
-    fdprem_w4 = np.array([np.interp(fd_percentile, uinp.sheep['i_woolp_fdprem_range_w5'], uinp.sheep['i_woolp_fdprem_w4w5'][i]) for i in range(uinp.sheep['i_woolp_fdprem_w4w5'].shape[0])])
-    ##FD premium to use (adjusted by sav)
+    ##FD premium at selected percentile for each FD
+    fdprem_w4 = np.array([np.interp(fd_percentile, uinp.sheep['i_woolp_fdprem_range_w5'], uinp.sheep['i_woolp_fdprem_w4w5'][i])
+                          for i in range(uinp.sheep['i_woolp_fdprem_w4w5'].shape[0])])
+    ##adjust FD premium using sav
     fdprem_w4 = fun.f_sa(fdprem_w4, sen.sav['woolp_fdprem'], 5)
-    ##Wool price for the analysis (note fdprem is the premium per micron - calculate like this because each step is not necessarily 1 micron)
-    woolprice_w4 = mpg_stdfd * (1 + fdprem_w4) ** (uinp.sheep['i_woolp_fd_std'] - uinp.sheep['i_woolp_fd_range_w4'])
-    return woolprice_w4
+    ##Wool price for the analysis (Note: fdprem is the premium per micron from the base)
+    mpg_w4 = mpg_stdfd * (1 + fdprem_w4) ** (uinp.sheep['i_woolp_fd_std'] - uinp.sheep['i_woolp_fd_range_w4'])
+    return mpg_w4
 
 
 def f_wool_value(mpg_w4, cfw_pg, fd_pg, sl_pg, ss_pg, vm_pg, pmb_pg,dtype=None):
-    ##call function for ph cvh and romaine
+    '''Calculate the net value of the wool on the sheep's back (cost of shearing is not included in these calculations)
+    Includes adjusting price for FD, level of fault (VM & predicted hauteur) and all components of the clip (STB)
+    FNF is 'free or nearly free' i.e. wool with no fault (low VM & high SS)
+    STB is sweep the board i.e. including all the wool types that are produced (fleece, pieces, bellies ...)
+    NIB is net in the bank i.e. all selling, testing & freight costs removed
+    '''
+    ##call function to calculate predicted hauteur (ph), CV of hauteur (cvh) and romaine
     ph_pg, cvh_pg, romaine_pg = f_wool_additional(fd_pg, sl_pg, ss_pg, vm_pg, pmb_pg)
     ##STB price for FNF (free or nearly free of fault)
-    fnf_pg = np.interp(fd_pg, uinp.sheep['i_woolp_fd_range_w4'], mpg_w4 * uinp.sheep['i_stb_scalar_w4']).astype(dtype)
+    fnfstb_pg = np.interp(fd_pg, uinp.sheep['i_woolp_fd_range_w4'], mpg_w4 * uinp.sheep['i_stb_scalar_w4']).astype(dtype)
     ##vm price adj
-    vm_adj_pg = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_vm_adj_w4w6'], uinp.sheep['i_woolp_vm_range_w6'], uinp.sheep['i_woolp_fd_range_w4'], vm_pg,fd_pg).astype(dtype)
+    vm_adj_pg = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_vm_adj_w4w6'], uinp.sheep['i_woolp_vm_range_w6']
+                                           , uinp.sheep['i_woolp_fd_range_w4'], vm_pg,fd_pg).astype(dtype)
     ##predicted hauteur price adj
-    ph_adj_pg = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_ph_adj_w4w7'], uinp.sheep['i_woolp_ph_range_w7'], uinp.sheep['i_woolp_fd_range_w4'], ph_pg,fd_pg).astype(dtype)
+    ph_adj_pg = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_ph_adj_w4w7'], uinp.sheep['i_woolp_ph_range_w7']
+                                           , uinp.sheep['i_woolp_fd_range_w4'], ph_pg,fd_pg).astype(dtype)
     ##cv hauteur price adj
-    cvh_adj_pg = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_cvh_adj_w4w8'], uinp.sheep['i_woolp_cvh_range_w8'], uinp.sheep['i_woolp_fd_range_w4'], cvh_pg,fd_pg).astype(dtype)
+    cvh_adj_pg = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_cvh_adj_w4w8'], uinp.sheep['i_woolp_cvh_range_w8']
+                                            , uinp.sheep['i_woolp_fd_range_w4'], cvh_pg,fd_pg).astype(dtype)
     ##romaine price adj
-    romaine_adj_pg = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_romaine_adj_w4w9'], uinp.sheep['i_woolp_romaine_range_w9'], uinp.sheep['i_woolp_fd_range_w4'], romaine_pg,fd_pg).astype(dtype)
+    romaine_adj_pg = fun.f_bilinear_interpolate(uinp.sheep['i_woolp_romaine_adj_w4w9'], uinp.sheep['i_woolp_romaine_range_w9']
+                                                , uinp.sheep['i_woolp_fd_range_w4'], romaine_pg,fd_pg).astype(dtype)
     ##wool price with adjustments
-    woolp_stb_pg = fnf_pg * (1 + vm_adj_pg) * (1 + ph_adj_pg) * (1 - cvh_adj_pg) * (1 - romaine_adj_pg)
+    woolp_stb_pg = fnfstb_pg * (1 + vm_adj_pg) * (1 + ph_adj_pg) * (1 - cvh_adj_pg) * (1 - romaine_adj_pg)
     ##stb net in the bank price
     woolp_stbnib_pg = woolp_stb_pg * (1 - uinp.sheep['i_wool_cost_pc']) - uinp.sheep['i_wool_cost_kg']
     ##wool value if shorn this period
@@ -1536,11 +1557,11 @@ def f_condition_score(rc, cu0):
        long version of the formula (use rc instead of using to following): 3 + (ffcfw - normal_weight) / (cs_propn * normal_weight)
        Returns: condition score - float
        '''
-    return np.maximum(1, 3 + (rc - 1) / cu0[1, ...]) #cs cant be below 1 because the animal would be dead
+    return np.maximum(1, 3 + (rc - 1) / cu0[1, ...]) #a minimum value of CS=1 is used to remove errors caused by low CS. A CS below 1 is unlikely because the animal would be dead
 
 #todo needs updating - currently just a copy of the cs function
 def f_fat_score(rc, cu0):
-    return np.maximum(1, 3 + (rc - 1) / cu0[1, ...]) #fs cant be below 1
+    return np.maximum(1, 3 + (rc - 1) / cu0[1, ...]) #FS 1 is the lowest possible measurement. FS1 is between 0 and 5mm of tissue at the GR site.
 
 
 def f_norm_cdf(x, mu, cv):
