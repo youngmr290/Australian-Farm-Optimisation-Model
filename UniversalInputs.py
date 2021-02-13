@@ -315,7 +315,7 @@ structure['i_mask_g3g3'] = np.array([[True,True,True,True],
                                     [False,True,False,True],
                                     [False,False,True,False],
                                     [False,False,False,True]])  
-##variations between initial patterns
+##variation in LW, CFW, FD & fibre length for animals with different weaning weight (WWt is determined by groups of 27 in LW profile)
 ###lw
 structure['i_adjp_lw_initial_w0'] = np.array([0])        
 structure['i_adjp_lw_initial_w1'] = np.array([0.0, 0.0,	0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15])
