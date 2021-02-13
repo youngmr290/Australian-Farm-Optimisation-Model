@@ -208,17 +208,19 @@ if run_fec_offs:
     trials = [33]
     type = 'stock'
     prod = 'fec_offs_k3k5vpnw8zida0e0b0xyg3'
-    na_prod = [1]
-    weights = 'offs_numbers_k3k5tvnwzida0e0b0xy3g3'
-    na_weights = [3,5,6]
-    den_weights = 'pe1b1_denom_weights_k3k5tvpnw8zida0e0b0xyg3'
-    keys = 'offs_keys_k3k5tvpnwzidaeb0xy3g3'
+    na_prod = [2]
+    weights = 'offs_numbers_k3k5tvnwziaxyg3'
+    na_weights = [4,9,11,12]
+    den_weights = 'pde0b0_denom_weights_k3k5tvpnw8zida0e0b0xyg3'
+    keys = 'offs_keys_k3k5tvpnwzidaebxyg3'
     arith = 1
-    arith_axis = [0,1,2,3,5,6,7,8,9,10,11,13,14,15]  # reporting p(4) & b0(12)
-    index =[3]
-    cols =[6]
+    arith_axis = [0,1,3,5,6,7,8,9,10,11,13,14,15]  # reporting p(4) & b0(12)
+    index =[4]
+    cols =[2,12]
     axis_slice = {}
-    # axis_slice[0] = [0, 2, 1]
+    axis_slice[11] = [0,1,1] #first cycle
+    axis_slice[9] = [2,-1,1] #Adult
+    axis_slice[15] = [0,1,1] #BBB
     fec_offs = rep.f_stack(func, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights,
                            den_weights=den_weights, na_prod=na_prod, na_weights=na_weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)

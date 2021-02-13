@@ -5505,8 +5505,11 @@ def generator(params,r_vals,ev,plots = False):
     ##key lists used to form table headers and indexs
     keys_e = ['e%s'%i for i in range(len_e1)]
     keys_b = uinp.structure['i_lsln_idx_dams']
+    keys_e0 = ['e%s'%i for i in range(len_e0)]
+    keys_b0 = uinp.structure['i_btrt_idx_offs']
     keys_b9 = uinp.structure['i_lsln_idx_dams'][1:5]
-    keys_p = ['p%s'%i for i in range(len_p)]
+    keys_p = np.array(['p%s'%i for i in range(len_p)])
+    keys_p3 = keys_p[mask_p_offs_p]
 
     r_vals['sire_keys_g0'] = [keys_g0]
     r_vals['sire_keys_p6fg0'] = [keys_p6, keys_f, keys_g0]
@@ -5522,6 +5525,8 @@ def generator(params,r_vals,ev,plots = False):
                                                 keys_z, keys_i, keys_y1, keys_g1]
     r_vals['offs_keys_k3k5tvnwziaxyg3'] = [keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i,
                                                keys_a, keys_x, keys_y3, keys_g3]
+    r_vals['offs_keys_k3k5tvpnwzidaebxyg3'] = [keys_k3, keys_k5, keys_t3, keys_v3, keys_p3, keys_n3, keys_lw3, keys_z, keys_i,
+                                               keys_d, keys_a, keys_e0, keys_b0, keys_x, keys_y3, keys_g3]
     r_vals['offs_keys_k3k5p6ftvnwziaxyg3'] = [keys_k3, keys_k5, keys_p6, keys_f, keys_t3, keys_v3, keys_n3,
                                                   keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
 
