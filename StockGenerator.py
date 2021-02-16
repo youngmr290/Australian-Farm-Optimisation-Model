@@ -666,7 +666,7 @@ def generator(params,r_vals,ev,plots = False):
 
 
     ###################################
-    # Feed variation period calcs dams#  ^note if type stuff is used then might need to add a special fvp that is the start of the simulation ie 1/1/19
+    # Feed variation period calcs dams#
     ###################################
     ##beginning - first day of generator
     fvp_begin_start_ba1e1b1nwzida0e0b0xyg1 = date_start_pa1e1b1nwzida0e0b0xyg[0:1]
@@ -786,9 +786,6 @@ def generator(params,r_vals,ev,plots = False):
     ## The next lambing opportunity is the earliest joining date that is greater than or equal to the end date at the end of the period
     ##prev is just next - 1
 
-
-
-
     ##joining opportunity association
     a_nextprejoining_o_pa1e1b1nwzida0e0b0xyg1 = np.apply_along_axis(sfun.f_next_prev_association, 0, prejoining_oa1e1b1nwzida0e0b0xyg1, date_start_p, 0,'left')
     a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1 = np.apply_along_axis(sfun.f_next_prev_association, 0, prejoining_oa1e1b1nwzida0e0b0xyg1, date_end_p, 1,'right')
@@ -843,12 +840,6 @@ def generator(params,r_vals,ev,plots = False):
     ###date, age, timing
     date_born1st_pa1e1b1nwzida0e0b0xyg2=np.take_along_axis(date_born1st_oa1e1b1nwzida0e0b0xyg2,a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0)
     date_born_pa1e1b1nwzida0e0b0xyg2=np.take_along_axis(date_born_oa1e1b1nwzida0e0b0xyg2,a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0)
-    # ####convert from date of first lamb born to average date born of all lambs and adjust date born1st (so that birth happens on start of p)
-    # date_born_pa1e1b1nwzida0e0b0xyg2 = date_born1st_pa1e1b1nwzida0e0b0xyg2 + (index_e1b1nwzida0e0b0xyg + 0.5) * cf_yatf[4, 0:1,:].astype('timedelta64[D]')	 #times by 0.5 to get the average birth date for all lambs because ewes can be conceived anytime within joining cycle. e_index is to account for ewe cycles.
-    # date_born_idx_pa1e1b1nwzida0e0b0xyg2 =sfun.f_next_prev_association(date_start_p, date_born_pa1e1b1nwzida0e0b0xyg2, 0)
-    # date_born_pa1e1b1nwzida0e0b0xyg2 = date_start_p[date_born_idx_pa1e1b1nwzida0e0b0xyg2]
-    # date_born1st_pa1e1b1nwzida0e0b0xyg2 = date_born_pa1e1b1nwzida0e0b0xyg2[:,:,0:1,...] - 0.5 * cf_yatf[4, 0:1,:].astype('timedelta64[D]') #take slice 0 of e axis
-
     date_born1st2_pa1e1b1nwzida0e0b0xyg2=np.take_along_axis(date_born1st_oa1e1b1nwzida0e0b0xyg2,a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #increments at prejoining
     date_prejoin_next_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(prejoining_oa1e1b1nwzida0e0b0xyg1,a_nextprejoining_o_pa1e1b1nwzida0e0b0xyg1,0)
     date_prejoin_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(prejoining_oa1e1b1nwzida0e0b0xyg1,a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0)
