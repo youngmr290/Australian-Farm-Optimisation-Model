@@ -2036,7 +2036,7 @@ def f_cum_dvp(arr,dvp_pointer,axis=0,shift=0):
         final += arr1
     return final
 
-def f_lw_distribution(ffcfw_condensed_va1e1b1nwzida0e0b0xyg, ffcfw_va1e1b1nwzida0e0b0xyg, i_n_len, i_n_fvp_period, dvp_type_next_tvgw=0):
+def f_lw_distribution(ffcfw_condensed_va1e1b1nwzida0e0b0xyg, ffcfw_va1e1b1nwzida0e0b0xyg, i_n_len, i_n_fvp_period, dvp_type_next_tvgw=0, condense_vtype=0, season_vtype=0):
     '''distributing animals on LW at the start of dvp0
     ^ this function will need altering if the dvp_type definition changes'''
     ##add second w axis - the condensed w axis becomes axis -1 and the end of period w stays in the normal place
@@ -2057,7 +2057,7 @@ def f_lw_distribution(ffcfw_condensed_va1e1b1nwzida0e0b0xyg, ffcfw_va1e1b1nwzida
     ##Set the distribution to 0 if lw_end is below the condensed minimum weight
     distribution_va1e1b1nwzida0e0b0xygw = spread_bounded * (ffcfw_va1e1b1nwzida0e0b0xyg[..., na] >= np.min(ffcfw_condensed_va1e1b1nwzida0e0b0xygw, axis = -1, keepdims=True))
     ##Set default for DVPs that don’t require distributing to 1 (these are masked later to remove those that are not required)
-    distribution_va1e1b1nwzida0e0b0xygw = fun.f_update(distribution_va1e1b1nwzida0e0b0xygw, 1, dvp_type_next_tvgw!=0)
+    distribution_va1e1b1nwzida0e0b0xygw = fun.f_update(distribution_va1e1b1nwzida0e0b0xygw, 1, np.logical_and(dvp_type_next_tvgw!=condense_vtype,dvp_type_next_tvgw!=season_vtype))
     return distribution_va1e1b1nwzida0e0b0xygw
 
 def f_lw_distribution_2prog(ffcfw_prog_g2w9, ffcfw_yatf_vg1):

@@ -59,6 +59,11 @@ def stockpyomo_local(params):
         pass
     model.s_dvp_dams = pe.Set(ordered=True, initialize=params['dvp_idx_dams'], doc='Decision variable periods for dams') #ordered so they can be indexed in constraint to determine previous period
     try:
+        model.del_component(model.s_lw_dams)
+    except AttributeError:
+        pass
+    model.s_lw_dams = pe.Set(initialize=params['w_idx_dams'], doc='Standard LW patterns dams')
+    try:
         model.del_component(model.s_groups_dams)
     except AttributeError:
         pass
