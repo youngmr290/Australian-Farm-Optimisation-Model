@@ -100,12 +100,12 @@ def f_df2xl(writer, df, sheet, rowstart=0, colstart=0, option=0):
                 offset = df.columns.nlevels #number of columns used for names
                 if offset>1:
                     offset += 1 #for some reason if the cols are multiindex the an extra row gets added when writing to excel
-                worksheet.set_row(row+offset,None,None,{'level': 1, 'hidden': True}) #set hidden to true to colaps the level initially
+                worksheet.set_row(row+offset,None,None,{'level': 1, 'hidden': True}) #set hidden to true to collapse the level initially
 
         for col in range(len(df.columns)):
             if (df.iloc[:,col]==0).all():
                 offset = df.index.nlevels
-                col = xlsxwriter.utility.xl_col_to_name(col+offset) + ':' + xlsxwriter.utility.xl_col_to_name(col+offset) #conver col number to excel col reference eg 'A:B'
+                col = xlsxwriter.utility.xl_col_to_name(col+offset) + ':' + xlsxwriter.utility.xl_col_to_name(col+offset) #convert col number to excel col reference eg 'A:B'
                 worksheet.set_column(col,None,None,{'level': 1, 'hidden': True})
         return
 

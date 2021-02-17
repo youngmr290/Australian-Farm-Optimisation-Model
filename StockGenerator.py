@@ -157,6 +157,8 @@ def generator(params,r_vals,ev,plots = False):
     len_n2 = uinp.structure['i_n1_matrix_len'] #same as dams
     len_n3 = uinp.structure['i_n3_matrix_len']
     len_w0 = uinp.structure['i_w0_len']
+    # possible formula for len_w1, except i_w1_start_len doesn't exist. But this would be less error prone than entering the total number of patterns
+    # len_w1 = uinp.structure['i_w1_start_len'] * uinp.structure['i_n1_len'] ** uinp.structure['i_n_fvp_period1']
     len_w1 = uinp.structure['i_w1_len']
     len_w2 = uinp.structure['i_w1_len'] #same as dams
     len_w_prog = uinp.structure['i_progeny_w2_len']
@@ -4199,15 +4201,31 @@ def generator(params,r_vals,ev,plots = False):
     ######################################
     #Mask animals to nutrition profiles  #
     ######################################
-    '''creates a mask that removes unnecessary values in the parameters. Because of the lw branching not every activity provides to a unique constraint 
-        therefore some activities and constraints can be masked out'''
+    '''creates a mask that removes unnecessary values in the parameters. Because of the lw branching not every decision
+        variable provides to a unique constraint and therefore some decision variables and constraints can be masked out
+        The inclusion of multiple FVPs in a DVP requires a variable step size based on the number of FVPs in a DVP (n_damfvps_v)
+        and the number of FVPs prior to this DVP (n_prior_damfvps_v)
+        step is equal to the total number of patterns i_w_start_len * (i_n_len ** i_n_fvp_period) divided by the number 
+        of constraints : i_w_start_len * (i_n_len ** i_n_prior_damsfvps_v)
+        or decision variables: i_w_start_len * (i_n_len ** (i_n_prior_damsfvps_v + i_n_damsfvps_v)). 
+        This can be simplified to a single line equation because the terms cancel out'''
     allocation_start = time.time()
     ##dams
+    ###Steps for ‘Numbers Requires’ constraint is determined by the number of prior FVPs
+    step_con1_va1e1b1nw8zida0e0b0xyg1 = uinp.structure['i_n1_len'] ** (uinp.structure['i_n_fvp_period1']
+                                                                      - uinp.structure['i_n_prior_damsfvps_v'])
+    ###Steps for the decision variables is determined by the number of current & prior FVPs
+    step_dv1_va1e1b1nw8zida0e0b0xyg1 = uinp.structure['i_n1_len'] ** (uinp.structure['i_n_fvp_period1']
+                                                                      - uinp.structure['i_n_prior_damsfvps_v']
+                                                                      - uinp.structure['i_n_damsfvps_v'])
     ###Steps for ‘Numbers Provides’ is calculated with a t axis (because the t axis can alter the dvp type of the source relative to the destination)
-    step_next_con1_tva1e1b1nw8zida0e0b0xyg1w9 = (uinp.structure['i_n1_len'] ** (uinp.structure['i_n_fvp_period1'] - dvp_type_next_tva1e1b1nwzida0e0b0xyg1))[...,na]
-    ###Steps for ‘Numbers Requires’ & ‘Decision Variable’ is calculated without a t axis.
-    step_con1_va1e1b1nw8zida0e0b0xyg1 = (uinp.structure['i_n1_len'] ** (uinp.structure['i_n_fvp_period1'] - dvp_type_va1e1b1nwzida0e0b0xyg1))
-    step_dv1_va1e1b1nw8zida0e0b0xyg1 = step_con1_va1e1b1nw8zida0e0b0xyg1 / uinp.structure['i_n1_len']
+    step_next_con1_tva1e1b1nw8zida0e0b0xyg1w9 = fun.f_update(step_dv1_va1e1b1nw8zida0e0b0xyg1
+                                                         , uinp.structure['i_n1_len'] ** uinp.structure['i_n_fvp_period1']
+                                                         , dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == 0)[..., na]
+    # step_next_con1_tva1e1b1nw8zida0e0b0xyg1w9 = (uinp.structure['i_n1_len'] ** (uinp.structure['i_n_fvp_period1'] - dvp_type_next_tva1e1b1nwzida0e0b0xyg1))[...,na]
+    # ###Steps for ‘Numbers Requires’ & ‘Decision Variable’ is calculated without a t axis.
+    # step_con1_va1e1b1nw8zida0e0b0xyg1 = (uinp.structure['i_n1_len'] ** (uinp.structure['i_n_fvp_period1'] - dvp_type_va1e1b1nwzida0e0b0xyg1))
+    # step_dv1_va1e1b1nw8zida0e0b0xyg1 = step_con1_va1e1b1nw8zida0e0b0xyg1 / uinp.structure['i_n1_len']
     ##Mask the decision variables that are not yet active in the matrix because they share a common nutrition history (broadcast across t axis)
     mask_w8vars_va1e1b1nw8zida0e0b0xyg1 = index_wzida0e0b0xyg1 % step_dv1_va1e1b1nw8zida0e0b0xyg1 == 0
     ##mask for nutrition profiles (this allows the user to examine certain nutrition patterns eg high high high vs low low low) - this mask is combine with the other w8 masks below
