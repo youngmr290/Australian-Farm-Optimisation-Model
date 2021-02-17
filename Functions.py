@@ -477,7 +477,7 @@ def f_run_required(exp_data1, check_pyomo=True):
     exp_data1['run'] = False
     exp_data1['runpyomo'] = False
 
-    ###if only report.py or reportfunction.py has been updated precalcs don't need to be re-run therefore newest is equal to the newest py file that isn't report
+    ###if only ReportControl.py or ReportFunctions.py have been updated precalcs don't need to be re-run therefore newest is equal to the newest py file that isn't a report
     sorted_list = sorted(glob.iglob('*.py'), key=os.path.getmtime)
     if sorted_list[-1] != 'ReportFunctions.py' and sorted_list[-1] != 'ReportControl.py':
         newest = sorted_list[-1]
@@ -509,7 +509,9 @@ def f_run_required(exp_data1, check_pyomo=True):
         prev_exp.loc[run_crash, ('runpyomo', '', '', '')] = False
 
         ##if headers are the same, code is the same and the excel inputs are the same then test if the values in exp.xlsx are the same
-        if keys_current==keys_hist and os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime(newest) and os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime("Universal.xlsx") and os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime("Property.xlsx"):
+        if (keys_current==keys_hist and os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime(newest)
+                                    and os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime("Universal.xlsx")
+                                    and os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime("Property.xlsx")):
             ###check if each exp has the same values in exp.xlsx as last time it was run.
             i3 = prev_exp.reset_index().set_index(keys_hist).index  # have to reset index because the name of the trial is going to be included in the new index so it must first be dropped from current index
             i4 = exp_data1.reset_index().set_index(keys_current).index

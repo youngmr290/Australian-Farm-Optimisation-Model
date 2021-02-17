@@ -319,12 +319,12 @@ structure['i_n1_len'] = 3   #number of different feedsupplies in each fv period
 structure['i_n_idx_dams'] = ['n1']
 structure['i_n3_len'] = 3  #number of different feedsupplies in each fv period
 structure['i_n_idx_offs'] = ['n1']
-structure['i_n0_matrix_len'] = 1 #number of nutrition levels in the matrix
+structure['i_n0_matrix_len'] = 1 #number of nutrition levels in the matrix (for version 1 all the variation is in the w axis)
 structure['i_n1_matrix_len'] = 1 #number of nutrition levels in the matrix
 structure['i_n3_matrix_len'] = 1 #number of nutrition levels in the matrix
-structure['i_n_fvp_period0'] = 1 #number of different fs period
-# structure['i_n_fvp_period1'] = 3 #number of different fs period
-structure['i_n_fvp_period3'] = 3 #number of different fs period
+structure['i_n_fvp_period0'] = 1 #number of FVPs for sires (g0)
+# structure['i_n_fvp_period1'] = 3 #number of FVPs for dams (g1)
+structure['i_n_fvp_period3'] = 3 #number of FVPs for offspring (g3)
 
 structure['i_nut_spread_n0'] = np.array([0])
 structure['i_nut_spread_n1'] = np.array([0,1,-1]) #fs adjustment for different n levels - above 3 is absolute not adjustment
