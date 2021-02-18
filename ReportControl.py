@@ -328,9 +328,9 @@ if run_numbers_offs:
     weights = 'offs_numbers_k3k5tvnwziaxyg3'
     keys = 'offs_keys_k3k5tvnwziaxyg3'
     arith = 2
-    arith_axis = [0,1,4,5,6,7,8,9,10,11]
+    arith_axis = [4,5,6,7,8,9,10,11]
     index =[3]
-    cols =[2]
+    cols =[0,1,2]
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
     numbers_offs = rep.f_stack(func, trial_outdated, exp_data_index, trials, type=type, weights=weights,
