@@ -185,9 +185,10 @@ def generator(params,r_vals,ev,plots = False):
     ########################
     #dvp/fvp relatedinputs #
     ########################
+    w_start_len = uinp.structure['i_w_start_len']
     n_fs_g1 = uinp.structure['i_n1_len']
     n_fvp_periods_g1 = np.count_nonzero(fvp_mask_dams)
-    len_w1 = n_fs_g1 ** (n_fvp_periods_g1 + 1)
+    len_w1 = w_start_len * n_fs_g1 ** n_fvp_periods_g1
     len_w2 = len_w1 #yatf and dams are same
     n_fs_g3 = uinp.structure['i_n3_len']
     n_fvp_periods_g3=uinp.structure['i_n_fvp_period3']
@@ -3624,7 +3625,7 @@ def generator(params,r_vals,ev,plots = False):
 
     ##dams
     ###dvp controls
-    fvp_mask_v1 = uinp.structure['i_fvp_mask_v1'] #is the fvp a dvp
+    fvp_mask_v1 = uinp.structure['i_dvp_mask_f1'] #is the fvp a dvp
     dvp_mask_dams = fvp_mask_dams[fvp_mask_v1]
     ###transfer
     a_g1_tpa1e1b1nwzida0e0b0xyg1 = sfun.f_g2g(uinp.structure['ia_g1_tg1'], 'dams', p_pos-1)
@@ -3673,7 +3674,7 @@ def generator(params,r_vals,ev,plots = False):
                                           , len_ax1=uinp.structure['i_len_l'], len_ax2=uinp.structure['i_len_s'], len_ax3=uinp.structure['ia_ppk2g1_rlsb1'].shape[-1]
                                           , left_pos2=p_pos, right_pos2=b1_pos)
     a_ppk2g1_ra1e1b1nwzida0e0b0xygsl = np.moveaxis(np.moveaxis(a_ppk2g1_slra1e1b1nwzida0e0b0xyg, 0,-1),0,-1) #put s and l at the end they are summed away shortly
-    a_r_va1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(uinp.structure['ia_r1type_fi'], i_pos, left_pos2=p_pos, right_pos2=i_pos, condition=fvp_mask_v1, axis=0)
+    a_r_va1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(uinp.structure['ia_r1type_fi'], i_pos, left_pos2=p_pos, right_pos2=i_pos, condition=fvp_mask_v1, axis=0, condition2=pinp.sheep['i_mask_i'], axis2=i_pos)
     a_ppk2g1_va1e1b1nwzida0e0b0xygsl = np.take_along_axis(a_ppk2g1_ra1e1b1nwzida0e0b0xygsl,a_r_va1e1b1nwzida0e0b0xyg1[...,na,na], axis=0) #convert r type to v type
     a_ppk2g1_va1e1b1nwzida0e0b0xygsl = np.take_along_axis(a_ppk2g1_va1e1b1nwzida0e0b0xygsl,dvp_type_va1e1b1nwzida0e0b0xyg1[...,na,na], axis=0) #convert v type axis to normal v axis
 
@@ -4261,27 +4262,33 @@ def generator(params,r_vals,ev,plots = False):
         The inclusion of multiple FVPs in a DVP requires a variable step size based on the number of FVPs in a DVP (n_damfvps_v)
         and the number of FVPs prior to this DVP (n_prior_damfvps_v)
         step is equal to the total number of patterns i_w_start_len * (i_n_len ** i_n_fvp_period) divided by the number 
-        of constraints : i_w_start_len * (i_n_len ** i_n_prior_damsfvps_v)
+        of constraints : i_w_start_len * (i_n_len ** i_n_prior_damsfvps_v) 
         or decision variables: i_w_start_len * (i_n_len ** (i_n_prior_damsfvps_v + i_n_damsfvps_v)). 
         This can be simplified to a single line equation because the terms cancel out'''
     allocation_start = time.time()
     ##dams
+    n_fvps_va1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(uinp.structure['i_n_fvps_vi1'], i_pos, left_pos2=p_pos, right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos, condition2=dvp_mask_dams, axis2=0)
+    n_prior_fvps_va1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(uinp.structure['i_n_prior_fvps_vi1'], i_pos, left_pos2=p_pos, right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos, condition2=dvp_mask_dams, axis2=0)
+    n_fvps_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(n_fvps_va1e1b1nwzida0e0b0xyg1, dvp_type_va1e1b1nwzida0e0b0xyg1, 0) #expand v type axis to the full v
+    n_prior_fvps_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(n_prior_fvps_va1e1b1nwzida0e0b0xyg1, dvp_type_va1e1b1nwzida0e0b0xyg1, 0) #expand v type axis to the full v
     ###Steps for ‘Numbers Requires’ constraint is determined by the number of prior FVPs
-    step_con1_va1e1b1nw8zida0e0b0xyg1 = uinp.structure['i_n1_len'] ** (uinp.structure['i_n_fvp_period1']
-                                                                      - uinp.structure['i_n_prior_damsfvps_v'])
+    step_con1_va1e1b1nw8zida0e0b0xyg1 = np.power(n_fs_g1, (n_fvp_periods_g1
+                                                                      - n_prior_fvps_va1e1b1nwzida0e0b0xyg1))
     ###Steps for the decision variables is determined by the number of current & prior FVPs
-    step_dv1_va1e1b1nw8zida0e0b0xyg1 = uinp.structure['i_n1_len'] ** (uinp.structure['i_n_fvp_period1']
-                                                                      - uinp.structure['i_n_prior_damsfvps_v']
-                                                                      - uinp.structure['i_n_damsfvps_v'])
+    step_dv1_va1e1b1nw8zida0e0b0xyg1 = np.power(n_fs_g1, (n_fvp_periods_g1
+                                                                      - n_prior_fvps_va1e1b1nwzida0e0b0xyg1
+                                                                      - n_fvps_va1e1b1nwzida0e0b0xyg1))
     ###Steps for ‘Numbers Provides’ is calculated with a t axis (because the t axis can alter the dvp type of the source relative to the destination)
     step_next_con1_tva1e1b1nw8zida0e0b0xyg1w9 = fun.f_update(step_dv1_va1e1b1nw8zida0e0b0xyg1
-                                                         , uinp.structure['i_n1_len'] ** uinp.structure['i_n_fvp_period1']
-                                                         , dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == 0)[..., na]
+                                                         , n_fs_g1 ** n_fvp_periods_g1
+                                                         , dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == condense_vtype1)[..., na]
+
     # ###Steps for ‘Numbers Provides’ is calculated with a t axis (because the t axis can alter the dvp type of the source relative to the destination)
     # step_next_con1_tva1e1b1nw8zida0e0b0xyg1w9 = (n_fs_g1 ** (n_fvp_periods_g1 - dvp_type_next_tva1e1b1nwzida0e0b0xyg1))[...,na]
     # ###Steps for ‘Numbers Requires’ & ‘Decision Variable’ is calculated without a t axis.
     # step_con1_va1e1b1nw8zida0e0b0xyg1 = (n_fs_g1 ** (n_fvp_periods_g1 - dvp_type_va1e1b1nwzida0e0b0xyg1))
     # step_dv1_va1e1b1nw8zida0e0b0xyg1 = step_con1_va1e1b1nw8zida0e0b0xyg1 / n_fs_g1
+
     ##Mask the decision variables that are not yet active in the matrix because they share a common nutrition history (broadcast across t axis)
     mask_w8vars_va1e1b1nw8zida0e0b0xyg1 = index_wzida0e0b0xyg1 % step_dv1_va1e1b1nw8zida0e0b0xyg1 == 0
     ##mask for nutrition profiles (this allows the user to examine certain nutrition patterns eg high high high vs low low low) - this mask is combine with the other w8 masks below
