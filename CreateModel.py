@@ -161,7 +161,6 @@ model.s_feed_pools = Set(initialize=sinp.general['sheep_pools'], doc='nutritive 
 
 ##dams
 model.s_nut_dams = Set(initialize=sinp.stock['i_n_idx_dams'], doc='Nutrition levels in each feed period for dams')
-model.s_lw_dams = Set(initialize=sinp.stock['i_w_idx_dams'], doc='Standard LW patterns dams')
 ##offs
 model.s_sale_offs = Set(initialize=['t%s'%i for i in range(pinp.sheep['i_t3_len'])], doc='Sales within the year for offs')
 model.s_nut_offs = Set(initialize=sinp.stock['i_n_idx_offs'], doc='Nutrition levels in each feed period for offs')

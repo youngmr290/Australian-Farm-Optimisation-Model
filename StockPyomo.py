@@ -59,6 +59,11 @@ def stockpyomo_local(params):
         pass
     model.s_dvp_dams = pe.Set(ordered=True, initialize=params['dvp_idx_dams'], doc='Decision variable periods for dams') #ordered so they can be indexed in constraint to determine previous period
     try:
+        model.del_component(model.s_lw_dams)
+    except AttributeError:
+        pass
+    model.s_lw_dams = pe.Set(initialize=params['w_idx_dams'], doc='Standard LW patterns dams')
+    try:
         model.del_component(model.s_groups_dams)
     except AttributeError:
         pass
@@ -783,7 +788,7 @@ def stockpyomo_local(params):
             return pe.Constraint.Skip
     start = time.time()
     model.con_prog2offsR = pe.Constraint(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_dvp_dams, model.s_season_types, model.s_tol,
-                                   model.s_wean_times, model.s_gender, model.s_gen_merit_dams, model.s_groups_offs, model.s_lw_dams, rule=prog2offsR,
+                                   model.s_wean_times, model.s_gender, model.s_gen_merit_dams, model.s_groups_offs, model.s_lw_offs, rule=prog2offsR,
                                    doc='transfer prog to off in dvp 0.')
     end = time.time()
     print('con_prog2offR ',end-start)

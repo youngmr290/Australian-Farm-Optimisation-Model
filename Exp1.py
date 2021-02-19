@@ -50,7 +50,7 @@ import CorePyomo as core
 # logger = multiprocessing.log_to_stderr(logging.DEBUG)
 
 ## the upper limit of number of processes based on the memory capacity of this machine
-memory_limit = 10
+memory_limit = 16
 
 start_time1 = time.time()
 
@@ -100,6 +100,7 @@ def exp(row):
 
     ##get trial name - used for outputs
     trial_name = exp_data.index[row][2]
+    print("Starting row %d, %s" %(row, trial_name))
 
     ##updaye sensitivity values
     fun.f_update_sen(row,exp_data,sen.sam,sen.saa,sen.sap,sen.sar,sen.sat,sen.sav)
@@ -234,10 +235,10 @@ def exp(row):
     if any(lp_vars):  # only do this if pyomo was run and the dict contains values
         with open('pkl/pkl_lp_vars_{0}.pkl'.format(trial_name),"wb") as f:
             pkl.dump(lp_vars,f,protocol=pkl.HIGHEST_PROTOCOL)
-    with open('pkl/pkl_params_{0}.pkl'.format(trial_name),"wb") as f:
-        pkl.dump(params,f,protocol=pkl.HIGHEST_PROTOCOL)
     with open('pkl/pkl_r_vals_{0}.pkl'.format(trial_name),"wb") as f:
         pkl.dump(r_vals,f,protocol=pkl.HIGHEST_PROTOCOL)
+    with open('pkl/pkl_params_{0}.pkl'.format(trial_name),"wb") as f:  #pkl_params must be pickled last becasue it is used to determine if model crashed but the current trial was complete prior to crash
+        pkl.dump(params,f,protocol=pkl.HIGHEST_PROTOCOL)
 
     ##track the successful execution of trial - so we don't update a trial that didn't finish for some reason
     trials_successfully_run = row

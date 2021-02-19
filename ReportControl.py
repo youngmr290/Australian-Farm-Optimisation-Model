@@ -42,9 +42,10 @@ trial_outdated = exp_data['run'] #returns true if trial is out of date
 run_areasum = True #area summary
 run_pnl = True #table of profit and loss
 run_profitarea = True #graph profit by crop area
-run_saleprice = True #table of saleprices
+run_saleprice = True #table of gross saleprices for specified grids, weights & fat scores
 run_cfw_dams = True #table of cfw
-run_fec_dams = False #fec
+run_fec_dams = True #fec for the dams in each generator period
+run_fec_offs = True #fec for the offspring in each generator period
 run_weanper = True #table of weaning percent
 run_scanper = True #table of scan percent
 run_lamb_survival = True #table of lamb survival
@@ -56,12 +57,12 @@ run_dse = True #table of dse
 run_grnfoo = True #table of green foo at end of fp
 run_dryfoo = True #table of dry foo at end of fp
 run_napfoo = True #table of nap foo at end of fp
-run_grncon = True #table of green con at end of fp
-run_drycon = True #table of dry con at end of fp
-run_napcon = True #table of nap con at end of fp
-run_poccon = True #table of poc con at end of fp
-run_supcon = True #table of sup con at end of fp
-run_stubcon = True #table of sup con at end of fp
+run_grncon = True #table of green con during fp
+run_drycon = True #table of dry con during fp
+run_napcon = True #table of nap con during fp
+run_poccon = True #table of poc con during fp
+run_supcon = True #table of sup con during fp
+run_stubcon = True #table of sup con during fp
 
 
 
@@ -99,12 +100,12 @@ def f_df2xl(writer, df, sheet, rowstart=0, colstart=0, option=0):
                 offset = df.columns.nlevels #number of columns used for names
                 if offset>1:
                     offset += 1 #for some reason if the cols are multiindex the an extra row gets added when writing to excel
-                worksheet.set_row(row+offset,None,None,{'level': 1, 'hidden': True}) #set hidden to true to colaps the level initially
+                worksheet.set_row(row+offset,None,None,{'level': 1, 'hidden': True}) #set hidden to true to collapse the level initially
 
         for col in range(len(df.columns)):
             if (df.iloc[:,col]==0).all():
                 offset = df.index.nlevels
-                col = xlsxwriter.utility.xl_col_to_name(col+offset) + ':' + xlsxwriter.utility.xl_col_to_name(col+offset) #conver col number to excel col reference eg 'A:B'
+                col = xlsxwriter.utility.xl_col_to_name(col+offset) + ':' + xlsxwriter.utility.xl_col_to_name(col+offset) #convert col number to excel col reference eg 'A:B'
                 worksheet.set_column(col,None,None,{'level': 1, 'hidden': True})
         return
 
@@ -134,14 +135,14 @@ def f_df2xl(writer, df, sheet, rowstart=0, colstart=0, option=0):
 ##run report functions
 if run_areasum:
     func = rep.f_area_summary
-    trials = [0]
+    trials = [33]
     option = 2
     areasum = rep.f_stack(func, trial_outdated, exp_data_index, trials, option=option)
     f_df2xl(writer, areasum, 'areasum', option=1)
 
 if run_pnl:
     func = rep.f_profitloss_table
-    trials = [0]
+    trials = [33]
     pnl = rep.f_stack(func, trial_outdated, exp_data_index, trials)
     f_df2xl(writer, pnl, 'pnl', option=1)
 
@@ -150,13 +151,13 @@ if run_profitarea:
     func1 = rep.f_profit
     func0_option = 4
     func1_option = 0
-    trials = [0]
+    trials = [33]
     plot = rep.f_xy_graph(func0, func1, trial_outdated, exp_data_index, trials, func0_option, func1_option)
     plot.savefig('Output/profitarea_curve.png')
 
 if run_saleprice:
     func = rep.f_price_summary
-    trials = [0]
+    trials = [33]
     option = 2
     grid = [0,5,6]
     weight = [22,40,25]
@@ -166,7 +167,7 @@ if run_saleprice:
 
 if run_cfw_dams:
     func = rep.f_stock_pasture_summary
-    trials = [0]
+    trials = [33]
     type = 'stock'
     prod = 'cfw_hdmob_k2tva1nwziyg1'
     weights = 'dams_numbers_k2tvanwziy1g1'
@@ -183,7 +184,7 @@ if run_cfw_dams:
 
 if run_fec_dams:
     func = rep.f_stock_pasture_summary
-    trials = [0]
+    trials = [33]
     type = 'stock'
     prod = 'fec_dams_k2vpa1e1b1nw8ziyg1'
     na_prod = [1]
@@ -192,7 +193,7 @@ if run_fec_dams:
     den_weights = 'pe1b1_denom_weights_k2tvpa1e1b1nw8ziyg1'
     keys = 'dams_keys_k2tvpaebnwziy1g1'
     arith = 1
-    arith_axis = [0,1,2,4,5,7,8,9,10,11,12]
+    arith_axis = [0,1,2,4,5,7,8,9,10,11,12]  #reporting p(3) & b1(6)
     index =[3]
     cols =[6]
     axis_slice = {}
@@ -201,6 +202,29 @@ if run_fec_dams:
                            den_weights=den_weights, na_prod=na_prod, na_weights=na_weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
     f_df2xl(writer, fec_dams, 'fec_dams', option=1)
+
+if run_fec_offs:
+    func = rep.f_stock_pasture_summary
+    trials = [33]
+    type = 'stock'
+    prod = 'fec_offs_k3k5vpnw8zida0e0b0xyg3'
+    na_prod = [2]
+    weights = 'offs_numbers_k3k5tvnwziaxyg3'
+    na_weights = [4,9,11,12]
+    den_weights = 'pde0b0_denom_weights_k3k5tvpnw8zida0e0b0xyg3'
+    keys = 'offs_keys_k3k5tvpnwzidaebxyg3'
+    arith = 1
+    arith_axis = [0,1,3,5,6,7,8,9,10,11,13,14,15]  # reporting p(4) & b0(12)
+    index =[4]
+    cols =[2,12]
+    axis_slice = {}
+    axis_slice[11] = [0,1,1] #first cycle
+    axis_slice[9] = [2,-1,1] #Adult
+    axis_slice[15] = [0,1,1] #BBB
+    fec_offs = rep.f_stack(func, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights,
+                           den_weights=den_weights, na_prod=na_prod, na_weights=na_weights,
+                           keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+    f_df2xl(writer, fec_offs, 'fec_offs', option=1)
 
 if run_lamb_survival:
     func = rep.f_survival_wean_scan
@@ -241,7 +265,7 @@ if run_scanper:
 
 if run_daily_mei_dams:
     func = rep.f_stock_pasture_summary
-    trials = [0]
+    trials = [33]
     type = 'stock'
     prod = 'mei_dams_k2p6ftva1nw8ziyg1'
     weights = 'dams_numbers_k2tvanwziy1g1'
@@ -261,7 +285,7 @@ if run_daily_mei_dams:
 
 if run_daily_pi_dams:
     func = rep.f_stock_pasture_summary
-    trials = [0]
+    trials = [33]
     type = 'stock'
     prod = 'pi_dams_k2p6ftva1nw8ziyg1'
     weights = 'dams_numbers_k2tvanwziy1g1'
@@ -282,7 +306,7 @@ if run_daily_pi_dams:
 
 if run_numbers_dams:
     func = rep.f_stock_pasture_summary
-    trials = [0]
+    trials = [33]
     type = 'stock'
     weights = 'dams_numbers_k2tvanwziy1g1'
     keys = 'dams_keys_k2tvanwziy1g1'
@@ -299,14 +323,14 @@ if run_numbers_dams:
 
 if run_numbers_offs:
     func = rep.f_stock_pasture_summary
-    trials = [0]
+    trials = [33]
     type = 'stock'
     weights = 'offs_numbers_k3k5tvnwziaxyg3'
     keys = 'offs_keys_k3k5tvnwziaxyg3'
     arith = 2
-    arith_axis = [0,1,4,5,6,7,8,9,10,11]
+    arith_axis = [4,5,6,7,8,9,10,11]
     index =[3]
-    cols =[2]
+    cols =[0,1,2]
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
     numbers_offs = rep.f_stack(func, trial_outdated, exp_data_index, trials, type=type, weights=weights,
@@ -316,7 +340,7 @@ if run_numbers_offs:
 
 if run_dse:
     func = rep.f_dse
-    trials = [0]
+    trials = [33]
     method = 0
     per_ha = True
     dse = rep.f_stack(func, trial_outdated, exp_data_index, trials, method = method, per_ha = per_ha)
@@ -325,7 +349,7 @@ if run_dse:
 if run_grnfoo:
     #returns foo at end of each fp
     func = rep.f_stock_pasture_summary
-    trials = [0]
+    trials = [33]
     type = 'pas'
     prod = 'foo_end_grnha_goflt'
     weights = 'greenpas_ha_vgoflt'
@@ -343,7 +367,7 @@ if run_grnfoo:
 if run_dryfoo:
     #returns foo at end of each fp
     func = rep.f_stock_pasture_summary
-    trials = [0]
+    trials = [33]
     prod = 1000
     type = 'pas'
     weights = 'drypas_transfer_dft'
@@ -361,7 +385,7 @@ if run_dryfoo:
 if run_napfoo:
     #returns foo at end of each fp
     func = rep.f_stock_pasture_summary
-    trials = [0]
+    trials = [33]
     prod = 1000
     type = 'pas'
     weights = 'nap_transfer_dft'
@@ -379,7 +403,7 @@ if run_napfoo:
 if run_grncon:
     #returns consumption in each fp
     func = rep.f_stock_pasture_summary
-    trials = [0]
+    trials = [33]
     prod = 'cons_grnha_t_goflt'
     type = 'pas'
     weights = 'greenpas_ha_vgoflt'
@@ -397,7 +421,7 @@ if run_grncon:
 if run_drycon:
     #returns consumption in each fp
     func = rep.f_stock_pasture_summary
-    trials = [0]
+    trials = [33]
     prod = 1000
     type = 'pas'
     weights = 'drypas_consumed_vdft'
@@ -415,7 +439,7 @@ if run_drycon:
 if run_napcon:
     #returns consumption in each fp
     func = rep.f_stock_pasture_summary
-    trials = [0]
+    trials = [33]
     prod = 1000
     type = 'pas'
     weights = 'nap_consumed_vdft'
@@ -433,7 +457,7 @@ if run_napcon:
 if run_poccon:
     #returns consumption in each fp
     func = rep.f_stock_pasture_summary
-    trials = [0]
+    trials = [33]
     prod = 1000
     type = 'pas'
     weights = 'poc_consumed_vfl'
@@ -451,7 +475,7 @@ if run_poccon:
 if run_supcon:
     #returns consumption in each fp
     func = rep.f_grain_sup_summary
-    trials = [0]
+    trials = [33]
     option = 1
     supcon = rep.f_stack(func, trial_outdated, exp_data_index, trials, option=option)
     f_df2xl(writer, supcon, 'supcon', option=1)
@@ -459,7 +483,7 @@ if run_supcon:
 if run_stubcon:
     #returns consumption in each fp
     func = rep.f_stubble_summary
-    trials = [0]
+    trials = [33]
     stubcon = rep.f_stack(func, trial_outdated, exp_data_index, trials)
     f_df2xl(writer, stubcon, 'stubcon', option=1)
 

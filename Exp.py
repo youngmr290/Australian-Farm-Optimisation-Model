@@ -116,6 +116,7 @@ for row in range(len(exp_data)):
 
     ##get trial name - used for outputs
     trial_name = exp_data.index[row][2]
+    print("Starting row %d, %s" %(row, trial_name))
 
     ##check to make sure user wants to run this trial - note pyomo is never run without precalcs being run (this could possibly be change by making a more custom function to check only precalc module time and then altering the 'continue' call below)
     if exp_data1.index[row][0] == False or (exp_data1.loc[exp_data1.index[row],'run'].squeeze()==False and force_run==False):
@@ -271,10 +272,10 @@ for row in range(len(exp_data)):
     if any(lp_vars):  # only do this if pyomo was run and the dict contains values
         with open('pkl/pkl_lp_vars_{0}.pkl'.format(trial_name),"wb") as f:
             pkl.dump(lp_vars,f,protocol=pkl.HIGHEST_PROTOCOL)
-    with open('pkl/pkl_params_{0}.pkl'.format(trial_name),"wb") as f:
-        pkl.dump(params,f,protocol=pkl.HIGHEST_PROTOCOL)
     with open('pkl/pkl_r_vals_{0}.pkl'.format(trial_name),"wb") as f:
         pkl.dump(r_vals,f,protocol=pkl.HIGHEST_PROTOCOL)
+    with open('pkl/pkl_params_{0}.pkl'.format(trial_name),"wb") as f: #pkl_params must be pickled last becasue it is used to determine if model crashed but the current trial was complete prior to crash
+        pkl.dump(params,f,protocol=pkl.HIGHEST_PROTOCOL)
 
     ##determine expected time to completion - trials left multiplied by average time per trial &time for current loop
     trials_to_go = total_trials - run
