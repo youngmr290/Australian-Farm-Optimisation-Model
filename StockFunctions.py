@@ -1258,13 +1258,13 @@ def f_comb(n,k):
 
 
 
-def f_period_start_prod(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_fvp0, period_is_startfvp0, period_is_startseason, period_is_prejoin=0, group=None):
+def f_period_start_prod(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_condense, period_is_condense, period_is_startseason, period_is_prejoin=0, group=None):
     ##Set variable level = value at end of previous	
     var_start = var
     ##make sure numbers and var are same shape - this is required for the np.average func below
-    numbers, var_start, numbers_start_fvp0 = np.broadcast_arrays(numbers,var_start,numbers_start_fvp0)
+    numbers, var_start, numbers_start_condense = np.broadcast_arrays(numbers,var_start,numbers_start_condense)
     ##a)update var if start of DVP
-    var_start = f_condensed(numbers, var_start, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_fvp0, period_is_startfvp0)
+    var_start = f_condensed(numbers, var_start, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_condense, period_is_condense)
     ##b) Calculate temporary values as if period is start of season
     if np.any(period_is_startseason):
         temporary = fun.f_weighted_average(var_start, numbers, season_tup, keepdims=True, non_zero=True)#gets the weighted average of production in the different seasons
@@ -1301,9 +1301,9 @@ def f_period_start_prod(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len,
 #         var_start = fun.f_update(var_start, temporary, period_is_prejoin)
 #     return var_start
 
-def f_condensed(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_fvp0, period_is_startfvp0):
+def f_condensed(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_condense, period_is_condense):
     '''condense variable to 3 common points along the w axis for the start of fvp0'''
-    if np.any(period_is_startfvp0):
+    if np.any(period_is_condense):
         temporary = var.copy()  #this is done to ensure that temp has the same size as var.
         ###test if array has diagonal and calc temp variables as if start of dvp - if there is not a diagonal use the alternative system for reallocating at the end of a DVP
         ### np.diagonal removes the n axis so it is added back in using the expand function, but that is a singleton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
@@ -1322,7 +1322,7 @@ def f_condensed(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp
             ###low pattern
             ind = np.argsort(var, axis=sinp.stock['i_w_pos'])  #sort into production order so we can select the lowest production with mort less than 10% - note sorts in ascending order
             var_sorted = np.take_along_axis(var, ind, axis=sinp.stock['i_w_pos'])
-            numbers_start_sorted = np.take_along_axis(numbers_start_fvp0, ind, axis=sinp.stock['i_w_pos'])
+            numbers_start_sorted = np.take_along_axis(numbers_start_condense, ind, axis=sinp.stock['i_w_pos'])
             numbers_sorted = np.take_along_axis(numbers, ind, axis=sinp.stock['i_w_pos'])
             low_slice = i_w_len - np.sum(np.sum(numbers_start_sorted, axis=prejoin_tup + (season_tup,), keepdims=True)
                                          / np.sum(numbers_sorted, axis=prejoin_tup + (season_tup,), keepdims=True) > 0.9
@@ -1332,13 +1332,13 @@ def f_condensed(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp
             ## production level of the lowest nutrition profile that has a mortality less than 10% for the year
             temporary[tuple(sl)] = np.take_along_axis(var_sorted, low_slice, sinp.stock['i_w_pos'])
         ###Update if the period is start of year (shearing for offs and prejoining for dams)
-        var = fun.f_update(var, temporary, period_is_startfvp0)
+        var = fun.f_update(var, temporary, period_is_condense)
 
     return var
 
-def f_period_start_nums(numbers, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_fvp0, period_is_startfvp0, period_is_startseason, season_propn_z, group=None, nyatf_b1 = 0, numbers_initial_repro=0, gender_propn_x=1, period_is_prejoin=0, period_is_birth=False):
+def f_period_start_nums(numbers, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_condense, period_is_condense, period_is_startseason, season_propn_z, group=None, nyatf_b1 = 0, numbers_initial_repro=0, gender_propn_x=1, period_is_prejoin=0, period_is_birth=False):
     ##a)update numbers if start of DVP
-    numbers = f_condensed(numbers, numbers, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_fvp0, period_is_startfvp0)
+    numbers = f_condensed(numbers, numbers, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_condense, period_is_condense)
     ##b) reallocate for season type
     if np.any(period_is_startseason):
         temporary = np.sum(numbers, axis = season_tup, keepdims=True)  * season_propn_z  #Calculate temporary values as if period_is_break
