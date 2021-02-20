@@ -189,6 +189,7 @@ def generator(params,r_vals,ev,plots = False):
     n_fs_g1 = uinp.structure['i_n1_len']
     n_fvp_periods_g1 = np.count_nonzero(fvp_mask_dams)
     len_w1 = w_start_len * n_fs_g1 ** n_fvp_periods_g1
+    n_lw1_total = w_start_len * n_fs_g1 ** (len(fvp_mask_dams))  # total lw if all dvps included
     len_w2 = len_w1 #yatf and dams are same
     n_fs_g3 = uinp.structure['i_n3_len']
     n_fvp_periods_g3=uinp.structure['i_n_fvp_period3']
@@ -1026,26 +1027,29 @@ def generator(params,r_vals,ev,plots = False):
     ####################
     #initial conditions#
     ####################
-    ##mask adjustments along w axis so it can handle changing the number of dvps
+    #mask adjustments along w axis so it can handle changing the number of dvps
     n_lw1_total = n_fs_g1 ** (len(fvp_mask_dams) + 1) #total lw if all dvps included
-    lw_adjp_mask_dams = np.full(n_lw1_total,False)
-    lw_adjp_mask_dams[0:len_w1] = True
+    # lw_adjp_mask_dams = np.full(n_lw1_total,False)
+    # lw_adjp_mask_dams[0:len_w1] = True
+    ##step - used to expand start lw adjustment to all lw patterns
+    step_w1 = len_w1/w_start_len
+
     ##convert i_adjp to adjp - add necessary axes for 'a' and 'w'
     adjp_lw_initial_a0e0b0xyg = fun.f_reshape_expand(pinp.sheep['i_adjp_lw_initial_a'], a0_pos, condition=pinp.sheep['i_mask_a'], axis=a0_pos)
     adjp_lw_initial_wzida0e0b0xyg0 = fun.f_reshape_expand(uinp.structure['i_adjp_lw_initial_w0'], w_pos)
-    adjp_lw_initial_wzida0e0b0xyg1 = fun.f_reshape_expand(uinp.structure['i_adjp_lw_initial_w1'], w_pos, condition=lw_adjp_mask_dams, axis=w_pos)
+    adjp_lw_initial_wzida0e0b0xyg1 = fun.f_reshape_expand(uinp.structure['i_adjp_lw_initial_w1'][np.trunc(index_w1/step_w1).astype(int)], w_pos)
     adjp_lw_initial_wzida0e0b0xyg3 = fun.f_reshape_expand(uinp.structure['i_adjp_lw_initial_w3'], w_pos)
     adjp_cfw_initial_a0e0b0xyg = fun.f_reshape_expand(pinp.sheep['i_adjp_cfw_initial_a'], a0_pos, condition=pinp.sheep['i_mask_a'], axis=a0_pos)
     adjp_cfw_initial_wzida0e0b0xyg0 = fun.f_reshape_expand(uinp.structure['i_adjp_cfw_initial_w0'], w_pos)
-    adjp_cfw_initial_wzida0e0b0xyg1 = fun.f_reshape_expand(uinp.structure['i_adjp_cfw_initial_w1'], w_pos, condition=lw_adjp_mask_dams, axis=w_pos)
+    adjp_cfw_initial_wzida0e0b0xyg1 = fun.f_reshape_expand(uinp.structure['i_adjp_cfw_initial_w1'][np.trunc(index_w1/step_w1).astype(int)], w_pos)
     adjp_cfw_initial_wzida0e0b0xyg3 = fun.f_reshape_expand(uinp.structure['i_adjp_cfw_initial_w3'], w_pos)
     adjp_fd_initial_a0e0b0xyg = fun.f_reshape_expand(pinp.sheep['i_adjp_fd_initial_a'], a0_pos, condition=pinp.sheep['i_mask_a'], axis=a0_pos)
     adjp_fd_initial_wzida0e0b0xyg0 = fun.f_reshape_expand(uinp.structure['i_adjp_fd_initial_w0'], w_pos)
-    adjp_fd_initial_wzida0e0b0xyg1 = fun.f_reshape_expand(uinp.structure['i_adjp_fd_initial_w1'], w_pos, condition=lw_adjp_mask_dams, axis=w_pos)
+    adjp_fd_initial_wzida0e0b0xyg1 = fun.f_reshape_expand(uinp.structure['i_adjp_fd_initial_w1'][np.trunc(index_w1/step_w1).astype(int)], w_pos)
     adjp_fd_initial_wzida0e0b0xyg3 = fun.f_reshape_expand(uinp.structure['i_adjp_fd_initial_w3'], w_pos)
     adjp_fl_initial_a0e0b0xyg = fun.f_reshape_expand(pinp.sheep['i_adjp_fl_initial_a'], a0_pos, condition=pinp.sheep['i_mask_a'], axis=a0_pos)
     adjp_fl_initial_wzida0e0b0xyg0 = fun.f_reshape_expand(uinp.structure['i_adjp_fl_initial_w0'], w_pos)
-    adjp_fl_initial_wzida0e0b0xyg1 = fun.f_reshape_expand(uinp.structure['i_adjp_fl_initial_w1'], w_pos, condition=lw_adjp_mask_dams, axis=w_pos)
+    adjp_fl_initial_wzida0e0b0xyg1 = fun.f_reshape_expand(uinp.structure['i_adjp_fl_initial_w1'][np.trunc(index_w1/step_w1).astype(int)], w_pos)
     adjp_fl_initial_wzida0e0b0xyg3 = fun.f_reshape_expand(uinp.structure['i_adjp_fl_initial_w3'], w_pos)
 
 
