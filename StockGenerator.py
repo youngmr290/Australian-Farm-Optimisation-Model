@@ -1028,7 +1028,7 @@ def generator(params,r_vals,ev,plots = False):
     #initial conditions#
     ####################
     #mask adjustments along w axis so it can handle changing the number of dvps
-    n_lw1_total = n_fs_g1 ** (len(fvp_mask_dams) + 1) #total lw if all dvps included
+    # n_lw1_total = n_fs_g1 ** (len(fvp_mask_dams) + 1) #total lw if all dvps included
     # lw_adjp_mask_dams = np.full(n_lw1_total,False)
     # lw_adjp_mask_dams[0:len_w1] = True
     ##step - used to expand start lw adjustment to all lw patterns
@@ -3592,8 +3592,9 @@ def generator(params,r_vals,ev,plots = False):
     ##dams
     sale_delay_sa1e1b1nwzida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['i_sales_delay_sg1'], 'dams', p_pos) #periods after shearing that sale occurs
     ###mask for nutrition profiles. this doesnt have a full w axis because it only has the nutrition options it is expanded to w further down.
+    # todo Replace this code section. Generate the _owi array with np.full(True) (rather than reading in) then alter use the sa to mask out the patterns not required.
     n_nut_patterns = int(len_w1 / n_fs_g1)
-    nut_mask = np.full(int((n_lw1_total)/n_fs_g1), False) #this is a mask for the nutrition patterns included. This mask exists becasue if dvps are added or removed the number of nut patterns will need to change.
+    nut_mask = np.full(int((n_lw1_total)/w_start_len), False) #this is a mask for the nutrition patterns included. This mask exists because if dvps are added or removed the number of nut patterns will need to change.
     nut_mask[0:n_nut_patterns] = True
     i_sai_lw_dams_owi = pinp.sheep['i_sai_lw_dams_owi'][..., nut_mask]
     mask_nut_oa1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(i_sai_lw_dams_owi,i_pos,pinp.sheep['i_i_len'],pinp.sheep['i_o_len'],
@@ -4293,9 +4294,9 @@ def generator(params,r_vals,ev,plots = False):
     # step_con1_va1e1b1nw8zida0e0b0xyg1 = (n_fs_g1 ** (n_fvp_periods_g1 - dvp_type_va1e1b1nwzida0e0b0xyg1))
     # step_dv1_va1e1b1nw8zida0e0b0xyg1 = step_con1_va1e1b1nw8zida0e0b0xyg1 / n_fs_g1
 
-    ##Mask the decision variables that are not yet active in the matrix because they share a common nutrition history (broadcast across t axis)
+    ##Mask the decision variables that are not active in this DVP in the matrix - because they share a common nutrition history (broadcast across t axis)
     mask_w8vars_va1e1b1nw8zida0e0b0xyg1 = index_wzida0e0b0xyg1 % step_dv1_va1e1b1nw8zida0e0b0xyg1 == 0
-    ##mask for nutrition profiles (this allows the user to examine certain nutrition patterns eg high high high vs low low low) - this mask is combine with the other w8 masks below
+    ##mask for nutrition profiles (this allows the user to examine certain nutrition patterns eg high high high vs low low low) - this mask is combined with the other w8 masks below
     mask_nut_va1e1b1nwzida0e0b0xyg1 = mask_nut_oa1e1b1nwzida0e0b0xyg1[a_o_v]
     ###association between the shortlist of nutrition profile inputs and the full range of LW patterns that include starting LW
     a_shortlist_w1 = index_w1 % (n_fs_g1 ** n_fvp_periods_g1)
