@@ -195,46 +195,6 @@ def universal_inp_sa():
 
 
 
-##############
-#need to be added to spreadsheet - added by mry when adding dvps
-##############
-
-# structure['i_fvp4_date_i'] = np.array([np.datetime64('2019-11-15'), np.datetime64('2019-01-15')])
-#                                         #prejoin, others..............
-# # structure['i_fvp_mask_dams'] = np.array([True, True, True, True,	False]) #prejoining dvp must always be True. (dvp from start of sim to first other dvp is not included - it is added as a true in code)
-# structure['i_dvp_mask_f1'] = np.array([True, True, True, False,	False]) #prejoining dvp must always be True. (dvp from start of sim to first other dvp is not included - it is added as a true in code)
-# structure['i_w_start_len1'] = 3
-#
-# structure['ia_r1type_fi'] = np.array([[0,0], #dont need to add ones that are not dvp (eg just leave them as 2 (default))
-#                                      [1,1],
-#                                      [2,2],
-#                                      [2,2],
-#                                      [2,2]]) #todo add this input also make sure user changes this when changing dvp timing.
-'''The number is the number of fvps prior to the start of this dvp. So if the dvp dates are say
-1 Feb, 1 May & 1 July and the FVP dates are
-1 Feb, 1 May, 1 June, 1 July, 1 Oct. Then 
-n_prior_damfvps_v = 0, 1, 3
-n_damsfvps_v = 1,2,2'''
-# #number of fvps that occur during a dvp
-# structure['i_n_fvps_vi1'] = np.array([[1,1], #this is only the v type axis. it is expanded to full v axis in code.
-#                                      [1,1],
-#                                      [2,2]])
-# #number of fvps since condensing. this would need to change if fvp/dvp aded or removed or changes date.
-# structure['i_n_prior_fvps_vi1'] = np.array([[0,0], #this is only the v type axis. it is expanded to full v axis in code.
-#                                              [1,1],
-#                                              [2,2]])
-
-##need to alter how these are handle
-#todo remove the inputs below.
-#structure['i_n_fvp_period1']
-# structure['i_w1_len']
-# structure['i_w_idx_dams']
-#todo these need to be calibrated - these are mask to be the correct length but need to ensure that the values are correct for the number of dvps
-structure['i_adjp_lw_initial_w1'] = np.array([0.0, 0.15, -0.15])
-structure['i_adjp_cfw_initial_w1'] = np.array([0.0, 0.10, -0.10])
-structure['i_adjp_fd_initial_w1'] = np.array([0.0, 0.5, -0.5])
-structure['i_adjp_fl_initial_w1'] = np.array([0.0, 0.10, -0.10])
-
 
 
 

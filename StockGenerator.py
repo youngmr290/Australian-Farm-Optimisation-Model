@@ -80,14 +80,14 @@ def generator(params,r_vals,ev,plots = False):
     ##background vars    #
     ######################
     na=np.newaxis
-    a0_pos = sinp.stock['i_a0_pos'] #todo delete name pinp
-    a1_pos = sinp.stock['i_a1_pos'] #todo delete name pinp
+    a0_pos = sinp.stock['i_a0_pos']
+    a1_pos = sinp.stock['i_a1_pos']
     b0_pos = sinp.stock['i_b0_pos']
     b1_pos = sinp.stock['i_b1_pos']
     d_pos = sinp.stock['i_d_pos']
     e0_pos = sinp.stock['i_e0_pos']
-    e1_pos = sinp.stock['i_e1_pos'] #todo delete name pinp
-    i_pos = sinp.stock['i_i_pos'] #todo delete name pinp
+    e1_pos = sinp.stock['i_e1_pos']
+    i_pos = sinp.stock['i_i_pos']
     k2_pos = sinp.stock['i_k2_pos']
     k3_pos = sinp.stock['i_k3_pos']
     k5_pos = sinp.stock['i_k5_pos']
@@ -96,7 +96,7 @@ def generator(params,r_vals,ev,plots = False):
     w_pos = sinp.stock['i_w_pos']
     x_pos = sinp.stock['i_x_pos']
     y_pos = sinp.stock['i_y_pos']
-    z_pos = sinp.stock['i_z_pos'] #todo delete name pinp
+    z_pos = sinp.stock['i_z_pos']
 
     ######################
     ##date               #
