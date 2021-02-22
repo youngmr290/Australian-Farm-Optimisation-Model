@@ -93,7 +93,7 @@ def generator(params,r_vals,ev,plots = False):
     b0_pos = uinp.parameters['i_b0_pos']
     x_pos = uinp.parameters['i_x_pos']
     y_pos = uinp.parameters['i_y_pos']
-    # g_pos = 0  #todo (JMY) not used but should it be -1 if it was
+    # g_pos = -1
     
     ######################
     ##date               #
