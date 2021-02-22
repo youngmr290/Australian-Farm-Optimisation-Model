@@ -149,19 +149,20 @@ def exp(row):
     spy.stock_precalcs(params['stock'],r_vals['stock'],ev)
     paspy.paspyomo_precalcs(params['pas'],r_vals['pas'],ev)
 
-    ##does pyomo need to be run?
+    ##does pyomo need to be run? In exp1 pyomo is always run because creating params file take up lots of time, RAM and disc space
     ###read in prev params for trial
     ##try to load in params dict, if it doesn't exist then create a new dict
-    try:
-        with open('pkl/pkl_params_{0}.pkl'.format(trial_name),"rb") as f:
-            prev_params = pkl.load(f)
-    except FileNotFoundError:
-        prev_params = {}
-    ##check if the two dicts are the same, it is possible that the current dict has less keys than the previous dict eg if a value becomes nan (because you removed the cell in excel inputs) and when it is stacked it disappears (this is very unlikely though so not going to test for it since this step is already slow)
-    try: #try required in case the key (trial) doesn't exist in the old dict, if this is the case pyomo must be run
-        run_pyomo_params=fun.findDiff(params, prev_params)
-    except KeyError:
-        run_pyomo_params= True
+    # try:
+    #     with open('pkl/pkl_params_{0}.pkl'.format(trial_name),"rb") as f:
+    #         prev_params = pkl.load(f)
+    # except FileNotFoundError:
+    #     prev_params = {}
+    # ##check if the two dicts are the same, it is possible that the current dict has less keys than the previous dict eg if a value becomes nan (because you removed the cell in excel inputs) and when it is stacked it disappears (this is very unlikely though so not going to test for it since this step is already slow)
+    # try: #try required in case the key (trial) doesn't exist in the old dict, if this is the case pyomo must be run
+    #     run_pyomo_params=fun.findDiff(params, prev_params)
+    # except KeyError:
+    #     run_pyomo_params= True
+    run_pyomo_params= True
     ##determine if pyomo should run, note if pyomo doesn't run there will be no ful solution (they are the same as before so no need)
     lp_vars={} #create empty dict to return if pyomo isn't run. If dict is empty it doesnt overwrite the previous main lp_vars dict66
     if run_pyomo_params or exp_data1.loc[exp_data1.index[row],'runpyomo'].squeeze():
@@ -237,8 +238,8 @@ def exp(row):
             pkl.dump(lp_vars,f,protocol=pkl.HIGHEST_PROTOCOL)
     with open('pkl/pkl_r_vals_{0}.pkl'.format(trial_name),"wb") as f:
         pkl.dump(r_vals,f,protocol=pkl.HIGHEST_PROTOCOL)
-    with open('pkl/pkl_params_{0}.pkl'.format(trial_name),"wb") as f:  #pkl_params must be pickled last becasue it is used to determine if model crashed but the current trial was complete prior to crash
-        pkl.dump(params,f,protocol=pkl.HIGHEST_PROTOCOL)
+    # with open('pkl/pkl_params_{0}.pkl'.format(trial_name),"wb") as f:  #pkl_params must be pickled last becasue it is used to determine if model crashed but the current trial was complete prior to crash
+    #     pkl.dump(params,f,protocol=pkl.HIGHEST_PROTOCOL)
 
     ##track the successful execution of trial - so we don't update a trial that didn't finish for some reason
     trials_successfully_run = row

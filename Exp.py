@@ -40,6 +40,8 @@ import StockPyomo as spy
 import CorePyomo as core
 
 force_run=True #force precalcs to be run
+run_pyomo = True #do you want pyomo to run (default is True but if testing reports it can be useful to only run the precalcs)
+
 
 
 # #########################
@@ -114,13 +116,17 @@ for row in range(len(exp_data)):
     ##start timer for each loop
     start_time = time.time()
 
-    ##get trial name - used for outputs
-    trial_name = exp_data.index[row][2]
-    print("Starting row %d, %s" %(row, trial_name))
 
     ##check to make sure user wants to run this trial - note pyomo is never run without precalcs being run (this could possibly be change by making a more custom function to check only precalc module time and then altering the 'continue' call below)
     if exp_data1.index[row][0] == False or (exp_data1.loc[exp_data1.index[row],'run'].squeeze()==False and force_run==False):
         continue
+
+    ##get trial name - used for outputs
+    trial_name = exp_data.index[row][2]
+    print("Starting row %d, %s" %(row, trial_name))
+    if run_pyomo != True:
+        print("\n **** Pyomo is turned off... are you sure? ****\n")
+
     # print('precalcs',exp_data1.index[row][2])
     exp_data1.loc[exp_data1.index[row],('run', '', '', '')] = False
     run+=1
@@ -177,21 +183,23 @@ for row in range(len(exp_data)):
     
     
     ##does pyomo need to be run?
-    ##check if the two dicts are the same, it is possible that the current dict has less keys than the previous dict eg if a value becomes nan (because you removed the cell in excel inputs) and when it is stacked it disappears (this is very unlikely though so not going to test for it since this step is already slow)
-    ##try to load in params dict, if it doesn't exist then create a new dict
-    try:
-        with open('pkl/pkl_params_{0}.pkl'.format(trial_name),"rb") as f:
-            prev_params = pkl.load(f)
-    except FileNotFoundError:
-        prev_params = {}
-    ##check if the two dicts are the same, it is possible that the current dict has less keys than the previous dict eg if a value becomes nan (because you removed the cell in excel inputs) and when it is stacked it disappears (this is very unlikely though so not going to test for it since this step is already slow)
-    try: #try required in case the key (trial) doesn't exist in the old dict, if this is the case pyomo must be run
-        run_pyomo_params=fun.findDiff(params, prev_params)
-    except KeyError:
-        run_pyomo_params= True
+    ##pyomo is run unless the user has specified not to run it.
+    # ##check if the two dicts are the same, it is possible that the current dict has less keys than the previous dict eg if a value becomes nan (because you removed the cell in excel inputs) and when it is stacked it disappears (this is very unlikely though so not going to test for it since this step is already slow)
+    # ##try to load in params dict, if it doesn't exist then create a new dict
+    # try:
+    #     with open('pkl/pkl_params_{0}.pkl'.format(trial_name),"rb") as f:
+    #         prev_params = pkl.load(f)
+    # except FileNotFoundError:
+    #     prev_params = {}
+    # ##check if the two dicts are the same, it is possible that the current dict has less keys than the previous dict eg if a value becomes nan (because you removed the cell in excel inputs) and when it is stacked it disappears (this is very unlikely though so not going to test for it since this step is already slow)
+    # try: #try required in case the key (trial) doesn't exist in the old dict, if this is the case pyomo must be run
+    #     run_pyomo_params=fun.findDiff(params, prev_params)
+    # except KeyError:
+    #     run_pyomo_params= True
+
     lp_vars={} #create empty dict to return if pyomo isn't run. If dict is empty it doesnt overwrite the previous main lp_vars
     ##determine if pyomo should run, note if pyomo doesn't run there will be no ful solution (they are the same as before so no need)
-    if run_pyomo_params or exp_data1.loc[exp_data1.index[row],'runpyomo'].squeeze():
+    if run_pyomo: #or exp_data1.loc[exp_data1.index[row],'runpyomo'].squeeze():
         # print('run pyomo')
         ##call pyomo model function, must call them in the correct order (core must be last)
         pyomocalc_start = time.time()
