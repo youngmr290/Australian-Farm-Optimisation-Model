@@ -231,7 +231,7 @@ def f_crop_monitoring():
     variable_crop_monitor = pd.DataFrame(variable_crop_monitor_kpz, index=variable_crop_monitor.index, columns=cols)
     phases_df = sinp.phases['phases']
     phases_df.columns = pd.MultiIndex.from_product([phases_df.columns,['']])
-    variable_crop_monitor = pd.merge(phases_df, variable_crop_monitor, how='left', left_on=uinp.end_col(), right_index = True) #merge with all the phases
+    variable_crop_monitor = pd.merge(phases_df, variable_crop_monitor, how='left', left_on=sinp.end_col(), right_index = True) #merge with all the phases
     variable_crop_monitor = variable_crop_monitor.drop(list(range(sinp.general['phase_len'])), axis=1).stack(0)
 
     ##fixed monitoring
@@ -249,7 +249,7 @@ def f_labcrop_params(params,r_vals):
     fert_app_time_t = f_fert_app_time_t()
     fert_app_time_ha = f_fert_app_time_ha()
     chem_app_time_ha = f_chem_app_time_ha()
-    variable_crop_monitor, fixed_crop_monitor = f_crop_monitoring(params)
+    variable_crop_monitor, fixed_crop_monitor = f_crop_monitoring()
 
     ##add params which are inputs
     params['harvest_helper'] = pinp.labour['harvest_helper'].squeeze().to_dict()

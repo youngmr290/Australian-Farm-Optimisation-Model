@@ -1063,8 +1063,8 @@ def range_allocation_np(period_dates, start, length, opposite=None, shape=None):
     if opposite:
         #check how much of each date range falls within the period
         for i in range(len(period_dates)-1):
-            per_start= period_dates[i]
-            per_end = period_dates[i + 1].copy() #so origional date array isnt altered when updating year in next step
+            per_start= period_dates[i:i+1] #to keep dim
+            per_end = period_dates[i+1:i+2].copy() #so origional date array isnt altered when updating year in next step
             ###to handle situations where base yr version of feed period is used. In these case the year does not increment
             ###at the start of a new year eg at the start of the ny it goes back to 2019 instead of 2020
             ###in these cases when the end date is less than start it means a ny has started so we temporarily increase end date by 1yr.
@@ -1076,8 +1076,8 @@ def range_allocation_np(period_dates, start, length, opposite=None, shape=None):
     else:
         #check how much of each period falls within the date range
         for i in range(len(period_dates)-1):
-            per_start= period_dates[i]
-            per_end = period_dates[i + 1].copy() #so origional date array isnt altered when updating year in next step
+            per_start= period_dates[i:i+1]
+            per_end = period_dates[i+1:i+2].copy() #so origional date array isnt altered when updating year in next step
             ###to handle situations where base yr version of feed period is used. In these case the year does not increment
             ###at the start of a new year eg at the start of the ny it goes back to 2019 instead of 2020
             ###in these cases when the end date is less than start it means a ny has started so we temporarily increase end date by 1yr.

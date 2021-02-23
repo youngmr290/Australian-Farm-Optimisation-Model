@@ -119,11 +119,11 @@ def f_contractseeding_occurs():
     Contract seeding is not hooked up to yield penalty because if your going to hire someone you will hire
     them at the optimum time. Contract seeding is hooked up to poc so this param stops the model having late seeding.
     '''
-    contract_start_z = per.wet_seeding_start_date()
+    contract_start_z = per.wet_seeding_start_date().astype(np.datetime64)
     mach_periods = per.p_dates_df()
     start_pz = mach_periods.values[:-1]
     end_pz = mach_periods.values[1:]
-    contractseeding_occur_pz = np.logical_and(start_pz <= contract_start_z.astype('datetime64'), contract_start_z.astype('datetime64') < end_pz)
+    contractseeding_occur_pz = np.logical_and(start_pz <= contract_start_z, contract_start_z < end_pz)
     contractseeding_occur_pz = pd.DataFrame(contractseeding_occur_pz,index=mach_periods.index[:-1],columns=mach_periods.columns)
     return contractseeding_occur_pz
     # params['contractseeding_occur'] = (mach_periods==contract_start).squeeze().to_dict()
@@ -342,7 +342,7 @@ def f_seed_cost_alloc():
     p_dates_c = per.cashflow_periods()['start date'].values
     p_name_c = per.cashflow_periods()['cash period']
     length_z = length_z.astype('timedelta64[D]')
-    start_z = per.wet_seeding_start_date().astype('datetime64')
+    start_z = per.wet_seeding_start_date().astype(np.datetime64)
     alloc_cz = fun.range_allocation_np(p_dates_c, start_z, length_z, True)
     keys_z = pinp.f_keys_z()
     alloc_cz = pd.DataFrame(alloc_cz, index=p_name_c, columns=keys_z)
@@ -417,7 +417,7 @@ def f_yield_penalty():
     dry_penalty_pzk = period_is_dry_seeding_pz[...,na] * dry_seeding_penalty_k.values
 
     ##wet seeding penalty - penalty = average penalty of period (= (start day + end day) / 2 * penalty)
-    seed_start_z = per.wet_seeding_start_date().astype('datetime64')
+    seed_start_z = per.wet_seeding_start_date().astype(np.datetime64)
     penalty_free_days_z = seed_period_lengths_pz[0].astype('timedelta64[D]')
     start_day_pz = 1 + (mach_periods_start_pz - (seed_start_z + penalty_free_days_z))/ np.timedelta64(1, 'D')
     end_day_pz = (mach_periods_end_pz - (seed_start_z + penalty_free_days_z))/ np.timedelta64(1, 'D')
@@ -503,11 +503,11 @@ def f_harv_rate_period():
         - account for crops that can be harvested early ie crops that can't be harvested early are given 0 harv rate in the first harv period
     '''
     ##season inputs through function
-    harv_start_z = pinp.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0) #when the first crop begins to be harvested (eg when harv periods start)
+    harv_start_z = pinp.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0).astype(np.datetime64) #when the first crop begins to be harvested (eg when harv periods start)
     harv_period_lengths_z = np.sum(pinp.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1), axis=0)
-    harv_end_z = harv_start_z.astype('datetime64') + harv_period_lengths_z.astype('timedelta64[D]') #when all harv is done
+    harv_end_z = harv_start_z + harv_period_lengths_z.astype('timedelta64[D]') #when all harv is done
     start_harvest_crops = pinp.crop['start_harvest_crops']
-    start_harvest_crops_kz = pinp.f_seasonal_inp(start_harvest_crops.values, numpy=True, axis=1) #start harvest for each crop
+    start_harvest_crops_kz = pinp.f_seasonal_inp(start_harvest_crops.values, numpy=True, axis=1).astype(np.datetime64) #start harvest for each crop
 
     ##harv occur - note: some crops are not harvested in the early harv period
     mach_periods_start_pz = per.p_dates_df().values[:-1]

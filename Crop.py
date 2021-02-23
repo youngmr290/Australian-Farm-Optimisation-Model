@@ -142,7 +142,7 @@ def f_base_yield():
     if pinp.crop['user_crop_rot']:
         ### User defined
         base_yields = pinp.crop['yields']
-        base_yields = pinp.f_seasonal_inp(base_yields)
+        base_yields = pinp.f_seasonal_inp(base_yields, axis=1)
         base_yields = base_yields.set_index([phases_df.index, phases_df.iloc[:,-1]])
     else:
         ### AusFarm ^need to add code for ausfarm inputs
@@ -224,7 +224,7 @@ def f_fert_req():
         ### User defined
         base_fert = pinp.crop['fert']
         base_fert = base_fert.T.set_index(['fert'], append=True).T
-        base_fert = pinp.f_seasonal_inp(base_fert)
+        base_fert = pinp.f_seasonal_inp(base_fert, axis=1)
         base_fert=base_fert.set_index([phases_df.index,phases_df.iloc[:,-1]])
     else:        
         ### AusFarm ^need to add code for ausfarm inputs
@@ -258,7 +258,7 @@ def f_fert_passes():
         ### User defined
         fert_passes = pinp.crop['fert_passes']
         fert_passes = fert_passes.T.set_index(['passes'], append=True).T
-        fert_passes = pinp.f_seasonal_inp(fert_passes)
+        fert_passes = pinp.f_seasonal_inp(fert_passes, axis=1)
         fert_passes = fert_passes.set_index([phases_df.index, phases_df.iloc[:,-1]])  #make the rotation and current landuse the index
     else:
         ### AusFarm
@@ -325,7 +325,7 @@ def f_nap_fert_req():
     ##add cont pasture fert req
     fertreq_na = f_cont_pas(fertreq_na.unstack(0))
     ##merge with full df
-    fertreq_na = pd.merge(phases_df2, fertreq_na, how='left', left_on=uinp.end_col(), right_index = True) #merge with all the phases, requires because different phases have different application passes
+    fertreq_na = pd.merge(phases_df2, fertreq_na, how='left', left_on=sinp.end_col(), right_index = True) #merge with all the phases, requires because different phases have different application passes
     fertreq_na = fertreq_na.drop(list(range(sinp.general['phase_len'])), axis=1, level=0).stack([0]) #drop the segregated landuse cols
     return fertreq_na
 
@@ -338,7 +338,7 @@ def f_nap_fert_passes():
     ##add cont pasture fert req
     passes_na = f_cont_pas(passes_na.unstack(0))
     ##merge with full df
-    passes_na = pd.merge(phases_df2, passes_na, how='left', left_on=uinp.end_col(), right_index = True) #merge with all the phases, requires because different phases have different application passes
+    passes_na = pd.merge(phases_df2, passes_na, how='left', left_on=sinp.end_col(), right_index = True) #merge with all the phases, requires because different phases have different application passes
     passes_na = passes_na.drop(list(range(sinp.general['phase_len'])), axis=1, level=0).stack([0]) #drop the segregated landuse cols
     return passes_na
 
@@ -459,7 +459,7 @@ def f_chem_application():
         ### User defined
         base_chem = pinp.crop['chem']
         base_chem = base_chem.T.set_index(['chem'], append=True).T
-        base_chem = pinp.f_seasonal_inp(base_chem)
+        base_chem = pinp.f_seasonal_inp(base_chem, axis=1)
         base_chem = base_chem.set_index([phases_df.index, phases_df.iloc[:,-1]])  #make the current landuse the index
     else:
         ### AusFarm ^need to add code for ausfarm inputs
@@ -561,18 +561,22 @@ def seedcost(r_vals):
     ##add cost for cont pasture
     phase_cost = f_cont_pas(phase_cost)
     ##cost allocation
+    # if pinp.general['steady_state']:
+    #     start_z = np.array([per.wet_seeding_start_date()], dtype=np.datetime64)
+    #     # length_z = np.sum(seed_period_lengths, axis=0).astype('timedelta64[D]') #add season axis
+    # else:
     start_z = per.wet_seeding_start_date().astype(np.datetime64)
     length_z = np.sum(seed_period_lengths, axis=0).astype('timedelta64[D]')
-    p_dates_c = per.cashflow_periods()['start date']
+    p_dates_c = per.cashflow_periods()['start date'].values
     p_name_c = per.cashflow_periods()['cash period'].iloc[:-1]
-    allocation_cz = fun.range_allocation_np(p_dates_c, start_z, length_z, True)[:-1,:] #drop last row because that is just the end date of last period
+    allocation_cz = fun.range_allocation_np(p_dates_c, start_z, length_z, True)[:-1,...] #drop last row because that is just the end date of last period
     allocation_cz = pd.DataFrame(allocation_cz, index=p_name_c, columns=i_z_idx).stack()
     ##mul cost by allocation - need to align column headers first
     columns = pd.MultiIndex.from_product([phase_cost.columns, p_name_c, i_z_idx])
     phase_cost = phase_cost.reindex(columns, axis=1, level=0)
     phase_cost = phase_cost.stack(level=0).mul(allocation_cz, axis=1).unstack()
     ##merge
-    rot_cost = pd.merge(phases_df3, phase_cost, how='left', left_on=uinp.end_col(), right_index = True)
+    rot_cost = pd.merge(phases_df3, phase_cost, how='left', left_on=sinp.end_col(), right_index = True)
     seedcost = rot_cost.drop(list(range(sinp.general['phase_len'])), axis=1).stack([1,2])
     r_vals['seedcost'] = seedcost
     return seedcost
@@ -656,9 +660,9 @@ def f_crop_sow():
     arable = pinp.crop['arable']
     cropsow = arable.reindex(pd.MultiIndex.from_product([sinp.landuse['C'],arable.index]), axis=0, level=1).droplevel(1)
     ##merge to rot phases
-    cropsow = pd.merge(phases_df, cropsow, how='left', left_on=uinp.end_col(), right_index = True)
+    cropsow = pd.merge(phases_df, cropsow, how='left', left_on=sinp.end_col(), right_index = True)
     ##add current crop to index
-    cropsow.set_index(uinp.end_col(), append=True, inplace=True)
+    cropsow.set_index(sinp.end_col(), append=True, inplace=True)
     crop_sow = cropsow.drop(list(range(sinp.general['phase_len']-1)), axis=1).stack()
     return crop_sow
 

@@ -104,6 +104,11 @@ def stockpyomo_local(params):
         pass
     model.s_k5_birth_offs = pe.Set(initialize=params['k5_idx_offs'], doc='Cluster for BTRT & oestrus cycle based on scanning, global & weaning management')
     try:
+        model.del_component(model.s_lw_offs)
+    except AttributeError:
+        pass
+    model.s_lw_offs = pe.Set(initialize=params['w_idx_offs'], doc='Standard LW patterns offs')
+    try:
         model.del_component(model.s_groups_offs)
     except AttributeError:
         pass

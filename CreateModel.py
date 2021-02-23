@@ -160,11 +160,10 @@ model.s_feed_pools = Set(initialize=sinp.general['sheep_pools'], doc='nutritive 
 # model.s_sire_periods = Set(initialize=, doc='sire capacity periods')
 
 ##dams
-model.s_nut_dams = Set(initialize=sinp.stock['i_n_idx_dams'], doc='Nutrition levels in each feed period for dams')
+model.s_nut_dams = Set(initialize=np.array(['n%s'%i for i in range(sinp.stock['i_n1_matrix_len'])]), doc='Nutrition levels in each feed period for dams')
 ##offs
 model.s_sale_offs = Set(initialize=['t%s'%i for i in range(pinp.sheep['i_t3_len'])], doc='Sales within the year for offs')
-model.s_nut_offs = Set(initialize=sinp.stock['i_n_idx_offs'], doc='Nutrition levels in each feed period for offs')
-model.s_lw_offs = Set(initialize=sinp.stock['i_w_idx_offs'], doc='Standard LW patterns offs')
+model.s_nut_offs = Set(initialize=np.array(['n%s'%i for i in range(sinp.stock['i_n3_matrix_len'])]), doc='Nutrition levels in each feed period for offs')
 ##prog
 model.s_sale_prog = Set(initialize=['t%s'%i for i in range(pinp.sheep['i_t2_len'])], doc='Sales and transfers options for yatf')
 model.s_lw_prog = Set(initialize=['lw%02d'%i for i in range(sinp.stock['i_progeny_w2_len'])], doc='Standard LW patterns prog')

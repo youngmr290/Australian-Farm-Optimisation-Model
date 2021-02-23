@@ -23,6 +23,7 @@ from dateutil.relativedelta import relativedelta
 # from LabourInputs import *
 import PropertyInputs as pinp
 import UniversalInputs as uinp
+import StructuralInputs as sinp
 import Periods as per
 import Functions as fun
 
