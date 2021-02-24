@@ -47,7 +47,7 @@ if inputs_from_pickle == False:
         ##mach inputs - general
         mach_general_inp = fun.xl_all_named_ranges("Universal.xlsx","Mach General")
         pkl.dump(mach_general_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
-        
+
         ##sup inputs
         sup_inp = fun.xl_all_named_ranges("Universal.xlsx","Sup Feed")
         pkl.dump(sup_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
@@ -79,7 +79,7 @@ else:
         finance_inp = pkl.load(f)
         
         mach_general_inp = pkl.load(f)
-        
+
         sup_inp = pkl.load(f)
         
         crop_inp = pkl.load(f)
@@ -196,5 +196,67 @@ def universal_inp_sa():
 
 
 
+##############
+#need to be added to spreadsheet - added by mry when adding dvps
+##############
+
+structure['i_fvp4_date_i'] = np.array([np.datetime64('2019-11-15'), np.datetime64('2019-01-15')])
+                                        #prejoin, others..............
+structure['i_fvp_mask_dams'] = np.array([True, True, True, True,	False]) #prejoining dvp must always be True. (dvp from start of sim to first other dvp is not included - it is added as a true in code)
+structure['i_dvp_mask_f1'] = np.array([True, True, True, False,	False]) #prejoining dvp must always be True. (dvp from start of sim to first other dvp is not included - it is added as a true in code)
+structure['i_w_start_len'] = 3
+
+structure['i_fvp_mask_offs'] = np.array([True, True, True, True,	False]) #prejoining dvp must always be True. (dvp from start of sim to first other dvp is not included - it is added as a true in code)
+structure['i_dvp_mask_f1'] = np.array([True, False, False, False,	False]) #prejoining dvp must always be True. (dvp from start of sim to first other dvp is not included - it is added as a true in code)
+
+## r1type is the reproduction type of the period (0 is prejoining to scanning, 1 is scanning to birth, 2 is birth to prejoining)
+structure['ia_r1type_fi'] = np.array([[0,0], #the slices of the f axis that are not a DVP are not used and therefore just leave them as 2 (default))
+                                     [1,1],
+                                     [2,2],
+                                     [2,2],
+                                     [2,2]]) #todo add this input also make sure user changes this when changing dvp timing.
+### rtype
+'''
+n_fvps_v is the number of FVPs within the DVP
+n_prior_fvps_v is the number of FVPs prior to the start of this DVP. 
+So if the DVP dates are say
+1 Feb, 1 May & 1 July and the FVP dates are
+1 Feb, 1 May, 1 June, 1 July, 1 Oct. Then 
+n_fvps_v = 1,2,2 because 1 fvp in the first DVP and 2 in each of the other two DVPs
+n_prior_fvps_v = 0, 1, 3 which is the cumulative sum of n_fvps_v in the previous DVPs (ie not including this DVP)
+This could be calculated in the code but for now is an input. 
+Note: the values can change along the i axis if the FVP date is not relative to a reproduction event.
+'''
+#number of fvps that occur during a dvp.
+# Note: the shape alters if DVPs are masked
+# Note: the values alter if FVPs are masked
+n_fvps_vi1 = np.array([[1,1], #this is only the v type axis. it is expanded to full v axis in code.
+                       [1,1],
+                       [2,2]])
+structure['i_n_fvps_vi1'] = n_fvps_vi1
+#number of fvps since condensing. this changes if fvp/dvp added or removed or changes date.
+n_prior_fvps_vi1 = np.cumsum(n_fvps_vi1, axis = 0) - n_fvps_vi1  #assumes that condensing is the start of the first DVP type
+# structure['i_n_prior_fvps_vi1'] = np.array([[0,0], #this is only the v type axis. it is expanded to full v axis in code.
+#                                              [1,1],
+#                                              [2,2]])
+structure['i_n_prior_fvps_vi1'] = n_prior_fvps_vi1
+
+##Offspring
+n_fvps_vi3 = np.array([[3,3]]), #this is only the v type axis. it is expanded to full v axis in code.
+structure['i_n_fvps_vi3'] = n_fvps_vi3
+#number of fvps since condensing. this changes if fvp/dvp added or removed or changes date.
+n_prior_fvps_vi3 = np.cumsum(n_fvps_vi3, axis = 0) - n_fvps_vi3  #assumes that condensing is the start of the first DVP type
+structure['i_n_prior_fvps_vi3'] = n_prior_fvps_vi3
+
+##need to alter how these are handle
+#todo remove the inputs below.
+#structure['i_n_fvp_period1']
+# structure['i_w1_len']
+# structure['i_w_idx_dams']
+#todo these need to be calibrated - these are mask to be the correct length but need to ensure that the values are correct for the number of dvps
+structure['i_adjp_lw_initial_w1'] = np.array([0.0, 0.15, -0.15])
+structure['i_adjp_cfw_initial_w1'] = np.array([0.0, 0.10, -0.10])
+structure['i_adjp_fd_initial_w1'] = np.array([0.0, 0.5, -0.5])
+structure['i_adjp_fl_initial_w1'] = np.array([0.0, 0.10, -0.10])
 
 
