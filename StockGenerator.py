@@ -3738,18 +3738,18 @@ def generator(params,r_vals,ev,plots = False):
     dvp_start_va1e1b1nwzida0e0b0xyg1 = np.concatenate(dvp_date_inc_v1,axis=0)
     dvp_type_va1e1b1nwzida0e0b0xyg1 = np.concatenate(dvp_type_inc_v1,axis=0) #note dvp type doesnt have to start at 0 or be consecutive.
     ind=np.argsort(dvp_start_va1e1b1nwzida0e0b0xyg1, axis=0)
-    dvp_date_start_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(dvp_start_va1e1b1nwzida0e0b0xyg1, ind, axis=0)
+    dvp_date_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(dvp_start_va1e1b1nwzida0e0b0xyg1, ind, axis=0)
     dvp_type_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(dvp_type_va1e1b1nwzida0e0b0xyg1, ind, axis=0)
     ###dvp pointer and index
-    a_v_pa1e1b1nwzida0e0b0xyg1 =  np.apply_along_axis(sfun.f_next_prev_association, 0, dvp_date_start_va1e1b1nwzida0e0b0xyg1, date_end_p, 1,'right')
+    a_v_pa1e1b1nwzida0e0b0xyg1 =  np.apply_along_axis(sfun.f_next_prev_association, 0, dvp_date_va1e1b1nwzida0e0b0xyg1, date_end_p, 1,'right')
     index_va1e1b1nwzida0e0b0xyg1 = fun.f_expand(np.arange(np.max(a_v_pa1e1b1nwzida0e0b0xyg1)+1), p_pos)
     index_vpa1e1b1nwzida0e0b0xyg1 = fun.f_expand(np.arange(np.max(a_v_pa1e1b1nwzida0e0b0xyg1)+1), p_pos-1)
     ###other dvp associations and masks
-    a_p_va1e1b1nwzida0e0b0xyg1 = sfun.f_next_prev_association(date_start_p, dvp_date_start_va1e1b1nwzida0e0b0xyg1, 1, 'right').astype(dtypeint) #returns the period index for the start of each dvp
-    dvp_date_start_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(dvp_date_start_va1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1,0)
+    a_p_va1e1b1nwzida0e0b0xyg1 = sfun.f_next_prev_association(date_start_p, dvp_date_va1e1b1nwzida0e0b0xyg1, 1, 'right').astype(dtypeint) #returns the period index for the start of each dvp
+    dvp_date_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(dvp_date_va1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1,0)
     dvp_type_next_va1e1b1nwzida0e0b0xyg1 = np.roll(dvp_type_va1e1b1nwzida0e0b0xyg1, -1, axis=p_pos)
     dvp_type_va1e1b1nwzida0e0b0xyg1[0] = condense_vtype1 #change dvp type for dvp from start of sim to first real dvp so it is correctly masked later in pp (because there is only 3 different weights (which is technically type 0)) but don't want to change fvp type because we still want to trigger a dvp change at the first real fvp.
-    period_is_startdvp_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is', dvp_date_start_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
+    period_is_startdvp_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is', dvp_date_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
     nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg1 = np.roll(period_is_startdvp_pa1e1b1nwzida0e0b0xyg1,-1,axis=0)
     nextperiod_is_prejoin_pa1e1b1nwzida0e0b0xyg1 = np.roll(period_is_prejoin_pa1e1b1nwzida0e0b0xyg1,-1,axis=0)
     #### the transfer to a dvp_type other than type==0 only occurs when transferring to and from the same genotype
@@ -3801,8 +3801,6 @@ def generator(params,r_vals,ev,plots = False):
     # dvp_date_wean_va1e1b1nwzida0e0b0xyg3 = np.take_along_axis(dvp_date_wean_va1e1b1nwzida0e0b0xyg3, ind, axis=0)
     date_weaned_a1e1b1nwzida0e0b0xyg3 = np.broadcast_to(date_weaned_ida0e0b0xyg3,fvp_0_start_oa1e1b1nwzida0e0b0xyg3.shape[1:]) #need wean date rather than first day of yr because selling inputs are days from weaning.
     date_wean_shearing_sa1e1b1nwzida0e0b0xyg3 = np.concatenate([date_weaned_a1e1b1nwzida0e0b0xyg3[na,...],fvp_0_start_oa1e1b1nwzida0e0b0xyg3], axis=0)
-
-
 
     ###dvp pointer and index
     a_v_pa1e1b1nwzida0e0b0xyg3 =  np.apply_along_axis(sfun.f_next_prev_association, 0, dvp_date_va1e1b1nwzida0e0b0xyg3, offs_date_end_p, 1,'right')
@@ -4391,23 +4389,34 @@ def generator(params,r_vals,ev,plots = False):
         step is equal to the total number of patterns i_w_start_len * (i_n_len ** i_n_fvp_period) divided by the number 
         of constraints : i_w_start_len * (i_n_len ** i_n_prior_damsfvps_v) 
         or decision variables: i_w_start_len * (i_n_len ** (i_n_prior_damsfvps_v + i_n_damsfvps_v)). 
-        This can be simplified to a single line equation because the terms cancel out'''
+        This can be simplified to a single line equation because the terms cancel out
+        
+        n_fvps_v is the number of FVPs within the DVP
+        n_prior_fvps_v is the number of FVPs prior to the start of this DVP. 
+        So if the DVP dates are say
+        1 Feb, 1 May & 1 July and the FVP dates are
+        1 Feb, 1 May, 1 June, 1 July, 1 Oct. Then 
+        n_fvps_v = 1,2,2 because 1 fvp in the first DVP and 2 in each of the other two DVPs
+        n_prior_fvps_v = 0, 1, 3 which is the cumulative sum of n_fvps_v in the previous DVPs (ie not including this DVP)
+        Note: the values can change along the i axis if the FVP date is not relative to a reproduction event.
+        '''
     allocation_start = time.time()
     ##dams
-    n_fvps_va1e1b1nwzida0e0b0xyg1 = np.zeros(dvp_type_va1e1b1nwzida0e0b0xyg1.shape)
+    n_fvps_va1e1b1nwzida0e0b0xyg1 = np.ones(dvp_type_va1e1b1nwzida0e0b0xyg1.shape)
+    n_fvps_cum_va1e1b1nwzida0e0b0xyg1 = np.zeros(dvp_type_va1e1b1nwzida0e0b0xyg1.shape)
+    cum_index_va1e1b1nwzida0e0b0xyg1 = np.maximum.accumulate((dvp_type_va1e1b1nwzida0e0b0xyg1==condense_vtype1)
+                                                             * index_va1e1b1nwzida0e0b0xyg1, axis=0)  # return index which is the same for dvps in the same condense cycle
     for i in range(dvp_type_va1e1b1nwzida0e0b0xyg1.shape[0]-1):
         dvp_start = dvp_date_va1e1b1nwzida0e0b0xyg1[i,...]
         dvp_end = dvp_date_va1e1b1nwzida0e0b0xyg1[i+1,...]
         n_fvp = ((fvp_date_start_fa1e1b1nwzida0e0b0xyg1 >= dvp_start) & (fvp_date_start_fa1e1b1nwzida0e0b0xyg1 < dvp_end)).sum(axis=0)
         n_fvps_va1e1b1nwzida0e0b0xyg1[i,...] = n_fvp
-
-
-    # n_fvps_va1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(sinp.stock['i_n_fvps_vi1'], i_pos, left_pos2=p_pos, right_pos2=i_pos
-    #                                                      , condition=pinp.sheep['i_mask_i'], axis=i_pos, condition2=dvp_mask_dams, axis2=0)
-    # n_prior_fvps_va1e1b1nwzida0e0b0xyg1 = fun.f_reshape_expand(sinp.stock['i_n_prior_fvps_vi1'], i_pos, left_pos2=p_pos, right_pos2=i_pos
-    #                                                            , condition=pinp.sheep['i_mask_i'], axis=i_pos, condition2=dvp_mask_dams, axis2=0)
-    # n_fvps_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(n_fvps_va1e1b1nwzida0e0b0xyg1, dvp_type_va1e1b1nwzida0e0b0xyg1, 0) #expand v type axis to the full v
-    # n_prior_fvps_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(n_prior_fvps_va1e1b1nwzida0e0b0xyg1, dvp_type_va1e1b1nwzida0e0b0xyg1, 0) #expand v type axis to the full v
+        ### number of fvps since condensing.
+        cum_idx_cut_va1e1b1nwzida0e0b0xyg1 = cum_index_va1e1b1nwzida0e0b0xyg1[i:i+1]
+        n_fvps_cum_va1e1b1nwzida0e0b0xyg1[i] = np.cumsum(n_fvps_va1e1b1nwzida0e0b0xyg1 *
+                                                         (cum_index_va1e1b1nwzida0e0b0xyg1==cum_idx_cut_va1e1b1nwzida0e0b0xyg1),
+                                                         axis=0)[i]
+    n_prior_fvps_vi1 = n_fvps_cum_va1e1b1nwzida0e0b0xyg1 - n_fvps_va1e1b1nwzida0e0b0xyg1
 
     ###Steps for ‘Numbers Requires’ constraint is determined by the number of prior FVPs
     step_con_req_va1e1b1nw8zida0e0b0xyg1 = np.power(n_fs_dams, (n_fvp_periods_dams
