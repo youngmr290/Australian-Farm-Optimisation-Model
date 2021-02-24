@@ -49,8 +49,8 @@ import CorePyomo as core
 # import logging
 # logger = multiprocessing.log_to_stderr(logging.DEBUG)
 
-## the upper limit of number of processes based on the memory capacity of this machine
-memory_limit = 16
+## the upper limit of number of processes (concurrent trials) based on the memory capacity of this machine
+maximum_processes = 8  # available memory / value determined by size of the model being run (~5GB for the small model)
 
 start_time1 = time.time()
 
@@ -246,7 +246,7 @@ def exp(row):
 
     ##determine expected time to completion - trials left multiplied by average time per trial &time for current loop
     dataset = list(np.flatnonzero(np.array(exp_data.index.get_level_values(0)) * np.array(exp_data1['run']))) #gets the ordinal index values for the trials the user wants to run that are not up to date
-    processes = multiprocessing.cpu_count()
+    processes = min(multiprocessing.cpu_count(), len(dataset), maximum_processes)
     total_batches = math.ceil(len(dataset) / processes )
     current_batch = math.ceil( (dataset.index(row)+1) / processes ) #add 1 because python starts at 0
     remaining_batches = total_batches - current_batch
@@ -270,7 +270,8 @@ def main():
     print('Number of full solutions: ',sum((exp_data.index[row][1] == True) and (exp_data.index[row][0] == True) for row in range(len(exp_data))))
     print('Exp.xlsx last saved: ',datetime.fromtimestamp(round(os.path.getmtime("exp.xlsx"))))
     ##start multiprocessing
-    agents = min(multiprocessing.cpu_count(), len(dataset), memory_limit) # number of agents (processes) should be min of the num of cpus, number of trials trial or the user specified memory capacity
+    ### number of agents (processes) should be min of the num of cpus, number of trials trial or the user specified limit due to memory capacity
+    agents = min(multiprocessing.cpu_count(), len(dataset), maximum_processes)
     with multiprocessing.Pool(processes=agents) as pool:
         trials_successfully_run = pool.map(exp, dataset)
 
