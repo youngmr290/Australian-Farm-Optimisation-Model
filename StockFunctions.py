@@ -276,6 +276,7 @@ def f_g2g(array_g,group,left_pos=0,swap=False,right_pos=-1,left_pos2=0,right_pos
     ##swap axis if necessary
     if swap:
         array_g = np.swapaxes(array_g, 0, 1)
+
     ##get axis into correct position 1
     if left_pos != None or left_pos != 0:
         extra_axes = tuple(range((left_pos + 1), right_pos))
@@ -1272,7 +1273,7 @@ def f_period_start_prod(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len,
         ###adjust production for min lw: w slice -1 is assigned the lowest weight for all seasons and the production associated with that (this is so the light animals in the poor seasons are not disregarded)
         sl = [slice(None)] * temporary.ndim
         sl[sinp.stock['i_w_pos']] = slice(-1,None)
-        temporary[tuple(sl)] = np.take_along_axis(var_start, np.expand_dims(idx_min_lw_z, axis=season_tup), axis=season_tup)
+        temporary[tuple(sl)] = np.take_along_axis(var_start, np.expand_dims(idx_min_lw_z, axis=season_tup), axis=season_tup)[tuple(sl)]
         ###Set values where it is beginning of FVP
         var_start = fun.f_update(var_start, temporary, period_is_startseason)
     if group==1 and np.any(period_is_prejoin):
@@ -1402,7 +1403,7 @@ def f_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfoe
         ###d) birth (account for birth status and if drys are retained)
         if np.any(period_is_birth):
             dam_propn_birth_b1 = f_comb(nfoet_b1, nyatf_b1) * (1 - mortality_yatf) ** nyatf_b1 * mortality_yatf ** (nfoet_b1 - nyatf_b1) # the proportion of dams of each LSLN based on (progeny) mortality
-            temp = np.sum(dam_propn_birth_b1 * gender_propn_x, axis=sinp.stock['i_x_pos'], keepdims=True) * numbers[:,:,sinp.stock['a_prepost_b1'],...] #have to average x axis so that it is not active for dams - times by gender propn to give approx weighting (ie because offs are not usually entire males so they will get low weighting)
+            temp = np.sum(dam_propn_birth_b1 * gender_propn_x, axis=sinp.stock['i_x_pos'], keepdims=True) * numbers[:,:,sinp.stock['ia_prepost_b1'],...] #have to average x axis so that it is not active for dams - times by gender propn to give approx weighting (ie because offs are not usually entire males so they will get low weighting)
             pp_numbers = fun.f_update(numbers, temp, period_is_birth)  # calculated in the period after birth when progeny mortality due to exposure is calculated
             temp = np.maximum(pinp.sheep['i_drysretained_birth'],np.minimum(1, nyatf_b1)) * pp_numbers
             numbers = fun.f_update(pp_numbers, temp, period_is_birth * (gbal>=2)) # has to happen after the dams are moved due to progeny mortality so that gbal drys are also scaled by drys_retained
@@ -2009,10 +2010,9 @@ def f_cum_dvp(arr,dvp_pointer,axis=0,shift=0):
     return final
 
 def f_lw_distribution(ffcfw_condensed_va1e1b1nwzida0e0b0xyg, ffcfw_va1e1b1nwzida0e0b0xyg, i_n_len, i_n_fvp_period, dvp_type_next_tvgw=0, condense_vtype=0, season_vtype=0):
-    '''distributing animals on LW at the start of dvp0
-    ^ this function will need altering if the dvp_type definition changes'''
+    '''distributing animals on LW at the start of dvp0'''
     ##add second w axis - the condensed w axis becomes axis -1 and the end of period w stays in the normal place
-    ffcfw_condensed_va1e1b1nwzida0e0b0xygw = fun.f_reshape_expand(np.moveaxis(ffcfw_condensed_va1e1b1nwzida0e0b0xyg,sinp.stock['i_w_pos'],-1), sinp.stock['i_n_pos']-1, right_pos=sinp.stock['i_z_pos']-1)
+    ffcfw_condensed_va1e1b1nwzida0e0b0xygw = fun.f_expand(np.moveaxis(ffcfw_condensed_va1e1b1nwzida0e0b0xyg, sinp.stock['i_w_pos'],-1), sinp.stock['i_n_pos']-1, right_pos=sinp.stock['i_z_pos']-1)
     ##Calculate the difference between the 3 (or more if not dvp0) condensed weights and the middle weight (slice 0)
     diff = ffcfw_condensed_va1e1b1nwzida0e0b0xygw - f_dynamic_slice(ffcfw_condensed_va1e1b1nwzida0e0b0xygw, -1, 0, 1)
     ##Calculate the spread that would generate the average weight

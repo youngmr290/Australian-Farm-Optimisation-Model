@@ -58,7 +58,7 @@ print('- finished')
 ##reshape require inputs
 ###lengths
 len_b0 = stock_inp['ia_ppk5_lsb0'].shape[-1]
-len_b1 = stock_inp['ia_ppk2g1_vlsb1'].shape[-1]
+len_b1 = stock_inp['ia_ppk2g1_rlsb1'].shape[-1]
 len_l = stock_inp['i_len_l']
 len_m = stock_inp['i_len_m']
 len_s = stock_inp['i_len_s']
@@ -70,7 +70,7 @@ mlsb1 = (len_m,len_l,len_s,len_b1)
 lsb0 = (len_l,len_s,len_b0)
 
 ###stock
-stock_inp['ia_ppk2g1_vlsb1'] = np.reshape(stock_inp['ia_ppk2g1_vlsb1'],rlsb1)
+stock_inp['ia_ppk2g1_rlsb1'] = np.reshape(stock_inp['ia_ppk2g1_rlsb1'],rlsb1)
 stock_inp['ia_ppk5_lsb0'] = np.reshape(stock_inp['ia_ppk5_lsb0'],lsb0)
 stock_inp['ia_k2_mlsb1'] = np.reshape(stock_inp['ia_k2_mlsb1'],mlsb1)
 

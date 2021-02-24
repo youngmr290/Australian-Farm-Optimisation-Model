@@ -55,7 +55,7 @@ def stubble_all(params):
     stubble_per_grain = crp.f_stubble_production() #produces dict with stubble production per kg of yield for each grain used in the ri.availability section
 
     ##days since harvest (calculated from the end date of each fp)
-    days_since_harv_p6zk = fp_end_p6z[...,na] - harv_date_zk
+    days_since_harv_p6zk = fp_end_p6z[...,na] - harv_date_zk.astype('datetime64[D]')
     days_since_harv_p6zk[days_since_harv_p6zk.astype(int)<0] = days_since_harv_p6zk[days_since_harv_p6zk.astype(int)<0] + 365  #add 365 to the periods at the start of the year becasue as far as stubble goes they are after harvest
     average_days_since_harv_p6zk = days_since_harv_p6zk - np.minimum(days_since_harv_p6zk, (fp_end_p6z - fp_start_p6z)[...,na])/2 #subtract half the length of current period to get the average days since harv. Minimum is to handle the period when harvest occurs.
     average_days_since_harv_p6zk = average_days_since_harv_p6zk.astype(float)
