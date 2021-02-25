@@ -497,6 +497,7 @@ def coremodel_all():
             model.p_foo_start_grnha.store_values(params[scenario_name]['p_foo_start_grnha_oflt'])
             model.p_senesce_grnha.store_values(params[scenario_name]['p_senesce_grnha_dgoflt'])
             model.p_me_cons_grnha.store_values(params[scenario_name]['p_me_cons_grnha_vgoflt'])
+            model.p_dry_mecons_t.store_values(params[scenario_name]['p_dry_mecons_t_vdft'])
             model.p_volume_grnha.store_values(params[scenario_name]['p_volume_grnha_goflt'])
             model.p_dry_volume_t.store_values(params[scenario_name]['p_dry_volume_t_dft'])
             model.p_dry_transfer_t.store_values(params[scenario_name]['p_dry_transfer_t_ft'])

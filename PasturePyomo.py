@@ -102,7 +102,7 @@ def paspyomo_local(params):
         model.del_component(model.p_dry_mecons_t)
     except AttributeError:
         pass
-    model.p_dry_mecons_t = pe.Param(model.s_feed_pools, model.s_dry_groups, model.s_feed_periods, model.s_pastures, initialize=params['p_dry_mecons_t_vdft'], default=0, doc='Total ME from grazing a tonne of dry feed')
+    model.p_dry_mecons_t = pe.Param(model.s_feed_pools, model.s_dry_groups, model.s_feed_periods, model.s_pastures, initialize=params[season]['p_dry_mecons_t_vdft'], default=0, doc='Total ME from grazing a tonne of dry feed')
     
     try:
         model.del_component(model.p_dry_volume_t_index)

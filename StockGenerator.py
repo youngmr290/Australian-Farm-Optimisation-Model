@@ -4725,9 +4725,13 @@ def generator(params,r_vals,ev,plots = False):
 
 
     ###offs
-    numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9 =  1*(np.sum((a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)*(a_k5cluster_da0e0b0xyg3==index_k5tva1e1b1nwzida0e0b0xyg3)
-                                                             , axis = (d_pos, b0_pos, e0_pos), keepdims=True)[...,na
-                                                      ] * mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg3w9 * (index_vpa1e1b1nwzida0e0b0xyg3==index_vpa1e1b1nwzida0e0b0xyg3) >0) #add active v axis
+    numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9 =  1*(np.sum((a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na]
+                                                                *(a_k5cluster_da0e0b0xyg3==index_k5tva1e1b1nwzida0e0b0xyg3)[...,na]
+                                                                * mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg3w9
+                                                             , axis = (d_pos-1, b0_pos-1, e0_pos-1), keepdims=True)  >0) #add active v axis
+    # numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9 =  1*(np.sum((a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)*(a_k5cluster_da0e0b0xyg3==index_k5tva1e1b1nwzida0e0b0xyg3)
+    #                                                          , axis = (d_pos, b0_pos, e0_pos), keepdims=True)[...,na
+    #                                                   ] * mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg3w9 * (index_vpa1e1b1nwzida0e0b0xyg3==index_vpa1e1b1nwzida0e0b0xyg3) >0) #add active v axis
 
     ##Setting the parameters at the end of the generator to 0 removes passing animals into the constraint that links the end of life with the beginning of life.
     numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,:,:,-1,...] = 0
@@ -5356,7 +5360,7 @@ def generator(params,r_vals,ev,plots = False):
     progreq_k3vw8ixw9 = numbers_progreq_k3k5tva1e1b1nw8zida0e0b0xyg3w9[mask] #applying the mask does the raveling and squeezing of singleton axis
     mask=mask.ravel()
     index_cut_k3vw8ixw9=index_k3vw8ixw9[mask,:]
-    tup_k3kvw8ixw9 = tuple(map(tuple, index_cut_k3vw8ixw9))
+    tup_k3vw8ixw9 = tuple(map(tuple, index_cut_k3vw8ixw9))
     params['p_progreq_offs'] =dict(zip(tup_k3vw8ixw9, progreq_k3vw8ixw9))
     # mask=numbers_progreq_va1e1b1nw8zida0e0b0xyg3w9!=0
     # progreq_vw8ixw9 = numbers_progreq_va1e1b1nw8zida0e0b0xyg3w9[mask] #applying the mask does the raveling and squeezing of singleton axis

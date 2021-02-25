@@ -18,7 +18,7 @@ from timeit import default_timer as timer
 time_list = [] ; time_was = []
 time_list.append(timer()) ; time_was.append("start")
 
-import UniversalInputs as uinp
+import StructuralInputs as sinp
 import PropertyInputs as pinp
 
 time_list.append(timer()) ; time_was.append("import Universal")

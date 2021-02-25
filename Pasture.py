@@ -86,11 +86,11 @@ def f_pasture(params, r_vals, ev):
 
 
     # vgoflt = (n_feed_pools, n_grazing_int, n_foo_levels, n_feed_periods, n_lmu, n_pasture_types)
-    dgoflt = (n_dry_groups, n_grazing_int, n_foo_levels, n_feed_periods, n_lmu, n_pasture_types)
+    dgoflzt = (n_dry_groups, n_grazing_int, n_foo_levels, n_feed_periods, n_lmu,  n_season_types, n_pasture_types)
     # vdft   = (n_feed_pools, n_dry_groups, n_feed_periods, n_pasture_types)
     vft    = (n_feed_pools, n_feed_periods, n_pasture_types)
     dft    = (n_dry_groups, n_feed_periods, n_pasture_types)
-    goflt  = (n_grazing_int, n_foo_levels, n_feed_periods, n_lmu, n_pasture_types)
+    goflzt  = (n_grazing_int, n_foo_levels, n_feed_periods, n_lmu,  n_season_types, n_pasture_types)
     # goft   = (n_grazing_int, n_foo_levels, n_feed_periods, n_pasture_types)
     gft    = (n_grazing_int, n_feed_periods, n_pasture_types)
     gt     = (n_grazing_int, n_pasture_types)
@@ -687,10 +687,10 @@ def f_pasture(params, r_vals, ev):
                                                  ,   me_maintenance_vft[:, na, na,:, na, na, :]
                                                  ,           grn_ri_goflzt
                                                  ,i_me_eff_gainlose_ft[:, na, na, :])
-    me_cons_grnha_vgoflzt = me_cons_grnha_vgoflzt[..., na,:] * mask_greenfeed_exists_fzt[:, na,...]  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
+    me_cons_grnha_vgoflzt = me_cons_grnha_vgoflzt * mask_greenfeed_exists_fzt[:, na,...]  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
 
     volume_grnha_goflzt    =  cons_grnha_t_goflzt / grn_ri_goflzt              # parameters for the growth/grazing activities: Total volume of feed consumed from the hectare
-    volume_grnha_goflzt = volume_grnha_goflzt[..., na,:] * mask_greenfeed_exists_fzt[:, na,...]  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
+    volume_grnha_goflzt = volume_grnha_goflzt * mask_greenfeed_exists_fzt[:, na,...]  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
 
     ## dry, dmd & foo of feed consumed
     ### do sensitivity adjustment for dry_dmd_input based on increasing/reducing the reduction in dmd from the maximum (starting value)
@@ -725,12 +725,12 @@ def f_pasture(params, r_vals, ev):
     dry_md_dfzt           = fun.dmd_to_md(dry_dmd_dfzt)
     dry_md_vdfzt          = np.stack([dry_md_dfzt] * n_feed_pools, axis = 0)
     ## convert to effective quality per tonne
-    dry_mecons_t_vdft  = fun.f_effective_mei( 1000                                    # parameters for the dry feed grazing activities: Total ME of the tonne consumed
+    dry_mecons_t_vdfzt  = fun.f_effective_mei( 1000                                    # parameters for the dry feed grazing activities: Total ME of the tonne consumed
                             ,           dry_md_vdfzt
-                            ,   me_maintenance_vft[:, na,:,:]
+                            ,   me_maintenance_vft[:, na,:,na,:]
                             ,           dry_ri_dfzt
-                            ,i_me_eff_gainlose_ft)
-    dry_mecons_t_vdfzt = dry_mecons_t_vdft[..., na,:] * mask_dryfeed_exists_fzt  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
+                            ,i_me_eff_gainlose_ft[:,na,:])
+    dry_mecons_t_vdfzt = dry_mecons_t_vdfzt * mask_dryfeed_exists_fzt  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
 
     ## dry, animal removal
     dry_removal_t_ft  = 1000 * (1 + i_dry_trampling_ft)
@@ -747,7 +747,7 @@ def f_pasture(params, r_vals, ev):
                                             - dry_dmd_low_fzt[:, na,:]), 0, 1)
     senesce_propn_dgoflzt[0,...] = 1- senesce_propn_dgoflzt[1,...]                       # senescence to low pool
     senesce_grnha_dgoflzt        = senesce_total_grnha_goflzt * senesce_propn_dgoflzt       # ^alternative in one array parameters for the growth/grazing activities: quantity of green that senesces to the high pool
-    senesce_grnha_dgoflzt        = senesce_grnha_dgoflzt[..., na,:] * mask_greenfeed_exists_fzt[:, na,...]  # apply mask - green pasture only senesces when green pas exists.
+    senesce_grnha_dgoflzt        = senesce_grnha_dgoflzt * mask_greenfeed_exists_fzt[:, na,...]  # apply mask - green pasture only senesces when green pas exists.
 
 
     ######
@@ -772,8 +772,8 @@ def f_pasture(params, r_vals, ev):
         ri_qual_fz     = sfun.f_rq_cs(i_poc_dmd_ft[...,na,0], i_legume_zt[...,0])
     
     ### adjust foo and calc hf
-    i_poc_foo_fz, hf = sfun.f_foo_convert(cu3, cu4, i_poc_foo_ft[:,na,na,0], pinp.sheep['i_hr_scalar'], pinp.sheep['i_region'],
-                                         uinp.pastparameters['i_n_pasture_stage'],uinp.pastparameters['i_hd_std'], i_legume_zt, i_pasture_stage_p6z)
+    i_poc_foo_fz, hf = sfun.f_foo_convert(cu3, cu4, i_poc_foo_ft[:,na,0], pinp.sheep['i_hr_scalar'], pinp.sheep['i_region'],
+                                         uinp.pastparameters['i_n_pasture_stage'],uinp.pastparameters['i_hd_std'], i_legume_zt[...,0], i_pasture_stage_p6z)
     ### calc relative availability - note that the equation system used is the one selected for dams in p1 - need to hook up mu function
     if uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used
         ri_quan_fz = sfun.f_ra_cs(i_poc_foo_fz, hf)
@@ -789,9 +789,6 @@ def f_pasture(params, r_vals, ev):
 
     erosion_rav_flrt = erosion_flrt.ravel()
     params['p_erosion_flrt'] = dict(zip(index_flrt,erosion_rav_flrt))
-
-    dry_mecons_t_rav_vdft = dry_mecons_t_vdft.ravel()
-    params['p_dry_mecons_t_vdft'] = dict(zip(index_vdft,dry_mecons_t_rav_vdft))
 
     dry_removal_t_rav_ft = dry_removal_t_ft.ravel()
     params['p_dry_removal_t_ft'] = dict(zip(index_ft,dry_removal_t_rav_ft))
@@ -842,6 +839,9 @@ def f_pasture(params, r_vals, ev):
 
         me_cons_grnha_rav_vgoflt = me_cons_grnha_vgoflzt[...,z,:].ravel()
         params[scenario]['p_me_cons_grnha_vgoflt'] = dict(zip(index_vgoflt,me_cons_grnha_rav_vgoflt))
+
+        dry_mecons_t_rav_vdft = dry_mecons_t_vdfzt[...,z,:].ravel()
+        params[scenario]['p_dry_mecons_t_vdft'] = dict(zip(index_vdft,dry_mecons_t_rav_vdft))
 
         volume_grnha_rav_goflt = volume_grnha_goflzt[...,z,:].ravel()
         params[scenario]['p_volume_grnha_goflt'] = dict(zip(index_goflt,volume_grnha_rav_goflt))
