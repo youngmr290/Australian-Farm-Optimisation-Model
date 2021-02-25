@@ -4782,8 +4782,8 @@ def generator(params,r_vals,ev,plots = False):
     salevalue_prog_tpa1e1b1nwzida0e0b0xyg2 = salevalue_prog_wzida0e0b0xyg2 * (index_tpa1e1b1nwzida0e0b0xyg2==0)
 
     ##add c axis to prog - using period_is_wean so that correct c slice is activated
-    salevalue_prog_cta1e1b1nwzida0e0b0xyg2 = sfun.f_p2v_std(salevalue_prog_tpa1e1b1nwzida0e0b0xyg2, period_is_tvp=period_is_wean_pa1e1b1nwzida0e0b0xyg2[:,:,0:1,...], #weaning is same for all e slices
-                                     a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg,index_any1tvp=index_ctpa1e1b1nwzida0e0b0xyg) / np.count_nonzero(period_is_wean_pa1e1b1nwzida0e0b0xyg2[:,:,0:1,...], axis=0) #divide by the number of weaning times down the p axis because all weaning times for lambs with different age mums are combined into single activity.
+    salevalue_prog_cta1e1b1nwzida0e0b0xyg2 = (sfun.f_p2v_std(salevalue_prog_tpa1e1b1nwzida0e0b0xyg2, period_is_tvp=period_is_wean_pa1e1b1nwzida0e0b0xyg2[:,:,0:1,...], #weaning is same for all e slices
+                                     a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg,index_any1tvp=index_ctpa1e1b1nwzida0e0b0xyg) / np.count_nonzero(period_is_wean_pa1e1b1nwzida0e0b0xyg2[:,:,0:1,...], axis=0)).astype(dtype) #divide by the number of weaning times down the p axis because all weaning times for lambs with different age mums are combined into single activity.
 
     ##mask w8 (prog) to w9 (dams)
     step_con_prog2dams = n_fs_dams ** n_fvp_periods_dams
@@ -4824,7 +4824,7 @@ def generator(params,r_vals,ev,plots = False):
 
     ##transfer progeny to dam replacements
     ###liveweight distribution
-    ffcfw_initial_wzida0e0b0xyg1 = lw_initial_wzida0e0b0xyg1 - cfw_initial_wzida0e0b0xyg1 / cw_dams[3, ...]
+    ffcfw_initial_wzida0e0b0xyg1 = (lw_initial_wzida0e0b0xyg1 - cfw_initial_wzida0e0b0xyg1 / cw_dams[3, ...]).astype(dtype)
     distribution_2dams_wzida0e0b0xyg2w9 = sfun.f_lw_distribution(ffcfw_initial_wzida0e0b0xyg1, ffcfw_prog_wzida0e0b0xyg2, n_fs_dams, n_fvp_periods_dams)
     ###numbers provided - active d for Prog DVs
     numbers_prog2dams_k3tva1e1b1nwzida0e0b0xyg2g9w9 = 1 * (np.sum(distribution_2dams_wzida0e0b0xyg2w9[...,na,:] * mask_numbers_prog2damsw8w9_w9
@@ -4839,14 +4839,14 @@ def generator(params,r_vals,ev,plots = False):
     numbers_progreq_k2k3k5tva1e1b1nw8zida0e0b0xyg1g9w9 = 1 * (np.sum(np.any(mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9, axis=e1_pos-1, keepdims=True)[0, ...,na,:]
                                                                     * mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[:,na,na,:,0:1,...,na,na]  # mask based on the t axis for dvp0
                                                                     * (index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,..., na,na] == 0)
-                                                                    * (index_g1[...,na]==index_g1)[...,na] * btrt_propn_b0xyg1[...,na,na] * e0_propn_ida0e0b0xyg[...,na,na]
-                                                                    * agedam_propn_da0e0b0xyg1[...,na,na] * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na,na]
+                                                                    * (index_g1[...,na]==index_g1)[...,na] * btrt_propn_b0xyg1[...,na,na].astype(dtype) * e0_propn_ida0e0b0xyg[...,na,na].astype(dtype)
+                                                                    * agedam_propn_da0e0b0xyg1[...,na,na].astype(dtype) * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na,na]
                                                                     * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[...,na,na],
                                                                      axis=(e1_pos-2, d_pos-2, b0_pos-2, e0_pos-2),keepdims=True))
 
     ##transfer progeny to offs
     ###numbers provide - has d axis
-    ffcfw_initial_wzida0e0b0xyg3 = lw_initial_wzida0e0b0xyg3 - cfw_initial_wzida0e0b0xyg3 / cw_offs[3, ...]
+    ffcfw_initial_wzida0e0b0xyg3 = (lw_initial_wzida0e0b0xyg3 - cfw_initial_wzida0e0b0xyg3 / cw_offs[3, ...]).astype(dtype)
     ffcfw_initial_k5tva1e1b1nwzida0e0b0xyg3 = np.mean(ffcfw_initial_wzida0e0b0xyg3 * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)
                                                       , axis=(b0_pos, e0_pos),keepdims=True)
     distribution_2offs_k5tva1e1b1nwzida0e0b0xyg2w9 = sfun.f_lw_distribution(ffcfw_initial_k5tva1e1b1nwzida0e0b0xyg3, ffcfw_prog_wzida0e0b0xyg2, n_fs_offs, n_fvp_periods_offs)
@@ -5024,7 +5024,7 @@ def generator(params,r_vals,ev,plots = False):
                                * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...]))
 
     ###############
-    ## report dse #
+    ## report dse # #todo check if this is using much memory or time. if so then convert to float32
     ###############
     days_p6z = np.array(per.f_feed_periods(option=1))
     days_p6_p6tva1e1b1nwzida0e0b0xyg = fun.f_expand(days_p6z, z_pos,  left_pos2=p_pos-2, right_pos2=z_pos)
@@ -5311,11 +5311,11 @@ def generator(params,r_vals,ev,plots = False):
     # tup_k5tva1nw8zidxyg1w9i9 = tuple(map(tuple, index_cut_k5tva1nw8zidxyg1w9i9))
     # params['p_npw_dams'] =dict(zip(tup_k5tva1nw8zidxyg1w9i9, npw_k5tva1nw8zidxyg1w9i9))
 
-    npw_k5tva1nw8zidxyg1w9i9 = np.array([])
+    npw_k5tva1nw8zidxyg1w9i9 = np.array([],dtype=dtype)
     index_cut_k5tva1nw8zidxyg1w9i9 = np.array([])
     for k5 in range(len(keys_k5)):
         mask=npw_k5tva1e1b1nwzida0e0b0xyg1w9i9[k5,...]!=0
-        npw_k5tva1nw8zidxyg1w9i9 = np.concatenate([npw_k5tva1nw8zidxyg1w9i9,npw_k5tva1e1b1nwzida0e0b0xyg1w9i9[k5,mask]],0) #applying the mask does the raveling and squeezing of singleton axis
+        npw_k5tva1nw8zidxyg1w9i9 = np.concatenate([npw_k5tva1nw8zidxyg1w9i9,npw_k5tva1e1b1nwzida0e0b0xyg1w9i9[k5,mask]],0).astype(dtype) #applying the mask does the raveling and squeezing of singleton axis
         mask=mask.ravel()
         arrays = [keys_k5[k5:k5+1], keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_d, keys_x, keys_y1, keys_g1, keys_lw_prog, keys_i]
         index_tva1nw8zidxyg1w9i9 = fun.cartesian_product_simple_transpose(arrays)
@@ -5371,11 +5371,11 @@ def generator(params,r_vals,ev,plots = False):
 
     ###numbers_prov_dams
     ####numbers provided into next period (the norm)
-    numbers_prov_dams_k2k2tva1nw8ziyg1g9w9 = np.array([])
+    numbers_prov_dams_k2k2tva1nw8ziyg1g9w9 = np.array([], dtype=dtype)
     index_cut_k2k2tvanwziyg1g9w = np.array([])
     for w in range(len(keys_lw1)):
         mask=numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[...,w]!=0
-        numbers_prov_dams_k2k2tva1nw8ziyg1g9w9 = np.concatenate([numbers_prov_dams_k2k2tva1nw8ziyg1g9w9,numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[mask,w]],0) #applying the mask does the raveling and squeezing of singleton axis
+        numbers_prov_dams_k2k2tva1nw8ziyg1g9w9 = np.concatenate([numbers_prov_dams_k2k2tva1nw8ziyg1g9w9,numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[mask,w]],0).astype(dtype) #applying the mask does the raveling and squeezing of singleton axis
         mask=mask.ravel()
         arrays = [keys_k2, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1, keys_g1, keys_lw1[w:w+1]]
         index_k2k2tvanwziyg1g9 = fun.cartesian_product_simple_transpose(arrays)
@@ -5421,12 +5421,12 @@ def generator(params,r_vals,ev,plots = False):
     # tup_k2k2tvanwziyg1g9w = tuple(map(tuple, index_cut_k2k2tvanwziyg1g9w))
     # params['p_numbers_req_dams'] =dict(zip(tup_k2k2tvanwziyg1g9w, numbers_req_dams_k2k2tva1nw8ziyg1g9w9)) #same keys as prov so don't need to recalc again
 
-    numbers_req_dams_k2k2tva1nw8ziyg1g9w9 = np.array([])
+    numbers_req_dams_k2k2tva1nw8ziyg1g9w9 = np.array([], dtype=dtype)
     index_cut_k2k2tvanwziyg1g9w = np.array([])
     params['numbers_req_numpyversion_k2k2tva1nw8ziyg1g9w9'] = numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,:,:,:,:,0,0,:,:,:,:,0,0,0,0,0,:,:,:,:]  #cant use squeeze here because i need to keep all relevant axis even if singleton. this is used to speed pyomo constraint.
     for w in range(len(keys_lw1)): #loop on w to reduce memory
         mask=numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[...,w]!=0
-        numbers_req_dams_k2k2tva1nw8ziyg1g9w9 = np.concatenate([numbers_req_dams_k2k2tva1nw8ziyg1g9w9,numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[mask,w]],0) #applying the mask does the raveling and squeezing of singleton axis
+        numbers_req_dams_k2k2tva1nw8ziyg1g9w9 = np.concatenate([numbers_req_dams_k2k2tva1nw8ziyg1g9w9,numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[mask,w]],0).astype(dtype) #applying the mask does the raveling and squeezing of singleton axis
         mask=mask.ravel()
         arrays = [keys_k2, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1, keys_g1, keys_lw1[w:w+1]]
         index_k2k2tvanwziyg1g9 = fun.cartesian_product_simple_transpose(arrays)
