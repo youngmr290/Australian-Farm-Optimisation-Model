@@ -23,7 +23,28 @@ def paspyomo_precalcs(params,r_vals,ev):
     # pas.report_global(r_vals)                       #assign some global pas variable to r_vals
 
 def paspyomo_local(params):
-    
+    #####################################################################################################################################################################################################
+    #####################################################################################################################################################################################################
+    ### Variables
+    #####################################################################################################################################################################################################
+    #####################################################################################################################################################################################################
+
+    model.v_greenpas_ha = pe.Var(model.s_feed_pools,model.s_grazing_int,model.s_foo_levels,model.s_feed_periods,
+                                 model.s_lmus,model.s_pastures,bounds=(0,None),
+                                 doc='hectares grazed each period for each grazing intensity on each soil in each period')
+    model.v_drypas_consumed = pe.Var(model.s_feed_pools,model.s_dry_groups,model.s_feed_periods,model.s_pastures,
+                                     bounds=(0,None),
+                                     doc='tonnes of low and high quality dry feed consumed by each sheep pool in each feed period')
+    model.v_drypas_transfer = pe.Var(model.s_dry_groups,model.s_feed_periods,model.s_pastures,bounds=(0,None),
+                                     doc='tonnes of low and high quality dry feed at end of the period transferred to the following periods in each feed period')
+    model.v_nap_consumed = pe.Var(model.s_feed_pools,model.s_dry_groups,model.s_feed_periods,model.s_pastures,
+                                  bounds=(0,None),
+                                  doc='tonnes of low and high quality dry pasture on crop paddocks consumed by each sheep pool in each feed period')
+    model.v_nap_transfer = pe.Var(model.s_dry_groups,model.s_feed_periods,model.s_pastures,bounds=(0,None),
+                                  doc='tonnes of low and high quality dry pasture on crop paddocks transferred to the following periods in each feed period')
+    model.v_poc = pe.Var(model.s_feed_pools,model.s_feed_periods,model.s_lmus,bounds=(0,None),
+                         doc='tonnes of poc consumed by each sheep pool in each period on each lmu')
+
     #####################################################################################################################################################################################################
     #####################################################################################################################################################################################################
     ### Params
@@ -246,18 +267,6 @@ def paspyomo_local(params):
     model.con_erosion = pe.Constraint(model.s_feed_periods, model.s_lmus, model.s_pastures, rule = erosion, doc='total pasture available of each type on each soil type in each feed period')
 
     
-#####################################################################################################################################################################################################
-#####################################################################################################################################################################################################
-### Variables
-#####################################################################################################################################################################################################
-#####################################################################################################################################################################################################
-
-model.v_greenpas_ha = pe.Var(model.s_feed_pools, model.s_grazing_int, model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, bounds = (0,None) , doc='hectares grazed each period for each grazing intensity on each soil in each period')
-model.v_drypas_consumed = pe.Var(model.s_feed_pools, model.s_dry_groups, model.s_feed_periods, model.s_pastures, bounds = (0,None) , doc='tonnes of low and high quality dry feed consumed by each sheep pool in each feed period')
-model.v_drypas_transfer = pe.Var(model.s_dry_groups, model.s_feed_periods, model.s_pastures, bounds = (0,None) , doc='tonnes of low and high quality dry feed at end of the period transferred to the following periods in each feed period')
-model.v_nap_consumed = pe.Var(model.s_feed_pools, model.s_dry_groups, model.s_feed_periods, model.s_pastures, bounds = (0,None) , doc='tonnes of low and high quality dry pasture on crop paddocks consumed by each sheep pool in each feed period')
-model.v_nap_transfer = pe.Var(model.s_dry_groups, model.s_feed_periods, model.s_pastures, bounds = (0,None) , doc='tonnes of low and high quality dry pasture on crop paddocks transferred to the following periods in each feed period')
-model.v_poc = pe.Var(model.s_feed_pools, model.s_feed_periods, model.s_lmus, bounds = (0,None) , doc='tonnes of poc consumed by each sheep pool in each period on each lmu')
 
 
 #####################################################################################################################################################################################################

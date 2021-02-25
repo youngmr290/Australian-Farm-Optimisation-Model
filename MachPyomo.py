@@ -28,6 +28,24 @@ def mach_precalcs(params, r_vals):
 
 
 def machpyomo_local(params):
+    ############
+    #variable  #
+    ############
+    #number of seeding days in each period on each crop and lmu
+    model.v_seeding_machdays = Var(model.s_labperiods, model.s_landuses, model.s_lmus, bounds=(0,None), doc='number of days of seeding')
+    #number of ha seeded for each pasture
+    model.v_seeding_pas = Var(model.s_labperiods, model.s_landuses, model.s_lmus, bounds=(0,None), doc='number of ha of pasture seeded')
+    #number of ha seeded for each crop
+    model.v_seeding_crop = Var(model.s_labperiods, model.s_landuses, model.s_lmus, bounds=(0,None), doc='number of ha of crop seeded')
+    #number of ha seeded using contractor
+    model.v_contractseeding_ha = Var(model.s_labperiods, model.s_landuses, model.s_lmus, bounds=(0,None), doc='number of ha contract seeding for each crop')
+    #number of hours harvesting for each crop - there is a constraint to limit this to the hours available in the harvest period
+    model.v_harv_hours = Var(model.s_labperiods, model.s_harvcrops, bounds=(0,None), doc='number of hours of harvesting')
+    #number of contract hours harvesting for each crop
+    model.v_contractharv_hours = Var(model.s_harvcrops, bounds=(0,None), doc='number of contract hours of harvesting')
+    #tonnes of hay made
+    model.v_hay_made = Var(bounds=(0,None), doc='tonnes of hay made')
+
     
     #########
     #param  #
@@ -204,23 +222,7 @@ def machpyomo_local(params):
         return -model.v_contractseeding_ha[p,k1,l] * model.p_contractseeding_occur[p] - model.p_seeding_rate[k1,l] * model.v_seeding_machdays[p,k1,l]   \
                 + model.v_seeding_pas[p,k1,l] + model.v_seeding_crop[p,k1,l] <=0
     model.con_sow_supply = Constraint(model.s_labperiods, model.s_landuses, model.s_lmus, rule=sow_supply, doc='link sow supply to crop and pas variable')
-############
-#variable  #
-############    
-#number of seeding days in each period on each crop and lmu
-model.v_seeding_machdays = Var(model.s_labperiods, model.s_landuses, model.s_lmus, bounds=(0,None), doc='number of days of seeding')
-#number of ha seeded for each pasture
-model.v_seeding_pas = Var(model.s_labperiods, model.s_landuses, model.s_lmus, bounds=(0,None), doc='number of ha of pasture seeded')
-#number of ha seeded for each crop
-model.v_seeding_crop = Var(model.s_labperiods, model.s_landuses, model.s_lmus, bounds=(0,None), doc='number of ha of crop seeded')
-#number of ha seeded using contractor
-model.v_contractseeding_ha = Var(model.s_labperiods, model.s_landuses, model.s_lmus, bounds=(0,None), doc='number of ha contract seeding for each crop')
-#number of hours harvesting for each crop - there is a constraint to limit this to the hours available in the harvest period
-model.v_harv_hours = Var(model.s_labperiods, model.s_harvcrops, bounds=(0,None), doc='number of hours of harvesting')
-#number of contract hours harvesting for each crop
-model.v_contractharv_hours = Var(model.s_harvcrops, bounds=(0,None), doc='number of contract hours of harvesting')
-#tonnes of hay made
-model.v_hay_made = Var(bounds=(0,None), doc='tonnes of hay made')
+
 ###################################
 #functions for core model         #
 ###################################   

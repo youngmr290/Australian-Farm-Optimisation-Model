@@ -39,8 +39,8 @@ pastures = sinp.general['pastures'][pas_inc]
 exceldata = pinp.pasture_inputs[pastures[0]]           # assign the pasture data to exceldata for the first pasture type
 i_me_maintenance_vf = exceldata['MaintenanceEff'][:, 1:].T
 ##add ev params to dict for use in pasture.py
-ev['ev_cutoff_p6f'] = i_me_maintenance_vf[0:-1, ...].T
-ev['ev_max_p6'] = i_me_maintenance_vf[-1, ...]
+ev['ev_cutoff_p6fz'] = i_me_maintenance_vf[0:-1, ...].T[...,None]
+ev['ev_max_p6z'] = i_me_maintenance_vf[-1, :, None]
 
 pas.f_pasture(params, r_vals, ev)
 

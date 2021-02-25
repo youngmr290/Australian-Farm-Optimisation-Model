@@ -33,6 +33,71 @@ def lab_precalcs(params, r_vals):
 
 
 def labpyomo_local(params):
+    ############
+    # variable  #
+    ############
+
+    # Casual supervision
+    model.v_casualsupervision_perm = Var(model.s_labperiods,bounds=(0,None),
+                                         doc='hours of perm labour used for supervision of casual')
+    model.v_casualsupervision_manager = Var(model.s_labperiods,bounds=(0,None),
+                                            doc='hours of manager labour used for supervision of casual')
+
+    # Amount of casual. Casual labour can be optimised for each period
+    model.v_quantity_casual = Var(model.s_labperiods,bounds=(0,None),
+                                  doc='number of casual labour used in each labour period')
+
+    # Amount of permanent labour.
+    max_perm = pinp.labour['max_perm'] if pinp.labour['max_perm'] != 'inf' else None  # if none convert to python None
+    model.v_quantity_perm = Var(bounds=(pinp.labour['min_perm'],max_perm),
+                                doc='number of permanent labour used in each labour period')
+
+    # Amount of manager labour
+    max_managers = pinp.labour['max_managers'] if pinp.labour[
+                                                      'max_managers'] != 'inf' else None  # if none convert to python None
+    model.v_quantity_manager = Var(bounds=(pinp.labour['min_managers'],max_managers),
+                                   doc='number of manager/owner labour used in each labour period')
+
+    # manager pool
+    # labour for sheep activities (this variable transfers labour from source to sink)
+    model.v_sheep_labour_manager = Var(model.s_labperiods,model.s_worker_levels,bounds=(0,None),
+                                       doc='manager labour used by sheep activities in each labour period for each different worker level')
+
+    # labour for crop activities (this variable transfers labour from source to sink)
+    model.v_crop_labour_manager = Var(model.s_labperiods,model.s_worker_levels,bounds=(0,None),
+                                      doc='manager labour used by crop activities in each labour period for each different worker level')
+
+    # labour for fixed activities (this variable transfers labour from source to sink)
+    model.v_fixed_labour_manager = Var(model.s_labperiods,model.s_worker_levels,bounds=(0,None),
+                                       doc='manager labour used by fixed activities in each labour period for each different worker level')
+
+    # permanent pool
+    # labour for sheep activities (this variable transfers labour from source to sink)
+    model.v_sheep_labour_permanent = Var(model.s_labperiods,model.s_worker_levels,bounds=(0,None),
+                                         doc='permanent labour used by sheep activities in each labour period for each different worker level')
+
+    # labour for crop activities (this variable transfers labour from source to sink)
+    model.v_crop_labour_permanent = Var(model.s_labperiods,model.s_worker_levels,bounds=(0,None),
+                                        doc='permanent labour used by crop activities in each labour period for each different worker level')
+
+    # labour for fixed activities (this variable transfers labour from source to sink)
+    model.v_fixed_labour_permanent = Var(model.s_labperiods,model.s_worker_levels,bounds=(0,None),
+                                         doc='permanent labour used by fixed activities in each labour period for each different worker level')
+
+    # casual pool
+    # labour for sheep activities (this variable transfers labour from source to sink)
+    model.v_sheep_labour_casual = Var(model.s_labperiods,model.s_worker_levels,bounds=(0,None),
+                                      doc='casual labour used by sheep activities in each labour period for each different worker level')
+
+    # labour for crop activities (this variable transfers labour from source to sink)
+    model.v_crop_labour_casual = Var(model.s_labperiods,model.s_worker_levels,bounds=(0,None),
+                                     doc='casual labour used by crop activities in each labour period for each different worker level')
+
+    # labour for fixed activities (this variable transfers labour from source to sink)
+    model.v_fixed_labour_casual = Var(model.s_labperiods,model.s_worker_levels,bounds=(0,None),
+                                      doc='casual labour used by fixed activities in each labour period for each different worker level')
+
+
     #########
     #param  #
     #########
@@ -102,11 +167,11 @@ def labpyomo_local(params):
         pass
     model.p_casual_lower = Param(model.s_labperiods, initialize = params[season]['casual lb'], doc = 'casual availability lower bound')
 
-###############################
-#local constraints            #
-###############################
-#to constrain the amount of casual labour in each period
-#this can't be done with variable bounds because it's not a constant value for each period (seeding and harv may differ)
+    ###############################
+    #local constraints            #
+    ###############################
+    #to constrain the amount of casual labour in each period
+    #this can't be done with variable bounds because it's not a constant value for each period (seeding and harv may differ)
     try:
         model.del_component(model.con_casual_bounds)
     except AttributeError:
@@ -153,66 +218,6 @@ def labpyomo_local(params):
         return -(model.v_quantity_casual[p] *  model.p_casual_hours[p])  \
             + sum(model.v_sheep_labour_casual[p,w] + model.v_crop_labour_casual[p,w] + model.v_fixed_labour_casual[p,w] for w in model.s_worker_levels if w in sinp.general['worker_levels'][0])  <= 0  #if statement just to remove unnecessary activities from lp output
     model.con_labour_transfer_casual = Constraint(model.s_labperiods, rule = labour_transfer_casual, doc='labour from casual staff to sheep and crop and fixed')
-
-############
-#variable  #
-############    
-
-#Casual supervision
-model.v_casualsupervision_perm = Var(model.s_labperiods, bounds = (0,None) , doc='hours of perm labour used for supervision of casual')
-model.v_casualsupervision_manager = Var(model.s_labperiods, bounds = (0,None) , doc='hours of manager labour used for supervision of casual')
-
-#Amount of casual. Casual labour can be optimised for each period
-model.v_quantity_casual = Var(model.s_labperiods, bounds = (0,None) , doc='number of casual labour used in each labour period')
-
-#Amount of permanent labour.
-max_perm = pinp.labour['max_perm'] if pinp.labour['max_perm']!='inf' else None #if none convert to python None
-model.v_quantity_perm = Var(bounds=(pinp.labour['min_perm'],max_perm), doc='number of permanent labour used in each labour period')
-
-#Amount of manager labour
-max_managers = pinp.labour['max_managers'] if pinp.labour['max_managers']!='inf' else None #if none convert to python None
-model.v_quantity_manager = Var(bounds=(pinp.labour['min_managers'],max_managers), doc='number of manager/owner labour used in each labour period')
-
-#manager pool
-#labour for sheep activities (this variable transfers labour from source to sink)
-model.v_sheep_labour_manager = Var(model.s_labperiods, model.s_worker_levels, bounds = (0,None), doc='manager labour used by sheep activities in each labour period for each different worker level')
-
-#labour for crop activities (this variable transfers labour from source to sink)
-model.v_crop_labour_manager = Var(model.s_labperiods, model.s_worker_levels, bounds = (0,None), doc='manager labour used by crop activities in each labour period for each different worker level')
-
-#labour for fixed activities (this variable transfers labour from source to sink)
-model.v_fixed_labour_manager = Var(model.s_labperiods, model.s_worker_levels, bounds = (0,None), doc='manager labour used by fixed activities in each labour period for each different worker level')
-
-#permanent pool
-#labour for sheep activities (this variable transfers labour from source to sink)
-model.v_sheep_labour_permanent = Var(model.s_labperiods, model.s_worker_levels, bounds = (0,None), doc='permanent labour used by sheep activities in each labour period for each different worker level')
-
-#labour for crop activities (this variable transfers labour from source to sink)
-model.v_crop_labour_permanent = Var(model.s_labperiods, model.s_worker_levels, bounds = (0,None), doc='permanent labour used by crop activities in each labour period for each different worker level')
-
-#labour for fixed activities (this variable transfers labour from source to sink)
-model.v_fixed_labour_permanent = Var(model.s_labperiods, model.s_worker_levels, bounds = (0,None), doc='permanent labour used by fixed activities in each labour period for each different worker level')
-
-#casual pool
-#labour for sheep activities (this variable transfers labour from source to sink)
-model.v_sheep_labour_casual = Var(model.s_labperiods, model.s_worker_levels, bounds = (0,None), doc='casual labour used by sheep activities in each labour period for each different worker level')
-
-#labour for crop activities (this variable transfers labour from source to sink)
-model.v_crop_labour_casual = Var(model.s_labperiods, model.s_worker_levels, bounds = (0,None), doc='casual labour used by crop activities in each labour period for each different worker level')
-
-#labour for fixed activities (this variable transfers labour from source to sink)
-model.v_fixed_labour_casual = Var(model.s_labperiods, model.s_worker_levels, bounds = (0,None), doc='casual labour used by fixed activities in each labour period for each different worker level')
-
-#^happens in core model now - there isn't a transfer but the different activities provide for the same con eg perm labour provides into the casual labour constraint.
-# #transfer labour between pools
-# #transfer labour from manager to casual, because jobs are tasked to particular pools and jobs tasked to casual can be done by the manager or permanent staff 
-# model.v_manager_casual_labour_transfer = Var(model.s_labperiods, bounds = (0,None), doc='manager labour used to complete jobs tasked to casual')
-
-# #transfer labour from manager to permanent 
-# model.v_manager_permanent_labour_transfer = Var(model.s_labperiods, bounds = (0,None), doc='manager labour used to complete jobs tasked to permanent')
-
-# #transfer labour from permanent to casual 
-# model.v_permanent_casual_labour_transfer = Var(model.s_labperiods, bounds = (0,None), doc='permanent labour used to complete jobs tasked to casual')
 
 
 

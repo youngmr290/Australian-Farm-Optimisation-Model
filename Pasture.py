@@ -88,7 +88,7 @@ def f_pasture(params, r_vals, ev):
     # vgoflt = (n_feed_pools, n_grazing_int, n_foo_levels, n_feed_periods, n_lmu, n_pasture_types)
     dgoflzt = (n_dry_groups, n_grazing_int, n_foo_levels, n_feed_periods, n_lmu,  n_season_types, n_pasture_types)
     # vdft   = (n_feed_pools, n_dry_groups, n_feed_periods, n_pasture_types)
-    vft    = (n_feed_pools, n_feed_periods, n_pasture_types)
+    vfzt    = (n_feed_pools, n_feed_periods, n_season_types, n_pasture_types)
     dft    = (n_dry_groups, n_feed_periods, n_pasture_types)
     goflzt  = (n_grazing_int, n_foo_levels, n_feed_periods, n_lmu,  n_season_types, n_pasture_types)
     # goft   = (n_grazing_int, n_foo_levels, n_feed_periods, n_pasture_types)
@@ -334,7 +334,7 @@ def f_pasture(params, r_vals, ev):
 
     ##season inputs not required in t loop above
     harv_date_z = pinp.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0).astype(np.datetime64)
-    i_pasture_stage_p6z = pinp.f_seasonal_inp(np.moveaxis(pinp.sheep['i_pasture_stage_p6z'],0,-1), numpy=True, axis=-1)
+    i_pasture_stage_p6z = pinp.f_seasonal_inp(np.moveaxis(pinp.sheep['i_pasture_stage_p6z'],0,-1), numpy=True, axis=-1).astype(int)
 
     ### pasture params used to convert foo for rel availability
     cu3 = uinp.pastparameters['i_cu3_c4'][...,pinp.sheep['i_pasture_type']].astype(float)
@@ -552,12 +552,12 @@ def f_pasture(params, r_vals, ev):
     grn_dmd_selectivity_goflzt = np.zeros(goflzt,  dtype = 'float64')
     senesce_propn_dgoflzt      = np.zeros(dgoflzt, dtype = 'float64')
     nap_dflrzt                 = np.zeros(dflrzt,  dtype = 'float64')
-    me_maintenance_vft        = np.zeros(vft,    dtype = 'float64')
+    me_maintenance_vfzt        = np.zeros(vfzt,    dtype = 'float64')
 
     ## create numpy array of threshold values from the ev dictionary
-    me_maintenance_vft[0:-1, ...] = ev['ev_cutoff_p6f'].T[..., na]
-    me_maintenance_vft[-1, ...] = ev['ev_max_p6'][..., na]
-    me_maintenance_vft[me_maintenance_vft < i_fec_maintenance_t] = i_fec_maintenance_t
+    me_maintenance_vfzt[0:-1, ...] = np.swapaxes(ev['ev_cutoff_p6fz'][..., na], axis1=0, axis2=1)
+    me_maintenance_vfzt[-1, ...] = ev['ev_max_p6z'][..., na]
+    me_maintenance_vfzt[me_maintenance_vfzt < i_fec_maintenance_t] = i_fec_maintenance_t
 
     ## dry, DM decline (high = low pools)
     dry_transfer_t_fzt = 1000 * (1-dry_decay_period_fzt)
@@ -684,7 +684,7 @@ def f_pasture(params, r_vals, ev):
     #todo set me_cons to 0 in the confinement pool when the pool is added
     me_cons_grnha_vgoflzt     = fun.f_effective_mei(      cons_grnha_t_goflzt
                                                  ,     grn_md_grnha_goflzt
-                                                 ,   me_maintenance_vft[:, na, na,:, na, na, :]
+                                                 ,   me_maintenance_vfzt[:, na, na,:, na, ...]
                                                  ,           grn_ri_goflzt
                                                  ,i_me_eff_gainlose_ft[:, na, na, :])
     me_cons_grnha_vgoflzt = me_cons_grnha_vgoflzt * mask_greenfeed_exists_fzt[:, na,...]  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
@@ -727,7 +727,7 @@ def f_pasture(params, r_vals, ev):
     ## convert to effective quality per tonne
     dry_mecons_t_vdfzt  = fun.f_effective_mei( 1000                                    # parameters for the dry feed grazing activities: Total ME of the tonne consumed
                             ,           dry_md_vdfzt
-                            ,   me_maintenance_vft[:, na,:,na,:]
+                            ,   me_maintenance_vfzt[:, na, ...]
                             ,           dry_ri_dfzt
                             ,i_me_eff_gainlose_ft[:,na,:])
     dry_mecons_t_vdfzt = dry_mecons_t_vdfzt * mask_dryfeed_exists_fzt  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.

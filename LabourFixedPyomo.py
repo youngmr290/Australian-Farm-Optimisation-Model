@@ -26,6 +26,11 @@ def labfx_precalcs(params, report):
     params['learn'] = pinp.labour['learn']
     
 def labfxpyomo_local(params):
+    ############
+    # variables #
+    ############
+    model.v_learn_allocation = Var(model.s_labperiods,bounds=(0,1),doc='proportion of learning done each labour period')
+
     #########
     #param  #
     #########
@@ -75,11 +80,6 @@ def labfxpyomo_local(params):
         # return -sum(model.v_learn_allocation[i] * model.p_learn_labour for i in model.s_labperiods ) + model.p_learn_labour <= 0
         return -sum(model.v_learn_allocation[p] for p in model.s_labperiods)  <= -1
     model.con_labour_learn_period = Constraint(rule = labour_learn_period, doc='constrains the amount of labour learn in each period')
-
-############
-#variables #
-############  
-model.v_learn_allocation = Var(model.s_labperiods, bounds = (0,1) , doc='proportion of learning done each labour period')
 
 
 

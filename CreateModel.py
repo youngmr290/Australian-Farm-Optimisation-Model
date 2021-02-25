@@ -39,11 +39,8 @@ model.report_timing=True #haven't actually been able to get this to do any thing
 '''
 pyomo sets
 '''
-##define sets that may change for different iterations of exp
+##define sets - sets are redefined for each exp incase they change due to SA
 def sets() :
-    #######################
-    #seasons              #
-    #######################
     ##season types - set only has one season if steady state model is being used
     try:
         model.del_component(model.s_season_types)
@@ -51,19 +48,27 @@ def sets() :
         pass
     if pinp.general['steady_state']:
         model.s_season_types = Set(initialize=[pinp.general['i_z_idx'][pinp.general['i_mask_z']][0]], doc='season types')
-    else:    
+    else:
         model.s_season_types = Set(initialize=pinp.general['i_z_idx'][pinp.general['i_mask_z']], doc='season types') #mask season types by the ones included
 
+    #labour periods
+    try:
+        model.del_component(model.s_labperiods)
+    except AttributeError:
+        pass
+    model.s_labperiods = Set(initialize=per.p_date2_df().index, doc='labour periods')
+
+    ##pasture types
+    try:
+        model.del_component(model.s_pastures)
+    except AttributeError:
+        pass
+    model.s_pastures = Set(initialize=sinp.general['pastures'][pinp.general['pas_inc']],doc='feed periods')
 
 
-
-    
 #######################
 #labour               #
 #######################
-
-#labour periods
-model.s_labperiods = Set(initialize=per.p_date2_df().index, doc='labour periods')
 ##worker levels - levels for the different jobs
 model.s_worker_levels  = Set(initialize=sinp.general['worker_levels'], doc='worker levels for the different jobs')
 
@@ -92,7 +97,7 @@ model.s_grain_pools = Set(initialize=sinp.general['grain_pools'], doc='grain poo
 #landuses that are harvested - used in harv constraints and variables
 model.s_harvcrops = Set(initialize=uinp.mach_general['contract_harvest_speed'].index, doc='landuses that are harvest')
 
-##landuses that produce hay - used in hay constraints 
+##landuses that produce hay - used in hay constraints
 model.s_haycrops = Set(ordered=False, initialize=sinp.landuse['Hay'], doc='landuses that make hay')
 
 ##types of crops
@@ -149,9 +154,9 @@ model.s_feed_pools = Set(initialize=sinp.general['sheep_pools'], doc='nutritive 
 # model.s_co_fl = Set(initialize=, doc='carryover characteristics - Fibre length')
 
 ##dams & offs
- 
 
-   
+
+
 ##sire ^don't have any sets at the moment
 # model.s_sale_sire = Set(initialize=['t%s'%i for i in range(pinp.sheep['i_t0_len'])], doc='Sales within the year for sires')
 # model.s_dvp_sire = Set(ordered=True, initialize=, doc='Decision variable periods for sires')
@@ -176,8 +181,7 @@ model.s_lw_prog = Set(initialize=['lw%02d'%i for i in range(sinp.stock['i_progen
 #######################
 ##feed periods
 model.s_feed_periods = Set(ordered=True, initialize=pinp.period['i_fp_idx'], doc='feed periods') #must be ordered so it can be sliced in pasture pyomo to allow feed to be transferred betweeen periods.
-##pasture types
-model.s_pastures = Set(initialize=sinp.general['pastures'][pinp.general['pas_inc']], doc='feed periods')
+##pasture groups
 model.s_dry_groups = Set(initialize=sinp.general['dry_groups'], doc='dry feed pools')
 model.s_grazing_int = Set(initialize=sinp.general['grazing_int'], doc='grazing intensity in the growth/grazing activities')
 model.s_foo_levels = Set(initialize=sinp.general['foo_levels'], doc='FOO level in the growth/grazing activities')
