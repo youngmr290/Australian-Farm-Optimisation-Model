@@ -213,6 +213,8 @@ def f_sup_params(params,r_vals):
 
 
     ##create non seasonal params
+    params['storage_dep'] = storage_dep.to_dict()
+    params['storage_asset'] = storage_asset.to_dict()
     params['vol_tonne'] = vol_tonne.to_dict()
     params['md_tonne'] = md_tonne.to_dict()
     params['buy_grain_price'] = buy_grain_price.to_dict()

@@ -195,7 +195,7 @@ def labpyomo_local(params):
     except AttributeError:
         pass
     def labour_transfer_manager(model,p):
-        return -(model.v_quantity_manager * model.p_manager_hours[p]) + (model.p_perm_supervision[p] * model.v_quantity_perm) + model.v_casualsupervision_manager[p]      \
+        return -(model.v_quantity_manager * model.p_manager_hours[p]) + (model.v_quantity_perm * model.p_perm_supervision[p]) + model.v_casualsupervision_manager[p]      \
         + sum(model.v_sheep_labour_manager[p,w] + model.v_crop_labour_manager[p,w] + model.v_fixed_labour_manager[p,w] for w in model.s_worker_levels)  <= 0
     model.con_labour_transfer_manager = Constraint(model.s_labperiods, rule = labour_transfer_manager, doc='labour from manager to sheep and crop and fixed')
 

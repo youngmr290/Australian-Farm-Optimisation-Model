@@ -185,13 +185,19 @@ def labour_general(params,r_vals):
     p_dates = per.cashflow_periods()['start date']#get cashflow period dates
     p_dates_start_c = p_dates.values[:-1]
     p_dates_end_c = p_dates.values[1:]
-    p_name = per.cashflow_periods()['cash period'].values[:-1]#gets the period name
-    p_name = np.broadcast_to(p_name[:,na], (p_name.shape + (lp_start_p5z.shape[-1],)))
+    p_name = per.cashflow_periods()['cash period'].values[:-1].astype(str)#gets the period name
     ###loop thorugh and determine period for each cashflow
-    cashflow_alloc_p5z = np.empty(lp_start_p5z.shape, dtype='S2')
-    for lp_date_z, lp_idx in zip(lp_start_p5z, np.arange(len(lp_start_p5z))):
-        alloc_cz = np.logical_and(p_dates_start_c[:,na] <= lp_date_z, lp_date_z < p_dates_end_c[:,na])
-        cashflow_alloc_p5z[lp_idx] = p_name[alloc_cz]
+    index_c = np.arange(len(p_dates_start_c))
+    length_c = p_dates_end_c - p_dates_start_c
+    alloc_pzc = fun.range_allocation_np(lp_p5z,p_dates_start_c,length_c)[:-1] > 0.5
+    cash_period_idx_pz = np.sum(alloc_pzc * index_c, axis=-1)
+    cashflow_alloc_p5z = p_name[cash_period_idx_pz]
+
+    # p_name = np.broadcast_to(p_name[:,na], (p_name.shape + (lp_start_p5z.shape[-1],)))
+    # cashflow_alloc_p5z = np.empty(lp_start_p5z.shape, dtype='S2')
+    # for lp_date_z, lp_idx in zip(lp_start_p5z, np.arange(len(lp_start_p5z))):
+    #     alloc_cz = np.logical_and(p_dates_start_c[:,na] <= lp_date_z, lp_date_z < p_dates_end_c[:,na])
+    #     cashflow_alloc_p5z[lp_idx] = p_name[alloc_cz]
 
     ##cost of casual for each labour period - wage plus super plus workers comp (multipled by wage because super and others are %)
     ##differect to perm and manager because they are at a fixed level throughout the year ie same number of perm staff all yr.

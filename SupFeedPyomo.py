@@ -31,7 +31,7 @@ def suppyomo_local(params):
         model.del_component(model.p_sup_cost)
     except AttributeError:
         pass
-    model.p_sup_cost = pe.Param(model.s_cashflow_periods, model.s_feed_periods, model.s_crops, initialize=params[season]['total_sup_cost'], default = 0.0, doc='cost of storing and feeding 1t of sup each period')
+    model.p_sup_cost = pe.Param(model.s_cashflow_periods, model.s_crops, model.s_feed_periods, initialize=params[season]['total_sup_cost'], default = 0.0, doc='cost of storing and feeding 1t of sup each period')
     
     ##sup dep
     try:
@@ -55,7 +55,7 @@ def suppyomo_local(params):
         model.del_component(model.p_sup_labour)
     except AttributeError:
         pass
-    model.p_sup_labour = pe.Param(model.s_crops, model.s_labperiods, model.s_feed_periods, initialize=params[season]['sup_labour'], default = 0.0, doc='labour required to feed each sup in each feed period')
+    model.p_sup_labour = pe.Param(model.s_labperiods, model.s_feed_periods, model.s_crops, initialize=params[season]['sup_labour'], default = 0.0, doc='labour required to feed each sup in each feed period')
     
     ##sup vol
     try:
@@ -94,7 +94,7 @@ model.v_sup_con = pe.Var(model.s_crops,  model.s_grain_pools, model.s_feed_pools
 #######################################################################################################################################################
 #######################################################################################################################################################
 def sup_cost(model,c):
-    return sum(model.v_sup_con[k,g,v,f] * model.p_sup_cost[c,f,k] for v in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for f in model.s_feed_periods)
+    return sum(model.v_sup_con[k,g,v,f] * model.p_sup_cost[c,k,f] for v in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for f in model.s_feed_periods)
 
 def sup_me(model,v,f):
     return sum(model.v_sup_con[k,g,v,f] * model.p_sup_md[k]for g in model.s_grain_pools for k in model.s_crops)
@@ -109,7 +109,7 @@ def sup_asset(model):
     return sum(model.v_sup_con[k,g,v,f] * model.p_sup_asset[k] for v in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for f in model.s_feed_periods)
     
 def sup_labour(model,p):
-    return sum(model.v_sup_con[k,g,v,f] * model.p_sup_labour[k,p,f] for v in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for f in model.s_feed_periods)
+    return sum(model.v_sup_con[k,g,v,f] * model.p_sup_labour[p,f,k] for v in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for f in model.s_feed_periods)
     
     
     

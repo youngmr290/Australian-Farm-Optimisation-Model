@@ -99,7 +99,7 @@ def f_seed_days():
     mach_periods = per.p_dates_df()
     start_pz = mach_periods.values[:-1]
     end_pz = mach_periods.values[1:]
-    length_pz = (end_pz - start_pz)#.astype('timedelta64[D]').astype(int)
+    length_pz = (end_pz - start_pz).astype('timedelta64[D]').astype(int)
     days = pd.DataFrame(length_pz, index=mach_periods.index[:-1], columns=mach_periods.columns)
     return days
 
@@ -174,7 +174,7 @@ def f_grazing_days():
     mach_periods = per.p_dates_df()
     date_start_p5z = mach_periods.values[:-1]
     date_end_p5z = mach_periods.values[1:]
-    seed_days_p5z = f_seed_days().values/ np.timedelta64(1, 'D')
+    seed_days_p5z = f_seed_days().values
     defer_period = np.array([pinp.crop['poc_destock']]).astype('timedelta64[D]') #days between seeding and destocking
     season_break_z = date_start_p6z[0]
 
@@ -518,7 +518,7 @@ def f_harv_rate_period():
     keys_z = pinp.f_keys_z()
     col = pd.MultiIndex.from_product([start_harvest_crops.index, keys_z])
     harv_occur = harv_occur_pkz.reshape(harv_occur_pkz.shape[0],-1)
-    harv_occur = pd.DataFrame(harv_occur, index=per.p_dates_df().index[1:], columns=col)
+    harv_occur = pd.DataFrame(harv_occur, index=per.p_date2_df().index, columns=col)
 
     ##Grain harvested per hr (t/hr) for each crop.
     harv_rate = (uinp.mach_general['harvest_yield'] * (1 / harv_time_ha())).squeeze()
