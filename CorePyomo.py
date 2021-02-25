@@ -19,6 +19,7 @@ import pyomo.environ as pe
 
 #AFO modules - should only be pyomo modules
 import UniversalInputs as uinp
+import PropertyInputs as pinp
 import StructuralInputs as sinp
 from CreateModel import model
 import CropPyomo as crppy
@@ -146,7 +147,7 @@ def coremodel_all():
         pass
     def harv_stub_nap_cons(model,f):
         if any(model.p_nap_prop[f] or model.p_harv_prop[f,k] for k in model.s_crops):
-            return sum(-paspy.pas_me(model,v,f) + sum(model.p_harv_prop[f,k]/(1-model.p_harv_prop[f,k]) * model.v_stub_con[v,f,k,s] * model.p_stub_md[f,s,k] for k in model.s_crops for s in model.s_stub_cat)
+            return sum(-paspy.pas_me(model,v,f) + sum(model.p_harv_prop[f,k]/(1-model.p_harv_prop[f,k]) * model.v_stub_con[v,f,k,s] * model.p_stub_md[f,k,s] for k in model.s_crops for s in model.s_stub_cat)
                     +  model.p_nap_prop[f]/(1-model.p_nap_prop[f]) * paspy.nappas_me(model,v,f) for v in model.s_feed_pools) <= 0
         else:
             return pe.Constraint.Skip
@@ -375,7 +376,7 @@ def coremodel_all():
     if pinp.general['steady_state']:
     
         ##sometimes if there is a bug when solved it is good to write lp here - because the code doesn't run to the other place where lp written
-        # model.write('Output/test.lp',io_options={'symbolic_solver_labels':True}) #comment this out when not debugging
+        model.write('Output/test.lp',io_options={'symbolic_solver_labels':True}) #comment this out when not debugging
 
         ##tells the solver you want duals and rc
         try:

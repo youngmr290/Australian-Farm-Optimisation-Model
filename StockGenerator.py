@@ -4400,14 +4400,17 @@ def generator(params,r_vals,ev,plots = False):
         '''
     allocation_start = time.time()
     ##dams
-    n_fvps_va1e1b1nwzida0e0b0xyg1 = np.ones(dvp_type_va1e1b1nwzida0e0b0xyg1.shape)
+    n_fvps_va1e1b1nwzida0e0b0xyg1 = np.zeros(dvp_type_va1e1b1nwzida0e0b0xyg1.shape)
     n_fvps_cum_va1e1b1nwzida0e0b0xyg1 = np.zeros(dvp_type_va1e1b1nwzida0e0b0xyg1.shape)
     cum_index_va1e1b1nwzida0e0b0xyg1 = np.maximum.accumulate((dvp_type_va1e1b1nwzida0e0b0xyg1==condense_vtype1)
                                                              * index_va1e1b1nwzida0e0b0xyg1, axis=0)  # return index which is the same for dvps in the same condense cycle
-    for i in range(dvp_type_va1e1b1nwzida0e0b0xyg1.shape[0]-1):
-        dvp_start = dvp_date_va1e1b1nwzida0e0b0xyg1[i,...]
-        dvp_end = dvp_date_va1e1b1nwzida0e0b0xyg1[i+1,...]
-        n_fvp = ((fvp_date_start_fa1e1b1nwzida0e0b0xyg1 >= dvp_start) & (fvp_date_start_fa1e1b1nwzida0e0b0xyg1 < dvp_end)).sum(axis=0)
+    for i in range(dvp_type_va1e1b1nwzida0e0b0xyg1.shape[0]):
+        if i==dvp_type_va1e1b1nwzida0e0b0xyg1.shape[0]-1:
+            n_fvp=1 #only one fvp in the last dvp becasue nothing follows it
+        else:
+            dvp_start = dvp_date_va1e1b1nwzida0e0b0xyg1[i,...]
+            dvp_end = dvp_date_va1e1b1nwzida0e0b0xyg1[i+1,...]
+            n_fvp = ((fvp_date_start_fa1e1b1nwzida0e0b0xyg1 >= dvp_start) & (fvp_date_start_fa1e1b1nwzida0e0b0xyg1 < dvp_end)).sum(axis=0)
         n_fvps_va1e1b1nwzida0e0b0xyg1[i,...] = n_fvp
         ### number of fvps since condensing.
         cum_idx_cut_va1e1b1nwzida0e0b0xyg1 = cum_index_va1e1b1nwzida0e0b0xyg1[i:i+1]
@@ -4443,7 +4446,7 @@ def generator(params,r_vals,ev,plots = False):
     mask_w8nut_va1e1b1nwzida0e0b0xyg1 = np.moveaxis(mask_w8nut_va1e1b1nzida0e0b0xyg1w9,-1,w_pos) #move w9 axis to w position
     ## Combine the w8vars mask and the user nutrition mask
     mask_w8vars_va1e1b1nw8zida0e0b0xyg1 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_w8nut_va1e1b1nwzida0e0b0xyg1
-    ##Mask numbers provided based on the steps (with a t axis) and the next dvp type (with a t axis)
+    ##Mask numbers provided based on the steps (with a t axis) and the next dvp type (with a t axis) (t0&1 are sold and never transfer so the mask doesnt mean anything for them. for t2 animals always transfer to themselves unless dvpnext is 0)
     mask_numbers_provw8w9_tva1e1b1nw8zida0e0b0xyg1w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1[...,na] * (np.trunc((index_wzida0e0b0xyg1[...,na] * (dvp_type_next_tva1e1b1nwzida0e0b0xyg1[...,na] !=condense_vtype1) +
                                                      index_w1 * (dvp_type_next_tva1e1b1nwzida0e0b0xyg1[...,na] == condense_vtype1))
                                                     / step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9) == index_w1 / step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9)
@@ -4462,10 +4465,13 @@ def generator(params,r_vals,ev,plots = False):
     n_fvps_cum_va1e1b1nwzida0e0b0xyg3 = np.zeros(dvp_type_va1e1b1nwzida0e0b0xyg3.shape)
     cum_index_va1e1b1nwzida0e0b0xyg3 = np.maximum.accumulate((dvp_type_va1e1b1nwzida0e0b0xyg3==condense_vtype1)
                                                              * index_va1e1b1nwzida0e0b0xyg3, axis=0)  # return index which is the same for dvps in the same condense cycle
-    for i in range(dvp_type_va1e1b1nwzida0e0b0xyg3.shape[0]-1):
-        dvp_start = dvp_date_va1e1b1nwzida0e0b0xyg3[i,...]
-        dvp_end = dvp_date_va1e1b1nwzida0e0b0xyg3[i+1,...]
-        n_fvp = ((fvp_start_fa1e1b1nwzida0e0b0xyg3 >= dvp_start) & (fvp_start_fa1e1b1nwzida0e0b0xyg3 < dvp_end)).sum(axis=0)
+    for i in range(dvp_type_va1e1b1nwzida0e0b0xyg3.shape[0]):
+        if i==dvp_type_va1e1b1nwzida0e0b0xyg3.shape[0]-1:
+            n_fvp=1 #only one fvp in the last dvp becasue nothing follows it
+        else:
+            dvp_start = dvp_date_va1e1b1nwzida0e0b0xyg3[i,...]
+            dvp_end = dvp_date_va1e1b1nwzida0e0b0xyg3[i+1,...]
+            n_fvp = ((fvp_start_fa1e1b1nwzida0e0b0xyg3 >= dvp_start) & (fvp_start_fa1e1b1nwzida0e0b0xyg3 < dvp_end)).sum(axis=0)
         n_fvps_va1e1b1nwzida0e0b0xyg3[i,...] = n_fvp
         ### number of fvps since condensing.
         cum_idx_cut_va1e1b1nwzida0e0b0xyg3 = cum_index_va1e1b1nwzida0e0b0xyg3[i:i+1]
