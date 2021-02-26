@@ -16,6 +16,7 @@ formatting; try to avoid capitals (reduces possible mistakes in future)
 """
 import time 
 import pyomo.environ as pe
+import numpy as np
 
 #AFO modules - should only be pyomo modules
 import UniversalInputs as uinp
@@ -373,7 +374,7 @@ def coremodel_all():
     #######################################################################################################################################################
     #######################################################################################################################################################
 
-    if pinp.general['steady_state']:
+    if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1:
     
         ##sometimes if there is a bug when solved it is good to write lp here - because the code doesn't run to the other place where lp written
         model.write('Output/test.lp',io_options={'symbolic_solver_labels':True}) #comment this out when not debugging

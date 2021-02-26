@@ -282,8 +282,8 @@ for row in range(len(exp_data)):
             pkl.dump(lp_vars,f,protocol=pkl.HIGHEST_PROTOCOL)
     with open('pkl/pkl_r_vals_{0}.pkl'.format(trial_name),"wb") as f:
         pkl.dump(r_vals,f,protocol=pkl.HIGHEST_PROTOCOL)
-    with open('pkl/pkl_params_{0}.pkl'.format(trial_name),"wb") as f: #pkl_params must be pickled last becasue it is used to determine if model crashed but the current trial was complete prior to crash
-        pkl.dump(params,f,protocol=pkl.HIGHEST_PROTOCOL)
+    # with open('pkl/pkl_params_{0}.pkl'.format(trial_name),"wb") as f: #pkl_params must be pickled last becasue it is used to determine if model crashed but the current trial was complete prior to crash
+    #     pkl.dump(params,f,protocol=pkl.HIGHEST_PROTOCOL)
 
     ##determine expected time to completion - trials left multiplied by average time per trial &time for current loop
     trials_to_go = total_trials - run

@@ -103,7 +103,7 @@ def period_end_date(start, length):
 
 #This function determines the start dates of the labour periods. generally each period begins at the start of the month except seeding and harvest periods (which need to be separate because the labour force works more hours during those periods)
 def p_dates_df():
-    if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_season_propn_z'])==1:
+    if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1:
         ##put season inputs through season input function
         harv_date = pinp.f_seasonal_inp(pinp.period['harv_date'],numpy=True,axis=0)[0]
         seed_period_lengths = pinp.f_seasonal_inp(pinp.period['seed_period_lengths'],numpy=True,axis=1)[...,0]
@@ -111,7 +111,8 @@ def p_dates_df():
         wet_seeding_start = wet_seeding_start_date()[0]
 
         ##calc period
-        periods = pd.DataFrame(columns=['z0'])
+        keys_z = pinp.f_keys_z()
+        periods = pd.DataFrame(columns=keys_z)
         #create empty list of dates to be filled by this function
         period_start_dates = []
         #determine the start of the first period, this references feed periods so it has the same yr.
@@ -146,7 +147,7 @@ def p_dates_df():
                 period_start_dates.append(period_end_date(start, length))
                 date = period_end_date(start, length) + relativedelta(months=sinp.general['labour_period_len']) + relativedelta(day=1)
         #add the list of dates to the labour dataframe
-        periods['z0']=period_start_dates
+        periods[keys_z[0]]=period_start_dates
         ##modify index
         index = ['P%02d' % i for i in range(len(periods))]
         periods.index = index

@@ -327,10 +327,10 @@ def f_seasonal_inp(inp, numpy=False, axis=0, level=0):
                 del sum_level[level]
                 if sum_level == []:
                     inp = inp.mul(z_prob, axis=axis, level=level).sum(axis=axis)
-                    inp = pd.concat([inp],keys=['z0'],axis=axis) #add z0 index key
+                    inp = pd.concat([inp],keys=[keys_z[0]],axis=axis) #add z0 index key
                 else:
                     inp = inp.mul(z_prob, axis=axis, level=level).sum(axis=axis, level=sum_level)
-                    inp = pd.concat([inp],keys=['z0'],axis=axis) #add z0 index key
+                    inp = pd.concat([inp],keys=[keys_z[0]],axis=axis) #add z0 index key
                     col_level_order = sum_level[:]
                     col_level_order.insert(level,0)
                     inp = inp.reorder_levels(col_level_order, axis=axis)

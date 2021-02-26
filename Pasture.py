@@ -303,6 +303,7 @@ def f_pasture(params, r_vals, ev):
         i_reseeding_foo_grazing_t[t]        = exceldata['FOOatGrazing']
 
         i_grn_trampling_ft[...,t].fill       (exceldata['Trampling'])
+        i_dry_trampling_ft[...,t].fill       (exceldata['Trampling'])
         i_grn_senesce_daily_ft[...,t]       = np.asfarray(exceldata['SenescePropn'])
         i_grn_senesce_eos_fzt[...,t]         = pinp.f_seasonal_inp(np.asfarray(exceldata['SenesceEOS']), numpy=True, axis=1)
         i_base_ft[...,t]                    = np.asfarray(exceldata['BaseLevelInput'])

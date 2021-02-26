@@ -4461,7 +4461,7 @@ def generator(params,r_vals,ev,plots = False):
     # n_fvps_va1e1b1nwzida0e0b0xyg3 = np.take_along_axis(n_fvps_va1e1b1nwzida0e0b0xyg3, dvp_type_va1e1b1nwzida0e0b0xyg3, 0) #expand v type axis to the full v
     # n_prior_fvps_va1e1b1nwzida0e0b0xyg3 = np.take_along_axis(n_prior_fvps_va1e1b1nwzida0e0b0xyg1, dvp_type_va1e1b1nwzida0e0b0xyg1, 0) #expand v type axis to the full v
 
-    n_fvps_va1e1b1nwzida0e0b0xyg3 = np.ones(dvp_type_va1e1b1nwzida0e0b0xyg3.shape)
+    n_fvps_va1e1b1nwzida0e0b0xyg3 = np.zeros(dvp_type_va1e1b1nwzida0e0b0xyg3.shape)
     n_fvps_cum_va1e1b1nwzida0e0b0xyg3 = np.zeros(dvp_type_va1e1b1nwzida0e0b0xyg3.shape)
     cum_index_va1e1b1nwzida0e0b0xyg3 = np.maximum.accumulate((dvp_type_va1e1b1nwzida0e0b0xyg3==condense_vtype1)
                                                              * index_va1e1b1nwzida0e0b0xyg3, axis=0)  # return index which is the same for dvps in the same condense cycle
