@@ -10,43 +10,44 @@ from pyomo import environ as pe
 #AFO modules
 from CreateModel import model
 import SupFeed as sup
+import PropertyInputs as pinp
 
 def sup_precalcs(params, r_vals):
     ##call sup functions
-    sup.sup_cost(params, r_vals)
-    vol_md = sup.sup_md_vol(params)  
-    sup.sup_labour(params)
-    sup.buy_grain_price(params, r_vals)
-    
+    sup.f_sup_params(params,r_vals)
+
     
 def suppyomo_local(params):
     #########
     #param  #
     ######### 
-    
+
+    ##used to index the season key in params
+    season = pinp.general['i_z_idx'][pinp.general['i_mask_z']][0]
+
     ##sup cost
     try:
         model.del_component(model.p_sup_cost_index)
         model.del_component(model.p_sup_cost)
     except AttributeError:
         pass
-    model.p_sup_cost = pe.Param(model.s_cashflow_periods, model.s_feed_periods, model.s_crops, initialize=params['total_sup_cost'], default = 0.0, doc='cost of storing and feeding 1t of sup each period')
+    model.p_sup_cost = pe.Param(model.s_cashflow_periods, model.s_crops, model.s_feed_periods, initialize=params[season]['total_sup_cost'], default = 0.0, doc='cost of storing and feeding 1t of sup each period')
     
     ##sup dep
     try:
-        model.del_component(model.p_sup_dep_index)
+        # model.del_component(model.p_sup_dep_index)
         model.del_component(model.p_sup_dep)
     except AttributeError:
         pass
-    model.p_sup_dep = pe.Param(model.s_feed_periods, model.s_crops, initialize= params['storage_dep'], default = 0.0, doc='depreciation of storing 1t of sup each period')
+    model.p_sup_dep = pe.Param(model.s_crops, initialize= params['storage_dep'], default = 0.0, doc='depreciation of storing 1t of sup each period')
     
     ##sup asset
     try:
-        model.del_component(model.p_sup_asset_index)
+        # model.del_component(model.p_sup_asset_index)
         model.del_component(model.p_sup_asset)
     except AttributeError:
         pass
-    model.p_sup_asset = pe.Param(model.s_feed_periods, model.s_crops, initialize=params['storage_asset'], default = 0.0, doc='asset value associated with storing 1t of sup each period')
+    model.p_sup_asset = pe.Param(model.s_crops, initialize=params['storage_asset'], default = 0.0, doc='asset value associated with storing 1t of sup each period')
     
     ##sup labour
     try:
@@ -54,7 +55,7 @@ def suppyomo_local(params):
         model.del_component(model.p_sup_labour)
     except AttributeError:
         pass
-    model.p_sup_labour = pe.Param(model.s_crops, model.s_labperiods, model.s_feed_periods, initialize=params['sup_labour'], default = 0.0, doc='labour required to feed each sup in each feed period')
+    model.p_sup_labour = pe.Param(model.s_labperiods, model.s_feed_periods, model.s_crops, initialize=params[season]['sup_labour'], default = 0.0, doc='labour required to feed each sup in each feed period')
     
     ##sup vol
     try:
@@ -93,7 +94,7 @@ model.v_sup_con = pe.Var(model.s_crops,  model.s_grain_pools, model.s_feed_pools
 #######################################################################################################################################################
 #######################################################################################################################################################
 def sup_cost(model,c):
-    return sum(model.v_sup_con[k,g,v,f] * model.p_sup_cost[c,f,k] for v in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for f in model.s_feed_periods)
+    return sum(model.v_sup_con[k,g,v,f] * model.p_sup_cost[c,k,f] for v in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for f in model.s_feed_periods)
 
 def sup_me(model,v,f):
     return sum(model.v_sup_con[k,g,v,f] * model.p_sup_md[k]for g in model.s_grain_pools for k in model.s_crops)
@@ -102,13 +103,13 @@ def sup_vol(model,v,f):
     return sum(model.v_sup_con[k,g,v,f] * model.p_sup_vol[k] for g in model.s_grain_pools for k in model.s_crops)
 
 def sup_dep(model):
-    return sum(model.v_sup_con[k,g,v,f] * model.p_sup_dep[f,k] for v in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for f in model.s_feed_periods)
+    return sum(model.v_sup_con[k,g,v,f] * model.p_sup_dep[k] for v in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for f in model.s_feed_periods)
 
 def sup_asset(model):
-    return sum(model.v_sup_con[k,g,v,f] * model.p_sup_asset[f,k] for v in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for f in model.s_feed_periods)
+    return sum(model.v_sup_con[k,g,v,f] * model.p_sup_asset[k] for v in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for f in model.s_feed_periods)
     
 def sup_labour(model,p):
-    return sum(model.v_sup_con[k,g,v,f] * model.p_sup_labour[k,p,f] for v in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for f in model.s_feed_periods)
+    return sum(model.v_sup_con[k,g,v,f] * model.p_sup_labour[p,f,k] for v in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for f in model.s_feed_periods)
     
     
     

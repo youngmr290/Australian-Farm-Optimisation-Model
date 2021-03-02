@@ -24,37 +24,35 @@ import timeit
 
 #AFO modules
 import Crop as crp
-import UniversalInputs as uinp
 from CreateModel import *
+import PropertyInputs as pinp
 
 def crop_precalcs(params, r_vals):
-    crp.rot_cost(params, r_vals)
-    crp.rot_yield(params)
-    crp.grain_pool_proportions(params)
-    crp.grain_price(params, r_vals)
-    crp.stubble_production(params)
-    crp.crop_sow(params)
-    crp.total_fert_req(params)
+    crp.crop_params(params, r_vals)
 
 
 def croppyomo_local(params):
     
     #########
     #param  #
-    #########    
+    #########
+
+    ##used to index the season key in params
+    season = pinp.general['i_z_idx'][pinp.general['i_mask_z']][0]
+
     try:
         model.del_component(model.p_rotation_cost)
         model.del_component(model.p_rotation_cost_index)
     except AttributeError:
         pass
-    model.p_rotation_cost = Param(model.s_phases,model.s_lmus,model.s_cashflow_periods, initialize=params['rot_cost'], default=0, doc='total cost for 1 unit of rotation')
+    model.p_rotation_cost = Param(model.s_phases,model.s_lmus,model.s_cashflow_periods, initialize=params[season]['rot_cost'], default=0, doc='total cost for 1 unit of rotation')
        
     try:
         model.del_component(model.p_rotation_yield)
         model.del_component(model.p_rotation_yield_index)
     except AttributeError:
         pass
-    model.p_rotation_yield = Param(model.s_phases, model.s_crops, model.s_lmus, initialize=params['rot_yield'], default = 0.0, doc='grain production for all crops for 1 unit of rotation')
+    model.p_rotation_yield = Param(model.s_phases, model.s_crops, model.s_lmus, initialize=params[season]['rot_yield'], default = 0.0, doc='grain production for all crops for 1 unit of rotation')
 
     try:
         model.del_component(model.p_grainpool_proportion)
@@ -90,7 +88,7 @@ def croppyomo_local(params):
     except AttributeError:
         pass
     ##only used in croplabour pyomo to determine labour per tonne of fert
-    model.p_phasefert = Param(model.s_phases, model.s_lmus, model.s_fert_type, initialize=params['fert_req'], default = 0.0, doc='fert required by 1 unit of phase')
+    model.p_phasefert = Param(model.s_phases, model.s_lmus, model.s_fert_type, initialize=params[season]['fert_req'], default = 0.0, doc='fert required by 1 unit of phase')
    
     
     
@@ -121,7 +119,7 @@ model.v_sell_grain = Var(model.s_crops, model.s_grain_pools, bounds=(0,None), do
 ###alternative would have been to add another key/index/set to the yield parameter that was k, although i suspect this would make it a bit slower due to being bigger but it might be tidyer
 
 def rotation_yield_transfer(model,g,k):
-    # i=uinp.structure['phase_len']-1
+    # i=sinp.general['phase_len']-1
     ##h is a disaggregated version of r, it can be indexed. h[0:i] is the rotation history. Have to check if k==h otherwise when h[0:i] is combined with k you can get the wrong rotation
     return sum(sum(model.p_rotation_yield[r,k,l]*model.v_phase_area[r,l] * model.p_grainpool_proportion[k,g] for r in model.s_phases if model.p_rotation_yield[r,k,l] != 0)for l in model.s_lmus) \
                    

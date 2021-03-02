@@ -11,10 +11,7 @@ module: universal module - contains all the core input data - usually held const
 
 ##python modules
 import pickle as pkl
-import pandas as pd
 import numpy as np
-import datetime
-from dateutil.relativedelta import relativedelta
 
 import Functions as fun
 
@@ -50,11 +47,7 @@ if inputs_from_pickle == False:
         ##mach inputs - general
         mach_general_inp = fun.xl_all_named_ranges("Universal.xlsx","Mach General")
         pkl.dump(mach_general_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
-        
-        ##feed inputs
-        feed_inputs_inp = fun.xl_all_named_ranges("Universal.xlsx","Feed Budget")
-        pkl.dump(feed_inputs_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
-        
+
         ##sup inputs
         sup_inp = fun.xl_all_named_ranges("Universal.xlsx","Sup Feed")
         pkl.dump(sup_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
@@ -86,9 +79,7 @@ else:
         finance_inp = pkl.load(f)
         
         mach_general_inp = pkl.load(f)
-        
-        feed_inputs_inp = pkl.load(f)
-        
+
         sup_inp = pkl.load(f)
         
         crop_inp = pkl.load(f)
@@ -100,12 +91,69 @@ else:
         
         machine_options_dict_inp  = pkl.load(f)
 print('- finished')
-        
-        
+
+##reshape require inputs
+###lengths
+len_h1 = sheep_inp['i_husb_muster_infrastructurereq_h1h4'].shape[-1]
+len_h4 = sheep_inp['i_h4_len']
+len_h6 = sheep_inp['i_husb_muster_requisites_prob_h6h4'].shape[-1]
+len_l2 = sheep_inp['i_husb_muster_labourreq_l2h4'].shape[-1]
+len_m4 = sheep_inp['i_salep_months_priceadj_s7s9m4'].shape[-1]
+len_s5 = sheep_inp['i_s5_len']
+len_s6 = sheep_inp['i_salep_score_scalar_s7s5s6'].shape[-1]
+len_s7 = sheep_inp['i_s7_len']
+len_s9 = sheep_inp['i_s9_len']
+
+
+
+
+###shapes
+h4h1 = (len_h4, len_h1)
+h4h6 = (len_h4, len_h6)
+h4l2 = (len_h4, len_l2)
+s7s9m4 = (len_s7, len_s9, len_m4)
+s7s5s6 = (len_s7, len_s5, len_s6)
+s7s5 = (len_s7, len_s5)
+cb0 = (parameters_inp['i_cb0_len'], parameters_inp['i_cb0_len2'],-1)
+ce = (parameters_inp['i_ce_len'], parameters_inp['i_ce_len2'],-1)
+cl0 = (parameters_inp['i_cl0_len'], parameters_inp['i_cl0_len2'],-1)
+cl1 = (parameters_inp['i_cl1_len'], parameters_inp['i_cl1_len2'],-1)
+cu1 = (parameters_inp['i_cu1_len'], parameters_inp['i_cu1_len2'],-1)
+cu2 = (parameters_inp['i_cu2_len'], parameters_inp['i_cu2_len2'],-1)
+cx = (parameters_inp['i_cx_len'], parameters_inp['i_cx_len2'],-1)
+
+###stock
+sheep_inp['i_salep_months_priceadj_s7s9m4'] = np.reshape(sheep_inp['i_salep_months_priceadj_s7s9m4'], s7s9m4)
+sheep_inp['i_salep_score_scalar_s7s5s6'] = np.reshape(sheep_inp['i_salep_score_scalar_s7s5s6'], s7s5s6)
+sheep_inp['i_salep_weight_scalar_s7s5s6'] = np.reshape(sheep_inp['i_salep_weight_scalar_s7s5s6'], s7s5s6)
+sheep_inp['i_salep_weight_range_s7s5'] = np.reshape(sheep_inp['i_salep_weight_range_s7s5'], s7s5)
+sheep_inp['i_husb_muster_requisites_prob_h6h4'] = np.reshape(sheep_inp['i_husb_muster_requisites_prob_h6h4'], h4h6)
+sheep_inp['i_husb_muster_labourreq_l2h4'] = np.reshape(sheep_inp['i_husb_muster_labourreq_l2h4'], h4l2)
+sheep_inp['i_husb_muster_infrastructurereq_h1h4'] = np.reshape(sheep_inp['i_husb_muster_infrastructurereq_h1h4'], h4h1)
+parameters_inp['i_cb0_c2'] = np.reshape(parameters_inp['i_cb0_c2'], cb0)
+parameters_inp['i_cb0_y'] = np.reshape(parameters_inp['i_cb0_y'], cb0)
+parameters_inp['i_ce_c2'] = np.reshape(parameters_inp['i_ce_c2'], ce)
+parameters_inp['i_ce_y'] = np.reshape(parameters_inp['i_ce_y'], ce)
+parameters_inp['i_cl0_c2'] = np.reshape(parameters_inp['i_cl0_c2'], cl0)
+parameters_inp['i_cl0_y'] = np.reshape(parameters_inp['i_cl0_y'], cl0)
+parameters_inp['i_cl1_c2'] = np.reshape(parameters_inp['i_cl1_c2'], cl1)
+parameters_inp['i_cl1_y'] = np.reshape(parameters_inp['i_cl1_y'], cl1)
+parameters_inp['i_cu1_c2'] = np.reshape(parameters_inp['i_cu1_c2'], cu1)
+parameters_inp['i_cu1_y'] = np.reshape(parameters_inp['i_cu1_y'], cu1)
+parameters_inp['i_cu2_c2'] = np.reshape(parameters_inp['i_cu2_c2'], cu2)
+parameters_inp['i_cu2_y'] = np.reshape(parameters_inp['i_cu2_y'], cu2)
+parameters_inp['i_cx_c2'] = np.reshape(parameters_inp['i_cx_c2'], cx)
+parameters_inp['i_cx_y'] = np.reshape(parameters_inp['i_cx_y'], cx)
+
+##pasture
+pastparameters_inp['i_cu3_c4'] = pastparameters_inp['i_cu3_c4'].reshape(pastparameters_inp['i_cu3_len'], pastparameters_inp['i_cu3_len2'], -1)
+pastparameters_inp['i_cu4_c4'] = pastparameters_inp['i_cu4_c4'].reshape(pastparameters_inp['i_cu4_len'], pastparameters_inp['i_cu4_len2'], -1)
+
+
+##copy inputs so there is an origional (before SA) version
 price = price_inp.copy()
 finance = finance_inp.copy()
 mach_general = mach_general_inp.copy()
-feed_inputs = feed_inputs_inp.copy()
 supfeed = sup_inp.copy()
 crop = crop_inp.copy()
 sheep = sheep_inp.copy()
@@ -146,600 +194,5 @@ def universal_inp_sa():
     sheep['i_salep_percentile'] = fun.f_sa(sheep_inp['i_salep_percentile'], sen.sav['salep_percentile'], 5) #Value for percentile for all sale grids
 
 
-
-    
-    
-    
-
-#########################################################################################################################################################################################################
-#########################################################################################################################################################################################################
-#general - used to determine model structure (these will stay in python to keep separate from excel inputs which can be adjusted by any user)
-#########################################################################################################################################################################################################
-#########################################################################################################################################################################################################
-
-##create an empty dict to store all structure inputs
-structure = dict()
-
-##############
-#need to be added to spreadsheet - added by mry when adding dvps
-##############
-
-structure['i_fvp4_date_i'] = np.array([np.datetime64('2019-11-15'), np.datetime64('2019-01-15')])
-                                        #prejoin, others..............
-structure['i_fvp_mask_dams'] = np.array([True, True, True, True,	False]) #prejoining dvp must always be True. (dvp from start of sim to first other dvp is not included - it is added as a true in code)
-structure['i_dvp_mask_f1'] = np.array([True, True, True, False,	False]) #prejoining dvp must always be True. (dvp from start of sim to first other dvp is not included - it is added as a true in code)
-structure['i_w_start_len'] = 3
-
-structure['i_fvp_mask_offs'] = np.array([True, True, True, True,	False]) #prejoining dvp must always be True. (dvp from start of sim to first other dvp is not included - it is added as a true in code)
-structure['i_dvp_mask_f1'] = np.array([True, False, False, False,	False]) #prejoining dvp must always be True. (dvp from start of sim to first other dvp is not included - it is added as a true in code)
-
-## r1type is the reproduction type of the period (0 is prejoining to scanning, 1 is scanning to birth, 2 is birth to prejoining)
-structure['ia_r1type_fi'] = np.array([[0,0], #the slices of the f axis that are not a DVP are not used and therefore just leave them as 2 (default))
-                                     [1,1],
-                                     [2,2],
-                                     [2,2],
-                                     [2,2]]) #todo add this input also make sure user changes this when changing dvp timing.
-### rtype
-'''
-n_fvps_v is the number of FVPs within the DVP
-n_prior_fvps_v is the number of FVPs prior to the start of this DVP. 
-So if the DVP dates are say
-1 Feb, 1 May & 1 July and the FVP dates are
-1 Feb, 1 May, 1 June, 1 July, 1 Oct. Then 
-n_fvps_v = 1,2,2 because 1 fvp in the first DVP and 2 in each of the other two DVPs
-n_prior_fvps_v = 0, 1, 3 which is the cumulative sum of n_fvps_v in the previous DVPs (ie not including this DVP)
-This could be calculated in the code but for now is an input. 
-Note: the values can change along the i axis if the FVP date is not relative to a reproduction event.
-'''
-#number of fvps that occur during a dvp.
-# Note: the shape alters if DVPs are masked
-# Note: the values alter if FVPs are masked
-n_fvps_vi1 = np.array([[1,1], #this is only the v type axis. it is expanded to full v axis in code.
-                       [1,1],
-                       [2,2]])
-structure['i_n_fvps_vi1'] = n_fvps_vi1
-#number of fvps since condensing. this changes if fvp/dvp added or removed or changes date.
-n_prior_fvps_vi1 = np.cumsum(n_fvps_vi1, axis = 0) - n_fvps_vi1  #assumes that condensing is the start of the first DVP type
-# structure['i_n_prior_fvps_vi1'] = np.array([[0,0], #this is only the v type axis. it is expanded to full v axis in code.
-#                                              [1,1],
-#                                              [2,2]])
-structure['i_n_prior_fvps_vi1'] = n_prior_fvps_vi1
-
-##Offspring
-n_fvps_vi3 = np.array([[3,3]]), #this is only the v type axis. it is expanded to full v axis in code.
-structure['i_n_fvps_vi3'] = n_fvps_vi3
-#number of fvps since condensing. this changes if fvp/dvp added or removed or changes date.
-n_prior_fvps_vi3 = np.cumsum(n_fvps_vi3, axis = 0) - n_fvps_vi3  #assumes that condensing is the start of the first DVP type
-structure['i_n_prior_fvps_vi3'] = n_prior_fvps_vi3
-
-##need to alter how these are handle
-#todo remove the inputs below.
-#structure['i_n_fvp_period1']
-# structure['i_w1_len']
-# structure['i_w_idx_dams']
-#todo these need to be calibrated - these are mask to be the correct length but need to ensure that the values are correct for the number of dvps
-structure['i_adjp_lw_initial_w1'] = np.array([0.0, 0.15, -0.15])
-structure['i_adjp_cfw_initial_w1'] = np.array([0.0, 0.10, -0.10])
-structure['i_adjp_fd_initial_w1'] = np.array([0.0, 0.5, -0.5])
-structure['i_adjp_fl_initial_w1'] = np.array([0.0, 0.10, -0.10])
-
-
-
-###############
-# labour      #
-###############
-structure['worker_levels'] = ['any', 'perm', 'mngr']
-
-###############
-# crop        #
-###############
-##grain pools there is one transfer constraint for each pool.
-structure['grain_pools']=['firsts','seconds']
-
-###############
-# cashflow    #
-###############
-##asset value time of yr - this is also the beginning of the cashflow periods  ^for now this must be the 1/1/19 but it would be good to make it flexible ie have the capacity to have cashflow periods start on any day of yr
-structure['i_date_assetvalue']= datetime.datetime(2019, 1, 1) #y/m/d
-
-##the number of these can change as long as each period is of equal length.
-structure['cashflow_periods']=['JF','MA','MJ','JA','SO','ND']
-
-###############
-# pasture     #
-###############
-##sets as well as define the pastures to include
-structure['pastures'] = ['annual'] # ,'lucerne','tedera']    #define which pastures are to be included
-structure['dry_groups'] = ['DryL', 'DryH']                       # Low & high quality groups for dry feed
-structure['grazing_int'] =  ['Graz0', 'Graz25', 'Graz50', 'Graz100']   # grazing intensity in the growth/grazing activities
-structure['foo_levels'] =  ['FooL', 'FooM', 'FooH']                 # Low, medium & high FOO level in the growth/grazing activities
-
-#######
-#sheep#
-#######
-##dse
-structure['ia_sire_dsegroup'] = 4
-structure['ia_offs_dsegroup'] = 4
-structure['ia_dams_dsegroup_b1'] = np.array([4,	0,	1,	2,	3,	1,	2,	1,	0,	0,	0])
-##axis pos ^maybe move in the ones from the other inputs to here?
-structure['i_e0_pos']=-5
-##general
-structure['i_age_max'] = 7.1  # after shearing for the July lambing at 6.5 yo
-structure['i_age_max_offs'] = 3.5
-structure['i_sim_periods_year'] = 52
-structure['i_w_pos'] = -10
-structure['i_n_pos'] = -11
-structure['i_p_pos'] = -15
-structure['i_k2_pos'] = -17
-structure['i_k3_pos'] = -18
-structure['i_k5_pos'] = -17
-structure['i_lag_wool'] = 1 #lags in calculations (number of days over which production is averaged)
-structure['i_lag_organs'] = 1  #lags in calculations (number of days over which production is averaged)
-structure['i_lsln_idx_dams'] = ['NM', '00',	'11',	'22',	'33',	'21',	'32',	'31',	'10',	'20',	'30']
-structure['i_btrt_idx_offs'] = ['11',	'22',	'33',	'21',	'32',	'31']
-structure['prejoin_offset'] = 8
-structure['i_feedsupply_itn_max'] = 10
-
-##pools
-structure['sheep_pools']=['pool0', 'pool1', 'pool2', 'pool3'] #nutritive value pools (MEI/Vol). A 5th pool would be added here for the confinement feeding pool.
-## DSE group and LSLN (b1)
-structure['i_mask_b0_b1'] = np.array([False, False, True,	True,	True,	True,	True,	True,	False,	False,	False])
-structure['i_mated_b1'] = np.array([False, True, True,	True,	True,	True,	True,	True,	True,	True,	True])
-structure['ia_b0_b1'] = np.array([0, 0, 0, 1,	2,	3,	4,	5,	0,	0,	0])
-structure['a_prepost_b1'] = np.array([0, 1, 2, 3, 4, 3,	4,	4,	2,	3,	4]) #The association of b1 pre lambing pointed to from b1 post lambing
-structure['a_nfoet_b1'] = np.array([0,0,1,2,3,2,3,3,1,2,3])
-structure['a_nyatf_b1'] = np.array([0,0,1,2,3,1,2,1,0,0,0])
-#structure['a_nyatf_b0'] = np.array([1,2,3,1,2,1])  #added for standard weaning % but not required
-structure['i_initial_b1'] = np.array([1,0,0,0,0,0,0,0,0,0,0])
-structure['i_numbers_min_b1'] = np.array([0,0,0,0,0,0,0,0,0,0,0])
-
-                                        #dams
-##dams sire transfer                #bbb bbm bbt bmt
-structure['ia_g1_tg1'] = np.array([                 #sire
-                                    [0,	0,	0,	4],  #b   use 4 - A value greater than the number of slices of the g axis, so that a_g1_tg1 == index_g1 is never True
-                                    [1,	1,	1,	4],  #m
-                                    [2,	2,	2,	3]]) #t
-
-                                               #dams
-##dams sire transfer  mask           #bbb   bbm     bbt     bmt
-structure['i_transfer_exists_tg1'] = np.array([                    #sire
-                                    [True,	True,	True,	False],  #b
-                                    [True,	True,	True,	False],  #m
-                                    [True,	True,	True,	True]])  #t
-
-##feed supply/ nutrition levels
-structure['i_w0_len'] = 1
-structure['i_w_idx_sire'] = ['lw00']
-# structure['i_w1_len'] = 81
-# structure['i_w_idx_dams'] = ['lw00', 'lw01', 'lw02', 'lw03', 'lw04', 'lw05', 'lw06', 'lw07', 'lw08', 'lw09', 'lw10', 'lw11', 'lw12', 'lw13', 'lw14', 'lw15', 'lw16', 'lw17', 'lw18', 'lw19', 'lw20', 'lw21', 'lw22', 'lw23', 'lw24', 'lw25', 'lw26', 'lw27', 'lw28', 'lw29', 'lw30', 'lw31', 'lw32', 'lw33', 'lw34', 'lw35', 'lw36', 'lw37', 'lw38', 'lw39', 'lw40', 'lw41', 'lw42', 'lw43', 'lw44', 'lw45', 'lw46', 'lw47', 'lw48', 'lw49', 'lw50', 'lw51', 'lw52', 'lw53', 'lw54', 'lw55', 'lw56', 'lw57', 'lw58', 'lw59', 'lw60', 'lw61', 'lw62', 'lw63', 'lw64', 'lw65', 'lw66', 'lw67', 'lw68', 'lw69', 'lw70', 'lw71', 'lw72', 'lw73', 'lw74', 'lw75', 'lw76', 'lw77', 'lw78', 'lw79', 'lw80']
-structure['i_progeny_w2_len'] = 10
-structure['i_w3_len'] = 81
-structure['i_w_idx_offs'] = ['lw00', 'lw01', 'lw02', 'lw03', 'lw04', 'lw05', 'lw06', 'lw07', 'lw08', 'lw09', 'lw10', 'lw11', 'lw12', 'lw13', 'lw14', 'lw15', 'lw16', 'lw17', 'lw18', 'lw19', 'lw20', 'lw21', 'lw22', 'lw23', 'lw24', 'lw25', 'lw26', 'lw27', 'lw28', 'lw29', 'lw30', 'lw31', 'lw32', 'lw33', 'lw34', 'lw35', 'lw36', 'lw37', 'lw38', 'lw39', 'lw40', 'lw41', 'lw42', 'lw43', 'lw44', 'lw45', 'lw46', 'lw47', 'lw48', 'lw49', 'lw50', 'lw51', 'lw52', 'lw53', 'lw54', 'lw55', 'lw56', 'lw57', 'lw58', 'lw59', 'lw60', 'lw61', 'lw62', 'lw63', 'lw64', 'lw65', 'lw66', 'lw67', 'lw68', 'lw69', 'lw70', 'lw71', 'lw72', 'lw73', 'lw74', 'lw75', 'lw76', 'lw77', 'lw78', 'lw79', 'lw80']
-structure['i_n0_len'] = 1  #number of different feedsupplies in each fv period
-structure['i_n_idx_sire'] = ['n1']
-structure['i_n1_len'] = 3   #number of different feedsupplies in each fv period
-structure['i_n_idx_dams'] = ['n1']
-structure['i_n3_len'] = 3  #number of different feedsupplies in each fv period
-structure['i_n_idx_offs'] = ['n1']
-structure['i_n0_matrix_len'] = 1 #number of nutrition levels in the matrix (for version 1 all the variation is in the w axis)
-structure['i_n1_matrix_len'] = 1 #number of nutrition levels in the matrix
-structure['i_n3_matrix_len'] = 1 #number of nutrition levels in the matrix
-structure['i_n_fvp_period0'] = 1 #number of FVPs for sires (g0)
-# structure['i_n_fvp_period1'] = 3 #number of FVPs for dams (g1)
-structure['i_n_fvp_period3'] = 3 #number of FVPs for offspring (g3)
-
-structure['i_nut_spread_n0'] = np.array([0])
-structure['i_nut_spread_n1'] = np.array([0,1,-1]) #fs adjustment for different n levels - above 3 is absolute not adjustment
-structure['i_density_g1_n'] = np.array([1,0.5,1.5]) #stocking density adjuster for different n levels. An increasing feedsupply (less than 3.0) means that the animals are being offered more feed and therefore density is lower (although it could be with a high density and lots of supplement - we will be assuming that it is lower density and increased FOO). This is represented by scaling the standard stocking density by a number less than 1. Note: Distance walked is scaled by 40/density (if density is > 40). SO trying to make distance a small number for confinement feeding and even smaller for feedlotting
-structure['i_nut_spread_n3'] = np.array([0,1,-1]) #fs adjustment for different n levels - above 3 is absolute not adjustment
-structure['i_density_g3_n'] = np.array([1,0.5,1.5]) #stocking density adjuster for different n levels. An increasing feedsupply (less than 3.0) means that the animals are being offered more feed and therefore density is lower (although it could be with a high density and lots of supplement - we will be assuming that it is lower density and increased FOO). This is represented by scaling the standard stocking density by a number less than 1. Note: Distance walked is scaled by 40/density (if density is > 40). SO trying to make distance a small number for confinement feeding and even smaller for feedlotting
-##genotype
-###An array that contains the proportion of each purebred genotype in the sire, dam, yatf or offspring eg:
-# 		            k0	
-# g3		 B	     M	    T	
-# B		    1.0			
-# BM		0.5	    0.5		
-# BT		0.5		0.5	
-# BMT		0.25	0.25	0.5	
-
-structure['i_mul_g0c0'] = np.array([[1,0,0],
-                                     [0,1,0],
-                                     [0,0,1]])    
-structure['i_mul_g1c0'] = np.array([[1,   0,    0],
-                                     [1,   0,    0],    
-                                     [1,   0,    0],    
-                                     [0.5, 0.5,  0]])    
-structure['i_mul_g2c0'] = np.array([[1,   0,    0],
-                                     [0.5,  0.5,  0],
-                                     [0.5,  0,    0.5],
-                                     [0.25, 0.25, 0.5]])    
-structure['i_mul_g3c0'] = np.array([[1,   0,    0],
-                                     [0.5,  0.5,  0],
-                                     [0.5,  0,    0.5],
-                                     [0.25, 0.25, 0.5]]) 
-###A mask array that relates i_g3_inc to the genotypes that need to be simulated eg:
-# 		                g3	
-#   g2		BBB	    BBM	BBT	    BMT	
-# BBB		TRUE	TRUE	TRUE	TRUE	
-# BBM		FALSE	TRUE	FALSE	TRUE	
-# BBT		FALSE	FALSE	TRUE	FALSE	
-# BMT		FALSE	FALSE	FALSE	TRUE	
-  
-structure['i_mask_g0g3'] = np.array([[True,True,True,True],
-                                     [False,True,False,True],
-                                     [False,False,True,True]])    
-structure['i_mask_g1g3'] = np.array([[True,True,True,True],
-                                     [False,True,False,True],  
-                                     [False,False,True,False],  
-                                     [False,False,False,True]])   
-structure['i_mask_g2g3'] = np.array([[True,True,True,True],
-                                     [False,True,False,True],
-                                     [False,False,True,False],
-                                     [False,False,False,True]])    
-structure['i_mask_g3g3'] = np.array([[True,True,True,True],
-                                    [False,True,False,True],
-                                    [False,False,True,False],
-                                    [False,False,False,True]])  
-##variation in LW, CFW, FD & fibre length for animals with different weaning weight (WWt is determined by groups of 27 in LW profile)
-###lw
-structure['i_adjp_lw_initial_w0'] = np.array([0])        
-# structure['i_adjp_lw_initial_w1'] = np.array([0.0, 0.0,	0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15])
-structure['i_adjp_lw_initial_w3'] = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, 0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15, -0.15])
-###cfw
-structure['i_adjp_cfw_initial_w0'] = np.array([0])        
-# structure['i_adjp_cfw_initial_w1'] = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10])
-structure['i_adjp_cfw_initial_w3'] = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10])
-###fd
-structure['i_adjp_fd_initial_w0'] = np.array([0])        
-# structure['i_adjp_fd_initial_w1'] = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5])
-structure['i_adjp_fd_initial_w3'] = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5])
-###fl
-structure['i_adjp_fl_initial_w0'] = np.array([0])        
-# structure['i_adjp_fl_initial_w1'] = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10])
-structure['i_adjp_fl_initial_w3'] = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10, -0.10])
-
-##association between management and feedsupply
-structure['i_len_m'] = 2
-structure['i_len_l'] = 4
-structure['i_len_s'] = 5
-
-structure['ia_k2_mlsb1'] =np.array([
-                                    [0, 0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
-                                    ,[0, 0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
-                                    ,[0, 0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
-                                    ,[0, 0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
-                                    ,[0, 0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
-                                    ,[0, 0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
-                                    ,[0, 0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
-                                    ,[0, 0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
-                                    ,[0, 0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
-                                    ,[0, 0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
-                                    ,[0, 0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
-                                    ,[0, 0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
-                                    ,[0, 0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
-                                    ,[0, 0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
-                                    ,[0, 0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
-                                    ,[0, 0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
-                                    ,[0, 0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
-                                    ,[0, 0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
-                                    ,[0, 0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
-                                    ,[0, 0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
-                                    ,[0, 0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
-                                    ,[0, 0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
-                                    ,[0, 0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
-                                    ,[0, 0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
-                                    ,[0, 0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
-                                    ,[0, 0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
-                                    ,[1, 1,	2,	2,	2,	2,	2,	2,	2,	2,	2]
-                                    ,[1, 1,	3,	4,	4,	4,	4,	4,	3,	4,	4]
-                                    ,[1, 1,	3,	5,	6,	5,	6,	6,	3,	5,	6]
-                                    ,[1, 1,	3,	5,	6,	5,	6,	6,	3,	5,	6]
-                                    ,[0, 0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
-                                    ,[1, 1,	2,	2,	2,	2,	2,	2,	1,	1,	1]
-                                    ,[1, 1,	3,	4,	4,	4,	4,	4,	1,	1,	1]
-                                    ,[1, 1,	3,	5,	6,	5,	6,	6,	1,	1,	1]
-                                    ,[1, 1,	3,	5,	6,	5,	6,	6,	1,	1,	1]
-                                    ,[0, 0,	0,	0,	0,	0,	0,	0,	0,	0,	0]
-                                    ,[1, 1,	2,	2,	2,	2,	2,	2,	1,	1,	1]
-                                    ,[1, 1,	3,	4,	4,	3,	4,	3,	1,	1,	1]
-                                    ,[1, 1,	3,	5,	6,	3,	5,	3,	1,	1,	1]
-                                    ,[1, 1,	3,	5,	6,	3,	5,	3,	1,	1,	1]])
-
-
-
-##association between management and postprocessing clustering
-structure['i_n_r1type'] = 3 #The associaiton between k2 and dvp is dependant on the reproduction cycle #todo change this name in structural inputs and add comment
-structure['i_k2_idx_dams'] = np.array([
-['NM',   '00',   '11',	 '22',   '33',   '21',   '32',   '31',   '10',   '20',   '30'],
-['NM1', '001', '111', '221', '331', '211', '321', '311', '101', '201', '301'],
-['NM2', '002', '112', '222', '332', '212', '322', '312', '102', '202', '302']])
-
-structure['ia_ppk2g1_rlsb1'] = np.array([
-                                        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-                                        , [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-                                        , [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-                                        , [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-                                        , [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-                                        , [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-                                        , [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-                                        , [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-                                        , [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-                                        , [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-                                        , [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-                                        , [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-                                        , [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-                                        , [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-                                        , [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-                                        , [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-                                        , [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-                                        , [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-                                        , [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-                                        , [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-                                        , [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-                                        , [0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2]
-                                        , [0, 1, 2, 3, 3, 3, 3, 3, 2, 3, 3]
-                                        , [0, 1, 2, 3, 4, 3, 4, 4, 2, 3, 4]
-                                        , [0, 1, 2, 3, 4, 3, 4, 4, 2, 3, 4]
-                                        , [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-                                        , [0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2]
-                                        , [0, 1, 2, 3, 3, 3, 3, 3, 2, 3, 3]
-                                        , [0, 1, 2, 3, 4, 3, 4, 4, 2, 3, 4]
-                                        , [0, 1, 2, 3, 4, 3, 4, 4, 2, 3, 4]
-                                        , [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-                                        , [0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2]
-                                        , [0, 1, 2, 3, 3, 3, 3, 3, 2, 3, 3]
-                                        , [0, 1, 2, 3, 4, 3, 4, 4, 2, 3, 4]
-                                        , [0, 1, 2, 3, 4, 3, 4, 4, 2, 3, 4]
-                                        , [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-                                        , [0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2]
-                                        , [0, 1, 2, 3, 3, 3, 3, 3, 2, 3, 3]
-                                        , [0, 1, 2, 3, 4, 3, 4, 4, 2, 3, 4]
-                                        , [0, 1, 2, 3, 4, 3, 4, 4, 2, 3, 4]
-                                        , [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-                                        , [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-                                        , [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-                                        , [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-                                        , [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-                                        , [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-                                        , [0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2]
-                                        , [0, 1, 2, 3, 3, 3, 3, 3, 2, 3, 3]
-                                        , [0, 1, 2, 3, 4, 3, 4, 4, 2, 3, 4]
-                                        , [0, 1, 2, 3, 4, 3, 4, 4, 2, 3, 4]
-                                        , [0, 1, 2, 2, 2, 2, 2, 2, 1, 1, 1]
-                                        , [0, 1, 2, 2, 2, 2, 2, 2, 8, 8, 8]
-                                        , [0, 1, 2, 3, 3, 3, 3, 3, 8, 9, 9]
-                                        , [0, 1, 2, 3, 4, 3, 4, 4, 8, 9, 10]
-                                        , [0, 1, 2, 3, 4, 3, 4, 4, 8, 9, 10]
-                                        , [0, 1, 2, 3, 4, 2, 3, 2, 1, 1, 1]
-                                        , [0, 1, 2, 3, 4, 2, 3, 2, 8, 8, 8]
-                                        , [0, 1, 2, 3, 4, 5, 3, 5, 8, 9, 9]
-                                        , [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-                                        , [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]])
-##association between management and postprocessing clustering - offs
-structure['i_k5_idx_offs'] = np.array([['11',	'22',	'33',	'21',	'32',	'31'],
-                                       ['001',	'111',	'221',	'331',	'211',	'321'],
-                                       ['002',	'112',	'222',	'332',	'212',	'322']])
-
-structure['ia_ppk5_lsb0'] = np.array([
-                                        [0,	0,	0,	0,	0,	0],
-                                        [0,	0,	0,	0,	0,	0],
-                                        [0,	0,	0,	0,	0,	0],
-                                        [0,	0,	0,	0,	0,	0],
-                                        [0,	0,	0,	0,	0,	0],
-                                        [0,	0,	0,	0,	0,	0],
-                                        [0,	0,	0,	0,	0,	0],
-                                        [0,	1,	1,	1,	1,	1],
-                                        [0,	1,	2,	1,	2,	2],
-                                        [0,	1,	2,	1,	2,	2],
-                                        [0,	0,	0,	0,	0,	0],
-                                        [0,	0,	0,	0,	0,	0],
-                                        [0,	1,	1,	1,	1,	1],
-                                        [0,	1,	2,	1,	2,	2],
-                                        [0,	1,	2,	1,	2,	2],
-                                        [0,	1,	2,	0,	1,	0],
-                                        [0,	1,	2,	0,	1,	0],
-                                        [0,	1,	2,	3,	1,	3],
-                                        [0,	1,	2,	3,	4,	5],
-                                        [0,	1,	2,	3,	4,	5]])
-
-
-
-########################
-#period                #
-########################
-##Length of standard labour period, must be an integer that 12 is divisible by
-structure['labour_period_len'] = relativedelta(months=1)
-
-
-##############
-#phases      #
-##############
-##the number of previous land uses considered for crop inputs - when this changes yield input and fert and chem will need to be expended to include the extra years previous land use
-structure['num_prev_phase']=1
-
-#number of phases analysed ie rotation length if you will (although not really a rotation)
-structure['phase_len'] = 6
-
-#rotation phases and constraints read in from excel 
-structure['phases'] = pd.read_excel('Rotation.xlsx', sheet_name='rotation list', header= None, index_col = 0, engine='openpyxl').T.reset_index(drop=True).T  #reset the col headers to std ie 0,1,2 etc
-
-
-
-###############
-#landuses     #
-###############
-'''
-A1, E1 are special sets used in con2 - currently not used
-Note
-- A1 is also used in pasture functions to build the germ df, so it cant be deleted
-- C is used in stubble module, createmodel & mach
-- C1 is used just in pasture functions
-- sets now include capitals - this shouldn't effect con1 but it makes building the germ df easier
-'''
-##special sets that are used elsewhere from rotations
-###used to make nap inputs - note cont lucerne and tedera are added separately at the end of the cost section hence not included here.
-# structure['All_pas']={'a', 'ar', 'a3', 'a4', 'a5'
-#                 , 's', 'sr', 's3', 's4', 's5'
-#                 , 'm', 'm3', 'm4', 'm5'
-#                 , 'u', 'ur', 'u3', 'u4', 'u5'
-#                 , 'x', 'xr', 'x3', 'x4', 'x5'
-#                 , 'j', 't', 'jr', 'tr'
-#                 }
-##all pas2 includes cont pasture - used in reporting
-structure['All_pas']={'a', 'ar'
-                , 's', 'sr'
-                , 'm'
-                , 'u', 'ur','uc'
-                , 'x', 'xr','xc'
-                , 'j', 't', 'jr', 'tr','tc','jc'
-                }
-##next set is used in pasture.py for germination and phase area
-structure['pasture_sets']={'annual': {'a', 'ar'
-                                , 's', 'sr'
-                                , 'm'}
-                        ,'lucerne':{'u', 'uc', 'ur'
-                                   , 'x', 'xc', 'xr'}
-                        ,'tedera':{'j','jc', 't','tc', 'jr', 'tr'}
-                       }
-##G and C1 are just used in pas.py for germination ^can be removed when germination is calculated from sim
-structure['G']={'b', 'h', 'o','of', 'w', 'f','i', 'k', 'l', 'v', 'z','r'
-                , 'a', 'ar'
-                , 's', 'sr'
-                , 'm'
-                , 'u', 'ur'
-                , 'x', 'xr'
-                , 'j', 't', 'jr', 'tr'
-                , 'G', 'Y', 'E', 'N', 'P', 'OF'
-                , 'A', 'AR'
-                , 'S', 'SR'
-                , 'M'
-                , 'U'
-                , 'X'
-                , 'T', 'J'} #all landuses
-structure['C1']={'E', 'N', 'P', 'OF', 'b', 'h', 'o', 'of', 'w', 'f','i', 'k', 'l', 'v', 'z','r'} #had to create a separate set because don't want the capital in the crop set above as it is used to create pyomo set 
-
-
-structure['All']={'b', 'h', 'o', 'of', 'w', 'f','i', 'k', 'l', 'v', 'z','r', 'a', 'ar', 's', 'sr', 'm', 'u', 'uc', 'ur', 'x', 'xc', 'xr', 'j','jc', 't','tc', 'jr', 'tr'} #used in reporting and bounds
-structure['C']={'b', 'h', 'o', 'of', 'w', 'f','i', 'k', 'l', 'v', 'z','r'} #all crops, used in stubble and mach (not used for rotations)
-structure['Hay']={'h'} #all crops that produce hay - used in machpyomo/coremodel for hay con
-##special sets used in crop sim
-structure['Ys'] = {'Y'}
-structure['As'] = {'A','a'}
-structure['JR'] = {'jr'}
-structure['TR'] = {'tr'}
-structure['UR'] = {'ur'}
-structure['XR'] = {'xr'}
-structure['PAS'] = {'A', 'AR', 'S', 'SR', 'M','T','J','U','X', 'tc', 'jc', 'uc', 'xc'} 
-##sets used in to build rotations
-structure['A']={'a', 'ar','s', 'sr', 'm'
-                , 'A', 'AR'
-                , 'S', 'SR'
-                , 'M'} #annual
-structure['A1']={'a',  's', 'm'} #annual not resown - special set used in pasture germ and con2 when determining if a rotation provides a rotation because in yr1 we don't want ar to provide an A because we need to distinguish between them
-structure['AR']={'ar', 'AR'} #resown annual
-structure['E']={'E', 'E1', 'OF', 'b', 'h', 'o', 'of', 'w'} #cereals
-structure['E1']={'E', 'b', 'h', 'o', 'w'} #cereals
-# # structure['H']={'h', 'of'} #non harvested cereals
-structure['J']={'J', 'j', 'jr'} #tedera
-structure['M']={'m', 'M'} #manipulated pasture
-structure['N']={'N', 'z','r'} #canolas
-structure['OF']={'OF', 'of'} #oats fodder
-structure['P']={'P', 'f','i', 'k', 'l', 'v'} #pulses
-structure['S']={'s','sr', 'S', 'SR'} #spray topped pasture
-structure['SR']={'sr', 'SR'} #spray topped pasture
-structure['T']={'T', 't', 'tr','J', 'j', 'jr'} #tedera - also includes manipulated tedera because it is combined in yrs 3,4,5
-structure['U']={'u', 'ur', 'U','x', 'xr', 'X'} #lucerne
-structure['X']={'x', 'xr', 'X'} #lucerne
-structure['Y']={'b', 'h', 'o','of', 'w', 'f','i', 'k', 'l', 'v', 'z','r'
-                , 'Y', 'E', 'E1', 'N', 'P', 'OF'} #anything not pasture
-
-
-'''make each landuse a set so the issuperset func works'''
-structure['a']={'a'}
-structure['ar']={'ar'}
-structure['b']={'b'}
-structure['f']={'f'}
-structure['h']={'h'}
-structure['i']={'i'}
-structure['j']={'j'}
-structure['jc']={'jc'}
-structure['jr']={'jr'}
-structure['k']={'k'}
-structure['l']={'l'}
-structure['m']={'m'}
-structure['o']={'o'}
-structure['of']={'of'}
-structure['r']={'r'}
-structure['s']={'s'}
-structure['sr']={'sr'}
-structure['t']={'t'}
-structure['tc']={'tc'}
-structure['tr']={'tr'}
-structure['u']={'u'}
-structure['uc']={'uc'}
-structure['ur']={'ur'}
-structure['v']={'v'}
-structure['w']={'w'}
-structure['x']={'x'}
-structure['xc']={'xc'}
-structure['xr']={'xr'}
-structure['z']={'z'}
-
-
-
-
-
-
-
-
-
-
-
-# phases = phases[~(np.isin(phases[:,i], ['U'])&np.isin(phases[:,i+1], ['U4','U5','u4','u5']))] #only U or U3 after U
-#     phases = phases[~(np.isin(phases[:,i], ['U3'])&np.isin(phases[:,i+1], ['U', 'U3','U5','u','ur','u3','u5']))] #pasture 4 must come after pasture 3
-#     phases = phases[~(np.isin(phases[:,i], ['U4'])&np.isin(phases[:,i+1], ['U', 'U3','U4','u','ur','u3','u4']))] #pasture 5 must come after pasture 4
-#     phases = phases[~(np.isin(phases[:,i], ['U5'])&np.isin(phases[:,i+1], ['U', 'U3','U4','u','ur','u3','u4']))] #pasture 5 must come after pasture 5
-#     phases = phases[~(~np.isin(phases[:,i], ['U'])&np.isin(phases[:,i+1], ['U3','u3']))] #cant have U3 after anything except U
-#     try:  #used for conditions that are concerned with more than two yrs
-#         phases = phases[~(~np.isin(phases[:,i], ['U'])&np.isin(phases[:,i+2], ['U3','u3']))] #cant have U3 after anything except U U (this is the second part to the rule above)
-#     except IndexError: pass
-#     phases = phases[~(~np.isin(phases[:,i], ['U3'])&np.isin(phases[:,i+1], ['U4','u4']))] #cant have U4 after anything except U3
-#     phases = phases[~(~np.isin(phases[:,i], ['U4'])&np.isin(phases[:,i+1], ['U5','u5']))] #cant have U5 after anything except U4
-#     try:  #used for conditions that are concerned with more than two yrs
-#         phases = phases[~(np.isin(phases[:,i], ['U'])&np.isin(phases[:,i+1], ['U'])&~np.isin(phases[:,i+2], ['U3','u3']))] #can only have U3 after U U (have used a double negative here)
-#     except IndexError: pass
-
-#     ##Manipulated Lucerne
-#     phases = phases[~(np.isin(phases[:,i], ['X'])&np.isin(phases[:,i+1], ['X4','X5','x4','x5']))] #only U or U3 after U
-#     phases = phases[~(np.isin(phases[:,i], ['X3'])&np.isin(phases[:,i+1], ['X','X3','X5','x','xr','x3','x5']))] #pasture 4 must come after pasture 3
-#     phases = phases[~(np.isin(phases[:,i], ['X4'])&np.isin(phases[:,i+1], ['X','X3','X4','x','xr','x3','x4']))] #pasture 5 must come after pasture 4
-#     phases = phases[~(np.isin(phases[:,i], ['X5'])&np.isin(phases[:,i+1], ['X','X3','X4','x','xr','x3','x4']))] #pasture 5 must come after pasture 5
-#     phases = phases[~(~np.isin(phases[:,i], ['X'])&np.isin(phases[:,i+1], ['X3','x3']))] #cant have U3 after anything except U
-#     try:  #used for conditions that are concerned with more than two yrs
-#         phases = phases[~(~np.isin(phases[:,i], ['X'])&np.isin(phases[:,i+2], ['X3','x3']))] #cant have U3 after anything except U U (this is the second part to the rule above)
-#     except IndexError: pass
-#     phases = phases[~(~np.isin(phases[:,i], ['X3'])&np.isin(phases[:,i+1], ['X4','x4']))] #cant have U4 after anything except U3
-#     phases = phases[~(~np.isin(phases[:,i], ['X4'])&np.isin(phases[:,i+1], ['X5','x5']))] #cant have U5 after anything except U4
-#     try:  #used for conditions that are concerned with more than two yrs
-#         phases = phases[~(np.isin(phases[:,i], ['X'])&np.isin(phases[:,i+1], ['X'])&~np.isin(phases[:,i+2], ['X3','x3']))] #can only have U3 after U U (have used a double negative here)
-#     except IndexError: pass
-
-# #Lucerne
-#
-#########################################################################################################################################################################################################
-#########################################################################################################################################################################################################
-#universal functions that use data from above
-#########################################################################################################################################################################################################
-#########################################################################################################################################################################################################
-
-
-#Function that just uses inout inputs but is used in multiple other pre-calc modules
-#defined here to limit importing pre calc modules in other precalc modules
-def cols():
-    #this is used to make a list of the relevant column numbers used in merge function, to specify the columns that are being matched - it will change if inputs specifying number of phases changes
-    cols = []
-    for i in reversed(range(structure['num_prev_phase']+1)):
-        cols.append(structure['phase_len']-1-i) 
-    return cols
 
 

@@ -177,7 +177,7 @@ for row in range(len(exp_data)):
     suppy.sup_precalcs(params['sup'],r_vals['sup'])
     stubpy.stub_precalcs(params['stub'],r_vals['stub'])
     spy.stock_precalcs(params['stock'],r_vals['stock'],ev)
-    paspy.paspyomo_precalcs(params['pas'],r_vals['pas'],ev)
+    paspy.paspyomo_precalcs(params['pas'],r_vals['pas'],ev) #pas must be after stock becasue it uses ev dict which is populated in stock.py
     precalc_end = time.time()
     print('precalcs: ', precalc_end - precalc_start)
     
@@ -282,8 +282,8 @@ for row in range(len(exp_data)):
             pkl.dump(lp_vars,f,protocol=pkl.HIGHEST_PROTOCOL)
     with open('pkl/pkl_r_vals_{0}.pkl'.format(trial_name),"wb") as f:
         pkl.dump(r_vals,f,protocol=pkl.HIGHEST_PROTOCOL)
-    with open('pkl/pkl_params_{0}.pkl'.format(trial_name),"wb") as f: #pkl_params must be pickled last becasue it is used to determine if model crashed but the current trial was complete prior to crash
-        pkl.dump(params,f,protocol=pkl.HIGHEST_PROTOCOL)
+    # with open('pkl/pkl_params_{0}.pkl'.format(trial_name),"wb") as f: #pkl_params must be pickled last becasue it is used to determine if model crashed but the current trial was complete prior to crash
+    #     pkl.dump(params,f,protocol=pkl.HIGHEST_PROTOCOL)
 
     ##determine expected time to completion - trials left multiplied by average time per trial &time for current loop
     trials_to_go = total_trials - run

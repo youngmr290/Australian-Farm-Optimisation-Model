@@ -7,10 +7,14 @@ Created on Mon Jan 13 21:03:30 2020
 ##python modules
 import pickle as pkl
 import os.path
+import numpy as np
+import pandas as pd
 
 ##Midas modules
 import Functions as fun
-import UniversalInputs as uinp
+import StructuralInputs as sinp
+
+na = np.newaxis
 
 ##############
 #read inputs #
@@ -45,27 +49,27 @@ if inputs_from_pickle == False:
         mach_inp = fun.xl_all_named_ranges("Property.xlsx","Mach")
         pkl.dump(mach_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
-        stubble_inp = fun.xl_all_named_ranges("Property.xlsx","Stubble")
+        stubble_inp = fun.xl_all_named_ranges("Property.xlsx","Stubble", numpy=True)
         pkl.dump(stubble_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
         finance_inp = fun.xl_all_named_ranges("Property.xlsx","Finance")
         pkl.dump(finance_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
-        feed_inp = fun.xl_all_named_ranges("Property.xlsx","Feed Budget") #automatically read in the periods as dates
-        pkl.dump(feed_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
+        period_inp = fun.xl_all_named_ranges("Property.xlsx","Periods", numpy=True) #automatically read in the periods as dates
+        pkl.dump(period_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
-        sup_inp = fun.xl_all_named_ranges("Property.xlsx","Sup Feed") #automatically read in the periods as dates
+        sup_inp = fun.xl_all_named_ranges("Property.xlsx","Sup Feed")
         pkl.dump(sup_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
         sheep_inp  = fun.xl_all_named_ranges('Property.xlsx', 'Sheep', numpy=True)
         pkl.dump(sheep_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
-        feedsupply_inp  = fun.xl_all_named_ranges('Property.xlsx', 'FeedSupply', numpy=True) #^think this will get combined with the input sheet above
+        feedsupply_inp  = fun.xl_all_named_ranges('Property.xlsx', 'FeedSupply', numpy=True)
         pkl.dump(feedsupply_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
         pasture_inp=dict()
-        for pasture in uinp.structure['pastures']:
-            pasture_inp[pasture] = fun.xl_all_named_ranges('Property.xlsx', pasture)
+        for pasture in sinp.general['pastures'][sinp.general['pastures_exist']]:
+            pasture_inp[pasture] = fun.xl_all_named_ranges('Property.xlsx', pasture, numpy=True)
         pkl.dump(pasture_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
 ##else the inputs are read in from the pickle file
@@ -86,7 +90,7 @@ else:
 
         finance_inp = pkl.load(f)
 
-        feed_inp = pkl.load(f)
+        period_inp = pkl.load(f)
 
         sup_inp = pkl.load(f)
 
@@ -97,6 +101,107 @@ else:
         pasture_inp = pkl.load(f)
 
 print('- finished')
+##reshape required inputs
+###lengths
+len_d = len(sheep_inp['i_d_idx'])
+len_h2 = sheep_inp['i_h2_len']
+len_h5 = sheep_inp['i_h5_len']
+len_h7 = sheep_inp['i_husb_operations_triggerlevels_h5h7h2'].shape[-1]
+len_i = sheep_inp['i_i_len']
+len_j0 = feedsupply_inp['i_j0_len']
+len_k0 = sheep_inp['i_k0_len']
+len_k1 = sheep_inp['i_k1_len']
+len_k2 = sheep_inp['i_k2_len']
+len_k3 = sheep_inp['i_k3_len']
+len_k4 = sheep_inp['i_k4_len']
+len_k5 = sheep_inp['i_k5_len']
+len_l = len(general_inp['lmu_area'])
+len_n1 = sinp.stock['i_n1_len']
+len_n3 = sinp.stock['i_n3_len']
+len_o = sheep_inp['i_o_len']
+len_p6 = len(period_inp['i_fp_idx'])
+len_r1 = feedsupply_inp['i_r1_len']
+len_s = sheep_inp['i_s_len']
+len_t3 = sheep_inp['i_t3_len']
+w_start_len1 = sinp.stock['i_w_start_len1']
+n_fvp_periods_dams = np.count_nonzero(sinp.stock['i_fvp_mask_dams'])
+len_w1 = w_start_len1 * len_n1 ** n_fvp_periods_dams
+len_w1_cut = int(len_w1 / len_n1)
+w_start_len3 = sinp.stock['i_w_start_len3']
+n_fvp_periods_offs = np.count_nonzero(sinp.stock['i_fvp_mask_offs'])
+len_w3 = w_start_len3 * len_n3 ** n_fvp_periods_offs
+len_w3_cut = int(len_w3 / len_n3)
+len_x = sheep_inp['i_x_len']
+len_z = len(general_inp['i_mask_z'])
+
+
+###shapes
+zp6 = (len_z, len_p6)
+zp6l = (len_z, len_p6, len_l)
+zp6j0 = (len_z, len_p6, len_j0)
+h2h5h7 = (len_h2, len_h5, len_h7)
+ioW1 = (len_i, len_o, len_w1_cut)
+isxW1 = (len_i, len_s, len_x, len_w3_cut)
+iog = (len_i, len_o, -1)
+idg = (len_i, len_d, -1)
+isxg = (len_i, len_s, len_x, -1)
+izg = (len_i, len_z, -1)
+ik0g = (len_i, len_k0, -1)
+ik1g = (len_i, len_k1, -1)
+ik2g = (len_i, len_k2, -1)
+ik3g = (len_i, len_k3, -1)
+ik4g = (len_i, len_k4, -1)
+ik5g = (len_i, len_k5, -1)
+t3Sg = (len_t3, len_s+1, -1) #capital S to indicate this is special eg not normal becasue +1
+r1j0P = (len_r1, len_j0, -1) #capital p to indicate this is just the remaining length of input, it is p axis but input is longer
+
+
+###pasture
+for t,pasture in enumerate(sinp.general['pastures'][sinp.general['pastures_exist']]):
+    inp = pasture_inp[pasture]
+    inp['DigRednSenesce'] = np.reshape(inp['DigRednSenesce'], zp6)
+    inp['DigDryAve'] = np.reshape(inp['DigDryAve'], zp6)
+    inp['DigDryRange'] = np.reshape(inp['DigDryRange'], zp6)
+    inp['FOODryH'] = np.reshape(inp['FOODryH'], zp6)
+    inp['LowFOO'] = np.reshape(inp['LowFOO'], zp6l)
+    inp['MedFOO'] = np.reshape(inp['MedFOO'], zp6l)
+    inp['LowPGR'] = np.reshape(inp['LowPGR'], zp6l)
+    inp['MedPGR'] = np.reshape(inp['MedPGR'], zp6l)
+    inp['DigGrn'] = np.reshape(inp['DigGrn'], zp6l)
+
+###stock
+sheep_inp['i_pasture_stage_p6z'] = np.reshape(sheep_inp['i_pasture_stage_p6z'], zp6)
+sheep_inp['i_legume_p6z'] = np.reshape(sheep_inp['i_legume_p6z'], zp6)
+sheep_inp['i_paststd_foo_p6zj0'] = np.reshape(sheep_inp['i_paststd_foo_p6zj0'], zp6j0)
+sheep_inp['i_paststd_dmd_p6zj0'] = np.reshape(sheep_inp['i_paststd_dmd_p6zj0'], zp6j0)
+sheep_inp['i_density_p6z'] = np.reshape(sheep_inp['i_density_p6z'], zp6)
+sheep_inp['i_husb_operations_triggerlevels_h5h7h2'] = np.reshape(sheep_inp['i_husb_operations_triggerlevels_h5h7h2'], h2h5h7)
+sheep_inp['i_sai_lw_dams_owi'] = np.full(ioW1, True) #this is acted on by SA but didnt need to be an inputs so it is added here. This controls if a nutrition pattern is included.
+sheep_inp['i_sai_lw_offs_swix'] = np.full(isxW1, True) #this is acted on by SA but didnt need to be an inputs so it is added here. This controls if a nutrition pattern is included.
+sheep_inp['i_date_born1st_oig2'] = np.reshape(sheep_inp['i_date_born1st_oig2'], iog)
+sheep_inp['i_date_born1st_idg3'] = np.reshape(sheep_inp['i_date_born1st_idg3'], idg)
+sheep_inp['i_sire_propn_oig1'] = np.reshape(sheep_inp['i_sire_propn_oig1'], iog)
+sheep_inp['i_date_shear_sixg0'] = np.reshape(sheep_inp['i_date_shear_sixg0'], isxg)
+sheep_inp['i_date_shear_sixg1'] = np.reshape(sheep_inp['i_date_shear_sixg1'], isxg)
+sheep_inp['i_date_shear_sixg3'] = np.reshape(sheep_inp['i_date_shear_sixg3'], isxg)
+sheep_inp['ia_r1_zig0'] = np.reshape(sheep_inp['ia_r1_zig0'], izg)
+sheep_inp['ia_r1_zig1'] = np.reshape(sheep_inp['ia_r1_zig1'], izg)
+sheep_inp['ia_r1_zig3'] = np.reshape(sheep_inp['ia_r1_zig3'], izg)
+sheep_inp['ia_r2_k0ig1'] = np.reshape(sheep_inp['ia_r2_k0ig1'], ik0g)
+sheep_inp['ia_r2_k1ig1'] = np.reshape(sheep_inp['ia_r2_k1ig1'], ik1g)
+sheep_inp['ia_r2_k2ig1'] = np.reshape(sheep_inp['ia_r2_k2ig1'], ik2g)
+sheep_inp['ia_r2_ik0g3'] = np.reshape(sheep_inp['ia_r2_ik0g3'], ik0g)
+sheep_inp['ia_r2_ik3g3'] = np.reshape(sheep_inp['ia_r2_ik3g3'], ik3g)
+sheep_inp['ia_r2_ik4g3'] = np.reshape(sheep_inp['ia_r2_ik4g3'], ik4g)
+sheep_inp['ia_r2_ik5g3'] = np.reshape(sheep_inp['ia_r2_ik5g3'], ik5g)
+sheep_inp['i_sales_offset_tsg3'] = np.reshape(sheep_inp['i_sales_offset_tsg3'], t3Sg)
+sheep_inp['i_target_weight_tsg3'] = np.reshape(sheep_inp['i_target_weight_tsg3'], t3Sg)
+sheep_inp['i_shear_prior_tsg3'] = np.reshape(sheep_inp['i_shear_prior_tsg3'], t3Sg)
+sheep_inp['ia_i_idg2'] = np.reshape(sheep_inp['ia_i_idg2'], idg)
+feedsupply_inp['i_feedoptions_r1pj0'] = np.reshape(feedsupply_inp['i_feedoptions_r1pj0'], r1j0P)
+
+
+
 
 ##create a copy of each input dict - this means there is always a copy of the original inputs (the second copy has SA applied to it)
 ##the copy created is the one used in the actual modules
@@ -107,12 +212,10 @@ crop=crop_inp.copy()
 mach=mach_inp.copy()
 stubble=stubble_inp.copy()
 finance=finance_inp.copy()
-feed_inputs=feed_inp.copy()
+period=period_inp.copy()
 supfeed=sup_inp.copy()
 sheep=sheep_inp.copy()
 feedsupply=feedsupply_inp.copy()
-# sheep_management=sheep_management_inp.copy()
-# sheep_regions=sheep_regions_inp.copy()
 pasture_inputs=pasture_inp.copy()
 
 #######################
@@ -131,23 +234,30 @@ def property_inp_sa():
     '''
     ##have to import it here since sen.py imports this module
     import Sensitivity as sen
-    #mach['approx_hay_yield']=mach_inp['approx_hay_yield']+sen.saa['variable'] #just an example, this can be deleted
-    ##pasture will have to be added in a loop
-    for pasture in uinp.structure['pastures']:
+    ##general
+    ###sav
+    general['steady_state'] = fun.f_sa(general_inp['steady_state'],sen.sav['steady_state'],5)
+
+
+    ##pasture
+    ###sav
+    general['pas_inc'] = fun.f_sa(general_inp['pas_inc'],sen.sav['pas_inc'],5)
+    for pasture in sinp.general['pastures'][general['pas_inc']]: #all pasture inputs are adjusted even if a given pasture is not included
         ###SAM
         pasture_inputs[pasture]['GermStd'] = fun.f_sa(pasture_inp[pasture]['GermStd'], sen.sam[('germ',pasture)])
         pasture_inputs[pasture]['GermScalarLMU'] = fun.f_sa(pasture_inp[pasture]['GermScalarLMU'], sen.sam[('germ_l',pasture)])
         pasture_inputs[pasture]['LowPGR'] = fun.f_sa(pasture_inp[pasture]['LowPGR'], sen.sam[('pgr',pasture)])
         pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inp[pasture]['MedPGR'], sen.sam[('pgr',pasture)])
-        pasture_inputs[pasture]['LowPGR'] = fun.f_sa(pasture_inp[pasture]['LowPGR'], sen.sam[('pgr_f',pasture)], pandas=True, axis=0)
-        pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inp[pasture]['MedPGR'], sen.sam[('pgr_f',pasture)], pandas=True, axis=0)
-        pasture_inputs[pasture]['LowPGR'] = fun.f_sa(pasture_inp[pasture]['LowPGR'], sen.sam[('pgr_l',pasture)], pandas=True, axis=1)
-        pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inp[pasture]['MedPGR'], sen.sam[('pgr_l',pasture)], pandas=True, axis=1)
-        pasture_inputs[pasture]['DigDryAve'] = pasture_inp[pasture]['DigDryAve'] * sen.sam[('dry_dmd_decline',pasture)] \
-                                                + max(pasture_inp[pasture]['DigDryAve']) * (1 - sen.sam[('dry_dmd_decline',pasture)])
+        pasture_inputs[pasture]['LowPGR'] = fun.f_sa(pasture_inp[pasture]['LowPGR'], sen.sam[('pgr_f',pasture)][...,na])
+        pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inp[pasture]['MedPGR'], sen.sam[('pgr_f',pasture)][...,na])
+        pasture_inputs[pasture]['LowPGR'] = fun.f_sa(pasture_inp[pasture]['LowPGR'], sen.sam[('pgr_l',pasture)])
+        pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inp[pasture]['MedPGR'], sen.sam[('pgr_l',pasture)])
+        pasture_inputs[pasture]['DigDryAve'] = (pasture_inp[pasture]['DigDryAve'] * sen.sam[('dry_dmd_decline',pasture)]
+                                                + np.max(pasture_inp[pasture]['DigDryAve'],axis=1) * (1 - sen.sam[('dry_dmd_decline',pasture)]))
         pasture_inputs[pasture]['DigSpread'] = fun.f_sa(pasture_inp[pasture]['DigSpread'], sen.sam[('grn_dmd_range_f',pasture)])
         pasture_inputs[pasture]['DigDeclineFOO'] = fun.f_sa(pasture_inp[pasture]['DigDeclineFOO'], sen.sam[('grn_dmd_declinefoo_f',pasture)])
         pasture_inputs[pasture]['DigRednSenesce'] = fun.f_sa(pasture_inp[pasture]['DigRednSenesce'], sen.sam[('grn_dmd_senesce_f',pasture)])
+
     ##sheep
     ###SAV
     sheep['i_mask_i'] = fun.f_sa(sheep_inp['i_mask_i'], sen.sav['TOL_inc'], 5)
@@ -160,4 +270,85 @@ def property_inp_sa():
     ###SAV
     rep['i_store_fec_rep'] = fun.f_sa(rep_inp['i_store_fec_rep'], sen.sav['fec_inc'], 5)
 
+
+def f_seasonal_inp(inp, numpy=False, axis=0, level=0):
+    '''
+    This function adjust the seasonal inputs.
+    Either returning inputs for the static model or DSP.
+    For the static model the inputs which are seasnally effected can be generated by 2 methods:
+        1. Take the weighted average of the inputs for differnt seasons
+        2. Take the fisrt slice of the z axis which is the user defined 'typical' season.
+    :param axis: the axis number where z is
+    :param level: for pandas which level is season (if multi index)
+    :return:
+    '''
+    ##season mask - contros which seasons are included
+    z_mask = general['i_mask_z']
+    ##adjust season prob accounting for the seasons which are not included
+    z_prob = np.array(general['i_season_propn_z'])
+    z_prob = z_prob[z_mask]
+    z_prob = z_prob / sum(z_prob)
+
+    if numpy:
+        ##mask the season types
+        inp = np.compress(z_mask, inp, axis)
+
+        ##weighted average if steady state
+        if general['steady_state']:
+            try:  # incase array is datearray
+                inp = np.expand_dims(np.average(inp, axis=axis, weights=z_prob), axis)
+            except TypeError:
+                n_inp = inp.astype("datetime64[ns]").astype(np.int64)
+                n_inp = np.expand_dims(np.average(n_inp, axis=axis, weights=z_prob), axis)
+                n_inp = n_inp.astype("datetime64[ns]")
+                inp = n_inp.astype('M8[us]').astype('O') #converts to datetime
+
+    else:
+        ##mask the season types
+        keys_z = general['i_z_idx'][z_mask]
+        if inp.columns.nlevels > 2: #if statement required becasue cant convert one element to tuple
+            slc_none = tuple([slice(None)] * (inp.columns.nlevels - 1)) #makes a slice(none) for each column level except season.
+            inp = inp.loc[:, (keys_z, slc_none)]
+        elif inp.columns.nlevels > 1:
+            slc_none = slice(None)
+            inp = inp.loc[:, (keys_z, slc_none)]
+        else:
+            inp = inp.loc[:,z_mask]
+
+        ##weighted average if steady state
+        if general['steady_state']:
+            try: #incase df is datearray
+                z_prob = pd.Series(z_prob, index=keys_z)
+                if axis==0:
+                    sum_level = list(range(inp.index.nlevels))
+                else:
+                    sum_level = list(range(inp.columns.nlevels))
+
+                del sum_level[level]
+                if sum_level == []:
+                    inp = inp.mul(z_prob, axis=axis, level=level).sum(axis=axis)
+                    inp = pd.concat([inp],keys=[keys_z[0]],axis=axis) #add z0 index key
+                else:
+                    inp = inp.mul(z_prob, axis=axis, level=level).sum(axis=axis, level=sum_level)
+                    inp = pd.concat([inp],keys=[keys_z[0]],axis=axis) #add z0 index key
+                    col_level_order = sum_level[:]
+                    col_level_order.insert(level,0)
+                    inp = inp.reorder_levels(col_level_order, axis=axis)
+            except TypeError:
+                #this wont work if columns have two levels (would need to reshape into multi d numpy do the average then reshape to 2-d)
+                n_inp = inp.values.astype(np.int64)
+                n_inp = np.average(n_inp, axis=axis, weights=z_prob)
+                n_inp = n_inp.astype("datetime64[ns]")
+                n_inp = n_inp.astype('M8[us]').astype('O') #converts to datetime
+                col = pd.MultiIndex.from_tuples([inp.columns[0]])
+                inp = pd.DataFrame(n_inp, index=inp.index, columns=col)
+    return inp
+
+def f_keys_z():
+    '''returns the index/keys for z axis'''
+    if general['steady_state']:
+        keys_z = np.array([general['i_z_idx'][general['i_mask_z']][0]]).astype('str')
+    else:
+        keys_z = general['i_z_idx'][general['i_mask_z']].astype('str')
+    return keys_z
 

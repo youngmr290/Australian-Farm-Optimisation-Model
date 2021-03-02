@@ -104,6 +104,11 @@ def stockpyomo_local(params):
         pass
     model.s_k5_birth_offs = pe.Set(initialize=params['k5_idx_offs'], doc='Cluster for BTRT & oestrus cycle based on scanning, global & weaning management')
     try:
+        model.del_component(model.s_lw_offs)
+    except AttributeError:
+        pass
+    model.s_lw_offs = pe.Set(initialize=params['w_idx_offs'], doc='Standard LW patterns offs')
+    try:
         model.del_component(model.s_groups_offs)
     except AttributeError:
         pass
@@ -237,7 +242,7 @@ def stockpyomo_local(params):
         model.del_component(model.p_progreq_offs)
     except AttributeError:
         pass
-    model.p_progreq_offs = pe.Param(model.s_dvp_offs, model.s_lw_offs, model.s_tol, model.s_gender, model.s_lw_offs,
+    model.p_progreq_offs = pe.Param(model.s_k3_damage_offs, model.s_dvp_offs, model.s_lw_offs, model.s_tol, model.s_gender, model.s_lw_offs,
                               initialize=params['p_progreq_offs'], default=0.0, doc='number of progeny required by dams')
 
 
@@ -778,12 +783,12 @@ def stockpyomo_local(params):
     except AttributeError:
         pass
     def prog2offsR(model, k3, k5, v3, z, i, a, x, y3, g3, w9):
-        if v3==l_v3[0] and any(model.p_progreq_offs[v3, w38, i, x, w9] for w38 in model.s_lw_offs):
+        if v3==l_v3[0] and any(model.p_progreq_offs[k3, v3, w38, i, x, w9] for w38 in model.s_lw_offs):
             return (sum(- model.v_prog[k5, t2, w28, z, i, d, a, x, g3] * model.p_progprov_offs[k3, k5, t2, w28, z, i, d, a, x, y3, g3, w9] #use g3 (same as g2)
                         for d in model.s_damage for w28 in model.s_lw_prog for t2 in model.s_sale_prog
                         if model.p_progprov_offs[k3, k5, t2, w28, z, i, d, a, x, y3, g3, w9]!= 0)
-                       + sum(model.v_offs[k3,k5,t3,v3,n3,w38,z,i,a,x,y3,g3]  * model.p_progreq_offs[v3, w38, i, x, w9]
-                        for t3 in model.s_sale_offs for n3 in model.s_nut_dams for w38 in model.s_lw_offs if model.p_progreq_offs[v3, w38, i, x, w9]!= 0))<=0
+                       + sum(model.v_offs[k3,k5,t3,v3,n3,w38,z,i,a,x,y3,g3]  * model.p_progreq_offs[k3, v3, w38, i, x, w9]
+                        for t3 in model.s_sale_offs for n3 in model.s_nut_dams for w38 in model.s_lw_offs if model.p_progreq_offs[k3, v3, w38, i, x, w9]!= 0))<=0
         else:
             return pe.Constraint.Skip
     start = time.time()
@@ -970,7 +975,7 @@ def stock_asset(model):
                for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol)
     # purchases = sum(sum(model.v_purchase_dams[v1,w1,z,i,g1] * sum(model.p_cost_purch_dam[v1,w1,z,i,g1,c] for c in model.s_cashflow_periods) for v1 in model.s_dvp_dams for w1 in model.s_lw_dams for g1 in model.s_groups_dams)
     #                 +sum(model.v_purchase_offs[v3,w3,z,i,g3] * sum(model.p_cost_purch_offs[v3,w3,z,i,g3,c] for c in model.s_cashflow_periods) for v3 in model.s_dvp_offs for w3 in model.s_lw_offs for g3 in model.s_groups_offs)
-    return  stock + infrastructure #+ purchases
+    return stock + infrastructure #+ purchases
 
 
 ##################################

@@ -20,13 +20,13 @@ import Crop as crp
 import Mach as mac
 import StockFunctions as sfun
 
-
+na = np.newaxis
 
 ########################
 #off farm grain price  #
 ########################
 
-def buy_grain_price(params, r_vals):
+def f_buy_grain_price(r_vals):
     '''
     Returns
     -------
@@ -47,13 +47,15 @@ def buy_grain_price(params, r_vals):
     p_dates = per.cashflow_periods()['start date']
     p_name = per.cashflow_periods()['cash period']
     allocation=fun.period_allocation(p_dates, p_name, start, length).set_index('period').squeeze()
+    allocation = allocation.fillna(0)
     cols = pd.MultiIndex.from_product([allocation.index, price_df.columns])
     price_df = price_df.reindex(cols, axis=1,level=1)#adds level to header so i can mul in the next step
     buy_grain_price = price_df.mul(allocation,axis=1,level=0)
-    params['buy_grain_price'] = buy_grain_price.stack([0,1]).to_dict()
     r_vals['buy_grain_price'] = buy_grain_price.T
+    return buy_grain_price.stack([0,1])
 
-def sup_cost(params, r_vals):
+def f_sup_cost(r_vals):
+    #todo there could be a limitation here. We are assuming the silo is only filled once each year - the cost of the silo per tonne of sup is calculated based on the silos capacity, if the silo is fill multiple times this will overestimate the cost.
     ##calculate the insurance/dep/asset value per yr for the silos
     silo_info = pinp.supfeed['storage_type']
     silo_info.loc['dep'] = (silo_info.loc['price'] - silo_info.loc['salvage value'])/silo_info.loc['life']
@@ -65,45 +67,57 @@ def sup_cost(params, r_vals):
     grain_info.loc['capacity'] =  grain_info.loc['density'].mul(silo_info.loc['capacity'] , level=1)
     grain_info.loc['dep'] =  silo_info.loc['dep'].div(grain_info.loc['capacity'] , level=1)
     grain_info.loc['cost'] =  (silo_info.loc['insurance'] + silo_info.loc['other']).div(grain_info.loc['capacity'] , level=1) #variable cost = insurance + other (cleaning silo etc)
-    grain_info.loc['asset'] =  silo_info.loc['asset'].div(grain_info.loc['capacity'] , level=1)
-    ##drop silo type index
-    grain_info=grain_info.droplevel(1,axis=1)
+    grain_info.loc['asset'] =  silo_info.loc['asset'].div(grain_info.loc['capacity'], level=1)
+    grain_info=grain_info.droplevel(1,axis=1) #drop silo type index
+
     ##data to determine cash period
-    p_dates = per.cashflow_periods()['start date']
-    p_name = per.cashflow_periods()['cash period']
+    cashflow_df = per.cashflow_periods()
+    p_dates = cashflow_df['start date']
+    p_dates_c = p_dates.values #np version
+    p_name_c = cashflow_df['cash period'].values[:-1]
+
+    ##feed period data - need to convert all dates to the same year
+    # start_p6z  = per.f_feed_periods()[:-1].astype('datetime64')
+    # base_year = p_dates[0].year
+    # condition_date = dt.datetime(year=base_year+1, month=1, day=1)
+    # start_p6z[start_p6z>condition_date] = start_p6z[start_p6z>condition_date] - np.timedelta64(365, 'D')
+    start_p6z = per.f_fp_baseyr()[:-1]
+    length_p6z = per.f_feed_periods(option=1).astype('timedelta64[D]')
+
+    ##deterimine cashflow allocation
+    alloc_cpz=fun.range_allocation_np(p_dates_c, start_p6z, length_p6z, True)[:-1] #drop last c row because it is just the end date of last period.
+    alloc_cpz = alloc_cpz.reshape(alloc_cpz.shape[0], -1)
+    keys_z = pinp.f_keys_z()
+    keys_p6 = pinp.period['i_fp_idx']
+    cols = pd.MultiIndex.from_product([keys_p6, keys_z])
+    alloc_cpz = pd.DataFrame(alloc_cpz, index=p_name_c, columns=cols)
+
     ##determine cost of feeding in each feed period and cashflow period
-    feeding_cost = mac.sup_mach_cost()
-    start_df  = pinp.feed_inputs['feed_periods'].loc[:pinp.feed_inputs['feed_periods'].index[-2],'date']
-    start_df  =start_df.apply(lambda x: x.replace(year=p_dates[0].year)) #this is required because feed period dates are split over two yrs which causes and error when trying to determine which cashflow period each feed period date falls into
-    length_df = pinp.feed_inputs['feed_periods'].loc[:pinp.feed_inputs['feed_periods'].index[-2],'length'].astype('timedelta64[D]')
-    allocation=fun.period_allocation2(start_df, length_df, p_dates, p_name)
-    cols = pd.MultiIndex.from_product([allocation.columns, feeding_cost.index])
-    allocation = allocation.reindex(cols,axis=1,level=0)
-    feeding_cost = allocation.mul(feeding_cost, axis=1, level=1)
-    ##determine cost of storage in each feed period and cashflow period
-    start = pinp.supfeed['storage_cost_date']
-    allocation=fun.period_allocation(p_dates,p_name,start)
-    storage_cost = grain_info.loc['cost']
-    indx = pd.MultiIndex.from_product([[allocation],start_df.index, storage_cost.index])
-    storage_cost = storage_cost.reindex(indx,axis=0,level=2)
+    feeding_cost_k = mac.sup_mach_cost()
+    alloc_cpz = alloc_cpz.stack(0)
+    cols = pd.MultiIndex.from_product([alloc_cpz.columns, feeding_cost_k.index])
+    alloc_cpz = alloc_cpz.reindex(cols,axis=1,level=0)
+    feeding_cost_cpzk = alloc_cpz.mul(feeding_cost_k, axis=1, level=1)
+    start = np.datetime64(pinp.supfeed['storage_cost_date'])
+    alloc_c = np.logical_and(p_dates_c[:-1]<=start, start<p_dates_c[1:])
+    storage_cost_k = grain_info.loc['cost'].values
+    storage_cost_ck = storage_cost_k * alloc_c[:,na]
+    storage_cost_ck = pd.DataFrame(storage_cost_ck, index=p_name_c, columns=grain_info.columns)
+
     ##total cost = feeding cost plus storage cost
-    total_sup_cost=feeding_cost.add(storage_cost.unstack([1,2]),axis=1, fill_value=0)
-    r_vals['total_sup_cost'] = total_sup_cost.T
+    feeding_cost_cpzk = feeding_cost_cpzk.stack().unstack(1)
+    total_sup_cost = feeding_cost_cpzk.add(storage_cost_ck.stack().sort_index(),axis=0).stack(1)
+    r_vals['total_sup_cost'] = total_sup_cost
+
     ##dep
     storage_dep = grain_info.loc['dep']
-    indx = pd.MultiIndex.from_product([start_df.index, storage_dep.index])
-    storage_dep = storage_dep.reindex(indx,axis=0,level=1).to_dict()
     ##asset
     storage_asset = grain_info.loc['asset']
-    indx = pd.MultiIndex.from_product([start_df.index, storage_asset.index])
-    storage_asset = storage_asset.reindex(indx,axis=0,level=1).to_dict()
     ##return cost, dep and asset value
-    params['total_sup_cost'] = total_sup_cost.stack([0,1]).to_dict()
-    params['storage_dep'] = storage_dep
-    params['storage_asset'] = storage_asset
+    return total_sup_cost, storage_dep, storage_asset
     
     
-def sup_md_vol(params):
+def f_sup_md_vol():
     ##calc vol
     sup_md_vol = uinp.supfeed['sup_md_vol']    
     ###convert md to dmd
@@ -118,11 +132,10 @@ def sup_md_vol(params):
     ##calc ME
     md_tonne=sup_md_vol.loc['energy']*sup_md_vol.loc['prop consumed']*sup_md_vol.loc['dry matter content']
     ##load into params dict for pyomo
-    params['vol_tonne'] = vol_tonne.to_dict()
-    params['md_tonne'] = md_tonne.to_dict()
+    return vol_tonne, md_tonne
     
     
-def sup_labour(params):
+def f_sup_labour():
     ##time to fill up
     fill_df= pinp.supfeed['time_fill_feeder']
     fill_time = (fill_df.loc['drive time']+fill_df.loc['fill time'])/fill_df.loc['capacity']
@@ -154,27 +167,64 @@ def sup_labour(params):
     total_time=transport_tonne+fill_empty_tonne
     ##determine time in each labour period
     ###determine the time taken to feed a tonne of feed in each labour perior - this depends on the allocation of the labour periods into the entered sup feed dates
-    p_dates=list(total_time.index)
-    p_dates.append(total_time.index[0] + rdelta.relativedelta(years=1))
-    p_name = p_dates #use the dates as index so i can have a similar inex to the time df
-    start_df = per.p_date2_df()['date']
-    date_full=list(per.p_dates_df()['date'])
-    length_df =  pd.DataFrame([date_full[i+1]-date_full[i] for i in range(len(date_full)-1)])
-    allocation=fun.period_allocation2(start_df, length_df, p_dates, p_name)
-    ###mul allocation by the actual time taken and sum for each labour period ie if a labour period is split between two sup feed periods the time taken to feed in that given labour period is a comnination of the time taken in each sup period
-    total_time=total_time.stack()
-    time_lab_period= allocation.reindex(total_time.index, level=0).mul(total_time, axis=0).sum(axis=0, level=1)
+    lp_dates_p5z = per.p_dates_df()
+    start_p8 = total_time.index.values
+    end_p8 = np.roll(start_p8, -1)
+    end_p8[-1] = end_p8[-1] + np.timedelta64(365, 'D') #increment the first date by 1yr so it becomes the end date for the last period
+    len_p8 = end_p8 - start_p8
+    shape_p5zp8 = lp_dates_p5z.shape + start_p8.shape
+    alloc_p5zp8 = fun.range_allocation_np(lp_dates_p5z.values[...,na], start_p8, len_p8, shape=shape_p5zp8)[:-1]
+
+    ##combine allocation with the labour time
+    total_time_p8k = total_time.values
+    total_time_p5zp8k = alloc_p5zp8[...,na] * total_time_p8k
+    total_time_p5zk = np.sum(total_time_p5zp8k, axis=-2)
+
     ##link feed periods to labour periods, ie determine the proportion of each feed period in each labour period so the time taken to sup feed can be divided up accordingly
-    p_dates = per.p_dates_df()['date']
-    p_name = per.p_dates_df().index
-    fp=pinp.feed_inputs['feed_periods'].iloc[:-1]  #don't want the end date of the last period included
-    start_df = fp['date'].apply(lambda x: x.replace(year=p_dates[0].year))
-    length_df =  fp['length'].astype('timedelta64[D]') 
-    allocation=fun.period_allocation2(start_df, length_df, p_dates, p_name)
-    ###get the time taken in each labour period to feed 1t of feed in each feed period
-    time_lab_period=time_lab_period.stack()
-    time_lab_feed_period=allocation.reindex(time_lab_period.index, level=1).mul(time_lab_period, axis=0)
-    params['sup_labour'] = time_lab_feed_period.stack().to_dict()
+    start_p6z = per.f_fp_baseyr()[:-1]
+    length_p6z = per.f_feed_periods(option=1).astype('timedelta64[D]')
+    shape_p5p6z = (lp_dates_p5z.shape[0],) + length_p6z.shape
+    alloc_p5p6z = fun.range_allocation_np(lp_dates_p5z.values[:,na,:], start_p6z, length_p6z, True, shape=shape_p5p6z)[:-1]
+
+    ##allocate time to labour period for each feed period - get the time taken in each labour period to feed 1t of feed in each feed period
+    total_time_p5p6zk = total_time_p5zk[:,na,...] * alloc_p5p6z[...,na]
+
+    ##build df
+    total_time_p5p6zk = total_time_p5p6zk.reshape(total_time_p5p6zk.shape[0],-1)
+    keys_z = pinp.f_keys_z()
+    keys_p6 = pinp.period['i_fp_idx']
+    cols = pd.MultiIndex.from_product([keys_p6, keys_z, total_time.columns])
+    total_time_p5zk = pd.DataFrame(total_time_p5p6zk, index=lp_dates_p5z.index[:-1], columns=cols).stack([0,2])
+    return total_time_p5zk
+
+
+    # ###get the time taken in each labour period to feed 1t of feed in each feed period
+    # time_lab_period=time_lab_period.stack()
+    # time_lab_feed_period=allocation.reindex(time_lab_period.index, level=1).mul(time_lab_period, axis=0)
+    # params['sup_labour'] = time_lab_feed_period.stack().to_dict()
     
 
+##collates all the params
+def f_sup_params(params,r_vals):
+    total_sup_cost, storage_dep, storage_asset = f_sup_cost(r_vals)
+    vol_tonne, md_tonne = f_sup_md_vol()
+    sup_labour = f_sup_labour()
+    buy_grain_price = f_buy_grain_price(r_vals)
+
+
+    ##create non seasonal params
+    params['storage_dep'] = storage_dep.to_dict()
+    params['storage_asset'] = storage_asset.to_dict()
+    params['vol_tonne'] = vol_tonne.to_dict()
+    params['md_tonne'] = md_tonne.to_dict()
+    params['buy_grain_price'] = buy_grain_price.to_dict()
+
+    ##create season params in loop
+    keys_z = pinp.f_keys_z()
+    for z in range(len(keys_z)):
+        ##create season key for params dict
+        scenario = keys_z[z]
+        params[scenario] = {}
+        params[scenario]['total_sup_cost'] = total_sup_cost[scenario].to_dict()
+        params[scenario]['sup_labour'] = sup_labour[scenario].to_dict()
 

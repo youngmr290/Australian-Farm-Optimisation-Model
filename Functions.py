@@ -132,7 +132,6 @@ def f_convert_to_inf(input):
     input[mask]=False
     return input.astype('float')
 
-
 ###########################
 #general functions        #
 ###########################
@@ -150,37 +149,47 @@ def cartesian_product_simple_transpose(arrays):
     return arr.reshape(la, -1).T
 
 
-def searchsort_multiple_dim(a,v,axis_a,axis_v):
+def searchsort_multiple_dim(a,v,axis_a0,axis_a1,axis_v0,axis_v1):
     '''
     Find the indices into a sorted array a such that, if the corresponding elements in 'v' were inserted before the indices, the order of 'a' would be preserved.
     It does this iteratively down the specified axis (therefore the specified axis must be present in both 'a' and 'v'
 
     Parameters:
-        a: 2-D array_like
-        Input array. Must be sorted in ascending order, otherwise sorter must be an array of indices that sort it.
+        a: 3-D array_like
+        Input array. Must be sorted in ascending order.
 
         v: array_like
         Values to insert into a.
 
-        axis_a: int
-        The axis to iterate along - should be same as axis_v
-        axis_v: int
-        The axis to iterate along - should be same as axis_a
+        axis_a0: int
+        The position of axis to iterate along. a1 & v1 axis must be same length
+        axis_a1: int
+        The position of axis to iterate along. a1 & v1 axis must be same length
 
     '''
+    # final = np.zeros_like(v)
+    # slc_v = [slice(None)] * len(v.shape)
+    # slc_a = [slice(None)] * len(a.shape)
+    # for i in range(v.shape[axis_v]):
+    #     slc_v[axis_v] = slice(i, i+1)
+    #     slc_a[axis_a] = slice(i, i+1)
+    #     final[tuple(slc_v)] = np.searchsorted(np.squeeze(a[tuple(slc_a)]), v[tuple(slc_v)])
     final = np.zeros_like(v)
-    slc_v = [slice(None)] * len(v.shape)
     slc_a = [slice(None)] * len(a.shape)
-    for i in range(v.shape[axis_v]):
-        slc_v[axis_v] = slice(i, i+1)
-        slc_a[axis_a] = slice(i, i+1)
-        final[tuple(slc_v)] = np.searchsorted(np.squeeze(a[tuple(slc_a)]), v[tuple(slc_v)])
+    slc_v = [slice(None)] * len(v.shape)
+    for i in range(v.shape[axis_a0]):
+        for j in range(v.shape[axis_a1]):
+            slc_a[axis_a0] = slice(i, i+1)
+            slc_a[axis_a1] = slice(j, j+1)
+            slc_v[axis_v0] = slice(i, i+1)
+            slc_v[axis_v1] = slice(j, j+1)
+            final[tuple(slc_v)] = np.searchsorted(np.squeeze(a[tuple(slc_a)]), v[tuple(slc_v)])
     return final
 
 #print(timeit.timeit(phases2,number=100)/100)
 #
-def f_reshape_expand(array, left_pos=0, len_ax0=0, len_ax1=0, len_ax2=0, swap=False, ax1=0, ax2=1, right_pos=0, left_pos2=0, right_pos2=0
-                     , left_pos3=0, right_pos3=0, condition = None, axis = 0, len_ax3=0, swap2=False, ax1_2=1, ax2_2=2,
+def f_expand(array, left_pos=0, swap=False, ax1=0, ax2=1, right_pos=0, left_pos2=0, right_pos2=0
+                     , left_pos3=0, right_pos3=0, condition = None, axis = 0, swap2=False, ax1_2=1, ax2_2=2,
                      condition2=None, axis2=0, condition3=None, axis3=0, left_pos4=0, right_pos4=0, move=False, source=0, dest=1):
     '''
     *note: if adding two sets of new axis add from right to left (then the pos variables align)
@@ -192,12 +201,6 @@ def f_reshape_expand(array, left_pos=0, len_ax0=0, len_ax1=0, len_ax2=0, swap=Fa
         parameter array - input from excel.
     left_pos : int
         position of axis to the left of where the new axis will be added.
-    len_ax1 : int
-        length of axis 1 - used to reshape input array into multi dimension array (this should be i_len_?).
-    len_ax2 : int, optional
-        length of axis 3 - used to reshape input array into multi dimension array (this should be i_len_?). The default is 0.
-    len_ax3 : int, optional
-        length of axis 3 - used to reshape input array into multi dimension array (this should be i_len_?). The default is 0.
     swap : boolean, optional
         do you want to swap the first tow axis?. The default is False.
     right_pos : int, optional
@@ -213,22 +216,11 @@ def f_reshape_expand(array, left_pos=0, len_ax0=0, len_ax1=0, len_ax2=0, swap=Fa
 
     Returns
     -------
-    Reshapes, swaps axis if required, expands and apply a mask to a given axis if required.
+    expands, swaps axis if required and apply a mask to a given axis if required.
     '''
     ##convert int to 1d array if required
     if type(array) == int:
         array = np.array([array])
-    if len_ax3>0:
-        shape=(len_ax0,len_ax1,len_ax2,len_ax3)
-        array = array.reshape(shape)
-    elif len_ax2>0:
-        shape=(len_ax0,len_ax1,len_ax2)
-        array = array.reshape(shape)
-    elif len_ax1>0:
-        shape=(len_ax0,len_ax1)
-        array = array.reshape(shape)
-    else:
-        pass#don't need to reshape
     ##swap axis if necessary
     if swap:
         array = np.swapaxes(array, ax1, ax2)
@@ -280,6 +272,109 @@ def f_reshape_expand(array, left_pos=0, len_ax0=0, len_ax1=0, len_ax2=0, swap=Fa
         else:
             array = np.compress(condition3, array, axis3)
     return array
+# def f_reshape_expand(array, left_pos=0, len_ax0=0, len_ax1=0, len_ax2=0, swap=False, ax1=0, ax2=1, right_pos=0, left_pos2=0, right_pos2=0
+#                      , left_pos3=0, right_pos3=0, condition = None, axis = 0, len_ax3=0, swap2=False, ax1_2=1, ax2_2=2,
+#                      condition2=None, axis2=0, condition3=None, axis3=0, left_pos4=0, right_pos4=0, move=False, source=0, dest=1):
+#     '''
+#     *note: if adding two sets of new axis add from right to left (then the pos variables align)
+#     *note: mask applied last (after expanding and reshaping)
+#
+#     Parameters
+#     ----------
+#     array : array
+#         parameter array - input from excel.
+#     left_pos : int
+#         position of axis to the left of where the new axis will be added.
+#     len_ax0 : int
+#         length of axis 0 - used to reshape input array into multi dimension array (this should be i_len_?).
+#     len_ax1 : int
+#         length of axis 1 - used to reshape input array into multi dimension array (this should be i_len_?).
+#     len_ax2 : int, optional
+#         length of axis 2 - used to reshape input array into multi dimension array (this should be i_len_?). The default is 0.
+#     len_ax3 : int, optional
+#         length of axis 3 - used to reshape input array into multi dimension array (this should be i_len_?). The default is 0.
+#     swap : boolean, optional
+#         do you want to swap the first tow axis?. The default is False.
+#     right_pos : int, optional
+#         the position of the axis to the right of the singleton axis being added. The default is -1, for when the axis to the right is g?.
+#     left_pos2 : int
+#         position of axis to the left of where the new axis will be added.
+#     right_pos2 : int, optional
+#         the position of the axis to the right of the singleton axis being added. The default is -1, for when the axis to the right is g?.
+#     condition: boolean, optional
+#         mask used to slice given axis.
+#     axis: int, optional
+#         axis to apply mask to.
+#
+#     Returns
+#     -------
+#     Reshapes, swaps axis if required, expands and apply a mask to a given axis if required.
+#     '''
+#     ##convert int to 1d array if required
+#     if type(array) == int:
+#         array = np.array([array])
+#     if len_ax3>0:
+#         shape=(len_ax0,len_ax1,len_ax2,len_ax3)
+#         array = array.reshape(shape)
+#     elif len_ax2>0:
+#         shape=(len_ax0,len_ax1,len_ax2)
+#         array = array.reshape(shape)
+#     elif len_ax1>0:
+#         shape=(len_ax0,len_ax1)
+#         array = array.reshape(shape)
+#     else:
+#         pass#don't need to reshape
+#     ##swap axis if necessary
+#     if swap:
+#         array = np.swapaxes(array, ax1, ax2)
+#     ##swap axis if necessary
+#     if swap2:
+#         array = np.swapaxes(array, ax1_2, ax2_2)
+#     ##move axis if necessary
+#     if move:
+#         array = np.moveaxis(array, source=source, destination=dest)
+#     ##get axis into correct position 1
+#     if left_pos != 0:
+#         extra_axes = tuple(range((left_pos + 1), right_pos))
+#     else: extra_axes = ()
+#     array = np.expand_dims(array, axis = extra_axes)
+#     ##get axis into correct position 2 (some arrays need singleton axis added in multiple places ie separated by a used axis)
+#     if left_pos2 != 0:
+#         extra_axes = tuple(range((left_pos2 + 1), right_pos2))
+#     else: extra_axes = ()
+#     array = np.expand_dims(array, axis = extra_axes)
+#     ##get axis into correct position 3 (some arrays need singleton axis added in multiple places ie separated by a used axis)
+#     if left_pos3 != 0:
+#         extra_axes = tuple(range((left_pos3 + 1), right_pos3))
+#     else: extra_axes = ()
+#     array = np.expand_dims(array, axis = extra_axes)
+#     ##get axis into correct position 4 (some arrays need singleton axis added in multiple places ie separated by a used axis)
+#     if left_pos4 != 0:
+#         extra_axes = tuple(range((left_pos4 + 1), right_pos4))
+#     else: extra_axes = ()
+#     array = np.expand_dims(array, axis = extra_axes)
+#     ##apply mask if required
+#     if condition is not None: #see if condition exists
+#         if type(condition) == bool: #check if array or single value - note array of T & F is not type bool (it is array)
+#             condition= np.asarray([condition]) #convert to numpy if it is singular input
+#             array = np.compress(condition, array, axis)
+#         else:
+#             array = np.compress(condition, array, axis)
+#     ##apply mask if required
+#     if condition2 is not None: #see if condition exists
+#         if type(condition2) == bool: #check if array or single value - note array of T & F is not type bool (it is array)
+#             condition2= np.asarray([condition2]) #convert to numpy if it is singular input
+#             array = np.compress(condition2, array, axis2)
+#         else:
+#             array = np.compress(condition2, array, axis2)
+#     ##apply mask if required
+#     if condition3 is not None: #see if condition exists
+#         if type(condition3) == bool: #check if array or single value - note array of T & F is not type bool (it is array)
+#             condition3= np.asarray([condition3]) #convert to numpy if it is singular input
+#             array = np.compress(condition3, array, axis3)
+#         else:
+#             array = np.compress(condition3, array, axis3)
+#     return array
 
 def f_update(existing_value, new_value, mask_for_new):
     '''
@@ -838,75 +933,75 @@ def period_allocation(period_dates,periods,start_d,length=None):
         return allocation_p
 
 
-def df_period_total(p_dates,p_name,*dfs):
-    '''
-
-
-    Parameters
-    ----------
-    p_dates : List
-        Dates of the period you are matching ie cashflow or labour. Includes the end date of the last period
-    p_name : List
-        Names of the period you are matching ie cashflow or labour. Includes the a name for the last date which is not a period (it is just the end date of the last period)
-    *dfs : Dataframe or Series (1d)
-        Each df has dates as a index and a corresponding value in col 0 that you want to add to a period.
-
-    Returns
-    -------
-    Dict.
-        -The function determines what period each date falls into and adds the value to that period. This is repeated for each df.
-        -This func is good if you have multiple df with values that you want to add to the relevant period (you can only add values that are in the same period but you don't know what period the value is in until running the allocation func)
-        #example of this func is in the labourcrop module
-
-    '''
-    ## drop last row, because it has na because it only contains the end date, therefore not a period
-    p_name = p_name[0:-1]
-    #create empty numpy array that i will add the labour time in each period to
-    array = np.zeros(len(p_name))
-    #have to loops to allow for passing in multiple dicts
-    for d in dfs:
-#        print(dic)
-        for date in d.index:
-            # date = parse(key, dayfirst = False) #parse - simple way to go from string to datetime
-            period_name = period_allocation(p_dates,p_name,date)
-            period_idx = list(p_name).index(period_name)
-            array[period_idx] += d.loc[date,d.columns]
-    return dict(zip(p_name,array))
+# def df_period_total(p_dates,p_name,*dfs):
+#     '''
+#
+#
+#     Parameters
+#     ----------
+#     p_dates : List
+#         Dates of the period you are matching ie cashflow or labour. Includes the end date of the last period
+#     p_name : List
+#         Names of the period you are matching ie cashflow or labour. Includes the a name for the last date which is not a period (it is just the end date of the last period)
+#     *dfs : Dataframe or Series (1d)
+#         Each df has dates as a index and a corresponding value in col 0 that you want to add to a period.
+#
+#     Returns
+#     -------
+#     Dict.
+#         -The function determines what period each date falls into and adds the value to that period. This is repeated for each df.
+#         -This func is good if you have multiple df with values that you want to add to the relevant period (you can only add values that are in the same period but you don't know what period the value is in until running the allocation func)
+#         #example of this func is in the labourcrop module
+#
+#     '''
+#     ## drop last row, because it has na because it only contains the end date, therefore not a period
+#     p_name = p_name[0:-1]
+#     #create empty numpy array that i will add the labour time in each period to
+#     array = np.zeros(len(p_name))
+#     #have to loops to allow for passing in multiple dicts
+#     for d in dfs:
+# #        print(dic)
+#         for date in d.index:
+#             # date = parse(key, dayfirst = False) #parse - simple way to go from string to datetime
+#             period_name = period_allocation(p_dates,p_name,date)
+#             period_idx = list(p_name).index(period_name)
+#             array[period_idx] += d.loc[date,d.columns]
+#     return dict(zip(p_name,array))
 
 ##functions below are used to manipulate the period allocation from the func above into necessary format
 ##they depend on the input type ie dict of df, and the number of entries
 
 #^if this doesn't get used much it should be removed it really doesn't do much
-def period_allocation_reindex(df, p_dates, p_name, start, length):
-    '''
-    Parameters
-    ----------
-    df : Dataframe
-        1d dataframe or series.
-    p_dates : List
-        Dates of the period you are matching ie cashflow or labour. Includes the end date of the last period
-    p_name : List
-        Names of the period you are matching ie cashflow or labour. Includes the a name for the last date which is not a period (it is just the end date of the last period)
-    start : Datetime
-        Start date of the df activity ie start date of seeding.
-    length : Datetime
-        Length of the df activity ie length of seeding.
-
-    Returns
-    -------
-    Dataframe 2D
-        This function is used when multiple activities have the same period allocation.
-        - this func basically just calls the main allocation func then reindexes the df so it applies to all activities.
-        eg the cost of seeding for each lmu is incurred over the same period so we just want to return a df with a certain cost in it for each lmu and each cashflow period (the cost may differ but the allocation will be the same for each lmu, so the allocation func is called once then reindexed then multiplied by the different costs)
-    '''
-    allocation = period_allocation(p_dates, p_name,start,length)
-    allocation = allocation.set_index('period')
-    columns = pd.MultiIndex.from_product([allocation.columns, df.index])
-    allocation = allocation.reindex(columns,axis=1,level=0) #add level so mul can happen
-    allocation.columns = allocation.columns.droplevel(0) #drop added level
-    # cost = df.rename(index={0:'allocation'}).stack()
-    df = allocation.mul(df.iloc[:,0],axis=1)
-    return df
+# def period_allocation_reindex(df, p_dates, p_name, start, length):
+#     '''
+#     Parameters
+#     ----------
+#     df : Dataframe
+#         1d dataframe or series.
+#     p_dates : List
+#         Dates of the period you are matching ie cashflow or labour. Includes the end date of the last period
+#     p_name : List
+#         Names of the period you are matching ie cashflow or labour. Includes the a name for the last date which is not a period (it is just the end date of the last period)
+#     start : Datetime
+#         Start date of the df activity ie start date of seeding.
+#     length : Datetime
+#         Length of the df activity ie length of seeding.
+#
+#     Returns
+#     -------
+#     Dataframe 2D
+#         This function is used when multiple activities have the same period allocation.
+#         - this func basically just calls the main allocation func then reindexes the df so it applies to all activities.
+#         eg the cost of seeding for each lmu is incurred over the same period so we just want to return a df with a certain cost in it for each lmu and each cashflow period (the cost may differ but the allocation will be the same for each lmu, so the allocation func is called once then reindexed then multiplied by the different costs)
+#     '''
+#     allocation = period_allocation(p_dates, p_name,start,length)
+#     allocation = allocation.set_index('period')
+#     columns = pd.MultiIndex.from_product([allocation.columns, df.index])
+#     allocation = allocation.reindex(columns,axis=1,level=0) #add level so mul can happen
+#     allocation.columns = allocation.columns.droplevel(0) #drop added level
+#     # cost = df.rename(index={0:'allocation'}).stack()
+#     df = allocation.mul(df.iloc[:,0],axis=1)
+#     return df
 
 def period_allocation2(start_df, length_df, p_dates, p_name):
     '''
@@ -939,63 +1034,107 @@ def period_allocation2(start_df, length_df, p_dates, p_name):
     df.index=allocation['period']
     return df
 
-def range_allocation_np(period_dates, start, length, opposite=None):
+def range_allocation_np(period_dates, start, length, opposite=None, shape=None):
     ''' Numpy version - The proportion of each period that falls in the tested date range or proportion of date range in each period.
 
     Parameters.
     period_dates: the start of the periods - in a Numpy array np.datetime64.
-    start: the date of the beginning of the date range to test - a numpy array of dates.
-    length: the length of the date range to test - an array of timedelta.days object.
+    start: the date of the beginning of the date range to test - a numpy array of dates (np.datetime64)
+    length: the length of the date range to test - an array of timedelta.
           : must be broadcastable into start.
-    ags: input True returns the proportion of date range in each period.
+    oposite: input True returns the proportion of date range in each period.
        :       None returns the proportion of the period in the date range (2nd arg).
+    shape: this is the shape of returned array required if both period_dates & start have more than 1 dim
 
     Returns.
     a Numpy array with shape(period_dates, start array).
     Containing the proportion of the respective period for that test date.
     '''
-    #start empty list to append to
-    allocation_period=np.zeros(((len(period_dates),) + start.shape),dtype=np.float64)
+    ##end of period
     end = start + length
+
+    #start empty array to assign to
+    if shape==None:
+        allocation_period=np.zeros((period_dates.shape + start.shape),dtype=np.float64)
+    else:
+        allocation_period=np.zeros(shape,dtype=np.float64)
+
     ##checks if user wants to the proportion of each period that falls in the tested date range or proportion of date range in each period
     if opposite:
         #check how much of each date range falls within the period
         for i in range(len(period_dates)-1):
-            #^.date() might be required because the array being passed is not a np.datetime64[D]
-            per_start= period_dates[i].date() #had to add this and the as type thing below to get it all in the same format so calcs would work
-            per_end = period_dates[i + 1].date()
+            per_start= period_dates[i:i+1] #to keep dim
+            per_end = period_dates[i+1:i+2].copy() #so origional date array isnt altered when updating year in next step
+            ###to handle situations where base yr version of feed period is used. In these case the year does not increment
+            ###at the start of a new year eg at the start of the ny it goes back to 2019 instead of 2020
+            ###in these cases when the end date is less than start it means a ny has started so we temporarily increase end date by 1yr.
+            mask = per_end < per_start
+            per_end[mask] = per_end[mask] + np.timedelta64(365, 'D')
             calc_start = np.maximum(per_start,start).astype('datetime64[D]')       #select the later of the period start or the start of the range
             calc_end = np.minimum(per_end,end).astype('datetime64[D]')             #select earlier of the period end and the end of the range
             allocation_period[i,...] = np.maximum(0, (calc_end - calc_start) / (end - start)) #days between calc_end and calc_start (0 if end before start) divided by length of the range
     else:
         #check how much of each period falls within the date range
         for i in range(len(period_dates)-1):
-            per_start= period_dates[i]
-            per_end = period_dates[i + 1]
+            per_start= period_dates[i:i+1]
+            per_end = period_dates[i+1:i+2].copy() #so origional date array isnt altered when updating year in next step
+            ###to handle situations where base yr version of feed period is used. In these case the year does not increment
+            ###at the start of a new year eg at the start of the ny it goes back to 2019 instead of 2020
+            ###in these cases when the end date is less than start it means a ny has started so we temporarily increase end date by 1yr.
+            mask = per_end < per_start
+            per_end[mask] = per_end[mask] + np.timedelta64(365, 'D')
             calc_start = np.maximum(per_start,start).astype('datetime64[D]')       #select the later of the period start or the start of the range
             calc_end = np.minimum(per_end,end).astype('datetime64[D]')             #select earlier of the period end and the end of the range
-            allocation_period[i,...] = np.maximum(0, (calc_end - calc_start) / (per_end - per_start)) #days between calc_end and calc_start (0 if end before start) divided by length of the period
+            allocation_period[i,...] = np.maximum(0, (calc_end - calc_start) / (per_end - per_start)) #days between calc_end and calc_start (0 if end before start) divided by length of the period, use f_divide incase any period lengths are 0 (this is likely to occur in season version)
     return allocation_period
 
 def period_proportion_np(period_dates, date_array):
-    ''' Numpy version - The period that a given date falls in.
+    ''' Numpy version - The period that a given date falls in. and the proportion of the way through the period the date occurs.
 
     Parameters.
-    period_dates: the start of the periods - in a Numpy array np.datetime64.
-    date_array: the date to test - a numpy array of dates.
+    period_dates: Numpy array np.datetime64
+        The dates of the periods to search.
+        Must contain the end date of the last period.
+        If multi-D period axis must be pos 0.
+    date_array: Numpy array np.datetime64
+        The dates to allocate.
+
+    Note: period_dates and date_array must be broadcastable.
 
     Returns.
     Two Numpy arrays with shape(date_array).
-    #1 the period for that test date.
-    #2 how far through the period the date occurs.
+        1 period_array - the period which the values in date_array occur.
+        2 proportion_array - how far through the period the date occurs.
     '''
-    #this is needed when only a single date is passed in because can't do .shape on a single dt object
-    try:
-        proportion_array = np.zeros(date_array.shape,dtype='float64')
-    except AttributeError: pass
-    period_array = np.searchsorted(period_dates, date_array, side = 'right') - 1
-    per_start = period_dates[period_array]
-    per_end   = period_dates[period_array + 1]
+
+    ##broadcast period_dates so that it has same size axis as date_array - so slicing works
+    shape = (period_dates.shape[0],) + date_array.shape
+    period_dates = np.broadcast_to(period_dates, shape)
+
+    ##dates
+    dates_start = period_dates[:-1]
+    dates_end = period_dates[1:].copy() #so origional date array isnt altered when updating year in next step
+
+    ##to handle situations where base yr version of feed period is used. In these case the year does not increment
+    ##at the start of a new year eg at the start of the ny it goes back to 2019 instead of 2020
+    ##in these cases when the end date is less than start it means a ny has started so we temporarily increase end date by 1yr.
+    mask = dates_end < dates_start
+    dates_end[mask] = dates_end[mask] + np.timedelta64(365,'D')
+
+    ##calc the period each value in the date array falls within (cant use np.searchsorted because date array has z axis)
+    ###occur is bool array which is true for the period that the date array fall into
+    occur = np.logical_and(dates_start <= date_array, date_array < dates_end)
+    ###period index
+    p_idx = np.arange(period_dates[:-1].shape[0])
+    ###mul occur and idx to return the period number the date falls in else a 0. then sum the period axis to return the period array
+    occur = np.moveaxis(occur,0,-1) #so that period axis is at end
+    period_array = np.sum(occur * p_idx, axis=-1)
+
+    ##calc proportion
+    per_start = np.take_along_axis(period_dates,period_array[None,...],0)[0]
+    per_end = np.take_along_axis(period_dates,period_array[None,...]+1,0)[0]
+    # per_start = period_dates[period_array, np.arange(date_array.shape[0])[:,None], np.arange(date_array.shape[1])] #problem is that this is fixed to 3d
+    # per_end   = period_array[period_array + 1]
     proportion_array = (date_array - per_start) / (per_end - per_start)
     # print('propn, date, stat, end, start', proportion_array,date_array,per_start,per_end,per_start)
     return period_array, proportion_array
