@@ -1552,9 +1552,10 @@ def generator(params,r_vals,ev,plots = False):
     # t_fs_btrt_pj0zida0e0b0xg3 = t_fs_btrt_pj0zik3k0k4k5g3
     # t_fs_gender_pj0zida0e0b0xg3 = t_fs_gender_pj0zik3k0k4k5g3
 
-    ##4) add variation to std pattern
+    ##4) add variation to std pattern (the variation is added to the standard and the minimum and the maximum todo this could cause an problem if the (maximum + variation) > 3.0
     t_feedsupply_pa1e1b1j0wzida0e0b0xyg1 = (t_feedsupply_pa1e1b1j0wzida0e0b0xyg1 + t_fs_ageweaned_pa1e1b1j0wzida0e0b0xyg1 + t_fs_lsln_pa1e1b1j0wzida0e0b0xyg1) #cant use += for some reason
-
+    # t_feedsupply_pa1e1b1j0wzida0e0b0xyg3 = (t_feedsupply_pa1e1b1j0wzida0e0b0xyg3 + t_fs_agedam_pj0zida0e0b0xg3
+    #                                             + t_fs_ageweaned_pj0zida0e0b0xg3 + t_fs_gender_pj0zida0e0b0xg3)
 
 
     ##6)Convert the ‘j0’ axis to an ‘n’ axis
@@ -4394,7 +4395,7 @@ def generator(params,r_vals,ev,plots = False):
     mei_p6fa1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param('sire', mei_p6fa1e1b1nwzida0e0b0xyg0,numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
     mei_k2p6ftva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams', mei_p6ftva1e1b1nwzida0e0b0xyg1, a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,...],
                                                                  numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1,
-                                                                 mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1*mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1))
+                                                                 mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1*mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[:,na,na,...]))
     mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs', mei_p6ftva1e1b1nwzida0e0b0xyg3, a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,na,...],
                                                     a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3[:,na,na,...], numbers_start_va1e1b1nwzida0e0b0xyg3,
                                                     mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3)
@@ -4403,7 +4404,7 @@ def generator(params,r_vals,ev,plots = False):
     pi_p6fa1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param('sire', pi_p6fa1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
     pi_k2p6ftva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams', pi_p6ftva1e1b1nwzida0e0b0xyg1, a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,...],
                                                                  numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1,
-                                                                 mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1*mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1))
+                                                                 mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1*mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[:,na,na,...]))
     pi_k3k5p6ftva1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs', pi_p6ftva1e1b1nwzida0e0b0xyg3, a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,na,...],
                                                     a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3[:,na,na,...], numbers_start_va1e1b1nwzida0e0b0xyg3,
                                                     mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3)
@@ -4951,7 +4952,7 @@ def generator(params,r_vals,ev,plots = False):
     keys_i = pinp.sheep['i_i_idx'][pinp.sheep['i_mask_i']]
     keys_k3 = np.ravel(pinp.sheep['i_k3_idx_offs'])[:len_k3]
     # keys_lw0 = np.array(uinp.structure['i_w_idx_sire'])
-    keys_lw1 = np.array(['lw%02d'%i for i in range(len_w1)])
+    keys_lw1 = np.array(['lw%03d'%i for i in range(len_w1)])
     keys_lw3 = np.array(uinp.structure['i_w_idx_offs'])
     keys_lw_prog = np.array(['lw%02d'%i for i in range(len_w_prog)])
     # keys_n0 = uinp.structure['i_n_idx_sire']
