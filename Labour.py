@@ -114,10 +114,10 @@ def labour_general(params,r_vals):
     ##manager hours
     ###seeding
     seeding_dailyhours = pinp.labour['daily_hours'].loc['seeding','Manager']
-    manager_hrs_seeding = seeding_occur_p5z * seeding_dailyhours
+    manager_hrs_seeding = (lp_len_p5z - manager_leave_p5z) * seeding_occur_p5z * seeding_dailyhours
     ###harv
     harving_dailyhours = pinp.labour['daily_hours'].loc['harvest','Manager']
-    manager_hrs_harv = harv_occur_p5z * harving_dailyhours
+    manager_hrs_harv = (lp_len_p5z - manager_leave_p5z) * harv_occur_p5z * harving_dailyhours
     ###weekend hrs
     manager_hrs_weekend = manager_weekend_p5z * np.logical_not(np.logical_or(harv_occur_p5z, seeding_occur_p5z)) * pinp.labour['daily_hours'].loc['weekends','Manager']
     ###weekdays hrs
@@ -127,10 +127,10 @@ def labour_general(params,r_vals):
     ##perm hours
     ###seeding
     seeding_dailyhours = pinp.labour['daily_hours'].loc['seeding','Permanent']
-    perm_hrs_seeding = seeding_occur_p5z * seeding_dailyhours
+    perm_hrs_seeding = (lp_len_p5z - perm_leave_p5z) * seeding_occur_p5z * seeding_dailyhours
     ###harv
     harving_dailyhours = pinp.labour['daily_hours'].loc['harvest','Permanent']
-    perm_hrs_harv = harv_occur_p5z * harving_dailyhours
+    perm_hrs_harv = (lp_len_p5z - perm_leave_p5z) * harv_occur_p5z * harving_dailyhours
     ###weekend hrs
     perm_hrs_weekend = perm_weekend_p5z * np.logical_not(np.logical_or(harv_occur_p5z, seeding_occur_p5z)) * pinp.labour['daily_hours'].loc['weekends','Permanent']
     ###weekdays hrs

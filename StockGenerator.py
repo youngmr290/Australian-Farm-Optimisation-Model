@@ -1701,7 +1701,7 @@ def generator(params,r_vals,ev,plots = False):
     sfw_ltwadj_a1e1b1nwzida0e0b0xyg3 = np.ones(pg3)[0, ...]  # slice the p axis to remove
     sfd_ltwadj_a1e1b1nwzida0e0b0xyg3 = np.zeros(pg3)[0, ...]  # slice the p axis to remove
 
-    for loop_ltw in range(1):
+    for loop_ltw in range(2):
 
         ####################################
         ### initialise arrays for sim loop  # axis names not always track from now on because they change between p=0 and p=1
@@ -5134,9 +5134,9 @@ def generator(params,r_vals,ev,plots = False):
     keys_i = pinp.sheep['i_i_idx'][pinp.sheep['i_mask_i']]
     keys_k3 = np.ravel(pinp.sheep['i_k3_idx_offs'])[:len_k3]
     # keys_lw0 = np.array(sinp.stock['i_w_idx_sire'])
-    keys_lw1 = np.array(['lw%02d'%i for i in range(len_w1)])
-    keys_lw3 = np.array(['lw%02d'%i for i in range(len_w3)])
-    keys_lw_prog = np.array(['lw%02d'%i for i in range(len_w_prog)])
+    keys_lw1 = np.array(['w%03d'%i for i in range(len_w1)])
+    keys_lw3 = np.array(['w%03d'%i for i in range(len_w3)])
+    keys_lw_prog = np.array(['w%03d'%i for i in range(len_w_prog)])
     # keys_n0 = sinp.stock['i_n_idx_sire']
     keys_n1 = np.array(['n%s'%i for i in range(sinp.stock['i_n1_matrix_len'])])
     keys_n3 = np.array(['n%s'%i for i in range(sinp.stock['i_n3_matrix_len'])])

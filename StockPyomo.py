@@ -975,7 +975,7 @@ def stock_asset(model):
                for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol)
     # purchases = sum(sum(model.v_purchase_dams[v1,w1,z,i,g1] * sum(model.p_cost_purch_dam[v1,w1,z,i,g1,c] for c in model.s_cashflow_periods) for v1 in model.s_dvp_dams for w1 in model.s_lw_dams for g1 in model.s_groups_dams)
     #                 +sum(model.v_purchase_offs[v3,w3,z,i,g3] * sum(model.p_cost_purch_offs[v3,w3,z,i,g3,c] for c in model.s_cashflow_periods) for v3 in model.s_dvp_offs for w3 in model.s_lw_offs for g3 in model.s_groups_offs)
-    return  stock + infrastructure #+ purchases
+    return stock + infrastructure #+ purchases
 
 
 ##################################
