@@ -5837,6 +5837,9 @@ def generator(params,r_vals,ev,plots = False):
     r_vals['woolvalue_k2ctva1nwziyg1'] = r_woolvalue_k2ctva1e1b1nwzida0e0b0xyg1.reshape(k2ctva1nwziyg1_shape)
     r_vals['woolvalue_k3k5ctvnwziaxyg3'] =r_woolvalue_k3k5ctva1e1b1nwzida0e0b0xyg3.reshape(k3k5ctvnwziaxyg3_shape)
 
+    r_vals['rm_stockinfra_var_h1c'] = rm_stockinfra_var_h1c
+    r_vals['rm_stockinfra_fix_h1c'] = rm_stockinfra_fix_h1c
+
     ###cfw
     r_vals['cfw_hdmob_g0'] = r_cfw_hdmob_tva1e1b1nwzida0e0b0xyg0.reshape(g0_shape)
     r_vals['cfw_hdmob_k2tva1nwziyg1'] = r_cfw_hdmob_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
