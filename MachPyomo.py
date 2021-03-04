@@ -20,38 +20,40 @@ import sys
 #AFO modules
 import Mach as mac
 from CreateModel import *
+import PropertyInputs as pinp
 
 def mach_precalcs(params, r_vals):
-    mac.overall_seed_rate(params, r_vals)
-    mac.contractseeding_occurs(params)
-    mac.seed_days(params)
-    mac.seeding_cost(params, r_vals)
-    mac.contract_seed_cost(params, r_vals)
-    mac.harv_rate_period(params)
-    mac.contract_harv_rate(params)
-    mac.max_harv_hours(params)
-    mac.harvest_cost(params, r_vals)
-    mac.contract_harvest_cost_period(params, r_vals)
-    mac.hay_making_cost(params)
-    mac.yield_penalty(params)
-    mac.grazing_days(params)
-    mac.fix_dep(params)
-    mac.harvest_dep(params)
-    mac.seeding_dep(params)
-    mac.insurance(params)
-    mac.f_mach_asset_value(params)
+    mac.f_mach_params(params, r_vals)
 
-    ##add inputs that are params to dict
-    params['number_seeding_gear'] = pinp.mach['number_seeding_gear']
-    params['number_harv_gear'] = pinp.mach['number_harv_gear']
-    params['seeding_occur'] = pinp.mach['seeding_occur']
 
 
 def machpyomo_local(params):
+    ############
+    #variable  #
+    ############
+    #number of seeding days in each period on each crop and lmu
+    model.v_seeding_machdays = Var(model.s_labperiods, model.s_landuses, model.s_lmus, bounds=(0,None), doc='number of days of seeding')
+    #number of ha seeded for each pasture
+    model.v_seeding_pas = Var(model.s_labperiods, model.s_landuses, model.s_lmus, bounds=(0,None), doc='number of ha of pasture seeded')
+    #number of ha seeded for each crop
+    model.v_seeding_crop = Var(model.s_labperiods, model.s_landuses, model.s_lmus, bounds=(0,None), doc='number of ha of crop seeded')
+    #number of ha seeded using contractor
+    model.v_contractseeding_ha = Var(model.s_labperiods, model.s_landuses, model.s_lmus, bounds=(0,None), doc='number of ha contract seeding for each crop')
+    #number of hours harvesting for each crop - there is a constraint to limit this to the hours available in the harvest period
+    model.v_harv_hours = Var(model.s_labperiods, model.s_harvcrops, bounds=(0,None), doc='number of hours of harvesting')
+    #number of contract hours harvesting for each crop
+    model.v_contractharv_hours = Var(model.s_harvcrops, bounds=(0,None), doc='number of contract hours of harvesting')
+    #tonnes of hay made
+    model.v_hay_made = Var(bounds=(0,None), doc='tonnes of hay made')
+
     
     #########
     #param  #
-    #########    
+    #########
+
+    ##used to index the season key in params
+    season = pinp.general['i_z_idx'][pinp.general['i_mask_z']][0]
+
     try:
         model.del_component(model.p_seeding_rate_index)
         model.del_component(model.p_seeding_rate)
@@ -63,33 +65,33 @@ def machpyomo_local(params):
         model.del_component(model.p_contractseeding_occur)
     except AttributeError:
         pass
-    model.p_contractseeding_occur = Param(model.s_labperiods, initialize=params['contractseeding_occur'], default = 0.0, doc='period/s when contract seeding can occur')
+    model.p_contractseeding_occur = Param(model.s_labperiods, initialize=params[season]['contractseeding_occur'], default = 0.0, doc='period/s when contract seeding can occur')
     
     try:
         model.del_component(model.p_seed_days)
     except AttributeError:
         pass
-    model.p_seed_days = Param(model.s_labperiods, initialize=params['seed_days'], default = 0.0, doc='number of seeding days in each period')
+    model.p_seed_days = Param(model.s_labperiods, initialize=params[season]['seed_days'], default = 0.0, doc='number of seeding days in each period')
 
     try:
         model.del_component(model.p_seeding_cost_index)
         model.del_component(model.p_seeding_cost)
     except AttributeError:
         pass
-    model.p_seeding_cost = Param(model.s_cashflow_periods, model.s_lmus, initialize=params['seeding_cost'], default = 0.0, doc='cost of seeding 1ha')
+    model.p_seeding_cost = Param(model.s_cashflow_periods, model.s_lmus, initialize=params[season]['seeding_cost'], default = 0.0, doc='cost of seeding 1ha')
     
     try:
         model.del_component(model.p_contract_seeding_cost)
     except AttributeError:
         pass
-    model.p_contract_seeding_cost = Param(model.s_cashflow_periods, initialize=params['contract_seed_cost'], default = 0.0, doc='cost of contract seeding 1ha')
+    model.p_contract_seeding_cost = Param(model.s_cashflow_periods, initialize=params[season]['contract_seed_cost'], default = 0.0, doc='cost of contract seeding 1ha')
     
     try:
         model.del_component(model.p_harv_rate_index)
         model.del_component(model.p_harv_rate)
     except AttributeError:
         pass
-    model.p_harv_rate = Param(model.s_labperiods, model.s_crops, initialize=params['harv_rate_period'], default = 0.0, doc='rate of harv t/hr provided by one crop gear each period')
+    model.p_harv_rate = Param(model.s_labperiods, model.s_crops, initialize=params[season]['harv_rate_period'], default = 0.0, doc='rate of harv t/hr provided by one crop gear each period')
     
     try:
         model.del_component(model.p_contractharv_rate)
@@ -101,21 +103,21 @@ def machpyomo_local(params):
         model.del_component(model.p_harv_hrs_max)
     except AttributeError:
         pass
-    model.p_harv_hrs_max = Param(model.s_labperiods, initialize= params['max_harv_hours'], default = 0.0, doc='max hours of harvest per period')
+    model.p_harv_hrs_max = Param(model.s_labperiods, initialize= params[season]['max_harv_hours'], default = 0.0, doc='max hours of harvest per period')
     
     try:
         model.del_component(model.p_harv_cost_index)
         model.del_component(model.p_harv_cost)
     except AttributeError:
         pass
-    model.p_harv_cost = Param(model.s_cashflow_periods, model.s_crops, initialize=params['harvest_cost'], default = 0.0, doc='cost of harvesting 1hr')
+    model.p_harv_cost = Param(model.s_cashflow_periods, model.s_crops, initialize=params[season]['harvest_cost'], default = 0.0, doc='cost of harvesting 1hr')
     
     try:
         model.del_component(model.p_contractharv_cost_index)
         model.del_component(model.p_contractharv_cost)
     except AttributeError:
         pass
-    model.p_contractharv_cost = Param(model.s_cashflow_periods, model.s_crops, initialize=params['contract_harvest_cost'], default = 0.0, doc='cost of contract harvesting 1hr')
+    model.p_contractharv_cost = Param(model.s_cashflow_periods, model.s_crops, initialize=params[season]['contract_harvest_cost'], default = 0.0, doc='cost of contract harvesting 1hr')
     
     try:
         model.del_component(model.p_contracthay_cost)
@@ -128,14 +130,14 @@ def machpyomo_local(params):
         model.del_component(model.p_yield_penalty)
     except AttributeError:
         pass
-    model.p_yield_penalty = Param(model.s_labperiods, model.s_crops, initialize=params['yield_penalty'], default = 0.0, doc='kg/ha/day penalty for late sowing in each period')
+    model.p_yield_penalty = Param(model.s_labperiods, model.s_crops, initialize=params[season]['yield_penalty'], default = 0.0, doc='kg/ha/day penalty for late sowing in each period')
     
     try:
         model.del_component(model.p_seeding_grazingdays_index)
         model.del_component(model.p_seeding_grazingdays)
     except AttributeError:
         pass
-    model.p_seeding_grazingdays = Param(model.s_feed_periods, model.s_labperiods, initialize=params['grazing_days'], default = 0.0, doc='pasture grazing days per feed period provided by 1ha of seeding in each seed period')
+    model.p_seeding_grazingdays = Param(model.s_feed_periods, model.s_labperiods, initialize=params[season]['grazing_days'], default = 0.0, doc='pasture grazing days per feed period provided by 1ha of seeding in each seed period')
 
     try:
         model.del_component(model.p_fixed_dep)
@@ -220,23 +222,7 @@ def machpyomo_local(params):
         return -model.v_contractseeding_ha[p,k1,l] * model.p_contractseeding_occur[p] - model.p_seeding_rate[k1,l] * model.v_seeding_machdays[p,k1,l]   \
                 + model.v_seeding_pas[p,k1,l] + model.v_seeding_crop[p,k1,l] <=0
     model.con_sow_supply = Constraint(model.s_labperiods, model.s_landuses, model.s_lmus, rule=sow_supply, doc='link sow supply to crop and pas variable')
-############
-#variable  #
-############    
-#number of seeding days in each period on each crop and lmu
-model.v_seeding_machdays = Var(model.s_labperiods, model.s_landuses, model.s_lmus, bounds=(0,None), doc='number of days of seeding')
-#number of ha seeded for each pasture
-model.v_seeding_pas = Var(model.s_labperiods, model.s_landuses, model.s_lmus, bounds=(0,None), doc='number of ha of pasture seeded')
-#number of ha seeded for each crop
-model.v_seeding_crop = Var(model.s_labperiods, model.s_landuses, model.s_lmus, bounds=(0,None), doc='number of ha of crop seeded')
-#number of ha seeded using contractor
-model.v_contractseeding_ha = Var(model.s_labperiods, model.s_landuses, model.s_lmus, bounds=(0,None), doc='number of ha contract seeding for each crop')
-#number of hours harvesting for each crop - there is a constraint to limit this to the hours available in the harvest period
-model.v_harv_hours = Var(model.s_labperiods, model.s_harvcrops, bounds=(0,None), doc='number of hours of harvesting')
-#number of contract hours harvesting for each crop
-model.v_contractharv_hours = Var(model.s_harvcrops, bounds=(0,None), doc='number of contract hours of harvesting')
-#tonnes of hay made
-model.v_hay_made = Var(bounds=(0,None), doc='tonnes of hay made')
+
 ###################################
 #functions for core model         #
 ###################################   

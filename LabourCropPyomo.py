@@ -10,26 +10,23 @@ module - labour crop pyomo stuff
 from pyomo.environ import *
 
 #AFO modules
-from MachPyomo import *
+# from MachPyomo import *
 from CreateModel import *
 import LabourCrop as lcrp
 import PropertyInputs as pinp
 
 
-def crplab_precalcs(params, report):
-    lcrp.prep_labour(params)
-    lcrp.fert_app_time_t(params)
-    lcrp.fert_app_time_ha(params)
-    lcrp.chem_app_time_ha(params)
-    lcrp.f_crop_monitoring(params)
-    params['harvest_helper'] = pinp.labour['harvest_helper'].squeeze().to_dict()
-    params['daily_seed_hours'] = pinp.mach['daily_seed_hours']
-    params['seeding_helper'] = pinp.labour['seeding_helper']
-    
+def crplab_precalcs(params, r_vals):
+    lcrp.f_labcrop_params(params, r_vals)
+
 def labcrppyomo_local(params):
     #########
     #param  #
-    #########    
+    #########
+
+    ##used to index the season key in params
+    season = pinp.general['i_z_idx'][pinp.general['i_mask_z']][0]
+
     try:
         model.del_component(model.p_harv_helper)
     except AttributeError:
@@ -52,14 +49,14 @@ def labcrppyomo_local(params):
         model.del_component(model.p_prep_pack)
     except AttributeError:
         pass
-    model.p_prep_pack = Param(model.s_labperiods, initialize=params['prep_labour'], default = 0.0, doc='harvest helper time per crop')
+    model.p_prep_pack = Param(model.s_labperiods, initialize=params[season]['prep_labour'], default = 0.0, doc='harvest helper time per crop')
     
     try:
         model.del_component(model.p_fert_app_hour_tonne_index)
         model.del_component(model.p_fert_app_hour_tonne)
     except AttributeError:
         pass
-    model.p_fert_app_hour_tonne = Param(model.s_labperiods, model.s_fert_type, initialize= params['fert_app_time_t'], default = 0.0, doc='time required for fert application per tonne of each fert (filling up and driving to paddock cost)')
+    model.p_fert_app_hour_tonne = Param(model.s_labperiods, model.s_fert_type, initialize= params[season]['fert_app_time_t'], default = 0.0, doc='time required for fert application per tonne of each fert (filling up and driving to paddock cost)')
  
     try:
         # model.del_component(model.p_fert_app_hour_ha_index_index_0)
@@ -67,27 +64,27 @@ def labcrppyomo_local(params):
         model.del_component(model.p_fert_app_hour_ha)
     except AttributeError:
         pass
-    model.p_fert_app_hour_ha = Param(model.s_phases, model.s_lmus, model.s_labperiods, initialize= params['fert_app_time_ha'], default = 0.0, doc='time required for fert application per ha of each fert (driving around paddock cost)')
+    model.p_fert_app_hour_ha = Param(model.s_phases, model.s_lmus, model.s_labperiods, initialize= params[season]['fert_app_time_ha'], default = 0.0, doc='time required for fert application per ha of each fert (driving around paddock cost)')
     
     try:
         model.del_component(model.p_chem_app_lab_index)
         model.del_component(model.p_chem_app_lab)
     except AttributeError:
         pass
-    model.p_chem_app_lab = Param(model.s_phases, model.s_lmus, model.s_labperiods, initialize= params['chem_app_time_ha'], default = 0.0, doc='time required for chem application per ha (hr/ha)')
+    model.p_chem_app_lab = Param(model.s_phases, model.s_lmus, model.s_labperiods, initialize= params[season]['chem_app_time_ha'], default = 0.0, doc='time required for chem application per ha (hr/ha)')
 
     try:
         model.del_component(model.p_variable_crop_monitor_index)
         model.del_component(model.p_variable_crop_monitor)
     except AttributeError:
         pass
-    model.p_variable_crop_monitor = Param(model.s_phases, model.s_labperiods, initialize= params['variable_crop_monitor'], default = 0.0, doc='time required for crop monitoring (hr/ha)')
+    model.p_variable_crop_monitor = Param(model.s_phases, model.s_labperiods, initialize= params[season]['variable_crop_monitor'], default = 0.0, doc='time required for crop monitoring (hr/ha)')
 
     try:
         model.del_component(model.p_fixed_crop_monitor)
     except AttributeError:
         pass
-    model.p_fixed_crop_monitor = Param(model.s_labperiods, initialize= params['fixed_crop_monitor'], default = 0.0, doc='fixed time required for crop monitoring (hr/period)')
+    model.p_fixed_crop_monitor = Param(model.s_labperiods, initialize= params[season]['fixed_crop_monitor'], default = 0.0, doc='fixed time required for crop monitoring (hr/period)')
 
 
 ###################################

@@ -6,6 +6,7 @@ Created on Sat Dec 28 15:00:25 2019
 """
 #python modules
 from pyomo import environ as pe
+import PropertyInputs as pinp
 
 #AFO modules
 from CreateModel import model
@@ -14,19 +15,46 @@ import Pasture as pas
 
 
 def paspyomo_precalcs(params,r_vals,ev):
-    pas.map_excel(params,r_vals)                         # read inputs from Excel file and map to the python variables
-    pas.calculate_germ_and_reseed(params)                          # calculate the germination for each rotation phase
-    pas.green_and_dry(params, r_vals, ev)                            # calculate the FOO lost when destocked and the FOO gained when grazed after establishment
-    pas.poc(params)                                     # calculate the FOO on crop paddocks and the md and vol
-    pas.report_global(r_vals)                       #assign some global pas variable to r_vals
+    pas.f_pasture(params,r_vals,ev)
+    # pas.map_excel(params,r_vals)                         # read inputs from Excel file and map to the python variables
+    # pas.calculate_germ_and_reseed(params)                          # calculate the germination for each rotation phase
+    # pas.green_and_dry(params, r_vals, ev)                            # calculate the FOO lost when destocked and the FOO gained when grazed after establishment
+    # pas.poc(params)                                     # calculate the FOO on crop paddocks and the md and vol
+    # pas.report_global(r_vals)                       #assign some global pas variable to r_vals
 
 def paspyomo_local(params):
-    
+    #####################################################################################################################################################################################################
+    #####################################################################################################################################################################################################
+    ### Variables
+    #####################################################################################################################################################################################################
+    #####################################################################################################################################################################################################
+
+    model.v_greenpas_ha = pe.Var(model.s_feed_pools,model.s_grazing_int,model.s_foo_levels,model.s_feed_periods,
+                                 model.s_lmus,model.s_pastures,bounds=(0,None),
+                                 doc='hectares grazed each period for each grazing intensity on each soil in each period')
+    model.v_drypas_consumed = pe.Var(model.s_feed_pools,model.s_dry_groups,model.s_feed_periods,model.s_pastures,
+                                     bounds=(0,None),
+                                     doc='tonnes of low and high quality dry feed consumed by each sheep pool in each feed period')
+    model.v_drypas_transfer = pe.Var(model.s_dry_groups,model.s_feed_periods,model.s_pastures,bounds=(0,None),
+                                     doc='tonnes of low and high quality dry feed at end of the period transferred to the following periods in each feed period')
+    model.v_nap_consumed = pe.Var(model.s_feed_pools,model.s_dry_groups,model.s_feed_periods,model.s_pastures,
+                                  bounds=(0,None),
+                                  doc='tonnes of low and high quality dry pasture on crop paddocks consumed by each sheep pool in each feed period')
+    model.v_nap_transfer = pe.Var(model.s_dry_groups,model.s_feed_periods,model.s_pastures,bounds=(0,None),
+                                  doc='tonnes of low and high quality dry pasture on crop paddocks transferred to the following periods in each feed period')
+    model.v_poc = pe.Var(model.s_feed_pools,model.s_feed_periods,model.s_lmus,bounds=(0,None),
+                         doc='tonnes of poc consumed by each sheep pool in each period on each lmu')
+
     #####################################################################################################################################################################################################
     #####################################################################################################################################################################################################
     ### Params
     #####################################################################################################################################################################################################
     #####################################################################################################################################################################################################
+
+    ##used to index the season key in params
+    season = pinp.general['i_z_idx'][pinp.general['i_mask_z']][0]
+
+
     try:
         model.del_component(model.p_pasture_area_index)
         model.del_component(model.p_pasture_area)
@@ -39,97 +67,97 @@ def paspyomo_local(params):
         model.del_component(model.p_germination)
     except AttributeError:
         pass
-    model.p_germination = pe.Param(model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=params['p_germination_flrt'], default=0, doc='pasture germination for each rotation')
+    model.p_germination = pe.Param(model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=params[season]['p_germination_flrt'], default=0, doc='pasture germination for each rotation')
 
     try:
         model.del_component(model.p_foo_grn_reseeding_index)
         model.del_component(model.p_foo_grn_reseeding)
     except AttributeError:
         pass
-    model.p_foo_grn_reseeding = pe.Param(model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=params['p_foo_grn_reseeding_flrt'], default=0, doc='Change in grn FOO due to destocking and seeding of pastures')
+    model.p_foo_grn_reseeding = pe.Param(model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=params[season]['p_foo_grn_reseeding_flrt'], default=0, doc='Change in grn FOO due to destocking and seeding of pastures')
     
     try:
         model.del_component(model.p_foo_dry_reseeding_index)
         model.del_component(model.p_foo_dry_reseeding)
     except AttributeError:
         pass
-    model.p_foo_dry_reseeding = pe.Param(model.s_dry_groups, model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=params['p_foo_dry_reseeding_dflrt'], default=0, doc='Change in dry FOO due to destocking and seeding of pastures')
+    model.p_foo_dry_reseeding = pe.Param(model.s_dry_groups, model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=params[season]['p_foo_dry_reseeding_dflrt'], default=0, doc='Change in dry FOO due to destocking and seeding of pastures')
     
     try:
         model.del_component(model.p_foo_end_grnha_index)
         model.del_component(model.p_foo_end_grnha)
     except AttributeError:
         pass
-    model.p_foo_end_grnha = pe.Param(model.s_grazing_int, model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, initialize=params['p_foo_end_grnha_goflt'], default=0, doc='Green Foo at the end of the period')
+    model.p_foo_end_grnha = pe.Param(model.s_grazing_int, model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, initialize=params[season]['p_foo_end_grnha_goflt'], default=0, doc='Green Foo at the end of the period')
     
     try:
         model.del_component(model.p_foo_start_grnha_index)
         model.del_component(model.p_foo_start_grnha)
     except AttributeError:
         pass
-    model.p_foo_start_grnha = pe.Param(model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, initialize=params['p_foo_start_grnha_oflt'], default=0, doc='Green Foo at the start of the period')
+    model.p_foo_start_grnha = pe.Param(model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, initialize=params[season]['p_foo_start_grnha_oflt'], default=0, doc='Green Foo at the start of the period')
     
     try:
         model.del_component(model.p_senesce_grnha_index)
         model.del_component(model.p_senesce_grnha)
     except AttributeError:
         pass
-    model.p_senesce_grnha = pe.Param(model.s_dry_groups, model.s_grazing_int, model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, initialize=params['p_senesce_grnha_dgoflt'], default=0, doc='Green pasture senescence into high and low quality dry pasture pools')
+    model.p_senesce_grnha = pe.Param(model.s_dry_groups, model.s_grazing_int, model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, initialize=params[season]['p_senesce_grnha_dgoflt'], default=0, doc='Green pasture senescence into high and low quality dry pasture pools')
     
     try:
         model.del_component(model.p_me_cons_grnha_index)
         model.del_component(model.p_me_cons_grnha)
     except AttributeError:
         pass
-    model.p_me_cons_grnha = pe.Param(model.s_feed_pools, model.s_grazing_int, model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, initialize=params['p_me_cons_grnha_vgoflt'], default=0, doc='Total ME from grazing a hectare')
+    model.p_me_cons_grnha = pe.Param(model.s_feed_pools, model.s_grazing_int, model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, initialize=params[season]['p_me_cons_grnha_vgoflt'], default=0, doc='Total ME from grazing a hectare')
     
     try:
         model.del_component(model.p_volume_grnha_index)
         model.del_component(model.p_volume_grnha)
     except AttributeError:
         pass
-    model.p_volume_grnha = pe.Param(model.s_grazing_int, model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, initialize=params['p_volume_grnha_goflt'], default=0, doc='Total Vol from grazing a hectare')
+    model.p_volume_grnha = pe.Param(model.s_grazing_int, model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, initialize=params[season]['p_volume_grnha_goflt'], default=0, doc='Total Vol from grazing a hectare')
     
     try:
         model.del_component(model.p_dry_mecons_t_index)
         model.del_component(model.p_dry_mecons_t)
     except AttributeError:
         pass
-    model.p_dry_mecons_t = pe.Param(model.s_feed_pools, model.s_dry_groups, model.s_feed_periods, model.s_pastures, initialize=params['p_dry_mecons_t_vdft'], default=0, doc='Total ME from grazing a tonne of dry feed')
+    model.p_dry_mecons_t = pe.Param(model.s_feed_pools, model.s_dry_groups, model.s_feed_periods, model.s_pastures, initialize=params[season]['p_dry_mecons_t_vdft'], default=0, doc='Total ME from grazing a tonne of dry feed')
     
     try:
         model.del_component(model.p_dry_volume_t_index)
         model.del_component(model.p_dry_volume_t)
     except AttributeError:
         pass
-    model.p_dry_volume_t = pe.Param(model.s_dry_groups, model.s_feed_periods, model.s_pastures, initialize=params['p_dry_volume_t_dft'], default=0, doc='Total Vol from grazing a tonne of dry feed')
+    model.p_dry_volume_t = pe.Param(model.s_dry_groups, model.s_feed_periods, model.s_pastures, initialize=params[season]['p_dry_volume_t_dft'], default=0, doc='Total Vol from grazing a tonne of dry feed')
     
     try:
         model.del_component(model.p_dry_transfer_t_index)
         model.del_component(model.p_dry_transfer_t)
     except AttributeError:
         pass
-    model.p_dry_transfer_t = pe.Param(model.s_dry_groups, model.s_feed_periods, model.s_pastures, initialize=params['p_dry_transfer_t_dft'], default=0, doc='quantity of dry feed transfered out of the period to the next')
+    model.p_dry_transfer_t = pe.Param(model.s_feed_periods, model.s_pastures, initialize=params[season]['p_dry_transfer_t_ft'], default=0, doc='quantity of dry feed transfered out of the period to the next')
     
     try:
         model.del_component(model.p_dry_removal_t_index)
         model.del_component(model.p_dry_removal_t)
     except AttributeError:
         pass
-    model.p_dry_removal_t = pe.Param(model.s_dry_groups, model.s_feed_periods, model.s_pastures, initialize=params['p_dry_removal_t_dft'], default=0, doc='quantity of dry feed removed for sheep to consume 1t, accounts for trampling')
+    model.p_dry_removal_t = pe.Param(model.s_feed_periods, model.s_pastures, initialize=params['p_dry_removal_t_ft'], default=0, doc='quantity of dry feed removed for sheep to consume 1t, accounts for trampling')
     
     try:
         model.del_component(model.p_nap_index)
         model.del_component(model.p_nap)
     except AttributeError:
         pass
-    model.p_nap = pe.Param(model.s_dry_groups, model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=params['p_nap_dflrt'], default=0, doc='pasture on non arable areas in crop paddocks')
+    model.p_nap = pe.Param(model.s_dry_groups, model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=params[season]['p_nap_dflrt'], default=0, doc='pasture on non arable areas in crop paddocks')
     
     try:
         model.del_component(model.p_nap_prop)
     except AttributeError:
         pass
-    model.p_nap_prop = pe.Param(model.s_feed_periods, initialize=params['p_harvest_period_prop'], default=0, doc='proportion of the way through each period nap becomes available')
+    model.p_nap_prop = pe.Param(model.s_feed_periods, initialize=params[season]['p_harvest_period_prop'], default=0, doc='proportion of the way through each period nap becomes available')
     
     try:
         model.del_component(model.p_erosion_index)
@@ -143,14 +171,14 @@ def paspyomo_local(params):
         model.del_component(model.p_phase_area)
     except AttributeError:
         pass
-    model.p_phase_area = pe.Param(model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=params['p_phase_area_flrt'], default=0, doc='pasture area in each rotation for each feed period')
+    model.p_phase_area = pe.Param(model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=params[season]['p_phase_area_flrt'], default=0, doc='pasture area in each rotation for each feed period')
     
     try:
         model.del_component(model.p_pas_sow_index)
         model.del_component(model.p_pas_sow)
     except AttributeError:
         pass
-    model.p_pas_sow = pe.Param(model.s_labperiods, model.s_lmus, model.s_phases, model.s_landuses, initialize=params['p_pas_sow_plrk'], default=0, doc='pasture sown for each rotation')
+    model.p_pas_sow = pe.Param(model.s_labperiods, model.s_lmus, model.s_phases, model.s_landuses, initialize=params[season]['p_pas_sow_plrk'], default=0, doc='pasture sown for each rotation')
     
     try:
         model.del_component(model.p_poc_con_index)
@@ -169,7 +197,7 @@ def paspyomo_local(params):
         model.del_component(model.p_poc_vol)
     except AttributeError:
         pass
-    model.p_poc_vol = pe.Param(model.s_feed_periods, initialize=params['p_poc_vol_f'],default=0, doc='vol (ri intake) of pasture on crop paddocks for each feed period')
+    model.p_poc_vol = pe.Param(model.s_feed_periods, initialize=params[season]['p_poc_vol_f'],default=0, doc='vol (ri intake) of pasture on crop paddocks for each feed period')
     
     
     #####################################################################################################################################################################################################
@@ -201,8 +229,8 @@ def paspyomo_local(params):
     def drypas(model,d,f,t):
         fs = l_fp[l_fp.index(f) - 1] #need the activity level from last feed period
         return sum(sum(model.v_greenpas_ha[v,g,o,f,l,t] * -model.p_senesce_grnha[d,g,o,f,l,t] for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus)        \
-                       + model.v_drypas_consumed[v,d,f,t] * model.p_dry_removal_t[d,f,t] for v in model.s_feed_pools) \
-                       - model.v_drypas_transfer[d,fs,t] * model.p_dry_transfer_t[d,fs,t] + model.v_drypas_transfer[d,f,t] * 1000 <=0 #minus 1000 is what you are transferring into constraint, p_dry_transfer is how much you get in the current period if you transferred 1t from previous period (not 1000 because you have to account for deterioration)
+                       + model.v_drypas_consumed[v,d,f,t] * model.p_dry_removal_t[f,t] for v in model.s_feed_pools) \
+                       - model.v_drypas_transfer[d,fs,t] * model.p_dry_transfer_t[fs,t] + model.v_drypas_transfer[d,f,t] * 1000 <=0 #minus 1000 is what you are transferring into constraint, p_dry_transfer is how much you get in the current period if you transferred 1t from previous period (not 1000 because you have to account for deterioration)
     model.con_drypas = pe.Constraint(model.s_dry_groups, model.s_feed_periods, model.s_pastures, rule = drypas, doc='High and low quality dry pasture of each type available in each period')
     
     try:
@@ -213,8 +241,8 @@ def paspyomo_local(params):
     def nappas(model,d,f,t):
         fs = l_fp[l_fp.index(f) - 1] #need the activity level from last feed period
         return sum(sum(sum(model.v_phase_area[r,l] * -model.p_nap[d,f,l,r,t] for r in model.s_phases if model.p_nap[d,f,l,r,t] != 0)for l in model.s_lmus)        \
-                       + model.v_nap_consumed[v,d,f,t] * model.p_dry_removal_t[d,f,t] for v in model.s_feed_pools) \
-                       - model.v_nap_transfer[d,fs,t] * model.p_dry_transfer_t[d,fs,t] + model.v_nap_transfer[d,f,t] * 1000 <=0 #minus 1000 is what you are transferring into constraint, p_dry_transfer is how much you get in the current period if you transferred 1t from previous period (not 1000 because you have to account for deterioration)
+                       + model.v_nap_consumed[v,d,f,t] * model.p_dry_removal_t[f,t] for v in model.s_feed_pools) \
+                       - model.v_nap_transfer[d,fs,t] * model.p_dry_transfer_t[fs,t] + model.v_nap_transfer[d,f,t] * 1000 <=0 #minus 1000 is what you are transferring into constraint, p_dry_transfer is how much you get in the current period if you transferred 1t from previous period (not 1000 because you have to account for deterioration)
     model.con_nappas = pe.Constraint(model.s_dry_groups, model.s_feed_periods, model.s_pastures, rule = nappas, doc='High and low quality dry pasture of each type available in each period')
     
     try:
@@ -239,18 +267,6 @@ def paspyomo_local(params):
     model.con_erosion = pe.Constraint(model.s_feed_periods, model.s_lmus, model.s_pastures, rule = erosion, doc='total pasture available of each type on each soil type in each feed period')
 
     
-#####################################################################################################################################################################################################
-#####################################################################################################################################################################################################
-### Variables
-#####################################################################################################################################################################################################
-#####################################################################################################################################################################################################
-
-model.v_greenpas_ha = pe.Var(model.s_feed_pools, model.s_grazing_int, model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, bounds = (0,None) , doc='hectares grazed each period for each grazing intensity on each soil in each period')
-model.v_drypas_consumed = pe.Var(model.s_feed_pools, model.s_dry_groups, model.s_feed_periods, model.s_pastures, bounds = (0,None) , doc='tonnes of low and high quality dry feed consumed by each sheep pool in each feed period')
-model.v_drypas_transfer = pe.Var(model.s_dry_groups, model.s_feed_periods, model.s_pastures, bounds = (0,None) , doc='tonnes of low and high quality dry feed at end of the period transferred to the following periods in each feed period')
-model.v_nap_consumed = pe.Var(model.s_feed_pools, model.s_dry_groups, model.s_feed_periods, model.s_pastures, bounds = (0,None) , doc='tonnes of low and high quality dry pasture on crop paddocks consumed by each sheep pool in each feed period')
-model.v_nap_transfer = pe.Var(model.s_dry_groups, model.s_feed_periods, model.s_pastures, bounds = (0,None) , doc='tonnes of low and high quality dry pasture on crop paddocks transferred to the following periods in each feed period')
-model.v_poc = pe.Var(model.s_feed_pools, model.s_feed_periods, model.s_lmus, bounds = (0,None) , doc='tonnes of poc consumed by each sheep pool in each period on each lmu')
 
 
 #####################################################################################################################################################################################################

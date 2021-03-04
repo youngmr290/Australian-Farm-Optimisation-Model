@@ -16,9 +16,12 @@ formatting; try to avoid capitals (reduces possible mistakes in future)
 """
 import time 
 import pyomo.environ as pe
+import numpy as np
 
 #AFO modules - should only be pyomo modules
 import UniversalInputs as uinp
+import PropertyInputs as pinp
+import StructuralInputs as sinp
 from CreateModel import model
 import CropPyomo as crppy
 import MachPyomo as macpy
@@ -145,7 +148,7 @@ def coremodel_all():
         pass
     def harv_stub_nap_cons(model,f):
         if any(model.p_nap_prop[f] or model.p_harv_prop[f,k] for k in model.s_crops):
-            return sum(-paspy.pas_me(model,v,f) + sum(model.p_harv_prop[f,k]/(1-model.p_harv_prop[f,k]) * model.v_stub_con[v,f,k,s] * model.p_stub_md[f,s,k] for k in model.s_crops for s in model.s_stub_cat)
+            return sum(-paspy.pas_me(model,v,f) + sum(model.p_harv_prop[f,k]/(1-model.p_harv_prop[f,k]) * model.v_stub_con[v,f,k,s] * model.p_stub_md[f,k,s] for k in model.s_crops for s in model.s_stub_cat)
                     +  model.p_nap_prop[f]/(1-model.p_nap_prop[f]) * paspy.nappas_me(model,v,f) for v in model.s_feed_pools) <= 0
         else:
             return pe.Constraint.Skip
@@ -292,7 +295,7 @@ def coremodel_all():
             Carryover basically represents interest free cash at the start of the year. It requires cash from ND and provides in JF. 
 
         '''
-        c = uinp.structure['cashflow_periods']
+        c = sinp.general['cashflow_periods']
         ##j becomes a list which has 0 as first value and 1 after that. this is then indexed by i and multiplied by previous periods debit and credit.
         ##this means the first period doesn't include the previous debit or credit (because it doesn't exist, because it is the first period) 
         j = [1] * len(c)
@@ -353,7 +356,7 @@ def coremodel_all():
     minus dep (variable and fixed)
     '''
     def profit(model):
-        c = uinp.structure['cashflow_periods']
+        c = sinp.general['cashflow_periods']
         i = len(c) - 1 # minus one because index starts from 0
         return model.v_credit[c[i]]-model.v_debit[c[i]] - model.v_dep - model.v_minroe - (model.v_asset * uinp.finance['opportunity_cost_capital'])  #have to include debit otherwise model selects lots of debit to increase credit, hence cant just maximise credit.
     try:
@@ -370,22 +373,189 @@ def coremodel_all():
     #solve
     #######################################################################################################################################################
     #######################################################################################################################################################
+
+    if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1:
     
-    ##sometimes if there is a bug when solved it is good to write lp here - because the code doesn't run to the other place where lp written
-    # model.write('Output/test.lp',io_options={'symbolic_solver_labels':True}) #comment this out when not debugging
-    
-    ##tells the solver you want duals and rc
-    try:
-        model.del_component(model.dual)
-    except AttributeError:
-        pass
-    model.dual = pe.Suffix(direction=pe.Suffix.IMPORT)
-    try:
-        model.del_component(model.rc)
-    except AttributeError:
-        pass
-    model.rc = pe.Suffix(direction=pe.Suffix.IMPORT)
-    ##solve - tee=True will print out solver information
-    results = pe.SolverFactory('glpk').solve(model, tee=False) #turn to true for solver output - may be useful for troubleshooting
-    return results
+        ##sometimes if there is a bug when solved it is good to write lp here - because the code doesn't run to the other place where lp written
+        model.write('Output/test.lp',io_options={'symbolic_solver_labels':True}) #comment this out when not debugging
+
+        ##tells the solver you want duals and rc
+        try:
+            model.del_component(model.dual)
+        except AttributeError:
+            pass
+        model.dual = pe.Suffix(direction=pe.Suffix.IMPORT)
+        try:
+            model.del_component(model.rc)
+        except AttributeError:
+            pass
+        model.rc = pe.Suffix(direction=pe.Suffix.IMPORT)
+        ##solve - tee=True will print out solver information
+        results = pe.SolverFactory('glpk').solve(model, tee=True) #turn to true for solver output - may be useful for troubleshooting
+        return results
+
+    else:
+        #todo include some error handling - eg cant run multiple TOL at the same time. Need different stage allocation for each tol. thus could use an if statement to pick the allocation used
+        #todo each variable needs to assigned to stage - give error if that does not happen
+        #todo cant allocate one variable to multiple stages
+        #allocate labour provide variables to the last stage??
+        #stage definitions differ for different nodes to the allocation will need to be based on the node as well eg for ealry break labour period 3 might be in stage 2 but for late break it might be in stage 3
+        ##specify stages for variables when all variables go into the same stage
+        root_vars=['v_quantity_perm[*]','v_quantity_manager[*]']
+        root_sets=['FP9']
+        stage1_node1_vars=[]
+        stage1_node2_vars=[]
+        stage1_node1_sets=['FP0', 'FP1','P']
+        stage1_node2_sets=['FP0', 'FP1','P']
+        stage2_vars=['v_phase_area[*]']
+        stage2_sets=['FP2','FP3','FP4','FP5','FP6','FP7','FP8']
+        stage3_vars=['v_sell_grain[*]', 'v_credit[*]', 'v_debit[*]', 'v_dep[*]', 'v_asset[*]', 'v_minroe[*]', 'v_buy_grain[*]'] #buy grain may not be in stage 3, i feel like you retain grain for the year ahead without knowing the type of season. but then the model will just counter by altering sale of grain.
+        stage3_sets=['FP9']
+
+
+        for v in model.component_objects(pe.Var,active=True):
+            for index in v:
+                print(v)
+        def pysp_scenario_tree_model_callback():
+            # Return a NetworkX scenario tree.
+            g = networkx.DiGraph()
+
+            ce1 = 'FirstStageCost'
+            g.add_node("Root",
+                       cost=ce1,
+                       variables=["DevotedAcreage[*]"],
+                       derived_variables=[])
+
+            ce2 = 'SecondStageCost'
+            g.add_node("BelowAverageScenario",
+                       cost=ce2,
+                       variables=["QuantitySubQuotaSold[*]",
+                                  "QuantitySuperQuotaSold[*]",
+                                  "QuantityPurchased[*]"],
+                       derived_variables=[])
+            g.add_edge("Root","BelowAverageScenario",weight=0.3333)
+
+            g.add_node("AverageScenario",
+                       cost=ce2,
+                       variables=["QuantitySubQuotaSold[*]",
+                                  "QuantitySuperQuotaSold[*]",
+                                  "QuantityPurchased[*]"],
+                       derived_variables=[])
+            g.add_edge("Root","AverageScenario",weight=0.3333)
+
+            g.add_node("AboveAverageScenario",
+                       cost=ce2,
+                       variables=["QuantitySubQuotaSold[*]",
+                                  "QuantitySuperQuotaSold[*]",
+                                  "QuantityPurchased[*]"],
+                       derived_variables=[])
+            g.add_edge("Root","AboveAverageScenario",weight=0.3334)
+
+            return g
+
+        def pysp_instance_creation_callback(scenario_name,node_names):
+            instance = model.clone()
+            ##stubble
+            model.p_fp_transfer.store_values(params[scenario_name]['per_transfer'])
+            model.p_a_req.store_values(params[scenario_name]['cat_a_st_req'])
+            model.p_stub_vol.store_values(params[scenario_name]['vol'])
+            model.p_stub_md.store_values(params[scenario_name]['md'])
+            model.p_harv_prop.store_values(params[scenario_name]['cons_prop'])
+
+            ##labour
+            model.p_perm_hours.store_values(params[scenario_name]['permanent hours'])
+            model.p_perm_supervision.store_values(params[scenario_name]['permanent supervision'])
+            model.p_casual_cost.store_values(params[scenario_name]['casual_cost'])
+            model.p_casual_hours.store_values(params[scenario_name]['casual hours'])
+            model.p_casual_supervision.store_values(params[scenario_name]['casual supervision'])
+            model.p_manager_hours.store_values(params[scenario_name]['manager hours'])
+            model.p_casual_upper.store_values(params[scenario_name]['casual ub'])
+            model.p_casual_lower.store_values(params[scenario_name]['casual lb'])
+
+            ##labour crop
+            model.p_prep_pack.store_values(params[scenario_name]['prep_labour'])
+            model.p_fert_app_hour_tonne.store_values(params[scenario_name]['fert_app_time_t'])
+            model.p_fert_app_hour_ha.store_values(params[scenario_name]['fert_app_time_ha'])
+            model.p_chem_app_lab.store_values(params[scenario_name]['chem_app_time_ha'])
+            model.p_variable_crop_monitor.store_values(params[scenario_name]['variable_crop_monitor'])
+            model.p_fixed_crop_monitor.store_values(params[scenario_name]['fixed_crop_monitor'])
+
+            ##labour fixed
+            model.p_super_labour.store_values(params[scenario_name]['super'])
+            model.p_bas_labour.store_values(params[scenario_name]['bas'])
+            model.p_planning_labour.store_values(params[scenario_name]['planning'])
+            model.p_tax_labour.store_values(params[scenario_name]['tax'])
+
+            ##crop
+            model.p_rotation_cost.store_values(params[scenario_name]['rot_cost'])
+            model.p_rotation_yield.store_values(params[scenario_name]['rot_yield'])
+            model.p_phasefert.store_values(params[scenario_name]['fert_req'])
+
+            ##pasture
+            model.p_germination.store_values(params[scenario_name]['p_germination_flrt'])
+            model.p_foo_grn_reseeding.store_values(params[scenario_name]['p_foo_grn_reseeding_flrt'])
+            model.p_foo_dry_reseeding.store_values(params[scenario_name]['p_foo_dry_reseeding_dflrt'])
+            model.p_foo_end_grnha.store_values(params[scenario_name]['p_foo_end_grnha_goflt'])
+            model.p_foo_start_grnha.store_values(params[scenario_name]['p_foo_start_grnha_oflt'])
+            model.p_senesce_grnha.store_values(params[scenario_name]['p_senesce_grnha_dgoflt'])
+            model.p_me_cons_grnha.store_values(params[scenario_name]['p_me_cons_grnha_vgoflt'])
+            model.p_dry_mecons_t.store_values(params[scenario_name]['p_dry_mecons_t_vdft'])
+            model.p_volume_grnha.store_values(params[scenario_name]['p_volume_grnha_goflt'])
+            model.p_dry_volume_t.store_values(params[scenario_name]['p_dry_volume_t_dft'])
+            model.p_dry_transfer_t.store_values(params[scenario_name]['p_dry_transfer_t_ft'])
+            model.p_nap.store_values(params[scenario_name]['p_nap_dflrt'])
+            model.p_nap_prop.store_values(params[scenario_name]['p_harvest_period_prop'])
+            model.p_phase_area.store_values(params[scenario_name]['p_phase_area_flrt'])
+            model.p_pas_sow.store_values(params[scenario_name]['p_pas_sow_plrk'])
+            model.p_poc_vol.store_values(params[scenario_name]['p_poc_vol_f'])
+
+            ##machine
+            model.p_seed_days.store_values(params[scenario_name]['seed_days'])
+            model.p_contractseeding_occur.store_values(params[scenario_name]['contractseeding_occur'])
+            model.p_seeding_cost.store_values(params[scenario_name]['seeding_cost'])
+            model.p_contract_seeding_cost.store_values(params[scenario_name]['contract_seed_cost'])
+            model.p_harv_rate.store_values(params[scenario_name]['harv_rate_period'])
+            model.p_harv_hrs_max.store_values(params[scenario_name]['max_harv_hours'])
+            model.p_harv_cost.store_values(params[scenario_name]['harvest_cost'])
+            model.p_contractharv_cost.store_values(params[scenario_name]['contract_harvest_cost'])
+            model.p_yield_penalty.store_values(params[scenario_name]['yield_penalty'])
+            model.p_seeding_grazingdays.store_values(params[scenario_name]['grazing_days'])
+
+            ##sup feed
+            model.p_sup_cost.store_values(params[scenario_name]['total_sup_cost'])
+            model.p_sup_labour.store_values(params[scenario_name]['sup_labour'])
+
+
+
+
+            instance.Yield.store_values(Yield[scenario_name])
+            # seed_random(scenario_name)
+            # # Note: Must sort the iteration order so that
+            # #       data is generated deterministically
+            # #       across runs. Iteration over dict and set
+            # #       is very fickle in Python3.x
+            # for key in sorted(RandomYield.keys()):
+            #     instance.Yield[key] = random.normalvariate(*RandomYield[key])
+
+            return instance
+
+    concrete_tree = pysp_scenario_tree_model_callback()
+    stsolver = rapper.StochSolver(None,tree_model=concrete_tree,fsfct=pysp_instance_creation_callback)
+    ef_sol = stsolver.solve_ef('glpk',tee=True)
+    print(ef_sol.solver.termination_condition)
+    obj = stsolver.root_E_obj()
+    print("Expecatation take over scenarios=",obj)
+    for varname,varval in stsolver.root_Var_solution():  # doctest: +SKIP
+        print(varname,str(varval))
+
+    ##saves file to csv
+    csvw.write_csv_soln(stsolver.scenario_tree,"solution")
+    ##saves file to json
+    jsonw.JSONSolutionWriter.write('',stsolver.scenario_tree,
+                                   'ef')  # i dont know what the first arg does?? it needs to exist but can put any string without changing output
+
+    ##load json back in
+    with open('ef_solution.json') as f:
+        data = json.load(f)
+
     

@@ -4,7 +4,7 @@ Created on Tue Nov 26 16:28:11 2019
 
 Version Control:
 Version     Date        Person  Change
-   1.1      29Dec19     John    fb.feed_inputs['feed_periods'] was altered to include the beginning of the next period (year +1)
+   1.1      29Dec19     John    fb.period['feed_periods'] was altered to include the beginning of the next period (year +1)
                                 so references to create fp were shorten fp=fp[:-1]
 
 ^update this with CSIRO (dean thomas) experiment data. - will hopefully simplify the sim
@@ -39,7 +39,7 @@ import PropertyInputs as pinp
 #this first section is just to get the ddm of the diff components in the first period 
 #this is also used in the stubble module but i wanted to keep it separate from here so i have just re-used code
 
-fp = pd.DataFrame(pinp.feed_inputs['feed_periods'], columns=['date'])
+fp = pd.DataFrame(pinp.period['feed_periods'], columns=['date'])
 fp=fp[:-1]
 
 # Create a Pandas Excel writer using XlsxWriter as the engine. used to write to multiple sheets in excel
