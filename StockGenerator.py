@@ -4448,11 +4448,14 @@ def generator(params,r_vals,ev,plots = False):
     ## Combine the w8vars mask and the user nutrition mask
     mask_w8vars_va1e1b1nw8zida0e0b0xyg1 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_w8nut_va1e1b1nwzida0e0b0xyg1
     ##Mask numbers provided based on the steps (with a t axis) and the next dvp type (with a t axis) (t0&1 are sold and never transfer so the mask doesnt mean anything for them. for t2 animals always transfer to themselves unless dvpnext is 0)
-    mask_numbers_provw8w9_tva1e1b1nw8zida0e0b0xyg1w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1[...,na] * (np.trunc((index_wzida0e0b0xyg1[...,na] * (dvp_type_next_tva1e1b1nwzida0e0b0xyg1[...,na] !=condense_vtype1) +
-                                                     index_w1 * (dvp_type_next_tva1e1b1nwzida0e0b0xyg1[...,na] == condense_vtype1))
-                                                    / step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9) == index_w1 / step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9)
+    mask_numbers_provw8w9_tva1e1b1nw8zida0e0b0xyg1w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1[...,na] \
+                        * (np.trunc((index_wzida0e0b0xyg1[...,na] * (dvp_type_next_tva1e1b1nwzida0e0b0xyg1[...,na] !=condense_vtype1)
+                                     + index_w1 * (dvp_type_next_tva1e1b1nwzida0e0b0xyg1[...,na] == condense_vtype1))
+                                    / step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9) == index_w1 / step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9)
     ##Mask numbers required from the previous period (broadcast across t axis) - Note: req does not need a t axis because the destination decision variable don’t change for the transfer
-    mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1[...,na] * (np.trunc(index_wzida0e0b0xyg1 / step_con_req_va1e1b1nw8zida0e0b0xyg1)[...,na] == index_w1 / step_con_req_va1e1b1nw8zida0e0b0xyg1[...,na])
+    mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1[...,na] \
+                        * (np.trunc(index_wzida0e0b0xyg1 / step_con_req_va1e1b1nw8zida0e0b0xyg1)[...,na] == index_w1
+                           / step_con_req_va1e1b1nw8zida0e0b0xyg1[...,na])
 
     ##offs
     # n_fvps_va1e1b1nwzida0e0b0xyg3 = fun.f_reshape_expand(sinp.stock['i_n_fvps_vi3'], i_pos, left_pos2=p_pos, right_pos2=i_pos
@@ -4662,7 +4665,8 @@ def generator(params,r_vals,ev,plots = False):
     numbers_startp8_va1e1b1nwzida0e0b0xyg0p8 = sfun.f_create_production_param('sire', numbers_startp8_va1e1b1nwzida0e0b0xyg0p8, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0[...,na])
     ##number of sires for required for mating - dams
     ### mask the dams for w8 vars, t_vars. Also not mated if they are being transferred to another ram group. A transfer in the mating period (a_g1_tg1!=index_g1) indicates that the dam is going to be mated to another sire at a later date within the same DVP
-    t_mask_k2tva1e1b1nw8zida0e0b0xyg1g0p8 = (mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1 * (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1))[...,na,na]
+    t_mask_k2tva1e1b1nw8zida0e0b0xyg1g0p8 = (mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1
+                                             * (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1))[...,na,na]
     nsire_k2tva1e1b1nwzida0e0b0xyg1g0p8 = sfun.f_create_production_param('dams', nsire_tva1e1b1nwzida0e0b0xyg1g0p8,
                                                 a_k2cluster_va1e1b1nwzida0e0b0xyg1[...,na,na], index_k2tva1e1b1nwzida0e0b0xyg1[...,na,na],
                                                 numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1[...,na,na],
@@ -4843,13 +4847,13 @@ def generator(params,r_vals,ev,plots = False):
     ###numbers required - no d axis for Dam DVs
     ####collapse the e1 axis on the mask prior to np.sum because can't test for > 0 as per other numbers_req (because need proportions of age & BTRT)
     #### but don't want to increase the numbers if joining for multiple cycles
-    numbers_progreq_k2k3k5tva1e1b1nw8zida0e0b0xyg1g9w9 = 1 * (np.sum(np.any(mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9, axis=e1_pos-1, keepdims=True)[0, ...,na,:]
+    numbers_progreq_k2k3k5tva1e1b1nw8zida0e0b0xyg1g9w9 = 1 * np.sum(np.any(mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9, axis=e1_pos-1, keepdims=True)[0, ...,na,:]
                                                                     * mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[:,na,na,:,0:1,...,na,na]  # mask based on the t axis for dvp0
                                                                     * (index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,..., na,na] == 0)
                                                                     * (index_g1[...,na]==index_g1)[...,na] * btrt_propn_b0xyg1[...,na,na].astype(dtype) * e0_propn_ida0e0b0xyg[...,na,na].astype(dtype)
                                                                     * agedam_propn_da0e0b0xyg1[...,na,na].astype(dtype) * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na,na]
                                                                     * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[...,na,na],
-                                                                     axis=(e1_pos-2, d_pos-2, b0_pos-2, e0_pos-2),keepdims=True))
+                                                                     axis=(e1_pos-2, d_pos-2, b0_pos-2, e0_pos-2),keepdims=True)
 
     ##transfer progeny to offs
     ###numbers provide - has d axis
