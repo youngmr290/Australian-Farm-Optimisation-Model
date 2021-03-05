@@ -351,9 +351,9 @@ if run_grnfoo:
     func = rep.f_stock_pasture_summary
     trials = [34]
     type = 'pas'
-    prod = 'foo_end_grnha_goflt'
-    weights = 'greenpas_ha_vgoflt'
-    keys = 'keys_vgoflt'
+    prod = 'foo_end_grnha_goflzt'
+    weights = 'greenpas_ha_vgoflzt'
+    keys = 'keys_vgoflzt'
     arith = 2
     arith_axis = [0,1,2,4,5]
     index =[3]
@@ -368,10 +368,10 @@ if run_dryfoo:
     #returns foo at end of each fp
     func = rep.f_stock_pasture_summary
     trials = [34]
-    prod = 1000
     type = 'pas'
-    weights = 'drypas_transfer_dft'
-    keys = 'keys_dft'
+    prod = 1000
+    weights = 'drypas_transfer_dfzt'
+    keys = 'keys_dfzt'
     arith = 2
     arith_axis = [0,2]
     index =[1]
@@ -388,8 +388,8 @@ if run_napfoo:
     trials = [34]
     prod = 1000
     type = 'pas'
-    weights = 'nap_transfer_dft'
-    keys = 'keys_dft'
+    weights = 'nap_transfer_dfzt'
+    keys = 'keys_dfzt'
     arith = 2
     arith_axis = [0,2]
     index =[1]
@@ -404,10 +404,10 @@ if run_grncon:
     #returns consumption in each fp
     func = rep.f_stock_pasture_summary
     trials = [34]
-    prod = 'cons_grnha_t_goflt'
+    prod = 'cons_grnha_t_goflzt'
     type = 'pas'
-    weights = 'greenpas_ha_vgoflt'
-    keys = 'keys_vgoflt'
+    weights = 'greenpas_ha_vgoflzt'
+    keys = 'keys_vgoflzt'
     arith = 2
     arith_axis = [0,1,2,4,5]
     index =[3]
@@ -424,8 +424,8 @@ if run_drycon:
     trials = [34]
     prod = 1000
     type = 'pas'
-    weights = 'drypas_consumed_vdft'
-    keys = 'keys_vdft'
+    weights = 'drypas_consumed_vdfzt'
+    keys = 'keys_vdfzt'
     arith = 2
     arith_axis = [0,1,3]
     index =[2]
@@ -442,8 +442,8 @@ if run_napcon:
     trials = [34]
     prod = 1000
     type = 'pas'
-    weights = 'nap_consumed_vdft'
-    keys = 'keys_vdft'
+    weights = 'nap_consumed_vdfzt'
+    keys = 'keys_vdfzt'
     arith = 2
     arith_axis = [0,1,3]
     index =[2]
@@ -460,8 +460,8 @@ if run_poccon:
     trials = [34]
     prod = 1000
     type = 'pas'
-    weights = 'poc_consumed_vfl'
-    keys = 'keys_vfl'
+    weights = 'poc_consumed_vflz'
+    keys = 'keys_vflz'
     arith = 2
     arith_axis = [0,2]
     index =[1]

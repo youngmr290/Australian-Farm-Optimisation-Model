@@ -252,7 +252,7 @@ def f_area_summary(lp_vars, r_vals, **kwargs):
 
     ##read from other functions
     rot_area_zrl, rot_area_zlrk = f_rotation(lp_vars, r_vals)[1:3]
-    landuse_area_k_zl = rot_area_zlrk.sum(axis=0, level=(0,1,3)).unstack(0,1)  # area of each landuse (sum lmu and rotation)
+    landuse_area_k_zl = rot_area_zlrk.sum(axis=0, level=(0,1,3)).unstack([0,1])  # area of each landuse (sum lmu and rotation)
 
     ##all rotations by lmu
     rot_area_zr_l = rot_area_zrl.unstack()
@@ -530,74 +530,58 @@ def f_pasture_reshape(lp_vars, r_vals):
     keys_v = r_vals['pas']['keys_v']
     keys_f = r_vals['pas']['keys_f']
     keys_g = r_vals['pas']['keys_g']
+    keys_k = r_vals['pas']['keys_k']
     keys_l = r_vals['pas']['keys_l']
     keys_o = r_vals['pas']['keys_o']
     keys_p = r_vals['pas']['keys_p']
     keys_r = r_vals['pas']['keys_r']
     keys_t = r_vals['pas']['keys_t']
-    keys_k = r_vals['pas']['keys_k']
+    keys_z = r_vals['stock']['keys_z']
 
     len_d = len(keys_d)
     len_v = len(keys_v)
     len_f = len(keys_f)
     len_g = len(keys_g)
+    len_k = len(keys_k)
     len_l = len(keys_l)
     len_o = len(keys_o)
     len_p = len(keys_p)
     len_r = len(keys_r)
     len_t = len(keys_t)
-    len_k = len(keys_k)
+    len_z = len(keys_z)
 
     ##dict to store reshaped pasture stuff in
     pas_vars = {}
 
     # store keys - must be in axis order
-    pas_vars['keys_vgoflt'] = [keys_v, keys_g, keys_o, keys_f, keys_l, keys_t]
-    pas_vars['keys_vdft'] = [keys_v, keys_d, keys_f, keys_t]
-    pas_vars['keys_dft'] = [keys_d, keys_f, keys_t]
-    pas_vars['keys_vfl'] = [keys_v, keys_f, keys_l]
+    pas_vars['keys_vgoflzt'] = [keys_v, keys_g, keys_o, keys_f, keys_l, keys_z, keys_t]
+    pas_vars['keys_vdfzt'] = [keys_v, keys_d, keys_f, keys_z, keys_t]
+    pas_vars['keys_dfzt'] = [keys_d, keys_f, keys_z, keys_t]
+    pas_vars['keys_vflz'] = [keys_v, keys_f, keys_l, keys_z]
 
     ##shapes
-    vgoflt = len_v, len_g, len_o, len_f, len_l, len_t
-    vdft = len_v, len_d, len_f, len_t
-    dft = len_d, len_f, len_t
-    vfl = len_v, len_f, len_l
+    vgoflzt = len_v, len_g, len_o, len_f, len_l, len_z, len_t
+    vdfzt = len_v, len_d, len_f, len_z, len_t
+    dfzt = len_d, len_f, len_z, len_t
+    vflz = len_v, len_f, len_l, len_z
 
     ##reshape green pasture hectare variable
-    greenpas_ha = np.array(list(lp_vars['v_greenpas_ha'].values()))
-    greenpas_ha_vgoflt = greenpas_ha.reshape(vgoflt)
-    greenpas_ha_vgoflt[greenpas_ha_vgoflt == None] = 0  # replace None with 0
-    pas_vars['greenpas_ha_vgoflt'] = greenpas_ha_vgoflt
+    pas_vars['greenpas_ha_vgoflzt'] = f_vars2np(lp_vars['v_greenpas_ha'], vgoflzt, z_pos=-2)
 
     ##dry end period
-    drypas_transfer = np.array(list(lp_vars['v_drypas_transfer'].values()))
-    drypas_transfer_dft = drypas_transfer.reshape(dft)
-    drypas_transfer_dft[drypas_transfer_dft == None] = 0  # replace None with 0
-    pas_vars['drypas_transfer_dft'] = drypas_transfer_dft
+    pas_vars['drypas_transfer_dfzt'] = f_vars2np(lp_vars['v_drypas_transfer'], dfzt, z_pos=-2)
 
     ##nap end period
-    nap_transfer = np.array(list(lp_vars['v_nap_transfer'].values()))
-    nap_transfer_dft = nap_transfer.reshape(dft)
-    nap_transfer_dft[nap_transfer_dft == None] = 0  # replace None with 0
-    pas_vars['nap_transfer_dft'] = nap_transfer_dft
+    pas_vars['nap_transfer_dfzt'] = f_vars2np(lp_vars['v_nap_transfer'], dfzt, z_pos=-2)
 
     ##dry consumed
-    drypas_consumed = np.array(list(lp_vars['v_drypas_consumed'].values()))
-    drypas_consumed_vdft = drypas_consumed.reshape(vdft)
-    drypas_consumed_vdft[drypas_consumed_vdft == None] = 0  # replace None with 0
-    pas_vars['drypas_consumed_vdft'] = drypas_consumed_vdft
+    pas_vars['drypas_consumed_vdfzt'] = f_vars2np(lp_vars['v_drypas_consumed'], vdfzt, z_pos=-2)
 
     ##nap consumed
-    nap_consumed = np.array(list(lp_vars['v_nap_consumed'].values()))
-    nap_consumed_vdft = nap_consumed.reshape(vdft)
-    nap_consumed_vdft[nap_consumed_vdft == None] = 0  # replace None with 0
-    pas_vars['nap_consumed_vdft'] = nap_consumed_vdft
+    pas_vars['nap_consumed_vdfzt'] = f_vars2np(lp_vars['v_nap_consumed'], vdfzt, z_pos=-2)
 
     ##poc consumed
-    poc_consumed = np.array(list(lp_vars['v_poc'].values()))
-    poc_consumed_vfl = poc_consumed.reshape(vfl)
-    poc_consumed_vfl[poc_consumed_vfl == None] = 0  # replace None with 0
-    pas_vars['poc_consumed_vfl'] = poc_consumed_vfl
+    pas_vars['poc_consumed_vflz'] = f_vars2np(lp_vars['v_poc'], vflz, z_pos=-1)
 
     return pas_vars
 
@@ -728,8 +712,8 @@ def f_dep_summary(lp_vars, r_vals):
 
     dep_z = f_vars2np(lp_vars['v_dep'], len_z, z_pos=-1)
     ##dep - depreciation is yearly but for the profit and loss it is equally divided into each cash period
-    dep_zc = dep_z[:,na] / len_c  # convert to dep per cashflow period
-    # dep_c = pd.Series([dep] * len_c, index=keys_c)  # convert to df with cashflow period as index
+    dep_z = dep_z / len_c  # convert to dep per cashflow period
+    dep_zc = np.stack([dep_z] * len_c, axis=1) #add c axis
     return dep_zc
 
 
@@ -813,9 +797,13 @@ def f_profitloss_table(lp_vars, r_vals):
     ##create p/l dataframe
     idx = pd.IndexSlice
     keys_z = r_vals['stock']['keys_z']
-    type = ['Revenue', 'Expense']
-    subtype = ['grain', 'sheep sales', 'wool', 'Total Revenue']
-    pnl_index = pd.MultiIndex.from_product([keys_z, type, subtype], names=['Season', 'Type', 'Subtype'])
+    subtype_rev = ['grain', 'sheep sales', 'wool', 'Total Revenue']
+    subtype_exp = ['Crop', 'pasture', 'stock', 'machinery', 'labour', 'fixed', 'depreciation', 'Total expenses']
+    subtype_tot = ['EBIT']
+    pnl_rev_index = pd.MultiIndex.from_product([keys_z, ['Revenue'], subtype_rev], names=['Season', 'Type', 'Subtype'])
+    pnl_exp_index = pd.MultiIndex.from_product([keys_z, ['Expense'], subtype_exp], names=['Season', 'Type', 'Subtype'])
+    pnl_tot_index = pd.MultiIndex.from_product([keys_z, ['Total'], subtype_tot], names=['Season', 'Type', 'Subtype'])
+    pnl_index = pnl_rev_index.append(pnl_exp_index).append(pnl_tot_index)
     pnl = pd.DataFrame(index=pnl_index, columns=keys_c)  # need to initialise df with multiindex so rows can be added
 
     ##income
@@ -844,18 +832,19 @@ def f_profitloss_table(lp_vars, r_vals):
     dep_zc = f_dep_summary(lp_vars, r_vals)
     ####fixed overhead expenses
     exp_fix_c = f_overhead_summary(r_vals)
+    exp_fix_cz = pd.concat([exp_fix_c] * len(keys_z),axis=1).values
     ###add to p/l table each as a new row
     pnl.loc[idx[:, 'Expense', 'Crop'], :] = crop_c_z.T.reindex(keys_c, axis=1).values
     pnl.loc[idx[:, 'Expense', 'pasture'], :] = pas_c_z.T.reindex(keys_c, axis=1).values
     pnl.loc[idx[:, 'Expense', 'stock'], :] = stockcost_cz.T
     pnl.loc[idx[:, 'Expense', 'machinery'], :] = mach_c_z.T.reindex(keys_c, axis=1).values
     pnl.loc[idx[:, 'Expense', 'labour'], :] = labour_zc
-    pnl.loc[idx[:, 'Expense', 'fixed'], :] = exp_fix_cz
+    pnl.loc[idx[:, 'Expense', 'fixed'], :] = exp_fix_cz.T
     pnl.loc[idx[:, 'Expense', 'depreciation'], :] = dep_zc
     pnl.loc[idx[:, 'Expense', 'Total expenses'], :] = pnl.loc[pnl.index.get_level_values(1) == 'Expense'].sum(axis=0).values
 
     ##EBIT
-    pnl.loc[('', 'EBIT'), :] = pnl.loc[('Revenue', 'Total Revenue')] - pnl.loc[('Expense', 'Total expenses')]
+    pnl.loc[idx[:, 'Total', 'EBIT'], :] = (pnl.loc[idx[:, 'Revenue', 'Total Revenue']] - pnl.loc[idx[:, 'Expense', 'Total expenses']]).values
 
     ##add a column which is total of all cashflow period
     pnl['Full year'] = pnl.sum(axis=1)
