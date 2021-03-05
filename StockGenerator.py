@@ -464,13 +464,10 @@ def generator(params,r_vals,ev,plots = False):
     ### feed supply inputs     #
     ############################
     ##feedsupply
-    ###feedsupply option selected
+    ###feedsupply option selected - keep the z axis here and then handle the z axis after the feedsupply is calculated
     a_r_zida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['ia_r1_zig0'],'sire',i_pos, swap=True, condition=pinp.sheep['i_masksire_i'], axis=i_pos)
-    a_r_zida0e0b0xyg0 = np.rint(pinp.f_seasonal_inp(a_r_zida0e0b0xyg0,numpy=True,axis=z_pos)).astype(int)
     a_r_zida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['ia_r1_zig1'],'dams',i_pos, swap=True, condition=pinp.sheep['i_mask_i'], axis=i_pos)
-    a_r_zida0e0b0xyg1 = np.rint(pinp.f_seasonal_inp(a_r_zida0e0b0xyg1,numpy=True,axis=z_pos)).astype(int)
     a_r_zida0e0b0xyg3 = sfun.f_g2g(pinp.sheep['ia_r1_zig3'],'offs',i_pos, swap=True, condition=pinp.sheep['i_mask_i'], axis=i_pos)
-    a_r_zida0e0b0xyg3 = np.rint(pinp.f_seasonal_inp(a_r_zida0e0b0xyg3,numpy=True,axis=z_pos)).astype(int)
     ###feed variation for dams
     a_r2_k0e1b1nwzida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['ia_r2_k0ig1'],'dams',i_pos, swap=True,left_pos2=a1_pos,right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
     a_r2_k1b1nwzida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['ia_r2_k1ig1'],'dams',i_pos, swap=True,left_pos2=e1_pos,right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
@@ -1550,17 +1547,20 @@ def generator(params,r_vals,ev,plots = False):
     ############################
     ### feed supply calcs      # todo need to add something about break of season..? and need to add e variation
     ############################
-    ##1)	Compile the standard pattern from the inputs
+    ##1)	Compile the standard pattern from the inputs and handle the z axis (need to apply z treatment here because a_r_zida0e0b0xyg0 didnt get the season treatment)
     ###sire
     t_feedsupply_pj0zida0e0b0xyg0 = np.moveaxis(np.moveaxis(feedoptions_r1j0p[a_r_zida0e0b0xyg0],-1,0),-1,1) #had to rollaxis twice once for p and once for j0 (couldn't find a way to do both at the same time)
+    t_feedsupply_pj0zida0e0b0xyg0 = pinp.f_seasonal_inp(t_feedsupply_pj0zida0e0b0xyg0,numpy=True,axis=z_pos)
     t_feedsupply_pa1e1b1j0wzida0e0b0xyg0 = fun.f_expand(t_feedsupply_pj0zida0e0b0xyg0, left_pos=n_pos, right_pos=z_pos, left_pos2=p_pos,right_pos2=n_pos) #add  a1,e1,b1,w axis. Note n and j are the same thing (as far a position goes)
 
     ###dams
     t_feedsupply_pj0zida0e0b0xyg1 = np.moveaxis(np.moveaxis(feedoptions_r1j0p[a_r_zida0e0b0xyg1],-1,0),-1,1) #had to rollaxis twice once for p and once for j0 (couldn't find a way to do both at the same time)
+    t_feedsupply_pj0zida0e0b0xyg1 = pinp.f_seasonal_inp(t_feedsupply_pj0zida0e0b0xyg1,numpy=True,axis=z_pos)
     t_feedsupply_pa1e1b1j0wzida0e0b0xyg1 = fun.f_expand(t_feedsupply_pj0zida0e0b0xyg1, left_pos=n_pos, right_pos=z_pos, left_pos2=p_pos,right_pos2=n_pos) #add  a1,e1,b1,w axis. Note n and j are the same thing (as far a position goes)
 
     ###offs
     t_feedsupply_pj0zida0e0b0xyg3 = np.moveaxis(np.moveaxis(feedoptions_r1j0p[a_r_zida0e0b0xyg3],-1,0),-1,1) #had to rollaxis twice once for p and once for j0 (couldn't find a way to do both at the same time)
+    t_feedsupply_pj0zida0e0b0xyg3 = pinp.f_seasonal_inp(t_feedsupply_pj0zida0e0b0xyg3,numpy=True,axis=z_pos)
     t_feedsupply_pa1e1b1j0wzida0e0b0xyg3 = fun.f_expand(t_feedsupply_pj0zida0e0b0xyg3, left_pos=n_pos, right_pos=z_pos, left_pos2=p_pos,right_pos2=n_pos, condition=mask_p_offs_p, axis=0) #add  a1,e1,b1,w axis. Note n and j are the same thing (as far a position goes), mask p axis for offs
 
     ##2) calculate the feedsupply variation for each sheep class
