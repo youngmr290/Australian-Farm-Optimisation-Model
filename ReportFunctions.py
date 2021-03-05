@@ -46,6 +46,53 @@ def load_pkl(trial_name):
         r_vals = pkl.load(f)
     return lp_vars, r_vals
 
+def f_vars2np(lp_vars,shape,z_pos):
+    '''
+    converts lp vars to numpy.
+    :param lp_vars: variable to convert to numpy
+    :param shape: shape of desired numpy array
+    :param z_pos: position to add z axis
+    :return:
+    '''
+    #todo this still needs slight mods so it will handle the output from season active model.
+    final_vars = np.zeros(shape)
+    if isinstance(shape,int):
+        shape_wo_z = 1
+        len_z = shape
+        len_shape = 1
+    elif z_pos == -1:
+        shape_wo_z = shape[0:z_pos] + (1,) #make z singleton
+        len_z = shape[z_pos]
+        len_shape = len(shape)
+    else:
+        shape_wo_z = shape[0:z_pos] + (1,)+ shape[z_pos+1:] #make z singleton
+        len_z = shape[z_pos]
+        len_shape = len(shape)
+    for z in range(len_z):
+        vars = np.array(list(lp_vars.values()))
+        vars = vars.reshape(shape_wo_z)
+        vars[vars == None] = 0  # replace None with 0
+        slc = [slice(None)] * len_shape
+        slc[z_pos] = slice(z,z+1)
+        final_vars[tuple(slc)] = vars
+    return final_vars
+
+def f_vars2df(lp_vars, z_keys):
+    '''
+    converts lp vars to series.
+    :param lp_vars: variable to convert to series.
+    :return: series with season as index level 0
+    '''
+    #todo this still needs slight mods so it will handle the output from season active model.
+    for z_key, i in zip(z_keys,range(len(z_keys))):
+        var_series = pd.Series(lp_vars)
+        var_series = pd.concat([var_series], keys=[z_key])
+        if i == 0:
+            final_series = var_series
+        else:
+            final_series = pd.concat([final_series, var_series])
+    return final_series.sort_index()
+
 #################
 # Final reports #
 #################
@@ -179,9 +226,10 @@ def f_rotation(lp_vars, r_vals):
     ##rotation
     phases_df = r_vals['rot']['phases']
     phases_rk = phases_df.set_index(5, append=True)  # add landuse as index level
-    rot_area_rl = pd.Series(lp_vars['v_phase_area']).sort_index()  # create a series of all the phase areas, need to sort the index because it was chuck error for some calculations
-    rot_area_rkl = rot_area_rl.unstack().reindex(phases_rk.index, axis=0, level=0).stack()  # add landuse to the axis
-    return phases_rk, rot_area_rl, rot_area_rkl
+    keys_z = r_vals['stock']['keys_z']
+    rot_area_zrl = f_vars2df(lp_vars['v_phase_area'], keys_z)  # create a series of all the phase areas, need to sort the index because it was chuck error for some calculations
+    rot_area_zlrk = rot_area_zrl.unstack(1).reindex(phases_rk.index, axis=1, level=0).stack([0,1])  # add landuse to the axis
+    return phases_rk, rot_area_zrl, rot_area_zlrk
 
 
 def f_area_summary(lp_vars, r_vals, **kwargs):
@@ -203,25 +251,25 @@ def f_area_summary(lp_vars, r_vals, **kwargs):
     option = kwargs['option']
 
     ##read from other functions
-    rot_area_rl, rot_area_rkl = f_rotation(lp_vars, r_vals)[1:3]
-    landuse_area_kl = rot_area_rkl.sum(axis=0, level=(1, 2)).unstack()  # area of each landuse (sum lmu and rotation)
+    rot_area_zrl, rot_area_zlrk = f_rotation(lp_vars, r_vals)[1:3]
+    landuse_area_k_zl = rot_area_zlrk.sum(axis=0, level=(0,1,3)).unstack([0,1])  # area of each landuse (sum lmu and rotation)
 
     ##all rotations by lmu
-    rot_area_rl = rot_area_rl.unstack()
+    rot_area_zr_l = rot_area_zrl.unstack()
     if option == 1:
-        return rot_area_rl.round(0)
+        return rot_area_zr_l.round(0)
 
     ##selected rotations by lmu
-    rot_area_selected_rl = rot_area_rl[rot_area_rl.any(axis=1)]
+    rot_area_selected_zr_l = rot_area_zr_l[rot_area_zr_l.any(axis=1)]
     if option == 2:
-        return rot_area_selected_rl.round(0)
+        return rot_area_selected_zr_l.round(0)
     ###crop & pasture area
     ####you can now use isin pasture or crop sets to calc the area of crop or pasture
     all_pas = r_vals['rot']['all_pastures']  # landuse sets
-    pasture_area_l = landuse_area_kl[landuse_area_kl.index.isin(all_pas)].sum()  # sum landuse
+    pasture_area_l = landuse_area_k_zl[landuse_area_k_zl.index.isin(all_pas)].sum()  # sum landuse
     if option == 3:
         return pasture_area_l.sum().round(0)
-    crop_area_l = landuse_area_kl[~landuse_area_kl.index.isin(all_pas)].sum()  # sum landuse
+    crop_area_l = landuse_area_k_zl[~landuse_area_k_zl.index.isin(all_pas)].sum()  # sum landuse
     if option == 4:
         return crop_area_l.sum().round(0)
 
@@ -234,7 +282,7 @@ def f_area_summary(lp_vars, r_vals, **kwargs):
 
     ##return all if option==0
     if option == 0:
-        return rot_area_rl, rot_area_selected_rl, pasture_area_l, crop_area_l, croppas_area_l
+        return rot_area_zr_l, rot_area_selected_zr_l, pasture_area_l, crop_area_l, croppas_area_l
 
 
 def f_mach_summary(lp_vars, r_vals, option=0):
@@ -245,36 +293,42 @@ def f_mach_summary(lp_vars, r_vals, option=0):
 
     '''
     ##call rotation function to get rotation info
-    phases_rk, rot_area_rl = f_rotation(lp_vars, r_vals)[0:2]
+    phases_rk, rot_area_zrl = f_rotation(lp_vars, r_vals)[0:2]
+    keys_z = r_vals['stock']['keys_z']
+
     ##harv
-    contractharv_hours = pd.Series(lp_vars['v_contractharv_hours'])
-    harv_hours = pd.Series(lp_vars['v_harv_hours']).sum(level=1)  # sum p5 axis
-    harvest_cost = r_vals['mach']['contract_harvest_cost'].mul(contractharv_hours, axis=1) + r_vals['mach'][
-        'harvest_cost'].mul(harv_hours, axis=1)
+    contractharv_hours_zk = f_vars2df(lp_vars['v_contractharv_hours'], keys_z)
+    harv_hours_zk = f_vars2df(lp_vars['v_harv_hours'], keys_z).sum(level=(0,2))  # sum p5 axis
+    contract_harvest_cost_c_zk = r_vals['mach']['contract_harvest_cost'].T.sort_index().T.swaplevel(0,1,axis=1)
+    own_harvest_cost_c_zk = r_vals['mach']['harvest_cost'].T.sort_index().T.swaplevel(0,1,axis=1)
+    harvest_cost_c_zk = contract_harvest_cost_c_zk.mul(contractharv_hours_zk, axis=1) + own_harvest_cost_c_zk.mul(harv_hours_zk, axis=1)
+
     ##seeding
-    seeding_days = pd.Series(lp_vars['v_seeding_machdays']).sum(level=(1, 2))  # sum labour period axis
-    contractseeding_ha = pd.Series(lp_vars['v_contractseeding_ha']).sum(level=1)  # sum labour period and lmu axis
-    seeding_ha = r_vals['mach']['seeding_rate'].mul(
-        seeding_days.unstack()).stack()  # note seeding ha wont equal the rotation area because arable area is included in seed_ha.
-    seeding_cost_own = r_vals['mach']['seeding_cost'].reindex(seeding_ha.index, axis=1, level=1).mul(seeding_ha,
-                                                                                                     axis=1).sum(axis=1,
-                                                                                                                 level=0)  # sum lmu axis
-    contractseed_cost_ha = r_vals['mach']['contractseed_cost']
-    idx = pd.MultiIndex.from_product([contractseed_cost_ha.index, contractseeding_ha.index])
-    seeding_cost_contract = contractseed_cost_ha.reindex(idx, level=0).mul(contractseeding_ha, level=1).unstack()
+    seeding_days_kl_z = f_vars2df(lp_vars['v_seeding_machdays'], keys_z).sum(level=(0, 2,3)).unstack(0)  # sum labour period axis
+    seeding_rate_kl = r_vals['mach']['seeding_rate'].stack()
+    seeding_ha_kl_z = seeding_days_kl_z.mul(seeding_rate_kl.reindex(seeding_days_kl_z.index), axis=0) # note seeding ha wont equal the rotation area because arable area is included in seed_ha.
+    seeding_cost_cz_l = r_vals['mach']['seeding_cost'].stack()
+    seeding_cost_c_klz = seeding_cost_cz_l.reindex(seeding_ha_kl_z.index, axis=1, level=1).unstack()
+    seeding_cost_own_c_zk = seeding_cost_c_klz.mul(seeding_ha_kl_z.stack(), axis=1).sum(axis=1, level=(0,2)).swaplevel(0,1,axis=1)  # sum lmu axis
+    contractseeding_ha_zk = f_vars2df(lp_vars['v_contractseeding_ha'], keys_z).sum(level=(0,2))  # sum labour period and lmu axis
+    contractseed_cost_ha_c_z = r_vals['mach']['contractseed_cost']
+    contractseed_cost_ha_c_zk = contractseed_cost_ha_c_z.reindex(contractseeding_ha_zk.index, axis=1, level=0)
+    seeding_cost_contract_c_zk =  contractseed_cost_ha_c_zk.mul(contractseeding_ha_zk, axis=1, level=1)
+
     ##fert & chem mach cost
-    fertchem_cost_rlc = pd.concat(
-        [r_vals['crop']['fert_app_cost'], r_vals['crop']['nap_fert_app_cost'], r_vals['crop']['chem_app_cost_ha']],
-        axis=1).sum(axis=1, level=0)  # cost per ha
-    fertchem_cost_rc = fertchem_cost_rlc.mul(rot_area_rl, axis=0).sum(axis=0, level=0)  # mul area and sum lmu
-    fertchem_cost_kc = fertchem_cost_rc.reindex(phases_rk.index, axis=0, level=0).sum(axis=0,
-                                                                                      level=1)  # reindex to include landuse and sum rot
+    fert_app_cost_rzl_c = r_vals['crop']['fert_app_cost']
+    nap_fert_app_cost_rzl_c = r_vals['crop']['nap_fert_app_cost'].unstack().reindex(fert_app_cost_rzl_c.unstack().index, axis=0,level=0).stack()
+    chem_app_cost_ha_rzl_c = r_vals['crop']['chem_app_cost_ha']
+    fertchem_cost_rzl_c = pd.concat([fert_app_cost_rzl_c, nap_fert_app_cost_rzl_c, chem_app_cost_ha_rzl_c], axis=1).sum(axis=1, level=0)  # cost per ha
+    fertchem_cost_rz_c = fertchem_cost_rzl_c.mul(rot_area_zrl.swaplevel(0,1), axis=0).sum(axis=0, level=(0,1))  # mul area and sum lmu
+    fertchem_cost_c_zk = fertchem_cost_rz_c.unstack(1).reindex(phases_rk.index, axis=0, level=0).sum(axis=0,
+                                                                                      level=1).stack(0).unstack(0)  # reindex to include landuse and sum rot
     ##conbime all costs
-    exp_mach_kc = pd.concat([fertchem_cost_kc.T, seeding_cost_own, seeding_cost_contract, harvest_cost], axis=0).sum(
-        axis=0, level=0).T
+    exp_mach_c_zk = pd.concat([fertchem_cost_c_zk, seeding_cost_own_c_zk, seeding_cost_contract_c_zk, harvest_cost_c_zk], axis=0).sum(
+        axis=0, level=0)
     ##return all if option==0
     if option == 0:
-        return exp_mach_kc
+        return exp_mach_c_zk
 
 
 def f_grain_sup_summary(lp_vars, r_vals, option=0):
@@ -288,36 +342,35 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
     '''
     ##create dict to store grain variables
     grain = {}
-
+    keys_z = r_vals['stock']['keys_z']
     ##prices
-    grains_sale_price_kgc = r_vals['crop']['grain_price'].T.stack()
-    grains_buy_price_kgc = r_vals['sup']['buy_grain_price'].T.stack()
+    grains_sale_price_kg_c = r_vals['crop']['grain_price'].T.stack()
+    grains_buy_price_kg_c = r_vals['sup']['buy_grain_price'].T.stack()
 
     ##grain purchased
-    grain_purchased_kg = pd.Series(lp_vars['v_buy_grain'])
+    grain_purchased_zkg = f_vars2df(lp_vars['v_buy_grain'], keys_z)
 
     ##grain sold
-    grain_sold_kg = pd.Series(lp_vars['v_sell_grain'])
+    grain_sold_zkg = f_vars2df(lp_vars['v_sell_grain'], keys_z)
 
     ##grain fed
-    grain_fed_kg = pd.Series(lp_vars['v_sup_con']).sum(level=(0, 1))  # sum feed pool and feed period
-    grain_fed_kp6 = pd.Series(lp_vars['v_sup_con']).sum(level=(0, 3)).swaplevel()  # sum feed pool and grain pool
-    grain_fed_p6 = pd.Series(lp_vars['v_sup_con']).sum(level=(3))  # sum feed pool, landuse and grain pool
+    grain_fed_zkgvp6 = f_vars2df(lp_vars['v_sup_con'], keys_z)
+    grain_fed_zkg = grain_fed_zkgvp6.sum(level=(0, 1, 2))  # sum feed pool and feed period
+    grain_fed_zkp6 = grain_fed_zkgvp6.sum(level=(0, 1, 4)).swaplevel()  # sum feed pool and grain pool
+    grain_fed_zp6 = grain_fed_zkgvp6.sum(level=(0, 4))  # sum feed pool, landuse and grain pool
     if option == 1:
-        return grain_fed_p6.to_frame()
+        return grain_fed_zp6.to_frame()
     ##total grain produced by crop enterprise
-    total_grain_produced = grain_sold_kg + grain_fed_kg - grain_purchased_kg  # total grain produced by crop enterprise
-    rev_grain_c = grains_sale_price_kgc.mul(total_grain_produced.reindex(grains_sale_price_kgc.index), axis=0).sum(
-        axis=0,
-        level=0)  # sum grain pool, have to reindex (not really sure why since it is the same index - maybe one has been condensed ie index with nan removed)
-    grain['rev_grain_c'] = rev_grain_c
+    total_grain_produced_zkg = grain_sold_zkg + grain_fed_zkg - grain_purchased_zkg  # total grain produced by crop enterprise
+    grains_sale_price_zkg_c = grains_sale_price_kg_c.unstack().reindex(total_grain_produced_zkg.unstack().index, axis=0,level=1).stack()
+    rev_grain_k_cz = grains_sale_price_zkg_c.mul(total_grain_produced_zkg, axis=0).unstack(0).sum(axis=0, level=0)  # sum grain pool, have to reindex (not really sure why since it is the same index - maybe one has been condensed ie index with nan removed)
+    grain['rev_grain_k_cz'] = rev_grain_k_cz
 
     ##supplementary cost: cost = sale_price * (grain_fed - grain_purchased) + buy_price * grain_purchased
-    sup_exp_c = (grains_sale_price_kgc.mul((grain_fed_kg - grain_purchased_kg).reindex(grains_sale_price_kgc.index),
-                                           axis=0)
-                 + grains_buy_price_kgc.mul(grain_purchased_kg.reindex(grains_buy_price_kgc.index), axis=0)).sum(axis=0,
-                                                                                                                 level=0)  # sum grain pool
-    grain['sup_exp_c'] = sup_exp_c
+    grains_buy_price_zkg_c = grains_buy_price_kg_c.unstack().reindex(grain_purchased_zkg.unstack().index, axis=0,level=1).stack()
+    sup_exp_z_c = (grains_sale_price_zkg_c.mul(grain_fed_zkg - grain_purchased_zkg, axis=0)
+                 + grains_buy_price_zkg_c.mul(grain_purchased_zkg, axis=0)).sum(axis=0,level=0)  # sum grain pool
+    grain['sup_exp_c_z'] = sup_exp_z_c.T
     return grain
 
 
@@ -334,33 +387,38 @@ def f_crop_summary(lp_vars, r_vals, option=0):
 
     '''
     ##call rotation function to get rotation info
-    phases_rk, rot_area_rl = f_rotation(lp_vars, r_vals)[0:2]
+    phases_rk, rot_area_zrl = f_rotation(lp_vars, r_vals)[0:2]
+    keys_z = r_vals['stock']['keys_z']
     ##expenses
     ###fert
-    exp_fert_ha_rlc = pd.concat([r_vals['crop']['phase_fert_cost'], r_vals['crop']['nap_phase_fert_cost']], axis=1).sum(
-        axis=1, level=0)
-    exp_fert_rc = exp_fert_ha_rlc.mul(rot_area_rl, axis=0).sum(axis=0, level=0)  # mul area and sum lmu
-    exp_fert_kc = exp_fert_rc.reindex(phases_rk.index, axis=0, level=0).sum(axis=0,
+    nap_phase_fert_cost_r_cl = r_vals['crop']['nap_phase_fert_cost'].unstack()
+    index = pd.MultiIndex.from_product([keys_z, nap_phase_fert_cost_r_cl.index])
+    nap_phase_fert_cost_zrl_c = nap_phase_fert_cost_r_cl.reindex(index, axis=0,level=0).stack()
+    phase_fert_cost_zrl_c = r_vals['crop']['phase_fert_cost'].swaplevel(0,1,axis=0)
+    exp_fert_ha_zrl_c = pd.concat([phase_fert_cost_zrl_c, nap_phase_fert_cost_zrl_c], axis=1).sum(axis=1, level=0)
+    exp_fert_zr_c = exp_fert_ha_zrl_c.mul(rot_area_zrl, axis=0).sum(axis=0, level=(0,1))  # mul area and sum lmu
+    exp_fert_k_cz = exp_fert_zr_c.unstack(0).reindex(phases_rk.index, axis=0, level=0).sum(axis=0,
                                                                             level=1)  # reindex to include landuse and sum rot
     ###chem
-    exp_chem_rc = r_vals['crop']['chem_cost'].mul(rot_area_rl, axis=0).sum(axis=0, level=0)  # mul area and sum lmu
-    exp_chem_kc = exp_chem_rc.reindex(phases_rk.index, axis=0, level=0).sum(axis=0,
+    chem_cost_zrl_c = r_vals['crop']['chem_cost'].swaplevel(0,1,axis=0)
+    exp_chem_zr_c = chem_cost_zrl_c.mul(rot_area_zrl, axis=0).sum(axis=0, level=(0,1))  # mul area and sum lmu
+    exp_chem_k_cz = exp_chem_zr_c.unstack(0).reindex(phases_rk.index, axis=0, level=0).sum(axis=0,
                                                                             level=1)  # reindex to include landuse and sum rot
     ###misc
-    misc_exp_ha_rlc = pd.concat(
-        [r_vals['crop']['stub_cost'], r_vals['crop']['insurance_cost'], r_vals['crop']['seedcost']], axis=1).sum(axis=1,
-                                                                                                                 level=0)  # stubble, seed & insurance
-    misc_exp_rc = misc_exp_ha_rlc.reindex(rot_area_rl.index, axis=0).mul(rot_area_rl, axis=0).sum(axis=0,
-                                                                                                  level=0)  # mul area and sum lmu
-    misc_exp_kc = misc_exp_rc.reindex(phases_rk.index, axis=0, level=0).sum(axis=0,
+    stub_cost_zrl_c = r_vals['crop']['stub_cost'].swaplevel(0,1,axis=0)
+    insurance_cost_zrl_c = r_vals['crop']['insurance_cost'].swaplevel(0,1,axis=0)
+    seedcost_zrl_c = r_vals['crop']['seedcost'].swaplevel(0,1,axis=0)
+    misc_exp_ha_zrl_c = pd.concat([stub_cost_zrl_c, insurance_cost_zrl_c, seedcost_zrl_c], axis=1).sum(axis=1, level=0)  # stubble, seed & insurance
+    misc_exp_zr_c = misc_exp_ha_zrl_c.reindex(rot_area_zrl.index, axis=0).mul(rot_area_zrl, axis=0).sum(axis=0, level=(0,1))  # mul area and sum lmu
+    misc_exp_k_cz = misc_exp_zr_c.unstack(0).reindex(phases_rk.index, axis=0, level=0).sum(axis=0,
                                                                             level=1)  # reindex to include landuse and sum rot
     ##revenue. rev = (grain_sold + grain_fed - grain_purchased) * sell_price
     ###read in dict from grain summary
     grain_summary = f_grain_sup_summary(lp_vars, r_vals)
-    rev_grain_c = grain_summary['rev_grain_c']
+    rev_grain_k_cz = grain_summary['rev_grain_k_cz']
     ##return all if option==0
     if option == 0:
-        return exp_fert_kc, exp_chem_kc, misc_exp_kc, rev_grain_c
+        return exp_fert_k_cz, exp_chem_k_cz, misc_exp_k_cz, rev_grain_k_cz
 
 
 def f_stock_reshape(lp_vars, r_vals):
@@ -441,31 +499,22 @@ def f_stock_reshape(lp_vars, r_vals):
 
     ##animal numbers
     ###shapes
-    sire_shape = len_g0
+    sire_shape = len_z, len_g0
     dams_shape = len_k2, len_t1, len_v1, len_a, len_n1, len_lw1, len_z, len_i, len_y1, len_g1
     prog_shape = len_k5, len_t2, len_lw_prog, len_z, len_i, len_d, len_a, len_x, len_g2
     offs_shape = len_k3, len_k5, len_t3, len_v3, len_n3, len_lw3, len_z, len_i, len_a, len_x, len_y3, len_g3
+    infra_shape = len_h1, len_z
     ###sire
-    sire_numbers = np.array(list(lp_vars['v_sire'].values()))
-    sire_numbers_g0 = sire_numbers.reshape(sire_shape)
-    sire_numbers_g0[sire_numbers_g0 == None] = 0  # replace None with 0
-    stock_vars['sire_numbers_g0'] = sire_numbers_g0.astype(float)
+    stock_vars['sire_numbers_zg0'] = f_vars2np(lp_vars['v_sire'], sire_shape, z_pos=-2).astype(float)
     ###dams
-    dams_numbers = np.array(list(lp_vars['v_dams'].values()))
-    dams_numbers_k2tvanwziy1g1 = dams_numbers.reshape(dams_shape)
-    dams_numbers_k2tvanwziy1g1[dams_numbers_k2tvanwziy1g1 == None] = 0  # replace None with 0
-    stock_vars['dams_numbers_k2tvanwziy1g1'] = dams_numbers_k2tvanwziy1g1.astype(float)
-    stock_vars['dams_numbers_tvanwziy1g1'] = np.sum(dams_numbers_k2tvanwziy1g1.astype(float), axis=0)
+    stock_vars['dams_numbers_k2tvanwziy1g1'] = f_vars2np(lp_vars['v_dams'], dams_shape, z_pos=-4).astype(float)
+    stock_vars['dams_numbers_tvanwziy1g1'] = np.sum(f_vars2np(lp_vars['v_dams'], dams_shape, z_pos=-4).astype(float), axis=0)
     ###prog
-    prog_numbers = np.array(list(lp_vars['v_prog'].values()))
-    prog_numbers_k5twzida0xg2 = prog_numbers.reshape(prog_shape)
-    prog_numbers_k5twzida0xg2[prog_numbers_k5twzida0xg2 == None] = 0  # replace None with 0
-    stock_vars['prog_numbers_k5twzida0xg2'] = prog_numbers_k5twzida0xg2.astype(float)
+    stock_vars['prog_numbers_k5twzida0xg2'] = f_vars2np(lp_vars['v_prog'], prog_shape, z_pos=-6).astype(float)
     ###offs
-    offs_numbers = np.array(list(lp_vars['v_offs'].values()))
-    offs_numbers_k3k5tvnwziaxyg3 = offs_numbers.reshape(offs_shape)
-    offs_numbers_k3k5tvnwziaxyg3[offs_numbers_k3k5tvnwziaxyg3 == None] = 0  # replace None with 0
-    stock_vars['offs_numbers_k3k5tvnwziaxyg3'] = offs_numbers_k3k5tvnwziaxyg3.astype(float)
+    stock_vars['offs_numbers_k3k5tvnwziaxyg3'] = f_vars2np(lp_vars['v_offs'], offs_shape, z_pos=-6).astype(float)
+    ###infrastructure
+    stock_vars['infrastructure_h1z'] = f_vars2np(lp_vars['v_infrastructure'], infra_shape, z_pos=-1).astype(float)
 
     return stock_vars
 
@@ -481,74 +530,58 @@ def f_pasture_reshape(lp_vars, r_vals):
     keys_v = r_vals['pas']['keys_v']
     keys_f = r_vals['pas']['keys_f']
     keys_g = r_vals['pas']['keys_g']
+    keys_k = r_vals['pas']['keys_k']
     keys_l = r_vals['pas']['keys_l']
     keys_o = r_vals['pas']['keys_o']
     keys_p = r_vals['pas']['keys_p']
     keys_r = r_vals['pas']['keys_r']
     keys_t = r_vals['pas']['keys_t']
-    keys_k = r_vals['pas']['keys_k']
+    keys_z = r_vals['stock']['keys_z']
 
     len_d = len(keys_d)
     len_v = len(keys_v)
     len_f = len(keys_f)
     len_g = len(keys_g)
+    len_k = len(keys_k)
     len_l = len(keys_l)
     len_o = len(keys_o)
     len_p = len(keys_p)
     len_r = len(keys_r)
     len_t = len(keys_t)
-    len_k = len(keys_k)
+    len_z = len(keys_z)
 
     ##dict to store reshaped pasture stuff in
     pas_vars = {}
 
     # store keys - must be in axis order
-    pas_vars['keys_vgoflt'] = [keys_v, keys_g, keys_o, keys_f, keys_l, keys_t]
-    pas_vars['keys_vdft'] = [keys_v, keys_d, keys_f, keys_t]
-    pas_vars['keys_dft'] = [keys_d, keys_f, keys_t]
-    pas_vars['keys_vfl'] = [keys_v, keys_f, keys_l]
+    pas_vars['keys_vgoflzt'] = [keys_v, keys_g, keys_o, keys_f, keys_l, keys_z, keys_t]
+    pas_vars['keys_vdfzt'] = [keys_v, keys_d, keys_f, keys_z, keys_t]
+    pas_vars['keys_dfzt'] = [keys_d, keys_f, keys_z, keys_t]
+    pas_vars['keys_vflz'] = [keys_v, keys_f, keys_l, keys_z]
 
     ##shapes
-    vgoflt = len_v, len_g, len_o, len_f, len_l, len_t
-    vdft = len_v, len_d, len_f, len_t
-    dft = len_d, len_f, len_t
-    vfl = len_v, len_f, len_l
+    vgoflzt = len_v, len_g, len_o, len_f, len_l, len_z, len_t
+    vdfzt = len_v, len_d, len_f, len_z, len_t
+    dfzt = len_d, len_f, len_z, len_t
+    vflz = len_v, len_f, len_l, len_z
 
     ##reshape green pasture hectare variable
-    greenpas_ha = np.array(list(lp_vars['v_greenpas_ha'].values()))
-    greenpas_ha_vgoflt = greenpas_ha.reshape(vgoflt)
-    greenpas_ha_vgoflt[greenpas_ha_vgoflt == None] = 0  # replace None with 0
-    pas_vars['greenpas_ha_vgoflt'] = greenpas_ha_vgoflt
+    pas_vars['greenpas_ha_vgoflzt'] = f_vars2np(lp_vars['v_greenpas_ha'], vgoflzt, z_pos=-2)
 
     ##dry end period
-    drypas_transfer = np.array(list(lp_vars['v_drypas_transfer'].values()))
-    drypas_transfer_dft = drypas_transfer.reshape(dft)
-    drypas_transfer_dft[drypas_transfer_dft == None] = 0  # replace None with 0
-    pas_vars['drypas_transfer_dft'] = drypas_transfer_dft
+    pas_vars['drypas_transfer_dfzt'] = f_vars2np(lp_vars['v_drypas_transfer'], dfzt, z_pos=-2)
 
     ##nap end period
-    nap_transfer = np.array(list(lp_vars['v_nap_transfer'].values()))
-    nap_transfer_dft = nap_transfer.reshape(dft)
-    nap_transfer_dft[nap_transfer_dft == None] = 0  # replace None with 0
-    pas_vars['nap_transfer_dft'] = nap_transfer_dft
+    pas_vars['nap_transfer_dfzt'] = f_vars2np(lp_vars['v_nap_transfer'], dfzt, z_pos=-2)
 
     ##dry consumed
-    drypas_consumed = np.array(list(lp_vars['v_drypas_consumed'].values()))
-    drypas_consumed_vdft = drypas_consumed.reshape(vdft)
-    drypas_consumed_vdft[drypas_consumed_vdft == None] = 0  # replace None with 0
-    pas_vars['drypas_consumed_vdft'] = drypas_consumed_vdft
+    pas_vars['drypas_consumed_vdfzt'] = f_vars2np(lp_vars['v_drypas_consumed'], vdfzt, z_pos=-2)
 
     ##nap consumed
-    nap_consumed = np.array(list(lp_vars['v_nap_consumed'].values()))
-    nap_consumed_vdft = nap_consumed.reshape(vdft)
-    nap_consumed_vdft[nap_consumed_vdft == None] = 0  # replace None with 0
-    pas_vars['nap_consumed_vdft'] = nap_consumed_vdft
+    pas_vars['nap_consumed_vdfzt'] = f_vars2np(lp_vars['v_nap_consumed'], vdfzt, z_pos=-2)
 
     ##poc consumed
-    poc_consumed = np.array(list(lp_vars['v_poc'].values()))
-    poc_consumed_vfl = poc_consumed.reshape(vfl)
-    poc_consumed_vfl[poc_consumed_vfl == None] = 0  # replace None with 0
-    pas_vars['poc_consumed_vfl'] = poc_consumed_vfl
+    pas_vars['poc_consumed_vflz'] = f_vars2np(lp_vars['v_poc'], vflz, z_pos=-1)
 
     return pas_vars
 
@@ -563,52 +596,58 @@ def f_stock_cash_summary(lp_vars, r_vals):
     stock_vars = f_stock_reshape(lp_vars, r_vals)
 
     ##numbers
-    sire_numbers_g0 = stock_vars['sire_numbers_g0']
+    sire_numbers_zg0 = stock_vars['sire_numbers_zg0']
     dams_numbers_k2tvanwziy1g1 = stock_vars['dams_numbers_k2tvanwziy1g1']
     prog_numbers_k5twzida0xg2 = stock_vars['prog_numbers_k5twzida0xg2']
     offs_numbers_k3k5tvnwziaxyg3 = stock_vars['offs_numbers_k3k5tvnwziaxyg3']
 
     ##husb cost
-    sire_cost_cg0 = r_vals['stock']['sire_cost_cg0'] * sire_numbers_g0
+    sire_cost_czg0 = r_vals['stock']['sire_cost_cg0'][:,na,:] * sire_numbers_zg0
     dams_cost_k2ctva1nwziyg1 = r_vals['stock']['dams_cost_k2ctva1nwziyg1'] * dams_numbers_k2tvanwziy1g1[:, na, ...]
     offs_cost_k3k5ctvnwziaxyg3 = r_vals['stock']['offs_cost_k3k5ctvnwziaxyg3'] * offs_numbers_k3k5tvnwziaxyg3[:, :, na, ...]
 
     ##sale income
-    salevalue_cg0 = r_vals['stock']['salevalue_cg0'] * sire_numbers_g0
+    salevalue_czg0 = r_vals['stock']['salevalue_cg0'][:,na,:] * sire_numbers_zg0
     salevalue_k2ctva1nwziyg1 = r_vals['stock']['salevalue_k2ctva1nwziyg1'] * dams_numbers_k2tvanwziy1g1[:, na, ...]
     salevalue_k5ctwzida0xg2 = r_vals['stock']['salevalue_ctwzia0xg2'][..., na, :, :, :] * prog_numbers_k5twzida0xg2[:, na,
                                                                                      ...]
     salevalue_k3k5ctvnwziaxyg3 = r_vals['stock']['salevalue_k3k5ctvnwziaxyg3'] * offs_numbers_k3k5tvnwziaxyg3[:, :, na, ...]
 
     ##wool income
-    woolvalue_cg0 = r_vals['stock']['woolvalue_cg0'] * sire_numbers_g0
+    woolvalue_czg0 = r_vals['stock']['woolvalue_cg0'][:,na,:] * sire_numbers_zg0
     woolvalue_k2ctva1nwziyg1 = r_vals['stock']['woolvalue_k2ctva1nwziyg1'] * dams_numbers_k2tvanwziy1g1[:, na, ...]
     woolvalue_k3k5ctvnwziaxyg3 = r_vals['stock']['woolvalue_k3k5ctvnwziaxyg3'] * offs_numbers_k3k5tvnwziaxyg3[:, :, na, ...]
 
     ###sum axis to return total income in each cash period
-    siresale_c = fun.f_reduce_skipfew(np.sum, salevalue_cg0, preserveAxis=0)  # sum all axis except c
-    damssale_c = fun.f_reduce_skipfew(np.sum, salevalue_k2ctva1nwziyg1, preserveAxis=1)  # sum all axis except c
-    progsale_c = fun.f_reduce_skipfew(np.sum, salevalue_k5ctwzida0xg2, preserveAxis=1)  # sum all axis except c
-    offssale_c = fun.f_reduce_skipfew(np.sum, salevalue_k3k5ctvnwziaxyg3, preserveAxis=2)  # sum all axis except c
-    sirewool_c = fun.f_reduce_skipfew(np.sum, woolvalue_cg0, preserveAxis=0)  # sum all axis except c
-    damswool_c = fun.f_reduce_skipfew(np.sum, woolvalue_k2ctva1nwziyg1, preserveAxis=1)  # sum all axis except c
-    offswool_c = fun.f_reduce_skipfew(np.sum, woolvalue_k3k5ctvnwziaxyg3, preserveAxis=2)  # sum all axis except c
-    stocksale_c = siresale_c + damssale_c + progsale_c + offssale_c
-    wool_c = sirewool_c + damswool_c + offswool_c
+    siresale_cz = fun.f_reduce_skipfew(np.sum, salevalue_czg0, preserveAxis=(0,1))  # sum all axis except c
+    damssale_cz = fun.f_reduce_skipfew(np.sum, salevalue_k2ctva1nwziyg1, preserveAxis=(1,7))  # sum all axis except c
+    progsale_cz = fun.f_reduce_skipfew(np.sum, salevalue_k5ctwzida0xg2, preserveAxis=(1,4))  # sum all axis except c
+    offssale_cz = fun.f_reduce_skipfew(np.sum, salevalue_k3k5ctvnwziaxyg3, preserveAxis=(2,7))  # sum all axis except c
+    sirewool_cz = fun.f_reduce_skipfew(np.sum, woolvalue_czg0, preserveAxis=(0,1))  # sum all axis except c
+    damswool_cz = fun.f_reduce_skipfew(np.sum, woolvalue_k2ctva1nwziyg1, preserveAxis=(1,7))  # sum all axis except c
+    offswool_cz = fun.f_reduce_skipfew(np.sum, woolvalue_k3k5ctvnwziaxyg3, preserveAxis=(2,7))  # sum all axis except c
+    stocksale_cz = siresale_cz + damssale_cz + progsale_cz + offssale_cz
+    wool_cz = sirewool_cz + damswool_cz + offswool_cz
 
-    sirecost_c = fun.f_reduce_skipfew(np.sum, sire_cost_cg0, preserveAxis=0)  # sum all axis except c
-    damscost_c = fun.f_reduce_skipfew(np.sum, dams_cost_k2ctva1nwziyg1, preserveAxis=1)  # sum all axis except c
-    offscost_c = fun.f_reduce_skipfew(np.sum, offs_cost_k3k5ctvnwziaxyg3, preserveAxis=2)  # sum all axis except c
-    stockcost_c = sirecost_c + damscost_c + offscost_c
+    sirecost_cz = fun.f_reduce_skipfew(np.sum, sire_cost_czg0, preserveAxis=(0,1))  # sum all axis except c
+    damscost_cz = fun.f_reduce_skipfew(np.sum, dams_cost_k2ctva1nwziyg1, preserveAxis=(1,7))  # sum all axis except c
+    offscost_cz = fun.f_reduce_skipfew(np.sum, offs_cost_k3k5ctvnwziaxyg3, preserveAxis=(2,7))  # sum all axis except c
+
 
     ##expenses sup feeding
     ###read in dict from grain summary
     grain_summary = f_grain_sup_summary(lp_vars, r_vals)
-    sup_cost_c = grain_summary['sup_exp_c']
+    sup_cost_cz = grain_summary['sup_exp_c_z']
 
     ##infrastructure
+    fixed_infra_cost_c = np.sum(r_vals['stock']['rm_stockinfra_fix_h1c'], axis=0)
+    var_infra_cost_cz = np.sum(r_vals['stock']['rm_stockinfra_var_h1c'][...,na] * stock_vars['infrastructure_h1z'][:,na,:], axis=0)
+    total_infra_cost_cz = fixed_infra_cost_c[:,na] + var_infra_cost_cz
 
-    return stocksale_c, wool_c, sirecost_c, stockcost_c, sup_cost_c
+    ##total costs
+    stockcost_cz = sirecost_cz + damscost_cz + offscost_cz + sup_cost_cz.values + total_infra_cost_cz
+
+    return stocksale_cz, wool_cz, stockcost_cz
 
 
 def f_labour_summary(lp_vars, r_vals, option=0):
@@ -617,13 +656,34 @@ def f_labour_summary(lp_vars, r_vals, option=0):
     0- total labour cost
     1- amount for each enterprise
     '''
+
+    ##shapes
+    keys_c = r_vals['fin']['keys_c']
+    keys_p5 = r_vals['lab']['keys_p5']
+    keys_z = r_vals['stock']['keys_z']
+    len_c = len(keys_c)
+    len_p5 = len(keys_p5)
+    len_z = len(keys_z)
+
+    cas_shape = len_p5, len_z
+
     ##total labour cost
     if option == 0:
-        cas_cost_pc = r_vals['lab']['casual_cost'].mul(pd.Series(lp_vars['v_quantity_casual']), level=0)
-        perm_cost_c = r_vals['lab']['perm_cost'] * pd.Series(lp_vars['v_quantity_perm']).values
-        manager_cost_c = r_vals['lab']['manager_cost'] * pd.Series(lp_vars['v_quantity_manager']).values
-        total_lab_cost = cas_cost_pc.sum(level=1) + perm_cost_c + manager_cost_c
-        return total_lab_cost
+        ###casual
+        quantity_casual_p5z = f_vars2np(lp_vars['v_quantity_casual'],cas_shape,z_pos=-1)
+        casual_cost_p5zc = r_vals['lab']['casual_cost_p5zc']
+        cas_cost_zc = np.sum(casual_cost_p5zc * quantity_casual_p5z[...,na], axis=0)
+        ###perm
+        quantity_perm_z = f_vars2np(lp_vars['v_quantity_perm'], len_z, z_pos=-1)
+        perm_cost_c = r_vals['lab']['perm_cost_c']
+        perm_cost_zc = perm_cost_c * quantity_perm_z[...,na]
+        ###manager
+        quantity_manager_z = f_vars2np(lp_vars['v_quantity_manager'], len_z, z_pos=-1)
+        manager_cost_c = r_vals['lab']['manager_cost_c']
+        manager_cost_zc = manager_cost_c * quantity_manager_z[...,na]
+        ###total
+        total_lab_cost_zc = cas_cost_zc + perm_cost_zc + manager_cost_zc
+        return total_lab_cost_zc
     ##labour breakdown for each worker level (table: labour period by worker level)
     if option == 1:
         ###sheep
@@ -646,11 +706,15 @@ def f_labour_summary(lp_vars, r_vals, option=0):
 
 def f_dep_summary(lp_vars, r_vals):
     keys_c = r_vals['fin']['keys_c']
+    keys_z = r_vals['stock']['keys_z']
     len_c = len(keys_c)
+    len_z = len(keys_z)
+
+    dep_z = f_vars2np(lp_vars['v_dep'], len_z, z_pos=-1)
     ##dep - depreciation is yearly but for the profit and loss it is equally divided into each cash period
-    dep = lp_vars['v_dep'][None] / len_c  # convert to dep per cashflow period
-    dep_c = pd.Series([dep] * len_c, index=keys_c)  # convert to df with cashflow period as index
-    return dep_c
+    dep_z = dep_z / len_c  # convert to dep per cashflow period
+    dep_zc = np.stack([dep_z] * len_c, axis=1) #add c axis
+    return dep_zc
 
 
 def f_overhead_summary(r_vals):
@@ -678,7 +742,7 @@ def f_dse(lp_vars, r_vals, **kwargs):
 
     if method == 0:
         ##sire
-        dse_sire = stock_vars['sire_numbers_g0'] * r_vals['stock']['dsenw_p6g0']
+        dse_sire = stock_vars['sire_numbers_zg0'] * r_vals['stock']['dsenw_p6g0']
         ##dams
         dse_dams = fun.f_reduce_skipfew(np.sum, stock_vars['dams_numbers_k2tvanwziy1g1'][:, na, ...] * r_vals['stock'][
             'dsenw_k2p6tva1nwziyg1'], preserveAxis=1)  # sum all axis except p6
@@ -687,7 +751,7 @@ def f_dse(lp_vars, r_vals, **kwargs):
             'dsenw_k3k5p6tvnwziaxyg3'], preserveAxis=2)  # sum all axis except p6
     else:
         ##sire
-        dse_sire = stock_vars['sire_numbers_g0'] * r_vals['stock']['dsemj_p6g0']
+        dse_sire = stock_vars['sire_numbers_zg0'] * r_vals['stock']['dsemj_p6g0']
         ##dams
         dse_dams = fun.f_reduce_skipfew(np.sum, stock_vars['dams_numbers_k2tvanwziy1g1'][:, na, ...] * r_vals['stock'][
             'dsemj_k2p6tva1nwziyg1'], preserveAxis=1)  # sum all axis except p6
@@ -723,57 +787,64 @@ def f_profitloss_table(lp_vars, r_vals):
 
     '''
     ##read stuff from other functions that is used in rev and cost section
-    exp_fert_kc, exp_chem_kc, misc_exp_kc, rev_grain_kc = f_crop_summary(lp_vars, r_vals, option=0)
-    exp_mach_kc = f_mach_summary(lp_vars, r_vals)
-    stocksale_c, wool_c, sirecost_c, stockcost_c, sup_cost_c = f_stock_cash_summary(lp_vars, r_vals)
+    exp_fert_k_cz, exp_chem_k_cz, misc_exp_k_cz, rev_grain_k_cz = f_crop_summary(lp_vars, r_vals, option=0)
+    exp_mach_c_zk = f_mach_summary(lp_vars, r_vals)
+    stocksale_cz, wool_cz, stockcost_cz = f_stock_cash_summary(lp_vars, r_vals)
     ##other info required below
     all_pas = r_vals['rot']['all_pastures']  # landuse sets
     keys_c = r_vals['fin']['keys_c']
 
     ##create p/l dataframe
-    pnl_index = pd.MultiIndex(levels=[[], []],
-                              codes=[[], []],
-                              names=['Type', 'Subtype'])
+    idx = pd.IndexSlice
+    keys_z = r_vals['stock']['keys_z']
+    subtype_rev = ['grain', 'sheep sales', 'wool', 'Total Revenue']
+    subtype_exp = ['Crop', 'pasture', 'stock', 'machinery', 'labour', 'fixed', 'depreciation', 'Total expenses']
+    subtype_tot = ['EBIT']
+    pnl_rev_index = pd.MultiIndex.from_product([keys_z, ['Revenue'], subtype_rev], names=['Season', 'Type', 'Subtype'])
+    pnl_exp_index = pd.MultiIndex.from_product([keys_z, ['Expense'], subtype_exp], names=['Season', 'Type', 'Subtype'])
+    pnl_tot_index = pd.MultiIndex.from_product([keys_z, ['Total'], subtype_tot], names=['Season', 'Type', 'Subtype'])
+    pnl_index = pnl_rev_index.append(pnl_exp_index).append(pnl_tot_index)
     pnl = pd.DataFrame(index=pnl_index, columns=keys_c)  # need to initialise df with multiindex so rows can be added
 
     ##income
-    rev_grain_c = rev_grain_kc.sum(axis=0)  # sum landuse axis
+    rev_grain_zc = rev_grain_k_cz.sum(axis=0).unstack(0)  # sum landuse axis
     ###add to p/l table each as a new row
-    pnl.loc[('Revenue', 'grain'), :] = rev_grain_c
-    pnl.loc[('Revenue', 'sheep sales'), :] = stocksale_c
-    pnl.loc[('Revenue', 'wool'), :] = wool_c
-    pnl.loc[('Revenue', 'Total Revenue'), :] = pnl.loc[pnl.index.get_level_values(0) == 'Revenue'].sum(axis=0)
+    pnl.loc[idx[:,'Revenue','grain'],:] = rev_grain_zc.reindex(keys_c, axis=1).values #cant just assign values becasue c axis has been sorted alphebetically so need to put back in correct order for cashflow
+    pnl.loc[idx[:, 'Revenue', 'sheep sales'], :] = stocksale_cz.T
+    pnl.loc[idx[:, 'Revenue', 'wool'], :] = wool_cz.T
+    pnl.loc[idx[:, 'Revenue', 'Total Revenue'], :] = pnl.loc[pnl.index.get_level_values(1) == 'Revenue'].sum(axis=0).values
 
     ##expenses
     ####machinery
-    mach_c = exp_mach_kc.sum(axis=0)  # sum landuse
+    mach_c_z = exp_mach_c_zk.sum(axis=1,level=0)  # sum landuse
     ####crop & pasture
-    pasfert_c = exp_fert_kc[exp_fert_kc.index.isin(all_pas)].sum(axis=0)
-    cropfert_c = exp_fert_kc[~exp_fert_kc.index.isin(all_pas)].sum(axis=0)
-    paschem_c = exp_chem_kc[exp_chem_kc.index.isin(all_pas)].sum(axis=0)
-    cropchem_c = exp_chem_kc[~exp_chem_kc.index.isin(all_pas)].sum(axis=0)
-    pasmisc_c = misc_exp_kc[misc_exp_kc.index.isin(all_pas)].sum(axis=0)
-    cropmisc_c = misc_exp_kc[~misc_exp_kc.index.isin(all_pas)].sum(axis=0)
-    pas_c = pasfert_c + paschem_c + pasmisc_c
-    crop_c = cropfert_c + cropchem_c + cropmisc_c
+    pasfert_c_z = exp_fert_k_cz[exp_fert_k_cz.index.isin(all_pas)].sum(axis=0).unstack()
+    cropfert_c_z = exp_fert_k_cz[~exp_fert_k_cz.index.isin(all_pas)].sum(axis=0).unstack()
+    paschem_c_z = exp_chem_k_cz[exp_chem_k_cz.index.isin(all_pas)].sum(axis=0).unstack()
+    cropchem_c_z = exp_chem_k_cz[~exp_chem_k_cz.index.isin(all_pas)].sum(axis=0).unstack()
+    pasmisc_c_z = misc_exp_k_cz[misc_exp_k_cz.index.isin(all_pas)].sum(axis=0).unstack()
+    cropmisc_c_z = misc_exp_k_cz[~misc_exp_k_cz.index.isin(all_pas)].sum(axis=0).unstack()
+    pas_c_z = pd.concat([pasfert_c_z, paschem_c_z, pasmisc_c_z], axis=0).sum(axis=0, level=0)
+    crop_c_z = pd.concat([cropfert_c_z, cropchem_c_z, cropmisc_c_z], axis=0).sum(axis=0, level=0)
     ####labour
-    labour_c = f_labour_summary(lp_vars, r_vals, option=0)
+    labour_zc = f_labour_summary(lp_vars, r_vals, option=0)
     ####depreciation
-    dep_c = f_dep_summary(lp_vars, r_vals)
+    dep_zc = f_dep_summary(lp_vars, r_vals)
     ####fixed overhead expenses
     exp_fix_c = f_overhead_summary(r_vals)
+    exp_fix_cz = pd.concat([exp_fix_c] * len(keys_z),axis=1).values
     ###add to p/l table each as a new row
-    pnl.loc[('Expense', 'Crop'), :] = crop_c
-    pnl.loc[('Expense', 'pasture'), :] = pas_c
-    pnl.loc[('Expense', 'stock'), :] = stockcost_c
-    pnl.loc[('Expense', 'machinery'), :] = mach_c
-    pnl.loc[('Expense', 'labour'), :] = labour_c
-    pnl.loc[('Expense', 'fixed'), :] = exp_fix_c
-    pnl.loc[('Expense', 'depreciation'), :] = dep_c
-    pnl.loc[('Expense', 'Total expenses'), :] = pnl.loc[pnl.index.get_level_values(0) == 'Expense'].sum(axis=0)
+    pnl.loc[idx[:, 'Expense', 'Crop'], :] = crop_c_z.T.reindex(keys_c, axis=1).values
+    pnl.loc[idx[:, 'Expense', 'pasture'], :] = pas_c_z.T.reindex(keys_c, axis=1).values
+    pnl.loc[idx[:, 'Expense', 'stock'], :] = stockcost_cz.T
+    pnl.loc[idx[:, 'Expense', 'machinery'], :] = mach_c_z.T.reindex(keys_c, axis=1).values
+    pnl.loc[idx[:, 'Expense', 'labour'], :] = labour_zc
+    pnl.loc[idx[:, 'Expense', 'fixed'], :] = exp_fix_cz.T
+    pnl.loc[idx[:, 'Expense', 'depreciation'], :] = dep_zc
+    pnl.loc[idx[:, 'Expense', 'Total expenses'], :] = pnl.loc[pnl.index.get_level_values(1) == 'Expense'].sum(axis=0).values
 
     ##EBIT
-    pnl.loc[('', 'EBIT'), :] = pnl.loc[('Revenue', 'Total Revenue')] - pnl.loc[('Expense', 'Total expenses')]
+    pnl.loc[idx[:, 'Total', 'EBIT'], :] = (pnl.loc[idx[:, 'Revenue', 'Total Revenue']] - pnl.loc[idx[:, 'Expense', 'Total expenses']]).values
 
     ##add a column which is total of all cashflow period
     pnl['Full year'] = pnl.sum(axis=1)

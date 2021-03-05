@@ -186,12 +186,12 @@ def labour_general(params,r_vals):
     p_dates_start_c = p_dates.values[:-1]
     p_dates_end_c = p_dates.values[1:]
     p_name = per.cashflow_periods()['cash period'].values[:-1].astype(str)#gets the period name
-    ###loop thorugh and determine period for each cashflow
+    ###determine cashflow allocation
     index_c = np.arange(len(p_dates_start_c))
     length_c = p_dates_end_c - p_dates_start_c
-    alloc_pzc = fun.range_allocation_np(lp_p5z,p_dates_start_c,length_c)[:-1] > 0.5
-    cash_period_idx_pz = np.sum(alloc_pzc * index_c, axis=-1)
-    cashflow_alloc_p5z = p_name[cash_period_idx_pz]
+    alloc_pzc = fun.range_allocation_np(lp_p5z,p_dates_start_c,length_c)[:-1]
+    # cash_period_idx_pz = np.sum(alloc_pzc * index_c, axis=-1)
+    # cashflow_alloc_p5z = p_name[cash_period_idx_pz]
 
     # p_name = np.broadcast_to(p_name[:,na], (p_name.shape + (lp_start_p5z.shape[-1],)))
     # cashflow_alloc_p5z = np.empty(lp_start_p5z.shape, dtype='S2')
@@ -202,15 +202,20 @@ def labour_general(params,r_vals):
     ##cost of casual for each labour period - wage plus super plus workers comp (multipled by wage because super and others are %)
     ##differect to perm and manager because they are at a fixed level throughout the year ie same number of perm staff all yr.
     casual_cost_p5z = cas_hrs_total_p5z * (uinp.price['casual_cost'] + uinp.price['casual_cost'] * uinp.price['casual_super'] + uinp.price['casual_cost'] * uinp.price['casual_workers_comp'])
-
+    casual_cost_p5zc = casual_cost_p5z[...,na] * alloc_pzc
 
 
     #########
     ##keys  #
     #########
     ##keys
+    keys_c = np.array(sinp.general['cashflow_periods'])
     keys_p5 = np.asarray(per.p_dates_df().index[:-1]).astype('str')
     keys_z = pinp.f_keys_z()
+
+    ##index
+    arrays = [keys_p5,keys_c]
+    index_p5c = fun.cartesian_product_simple_transpose(arrays)
 
     ################
     ##pyomo params #
@@ -224,18 +229,19 @@ def labour_general(params,r_vals):
 
         params[scenario]['permanent hours'] = dict(zip(keys_p5, perm_hrs_total_p5z[:,z]))
         params[scenario]['permanent supervision'] = dict(zip(keys_p5, perm_supervision_p5z[:,z]))
-        params[scenario]['casual_cost'] = dict(zip(zip(keys_p5, cashflow_alloc_p5z[:,z]), casual_cost_p5z[:,z]))
         params[scenario]['casual hours'] = dict(zip(keys_p5, cas_hrs_total_p5z[:,z]))
         params[scenario]['casual supervision'] = dict(zip(keys_p5, cas_supervision_p5z[:,z]))
         params[scenario]['manager hours'] = dict(zip(keys_p5, manager_hrs_total_p5z[:,z]))
         params[scenario]['casual ub'] = dict(zip(keys_p5, ub_cas_pz[:,z]))
         params[scenario]['casual lb'] = dict(zip(keys_p5, lb_cas_pz[:,z]))
 
-
+        casual_cost_p5c = casual_cost_p5zc[:,z,:].ravel()
+        tup_p5c = tuple(map(tuple, index_p5c))
+        params[scenario]['casual_cost'] =dict(zip(tup_p5c, casual_cost_p5c))
 
     ##report values that are not season affected
     r_vals['keys_p5'] = keys_p5
-    r_vals['casual_cost'] = pd.DataFrame(casual_cost_p5z, index=keys_p5, columns=keys_z)
+    r_vals['casual_cost_p5zc'] = casual_cost_p5zc
 
 
 
@@ -412,7 +418,7 @@ def perm_cost(params, r_vals):
     + uinp.price['permanent_cost'] * uinp.price['permanent_workers_comp'] + uinp.price['permanent_cost'] * uinp.price['permanent_ls_leave']) / len(sinp.general['cashflow_periods'])
     perm_cost=dict.fromkeys(sinp.general['cashflow_periods'], perm_cost)
     params['perm_cost']=perm_cost
-    r_vals['perm_cost']=pd.Series(perm_cost)
+    r_vals['perm_cost_c']=np.array(list(perm_cost.values()))
 
 
 #manager cost per cashflow period
@@ -420,7 +426,7 @@ def manager_cost(params, r_vals):
     manager_cost = uinp.price['manager_cost'] / len(sinp.general['cashflow_periods'])
     manager_cost=dict.fromkeys(sinp.general['cashflow_periods'], manager_cost)
     params['manager_cost']=manager_cost
-    r_vals['manager_cost']=pd.Series(manager_cost)
+    r_vals['manager_cost_c'] = np.array(list(manager_cost.values()))
 
 
 
