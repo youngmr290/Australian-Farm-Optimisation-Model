@@ -312,7 +312,7 @@ def fert_cost(r_vals):
     ###add the cost for each pass
     fert_cost_ha = allocation.mul(mac.fert_app_cost_ha()).stack() #cost for 1 pass for each fert.
     fert_app_cost_ha = fert_passes.mul(fert_cost_ha,axis=1,level=1).sum(axis=1, level=0)
-    r_vals['fert_app_cost'] = fert_app_cost_ha
+    r_vals['fert_app_cost'] = fert_app_cost_ha + fert_app_cost_t
     ##combine all costs - fert, app per ha and app per tonne    
     fert_cost_total= pd.concat([phase_fert_cost,fert_app_cost_t, fert_app_cost_ha],axis=1).sum(axis=1,level=0) #must include level so that all cols don't sum, had to switch this from .add to concat because for some reason on multiple iterations of the model add stoped working
     return fert_cost_total
