@@ -1023,8 +1023,9 @@ def f_lwc_cs(cg, rc_start, mei, mem, mew, z1f, z2f, kg, mec = 0,
     neg = kg * (mei - (mem + mec * gest_propn + mel * lact_propn + mew))
     ##Energy Value of gain
     evg = cg[8, ...] - z1f * (cg[9, ...] - cg[10, ...] * (level - 1)) + z2f * cg[11, ...] * (rc_start - 1)
-    ##Protein content of gain
-    pcg = cg[12, ...] - z1f * (cg[13, ...] - cg[14, ...] * (level - 1)) + z2f * cg[15, ...] * (rc_start - 1)
+    ##Protein content of gain (some uncertainty for sign associated with zf2.
+    ### GrazFeed documentation had +ve however, this implies that PCG increases when BC > 1. So changed to -ve
+    pcg = cg[12, ...] - z1f * (cg[13, ...] - cg[14, ...] * (level - 1)) - z2f * cg[15, ...] * (rc_start - 1)
     ##Empty bodyweight gain
     ebg = neg / evg
     ##Protein gain
