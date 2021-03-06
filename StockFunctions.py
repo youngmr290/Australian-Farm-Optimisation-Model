@@ -556,7 +556,7 @@ def f_ra_cs(foo, hf, cr=None, zf=1):
     return ra
 
 
-def f_foo_convert(cu3, cu4, foo, i_hr_scalar, i_region, i_n_pasture_stage,i_hd_std, legume=0, pasture_stage=1, cr=None):
+def f_foo_convert(cu3, cu4, foo, pasture_stage, legume=0, cr=None, z_pos=-1):
     '''
     Parameters
     ----------
@@ -572,7 +572,7 @@ def f_foo_convert(cu3, cu4, foo, i_hr_scalar, i_region, i_n_pasture_stage,i_hd_s
     else:
         cr12=cr[12, ...]
     ##pasture conversion scenario
-    conversion_scenario = i_region * i_n_pasture_stage + pasture_stage
+    conversion_scenario = pinp.sheep['i_region'] * uinp.pastparameters['i_n_pasture_stage'] + pasture_stage
     ##select cu3&4 params
     cu3=cu3[..., conversion_scenario]
     cu4=cu4[..., conversion_scenario]
@@ -583,9 +583,12 @@ def f_foo_convert(cu3, cu4, foo, i_hr_scalar, i_region, i_n_pasture_stage,i_hd_s
     ##Height density (height per unit FOO)
     hd = fun.f_divide(height, foo_shears) #handles div0 (eg if in feedlot with no pasture or adjusted foo is less than 0)
     ##height ratio
-    hr = i_hr_scalar * hd / i_hd_std
+    hr = pinp.sheep['i_hr_scalar'] * hd / uinp.pastparameters['i_hd_std']
     ##calc hf
     hf = 1 + cr12 * (hr -1)
+    ##apply z treatment
+    foo_shears = pinp.f_seasonal_inp(foo_shears,numpy=True,axis=z_pos)
+    hf = pinp.f_seasonal_inp(hf,numpy=True,axis=z_pos)
     return foo_shears, hf
 
 def f_dynamic_slice(arr, axis, start, stop, axis2=None, start2=None, stop2=None):
@@ -1045,7 +1048,7 @@ def f_emissions_bc(ch, intake_f, intake_s, md_solid, level):
 
 
 
-def f_feedsupply(cu3, cu4, cr, feedsupply_std_a1e1b1nwzida0e0b0xyg, paststd_foo_a1e1b1j0wzida0e0b0xyg, paststd_dmd_a1e1b1j0wzida0e0b0xyg, legume_a1e1b1nwzida0e0b0xyg, pi, pasture_stage_a1e1b1j0wzida0e0b0xyg, i_hr_scalar, i_region, i_n_pasture_stage, i_hd_std):
+def f_feedsupply(cu3, cu4, cr, feedsupply_std_a1e1b1nwzida0e0b0xyg, paststd_foo_a1e1b1j0wzida0e0b0xyg, paststd_dmd_a1e1b1j0wzida0e0b0xyg, legume_a1e1b1nwzida0e0b0xyg, pi, pasture_stage_a1e1b1j0wzida0e0b0xyg):
     ##level of pasture
     level_a1e1b1nwzida0e0b0xyg = np.trunc(np.minimum(2, feedsupply_std_a1e1b1nwzida0e0b0xyg)).astype('int') #note np.trunc rounds down to the nearest int (need to specify int type for the take along axis function below)
     ##next level up of pasture
@@ -1057,7 +1060,7 @@ def f_feedsupply(cu3, cu4, cr, feedsupply_std_a1e1b1nwzida0e0b0xyg, paststd_foo_
     paststd_foo_next_a1e1b1nwzida0e0b0xyg = np.take_along_axis(paststd_foo_a1e1b1j0wzida0e0b0xyg, next_level_a1e1b1nwzida0e0b0xyg, sinp.stock['i_n_pos'])
     foo_a1e1b1nwzida0e0b0xyg = paststd_foo_a1e1b1nwzida0e0b0xyg + proportion_a1e1b1nwzida0e0b0xyg * (paststd_foo_next_a1e1b1nwzida0e0b0xyg - paststd_foo_a1e1b1nwzida0e0b0xyg)
     ##foo corrected to hand shears and estimated height
-    foo, hf = f_foo_convert(cu3, cu4, foo_a1e1b1nwzida0e0b0xyg, i_hr_scalar,i_region, i_n_pasture_stage,i_hd_std, legume_a1e1b1nwzida0e0b0xyg, pasture_stage_a1e1b1j0wzida0e0b0xyg, cr)
+    foo, hf = f_foo_convert(cu3, cu4, foo_a1e1b1nwzida0e0b0xyg, pasture_stage_a1e1b1j0wzida0e0b0xyg, legume_a1e1b1nwzida0e0b0xyg, cr, z_pos = sinp.stock['i_z_pos'])
     ##dmd
     paststd_dmd_a1e1b1nwzida0e0b0xyg = np.take_along_axis(paststd_dmd_a1e1b1j0wzida0e0b0xyg, level_a1e1b1nwzida0e0b0xyg, sinp.stock['i_n_pos'])
     paststd_dmd_next_a1e1b1nwzida0e0b0xyg = np.take_along_axis(paststd_dmd_a1e1b1j0wzida0e0b0xyg, next_level_a1e1b1nwzida0e0b0xyg, sinp.stock['i_n_pos'])

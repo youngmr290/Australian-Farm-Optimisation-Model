@@ -335,7 +335,7 @@ def f_pasture(params, r_vals, ev):
 
     ##season inputs not required in t loop above
     harv_date_z = pinp.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0).astype(np.datetime64)
-    i_pasture_stage_p6z = pinp.f_seasonal_inp(np.moveaxis(pinp.sheep['i_pasture_stage_p6z'],0,-1), numpy=True, axis=-1).astype(int)
+    i_pasture_stage_p6z = np.moveaxis(pinp.sheep['i_pasture_stage_p6z'],0,-1)
 
     ### pasture params used to convert foo for rel availability
     cu3 = uinp.pastparameters['i_cu3_c4'][...,pinp.sheep['i_pasture_type']].astype(float)
@@ -671,9 +671,7 @@ def f_pasture(params, r_vals, ev):
     ### pasture params used to convert foo for rel availability
     pasture_stage_flzt = i_pasture_stage_p6z[:, na, :, na]
     ### adjust foo and calc hf
-    foo_ave_grnha_goflzt, hf = sfun.f_foo_convert(cu3, cu4, foo_ave_grnha_goflzt, pinp.sheep['i_hr_scalar'],
-                                                 pinp.sheep['i_region'], uinp.pastparameters['i_n_pasture_stage'],
-                                                 uinp.pastparameters['i_hd_std'], i_legume_zt, pasture_stage_flzt)
+    foo_ave_grnha_goflzt, hf = sfun.f_foo_convert(cu3, cu4, foo_ave_grnha_goflzt, pasture_stage_flzt, i_legume_zt, z_pos=-2)
     ### calc relative availability - note that the equation system used is the one selected for dams in p1 - need to hook up mu function
     if uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used
         grn_ri_availability_goflzt = sfun.f_ra_cs(foo_ave_grnha_goflzt, hf)
@@ -708,8 +706,7 @@ def f_pasture(params, r_vals, ev):
     ## dry, volume of feed consumed per tonne
     ### adjust foo and calc hf
     pasture_stage_fzt = i_pasture_stage_p6z[...,na]
-    dry_foo_dfzt, hf = sfun.f_foo_convert(cu3, cu4, dry_foo_dfzt, pinp.sheep['i_hr_scalar'], pinp.sheep['i_region'],
-                                          uinp.pastparameters['i_n_pasture_stage'],uinp.pastparameters['i_hd_std'], i_legume_zt, pasture_stage_fzt)
+    dry_foo_dfzt, hf = sfun.f_foo_convert(cu3, cu4, dry_foo_dfzt, pasture_stage_fzt, i_legume_zt, z_pos=-2)
     ### calc relative availability - note that the equation system used is the one selected for dams in p1 - need to hook up mu function
     if uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used
         dry_ri_availability_dfzt = sfun.f_ra_cs(dry_foo_dfzt, hf)
@@ -773,8 +770,7 @@ def f_pasture(params, r_vals, ev):
         ri_qual_fz     = sfun.f_rq_cs(i_poc_dmd_ft[...,na,0], i_legume_zt[...,0])
     
     ### adjust foo and calc hf
-    i_poc_foo_fz, hf = sfun.f_foo_convert(cu3, cu4, i_poc_foo_ft[:,na,0], pinp.sheep['i_hr_scalar'], pinp.sheep['i_region'],
-                                         uinp.pastparameters['i_n_pasture_stage'],uinp.pastparameters['i_hd_std'], i_legume_zt[...,0], i_pasture_stage_p6z)
+    i_poc_foo_fz, hf = sfun.f_foo_convert(cu3, cu4, i_poc_foo_ft[:,na,0], i_pasture_stage_p6z, i_legume_zt[...,0], z_pos=-1)
     ### calc relative availability - note that the equation system used is the one selected for dams in p1 - need to hook up mu function
     if uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used
         ri_quan_fz = sfun.f_ra_cs(i_poc_foo_fz, hf)
