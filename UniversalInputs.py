@@ -179,6 +179,11 @@ def universal_inp_sa():
     import Sensitivity as sen 
     ##enter sa below
 
+    ##finance
+    ###SAV
+    finance['minroe'] = fun.f_sa(finance_inp['minroe'], sen.sav['minroe'], 5)  #value for minroe (same sav as below)
+    finance['minroe_dsp'] = fun.f_sa(finance_inp['minroe_dsp'], sen.sav['minroe'], 5)  #value for minroe (same sav as above)
+
     ##sheep
     ###SAT
     sheep['i_salep_weight_scalar_s7s5s6'] = fun.f_sa(sheep_inp['i_salep_weight_scalar_s7s5s6'], sen.sat['salep_weight_scalar'], 3, 1, 0) #Scalar for LW impact across grid 1 (sat adjusted)

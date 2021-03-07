@@ -81,11 +81,17 @@ sar['mortalitye'] = 0          #Scale the calculated dam mortality at birth in t
 ##if you initialise an array it must be type object (so that you can assign int/float/bool into the array)
 ##general
 sav['steady_state']      = '-'                  #SA to alter if the model is steady state
+
+##finance
+sav['minroe']      = '-'                  #SA to alter the minroe (applied to both steady-state and dsp minroe inputs)
+
 ##area
 sav['bnd_total_pas_area'] = '-'  #Total pasture area for bound. '-' is default so it will chuck an error if the bound is turned on without a specified area
 sav['bnd_pasarea_inc'] = '-'   #SA to turn on the pasture area bound
+
 ##pasture
 sav['pas_inc'] = np.full_like(pinp.general_inp['pas_inc'], '-', dtype=object) #SA value for pastures included mask
+
 ##Sheep
 sav['fec_inc'] = '-'   #SA to store fec report report values
 sav['eqn_compare']      = '-'                  #SA to alter if the different equation systems in the sheep sim are run and compared

@@ -53,6 +53,20 @@ def overheads(params, r_vals):
     r_vals['overheads'] = pd.Series(overheads)
 
 #################
+#Min ROE        #
+#################
+def f_min_roe():
+    ##the default inputs for min roe are different for steady-state and stochastic version.
+    ##but one SAV controls both inputs. So steady-state and stochastic can fairly be compared.
+    if pinp.general['steady_state']:
+        min_roe = uinp.finance['minroe']
+    else:
+        min_roe = uinp.finance['minroe_dsp']
+    return min_roe
+
+
+
+#################
 # report vals   #
 #################
 
