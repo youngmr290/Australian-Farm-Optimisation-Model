@@ -571,9 +571,10 @@ def f_foo_convert(cu3, cu4, foo, pasture_stage, legume=0, cr=None, z_pos=-1):
         cr12 = uinp.parameters['i_cr_c2'][12,0]
     else:
         cr12=cr[12, ...]
-    ##pasture conversion scenario
+    ##pasture conversion scenario (convert the region and pasture stage to an index
+    ### because the second axis of cu3 is a combination of region & stage)
     conversion_scenario = pinp.sheep['i_region'] * uinp.pastparameters['i_n_pasture_stage'] + pasture_stage
-    ##select cu3&4 params
+    ##select cu3&4 params for the specified region and stage. Remaining axes are season and formula coefficient (intercept & slope)
     cu3=cu3[..., conversion_scenario]
     cu4=cu4[..., conversion_scenario]
     ##Convert FOO to hand shears measurement
