@@ -150,7 +150,7 @@ pastparameters_inp['i_cu3_c4'] = pastparameters_inp['i_cu3_c4'].reshape(pastpara
 pastparameters_inp['i_cu4_c4'] = pastparameters_inp['i_cu4_c4'].reshape(pastparameters_inp['i_cu4_len'], pastparameters_inp['i_cu4_len2'], -1)
 
 
-##copy inputs so there is an origional (before SA) version
+##copy inputs so there is an original (before SA) version
 price = price_inp.copy()
 finance = finance_inp.copy()
 mach_general = mach_general_inp.copy()

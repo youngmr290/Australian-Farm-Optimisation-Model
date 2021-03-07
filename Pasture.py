@@ -434,7 +434,7 @@ def f_pasture(params, r_vals, ev):
                             * germ_scalar_rt[:, na, :]      # create an array rot phase x lmu
     arable_germination_lrzt[np.isnan(arable_germination_lrzt)]  = 0.0
 
-    ## germination on the non arable area based on annual pasture - sum on t to capture the non arable annaual pasture exist on other pasture paddocks
+    ## germination on the non arable area based on annual pasture - sum on t to capture the non arable annual pasture exist on other pasture paddocks
     na_germination_lrz = np.sum(i_germination_std_zt[:,0:1]
                                * i_germ_scalar_lzt[:,na,:,0:1]
                                * pasture_rt[:,na,:], axis = -1)
@@ -470,8 +470,8 @@ def f_pasture(params, r_vals, ev):
                          * length_fz[..., na]
     period_zt, proportion_zt = fun.period_proportion_np(feed_period_dates_fz[...,na]
                                                       ,i_reseeding_date_grazing_zt)       # which feed period does grazing occur
-    ### calc na_foo at restocking. Use annual pgr but with start foo varying with pasture type becasue destocking date could be different for each pasture #todo make this comment better - explain why we are using foo by different pasture and pgr annual. and explain why loop is needed.
-    #todo if destockd before break it gets no growth.. This needs fixing
+    ### calc na_foo at restocking. Use annual pgr but with start foo varying with pasture type because destocking date could be different for each pasture #todo make this comment better - explain why we are using foo by different pasture and pgr annual. and explain why loop is needed.
+    #todo if destocked before break it gets no growth.. This needs fixing
     for t in range(n_pasture_types):
         foo_na_flzt = foo_na_destock_fzt[:, na,:,t:t+1]  #todo keep 'destock' in the name
         grn_destock, dry_destock = pfun.calc_foo_profile(foo_na_flzt, dry_decay_period_fzt, days_each_period_fzt[...,t],  #todo make names restock rather than destock (this is more clear since it is foo when paddocks are restocked)

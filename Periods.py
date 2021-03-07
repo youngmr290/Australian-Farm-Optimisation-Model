@@ -155,10 +155,10 @@ def p_dates_df():
         periods = pinp.period['i_dsp_lp']
         ##make df
         index = ['P%02d' % i for i in range(len(periods))]
-        cols = pinp.general['i_z_idx'][1:] #need to slice off 'typical' becasue no labour period inputs for typical becasue it is automatically generated
+        cols = pinp.general['i_z_idx'][1:] #need to slice off 'typical' because no labour period inputs for typical because it is automatically generated
         periods = pd.DataFrame(periods, index=index, columns=cols)
         ##apply season mask
-        mask_z = pinp.general['i_mask_z'][1:] #need to slice off 'typical' becasue no labour period inputs for typical becasue it is automatically generated
+        mask_z = pinp.general['i_mask_z'][1:] #need to slice off 'typical' because no labour period inputs for typical because it is automatically generated
         periods = periods.loc[:, mask_z]
     return periods
 
@@ -190,7 +190,7 @@ def f_feed_periods(option=0):
         return fp
     ## return length
     else:
-        # fp = fp.loc[:fp.index[-2], idx[:, 'length']] #last row not included becasue that only contains the end date of last period
+        # fp = fp.loc[:fp.index[-2], idx[:, 'length']] #last row not included because that only contains the end date of last period
         fp = pinp.period['i_dsp_fp_len']
         fp = pinp.f_seasonal_inp(fp, numpy=True, axis=1)
         return fp
@@ -208,7 +208,7 @@ def f_feed_periods(option=0):
     #     else:
     #         fp = pinp.period['i_dsp_fp']
     #         fp = fp.T.set_index(['period'], append=True).T
-    #         ##apply season mask - more complicated becasue masking levl 0 of multilevel df
+    #         ##apply season mask - more complicated because masking levl 0 of multilevel df
     #         fp = fp.loc[:, idx[:, pinp.general['i_mask_z']]]
 
 def f_fp_baseyr():

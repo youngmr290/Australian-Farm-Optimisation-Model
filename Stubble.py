@@ -56,7 +56,7 @@ def stubble_all(params):
 
     ##days since harvest (calculated from the end date of each fp)
     days_since_harv_p6zk = fp_end_p6z[...,na] - harv_date_zk.astype('datetime64[D]')
-    days_since_harv_p6zk[days_since_harv_p6zk.astype(int)<0] = days_since_harv_p6zk[days_since_harv_p6zk.astype(int)<0] + 365  #add 365 to the periods at the start of the year becasue as far as stubble goes they are after harvest
+    days_since_harv_p6zk[days_since_harv_p6zk.astype(int)<0] = days_since_harv_p6zk[days_since_harv_p6zk.astype(int)<0] + 365  #add 365 to the periods at the start of the year because as far as stubble goes they are after harvest
     average_days_since_harv_p6zk = days_since_harv_p6zk - np.minimum(days_since_harv_p6zk, (fp_end_p6z - fp_start_p6z)[...,na])/2 #subtract half the length of current period to get the average days since harv. Minimum is to handle the period when harvest occurs.
     average_days_since_harv_p6zk = average_days_since_harv_p6zk.astype(float)
 
@@ -110,10 +110,10 @@ def stubble_all(params):
             stub_foo_harv_zk[:,crop_idx] = base_yields.loc[crop].mean() * stubble_per_grain[(crop,'a')]
         except KeyError: #if the crop is not in any of the rotations assign average foo to stop error - this is not used so could assign any value.
             stub_foo_harv_zk[:,crop_idx] = base_yields.mean()
-    ###adjust the foo for each catergory becasue the good stuff is eaten first therefore there is less foo when the sheep start eating the poorer stubble
+    ###adjust the foo for each catergory because the good stuff is eaten first therefore there is less foo when the sheep start eating the poorer stubble
     cat_propn_ks1 = pinp.stubble['stub_cat_prop']
     cat_propn_rolled_ks1 = np.roll(cat_propn_ks1, shift=1, axis=1) #roll along the cat axis. So that the previous cat lines up with the current cat
-    cat_propn_rolled_ks1[:,0] = 0 #set the first slice to 0 becasue no stubble is consumed before cat A is consumed eg there is 100% of foo available when sheep are consuming cat A
+    cat_propn_rolled_ks1[:,0] = 0 #set the first slice to 0 because no stubble is consumed before cat A is consumed eg there is 100% of foo available when sheep are consuming cat A
     cat_cum_propn_ks1 = np.cumsum(cat_propn_rolled_ks1, axis=1) #cumulative sum of the component sizes.
     stubble_foo_zks1 = stub_foo_harv_zk[...,na] *  (1 - cat_cum_propn_ks1)
     ###adjust for quantity delcine due to deterioration
