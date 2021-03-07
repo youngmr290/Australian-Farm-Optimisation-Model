@@ -76,7 +76,7 @@ stock_inp['ia_k2_mlsb1'] = np.reshape(stock_inp['ia_k2_mlsb1'],mlsb1)
 
 
 
-##copy inputs so there is an origional (before SA) version
+##copy inputs so there is an original (before SA) version
 general = general_inp.copy()
 stock = stock_inp.copy()
 

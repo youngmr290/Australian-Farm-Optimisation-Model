@@ -809,7 +809,7 @@ def f_profitloss_table(lp_vars, r_vals):
     ##income
     rev_grain_zc = rev_grain_k_cz.sum(axis=0).unstack(0)  # sum landuse axis
     ###add to p/l table each as a new row
-    pnl.loc[idx[:,'Revenue','grain'],:] = rev_grain_zc.reindex(keys_c, axis=1).values #cant just assign values becasue c axis has been sorted alphebetically so need to put back in correct order for cashflow
+    pnl.loc[idx[:,'Revenue','grain'],:] = rev_grain_zc.reindex(keys_c, axis=1).values #cant just assign values because c axis has been sorted alphebetically so need to put back in correct order for cashflow
     pnl.loc[idx[:, 'Revenue', 'sheep sales'], :] = stocksale_cz.T
     pnl.loc[idx[:, 'Revenue', 'wool'], :] = wool_cz.T
     pnl.loc[idx[:, 'Revenue', 'Total Revenue'], :] = pnl.loc[pnl.index.get_level_values(1) == 'Revenue'].sum(axis=0).values

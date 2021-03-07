@@ -1042,7 +1042,7 @@ def range_allocation_np(period_dates, start, length, opposite=None, shape=None):
     start: the date of the beginning of the date range to test - a numpy array of dates (np.datetime64)
     length: the length of the date range to test - an array of timedelta.
           : must be broadcastable into start.
-    oposite: input True returns the proportion of date range in each period.
+    opposite: input True returns the proportion of date range in each period.
        :       None returns the proportion of the period in the date range (2nd arg).
     shape: this is the shape of returned array required if both period_dates & start have more than 1 dim
 
@@ -1064,7 +1064,7 @@ def range_allocation_np(period_dates, start, length, opposite=None, shape=None):
         #check how much of each date range falls within the period
         for i in range(len(period_dates)-1):
             per_start= period_dates[i:i+1] #to keep dim
-            per_end = period_dates[i+1:i+2].copy() #so origional date array isnt altered when updating year in next step
+            per_end = period_dates[i+1:i+2].copy() #so original date array isn't altered when updating year in next step
             ###to handle situations where base yr version of feed period is used. In these case the year does not increment
             ###at the start of a new year eg at the start of the ny it goes back to 2019 instead of 2020
             ###in these cases when the end date is less than start it means a ny has started so we temporarily increase end date by 1yr.
@@ -1077,7 +1077,7 @@ def range_allocation_np(period_dates, start, length, opposite=None, shape=None):
         #check how much of each period falls within the date range
         for i in range(len(period_dates)-1):
             per_start= period_dates[i:i+1]
-            per_end = period_dates[i+1:i+2].copy() #so origional date array isnt altered when updating year in next step
+            per_end = period_dates[i+1:i+2].copy() #so original date array isn't altered when updating year in next step
             ###to handle situations where base yr version of feed period is used. In these case the year does not increment
             ###at the start of a new year eg at the start of the ny it goes back to 2019 instead of 2020
             ###in these cases when the end date is less than start it means a ny has started so we temporarily increase end date by 1yr.
@@ -1085,7 +1085,7 @@ def range_allocation_np(period_dates, start, length, opposite=None, shape=None):
             per_end[mask] = per_end[mask] + np.timedelta64(365, 'D')
             calc_start = np.maximum(per_start,start).astype('datetime64[D]')       #select the later of the period start or the start of the range
             calc_end = np.minimum(per_end,end).astype('datetime64[D]')             #select earlier of the period end and the end of the range
-            allocation_period[i,...] = np.maximum(0, (calc_end - calc_start) / (per_end - per_start)) #days between calc_end and calc_start (0 if end before start) divided by length of the period, use f_divide incase any period lengths are 0 (this is likely to occur in season version)
+            allocation_period[i,...] = np.maximum(0, (calc_end - calc_start) / (per_end - per_start)) #days between calc_end and calc_start (0 if end before start) divided by length of the period, use f_divide in case any period lengths are 0 (this is likely to occur in season version)
     return allocation_period
 
 def period_proportion_np(period_dates, date_array):
@@ -1113,7 +1113,7 @@ def period_proportion_np(period_dates, date_array):
 
     ##dates
     dates_start = period_dates[:-1]
-    dates_end = period_dates[1:].copy() #so origional date array isnt altered when updating year in next step
+    dates_end = period_dates[1:].copy() #so original date array isn't altered when updating year in next step
 
     ##to handle situations where base yr version of feed period is used. In these case the year does not increment
     ##at the start of a new year eg at the start of the ny it goes back to 2019 instead of 2020

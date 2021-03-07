@@ -39,7 +39,7 @@ model.report_timing=True #haven't actually been able to get this to do any thing
 '''
 pyomo sets
 '''
-##define sets - sets are redefined for each exp incase they change due to SA
+##define sets - sets are redefined for each exp in case they change due to SA
 def sets() :
     ##season types - set only has one season if steady state model is being used
     try:

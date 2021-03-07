@@ -83,7 +83,7 @@ def f_df2xl(writer, df, sheet, rowstart=0, colstart=0, option=0):
     :param colstart: start col in excel
     :param option: int: specifying the writing option
                     0: df straight into excel
-                    1: df into excel colapsing empty rows and cols
+                    1: df into excel collapsing empty rows and cols
     '''
     ## simple write df to xl
     df.to_excel(writer, sheet, startrow=rowstart, startcol=colstart)

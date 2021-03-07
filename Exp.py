@@ -94,7 +94,7 @@ exp_data1=exp_data.copy() #copy made so that the run and runpyomo cols can be ad
 
 exp_data1 = fun.f_run_required(exp_data1)
 
-##plk a copy of exp incase the code crashes before the end. (this is tracks if a trial needed to be run)
+##plk a copy of exp in case the code crashes before the end. (this is tracks if a trial needed to be run)
 if __name__ == '__main__':
     try:
         with open('pkl/pkl_exp.pkl', "wb") as f:
@@ -177,7 +177,7 @@ for row in range(len(exp_data)):
     suppy.sup_precalcs(params['sup'],r_vals['sup'])
     stubpy.stub_precalcs(params['stub'],r_vals['stub'])
     spy.stock_precalcs(params['stock'],r_vals['stock'],ev)
-    paspy.paspyomo_precalcs(params['pas'],r_vals['pas'],ev) #pas must be after stock becasue it uses ev dict which is populated in stock.py
+    paspy.paspyomo_precalcs(params['pas'],r_vals['pas'],ev) #pas must be after stock because it uses ev dict which is populated in stock.py
     precalc_end = time.time()
     print('precalcs: ', precalc_end - precalc_start)
     
@@ -256,7 +256,7 @@ for row in range(len(exp_data)):
             ##This writes variable summary for full solution
             fun.write_variablesummary(model, row, exp_data)
 
-        ##This writes variable summary each itteration with generic file name so it is overwritten each itteration
+        ##This writes variable summary each iteration with generic file name so it is overwritten each iteration
         fun.write_variablesummary(model, row, exp_data, 1)
 
         ##this prints stuff for each trial - trial name, overall profit
@@ -282,7 +282,7 @@ for row in range(len(exp_data)):
             pkl.dump(lp_vars,f,protocol=pkl.HIGHEST_PROTOCOL)
     with open('pkl/pkl_r_vals_{0}.pkl'.format(trial_name),"wb") as f:
         pkl.dump(r_vals,f,protocol=pkl.HIGHEST_PROTOCOL)
-    # with open('pkl/pkl_params_{0}.pkl'.format(trial_name),"wb") as f: #pkl_params must be pickled last becasue it is used to determine if model crashed but the current trial was complete prior to crash
+    # with open('pkl/pkl_params_{0}.pkl'.format(trial_name),"wb") as f: #pkl_params must be pickled last because it is used to determine if model crashed but the current trial was complete prior to crash
     #     pkl.dump(params,f,protocol=pkl.HIGHEST_PROTOCOL)
 
     ##determine expected time to completion - trials left multiplied by average time per trial &time for current loop
