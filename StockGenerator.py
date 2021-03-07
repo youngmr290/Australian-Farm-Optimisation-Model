@@ -4164,28 +4164,28 @@ def generator(params,r_vals,ev,plots = False):
     t_ev_min_pa1e1b1nwzida0e0b0xyg1[t_ev_min_pa1e1b1nwzida0e0b0xyg1<=0] = 100
     t_ev_min_pa1e1b1nwzida0e0b0xyg3[t_ev_min_pa1e1b1nwzida0e0b0xyg3<=0] = 100
     ###calc max and min - set 0 to high value so it doesnt get included in the next steps
-    t_evmax_pdams = np.max(t_ev_pa1e1b1nwzida0e0b0xyg1,axis=tuple(range(a1_pos,0)))
-    t_evmin_pdams = np.min(t_ev_min_pa1e1b1nwzida0e0b0xyg1,axis=tuple(range(a1_pos,0)))
-    t_evmax_poffs = np.max(t_ev_pa1e1b1nwzida0e0b0xyg3,axis=tuple(range(a1_pos,0)))
-    t_evmin_poffs = np.min(t_ev_min_pa1e1b1nwzida0e0b0xyg3,axis=tuple(range(a1_pos,0)))
+    t_evmax_dams_p = np.max(t_ev_pa1e1b1nwzida0e0b0xyg1,axis=tuple(range(a1_pos,0)))
+    t_evmin_dams_p = np.min(t_ev_min_pa1e1b1nwzida0e0b0xyg1,axis=tuple(range(a1_pos,0)))
+    t_evmax_offs_p = np.max(t_ev_pa1e1b1nwzida0e0b0xyg3,axis=tuple(range(a1_pos,0)))
+    t_evmin_offs_p = np.min(t_ev_min_pa1e1b1nwzida0e0b0xyg3,axis=tuple(range(a1_pos,0)))
     ###Create the p6p arrays
-    t_evmax_p6pzdams = t_evmax_pdams[:,na] * (a_p6_pz == index_p6[:,na,na])
-    t_evmin_p6pzdams = t_evmin_pdams[:,na] * (a_p6_pz == index_p6[:,na,na])
-    t_evmax_p6pzoffs = t_evmax_poffs[:,na] * (a_p6_pz[mask_p_offs_p] == index_p6[:,na,na])
-    t_evmin_p6pzoffs = t_evmin_poffs[:,na] * (a_p6_pz[mask_p_offs_p] == index_p6[:,na,na])
+    t_evmax_dams_p6pz = t_evmax_dams_p[:,na] * (a_p6_pz == index_p6[:,na,na])
+    t_evmin_dams_p6pz = t_evmin_dams_p[:,na] * (a_p6_pz == index_p6[:,na,na])
+    t_evmax_offs_p6pz = t_evmax_offs_p[:,na] * (a_p6_pz[mask_p_offs_p] == index_p6[:,na,na])
+    t_evmin_offs_p6pz = t_evmin_offs_p[:,na] * (a_p6_pz[mask_p_offs_p] == index_p6[:,na,na])
     ###set 0 to nan for p slices that are not in p6
-    t_evmax_p6pzdams[t_evmax_p6pzdams<=0] = np.nan
-    t_evmin_p6pzdams[t_evmin_p6pzdams<=0] = np.nan
-    t_evmax_p6pzoffs[t_evmax_p6pzoffs<=0] = np.nan
-    t_evmin_p6pzoffs[t_evmin_p6pzoffs<=0] = np.nan
+    t_evmax_dams_p6pz[t_evmax_dams_p6pz<=0] = np.nan
+    t_evmin_dams_p6pz[t_evmin_dams_p6pz<=0] = np.nan
+    t_evmax_offs_p6pz[t_evmax_offs_p6pz<=0] = np.nan
+    t_evmin_offs_p6pz[t_evmin_offs_p6pz<=0] = np.nan
     ###Calculate the max and min over the p axis for each p6
-    t_evmax_p6zdams = np.nanmax(t_evmax_p6pzdams,axis=1)
-    t_evmin_p6zdams = np.nanmin(t_evmin_p6pzdams,axis=1)
-    t_evmax_p6zoffs = np.nanmax(t_evmax_p6pzoffs,axis=1)
-    t_evmin_p6zoffs = np.nanmin(t_evmin_p6pzoffs,axis=1)
+    t_evmax_dams_p6z = np.nanmax(t_evmax_dams_p6pz,axis=1)
+    t_evmin_dams_p6z = np.nanmin(t_evmin_dams_p6pz,axis=1)
+    t_evmax_offs_p6z = np.nanmax(t_evmax_offs_p6pz,axis=1)
+    t_evmin_offs_p6z = np.nanmin(t_evmin_offs_p6pz,axis=1)
     ###Calculate the overall min & max for p6 by taking min & max of dams & offs
-    t_evmax_p6z = np.maximum(t_evmax_p6zdams, t_evmax_p6zoffs)
-    t_evmin_p6z = np.minimum(t_evmin_p6zdams, t_evmin_p6zoffs)
+    t_evmax_p6z = np.maximum(t_evmax_dams_p6z, t_evmax_offs_p6z)
+    t_evmin_p6z = np.minimum(t_evmin_dams_p6z, t_evmin_offs_p6z)
     ###Calculate the EV for each cutoff (upper value) for each matrix feed period (based on equal spacing, not equal numbers)
     ev_cutoff_p6fz = t_evmax_p6z[:,na,:] * ev_propn_f[na,:,na] + t_evmin_p6z[:,na,:] * (1 - ev_propn_f[na,:,na])
     ##allocate each sheep class to an ev group - use MRY version of searchsort which handles 2d array
