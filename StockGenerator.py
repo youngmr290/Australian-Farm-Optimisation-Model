@@ -4334,7 +4334,8 @@ def generator(params,r_vals,ev,plots = False):
     ##offs are distributed each period, dams only distributed when next dvp type == 0. T0 and t1 are distributed however this is not used because t0 and t1 don't transfer to next dvp
     distribution_tva1e1b1nw8zida0e0b0xyg1w9 = sfun.f_lw_distribution(ffcfw_end_condensed_tva1e1b1nwzida0e0b0xyg1, ffcfw_end_tva1e1b1nwzida0e0b0xyg1,
                                                                      n_fs_dams, n_fvp_periods_dams, dvp_type_next_tva1e1b1nwzida0e0b0xyg1[...,na],
-                                                                     condense_vtype1, season_vtype1)
+                                                                     condense_vtype1, condense_vtype1)
+                                                                     # condense_vtype1, season_vtype1) #todo fix this, i think i need to add season distribution. maybe modify the lw distribution function or add new function...
     distribution_va1e1b1nw8zida0e0b0xyg3w9 = sfun.f_lw_distribution(ffcfw_end_condensed_va1e1b1nwzida0e0b0xyg3, ffcfw_end_va1e1b1nwzida0e0b0xyg3,
                                                                     n_fs_offs, n_fvp_periods_offs, dvp_type_next_va1e1b1nwzida0e0b0xyg3[...,na],
                                                                      condense_vtype3, season_vtype3)
@@ -4399,10 +4400,9 @@ def generator(params,r_vals,ev,plots = False):
         This can be simplified to a single line equation because the terms cancel out
         
         n_fvps_v is the number of FVPs within the DVP
-        n_prior_fvps_v is the number of FVPs prior to the start of this DVP. 
-        So if the DVP dates are say
-        1 Feb, 1 May & 1 July and the FVP dates are
-        1 Feb, 1 May, 1 June, 1 July, 1 Oct. Then 
+        n_prior_fvps_v is the number of FVPs prior to the start of this DVP since condensing. 
+        So if the DVP dates are say 1 Feb, 1 May & 1 July 
+        and the FVP dates are 1 Feb, 1 May, 1 June, 1 July, 1 Oct. Then 
         n_fvps_v = 1,2,2 because 1 fvp in the first DVP and 2 in each of the other two DVPs
         n_prior_fvps_v = 0, 1, 3 which is the cumulative sum of n_fvps_v in the previous DVPs (ie not including this DVP)
         Note: the values can change along the i axis if the FVP date is not relative to a reproduction event.

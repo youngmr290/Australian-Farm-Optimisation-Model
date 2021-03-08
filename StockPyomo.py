@@ -798,8 +798,6 @@ def stockpyomo_local(params):
     end = time.time()
     print('con_prog2offR ',end-start)
 
-
-
     try:
         model.del_component(model.con_matingR_index)
         model.del_component(model.con_matingR)
