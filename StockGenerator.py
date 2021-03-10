@@ -749,7 +749,7 @@ def generator(params,r_vals,ev,plots = False):
     fvp_birth_type_va1e1b1nwzida0e0b0xyg1 = np.full(fvp_birth_start_oa1e1b1nwzida0e0b0xyg1.shape,birth_vtype1)
     fvp_wean_type_va1e1b1nwzida0e0b0xyg1 = np.full(fvp_wean_start_oa1e1b1nwzida0e0b0xyg1.shape,wean_ftype1)
     fvp_other_type_va1e1b1nwzida0e0b0xyg1 = np.full(fvp_other_start_ya1e1b1nwzida0e0b0xyg.shape,other_ftype1)
-    fvp_begin_type_va1e1b1nwzida0e0b0xyg1 = np.full(fvp_begin_start_ba1e1b1nwzida0e0b0xyg1.shape,other_ftype1+1)
+    fvp_begin_type_va1e1b1nwzida0e0b0xyg1 = np.full(fvp_begin_start_ba1e1b1nwzida0e0b0xyg1.shape,condense_vtype1)
     ##stack & mask which dvps are included - this must be in the order as per the input mask
     fvp_date_all_f1 = np.array([fvp_begin_start_ba1e1b1nwzida0e0b0xyg1,fvp_seasonstart_ya1e1b1nwzida0e0b0xyg,
                                fvp_prejoin_start_oa1e1b1nwzida0e0b0xyg1, fvp_scan_start_oa1e1b1nwzida0e0b0xyg1,
@@ -764,14 +764,15 @@ def generator(params,r_vals,ev,plots = False):
     fvp_type_inc_f1 = fvp_type_all_f1[fvp1_inc]
     fvp_start_fa1e1b1nwzida0e0b0xyg1 = np.concatenate(fvp_date_inc_f1,axis=0)
     fvp_type_fa1e1b1nwzida0e0b0xyg1 = np.concatenate(fvp_type_inc_f1,axis=0)
+    ##mask any that occur before weaning and set to last date of generator and type to 0 so they are essentially ignored. if more than one dvp is moved to the end the dates must be offset by 1 becasue can't have multiple dvps on same date.
+    mask = np.logical_and(fvp_start_fa1e1b1nwzida0e0b0xyg1 <= date_weaned_ida0e0b0xyg1, fvp_start_fa1e1b1nwzida0e0b0xyg1 > date_start_p[0])
+    fvp_start_fa1e1b1nwzida0e0b0xyg1[mask] = date_start_p[-1]
+    fvp_start_fa1e1b1nwzida0e0b0xyg1 = fvp_start_fa1e1b1nwzida0e0b0xyg1 - ((np.cumsum(mask, axis=0) - 1) * mask) #if multiple fvps are before weaning then off set there date by 1 day so they are not on the same date.
+    fvp_type_fa1e1b1nwzida0e0b0xyg1[mask] = condense_vtype1 #set to condense type to make sure extra dvps dont cause issues with masking or feed supply
     ##sort into date order
     ind=np.argsort(fvp_start_fa1e1b1nwzida0e0b0xyg1, axis=0)
     fvp_date_start_fa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(fvp_start_fa1e1b1nwzida0e0b0xyg1, ind, axis=0)
     fvp_type_fa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(fvp_type_fa1e1b1nwzida0e0b0xyg1, ind, axis=0)
-    ##mask out any that occur before weaning
-    mask = fvp_date_start_fa1e1b1nwzida0e0b0xyg1 <= date_weaned_ida0e0b0xyg1
-    fvp_date_start_fa1e1b1nwzida0e0b0xyg1[mask] = date_start_p[0]
-    fvp_type_fa1e1b1nwzida0e0b0xyg1[mask] = condense_vtype1
 
     ####################################
     # Feed variation period calcs offs #
@@ -855,15 +856,17 @@ def generator(params,r_vals,ev,plots = False):
     fvp_start_fa1e1b1nwzida0e0b0xyg3[mask_initial_fvp] = offs_date_start_p[0]
     fvp_type_fa1e1b1nwzida0e0b0xyg3[mask_initial_fvp] = 0
 
+    ##mask any that occur before weaning and set to last date of generator and type to 0 so they are essentially ignored. if more than one dvp is moved to the end the dates must be offset by 1 becasue can't have multiple dvps on same date.
+    mask = np.logical_and(fvp_start_fa1e1b1nwzida0e0b0xyg3 <= date_weaned_ida0e0b0xyg3, fvp_start_fa1e1b1nwzida0e0b0xyg3 > offs_date_start_p[0])
+    fvp_start_fa1e1b1nwzida0e0b0xyg3[mask] = date_start_p[-1]
+    fvp_start_fa1e1b1nwzida0e0b0xyg3 = fvp_start_fa1e1b1nwzida0e0b0xyg3 - ((np.cumsum(mask, axis=0) - 1) * mask) #if multiple fvps are before weaning then off set there date by 1 day so they are not on the same date.
+    fvp_type_fa1e1b1nwzida0e0b0xyg3[mask] = condense_vtype3 #set to condense type to make sure extra dvps dont cause issues with masking or feed supply
+
     ##sort into date order
     ind=np.argsort(fvp_start_fa1e1b1nwzida0e0b0xyg3, axis=0)
     fvp_start_fa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(fvp_start_fa1e1b1nwzida0e0b0xyg3, ind, axis=0)
     fvp_type_fa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(fvp_type_fa1e1b1nwzida0e0b0xyg3, ind, axis=0)
 
-    ##mask out any that occur before weaning
-    mask = fvp_start_fa1e1b1nwzida0e0b0xyg3 <= date_weaned_ida0e0b0xyg3
-    fvp_start_fa1e1b1nwzida0e0b0xyg3[mask] = offs_date_start_p[0]
-    fvp_type_fa1e1b1nwzida0e0b0xyg3[mask] = condense_vtype3
 
 
 
@@ -1266,11 +1269,9 @@ def generator(params,r_vals,ev,plots = False):
     ####initial offs numbers
     numbers_initial_zida0e0b0xyg3 = season_propn_zida0e0b0xyg * initial_yg3 * numbers_initial_cluster_ida0e0b0xyg3
 
-    ##set default numbers to initial numbers. So that p0 (dvp0 has numbers) and so that dvps that occur before weaning still transfer animals.
+    ##set default numbers to initial numbers. So that p0 (dvp0 has numbers_start)
     o_numbers_start_pdams[...] =  numbers_initial_a1e1b1nwzida0e0b0xyg1  # default 1 so that dvp0 (p0) has start numbers
-    o_numbers_end_pdams[...] = numbers_initial_a1e1b1nwzida0e0b0xyg1  # default 1 so that transfer can exist for dvps before weaning
     o_numbers_start_poffs[...] = numbers_initial_zida0e0b0xyg3 # ones so that dvp0 (p0) has start numbers.
-    o_numbers_end_poffs[...] = numbers_initial_zida0e0b0xyg3 #ones so that transfer can exist for dvps before weaning
 
     #######################
     ##Age, date, timing 1 #
@@ -3762,13 +3763,15 @@ def generator(params,r_vals,ev,plots = False):
     dvp_type_inc_v1 = fvp_type_all_f1[dvp1_inc]
     dvp_start_va1e1b1nwzida0e0b0xyg1 = np.concatenate(dvp_date_inc_v1,axis=0)
     dvp_type_va1e1b1nwzida0e0b0xyg1 = np.concatenate(dvp_type_inc_v1,axis=0) #note dvp type doesnt have to start at 0 or be consecutive.
+    ###mask any that occur before weaning and set to last date of generator and type to 0 so they are essentially ignored. if more than one dvp is moved to the end the dates must be offset by 1 becasue can't have multiple dvps on same date.
+    mask = np.logical_and(dvp_start_va1e1b1nwzida0e0b0xyg1 <= date_weaned_ida0e0b0xyg1, dvp_start_va1e1b1nwzida0e0b0xyg1 > date_start_p[0])
+    dvp_start_va1e1b1nwzida0e0b0xyg1[mask] = date_start_p[-1]
+    dvp_start_va1e1b1nwzida0e0b0xyg1 = dvp_start_va1e1b1nwzida0e0b0xyg1 - ((np.cumsum(mask, axis=0) - 1) * mask) #if multiple fvps are before weaning then off set there date by 1 day so they are not on the same date.
+    dvp_type_va1e1b1nwzida0e0b0xyg1[mask] = condense_vtype1 #set to condense type to make sure extra dvps dont cause issues with masking or feed supply
+    ###sort into order
     ind=np.argsort(dvp_start_va1e1b1nwzida0e0b0xyg1, axis=0)
     dvp_date_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(dvp_start_va1e1b1nwzida0e0b0xyg1, ind, axis=0)
     dvp_type_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(dvp_type_va1e1b1nwzida0e0b0xyg1, ind, axis=0)
-    ####mask out any that occur before weaning
-    mask = dvp_date_va1e1b1nwzida0e0b0xyg1 <= date_weaned_ida0e0b0xyg1
-    dvp_date_va1e1b1nwzida0e0b0xyg1[mask] = date_start_p[0]
-    dvp_type_va1e1b1nwzida0e0b0xyg1[mask] = condense_vtype1
 
     ###dvp pointer and index
     a_v_pa1e1b1nwzida0e0b0xyg1 =  np.apply_along_axis(sfun.f_next_prev_association, 0, dvp_date_va1e1b1nwzida0e0b0xyg1, date_end_p, 1,'right')
@@ -3822,13 +3825,15 @@ def generator(params,r_vals,ev,plots = False):
     dvp_type_inc_v3 = fvp_type_all_f3[dvp3_inc]
     dvp_type_va1e1b1nwzida0e0b0xyg3 = np.concatenate(dvp_type_inc_v3,axis=0)
     dvp_date_presort_va1e1b1nwzida0e0b0xyg3 = np.concatenate(dvp_date_inc_v3,axis=0)
+    ###mask any that occur before weaning and set to last date of generator and type to 0 so they are essentially ignored. if more than one dvp is moved to the end the dates must be offset by 1 becasue can't have multiple dvps on same date.
+    mask = np.logical_and(dvp_date_presort_va1e1b1nwzida0e0b0xyg3 <= date_weaned_ida0e0b0xyg3, dvp_date_presort_va1e1b1nwzida0e0b0xyg3 > offs_date_start_p[0])
+    dvp_date_presort_va1e1b1nwzida0e0b0xyg3[mask] = date_start_p[-1]
+    dvp_date_presort_va1e1b1nwzida0e0b0xyg3 = dvp_date_presort_va1e1b1nwzida0e0b0xyg3 - ((np.cumsum(mask, axis=0) - 1) * mask) #if multiple fvps are before weaning then off set there date by 1 day so they are not on the same date.
+    dvp_type_va1e1b1nwzida0e0b0xyg3[mask] = condense_vtype3 #set to condense type to make sure extra dvps dont cause issues with masking or feed supply
+    ###sort into order
     ind=np.argsort(dvp_date_presort_va1e1b1nwzida0e0b0xyg3, axis=0)
     dvp_date_va1e1b1nwzida0e0b0xyg3 = np.take_along_axis(dvp_date_presort_va1e1b1nwzida0e0b0xyg3, ind, axis=0)
     dvp_type_va1e1b1nwzida0e0b0xyg3 = np.take_along_axis(dvp_type_va1e1b1nwzida0e0b0xyg3, ind, axis=0)
-    ####mask out any that occur before weaning
-    mask = dvp_date_va1e1b1nwzida0e0b0xyg3 <= date_weaned_ida0e0b0xyg3
-    dvp_date_va1e1b1nwzida0e0b0xyg3[mask] = offs_date_start_p[0]
-    dvp_type_va1e1b1nwzida0e0b0xyg3[mask] = condense_vtype3
 
     ###build array of shearing dates including weaning - weaning is used for sale stuff because inputs are based on weaning date.
     date_weaned_a1e1b1nwzida0e0b0xyg3 = np.broadcast_to(date_weaned_ida0e0b0xyg3,fvp_0_start_oa1e1b1nwzida0e0b0xyg3.shape[1:]) #need wean date rather than first day of yr because selling inputs are days from weaning.
@@ -4391,8 +4396,8 @@ def generator(params,r_vals,ev,plots = False):
                                                                     season_vtype3)
 
     ##combine distributions
-    distribution_tva1e1b1nw8zida0e0b0xyg1w9 = distribution_condense_va1e1b1nw8zida0e0b0xyg1w9 * distribution_season_va1e1b1nw8zida0e0b0xyg1w9[na] \
-                                              * distribution_prejoin_tva1e1b1nw8zida0e0b0xyg1w9
+    distribution_tva1e1b1nw8zida0e0b0xyg1w9 = distribution_condense_va1e1b1nw8zida0e0b0xyg1w9 * distribution_season_va1e1b1nw8zida0e0b0xyg1w9[na] #\
+                                              # * distribution_prejoin_tva1e1b1nw8zida0e0b0xyg1w9
     distribution_va1e1b1nw8zida0e0b0xyg3w9 = distribution_condense_va1e1b1nw8zida0e0b0xyg3w9 * distribution_season_va1e1b1nw8zida0e0b0xyg3w9
 
 
