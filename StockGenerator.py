@@ -764,9 +764,11 @@ def generator(params,r_vals,ev,plots = False):
     fvp_type_inc_f1 = fvp_type_all_f1[fvp1_inc]
     fvp_start_fa1e1b1nwzida0e0b0xyg1 = np.concatenate(fvp_date_inc_f1,axis=0)
     fvp_type_fa1e1b1nwzida0e0b0xyg1 = np.concatenate(fvp_type_inc_f1,axis=0)
-    ##mask any that occur before weaning and set to last date of generator and type to 0 so they are essentially ignored. if more than one dvp is moved to the end the dates must be offset by 1 becasue can't have multiple dvps on same date.
+    ##mask any that occur before weaning (except the start fvp) and set to last date of generator and type to 0 so they are essentially ignored.
     mask = np.logical_and(fvp_start_fa1e1b1nwzida0e0b0xyg1 <= date_weaned_ida0e0b0xyg1, fvp_start_fa1e1b1nwzida0e0b0xyg1 > date_start_p[0])
     fvp_start_fa1e1b1nwzida0e0b0xyg1[mask] = date_start_p[-1]
+    ##if more than one dvp on the last day of the generator dates must be offset by 1 becasue can't have multiple dvps on same date.
+    mask = fvp_start_fa1e1b1nwzida0e0b0xyg1 == date_start_p[-1] #cant use the existing mask (above) incase there is an fvp on the last day of generator that we didnt manually put there.
     fvp_start_fa1e1b1nwzida0e0b0xyg1 = fvp_start_fa1e1b1nwzida0e0b0xyg1 - ((np.cumsum(mask, axis=0) - 1) * mask) #if multiple fvps are before weaning then off set there date by 1 day so they are not on the same date.
     fvp_type_fa1e1b1nwzida0e0b0xyg1[mask] = condense_vtype1 #set to condense type to make sure extra dvps dont cause issues with masking or feed supply
     ##sort into date order
@@ -856,9 +858,11 @@ def generator(params,r_vals,ev,plots = False):
     fvp_start_fa1e1b1nwzida0e0b0xyg3[mask_initial_fvp] = offs_date_start_p[0]
     fvp_type_fa1e1b1nwzida0e0b0xyg3[mask_initial_fvp] = 0
 
-    ##mask any that occur before weaning and set to last date of generator and type to 0 so they are essentially ignored. if more than one dvp is moved to the end the dates must be offset by 1 becasue can't have multiple dvps on same date.
+    ##mask any that occur before weaning and set to last date of generator and type to 0 so they are essentially ignored.
     mask = np.logical_and(fvp_start_fa1e1b1nwzida0e0b0xyg3 <= date_weaned_ida0e0b0xyg3, fvp_start_fa1e1b1nwzida0e0b0xyg3 > offs_date_start_p[0])
-    fvp_start_fa1e1b1nwzida0e0b0xyg3[mask] = date_start_p[-1]
+    fvp_start_fa1e1b1nwzida0e0b0xyg3[mask] = offs_date_start_p[-1]
+    ###if more than one dvp on the last day of the generator dates must be offset by 1 becasue can't have multiple dvps on same date.
+    mask = fvp_start_fa1e1b1nwzida0e0b0xyg3 == offs_date_start_p[-1] #cant use the existing mask (above) incase there is an fvp on the last day of generator that we didnt manually put there.
     fvp_start_fa1e1b1nwzida0e0b0xyg3 = fvp_start_fa1e1b1nwzida0e0b0xyg3 - ((np.cumsum(mask, axis=0) - 1) * mask) #if multiple fvps are before weaning then off set there date by 1 day so they are not on the same date.
     fvp_type_fa1e1b1nwzida0e0b0xyg3[mask] = condense_vtype3 #set to condense type to make sure extra dvps dont cause issues with masking or feed supply
 
@@ -3763,9 +3767,11 @@ def generator(params,r_vals,ev,plots = False):
     dvp_type_inc_v1 = fvp_type_all_f1[dvp1_inc]
     dvp_start_va1e1b1nwzida0e0b0xyg1 = np.concatenate(dvp_date_inc_v1,axis=0)
     dvp_type_va1e1b1nwzida0e0b0xyg1 = np.concatenate(dvp_type_inc_v1,axis=0) #note dvp type doesnt have to start at 0 or be consecutive.
-    ###mask any that occur before weaning and set to last date of generator and type to 0 so they are essentially ignored. if more than one dvp is moved to the end the dates must be offset by 1 becasue can't have multiple dvps on same date.
+    ###mask any that occur before weaning (except start one) and set to last date of generator and type to 0 so they are essentially ignored.
     mask = np.logical_and(dvp_start_va1e1b1nwzida0e0b0xyg1 <= date_weaned_ida0e0b0xyg1, dvp_start_va1e1b1nwzida0e0b0xyg1 > date_start_p[0])
     dvp_start_va1e1b1nwzida0e0b0xyg1[mask] = date_start_p[-1]
+    ###if more than one dvp on the last day of the generator dates must be offset by 1 becasue can't have multiple dvps on same date.
+    mask = dvp_start_va1e1b1nwzida0e0b0xyg1 == date_start_p[-1] #cant use the existing mask (above) incase there is an fvp on the last day of generator that we didnt manually put there.
     dvp_start_va1e1b1nwzida0e0b0xyg1 = dvp_start_va1e1b1nwzida0e0b0xyg1 - ((np.cumsum(mask, axis=0) - 1) * mask) #if multiple fvps are before weaning then off set there date by 1 day so they are not on the same date.
     dvp_type_va1e1b1nwzida0e0b0xyg1[mask] = condense_vtype1 #set to condense type to make sure extra dvps dont cause issues with masking or feed supply
     ###sort into order
@@ -3825,9 +3831,11 @@ def generator(params,r_vals,ev,plots = False):
     dvp_type_inc_v3 = fvp_type_all_f3[dvp3_inc]
     dvp_type_va1e1b1nwzida0e0b0xyg3 = np.concatenate(dvp_type_inc_v3,axis=0)
     dvp_date_presort_va1e1b1nwzida0e0b0xyg3 = np.concatenate(dvp_date_inc_v3,axis=0)
-    ###mask any that occur before weaning and set to last date of generator and type to 0 so they are essentially ignored. if more than one dvp is moved to the end the dates must be offset by 1 becasue can't have multiple dvps on same date.
+    ###mask any that occur before weaning and set to last date of generator and type to 0 so they are essentially ignored.
     mask = np.logical_and(dvp_date_presort_va1e1b1nwzida0e0b0xyg3 <= date_weaned_ida0e0b0xyg3, dvp_date_presort_va1e1b1nwzida0e0b0xyg3 > offs_date_start_p[0])
-    dvp_date_presort_va1e1b1nwzida0e0b0xyg3[mask] = date_start_p[-1]
+    dvp_date_presort_va1e1b1nwzida0e0b0xyg3[mask] = offs_date_start_p[-1]
+    ###if more than one dvp on the last day of the generator dates must be offset by 1 becasue can't have multiple dvps on same date.
+    mask = dvp_date_presort_va1e1b1nwzida0e0b0xyg3 == offs_date_start_p[-1] #cant use the existing mask (above) incase there is an fvp on the last day of generator that we didnt manually put there.
     dvp_date_presort_va1e1b1nwzida0e0b0xyg3 = dvp_date_presort_va1e1b1nwzida0e0b0xyg3 - ((np.cumsum(mask, axis=0) - 1) * mask) #if multiple fvps are before weaning then off set there date by 1 day so they are not on the same date.
     dvp_type_va1e1b1nwzida0e0b0xyg3[mask] = condense_vtype3 #set to condense type to make sure extra dvps dont cause issues with masking or feed supply
     ###sort into order
