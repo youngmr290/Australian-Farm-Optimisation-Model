@@ -100,7 +100,8 @@ def exp(row):
 
     ##get trial name - used for outputs
     trial_name = exp_data.index[row][2]
-    print("Starting row %d, %s" %(row, trial_name))
+    run = row - list(exp_data.index.get_level_values(0))[:row].count(False)
+    print("Starting trial %d, %s" %(run, trial_name))
 
     ##updaye sensitivity values
     fun.f_update_sen(row,exp_data,sen.sam,sen.saa,sen.sap,sen.sar,sen.sat,sen.sav)
@@ -241,7 +242,7 @@ def exp(row):
     # with open('pkl/pkl_params_{0}.pkl'.format(trial_name),"wb") as f:  #pkl_params must be pickled last because it is used to determine if model crashed but the current trial was complete prior to crash
     #     pkl.dump(params,f,protocol=pkl.HIGHEST_PROTOCOL)
 
-    ##track the successful execution of trial - so we don't update a trial that didn't finish for some reason
+    ##track the successful execution of trial - so we don't update a trial that didn't finish
     trials_successfully_run = row
 
     ##determine expected time to completion - trials left multiplied by average time per trial &time for current loop

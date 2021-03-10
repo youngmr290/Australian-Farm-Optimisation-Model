@@ -123,7 +123,7 @@ for row in range(len(exp_data)):
 
     ##get trial name - used for outputs
     trial_name = exp_data.index[row][2]
-    print("Starting row %d, %s" %(row, trial_name))
+    print("Starting trial %d, %s" %(run, trial_name))
     if run_pyomo != True:
         print("\n **** Pyomo is turned off... are you sure? ****\n")
 
