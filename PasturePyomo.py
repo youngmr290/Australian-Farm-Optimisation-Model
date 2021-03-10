@@ -74,7 +74,7 @@ def paspyomo_local(params):
         model.del_component(model.p_foo_grn_reseeding)
     except AttributeError:
         pass
-    model.p_foo_grn_reseeding = pe.Param(model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=params[season]['p_foo_grn_reseeding_flrt'], default=0, doc='Change in grn FOO due to destocking and seeding of pastures')
+    model.p_foo_grn_reseeding = pe.Param(model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=params[season]['p_foo_grn_reseeding_flrt'], default=0, doc='Change in grn FOO due to destocking and restocking of resown pastures')
     
     try:
         model.del_component(model.p_foo_dry_reseeding_index)

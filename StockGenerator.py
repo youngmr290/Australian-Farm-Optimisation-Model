@@ -3549,15 +3549,16 @@ def generator(params,r_vals,ev,plots = False):
         a_nextisprejoin_pa1e1b1nwzida0e0b0xyg1 = sfun.f_next_prev_association(date_end_p, date_prejoin_next_pa1e1b1nwzida0e0b0xyg1, 1, 'right').astype(dtypeint) #p indx of period before prejoining - when nextperiod is prejoining this returns the current period
 
         ## the dam lifetime adjustment (for the p, e1, b1 & w axes) are based on the LW profile of the dams themselves and scaled by the number of progeny they rear as a proportion of the total number weaned.
-        o_cfw_ltwadj_pdams = np.take_along_axis(o_cfw_ltwadj_pdams, a_nextisprejoin_pa1e1b1nwzida0e0b0xyg1, axis=0) #adjust p axis so it is the cfw in the period before prejoining
+        o_cfw_ltwadj_pdams = np.take_along_axis(o_cfw_ltwadj_pdams, a_nextisprejoin_pa1e1b1nwzida0e0b0xyg1, axis=0) #populate ltwadj with the value from the period before prejoining
         sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1 = 1 + (o_cfw_ltwadj_pdams * nyatf_b1nwzida0e0b0xyg
                                                  / npw_std_xyg1 / sfw_a0e0b0xyg1)
         o_fd_ltwadj_pdams = np.take_along_axis(o_fd_ltwadj_pdams, a_nextisprejoin_pa1e1b1nwzida0e0b0xyg1, axis=0) #adjust p axis so it is the fd in the period before prejoining
         sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = o_fd_ltwadj_pdams * nyatf_b1nwzida0e0b0xyg / npw_std_xyg1
 
 
-        ## the offspring lifetime adjustment is based on LW pattern 0
-        ###want the p slice from nextisprejoin (or period_is_lambing) to be in the d axis using a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1
+        ## the offspring lifetime adjustment is based on dam LW pattern 0
+        ### required because there is not a link in the matrix between dam profile and the offspring DVs, so a dam pattern must be selected.
+        ### need the p slice from nextisprejoin (or period_is_lambing) to be in the d axis using a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1
         ###         e1 axis in the position of e0
         ###         b1 axis in the position of b0 and simplified using a_b0_b1
         ###         w axis to only have slice 0
@@ -4455,7 +4456,7 @@ def generator(params,r_vals,ev,plots = False):
     mask_w8nut_va1e1b1nwzida0e0b0xyg1 = np.moveaxis(mask_w8nut_va1e1b1nzida0e0b0xyg1w9,-1,w_pos) #move w9 axis to w position
     ## Combine the w8vars mask and the user nutrition mask
     mask_w8vars_va1e1b1nw8zida0e0b0xyg1 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_w8nut_va1e1b1nwzida0e0b0xyg1
-    ##Mask numbers provided based on the steps (with a t axis) and the next dvp type (with a t axis) (t0&1 are sold and never transfer so the mask doesnt mean anything for them. for t2 animals always transfer to themselves unless dvpnext is 0)
+    ##Mask numbers provided based on the steps (with a t axis) and the next dvp type (with a t axis) (t0&1 are sold and never transfer so the mask doesnt mean anything for them. for t2 animals always transfer to themselves unless dvpnext is 'condense')
     mask_numbers_provw8w9_tva1e1b1nw8zida0e0b0xyg1w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1[...,na] \
                         * (np.trunc((index_wzida0e0b0xyg1[...,na] * (dvp_type_next_tva1e1b1nwzida0e0b0xyg1[...,na] !=condense_vtype1)
                                      + index_w1 * (dvp_type_next_tva1e1b1nwzida0e0b0xyg1[...,na] == condense_vtype1))
