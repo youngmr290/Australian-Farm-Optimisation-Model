@@ -181,7 +181,7 @@ def exp(row):
         spy.stockpyomo_local(params['stock'])
         ###bounds-this must be done last because it uses sets built in some of the other modules
         bndpy.boundarypyomo_local()
-        results=core.coremodel_all() #have to do this so i can access the solver status
+        results=core.coremodel_all(params) #have to do this so i can access the solver status
  
         ##check if user wants full solution
         if exp_data.index[row][1] == True:

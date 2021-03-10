@@ -222,7 +222,7 @@ for row in range(len(exp_data)):
 
         pyomocalc_end = time.time()
         print('localpyomo: ', pyomocalc_end - pyomocalc_start)
-        results=core.coremodel_all() #have to do this so i can access the solver status
+        results=core.coremodel_all(params) #have to do this so i can access the solver status
         print('corepyomo: ',time.time() - pyomocalc_end)
 
         ##check if user wants full solution

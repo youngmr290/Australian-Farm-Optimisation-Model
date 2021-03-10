@@ -37,7 +37,7 @@ import StockPyomo as stkpy
 import Finance as fin
 
 
-def coremodel_all():
+def coremodel_all(params):
     '''
     Wraps all of the core model into a function so it can be run multiple times in a loop
 
@@ -456,79 +456,80 @@ def coremodel_all():
         def pysp_instance_creation_callback(scenario_name,node_names):
             instance = model.clone()
             ##stubble
-            model.p_fp_transfer.store_values(params[scenario_name]['per_transfer'])
-            model.p_a_req.store_values(params[scenario_name]['cat_a_st_req'])
-            model.p_stub_vol.store_values(params[scenario_name]['vol'])
-            model.p_stub_md.store_values(params[scenario_name]['md'])
-            model.p_harv_prop.store_values(params[scenario_name]['cons_prop'])
+            model.p_fp_transfer.store_values(params['stub'][scenario_name]['per_transfer'])
+            model.p_a_req.store_values(params['stub'][scenario_name]['cat_a_st_req'])
+            model.p_stub_vol.store_values(params['stub'][scenario_name]['vol'])
+            model.p_stub_md.store_values(params['stub'][scenario_name]['md'])
+            model.p_harv_prop.store_values(params['stub'][scenario_name]['cons_prop'])
 
             ##labour
-            model.p_perm_hours.store_values(params[scenario_name]['permanent hours'])
-            model.p_perm_supervision.store_values(params[scenario_name]['permanent supervision'])
-            model.p_casual_cost.store_values(params[scenario_name]['casual_cost'])
-            model.p_casual_hours.store_values(params[scenario_name]['casual hours'])
-            model.p_casual_supervision.store_values(params[scenario_name]['casual supervision'])
-            model.p_manager_hours.store_values(params[scenario_name]['manager hours'])
-            model.p_casual_upper.store_values(params[scenario_name]['casual ub'])
-            model.p_casual_lower.store_values(params[scenario_name]['casual lb'])
+            model.p_perm_hours.store_values(params['lab'][scenario_name]['permanent hours'])
+            model.p_perm_supervision.store_values(params['lab'][scenario_name]['permanent supervision'])
+            model.p_casual_cost.store_values(params['lab'][scenario_name]['casual_cost'])
+            model.p_casual_hours.store_values(params['lab'][scenario_name]['casual hours'])
+            model.p_casual_supervision.store_values(params['lab'][scenario_name]['casual supervision'])
+            model.p_manager_hours.store_values(params['lab'][scenario_name]['manager hours'])
+            model.p_casual_upper.store_values(params['lab'][scenario_name]['casual ub'])
+            model.p_casual_lower.store_values(params['lab'][scenario_name]['casual lb'])
 
             ##labour crop
-            model.p_prep_pack.store_values(params[scenario_name]['prep_labour'])
-            model.p_fert_app_hour_tonne.store_values(params[scenario_name]['fert_app_time_t'])
-            model.p_fert_app_hour_ha.store_values(params[scenario_name]['fert_app_time_ha'])
-            model.p_chem_app_lab.store_values(params[scenario_name]['chem_app_time_ha'])
-            model.p_variable_crop_monitor.store_values(params[scenario_name]['variable_crop_monitor'])
-            model.p_fixed_crop_monitor.store_values(params[scenario_name]['fixed_crop_monitor'])
+            model.p_prep_pack.store_values(params['crplab'][scenario_name]['prep_labour'])
+            model.p_fert_app_hour_tonne.store_values(params['crplab'][scenario_name]['fert_app_time_t'])
+            model.p_fert_app_hour_ha.store_values(params['crplab'][scenario_name]['fert_app_time_ha'])
+            model.p_chem_app_lab.store_values(params['crplab'][scenario_name]['chem_app_time_ha'])
+            model.p_variable_crop_monitor.store_values(params['crplab'][scenario_name]['variable_crop_monitor'])
+            model.p_fixed_crop_monitor.store_values(params['crplab'][scenario_name]['fixed_crop_monitor'])
 
             ##labour fixed
-            model.p_super_labour.store_values(params[scenario_name]['super'])
-            model.p_bas_labour.store_values(params[scenario_name]['bas'])
-            model.p_planning_labour.store_values(params[scenario_name]['planning'])
-            model.p_tax_labour.store_values(params[scenario_name]['tax'])
+            model.p_super_labour.store_values(params['labfx'][scenario_name]['super'])
+            model.p_bas_labour.store_values(params['labfx'][scenario_name]['bas'])
+            model.p_planning_labour.store_values(params['labfx'][scenario_name]['planning'])
+            model.p_tax_labour.store_values(params['labfx'][scenario_name]['tax'])
 
             ##crop
-            model.p_rotation_cost.store_values(params[scenario_name]['rot_cost'])
-            model.p_rotation_yield.store_values(params[scenario_name]['rot_yield'])
-            model.p_phasefert.store_values(params[scenario_name]['fert_req'])
+            model.p_rotation_cost.store_values(params['crop'][scenario_name]['rot_cost'])
+            model.p_rotation_yield.store_values(params['crop'][scenario_name]['rot_yield'])
+            model.p_phasefert.store_values(params['crop'][scenario_name]['fert_req'])
 
             ##pasture
-            model.p_germination.store_values(params[scenario_name]['p_germination_flrt'])
-            model.p_foo_grn_reseeding.store_values(params[scenario_name]['p_foo_grn_reseeding_flrt'])
-            model.p_foo_dry_reseeding.store_values(params[scenario_name]['p_foo_dry_reseeding_dflrt'])
-            model.p_foo_end_grnha.store_values(params[scenario_name]['p_foo_end_grnha_goflt'])
-            model.p_foo_start_grnha.store_values(params[scenario_name]['p_foo_start_grnha_oflt'])
-            model.p_senesce_grnha.store_values(params[scenario_name]['p_senesce_grnha_dgoflt'])
-            model.p_me_cons_grnha.store_values(params[scenario_name]['p_me_cons_grnha_vgoflt'])
-            model.p_dry_mecons_t.store_values(params[scenario_name]['p_dry_mecons_t_vdft'])
-            model.p_volume_grnha.store_values(params[scenario_name]['p_volume_grnha_goflt'])
-            model.p_dry_volume_t.store_values(params[scenario_name]['p_dry_volume_t_dft'])
-            model.p_dry_transfer_t.store_values(params[scenario_name]['p_dry_transfer_t_ft'])
-            model.p_nap.store_values(params[scenario_name]['p_nap_dflrt'])
-            model.p_nap_prop.store_values(params[scenario_name]['p_harvest_period_prop'])
-            model.p_phase_area.store_values(params[scenario_name]['p_phase_area_flrt'])
-            model.p_pas_sow.store_values(params[scenario_name]['p_pas_sow_plrk'])
-            model.p_poc_vol.store_values(params[scenario_name]['p_poc_vol_f'])
+            model.p_germination.store_values(params['pas'][scenario_name]['p_germination_flrt'])
+            model.p_foo_grn_reseeding.store_values(params['pas'][scenario_name]['p_foo_grn_reseeding_flrt'])
+            model.p_foo_dry_reseeding.store_values(params['pas'][scenario_name]['p_foo_dry_reseeding_dflrt'])
+            model.p_foo_end_grnha.store_values(params['pas'][scenario_name]['p_foo_end_grnha_goflt'])
+            model.p_foo_start_grnha.store_values(params['pas'][scenario_name]['p_foo_start_grnha_oflt'])
+            model.p_senesce_grnha.store_values(params['pas'][scenario_name]['p_senesce_grnha_dgoflt'])
+            model.p_me_cons_grnha.store_values(params['pas'][scenario_name]['p_me_cons_grnha_vgoflt'])
+            model.p_dry_mecons_t.store_values(params['pas'][scenario_name]['p_dry_mecons_t_vdft'])
+            model.p_volume_grnha.store_values(params['pas'][scenario_name]['p_volume_grnha_goflt'])
+            model.p_dry_volume_t.store_values(params['pas'][scenario_name]['p_dry_volume_t_dft'])
+            model.p_dry_transfer_t.store_values(params['pas'][scenario_name]['p_dry_transfer_t_ft'])
+            model.p_nap.store_values(params['pas'][scenario_name]['p_nap_dflrt'])
+            model.p_nap_prop.store_values(params['pas'][scenario_name]['p_harvest_period_prop'])
+            model.p_phase_area.store_values(params['pas'][scenario_name]['p_phase_area_flrt'])
+            model.p_pas_sow.store_values(params['pas'][scenario_name]['p_pas_sow_plrk'])
+            model.p_poc_vol.store_values(params['pas'][scenario_name]['p_poc_vol_f'])
 
             ##machine
-            model.p_seed_days.store_values(params[scenario_name]['seed_days'])
-            model.p_contractseeding_occur.store_values(params[scenario_name]['contractseeding_occur'])
-            model.p_seeding_cost.store_values(params[scenario_name]['seeding_cost'])
-            model.p_contract_seeding_cost.store_values(params[scenario_name]['contract_seed_cost'])
-            model.p_harv_rate.store_values(params[scenario_name]['harv_rate_period'])
-            model.p_harv_hrs_max.store_values(params[scenario_name]['max_harv_hours'])
-            model.p_harv_cost.store_values(params[scenario_name]['harvest_cost'])
-            model.p_contractharv_cost.store_values(params[scenario_name]['contract_harvest_cost'])
-            model.p_yield_penalty.store_values(params[scenario_name]['yield_penalty'])
-            model.p_seeding_grazingdays.store_values(params[scenario_name]['grazing_days'])
+            model.p_seed_days.store_values(params['mach'][scenario_name]['seed_days'])
+            model.p_contractseeding_occur.store_values(params['mach'][scenario_name]['contractseeding_occur'])
+            model.p_seeding_cost.store_values(params['mach'][scenario_name]['seeding_cost'])
+            model.p_contract_seeding_cost.store_values(params['mach'][scenario_name]['contract_seed_cost'])
+            model.p_harv_rate.store_values(params['mach'][scenario_name]['harv_rate_period'])
+            model.p_harv_hrs_max.store_values(params['mach'][scenario_name]['max_harv_hours'])
+            model.p_harv_cost.store_values(params['mach'][scenario_name]['harvest_cost'])
+            model.p_contractharv_cost.store_values(params['mach'][scenario_name]['contract_harvest_cost'])
+            model.p_yield_penalty.store_values(params['mach'][scenario_name]['yield_penalty'])
+            model.p_seeding_grazingdays.store_values(params['mach'][scenario_name]['grazing_days'])
 
             ##sup feed
-            model.p_sup_cost.store_values(params[scenario_name]['total_sup_cost'])
-            model.p_sup_labour.store_values(params[scenario_name]['sup_labour'])
+            model.p_sup_cost.store_values(params['sup'][scenario_name]['total_sup_cost'])
+            model.p_sup_labour.store_values(params['sup'][scenario_name]['sup_labour'])
+
+            ##stock
 
 
 
 
-            instance.Yield.store_values(Yield[scenario_name])
             # seed_random(scenario_name)
             # # Note: Must sort the iteration order so that
             # #       data is generated deterministically
