@@ -28,20 +28,49 @@ def paspyomo_local(params):
     ### Variables
     #####################################################################################################################################################################################################
     #####################################################################################################################################################################################################
-
+    try:
+        model.del_component(model.v_greenpas_ha)
+        model.del_component(model.v_greenpas_ha_index)
+    except AttributeError:
+        pass
     model.v_greenpas_ha = pe.Var(model.s_feed_pools,model.s_grazing_int,model.s_foo_levels,model.s_feed_periods,
                                  model.s_lmus,model.s_pastures,bounds=(0,None),
                                  doc='hectares grazed each period for each grazing intensity on each soil in each period')
+    try:
+        model.del_component(model.v_drypas_consumed)
+        model.del_component(model.v_drypas_consumed_index)
+    except AttributeError:
+        pass
     model.v_drypas_consumed = pe.Var(model.s_feed_pools,model.s_dry_groups,model.s_feed_periods,model.s_pastures,
                                      bounds=(0,None),
                                      doc='tonnes of low and high quality dry feed consumed by each sheep pool in each feed period')
+    try:
+        model.del_component(model.v_drypas_transfer)
+        model.del_component(model.v_drypas_transfer_index)
+    except AttributeError:
+        pass
     model.v_drypas_transfer = pe.Var(model.s_dry_groups,model.s_feed_periods,model.s_pastures,bounds=(0,None),
                                      doc='tonnes of low and high quality dry feed at end of the period transferred to the following periods in each feed period')
+    try:
+        model.del_component(model.v_nap_consumed)
+        model.del_component(model.v_nap_consumed_index)
+    except AttributeError:
+        pass
     model.v_nap_consumed = pe.Var(model.s_feed_pools,model.s_dry_groups,model.s_feed_periods,model.s_pastures,
                                   bounds=(0,None),
                                   doc='tonnes of low and high quality dry pasture on crop paddocks consumed by each sheep pool in each feed period')
+    try:
+        model.del_component(model.v_nap_transfer)
+        model.del_component(model.v_nap_transfer_index)
+    except AttributeError:
+        pass
     model.v_nap_transfer = pe.Var(model.s_dry_groups,model.s_feed_periods,model.s_pastures,bounds=(0,None),
                                   doc='tonnes of low and high quality dry pasture on crop paddocks transferred to the following periods in each feed period')
+    try:
+        model.del_component(model.v_poc)
+        model.del_component(model.v_poc_index)
+    except AttributeError:
+        pass
     model.v_poc = pe.Var(model.s_feed_pools,model.s_feed_periods,model.s_lmus,bounds=(0,None),
                          doc='tonnes of poc consumed by each sheep pool in each period on each lmu')
 

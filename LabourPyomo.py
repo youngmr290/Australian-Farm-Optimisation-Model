@@ -38,21 +38,41 @@ def labpyomo_local(params):
     ############
 
     # Casual supervision
+    try:
+        model.del_component(model.v_casualsupervision_perm)
+    except AttributeError:
+        pass
     model.v_casualsupervision_perm = Var(model.s_labperiods,bounds=(0,None),
                                          doc='hours of perm labour used for supervision of casual')
+    try:
+        model.del_component(model.v_casualsupervision_manager)
+    except AttributeError:
+        pass
     model.v_casualsupervision_manager = Var(model.s_labperiods,bounds=(0,None),
                                             doc='hours of manager labour used for supervision of casual')
 
     # Amount of casual. Casual labour can be optimised for each period
+    try:
+        model.del_component(model.v_quantity_casual)
+    except AttributeError:
+        pass
     model.v_quantity_casual = Var(model.s_labperiods,bounds=(0,None),
                                   doc='number of casual labour used in each labour period')
 
     # Amount of permanent labour.
+    try:
+        model.del_component(model.v_quantity_perm)
+    except AttributeError:
+        pass
     max_perm = pinp.labour['max_perm'] if pinp.labour['max_perm'] != 'inf' else None  # if none convert to python None
     model.v_quantity_perm = Var(bounds=(pinp.labour['min_perm'],max_perm),
                                 doc='number of permanent labour used in each labour period')
 
     # Amount of manager labour
+    try:
+        model.del_component(model.v_quantity_manager)
+    except AttributeError:
+        pass
     max_managers = pinp.labour['max_managers'] if pinp.labour[
                                                       'max_managers'] != 'inf' else None  # if none convert to python None
     model.v_quantity_manager = Var(bounds=(pinp.labour['min_managers'],max_managers),
@@ -60,40 +80,85 @@ def labpyomo_local(params):
 
     # manager pool
     # labour for sheep activities (this variable transfers labour from source to sink)
+    try:
+        model.del_component(model.v_sheep_labour_manager_index)
+        model.del_component(model.v_sheep_labour_manager)
+    except AttributeError:
+        pass
     model.v_sheep_labour_manager = Var(model.s_labperiods,model.s_worker_levels,bounds=(0,None),
                                        doc='manager labour used by sheep activities in each labour period for each different worker level')
 
     # labour for crop activities (this variable transfers labour from source to sink)
+    try:
+        model.del_component(model.v_crop_labour_manager_index)
+        model.del_component(model.v_crop_labour_manager)
+    except AttributeError:
+        pass
     model.v_crop_labour_manager = Var(model.s_labperiods,model.s_worker_levels,bounds=(0,None),
                                       doc='manager labour used by crop activities in each labour period for each different worker level')
 
     # labour for fixed activities (this variable transfers labour from source to sink)
+    try:
+        model.del_component(model.v_fixed_labour_manager_index)
+        model.del_component(model.v_fixed_labour_manager)
+    except AttributeError:
+        pass
     model.v_fixed_labour_manager = Var(model.s_labperiods,model.s_worker_levels,bounds=(0,None),
                                        doc='manager labour used by fixed activities in each labour period for each different worker level')
 
     # permanent pool
     # labour for sheep activities (this variable transfers labour from source to sink)
+    try:
+        model.del_component(model.v_sheep_labour_permanent_index)
+        model.del_component(model.v_sheep_labour_permanent)
+    except AttributeError:
+        pass
     model.v_sheep_labour_permanent = Var(model.s_labperiods,model.s_worker_levels,bounds=(0,None),
                                          doc='permanent labour used by sheep activities in each labour period for each different worker level')
 
     # labour for crop activities (this variable transfers labour from source to sink)
+    try:
+        model.del_component(model.v_crop_labour_permanent_index)
+        model.del_component(model.v_crop_labour_permanent)
+    except AttributeError:
+        pass
     model.v_crop_labour_permanent = Var(model.s_labperiods,model.s_worker_levels,bounds=(0,None),
                                         doc='permanent labour used by crop activities in each labour period for each different worker level')
 
     # labour for fixed activities (this variable transfers labour from source to sink)
+    try:
+        model.del_component(model.v_fixed_labour_permanent_index)
+        model.del_component(model.v_fixed_labour_permanent)
+    except AttributeError:
+        pass
     model.v_fixed_labour_permanent = Var(model.s_labperiods,model.s_worker_levels,bounds=(0,None),
                                          doc='permanent labour used by fixed activities in each labour period for each different worker level')
 
     # casual pool
     # labour for sheep activities (this variable transfers labour from source to sink)
+    try:
+        model.del_component(model.v_sheep_labour_casual_index)
+        model.del_component(model.v_sheep_labour_casual)
+    except AttributeError:
+        pass
     model.v_sheep_labour_casual = Var(model.s_labperiods,model.s_worker_levels,bounds=(0,None),
                                       doc='casual labour used by sheep activities in each labour period for each different worker level')
 
     # labour for crop activities (this variable transfers labour from source to sink)
+    try:
+        model.del_component(model.v_crop_labour_casual_index)
+        model.del_component(model.v_crop_labour_casual)
+    except AttributeError:
+        pass
     model.v_crop_labour_casual = Var(model.s_labperiods,model.s_worker_levels,bounds=(0,None),
                                      doc='casual labour used by crop activities in each labour period for each different worker level')
 
     # labour for fixed activities (this variable transfers labour from source to sink)
+    try:
+        model.del_component(model.v_fixed_labour_casual_index)
+        model.del_component(model.v_fixed_labour_casual)
+    except AttributeError:
+        pass
     model.v_fixed_labour_casual = Var(model.s_labperiods,model.s_worker_levels,bounds=(0,None),
                                       doc='casual labour used by fixed activities in each labour period for each different worker level')
 

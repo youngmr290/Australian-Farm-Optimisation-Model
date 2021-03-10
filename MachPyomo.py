@@ -32,18 +32,52 @@ def machpyomo_local(params):
     #variable  #
     ############
     #number of seeding days in each period on each crop and lmu
+    try:
+        model.del_component(model.v_seeding_machdays)
+        model.del_component(model.v_seeding_machdays_index)
+    except AttributeError:
+        pass
     model.v_seeding_machdays = Var(model.s_labperiods, model.s_landuses, model.s_lmus, bounds=(0,None), doc='number of days of seeding')
     #number of ha seeded for each pasture
+    try:
+        model.del_component(model.v_seeding_pas)
+        model.del_component(model.v_seeding_pas_index)
+    except AttributeError:
+        pass
     model.v_seeding_pas = Var(model.s_labperiods, model.s_landuses, model.s_lmus, bounds=(0,None), doc='number of ha of pasture seeded')
     #number of ha seeded for each crop
+    try:
+        model.del_component(model.v_seeding_crop)
+        model.del_component(model.v_seeding_crop_index)
+    except AttributeError:
+        pass
     model.v_seeding_crop = Var(model.s_labperiods, model.s_landuses, model.s_lmus, bounds=(0,None), doc='number of ha of crop seeded')
     #number of ha seeded using contractor
+    try:
+        model.del_component(model.v_contractseeding_ha)
+        model.del_component(model.v_contractseeding_ha_index)
+    except AttributeError:
+        pass
     model.v_contractseeding_ha = Var(model.s_labperiods, model.s_landuses, model.s_lmus, bounds=(0,None), doc='number of ha contract seeding for each crop')
     #number of hours harvesting for each crop - there is a constraint to limit this to the hours available in the harvest period
+    try:
+        model.del_component(model.v_harv_hours)
+        model.del_component(model.v_harv_hours_index)
+    except AttributeError:
+        pass
     model.v_harv_hours = Var(model.s_labperiods, model.s_harvcrops, bounds=(0,None), doc='number of hours of harvesting')
     #number of contract hours harvesting for each crop
+    try:
+        model.del_component(model.v_contractharv_hours)
+        model.del_component(model.v_contractharv_hours_index)
+    except AttributeError:
+        pass
     model.v_contractharv_hours = Var(model.s_harvcrops, bounds=(0,None), doc='number of contract hours of harvesting')
     #tonnes of hay made
+    try:
+        model.del_component(model.v_hay_made)
+    except AttributeError:
+        pass
     model.v_hay_made = Var(bounds=(0,None), doc='tonnes of hay made')
 
     

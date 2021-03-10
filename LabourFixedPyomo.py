@@ -29,6 +29,11 @@ def labfxpyomo_local(params):
     ############
     # variables #
     ############
+    try:
+        model.del_component(model.v_learn_allocation)
+        model.del_component(model.v_learn_allocation_index)
+    except AttributeError:
+        pass
     model.v_learn_allocation = Var(model.s_labperiods,bounds=(0,1),doc='proportion of learning done each labour period')
 
     #########
