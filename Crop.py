@@ -489,22 +489,21 @@ def f_chem_cost(r_vals):
         -Arable area accounted for in application funciton above
     '''
     ##read in necessary bits and adjust indexed
-    i_chem_cost = pinp.crop['chem_cost']
+    i_chem_cost = pinp.crop['chem_cost'].sort_index()
     chem_by_soil = pinp.crop['chem_by_lmu'] #read in chem by soil
     ##add cont pasture to chem cost array
     i_chem_cost = f_cont_pas(i_chem_cost)
     ##number of applications for each rotation
     chem_applications = f_chem_application()
     ##determine the total chemical cost of each rotation. eg: chem cost per application * number of applications
-    index = pd.MultiIndex.from_arrays([phases_df.iloc[:,-1], phases_df.index]) #add phase letter to index so it can be merged with the cost per application for each phase
-    t_chem_applications = chem_applications.unstack(level=(1,2)).reindex(index, axis=0, level=0).stack(level=(1,2)) #reindex so the array has same axis so it can be multiplied
-    ###Merge the phase cost with the rotation application number then mul to get final cost. ^i couldnt get reinexing to work so i have ended up merging the mul instead (i think there should be a way to reindex i_cost so it is the same as chem_applications then mul).
-    merge_chem = t_chem_applications.merge(i_chem_cost, left_on=[5], right_index=True, how='left')
-    chem_cost = merge_chem.iloc[:,0:len(i_chem_cost.columns)].values * merge_chem.iloc[:,len(i_chem_cost.columns):].values
-    chem_cost = pd.DataFrame(chem_cost, index=chem_applications.index, columns = i_chem_cost.columns)
+    index = pd.MultiIndex.from_arrays([phases_df.iloc[:,-1], phases_df.index], names=['landuse','rot']) #add phase letter to index so it can be merged with the cost per application for each phase
+    t_chem_applications = chem_applications.unstack(level=(1,2)).reindex(index, axis=0, level=1).stack(level=(1,2)) #reindex so the array has same axis so it can be multiplied
+    ###reindex cost and mul with number of applications.
+    i_chem_cost = i_chem_cost.reindex(t_chem_applications.index, axis=0, level=0)
+    chem_cost = t_chem_applications.mul(i_chem_cost).droplevel(0)
     ## adjust the chem cost for each rotation by lmu
     chem_by_soil1 = chem_by_soil.stack()
-    chem_cost=chem_cost.unstack().mul(chem_by_soil1,axis=1,level=0).stack()
+    chem_cost=chem_cost.unstack().mul(chem_by_soil1,axis=1).stack()
     ##application cost
     app_cost_ha = chem_applications * mac.chem_app_cost_ha()
     ##add cashflow periods and sum across each chem - have to do this to both chem cost and application so i can report them separately
