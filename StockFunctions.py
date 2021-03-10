@@ -1274,13 +1274,14 @@ def f_period_start_prod(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len,
     var_start = f_condensed(numbers, var_start, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_condense, period_is_condense)
     ##b) Calculate temporary values as if period is start of season
     if np.any(period_is_startseason):
-        temporary = fun.f_weighted_average(var_start, numbers, season_tup, keepdims=True, non_zero=True)#gets the weighted average of production in the different seasons
-        ###adjust production for min lw: w slice -1 is assigned the lowest weight for all seasons and the production associated with that (this is so the light animals in the poor seasons are not disregarded)
-        sl = [slice(None)] * temporary.ndim
-        sl[sinp.stock['i_w_pos']] = slice(-1,None)
-        temporary[tuple(sl)] = np.take_along_axis(var_start, np.expand_dims(idx_min_lw_z, axis=season_tup), axis=season_tup)[tuple(sl)]
-        ###Set values where it is beginning of FVP
-        var_start = fun.f_update(var_start, temporary, period_is_startseason)
+        var_start = f_season_wa(numbers, var_start, season_tup, idx_min_lw_z, period_is_startseason)
+        # temporary = fun.f_weighted_average(var_start, numbers, season_tup, keepdims=True, non_zero=True)#gets the weighted average of production in the different seasons
+        # ###adjust production for min lw: w slice -1 is assigned the lowest weight for all seasons and the production associated with that (this is so the light animals in the poor seasons are not disregarded)
+        # sl = [slice(None)] * temporary.ndim
+        # sl[sinp.stock['i_w_pos']] = slice(-1,None)
+        # temporary[tuple(sl)] = np.take_along_axis(var_start, np.expand_dims(idx_min_lw_z, axis=season_tup), axis=season_tup)[tuple(sl)]
+        # ###Set values where it is beginning of FVP
+        # var_start = fun.f_update(var_start, temporary, period_is_startseason)
     if group==1 and np.any(period_is_prejoin):
         ##c) Calculate temporary values as if period_is_prejoin	
         temporary = fun.f_weighted_average(var_start, numbers, prejoin_tup, keepdims=True, non_zero=True) #gets the weighted average of production in the different seasons
@@ -1311,6 +1312,21 @@ def f_period_start_prod(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len,
 #         ##Set values where it is beginning of FVP
 #         var_start = fun.f_update(var_start, temporary, period_is_prejoin)
 #     return var_start
+
+def f_season_wa(numbers, var, season_tup, idx_min_lw_z, period_is_startseason):
+    '''preform weighted average across seasons, at the begining of each season.
+        So all seasons start from a common place.'''
+    temporary = fun.f_weighted_average(var,numbers,season_tup,keepdims=True,
+                                       non_zero=True)  # gets the weighted average of production in the different seasons
+    ###adjust production for min lw: w slice -1 is assigned the lowest weight for all seasons and the production associated with that (this is so the light animals in the poor seasons are not disregarded)
+    sl = [slice(None)] * temporary.ndim
+    sl[sinp.stock['i_w_pos']] = slice(-1,None)
+    temporary[tuple(sl)] = np.take_along_axis(var,np.expand_dims(idx_min_lw_z,axis=season_tup),axis=season_tup)[
+        tuple(sl)]
+    ###Set values where it is beginning of FVP
+    var = fun.f_update(var,temporary,period_is_startseason)
+    return var
+
 
 def f_condensed(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_condense, period_is_condense):
     '''condense variable to 3 common points along the w axis for the start of fvp0'''
@@ -2014,7 +2030,7 @@ def f_cum_dvp(arr,dvp_pointer,axis=0,shift=0):
         final += arr1
     return final
 
-def f_lw_distribution(ffcfw_condensed_va1e1b1nwzida0e0b0xyg, ffcfw_va1e1b1nwzida0e0b0xyg, i_n_len, i_n_fvp_period, dvp_type_next_tvgw=0, condense_vtype=0, season_vtype=0):
+def f_lw_distribution(ffcfw_condensed_va1e1b1nwzida0e0b0xyg, ffcfw_va1e1b1nwzida0e0b0xyg, i_n_len, i_n_fvp_period, dvp_type_next_tvgw=0, vtype=0):
     '''distributing animals on LW at the start of dvp0'''
     ##add second w axis - the condensed w axis becomes axis -1 and the end of period w stays in the normal place
     ffcfw_condensed_va1e1b1nwzida0e0b0xygw = fun.f_expand(np.moveaxis(ffcfw_condensed_va1e1b1nwzida0e0b0xyg, sinp.stock['i_w_pos'],-1), sinp.stock['i_n_pos']-1, right_pos=sinp.stock['i_z_pos']-1)
@@ -2034,7 +2050,7 @@ def f_lw_distribution(ffcfw_condensed_va1e1b1nwzida0e0b0xyg, ffcfw_va1e1b1nwzida
     ##Set the distribution to 0 if lw_end is below the condensed minimum weight
     distribution_va1e1b1nwzida0e0b0xygw = spread_bounded * (ffcfw_va1e1b1nwzida0e0b0xyg[..., na] >= np.min(ffcfw_condensed_va1e1b1nwzida0e0b0xygw, axis = -1, keepdims=True))
     ##Set default for DVPs that don’t require distributing to 1 (these are masked later to remove those that are not required)
-    distribution_va1e1b1nwzida0e0b0xygw = fun.f_update(distribution_va1e1b1nwzida0e0b0xygw, 1, np.logical_and(dvp_type_next_tvgw!=condense_vtype,dvp_type_next_tvgw!=season_vtype))
+    distribution_va1e1b1nwzida0e0b0xygw = fun.f_update(distribution_va1e1b1nwzida0e0b0xygw, 1, dvp_type_next_tvgw!=vtype)
     return distribution_va1e1b1nwzida0e0b0xygw
 
 def f_lw_distribution_2prog(ffcfw_prog_g2w9, ffcfw_yatf_vg1):
