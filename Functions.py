@@ -424,6 +424,8 @@ def f_update(existing_value, new_value, mask_for_new):
     except AttributeError:
         if new_value=='-':
             new_value = 0
+    #todo using a masked array may allow f_update to handle situation that have a nan value that is masked
+    # updated = np.ma.masked_array(existing_value, mask_for_new) + np.ma.maskedarray(new_value, np.logicalnot(mask_for_new))  #used 'not' rather than '~' because ~False == -1 rather than True (not the case for np.arrays only if bool is single - as it is for sire in some situations)
     updated = existing_value * np.logical_not(mask_for_new) + new_value * mask_for_new #used not rather than ~ because ~False == -1 not True (not the case for np.arrays only if bool is single - as it is for sire in some situations)
 
     ##convert back to original dtype because adding float32 and int32 returns float64. And sometimes we don't want this eg postprocessing

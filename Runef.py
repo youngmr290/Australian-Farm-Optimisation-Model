@@ -40,7 +40,7 @@ for varname, varval in stsolver.root_Var_solution(): # doctest: +SKIP
 ##saves file to csv
 csvw.write_csv_soln(stsolver.scenario_tree,"solution")
 ##saves file to json
-jsonw.JSONSolutionWriter.write('',stsolver.scenario_tree,'ef') #i dont know what the first arg does?? it needs to exist but can put any string without changing output
+jsonw.JSONSolutionWriter.write('',stsolver.scenario_tree,'ef') #i don't know what the first arg does?? it needs to exist but can put any string without changing output
 
 ##load json back in
 with open('ef_solution.json') as f:
