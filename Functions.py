@@ -177,8 +177,8 @@ def searchsort_multiple_dim(a,v,axis_a0,axis_a1,axis_v0,axis_v1):
     final = np.zeros_like(v)
     slc_a = [slice(None)] * len(a.shape)
     slc_v = [slice(None)] * len(v.shape)
-    for i in range(v.shape[axis_a0]):
-        for j in range(v.shape[axis_a1]):
+    for i in range(a.shape[axis_a0]):
+        for j in range(a.shape[axis_a1]):
             slc_a[axis_a0] = slice(i, i+1)
             slc_a[axis_a1] = slice(j, j+1)
             slc_v[axis_v0] = slice(i, i+1)

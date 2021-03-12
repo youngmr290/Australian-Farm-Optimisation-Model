@@ -5344,8 +5344,8 @@ def generator(params,r_vals,ev,plots = False):
 
 
     ###vw8ixw9 - prog to offs req
-    arrays = [keys_k3, keys_v3, keys_lw3, keys_i, keys_x, keys_lw3]
-    index_k3vw8ixw9 = fun.cartesian_product_simple_transpose(arrays)
+    arrays = [keys_k3, keys_v3, keys_lw3, keys_i, keys_x, keys_g3, keys_lw3]
+    index_k3vw8ixg3w9 = fun.cartesian_product_simple_transpose(arrays)
     # arrays = [keys_v3, keys_lw3, keys_i, keys_x, keys_lw3]
     # index_vw8ixw9 = fun.cartesian_product_simple_transpose(arrays)
 
@@ -5516,11 +5516,11 @@ def generator(params,r_vals,ev,plots = False):
 
     ###number prog require by offs
     mask=numbers_progreq_k3k5tva1e1b1nw8zida0e0b0xyg3w9!=0
-    progreq_k3vw8ixw9 = numbers_progreq_k3k5tva1e1b1nw8zida0e0b0xyg3w9[mask] #applying the mask does the raveling and squeezing of singleton axis
+    progreq_k3vw8ixg3w9 = numbers_progreq_k3k5tva1e1b1nw8zida0e0b0xyg3w9[mask] #applying the mask does the raveling and squeezing of singleton axis
     mask=mask.ravel()
-    index_cut_k3vw8ixw9=index_k3vw8ixw9[mask,:]
-    tup_k3vw8ixw9 = tuple(map(tuple, index_cut_k3vw8ixw9))
-    params['p_progreq_offs'] =dict(zip(tup_k3vw8ixw9, progreq_k3vw8ixw9))
+    index_cut_k3vw8ixg3w9=index_k3vw8ixg3w9[mask,:]
+    tup_k3vw8ixg3w9 = tuple(map(tuple, index_cut_k3vw8ixg3w9))
+    params['p_progreq_offs'] =dict(zip(tup_k3vw8ixg3w9, progreq_k3vw8ixg3w9))
     # mask=numbers_progreq_va1e1b1nw8zida0e0b0xyg3w9!=0
     # progreq_vw8ixw9 = numbers_progreq_va1e1b1nw8zida0e0b0xyg3w9[mask] #applying the mask does the raveling and squeezing of singleton axis
     # mask=mask.ravel()
