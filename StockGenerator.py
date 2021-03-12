@@ -311,7 +311,6 @@ def generator(params,r_vals,ev,plots = False):
     o_numbers_join_pdams = np.zeros(pg1, dtype =dtype)
     o_numbers_end_pdams = np.zeros(pg1, dtype =dtype) #default 1 so that transfer can exist for dvps before weaning
     o_ffcfw_pdams = np.zeros(pg1, dtype =dtype)
-    o_ffcfw_prejoin_pdams = np.zeros(pg1, dtype =dtype)
     o_ffcfw_season_pdams = np.zeros(pg1, dtype =dtype)
     o_ffcfw_condensed_pdams = np.zeros(pg1, dtype =dtype)
     o_nw_start_pdams = np.zeros(pg1, dtype = dtype)
@@ -688,7 +687,7 @@ def generator(params,r_vals,ev,plots = False):
     ##fvp/dvp types
     season_vtype1 = sinp.stock['i_fvp_type1'][0]
     prejoin_vtype1 = sinp.stock['i_fvp_type1'][1]
-    condense_vtype1 = sinp.stock['i_condensefvp_type1']
+    condense_vtype1 = prejoin_vtype1 #currently for dams condensing must occur at prejoining, most of the code is flexible to handle different timing except the lw_distribution section.
     scan_vtype1 = sinp.stock['i_fvp_type1'][2]
     birth_vtype1 = sinp.stock['i_fvp_type1'][3]
     wean_ftype1 = sinp.stock['i_fvp_type1'][4]
@@ -891,7 +890,7 @@ def generator(params,r_vals,ev,plots = False):
     a_prevbirth_d_pa1e1b1nwzida0e0b0xyg2 = a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2
     ##start of season
     a_seasonstart_pa1e1b1nwzida0e0b0xyg = np.apply_along_axis(sfun.f_next_prev_association, 0, seasonstart_ya1e1b1nwzida0e0b0xyg, date_end_p, 1,'right')
-    ##condensing
+    ##condensing - currently this is fixed to be the same as prejoining for dams
     condensing_date_oa1e1b1nwzida0e0b0xyg1 = fvp_date_all_f1[1+list(sinp.stock['i_fvp_type1']).index(condense_vtype1)] #determine the date when condensing happens
     a_condensing_pa1e1b1nwzida0e0b0xyg1 = np.apply_along_axis(sfun.f_next_prev_association, 0, condensing_date_oa1e1b1nwzida0e0b0xyg1, date_end_p, 1,'right')
     condensing_date_oa1e1b1nwzida0e0b0xyg3 = fvp_date_all_f3[3+list(sinp.stock['i_fvp_type1']).index(condense_vtype1)] #determine the date when condensing happens
@@ -1005,6 +1004,7 @@ def generator(params,r_vals,ev,plots = False):
     # n_fvp_periods_g0=sinp.stock['i_n_fvp_period0']
     # a_n_pa1e1b1nwzida0e0b0xyg0 = (np.trunc(index_wzida0e0b0xyg0 / (n_fs_g0 ** ((n_fvp_periods_g0-1) - fvp_type_pa1e1b1nwzida0e0b0xyg0))) % n_fs_g0).astype(int) #needs to be int so it can be an indice
     ###dams
+    ####for dams period is condense is the same as period is prejoin atm but it is designed so it can be different (the lw_distribution will just need to be updated)
     period_is_condense_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is', date_condensing_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg) #g2 date born is the equivalent of date lambed g1
     period_is_startfvp_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is', fvp_date_start_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
     n_cum_fvps_pa1e1b1nwzida0e0b0xyg1 = np.cumsum(period_is_startfvp_pa1e1b1nwzida0e0b0xyg1, axis=0)
@@ -3787,7 +3787,6 @@ def generator(params,r_vals,ev,plots = False):
     period_is_startdvp_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is', dvp_date_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
     nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg1 = np.roll(period_is_startdvp_pa1e1b1nwzida0e0b0xyg1,-1,axis=0)
     nextperiod_is_prejoin_pa1e1b1nwzida0e0b0xyg1 = np.roll(period_is_prejoin_pa1e1b1nwzida0e0b0xyg1,-1,axis=0)
-    nextperiod_is_condense_pa1e1b1nwzida0e0b0xyg1 = np.roll(period_is_condense_pa1e1b1nwzida0e0b0xyg1,-1,axis=0)
     #### the transfer to a dvp_type other than type==0 only occurs when transferring to and from the same genotype
     #### this occurs when (index_g1 == a_g1_tg1) and the transfer exists
     mask_dvp_type_next_tg1 = transfer_exists_tpa1e1b1nwzida0e0b0xyg1 * (index_g1 == a_g1_tpa1e1b1nwzida0e0b0xyg1) #dvp type next is a little more complex for animals transferring. However the destination for transfer is always dvp type next ==0 (either it is going from dvp 2 to 0 or from 0 to 0.
@@ -4353,24 +4352,37 @@ def generator(params,r_vals,ev,plots = False):
     ##################
     #lw distribution #
     ##################
+    '''
+    Distributing happens at the start of each season/season sequence when all the different seasons are combined back
+    to a common season. It also happens when lw is condensed back to the starting number. For dams lw distributing is also 
+    required at prejoining when dams are transfered to different sires. 
+    
+    Note: The generator handles dam condensing and prejoining to be in different dvps however the distribution below 
+          requires condensing to occur at prejoining (it may be possible to change the distribution code to handle 
+          condensing and prejoining in different dvps).
+    
+    What this section does:
+    Calc the ffcfw being distributed from and to.
+    Calc the proportion of the source weight allocated to each destination weight.
+    
+    '''
     lwdist_start = time.time()
 
-    ##calc the ffcfw being distributed from and to
     ## calc the ‘source’ weight of the animal at the end of each period in which they can be transferred
-    ### for dams the period is based on period_is_transfer which points at the nextperiod_is_prejoin for the destination g1 slice
-    ffcfw_source_season_va1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_ffcfw_pdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg) #numbers not required for ffcfw
+    ###dams - the period is based on period_is_transfer which points at the nextperiod_is_prejoin for the destination g1 slice
     ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_ffcfw_pdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_transfer_tpa1e1b1nwzida0e0b0xyg1) #numbers not required for ffcfw
+    ffcfw_source_season_va1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_ffcfw_pdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg) #numbers not required for ffcfw
     ###offs
-    ffcfw_source_season_va1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(o_ffcfw_poffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg3) #numbers not required for ffcfw
     ffcfw_source_condense_va1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(o_ffcfw_poffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=nextperiod_is_condense_pa1e1b1nwzida0e0b0xyg3) #numbers not required for ffcfw
+    ffcfw_source_season_va1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(o_ffcfw_poffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg3) #numbers not required for ffcfw
 
     ## calc the ‘destination’ weight of each group of animal at the end of the period prior to the transfer (transfer is next period is prejoining for the destination animal)
     ### for dams select the ‘destination’ condensed weight for the ‘source’ slices using a_g1_tg1
     ffcfw_condensed_tdams = np.take_along_axis(o_ffcfw_condensed_pdams[na,...], a_g1_tpa1e1b1nwzida0e0b0xyg1, -1)
     ### Convert from p to v.
     #### for dams the period is based on period_is_transfer which points at the nextperiod_is_prejoin for the destination g1 slice
-    ffcfw_dest_season_va1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_ffcfw_season_pdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg)  #numbers not required for ffcfw
     ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(ffcfw_condensed_tdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_transfer_tpa1e1b1nwzida0e0b0xyg1)  #numbers not required for ffcfw
+    ffcfw_dest_season_va1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_ffcfw_season_pdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg)  #numbers not required for ffcfw
     ###offs
     ffcfw_dest_condense_va1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(o_ffcfw_condensed_poffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=nextperiod_is_condense_pa1e1b1nwzida0e0b0xyg3) #numbers not required for ffcfw
     ffcfw_dest_season_va1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(o_ffcfw_season_poffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg3)  #numbers not required for ffcfw
@@ -4392,10 +4404,10 @@ def generator(params,r_vals,ev,plots = False):
     distribution_tva1e1b1nw8zida0e0b0xyg1w9 = distribution_condense_tva1e1b1nw8zida0e0b0xyg1w9 * distribution_season_va1e1b1nw8zida0e0b0xyg1w9
     distribution_va1e1b1nw8zida0e0b0xyg3w9 = distribution_condense_va1e1b1nw8zida0e0b0xyg3w9 * distribution_season_va1e1b1nw8zida0e0b0xyg3w9
 
-    ###################################
-    ##animal shifting between classes #
-    ###################################
-    ##axis b1 is the equivalent of b18 so when adding na add it after the b1 axis
+    # ##################################
+    # #animal shifting between classes #
+    # ##################################
+    # axis b1 is the equivalent of b18 so when adding na add it after the b1 axis
     # a_prepost_b19nwzida0e0b0xyg1 = fun.f_expand(sinp.stock['a_prepost_b1'], b1_pos)
     # index_b19nwzida0e0b0xyg1 = fun.f_expand(np.arange(len_b1), b1_pos)
     # index_b18b19nwzida0e0b0xyg1 = index_b19nwzida0e0b0xyg1[:,na,...]
