@@ -2079,42 +2079,6 @@ def f_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, dvp_type_next_tvgw=0, vt
     distribution_w8gw9 = fun.f_update(distribution_w8gw9, 1, dvp_type_next_tvgw!=vtype)
     return distribution_w8gw9
 
-
-def f_lw_distribution1(ffcfw_condensed_va1e1b1nwzida0e0b0xyg, ffcfw_va1e1b1nwzida0e0b0xyg, i_n_len, i_n_fvp_period, dvp_type_next_tvgw=0, vtype=0):
-    '''distributing animals on LW at the start of dvp0'''
-    ##add second w axis - the condensed w axis becomes axis -1 and the end of period w stays in the normal place
-    ffcfw_condensed_va1e1b1nwzida0e0b0xygw = fun.f_expand(np.moveaxis(ffcfw_condensed_va1e1b1nwzida0e0b0xyg, sinp.stock['i_w_pos'],-1), sinp.stock['i_n_pos']-1, right_pos=sinp.stock['i_z_pos']-1)
-    ##Calculate the difference between the 3 (or more if not dvp0) condensed weights and the middle weight (slice 0)
-    diff = ffcfw_condensed_va1e1b1nwzida0e0b0xygw - f_dynamic_slice(ffcfw_condensed_va1e1b1nwzida0e0b0xygw, -1, 0, 1)
-    ##Calculate the spread that would generate the average weight
-    # spread =  1 - fun.f_divide((ffcfw_condensed_va1e1b1nwzida0e0b0xygw - ffcfw_va1e1b1nwzida0e0b0xyg[..., na]), diff, dtype=diff.dtype)
-    spread =  fun.f_divide((diff - (ffcfw_condensed_va1e1b1nwzida0e0b0xygw - ffcfw_va1e1b1nwzida0e0b0xyg[..., na])), diff, dtype=diff.dtype)
-    ## select the minimum value that is greater than 0, make others 0
-    temporary = np.copy(spread)
-    temporary[spread <= 0] = np.inf
-    spread = spread * (spread == np.min(temporary, axis=-1, keepdims = True))
-    ##Bound the spread
-    spread_bounded = np.clip(spread, 0, 1)
-    ##Set values for the standard pattern to be the remainder from the closest. (consolidated w axis)
-    spread_bounded[..., :int(i_n_len ** i_n_fvp_period)] =  1 - np.maximum(spread_bounded[..., int(i_n_len ** i_n_fvp_period):-int(i_n_len ** i_n_fvp_period)], spread_bounded[..., -int(i_n_len ** i_n_fvp_period):])
-    ##Set the distribution to 0 if lw_end is below the condensed minimum weight
-    distribution_va1e1b1nwzida0e0b0xygw = spread_bounded * (ffcfw_va1e1b1nwzida0e0b0xyg[..., na] >= np.min(ffcfw_condensed_va1e1b1nwzida0e0b0xygw, axis = -1, keepdims=True))
-    ##Set default for DVPs that don’t require distributing to 1 (these are masked later to remove those that are not required)
-    distribution_va1e1b1nwzida0e0b0xygw = fun.f_update(distribution_va1e1b1nwzida0e0b0xygw, 1, dvp_type_next_tvgw!=vtype)
-    return distribution_va1e1b1nwzida0e0b0xygw
-
-def f_lw_distribution_2prog(ffcfw_prog_g2w9, ffcfw_yatf_vg1):
-    ###maximum(0, ) removes points where yatf weight is greater than the rolled progeny weight
-    distribution_2prog_vg1w9 = 1- fun.f_divide((ffcfw_yatf_vg1[..., na] - ffcfw_prog_g2w9)
-                                               , np.abs(np.roll(ffcfw_prog_g2w9,-1,axis=-1) - ffcfw_prog_g2w9))
-    ###remove if the yatf weight is above the weight in the next progeny slice (ie the division is >1).
-    distribution_2prog_vg1w9[distribution_2prog_vg1w9 < 0] = 0
-    ###remove if the yatf weight is below the progeny weight in that slice (ie the division is negative).
-    distribution_2prog_vg1w9[distribution_2prog_vg1w9 > 1] = 0
-    ###set the distribution for the other of the target pair
-    distribution_2prog_vg1w9[..., 1:] += (1 - distribution_2prog_vg1w9[..., :-1]) * (distribution_2prog_vg1w9[..., :-1] > 0)
-    return distribution_2prog_vg1w9
-
 def f_create_production_param(group, production_vg, a_kcluster_vg_1=1, index_ktvg_1=1, a_kcluster_vg_2=1, index_kktvg_2=1, numbers_start_vg=1, mask_vg=True, pos_offset=0):
     '''convert production to per animal including impact of death. And apply the k clustering'''
     if group=='sire':
