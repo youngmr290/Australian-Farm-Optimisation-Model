@@ -313,7 +313,7 @@ def rot_stubble(model,k,s):
    # model.del_component(model.rotation_con2)
 #print(timeit.timeit(test2,number=10)/10)
 #model.rotation_cashflow.pprint()
-#total costs and income from rotations - transfered to core model
+#total costs and income from rotations - transferred to core model
 
 # def test2():
 #     def rotation_cashflow(model,c):

@@ -744,9 +744,9 @@ def f_dse(lp_vars, r_vals, **kwargs):
         ##sire
         dse_sire = stock_vars['sire_numbers_zg0'] * r_vals['stock']['dsenw_p6g0']
         ##dams
-        dse_dams = fun.f_reduce_skipfew(np.sum, stock_vars['dams_numbers_k2tvanwziy1g1'][:, na, ...] * r_vals['stock'][
-            'dsenw_k2p6tva1nwziyg1'], preserveAxis=1)  # sum all axis except p6
-        ##dams
+        dse_dams = fun.f_reduce_skipfew(np.sum, stock_vars['dams_numbers_k2tvanwziy1g1'][:, na, ...]
+                                        * r_vals['stock']['dsenw_k2p6tva1nwziyg1'], preserveAxis=1)  # sum all axis except p6
+        ##offs
         dse_offs = fun.f_reduce_skipfew(np.sum, stock_vars['offs_numbers_k3k5tvnwziaxyg3'][:, :, na, ...] * r_vals['stock'][
             'dsenw_k3k5p6tvnwziaxyg3'], preserveAxis=2)  # sum all axis except p6
     else:
@@ -755,7 +755,7 @@ def f_dse(lp_vars, r_vals, **kwargs):
         ##dams
         dse_dams = fun.f_reduce_skipfew(np.sum, stock_vars['dams_numbers_k2tvanwziy1g1'][:, na, ...] * r_vals['stock'][
             'dsemj_k2p6tva1nwziyg1'], preserveAxis=1)  # sum all axis except p6
-        ##dams
+        ##offs
         dse_offs = fun.f_reduce_skipfew(np.sum, stock_vars['offs_numbers_k3k5tvnwziaxyg3'][:, :, na, ...] * r_vals['stock'][
             'dsemj_k3k5p6tvnwziaxyg3'], preserveAxis=2)  # sum all axis except p6
 
@@ -1004,6 +1004,7 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, **kwargs):
         return prod
     else:
         return prod, keys
+
 
 def f_survival_wean_scan(lp_vars, r_vals, **kwargs):
     '''

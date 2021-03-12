@@ -762,8 +762,8 @@ def generator(params,r_vals,ev,plots = False):
     ##mask any that occur before weaning (except the start fvp) and set to last date of generator and type to 0 so they are essentially ignored.
     mask = np.logical_and(fvp_start_fa1e1b1nwzida0e0b0xyg1 <= date_weaned_ida0e0b0xyg1, fvp_start_fa1e1b1nwzida0e0b0xyg1 > date_start_p[0])
     fvp_start_fa1e1b1nwzida0e0b0xyg1[mask] = date_start_p[-1]
-    ##if more than one dvp on the last day of the generator dates must be offset by 1 becasue can't have multiple dvps on same date.
-    mask = fvp_start_fa1e1b1nwzida0e0b0xyg1 == date_start_p[-1] #cant use the existing mask (above) incase there is an fvp on the last day of generator that we didnt manually put there.
+    ##if more than one dvp on the last day of the generator dates must be offset by 1 because can't have multiple dvps on same date.
+    mask = fvp_start_fa1e1b1nwzida0e0b0xyg1 == date_start_p[-1] #cant use the existing mask (above) in case there is an fvp on the last day of generator that we didn't manually put there.
     fvp_start_fa1e1b1nwzida0e0b0xyg1 = fvp_start_fa1e1b1nwzida0e0b0xyg1 - ((np.cumsum(mask, axis=0) - 1) * mask) #if multiple fvps are before weaning then off set there date by 1 day so they are not on the same date.
     fvp_type_fa1e1b1nwzida0e0b0xyg1[mask] = condense_vtype1 #set to condense type to make sure extra dvps don't cause issues with masking or feed supply
     ##sort into date order
@@ -856,8 +856,8 @@ def generator(params,r_vals,ev,plots = False):
     ##mask any that occur before weaning and set to last date of generator and type to 0 so they are essentially ignored.
     mask = np.logical_and(fvp_start_fa1e1b1nwzida0e0b0xyg3 <= date_weaned_ida0e0b0xyg3, fvp_start_fa1e1b1nwzida0e0b0xyg3 > offs_date_start_p[0])
     fvp_start_fa1e1b1nwzida0e0b0xyg3[mask] = offs_date_start_p[-1]
-    ###if more than one dvp on the last day of the generator dates must be offset by 1 becasue can't have multiple dvps on same date.
-    mask = fvp_start_fa1e1b1nwzida0e0b0xyg3 == offs_date_start_p[-1] #cant use the existing mask (above) incase there is an fvp on the last day of generator that we didnt manually put there.
+    ###if more than one dvp on the last day of the generator dates must be offset by 1 because can't have multiple dvps on same date.
+    mask = fvp_start_fa1e1b1nwzida0e0b0xyg3 == offs_date_start_p[-1] #cant use the existing mask (above) in case there is an fvp on the last day of generator that we didn't manually put there.
     fvp_start_fa1e1b1nwzida0e0b0xyg3 = fvp_start_fa1e1b1nwzida0e0b0xyg3 - ((np.cumsum(mask, axis=0) - 1) * mask) #if multiple fvps are before weaning then off set there date by 1 day so they are not on the same date.
     fvp_type_fa1e1b1nwzida0e0b0xyg3[mask] = condense_vtype3 #set to condense type to make sure extra dvps don't cause issues with masking or feed supply
 
@@ -1572,7 +1572,7 @@ def generator(params,r_vals,ev,plots = False):
     ############################
     ### feed supply calcs      # todo need to add something about break of season..? and need to add e variation
     ############################
-    ##1)	Compile the standard pattern from the inputs and handle the z axis (need to apply z treatment here because a_r_zida0e0b0xyg0 didnt get the season treatment)
+    ##1)	Compile the standard pattern from the inputs and handle the z axis (need to apply z treatment here because a_r_zida0e0b0xyg0 didn't get the season treatment)
     ###sire
     t_feedsupply_pj0zida0e0b0xyg0 = np.moveaxis(np.moveaxis(feedoptions_r1j0p[a_r_zida0e0b0xyg0],-1,0),-1,1) #had to rollaxis twice once for p and once for j0 (couldn't find a way to do both at the same time)
     t_feedsupply_pj0zida0e0b0xyg0 = pinp.f_seasonal_inp(t_feedsupply_pj0zida0e0b0xyg0,numpy=True,axis=z_pos)
@@ -3793,8 +3793,8 @@ def generator(params,r_vals,ev,plots = False):
     ###mask any that occur before weaning (except start one) and set to last date of generator and type to 0 so they are essentially ignored.
     mask = np.logical_and(dvp_start_va1e1b1nwzida0e0b0xyg1 <= date_weaned_ida0e0b0xyg1, dvp_start_va1e1b1nwzida0e0b0xyg1 > date_start_p[0])
     dvp_start_va1e1b1nwzida0e0b0xyg1[mask] = date_start_p[-1]
-    ###if more than one dvp on the last day of the generator dates must be offset by 1 becasue can't have multiple dvps on same date.
-    mask = dvp_start_va1e1b1nwzida0e0b0xyg1 == date_start_p[-1] #cant use the existing mask (above) incase there is an fvp on the last day of generator that we didnt manually put there.
+    ###if more than one dvp on the last day of the generator dates must be offset by 1 because can't have multiple dvps on same date.
+    mask = dvp_start_va1e1b1nwzida0e0b0xyg1 == date_start_p[-1] #cant use the existing mask (above) in case there is an fvp on the last day of generator that we didn't manually put there.
     dvp_start_va1e1b1nwzida0e0b0xyg1 = dvp_start_va1e1b1nwzida0e0b0xyg1 - ((np.cumsum(mask, axis=0) - 1) * mask) #if multiple fvps are before weaning then off set there date by 1 day so they are not on the same date.
     dvp_type_va1e1b1nwzida0e0b0xyg1[mask] = condense_vtype1 #set to condense type to make sure extra dvps don't cause issues with masking or feed supply
     ###sort into order
@@ -3856,8 +3856,8 @@ def generator(params,r_vals,ev,plots = False):
     ###mask any that occur before weaning and set to last date of generator and type to 0 so they are essentially ignored.
     mask = np.logical_and(dvp_date_presort_va1e1b1nwzida0e0b0xyg3 <= date_weaned_ida0e0b0xyg3, dvp_date_presort_va1e1b1nwzida0e0b0xyg3 > offs_date_start_p[0])
     dvp_date_presort_va1e1b1nwzida0e0b0xyg3[mask] = offs_date_start_p[-1]
-    ###if more than one dvp on the last day of the generator dates must be offset by 1 becasue can't have multiple dvps on same date.
-    mask = dvp_date_presort_va1e1b1nwzida0e0b0xyg3 == offs_date_start_p[-1] #cant use the existing mask (above) incase there is an fvp on the last day of generator that we didnt manually put there.
+    ###if more than one dvp on the last day of the generator dates must be offset by 1 because can't have multiple dvps on same date.
+    mask = dvp_date_presort_va1e1b1nwzida0e0b0xyg3 == offs_date_start_p[-1] #cant use the existing mask (above) in case there is an fvp on the last day of generator that we didn't manually put there.
     dvp_date_presort_va1e1b1nwzida0e0b0xyg3 = dvp_date_presort_va1e1b1nwzida0e0b0xyg3 - ((np.cumsum(mask, axis=0) - 1) * mask) #if multiple fvps are before weaning then off set there date by 1 day so they are not on the same date.
     dvp_type_va1e1b1nwzida0e0b0xyg3[mask] = condense_vtype3 #set to condense type to make sure extra dvps don't cause issues with masking or feed supply
     ###sort into order
@@ -4381,7 +4381,7 @@ def generator(params,r_vals,ev,plots = False):
     '''
     Distributing happens at the start of each season/season sequence when all the different seasons are combined back
     to a common season. It also happens when lw is condensed back to the starting number. For dams lw distributing is also 
-    required at prejoining when dams are transfered to different sires. 
+    required at prejoining when dams are transferred to different sires. 
     
     Note: The generator handles dam condensing and prejoining to be in different dvps however the distribution below 
           requires condensing to occur at prejoining (it may be possible to change the distribution code to handle 
@@ -4696,12 +4696,18 @@ def generator(params,r_vals,ev,plots = False):
 
     ##mei
     mei_p6fa1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param('sire', mei_p6fa1e1b1nwzida0e0b0xyg0,numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
-    mei_k2p6ftva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams', mei_p6ftva1e1b1nwzida0e0b0xyg1, a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,...],
-                                                                 numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1,
-                                                                 mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1*mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[:,na,na,...]))
-    mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs', mei_p6ftva1e1b1nwzida0e0b0xyg3, a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,na,...],
-                                                    a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3[:,na,na,...], numbers_start_va1e1b1nwzida0e0b0xyg3,
-                                                    mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3)
+    mei_k2p6ftva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams', mei_p6ftva1e1b1nwzida0e0b0xyg1
+                                                                      , a_k2cluster_va1e1b1nwzida0e0b0xyg1
+                                                                      , index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,...]
+                                                                      , numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1
+                                                                      , mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1*mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[:,na,na,...]))
+    mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs', mei_p6ftva1e1b1nwzida0e0b0xyg3
+                                                                        , a_k3cluster_da0e0b0xyg3
+                                                                        , index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,na,...]
+                                                                        , a_k5cluster_da0e0b0xyg3
+                                                                        , index_k5tva1e1b1nwzida0e0b0xyg3[:,na,na,...]
+                                                                        , numbers_start_va1e1b1nwzida0e0b0xyg3
+                                                                        , mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3)
 
     ##pi
     pi_p6fa1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param('sire', pi_p6fa1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
@@ -5144,12 +5150,12 @@ def generator(params,r_vals,ev,plots = False):
 
     ###lw - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. Don't need t because it doesnt effect lw
     if pinp.rep['i_store_lw_rep']:
-        r_lw_sire_pg = o_lw_psire
-        r_lw_dams_k2tvpg = o_lw_pdams * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1) * (
-                    a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,:,na,...])
-        r_lw_offs_k3k5tvpg = o_lw_poffs * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3) * (
-                    a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...]) \
-                             * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
+        r_lw_sire_psire = o_lw_psire
+        r_lw_dams_k2tvpdams = (o_lw_pdams * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                               * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+        r_lw_offs_k3k5tvpoffs = (o_lw_poffs * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
+                                 * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
+                                 * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...]))
 
     ###fec - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns.
     ### This is a big array so only stored if user wants. t is not required because it doesnt effect lw
@@ -6022,11 +6028,13 @@ def generator(params,r_vals,ev,plots = False):
 
     ###denom weights for arrays that keep axis that are not present in lp array.
     r_vals['pe1b1_denom_weights_k2tvpa1e1b1nw8ziyg1'] = ((a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
-    *(a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...])).squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos))
+                                                         *(a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...])
+                                                         ).squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos))
 
     r_vals['pde0b0_denom_weights_k3k5tvpnw8zida0e0b0xyg3'] = ((a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
                                                         *(a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
-                                                        *(a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...])).squeeze(axis=(a1_pos, e1_pos, b1_pos))
+                                                        *(a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...])
+                                                              ).squeeze(axis=(a1_pos, e1_pos, b1_pos))
 
     r_vals['e1b1_denom_weights_k2tva1e1b1nw8ziyg1'] = (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1).squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos))
 
@@ -6035,9 +6043,9 @@ def generator(params,r_vals,ev,plots = False):
 
     ###lw - with p, e, b
     if pinp.rep['i_store_lw_rep']:
-        r_vals['lw_sire_pg0'] = r_lw_sire_pg.reshape(pg0_shape)
-        r_vals['lw_dams_k2vpa1e1b1nw8ziyg1'] = r_lw_dams_k2tvpg.reshape(k2vpa1e1b1nwziyg1_shape)
-        r_vals['lw_offs_k3k5vpnw8zida0e0b0xyg3'] = r_lw_offs_k3k5tvpg.reshape(k3k5vpnwzidae0b0xyg3_shape)
+        r_vals['lw_sire_pg0'] = r_lw_sire_psire.reshape(pg0_shape)
+        r_vals['lw_dams_k2vpa1e1b1nw8ziyg1'] = r_lw_dams_k2tvpdams.reshape(k2vpa1e1b1nwziyg1_shape)
+        r_vals['lw_offs_k3k5vpnw8zida0e0b0xyg3'] = r_lw_offs_k3k5tvpoffs.reshape(k3k5vpnwzidae0b0xyg3_shape)
 
     ###fec - with p, e, b
     if pinp.rep['i_store_fec_rep']:
