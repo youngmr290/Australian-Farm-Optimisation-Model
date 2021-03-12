@@ -2031,32 +2031,33 @@ def f_cum_dvp(arr,dvp_pointer,axis=0,shift=0):
     return final
 
 def f_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, dvp_type_next_tvgw=0, vtype=0): #, w_pos, i_n_len, i_n_fvp_period, dvp_type_next_tvgw=0, vtype=0):
-    '''distributing animals on LW at the start of dvp'''
+    '''distributing animals on LW at the start of dvp
+        the 8/9 is dropped from the w if singleton'''
     ## Move w axis of destination_w9g to -1 and retain the original ‘w’ as a singleton
-    ffcfw_dest_w8gw9 = fun.f_expand(np.moveaxis(ffcfw_dest_w8g, sinp.stock['i_w_pos'],-1), sinp.stock['i_n_pos']-1, right_pos=sinp.stock['i_z_pos']-1)
+    ffcfw_dest_wgw9 = fun.f_expand(np.moveaxis(ffcfw_dest_w8g, sinp.stock['i_w_pos'],-1), sinp.stock['i_n_pos']-1, right_pos=sinp.stock['i_z_pos']-1)
 
     ## Create the distribution (result) array because it is assigned in slices
-    distribution_nearest_w8gw9 = np.zeros_like(np.broadcast_arrays(ffcfw_source_w8g[...,na],ffcfw_dest_w8gw9)[0]) #broadcast array returns list of two arrays so need to select one
+    distribution_nearest_w8gw9 = np.zeros_like(np.broadcast_arrays(ffcfw_source_w8g[...,na],ffcfw_dest_wgw9)[0]) #broadcast array returns list of two arrays so need to select one
     distribution_nextnearest_w8gw9 = np.zeros_like(distribution_nearest_w8gw9)
 
     ## Find the index of the destination slice that is nearest to the source weight
-    diff_w8gw9 = ffcfw_dest_w8gw9 - ffcfw_source_w8g[...,na]
+    diff_w8gw9 = ffcfw_dest_wgw9 - ffcfw_source_w8g[...,na]
     diff_abs_w8gw9 = np.abs(diff_w8gw9)
     nearestw9_idx_w8g = np.argmin(diff_abs_w8gw9,axis = -1)
 
     ## The nearest destination weight for each source weight
-    nearestw9_w8gw9 = np.take_along_axis(ffcfw_dest_w8gw9, nearestw9_idx_w8g[...,na], axis=-1)
+    nearestw9_w8gw9 = np.take_along_axis(ffcfw_dest_wgw9, nearestw9_idx_w8g[...,na], axis=-1)
 
     ## Determine the index of the next nearest destination slice by finding the nearest non-zero value from the difference between w9 and the nearest_w9 (using masked array)
     ###if the nearest is greater than the source then the next nearest must be less than the source.
-    nonzero_mask = (ffcfw_dest_w8gw9 - nearestw9_w8gw9) == 0
+    nonzero_mask = (ffcfw_dest_wgw9 - nearestw9_w8gw9) == 0
     positive_mask = np.logical_and(diff_w8gw9 > 0, nearestw9_w8gw9 - ffcfw_source_w8g[...,na] > 0)
     neg_mask = np.logical_and(diff_w8gw9 < 0, nearestw9_w8gw9 - ffcfw_source_w8g[...,na] < 0)
     mask = np.logical_or(np.logical_or(positive_mask, neg_mask), nonzero_mask)
     next_nearestw9_idx_w8g = np.argmin(np.ma.masked_array(diff_abs_w8gw9, mask), axis = -1)
 
     ## the next_nearest destination weight
-    next_nearestw9_w8gw9 = np.take_along_axis(ffcfw_dest_w8gw9, next_nearestw9_idx_w8g[...,na], axis=-1)
+    next_nearestw9_w8gw9 = np.take_along_axis(ffcfw_dest_wgw9, next_nearestw9_idx_w8g[...,na], axis=-1)
 
     ## Calculate the proportion distributed to the nearest and next_nearest and assign to that w9 slice
     np.put_along_axis(distribution_nearest_w8gw9, nearestw9_idx_w8g[...,na],
@@ -2068,8 +2069,8 @@ def f_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, dvp_type_next_tvgw=0, vt
     ## Handle the special cases where source weight is less than the lowest destination weight
     ### the light animals are not transferred because that would mean getting ‘free’ weight.
     ### if the light animals should be transferred, the minimum destination weight will need to be altered.
-    mask_w8gw9 = (ffcfw_source_w8g < np.min(ffcfw_dest_w8gw9,axis=-1))[...,na]
-    mask_w8gw9 = np.broadcast_to(mask_w8gw9, distribution_nearest_w8gw9.shape)
+    mask_w8gw = (ffcfw_source_w8g < np.min(ffcfw_dest_wgw9,axis=-1))[...,na]
+    mask_w8gw9 = np.broadcast_to(mask_w8gw, distribution_nearest_w8gw9.shape)
     distribution_nearest_w8gw9[mask_w8gw9] = 0
 
     ## Combine the values into the return variable
