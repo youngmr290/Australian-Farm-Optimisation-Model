@@ -1265,13 +1265,13 @@ def f_comb(n,k):
 
 
 def f_period_start_prod(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_condense,
-                        period_is_condense, period_is_startseason, idx_min_lw_z, period_is_prejoin=0, group=None):
+                        period_is_condense, period_is_startseason, lw_idx, idx_min_lw_z, period_is_prejoin=0, group=None):
     ##Set variable level = value at end of previous	
     var_start = var
     ##make sure numbers and var are same shape - this is required for the np.average func below
     numbers, var_start, numbers_start_condense = np.broadcast_arrays(numbers,var_start,numbers_start_condense)
     ##a)update var if start of DVP
-    var_start = f_condensed(numbers, var_start, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_condense, period_is_condense)
+    var_start = f_condensed(numbers, var_start, lw_idx, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_condense, period_is_condense)
     ##b) Calculate temporary values as if period is start of season
     if np.any(period_is_startseason):
         var_start = f_season_wa(numbers, var_start, season_tup, idx_min_lw_z, period_is_startseason)
@@ -1327,8 +1327,8 @@ def f_season_wa(numbers, var, season_tup, idx_min_lw_z, period_is_startseason):
     var = fun.f_update(var,temporary,period_is_startseason)
     return var
 
-
-def f_condensed(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_condense, period_is_condense):
+#todo this will NOT handle varying number of starting lws. Need to make more flexible
+def f_condensed(numbers, var, lw_idx, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_condense, period_is_condense):
     '''condense variable to 3 common points along the w axis for the start of fvp0'''
     if np.any(period_is_condense):
         temporary = var.copy()  #this is done to ensure that temp has the same size as var.
@@ -1338,22 +1338,23 @@ def f_condensed(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp
             ####this method was the way we first tried - no longer used (might be used later if we add nutrient options back in)
             temporary[...] = np.expand_dims(np.rollaxis(temporary.diagonal(axis1= sinp.stock['i_w_pos'], axis2= sinp.stock['i_n_pos']),-1,sinp.stock['i_w_pos']), sinp.stock['i_n_pos']) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
         else:
+            ###sort var based on animal lw
+            var_sorted = np.take_along_axis(var, lw_idx, axis=sinp.stock['i_w_pos']) #sort into production order (base on lw) so we can select the production of the lowest lw animals with mort less than 10% - note sorts in ascending order
             ###add high pattern
-            temporary[...] = np.mean(
-                f_dynamic_slice(var, sinp.stock['i_w_pos'], int(i_n_len ** i_n_fvp_period), int(i_n_len ** i_n_fvp_period) + int(i_w_len / 10)), sinp.stock['i_w_pos'],
-                keepdims=True)  # average of the top lw patterns
+            temporary[...] = np.mean(f_dynamic_slice(var_sorted, sinp.stock['i_w_pos'], i_w_len - int(i_w_len / 10), -1),
+                                     sinp.stock['i_w_pos'], keepdims=True)  # average of the top lw patterns
             ###add mid pattern (w 0 - 27) - use slice method in case w axis changes position (cant use MRYs dynamic slice function because we are assigning)
             sl = [slice(None)] * temporary.ndim
             sl[sinp.stock['i_w_pos']] = slice(0, int(i_n_len ** i_n_fvp_period))
             temporary[tuple(sl)] = f_dynamic_slice(var, sinp.stock['i_w_pos'], 0, 1)  # the pattern that is feed supply 1 (median) for the entire year (the top w pattern)
             ###low pattern
-            ind = np.argsort(var, axis=sinp.stock['i_w_pos'])  #sort into production order so we can select the lowest production with mort less than 10% - note sorts in ascending order
-            var_sorted = np.take_along_axis(var, ind, axis=sinp.stock['i_w_pos'])
-            numbers_start_sorted = np.take_along_axis(numbers_start_condense, ind, axis=sinp.stock['i_w_pos'])
-            numbers_sorted = np.take_along_axis(numbers, ind, axis=sinp.stock['i_w_pos'])
-            low_slice = i_w_len - np.sum(np.sum(numbers_start_sorted, axis=prejoin_tup + (season_tup,), keepdims=True)
+            # ind = np.argsort(var, axis=sinp.stock['i_w_pos'])  #sort into production order so we can select the lowest production with mort less than 10% - note sorts in ascending order
+            numbers_start_sorted = np.take_along_axis(numbers_start_condense, lw_idx, axis=sinp.stock['i_w_pos'])
+            numbers_sorted = np.take_along_axis(numbers, lw_idx, axis=sinp.stock['i_w_pos'])
+            low_slice = np.argmax(np.sum(numbers_start_sorted, axis=prejoin_tup + (season_tup,), keepdims=True)
                                          / np.sum(numbers_sorted, axis=prejoin_tup + (season_tup,), keepdims=True) > 0.9
-                                         , sinp.stock['i_w_pos'], keepdims=True)  # returns bool if mort is less the 10% then sums the falses which give the index of the first w pattern that has mort less that 10%
+                                         , axis=sinp.stock['i_w_pos'])  # returns the index of the first w slice that has mort less the 10%.
+            low_slice = np.expand_dims(low_slice, axis=sinp.stock['i_w_pos']) #add singleton w axis back
             sl = [slice(None)] * temporary.ndim
             sl[sinp.stock['i_w_pos']] = slice(-int(i_n_len ** i_n_fvp_period), None)
             ## production level of the lowest nutrition profile that has a mortality less than 10% for the year
@@ -1363,9 +1364,9 @@ def f_condensed(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp
 
     return var
 
-def f_period_start_nums(numbers, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_condense, period_is_condense, period_is_startseason, season_propn_z, group=None, nyatf_b1 = 0, numbers_initial_repro=0, gender_propn_x=1, period_is_prejoin=0, period_is_birth=False):
+def f_period_start_nums(numbers, lw_idx, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_condense, period_is_condense, period_is_startseason, season_propn_z, group=None, nyatf_b1 = 0, numbers_initial_repro=0, gender_propn_x=1, period_is_prejoin=0, period_is_birth=False):
     ##a)update numbers if start of DVP
-    numbers = f_condensed(numbers, numbers, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_condense, period_is_condense)
+    numbers = f_condensed(numbers, numbers, lw_idx, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_condense, period_is_condense)
     ##b) reallocate for season type
     if np.any(period_is_startseason):
         temporary = np.sum(numbers, axis = season_tup, keepdims=True)  * season_propn_z  #Calculate temporary values as if period_is_break
