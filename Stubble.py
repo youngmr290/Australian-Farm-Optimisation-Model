@@ -143,7 +143,7 @@ def stubble_all(params):
     ################################
 
     cat_a_st_req_p6zk = (1/(1-quant_decline_p6zk))*(1+tramp_effect_ks1[:,0])*(1/cat_propn_ks1[:,0])*1000 #*1000 - to convert to tonnes
-    cat_b_st_prov_k = cat_propn_ks1[:,1]/cat_propn_ks1[:,0]*1000
+    cat_b_st_prov_k = cat_propn_ks1[:,1]/cat_propn_ks1[:,0]*1000 #cat b provided by consuming 1t of cat a.
     cat_b_st_req_k = 1000*(1+tramp_effect_ks1[:,1])
     cat_c_st_prov_k = cat_propn_ks1[:,2]/cat_propn_ks1[:,1]*1000
     cat_c_st_req_k = 1000*(1+tramp_effect_ks1[:,2])
@@ -152,7 +152,7 @@ def stubble_all(params):
     #transfers between periods   #
     ##############################
     ##transfer a given cat to the next period.
-    per_transfer_p6zk = quant_decline_p6zk*1000 + 1000
+    per_transfer_p6zk = 1000 - quant_decline_p6zk*1000
     per_transfer_p6zk = per_transfer_p6zk * mask_stubble_exists_p6zk  #no transfer can occur when stubble doesnt exist
 
     ###############
@@ -199,7 +199,7 @@ def stubble_all(params):
     tup_ks1 = tuple(map(tuple, index_bc_ks1))
     params['transfer_req'] =dict(zip(tup_ks1, stub_req_ks1))
 
-    ###'provide' params ie transferring 1t from current period to the next - this accounts for deterioration
+    ###'provide' from cat to cat ie consuming 1t of cat A provides 2t of cat b
     stub_prov_ks1 = np.stack([cat_b_st_prov_k, cat_c_st_prov_k], 1)
     stub_prov_ks1 = stub_prov_ks1.ravel()
     tup_ks1 = tuple(map(tuple, index_bc_ks1))

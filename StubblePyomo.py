@@ -85,10 +85,13 @@ def stubpyomo_local(params):
     except AttributeError:
         pass
     def stubble_transfer(model,f,k,s):
-        ss = list(model.s_stub_cat)[list(model.s_stub_cat).index(s)-1] #stubble cat plus one - used to transfer from current cat to the next, list is required because indexing of an ordered set starts at 1 which means index of 0 chucks error 
-        fs = list(model.s_feed_periods)[list(model.s_feed_periods).index(f)-1] #have to convert to a list first beacuse indexing of an ordered set starts at 1
-        return  -model.v_stub_transfer[fs,k,s]*1000  + model.p_fp_transfer[f,k]*model.v_stub_transfer[f,k,s] \
-                    - sum(model.v_stub_con[v,f,k,ss] * model.p_bc_prov[k,s] + model.v_stub_con[v,f,k,s] * model.p_bc_req[k,s] for v in model.s_feed_pools) <=0
+        if s == 'a':# or model.p_bc_req[k,s]==0: #this constraint is only for cat b and c
+            return pe.Param.Skip
+        else:
+            ss = list(model.s_stub_cat)[list(model.s_stub_cat).index(s)-1] #previous stubble cat - used to transfer from current cat to the next, list is required because indexing of an ordered set starts at 1 which means index of 0 chucks error
+            fs = list(model.s_feed_periods)[list(model.s_feed_periods).index(f)-1] #have to convert to a list first beacuse indexing of an ordered set starts at 1
+            return  - model.v_stub_transfer[fs,k,s] * model.p_fp_transfer[f,k]  + model.v_stub_transfer[f,k,s] * 1000 \
+                    + sum(-model.v_stub_con[v,f,k,ss] * model.p_bc_prov[k,s] + model.v_stub_con[v,f,k,s] * model.p_bc_req[k,s] for v in model.s_feed_pools) <=0
     model.con_stubble_bcd = pe.Constraint(model.s_feed_periods, model.s_crops, model.s_stub_cat, rule = stubble_transfer, doc='links rotation stubble production with consumption of cat A')
 
 
