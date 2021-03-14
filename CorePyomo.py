@@ -181,7 +181,7 @@ def coremodel_all(params):
     except AttributeError:
         pass
     def cropsow_link(model,k,l):
-        if type(crppy.cropsow(model,k,l)) == int: #if crop sow param is zero this will be int (cant do if==0 because when it is not 0 it is a complex pyomo object which cant be evaluated)
+        if type(crppy.cropsow(model,k,l)) == int: #if crop sow param is zero this will be int (can't do if==0 because when it is not 0 it is a complex pyomo object which can't be evaluated)
             return pe.Constraint.Skip #skip constraint if no crop is being sown on given rotation
         else:
             return sum(-model.v_seeding_crop[p,k,l] for p in model.s_labperiods) + crppy.cropsow(model,k,l)  <= 0
@@ -194,7 +194,7 @@ def coremodel_all(params):
     except AttributeError:
         pass
     def passow_link(model,p,k,l):
-        if type(paspy.passow(model,p,k,l)) == int: #if crop sow param is zero this will be int (cant do if==0 because when it is not 0 it is a complex pyomo object which cant be evaluated)
+        if type(paspy.passow(model,p,k,l)) == int: #if crop sow param is zero this will be int (can't do if==0 because when it is not 0 it is a complex pyomo object which can't be evaluated)
             return pe.Constraint.Skip #skip constraint if no pasture is being sown
         else:
             return -model.v_seeding_pas[p,k,l]  + paspy.passow(model,p,k,l) <= 0
@@ -358,7 +358,7 @@ def coremodel_all(params):
     def profit(model):
         c = sinp.general['cashflow_periods']
         i = len(c) - 1 # minus one because index starts from 0
-        return model.v_credit[c[i]]-model.v_debit[c[i]] - model.v_dep - model.v_minroe - (model.v_asset * uinp.finance['opportunity_cost_capital'])  #have to include debit otherwise model selects lots of debit to increase credit, hence cant just maximise credit.
+        return model.v_credit[c[i]]-model.v_debit[c[i]] - model.v_dep - model.v_minroe - (model.v_asset * uinp.finance['opportunity_cost_capital'])  #have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.
     try:
         model.del_component(model.profit)
     except AttributeError:
@@ -395,9 +395,9 @@ def coremodel_all(params):
         return results
 
     else:
-        #todo include some error handling - eg cant run multiple TOL at the same time. Need different stage allocation for each tol. thus could use an if statement to pick the allocation used
+        #todo include some error handling - eg can't run multiple TOL at the same time. Need different stage allocation for each tol. thus could use an if statement to pick the allocation used
         #todo each variable needs to assigned to stage - give error if that does not happen
-        #todo cant allocate one variable to multiple stages
+        #todo can't allocate one variable to multiple stages
         #allocate labour provide variables to the last stage??
         #stage definitions differ for different nodes to the allocation will need to be based on the node as well eg for ealry break labour period 3 might be in stage 2 but for late break it might be in stage 3
         ##specify stages for variables when all variables go into the same stage

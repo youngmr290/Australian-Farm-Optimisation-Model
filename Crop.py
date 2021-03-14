@@ -508,8 +508,8 @@ def f_chem_cost(r_vals):
     app_cost_ha = chem_applications * mac.chem_app_cost_ha()
     ##add cashflow periods and sum across each chem - have to do this to both chem cost and application so i can report them separately
     c_chem_allocation = chem_cost_allocation().stack()
-    chem_cost = chem_cost.mul(c_chem_allocation, axis=1,level=1).sum(axis=1, level=0)#first stack is required so that reindexing can occur (ie cant reindex a multi index with a multi index)
-    app_cost_ha = app_cost_ha.mul(c_chem_allocation, axis=1,level=1).sum(axis=1, level=0)#first stack is required so that reindexing can occur (ie cant reindex a multi index with a multi index)
+    chem_cost = chem_cost.mul(c_chem_allocation, axis=1,level=1).sum(axis=1, level=0)#first stack is required so that reindexing can occur (ie can't reindex a multi index with a multi index)
+    app_cost_ha = app_cost_ha.mul(c_chem_allocation, axis=1,level=1).sum(axis=1, level=0)#first stack is required so that reindexing can occur (ie can't reindex a multi index with a multi index)
     r_vals['chem_cost'] = chem_cost
     r_vals['chem_app_cost_ha'] = app_cost_ha
     ##add application cost and chem cost

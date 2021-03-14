@@ -1123,7 +1123,7 @@ def period_proportion_np(period_dates, date_array):
     mask = dates_end < dates_start
     dates_end[mask] = dates_end[mask] + np.timedelta64(365,'D')
 
-    ##calc the period each value in the date array falls within (cant use np.searchsorted because date array has z axis)
+    ##calc the period each value in the date array falls within (can't use np.searchsorted because date array has z axis)
     ###occur is bool array which is true for the period that the date array fall into
     occur = np.logical_and(dates_start <= date_array, date_array < dates_end)
     ###period index

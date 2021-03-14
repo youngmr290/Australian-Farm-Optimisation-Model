@@ -83,7 +83,7 @@ run_pyomo = True #do you want pyomo to run (default is True but if testing repor
 
 exp_data = fun.f_read_exp()
 exp_data = exp_data.sort_index() #had to sort to stop performance warning, this means runs may not be executed in order of exp.xlsx
-exp_data1=exp_data.copy() #copy made so that the run and runpyomo cols can be added - the original df is used to allocate sa values (would cause an error if run col existed but i cant drop it because it is used to determine if the trial is run)
+exp_data1=exp_data.copy() #copy made so that the run and runpyomo cols can be added - the original df is used to allocate sa values (would cause an error if run col existed but i can't drop it because it is used to determine if the trial is run)
 
 
 ##check if precalcs and pyomo need to be recalculated.

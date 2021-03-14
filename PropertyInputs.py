@@ -307,7 +307,7 @@ def f_seasonal_inp(inp, numpy=False, axis=0, level=0):
     else:
         ##mask the season types
         keys_z = general['i_z_idx'][z_mask]
-        if inp.columns.nlevels > 2: #if statement required because cant convert one element to tuple
+        if inp.columns.nlevels > 2: #if statement required because can't convert one element to tuple
             slc_none = tuple([slice(None)] * (inp.columns.nlevels - 1)) #makes a slice(none) for each column level except season.
             inp = inp.loc[:, (keys_z, slc_none)]
         elif inp.columns.nlevels > 1:

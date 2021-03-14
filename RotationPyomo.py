@@ -63,7 +63,7 @@ def rotationpyomo(params):
             pass
     except AttributeError:
         def rot_phase_link(model,l,h):
-            ##skip constraint if the history is not used by any of the rotations. This only happens for the continuous rotations because there is not constraint for them because they provide and require themselves, so if no other rotation use the continuous history and error is thrown because constraint is built from nothing. But cant remove continuous histories because they can be used by other rotations eg AAAAAa has history of AAAAA this history can be used by AAAAAb rotation.
+            ##skip constraint if the history is not used by any of the rotations. This only happens for the continuous rotations because there is not constraint for them because they provide and require themselves, so if no other rotation use the continuous history and error is thrown because constraint is built from nothing. But can't remove continuous histories because they can be used by other rotations eg AAAAAa has history of AAAAA this history can be used by AAAAAb rotation.
             if any(params['hist']==h):
                 return sum(model.v_phase_area[r,l]*model.p_rotphaselink[r,h] for r in model.s_phases if ((r,)+(h,)) in model.p_rotphaselink)<=0
             else:

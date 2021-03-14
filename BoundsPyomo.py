@@ -92,7 +92,7 @@ def boundarypyomo_local():
 
         
         
-        ##SR - this cant set the sr on an actual pasture but it means different pastures provide a different level of carry capacity although nothing fixes sheep to that pasture
+        ##SR - this can't set the sr on an actual pasture but it means different pastures provide a different level of carry capacity although nothing fixes sheep to that pasture
         if sr_bound_inc:
             ###initilise
             pasture_dse_carry = {} #populate straight into dict

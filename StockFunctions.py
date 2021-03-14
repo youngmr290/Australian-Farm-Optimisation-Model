@@ -186,7 +186,7 @@ def f_c2g(params_c2, y=0, var_pos=0, condition=None, axis=0, dtype=False):
     i_mask_g3g3 = sinp.stock['i_mask_g3g3']
 
     ##convert params from c2 to c0
-    params_c2 = params_c2.astype(float) #this is so that blank cells are converted to nan not none type because none type cant be multiplied etc
+    params_c2 = params_c2.astype(float) #this is so that blank cells are converted to nan not none type because none type can't be multiplied etc
     params_c0 = params_c2[...,a_c2_c0]
     ##add y axis
     ###if y is not numpy ie was read in as an int because it was a single cell, it needs to be converted
@@ -489,7 +489,7 @@ def f_feedsupply_adjust(attempts,feedsupply,itn):
     if itn==0:
         slope=pinp.sheep['i_feedsupply_slope_std']
     else:
-        ####linregress only works on 1d array and cant use apply_over_axis because needs x and y. maybe there is a better way but i looked for a while and found nothing
+        ####linregress only works on 1d array and can't use apply_over_axis because needs x and y. maybe there is a better way but i looked for a while and found nothing
         slope=np.empty_like(feedsupply)
         feedsupply_all_itn = attempts[...,0]
         error_all_itn = attempts[...,1]
@@ -1343,7 +1343,7 @@ def f_condensed(numbers, var, lw_idx, prejoin_tup, season_tup, i_n_len, i_w_len,
             ###add high pattern
             temporary[...] = np.mean(f_dynamic_slice(var_sorted, sinp.stock['i_w_pos'], i_w_len - int(i_w_len / 10), -1),
                                      sinp.stock['i_w_pos'], keepdims=True)  # average of the top lw patterns
-            ###add mid pattern (w 0 - 27) - use slice method in case w axis changes position (cant use MRYs dynamic slice function because we are assigning)
+            ###add mid pattern (w 0 - 27) - use slice method in case w axis changes position (can't use MRYs dynamic slice function because we are assigning)
             sl = [slice(None)] * temporary.ndim
             sl[sinp.stock['i_w_pos']] = slice(0, int(i_n_len ** i_n_fvp_period))
             temporary[tuple(sl)] = f_dynamic_slice(var, sinp.stock['i_w_pos'], 0, 1)  # the pattern that is feed supply 1 (median) for the entire year (the top w pattern)
@@ -1683,7 +1683,7 @@ def f_animal_trigger_levels(index_pg, age_start, period_is_shearing_pg, a_next_s
     trigger2_pg = np.trunc(age_start / 7)
     ##Trigger value 3 - Weeks from previous shearing
     trigger3_pg = index_pg - np.maximum.accumulate(index_pg*period_is_shearing_pg)
-    ##Trigger value 4 - weeks to next shearing - cant use period is array like in the other situations
+    ##Trigger value 4 - weeks to next shearing - can't use period is array like in the other situations
     trigger4_pg = a_next_s_pg - index_pg #this will return 0 when the current period is shearing because the next association points at the current period when period is
     ##Trigger value 5 - weeks from previous joining
     trigger5_pg = index_pg - np.maximum.accumulate(index_pg*period_is_joining_pg)
@@ -1927,7 +1927,7 @@ def f_p2v_std(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tv
 
 # ##Method 4 - loop over v and sum p - this save p and v axis being on the same array but requires lots of looping so isn't much faster
 # def f_p2v_loop(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tvp=True, days_period_p=1, period_is_tvp=True, a_ev_p=1, index_ftvp=1, a_p6_p=1, index_p6ftvp=1):
-#     try: days_period_p = days_period_p.astype('float32')  #convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it cant be converted to float (because int object is not numpy)
+#     try: days_period_p = days_period_p.astype('float32')  #convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it can't be converted to float (because int object is not numpy)
 #     except AttributeError:
 #         pass
 #     ##mul everything
@@ -1945,7 +1945,7 @@ def f_p2v_std(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tv
 # ##Method 3 - use groupby to sum p, this means p and v don't exist on the same array - not as fast as method 2
 # import numpy_indexed as npi
 # def f_p2v_groupby(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tvp=True, days_period_p=1, period_is_tvp=True, a_ev_p=1, index_ftvp=1, a_p6_p=1, index_p6ftvp=1):
-#     try: days_period_p = days_period_p.astype('float32')  #convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it cant be converted to float (because int object is not numpy)
+#     try: days_period_p = days_period_p.astype('float32')  #convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it can't be converted to float (because int object is not numpy)
 #     except AttributeError:
 #         pass
 #     ##mul everything
@@ -1964,7 +1964,7 @@ def f_p2v_std(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tv
 
 ##Method 2 (fastest)- sum sections of p axis to leave v (almost like sum if) this is fast because don't need p and v axis in same array
 def f_p2v(production_p, dvp_pointer_p=1, numbers_p=1, on_hand_tp=True, days_period_p=1, period_is_tp=True, a_any1_p=1, index_any1tp=1, a_any2_p=1, index_any2any1tp=1):
-    #convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it cant be converted to float (because int object is not numpy)
+    #convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it can't be converted to float (because int object is not numpy)
     try:
         days_period_p = days_period_p.astype('float32')
     except AttributeError:

@@ -8,7 +8,7 @@ This module has no SA
 @author: young
 """
 
-##python modules (CANT import propertyinputs)
+##python modules (CAN'T import PropertyInputs)
 import pickle as pkl
 import pandas as pd
 import numpy as np
@@ -95,7 +95,7 @@ phases['phases'] = pd.read_excel('Rotation.xlsx', sheet_name='rotation list', he
 '''
 A1, E1 are special sets used in con2 - currently not used
 Note
-- A1 is also used in pasture functions to build the germ df, so it cant be deleted
+- A1 is also used in pasture functions to build the germ df, so it can't be deleted
 - C is used in stubble module, createmodel & mach
 - C1 is used just in pasture functions
 - sets now include capitals - this shouldn't effect con1 but it makes building the germ df easier

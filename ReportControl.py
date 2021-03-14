@@ -1,6 +1,11 @@
 """
 Created on Thu Dec 2 09:35:26 2020
 
+Note: If reporting dates from a numpy array it is necessary to convert to datetime64[ns] prior to converting to a DataFrame
+
+For example:
+data_df3 = pd.DataFrame(fvp_fdams.astype('datetime64[ns]'))  # conversion to dataframe only works with this datatype
+
 @author: Young
 """
 
@@ -201,7 +206,7 @@ if run_lw_dams:
     cols =[6]
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
-    ffcfw_dams = rep.f_stack(func, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights,
+    ffcfw_dams = rep.f_stack(func, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights
                              , den_weights=den_weights, na_prod=na_prod, na_weights=na_weights
                              , keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
     f_df2xl(writer, ffcfw_dams, 'ffcfw_dams', option=1)
@@ -368,10 +373,10 @@ if run_dse:
     method = 0
     per_ha = True
     dse = rep.f_stack(func, trial_outdated, exp_data_index, trials, method = method, per_ha = per_ha)
-    f_df2xl(writer, dse, 'dse_wtwt', option=1)
+    f_df2xl(writer, dse, 'dse_wt', option=1)
     method = 1
     dse = rep.f_stack(func, trial_outdated, exp_data_index, trials, method = method, per_ha = per_ha)
-    f_df2xl(writer, dse, 'dse_wtmei', option=1)
+    f_df2xl(writer, dse, 'dse_mei', option=1)
 
 if run_grnfoo:
     #returns foo at end of each fp

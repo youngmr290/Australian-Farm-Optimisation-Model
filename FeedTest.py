@@ -42,15 +42,30 @@ temp = np.concatenate((feedsupply_f[na,:],r_fec_p6f), axis=0)
 data_df1 = pd.DataFrame(temp)
 
 ## call the period generator that returns the FEC for each feedsupply between 0 and 3
-date_start_p, fvp_dams, fvp_offs = fgen.period_generator()
+date_start_p, fvp_fdams, fvp_foffs = fgen.period_generator()
+## reduce dimension of the fvp arrays to 2 dimensions
+# todo this needs to be altered if shape of the inputs is altered
+### common for dams & offs
+z_slc = 0
+i_slc = 0
+### dams
+###Active e axis for dams
+e1_dams_slc = slice(None)
+###offspring
+###Active x slice for offspring
+d_offs_slc = 2
+x_offs_slc = slice(None)
+
+fvp_fdams = fvp_fdams[:, :, e1_dams_slc, :, :, :, z_slc, i_slc, :, :, :, :, :, :, :]
+fvp_foffs = fvp_foffs[:, :, :, :, :, :, z_slc, i_slc, d_offs_slc, :, :, :, x_offs_slc, :, :]
+
 ## convert each to a dataframe for saving to Excel
 data_df2 = pd.DataFrame(date_start_p)
 ### alter the axes that are added to the dataframe based axes that will vary. Also change the columns in the writer below
 ### Use squeeze to highlight (with an error) that the number of active axes has changed.
-###Active e axis for dams
-data_df3 = pd.DataFrame(np.squeeze(fvp_dams))
-###Set d & x slice both to slice 0
-data_df4 = pd.DataFrame(np.squeeze(fvp_offs)[:,0,0])
+
+data_df3 = pd.DataFrame(np.squeeze(fvp_fdams).astype('datetime64[ns]'))  # conversion to dataframe only works with this datatype
+data_df4 = pd.DataFrame(np.squeeze(fvp_foffs).astype('datetime64[ns]'))
 
 
 ## write the data and the polynomials to Excel (overwriting file r_fec.xlsx)

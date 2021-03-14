@@ -809,7 +809,7 @@ def f_profitloss_table(lp_vars, r_vals):
     ##income
     rev_grain_zc = rev_grain_k_cz.sum(axis=0).unstack(0)  # sum landuse axis
     ###add to p/l table each as a new row
-    pnl.loc[idx[:,'Revenue','grain'],:] = rev_grain_zc.reindex(keys_c, axis=1).values #cant just assign values because c axis has been sorted alphebetically so need to put back in correct order for cashflow
+    pnl.loc[idx[:,'Revenue','grain'],:] = rev_grain_zc.reindex(keys_c, axis=1).values #can't just assign values because c axis has been sorted alphebetically so need to put back in correct order for cashflow
     pnl.loc[idx[:, 'Revenue', 'sheep sales'], :] = stocksale_cz.T
     pnl.loc[idx[:, 'Revenue', 'wool'], :] = wool_cz.T
     pnl.loc[idx[:, 'Revenue', 'Total Revenue'], :] = pnl.loc[pnl.index.get_level_values(1) == 'Revenue'].sum(axis=0).values
@@ -1112,7 +1112,7 @@ def f_survival_wean_scan(lp_vars, r_vals, **kwargs):
 ############################
 
 def f_numpy2df_error(prod, weights, arith_axis, index, cols):
-    ##error handle 1: cant preform arithmetic along an axis and also report that axis and the index or col
+    ##error handle 1: can't preform arithmetic along an axis and also report that axis and the index or col
     arith_occur = len(arith_axis) >= 1
     arith_error = any(item in index for item in arith_axis) or any(item in cols for item in arith_axis)
     if arith_occur and arith_error:  # if arith is happening and there is an error in selected axis
