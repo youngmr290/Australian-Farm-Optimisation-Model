@@ -64,7 +64,8 @@ def feed_generator():
     na=np.newaxis
     ## define the periods - default (dams and sires)
     n_sim_periods = 11  #number of feed periods + 1
-    date_start_p = per.f_feed_periods()[0:-1].astype('datetime64') #remove last date because that is the end date of the last period (not required)
+    date_start_pz = per.f_feed_periods()[0:-1].astype('datetime64') #remove last date because that is the end date of the last period (not required)
+    date_start_p = date_start_pz[:, 0] # to take only the first slice of the z axis. The Feed supply calculator.xlsx is not set to handle different seasons
     # date_start_pa1e1b1nwzida0e0b0xyg = np.expand_dims(date_start_p, axis = tuple(range(sinp.stock['i_p_pos']+1, 0)))
 
 

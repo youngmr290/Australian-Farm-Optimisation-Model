@@ -47,14 +47,14 @@ date_start_p, fvp_fdams, fvp_foffs = fgen.period_generator()
 # todo this needs to be altered if shape of the inputs is altered
 ### common for dams & offs
 z_slc = 0
-i_slc = 0
+i_slc = slice(None)
 ### dams
-###Active e axis for dams
-e1_dams_slc = slice(None)
+###Select e axis for dams
+e1_dams_slc = 0
 ###offspring
-###Active x slice for offspring
+###Select d & x slice for offspring
 d_offs_slc = 2
-x_offs_slc = slice(None)
+x_offs_slc = 0
 
 fvp_fdams = fvp_fdams[:, :, e1_dams_slc, :, :, :, z_slc, i_slc, :, :, :, :, :, :, :]
 fvp_foffs = fvp_foffs[:, :, :, :, :, :, z_slc, i_slc, d_offs_slc, :, :, :, x_offs_slc, :, :]
