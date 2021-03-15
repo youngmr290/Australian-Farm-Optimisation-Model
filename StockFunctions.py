@@ -1050,7 +1050,7 @@ def f_emissions_bc(ch, intake_f, intake_s, md_solid, level):
 
 
 
-def f_feedsupply(cu3, cu4, cr, feedsupply_std_a1e1b1nwzida0e0b0xyg, paststd_foo_a1e1b1j0wzida0e0b0xyg, paststd_dmd_a1e1b1j0wzida0e0b0xyg, legume_a1e1b1nwzida0e0b0xyg, pi, pasture_stage_a1e1b1j0wzida0e0b0xyg):
+def f_feedsupply(feedsupply_std_a1e1b1nwzida0e0b0xyg, paststd_foo_a1e1b1j0wzida0e0b0xyg, paststd_dmd_a1e1b1j0wzida0e0b0xyg, paststd_hf_a1e1b1j0wzida0e0b0xyg, pi):
     ##level of pasture
     level_a1e1b1nwzida0e0b0xyg = np.trunc(np.minimum(2, feedsupply_std_a1e1b1nwzida0e0b0xyg)).astype('int') #note np.trunc rounds down to the nearest int (need to specify int type for the take along axis function below)
     ##next level up of pasture
@@ -1061,18 +1061,20 @@ def f_feedsupply(cu3, cu4, cr, feedsupply_std_a1e1b1nwzida0e0b0xyg, paststd_foo_
     paststd_foo_a1e1b1nwzida0e0b0xyg = np.take_along_axis(paststd_foo_a1e1b1j0wzida0e0b0xyg, level_a1e1b1nwzida0e0b0xyg, sinp.stock['i_n_pos'])
     paststd_foo_next_a1e1b1nwzida0e0b0xyg = np.take_along_axis(paststd_foo_a1e1b1j0wzida0e0b0xyg, next_level_a1e1b1nwzida0e0b0xyg, sinp.stock['i_n_pos'])
     foo_a1e1b1nwzida0e0b0xyg = paststd_foo_a1e1b1nwzida0e0b0xyg + proportion_a1e1b1nwzida0e0b0xyg * (paststd_foo_next_a1e1b1nwzida0e0b0xyg - paststd_foo_a1e1b1nwzida0e0b0xyg)
-    ##foo corrected to hand shears and estimated height
-    foo, hf = f_foo_convert(cu3, cu4, foo_a1e1b1nwzida0e0b0xyg, pasture_stage_a1e1b1j0wzida0e0b0xyg, legume_a1e1b1nwzida0e0b0xyg, cr, z_pos = sinp.stock['i_z_pos'])
     ##dmd
     paststd_dmd_a1e1b1nwzida0e0b0xyg = np.take_along_axis(paststd_dmd_a1e1b1j0wzida0e0b0xyg, level_a1e1b1nwzida0e0b0xyg, sinp.stock['i_n_pos'])
     paststd_dmd_next_a1e1b1nwzida0e0b0xyg = np.take_along_axis(paststd_dmd_a1e1b1j0wzida0e0b0xyg, next_level_a1e1b1nwzida0e0b0xyg, sinp.stock['i_n_pos'])
     dmd_a1e1b1nwzida0e0b0xyg = paststd_dmd_a1e1b1nwzida0e0b0xyg + proportion_a1e1b1nwzida0e0b0xyg * (paststd_dmd_next_a1e1b1nwzida0e0b0xyg - paststd_dmd_a1e1b1nwzida0e0b0xyg)
+    ##hf
+    paststd_hf_a1e1b1nwzida0e0b0xyg = np.take_along_axis(paststd_hf_a1e1b1j0wzida0e0b0xyg, level_a1e1b1nwzida0e0b0xyg, sinp.stock['i_n_pos'])
+    paststd_hf_next_a1e1b1nwzida0e0b0xyg = np.take_along_axis(paststd_hf_a1e1b1j0wzida0e0b0xyg, next_level_a1e1b1nwzida0e0b0xyg, sinp.stock['i_n_pos'])
+    hf_a1e1b1nwzida0e0b0xyg = paststd_hf_a1e1b1nwzida0e0b0xyg + proportion_a1e1b1nwzida0e0b0xyg * (paststd_hf_next_a1e1b1nwzida0e0b0xyg - paststd_hf_a1e1b1nwzida0e0b0xyg)
     ##proportion of PI that is offered as supp
     supp_propn_a1e1b1nwzida0e0b0xyg = proportion_a1e1b1nwzida0e0b0xyg * (feedsupply_std_a1e1b1nwzida0e0b0xyg > 2) + (feedsupply_std_a1e1b1nwzida0e0b0xyg == 4)   # the proportion of diet if the value is above 2 and equal to 1.0 if fs==4 (at fs 3 sheep have 0 sup and 0 fodder at fs4 sheep have 100% of pi is sup)
     intake_s = pi * supp_propn_a1e1b1nwzida0e0b0xyg
     ##calc herb md
     herb_md = fun.dmd_to_md(dmd_a1e1b1nwzida0e0b0xyg)
-    return foo, hf, dmd_a1e1b1nwzida0e0b0xyg, intake_s, herb_md
+    return foo_a1e1b1nwzida0e0b0xyg, hf_a1e1b1nwzida0e0b0xyg, dmd_a1e1b1nwzida0e0b0xyg, intake_s, herb_md
 
 
 

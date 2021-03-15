@@ -492,56 +492,6 @@ def generator(params,r_vals,ev,plots = False):
     fvp1_offset_ida0e0b0xyg3 = sfun.f_g2g(pinp.sheep['i_fvp1_offset_ig3'], 'offs', i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
     fvp2_offset_ida0e0b0xyg3 = sfun.f_g2g(pinp.sheep['i_fvp2_offset_ig3'], 'offs', i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
 
-    ###################################
-    ###group independent              #
-    ###################################
-    ##association between b0 and b1
-    a_b0_b1nwzida0e0b0xyg = fun.f_expand(sinp.stock['ia_b0_b1'], b1_pos)
-    ##nfoet expanded
-    nfoet_b1nwzida0e0b0xyg = fun.f_expand(sinp.stock['a_nfoet_b1'], b1_pos)
-    ##nyatf expanded to b1 & b0
-    nyatf_b1nwzida0e0b0xyg = fun.f_expand(sinp.stock['a_nyatf_b1'], b1_pos)
-    #nyatf_b0xyg = fun.f_expand(sinp.stock['a_nyatf_b0'], b0_pos)
-    ##legume proportion in each period
-    legume_p6a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_legume_p6z'], z_pos, source=0, dest=-1, left_pos2=p_pos,
-                                                 right_pos2=z_pos) #p6 axis converted to p axis later (association section)
-    legume_p6a1e1b1nwzida0e0b0xyg = pinp.f_seasonal_inp(legume_p6a1e1b1nwzida0e0b0xyg,numpy=True,axis=z_pos)
-    ##estimated foo and dmd for the midas periods - apply z mask
-    paststd_foo_p6a1e1b1j0wzida0e0b0xyg = fun.f_expand(pinp.sheep['i_paststd_foo_p6zj0'], z_pos, move=True, source=0, dest=2,
-                                                       left_pos2=n_pos, right_pos2=z_pos, left_pos3=p_pos, right_pos3=n_pos) #p6 axis converted to p axis later (association section), axis order doesnt matter because sliced when used
-    paststd_foo_p6a1e1b1j0wzida0e0b0xyg = pinp.f_seasonal_inp(paststd_foo_p6a1e1b1j0wzida0e0b0xyg,numpy=True,axis=z_pos)
-    paststd_dmd_p6a1e1b1j0wzida0e0b0xyg = fun.f_expand(pinp.sheep['i_paststd_dmd_p6zj0'], z_pos, move=True, source=0, dest=2,
-                                                       left_pos2=n_pos, right_pos2=z_pos, left_pos3=p_pos, right_pos3=n_pos) #p6 axis converted to p axis later (association section), axis order doesnt matter because sliced when used
-    paststd_dmd_p6a1e1b1j0wzida0e0b0xyg = pinp.f_seasonal_inp(paststd_dmd_p6a1e1b1j0wzida0e0b0xyg,numpy=True,axis=z_pos)
-    pasture_stage_p6a1e1b1j0wzida0e0b0xyg = fun.f_expand(pinp.sheep['i_pasture_stage_p6z'], z_pos, move=True, source=0, dest=-1,
-                                                         left_pos2=p_pos, right_pos2=z_pos) #p6 axis converted to p axis later (association section)
-    pasture_stage_p6a1e1b1j0wzida0e0b0xyg = pinp.f_seasonal_inp(pasture_stage_p6a1e1b1j0wzida0e0b0xyg,numpy=True,axis=z_pos).astype(int)
-    ##season type probability - prob and z mask are accounted for in f_season
-    i_season_propn_z = fun.f_expand(np.ones_like(pinp.general['i_season_propn_z']), z_pos)
-    season_propn_zida0e0b0xyg = pinp.f_seasonal_inp(i_season_propn_z,numpy=True,axis=z_pos)
-    ##wind speed
-    ws_m4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_ws_m4'], p_pos)
-    ##expected stocking density
-    density_p6a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_density_p6z'], z_pos, source=0, dest=-1,
-                                                  left_pos2=p_pos, right_pos2=z_pos) #p6 axis converted to p axis later (association section)
-    density_p6a1e1b1nwzida0e0b0xyg = pinp.f_seasonal_inp(density_p6a1e1b1nwzida0e0b0xyg,numpy=True,axis=z_pos).astype(int)
-    ##nutrition adjustment for expected stocking density
-    density_nwzida0e0b0xyg1 = fun.f_expand(sinp.stock['i_density_n1'], n_pos)
-    density_nwzida0e0b0xyg3 = fun.f_expand(sinp.stock['i_density_n3'], n_pos)
-    ##Calculation of rainfall distribution across the week - i_rain_distribution_m4m1 = how much rain falls on each day of the week sorted in order of quantity of rain. SO the most rain falls on the day with the highest rainfall.
-    rain_m4a1e1b1nwzida0e0b0xygm1 = fun.f_expand(pinp.sheep['i_rain_m4'][...,na] * pinp.sheep['i_rain_distribution_m4m1'] * (7/30.4), p_pos-1,right_pos=-1) #-1 because p is -16 when m1 axis is included
-    ##Mean daily temperature
-    temp_ave_m4a1e1b1nwzida0e0b0xyg= fun.f_expand(pinp.sheep['i_temp_ave_m4'], p_pos)
-    ##Mean daily maximum temperature
-    temp_max_m4a1e1b1nwzida0e0b0xyg= fun.f_expand(pinp.sheep['i_temp_max_m4'], p_pos)
-    ##Mean daily minimum temperature
-    temp_min_m4a1e1b1nwzida0e0b0xyg= fun.f_expand(pinp.sheep['i_temp_min_m4'], p_pos)
-    ##latitude
-    lat_deg = pinp.sheep['i_latitude']
-    lat_rad = np.radians(pinp.sheep['i_latitude'])
-    ##min numbers
-    numbers_min_b1nwzida0e0b0xyg = fun.f_expand(sinp.stock['i_numbers_min_b1'], b1_pos)
-
     ############################
     ### sim param arrays       # '''csiro params '''
     ############################
@@ -602,6 +552,90 @@ def generator(params,r_vals,ev,plots = False):
     cb1_yatf[13, ...] = np.expand_dims(cb0_yatf[13, sinp.stock['ia_b0_b1']], axis = tuple(range(uinp.parameters['i_cl1_pos']+1,-3))) #add singleton axis between b0 and x so that b0 array aligns with b1
     cb1_yatf[17, ...] = np.expand_dims(cb0_yatf[17, sinp.stock['ia_b0_b1']], axis = tuple(range(uinp.parameters['i_cl1_pos']+1,-3))) #add singleton axis between b0 and x so that b0 array aligns with b1
     cb1_yatf[18, ...] = np.expand_dims(cb0_yatf[18, sinp.stock['ia_b0_b1']], axis = tuple(range(uinp.parameters['i_cl1_pos']+1,-3))) #add singleton axis between b0 and x so that b0 array aligns with b1
+
+    ###################################
+    ###group independent              #
+    ###################################
+    ##association between b0 and b1
+    a_b0_b1nwzida0e0b0xyg = fun.f_expand(sinp.stock['ia_b0_b1'],b1_pos)
+    ##nfoet expanded
+    nfoet_b1nwzida0e0b0xyg = fun.f_expand(sinp.stock['a_nfoet_b1'],b1_pos)
+    ##nyatf expanded to b1 & b0
+    nyatf_b1nwzida0e0b0xyg = fun.f_expand(sinp.stock['a_nyatf_b1'],b1_pos)
+    ##legume proportion in each period
+    legume_p6a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_legume_p6z'],z_pos,source=0,dest=-1,left_pos2=p_pos,
+                                                 right_pos2=z_pos)  # p6 axis converted to p axis later (association section)
+    ##estimated foo and dmd for the midas periods
+    paststd_foo_p6a1e1b1j0wzida0e0b0xyg = fun.f_expand(pinp.sheep['i_paststd_foo_p6zj0'],z_pos,move=True,source=0,
+                                                       dest=2,
+                                                       left_pos2=n_pos,right_pos2=z_pos,left_pos3=p_pos,
+                                                       right_pos3=n_pos)  # p6 axis converted to p axis later (association section), axis order doesnt matter because sliced when used
+    pasture_stage_p6a1e1b1j0wzida0e0b0xyg = fun.f_expand(pinp.sheep['i_pasture_stage_p6z'],z_pos,move=True,source=0,
+                                                         dest=-1,
+                                                         left_pos2=p_pos,
+                                                         right_pos2=z_pos)  # p6 axis converted to p axis later (association section), z is treated later also
+    ##foo corrected to hand shears and estimated height - the z axis is also treated in this step
+    paststd_foo_p6a1e1b1j0wzida0e0b0xyg0, paststd_hf_p6a1e1b1j0wzida0e0b0xyg0 = sfun.f_foo_convert(cu3, cu4,
+                                                                                     paststd_foo_p6a1e1b1j0wzida0e0b0xyg,
+                                                                                     pasture_stage_p6a1e1b1j0wzida0e0b0xyg,
+                                                                                     legume_p6a1e1b1nwzida0e0b0xyg,
+                                                                                     cr_sire,
+                                                                                     z_pos=sinp.stock['i_z_pos'])
+    paststd_foo_p6a1e1b1j0wzida0e0b0xyg1, paststd_hf_p6a1e1b1j0wzida0e0b0xyg1 = sfun.f_foo_convert(cu3, cu4,
+                                                                                     paststd_foo_p6a1e1b1j0wzida0e0b0xyg,
+                                                                                     pasture_stage_p6a1e1b1j0wzida0e0b0xyg,
+                                                                                     legume_p6a1e1b1nwzida0e0b0xyg,
+                                                                                     cr_dams,
+                                                                                     z_pos=sinp.stock['i_z_pos'])
+    paststd_foo_p6a1e1b1j0wzida0e0b0xyg2, paststd_hf_p6a1e1b1j0wzida0e0b0xyg2 = sfun.f_foo_convert(cu3, cu4,
+                                                                                     paststd_foo_p6a1e1b1j0wzida0e0b0xyg,
+                                                                                     pasture_stage_p6a1e1b1j0wzida0e0b0xyg,
+                                                                                     legume_p6a1e1b1nwzida0e0b0xyg,
+                                                                                     cr_yatf,
+                                                                                     z_pos=sinp.stock['i_z_pos'])
+    paststd_foo_p6a1e1b1j0wzida0e0b0xyg3, paststd_hf_p6a1e1b1j0wzida0e0b0xyg3 = sfun.f_foo_convert(cu3, cu4,
+                                                                                     paststd_foo_p6a1e1b1j0wzida0e0b0xyg,
+                                                                                     pasture_stage_p6a1e1b1j0wzida0e0b0xyg,
+                                                                                     legume_p6a1e1b1nwzida0e0b0xyg,
+                                                                                     cr_offs,
+                                                                                     z_pos=sinp.stock['i_z_pos'])
+    ##treate z axis (have to do it after adjusting foo)
+    legume_p6a1e1b1nwzida0e0b0xyg = pinp.f_seasonal_inp(legume_p6a1e1b1nwzida0e0b0xyg,numpy=True,axis=z_pos)
+    ##dmd
+    paststd_dmd_p6a1e1b1j0wzida0e0b0xyg = fun.f_expand(pinp.sheep['i_paststd_dmd_p6zj0'],z_pos,move=True,source=0,
+                                                       dest=2,
+                                                       left_pos2=n_pos,right_pos2=z_pos,left_pos3=p_pos,
+                                                       right_pos3=n_pos)  # p6 axis converted to p axis later (association section), axis order doesnt matter because sliced when used
+    paststd_dmd_p6a1e1b1j0wzida0e0b0xyg = pinp.f_seasonal_inp(paststd_dmd_p6a1e1b1j0wzida0e0b0xyg,numpy=True,axis=z_pos)
+    ##season type probability - prob and z mask are accounted for in f_season
+    i_season_propn_z = fun.f_expand(np.ones_like(pinp.general['i_season_propn_z']),z_pos)
+    season_propn_zida0e0b0xyg = pinp.f_seasonal_inp(i_season_propn_z,numpy=True,axis=z_pos)
+    ##wind speed
+    ws_m4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_ws_m4'],p_pos)
+    ##expected stocking density
+    density_p6a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_density_p6z'],z_pos,source=0,dest=-1,
+                                                  left_pos2=p_pos,
+                                                  right_pos2=z_pos)  # p6 axis converted to p axis later (association section)
+    density_p6a1e1b1nwzida0e0b0xyg = pinp.f_seasonal_inp(density_p6a1e1b1nwzida0e0b0xyg,numpy=True,axis=z_pos).astype(
+        int)
+    ##nutrition adjustment for expected stocking density
+    density_nwzida0e0b0xyg1 = fun.f_expand(sinp.stock['i_density_n1'],n_pos)
+    density_nwzida0e0b0xyg3 = fun.f_expand(sinp.stock['i_density_n3'],n_pos)
+    ##Calculation of rainfall distribution across the week - i_rain_distribution_m4m1 = how much rain falls on each day of the week sorted in order of quantity of rain. SO the most rain falls on the day with the highest rainfall.
+    rain_m4a1e1b1nwzida0e0b0xygm1 = fun.f_expand(
+        pinp.sheep['i_rain_m4'][...,na] * pinp.sheep['i_rain_distribution_m4m1'] * (7 / 30.4),p_pos - 1,
+        right_pos=-1)  # -1 because p is -16 when m1 axis is included
+    ##Mean daily temperature
+    temp_ave_m4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_temp_ave_m4'],p_pos)
+    ##Mean daily maximum temperature
+    temp_max_m4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_temp_max_m4'],p_pos)
+    ##Mean daily minimum temperature
+    temp_min_m4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_temp_min_m4'],p_pos)
+    ##latitude
+    lat_deg = pinp.sheep['i_latitude']
+    lat_rad = np.radians(pinp.sheep['i_latitude'])
+    ##min numbers
+    numbers_min_b1nwzida0e0b0xyg = fun.f_expand(sinp.stock['i_numbers_min_b1'],b1_pos)
 
     ########################################
     #adjust input to align with gen periods#
@@ -977,10 +1011,16 @@ def generator(params,r_vals,ev,plots = False):
     eqn_used_g1_q1p = uinp.sheep['i_eqn_used_g1_q1p7'][:, a_g1_p7_p]
     eqn_used_g2_q1p = uinp.sheep['i_eqn_used_g2_q1p7'][:, a_g2_p7_p]
     eqn_used_g3_q1p = uinp.sheep['i_eqn_used_g3_q1p7'][:, a_g3_p7_p]
-    ##convert foo and dmd for each feed period to each sim period
-    paststd_foo_pa1e1b1j0wzida0e0b0xyg = np.take_along_axis(paststd_foo_p6a1e1b1j0wzida0e0b0xyg, a_p6_pa1e1b1nwzida0e0b0xyg, 0)
+    ##convert foo, hf and dmd for each feed period to each sim period
+    paststd_foo_pa1e1b1j0wzida0e0b0xyg0 = np.take_along_axis(paststd_foo_p6a1e1b1j0wzida0e0b0xyg0, a_p6_pa1e1b1nwzida0e0b0xyg, 0)
+    paststd_foo_pa1e1b1j0wzida0e0b0xyg1 = np.take_along_axis(paststd_foo_p6a1e1b1j0wzida0e0b0xyg1, a_p6_pa1e1b1nwzida0e0b0xyg, 0)
+    paststd_foo_pa1e1b1j0wzida0e0b0xyg2 = np.take_along_axis(paststd_foo_p6a1e1b1j0wzida0e0b0xyg2, a_p6_pa1e1b1nwzida0e0b0xyg, 0)
+    paststd_foo_pa1e1b1j0wzida0e0b0xyg3 = np.take_along_axis(paststd_foo_p6a1e1b1j0wzida0e0b0xyg3, a_p6_pa1e1b1nwzida0e0b0xyg, 0)
+    paststd_hf_pa1e1b1j0wzida0e0b0xyg0 = np.take_along_axis(paststd_hf_p6a1e1b1j0wzida0e0b0xyg0, a_p6_pa1e1b1nwzida0e0b0xyg, 0)
+    paststd_hf_pa1e1b1j0wzida0e0b0xyg1 = np.take_along_axis(paststd_hf_p6a1e1b1j0wzida0e0b0xyg1, a_p6_pa1e1b1nwzida0e0b0xyg, 0)
+    paststd_hf_pa1e1b1j0wzida0e0b0xyg2 = np.take_along_axis(paststd_hf_p6a1e1b1j0wzida0e0b0xyg2, a_p6_pa1e1b1nwzida0e0b0xyg, 0)
+    paststd_hf_pa1e1b1j0wzida0e0b0xyg3 = np.take_along_axis(paststd_hf_p6a1e1b1j0wzida0e0b0xyg3, a_p6_pa1e1b1nwzida0e0b0xyg, 0)
     paststd_dmd_pa1e1b1j0wzida0e0b0xyg = np.take_along_axis(paststd_dmd_p6a1e1b1j0wzida0e0b0xyg, a_p6_pa1e1b1nwzida0e0b0xyg, 0)
-    pasture_stage_pa1e1b1j0wzida0e0b0xyg = np.take_along_axis(pasture_stage_p6a1e1b1j0wzida0e0b0xyg, a_p6_untreatedz_pa1e1b1nwzida0e0b0xyg, 0) #this has untreated z axis, f_seasonal_inp is applied in the foo convert function
     ##mating
     sire_propn_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(sire_propn_oa1e1b1nwzida0e0b0xyg1,a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1,0) #np.take_along uses the number in the second array as the index for the first array. and returns a same shaped array
     sire_include_idx = np.arange(len(mask_sire_inc_g0))[mask_sire_inc_g0]
@@ -2090,19 +2130,19 @@ def generator(params,r_vals,ev,plots = False):
                 ##feedsupply - calculated after pi because pi required for intake_s
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                     foo_sire, hf_sire, dmd_sire, intake_s_sire, md_herb_sire  \
-                        = sfun.f_feedsupply(cu3, cu4, cr_sire, feedsupply_std_pa1e1b1nwzida0e0b0xyg0[p]
-                                            , paststd_foo_pa1e1b1j0wzida0e0b0xyg[p], paststd_dmd_pa1e1b1j0wzida0e0b0xyg[p]
-                                            , legume_pa1e1b1nwzida0e0b0xyg[p], pi_sire, pasture_stage_pa1e1b1j0wzida0e0b0xyg[p])
+                        = sfun.f_feedsupply(feedsupplyw_pa1e1b1nwzida0e0b0xyg0[p]
+                                            , paststd_foo_pa1e1b1j0wzida0e0b0xyg0[p], paststd_dmd_pa1e1b1j0wzida0e0b0xyg[p]
+                                            , paststd_hf_pa1e1b1j0wzida0e0b0xyg0[p], pi_sire)
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     foo_dams, hf_dams, dmd_dams, intake_s_dams, md_herb_dams  \
-                        = sfun.f_feedsupply(cu3, cu4, cr_dams, feedsupplyw_pa1e1b1nwzida0e0b0xyg1[p]
-                                            , paststd_foo_pa1e1b1j0wzida0e0b0xyg[p], paststd_dmd_pa1e1b1j0wzida0e0b0xyg[p]
-                                            , legume_pa1e1b1nwzida0e0b0xyg[p], pi_dams, pasture_stage_pa1e1b1j0wzida0e0b0xyg[p])
+                        = sfun.f_feedsupply(feedsupplyw_pa1e1b1nwzida0e0b0xyg1[p]
+                                            , paststd_foo_pa1e1b1j0wzida0e0b0xyg1[p], paststd_dmd_pa1e1b1j0wzida0e0b0xyg[p]
+                                            , paststd_hf_pa1e1b1j0wzida0e0b0xyg1[p], pi_dams)
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
                     foo_offs, hf_offs, dmd_offs, intake_s_offs, md_herb_offs  \
-                        = sfun.f_feedsupply(cu3, cu4, cr_offs, feedsupplyw_pa1e1b1nwzida0e0b0xyg3[p]
-                                            , paststd_foo_pa1e1b1j0wzida0e0b0xyg[p], paststd_dmd_pa1e1b1j0wzida0e0b0xyg[p]
-                                            , legume_pa1e1b1nwzida0e0b0xyg[p], pi_offs, pasture_stage_pa1e1b1j0wzida0e0b0xyg[p])
+                        = sfun.f_feedsupply(feedsupplyw_pa1e1b1nwzida0e0b0xyg3[p]
+                                            , paststd_foo_pa1e1b1j0wzida0e0b0xyg3[p], paststd_dmd_pa1e1b1j0wzida0e0b0xyg[p]
+                                            , paststd_hf_pa1e1b1j0wzida0e0b0xyg3[p], pi_offs)
 
                 ##relative availability
                 eqn_group = 5
@@ -2193,7 +2233,7 @@ def generator(params,r_vals,ev,plots = False):
                 ##intake
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                     mei_sire, mei_solid_sire, intake_f_sire, md_solid_sire, mei_propn_milk_sire, mei_propn_herb_sire, mei_propn_supp_sire \
-                            = sfun.f_intake(cr_sire, pi_sire, ra_sire, rq_sire,  md_herb_sire, feedsupply_std_pa1e1b1nwzida0e0b0xyg0[p]
+                            = sfun.f_intake(cr_sire, pi_sire, ra_sire, rq_sire,  md_herb_sire, feedsupplyw_pa1e1b1nwzida0e0b0xyg0[p]
                                             , intake_s_sire, pinp.sheep['i_md_supp'], legume_pa1e1b1nwzida0e0b0xyg[p])
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     mei_dams, mei_solid_dams, intake_f_dams, md_solid_dams, mei_propn_milk_dams, mei_propn_herb_dams, mei_propn_supp_dams  \
@@ -2217,7 +2257,7 @@ def generator(params,r_vals,ev,plots = False):
                                                                     , days_period_pa1e1b1nwzida0e0b0xyg0[p], md_solid_sire, pinp.sheep['i_md_supp']
                                                                     , md_herb_sire, lgf_eff_pa1e1b1nwzida0e0b0xyg0[p, ...]
                                                                     , dlf_eff_pa1e1b1nwzida0e0b0xyg[p,...], pinp.sheep['i_steepness']
-                                                                    , densityw_pa1e1b1nwzida0e0b0xyg0[p], foo_sire, feedsupply_std_pa1e1b1nwzida0e0b0xyg0[p]
+                                                                    , densityw_pa1e1b1nwzida0e0b0xyg0[p], foo_sire, feedsupplyw_pa1e1b1nwzida0e0b0xyg0[p]
                                                                     , intake_f_sire, dmd_sire)
                         ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                         omer_history_sire = temp1
@@ -2598,7 +2638,7 @@ def generator(params,r_vals,ev,plots = False):
 
             ##feedsupply
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                foo_yatf, hf_yatf, dmd_yatf, intake_s_yatf, md_herb_yatf = sfun.f_feedsupply(cu3, cu4, cr_yatf, feedsupplyw_pa1e1b1nwzida0e0b0xyg1[p], paststd_foo_pa1e1b1j0wzida0e0b0xyg[p], paststd_dmd_pa1e1b1j0wzida0e0b0xyg[p], legume_pa1e1b1nwzida0e0b0xyg[p], pi_yatf, pasture_stage_pa1e1b1j0wzida0e0b0xyg[p]) #yatf use dam feedsupply_std
+                foo_yatf, hf_yatf, dmd_yatf, intake_s_yatf, md_herb_yatf = sfun.f_feedsupply(feedsupplyw_pa1e1b1nwzida0e0b0xyg1[p], paststd_foo_pa1e1b1j0wzida0e0b0xyg2[p], paststd_dmd_pa1e1b1j0wzida0e0b0xyg[p], paststd_hf_pa1e1b1j0wzida0e0b0xyg2[p], pi_yatf) #yatf use dam feedsupply_std because they are on same pasture (foo and hf may be different due to cr param)
 
 
             ##relative availability - yatf
@@ -5441,8 +5481,11 @@ def generator(params,r_vals,ev,plots = False):
     ################
     #create params #
     ################
-    ##ravel and zip params with keys. This step removes 0's first using a mask because this saves considerable time.
-    ##note need to do the tups each time even if same keys because the mask may be different
+    '''
+    ravel and zip params with keys. This step removes 0's first using a mask because this saves considerable time.
+    note: need to do the tups each time even if same keys because the mask may be different
+    '''
+    ##non seasonal
     ###nsire_sire
     mask=numbers_startp8_va1e1b1nwzida0e0b0xyg0p8!=0
     nsire_g0p8 = numbers_startp8_va1e1b1nwzida0e0b0xyg0p8[mask] #applying the mask does the raveling and squeezing of singleton axis
@@ -5450,13 +5493,29 @@ def generator(params,r_vals,ev,plots = False):
     index_cut_g0p8=index_g0p8[mask,:]
     tup_g0p8 = tuple(map(tuple, index_cut_g0p8))
     params['p_nsire_prov_sire'] =dict(zip(tup_g0p8, nsire_g0p8))
-    ###nsire_dams
-    mask=nsire_k2tva1e1b1nwzida0e0b0xyg1g0p8!=0
-    nsire_k2tva1nw8ziyg1g0p8 = nsire_k2tva1e1b1nwzida0e0b0xyg1g0p8[mask] #applying the mask does the raveling and squeezing of singleton axis
+
+    ###npw required by prog activity
+    mask=numbers_prog_req_tva1e1b1nwzida0e0b0xyg2w9!=0
+    npw_tdxg = numbers_prog_req_tva1e1b1nwzida0e0b0xyg2w9[mask] #applying the mask does the raveling and squeezing of singleton axis
     mask=mask.ravel()
-    index_cut_k2tvanwziyg1g0p8=index_k2tvanwziyg1g0p8[mask,:]
-    tup_k2tvanwziyg1g0p8 = tuple(map(tuple, index_cut_k2tvanwziyg1g0p8))
-    params['p_nsire_req_dams'] =dict(zip(tup_k2tvanwziyg1g0p8, nsire_k2tva1nw8ziyg1g0p8))
+    index_cut_tdxg=index_tdxg[mask,:]
+    tup_tdxg = tuple(map(tuple, index_cut_tdxg))
+    params['p_npw_req_prog'] =dict(zip(tup_tdxg, npw_tdxg))
+
+
+    ##seasonal
+    for z in range(len(keys_z)):
+        ##create season key for params dict
+        scenario = keys_z[z]
+        params[scenario] = {}
+
+        ###nsire_dams
+        mask=nsire_k2tva1e1b1nwzida0e0b0xyg1g0p8!=0
+        nsire_k2tva1nw8ziyg1g0p8 = nsire_k2tva1e1b1nwzida0e0b0xyg1g0p8[mask] #applying the mask does the raveling and squeezing of singleton axis
+        mask=mask.ravel()
+        index_cut_k2tvanwziyg1g0p8=index_k2tvanwziyg1g0p8[mask,:]
+        tup_k2tvanwziyg1g0p8 = tuple(map(tuple, index_cut_k2tvanwziyg1g0p8))
+        params['p_nsire_req_dams'] =dict(zip(tup_k2tvanwziyg1g0p8, nsire_k2tva1nw8ziyg1g0p8))
 
     ###number prog weaned
     # mask=npw_k5tva1e1b1nwzida0e0b0xyg1w9i9!=0
@@ -5479,13 +5538,6 @@ def generator(params,r_vals,ev,plots = False):
     tup_k5tva1nw8zidxyg1w9i9 = tuple(map(tuple, index_cut_k5tva1nw8zidxyg1w9i9))
     params['p_npw_dams'] =dict(zip(tup_k5tva1nw8zidxyg1w9i9, npw_k5tva1nw8zidxyg1w9i9))
 
-    ###npw required by prog activity
-    mask=numbers_prog_req_tva1e1b1nwzida0e0b0xyg2w9!=0
-    npw_tdxg = numbers_prog_req_tva1e1b1nwzida0e0b0xyg2w9[mask] #applying the mask does the raveling and squeezing of singleton axis
-    mask=mask.ravel()
-    index_cut_tdxg=index_tdxg[mask,:]
-    tup_tdxg = tuple(map(tuple, index_cut_tdxg))
-    params['p_npw_req_prog'] =dict(zip(tup_tdxg, npw_tdxg))
 
     ###number prog provided to dams
     mask=numbers_prog2dams_k3tva1e1b1nwzida0e0b0xyg2g9w9!=0
