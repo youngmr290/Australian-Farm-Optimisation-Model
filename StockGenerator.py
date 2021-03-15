@@ -773,6 +773,13 @@ def generator(params,r_vals,ev,plots = False):
     fvp_date_start_fa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(fvp_start_fa1e1b1nwzida0e0b0xyg1, ind, axis=0)
     fvp_type_fa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(fvp_type_fa1e1b1nwzida0e0b0xyg1, ind, axis=0)
 
+    ##condensing - currently this is fixed to be the same as prejoining for dams (has a full fvp axis but fvp that are not condensing just have the same date as previous condensing)
+    condense_bool_fa1e1b1nwzida0e0b0xyg1 = fvp_type_fa1e1b1nwzida0e0b0xyg1!=condense_vtype1
+    condensing_date_oa1e1b1nwzida0e0b0xyg1 = fvp_date_start_fa1e1b1nwzida0e0b0xyg1.copy()
+    condensing_date_oa1e1b1nwzida0e0b0xyg1[condense_bool_fa1e1b1nwzida0e0b0xyg1] = 0
+    condensing_date_oa1e1b1nwzida0e0b0xyg1 = np.maximum.accumulate(condensing_date_oa1e1b1nwzida0e0b0xyg1, axis=0)
+
+
     ####################################
     # Feed variation period calcs offs #
     ####################################
@@ -868,7 +875,11 @@ def generator(params,r_vals,ev,plots = False):
     fvp_date_start_fa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(fvp_start_fa1e1b1nwzida0e0b0xyg3, ind, axis=0)
     fvp_type_fa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(fvp_type_fa1e1b1nwzida0e0b0xyg3, ind, axis=0)
 
-
+    ##condensing dates (has a full fvp axis but fvp that are not condensing just have the same date as previous condensing)
+    condense_bool_fa1e1b1nwzida0e0b0xyg3 = fvp_type_fa1e1b1nwzida0e0b0xyg3!=condense_vtype3
+    condensing_date_oa1e1b1nwzida0e0b0xyg3 = fvp_date_start_fa1e1b1nwzida0e0b0xyg3.copy()
+    condensing_date_oa1e1b1nwzida0e0b0xyg3[condense_bool_fa1e1b1nwzida0e0b0xyg3] = 0
+    condensing_date_oa1e1b1nwzida0e0b0xyg3 = np.maximum.accumulate(condensing_date_oa1e1b1nwzida0e0b0xyg3, axis=0)
 
 
     ############################
@@ -892,10 +903,8 @@ def generator(params,r_vals,ev,plots = False):
     a_prevbirth_d_pa1e1b1nwzida0e0b0xyg2 = a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2
     ##start of season
     a_seasonstart_pa1e1b1nwzida0e0b0xyg = np.apply_along_axis(sfun.f_next_prev_association, 0, seasonstart_ya1e1b1nwzida0e0b0xyg, date_end_p, 1,'right')
-    ##condensing - currently this is fixed to be the same as prejoining for dams
-    condensing_date_oa1e1b1nwzida0e0b0xyg1 = fvp_date_all_f1[1+list(sinp.stock['i_fvp_type1']).index(condense_vtype1)] #determine the date when condensing happens
+    ##condensing
     a_condensing_pa1e1b1nwzida0e0b0xyg1 = np.apply_along_axis(sfun.f_next_prev_association, 0, condensing_date_oa1e1b1nwzida0e0b0xyg1, date_end_p, 1,'right')
-    condensing_date_oa1e1b1nwzida0e0b0xyg3 = fvp_date_all_f3[3+list(sinp.stock['i_fvp_type1']).index(condense_vtype1)] #determine the date when condensing happens
     a_condensing_pa1e1b1nwzida0e0b0xyg3 = np.apply_along_axis(sfun.f_next_prev_association, 0, condensing_date_oa1e1b1nwzida0e0b0xyg3, offs_date_end_p, 1,'right')
 
     ##MIDAS feed period for each sim period
