@@ -85,7 +85,7 @@ def f_sup_cost(r_vals):
     length_p6z = per.f_feed_periods(option=1).astype('timedelta64[D]')
 
     ##deterimine cashflow allocation
-    alloc_cpz=fun.range_allocation_np(p_dates_c, start_p6z, length_p6z, True)[:-1] #drop last c row because it is just the end date of last period.
+    alloc_cpz=fun.range_allocation_np(p_dates_c[...,na], start_p6z, length_p6z, True)[:-1] #drop last c row because it is just the end date of last period.
     alloc_cpz = alloc_cpz.reshape(alloc_cpz.shape[0], -1)
     keys_z = pinp.f_keys_z()
     keys_p6 = pinp.period['i_fp_idx']

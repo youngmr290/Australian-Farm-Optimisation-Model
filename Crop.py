@@ -568,7 +568,7 @@ def seedcost(r_vals):
     length_z = np.sum(seed_period_lengths, axis=0).astype('timedelta64[D]')
     p_dates_c = per.cashflow_periods()['start date'].values
     p_name_c = per.cashflow_periods()['cash period'].iloc[:-1]
-    allocation_cz = fun.range_allocation_np(p_dates_c, start_z, length_z, True)[:-1,...] #drop last row because that is just the end date of last period
+    allocation_cz = fun.range_allocation_np(p_dates_c[...,None], start_z, length_z, True)[:-1,...] #drop last row because that is just the end date of last period
     allocation_cz = pd.DataFrame(allocation_cz, index=p_name_c, columns=i_z_idx).stack()
     ##mul cost by allocation - need to align column headers first
     columns = pd.MultiIndex.from_product([phase_cost.columns, p_name_c, i_z_idx])
