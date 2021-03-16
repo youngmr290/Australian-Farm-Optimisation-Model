@@ -5584,7 +5584,7 @@ def generator(params,r_vals,ev,plots = False):
         params[scenario] = {}
 
         ###nsire_sire
-        numbers_startp8_va1e1b1nwida0e0b0xyg0p8 = sfun.f_dynamic_slice(numbers_startp8_va1e1b1nwzida0e0b0xyg0p8, z_pos, z, z+1)
+        numbers_startp8_va1e1b1nwida0e0b0xyg0p8 = sfun.f_dynamic_slice(numbers_startp8_va1e1b1nwzida0e0b0xyg0p8, z_pos-1, z, z+1)
         mask = numbers_startp8_va1e1b1nwida0e0b0xyg0p8 != 0
         nsire_g0p8 = numbers_startp8_va1e1b1nwida0e0b0xyg0p8[mask]  # applying the mask does the raveling and squeezing of singleton axis
         mask = mask.ravel()
@@ -6041,7 +6041,7 @@ def generator(params,r_vals,ev,plots = False):
     len_v1 = len(keys_v1)
     len_v3 = len(keys_v3)
     ####std
-    g0_shape = len_g0
+    zg0_shape = len_z, len_g0
     k2tva1nwziyg1_shape = len_k2, len_t1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
     k5twzidaxyg2_shape = len_k5, len_t2, len_w_prog, len_z, len_i, len_d, len_a1, len_x, len_g2
     k3k5tvnwziaxyg3_shape = len_k3, len_k5, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
@@ -6050,21 +6050,21 @@ def generator(params,r_vals,ev,plots = False):
     k2tva1e1b1nwziyg1_shape = len_k2, len_t1, len_v1, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
 
     ####kpveb
-    pg0_shape = len_p, len_g0
+    pzg0_shape = len_p, len_z, len_g0
     k2vpa1e1b1nwziyg1_shape = len_k2, len_v1, len_p, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
     k3k5vpnwzidae0b0xyg3_shape = len_k3, len_k5, len_v3, len_p3, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3
 
     ####p6
-    p6g0_shape = len_p6, len_g0
+    p6zg0_shape = len_p6, len_z, len_g0
     k2p6tva1nwziyg1_shape = len_k2, len_p6, len_t1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
     k3k5p6tvnwziaxyg3_shape = len_k3, len_k5, len_p6, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
     ####p6f
-    p6fg0_shape = len_p6, len_f, len_g0
+    p6fzg0_shape = len_p6, len_f, len_z, len_g0
     k2p6ftva1nwziyg1_shape = len_k2, len_p6, len_f, len_t1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
     k3k5p6ftvnwziaxyg3_shape = len_k3, len_k5, len_p6, len_f, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
-    cg0_shape = len_c, len_g0
+    czg0_shape = len_c, len_z, len_g0
     k2ctva1nwziyg1_shape = len_k2, len_c, len_t1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
     k5ctwziaxyg2_shape = len_c, len_t2, len_w_prog, len_z, len_i, len_a1, len_x, len_g2
     k3k5ctvnwziaxyg3_shape = len_k3, len_k5, len_c, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
@@ -6072,29 +6072,29 @@ def generator(params,r_vals,ev,plots = False):
 
 
     ###dse
-    r_vals['dsenw_p6g0'] = dsenw_p6tva1e1b1nwzida0e0b0xyg0.reshape(p6g0_shape)
-    r_vals['dsemj_p6g0'] = dsemj_p6tva1e1b1nwzida0e0b0xyg0.reshape(p6g0_shape)
+    r_vals['dsenw_p6zg0'] = dsenw_p6tva1e1b1nwzida0e0b0xyg0.reshape(p6zg0_shape)
+    r_vals['dsemj_p6zg0'] = dsemj_p6tva1e1b1nwzida0e0b0xyg0.reshape(p6zg0_shape)
     r_vals['dsenw_k2p6tva1nwziyg1'] = dsenw_k2p6tva1e1b1nwzida0e0b0xyg1.reshape(k2p6tva1nwziyg1_shape)
     r_vals['dsemj_k2p6tva1nwziyg1'] = dsemj_k2p6tva1e1b1nwzida0e0b0xyg1.reshape(k2p6tva1nwziyg1_shape)
     r_vals['dsenw_k3k5p6tvnwziaxyg3'] = dsenw_k3k5p6tva1e1b1nwzida0e0b0xyg3.reshape(k3k5p6tvnwziaxyg3_shape)
     r_vals['dsemj_k3k5p6tvnwziaxyg3'] = dsemj_k3k5p6tva1e1b1nwzida0e0b0xyg3.reshape(k3k5p6tvnwziaxyg3_shape)
 
     ###stock days
-    r_vals['stock_days_p6fg0'] = stock_days_p6fa1e1b1nwzida0e0b0xyg0.reshape(p6fg0_shape)
+    r_vals['stock_days_p6fzg0'] = stock_days_p6fa1e1b1nwzida0e0b0xyg0.reshape(p6fzg0_shape)
     r_vals['stock_days_k2p6ftva1nwziyg1'] = stock_days_k2p6ftva1e1b1nwzida0e0b0xyg1.reshape(k2p6ftva1nwziyg1_shape)
     r_vals['stock_days_k3k5p6ftvnwziaxyg3'] = stock_days_k3k5p6ftva1e1b1nwzida0e0b0xyg3.reshape(k3k5p6ftvnwziaxyg3_shape)
 
     ###cashflow
-    r_vals['sire_cost_cg0'] = cost_ctva1e1b1nwzida0e0b0xyg0.reshape(cg0_shape)
+    r_vals['sire_cost_czg0'] = cost_ctva1e1b1nwzida0e0b0xyg0.reshape(czg0_shape)
     r_vals['dams_cost_k2ctva1nwziyg1'] = cost_k2ctva1e1b1nwzida0e0b0xyg1.reshape(k2ctva1nwziyg1_shape)
     r_vals['offs_cost_k3k5ctvnwziaxyg3'] =cost_k3k5ctva1e1b1nwzida0e0b0xyg3.reshape(k3k5ctvnwziaxyg3_shape)
 
-    r_vals['salevalue_cg0'] = r_salevalue_ctva1e1b1nwzida0e0b0xyg0.reshape(cg0_shape)
+    r_vals['salevalue_czg0'] = r_salevalue_ctva1e1b1nwzida0e0b0xyg0.reshape(czg0_shape)
     r_vals['salevalue_k2ctva1nwziyg1'] = r_salevalue_k2ctva1e1b1nwzida0e0b0xyg1.reshape(k2ctva1nwziyg1_shape)
     r_vals['salevalue_ctwzia0xg2'] = salevalue_prog_cta1e1b1nwzida0e0b0xyg2.reshape(k5ctwziaxyg2_shape)
     r_vals['salevalue_k3k5ctvnwziaxyg3'] = r_salevalue_k3k5ctva1e1b1nwzida0e0b0xyg3.reshape(k3k5ctvnwziaxyg3_shape)
 
-    r_vals['woolvalue_cg0'] = r_woolvalue_ctva1e1b1nwzida0e0b0xyg0.reshape(cg0_shape)
+    r_vals['woolvalue_czg0'] = r_woolvalue_ctva1e1b1nwzida0e0b0xyg0.reshape(czg0_shape)
     r_vals['woolvalue_k2ctva1nwziyg1'] = r_woolvalue_k2ctva1e1b1nwzida0e0b0xyg1.reshape(k2ctva1nwziyg1_shape)
     r_vals['woolvalue_k3k5ctvnwziaxyg3'] =r_woolvalue_k3k5ctva1e1b1nwzida0e0b0xyg3.reshape(k3k5ctvnwziaxyg3_shape)
 
@@ -6102,20 +6102,20 @@ def generator(params,r_vals,ev,plots = False):
     r_vals['rm_stockinfra_fix_h1c'] = rm_stockinfra_fix_h1c
 
     ###cfw
-    r_vals['cfw_hdmob_g0'] = r_cfw_hdmob_tva1e1b1nwzida0e0b0xyg0.reshape(g0_shape)
+    r_vals['cfw_hdmob_zg0'] = r_cfw_hdmob_tva1e1b1nwzida0e0b0xyg0.reshape(zg0_shape)
     r_vals['cfw_hdmob_k2tva1nwziyg1'] = r_cfw_hdmob_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
     r_vals['cfw_hdmob_k3k5tvnwziaxyg3'] = r_cfw_hdmob_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
 
-    r_vals['cfw_hd_g0'] = r_cfw_hd_tva1e1b1nwzida0e0b0xyg0.reshape(g0_shape)
+    r_vals['cfw_hd_zg0'] = r_cfw_hd_tva1e1b1nwzida0e0b0xyg0.reshape(zg0_shape)
     r_vals['cfw_hd_k2tva1nwziyg1'] = r_cfw_hd_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
     r_vals['cfw_hd_k3k5tvnwziaxyg3'] = r_cfw_hd_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
 
     ###mei and pi and fec (feed energy concentration)
-    r_vals['mei_sire_p6fg0'] = mei_p6fa1e1b1nwzida0e0b0xyg0.reshape(p6fg0_shape)
+    r_vals['mei_sire_p6fzg0'] = mei_p6fa1e1b1nwzida0e0b0xyg0.reshape(p6fzg0_shape)
     r_vals['mei_dams_k2p6ftva1nw8ziyg1'] = mei_k2p6ftva1e1b1nwzida0e0b0xyg1.reshape(k2p6ftva1nwziyg1_shape)
     r_vals['mei_offs_k3k5p6ftvnw8ziaxyg3'] = mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3.reshape(k3k5p6ftvnwziaxyg3_shape)
 
-    r_vals['pi_sire_p6fg0'] = pi_p6fa1e1b1nwzida0e0b0xyg0.reshape(p6fg0_shape)
+    r_vals['pi_sire_p6fzg0'] = pi_p6fa1e1b1nwzida0e0b0xyg0.reshape(p6fzg0_shape)
     r_vals['pi_dams_k2p6ftva1nw8ziyg1'] = pi_k2p6ftva1e1b1nwzida0e0b0xyg1.reshape(k2p6ftva1nwziyg1_shape)
     r_vals['pi_offs_k3k5p6ftvnw8ziaxyg3'] = pi_k3k5p6ftva1e1b1nwzida0e0b0xyg3.reshape(k3k5p6ftvnwziaxyg3_shape)
 
