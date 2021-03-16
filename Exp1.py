@@ -99,7 +99,7 @@ def exp(row):
     start_time = time.time()
 
     ##get trial name - used for outputs
-    trial_name = exp_data.index[row][2]
+    trial_name = exp_data.index[row][3]
     run = row - list(exp_data.index.get_level_values(0))[:row].count(False)
     print("Starting trial %d, %s" %(run, trial_name))
 

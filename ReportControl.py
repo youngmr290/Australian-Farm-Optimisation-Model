@@ -9,7 +9,7 @@ data_df3 = pd.DataFrame(fvp_fdams.astype('datetime64[ns]'))  # conversion to dat
 @author: Young
 """
 
-import pickle as pkl
+import numpy as np
 import pandas as pd
 import xlsxwriter
 
@@ -45,7 +45,7 @@ exp_data = fun.f_run_required(exp_data, check_pyomo=False)
 trial_outdated = exp_data['run'] #returns true if trial is out of date
 
 ## enter the trials to summarise and the reports to include
-trials = [34,35]
+trials = np.array(range(len(exp_data_index)))[list(exp_data_index.get_level_values(2))]
 run_areasum         = True #area summary for each landuse
 run_pnl             = True #table of profit and loss
 run_profitarea      = True #graph profit by crop area

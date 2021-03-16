@@ -634,9 +634,9 @@ def f_read_exp():
     ##read and drop irrelevant cols
     exp_data = pd.read_excel('exp.xlsx', index_col=None, header=[0,1,2,3], engine='openpyxl')
     exp_data = exp_data.iloc[:,exp_data.columns.get_level_values(0)!='Drop']
-    exp_data = exp_data.set_index(list(exp_data.columns[0:3]))
+    exp_data = exp_data.set_index(list(exp_data.columns[0:4]))
     ##check if any trials have the same name
-    if  len(exp_data.index.get_level_values(2)) == len(set(exp_data.index.get_level_values(2))):
+    if  len(exp_data.index.get_level_values(3)) == len(set(exp_data.index.get_level_values(3))):
         pass
     else:
         raise exc.TrialError('''Exp.xlsx has multiple trials with the same name.''')
@@ -792,11 +792,11 @@ def write_variablesummary(model, row, exp_data, option=0):
     '''
     ##This writes variable with value greater than 1 to txt file - used to check stuff out each iteration if you want
     if option == 0:
-        file = open('Output/Variable summary %s.txt' % exp_data.index[row][2],'w')  # file name has to have capital
+        file = open('Output/Variable summary %s.txt' % exp_data.index[row][3],'w')  # file name has to have capital
     else:
         file = open('Output/Variable summary.txt','w')  # file name has to have capital
-    file.write('Trial: %s\n' % exp_data.index[row][2])  # the first line is the name of the trial
-    file.write('{0} profit: {1}\n'.format(exp_data.index[row][2],pe.value(model.profit)))  # the second line is profit
+    file.write('Trial: %s\n' % exp_data.index[row][3])  # the first line is the name of the trial
+    file.write('{0} profit: {1}\n'.format(exp_data.index[row][3],pe.value(model.profit)))  # the second line is profit
     for v in model.component_objects(pe.Var,active=True):
         file.write("Variable %s\n" % v)  # \n makes new line
         for index in v:

@@ -23,7 +23,7 @@ na = np.newaxis
 def f_errors(exp_data_index, trial_outdated, trials):
     ##first check if data exists for each desired trial
     for row in trials:
-        trial_name = exp_data_index[row][2]
+        trial_name = exp_data_index[row][3]
         if os.path.isfile('pkl/pkl_r_vals_{0}.pkl'.format(trial_name)):
             pass
         else:
@@ -114,7 +114,7 @@ def f_stack(func, trial_outdated, exp_data_index, trials, **kwargs):
     ##loop through trials and generate pnl table
     result_stacked = pd.DataFrame()  # create df to append table from each trial
     for row in trials:
-        trial_name = exp_data_index[row][2]
+        trial_name = exp_data_index[row][3]
         lp_vars, r_vals = load_pkl(trial_name)
         result = func(lp_vars, r_vals, **kwargs)
         result = pd.concat([result], keys=[trial_name], names=['Trial'])  # add trial name as index level
@@ -146,7 +146,7 @@ def f_xy_graph(func0, func1, trial_outdated, exp_data_index, trials, func0_optio
     y_vals = []  # create list to append pnl table from each trial
     x_vals = []  # create list to append pnl table from each trial
     for row in trials:
-        trial_name = exp_data_index[row][2]
+        trial_name = exp_data_index[row][3]
         lp_vars, r_vals = load_pkl(trial_name)
         x_vals.append(func0(lp_vars, r_vals, option=func0_options))
         y_vals.append(func1(lp_vars, r_vals, option=func1_options))
