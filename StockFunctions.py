@@ -556,7 +556,7 @@ def f_ra_cs(foo, hf, cr=None, zf=1):
     return ra
 
 
-def f_foo_convert(cu3, cu4, foo, pasture_stage, legume=0, cr=None, z_pos=-1):
+def f_foo_convert(cu3, cu4, foo, pasture_stage, legume=0, cr=None, z_pos=-1, treat_z=False):
     '''
     Parameters
     ----------
@@ -588,8 +588,9 @@ def f_foo_convert(cu3, cu4, foo, pasture_stage, legume=0, cr=None, z_pos=-1):
     ##calc hf
     hf = 1 + cr12 * (hr -1)
     ##apply z treatment
-    foo_shears = pinp.f_seasonal_inp(foo_shears,numpy=True,axis=z_pos)
-    hf = pinp.f_seasonal_inp(hf,numpy=True,axis=z_pos)
+    if treat_z:
+        foo_shears = pinp.f_seasonal_inp(foo_shears,numpy=True,axis=z_pos)
+        hf = pinp.f_seasonal_inp(hf,numpy=True,axis=z_pos)
     return foo_shears, hf
 
 def f_dynamic_slice(arr, axis, start, stop, axis2=None, start2=None, stop2=None):

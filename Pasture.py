@@ -334,8 +334,8 @@ def f_pasture(params, r_vals, ev):
 
     ##season inputs not required in t loop above
     harv_date_z         = pinp.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0).astype(np.datetime64)
-    i_pasture_stage_p6z = np.moveaxis(pinp.sheep['i_pasture_stage_p6z'],0,-1)
-
+    i_pasture_stage_p6z = np.rint(pinp.f_seasonal_inp(np.moveaxis(pinp.sheep['i_pasture_stage_p6z'],0,-1), numpy=True, axis=-1)
+                                  ).astype(int) #it would be better if z axis was treated after pas_stage has been used (like in stock.py) becasue it is used as an index. But there wasnt anyway to do this without doubling up a lot of code. This is only a limitation in the weighted average version of model.
     ### pasture params used to convert foo for rel availability
     cu3 = uinp.pastparameters['i_cu3_c4'][...,pinp.sheep['i_pasture_type']].astype(float)
     cu4 = uinp.pastparameters['i_cu4_c4'][...,pinp.sheep['i_pasture_type']].astype(float)
