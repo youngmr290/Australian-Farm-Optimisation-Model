@@ -40,6 +40,8 @@ import pyomo.environ as pe
 #this module shouldn't import other AFO modules
 import Exceptions as exc #can import exceptions because exceptions imports no modules
 
+
+na = np.newaxis
 ################################################
 #function to read in excel named ranges to a df#
 ################################################
@@ -1040,7 +1042,8 @@ def range_allocation_np(period_dates, start, length, opposite=None, shape=None):
     ''' Numpy version - The proportion of each period that falls in the tested date range or proportion of date range in each period.
 
     Parameters.
-    period_dates: the start of the periods - in a Numpy array np.datetime64.
+    period_dates: the start of the periods - in a Numpy array np.datetime64. This array must be broadcastable with start
+                  (therefore may need to add new axis if start has a dimension).
     start: the date of the beginning of the date range to test - a numpy array of dates (np.datetime64)
     length: the length of the date range to test - an array of timedelta.
           : must be broadcastable into start.
@@ -1057,7 +1060,7 @@ def range_allocation_np(period_dates, start, length, opposite=None, shape=None):
 
     #start empty array to assign to
     if shape==None:
-        allocation_period=np.zeros((period_dates.shape + start.shape),dtype=np.float64)
+        allocation_period=np.zeros((period_dates.shape[:-1] + start.shape),dtype=np.float64)
     else:
         allocation_period=np.zeros(shape,dtype=np.float64)
 
@@ -1065,8 +1068,8 @@ def range_allocation_np(period_dates, start, length, opposite=None, shape=None):
     if opposite:
         #check how much of each date range falls within the period
         for i in range(len(period_dates)-1):
-            per_start= period_dates[i:i+1] #to keep dim
-            per_end = period_dates[i+1:i+2].copy() #so original date array isn't altered when updating year in next step
+            per_start = period_dates[i, ...] #[i:i+1] #to keep dim
+            per_end = period_dates[i+1, ...].copy() #[i+1:i+2].copy() #so original date array isn't altered when updating year in next step
             ###to handle situations where base yr version of feed period is used. In these case the year does not increment
             ###at the start of a new year eg at the start of the ny it goes back to 2019 instead of 2020
             ###in these cases when the end date is less than start it means a ny has started so we temporarily increase end date by 1yr.
@@ -1078,8 +1081,8 @@ def range_allocation_np(period_dates, start, length, opposite=None, shape=None):
     else:
         #check how much of each period falls within the date range
         for i in range(len(period_dates)-1):
-            per_start= period_dates[i:i+1]
-            per_end = period_dates[i+1:i+2].copy() #so original date array isn't altered when updating year in next step
+            per_start = period_dates[i, ...] #[i:i+1]
+            per_end = period_dates[i+1, ...].copy() #[i+1:i+2].copy() #so original date array isn't altered when updating year in next step
             ###to handle situations where base yr version of feed period is used. In these case the year does not increment
             ###at the start of a new year eg at the start of the ny it goes back to 2019 instead of 2020
             ###in these cases when the end date is less than start it means a ny has started so we temporarily increase end date by 1yr.

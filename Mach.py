@@ -343,7 +343,7 @@ def f_seed_cost_alloc():
     p_name_c = per.cashflow_periods()['cash period']
     length_z = length_z.astype('timedelta64[D]')
     start_z = per.wet_seeding_start_date().astype(np.datetime64)
-    alloc_cz = fun.range_allocation_np(p_dates_c, start_z, length_z, True)
+    alloc_cz = fun.range_allocation_np(p_dates_c[...,None], start_z, length_z, True)
     keys_z = pinp.f_keys_z()
     alloc_cz = pd.DataFrame(alloc_cz, index=p_name_c, columns=keys_z)
     ## drop last row, because it has na because it only contains the end date, therefore not a period
@@ -629,7 +629,7 @@ def f_harv_cost_alloc():
     p_dates_c = per.cashflow_periods()['start date'].values
     harv_start_z = pinp.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0).astype('datetime64')
     harv_lengths_z = np.sum(pinp.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1), axis=0).astype('timedelta64[D]')
-    alloc_cz = fun.range_allocation_np(p_dates_c,harv_start_z,harv_lengths_z,True)
+    alloc_cz = fun.range_allocation_np(p_dates_c[...,None],harv_start_z,harv_lengths_z,True)
     ###make it a df
     p_name_c = per.cashflow_periods()['cash period']
     keys_z = pinp.f_keys_z()

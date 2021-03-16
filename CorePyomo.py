@@ -320,7 +320,7 @@ def coremodel_all(params):
     except AttributeError:
         pass
     def dep(model):
-        return  macpy.total_dep(model) + suppy.sup_dep(model) + stkpy.stock_dep(model) - model.v_dep <=0   
+        return  macpy.total_dep(model) + suppy.sup_dep(model) - model.v_dep <=0
     model.con_dep = pe.Constraint( rule=dep, doc='tallies depreciation from all activities so it can be transferred to objective')
     
     ######################
@@ -526,6 +526,45 @@ def coremodel_all(params):
             model.p_sup_labour.store_values(params['sup'][scenario_name]['sup_labour'])
 
             ##stock
+            model.p_nsires_req.store_values(params['stock'][scenario_name]['p_nsire_req_dams'])
+            model.p_nsires_prov.store_values(params['stock'][scenario_name]['p_nsire_prov_sire'])
+            model.p_progprov_dams.store_values(params['stock'][scenario_name]['p_progprov_dams'])
+            model.p_progprov_offs.store_values(params['stock'][scenario_name]['p_progprov_offs'])
+            model.p_numbers_prov_dams.store_values(params['stock'][scenario_name]['p_numbers_prov_dams'])
+            model.p_numbers_provthis_dams.store_values(params['stock'][scenario_name]['p_numbers_provthis_dams'])
+            model.p_numbers_prov_offs.store_values(params['stock'][scenario_name]['p_numbers_prov_offs'])
+            model.p_mei_sire.store_values(params['stock'][scenario_name]['p_mei_sire'])
+            model.p_mei_dams.store_values(params['stock'][scenario_name]['p_mei_dams'])
+            model.p_mei_offs.store_values(params['stock'][scenario_name]['p_mei_offs'])
+            model.p_pi_sire.store_values(params['stock'][scenario_name]['p_pi_sire'])
+            model.p_pi_dams.store_values(params['stock'][scenario_name]['p_pi_dams'])
+            model.p_pi_offs.store_values(params['stock'][scenario_name]['p_pi_offs'])
+            model.p_cashflow_sire.store_values(params['stock'][scenario_name]['p_cashflow_sire'])
+            model.p_cashflow_dams.store_values(params['stock'][scenario_name]['p_cashflow_dams'])
+            model.p_cashflow_prog.store_values(params['stock'][scenario_name]['p_cashflow_prog'])
+            model.p_cashflow_offs.store_values(params['stock'][scenario_name]['p_cashflow_offs'])
+            model.p_cost_sire.store_values(params['stock'][scenario_name]['p_cost_sire'])
+            model.p_cost_dams.store_values(params['stock'][scenario_name]['p_cost_dams'])
+            model.p_cost_offs.store_values(params['stock'][scenario_name]['p_cost_offs'])
+            model.p_asset_sire.store_values(params['stock'][scenario_name]['p_assetvalue_sire'])
+            model.p_asset_dams.store_values(params['stock'][scenario_name]['p_assetvalue_dams'])
+            model.p_asset_offs.store_values(params['stock'][scenario_name]['p_assetvalue_offs'])
+            model.p_lab_anyone_sire.store_values(params['stock'][scenario_name]['p_labour_anyone_sire'])
+            model.p_lab_perm_sire.store_values(params['stock'][scenario_name]['p_labour_perm_sire'])
+            model.p_lab_manager_sire.store_values(params['stock'][scenario_name]['p_labour_manager_sire'])
+            model.p_lab_anyone_dams.store_values(params['stock'][scenario_name]['p_labour_anyone_dams'])
+            model.p_lab_perm_dams.store_values(params['stock'][scenario_name]['p_labour_perm_dams'])
+            model.p_lab_manager_dams.store_values(params['stock'][scenario_name]['p_labour_manager_dams'])
+            model.p_lab_anyone_offs.store_values(params['stock'][scenario_name]['p_labour_anyone_offs'])
+            model.p_lab_perm_offs.store_values(params['stock'][scenario_name]['p_labour_perm_offs'])
+            model.p_lab_manager_offs.store_values(params['stock'][scenario_name]['p_labour_manager_offs'])
+            model.p_infra_sire.store_values(params['stock'][scenario_name]['p_infrastructure_sire'])
+            model.p_infra_dams.store_values(params['stock'][scenario_name]['p_infrastructure_dams'])
+            model.p_infra_offs.store_values(params['stock'][scenario_name]['p_infrastructure_offs'])
+            model.p_dse_sire.store_values(params['stock'][scenario_name]['p_dse_sire'])
+            model.p_dse_dams.store_values(params['stock'][scenario_name]['p_dse_dams'])
+            model.p_dse_offs.store_values(params['stock'][scenario_name]['p_dse_offs'])
+            model.p_cost_purch_sire.store_values(params['stock'][scenario_name]['p_purchcost_sire'])
 
 
 
