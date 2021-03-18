@@ -4277,35 +4277,38 @@ def generator(params,r_vals,ev,plots = False):
     ev_psire = fun.f_divide(o_mei_solid_psire, o_pi_psire, dtype=dtype)
     ev_pdams = fun.f_divide(o_mei_solid_pdams, o_pi_pdams, dtype=dtype)
     ev_poffs = fun.f_divide(o_mei_solid_poffs, o_pi_poffs, dtype=dtype)
-    ###Find the values that divides the values into 4 equal groups
+    ###Find the values that divides the values into 4 equal groups by finding the minimum and maximum in each feed period (p6)
+    ####Remove any values where animals are being fed in confinement
     t_ev_pa1e1b1nwzida0e0b0xyg1 = ev_pdams * (feedsupplyw_pa1e1b1nwzida0e0b0xyg1 < 3) # feedsupply >= 3 (ie the animals are in confinement)
     t_ev_pa1e1b1nwzida0e0b0xyg3 = ev_poffs * (feedsupplyw_pa1e1b1nwzida0e0b0xyg3 < 3) # feedsupply >= 3 (ie the animals are in confinement)
-    ###set 0 to high value so it doesnt get included in the next steps
+    ####set 0 to high value so it doesnt get included in calculation of the range in the next steps
     t_ev_min_pa1e1b1nwzida0e0b0xyg1 = t_ev_pa1e1b1nwzida0e0b0xyg1.copy() #have to copy so other array is not changed
     t_ev_min_pa1e1b1nwzida0e0b0xyg3 = t_ev_pa1e1b1nwzida0e0b0xyg3.copy()
     t_ev_min_pa1e1b1nwzida0e0b0xyg1[t_ev_min_pa1e1b1nwzida0e0b0xyg1<=0] = 100
     t_ev_min_pa1e1b1nwzida0e0b0xyg3[t_ev_min_pa1e1b1nwzida0e0b0xyg3<=0] = 100
-    ###calc max and min - set 0 to high value so it doesnt get included in the next steps
-    t_evmax_dams_p = np.max(t_ev_pa1e1b1nwzida0e0b0xyg1,axis=tuple(range(a1_pos,0)))
-    t_evmin_dams_p = np.min(t_ev_min_pa1e1b1nwzida0e0b0xyg1,axis=tuple(range(a1_pos,0)))
-    t_evmax_offs_p = np.max(t_ev_pa1e1b1nwzida0e0b0xyg3,axis=tuple(range(a1_pos,0)))
-    t_evmin_offs_p = np.min(t_ev_min_pa1e1b1nwzida0e0b0xyg3,axis=tuple(range(a1_pos,0)))
-    ###Create the p6p arrays
-    t_evmax_dams_p6pz = t_evmax_dams_p[:,na] * (a_p6_pz == index_p6[:,na,na])
-    t_evmin_dams_p6pz = t_evmin_dams_p[:,na] * (a_p6_pz == index_p6[:,na,na])
-    t_evmax_offs_p6pz = t_evmax_offs_p[:,na] * (a_p6_pz[mask_p_offs_p] == index_p6[:,na,na])
-    t_evmin_offs_p6pz = t_evmin_offs_p[:,na] * (a_p6_pz[mask_p_offs_p] == index_p6[:,na,na])
-    ###set 0 to nan for p slices that are not in p6
+    ####calc max and min - set 0 to high value so it doesnt get included in the next steps
+    #### min or max over all axes leaving p
+    t_axes = tuple(range(a1_pos,z_pos)) + tuple(range(z_pos+1,0))
+    t_evmax_dams_pz = np.max(t_ev_pa1e1b1nwzida0e0b0xyg1,axis=t_axes)
+    t_evmin_dams_pz = np.min(t_ev_min_pa1e1b1nwzida0e0b0xyg1,axis=t_axes)
+    t_evmax_offs_pz = np.max(t_ev_pa1e1b1nwzida0e0b0xyg3,axis=t_axes)
+    t_evmin_offs_pz = np.min(t_ev_min_pa1e1b1nwzida0e0b0xyg3,axis=t_axes)
+    ####Create the p6p arrays
+    t_evmax_dams_p6pz = t_evmax_dams_pz * (a_p6_pz == index_p6[:,na,na])
+    t_evmin_dams_p6pz = t_evmin_dams_pz * (a_p6_pz == index_p6[:,na,na])
+    t_evmax_offs_p6pz = t_evmax_offs_pz * (a_p6_pz[mask_p_offs_p] == index_p6[:,na,na])
+    t_evmin_offs_p6pz = t_evmin_offs_pz * (a_p6_pz[mask_p_offs_p] == index_p6[:,na,na])
+    ####set 0 to nan for p slices that are not in p6
     t_evmax_dams_p6pz[t_evmax_dams_p6pz<=0] = np.nan
     t_evmin_dams_p6pz[t_evmin_dams_p6pz<=0] = np.nan
     t_evmax_offs_p6pz[t_evmax_offs_p6pz<=0] = np.nan
     t_evmin_offs_p6pz[t_evmin_offs_p6pz<=0] = np.nan
-    ###Calculate the max and min over the p axis for each p6
+    ####Calculate the max and min over the p axis for each p6
     t_evmax_dams_p6z = np.nanmax(t_evmax_dams_p6pz,axis=1)
     t_evmin_dams_p6z = np.nanmin(t_evmin_dams_p6pz,axis=1)
     t_evmax_offs_p6z = np.nanmax(t_evmax_offs_p6pz,axis=1)
     t_evmin_offs_p6z = np.nanmin(t_evmin_offs_p6pz,axis=1)
-    ###Calculate the overall min & max for p6 by taking min & max of dams & offs
+    ####Calculate the overall min & max for p6 by taking min & max of dams & offs
     t_evmax_p6z = np.maximum(t_evmax_dams_p6z, t_evmax_offs_p6z)
     t_evmin_p6z = np.minimum(t_evmin_dams_p6z, t_evmin_offs_p6z)
     ###Calculate the EV for each cutoff (upper value) for each matrix feed period (based on equal spacing, not equal numbers)
