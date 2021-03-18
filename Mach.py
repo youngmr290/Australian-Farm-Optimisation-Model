@@ -806,7 +806,7 @@ def time_cubic():
 ###################
 #application cost # *remember that lime application only happens every 4 yrs - accounted for in the passes inputs
 ################### *used in crop pyomo
-#this is split into two sections - new feature of midas
+#this is split into two sections - new feature of AFO
 # 1- cost to drive around 1ha
 # 2- cost per cubic metre ie to represent filling up and driving to and from paddock
 

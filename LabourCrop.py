@@ -74,7 +74,7 @@ def f_prep_labour():
 ###########################
 #fert application time   #  this is similar to app cost done in mach sheet
 ###########################
-#this is split into two sections - new feature of midas
+#this is split into two sections - new feature of AFO
 # 1- time to drive around 1ha
 # 2- time per cubic metre ie to represent filling up and driving to and from paddock
 

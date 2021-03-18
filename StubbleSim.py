@@ -12,7 +12,7 @@ Version     Date        Person  Change
 
 this module determines the proportion of each stubble component (grain, leaf etc) in each stub categ (a,b,c,d)
 The module requires access to stubble inputs module
-The module writes the answers to and excel book whick is referenced by midas - this means this module only needs to be run if you make changes to stub
+The module writes the answers to an excel book which is referenced by AFO - this means this module only needs to be run if you make changes to stub
 
 Stubble:
 
@@ -31,7 +31,7 @@ import pandas as pd
 import numpy as np
 from scipy.optimize import minimize
 
-#midas modules
+#AFO modules
 # import StubbleInputs as si
 # import Inputs as inp
 import PropertyInputs as pinp

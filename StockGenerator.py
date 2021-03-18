@@ -565,7 +565,7 @@ def generator(params,r_vals,ev,plots = False):
     ##legume proportion in each period
     legume_p6a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_legume_p6z'],z_pos,source=0,dest=-1,left_pos2=p_pos,
                                                  right_pos2=z_pos)  # p6 axis converted to p axis later (association section)
-    ##estimated foo and dmd for the midas periods
+    ##estimated foo and dmd for the feed periods (p6) periods
     paststd_foo_p6a1e1b1j0wzida0e0b0xyg = fun.f_expand(pinp.sheep['i_paststd_foo_p6zj0'],z_pos,move=True,source=0,
                                                        dest=2,
                                                        left_pos2=n_pos,right_pos2=z_pos,left_pos3=p_pos,
@@ -599,7 +599,7 @@ def generator(params,r_vals,ev,plots = False):
                                                                                      legume_p6a1e1b1nwzida0e0b0xyg,
                                                                                      cr_offs,
                                                                                      z_pos=sinp.stock['i_z_pos'])
-    ##treate z axis (have to do it after adjusting foo)
+    ##treat z axis (have to do it after adjusting foo)
     legume_p6a1e1b1nwzida0e0b0xyg = pinp.f_seasonal_inp(legume_p6a1e1b1nwzida0e0b0xyg,numpy=True,axis=z_pos)
     ##dmd
     paststd_dmd_p6a1e1b1j0wzida0e0b0xyg = fun.f_expand(pinp.sheep['i_paststd_dmd_p6zj0'],z_pos,move=True,source=0,
@@ -941,7 +941,7 @@ def generator(params,r_vals,ev,plots = False):
     a_condensing_pa1e1b1nwzida0e0b0xyg1 = np.apply_along_axis(sfun.f_next_prev_association, 0, condensing_date_oa1e1b1nwzida0e0b0xyg1, date_end_p, 1,'right')
     a_condensing_pa1e1b1nwzida0e0b0xyg3 = np.apply_along_axis(sfun.f_next_prev_association, 0, condensing_date_oa1e1b1nwzida0e0b0xyg3, offs_date_end_p, 1,'right')
 
-    ##MIDAS feed period for each sim period
+    ##Feed period for each generator period
     a_p6_pz = np.apply_along_axis(sfun.f_next_prev_association, 0, feedperiods_p6z, date_end_p, 1,'right') % len_p6 #% 10 required to convert association back to only the number of feed periods
     a_p6_pa1e1b1nwzida0e0b0xyg = fun.f_expand(a_p6_pz,z_pos,left_pos2=p_pos,right_pos2=z_pos)
 

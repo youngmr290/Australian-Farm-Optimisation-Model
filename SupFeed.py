@@ -10,7 +10,7 @@ import numpy as np
 import datetime as dt
 from dateutil import relativedelta as rdelta
 
-#midas modules
+#AFO modules
 import UniversalInputs as uinp
 import Functions as fun
 import Periods as per

@@ -19,7 +19,7 @@ import pandas as pd
 import itertools
 from openpyxl import load_workbook
 
-#MIDAS modules
+#AFO modules
 import Functions as fun
 import StructuralInputs as sinp
 import PropertyInputs as pinp

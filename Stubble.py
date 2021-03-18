@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 pd.set_option('mode.chained_assignment', 'raise')
 
-#midas modules
+#AFO modules
 import Functions as fun
 import StockFunctions as sfun
 import PropertyInputs as pinp

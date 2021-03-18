@@ -10,7 +10,7 @@ import os.path
 import numpy as np
 import pandas as pd
 
-##Midas modules
+##AFO modules
 import Functions as fun
 import StructuralInputs as sinp
 
