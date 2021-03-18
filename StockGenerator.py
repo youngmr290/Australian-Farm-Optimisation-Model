@@ -1722,12 +1722,18 @@ def generator(params,r_vals,ev,plots = False):
     nut_add_g0_n[nut_spread_g0_n >=3] = nut_spread_g0_n[nut_spread_g0_n >=3]
     nut_mult_g0_j0n[:,nut_spread_g0_n >=3] = 0 #if nut_add exists then nut_mult=0
 
-    nut_spread_g1_n = sinp.stock['i_nut_spread_n1']
+    if isinstance(sinp.stock['i_nut_spread_n1'], np.ndarray): #so it can handle 1 nut pattern
+        nut_spread_g1_n = sinp.stock['i_nut_spread_n1']
+    else:
+        nut_spread_g1_n = np.array([sinp.stock['i_nut_spread_n1']])
     nut_add_g1_n = np.zeros_like(nut_spread_g1_n)
     nut_add_g1_n[nut_spread_g1_n >=3] = nut_spread_g1_n[nut_spread_g1_n >=3]
     nut_mult_g1_j0n[:,nut_spread_g1_n >=3] = 0 #if nut_add exists then nut_mult=0
 
-    nut_spread_g3_n = sinp.stock['i_nut_spread_n3']
+    if isinstance(sinp.stock['i_nut_spread_n3'], np.ndarray): #so it can handle 1 nut pattern
+        nut_spread_g3_n = sinp.stock['i_nut_spread_n3']
+    else:
+        nut_spread_g3_n = np.array([sinp.stock['i_nut_spread_n3']])
     nut_add_g3_n = np.zeros_like(nut_spread_g3_n)
     nut_add_g3_n[nut_spread_g3_n >=3] = nut_spread_g3_n[nut_spread_g3_n >=3]
     nut_mult_g3_j0n[:,nut_spread_g3_n >=3] = 0 #if nut_add exists then nut_mult=0

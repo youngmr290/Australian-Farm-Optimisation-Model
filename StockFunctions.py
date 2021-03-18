@@ -1382,7 +1382,7 @@ def f_condensed(numbers, var, lw_idx, prejoin_tup, season_tup, i_n_len, i_w_len,
             ###sort var based on animal lw
             var_sorted = np.take_along_axis(var, lw_idx, axis=sinp.stock['i_w_pos']) #sort into production order (base on lw) so we can select the production of the lowest lw animals with mort less than 10% - note sorts in ascending order
             ###add high pattern
-            temporary[...] = np.mean(f_dynamic_slice(var_sorted, sinp.stock['i_w_pos'], i_w_len - int(i_w_len / 10), -1),
+            temporary[...] = np.mean(f_dynamic_slice(var_sorted, sinp.stock['i_w_pos'], i_w_len -1 - int(math.ceil(i_w_len / 10)), -1),  #ceil is used to handle cases where nutrition options is 1 (eg only 3 lw patterns)
                                      sinp.stock['i_w_pos'], keepdims=True)  # average of the top lw patterns
             ###add mid pattern (w 0 - 27) - use slice method in case w axis changes position (can't use MRYs dynamic slice function because we are assigning)
             sl = [slice(None)] * temporary.ndim
