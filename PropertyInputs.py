@@ -270,7 +270,7 @@ def property_inp_sa():
     ###SAV
     rep['i_store_fec_rep'] = fun.f_sa(rep_inp['i_store_fec_rep'], sen.sav['fec_inc'], 5)
     rep['i_store_lw_rep'] = fun.f_sa(rep_inp['i_store_lw_rep'], sen.sav['lw_inc'], 5)
-    rep['i_store_ffcfw_rep'] = fun.f_sa(rep_inp['i_store_ffcfw_rep'], sen.sav['lw_inc'], 5)
+    rep['i_store_ffcfw_rep'] = fun.f_sa(rep_inp['i_store_ffcfw_rep'], sen.sav['ffcfw_inc'], 5)
 
 
 def f_seasonal_inp(inp, numpy=False, axis=0, level=0):
