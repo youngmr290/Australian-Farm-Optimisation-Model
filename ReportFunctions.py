@@ -35,7 +35,7 @@ def f_errors(exp_data_index, trial_outdated, trials):
 
               Generating reports from out dated data: Trial %s
                 
-              ''' %np.array(trials)[outdatedbool.squeeze()])
+              ''' %np.array(trials)[np.array(outdatedbool)])   #todo test if this returns the correct number when sorting is affect the order
     return
 
 def load_pkl(trial_name):
