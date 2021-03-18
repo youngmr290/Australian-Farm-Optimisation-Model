@@ -51,7 +51,8 @@ run_pnl             = True #table of profit and loss
 run_profitarea      = True #graph profit by crop area
 run_saleprice       = True #table of gross saleprices for specified grids, weights & fat scores
 run_cfw_dams        = True #table of CFW
-run_lw_dams         = True #table of liveweight at the start of the DVP
+run_lw_dams         = False #table of liveweight at the start of the DVP
+run_ffcfw_dams      = True # table of fleece free conceptus free weights
 run_fec_dams        = True #Feed energy concentration for the dams in each generator period
 run_fec_offs        = True #Feed energy concentration for the offspring in each generator period
 run_weanper         = True #table of weaning percent
@@ -204,6 +205,27 @@ if run_lw_dams:
     arith_axis = [0,1,2,4,5,7,8,9,10,11,12]  #reporting p(3) & b1(6)
     index =[3]
     cols =[6]
+    axis_slice = {}
+    # axis_slice[0] = [0, 2, 1]
+    lw_dams = rep.f_stack(func, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights
+                             , den_weights=den_weights, na_prod=na_prod, na_weights=na_weights
+                             , keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+    f_df2xl(writer, lw_dams, 'lw_dams', option=1)
+
+if run_ffcfw_dams:
+    func = rep.f_stock_pasture_summary
+    # trials = [34]
+    type = 'stock'
+    prod = 'ffcfw_dams_k2vpa1e1b1nw8ziyg1'
+    na_prod = [1]
+    weights = 'dams_numbers_k2tvanwziy1g1'
+    na_weights = [3, 5, 6]
+    den_weights = 'pe1b1_denom_weights_k2tvpa1e1b1nw8ziyg1'
+    keys = 'dams_keys_k2tvpaebnwziy1g1'
+    arith = 1
+    arith_axis = [0, 1, 2, 4, 5, 7, 8, 9, 10, 11, 12]  #reporting p(3) & b1(6)
+    index = [3]
+    cols = [6]
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
     ffcfw_dams = rep.f_stack(func, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights

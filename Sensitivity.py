@@ -93,7 +93,9 @@ sav['bnd_pasarea_inc'] = '-'   #SA to turn on the pasture area bound
 sav['pas_inc'] = np.full_like(pinp.general_inp['pas_inc'], '-', dtype=object) #SA value for pastures included mask
 
 ##Sheep
-sav['fec_inc'] = '-'   #SA to store fec report report values
+sav['fec_inc'] = '-'    #SA to store FEC report values
+sav['lw_inc'] = '-'     #SA to store LW report values
+sav['ffcfw_inc'] = '-'  #SA to store FFCFW report values
 sav['eqn_compare']      = '-'                  #SA to alter if the different equation systems in the sheep sim are run and compared
 sav['eqn_used_g0_q1p7'] = np.full(uinp.sheep['i_eqn_used_g0_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
 sav['eqn_used_g1_q1p7'] = np.full(uinp.sheep['i_eqn_used_g1_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use

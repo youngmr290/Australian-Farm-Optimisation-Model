@@ -5217,6 +5217,15 @@ def generator(params,r_vals,ev,plots = False):
                                  * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
                                  * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...]))
 
+        ###ffcfw - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. Don't need it because it doesnt effect lw
+    if pinp.rep['i_store_ffcfw_rep']:
+        r_ffcfw_sire_psire = o_ffcfw_psire
+        r_ffcfw_dams_k2tvpdams = (o_ffcfw_pdams * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                               * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+        r_ffcfw_offs_k3k5tvpoffs = (o_ffcfw_poffs * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
+                                 * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
+                                 * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...]))
+
     ###fec - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns.
     ### This is a big array so only stored if user wants. t is not required because it doesnt effect lw
     if pinp.rep['i_store_fec_rep']:
@@ -6156,6 +6165,12 @@ def generator(params,r_vals,ev,plots = False):
         r_vals['lw_sire_pg0'] = r_lw_sire_psire.reshape(pg0_shape)
         r_vals['lw_dams_k2vpa1e1b1nw8ziyg1'] = r_lw_dams_k2tvpdams.reshape(k2vpa1e1b1nwziyg1_shape)
         r_vals['lw_offs_k3k5vpnw8zida0e0b0xyg3'] = r_lw_offs_k3k5tvpoffs.reshape(k3k5vpnwzidae0b0xyg3_shape)
+
+    ###ffcfw - with p, e, b
+    if pinp.rep['i_store_ffcfw_rep']:
+        r_vals['ffcfw_sire_pg0'] = r_ffcfw_sire_psire.reshape(pg0_shape)
+        r_vals['ffcfw_dams_k2vpa1e1b1nw8ziyg1'] = r_ffcfw_dams_k2tvpdams.reshape(k2vpa1e1b1nwziyg1_shape)
+        r_vals['ffcfw_offs_k3k5vpnw8zida0e0b0xyg3'] = r_ffcfw_offs_k3k5tvpoffs.reshape(k3k5vpnwzidae0b0xyg3_shape)
 
     ###fec - with p, e, b
     if pinp.rep['i_store_fec_rep']:
