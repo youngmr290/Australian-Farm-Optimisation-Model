@@ -5208,7 +5208,7 @@ def generator(params,r_vals,ev,plots = False):
                                                                      axis = (e1_pos, b1_pos), keepdims=True))
 
 
-    ###lw - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. Don't need t because it doesnt effect lw
+    ###lw - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. Don't need it because it doesnt effect lw
     if pinp.rep['i_store_lw_rep']:
         r_lw_sire_psire = o_lw_psire
         r_lw_dams_k2tvpdams = (o_lw_pdams * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)

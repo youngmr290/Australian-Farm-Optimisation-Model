@@ -119,7 +119,7 @@ for row in range(len(exp_data)):
 
     ##check to make sure user wants to run this trial - note pyomo is never run without precalcs being run (this could possibly be change by making a more custom function to check only precalc module time and then altering the 'continue' call below)
     if exp_data1.index[row][0] == False or (exp_data1.loc[exp_data1.index[row],'run'].squeeze()==False and force_run==False):
-        continue
+        continue   # move to next row of the trial
 
     ##get trial name - used for outputs
     trial_name = exp_data.index[row][3]
@@ -198,7 +198,7 @@ for row in range(len(exp_data)):
     #     run_pyomo_params= True
 
     lp_vars={} #create empty dict to return if pyomo isn't run. If dict is empty it doesnt overwrite the previous main lp_vars
-    ##determine if pyomo should run, note if pyomo doesn't run there will be no ful solution (they are the same as before so no need)
+    ##determine if pyomo should run, note if pyomo doesn't run there will be no full solution (they are the same as before so no need)
     if run_pyomo: #or exp_data1.loc[exp_data1.index[row],'runpyomo'].squeeze():
         # print('run pyomo')
         ##call pyomo model function, must call them in the correct order (core must be last)
@@ -229,23 +229,23 @@ for row in range(len(exp_data)):
         if exp_data.index[row][1] == True:
             ##make lp file
             model.write('Output/%s.lp' %trial_name, io_options={'symbolic_solver_labels':True})  #file name has to have capital
-               
-            ##write rc and dual to txt file
-            with open('Output/Rc and Duals - %s.txt' %trial_name,'w') as f:  #file name has to have capital
-                f.write('RC\n')        
-                for v in model.component_objects(pe.Var, active=True):
-                    f.write("Variable %s\n" %v)   #  \n makes new line
-                    for index in v:
-                        try:
-                            print("      ", index, model.rc[v[index]], file=f)
-                        except: pass 
-                f.write('Dual\n')   #this can be used in search to find the start of this in the txt file     
-                for c in model.component_objects(pe.Constraint, active=True):
-                    f.write("Constraint %s\n" %c)   #  \n makes new line
-                    for index in c:
-                        # try:
-                        print("      ", index, model.dual[c[index]], file=f)
-                        # except: pass 
+
+            #todo writing the RC & Duals is very slow. Search for a quicker method if it is required for a large model
+            # ##write rc and dual to txt file
+            # with open('Output/Rc and Duals - %s.txt' %trial_name,'w') as f:  #file name has to have capital
+            #     f.write('RC\n')
+            #     for v in model.component_objects(pe.Var, active=True):
+            #         f.write("Variable %s\n" %v)   #  \n makes new line
+            #         for index in v:
+            #             try:
+            #                 print("      ", index, model.rc[v[index]], file=f)
+            #             except: pass
+            #     for c in model.component_objects(pe.Constraint, active=True):
+            #         f.write("Constraint %s\n" %c)   #  \n makes new line
+            #         for index in c:
+            #             # try:
+            #             print("      ", index, model.dual[c[index]], file=f)
+            #             # except: pass
             
         
             ##prints what you see from pprint to txt file - you can see the slack on constraints but not the rc or dual

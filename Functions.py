@@ -790,7 +790,9 @@ def write_variablesummary(model, row, exp_data, option=0):
                    1: file name will be generic
     :return:
     '''
-    ##This writes variable with value greater than 1 to txt file - used to check stuff out each iteration if you want
+    ##This writes variables with value greater than 0.0001 to txt file
+    ### written with trial description in file name if full solution is requested (option 0)
+    ### written every iteration with generic name (option 1) - can be used to check progress of analysis each iteration
     if option == 0:
         file = open('Output/Variable summary %s.txt' % exp_data.index[row][3],'w')  # file name has to have capital
     else:
