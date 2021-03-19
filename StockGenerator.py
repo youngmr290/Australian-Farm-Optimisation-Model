@@ -719,6 +719,8 @@ def generator(params,r_vals,ev,plots = False):
     feedperiods_p6z = per.f_feed_periods().astype('datetime64[D]')[:-1] #remove last date because that is the end date of the last period (not required)
     feedperiods_p6z = feedperiods_p6z + np.timedelta64(365,'D') * ((date_start_p[0].astype('datetime64[Y]').astype(int) + 1970 -1) - (feedperiods_p6z[0].astype('datetime64[Y]').astype(int) + 1970)) #this is to make sure the first sim period date is greater than the first feed period date.
     feedperiods_p6z = (feedperiods_p6z  + (np.arange(np.ceil(sim_years +1)) * np.timedelta64(365,'D') )[...,na,na]).reshape((-1, len_z)) #expand then ravel to return 1d array of the feed period dates expanded the length of the sim. +1 because feed periods start and finish mid yr so add one to ensure they go to the end of the sim.
+    feedperiods_idx_p6z = sfun.f_next_prev_association(date_start_p, feedperiods_p6z - np.timedelta64(step/2,'D'), 0, 'left') #get the nearest generator period (hence minus half a period
+    feedperiods_p6z = date_start_p[feedperiods_idx_p6z]
 
 
 
@@ -949,14 +951,6 @@ def generator(params,r_vals,ev,plots = False):
     ##MIDAS feed period for each sim period
     a_p6_pz = np.apply_along_axis(sfun.f_next_prev_association, 0, feedperiods_p6z, date_end_p, 1,'right') % len_p6 #% 10 required to convert association back to only the number of feed periods
     a_p6_pa1e1b1nwzida0e0b0xyg = fun.f_expand(a_p6_pz,z_pos,left_pos2=p_pos,right_pos2=z_pos)
-
-    ##build association between p6 and p with the full z axis (this is used to to expand pasture_stage_p6z because we want to keep the full z axis and then apply f_seasonal_inp to the resulting answer because pasture stage is used as an index)
-    ###expand feed periods over all the years of the sim so that an association between sim period can be made.
-    feedperiods_untreatedz_p6z = pinp.period['i_dsp_fp_len'].astype('datetime64[D]')[:-1] #remove last date because that is the end date of the last period (not required)
-    feedperiods_untreatedz_p6z = feedperiods_untreatedz_p6z + np.timedelta64(365,'D') * ((date_start_p[0].astype('datetime64[Y]').astype(int) + 1970 -1) - (feedperiods_untreatedz_p6z[0].astype('datetime64[Y]').astype(int) + 1970)) #this is to make sure the first sim period date is greater than the first feed period date.
-    feedperiods_untreatedz_p6z = (feedperiods_untreatedz_p6z  + (np.arange(np.ceil(sim_years +1)) * np.timedelta64(365,'D') )[:,na,na]).reshape((-1, len(pinp.general['i_mask_z']))) #expand then ravel to return 1d array of the feed period dates expanded the length of the sim. +1 because feed periods start and finish mid yr so add one to ensure they go to the end of the sim.
-    a_p6_untreatedz_pz = np.apply_along_axis(sfun.f_next_prev_association, 0, feedperiods_untreatedz_p6z, date_end_p, 1,'right') % len_p6 #% 10 required to convert association back to only the number of feed periods
-    a_p6_untreatedz_pa1e1b1nwzida0e0b0xyg = fun.f_expand(a_p6_untreatedz_pz,z_pos,left_pos2=p_pos,right_pos2=z_pos)
 
     ##shearing opp (previous/current)
     a_prev_s_pa1e1b1nwzida0e0b0xyg0 = np.apply_along_axis(sfun.f_next_prev_association, 0, date_shear_sa1e1b1nwzida0e0b0xyg0, date_end_p, 1,'right')
