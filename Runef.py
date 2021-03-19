@@ -12,6 +12,29 @@ import pyomo.pysp.plugins.jsonsolutionwriter as jsonw
 import ReferenceModel as refm
 import json
 
+################
+#run option    #
+################
+'''
+DSP can be run through a command call or via a rapper module. The rapper module is easier to incoporate in the code 
+and hence that is the method used in AFO however the command call method has more options eg generation of .lp.
+This module can be used to run the test DSP example from pyomo or the command version of AFO.
+'''
+run_AFO_command = True #you need to uncomment out the dsp functions in exp.py for this method (i couldnt get it working with them in corepyomo - so essentially need to copy from core to exp then comment out in corepyomo)
+run_testDSP_command = False
+run_testDSP_rapper = False
+
+
+
+################
+#run           #
+################
+##run AFO via terminal command so the lp file is printed
+if run_AFO_command:
+    subprocess.call(['C:/Users/21512438/Anaconda3/Scripts/runef.exe','--output-file=efout','--solution-writer=pyomo.pysp.plugins.csvsolutionwriter', '--traceback', '--symbolic-solver-labels',
+                 '--verbose', '-mExp.py', '--solve', '--output-scenario-tree-solution', '--solver=glpk', '--solver=glpk'])
+
+##option 1 - command runef
 ##C:/Users/21512438/Anaconda3/Scripts/runef.exe = file for runef
 ##--output-file=efout = set this to a name saves the lp file (if this argument =false or is not included no lp file will be saved)
 ##--solution-writer=pyomo.pysp.plugins.jsonsolutionwriter = writes scenario tree to json file
@@ -23,35 +46,32 @@ import json
 ##--solve = tells runef to solve the model (if not then it will just build an lp file)
 ##--solver=glpk = specifies the solver
 ##--output-scenario-tree-solution = prints the solution for each element in tree
-# subprocess.call(['C:/Users/21512438/Anaconda3/Scripts/runef.exe','--output-file=efout','--solution-writer=pyomo.pysp.plugins.csvsolutionwriter', '--traceback', '--symbolic-solver-labels',
-#                  '--verbose', '-mReferenceModel.py', '--solve', '--output-scenario-tree-solution', '--solver=glpk', '--solver=glpk'])
+if run_testDSP_command:
+    subprocess.call(['C:/Users/21512438/Anaconda3/Scripts/runef.exe','--output-file=efout','--solution-writer=pyomo.pysp.plugins.csvsolutionwriter', '--traceback', '--symbolic-solver-labels',
+                 '--verbose', '-mReferenceModel.py', '--solve', '--output-scenario-tree-solution', '--solver=glpk', '--solver=glpk'])
 
 
 
-concrete_tree = refm.pysp_scenario_tree_model_callback()
-stsolver = rapper.StochSolver(None, tree_model=concrete_tree, fsfct=refm.pysp_instance_creation_callback)
-ef_sol = stsolver.solve_ef('glpk', tee=True)
-print(ef_sol.solver.termination_condition)
-obj = stsolver.root_E_obj()
-print("Expecatation take over scenarios=", obj)
-for varname, varval in stsolver.root_Var_solution(): # doctest: +SKIP
-    print (varname, str(varval))
+##option 2 - rapper
+if run_testDSP_rapper:
+    concrete_tree = refm.pysp_scenario_tree_model_callback()
+    stsolver = rapper.StochSolver(None, tree_model=concrete_tree, fsfct=refm.pysp_instance_creation_callback)
+    ef_sol = stsolver.solve_ef('glpk')#, tee=True)
+    print(ef_sol.solver.termination_condition)
+    obj = stsolver.root_E_obj()
+    print("Expecatation take over scenarios=", obj)
+    for varname, varval in stsolver.root_Var_solution(): # doctest: +SKIP
+        print (varname, str(varval))
 
-##saves file to csv
-csvw.write_csv_soln(stsolver.scenario_tree,"solution")
-##saves file to json
-jsonw.JSONSolutionWriter.write('',stsolver.scenario_tree,'ef') #i don't know what the first arg does?? it needs to exist but can put any string without changing output
+    ##saves file to csv
+    csvw.write_csv_soln(stsolver.scenario_tree,"solution")
+    ##saves file to json
+    jsonw.JSONSolutionWriter.write('',stsolver.scenario_tree,'ef') #i don't know what the first arg does?? it needs to exist but can put any string without changing output
 
-##load json back in
-with open('ef_solution.json') as f:
-  data = json.load(f)
+    ##load json back in
+    with open('ef_solution.json') as f:
+      data = json.load(f)
 
-# print(value(refm.model.Total_Cost_Objective))
-# model.Total_Cost_Objective.pprint()
-#
-# with open('Full model.txt', 'w') as f:  #file name has to have capital
-#     f.write("My description of the instance!\n")
-#     model.display(ostream=f)
 
 
 # #^to test - Thomas for forum
