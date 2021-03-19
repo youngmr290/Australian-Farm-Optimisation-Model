@@ -5040,13 +5040,17 @@ def generator(params,r_vals,ev,plots = False):
                                                                     * (a_k3cluster_da0e0b0xyg3 == index_k3tva1e1b1nwzida0e0b0xyg3)[...,na,na]
                                                                     , axis=(b0_pos-2, e0_pos-2),keepdims=True))
     ###numbers required - no d axis for Dam DVs
+    ####the total number required for each dam is 1.0 when summed across the progeny k3 (progeny BTRT) & k5 (progeny dam age) axes
     ####collapse the e1 axis on the mask prior to np.sum because can't test for > 0 as per other numbers_req (because need proportions of age & BTRT)
     #### but don't want to increase the numbers if joining for multiple cycles
     numbers_progreq_k2k3k5tva1e1b1nw8zida0e0b0xyg1g9w9 = 1 * np.sum(np.any(mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9, axis=e1_pos-1, keepdims=True)[0, ...,na,:]
                                                                     * mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[:,na,na,:,0:1,...,na,na]  # mask based on the t axis for dvp0
                                                                     * (index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,..., na,na] == 0)
-                                                                    * (index_g1[...,na]==index_g1)[...,na] * btrt_propn_b0xyg1[...,na,na].astype(dtype) * e0_propn_ida0e0b0xyg[...,na,na].astype(dtype)
-                                                                    * agedam_propn_da0e0b0xyg1[...,na,na].astype(dtype) * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na,na]
+                                                                    * (index_g1[...,na]==index_g1)[...,na]
+                                                                    * btrt_propn_b0xyg1[...,na,na].astype(dtype)
+                                                                    * e0_propn_ida0e0b0xyg[...,na,na].astype(dtype)
+                                                                    * agedam_propn_da0e0b0xyg1[...,na,na].astype(dtype)
+                                                                    * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na,na]
                                                                     * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)[...,na,na],
                                                                      axis=(e1_pos-2, d_pos-2, b0_pos-2, e0_pos-2),keepdims=True)
 
