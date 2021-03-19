@@ -89,7 +89,7 @@ if __name__ == '__main__':
 #Exp loop               #
 #########################
 #^maybe there is a cleaner way to do some of the stuff below ie a way that doesn't need as many if statements?
-def exp(row):
+def exp(row):  # called with command: pool.map(exp, dataset)
     ##sleep for random length of time. This is to offset processes with a goal of spreading the RAM load
     # time.sleep(randrange(30))
 
@@ -162,9 +162,9 @@ def exp(row):
     # try: #try required in case the key (trial) doesn't exist in the old dict, if this is the case pyomo must be run
     #     run_pyomo_params=fun.findDiff(params, prev_params)
     # except KeyError:
-    #     run_pyomo_params= True
-    run_pyomo_params= True
-    ##determine if pyomo should run, note if pyomo doesn't run there will be no ful solution (they are the same as before so no need)
+    #     run_pyomo_params = True
+    run_pyomo_params = True
+    ##determine if pyomo should run, note if pyomo doesn't run there will be no full solution (they are the same as before so no need)
     lp_vars={} #create empty dict to return if pyomo isn't run. If dict is empty it doesnt overwrite the previous main lp_vars dict66
     if run_pyomo_params or exp_data1.loc[exp_data1.index[row],'runpyomo'].squeeze():
         ##call core model function, must call them in the correct order (core must be last)
@@ -183,12 +183,18 @@ def exp(row):
         ###bounds-this must be done last because it uses sets built in some of the other modules
         bndpy.boundarypyomo_local()
         results=core.coremodel_all(params) #have to do this so i can access the solver status
- 
+
+        ##This writes variable summary each iteration with generic file name - it is overwritten each iteration and is created so the run progress can be monitored
+        fun.write_variablesummary(model, row, exp_data, 1)
+
         ##check if user wants full solution
         if exp_data.index[row][1] == True:
             ##make lp file
             model.write('Output/%s.lp' %trial_name,io_options={'symbolic_solver_labels':True})  #file name has to have capital
-            
+
+            ##This writes variable summary for full solution (same file as the temporary version created above)
+            fun.write_variablesummary(model, row, exp_data)
+
             ##write rc and dual to txt file
             with open('Output/Rc and Duals - %s.txt' %trial_name,'w') as f:  #file name has to have capital
                 f.write('RC\n')        
@@ -209,12 +215,6 @@ def exp(row):
             # with open('Output/Full model - %s.txt' %trial_name, 'w') as f:  #file name has to have capital
             #     f.write("My description of the instance!\n")
             #     model.display(ostream=f)
-
-            ##This writes variable summary for full solution
-            fun.write_variablesummary(model,row,exp_data)
-
-        ##This writes variable summary each iteration with generic file name so it is overwritten each iteration
-        fun.write_variablesummary(model,row,exp_data,1)
 
         ##this prints stuff for each trial - trial name, overall profit
         print("\nDisplaying Solution for trial: %s\n" %trial_name , '-'*60,'\n%s' %pe.value(model.profit))

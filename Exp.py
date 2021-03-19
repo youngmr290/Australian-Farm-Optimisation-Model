@@ -225,10 +225,16 @@ for row in range(len(exp_data)):
         results=core.coremodel_all(params) #have to do this so i can access the solver status
         print('corepyomo: ',time.time() - pyomocalc_end)
 
+        ##This writes variable summary each iteration with generic file name - it is overwritten each iteration and is created so the run progress can be monitored
+        fun.write_variablesummary(model, row, exp_data, 1)
+
         ##check if user wants full solution
         if exp_data.index[row][1] == True:
             ##make lp file
             model.write('Output/%s.lp' %trial_name, io_options={'symbolic_solver_labels':True})  #file name has to have capital
+
+            ##This writes variable summary for full solution (same file as the temporary version created above)
+            fun.write_variablesummary(model, row, exp_data)
 
             #todo writing the RC & Duals is very slow. Search for a quicker method if it is required for a large model
             # ##write rc and dual to txt file
@@ -253,12 +259,6 @@ for row in range(len(exp_data)):
             #     f.write("My description of the instance!\n")
             #     model.display(ostream=f)
         
-            ##This writes variable summary for full solution
-            fun.write_variablesummary(model, row, exp_data)
-
-        ##This writes variable summary each iteration with generic file name so it is overwritten each iteration
-        fun.write_variablesummary(model, row, exp_data, 1)
-
         ##this prints stuff for each trial - trial name, overall profit
         print("\nDisplaying Solution for trial: %s\n" %trial_name , '-'*60,'\n%s' %pe.value(model.profit))
         ##this check if the solver is optimal - if infeasible or error the model will quit
