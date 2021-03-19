@@ -580,25 +580,25 @@ def generator(params,r_vals,ev,plots = False):
                                                                                      pasture_stage_p6a1e1b1j0wzida0e0b0xyg,
                                                                                      legume_p6a1e1b1nwzida0e0b0xyg,
                                                                                      cr_sire,
-                                                                                     z_pos=sinp.stock['i_z_pos'])
+                                                                                     z_pos=sinp.stock['i_z_pos'], treat_z=True)
     paststd_foo_p6a1e1b1j0wzida0e0b0xyg1, paststd_hf_p6a1e1b1j0wzida0e0b0xyg1 = sfun.f_foo_convert(cu3, cu4,
                                                                                      paststd_foo_p6a1e1b1j0wzida0e0b0xyg,
                                                                                      pasture_stage_p6a1e1b1j0wzida0e0b0xyg,
                                                                                      legume_p6a1e1b1nwzida0e0b0xyg,
                                                                                      cr_dams,
-                                                                                     z_pos=sinp.stock['i_z_pos'])
+                                                                                     z_pos=sinp.stock['i_z_pos'], treat_z=True)
     paststd_foo_p6a1e1b1j0wzida0e0b0xyg2, paststd_hf_p6a1e1b1j0wzida0e0b0xyg2 = sfun.f_foo_convert(cu3, cu4,
                                                                                      paststd_foo_p6a1e1b1j0wzida0e0b0xyg,
                                                                                      pasture_stage_p6a1e1b1j0wzida0e0b0xyg,
                                                                                      legume_p6a1e1b1nwzida0e0b0xyg,
                                                                                      cr_yatf,
-                                                                                     z_pos=sinp.stock['i_z_pos'])
+                                                                                     z_pos=sinp.stock['i_z_pos'], treat_z=True)
     paststd_foo_p6a1e1b1j0wzida0e0b0xyg3, paststd_hf_p6a1e1b1j0wzida0e0b0xyg3 = sfun.f_foo_convert(cu3, cu4,
                                                                                      paststd_foo_p6a1e1b1j0wzida0e0b0xyg,
                                                                                      pasture_stage_p6a1e1b1j0wzida0e0b0xyg,
                                                                                      legume_p6a1e1b1nwzida0e0b0xyg,
                                                                                      cr_offs,
-                                                                                     z_pos=sinp.stock['i_z_pos'])
+                                                                                     z_pos=sinp.stock['i_z_pos'], treat_z=True)
     ##treat z axis (have to do it after adjusting foo)
     legume_p6a1e1b1nwzida0e0b0xyg = pinp.f_seasonal_inp(legume_p6a1e1b1nwzida0e0b0xyg,numpy=True,axis=z_pos)
     ##dmd
@@ -607,9 +607,14 @@ def generator(params,r_vals,ev,plots = False):
                                                        left_pos2=n_pos,right_pos2=z_pos,left_pos3=p_pos,
                                                        right_pos3=n_pos)  # p6 axis converted to p axis later (association section), axis order doesnt matter because sliced when used
     paststd_dmd_p6a1e1b1j0wzida0e0b0xyg = pinp.f_seasonal_inp(paststd_dmd_p6a1e1b1j0wzida0e0b0xyg,numpy=True,axis=z_pos)
-    ##season type probability - prob and z mask are accounted for in f_season
-    i_season_propn_z = fun.f_expand(np.ones_like(pinp.general['i_season_propn_z']),z_pos)
-    season_propn_zida0e0b0xyg = pinp.f_seasonal_inp(i_season_propn_z,numpy=True,axis=z_pos)
+    ##season type probability
+    if pinp.general['steady_state']:
+        i_season_propn_z = fun.f_expand(np.ones_like(pinp.general['i_season_propn_z']),z_pos)
+        season_propn_zida0e0b0xyg = pinp.f_seasonal_inp(i_season_propn_z,numpy=True,axis=z_pos)
+    else:
+        i_season_propn_z = pinp.f_z_prob()
+        season_propn_zida0e0b0xyg = fun.f_expand(i_season_propn_z, z_pos)
+
     ##wind speed
     ws_m4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_ws_m4'],p_pos)
     ##expected stocking density
@@ -714,6 +719,8 @@ def generator(params,r_vals,ev,plots = False):
     feedperiods_p6z = per.f_feed_periods().astype('datetime64[D]')[:-1] #remove last date because that is the end date of the last period (not required)
     feedperiods_p6z = feedperiods_p6z + np.timedelta64(365,'D') * ((date_start_p[0].astype('datetime64[Y]').astype(int) + 1970 -1) - (feedperiods_p6z[0].astype('datetime64[Y]').astype(int) + 1970)) #this is to make sure the first sim period date is greater than the first feed period date.
     feedperiods_p6z = (feedperiods_p6z  + (np.arange(np.ceil(sim_years +1)) * np.timedelta64(365,'D') )[...,na,na]).reshape((-1, len_z)) #expand then ravel to return 1d array of the feed period dates expanded the length of the sim. +1 because feed periods start and finish mid yr so add one to ensure they go to the end of the sim.
+    feedperiods_idx_p6z = sfun.f_next_prev_association(date_start_p, feedperiods_p6z - np.timedelta64(step/2,'D'), 0, 'left') #get the nearest generator period (hence minus half a period
+    feedperiods_p6z = date_start_p[feedperiods_idx_p6z]
 
 
 
@@ -944,14 +951,6 @@ def generator(params,r_vals,ev,plots = False):
     ##Feed period for each generator period
     a_p6_pz = np.apply_along_axis(sfun.f_next_prev_association, 0, feedperiods_p6z, date_end_p, 1,'right') % len_p6 #% 10 required to convert association back to only the number of feed periods
     a_p6_pa1e1b1nwzida0e0b0xyg = fun.f_expand(a_p6_pz,z_pos,left_pos2=p_pos,right_pos2=z_pos)
-
-    ##build association between p6 and p with the full z axis (this is used to to expand pasture_stage_p6z because we want to keep the full z axis and then apply f_seasonal_inp to the resulting answer because pasture stage is used as an index)
-    ###expand feed periods over all the years of the sim so that an association between sim period can be made.
-    feedperiods_untreatedz_p6z = pinp.period['i_dsp_fp_len'].astype('datetime64[D]')[:-1] #remove last date because that is the end date of the last period (not required)
-    feedperiods_untreatedz_p6z = feedperiods_untreatedz_p6z + np.timedelta64(365,'D') * ((date_start_p[0].astype('datetime64[Y]').astype(int) + 1970 -1) - (feedperiods_untreatedz_p6z[0].astype('datetime64[Y]').astype(int) + 1970)) #this is to make sure the first sim period date is greater than the first feed period date.
-    feedperiods_untreatedz_p6z = (feedperiods_untreatedz_p6z  + (np.arange(np.ceil(sim_years +1)) * np.timedelta64(365,'D') )[:,na,na]).reshape((-1, len(pinp.general['i_mask_z']))) #expand then ravel to return 1d array of the feed period dates expanded the length of the sim. +1 because feed periods start and finish mid yr so add one to ensure they go to the end of the sim.
-    a_p6_untreatedz_pz = np.apply_along_axis(sfun.f_next_prev_association, 0, feedperiods_untreatedz_p6z, date_end_p, 1,'right') % len_p6 #% 10 required to convert association back to only the number of feed periods
-    a_p6_untreatedz_pa1e1b1nwzida0e0b0xyg = fun.f_expand(a_p6_untreatedz_pz,z_pos,left_pos2=p_pos,right_pos2=z_pos)
 
     ##shearing opp (previous/current)
     a_prev_s_pa1e1b1nwzida0e0b0xyg0 = np.apply_along_axis(sfun.f_next_prev_association, 0, date_shear_sa1e1b1nwzida0e0b0xyg0, date_end_p, 1,'right')
@@ -1722,12 +1721,18 @@ def generator(params,r_vals,ev,plots = False):
     nut_add_g0_n[nut_spread_g0_n >=3] = nut_spread_g0_n[nut_spread_g0_n >=3]
     nut_mult_g0_j0n[:,nut_spread_g0_n >=3] = 0 #if nut_add exists then nut_mult=0
 
-    nut_spread_g1_n = sinp.stock['i_nut_spread_n1']
+    if isinstance(sinp.stock['i_nut_spread_n1'], np.ndarray): #so it can handle 1 nut pattern
+        nut_spread_g1_n = sinp.stock['i_nut_spread_n1']
+    else:
+        nut_spread_g1_n = np.array([sinp.stock['i_nut_spread_n1']])
     nut_add_g1_n = np.zeros_like(nut_spread_g1_n)
     nut_add_g1_n[nut_spread_g1_n >=3] = nut_spread_g1_n[nut_spread_g1_n >=3]
     nut_mult_g1_j0n[:,nut_spread_g1_n >=3] = 0 #if nut_add exists then nut_mult=0
 
-    nut_spread_g3_n = sinp.stock['i_nut_spread_n3']
+    if isinstance(sinp.stock['i_nut_spread_n3'], np.ndarray): #so it can handle 1 nut pattern
+        nut_spread_g3_n = sinp.stock['i_nut_spread_n3']
+    else:
+        nut_spread_g3_n = np.array([sinp.stock['i_nut_spread_n3']])
     nut_add_g3_n = np.zeros_like(nut_spread_g3_n)
     nut_add_g3_n[nut_spread_g3_n >=3] = nut_spread_g3_n[nut_spread_g3_n >=3]
     nut_mult_g3_j0n[:,nut_spread_g3_n >=3] = 0 #if nut_add exists then nut_mult=0
@@ -3619,7 +3624,7 @@ def generator(params,r_vals,ev,plots = False):
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                 numbers_start_dams = sfun.f_period_start_nums(numbers_end_dams, idx_sorted_w_dams, prejoin_tup, season_tup, n_fs_dams
                                         , len_w1, n_fvp_periods_dams, numbers_start_condense_dams
-                                        , period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1], period_is_startseason_pa1e1b1nwzida0e0b0xyg[p]
+                                        , period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1], period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1]
                                         , season_propn_zida0e0b0xyg, group=1, numbers_initial_repro=numbers_initial_propn_repro_a1e1b1nwzida0e0b0xyg1
                                         , period_is_prejoin=period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###numbers at the beginning of fvp 0 (used to calc mort for the lw patterns to determine the lowest feasible level - used in the start prod func)
@@ -5600,7 +5605,7 @@ def generator(params,r_vals,ev,plots = False):
         params[scenario] = {}
 
         ###nsire_sire
-        numbers_startp8_va1e1b1nwida0e0b0xyg0p8 = sfun.f_dynamic_slice(numbers_startp8_va1e1b1nwzida0e0b0xyg0p8, z_pos, z, z+1)
+        numbers_startp8_va1e1b1nwida0e0b0xyg0p8 = sfun.f_dynamic_slice(numbers_startp8_va1e1b1nwzida0e0b0xyg0p8, z_pos-1, z, z+1)
         mask = numbers_startp8_va1e1b1nwida0e0b0xyg0p8 != 0
         nsire_g0p8 = numbers_startp8_va1e1b1nwida0e0b0xyg0p8[mask]  # applying the mask does the raveling and squeezing of singleton axis
         mask = mask.ravel()
@@ -5617,372 +5622,372 @@ def generator(params,r_vals,ev,plots = False):
         tup_k2tvanwiyg1g0p8 = tuple(map(tuple, index_cut_k2tvanwiyg1g0p8))
         params[scenario]['p_nsire_req_dams'] =dict(zip(tup_k2tvanwiyg1g0p8, nsire_k2tva1nw8iyg1g0p8))
 
-    ###number prog weaned
-    # mask=npw_k5tva1e1b1nwzida0e0b0xyg1w9i9!=0
-    # npw_k5tva1nw8zidxyg1w9i9 = npw_k5tva1e1b1nwzida0e0b0xyg1w9i9[mask] #applying the mask does the raveling and squeezing of singleton axis
-    # mask=mask.ravel()
-    # index_cut_k5tva1nw8zidxyg1w9i9=index_k5tva1nw8zidxyg1w9i9[mask,:]
-    # tup_k5tva1nw8zidxyg1w9i9 = tuple(map(tuple, index_cut_k5tva1nw8zidxyg1w9i9))
-    # params['p_npw_dams'] =dict(zip(tup_k5tva1nw8zidxyg1w9i9, npw_k5tva1nw8zidxyg1w9i9))
-    npw_k5tva1nw8idxyg1w9i9 = np.array([],dtype=dtype)
-    index_cut_k5tva1nw8idxyg1w9i9 = np.array([])
-    npw_k5tva1e1b1nwida0e0b0xyg1w9i9 = sfun.f_dynamic_slice(npw_k5tva1e1b1nwzida0e0b0xyg1w9i9,z_pos - 2,z,z + 1)
-    for w in range(len(keys_lw1)):
-        mask=npw_k5tva1e1b1nwida0e0b0xyg1w9i9[:,:,:,:,:,:,:,w,...]!=0
-        temp_npw_k5tva1e1b1nida0e0b0xyg1w9i9 = npw_k5tva1e1b1nwida0e0b0xyg1w9i9[:,:,:,:,:,:,:,w,...]
-        npw_k5tva1nw8idxyg1w9i9 = np.concatenate([npw_k5tva1nw8idxyg1w9i9,temp_npw_k5tva1e1b1nida0e0b0xyg1w9i9[mask]],0).astype(dtype) #applying the mask does the raveling and squeezing of singleton axis
+        ###number prog weaned
+        # mask=npw_k5tva1e1b1nwzida0e0b0xyg1w9i9!=0
+        # npw_k5tva1nw8zidxyg1w9i9 = npw_k5tva1e1b1nwzida0e0b0xyg1w9i9[mask] #applying the mask does the raveling and squeezing of singleton axis
+        # mask=mask.ravel()
+        # index_cut_k5tva1nw8zidxyg1w9i9=index_k5tva1nw8zidxyg1w9i9[mask,:]
+        # tup_k5tva1nw8zidxyg1w9i9 = tuple(map(tuple, index_cut_k5tva1nw8zidxyg1w9i9))
+        # params['p_npw_dams'] =dict(zip(tup_k5tva1nw8zidxyg1w9i9, npw_k5tva1nw8zidxyg1w9i9))
+        npw_k5tva1nw8idxyg1w9i9 = np.array([],dtype=dtype)
+        index_cut_k5tva1nw8idxyg1w9i9 = np.array([])
+        npw_k5tva1e1b1nwida0e0b0xyg1w9i9 = sfun.f_dynamic_slice(npw_k5tva1e1b1nwzida0e0b0xyg1w9i9,z_pos - 2,z,z + 1)
+        for w in range(len(keys_lw1)):
+            mask=npw_k5tva1e1b1nwida0e0b0xyg1w9i9[:,:,:,:,:,:,:,w,...]!=0
+            temp_npw_k5tva1e1b1nida0e0b0xyg1w9i9 = npw_k5tva1e1b1nwida0e0b0xyg1w9i9[:,:,:,:,:,:,:,w,...]
+            npw_k5tva1nw8idxyg1w9i9 = np.concatenate([npw_k5tva1nw8idxyg1w9i9,temp_npw_k5tva1e1b1nida0e0b0xyg1w9i9[mask]],0).astype(dtype) #applying the mask does the raveling and squeezing of singleton axis
+            mask=mask.ravel()
+            arrays = [keys_k5, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1[w:w+1], keys_i, keys_d, keys_x, keys_y1, keys_g1, keys_lw_prog, keys_i]
+            index_tva1nw8idxyg1w9i9 = fun.cartesian_product_simple_transpose(arrays)
+            index_cut_k5tva1nw8idxyg1w9i9 = np.vstack([index_cut_k5tva1nw8idxyg1w9i9,index_tva1nw8idxyg1w9i9[mask,:]]) if index_cut_k5tva1nw8idxyg1w9i9.size else index_tva1nw8idxyg1w9i9[mask,:]
+        tup_k5tva1nw8idxyg1w9i9 = tuple(map(tuple, index_cut_k5tva1nw8idxyg1w9i9))
+        params[scenario]['p_npw_dams'] =dict(zip(tup_k5tva1nw8idxyg1w9i9, npw_k5tva1nw8idxyg1w9i9))
+
+
+        ###number prog provided to dams
+        numbers_prog2dams_k3tva1e1b1nwida0e0b0xyg2g9w9 = sfun.f_dynamic_slice(numbers_prog2dams_k3tva1e1b1nwzida0e0b0xyg2g9w9,z_pos - 2,z,z + 1)
+        mask=numbers_prog2dams_k3tva1e1b1nwida0e0b0xyg2g9w9!=0
+        progprov_dams_k3tw8ida0xyg2g9w9 = numbers_prog2dams_k3tva1e1b1nwida0e0b0xyg2g9w9[mask] #applying the mask does the raveling and squeezing of singleton axis
         mask=mask.ravel()
-        arrays = [keys_k5, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1[w:w+1], keys_i, keys_d, keys_x, keys_y1, keys_g1, keys_lw_prog, keys_i]
-        index_tva1nw8idxyg1w9i9 = fun.cartesian_product_simple_transpose(arrays)
-        index_cut_k5tva1nw8idxyg1w9i9 = np.vstack([index_cut_k5tva1nw8idxyg1w9i9,index_tva1nw8idxyg1w9i9[mask,:]]) if index_cut_k5tva1nw8idxyg1w9i9.size else index_tva1nw8idxyg1w9i9[mask,:]
-    tup_k5tva1nw8idxyg1w9i9 = tuple(map(tuple, index_cut_k5tva1nw8idxyg1w9i9))
-    params[scenario]['p_npw_dams'] =dict(zip(tup_k5tva1nw8idxyg1w9i9, npw_k5tva1nw8idxyg1w9i9))
+        index_cut_k3tw8ida0xyg2g9w9=index_k3tw8ida0xyg2g9w9[mask,:]
+        tup_k3tw8ida0xyg2g9w9 = tuple(map(tuple, index_cut_k3tw8ida0xyg2g9w9))
+        params[scenario]['p_progprov_dams'] =dict(zip(tup_k3tw8ida0xyg2g9w9, progprov_dams_k3tw8ida0xyg2g9w9))
 
-
-    ###number prog provided to dams
-    numbers_prog2dams_k3tva1e1b1nwida0e0b0xyg2g9w9 = sfun.f_dynamic_slice(numbers_prog2dams_k3tva1e1b1nwzida0e0b0xyg2g9w9,z_pos - 2,z,z + 1)
-    mask=numbers_prog2dams_k3tva1e1b1nwida0e0b0xyg2g9w9!=0
-    progprov_dams_k3tw8ida0xyg2g9w9 = numbers_prog2dams_k3tva1e1b1nwida0e0b0xyg2g9w9[mask] #applying the mask does the raveling and squeezing of singleton axis
-    mask=mask.ravel()
-    index_cut_k3tw8ida0xyg2g9w9=index_k3tw8ida0xyg2g9w9[mask,:]
-    tup_k3tw8ida0xyg2g9w9 = tuple(map(tuple, index_cut_k3tw8ida0xyg2g9w9))
-    params[scenario]['p_progprov_dams'] =dict(zip(tup_k3tw8ida0xyg2g9w9, progprov_dams_k3tw8ida0xyg2g9w9))
-
-    ###number prog provided to offs
-    numbers_prog2offs_k3k5tva1e1b1nwida0e0b0xyg2w9 = sfun.f_dynamic_slice(numbers_prog2offs_k3k5tva1e1b1nwzida0e0b0xyg2w9,z_pos - 1,z,z + 1)
-    mask=numbers_prog2offs_k3k5tva1e1b1nwida0e0b0xyg2w9!=0
-    progprov_offs_k3k5tw8idaxyg2w9 = numbers_prog2offs_k3k5tva1e1b1nwida0e0b0xyg2w9[mask] #applying the mask does the raveling and squeezing of singleton axis
-    mask=mask.ravel()
-    index_cut_k3k5tw8idaxyg2w9=index_k3k5tw8idaxyg2w9[mask,:]
-    tup_k3k5tw8idaxyg2w9 = tuple(map(tuple, index_cut_k3k5tw8idaxyg2w9))
-    params[scenario]['p_progprov_offs'] =dict(zip(tup_k3k5tw8idaxyg2w9, progprov_offs_k3k5tw8idaxyg2w9))
-
-    ###numbers_prov_dams
-    ####numbers provided into next period (the norm)
-    numbers_prov_dams_k2k2tva1nw8iyg1g9w9 = np.array([], dtype=dtype)
-    index_cut_k2k2tvanwiyg1g9w = np.array([])
-    numbers_prov_dams_k28k29tva1e1b1nw8ida0e0b0xyg1g9w9 = sfun.f_dynamic_slice(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9,z_pos - 2,z,z + 1)
-    for w in range(len(keys_lw1)):
-        mask=numbers_prov_dams_k28k29tva1e1b1nw8ida0e0b0xyg1g9w9[...,w]!=0
-        numbers_prov_dams_k2k2tva1nw8iyg1g9w9 = np.concatenate([numbers_prov_dams_k2k2tva1nw8iyg1g9w9,numbers_prov_dams_k28k29tva1e1b1nw8ida0e0b0xyg1g9w9[mask,w]],0).astype(dtype) #applying the mask does the raveling and squeezing of singleton axis
+        ###number prog provided to offs
+        numbers_prog2offs_k3k5tva1e1b1nwida0e0b0xyg2w9 = sfun.f_dynamic_slice(numbers_prog2offs_k3k5tva1e1b1nwzida0e0b0xyg2w9,z_pos - 1,z,z + 1)
+        mask=numbers_prog2offs_k3k5tva1e1b1nwida0e0b0xyg2w9!=0
+        progprov_offs_k3k5tw8idaxyg2w9 = numbers_prog2offs_k3k5tva1e1b1nwida0e0b0xyg2w9[mask] #applying the mask does the raveling and squeezing of singleton axis
         mask=mask.ravel()
-        arrays = [keys_k2, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_i, keys_y1, keys_g1, keys_g1, keys_lw1[w:w+1]]
-        index_k2k2tvanwiyg1g9 = fun.cartesian_product_simple_transpose(arrays)
-        index_cut_k2k2tvanwiyg1g9w = np.vstack([index_cut_k2k2tvanwiyg1g9w,index_k2k2tvanwiyg1g9[mask,:]]) if index_cut_k2k2tvanwiyg1g9w.size else index_k2k2tvanwiyg1g9[mask,:]
-    tup_k2k2tvanwiyg1g9w = tuple(map(tuple, index_cut_k2k2tvanwiyg1g9w))
-    params[scenario]['p_numbers_prov_dams'] =dict(zip(tup_k2k2tvanwiyg1g9w, numbers_prov_dams_k2k2tva1nw8iyg1g9w9))
+        index_cut_k3k5tw8idaxyg2w9=index_k3k5tw8idaxyg2w9[mask,:]
+        tup_k3k5tw8idaxyg2w9 = tuple(map(tuple, index_cut_k3k5tw8idaxyg2w9))
+        params[scenario]['p_progprov_offs'] =dict(zip(tup_k3k5tw8idaxyg2w9, progprov_offs_k3k5tw8idaxyg2w9))
 
-    #### provided into this period (when transferring from an earlier lambing ram group to a later lambing)
-    # mask=numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9!=0
-    # numbers_provthis_dams_k2k2tva1nw8ziyg1g9w9 = numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[mask] #applying the mask does the raveling and squeezing of singleton axis
-    # mask=mask.ravel()
-    # index_cut_k2k2tvanwziyg1g9w=index_k2k2tvanwziyg1g9w[mask,:]
-    # tup_k2k2tvanwziyg1g9w = tuple(map(tuple, index_cut_k2k2tvanwziyg1g9w))
-    # params['p_numbers_provthis_dams'] =dict(zip(tup_k2k2tvanwziyg1g9w, numbers_provthis_dams_k2k2tva1nw8ziyg1g9w9))
-    numbers_provthis_dams_k2k2tva1nw8iyg1g9w9 = np.array([])
-    index_cut_k2k2tvanwiyg1g9w = np.array([])
-    numbers_provthis_dams_k28k29tva1e1b1nw8ida0e0b0xyg1g9w9 = sfun.f_dynamic_slice(numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9,z_pos - 2,z,z + 1)
-    for w in range(len(keys_lw1)): #loop on w to reduce memory
-        mask=numbers_provthis_dams_k28k29tva1e1b1nw8ida0e0b0xyg1g9w9[...,w]!=0
-        numbers_provthis_dams_k2k2tva1nw8iyg1g9w9 = np.concatenate([numbers_provthis_dams_k2k2tva1nw8iyg1g9w9,numbers_provthis_dams_k28k29tva1e1b1nw8ida0e0b0xyg1g9w9[mask,w]],0) #applying the mask does the raveling and squeezing of singleton axis
+        ###numbers_prov_dams
+        ####numbers provided into next period (the norm)
+        numbers_prov_dams_k2k2tva1nw8iyg1g9w9 = np.array([], dtype=dtype)
+        index_cut_k2k2tvanwiyg1g9w = np.array([])
+        numbers_prov_dams_k28k29tva1e1b1nw8ida0e0b0xyg1g9w9 = sfun.f_dynamic_slice(numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9,z_pos - 2,z,z + 1)
+        for w in range(len(keys_lw1)):
+            mask=numbers_prov_dams_k28k29tva1e1b1nw8ida0e0b0xyg1g9w9[...,w]!=0
+            numbers_prov_dams_k2k2tva1nw8iyg1g9w9 = np.concatenate([numbers_prov_dams_k2k2tva1nw8iyg1g9w9,numbers_prov_dams_k28k29tva1e1b1nw8ida0e0b0xyg1g9w9[mask,w]],0).astype(dtype) #applying the mask does the raveling and squeezing of singleton axis
+            mask=mask.ravel()
+            arrays = [keys_k2, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_i, keys_y1, keys_g1, keys_g1, keys_lw1[w:w+1]]
+            index_k2k2tvanwiyg1g9 = fun.cartesian_product_simple_transpose(arrays)
+            index_cut_k2k2tvanwiyg1g9w = np.vstack([index_cut_k2k2tvanwiyg1g9w,index_k2k2tvanwiyg1g9[mask,:]]) if index_cut_k2k2tvanwiyg1g9w.size else index_k2k2tvanwiyg1g9[mask,:]
+        tup_k2k2tvanwiyg1g9w = tuple(map(tuple, index_cut_k2k2tvanwiyg1g9w))
+        params[scenario]['p_numbers_prov_dams'] =dict(zip(tup_k2k2tvanwiyg1g9w, numbers_prov_dams_k2k2tva1nw8iyg1g9w9))
+
+        #### provided into this period (when transferring from an earlier lambing ram group to a later lambing)
+        # mask=numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9!=0
+        # numbers_provthis_dams_k2k2tva1nw8ziyg1g9w9 = numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[mask] #applying the mask does the raveling and squeezing of singleton axis
+        # mask=mask.ravel()
+        # index_cut_k2k2tvanwziyg1g9w=index_k2k2tvanwziyg1g9w[mask,:]
+        # tup_k2k2tvanwziyg1g9w = tuple(map(tuple, index_cut_k2k2tvanwziyg1g9w))
+        # params['p_numbers_provthis_dams'] =dict(zip(tup_k2k2tvanwziyg1g9w, numbers_provthis_dams_k2k2tva1nw8ziyg1g9w9))
+        numbers_provthis_dams_k2k2tva1nw8iyg1g9w9 = np.array([])
+        index_cut_k2k2tvanwiyg1g9w = np.array([])
+        numbers_provthis_dams_k28k29tva1e1b1nw8ida0e0b0xyg1g9w9 = sfun.f_dynamic_slice(numbers_provthis_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9,z_pos - 2,z,z + 1)
+        for w in range(len(keys_lw1)): #loop on w to reduce memory
+            mask=numbers_provthis_dams_k28k29tva1e1b1nw8ida0e0b0xyg1g9w9[...,w]!=0
+            numbers_provthis_dams_k2k2tva1nw8iyg1g9w9 = np.concatenate([numbers_provthis_dams_k2k2tva1nw8iyg1g9w9,numbers_provthis_dams_k28k29tva1e1b1nw8ida0e0b0xyg1g9w9[mask,w]],0) #applying the mask does the raveling and squeezing of singleton axis
+            mask=mask.ravel()
+            arrays = [keys_k2, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_i, keys_y1, keys_g1, keys_g1, keys_lw1[w:w+1]]
+            index_k2k2tvanwiyg1g9 = fun.cartesian_product_simple_transpose(arrays)
+            index_cut_k2k2tvanwiyg1g9w = np.vstack([index_cut_k2k2tvanwiyg1g9w,index_k2k2tvanwiyg1g9[mask,:]]) if index_cut_k2k2tvanwiyg1g9w.size else index_k2k2tvanwiyg1g9[mask,:]
+        tup_k2k2tvanwiyg1g9w = tuple(map(tuple, index_cut_k2k2tvanwiyg1g9w))
+        params[scenario]['p_numbers_provthis_dams'] =dict(zip(tup_k2k2tvanwiyg1g9w, numbers_provthis_dams_k2k2tva1nw8iyg1g9w9))
+
+
+        ###numbers_prov_offs
+        numbers_prov_offs_k3k5tva1e1b1nw8ida0e0b0xygw9 = sfun.f_dynamic_slice(numbers_prov_offs_k3k5tva1e1b1nw8zida0e0b0xygw9,z_pos - 1,z,z + 1)
+        mask=numbers_prov_offs_k3k5tva1e1b1nw8ida0e0b0xygw9!=0
+        numbers_prov_offs_k3k5tvnw8ia0xyg3w9 = numbers_prov_offs_k3k5tva1e1b1nw8ida0e0b0xygw9[mask] #applying the mask does the raveling and squeezing of singleton axis
         mask=mask.ravel()
-        arrays = [keys_k2, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_i, keys_y1, keys_g1, keys_g1, keys_lw1[w:w+1]]
-        index_k2k2tvanwiyg1g9 = fun.cartesian_product_simple_transpose(arrays)
-        index_cut_k2k2tvanwiyg1g9w = np.vstack([index_cut_k2k2tvanwiyg1g9w,index_k2k2tvanwiyg1g9[mask,:]]) if index_cut_k2k2tvanwiyg1g9w.size else index_k2k2tvanwiyg1g9[mask,:]
-    tup_k2k2tvanwiyg1g9w = tuple(map(tuple, index_cut_k2k2tvanwiyg1g9w))
-    params[scenario]['p_numbers_provthis_dams'] =dict(zip(tup_k2k2tvanwiyg1g9w, numbers_provthis_dams_k2k2tva1nw8iyg1g9w9))
+        index_cut_k3k5tvnw8iaxyg3w9=index_k3k5tvnw8iaxyg3w9[mask,:]
+        tup_k3k5tvnw8iaxyg3w9 = tuple(map(tuple, index_cut_k3k5tvnw8iaxyg3w9))
+        params[scenario]['p_numbers_prov_offs'] =dict(zip(tup_k3k5tvnw8iaxyg3w9, numbers_prov_offs_k3k5tvnw8ia0xyg3w9))
 
+        ###mei - sire
+        mei_p6fa1e1b1nwida0e0b0xyg0 = sfun.f_dynamic_slice(mei_p6fa1e1b1nwzida0e0b0xyg0,z_pos,z,z + 1)
+        mask=mei_p6fa1e1b1nwida0e0b0xyg0!=0
+        mei_sire_p6fg0 = mei_p6fa1e1b1nwida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
+        mask=mask.ravel()
+        index_cut_p6fg0=index_p6fg0[mask,:]
+        tup_p6fg0 = tuple(map(tuple, index_cut_p6fg0))
+        params[scenario]['p_mei_sire'] =dict(zip(tup_p6fg0, mei_sire_p6fg0))
+        ###mei - dams
+        mei_k2p6ftva1e1b1nwida0e0b0xyg1 = sfun.f_dynamic_slice(mei_k2p6ftva1e1b1nwzida0e0b0xyg1,z_pos,z,z + 1)
+        mask=mei_k2p6ftva1e1b1nwida0e0b0xyg1!=0
+        mei_dams_k2p6ftva1nw8iyg1 = mei_k2p6ftva1e1b1nwida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
+        mask=mask.ravel()
+        index_cut_k2p6ftva1nw8iyg1=index_k2p6ftva1nw8iyg1[mask,:]
+        tup_k2p6ftva1nw8iyg1 = tuple(map(tuple, index_cut_k2p6ftva1nw8iyg1))
+        params[scenario]['p_mei_dams'] =dict(zip(tup_k2p6ftva1nw8iyg1, mei_dams_k2p6ftva1nw8iyg1))
+        ###mei - offs
+        mei_k3k5p6ftva1e1b1nwida0e0b0xyg3 = sfun.f_dynamic_slice(mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3,z_pos,z,z + 1)
+        mask=mei_k3k5p6ftva1e1b1nwida0e0b0xyg3!=0
+        mei_offs_k3k5p6ftvnw8iaxyg3 = mei_k3k5p6ftva1e1b1nwida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
+        mask=mask.ravel()
+        index_cut_k3k5p6ftvnw8iaxyg3=index_k3k5p6ftvnw8iaxyg3[mask,:]
+        tup_k3k5p6ftvnw8iaxyg3 = tuple(map(tuple, index_cut_k3k5p6ftvnw8iaxyg3))
+        params[scenario]['p_mei_offs'] =dict(zip(tup_k3k5p6ftvnw8iaxyg3, mei_offs_k3k5p6ftvnw8iaxyg3))
 
-    ###numbers_prov_offs
-    numbers_prov_offs_k3k5tva1e1b1nw8ida0e0b0xygw9 = sfun.f_dynamic_slice(numbers_prov_offs_k3k5tva1e1b1nw8zida0e0b0xygw9,z_pos - 1,z,z + 1)
-    mask=numbers_prov_offs_k3k5tva1e1b1nw8ida0e0b0xygw9!=0
-    numbers_prov_offs_k3k5tvnw8ia0xyg3w9 = numbers_prov_offs_k3k5tva1e1b1nw8ida0e0b0xygw9[mask] #applying the mask does the raveling and squeezing of singleton axis
-    mask=mask.ravel()
-    index_cut_k3k5tvnw8iaxyg3w9=index_k3k5tvnw8iaxyg3w9[mask,:]
-    tup_k3k5tvnw8iaxyg3w9 = tuple(map(tuple, index_cut_k3k5tvnw8iaxyg3w9))
-    params[scenario]['p_numbers_prov_offs'] =dict(zip(tup_k3k5tvnw8iaxyg3w9, numbers_prov_offs_k3k5tvnw8ia0xyg3w9))
+        ###pi - sire
+        pi_p6fa1e1b1nwida0e0b0xyg0 = sfun.f_dynamic_slice(pi_p6fa1e1b1nwzida0e0b0xyg0,z_pos,z,z + 1)
+        mask=pi_p6fa1e1b1nwida0e0b0xyg0!=0
+        pi_sire_p6fg0 = pi_p6fa1e1b1nwida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
+        mask=mask.ravel()
+        index_cut_p6fg0=index_p6fg0[mask,:]
+        tup_p6fg0 = tuple(map(tuple, index_cut_p6fg0))
+        params[scenario]['p_pi_sire'] =dict(zip(tup_p6fg0, pi_sire_p6fg0))
+        ###pi - dams
+        pi_k2p6ftva1e1b1nwida0e0b0xyg1 = sfun.f_dynamic_slice(pi_k2p6ftva1e1b1nwzida0e0b0xyg1,z_pos,z,z + 1)
+        mask=pi_k2p6ftva1e1b1nwida0e0b0xyg1!=0
+        pi_dams_k2p6ftva1nw8iyg1 = pi_k2p6ftva1e1b1nwida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
+        mask=mask.ravel()
+        index_cut_k2p6ftva1nw8iyg1=index_k2p6ftva1nw8iyg1[mask,:]
+        tup_k2p6ftva1nw8iyg1 = tuple(map(tuple, index_cut_k2p6ftva1nw8iyg1))
+        params[scenario]['p_pi_dams'] =dict(zip(tup_k2p6ftva1nw8iyg1, pi_dams_k2p6ftva1nw8iyg1))
+        ###pi - offs
+        pi_k3k5p6ftva1e1b1nwida0e0b0xyg3 = sfun.f_dynamic_slice(pi_k3k5p6ftva1e1b1nwzida0e0b0xyg3,z_pos,z,z + 1)
+        mask=pi_k3k5p6ftva1e1b1nwida0e0b0xyg3!=0
+        pi_offs_k3k5p6ftvnw8iaxyg3 = pi_k3k5p6ftva1e1b1nwida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
+        mask=mask.ravel()
+        index_cut_k3k5p6ftvnw8iaxyg3=index_k3k5p6ftvnw8iaxyg3[mask,:]
+        tup_k3k5p6ftvnw8iaxyg3 = tuple(map(tuple, index_cut_k3k5p6ftvnw8iaxyg3))
+        params[scenario]['p_pi_offs'] =dict(zip(tup_k3k5p6ftvnw8iaxyg3, pi_offs_k3k5p6ftvnw8iaxyg3))
 
-    ###mei - sire
-    mei_p6fa1e1b1nwida0e0b0xyg0 = sfun.f_dynamic_slice(mei_p6fa1e1b1nwzida0e0b0xyg0,z_pos,z,z + 1)
-    mask=mei_p6fa1e1b1nwida0e0b0xyg0!=0
-    mei_sire_p6fg0 = mei_p6fa1e1b1nwida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_p6fg0=index_p6fg0[mask,:]
-    tup_p6fg0 = tuple(map(tuple, index_cut_p6fg0))
-    params[scenario]['p_mei_sire'] =dict(zip(tup_p6fg0, mei_sire_p6fg0))
-    ###mei - dams
-    mei_k2p6ftva1e1b1nwida0e0b0xyg1 = sfun.f_dynamic_slice(mei_k2p6ftva1e1b1nwzida0e0b0xyg1,z_pos,z,z + 1)
-    mask=mei_k2p6ftva1e1b1nwida0e0b0xyg1!=0
-    mei_dams_k2p6ftva1nw8iyg1 = mei_k2p6ftva1e1b1nwida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k2p6ftva1nw8iyg1=index_k2p6ftva1nw8iyg1[mask,:]
-    tup_k2p6ftva1nw8iyg1 = tuple(map(tuple, index_cut_k2p6ftva1nw8iyg1))
-    params[scenario]['p_mei_dams'] =dict(zip(tup_k2p6ftva1nw8iyg1, mei_dams_k2p6ftva1nw8iyg1))
-    ###mei - offs
-    mei_k3k5p6ftva1e1b1nwida0e0b0xyg3 = sfun.f_dynamic_slice(mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3,z_pos,z,z + 1)
-    mask=mei_k3k5p6ftva1e1b1nwida0e0b0xyg3!=0
-    mei_offs_k3k5p6ftvnw8iaxyg3 = mei_k3k5p6ftva1e1b1nwida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k3k5p6ftvnw8iaxyg3=index_k3k5p6ftvnw8iaxyg3[mask,:]
-    tup_k3k5p6ftvnw8iaxyg3 = tuple(map(tuple, index_cut_k3k5p6ftvnw8iaxyg3))
-    params[scenario]['p_mei_offs'] =dict(zip(tup_k3k5p6ftvnw8iaxyg3, mei_offs_k3k5p6ftvnw8iaxyg3))
-    
-    ###pi - sire
-    pi_p6fa1e1b1nwida0e0b0xyg0 = sfun.f_dynamic_slice(pi_p6fa1e1b1nwzida0e0b0xyg0,z_pos,z,z + 1)
-    mask=pi_p6fa1e1b1nwida0e0b0xyg0!=0
-    pi_sire_p6fg0 = pi_p6fa1e1b1nwida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_p6fg0=index_p6fg0[mask,:]
-    tup_p6fg0 = tuple(map(tuple, index_cut_p6fg0))
-    params[scenario]['p_pi_sire'] =dict(zip(tup_p6fg0, pi_sire_p6fg0))
-    ###pi - dams
-    pi_k2p6ftva1e1b1nwida0e0b0xyg1 = sfun.f_dynamic_slice(pi_k2p6ftva1e1b1nwzida0e0b0xyg1,z_pos,z,z + 1)
-    mask=pi_k2p6ftva1e1b1nwida0e0b0xyg1!=0
-    pi_dams_k2p6ftva1nw8iyg1 = pi_k2p6ftva1e1b1nwida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k2p6ftva1nw8iyg1=index_k2p6ftva1nw8iyg1[mask,:]
-    tup_k2p6ftva1nw8iyg1 = tuple(map(tuple, index_cut_k2p6ftva1nw8iyg1))
-    params[scenario]['p_pi_dams'] =dict(zip(tup_k2p6ftva1nw8iyg1, pi_dams_k2p6ftva1nw8iyg1))
-    ###pi - offs
-    pi_k3k5p6ftva1e1b1nwida0e0b0xyg3 = sfun.f_dynamic_slice(pi_k3k5p6ftva1e1b1nwzida0e0b0xyg3,z_pos,z,z + 1)
-    mask=pi_k3k5p6ftva1e1b1nwida0e0b0xyg3!=0
-    pi_offs_k3k5p6ftvnw8iaxyg3 = pi_k3k5p6ftva1e1b1nwida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k3k5p6ftvnw8iaxyg3=index_k3k5p6ftvnw8iaxyg3[mask,:]
-    tup_k3k5p6ftvnw8iaxyg3 = tuple(map(tuple, index_cut_k3k5p6ftvnw8iaxyg3))
-    params[scenario]['p_pi_offs'] =dict(zip(tup_k3k5p6ftvnw8iaxyg3, pi_offs_k3k5p6ftvnw8iaxyg3))
-    
-    ###cashflow - sire
-    cashflow_ctva1e1b1nwida0e0b0xyg0 = sfun.f_dynamic_slice(cashflow_ctva1e1b1nwzida0e0b0xyg0,z_pos,z,z + 1)
-    mask=cashflow_ctva1e1b1nwida0e0b0xyg0!=0
-    cashflow_sire_cg0 = cashflow_ctva1e1b1nwida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_cg0=index_cg0[mask,:]
-    tup_cg0 = tuple(map(tuple, index_cut_cg0))
-    params[scenario]['p_cashflow_sire'] =dict(zip(tup_cg0, cashflow_sire_cg0))
-    ###cashflow - dams
-    cashflow_k2ctva1e1b1nwida0e0b0xyg1 = sfun.f_dynamic_slice(cashflow_k2ctva1e1b1nwzida0e0b0xyg1,z_pos,z,z + 1)
-    mask=cashflow_k2ctva1e1b1nwida0e0b0xyg1!=0
-    cashflow_dams_k2ctva1nw8iyg = cashflow_k2ctva1e1b1nwida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k2ctvanwiyg1=index_k2ctvanwiyg1[mask,:]
-    tup_k2ctvanwiyg1 = tuple(map(tuple, index_cut_k2ctvanwiyg1))
-    params[scenario]['p_cashflow_dams'] =dict(zip(tup_k2ctvanwiyg1, cashflow_dams_k2ctva1nw8iyg))
-    ###cashflow - prog - only consists of sale value
-    salevalue_prog_cta1e1b1nwida0e0b0xyg2 = sfun.f_dynamic_slice(salevalue_prog_cta1e1b1nwzida0e0b0xyg2,z_pos,z,z + 1)
-    mask=salevalue_prog_cta1e1b1nwida0e0b0xyg2!=0
-    cashflow_prog_ctwia0xg2 = salevalue_prog_cta1e1b1nwida0e0b0xyg2[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_ctwia0xg2=index_ctwia0xg2[mask,:]
-    tup_ctwia0xg2 = tuple(map(tuple, index_cut_ctwia0xg2))
-    params[scenario]['p_cashflow_prog'] =dict(zip(tup_ctwia0xg2, cashflow_prog_ctwia0xg2))
-    ###cashflow - offs
-    cashflow_k3k5ctva1e1b1nwida0e0b0xyg3 = sfun.f_dynamic_slice(cashflow_k3k5ctva1e1b1nwzida0e0b0xyg3,z_pos,z,z + 1)
-    mask=cashflow_k3k5ctva1e1b1nwida0e0b0xyg3!=0
-    cashflow_offs_k3k5ctvnw8iaxyg3 = cashflow_k3k5ctva1e1b1nwida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k3k5ctvnw8iaxyg3=index_k3k5ctvnw8iaxyg3[mask,:]
-    tup_k3k5ctvnw8iaxyg3 = tuple(map(tuple, index_cut_k3k5ctvnw8iaxyg3))
-    params[scenario]['p_cashflow_offs'] =dict(zip(tup_k3k5ctvnw8iaxyg3, cashflow_offs_k3k5ctvnw8iaxyg3))
+        ###cashflow - sire
+        cashflow_ctva1e1b1nwida0e0b0xyg0 = sfun.f_dynamic_slice(cashflow_ctva1e1b1nwzida0e0b0xyg0,z_pos,z,z + 1)
+        mask=cashflow_ctva1e1b1nwida0e0b0xyg0!=0
+        cashflow_sire_cg0 = cashflow_ctva1e1b1nwida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
+        mask=mask.ravel()
+        index_cut_cg0=index_cg0[mask,:]
+        tup_cg0 = tuple(map(tuple, index_cut_cg0))
+        params[scenario]['p_cashflow_sire'] =dict(zip(tup_cg0, cashflow_sire_cg0))
+        ###cashflow - dams
+        cashflow_k2ctva1e1b1nwida0e0b0xyg1 = sfun.f_dynamic_slice(cashflow_k2ctva1e1b1nwzida0e0b0xyg1,z_pos,z,z + 1)
+        mask=cashflow_k2ctva1e1b1nwida0e0b0xyg1!=0
+        cashflow_dams_k2ctva1nw8iyg = cashflow_k2ctva1e1b1nwida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
+        mask=mask.ravel()
+        index_cut_k2ctvanwiyg1=index_k2ctvanwiyg1[mask,:]
+        tup_k2ctvanwiyg1 = tuple(map(tuple, index_cut_k2ctvanwiyg1))
+        params[scenario]['p_cashflow_dams'] =dict(zip(tup_k2ctvanwiyg1, cashflow_dams_k2ctva1nw8iyg))
+        ###cashflow - prog - only consists of sale value
+        salevalue_prog_cta1e1b1nwida0e0b0xyg2 = sfun.f_dynamic_slice(salevalue_prog_cta1e1b1nwzida0e0b0xyg2,z_pos,z,z + 1)
+        mask=salevalue_prog_cta1e1b1nwida0e0b0xyg2!=0
+        cashflow_prog_ctwia0xg2 = salevalue_prog_cta1e1b1nwida0e0b0xyg2[mask] #applying the mask does the raveling and squeezing of array
+        mask=mask.ravel()
+        index_cut_ctwia0xg2=index_ctwia0xg2[mask,:]
+        tup_ctwia0xg2 = tuple(map(tuple, index_cut_ctwia0xg2))
+        params[scenario]['p_cashflow_prog'] =dict(zip(tup_ctwia0xg2, cashflow_prog_ctwia0xg2))
+        ###cashflow - offs
+        cashflow_k3k5ctva1e1b1nwida0e0b0xyg3 = sfun.f_dynamic_slice(cashflow_k3k5ctva1e1b1nwzida0e0b0xyg3,z_pos,z,z + 1)
+        mask=cashflow_k3k5ctva1e1b1nwida0e0b0xyg3!=0
+        cashflow_offs_k3k5ctvnw8iaxyg3 = cashflow_k3k5ctva1e1b1nwida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
+        mask=mask.ravel()
+        index_cut_k3k5ctvnw8iaxyg3=index_k3k5ctvnw8iaxyg3[mask,:]
+        tup_k3k5ctvnw8iaxyg3 = tuple(map(tuple, index_cut_k3k5ctvnw8iaxyg3))
+        params[scenario]['p_cashflow_offs'] =dict(zip(tup_k3k5ctvnw8iaxyg3, cashflow_offs_k3k5ctvnw8iaxyg3))
 
-    ###cost - sire
-    cost_tva1e1b1nwida0e0b0xyg0 = sfun.f_dynamic_slice(cost_tva1e1b1nwzida0e0b0xyg0,z_pos,z,z + 1)
-    mask=cost_tva1e1b1nwida0e0b0xyg0!=0
-    cost_sire_g0 = cost_tva1e1b1nwida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_g0=index_g0[mask,:]
-    tup_g0 = tuple(map(tuple, index_cut_g0))
-    params[scenario]['p_cost_sire'] =dict(zip(tup_g0, cost_sire_g0))
-    ###cost - dams
-    cost_k2tva1e1b1nwida0e0b0xyg1 = sfun.f_dynamic_slice(cost_k2tva1e1b1nwzida0e0b0xyg1,z_pos,z,z + 1)
-    mask=cost_k2tva1e1b1nwida0e0b0xyg1!=0
-    cost_dams_k2tva1nw8iyg = cost_k2tva1e1b1nwida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k2tvanwiyg1=index_k2tvanwiyg1[mask,:]
-    tup_k2tvanwiyg1 = tuple(map(tuple, index_cut_k2tvanwiyg1))
-    params[scenario]['p_cost_dams'] =dict(zip(tup_k2tvanwiyg1, cost_dams_k2tva1nw8iyg))
-    ###cost - offs
-    cost_k3k5tva1e1b1nwida0e0b0xyg3 = sfun.f_dynamic_slice(cost_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos,z,z + 1)
-    mask=cost_k3k5tva1e1b1nwida0e0b0xyg3!=0
-    cost_offs_k3k5tvnw8iaxyg3 = cost_k3k5tva1e1b1nwida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k3k5tvnw8iaxyg3=index_k3k5tvnw8iaxyg3[mask,:]
-    tup_k3k5tvnw8iaxyg3 = tuple(map(tuple, index_cut_k3k5tvnw8iaxyg3))
-    params[scenario]['p_cost_offs'] =dict(zip(tup_k3k5tvnw8iaxyg3, cost_offs_k3k5tvnw8iaxyg3))
+        ###cost - sire
+        cost_tva1e1b1nwida0e0b0xyg0 = sfun.f_dynamic_slice(cost_tva1e1b1nwzida0e0b0xyg0,z_pos,z,z + 1)
+        mask=cost_tva1e1b1nwida0e0b0xyg0!=0
+        cost_sire_g0 = cost_tva1e1b1nwida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
+        mask=mask.ravel()
+        index_cut_g0=index_g0[mask,:]
+        tup_g0 = tuple(map(tuple, index_cut_g0))
+        params[scenario]['p_cost_sire'] =dict(zip(tup_g0, cost_sire_g0))
+        ###cost - dams
+        cost_k2tva1e1b1nwida0e0b0xyg1 = sfun.f_dynamic_slice(cost_k2tva1e1b1nwzida0e0b0xyg1,z_pos,z,z + 1)
+        mask=cost_k2tva1e1b1nwida0e0b0xyg1!=0
+        cost_dams_k2tva1nw8iyg = cost_k2tva1e1b1nwida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
+        mask=mask.ravel()
+        index_cut_k2tvanwiyg1=index_k2tvanwiyg1[mask,:]
+        tup_k2tvanwiyg1 = tuple(map(tuple, index_cut_k2tvanwiyg1))
+        params[scenario]['p_cost_dams'] =dict(zip(tup_k2tvanwiyg1, cost_dams_k2tva1nw8iyg))
+        ###cost - offs
+        cost_k3k5tva1e1b1nwida0e0b0xyg3 = sfun.f_dynamic_slice(cost_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos,z,z + 1)
+        mask=cost_k3k5tva1e1b1nwida0e0b0xyg3!=0
+        cost_offs_k3k5tvnw8iaxyg3 = cost_k3k5tva1e1b1nwida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
+        mask=mask.ravel()
+        index_cut_k3k5tvnw8iaxyg3=index_k3k5tvnw8iaxyg3[mask,:]
+        tup_k3k5tvnw8iaxyg3 = tuple(map(tuple, index_cut_k3k5tvnw8iaxyg3))
+        params[scenario]['p_cost_offs'] =dict(zip(tup_k3k5tvnw8iaxyg3, cost_offs_k3k5tvnw8iaxyg3))
 
-    ###purchcost - sire
-    purchcost_cva1e1b1nwida0e0b0xyg0 = sfun.f_dynamic_slice(purchcost_cva1e1b1nwzida0e0b0xyg0,z_pos,z,z + 1)
-    mask=purchcost_cva1e1b1nwida0e0b0xyg0!=0
-    purchcost_sire_cg0 = purchcost_cva1e1b1nwida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_cg0=index_cg0[mask,:]
-    tup_cg0 = tuple(map(tuple, index_cut_cg0))
-    params[scenario]['p_purchcost_sire'] =dict(zip(tup_cg0, purchcost_sire_cg0))
+        ###purchcost - sire
+        purchcost_cva1e1b1nwida0e0b0xyg0 = sfun.f_dynamic_slice(purchcost_cva1e1b1nwzida0e0b0xyg0,z_pos,z,z + 1)
+        mask=purchcost_cva1e1b1nwida0e0b0xyg0!=0
+        purchcost_sire_cg0 = purchcost_cva1e1b1nwida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
+        mask=mask.ravel()
+        index_cut_cg0=index_cg0[mask,:]
+        tup_cg0 = tuple(map(tuple, index_cut_cg0))
+        params[scenario]['p_purchcost_sire'] =dict(zip(tup_cg0, purchcost_sire_cg0))
 
-    ###assetvalue - sire
-    assetvalue_va1e1b1nwida0e0b0xyg0 = sfun.f_dynamic_slice(assetvalue_va1e1b1nwzida0e0b0xyg0,z_pos,z,z + 1)
-    mask=assetvalue_va1e1b1nwida0e0b0xyg0!=0
-    assetvalue_sire_g0 = assetvalue_va1e1b1nwida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_g0=index_g0[mask,:]
-    tup_g0 = tuple(map(tuple, index_cut_g0))
-    params[scenario]['p_assetvalue_sire'] =dict(zip(tup_g0, assetvalue_sire_g0))
-    ###assetvalue - dams
-    assetvalue_k2tva1e1b1nwida0e0b0xyg1 = sfun.f_dynamic_slice(assetvalue_k2tva1e1b1nwzida0e0b0xyg1,z_pos,z,z + 1)
-    mask=assetvalue_k2tva1e1b1nwida0e0b0xyg1!=0
-    assetvalue_dams_k2tva1nw8iyg = assetvalue_k2tva1e1b1nwida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k2tvanwiyg1=index_k2tvanwiyg1[mask,:]
-    tup_k2tvanwiyg1 = tuple(map(tuple, index_cut_k2tvanwiyg1))
-    params[scenario]['p_assetvalue_dams'] =dict(zip(tup_k2tvanwiyg1, assetvalue_dams_k2tva1nw8iyg))
-    ###assetvalue - offs
-    assetvalue_k3k5tva1e1b1nwida0e0b0xyg3 = sfun.f_dynamic_slice(assetvalue_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos,z,z + 1)
-    mask=assetvalue_k3k5tva1e1b1nwida0e0b0xyg3!=0
-    assetvalue_offs_k3k5tvnw8iaxyg3 = assetvalue_k3k5tva1e1b1nwida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k3k5tvnw8iaxyg3=index_k3k5tvnw8iaxyg3[mask,:]
-    tup_k3k5tvnw8iaxyg3 = tuple(map(tuple, index_cut_k3k5tvnw8iaxyg3))
-    params[scenario]['p_assetvalue_offs'] =dict(zip(tup_k3k5tvnw8iaxyg3, assetvalue_offs_k3k5tvnw8iaxyg3))
+        ###assetvalue - sire
+        assetvalue_va1e1b1nwida0e0b0xyg0 = sfun.f_dynamic_slice(assetvalue_va1e1b1nwzida0e0b0xyg0,z_pos,z,z + 1)
+        mask=assetvalue_va1e1b1nwida0e0b0xyg0!=0
+        assetvalue_sire_g0 = assetvalue_va1e1b1nwida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
+        mask=mask.ravel()
+        index_cut_g0=index_g0[mask,:]
+        tup_g0 = tuple(map(tuple, index_cut_g0))
+        params[scenario]['p_assetvalue_sire'] =dict(zip(tup_g0, assetvalue_sire_g0))
+        ###assetvalue - dams
+        assetvalue_k2tva1e1b1nwida0e0b0xyg1 = sfun.f_dynamic_slice(assetvalue_k2tva1e1b1nwzida0e0b0xyg1,z_pos,z,z + 1)
+        mask=assetvalue_k2tva1e1b1nwida0e0b0xyg1!=0
+        assetvalue_dams_k2tva1nw8iyg = assetvalue_k2tva1e1b1nwida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
+        mask=mask.ravel()
+        index_cut_k2tvanwiyg1=index_k2tvanwiyg1[mask,:]
+        tup_k2tvanwiyg1 = tuple(map(tuple, index_cut_k2tvanwiyg1))
+        params[scenario]['p_assetvalue_dams'] =dict(zip(tup_k2tvanwiyg1, assetvalue_dams_k2tva1nw8iyg))
+        ###assetvalue - offs
+        assetvalue_k3k5tva1e1b1nwida0e0b0xyg3 = sfun.f_dynamic_slice(assetvalue_k3k5tva1e1b1nwzida0e0b0xyg3,z_pos,z,z + 1)
+        mask=assetvalue_k3k5tva1e1b1nwida0e0b0xyg3!=0
+        assetvalue_offs_k3k5tvnw8iaxyg3 = assetvalue_k3k5tva1e1b1nwida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
+        mask=mask.ravel()
+        index_cut_k3k5tvnw8iaxyg3=index_k3k5tvnw8iaxyg3[mask,:]
+        tup_k3k5tvnw8iaxyg3 = tuple(map(tuple, index_cut_k3k5tvnw8iaxyg3))
+        params[scenario]['p_assetvalue_offs'] =dict(zip(tup_k3k5tvnw8iaxyg3, assetvalue_offs_k3k5tvnw8iaxyg3))
 
-    ###anyone labour - sire
-    lab_anyone_p5tva1e1b1nwida0e0b0xyg0 = sfun.f_dynamic_slice(lab_anyone_p5tva1e1b1nwzida0e0b0xyg0,z_pos,z,z + 1)
-    mask=lab_anyone_p5tva1e1b1nwida0e0b0xyg0!=0
-    lab_any_sire_p5g0 = lab_anyone_p5tva1e1b1nwida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_p5g0=index_p5g0[mask,:]
-    tup_p5g0 = tuple(map(tuple, index_cut_p5g0))
-    params[scenario]['p_labour_anyone_sire'] =dict(zip(tup_p5g0, lab_any_sire_p5g0))
-    ###perm labour - sire
-    lab_perm_p5tva1e1b1nwida0e0b0xyg0 = sfun.f_dynamic_slice(lab_perm_p5tva1e1b1nwzida0e0b0xyg0,z_pos,z,z + 1)
-    mask=lab_perm_p5tva1e1b1nwida0e0b0xyg0!=0
-    lab_perm_sire_p5g0 = lab_perm_p5tva1e1b1nwida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_p5g0=index_p5g0[mask,:]
-    tup_p5g0 = tuple(map(tuple, index_cut_p5g0))
-    params[scenario]['p_labour_perm_sire'] =dict(zip(tup_p5g0, lab_perm_sire_p5g0))
-    ###manager labour - sire
-    lab_manager_p5tva1e1b1nwida0e0b0xyg0 = sfun.f_dynamic_slice(lab_manager_p5tva1e1b1nwzida0e0b0xyg0,z_pos,z,z + 1)
-    mask=lab_manager_p5tva1e1b1nwida0e0b0xyg0!=0
-    lab_manager_sire_p5g0 = lab_manager_p5tva1e1b1nwida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_p5g0=index_p5g0[mask,:]
-    tup_p5g0 = tuple(map(tuple, index_cut_p5g0))
-    params[scenario]['p_labour_manager_sire'] =dict(zip(tup_p5g0, lab_manager_sire_p5g0))
-    
-    ###anyone labour - dams
-    lab_anyone_k2p5tva1e1b1nwida0e0b0xyg1 = sfun.f_dynamic_slice(lab_anyone_k2p5tva1e1b1nwzida0e0b0xyg1,z_pos,z,z + 1)
-    mask=lab_anyone_k2p5tva1e1b1nwida0e0b0xyg1!=0
-    lab_any_dams_k2p5tva1nw8iyg = lab_anyone_k2p5tva1e1b1nwida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k2p5tvanwiyg1=index_k2p5tvanwiyg1[mask,:]
-    tup_k2p5tvanwiyg1 = tuple(map(tuple, index_cut_k2p5tvanwiyg1))
-    params[scenario]['p_labour_anyone_dams'] =dict(zip(tup_k2p5tvanwiyg1, lab_any_dams_k2p5tva1nw8iyg))
-    ###perm labour - dams
-    lab_perm_k2p5tva1e1b1nwida0e0b0xyg1 = sfun.f_dynamic_slice(lab_perm_k2p5tva1e1b1nwzida0e0b0xyg1,z_pos,z,z + 1)
-    mask=lab_perm_k2p5tva1e1b1nwida0e0b0xyg1!=0
-    lab_perm_dams_k2p5tva1nw8iyg = lab_perm_k2p5tva1e1b1nwida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k2p5tvanwiyg1=index_k2p5tvanwiyg1[mask,:]
-    tup_k2p5tvanwiyg1 = tuple(map(tuple, index_cut_k2p5tvanwiyg1))
-    params[scenario]['p_labour_perm_dams'] =dict(zip(tup_k2p5tvanwiyg1, lab_perm_dams_k2p5tva1nw8iyg))
-    ###manager labour - dams
-    lab_manager_k2p5tva1e1b1nwida0e0b0xyg1 = sfun.f_dynamic_slice(lab_manager_k2p5tva1e1b1nwzida0e0b0xyg1,z_pos,z,z + 1)
-    mask=lab_manager_k2p5tva1e1b1nwida0e0b0xyg1!=0
-    lab_manager_dams_k2p5tva1nw8iyg = lab_manager_k2p5tva1e1b1nwida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k2p5tvanwiyg1=index_k2p5tvanwiyg1[mask,:]
-    tup_k2p5tvanwiyg1 = tuple(map(tuple, index_cut_k2p5tvanwiyg1))
-    params[scenario]['p_labour_manager_dams'] =dict(zip(tup_k2p5tvanwiyg1, lab_manager_dams_k2p5tva1nw8iyg))
+        ###anyone labour - sire
+        lab_anyone_p5tva1e1b1nwida0e0b0xyg0 = sfun.f_dynamic_slice(lab_anyone_p5tva1e1b1nwzida0e0b0xyg0,z_pos,z,z + 1)
+        mask=lab_anyone_p5tva1e1b1nwida0e0b0xyg0!=0
+        lab_any_sire_p5g0 = lab_anyone_p5tva1e1b1nwida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
+        mask=mask.ravel()
+        index_cut_p5g0=index_p5g0[mask,:]
+        tup_p5g0 = tuple(map(tuple, index_cut_p5g0))
+        params[scenario]['p_labour_anyone_sire'] =dict(zip(tup_p5g0, lab_any_sire_p5g0))
+        ###perm labour - sire
+        lab_perm_p5tva1e1b1nwida0e0b0xyg0 = sfun.f_dynamic_slice(lab_perm_p5tva1e1b1nwzida0e0b0xyg0,z_pos,z,z + 1)
+        mask=lab_perm_p5tva1e1b1nwida0e0b0xyg0!=0
+        lab_perm_sire_p5g0 = lab_perm_p5tva1e1b1nwida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
+        mask=mask.ravel()
+        index_cut_p5g0=index_p5g0[mask,:]
+        tup_p5g0 = tuple(map(tuple, index_cut_p5g0))
+        params[scenario]['p_labour_perm_sire'] =dict(zip(tup_p5g0, lab_perm_sire_p5g0))
+        ###manager labour - sire
+        lab_manager_p5tva1e1b1nwida0e0b0xyg0 = sfun.f_dynamic_slice(lab_manager_p5tva1e1b1nwzida0e0b0xyg0,z_pos,z,z + 1)
+        mask=lab_manager_p5tva1e1b1nwida0e0b0xyg0!=0
+        lab_manager_sire_p5g0 = lab_manager_p5tva1e1b1nwida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
+        mask=mask.ravel()
+        index_cut_p5g0=index_p5g0[mask,:]
+        tup_p5g0 = tuple(map(tuple, index_cut_p5g0))
+        params[scenario]['p_labour_manager_sire'] =dict(zip(tup_p5g0, lab_manager_sire_p5g0))
 
-    ###anyone labour - offs
-    lab_anyone_k3k5p5tva1e1b1nwida0e0b0xyg3 = sfun.f_dynamic_slice(lab_anyone_k3k5p5tva1e1b1nwzida0e0b0xyg3,z_pos,z,z + 1)
-    mask=lab_anyone_k3k5p5tva1e1b1nwida0e0b0xyg3!=0
-    lab_any_offs_k3k5p5tvnw8iaxyg3 = lab_anyone_k3k5p5tva1e1b1nwida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k3k5p5tvnw8iaxyg3=index_k3k5p5tvnw8iaxyg3[mask,:]
-    tup_k3k5p5tvnw8iaxyg3 = tuple(map(tuple, index_cut_k3k5p5tvnw8iaxyg3))
-    params[scenario]['p_labour_anyone_offs'] =dict(zip(tup_k3k5p5tvnw8iaxyg3, lab_any_offs_k3k5p5tvnw8iaxyg3))
-    ###perm labour - offs
-    lab_perm_k3k5p5tva1e1b1nwida0e0b0xyg3 = sfun.f_dynamic_slice(lab_perm_k3k5p5tva1e1b1nwzida0e0b0xyg3,z_pos,z,z + 1)
-    mask=lab_perm_k3k5p5tva1e1b1nwida0e0b0xyg3!=0
-    lab_perm_offs_k3k5p5tvnw8iaxyg3 = lab_perm_k3k5p5tva1e1b1nwida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k3k5p5tvnw8iaxyg3=index_k3k5p5tvnw8iaxyg3[mask,:]
-    tup_k3k5p5tvnw8iaxyg3 = tuple(map(tuple, index_cut_k3k5p5tvnw8iaxyg3))
-    params[scenario]['p_labour_perm_offs'] =dict(zip(tup_k3k5p5tvnw8iaxyg3, lab_perm_offs_k3k5p5tvnw8iaxyg3))
-    ###manager labour - offs
-    lab_manager_k3k5p5tva1e1b1nwida0e0b0xyg3 = sfun.f_dynamic_slice(lab_manager_k3k5p5tva1e1b1nwzida0e0b0xyg3,z_pos,z,z + 1)
-    mask=lab_manager_k3k5p5tva1e1b1nwida0e0b0xyg3!=0
-    lab_manager_offs_k3k5p5tvnw8iaxyg3 = lab_manager_k3k5p5tva1e1b1nwida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k3k5p5tvnw8iaxyg3=index_k3k5p5tvnw8iaxyg3[mask,:]
-    tup_k3k5p5tvnw8iaxyg3 = tuple(map(tuple, index_cut_k3k5p5tvnw8iaxyg3))
-    params[scenario]['p_labour_manager_offs'] =dict(zip(tup_k3k5p5tvnw8iaxyg3, lab_manager_offs_k3k5p5tvnw8iaxyg3))
-    
-    ###infrastructure - sire
-    infrastructure_h1va1e1b1nwida0e0b0xyg0 = sfun.f_dynamic_slice(infrastructure_h1va1e1b1nwzida0e0b0xyg0,z_pos,z,z + 1)
-    mask=infrastructure_h1va1e1b1nwida0e0b0xyg0!=0
-    infrastructure_sire_h1g0 = infrastructure_h1va1e1b1nwida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_h1g0=index_h1g0[mask,:]
-    tup_h1g0 = tuple(map(tuple, index_cut_h1g0))
-    params[scenario]['p_infrastructure_sire'] =dict(zip(tup_h1g0, infrastructure_sire_h1g0))
-    ###infrastructure - dams
-    infrastructure_k2h1tva1e1b1nwida0e0b0xyg1 = sfun.f_dynamic_slice(infrastructure_k2h1tva1e1b1nwzida0e0b0xyg1,z_pos,z,z + 1)
-    mask=infrastructure_k2h1tva1e1b1nwida0e0b0xyg1!=0
-    infrastructure_dams_k2h1tva1nw8iyg = infrastructure_k2h1tva1e1b1nwida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k2h1tvanwiyg1=index_k2h1tvanwiyg1[mask,:]
-    tup_k2h1tvanwiyg1 = tuple(map(tuple, index_cut_k2h1tvanwiyg1))
-    params[scenario]['p_infrastructure_dams'] =dict(zip(tup_k2h1tvanwiyg1, infrastructure_dams_k2h1tva1nw8iyg))
-    ###infrastructure - offs
-    infrastructure_k3k5p5tva1e1b1nwida0e0b0xyg3 = sfun.f_dynamic_slice(infrastructure_k3k5p5tva1e1b1nwzida0e0b0xyg3,z_pos,z,z + 1)
-    mask=infrastructure_k3k5p5tva1e1b1nwida0e0b0xyg3!=0
-    infrastructure_offs_k3k5h1tvnw8iaxyg3 = infrastructure_k3k5p5tva1e1b1nwida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k3k5h1tvnw8iaxyg3=index_k3k5h1tvnw8iaxyg3[mask,:]
-    tup_k3k5h1tvnw8iaxyg3 = tuple(map(tuple, index_cut_k3k5h1tvnw8iaxyg3))
-    params[scenario]['p_infrastructure_offs'] =dict(zip(tup_k3k5h1tvnw8iaxyg3, infrastructure_offs_k3k5h1tvnw8iaxyg3))
+        ###anyone labour - dams
+        lab_anyone_k2p5tva1e1b1nwida0e0b0xyg1 = sfun.f_dynamic_slice(lab_anyone_k2p5tva1e1b1nwzida0e0b0xyg1,z_pos,z,z + 1)
+        mask=lab_anyone_k2p5tva1e1b1nwida0e0b0xyg1!=0
+        lab_any_dams_k2p5tva1nw8iyg = lab_anyone_k2p5tva1e1b1nwida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
+        mask=mask.ravel()
+        index_cut_k2p5tvanwiyg1=index_k2p5tvanwiyg1[mask,:]
+        tup_k2p5tvanwiyg1 = tuple(map(tuple, index_cut_k2p5tvanwiyg1))
+        params[scenario]['p_labour_anyone_dams'] =dict(zip(tup_k2p5tvanwiyg1, lab_any_dams_k2p5tva1nw8iyg))
+        ###perm labour - dams
+        lab_perm_k2p5tva1e1b1nwida0e0b0xyg1 = sfun.f_dynamic_slice(lab_perm_k2p5tva1e1b1nwzida0e0b0xyg1,z_pos,z,z + 1)
+        mask=lab_perm_k2p5tva1e1b1nwida0e0b0xyg1!=0
+        lab_perm_dams_k2p5tva1nw8iyg = lab_perm_k2p5tva1e1b1nwida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
+        mask=mask.ravel()
+        index_cut_k2p5tvanwiyg1=index_k2p5tvanwiyg1[mask,:]
+        tup_k2p5tvanwiyg1 = tuple(map(tuple, index_cut_k2p5tvanwiyg1))
+        params[scenario]['p_labour_perm_dams'] =dict(zip(tup_k2p5tvanwiyg1, lab_perm_dams_k2p5tva1nw8iyg))
+        ###manager labour - dams
+        lab_manager_k2p5tva1e1b1nwida0e0b0xyg1 = sfun.f_dynamic_slice(lab_manager_k2p5tva1e1b1nwzida0e0b0xyg1,z_pos,z,z + 1)
+        mask=lab_manager_k2p5tva1e1b1nwida0e0b0xyg1!=0
+        lab_manager_dams_k2p5tva1nw8iyg = lab_manager_k2p5tva1e1b1nwida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
+        mask=mask.ravel()
+        index_cut_k2p5tvanwiyg1=index_k2p5tvanwiyg1[mask,:]
+        tup_k2p5tvanwiyg1 = tuple(map(tuple, index_cut_k2p5tvanwiyg1))
+        params[scenario]['p_labour_manager_dams'] =dict(zip(tup_k2p5tvanwiyg1, lab_manager_dams_k2p5tva1nw8iyg))
 
-    ##DSE - sire
-    dsemj_p6tva1e1b1nwida0e0b0xyg0 = sfun.f_dynamic_slice(dsemj_p6tva1e1b1nwzida0e0b0xyg0,z_pos,z,z + 1)
-    dsenw_p6tva1e1b1nwida0e0b0xyg0 = sfun.f_dynamic_slice(dsenw_p6tva1e1b1nwzida0e0b0xyg0,z_pos,z,z + 1)
-    mask=dsemj_p6tva1e1b1nwida0e0b0xyg0!=0
-    dsemj_sire_p6g0 = dsemj_p6tva1e1b1nwida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
-    dsenw_sire_p6g0 = dsenw_p6tva1e1b1nwida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_p6g0=index_p6g0[mask,:]
-    tup_p6g0 = tuple(map(tuple, index_cut_p6g0))
-    if pinp.sheep['i_dse_type'] == 0:
-        params[scenario]['p_dse_sire'] =dict(zip(tup_p6g0, dsemj_sire_p6g0))
-    else:
-        params[scenario]['p_dse_sire'] =dict(zip(tup_p6g0, dsenw_sire_p6g0))
-    ##DSE - dams
-    dsemj_k2p6tva1e1b1nwida0e0b0xyg1 = sfun.f_dynamic_slice(dsemj_k2p6tva1e1b1nwzida0e0b0xyg1,z_pos,z,z + 1)
-    dsenw_k2p6tva1e1b1nwida0e0b0xyg1 = sfun.f_dynamic_slice(dsenw_k2p6tva1e1b1nwzida0e0b0xyg1,z_pos,z,z + 1)
-    mask=dsemj_k2p6tva1e1b1nwida0e0b0xyg1!=0
-    dsemj_dams_k2p6tva1nw8iyg1 = dsemj_k2p6tva1e1b1nwida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
-    dsenw_dams_k2p6tva1nw8iyg1 = dsenw_k2p6tva1e1b1nwida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k2p6tva1nw8iyg1=index_k2p6tva1nw8iyg1[mask,:]
-    tup_k2p6tva1nw8iyg1 = tuple(map(tuple, index_cut_k2p6tva1nw8iyg1))
-    if pinp.sheep['i_dse_type'] == 0:
-        params[scenario]['p_dse_dams'] =dict(zip(tup_k2p6tva1nw8iyg1, dsemj_dams_k2p6tva1nw8iyg1))
-    else:
-        params[scenario]['p_dse_dams'] =dict(zip(tup_k2p6tva1nw8iyg1, dsenw_dams_k2p6tva1nw8iyg1))
-    ##DSE - offs
-    dsemj_k3k5p6tva1e1b1nwida0e0b0xyg3 = sfun.f_dynamic_slice(dsemj_k3k5p6tva1e1b1nwzida0e0b0xyg3,z_pos,z,z + 1)
-    dsenw_k3k5p6tva1e1b1nwida0e0b0xyg3 = sfun.f_dynamic_slice(dsenw_k3k5p6tva1e1b1nwzida0e0b0xyg3,z_pos,z,z + 1)
-    mask=dsemj_k3k5p6tva1e1b1nwida0e0b0xyg3!=0
-    dsemj_dams_k3k5p6tvnw8iaxyg3 = dsemj_k3k5p6tva1e1b1nwida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
-    dsenw_dams_k3k5p6tvnw8iaxyg3 = dsenw_k3k5p6tva1e1b1nwida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k3k5p6tvnw8iaxyg3=index_k3k5p6tvnw8iaxyg3[mask,:]
-    tup_k3k5p6tvnw8iaxyg3 = tuple(map(tuple, index_cut_k3k5p6tvnw8iaxyg3))
-    if pinp.sheep['i_dse_type'] == 0:
-        params[scenario]['p_dse_offs'] =dict(zip(tup_k3k5p6tvnw8iaxyg3, dsemj_dams_k3k5p6tvnw8iaxyg3))
-    else:
-        params[scenario]['p_dse_offs'] =dict(zip(tup_k3k5p6tvnw8iaxyg3, dsenw_dams_k3k5p6tvnw8iaxyg3))
+        ###anyone labour - offs
+        lab_anyone_k3k5p5tva1e1b1nwida0e0b0xyg3 = sfun.f_dynamic_slice(lab_anyone_k3k5p5tva1e1b1nwzida0e0b0xyg3,z_pos,z,z + 1)
+        mask=lab_anyone_k3k5p5tva1e1b1nwida0e0b0xyg3!=0
+        lab_any_offs_k3k5p5tvnw8iaxyg3 = lab_anyone_k3k5p5tva1e1b1nwida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
+        mask=mask.ravel()
+        index_cut_k3k5p5tvnw8iaxyg3=index_k3k5p5tvnw8iaxyg3[mask,:]
+        tup_k3k5p5tvnw8iaxyg3 = tuple(map(tuple, index_cut_k3k5p5tvnw8iaxyg3))
+        params[scenario]['p_labour_anyone_offs'] =dict(zip(tup_k3k5p5tvnw8iaxyg3, lab_any_offs_k3k5p5tvnw8iaxyg3))
+        ###perm labour - offs
+        lab_perm_k3k5p5tva1e1b1nwida0e0b0xyg3 = sfun.f_dynamic_slice(lab_perm_k3k5p5tva1e1b1nwzida0e0b0xyg3,z_pos,z,z + 1)
+        mask=lab_perm_k3k5p5tva1e1b1nwida0e0b0xyg3!=0
+        lab_perm_offs_k3k5p5tvnw8iaxyg3 = lab_perm_k3k5p5tva1e1b1nwida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
+        mask=mask.ravel()
+        index_cut_k3k5p5tvnw8iaxyg3=index_k3k5p5tvnw8iaxyg3[mask,:]
+        tup_k3k5p5tvnw8iaxyg3 = tuple(map(tuple, index_cut_k3k5p5tvnw8iaxyg3))
+        params[scenario]['p_labour_perm_offs'] =dict(zip(tup_k3k5p5tvnw8iaxyg3, lab_perm_offs_k3k5p5tvnw8iaxyg3))
+        ###manager labour - offs
+        lab_manager_k3k5p5tva1e1b1nwida0e0b0xyg3 = sfun.f_dynamic_slice(lab_manager_k3k5p5tva1e1b1nwzida0e0b0xyg3,z_pos,z,z + 1)
+        mask=lab_manager_k3k5p5tva1e1b1nwida0e0b0xyg3!=0
+        lab_manager_offs_k3k5p5tvnw8iaxyg3 = lab_manager_k3k5p5tva1e1b1nwida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
+        mask=mask.ravel()
+        index_cut_k3k5p5tvnw8iaxyg3=index_k3k5p5tvnw8iaxyg3[mask,:]
+        tup_k3k5p5tvnw8iaxyg3 = tuple(map(tuple, index_cut_k3k5p5tvnw8iaxyg3))
+        params[scenario]['p_labour_manager_offs'] =dict(zip(tup_k3k5p5tvnw8iaxyg3, lab_manager_offs_k3k5p5tvnw8iaxyg3))
+
+        ###infrastructure - sire
+        infrastructure_h1va1e1b1nwida0e0b0xyg0 = sfun.f_dynamic_slice(infrastructure_h1va1e1b1nwzida0e0b0xyg0,z_pos,z,z + 1)
+        mask=infrastructure_h1va1e1b1nwida0e0b0xyg0!=0
+        infrastructure_sire_h1g0 = infrastructure_h1va1e1b1nwida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
+        mask=mask.ravel()
+        index_cut_h1g0=index_h1g0[mask,:]
+        tup_h1g0 = tuple(map(tuple, index_cut_h1g0))
+        params[scenario]['p_infrastructure_sire'] =dict(zip(tup_h1g0, infrastructure_sire_h1g0))
+        ###infrastructure - dams
+        infrastructure_k2h1tva1e1b1nwida0e0b0xyg1 = sfun.f_dynamic_slice(infrastructure_k2h1tva1e1b1nwzida0e0b0xyg1,z_pos,z,z + 1)
+        mask=infrastructure_k2h1tva1e1b1nwida0e0b0xyg1!=0
+        infrastructure_dams_k2h1tva1nw8iyg = infrastructure_k2h1tva1e1b1nwida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
+        mask=mask.ravel()
+        index_cut_k2h1tvanwiyg1=index_k2h1tvanwiyg1[mask,:]
+        tup_k2h1tvanwiyg1 = tuple(map(tuple, index_cut_k2h1tvanwiyg1))
+        params[scenario]['p_infrastructure_dams'] =dict(zip(tup_k2h1tvanwiyg1, infrastructure_dams_k2h1tva1nw8iyg))
+        ###infrastructure - offs
+        infrastructure_k3k5p5tva1e1b1nwida0e0b0xyg3 = sfun.f_dynamic_slice(infrastructure_k3k5p5tva1e1b1nwzida0e0b0xyg3,z_pos,z,z + 1)
+        mask=infrastructure_k3k5p5tva1e1b1nwida0e0b0xyg3!=0
+        infrastructure_offs_k3k5h1tvnw8iaxyg3 = infrastructure_k3k5p5tva1e1b1nwida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
+        mask=mask.ravel()
+        index_cut_k3k5h1tvnw8iaxyg3=index_k3k5h1tvnw8iaxyg3[mask,:]
+        tup_k3k5h1tvnw8iaxyg3 = tuple(map(tuple, index_cut_k3k5h1tvnw8iaxyg3))
+        params[scenario]['p_infrastructure_offs'] =dict(zip(tup_k3k5h1tvnw8iaxyg3, infrastructure_offs_k3k5h1tvnw8iaxyg3))
+
+        ##DSE - sire
+        dsemj_p6tva1e1b1nwida0e0b0xyg0 = sfun.f_dynamic_slice(dsemj_p6tva1e1b1nwzida0e0b0xyg0,z_pos,z,z + 1)
+        dsenw_p6tva1e1b1nwida0e0b0xyg0 = sfun.f_dynamic_slice(dsenw_p6tva1e1b1nwzida0e0b0xyg0,z_pos,z,z + 1)
+        mask=dsemj_p6tva1e1b1nwida0e0b0xyg0!=0
+        dsemj_sire_p6g0 = dsemj_p6tva1e1b1nwida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
+        dsenw_sire_p6g0 = dsenw_p6tva1e1b1nwida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
+        mask=mask.ravel()
+        index_cut_p6g0=index_p6g0[mask,:]
+        tup_p6g0 = tuple(map(tuple, index_cut_p6g0))
+        if pinp.sheep['i_dse_type'] == 0:
+            params[scenario]['p_dse_sire'] =dict(zip(tup_p6g0, dsemj_sire_p6g0))
+        else:
+            params[scenario]['p_dse_sire'] =dict(zip(tup_p6g0, dsenw_sire_p6g0))
+        ##DSE - dams
+        dsemj_k2p6tva1e1b1nwida0e0b0xyg1 = sfun.f_dynamic_slice(dsemj_k2p6tva1e1b1nwzida0e0b0xyg1,z_pos,z,z + 1)
+        dsenw_k2p6tva1e1b1nwida0e0b0xyg1 = sfun.f_dynamic_slice(dsenw_k2p6tva1e1b1nwzida0e0b0xyg1,z_pos,z,z + 1)
+        mask=dsemj_k2p6tva1e1b1nwida0e0b0xyg1!=0
+        dsemj_dams_k2p6tva1nw8iyg1 = dsemj_k2p6tva1e1b1nwida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
+        dsenw_dams_k2p6tva1nw8iyg1 = dsenw_k2p6tva1e1b1nwida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
+        mask=mask.ravel()
+        index_cut_k2p6tva1nw8iyg1=index_k2p6tva1nw8iyg1[mask,:]
+        tup_k2p6tva1nw8iyg1 = tuple(map(tuple, index_cut_k2p6tva1nw8iyg1))
+        if pinp.sheep['i_dse_type'] == 0:
+            params[scenario]['p_dse_dams'] =dict(zip(tup_k2p6tva1nw8iyg1, dsemj_dams_k2p6tva1nw8iyg1))
+        else:
+            params[scenario]['p_dse_dams'] =dict(zip(tup_k2p6tva1nw8iyg1, dsenw_dams_k2p6tva1nw8iyg1))
+        ##DSE - offs
+        dsemj_k3k5p6tva1e1b1nwida0e0b0xyg3 = sfun.f_dynamic_slice(dsemj_k3k5p6tva1e1b1nwzida0e0b0xyg3,z_pos,z,z + 1)
+        dsenw_k3k5p6tva1e1b1nwida0e0b0xyg3 = sfun.f_dynamic_slice(dsenw_k3k5p6tva1e1b1nwzida0e0b0xyg3,z_pos,z,z + 1)
+        mask=dsemj_k3k5p6tva1e1b1nwida0e0b0xyg3!=0
+        dsemj_dams_k3k5p6tvnw8iaxyg3 = dsemj_k3k5p6tva1e1b1nwida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
+        dsenw_dams_k3k5p6tvnw8iaxyg3 = dsenw_k3k5p6tva1e1b1nwida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
+        mask=mask.ravel()
+        index_cut_k3k5p6tvnw8iaxyg3=index_k3k5p6tvnw8iaxyg3[mask,:]
+        tup_k3k5p6tvnw8iaxyg3 = tuple(map(tuple, index_cut_k3k5p6tvnw8iaxyg3))
+        if pinp.sheep['i_dse_type'] == 0:
+            params[scenario]['p_dse_offs'] =dict(zip(tup_k3k5p6tvnw8iaxyg3, dsemj_dams_k3k5p6tvnw8iaxyg3))
+        else:
+            params[scenario]['p_dse_offs'] =dict(zip(tup_k3k5p6tvnw8iaxyg3, dsenw_dams_k3k5p6tvnw8iaxyg3))
 
 
 
@@ -6057,7 +6062,7 @@ def generator(params,r_vals,ev,plots = False):
     len_v1 = len(keys_v1)
     len_v3 = len(keys_v3)
     ####std
-    g0_shape = len_g0
+    zg0_shape = len_z, len_g0
     k2tva1nwziyg1_shape = len_k2, len_t1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
     k5twzidaxyg2_shape = len_k5, len_t2, len_w_prog, len_z, len_i, len_d, len_a1, len_x, len_g2
     k3k5tvnwziaxyg3_shape = len_k3, len_k5, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
@@ -6066,21 +6071,21 @@ def generator(params,r_vals,ev,plots = False):
     k2tva1e1b1nwziyg1_shape = len_k2, len_t1, len_v1, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
 
     ####kpveb
-    pg0_shape = len_p, len_g0
+    pzg0_shape = len_p, len_z, len_g0
     k2vpa1e1b1nwziyg1_shape = len_k2, len_v1, len_p, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
     k3k5vpnwzidae0b0xyg3_shape = len_k3, len_k5, len_v3, len_p3, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3
 
     ####p6
-    p6g0_shape = len_p6, len_g0
+    p6zg0_shape = len_p6, len_z, len_g0
     k2p6tva1nwziyg1_shape = len_k2, len_p6, len_t1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
     k3k5p6tvnwziaxyg3_shape = len_k3, len_k5, len_p6, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
     ####p6f
-    p6fg0_shape = len_p6, len_f, len_g0
+    p6fzg0_shape = len_p6, len_f, len_z, len_g0
     k2p6ftva1nwziyg1_shape = len_k2, len_p6, len_f, len_t1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
     k3k5p6ftvnwziaxyg3_shape = len_k3, len_k5, len_p6, len_f, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
-    cg0_shape = len_c, len_g0
+    czg0_shape = len_c, len_z, len_g0
     k2ctva1nwziyg1_shape = len_k2, len_c, len_t1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
     k5ctwziaxyg2_shape = len_c, len_t2, len_w_prog, len_z, len_i, len_a1, len_x, len_g2
     k3k5ctvnwziaxyg3_shape = len_k3, len_k5, len_c, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
@@ -6088,29 +6093,29 @@ def generator(params,r_vals,ev,plots = False):
 
 
     ###dse
-    r_vals['dsenw_p6g0'] = dsenw_p6tva1e1b1nwzida0e0b0xyg0.reshape(p6g0_shape)
-    r_vals['dsemj_p6g0'] = dsemj_p6tva1e1b1nwzida0e0b0xyg0.reshape(p6g0_shape)
+    r_vals['dsenw_p6zg0'] = dsenw_p6tva1e1b1nwzida0e0b0xyg0.reshape(p6zg0_shape)
+    r_vals['dsemj_p6zg0'] = dsemj_p6tva1e1b1nwzida0e0b0xyg0.reshape(p6zg0_shape)
     r_vals['dsenw_k2p6tva1nwziyg1'] = dsenw_k2p6tva1e1b1nwzida0e0b0xyg1.reshape(k2p6tva1nwziyg1_shape)
     r_vals['dsemj_k2p6tva1nwziyg1'] = dsemj_k2p6tva1e1b1nwzida0e0b0xyg1.reshape(k2p6tva1nwziyg1_shape)
     r_vals['dsenw_k3k5p6tvnwziaxyg3'] = dsenw_k3k5p6tva1e1b1nwzida0e0b0xyg3.reshape(k3k5p6tvnwziaxyg3_shape)
     r_vals['dsemj_k3k5p6tvnwziaxyg3'] = dsemj_k3k5p6tva1e1b1nwzida0e0b0xyg3.reshape(k3k5p6tvnwziaxyg3_shape)
 
     ###stock days
-    r_vals['stock_days_p6fg0'] = stock_days_p6fa1e1b1nwzida0e0b0xyg0.reshape(p6fg0_shape)
+    r_vals['stock_days_p6fzg0'] = stock_days_p6fa1e1b1nwzida0e0b0xyg0.reshape(p6fzg0_shape)
     r_vals['stock_days_k2p6ftva1nwziyg1'] = stock_days_k2p6ftva1e1b1nwzida0e0b0xyg1.reshape(k2p6ftva1nwziyg1_shape)
     r_vals['stock_days_k3k5p6ftvnwziaxyg3'] = stock_days_k3k5p6ftva1e1b1nwzida0e0b0xyg3.reshape(k3k5p6ftvnwziaxyg3_shape)
 
     ###cashflow
-    r_vals['sire_cost_cg0'] = cost_ctva1e1b1nwzida0e0b0xyg0.reshape(cg0_shape)
+    r_vals['sire_cost_czg0'] = cost_ctva1e1b1nwzida0e0b0xyg0.reshape(czg0_shape)
     r_vals['dams_cost_k2ctva1nwziyg1'] = cost_k2ctva1e1b1nwzida0e0b0xyg1.reshape(k2ctva1nwziyg1_shape)
     r_vals['offs_cost_k3k5ctvnwziaxyg3'] =cost_k3k5ctva1e1b1nwzida0e0b0xyg3.reshape(k3k5ctvnwziaxyg3_shape)
 
-    r_vals['salevalue_cg0'] = r_salevalue_ctva1e1b1nwzida0e0b0xyg0.reshape(cg0_shape)
+    r_vals['salevalue_czg0'] = r_salevalue_ctva1e1b1nwzida0e0b0xyg0.reshape(czg0_shape)
     r_vals['salevalue_k2ctva1nwziyg1'] = r_salevalue_k2ctva1e1b1nwzida0e0b0xyg1.reshape(k2ctva1nwziyg1_shape)
     r_vals['salevalue_ctwzia0xg2'] = salevalue_prog_cta1e1b1nwzida0e0b0xyg2.reshape(k5ctwziaxyg2_shape)
     r_vals['salevalue_k3k5ctvnwziaxyg3'] = r_salevalue_k3k5ctva1e1b1nwzida0e0b0xyg3.reshape(k3k5ctvnwziaxyg3_shape)
 
-    r_vals['woolvalue_cg0'] = r_woolvalue_ctva1e1b1nwzida0e0b0xyg0.reshape(cg0_shape)
+    r_vals['woolvalue_czg0'] = r_woolvalue_ctva1e1b1nwzida0e0b0xyg0.reshape(czg0_shape)
     r_vals['woolvalue_k2ctva1nwziyg1'] = r_woolvalue_k2ctva1e1b1nwzida0e0b0xyg1.reshape(k2ctva1nwziyg1_shape)
     r_vals['woolvalue_k3k5ctvnwziaxyg3'] =r_woolvalue_k3k5ctva1e1b1nwzida0e0b0xyg3.reshape(k3k5ctvnwziaxyg3_shape)
 
@@ -6118,20 +6123,20 @@ def generator(params,r_vals,ev,plots = False):
     r_vals['rm_stockinfra_fix_h1c'] = rm_stockinfra_fix_h1c
 
     ###cfw
-    r_vals['cfw_hdmob_g0'] = r_cfw_hdmob_tva1e1b1nwzida0e0b0xyg0.reshape(g0_shape)
+    r_vals['cfw_hdmob_zg0'] = r_cfw_hdmob_tva1e1b1nwzida0e0b0xyg0.reshape(zg0_shape)
     r_vals['cfw_hdmob_k2tva1nwziyg1'] = r_cfw_hdmob_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
     r_vals['cfw_hdmob_k3k5tvnwziaxyg3'] = r_cfw_hdmob_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
 
-    r_vals['cfw_hd_g0'] = r_cfw_hd_tva1e1b1nwzida0e0b0xyg0.reshape(g0_shape)
+    r_vals['cfw_hd_zg0'] = r_cfw_hd_tva1e1b1nwzida0e0b0xyg0.reshape(zg0_shape)
     r_vals['cfw_hd_k2tva1nwziyg1'] = r_cfw_hd_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
     r_vals['cfw_hd_k3k5tvnwziaxyg3'] = r_cfw_hd_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
 
     ###mei and pi and fec (feed energy concentration)
-    r_vals['mei_sire_p6fg0'] = mei_p6fa1e1b1nwzida0e0b0xyg0.reshape(p6fg0_shape)
+    r_vals['mei_sire_p6fzg0'] = mei_p6fa1e1b1nwzida0e0b0xyg0.reshape(p6fzg0_shape)
     r_vals['mei_dams_k2p6ftva1nw8ziyg1'] = mei_k2p6ftva1e1b1nwzida0e0b0xyg1.reshape(k2p6ftva1nwziyg1_shape)
     r_vals['mei_offs_k3k5p6ftvnw8ziaxyg3'] = mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3.reshape(k3k5p6ftvnwziaxyg3_shape)
 
-    r_vals['pi_sire_p6fg0'] = pi_p6fa1e1b1nwzida0e0b0xyg0.reshape(p6fg0_shape)
+    r_vals['pi_sire_p6fzg0'] = pi_p6fa1e1b1nwzida0e0b0xyg0.reshape(p6fzg0_shape)
     r_vals['pi_dams_k2p6ftva1nw8ziyg1'] = pi_k2p6ftva1e1b1nwzida0e0b0xyg1.reshape(k2p6ftva1nwziyg1_shape)
     r_vals['pi_offs_k3k5p6ftvnw8ziaxyg3'] = pi_k3k5p6ftva1e1b1nwzida0e0b0xyg3.reshape(k3k5p6ftvnwziaxyg3_shape)
 

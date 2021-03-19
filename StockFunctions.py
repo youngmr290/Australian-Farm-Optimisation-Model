@@ -556,7 +556,7 @@ def f_ra_cs(foo, hf, cr=None, zf=1):
     return ra
 
 
-def f_foo_convert(cu3, cu4, foo, pasture_stage, legume=0, cr=None, z_pos=-1):
+def f_foo_convert(cu3, cu4, foo, pasture_stage, legume=0, cr=None, z_pos=-1, treat_z=False):
     '''
     Parameters
     ----------
@@ -588,8 +588,9 @@ def f_foo_convert(cu3, cu4, foo, pasture_stage, legume=0, cr=None, z_pos=-1):
     ##calc hf
     hf = 1 + cr12 * (hr -1)
     ##apply z treatment
-    foo_shears = pinp.f_seasonal_inp(foo_shears,numpy=True,axis=z_pos)
-    hf = pinp.f_seasonal_inp(hf,numpy=True,axis=z_pos)
+    if treat_z:
+        foo_shears = pinp.f_seasonal_inp(foo_shears,numpy=True,axis=z_pos)
+        hf = pinp.f_seasonal_inp(hf,numpy=True,axis=z_pos)
     return foo_shears, hf
 
 def f_dynamic_slice(arr, axis, start, stop, axis2=None, start2=None, stop2=None):
@@ -1381,7 +1382,7 @@ def f_condensed(numbers, var, lw_idx, prejoin_tup, season_tup, i_n_len, i_w_len,
             ###sort var based on animal lw
             var_sorted = np.take_along_axis(var, lw_idx, axis=sinp.stock['i_w_pos']) #sort into production order (base on lw) so we can select the production of the lowest lw animals with mort less than 10% - note sorts in ascending order
             ###add high pattern
-            temporary[...] = np.mean(f_dynamic_slice(var_sorted, sinp.stock['i_w_pos'], i_w_len - int(i_w_len / 10), -1),
+            temporary[...] = np.mean(f_dynamic_slice(var_sorted, sinp.stock['i_w_pos'], i_w_len -1 - int(math.ceil(i_w_len / 10)), -1),  #ceil is used to handle cases where nutrition options is 1 (eg only 3 lw patterns)
                                      sinp.stock['i_w_pos'], keepdims=True)  # average of the top lw patterns
             ###add mid pattern (w 0 - 27) - use slice method in case w axis changes position (can't use MRYs dynamic slice function because we are assigning)
             sl = [slice(None)] * temporary.ndim

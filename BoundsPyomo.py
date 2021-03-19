@@ -74,6 +74,7 @@ def boundarypyomo_local():
         ##total dam min bound
             #todo might need to somehoe include mask_w8 so that we only include active activities The masking of the bounds needs to use a mask the same as used in the production parameters
             # mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1*mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1)
+            # i think use number required as the mask instead of above (tried above and it didnt do k2 axis correctly)
         if dam_lobound_inc:
             ###set the bound
             dam_lobound = 5000
@@ -83,9 +84,11 @@ def boundarypyomo_local():
             except AttributeError:
                 pass
             def dam_lo_bound(model):
-                return sum(model.v_dams[k2,t,v,a,n,w,z,i,y,g] for k2 in model.s_k2_birth_dams for t in model.s_sale_dams
-                           for v in model.s_dvp_dams for a in model.s_wean_times for n in model.s_nut_dams for w in model.s_lw_dams
-                           for z in model.s_season_types for i in model.s_tol for y in model.s_gen_merit_dams for g in model.s_groups_dams) \
+                return sum(model.v_dams[k28,t,v,a,n,w8,z,i,y,g1] for k28 in model.s_k2_birth_dams for t in model.s_sale_dams
+                           for v in model.s_dvp_dams for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
+                           for z in model.s_season_types for i in model.s_tol for y in model.s_gen_merit_dams for g1 in model.s_groups_dams
+                           if any(model.p_numbers_req_dams[k28,k29,t,v,a,n,w8,i,y,g1,g9,w9] == 1 for k29 in model.s_k2_birth_dams
+                                  for w9 in model.s_lw_dams for g9 in model.s_groups_dams)) \
                        >= dam_lobound
             model.con_dam_lobound = pe.Constraint(rule=dam_lo_bound,
                                                     doc='min number of all dams')

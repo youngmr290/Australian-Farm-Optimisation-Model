@@ -602,19 +602,19 @@ def f_stock_cash_summary(lp_vars, r_vals):
     offs_numbers_k3k5tvnwziaxyg3 = stock_vars['offs_numbers_k3k5tvnwziaxyg3']
 
     ##husb cost
-    sire_cost_czg0 = r_vals['stock']['sire_cost_cg0'][:,na,:] * sire_numbers_zg0
+    sire_cost_czg0 = r_vals['stock']['sire_cost_czg0'] * sire_numbers_zg0
     dams_cost_k2ctva1nwziyg1 = r_vals['stock']['dams_cost_k2ctva1nwziyg1'] * dams_numbers_k2tvanwziy1g1[:, na, ...]
     offs_cost_k3k5ctvnwziaxyg3 = r_vals['stock']['offs_cost_k3k5ctvnwziaxyg3'] * offs_numbers_k3k5tvnwziaxyg3[:, :, na, ...]
 
     ##sale income
-    salevalue_czg0 = r_vals['stock']['salevalue_cg0'][:,na,:] * sire_numbers_zg0
+    salevalue_czg0 = r_vals['stock']['salevalue_czg0'] * sire_numbers_zg0
     salevalue_k2ctva1nwziyg1 = r_vals['stock']['salevalue_k2ctva1nwziyg1'] * dams_numbers_k2tvanwziy1g1[:, na, ...]
     salevalue_k5ctwzida0xg2 = r_vals['stock']['salevalue_ctwzia0xg2'][..., na, :, :, :] * prog_numbers_k5twzida0xg2[:, na,
                                                                                      ...]
     salevalue_k3k5ctvnwziaxyg3 = r_vals['stock']['salevalue_k3k5ctvnwziaxyg3'] * offs_numbers_k3k5tvnwziaxyg3[:, :, na, ...]
 
     ##wool income
-    woolvalue_czg0 = r_vals['stock']['woolvalue_cg0'][:,na,:] * sire_numbers_zg0
+    woolvalue_czg0 = r_vals['stock']['woolvalue_czg0'] * sire_numbers_zg0
     woolvalue_k2ctva1nwziyg1 = r_vals['stock']['woolvalue_k2ctva1nwziyg1'] * dams_numbers_k2tvanwziy1g1[:, na, ...]
     woolvalue_k3k5ctvnwziaxyg3 = r_vals['stock']['woolvalue_k3k5ctvnwziaxyg3'] * offs_numbers_k3k5tvnwziaxyg3[:, :, na, ...]
 
@@ -742,7 +742,7 @@ def f_dse(lp_vars, r_vals, **kwargs):
 
     if method == 0:
         ##sire
-        dse_sire = stock_vars['sire_numbers_zg0'] * r_vals['stock']['dsenw_p6g0']
+        dse_sire = stock_vars['sire_numbers_zg0'] * r_vals['stock']['dsenw_p6zg0']
         ##dams
         dse_dams = fun.f_reduce_skipfew(np.sum, stock_vars['dams_numbers_k2tvanwziy1g1'][:, na, ...]
                                         * r_vals['stock']['dsenw_k2p6tva1nwziyg1'], preserveAxis=1)  # sum all axis except p6
@@ -751,7 +751,7 @@ def f_dse(lp_vars, r_vals, **kwargs):
             'dsenw_k3k5p6tvnwziaxyg3'], preserveAxis=2)  # sum all axis except p6
     else:
         ##sire
-        dse_sire = stock_vars['sire_numbers_zg0'] * r_vals['stock']['dsemj_p6g0']
+        dse_sire = stock_vars['sire_numbers_zg0'] * r_vals['stock']['dsemj_p6zg0']
         ##dams
         dse_dams = fun.f_reduce_skipfew(np.sum, stock_vars['dams_numbers_k2tvanwziy1g1'][:, na, ...] * r_vals['stock'][
             'dsemj_k2p6tva1nwziyg1'], preserveAxis=1)  # sum all axis except p6

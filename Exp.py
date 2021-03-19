@@ -225,65 +225,66 @@ for row in range(len(exp_data)):
         results=core.coremodel_all(params) #have to do this so i can access the solver status
         print('corepyomo: ',time.time() - pyomocalc_end)
 
-        ##This writes variable summary each iteration with generic file name - it is overwritten each iteration and is created so the run progress can be monitored
-        fun.write_variablesummary(model, row, exp_data, 1)
+        if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1:
+            ##This writes variable summary each iteration with generic file name - it is overwritten each iteration and is created so the run progress can be monitored
+            fun.write_variablesummary(model, row, exp_data, 1)
 
-        ##check if user wants full solution
-        if exp_data.index[row][1] == True:
-            ##make lp file
-            model.write('Output/%s.lp' %trial_name, io_options={'symbolic_solver_labels':True})  #file name has to have capital
+            ##check if user wants full solution
+            if exp_data.index[row][1] == True:
+                ##make lp file
+                model.write('Output/%s.lp' %trial_name, io_options={'symbolic_solver_labels':True})  #file name has to have capital
 
-            ##This writes variable summary for full solution (same file as the temporary version created above)
-            fun.write_variablesummary(model, row, exp_data)
+                ##This writes variable summary for full solution (same file as the temporary version created above)
+                fun.write_variablesummary(model, row, exp_data)
 
-            #todo writing the RC & Duals is very slow. Search for a quicker method if it is required for a large model
-            # ##write rc and dual to txt file
-            # with open('Output/Rc and Duals - %s.txt' %trial_name,'w') as f:  #file name has to have capital
-            #     f.write('RC\n')
-            #     for v in model.component_objects(pe.Var, active=True):
-            #         f.write("Variable %s\n" %v)   #  \n makes new line
-            #         for index in v:
-            #             try:
-            #                 print("      ", index, model.rc[v[index]], file=f)
-            #             except: pass
-            #     for c in model.component_objects(pe.Constraint, active=True):
-            #         f.write("Constraint %s\n" %c)   #  \n makes new line
-            #         for index in c:
-            #             # try:
-            #             print("      ", index, model.dual[c[index]], file=f)
-            #             # except: pass
-            
-        
-            ##prints what you see from pprint to txt file - you can see the slack on constraints but not the rc or dual
-            # with open('Output/Full model - %s.txt' %trial_name, 'w') as f:  #file name has to have capital
-            #     f.write("My description of the instance!\n")
-            #     model.display(ostream=f)
-        
-        ##this prints stuff for each trial - trial name, overall profit
-        print("\nDisplaying Solution for trial: %s\n" %trial_name , '-'*60,'\n%s' %pe.value(model.profit))
-        ##this check if the solver is optimal - if infeasible or error the model will quit
-        if (results.solver.status == pe.SolverStatus.ok) and (results.solver.termination_condition == pe.TerminationCondition.optimal):
-            print('solver optimal')# Do nothing when the solution in optimal and feasible
-        elif (results.solver.termination_condition == pe.TerminationCondition.infeasible):
-            print ('Solver Status: infeasible')
-            sys.exit()
-        else: # Something else is wrong
-            print ('Solver Status: error')
-            sys.exit()
-        ##store pyomo variable output as a dict
-        variables=model.component_objects(pe.Var, active=True)
-        lp_vars = {str(v):{s:v[s].value for s in v} for v in variables}     #creates dict with variable in it. This is tricky since pyomo returns a generator object
-        ##store profit
-        lp_vars['profit'] = pe.value(model.profit)
+                #todo writing the RC & Duals is very slow. Search for a quicker method if it is required for a large model
+                # ##write rc and dual to txt file
+                # with open('Output/Rc and Duals - %s.txt' %trial_name,'w') as f:  #file name has to have capital
+                #     f.write('RC\n')
+                #     for v in model.component_objects(pe.Var, active=True):
+                #         f.write("Variable %s\n" %v)   #  \n makes new line
+                #         for index in v:
+                #             try:
+                #                 print("      ", index, model.rc[v[index]], file=f)
+                #             except: pass
+                #     for c in model.component_objects(pe.Constraint, active=True):
+                #         f.write("Constraint %s\n" %c)   #  \n makes new line
+                #         for index in c:
+                #             # try:
+                #             print("      ", index, model.dual[c[index]], file=f)
+                #             # except: pass
 
-    ##pickle trial info
-    if any(lp_vars):  # only do this if pyomo was run and the dict contains values
-        with open('pkl/pkl_lp_vars_{0}.pkl'.format(trial_name),"wb") as f:
-            pkl.dump(lp_vars,f,protocol=pkl.HIGHEST_PROTOCOL)
-    with open('pkl/pkl_r_vals_{0}.pkl'.format(trial_name),"wb") as f:
-        pkl.dump(r_vals,f,protocol=pkl.HIGHEST_PROTOCOL)
-    # with open('pkl/pkl_params_{0}.pkl'.format(trial_name),"wb") as f: #pkl_params must be pickled last because it is used to determine if model crashed but the current trial was complete prior to crash
-    #     pkl.dump(params,f,protocol=pkl.HIGHEST_PROTOCOL)
+
+                ##prints what you see from pprint to txt file - you can see the slack on constraints but not the rc or dual
+                # with open('Output/Full model - %s.txt' %trial_name, 'w') as f:  #file name has to have capital
+                #     f.write("My description of the instance!\n")
+                #     model.display(ostream=f)
+
+            ##this prints stuff for each trial - trial name, overall profit
+            print("\nDisplaying Solution for trial: %s\n" %trial_name , '-'*60,'\n%s' %pe.value(model.profit))
+            ##this check if the solver is optimal - if infeasible or error the model will quit
+            if (results.solver.status == pe.SolverStatus.ok) and (results.solver.termination_condition == pe.TerminationCondition.optimal):
+                print('solver optimal')# Do nothing when the solution in optimal and feasible
+            elif (results.solver.termination_condition == pe.TerminationCondition.infeasible):
+                print ('Solver Status: infeasible')
+                sys.exit()
+            else: # Something else is wrong
+                print ('Solver Status: error')
+                sys.exit()
+            ##store pyomo variable output as a dict
+            variables=model.component_objects(pe.Var, active=True)
+            lp_vars = {str(v):{s:v[s].value for s in v} for v in variables}     #creates dict with variable in it. This is tricky since pyomo returns a generator object
+            ##store profit
+            lp_vars['profit'] = pe.value(model.profit)
+
+            ##pickle trial info
+            if any(lp_vars):  # only do this if pyomo was run and the dict contains values
+                with open('pkl/pkl_lp_vars_{0}.pkl'.format(trial_name),"wb") as f:
+                    pkl.dump(lp_vars,f,protocol=pkl.HIGHEST_PROTOCOL)
+            with open('pkl/pkl_r_vals_{0}.pkl'.format(trial_name),"wb") as f:
+                pkl.dump(r_vals,f,protocol=pkl.HIGHEST_PROTOCOL)
+            # with open('pkl/pkl_params_{0}.pkl'.format(trial_name),"wb") as f: #pkl_params must be pickled last because it is used to determine if model crashed but the current trial was complete prior to crash
+            #     pkl.dump(params,f,protocol=pkl.HIGHEST_PROTOCOL)
 
     ##determine expected time to completion - trials left multiplied by average time per trial &time for current loop
     trials_to_go = total_trials - run
@@ -304,4 +305,83 @@ print('total trials completed: ', run)
 try:
     print("average time taken for each loop: ", (end_time1 - start_time1)/run)
 except ZeroDivisionError: pass
-    
+
+
+
+    ##use the code below so that dsp can be run using command line. This allows the generation of lp file. (cant seem to generate lp file using the rapper method.
+
+        # import networkx
+        # root_vars=['v_hay_made[*]']
+        #
+        # stage2_vars=['v_quantity_casual[*]','v_quantity_perm[*]','v_quantity_manager[*]','v_phase_area[*,*]','v_sell_grain[*,*]',
+        #              'v_credit[*]',
+        #              'v_debit[*]',
+        #              'v_dep[*]',
+        #              'v_asset[*]',
+        #              'v_minroe[*]',
+        #              'v_buy_grain[*,*]',
+        #              'v_sup_con[*,*,*,*]',
+        #              'v_stub_con[*,*,*,*]',
+        #              'v_stub_transfer[*,*,*]',
+        #              'v_infrastructure[*]',
+        #              'v_seeding_machdays[*,*,*]',
+        #              'v_seeding_pas[*,*,*]',
+        #              'v_seeding_crop[*,*,*]',
+        #              'v_contractseeding_ha[*,*,*]',
+        #              'v_harv_hours[*,*]',
+        #              'v_contractharv_hours[*]',
+        #
+        #              'v_learn_allocation[*]',
+        #              'v_casualsupervision_perm[*]',
+        #              'v_casualsupervision_manager[*]',
+        #              'v_sheep_labour_manager[*,*]',
+        #              'v_crop_labour_manager[*,*]',
+        #              'v_fixed_labour_manager[*,*]',
+        #              'v_sheep_labour_permanent[*,*]',
+        #              'v_crop_labour_permanent[*,*]',
+        #              'v_fixed_labour_permanent[*,*]',
+        #              'v_sheep_labour_casual[*,*]',
+        #              'v_crop_labour_casual[*,*]',
+        #              'v_fixed_labour_casual[*,*]',
+        #              'v_greenpas_ha[*,*,*,*,*,*]',
+        #              'v_drypas_consumed[*,*,*,*]',
+        #              'v_drypas_transfer[*,*,*]',
+        #              'v_nap_consumed[*,*,*,*]',
+        #              'v_nap_transfer[*,*,*]',
+        #              'v_poc[*,*,*]',
+        #              'v_sire[*]',
+        #              'v_dams[*,*,*,*,*,*,*,*,*]',
+        #              'v_offs[*,*,*,*,*,*,*,*,*,*,*]',
+        #              'v_prog[*,*,*,*,*,*,*,*]'
+        #              ] #buy grain may not be in stage 3, i feel like you retain grain for the year ahead without knowing the type of season. but then the model will just counter by altering sale of grain.
+        #
+        #
+        #
+        # def pysp_scenario_tree_model_callback():
+        #     # Return a NetworkX scenario tree.
+        #     g = networkx.DiGraph()
+        #
+        #     ce1 = 'FirstStageCost'
+        #     g.add_node("Root",
+        #                cost=ce1,
+        #                variables=root_vars,
+        #                derived_variables=[])
+        #
+        #     ce2 = 'SecondStageCost'
+        #     g.add_node("z0",
+        #                cost=ce2,
+        #                variables=stage2_vars, #todo these will be different for each season potentially in the actual version.
+        #                derived_variables=[])
+        #     g.add_edge("Root","z0",weight=0.5) #todo this will need to be the season proportion inoput
+        #
+        #     g.add_node("z1",
+        #                cost=ce2,
+        #                variables=stage2_vars,
+        #                derived_variables=[])
+        #     g.add_edge("Root","z1",weight=0.5)
+        #
+        #     return g
+        #
+        # def pysp_instance_creation_callback(scenario_name,node_names):
+        #     instance = model.clone()
+        #     return instance
