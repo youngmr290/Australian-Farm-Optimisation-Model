@@ -6174,19 +6174,19 @@ def generator(params,r_vals,ev,plots = False):
 
     ###lw - with p, e, b
     if pinp.rep['i_store_lw_rep']:
-        r_vals['lw_sire_pg0'] = r_lw_sire_psire.reshape(pg0_shape)
+        r_vals['lw_sire_pzg0'] = r_lw_sire_psire.reshape(pzg0_shape)
         r_vals['lw_dams_k2vpa1e1b1nw8ziyg1'] = r_lw_dams_k2tvpdams.reshape(k2vpa1e1b1nwziyg1_shape)
         r_vals['lw_offs_k3k5vpnw8zida0e0b0xyg3'] = r_lw_offs_k3k5tvpoffs.reshape(k3k5vpnwzidae0b0xyg3_shape)
 
     ###ffcfw - with p, e, b
     if pinp.rep['i_store_ffcfw_rep']:
-        r_vals['ffcfw_sire_pg0'] = r_ffcfw_sire_psire.reshape(pg0_shape)
+        r_vals['ffcfw_sire_pzg0'] = r_ffcfw_sire_psire.reshape(pzg0_shape)
         r_vals['ffcfw_dams_k2vpa1e1b1nw8ziyg1'] = r_ffcfw_dams_k2tvpdams.reshape(k2vpa1e1b1nwziyg1_shape)
         r_vals['ffcfw_offs_k3k5vpnw8zida0e0b0xyg3'] = r_ffcfw_offs_k3k5tvpoffs.reshape(k3k5vpnwzidae0b0xyg3_shape)
 
     ###fec - with p, e, b
     if pinp.rep['i_store_fec_rep']:
-        r_vals['fec_sire_pg0'] = r_fec_sire_pg.reshape(pg0_shape)
+        r_vals['fec_sire_pzg0'] = r_fec_sire_pg.reshape(pzg0_shape)
         r_vals['fec_dams_k2vpa1e1b1nw8ziyg1'] = r_fec_dams_k2tvpg.reshape(k2vpa1e1b1nwziyg1_shape)
         r_vals['fec_offs_k3k5vpnw8zida0e0b0xyg3'] = r_fec_offs_k3k5tvpg.reshape(k3k5vpnwzidae0b0xyg3_shape)
 
