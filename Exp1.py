@@ -269,7 +269,7 @@ def main():
     ##prints out start status - number of trials to run, date and time exp.xl was last saved and output summary  
     print('Number of trials to run: ',len(dataset))
     print('Number of full solutions: ',sum((exp_data.index[row][1] == True) and (exp_data.index[row][0] == True) for row in range(len(exp_data))))
-    print('Exp.xlsx last saved: ',datetime.fromtimestamp(round(os.path.getmtime("exp.xlsx"))))
+    print('Exp.xls last saved: ',datetime.fromtimestamp(round(os.path.getmtime("exp.xlsm"))))
     ##start multiprocessing
     ### number of agents (processes) should be min of the num of cpus, number of trials or the user specified limit due to memory capacity
     agents = min(multiprocessing.cpu_count(), len(dataset), maximum_processes)
