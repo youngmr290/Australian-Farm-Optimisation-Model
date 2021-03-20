@@ -782,15 +782,15 @@ def f_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb
 
 
 
-def f_energy_cs(ck, cx, cm, lw_start, ffcfw_start, mr_age, mei, omer_history_start, days_period, md_solid, i_md_supp, md_herb, lgf_eff, dlf_eff, i_steepness, density, foo, feedsupply, intake_f, dmd, mei_propn_milk=0):
+def f_energy_cs(ck, cx, cm, lw_start, ffcfw_start, mr_age, mei, omer_history_start, days_period, md_solid, i_md_supp, md_herb, lgf_eff, dlf_eff, i_steepness, density, foo, feedsupply, intake_f, dmd, mei_propn_milk=0, sam_kg=1):
     ##Efficiency for maintenance	
     km = (ck[1, ...] + ck[2, ...] * md_solid) * (1-mei_propn_milk) + ck[3, ...] * mei_propn_milk
     ##Efficiency for lactation - dam only	
     kl =  ck[5, ...] + ck[6, ...] * md_solid
-    ##Efficiency for growth (supplement)	
-    kg_supp = ck[16, ...] * i_md_supp
-    ##Efficiency for growth (fodder)	
-    kg_fodd = ck[13, ...] * lgf_eff * (1+ ck[15, ...] * dlf_eff) * md_herb
+    ##Efficiency for growth (supplement) including the sensitivity scalar
+    kg_supp = ck[16, ...] * i_md_supp * sam_kg
+    ##Efficiency for growth (fodder) including the sensitivity scalar
+    kg_fodd = ck[13, ...] * lgf_eff * (1+ ck[15, ...] * dlf_eff) * md_herb * sam_kg
     ##Energy required at maint for metabolism	
     emetab = cx[10, ...] * cm[2, ...] * ffcfw_start ** 0.75 * mr_age * (1 + cm[5, ...] * mei_propn_milk)
     ##Distance walked (horizontal equivalent)	
