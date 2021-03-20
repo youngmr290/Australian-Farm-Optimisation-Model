@@ -1052,15 +1052,16 @@ def f_lwc_cs(cg, rc_start, mei, mem, mew, z1f, z2f, kg, mec = 0,
     else
         evg = i_evg #todo this will be an sav over an input from universal.xlsx. Needs to be added at the top of the sheep parameters in Universal
         # the input will be for each of the genotypes and called "energy value of gain (MJ/kg)"
-    ##Protein content of gain (some uncertainty for sign associated with zf2.
-    ### GrazFeed documentation had +ve however, this implies that PCG increases when BC > 1. So changed to -ve
-    pcg = cg[12, ...] - z1f * (cg[13, ...] - cg[14, ...] * (level - 1)) - z2f * cg[15, ...] * (rc_start - 1)
     ##Empty bodyweight gain
     ebg = neg / evg
-    ##Protein gain
-    pg = pcg * ebg
-    ##fat gain
-    fg = (neg - pg * cg[21, ...]) / cg[22, ...]
+    # ##Protein gain
+    # pg = pcg * ebg
+    # ##fat gain
+    # fg = (neg - pg * cg[21, ...]) / cg[22, ...]
+    ## proportion of fat and lean is determined from the EVG based on energy and DM content of muscle and adipose
+    adipose_propn = (evg - (cg[21, ...] * cg[19, ...])) / ((cg[22, ...] * cg[20, ...]) - (cg[21, ...] * cg[19, ...]))
+    fg = ebg * adipose_propn * cg[20, ...]
+    pg = (neg - fg * cg[22, ...]) / cg[21, ...]
     return ebg, evg, pg, fg, level
 
 
