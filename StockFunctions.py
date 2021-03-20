@@ -1040,7 +1040,7 @@ def f_lwc_cs(cg, rc_start, mei, mem, mew, z1f, z2f, kg, mec = 0,
     return ebg, evg, pg, fg, level
 
 
-def f_lwc_cs(cg, rc_start, mei, mem, mew, z1f, z2f, kg, mec = 0,
+def f_lwc_mu(cg, rc_start, mei, mem, mew, z1f, z2f, kg, evg, mec = 0,
               mel = 0, gest_propn = 0, lact_propn = 0):
     ##Level of feeding (maint = 0)
     level = (mei /  (mem + mec * gest_propn + mel * lact_propn + mew)) - 1
@@ -1049,9 +1049,8 @@ def f_lwc_cs(cg, rc_start, mei, mem, mew, z1f, z2f, kg, mec = 0,
     ##Energy Value of gain. If zf2 = 1 then use the formula from the GEPEP trial
     if z2f < 1:
         evg = cg[8, ...] - z1f * (cg[9, ...] - cg[10, ...] * (level - 1)) + z2f * cg[11, ...] * (rc_start - 1)
-    else
-        evg = i_evg #todo this will be an sav over an input from universal.xlsx. Needs to be added at the top of the sheep parameters in Universal
-        # the input will be for each of the genotypes and called "energy value of gain (MJ/kg)"
+    else:
+        evg = evg
     ##Empty bodyweight gain
     ebg = neg / evg
     # ##Protein gain

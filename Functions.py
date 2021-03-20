@@ -426,7 +426,7 @@ def f_update(existing_value, new_value, mask_for_new):
     except AttributeError:
         if new_value=='-':
             new_value = 0
-    #todo using a masked array may allow f_update to handle situation that have a nan value that is masked
+    #todo using a masked array may allow f_update to handle situation that have a nan value that is masked - MRY addition: i couldnt get this method to actually work
     # updated = np.ma.masked_array(existing_value, mask_for_new) + np.ma.maskedarray(new_value, np.logical_not(mask_for_new))  #used 'not' rather than '~' because ~False == -1 rather than True (not the case for np.arrays only if bool is single - as it is for sire in some situations)
     updated = existing_value * np.logical_not(mask_for_new) + new_value * mask_for_new #used not rather than ~ because ~False == -1 not True (not the case for np.arrays only if bool is single - as it is for sire in some situations)
 
@@ -639,7 +639,7 @@ def f_read_exp():
     if  len(exp_data.index.get_level_values(3)) == len(set(exp_data.index.get_level_values(3))):
         pass
     else:
-        raise exc.TrialError('''Exp.xlsx has multiple trials with the same name.''')
+        raise exc.TrialError('''Exp.xl has multiple trials with the same name.''')
 
     return exp_data
 

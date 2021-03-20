@@ -501,15 +501,15 @@ def generator(params,r_vals,ev,plots = False):
     aw_propn_yg0, aw_propn_yg1, aw_propn_yg2, aw_propn_yg3 = sfun.f_c2g(uinp.parameters['i_aw_propn_wean_c2'], uinp.parameters['i_aw_wean_y'])
     bw_propn_yg0, bw_propn_yg1, bw_propn_yg2, bw_propn_yg3 = sfun.f_c2g(uinp.parameters['i_bw_propn_wean_c2'], uinp.parameters['i_bw_wean_y'])
     cfw_propn_yg0, cfw_propn_yg1, cfw_propn_yg2, cfw_propn_yg3 = sfun.f_c2g(uinp.parameters['i_cfw_propn_c2'], uinp.parameters['i_cfw_propn_y'])
+    evg_yg0, evg_yg1, evg_yg2, evg_yg3 = sfun.f_c2g(uinp.parameters['i_evg_c2'], uinp.parameters['i_evg_y'])
     fl_birth_yg0, fl_birth_yg1, fl_birth_yg2, fl_birth_yg3 = sfun.f_c2g(uinp.parameters['i_fl_birth_c2'], uinp.parameters['i_fl_birth_y'])
     fl_shear_yg0, fl_shear_yg1, fl_shear_yg2, fl_shear_yg3 = sfun.f_c2g(uinp.parameters['i_fl_shear_c2'], uinp.parameters['i_fl_shear_y'])
-
-    scan_std_yg0, scan_std_yg1, scan_std_yg2, scan_std_yg3 = sfun.f_c2g(uinp.parameters['i_scan_std_c2'], uinp.parameters['i_scan_std_y']) #scan_std_yg2/3 not used
-    scan_dams_std_yg3 = scan_std_yg1 #offs needs to be the same as dams because scan_std is used to calc starting propn of BTRT which is dependant on dams scanning
+    mw_propn_yg0, mw_propn_yg1, mw_propn_yg2, mw_propn_yg3 = sfun.f_c2g(uinp.parameters['i_mw_propn_wean_c2'], uinp.parameters['i_mw_wean_y'])
     pss_std_yg0, pss_std_yg1, pss_std_yg2, pss_std_yg3 = sfun.f_c2g(uinp.parameters['i_lss_std_c2'], uinp.parameters['i_lss_std_y'])
     pstr_std_yg0, pstr_std_yg1, pstr_std_yg2, pstr_std_yg3 = sfun.f_c2g(uinp.parameters['i_lstr_std_c2'], uinp.parameters['i_lstr_std_y'])
     pstw_std_yg0, pstw_std_yg1, pstw_std_yg2, pstw_std_yg3 = sfun.f_c2g(uinp.parameters['i_lstw_std_c2'], uinp.parameters['i_lstw_std_y'])
-    mw_propn_yg0, mw_propn_yg1, mw_propn_yg2, mw_propn_yg3 = sfun.f_c2g(uinp.parameters['i_mw_propn_wean_c2'], uinp.parameters['i_mw_wean_y'])
+    scan_std_yg0, scan_std_yg1, scan_std_yg2, scan_std_yg3 = sfun.f_c2g(uinp.parameters['i_scan_std_c2'], uinp.parameters['i_scan_std_y']) #scan_std_yg2/3 not used
+    scan_dams_std_yg3 = scan_std_yg1 #offs needs to be the same as dams because scan_std is used to calc starting propn of BTRT which is dependant on dams scanning
     sfd_yg0, sfd_yg1, sfd_yg2, sfd_yg3 = sfun.f_c2g(uinp.parameters['i_sfd_c2'], uinp.parameters['i_sfd_y'])
     sfw_yg0, sfw_yg1, sfw_yg2, sfw_yg3 = sfun.f_c2g(uinp.parameters['i_sfw_c2'], uinp.parameters['i_sfw_y'])
     srw_female_yg0, srw_female_yg1, srw_female_yg2, srw_female_yg3 = sfun.f_c2g(uinp.parameters['i_srw_c2'], uinp.parameters['i_srw_y']) #srw of a female of the given genotype (this is the definition of the inputs)
@@ -2463,6 +2463,51 @@ def generator(params,r_vals,ev,plots = False):
                             r_compare_q0q1q2poffs[eqn_system, eqn_group, 0, p, ...] = temp0
                             r_compare_q0q1q2poffs[eqn_system, eqn_group, 1, p, ...] = temp1
 
+                eqn_system = 1 # Murdoch = 1
+                if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
+                    ###sire
+                    eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
+                        temp0, temp1, temp2, temp3, temp4 = sfun.f_lwc_mu(cg_sire, rc_start_sire, mei_sire, mem_sire, mew_sire
+                                                                , z1f_sire, z2f_sire, kg_sire, evg_yg0)
+                        if eqn_used:
+                            ebg_sire = temp0
+                            evg_sire = temp1
+                            pg_sire = temp2
+                            fg_sire = temp3
+                            level_sire = temp4
+                        if eqn_compare:
+                            r_compare_q0q1q2psire[eqn_system, eqn_group, 0, p, ...] = temp0
+                            r_compare_q0q1q2psire[eqn_system, eqn_group, 1, p, ...] = temp1
+                    ###dams
+                    eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
+                        temp0, temp1, temp2, temp3, temp4 = sfun.f_lwc_mu(cg_dams, rc_start_dams, mei_dams, mem_dams, mew_dams
+                                                                , z1f_dams, z2f_dams, kg_dams, evg_yg1, mec_dams, mel_dams
+                                                                , gest_propn_pa1e1b1nwzida0e0b0xyg1[p], lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
+                        if eqn_used:
+                            ebg_dams = temp0
+                            evg_dams = temp1
+                            pg_dams = temp2
+                            fg_dams = temp3
+                            level_dams = temp4
+                        if eqn_compare:
+                            r_compare_q0q1q2pdams[eqn_system, eqn_group, 0, p, ...] = temp0
+                            r_compare_q0q1q2pdams[eqn_system, eqn_group, 1, p, ...] = temp1
+                    ###offs
+                    eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
+                    if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
+                        temp0, temp1, temp2, temp3, temp4 = sfun.f_lwc_mu(cg_offs, rc_start_offs, mei_offs, mem_offs, mew_offs
+                                                                , z1f_offs, z2f_offs, kg_offs, evg_yg3)
+                        if eqn_used:
+                            ebg_offs = temp0
+                            evg_offs = temp1
+                            pg_offs = temp2
+                            fg_offs = temp3
+                            level_offs = temp4
+                        if eqn_compare:
+                            r_compare_q0q1q2poffs[eqn_system, eqn_group, 0, p, ...] = temp0
+                            r_compare_q0q1q2poffs[eqn_system, eqn_group, 1, p, ...] = temp1
 
 
 
@@ -2750,6 +2795,21 @@ def generator(params,r_vals,ev,plots = False):
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                     temp0, temp1, temp2, temp3, temp4 = sfun.f_lwc_cs(cg_yatf, rc_start_yatf, mei_yatf, mem_yatf, mew_yatf, z1f_yatf, z2f_yatf, kg_yatf)
+                    if eqn_used:
+                        ebg_yatf = temp0
+                        evg_yatf = temp1
+                        pg_yatf = temp2
+                        fg_yatf = temp3
+                        level_yatf = temp4
+                    if eqn_compare:
+                        r_compare_q0q1q2pyatf[eqn_system, eqn_group, 0, p, ...] = temp0
+                        r_compare_q0q1q2pyatf[eqn_system, eqn_group, 1, p, ...] = temp1
+
+            eqn_system = 1 # Mu = 1
+            if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
+                    temp0, temp1, temp2, temp3, temp4 = sfun.f_lwc_mu(cg_yatf, rc_start_yatf, mei_yatf, mem_yatf, mew_yatf, z1f_yatf, z2f_yatf, kg_yatf, evg_yg2)
                     if eqn_used:
                         ebg_yatf = temp0
                         evg_yatf = temp1

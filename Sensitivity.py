@@ -97,12 +97,12 @@ sav['fec_inc'] = '-'    #SA to store FEC report values
 sav['lw_inc'] = '-'     #SA to store LW report values
 sav['ffcfw_inc'] = '-'  #SA to store FFCFW report values
 sav['eqn_compare']      = '-'                  #SA to alter if the different equation systems in the sheep sim are run and compared
-sav['eqn_used_g0_q1p7'] = np.full(uinp.sheep['i_eqn_used_g0_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
-sav['eqn_used_g1_q1p7'] = np.full(uinp.sheep['i_eqn_used_g1_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
-sav['eqn_used_g2_q1p7'] = np.full(uinp.sheep['i_eqn_used_g2_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
-sav['eqn_used_g3_q1p7'] = np.full(uinp.sheep['i_eqn_used_g3_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
-sav['TOL_inc']         = np.full(pinp.sheep_inp['i_mask_i'].shape, '-', dtype=object)   # SA value for the inclusion of each TOL
-sav['g3_included']         = np.full(pinp.sheep_inp['i_g3_inc'].shape, '-', dtype=object) # SA value for the inclusion of each offspring genotype
+sav['eqn_used_g0_q1p7'] = np.full(uinp.sheep_inp['i_eqn_used_g0_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
+sav['eqn_used_g1_q1p7'] = np.full(uinp.sheep_inp['i_eqn_used_g1_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
+sav['eqn_used_g2_q1p7'] = np.full(uinp.sheep_inp['i_eqn_used_g2_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
+sav['eqn_used_g3_q1p7'] = np.full(uinp.sheep_inp['i_eqn_used_g3_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
+sav['TOL_inc']          = np.full(pinp.sheep_inp['i_mask_i'].shape, '-', dtype=object)   # SA value for the inclusion of each TOL
+sav['g3_included']      = np.full(pinp.sheep_inp['i_g3_inc'].shape, '-', dtype=object) # SA value for the inclusion of each offspring genotype
 sav['scan_og1']         = np.full(pinp.sheep_inp['i_scan_og1'].shape, '-', dtype=object) # SA value for the scanning management option
 sav['woolp_mpg_percentile'] = '-'              #sa value for the wool price percentile
 sav['woolp_mpg'] = '-'                     # sa value for wool price at std micron
@@ -112,3 +112,6 @@ sav['salep_percentile'] = '-'                     #Value for percentile for all 
 sav['salep_max'] = '-'                        #max sale price in grid
 sav['nut_mask_dams'] = np.full(pinp.sheep_inp['i_sai_lw_dams_owi'].shape, '-', dtype=object)  #masks the nutrition options available eg high low high - the options selected are available for each starting weight
 sav['nut_mask_offs'] = np.full(pinp.sheep_inp['i_sai_lw_offs_swix'].shape, '-', dtype=object)  #masks the nutrition options available eg high low high - the options selected are available for each starting weight
+
+##parameters
+sav['evg_c2'] = np.full(uinp.parameters_inp['i_evg_c2'].shape, '-', dtype=object)  #SA value for energy value of each c2 genotype.
