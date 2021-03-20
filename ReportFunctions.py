@@ -105,7 +105,7 @@ def f_stack(func, trial_outdated, exp_data_index, trials, **kwargs):
     :param lp_vars: dict - results from pyomo
     :param r_vals: dict - report variable
     :param trial_outdated: series indicating which trials are outdated
-    :param exp_data_index: trial names - in the same order as exp.xlsx
+    :param exp_data_index: trial names - in the same order as exp.xls
     :param trials: trials to return info for
     :param kwargs: args for specified function. This is optional.
     '''
@@ -131,7 +131,7 @@ def f_xy_graph(func0, func1, trial_outdated, exp_data_index, trials, func0_optio
     :param lp_vars: dict - results from pyomo
     :param r_vals: dict - report variable
     :param trial_outdated: series indicating which trials are outdated
-    :param exp_data_index: trial names - in the same order as exp.xlsx
+    :param exp_data_index: trial names - in the same order as exp.xls
     :param trials: trials to return info for
     :param func0_options:
             3: total pasture area

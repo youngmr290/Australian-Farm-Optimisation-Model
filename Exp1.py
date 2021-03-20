@@ -61,14 +61,14 @@ start_time1 = time.time()
 #########################
 ##read in exp and drop all false runs ie runs not being run this time
 exp_data = fun.f_read_exp()
-exp_data = exp_data.sort_index() #had to sort to stop performance warning, this means runs may not be executed in order of exp.xlsx
+exp_data = exp_data.sort_index() #had to sort to stop performance warning, this means runs may not be executed in order of exp.xls
 exp_data1=exp_data.copy() #copy made so that the run col can be added - the original df is used to allocate sa values (would cause an error if run col existed but i can't drop it because it is used to determine if the trial is run)
 
 
 
 ##check if precalcs and pyomo need to be recalculated.
 ##precalcs are rerun if
-##  1. exp.xlsx has changed
+##  1. exp.xls has changed
 ##  2. any python module has been updated
 ##  3. the trial needed to be run last time but the user opted not to run that trial
 

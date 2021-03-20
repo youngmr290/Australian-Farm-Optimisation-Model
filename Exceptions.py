@@ -31,5 +31,5 @@ class AxisError(Error):
 
 
 class Exp(Error):
-    """Raised when user has specified duplicate trials in exp.xlsx"""
+    """Raised when user has specified duplicate trials in exp.xls"""
     pass

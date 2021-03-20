@@ -69,7 +69,7 @@ run_pyomo = True #do you want pyomo to run (default is True but if testing repor
 # except FileNotFoundError:
 #     r_vals={}
 #
-# ##try to load in Previous Exp.xlsx file to dict, if it doesn't exist then create a new dict
+# ##try to load in Previous exp.xls file to dict, if it doesn't exist then create a new dict
 # try:
 #     with open('pkl_exp.pkl', "rb") as f:
 #         prev_exp = pkl.load(f)
@@ -82,13 +82,13 @@ run_pyomo = True #do you want pyomo to run (default is True but if testing repor
 ##read in exp log 
 
 exp_data = fun.f_read_exp()
-exp_data = exp_data.sort_index() #had to sort to stop performance warning, this means runs may not be executed in order of exp.xlsx
+exp_data = exp_data.sort_index() #had to sort to stop performance warning, this means runs may not be executed in order of exp.xls
 exp_data1=exp_data.copy() #copy made so that the run and runpyomo cols can be added - the original df is used to allocate sa values (would cause an error if run col existed but i can't drop it because it is used to determine if the trial is run)
 
 
 ##check if precalcs and pyomo need to be recalculated.
 ##precalcs are rerun if
-##  1. exp.xlsx has changed
+##  1. exp.xls has changed
 ##  2. any python module has been updated
 ##  3. the trial needed to be run last time but the user opted not to run that trial
 
@@ -109,7 +109,7 @@ if __name__ == '__main__':
 total_trials=sum(exp_data.index[row][0] == True for row in range(len(exp_data)))
 print('Number of trials to run: ',total_trials)
 print('Number of full solutions: ',sum((exp_data.index[row][1] == True) and (exp_data.index[row][0] == True) for row in range(len(exp_data))))
-print('exp.xlsx last saved: ',datetime.fromtimestamp(round(os.path.getmtime("exp.xlsx"))))
+print('exp.xls last saved: ',datetime.fromtimestamp(round(os.path.getmtime("exp.xlsm"))))
 start_time1 = time.time()
 run=0 #counter to work out average time per loop
 for row in range(len(exp_data)):

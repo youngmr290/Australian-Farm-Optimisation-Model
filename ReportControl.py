@@ -21,8 +21,8 @@ writer = pd.ExcelWriter('Output/Report.xlsx',engine='xlsxwriter')
 
 ##read in exp log
 exp_data_nosort = fun.f_read_exp()
-exp_data_index = exp_data_nosort.index #need to use this so user can specify the trial number as per exp.xlsx
-exp_data = exp_data_nosort.sort_index() #had to sort to stop performance warning, this means runs may not be executed in order of exp.xlsx
+exp_data_index = exp_data_nosort.index #need to use this so user can specify the trial number as per exp.xls
+exp_data = exp_data_nosort.sort_index() #had to sort to stop performance warning, this means runs may not be executed in order of exp.xls
 
 
 
@@ -38,7 +38,7 @@ exp_data = exp_data_nosort.sort_index() #had to sort to stop performance warning
 
 ##check if precalcs and pyomo need to be recalculated.
 ##precalcs are rerun if
-##  1. exp.xlsx has changed
+##  1. exp.xls has changed
 ##  2. any python module has been updated
 ##  3. the trial needed to be run last time but the user opted not to run that trial
 exp_data = fun.f_run_required(exp_data, check_pyomo=False)

@@ -566,7 +566,7 @@ def f_sa(value, sa, sa_type=0, target=0, value_min=-np.inf,pandas=False, axis=0)
 
 def f_run_required(exp_data1, check_pyomo=True):
     '''
-    here we check if precalcs and pyomo need to be recalculated. this is slightly complicated by the fact that columns and rows can be added to exp.xlsx
+    here we check if precalcs and pyomo need to be recalculated. this is slightly complicated by the fact that columns and rows can be added to exp.xls
     and the fact that a user can opt not to run a trial even if it is out of date so the run requirement must be tracked
     have any sa cols been added or removed, are the values the same, has the py code changed since last run?
 
@@ -607,11 +607,11 @@ def f_run_required(exp_data1, check_pyomo=True):
         prev_exp.loc[run_crash, ('run', '', '', '')] = False
         prev_exp.loc[run_crash, ('runpyomo', '', '', '')] = False
 
-        ##if headers are the same, code is the same and the excel inputs are the same then test if the values in exp.xlsx are the same
+        ##if headers are the same, code is the same and the excel inputs are the same then test if the values in exp.xls are the same
         if (keys_current==keys_hist and os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime(newest)
                                     and os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime("Universal.xlsx")
                                     and os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime("Property.xlsx")):
-            ###check if each exp has the same values in exp.xlsx as last time it was run.
+            ###check if each exp has the same values in exp.xls as last time it was run.
             i3 = prev_exp.reset_index().set_index(keys_hist).index  # have to reset index because the name of the trial is going to be included in the new index so it must first be dropped from current index
             i4 = exp_data1.reset_index().set_index(keys_current).index
             exp_data1.loc[~i4.isin(i3),('run', '', '', '')] = True
