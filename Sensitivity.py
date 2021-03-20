@@ -48,6 +48,12 @@ sam['grn_dmd_senesce_f','annual']       = np.ones((len(per.f_feed_periods()) - 1
 ##livestock
 sam['woolp_mpg'] = 1.0                   # sa multiplier for wool price at std micron
 sam['salep_max'] = 1.0                        #max sale price in grid
+sam['kg'] = 1.0                       #energy efficiency
+
+##stock parameters
+sam['ci_c2'] = np.ones(uinp.parameters_inp['i_ci_c2'].shape,  dtype=np.float64)  #potential intake genotype params
+sam['sfw_c2'] = 1.0                       #std fleece weight genotype params
+sam['sfd_c2'] = 1.0                       #std fleece diameter genotype params
 
 
 ######
@@ -113,5 +119,7 @@ sav['salep_max'] = '-'                        #max sale price in grid
 sav['nut_mask_dams'] = np.full(pinp.sheep_inp['i_sai_lw_dams_owi'].shape, '-', dtype=object)  #masks the nutrition options available eg high low high - the options selected are available for each starting weight
 sav['nut_mask_offs'] = np.full(pinp.sheep_inp['i_sai_lw_offs_swix'].shape, '-', dtype=object)  #masks the nutrition options available eg high low high - the options selected are available for each starting weight
 
-##parameters
+##stock parameters
 sav['evg_c2'] = np.full(uinp.parameters_inp['i_evg_c2'].shape, '-', dtype=object)  #SA value for energy value of each c2 genotype.
+sav['srw_c2'] = np.full(uinp.parameters_inp['i_srw_c2'].shape, '-', dtype=object)  #SA value for srw of each c2 genotype.
+sav['cl0_c2'] = np.full(uinp.parameters_inp['i_cl0_c2'].shape, '-', dtype=object)  #SA value for litter size genotype params.

@@ -2258,7 +2258,7 @@ def generator(params,r_vals,ev,plots = False):
                             = sfun.f_intake(cr_offs, pi_offs, ra_offs, rq_offs,  md_herb_offs, feedsupplyw_pa1e1b1nwzida0e0b0xyg3[p]
                                             , intake_s_offs, pinp.sheep['i_md_supp'], legume_pa1e1b1nwzida0e0b0xyg[p])
 
-
+#todo sam_kg_sire = sen.sam['kg'] then whatever calc you want.
                 ##energy
                 eqn_group = 7
                 eqn_system = 0 # CSIRO = 0
@@ -2272,7 +2272,7 @@ def generator(params,r_vals,ev,plots = False):
                                                                     , md_herb_sire, lgf_eff_pa1e1b1nwzida0e0b0xyg0[p, ...]
                                                                     , dlf_eff_pa1e1b1nwzida0e0b0xyg[p,...], pinp.sheep['i_steepness']
                                                                     , densityw_pa1e1b1nwzida0e0b0xyg0[p], foo_sire, feedsupplyw_pa1e1b1nwzida0e0b0xyg0[p]
-                                                                    , intake_f_sire, dmd_sire)
+                                                                    , intake_f_sire, dmd_sire, sam_kg_sire)
                         ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                         omer_history_sire = temp1
                         if eqn_used:
@@ -2291,7 +2291,7 @@ def generator(params,r_vals,ev,plots = False):
                                                                     , md_herb_dams, lgf_eff_pa1e1b1nwzida0e0b0xyg1[p, ...]
                                                                     , dlf_eff_pa1e1b1nwzida0e0b0xyg[p,...], pinp.sheep['i_steepness']
                                                                     , densityw_pa1e1b1nwzida0e0b0xyg1[p], foo_dams, feedsupplyw_pa1e1b1nwzida0e0b0xyg1[p]
-                                                                    , intake_f_dams, dmd_dams)
+                                                                    , intake_f_dams, dmd_dams, sam_kg_dams)
                         ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                         omer_history_dams = temp1
                         if eqn_used:
@@ -2311,7 +2311,7 @@ def generator(params,r_vals,ev,plots = False):
                                                                     , md_herb_offs, lgf_eff_pa1e1b1nwzida0e0b0xyg3[p, ...]
                                                                     , dlf_eff_pa1e1b1nwzida0e0b0xyg[p,...], pinp.sheep['i_steepness']
                                                                     , densityw_pa1e1b1nwzida0e0b0xyg3[p], foo_offs, feedsupplyw_pa1e1b1nwzida0e0b0xyg3[p]
-                                                                    , intake_f_offs, dmd_offs)
+                                                                    , intake_f_offs, dmd_offs, sam_kg_offs)
                         ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                         omer_history_offs = temp1
                         if eqn_used:
@@ -2755,7 +2755,7 @@ def generator(params,r_vals,ev,plots = False):
                                                                 , lgf_eff_pa1e1b1nwzida0e0b0xyg2[p], dlf_eff_pa1e1b1nwzida0e0b0xyg[p]
                                                                 , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg2[p]
                                                                 , foo_yatf, feedsupplyw_pa1e1b1nwzida0e0b0xyg1[p], intake_f_yatf
-                                                                , dmd_yatf, mei_propn_milk_yatf)  #same feedsupply as dams
+                                                                , dmd_yatf, mei_propn_milk_yatf, sam_kg_yatf)  #same feedsupply as dams
                     ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                     omer_history_yatf = temp1
                     if eqn_used:

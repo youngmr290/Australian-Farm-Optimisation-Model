@@ -199,9 +199,14 @@ def universal_inp_sa():
     sheep['i_salep_percentile'] = fun.f_sa(sheep_inp['i_salep_percentile'], sen.sav['salep_percentile'], 5) #Value for percentile for all sale grids
 
     ##parameters
-    ###SAV
-    ####these have to be converted to float so that the blank column becomes nan rather that None
+    ###SAM - these have to be converted to float so that the blank column becomes nan rather that None
+    parameters['i_ci_c2'] = fun.f_sa(parameters_inp['i_ci_c2'].astype(float),sen.sam['ci_c2'])
+    parameters['i_sfw_c2'] = fun.f_sa(parameters_inp['i_sfw_c2'].astype(float),sen.sam['sfw_c2'])
+    parameters['i_sfd_c2'] = fun.f_sa(parameters_inp['i_sfd_c2'].astype(float),sen.sam['sfd_c2'])
+    ###SAV - these have to be converted to float so that the blank column becomes nan rather that None
     parameters['i_evg_c2'] = fun.f_sa(parameters_inp['i_evg_c2'].astype(float), sen.sav['evg_c2'], 5) #genotype energy value
+    parameters['i_swr_c2'] = fun.f_sa(parameters_inp['i_srw_c2'].astype(float), sen.sav['srw_c2'], 5) #genotype srw
+    parameters['i_cl0_c2'] = fun.f_sa(parameters_inp['i_cl0_c2'].astype(float), sen.sav['cl0_c2'], 5) #genotype litter size params
 
 
 
