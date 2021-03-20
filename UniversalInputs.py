@@ -205,7 +205,7 @@ def universal_inp_sa():
     parameters['i_sfd_c2'] = fun.f_sa(parameters_inp['i_sfd_c2'].astype(float),sen.sam['sfd_c2'])
     ###SAV - these have to be converted to float so that the blank column becomes nan rather that None
     parameters['i_evg_c2'] = fun.f_sa(parameters_inp['i_evg_c2'].astype(float), sen.sav['evg_c2'], 5) #genotype energy value
-    parameters['i_swr_c2'] = fun.f_sa(parameters_inp['i_srw_c2'].astype(float), sen.sav['srw_c2'], 5) #genotype srw
+    parameters['i_srw_c2'] = fun.f_sa(parameters_inp['i_srw_c2'].astype(float), sen.sav['srw_c2'], 5) #genotype srw
     parameters['i_cl0_c2'] = fun.f_sa(parameters_inp['i_cl0_c2'].astype(float), sen.sav['cl0_c2'], 5) #genotype litter size params
 
 

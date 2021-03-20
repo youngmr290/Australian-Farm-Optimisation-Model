@@ -2001,6 +2001,8 @@ def generator(params,r_vals,ev,plots = False):
                 z1f_sire = 1 / (1 + np.exp(+cg_sire[4, ...] * (relsize1_start_sire - cg_sire[5, ...])))
                 ###EVG Size factor (increases at maturity)
                 z2f_sire = np.clip((relsize1_start_sire - cg_sire[6, ...]) / (cg_sire[7, ...] - cg_sire[6, ...]), 0 ,1)
+                ###sensitivity on kg (efficiency of gain) based on z2f and sam['kg'] - the sensitivity is only for adults
+                sam_kg_sire = fun.f_update(1, sen.sam['kg'], z2f_sire == 1)
 
             ##dams
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
@@ -2028,9 +2030,11 @@ def generator(params,r_vals,ev,plots = False):
                 z1f_dams = 1 / (1 + np.exp(+cg_dams[4, ...] * (relsize1_start_dams - cg_dams[5, ...])))
                 ###EVG Size factor (increases at maturity)
                 z2f_dams = np.clip((relsize1_start_dams - cg_dams[6, ...]) / (cg_dams[7, ...] - cg_dams[6, ...]), 0 ,1)
+                ###sensitivity on kg (efficiency of gain) based on z2f and sam['kg'] - the sensitivity is only for adults
+                sam_kg_dams = fun.f_update(1, sen.sam['kg'], z2f_dams == 1)
                 ##sires for mating
-                n_sire_a1e1b1nwzida0e0b0xyg1g0p8 = sfun.f_sire_req(sire_propn_pa1e1b1nwzida0e0b0xyg1g0[p], sire_periods_g0p8, pinp.sheep['i_sire_recovery'],
-                                                                   pinp.sheep['i_startyear'], date_end_pa1e1b1nwzida0e0b0xyg[p], period_is_join_pa1e1b1nwzida0e0b0xyg1[p])
+                n_sire_a1e1b1nwzida0e0b0xyg1g0p8 = sfun.f_sire_req(sire_propn_pa1e1b1nwzida0e0b0xyg1g0[p], sire_periods_g0p8, pinp.sheep['i_sire_recovery']
+                                                                   , pinp.sheep['i_startyear'], date_end_pa1e1b1nwzida0e0b0xyg[p], period_is_join_pa1e1b1nwzida0e0b0xyg1[p])
 
 
         ##offs
@@ -2057,11 +2061,8 @@ def generator(params,r_vals,ev,plots = False):
                 z1f_offs = 1 / (1 + np.exp(+cg_offs[4, ...] * (relsize1_start_offs - cg_offs[5, ...])))
                 ###EVG Size factor (increases at maturity)
                 z2f_offs = np.clip((relsize1_start_offs - cg_offs[6, ...]) / (cg_offs[7, ...] - cg_offs[6, ...]), 0 ,1)
-
-
-
-
-
+                ###sensitivity on kg (efficiency of gain) based on z2f and sam['kg'] - the sensitivity is only for adults
+                sam_kg_offs = fun.f_update(1, sen.sam['kg'], z2f_offs == 1)
 
 
 
@@ -2258,7 +2259,6 @@ def generator(params,r_vals,ev,plots = False):
                             = sfun.f_intake(cr_offs, pi_offs, ra_offs, rq_offs,  md_herb_offs, feedsupplyw_pa1e1b1nwzida0e0b0xyg3[p]
                                             , intake_s_offs, pinp.sheep['i_md_supp'], legume_pa1e1b1nwzida0e0b0xyg[p])
 
-#todo sam_kg_sire = sen.sam['kg'] then whatever calc you want.
                 ##energy
                 eqn_group = 7
                 eqn_system = 0 # CSIRO = 0
@@ -2678,6 +2678,8 @@ def generator(params,r_vals,ev,plots = False):
                 z1f_yatf = 1 / (1 + np.exp(+cg_yatf[4, ...] * (relsize1_start_yatf - cg_yatf[5, ...])))
                 ###EVG Size factor (increases at maturity)
                 z2f_yatf = np.clip((relsize1_start_yatf - cg_yatf[6, ...]) / (cg_yatf[7, ...] - cg_yatf[6, ...]), 0 ,1)
+                ###sensitivity on kg (efficiency of gain) based on z2f and sam['kg'] - the sensitivity is only for adults
+                sam_kg_yatf = fun.f_update(1, sen.sam['kg'], z2f_yatf == 1)
 
 
             ##potential intake - yatf
