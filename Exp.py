@@ -247,6 +247,7 @@ for row in range(len(exp_data)):
                 #             try:
                 #                 print("      ", index, model.rc[v[index]], file=f)
                 #             except: pass
+                #     f.write('Dual\n')   #this can be used in search to find the start of this in the txt file
                 #     for c in model.component_objects(pe.Constraint, active=True):
                 #         f.write("Constraint %s\n" %c)   #  \n makes new line
                 #         for index in c:
@@ -372,7 +373,7 @@ except ZeroDivisionError: pass
         #                cost=ce2,
         #                variables=stage2_vars, #todo these will be different for each season potentially in the actual version.
         #                derived_variables=[])
-        #     g.add_edge("Root","z0",weight=0.5) #todo this will need to be the season proportion inoput
+        #     g.add_edge("Root","z0",weight=0.5) #todo this will need to be the season proportion input
         #
         #     g.add_node("z1",
         #                cost=ce2,

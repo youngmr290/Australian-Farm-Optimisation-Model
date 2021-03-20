@@ -9,7 +9,7 @@ module: builds a df with period definitions
 
 Version Control:
 Version     Date        Person  Change
-   1.1      25Dec19     John    altered the import staements to import as inp. & ci.
+   1.1      25Dec19     John    altered the import statements to import as inp. & ci.
 
 Known problems:
 Fixed   Date    ID by   Problem
@@ -85,7 +85,7 @@ def period_dates(start, length):
     #create empty list
     dates=[]
     perioddate = start
-    #appends start date to lisr
+    #appends start date to list
     dates.append(perioddate)
     #loop used to append the rest of the seeding dates to list, doesnt include last seed period length because i only want start dates of seed periods
     for i in length[:-1]:
@@ -96,7 +96,7 @@ def period_dates(start, length):
 #function to determine the end date of something (ie mach periods)
 #also used in mach sheet
 def period_end_date(start, length):
-    #gets the last date from periods funct then adds the length of last period
+    #gets the last date from periods function then adds the length of last period
     return period_dates(start,length)[-1] + datetime.timedelta(days = length[-1].astype(np.float64))
 #print(period_end_date(wet_seeding_start_date(),ci.crop_input['seed_period_lengths']))
 
@@ -208,7 +208,7 @@ def f_feed_periods(option=0):
     #     else:
     #         fp = pinp.period['i_dsp_fp']
     #         fp = fp.T.set_index(['period'], append=True).T
-    #         ##apply season mask - more complicated because masking levl 0 of multilevel df
+    #         ##apply season mask - more complicated because masking level 0 of multilevel df
     #         fp = fp.loc[:, idx[:, pinp.general['i_mask_z']]]
 
 def f_fp_baseyr():
