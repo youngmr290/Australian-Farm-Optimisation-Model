@@ -84,6 +84,7 @@ def generator(params,r_vals,ev,plots = False):
     e0_pos = sinp.stock['i_e0_pos']
     e1_pos = sinp.stock['i_e1_pos']
     i_pos = sinp.stock['i_i_pos']
+    j0_len = pinp.feedsupply['i_j0_len']
     k2_pos = sinp.stock['i_k2_pos']
     k3_pos = sinp.stock['i_k3_pos']
     k5_pos = sinp.stock['i_k5_pos']
@@ -1699,15 +1700,15 @@ def generator(params,r_vals,ev,plots = False):
 
     ##6)Convert the ‘j0’ axis to an ‘n’ axis
     ###a- create a ‘j0’ by ‘n’ array that is the multipliers that weight each ‘j0’ for that level of ‘n’
-    nut_mult_g0_j0n = np.empty((3,sinp.stock['i_n0_len']))
+    nut_mult_g0_j0n = np.empty((j0_len,sinp.stock['i_n0_len']))
     nut_mult_g0_j0n[0, ...] = 1 - np.abs(sinp.stock['i_nut_spread_n0'])
     nut_mult_g0_j0n[1, ...] = 1-(1 - np.abs(np.minimum(0, sinp.stock['i_nut_spread_n0'])))
     nut_mult_g0_j0n[2, ...] = 1-(1 - np.maximum(0, sinp.stock['i_nut_spread_n0']))
-    nut_mult_g1_j0n = np.empty((3,n_fs_dams))
+    nut_mult_g1_j0n = np.empty((j0_len,n_fs_dams))
     nut_mult_g1_j0n[0, ...] = 1 - np.abs(sinp.stock['i_nut_spread_n1'])
     nut_mult_g1_j0n[1, ...] = 1-(1 - np.abs(np.minimum(0, sinp.stock['i_nut_spread_n1'])))
     nut_mult_g1_j0n[2, ...] = 1-(1 - np.maximum(0, sinp.stock['i_nut_spread_n1']))
-    nut_mult_g3_j0n = np.empty((3,n_fs_offs))
+    nut_mult_g3_j0n = np.empty((j0_len,n_fs_offs))
     nut_mult_g3_j0n[0, ...] = 1 - np.abs(sinp.stock['i_nut_spread_n3'])
     nut_mult_g3_j0n[1, ...] = 1-(1 - np.abs(np.minimum(0, sinp.stock['i_nut_spread_n3'])))
     nut_mult_g3_j0n[2, ...] = 1-(1 - np.maximum(0, sinp.stock['i_nut_spread_n3']))
@@ -1741,7 +1742,7 @@ def generator(params,r_vals,ev,plots = False):
     nut_mult_g0_pk0k1k2j0nwzida0e0b0xyg = np.expand_dims(nut_mult_g0_j0n[na,na,na,na,...], axis = tuple(range(n_pos+1,0))) #expand axis to line up with feedsupply, add axis from g to n and j0 to p
     nut_add_g0_pk0k1k2nwzida0e0b0xyg = np.expand_dims(nut_add_g0_n, axis = (tuple(range(p_pos,n_pos)) + tuple(range(n_pos+1,0)))) #add axis from p to n and n to g
     t_feedsupply_pa1e1b1j0nwzida0e0b0xyg0 = np.expand_dims(t_feedsupply_pa1e1b1j0wzida0e0b0xyg0, axis = n_pos) #add n axis
-    feedsupply_std_pa1e1b1nwzida0e0b0xyg0 = np.sum(t_feedsupply_pa1e1b1j0nwzida0e0b0xyg0 * nut_mult_g0_pk0k1k2j0nwzida0e0b0xyg, axis = n_pos-1 ) + nut_add_g0_pk0k1k2nwzida0e0b0xyg #minus 1 because n axis was added therefore shifting j0 position (it was originally in the same place). Sum across j0 axis and leave just the n axis
+    feedsupply_std_pa1e1b1nwzida0e0b0xyg0 = np.sum(t_feedsupply_pa1e1b1j0nwzida0e0b0xyg0 * nut_mult_g0_pk0k1k2j0nwzida0e0b0xyg, axis = n_pos-1 ) + nut_add_g0_pk0k1k2nwzida0e0b0xyg #sum j axis, minus 1 because n axis was added therefore shifting j0 position (it was originally in the same place). Sum across j0 axis and leave just the n axis
 
     nut_mult_g1_pk0k1k2j0nwzida0e0b0xyg = np.expand_dims(nut_mult_g1_j0n[na,na,na,na,...], axis = tuple(range(n_pos+1,0))) #expand axis to line up with feedsupply, add axis from g to n and j0 to p
     nut_add_g1_pk0k1k2nwzida0e0b0xyg = np.expand_dims(nut_add_g1_n, axis = (tuple(range(p_pos,n_pos)) + tuple(range(n_pos+1,0)))) #add axis from p to n and n to g
