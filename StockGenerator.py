@@ -5032,7 +5032,7 @@ def generator(params,r_vals,ev,plots = False):
     #progeny weaned#
     #################
     '''yatf are first transferred to progeny activity then they are either sold as sucker, transferred to dam or transferred to offs'''
-    ##condense yatf from 81 finishing lw to 10
+    ##condense yatf from total number of finishing lw to 10
     ###reshape array so to stack/combine some axis - this new axis is called k
     ffcfw_range_zia0xg2k = np.moveaxis(ffcfw_start_d_yatf_a1e1b1nwzida0e0b0xyg2, [a1_pos, z_pos, i_pos, x_pos, -1]
                                        , [2,0,1,3,4]).reshape((len_z,len_i,len_a1,len_x,len_g2, -1))
