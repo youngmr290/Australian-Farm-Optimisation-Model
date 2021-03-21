@@ -833,7 +833,7 @@ def stockpyomo_local(params):
     #     outputfile.write(textbuffer.getvalue())
 
 #####################
-##  setup variables # these variables only need initialising once ie sets wont change within and iteration of exp.
+##  setup variables # these variables only need initialising once ie sets wont change within an iteration of exp.
 #####################
 ##infrastructure
 model.v_infrastructure = pe.Var(model.s_infrastructure, bounds = (0,None) , doc='amount of infrastructure required for given animal enterprise (based on number of sheep through infra)')

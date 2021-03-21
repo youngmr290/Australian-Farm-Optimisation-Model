@@ -1698,42 +1698,48 @@ def generator(params,r_vals,ev,plots = False):
     #                                             + t_fs_ageweaned_pj0zida0e0b0xg3 + t_fs_gender_pj0zida0e0b0xg3)
 
 
-    ##6)Convert the ‘j0’ axis to an ‘n’ axis
-    ###a- create a ‘j0’ by ‘n’ array that is the multipliers that weight each ‘j0’ for that level of ‘n’
-    nut_mult_g0_j0n = np.empty((j0_len,sinp.stock['i_n0_len']))
-    nut_mult_g0_j0n[0, ...] = 1 - np.abs(sinp.stock['i_nut_spread_n0'])
-    nut_mult_g0_j0n[1, ...] = 1-(1 - np.abs(np.minimum(0, sinp.stock['i_nut_spread_n0'])))
-    nut_mult_g0_j0n[2, ...] = 1-(1 - np.maximum(0, sinp.stock['i_nut_spread_n0']))
-    nut_mult_g1_j0n = np.empty((j0_len,n_fs_dams))
-    nut_mult_g1_j0n[0, ...] = 1 - np.abs(sinp.stock['i_nut_spread_n1'])
-    nut_mult_g1_j0n[1, ...] = 1-(1 - np.abs(np.minimum(0, sinp.stock['i_nut_spread_n1'])))
-    nut_mult_g1_j0n[2, ...] = 1-(1 - np.maximum(0, sinp.stock['i_nut_spread_n1']))
-    nut_mult_g3_j0n = np.empty((j0_len,n_fs_offs))
-    nut_mult_g3_j0n[0, ...] = 1 - np.abs(sinp.stock['i_nut_spread_n3'])
-    nut_mult_g3_j0n[1, ...] = 1-(1 - np.abs(np.minimum(0, sinp.stock['i_nut_spread_n3'])))
-    nut_mult_g3_j0n[2, ...] = 1-(1 - np.maximum(0, sinp.stock['i_nut_spread_n3']))
-
-    ###b- create add array if there is a confinement or feedlot pattern (i_nut_spread_n >=3)
+    ##6)Convert the ‘j0’ axis to an ‘n’ axis using the nut_spread inputs.
+    ### the nut_spread inputs are the proportion of std and min or max feed supply.
+    ### Unless nut_spread is greater than 3 in which case the value becomes the actual feed supply
+    ###convert  nut_spread inputs to numpy array
     if isinstance(sinp.stock['i_nut_spread_n0'], np.ndarray):
         nut_spread_g0_n = sinp.stock['i_nut_spread_n0']
     else:
         nut_spread_g0_n = np.array([sinp.stock['i_nut_spread_n0']])
-    nut_add_g0_n = np.zeros_like(nut_spread_g0_n)
-    nut_add_g0_n[nut_spread_g0_n >=3] = nut_spread_g0_n[nut_spread_g0_n >=3]
-    nut_mult_g0_j0n[:,nut_spread_g0_n >=3] = 0 #if nut_add exists then nut_mult=0
 
     if isinstance(sinp.stock['i_nut_spread_n1'], np.ndarray): #so it can handle 1 nut pattern
         nut_spread_g1_n = sinp.stock['i_nut_spread_n1']
     else:
         nut_spread_g1_n = np.array([sinp.stock['i_nut_spread_n1']])
-    nut_add_g1_n = np.zeros_like(nut_spread_g1_n)
-    nut_add_g1_n[nut_spread_g1_n >=3] = nut_spread_g1_n[nut_spread_g1_n >=3]
-    nut_mult_g1_j0n[:,nut_spread_g1_n >=3] = 0 #if nut_add exists then nut_mult=0
 
     if isinstance(sinp.stock['i_nut_spread_n3'], np.ndarray): #so it can handle 1 nut pattern
         nut_spread_g3_n = sinp.stock['i_nut_spread_n3']
     else:
         nut_spread_g3_n = np.array([sinp.stock['i_nut_spread_n3']])
+
+    ###a- create a ‘j0’ by ‘n’ array that is the multipliers that weight each ‘j0’ for that level of ‘n’
+    nut_mult_g0_j0n = np.empty((j0_len,sinp.stock['i_n0_len']))
+    nut_mult_g0_j0n[0, ...] = 1 - np.abs(nut_spread_g0_n)
+    nut_mult_g0_j0n[1, ...] = np.abs(np.minimum(0, nut_spread_g0_n))
+    nut_mult_g0_j0n[2, ...] = np.abs(np.maximum(0, nut_spread_g0_n))
+    nut_mult_g1_j0n = np.empty((j0_len,n_fs_dams))
+    nut_mult_g1_j0n[0, ...] = 1 - np.abs(nut_spread_g1_n)
+    nut_mult_g1_j0n[1, ...] = np.abs(np.minimum(0, nut_spread_g1_n))
+    nut_mult_g1_j0n[2, ...] = np.abs(np.maximum(0, nut_spread_g1_n))
+    nut_mult_g3_j0n = np.empty((j0_len,n_fs_offs))
+    nut_mult_g3_j0n[0, ...] = 1 - np.abs(nut_spread_g3_n)
+    nut_mult_g3_j0n[1, ...] = np.abs(np.minimum(0, nut_spread_g3_n))
+    nut_mult_g3_j0n[2, ...] = np.abs(np.maximum(0, nut_spread_g3_n))
+
+    ###b- create add array if there is a confinement or feedlot pattern (i_nut_spread_n >=3)
+    nut_add_g0_n = np.zeros_like(nut_spread_g0_n)
+    nut_add_g0_n[nut_spread_g0_n >=3] = nut_spread_g0_n[nut_spread_g0_n >=3]
+    nut_mult_g0_j0n[:,nut_spread_g0_n >=3] = 0 #if nut_add exists then nut_mult=0
+
+    nut_add_g1_n = np.zeros_like(nut_spread_g1_n)
+    nut_add_g1_n[nut_spread_g1_n >=3] = nut_spread_g1_n[nut_spread_g1_n >=3]
+    nut_mult_g1_j0n[:,nut_spread_g1_n >=3] = 0 #if nut_add exists then nut_mult=0
+
     nut_add_g3_n = np.zeros_like(nut_spread_g3_n)
     nut_add_g3_n[nut_spread_g3_n >=3] = nut_spread_g3_n[nut_spread_g3_n >=3]
     nut_mult_g3_j0n[:,nut_spread_g3_n >=3] = 0 #if nut_add exists then nut_mult=0
@@ -1742,34 +1748,42 @@ def generator(params,r_vals,ev,plots = False):
     nut_mult_g0_pk0k1k2j0nwzida0e0b0xyg = np.expand_dims(nut_mult_g0_j0n[na,na,na,na,...], axis = tuple(range(n_pos+1,0))) #expand axis to line up with feedsupply, add axis from g to n and j0 to p
     nut_add_g0_pk0k1k2nwzida0e0b0xyg = np.expand_dims(nut_add_g0_n, axis = (tuple(range(p_pos,n_pos)) + tuple(range(n_pos+1,0)))) #add axis from p to n and n to g
     t_feedsupply_pa1e1b1j0nwzida0e0b0xyg0 = np.expand_dims(t_feedsupply_pa1e1b1j0wzida0e0b0xyg0, axis = n_pos) #add n axis
-    feedsupply_std_pa1e1b1nwzida0e0b0xyg0 = np.sum(t_feedsupply_pa1e1b1j0nwzida0e0b0xyg0 * nut_mult_g0_pk0k1k2j0nwzida0e0b0xyg, axis = n_pos-1 ) + nut_add_g0_pk0k1k2nwzida0e0b0xyg #sum j axis, minus 1 because n axis was added therefore shifting j0 position (it was originally in the same place). Sum across j0 axis and leave just the n axis
+    feedsupply_std_pa1e1b1nwzida0e0b0xyg0 = np.sum(t_feedsupply_pa1e1b1j0nwzida0e0b0xyg0 * nut_mult_g0_pk0k1k2j0nwzida0e0b0xyg, axis = n_pos-1 ) #sum j axis, minus 1 because n axis was added therefore shifting j0 position (it was originally in the same place). Sum across j0 axis and leave just the n axis
 
     nut_mult_g1_pk0k1k2j0nwzida0e0b0xyg = np.expand_dims(nut_mult_g1_j0n[na,na,na,na,...], axis = tuple(range(n_pos+1,0))) #expand axis to line up with feedsupply, add axis from g to n and j0 to p
     nut_add_g1_pk0k1k2nwzida0e0b0xyg = np.expand_dims(nut_add_g1_n, axis = (tuple(range(p_pos,n_pos)) + tuple(range(n_pos+1,0)))) #add axis from p to n and n to g
     t_feedsupply_pa1e1b1j0nwzida0e0b0xyg1 = np.expand_dims(t_feedsupply_pa1e1b1j0wzida0e0b0xyg1, axis = n_pos) #add n axis
-    feedsupply_std_pa1e1b1nwzida0e0b0xyg1 = np.sum(t_feedsupply_pa1e1b1j0nwzida0e0b0xyg1 * nut_mult_g1_pk0k1k2j0nwzida0e0b0xyg, axis = n_pos-1 ) + nut_add_g1_pk0k1k2nwzida0e0b0xyg #minus 1 because n axis was added therefore shifting j0 position (it was originally in the same place). Sum across j0 axis and leave just the n axis
+    feedsupply_std_pa1e1b1nwzida0e0b0xyg1 = np.sum(t_feedsupply_pa1e1b1j0nwzida0e0b0xyg1 * nut_mult_g1_pk0k1k2j0nwzida0e0b0xyg, axis = n_pos-1 ) #minus 1 because n axis was added therefore shifting j0 position (it was originally in the place of n). Sum across j0 axis leaving the n axis
 
     nut_mult_g3_pk0k1k2j0nwzida0e0b0xyg = np.expand_dims(nut_mult_g3_j0n[na,na,na,na,...], axis = tuple(range(n_pos+1,0))) #expand axis to line up with feedsupply, add axis from g to n and j0 to p
     nut_add_g3_pk0k1k2nwzida0e0b0xyg = np.expand_dims(nut_add_g3_n, axis = (tuple(range(p_pos,n_pos)) + tuple(range(n_pos+1,0)))) #add axis from p to n and n to g
     t_feedsupply_pa1e1b1j0nwzida0e0b0xyg3 = np.expand_dims(t_feedsupply_pa1e1b1j0wzida0e0b0xyg3, axis = n_pos) #add n axis
-    feedsupply_std_pa1e1b1nwzida0e0b0xyg3 = np.sum(t_feedsupply_pa1e1b1j0nwzida0e0b0xyg3 * nut_mult_g3_pk0k1k2j0nwzida0e0b0xyg, axis = n_pos-1 ) + nut_add_g3_pk0k1k2nwzida0e0b0xyg #minus 1 because n axis was added therefore shifting j0 position (it was originally in the same place). Sum across j0 axis and leave just the n axis
+    feedsupply_std_pa1e1b1nwzida0e0b0xyg3 = np.sum(t_feedsupply_pa1e1b1j0nwzida0e0b0xyg3 * nut_mult_g3_pk0k1k2j0nwzida0e0b0xyg, axis = n_pos-1 ) #minus 1 because n axis was added therefore shifting j0 position (it was originally in the same place). Sum across j0 axis and leave just the n axis
+
+    ###Ensure that feed supplies generated by nut_spread inputs < 3 are less than 3
+    feedsupply_std_pa1e1b1nwzida0e0b0xyg0 = np.minimum(2.99, feedsupply_std_pa1e1b1nwzida0e0b0xyg0)
+    feedsupply_std_pa1e1b1nwzida0e0b0xyg1 = np.minimum(2.99, feedsupply_std_pa1e1b1nwzida0e0b0xyg1)
+    feedsupply_std_pa1e1b1nwzida0e0b0xyg3 = np.minimum(2.99, feedsupply_std_pa1e1b1nwzida0e0b0xyg3)
+
+    ### for nut_spread inputs >= 3 set the feed supply to the value of the input (nut_add)
+    feedsupply_std_pa1e1b1nwzida0e0b0xyg0 = feedsupply_std_pa1e1b1nwzida0e0b0xyg0 + nut_add_g0_pk0k1k2nwzida0e0b0xyg
+    feedsupply_std_pa1e1b1nwzida0e0b0xyg1 = feedsupply_std_pa1e1b1nwzida0e0b0xyg1 + nut_add_g1_pk0k1k2nwzida0e0b0xyg
+    feedsupply_std_pa1e1b1nwzida0e0b0xyg3 = feedsupply_std_pa1e1b1nwzida0e0b0xyg3 + nut_add_g3_pk0k1k2nwzida0e0b0xyg
 
     ##7)Ensure that no feed supplies are outside the range 0 to 4
-    feedsupply_std_pa1e1b1nwzida0e0b0xyg0 = np.maximum(0, feedsupply_std_pa1e1b1nwzida0e0b0xyg0)
-    feedsupply_std_pa1e1b1nwzida0e0b0xyg0 = np.minimum(4, feedsupply_std_pa1e1b1nwzida0e0b0xyg0)
-    feedsupply_std_pa1e1b1nwzida0e0b0xyg1 = np.maximum(0, feedsupply_std_pa1e1b1nwzida0e0b0xyg1)
-    feedsupply_std_pa1e1b1nwzida0e0b0xyg1 = np.minimum(4, feedsupply_std_pa1e1b1nwzida0e0b0xyg1)
-    feedsupply_std_pa1e1b1nwzida0e0b0xyg3 = np.maximum(0, feedsupply_std_pa1e1b1nwzida0e0b0xyg3)
-    feedsupply_std_pa1e1b1nwzida0e0b0xyg3 = np.minimum(4, feedsupply_std_pa1e1b1nwzida0e0b0xyg3)
+    feedsupply_std_pa1e1b1nwzida0e0b0xyg0 = np.clip(feedsupply_std_pa1e1b1nwzida0e0b0xyg0, 0, 4)
+    feedsupply_std_pa1e1b1nwzida0e0b0xyg1 = np.clip(feedsupply_std_pa1e1b1nwzida0e0b0xyg1, 0, 4)
+    feedsupply_std_pa1e1b1nwzida0e0b0xyg3 = np.clip(feedsupply_std_pa1e1b1nwzida0e0b0xyg3, 0, 4)
 
 
     #####################################
     ##expand feedsupply for all w slices#  see google doc for more info
     #####################################
-    ###apply association - give feedsupply singleton n axis and 81 slices in w axis
+    ###convert feedsupply from having an active n axis to active w axis by applying association
+    #### each slice of w has a combination of nutrition levels during the nutrition cycle and that is specified in the association a_n_pw
     feedsupplyw_pa1e1b1nwzida0e0b0xyg0 = feedsupply_std_pa1e1b1nwzida0e0b0xyg0 #^only one n slice so doesnt need following code yet: np.take_along_axis(feedsupply_std_pa1e1b1nwzida0e0b0xyg0,a_n_pa1e1b1nwzida0e0b0xyg0,axis=n_pos)
-    feedsupplyw_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(feedsupply_std_pa1e1b1nwzida0e0b0xyg1,a_n_pa1e1b1nwzida0e0b0xyg1,axis=n_pos)
-    feedsupplyw_pa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(feedsupply_std_pa1e1b1nwzida0e0b0xyg3,a_n_pa1e1b1nwzida0e0b0xyg3,axis=n_pos)
+    feedsupplyw_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(feedsupply_std_pa1e1b1nwzida0e0b0xyg1, a_n_pa1e1b1nwzida0e0b0xyg1, axis=n_pos)
+    feedsupplyw_pa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(feedsupply_std_pa1e1b1nwzida0e0b0xyg3, a_n_pa1e1b1nwzida0e0b0xyg3, axis=n_pos)
 
 
 
