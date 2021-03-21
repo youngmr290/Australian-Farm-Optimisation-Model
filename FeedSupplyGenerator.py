@@ -611,13 +611,15 @@ def period_generator():
     ##date joined (when the rams go in)
     date_joined_oa1e1b1nwzida0e0b0xyg1 = date_born1st_oa1e1b1nwzida0e0b0xyg2 - cp_dams[1,...,0:1,:].astype('timedelta64[D]') #take slice 0 from y axis because cp1 is not affected by genetic merit
     ##expand feed periods over all the years of the sim so that an association between sim period can be made.
-#    feedperiods_p6z = per.f_feed_periods().astype('datetime64[D]')[:-1] #remove last date because that is the end date of the last period (not required)
-#    feedperiods_p6z = feedperiods_p6z + np.timedelta64(365,'D') * ((date_start_p[0].astype('datetime64[Y]').astype(int) + 1970 -1) - (feedperiods_p6z[0].astype('datetime64[Y]').astype(int) + 1970)) #this is to make sure the first sim period date is greater than the first feed period date.
-#    feedperiods_p6z = (feedperiods_p6z  + (np.arange(np.ceil(sim_years +1)) * np.timedelta64(365,'D') )[...,na,na]).reshape((-1, len_z)) #expand then ravel to return 1d array of the feed period dates expanded the length of the sim. +1 because feed periods start and finish mid yr so add one to ensure they go to the end of the sim.
+    feedperiods_p6z = per.f_feed_periods().astype('datetime64[D]')[:-1] #remove last date because that is the end date of the last period (not required)
+    feedperiods_p6z = feedperiods_p6z + np.timedelta64(365,'D') * ((date_start_p[0].astype('datetime64[Y]').astype(int) + 1970 -1) - (feedperiods_p6z[0].astype('datetime64[Y]').astype(int) + 1970)) #this is to make sure the first sim period date is greater than the first feed period date.
+    feedperiods_p6z = (feedperiods_p6z  + (np.arange(np.ceil(sim_years +1)) * np.timedelta64(365,'D') )[...,na,na]).reshape((-1, len_z)) #expand then ravel to return 1d array of the feed period dates expanded the length of the sim. +1 because feed periods start and finish mid yr so add one to ensure they go to the end of the sim.
+    feedperiods_idx_p6z = sfun.f_next_prev_association(date_start_p, feedperiods_p6z - np.timedelta64(step/2,'D'), 0, 'left') #get the nearest generator period (hence minus half a period
+    feedperiods_p6z = date_start_p[feedperiods_idx_p6z]
 
 
     ###################################
-    # Feed variation period calcs dams#  ^note if type stuff is used then might need to add a special fvp that is the start of the simulation ie 1/1/19
+    # Feed variation period calcs dams#
     ###################################
     ##fvp/dvp types
 #    season_vtype1 = sinp.stock['i_fvp_type1'][0]
@@ -801,8 +803,25 @@ def period_generator():
     fvp_date_start_fa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(fvp_start_fa1e1b1nwzida0e0b0xyg3, ind, axis=0)
 #    fvp_type_fa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(fvp_type_fa1e1b1nwzida0e0b0xyg3, ind, axis=0)
 
+    ############################
+    ### associations           #
+    ############################
+    ### Aim is to create an association array that points from period to opportunity
+    ## The date_p array will be the start date for each period.
+    ## A pointer (association) is required that points from the period to the previous or next lambing opportunity
+    ## The Lambing opportunity is defined by the joining_date array (which has an 'o' axis)
+    ## The previous lambing opportunity is the latest joining date that is less than the date at the end of the period (ie previous/current opportunity)
+    ## # ('end of the period' so that if joining occurs during the period it is the previous
+    ## The next lambing opportunity is the earliest joining date that is greater than or equal to the end date at the end of the period
+    ##prev is just next - 1
+
+    ##Feed period for each generator period
+    a_p6_pz = np.apply_along_axis(sfun.f_next_prev_association, 0, feedperiods_p6z, date_end_p, 1,'right') % len_p6 #% 10 required to convert association back to only the number of feed periods
+#    a_p6_pa1e1b1nwzida0e0b0xyg = fun.f_expand(a_p6_pz,z_pos,left_pos2=p_pos,right_pos2=z_pos)
+
+
     ##feed variation period
 #    a_fvp_pa1e1b1nwzida0e0b0xyg1 = np.apply_along_axis(sfun.f_next_prev_association, 0, fvp_date_start_fa1e1b1nwzida0e0b0xyg1, date_end_p, 1,'right')
 #    a_fvp_pa1e1b1nwzida0e0b0xyg3 = np.apply_along_axis(sfun.f_next_prev_association, 0, fvp_date_start_fa1e1b1nwzida0e0b0xyg3, offs_date_end_p, 1,'right')
 
-    return date_start_p, fvp_date_start_fa1e1b1nwzida0e0b0xyg1, fvp_date_start_fa1e1b1nwzida0e0b0xyg3
+    return date_start_p, fvp_date_start_fa1e1b1nwzida0e0b0xyg1, fvp_date_start_fa1e1b1nwzida0e0b0xyg3, a_p6_pz

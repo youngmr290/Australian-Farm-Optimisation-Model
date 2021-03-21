@@ -13,6 +13,11 @@ import numpy as np
 import FeedSupplyGenerator as fgen
 #import Functions as fun
 
+print("")
+print("It is good to run FeedTest with a temporary Structural.xls with maximum age set to 9.5year")
+print("This generates the dams & offspring periods for the full width of the FeedSupply spreadsheet")
+print("")
+
 na = np.newaxis
 
 ## Create a Pandas Excel writer using XlsxWriter as the engine. used to write to multiple sheets in excel
@@ -42,7 +47,7 @@ temp = np.concatenate((feedsupply_f[na,:],r_fec_p6f), axis=0)
 data_df1 = pd.DataFrame(temp)
 
 ## call the period generator that returns the FEC for each feedsupply between 0 and 3
-date_start_p, fvp_fdams, fvp_foffs = fgen.period_generator()
+date_start_p, fvp_fdams, fvp_foffs, a_p6_pz = fgen.period_generator()
 ## reduce dimension of the fvp arrays to 2 dimensions
 # todo this needs to be altered if shape of the inputs is altered
 ### common for dams & offs
@@ -56,16 +61,19 @@ e1_dams_slc = 0
 d_offs_slc = 2
 x_offs_slc = 0
 
+## convert each to a dataframe for saving to Excel
+data_df2 = pd.DataFrame(date_start_p)
+data_df3 = pd.DataFrame(a_p6_pz)
+
+### alter the axes that are added to the dataframe based axes that will vary. Also change the columns in the writer below
 fvp_fdams = fvp_fdams[:, :, e1_dams_slc, :, :, :, z_slc, i_slc, :, :, :, :, :, :, :]
 fvp_foffs = fvp_foffs[:, :, :, :, :, :, z_slc, i_slc, d_offs_slc, :, :, :, x_offs_slc, :, :]
 
-## convert each to a dataframe for saving to Excel
-data_df2 = pd.DataFrame(date_start_p)
-### alter the axes that are added to the dataframe based axes that will vary. Also change the columns in the writer below
 ### Use squeeze to highlight (with an error) that the number of active axes has changed.
+data_df4 = pd.DataFrame(np.squeeze(fvp_fdams).astype('datetime64[ns]'))  # conversion to dataframe only works with this datatype
+data_df5 = pd.DataFrame(np.squeeze(fvp_foffs).astype('datetime64[ns]'))
 
-data_df3 = pd.DataFrame(np.squeeze(fvp_fdams).astype('datetime64[ns]'))  # conversion to dataframe only works with this datatype
-data_df4 = pd.DataFrame(np.squeeze(fvp_foffs).astype('datetime64[ns]'))
+
 
 
 ## write the data and the polynomials to Excel (overwriting file r_fec.xlsx)
@@ -76,13 +84,17 @@ data_df1.to_excel(writer, 'FEC', index=False, header=False, startrow=0, startcol
 first_col_df2 = 0
 data_df2.to_excel(writer, 'Periods', index=True, header=False, startrow=1, startcol=first_col_df2)
 
-##The FVP number for the dams
+##The feed periods dataframe
 first_col_df3 = 3
 data_df3.to_excel(writer, 'Periods', index=False, header=False, startrow=1, startcol=first_col_df3)
 
-##The FVP number for the dams
-first_col_df4 = 6
+##The FVP dates for the dams
+first_col_df4 = 5
 data_df4.to_excel(writer, 'Periods', index=False, header=False, startrow=1, startcol=first_col_df4)
+
+##The FVP dates for the offs
+first_col_df5 = 8
+data_df5.to_excel(writer, 'Periods', index=False, header=False, startrow=1, startcol=first_col_df5)
 
 ##Write column headers with format   todo Work out how to add a column heading to each df
 worksheet = writer.sheets['Periods']
@@ -95,6 +107,9 @@ for col_num, value in enumerate(data_df3.columns.values):
 ###df4
 for col_num, value in enumerate(data_df4.columns.values):
     worksheet.write(0, first_col_df4 + col_num, value, format_header)
+###df5
+for col_num, value in enumerate(data_df5.columns.values):
+    worksheet.write(0, first_col_df5 + col_num, value, format_header)
 
 
 # # set some values required for the polynomials
