@@ -3252,7 +3252,9 @@ def generator(params,r_vals,ev,plots = False):
                     ###if period is mating back date the end number after mating to all the periods since prejoining
                     o_numbers_end_pdams = fun.f_update(o_numbers_end_pdams, pp_numbers_end_dams.astype(dtype), (period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p] * between_prejoinnow))
                     ###scale end numbers (to account for mortality) before back dating to the start (only start numbers need scaling because end numbers don't need to be correct at the start of the dvp)
-                    t_scaled_numbers = pp_numbers_end_dams * (np.sum(t_numbers_start_prejoin, axis=(e1_pos,b1_pos)) / np.sum(pp_numbers_end_dams, axis=(e1_pos,b1_pos)))
+                    t_scaled_numbers = np.maximum(pp_numbers_end_dams,
+                                                  pp_numbers_end_dams * (np.sum(t_numbers_start_prejoin, axis=(e1_pos,b1_pos), keepdims=True)
+                                                                            / np.sum(pp_numbers_end_dams, axis=(e1_pos,b1_pos), keepdims=True)))
                     o_numbers_start_pdams = fun.f_update(o_numbers_start_pdams, t_scaled_numbers.astype(dtype), (period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p] * between_prejoinnow))
                 o_ffcfw_pdams[p] = ffcfw_dams
                 o_ffcfw_season_pdams[p] = sfun.f_season_wa(numbers_end_dams, ffcfw_dams, season_tup, idx_min_lw_z_dams, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1])
