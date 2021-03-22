@@ -111,6 +111,7 @@ sav['eqn_used_g2_q1p7'] = np.full(uinp.sheep_inp['i_eqn_used_g2_q1p7'].shape, '-
 sav['eqn_used_g3_q1p7'] = np.full(uinp.sheep_inp['i_eqn_used_g3_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
 sav['TOL_inc']          = np.full(pinp.sheep_inp['i_mask_i'].shape, '-', dtype=object)   # SA value for the inclusion of each TOL
 sav['g3_included']      = np.full(pinp.sheep_inp['i_g3_inc'].shape, '-', dtype=object) # SA value for the inclusion of each offspring genotype
+sav['genotype']         = np.full(pinp.sheep_inp['a_c2_c0'].shape, '-', dtype=object) # this is the selection of the genotypes of the sires for B, M & T
 sav['scan_og1']         = np.full(pinp.sheep_inp['i_scan_og1'].shape, '-', dtype=object) # SA value for the scanning management option
 sav['woolp_mpg_percentile'] = '-'              #sa value for the wool price percentile
 sav['woolp_mpg'] = '-'                     # sa value for wool price at std micron
