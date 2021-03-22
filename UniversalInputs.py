@@ -185,6 +185,10 @@ def universal_inp_sa():
     finance['minroe_dsp'] = fun.f_sa(finance_inp['minroe_dsp'], sen.sav['minroe'], 5)  #value for minroe (same sav as above)
 
     ##sheep
+    ###SAM
+    sheep['i_sam_LTW_dams'] = fun.f_sa(sheep_inp['i_sam_LTW_dams'],sen.sam['LTW_dams'])
+    sheep['i_sam_LTW_offs'] = fun.f_sa(sheep_inp['i_sam_LTW_offs'],sen.sam['LTW_offs'])
+
     ###SAT
     sheep['i_salep_weight_scalar_s7s5s6'] = fun.f_sa(sheep_inp['i_salep_weight_scalar_s7s5s6'], sen.sat['salep_weight_scalar'], 3, 1, 0) #Scalar for LW impact across grid 1 (sat adjusted)
     sheep['i_salep_score_scalar_s7s5s6'] = fun.f_sa(sheep_inp['i_salep_score_scalar_s7s5s6'], sen.sat['salep_score_scalar'], 3, 1, 0) #Scalar for score impact across the grid (sat adjusted)
