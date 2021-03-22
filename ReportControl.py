@@ -54,6 +54,7 @@ run_cfw_dams        = True #table of CFW
 run_lw_dams         = False #table of liveweight at the start of the DVP
 run_ffcfw_dams      = True # table of fleece free conceptus free weights
 run_fec_dams        = True #Feed energy concentration for the dams in each generator period
+run_ffcfw_prog        = True #ffcfw of prog
 run_fec_offs        = True #Feed energy concentration for the offspring in each generator period
 run_weanper         = True #table of weaning percent
 run_scanper         = True #table of scanning percent
@@ -61,6 +62,7 @@ run_lamb_survival   = True #table of lamb survival
 run_daily_mei_dams  = True #table of ME intake
 run_daily_pi_dams   = True #table of potential intake
 run_numbers_dams    = True #table of numbers of Dams in each DVP
+run_numbers_prog    = True #table of numbers of prog
 run_numbers_offs    = True #table of numbers of Offspring in each DVP
 run_dse             = True #table of DSE
 run_grnfoo          = True #table of green FOO at end of each feed period
@@ -254,6 +256,23 @@ if run_fec_dams:
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
     f_df2xl(writer, fec_dams, 'fec_dams', option=1)
 
+if run_ffcfw_prog:
+    func = rep.f_stock_pasture_summary
+    type = 'stock'
+    prod = 'ffcfw_prog_zia0xg2w9'
+    weights = 1
+    keys = 'prog_keys_zia0xg2w9'
+    arith = 0
+    arith_axis = []  #reporting p(3) & b1(6)
+    index = [5]
+    cols = [0,1,2,3,4]
+    axis_slice = {}
+    # axis_slice[0] = [0, 2, 1]
+    ffcfw_prog = rep.f_stack(func, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights
+                             , keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+    f_df2xl(writer, ffcfw_prog, 'ffcfw_prog', option=1)
+
+
 if run_fec_offs:
     func = rep.f_stock_pasture_summary
    # trials = [34]
@@ -371,6 +390,22 @@ if run_numbers_dams:
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols,
                            axis_slice=axis_slice)
     f_df2xl(writer, numbers_dams, 'numbers_dams', option=1)
+
+if run_numbers_prog:
+    func = rep.f_stock_pasture_summary
+    type = 'stock'
+    weights = 'prog_numbers_k5twzida0xg2'
+    keys = 'prog_keys_k5twzida0xg2'
+    arith = 2
+    arith_axis = [3,4,5,6,7,8]
+    index =[2]
+    cols =[0,1]
+    axis_slice = {}
+    # axis_slice[0] = [0, 2, 1]
+    numbers_prog = rep.f_stack(func, trial_outdated, exp_data_index, trials, type=type, weights=weights,
+                           keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols,
+                           axis_slice=axis_slice)
+    f_df2xl(writer, numbers_prog, 'numbers_prog', option=1)
 
 if run_numbers_offs:
     func = rep.f_stock_pasture_summary

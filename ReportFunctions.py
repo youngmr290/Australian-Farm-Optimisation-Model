@@ -722,7 +722,7 @@ def f_overhead_summary(r_vals):
     exp_fix_c = r_vals['fin']['overheads']
     return exp_fix_c
 
-
+#todo this should probably report z as an index rather than summing it.
 def f_dse(lp_vars, r_vals, **kwargs):
     '''
     DSE calculation
@@ -742,7 +742,7 @@ def f_dse(lp_vars, r_vals, **kwargs):
 
     if method == 0:
         ##sire
-        dse_sire = stock_vars['sire_numbers_zg0'] * r_vals['stock']['dsenw_p6zg0']
+        dse_sire = fun.f_reduce_skipfew(np.sum, stock_vars['sire_numbers_zg0'] * r_vals['stock']['dsenw_p6zg0'], preserveAxis=0)  # sum all axis except p6
         ##dams
         dse_dams = fun.f_reduce_skipfew(np.sum, stock_vars['dams_numbers_k2tvanwziy1g1'][:, na, ...]
                                         * r_vals['stock']['dsenw_k2p6tva1nwziyg1'], preserveAxis=1)  # sum all axis except p6
@@ -751,7 +751,7 @@ def f_dse(lp_vars, r_vals, **kwargs):
             'dsenw_k3k5p6tvnwziaxyg3'], preserveAxis=2)  # sum all axis except p6
     else:
         ##sire
-        dse_sire = stock_vars['sire_numbers_zg0'] * r_vals['stock']['dsemj_p6zg0']
+        dse_sire = fun.f_reduce_skipfew(np.sum, stock_vars['sire_numbers_zg0'] * r_vals['stock']['dsemj_p6zg0'], preserveAxis=0)  # sum all axis except p6
         ##dams
         dse_dams = fun.f_reduce_skipfew(np.sum, stock_vars['dams_numbers_k2tvanwziy1g1'][:, na, ...] * r_vals['stock'][
             'dsemj_k2p6tva1nwziyg1'], preserveAxis=1)  # sum all axis except p6

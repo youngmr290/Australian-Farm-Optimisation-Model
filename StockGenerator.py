@@ -625,8 +625,8 @@ def generator(params,r_vals,ev,plots = False):
     density_p6a1e1b1nwzida0e0b0xyg = pinp.f_seasonal_inp(density_p6a1e1b1nwzida0e0b0xyg,numpy=True,axis=z_pos).astype(
         int)
     ##nutrition adjustment for expected stocking density
-    density_nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_density_n1'][0:sinp.stock['i_n1_len']+1],n_pos) # cut to the correct length based on number of nutrition options (i_len_n structural input)
-    density_nwzida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_density_n3'][0:sinp.stock['i_n3_len']+1],n_pos) # cut to the correct length based on number of nutrition options (i_len_n structural input)
+    density_nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_density_n1'][0:n_fs_dams],n_pos) # cut to the correct length based on number of nutrition options (i_len_n structural input)
+    density_nwzida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_density_n3'][0:n_fs_offs],n_pos) # cut to the correct length based on number of nutrition options (i_len_n structural input)
     ##Calculation of rainfall distribution across the week - i_rain_distribution_m4m1 = how much rain falls on each day of the week sorted in order of quantity of rain. SO the most rain falls on the day with the highest rainfall.
     rain_m4a1e1b1nwzida0e0b0xygm1 = fun.f_expand(
         pinp.sheep['i_rain_m4'][...,na] * pinp.sheep['i_rain_distribution_m4m1'] * (7 / 30.4),p_pos - 1,
@@ -1703,19 +1703,19 @@ def generator(params,r_vals,ev,plots = False):
     ### Unless nut_spread is greater than 3 in which case the value becomes the actual feed supply
     ###convert  nut_spread inputs to numpy array and cut to the correct length based on number of nutrition options (i_len_n structural input)
     if isinstance(pinp.sheep['i_nut_spread_n0'], np.ndarray):
-        nut_spread_g0_n = pinp.sheep['i_nut_spread_n0'][0:sinp.stock['i_n0_len']+1]
+        nut_spread_g0_n = pinp.sheep['i_nut_spread_n0'][0:sinp.stock['i_n0_len']]
     else:
-        nut_spread_g0_n = np.array([pinp.sheep['i_nut_spread_n0']])[0:sinp.stock['i_n0_len']+1]
+        nut_spread_g0_n = np.array([pinp.sheep['i_nut_spread_n0']])[0:sinp.stock['i_n0_len']]
 
     if isinstance(pinp.sheep['i_nut_spread_n1'], np.ndarray): #so it can handle 1 nut pattern
-        nut_spread_g1_n = pinp.sheep['i_nut_spread_n1'][0:sinp.stock['i_n1_len']+1]
+        nut_spread_g1_n = pinp.sheep['i_nut_spread_n1'][0:n_fs_dams]
     else:
-        nut_spread_g1_n = np.array([pinp.sheep['i_nut_spread_n1']])[0:sinp.stock['i_n1_len']+1]
+        nut_spread_g1_n = np.array([pinp.sheep['i_nut_spread_n1']])[0:n_fs_dams]
 
     if isinstance(pinp.sheep['i_nut_spread_n3'], np.ndarray): #so it can handle 1 nut pattern
-        nut_spread_g3_n = pinp.sheep['i_nut_spread_n3'][0:sinp.stock['i_n3_len']+1]
+        nut_spread_g3_n = pinp.sheep['i_nut_spread_n3'][0:n_fs_offs]
     else:
-        nut_spread_g3_n = np.array([pinp.sheep['i_nut_spread_n3']])[0:sinp.stock['i_n3_len']+1]
+        nut_spread_g3_n = np.array([pinp.sheep['i_nut_spread_n3']])[0:n_fs_offs]
 
     ###a- create a ‘j0’ by ‘n’ array that is the multipliers that weight each ‘j0’ for that level of ‘n’
     ###the slices of j0 are Std, minimum & maximum respectively
@@ -6134,6 +6134,8 @@ def generator(params,r_vals,ev,plots = False):
                                              keys_y1, keys_g1]
     r_vals['dams_keys_k2p6ftvanwziy1g1'] = [keys_k2, keys_p6, keys_f, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1,
                                                 keys_z, keys_i, keys_y1, keys_g1]
+    r_vals['prog_keys_k5twzida0xg2'] = [keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i, keys_d, keys_a, keys_x, keys_g2]
+    r_vals['prog_keys_zia0xg2w9'] = [keys_z, keys_i, keys_a, keys_x, keys_g2, keys_lw_prog]
     r_vals['offs_keys_k3k5tvnwziaxyg3'] = [keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i,
                                                keys_a, keys_x, keys_y3, keys_g3]
     r_vals['offs_keys_k3k5tvpnwzidaebxyg3'] = [keys_k3, keys_k5, keys_t3, keys_v3, keys_p3, keys_n3, keys_lw3, keys_z, keys_i,
