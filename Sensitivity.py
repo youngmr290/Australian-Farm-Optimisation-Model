@@ -121,6 +121,8 @@ sav['salep_percentile'] = '-'                     #Value for percentile for all 
 sav['salep_max'] = '-'                        #max sale price in grid
 sav['nut_mask_dams'] = np.full(pinp.sheep_inp['i_sai_lw_dams_owi'].shape, '-', dtype=object)  #masks the nutrition options available eg high low high - the options selected are available for each starting weight
 sav['nut_mask_offs'] = np.full(pinp.sheep_inp['i_sai_lw_offs_swix'].shape, '-', dtype=object)  #masks the nutrition options available eg high low high - the options selected are available for each starting weight
+sav['nut_spread_n1'] = np.full(pinp.sheep_inp['i_nut_spread_n1'].shape, '-', dtype=object)  #nut spread dams
+sav['nut_spread_n3'] = np.full(pinp.sheep_inp['i_nut_spread_n3'].shape, '-', dtype=object)  #nut spread dams
 
 ##stock parameters
 sav['evg_c2'] = np.full(uinp.parameters_inp['i_evg_c2'].shape, '-', dtype=object)  #SA value for energy value of each c2 genotype.

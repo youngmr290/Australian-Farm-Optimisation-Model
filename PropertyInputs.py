@@ -266,6 +266,8 @@ def property_inp_sa():
     sheep['i_scan_og1'] = fun.f_sa(sheep_inp['i_scan_og1'], sen.sav['scan_og1'],5)
     sheep['i_sai_lw_dams_owi'] = fun.f_sa(sheep_inp['i_sai_lw_dams_owi'], sen.sav['nut_mask_dams'],5)
     sheep['i_sai_lw_offs_swix'] = fun.f_sa(sheep_inp['i_sai_lw_offs_swix'], sen.sav['nut_mask_offs'],5)
+    sheep['i_nut_spread_n1'] = fun.f_sa(sheep_inp['i_nut_spread_n1'], sen.sav['nut_spread_n1'],5)
+    sheep['i_nut_spread_n3'] = fun.f_sa(sheep_inp['i_nut_spread_n3'], sen.sav['nut_spread_n3'],5)
 
     ##report controls
     ###SAV
