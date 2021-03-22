@@ -49,6 +49,8 @@ sam['grn_dmd_senesce_f','annual']       = np.ones((len(per.f_feed_periods()) - 1
 sam['woolp_mpg'] = 1.0                   # sa multiplier for wool price at std micron
 sam['salep_max'] = 1.0                        #max sale price in grid
 sam['kg'] = 1.0                       #energy efficiency
+sam['LTW_dams'] = 1.0                       #adjust impact of life time wool effect
+sam['LTW_offs'] = 1.0                       #adjust impact of life time wool effect
 
 ##stock parameters
 sam['ci_c2'] = np.ones(uinp.parameters_inp['i_ci_c2'].shape,  dtype=np.float64)  #potential intake genotype params
