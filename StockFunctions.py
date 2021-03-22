@@ -1404,19 +1404,31 @@ def f_condensed(numbers, var, lw_idx, prejoin_tup, season_tup, i_n_len, i_w_len,
 
             ###sort var based on animal lw
             var_sorted = np.take_along_axis(var, lw_idx, axis=sinp.stock['i_w_pos']) #sort into production order (base on lw) so we can select the production of the lowest lw animals with mort less than 10% - note sorts in ascending order
-            ###add high pattern
-            temporary[...] = np.mean(f_dynamic_slice(var_sorted, sinp.stock['i_w_pos'], i_w_len -1 - int(math.ceil(i_w_len / 10)), -1),  #ceil is used to handle cases where nutrition options is 1 (eg only 3 lw patterns)
-                                     sinp.stock['i_w_pos'], keepdims=True)  # average of the top lw patterns
-            ###add mid pattern (w 0 - 27) - use slice method in case w axis changes position (can't use MRYs dynamic slice function because we are assigning)
-            sl = [slice(None)] * temporary.ndim
-            sl[sinp.stock['i_w_pos']] = slice(0, int(i_n_len ** i_n_fvp_period))
-            temporary[tuple(sl)] = f_dynamic_slice(var, sinp.stock['i_w_pos'], 0, 1)  # the pattern that is feed supply 1 (median) for the entire year (the top w pattern)
-            ###low pattern
+
+            ###mask for animals with greater than 10% mort
             numbers_start_sorted = np.take_along_axis(numbers_start_condense, lw_idx, axis=sinp.stock['i_w_pos'])
             numbers_sorted = np.take_along_axis(numbers, lw_idx, axis=sinp.stock['i_w_pos'])
-            low_slice = np.argmax(np.sum(numbers_start_sorted, axis=prejoin_tup + (season_tup,), keepdims=True)
-                                         / np.sum(numbers_sorted, axis=prejoin_tup + (season_tup,), keepdims=True) > 0.9
-                                         , axis=sinp.stock['i_w_pos'])  # returns the index of the first w slice that has mort less the 10%.
+            mort_mask = (np.sum(numbers_start_sorted, axis=prejoin_tup + (season_tup,), keepdims=True)
+                        / np.sum(numbers_sorted, axis=prejoin_tup + (season_tup,), keepdims=True)) > 0.9 #sum e,b,z axis because numbers are distributed along those axis so need to sum to determine if w has more > 10%
+            mort_mask1 = np.broadcast_to(mort_mask, var_sorted.shape)
+            var_sorted_mort = np.ma.masked_array(var_sorted, np.logical_not(mort_mask1))
+
+            ###add high pattern - this will not handle situations where the top 10% lw animals all have higher mortality than the threshold.
+            temporary[...] = np.mean(f_dynamic_slice(var_sorted_mort, sinp.stock['i_w_pos'], i_w_len -1 - int(math.ceil(i_w_len / 10)), None),  #ceil is used to handle cases where nutrition options is 1 (eg only 3 lw patterns)
+                                     sinp.stock['i_w_pos'], keepdims=True)  # average of the top lw patterns
+
+            ###add mid pattern (w 0 - 27) - use slice method in case w axis changes position (can't use MRYs dynamic slice function because we are assigning)
+            ###if there is 3n then medium condense is the top slice (medium start weight with medium nutrition)
+            ###if there is 2n then medium condense is the average of all animals with less than 10% mort.
+            sl = [slice(None)] * temporary.ndim
+            sl[sinp.stock['i_w_pos']] = slice(0, int(i_n_len ** i_n_fvp_period))
+            if i_n_len >= 3:
+                temporary[tuple(sl)] = f_dynamic_slice(var, sinp.stock['i_w_pos'], 0, 1)  # the pattern that is feed supply 1 (median) for the entire year (the top w pattern)
+            else:
+                temporary[tuple(sl)] = np.mean(var_sorted_mort, axis=sinp.stock['i_w_pos'], keepdims=True)  # average of all animals with less than 10% mort
+
+            ###low pattern
+            low_slice = np.argmax(mort_mask, axis=sinp.stock['i_w_pos'])  # returns the index of the first w slice that has mort less the 10%. (argmax takes the first occurence of the highest number)
             low_slice = np.expand_dims(low_slice, axis=sinp.stock['i_w_pos']) #add singleton w axis back
             sl = [slice(None)] * temporary.ndim
             sl[sinp.stock['i_w_pos']] = slice(-int(i_n_len ** i_n_fvp_period), None)
