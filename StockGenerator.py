@@ -1718,6 +1718,8 @@ def generator(params,r_vals,ev,plots = False):
         nut_spread_g3_n = np.array([sinp.stock['i_nut_spread_n3']])
 
     ###a- create a ‘j0’ by ‘n’ array that is the multipliers that weight each ‘j0’ for that level of ‘n’
+    ###the slices of j0 are Std, minimum & maximum respectively
+    ###the nut_mult does an array equivalent of feed supply = std + (max - std) * spread (if spread > 0)
     nut_mult_g0_j0n = np.empty((j0_len,sinp.stock['i_n0_len']))
     nut_mult_g0_j0n[0, ...] = 1 - np.abs(nut_spread_g0_n)
     nut_mult_g0_j0n[1, ...] = np.abs(np.minimum(0, nut_spread_g0_n))
@@ -3736,6 +3738,7 @@ def generator(params,r_vals,ev,plots = False):
         a_nextisprejoin_pa1e1b1nwzida0e0b0xyg1 = sfun.f_next_prev_association(date_end_p, date_prejoin_next_pa1e1b1nwzida0e0b0xyg1, 1, 'right').astype(dtypeint) #p indx of period before prejoining - when nextperiod is prejoining this returns the current period
 
         ## the dam lifetime adjustment (for the p, e1, b1 & w axes) are based on the LW profile of the dams themselves and scaled by the number of progeny they rear as a proportion of the total number weaned.
+        ### cfw is a scalar so it is the LTW effect as a proportion of sfw. FD is a change so it not scaled by sfd.
         o_cfw_ltwadj_pdams = np.take_along_axis(o_cfw_ltwadj_pdams, a_nextisprejoin_pa1e1b1nwzida0e0b0xyg1, axis=0) #populate ltwadj with the value from the period before prejoining
         sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1 = 1 + (o_cfw_ltwadj_pdams * nyatf_b1nwzida0e0b0xyg
                                                  / npw_std_xyg1 / sfw_a0e0b0xyg1)
@@ -3745,18 +3748,19 @@ def generator(params,r_vals,ev,plots = False):
 
         ## the offspring lifetime adjustment is based on dam LW pattern 0
         ### required because there is not a link in the matrix between dam profile and the offspring DVs, so a dam pattern must be selected.
+        ### the progeny CFW effect is the dam LTW effect as a proportion of the dam sfw
         ### need the p slice from nextisprejoin (or period_is_lambing) to be in the d axis using a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1
         ###         e1 axis in the position of e0
         ###         b1 axis in the position of b0 and simplified using a_b0_b1
         ###         w axis to only have slice 0
         ###         z axis is the weighted average
-        temporary = np.sum(o_cfw_ltwadj_pdams[:, :, :, :, :, 0:1, ...] * (a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1 == index_da0e0b0xyg)
+        temporary = np.sum(o_cfw_ltwadj_pdams[:, :, :, :, :, 0:1, ...] / sfw_a0e0b0xyg1 * (a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1 == index_da0e0b0xyg)
                            * period_is_join_pa1e1b1nwzida0e0b0xyg1, axis = 0)
         temporary = np.swapaxes(temporary, e1_pos, e0_pos)
         temporary = np.sum(temporary * (a_b0_b1nwzida0e0b0xyg == index_b0xyg), axis=b1_pos, keepdims=True)
         t_season_propn_pg = np.broadcast_to(season_propn_zida0e0b0xyg, temporary.shape)
         temporary = np.average(temporary, axis=z_pos, weights=t_season_propn_pg)
-        sfw_ltwadj_a1e1b1nwzida0e0b0xyg3 = 1 + temporary / sfw_da0e0b0xyg3
+        sfw_ltwadj_a1e1b1nwzida0e0b0xyg3 = 1 + temporary  # / sfw_da0e0b0xyg3  divide the dam cfw effect by average
 
         ## repeat for FD
         temporary = np.sum(o_fd_ltwadj_pdams[:, :, :, :, :, 0:1, ...] * (a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1 == index_da0e0b0xyg), axis = 0)
