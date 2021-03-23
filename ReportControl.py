@@ -150,8 +150,8 @@ def f_df2xl(writer, df, sheet, rowstart=0, colstart=0, option=0):
 ##run report functions
 if run_summary:
     func = rep.f_summary
-    pnl = rep.f_stack(func, trial_outdated, exp_data_index, trials)
-    f_df2xl(writer, pnl, 'pnl', option=1)
+    summary = rep.f_stack(func, trial_outdated, exp_data_index, trials)
+    f_df2xl(writer, summary, 'summary', option=1)
 
 if run_areasum:
     func = rep.f_area_summary
