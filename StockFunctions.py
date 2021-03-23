@@ -1336,12 +1336,12 @@ def f_period_start_prod(numbers, var, prejoin_tup, season_tup, i_n_len, i_w_len,
 
 def f_season_wa(numbers, var, season, mask_min_lw_z, period_is_startseason):
     '''
-    Preform weighted average across seasons, at the beginning of each season.
+    Perform weighted average across seasons, at the beginning of each season.
     So all seasons start from a common place.
     The animals with the lightest liveweight patterns (there could be multiple because depending on the fvp the w axis may be clustered)
      at the time of season start are assigned the lowest live weight from across the z axis rather than the weighted average,
      so that light animals are not lost in the postprocessing distribution.
-    Dont need to worry about mortlaity in the different slices because this is not to do with condensing (in condensing we take the weights of animals with less than 10% mort).
+    Don't need to worry about mortality in the different slices because this is not to do with condensing (in condensing we take the weights of animals with less than 10% mort).
     '''
     temporary = fun.f_weighted_average(var,numbers,season,keepdims=True, non_zero=True)  # gets the weighted average of production in the different seasons
     ###adjust production for min lw: the w slices with the minimum lw get assigned the production associated with the animal from the season with the lightest animal (this is so the light animals in the poor seasons are not disregarded when distributing in PP).

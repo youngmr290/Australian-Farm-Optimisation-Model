@@ -3740,9 +3740,9 @@ def generator(params,r_vals,ev,plots = False):
         ### cfw is a scalar so it is the LTW effect as a proportion of sfw. FD is a change so it not scaled by sfd.
         o_cfw_ltwadj_pdams = np.take_along_axis(o_cfw_ltwadj_pdams, a_nextisprejoin_pa1e1b1nwzida0e0b0xyg1, axis=0) #populate ltwadj with the value from the period before prejoining
         sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1 = 1 + (o_cfw_ltwadj_pdams * nyatf_b1nwzida0e0b0xyg
-                                                 / npw_std_xyg1 / sfw_a0e0b0xyg1) * uinp.sheep['i_sam_LTW_dams']*0
+                                                 / npw_std_xyg1 / sfw_a0e0b0xyg1) * uinp.sheep['i_sam_LTW_dams']
         o_fd_ltwadj_pdams = np.take_along_axis(o_fd_ltwadj_pdams, a_nextisprejoin_pa1e1b1nwzida0e0b0xyg1, axis=0) #adjust p axis so it is the fd in the period before prejoining
-        sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = o_fd_ltwadj_pdams * nyatf_b1nwzida0e0b0xyg / npw_std_xyg1 * uinp.sheep['i_sam_LTW_dams']*0
+        sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = o_fd_ltwadj_pdams * nyatf_b1nwzida0e0b0xyg / npw_std_xyg1 * uinp.sheep['i_sam_LTW_dams']
 
 
         ## the offspring lifetime adjustment is based on dam LW pattern 0
