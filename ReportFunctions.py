@@ -218,6 +218,18 @@ def f_price_summary(lp_vars, r_vals, **kwargs):
 # intermediate report building functions#
 #########################################
 
+def f_summary(lp_vars, r_vals):
+    '''Returns a simple 1 row summary of the trial'''
+    summary_df = pd.DataFrame()
+    ##obj
+    summary_df['obj'] = f_profit(lp_vars, r_vals, option=0)
+    ##profit - no minroe and asset
+    summary_df['profit'] = f_profit(lp_vars, r_vals, option=1)
+
+    return summary_df
+
+
+
 
 def f_rotation(lp_vars, r_vals):
     '''
@@ -799,7 +811,7 @@ def f_profitloss_table(lp_vars, r_vals):
     keys_z = r_vals['stock']['keys_z']
     subtype_rev = ['grain', 'sheep sales', 'wool', 'Total Revenue']
     subtype_exp = ['Crop', 'pasture', 'stock', 'machinery', 'labour', 'fixed', 'depreciation', 'Total expenses']
-    subtype_tot = ['EBIT']
+    subtype_tot = ['EBIT', 'Obj']
     pnl_rev_index = pd.MultiIndex.from_product([keys_z, ['Revenue'], subtype_rev], names=['Season', 'Type', 'Subtype'])
     pnl_exp_index = pd.MultiIndex.from_product([keys_z, ['Expense'], subtype_exp], names=['Season', 'Type', 'Subtype'])
     pnl_tot_index = pd.MultiIndex.from_product([keys_z, ['Total'], subtype_tot], names=['Season', 'Type', 'Subtype'])
@@ -849,6 +861,9 @@ def f_profitloss_table(lp_vars, r_vals):
     ##add a column which is total of all cashflow period
     pnl['Full year'] = pnl.sum(axis=1)
 
+    ##add the objective
+    pnl.loc[idx[:, 'Total', 'Obj'],'Full year'] = f_profit(lp_vars, r_vals, option=0)
+
     ##round numbers in df
     pnl = pnl.astype(float).round(1)  # have to go to float so rounding works
     return pnl
@@ -856,16 +871,16 @@ def f_profitloss_table(lp_vars, r_vals):
 
 def f_profit(lp_vars, r_vals, option=0):
     '''returns profit
-    0- rev - (exp + minroe + asset_opp +dep)
+    0- rev - (exp + minroe + asset_opp +dep). This is the model obj.
     1- rev - (exp + dep)
     '''
     obj_profit = lp_vars['profit']
     minroe = pd.Series(lp_vars['v_minroe'])
-    asset_opportunity_cost = pd.Series(lp_vars['v_asset'])
+    asset_value = pd.Series(lp_vars['v_asset'])
     if option == 0:
         return obj_profit
     else:
-        return obj_profit + minroe - (asset_opportunity_cost * r_vals['opportunity_cost_capital'])
+        return obj_profit + minroe + (asset_value * r_vals['fin']['opportunity_cost_capital'])
 
 
 def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, **kwargs):
