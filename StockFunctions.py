@@ -1081,7 +1081,7 @@ def f_feedsupply(feedsupply_std_a1e1b1nwzida0e0b0xyg, paststd_foo_a1e1b1j0wzida0
     next_level_a1e1b1nwzida0e0b0xyg = np.minimum(2, level_a1e1b1nwzida0e0b0xyg + 1)
     ##decimal component of feedsupply
     proportion_a1e1b1nwzida0e0b0xyg = feedsupply_std_a1e1b1nwzida0e0b0xyg % 1
-    ##foo as measured
+    ##foo (corrected for measurement system of the region and the pasture stage)
     paststd_foo_a1e1b1nwzida0e0b0xyg = np.take_along_axis(paststd_foo_a1e1b1j0wzida0e0b0xyg, level_a1e1b1nwzida0e0b0xyg, sinp.stock['i_n_pos'])
     paststd_foo_next_a1e1b1nwzida0e0b0xyg = np.take_along_axis(paststd_foo_a1e1b1j0wzida0e0b0xyg, next_level_a1e1b1nwzida0e0b0xyg, sinp.stock['i_n_pos'])
     foo_a1e1b1nwzida0e0b0xyg = paststd_foo_a1e1b1nwzida0e0b0xyg + proportion_a1e1b1nwzida0e0b0xyg * (paststd_foo_next_a1e1b1nwzida0e0b0xyg - paststd_foo_a1e1b1nwzida0e0b0xyg)
@@ -1224,12 +1224,12 @@ def f_mortality_dam_cs(cb1, cg, nw_start, ebg, days_period, period_between_birth
     return mort
 
     
-def f_mortality_dam_mu(cu2, cs_birth_dams, period_is_birth, days_period, sar_mortalitye):
-    ##(Twin) Dam mortality in last 6 weeks (preg tox)	
+def f_mortality_dam_mu(cu2, cs_birth_dams, period_is_birth, sar_mortalitye):
+    ## transformed Dam mortality at birth
     t_mortalitye_mu = cu2[22, 0, ...] * cs_birth_dams + cu2[22, 1, ...] * cs_birth_dams ** 2 + cu2[22, -1, ...]
-    ##Non-multiple bearing ewes = 0	
-    mortalitye_mu = np.exp(t_mortalitye_mu) / (1 + np.exp(t_mortalitye_mu)) * period_is_birth * days_period #mul be days period to convert from mort per day to per period
-    ##Dam (& progeny) losses at birth related to CSL	
+    ##Back transform the mortality
+    mortalitye_mu = np.exp(t_mortalitye_mu) / (1 + np.exp(t_mortalitye_mu)) * period_is_birth
+    ##Adjust by sensitivity on dam mortality
     mortalitye_mu = fun.f_sa(mortalitye_mu, sar_mortalitye, sa_type = 4)
     return mortalitye_mu
 

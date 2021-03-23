@@ -1692,7 +1692,7 @@ def generator(params,r_vals,ev,plots = False):
     # t_fs_btrt_pj0zida0e0b0xg3 = t_fs_btrt_pj0zik3k0k4k5g3
     # t_fs_gender_pj0zida0e0b0xg3 = t_fs_gender_pj0zik3k0k4k5g3
 
-    ##4) add variation to std pattern (the variation is added to the standard and the minimum and the maximum todo this could cause an problem if the (maximum + variation) > 3.0
+    ##4) add variation to std pattern (the variation is added to the standard and the minimum and the maximum
     t_feedsupply_pa1e1b1j0wzida0e0b0xyg1 = (t_feedsupply_pa1e1b1j0wzida0e0b0xyg1 + t_fs_ageweaned_pa1e1b1j0wzida0e0b0xyg1 + t_fs_lsln_pa1e1b1j0wzida0e0b0xyg1) #can't use += for some reason
     # t_feedsupply_pa1e1b1j0wzida0e0b0xyg3 = (t_feedsupply_pa1e1b1j0wzida0e0b0xyg3 + t_fs_agedam_pj0zida0e0b0xg3
     #                                             + t_fs_ageweaned_pj0zida0e0b0xg3 + t_fs_gender_pj0zida0e0b0xg3)
@@ -3012,7 +3012,7 @@ def generator(params,r_vals,ev,plots = False):
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     temp0 = sfun.f_mortality_dam_mu(cu2_dams, cs_start_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]
-                                                    , days_period_pa1e1b1nwzida0e0b0xyg1[p], sen.sar['mortalitye'])
+                                                    , sen.sar['mortalitye'])
                     if eqn_used:
                         mortality_dams += temp0
                     if eqn_compare:
