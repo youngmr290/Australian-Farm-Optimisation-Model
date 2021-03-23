@@ -45,10 +45,11 @@ exp_data = fun.f_run_required(exp_data, check_pyomo=False)
 trial_outdated = exp_data['run'] #returns true if trial is out of date
 
 ## enter the trials to summarise and the reports to include
-trials = np.array(range(len(exp_data_index)))[list(exp_data_index.get_level_values(2))]
+trials = np.array(range(len(exp_data_index)))[pd.Series(exp_data_index.get_level_values(2)).fillna(0).astype(bool)]  #this is slightly complicated becasue blank rows in exp.xl result in nan, so nan must be converted to 0.
 
 #todo could these report settings be included in exp.xl in a separate sheet
 # Could be read in with named ranges using fun.xl_all_named_ranges & an extra sheet doesn't appear to affect reading the experiment
+run_summary         = True #1 row summary for each trial
 run_areasum         = True #area summary for each landuse
 run_pnl             = True #table of profit and loss
 run_profitarea      = True #graph profit by crop area
@@ -147,6 +148,11 @@ def f_df2xl(writer, df, sheet, rowstart=0, colstart=0, option=0):
 
 
 ##run report functions
+if run_summary:
+    func = rep.f_summary
+    pnl = rep.f_stack(func, trial_outdated, exp_data_index, trials)
+    f_df2xl(writer, pnl, 'pnl', option=1)
+
 if run_areasum:
     func = rep.f_area_summary
    # trials = [34]
