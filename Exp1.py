@@ -101,7 +101,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
     ##get trial name - used for outputs
     trial_name = exp_data.index[row][3]
     run = row - list(exp_data.index.get_level_values(0))[:row].count(False)
-    print("Starting trial %d, %s" %(run, trial_name))
+    print(time.ctime()," : Starting trial %d, %s" %(run, trial_name))
 
     ##updaye sensitivity values
     fun.f_update_sen(row,exp_data,sen.sam,sen.saa,sen.sap,sen.sar,sen.sat,sen.sav)
