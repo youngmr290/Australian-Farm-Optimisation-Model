@@ -46,16 +46,16 @@ sam['grn_dmd_senesce_f','annual']       = np.ones((len(per.f_feed_periods()) - 1
 # sa_lmu_inc_t              = True    # this pasture is included on this lmu
 
 ##livestock
-sam['woolp_mpg'] = 1.0                   # sa multiplier for wool price at std micron
-sam['salep_max'] = 1.0                        #max sale price in grid
-sam['kg'] = 1.0                       #energy efficiency
-sam['LTW_dams'] = 1.0                       #adjust impact of life time wool effect
-sam['LTW_offs'] = 1.0                       #adjust impact of life time wool effect
+sam['woolp_mpg'] = 1.0                      # sa multiplier for wool price at std micron
+sam['salep_max'] = 1.0                      #max sale price in grid
+sam['kg'] = 1.0                             #energy efficiency
+sam['LTW_dams'] = 1.0                       #adjust impact of life time wool fleece effects
+sam['LTW_offs'] = 1.0                       #adjust impact of life time wool fleece effects
 
 ##stock parameters
-sam['ci_c2'] = np.ones(uinp.parameters_inp['i_ci_c2'].shape,  dtype=np.float64)  #potential intake genotype params
+sam['ci_c2'] = np.ones(uinp.parameters_inp['i_ci_c2'].shape,  dtype=np.float64)  #intake params for genotypes
 sam['sfw_c2'] = 1.0                       #std fleece weight genotype params
-sam['sfd_c2'] = 1.0                       #std fleece diameter genotype params
+sam['sfd_c2'] = 1.0                       #std fibre diameter genotype params
 
 
 ######
@@ -109,20 +109,20 @@ sav['eqn_used_g0_q1p7'] = np.full(uinp.sheep_inp['i_eqn_used_g0_q1p7'].shape, '-
 sav['eqn_used_g1_q1p7'] = np.full(uinp.sheep_inp['i_eqn_used_g1_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
 sav['eqn_used_g2_q1p7'] = np.full(uinp.sheep_inp['i_eqn_used_g2_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
 sav['eqn_used_g3_q1p7'] = np.full(uinp.sheep_inp['i_eqn_used_g3_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
-sav['TOL_inc']          = np.full(pinp.sheep_inp['i_mask_i'].shape, '-', dtype=object)   # SA value for the inclusion of each TOL
-sav['g3_included']      = np.full(pinp.sheep_inp['i_g3_inc'].shape, '-', dtype=object) # SA value for the inclusion of each offspring genotype
-sav['genotype']         = np.full(pinp.sheep_inp['a_c2_c0'].shape, '-', dtype=object) # this is the selection of the genotypes of the sires for B, M & T
-sav['scan_og1']         = np.full(pinp.sheep_inp['i_scan_og1'].shape, '-', dtype=object) # SA value for the scanning management option
-sav['woolp_mpg_percentile'] = '-'              #sa value for the wool price percentile
-sav['woolp_mpg'] = '-'                     # sa value for wool price at std micron
-sav['woolp_fdprem_percentile'] = '-'           # sa value for fd premium percentile (premium received by fd compared to std)
-sav['woolp_fdprem'] = '-'                     # sa value for fd premium
-sav['salep_percentile'] = '-'                     #Value for percentile for all sale grids
-sav['salep_max'] = '-'                        #max sale price in grid
-sav['nut_mask_dams'] = np.full(pinp.sheep_inp['i_sai_lw_dams_owi'].shape, '-', dtype=object)  #masks the nutrition options available eg high low high - the options selected are available for each starting weight
-sav['nut_mask_offs'] = np.full(pinp.sheep_inp['i_sai_lw_offs_swix'].shape, '-', dtype=object)  #masks the nutrition options available eg high low high - the options selected are available for each starting weight
-sav['nut_spread_n1'] = np.full(pinp.sheep_inp['i_nut_spread_n1'].shape, '-', dtype=object)  #nut spread dams
-sav['nut_spread_n3'] = np.full(pinp.sheep_inp['i_nut_spread_n3'].shape, '-', dtype=object)  #nut spread dams
+sav['TOL_inc']          = np.full(pinp.sheep_inp['i_mask_i'].shape, '-', dtype=object)      # SA value for the inclusion of each TOL
+sav['g3_included']      = np.full(pinp.sheep_inp['i_g3_inc'].shape, '-', dtype=object)      # SA value for the inclusion of each offspring genotype
+sav['genotype']         = np.full(pinp.sheep_inp['a_c2_c0'].shape, '-', dtype=object)       # this is the selection of the genotypes of the sires for B, M & T
+sav['scan_og1']         = np.full(pinp.sheep_inp['i_scan_og1'].shape, '-', dtype=object)    # SA value for the scanning management option
+sav['woolp_mpg_percentile'] = '-'               #sa value for the wool price percentile
+sav['woolp_mpg'] = '-'                          # sa value for wool price at std micron
+sav['woolp_fdprem_percentile'] = '-'            # sa value for fd premium percentile (premium received by fd compared to std)
+sav['woolp_fdprem'] = '-'                       # sa value for fd premium
+sav['salep_percentile'] = '-'                   #Value for percentile for all sale grids
+sav['salep_max'] = '-'                          #max sale price in grid
+sav['nut_mask_dams'] = np.full(pinp.sheep_inp['i_sai_lw_dams_owi'].shape, '-', dtype=object)    #masks the nutrition options available eg high low high - the options selected are available for each starting weight
+sav['nut_mask_offs'] = np.full(pinp.sheep_inp['i_sai_lw_offs_swix'].shape, '-', dtype=object)   #masks the nutrition options available eg high low high - the options selected are available for each starting weight
+sav['nut_spread_n1'] = np.full(pinp.sheep_inp['i_nut_spread_n1'].shape, '-', dtype=object)      #nut spread dams
+sav['nut_spread_n3'] = np.full(pinp.sheep_inp['i_nut_spread_n3'].shape, '-', dtype=object)      #nut spread dams
 
 ##stock parameters
 sav['evg_c2'] = np.full(uinp.parameters_inp['i_evg_c2'].shape, '-', dtype=object)  #SA value for energy value of each c2 genotype.
