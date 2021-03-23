@@ -1692,7 +1692,7 @@ def generator(params,r_vals,ev,plots = False):
     # t_fs_btrt_pj0zida0e0b0xg3 = t_fs_btrt_pj0zik3k0k4k5g3
     # t_fs_gender_pj0zida0e0b0xg3 = t_fs_gender_pj0zik3k0k4k5g3
 
-    ##4) add variation to std pattern (the variation is added to the standard and the minimum and the maximum todo this could cause an problem if the (maximum + variation) > 3.0
+    ##4) add variation to std pattern (the variation is added to the standard and the minimum and the maximum
     t_feedsupply_pa1e1b1j0wzida0e0b0xyg1 = (t_feedsupply_pa1e1b1j0wzida0e0b0xyg1 + t_fs_ageweaned_pa1e1b1j0wzida0e0b0xyg1 + t_fs_lsln_pa1e1b1j0wzida0e0b0xyg1) #can't use += for some reason
     # t_feedsupply_pa1e1b1j0wzida0e0b0xyg3 = (t_feedsupply_pa1e1b1j0wzida0e0b0xyg3 + t_fs_agedam_pj0zida0e0b0xg3
     #                                             + t_fs_ageweaned_pj0zida0e0b0xg3 + t_fs_gender_pj0zida0e0b0xg3)

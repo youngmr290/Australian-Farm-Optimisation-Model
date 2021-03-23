@@ -153,7 +153,7 @@ def feed_generator():
                                                          dest=-1,
                                                          left_pos2=p_pos,
                                                          right_pos2=z_pos)  # p6 axis converted to p axis later (association section), z is treated later also
-    ##foo corrected to hand shears and estimated height - the z axis is also treated in this step
+    ##foo for a region of measurement with pasture stage converted to hand shears and estimated height (for GrazFeed) - the z axis is also treated in this step
     paststd_foo_p6a1e1b1j0wzida0e0b0xyg1, paststd_hf_p6a1e1b1j0wzida0e0b0xyg1 = sfun.f_foo_convert(cu3, cu4,
                                                                                      paststd_foo_p6a1e1b1j0wzida0e0b0xyg,
                                                                                      pasture_stage_p6a1e1b1j0wzida0e0b0xyg,
