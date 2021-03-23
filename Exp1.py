@@ -166,7 +166,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
     run_pyomo_params = True
     ##determine if pyomo should run, note if pyomo doesn't run there will be no full solution (they are the same as before so no need)
     lp_vars={} #create empty dict to return if pyomo isn't run. If dict is empty it doesnt overwrite the previous main lp_vars dict66
-    if run_pyomo_params or exp_data1.loc[exp_data1.index[row],'runpyomo'].squeeze():
+    if run_pyomo_params:
         ##call core model function, must call them in the correct order (core must be last)
         crtmod.sets() #certain sets have to be updated each iteration of exp
         rotpy.rotationpyomo(params['rot'])
