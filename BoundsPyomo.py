@@ -30,7 +30,7 @@ def boundarypyomo_local():
     ##set bounds to include
     bounds_inc=True #controls all bounds (typically on)
     rot_lobound_inc = False #controls rot bound
-    dam_lobound_inc = False #controls rot bound
+    dam_lobound_inc = True #controls rot bound
     sr_bound_inc = False #controls sr bound
     total_pasture_bound = fun.f_sa(False, sen.sav['bnd_pasarea_inc'], 5)  #bound on total pasture (hence also total crop)
     landuse_bound = False #bound on area of each landuse
@@ -71,22 +71,19 @@ def boundarypyomo_local():
             model.con_rotation_lobound = pe.Constraint(model.s_phases, model.s_lmus, rule=rot_lo_bound,
                                                     doc='lo bound for the number of each phase')
 
-        ##total dam min bound
-            #todo might need to somehoe include mask_w8 so that we only include active activities The masking of the bounds needs to use a mask the same as used in the production parameters
-            # mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1*mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1)
-            # i think use number required as the mask instead of above (tried above and it didnt do k2 axis correctly)
+        ##total dam min bound - total number includes each dvp (the sheep in a given yr equal total for all dvp divided by the number of dvps in 1 yr)
         if dam_lobound_inc:
             ###set the bound
-            dam_lobound = 5000
+            dam_lobound = 15000
             ###constraint
             try:
                 model.del_component(model.con_dam_lobound)
             except AttributeError:
                 pass
             def dam_lo_bound(model):
-                return sum(model.v_dams[k28,t,v,a,n,w8,z,i,y,g1] for k28 in model.s_k2_birth_dams for t in model.s_sale_dams
+                return sum(model.v_dams[k28,t,v,a,n,w8,i,y,g1] for k28 in model.s_k2_birth_dams for t in model.s_sale_dams
                            for v in model.s_dvp_dams for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
-                           for z in model.s_season_types for i in model.s_tol for y in model.s_gen_merit_dams for g1 in model.s_groups_dams
+                           for i in model.s_tol for y in model.s_gen_merit_dams for g1 in model.s_groups_dams
                            if any(model.p_numbers_req_dams[k28,k29,t,v,a,n,w8,i,y,g1,g9,w9] == 1 for k29 in model.s_k2_birth_dams
                                   for w9 in model.s_lw_dams for g9 in model.s_groups_dams)) \
                        >= dam_lobound
