@@ -97,25 +97,23 @@ def f_vars2df(lp_vars, z_keys):
 # Final reports #
 #################
 
-def f_stack(func, trial_outdated, exp_data_index, trials, **kwargs):
+def f_stack(func, report_data, exp_data_index, trials, **kwargs):
     '''
     Returns dataframe for specified function. Multiple trials result in a stacked table with trial name as index level.
 
     :param func: report function whose return value is to be stacked
-    :param lp_vars: dict - results from pyomo
-    :param r_vals: dict - report variable
-    :param trial_outdated: series indicating which trials are outdated
+    :param report_data: dict containint lp_vars and r_vals
     :param exp_data_index: trial names - in the same order as exp.xls
     :param trials: trials to return info for
     :param kwargs: args for specified function. This is optional.
     '''
-    ##check for errors
-    f_errors(exp_data_index, trial_outdated, trials)
+
     ##loop through trials and generate pnl table
     result_stacked = pd.DataFrame()  # create df to append table from each trial
     for row in trials:
         trial_name = exp_data_index[row][3]
-        lp_vars, r_vals = load_pkl(trial_name)
+        lp_vars = report_data[trial_name]['lp_vars']
+        r_vals = report_data[trial_name]['r_vals']
         result = func(lp_vars, r_vals, **kwargs)
         result = pd.concat([result], keys=[trial_name], names=['Trial'])  # add trial name as index level
         result_stacked = result_stacked.append(result)
@@ -123,14 +121,12 @@ def f_stack(func, trial_outdated, exp_data_index, trials, **kwargs):
     return result_stacked
 
 
-def f_xy_graph(func0, func1, trial_outdated, exp_data_index, trials, func0_options, func1_options):
+def f_xy_graph(func0, func1, report_data, exp_data_index, trials, func0_options, func1_options):
     '''returns graph of crop area (x - axis) by profit (y - axis)
 
     :param func0: func to generate x values
     :param func1:func to generate y values
-    :param lp_vars: dict - results from pyomo
-    :param r_vals: dict - report variable
-    :param trial_outdated: series indicating which trials are outdated
+    :param report_data: dict containint lp_vars and r_vals
     :param exp_data_index: trial names - in the same order as exp.xls
     :param trials: trials to return info for
     :param func0_options:
@@ -140,14 +136,13 @@ def f_xy_graph(func0, func1, trial_outdated, exp_data_index, trials, func0_optio
             0: profit = rev - (exp + minroe + asset_opp +dep)
             1: profit = rev - (exp + dep)
     '''
-    ##check for errors
-    f_errors(exp_data_index, trial_outdated, trials)
     ##loop through trials and generate pnl table
     y_vals = []  # create list to append pnl table from each trial
     x_vals = []  # create list to append pnl table from each trial
     for row in trials:
         trial_name = exp_data_index[row][3]
-        lp_vars, r_vals = load_pkl(trial_name)
+        lp_vars = report_data[trial_name]['lp_vars']
+        r_vals = report_data[trial_name]['r_vals']
         x_vals.append(func0(lp_vars, r_vals, option=func0_options))
         y_vals.append(func1(lp_vars, r_vals, option=func1_options))
     plt.plot(x_vals, y_vals)

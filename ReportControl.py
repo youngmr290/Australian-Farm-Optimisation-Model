@@ -47,6 +47,17 @@ trial_outdated = exp_data['run'] #returns true if trial is out of date
 ## enter the trials to summarise and the reports to include
 trials = np.array(range(len(exp_data_index)))[pd.Series(exp_data_index.get_level_values(2)).fillna(0).astype(bool)]  #this is slightly complicated becasue blank rows in exp.xl result in nan, so nan must be converted to 0.
 
+##check the trials you want to run exist and are upto date
+rep.f_errors(exp_data_index, trial_outdated, trials)
+
+##read in the pickled results
+report_data = {}
+for row in trials:
+    trial_name = exp_data_index[row][3]
+    lp_vars,r_vals = rep.load_pkl(trial_name)
+    report_data[trial_name]['lp_vars'] = lp_vars
+    report_data[trial_name]['r_vals'] = r_vals
+
 #todo could these report settings be included in exp.xl in a separate sheet
 # Could be read in with named ranges using fun.xl_all_named_ranges & an extra sheet doesn't appear to affect reading the experiment
 run_summary         = True #1 row summary for each trial
@@ -150,20 +161,20 @@ def f_df2xl(writer, df, sheet, rowstart=0, colstart=0, option=0):
 ##run report functions
 if run_summary:
     func = rep.f_summary
-    summary = rep.f_stack(func, trial_outdated, exp_data_index, trials)
+    summary = rep.f_stack(func, report_data, exp_data_index, trials)
     f_df2xl(writer, summary, 'summary', option=1)
 
 if run_areasum:
     func = rep.f_area_summary
    # trials = [34]
     option = 2
-    areasum = rep.f_stack(func, trial_outdated, exp_data_index, trials, option=option)
+    areasum = rep.f_stack(func, report_data, exp_data_index, trials, option=option)
     f_df2xl(writer, areasum, 'areasum', option=1)
 
 if run_pnl:
     func = rep.f_profitloss_table
    # trials = [34]
-    pnl = rep.f_stack(func, trial_outdated, exp_data_index, trials)
+    pnl = rep.f_stack(func, report_data, exp_data_index, trials)
     f_df2xl(writer, pnl, 'pnl', option=1)
 
 if run_profitarea:
@@ -172,7 +183,7 @@ if run_profitarea:
     func0_option = 4
     func1_option = 0
    # trials = [34]
-    plot = rep.f_xy_graph(func0, func1, trial_outdated, exp_data_index, trials, func0_option, func1_option)
+    plot = rep.f_xy_graph(func0, func1, report_data, exp_data_index, trials, func0_option, func1_option)
     plot.savefig('Output/profitarea_curve.png')
 
 if run_saleprice:
@@ -182,7 +193,7 @@ if run_saleprice:
     grid = [0,5,6]
     weight = [22,40,25]
     fs = [2,3,2]
-    saleprice = rep.f_stack(func, trial_outdated, exp_data_index, trials, option=option, grid=grid, weight=weight, fs=fs)
+    saleprice = rep.f_stack(func, report_data, exp_data_index, trials, option=option, grid=grid, weight=weight, fs=fs)
     f_df2xl(writer, saleprice, 'saleprice', option=1)
 
 if run_cfw_dams:
@@ -198,7 +209,7 @@ if run_cfw_dams:
     cols =[0,1]
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
-    cfw_dams = rep.f_stack(func, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights,
+    cfw_dams = rep.f_stack(func, report_data, exp_data_index, trials, type=type, prod=prod, weights=weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
     f_df2xl(writer, cfw_dams, 'cfw_dams', option=1)
 
@@ -218,7 +229,7 @@ if run_lw_dams:
     cols =[6]
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
-    lw_dams = rep.f_stack(func, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights
+    lw_dams = rep.f_stack(func, report_data, exp_data_index, trials, type=type, prod=prod, weights=weights
                              , den_weights=den_weights, na_prod=na_prod, na_weights=na_weights
                              , keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
     f_df2xl(writer, lw_dams, 'lw_dams', option=1)
@@ -239,7 +250,7 @@ if run_ffcfw_dams:
     cols = [6]
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
-    ffcfw_dams = rep.f_stack(func, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights
+    ffcfw_dams = rep.f_stack(func, report_data, exp_data_index, trials, type=type, prod=prod, weights=weights
                              , den_weights=den_weights, na_prod=na_prod, na_weights=na_weights
                              , keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
     f_df2xl(writer, ffcfw_dams, 'ffcfw_dams', option=1)
@@ -260,7 +271,7 @@ if run_fec_dams:
     cols =[6]
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
-    fec_dams = rep.f_stack(func, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights,
+    fec_dams = rep.f_stack(func, report_data, exp_data_index, trials, type=type, prod=prod, weights=weights,
                            den_weights=den_weights, na_prod=na_prod, na_weights=na_weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
     f_df2xl(writer, fec_dams, 'fec_dams', option=1)
@@ -277,7 +288,7 @@ if run_ffcfw_prog:
     cols = [0,1,2,3,4]
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
-    ffcfw_prog = rep.f_stack(func, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights
+    ffcfw_prog = rep.f_stack(func, report_data, exp_data_index, trials, type=type, prod=prod, weights=weights
                              , keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
     f_df2xl(writer, ffcfw_prog, 'ffcfw_prog', option=1)
 
@@ -300,7 +311,7 @@ if run_fec_offs:
     axis_slice[11] = [0,1,1] #first cycle
     axis_slice[9] = [2,-1,1] #Adult
     axis_slice[15] = [0,1,1] #BBB
-    fec_offs = rep.f_stack(func, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights,
+    fec_offs = rep.f_stack(func, report_data, exp_data_index, trials, type=type, prod=prod, weights=weights,
                            den_weights=den_weights, na_prod=na_prod, na_weights=na_weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
     f_df2xl(writer, fec_offs, 'fec_offs', option=1)
@@ -313,7 +324,7 @@ if run_lamb_survival:
     index =[2]
     cols =[5]
     axis_slice = {}
-    lamb_survival = rep.f_stack(func, trial_outdated, exp_data_index, trials, option=option, arith_axis=arith_axis,
+    lamb_survival = rep.f_stack(func, report_data, exp_data_index, trials, option=option, arith_axis=arith_axis,
                                 index=index, cols=cols, axis_slice=axis_slice)
     f_df2xl(writer, lamb_survival, 'lamb_survival', option=1)
 
@@ -325,7 +336,7 @@ if run_weanper:
     index =[1]
     cols =[]
     axis_slice = {}
-    lamb_survival = rep.f_stack(func, trial_outdated, exp_data_index, trials, option=option, arith_axis=arith_axis,
+    lamb_survival = rep.f_stack(func, report_data, exp_data_index, trials, option=option, arith_axis=arith_axis,
                                 index=index, cols=cols, axis_slice=axis_slice)
     f_df2xl(writer, lamb_survival, 'wean_per', option=1)
 
@@ -337,7 +348,7 @@ if run_scanper:
     index =[1]
     cols =[]
     axis_slice = {}
-    lamb_survival = rep.f_stack(func, trial_outdated, exp_data_index, trials, option=option, arith_axis=arith_axis,
+    lamb_survival = rep.f_stack(func, report_data, exp_data_index, trials, option=option, arith_axis=arith_axis,
                                 index=index, cols=cols, axis_slice=axis_slice)
     f_df2xl(writer, lamb_survival, 'scan_per', option=1)
 
@@ -357,7 +368,7 @@ if run_daily_mei_dams:
     cols =[0]
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
-    daily_mei_dams = rep.f_stack(func, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights,
+    daily_mei_dams = rep.f_stack(func, report_data, exp_data_index, trials, type=type, prod=prod, weights=weights,
                            na_weights=na_weights, den_weights=den_weights, keys=keys, arith=arith,
                            arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
     f_df2xl(writer, daily_mei_dams, 'daily_mei_dams', option=1)
@@ -377,7 +388,7 @@ if run_daily_pi_dams:
     cols =[0]
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
-    daily_pi_dams = rep.f_stack(func, trial_outdated, exp_data_index, trials, type=type, prod=prod, weights=weights,
+    daily_pi_dams = rep.f_stack(func, report_data, exp_data_index, trials, type=type, prod=prod, weights=weights,
                                na_weights=na_weights, den_weights=den_weights, keys=keys, arith=arith,
                                arith_axis=arith_axis, index=index, cols=cols,
                                axis_slice=axis_slice)
@@ -395,7 +406,7 @@ if run_numbers_dams:
     cols =[0,1]
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
-    numbers_dams = rep.f_stack(func, trial_outdated, exp_data_index, trials, type=type, weights=weights,
+    numbers_dams = rep.f_stack(func, report_data, exp_data_index, trials, type=type, weights=weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols,
                            axis_slice=axis_slice)
     f_df2xl(writer, numbers_dams, 'numbers_dams', option=1)
@@ -411,7 +422,7 @@ if run_numbers_prog:
     cols =[0,1]
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
-    numbers_prog = rep.f_stack(func, trial_outdated, exp_data_index, trials, type=type, weights=weights,
+    numbers_prog = rep.f_stack(func, report_data, exp_data_index, trials, type=type, weights=weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols,
                            axis_slice=axis_slice)
     f_df2xl(writer, numbers_prog, 'numbers_prog', option=1)
@@ -428,7 +439,7 @@ if run_numbers_offs:
     cols =[0,1,2]
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
-    numbers_offs = rep.f_stack(func, trial_outdated, exp_data_index, trials, type=type, weights=weights,
+    numbers_offs = rep.f_stack(func, report_data, exp_data_index, trials, type=type, weights=weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols,
                            axis_slice=axis_slice)
     f_df2xl(writer, numbers_offs, 'numbers_offs', option=1)
@@ -438,10 +449,10 @@ if run_dse:
    # trials = [34]
     method = 0
     per_ha = True
-    dse = rep.f_stack(func, trial_outdated, exp_data_index, trials, method = method, per_ha = per_ha)
+    dse = rep.f_stack(func, report_data, exp_data_index, trials, method = method, per_ha = per_ha)
     f_df2xl(writer, dse, 'dse_wt', option=1)
     method = 1
-    dse = rep.f_stack(func, trial_outdated, exp_data_index, trials, method = method, per_ha = per_ha)
+    dse = rep.f_stack(func, report_data, exp_data_index, trials, method = method, per_ha = per_ha)
     f_df2xl(writer, dse, 'dse_mei', option=1)
 
 if run_grnfoo:
@@ -458,7 +469,7 @@ if run_grnfoo:
     cols =[]
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
-    grnfoo = rep.f_stack(func, trial_outdated, exp_data_index, trials, prod=prod, type=type, weights=weights,
+    grnfoo = rep.f_stack(func, report_data, exp_data_index, trials, prod=prod, type=type, weights=weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
     f_df2xl(writer, grnfoo, 'grnfoo', option=1)
 
@@ -476,7 +487,7 @@ if run_dryfoo:
     cols =[]
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
-    dryfoo = rep.f_stack(func, trial_outdated, exp_data_index, trials, prod=prod, type=type, weights=weights,
+    dryfoo = rep.f_stack(func, report_data, exp_data_index, trials, prod=prod, type=type, weights=weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
     f_df2xl(writer, dryfoo, 'dryfoo', option=1)
 
@@ -494,7 +505,7 @@ if run_napfoo:
     cols =[]
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
-    napfoo = rep.f_stack(func, trial_outdated, exp_data_index, trials, prod=prod, type=type, weights=weights,
+    napfoo = rep.f_stack(func, report_data, exp_data_index, trials, prod=prod, type=type, weights=weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
     f_df2xl(writer, napfoo, 'napfoo', option=1)
 
@@ -512,7 +523,7 @@ if run_grncon:
     cols =[]
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
-    grncon = rep.f_stack(func, trial_outdated, exp_data_index, trials, prod=prod, type=type, weights=weights,
+    grncon = rep.f_stack(func, report_data, exp_data_index, trials, prod=prod, type=type, weights=weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
     f_df2xl(writer, grncon, 'grncon', option=1)
 
@@ -530,7 +541,7 @@ if run_drycon:
     cols =[]
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
-    drycon = rep.f_stack(func, trial_outdated, exp_data_index, trials, prod=prod, type=type, weights=weights,
+    drycon = rep.f_stack(func, report_data, exp_data_index, trials, prod=prod, type=type, weights=weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
     f_df2xl(writer, drycon, 'drycon', option=1)
 
@@ -548,7 +559,7 @@ if run_napcon:
     cols =[]
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
-    napcon = rep.f_stack(func, trial_outdated, exp_data_index, trials, prod=prod, type=type, weights=weights,
+    napcon = rep.f_stack(func, report_data, exp_data_index, trials, prod=prod, type=type, weights=weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
     f_df2xl(writer, napcon, 'napcon', option=1)
 
@@ -566,7 +577,7 @@ if run_poccon:
     cols =[]
     axis_slice = {}
     # axis_slice[0] = [0, 2, 1]
-    poccon = rep.f_stack(func, trial_outdated, exp_data_index, trials, prod=prod, type=type, weights=weights,
+    poccon = rep.f_stack(func, report_data, exp_data_index, trials, prod=prod, type=type, weights=weights,
                            keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
     f_df2xl(writer, poccon, 'poccon', option=1)
 
@@ -575,14 +586,14 @@ if run_supcon:
     func = rep.f_grain_sup_summary
    # trials = [34]
     option = 1
-    supcon = rep.f_stack(func, trial_outdated, exp_data_index, trials, option=option)
+    supcon = rep.f_stack(func, report_data, exp_data_index, trials, option=option)
     f_df2xl(writer, supcon, 'supcon', option=1)
 
 if run_stubcon:
     #returns consumption in each fp
     func = rep.f_stubble_summary
    # trials = [34]
-    stubcon = rep.f_stack(func, trial_outdated, exp_data_index, trials)
+    stubcon = rep.f_stack(func, report_data, exp_data_index, trials)
     f_df2xl(writer, stubcon, 'stubcon', option=1)
 
 
