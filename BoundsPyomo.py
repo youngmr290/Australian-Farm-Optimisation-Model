@@ -30,7 +30,7 @@ def boundarypyomo_local():
     ##set bounds to include
     bounds_inc=True #controls all bounds (typically on)
     rot_lobound_inc = False #controls rot bound
-    dam_lobound_inc = True #controls rot bound
+    dam_lobound_inc = False #controls rot bound
     sr_bound_inc = False #controls sr bound
     total_pasture_bound = fun.f_sa(False, sen.sav['bnd_pasarea_inc'], 5)  #bound on total pasture (hence also total crop)
     landuse_bound = False #bound on area of each landuse
