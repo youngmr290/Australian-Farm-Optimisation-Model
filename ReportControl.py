@@ -55,6 +55,8 @@ report_data = {}
 for row in trials:
     trial_name = exp_data_index[row][3]
     lp_vars,r_vals = rep.load_pkl(trial_name)
+    report_data[trial_name] = {}
+    report_data[trial_name] = {}
     report_data[trial_name]['lp_vars'] = lp_vars
     report_data[trial_name]['r_vals'] = r_vals
 
