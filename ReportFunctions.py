@@ -164,30 +164,15 @@ def f_vars2df(lp_vars, z_keys):
 ########################
 # across trial reports #
 ########################
-def f_xy_graph(func0, func1, report_data, exp_data_index, trials, func0_options, func1_options):
+def f_xy_graph(data):
     '''returns graph of crop area (x - axis) by profit (y - axis)
 
-    :param func0: func to generate x values
-    :param func1:func to generate y values
-    :param report_data: dict containint lp_vars and r_vals
-    :param exp_data_index: trial names - in the same order as exp.xls
-    :param trials: trials to return info for
-    :param func0_options:
-            3: total pasture area
-            4: total crop area
-    :param func1_options:
-            0: profit = rev - (exp + minroe + asset_opp +dep)
-            1: profit = rev - (exp + dep)
+    :param data: df with data to plot. first col contains x values and second col contains y values
+
     '''
     ##loop through trials and generate pnl table
-    y_vals = []  # create list to append pnl table from each trial
-    x_vals = []  # create list to append pnl table from each trial
-    for row in trials:
-        trial_name = exp_data_index[row][3]
-        lp_vars = report_data[trial_name]['lp_vars']
-        r_vals = report_data[trial_name]['r_vals']
-        x_vals.append(func0(lp_vars, r_vals, option=func0_options))
-        y_vals.append(func1(lp_vars, r_vals, option=func1_options))
+    x_vals = data.iloc[:,0]  # create list to append pnl table from each trial
+    y_vals = data.iloc[:,1]  # create list to append pnl table from each trial
     plt.plot(x_vals, y_vals)
     return plt
 
@@ -254,12 +239,9 @@ def f_price_summary(lp_vars, r_vals, option, grid, weight, fs):
 def f_summary(lp_vars, r_vals, trial):
     '''Returns a simple 1 row summary of the trial'''
     summary_df = pd.DataFrame(index=[trial], columns=['obj', 'profit'])
-    # summary_df = pd.DataFrame()
     ##obj
-    # summary_df['obj'] = f_profit(lp_vars, r_vals, option=0)
     summary_df.loc[trial, 'obj'] = f_profit(lp_vars, r_vals, option=0)
     ##profit - no minroe and asset
-    # summary_df['profit'] = f_profit(lp_vars, r_vals, option=1)
     summary_df.loc[trial, 'profit'] = f_profit(lp_vars, r_vals, option=1)
 
     return summary_df

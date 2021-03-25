@@ -7,7 +7,13 @@ The trials to report are controlled in exp.xl.
 The reports to run are controlled in exp.xl
 The code loops through each 'on' trial and calculates the reports. The resulting table from each trial is stacked
  together. Once the loop is completed the between trial reports (reports that require info from all trials) are
- calculated. 
+ calculated.
+
+To add a report:
+1. Make the relevant code.
+2. add it to exp.xl
+3. add an empty df to stack results
+4. add if statement to store final report to excel
 
 Note: If reporting dates from a numpy array it is necessary to convert to datetime64[ns] prior to converting to a DataFrame
 
@@ -47,67 +53,39 @@ trials = np.array(range(len(exp_data_index)))[pd.Series(exp_data_index.get_level
 ##check the trials you want to run exist and are up to date
 rep.f_errors(exp_data_index, trial_outdated, trials)
 
+##read in excel that controls which reports to run
+report_run = pd.read_excel('exp.xlsm', sheet_name='Run Report', index_col=[0], header=[0], engine='openpyxl')
 
-#todo could these report settings be included in exp.xl in a separate sheet
-# Could be read in with named ranges using fun.xl_all_named_ranges & an extra sheet doesn't appear to affect reading the experiment
-run_summary         = True #1 row summary for each trial
+##create empty df to stack each trial results into
 stacked_summary = pd.DataFrame()  # create df to append table from each trial
-run_areasum         = True #area summary for each landuse
 stacked_areasum = pd.DataFrame()  # create df to append table from each trial
-run_pnl             = True #table of profit and loss
 stacked_pnl = pd.DataFrame()  # create df to append table from each trial
-run_profitarea      = False #graph profit by crop area
 stacked_profitarea = pd.DataFrame()  # create df to append table from each trial
-run_saleprice       = True #table of gross saleprices for specified grids, weights & fat scores
 stacked_saleprice = pd.DataFrame()  # create df to append table from each trial
-run_cfw_dams        = True #table of CFW
 stacked_cfw_dams = pd.DataFrame()  # create df to append table from each trial
-run_lw_dams         = False #table of liveweight at the start of the DVP
 stacked_lw_dams = pd.DataFrame()  # create df to append table from each trial
-run_ffcfw_dams      = True # table of fleece free conceptus free weights
 stacked_ffcfw_dams = pd.DataFrame()  # create df to append table from each trial
-run_fec_dams        = True #Feed energy concentration for the dams in each generator period
 stacked_fec_dams = pd.DataFrame()  # create df to append table from each trial
-run_ffcfw_prog        = True #ffcfw of prog
 stacked_ffcfw_prog = pd.DataFrame()  # create df to append table from each trial
-run_fec_offs        = True #Feed energy concentration for the offspring in each generator period
 stacked_fec_offs = pd.DataFrame()  # create df to append table from each trial
-run_weanper         = True #table of weaning percent
 stacked_weanper = pd.DataFrame()  # create df to append table from each trial
-run_scanper         = True #table of scanning percent
 stacked_scanper = pd.DataFrame()  # create df to append table from each trial
-run_lamb_survival   = True #table of lamb survival
 stacked_lamb_survival = pd.DataFrame()  # create df to append table from each trial
-run_daily_mei_dams  = True #table of ME intake
 stacked_daily_mei_dams = pd.DataFrame()  # create df to append table from each trial
-run_daily_pi_dams   = True #table of potential intake
 stacked_daily_pi_dams = pd.DataFrame()  # create df to append table from each trial
-run_numbers_dams    = True #table of numbers of Dams in each DVP
 stacked_numbers_dams = pd.DataFrame()  # create df to append table from each trial
-run_numbers_prog    = True #table of numbers of prog
 stacked_numbers_prog = pd.DataFrame()  # create df to append table from each trial
-run_numbers_offs    = True #table of numbers of Offspring in each DVP
 stacked_numbers_offs = pd.DataFrame()  # create df to append table from each trial
-run_dse             = True #table of DSE
 stacked_dse = pd.DataFrame()  # create df to append table from each trial
 stacked_dse1 = pd.DataFrame()  # create df to append table from each trial
-run_grnfoo          = True #table of green FOO at end of each feed period
 stacked_grnfoo = pd.DataFrame()  # create df to append table from each trial
-run_dryfoo          = True #table of dry FOO at end of each feed period
 stacked_dryfoo = pd.DataFrame()  # create df to append table from each trial
-run_napfoo          = True #table of nap FOO at end of each feed period
 stacked_napfoo = pd.DataFrame()  # create df to append table from each trial
-run_grncon          = True #table of consumption of green pasture during each feed period
 stacked_grncon = pd.DataFrame()  # create df to append table from each trial
-run_drycon          = True #table of consumption of dry pasture during each feed period
 stacked_drycon = pd.DataFrame()  # create df to append table from each trial
-run_napcon          = True #table of consumption of pasture on the non-arable areas of crop paddocks during each feed period
 stacked_napcon = pd.DataFrame()  # create df to append table from each trial
-run_poccon          = True #table of consumption of pasture on crop paddocks during each feed period
 stacked_poccon = pd.DataFrame()  # create df to append table from each trial
-run_supcon          = True #table of consumption of supplement during each feed period
 stacked_supcon = pd.DataFrame()  # create df to append table from each trial
-run_stubcon         = True #table of consumption of stubble during each feed period
 stacked_stubcon = pd.DataFrame()  # create df to append table from each trial
 
 ##read in the pickled results
@@ -115,40 +93,34 @@ report_data = {}
 for row in trials:
     trial_name = exp_data_index[row][3]
     lp_vars,r_vals = rep.load_pkl(trial_name)
-    # report_data[trial_name] = {}
-    # report_data[trial_name] = {}
-    # report_data[trial_name]['lp_vars'] = lp_vars
-    # report_data[trial_name]['r_vals'] = r_vals
 
     ##run report functions
-    if run_summary:
+    if report_run.loc['run_summary','Run']:
         summary = rep.f_summary(lp_vars,r_vals,trial_name)
-        # summary = pd.concat([summary],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_summary = stacked_summary.append(summary)
     
-    if run_areasum:
+    if report_run.loc['run_areasum', 'Run']:
         option = 2
         areasum = rep.f_area_summary(lp_vars, r_vals, option=option)
         areasum = pd.concat([areasum],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_areasum = stacked_areasum.append(areasum)
     
-    if run_pnl:
+    if report_run.loc['run_pnl', 'Run']:
         pnl = rep.f_profitloss_table(lp_vars, r_vals)
         pnl = pd.concat([pnl],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_pnl = stacked_pnl.append(pnl)
 
     
-    if run_profitarea:
+    if report_run.loc['run_profitarea', 'Run']:
         area_option = 4
         profit_option = 0
-        profitarea = pd.DataFrame()
-        profitarea['area'] = rep.f_area_summary(lp_vars,r_vals,area_option)
-        profitarea['profit'] = rep.f_profit(lp_vars,r_vals,profit_option)
-        profitarea = pd.concat([profitarea],keys=[trial_name],names=['Trial'])  # add trial name as index level
+        profitarea = pd.DataFrame(index=[trial_name], columns=['area','profit'])
+        profitarea.loc[trial_name, 'area'] = rep.f_area_summary(lp_vars,r_vals,area_option)
+        profitarea.loc[trial_name,'profit'] = rep.f_profit(lp_vars,r_vals,profit_option)
         stacked_profitarea = stacked_profitarea.append(profitarea)
 
     
-    if run_saleprice:
+    if report_run.loc['run_saleprice', 'Run']:
         option = 2
         grid = [0,5,6]
         weight = [22,40,25]
@@ -158,7 +130,7 @@ for row in trials:
         stacked_saleprice = stacked_saleprice.append(saleprice)
 
     
-    if run_cfw_dams:
+    if report_run.loc['run_cfw_dams', 'Run']:
         type = 'stock'
         prod = 'cfw_hdmob_k2tva1nwziyg1'
         weights = 'dams_numbers_k2tvanwziy1g1'
@@ -175,7 +147,7 @@ for row in trials:
         stacked_cfw_dams = stacked_cfw_dams.append(cfw_dams)
 
     
-    if run_lw_dams:
+    if report_run.loc['run_lw_dams', 'Run']:
         type = 'stock'
         prod = 'lw_dams_k2vpa1e1b1nw8ziyg1'
         na_prod = [1]
@@ -196,7 +168,7 @@ for row in trials:
         stacked_lw_dams = stacked_lw_dams.append(lw_dams)
 
     
-    if run_ffcfw_dams:
+    if report_run.loc['run_ffcfw_dams', 'Run']:
         type = 'stock'
         prod = 'ffcfw_dams_k2vpa1e1b1nw8ziyg1'
         na_prod = [1]
@@ -217,7 +189,7 @@ for row in trials:
         stacked_ffcfw_dams = stacked_ffcfw_dams.append(ffcfw_dams)
 
     
-    if run_fec_dams:
+    if report_run.loc['run_fec_dams', 'Run']:
         type = 'stock'
         prod = 'fec_dams_k2vpa1e1b1nw8ziyg1'
         na_prod = [1]
@@ -238,7 +210,7 @@ for row in trials:
         stacked_fec_dams = stacked_fec_dams.append(fec_dams)
 
     
-    if run_ffcfw_prog:
+    if report_run.loc['run_ffcfw_prog', 'Run']:
         type = 'stock'
         prod = 'ffcfw_prog_zia0xg2w9'
         weights = 1
@@ -256,7 +228,7 @@ for row in trials:
 
     
     
-    if run_fec_offs:
+    if report_run.loc['run_fec_offs', 'Run']:
         type = 'stock'
         prod = 'fec_offs_k3k5vpnw8zida0e0b0xyg3'
         na_prod = [2]
@@ -279,7 +251,7 @@ for row in trials:
         stacked_fec_offs = stacked_fec_offs.append(fec_offs)
 
     
-    if run_lamb_survival:
+    if report_run.loc['run_lamb_survival', 'Run']:
         option = 0
         arith_axis = [0,1,3,4,6,7,8,9,10]
         index =[2]
@@ -291,7 +263,7 @@ for row in trials:
         stacked_lamb_survival = stacked_lamb_survival.append(lamb_survival)
 
     
-    if run_weanper:
+    if report_run.loc['run_weanper', 'Run']:
         option = 1
         arith_axis = [0,2,3,4,5,6,7,8]
         index =[1]
@@ -303,7 +275,7 @@ for row in trials:
         stacked_weanper = stacked_weanper.append(weanper)
 
     
-    if run_scanper:
+    if report_run.loc['run_scanper', 'Run']:
         option = 2
         arith_axis = [0,2,3,4,5,6,7,8]
         index =[1]
@@ -316,7 +288,7 @@ for row in trials:
 
     
     
-    if run_daily_mei_dams:
+    if report_run.loc['run_daily_mei_dams', 'Run']:
         type = 'stock'
         prod = 'mei_dams_k2p6ftva1nw8ziyg1'
         weights = 'dams_numbers_k2tvanwziy1g1'
@@ -336,7 +308,7 @@ for row in trials:
         stacked_daily_mei_dams = stacked_daily_mei_dams.append(daily_mei_dams)
 
     
-    if run_daily_pi_dams:
+    if report_run.loc['run_daily_pi_dams', 'Run']:
         type = 'stock'
         prod = 'pi_dams_k2p6ftva1nw8ziyg1'
         weights = 'dams_numbers_k2tvanwziy1g1'
@@ -357,7 +329,7 @@ for row in trials:
         stacked_daily_pi_dams = stacked_daily_pi_dams.append(daily_pi_dams)
 
     
-    if run_numbers_dams:
+    if report_run.loc['run_numbers_dams', 'Run']:
         type = 'stock'
         weights = 'dams_numbers_k2tvanwziy1g1'
         keys = 'dams_keys_k2tvanwziy1g1'
@@ -374,7 +346,7 @@ for row in trials:
         stacked_numbers_dams = stacked_numbers_dams.append(numbers_dams)
 
     
-    if run_numbers_prog:
+    if report_run.loc['run_numbers_prog', 'Run']:
         type = 'stock'
         weights = 'prog_numbers_k5twzida0xg2'
         keys = 'prog_keys_k5twzida0xg2'
@@ -391,7 +363,7 @@ for row in trials:
         stacked_numbers_prog = stacked_numbers_prog.append(numbers_prog)
 
     
-    if run_numbers_offs:
+    if report_run.loc['run_numbers_offs', 'Run']:
         type = 'stock'
         weights = 'offs_numbers_k3k5tvnwziaxyg3'
         keys = 'offs_keys_k3k5tvnwziaxyg3'
@@ -408,7 +380,7 @@ for row in trials:
         stacked_numbers_offs = stacked_numbers_offs.append(numbers_offs)
 
     
-    if run_dse:
+    if report_run.loc['run_dse', 'Run']:
         method = 0
         per_ha = True
         dse = rep.f_dse(lp_vars, r_vals, method = method, per_ha = per_ha)
@@ -420,7 +392,7 @@ for row in trials:
         stacked_dse1 = stacked_dse1.append(dse1)
 
     
-    if run_grnfoo:
+    if report_run.loc['run_grnfoo', 'Run']:
         #returns foo at end of each fp
         type = 'pas'
         prod = 'foo_end_grnha_goflzt'
@@ -438,7 +410,7 @@ for row in trials:
         stacked_grnfoo = stacked_grnfoo.append(grnfoo)
 
     
-    if run_dryfoo:
+    if report_run.loc['run_dryfoo', 'Run']:
         #returns foo at end of each fp
         type = 'pas'
         prod = 1000
@@ -456,7 +428,7 @@ for row in trials:
         stacked_dryfoo = stacked_dryfoo.append(dryfoo)
 
     
-    if run_napfoo:
+    if report_run.loc['run_napfoo', 'Run']:
         #returns foo at end of each fp
         prod = 1000
         type = 'pas'
@@ -474,7 +446,7 @@ for row in trials:
         stacked_napfoo = stacked_napfoo.append(napfoo)
 
     
-    if run_grncon:
+    if report_run.loc['run_grncon', 'Run']:
         #returns consumption in each fp
         prod = 'cons_grnha_t_goflzt'
         type = 'pas'
@@ -492,7 +464,7 @@ for row in trials:
         stacked_grncon = stacked_grncon.append(grncon)
 
     
-    if run_drycon:
+    if report_run.loc['run_drycon', 'Run']:
         #returns consumption in each fp
         prod = 1000
         type = 'pas'
@@ -510,7 +482,7 @@ for row in trials:
         stacked_drycon = stacked_drycon.append(drycon)
 
     
-    if run_napcon:
+    if report_run.loc['run_napcon', 'Run']:
         #returns consumption in each fp
         prod = 1000
         type = 'pas'
@@ -528,7 +500,7 @@ for row in trials:
         stacked_napcon = stacked_napcon.append(napcon)
 
     
-    if run_poccon:
+    if report_run.loc['run_poccon', 'Run']:
         #returns consumption in each fp
         prod = 1000
         type = 'pas'
@@ -546,7 +518,7 @@ for row in trials:
         stacked_poccon = stacked_poccon.append(poccon)
 
     
-    if run_supcon:
+    if report_run.loc['run_supcon', 'Run']:
         #returns consumption in each fp
         option = 1
         supcon = rep.f_grain_sup_summary(lp_vars, r_vals, option=option)
@@ -554,7 +526,7 @@ for row in trials:
         stacked_supcon = stacked_supcon.append(supcon)
 
     
-    if run_stubcon:
+    if report_run.loc['run_stubcon', 'Run']:
         #returns consumption in each fp
         stubcon = rep.f_stubble_summary(lp_vars, r_vals)
         stubcon = pd.concat([stubcon],keys=[trial_name],names=['Trial'])  # add trial name as index level
@@ -563,66 +535,66 @@ for row in trials:
 ####################################
 #run between trial reports and save#
 ####################################
-if run_summary:
+if report_run.loc['run_summary', 'Run']:
     rep.f_df2xl(writer, stacked_summary, 'summary', option=1)
-if run_areasum:
+if report_run.loc['run_areasum', 'Run']:
     rep.f_df2xl(writer, stacked_areasum, 'areasum', option=1)
-if run_pnl:
+if report_run.loc['run_pnl', 'Run']:
     rep.f_df2xl(writer, stacked_pnl, 'pnl', option=1)
-if run_profitarea:
+if report_run.loc['run_profitarea', 'Run']:
     #todo need to fix the plot function
-    plot = rep.f_xy_graph(func0, func1, report_data, exp_data_index, trials, func0_option, func1_option)
+    plot = rep.f_xy_graph(stacked_profitarea)
     plot.savefig('Output/profitarea_curve.png')
-if run_saleprice:
+if report_run.loc['run_saleprice', 'Run']:
     rep.f_df2xl(writer, stacked_saleprice, 'saleprice', option=1)
-if run_cfw_dams:
+if report_run.loc['run_cfw_dams', 'Run']:
     rep.f_df2xl(writer, stacked_cfw_dams, 'cfw_dams', option=1)
-if run_lw_dams:
+if report_run.loc['run_lw_dams', 'Run']:
     rep.f_df2xl(writer, stacked_lw_dams, 'lw_dams', option=1)
-if run_ffcfw_dams:
+if report_run.loc['run_ffcfw_dams', 'Run']:
     rep.f_df2xl(writer, stacked_ffcfw_dams, 'ffcfw_dams', option=1)
-if run_fec_dams:
+if report_run.loc['run_fec_dams', 'Run']:
     rep.f_df2xl(writer, stacked_fec_dams, 'fec_dams', option=1)
-if run_ffcfw_prog:
+if report_run.loc['run_ffcfw_prog', 'Run']:
     rep.f_df2xl(writer, stacked_ffcfw_prog, 'ffcfw_prog', option=1)
-if run_fec_offs:
+if report_run.loc['run_fec_offs', 'Run']:
     rep.f_df2xl(writer, stacked_fec_offs, 'fec_offs', option=1)
-if run_lamb_survival:
+if report_run.loc['run_lamb_survival', 'Run']:
     rep.f_df2xl(writer, stacked_lamb_survival, 'lamb_survival', option=1)
-if run_weanper:
+if report_run.loc['run_weanper', 'Run']:
     rep.f_df2xl(writer, stacked_weanper, 'wean_per', option=1)
-if run_scanper:
+if report_run.loc['run_scanper', 'Run']:
     rep.f_df2xl(writer, stacked_scanper, 'scan_per', option=1)
-if run_daily_mei_dams:
+if report_run.loc['run_daily_mei_dams', 'Run']:
     rep.f_df2xl(writer, stacked_daily_mei_dams, 'daily_mei_dams', option=1)
-if run_daily_pi_dams:
+if report_run.loc['run_daily_pi_dams', 'Run']:
     rep.f_df2xl(writer, stacked_daily_pi_dams, 'daily_pi_dams', option=1)
-if run_numbers_dams:
+if report_run.loc['run_numbers_dams', 'Run']:
     rep.f_df2xl(writer, stacked_numbers_dams, 'numbers_dams', option=1)
-if run_numbers_prog:
+if report_run.loc['run_numbers_prog', 'Run']:
     rep.f_df2xl(writer, stacked_numbers_prog, 'numbers_prog', option=1)
-if run_numbers_offs:
+if report_run.loc['run_numbers_offs', 'Run']:
     rep.f_df2xl(writer, stacked_numbers_offs, 'numbers_offs', option=1)
-if run_dse:
+if report_run.loc['run_dse', 'Run']:
     rep.f_df2xl(writer, stacked_dse, 'dse_wt', option=1)
     rep.f_df2xl(writer, stacked_dse1, 'dse_mei', option=1)
-if run_grnfoo:
+if report_run.loc['run_grnfoo', 'Run']:
     rep.f_df2xl(writer, stacked_grnfoo, 'grnfoo', option=1)
-if run_dryfoo:
+if report_run.loc['run_dryfoo', 'Run']:
     rep.f_df2xl(writer, stacked_dryfoo, 'dryfoo', option=1)
-if run_napfoo:
+if report_run.loc['run_napfoo', 'Run']:
     rep.f_df2xl(writer, stacked_napfoo, 'napfoo', option=1)
-if run_grncon:
+if report_run.loc['run_grncon', 'Run']:
     rep.f_df2xl(writer, stacked_grncon, 'grncon', option=1)
-if run_drycon:
+if report_run.loc['run_drycon', 'Run']:
     rep.f_df2xl(writer, stacked_drycon, 'drycon', option=1)
-if run_napcon:
+if report_run.loc['run_napcon', 'Run']:
     rep.f_df2xl(writer, stacked_napcon, 'napcon', option=1)
-if run_poccon:
+if report_run.loc['run_poccon', 'Run']:
     rep.f_df2xl(writer, stacked_poccon, 'poccon', option=1)
-if run_supcon:
+if report_run.loc['run_supcon', 'Run']:
     rep.f_df2xl(writer, stacked_supcon, 'supcon', option=1)
-if run_stubcon:
+if report_run.loc['run_stubcon', 'Run']:
     rep.f_df2xl(writer, stacked_stubcon, 'stubcon', option=1)
 
 
