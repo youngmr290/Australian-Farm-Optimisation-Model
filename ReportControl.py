@@ -45,9 +45,9 @@ exp_data = fun.f_run_required(exp_data, check_pyomo=False)
 trial_outdated = exp_data['run'] #returns true if trial is out of date
 
 ## enter the trials to summarise and the reports to include
-trials = np.array(range(len(exp_data_index)))[pd.Series(exp_data_index.get_level_values(2)).fillna(0).astype(bool)]  #this is slightly complicated becasue blank rows in exp.xl result in nan, so nan must be converted to 0.
+trials = np.array(range(len(exp_data_index)))[pd.Series(exp_data_index.get_level_values(2)).fillna(0).astype(bool)]  #this is slightly complicated because blank rows in exp.xl result in nan, so nan must be converted to 0.
 
-##check the trials you want to run exist and are upto date
+##check the trials you want to run exist and are up to date
 rep.f_errors(exp_data_index, trial_outdated, trials)
 
 ##read in the pickled results
@@ -230,7 +230,7 @@ if run_lw_dams:
 
 if run_ffcfw_dams:
     func = rep.f_stock_pasture_summary
-     type = 'stock'
+    type = 'stock'
     prod = 'ffcfw_dams_k2vpa1e1b1nw8ziyg1'
     na_prod = [1]
     weights = 'dams_numbers_k2tvanwziy1g1'
