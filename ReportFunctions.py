@@ -254,9 +254,12 @@ def f_price_summary(lp_vars, r_vals, option, grid, weight, fs):
 def f_summary(lp_vars, r_vals, trial):
     '''Returns a simple 1 row summary of the trial'''
     summary_df = pd.DataFrame(index=[trial], columns=['obj', 'profit'])
+    # summary_df = pd.DataFrame()
     ##obj
+    # summary_df['obj'] = f_profit(lp_vars, r_vals, option=0)
     summary_df.loc[trial, 'obj'] = f_profit(lp_vars, r_vals, option=0)
     ##profit - no minroe and asset
+    # summary_df['profit'] = f_profit(lp_vars, r_vals, option=1)
     summary_df.loc[trial, 'profit'] = f_profit(lp_vars, r_vals, option=1)
 
     return summary_df
@@ -905,8 +908,8 @@ def f_profit(lp_vars, r_vals, option=0):
     1- rev - (exp + dep)
     '''
     obj_profit = lp_vars['profit']
-    minroe = pd.Series(lp_vars['v_minroe'])
-    asset_value = pd.Series(lp_vars['v_asset'])
+    minroe = pd.Series(lp_vars['v_minroe']).squeeze()
+    asset_value = pd.Series(lp_vars['v_asset']).squeeze()
     if option == 0:
         return obj_profit
     else:
