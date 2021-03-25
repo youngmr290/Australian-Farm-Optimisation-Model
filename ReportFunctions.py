@@ -13,12 +13,79 @@ import numpy as np
 from matplotlib import pyplot as plt
 import pickle as pkl
 import os.path
+import xlsxwriter
 
 import Functions as fun
 import Exceptions as exc
 
 na = np.newaxis
 
+###################
+#general functions#
+###################
+def f_df2xl(writer, df, sheet, rowstart=0, colstart=0, option=0):
+    '''
+    Pandas to excel. https://xlsxwriter.readthedocs.io/working_with_pandas.html
+        - You can simply stick a dataframe from pandas into excel using df.to_excel() function.
+          for this you can specify the workbook the sheet and the start row or col (so you can put
+          multiple dfs in one sheet)
+        - The next level involves interacting with xlsxwriter. This allows you to do custom things like
+          creating graphs, hiding rows/cols, filtering or grouping.
+
+    :param writer: writer used. controls the workbook being writen to.
+    :param df: dataframe going to excel
+    :param sheet: str: sheet name.
+    :param rowstart: start row in excel
+    :param colstart: start col in excel
+    :param option: int: specifying the writing option
+                    0: df straight into excel
+                    1: df into excel collapsing empty rows and cols
+    '''
+    ## simple write df to xl
+    df.to_excel(writer, sheet, startrow=rowstart, startcol=colstart)
+
+    ##set up xlsxwriter stuff needed for advanced options
+    workbook = writer.book
+    worksheet = writer.sheets[sheet]
+
+    ## collapse rows and cols with all 0's
+    if option==1:
+        df = df.round(5)  # round so that very small numbers are dropped out in the next step
+        for row in range(len(df)):
+            if (df.iloc[row]==0).all():
+                offset = df.columns.nlevels #number of columns used for names
+                if offset>1:
+                    offset += 1 #for some reason if the cols are multiindex the an extra row gets added when writing to excel
+                worksheet.set_row(row+offset,None,None,{'level': 1, 'hidden': True}) #set hidden to true to collapse the level initially
+
+        for col in range(len(df.columns)):
+            if (df.iloc[:,col]==0).all():
+                offset = df.index.nlevels
+                col = xlsxwriter.utility.xl_col_to_name(col+offset) + ':' + xlsxwriter.utility.xl_col_to_name(col+offset) #convert col number to excel col reference eg 'A:B'
+                worksheet.set_column(col,None,None,{'level': 1, 'hidden': True})
+        return
+
+    ##apply filter
+    if option==2:
+        # Activate autofilter
+        worksheet.autofilter(f'B1:B{len(df)}')
+        worksheet.filter_column('B', 'x < 5') # todo this will need to become function argument
+
+        # Hide the rows that don't match the filter criteria.
+        for idx,row_data in df.iterrows():
+            region = row_data['Data']
+            if not (region < 5):
+                # We need to hide rows that don't match the filter.
+                worksheet.set_row(idx + 1,options={'hidden': True})
+
+    ##create chart
+    if option==3:
+        # Create a chart object.
+        chart = workbook.add_chart({'type': 'column'}) # todo this will need to become function argument
+        # Configure the series of the chart from the dataframe data.
+        chart.add_series({'values': '=areasum!$B$2:$B$8'}) # todo this will need to become function argument
+        # Insert the chart into the worksheet.
+        worksheet.insert_chart('D2',chart)
 
 def f_errors(exp_data_index, trial_outdated, trials):
     ##first check if data exists for each desired trial
@@ -93,34 +160,10 @@ def f_vars2df(lp_vars, z_keys):
             final_series = pd.concat([final_series, var_series])
     return final_series.sort_index()
 
-#################
-# Final reports #
-#################
 
-def f_stack(func, report_data, exp_data_index, trials, **kwargs):
-    '''
-    Returns dataframe for specified function. Multiple trials result in a stacked table with trial name as index level.
-
-    :param func: report function whose return value is to be stacked
-    :param report_data: dict containint lp_vars and r_vals
-    :param exp_data_index: trial names - in the same order as exp.xls
-    :param trials: trials to return info for
-    :param kwargs: args for specified function. This is optional.
-    '''
-
-    ##loop through trials and generate pnl table
-    result_stacked = pd.DataFrame()  # create df to append table from each trial
-    for row in trials:
-        trial_name = exp_data_index[row][3]
-        lp_vars = report_data[trial_name]['lp_vars']
-        r_vals = report_data[trial_name]['r_vals']
-        result = func(lp_vars, r_vals, **kwargs)
-        result = pd.concat([result], keys=[trial_name], names=['Trial'])  # add trial name as index level
-        result_stacked = result_stacked.append(result)
-
-    return result_stacked
-
-
+########################
+# across trial reports #
+########################
 def f_xy_graph(func0, func1, report_data, exp_data_index, trials, func0_options, func1_options):
     '''returns graph of crop area (x - axis) by profit (y - axis)
 
@@ -153,7 +196,7 @@ def f_xy_graph(func0, func1, report_data, exp_data_index, trials, func0_options,
 # input summaries #
 ###################
 
-def f_price_summary(lp_vars, r_vals, **kwargs):
+def f_price_summary(lp_vars, r_vals, option, grid, weight, fs):
     '''Returns price summaries
     :param r_vals:
     :key option:
@@ -165,11 +208,6 @@ def f_price_summary(lp_vars, r_vals, **kwargs):
     :key fs: int - fat score to report price for. Has to be number between 1-5 inclusive.
     :return: df
     '''
-    ##unpack kwargs
-    option = kwargs['option']
-    grid = kwargs['grid']
-    weight = kwargs['weight']
-    fs = kwargs['fs']
 
     ##grain price - farmgate (price received by farmer)
     if option == 0:
@@ -239,7 +277,7 @@ def f_rotation(lp_vars, r_vals):
     return phases_rk, rot_area_zrl, rot_area_zlrk
 
 
-def f_area_summary(lp_vars, r_vals, **kwargs):
+def f_area_summary(lp_vars, r_vals, option):
     '''
     Rotation & landuse area summary. With multiple output levels.
     return options:
@@ -254,8 +292,6 @@ def f_area_summary(lp_vars, r_vals, **kwargs):
         4: float total crop area
         5: table crop and pasture area by lmu
     '''
-    ##unpack kwargs
-    option = kwargs['option']
 
     ##read from other functions
     rot_area_zrl, rot_area_zlrk = f_rotation(lp_vars, r_vals)[1:3]
@@ -730,7 +766,7 @@ def f_overhead_summary(r_vals):
     return exp_fix_c
 
 #todo this should probably report z as an index rather than summing it.
-def f_dse(lp_vars, r_vals, **kwargs):
+def f_dse(lp_vars, r_vals, method, per_ha):
     '''
     DSE calculation
 
@@ -743,8 +779,7 @@ def f_dse(lp_vars, r_vals, **kwargs):
         if true it returns DSE/ha else it returns total dse
     :return DSE per pasture hectare for each sheep group:
     '''
-    method = kwargs['method']
-    per_ha = kwargs['per_ha']
+
     stock_vars = f_stock_reshape(lp_vars, r_vals)
 
     if method == 0:
@@ -878,7 +913,9 @@ def f_profit(lp_vars, r_vals, option=0):
         return obj_profit + minroe + (asset_value * r_vals['fin']['opportunity_cost_capital'])
 
 
-def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, **kwargs):
+def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None, index=[], cols=[], arith=0, arith_axis=[],
+                            prod=1, na_prod=[], weights=None, na_weights=[], axis_slice={},
+                            na_denweights=[], den_weights=1, na_denom=[], denom=1):
     '''
     Returns summary of a numpy array in a pandas table.
     Note: 1. prod and weights must be broadcastable.
@@ -911,68 +948,20 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, **kwargs):
     '''
     ##unpack dict adding default values
     ###no default value (therefore argument must exist)
-    keys_key = kwargs['keys']
-    type = kwargs['type']
-    ###default values exist
-    try:
-        na_weights = kwargs['na_weights']
-    except KeyError:
-        na_weights = []
+    keys_key = keys
 
-    try:
-        na_prod = kwargs['na_prod']
-    except KeyError:
-        na_prod = []
 
-    try:
-        na_denweights = kwargs['na_denweights']
-    except KeyError:
-        na_denweights = []
 
-    try:
-        den_weights = kwargs['den_weights']
-    except KeyError:
-        den_weights = 1
+    # try:
+    #     denom = r_vals[kwargs['denom'][0]][kwargs['denom'][1]]
+    # except KeyError:
+    #     denom = 1
 
-    try:
-        arith = kwargs['arith']
-    except KeyError:
-        arith = 0
+    # try:
+    #     na_denom = kwargs['denom_pos']
+    # except KeyError:
+    #     na_denom = []
 
-    try:
-        arith_axis = kwargs['arith_axis']
-    except KeyError:
-        arith_axis = []
-
-    try:
-        denom = r_vals[kwargs['denom'][0]][kwargs['denom'][1]]
-    except KeyError:
-        denom = 1
-
-    try:
-        na_denom = kwargs['denom_pos']
-    except KeyError:
-        na_denom = []
-
-    try:
-        index = kwargs['index']
-    except KeyError:
-        index = []
-
-    try:
-        cols = kwargs['cols']
-    except KeyError:
-        cols = []
-
-    try:
-        prod_key = kwargs['prod']
-    except KeyError:
-        prod_key = 1
-
-    try:
-        axis_slice = kwargs['axis_slice']
-    except KeyError:
-        axis_slice = {}
 
     ##read from stock reshape function
     if type == 'stock':
@@ -986,22 +975,21 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, **kwargs):
         ###keys that will become the index and cols for table
         keys = vars[keys_key]
 
+    ##if no weights then make None
+    try:
+        weights = vars[weights]
+    except KeyError:
+        weights = None
 
     ###if production doesnt exist eg it is 1 or some other number (this means you can preform arith with any number - mainly used for pasture when there is no production param)
-    if isinstance(prod_key, str):
-        prod = r_vals[prod_key]
+    if isinstance(prod, str):
+        prod = r_vals[prod]
     else:
-        prod = np.array([prod_key])
+        prod = np.array([prod])
     ###den weight - used in weighted average calc (default is 1)
     if isinstance(den_weights, str):
         den_weights = r_vals[den_weights]
 
-
-    ##if no weights then make None
-    try:
-        weights = vars[kwargs['weights']]
-    except KeyError:
-        weights = None
 
     ##other manipulation
     f_numpy2df_error(prod, weights, arith_axis, index, cols)
@@ -1016,7 +1004,7 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, **kwargs):
         return prod, keys
 
 
-def f_survival_wean_scan(lp_vars, r_vals, **kwargs):
+def f_survival_wean_scan(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], arith_axis=[], axis_slice={}):
     '''
 
     :param lp_vars: dict: results from pyomo
@@ -1031,32 +1019,8 @@ def f_survival_wean_scan(lp_vars, r_vals, **kwargs):
     :key axis_slice (optional, default = {}): dict: keys (int) is the axis. value (list) is the start, stop and step of the slice
     :return: pandas df
     '''
-    ##unpack dict adding default values
-    ###default values exist
-    try:
-        option = kwargs['option']
-    except KeyError:
-        option = 0
 
-    try:
-        arith_axis = kwargs['arith_axis']
-    except KeyError:
-        arith_axis = []
 
-    try:
-        index = kwargs['index']
-    except KeyError:
-        index = []
-
-    try:
-        cols = kwargs['cols']
-    except KeyError:
-        cols = []
-
-    try:
-        axis_slice = kwargs['axis_slice']
-    except KeyError:
-        axis_slice = {}
 
     ##params for specific options
     type = 'stock'
