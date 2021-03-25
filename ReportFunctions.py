@@ -931,22 +931,7 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None
     :key axis_slice (optional, default = {}): dict: keys (int) is the axis. value (list) is the start, stop and step of the slice
     :return: pandas df
     '''
-    ##unpack dict adding default values
-    ###no default value (therefore argument must exist)
     keys_key = keys
-
-
-
-    # try:
-    #     denom = r_vals[kwargs['denom'][0]][kwargs['denom'][1]]
-    # except KeyError:
-    #     denom = 1
-
-    # try:
-    #     na_denom = kwargs['denom_pos']
-    # except KeyError:
-    #     na_denom = []
-
 
     ##read from stock reshape function
     if type == 'stock':
