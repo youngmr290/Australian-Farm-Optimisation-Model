@@ -47,6 +47,69 @@ trials = np.array(range(len(exp_data_index)))[pd.Series(exp_data_index.get_level
 ##check the trials you want to run exist and are up to date
 rep.f_errors(exp_data_index, trial_outdated, trials)
 
+
+#todo could these report settings be included in exp.xl in a separate sheet
+# Could be read in with named ranges using fun.xl_all_named_ranges & an extra sheet doesn't appear to affect reading the experiment
+run_summary         = True #1 row summary for each trial
+stacked_summary = pd.DataFrame()  # create df to append table from each trial
+run_areasum         = True #area summary for each landuse
+stacked_areasum = pd.DataFrame()  # create df to append table from each trial
+run_pnl             = True #table of profit and loss
+stacked_pnl = pd.DataFrame()  # create df to append table from each trial
+run_profitarea      = False #graph profit by crop area
+stacked_profitarea = pd.DataFrame()  # create df to append table from each trial
+run_saleprice       = True #table of gross saleprices for specified grids, weights & fat scores
+stacked_saleprice = pd.DataFrame()  # create df to append table from each trial
+run_cfw_dams        = True #table of CFW
+stacked_cfw_dams = pd.DataFrame()  # create df to append table from each trial
+run_lw_dams         = False #table of liveweight at the start of the DVP
+stacked_lw_dams = pd.DataFrame()  # create df to append table from each trial
+run_ffcfw_dams      = True # table of fleece free conceptus free weights
+stacked_ffcfw_dams = pd.DataFrame()  # create df to append table from each trial
+run_fec_dams        = True #Feed energy concentration for the dams in each generator period
+stacked_fec_dams = pd.DataFrame()  # create df to append table from each trial
+run_ffcfw_prog        = True #ffcfw of prog
+stacked_ffcfw_prog = pd.DataFrame()  # create df to append table from each trial
+run_fec_offs        = True #Feed energy concentration for the offspring in each generator period
+stacked_fec_offs = pd.DataFrame()  # create df to append table from each trial
+run_weanper         = True #table of weaning percent
+stacked_weanper = pd.DataFrame()  # create df to append table from each trial
+run_scanper         = True #table of scanning percent
+stacked_scanper = pd.DataFrame()  # create df to append table from each trial
+run_lamb_survival   = True #table of lamb survival
+stacked_lamb_survival = pd.DataFrame()  # create df to append table from each trial
+run_daily_mei_dams  = True #table of ME intake
+stacked_daily_mei_dams = pd.DataFrame()  # create df to append table from each trial
+run_daily_pi_dams   = True #table of potential intake
+stacked_daily_pi_dams = pd.DataFrame()  # create df to append table from each trial
+run_numbers_dams    = True #table of numbers of Dams in each DVP
+stacked_numbers_dams = pd.DataFrame()  # create df to append table from each trial
+run_numbers_prog    = True #table of numbers of prog
+stacked_numbers_prog = pd.DataFrame()  # create df to append table from each trial
+run_numbers_offs    = True #table of numbers of Offspring in each DVP
+stacked_numbers_offs = pd.DataFrame()  # create df to append table from each trial
+run_dse             = True #table of DSE
+stacked_dse = pd.DataFrame()  # create df to append table from each trial
+stacked_dse1 = pd.DataFrame()  # create df to append table from each trial
+run_grnfoo          = True #table of green FOO at end of each feed period
+stacked_grnfoo = pd.DataFrame()  # create df to append table from each trial
+run_dryfoo          = True #table of dry FOO at end of each feed period
+stacked_dryfoo = pd.DataFrame()  # create df to append table from each trial
+run_napfoo          = True #table of nap FOO at end of each feed period
+stacked_napfoo = pd.DataFrame()  # create df to append table from each trial
+run_grncon          = True #table of consumption of green pasture during each feed period
+stacked_grncon = pd.DataFrame()  # create df to append table from each trial
+run_drycon          = True #table of consumption of dry pasture during each feed period
+stacked_drycon = pd.DataFrame()  # create df to append table from each trial
+run_napcon          = True #table of consumption of pasture on the non-arable areas of crop paddocks during each feed period
+stacked_napcon = pd.DataFrame()  # create df to append table from each trial
+run_poccon          = True #table of consumption of pasture on crop paddocks during each feed period
+stacked_poccon = pd.DataFrame()  # create df to append table from each trial
+run_supcon          = True #table of consumption of supplement during each feed period
+stacked_supcon = pd.DataFrame()  # create df to append table from each trial
+run_stubcon         = True #table of consumption of stubble during each feed period
+stacked_stubcon = pd.DataFrame()  # create df to append table from each trial
+
 ##read in the pickled results
 report_data = {}
 for row in trials:
@@ -57,73 +120,10 @@ for row in trials:
     # report_data[trial_name]['lp_vars'] = lp_vars
     # report_data[trial_name]['r_vals'] = r_vals
 
-    #todo could these report settings be included in exp.xl in a separate sheet
-    # Could be read in with named ranges using fun.xl_all_named_ranges & an extra sheet doesn't appear to affect reading the experiment
-    run_summary         = True #1 row summary for each trial
-    stacked_summary = pd.DataFrame()  # create df to append table from each trial
-    run_areasum         = True #area summary for each landuse
-    stacked_areasum = pd.DataFrame()  # create df to append table from each trial
-    run_pnl             = True #table of profit and loss
-    stacked_pnl = pd.DataFrame()  # create df to append table from each trial
-    run_profitarea      = False #graph profit by crop area
-    stacked_profitarea = pd.DataFrame()  # create df to append table from each trial
-    run_saleprice       = True #table of gross saleprices for specified grids, weights & fat scores
-    stacked_saleprice = pd.DataFrame()  # create df to append table from each trial
-    run_cfw_dams        = True #table of CFW
-    stacked_cfw_dams = pd.DataFrame()  # create df to append table from each trial
-    run_lw_dams         = False #table of liveweight at the start of the DVP
-    stacked_lw_dams = pd.DataFrame()  # create df to append table from each trial
-    run_ffcfw_dams      = True # table of fleece free conceptus free weights
-    stacked_ffcfw_dams = pd.DataFrame()  # create df to append table from each trial
-    run_fec_dams        = True #Feed energy concentration for the dams in each generator period
-    stacked_fec_dams = pd.DataFrame()  # create df to append table from each trial
-    run_ffcfw_prog        = True #ffcfw of prog
-    stacked_ffcfw_prog = pd.DataFrame()  # create df to append table from each trial
-    run_fec_offs        = True #Feed energy concentration for the offspring in each generator period
-    stacked_fec_offs = pd.DataFrame()  # create df to append table from each trial
-    run_weanper         = True #table of weaning percent
-    stacked_weanper = pd.DataFrame()  # create df to append table from each trial
-    run_scanper         = True #table of scanning percent
-    stacked_scanper = pd.DataFrame()  # create df to append table from each trial
-    run_lamb_survival   = True #table of lamb survival
-    stacked_lamb_survival = pd.DataFrame()  # create df to append table from each trial
-    run_daily_mei_dams  = True #table of ME intake
-    stacked_daily_mei_dams = pd.DataFrame()  # create df to append table from each trial
-    run_daily_pi_dams   = True #table of potential intake
-    stacked_daily_pi_dams = pd.DataFrame()  # create df to append table from each trial
-    run_numbers_dams    = True #table of numbers of Dams in each DVP
-    stacked_numbers_dams = pd.DataFrame()  # create df to append table from each trial
-    run_numbers_prog    = True #table of numbers of prog
-    stacked_numbers_prog = pd.DataFrame()  # create df to append table from each trial
-    run_numbers_offs    = True #table of numbers of Offspring in each DVP
-    stacked_numbers_offs = pd.DataFrame()  # create df to append table from each trial
-    run_dse             = True #table of DSE
-    stacked_dse = pd.DataFrame()  # create df to append table from each trial
-    stacked_dse1 = pd.DataFrame()  # create df to append table from each trial
-    run_grnfoo          = True #table of green FOO at end of each feed period
-    stacked_grnfoo = pd.DataFrame()  # create df to append table from each trial
-    run_dryfoo          = True #table of dry FOO at end of each feed period
-    stacked_dryfoo = pd.DataFrame()  # create df to append table from each trial
-    run_napfoo          = True #table of nap FOO at end of each feed period
-    stacked_napfoo = pd.DataFrame()  # create df to append table from each trial
-    run_grncon          = True #table of consumption of green pasture during each feed period
-    stacked_grncon = pd.DataFrame()  # create df to append table from each trial
-    run_drycon          = True #table of consumption of dry pasture during each feed period
-    stacked_drycon = pd.DataFrame()  # create df to append table from each trial
-    run_napcon          = True #table of consumption of pasture on the non-arable areas of crop paddocks during each feed period
-    stacked_napcon = pd.DataFrame()  # create df to append table from each trial
-    run_poccon          = True #table of consumption of pasture on crop paddocks during each feed period
-    stacked_poccon = pd.DataFrame()  # create df to append table from each trial
-    run_supcon          = True #table of consumption of supplement during each feed period
-    stacked_supcon = pd.DataFrame()  # create df to append table from each trial
-    run_stubcon         = True #table of consumption of stubble during each feed period
-    stacked_stubcon = pd.DataFrame()  # create df to append table from each trial
-    
-    
     ##run report functions
     if run_summary:
-        summary = rep.f_summary(lp_vars,r_vals)
-        summary = pd.concat([summary],keys=[trial_name],names=['Trial'])  # add trial name as index level
+        summary = rep.f_summary(lp_vars,r_vals,trial_name)
+        # summary = pd.concat([summary],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_summary = stacked_summary.append(summary)
     
     if run_areasum:

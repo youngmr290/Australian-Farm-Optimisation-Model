@@ -251,13 +251,13 @@ def f_price_summary(lp_vars, r_vals, option, grid, weight, fs):
 # intermediate report building functions#
 #########################################
 
-def f_summary(lp_vars, r_vals):
+def f_summary(lp_vars, r_vals, trial):
     '''Returns a simple 1 row summary of the trial'''
-    summary_df = pd.DataFrame()
+    summary_df = pd.DataFrame(index=[trial], columns=['obj', 'profit'])
     ##obj
-    summary_df['obj'] = f_profit(lp_vars, r_vals, option=0)
+    summary_df.loc[trial, 'obj'] = f_profit(lp_vars, r_vals, option=0)
     ##profit - no minroe and asset
-    summary_df['profit'] = f_profit(lp_vars, r_vals, option=1)
+    summary_df.loc[trial, 'profit'] = f_profit(lp_vars, r_vals, option=1)
 
     return summary_df
 
