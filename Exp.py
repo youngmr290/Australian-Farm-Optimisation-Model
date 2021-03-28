@@ -43,39 +43,6 @@ force_run=True #force precalcs to be run
 run_pyomo = True #do you want pyomo to run (default is True but if testing reports it can be useful to only run the precalcs)
 
 
-
-# #########################
-# #load pickle            #
-# #########################
-# ##try to load in lp variable dict, if it doesn't exist then create a new dict
-# try:
-#     with open('pkl_lp_vars.pkl', "rb") as f:
-#         lp_vars = pkl.load(f)
-# except FileNotFoundError:
-#     lp_vars={}
-#
-# ##try to load in params dict, if it doesn't exist then create a new dict
-# try:
-#     with open('pkl_params.pkl', "rb") as f:
-#         params = pkl.load(f)
-# except FileNotFoundError:
-#     params={}
-# prev_params = params.copy() #make a copy to compare with
-#
-# ##try to load in results file to dict, if it doesn't exist then create a new dict
-# try:
-#     with open('pkl_r_vals.pkl', "rb") as f:
-#         r_vals = pkl.load(f)
-# except FileNotFoundError:
-#     r_vals={}
-#
-# ##try to load in Previous exp.xls file to dict, if it doesn't exist then create a new dict
-# try:
-#     with open('pkl_exp.pkl', "rb") as f:
-#         prev_exp = pkl.load(f)
-# except FileNotFoundError:
-#     prev_exp=pd.DataFrame()
-    
 #########################
 #Exp loop               # #^maybe there is a cleaner way to do some of the stuff below ie a way that doesn't need as many if statements?
 #########################

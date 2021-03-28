@@ -36,6 +36,7 @@ from dateutil import relativedelta as rdelta
 import os.path
 import glob
 import pyomo.environ as pe
+import sys
 
 #this module shouldn't import other AFO modules
 import Exceptions as exc #can import exceptions because exceptions imports no modules
@@ -630,10 +631,23 @@ def f_run_required(exp_data1, check_pyomo=True):
         exp_data1['runpyomo'] = True
     return exp_data1
 
-def f_read_exp():
+def f_read_exp(exp_group=0):
+    '''
+
+    :param exp_group: optional int - specifying which group of trials to run.
+    :return:
+    '''
+
+    ##set the group of trials being run. This defaults to 0 unless an argument is passed in when runing the python script.
+    try:
+        exp_group = int(sys.argv[1]) #reads in as string so need to convert to int, the script path is the first value hence take the second.
+    except IndexError:
+        exp_group = 0
+
     ##read and drop irrelevant cols
     exp_data = pd.read_excel('exp.xlsm', index_col=None, header=[0,1,2,3], engine='openpyxl')
-    exp_data = exp_data.iloc[:,exp_data.columns.get_level_values(0)!='Drop']
+    exp_group_bool = exp_data.loc[:,('Drop','blank','blank','Exp Group')].values==exp_group
+    exp_data = exp_data.iloc[exp_group_bool, exp_data.columns.get_level_values(0)!='Drop']
     exp_data = exp_data.set_index(list(exp_data.columns[0:4]))
     ##check if any trials have the same name
     if  len(exp_data.index.get_level_values(3)) == len(set(exp_data.index.get_level_values(3))):
