@@ -62,6 +62,7 @@ stacked_areasum = pd.DataFrame()  # create df to append table from each trial
 stacked_pnl = pd.DataFrame()  # create df to append table from each trial
 stacked_profitarea = pd.DataFrame()  # create df to append table from each trial
 stacked_saleprice = pd.DataFrame()  # create df to append table from each trial
+stacked_saledate_offs = pd.DataFrame()  # create df to append table from each trial
 stacked_cfw_dams = pd.DataFrame()  # create df to append table from each trial
 stacked_lw_dams = pd.DataFrame()  # create df to append table from each trial
 stacked_ffcfw_dams = pd.DataFrame()  # create df to append table from each trial
@@ -130,6 +131,20 @@ for row in trials:
         stacked_saleprice = stacked_saleprice.append(saleprice)
 
     
+    if report_run.loc['run_saledate_offs', 'Run']:
+        type = 'stock'
+        prod = 'saledate_k3k5tvnwziaxyg3'
+        weights = 'offs_numbers_k3k5tvnwziaxyg3'
+        keys = 'offs_keys_k3k5tvnwziaxyg3'
+        arith = 1
+        arith_axis = [4,5,6,7,8,9,10,11]
+        index =[3]
+        cols =[0,1,2]
+        saledate_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
+                               keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols).astype('datetime64[D]')
+        saledate_offs = pd.concat([saledate_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
+        stacked_saledate_offs = stacked_saledate_offs.append(saledate_offs)
+
     if report_run.loc['run_cfw_dams', 'Run']:
         type = 'stock'
         prod = 'cfw_hdmob_k2tva1nwziyg1'
@@ -146,7 +161,7 @@ for row in trials:
         cfw_dams = pd.concat([cfw_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_cfw_dams = stacked_cfw_dams.append(cfw_dams)
 
-    
+
     if report_run.loc['run_lw_dams', 'Run']:
         type = 'stock'
         prod = 'lw_dams_k2vpa1e1b1nw8ziyg1'
@@ -547,6 +562,8 @@ if report_run.loc['run_profitarea', 'Run']:
     plot.savefig('Output/profitarea_curve.png')
 if report_run.loc['run_saleprice', 'Run']:
     rep.f_df2xl(writer, stacked_saleprice, 'saleprice', option=1)
+if report_run.loc['run_saledate_offs', 'Run']:
+    rep.f_df2xl(writer, stacked_saledate_offs, 'saledate_offs', option=1)
 if report_run.loc['run_cfw_dams', 'Run']:
     rep.f_df2xl(writer, stacked_cfw_dams, 'cfw_dams', option=1)
 if report_run.loc['run_lw_dams', 'Run']:

@@ -4528,6 +4528,11 @@ def generator(params,r_vals,ev,plots = False):
     ############
     #feed pools#
     ############
+    '''
+    If you are in the season version and get warning because all slices are nan it is likely becasue some of the
+     feed periods do not fall in any of the generator period becasue the feed period is too short. Thus need to 
+     fix inputs.
+    '''
     feedpools_start = time.time()
     ##Calculate the feed pools (f) and allocate each intake period to a feed pool based on mei/volume (E/V). - this is done like this to handle the big arrays easier - also handles situations where offs and dams may have diff length p axis
     ###calculate ‘ev’ for each animal class.
@@ -5349,6 +5354,10 @@ def generator(params,r_vals,ev,plots = False):
     r_woolvalue_ctva1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(woolvalue_tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_poffs,
                                               on_hand_tpa1e1b1nwzida0e0b0xyg3, a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p],index_any1tp=index_ctpa1e1b1nwzida0e0b0xyg)
 
+    ##sale time - no numbers needed becasue they dont effect sale date
+    r_saledate_tva1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(date_start_pa1e1b1nwzida0e0b0xyg3.astype('timedelta64[s]'), a_v_pa1e1b1nwzida0e0b0xyg3,
+                                                    period_is_tp=period_is_sale_tpa1e1b1nwzida0e0b0xyg3) #have to convert to timedelta so can multiply (converted back to date after the report)
+
     ##cfw per head average for the mob - includes the mortality factor
     r_cfw_hdmob_vg0 = sfun.f_p2v_std(o_cfw_psire, numbers_p=o_numbers_end_psire, on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0,
                                                   period_is_tvp=period_is_shearing_pa1e1b1nwzida0e0b0xyg0)
@@ -5396,8 +5405,16 @@ def generator(params,r_vals,ev,plots = False):
                                                                               index_k5tva1e1b1nwzida0e0b0xyg3[:,na,...],
                                                                               numbers_start_va1e1b1nwzida0e0b0xyg3,
                                                                               mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3)
+    ##sale date - no numbers needed becasue they dont effect sale date
+    r_saledate_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs',
+                                                                              r_saledate_tva1e1b1nwzida0e0b0xyg3,
+                                                                              a_k3cluster_da0e0b0xyg3,
+                                                                              index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...],
+                                                                              a_k5cluster_da0e0b0xyg3,
+                                                                              index_k5tva1e1b1nwzida0e0b0xyg3[:,na,...],
+                                                                              mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3)
 
-    ##wool value - needed for reporting
+    ##wool value
     r_woolvalue_ctva1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param('sire',r_woolvalue_ctva1e1b1nwzida0e0b0xyg0,
                                                                           numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
     r_woolvalue_k2ctva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams',r_woolvalue_ctva1e1b1nwzida0e0b0xyg1,
@@ -6375,6 +6392,10 @@ def generator(params,r_vals,ev,plots = False):
 
     r_vals['rm_stockinfra_var_h1c'] = rm_stockinfra_var_h1c
     r_vals['rm_stockinfra_fix_h1c'] = rm_stockinfra_fix_h1c
+
+    ###sale date
+    r_vals['saledate_k3k5tvnwziaxyg3'] = r_saledate_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
+
 
     ###cfw
     r_vals['cfw_hdmob_zg0'] = r_cfw_hdmob_tva1e1b1nwzida0e0b0xyg0.reshape(zg0_shape)
