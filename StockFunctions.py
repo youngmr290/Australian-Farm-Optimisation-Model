@@ -1318,7 +1318,10 @@ def f_season_wa(numbers, var, season, mask_min_lw_z, period_is_startseason):
     '''
     temporary = fun.f_weighted_average(var,numbers,season,keepdims=True, non_zero=True)  # gets the weighted average of production in the different seasons
     ###adjust production for min lw: the w slices with the minimum lw get assigned the production associated with the animal from the season with the lightest animal (this is so the light animals in the poor seasons are not disregarded when distributing in PP).
-    temporary[np.any(mask_min_lw_z,axis=season, keepdims=True)] = var[mask_min_lw_z]
+    ###use masked array to average the production from the z slices with the lightest animal (this is required incase multiple z slices have the same weight animals)
+    masked_var = np.ma.masked_array(var,np.logical_not(mask_min_lw_z))
+    mean_var = np.mean(masked_var ,axis=season,keepdims=True) #take the mean incase multiple season slices have the same weight light animal.
+    temporary[np.any(mask_min_lw_z,axis=season, keepdims=True)] = mean_var[np.any(mask_min_lw_z,axis=season, keepdims=True)]
 
     ###Set values where it is beginning of FVP
     var = fun.f_update(var,temporary,period_is_startseason)
