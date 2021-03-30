@@ -536,7 +536,6 @@ def f_stock_reshape(lp_vars, r_vals):
     stock_vars['sire_numbers_zg0'] = f_vars2np(lp_vars['v_sire'], sire_shape, z_pos=-2).astype(float)
     ###dams
     stock_vars['dams_numbers_k2tvanwziy1g1'] = f_vars2np(lp_vars['v_dams'], dams_shape, z_pos=-4).astype(float)
-    stock_vars['dams_numbers_tvanwziy1g1'] = np.sum(f_vars2np(lp_vars['v_dams'], dams_shape, z_pos=-4).astype(float), axis=0)
     ###prog
     stock_vars['prog_numbers_k5twzida0xg2'] = f_vars2np(lp_vars['v_prog'], prog_shape, z_pos=-6).astype(float)
     ###offs
@@ -974,8 +973,13 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None
         return prod, keys
 
 
-def f_survival_wean_scan(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], arith_axis=[], axis_slice={}):
+def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], arith_axis=[], axis_slice={}):
     '''
+    Depending on the option selected this function can calc:
+        Lamb survival
+        Weaning %
+        Scanning %
+        Proportion of dry ewes
 
     :param lp_vars: dict: results from pyomo
     :param r_vals: dict: report variable
@@ -1002,19 +1006,25 @@ def f_survival_wean_scan(lp_vars, r_vals, option=0, keys=None, index=[], cols=[]
         keys = 'dams_keys_k2tvaeb9nwziy1g1'
         # den_weights = 'e1b1_denom_weights_k2tva1e1b1nw8ziyg1'
     elif option == 1:
-        prod = 'nyatf_wean_tva1nw8ziyg1'
-        prod2 = 1      #prod = 1 to return the number of dams
-        weights = 'dams_numbers_tvanwziy1g1'
+        prod = 'nyatf_wean_k2tva1nw8ziyg1'
+        prod2 = 'n_mated_k2tva1nw8ziyg1'
+        weights = 'dams_numbers_k2tvanwziy1g1'
         na_weights = []
-        keys = 'dams_keys_tvanwziy1g1'
+        keys = 'dams_keys_k2tvanwziy1g1'
         # den_weights = 1
     elif option == 2:
-        prod = 'nfoet_scan_tva1nw8ziyg1'
-        prod2 = 1      #prod = 1 to return the number of dams
-        weights = 'dams_numbers_tvanwziy1g1'
+        prod = 'nfoet_scan_k2tva1nw8ziyg1'
+        prod2 = 'n_mated_k2tva1nw8ziyg1'
+        weights = 'dams_numbers_k2tvanwziy1g1'
         na_weights = []
-        keys = 'dams_keys_tvanwziy1g1'
-        # den_weights = 1
+        keys = 'dams_keys_k2tvanwziy1g1'
+
+    elif option == 3:
+        prod = 'n_drys_k2tva1nw8ziyg1'
+        prod2 = 'n_mated_k2tva1nw8ziyg1'
+        weights = 'dams_numbers_k2tvanwziy1g1'
+        na_weights = []
+        keys = 'dams_keys_k2tvanwziy1g1'
 
     ##params for all options
     arith = 2
@@ -1031,19 +1041,16 @@ def f_survival_wean_scan(lp_vars, r_vals, option=0, keys=None, index=[], cols=[]
         prog_born_k2tvpa1e1b1nw8ziyg1 = np.moveaxis(np.sum(denominator[...,na] * r_vals['stock']['mask_b1b9_preg_b1nwziygb9'], axis=-8), -1, -7)
         percentage = fun.f_divide(prog_alive_k2tvpa1e1b1nw8ziyg1, prog_born_k2tvpa1e1b1nw8ziyg1)
 
-    ##calc for wean %
-    elif option == 1:
-        ##roll the number of dams along the v axis to align the joining number with the numerator
-        roll = 2
-        denominator = np.roll(denominator,roll,axis=-8)
+    ##calc for wean % or scan %
+    else:
         percentage= fun.f_divide(numerator, denominator)
 
-    ##calc for scan %
-    elif option == 2:
-        ##roll the number of dams along the v axis to align the joining number with the numerator
-        roll = 1
-        denominator = np.roll(denominator,roll,axis=-8)
-        percentage= fun.f_divide(numerator, denominator)
+    # ##calc for scan %
+    # elif option == 2:
+    #     # ##roll the number of dams along the v axis to align the joining number with the numerator
+    #     # roll = 1
+    #     denominator = np.roll(denominator,roll,axis=-8)
+    #     percentage= fun.f_divide(numerator, denominator)
 
     ##make table
     percentage = f_numpy2df(percentage, keys_sliced, index, cols)

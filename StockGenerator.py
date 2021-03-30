@@ -5400,6 +5400,18 @@ def generator(params,r_vals,ev,plots = False):
     r_nyatf_birth_tvg1 = sfun.f_p2v(nyatf_b1nwzida0e0b0xyg, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_pdams,
                                    on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_birth_pa1e1b1nwzida0e0b0xyg1)
 
+    ##numbers dry
+    n_drys_b1g1 = fun.f_expand(sinp.stock['i_is_dry_b1'],b1_pos)
+    r_n_drys_tvg1 = sfun.f_p2v(n_drys_b1g1*1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_pdams,
+                                on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_scan_pa1e1b1nwzida0e0b0xyg1)
+
+    ##numbers mated
+    r_n_mated_tvg1 = sfun.f_p2v(animal_mated_b1g1*1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_pdams,
+                                on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_mating_pa1e1b1nwzida0e0b0xyg1)
+    ###update dvps that are not mating with mating numbers
+    a_matingv_tvg1 =  np.maximum.accumulate(np.any(r_n_mated_tvg1 != 0, axis=b1_pos, keepdims=True) * index_va1e1b1nwzida0e0b0xyg1, axis=p_pos) #create association pointing at previous/current mating dvp.
+    r_n_mated_tvg1= np.take_along_axis(r_n_mated_tvg1, a_matingv_tvg1, axis=p_pos)
+
     ###########################
     # create report params    #
     ###########################
@@ -5507,14 +5519,32 @@ def generator(params,r_vals,ev,plots = False):
     ######################################
     #weaning %, scan % and lamb survival #
     ######################################
+    ##proportion mated - per ewe at start of dvp (ie accounting for dam mortality)
+    r_n_mated_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams',r_n_mated_tvg1,
+                                                                          a_k2cluster_va1e1b1nwzida0e0b0xyg1,
+                                                                          index_k2tva1e1b1nwzida0e0b0xyg1,
+                                                                       numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1,
+                                                                       mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1)  # no clustering required for scanning percent because it is a measure of all dams
+
+    ##proportion of drys - per ewe at start of dvp (ie accounting for dam mortality)
+    r_n_drys_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams',r_n_drys_tvg1,
+                                                                          a_k2cluster_va1e1b1nwzida0e0b0xyg1,
+                                                                          index_k2tva1e1b1nwzida0e0b0xyg1,
+                                                                       numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1,
+                                                                       mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1)  # no clustering required for scanning percent because it is a measure of all dams
+
     ##wean percent - weaning percent - npw per ewe at start of dvp (ie accounting for mortality)
     ###number of progeny weaned. Cluster and account for mortality between start of dvp and weaning so it is compatible with the dams variable
-    r_nyatf_wean_tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams',npw2_tva1e1b1nwzida0e0b0xyg1,
+    r_nyatf_wean_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams',npw2_tva1e1b1nwzida0e0b0xyg1,
+                                                                          a_k2cluster_va1e1b1nwzida0e0b0xyg1,
+                                                                          index_k2tva1e1b1nwzida0e0b0xyg1,
                                                                        numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1,
                                                                        mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1) # no clustering required for wean percent because it is a measure of all dams
 
     ##scanning percent - foetuses scanned per ewe at start of dvp (ie accounting for dam mortality)
-    r_nfoet_scan_tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams',r_nfoet_scan_tvg1,
+    r_nfoet_scan_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams',r_nfoet_scan_tvg1,
+                                                                          a_k2cluster_va1e1b1nwzida0e0b0xyg1,
+                                                                          index_k2tva1e1b1nwzida0e0b0xyg1,
                                                                        numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1,
                                                                        mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1)  # no clustering required for scanning percent because it is a measure of all dams
 
@@ -6353,8 +6383,6 @@ def generator(params,r_vals,ev,plots = False):
 
     r_vals['sire_keys_g0'] = [keys_g0]
     r_vals['sire_keys_p6fg0'] = [keys_p6, keys_f, keys_g0]
-    r_vals['dams_keys_tvanwziy1g1'] = [keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i,
-                                             keys_y1, keys_g1]
     r_vals['dams_keys_k2tvanwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i,
                                              keys_y1, keys_g1]
     r_vals['dams_keys_k2tvaeb9nwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_a, keys_e, keys_b9, keys_n1, keys_lw1, keys_z, keys_i,
@@ -6470,17 +6498,21 @@ def generator(params,r_vals,ev,plots = False):
     r_vals['pi_offs_k3k5p6ftvnw8ziaxyg3'] = pi_k3k5p6ftva1e1b1nwzida0e0b0xyg3.reshape(k3k5p6ftvnwziaxyg3_shape)
 
 
+    ###proportion mated per dam at beginning of the period (eg accounts for mortality)
+    r_vals['n_mated_k2tva1nw8ziyg1'] = r_n_mated_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
+
+    ###proportion of drys per dam at beginning of the period (eg accounts for mortality)
+    r_vals['n_drys_k2tva1nw8ziyg1'] = r_n_drys_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
+
     ###number of foetuses scanned per dam at beginning of the period (eg accounts for mortality)
-    r_vals['nfoet_scan_tva1nw8ziyg1'] = r_nfoet_scan_tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape[1:])
+    r_vals['nfoet_scan_k2tva1nw8ziyg1'] = r_nfoet_scan_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
 
     ###wean percent
-    r_vals['nyatf_wean_tva1nw8ziyg1'] = r_nyatf_wean_tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape[1:])
+    r_vals['nyatf_wean_k2tva1nw8ziyg1'] = r_nyatf_wean_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
 
     ###nfoet and nyatf used to calc lamb survival and mortality
     r_vals['nfoet_birth_k2tva1e1b1nw8ziyg1'] = r_nfoet_birth_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1e1b1nwziyg1_shape)
     r_vals['nyatf_birth_k2tva1e1b1nw8ziyg1'] = r_nyatf_birth_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1e1b1nwziyg1_shape)
-    # r_vals['prog_born_k2tva1e1b1nw8ziyg1'] = r_prog_born_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1e1b1nwziyg1_shape)
-    # r_vals['prog_alive_k2tva1e1b1nw8ziyg1'] = r_prog_alive_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1e1b1nwziyg1_shape)
     index_b9 = [0,1,2,3]
     nfoet_b1nwzida0e0b0xygb9 = nfoet_b1nwzida0e0b0xyg[...,na] == index_b9
     nyatf_b1nwzida0e0b0xygb9 = nyatf_b1nwzida0e0b0xyg[...,na] == index_b9

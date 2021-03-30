@@ -290,7 +290,7 @@ for row in trials:
         index =[2]
         cols =[5]
         axis_slice = {}
-        lamb_survival = rep.f_survival_wean_scan(lp_vars, r_vals, option=option, arith_axis=arith_axis,
+        lamb_survival = rep.f_lambing_status(lp_vars, r_vals, option=option, arith_axis=arith_axis,
                                     index=index, cols=cols, axis_slice=axis_slice)
         lamb_survival = pd.concat([lamb_survival],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_lamb_survival = stacked_lamb_survival.append(lamb_survival)
@@ -298,11 +298,11 @@ for row in trials:
     
     if report_run.loc['run_weanper', 'Run']:
         option = 1
-        arith_axis = [0,2,3,4,5,6,7,8]
-        index =[1]
+        arith_axis = [0,1,3,4,5,6,7,8,9]
+        index =[2]
         cols =[]
         axis_slice = {}
-        weanper = rep.f_survival_wean_scan(lp_vars, r_vals, option=option, arith_axis=arith_axis,
+        weanper = rep.f_lambing_status(lp_vars, r_vals, option=option, arith_axis=arith_axis,
                                     index=index, cols=cols, axis_slice=axis_slice)
         weanper = pd.concat([weanper],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_weanper = stacked_weanper.append(weanper)
@@ -310,32 +310,25 @@ for row in trials:
     
     if report_run.loc['run_scanper', 'Run']:
         option = 2
-        arith_axis = [0,2,3,4,5,6,7,8]
-        index =[1]
+        arith_axis = [0,1,3,4,5,6,7,8,9]
+        index =[2]
         cols =[]
         axis_slice = {}
-        scanper = rep.f_survival_wean_scan(lp_vars, r_vals, option=option, arith_axis=arith_axis,
+        scanper = rep.f_lambing_status(lp_vars, r_vals, option=option, arith_axis=arith_axis,
                                     index=index, cols=cols, axis_slice=axis_slice)
         scanper = pd.concat([scanper],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_scanper = stacked_scanper.append(scanper)
 
     if report_run.loc['run_dry_propn', 'Run']:
-        type = 'stock'
-        prod = 'e1b1_denom_weights_k2tva1e1b1nw8ziyg1'
-        weights = 'dams_numbers_k2tvanwziy1g1'
-        na_weights = [4, 5]
-        keys = 'dams_keys_k2tvaebnwziy1g1'
-        arith = 2
-        arith_axis = [0,1,3,4,6,7,8,9,10,11]
+        option = 3
+        arith_axis = [0,1,3,4,5,6,7,8,9]
         index =[2]
-        cols =[5]
-        dam_b_numbers = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
-                               na_weights=na_weights, keys=keys, arith=arith,
-                               arith_axis=arith_axis, index=index, cols=cols)
-        dry_propn = dam_b_numbers.iloc[:,1] / dam_b_numbers.iloc[:,1:] #calc propn of drys
+        cols =[]
+        axis_slice = {}
+        dry_propn = rep.f_lambing_status(lp_vars, r_vals, option=option, arith_axis=arith_axis,
+                                    index=index, cols=cols, axis_slice=axis_slice)
         dry_propn = pd.concat([dry_propn],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_dry_propn = stacked_dry_propn.append(dry_propn)
-
 
     if report_run.loc['run_daily_mei_dams', 'Run']:
         type = 'stock'
