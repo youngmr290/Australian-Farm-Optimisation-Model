@@ -50,7 +50,7 @@ import CorePyomo as core
 # logger = multiprocessing.log_to_stderr(logging.DEBUG)
 
 ## the upper limit of number of processes (concurrent trials) based on the memory capacity of this machine
-maximum_processes = 8  # available memory / value determined by size of the model being run (~5GB for the small model)
+maximum_processes = 12  # available memory / value determined by size of the model being run (~5GB for the small model)
 
 start_time1 = time.time()
 

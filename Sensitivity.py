@@ -55,7 +55,6 @@ sam['LTW_offs'] = 1.0                       #adjust impact of life time wool fle
 ##stock parameters
 sam['ci_c2'] = np.ones(uinp.parameters_inp['i_ci_c2'].shape,  dtype=np.float64)  #intake params for genotypes
 sam['sfw_c2'] = 1.0                       #std fleece weight genotype params
-sam['sfd_c2'] = 1.0                       #std fibre diameter genotype params
 
 
 ######
@@ -67,6 +66,8 @@ sam['sfd_c2'] = 1.0                       #std fibre diameter genotype params
 #SAA #
 ######
 
+##stock parameters
+saa['sfd_c2'] = 1.0                       #std fibre diameter genotype params
 
 ######
 #SAT #
