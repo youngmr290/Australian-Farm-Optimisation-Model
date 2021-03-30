@@ -1041,15 +1041,17 @@ def f_lwc_cs(cg, rc_start, mei, mem, mew, z1f, z2f, kg, mec = 0,
     return ebg, evg, pg, fg, level
 
 
-def f_lwc_mu(cg, rc_start, mei, mem, mew, z1f, z2f, kg, evg, mec = 0,
+def f_lwc_mu(cg, rc_start, mei, mem, mew, z1f, z2f, kg, i_evg, mec = 0,
               mel = 0, gest_propn = 0, lact_propn = 0):
     ##Level of feeding (maint = 0)
     level = (mei /  (mem + mec * gest_propn + mel * lact_propn + mew)) - 1
     ##Net energy gain (based on ME)
     neg = kg * (mei - (mem + mec * gest_propn + mel * lact_propn + mew))
-    ##Energy Value of gain. If zf2 = 1 then use the value from the GEPEP trial
-    temporary = cg[8, ...] - z1f * (cg[9, ...] - cg[10, ...] * (level - 1)) + z2f * cg[11, ...] * (rc_start - 1)
-    evg = fun.f_update(evg , temporary, z2f < 1)
+    ##Energy Value of gain as calculated.
+    c_evg = cg[8, ...] - z1f * (cg[9, ...] - cg[10, ...] * (level - 1)) + z2f * cg[11, ...] * (rc_start - 1)
+    # evg = fun.f_update(evg , temporary, z2f < 1)
+    ## Scale from calculated to input evg based on z2f. If z2f = 1 then use the value from the GEPEP trial
+    evg = c_evg * z2f + i_evg * (1- z2f)
     ##Empty bodyweight gain
     ebg = neg / evg
     # ##Protein gain
