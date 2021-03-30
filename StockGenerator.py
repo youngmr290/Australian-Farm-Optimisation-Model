@@ -5373,6 +5373,21 @@ def generator(params,r_vals,ev,plots = False):
     r_cfw_hd_tvg3 = sfun.f_p2v(o_cfw_poffs, a_v_pa1e1b1nwzida0e0b0xyg3, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg3,
                                period_is_tp=period_is_shearing_tpa1e1b1nwzida0e0b0xyg3)
 
+    ##fd per head average for the mob - includes the mortality factor
+    r_fd_hdmob_vg0 = sfun.f_p2v_std(o_fd_psire, numbers_p=o_numbers_end_psire, on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0,
+                                                  period_is_tvp=period_is_shearing_pa1e1b1nwzida0e0b0xyg0)
+    r_fd_hdmob_tvg1 = sfun.f_p2v(o_fd_pdams, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_pdams,
+                                             on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_shearing_pa1e1b1nwzida0e0b0xyg1)
+    r_fd_hdmob_tvg3 = sfun.f_p2v(o_fd_poffs, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_poffs,
+                                             on_hand_tpa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_shearing_tpa1e1b1nwzida0e0b0xyg3)
+    ##fd per head - wool cut for 1 whole animal, no account for mortality
+    r_fd_hd_vg0 = sfun.f_p2v_std(o_fd_psire, on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0,
+                                                  period_is_tvp=period_is_shearing_pa1e1b1nwzida0e0b0xyg0)
+    r_fd_hd_tvg1 = sfun.f_p2v(o_fd_pdams, a_v_pa1e1b1nwzida0e0b0xyg1, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1,
+                               period_is_tp=period_is_shearing_pa1e1b1nwzida0e0b0xyg1)
+    r_fd_hd_tvg3 = sfun.f_p2v(o_fd_poffs, a_v_pa1e1b1nwzida0e0b0xyg3, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg3,
+                               period_is_tp=period_is_shearing_tpa1e1b1nwzida0e0b0xyg3)
+
     ##nfoet scanning
     r_nfoet_scan_tvg1 = sfun.f_p2v(nfoet_b1nwzida0e0b0xyg, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_pdams,
                                 on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_scan_pa1e1b1nwzida0e0b0xyg1)
@@ -5455,6 +5470,34 @@ def generator(params,r_vals,ev,plots = False):
                                                                         index_k2tva1e1b1nwzida0e0b0xyg1,
                                                                         mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1)
     r_cfw_hd_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs',r_cfw_hd_tvg3,a_k3cluster_da0e0b0xyg3,
+                                                                          index_k3k5tva1e1b1nwzida0e0b0xyg3,
+                                                                          a_k5cluster_da0e0b0xyg3,
+                                                                          index_k5tva1e1b1nwzida0e0b0xyg3,
+                                                                          mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3)
+
+    ##fd per head average for the mob - includes the mortality factor
+    r_fd_hdmob_tva1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param('sire',r_fd_hdmob_vg0,
+                                                                         numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
+    r_fd_hdmob_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams',r_fd_hdmob_tvg1,
+                                                                           a_k2cluster_va1e1b1nwzida0e0b0xyg1,
+                                                                           index_k2tva1e1b1nwzida0e0b0xyg1,
+                                                                           numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1,
+                                                                           mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1)
+    r_fd_hdmob_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs',r_fd_hdmob_tvg3,
+                                                                             a_k3cluster_da0e0b0xyg3,
+                                                                             index_k3k5tva1e1b1nwzida0e0b0xyg3,
+                                                                             a_k5cluster_da0e0b0xyg3,
+                                                                             index_k5tva1e1b1nwzida0e0b0xyg3,
+                                                                             numbers_start_va1e1b1nwzida0e0b0xyg3,
+                                                                             mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3)
+
+    ##fd per head - wool cut per animal at shearing, no account for mortality (numbers)
+    r_fd_hd_tva1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param('sire',r_fd_hd_vg0)
+    r_fd_hd_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams',r_fd_hd_tvg1,
+                                                                        a_k2cluster_va1e1b1nwzida0e0b0xyg1,
+                                                                        index_k2tva1e1b1nwzida0e0b0xyg1,
+                                                                        mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1)
+    r_fd_hd_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs',r_fd_hd_tvg3,a_k3cluster_da0e0b0xyg3,
                                                                           index_k3k5tva1e1b1nwzida0e0b0xyg3,
                                                                           a_k5cluster_da0e0b0xyg3,
                                                                           index_k5tva1e1b1nwzida0e0b0xyg3,
@@ -6316,6 +6359,8 @@ def generator(params,r_vals,ev,plots = False):
                                              keys_y1, keys_g1]
     r_vals['dams_keys_k2tvaeb9nwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_a, keys_e, keys_b9, keys_n1, keys_lw1, keys_z, keys_i,
                                              keys_y1, keys_g1]
+    r_vals['dams_keys_k2tvaebnwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_a, keys_e, keys_b, keys_n1, keys_lw1, keys_z, keys_i,
+                                             keys_y1, keys_g1]
     r_vals['dams_keys_k2tvpaebnwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1, keys_z, keys_i,
                                              keys_y1, keys_g1]
     r_vals['dams_keys_k2p6ftvanwziy1g1'] = [keys_k2, keys_p6, keys_f, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1,
@@ -6405,6 +6450,15 @@ def generator(params,r_vals,ev,plots = False):
     r_vals['cfw_hd_zg0'] = r_cfw_hd_tva1e1b1nwzida0e0b0xyg0.reshape(zg0_shape)
     r_vals['cfw_hd_k2tva1nwziyg1'] = r_cfw_hd_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
     r_vals['cfw_hd_k3k5tvnwziaxyg3'] = r_cfw_hd_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
+
+    ###fd
+    r_vals['fd_hdmob_zg0'] = r_fd_hdmob_tva1e1b1nwzida0e0b0xyg0.reshape(zg0_shape)
+    r_vals['fd_hdmob_k2tva1nwziyg1'] = r_fd_hdmob_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
+    r_vals['fd_hdmob_k3k5tvnwziaxyg3'] = r_fd_hdmob_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
+
+    r_vals['fd_hd_zg0'] = r_fd_hd_tva1e1b1nwzida0e0b0xyg0.reshape(zg0_shape)
+    r_vals['fd_hd_k2tva1nwziyg1'] = r_fd_hd_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
+    r_vals['fd_hd_k3k5tvnwziaxyg3'] = r_fd_hd_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
 
     ###mei and pi and fec (feed energy concentration)
     r_vals['mei_sire_p6fzg0'] = mei_p6fa1e1b1nwzida0e0b0xyg0.reshape(p6fzg0_shape)
