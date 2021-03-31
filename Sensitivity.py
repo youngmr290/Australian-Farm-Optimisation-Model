@@ -56,10 +56,10 @@ sam['LTW_offs'] = 1.0                       #adjust impact of life time wool fle
 sam['ci_c2'] = np.ones(uinp.parameters_inp['i_ci_c2'].shape,  dtype=np.float64)  #intake params for genotypes
 sam['sfw_c2'] = 1.0                       #std fleece weight genotype params
 
-
 ######
 #SAP #
 ######
+sap['evg'] = 0.0                            #energy content of liveweight gain
 
 
 ######
@@ -126,6 +126,5 @@ sav['nut_spread_n1'] = np.full(pinp.sheep_inp['i_nut_spread_n1'].shape, '-', dty
 sav['nut_spread_n3'] = np.full(pinp.sheep_inp['i_nut_spread_n3'].shape, '-', dtype=object)      #nut spread dams
 
 ##stock parameters
-sav['evg_c2'] = np.full(uinp.parameters_inp['i_evg_c2'].shape, '-', dtype=object)  #SA value for energy value of each c2 genotype.
 sav['srw_c2'] = np.full(uinp.parameters_inp['i_srw_c2'].shape, '-', dtype=object)  #SA value for srw of each c2 genotype.
 sav['cl0_c2'] = np.full(uinp.parameters_inp['i_cl0_c2'].shape, '-', dtype=object)  #SA value for litter size genotype params.
