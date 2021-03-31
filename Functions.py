@@ -427,7 +427,7 @@ def f_update(existing_value, new_value, mask_for_new):
     except AttributeError:
         if new_value=='-':
             new_value = 0
-    #todo using a masked array may allow f_update to handle situation that have a nan value that is masked - MRY addition: i couldnt get this method to actually work
+    #todo using a masked array may allow f_update to handle situation that have a nan value that is masked - MRY addition: i couldn't get this method to actually work
     # updated = np.ma.masked_array(existing_value, mask_for_new) + np.ma.maskedarray(new_value, np.logical_not(mask_for_new))  #used 'not' rather than '~' because ~False == -1 rather than True (not the case for np.arrays only if bool is single - as it is for sire in some situations)
     updated = existing_value * np.logical_not(mask_for_new) + new_value * mask_for_new #used not rather than ~ because ~False == -1 not True (not the case for np.arrays only if bool is single - as it is for sire in some situations)
 
@@ -638,7 +638,7 @@ def f_read_exp(exp_group=0):
     :return:
     '''
 
-    ##set the group of trials being run. This defaults to 0 unless an argument is passed in when runing the python script.
+    ##set the group of trials being run. This defaults to 0 unless an argument is passed in when running the python script.
     try:
         exp_group = int(sys.argv[1]) #reads in as string so need to convert to int, the script path is the first value hence take the second.
     except IndexError:

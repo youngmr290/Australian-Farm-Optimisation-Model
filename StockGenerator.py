@@ -3212,8 +3212,8 @@ def generator(params,r_vals,ev,plots = False):
                 ###sorted index of w. used for condensing and used below.
                 idx_sorted_w_sire = np.argsort(ffcfw_sire, axis=w_pos)
 
-                ###mask with a true for the season and w slices with the lighest animal
-                mask_min_lw_z_sire = np.isclose(ffcfw_sire, np.min(ffcfw_sire, axis=(w_pos, z_pos), keepdims=True)) #use isclose incase small rounding error in lw
+                ###mask with a true for the season and w slices with the lightest animal
+                mask_min_lw_z_sire = np.isclose(ffcfw_sire, np.min(ffcfw_sire, axis=(w_pos, z_pos), keepdims=True)) #use isclose in case small rounding error in lw
 
                 ###store output variables for the post processing
                 o_numbers_start_psire[p] = numbers_start_sire
@@ -3240,8 +3240,8 @@ def generator(params,r_vals,ev,plots = False):
                 ###sorted index of w. used for condensing.
                 idx_sorted_w_dams = np.argsort(ffcfw_dams, axis=w_pos)
 
-                ###mask with a true for the season and w slices with the lighest animal
-                mask_min_lw_z_dams = np.isclose(ffcfw_dams, np.min(ffcfw_dams, axis=(w_pos, z_pos), keepdims=True)) #use isclose incase small rounding error in lw
+                ###mask with a true for the season and w slices with the lightest animal
+                mask_min_lw_z_dams = np.isclose(ffcfw_dams, np.min(ffcfw_dams, axis=(w_pos, z_pos), keepdims=True)) #use isclose in case small rounding error in lw
 
                 ###store output variables for the post processing
                 o_numbers_start_pdams[p] = numbers_start_dams
@@ -3301,8 +3301,8 @@ def generator(params,r_vals,ev,plots = False):
                 ###sorted index of w. used for condensing.
                 idx_sorted_w_yatf = np.argsort(ffcfw_yatf, axis=w_pos)
 
-                ###mask with a true for the season and w slices with the lighest animal
-                mask_min_lw_z_yatf = np.isclose(ffcfw_yatf, np.min(ffcfw_yatf, axis=(w_pos, z_pos), keepdims=True)) #use isclose incase small rounding error in lw
+                ###mask with a true for the season and w slices with the lightest animal
+                mask_min_lw_z_yatf = np.isclose(ffcfw_yatf, np.min(ffcfw_yatf, axis=(w_pos, z_pos), keepdims=True)) #use isclose in case small rounding error in lw
 
                 ###store output variables for the post processing
                 o_pi_pyatf[p] = pi_yatf
@@ -3336,8 +3336,8 @@ def generator(params,r_vals,ev,plots = False):
                 ###sorted index of w. used for condensing.
                 idx_sorted_w_offs = np.argsort(ffcfw_offs, axis=w_pos)
 
-                ###mask with a true for the season and w slices with the lighest animal
-                mask_min_lw_z_offs = np.isclose(ffcfw_offs, np.min(ffcfw_offs, axis=(w_pos, z_pos), keepdims=True)) #use isclose incase small rounding error in lw
+                ###mask with a true for the season and w slices with the lightest animal
+                mask_min_lw_z_offs = np.isclose(ffcfw_offs, np.min(ffcfw_offs, axis=(w_pos, z_pos), keepdims=True)) #use isclose in case small rounding error in lw
 
                 ###store output variables for the post processing
                 o_numbers_start_poffs[p] = numbers_start_offs
@@ -3366,17 +3366,17 @@ def generator(params,r_vals,ev,plots = False):
             #stuff for next period    #
             ###########################
             '''
-            What is done in following section (not done every peirod):
+            What is done in following section (not done every period):
                 1. W axis can be condensed
                 2. the e and b axis can be combined
-                3. the z axisls can be combined
+                3. the z axis can be combined
             The order of the following stuff DOES matter.
-                1. production needs to be condesned (w handling) using non condensed end numbers.
+                1. production needs to be condensed (w handling) using non condensed end numbers.
                 2. production for start of next period (z, e & b axis handling) needs to be calculated using condensed end numbers 
             '''
 
             ##condensing - this requires end number (that have NOT been condensed)
-            ###sire - currently not condensed becasue only one dvp but code exists incase we add the detail later.
+            ###sire - currently not condensed because only one dvp but code exists in case we add the detail later.
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                 ###FFCFW (condense - fleece free conceptus free)
                 ffcfw_condensed_sire = sfun.f_condensed(numbers_end_sire, ffcfw_sire, idx_sorted_w_sire, prejoin_tup, season_tup,
@@ -3643,7 +3643,7 @@ def generator(params,r_vals,ev,plots = False):
                                         , len_w3, n_fvp_periods_offs, numbers_start_condense_offs
                                         , period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
 
-            ##condesne end numbers - have to condense the numbers before calc start production, but need to condense production using non condesed end numbers
+            ##condesne end numbers - have to condense the numbers before calc start production, but need to condense production using non condensed end numbers
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                 numbers_end_condensed_sire = sfun.f_condensed(numbers_end_sire, numbers_end_sire, idx_sorted_w_sire, prejoin_tup,
                                                       season_tup, n_fs_g0, len_w0, n_fvp_periods_sire,
@@ -4528,8 +4528,8 @@ def generator(params,r_vals,ev,plots = False):
     #feed pools#
     ############
     '''
-    If you are in the season version and get warning because all slices are nan it is likely becasue some of the
-     feed periods do not fall in any of the generator period becasue the feed period is too short. Thus need to 
+    If you are in the season version and get warning because all slices are nan it is likely because some of the
+     feed periods do not fall in any of the generator period because the feed period is too short. Thus need to 
      fix inputs.
     '''
     feedpools_start = time.time()
@@ -5353,7 +5353,7 @@ def generator(params,r_vals,ev,plots = False):
     r_woolvalue_ctva1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(woolvalue_tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_poffs,
                                               on_hand_tpa1e1b1nwzida0e0b0xyg3, a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p],index_any1tp=index_ctpa1e1b1nwzida0e0b0xyg)
 
-    ##sale time - no numbers needed becasue they dont effect sale date
+    ##sale time - no numbers needed because they don't effect sale date
     r_saledate_tva1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(date_start_pa1e1b1nwzida0e0b0xyg3.astype('timedelta64[s]'), a_v_pa1e1b1nwzida0e0b0xyg3,
                                                     period_is_tp=period_is_sale_tpa1e1b1nwzida0e0b0xyg3) #have to convert to timedelta so can multiply (converted back to date after the report)
 
@@ -5431,7 +5431,7 @@ def generator(params,r_vals,ev,plots = False):
                                                                               index_k5tva1e1b1nwzida0e0b0xyg3[:,na,...],
                                                                               numbers_start_va1e1b1nwzida0e0b0xyg3,
                                                                               mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3)
-    ##sale date - no numbers needed becasue they dont effect sale date
+    ##sale date - no numbers needed because they don't effect sale date
     r_saledate_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs',
                                                                               r_saledate_tva1e1b1nwzida0e0b0xyg3,
                                                                               a_k3cluster_da0e0b0xyg3,

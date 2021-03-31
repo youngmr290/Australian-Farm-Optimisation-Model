@@ -578,7 +578,7 @@ def f_max_harv_hours():
     harv_period_lengths_z = np.sum(pinp.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1), axis=0)
     harv_end_z = harv_start_z.astype('datetime64') + harv_period_lengths_z.astype('timedelta64[D]') #when all harv is done
 
-    ##does any harvest occur in given peirod
+    ##does any harvest occur in given period
     mach_periods_start_pz = per.p_dates_df()[:-1]
     mach_periods_end_pz = per.p_dates_df()[1:]
     harv_occur_pz = np.logical_and(harv_start_z <= mach_periods_start_pz, mach_periods_start_pz < harv_end_z)
@@ -624,7 +624,7 @@ def cost_harv():
     return fuel_oil_cost_hr + uinp.mach[pinp.mach['option']]['harvest_maint']
 
 def f_harv_cost_alloc():
-    '''allocation of harvest cost into cashflow peirod'''
+    '''allocation of harvest cost into cashflow period'''
     ##gets the cost allocation
     p_dates_c = per.cashflow_periods()['start date'].values
     harv_start_z = pinp.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0).astype('datetime64')

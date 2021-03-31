@@ -16,11 +16,11 @@ import json
 #run option    #
 ################
 '''
-DSP can be run through a command call or via a rapper module. The rapper module is easier to incoporate in the code 
+DSP can be run through a command call or via a rapper module. The rapper module is easier to incorporate in the code 
 and hence that is the method used in AFO however the command call method has more options eg generation of .lp.
 This module can be used to run the test DSP example from pyomo or the command version of AFO.
 '''
-run_AFO_command = True #you need to uncomment out the dsp functions in exp.py for this method (i couldnt get it working with them in corepyomo - so essentially need to copy from core to exp then comment out in corepyomo)
+run_AFO_command = True #you need to uncomment out the dsp functions in exp.py for this method (i couldn't get it working with them in corepyomo - so essentially need to copy from core to exp then comment out in corepyomo)
 run_testDSP_command = False
 run_testDSP_rapper = False
 

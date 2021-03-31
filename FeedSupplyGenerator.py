@@ -443,6 +443,16 @@ def period_generator():
     fvp_mask_dams = sinp.stock['i_fvp_mask_dams']
     fvp_mask_offs = sinp.stock['i_fvp_mask_offs']
 
+    ###################################
+    ### axis len                      #
+    ###################################
+    ## Final length of axis after any masks have been applied, used to initialise arrays and in code below (note: these are not used to reshape input array).
+    if pinp.general['steady_state']:
+        len_z = 1
+    else:
+        len_z = np.count_nonzero(pinp.general['i_mask_z'])
+    len_p6 = len(per.f_feed_periods()) - 1 #-1 because the end feed period date is included
+
 
     ###################################
     ### index arrays                  #

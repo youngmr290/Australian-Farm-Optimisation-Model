@@ -14,7 +14,7 @@ import FeedSupplyGenerator as fgen
 #import Functions as fun
 
 print("")
-print("It is good to run FeedTest with a temporary Structural.xls with maximum age set to 9.5year")
+print("It is good to run FeedTest with a temporary Structural.xls with maximum age set to 9.5year & 5 FVPs")
 print("This generates the dams & offspring periods for the full width of the FeedSupply spreadsheet")
 print("")
 
