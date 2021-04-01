@@ -31,7 +31,7 @@ import numpy as np
 import pickle as pkl
 # from dateutil.parser import parse
 # import itertools
-# import datetime as dt
+import datetime as dt
 from dateutil import relativedelta as rdelta
 import os.path
 import glob
@@ -729,7 +729,6 @@ def f_update_sen(row, exp_data, sam, saa, sap, sar, sat, sav):
             elif dic == 'sav':
                 sav[key1]=value
 
-
 ##check if two param dicts are the same.
 def findDiff(d1, d2):
     a=False
@@ -1161,5 +1160,22 @@ def period_proportion_np(period_dates, date_array):
     return period_array, proportion_array
 
 
+def f_baseyr(periods, base_year=None):
+    """convert all dates to the same year
+    :param periods: array of period dates
+    :param base_year: datetime[Y] - year to convert periods to. If None it takes the year from the first period in array.
+    """
+    ##convert to np datetime
+    periods  = periods.astype('datetime64')
+
+    ##If None it takes the year from the first period in array
+    if base_year==None:
+        base_year = periods[0,0].astype('datetime64[Y]')
+
+    ##bring year back to base yr
+    period_year = periods.astype('datetime64[Y]').astype(int)
+    year_offset = period_year - base_year.astype(int)
+    periods = periods - (np.timedelta64(365, 'D') * year_offset)
+    return periods
 
 

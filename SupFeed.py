@@ -77,11 +77,7 @@ def f_sup_cost(r_vals):
     p_name_c = cashflow_df['cash period'].values[:-1]
 
     ##feed period data - need to convert all dates to the same year
-    # start_p6z  = per.f_feed_periods()[:-1].astype('datetime64')
-    # base_year = p_dates[0].year
-    # condition_date = dt.datetime(year=base_year+1, month=1, day=1)
-    # start_p6z[start_p6z>condition_date] = start_p6z[start_p6z>condition_date] - np.timedelta64(365, 'D')
-    start_p6z = per.f_fp_baseyr()[:-1]
+    start_p6z = fun.f_baseyr(per.f_feed_periods())[:-1,:]
     length_p6z = per.f_feed_periods(option=1).astype('timedelta64[D]')
 
     ##deterimine cashflow allocation
@@ -181,7 +177,7 @@ def f_sup_labour():
     total_time_p5zk = np.sum(total_time_p5zp8k, axis=-2)
 
     ##link feed periods to labour periods, ie determine the proportion of each feed period in each labour period so the time taken to sup feed can be divided up accordingly
-    start_p6z = per.f_fp_baseyr()[:-1]
+    start_p6z = fun.f_baseyr(per.f_feed_periods())[:-1,:]
     length_p6z = per.f_feed_periods(option=1).astype('timedelta64[D]')
     shape_p5p6z = (lp_dates_p5z.shape[0],) + length_p6z.shape
     alloc_p5p6z = fun.range_allocation_np(lp_dates_p5z.values[:,na,:], start_p6z, length_p6z, True, shape=shape_p5p6z)[:-1]

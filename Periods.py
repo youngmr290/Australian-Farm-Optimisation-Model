@@ -211,12 +211,5 @@ def f_feed_periods(option=0):
     #         ##apply season mask - more complicated because masking level 0 of multilevel df
     #         fp = fp.loc[:, idx[:, pinp.general['i_mask_z']]]
 
-def f_fp_baseyr():
-    ##feed period data - need to convert all dates to the same year
-    fp_start_p6z  = f_feed_periods().astype('datetime64')
-    base_year = fp_start_p6z[0,0].astype('datetime64[Y]').astype(int) + 1970
-    condition_date = datetime.datetime(year=base_year+1, month=1, day=1)
-    fp_start_p6z[fp_start_p6z>condition_date] = fp_start_p6z[fp_start_p6z>condition_date] - np.timedelta64(365, 'D')
-    return fp_start_p6z
 
 

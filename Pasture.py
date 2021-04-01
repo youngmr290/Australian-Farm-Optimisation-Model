@@ -82,8 +82,7 @@ def f_pasture(params, r_vals, ev):
     # length_f  = np.array(pinp.period['feed_periods'].loc[:pinp.period['feed_periods'].index[-2],'length']) # not including last row because that is the start of the following year. #todo as above this will need z axis
     # feed_period_dates_f = np.array(i_feed_period_dates,dtype='datetime64[D]')
     length_fz  = np.array(per.f_feed_periods(option=1),dtype='float64')
-    feed_period_dates_fz = np.array(per.f_fp_baseyr(),dtype='datetime64[D]') #feed periods are all date to the base yr (eg 2019) - this is required for some of the allocation formulas
-
+    feed_period_dates_fz = fun.f_baseyr(per.f_feed_periods()).astype('datetime64[D]') #feed periods are all date to the base yr (eg 2019) - this is required for some of the allocation formulas
 
     # vgoflt = (n_feed_pools, n_grazing_int, n_foo_levels, n_feed_periods, n_lmu, n_pasture_types)
     dgoflzt = (n_dry_groups, n_grazing_int, n_foo_levels, n_feed_periods, n_lmu,  n_season_types, n_pasture_types)
