@@ -1802,7 +1802,7 @@ def generator(params,r_vals,ev,plots = False):
     sfw_ltwadj_a1e1b1nwzida0e0b0xyg3 = np.ones(pg3)[0, ...]  # slice the p axis to remove
     sfd_ltwadj_a1e1b1nwzida0e0b0xyg3 = np.zeros(pg3)[0, ...]  # slice the p axis to remove
 
-    for loop_ltw in range(2):
+    for loop_ltw in range(1):
 
         ####################################
         ### initialise arrays for sim loop  # axis names not always track from now on because they change between p=0 and p=1
@@ -3979,11 +3979,11 @@ def generator(params,r_vals,ev,plots = False):
     a_c_pa1e1b1nwzida0e0b0xyg = fun.f_expand(a_c_p, p_pos).astype(dtype)
     index_ctpa1e1b1nwzida0e0b0xyg = fun.f_expand(np.arange(len(cash_period_dates)), p_pos-2)
     ###labour period
-    labour_periods = per.p_date2_df().iloc[:,0].to_numpy().astype('datetime64[D]') #convert from df to numpy
-    labour_periods_p5y = labour_periods + (np.arange(np.ceil(sim_years)) * np.timedelta64(365,'D'))[:,na] #expand from single yr to all length of generator
-    labour_periods_p5 = labour_periods_p5y.ravel()
-    a_p5_p = sfun.f_next_prev_association(labour_periods_p5, date_end_p, 1, 'right') % len(labour_periods)
-    a_p5_pa1e1b1nwzida0e0b0xyg = fun.f_expand(a_p5_p, p_pos).astype(dtype)
+    labour_periods = per.p_date2_df().to_numpy().astype('datetime64[D]') #convert from df to numpy
+    labour_periods_yp5z = labour_periods + (np.arange(np.ceil(sim_years)) * np.timedelta64(365,'D'))[:,na,na] #expand from single yr to all length of generator
+    labour_periods_p5z = labour_periods_yp5z.reshape((-1, len_z))
+    a_p5_pz = np.apply_along_axis(sfun.f_next_prev_association, 0, labour_periods_p5z, date_end_p, 1, 'right') % len(labour_periods)
+    a_p5_pa1e1b1nwzida0e0b0xyg = fun.f_expand(a_p5_pz,z_pos,left_pos2=p_pos,right_pos2=z_pos).astype(dtype)
     index_p5tpa1e1b1nwzida0e0b0xyg = fun.f_expand(np.arange(len(labour_periods)), p_pos-2)
     ###asset value timing - the date when the asset value is tallied
     assetvalue_timing = np.datetime64(sinp.general['i_date_assetvalue']).astype('datetime64[D]') #convert from df to numpy
@@ -4118,6 +4118,7 @@ def generator(params,r_vals,ev,plots = False):
     ind=np.argsort(dvp_start_va1e1b1nwzida0e0b0xyg1, axis=0)
     dvp_date_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(dvp_start_va1e1b1nwzida0e0b0xyg1, ind, axis=0)
     dvp_type_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(dvp_type_va1e1b1nwzida0e0b0xyg1, ind, axis=0)
+    params['dvp1'] = dvp_date_va1e1b1nwzida0e0b0xyg1 #stored to be accessed in corepyomo when allocating variables to stages
 
     ###dvp pointer and index
     a_v_pa1e1b1nwzida0e0b0xyg1 =  np.apply_along_axis(sfun.f_next_prev_association, 0, dvp_date_va1e1b1nwzida0e0b0xyg1, date_end_p, 1,'right')
@@ -4181,6 +4182,7 @@ def generator(params,r_vals,ev,plots = False):
     ind=np.argsort(dvp_date_presort_va1e1b1nwzida0e0b0xyg3, axis=0)
     dvp_date_va1e1b1nwzida0e0b0xyg3 = np.take_along_axis(dvp_date_presort_va1e1b1nwzida0e0b0xyg3, ind, axis=0)
     dvp_type_va1e1b1nwzida0e0b0xyg3 = np.take_along_axis(dvp_type_va1e1b1nwzida0e0b0xyg3, ind, axis=0)
+    params['dvp3'] = dvp_date_va1e1b1nwzida0e0b0xyg3 #stored to be accessed in corepyomo when allocating variables to stages
 
     ###build array of shearing dates including weaning - weaning is used for sale stuff because inputs are based on weaning date.
     date_weaned_a1e1b1nwzida0e0b0xyg3 = np.broadcast_to(date_weaned_ida0e0b0xyg3,fvp_0_start_sa1e1b1nwzida0e0b0xyg3.shape[1:]) #need wean date rather than first day of yr because selling inputs are days from weaning.
