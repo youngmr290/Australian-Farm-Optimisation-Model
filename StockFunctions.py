@@ -1216,33 +1216,33 @@ def f_mortality_weaner_cs(cd, cg, age, ebg_start, d_nw_max,days_period):
     return cd[13, ...] * f_ramp(age, cd[15, ...], cd[14, ...]) * ((cd[16, ...] * d_nw_max) > (ebg_start * cg[18, ...]))* days_period #mul by days period to convert from mort per day to per period
 
 
-def f_mortality_dam_cs(cb1, cg, nw_start, ebg, days_period, period_between_birth6wks, gest_propn, sar_mortalitye):
+def f_mortality_dam_cs(cb1, cg, nw_start, ebg, days_period, period_between_birth6wks, gest_propn, sat_mortalitye):
     ##(Twin) Dam mortality in last 6 weeks (preg tox)
     t_mort = days_period * gest_propn /42 * f_sig(-42 * ebg * cg[18, ...] / nw_start, cb1[4, ...], cb1[5, ...]) #mul by days period to convert from mort per day to per period
     ##If not last 6 weeks then = 0
     mort = t_mort * period_between_birth6wks
     ##Adjust by sensitivity on dam mortality
-    mort = fun.f_sa(mort, sar_mortalitye, sa_type = 4)
+    mort = fun.f_sa(mort, sat_mortalitye, sa_type = 3, target = 1, value_min = 0)
     return mort
 
     
-def f_mortality_dam_mu(cu2, cs_birth_dams, period_is_birth, sar_mortalitye):
+def f_mortality_dam_mu(cu2, cs_birth_dams, period_is_birth, sat_mortalitye):
     ## transformed Dam mortality at birth
     t_mortalitye_mu = cu2[22, 0, ...] * cs_birth_dams + cu2[22, 1, ...] * cs_birth_dams ** 2 + cu2[22, -1, ...]
     ##Back transform the mortality
     mortalitye_mu = np.exp(t_mortalitye_mu) / (1 + np.exp(t_mortalitye_mu)) * period_is_birth
     ##Adjust by sensitivity on dam mortality
-    mortalitye_mu = fun.f_sa(mortalitye_mu, sar_mortalitye, sa_type = 4)
+    mortalitye_mu = fun.f_sa(mortalitye_mu, sat_mortalitye, sa_type = 3, target = 1, value_min = 0)
     return mortalitye_mu
 
 
     
-def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, w_b_exp_y, period_is_birth, chill_index_m1, nfoet_b1, sar_mortalityp):
+def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, w_b_exp_y, period_is_birth, chill_index_m1, nfoet_b1, sat_mortalityp):
     ##Progeny losses due to large progeny (dystocia)
     mortalityd_yatf = f_sig(fun.f_divide(w_b, w_b_exp_y) * np.maximum(1, rc_birth), cb1[6, ...], cb1[7, ...]) * period_is_birth
     ##add sensitivity
-    mortalityd_yatf = fun.f_sa(mortalityd_yatf, sar_mortalityp, sa_type = 4)
-    ##dam mort due to large progeny (dystocia)
+    mortalityd_yatf = fun.f_sa(mortalityd_yatf, sat_mortalityp, sa_type = 3, target = 1, value_min = 0)
+    ##dam mort due to large progeny or lack of energy at birth (dystocia)
     mortalityd_dams = fun.f_divide(np.mean(mortalityd_yatf, axis=sinp.stock['i_x_pos'], keepdims=True) * cd[21,...], nfoet_b1)  #returns 0 mort if there is 0 nfoet - this handles div0 error
     ##Progeny losses due to large progeny (dystocia) - so there is no double counting of progeny loses associated with dam mortality
     mortalityd_yatf = mortalityd_yatf * (1- cd[21,...])
@@ -1251,11 +1251,11 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, w_b_exp_y, period_is_birth, c
     ##Progeny mortality at birth from exposure
     mortalityx = np.average(np.exp(xo) / (1 + np.exp(xo)) ,axis = -1) * period_is_birth #axis -1 is m1
     ##Apply SA to progeny mortality due to exposure
-    mortalityx = fun.f_sa(mortalityx, sar_mortalityp, sa_type = 4)
+    mortalityx = fun.f_sa(mortalityx, sat_mortalityp, sa_type = 3, target = 1, value_min = 0)
     return mortalityx, mortalityd_yatf, mortalityd_dams
 
 
-def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, foo, chill_index_m1, period_is_birth, sar_mortalityp):
+def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, foo, chill_index_m1, period_is_birth, sat_mortalityp):
     ##transformed survival for actual & standard
     t_survival = cu2[8, 0, ..., na] * w_b[..., na] + cu2[8, 1, ..., na] * w_b[..., na] ** 2 + cu2[8, 2, ..., na] * chill_index_m1  \
                       + cu2[8, 3, ..., na] * foo[..., na] + cu2[8, 4, ..., na] * foo[..., na] ** 2 + cu2[8, 5, ..., na]   \
@@ -1269,7 +1269,7 @@ def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, foo, chill_index_m1, 
     ##Scale progeny survival using paddock level scalars
     mortality = mortality_std + (mortality - mortality_std) * cb1[9, ...]
     ##Apply SA to progeny mortality at birth (LTW)
-    mortality = fun.f_sa(mortality, sar_mortalityp, sa_type = 4)
+    mortality = fun.f_sa(mortality, sat_mortalityp, sa_type = 3, target = 1, value_min = 0)
     return mortality
         
 

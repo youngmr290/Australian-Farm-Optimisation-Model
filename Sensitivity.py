@@ -74,7 +74,9 @@ saa['cl0_c2'] = np.zeros(uinp.parameters_inp['i_cl0_c2'].shape, dtype=np.float64
 #SAT #
 ######
 sat['salep_weight_scalar'] = 0 #Scalar for LW impact across grid 1
-sat['salep_score_scalar'] = 0 #Scalar for score impact across the grid
+sat['salep_score_scalar'] = 0  #Scalar for score impact across the grid
+sat['mortalityp'] = 0          #Scale the calculated progeny mortality at birth in the target range 0 to 100% - this is a high level sa it impacts within a calculation not on an input
+sat['mortalitye'] = 0          #Scale the calculated dam mortality at birth in the target range 0 to 100% - this is a high level sa it impacts within a calculation not on an input
 
 
 ######
@@ -82,8 +84,6 @@ sat['salep_score_scalar'] = 0 #Scalar for score impact across the grid
 ######
 
 ##sheep
-sar['mortalityp'] = 0          #Scale the calculated progeny mortality at birth in the target range 0 to 100% - this is a high level sa it impacts within a calculation not on an input
-sar['mortalitye'] = 0          #Scale the calculated dam mortality at birth in the target range 0 to 100% - this is a high level sa it impacts within a calculation not on an input
 
 ######
 #SAV #
