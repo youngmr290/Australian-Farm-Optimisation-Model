@@ -47,25 +47,25 @@ def labfxpyomo_local(params):
         model.del_component(model.p_super_labour)
     except AttributeError:
         pass
-    model.p_super_labour = Param(model.s_labperiods, initialize= params[season]['super'], doc='hours of labour required to complete super and wc activities')
+    model.p_super_labour = Param(model.s_labperiods, initialize= params[season]['super'], mutable=True, doc='hours of labour required to complete super and wc activities')
     
     try:
         model.del_component(model.p_bas_labour)
     except AttributeError:
         pass
-    model.p_bas_labour = Param(model.s_labperiods, initialize= params[season]['bas'], doc='hours of labour required to complete bas activities')
+    model.p_bas_labour = Param(model.s_labperiods, initialize= params[season]['bas'], mutable=True, doc='hours of labour required to complete bas activities')
     
     try:
         model.del_component(model.p_planning_labour)
     except AttributeError:
         pass
-    model.p_planning_labour = Param(model.s_labperiods, initialize= params[season]['planning'], doc='hours of labour required to complete planning activities')
+    model.p_planning_labour = Param(model.s_labperiods, initialize= params[season]['planning'], mutable=True, doc='hours of labour required to complete planning activities')
     
     try:
         model.del_component(model.p_tax_labour)
     except AttributeError:
         pass
-    model.p_tax_labour = Param(model.s_labperiods, initialize= params[season]['tax'], doc='hours of labour required to complete tax activities')
+    model.p_tax_labour = Param(model.s_labperiods, initialize= params[season]['tax'], mutable=True, doc='hours of labour required to complete tax activities')
     
     try:
         model.del_component(model.p_learn_labour)
