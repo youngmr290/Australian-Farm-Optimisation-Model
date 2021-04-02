@@ -431,17 +431,132 @@ def coremodel_all(params):
         #allocate labour provide variables to the last stage??
         #stage definitions differ for different nodes to the allocation will need to be based on the node as well eg for ealry break labour period 3 might be in stage 2 but for late break it might be in stage 3
         ##specify stages for variables when all variables go into the same stage
-        #root needs at least one variable
-        root_vars=['v_hay_made[*]']
+        ##root needs at least one variable
+        ##variables have at most one time series set
 
-        # root_sets=['FP9']
-        # stage1_node1_vars=[]
-        # stage1_node2_vars=[]
-        # stage1_node1_sets=['FP0', 'FP1','P']
-        # stage1_node2_sets=['FP0', 'FP1','P']
-        # stage2_sets=['FP2','FP3','FP4','FP5','FP6','FP7','FP8']
+        import Periods as per
+        import Functions as fun
 
-        stage2_vars=['v_quantity_casual[*]','v_quantity_perm[*]','v_quantity_manager[*]','v_phase_area[*,*]','v_sell_grain[*,*]',
+        stage_info = {}
+        stage_info['root'] = {}
+        stage_info['ebrk2spr'] = {}
+        stage_info['ebrk2mbrk'] = {}
+        stage_info['mbrk2spr'] = {}
+        stage_info['lbrk2spr'] = {}
+
+
+        ##specify a season which represents the stages
+        root_z = 0 #this could be any stage becasue all seasons have the same period definitions in the root stage.
+        ebrk2spr_z = 0 #any season with early break
+        ebrk2mbrk_z = -1 #any season with medium or late break
+        mbrk2spr_z = 1 #any season with medium
+        lbrk2spr_z = -1 #any season with late break
+        ##keys
+        keys_p5 = np.array(per.p_date2_df().index).astype('str')
+        keys_dams = params['stock']['keys_v_dams']
+        keys_offs = params['stock']['keys_v_offs']
+        ##date arrays
+        fp_p6z = fun.f_baseyr(per.f_feed_periods())[:-1,:]
+        lp_p5z = per.p_date2_df().to_numpy().astype('datetime64[D]')
+        dvp1 = fun.f_baseyr(params['stock']['dvp1'], fp_p6z[0,0].astype('datetime64[Y]'))
+        dvp3 = fun.f_baseyr(params['stock']['dvp3'], fp_p6z[0,0].astype('datetime64[Y]'))
+
+
+        ##stage dates
+        root_start = np.minimum(np.datetime64(pinp.crop['dry_seed_start']), np.min(per.f_feed_periods().astype(np.datetime64)[0,:]))
+        ebrk_start = fp_p6z[0,0]
+        mbrk_start = fp_p6z[0,1]
+        lbrk_start = fp_p6z[0,-1]
+
+        ##stage sets
+        stage_info['root']['sets'] = []
+        stage_info['ebrk2spr']['sets'] = []
+        stage_info['ebrk2mbrk']['sets'] = []
+        stage_info['mbrk2spr']['sets'] = []
+        stage_info['lbrk2spr']['sets'] = []
+
+        ##allocate time sets into stages
+        ###root - early break
+        stage_info['root']['sets'].extend(list(pinp.period['i_fp_idx'][np.logical_and(fp_p6z[:,root_z] > root_start, fp_p6z[:,root_z] < ebrk_start)]))
+        stage_info['root']['sets'].extend(list(keys_p5[np.logical_and(lp_p5z[:,root_z] > root_start, lp_p5z[:,root_z] < ebrk_start)]))
+        stage_info['root']['sets'].extend(list(keys_dams[np.logical_and(dvp1 > root_start, dvp1 < ebrk_start)]))
+        stage_info['root']['sets'].extend(list(keys_offs[np.logical_and(dvp3 > root_start, dvp3 < ebrk_start)]))
+        ###early break - end (dont need logical and becasue this is the last stage)
+        stage_info['ebrk2spr']['sets'].extend(list(pinp.period['i_fp_idx'][fp_p6z[:,ebrk2spr_z] > ebrk_start]))
+        stage_info['ebrk2spr']['sets'].extend(list(keys_p5[lp_p5z[:,ebrk2spr_z] > ebrk_start]))
+        stage_info['ebrk2spr']['sets'].extend(list(keys_dams[dvp1 > ebrk_start]))
+        stage_info['ebrk2spr']['sets'].extend(list(keys_offs[dvp3 > ebrk_start]))
+        ###early break - med break
+        stage_info['ebrk2mbrk']['sets'].extend(list(pinp.period['i_fp_idx'][np.logical_and(fp_p6z[:,ebrk2mbrk_z] > ebrk_start, fp_p6z[:,ebrk2mbrk_z] < mbrk_start)]))
+        stage_info['ebrk2mbrk']['sets'].extend(list(keys_p5[np.logical_and(lp_p5z[:,ebrk2mbrk_z] > ebrk_start, lp_p5z[:,ebrk2mbrk_z] < mbrk_start)]))
+        stage_info['ebrk2mbrk']['sets'].extend(list(keys_dams[np.logical_and(dvp1 > ebrk_start, dvp1 < mbrk_start)]))
+        stage_info['ebrk2mbrk']['sets'].extend(list(keys_offs[np.logical_and(dvp3 > ebrk_start, dvp3 < mbrk_start)]))
+        ###medium break - end (dont need logical and becasue this is the last stage)
+        stage_info['mbrk2spr']['sets'].extend(list(pinp.period['i_fp_idx'][fp_p6z[:,mbrk2spr_z] > mbrk_start]))
+        stage_info['mbrk2spr']['sets'].extend(list(keys_p5[lp_p5z[:,mbrk2spr_z] > mbrk_start]))
+        stage_info['mbrk2spr']['sets'].extend(list(keys_dams[dvp1 > mbrk_start]))
+        stage_info['mbrk2spr']['sets'].extend(list(keys_offs[dvp3 > mbrk_start]))
+        ###late break - end (dont need logical and becasue this is the last stage)
+        stage_info['lbrk2spr']['sets'].extend(list(pinp.period['i_fp_idx'][fp_p6z[:,lbrk2spr_z] > lbrk_start]))
+        stage_info['lbrk2spr']['sets'].extend(list(keys_p5[lp_p5z[:,lbrk2spr_z] > lbrk_start]))
+        stage_info['lbrk2spr']['sets'].extend(list(keys_dams[dvp1 > lbrk_start]))
+        stage_info['lbrk2spr']['sets'].extend(list(keys_offs[dvp3 > lbrk_start]))
+
+        #todo v_prog, rotation - how to allocate? trickier becasue no dvp or time serires set but need to allocate based on lambing? probably just have to allocate manually
+        ##allocate variable into stages using the allocated sets
+        stage_info['root']['vars'] = ['v_quantity_perm[*]','v_quantity_manager[*]','v_sire[*]']
+        stage_info['ebrk2spr']['vars'] = []
+        stage_info['ebrk2mbrk']['vars'] = []
+        stage_info['mbrk2spr']['vars'] = []
+        stage_info['lbrk2spr']['vars'] = []
+
+        for stage in stage_info.keys():
+            for v in model.component_objects(pe.Var,active=True):
+                for index in v:
+                    if index==None: #handle variables with no sets (variables with no sets are manually assigned to stages)
+                        continue
+                    if any(x in tuple(index) for x in stage_info[stage]['sets']):
+                        if isinstance(index, str): #handle just one set
+                            a=str(v)+"["+index+"]"
+                        else: #handle when multiple sets
+                            a=str(v)+str(list(index))
+
+                        stage_info[stage]['vars'].append(a)
+
+        # ##option1 - puts all variables into root.
+        # root_vars=[]
+        # for v in model.component_objects(pe.Var,active=True):
+        #     print(v)
+        #     try:
+        #         index = np.array(v)
+        #         if index.ndim == 1:
+        #             len_v=1
+        #         else:
+        #             len_v = len(index[0]) #number of sets in variable.
+        #     except:
+        #         len_v=1
+        #     a=str(v) + "[" + "*,"*(len_v-1) + "*" + "]"
+        #     root_vars.append(a)
+        #
+        # ##option2 - puts all variables into root.
+        # root_vars=[]
+        # for v in model.component_objects(pe.Var,active=True):
+        #     print(v)
+        #     for index in v:
+        #         print(v,index)
+        #         try:
+        #             if isinstance(index, str): #handle just one set
+        #                 a=str(v)+"["+index+"]"
+        #             else: #handle when multiple sets
+        #                 a=str(v)+str(list(index))
+        #         except: #handle if variable has no sets
+        #             a=str(v)+"['']"
+        #         root_vars.append(a)
+
+
+
+
+        stage2_vars=['v_quantity_casual[*]','v_hay_made[*]','v_phase_area[*,*]','v_sell_grain[*,*]',
                      'v_credit[*]',
                      'v_debit[*]',
                      'v_dep[*]',
@@ -482,61 +597,50 @@ def coremodel_all(params):
                      'v_prog[*,*,*,*,*,*,*,*]'
                      ] #buy grain may not be in stage 3, i feel like you retain grain for the year ahead without knowing the type of season. but then the model will just counter by altering sale of grain.
 
-
-        # todo ideas: maybe can just put the variable name in each stage. if none index then need [*].
-
-        # print("start stage loop")
-        # stage2_vars1 = list(model.component_objects(pe.Var,active=True)) #this method doesnt work
-        # stage2_vars2 = []
-        # for v in model.component_objects(pe.Var,active=True):
-        #     ##option1
-        #     try:
-        #         len_v = len(list(v)[0])
-        #     except:
-        #         len_v=1
-        #     a=str(v) + "[" + "*,"*len_v + "]"
-        #     stage2_vars2.append(a)
-        #     ##option2
-        #     # for index in v:
-        #     #     print(v,index)
-        #     #     try:
-        #     #         a=str(v)+str(list(index)) #doesnt work - maybe i need to strip the '
-        #     #     except: #handle if variable has no sets
-        #     #         a=str(v)+"[*]"
-        #     #     stage2_vars2.append(a)
-        # print("finish stage loop")
+        stage2_vars=[]
 
 
         def pysp_scenario_tree_model_callback():
             # Return a NetworkX scenario tree.
             g = networkx.DiGraph()
 
+            ##root
             ce1 = 'FirstStageCost'
             g.add_node("Root",
                        cost=ce1,
-                       variables=root_vars,
+                       variables=stage_info['root']['vars'],
                        derived_variables=[])
 
+            ##ebrk2mbrk
+            ce1 = 'FirstStageCost'
+            g.add_node("mbrk",
+                       cost=ce1,
+                       variables=stage_info['ebrk2mbrk']['vars'],
+                       derived_variables=[])
+            g.add_edge("Root","mbrk",weight=0.666) #todo this will need to be the season proportion inoput
+
+            ##ebrk2spr
             ce2 = 'SecondStageCost'
             g.add_node("z0",
                        cost=ce2,
-                       variables=stage2_vars, #todo these will be different for each season potentially in the actual version.
+                       variables = stage_info['ebrk2spr']['vars'],
                        derived_variables=[])
-            g.add_edge("Root","z0",weight=0.5) #todo this will need to be the season proportion inoput
+            g.add_edge("Root","z0",weight=0.334) #todo this will need to be the season proportion inoput
 
+            ##mbrk2spr
             g.add_node("z1",
                        cost=ce2,
-                       variables=stage2_vars,
+                       variables=stage_info['mbrk2spr']['vars'],
                        derived_variables=[])
-            g.add_edge("Root","z1",weight=0.5)
+            g.add_edge("mbrk","z1",weight=0.5)
 
-            # g.add_node("AboveAverageScenario",
-            #            cost=ce2,
-            #            variables=["QuantitySubQuotaSold[*]",
-            #                       "QuantitySuperQuotaSold[*]",
-            #                       "QuantityPurchased[*]"],
-            #            derived_variables=[])
-            # g.add_edge("Root","AboveAverageScenario",weight=0.3334)
+            ##lbrk2spr
+            g.add_node("z2",
+                       cost=ce2,
+                       variables=stage_info['lbrk2spr']['vars'],
+                       derived_variables=[])
+            g.add_edge("mbrk","z2",weight=0.5)
+
 
             return g
 
@@ -661,8 +765,8 @@ def coremodel_all(params):
     print(ef_sol.solver.termination_condition)
     obj = stsolver.root_E_obj()
     print("Expecatation take over scenarios=",obj)
-    for varname,varval in stsolver.root_Var_solution():  # doctest: +SKIP
-        print(varname,str(varval))
+    # for varname,varval in stsolver.root_Var_solution():  # doctest: +SKIP
+    #     print(varname,str(varval))
 
     #saves file to csv
     csvw.write_csv_soln(stsolver.scenario_tree,"solutionMRY")

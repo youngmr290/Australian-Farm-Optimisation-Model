@@ -1802,7 +1802,7 @@ def generator(params,r_vals,ev,plots = False):
     sfw_ltwadj_a1e1b1nwzida0e0b0xyg3 = np.ones(pg3)[0, ...]  # slice the p axis to remove
     sfd_ltwadj_a1e1b1nwzida0e0b0xyg3 = np.zeros(pg3)[0, ...]  # slice the p axis to remove
 
-    for loop_ltw in range(1):
+    for loop_ltw in range(2):
 
         ####################################
         ### initialise arrays for sim loop  # axis names not always track from now on because they change between p=0 and p=1
@@ -4118,7 +4118,6 @@ def generator(params,r_vals,ev,plots = False):
     ind=np.argsort(dvp_start_va1e1b1nwzida0e0b0xyg1, axis=0)
     dvp_date_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(dvp_start_va1e1b1nwzida0e0b0xyg1, ind, axis=0)
     dvp_type_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(dvp_type_va1e1b1nwzida0e0b0xyg1, ind, axis=0)
-    params['dvp1'] = dvp_date_va1e1b1nwzida0e0b0xyg1 #stored to be accessed in corepyomo when allocating variables to stages
 
     ###dvp pointer and index
     a_v_pa1e1b1nwzida0e0b0xyg1 =  np.apply_along_axis(sfun.f_next_prev_association, 0, dvp_date_va1e1b1nwzida0e0b0xyg1, date_end_p, 1,'right')
@@ -4182,7 +4181,6 @@ def generator(params,r_vals,ev,plots = False):
     ind=np.argsort(dvp_date_presort_va1e1b1nwzida0e0b0xyg3, axis=0)
     dvp_date_va1e1b1nwzida0e0b0xyg3 = np.take_along_axis(dvp_date_presort_va1e1b1nwzida0e0b0xyg3, ind, axis=0)
     dvp_type_va1e1b1nwzida0e0b0xyg3 = np.take_along_axis(dvp_type_va1e1b1nwzida0e0b0xyg3, ind, axis=0)
-    params['dvp3'] = dvp_date_va1e1b1nwzida0e0b0xyg3 #stored to be accessed in corepyomo when allocating variables to stages
 
     ###build array of shearing dates including weaning - weaning is used for sale stuff because inputs are based on weaning date.
     date_weaned_a1e1b1nwzida0e0b0xyg3 = np.broadcast_to(date_weaned_ida0e0b0xyg3,fvp_0_start_sa1e1b1nwzida0e0b0xyg3.shape[1:]) #need wean date rather than first day of yr because selling inputs are days from weaning.
@@ -6553,6 +6551,42 @@ def generator(params,r_vals,ev,plots = False):
         r_vals['fec_sire_pzg0'] = r_fec_sire_pg.reshape(pzg0_shape)
         r_vals['fec_dams_k2vpa1e1b1nw8ziyg1'] = r_fec_dams_k2tvpg.reshape(k2vpa1e1b1nwziyg1_shape)
         r_vals['fec_offs_k3k5vpnw8zida0e0b0xyg3'] = r_fec_offs_k3k5tvpg.reshape(k3k5vpnwzidae0b0xyg3_shape)
+
+
+
+
+    ###############
+    # season      #
+    ###############
+    '''
+    stuff needed to allocate variable to stages for dsp
+    stored in params to be accessed in corepyomo when allocating variables to stages
+    '''
+    k2tva1nwiyg1_shape = len_k2, len_t1, len_v1, len_a1, len_n1, len_w1, len_i, len_y1, len_g1
+    k3k5tvnwiaxyg3_shape = len_k3, len_k5, len_t3, len_v3, len_n3, len_w3, len_i, len_a0, len_x, len_y3, len_g3
+
+    ##k2tvanwiyg1 - v_dams
+    arrays = [keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_i, keys_y1, keys_g1]
+    index_k2tvanwiyg1 = fun.cartesian_product_simple_transpose(arrays)
+    tup_k2tvanwiyg1 = list(map(tuple,index_k2tvanwiyg1))
+    array_k2tvanwiyg1 = np.zeros(len(tup_k2tvanwiyg1),dtype=object)
+    array_k2tvanwiyg1[...] = tup_k2tvanwiyg1
+    array_k2tvanwiyg1 = array_k2tvanwiyg1.reshape(k2tva1nwiyg1_shape)
+    params['keys_v_dams'] = array_k2tvanwiyg1
+
+    ##k3k5tvnwiaxyg3 - v_offs
+    arrays = [keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_i, keys_a, keys_x, keys_y3, keys_g3]
+    index_k3k5tvnwiaxyg3 = fun.cartesian_product_simple_transpose(arrays)
+    tup_k3k5tvnwiaxyg3 = list(map(tuple,index_k3k5tvnwiaxyg3))
+    array_k3k5tvnwiaxyg3 = np.zeros(len(tup_k3k5tvnwiaxyg3),dtype=object)
+    array_k3k5tvnwiaxyg3[...] = tup_k3k5tvnwiaxyg3
+    array_k3k5tvnwiaxyg3 = array_k3k5tvnwiaxyg3.reshape(k3k5tvnwiaxyg3_shape)
+    params['keys_v_offs'] = array_k3k5tvnwiaxyg3
+
+    dvp_date_k2tva1nwiyg1 = dvp_date_va1e1b1nwzida0e0b0xyg1[None,None,:,:,0,0,:,:,0,:,0,0,0,0,0,:,:] #take e slice 0 becasue e wont effect stage allocation
+    params['dvp1'] = np.broadcast_to(dvp_date_k2tva1nwiyg1, array_k2tvanwiyg1.shape)
+    dvp_date_k3k5tvnwiaxyg3 = dvp_date_va1e1b1nwzida0e0b0xyg3[None,None,None,:,0,0,0,:,:,0,:,0,:,0,0,:,:,:] #take e slice 0 becasue e wont effect stage allocation
+    params['dvp3'] = np.broadcast_to(dvp_date_k3k5tvnwiaxyg3, array_k3k5tvnwiaxyg3.shape)
 
 
 
