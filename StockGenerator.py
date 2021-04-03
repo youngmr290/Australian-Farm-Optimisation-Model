@@ -2996,7 +2996,7 @@ def generator(params,r_vals,ev,plots = False):
                     if eqn_compare:
                         r_compare_q0q1q2poffs[eqn_system, eqn_group, 0, p, ...] = temp0
 
-            ## dam mortality - Peri-natal Dam mortality
+            ## dam mortality - Peri-natal Dam mortality #todo consider combining CSIRO & MU to represent both Preg Tox and ewe mortality due to low CS at birth
             eqn_group = 3
             eqn_system = 0 # CSIRO = 0
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
