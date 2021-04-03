@@ -2290,7 +2290,7 @@ def generator(params,r_vals,ev,plots = False):
                                                                     , md_herb_sire, lgf_eff_pa1e1b1nwzida0e0b0xyg0[p, ...]
                                                                     , dlf_eff_pa1e1b1nwzida0e0b0xyg[p,...], pinp.sheep['i_steepness']
                                                                     , densityw_pa1e1b1nwzida0e0b0xyg0[p], foo_sire, feedsupplyw_pa1e1b1nwzida0e0b0xyg0[p]
-                                                                    , intake_f_sire, dmd_sire, sam_kg_sire)
+                                                                    , intake_f_sire, dmd_sire, sam_kg = sam_kg_sire)
                         ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                         omer_history_sire = temp1
                         if eqn_used:
@@ -2309,7 +2309,7 @@ def generator(params,r_vals,ev,plots = False):
                                                                     , md_herb_dams, lgf_eff_pa1e1b1nwzida0e0b0xyg1[p, ...]
                                                                     , dlf_eff_pa1e1b1nwzida0e0b0xyg[p,...], pinp.sheep['i_steepness']
                                                                     , densityw_pa1e1b1nwzida0e0b0xyg1[p], foo_dams, feedsupplyw_pa1e1b1nwzida0e0b0xyg1[p]
-                                                                    , intake_f_dams, dmd_dams, sam_kg_dams)
+                                                                    , intake_f_dams, dmd_dams, sam_kg = sam_kg_dams)
                         ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                         omer_history_dams = temp1
                         if eqn_used:
@@ -2329,7 +2329,7 @@ def generator(params,r_vals,ev,plots = False):
                                                                     , md_herb_offs, lgf_eff_pa1e1b1nwzida0e0b0xyg3[p, ...]
                                                                     , dlf_eff_pa1e1b1nwzida0e0b0xyg[p,...], pinp.sheep['i_steepness']
                                                                     , densityw_pa1e1b1nwzida0e0b0xyg3[p], foo_offs, feedsupplyw_pa1e1b1nwzida0e0b0xyg3[p]
-                                                                    , intake_f_offs, dmd_offs, sam_kg_offs)
+                                                                    , intake_f_offs, dmd_offs, sam_kg = sam_kg_offs)
                         ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                         omer_history_offs = temp1
                         if eqn_used:
