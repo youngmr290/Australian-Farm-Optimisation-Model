@@ -49,14 +49,14 @@ def labcrppyomo_local(params):
         model.del_component(model.p_prep_pack)
     except AttributeError:
         pass
-    model.p_prep_pack = Param(model.s_labperiods, initialize=params[season]['prep_labour'], default = 0.0, doc='harvest helper time per crop')
+    model.p_prep_pack = Param(model.s_labperiods, initialize=params[season]['prep_labour'], default = 0.0, mutable=True, doc='harvest helper time per crop')
     
     try:
         model.del_component(model.p_fert_app_hour_tonne_index)
         model.del_component(model.p_fert_app_hour_tonne)
     except AttributeError:
         pass
-    model.p_fert_app_hour_tonne = Param(model.s_labperiods, model.s_fert_type, initialize= params[season]['fert_app_time_t'], default = 0.0, doc='time required for fert application per tonne of each fert (filling up and driving to paddock cost)')
+    model.p_fert_app_hour_tonne = Param(model.s_labperiods, model.s_fert_type, initialize= params[season]['fert_app_time_t'], default = 0.0, mutable=True, doc='time required for fert application per tonne of each fert (filling up and driving to paddock cost)')
  
     try:
         # model.del_component(model.p_fert_app_hour_ha_index_index_0)
@@ -64,27 +64,27 @@ def labcrppyomo_local(params):
         model.del_component(model.p_fert_app_hour_ha)
     except AttributeError:
         pass
-    model.p_fert_app_hour_ha = Param(model.s_phases, model.s_lmus, model.s_labperiods, initialize= params[season]['fert_app_time_ha'], default = 0.0, doc='time required for fert application per ha of each fert (driving around paddock cost)')
+    model.p_fert_app_hour_ha = Param(model.s_phases, model.s_lmus, model.s_labperiods, initialize= params[season]['fert_app_time_ha'], default = 0.0, mutable=True, doc='time required for fert application per ha of each fert (driving around paddock cost)')
     
     try:
         model.del_component(model.p_chem_app_lab_index)
         model.del_component(model.p_chem_app_lab)
     except AttributeError:
         pass
-    model.p_chem_app_lab = Param(model.s_phases, model.s_lmus, model.s_labperiods, initialize= params[season]['chem_app_time_ha'], default = 0.0, doc='time required for chem application per ha (hr/ha)')
+    model.p_chem_app_lab = Param(model.s_phases, model.s_lmus, model.s_labperiods, initialize= params[season]['chem_app_time_ha'], default = 0.0, mutable=True, doc='time required for chem application per ha (hr/ha)')
 
     try:
         model.del_component(model.p_variable_crop_monitor_index)
         model.del_component(model.p_variable_crop_monitor)
     except AttributeError:
         pass
-    model.p_variable_crop_monitor = Param(model.s_phases, model.s_labperiods, initialize= params[season]['variable_crop_monitor'], default = 0.0, doc='time required for crop monitoring (hr/ha)')
+    model.p_variable_crop_monitor = Param(model.s_phases, model.s_labperiods, initialize= params[season]['variable_crop_monitor'], default = 0.0, mutable=True, doc='time required for crop monitoring (hr/ha)')
 
     try:
         model.del_component(model.p_fixed_crop_monitor)
     except AttributeError:
         pass
-    model.p_fixed_crop_monitor = Param(model.s_labperiods, initialize= params[season]['fixed_crop_monitor'], default = 0.0, doc='fixed time required for crop monitoring (hr/period)')
+    model.p_fixed_crop_monitor = Param(model.s_labperiods, initialize= params[season]['fixed_crop_monitor'], default = 0.0, mutable=True, doc='fixed time required for crop monitoring (hr/period)')
 
 
 ###################################

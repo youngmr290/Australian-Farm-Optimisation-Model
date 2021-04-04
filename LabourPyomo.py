@@ -175,13 +175,13 @@ def labpyomo_local(params):
         model.del_component(model.p_perm_hours)
     except AttributeError:
         pass
-    model.p_perm_hours = Param(model.s_labperiods, initialize= params[season]['permanent hours'], doc='hours worked by a permanent staff in each period')
+    model.p_perm_hours = Param(model.s_labperiods, initialize= params[season]['permanent hours'], mutable=True, doc='hours worked by a permanent staff in each period')
     
     try:
         model.del_component(model.p_perm_supervision)
     except AttributeError:
         pass
-    model.p_perm_supervision = Param(model.s_labperiods, initialize= params[season]['permanent supervision'], doc='hours of supervision required by a permanent staff in each period')
+    model.p_perm_supervision = Param(model.s_labperiods, initialize= params[season]['permanent supervision'], mutable=True, doc='hours of supervision required by a permanent staff in each period')
     
     try:
         model.del_component(model.p_perm_cost)
@@ -194,25 +194,25 @@ def labpyomo_local(params):
         model.del_component(model.p_casual_cost)
     except AttributeError:
         pass
-    model.p_casual_cost = Param(model.s_labperiods, model.s_cashflow_periods,  initialize = params[season]['casual_cost'], default = 0.0, doc = 'cost of a casual staff for each labour period')
+    model.p_casual_cost = Param(model.s_labperiods, model.s_cashflow_periods,  initialize = params[season]['casual_cost'], mutable=True, default = 0.0, doc = 'cost of a casual staff for each labour period')
     
     try:
         model.del_component(model.p_casual_hours)
     except AttributeError:
         pass
-    model.p_casual_hours = Param(model.s_labperiods, initialize= params[season]['casual hours'], doc='hours worked by a casual staff in each period')
+    model.p_casual_hours = Param(model.s_labperiods, initialize= params[season]['casual hours'], mutable=True, doc='hours worked by a casual staff in each period')
     
     try:
         model.del_component(model.p_casual_supervision)
     except AttributeError:
         pass
-    model.p_casual_supervision = Param(model.s_labperiods, initialize= params[season]['casual supervision'], doc='hours of supervision required by a casual staff in each period')
+    model.p_casual_supervision = Param(model.s_labperiods, initialize= params[season]['casual supervision'], mutable=True, doc='hours of supervision required by a casual staff in each period')
     
     try:
         model.del_component(model.p_manager_hours)
     except AttributeError:
         pass
-    model.p_manager_hours = Param(model.s_labperiods, initialize= params[season]['manager hours'], doc='hours worked by a manager in each period')
+    model.p_manager_hours = Param(model.s_labperiods, initialize= params[season]['manager hours'], mutable=True, doc='hours worked by a manager in each period')
     
     try:
         model.del_component(model.p_manager_cost)
@@ -224,13 +224,13 @@ def labpyomo_local(params):
         model.del_component(model.p_casual_upper)
     except AttributeError:
         pass
-    model.p_casual_upper = Param(model.s_labperiods, initialize = params[season]['casual ub'],  doc = 'casual availability upper bound')
+    model.p_casual_upper = Param(model.s_labperiods, initialize = params[season]['casual ub'], mutable=True,  doc = 'casual availability upper bound')
     
     try:
         model.del_component(model.p_casual_lower)
     except AttributeError:
         pass
-    model.p_casual_lower = Param(model.s_labperiods, initialize = params[season]['casual lb'], doc = 'casual availability lower bound')
+    model.p_casual_lower = Param(model.s_labperiods, initialize = params[season]['casual lb'], mutable=True, doc = 'casual availability lower bound')
 
     ###############################
     #local constraints            #

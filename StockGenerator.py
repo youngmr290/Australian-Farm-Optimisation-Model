@@ -3980,11 +3980,11 @@ def generator(params,r_vals,ev,plots = False):
     a_c_pa1e1b1nwzida0e0b0xyg = fun.f_expand(a_c_p, p_pos).astype(dtype)
     index_ctpa1e1b1nwzida0e0b0xyg = fun.f_expand(np.arange(len(cash_period_dates)), p_pos-2)
     ###labour period
-    labour_periods = per.p_date2_df().iloc[:,0].to_numpy().astype('datetime64[D]') #convert from df to numpy
-    labour_periods_p5y = labour_periods + (np.arange(np.ceil(sim_years)) * np.timedelta64(365,'D'))[:,na] #expand from single yr to all length of generator
-    labour_periods_p5 = labour_periods_p5y.ravel()
-    a_p5_p = sfun.f_next_prev_association(labour_periods_p5, date_end_p, 1, 'right') % len(labour_periods)
-    a_p5_pa1e1b1nwzida0e0b0xyg = fun.f_expand(a_p5_p, p_pos).astype(dtype)
+    labour_periods = per.p_date2_df().to_numpy().astype('datetime64[D]') #convert from df to numpy
+    labour_periods_yp5z = labour_periods + (np.arange(np.ceil(sim_years)) * np.timedelta64(365,'D'))[:,na,na] #expand from single yr to all length of generator
+    labour_periods_p5z = labour_periods_yp5z.reshape((-1, len_z))
+    a_p5_pz = np.apply_along_axis(sfun.f_next_prev_association, 0, labour_periods_p5z, date_end_p, 1, 'right') % len(labour_periods)
+    a_p5_pa1e1b1nwzida0e0b0xyg = fun.f_expand(a_p5_pz,z_pos,left_pos2=p_pos,right_pos2=z_pos).astype(dtype)
     index_p5tpa1e1b1nwzida0e0b0xyg = fun.f_expand(np.arange(len(labour_periods)), p_pos-2)
     ###asset value timing - the date when the asset value is tallied
     assetvalue_timing = np.datetime64(sinp.general['i_date_assetvalue']).astype('datetime64[D]') #convert from df to numpy
@@ -6552,6 +6552,42 @@ def generator(params,r_vals,ev,plots = False):
         r_vals['fec_sire_pzg0'] = r_fec_sire_pg.reshape(pzg0_shape)
         r_vals['fec_dams_k2vpa1e1b1nw8ziyg1'] = r_fec_dams_k2tvpg.reshape(k2vpa1e1b1nwziyg1_shape)
         r_vals['fec_offs_k3k5vpnw8zida0e0b0xyg3'] = r_fec_offs_k3k5tvpg.reshape(k3k5vpnwzidae0b0xyg3_shape)
+
+
+
+
+    ###############
+    # season      #
+    ###############
+    '''
+    stuff needed to allocate variable to stages for dsp
+    stored in params to be accessed in corepyomo when allocating variables to stages
+    '''
+    k2tva1nwiyg1_shape = len_k2, len_t1, len_v1, len_a1, len_n1, len_w1, len_i, len_y1, len_g1
+    k3k5tvnwiaxyg3_shape = len_k3, len_k5, len_t3, len_v3, len_n3, len_w3, len_i, len_a0, len_x, len_y3, len_g3
+
+    ##k2tvanwiyg1 - v_dams
+    arrays = [keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_i, keys_y1, keys_g1]
+    index_k2tvanwiyg1 = fun.cartesian_product_simple_transpose(arrays)
+    tup_k2tvanwiyg1 = list(map(tuple,index_k2tvanwiyg1))
+    array_k2tvanwiyg1 = np.zeros(len(tup_k2tvanwiyg1),dtype=object)
+    array_k2tvanwiyg1[...] = tup_k2tvanwiyg1
+    array_k2tvanwiyg1 = array_k2tvanwiyg1.reshape(k2tva1nwiyg1_shape)
+    params['keys_v_dams'] = array_k2tvanwiyg1
+
+    ##k3k5tvnwiaxyg3 - v_offs
+    arrays = [keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_i, keys_a, keys_x, keys_y3, keys_g3]
+    index_k3k5tvnwiaxyg3 = fun.cartesian_product_simple_transpose(arrays)
+    tup_k3k5tvnwiaxyg3 = list(map(tuple,index_k3k5tvnwiaxyg3))
+    array_k3k5tvnwiaxyg3 = np.zeros(len(tup_k3k5tvnwiaxyg3),dtype=object)
+    array_k3k5tvnwiaxyg3[...] = tup_k3k5tvnwiaxyg3
+    array_k3k5tvnwiaxyg3 = array_k3k5tvnwiaxyg3.reshape(k3k5tvnwiaxyg3_shape)
+    params['keys_v_offs'] = array_k3k5tvnwiaxyg3
+
+    dvp_date_k2tva1nwiyg1 = dvp_date_va1e1b1nwzida0e0b0xyg1[None,None,:,:,0,0,:,:,0,:,0,0,0,0,0,:,:] #take e slice 0 becasue e wont effect stage allocation
+    params['dvp1'] = np.broadcast_to(dvp_date_k2tva1nwiyg1, array_k2tvanwiyg1.shape)
+    dvp_date_k3k5tvnwiaxyg3 = dvp_date_va1e1b1nwzida0e0b0xyg3[None,None,None,:,0,0,0,:,:,0,:,0,:,0,0,:,:,:] #take e slice 0 becasue e wont effect stage allocation
+    params['dvp3'] = np.broadcast_to(dvp_date_k3k5tvnwiaxyg3, array_k3k5tvnwiaxyg3.shape)
 
 
 

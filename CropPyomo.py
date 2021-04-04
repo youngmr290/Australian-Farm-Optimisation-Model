@@ -45,14 +45,14 @@ def croppyomo_local(params):
         model.del_component(model.p_rotation_cost_index)
     except AttributeError:
         pass
-    model.p_rotation_cost = Param(model.s_phases,model.s_lmus,model.s_cashflow_periods, initialize=params[season]['rot_cost'], default=0, doc='total cost for 1 unit of rotation')
+    model.p_rotation_cost = Param(model.s_phases,model.s_lmus,model.s_cashflow_periods, initialize=params[season]['rot_cost'], default=0, mutable=True, doc='total cost for 1 unit of rotation')
        
     try:
         model.del_component(model.p_rotation_yield)
         model.del_component(model.p_rotation_yield_index)
     except AttributeError:
         pass
-    model.p_rotation_yield = Param(model.s_phases, model.s_crops, model.s_lmus, initialize=params[season]['rot_yield'], default = 0.0, doc='grain production for all crops for 1 unit of rotation')
+    model.p_rotation_yield = Param(model.s_phases, model.s_crops, model.s_lmus, initialize=params[season]['rot_yield'], default = 0.0, mutable=True, doc='grain production for all crops for 1 unit of rotation')
 
     try:
         model.del_component(model.p_grainpool_proportion)
@@ -88,7 +88,7 @@ def croppyomo_local(params):
     except AttributeError:
         pass
     ##only used in croplabour pyomo to determine labour per tonne of fert
-    model.p_phasefert = Param(model.s_phases, model.s_lmus, model.s_fert_type, initialize=params[season]['fert_req'], default = 0.0, doc='fert required by 1 unit of phase')
+    model.p_phasefert = Param(model.s_phases, model.s_lmus, model.s_fert_type, initialize=params[season]['fert_req'], default = 0.0, mutable=True, doc='fert required by 1 unit of phase')
    
     
     
