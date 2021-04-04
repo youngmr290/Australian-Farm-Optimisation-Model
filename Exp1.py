@@ -181,7 +181,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
         stubpy.stubpyomo_local(params['stub'])
         spy.stockpyomo_local(params['stock'])
         ###bounds-this must be done last because it uses sets built in some of the other modules
-        bndpy.boundarypyomo_local()
+        bndpy.boundarypyomo_local(params)
         results=core.coremodel_all(params) #have to do this so i can access the solver status
 
         ##This writes variable summary each iteration with generic file name - it is overwritten each iteration and is created so the run progress can be monitored

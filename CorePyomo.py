@@ -487,7 +487,7 @@ def coremodel_all(params):
         stage_info['mbrk2spr']['sets'] = []
         stage_info['lbrk2spr']['sets'] = []
 
-        ##allocate time sets into stages
+        ##allocate time sets into stages todo need to handle z axis for dvp (same as for fp and lp) (i have aded to the sgen already)
         ###root - early break
         stage_info['root']['sets'].extend(list(pinp.period['i_fp_idx'][np.logical_and(fp_p6z[:,root_z] > root_start, fp_p6z[:,root_z] < ebrk_start)]))
         stage_info['root']['sets'].extend(list(keys_p5[np.logical_and(lp_p5z[:,root_z] > root_start, lp_p5z[:,root_z] < ebrk_start)]))

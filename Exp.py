@@ -185,7 +185,7 @@ for row in range(len(exp_data)):
         ###if re-run update runpyomo to false
         exp_data1.loc[exp_data1.index[row], ('runpyomo', '', '', '')] = False
         ###bounds-this must be done last because it uses sets built in some of the other modules
-        bndpy.boundarypyomo_local()
+        bndpy.boundarypyomo_local(params)
 
         pyomocalc_end = time.time()
         print('localpyomo: ', pyomocalc_end - pyomocalc_start)
