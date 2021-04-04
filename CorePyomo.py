@@ -425,9 +425,15 @@ def coremodel_all(params):
         return results
 
     else:
+        '''
+        Stage allocation:
+            If a variable is not allocated to a stage end up in the final stage (they can be optimised independantly for each season).
+            If a variable is allocated to two stages it is constrained in both stages so it is essentially the same as assigning it to just the first stage.
+        '''
         #todo include some error handling - eg can't run multiple TOL at the same time. Need different stage allocation for each tol. thus could use an if statement to pick the allocation used
         #todo each variable needs to assigned to stage - give error if that does not happen
         #todo can't allocate one variable to multiple stages
+        # buy grain may not be in stage 3, i feel like you retain grain for the year ahead without knowing the type of season. but then the model will just counter by altering sale of grain.
         #allocate labour provide variables to the last stage??
         #stage definitions differ for different nodes to the allocation will need to be based on the node as well eg for ealry break labour period 3 might be in stage 2 but for late break it might be in stage 3
         ##specify stages for variables when all variables go into the same stage
@@ -455,18 +461,24 @@ def coremodel_all(params):
         keys_p5 = np.array(per.p_date2_df().index).astype('str')
         keys_dams = params['stock']['keys_v_dams']
         keys_offs = params['stock']['keys_v_offs']
+
         ##date arrays
-        fp_p6z = fun.f_baseyr(per.f_feed_periods())[:-1,:]
+        fp_p6z = per.f_feed_periods()[:-1,:].astype('datetime64')
         lp_p5z = per.p_date2_df().to_numpy().astype('datetime64[D]')
         dvp1 = fun.f_baseyr(params['stock']['dvp1'], fp_p6z[0,0].astype('datetime64[Y]'))
         dvp3 = fun.f_baseyr(params['stock']['dvp3'], fp_p6z[0,0].astype('datetime64[Y]'))
 
-
-        ##stage dates
+        ##stage dates (these continue into the new year eg some may be in the yr of 2020)
         root_start = np.minimum(np.datetime64(pinp.crop['dry_seed_start']), np.min(per.f_feed_periods().astype(np.datetime64)[0,:]))
         ebrk_start = fp_p6z[0,0]
         mbrk_start = fp_p6z[0,1]
         lbrk_start = fp_p6z[0,-1]
+
+        ##add 1 year to date before season start so that periods before season start get allocated to stages.
+        lp_p5z[lp_p5z<root_start] = lp_p5z[lp_p5z<root_start] + np.timedelta64(365, 'D')
+        dvp1[dvp1<root_start] = dvp1[dvp1<root_start] + np.timedelta64(365, 'D')
+        dvp3[dvp3<root_start] = dvp3[dvp3<root_start] + np.timedelta64(365, 'D')
+
 
         ##stage sets
         stage_info['root']['sets'] = []
@@ -505,23 +517,70 @@ def coremodel_all(params):
         #todo v_prog, rotation - how to allocate? trickier becasue no dvp or time serires set but need to allocate based on lambing? probably just have to allocate manually
         ##allocate variable into stages using the allocated sets
         stage_info['root']['vars'] = ['v_quantity_perm[*]','v_quantity_manager[*]','v_sire[*]']
-        stage_info['ebrk2spr']['vars'] = []
+        stage_info['ebrk2spr']['vars'] = ['v_credit[*]', 'v_debit[*]', 'v_dep[*]', 'v_asset[*]', 'v_minroe[*]']
         stage_info['ebrk2mbrk']['vars'] = []
-        stage_info['mbrk2spr']['vars'] = []
-        stage_info['lbrk2spr']['vars'] = []
+        stage_info['mbrk2spr']['vars'] = ['v_credit[*]', 'v_debit[*]', 'v_dep[*]', 'v_asset[*]', 'v_minroe[*]']
+        stage_info['lbrk2spr']['vars'] = ['v_credit[*]', 'v_debit[*]', 'v_dep[*]', 'v_asset[*]', 'v_minroe[*]']
 
         for stage in stage_info.keys():
             for v in model.component_objects(pe.Var,active=True):
                 for index in v:
                     if index==None: #handle variables with no sets (variables with no sets are manually assigned to stages)
                         continue
-                    if any(x in tuple(index) for x in stage_info[stage]['sets']):
+                    if any(x in tuple(index) for x in stage_info[stage]['sets'])\
+                            or any(x == tuple(index) for x in stage_info[stage]['sets']):
                         if isinstance(index, str): #handle just one set
                             a=str(v)+"["+index+"]"
                         else: #handle when multiple sets
                             a=str(v)+str(list(index))
 
                         stage_info[stage]['vars'].append(a)
+
+        # def pysp_scenario_tree_model_callback():
+        #     # Return a NetworkX scenario tree.
+        #     g = networkx.DiGraph()
+        #
+        #     ##root
+        #     ce1 = 'FirstStageCost'
+        #     g.add_node("Root",
+        #                cost=ce1,
+        #                variables=stage_info['root']['vars'],
+        #                derived_variables=[])
+        #
+        #     ##ebrk2mbrk
+        #     ce1 = 'FirstStageCost'
+        #     g.add_node("mbrk",
+        #                cost=ce1,
+        #                variables=stage_info['ebrk2mbrk']['vars'],
+        #                derived_variables=[])
+        #     g.add_edge("Root","mbrk",weight=0.666) #todo this will need to be the season proportion inoput
+        #
+        #     ##ebrk2spr
+        #     ce2 = 'SecondStageCost'
+        #     g.add_node("z0",
+        #                cost=ce2,
+        #                variables = stage_info['ebrk2spr']['vars'],
+        #                derived_variables=[])
+        #     g.add_edge("Root","z0",weight=0.334) #todo this will need to be the season proportion inoput
+        #
+        #     ##mbrk2spr
+        #     g.add_node("z3",
+        #                cost=ce2,
+        #                variables=stage_info['mbrk2spr']['vars'],
+        #                derived_variables=[])
+        #     g.add_edge("mbrk","z3",weight=0.5)
+        #
+        #     ##lbrk2spr
+        #     g.add_node("z6",
+        #                cost=ce2,
+        #                variables=stage_info['lbrk2spr']['vars'],
+        #                derived_variables=[])
+        #     g.add_edge("mbrk","z6",weight=0.5)
+        #
+        #
+        #     return g
+        #
+
 
         # ##option1 - puts all variables into root.
         # root_vars=[]
@@ -553,10 +612,9 @@ def coremodel_all(params):
         #             a=str(v)+"['']"
         #         root_vars.append(a)
 
+        root_vars = ['v_poc[*,*,*]']
 
-
-
-        stage2_vars=['v_quantity_casual[*]','v_hay_made[*]','v_phase_area[*,*]','v_sell_grain[*,*]',
+        stage2_vars=['v_quantity_perm[*]','v_quantity_manager[*]','v_quantity_casual[*]','v_hay_made[*]','v_phase_area[*,*]','v_sell_grain[*,*]',
                      'v_credit[*]',
                      'v_debit[*]',
                      'v_dep[*]',
@@ -590,14 +648,14 @@ def coremodel_all(params):
                      'v_drypas_transfer[*,*,*]',
                      'v_nap_consumed[*,*,*,*]',
                      'v_nap_transfer[*,*,*]',
-                     'v_poc[*,*,*]',
+                     # 'v_poc[*,*,*]',
                      'v_sire[*]',
                      'v_dams[*,*,*,*,*,*,*,*,*]',
                      'v_offs[*,*,*,*,*,*,*,*,*,*,*]',
                      'v_prog[*,*,*,*,*,*,*,*]'
-                     ] #buy grain may not be in stage 3, i feel like you retain grain for the year ahead without knowing the type of season. but then the model will just counter by altering sale of grain.
+                     ]
 
-        stage2_vars=[]
+
 
 
         def pysp_scenario_tree_model_callback():
@@ -608,154 +666,148 @@ def coremodel_all(params):
             ce1 = 'FirstStageCost'
             g.add_node("Root",
                        cost=ce1,
-                       variables=stage_info['root']['vars'],
+                       variables=root_vars,
                        derived_variables=[])
 
-            ##ebrk2mbrk
-            ce1 = 'FirstStageCost'
-            g.add_node("mbrk",
-                       cost=ce1,
-                       variables=stage_info['ebrk2mbrk']['vars'],
-                       derived_variables=[])
-            g.add_edge("Root","mbrk",weight=0.666) #todo this will need to be the season proportion inoput
 
-            ##ebrk2spr
             ce2 = 'SecondStageCost'
             g.add_node("z0",
                        cost=ce2,
-                       variables = stage_info['ebrk2spr']['vars'],
+                       variables = stage2_vars,
                        derived_variables=[])
-            g.add_edge("Root","z0",weight=0.334) #todo this will need to be the season proportion inoput
+            g.add_edge("Root","z0",weight=0.334)
 
-            ##mbrk2spr
-            g.add_node("z1",
-                       cost=ce2,
-                       variables=stage_info['mbrk2spr']['vars'],
-                       derived_variables=[])
-            g.add_edge("mbrk","z1",weight=0.5)
 
-            ##lbrk2spr
-            g.add_node("z2",
+            g.add_node("z3",
                        cost=ce2,
-                       variables=stage_info['lbrk2spr']['vars'],
+                       variables=stage2_vars,
                        derived_variables=[])
-            g.add_edge("mbrk","z2",weight=0.5)
+            g.add_edge("Root","z3",weight=0.334)
+
+
+            g.add_node("z6",
+                       cost=ce2,
+                       variables=stage2_vars,
+                       derived_variables=[])
+            g.add_edge("Root","z6",weight=0.332)
 
 
             return g
 
+
         def pysp_instance_creation_callback(scenario_name,node_names):
             instance = model.clone()
-            # ##stubble
-            # model.p_fp_transfer.store_values(params['stub'][scenario_name]['per_transfer'])
-            # model.p_a_req.store_values(params['stub'][scenario_name]['cat_a_st_req'])
-            # model.p_stub_vol.store_values(params['stub'][scenario_name]['vol'])
-            # model.p_stub_md.store_values(params['stub'][scenario_name]['md'])
-            # model.p_harv_prop.store_values(params['stub'][scenario_name]['cons_prop'])
-            #
-            # ##labour
-            # model.p_perm_hours.store_values(params['lab'][scenario_name]['permanent hours'])
-            # model.p_perm_supervision.store_values(params['lab'][scenario_name]['permanent supervision'])
-            # model.p_casual_cost.store_values(params['lab'][scenario_name]['casual_cost'])
-            # model.p_casual_hours.store_values(params['lab'][scenario_name]['casual hours'])
-            # model.p_casual_supervision.store_values(params['lab'][scenario_name]['casual supervision'])
-            # model.p_manager_hours.store_values(params['lab'][scenario_name]['manager hours'])
-            # model.p_casual_upper.store_values(params['lab'][scenario_name]['casual ub'])
-            # model.p_casual_lower.store_values(params['lab'][scenario_name]['casual lb'])
-            #
-            # ##labour crop
-            # model.p_prep_pack.store_values(params['crplab'][scenario_name]['prep_labour'])
-            # model.p_fert_app_hour_tonne.store_values(params['crplab'][scenario_name]['fert_app_time_t'])
-            # model.p_fert_app_hour_ha.store_values(params['crplab'][scenario_name]['fert_app_time_ha'])
-            # model.p_chem_app_lab.store_values(params['crplab'][scenario_name]['chem_app_time_ha'])
-            # model.p_variable_crop_monitor.store_values(params['crplab'][scenario_name]['variable_crop_monitor'])
-            # model.p_fixed_crop_monitor.store_values(params['crplab'][scenario_name]['fixed_crop_monitor'])
-            #
-            # ##labour fixed
-            # model.p_super_labour.store_values(params['labfx'][scenario_name]['super'])
-            # model.p_bas_labour.store_values(params['labfx'][scenario_name]['bas'])
-            # model.p_planning_labour.store_values(params['labfx'][scenario_name]['planning'])
-            # model.p_tax_labour.store_values(params['labfx'][scenario_name]['tax'])
-            #
-            # ##crop
-            # model.p_rotation_cost.store_values(params['crop'][scenario_name]['rot_cost'])
-            # model.p_rotation_yield.store_values(params['crop'][scenario_name]['rot_yield'])
-            # model.p_phasefert.store_values(params['crop'][scenario_name]['fert_req'])
-            #
-            # ##pasture
-            # model.p_germination.store_values(params['pas'][scenario_name]['p_germination_flrt'])
-            # model.p_foo_grn_reseeding.store_values(params['pas'][scenario_name]['p_foo_grn_reseeding_flrt'])
-            # model.p_foo_dry_reseeding.store_values(params['pas'][scenario_name]['p_foo_dry_reseeding_dflrt'])
-            # model.p_foo_end_grnha.store_values(params['pas'][scenario_name]['p_foo_end_grnha_goflt'])
-            # model.p_foo_start_grnha.store_values(params['pas'][scenario_name]['p_foo_start_grnha_oflt'])
-            # model.p_senesce_grnha.store_values(params['pas'][scenario_name]['p_senesce_grnha_dgoflt'])
-            # model.p_me_cons_grnha.store_values(params['pas'][scenario_name]['p_me_cons_grnha_vgoflt'])
-            # model.p_dry_mecons_t.store_values(params['pas'][scenario_name]['p_dry_mecons_t_vdft'])
-            # model.p_volume_grnha.store_values(params['pas'][scenario_name]['p_volume_grnha_goflt'])
-            # model.p_dry_volume_t.store_values(params['pas'][scenario_name]['p_dry_volume_t_dft'])
-            # model.p_dry_transfer_t.store_values(params['pas'][scenario_name]['p_dry_transfer_t_ft'])
-            # model.p_nap.store_values(params['pas'][scenario_name]['p_nap_dflrt'])
-            # model.p_nap_prop.store_values(params['pas'][scenario_name]['p_harvest_period_prop'])
-            # model.p_phase_area.store_values(params['pas'][scenario_name]['p_phase_area_flrt'])
-            # model.p_pas_sow.store_values(params['pas'][scenario_name]['p_pas_sow_plrk'])
-            # model.p_poc_vol.store_values(params['pas'][scenario_name]['p_poc_vol_f'])
-            #
-            # ##machine
-            # model.p_seed_days.store_values(params['mach'][scenario_name]['seed_days'])
-            # model.p_contractseeding_occur.store_values(params['mach'][scenario_name]['contractseeding_occur'])
-            # model.p_seeding_cost.store_values(params['mach'][scenario_name]['seeding_cost'])
-            # model.p_contract_seeding_cost.store_values(params['mach'][scenario_name]['contract_seed_cost'])
-            # model.p_harv_rate.store_values(params['mach'][scenario_name]['harv_rate_period'])
-            # model.p_harv_hrs_max.store_values(params['mach'][scenario_name]['max_harv_hours'])
-            # model.p_harv_cost.store_values(params['mach'][scenario_name]['harvest_cost'])
-            # model.p_contractharv_cost.store_values(params['mach'][scenario_name]['contract_harvest_cost'])
-            # model.p_yield_penalty.store_values(params['mach'][scenario_name]['yield_penalty'])
-            # model.p_seeding_grazingdays.store_values(params['mach'][scenario_name]['grazing_days'])
-            #
-            # ##sup feed
-            # model.p_sup_cost.store_values(params['sup'][scenario_name]['total_sup_cost'])
-            # model.p_sup_labour.store_values(params['sup'][scenario_name]['sup_labour'])
-            #
-            # ##stock
-            # model.p_nsires_req.store_values(params['stock'][scenario_name]['p_nsire_req_dams'])
-            # model.p_nsires_prov.store_values(params['stock'][scenario_name]['p_nsire_prov_sire'])
-            # model.p_progprov_dams.store_values(params['stock'][scenario_name]['p_progprov_dams'])
-            # model.p_progprov_offs.store_values(params['stock'][scenario_name]['p_progprov_offs'])
-            # model.p_numbers_prov_dams.store_values(params['stock'][scenario_name]['p_numbers_prov_dams'])
-            # model.p_numbers_provthis_dams.store_values(params['stock'][scenario_name]['p_numbers_provthis_dams'])
-            # model.p_numbers_prov_offs.store_values(params['stock'][scenario_name]['p_numbers_prov_offs'])
-            # model.p_mei_sire.store_values(params['stock'][scenario_name]['p_mei_sire'])
-            # model.p_mei_dams.store_values(params['stock'][scenario_name]['p_mei_dams'])
-            # model.p_mei_offs.store_values(params['stock'][scenario_name]['p_mei_offs'])
-            # model.p_pi_sire.store_values(params['stock'][scenario_name]['p_pi_sire'])
-            # model.p_pi_dams.store_values(params['stock'][scenario_name]['p_pi_dams'])
-            # model.p_pi_offs.store_values(params['stock'][scenario_name]['p_pi_offs'])
-            # model.p_cashflow_sire.store_values(params['stock'][scenario_name]['p_cashflow_sire'])
-            # model.p_cashflow_dams.store_values(params['stock'][scenario_name]['p_cashflow_dams'])
-            # model.p_cashflow_prog.store_values(params['stock'][scenario_name]['p_cashflow_prog'])
-            # model.p_cashflow_offs.store_values(params['stock'][scenario_name]['p_cashflow_offs'])
-            # model.p_cost_sire.store_values(params['stock'][scenario_name]['p_cost_sire'])
-            # model.p_cost_dams.store_values(params['stock'][scenario_name]['p_cost_dams'])
-            # model.p_cost_offs.store_values(params['stock'][scenario_name]['p_cost_offs'])
-            # model.p_asset_sire.store_values(params['stock'][scenario_name]['p_assetvalue_sire'])
-            # model.p_asset_dams.store_values(params['stock'][scenario_name]['p_assetvalue_dams'])
-            # model.p_asset_offs.store_values(params['stock'][scenario_name]['p_assetvalue_offs'])
-            # model.p_lab_anyone_sire.store_values(params['stock'][scenario_name]['p_labour_anyone_sire'])
-            # model.p_lab_perm_sire.store_values(params['stock'][scenario_name]['p_labour_perm_sire'])
-            # model.p_lab_manager_sire.store_values(params['stock'][scenario_name]['p_labour_manager_sire'])
-            # model.p_lab_anyone_dams.store_values(params['stock'][scenario_name]['p_labour_anyone_dams'])
-            # model.p_lab_perm_dams.store_values(params['stock'][scenario_name]['p_labour_perm_dams'])
-            # model.p_lab_manager_dams.store_values(params['stock'][scenario_name]['p_labour_manager_dams'])
-            # model.p_lab_anyone_offs.store_values(params['stock'][scenario_name]['p_labour_anyone_offs'])
-            # model.p_lab_perm_offs.store_values(params['stock'][scenario_name]['p_labour_perm_offs'])
-            # model.p_lab_manager_offs.store_values(params['stock'][scenario_name]['p_labour_manager_offs'])
-            # model.p_infra_sire.store_values(params['stock'][scenario_name]['p_infrastructure_sire'])
-            # model.p_infra_dams.store_values(params['stock'][scenario_name]['p_infrastructure_dams'])
-            # model.p_infra_offs.store_values(params['stock'][scenario_name]['p_infrastructure_offs'])
-            # model.p_dse_sire.store_values(params['stock'][scenario_name]['p_dse_sire'])
-            # model.p_dse_dams.store_values(params['stock'][scenario_name]['p_dse_dams'])
-            # model.p_dse_offs.store_values(params['stock'][scenario_name]['p_dse_offs'])
-            # model.p_cost_purch_sire.store_values(params['stock'][scenario_name]['p_purchcost_sire'])
+            ##stubble
+            model.p_fp_transfer.store_values(params['stub'][scenario_name]['per_transfer'])
+            model.p_a_req.store_values(params['stub'][scenario_name]['cat_a_st_req'])
+            model.p_stub_vol.store_values(params['stub'][scenario_name]['vol'])
+            model.p_stub_md.store_values(params['stub'][scenario_name]['md'])
+            model.p_harv_prop.store_values(params['stub'][scenario_name]['cons_prop'])
+
+            ##labour
+            model.p_perm_hours.store_values(params['lab'][scenario_name]['permanent hours'])
+            model.p_perm_supervision.store_values(params['lab'][scenario_name]['permanent supervision'])
+            model.p_casual_cost.store_values(params['lab'][scenario_name]['casual_cost'])
+            model.p_casual_hours.store_values(params['lab'][scenario_name]['casual hours'])
+            model.p_casual_supervision.store_values(params['lab'][scenario_name]['casual supervision'])
+            model.p_manager_hours.store_values(params['lab'][scenario_name]['manager hours'])
+            model.p_casual_upper.store_values(params['lab'][scenario_name]['casual ub'])
+            model.p_casual_lower.store_values(params['lab'][scenario_name]['casual lb'])
+
+            ##labour crop
+            model.p_prep_pack.store_values(params['crplab'][scenario_name]['prep_labour'])
+            model.p_fert_app_hour_tonne.store_values(params['crplab'][scenario_name]['fert_app_time_t'])
+            model.p_fert_app_hour_ha.store_values(params['crplab'][scenario_name]['fert_app_time_ha'])
+            model.p_chem_app_lab.store_values(params['crplab'][scenario_name]['chem_app_time_ha'])
+            model.p_variable_crop_monitor.store_values(params['crplab'][scenario_name]['variable_crop_monitor'])
+            model.p_fixed_crop_monitor.store_values(params['crplab'][scenario_name]['fixed_crop_monitor'])
+
+            ##labour fixed
+            model.p_super_labour.store_values(params['labfx'][scenario_name]['super'])
+            model.p_bas_labour.store_values(params['labfx'][scenario_name]['bas'])
+            model.p_planning_labour.store_values(params['labfx'][scenario_name]['planning'])
+            model.p_tax_labour.store_values(params['labfx'][scenario_name]['tax'])
+
+            ##crop
+            model.p_rotation_cost.store_values(params['crop'][scenario_name]['rot_cost'])
+            model.p_rotation_yield.store_values(params['crop'][scenario_name]['rot_yield'])
+            model.p_phasefert.store_values(params['crop'][scenario_name]['fert_req'])
+
+            ##pasture
+            model.p_germination.store_values(params['pas'][scenario_name]['p_germination_flrt'])
+            model.p_foo_grn_reseeding.store_values(params['pas'][scenario_name]['p_foo_grn_reseeding_flrt'])
+            model.p_foo_dry_reseeding.store_values(params['pas'][scenario_name]['p_foo_dry_reseeding_dflrt'])
+            model.p_foo_end_grnha.store_values(params['pas'][scenario_name]['p_foo_end_grnha_goflt'])
+            model.p_foo_start_grnha.store_values(params['pas'][scenario_name]['p_foo_start_grnha_oflt'])
+            model.p_senesce_grnha.store_values(params['pas'][scenario_name]['p_senesce_grnha_dgoflt'])
+            model.p_me_cons_grnha.store_values(params['pas'][scenario_name]['p_me_cons_grnha_vgoflt'])
+            model.p_volume_grnha.store_values(params['pas'][scenario_name]['p_volume_grnha_goflt'])
+            model.p_dry_mecons_t.store_values(params['pas'][scenario_name]['p_dry_mecons_t_vdft'])
+            model.p_dry_volume_t.store_values(params['pas'][scenario_name]['p_dry_volume_t_dft'])
+            model.p_dry_transfer_t.store_values(params['pas'][scenario_name]['p_dry_transfer_t_ft'])
+            model.p_nap.store_values(params['pas'][scenario_name]['p_nap_dflrt'])
+            model.p_nap_prop.store_values(params['pas'][scenario_name]['p_harvest_period_prop'])
+            model.p_phase_area.store_values(params['pas'][scenario_name]['p_phase_area_flrt'])
+            model.p_pas_sow.store_values(params['pas'][scenario_name]['p_pas_sow_plrk'])
+            model.p_poc_vol.store_values(params['pas'][scenario_name]['p_poc_vol_f'])
+
+            ##machine
+            model.p_contractseeding_occur.store_values(params['mach'][scenario_name]['contractseeding_occur'])
+            model.p_seed_days.store_values(params['mach'][scenario_name]['seed_days'])
+            model.p_seeding_cost.store_values(params['mach'][scenario_name]['seeding_cost'])
+            model.p_contract_seeding_cost.store_values(params['mach'][scenario_name]['contract_seed_cost'])
+            model.p_harv_rate.store_values(params['mach'][scenario_name]['harv_rate_period'])
+            model.p_harv_hrs_max.store_values(params['mach'][scenario_name]['max_harv_hours'])
+            model.p_harv_cost.store_values(params['mach'][scenario_name]['harvest_cost'])
+            model.p_contractharv_cost.store_values(params['mach'][scenario_name]['contract_harvest_cost'])
+            model.p_yield_penalty.store_values(params['mach'][scenario_name]['yield_penalty'])
+            model.p_seeding_grazingdays.store_values(params['mach'][scenario_name]['grazing_days'])
+
+            ##sup feed
+            model.p_sup_cost.store_values(params['sup'][scenario_name]['total_sup_cost'])
+            model.p_sup_labour.store_values(params['sup'][scenario_name]['sup_labour'])
+
+            ##stock
+            model.p_nsires_req.store_values(params['stock'][scenario_name]['p_nsire_req_dams'])
+            model.p_nsires_prov.store_values(params['stock'][scenario_name]['p_nsire_prov_sire'])
+            model.p_npw.store_values(params['stock'][scenario_name]['p_npw_dams'])
+            model.p_progprov_dams.store_values(params['stock'][scenario_name]['p_progprov_dams'])
+            model.p_progprov_offs.store_values(params['stock'][scenario_name]['p_progprov_offs'])
+            model.p_numbers_prov_dams.store_values(params['stock'][scenario_name]['p_numbers_prov_dams'])
+            model.p_numbers_provthis_dams.store_values(params['stock'][scenario_name]['p_numbers_provthis_dams'])
+            model.p_numbers_prov_offs.store_values(params['stock'][scenario_name]['p_numbers_prov_offs'])
+            model.p_mei_sire.store_values(params['stock'][scenario_name]['p_mei_sire'])
+            model.p_mei_dams.store_values(params['stock'][scenario_name]['p_mei_dams'])
+            model.p_mei_offs.store_values(params['stock'][scenario_name]['p_mei_offs'])
+            model.p_pi_sire.store_values(params['stock'][scenario_name]['p_pi_sire'])
+            model.p_pi_dams.store_values(params['stock'][scenario_name]['p_pi_dams'])
+            model.p_pi_offs.store_values(params['stock'][scenario_name]['p_pi_offs'])
+            model.p_cashflow_sire.store_values(params['stock'][scenario_name]['p_cashflow_sire'])
+            model.p_cashflow_dams.store_values(params['stock'][scenario_name]['p_cashflow_dams'])
+            model.p_cashflow_prog.store_values(params['stock'][scenario_name]['p_cashflow_prog'])
+            model.p_cashflow_offs.store_values(params['stock'][scenario_name]['p_cashflow_offs'])
+            model.p_cost_sire.store_values(params['stock'][scenario_name]['p_cost_sire'])
+            model.p_cost_dams.store_values(params['stock'][scenario_name]['p_cost_dams'])
+            model.p_cost_offs.store_values(params['stock'][scenario_name]['p_cost_offs'])
+            model.p_asset_sire.store_values(params['stock'][scenario_name]['p_assetvalue_sire'])
+            model.p_asset_dams.store_values(params['stock'][scenario_name]['p_assetvalue_dams'])
+            model.p_asset_offs.store_values(params['stock'][scenario_name]['p_assetvalue_offs'])
+            model.p_lab_anyone_sire.store_values(params['stock'][scenario_name]['p_labour_anyone_sire'])
+            model.p_lab_perm_sire.store_values(params['stock'][scenario_name]['p_labour_perm_sire'])
+            model.p_lab_manager_sire.store_values(params['stock'][scenario_name]['p_labour_manager_sire'])
+            model.p_lab_anyone_dams.store_values(params['stock'][scenario_name]['p_labour_anyone_dams'])
+            model.p_lab_perm_dams.store_values(params['stock'][scenario_name]['p_labour_perm_dams'])
+            model.p_lab_manager_dams.store_values(params['stock'][scenario_name]['p_labour_manager_dams'])
+            model.p_lab_anyone_offs.store_values(params['stock'][scenario_name]['p_labour_anyone_offs'])
+            model.p_lab_perm_offs.store_values(params['stock'][scenario_name]['p_labour_perm_offs'])
+            model.p_lab_manager_offs.store_values(params['stock'][scenario_name]['p_labour_manager_offs'])
+            model.p_infra_sire.store_values(params['stock'][scenario_name]['p_infrastructure_sire'])
+            model.p_infra_dams.store_values(params['stock'][scenario_name]['p_infrastructure_dams'])
+            model.p_infra_offs.store_values(params['stock'][scenario_name]['p_infrastructure_offs'])
+            model.p_dse_sire.store_values(params['stock'][scenario_name]['p_dse_sire'])
+            model.p_dse_dams.store_values(params['stock'][scenario_name]['p_dse_dams'])
+            model.p_dse_offs.store_values(params['stock'][scenario_name]['p_dse_offs'])
+            model.p_cost_purch_sire.store_values(params['stock'][scenario_name]['p_purchcost_sire'])
 
             return instance
 
