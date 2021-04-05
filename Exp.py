@@ -12,7 +12,7 @@ import numpy as np
 import pyomo.environ as pe
 import time
 import os.path
-import sys
+import json
 from datetime import datetime
 import pickle as pkl
 
@@ -164,7 +164,6 @@ for row in range(len(exp_data)):
     # except KeyError:
     #     run_pyomo_params= True
 
-    lp_vars={} #create empty dict to return if pyomo isn't run. If dict is empty it doesnt overwrite the previous main lp_vars
     ##determine if pyomo should run, note if pyomo doesn't run there will be no full solution (they are the same as before so no need)
     if run_pyomo: #or exp_data1.loc[exp_data1.index[row],'runpyomo'].squeeze():
         # print('run pyomo')
@@ -189,7 +188,7 @@ for row in range(len(exp_data)):
 
         pyomocalc_end = time.time()
         print('localpyomo: ', pyomocalc_end - pyomocalc_start)
-        results=core.coremodel_all(params) #have to do this so i can access the solver status
+        obj = core.coremodel_all(params, trial_name)
         print('corepyomo: ',time.time() - pyomocalc_end)
 
         if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1:
@@ -203,6 +202,12 @@ for row in range(len(exp_data)):
 
                 ##This writes variable summary for full solution (same file as the temporary version created above)
                 fun.write_variablesummary(model, row, exp_data)
+
+                ##prints what you see from pprint to txt file - you can see the slack on constraints but not the rc or dual
+                with open('Output/Full model - %s.txt' %trial_name, 'w') as f:  #file name has to have capital
+                    f.write("My description of the instance!\n")
+                    model.display(ostream=f)
+
 
                 #todo writing the RC & Duals is very slow. Search for a quicker method if it is required for a large model
                 # ##write rc and dual to txt file
@@ -222,37 +227,51 @@ for row in range(len(exp_data)):
                 #             print("      ", index, model.dual[c[index]], file=f)
                 #             # except: pass
 
-
-                ##prints what you see from pprint to txt file - you can see the slack on constraints but not the rc or dual
-                # with open('Output/Full model - %s.txt' %trial_name, 'w') as f:  #file name has to have capital
-                #     f.write("My description of the instance!\n")
-                #     model.display(ostream=f)
-
-            ##this prints stuff for each trial - trial name, overall profit
-            print("\nDisplaying Solution for trial: %s\n" %trial_name , '-'*60,'\n%s' %pe.value(model.profit))
-            ##this check if the solver is optimal - if infeasible or error the model will quit
-            if (results.solver.status == pe.SolverStatus.ok) and (results.solver.termination_condition == pe.TerminationCondition.optimal):
-                print('solver optimal')# Do nothing when the solution in optimal and feasible
-            elif (results.solver.termination_condition == pe.TerminationCondition.infeasible):
-                print ('Solver Status: infeasible')
-                sys.exit()
-            else: # Something else is wrong
-                print ('Solver Status: error')
-                sys.exit()
             ##store pyomo variable output as a dict
             variables=model.component_objects(pe.Var, active=True)
             lp_vars = {str(v):{s:v[s].value for s in v} for v in variables}     #creates dict with variable in it. This is tricky since pyomo returns a generator object
             ##store profit
             lp_vars['profit'] = pe.value(model.profit)
 
-            ##pickle trial info
-            if any(lp_vars):  # only do this if pyomo was run and the dict contains values
-                with open('pkl/pkl_lp_vars_{0}.pkl'.format(trial_name),"wb") as f:
-                    pkl.dump(lp_vars,f,protocol=pkl.HIGHEST_PROTOCOL)
-            with open('pkl/pkl_r_vals_{0}.pkl'.format(trial_name),"wb") as f:
-                pkl.dump(r_vals,f,protocol=pkl.HIGHEST_PROTOCOL)
-            # with open('pkl/pkl_params_{0}.pkl'.format(trial_name),"wb") as f: #pkl_params must be pickled last because it is used to determine if model crashed but the current trial was complete prior to crash
-            #     pkl.dump(params,f,protocol=pkl.HIGHEST_PROTOCOL)
+        ## if DSP version
+        else:
+            ##Note: to get full lp file for DSP model it needs to be run via the terminal (or in runef.py) see google doc for more info.
+
+            ## load json (dsp solution) back in
+            with open('ef_solution.json') as f:
+                data = json.load(f)
+
+            ##store pyomo variable output as a dict
+            lp_vars = {}
+            for season in pinp.f_keys_z():
+                variables = data['scenario solutions'][season]['variables']
+                lp_vars[season] = {}
+                ###get dict into correct format for lp_vars
+                for key in variables.keys():
+                    var_name = key.split('[', 1)[0]
+                    try:
+                        sets = key.split('[', 1)[1].split(']',1)[0]
+                        sets = tuple(sets.split(','))
+                    except IndexError: #handle variables with no sets
+                        sets = None #set to None becasue this happens in steady state version.
+                    value = variables[key]['value']
+                    try:
+                        lp_vars[season][var_name][sets] = value
+                    except KeyError:
+                        lp_vars[season][var_name] = {} #create empty dict once for each variable name
+                        lp_vars[season][var_name][sets] = value
+
+                ##store senario profit
+                lp_vars[season]['scenario_profit'] = data['scenario solutions'][season]['objective']
+            ##store overall expected profit
+            lp_vars['profit'] = obj
+
+        ##pickle lp info - only if pyomo is run
+        with open('pkl/pkl_lp_vars_{0}.pkl'.format(trial_name),"wb") as f:
+            pkl.dump(lp_vars,f,protocol=pkl.HIGHEST_PROTOCOL)
+    ##pickle report values - every time a trial is run
+    with open('pkl/pkl_r_vals_{0}.pkl'.format(trial_name),"wb") as f:
+        pkl.dump(r_vals,f,protocol=pkl.HIGHEST_PROTOCOL)
 
     ##determine expected time to completion - trials left multiplied by average time per trial &time for current loop
     trials_to_go = total_trials - run

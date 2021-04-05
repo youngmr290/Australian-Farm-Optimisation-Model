@@ -21,7 +21,7 @@ import networkx
 import pyomo.pysp.util.rapper as rapper
 import pyomo.pysp.plugins.csvsolutionwriter as csvw
 import pyomo.pysp.plugins.jsonsolutionwriter as jsonw
-import json
+import sys
 
 #AFO modules - should only be pyomo modules
 import UniversalInputs as uinp
@@ -42,7 +42,7 @@ import StockPyomo as stkpy
 import Finance as fin
 
 
-def coremodel_all(params):
+def coremodel_all(params, trial_name):
     '''
     Wraps all of the core model into a function so it can be run multiple times in a loop
 
@@ -421,8 +421,8 @@ def coremodel_all(params):
             pass
         model.rc = pe.Suffix(direction=pe.Suffix.IMPORT)
         ##solve - tee=True will print out solver information
-        results = pe.SolverFactory('glpk').solve(model, tee=True) #turn to true for solver output - may be useful for troubleshooting
-        return results
+        solver_result = pe.SolverFactory('glpk').solve(model, tee=True) #turn to true for solver output - may be useful for troubleshooting
+        obj = pe.value(model.profit)
 
     else:
         '''
@@ -811,23 +811,30 @@ def coremodel_all(params):
 
             return instance
 
-    concrete_tree = pysp_scenario_tree_model_callback()
-    stsolver = rapper.StochSolver(None,tree_model=concrete_tree,fsfct=pysp_instance_creation_callback)
-    ef_sol = stsolver.solve_ef('glpk',tee=True)
-    print(ef_sol.solver.termination_condition)
-    obj = stsolver.root_E_obj()
-    print("Expecatation take over scenarios=",obj)
-    # for varname,varval in stsolver.root_Var_solution():  # doctest: +SKIP
-    #     print(varname,str(varval))
+        concrete_tree = pysp_scenario_tree_model_callback()
+        stsolver = rapper.StochSolver(None,tree_model=concrete_tree,fsfct=pysp_instance_creation_callback)
+        solver_result = stsolver.solve_ef('glpk',tee=False) #convert tee=True to see solver output
+        obj = stsolver.root_E_obj()
+        # for varname,varval in stsolver.root_Var_solution():  # unfortunately this is only for root
+        #     print(varname,str(varval))
 
-    #saves file to csv
-    csvw.write_csv_soln(stsolver.scenario_tree,"solutionMRY")
-    #saves file to json
-    jsonw.JSONSolutionWriter.write('',stsolver.scenario_tree,
-                                   'ef')  # i don't know what the first arg does?? it needs to exist but can put any string without changing output
+        ##saves file to csv - not used for anything other than looking at.
+        csvw.write_csv_soln(stsolver.scenario_tree,"solutionMRY")
+        ##saves file to json - cant change the file name..without changing a pyomo module
+        jsonw.JSONSolutionWriter.write('',stsolver.scenario_tree,
+                                       'ef')  # i don't know what the first arg does?? it needs to exist but can put any string without changing output
 
-    #load json back in
-    with open('efMRY_solution.json') as f:
-        data = json.load(f)
+    ##this prints trial name, overall profit and feasibility for each trial
+    print("\nDisplaying Solution for trial: %s\n" % trial_name,'-' * 60,'\n%s' % obj)
+    ##this check if the solver is optimal - if infeasible or error the model will quit
+    if (solver_result.solver.status == pe.SolverStatus.ok) and (
+            solver_result.solver.termination_condition == pe.TerminationCondition.optimal):
+        print('OPTIMAL LP SOLUTION FOUND')  # Do nothing when the solution in optimal and feasible
+    elif (solver_result.solver.termination_condition == pe.TerminationCondition.infeasible):
+        print('***INFEASIBLE LP SOLUTION***')
+        sys.exit()
+    else:  # Something else is wrong
+        print('Solver Status: error')
+        sys.exit()
 
-    
+    return obj
