@@ -21,7 +21,7 @@ import networkx
 import pyomo.pysp.util.rapper as rapper
 import pyomo.pysp.plugins.csvsolutionwriter as csvw
 import pyomo.pysp.plugins.jsonsolutionwriter as jsonw
-import json
+import sys
 
 #AFO modules - should only be pyomo modules
 import UniversalInputs as uinp
@@ -42,7 +42,7 @@ import StockPyomo as stkpy
 import Finance as fin
 
 
-def coremodel_all(params):
+def coremodel_all(params, trial_name):
     '''
     Wraps all of the core model into a function so it can be run multiple times in a loop
 
@@ -421,8 +421,8 @@ def coremodel_all(params):
             pass
         model.rc = pe.Suffix(direction=pe.Suffix.IMPORT)
         ##solve - tee=True will print out solver information
-        results = pe.SolverFactory('glpk').solve(model, tee=True) #turn to true for solver output - may be useful for troubleshooting
-        return results
+        solver_result = pe.SolverFactory('glpk').solve(model, tee=True) #turn to true for solver output - may be useful for troubleshooting
+        obj = pe.value(model.profit)
 
     else:
         '''
@@ -698,136 +698,143 @@ def coremodel_all(params):
         def pysp_instance_creation_callback(scenario_name,node_names):
             instance = model.clone()
             ##stubble
-            model.p_fp_transfer.store_values(params['stub'][scenario_name]['per_transfer'])
-            model.p_a_req.store_values(params['stub'][scenario_name]['cat_a_st_req'])
-            model.p_stub_vol.store_values(params['stub'][scenario_name]['vol'])
-            model.p_stub_md.store_values(params['stub'][scenario_name]['md'])
-            model.p_harv_prop.store_values(params['stub'][scenario_name]['cons_prop'])
+            instance.p_fp_transfer.store_values(params['stub'][scenario_name]['per_transfer'])
+            instance.p_a_req.store_values(params['stub'][scenario_name]['cat_a_st_req'])
+            instance.p_stub_vol.store_values(params['stub'][scenario_name]['vol'])
+            instance.p_stub_md.store_values(params['stub'][scenario_name]['md'])
+            instance.p_harv_prop.store_values(params['stub'][scenario_name]['cons_prop'])
 
             ##labour
-            model.p_perm_hours.store_values(params['lab'][scenario_name]['permanent hours'])
-            model.p_perm_supervision.store_values(params['lab'][scenario_name]['permanent supervision'])
-            model.p_casual_cost.store_values(params['lab'][scenario_name]['casual_cost'])
-            model.p_casual_hours.store_values(params['lab'][scenario_name]['casual hours'])
-            model.p_casual_supervision.store_values(params['lab'][scenario_name]['casual supervision'])
-            model.p_manager_hours.store_values(params['lab'][scenario_name]['manager hours'])
-            model.p_casual_upper.store_values(params['lab'][scenario_name]['casual ub'])
-            model.p_casual_lower.store_values(params['lab'][scenario_name]['casual lb'])
+            instance.p_perm_hours.store_values(params['lab'][scenario_name]['permanent hours'])
+            instance.p_perm_supervision.store_values(params['lab'][scenario_name]['permanent supervision'])
+            instance.p_casual_cost.store_values(params['lab'][scenario_name]['casual_cost'])
+            instance.p_casual_hours.store_values(params['lab'][scenario_name]['casual hours'])
+            instance.p_casual_supervision.store_values(params['lab'][scenario_name]['casual supervision'])
+            instance.p_manager_hours.store_values(params['lab'][scenario_name]['manager hours'])
+            instance.p_casual_upper.store_values(params['lab'][scenario_name]['casual ub'])
+            instance.p_casual_lower.store_values(params['lab'][scenario_name]['casual lb'])
 
             ##labour crop
-            model.p_prep_pack.store_values(params['crplab'][scenario_name]['prep_labour'])
-            model.p_fert_app_hour_tonne.store_values(params['crplab'][scenario_name]['fert_app_time_t'])
-            model.p_fert_app_hour_ha.store_values(params['crplab'][scenario_name]['fert_app_time_ha'])
-            model.p_chem_app_lab.store_values(params['crplab'][scenario_name]['chem_app_time_ha'])
-            model.p_variable_crop_monitor.store_values(params['crplab'][scenario_name]['variable_crop_monitor'])
-            model.p_fixed_crop_monitor.store_values(params['crplab'][scenario_name]['fixed_crop_monitor'])
+            instance.p_prep_pack.store_values(params['crplab'][scenario_name]['prep_labour'])
+            instance.p_fert_app_hour_tonne.store_values(params['crplab'][scenario_name]['fert_app_time_t'])
+            instance.p_fert_app_hour_ha.store_values(params['crplab'][scenario_name]['fert_app_time_ha'])
+            instance.p_chem_app_lab.store_values(params['crplab'][scenario_name]['chem_app_time_ha'])
+            instance.p_variable_crop_monitor.store_values(params['crplab'][scenario_name]['variable_crop_monitor'])
+            instance.p_fixed_crop_monitor.store_values(params['crplab'][scenario_name]['fixed_crop_monitor'])
 
             ##labour fixed
-            model.p_super_labour.store_values(params['labfx'][scenario_name]['super'])
-            model.p_bas_labour.store_values(params['labfx'][scenario_name]['bas'])
-            model.p_planning_labour.store_values(params['labfx'][scenario_name]['planning'])
-            model.p_tax_labour.store_values(params['labfx'][scenario_name]['tax'])
+            instance.p_super_labour.store_values(params['labfx'][scenario_name]['super'])
+            instance.p_bas_labour.store_values(params['labfx'][scenario_name]['bas'])
+            instance.p_planning_labour.store_values(params['labfx'][scenario_name]['planning'])
+            instance.p_tax_labour.store_values(params['labfx'][scenario_name]['tax'])
 
             ##crop
-            model.p_rotation_cost.store_values(params['crop'][scenario_name]['rot_cost'])
-            model.p_rotation_yield.store_values(params['crop'][scenario_name]['rot_yield'])
-            model.p_phasefert.store_values(params['crop'][scenario_name]['fert_req'])
+            instance.p_rotation_cost.store_values(params['crop'][scenario_name]['rot_cost'])
+            instance.p_rotation_yield.store_values(params['crop'][scenario_name]['rot_yield'])
+            instance.p_phasefert.store_values(params['crop'][scenario_name]['fert_req'])
 
             ##pasture
-            model.p_germination.store_values(params['pas'][scenario_name]['p_germination_flrt'])
-            model.p_foo_grn_reseeding.store_values(params['pas'][scenario_name]['p_foo_grn_reseeding_flrt'])
-            model.p_foo_dry_reseeding.store_values(params['pas'][scenario_name]['p_foo_dry_reseeding_dflrt'])
-            model.p_foo_end_grnha.store_values(params['pas'][scenario_name]['p_foo_end_grnha_goflt'])
-            model.p_foo_start_grnha.store_values(params['pas'][scenario_name]['p_foo_start_grnha_oflt'])
-            model.p_senesce_grnha.store_values(params['pas'][scenario_name]['p_senesce_grnha_dgoflt'])
-            model.p_me_cons_grnha.store_values(params['pas'][scenario_name]['p_me_cons_grnha_vgoflt'])
-            model.p_volume_grnha.store_values(params['pas'][scenario_name]['p_volume_grnha_goflt'])
-            model.p_dry_mecons_t.store_values(params['pas'][scenario_name]['p_dry_mecons_t_vdft'])
-            model.p_dry_volume_t.store_values(params['pas'][scenario_name]['p_dry_volume_t_dft'])
-            model.p_dry_transfer_t.store_values(params['pas'][scenario_name]['p_dry_transfer_t_ft'])
-            model.p_nap.store_values(params['pas'][scenario_name]['p_nap_dflrt'])
-            model.p_nap_prop.store_values(params['pas'][scenario_name]['p_harvest_period_prop'])
-            model.p_phase_area.store_values(params['pas'][scenario_name]['p_phase_area_flrt'])
-            model.p_pas_sow.store_values(params['pas'][scenario_name]['p_pas_sow_plrk'])
-            model.p_poc_vol.store_values(params['pas'][scenario_name]['p_poc_vol_f'])
+            instance.p_germination.store_values(params['pas'][scenario_name]['p_germination_flrt'])
+            instance.p_foo_grn_reseeding.store_values(params['pas'][scenario_name]['p_foo_grn_reseeding_flrt'])
+            instance.p_foo_dry_reseeding.store_values(params['pas'][scenario_name]['p_foo_dry_reseeding_dflrt'])
+            instance.p_foo_end_grnha.store_values(params['pas'][scenario_name]['p_foo_end_grnha_goflt'])
+            instance.p_foo_start_grnha.store_values(params['pas'][scenario_name]['p_foo_start_grnha_oflt'])
+            instance.p_senesce_grnha.store_values(params['pas'][scenario_name]['p_senesce_grnha_dgoflt'])
+            instance.p_me_cons_grnha.store_values(params['pas'][scenario_name]['p_me_cons_grnha_vgoflt'])
+            instance.p_volume_grnha.store_values(params['pas'][scenario_name]['p_volume_grnha_goflt'])
+            instance.p_dry_mecons_t.store_values(params['pas'][scenario_name]['p_dry_mecons_t_vdft'])
+            instance.p_dry_volume_t.store_values(params['pas'][scenario_name]['p_dry_volume_t_dft'])
+            instance.p_dry_transfer_t.store_values(params['pas'][scenario_name]['p_dry_transfer_t_ft'])
+            instance.p_nap.store_values(params['pas'][scenario_name]['p_nap_dflrt'])
+            instance.p_nap_prop.store_values(params['pas'][scenario_name]['p_harvest_period_prop'])
+            instance.p_phase_area.store_values(params['pas'][scenario_name]['p_phase_area_flrt'])
+            instance.p_pas_sow.store_values(params['pas'][scenario_name]['p_pas_sow_plrk'])
+            instance.p_poc_vol.store_values(params['pas'][scenario_name]['p_poc_vol_f'])
 
             ##machine
-            model.p_contractseeding_occur.store_values(params['mach'][scenario_name]['contractseeding_occur'])
-            model.p_seed_days.store_values(params['mach'][scenario_name]['seed_days'])
-            model.p_seeding_cost.store_values(params['mach'][scenario_name]['seeding_cost'])
-            model.p_contract_seeding_cost.store_values(params['mach'][scenario_name]['contract_seed_cost'])
-            model.p_harv_rate.store_values(params['mach'][scenario_name]['harv_rate_period'])
-            model.p_harv_hrs_max.store_values(params['mach'][scenario_name]['max_harv_hours'])
-            model.p_harv_cost.store_values(params['mach'][scenario_name]['harvest_cost'])
-            model.p_contractharv_cost.store_values(params['mach'][scenario_name]['contract_harvest_cost'])
-            model.p_yield_penalty.store_values(params['mach'][scenario_name]['yield_penalty'])
-            model.p_seeding_grazingdays.store_values(params['mach'][scenario_name]['grazing_days'])
+            instance.p_contractseeding_occur.store_values(params['mach'][scenario_name]['contractseeding_occur'])
+            instance.p_seed_days.store_values(params['mach'][scenario_name]['seed_days'])
+            instance.p_seeding_cost.store_values(params['mach'][scenario_name]['seeding_cost'])
+            instance.p_contract_seeding_cost.store_values(params['mach'][scenario_name]['contract_seed_cost'])
+            instance.p_harv_rate.store_values(params['mach'][scenario_name]['harv_rate_period'])
+            instance.p_harv_hrs_max.store_values(params['mach'][scenario_name]['max_harv_hours'])
+            instance.p_harv_cost.store_values(params['mach'][scenario_name]['harvest_cost'])
+            instance.p_contractharv_cost.store_values(params['mach'][scenario_name]['contract_harvest_cost'])
+            instance.p_yield_penalty.store_values(params['mach'][scenario_name]['yield_penalty'])
+            instance.p_seeding_grazingdays.store_values(params['mach'][scenario_name]['grazing_days'])
 
             ##sup feed
-            model.p_sup_cost.store_values(params['sup'][scenario_name]['total_sup_cost'])
-            model.p_sup_labour.store_values(params['sup'][scenario_name]['sup_labour'])
+            instance.p_sup_cost.store_values(params['sup'][scenario_name]['total_sup_cost'])
+            instance.p_sup_labour.store_values(params['sup'][scenario_name]['sup_labour'])
 
             ##stock
-            model.p_nsires_req.store_values(params['stock'][scenario_name]['p_nsire_req_dams'])
-            model.p_nsires_prov.store_values(params['stock'][scenario_name]['p_nsire_prov_sire'])
-            model.p_npw.store_values(params['stock'][scenario_name]['p_npw_dams'])
-            model.p_progprov_dams.store_values(params['stock'][scenario_name]['p_progprov_dams'])
-            model.p_progprov_offs.store_values(params['stock'][scenario_name]['p_progprov_offs'])
-            model.p_numbers_prov_dams.store_values(params['stock'][scenario_name]['p_numbers_prov_dams'])
-            model.p_numbers_provthis_dams.store_values(params['stock'][scenario_name]['p_numbers_provthis_dams'])
-            model.p_numbers_prov_offs.store_values(params['stock'][scenario_name]['p_numbers_prov_offs'])
-            model.p_mei_sire.store_values(params['stock'][scenario_name]['p_mei_sire'])
-            model.p_mei_dams.store_values(params['stock'][scenario_name]['p_mei_dams'])
-            model.p_mei_offs.store_values(params['stock'][scenario_name]['p_mei_offs'])
-            model.p_pi_sire.store_values(params['stock'][scenario_name]['p_pi_sire'])
-            model.p_pi_dams.store_values(params['stock'][scenario_name]['p_pi_dams'])
-            model.p_pi_offs.store_values(params['stock'][scenario_name]['p_pi_offs'])
-            model.p_cashflow_sire.store_values(params['stock'][scenario_name]['p_cashflow_sire'])
-            model.p_cashflow_dams.store_values(params['stock'][scenario_name]['p_cashflow_dams'])
-            model.p_cashflow_prog.store_values(params['stock'][scenario_name]['p_cashflow_prog'])
-            model.p_cashflow_offs.store_values(params['stock'][scenario_name]['p_cashflow_offs'])
-            model.p_cost_sire.store_values(params['stock'][scenario_name]['p_cost_sire'])
-            model.p_cost_dams.store_values(params['stock'][scenario_name]['p_cost_dams'])
-            model.p_cost_offs.store_values(params['stock'][scenario_name]['p_cost_offs'])
-            model.p_asset_sire.store_values(params['stock'][scenario_name]['p_assetvalue_sire'])
-            model.p_asset_dams.store_values(params['stock'][scenario_name]['p_assetvalue_dams'])
-            model.p_asset_offs.store_values(params['stock'][scenario_name]['p_assetvalue_offs'])
-            model.p_lab_anyone_sire.store_values(params['stock'][scenario_name]['p_labour_anyone_sire'])
-            model.p_lab_perm_sire.store_values(params['stock'][scenario_name]['p_labour_perm_sire'])
-            model.p_lab_manager_sire.store_values(params['stock'][scenario_name]['p_labour_manager_sire'])
-            model.p_lab_anyone_dams.store_values(params['stock'][scenario_name]['p_labour_anyone_dams'])
-            model.p_lab_perm_dams.store_values(params['stock'][scenario_name]['p_labour_perm_dams'])
-            model.p_lab_manager_dams.store_values(params['stock'][scenario_name]['p_labour_manager_dams'])
-            model.p_lab_anyone_offs.store_values(params['stock'][scenario_name]['p_labour_anyone_offs'])
-            model.p_lab_perm_offs.store_values(params['stock'][scenario_name]['p_labour_perm_offs'])
-            model.p_lab_manager_offs.store_values(params['stock'][scenario_name]['p_labour_manager_offs'])
-            model.p_infra_sire.store_values(params['stock'][scenario_name]['p_infrastructure_sire'])
-            model.p_infra_dams.store_values(params['stock'][scenario_name]['p_infrastructure_dams'])
-            model.p_infra_offs.store_values(params['stock'][scenario_name]['p_infrastructure_offs'])
-            model.p_dse_sire.store_values(params['stock'][scenario_name]['p_dse_sire'])
-            model.p_dse_dams.store_values(params['stock'][scenario_name]['p_dse_dams'])
-            model.p_dse_offs.store_values(params['stock'][scenario_name]['p_dse_offs'])
-            model.p_cost_purch_sire.store_values(params['stock'][scenario_name]['p_purchcost_sire'])
+            instance.p_nsires_req.store_values(params['stock'][scenario_name]['p_nsire_req_dams'])
+            instance.p_nsires_prov.store_values(params['stock'][scenario_name]['p_nsire_prov_sire'])
+            instance.p_npw.store_values(params['stock'][scenario_name]['p_npw_dams'])
+            instance.p_progprov_dams.store_values(params['stock'][scenario_name]['p_progprov_dams'])
+            instance.p_progprov_offs.store_values(params['stock'][scenario_name]['p_progprov_offs'])
+            instance.p_numbers_prov_dams.store_values(params['stock'][scenario_name]['p_numbers_prov_dams'])
+            instance.p_numbers_provthis_dams.store_values(params['stock'][scenario_name]['p_numbers_provthis_dams'])
+            instance.p_numbers_prov_offs.store_values(params['stock'][scenario_name]['p_numbers_prov_offs'])
+            instance.p_mei_sire.store_values(params['stock'][scenario_name]['p_mei_sire'])
+            instance.p_mei_dams.store_values(params['stock'][scenario_name]['p_mei_dams'])
+            instance.p_mei_offs.store_values(params['stock'][scenario_name]['p_mei_offs'])
+            instance.p_pi_sire.store_values(params['stock'][scenario_name]['p_pi_sire'])
+            instance.p_pi_dams.store_values(params['stock'][scenario_name]['p_pi_dams'])
+            instance.p_pi_offs.store_values(params['stock'][scenario_name]['p_pi_offs'])
+            instance.p_cashflow_sire.store_values(params['stock'][scenario_name]['p_cashflow_sire'])
+            instance.p_cashflow_dams.store_values(params['stock'][scenario_name]['p_cashflow_dams'])
+            instance.p_cashflow_prog.store_values(params['stock'][scenario_name]['p_cashflow_prog'])
+            instance.p_cashflow_offs.store_values(params['stock'][scenario_name]['p_cashflow_offs'])
+            instance.p_cost_sire.store_values(params['stock'][scenario_name]['p_cost_sire'])
+            instance.p_cost_dams.store_values(params['stock'][scenario_name]['p_cost_dams'])
+            instance.p_cost_offs.store_values(params['stock'][scenario_name]['p_cost_offs'])
+            instance.p_asset_sire.store_values(params['stock'][scenario_name]['p_assetvalue_sire'])
+            instance.p_asset_dams.store_values(params['stock'][scenario_name]['p_assetvalue_dams'])
+            instance.p_asset_offs.store_values(params['stock'][scenario_name]['p_assetvalue_offs'])
+            instance.p_lab_anyone_sire.store_values(params['stock'][scenario_name]['p_labour_anyone_sire'])
+            instance.p_lab_perm_sire.store_values(params['stock'][scenario_name]['p_labour_perm_sire'])
+            instance.p_lab_manager_sire.store_values(params['stock'][scenario_name]['p_labour_manager_sire'])
+            instance.p_lab_anyone_dams.store_values(params['stock'][scenario_name]['p_labour_anyone_dams'])
+            instance.p_lab_perm_dams.store_values(params['stock'][scenario_name]['p_labour_perm_dams'])
+            instance.p_lab_manager_dams.store_values(params['stock'][scenario_name]['p_labour_manager_dams'])
+            instance.p_lab_anyone_offs.store_values(params['stock'][scenario_name]['p_labour_anyone_offs'])
+            instance.p_lab_perm_offs.store_values(params['stock'][scenario_name]['p_labour_perm_offs'])
+            instance.p_lab_manager_offs.store_values(params['stock'][scenario_name]['p_labour_manager_offs'])
+            instance.p_infra_sire.store_values(params['stock'][scenario_name]['p_infrastructure_sire'])
+            instance.p_infra_dams.store_values(params['stock'][scenario_name]['p_infrastructure_dams'])
+            instance.p_infra_offs.store_values(params['stock'][scenario_name]['p_infrastructure_offs'])
+            instance.p_dse_sire.store_values(params['stock'][scenario_name]['p_dse_sire'])
+            instance.p_dse_dams.store_values(params['stock'][scenario_name]['p_dse_dams'])
+            instance.p_dse_offs.store_values(params['stock'][scenario_name]['p_dse_offs'])
+            instance.p_cost_purch_sire.store_values(params['stock'][scenario_name]['p_purchcost_sire'])
 
             return instance
 
-    concrete_tree = pysp_scenario_tree_model_callback()
-    stsolver = rapper.StochSolver(None,tree_model=concrete_tree,fsfct=pysp_instance_creation_callback)
-    ef_sol = stsolver.solve_ef('glpk',tee=True)
-    print(ef_sol.solver.termination_condition)
-    obj = stsolver.root_E_obj()
-    print("Expecatation take over scenarios=",obj)
-    # for varname,varval in stsolver.root_Var_solution():  # doctest: +SKIP
-    #     print(varname,str(varval))
+        concrete_tree = pysp_scenario_tree_model_callback()
+        stsolver = rapper.StochSolver(None,tree_model=concrete_tree,fsfct=pysp_instance_creation_callback)
+        solver_result = stsolver.solve_ef('glpk',tee=False) #convert tee=True to see solver output
+        obj = stsolver.root_E_obj()
+        # for varname,varval in stsolver.root_Var_solution():  # unfortunately this is only for root
+        #     print(varname,str(varval))
 
-    #saves file to csv
-    csvw.write_csv_soln(stsolver.scenario_tree,"solutionMRY")
-    #saves file to json
-    jsonw.JSONSolutionWriter.write('',stsolver.scenario_tree,
-                                   'ef')  # i don't know what the first arg does?? it needs to exist but can put any string without changing output
+        ##saves file to csv - not used for anything other than looking at.
+        csvw.write_csv_soln(stsolver.scenario_tree,"solutionMRY")
+        ##saves file to json - cant change the file name..without changing a pyomo module
+        jsonw.JSONSolutionWriter.write('',stsolver.scenario_tree,
+                                       'ef')  # i don't know what the first arg does?? it needs to exist but can put any string without changing output
 
-    #load json back in
-    with open('efMRY_solution.json') as f:
-        data = json.load(f)
+    ##this prints trial name, overall profit and feasibility for each trial
+    print("\nDisplaying Solution for trial: %s\n" % trial_name,'-' * 60,'\n%s' % obj)
+    ##this check if the solver is optimal - if infeasible or error the model will quit
+    if (solver_result.solver.status == pe.SolverStatus.ok) and (
+            solver_result.solver.termination_condition == pe.TerminationCondition.optimal):
+        print('OPTIMAL LP SOLUTION FOUND')  # Do nothing when the solution in optimal and feasible
+    elif (solver_result.solver.termination_condition == pe.TerminationCondition.infeasible):
+        print('***INFEASIBLE LP SOLUTION***')
+        sys.exit()
+    else:  # Something else is wrong
+        print('Solver Status: error')
+        sys.exit()
 
-    
+    return obj

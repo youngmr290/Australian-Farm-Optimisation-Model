@@ -551,7 +551,7 @@ for row in trials:
         arith = 2
         arith_axis = [0,2]
         index =[1]
-        cols =[]
+        cols =[3]
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         poccon = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
@@ -567,7 +567,6 @@ for row in trials:
         supcon = pd.concat([supcon],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_supcon = stacked_supcon.append(supcon)
 
-    
     if report_run.loc['run_stubcon', 'Run']:
         #returns consumption in each fp
         stubcon = rep.f_stubble_summary(lp_vars, r_vals)
