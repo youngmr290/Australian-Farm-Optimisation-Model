@@ -228,8 +228,11 @@ for row in range(len(exp_data)):
                 #             # except: pass
 
             ##store pyomo variable output as a dict
+            key_z = pinp.f_keys_z()
+            lp_vars = {}
             variables=model.component_objects(pe.Var, active=True)
-            lp_vars = {str(v):{s:v[s].value for s in v} for v in variables}     #creates dict with variable in it. This is tricky since pyomo returns a generator object
+            lp_vars[key_z] = {str(v):{s:v[s].value for s in v} for v in variables}     #creates dict with variable in it. This is tricky since pyomo returns a generator object
+            lp_vars['scenario_profit'] = pe.value(model.profit)
             ##store profit
             lp_vars['profit'] = pe.value(model.profit)
 

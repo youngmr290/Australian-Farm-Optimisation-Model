@@ -204,8 +204,11 @@ def exp(row):  # called with command: pool.map(exp, dataset)
                     model.display(ostream=f)
 
             #last step is to print the time for the current trial to run
-            variables = model.component_objects(pe.Var, active=True)
-            lp_vars = {str(v):{s:v[s].value for s in v} for v in variables }     #creates dict with variable in it. This is tricky since pyomo returns a generator object
+            key_z = pinp.f_keys_z()
+            lp_vars = {}
+            variables=model.component_objects(pe.Var, active=True)
+            lp_vars[key_z] = {str(v):{s:v[s].value for s in v} for v in variables}     #creates dict with variable in it. This is tricky since pyomo returns a generator object
+            lp_vars['scenario_profit'] = pe.value(model.profit)
             ##store profit
             lp_vars['profit'] = pe.value(model.profit)
 
