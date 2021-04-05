@@ -6373,7 +6373,10 @@ def generator(params,r_vals,ev,plots = False):
     r_vals['keys_p6'] = keys_p6
 
     ##season prob
-    r_vals['prob_z'] = i_season_propn_z
+    if pinp.general['steady_state']:
+        r_vals['prob_z'] = 1
+    else:
+        r_vals['prob_z'] = i_season_propn_z
 
     ##key lists used to form table headers and indexs
     keys_e = ['e%s'%i for i in range(len_e1)]
