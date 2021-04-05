@@ -2931,7 +2931,7 @@ def generator(params,r_vals,ev,plots = False):
                         # cf_conception_dams = 0 #default set to 0 because required in start production function (only used in lmat conception function)
                     if eqn_compare:
                         r_compare_q0q1q2pdams[eqn_system, eqn_group, 0, p, ...] = temp0
-            eqn_system = 1 # MU LTW = 0
+            eqn_system = 1 # MU LTW = 1
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
@@ -2939,10 +2939,10 @@ def generator(params,r_vals,ev,plots = False):
                     temp0 = sfun.f_conception_ltw(cf_dams, cu0_dams, relsize_mating_dams, cs_mating_dams, scan_std_yg1, doy_pa1e1b1nwzida0e0b0xyg[p]
                                                   , nfoet_b1nwzida0e0b0xyg, nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]
                                                   , index_e1b1nwzida0e0b0xyg)
-                    ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                     cf_conception_dams = temp0*0  #default set to 0 because required in start production function (only used in lmat conception function)
                     if eqn_used:
                         conception_dams = temp0
+                    ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                     if eqn_compare:
                         r_compare_q0q1q2pdams[eqn_system, eqn_group, 0, p, ...] = temp0
 
@@ -2954,14 +2954,75 @@ def generator(params,r_vals,ev,plots = False):
 
 
             ## base mortality
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                mortality_sire = sfun.f_mortality_base(cd_sire, cg_sire, rc_start_sire, ebg_sire, d_nw_max_pa1e1b1nwzida0e0b0xyg0[p], days_period_pa1e1b1nwzida0e0b0xyg0[p])
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                mortality_dams = sfun.f_mortality_base(cd_dams, cg_dams, rc_start_dams, ebg_dams, d_nw_max_pa1e1b1nwzida0e0b0xyg1[p], days_period_pa1e1b1nwzida0e0b0xyg1[p])
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                mortality_yatf = sfun.f_mortality_base(cd_yatf, cg_yatf, rc_start_yatf, ebg_yatf, d_nw_max_yatf, days_period_pa1e1b1nwzida0e0b0xyg2[p])
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                mortality_offs = sfun.f_mortality_base(cd_offs, cg_offs, rc_start_offs, ebg_offs, d_nw_max_pa1e1b1nwzida0e0b0xyg3[p], days_period_pa1e1b1nwzida0e0b0xyg3[p])
+            eqn_group = 14
+            eqn_system = 0 # CSIRO = 0
+            if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
+                ####sire
+                eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
+                    temp0 = sfun.f_mortality_base_cs(cd_sire, cg_sire, rc_start_sire, ebg_sire, d_nw_max_pa1e1b1nwzida0e0b0xyg0[p], days_period_pa1e1b1nwzida0e0b0xyg0[p])
+                    if eqn_used:
+                        mortality_sire = temp0
+                    if eqn_compare:
+                        r_compare_q0q1q2psire[eqn_system, eqn_group, 0, p, ...] = temp0
+                ####dams
+                eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
+                    temp0 = sfun.f_mortality_base_cs(cd_dams, cg_dams, rc_start_dams, ebg_dams, d_nw_max_pa1e1b1nwzida0e0b0xyg1[p], days_period_pa1e1b1nwzida0e0b0xyg1[p])
+                    if eqn_used:
+                        mortality_dams = temp0
+                    if eqn_compare:
+                        r_compare_q0q1q2pdams[eqn_system, eqn_group, 0, p, ...] = temp0
+                ####yatf
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
+                    temp0 = sfun.f_mortality_base_cs(cd_yatf, cg_yatf, rc_start_yatf, ebg_yatf, d_nw_max_yatf, days_period_pa1e1b1nwzida0e0b0xyg2[p])
+                    if eqn_used:
+                        mortality_yatf = temp0
+                    if eqn_compare:
+                        r_compare_q0q1q2pyatf[eqn_system, eqn_group, 0, p, ...] = temp0
+                ####offs
+                eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
+                    temp0 = sfun.f_mortality_base_cs(cd_offs, cg_offs, rc_start_offs, ebg_offs, d_nw_max_pa1e1b1nwzida0e0b0xyg3[p], days_period_pa1e1b1nwzida0e0b0xyg3[p])
+                    if eqn_used:
+                        mortality_offs = temp0
+                    if eqn_compare:
+                        r_compare_q0q1q2poffs[eqn_system, eqn_group, 0, p, ...] = temp0
+            eqn_system = 1 # MU/LTW = 1
+            if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
+                ####sire
+                eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
+                    temp0 = sfun.f_mortality_base_mu(cd_sire, cg_sire, rc_start_sire, ebg_sire, d_nw_max_pa1e1b1nwzida0e0b0xyg0[p], days_period_pa1e1b1nwzida0e0b0xyg0[p])
+                    if eqn_used:
+                        mortality_sire = temp0
+                    if eqn_compare:
+                        r_compare_q0q1q2psire[eqn_system, eqn_group, 0, p, ...] = temp0
+                ####dams
+                eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
+                    temp0 = sfun.f_mortality_base_mu(cd_dams, cg_dams, rc_start_dams, ebg_dams, d_nw_max_pa1e1b1nwzida0e0b0xyg1[p], days_period_pa1e1b1nwzida0e0b0xyg1[p])
+                    if eqn_used:
+                        mortality_dams = temp0
+                    if eqn_compare:
+                        r_compare_q0q1q2pdams[eqn_system, eqn_group, 0, p, ...] = temp0
+                ####yatf
+                eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
+                    temp0 = sfun.f_mortality_base_mu(cd_yatf, cg_yatf, rc_start_yatf, ebg_yatf, d_nw_max_yatf, days_period_pa1e1b1nwzida0e0b0xyg2[p])
+                    if eqn_used:
+                        mortality_yatf = temp0
+                    if eqn_compare:
+                        r_compare_q0q1q2pyatf[eqn_system, eqn_group, 0, p, ...] = temp0
+                ####offs
+                eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
+                    temp0 = sfun.f_mortality_base_mu(cd_offs, cg_offs, rc_start_offs, ebg_offs, d_nw_max_pa1e1b1nwzida0e0b0xyg3[p], days_period_pa1e1b1nwzida0e0b0xyg3[p])
+                    if eqn_used:
+                        mortality_offs = temp0
+                    if eqn_compare:
+                        r_compare_q0q1q2poffs[eqn_system, eqn_group, 0, p, ...] = temp0
 
             ## weaner mortality
             eqn_group = 2

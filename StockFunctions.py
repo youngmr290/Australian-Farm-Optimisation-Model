@@ -1203,10 +1203,19 @@ def f_sire_req(sire_propn_a1e1b1nwzida0e0b0xyg1g0, sire_periods_g0p8, i_sire_rec
     return n_sires
 
 
-def f_mortality_base(cd, cg, rc_start, ebg_start, d_nw_max, days_period):
+def f_mortality_base_cs(cd, cg, rc_start, ebg_start, d_nw_max, days_period):
     ## a minimum level of mortality per day that is increased if RC is below a threshold and LWG is below a threshold
     ### i.e. increased mortality only for thin animals that are growing slowly (< 20% of normal growth rate)
     return (cd[1, ...] + cd[2, ...] * np.maximum(0, cd[3, ...] - rc_start) * ((cd[16, ...] * d_nw_max) > (ebg_start * cg[18, ...]))) * days_period #mul by days period to convert from mort per day to per period
+
+
+def f_mortality_base_mu(cd, cg, rc_start, ebg_start, d_nw_max, days_period):
+    ## a minimum level of mortality per day that is increased if RC is below a threshold and LWG is below a threshold
+    ### the mortality rate increases in a quadratic function for lower RC & greater disparity between EBG and normal gain
+    rc_mortality_scalar = (np.minimum(0, rc_start - cd[24, ...]) / (cd[23, ...] - cd[24, ...]))**2
+    ebg_mortality_scalar = (np.minimum(0, ebg_start - cd[26, ...] - d_nw_max) / (cd[25, ...] - cd[26, ...]))**2
+    mortality = (cd[1, ...] + cd[22, ...] * rc_mortality_scalar * ebg_mortality_scalar) * days_period #mul by days period to convert from mort per day to per period
+    return mortality
 
 
 def f_mortality_weaner_cs(cd, cg, age, ebg_start, d_nw_max,days_period):
