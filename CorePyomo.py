@@ -426,22 +426,29 @@ def coremodel_all(params, trial_name):
 
     else:
         '''
-        Stage allocation:
+        Stage allocation notes:
             If a variable is not allocated to a stage end up in the final stage (they can be optimised independantly for each season).
             If a variable is allocated to two stages it is constrained in both stages so it is essentially the same as assigning it to just the first stage.
+            Each stage needs at least one variable.
+            All variables have at most one time series set therefore dont need to worry about variables being allocated to two stages.
+            Dvp dates are the same for all seasons thus dont need to deal with the z axis for dvp allocation (for fp & lp we do need to deal with z axis).
+            
+        Stage allocation process
+            Variables that contain a time series set (eg dvp & lp & fp) are automatically allocated to a stage using the code below.
+            The other variables are allocated to a stage manually by the user.
         '''
-        #todo include some error handling - eg can't run multiple TOL at the same time. Need different stage allocation for each tol. thus could use an if statement to pick the allocation used
-        #todo each variable needs to assigned to stage - give error if that does not happen
-        #todo can't allocate one variable to multiple stages
+        #todo include some error handling - eg can't run multiple TOL at the same time (cant remember why).
+        #todo each variable needs to assigned to stage - give error if that does not happen, this would be good but cant think of a good way to do it since variables can be in multiple stages. Maybe just check that the variable is in any stage and assume if it is in any stage then it is corect
         # buy grain may not be in stage 3, i feel like you retain grain for the year ahead without knowing the type of season. but then the model will just counter by altering sale of grain.
-        #allocate labour provide variables to the last stage??
-        #stage definitions differ for different nodes to the allocation will need to be based on the node as well eg for ealry break labour period 3 might be in stage 2 but for late break it might be in stage 3
-        ##specify stages for variables when all variables go into the same stage
-        ##root needs at least one variable
-        ##variables have at most one time series set
+
 
         import Periods as per
         import Functions as fun
+
+
+        '''
+        Detailed tree with customised variable allocation
+        '''
 
         stage_info = {}
         stage_info['root'] = {}
@@ -450,15 +457,16 @@ def coremodel_all(params, trial_name):
         stage_info['mbrk2spr'] = {}
         stage_info['lbrk2spr'] = {}
 
-
-        ##specify a season which represents the stages
+        ##specify a season which represents the stages. This is required because for example the fp dates are different for each season (note dvps are the same for all seasons so not requied for them)
         root_z = 0 #this could be any stage becasue all seasons have the same period definitions in the root stage.
         ebrk2spr_z = 0 #any season with early break
         ebrk2mbrk_z = -1 #any season with medium or late break
         mbrk2spr_z = 1 #any season with medium
         lbrk2spr_z = -1 #any season with late break
-        ##keys
+
+        ##keys - keys are allocated to each stage and then variable containing any of these sets are allocated to that stage.
         keys_p5 = np.array(per.p_date2_df().index).astype('str')
+        keys_p6 = pinp.period['i_fp_idx']
         keys_dams = params['stock']['keys_v_dams']
         keys_offs = params['stock']['keys_v_offs']
 
@@ -479,37 +487,34 @@ def coremodel_all(params, trial_name):
         dvp1[dvp1<root_start] = dvp1[dvp1<root_start] + np.timedelta64(365, 'D')
         dvp3[dvp3<root_start] = dvp3[dvp3<root_start] + np.timedelta64(365, 'D')
 
-
-        ##stage sets
+        ##allocate time sets into stages
         stage_info['root']['sets'] = []
         stage_info['ebrk2spr']['sets'] = []
         stage_info['ebrk2mbrk']['sets'] = []
         stage_info['mbrk2spr']['sets'] = []
         stage_info['lbrk2spr']['sets'] = []
-
-        ##allocate time sets into stages todo need to handle z axis for dvp (same as for fp and lp) (i have aded to the sgen already)
         ###root - early break
-        stage_info['root']['sets'].extend(list(pinp.period['i_fp_idx'][np.logical_and(fp_p6z[:,root_z] > root_start, fp_p6z[:,root_z] < ebrk_start)]))
+        stage_info['root']['sets'].extend(list(keys_p6[np.logical_and(fp_p6z[:,root_z] > root_start, fp_p6z[:,root_z] < ebrk_start)]))
         stage_info['root']['sets'].extend(list(keys_p5[np.logical_and(lp_p5z[:,root_z] > root_start, lp_p5z[:,root_z] < ebrk_start)]))
         stage_info['root']['sets'].extend(list(keys_dams[np.logical_and(dvp1 > root_start, dvp1 < ebrk_start)]))
         stage_info['root']['sets'].extend(list(keys_offs[np.logical_and(dvp3 > root_start, dvp3 < ebrk_start)]))
         ###early break - end (dont need logical and becasue this is the last stage)
-        stage_info['ebrk2spr']['sets'].extend(list(pinp.period['i_fp_idx'][fp_p6z[:,ebrk2spr_z] > ebrk_start]))
+        stage_info['ebrk2spr']['sets'].extend(list(keys_p6[fp_p6z[:,ebrk2spr_z] > ebrk_start]))
         stage_info['ebrk2spr']['sets'].extend(list(keys_p5[lp_p5z[:,ebrk2spr_z] > ebrk_start]))
         stage_info['ebrk2spr']['sets'].extend(list(keys_dams[dvp1 > ebrk_start]))
         stage_info['ebrk2spr']['sets'].extend(list(keys_offs[dvp3 > ebrk_start]))
         ###early break - med break
-        stage_info['ebrk2mbrk']['sets'].extend(list(pinp.period['i_fp_idx'][np.logical_and(fp_p6z[:,ebrk2mbrk_z] > ebrk_start, fp_p6z[:,ebrk2mbrk_z] < mbrk_start)]))
+        stage_info['ebrk2mbrk']['sets'].extend(list(keys_p6[np.logical_and(fp_p6z[:,ebrk2mbrk_z] > ebrk_start, fp_p6z[:,ebrk2mbrk_z] < mbrk_start)]))
         stage_info['ebrk2mbrk']['sets'].extend(list(keys_p5[np.logical_and(lp_p5z[:,ebrk2mbrk_z] > ebrk_start, lp_p5z[:,ebrk2mbrk_z] < mbrk_start)]))
         stage_info['ebrk2mbrk']['sets'].extend(list(keys_dams[np.logical_and(dvp1 > ebrk_start, dvp1 < mbrk_start)]))
         stage_info['ebrk2mbrk']['sets'].extend(list(keys_offs[np.logical_and(dvp3 > ebrk_start, dvp3 < mbrk_start)]))
         ###medium break - end (dont need logical and becasue this is the last stage)
-        stage_info['mbrk2spr']['sets'].extend(list(pinp.period['i_fp_idx'][fp_p6z[:,mbrk2spr_z] > mbrk_start]))
+        stage_info['mbrk2spr']['sets'].extend(list(keys_p6[fp_p6z[:,mbrk2spr_z] > mbrk_start]))
         stage_info['mbrk2spr']['sets'].extend(list(keys_p5[lp_p5z[:,mbrk2spr_z] > mbrk_start]))
         stage_info['mbrk2spr']['sets'].extend(list(keys_dams[dvp1 > mbrk_start]))
         stage_info['mbrk2spr']['sets'].extend(list(keys_offs[dvp3 > mbrk_start]))
         ###late break - end (dont need logical and becasue this is the last stage)
-        stage_info['lbrk2spr']['sets'].extend(list(pinp.period['i_fp_idx'][fp_p6z[:,lbrk2spr_z] > lbrk_start]))
+        stage_info['lbrk2spr']['sets'].extend(list(keys_p6[fp_p6z[:,lbrk2spr_z] > lbrk_start]))
         stage_info['lbrk2spr']['sets'].extend(list(keys_p5[lp_p5z[:,lbrk2spr_z] > lbrk_start]))
         stage_info['lbrk2spr']['sets'].extend(list(keys_dams[dvp1 > lbrk_start]))
         stage_info['lbrk2spr']['sets'].extend(list(keys_offs[dvp3 > lbrk_start]))
@@ -536,52 +541,58 @@ def coremodel_all(params, trial_name):
 
                         stage_info[stage]['vars'].append(a)
 
-        # def pysp_scenario_tree_model_callback():
-        #     # Return a NetworkX scenario tree.
-        #     g = networkx.DiGraph()
-        #
-        #     ##root
-        #     ce1 = 'FirstStageCost'
-        #     g.add_node("Root",
-        #                cost=ce1,
-        #                variables=stage_info['root']['vars'],
-        #                derived_variables=[])
-        #
-        #     ##ebrk2mbrk
-        #     ce1 = 'FirstStageCost'
-        #     g.add_node("mbrk",
-        #                cost=ce1,
-        #                variables=stage_info['ebrk2mbrk']['vars'],
-        #                derived_variables=[])
-        #     g.add_edge("Root","mbrk",weight=0.666) #todo this will need to be the season proportion inoput
-        #
-        #     ##ebrk2spr
-        #     ce2 = 'SecondStageCost'
-        #     g.add_node("z0",
-        #                cost=ce2,
-        #                variables = stage_info['ebrk2spr']['vars'],
-        #                derived_variables=[])
-        #     g.add_edge("Root","z0",weight=0.334) #todo this will need to be the season proportion inoput
-        #
-        #     ##mbrk2spr
-        #     g.add_node("z3",
-        #                cost=ce2,
-        #                variables=stage_info['mbrk2spr']['vars'],
-        #                derived_variables=[])
-        #     g.add_edge("mbrk","z3",weight=0.5)
-        #
-        #     ##lbrk2spr
-        #     g.add_node("z6",
-        #                cost=ce2,
-        #                variables=stage_info['lbrk2spr']['vars'],
-        #                derived_variables=[])
-        #     g.add_edge("mbrk","z6",weight=0.5)
-        #
-        #
-        #     return g
-        #
+        def pysp_scenario_tree_model_callback():
+            # Return a NetworkX scenario tree.
+            g = networkx.DiGraph()
+
+            ##root
+            ce1 = 'FirstStageCost'
+            g.add_node("Root",
+                       cost=ce1,
+                       variables=stage_info['root']['vars'],
+                       derived_variables=[])
+
+            ##ebrk2mbrk
+            ce1 = 'FirstStageCost'
+            g.add_node("mbrk",
+                       cost=ce1,
+                       variables=stage_info['ebrk2mbrk']['vars'],
+                       derived_variables=[])
+            g.add_edge("Root","mbrk",weight=0.666) #todo this will need to be the season proportion inoput
+
+            ##ebrk2spr
+            ce2 = 'SecondStageCost'
+            g.add_node("z0",
+                       cost=ce2,
+                       variables = stage_info['ebrk2spr']['vars'],
+                       derived_variables=[])
+            g.add_edge("Root","z0",weight=0.334) #todo this will need to be the season proportion inoput
+
+            ##mbrk2spr
+            g.add_node("z3",
+                       cost=ce2,
+                       variables=stage_info['mbrk2spr']['vars'],
+                       derived_variables=[])
+            g.add_edge("mbrk","z3",weight=0.5)
+
+            ##lbrk2spr
+            g.add_node("z6",
+                       cost=ce2,
+                       variables=stage_info['lbrk2spr']['vars'],
+                       derived_variables=[])
+            g.add_edge("mbrk","z6",weight=0.5)
 
 
+            return g
+
+
+
+
+
+
+        '''
+        simple tree with simple variable allocation
+        '''
         # ##option1 - puts all variables into root.
         # root_vars=[]
         # for v in model.component_objects(pe.Var,active=True):
@@ -612,87 +623,81 @@ def coremodel_all(params, trial_name):
         #             a=str(v)+"['']"
         #         root_vars.append(a)
 
-        root_vars = ['v_poc[*,*,*]']
-
-        stage2_vars=['v_quantity_perm[*]','v_quantity_manager[*]','v_quantity_casual[*]','v_hay_made[*]','v_phase_area[*,*]','v_sell_grain[*,*]',
-                     'v_credit[*]',
-                     'v_debit[*]',
-                     'v_dep[*]',
-                     'v_asset[*]',
-                     'v_minroe[*]',
-                     'v_buy_grain[*,*]',
-                     'v_sup_con[*,*,*,*]',
-                     'v_stub_con[*,*,*,*]',
-                     'v_stub_transfer[*,*,*]',
-                     'v_infrastructure[*]',
-                     'v_seeding_machdays[*,*,*]',
-                     'v_seeding_pas[*,*,*]',
-                     'v_seeding_crop[*,*,*]',
-                     'v_contractseeding_ha[*,*,*]',
-                     'v_harv_hours[*,*]',
-                     'v_contractharv_hours[*]',
-                     'v_learn_allocation[*]',
-                     'v_casualsupervision_perm[*]',
-                     'v_casualsupervision_manager[*]',
-                     'v_sheep_labour_manager[*,*]',
-                     'v_crop_labour_manager[*,*]',
-                     'v_fixed_labour_manager[*,*]',
-                     'v_sheep_labour_permanent[*,*]',
-                     'v_crop_labour_permanent[*,*]',
-                     'v_fixed_labour_permanent[*,*]',
-                     'v_sheep_labour_casual[*,*]',
-                     'v_crop_labour_casual[*,*]',
-                     'v_fixed_labour_casual[*,*]',
-                     'v_greenpas_ha[*,*,*,*,*,*]',
-                     'v_drypas_consumed[*,*,*,*]',
-                     'v_drypas_transfer[*,*,*]',
-                     'v_nap_consumed[*,*,*,*]',
-                     'v_nap_transfer[*,*,*]',
-                     # 'v_poc[*,*,*]',
-                     'v_sire[*]',
-                     'v_dams[*,*,*,*,*,*,*,*,*]',
-                     'v_offs[*,*,*,*,*,*,*,*,*,*,*]',
-                     'v_prog[*,*,*,*,*,*,*,*]'
-                     ]
-
-
-
-
-        def pysp_scenario_tree_model_callback():
-            # Return a NetworkX scenario tree.
-            g = networkx.DiGraph()
-
-            ##root
-            ce1 = 'FirstStageCost'
-            g.add_node("Root",
-                       cost=ce1,
-                       variables=root_vars,
-                       derived_variables=[])
-
-
-            ce2 = 'SecondStageCost'
-            g.add_node("z0",
-                       cost=ce2,
-                       variables = stage2_vars,
-                       derived_variables=[])
-            g.add_edge("Root","z0",weight=0.334)
-
-
-            g.add_node("z3",
-                       cost=ce2,
-                       variables=stage2_vars,
-                       derived_variables=[])
-            g.add_edge("Root","z3",weight=0.334)
-
-
-            g.add_node("z6",
-                       cost=ce2,
-                       variables=stage2_vars,
-                       derived_variables=[])
-            g.add_edge("Root","z6",weight=0.332)
-
-
-            return g
+        # ##option 3 - manually assign all variables
+        # root_vars = ['v_poc[*,*,*]']
+        #
+        # stage2_vars=['v_quantity_perm[*]','v_quantity_manager[*]','v_quantity_casual[*]','v_hay_made[*]','v_phase_area[*,*]','v_sell_grain[*,*]',
+        #              'v_credit[*]',
+        #              'v_debit[*]',
+        #              'v_dep[*]',
+        #              'v_asset[*]',
+        #              'v_minroe[*]',
+        #              'v_buy_grain[*,*]',
+        #              'v_sup_con[*,*,*,*]',
+        #              'v_stub_con[*,*,*,*]',
+        #              'v_stub_transfer[*,*,*]',
+        #              'v_infrastructure[*]',
+        #              'v_seeding_machdays[*,*,*]',
+        #              'v_seeding_pas[*,*,*]',
+        #              'v_seeding_crop[*,*,*]',
+        #              'v_contractseeding_ha[*,*,*]',
+        #              'v_harv_hours[*,*]',
+        #              'v_contractharv_hours[*]',
+        #              'v_learn_allocation[*]',
+        #              'v_casualsupervision_perm[*]',
+        #              'v_casualsupervision_manager[*]',
+        #              'v_sheep_labour_manager[*,*]',
+        #              'v_crop_labour_manager[*,*]',
+        #              'v_fixed_labour_manager[*,*]',
+        #              'v_sheep_labour_permanent[*,*]',
+        #              'v_crop_labour_permanent[*,*]',
+        #              'v_fixed_labour_permanent[*,*]',
+        #              'v_sheep_labour_casual[*,*]',
+        #              'v_crop_labour_casual[*,*]',
+        #              'v_fixed_labour_casual[*,*]',
+        #              'v_greenpas_ha[*,*,*,*,*,*]',
+        #              'v_drypas_consumed[*,*,*,*]',
+        #              'v_drypas_transfer[*,*,*]',
+        #              'v_nap_consumed[*,*,*,*]',
+        #              'v_nap_transfer[*,*,*]',
+        #              # 'v_poc[*,*,*]',
+        #              'v_sire[*]',
+        #              'v_dams[*,*,*,*,*,*,*,*,*]',
+        #              'v_offs[*,*,*,*,*,*,*,*,*,*,*]',
+        #              'v_prog[*,*,*,*,*,*,*,*]'
+        #              ]
+        #
+        # def pysp_scenario_tree_model_callback():
+        #     # Return a NetworkX scenario tree.
+        #     g = networkx.DiGraph()
+        #
+        #     ##root
+        #     ce1 = 'FirstStageCost'
+        #     g.add_node("Root",
+        #                cost=ce1,
+        #                variables=root_vars,
+        #                derived_variables=[])
+        #
+        #     ce2 = 'SecondStageCost'
+        #     g.add_node("z0",
+        #                cost=ce2,
+        #                variables = stage2_vars,
+        #                derived_variables=[])
+        #     g.add_edge("Root","z0",weight=0.334)
+        #
+        #     g.add_node("z3",
+        #                cost=ce2,
+        #                variables=stage2_vars,
+        #                derived_variables=[])
+        #     g.add_edge("Root","z3",weight=0.334)
+        #
+        #     g.add_node("z6",
+        #                cost=ce2,
+        #                variables=stage2_vars,
+        #                derived_variables=[])
+        #     g.add_edge("Root","z6",weight=0.332)
+        #
+        #     return g
 
 
         def pysp_instance_creation_callback(scenario_name,node_names):
