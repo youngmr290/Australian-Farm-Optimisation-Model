@@ -448,21 +448,45 @@ def coremodel_all(params, trial_name):
 
         '''
         Detailed tree with customised variable allocation
+        
+        Tree Description:
+            Currently the tree is simplified from how it will finally end up. Currently it has 9 seasons. The stages are
+            based on the timing of break of season. There is also a stage from spring to the end (this indicates that at spring you
+            can identify each season).
+                                    (early spring node)
+                    (root node)           |----z0
+                        |----ebrk2spr ----|----z1
+                        |                 |----z2
+            ----root----|                            (med spring node)
+                        |            (mbrk node)           |----z3
+                        |                 |----mbrk2spr----|----z4
+                        |                 |                |----z5
+                        |----ebrk2mbrk----|          (late spring node)
+                                          |                |----z6
+                                          |----lbrk2spr----|----z7
+                                                           |----z8
+        
         '''
 
         stage_info = {}
         stage_info['root'] = {}
-        stage_info['ebrk2spr'] = {}
         stage_info['ebrk2mbrk'] = {}
+        stage_info['ebrk2spr'] = {}
         stage_info['mbrk2spr'] = {}
         stage_info['lbrk2spr'] = {}
+        stage_info['ebrk_spr2end'] = {}
+        stage_info['mbrk_spr2end'] = {}
+        stage_info['lbrk_spr2end'] = {}
 
         ##specify a season which represents the stages. This is required because for example the fp dates are different for each season (note dvps are the same for all seasons so not requied for them)
         root_z = 0 #this could be any stage becasue all seasons have the same period definitions in the root stage.
-        ebrk2spr_z = 0 #any season with early break
         ebrk2mbrk_z = -1 #any season with medium or late break
-        mbrk2spr_z = 1 #any season with medium
+        ebrk2spr_z = 0 #any season with early break
+        mbrk2spr_z = 3 #any season with medium
         lbrk2spr_z = -1 #any season with late break
+        ebrk_spr2end_z = 0 #any season with early break
+        mbrk_spr2end_z = 3 #any season with medium
+        lbrk_spr2end_z = -1 #any season with late break
 
         ##keys - keys are allocated to each stage and then variable containing any of these sets are allocated to that stage.
         keys_p5 = np.array(per.p_date2_df().index).astype('str')
@@ -478,54 +502,78 @@ def coremodel_all(params, trial_name):
 
         ##stage dates (these continue into the new year eg some may be in the yr of 2020)
         root_start = np.minimum(np.datetime64(pinp.crop['dry_seed_start']), np.min(per.f_feed_periods().astype(np.datetime64)[0,:]))
-        ebrk_start = fp_p6z[0,0]
-        mbrk_start = fp_p6z[0,1]
-        lbrk_start = fp_p6z[0,-1]
+        ebrk_start = fp_p6z[0,ebrk2spr_z]
+        mbrk_start = fp_p6z[0,mbrk2spr_z]
+        spr_start = fp_p6z[0,lbrk2spr_z] + np.timedelta64(50, 'D') #20 days after late seed
 
         ##add 1 year to date before season start so that periods before season start get allocated to stages.
         lp_p5z[lp_p5z<root_start] = lp_p5z[lp_p5z<root_start] + np.timedelta64(365, 'D')
         dvp1[dvp1<root_start] = dvp1[dvp1<root_start] + np.timedelta64(365, 'D')
         dvp3[dvp3<root_start] = dvp3[dvp3<root_start] + np.timedelta64(365, 'D')
+        ###fp is slightly more complicated because it increments to a new year however for the late break seasons there may be dates with 2020 that are after the start of season date thus they need to be taken back to base yr.
+        fp_mask_p6z = np.logical_and(fp_p6z - np.timedelta64(365, 'D') >= root_start, fp_p6z - np.timedelta64(365, 'D') < fp_p6z[0:1,:])
+        fp_p6z[fp_mask_p6z] = fp_p6z[fp_mask_p6z] - np.timedelta64(365, 'D')
 
         ##allocate time sets into stages
         stage_info['root']['sets'] = []
-        stage_info['ebrk2spr']['sets'] = []
         stage_info['ebrk2mbrk']['sets'] = []
+        stage_info['ebrk2spr']['sets'] = []
         stage_info['mbrk2spr']['sets'] = []
         stage_info['lbrk2spr']['sets'] = []
+        stage_info['ebrk_spr2end']['sets'] = []
+        stage_info['mbrk_spr2end']['sets'] = []
+        stage_info['lbrk_spr2end']['sets'] = []
         ###root - early break
-        stage_info['root']['sets'].extend(list(keys_p6[np.logical_and(fp_p6z[:,root_z] > root_start, fp_p6z[:,root_z] < ebrk_start)]))
-        stage_info['root']['sets'].extend(list(keys_p5[np.logical_and(lp_p5z[:,root_z] > root_start, lp_p5z[:,root_z] < ebrk_start)]))
-        stage_info['root']['sets'].extend(list(keys_dams[np.logical_and(dvp1 > root_start, dvp1 < ebrk_start)]))
-        stage_info['root']['sets'].extend(list(keys_offs[np.logical_and(dvp3 > root_start, dvp3 < ebrk_start)]))
-        ###early break - end (dont need logical and becasue this is the last stage)
-        stage_info['ebrk2spr']['sets'].extend(list(keys_p6[fp_p6z[:,ebrk2spr_z] > ebrk_start]))
-        stage_info['ebrk2spr']['sets'].extend(list(keys_p5[lp_p5z[:,ebrk2spr_z] > ebrk_start]))
-        stage_info['ebrk2spr']['sets'].extend(list(keys_dams[dvp1 > ebrk_start]))
-        stage_info['ebrk2spr']['sets'].extend(list(keys_offs[dvp3 > ebrk_start]))
+        stage_info['root']['sets'].extend(list(keys_p6[np.logical_and(fp_p6z[:,root_z] >= root_start, fp_p6z[:,root_z] < ebrk_start)]))
+        stage_info['root']['sets'].extend(list(keys_p5[np.logical_and(lp_p5z[:,root_z] >= root_start, lp_p5z[:,root_z] < ebrk_start)]))
+        stage_info['root']['sets'].extend(list(keys_dams[np.logical_and(dvp1 >= root_start, dvp1 < ebrk_start)]))
+        stage_info['root']['sets'].extend(list(keys_offs[np.logical_and(dvp3 >= root_start, dvp3 < ebrk_start)]))
         ###early break - med break
-        stage_info['ebrk2mbrk']['sets'].extend(list(keys_p6[np.logical_and(fp_p6z[:,ebrk2mbrk_z] > ebrk_start, fp_p6z[:,ebrk2mbrk_z] < mbrk_start)]))
-        stage_info['ebrk2mbrk']['sets'].extend(list(keys_p5[np.logical_and(lp_p5z[:,ebrk2mbrk_z] > ebrk_start, lp_p5z[:,ebrk2mbrk_z] < mbrk_start)]))
-        stage_info['ebrk2mbrk']['sets'].extend(list(keys_dams[np.logical_and(dvp1 > ebrk_start, dvp1 < mbrk_start)]))
-        stage_info['ebrk2mbrk']['sets'].extend(list(keys_offs[np.logical_and(dvp3 > ebrk_start, dvp3 < mbrk_start)]))
-        ###medium break - end (dont need logical and becasue this is the last stage)
-        stage_info['mbrk2spr']['sets'].extend(list(keys_p6[fp_p6z[:,mbrk2spr_z] > mbrk_start]))
-        stage_info['mbrk2spr']['sets'].extend(list(keys_p5[lp_p5z[:,mbrk2spr_z] > mbrk_start]))
-        stage_info['mbrk2spr']['sets'].extend(list(keys_dams[dvp1 > mbrk_start]))
-        stage_info['mbrk2spr']['sets'].extend(list(keys_offs[dvp3 > mbrk_start]))
-        ###late break - end (dont need logical and becasue this is the last stage)
-        stage_info['lbrk2spr']['sets'].extend(list(keys_p6[fp_p6z[:,lbrk2spr_z] > lbrk_start]))
-        stage_info['lbrk2spr']['sets'].extend(list(keys_p5[lp_p5z[:,lbrk2spr_z] > lbrk_start]))
-        stage_info['lbrk2spr']['sets'].extend(list(keys_dams[dvp1 > lbrk_start]))
-        stage_info['lbrk2spr']['sets'].extend(list(keys_offs[dvp3 > lbrk_start]))
+        stage_info['ebrk2mbrk']['sets'].extend(list(keys_p6[np.logical_and(fp_p6z[:,ebrk2mbrk_z] >= ebrk_start, fp_p6z[:,ebrk2mbrk_z] < mbrk_start)]))
+        stage_info['ebrk2mbrk']['sets'].extend(list(keys_p5[np.logical_and(lp_p5z[:,ebrk2mbrk_z] >= ebrk_start, lp_p5z[:,ebrk2mbrk_z] < mbrk_start)]))
+        stage_info['ebrk2mbrk']['sets'].extend(list(keys_dams[np.logical_and(dvp1 >= ebrk_start, dvp1 < mbrk_start)]))
+        stage_info['ebrk2mbrk']['sets'].extend(list(keys_offs[np.logical_and(dvp3 >= ebrk_start, dvp3 < mbrk_start)]))
+        ###early break - spring
+        stage_info['ebrk2spr']['sets'].extend(list(keys_p6[np.logical_and(fp_p6z[:,ebrk2spr_z] >= ebrk_start, fp_p6z[:,ebrk2spr_z] < spr_start)]))
+        stage_info['ebrk2spr']['sets'].extend(list(keys_p5[np.logical_and(lp_p5z[:,ebrk2spr_z] >= ebrk_start, lp_p5z[:,ebrk2spr_z] < spr_start)]))
+        stage_info['ebrk2spr']['sets'].extend(list(keys_dams[np.logical_and(dvp1 >= ebrk_start, dvp1 < spr_start)]))
+        stage_info['ebrk2spr']['sets'].extend(list(keys_offs[np.logical_and(dvp3 >= ebrk_start, dvp3 < spr_start)]))
+        ###medium break - spring
+        stage_info['mbrk2spr']['sets'].extend(list(keys_p6[np.logical_and(fp_p6z[:,mbrk2spr_z] >= mbrk_start, fp_p6z[:,mbrk2spr_z] < spr_start)]))
+        stage_info['mbrk2spr']['sets'].extend(list(keys_p5[np.logical_and(lp_p5z[:,mbrk2spr_z] >= mbrk_start, lp_p5z[:,mbrk2spr_z] < spr_start)]))
+        stage_info['mbrk2spr']['sets'].extend(list(keys_dams[np.logical_and(dvp1 >= mbrk_start, dvp1 < spr_start)]))
+        stage_info['mbrk2spr']['sets'].extend(list(keys_offs[np.logical_and(dvp3 >= mbrk_start, dvp3 < spr_start)]))
+        ###late break - spring (you know late break seasons once you know medium break)
+        stage_info['lbrk2spr']['sets'].extend(list(keys_p6[np.logical_and(fp_p6z[:,lbrk2spr_z] >= mbrk_start, fp_p6z[:,lbrk2spr_z] < spr_start)]))
+        stage_info['lbrk2spr']['sets'].extend(list(keys_p5[np.logical_and(lp_p5z[:,lbrk2spr_z] >= mbrk_start, lp_p5z[:,lbrk2spr_z] < spr_start)]))
+        stage_info['lbrk2spr']['sets'].extend(list(keys_dams[np.logical_and(dvp1 >= mbrk_start, dvp1 < spr_start)]))
+        stage_info['lbrk2spr']['sets'].extend(list(keys_offs[np.logical_and(dvp3 >= mbrk_start, dvp3 < spr_start)]))
+        ###spring - end (dont need logical and becasue this is the last stage)
+        stage_info['ebrk_spr2end']['sets'].extend(list(keys_p6[fp_p6z[:,ebrk_spr2end_z] >= spr_start]))
+        stage_info['ebrk_spr2end']['sets'].extend(list(keys_p5[lp_p5z[:,ebrk_spr2end_z] >= spr_start]))
+        stage_info['ebrk_spr2end']['sets'].extend(list(keys_dams[dvp1 >= spr_start]))
+        stage_info['ebrk_spr2end']['sets'].extend(list(keys_offs[dvp3 >= spr_start]))
+        ###spring - end (dont need logical and becasue this is the last stage)
+        stage_info['mbrk_spr2end']['sets'].extend(list(keys_p6[fp_p6z[:,mbrk_spr2end_z] >= spr_start]))
+        stage_info['mbrk_spr2end']['sets'].extend(list(keys_p5[lp_p5z[:,mbrk_spr2end_z] >= spr_start]))
+        stage_info['mbrk_spr2end']['sets'].extend(list(keys_dams[dvp1 >= spr_start]))
+        stage_info['mbrk_spr2end']['sets'].extend(list(keys_offs[dvp3 >= spr_start]))
+        ###spring - end (dont need logical and becasue this is the last stage)
+        stage_info['lbrk_spr2end']['sets'].extend(list(keys_p6[fp_p6z[:,lbrk_spr2end_z] >= spr_start]))
+        stage_info['lbrk_spr2end']['sets'].extend(list(keys_p5[lp_p5z[:,lbrk_spr2end_z] >= spr_start]))
+        stage_info['lbrk_spr2end']['sets'].extend(list(keys_dams[dvp1 >= spr_start]))
+        stage_info['lbrk_spr2end']['sets'].extend(list(keys_offs[dvp3 >= spr_start]))
 
-        #todo v_prog, rotation - how to allocate? trickier becasue no dvp or time serires set but need to allocate based on lambing? probably just have to allocate manually
+        #todo v_prog, how to allocate? trickier becasue no dvp or time serires set but need to allocate based on lambing and genotype? i think use i_date_born1st_idg3 (currently v_prog is in the july stage)
         ##allocate variable into stages using the allocated sets
-        stage_info['root']['vars'] = ['v_quantity_perm[*]','v_quantity_manager[*]','v_sire[*]']
-        stage_info['ebrk2spr']['vars'] = ['v_credit[*]', 'v_debit[*]', 'v_dep[*]', 'v_asset[*]', 'v_minroe[*]']
+        stage_info['root']['vars'] = ['v_quantity_perm[*]','v_quantity_manager[*]','v_sire[*]','v_buy_grain[*,*]']
         stage_info['ebrk2mbrk']['vars'] = []
-        stage_info['mbrk2spr']['vars'] = ['v_credit[*]', 'v_debit[*]', 'v_dep[*]', 'v_asset[*]', 'v_minroe[*]']
-        stage_info['lbrk2spr']['vars'] = ['v_credit[*]', 'v_debit[*]', 'v_dep[*]', 'v_asset[*]', 'v_minroe[*]']
+        stage_info['ebrk2spr']['vars'] = ['v_phase_area[*,*]']
+        stage_info['mbrk2spr']['vars'] = ['v_phase_area[*,*]']
+        stage_info['lbrk2spr']['vars'] = ['v_phase_area[*,*]']
+        stage_info['ebrk_spr2end']['vars'] = ['v_credit[*]', 'v_debit[*]', 'v_dep[*]', 'v_asset[*]', 'v_minroe[*]','v_sell_grain[*,*]','v_infrastructure[*]','v_prog[*,*,*,*,*,*,*,*]']
+        stage_info['mbrk_spr2end']['vars'] = ['v_credit[*]', 'v_debit[*]', 'v_dep[*]', 'v_asset[*]', 'v_minroe[*]','v_sell_grain[*,*]','v_infrastructure[*]','v_prog[*,*,*,*,*,*,*,*]']
+        stage_info['lbrk_spr2end']['vars'] = ['v_credit[*]', 'v_debit[*]', 'v_dep[*]', 'v_asset[*]', 'v_minroe[*]','v_sell_grain[*,*]','v_infrastructure[*]','v_prog[*,*,*,*,*,*,*,*]']
 
         for stage in stage_info.keys():
             for v in model.component_objects(pe.Var,active=True):
@@ -545,8 +593,10 @@ def coremodel_all(params, trial_name):
             # Return a NetworkX scenario tree.
             g = networkx.DiGraph()
 
+            ce1 = 'FirstStageCost' #0$ (for some reason i have to include it even though it is 0)
+            ce2 = 'SecondStageCost' #obj function - used for the last stage
+
             ##root
-            ce1 = 'FirstStageCost'
             g.add_node("Root",
                        cost=ce1,
                        variables=stage_info['root']['vars'],
@@ -561,27 +611,85 @@ def coremodel_all(params, trial_name):
             g.add_edge("Root","mbrk",weight=0.666) #todo this will need to be the season proportion inoput
 
             ##ebrk2spr
-            ce2 = 'SecondStageCost'
-            g.add_node("z0",
-                       cost=ce2,
+            g.add_node("ESpr",
+                       cost=ce1,
                        variables = stage_info['ebrk2spr']['vars'],
                        derived_variables=[])
-            g.add_edge("Root","z0",weight=0.334) #todo this will need to be the season proportion inoput
+            g.add_edge("Root","ESpr",weight=0.334) #todo this will need to be the season proportion inoput
 
             ##mbrk2spr
-            g.add_node("z3",
-                       cost=ce2,
+            g.add_node("MSpr",
+                       cost=ce1,
                        variables=stage_info['mbrk2spr']['vars'],
                        derived_variables=[])
-            g.add_edge("mbrk","z3",weight=0.5)
+            g.add_edge("mbrk","MSpr",weight=0.5)
 
             ##lbrk2spr
-            g.add_node("z6",
-                       cost=ce2,
+            g.add_node("LSpr",
+                       cost=ce1,
                        variables=stage_info['lbrk2spr']['vars'],
                        derived_variables=[])
-            g.add_edge("mbrk","z6",weight=0.5)
+            g.add_edge("mbrk","LSpr",weight=0.5)
 
+            ##ebrk_spr2end
+            ###z0
+            g.add_node("z0",
+                       cost=ce2,
+                       variables = stage_info['ebrk_spr2end']['vars'],
+                       derived_variables=[])
+            g.add_edge("ESpr","z0",weight=0.333)
+            ###z1
+            g.add_node("z1",
+                       cost=ce2,
+                       variables = stage_info['ebrk_spr2end']['vars'],
+                       derived_variables=[])
+            g.add_edge("ESpr","z1",weight=0.333)
+            ###z2
+            g.add_node("z2",
+                       cost=ce2,
+                       variables = stage_info['ebrk_spr2end']['vars'],
+                       derived_variables=[])
+            g.add_edge("ESpr","z2",weight=0.334)
+
+            ##mbrk_spr2end
+            ###z3
+            g.add_node("z3",
+                       cost=ce2,
+                       variables=stage_info['mbrk_spr2end']['vars'],
+                       derived_variables=[])
+            g.add_edge("MSpr","z3",weight=0.333)
+            ###z4
+            g.add_node("z4",
+                       cost=ce2,
+                       variables=stage_info['mbrk_spr2end']['vars'],
+                       derived_variables=[])
+            g.add_edge("MSpr","z4",weight=0.333)
+            ###z5
+            g.add_node("z5",
+                       cost=ce2,
+                       variables=stage_info['mbrk_spr2end']['vars'],
+                       derived_variables=[])
+            g.add_edge("MSpr","z5",weight=0.334)
+
+            ##lbrk_spr2end
+            ###z6
+            g.add_node("z6",
+                       cost=ce2,
+                       variables=stage_info['lbrk_spr2end']['vars'],
+                       derived_variables=[])
+            g.add_edge("LSpr","z6",weight=0.333)
+            ###z7
+            g.add_node("z7",
+                       cost=ce2,
+                       variables=stage_info['lbrk_spr2end']['vars'],
+                       derived_variables=[])
+            g.add_edge("LSpr","z7",weight=0.333)
+            ###z8
+            g.add_node("z8",
+                       cost=ce2,
+                       variables=stage_info['lbrk_spr2end']['vars'],
+                       derived_variables=[])
+            g.add_edge("LSpr","z8",weight=0.334)
 
             return g
 
