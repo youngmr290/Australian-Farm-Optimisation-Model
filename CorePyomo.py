@@ -492,6 +492,7 @@ def coremodel_all(params, trial_name):
         keys_p5 = np.array(per.p_date2_df().index).astype('str')
         keys_p6 = pinp.period['i_fp_idx']
         keys_dams = params['stock']['keys_v_dams']
+        keys_prog = params['stock']['keys_v_prog']
         keys_offs = params['stock']['keys_v_offs']
 
         ##date arrays
@@ -499,6 +500,7 @@ def coremodel_all(params, trial_name):
         lp_p5z = per.p_date2_df().to_numpy().astype('datetime64[D]')
         dvp1 = fun.f_baseyr(params['stock']['dvp1'], fp_p6z[0,0].astype('datetime64[Y]'))
         dvp3 = fun.f_baseyr(params['stock']['dvp3'], fp_p6z[0,0].astype('datetime64[Y]'))
+        prog_born = fun.f_baseyr(params['stock']['date_born_prog'], fp_p6z[0,0].astype('datetime64[Y]'))
 
         ##stage dates (these continue into the new year eg some may be in the yr of 2020)
         root_start = np.minimum(np.datetime64(pinp.crop['dry_seed_start']), np.min(per.f_feed_periods().astype(np.datetime64)[0,:]))
@@ -510,6 +512,7 @@ def coremodel_all(params, trial_name):
         lp_p5z[lp_p5z<root_start] = lp_p5z[lp_p5z<root_start] + np.timedelta64(365, 'D')
         dvp1[dvp1<root_start] = dvp1[dvp1<root_start] + np.timedelta64(365, 'D')
         dvp3[dvp3<root_start] = dvp3[dvp3<root_start] + np.timedelta64(365, 'D')
+        prog_born[prog_born<root_start] = prog_born[prog_born<root_start] + np.timedelta64(365, 'D')
         ###fp is slightly more complicated because it increments to a new year however for the late break seasons there may be dates with 2020 that are after the start of season date thus they need to be taken back to base yr.
         fp_mask_p6z = np.logical_and(fp_p6z - np.timedelta64(365, 'D') >= root_start, fp_p6z - np.timedelta64(365, 'D') < fp_p6z[0:1,:])
         fp_p6z[fp_mask_p6z] = fp_p6z[fp_mask_p6z] - np.timedelta64(365, 'D')
@@ -528,52 +531,59 @@ def coremodel_all(params, trial_name):
         stage_info['root']['sets'].extend(list(keys_p5[np.logical_and(lp_p5z[:,root_z] >= root_start, lp_p5z[:,root_z] < ebrk_start)]))
         stage_info['root']['sets'].extend(list(keys_dams[np.logical_and(dvp1 >= root_start, dvp1 < ebrk_start)]))
         stage_info['root']['sets'].extend(list(keys_offs[np.logical_and(dvp3 >= root_start, dvp3 < ebrk_start)]))
+        stage_info['root']['sets'].extend(list(keys_prog[np.logical_and(prog_born >= root_start, prog_born < ebrk_start)]))
         ###early break - med break
         stage_info['ebrk2mbrk']['sets'].extend(list(keys_p6[np.logical_and(fp_p6z[:,ebrk2mbrk_z] >= ebrk_start, fp_p6z[:,ebrk2mbrk_z] < mbrk_start)]))
         stage_info['ebrk2mbrk']['sets'].extend(list(keys_p5[np.logical_and(lp_p5z[:,ebrk2mbrk_z] >= ebrk_start, lp_p5z[:,ebrk2mbrk_z] < mbrk_start)]))
         stage_info['ebrk2mbrk']['sets'].extend(list(keys_dams[np.logical_and(dvp1 >= ebrk_start, dvp1 < mbrk_start)]))
         stage_info['ebrk2mbrk']['sets'].extend(list(keys_offs[np.logical_and(dvp3 >= ebrk_start, dvp3 < mbrk_start)]))
+        stage_info['ebrk2mbrk']['sets'].extend(list(keys_prog[np.logical_and(prog_born >= ebrk_start, prog_born < mbrk_start)]))
         ###early break - spring
         stage_info['ebrk2spr']['sets'].extend(list(keys_p6[np.logical_and(fp_p6z[:,ebrk2spr_z] >= ebrk_start, fp_p6z[:,ebrk2spr_z] < spr_start)]))
         stage_info['ebrk2spr']['sets'].extend(list(keys_p5[np.logical_and(lp_p5z[:,ebrk2spr_z] >= ebrk_start, lp_p5z[:,ebrk2spr_z] < spr_start)]))
         stage_info['ebrk2spr']['sets'].extend(list(keys_dams[np.logical_and(dvp1 >= ebrk_start, dvp1 < spr_start)]))
         stage_info['ebrk2spr']['sets'].extend(list(keys_offs[np.logical_and(dvp3 >= ebrk_start, dvp3 < spr_start)]))
+        stage_info['ebrk2spr']['sets'].extend(list(keys_prog[np.logical_and(prog_born >= ebrk_start, prog_born < spr_start)]))
         ###medium break - spring
         stage_info['mbrk2spr']['sets'].extend(list(keys_p6[np.logical_and(fp_p6z[:,mbrk2spr_z] >= mbrk_start, fp_p6z[:,mbrk2spr_z] < spr_start)]))
         stage_info['mbrk2spr']['sets'].extend(list(keys_p5[np.logical_and(lp_p5z[:,mbrk2spr_z] >= mbrk_start, lp_p5z[:,mbrk2spr_z] < spr_start)]))
         stage_info['mbrk2spr']['sets'].extend(list(keys_dams[np.logical_and(dvp1 >= mbrk_start, dvp1 < spr_start)]))
         stage_info['mbrk2spr']['sets'].extend(list(keys_offs[np.logical_and(dvp3 >= mbrk_start, dvp3 < spr_start)]))
+        stage_info['mbrk2spr']['sets'].extend(list(keys_prog[np.logical_and(prog_born >= mbrk_start, prog_born < spr_start)]))
         ###late break - spring (you know late break seasons once you know medium break)
         stage_info['lbrk2spr']['sets'].extend(list(keys_p6[np.logical_and(fp_p6z[:,lbrk2spr_z] >= mbrk_start, fp_p6z[:,lbrk2spr_z] < spr_start)]))
         stage_info['lbrk2spr']['sets'].extend(list(keys_p5[np.logical_and(lp_p5z[:,lbrk2spr_z] >= mbrk_start, lp_p5z[:,lbrk2spr_z] < spr_start)]))
         stage_info['lbrk2spr']['sets'].extend(list(keys_dams[np.logical_and(dvp1 >= mbrk_start, dvp1 < spr_start)]))
         stage_info['lbrk2spr']['sets'].extend(list(keys_offs[np.logical_and(dvp3 >= mbrk_start, dvp3 < spr_start)]))
+        stage_info['lbrk2spr']['sets'].extend(list(keys_prog[np.logical_and(prog_born >= mbrk_start, prog_born < spr_start)]))
         ###spring - end (dont need logical and becasue this is the last stage)
         stage_info['ebrk_spr2end']['sets'].extend(list(keys_p6[fp_p6z[:,ebrk_spr2end_z] >= spr_start]))
         stage_info['ebrk_spr2end']['sets'].extend(list(keys_p5[lp_p5z[:,ebrk_spr2end_z] >= spr_start]))
         stage_info['ebrk_spr2end']['sets'].extend(list(keys_dams[dvp1 >= spr_start]))
         stage_info['ebrk_spr2end']['sets'].extend(list(keys_offs[dvp3 >= spr_start]))
+        stage_info['ebrk_spr2end']['sets'].extend(list(keys_prog[prog_born >= spr_start]))
         ###spring - end (dont need logical and becasue this is the last stage)
         stage_info['mbrk_spr2end']['sets'].extend(list(keys_p6[fp_p6z[:,mbrk_spr2end_z] >= spr_start]))
         stage_info['mbrk_spr2end']['sets'].extend(list(keys_p5[lp_p5z[:,mbrk_spr2end_z] >= spr_start]))
         stage_info['mbrk_spr2end']['sets'].extend(list(keys_dams[dvp1 >= spr_start]))
         stage_info['mbrk_spr2end']['sets'].extend(list(keys_offs[dvp3 >= spr_start]))
+        stage_info['mbrk_spr2end']['sets'].extend(list(keys_prog[prog_born >= spr_start]))
         ###spring - end (dont need logical and becasue this is the last stage)
         stage_info['lbrk_spr2end']['sets'].extend(list(keys_p6[fp_p6z[:,lbrk_spr2end_z] >= spr_start]))
         stage_info['lbrk_spr2end']['sets'].extend(list(keys_p5[lp_p5z[:,lbrk_spr2end_z] >= spr_start]))
         stage_info['lbrk_spr2end']['sets'].extend(list(keys_dams[dvp1 >= spr_start]))
         stage_info['lbrk_spr2end']['sets'].extend(list(keys_offs[dvp3 >= spr_start]))
+        stage_info['lbrk_spr2end']['sets'].extend(list(keys_prog[prog_born >= spr_start]))
 
-        #todo v_prog, how to allocate? trickier becasue no dvp or time serires set but need to allocate based on lambing and genotype? i think use i_date_born1st_idg3 (currently v_prog is in the july stage)
         ##allocate variable into stages using the allocated sets
         stage_info['root']['vars'] = ['v_quantity_perm[*]','v_quantity_manager[*]','v_sire[*]','v_buy_grain[*,*]']
         stage_info['ebrk2mbrk']['vars'] = []
         stage_info['ebrk2spr']['vars'] = ['v_phase_area[*,*]']
         stage_info['mbrk2spr']['vars'] = ['v_phase_area[*,*]']
         stage_info['lbrk2spr']['vars'] = ['v_phase_area[*,*]']
-        stage_info['ebrk_spr2end']['vars'] = ['v_credit[*]', 'v_debit[*]', 'v_dep[*]', 'v_asset[*]', 'v_minroe[*]','v_sell_grain[*,*]','v_infrastructure[*]','v_prog[*,*,*,*,*,*,*,*]']
-        stage_info['mbrk_spr2end']['vars'] = ['v_credit[*]', 'v_debit[*]', 'v_dep[*]', 'v_asset[*]', 'v_minroe[*]','v_sell_grain[*,*]','v_infrastructure[*]','v_prog[*,*,*,*,*,*,*,*]']
-        stage_info['lbrk_spr2end']['vars'] = ['v_credit[*]', 'v_debit[*]', 'v_dep[*]', 'v_asset[*]', 'v_minroe[*]','v_sell_grain[*,*]','v_infrastructure[*]','v_prog[*,*,*,*,*,*,*,*]']
+        stage_info['ebrk_spr2end']['vars'] = ['v_credit[*]', 'v_debit[*]', 'v_dep[*]', 'v_asset[*]', 'v_minroe[*]','v_sell_grain[*,*]','v_infrastructure[*]']
+        stage_info['mbrk_spr2end']['vars'] = ['v_credit[*]', 'v_debit[*]', 'v_dep[*]', 'v_asset[*]', 'v_minroe[*]','v_sell_grain[*,*]','v_infrastructure[*]']
+        stage_info['lbrk_spr2end']['vars'] = ['v_credit[*]', 'v_debit[*]', 'v_dep[*]', 'v_asset[*]', 'v_minroe[*]','v_sell_grain[*,*]','v_infrastructure[*]']
 
         for stage in stage_info.keys():
             for v in model.component_objects(pe.Var,active=True):

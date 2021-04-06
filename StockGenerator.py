@@ -6500,7 +6500,7 @@ def generator(params,r_vals,ev,plots = False):
 
     czg0_shape = len_c, len_z, len_g0
     k2ctva1nwziyg1_shape = len_k2, len_c, len_t1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
-    k5ctwziaxyg2_shape = len_c, len_t2, len_w_prog, len_z, len_i, len_a1, len_x, len_g2
+    ctwziaxyg2_shape = len_c, len_t2, len_w_prog, len_z, len_i, len_a1, len_x, len_g2
     k3k5ctvnwziaxyg3_shape = len_k3, len_k5, len_c, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
 
@@ -6525,7 +6525,7 @@ def generator(params,r_vals,ev,plots = False):
 
     r_vals['salevalue_czg0'] = r_salevalue_ctva1e1b1nwzida0e0b0xyg0.reshape(czg0_shape)
     r_vals['salevalue_k2ctva1nwziyg1'] = r_salevalue_k2ctva1e1b1nwzida0e0b0xyg1.reshape(k2ctva1nwziyg1_shape)
-    r_vals['salevalue_ctwzia0xg2'] = salevalue_prog_cta1e1b1nwzida0e0b0xyg2.reshape(k5ctwziaxyg2_shape)
+    r_vals['salevalue_ctwzia0xg2'] = salevalue_prog_cta1e1b1nwzida0e0b0xyg2.reshape(ctwziaxyg2_shape)
     r_vals['salevalue_k3k5ctvnwziaxyg3'] = r_salevalue_k3k5ctva1e1b1nwzida0e0b0xyg3.reshape(k3k5ctvnwziaxyg3_shape)
 
     r_vals['woolvalue_czg0'] = r_woolvalue_ctva1e1b1nwzida0e0b0xyg0.reshape(czg0_shape)
@@ -6632,6 +6632,7 @@ def generator(params,r_vals,ev,plots = False):
     stored in params to be accessed in corepyomo when allocating variables to stages
     '''
     k2tva1nwiyg1_shape = len_k2, len_t1, len_v1, len_a1, len_n1, len_w1, len_i, len_y1, len_g1
+    k5twidaxg2_shape = len_k5, len_t2, len_w_prog, len_i, len_d, len_a1, len_x, len_g2
     k3k5tvnwiaxyg3_shape = len_k3, len_k5, len_t3, len_v3, len_n3, len_w3, len_i, len_a0, len_x, len_y3, len_g3
 
     ##k2tvanwiyg1 - v_dams
@@ -6643,6 +6644,15 @@ def generator(params,r_vals,ev,plots = False):
     array_k2tvanwiyg1 = array_k2tvanwiyg1.reshape(k2tva1nwiyg1_shape)
     params['keys_v_dams'] = array_k2tvanwiyg1
 
+    ##k2tvanwiyg1 - v_prog
+    arrays = [keys_k5, keys_t2, keys_lw_prog, keys_i, keys_d, keys_a, keys_x, keys_g2]
+    index_k5twidaxg2 = fun.cartesian_product_simple_transpose(arrays)
+    tup_k5twidaxg2 = list(map(tuple,index_k5twidaxg2))
+    array_k5twidaxg2 = np.zeros(len(tup_k5twidaxg2),dtype=object)
+    array_k5twidaxg2[...] = tup_k5twidaxg2
+    array_k5twidaxg2 = array_k5twidaxg2.reshape(k5twidaxg2_shape)
+    params['keys_v_prog'] = array_k5twidaxg2
+
     ##k3k5tvnwiaxyg3 - v_offs
     arrays = [keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_i, keys_a, keys_x, keys_y3, keys_g3]
     index_k3k5tvnwiaxyg3 = fun.cartesian_product_simple_transpose(arrays)
@@ -6652,10 +6662,12 @@ def generator(params,r_vals,ev,plots = False):
     array_k3k5tvnwiaxyg3 = array_k3k5tvnwiaxyg3.reshape(k3k5tvnwiaxyg3_shape)
     params['keys_v_offs'] = array_k3k5tvnwiaxyg3
 
-    ##convert dvp date into the shape of stock variable.
-    dvp_date_k2tva1nwiyg1 = dvp_date_va1e1b1nwzida0e0b0xyg1[None,None,:,:,0,0,:,:,0,:,0,0,0,0,0,:,:]
+    ##convert date array into the shape of stock variable.
+    dvp_date_k2tva1nwiyg1 = dvp_date_va1e1b1nwzida0e0b0xyg1[na,na,:,:,0,0,:,:,0,:,0,0,0,0,0,:,:]
     params['dvp1'] = np.broadcast_to(dvp_date_k2tva1nwiyg1, k2tva1nwiyg1_shape)
-    dvp_date_k3k5tvnwiaxyg3 = dvp_date_va1e1b1nwzida0e0b0xyg3[None,None,None,:,0,0,0,:,:,0,:,0,:,0,0,:,:,:]
+    date_born_k5twidaxg2 = date_born_ida0e0b0xyg3[na,na,na,:,:,:,0,0,:,0,:] #average lamb along e slice
+    params['date_born_prog'] = np.broadcast_to(date_born_k5twidaxg2, k5twidaxg2_shape)
+    dvp_date_k3k5tvnwiaxyg3 = dvp_date_va1e1b1nwzida0e0b0xyg3[na,na,na,:,0,0,0,:,:,0,:,0,:,0,0,:,:,:]
     params['dvp3'] = np.broadcast_to(dvp_date_k3k5tvnwiaxyg3, k3k5tvnwiaxyg3_shape)
 
     ###############
