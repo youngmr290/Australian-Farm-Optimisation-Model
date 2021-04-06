@@ -6631,80 +6631,75 @@ def generator(params,r_vals,ev,plots = False):
     stuff needed to allocate variable to stages for dsp
     stored in params to be accessed in corepyomo when allocating variables to stages
     '''
+    k2tva1nwiyg1_shape = len_k2, len_t1, len_v1, len_a1, len_n1, len_w1, len_i, len_y1, len_g1
+    k3k5tvnwiaxyg3_shape = len_k3, len_k5, len_t3, len_v3, len_n3, len_w3, len_i, len_a0, len_x, len_y3, len_g3
 
     ##k2tvanwiyg1 - v_dams
-    arrays = [keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
-    index_k2tvanwziyg1 = fun.cartesian_product_simple_transpose(arrays)
-    tup_k2tvanwziyg1 = list(map(tuple,index_k2tvanwziyg1))
-    array_k2tvanwziyg1 = np.zeros(len(tup_k2tvanwziyg1),dtype=object)
-    array_k2tvanwziyg1[...] = tup_k2tvanwziyg1
-    array_k2tvanwziyg1 = array_k2tvanwziyg1.reshape(k2tva1nwziyg1_shape)
-    params['keys_v_dams'] = array_k2tvanwziyg1
+    arrays = [keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_i, keys_y1, keys_g1]
+    index_k2tvanwiyg1 = fun.cartesian_product_simple_transpose(arrays)
+    tup_k2tvanwiyg1 = list(map(tuple,index_k2tvanwiyg1))
+    array_k2tvanwiyg1 = np.zeros(len(tup_k2tvanwiyg1),dtype=object)
+    array_k2tvanwiyg1[...] = tup_k2tvanwiyg1
+    array_k2tvanwiyg1 = array_k2tvanwiyg1.reshape(k2tva1nwiyg1_shape)
+    params['keys_v_dams'] = array_k2tvanwiyg1
 
     ##k3k5tvnwiaxyg3 - v_offs
-    arrays = [keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
-    index_k3k5tvnwziaxyg3 = fun.cartesian_product_simple_transpose(arrays)
-    tup_k3k5tvnwziaxyg3 = list(map(tuple,index_k3k5tvnwziaxyg3))
-    array_k3k5tvnwziaxyg3 = np.zeros(len(tup_k3k5tvnwziaxyg3),dtype=object)
-    array_k3k5tvnwziaxyg3[...] = tup_k3k5tvnwziaxyg3
-    array_k3k5tvnwziaxyg3 = array_k3k5tvnwziaxyg3.reshape(k3k5tvnwziaxyg3_shape)
-    params['keys_v_offs'] = array_k3k5tvnwziaxyg3
+    arrays = [keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_i, keys_a, keys_x, keys_y3, keys_g3]
+    index_k3k5tvnwiaxyg3 = fun.cartesian_product_simple_transpose(arrays)
+    tup_k3k5tvnwiaxyg3 = list(map(tuple,index_k3k5tvnwiaxyg3))
+    array_k3k5tvnwiaxyg3 = np.zeros(len(tup_k3k5tvnwiaxyg3),dtype=object)
+    array_k3k5tvnwiaxyg3[...] = tup_k3k5tvnwiaxyg3
+    array_k3k5tvnwiaxyg3 = array_k3k5tvnwiaxyg3.reshape(k3k5tvnwiaxyg3_shape)
+    params['keys_v_offs'] = array_k3k5tvnwiaxyg3
 
-    dvp_date_k2tva1nwziyg1 = dvp_date_va1e1b1nwzida0e0b0xyg1[None,None,:,:,0,0,:,:,:,:,0,0,0,0,0,:,:] #take e slice 0 becasue e wont effect stage allocation
-    params['dvp1'] = np.broadcast_to(dvp_date_k2tva1nwziyg1, array_k2tvanwziyg1.shape)
-    dvp_date_k3k5tvnwziaxyg3 = dvp_date_va1e1b1nwzida0e0b0xyg3[None,None,None,:,0,0,0,:,:,:,:,0,:,0,0,:,:,:] #take e slice 0 becasue e wont effect stage allocation
-    params['dvp3'] = np.broadcast_to(dvp_date_k3k5tvnwziaxyg3, array_k3k5tvnwziaxyg3.shape)
+    ##convert dvp date into the shape of stock variable.
+    dvp_date_k2tva1nwiyg1 = dvp_date_va1e1b1nwzida0e0b0xyg1[None,None,:,:,0,0,:,:,0,:,0,0,0,0,0,:,:]
+    params['dvp1'] = np.broadcast_to(dvp_date_k2tva1nwiyg1, k2tva1nwiyg1_shape)
+    dvp_date_k3k5tvnwiaxyg3 = dvp_date_va1e1b1nwzida0e0b0xyg3[None,None,None,:,0,0,0,:,:,0,:,0,:,0,0,:,:,:]
+    params['dvp3'] = np.broadcast_to(dvp_date_k3k5tvnwiaxyg3, k3k5tvnwiaxyg3_shape)
 
     ###############
     # bound params#
     ###############
 
     ##bound to stop sale of ewe lambs before the first shearing for the dam activity
-    arrays = [keys_k2,keys_t1,keys_v1,keys_a,keys_i,keys_y1,keys_g1]
-    index_k2tvaiyg1 = fun.cartesian_product_simple_transpose(arrays)
     ###dam dvp when first shearing occurs
     shear_date_iyg1 = date_shear_sida0e0b0xyg1[0,:,0,0,0,0,0,:,:]
-    dvp_date_k2tvaziyg1 = params['dvp1'][:,:,:,:,0,0,...]
-    index_tvaziyg1 = fun.f_expand(np.arange(len_t1),-7)
-    mask_v_prior_shear_k2tvaziyg1 = np.logical_and(dvp_date_k2tvaziyg1 < shear_date_iyg1,
-                                                   index_tvaziyg1 < pinp.sheep['i_n_dam_sales'])
+    dvp_date_k2tvaiyg1 = params['dvp1'][:,:,:,:,0,0,...]
+    index_tvaiyg1 = fun.f_expand(np.arange(len_t1),-6)
+    mask_v_prior_shear_k2tvaiyg1 = np.logical_and(dvp_date_k2tvaiyg1 < shear_date_iyg1,
+                                                   index_tvaiyg1 < pinp.sheep['i_n_dam_sales'])
     ###build array for the axes of the specified slices
-    sale_dam_yearling_k2tvaziyg1 = np.full(mask_v_prior_shear_k2tvaziyg1.shape,np.inf)
+    sale_dam_yearling_k2tvaiyg1 = np.full(mask_v_prior_shear_k2tvaiyg1.shape,np.inf)
     ###set the bound
-    sale_dam_yearling_k2tvaziyg1[mask_v_prior_shear_k2tvaziyg1] = 0
+    sale_dam_yearling_k2tvaiyg1[mask_v_prior_shear_k2tvaiyg1] = 0
 
     ##bound to stop sale of ewe lambs before the first shearing for the offs activity
-    arrays = [keys_k3,keys_k5,keys_t3,keys_v3,keys_i,keys_a,keys_x,keys_y3,keys_g3]
-    index_k3k5tviaxyg3 = fun.cartesian_product_simple_transpose(arrays)
     ###offs dvp when first shearing occurs
     shear_date_iaxyg3 = date_shear_sida0e0b0xyg3[0,:,0,0,0,0,...]
-    dvp_date_k3k5tvziaxyg3 = params['dvp3'][:,:,:,:,0,0,...]
-    index_tvziaxyg3 = fun.f_expand(np.arange(len_t3),-8)
-    mask_v_prior_shear_k3k5tvziaxyg3 = np.logical_and(dvp_date_k3k5tvziaxyg3 < shear_date_iaxyg3,
-                                                   np.logical_and(index_tvziaxyg3 >= 1, index_xyg == 1)) #mask for females, in the sale t slice before the first shearing.
+    dvp_date_k3k5tviaxyg3 = params['dvp3'][:,:,:,:,0,0,...]
+    index_tviaxyg3 = fun.f_expand(np.arange(len_t3),-7)
+    mask_v_prior_shear_k3k5tviaxyg3 = np.logical_and(dvp_date_k3k5tviaxyg3 < shear_date_iaxyg3,
+                                                   np.logical_and(index_tviaxyg3 >= 1, index_xyg == 1)) #mask for females, in the sale t slice before the first shearing.
     ###build array for the axes of the specified slices
-    sale_offs_yearling_k3k5tvziaxyg3 = np.full(mask_v_prior_shear_k3k5tvziaxyg3.shape,np.inf)
+    sale_offs_yearling_k3k5tviaxyg3 = np.full(mask_v_prior_shear_k3k5tviaxyg3.shape,np.inf)
     ###set the bound
-    sale_offs_yearling_k3k5tvziaxyg3[mask_v_prior_shear_k3k5tvziaxyg3] = 0
+    sale_offs_yearling_k3k5tviaxyg3[mask_v_prior_shear_k3k5tviaxyg3] = 0
 
+    ##create the params (the bounds are the same for all seasons - if you want to change this you will need to add active z axis and build param with a loop)
+    ###yearling sale bound for dam activity
+    arrays = [keys_k2,keys_t1,keys_v1,keys_a,keys_i,keys_y1,keys_g1]
+    index_k2tvaiyg1 = fun.cartesian_product_simple_transpose(arrays)
+    sale_dam_yearling = sale_dam_yearling_k2tvaiyg1.ravel()
+    tup_k2tvaiyg1 = tuple(map(tuple,index_k2tvaiyg1))
+    params['sale_dams_yearling_upperbound'] = dict(zip(tup_k2tvaiyg1,sale_dam_yearling))
 
-
-
-    for z in range(len(keys_z)):
-        ##create season key for params dict
-        scenario = keys_z[z]
-
-        ##yearling sale bound for dam activity
-        sale_dam_yearling_k2tvaiyg1 = sfun.f_dynamic_slice(sale_dam_yearling_k2tvaziyg1, -4, z, z + 1)
-        sale_dam_yearling = sale_dam_yearling_k2tvaiyg1.ravel()
-        tup_k2tvaiyg1 = tuple(map(tuple,index_k2tvaiyg1))
-        params[scenario]['sale_dams_yearling_upperbound'] = dict(zip(tup_k2tvaiyg1,sale_dam_yearling))
-
-        ##yearling sale bound for offs activity
-        sale_offs_yearling_k3k5tviaxyg3 = sfun.f_dynamic_slice(sale_offs_yearling_k3k5tvziaxyg3, -4, z, z + 1)
-        sale_offs_yearling = sale_offs_yearling_k3k5tviaxyg3.ravel()
-        tup_k3k5tviaxyg3 = tuple(map(tuple,index_k3k5tviaxyg3))
-        params[scenario]['sale_offs_yearling_upperbound'] = dict(zip(tup_k3k5tviaxyg3, sale_offs_yearling))
+    ###yearling sale bound for offs activity
+    arrays = [keys_k3,keys_k5,keys_t3,keys_v3,keys_i,keys_a,keys_x,keys_y3,keys_g3]
+    index_k3k5tviaxyg3 = fun.cartesian_product_simple_transpose(arrays)
+    sale_offs_yearling = sale_offs_yearling_k3k5tviaxyg3.ravel()
+    tup_k3k5tviaxyg3 = tuple(map(tuple,index_k3k5tviaxyg3))
+    params['sale_offs_yearling_upperbound'] = dict(zip(tup_k3k5tviaxyg3, sale_offs_yearling))
 
 
 
