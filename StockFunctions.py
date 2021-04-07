@@ -1065,6 +1065,12 @@ def f_lwc_mu(cg, rc_start, mei, mem, mew, z1f, z2f, kg, mec = 0,
     return ebg, evg, pg, fg, level
 
 
+def f_wbe(aw, mw, cg):
+    ## calculate whole body energy content from weight of adipose tissue (aw) and muscle (mw), and the dry matter content and energy density.
+    wbe = aw * cg[20, ...] * cg[22, ...] + mw * cg[19, ...] * cg[21, ...]
+    return wbe
+
+
 def f_emissions_bc(ch, intake_f, intake_s, md_solid, level):
     ##Methane production total
     ch4_total = ch[1, ...] * (intake_f + intake_s)*((ch[2, ...] + ch[3, ...] * md_solid) + (level + 1) * (ch[4, ...] - ch[5, ...] * md_solid))
@@ -2032,6 +2038,7 @@ def f_p2v(production_p, dvp_pointer_p=1, numbers_p=1, on_hand_tp=True, days_peri
     shape = production_ftpany.shape[0:sinp.stock['i_p_pos']] + (np.max(dvp_pointer_p)+1,) + production_ftpany.shape[sinp.stock['i_p_pos']+1:]  # bit messy because need v t and all the other axis (but not p)
     result=np.zeros(shape).astype('float32')
     shape = dvp_pointer_p.shape
+    #todo referring to axes positions using a constant rather than using the variable
     for a1 in range(shape[-14]):
         a1_slc = slice(a1,a1+1) if shape[-14]>1 else slice(0,None) #used for param because we want to keep axis
         for e1 in range(shape[-13]):

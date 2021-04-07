@@ -33,7 +33,7 @@ def boundarypyomo_local(params):
     dams_lobound_inc = False #controls rot bound
     dams_upperbound_inc = False #upper bound on dams
     dams_mating_upperbound_inc = True #allow exclusion of mating yearlings
-    sale_yearling_upperbound_inc = True #upperbound on ewe lambs sold
+    sale_yearling_upperbound_inc = False #upperbound on ewe lambs sold
     sr_bound_inc = False #controls sr bound
     total_pasture_bound = fun.f_sa(False, sen.sav['bnd_pasarea_inc'], 5)  #bound on total pasture (hence also total crop)
     landuse_bound = False #bound on area of each landuse

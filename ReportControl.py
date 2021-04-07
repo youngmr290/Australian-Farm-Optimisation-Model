@@ -179,6 +179,35 @@ for row in trials:
         fd_dams = pd.concat([fd_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_fd_dams = stacked_fd_dams.append(fd_dams)
 
+    if report_run.loc['run_wbe_dams', 'Run']:
+        type = 'stock'
+        prod = 'wbe_k2tva1nwziyg1'
+        weights = 'dams_numbers_k2tvanwziy1g1'
+        keys = 'dams_keys_k2tvanwziy1g1'
+        arith = 1
+        arith_axis = [3,4,5,6,7,8,9]
+        index =[2]
+        cols =[0,1]
+        axis_slice = {}
+        # axis_slice[0] = [0, 2, 1]
+        wbe_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
+                               keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+        wbe_dams = pd.concat([wbe_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
+        stacked_wbe_dams = stacked_wbe_dams.append(wbe_dams)
+
+    if report_run.loc['run_wbe_offs', 'Run']:
+        prod = 'wbe_k3k5tvnwziaxyg3'
+        weights = 'offs_numbers_k3k5tvnwziaxyg3'
+        keys = 'offs_keys_k3k5tvnwziaxyg3'
+        arith = 1
+        arith_axis = [4,5,6,7,8,9,10,11]
+        index =[3]
+        cols =[0,1,2]
+        axis_slice = {}
+        wbe_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
+                               keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+        wbe_offs = pd.concat([wbe_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
+        stacked_wbe_offs = stacked_wbe_offs.append(wbe_offs)
 
     if report_run.loc['run_lw_dams', 'Run']:
         type = 'stock'
@@ -594,6 +623,10 @@ if report_run.loc['run_cfw_dams', 'Run']:
     rep.f_df2xl(writer, stacked_cfw_dams, 'cfw_dams', option=1)
 if report_run.loc['run_fd_dams', 'Run']:
     rep.f_df2xl(writer, stacked_fd_dams, 'fd_dams', option=1)
+if report_run.loc['run_wbe_dams', 'Run']:
+    rep.f_df2xl(writer, stacked_wbe_dams, 'wbe_dams', option=1)
+if report_run.loc['run_wbe_offs', 'Run']:
+    rep.f_df2xl(writer, stacked_wbe_offs, 'wbe_offs', option=1)
 if report_run.loc['run_lw_dams', 'Run']:
     rep.f_df2xl(writer, stacked_lw_dams, 'lw_dams', option=1)
 if report_run.loc['run_ffcfw_dams', 'Run']:
