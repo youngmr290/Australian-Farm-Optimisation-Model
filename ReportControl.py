@@ -367,9 +367,9 @@ for row in trials:
         den_weights = 'stock_days_k2p6ftva1nwziyg1'
         keys = 'dams_keys_k2p6ftvanwziy1g1'
         arith = 1
-        arith_axis = [2,3,4,5,6,7,8,9,10,11]
-        index =[1]
-        cols =[0]
+        arith_axis = [3,5,6,7,8,9,10,11]    # for FP only [2,3,4,5,6,7,8,9,10,11]
+        index =[1,4]                                    # [1]
+        cols =[0,2]                                     # [0]
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         daily_mei_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
@@ -387,9 +387,9 @@ for row in trials:
         den_weights = 'stock_days_k2p6ftva1nwziyg1'
         keys = 'dams_keys_k2p6ftvanwziy1g1'
         arith = 1
-        arith_axis = [2,3,4,5,6,7,8,9,10,11]
-        index =[1]
-        cols =[0]
+        arith_axis = [3,5,6,7,8,9,10,11]    # for FP only [2,3,4,5,6,7,8,9,10,11]
+        index =[1,4]                                    # [1]
+        cols =[0,2]                                     # [0]
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         daily_pi_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
