@@ -452,7 +452,7 @@ def coremodel_all(params, trial_name):
 
 
         ##specify a season which represents the stages
-        root_z = 0 #this could be any stage becasue all seasons have the same period definitions in the root stage.
+        root_z = 0 #this could be any stage because all seasons have the same period definitions in the root stage.
         ebrk2spr_z = 0 #any season with early break
         ebrk2mbrk_z = -1 #any season with medium or late break
         mbrk2spr_z = 1 #any season with medium
@@ -493,7 +493,7 @@ def coremodel_all(params, trial_name):
         stage_info['root']['sets'].extend(list(keys_p5[np.logical_and(lp_p5z[:,root_z] > root_start, lp_p5z[:,root_z] < ebrk_start)]))
         stage_info['root']['sets'].extend(list(keys_dams[np.logical_and(dvp1 > root_start, dvp1 < ebrk_start)]))
         stage_info['root']['sets'].extend(list(keys_offs[np.logical_and(dvp3 > root_start, dvp3 < ebrk_start)]))
-        ###early break - end (dont need logical and becasue this is the last stage)
+        ###early break - end (dont need logical and because this is the last stage)
         stage_info['ebrk2spr']['sets'].extend(list(pinp.period['i_fp_idx'][fp_p6z[:,ebrk2spr_z] > ebrk_start]))
         stage_info['ebrk2spr']['sets'].extend(list(keys_p5[lp_p5z[:,ebrk2spr_z] > ebrk_start]))
         stage_info['ebrk2spr']['sets'].extend(list(keys_dams[dvp1 > ebrk_start]))
@@ -503,18 +503,18 @@ def coremodel_all(params, trial_name):
         stage_info['ebrk2mbrk']['sets'].extend(list(keys_p5[np.logical_and(lp_p5z[:,ebrk2mbrk_z] > ebrk_start, lp_p5z[:,ebrk2mbrk_z] < mbrk_start)]))
         stage_info['ebrk2mbrk']['sets'].extend(list(keys_dams[np.logical_and(dvp1 > ebrk_start, dvp1 < mbrk_start)]))
         stage_info['ebrk2mbrk']['sets'].extend(list(keys_offs[np.logical_and(dvp3 > ebrk_start, dvp3 < mbrk_start)]))
-        ###medium break - end (dont need logical and becasue this is the last stage)
+        ###medium break - end (dont need logical and because this is the last stage)
         stage_info['mbrk2spr']['sets'].extend(list(pinp.period['i_fp_idx'][fp_p6z[:,mbrk2spr_z] > mbrk_start]))
         stage_info['mbrk2spr']['sets'].extend(list(keys_p5[lp_p5z[:,mbrk2spr_z] > mbrk_start]))
         stage_info['mbrk2spr']['sets'].extend(list(keys_dams[dvp1 > mbrk_start]))
         stage_info['mbrk2spr']['sets'].extend(list(keys_offs[dvp3 > mbrk_start]))
-        ###late break - end (dont need logical and becasue this is the last stage)
+        ###late break - end (dont need logical and because this is the last stage)
         stage_info['lbrk2spr']['sets'].extend(list(pinp.period['i_fp_idx'][fp_p6z[:,lbrk2spr_z] > lbrk_start]))
         stage_info['lbrk2spr']['sets'].extend(list(keys_p5[lp_p5z[:,lbrk2spr_z] > lbrk_start]))
         stage_info['lbrk2spr']['sets'].extend(list(keys_dams[dvp1 > lbrk_start]))
         stage_info['lbrk2spr']['sets'].extend(list(keys_offs[dvp3 > lbrk_start]))
 
-        #todo v_prog, rotation - how to allocate? trickier becasue no dvp or time serires set but need to allocate based on lambing? probably just have to allocate manually
+        #todo v_prog, rotation - how to allocate? trickier because no dvp or time serires set but need to allocate based on lambing? probably just have to allocate manually
         ##allocate variable into stages using the allocated sets
         stage_info['root']['vars'] = ['v_quantity_perm[*]','v_quantity_manager[*]','v_sire[*]']
         stage_info['ebrk2spr']['vars'] = ['v_credit[*]', 'v_debit[*]', 'v_dep[*]', 'v_asset[*]', 'v_minroe[*]']

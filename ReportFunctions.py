@@ -338,7 +338,7 @@ def f_mach_summary(lp_vars, r_vals, option=0):
     ##seeding
     seeding_days_kl_z = f_vars2df(lp_vars, 'v_seeding_machdays', keys_z).sum(level=(0, 2,3)).unstack(0)  # sum labour period axis
     seeding_rate_kl = r_vals['mach']['seeding_rate'].stack()
-    seeding_ha_kl_z = seeding_days_kl_z.mul(seeding_rate_kl.reindex(seeding_days_kl_z.index), axis=0) # note seeding ha wont equal the rotation area because arable area is included in seed_ha.
+    seeding_ha_kl_z = seeding_days_kl_z.mul(seeding_rate_kl.reindex(seeding_days_kl_z.index), axis=0) # note seeding ha won't equal the rotation area because arable area is included in seed_ha.
     seeding_cost_cz_l = r_vals['mach']['seeding_cost'].stack()
     seeding_cost_c_klz = seeding_cost_cz_l.reindex(seeding_ha_kl_z.index, axis=1, level=1).unstack()
     seeding_cost_own_c_zk = seeding_cost_c_klz.mul(seeding_ha_kl_z.stack(), axis=1).sum(axis=1, level=(0,2)).swaplevel(0,1,axis=1)  # sum lmu axis

@@ -349,7 +349,7 @@ def f_seasonal_inp(inp, numpy=False, axis=0, level=0):
                     col_level_order.insert(level,0)
                     inp = inp.reorder_levels(col_level_order, axis=axis)
             except TypeError:
-                #this wont work if columns have two levels (would need to reshape into multi d numpy do the average then reshape to 2-d)
+                #this won't work if columns have two levels (would need to reshape into multi d numpy do the average then reshape to 2-d)
                 n_inp = inp.values.astype(np.int64)
                 n_inp = np.average(n_inp, axis=axis, weights=z_prob)
                 n_inp = n_inp.astype("datetime64[ns]")

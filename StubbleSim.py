@@ -55,14 +55,14 @@ for crp in pinp.stubble['harvest_index'].index:
             feed_period_date = fp.loc[period_num+1,'date']
             harv_start = pinp.crop['start_harvest_crops'].loc[crp,'date']
             if feed_period_date < harv_start:
-                days_since_harv.append(365 + (feed_period_date - harv_start).days) #add a yr because dates before harvest wont have access to stubble until next yr
+                days_since_harv.append(365 + (feed_period_date - harv_start).days) #add a yr because dates before harvest won't have access to stubble until next yr
             else:  days_since_harv.append((feed_period_date - harv_start).days)
         else: 
             period_num = fp.index[0]
             feed_period_date = fp.loc[period_num,'date']
             harv_start = pinp.crop['start_harvest_crops'].loc[crp,'date']
             if feed_period_date < harv_start:
-                days_since_harv.append(365 + (feed_period_date - harv_start).days) #add a yr because dates before harvest wont have access to stubble until next yr
+                days_since_harv.append(365 + (feed_period_date - harv_start).days) #add a yr because dates before harvest won't have access to stubble until next yr
             else:  days_since_harv.append((feed_period_date - harv_start).days)
     fp['days_%s' %crp]=days_since_harv
     #add dmd for each component in each period for each crop

@@ -215,7 +215,7 @@ def f_grazing_days():
     # ##loop through labour/mach periods.
     # for mach_p_start, seeding_days, mach_p_num in zip(mach_periods, seed_days,seed_days.index):
     #     grazing_days_list=[]
-    #     season_break = feed_periods_date[0] #todo probs wont handle z axis
+    #     season_break = feed_periods_date[0] #todo probs won't handle z axis
     #     effective_break = season_break + destock_days #accounts for the time before seeding that destocking must occur
     #     for i in range(len(feed_periods_date)):
     #         fp_end_date = feed_periods_date[i] + dt.timedelta(days = feed_periods_length[i]) #todo this will not handle Z axis either need to loop or maybe use numpy

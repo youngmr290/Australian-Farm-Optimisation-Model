@@ -213,7 +213,7 @@ def f_c2g(params_c2, y=0, var_pos=0, condition=None, axis=0, dtype=False):
     mul_dams_genotypes_g0c0 = i_mul_g1_c0[mask_dams_inc_g1]
     mul_yatf_genotypes_g0c0 = i_mul_g2_c0[mask_yatf_inc_g2]
     mul_offs_genotypes_g0c0 = i_mul_g3_c0[mask_offs_inc_g3]
-    ##convert params from c0 to g. nansum required when the selected c0 info is not filled out ^may be an issue if params are missing and mixed breed sheep is selected because it wont catch the error
+    ##convert params from c0 to g. nansum required when the selected c0 info is not filled out ^may be an issue if params are missing and mixed breed sheep is selected because it won't catch the error
     param_sire=np.nansum(allaxis_params_c0[..., na, :] * mul_sire_genotypes_g0c0, axis = -1)
     param_dams=np.nansum(allaxis_params_c0[..., na, :] * mul_dams_genotypes_g0c0, axis = -1)
     param_yatf=np.nansum(allaxis_params_c0[..., na, :] * mul_yatf_genotypes_g0c0, axis = -1)
@@ -1132,6 +1132,7 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         ##Define the temp array shape & populate with values from crg (values are required for the proportion of the highest parity dams)
         t_cr = crg.copy()
         ##probability of a given number of foetuses (calculated from the difference in the cumulative probability)
+        #todo may be simplified by rolling the array on the b1 axis
         slc = [slice(None)] * len(t_cr.shape)
         slc[sinp.stock['i_b1_pos']] = slice(1,-1)
         t_cr[tuple(slc)] = np.maximum(0, f_dynamic_slice(crg, sinp.stock['i_b1_pos'], 1, -1) - f_dynamic_slice(crg, uinp.parameters['i_b1_pos'], 2, None))    # (difference between '>x' and '>x+1')

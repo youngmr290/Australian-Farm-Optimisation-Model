@@ -232,7 +232,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
                         sets = key.split('[', 1)[1].split(']',1)[0]
                         sets = tuple(sets.split(','))
                     except IndexError: #handle variables with no sets
-                        sets = None #set to None becasue this happens in steady state version.
+                        sets = None #set to None because this happens in steady state version.
                     value = variables[key]['value']
                     try:
                         lp_vars[season][var_name][sets] = value
