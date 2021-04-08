@@ -1338,10 +1338,11 @@ def f_season_wa(numbers, var, season, mask_min_lw_z, period_is_startseason):
     var = fun.f_update(var,temporary,period_is_startseason)
     return var
 
-#todo this will NOT handle varying number of starting lws. Need to make more flexible
-# maybe loop on number of initial lws, select medium nut pattern for all starting points except the high and low which get the same treatment as below.
 def f_condensed(numbers, var, lw_idx, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_condense, period_is_condense):
-    """condense variable to 3 common points along the w axis for the start of fvp0
+    """
+    Condense variable to x common points along the w axis when period_is_condense.
+    Currently this function only handle 2 or 3 initial liveweights. The order of the returned W axis is M, H, L for 3 initial lws or H, L for 2 initial lws.
+
     :param numbers: current end numbers
     :param var: production variable being condensed
     :param lw_idx: index specifying the sorted order of the w axis
@@ -1356,28 +1357,33 @@ def f_condensed(numbers, var, lw_idx, prejoin_tup, season_tup, i_n_len, i_w_len,
     """
     if np.any(period_is_condense):
         temporary = var.copy()  #this is done to ensure that temp has the same size as var.
-        ###test if array has diagonal and calc temp variables as if start of dvp - if there is not a diagonal use the alternative system for reallocating at the end of a DVP
-        ### np.diagonal removes the n axis so it is added back in using the expand function, but that is a singleton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
+        ##test if array has diagonal and calc temp variables as if start of dvp - if there is not a diagonal use the alternative system for reallocating at the end of a DVP
         if i_n_len >= i_w_len:
-            ####this method was the way we first tried - no longer used (might be used later if we add nutrient options back in)
+            ###this method was the way we first tried - no longer used (might be used later if we add nutrient options back in)
+            ### np.diagonal removes the n axis so it is added back in using the expand function, but that is a singleton, Therefore that is the reason that temp must be the same size as var. That will ensure that the new n axis is the same length as it used to before np diagonal
             temporary[...] = np.expand_dims(np.rollaxis(temporary.diagonal(axis1= sinp.stock['i_w_pos'], axis2= sinp.stock['i_n_pos']),-1,sinp.stock['i_w_pos']), sinp.stock['i_n_pos']) #roll w axis back into place and add na for n (np.diagonal removes the second axis in the diagonal and moves the other axis to the end)
         else:
             '''
-            possible idea to handle different number of starting lws.
+            possible idea to handle more than 3 starting lws.
+            Note: it is good to keep the medium lw as slice 0 because that means it is held the same across all dvps 
+             and thus the user can make its pattern optimal.
                         
             if n_initial_lws==2:
-                #calculate only the high and low starting points
-                low = use current code 
-                high = use current code
+                #in code already. Nothing needs to be changed for this part                
             
-            else:
+            else: #need to update the code with something like this.
                 for i in n_initial_lws:
                 #use i to assign and select correct patterns
                     if i == 0 or >2:
                         #medium = use current code with i to select correct pattern and assign
                         sl = [slice(None)] * temporary.ndim
-                        sl[sinp.stock['i_w_pos']] = slice(i*int(i_n_len ** i_n_fvp_period), (i+1)*int(i_n_len ** i_n_fvp_period))
-                        temporary[tuple(sl)] = f_dynamic_slice(var, sinp.stock['i_w_pos'], i*int(i_n_len ** i_n_fvp_period), i*int(i_n_len ** i_n_fvp_period)+1)  
+                        sl_start_med = i*int(i_n_len ** i_n_fvp_period)
+                        sl_end_med = (i+1)*int(i_n_len ** i_n_fvp_period)
+                        sl[sinp.stock['i_w_pos']] = slice(sl_start_med, sl_end_med)
+                        if i_n_len >= 3:
+                            temporary[tuple(sl)] = f_dynamic_slice(var, sinp.stock['i_w_pos'], sl_start_med, sl_start_med+1)  # the pattern that is feed supply 1 (median) for the entire year (the top w pattern)
+                        else:
+                            temporary[tuple(sl)] = np.mean(var_sorted_mort, axis=sinp.stock['i_w_pos'], keepdims=True) ^this line wont work if more than 3 lws, somehow need to take mean of subsection of w axis depending on number of initial w. # average of all animals with less than 10% mort
 
                     elif i==1:
                         #calc high - using sorted var
@@ -1385,7 +1391,7 @@ def f_condensed(numbers, var, lw_idx, prejoin_tup, season_tup, i_n_len, i_w_len,
                         sl[sinp.stock['i_w_pos']] = slice(i*int(i_n_len ** i_n_fvp_period), (i+1)*int(i_n_len ** i_n_fvp_period))
                         temporary[tuple(sl)] = np.mean(f_dynamic_slice(var_sorted, sinp.stock['i_w_pos'], i_w_len - int(i_w_len / 10), -1), sinp.stock['i_w_pos'], keepdims=True)  # average of the top lw patterns
 
-                    else: 
+                    else: #i==2 (low w)
                         #calc low
                         numbers_start_sorted = np.take_along_axis(numbers_start_condense, lw_idx, axis=sinp.stock['i_w_pos'])
                         numbers_sorted = np.take_along_axis(numbers, lw_idx, axis=sinp.stock['i_w_pos'])
@@ -1410,27 +1416,41 @@ def f_condensed(numbers, var, lw_idx, prejoin_tup, season_tup, i_n_len, i_w_len,
             mort_mask1 = np.broadcast_to(mort_mask, var_sorted.shape)
             var_sorted_mort = np.ma.masked_array(var_sorted, np.logical_not(mort_mask1))
 
-            ###add high pattern - this will not handle situations where the top 10% lw animals all have higher mortality than the threshold.
-            temporary[...] = np.mean(f_dynamic_slice(var_sorted_mort, sinp.stock['i_w_pos'], i_w_len -1 - int(math.ceil(i_w_len / 10)), None),  #ceil is used to handle cases where nutrition options is 1 (eg only 3 lw patterns)
-                                     sinp.stock['i_w_pos'], keepdims=True)  # average of the top lw patterns
+            ##to handle varying number of initial lws
+            if sinp.stock['i_w_start_len1'] == 2:
+                ###add high pattern - this will not handle situations where the top 10% lw animals all have higher mortality than the threshold.
+                temporary[...] = np.mean(
+                    f_dynamic_slice(var_sorted_mort,sinp.stock['i_w_pos'],i_w_len - 1 - int(math.ceil(i_w_len / 10)), None), # ceil is used to handle cases where nutrition options is 1 (eg only 3 lw patterns)
+                    sinp.stock['i_w_pos'],keepdims=True)  # average of the top lw patterns
 
-            ###add mid pattern (w 0 - 27) - use slice method in case w axis changes position (can't use MRYs dynamic slice function because we are assigning)
-            ###if there is 3n then medium condense is the top slice (medium start weight with medium nutrition)
-            ###if there is 2n then medium condense is the average of all animals with less than 10% mort.
-            sl = [slice(None)] * temporary.ndim
-            sl[sinp.stock['i_w_pos']] = slice(0, int(i_n_len ** i_n_fvp_period))
-            if i_n_len >= 3:
-                temporary[tuple(sl)] = f_dynamic_slice(var, sinp.stock['i_w_pos'], 0, 1)  # the pattern that is feed supply 1 (median) for the entire year (the top w pattern)
+                ###low pattern - production level of the lowest nutrition profile that has a mortality less than 10% for the year
+                low_slice = np.argmax(mort_mask, axis=sinp.stock['i_w_pos'])  # returns the index of the first w slice that has mort less the 10%. (argmax takes the first occurrence of the highest number)
+                low_slice = np.expand_dims(low_slice, axis=sinp.stock['i_w_pos']) #add singleton w axis back
+                sl = [slice(None)] * temporary.ndim
+                sl[sinp.stock['i_w_pos']] = slice(-int(i_n_len ** i_n_fvp_period), None)
+                temporary[tuple(sl)] = np.take_along_axis(var_sorted, low_slice, sinp.stock['i_w_pos'])
+
             else:
-                temporary[tuple(sl)] = np.mean(var_sorted_mort, axis=sinp.stock['i_w_pos'], keepdims=True)  # average of all animals with less than 10% mort
+                ###add high pattern - this will not handle situations where the top 10% lw animals all have higher mortality than the threshold.
+                temporary[...] = np.mean(f_dynamic_slice(var_sorted_mort, sinp.stock['i_w_pos'], i_w_len -1 - int(math.ceil(i_w_len / 10)), None),  #ceil is used to handle cases where nutrition options is 1 (eg only 3 lw patterns)
+                                         sinp.stock['i_w_pos'], keepdims=True)  # average of the top lw patterns
 
-            ###low pattern
-            low_slice = np.argmax(mort_mask, axis=sinp.stock['i_w_pos'])  # returns the index of the first w slice that has mort less the 10%. (argmax takes the first occurrence of the highest number)
-            low_slice = np.expand_dims(low_slice, axis=sinp.stock['i_w_pos']) #add singleton w axis back
-            sl = [slice(None)] * temporary.ndim
-            sl[sinp.stock['i_w_pos']] = slice(-int(i_n_len ** i_n_fvp_period), None)
-            ## production level of the lowest nutrition profile that has a mortality less than 10% for the year
-            temporary[tuple(sl)] = np.take_along_axis(var_sorted, low_slice, sinp.stock['i_w_pos'])
+                ###add mid pattern (w 0 - 27) - use slice method in case w axis changes position (can't use MRYs dynamic slice function because we are assigning)
+                ###if there is 3n then medium condense is the top slice (medium start weight with medium nutrition). It is best to keep the middle w to slice 0 rather than the average because then medium always passes to medium so the user can attempt to more easily optimise the nutrition for medium lw.
+                ###if there is 2n then medium condense is the average of all animals with less than 10% mort.
+                sl = [slice(None)] * temporary.ndim
+                sl[sinp.stock['i_w_pos']] = slice(0, int(i_n_len ** i_n_fvp_period))
+                if i_n_len >= 3:
+                    temporary[tuple(sl)] = f_dynamic_slice(var, sinp.stock['i_w_pos'], 0, 1)  # the pattern that is feed supply 1 (median) for the entire year (the top w pattern)
+                else:
+                    temporary[tuple(sl)] = np.mean(var_sorted_mort, axis=sinp.stock['i_w_pos'], keepdims=True)  # average of all animals with less than 10% mort
+
+                ###low pattern - production level of the lowest nutrition profile that has a mortality less than 10% for the year
+                low_slice = np.argmax(mort_mask, axis=sinp.stock['i_w_pos'])  # returns the index of the first w slice that has mort less the 10%. (argmax takes the first occurrence of the highest number)
+                low_slice = np.expand_dims(low_slice, axis=sinp.stock['i_w_pos']) #add singleton w axis back
+                sl = [slice(None)] * temporary.ndim
+                sl[sinp.stock['i_w_pos']] = slice(-int(i_n_len ** i_n_fvp_period), None)
+                temporary[tuple(sl)] = np.take_along_axis(var_sorted, low_slice, sinp.stock['i_w_pos'])
         ###Update if the period is start of year (shearing for offs and prejoining for dams)
         var = fun.f_update(var, temporary, period_is_condense)
 
