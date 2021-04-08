@@ -768,27 +768,40 @@ def f_dse(lp_vars, r_vals, method, per_ha):
         if true it returns DSE/ha else it returns total dse
     :return DSE per pasture hectare for each sheep group:
     '''
+    ##keys for table that is reported
+    keys_p6 = r_vals['stock']['keys_p6']
+    keys_v1 = r_vals['stock']['keys_v1']
+    keys_v3 = r_vals['stock']['keys_v3']
+
+    ##user can change this if they want to report different axis. Keys must be a list and axis must be tuple. Check names below to get the axis positions.
+    sire_preserve_ax = 0
+    sire_key = [keys_p6]
+    dams_preserve_ax = (1, 3)
+    dams_key = [keys_p6, keys_v1]
+    offs_preserve_ax = (2, 4)
+    offs_key = [keys_p6, keys_v3]
+
 
     stock_vars = f_stock_reshape(lp_vars, r_vals)
 
     if method == 0:
         ##sire
-        dse_sire = fun.f_reduce_skipfew(np.sum, stock_vars['sire_numbers_zg0'] * r_vals['stock']['dsenw_p6zg0'], preserveAxis=0)  # sum all axis except p6
+        dse_sire = fun.f_reduce_skipfew(np.sum, stock_vars['sire_numbers_zg0'] * r_vals['stock']['dsenw_p6zg0'], preserveAxis=sire_preserve_ax)  # sum all axis except preserveAxis
         ##dams
         dse_dams = fun.f_reduce_skipfew(np.sum, stock_vars['dams_numbers_k2tvanwziy1g1'][:, na, ...]
-                                        * r_vals['stock']['dsenw_k2p6tva1nwziyg1'], preserveAxis=1)  # sum all axis except p6
+                                        * r_vals['stock']['dsenw_k2p6tva1nwziyg1'], preserveAxis=dams_preserve_ax)  # sum all axis except preserveAxis
         ##offs
         dse_offs = fun.f_reduce_skipfew(np.sum, stock_vars['offs_numbers_k3k5tvnwziaxyg3'][:, :, na, ...] * r_vals['stock'][
-            'dsenw_k3k5p6tvnwziaxyg3'], preserveAxis=2)  # sum all axis except p6
+            'dsenw_k3k5p6tvnwziaxyg3'], preserveAxis=offs_preserve_ax)  # sum all axis except preserveAxis
     else:
         ##sire
-        dse_sire = fun.f_reduce_skipfew(np.sum, stock_vars['sire_numbers_zg0'] * r_vals['stock']['dsemj_p6zg0'], preserveAxis=0)  # sum all axis except p6
+        dse_sire = fun.f_reduce_skipfew(np.sum, stock_vars['sire_numbers_zg0'] * r_vals['stock']['dsemj_p6zg0'], preserveAxis=sire_preserve_ax)  # sum all axis except preserveAxis
         ##dams
         dse_dams = fun.f_reduce_skipfew(np.sum, stock_vars['dams_numbers_k2tvanwziy1g1'][:, na, ...] * r_vals['stock'][
-            'dsemj_k2p6tva1nwziyg1'], preserveAxis=1)  # sum all axis except p6
+            'dsemj_k2p6tva1nwziyg1'], preserveAxis=dams_preserve_ax)  # sum all axis except preserveAxis
         ##offs
         dse_offs = fun.f_reduce_skipfew(np.sum, stock_vars['offs_numbers_k3k5tvnwziaxyg3'][:, :, na, ...] * r_vals['stock'][
-            'dsemj_k3k5p6tvnwziaxyg3'], preserveAxis=2)  # sum all axis except p6
+            'dsemj_k3k5p6tvnwziaxyg3'], preserveAxis=offs_preserve_ax)  # sum all axis except preserveAxis
 
     ##dse per ha if user opts for this level of detail
     if per_ha:
@@ -797,15 +810,12 @@ def f_dse(lp_vars, r_vals, method, per_ha):
         dse_dams = dse_dams / pasture_area
         dse_offs = dse_offs / pasture_area
 
-    ##turn to table
-    key_p6 = r_vals['stock']['keys_p6']
-    dse_sire = fun.f_make_table(dse_sire, key_p6, ['Sire DSE'])
-    dse_dams = fun.f_make_table(dse_dams, key_p6, ['Dams DSE'])
-    dse_offs = fun.f_make_table(dse_offs, key_p6, ['Offs DSE'])
+    ##turn to table - rows and cols need to be a list of lists/arrays
+    dse_sire = fun.f_produce_df(dse_sire.ravel(), rows=sire_key, columns=[['Sire DSE']])
+    dse_dams = fun.f_produce_df(dse_dams.ravel(), rows=dams_key, columns=[['Dams DSE']])
+    dse_offs = fun.f_produce_df(dse_offs.ravel(), rows=offs_key, columns=[['Offs DSE']])
 
-    ##concat
-    dse = pd.concat([dse_sire, dse_dams, dse_offs], axis=1)
-    return dse
+    return dse_sire, dse_dams, dse_offs
 
 
 def f_profitloss_table(lp_vars, r_vals):

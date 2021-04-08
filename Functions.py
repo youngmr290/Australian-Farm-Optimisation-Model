@@ -766,11 +766,6 @@ def findDiff(d1, d2):
                             return a #only return if true
     return a
 
-def f_make_table(data, index, header):
-    '''function to return table
-    ^currently just returns a df but there are python packages which make nice tables'''
-    return pd.DataFrame(data, index=index, columns=header)
-
 def f_produce_df(data, rows, columns, row_names=None, column_names=None):
     """rows is a list of lists that will be used to build a MultiIndex
     columns is a list of lists that will be used to build a MultiIndex"""

@@ -79,8 +79,12 @@ stacked_daily_pi_dams = pd.DataFrame()  # create df to append table from each tr
 stacked_numbers_dams = pd.DataFrame()  # create df to append table from each trial
 stacked_numbers_prog = pd.DataFrame()  # create df to append table from each trial
 stacked_numbers_offs = pd.DataFrame()  # create df to append table from each trial
-stacked_dse = pd.DataFrame()  # create df to append table from each trial
-stacked_dse1 = pd.DataFrame()  # create df to append table from each trial
+stacked_dse_sire = pd.DataFrame()  # create df to append table from each trial
+stacked_dse_dams = pd.DataFrame()  # create df to append table from each trial
+stacked_dse_offs = pd.DataFrame()  # create df to append table from each trial
+stacked_dse1_sire = pd.DataFrame()  # create df to append table from each trial
+stacked_dse1_dams = pd.DataFrame()  # create df to append table from each trial
+stacked_dse1_offs = pd.DataFrame()  # create df to append table from each trial
 stacked_grnfoo = pd.DataFrame()  # create df to append table from each trial
 stacked_dryfoo = pd.DataFrame()  # create df to append table from each trial
 stacked_napfoo = pd.DataFrame()  # create df to append table from each trial
@@ -423,15 +427,26 @@ for row in trials:
 
     
     if report_run.loc['run_dse', 'Run']:
-        method = 0
+        ##you can go into f_dse to change the axis being reported.
         per_ha = True
-        dse = rep.f_dse(lp_vars, r_vals, method = method, per_ha = per_ha)
+
+        method = 0
+        dse_sire, dse_dams, dse_offs = rep.f_dse(lp_vars, r_vals, method = method, per_ha = per_ha)
+        dse_sire = pd.concat([dse_sire],keys=[trial_name],names=['Trial'])  # add trial name as index level
+        dse_dams = pd.concat([dse_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
+        dse_offs = pd.concat([dse_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
+        stacked_dse_sire = stacked_dse_sire.append(dse_sire)
+        stacked_dse_dams = stacked_dse_dams.append(dse_dams)
+        stacked_dse_offs = stacked_dse_offs.append(dse_offs)
+
         method = 1
-        dse1 = rep.f_dse(lp_vars, r_vals, method = method, per_ha = per_ha)
-        dse = pd.concat([dse],keys=[trial_name],names=['Trial'])  # add trial name as index level
-        stacked_dse = stacked_dse.append(dse)
-        dse1 = pd.concat([dse1],keys=[trial_name],names=['Trial'])  # add trial name as index level
-        stacked_dse1 = stacked_dse1.append(dse1)
+        dse1_sire, dse1_dams, dse1_offs = rep.f_dse(lp_vars, r_vals, method = method, per_ha = per_ha)
+        dse1_sire = pd.concat([dse1_sire],keys=[trial_name],names=['Trial'])  # add trial name as index level
+        dse1_dams = pd.concat([dse1_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
+        dse1_offs = pd.concat([dse1_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
+        stacked_dse1_sire = stacked_dse1_sire.append(dse1_sire)
+        stacked_dse1_dams = stacked_dse1_dams.append(dse1_dams)
+        stacked_dse1_offs = stacked_dse1_offs.append(dse1_offs)
 
     
     if report_run.loc['run_grnfoo', 'Run']:
@@ -623,8 +638,14 @@ if report_run.loc['run_numbers_prog', 'Run']:
 if report_run.loc['run_numbers_offs', 'Run']:
     rep.f_df2xl(writer, stacked_numbers_offs, 'numbers_offs', option=1)
 if report_run.loc['run_dse', 'Run']:
-    rep.f_df2xl(writer, stacked_dse, 'dse_wt', option=1)
-    rep.f_df2xl(writer, stacked_dse1, 'dse_mei', option=1)
+    dams_start_col = len(stacked_dse_sire.columns) + stacked_dse_sire.index.nlevels + 1
+    offs_start_col = dams_start_col + len(stacked_dse_dams.columns) + stacked_dse_dams.index.nlevels + 1
+    rep.f_df2xl(writer, stacked_dse_sire, 'dse_wt', option=0, colstart=0)
+    rep.f_df2xl(writer, stacked_dse_dams, 'dse_wt', option=0, colstart=dams_start_col)
+    rep.f_df2xl(writer, stacked_dse_offs, 'dse_wt', option=0, colstart=offs_start_col)
+    rep.f_df2xl(writer, stacked_dse1_sire, 'dse_mei', option=0, colstart=0)
+    rep.f_df2xl(writer, stacked_dse1_dams, 'dse_mei', option=0, colstart=dams_start_col)
+    rep.f_df2xl(writer, stacked_dse1_offs, 'dse_mei', option=0, colstart=offs_start_col)
 if report_run.loc['run_grnfoo', 'Run']:
     rep.f_df2xl(writer, stacked_grnfoo, 'grnfoo', option=1)
 if report_run.loc['run_dryfoo', 'Run']:
