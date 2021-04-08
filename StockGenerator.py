@@ -5459,8 +5459,8 @@ def generator(params,r_vals,ev,plots = False):
                                period_is_tp=period_is_shearing_tpa1e1b1nwzida0e0b0xyg3)
 
     ##wbe - not accounting for mortality
-    r_wbe_tvg1 = sfun.f_p2v(r_wbe_pdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
-    r_wbe_tvg3 = sfun.f_p2v(r_wbe_poffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3)
+    r_wbe_vg1 = sfun.f_p2v(r_wbe_pdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
+    r_wbe_vg3 = sfun.f_p2v(r_wbe_poffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3)
 
     ##nfoet scanning
     r_nfoet_scan_tvg1 = sfun.f_p2v(nfoet_b1nwzida0e0b0xyg, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_pdams,
@@ -5590,11 +5590,11 @@ def generator(params,r_vals,ev,plots = False):
                                                                           mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3)
 
     ##wbe - wholebody energy at start of DVP, no account for mortality
-    r_wbe_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams',r_wbe_tvg1,
+    r_wbe_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams',r_wbe_vg1,
                                                                         a_k2cluster_va1e1b1nwzida0e0b0xyg1,
                                                                         index_k2tva1e1b1nwzida0e0b0xyg1,
                                                                         mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1)
-    r_wbe_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs',r_wbe_tvg3,a_k3cluster_da0e0b0xyg3,
+    r_wbe_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs',r_wbe_vg3,a_k3cluster_da0e0b0xyg3,
                                                                           index_k3k5tva1e1b1nwzida0e0b0xyg3,
                                                                           a_k5cluster_da0e0b0xyg3,
                                                                           index_k5tva1e1b1nwzida0e0b0xyg3,
@@ -6502,6 +6502,10 @@ def generator(params,r_vals,ev,plots = False):
     k5twzidaxyg2_shape = len_k5, len_t2, len_w_prog, len_z, len_i, len_d, len_a1, len_x, len_g2
     k3k5tvnwziaxyg3_shape = len_k3, len_k5, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
+    ####kv with a singleton t axis (so that it can be divided by numbers with a t axis - but t is not in the name)
+    k2va1nwziyg1_shape = len_k2, 1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
+    k3k5vnwziaxyg3_shape = len_k3, len_k5, 1, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
+
     ####kveb
     k2tva1e1b1nwziyg1_shape = len_k2, len_t1, len_v1, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
 
@@ -6560,9 +6564,9 @@ def generator(params,r_vals,ev,plots = False):
     ###sale date
     r_vals['saledate_k3k5tvnwziaxyg3'] = r_saledate_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
 
-    ###wbe
-    r_vals['wbe_k2tva1nwziyg1'] = r_wbe_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
-    r_vals['wbe_k3k5tvnwziaxyg3'] = r_wbe_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
+    ###wbe (Note: the shape has a singleton t axis, just that t is not in the name)
+    r_vals['wbe_k2tva1nwziyg1'] = r_wbe_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2va1nwziyg1_shape)
+    r_vals['wbe_k3k5tvnwziaxyg3'] = r_wbe_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5vnwziaxyg3_shape)
 
     ###cfw
     r_vals['cfw_hdmob_zg0'] = r_cfw_hdmob_tva1e1b1nwzida0e0b0xyg0.reshape(zg0_shape)

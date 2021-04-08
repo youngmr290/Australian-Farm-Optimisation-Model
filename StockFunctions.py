@@ -2142,7 +2142,9 @@ def f_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, dvp_type_next_tvgw=0, vt
     return distribution_w8gw9
 
 def f_create_production_param(group, production_vg, a_kcluster_vg_1=1, index_ktvg_1=1, a_kcluster_vg_2=1, index_kktvg_2=1, numbers_start_vg=1, mask_vg=True, pos_offset=0):
-    '''convert production to per animal including impact of death. And apply the k clustering'''
+    '''Can convert total production to per animal production including impact of death if numbers have been included.
+    Apply the k clustering and collapse the e, b & d axes
+    If numbers_start are not included then only applies k clustering - this is usually done if production is already per head'''
     if group=='sire':
         return fun.f_divide(production_vg, numbers_start_vg, dtype=production_vg.dtype)
     elif group=='dams':

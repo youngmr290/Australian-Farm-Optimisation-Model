@@ -65,6 +65,8 @@ stacked_saleprice = pd.DataFrame()  # create df to append table from each trial
 stacked_saledate_offs = pd.DataFrame()  # create df to append table from each trial
 stacked_cfw_dams = pd.DataFrame()  # create df to append table from each trial
 stacked_fd_dams = pd.DataFrame()  # create df to append table from each trial
+stacked_wbe_dams = pd.DataFrame()  # create df to append table from each trial
+stacked_wbe_offs = pd.DataFrame()  # create df to append table from each trial
 stacked_lw_dams = pd.DataFrame()  # create df to append table from each trial
 stacked_ffcfw_dams = pd.DataFrame()  # create df to append table from each trial
 stacked_fec_dams = pd.DataFrame()  # create df to append table from each trial
@@ -134,6 +136,7 @@ for row in trials:
 
     
     if report_run.loc['run_saledate_offs', 'Run']:
+        #todo Currently this can return a date prior to the start of the generator. Some animals must not have a date
         type = 'stock'
         prod = 'saledate_k3k5tvnwziaxyg3'
         weights = 'offs_numbers_k3k5tvnwziaxyg3'
@@ -185,9 +188,9 @@ for row in trials:
         weights = 'dams_numbers_k2tvanwziy1g1'
         keys = 'dams_keys_k2tvanwziy1g1'
         arith = 1
-        arith_axis = [3,4,5,6,7,8,9]
+        arith_axis = [1,3,4,5,6,7,8,9]
         index =[2]
-        cols =[0,1]
+        cols =[0]
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         wbe_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
