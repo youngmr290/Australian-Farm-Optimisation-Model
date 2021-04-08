@@ -276,10 +276,9 @@ def f_area_summary(lp_vars, r_vals, option):
     :key option:
         0: tuple all results wrapped in tuple
         1: table all rotations by lmu
-        2: table selected rotations by lmu
-        3: float total pasture area
-        4: float total crop area
-        5: table crop and pasture area by lmu
+        2: float total pasture area
+        3: float total crop area
+        4: table crop and pasture area by lmu
     '''
 
     ##read from other functions
@@ -805,7 +804,7 @@ def f_dse(lp_vars, r_vals, method, per_ha):
 
     ##dse per ha if user opts for this level of detail
     if per_ha:
-        pasture_area = f_area_summary(lp_vars, r_vals, option=3)
+        pasture_area = f_area_summary(lp_vars, r_vals, option=2)
         dse_sire = dse_sire / pasture_area
         dse_dams = dse_dams / pasture_area
         dse_offs = dse_offs / pasture_area

@@ -107,7 +107,7 @@ for row in trials:
         stacked_summary = stacked_summary.append(summary)
     
     if report_run.loc['run_areasum', 'Run']:
-        option = 2
+        option = 1
         areasum = rep.f_area_summary(lp_vars, r_vals, option=option)
         areasum = pd.concat([areasum],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_areasum = stacked_areasum.append(areasum)
@@ -119,7 +119,7 @@ for row in trials:
 
     
     if report_run.loc['run_profitarea', 'Run']:
-        area_option = 4
+        area_option = 3
         profit_option = 0
         profitarea = pd.DataFrame(index=[trial_name], columns=['area','profit'])
         profitarea.loc[trial_name, 'area'] = rep.f_area_summary(lp_vars,r_vals,area_option)
@@ -598,7 +598,6 @@ if report_run.loc['run_areasum', 'Run']:
 if report_run.loc['run_pnl', 'Run']:
     rep.f_df2xl(writer, stacked_pnl, 'pnl', option=1)
 if report_run.loc['run_profitarea', 'Run']:
-    #todo need to fix the plot function
     plot = rep.f_xy_graph(stacked_profitarea)
     plot.savefig('Output/profitarea_curve.png')
 if report_run.loc['run_saleprice', 'Run']:
