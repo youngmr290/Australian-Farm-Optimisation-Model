@@ -6758,7 +6758,7 @@ def generator(params,r_vals,ev,plots = False):
     ## Call Steve's graph generator.
     ## Will be bypassed unless called from SheepTest.py or line below is uncommented
     if plots:
-        print('Interact with the graph generator using the PlotViewer spreadsheet')
+        print('Interact with the graph generator using the PlotViewer spreadsheet, kill each plot to continue')
     scan_spreadsheet = plots   # argument passed to the StockGen function. True if called from SheepTest
     #    scan_spreadsheet = True    #make line active to generate plots when called from exp.py
     while scan_spreadsheet:

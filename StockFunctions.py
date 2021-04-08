@@ -1220,8 +1220,8 @@ def f_mortality_base_mu(cd, cg, rc_start, ebg_start, d_nw_max, days_period):
     ## a minimum level of mortality per day that is increased if RC is below a threshold and LWG is below a threshold
     ### the mortality rate increases in a quadratic function for lower RC & greater disparity between EBG and normal gain
     rc_mortality_scalar = (np.minimum(0, rc_start - cd[24, ...]) / (cd[23, ...] - cd[24, ...]))**2
-    ebg_mortality_scalar = (np.minimum(0, ebg_start - cd[26, ...] - d_nw_max) / (cd[25, ...] - cd[26, ...]))**2
-    mortality = (cd[1, ...] + cd[22, ...] * rc_mortality_scalar * ebg_mortality_scalar) * days_period #mul by days period to convert from mort per day to per period
+    ebg_mortality_scalar = (np.minimum(0, ebg_start * cg[18, ...] - cd[26, ...] - d_nw_max) / (cd[25, ...] - cd[26, ...]))**2
+    mortality = (cd[1, ...] + cd[22, ...] * rc_mortality_scalar * ebg_mortality_scalar) * days_period  #mul by days period to convert from mort per day to per period
     return mortality
 
 
@@ -1464,8 +1464,8 @@ def f_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfoe
     '''
     This adjusts numbers for things like conception and mortality that happen during a given period
     '''
-    ##a) mortality
-    numbers = numbers * (1-mortality)
+    ##a) mortality (include np.maximum on mortality so that numbers can't become negative)
+    numbers = numbers * np.maximum(0, 1-mortality)
     ##numbers for post processing - don't include selling drys - assignment required here for when it is not group 1 or 2
     pp_numbers = numbers
     ##things for dams - prejoining and moving between classes

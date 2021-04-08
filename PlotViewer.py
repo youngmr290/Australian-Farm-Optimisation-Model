@@ -24,7 +24,7 @@ def read_spreadsheet():
 
 
 def create_plots(yvar1, yvar2, xlabels, wvar, xvar, plot_axes, dimensions, verticals):
-    yvar1, yvar2, wvar, xvar = np.broadcast_arrays(yvar1, yvar2, wvar, xvar);
+    yvar1, yvar2, wvar, xvar = np.broadcast_arrays(yvar1, yvar2, wvar, xvar)
     # yvar1, yvar2, xlabels, wvar, xvar = np.broadcast_arrays(yvar1, yvar2, xlabels, wvar, xvar);
 
     for datacol in dimensions.itertuples():  #for columns in each row
