@@ -38,6 +38,7 @@ import PropertyInputs as pinp
 import UniversalInputs as uinp
 import StructuralInputs as sinp
 import StockFunctions as sfun
+import FeedSupplyGenerator as fgen
 import Periods as per
 import PlotViewer as pv
 import sys,traceback
@@ -1722,7 +1723,8 @@ def generator(params,r_vals,ev,plots = False):
 
     ###a- create a ‘j0’ by ‘n’ array that is the multipliers that weight each ‘j0’ for that level of ‘n’
     ###the slices of j0 are Std, minimum & maximum respectively
-    ###the nut_mult does an array equivalent of feed supply = std + (max - std) * spread (if spread > 0)
+    ###the nut_mult does an array equivalent of feed supply = std + (max - std) * spread (if spread > 0, (min - std) if spread < 0)
+    ###the nut_mult step is carried out on FEC (MJ of MEI / intake volume required)
     nut_mult_g0_j0n = np.empty((j0_len,n_fs_g0))
     nut_mult_g0_j0n[0, ...] = 1 - np.abs(nut_spread_g0_n)
     nut_mult_g0_j0n[1, ...] = np.abs(np.minimum(0, nut_spread_g0_n))
@@ -1750,20 +1752,31 @@ def generator(params,r_vals,ev,plots = False):
     nut_mult_g3_j0n[:,nut_spread_g3_n >=3] = 0 #if nut_add exists then nut_mult=0
 
     ###c - feedsupply_std with n axis (instead of j axis).
+    #### an array to convert feedsupply to FEC and then to revert. Used to create the feedsupply with nut_spread.
+    #### the FeedSupplyGenerator is based on code from StockGenerator but with different period definitions
+    #todo there may be a way to save duplication of code
+    fec_p6f, feedsupply_f = fgen.feed_generator()
+
     nut_mult_g0_pk0k1k2j0nwzida0e0b0xyg = np.expand_dims(nut_mult_g0_j0n[na,na,na,na,...], axis = tuple(range(n_pos+1,0))) #expand axis to line up with feedsupply, add axis from g to n and j0 to p
     nut_add_g0_pk0k1k2nwzida0e0b0xyg = np.expand_dims(nut_add_g0_n, axis = (tuple(range(p_pos,n_pos)) + tuple(range(n_pos+1,0)))) #add axis from p to n and n to g
     t_feedsupply_pa1e1b1j0nwzida0e0b0xyg0 = np.expand_dims(t_feedsupply_pa1e1b1j0wzida0e0b0xyg0, axis = n_pos) #add n axis
-    feedsupply_std_pa1e1b1nwzida0e0b0xyg0 = np.sum(t_feedsupply_pa1e1b1j0nwzida0e0b0xyg0 * nut_mult_g0_pk0k1k2j0nwzida0e0b0xyg, axis = n_pos-1 ) #sum j axis, minus 1 because n axis was added therefore shifting j0 position (it was originally in the same place). Sum across j0 axis and leave just the n axis
+    t_fec_pa1e1b1j0nwzida0e0b0xyg0 = sfun.convert_fs2fec(t_feedsupply_pa1e1b1j0nwzida0e0b0xyg0, fec_p6f, feedsupply_f) #convert fs to fec
+    fec_std_pa1e1b1nwzida0e0b0xyg0 = np.sum(t_fec_pa1e1b1j0nwzida0e0b0xyg0 * nut_mult_g0_pk0k1k2j0nwzida0e0b0xyg, axis = n_pos-1 ) #sum j axis, minus 1 because n axis was added therefore shifting j0 position (it was originally in the same place). Sum across j0 axis and leave just the n axis
+    feedsupply_std_pa1e1b1nwzida0e0b0xyg0 = sfun.convert_fec2fs(fec_std_pa1e1b1nwzida0e0b0xyg0, fec_p6f, feedsupply_f, axis = n_pos) #convert fec back to fs
 
     nut_mult_g1_pk0k1k2j0nwzida0e0b0xyg = np.expand_dims(nut_mult_g1_j0n[na,na,na,na,...], axis = tuple(range(n_pos+1,0))) #expand axis to line up with feedsupply, add axis from g to n and j0 to p
     nut_add_g1_pk0k1k2nwzida0e0b0xyg = np.expand_dims(nut_add_g1_n, axis = (tuple(range(p_pos,n_pos)) + tuple(range(n_pos+1,0)))) #add axis from p to n and n to g
     t_feedsupply_pa1e1b1j0nwzida0e0b0xyg1 = np.expand_dims(t_feedsupply_pa1e1b1j0wzida0e0b0xyg1, axis = n_pos) #add n axis
-    feedsupply_std_pa1e1b1nwzida0e0b0xyg1 = np.sum(t_feedsupply_pa1e1b1j0nwzida0e0b0xyg1 * nut_mult_g1_pk0k1k2j0nwzida0e0b0xyg, axis = n_pos-1 ) #minus 1 because n axis was added therefore shifting j0 position (it was originally in the place of n). Sum across j0 axis leaving the n axis
+    t_fec_pa1e1b1j0nwzida0e0b0xyg1 = sfun.convert_fs2fec(t_feedsupply_pa1e1b1j0nwzida0e0b0xyg1, fec_p6f, feedsupply_f) #convert fs to fec
+    fec_std_pa1e1b1nwzida0e0b0xyg1 = np.sum(t_fec_pa1e1b1j0nwzida0e0b0xyg1 * nut_mult_g1_pk0k1k2j0nwzida0e0b0xyg, axis = n_pos-1 ) #minus 1 because n axis was added therefore shifting j0 position (it was originally in the place of n). Sum across j0 axis leaving the n axis
+    feedsupply_std_pa1e1b1nwzida0e0b0xyg1 = sfun.convert_fec2fs(fec_std_pa1e1b1nwzida0e0b0xyg1, fec_p6f, feedsupply_f, axis = n_pos) #convert fec back to fs
 
     nut_mult_g3_pk0k1k2j0nwzida0e0b0xyg = np.expand_dims(nut_mult_g3_j0n[na,na,na,na,...], axis = tuple(range(n_pos+1,0))) #expand axis to line up with feedsupply, add axis from g to n and j0 to p
     nut_add_g3_pk0k1k2nwzida0e0b0xyg = np.expand_dims(nut_add_g3_n, axis = (tuple(range(p_pos,n_pos)) + tuple(range(n_pos+1,0)))) #add axis from p to n and n to g
     t_feedsupply_pa1e1b1j0nwzida0e0b0xyg3 = np.expand_dims(t_feedsupply_pa1e1b1j0wzida0e0b0xyg3, axis = n_pos) #add n axis
-    feedsupply_std_pa1e1b1nwzida0e0b0xyg3 = np.sum(t_feedsupply_pa1e1b1j0nwzida0e0b0xyg3 * nut_mult_g3_pk0k1k2j0nwzida0e0b0xyg, axis = n_pos-1 ) #minus 1 because n axis was added therefore shifting j0 position (it was originally in the same place). Sum across j0 axis and leave just the n axis
+    t_fec_pa1e1b1j0nwzida0e0b0xyg3 = sfun.convert_fs2fec(t_feedsupply_pa1e1b1j0nwzida0e0b0xyg0, fec_p6f, feedsupply_f) #convert fs to fec
+    fec_std_pa1e1b1nwzida0e0b0xyg3 = np.sum(t_fec_pa1e1b1j0nwzida0e0b0xyg3 * nut_mult_g3_pk0k1k2j0nwzida0e0b0xyg, axis = n_pos-1 ) #minus 1 because n axis was added therefore shifting j0 position (it was originally in the same place). Sum across j0 axis and leave just the n axis
+    feedsupply_std_pa1e1b1nwzida0e0b0xyg3 = sfun.convert_fec2fs(fec_std_pa1e1b1nwzida0e0b0xyg3, fec_p6f, feedsupply_f, axis = n_pos) #convert fec back to fs
 
     ###Ensure that feed supplies generated by nut_spread inputs < 3 are less than 3
     feedsupply_std_pa1e1b1nwzida0e0b0xyg0 = np.minimum(2.99, feedsupply_std_pa1e1b1nwzida0e0b0xyg0)
