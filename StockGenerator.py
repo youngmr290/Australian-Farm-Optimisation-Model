@@ -5506,14 +5506,26 @@ def generator(params,r_vals,ev,plots = False):
                                                                               index_k5tva1e1b1nwzida0e0b0xyg3[:,na,...],
                                                                               numbers_start_va1e1b1nwzida0e0b0xyg3,
                                                                               mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3)
-    ##sale date - no numbers needed because they don't effect sale date
-    r_saledate_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs',
-                                                                              r_saledate_tva1e1b1nwzida0e0b0xyg3,
+
+    ##sale date - no numbers needed because they don't effect sale date. need to mask the denominator so that only the d, e, b slices where the animal was sold is used in the divide.
+    ###cant use production function becasue need to mask the denominator.
+    r_saledate_k3k5tva1e1b1nwzida0e0b0xyg3 = fun.f_divide(np.sum(r_saledate_tva1e1b1nwzida0e0b0xyg3 * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)
+                                                                 * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)
+                                                                 , axis = (sinp.stock['i_d_pos'], sinp.stock['i_b0_pos'], sinp.stock['i_e0_pos']), keepdims=True),
+                                                          np.sum((a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3) * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)*
+                                                                 (r_saledate_tva1e1b1nwzida0e0b0xyg3!=0), #need to include this mask to make sure we are only averaging the sale date with e,b,d slice animals that were sold.
+                                                                 axis=(sinp.stock['i_d_pos'], sinp.stock['i_b0_pos'], sinp.stock['i_e0_pos']), keepdims=True))
+
+    ##on hand - this is used so that the numbers report can have a p axis so the number of animals can be more specific than just dvp
+    r_on_hand_tvpa1e1b1nwzida0e0b0xyg1 = on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+    r_on_hand_tvpa1e1b1nwzida0e0b0xyg3 = on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
+    r_on_hand_k3k5tvpa1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs', r_on_hand_tvpa1e1b1nwzida0e0b0xyg3,
                                                                               a_k3cluster_da0e0b0xyg3,
-                                                                              index_k3k5tva1e1b1nwzida0e0b0xyg3,
+                                                                              index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],
                                                                               a_k5cluster_da0e0b0xyg3,
-                                                                              index_k5tva1e1b1nwzida0e0b0xyg3,
-                                                                              mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3)
+                                                                              index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...],
+                                                                              mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3[:,na,...])
+
 
     ##wool value
     r_woolvalue_ctva1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param('sire',r_woolvalue_ctva1e1b1nwzida0e0b0xyg0,
@@ -6563,6 +6575,9 @@ def generator(params,r_vals,ev,plots = False):
 
     ###sale date
     r_vals['saledate_k3k5tvnwziaxyg3'] = r_saledate_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
+
+    ###on hand
+    r_vals['on_hand_k3k5tvnwziaxyg3'] = r_on_hand_tvpa1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
 
     ###wbe (Note: the shape has a singleton t axis, just that t is not in the name)
     r_vals['wbe_k2tva1nwziyg1'] = r_wbe_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2va1nwziyg1_shape)

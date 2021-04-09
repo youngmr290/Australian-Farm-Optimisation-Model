@@ -142,9 +142,9 @@ for row in trials:
         weights = 'offs_numbers_k3k5tvnwziaxyg3'
         keys = 'offs_keys_k3k5tvnwziaxyg3'
         arith = 1
-        arith_axis = [4,6,7,8,9,10,11]
+        arith_axis = [4,6,7,8,10,11]
         index =[3,5]
-        cols =[0,1,2]
+        cols =[0,1,2,9]
         saledate_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
                                keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols).astype('datetime64[D]')
         saledate_offs = pd.concat([saledate_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
@@ -621,6 +621,8 @@ if report_run.loc['run_profitarea', 'Run']:
 if report_run.loc['run_saleprice', 'Run']:
     rep.f_df2xl(writer, stacked_saleprice, 'saleprice', option=1)
 if report_run.loc['run_saledate_offs', 'Run']:
+    stacked_saledate_offs = stacked_saledate_offs.astype(object)
+    stacked_saledate_offs[stacked_saledate_offs==np.datetime64('1970-01-01')] = '-'
     rep.f_df2xl(writer, stacked_saledate_offs, 'saledate_offs', option=1)
 if report_run.loc['run_cfw_dams', 'Run']:
     rep.f_df2xl(writer, stacked_cfw_dams, 'cfw_dams', option=1)
