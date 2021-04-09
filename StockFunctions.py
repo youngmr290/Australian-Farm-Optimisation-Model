@@ -1079,7 +1079,26 @@ def f_emissions_bc(ch, intake_f, intake_s, md_solid, level):
     return ch4_total, ch4_animal
 
 
+def convert_fs2fec(fs_input, fec_p6f, feedsupply_f):
+    ##convert a feed supply array (feed) and return an fec array using a conversion array (fec_p6f) for a corresponding feedsupply (feedsupply_f)
+    ## expect feed to have a p axis as axis 0.
+    ###the position of the feedsupply input in the conversion array
+    fs_col = np.searchsorted(feedsupply_f, fs_input, 'right') - 1
+    ###the value from the conversion array in column fs_col in the row associated with the feed period for that generator period.
+    fec = fec_p6f[a_p6_pz[index_p], fs_col]
+    return fec
 
+
+def convert_fec2fs(fec_input, fec_p6f, feedsupply_f, axis):
+    ##convert a feed supply array (feed) and return an fec array using a conversion array (fec_p6f) for a corresponding feedsupply (feedsupply_f)
+    ## expect feed to have a p axis as axis 0.
+    ### multi dim search sorted requires the axes to be the same, so convert p6 to p in the lookup array
+    fec_pzf = fec_p6f[a_p6_pz, :] # todo needs a z axis in the answer. What is the best position?
+    ###the position of the feedsupply input in the conversion array
+    fs_col = fun.searchsort_multiple_dim(fec_pzf, fec_input, 1, 0, axis, 0, 'right') - 1  #todo is this going to work with a z axis in the a array?
+    ###the value from the feedsupply array in column fs_col.
+    fs = feedsupply_f[fs_col]
+    return fs
 
 
 def f_feedsupply(feedsupply_std_a1e1b1nwzida0e0b0xyg, paststd_foo_a1e1b1j0wzida0e0b0xyg, paststd_dmd_a1e1b1j0wzida0e0b0xyg, paststd_hf_a1e1b1j0wzida0e0b0xyg, pi):
