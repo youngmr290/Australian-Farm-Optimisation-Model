@@ -5510,9 +5510,9 @@ def generator(params,r_vals,ev,plots = False):
     r_saledate_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs',
                                                                               r_saledate_tva1e1b1nwzida0e0b0xyg3,
                                                                               a_k3cluster_da0e0b0xyg3,
-                                                                              index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...],
+                                                                              index_k3k5tva1e1b1nwzida0e0b0xyg3,
                                                                               a_k5cluster_da0e0b0xyg3,
-                                                                              index_k5tva1e1b1nwzida0e0b0xyg3[:,na,...],
+                                                                              index_k5tva1e1b1nwzida0e0b0xyg3,
                                                                               mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3)
 
     ##wool value
