@@ -613,7 +613,7 @@ def generator(params,r_vals,ev,plots = False):
                                                        right_pos3=n_pos)  # p6 axis converted to p axis later (association section), axis order doesnt matter because sliced when used
     paststd_dmd_p6a1e1b1j0wzida0e0b0xyg = pinp.f_seasonal_inp(paststd_dmd_p6a1e1b1j0wzida0e0b0xyg,numpy=True,axis=z_pos)
     ##season type probability
-    if pinp.general['steady_state']:
+    if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1:
         i_season_propn_z = fun.f_expand(np.ones_like(pinp.general['i_season_propn_z']),z_pos)
         season_propn_zida0e0b0xyg = pinp.f_seasonal_inp(i_season_propn_z,numpy=True,axis=z_pos)
     else:
@@ -6436,7 +6436,7 @@ def generator(params,r_vals,ev,plots = False):
     r_vals['keys_p6'] = keys_p6
 
     ##season prob
-    if pinp.general['steady_state']:
+    if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1:
         r_vals['prob_z'] = 1
     else:
         r_vals['prob_z'] = i_season_propn_z
