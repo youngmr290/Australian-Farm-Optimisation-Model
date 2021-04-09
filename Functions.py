@@ -177,7 +177,7 @@ def searchsort_multiple_dim(a,v,axis_a0,axis_a1,axis_v0,axis_v1, side='left'):
     #     slc_v[axis_v] = slice(i, i+1)
     #     slc_a[axis_a] = slice(i, i+1)
     #     final[tuple(slc_v)] = np.searchsorted(np.squeeze(a[tuple(slc_a)]), v[tuple(slc_v)])
-    final = np.zeros_like(v)
+    final = np.zeros_like(v).astype(int)
     slc_a = [slice(None)] * len(a.shape)
     slc_v = [slice(None)] * len(v.shape)
     for i in range(a.shape[axis_a0]):

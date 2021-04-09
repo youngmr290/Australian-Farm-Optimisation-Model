@@ -1079,25 +1079,27 @@ def f_emissions_bc(ch, intake_f, intake_s, md_solid, level):
     return ch4_total, ch4_animal
 
 
-def convert_fs2fec(fs_input, fec_p6f, feedsupply_f):
+def convert_fs2fec(fs_input, fec_p6f, feedsupply_f, a_p6_pa1e1b1nwzida0e0b0xyg):
     ##convert a feed supply array (feed) and return an fec array using a conversion array (fec_p6f) for a corresponding feedsupply (feedsupply_f)
     ## expect feed to have a p axis as axis 0.
     ###the position of the feedsupply input in the conversion array
-    fs_col = np.searchsorted(feedsupply_f, fs_input, 'right') - 1
+    fs_col_pa1e1b1nwzida0e0b0xyg = np.searchsorted(feedsupply_f, fs_input, 'right') - 1
     ###the value from the conversion array in column fs_col in the row associated with the feed period for that generator period.
-    fec = fec_p6f[a_p6_pz[index_p], fs_col]
-    return fec
+    fec_pa1e1b1nwzida0e0b0xygf = fec_p6f[a_p6_pa1e1b1nwzida0e0b0xyg, :]
+    fec_pa1e1b1nwzida0e0b0xygf = np.take_along_axis(fec_pa1e1b1nwzida0e0b0xygf, fs_col_pa1e1b1nwzida0e0b0xyg[...,na], axis=-1)
+    return fec_pa1e1b1nwzida0e0b0xygf[...,0] #remove singleton f axis - no longer needed.
 
 
-def convert_fec2fs(fec_input, fec_p6f, feedsupply_f, axis):
+def convert_fec2fs(fec_input, fec_p6f, feedsupply_f, a_p6_pz):
     ##convert a feed supply array (feed) and return an fec array using a conversion array (fec_p6f) for a corresponding feedsupply (feedsupply_f)
     ## expect feed to have a p axis as axis 0.
     ### multi dim search sorted requires the axes to be the same, so convert p6 to p in the lookup array
-    fec_pzf = fec_p6f[a_p6_pz, :] # todo needs a z axis in the answer. What is the best position?
+    fec_pzf = fec_p6f[a_p6_pz, :]
     ###the position of the feedsupply input in the conversion array
-    fs_col = fun.searchsort_multiple_dim(fec_pzf, fec_input, 1, 0, axis, 0, 'right') - 1  #todo is this going to work with a z axis in the a array?
+    z_pos = sinp.stock['i_z_pos']
+    fs_col_pa1e1b1nwzida0e0b0xyg = fun.searchsort_multiple_dim(fec_pzf, fec_input, 0, 1, 0, z_pos, 'right') - 1
     ###the value from the feedsupply array in column fs_col.
-    fs = feedsupply_f[fs_col]
+    fs = feedsupply_f[fs_col_pa1e1b1nwzida0e0b0xyg]
     return fs
 
 
