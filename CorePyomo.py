@@ -437,8 +437,7 @@ def coremodel_all(params, trial_name):
             Variables that contain a time series set (eg dvp & lp & fp) are automatically allocated to a stage using the code below.
             The other variables are allocated to a stage manually by the user.
         '''
-        #todo include some error handling - eg can't run multiple TOL at the same time (cant remember why).
-        #todo each variable needs to assigned to stage - give error if that does not happen, this would be good but cant think of a good way to do it since variables can be in multiple stages. Maybe just check that the variable is in any stage and assume if it is in any stage then it is corect
+        #todo include some error handling - each variable needs to assigned to stage - give error if that does not happen, this would be good but cant think of a good way to do it since variables can be in multiple stages. Maybe just check that the variable is in any stage and assume if it is in any stage then it is corect
         # buy grain may not be in stage 3, i feel like you retain grain for the year ahead without knowing the type of season. but then the model will just counter by altering sale of grain.
 
 
@@ -576,7 +575,7 @@ def coremodel_all(params, trial_name):
         stage_info['lbrk_spr2end']['sets'].extend(list(keys_prog[prog_born >= spr_start]))
 
         ##allocate variable into stages using the allocated sets
-        stage_info['root']['vars'] = ['v_quantity_perm[*]','v_quantity_manager[*]','v_sire[*]','v_buy_grain[*,*]']
+        stage_info['root']['vars'] = ['v_quantity_perm[*]','v_quantity_manager[*]','v_sire[*]','v_buy_grain[*,*]','v_root_hist[*,*]']
         stage_info['ebrk2mbrk']['vars'] = []
         stage_info['ebrk2spr']['vars'] = ['v_phase_area[*,*]']
         stage_info['mbrk2spr']['vars'] = ['v_phase_area[*,*]']
@@ -820,6 +819,7 @@ def coremodel_all(params, trial_name):
 
         def pysp_instance_creation_callback(scenario_name,node_names):
             instance = model.clone()
+            print('cloning: ',scenario_name)
             ##stubble
             instance.p_fp_transfer.store_values(params['stub'][scenario_name]['per_transfer'])
             instance.p_a_req.store_values(params['stub'][scenario_name]['cat_a_st_req'])

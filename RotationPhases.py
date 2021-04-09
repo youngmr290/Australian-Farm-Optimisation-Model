@@ -39,13 +39,13 @@ def rot_params(params):
     #############################
     #rotation phase constraint1 #
     #############################    
-    rot_con1 = pd.read_excel('Rotation.xlsx', sheet_name='rotation con1', header= None, engine='openpyxl')#, index_col = [0,1]) #couldn't get it to read in with multiindex for some reason
-    params['hist'] =rot_con1.iloc[:,1] # this is a list of each history for each rotation in con1.
-    rot_con1 = rot_con1.set_index([0,1])
-    params['rot_con1'] =rot_con1.squeeze().to_dict()
-    # rot_con2 = pd.read_excel('Rotation.xlsx', sheet_name='rotation con2', header= None)
-    # rot_con2 = rot_con2.set_index([0,1])
-    # rot_con2 =rot_con2.squeeze().to_dict()
+    rot_req = pd.read_excel('Rotation.xlsx', sheet_name='rotation_req', header= None, engine='openpyxl')#, index_col = [0,1]) #couldn't get it to read in with multiindex for some reason
+    rot_prov = pd.read_excel('Rotation.xlsx', sheet_name='rotation_prov', header= None, engine='openpyxl')#, index_col = [0,1]) #couldn't get it to read in with multiindex for some reason
+    rot_req = rot_req.set_index([0,1])
+    rot_prov = rot_prov.set_index([0,1])
+    # params['rot_req_keys'] = rot_req.squeeze().to_dict().keys()
+    params['hist_prov'] = rot_prov.squeeze().to_dict()
+    params['hist_req'] = rot_req.squeeze().to_dict()
 
 
 
