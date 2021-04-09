@@ -142,8 +142,8 @@ for row in trials:
         weights = 'offs_numbers_k3k5tvnwziaxyg3'
         keys = 'offs_keys_k3k5tvnwziaxyg3'
         arith = 1
-        arith_axis = [4,5,6,7,8,9,10,11]
-        index =[3]
+        arith_axis = [4,6,7,8,9,10,11]
+        index =[3,5]
         cols =[0,1,2]
         saledate_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
                                keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols).astype('datetime64[D]')
@@ -371,7 +371,7 @@ for row in trials:
         keys = 'dams_keys_k2p6ftvanwziy1g1'
         arith = 1
         arith_axis = [3,5,6,7,8,9,10,11]    # for FP only [2,3,4,5,6,7,8,9,10,11]
-        index =[1,4]                                    # [1]
+        index =[4,1]                                    # [1]
         cols =[0,2]                                     # [0]
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
@@ -391,7 +391,7 @@ for row in trials:
         keys = 'dams_keys_k2p6ftvanwziy1g1'
         arith = 1
         arith_axis = [3,5,6,7,8,9,10,11]    # for FP only [2,3,4,5,6,7,8,9,10,11]
-        index =[1,4]                                    # [1]
+        index =[4,1]                                    # [1]
         cols =[0,2]                                     # [0]
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
