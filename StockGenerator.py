@@ -5530,14 +5530,18 @@ def generator(params,r_vals,ev,plots = False):
                                                                  axis=(sinp.stock['i_d_pos'], sinp.stock['i_b0_pos'], sinp.stock['i_e0_pos']), keepdims=True))
 
     ##on hand - this is used so that the numbers report can have a p axis so the number of animals can be more specific than just dvp
-    # r_on_hand_tvpa1e1b1nwzida0e0b0xyg1 = on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
-    # r_on_hand_tvpa1e1b1nwzida0e0b0xyg3 = on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
-    # r_on_hand_k3k5tvpa1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs', r_on_hand_tvpa1e1b1nwzida0e0b0xyg3,
-    #                                                                           a_k3cluster_da0e0b0xyg3,
-    #                                                                           index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],
-    #                                                                           a_k5cluster_da0e0b0xyg3,
-    #                                                                           index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...],
-    #                                                                           mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3[:,na,...])
+    r_on_hand_tvpa1e1b1nwzida0e0b0xyg1 = on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+    r_on_hand_tvpa1e1b1nwzida0e0b0xyg3 = on_hand_tpa1e1b1nwzida0e0b0xyg3[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
+    r_on_hand_k2tvpa1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams', r_on_hand_tvpa1e1b1nwzida0e0b0xyg1,
+                                                                              a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...],
+                                                                              index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],
+                                                                              mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1[:,na,...])
+    r_on_hand_k3k5tvpa1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs', r_on_hand_tvpa1e1b1nwzida0e0b0xyg3,
+                                                                              a_k3cluster_da0e0b0xyg3,
+                                                                              index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],
+                                                                              a_k5cluster_da0e0b0xyg3,
+                                                                              index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...],
+                                                                              mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3[:,na,...])
 
 
     ##wool value
@@ -6505,6 +6509,8 @@ def generator(params,r_vals,ev,plots = False):
                                              keys_y1, keys_g1]
     r_vals['dams_keys_k2tvaebnwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_a, keys_e, keys_b, keys_n1, keys_lw1, keys_z, keys_i,
                                              keys_y1, keys_g1]
+    r_vals['dams_keys_k2tvpanwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_n1, keys_lw1, keys_z, keys_i,
+                                             keys_y1, keys_g1]
     r_vals['dams_keys_k2tvpaebnwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1, keys_z, keys_i,
                                              keys_y1, keys_g1]
     r_vals['dams_keys_k2p6ftvanwziy1g1'] = [keys_k2, keys_p6, keys_f, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1,
@@ -6512,6 +6518,8 @@ def generator(params,r_vals,ev,plots = False):
     r_vals['prog_keys_k5twzida0xg2'] = [keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i, keys_d, keys_a, keys_x, keys_g2]
     r_vals['prog_keys_zia0xg2w9'] = [keys_z, keys_i, keys_a, keys_x, keys_g2, keys_lw_prog]
     r_vals['offs_keys_k3k5tvnwziaxyg3'] = [keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i,
+                                               keys_a, keys_x, keys_y3, keys_g3]
+    r_vals['offs_keys_k3k5tvpnwziaxyg3'] = [keys_k3, keys_k5, keys_t3, keys_v3, keys_p3, keys_n3, keys_lw3, keys_z, keys_i,
                                                keys_a, keys_x, keys_y3, keys_g3]
     r_vals['offs_keys_k3k5tvpnwzidaebxyg3'] = [keys_k3, keys_k5, keys_t3, keys_v3, keys_p3, keys_n3, keys_lw3, keys_z, keys_i,
                                                keys_d, keys_a, keys_e0, keys_b0, keys_x, keys_y3, keys_g3]
@@ -6534,10 +6542,15 @@ def generator(params,r_vals,ev,plots = False):
     ####kveb
     k2tva1e1b1nwziyg1_shape = len_k2, len_t1, len_v1, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
 
-    ####kpveb
+    ####kvpeb
     pzg0_shape = len_p, len_z, len_g0
     k2vpa1e1b1nwziyg1_shape = len_k2, len_v1, len_p, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
     k3k5vpnwzidae0b0xyg3_shape = len_k3, len_k5, len_v3, len_p3, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3
+
+    ####ktvp
+    pzg0_shape = len_p, len_z, len_g0
+    k2tvpa1nwziyg1_shape = len_k2, len_t1, len_v1, len_p, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
+    k3k5tvpnwziaxyg3_shape = len_k3, len_k5, len_t3, len_v3, len_p3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
     ####p6
     p6zg0_shape = len_p6, len_z, len_g0
@@ -6590,7 +6603,9 @@ def generator(params,r_vals,ev,plots = False):
     r_vals['saledate_k3k5tvnwziaxyg3'] = r_saledate_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
 
     ###on hand
-    # r_vals['on_hand_k3k5tvnwziaxyg3'] = r_on_hand_tvpa1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
+    if pinp.rep['i_store_on_hand']:
+        r_vals['on_hand_k2tvpa1nwziyg1'] = r_on_hand_k2tvpa1e1b1nwzida0e0b0xyg1.reshape(k2tvpa1nwziyg1_shape)
+        r_vals['on_hand_k3k5tvpnwziaxyg3'] = r_on_hand_k3k5tvpa1e1b1nwzida0e0b0xyg3.reshape(k3k5tvpnwziaxyg3_shape)
 
     ###wbe (Note: the shape has a singleton t axis, just that t is not in the name)
     r_vals['wbe_k2tva1nwziyg1'] = r_wbe_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2va1nwziyg1_shape)

@@ -16,16 +16,14 @@ To add a report:
 4. add if statement to store final report to excel
 
 Note: If reporting dates from a numpy array it is necessary to convert to datetime64[ns] prior to converting to a DataFrame
-
-For example:
-data_df3 = pd.DataFrame(fvp_fdams.astype('datetime64[ns]'))  # conversion to dataframe only works with this datatype
+    For example:
+    data_df3 = pd.DataFrame(fvp_fdams.astype('datetime64[ns]'))  # conversion to dataframe only works with this datatype
 
 @author: Young
 """
 
 import numpy as np
 import pandas as pd
-
 
 import ReportFunctions as rep
 import Functions as fun
@@ -57,41 +55,43 @@ rep.f_errors(exp_data_index, trial_outdated, trials)
 report_run = pd.read_excel('exp.xlsm', sheet_name='Run Report', index_col=[0], header=[0], engine='openpyxl')
 
 ##create empty df to stack each trial results into
-stacked_summary = pd.DataFrame()  # create df to append table from each trial
-stacked_areasum = pd.DataFrame()  # create df to append table from each trial
-stacked_pnl = pd.DataFrame()  # create df to append table from each trial
-stacked_profitarea = pd.DataFrame()  # create df to append table from each trial
-stacked_saleprice = pd.DataFrame()  # create df to append table from each trial
-stacked_saledate_offs = pd.DataFrame()  # create df to append table from each trial
-stacked_cfw_dams = pd.DataFrame()  # create df to append table from each trial
-stacked_fd_dams = pd.DataFrame()  # create df to append table from each trial
-stacked_wbe_dams = pd.DataFrame()  # create df to append table from each trial
-stacked_wbe_offs = pd.DataFrame()  # create df to append table from each trial
-stacked_lw_dams = pd.DataFrame()  # create df to append table from each trial
-stacked_ffcfw_dams = pd.DataFrame()  # create df to append table from each trial
-stacked_fec_dams = pd.DataFrame()  # create df to append table from each trial
-stacked_ffcfw_prog = pd.DataFrame()  # create df to append table from each trial
-stacked_fec_offs = pd.DataFrame()  # create df to append table from each trial
-stacked_weanper = pd.DataFrame()  # create df to append table from each trial
-stacked_scanper = pd.DataFrame()  # create df to append table from each trial
-stacked_dry_propn = pd.DataFrame()  # create df to append table from each trial
-stacked_lamb_survival = pd.DataFrame()  # create df to append table from each trial
-stacked_daily_mei_dams = pd.DataFrame()  # create df to append table from each trial
-stacked_daily_pi_dams = pd.DataFrame()  # create df to append table from each trial
-stacked_numbers_dams = pd.DataFrame()  # create df to append table from each trial
-stacked_numbers_prog = pd.DataFrame()  # create df to append table from each trial
-stacked_numbers_offs = pd.DataFrame()  # create df to append table from each trial
-stacked_dse = pd.DataFrame()  # create df to append table from each trial
-stacked_dse1 = pd.DataFrame()  # create df to append table from each trial
-stacked_grnfoo = pd.DataFrame()  # create df to append table from each trial
-stacked_dryfoo = pd.DataFrame()  # create df to append table from each trial
-stacked_napfoo = pd.DataFrame()  # create df to append table from each trial
-stacked_grncon = pd.DataFrame()  # create df to append table from each trial
-stacked_drycon = pd.DataFrame()  # create df to append table from each trial
-stacked_napcon = pd.DataFrame()  # create df to append table from each trial
-stacked_poccon = pd.DataFrame()  # create df to append table from each trial
-stacked_supcon = pd.DataFrame()  # create df to append table from each trial
-stacked_stubcon = pd.DataFrame()  # create df to append table from each trial
+stacked_summary = pd.DataFrame()  # 1 line summary of each trial
+stacked_areasum = pd.DataFrame()  # area summary
+stacked_pnl = pd.DataFrame()  # profit and loss statement
+stacked_profitarea = pd.DataFrame()  # profit by land area
+stacked_saleprice = pd.DataFrame()  # sale price
+stacked_saledate_offs = pd.DataFrame()  # offs sale date
+stacked_cfw_dams = pd.DataFrame()  # clean fleece weight dams
+stacked_fd_dams = pd.DataFrame()  # fibre diameter dams
+stacked_wbe_dams = pd.DataFrame()  # whole body energy content dams
+stacked_wbe_offs = pd.DataFrame()  # whole body energy content offs
+stacked_lw_dams = pd.DataFrame()  # live weight dams (large array with p, e and b axis)
+stacked_ffcfw_dams = pd.DataFrame()  # fleece free conceptus free dams (large array with p, e and b axis)
+stacked_fec_dams = pd.DataFrame()  # feed energy content dams (large array with p, e and b axis)
+stacked_ffcfw_prog = pd.DataFrame()  # fleece free conceptus free weight dams (large array with p, e and b axis)
+stacked_fec_offs = pd.DataFrame()  # feed energy content offs (large array with p, e and b axis)
+stacked_weanper = pd.DataFrame()  # weaning percent
+stacked_scanper = pd.DataFrame()  # scan percent
+stacked_dry_propn = pd.DataFrame()  # dry ewe proportion
+stacked_lamb_survival = pd.DataFrame()  # lamb survival
+stacked_daily_mei_dams = pd.DataFrame()  # mei dams
+stacked_daily_pi_dams = pd.DataFrame()  # potential intake dams
+stacked_numbers_dams = pd.DataFrame()  # numbers dams
+stacked_numbers_dams_p = pd.DataFrame()  # numbers dams with p axis (large array)
+stacked_numbers_prog = pd.DataFrame()  # numbers prog
+stacked_numbers_offs = pd.DataFrame()  # numbers offs
+stacked_numbers_offs_p = pd.DataFrame()  # numbers offs with p axis (large array)
+stacked_dse = pd.DataFrame()  # dse based on normal weight
+stacked_dse1 = pd.DataFrame()  # dse based on mei
+stacked_grnfoo = pd.DataFrame()  # green foo
+stacked_dryfoo = pd.DataFrame()  # dry foo
+stacked_napfoo = pd.DataFrame()  # non arable pasture foo
+stacked_grncon = pd.DataFrame()  # green pasture consumed
+stacked_drycon = pd.DataFrame()  # dry pasture consumed
+stacked_napcon = pd.DataFrame()  # non arable pasture feed consumed
+stacked_poccon = pd.DataFrame()  # pasture on crop paddocks feed consumed
+stacked_supcon = pd.DataFrame()  # supplement feed consumed
+stacked_stubcon = pd.DataFrame()  # stubble feed consumed
 
 ##read in the pickled results
 report_data = {}
@@ -419,7 +419,25 @@ for row in trials:
         numbers_dams = pd.concat([numbers_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_numbers_dams = stacked_numbers_dams.append(numbers_dams)
 
-    
+    if report_run.loc['run_numbers_dams_p', 'Run']:
+        type = 'stock'
+        prod = 'on_hand_k2tvpa1nwziyg1'
+        weights = 'dams_numbers_k2tvanwziy1g1'
+        na_weights = [3]
+        keys = 'dams_keys_k2tvpanwziy1g1'
+        arith = 2
+        arith_axis = [2,4,5,6,7,8,9,10]
+        index =[3]
+        cols =[0,1]
+        axis_slice = {}
+        # axis_slice[0] = [0, 2, 1]
+        numbers_dams_p = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
+                               na_weights=na_weights, keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols,
+                               axis_slice=axis_slice)
+        numbers_dams_p = pd.concat([numbers_dams_p],keys=[trial_name],names=['Trial'])  # add trial name as index level
+        stacked_numbers_dams_p = stacked_numbers_dams_p.append(numbers_dams_p)
+
+
     if report_run.loc['run_numbers_prog', 'Run']:
         type = 'stock'
         weights = 'prog_numbers_k5twzida0xg2'
@@ -453,7 +471,25 @@ for row in trials:
         numbers_offs = pd.concat([numbers_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_numbers_offs = stacked_numbers_offs.append(numbers_offs)
 
-    
+    if report_run.loc['run_numbers_offs_p', 'Run']:
+        type = 'stock'
+        prod = 'on_hand_k3k5tvpnwziaxyg3'
+        weights = 'offs_numbers_k3k5tvnwziaxyg3'
+        na_weights = [4]
+        keys = 'offs_keys_k3k5tvpnwziaxyg3'
+        arith = 2
+        arith_axis = [3,5,6,7,8,9,10,11,12]
+        index =[4]
+        cols =[0,1,2]
+        axis_slice = {}
+        # axis_slice[0] = [0, 2, 1]
+        numbers_offs_p = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
+                               na_weights=na_weights, keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols,
+                               axis_slice=axis_slice)
+        numbers_offs_p = pd.concat([numbers_offs_p],keys=[trial_name],names=['Trial'])  # add trial name as index level
+        stacked_numbers_offs_p = stacked_numbers_offs_p.append(numbers_offs_p)
+
+
     if report_run.loc['run_dse', 'Run']:
         method = 0
         per_ha = True
@@ -656,10 +692,14 @@ if report_run.loc['run_daily_pi_dams', 'Run']:
     rep.f_df2xl(writer, stacked_daily_pi_dams, 'daily_pi_dams', option=1)
 if report_run.loc['run_numbers_dams', 'Run']:
     rep.f_df2xl(writer, stacked_numbers_dams, 'numbers_dams', option=1)
+if report_run.loc['run_numbers_dams_p', 'Run']:
+    rep.f_df2xl(writer, stacked_numbers_dams_p, 'numbers_dams', option=1)
 if report_run.loc['run_numbers_prog', 'Run']:
     rep.f_df2xl(writer, stacked_numbers_prog, 'numbers_prog', option=1)
 if report_run.loc['run_numbers_offs', 'Run']:
     rep.f_df2xl(writer, stacked_numbers_offs, 'numbers_offs', option=1)
+if report_run.loc['run_numbers_offs_p', 'Run']:
+    rep.f_df2xl(writer, stacked_numbers_offs_p, 'numbers_offs_p', option=1)
 if report_run.loc['run_dse', 'Run']:
     rep.f_df2xl(writer, stacked_dse, 'dse_wt', option=1)
     rep.f_df2xl(writer, stacked_dse1, 'dse_mei', option=1)
