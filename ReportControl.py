@@ -184,7 +184,8 @@ for row in trials:
 
     if report_run.loc['run_wbe_dams', 'Run']:
         type = 'stock'
-        prod = 'wbe_k2tva1nwziyg1'
+        prod = 'wbe_k2va1nwziyg1'
+        na_prod = [1]
         weights = 'dams_numbers_k2tvanwziy1g1'
         keys = 'dams_keys_k2tvanwziy1g1'
         arith = 1
@@ -193,13 +194,15 @@ for row in trials:
         cols =[0]
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
-        wbe_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
+        wbe_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
         wbe_dams = pd.concat([wbe_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_wbe_dams = stacked_wbe_dams.append(wbe_dams)
 
     if report_run.loc['run_wbe_offs', 'Run']:
-        prod = 'wbe_k3k5tvnwziaxyg3'
+        type = 'stock'
+        prod = 'wbe_k3k5vnwziaxyg3'
+        na_prod = [2]
         weights = 'offs_numbers_k3k5tvnwziaxyg3'
         keys = 'offs_keys_k3k5tvnwziaxyg3'
         arith = 1
@@ -207,7 +210,7 @@ for row in trials:
         index =[3]
         cols =[0,1,2]
         axis_slice = {}
-        wbe_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
+        wbe_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
         wbe_offs = pd.concat([wbe_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_wbe_offs = stacked_wbe_offs.append(wbe_offs)

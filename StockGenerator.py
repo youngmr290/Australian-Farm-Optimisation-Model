@@ -6536,8 +6536,8 @@ def generator(params,r_vals,ev,plots = False):
     k3k5tvnwziaxyg3_shape = len_k3, len_k5, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
     ####kv with a singleton t axis (so that it can be divided by numbers with a t axis - but t is not in the name)
-    k2va1nwziyg1_shape = len_k2, 1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
-    k3k5vnwziaxyg3_shape = len_k3, len_k5, 1, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
+    k2va1nwziyg1_shape = len_k2, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
+    k3k5vnwziaxyg3_shape = len_k3, len_k5, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
     ####kveb
     k2tva1e1b1nwziyg1_shape = len_k2, len_t1, len_v1, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
@@ -6607,9 +6607,9 @@ def generator(params,r_vals,ev,plots = False):
         r_vals['on_hand_k2tvpa1nwziyg1'] = r_on_hand_k2tvpa1e1b1nwzida0e0b0xyg1.reshape(k2tvpa1nwziyg1_shape)
         r_vals['on_hand_k3k5tvpnwziaxyg3'] = r_on_hand_k3k5tvpa1e1b1nwzida0e0b0xyg3.reshape(k3k5tvpnwziaxyg3_shape)
 
-    ###wbe (Note: the shape has a singleton t axis, just that t is not in the name)
-    r_vals['wbe_k2tva1nwziyg1'] = r_wbe_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2va1nwziyg1_shape)
-    r_vals['wbe_k3k5tvnwziaxyg3'] = r_wbe_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5vnwziaxyg3_shape)
+    ###wbe
+    r_vals['wbe_k2va1nwziyg1'] = r_wbe_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2va1nwziyg1_shape)
+    r_vals['wbe_k3k5vnwziaxyg3'] = r_wbe_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5vnwziaxyg3_shape)
 
     ###cfw
     r_vals['cfw_hdmob_zg0'] = r_cfw_hdmob_tva1e1b1nwzida0e0b0xyg0.reshape(zg0_shape)
