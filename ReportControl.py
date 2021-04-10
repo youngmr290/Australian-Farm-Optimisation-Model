@@ -661,7 +661,7 @@ if report_run.loc['run_saleprice', 'Run']:
     rep.f_df2xl(writer, stacked_saleprice, 'saleprice', option=1)
 if report_run.loc['run_saledate_offs', 'Run']:
     stacked_saledate_offs = stacked_saledate_offs.astype(object)
-    stacked_saledate_offs[stacked_saledate_offs==np.datetime64('1970-01-01')] = '-'
+    stacked_saledate_offs[stacked_saledate_offs==np.datetime64('1970-01-01')] = 0
     rep.f_df2xl(writer, stacked_saledate_offs, 'saledate_offs', option=1)
 if report_run.loc['run_cfw_dams', 'Run']:
     rep.f_df2xl(writer, stacked_cfw_dams, 'cfw_dams', option=1)
