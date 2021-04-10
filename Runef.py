@@ -29,7 +29,7 @@ run_testDSP_rapper = False
 ################
 #run           #
 ################
-##run AFO via terminal command so the lp file is printed
+##run AFO via terminal command so the lp file is printed have to have the pyomo dsp function in exp for this.
 if run_AFO_command:
     subprocess.call(['C:/Users/21512438/Anaconda3/Scripts/runef.exe','--output-file=efout','--solution-writer=pyomo.pysp.plugins.csvsolutionwriter', '--traceback', '--symbolic-solver-labels',
                  '--verbose', '-mExp.py', '--solve', '--output-scenario-tree-solution', '--solver=glpk', '--solver=glpk'])
