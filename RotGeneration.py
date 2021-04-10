@@ -410,12 +410,16 @@ phases = phases[~tindex]
 #simplified rotations#
 ######################
 '''
-This bit of code can be used to extract custom rotations only.
-You can alter the user_rot array to include to rotations you want to include (all other rotations will be excluded)
-The sequence of the rotation is irrelevant ie b b w w is the same as w b b w.
+There are two options for simplified rotations:
+1. enter them manually below (this can be good for testing purposes)
+2. enter them in property.xl in the crop sheet (this is the more common option)
+
 '''
 
-##enter the rotaions you want represented in the model
+##option 1: enter the rotaions you want represented in the model
+###This bit of code can be used to extract custom rotations only.
+###You can alter the user_rot array to include to rotations you want to include (all other rotations will be excluded)
+###The sequence of the rotation is irrelevant ie b b w w is the same as w b b w.
 ds_user_rot_init = np.array([['ar', 'a', 'w', 'w', 'r', 'b'] #todo should this become an input?
                              ,['r', 'w', 'b', 'r', 'w', 'b']])
 
@@ -437,10 +441,26 @@ if customised_rotations:
     phases=phases[ix_bool>0]
 
 
-##if you want to represent the rotations from property.xlsx
+##option 2: if you want to represent the rotations from property.xlsx
 if pinp.crop['user_crop_rot']:
     phases =pinp.crop['fixed_rotphases'].reset_index().values.astype('str')    
 
+##################
+#continuous phase#
+##################
+##only generate cont phases if there are other phases that contain a resown version of the landuse and a normal version of the landuse because the inputs for the cont phases are generated from a combo of resown and normal phases
+if np.isin(phases,'tr').any() and np.isin(phases,'t').any():
+    tc=np.array(['tc','tc','tc','tc','tc','tc'])
+    phases = np.concatenate((phases, [tc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
+if np.isin(phases,'jr').any() and np.isin(phases,'j').any():
+    jc=np.array(['jc','jc','jc','jc','jc','jc'])
+    phases = np.concatenate((phases, [jc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
+if np.isin(phases,'ur').any() and np.isin(phases,'u').any():
+    uc=np.array(['uc','uc','uc','uc','uc','uc'])
+    phases = np.concatenate((phases, [uc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
+if np.isin(phases,'xr').any() and np.isin(phases,'x').any():
+    xc=np.array(['xc','xc','xc','xc','xc','xc'])
+    phases = np.concatenate((phases, [xc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
 
 ############################################################################################################################################################################################
 ############################################################################################################################################################################################
@@ -450,25 +470,27 @@ if pinp.crop['user_crop_rot']:
 
 
 ##history require 
-hist_req = phases[:,0:np.size(phases,1)-1]
-hist_req = np.unique(hist_req, axis=0)
+rot_hist = phases[:,0:np.size(phases,1)-1]
+rot_hist = np.unique(rot_hist, axis=0)
 
 
 ##generate a list of the phases and histories (agretated version)
 l_phases = [''.join(x) for x in phases.astype(str)]
-l_hist_req = [''.join(x) for x in hist_req.astype(str)]
-# l_hist_prov = [''.join(x) for x in hist_prov.astype(str)]
+l_rot_hist = [''.join(x) for x in rot_hist.astype(str)]
 
 
 ##################
 #con 1 param     #
 ##################
 '''determines what history1 each rotation requires and provides'''
-mps_bool=[]
+mps_bool_req=[]
+mps_bool_prov=[]
 for rot_phase in phases:
+    ##test variable just used to help check all rotations provide and require a history - only for user information.
+    ##every rotation should provide and require a history.
     test=0
     test2=0
-    for hist in hist_req:
+    for hist in rot_hist:
         rot_phase_req=[]
         rot_phase_prov=[]
         l_hist=[]
@@ -483,15 +505,20 @@ for rot_phase in phases:
             prov*=l_hist[i].issuperset(rot_phase_prov[i]) #checks each set in a given rotation for the prov part of the equation
         test+=prov
         test2+=req
-        mps_bool.append(req+prov)
+        # mps_bool.append(req+prov)
+        mps_bool_req.append(req)
+        mps_bool_prov.append(prov)
     if test==0: #doesn't provide a history
         print('rot doesnt provide a history: ',rot_phase)
-    if test2==0: #doesn't provide a history
+    if test2==0: #doesn't require a history
         print('rot doesnt req a history: ',rot_phase)
-mps_bool=pd.Series(mps_bool) #convert to series because easier to manipulate
-rot_phase_by_constrain = pd.DataFrame(list(itertools.product(l_phases,l_hist_req) ) ) #had to use this cartesian method as i couldn't get the fast function to work
-mps_bool=pd.concat([rot_phase_by_constrain, mps_bool], axis=1) #add two dfs together 
-mps_bool = mps_bool[(mps_bool.iloc[:,2] != 0)]
+rot_phase_by_constrain = pd.DataFrame(list(itertools.product(l_phases,l_rot_hist) ) ) #had to use this cartesian method as i couldn't get the fast function to work
+mps_bool_req=pd.Series(mps_bool_req) #convert to series because easier to manipulate
+mps_bool_prov=pd.Series(mps_bool_prov) #convert to series because easier to manipulate
+mps_bool_req=pd.concat([rot_phase_by_constrain, mps_bool_req], axis=1) #add two dfs together
+mps_bool_prov=pd.concat([rot_phase_by_constrain, mps_bool_prov], axis=1) #add two dfs together
+mps_bool_req = mps_bool_req[(mps_bool_req.iloc[:,2] != 0)]
+mps_bool_prov = mps_bool_prov[(mps_bool_prov.iloc[:,2] != 0)]
 
 
 ##################
@@ -567,24 +594,6 @@ The sets are altered for yr1 - this is done using if statements which make the s
 # mps_bool2 = mps_bool2[(mps_bool2.iloc[:,2] != 0)]
 
 
-##################
-#continuous phase#
-##################
-##only generate cont phases if there are other phases that contain a resown version of the landuse and a normal version of the landuse because the inputs for the cont phases are generated from a combo of resown and normal phases 
-if np.isin(phases,'tr').any() and np.isin(phases,'t').any():
-    tc=np.array(['tc','tc','tc','tc','tc','tc'])
-    phases = np.concatenate((phases, [tc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
-if np.isin(phases,'jr').any() and np.isin(phases,'j').any():
-    jc=np.array(['jc','jc','jc','jc','jc','jc'])
-    phases = np.concatenate((phases, [jc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
-if np.isin(phases,'ur').any() and np.isin(phases,'u').any():
-    uc=np.array(['uc','uc','uc','uc','uc','uc'])
-    phases = np.concatenate((phases, [uc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
-if np.isin(phases,'xr').any() and np.isin(phases,'x').any():
-    xc=np.array(['xc','xc','xc','xc','xc','xc'])
-    phases = np.concatenate((phases, [xc])) #square brackets required because otherwise it thinks that the cont rotations are just 1D
-##final list of phases that includes continuous phases - this list is not used when generating constrains because there are no cons associated with cont phases
-l_phases_cont = [''.join(x) for x in phases.astype(str)]
 
 ############################################################################################################################################################################################
 ############################################################################################################################################################################################
@@ -595,13 +604,14 @@ l_phases_cont = [''.join(x) for x in phases.astype(str)]
 ##start writing
 writer = pd.ExcelWriter('Rotation.xlsx', engine='xlsxwriter')
 ##list of rotations - index: tuple, values: expanded version of rotation
-rot_phases =  pd.DataFrame(phases, index=l_phases_cont)
+rot_phases =  pd.DataFrame(phases, index=l_phases)
 rot_phases.to_excel(writer, sheet_name='rotation list',index=True,header=False)
 ##con1 - the paramater for which history each rotation provides and requires
-mps_bool.to_excel(writer, sheet_name='rotation con1',index=False,header=False)
+mps_bool_req.to_excel(writer, sheet_name='rotation_req',index=False,header=False)
+mps_bool_prov.to_excel(writer, sheet_name='rotation_prov',index=False,header=False)
 ##con1 set - passed into the pyomo constraint
-hist_req = pd.DataFrame(hist_req, index=l_hist_req)
-hist_req.to_excel(writer, sheet_name='rotation con1 set',index=True,header=False)
+rot_hist = pd.DataFrame(rot_hist, index=l_rot_hist)
+rot_hist.to_excel(writer, sheet_name='rotation con1 set',index=True,header=False)
 ##con2
 # mps_bool2.to_excel(writer, sheet_name='rotation con2',index=False,header=False)
 # ##con2 set - passed into the pyomo constraint

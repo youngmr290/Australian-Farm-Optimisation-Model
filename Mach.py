@@ -402,8 +402,8 @@ def f_yield_penalty():
     '''
     ##inputs
     seed_period_lengths_pz = pinp.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
-    dry_seeding_penalty_k = pinp.crop['yield_penalty']['dry_seeding_penalty']
-    wet_seeding_penalty_k = pinp.crop['yield_penalty']['wet_seeding_penalty']
+    dry_seeding_penalty_k_z = pinp.f_seasonal_inp(pinp.crop['yield_penalty_wet'], axis=1)
+    wet_seeding_penalty_k_z = pinp.f_seasonal_inp(pinp.crop['yield_penalty_dry'], axis=1)
 
     ##general info
     mach_periods = per.p_dates_df()
@@ -414,14 +414,14 @@ def f_yield_penalty():
     dry_seed_start = np.datetime64(pinp.crop['dry_seed_start'])
     dry_seed_end_z = per.f_feed_periods()[0].astype('datetime64') #dry seeding finishes when the season breaks
     period_is_dry_seeding_pz = np.logical_and(dry_seed_start <= mach_periods_start_pz, mach_periods_start_pz < dry_seed_end_z)
-    dry_penalty_pzk = period_is_dry_seeding_pz[...,na] * dry_seeding_penalty_k.values
+    dry_penalty_pzk = period_is_dry_seeding_pz[...,na] * dry_seeding_penalty_k_z.T.values
 
     ##wet seeding penalty - penalty = average penalty of period (= (start day + end day) / 2 * penalty)
     seed_start_z = per.wet_seeding_start_date().astype(np.datetime64)
     penalty_free_days_z = seed_period_lengths_pz[0].astype('timedelta64[D]')
     start_day_pz = 1 + (mach_periods_start_pz - (seed_start_z + penalty_free_days_z))/ np.timedelta64(1, 'D')
     end_day_pz = (mach_periods_end_pz - (seed_start_z + penalty_free_days_z))/ np.timedelta64(1, 'D')
-    wet_penalty_pzk = (start_day_pz + end_day_pz)[...,na] / 2 * wet_seeding_penalty_k.values
+    wet_penalty_pzk = (start_day_pz + end_day_pz)[...,na] / 2 * wet_seeding_penalty_k_z.T.values
     wet_penalty_pzk = np.clip(wet_penalty_pzk, 0, np.inf)
 
     ##combine dry and wet penalty
@@ -430,42 +430,12 @@ def f_yield_penalty():
     ##put into df
     penalty_pzk = penalty_pzk.reshape(penalty_pzk.shape[0], -1)
     keys_z = pinp.f_keys_z()
-    cols = pd.MultiIndex.from_product([keys_z, wet_seeding_penalty_k.index])
+    cols = pd.MultiIndex.from_product([keys_z, wet_seeding_penalty_k_z.index])
     penalty = pd.DataFrame(penalty_pzk, index=mach_periods.index[:-1], columns=cols)
     return penalty.stack(1)
 
 
-#     ##calc yield penalty
-#     mach_periods = per.p_dates_df()
-#     mach_penalty = pd.DataFrame()  #adds the average yield penalty for each crop for each period to the df
-#     dry_seed_start = pinp.crop['dry_seed_start']
-#     dry_seed_end = per.f_feed_periods()[0] #dry seeding finishes when the season breaks
-#     seed_start = per.wet_seeding_start_date()
-#     # seed_end = per.period_end_date(per.wet_seeding_start_date(),pinp.crop['seed_period_lengths'])
-#     penalty_free_days = dt.timedelta(days = seed_period_lengths_pz[0])
-#     yield_penalty_df = pinp.crop['yield_penalty']
-#     ##add the yield penalty for each period and each crop
-#     for k, wet_penalty, dry_penalty in zip(yield_penalty_df.index, yield_penalty_df['wet_seeding_penalty'],yield_penalty_df['dry_seeding_penalty']):
-#         for i in range(len(mach_periods['date'])-1):
-#             period_start_date = mach_periods.loc[mach_periods.index[i],'date']
-#             period_end = mach_periods.loc[mach_periods.index[i+1],'date']
-#             ###check penalty free
-#             if seed_start  <= period_start_date  < seed_start + penalty_free_days:
-#                 penalty =  0
-#             ###check wet seeding
-#             elif seed_start + penalty_free_days <= period_start_date:#  < seed_end:
-#                 #penalty = average penalty of period (= (start day + end day) / 2 * penalty)
-#                 start_day = 1 + (period_start_date - (seed_start + penalty_free_days)).days
-#                 end_day = (period_end - (seed_start + penalty_free_days)).days
-#                 penalty =  (start_day + end_day) / 2  * wet_penalty
-#             ###check dry seeding
-#             elif dry_seed_start <= period_start_date <= dry_seed_end:
-#                 penalty = dry_penalty
-#             ###other periods (between season break and seeding start & before dry seeding) get 500 penalty
-#             else: penalty = 500
-#             mach_penalty.loc[mach_periods.index[i], k] = penalty
-#     params['yield_penalty'] = mach_penalty.stack().to_dict()
-# # x = (yield_penalty())
+
 
 
 #######################################################################################################################################################

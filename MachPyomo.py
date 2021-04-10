@@ -266,7 +266,7 @@ def ha_pasture_crop_paddocks(model,f,l):
     Returns
     -------
     Pyomo function.
-        Total hectares that can be grazed on crop paddocks before harvest
+        Total hectares that can be grazed on crop paddocks before seeding
         *note poc is only on crop paddocks but the seeding activity includes pastures, to stop pasture paddocks providing poc only loop through the crop set
     '''
     ##number of grazable pasture ha provided by contract seeding
