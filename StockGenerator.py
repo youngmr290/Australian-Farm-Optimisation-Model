@@ -5530,18 +5530,19 @@ def generator(params,r_vals,ev,plots = False):
                                                                  axis=(sinp.stock['i_d_pos'], sinp.stock['i_b0_pos'], sinp.stock['i_e0_pos']), keepdims=True))
 
     ##on hand - this is used so that the numbers report can have a p axis so the number of animals can be more specific than just dvp
-    r_on_hand_tvpa1e1b1nwzida0e0b0xyg1 = on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
-    r_on_hand_tvpa1e1b1nwzida0e0b0xyg3 = on_hand_tpa1e1b1nwzida0e0b0xyg3[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
-    r_on_hand_k2tvpa1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams', r_on_hand_tvpa1e1b1nwzida0e0b0xyg1,
-                                                                              a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...],
-                                                                              index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],
-                                                                              mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1[:,na,...])
-    r_on_hand_k3k5tvpa1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs', r_on_hand_tvpa1e1b1nwzida0e0b0xyg3,
-                                                                              a_k3cluster_da0e0b0xyg3,
-                                                                              index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],
-                                                                              a_k5cluster_da0e0b0xyg3,
-                                                                              index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...],
-                                                                              mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3[:,na,...])
+    if pinp.rep['i_store_on_hand']: #has a p axis so only stored and hence calculated if user specifies
+        r_on_hand_tvpa1e1b1nwzida0e0b0xyg1 = on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+        r_on_hand_tvpa1e1b1nwzida0e0b0xyg3 = on_hand_tpa1e1b1nwzida0e0b0xyg3[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
+        r_on_hand_k2tvpa1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams', r_on_hand_tvpa1e1b1nwzida0e0b0xyg1,
+                                                                                  a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...],
+                                                                                  index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],
+                                                                                  mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1[:,na,...])
+        r_on_hand_k3k5tvpa1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs', r_on_hand_tvpa1e1b1nwzida0e0b0xyg3,
+                                                                                  a_k3cluster_da0e0b0xyg3,
+                                                                                  index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],
+                                                                                  a_k5cluster_da0e0b0xyg3,
+                                                                                  index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...],
+                                                                                  mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3[:,na,...])
 
 
     ##wool value
