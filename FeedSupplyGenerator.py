@@ -159,7 +159,7 @@ def feed_generator():
                                                                                      pasture_stage_p6a1e1b1j0wzida0e0b0xyg,
                                                                                      legume_p6a1e1b1nwzida0e0b0xyg,
                                                                                      cr_dams,
-                                                                                     z_pos=sinp.stock['i_z_pos'])
+                                                                                     z_pos=sinp.stock['i_z_pos'], treat_z=True)
     ##treat z axis (have to do it after adjusting foo)
     legume_p6a1e1b1nwzida0e0b0xyg = pinp.f_seasonal_inp(legume_p6a1e1b1nwzida0e0b0xyg,numpy=True,axis=z_pos)
     ##dmd
