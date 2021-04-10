@@ -599,7 +599,7 @@ def f_run_required(exp_data1, check_pyomo=True):
         run_crash = []
         for trial in prev_exp.index.get_level_values(2):
             try:
-                if os.path.getmtime('pkl/pkl_exp.pkl') <= os.path.getmtime('pkl/pkl_params_{0}.pkl'.format(trial)):
+                if os.path.getmtime('pkl/pkl_exp.pkl') <= os.path.getmtime('pkl/pkl_r_vals_{0}.pkl'.format(trial)):
                     run_crash.append(True)
                 else:
                     run_crash.append(False)
