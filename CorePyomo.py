@@ -193,6 +193,7 @@ def coremodel_all(params, trial_name):
     model.con_cropsow = pe.Constraint(model.s_crops, model.s_lmus, rule = cropsow_link, doc='link between mach sow provide and rotation crop sow require')
    
     ##links pasture sow req with mach sow provide - requires a p set because the timing of sowing pasture is not optimisable (pasture sowing can occur in any period so the user specifies the periods when a given pasture must be sown)
+    ##pasture sow has seperate constraint from crop rotations because pas sow has a p axis so that user can specify period when pasture is sown (pasture has no yield penalty so model doesnt optimise seeding time like it does for crop)
     try:
         model.del_component(model.con_passow_index)
         model.del_component(model.con_passow)
