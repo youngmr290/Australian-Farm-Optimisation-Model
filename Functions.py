@@ -643,6 +643,8 @@ def f_read_exp(exp_group=0):
         exp_group = int(sys.argv[1]) #reads in as string so need to convert to int, the script path is the first value hence take the second.
     except IndexError:
         exp_group = 0
+    except ValueError: #incase running with command for DSP
+        exp_group = 0
 
     ##read and drop irrelevant cols
     exp_data = pd.read_excel('exp.xlsm', index_col=None, header=[0,1,2,3], engine='openpyxl')
