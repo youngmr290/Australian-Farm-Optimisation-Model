@@ -240,7 +240,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
                         lp_vars[season][var_name] = {} #create empty dict once for each variable name
                         lp_vars[season][var_name][sets] = value
 
-                ##store senario profit
+                ##store scenario profit
                 lp_vars[season]['scenario_profit'] = data['scenario solutions'][season]['objective']
             ##store overall expected profit
             lp_vars['profit'] = obj

@@ -1,5 +1,5 @@
 '''
-Module used to construct lp file from discrete model and stocastic add ons.
+Module used to construct lp file from discrete model and stochastic add ons.
 '''
 
 

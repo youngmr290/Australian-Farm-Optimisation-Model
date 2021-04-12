@@ -2,7 +2,7 @@
 """
 Created on Mon Nov  4 12:07:19 2019
 
-module: labour pyomo module - contains pyomo params, variables and constraits
+module: labour pyomo module - contains pyomo params, variables and constraints
 
 key: green section title is major title 
      '#' around a title is a minor section title

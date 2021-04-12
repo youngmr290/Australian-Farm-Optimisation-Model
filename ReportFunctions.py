@@ -906,9 +906,9 @@ def f_profit(lp_vars, r_vals, option=0):
     '''
     keys_z = r_vals['stock']['keys_z']
     prob_z =r_vals['stock']['prob_z']
-    obj_profit_z = f_vars2df(lp_vars, 'scenario_profit', keys_z).droplevel(1) #drop level 1 becasue no sets therefore nan
-    minroe_z = f_vars2df(lp_vars, 'v_minroe', keys_z).droplevel(1) #drop level 1 becasue no sets therefore nan
-    asset_value_z = f_vars2df(lp_vars, 'v_asset', keys_z).droplevel(1) #drop level 1 becasue no sets therefore nan
+    obj_profit_z = f_vars2df(lp_vars, 'scenario_profit', keys_z).droplevel(1) #drop level 1 because no sets therefore nan
+    minroe_z = f_vars2df(lp_vars, 'v_minroe', keys_z).droplevel(1) #drop level 1 because no sets therefore nan
+    asset_value_z = f_vars2df(lp_vars, 'v_asset', keys_z).droplevel(1) #drop level 1 because no sets therefore nan
     if option == 0:
         return lp_vars['profit']
     elif option==1:
