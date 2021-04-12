@@ -2437,6 +2437,7 @@ def generator(params,r_vals,ev,plots = False):
                                                             , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p], rain_pa1e1b1nwzida0e0b0xygm1[p]
                                                             , index_m0)
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
+                    print('\nPeriod',p,end="")
                     mem_dams, temp_lc_dams, kg_dams = sfun.f_chill_cs(cc_dams, ck_dams, ffcfw_start_dams, rc_start_dams, sl_start_dams, mei_dams
                                                             , meme_dams, mew_dams, new_dams, km_dams, kg_supp_dams, kg_fodd_dams, mei_propn_supp_dams
                                                             , mei_propn_herb_dams, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
