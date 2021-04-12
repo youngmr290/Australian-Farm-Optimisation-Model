@@ -2608,7 +2608,7 @@ def generator(params,r_vals,ev,plots = False):
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     temp0 = sfun.f_birthweight_cs(cx_yatf[:,mask_x,...], w_b_start_yatf, w_f_start_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]) #pass in wf_start because animal is born on first day of period
                     if eqn_used:
-                        w_b_yatf = temp0
+                        w_b_yatf = temp0 * (nfoet_b1nwzida0e0b0xyg>0) #so that only b slices with yatf have a weight
                         # cf_w_b_dams = 0 #this is only returned by mu function but variable needs to be defined so it doesnt give error in start function - default is 0
                     if eqn_compare:
                         r_compare_q0q1q2pyatf[eqn_system, eqn_group, 0, p, ...] = temp0
@@ -2623,7 +2623,7 @@ def generator(params,r_vals,ev,plots = False):
                     ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                     cf_w_b_dams = temp1
                     if eqn_used:
-                        w_b_yatf = temp0
+                        w_b_yatf = temp0 * (nfoet_b1nwzida0e0b0xyg>0) #so that only b slices with yatf have a weight
                     if eqn_compare:
                         r_compare_q0q1q2pyatf[eqn_system, eqn_group, 0, p, ...] = temp0
 
