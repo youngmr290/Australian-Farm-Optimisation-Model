@@ -783,7 +783,7 @@ def f_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb
 
 
 def f_energy_cs(ck, cx, cm, lw_start, ffcfw_start, mr_age, mei, omer_history_start, days_period, md_solid, i_md_supp,
-                md_herb, lgf_eff, dlf_eff, i_steepness, density, foo, feedsupply, intake_f, dmd, mei_propn_milk=0, sam_kg=1):
+                md_herb, lgf_eff, dlf_eff, i_steepness, density, foo, feedsupply, intake_f, dmd, mei_propn_milk=0, sam_kg=1, sam_mr=1):
     ##Efficiency for maintenance	
     km = (ck[1, ...] + ck[2, ...] * md_solid) * (1-mei_propn_milk) + ck[3, ...] * mei_propn_milk
     ##Efficiency for lactation - dam only	
@@ -805,7 +805,7 @@ def f_energy_cs(ck, cx, cm, lw_start, ffcfw_start, mr_age, mei, omer_history_sta
     ##Energy associated with organ activity
     omer, omer_history = f_history(omer_history_start, cm[1, ...] * mei, days_period)
     ##ME requirement for maintenance (before ECold)
-    meme = (emetab + egraze) / km + omer
+    meme = ((emetab + egraze) / km + omer) * sam_mr
     return meme, omer_history, km, kg_fodd, kg_supp, kl
 
 
@@ -973,7 +973,10 @@ def f_fibre(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_m2g,
 
 
 
-def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, meme, mew, new, km, kg_supp, kg_fodd, mei_propn_supp, mei_propn_herb, temp_ave_a1e1b1nwzida0e0b0xyg, temp_max_a1e1b1nwzida0e0b0xyg, temp_min_a1e1b1nwzida0e0b0xyg, ws_a1e1b1nwzida0e0b0xyg, rain_a1e1b1nwzida0e0b0xygm1, index_m0, guw	= 0, kl = 0, mei_propn_milk	= 0, mec = 0, mel = 0, nec = 0, nel = 0, gest_propn	= 0, lact_propn = 0):
+def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, meme, mew, new, km, kg_supp, kg_fodd, mei_propn_supp
+               , mei_propn_herb, temp_ave_a1e1b1nwzida0e0b0xyg, temp_max_a1e1b1nwzida0e0b0xyg, temp_min_a1e1b1nwzida0e0b0xyg
+               , ws_a1e1b1nwzida0e0b0xyg, rain_a1e1b1nwzida0e0b0xygm1, index_m0, guw = 0, kl = 0, mei_propn_milk = 0
+               , mec = 0, mel = 0, nec = 0, nel = 0, gest_propn	= 0, lact_propn = 0):
     ##Animal is below maintenance
     belowmaint = mei < (meme + mec + mel + mew)
     ##Efficiency for growth (before ECold)
@@ -1003,9 +1006,9 @@ def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, meme, mew, new, km,
     ##Impact of clear night skies on ME loss
     sky_temp_a1e1b1nwzida0e0b0xygm0m1 = sky_clear_a1e1b1nwzida0e0b0xygm1[..., na, :] * cc[13,..., na, na] * np.exp(-cc[14, ..., na, na] * np.minimum(0, cc[15, ..., na, na] - temperature_a1e1b1nwzida0e0b0xygm0[..., na]) ** 2)
     ##Heat production per m2
-    heat = ((mei - nec * gest_propn - nel * lact_propn - new - kge * (mei
+    heat = (mei - nec * gest_propn - nel * lact_propn - new - kge * (mei
             - (meme + mec * gest_propn + mel * lact_propn + mew))
-            + cc[16, ...] * guw) / area)
+            + cc[16, ...] * guw) / area
     ##Lower critical temperature (2 hourly)
     temp_lc_a1e1b1nwzida0e0b0xygm0m1 = cc[11, ..., na, na]+ cc[12, ..., na, na] - heat[..., na, na] * (in_tissue[..., na, na] + in_ext_a1e1b1nwzida0e0b0xygm0m1) + sky_temp_a1e1b1nwzida0e0b0xygm0m1
     ##Lower critical temperature (period)
@@ -1014,6 +1017,7 @@ def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, meme, mew, new, km,
     mecold_a1e1b1nwzida0e0b0xyg = area * np.average(f_dim(temp_lc_a1e1b1nwzida0e0b0xygm0m1, temperature_a1e1b1nwzida0e0b0xygm0[..., na]) /(in_tissue[..., na, na] + in_ext_a1e1b1nwzida0e0b0xygm0m1), axis = (-1,-2))
     ##ME requirement for maintenance (inc ECold)
     mem = meme + mecold_a1e1b1nwzida0e0b0xyg
+    print('ME Cold',mecold_a1e1b1nwzida0e0b0xyg[0,0,0,0,0,0,0,0,0,0,0,0,0,0],end="")
     ##Animal is below maintenance (incl ecold)
     belowmaint = mei < (mem + mec + mel + mew)
     ##Efficiency for growth (inc ECold) -different to the second line because belowmaint includes ecold

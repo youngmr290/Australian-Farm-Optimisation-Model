@@ -2,7 +2,7 @@
 """
 Created on Mon Nov  4 12:07:19 2019
 
-module: labour pyomo module - contains pyomo params, variables and constraits
+module: labour pyomo module - contains pyomo params, variables and constraints
 
 Version Control:
 Version     Date        Person  Change
@@ -114,9 +114,9 @@ model.v_sell_grain = Var(model.s_crops, model.s_grain_pools, bounds=(0,None), do
 #yield       #
 ##############
 ##total grain transfer for each crop, separated so it can be combined with untimely sowing and crop grazing penalty before converting to cashflow
-### slightly more complicated because i have to have rotation yield in disagregated format and the rotation variable is aggregated.
+### slightly more complicated because i have to have rotation yield in disaggregated format and the rotation variable is aggregated.
 ### yield needs to be disaggregated so that it returns the grain transfer for each crop - this is so it is compatible with yield penalty and sup feed activities.
-###alternative would have been to add another key/index/set to the yield parameter that was k, although i suspect this would make it a bit slower due to being bigger but it might be tidyer
+###alternative would have been to add another key/index/set to the yield parameter that was k, although i suspect this would make it a bit slower due to being bigger but it might be tidier
 
 def rotation_yield_transfer(model,g,k):
     # i=sinp.general['phase_len']-1
@@ -269,7 +269,7 @@ def rot_stubble(model,k,s):
 #
 
     # #calling a function multiple times takes time. call it once and assign result to a unique variable. 
-    # #local variables are easier for pyton to locate
+    # #local variables are easier for python to locate
     # # a=crp.phase_yields()
     # # b=crp.fert()
     # # c=crp.stubble_handling_prob()

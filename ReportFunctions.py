@@ -290,30 +290,26 @@ def f_area_summary(lp_vars, r_vals, option):
     if option == 1:
         return rot_area_zr_l.round(0)
 
-    ##selected rotations by lmu
-    rot_area_selected_zr_l = rot_area_zr_l[rot_area_zr_l.any(axis=1)]
-    if option == 2:
-        return rot_area_selected_zr_l.round(0)
     ###crop & pasture area
     ####you can now use isin pasture or crop sets to calc the area of crop or pasture
     all_pas = r_vals['rot']['all_pastures']  # landuse sets
     pasture_area_l = landuse_area_k_zl[landuse_area_k_zl.index.isin(all_pas)].sum()  # sum landuse
-    if option == 3:
+    if option == 2:
         return pasture_area_l.sum().round(0)
     crop_area_l = landuse_area_k_zl[~landuse_area_k_zl.index.isin(all_pas)].sum()  # sum landuse
-    if option == 4:
+    if option == 3:
         return crop_area_l.sum().round(0)
 
     ##crop & pasture area by lmu
     croppas_area_l = pd.DataFrame()
     croppas_area_l.loc['pasture'] = pasture_area_l
     croppas_area_l.loc['crop'] = crop_area_l
-    if option == 5:
+    if option == 4:
         return croppas_area_l.round(0)
 
     ##return all if option==0
     if option == 0:
-        return rot_area_zr_l, rot_area_selected_zr_l, pasture_area_l, crop_area_l, croppas_area_l
+        return rot_area_zr_l, pasture_area_l, crop_area_l, croppas_area_l
 
 
 def f_mach_summary(lp_vars, r_vals, option=0):
@@ -910,9 +906,9 @@ def f_profit(lp_vars, r_vals, option=0):
     '''
     keys_z = r_vals['stock']['keys_z']
     prob_z =r_vals['stock']['prob_z']
-    obj_profit_z = f_vars2df(lp_vars, 'scenario_profit', keys_z).droplevel(1) #drop level 1 becasue no sets therefore nan
-    minroe_z = f_vars2df(lp_vars, 'v_minroe', keys_z).droplevel(1) #drop level 1 becasue no sets therefore nan
-    asset_value_z = f_vars2df(lp_vars, 'v_asset', keys_z).droplevel(1) #drop level 1 becasue no sets therefore nan
+    obj_profit_z = f_vars2df(lp_vars, 'scenario_profit', keys_z).droplevel(1) #drop level 1 because no sets therefore nan
+    minroe_z = f_vars2df(lp_vars, 'v_minroe', keys_z).droplevel(1) #drop level 1 because no sets therefore nan
+    asset_value_z = f_vars2df(lp_vars, 'v_asset', keys_z).droplevel(1) #drop level 1 because no sets therefore nan
     if option == 0:
         return lp_vars['profit']
     elif option==1:

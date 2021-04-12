@@ -26,7 +26,7 @@ def rotation_precalcs(params, report):
     
 def rotationpyomo(params):
     ##################################################
-    #variables that need to be built each itteration #
+    #variables that need to be built each iteration #
     ##################################################
     try:
         model.del_component(model.v_root_hist)
@@ -79,15 +79,15 @@ def rotationpyomo(params):
     '''
     For steady state model each rotation requires and provides a rotation history.
     For DSP the process is slight more complicated because the history that provides the rotations must be the same for
-     each season. Becasue each sesaon needs to start in a common place. Therefore a history variable is created which
+     each season. because each season needs to start in a common place. Therefore a history variable is created which
      can be assigned to the root stage. This means an additional constraint is required.
     Note: the DSP structure will work fine for steady state however just increases the size, but for debugging you can 
      use the DSP structure with the steady state model (just comment out the steady state stuff)'''
 
     if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1:
         try:
-            model.del_component(model.con_root_hist) #if running the steady state model we dont need the dsp rotation constraints
-            model.del_component(model.con_root2rotation) #if running the steady state model we dont need the dsp rotation constraints
+            model.del_component(model.con_root_hist) #if running the steady state model we don't need the dsp rotation constraints
+            model.del_component(model.con_root2rotation) #if running the steady state model we don't need the dsp rotation constraints
         except AttributeError:
             pass
 
@@ -103,7 +103,7 @@ def rotationpyomo(params):
 
     else:
         try:
-            model.del_component(model.con_rotationcon1)  # if running the dsp model we dont need the steady state rotation constraints
+            model.del_component(model.con_rotationcon1)  # if running the dsp model we don't need the steady state rotation constraints
         except AttributeError:
             pass
 
@@ -113,13 +113,13 @@ def rotationpyomo(params):
                 pass
         except AttributeError:
 
-            ##constraint for history provided to history root. This is only required in the stocastic model so that each season starts from a common place.
+            ##constraint for history provided to history root. This is only required in the stochastic model so that each season starts from a common place.
             def rot_hist(model,l,h):
                 return model.v_root_hist[h,l] + sum(model.v_phase_area[r,l]*model.p_hist_prov[r,h]
                             for r in model.s_phases if ((r,)+(h,)) in params['hist_prov'].keys())<=0
             model.con_rot_hist = Constraint(model.s_lmus, model.s_rotconstraints, rule=rot_hist, doc='constraint between rotation history provided and root history')
 
-            ##constraint for history provided to history root. This is only required in the stocastic model so that each season starts from a common place.
+            ##constraint for history provided to history root. This is only required in the stochastic model so that each season starts from a common place.
             def rot_phase_link(model,l,h):
                 return - model.v_root_hist[h,l] + sum(model.v_phase_area[r,l]*model.p_hist_req[r,h]
                             for r in model.s_phases if ((r,)+(h,)) in params['hist_req'].keys())<=0

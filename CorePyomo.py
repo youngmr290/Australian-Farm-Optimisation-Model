@@ -428,17 +428,17 @@ def coremodel_all(params, trial_name):
     else:
         '''
         Stage allocation notes:
-            If a variable is not allocated to a stage end up in the final stage (they can be optimised independantly for each season).
+            If a variable is not allocated to a stage end up in the final stage (they can be optimised independently for each season).
             If a variable is allocated to two stages it is constrained in both stages so it is essentially the same as assigning it to just the first stage.
             Each stage needs at least one variable.
-            All variables have at most one time series set therefore dont need to worry about variables being allocated to two stages.
-            Dvp dates are the same for all seasons thus dont need to deal with the z axis for dvp allocation (for fp & lp we do need to deal with z axis).
+            All variables have at most one time series set therefore don't need to worry about variables being allocated to two stages.
+            Dvp dates are the same for all seasons thus don't need to deal with the z axis for dvp allocation (for fp & lp we do need to deal with z axis).
             
         Stage allocation process
             Variables that contain a time series set (eg dvp & lp & fp) are automatically allocated to a stage using the code below.
             The other variables are allocated to a stage manually by the user.
         '''
-        #todo include some error handling - each variable needs to assigned to stage - give error if that does not happen, this would be good but cant think of a good way to do it since variables can be in multiple stages. Maybe just check that the variable is in any stage and assume if it is in any stage then it is corect
+        #todo include some error handling - each variable needs to assigned to stage - give error if that does not happen, this would be good but cant think of a good way to do it since variables can be in multiple stages. Maybe just check that the variable is in any stage and assume if it is in any stage then it is correct
         # buy grain may not be in stage 3, i feel like you retain grain for the year ahead without knowing the type of season. but then the model will just counter by altering sale of grain.
 
 
@@ -478,7 +478,7 @@ def coremodel_all(params, trial_name):
         stage_info['mbrk_spr2end'] = {}
         stage_info['lbrk_spr2end'] = {}
 
-        ##specify a season which represents the stages. This is required because for example the fp dates are different for each season (note dvps are the same for all seasons so not requied for them)
+        ##specify a season which represents the stages. This is required because for example the fp dates are different for each season (note dvps are the same for all seasons so not required for them)
         root_z = 0 #this could be any stage because all seasons have the same period definitions in the root stage.
         ebrk2mbrk_z = -1 #any season with medium or late break
         ebrk2spr_z = 0 #any season with early break
@@ -556,19 +556,19 @@ def coremodel_all(params, trial_name):
         stage_info['lbrk2spr']['sets'].extend(list(keys_dams[np.logical_and(dvp1 >= mbrk_start, dvp1 < spr_start)]))
         stage_info['lbrk2spr']['sets'].extend(list(keys_offs[np.logical_and(dvp3 >= mbrk_start, dvp3 < spr_start)]))
         stage_info['lbrk2spr']['sets'].extend(list(keys_prog[np.logical_and(prog_born >= mbrk_start, prog_born < spr_start)]))
-        ###spring - end (dont need logical and because this is the last stage)
+        ###spring - end (don't need logical and because this is the last stage)
         stage_info['ebrk_spr2end']['sets'].extend(list(keys_p6[fp_p6z[:,ebrk_spr2end_z] >= spr_start]))
         stage_info['ebrk_spr2end']['sets'].extend(list(keys_p5[lp_p5z[:,ebrk_spr2end_z] >= spr_start]))
         stage_info['ebrk_spr2end']['sets'].extend(list(keys_dams[dvp1 >= spr_start]))
         stage_info['ebrk_spr2end']['sets'].extend(list(keys_offs[dvp3 >= spr_start]))
         stage_info['ebrk_spr2end']['sets'].extend(list(keys_prog[prog_born >= spr_start]))
-        ###spring - end (dont need logical and because this is the last stage)
+        ###spring - end (don't need logical and because this is the last stage)
         stage_info['mbrk_spr2end']['sets'].extend(list(keys_p6[fp_p6z[:,mbrk_spr2end_z] >= spr_start]))
         stage_info['mbrk_spr2end']['sets'].extend(list(keys_p5[lp_p5z[:,mbrk_spr2end_z] >= spr_start]))
         stage_info['mbrk_spr2end']['sets'].extend(list(keys_dams[dvp1 >= spr_start]))
         stage_info['mbrk_spr2end']['sets'].extend(list(keys_offs[dvp3 >= spr_start]))
         stage_info['mbrk_spr2end']['sets'].extend(list(keys_prog[prog_born >= spr_start]))
-        ###spring - end (dont need logical and because this is the last stage)
+        ###spring - end (don't need logical and because this is the last stage)
         stage_info['lbrk_spr2end']['sets'].extend(list(keys_p6[fp_p6z[:,lbrk_spr2end_z] >= spr_start]))
         stage_info['lbrk_spr2end']['sets'].extend(list(keys_p5[lp_p5z[:,lbrk_spr2end_z] >= spr_start]))
         stage_info['lbrk_spr2end']['sets'].extend(list(keys_dams[dvp1 >= spr_start]))
@@ -618,14 +618,14 @@ def coremodel_all(params, trial_name):
                        cost=ce1,
                        variables=stage_info['ebrk2mbrk']['vars'],
                        derived_variables=[])
-            g.add_edge("Root","mbrk",weight=0.666) #todo this will need to be the season proportion inoput
+            g.add_edge("Root","mbrk",weight=0.666) #todo this will need to be the season proportion input
 
             ##ebrk2spr
             g.add_node("ESpr",
                        cost=ce1,
                        variables = stage_info['ebrk2spr']['vars'],
                        derived_variables=[])
-            g.add_edge("Root","ESpr",weight=0.334) #todo this will need to be the season proportion inoput
+            g.add_edge("Root","ESpr",weight=0.334) #todo this will need to be the season proportion input
 
             ##mbrk2spr
             g.add_node("MSpr",

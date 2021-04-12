@@ -2034,8 +2034,9 @@ def generator(params,r_vals,ev,plots = False):
                 z1f_sire = 1 / (1 + np.exp(+cg_sire[4, ...] * (relsize1_start_sire - cg_sire[5, ...])))
                 ###EVG Size factor (increases at maturity)
                 z2f_sire = np.clip((relsize1_start_sire - cg_sire[6, ...]) / (cg_sire[7, ...] - cg_sire[6, ...]), 0 ,1)
-                ###sensitivity on kg (efficiency of gain) based on z2f and sam['kg'] - the sensitivity is only for adults
+                ###sensitivity on kg (efficiency of gain) & MR (maintenance req) based on z2f - the sensitivity is only for adults
                 sam_kg_sire = fun.f_update(1, sen.sam['kg'], z2f_sire == 1)
+                sam_mr_sire = fun.f_update(1, sen.sam['mr'], z2f_sire == 1)
 
             ##dams
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
@@ -2063,8 +2064,9 @@ def generator(params,r_vals,ev,plots = False):
                 z1f_dams = 1 / (1 + np.exp(+cg_dams[4, ...] * (relsize1_start_dams - cg_dams[5, ...])))
                 ###EVG Size factor (increases at maturity)
                 z2f_dams = np.clip((relsize1_start_dams - cg_dams[6, ...]) / (cg_dams[7, ...] - cg_dams[6, ...]), 0 ,1)
-                ###sensitivity on kg (efficiency of gain) based on z2f and sam['kg'] - the sensitivity is only for adults
+                ###sensitivity on kg (efficiency of gain) & MR (maintenance req) based on z2f - the sensitivity is only for adults
                 sam_kg_dams = fun.f_update(1, sen.sam['kg'], z2f_dams == 1)
+                sam_mr_dams = fun.f_update(1, sen.sam['mr'], z2f_dams == 1)
                 ##sires for mating
                 n_sire_a1e1b1nwzida0e0b0xyg1g0p8 = sfun.f_sire_req(sire_propn_pa1e1b1nwzida0e0b0xyg1g0[p], sire_periods_g0p8, pinp.sheep['i_sire_recovery']
                                                                    , pinp.sheep['i_startyear'], date_end_pa1e1b1nwzida0e0b0xyg[p], period_is_join_pa1e1b1nwzida0e0b0xyg1[p])
@@ -2094,8 +2096,9 @@ def generator(params,r_vals,ev,plots = False):
                 z1f_offs = 1 / (1 + np.exp(+cg_offs[4, ...] * (relsize1_start_offs - cg_offs[5, ...])))
                 ###EVG Size factor (increases at maturity)
                 z2f_offs = np.clip((relsize1_start_offs - cg_offs[6, ...]) / (cg_offs[7, ...] - cg_offs[6, ...]), 0 ,1)
-                ###sensitivity on kg (efficiency of gain) based on z2f and sam['kg'] - the sensitivity is only for adults
+                ###sensitivity on kg (efficiency of gain) & MR (maintenance req) based on z2f - the sensitivity is only for adults
                 sam_kg_offs = fun.f_update(1, sen.sam['kg'], z2f_offs == 1)
+                sam_mr_offs = fun.f_update(1, sen.sam['mr'], z2f_offs == 1)
 
 
 
@@ -2305,7 +2308,7 @@ def generator(params,r_vals,ev,plots = False):
                                                                     , md_herb_sire, lgf_eff_pa1e1b1nwzida0e0b0xyg0[p, ...]
                                                                     , dlf_eff_pa1e1b1nwzida0e0b0xyg[p,...], pinp.sheep['i_steepness']
                                                                     , densityw_pa1e1b1nwzida0e0b0xyg0[p], foo_sire, feedsupplyw_pa1e1b1nwzida0e0b0xyg0[p]
-                                                                    , intake_f_sire, dmd_sire, sam_kg = sam_kg_sire)
+                                                                    , intake_f_sire, dmd_sire, sam_kg = sam_kg_sire, sam_mr = sam_mr_sire)
                         ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                         omer_history_sire = temp1
                         if eqn_used:
@@ -2324,7 +2327,7 @@ def generator(params,r_vals,ev,plots = False):
                                                                     , md_herb_dams, lgf_eff_pa1e1b1nwzida0e0b0xyg1[p, ...]
                                                                     , dlf_eff_pa1e1b1nwzida0e0b0xyg[p,...], pinp.sheep['i_steepness']
                                                                     , densityw_pa1e1b1nwzida0e0b0xyg1[p], foo_dams, feedsupplyw_pa1e1b1nwzida0e0b0xyg1[p]
-                                                                    , intake_f_dams, dmd_dams, sam_kg = sam_kg_dams)
+                                                                    , intake_f_dams, dmd_dams, sam_kg = sam_kg_dams, sam_mr = sam_mr_dams)
                         ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                         omer_history_dams = temp1
                         if eqn_used:
@@ -2344,7 +2347,7 @@ def generator(params,r_vals,ev,plots = False):
                                                                     , md_herb_offs, lgf_eff_pa1e1b1nwzida0e0b0xyg3[p, ...]
                                                                     , dlf_eff_pa1e1b1nwzida0e0b0xyg[p,...], pinp.sheep['i_steepness']
                                                                     , densityw_pa1e1b1nwzida0e0b0xyg3[p], foo_offs, feedsupplyw_pa1e1b1nwzida0e0b0xyg3[p]
-                                                                    , intake_f_offs, dmd_offs, sam_kg = sam_kg_offs)
+                                                                    , intake_f_offs, dmd_offs, sam_kg = sam_kg_offs, sam_mr = sam_mr_offs)
                         ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                         omer_history_offs = temp1
                         if eqn_used:
@@ -2434,6 +2437,7 @@ def generator(params,r_vals,ev,plots = False):
                                                             , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p], rain_pa1e1b1nwzida0e0b0xygm1[p]
                                                             , index_m0)
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
+                    print('\nPeriod',p,end="")
                     mem_dams, temp_lc_dams, kg_dams = sfun.f_chill_cs(cc_dams, ck_dams, ffcfw_start_dams, rc_start_dams, sl_start_dams, mei_dams
                                                             , meme_dams, mew_dams, new_dams, km_dams, kg_supp_dams, kg_fodd_dams, mei_propn_supp_dams
                                                             , mei_propn_herb_dams, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
@@ -2711,8 +2715,9 @@ def generator(params,r_vals,ev,plots = False):
                 z1f_yatf = 1 / (1 + np.exp(+cg_yatf[4, ...] * (relsize1_start_yatf - cg_yatf[5, ...])))
                 ###EVG Size factor (increases at maturity)
                 z2f_yatf = np.clip((relsize1_start_yatf - cg_yatf[6, ...]) / (cg_yatf[7, ...] - cg_yatf[6, ...]), 0 ,1)
-                ###sensitivity on kg (efficiency of gain) based on z2f and sam['kg'] - the sensitivity is only for adults
+                ###sensitivity on kg (efficiency of gain) & MR (maintenance req) based on z2f - the sensitivity is only for adults (only included here for consistency)
                 sam_kg_yatf = fun.f_update(1, sen.sam['kg'], z2f_yatf == 1)
+                sam_mr_yatf = fun.f_update(1, sen.sam['mr'], z2f_yatf == 1)
 
 
             ##potential intake - yatf
@@ -2790,7 +2795,7 @@ def generator(params,r_vals,ev,plots = False):
                                                                 , lgf_eff_pa1e1b1nwzida0e0b0xyg2[p], dlf_eff_pa1e1b1nwzida0e0b0xyg[p]
                                                                 , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg2[p]
                                                                 , foo_yatf, feedsupplyw_pa1e1b1nwzida0e0b0xyg1[p], intake_f_yatf
-                                                                , dmd_yatf, mei_propn_milk_yatf, sam_kg_yatf)  #same feedsupply as dams
+                                                                , dmd_yatf, mei_propn_milk_yatf, sam_kg_yatf, sam_mr = sam_mr_yatf)  #same feedsupply as dams
                     ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                     omer_history_yatf = temp1
                     if eqn_used:
@@ -5521,7 +5526,7 @@ def generator(params,r_vals,ev,plots = False):
                                                                               mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3)
 
     ##sale date - no numbers needed because they don't effect sale date. need to mask the denominator so that only the d, e, b slices where the animal was sold is used in the divide.
-    ###cant use production function becasue need to mask the denominator.
+    ###cant use production function because need to mask the denominator.
     r_saledate_k3k5tva1e1b1nwzida0e0b0xyg3 = fun.f_divide(np.sum(r_saledate_tva1e1b1nwzida0e0b0xyg3 * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)
                                                                  * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)
                                                                  , axis = (sinp.stock['i_d_pos'], sinp.stock['i_b0_pos'], sinp.stock['i_e0_pos']), keepdims=True),

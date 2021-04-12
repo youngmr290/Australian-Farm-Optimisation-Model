@@ -121,11 +121,11 @@ model.s_fert_type = Set(initialize=uinp.price['fert_cost'].index, doc='fertilise
 model.s_phases = Set(initialize=sinp.phases['phases'].index, doc='rotation phases set')
 # model.s_phases.pprint()
 
-# ##phases disagregated - used in rot yield transfer
+# ##phases disaggregated - used in rot yield transfer
 # def phases_dis():
 #     phase=sinp.stock['phases'].copy()
 #     return phase.set_index(list(range(sinp.general['phase_len']))).index
-# model.s_phases_dis = Set(dimen=sinp.general['phase_len'], ordered=True, initialize=phases_dis(), doc='rotation phases disagregated')
+# model.s_phases_dis = Set(dimen=sinp.general['phase_len'], ordered=True, initialize=phases_dis(), doc='rotation phases disaggregated')
 # model.s_phases_dis.pprint()
 
 ##con1 set

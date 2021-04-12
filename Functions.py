@@ -449,18 +449,23 @@ def f_update(existing_value, new_value, mask_for_new):
 
 def f_weighted_average(array, weights, axis, keepdims=False, non_zero=False, den_weights=1):
     '''
-    weighted average (similar to np.average but it handles situation when sum weights = 0 - used in sheep generator - when sum weights = 0 the numbers being averaged also = 0 so just divide by 1 instead of 0
-    calculates weighted average however this will return 0 if the sum of the weights is 0 (np.average doesnt handle this)
+    Calculates weighted average (similar to np.average however this will handle if the sum of the weights is 0 (np.average doesnt handle this)
+    'non-zero' handles how the average is calculated
+    Note: if non-zero is false then when sum weights = 0 the numbers being averaged also = 0 (so can divide by 1 instead of 0)
+    The function is also called from the reporting module with den_weights. den_weights can be 0, in which case 'non-zero' handles how the average is calculated
     axis averaged along can be retained - default it is dropped.
+
 
     :param array:
     :param weights:
     :param axis:
     :param keepdims:
-    :param non_zero:
+    :param non_zero: how to handle a weight of 0. True returns the numerator, False (default) returns 0
     :param den_weights: array: broadcastable to weights. This is used to weight the denominator (used in reporting)
     :return:
     '''
+    #todo can the step of updating weights that are == 0 be done after weights are mult by den_weights. Might stop div 0 warning when reporting.
+    #todo alternatively if averaged_array was created as either zeros or a copy of weighted array (depending on non-zero), could the mask be set on weights != 0
     if non_zero:
         ##for some situations (production) if numbers are 0 we don't want to return 0 we want to return the original value
         weights=f_update(weights,1,np.all(weights==0, axis=axis, keepdims=True))
