@@ -28,6 +28,8 @@ import pandas as pd
 import ReportFunctions as rep
 import Functions as fun
 
+#todo Add a message about the number of trials being reported and the number of reports being created.
+
 ## Create a Pandas Excel writer using XlsxWriter as the engine. used to write to multiple sheets in excel
 writer = pd.ExcelWriter('Output/Report.xlsx',engine='xlsxwriter')
 
@@ -433,8 +435,8 @@ for row in trials:
         na_weights = [3]
         keys = 'dams_keys_k2tvpanwziy1g1'
         arith = 2
-        arith_axis = [2,4,5,6,7,8,9,10]
-        index =[3]
+        arith_axis = [4,5,6,7,8,9,10]
+        index =[2,3]
         cols =[0,1]
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
@@ -710,7 +712,7 @@ if report_run.loc['run_daily_pi_dams', 'Run']:
 if report_run.loc['run_numbers_dams', 'Run']:
     rep.f_df2xl(writer, stacked_numbers_dams, 'numbers_dams', option=1)
 if report_run.loc['run_numbers_dams_p', 'Run']:
-    rep.f_df2xl(writer, stacked_numbers_dams_p, 'numbers_dams', option=1)
+    rep.f_df2xl(writer, stacked_numbers_dams_p, 'numbers_dams_p', option=1)
 if report_run.loc['run_numbers_prog', 'Run']:
     rep.f_df2xl(writer, stacked_numbers_prog, 'numbers_prog', option=1)
 if report_run.loc['run_numbers_offs', 'Run']:
