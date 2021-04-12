@@ -131,7 +131,7 @@ def machpyomo_local(params):
         model.del_component(model.p_contractharv_rate)
     except AttributeError:
         pass
-    model.p_contractharv_rate = Param(model.s_crops, initialize=params['contract_harv_rate'], default = 0.0, doc='rate of harv t/hr provided by one crop gear each period')
+    model.p_contractharv_rate = Param(model.s_crops, initialize=params['contract_harv_rate'], default = 0.0, doc='rate of harv t/hr provided by contractor')
     
     try:
         model.del_component(model.p_harv_hrs_max)
@@ -214,7 +214,7 @@ def machpyomo_local(params):
         model.del_component(model.p_number_harv_gear)
     except AttributeError:
         pass
-    model.p_number_harv_gear = Param(initialize=params['number_harv_gear'], default = 0.0, doc='number of crop gear')
+    model.p_number_harv_gear = Param(initialize=params['number_harv_gear'], default = 0.0, doc='number of harvest gear')
 
     try:
         model.del_component(model.p_seeding_occur)

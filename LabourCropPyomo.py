@@ -49,7 +49,7 @@ def labcrppyomo_local(params):
         model.del_component(model.p_prep_pack)
     except AttributeError:
         pass
-    model.p_prep_pack = Param(model.s_labperiods, initialize=params[season]['prep_labour'], default = 0.0, mutable=True, doc='harvest helper time per crop')
+    model.p_prep_pack = Param(model.s_labperiods, initialize=params[season]['prep_labour'], default = 0.0, mutable=True, doc='labour for preperation and packing up for seeding and harv')
     
     try:
         model.del_component(model.p_fert_app_hour_tonne_index)
