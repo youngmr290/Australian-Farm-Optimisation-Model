@@ -934,13 +934,16 @@ def coremodel_all(params, trial_name):
             instance.p_cost_purch_sire.store_values(params['stock'][scenario_name]['p_purchcost_sire'])
 
             return instance
-
+        ##clones model, updates params and create scenario tree
         concrete_tree = pysp_scenario_tree_model_callback()
         stsolver = rapper.StochSolver(None,tree_model=concrete_tree,fsfct=pysp_instance_creation_callback)
-        solver_result = stsolver.solve_ef('glpk',tee=False) #convert tee=True to see solver output
+        ##creates binding constraints on variables and solves.
+        solver_result = stsolver.solve_ef('glpk',tee=False,verbose=True) #convert tee=True to see solver output
         obj = stsolver.root_E_obj()
         # for varname,varval in stsolver.root_Var_solution():  # unfortunately this is only for root
         #     print(varname,str(varval))
+        ##write lp file
+        stsolver.ef_instance.write('Output/%s.lp' % trial_name,io_options={'symbolic_solver_labels': True})
 
         ##saves file to csv - not used for anything other than looking at.
         csvw.write_csv_soln(stsolver.scenario_tree,"solutionMRY")
