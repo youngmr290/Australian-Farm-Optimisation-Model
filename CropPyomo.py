@@ -17,9 +17,7 @@ Fixed   Date    ID by   Problem
 """
 
 #python modules
-from pyomo.environ import *
-#import pandas as pd
-#import numpy as np
+import pyomo.environ as pe
 import timeit
 
 #AFO modules
@@ -45,42 +43,42 @@ def croppyomo_local(params):
         model.del_component(model.p_rotation_cost_index)
     except AttributeError:
         pass
-    model.p_rotation_cost = Param(model.s_phases,model.s_lmus,model.s_cashflow_periods, initialize=params[season]['rot_cost'], default=0, mutable=True, doc='total cost for 1 unit of rotation')
+    model.p_rotation_cost = pe.Param(model.s_phases,model.s_lmus,model.s_cashflow_periods, initialize=params[season]['rot_cost'], default=0, mutable=True, doc='total cost for 1 unit of rotation')
        
     try:
         model.del_component(model.p_rotation_yield)
         model.del_component(model.p_rotation_yield_index)
     except AttributeError:
         pass
-    model.p_rotation_yield = Param(model.s_phases, model.s_crops, model.s_lmus, initialize=params[season]['rot_yield'], default = 0.0, mutable=True, doc='grain production for all crops for 1 unit of rotation')
+    model.p_rotation_yield = pe.Param(model.s_phases, model.s_crops, model.s_lmus, initialize=params[season]['rot_yield'], default = 0.0, mutable=True, doc='grain production for all crops for 1 unit of rotation')
 
     try:
         model.del_component(model.p_grainpool_proportion)
         model.del_component(model.p_grainpool_proportion_index)
     except AttributeError:
         pass
-    model.p_grainpool_proportion = Param(model.s_crops, model.s_grain_pools, initialize=params['grain_pool_proportions'], default = 0.0, doc='proportion of grain in each pool')
+    model.p_grainpool_proportion = pe.Param(model.s_crops, model.s_grain_pools, initialize=params['grain_pool_proportions'], default = 0.0, doc='proportion of grain in each pool')
     
     try:
         model.del_component(model.p_grain_price)
         model.del_component(model.p_grain_price_index)
     except AttributeError:
         pass
-    model.p_grain_price = Param(model.s_crops, model.s_cashflow_periods, model.s_grain_pools, initialize=params['grain_price'],default = 0.0, doc='farm gate price per tonne of each grain')
+    model.p_grain_price = pe.Param(model.s_crops, model.s_cashflow_periods, model.s_grain_pools, initialize=params['grain_price'],default = 0.0, doc='farm gate price per tonne of each grain')
     
     try:
         model.del_component(model.p_rot_stubble_index)
         model.del_component(model.p_rot_stubble)
     except AttributeError:
         pass
-    model.p_rot_stubble = Param(model.s_crops, model.s_stub_cat, initialize=params['stubble_production'], default = 0.0, doc='stubble category A produced / kg grain harvested')
+    model.p_rot_stubble = pe.Param(model.s_crops, model.s_stub_cat, initialize=params['stubble_production'], default = 0.0, doc='stubble category A produced / kg grain harvested')
     
     try:
         model.del_component(model.p_cropsow_index)
         model.del_component(model.p_cropsow)
     except AttributeError:
         pass
-    model.p_cropsow = Param(model.s_phases, model.s_crops, model.s_lmus, initialize=params['crop_sow'], default = 0.0, doc='ha of sow activity required by each rot phase')
+    model.p_cropsow = pe.Param(model.s_phases, model.s_crops, model.s_lmus, initialize=params['crop_sow'], default = 0.0, doc='ha of sow activity required by each rot phase')
     
     try:
         model.del_component(model.p_phasefert_index)
@@ -88,7 +86,7 @@ def croppyomo_local(params):
     except AttributeError:
         pass
     ##only used in croplabour pyomo to determine labour per tonne of fert
-    model.p_phasefert = Param(model.s_phases, model.s_lmus, model.s_fert_type, initialize=params[season]['fert_req'], default = 0.0, mutable=True, doc='fert required by 1 unit of phase')
+    model.p_phasefert = pe.Param(model.s_phases, model.s_lmus, model.s_fert_type, initialize=params[season]['fert_req'], default = 0.0, mutable=True, doc='fert required by 1 unit of phase')
    
     
     
@@ -100,7 +98,7 @@ def croppyomo_local(params):
 #variable
 #######################################################################################################################################################
 #######################################################################################################################################################
-model.v_sell_grain = Var(model.s_crops, model.s_grain_pools, bounds=(0,None), doc='tonnes of grain in each pool sold')
+model.v_sell_grain = pe.Var(model.s_crops, model.s_grain_pools, bounds=(0,None), doc='tonnes of grain in each pool sold')
     
 
 
@@ -121,7 +119,8 @@ model.v_sell_grain = Var(model.s_crops, model.s_grain_pools, bounds=(0,None), do
 def rotation_yield_transfer(model,g,k):
     # i=sinp.general['phase_len']-1
     ##h is a disaggregated version of r, it can be indexed. h[0:i] is the rotation history. Have to check if k==h otherwise when h[0:i] is combined with k you can get the wrong rotation
-    return sum(sum(model.p_rotation_yield[r,k,l]*model.v_phase_area[r,l] * model.p_grainpool_proportion[k,g] for r in model.s_phases if model.p_rotation_yield[r,k,l] != 0)for l in model.s_lmus) \
+    return sum(sum(model.p_rotation_yield[r,k,l]*model.v_phase_area[r,l] * model.p_grainpool_proportion[k,g] for r in model.s_phases
+                   if pe.value(model.p_rotation_yield[r,k,l]) != 0)for l in model.s_lmus) \
                    
 
 
@@ -137,7 +136,8 @@ def rotation_yield_transfer(model,g,k):
 #         return False, 0
 def cropsow(model,k,l):
     if any(model.p_cropsow[r,k,l] for r in model.s_phases):
-        return sum(model.p_cropsow[r,k,l]*model.v_phase_area[r,l]  for r in model.s_phases if model.p_cropsow[r,k,l] != 0) #+ model.x[k] >=0 # if ((r,)+(k,)+(l,)) in model.p_cropsow
+        return sum(model.p_cropsow[r,k,l]*model.v_phase_area[r,l]  for r in model.s_phases
+                   if pe.value(model.p_cropsow[r,k,l]) != 0) #+ model.x[k] >=0 # if ((r,)+(k,)+(l,)) in model.p_cropsow
     else:
         return 0
 
@@ -147,13 +147,15 @@ def cropsow(model,k,l):
 #####################################
 
 def rotation_cost(model,c):
-    return sum(sum(model.p_rotation_cost[r,l,c]*model.v_phase_area[r,l] for r in model.s_phases if model.p_rotation_cost[r,l,c] != 0) for l in model.s_lmus )#+ model.x[c] >=0 #0.10677s
+    return sum(sum(model.p_rotation_cost[r,l,c]*model.v_phase_area[r,l] for r in model.s_phases
+                   if pe.value(model.p_rotation_cost[r,l,c]) != 0) for l in model.s_lmus )#+ model.x[c] >=0 #0.10677s
    
 ##############
 #stubble     #
 ##############
 def rot_stubble(model,k,s):
-      return sum(sum(model.p_rotation_yield[r,k,l]*model.v_phase_area[r,l] * model.p_rot_stubble[k,s] for r in model.s_phases if model.p_rotation_yield[r,k,l] != 0)for l in model.s_lmus if model.p_rot_stubble[k,s] !=0 ) \
+      return sum(sum(model.p_rotation_yield[r,k,l]*model.v_phase_area[r,l] * model.p_rot_stubble[k,s] for r in model.s_phases
+                     if pe.value(model.p_rotation_yield[r,k,l]) != 0)for l in model.s_lmus if model.p_rot_stubble[k,s] !=0 ) \
                       
 
 

@@ -665,6 +665,35 @@ def stockpyomo_local(params):
 
 
     try:
+        model.del_component(model.con_offR_index)
+        model.del_component(model.con_offR)
+    except AttributeError:
+        pass
+    def offR(model,k3,k5,v3,a,i,x,y3,g3,w9):
+        v3_prev = l_v1[l_v3.index(v3) - 1]  #used to get the activity number from the last period
+        ##skip constraint if the require param is 0 - using the numpy array because it is 2x faster because don't need to loop through activity keys eg k28
+        ###get the index number - required so numpy array can be indexed
+        t_k3 = l_k3.index(k3)
+        t_k5 = l_k5.index(k5)
+        t_v3 = l_v3.index(v3)
+        t_i = l_i.index(i)
+        t_x = l_x.index(x)
+        t_g3 = l_g3.index(g3)
+        t_w9 = l_w9_offs.index(w9)
+        if not np.any(params['numbers_req_numpyversion_k3k5vw8ixg3w9'][t_k3,t_k5,t_v3,:,t_i,t_x,t_g3,t_w9]):
+            return pe.Constraint.Skip
+        return sum(model.v_offs[k3,k5,t3,v3,n3,w8,i,a,x,y3,g3] * model.p_numbers_req_offs[k3,k5,v3,w8,i,x,g3,w9]
+                   - model.v_offs[k3,k5,t3,v3_prev,n3,w8,i,a,x,y3,g3] * model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,i,a,x,y3,g3,w9]
+                    for t3 in model.s_sale_offs for n3 in model.s_nut_offs for w8 in model.s_lw_offs
+                   if pe.value(model.p_numbers_req_offs[k3,k5,v3,w8,i,x,g3,w9]) != 0
+                   or pe.value(model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,i,a,x,y3,g3,w9]) != 0) <=0 #need to use both in the if statement (even though it is slower) because there are situations eg dvp4 (prejoining) where prov will have a value and req will not.
+    start=time.time()
+    model.con_offR = pe.Constraint(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_dvp_offs, model.s_wean_times, model.s_tol, model.s_gender,
+                                   model.s_gen_merit_dams, model.s_groups_offs, model.s_lw_offs, rule=offR, doc='transfer off to off from last dvp to current dvp.')
+    end=time.time()
+    print('con_offR method 3: ',end-start)
+
+    try:
         model.del_component(model.con_damR_index)
         model.del_component(model.con_damR)
     except AttributeError:
@@ -689,45 +718,15 @@ def stockpyomo_local(params):
                    - model.v_dams[k28,t1,v1,a,n1,w8,i,y1,g1] * model.p_numbers_provthis_dams[k28,k29,t1,v1,a,n1,w8,i,y1,g1,g9,w9]
                    for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams
                    for n1 in model.s_nut_dams for w8 in model.s_lw_dams for g1 in model.s_groups_dams
-                   if model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, i, y1, g1,g9, w9] != 0
-                   or model.p_numbers_prov_dams[k28, k29, t1, v1_prev, a, n1, w8, i, y1, g1, g9, w9] != 0
-                   or model.p_numbers_provthis_dams[k28, k29, t1, v1, a, n1, w8, i, y1, g1, g9, w9] != 0) <=0
+                   if pe.value(model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, i, y1, g1,g9, w9]) != 0
+                   or pe.value(model.p_numbers_prov_dams[k28, k29, t1, v1_prev, a, n1, w8, i, y1, g1, g9, w9]) != 0
+                   or pe.value(model.p_numbers_provthis_dams[k28, k29, t1, v1, a, n1, w8, i, y1, g1, g9, w9]) != 0) <=0
 
     start=time.time()
     model.con_damR = pe.Constraint(model.s_k2_birth_dams, model.s_dvp_dams, model.s_wean_times, model.s_tol, model.s_gen_merit_dams,
                                    model.s_groups_dams, model.s_lw_dams, rule=damR, doc='transfer dam to dam from last dvp to current dvp.')
     end=time.time()
     print('con_damR method 3: ',end-start)
-
-
-    try:
-        model.del_component(model.con_offR_index)
-        model.del_component(model.con_offR)
-    except AttributeError:
-        pass
-    def offR(model,k3,k5,v3,a,i,x,y3,g3,w9):
-        v3_prev = l_v1[l_v3.index(v3) - 1]  #used to get the activity number from the last period
-        ##skip constraint if the require param is 0 - using the numpy array because it is 2x faster because don't need to loop through activity keys eg k28
-        ###get the index number - required so numpy array can be indexed
-        t_k3 = l_k3.index(k3)
-        t_k5 = l_k5.index(k5)
-        t_v3 = l_v3.index(v3)
-        t_i = l_i.index(i)
-        t_x = l_x.index(x)
-        t_g3 = l_g3.index(g3)
-        t_w9 = l_w9_offs.index(w9)
-        if not np.any(params['numbers_req_numpyversion_k3k5vw8ixg3w9'][t_k3,t_k5,t_v3,:,t_i,t_x,t_g3,t_w9]):
-            return pe.Constraint.Skip
-        return sum(model.v_offs[k3,k5,t3,v3,n3,w8,i,a,x,y3,g3] * model.p_numbers_req_offs[k3,k5,v3,w8,i,x,g3,w9]
-                   - model.v_offs[k3,k5,t3,v3_prev,n3,w8,i,a,x,y3,g3] * model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,i,a,x,y3,g3,w9]
-                    for t3 in model.s_sale_offs for n3 in model.s_nut_offs for w8 in model.s_lw_offs
-                   if model.p_numbers_req_offs[k3,k5,v3,w8,i,x,g3,w9] != 0 or model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,i,a,x,y3,g3,w9] != 0) <=0 #need to use both in the if statement (even though it is slower) because there are situations eg dvp4 (prejoining) where prov will have a value and req will not.
-    start=time.time()
-    model.con_offR = pe.Constraint(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_dvp_offs, model.s_wean_times, model.s_tol, model.s_gender,
-                                   model.s_gen_merit_dams, model.s_groups_offs, model.s_lw_offs, rule=offR, doc='transfer off to off from last dvp to current dvp.')
-    end=time.time()
-    print('con_offR method 3: ',end-start)
-
 
     try:
         model.del_component(model.con_progR_index)
@@ -738,18 +737,11 @@ def stockpyomo_local(params):
         if any(model.p_npw_req[t2,d,x,g1] for t2 in model.s_sale_prog):
             return (- sum(model.v_dams[k5, t1, v1, a, n1, w18, i, y1, g1]  * model.p_npw[k5, t1, v1, a, n1, w18, i, d, x, y1, g1, w9, i9] #pass in the k5 set to dams - each slice of k5 aligns with a slice in k2 eg 11 and 22. we don't need other k2 slices eg nm
                         for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams for w18 in model.s_lw_dams for i in model.s_tol
-                             if model.p_npw[k5, t1, v1, a, n1, w18, i, d, x, y1, g1, w9, i9]!=0)
-                    + sum(model.v_prog[k5, t2, w9, i9, d, a, x, g1] * model.p_npw_req[t2,d,x,g1] for t2 in model.s_sale_prog if model.p_npw_req[t2,d,x,g1]!=0))<=0
+                             if pe.value(model.p_npw[k5, t1, v1, a, n1, w18, i, d, x, y1, g1, w9, i9])!=0)
+                    + sum(model.v_prog[k5, t2, w9, i9, d, a, x, g1] * model.p_npw_req[t2,d,x,g1] for t2 in model.s_sale_prog
+                          if pe.value(model.p_npw_req[t2,d,x,g1])!=0))<=0
         else:
             return pe.Constraint.Skip
-    # def progR(model, k5, a, i9, d, x, y1, g1, w9):
-    #     if any(model.p_npw_req[t2,d,x] for t2 in model.s_sale_prog):
-    #         return (- sum(model.v_dams[k2, t1, v1, a, n1, w18, i, y1, g1]  * model.p_npw[k2, k5, t1, v1, a, n1, w18, i, d, x, y1, g1, w9, i9]
-    #                     for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams for w18 in model.s_lw_dams for i in model.s_tol
-    #                          if model.p_npw[k2, k5, t1, v1, a, n1, w18,  i, d, x, y1, g1, w9, i9]!=0)
-    #                 + sum(model.v_prog[k5, t2, w9,  i9, d, a, x, g1] * model.p_npw_req[t2,d,x] for t2 in model.s_sale_prog if model.p_npw_req[t2,d,x]!=0))<=0
-    #     else:
-    #         return pe.Constraint.Skip
     start = time.time()
     model.con_progR = pe.Constraint(model.s_k5_birth_offs, model.s_wean_times, model.s_tol,
                                     model.s_damage, model.s_gender, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_prog, rule=progR,
@@ -766,10 +758,10 @@ def stockpyomo_local(params):
         if v1==l_v1[0] and any(model.p_progreq_dams[k2, k3, k5, t1, w18, i, y1, g1, g9, w9] for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for w18 in model.s_lw_dams for g1 in model.s_groups_dams):
             return (sum(- model.v_prog[k5, t2, w28, i, d, a0, x, g2] * model.p_progprov_dams[k3, t2, w28, i, d, a0, x, y1, g2,g9,w9]
                         for d in model.s_damage for a0 in model.s_wean_times for x in model.s_gender for w28 in model.s_lw_prog for t2 in model.s_sale_prog for g2 in model.s_groups_prog
-                        if model.p_progprov_dams[k3, t2, w28, i, d, a0, x, y1, g2,g9,w9]!= 0)
+                        if pe.value(model.p_progprov_dams[k3, t2, w28, i, d, a0, x, y1, g2,g9,w9])!= 0)
                        + sum(model.v_dams[k2, t1, v1, a1, n1, w18, i, y1, g1]  * model.p_progreq_dams[k2, k3, k5, t1, w18, i, y1, g1, g9, w9]
                         for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for a1 in model.s_wean_times for n1 in model.s_nut_dams for w18 in model.s_lw_dams for g1 in model.s_groups_dams
-                             if model.p_progreq_dams[k2, k3, k5, t1, w18, i, y1, g1, g9, w9]!= 0))<=0
+                             if pe.value(model.p_progreq_dams[k2, k3, k5, t1, w18, i, y1, g1, g9, w9])!= 0))<=0
         else:
             return pe.Constraint.Skip
     start = time.time()
@@ -788,9 +780,10 @@ def stockpyomo_local(params):
         if v3==l_v3[0] and any(model.p_progreq_offs[k3, v3, w38, i, x, g3, w9] for w38 in model.s_lw_offs):
             return (sum(- model.v_prog[k5, t2, w28, i, d, a, x, g3] * model.p_progprov_offs[k3, k5, t2, w28, i, d, a, x, y3, g3, w9] #use g3 (same as g2)
                         for d in model.s_damage for w28 in model.s_lw_prog for t2 in model.s_sale_prog
-                        if model.p_progprov_offs[k3, k5, t2, w28, i, d, a, x, y3, g3, w9]!= 0)
+                        if pe.value(model.p_progprov_offs[k3, k5, t2, w28, i, d, a, x, y3, g3, w9])!= 0)
                        + sum(model.v_offs[k3,k5,t3,v3,n3,w38,i,a,x,y3,g3]  * model.p_progreq_offs[k3, v3, w38, i, x, g3, w9]
-                        for t3 in model.s_sale_offs for n3 in model.s_nut_dams for w38 in model.s_lw_offs if model.p_progreq_offs[k3, v3, w38, i, x, g3, w9]!= 0))<=0
+                        for t3 in model.s_sale_offs for n3 in model.s_nut_dams for w38 in model.s_lw_offs
+                             if pe.value(model.p_progreq_offs[k3, v3, w38, i, x, g3, w9])!= 0))<=0
         else:
             return pe.Constraint.Skip
     start = time.time()
@@ -809,7 +802,7 @@ def stockpyomo_local(params):
         return - model.v_sire[g0] * model.p_nsires_prov[g0, p8] + sum(model.v_dams[k2,t1,v1,a,n1,w1,i,y1,g1] * model.p_nsires_req[k2,t1,v1,a,n1,w1,i,y1,g1,g0,p8]
                   for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for a in model.s_wean_times for n1 in model.s_nut_dams
                    for w1 in model.s_lw_dams for i in model.s_tol for y1 in model.s_gen_merit_dams  for g1 in model.s_groups_dams
-                   if model.p_nsires_req[k2,t1,v1,a,n1,w1,i,y1,g1,g0,p8]!=0) <=0
+                   if pe.value(model.p_nsires_req[k2,t1,v1,a,n1,w1,i,y1,g1,g0,p8])!=0) <=0
     model.con_matingR = pe.Constraint(model.s_groups_sire, model.s_sire_periods, rule=mating, doc='sire requirement for mating')
 
     try:
@@ -820,10 +813,12 @@ def stockpyomo_local(params):
         return -model.v_infrastructure[h1] + sum(model.v_sire[g0] * model.p_infra_sire[h1,g0] for g0 in model.s_groups_sire if model.p_infra_sire[h1,g0]!=0)  \
                + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,i,y1,g1] * model.p_infra_dams[k2,h1,t1,v1,a,n1,w1,i,y1,g1]
                          for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
-                         for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams if model.p_infra_dams[k2,h1,t1,v1,a,n1,w1,i,y1,g1]!=0)
+                         for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
+                         if pe.value(model.p_infra_dams[k2,h1,t1,v1,a,n1,w1,i,y1,g1])!=0)
                     + sum(model.v_offs[k3,k5,t3,v3,n3,w3,i,a,x,y3,g3]  * model.p_infra_offs[k3,k5,h1,t3,v3,n3,w3,i,a,x,y3,g3]
                           for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
-                          for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs if model.p_infra_offs[k3,k5,h1,t3,v3,n3,w3,i,a,x,y3,g3]!=0)
+                          for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
+                          if pe.value(model.p_infra_offs[k3,k5,h1,t3,v3,n3,w3,i,a,x,y3,g3])!=0)
                for a in model.s_wean_times for i in model.s_tol) <=0
     model.con_stockinfra = pe.Constraint(model.s_infrastructure, rule=stockinfra, doc='Requirement for infrastructure (based on number of times yarded and shearing activity)')
 
@@ -851,11 +846,11 @@ def stock_me(model,f,p6):
            + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,i,y1,g1] * model.p_mei_dams[k2,p6,f,t1,v1,a,n1,w1,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                      for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
-                     if model.p_mei_dams[k2,p6,f,t1,v1,a,n1,w1,i,y1,g1] != 0)
+                     if pe.value(model.p_mei_dams[k2,p6,f,t1,v1,a,n1,w1,i,y1,g1]) != 0)
                 + sum(model.v_offs[k3,k5,t3,v3,n3,w3,i,a,x,y3,g3]  * model.p_mei_offs[k3,k5,p6,f,t3,v3,n3,w3,i,a,x,y3,g3]
                       for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
                       for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
-                      if model.p_mei_offs[k3,k5,p6,f,t3,v3,n3,w3,i,a,x,y3,g3] != 0)
+                      if pe.value(model.p_mei_offs[k3,k5,p6,f,t3,v3,n3,w3,i,a,x,y3,g3]) != 0)
                for a in model.s_wean_times for i in model.s_tol)
 
 
@@ -864,11 +859,11 @@ def stock_pi(model,f,p6):
            + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,i,y1,g1] * model.p_pi_dams[k2,p6,f,t1,v1,a,n1,w1,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                      for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
-                     if model.p_pi_dams[k2,p6,f,t1,v1,a,n1,w1,i,y1,g1] != 0)
+                     if pe.value(model.p_pi_dams[k2,p6,f,t1,v1,a,n1,w1,i,y1,g1]) != 0)
                 + sum(model.v_offs[k3,k5,t3,v3,n3,w3,i,a,x,y3,g3]  * model.p_pi_offs[k3,k5,p6,f,t3,v3,n3,w3,i,a,x,y3,g3]
                       for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
                       for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
-                      if model.p_pi_offs[k3,k5,p6,f,t3,v3,n3,w3,i,a,x,y3,g3] != 0)
+                      if pe.value(model.p_pi_offs[k3,k5,p6,f,t3,v3,n3,w3,i,a,x,y3,g3]) != 0)
                for a in model.s_wean_times for i in model.s_tol)
 
 def stock_cashflow(model,c):
@@ -878,14 +873,14 @@ def stock_cashflow(model,c):
            + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,i,y1,g1] * model.p_cashflow_dams[k2,c,t1,v1,a,n1,w1,i,y1,g1]
                       for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                       for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
-                     if model.p_cashflow_dams[k2,c,t1,v1,a,n1,w1,i,y1,g1] != 0)
+                     if pe.value(model.p_cashflow_dams[k2,c,t1,v1,a,n1,w1,i,y1,g1]) != 0)
                 + sum(model.v_prog[k5, t2, w2, i, d, a, x, g2] * model.p_cashflow_prog[c, t2, w2, i, a, x, g2]
                       for k5 in model.s_k5_birth_offs for t2 in model.s_sale_prog for w2 in model.s_lw_prog for d in model.s_damage
                       for x in model.s_gender for g2 in model.s_groups_prog if model.p_cashflow_prog[c, t2, w2, i, a, x, g2] != 0)
                 + sum(model.v_offs[k3,k5,t3,v3,n3,w3,i,a,x,y3,g3]  * model.p_cashflow_offs[k3,k5,c,t3,v3,n3,w3,i,a,x,y3,g3]
                       for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
                       for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
-                      if model.p_cashflow_offs[k3,k5,c,t3,v3,n3,w3,i,a,x,y3,g3] != 0)
+                      if pe.value(model.p_cashflow_offs[k3,k5,c,t3,v3,n3,w3,i,a,x,y3,g3]) != 0)
                for a in model.s_wean_times for i in model.s_tol)
     purchases = sum(model.v_sire[g0] * model.p_cost_purch_sire[c,g0] for g0 in model.s_groups_sire)
     return stock - infrastructure - purchases
@@ -904,11 +899,11 @@ def stock_cost(model):
             + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,i,y1,g1] * model.p_cost_dams[k2,t1,v1,a,n1,w1,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                      for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
-                      if model.p_cost_dams[k2,t1,v1,a,n1,w1,i,y1,g1] != 0)
+                      if pe.value(model.p_cost_dams[k2,t1,v1,a,n1,w1,i,y1,g1]) != 0)
                 + sum(model.v_offs[k3,k5,t3,v3,n3,w3,i,a,x,y3,g3]  * model.p_cost_offs[k3,k5,t3,v3,n3,w3,i,a,x,y3,g3]
                       for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
                       for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
-                      if model.p_cost_offs[k3,k5,t3,v3,n3,w3,i,a,x,y3,g3] != 0)
+                      if pe.value(model.p_cost_offs[k3,k5,t3,v3,n3,w3,i,a,x,y3,g3]) != 0)
                for a in model.s_wean_times for i in model.s_tol)
     purchases = sum(model.v_sire[g0] * model.p_cost_purch_sire[c,g0] for g0 in model.s_groups_sire for c in model.s_cashflow_periods)
     return  stock + infrastructure + purchases
@@ -920,11 +915,11 @@ def stock_labour_anyone(model,p5):
             + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,i,y1,g1] * model.p_lab_anyone_dams[k2,p5,t1,v1,a,n1,w1,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                      for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
-                      if model.p_lab_anyone_dams[k2,p5,t1,v1,a,n1,w1,i,y1,g1] != 0)
+                      if pe.value(model.p_lab_anyone_dams[k2,p5,t1,v1,a,n1,w1,i,y1,g1]) != 0)
                 + sum(model.v_offs[k3,k5,t3,v3,n3,w3,i,a,x,y3,g3]  * model.p_lab_anyone_offs[k3,k5,p5,t3,v3,n3,w3,i,a,x,y3,g3]
                       for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
                       for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
-                      if model.p_lab_anyone_offs[k3,k5,p5,t3,v3,n3,w3,i,a,x,y3,g3] != 0)
+                      if pe.value(model.p_lab_anyone_offs[k3,k5,p5,t3,v3,n3,w3,i,a,x,y3,g3]) != 0)
                for a in model.s_wean_times for i in model.s_tol)
     return stock
 
@@ -934,11 +929,11 @@ def stock_labour_perm(model,p5):
             + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,i,y1,g1] * model.p_lab_perm_dams[k2,p5,t1,v1,a,n1,w1,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                      for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
-                      if model.p_lab_perm_dams[k2,p5,t1,v1,a,n1,w1,i,y1,g1] != 0)
+                      if pe.value(model.p_lab_perm_dams[k2,p5,t1,v1,a,n1,w1,i,y1,g1]) != 0)
                 + sum(model.v_offs[k3,k5,t3,v3,n3,w3,i,a,x,y3,g3]  * model.p_lab_perm_offs[k3,k5,p5,t3,v3,n3,w3,i,a,x,y3,g3]
                       for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
                       for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
-                      if model.p_lab_perm_offs[k3,k5,p5,t3,v3,n3,w3,i,a,x,y3,g3] != 0)
+                      if pe.value(model.p_lab_perm_offs[k3,k5,p5,t3,v3,n3,w3,i,a,x,y3,g3]) != 0)
                for a in model.s_wean_times for i in model.s_tol)
     return stock
 
@@ -948,11 +943,11 @@ def stock_labour_manager(model,p5):
             + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,i,y1,g1] * model.p_lab_manager_dams[k2,p5,t1,v1,a,n1,w1,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                      for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
-                      if model.p_lab_manager_dams[k2,p5,t1,v1,a,n1,w1,i,y1,g1] != 0)
+                      if pe.value(model.p_lab_manager_dams[k2,p5,t1,v1,a,n1,w1,i,y1,g1]) != 0)
                 + sum(model.v_offs[k3,k5,t3,v3,n3,w3,i,a,x,y3,g3]  * model.p_lab_manager_offs[k3,k5,p5,t3,v3,n3,w3,i,a,x,y3,g3]
                       for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
                       for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
-                      if model.p_lab_manager_offs[k3,k5,p5,t3,v3,n3,w3,i,a,x,y3,g3] != 0)
+                      if pe.value(model.p_lab_manager_offs[k3,k5,p5,t3,v3,n3,w3,i,a,x,y3,g3]) != 0)
                for a in model.s_wean_times for i in model.s_tol)
     return stock
 #
@@ -964,11 +959,11 @@ def stock_asset(model):
             + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,i,y1,g1] * model.p_asset_dams[k2,t1,v1,a,n1,w1,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                      for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
-                      if model.p_asset_dams[k2,t1,v1,a,n1,w1,i,y1,g1] != 0)
+                      if pe.value(model.p_asset_dams[k2,t1,v1,a,n1,w1,i,y1,g1]) != 0)
                 + sum(model.v_offs[k3,k5,t3,v3,n3,w3,i,a,x,y3,g3]  * model.p_asset_offs[k3,k5,t3,v3,n3,w3,i,a,x,y3,g3]
                       for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
                       for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
-                      if model.p_asset_offs[k3,k5,t3,v3,n3,w3,i,a,x,y3,g3] != 0)
+                      if pe.value(model.p_asset_offs[k3,k5,t3,v3,n3,w3,i,a,x,y3,g3]) != 0)
                for a in model.s_wean_times for i in model.s_tol)
     # purchases = sum(sum(model.v_purchase_dams[v1,w1,i,g1] * sum(model.p_cost_purch_dam[v1,w1,i,g1,c] for c in model.s_cashflow_periods) for v1 in model.s_dvp_dams for w1 in model.s_lw_dams for g1 in model.s_groups_dams)
     #                 +sum(model.v_purchase_offs[v3,w3,i,g3] * sum(model.p_cost_purch_offs[v3,w3,i,g3,c] for c in model.s_cashflow_periods) for v3 in model.s_dvp_offs for w3 in model.s_lw_offs for g3 in model.s_groups_offs)
