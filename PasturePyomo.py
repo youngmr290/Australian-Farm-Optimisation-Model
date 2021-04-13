@@ -243,7 +243,8 @@ def paspyomo_local(params):
     def greenpas(model,f,l,t):
         fs = l_fp[l_fp.index(f) - 1] #need the activity level from last feed period
         if any(model.p_foo_start_grnha[o,f,l,t] for o in model.s_foo_levels):
-            return sum(model.v_phase_area[r,l] * (-model.p_germination[f,l,r,t] - model.p_foo_grn_reseeding[f,l,r,t]) for r in model.s_phases if model.p_germination[f,l,r,t]!=0 or model.p_foo_grn_reseeding[f,l,r,t]!=0)         \
+            return sum(model.v_phase_area[r,l] * (-model.p_germination[f,l,r,t] - model.p_foo_grn_reseeding[f,l,r,t]) for r in model.s_phases
+                       if pe.value(model.p_germination[f,l,r,t])!=0 or model.p_foo_grn_reseeding[f,l,r,t]!=0)         \
                             + sum(model.v_greenpas_ha[v,g,o,f,l,t] * model.p_foo_start_grnha[o,f,l,t]   \
                             - model.v_greenpas_ha[v,g,o,fs,l,t] * model.p_foo_end_grnha[g,o,fs,l,t] for v in model.s_feed_pools for g in model.s_grazing_int for o in model.s_foo_levels) <=0
         else:
@@ -269,7 +270,7 @@ def paspyomo_local(params):
         pass
     def nappas(model,d,f,t):
         fs = l_fp[l_fp.index(f) - 1] #need the activity level from last feed period
-        return sum(sum(sum(model.v_phase_area[r,l] * -model.p_nap[d,f,l,r,t] for r in model.s_phases if model.p_nap[d,f,l,r,t] != 0)for l in model.s_lmus)        \
+        return sum(sum(sum(model.v_phase_area[r,l] * -model.p_nap[d,f,l,r,t] for r in model.s_phases if pe.value(model.p_nap[d,f,l,r,t]) != 0)for l in model.s_lmus)        \
                        + model.v_nap_consumed[v,d,f,t] * model.p_dry_removal_t[f,t] for v in model.s_feed_pools) \
                        - model.v_nap_transfer[d,fs,t] * model.p_dry_transfer_t[fs,t] + model.v_nap_transfer[d,f,t] * 1000 <=0 #minus 1000 is what you are transferring into constraint, p_dry_transfer is how much you get in the current period if you transferred 1t from previous period (not 1000 because you have to account for deterioration)
     model.con_nappas = pe.Constraint(model.s_dry_groups, model.s_feed_periods, model.s_pastures, rule = nappas, doc='High and low quality dry pasture of each type available in each period')
@@ -292,7 +293,7 @@ def paspyomo_local(params):
     def erosion(model,f,l,t):
         return sum(sum(model.v_greenpas_ha[v,g,o,f,l,t] for v in model.s_feed_pools) *  -model.p_foo_end_grnha[g,o,f,l,t] for g in model.s_grazing_int for o in model.s_foo_levels) \
                 -  sum(model.v_drypas_transfer[d,f,t] * 1000 for d in model.s_dry_groups) \
-                + sum(model.v_phase_area[r,l]  * model.p_erosion[f,l,r,t] for r in model.s_phases if model.p_erosion[f,l,r,t] != 0) <=0
+                + sum(model.v_phase_area[r,l]  * model.p_erosion[f,l,r,t] for r in model.s_phases if pe.value(model.p_erosion[f,l,r,t]) != 0) <=0
     model.con_erosion = pe.Constraint(model.s_feed_periods, model.s_lmus, model.s_pastures, rule = erosion, doc='total pasture available of each type on each soil type in each feed period')
 
     
@@ -309,7 +310,7 @@ def paspyomo_local(params):
 ##############
 def passow(model,p,k,l):
     if any(model.p_pas_sow[p,l,r,k] for r in model.s_phases):
-        return sum(model.p_pas_sow[p,l,r,k]*model.v_phase_area[r,l] for r in model.s_phases if model.p_pas_sow[p,l,r,k] != 0)
+        return sum(model.p_pas_sow[p,l,r,k]*model.v_phase_area[r,l] for r in model.s_phases if pe.value(model.p_pas_sow[p,l,r,k]) != 0)
     else:
         return 0
 

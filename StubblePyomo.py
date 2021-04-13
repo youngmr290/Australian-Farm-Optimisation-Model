@@ -109,7 +109,7 @@ model.v_stub_transfer = pe.Var(model.s_feed_periods, model.s_crops, model.s_stub
 ###################
 ##stubble transter from category to category and period to period
 def stubble_req_a(model,k,s):
-    return sum(model.v_stub_con[v,f,k,s] * model.p_a_req[f,k,s] for v in model.s_feed_pools for f in model.s_feed_periods if model.p_a_req[f,k,s] !=0)
+    return sum(model.v_stub_con[v,f,k,s] * model.p_a_req[f,k,s] for v in model.s_feed_pools for f in model.s_feed_periods if pe.value(model.p_a_req[f,k,s]) !=0)
 
 
 ##stubble md

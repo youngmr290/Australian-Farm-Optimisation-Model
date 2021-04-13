@@ -76,6 +76,9 @@ def rotationpyomo(params):
     ######################
     #rotation constraints#
     ######################
+
+    #todo i might not need the root hist variable and whatnot with new season structure
+
     '''
     For steady state model each rotation requires and provides a rotation history.
     For DSP the process is slight more complicated because the history that provides the rotations must be the same for

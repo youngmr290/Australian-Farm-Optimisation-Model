@@ -71,7 +71,7 @@ def croppyomo_local(params):
         model.del_component(model.p_rot_stubble)
     except AttributeError:
         pass
-    model.p_rot_stubble = pe.Param(model.s_crops, model.s_stub_cat, initialize=params['stubble_production'], default = 0.0, doc='stubble category A produced / kg grain harvested')
+    model.p_rot_stubble = pe.Param(model.s_crops, model.s_stub_cat, initialize=params['stubble_production'], default = 0.0, doc='stubble category A produced per kg grain harvested')
     
     try:
         model.del_component(model.p_cropsow_index)
@@ -155,7 +155,7 @@ def rotation_cost(model,c):
 ##############
 def rot_stubble(model,k,s):
       return sum(sum(model.p_rotation_yield[r,k,l]*model.v_phase_area[r,l] * model.p_rot_stubble[k,s] for r in model.s_phases
-                     if pe.value(model.p_rotation_yield[r,k,l]) != 0)for l in model.s_lmus if model.p_rot_stubble[k,s] !=0 ) \
+                     if pe.value(model.p_rotation_yield[r,k,l]) != 0)for l in model.s_lmus if pe.value(model.p_rot_stubble[k,s]) !=0 ) \
                       
 
 
