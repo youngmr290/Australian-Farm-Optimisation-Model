@@ -48,8 +48,9 @@ sam['grn_dmd_senesce_f','annual']       = np.ones((len(per.f_feed_periods()) - 1
 ##livestock
 sam['woolp_mpg'] = 1.0                      # sa multiplier for wool price at std micron
 sam['salep_max'] = 1.0                      #max sale price in grid
-sam['kg'] = 1.0                             #energy efficiency
-sam['mr'] = 1.0                             #Maintenance requirement
+sam['kg'] = 1.0                             #energy efficiency of adults (zf2==1)
+sam['mr'] = 1.0                             #Maintenance requirement of adults (zf2==1)
+sam['pi'] = 1.0                             #Potential intake of adults (zf2==1)
 sam['LTW_dams'] = 1.0                       #adjust impact of life time wool fleece effects
 sam['LTW_offs'] = 1.0                       #adjust impact of life time wool fleece effects
 

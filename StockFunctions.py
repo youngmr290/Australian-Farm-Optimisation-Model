@@ -666,7 +666,8 @@ def roll_slices(array, roll, roll_axis=0):
 
 
 
-def f_potential_intake_cs(ci, cl, srw, relsize_start, rc_start, temp_lc_dams, temp_ave, temp_max, temp_min, rain_intake, rc_birth_start = 1, pi_age_y = 0, lb_start = 0, mp2=0,piyf=1,period_between_birthwean=1):
+def f_potential_intake_cs(ci, cl, srw, relsize_start, rc_start, temp_lc_dams, temp_ave, temp_max, temp_min, rain_intake
+                          , rc_birth_start=1, pi_age_y=0, lb_start=0, mp2=0, piyf=1, period_between_birthwean=1, sam_pi=1):
     ##Condition factor on PI
     picf= np.minimum(1, rc_start * (ci[20, ...] - rc_start) / (ci[20, ...] - 1))
     ##Lactation adjustment (BC at parturition) - dam only because lb start = 0 for everything except lb
@@ -684,7 +685,7 @@ def f_potential_intake_cs(ci, cl, srw, relsize_start, rc_start, temp_lc_dams, te
     ##Temperature factor on PI
     pitf = np.minimum(1, pitf_high) * np.maximum(1, pitf_low)
     ##Potential intake
-    pi = ci[1, ...] * srw * relsize_start * (ci[2, ...] - relsize_start) * picf * pitf * pilf
+    pi = ci[1, ...] * srw * relsize_start * (ci[2, ...] - relsize_start) * picf * pitf * pilf * sam_pi
     ##Potential intake of pasture - young at foot only
     pi = (pi - mp2 / cl[6, ...] * cl[25, ...]) * piyf
     ##Potential intake of pasture - young at foot only
@@ -947,12 +948,15 @@ def f_milk(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_start,
 
 def f_fibre(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_m2g, mei_g, mew_min_g, d_cfw_ave_g
             , sfd_a0e0b0xyg, wge_a0e0b0xyg, af_wool_g, dlf_wool_g,  kw_yg, days_period_g, sfw_ltwadj_g, sfd_ltwadj_g
-            , mec_g1=0, mel_g1=0, gest_propn_g1=0, lact_propn_g1=0):
+            , mec_g1=0, mel_g1=0, gest_propn_g1=0, lact_propn_g1=0, sam_pi=1):
     ##adjust wge, cfw_ave, mew_min & sfd for the LTW adjustments (CFW is a scalar and FD is an addition)
     wge_a0e0b0xyg = wge_a0e0b0xyg * sfw_ltwadj_g
     d_cfw_ave_g = d_cfw_ave_g * sfw_ltwadj_g
     mew_min_g = mew_min_g * sfw_ltwadj_g
     sfd_a0e0b0xyg = sfd_a0e0b0xyg + sfd_ltwadj_g
+    ##adjust wge by sam_pi so the intake sensitivity doesn't alter the wool growth outcome for the genotype
+    ###this is required for the GEPEP analysis that is calibrating the intake and the fleece weight
+    wge_a0e0b0xyg = wge_a0e0b0xyg / sam_pi
     ##ME available for wool growth
     mew_xs_g = np.maximum(mew_min_g * relsize_start_g, mei_g - (mec_g1 * gest_propn_g1 + mel_g1 * lact_propn_g1))
     ##Wool growth (protein weight-as shorn i.e. not DM) if there was no lag
@@ -1487,7 +1491,8 @@ def f_condensed(numbers, var, lw_idx, prejoin_tup, season_tup, i_n_len, i_w_len,
 
     return var
 
-def f_period_start_nums(numbers, prejoin_tup, season_tup, period_is_startseason, season_propn_z, group=None, nyatf_b1 = 0, numbers_initial_repro=0, gender_propn_x=1, period_is_prejoin=0, period_is_birth=False):
+def f_period_start_nums(numbers, prejoin_tup, season_tup, period_is_startseason, season_propn_z, group=None, nyatf_b1 = 0
+                        , numbers_initial_repro=0, gender_propn_x=1, period_is_prejoin=0, period_is_birth=False):
     ##a) reallocate for season type
     if np.any(period_is_startseason):
         temporary = np.sum(numbers, axis = season_tup, keepdims=True)  * season_propn_z  #Calculate temporary values as if period_is_break
@@ -1504,7 +1509,9 @@ def f_period_start_nums(numbers, prejoin_tup, season_tup, period_is_startseason,
     return numbers
 
 
-def f_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfoet_b1 = 0, nyatf_b1 = 0, group=None, conception = 0, scan=0, gbal=0, gender_propn_x=1, period_is_mating = False, period_is_matingend = False, period_is_birth=False, period_is_scan=False):
+def f_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfoet_b1 = 0, nyatf_b1 = 0, group=None
+                      , conception = 0, scan=0, gbal=0, gender_propn_x=1, period_is_mating = False
+                      , period_is_matingend = False, period_is_birth=False, period_is_scan=False):
     '''
     This adjusts numbers for things like conception and mortality that happen during a given period
     '''
@@ -1528,7 +1535,8 @@ def f_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfoe
         ###d) birth (account for birth status and if drys are retained)
         if np.any(period_is_birth):
             dam_propn_birth_b1 = f_comb(nfoet_b1, nyatf_b1) * (1 - mortality_yatf) ** nyatf_b1 * mortality_yatf ** (nfoet_b1 - nyatf_b1) # the proportion of dams of each LSLN based on (progeny) mortality
-            temp = np.sum(dam_propn_birth_b1 * gender_propn_x, axis=sinp.stock['i_x_pos'], keepdims=True) * numbers[:,:,sinp.stock['ia_prepost_b1'],...] #have to average x axis so that it is not active for dams - times by gender propn to give approx weighting (ie because offs are not usually entire males so they will get low weighting)
+            ##have to average x axis so that it is not active for dams - times by gender propn to give approx weighting (ie because offs are not usually entire males so they will get low weighting)
+            temp = np.sum(dam_propn_birth_b1 * gender_propn_x, axis=sinp.stock['i_x_pos'], keepdims=True) * numbers[:,:,sinp.stock['ia_prepost_b1'],...]
             pp_numbers = fun.f_update(numbers, temp, period_is_birth)  # calculated in the period after birth when progeny mortality due to exposure is calculated
             temp = np.maximum(pinp.sheep['i_drysretained_birth'],np.minimum(1, nyatf_b1)) * pp_numbers
             numbers = fun.f_update(pp_numbers, temp, period_is_birth * (gbal>=2)) # has to happen after the dams are moved due to progeny mortality so that gbal drys are also scaled by drys_retained
