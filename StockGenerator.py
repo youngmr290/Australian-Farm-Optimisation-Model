@@ -2034,9 +2034,10 @@ def generator(params,r_vals,ev,plots = False):
                 z1f_sire = 1 / (1 + np.exp(+cg_sire[4, ...] * (relsize1_start_sire - cg_sire[5, ...])))
                 ###EVG Size factor (increases at maturity)
                 z2f_sire = np.clip((relsize1_start_sire - cg_sire[6, ...]) / (cg_sire[7, ...] - cg_sire[6, ...]), 0 ,1)
-                ###sensitivity on kg (efficiency of gain) & MR (maintenance req) based on z2f - the sensitivity is only for adults
+                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on z2f - the sensitivity is only for adults
                 sam_kg_sire = fun.f_update(1, sen.sam['kg'], z2f_sire == 1)
                 sam_mr_sire = fun.f_update(1, sen.sam['mr'], z2f_sire == 1)
+                sam_pi_sire = fun.f_update(1, sen.sam['pi'], z2f_sire == 1)
 
             ##dams
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p, ...] > 0):
@@ -2064,9 +2065,10 @@ def generator(params,r_vals,ev,plots = False):
                 z1f_dams = 1 / (1 + np.exp(+cg_dams[4, ...] * (relsize1_start_dams - cg_dams[5, ...])))
                 ###EVG Size factor (increases at maturity)
                 z2f_dams = np.clip((relsize1_start_dams - cg_dams[6, ...]) / (cg_dams[7, ...] - cg_dams[6, ...]), 0 ,1)
-                ###sensitivity on kg (efficiency of gain) & MR (maintenance req) based on z2f - the sensitivity is only for adults
+                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on z2f - the sensitivity is only for adults
                 sam_kg_dams = fun.f_update(1, sen.sam['kg'], z2f_dams == 1)
                 sam_mr_dams = fun.f_update(1, sen.sam['mr'], z2f_dams == 1)
+                sam_pi_dams = fun.f_update(1, sen.sam['pi'], z2f_dams == 1)
                 ##sires for mating
                 n_sire_a1e1b1nwzida0e0b0xyg1g0p8 = sfun.f_sire_req(sire_propn_pa1e1b1nwzida0e0b0xyg1g0[p], sire_periods_g0p8, pinp.sheep['i_sire_recovery']
                                                                    , pinp.sheep['i_startyear'], date_end_pa1e1b1nwzida0e0b0xyg[p], period_is_join_pa1e1b1nwzida0e0b0xyg1[p])
@@ -2096,9 +2098,10 @@ def generator(params,r_vals,ev,plots = False):
                 z1f_offs = 1 / (1 + np.exp(+cg_offs[4, ...] * (relsize1_start_offs - cg_offs[5, ...])))
                 ###EVG Size factor (increases at maturity)
                 z2f_offs = np.clip((relsize1_start_offs - cg_offs[6, ...]) / (cg_offs[7, ...] - cg_offs[6, ...]), 0 ,1)
-                ###sensitivity on kg (efficiency of gain) & MR (maintenance req) based on z2f - the sensitivity is only for adults
+                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on z2f - the sensitivity is only for adults
                 sam_kg_offs = fun.f_update(1, sen.sam['kg'], z2f_offs == 1)
                 sam_mr_offs = fun.f_update(1, sen.sam['mr'], z2f_offs == 1)
+                sam_pi_offs = fun.f_update(1, sen.sam['pi'], z2f_offs == 1)
 
 
 
@@ -2124,8 +2127,10 @@ def generator(params,r_vals,ev,plots = False):
                     ###sire
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                        temp0 = sfun.f_potential_intake_cs(ci_sire, cl_sire, srw_xyg0, relsize_start_sire, rc_start_sire, temp_lc_sire, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
-                                                           , temp_min_pa1e1b1nwzida0e0b0xyg[p], rain_intake_pa1e1b1nwzida0e0b0xyg0[p])
+                        temp0 = sfun.f_potential_intake_cs(ci_sire, cl_sire, srw_xyg0, relsize_start_sire, rc_start_sire, temp_lc_sire
+                                                           , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
+                                                           , temp_min_pa1e1b1nwzida0e0b0xyg[p], rain_intake_pa1e1b1nwzida0e0b0xyg0[p]
+                                                           , sam_pi = sam_pi_sire)
                         if eqn_used:
                             pi_sire = temp0
                         if eqn_compare:
@@ -2133,9 +2138,11 @@ def generator(params,r_vals,ev,plots = False):
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                        temp0 = sfun.f_potential_intake_cs(ci_dams, cl_dams, srw_xyg1, relsize_start_dams, rc_start_dams, temp_lc_dams, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
-                                                          , temp_min_pa1e1b1nwzida0e0b0xyg[p], rain_intake_pa1e1b1nwzida0e0b0xyg1[p], rc_birth_start = rc_birth_dams, pi_age_y = pi_age_y_pa1e1b1nwzida0e0b0xyg1[p]
-                                                          , lb_start = lb_start_dams)
+                        temp0 = sfun.f_potential_intake_cs(ci_dams, cl_dams, srw_xyg1, relsize_start_dams, rc_start_dams, temp_lc_dams
+                                                           , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
+                                                           , temp_min_pa1e1b1nwzida0e0b0xyg[p], rain_intake_pa1e1b1nwzida0e0b0xyg1[p]
+                                                           , rc_birth_start = rc_birth_dams, pi_age_y = pi_age_y_pa1e1b1nwzida0e0b0xyg1[p]
+                                                           , lb_start = lb_start_dams, sam_pi = sam_pi_dams)
                         if eqn_used:
                             pi_dams = temp0
                         if eqn_compare:
@@ -2143,8 +2150,10 @@ def generator(params,r_vals,ev,plots = False):
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                        temp0 = sfun.f_potential_intake_cs(ci_offs, cl_offs, srw_xyg3, relsize_start_offs, rc_start_offs, temp_lc_offs, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
-                                                            , temp_min_pa1e1b1nwzida0e0b0xyg[p], rain_intake_pa1e1b1nwzida0e0b0xyg3[p])
+                        temp0 = sfun.f_potential_intake_cs(ci_offs, cl_offs, srw_xyg3, relsize_start_offs, rc_start_offs, temp_lc_offs
+                                                           , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
+                                                           , temp_min_pa1e1b1nwzida0e0b0xyg[p], rain_intake_pa1e1b1nwzida0e0b0xyg3[p]
+                                                           , sam_pi = sam_pi_offs)
                         if eqn_used:
                             pi_offs = temp0
                         if eqn_compare:
@@ -2409,7 +2418,7 @@ def generator(params,r_vals,ev,plots = False):
                                        mei_sire, mew_min_pa1e1b1nwzida0e0b0xyg0[p],
                                        d_cfw_ave_pa1e1b1nwzida0e0b0xyg0[p, ...],  sfd_a0e0b0xyg0, wge_a0e0b0xyg0,
                                        af_wool_pa1e1b1nwzida0e0b0xyg0[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg0[p, ...],
-                                       kw_yg0, days_period_pa1e1b1nwzida0e0b0xyg0[p], sfw_ltwadj_g0, sfd_ltwadj_g0)
+                                       kw_yg0, days_period_pa1e1b1nwzida0e0b0xyg0[p], sfw_ltwadj_g0, sfd_ltwadj_g0, sam_pi = sam_pi_sire)
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     d_cfw_dams, d_fd_dams, d_fl_dams, d_cfw_history_dams_m2, mew_dams, new_dams  \
                         = sfun.f_fibre(cw_dams, cc_dams, ffcfw_start_dams, relsize_start_dams, d_cfw_history_start_m2g1,
@@ -2419,7 +2428,7 @@ def generator(params,r_vals,ev,plots = False):
                                        kw_yg1, days_period_pa1e1b1nwzida0e0b0xyg1[p],
                                        sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[p, ...],
                                        sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[p, ...], mec_dams, mel_dams,
-                                       gest_propn_pa1e1b1nwzida0e0b0xyg1[p], lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
+                                       gest_propn_pa1e1b1nwzida0e0b0xyg1[p], lact_propn_pa1e1b1nwzida0e0b0xyg1[p], sam_pi = sam_pi_dams)
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
                     d_cfw_offs, d_fd_offs, d_fl_offs, d_cfw_history_offs_m2, mew_offs, new_offs  \
                         = sfun.f_fibre(cw_offs, cc_offs, ffcfw_start_offs, relsize_start_offs, d_cfw_history_start_m2g3,
@@ -2427,7 +2436,7 @@ def generator(params,r_vals,ev,plots = False):
                                        d_cfw_ave_pa1e1b1nwzida0e0b0xyg3[p, ...], sfd_da0e0b0xyg3, wge_da0e0b0xyg3,
                                        af_wool_pa1e1b1nwzida0e0b0xyg3[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg3[p, ...],
                                        kw_yg3, days_period_pa1e1b1nwzida0e0b0xyg3[p], sfw_ltwadj_a1e1b1nwzida0e0b0xyg3,
-                                       sfd_ltwadj_a1e1b1nwzida0e0b0xyg3)
+                                       sfd_ltwadj_a1e1b1nwzida0e0b0xyg3, sam_pi = sam_pi_offs)
 
                 ##energy to offset chilling
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
@@ -2437,7 +2446,7 @@ def generator(params,r_vals,ev,plots = False):
                                                             , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p], rain_pa1e1b1nwzida0e0b0xygm1[p]
                                                             , index_m0)
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    print('\nPeriod',p,end="")
+                    # print('\nPeriod',p,end="")
                     mem_dams, temp_lc_dams, kg_dams = sfun.f_chill_cs(cc_dams, ck_dams, ffcfw_start_dams, rc_start_dams, sl_start_dams, mei_dams
                                                             , meme_dams, mew_dams, new_dams, km_dams, kg_supp_dams, kg_fodd_dams, mei_propn_supp_dams
                                                             , mei_propn_herb_dams, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
@@ -2715,9 +2724,10 @@ def generator(params,r_vals,ev,plots = False):
                 z1f_yatf = 1 / (1 + np.exp(+cg_yatf[4, ...] * (relsize1_start_yatf - cg_yatf[5, ...])))
                 ###EVG Size factor (increases at maturity)
                 z2f_yatf = np.clip((relsize1_start_yatf - cg_yatf[6, ...]) / (cg_yatf[7, ...] - cg_yatf[6, ...]), 0 ,1)
-                ###sensitivity on kg (efficiency of gain) & MR (maintenance req) based on z2f - the sensitivity is only for adults (only included here for consistency)
+                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on z2f - the sensitivity is only for adults (only included here for consistency)
                 sam_kg_yatf = fun.f_update(1, sen.sam['kg'], z2f_yatf == 1)
                 sam_mr_yatf = fun.f_update(1, sen.sam['mr'], z2f_yatf == 1)
+                sam_pi_yatf = fun.f_update(1, sen.sam['pi'], z2f_yatf == 1)
 
 
             ##potential intake - yatf
@@ -2726,10 +2736,12 @@ def generator(params,r_vals,ev,plots = False):
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                    temp0 = sfun.f_potential_intake_cs(ci_yatf, cl_yatf, srw_xyg2, relsize_start_yatf, rc_start_yatf, temp_lc_yatf, temp_ave_pa1e1b1nwzida0e0b0xyg[p]
-                                                       , temp_max_pa1e1b1nwzida0e0b0xyg[p], temp_min_pa1e1b1nwzida0e0b0xyg[p], rain_intake_pa1e1b1nwzida0e0b0xyg2[p]
+                    temp0 = sfun.f_potential_intake_cs(ci_yatf, cl_yatf, srw_xyg2, relsize_start_yatf, rc_start_yatf, temp_lc_yatf
+                                                       , temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
+                                                       , temp_min_pa1e1b1nwzida0e0b0xyg[p], rain_intake_pa1e1b1nwzida0e0b0xyg2[p]
                                                        , mp2 = mp2_yatf, piyf = piyf_pa1e1b1nwzida0e0b0xyg2[p]
-                                                       , period_between_birthwean = period_between_birthwean_pa1e1b1nwzida0e0b0xyg1[p])
+                                                       , period_between_birthwean = period_between_birthwean_pa1e1b1nwzida0e0b0xyg1[p]
+                                                       , sam_pi = sam_pi_yatf)
                     if eqn_used:
                         pi_yatf = temp0
                     if eqn_compare:
@@ -2815,7 +2827,7 @@ def generator(params,r_vals,ev,plots = False):
                                    d_cfw_ave_pa1e1b1nwzida0e0b0xyg2[p, ...], sfd_pa1e1b1nwzida0e0b0xyg2[p],
                                    wge_pa1e1b1nwzida0e0b0xyg2[p], af_wool_pa1e1b1nwzida0e0b0xyg2[p, ...],
                                    dlf_wool_pa1e1b1nwzida0e0b0xyg2[p, ...], kw_yg2,
-                                   days_period_pa1e1b1nwzida0e0b0xyg2[p], sfw_ltwadj_g2, sfd_ltwadj_g2)
+                                   days_period_pa1e1b1nwzida0e0b0xyg2[p], sfw_ltwadj_g2, sfd_ltwadj_g2, sam_pi = sam_pi_yatf)
 
 
             ##energy to offset chilling - yatf
