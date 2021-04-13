@@ -1017,7 +1017,6 @@ def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, meme, mew, new, km,
     mecold_a1e1b1nwzida0e0b0xyg = area * np.average(f_dim(temp_lc_a1e1b1nwzida0e0b0xygm0m1, temperature_a1e1b1nwzida0e0b0xygm0[..., na]) /(in_tissue[..., na, na] + in_ext_a1e1b1nwzida0e0b0xygm0m1), axis = (-1,-2))
     ##ME requirement for maintenance (inc ECold)
     mem = meme + mecold_a1e1b1nwzida0e0b0xyg
-    print('ME Cold',mecold_a1e1b1nwzida0e0b0xyg[0,0,0,0,0,0,0,0,0,0,0,0,0,0],end="")
     ##Animal is below maintenance (incl ecold)
     belowmaint = mei < (mem + mec + mel + mew)
     ##Efficiency for growth (inc ECold) -different to the second line because belowmaint includes ecold
