@@ -602,7 +602,7 @@ def f_run_required(exp_data1, check_pyomo=True):
 
         ##update prev_exp run column - check if trial was run then model crashed before pickling prev_exp
         run_crash = []
-        for trial in prev_exp.index.get_level_values(2):
+        for trial in prev_exp.index.get_level_values(3):
             try:
                 if os.path.getmtime('pkl/pkl_exp.pkl') <= os.path.getmtime('pkl/pkl_r_vals_{0}.pkl'.format(trial)):
                     run_crash.append(True)
