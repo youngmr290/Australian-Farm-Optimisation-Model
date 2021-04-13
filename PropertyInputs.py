@@ -126,11 +126,11 @@ len_t3 = sheep_inp['i_t3_len']
 w_start_len1 = sinp.stock['i_w_start_len1']
 n_fvp_periods_dams = np.count_nonzero(sinp.stock['i_fvp_mask_dams'])
 len_w1 = w_start_len1 * len_n1 ** n_fvp_periods_dams
-len_w1_cut = int(len_w1 / len_n1)
+len_w1_cut = int(len_w1 / w_start_len1)
 w_start_len3 = sinp.stock['i_w_start_len3']
 n_fvp_periods_offs = np.count_nonzero(sinp.stock['i_fvp_mask_offs'])
 len_w3 = w_start_len3 * len_n3 ** n_fvp_periods_offs
-len_w3_cut = int(len_w3 / len_n3)
+len_w3_cut = int(len_w3 / w_start_len3)
 len_x = sheep_inp['i_x_len']
 len_z = len(general_inp['i_mask_z'])
 
