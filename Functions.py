@@ -643,19 +643,21 @@ def f_read_exp(exp_group=0):
     :return:
     '''
 
-    ##set the group of trials being run. This defaults to 0 unless an argument is passed in when running the python script.
+    ##set the group of trials being run. If no argument is passed in then all trials are run. To pass in argument need to run via terminal.
     try:
         exp_group = int(sys.argv[1]) #reads in as string so need to convert to int, the script path is the first value hence take the second.
-    except IndexError:
-        exp_group = 0
-    except ValueError: #incase running with command for DSP
-        exp_group = 0
+    except IndexError: #incase no arg passed to python
+        exp_group = None
 
     ##read and drop irrelevant cols
     exp_data = pd.read_excel('exp.xlsm', index_col=None, header=[0,1,2,3], engine='openpyxl')
-    exp_group_bool = exp_data.loc[:,('Drop','blank','blank','Exp Group')].values==exp_group
+    if exp_group:
+        exp_group_bool = exp_data.loc[:,('Drop','blank','blank','Exp Group')].values==exp_group
+    else:
+        exp_group_bool = exp_data.loc[:,('Drop','blank','blank','Exp Group')].values >= 0 #this will remove the blank rows
     exp_data = exp_data.iloc[exp_group_bool, exp_data.columns.get_level_values(0)!='Drop']
     exp_data = exp_data.set_index(list(exp_data.columns[0:4]))
+
     ##check if any trials have the same name
     if  len(exp_data.index.get_level_values(3)) == len(set(exp_data.index.get_level_values(3))):
         pass
