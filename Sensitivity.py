@@ -85,7 +85,6 @@ sat['mortalitye'] = 0          #Scale the calculated dam mortality at birth in t
 #SAR #
 ######
 
-##sheep
 
 ######
 #SAV #
@@ -97,9 +96,11 @@ sav['steady_state']      = '-'                  #SA to alter if the model is ste
 ##finance
 sav['minroe']      = '-'                  #SA to alter the minroe (applied to both steady-state and dsp minroe inputs)
 
-##area
+##bounds
 sav['bnd_total_pas_area'] = '-'  #Total pasture area for bound. '-' is default so it will chuck an error if the bound is turned on without a specified area
 sav['bnd_pasarea_inc'] = '-'   #SA to turn on the pasture area bound
+sav['bnd_mateyearlings_inc'] = '-'   #SA to bound no mating of ewe yearlings.
+sav['bnd_sellyearlings_inc'] = '-'   #SA to bound no selling of ewe yearlings.
 
 ##pasture
 sav['pas_inc'] = np.full_like(pinp.general_inp['pas_inc'], '-', dtype=object) #SA value for pastures included mask
@@ -127,6 +128,8 @@ sav['nut_mask_dams'] = np.full(pinp.sheep_inp['i_sai_lw_dams_owi'].shape, '-', d
 sav['nut_mask_offs'] = np.full(pinp.sheep_inp['i_sai_lw_offs_swix'].shape, '-', dtype=object)   #masks the nutrition options available eg high low high - the options selected are available for each starting weight
 sav['nut_spread_n1'] = np.full(pinp.sheep_inp['i_nut_spread_n1'].shape, '-', dtype=object)      #nut spread dams
 sav['nut_spread_n3'] = np.full(pinp.sheep_inp['i_nut_spread_n3'].shape, '-', dtype=object)      #nut spread dams
+sav['drys_sold'] = '-'   #SA to force drys to be sold
+sav['drys_retained'] = '-'   #SA to force drys to be retained
 
 ##stock parameters
 sav['srw_c2'] = np.full(uinp.parameters_inp['i_srw_c2'].shape, '-', dtype=object)  #SA value for srw of each c2 genotype.
