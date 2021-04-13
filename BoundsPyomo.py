@@ -24,6 +24,11 @@ note:
 -forcing sale/retention of drys is done in the stock module (there are inputs which user can control this with)
 '''
 
+#todo At some stage it would be good to have a constraint that forces a proportion of the yearlings to be mated.
+# So an equal constraints between the number of NM (k2[0]) and the rest(k2[1:])
+# so that we can look at how profit changes as the proportion of ewe lambs that are mated varies.
+
+
 def boundarypyomo_local(params):
 
     ##set bounds to include
