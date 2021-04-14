@@ -28,7 +28,7 @@ model.PurchasePrice = {'WHEAT': 238.0,'CORN': 210.0,'SUGAR_BEETS': 100000.0}
 
 model.PlantingCostPerAcre = {'WHEAT': 150.0,'CORN': 230.0,'SUGAR_BEETS': 260.0}
 
-model.Yield = Param(model.CROPS,within=NonNegativeReals,initialize={'WHEAT':2.0,'CORN':2.4,'SUGAR_BEETS':16.0},mutable=True) #can initilise with std param data. Then adjust in the tree function
+model.Yield = Param(model.CROPS,within=NonNegativeReals,initialize={'WHEAT':2.0,'CORN':2.4,'SUGAR_BEETS':16.0},mutable=False) #can initilise with std param data. Then adjust in the tree function
 
 # stages=['Scenario1','Scenario2','Scenario3'] #must be titled ScenarioX when using CreateConcreteTwoStageScenarioTreeModel func
 # model.stages = Set(initialize=stages)
@@ -37,7 +37,7 @@ model.Yield = Param(model.CROPS,within=NonNegativeReals,initialize={'WHEAT':2.0,
 #     ('Scenario1','WHEAT'):2.0,('Scenario1','CORN'):2.4,('Scenario1','SUGAR_BEETS'):16.0,
 #     ('Scenario2','WHEAT'):2.5,('Scenario2','CORN'):3.0,('Scenario2','SUGAR_BEETS'):20.0,
 #     ('Scenario3','WHEAT'):3.0,('Scenario3','CORN'):3.6,('Scenario3','SUGAR_BEETS'):24.0}
-# model.Yield = Param(model.stages,model.CROPS,initialize=Yield,mutable=True)
+# model.Yield = Param(model.stages,model.CROPS,initialize=Yield,mutable=False)
 
 
 #

@@ -96,77 +96,77 @@ def paspyomo_local(params):
         model.del_component(model.p_germination)
     except AttributeError:
         pass
-    model.p_germination = pe.Param(model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=params[season]['p_germination_flrt'], default=0, mutable=True, doc='pasture germination for each rotation')
+    model.p_germination = pe.Param(model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=params[season]['p_germination_flrt'], default=0, mutable=False, doc='pasture germination for each rotation')
 
     try:
         model.del_component(model.p_foo_grn_reseeding_index)
         model.del_component(model.p_foo_grn_reseeding)
     except AttributeError:
         pass
-    model.p_foo_grn_reseeding = pe.Param(model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=params[season]['p_foo_grn_reseeding_flrt'], default=0, mutable=True, doc='Change in grn FOO due to destocking and restocking of resown pastures')
+    model.p_foo_grn_reseeding = pe.Param(model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=params[season]['p_foo_grn_reseeding_flrt'], default=0, mutable=False, doc='Change in grn FOO due to destocking and restocking of resown pastures')
     
     try:
         model.del_component(model.p_foo_dry_reseeding_index)
         model.del_component(model.p_foo_dry_reseeding)
     except AttributeError:
         pass
-    model.p_foo_dry_reseeding = pe.Param(model.s_dry_groups, model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=params[season]['p_foo_dry_reseeding_dflrt'], default=0, mutable=True, doc='Change in dry FOO due to destocking and seeding of pastures')
+    model.p_foo_dry_reseeding = pe.Param(model.s_dry_groups, model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=params[season]['p_foo_dry_reseeding_dflrt'], default=0, mutable=False, doc='Change in dry FOO due to destocking and seeding of pastures')
     
     try:
         model.del_component(model.p_foo_end_grnha_index)
         model.del_component(model.p_foo_end_grnha)
     except AttributeError:
         pass
-    model.p_foo_end_grnha = pe.Param(model.s_grazing_int, model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, initialize=params[season]['p_foo_end_grnha_goflt'], default=0, mutable=True, doc='Green Foo at the end of the period')
+    model.p_foo_end_grnha = pe.Param(model.s_grazing_int, model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, initialize=params[season]['p_foo_end_grnha_goflt'], default=0, mutable=False, doc='Green Foo at the end of the period')
     
     try:
         model.del_component(model.p_foo_start_grnha_index)
         model.del_component(model.p_foo_start_grnha)
     except AttributeError:
         pass
-    model.p_foo_start_grnha = pe.Param(model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, initialize=params[season]['p_foo_start_grnha_oflt'], default=0, mutable=True, doc='Green Foo at the start of the period')
+    model.p_foo_start_grnha = pe.Param(model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, initialize=params[season]['p_foo_start_grnha_oflt'], default=0, mutable=False, doc='Green Foo at the start of the period')
     
     try:
         model.del_component(model.p_senesce_grnha_index)
         model.del_component(model.p_senesce_grnha)
     except AttributeError:
         pass
-    model.p_senesce_grnha = pe.Param(model.s_dry_groups, model.s_grazing_int, model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, initialize=params[season]['p_senesce_grnha_dgoflt'], default=0, mutable=True, doc='Green pasture senescence into high and low quality dry pasture pools')
+    model.p_senesce_grnha = pe.Param(model.s_dry_groups, model.s_grazing_int, model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, initialize=params[season]['p_senesce_grnha_dgoflt'], default=0, mutable=False, doc='Green pasture senescence into high and low quality dry pasture pools')
     
     try:
         model.del_component(model.p_me_cons_grnha_index)
         model.del_component(model.p_me_cons_grnha)
     except AttributeError:
         pass
-    model.p_me_cons_grnha = pe.Param(model.s_feed_pools, model.s_grazing_int, model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, initialize=params[season]['p_me_cons_grnha_vgoflt'], default=0, mutable=True, doc='Total ME from grazing a hectare')
+    model.p_me_cons_grnha = pe.Param(model.s_feed_pools, model.s_grazing_int, model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, initialize=params[season]['p_me_cons_grnha_vgoflt'], default=0, mutable=False, doc='Total ME from grazing a hectare')
     
     try:
         model.del_component(model.p_volume_grnha_index)
         model.del_component(model.p_volume_grnha)
     except AttributeError:
         pass
-    model.p_volume_grnha = pe.Param(model.s_grazing_int, model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, initialize=params[season]['p_volume_grnha_goflt'], default=0, mutable=True, doc='Total Vol from grazing a hectare')
+    model.p_volume_grnha = pe.Param(model.s_grazing_int, model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_pastures, initialize=params[season]['p_volume_grnha_goflt'], default=0, mutable=False, doc='Total Vol from grazing a hectare')
     
     try:
         model.del_component(model.p_dry_mecons_t_index)
         model.del_component(model.p_dry_mecons_t)
     except AttributeError:
         pass
-    model.p_dry_mecons_t = pe.Param(model.s_feed_pools, model.s_dry_groups, model.s_feed_periods, model.s_pastures, initialize=params[season]['p_dry_mecons_t_vdft'], default=0, mutable=True, doc='Total ME from grazing a tonne of dry feed')
+    model.p_dry_mecons_t = pe.Param(model.s_feed_pools, model.s_dry_groups, model.s_feed_periods, model.s_pastures, initialize=params[season]['p_dry_mecons_t_vdft'], default=0, mutable=False, doc='Total ME from grazing a tonne of dry feed')
     
     try:
         model.del_component(model.p_dry_volume_t_index)
         model.del_component(model.p_dry_volume_t)
     except AttributeError:
         pass
-    model.p_dry_volume_t = pe.Param(model.s_dry_groups, model.s_feed_periods, model.s_pastures, initialize=params[season]['p_dry_volume_t_dft'], default=0, mutable=True, doc='Total Vol from grazing a tonne of dry feed')
+    model.p_dry_volume_t = pe.Param(model.s_dry_groups, model.s_feed_periods, model.s_pastures, initialize=params[season]['p_dry_volume_t_dft'], default=0, mutable=False, doc='Total Vol from grazing a tonne of dry feed')
     
     try:
         model.del_component(model.p_dry_transfer_t_index)
         model.del_component(model.p_dry_transfer_t)
     except AttributeError:
         pass
-    model.p_dry_transfer_t = pe.Param(model.s_feed_periods, model.s_pastures, initialize=params[season]['p_dry_transfer_t_ft'], default=0, mutable=True, doc='quantity of dry feed transferred out of the period to the next')
+    model.p_dry_transfer_t = pe.Param(model.s_feed_periods, model.s_pastures, initialize=params[season]['p_dry_transfer_t_ft'], default=0, mutable=False, doc='quantity of dry feed transferred out of the period to the next')
     
     try:
         model.del_component(model.p_dry_removal_t_index)
@@ -180,13 +180,13 @@ def paspyomo_local(params):
         model.del_component(model.p_nap)
     except AttributeError:
         pass
-    model.p_nap = pe.Param(model.s_dry_groups, model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=params[season]['p_nap_dflrt'], default=0, mutable=True, doc='pasture on non arable areas in crop paddocks')
+    model.p_nap = pe.Param(model.s_dry_groups, model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=params[season]['p_nap_dflrt'], default=0, mutable=False, doc='pasture on non arable areas in crop paddocks')
     
     try:
         model.del_component(model.p_nap_prop)
     except AttributeError:
         pass
-    model.p_nap_prop = pe.Param(model.s_feed_periods, initialize=params[season]['p_harvest_period_prop'], default=0, mutable=True, doc='proportion of the way through each period nap becomes available')
+    model.p_nap_prop = pe.Param(model.s_feed_periods, initialize=params[season]['p_harvest_period_prop'], default=0, mutable=False, doc='proportion of the way through each period nap becomes available')
     
     try:
         model.del_component(model.p_erosion_index)
@@ -200,14 +200,14 @@ def paspyomo_local(params):
         model.del_component(model.p_phase_area)
     except AttributeError:
         pass
-    model.p_phase_area = pe.Param(model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=params[season]['p_phase_area_flrt'], default=0, mutable=True, doc='pasture area in each rotation for each feed period')
+    model.p_phase_area = pe.Param(model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=params[season]['p_phase_area_flrt'], default=0, mutable=False, doc='pasture area in each rotation for each feed period')
     
     try:
         model.del_component(model.p_pas_sow_index)
         model.del_component(model.p_pas_sow)
     except AttributeError:
         pass
-    model.p_pas_sow = pe.Param(model.s_labperiods, model.s_lmus, model.s_phases, model.s_landuses, initialize=params[season]['p_pas_sow_plrk'], default=0, mutable=True, doc='pasture sown for each rotation')
+    model.p_pas_sow = pe.Param(model.s_labperiods, model.s_lmus, model.s_phases, model.s_landuses, initialize=params[season]['p_pas_sow_plrk'], default=0, mutable=False, doc='pasture sown for each rotation')
     
     try:
         model.del_component(model.p_poc_con_index)
@@ -226,7 +226,7 @@ def paspyomo_local(params):
         model.del_component(model.p_poc_vol)
     except AttributeError:
         pass
-    model.p_poc_vol = pe.Param(model.s_feed_periods, initialize=params[season]['p_poc_vol_f'],default=0, mutable=True, doc='vol (ri intake) of pasture on crop paddocks for each feed period')
+    model.p_poc_vol = pe.Param(model.s_feed_periods, initialize=params[season]['p_poc_vol_f'],default=0, mutable=False, doc='vol (ri intake) of pasture on crop paddocks for each feed period')
     
     
     #####################################################################################################################################################################################################

@@ -821,6 +821,7 @@ def coremodel_all(params, trial_name):
         def pysp_instance_creation_callback(scenario_name,node_names):
             instance = model.clone()
             print('cloning: ',scenario_name)
+            #todo since we wont be useing this method i have converted all parameters back to mutable=false. can be reverted easily using global find and replace
             ##stubble
             instance.p_fp_transfer.store_values(params['stub'][scenario_name]['per_transfer'])
             instance.p_a_req.store_values(params['stub'][scenario_name]['cat_a_st_req'])
