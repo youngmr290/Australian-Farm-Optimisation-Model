@@ -148,7 +148,6 @@ def generator(params,r_vals,ev,plots = False):
     len_q1	 = len(uinp.sheep['i_eqn_reportvars_q1'])
     len_q2	 = np.max(uinp.sheep['i_eqn_reportvars_q1'])
     len_p = len(date_start_p)
-    len_f = len(sinp.general['sheep_pools'])
     len_c = len(sinp.general['cashflow_periods'])
     len_p3 = len(offs_date_start_p)
     len_p8 = np.count_nonzero(pinp.sheep['i_mask_p8'])
@@ -209,6 +208,16 @@ def generator(params,r_vals,ev,plots = False):
     n_fvp_periods_offs= np.count_nonzero(fvp_mask_offs)
     len_w3 = w_start_len3 * n_fs_offs ** n_fvp_periods_offs
     n_lw3_total = w_start_len3 * n_fs_offs ** (len(fvp_mask_offs))  # total lw if all dvps included
+
+    ########################
+    #ev masks and len      #
+    ########################
+    confinement_inc = np.maximum(np.max(pinp.sheep['i_nut_spread_n1'][0:n_fs_dams]),
+                                 np.max(pinp.sheep['i_nut_spread_n3'][0:n_fs_offs])) > 3 #if fs>3 then need to include confinment feeding
+    ev_is_not_confinement_f = sinp.general['ev_is_not_confinement']
+    ev_mask_f = np.logical_or(ev_is_not_confinement_f, confinement_inc)
+    ev_is_not_confinement_f = ev_is_not_confinement_f[ev_mask_f]
+    len_f = len(sinp.general['sheep_pools'][ev_mask_f])
 
     ###################################
     ### index arrays                  #
@@ -4093,10 +4102,7 @@ def generator(params,r_vals,ev,plots = False):
     period_is_assetvalue_pa1e1b1nwzida0e0b0xyg = sfun.f_period_is_('period_is', assetvalue_timing_pa1e1b1nwzida0e0b0xyg, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
     ###feed pool - sheep are grouped based on energy volume ratio
     ev_propn_f = np.array([0.25, 0.50, 0.75]) #Set the values for the ranges required (same values for all 10 matrix feed periods). This spreads the feed pools evenly between the highest and lowest quality feed required by any of the animals.
-    confinement_inc = np.max(np.maximum(pinp.sheep['i_nut_spread_n1'],pinp.sheep['i_nut_spread_n3'])) > 3 #if fs>3 then need to include confinment feeding
-    ev_is_not_confinement_f = sinp.general['ev_is_not_confinement']
-    ev_mask_f = np.logical_or(ev_is_not_confinement_f, confinement_inc)
-    index_fpa1e1b1nwzida0e0b0xyg = fun.f_expand(np.arange(ev_mask_f.shape[0]), p_pos-1)
+    index_fpa1e1b1nwzida0e0b0xyg = fun.f_expand(np.arange(len_f), p_pos-1)
     ##wool
     vm_m4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_vm_m4'], p_pos).astype(dtype)
     pmb_m4s4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_pmb_m4s'], p_pos).astype(dtype)
@@ -5824,7 +5830,7 @@ def generator(params,r_vals,ev,plots = False):
     keys_g1 = sfun.f_g2g(pinp.sheep['i_g_idx_dams'],'dams')
     keys_g2 = keys_g1
     keys_g3 = sfun.f_g2g(pinp.sheep['i_g_idx_offs'],'offs')
-    keys_f = np.asarray(sinp.general['sheep_pools'])
+    keys_f = np.asarray(sinp.general['sheep_pools'][ev_mask_f])
     keys_h1 = np.asarray(uinp.sheep['i_h1_idx'])
     keys_i = pinp.sheep['i_i_idx'][pinp.sheep['i_mask_i']]
     keys_k3 = np.ravel(pinp.sheep['i_k3_idx_offs'])[:len_k3]

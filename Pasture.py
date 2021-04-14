@@ -45,10 +45,12 @@ def f_pasture(params, r_vals, ev):
     ########################
     ##ev stuff             #
     ########################
-    confinement_inc = np.max(np.maximum(pinp.sheep['i_nut_spread_n1'],pinp.sheep['i_nut_spread_n3'])) > 3 #if fs>3 then need to include confinment feeding
+    confinement_inc = np.maximum(np.max(pinp.sheep['i_nut_spread_n1'][0:sinp.stock['i_n1_len']]),
+                                 np.max(pinp.sheep['i_nut_spread_n3'][0:sinp.stock['i_n3_len']])) > 3 #if fs>3 then need to include confinment feeding
     ev_is_not_confinement_v = sinp.general['ev_is_not_confinement']
     ev_mask_v = np.logical_or(ev_is_not_confinement_v, confinement_inc)
-
+    ev_is_not_confinement_v = ev_is_not_confinement_v[ev_mask_v]
+    len_v1 = np.count_nonzero(ev_is_not_confinement_v) #number of normal ev pools (doesnt including confinement)
     ########################
     ##phases               #
     ########################
@@ -579,6 +581,12 @@ def f_pasture(params, r_vals, ev):
 
     ## create numpy array of threshold values from the ev dictionary
     ### note: v in pasture is f in StockGen and f in pasture is p6 in StockGen
+
+
+    # ev_cutoff_vfzt = np.swapaxes(ev['ev_cutoff_p6fz'][..., na], axis1=0, axis2=1)
+    # ev_max_vfzt = ev['ev_max_p6z'][na,...,na]
+    # ev = np.concatenate([ev_cutoff_vfzt, ev_max_vfzt], axis=0)
+
     me_threshold_vfzt[0:-1, ...] = np.swapaxes(ev['ev_cutoff_p6fz'][..., na], axis1=0, axis2=1)
     me_threshold_vfzt[-1, ...] = ev['ev_max_p6z'][..., na]
     ### if the threshold is below the expected maintenance quality set to the maintenance quality
