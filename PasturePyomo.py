@@ -220,7 +220,7 @@ def paspyomo_local(params):
         model.del_component(model.p_poc_md)
     except AttributeError:
         pass
-    model.p_poc_md = pe.Param(model.s_feed_periods, initialize=params['p_poc_md_f'],default=0, doc='md of pasture on crop paddocks for each feed period')
+    model.p_poc_md = pe.Param(model.s_feed_pools, model.s_feed_periods, initialize=params['p_poc_md_vf'],default=0, doc='md of pasture on crop paddocks for each feed period')
     
     try:
         model.del_component(model.p_poc_vol)
@@ -320,7 +320,7 @@ def passow(model,p,k,l):
 def pas_me(model,v,f):
     return sum(sum(model.v_greenpas_ha[v,g,o,f,l,t] * model.p_me_cons_grnha[v,g,o,f,l,t] for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus) \
                + sum(model.v_drypas_consumed[v,d,f,t] * model.p_dry_mecons_t[v,d,f,t] for d in model.s_dry_groups) for t in model.s_pastures) \
-               + sum(model.v_poc[v,f,l] * model.p_poc_md[f] for l in model.s_lmus) #have to sum lmu here again, otherwise other axis will broadcast
+               + sum(model.v_poc[v,f,l] * model.p_poc_md[v,f] for l in model.s_lmus) #have to sum lmu here again, otherwise other axis will broadcast
 
 def nappas_me(model,v,f):
     return sum(model.v_nap_consumed[v,d,f,t] * model.p_dry_mecons_t[v,d,f,t] for d in model.s_dry_groups for t in model.s_pastures)

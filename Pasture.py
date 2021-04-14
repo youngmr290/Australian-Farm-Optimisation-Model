@@ -43,6 +43,13 @@ def f_pasture(params, r_vals, ev):
     na = np.newaxis
 
     ########################
+    ##ev stuff             #
+    ########################
+    confinement_inc = np.max(np.maximum(pinp.sheep['i_nut_spread_n1'],pinp.sheep['i_nut_spread_n3'])) > 3 #if fs>3 then need to include confinment feeding
+    ev_is_not_confinement_v = sinp.general['ev_is_not_confinement']
+    ev_mask_v = np.logical_or(ev_is_not_confinement_v, confinement_inc)
+
+    ########################
     ##phases               #
     ########################
     ## read the rotation phases information from inputs
@@ -55,7 +62,7 @@ def f_pasture(params, r_vals, ev):
     ##constants required   #
     ########################
     ## define some parameters required to size arrays.
-    n_feed_pools    = len(sinp.general['sheep_pools'])
+    n_feed_pools    = np.count_nonzero(ev_mask_v)
     n_dry_groups    = len(sinp.general['dry_groups'])           # Low & high quality groups for dry feed
     n_grazing_int   = len(sinp.general['grazing_int'])          # grazing intensity in the growth/grazing activities
     n_foo_levels    = len(sinp.general['foo_levels'])           # Low, medium & high FOO level in the growth/grazing activities
@@ -185,7 +192,7 @@ def f_pasture(params, r_vals, ev):
     ## create numpy index for param dicts ^creating indexes is a bit slow
     ### the array returned must be of type object, if string the dict keys become a numpy string and when indexed in pyomo it doesn't work.
     keys_d  = np.asarray(sinp.general['dry_groups'])
-    keys_v  = np.asarray(sinp.general['sheep_pools'])
+    keys_v  = np.asarray(sinp.general['sheep_pools'][ev_mask_v])
     keys_f  = pinp.period['i_fp_idx']
     keys_g  = np.asarray(sinp.general['grazing_int'])
     keys_l  = np.array(pinp.general['lmu_area'].index).astype('str')    # lmu index description
@@ -694,13 +701,13 @@ def f_pasture(params, r_vals, ev):
         grn_ri_quality_goflzt = sfun.f_rq_cs(dmd_diet_grnha_goflzt, i_legume_zt)
     grn_ri_goflzt = np.maximum( 0.05, grn_ri_quality_goflzt * grn_ri_availability_goflzt)   # set the minimum RI to 0.05
 
-    #todo set me_cons to 0 in the confinement pool when the pool is added
     me_cons_grnha_vgoflzt = fun.f_effective_mei( cons_grnha_t_goflzt
                                               ,  grn_md_grnha_goflzt
                                               ,   me_threshold_vfzt[:, na, na,:, na, ...]
                                               ,        grn_ri_goflzt
                                               , i_me_eff_gainlose_ft[:, na, na, :])
     me_cons_grnha_vgoflzt = me_cons_grnha_vgoflzt * mask_greenfeed_exists_fzt[:, na, ...]  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
+    me_cons_grnha_vgoflzt = me_cons_grnha_vgoflzt * ev_is_not_confinement_v[:,na,na,na,na,na,na] #me from pasture is 0 in the confinment pool
 
     volume_grnha_goflzt    =  cons_grnha_t_goflzt / grn_ri_goflzt              # parameters for the growth/grazing activities: Total volume of feed consumed from the hectare
     volume_grnha_goflzt = volume_grnha_goflzt * mask_greenfeed_exists_fzt[:, na, ...]  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
@@ -742,6 +749,7 @@ def f_pasture(params, r_vals, ev):
                                ,           dry_ri_dfzt
                                , i_me_eff_gainlose_ft[:,na,:])
     dry_mecons_t_vdfzt = dry_mecons_t_vdfzt * mask_dryfeed_exists_fzt  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
+    dry_mecons_t_vdfzt = dry_mecons_t_vdfzt * ev_is_not_confinement_v[:,na,na,na,na] #me from pasture is 0 in the confinment pool
 
     ## dry, animal removal
     dry_removal_t_ft  = 1000 * (1 + i_dry_trampling_ft)
@@ -777,6 +785,8 @@ def f_pasture(params, r_vals, ev):
     poc_con_fl = i_poc_intake_daily_flt[..., 0] / 1000 #divide 1000 to convert to tonnes of foo per ha
     ## md per tonne
     poc_md_f = fun.dmd_to_md(i_poc_dmd_ft[..., 0]) * 1000 #times 1000 to convert to mj per tonne
+    poc_md_vf = poc_md_f * ev_is_not_confinement_v[:,na] #me from pasture is 0 in the confinment pool
+
     ## vol
     ### calc relative quality - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
     if uinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
@@ -806,8 +816,8 @@ def f_pasture(params, r_vals, ev):
     poc_con_rav_fl = poc_con_fl.ravel()
     params['p_poc_con_fl'] = dict(zip(index_fl,poc_con_rav_fl))
 
-    poc_md_rav_f = poc_md_f.ravel()
-    params['p_poc_md_f'] = dict(zip(keys_f,poc_md_rav_f))
+    poc_md_rav_vf = poc_md_vf.ravel()
+    params['p_poc_md_vf'] = dict(zip(keys_vf,poc_md_rav_vf))
 
     ##create season params in loop
     for z in range(len(keys_z)):
