@@ -640,6 +640,7 @@ def stockpyomo_local(params):
     - constraint.skip is fast, the trick is designing the code efficiently so that is knows when to skip.
     - in method 2 i use the param to determine when the constraint should be skipped, this still requires looping through the param
     - in method 3 i use the numpy array to determine when the constraint should be skipped. This is messier and requires some extra code but it is much more efficient reducing time 2x.
+    - you can use set filter to build filtered sets instead od skipping the constraint however this made little speed difference. 
     - using if statements to save summing 0 values is faster but it still takes time to evaluate the if therefore it saves time to select the minimum number of if statements
     - constraints can only be skipped on based on the req param. if the provide side is 0 and you skip the constraint then that would mean there would be no restriction for the require variable.
     '''
