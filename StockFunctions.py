@@ -1091,6 +1091,7 @@ def convert_fs2fec(fs_input, fec_p6f, feedsupply_f, a_p6_pa1e1b1nwzida0e0b0xyg):
     ## expect feed to have a p axis as axis 0.
     ###the position of the feedsupply input in the conversion array
     fs_col_pa1e1b1nwzida0e0b0xyg = np.searchsorted(feedsupply_f, fs_input, 'right') - 1
+    fs_col_pa1e1b1nwzida0e0b0xyg = np.maximum(0, fs_col_pa1e1b1nwzida0e0b0xyg)
     ###the value from the conversion array in column fs_col in the row associated with the feed period for that generator period.
     fec_pa1e1b1nwzida0e0b0xygf = fec_p6f[a_p6_pa1e1b1nwzida0e0b0xyg, :]
     fec_pa1e1b1nwzida0e0b0xygf = np.take_along_axis(fec_pa1e1b1nwzida0e0b0xygf, fs_col_pa1e1b1nwzida0e0b0xyg[...,na], axis=-1)
@@ -1105,6 +1106,7 @@ def convert_fec2fs(fec_input, fec_p6f, feedsupply_f, a_p6_pz):
     ###the position of the feedsupply input in the conversion array
     z_pos = sinp.stock['i_z_pos']
     fs_col_pa1e1b1nwzida0e0b0xyg = fun.searchsort_multiple_dim(fec_pzf, fec_input, 0, 1, 0, z_pos, 'right') - 1
+    fs_col_pa1e1b1nwzida0e0b0xyg = np.maximum(0, fs_col_pa1e1b1nwzida0e0b0xyg)
     ###the value from the feedsupply array in column fs_col.
     fs = feedsupply_f[fs_col_pa1e1b1nwzida0e0b0xyg]
     return fs
