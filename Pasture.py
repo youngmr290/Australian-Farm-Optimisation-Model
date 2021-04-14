@@ -581,14 +581,10 @@ def f_pasture(params, r_vals, ev):
 
     ## create numpy array of threshold values from the ev dictionary
     ### note: v in pasture is f in StockGen and f in pasture is p6 in StockGen
-
-
-    # ev_cutoff_vfzt = np.swapaxes(ev['ev_cutoff_p6fz'][..., na], axis1=0, axis2=1)
-    # ev_max_vfzt = ev['ev_max_p6z'][na,...,na]
-    # ev = np.concatenate([ev_cutoff_vfzt, ev_max_vfzt], axis=0)
-
-    me_threshold_vfzt[0:-1, ...] = np.swapaxes(ev['ev_cutoff_p6fz'][..., na], axis1=0, axis2=1)
-    me_threshold_vfzt[-1, ...] = ev['ev_max_p6z'][..., na]
+    ev_cutoff_vfzt = np.swapaxes(ev['ev_cutoff_p6fz'][..., na], axis1=0, axis2=1)
+    ev_max_vfzt = ev['ev_max_p6z'][na,...,na]
+    ev = np.concatenate([ev_cutoff_vfzt, ev_max_vfzt], axis=0)
+    me_threshold_vfzt[0:len_v1, ...] = ev #assign to all slices except confinement (if it is active)
     ### if the threshold is below the expected maintenance quality set to the maintenance quality
     ### switching from one below maintenance feed to another that is further below maintenance doesn't affect average efficiency
     me_threshold_vfzt[me_threshold_vfzt < i_fec_maintenance_t] = i_fec_maintenance_t
