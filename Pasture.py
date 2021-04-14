@@ -253,10 +253,10 @@ def f_pasture(params, r_vals, ev):
     index_dft=fun.cartesian_product_simple_transpose(arrays)
     index_dft=tuple(map(tuple, index_dft)) #create a tuple rather than a list because tuples are faster
 
-    ### flt
-#    arrays=[keys_f, keys_l, keys_t]
-#    index_flt=fun.cartesian_product_simple_transpose(arrays)
-#    index_flt=tuple(map(tuple, index_flt)) #create a tuple rather than a list because tuples are faster
+    ### vf
+    arrays=[keys_v, keys_f]
+    index_vf=fun.cartesian_product_simple_transpose(arrays)
+    index_vf=tuple(map(tuple, index_vf)) #create a tuple rather than a list because tuples are faster
 
     ### fl
     arrays=[keys_f, keys_l]
@@ -817,7 +817,7 @@ def f_pasture(params, r_vals, ev):
     params['p_poc_con_fl'] = dict(zip(index_fl,poc_con_rav_fl))
 
     poc_md_rav_vf = poc_md_vf.ravel()
-    params['p_poc_md_vf'] = dict(zip(keys_vf,poc_md_rav_vf))
+    params['p_poc_md_vf'] = dict(zip(index_vf,poc_md_rav_vf))
 
     ##create season params in loop
     for z in range(len(keys_z)):

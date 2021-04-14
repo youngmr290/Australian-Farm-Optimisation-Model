@@ -37,7 +37,7 @@ def stubpyomo_local(params):
         model.del_component(model.p_stub_md)
     except AttributeError:
         pass
-    model.p_stub_md = pe.Param(model.s_feed_periods, model.s_crops, model.s_stub_cat, initialize=params[season]['md'], default = 0.0, mutable=False, doc='md from 1t of each stubble categories for each crop')
+    model.p_stub_md = pe.Param(model.s_feed_pools, model.s_feed_periods, model.s_crops, model.s_stub_cat, initialize=params[season]['md'], default = 0.0, mutable=False, doc='md from 1t of each stubble categories for each crop')
 
     try:
         model.del_component(model.p_stub_vol_index)
@@ -114,7 +114,7 @@ def stubble_req_a(model,k,s):
 
 ##stubble md
 def stubble_me(model,v,f):
-    return sum(model.v_stub_con[v,f,k,s] * model.p_stub_md[f,k,s] for k in model.s_crops for s in model.s_stub_cat)
+    return sum(model.v_stub_con[v,f,k,s] * model.p_stub_md[v,f,k,s] for k in model.s_crops for s in model.s_stub_cat)
     
 ##stubble vol
 def stubble_vol(model,v,f):
