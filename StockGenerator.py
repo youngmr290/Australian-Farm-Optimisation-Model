@@ -4093,7 +4093,10 @@ def generator(params,r_vals,ev,plots = False):
     period_is_assetvalue_pa1e1b1nwzida0e0b0xyg = sfun.f_period_is_('period_is', assetvalue_timing_pa1e1b1nwzida0e0b0xyg, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
     ###feed pool - sheep are grouped based on energy volume ratio
     ev_propn_f = np.array([0.25, 0.50, 0.75]) #Set the values for the ranges required (same values for all 10 matrix feed periods). This spreads the feed pools evenly between the highest and lowest quality feed required by any of the animals.
-    index_fpa1e1b1nwzida0e0b0xyg = fun.f_expand(np.arange(ev_propn_f.shape[0]+1), p_pos-1)
+    confinement_inc = np.max(np.maximum(pinp.sheep['i_nut_spread_n1'],pinp.sheep['i_nut_spread_n3'])) > 3 #if fs>3 then need to include confinment feeding
+    ev_is_not_confinement_f = sinp.general['ev_is_not_confinement']
+    ev_mask_f = np.logical_or(ev_is_not_confinement_f, confinement_inc)
+    index_fpa1e1b1nwzida0e0b0xyg = fun.f_expand(np.arange(ev_mask_f.shape[0]), p_pos-1)
     ##wool
     vm_m4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_vm_m4'], p_pos).astype(dtype)
     pmb_m4s4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_pmb_m4s'], p_pos).astype(dtype)
