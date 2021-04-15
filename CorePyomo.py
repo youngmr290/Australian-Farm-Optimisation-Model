@@ -153,7 +153,7 @@ def coremodel_all(params, trial_name):
         pass
     def harv_stub_nap_cons(model,f):
         if any(model.p_nap_prop[f] or model.p_harv_prop[f,k] for k in model.s_crops):
-            return sum(-paspy.pas_me(model,v,f) + sum(model.p_harv_prop[f,k]/(1-model.p_harv_prop[f,k]) * model.v_stub_con[v,f,k,s] * model.p_stub_md[f,k,s] for k in model.s_crops for s in model.s_stub_cat)
+            return sum(-paspy.pas_me(model,v,f) + sum(model.p_harv_prop[f,k]/(1-model.p_harv_prop[f,k]) * model.v_stub_con[v,f,k,s] * model.p_stub_md[v,f,k,s] for k in model.s_crops for s in model.s_stub_cat)
                     +  model.p_nap_prop[f]/(1-model.p_nap_prop[f]) * paspy.nappas_me(model,v,f) for v in model.s_feed_pools) <= 0
         else:
             return pe.Constraint.Skip
@@ -823,6 +823,7 @@ def coremodel_all(params, trial_name):
         def pysp_instance_creation_callback(scenario_name,node_names):
             instance = model.clone()
             print('cloning: ',scenario_name)
+            #todo since we wont be useing this method i have converted all parameters back to mutable=false. can be reverted easily using global find and replace
             ##stubble
             instance.p_fp_transfer.store_values(params['stub'][scenario_name]['per_transfer'])
             instance.p_a_req.store_values(params['stub'][scenario_name]['cat_a_st_req'])

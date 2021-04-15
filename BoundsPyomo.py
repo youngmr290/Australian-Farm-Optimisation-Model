@@ -165,7 +165,7 @@ def boundarypyomo_local(params):
                 pass
             model.p_sale_dams_yearling_upperbound = pe.Param(model.s_k2_birth_dams, model.s_sale_dams, model.s_dvp_dams,
                                         model.s_wean_times, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, 
-                                        initialize=params['stock']['sale_dams_yearling_upperbound'],default=0.0,mutable=True,
+                                        initialize=params['stock']['sale_dams_yearling_upperbound'],default=0.0,mutable=False,
                                         doc='upper bound for number of ewe lambs sold in the dams activity')
 
             try:
@@ -175,7 +175,7 @@ def boundarypyomo_local(params):
                 pass
             model.p_sale_offs_yearling_upperbound = pe.Param(model.s_k3_damage_offs,model.s_k5_birth_offs,
                                         model.s_sale_offs,model.s_dvp_offs, model.s_tol,model.s_wean_times,model.s_gender,model.s_gen_merit_offs,
-                                        model.s_groups_offs, initialize=params['stock']['sale_offs_yearling_upperbound'],default=0.0,mutable=True,
+                                        model.s_groups_offs, initialize=params['stock']['sale_offs_yearling_upperbound'],default=0.0,mutable=False,
                                         doc='upper bound for number of ewe lambs sold in the offs activity')
             ###constraints
             try:

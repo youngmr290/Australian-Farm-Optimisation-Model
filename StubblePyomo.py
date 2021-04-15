@@ -30,28 +30,28 @@ def stubpyomo_local(params):
         model.del_component(model.p_harv_prop)
     except AttributeError:
         pass
-    model.p_harv_prop = pe.Param(model.s_feed_periods, model.s_crops, initialize=params[season]['cons_prop'], default = 0.0, mutable=True, doc='proportion of the way through each fp harvest occurs (0 if harv doesnt occur in given period)')
+    model.p_harv_prop = pe.Param(model.s_feed_periods, model.s_crops, initialize=params[season]['cons_prop'], default = 0.0, mutable=False, doc='proportion of the way through each fp harvest occurs (0 if harv doesnt occur in given period)')
     
     try:
         model.del_component(model.p_stub_md_index)
         model.del_component(model.p_stub_md)
     except AttributeError:
         pass
-    model.p_stub_md = pe.Param(model.s_feed_periods, model.s_crops, model.s_stub_cat, initialize=params[season]['md'], default = 0.0, mutable=True, doc='md from 1t of each stubble categories for each crop')
+    model.p_stub_md = pe.Param(model.s_feed_pools, model.s_feed_periods, model.s_crops, model.s_stub_cat, initialize=params[season]['md'], default = 0.0, mutable=False, doc='md from 1t of each stubble categories for each crop')
 
     try:
         model.del_component(model.p_stub_vol_index)
         model.del_component(model.p_stub_vol)
     except AttributeError:
         pass
-    model.p_stub_vol = pe.Param(model.s_feed_periods, model.s_crops, model.s_stub_cat, initialize=params[season]['vol'], default = 0.0, mutable=True, doc='amount of intake volume required by 1t of each stubble category for each crop')
+    model.p_stub_vol = pe.Param(model.s_feed_periods, model.s_crops, model.s_stub_cat, initialize=params[season]['vol'], default = 0.0, mutable=False, doc='amount of intake volume required by 1t of each stubble category for each crop')
     
     try:
         model.del_component(model.p_a_req_index)
         model.del_component(model.p_a_req)
     except AttributeError:
         pass
-    model.p_a_req = pe.Param(model.s_feed_periods, model.s_crops, model.s_stub_cat, initialize=params[season]['cat_a_st_req'], default = 0.0, mutable=True, doc='stubble required in each feed periods in order to consume 1t of cat A')
+    model.p_a_req = pe.Param(model.s_feed_periods, model.s_crops, model.s_stub_cat, initialize=params[season]['cat_a_st_req'], default = 0.0, mutable=False, doc='stubble required in each feed periods in order to consume 1t of cat A')
     
     try:
         model.del_component(model.p_bc_prov_index)
@@ -72,7 +72,7 @@ def stubpyomo_local(params):
         model.del_component(model.p_fp_transfer)
     except AttributeError:
         pass
-    model.p_fp_transfer = pe.Param(model.s_feed_periods, model.s_crops, initialize=params[season]['per_transfer'], default = 0.0, mutable=True, doc='stubble cat B or cat C transferred to the next feed period')
+    model.p_fp_transfer = pe.Param(model.s_feed_periods, model.s_crops, initialize=params[season]['per_transfer'], default = 0.0, mutable=False, doc='stubble cat B or cat C transferred to the next feed period')
     
 
     ###################
@@ -114,7 +114,7 @@ def stubble_req_a(model,k,s):
 
 ##stubble md
 def stubble_me(model,v,f):
-    return sum(model.v_stub_con[v,f,k,s] * model.p_stub_md[f,k,s] for k in model.s_crops for s in model.s_stub_cat)
+    return sum(model.v_stub_con[v,f,k,s] * model.p_stub_md[v,f,k,s] for k in model.s_crops for s in model.s_stub_cat)
     
 ##stubble vol
 def stubble_vol(model,v,f):

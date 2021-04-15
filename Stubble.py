@@ -26,6 +26,7 @@ import Functions as fun
 import StockFunctions as sfun
 import PropertyInputs as pinp
 import UniversalInputs as uinp
+import StructuralInputs as sinp
 import Crop as crp
 import Sensitivity as SA
 import Periods as per
@@ -41,6 +42,14 @@ def stubble_all(params):
         - md and vol
         - harv con limit
     '''
+    ##ev stuff
+    confinement_inc = np.maximum(np.max(pinp.sheep['i_nut_spread_n1'][0:sinp.stock['i_n1_len']]),
+                                 np.max(pinp.sheep['i_nut_spread_n3'][0:sinp.stock['i_n3_len']])) > 3 #if fs>3 then need to include confinment feeding
+    ev_is_not_confinement_v = sinp.general['ev_is_not_confinement']
+    ev_mask_v = np.logical_or(ev_is_not_confinement_v, confinement_inc)
+    ev_is_not_confinement_v = ev_is_not_confinement_v[ev_mask_v]
+
+
 
     ##create mask which is stubble available. Stubble is available from the period harvest starts to the beginning of the following growing season.
     ##if the end date of the fp is after harvest then stubble is available.
@@ -131,6 +140,7 @@ def stubble_all(params):
     ## Therefore, there is scope to alter average diet quality by altering the grazing time and the proportion of the stubble consumed.
     md_p6zks1 = np.clip(fun.dmd_to_md(dmd_cat_p6zks1) * 1000, 0, np.inf) #mul to convert to tonnes
     md_p6zks1 = md_p6zks1 * mask_stubble_exists_p6zk[...,na] #stop md being provided if stubble doesnt exist
+    md_vp6zks1 = md_p6zks1 * ev_is_not_confinement_v[:,na,na,na,na] #me from pasture is 0 in the confinment pool
 
     ###########
     #trampling#
@@ -168,10 +178,11 @@ def stubble_all(params):
     #########
     ##keys
     keys_k = np.array(pinp.crop['start_harvest_crops'].index)
+    keys_p6 = pinp.period['i_fp_idx']
     keys_s1_cut = np.array(['b', 'c'])
     keys_s1_cut2 = np.array(['a'])
     keys_s1 = pinp.stubble['stub_cat_idx']
-    keys_p6 = pinp.period['i_fp_idx']
+    keys_v  = np.asarray(sinp.general['sheep_pools'][ev_mask_v])
     keys_z = pinp.f_keys_z()
 
 
@@ -185,6 +196,9 @@ def stubble_all(params):
     ###p6ks1 - md & vol
     arrays = [keys_p6, keys_k, keys_s1]
     index_p6ks1 = fun.cartesian_product_simple_transpose(arrays)
+    ###p6ks1 - md & vol
+    arrays = [keys_v, keys_p6, keys_k, keys_s1]
+    index_vp6ks1 = fun.cartesian_product_simple_transpose(arrays)
     ###p6k - p7con & feed period transfer
     arrays = [keys_p6, keys_k]
     index_p6k = fun.cartesian_product_simple_transpose(arrays)
@@ -227,9 +241,9 @@ def stubble_all(params):
         params[scenario]['cat_a_st_req'] =dict(zip(tup_p6k, cat_a_st_req_p6k))
 
         ##md
-        md_p6ks1 = md_p6zks1[:,z,:,:].ravel()
-        tup_p6ks1 = tuple(map(tuple, index_p6ks1))
-        params[scenario]['md'] =dict(zip(tup_p6ks1, md_p6ks1))
+        md_vp6ks1 = md_vp6zks1[:,:,z,:,:].ravel()
+        tup_vp6ks1 = tuple(map(tuple, index_vp6ks1))
+        params[scenario]['md'] =dict(zip(tup_vp6ks1, md_vp6ks1))
 
         ##vol
         vol_p6ks1 = vol_p6zks1[:,z,:,:].ravel()
