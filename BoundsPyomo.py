@@ -36,7 +36,7 @@ def boundarypyomo_local(params):
     rot_lobound_inc = False #controls rot bound
     dams_lobound_inc = False #controls rot bound
     dams_upperbound_inc = False #upper bound on dams
-    dams_mating_upperbound_inc = fun.f_sa(False, sen.sav['bnd_mateyearlings_inc'], 5) #allow exclusion of mating yearlings
+    yearling_mating_upperbound_inc = fun.f_sa(True, sen.sav['bnd_mateyearlings_inc'], 5) #allow exclusion of mating yearlings (by default yearlings are not allowed to mate)
     sale_yearling_upperbound_inc = fun.f_sa(False, sen.sav['bnd_sellyearlings_inc'], 5) #upperbound on ewe lambs sold
     sr_bound_inc = False #controls sr bound
     total_pasture_bound = fun.f_sa(False, sen.sav['bnd_pasarea_inc'], 5)  #bound on total pasture (hence also total crop)
@@ -125,9 +125,10 @@ def boundarypyomo_local(params):
             model.con_dam_upperbound = pe.Constraint(model.s_dvp_dams, rule=f_dam_upperbound,
                                                     doc='max number of dams')
 
-        ##dams mated max bound - specified by k2 & v and totalled across other axes
+        ##bound to stop yearlings being mated - specified by k2 & v and totalled across other axes
         #todo would be good to implement this as a proportion of the yearlings that can be mated. So the constrain is: (1- x) number mated <= (x) number not mated (where x is max propn mated).
-        if dams_mating_upperbound_inc:
+        # also would be goood to add genotype as axis because if composite then default would be to mate them but default not to mate merino yearlings.
+        if yearling_mating_upperbound_inc:
             ###keys to build arrays for the specified slices
             arrays = [model.s_k2_birth_dams, model.s_dvp_dams]   #JMY not sure why this has _birth_ in the variable name. Is it just k2_dams??
             index_k2v = fun.cartesian_product_simple_transpose(arrays)
