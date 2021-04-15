@@ -21,7 +21,7 @@ import networkx
 import pyomo.pysp.util.rapper as rapper
 import pyomo.pysp.plugins.csvsolutionwriter as csvw
 import pyomo.pysp.plugins.jsonsolutionwriter as jsonw
-import sys
+import os
 
 #AFO modules - should only be pyomo modules
 import UniversalInputs as uinp
@@ -423,7 +423,10 @@ def coremodel_all(params, trial_name):
         model.rc = pe.Suffix(direction=pe.Suffix.IMPORT)
         ##solve - tee=True will print out solver information
         solver_result = pe.SolverFactory('glpk').solve(model, tee=True) #turn to true for solver output - may be useful for troubleshooting
-        obj = pe.value(model.profit)
+        try: #to handle infeasible (there is no profit component when infeasible)
+            obj = pe.value(model.profit)
+        except ValueError:
+            obj = 0
 
     else:
         '''
@@ -954,15 +957,26 @@ def coremodel_all(params, trial_name):
 
     ##this prints trial name, overall profit and feasibility for each trial
     print("\nDisplaying Solution for trial: %s\n" % trial_name,'-' * 60,'\n%s' % obj)
-    ##this check if the solver is optimal - if infeasible or error the model will quit
+
+    ##this check if the solver is optimal - if infeasible or error the model will save a file in Output/infeasible/ directory. This will be accessed in reporting to stop you reporting infeasible trials.
+    ##the model will keep running the next trials even if one is infeasible.
     if (solver_result.solver.status == pe.SolverStatus.ok) and (
             solver_result.solver.termination_condition == pe.TerminationCondition.optimal):
         print('OPTIMAL LP SOLUTION FOUND')  # Do nothing when the solution in optimal and feasible
+        ###trys to delete the infeasible file because the trial is now optimal
+        try:
+            os.remove('Output/infeasible/%s.txt' % trial_name)
+        except FileNotFoundError:
+            pass
     elif (solver_result.solver.termination_condition == pe.TerminationCondition.infeasible):
         print('***INFEASIBLE LP SOLUTION***')
-        sys.exit()
+        ###save infeasible file
+        with open('Output/infeasible/%s.txt' % trial_name,'w') as f:
+            f.write("Solver Status: infeasible")
     else:  # Something else is wrong
         print('***Solver Status: error***')
-        sys.exit()
+        ###save infeasible file
+        with open('Output/infeasible/%s.txt' % trial_name,'w') as f:
+            f.write("Solver Status: error")
 
     return obj

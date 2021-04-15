@@ -797,12 +797,13 @@ def f_produce_df(data, rows, columns, row_names=None, column_names=None):
         col_index = pd.MultiIndex.from_product(columns, names=column_names)
     return pd.DataFrame(data, index=row_index, columns=col_index)
 
-def write_variablesummary(model, row, exp_data, option=0):
+def write_variablesummary(model, row, exp_data, obj, option=0):
     '''
 
     :param model: pyomo model
     :param row: trial row
     :param exp_data: exp info
+    :param obj: objective value
     :param option: 0: trial name will be included in file name
                    1: file name will be generic
     :return:
@@ -815,7 +816,7 @@ def write_variablesummary(model, row, exp_data, option=0):
     else:
         file = open('Output/Variable summary.txt','w')  # file name has to have capital
     file.write('Trial: %s\n' % exp_data.index[row][3])  # the first line is the name of the trial
-    file.write('{0} profit: {1}\n'.format(exp_data.index[row][3],pe.value(model.profit)))  # the second line is profit
+    file.write('{0} profit: {1}\n'.format(exp_data.index[row][3],obj))  # the second line is profit
     for v in model.component_objects(pe.Var,active=True):
         file.write("Variable %s\n" % v)  # \n makes new line
         for index in v:

@@ -83,6 +83,10 @@ if __name__ == '__main__':
         pass
     else:
         os.mkdir('Output')
+    if os.path.isdir('Output/infeasible'):
+        pass
+    else:
+        os.mkdir('Output/infeasible')
 
     ##plk a copy of exp in case the code crashes before the end. (this is tracks if a trial needed to be run)
     with open('pkl/pkl_exp.pkl', "wb") as f:
@@ -177,7 +181,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
 
         if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1:
             ##This writes variable summary each iteration with generic file name - it is overwritten each iteration and is created so the run progress can be monitored
-            fun.write_variablesummary(model, row, exp_data, 1)
+            fun.write_variablesummary(model, row, exp_data, obj, 1)
 
             ##check if user wants full solution
             if exp_data.index[row][1] == True:
@@ -185,7 +189,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
                 model.write('Output/%s.lp' %trial_name,io_options={'symbolic_solver_labels':True})  #file name has to have capital
 
                 ##This writes variable summary for full solution (same file as the temporary version created above)
-                fun.write_variablesummary(model, row, exp_data)
+                fun.write_variablesummary(model, row, exp_data, obj)
 
                 ##write rc and dual to txt file
                 with open('Output/Rc and Duals - %s.txt' %trial_name,'w') as f:  #file name has to have capital
@@ -213,9 +217,9 @@ def exp(row):  # called with command: pool.map(exp, dataset)
             lp_vars = {}
             variables=model.component_objects(pe.Var, active=True)
             lp_vars[season] = {str(v):{s:v[s].value for s in v} for v in variables}     #creates dict with variable in it. This is tricky since pyomo returns a generator object
-            lp_vars[season]['scenario_profit'] = pe.value(model.profit)
+            lp_vars[season]['scenario_profit'] = obj
             ##store profit
-            lp_vars['profit'] = pe.value(model.profit)
+            lp_vars['profit'] = obj
 
         ## if DSP version
         else:
