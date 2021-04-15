@@ -426,8 +426,10 @@ def coremodel_all(params, trial_name):
         except AttributeError:
             pass
         model.slack = pe.Suffix(direction=pe.Suffix.IMPORT)
-        ##solve - tee=True will print out solver information
-        solver_result = pe.SolverFactory('glpk').solve(model, tee=True) #turn to true for solver output - may be useful for troubleshooting
+        ##solve - tee=True will print out solver information. With an iteration limit of 100 seconds
+        solver = pe.SolverFactory('glpk')
+        solver.options['tmlim'] = 100  #todo this stops an unending loop but it causes a crash because there is no solution
+        solver_result = solver.solve(model, tee=True)  #turn to true for solver output - may be useful for troubleshooting
         try: #to handle infeasible (there is no profit component when infeasible)
             obj = pe.value(model.profit)
         except ValueError:
