@@ -13,6 +13,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import pickle as pkl
 import os.path
+import sys
 import xlsxwriter
 
 import Functions as fun
@@ -88,14 +89,37 @@ def f_df2xl(writer, df, sheet, rowstart=0, colstart=0, option=0):
         worksheet.insert_chart('D2',chart)
 
 def f_errors(exp_data_index, trial_outdated, trials):
+    '''
+    Error checks:
+        1. Any trials infeasible.
+        2. Any trials don't exist.
+        3. Any trials out of date.
+    :param exp_data_index: list of all trials as it appears in exp.xl
+    :param trial_outdated: boolean list of all trials stating if trial is out of date.
+    :param trials: list of trials being run
+    :return:
+    '''
     ##first check if data exists for each desired trial
+    infeasible_trials=[]
+    for row in trials:
+        trial_name = exp_data_index[row][3]
+        if os.path.isfile('Output/infeasible/{0}.txt'.format(trial_name)):
+            infeasible_trials.append(trial_name)
+        else:
+            pass
+    if infeasible_trials:
+        print("Infeasible trials being reported:\n", infeasible_trials)
+        sys.exit()
+
+    ##second check if data exists for each desired trial
     for row in trials:
         trial_name = exp_data_index[row][3]
         if os.path.isfile('pkl/pkl_r_vals_{0}.pkl'.format(trial_name)):
             pass
         else:
             raise exc.TrialError('''Trials for reporting don't all exist''')
-    ##second check if generating results using out of date data.
+
+    ##third check if generating results using out of date data.
     outdatedbool = trial_outdated.loc[exp_data_index[trials]]  # have to use the trial name because the order is different
     if any(outdatedbool):  # have to use the trial name because the order is different
         print('''

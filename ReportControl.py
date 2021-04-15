@@ -39,8 +39,7 @@ exp_data_index = exp_data_nosort.index #need to use this so user can specify the
 exp_data = exp_data_nosort.sort_index() #had to sort to stop performance warning, this means runs may not be executed in order of exp.xls
 
 
-##check if precalcs and pyomo need to be recalculated.
-##precalcs are rerun if
+##check if trial results are up to date. Out-dated if:
 ##  1. exp.xls has changed
 ##  2. any python module has been updated
 ##  3. the trial needed to be run last time but the user opted not to run that trial
