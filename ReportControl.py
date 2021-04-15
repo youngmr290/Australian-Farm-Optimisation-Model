@@ -24,6 +24,7 @@ Note: If reporting dates from a numpy array it is necessary to convert to dateti
 
 import numpy as np
 import pandas as pd
+import os
 
 import ReportFunctions as rep
 import Functions as fun
@@ -663,6 +664,17 @@ for row in trials:
 ####################################
 #run between trial reports and save#
 ####################################
+##first check that excel is not open (microsoft puts a lock on files so they can't be updated from elsewhere while open)
+if os.path.isfile("Output/Report.xlsx"): #to check if report.xl exists
+    while True:   # repeat until the try statement succeeds
+        try:
+            myfile = open("Output/Report.xlsx","w") # chucks an error if excel file is open
+            break                             # exit the loop
+        except IOError:
+            input("Could not open file! Please close Excel. Press Enter to retry.")
+            # restart the loop
+
+##write to excel
 if report_run.loc['run_summary', 'Run']:
     rep.f_df2xl(writer, stacked_summary, 'summary', option=1)
 if report_run.loc['run_areasum', 'Run']:
