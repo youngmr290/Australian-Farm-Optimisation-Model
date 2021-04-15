@@ -217,24 +217,28 @@ for row in range(len(exp_data)):
                     f.write("My description of the instance!\n")
                     model.display(ostream=f)
 
-
-                #todo writing the RC & Duals is very slow. Search for a quicker method if it is required for a large model
-                # ##write rc and dual to txt file
-                # with open('Output/Rc and Duals - %s.txt' %trial_name,'w') as f:  #file name has to have capital
-                #     f.write('RC\n')
-                #     for v in model.component_objects(pe.Var, active=True):
-                #         f.write("Variable %s\n" %v)   #  \n makes new line
-                #         for index in v:
-                #             try:
-                #                 print("      ", index, model.rc[v[index]], file=f)
-                #             except: pass
-                #     f.write('Dual\n')   #this can be used in search to find the start of this in the txt file
-                #     for c in model.component_objects(pe.Constraint, active=True):
-                #         f.write("Constraint %s\n" %c)   #  \n makes new line
-                #         for index in c:
-                #             # try:
-                #             print("      ", index, model.dual[c[index]], file=f)
-                #             # except: pass
+                ##write rc, duals and slacks to txt file. Duals are slow to write so that option must be turn on
+                write_duals = False
+                with open('Output/Rc and Duals - %s.txt' %trial_name,'w') as f:  #file name has to have capital
+                    f.write('RC\n')
+                    for v in model.component_objects(pe.Var, active=True):
+                        f.write("Variable %s\n" %v)
+                        for index in v:
+                            try: #incase variable has no index
+                                print("      ", index, model.rc[v[index]], file=f)
+                            except: pass
+                    f.write('Slacks\n')  # this can be used in search to find the start of this in the txt file
+                    for c in model.component_objects(pe.Constraint,active=True):
+                        f.write("Constraint %s\n" % c)
+                        for index in c:
+                            print("      ",index,c[index].lslack(),file=f)
+                            print("      ",index,c[index].uslack(),file=f)
+                    if write_duals:
+                        f.write('Dual\n')   #this can be used in search to find the start of this in the txt file
+                        for c in model.component_objects(pe.Constraint, active=True):
+                            f.write("Constraint %s\n" %c)
+                            for index in c:
+                                print("      ", index, model.dual[c[index]], file=f)
 
             ##store pyomo variable output as a dict
             season = pinp.f_keys_z()[0]

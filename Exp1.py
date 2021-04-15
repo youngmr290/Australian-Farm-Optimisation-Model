@@ -96,13 +96,12 @@ if __name__ == '__main__':
 #########################
 #Exp loop               #
 #########################
-#^maybe there is a cleaner way to do some of the stuff below ie a way that doesn't need as many if statements?
+
 def exp(row):  # called with command: pool.map(exp, dataset)
-    ##sleep for random length of time. This is to offset processes with a goal of spreading the RAM load
-    # time.sleep(randrange(30))
 
     ##can use logger to get status on multiprocessing
     # logger.info('Received {}'.format(row))
+
     ##start timer for each loop
     start_time = time.time()
 
@@ -145,6 +144,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
     r_vals['stub']={}
     r_vals['stock']={}
     ev = {} #dict to store ev params from StockGenerator to be used in pasture
+
     ##call precalcs
     rotpy.rotation_precalcs(params['rot'],r_vals['rot'])
     crppy.crop_precalcs(params['crop'],r_vals['crop'])
@@ -160,6 +160,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
 
     ##does pyomo need to be run? In exp1 pyomo is always run because creating params file take up lots of time, RAM and disc space
     run_pyomo_params = True
+
     ##determine if pyomo should run, note if pyomo doesn't run there will be no full solution (they are the same as before so no need)
     if run_pyomo_params:
         ##call core model function, must call them in the correct order (core must be last)
@@ -191,26 +192,33 @@ def exp(row):  # called with command: pool.map(exp, dataset)
                 ##This writes variable summary for full solution (same file as the temporary version created above)
                 fun.write_variablesummary(model, row, exp_data, obj)
 
-                ##write rc and dual to txt file
-                with open('Output/Rc and Duals - %s.txt' %trial_name,'w') as f:  #file name has to have capital
-                    f.write('RC\n')
-                    for v in model.component_objects(pe.Var, active=True):
-                        f.write("Variable %s\n" %v)   #  \n makes new line
-                        for index in v:
-                            try:
-                                print("      ", index, model.rc[v[index]], file=f)
-                            except: pass
-                    f.write('Dual\n')   #this can be used in search to find the start of this in the txt file
-                    for c in model.component_objects(pe.Constraint, active=True):
-                        f.write("Constraint %s\n" %c)   #  \n makes new line
-                        for index in c:
-                            # try:
-                            print("      ", index, model.dual[c[index]], file=f)
-                            # except: pass
                 ##prints what you see from pprint to txt file - you can see the slack on constraints but not the rc or dual
                 with open('Output/Full model - %s.txt' %trial_name, 'w') as f:  #file name has to have capital
                     f.write("My description of the instance!\n")
                     model.display(ostream=f)
+
+                ##write rc, duals and slacks to txt file. Duals are slow to write so that option must be turn on
+                write_duals = False
+                with open('Output/Rc and Duals - %s.txt' %trial_name,'w') as f:  #file name has to have capital
+                    f.write('RC\n')
+                    for v in model.component_objects(pe.Var, active=True):
+                        f.write("Variable %s\n" %v)   
+                        for index in v:
+                            try: #incase variable has no index
+                                print("      ", index, model.rc[v[index]], file=f)
+                            except: pass
+                    f.write('Slacks\n')  # this can be used in search to find the start of this in the txt file
+                    for c in model.component_objects(pe.Constraint,active=True):
+                        f.write("Constraint %s\n" % c)
+                        for index in c:
+                            print("      ",index,c[index].lslack(),file=f)
+                            print("      ",index,c[index].uslack(),file=f)
+                    if write_duals:
+                        f.write('Dual\n')   #this can be used in search to find the start of this in the txt file
+                        for c in model.component_objects(pe.Constraint, active=True):
+                            f.write("Constraint %s\n" %c)
+                            for index in c:
+                                print("      ", index, model.dual[c[index]], file=f)
 
             #last step is to print the time for the current trial to run
             season = pinp.f_keys_z()[0]
@@ -279,8 +287,8 @@ def exp(row):  # called with command: pool.map(exp, dataset)
 
     return trials_successfully_run
 
-##3 - works when run through anaconda prompt - if 9 runs and 8 processors, the first processor to finish, will start the 9th run
-#using map it returns outputs in the order they go in ie in the order of the exp
+##works when run through anaconda prompt - if 9 runs and 8 processors, the first processor to finish, will start the 9th run
+#   using map it returns outputs in the order they go in ie in the order of the exp
 ##the result after the different processes are done is a list of dicts (because each iteration returns a dict and the multiprocess stuff returns a list)
 def main():
     ## Define the dataset - trials that require at least the precalcs done (user wants it run and it is out of date)
@@ -303,19 +311,6 @@ def main():
 
 if __name__ == '__main__':
     exp_data1 = main() #returns a list is the same order of exp
-    # ##turn list of dicts into nested dict with trial name as key
-    # for trial_row, result, res_num in zip(dataset,results,range(len(results))):
-    #     if any(results[res_num][0]):  # only do this if pyomo was run and the dict contains values
-    #         lp_vars[exp_data.index[trial_row][2]] = results[res_num][0]
-    #     params[exp_data.index[trial_row][2]] = results[res_num][1]
-    #     r_vals[exp_data.index[trial_row][2]] = results[res_num][2]
-    ##drop results into pickle file
-    # with open('pkl_lp_vars.pkl', "wb") as f:
-    #     pkl.dump(lp_vars, f, protocol=pkl.HIGHEST_PROTOCOL)
-    # with open('pkl_params.pkl', "wb") as f:
-    #     pkl.dump(params, f, protocol=pkl.HIGHEST_PROTOCOL)
-    # with open('pkl_r_vals.pkl', "wb") as f:
-    #     pkl.dump(r_vals, f, protocol=pkl.HIGHEST_PROTOCOL)
     with open('pkl/pkl_exp.pkl', "wb") as f:
         pkl.dump(exp_data1, f, protocol=pkl.HIGHEST_PROTOCOL)
 

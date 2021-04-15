@@ -421,6 +421,11 @@ def coremodel_all(params, trial_name):
         except AttributeError:
             pass
         model.rc = pe.Suffix(direction=pe.Suffix.IMPORT)
+        try:
+            model.del_component(model.rc)
+        except AttributeError:
+            pass
+        model.slack = pe.Suffix(direction=pe.Suffix.IMPORT)
         ##solve - tee=True will print out solver information
         solver_result = pe.SolverFactory('glpk').solve(model, tee=True) #turn to true for solver output - may be useful for troubleshooting
         try: #to handle infeasible (there is no profit component when infeasible)
