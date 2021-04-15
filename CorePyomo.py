@@ -962,7 +962,7 @@ def coremodel_all(params, trial_name):
         print('***INFEASIBLE LP SOLUTION***')
         sys.exit()
     else:  # Something else is wrong
-        print('Solver Status: error')
+        print('***Solver Status: error***')
         sys.exit()
 
     return obj

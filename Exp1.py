@@ -73,15 +73,20 @@ exp_data1=exp_data.copy() #copy made so that the run col can be added - the orig
 
 exp_data1 = fun.f_run_required(exp_data1)
 
-##plk a copy of exp in case the code crashes before the end. (this is tracks if a trial needed to be run)
 if __name__ == '__main__':
-    try:
-        with open('pkl/pkl_exp.pkl', "wb") as f:
-            pkl.dump(exp_data1, f, protocol=pkl.HIGHEST_PROTOCOL)
-    except FileNotFoundError:
+    ##check Output and pkl folders exist for outputs. If not create.
+    if os.path.isdir('pkl'):
+        pass
+    else:
         os.mkdir('pkl')
-        with open('pkl/pkl_exp.pkl', "wb") as f:
-            pkl.dump(exp_data1, f, protocol=pkl.HIGHEST_PROTOCOL)
+    if os.path.isdir('Output'):
+        pass
+    else:
+        os.mkdir('Output')
+
+    ##plk a copy of exp in case the code crashes before the end. (this is tracks if a trial needed to be run)
+    with open('pkl/pkl_exp.pkl', "wb") as f:
+        pkl.dump(exp_data1, f, protocol=pkl.HIGHEST_PROTOCOL)
 
 
 #########################
