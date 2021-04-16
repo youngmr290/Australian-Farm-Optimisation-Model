@@ -229,7 +229,7 @@ for row in trials:
         na_prod = [1]
         weights = 'dams_numbers_k2tvanwziy1g1'
         na_weights = [3,5,6]
-        den_weights = 'pe1b1_denom_weights_k2tvpa1e1b1nw8ziyg1'
+        den_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1'
         keys = 'dams_keys_k2tvpaebnwziy1g1'
         arith = 1
         arith_axis = [0,1,2,4,5,7,8,9,10,11,12]  #reporting p(3) & b1(6)
@@ -250,7 +250,7 @@ for row in trials:
         na_prod = [1]
         weights = 'dams_numbers_k2tvanwziy1g1'
         na_weights = [3, 5, 6]
-        den_weights = 'pe1b1_denom_weights_k2tvpa1e1b1nw8ziyg1'
+        den_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1'
         keys = 'dams_keys_k2tvpaebnwziy1g1'
         arith = 1
         arith_axis = [0, 1, 2, 4, 5, 7, 8, 9, 10, 11, 12]  #reporting p(3) & b1(6)
@@ -271,7 +271,7 @@ for row in trials:
         na_prod = [1]
         weights = 'dams_numbers_k2tvanwziy1g1'
         na_weights = [3,5,6]
-        den_weights = 'pe1b1_denom_weights_k2tvpa1e1b1nw8ziyg1'
+        den_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1'
         keys = 'dams_keys_k2tvpaebnwziy1g1'
         arith = 1
         arith_axis = [0,1,2,4,5,7,8,9,10,11,12]  #reporting p(3) & b1(6)
@@ -292,7 +292,7 @@ for row in trials:
         weights = 1
         keys = 'prog_keys_zia0xg2w9'
         arith = 0
-        arith_axis = []  #reporting p(3) & b1(6)
+        arith_axis = []
         index = [5]
         cols = [0,1,2,3,4]
         axis_slice = {}
@@ -309,7 +309,7 @@ for row in trials:
         na_prod = [2]
         weights = 'offs_numbers_k3k5tvnwziaxyg3'
         na_weights = [4,9,11,12]
-        den_weights = 'pde0b0_denom_weights_k3k5tvpnw8zida0e0b0xyg3'
+        den_weights = 'pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3'
         keys = 'offs_keys_k3k5tvpnwzidaebxyg3'
         arith = 1
         arith_axis = [0,1,3,5,6,7,8,9,10,11,13,14,15]  # reporting p(4) & b0(12)
@@ -332,7 +332,7 @@ for row in trials:
         na_prod = [2]
         weights = 'offs_numbers_k3k5tvnwziaxyg3'
         na_weights = [4,9,11,12]
-        den_weights = 'pde0b0_denom_weights_k3k5tvpnw8zida0e0b0xyg3'
+        den_weights = 'pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3'
         keys = 'offs_keys_k3k5tvpnwzidaebxyg3'
         arith = 1
         arith_axis = [0,1,3,5,6,7,8,9,10,11,13,14,15]  # reporting p(4) & b0(12)

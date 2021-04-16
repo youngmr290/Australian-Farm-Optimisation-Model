@@ -330,6 +330,7 @@ def generator(params,r_vals,ev,plots = False):
     o_ffcfw_season_pdams = np.zeros(pg1, dtype =dtype)
     o_ffcfw_condensed_pdams = np.zeros(pg1, dtype =dtype)
     o_nw_start_pdams = np.zeros(pg1, dtype = dtype)
+    o_mortality_dams = np.zeros(pg1, dtype =dtype)
     o_lw_pdams = np.zeros(pg1, dtype =dtype)
     o_pi_pdams = np.zeros(pg1, dtype =dtype)
     o_mei_solid_pdams = np.zeros(pg1, dtype =dtype)
@@ -3373,6 +3374,7 @@ def generator(params,r_vals,ev,plots = False):
                 o_nw_start_pdams[p] = nw_start_dams
                 numbers_join_dams = fun.f_update(numbers_join_dams, numbers_start_dams, period_is_join_pa1e1b1nwzida0e0b0xyg1[p])
                 o_numbers_join_pdams[p] = numbers_join_dams #store the numbers at joining until next
+                o_mortality_dams[p] = mortality_dams
                 o_lw_pdams[p] = lw_dams
                 o_pi_pdams[p] = pi_dams
                 o_mei_solid_pdams[p] = mei_solid_dams
@@ -5554,22 +5556,6 @@ def generator(params,r_vals,ev,plots = False):
                                                                  (r_saledate_tva1e1b1nwzida0e0b0xyg3!=0), #need to include this mask to make sure we are only averaging the sale date with e,b,d slice animals that were sold.
                                                                  axis=(sinp.stock['i_d_pos'], sinp.stock['i_b0_pos'], sinp.stock['i_e0_pos']), keepdims=True))
 
-    ##on hand - this is used so that the numbers report can have a p axis so the number of animals can be more specific than just dvp
-    if pinp.rep['i_store_on_hand']: #has a p axis so only stored and hence calculated if user specifies
-        r_on_hand_tvpa1e1b1nwzida0e0b0xyg1 = on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
-        r_on_hand_tvpa1e1b1nwzida0e0b0xyg3 = on_hand_tpa1e1b1nwzida0e0b0xyg3[:,na,...] * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
-        r_on_hand_k2tvpa1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams', r_on_hand_tvpa1e1b1nwzida0e0b0xyg1,
-                                                                                  a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...],
-                                                                                  index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],
-                                                                                  mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1[:,na,...])
-        r_on_hand_k3k5tvpa1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs', r_on_hand_tvpa1e1b1nwzida0e0b0xyg3,
-                                                                                  a_k3cluster_da0e0b0xyg3,
-                                                                                  index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],
-                                                                                  a_k5cluster_da0e0b0xyg3,
-                                                                                  index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...],
-                                                                                  mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3[:,na,...])
-
-
     ##wool value
     r_woolvalue_ctva1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param('sire',r_woolvalue_ctva1e1b1nwzida0e0b0xyg0,
                                                                           numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
@@ -5656,9 +5642,9 @@ def generator(params,r_vals,ev,plots = False):
                                                                           mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3)
 
 
-    ######################################
-    #weaning %, scan % and lamb survival #
-    ######################################
+    #############################################
+    #weaning %, scan % and lamb survival reports#
+    #############################################
     ##proportion mated - per ewe at start of dvp (ie accounting for dam mortality)
     r_n_mated_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams',r_n_mated_tvg1,
                                                                           a_k2cluster_va1e1b1nwzida0e0b0xyg1,
@@ -5701,6 +5687,32 @@ def generator(params,r_vals,ev,plots = False):
                                                             , np.sum(numbers_start_va1e1b1nwzida0e0b0xyg1 * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1),
                                                                      axis = (e1_pos, b1_pos), keepdims=True))
 
+
+    ##############
+    #big reports #
+    ##############
+    ##on hand - this is used so that the numbers report can have a p axis so the number of animals can be more specific than just dvp
+    ##          also used for numbers weights with e and b axis (used for ffcfw_peb and lw and fec reports)
+    # todo would be worth adding mortality to this array. o_mortality_dams
+    if pinp.rep['i_store_lw_rep'] or pinp.rep['i_store_ffcfw_rep'] or pinp.rep['i_store_fec_rep'] or pinp.rep['i_store_on_hand']:
+        r_on_hand_tvpa1e1b1nwzida0e0b0xyg1 = on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...] * (
+                    a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+        r_on_hand_tvpa1e1b1nwzida0e0b0xyg3 = on_hand_tpa1e1b1nwzida0e0b0xyg3[:,na,...] * (
+                    a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
+        r_on_hand_k2tvpa1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams',r_on_hand_tvpa1e1b1nwzida0e0b0xyg1,
+                                                                              a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...],
+                                                                              index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],
+                                                                              mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1[:,
+                                                                                      na,...])
+        r_on_hand_k3k5tvpa1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs',r_on_hand_tvpa1e1b1nwzida0e0b0xyg3,
+                                                                                a_k3cluster_da0e0b0xyg3,
+                                                                                index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,
+                                                                                na,...],
+                                                                                a_k5cluster_da0e0b0xyg3,
+                                                                                index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,
+                                                                                ...],
+                                                                                mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3[
+                                                                                        :,na,...])
 
     ###lw - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. Don't need it because it doesnt effect lw
     if pinp.rep['i_store_lw_rep']:
@@ -6685,20 +6697,23 @@ def generator(params,r_vals,ev,plots = False):
     nyatf_b1nwzida0e0b0xygb9 = nyatf_b1nwzida0e0b0xyg[...,na] == index_b9
     r_vals['mask_b1b9_preg_b1nwziygb9'] = nfoet_b1nwzida0e0b0xygb9.squeeze(axis=(d_pos-1, a0_pos-1, e0_pos-1, b0_pos-1, x_pos-1))
 
-    ###denom weights for arrays that keep axis that are not present in lp array.
-    r_vals['pe1b1_denom_weights_k2tvpa1e1b1nw8ziyg1'] = ((a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
-                                                         *(a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...])
-                                                         ).squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos))
+    ###numbers weights for reports with arrays that keep axis that are not present in lp array.
+    if pinp.rep['i_store_lw_rep'] or pinp.rep['i_store_ffcfw_rep'] or pinp.rep['i_store_fec_rep']:
+        r_vals['pe1b1_denom_numbers_k2tvpa1e1b1nw8ziyg1'] = ((a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                                                             *(a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...])
+                                                             * r_on_hand_k2tvpa1e1b1nwzida0e0b0xyg1
+                                                             ).squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos))
 
-    r_vals['pde0b0_denom_weights_k3k5tvpnw8zida0e0b0xyg3'] = ((a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
-                                                        *(a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
-                                                        *(a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...])
-                                                              ).squeeze(axis=(a1_pos, e1_pos, b1_pos))
+        r_vals['pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3'] = ((a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
+                                                                    * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
+                                                                    * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...])
+                                                                    * r_on_hand_k3k5tvpa1e1b1nwzida0e0b0xyg3
+                                                                    ).squeeze(axis=(a1_pos, e1_pos, b1_pos))
 
-    r_vals['e1b1_denom_weights_k2tva1e1b1nw8ziyg1'] = (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1).squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos))
+    # r_vals['e1b1_denom_weights_k2tva1e1b1nw8ziyg1'] = (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1).squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos))
 
-    r_vals['de0b0_denom_weights_k3k5tvnw8zida0e0b0xyg3'] = ((a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)
-                                                        *(a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)).squeeze(axis=(a1_pos, e1_pos, b1_pos))
+    # r_vals['de0b0_denom_weights_k3k5tvnw8zida0e0b0xyg3'] = ((a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)
+    #                                                     *(a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)).squeeze(axis=(a1_pos, e1_pos, b1_pos))
 
     ###lw - with p, e, b
     if pinp.rep['i_store_lw_rep']:

@@ -1052,14 +1052,14 @@ def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], ar
         weights = 'dams_numbers_k2tvanwziy1g1'
         na_weights = [4,5]
         keys = 'dams_keys_k2tvaeb9nwziy1g1'
-        # den_weights = 'e1b1_denom_weights_k2tva1e1b1nw8ziyg1'
+
     elif option == 1:
         prod = 'nyatf_wean_k2tva1nw8ziyg1'
         prod2 = 'n_mated_k2tva1nw8ziyg1'
         weights = 'dams_numbers_k2tvanwziy1g1'
         na_weights = []
         keys = 'dams_keys_k2tvanwziy1g1'
-        # den_weights = 1
+
     elif option == 2:
         prod = 'nfoet_scan_k2tva1nw8ziyg1'
         prod2 = 'n_mated_k2tva1nw8ziyg1'
