@@ -29,11 +29,7 @@ import os
 import ReportFunctions as rep
 import Functions as fun
 
-#todo Add a message about the number of trials being reported and the number of reports being created.
 #todo The reports would be easier to change if the arith axes where calculated from those that aren't in the index or columns (on the basis that I think that if they are not in the table then they need to have arithmetic done)
-
-## Create a Pandas Excel writer using XlsxWriter as the engine. used to write to multiple sheets in excel
-writer = pd.ExcelWriter('Output/Report.xlsx',engine='xlsxwriter')
 
 ##read in exp log
 exp_data_nosort = fun.f_read_exp()
@@ -56,6 +52,10 @@ rep.f_errors(exp_data_index, trial_outdated, trials)
 
 ##read in excel that controls which reports to run
 report_run = pd.read_excel('exp.xlsm', sheet_name='Run Report', index_col=[0], header=[0], engine='openpyxl')
+
+##print out the reports being run and number of trials
+print("The following trials will be reported: /n", trials)
+print("The following reports will be run: /n", report_run.index[report_run.loc[:,'Run']])
 
 ##create empty df to stack each trial results into
 stacked_summary = pd.DataFrame()  # 1 line summary of each trial
@@ -675,6 +675,10 @@ if os.path.isfile("Output/Report.xlsx"): #to check if report.xl exists
             input("Could not open file! Please close Excel. Press Enter to retry.")
             # restart the loop
 
+## Create a Pandas Excel writer using XlsxWriter as the engine. used to write to multiple sheets in excel
+writer = pd.ExcelWriter('Output/Report.xlsx',engine='xlsxwriter')
+
+
 ##write to excel
 if report_run.loc['run_summary', 'Run']:
     rep.f_df2xl(writer, stacked_summary, 'summary', option=1)
@@ -761,3 +765,5 @@ if report_run.loc['run_stubcon', 'Run']:
 
 
 writer.save()
+
+print("Reports successfully completed")
