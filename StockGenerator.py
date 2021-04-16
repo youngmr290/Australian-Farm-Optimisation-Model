@@ -213,7 +213,7 @@ def generator(params,r_vals,ev,plots = False):
     #ev masks and len      #
     ########################
     confinement_inc = np.maximum(np.max(pinp.sheep['i_nut_spread_n1'][0:n_fs_dams]),
-                                 np.max(pinp.sheep['i_nut_spread_n3'][0:n_fs_offs])) > 3 #if fs>3 then need to include confinment feeding
+                                 np.max(pinp.sheep['i_nut_spread_n3'][0:n_fs_offs])) > 3 #if fs>3 then need to include confinement feeding
     ev_is_not_confinement_f = sinp.general['ev_is_not_confinement']
     ev_mask_f = np.logical_or(ev_is_not_confinement_f, confinement_inc)
     ev_is_not_confinement_f = ev_is_not_confinement_f[ev_mask_f]
