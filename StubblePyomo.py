@@ -20,6 +20,24 @@ def stub_precalcs(params, report):
     
     
 def stubpyomo_local(params):
+    ###################
+    # variable         #
+    ###################
+    ##stubble consumption
+    try:
+        model.del_component(model.v_stub_con)
+    except AttributeError:
+        pass
+    model.v_stub_con = pe.Var(model.s_feed_pools,model.s_feed_periods,model.s_crops,model.s_stub_cat,bounds=(0.0,None),
+                              doc='consumption of stubble')
+    ##stubble transfer
+    try:
+        model.del_component(model.v_stub_transfer)
+    except AttributeError:
+        pass
+    model.v_stub_transfer = pe.Var(model.s_feed_periods,model.s_crops,model.s_stub_cat,bounds=(0.0,None),
+                                   doc='transfer of 1t of stubble to following period')
+
     ####################
     #define parameters #
     ####################
@@ -96,13 +114,6 @@ def stubpyomo_local(params):
 
 
 
-###################
-#variable         #
-###################
-##stubble consumption
-model.v_stub_con = pe.Var(model.s_feed_pools, model.s_feed_periods, model.s_crops, model.s_stub_cat, bounds = (0.0, None), doc = 'consumption of stubble')
-##stubble transfer
-model.v_stub_transfer = pe.Var(model.s_feed_periods, model.s_crops, model.s_stub_cat, bounds = (0.0, None), doc = 'transfer of 1t of stubble to following period')
 
 ###################
 #constraint global#

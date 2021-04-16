@@ -54,8 +54,8 @@ rep.f_errors(exp_data_index, trial_outdated, trials)
 report_run = pd.read_excel('exp.xlsm', sheet_name='Run Report', index_col=[0], header=[0], engine='openpyxl')
 
 ##print out the reports being run and number of trials
-print("The following trials will be reported: /n", trials)
-print("The following reports will be run: /n", report_run.index[report_run.loc[:,'Run']])
+print("The following trials will be reported: \n", trials)
+print("The following reports will be run: \n", report_run.index[report_run.loc[:,'Run']])
 
 ##create empty df to stack each trial results into
 stacked_summary = pd.DataFrame()  # 1 line summary of each trial
@@ -243,7 +243,7 @@ for row in trials:
         lw_dams = pd.concat([lw_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_lw_dams = stacked_lw_dams.append(lw_dams)
 
-    
+
     if report_run.loc['run_ffcfw_dams', 'Run']:
         type = 'stock'
         prod = 'ffcfw_dams_k2vpa1e1b1nw8ziyg1'

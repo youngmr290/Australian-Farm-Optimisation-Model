@@ -18,6 +18,22 @@ def sup_precalcs(params, r_vals):
 
     
 def suppyomo_local(params):
+    ############
+    # variable #
+    ############
+    try:
+        model.del_component(model.v_buy_grain)
+    except AttributeError:
+        pass
+    model.v_buy_grain = pe.Var(model.s_crops,model.s_grain_pools,bounds=(0,None),
+                               doc='tonnes of grain in each pool purchased for sup feeding')
+    try:
+        model.del_component(model.v_sup_con)
+    except AttributeError:
+        pass
+    model.v_sup_con = pe.Var(model.s_crops,model.s_grain_pools,model.s_feed_pools,model.s_feed_periods,bounds=(0,None),
+                             doc='tonnes of grain consumed in each pool')
+
     #########
     #param  #
     ######### 
@@ -79,14 +95,6 @@ def suppyomo_local(params):
         pass
     model.p_buy_grain_price = pe.Param(model.s_crops, model.s_cashflow_periods, model.s_grain_pools, initialize=params['buy_grain_price'], default = 0.0, doc='price to buy grain from neighbour')
 
-
-#######################################################################################################################################################
-#######################################################################################################################################################
-#variable
-#######################################################################################################################################################
-#######################################################################################################################################################
-model.v_buy_grain = pe.Var(model.s_crops, model.s_grain_pools, bounds=(0,None), doc='tonnes of grain in each pool purchased for sup feeding')
-model.v_sup_con = pe.Var(model.s_crops,  model.s_grain_pools, model.s_feed_pools, model.s_feed_periods, bounds=(0,None), doc='tonnes of grain consumed in each pool')
 
 #######################################################################################################################################################
 #######################################################################################################################################################

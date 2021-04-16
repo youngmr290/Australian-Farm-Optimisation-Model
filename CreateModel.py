@@ -65,6 +65,20 @@ def sets() :
         pass
     model.s_pastures = Set(initialize=sinp.general['pastures'][pinp.general['pas_inc']],doc='feed periods')
 
+    ##feed pool
+    confinement_inc = np.maximum(np.max(pinp.sheep['i_nut_spread_n1'][0:sinp.stock['i_n1_len']]),
+                                 np.max(pinp.sheep['i_nut_spread_n3'][
+                                        0:sinp.stock[
+                                            'i_n3_len']])) > 3  # if fs>3 then need to include confinment feeding
+    ev_is_not_confinement_v = sinp.general['ev_is_not_confinement']
+    ev_mask_v = np.logical_or(ev_is_not_confinement_v,confinement_inc)
+    try:
+        model.del_component(model.s_feed_pools)
+    except AttributeError:
+        pass
+    model.s_feed_pools = Set(initialize=sinp.general['sheep_pools'][ev_mask_v],doc='nutritive value pools')
+    print('tes')
+
 
 #######################
 #labour               #
@@ -144,7 +158,6 @@ model.s_rotconstraints = Set(initialize=s_rotcon1.index, doc='rotation constrain
 #######################
 ##all groups
 model.s_infrastructure = Set(initialize=uinp.sheep['i_h1_idx'], doc='core sheep infrastructure')
-model.s_feed_pools = Set(initialize=sinp.general['sheep_pools'], doc='nutritive value pools')
 # model.s_co_conception = Set(initialize=, doc='carryover characteristics - conception')
 # model.s_co_bw = Set(initialize=, doc='carryover characteristics - Birth weight')
 # model.s_co_ww = Set(initialize=, doc='carryover characteristics - Weaning weight')

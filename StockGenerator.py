@@ -6699,7 +6699,7 @@ def generator(params,r_vals,ev,plots = False):
 
     ###numbers weights for reports with arrays that keep axis that are not present in lp array.
     if pinp.rep['i_store_lw_rep'] or pinp.rep['i_store_ffcfw_rep'] or pinp.rep['i_store_fec_rep']:
-        r_vals['pe1b1_denom_numbers_k2tvpa1e1b1nw8ziyg1'] = ((a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+        r_vals['pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1'] = ((a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
                                                              *(a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...])
                                                              * r_on_hand_k2tvpa1e1b1nwzida0e0b0xyg1
                                                              ).squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos))
