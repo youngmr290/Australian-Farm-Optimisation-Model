@@ -67,9 +67,10 @@ stacked_fd_dams = pd.DataFrame()  # fibre diameter dams
 stacked_wbe_dams = pd.DataFrame()  # whole body energy content dams
 stacked_wbe_offs = pd.DataFrame()  # whole body energy content offs
 stacked_lw_dams = pd.DataFrame()  # live weight dams (large array with p, e and b axis)
-stacked_ffcfw_dams = pd.DataFrame()  # fleece free conceptus free dams (large array with p, e and b axis)
+stacked_ffcfw_dams = pd.DataFrame()  # fleece free conceptus free weight dams (large array with p, e and b axis)
 stacked_fec_dams = pd.DataFrame()  # feed energy content dams (large array with p, e and b axis)
-stacked_ffcfw_prog = pd.DataFrame()  # fleece free conceptus free weight dams (large array with p, e and b axis)
+stacked_ffcfw_prog = pd.DataFrame()  # fleece free conceptus free weight prog (large array with p, e and b axis)
+stacked_ffcfw_offs = pd.DataFrame()  # fleece free conceptus free weight offs (large array with p, e and b axis)
 stacked_fec_offs = pd.DataFrame()  # feed energy content offs (large array with p, e and b axis)
 stacked_weanper = pd.DataFrame()  # weaning percent
 stacked_scanper = pd.DataFrame()  # scan percent
@@ -261,7 +262,7 @@ for row in trials:
         ffcfw_dams = pd.concat([ffcfw_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_ffcfw_dams = stacked_ffcfw_dams.append(ffcfw_dams)
 
-    
+
     if report_run.loc['run_fec_dams', 'Run']:
         type = 'stock'
         prod = 'fec_dams_k2vpa1e1b1nw8ziyg1'
@@ -282,7 +283,7 @@ for row in trials:
         fec_dams = pd.concat([fec_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_fec_dams = stacked_fec_dams.append(fec_dams)
 
-    
+
     if report_run.loc['run_ffcfw_prog', 'Run']:
         type = 'stock'
         prod = 'ffcfw_prog_zia0xg2w9'
@@ -299,8 +300,30 @@ for row in trials:
         ffcfw_prog = pd.concat([ffcfw_prog],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_ffcfw_prog = stacked_ffcfw_prog.append(ffcfw_prog)
 
-    
-    
+
+    if report_run.loc['run_ffcfw_offs', 'Run']:
+        type = 'stock'
+        prod = 'ffcfw_offs_k3k5vpnw8zida0e0b0xyg3'
+        na_prod = [2]
+        weights = 'offs_numbers_k3k5tvnwziaxyg3'
+        na_weights = [4,9,11,12]
+        den_weights = 'pde0b0_denom_weights_k3k5tvpnw8zida0e0b0xyg3'
+        keys = 'offs_keys_k3k5tvpnwzidaebxyg3'
+        arith = 1
+        arith_axis = [0,1,3,5,6,7,8,9,10,11,13,14,15]  # reporting p(4) & b0(12)
+        index = [4]
+        cols = [2,12]
+        axis_slice = {}
+        axis_slice[11] = [0,1,1] #first cycle
+        axis_slice[9] = [2,-1,1] #Adult
+        axis_slice[15] = [0,1,1] #BBB
+        ffcfw_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights
+                                 , den_weights=den_weights, na_prod=na_prod, na_weights=na_weights
+                                 , keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+        ffcfw_offs = pd.concat([ffcfw_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
+        stacked_ffcfw_offs = stacked_ffcfw_offs.append(ffcfw_offs)
+
+
     if report_run.loc['run_fec_offs', 'Run']:
         type = 'stock'
         prod = 'fec_offs_k3k5vpnw8zida0e0b0xyg3'
@@ -709,6 +732,8 @@ if report_run.loc['run_fec_dams', 'Run']:
     rep.f_df2xl(writer, stacked_fec_dams, 'fec_dams', option=1)
 if report_run.loc['run_ffcfw_prog', 'Run']:
     rep.f_df2xl(writer, stacked_ffcfw_prog, 'ffcfw_prog', option=1)
+if report_run.loc['run_ffcfw_offs', 'Run']:
+    rep.f_df2xl(writer, stacked_ffcfw_offs, 'ffcfw_offs', option=1)
 if report_run.loc['run_fec_offs', 'Run']:
     rep.f_df2xl(writer, stacked_fec_offs, 'fec_offs', option=1)
 if report_run.loc['run_lamb_survival', 'Run']:
