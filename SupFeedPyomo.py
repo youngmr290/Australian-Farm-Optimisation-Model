@@ -22,12 +22,14 @@ def suppyomo_local(params):
     # variable #
     ############
     try:
+        model.del_component(model.v_buy_grain_index)
         model.del_component(model.v_buy_grain)
     except AttributeError:
         pass
     model.v_buy_grain = pe.Var(model.s_crops,model.s_grain_pools,bounds=(0,None),
                                doc='tonnes of grain in each pool purchased for sup feeding')
     try:
+        model.del_component(model.v_sup_con_index)
         model.del_component(model.v_sup_con)
     except AttributeError:
         pass

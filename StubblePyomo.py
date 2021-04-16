@@ -25,6 +25,7 @@ def stubpyomo_local(params):
     ###################
     ##stubble consumption
     try:
+        model.del_component(model.v_stub_con_index)
         model.del_component(model.v_stub_con)
     except AttributeError:
         pass
@@ -32,6 +33,7 @@ def stubpyomo_local(params):
                               doc='consumption of stubble')
     ##stubble transfer
     try:
+        model.del_component(model.v_stub_transfer_index)
         model.del_component(model.v_stub_transfer)
     except AttributeError:
         pass
