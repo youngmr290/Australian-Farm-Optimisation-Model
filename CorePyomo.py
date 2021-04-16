@@ -193,7 +193,7 @@ def coremodel_all(params, trial_name):
     model.con_cropsow = pe.Constraint(model.s_crops, model.s_lmus, rule = cropsow_link, doc='link between mach sow provide and rotation crop sow require')
    
     ##links pasture sow req with mach sow provide - requires a p set because the timing of sowing pasture is not optimisable (pasture sowing can occur in any period so the user specifies the periods when a given pasture must be sown)
-    ##pasture sow has seperate constraint from crop rotations because pas sow has a p axis so that user can specify period when pasture is sown (pasture has no yield penalty so model doesnt optimise seeding time like it does for crop)
+    ##pasture sow has separate constraint from crop rotations because pas sow has a p axis so that user can specify period when pasture is sown (pasture has no yield penalty so model doesnt optimise seeding time like it does for crop)
     try:
         model.del_component(model.con_passow_index)
         model.del_component(model.con_passow)
@@ -831,7 +831,7 @@ def coremodel_all(params, trial_name):
         def pysp_instance_creation_callback(scenario_name,node_names):
             instance = model.clone()
             print('cloning: ',scenario_name)
-            #todo since we wont be useing this method i have converted all parameters back to mutable=false. can be reverted easily using global find and replace
+            #todo since we wont be using this method i have converted all parameters back to mutable=false. can be reverted easily using global find and replace
             ##stubble
             instance.p_fp_transfer.store_values(params['stub'][scenario_name]['per_transfer'])
             instance.p_a_req.store_values(params['stub'][scenario_name]['cat_a_st_req'])

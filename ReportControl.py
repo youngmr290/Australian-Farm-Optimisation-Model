@@ -29,6 +29,8 @@ import os
 import ReportFunctions as rep
 import Functions as fun
 
+#todo The reports would be easier to change if the arith axes where calculated from those that aren't in the index or columns (on the basis that I think that if they are not in the table then they need to have arithmetic done)
+
 ##read in exp log
 exp_data_nosort = fun.f_read_exp()
 exp_data_index = exp_data_nosort.index #need to use this so user can specify the trial number as per exp.xls
@@ -491,9 +493,9 @@ for row in trials:
         weights = 'offs_numbers_k3k5tvnwziaxyg3'
         keys = 'offs_keys_k3k5tvnwziaxyg3'
         arith = 2
-        arith_axis = [4,5,6,7,8,9,10,11]
+        arith_axis = [4,5,6,7,8,10,11]
         index =[3]
-        cols =[0,1,2]
+        cols =[0,1,2,9]
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         numbers_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,

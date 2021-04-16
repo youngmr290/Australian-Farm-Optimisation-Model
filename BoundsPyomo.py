@@ -127,7 +127,7 @@ def boundarypyomo_local(params):
 
         ##bound to stop yearlings being mated - specified by k2 & v and totalled across other axes
         #todo would be good to implement this as a proportion of the yearlings that can be mated. So the constrain is: (1- x) number mated <= (x) number not mated (where x is max propn mated).
-        # also would be goood to add genotype as axis because if composite then default would be to mate them but default not to mate merino yearlings.
+        # also would be good to add genotype as axis because if composite then default would be to mate them but default not to mate merino yearlings.
         if yearling_mating_upperbound_inc:
             ###keys to build arrays for the specified slices
             arrays = [model.s_k2_birth_dams, model.s_dvp_dams]   #JMY not sure why this has _birth_ in the variable name. Is it just k2_dams??
