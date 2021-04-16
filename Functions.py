@@ -464,8 +464,6 @@ def f_weighted_average(array, weights, axis, keepdims=False, non_zero=False, den
     :param den_weights: array: broadcastable to weights. This is used to weight the denominator (used in reporting)
     :return:
     '''
-    #todo can the step of updating weights that are == 0 be done after weights are mult by den_weights. Might stop div 0 warning when reporting.
-    #todo alternatively if averaged_array was created as either zeros or a copy of weighted array (depending on non-zero), could the mask be set on weights != 0
     if non_zero:
         ##for some situations (production) if numbers are 0 we don't want to return 0 we want to return the original value
         weights=f_update(weights,1,np.all(weights==0, axis=axis, keepdims=True))
@@ -473,7 +471,7 @@ def f_weighted_average(array, weights, axis, keepdims=False, non_zero=False, den
     weights = np.broadcast_to(np.sum(weights * den_weights, axis=axis, keepdims=keepdims), weighted_array.shape)
     # den_weight = np.broadcast_to(np.sum(den_weight, axis=axis, keepdims=keepdims), weighted_array.shape)
     averaged_array = np.zeros_like(weighted_array)
-    mask = weighted_array!=0
+    mask = weights!=0
     averaged_array[mask] = weighted_array[mask] / weights[mask]
     return averaged_array
 
