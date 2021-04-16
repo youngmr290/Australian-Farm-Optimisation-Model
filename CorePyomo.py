@@ -979,11 +979,11 @@ def coremodel_all(params, trial_name):
         print('***INFEASIBLE LP SOLUTION***')
         ###save infeasible file
         with open('Output/infeasible/%s.txt' % trial_name,'w') as f:
-            f.write("Solver Status: infeasible")
-    else:  # Something else is wrong
+            f.write("Solver Status: {0}" .format(solver_result.solver.termination_condition))
+    else:  # Something else is wrong - solver may have stalled.
         print('***Solver Status: error***')
         ###save infeasible file
         with open('Output/infeasible/%s.txt' % trial_name,'w') as f:
-            f.write("Solver Status: error")
+            f.write("Solver Status: {0}" .format(solver_result.solver.termination_condition))
 
     return obj
