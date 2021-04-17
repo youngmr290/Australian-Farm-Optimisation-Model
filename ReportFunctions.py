@@ -24,7 +24,7 @@ na = np.newaxis
 ###################
 #general functions#
 ###################
-def f_df2xl(writer, df, sheet, rowstart=0, colstart=0, option=0):
+def f_df2xl(writer, df, sheet, df_settings=None, rowstart=0, colstart=0, option=0):
     '''
     Pandas to excel. https://xlsxwriter.readthedocs.io/working_with_pandas.html
         - You can simply stick a dataframe from pandas into excel using df.to_excel() function.
@@ -36,12 +36,17 @@ def f_df2xl(writer, df, sheet, rowstart=0, colstart=0, option=0):
     :param writer: writer used. controls the workbook being writen to.
     :param df: dataframe going to excel
     :param sheet: str: sheet name.
+    :param df_settings: df: df to store number of row and col indexes.
     :param rowstart: start row in excel
     :param colstart: start col in excel
     :param option: int: specifying the writing option
                     0: df straight into excel
                     1: df into excel collapsing empty rows and cols
     '''
+    ##store df settings
+    if df_settings:
+        df_settings.loc[sheet] = [df.index.nlevels, df.columns.nlevels]
+
     ## simple write df to xl
     df.to_excel(writer, sheet, startrow=rowstart, startcol=colstart)
 
@@ -64,7 +69,7 @@ def f_df2xl(writer, df, sheet, rowstart=0, colstart=0, option=0):
                 offset = df.index.nlevels
                 col = xlsxwriter.utility.xl_col_to_name(col+offset) + ':' + xlsxwriter.utility.xl_col_to_name(col+offset) #convert col number to excel col reference eg 'A:B'
                 worksheet.set_column(col,None,None,{'level': 1, 'hidden': True})
-        return
+
 
     ##apply filter
     if option==2:
@@ -87,6 +92,8 @@ def f_df2xl(writer, df, sheet, rowstart=0, colstart=0, option=0):
         chart.add_series({'values': '=areasum!$B$2:$B$8'}) # todo this will need to become function argument
         # Insert the chart into the worksheet.
         worksheet.insert_chart('D2',chart)
+
+    return df_settings
 
 def f_errors(exp_data_index, trial_outdated, trials):
     '''
