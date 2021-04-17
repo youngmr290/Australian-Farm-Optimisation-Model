@@ -19,7 +19,7 @@ import ReportFunctions as rep
 files = os.listdir('Output')
 excel_files=[]
 for file in files:                         # loop through Excel files
-    if file.endswith('.xlsx') and file!='combined_file.xlsx':
+    if not file.startswith('~') and file.endswith('.xlsx') and file!='combined_file.xlsx':
         excel_files.append(pd.ExcelFile('Output/{0}'.format(file)))
 
 ## Create a Pandas Excel writer using XlsxWriter as the engine. used to write to multiple sheets in excel
