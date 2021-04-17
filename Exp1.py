@@ -14,6 +14,7 @@ import time
 import math
 import os
 import os.path
+import sys
 from datetime import datetime
 import multiprocessing
 import pickle as pkl
@@ -49,7 +50,10 @@ import CorePyomo as core
 # logger = multiprocessing.log_to_stderr(logging.DEBUG)
 
 ## the upper limit of number of processes (concurrent trials) based on the memory capacity of this machine
-maximum_processes = 12  # available memory / value determined by size of the model being run (~5GB for the small model)
+try:
+    maximum_processes = int(sys.argv[2])  # reads in as string so need to convert to int, the script path is the first value hence take the second.
+except IndexError:  # incase no arg passed to python
+    maximum_processes = 12  # available memory / value determined by size of the model being run (~5GB for the small model)
 
 start_time1 = time.time()
 
