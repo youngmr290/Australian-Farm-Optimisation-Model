@@ -404,6 +404,7 @@ def generator(params,r_vals,ev,plots = False):
     o_ffcfw_season_poffs = np.zeros(pg3, dtype =dtype)
     o_ffcfw_condensed_poffs = np.zeros(pg3, dtype =dtype)
     o_nw_start_poffs = np.zeros(pg3, dtype=dtype)
+    o_mortality_offs = np.zeros(pg3, dtype =dtype)
     o_lw_poffs = np.zeros(pg3, dtype =dtype)
     o_pi_poffs = np.zeros(pg3, dtype =dtype)
     o_mei_solid_poffs = np.zeros(pg3, dtype =dtype)
@@ -3457,6 +3458,7 @@ def generator(params,r_vals,ev,plots = False):
                 o_ffcfw_condensed_poffs[p] = sfun.f_condensed(numbers_end_offs, ffcfw_offs, idx_sorted_w_offs, prejoin_tup, season_tup, n_fs_offs, len_w3, n_fvp_periods_offs, numbers_start_condense_offs,
                                                              period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])  #condensed lw at the end of the period before fvp0
                 o_nw_start_poffs[p] = nw_start_offs
+                o_mortality_offs[p] = mortality_offs
                 o_lw_poffs[p] = lw_offs
                 o_pi_poffs[p] = pi_offs
                 o_mei_solid_poffs[p] = mei_solid_offs
@@ -5691,13 +5693,38 @@ def generator(params,r_vals,ev,plots = False):
     ##############
     #big reports #
     ##############
+    ##mortality - at the start of each dvp mortality is 0. it accumulates over the dvp. This is its own report as well as affecting the other big reports that have p axis.
+    if pinp.rep['i_store_lw_rep'] or pinp.rep['i_store_ffcfw_rep'] or pinp.rep['i_store_fec_rep'] or pinp.rep['i_store_on_hand'] or pinp.rep['i_store_mort']:
+        ###get the cumulative mort for periods in each dvp
+        r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg1 = sfun.f_cum_sum_dvp(o_mortality_dams, a_v_pa1e1b1nwzida0e0b0xyg1)
+        r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg3 = sfun.f_cum_sum_dvp(o_mortality_offs, a_v_pa1e1b1nwzida0e0b0xyg3)
+        ###add v axis and adjust for onhand
+        r_cum_dvp_mort_tvpa1e1b1nwzida0e0b0xyg1 = r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg1 * on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...] * (
+                                                  a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+        r_cum_dvp_mort_tvpa1e1b1nwzida0e0b0xyg3 = r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg3 * on_hand_tpa1e1b1nwzida0e0b0xyg3[:,na,...] * (
+                                                  a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
+        ###cluster e,b
+        r_cum_dvp_mort_k2tvpa1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams',r_cum_dvp_mort_tvpa1e1b1nwzida0e0b0xyg1,
+                                                                              a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...],
+                                                                              index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],
+                                                                              mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1[:,
+                                                                                      na,...])
+        r_cum_dvp_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs',r_cum_dvp_mort_tvpa1e1b1nwzida0e0b0xyg3,
+                                                                                a_k3cluster_da0e0b0xyg3,
+                                                                                index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,
+                                                                                na,...],
+                                                                                a_k5cluster_da0e0b0xyg3,
+                                                                                index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,
+                                                                                ...],
+                                                                                mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3[
+                                                                                        :,na,...])
+
     ##on hand - this is used so that the numbers report can have a p axis so the number of animals can be more specific than just dvp
     ##          also used for numbers weights with e and b axis (used for ffcfw_peb and lw and fec reports)
-    # todo would be worth adding mortality to this array. o_mortality_dams
     if pinp.rep['i_store_lw_rep'] or pinp.rep['i_store_ffcfw_rep'] or pinp.rep['i_store_fec_rep'] or pinp.rep['i_store_on_hand']:
-        r_on_hand_tvpa1e1b1nwzida0e0b0xyg1 = on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...] * (
+        r_on_hand_tvpa1e1b1nwzida0e0b0xyg1 = (1 - r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg1) * on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...] * (
                     a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
-        r_on_hand_tvpa1e1b1nwzida0e0b0xyg3 = on_hand_tpa1e1b1nwzida0e0b0xyg3[:,na,...] * (
+        r_on_hand_tvpa1e1b1nwzida0e0b0xyg3 = (1 - r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg3) * on_hand_tpa1e1b1nwzida0e0b0xyg3[:,na,...] * (
                     a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
         r_on_hand_k2tvpa1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams',r_on_hand_tvpa1e1b1nwzida0e0b0xyg1,
                                                                               a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...],
@@ -6639,6 +6666,11 @@ def generator(params,r_vals,ev,plots = False):
 
     ###sale date
     r_vals['saledate_k3k5tvnwziaxyg3'] = r_saledate_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
+
+    ###mort
+    if pinp.rep['i_store_mort']:
+        r_vals['mort_k2tvpa1nwziyg1'] = r_cum_dvp_mort_k2tvpa1e1b1nwzida0e0b0xyg1.reshape(k2tvpa1nwziyg1_shape)
+        r_vals['mort_k3k5tvpnwziaxyg3'] = r_cum_dvp_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3.reshape(k3k5tvpnwziaxyg3_shape)
 
     ###on hand
     if pinp.rep['i_store_on_hand']:

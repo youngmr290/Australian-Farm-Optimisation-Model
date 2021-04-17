@@ -2145,6 +2145,20 @@ def f_cum_dvp(arr,dvp_pointer,axis=0,shift=0):
         final += arr1
     return final
 
+def f_cum_sum_dvp(arr,dvp_pointer,axis=0,shift=0):
+    '''This function does accumulative sum but it resets at each dvp.
+    '''
+    final = np.zeros_like(arr)
+    for i in range(np.max(dvp_pointer)+1):  #plus 1 so that the last dvp is counted for
+        arr1 = arr * (dvp_pointer==i) #sets the p slices to 0 if not in the given dvp
+        arr1 = np.roll(arr1,shift,axis) #this is only used for the dams on hand calculation, this rolls the period is sale array 1 unit along the p axis.
+                                        # This is required so that period is onhand == true in the period that sale occurs and false after that.
+                                        # Because sale occurs at the end of a given period so the sheep are technically onhand for the period sale occurs.
+        arr1 = np.cumsum(arr1,axis=axis)
+        arr1 = arr1 * (dvp_pointer==i) #sets the cum max to 0 for other dvp not of interest
+        final += arr1
+    return final
+
 def f_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, dvp_type_next_tvgw=0, vtype=0): #, w_pos, i_n_len, i_n_fvp_period, dvp_type_next_tvgw=0, vtype=0):
     '''distributing animals on LW at the start of dvp
         the 8 or 9 is dropped from the w if singleton'''

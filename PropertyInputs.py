@@ -277,6 +277,7 @@ def property_inp_sa():
     rep['i_store_lw_rep'] = fun.f_sa(rep_inp['i_store_lw_rep'], sen.sav['lw_inc'], 5)
     rep['i_store_ffcfw_rep'] = fun.f_sa(rep_inp['i_store_ffcfw_rep'], sen.sav['ffcfw_inc'], 5)
     rep['i_store_on_hand'] = fun.f_sa(rep_inp['i_store_on_hand'], sen.sav['onhand_p_inc'], 5)
+    rep['i_store_mort'] = fun.f_sa(rep_inp['i_store_mort'], sen.sav['mort_inc'], 5)
 
 
 def f_z_prob():

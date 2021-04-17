@@ -85,6 +85,8 @@ stacked_numbers_dams_p = pd.DataFrame()  # numbers dams with p axis (large array
 stacked_numbers_prog = pd.DataFrame()  # numbers prog
 stacked_numbers_offs = pd.DataFrame()  # numbers offs
 stacked_numbers_offs_p = pd.DataFrame()  # numbers offs with p axis (large array)
+stacked_mort_dams = pd.DataFrame()  # mort dams with p axis (large array)
+stacked_mort_offs = pd.DataFrame()  # mort offs with p axis (large array)
 stacked_dse_sire = pd.DataFrame()  # dse based on normal weight
 stacked_dse_dams = pd.DataFrame()  # dse based on normal weight
 stacked_dse_offs = pd.DataFrame()  # dse based on normal weight
@@ -487,7 +489,7 @@ for row in trials:
         numbers_prog = pd.concat([numbers_prog],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_numbers_prog = stacked_numbers_prog.append(numbers_prog)
 
-    
+
     if report_run.loc['run_numbers_offs', 'Run']:
         type = 'stock'
         weights = 'offs_numbers_k3k5tvnwziaxyg3'
@@ -521,6 +523,43 @@ for row in trials:
                                axis_slice=axis_slice)
         numbers_offs_p = pd.concat([numbers_offs_p],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_numbers_offs_p = stacked_numbers_offs_p.append(numbers_offs_p)
+
+
+    if report_run.loc['run_mort_dams', 'Run']:
+        type = 'stock'
+        prod = 'mort_k2tvpa1nwziyg1'
+        weights = 1 #this could be weighted by numbers if required
+        na_weights = []
+        keys = 'dams_keys_k2tvpanwziy1g1'
+        arith = 4
+        arith_axis = [2,4,5,7,8,9,10]
+        index =[3]
+        cols =[0,1,6]
+        axis_slice = {}
+        # axis_slice[0] = [0, 2, 1]
+        mort_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
+                               na_weights=na_weights, keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols,
+                               axis_slice=axis_slice)
+        mort_dams = pd.concat([mort_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
+        stacked_mort_dams = stacked_mort_dams.append(mort_dams)
+
+    if report_run.loc['run_mort_offs', 'Run']:
+        type = 'stock'
+        prod = 'mort_k3k5tvpnwziaxyg3'
+        weights = 1 #this could be weighted by numbers if required
+        na_weights = []
+        keys = 'offs_keys_k3k5tvpnwziaxyg3'
+        arith = 4
+        arith_axis = [3,5,7,8,9,10,11,12]
+        index =[4]
+        cols =[0,1,2,6]
+        axis_slice = {}
+        # axis_slice[0] = [0, 2, 1]
+        mort_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
+                               na_weights=na_weights, keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols,
+                               axis_slice=axis_slice)
+        mort_offs = pd.concat([mort_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
+        stacked_mort_offs = stacked_mort_offs.append(mort_offs)
 
 
     if report_run.loc['run_dse', 'Run']:
@@ -762,6 +801,10 @@ if report_run.loc['run_numbers_offs', 'Run']:
     df_settings = rep.f_df2xl(writer, stacked_numbers_offs, 'numbers_offs', df_settings, option=1)
 if report_run.loc['run_numbers_offs_p', 'Run']:
     df_settings = rep.f_df2xl(writer, stacked_numbers_offs_p, 'numbers_offs_p', df_settings, option=1)
+if report_run.loc['run_mort_dams', 'Run']:
+    df_settings = rep.f_df2xl(writer, stacked_mort_dams, 'mort_dams', df_settings, option=1)
+if report_run.loc['run_mort_offs', 'Run']:
+    df_settings = rep.f_df2xl(writer, stacked_mort_offs, 'mort_offs', df_settings, option=1)
 if report_run.loc['run_dse', 'Run']:
     dams_start_col = len(stacked_dse_sire.columns) + stacked_dse_sire.index.nlevels + 1
     offs_start_col = dams_start_col + len(stacked_dse_dams.columns) + stacked_dse_dams.index.nlevels + 1

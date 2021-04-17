@@ -1192,7 +1192,7 @@ def f_arith(prod, weight, den_weights, arith, axis):
     option 1: return weighted average of production param (using denominator weight return production per day the animal is on hand)
     option 2: total production for a given axis
     option 3: total production for each activity
-    option 4: return weighted average of production param (using denominator weight returns the average production for period eg less if animal is sold part way through)
+    option 4: return weighted average of production param using prod>0 as the weights
 
     :param prod: array: production param
     :param weight: array: weights (typically the variable associated with the prod param)
@@ -1216,8 +1216,8 @@ def f_arith(prod, weight, den_weights, arith, axis):
         prod = prod * weight
     ##option 4
     if arith == 4:
-        prod = fun.f_weighted_average(prod, weight, tuple(axis), keepdims=keepdims,
-                                      den_weights=(den_weights / den_weights))
+        prod = np.sum(prod * (prod>0),tuple(axis),keepdims=keepdims)
+
     return prod
 
 
