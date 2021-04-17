@@ -44,7 +44,7 @@ def f_df2xl(writer, df, sheet, df_settings=None, rowstart=0, colstart=0, option=
                     1: df into excel collapsing empty rows and cols
     '''
     ##store df settings
-    if df_settings:
+    if df_settings is not None:
         df_settings.loc[sheet] = [df.index.nlevels, df.columns.nlevels]
 
     ## simple write df to xl
