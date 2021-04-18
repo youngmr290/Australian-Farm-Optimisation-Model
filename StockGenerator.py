@@ -2997,7 +2997,7 @@ def generator(params,r_vals,ev,plots = False):
                 scanning = fun.f_update(scanning, t_scanning, period_is_scan_pa1e1b1nwzida0e0b0xyg1[p])
 
 
-            ## base mortality
+            ## base mortality - comments about mortality functins can be found in sfun.
             eqn_group = 14
             eqn_system = 0 # CSIRO = 0
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
@@ -3076,7 +3076,7 @@ def generator(params,r_vals,ev,plots = False):
                     if eqn_compare:
                         r_compare_q0q1q2poffs[eqn_system, eqn_group, 0, p, ...] = temp0
 
-            ## weaner mortality
+            ##weaner mortality - comments about mortality functins can be found in sfun.
             eqn_group = 2
             eqn_system = 0 # CSIRO = 0
             ####sire
@@ -3138,7 +3138,8 @@ def generator(params,r_vals,ev,plots = False):
                     if eqn_compare:
                         r_compare_q0q1q2poffs[eqn_system, eqn_group, 0, p, ...] = temp0
 
-            ## dam mortality - Peri-natal Dam mortality #todo consider combining CSIRO & MU to represent both Preg Tox and ewe mortality due to low CS at birth
+            ##Peri-natal Dam mortality - comments about mortality functins can be found in sfun.
+            #todo consider combining CSIRO & MU to represent both Preg Tox and ewe mortality due to low CS at birth
             eqn_group = 3
             eqn_system = 0 # CSIRO = 0
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
@@ -3148,7 +3149,7 @@ def generator(params,r_vals,ev,plots = False):
                                                     , period_between_birth6wks_pa1e1b1nwzida0e0b0xyg1[p], gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
                                                     , sen.sap['mortalitye'])
                     if eqn_used:
-                        mortality_dams += temp0
+                        mortality_dams += temp0 #mortality due to preg toxemia
                     if eqn_compare:
                         r_compare_q0q1q2pdams[eqn_system, eqn_group, 0, p, ...] = temp0
             eqn_system = 1 # mu = 1
@@ -3158,11 +3159,11 @@ def generator(params,r_vals,ev,plots = False):
                     temp0 = sfun.f_mortality_dam_mu(cu2_dams, cs_start_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]
                                                     , sen.sap['mortalitye'])
                     if eqn_used:
-                        mortality_dams += temp0
+                        mortality_dams += temp0 #dam mort at birth due to low CS
                     if eqn_compare:
                         r_compare_q0q1q2pdams[eqn_system, eqn_group, 0, p, ...] = temp0
 
-            ### Peri-natal progeny mortality (progeny survival)
+            ### Peri-natal progeny mortality (progeny survival) - comments about mortality functins can be found in sfun.
             eqn_group = 1
             eqn_system = 0 # CSIRO = 0
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
@@ -3174,7 +3175,7 @@ def generator(params,r_vals,ev,plots = False):
                     if eqn_used:
                         mortality_birth_yatf = temp1 #mortalityd, assign first because it has x axis
                         mortality_birth_yatf += temp0 #mortalityx
-                        mortality_dams += temp2 #mortalityd_dams
+                        mortality_dams += temp2 #mortality due to dystocia
                     if eqn_compare:
                         r_compare_q0q1q2pyatf[eqn_system, eqn_group, 0, p, ...] = temp0
                         r_compare_q0q1q2pyatf[eqn_system, eqn_group, 1, p, ...] = temp1
