@@ -61,7 +61,10 @@ sam['sfw_c2'] = 1.0                       #std fleece weight genotype params
 ######
 #SAP #
 ######
-sap['evg'] = 0.0                            #energy content of liveweight gain
+sap['evg'] = 0.0               #energy content of liveweight gain - this is a high level sa, it impacts within a calculation not on an input and is only implemented on adults
+sap['mortalityp'] = 0          #Scale the calculated progeny mortality at birth relative - this is a high level sa, it impacts within a calculation not on an input
+sap['mortalitye'] = 0          #Scale the calculated dam mortality at birth - this is a high level sa, it impacts within a calculation not on an input
+sap['mortalityb'] = 0          #Scale the calculated base mortality - this is a high level sa, it impacts within a calculation not on an input
 
 
 ######
@@ -77,8 +80,6 @@ saa['cl0_c2'] = np.zeros(uinp.parameters_inp['i_cl0_c2'].shape, dtype=np.float64
 ######
 sat['salep_weight_scalar'] = 0 #Scalar for LW impact across grid 1
 sat['salep_score_scalar'] = 0  #Scalar for score impact across the grid
-sat['mortalityp'] = 0          #Scale the calculated progeny mortality at birth in the target range 0 to 100% - this is a high level sa it impacts within a calculation not on an input
-sat['mortalitye'] = 0          #Scale the calculated dam mortality at birth in the target range 0 to 100% - this is a high level sa it impacts within a calculation not on an input
 
 
 ######

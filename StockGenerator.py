@@ -3004,7 +3004,8 @@ def generator(params,r_vals,ev,plots = False):
                 ####sire
                 eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                    temp0 = sfun.f_mortality_base_cs(cd_sire, cg_sire, rc_start_sire, ebg_sire, d_nw_max_pa1e1b1nwzida0e0b0xyg0[p], days_period_pa1e1b1nwzida0e0b0xyg0[p])
+                    temp0 = sfun.f_mortality_base_cs(cd_sire, cg_sire, rc_start_sire, ebg_sire, d_nw_max_pa1e1b1nwzida0e0b0xyg0[p]
+                                                     , days_period_pa1e1b1nwzida0e0b0xyg0[p], sen.sap['mortalityb'])
                     if eqn_used:
                         mortality_sire = temp0
                     if eqn_compare:
@@ -3012,7 +3013,8 @@ def generator(params,r_vals,ev,plots = False):
                 ####dams
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    temp0 = sfun.f_mortality_base_cs(cd_dams, cg_dams, rc_start_dams, ebg_dams, d_nw_max_pa1e1b1nwzida0e0b0xyg1[p], days_period_pa1e1b1nwzida0e0b0xyg1[p])
+                    temp0 = sfun.f_mortality_base_cs(cd_dams, cg_dams, rc_start_dams, ebg_dams, d_nw_max_pa1e1b1nwzida0e0b0xyg1[p]
+                                                     , days_period_pa1e1b1nwzida0e0b0xyg1[p], sen.sap['mortalityb'])
                     if eqn_used:
                         mortality_dams = temp0
                     if eqn_compare:
@@ -3020,7 +3022,8 @@ def generator(params,r_vals,ev,plots = False):
                 ####yatf
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                    temp0 = sfun.f_mortality_base_cs(cd_yatf, cg_yatf, rc_start_yatf, ebg_yatf, d_nw_max_yatf, days_period_pa1e1b1nwzida0e0b0xyg2[p])
+                    temp0 = sfun.f_mortality_base_cs(cd_yatf, cg_yatf, rc_start_yatf, ebg_yatf, d_nw_max_yatf
+                                                     , days_period_pa1e1b1nwzida0e0b0xyg2[p], sen.sap['mortalityb'])
                     if eqn_used:
                         mortality_yatf = temp0
                     if eqn_compare:
@@ -3028,7 +3031,8 @@ def generator(params,r_vals,ev,plots = False):
                 ####offs
                 eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                    temp0 = sfun.f_mortality_base_cs(cd_offs, cg_offs, rc_start_offs, ebg_offs, d_nw_max_pa1e1b1nwzida0e0b0xyg3[p], days_period_pa1e1b1nwzida0e0b0xyg3[p])
+                    temp0 = sfun.f_mortality_base_cs(cd_offs, cg_offs, rc_start_offs, ebg_offs, d_nw_max_pa1e1b1nwzida0e0b0xyg3[p]
+                                                     , days_period_pa1e1b1nwzida0e0b0xyg3[p], sen.sap['mortalityb'])
                     if eqn_used:
                         mortality_offs = temp0
                     if eqn_compare:
@@ -3038,7 +3042,8 @@ def generator(params,r_vals,ev,plots = False):
                 ####sire
                 eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                    temp0 = sfun.f_mortality_base_mu(cd_sire, cg_sire, rc_start_sire, ebg_sire, d_nw_max_pa1e1b1nwzida0e0b0xyg0[p], days_period_pa1e1b1nwzida0e0b0xyg0[p])
+                    temp0 = sfun.f_mortality_base_mu(cd_sire, cg_sire, rc_start_sire, ebg_sire, d_nw_max_pa1e1b1nwzida0e0b0xyg0[p]
+                                                     , days_period_pa1e1b1nwzida0e0b0xyg0[p], sen.sap['mortalityb'])
                     if eqn_used:
                         mortality_sire = temp0
                     if eqn_compare:
@@ -3046,7 +3051,8 @@ def generator(params,r_vals,ev,plots = False):
                 ####dams
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    temp0 = sfun.f_mortality_base_mu(cd_dams, cg_dams, rc_start_dams, ebg_dams, d_nw_max_pa1e1b1nwzida0e0b0xyg1[p], days_period_pa1e1b1nwzida0e0b0xyg1[p])
+                    temp0 = sfun.f_mortality_base_mu(cd_dams, cg_dams, rc_start_dams, ebg_dams, d_nw_max_pa1e1b1nwzida0e0b0xyg1[p]
+                                                     , days_period_pa1e1b1nwzida0e0b0xyg1[p], sen.sap['mortalityb'])
                     if eqn_used:
                         mortality_dams = temp0
                     if eqn_compare:
@@ -3054,7 +3060,8 @@ def generator(params,r_vals,ev,plots = False):
                 ####yatf
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                    temp0 = sfun.f_mortality_base_mu(cd_yatf, cg_yatf, rc_start_yatf, ebg_yatf, d_nw_max_yatf, days_period_pa1e1b1nwzida0e0b0xyg2[p])
+                    temp0 = sfun.f_mortality_base_mu(cd_yatf, cg_yatf, rc_start_yatf, ebg_yatf, d_nw_max_yatf
+                                                     , days_period_pa1e1b1nwzida0e0b0xyg2[p], sen.sap['mortalityb'])
                     if eqn_used:
                         mortality_yatf = temp0
                     if eqn_compare:
@@ -3062,7 +3069,8 @@ def generator(params,r_vals,ev,plots = False):
                 ####offs
                 eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                    temp0 = sfun.f_mortality_base_mu(cd_offs, cg_offs, rc_start_offs, ebg_offs, d_nw_max_pa1e1b1nwzida0e0b0xyg3[p], days_period_pa1e1b1nwzida0e0b0xyg3[p])
+                    temp0 = sfun.f_mortality_base_mu(cd_offs, cg_offs, rc_start_offs, ebg_offs, d_nw_max_pa1e1b1nwzida0e0b0xyg3[p]
+                                                     , days_period_pa1e1b1nwzida0e0b0xyg3[p], sen.sap['mortalityb'])
                     if eqn_used:
                         mortality_offs = temp0
                     if eqn_compare:
@@ -3101,6 +3109,34 @@ def generator(params,r_vals,ev,plots = False):
                         mortality_offs += temp0
                     if eqn_compare:
                         r_compare_q0q1q2poffs[eqn_system, eqn_group, 0, p, ...] = temp0
+            eqn_system = 1 # MU = 1
+            ####sire
+            if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
+                eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
+                    temp0 = sfun.f_mortality_weaner_mu()
+                    if eqn_used:
+                        mortality_sire += temp0
+                    if eqn_compare:
+                        r_compare_q0q1q2psire[eqn_system, eqn_group, 0, p, ...] = temp0
+            ####dams
+            if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
+                eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
+                    temp0 = sfun.f_mortality_weaner_mu()
+                    if eqn_used:
+                        mortality_dams += temp0
+                    if eqn_compare:
+                        r_compare_q0q1q2pdams[eqn_system, eqn_group, 0, p, ...] = temp0
+            ####offs
+            if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
+                eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
+                    temp0 = sfun.f_mortality_weaner_mu()
+                    if eqn_used:
+                        mortality_offs += temp0
+                    if eqn_compare:
+                        r_compare_q0q1q2poffs[eqn_system, eqn_group, 0, p, ...] = temp0
 
             ## dam mortality - Peri-natal Dam mortality #todo consider combining CSIRO & MU to represent both Preg Tox and ewe mortality due to low CS at birth
             eqn_group = 3
@@ -3110,7 +3146,7 @@ def generator(params,r_vals,ev,plots = False):
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     temp0 = sfun.f_mortality_dam_cs(cb1_dams, cg_dams, nw_start_dams, ebg_dams, days_period_pa1e1b1nwzida0e0b0xyg1[p]
                                                     , period_between_birth6wks_pa1e1b1nwzida0e0b0xyg1[p], gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
-                                                    , sen.sat['mortalitye'])
+                                                    , sen.sap['mortalitye'])
                     if eqn_used:
                         mortality_dams += temp0
                     if eqn_compare:
@@ -3120,7 +3156,7 @@ def generator(params,r_vals,ev,plots = False):
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     temp0 = sfun.f_mortality_dam_mu(cu2_dams, cs_start_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]
-                                                    , sen.sat['mortalitye'])
+                                                    , sen.sap['mortalitye'])
                     if eqn_used:
                         mortality_dams += temp0
                     if eqn_compare:
@@ -3134,7 +3170,7 @@ def generator(params,r_vals,ev,plots = False):
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                     temp0, temp1, temp2 = sfun.f_mortality_progeny_cs(cd_yatf, cb1_yatf, w_b_yatf, rc_start_dams, w_b_exp_y_dams
                                                                       , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p], chill_index_pa1e1b1nwzida0e0b0xygm1[p]
-                                                                      , nfoet_b1nwzida0e0b0xyg, sen.sat['mortalityp'])
+                                                                      , nfoet_b1nwzida0e0b0xyg, sen.sap['mortalityp'])
                     if eqn_used:
                         mortality_birth_yatf = temp1 #mortalityd, assign first because it has x axis
                         mortality_birth_yatf += temp0 #mortalityx
@@ -3153,7 +3189,7 @@ def generator(params,r_vals,ev,plots = False):
                                                          , period_between_scanbirth_pa1e1b1nwzida0e0b0xyg1[p], period_is_birth_pa1e1b1nwzida0e0b0xyg1[p])
                     temp0 = sfun.f_mortality_progeny_mu(cu2_yatf, cb1_yatf, cx_yatf[:,mask_x,...], ce_yatf[:,p,...], w_b_yatf, w_b_ltw_std_yatf
                                                         , foo_yatf, chill_index_pa1e1b1nwzida0e0b0xygm1[p], period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]
-                                                        , sen.sat['mortalityp'])
+                                                        , sen.sap['mortalityp'])
                     if eqn_used:
                         mortality_birth_yatf = temp0 #mortality
                     if eqn_compare:
