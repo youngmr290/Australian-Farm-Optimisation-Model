@@ -634,7 +634,7 @@ def f_run_required(exp_data1, check_pyomo=True):
         exp_data1['runpyomo'] = True
     return exp_data1
 
-def f_read_exp(exp_group=0):
+def f_read_exp():
     '''
 
     :param exp_group: optional int - specifying which group of trials to run.
@@ -649,7 +649,7 @@ def f_read_exp(exp_group=0):
 
     ##read and drop irrelevant cols
     exp_data = pd.read_excel('exp.xlsm', index_col=None, header=[0,1,2,3], engine='openpyxl')
-    if exp_group:
+    if exp_group is not None:
         exp_group_bool = exp_data.loc[:,('Drop','blank','blank','Exp Group')].values==exp_group
     else:
         exp_group_bool = exp_data.loc[:,('Drop','blank','blank','Exp Group')].values >= 0 #this will remove the blank rows
@@ -657,7 +657,7 @@ def f_read_exp(exp_group=0):
     exp_data = exp_data.set_index(list(exp_data.columns[0:4]))
 
     ##check if any trials have the same name
-    if  len(exp_data.index.get_level_values(3)) == len(set(exp_data.index.get_level_values(3))):
+    if len(exp_data.index.get_level_values(3)) == len(set(exp_data.index.get_level_values(3))):
         pass
     else:
         raise exc.TrialError('''Exp.xl has multiple trials with the same name.''')
