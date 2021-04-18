@@ -3157,7 +3157,7 @@ def generator(params,r_vals,ev,plots = False):
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     temp0 = sfun.f_mortality_dam_mu(cu2_dams, cs_start_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]
-                                                    , sen.sap['mortalitye'])
+                                                    , nfoet_b1nwzida0e0b0xyg, sen.sap['mortalitye'])
                     if eqn_used:
                         mortality_dams += temp0 #dam mort at birth due to low CS
                     if eqn_compare:

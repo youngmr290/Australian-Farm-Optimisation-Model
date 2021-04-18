@@ -1303,7 +1303,8 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, w_b_exp_y, period_is_birth, c
         1.  a base mortality for all animal classes which is a non reducible amount plus an increment
             The increment varies quadratically with both RC if below a threshold and ebg if below a threshold (relative to normal weight change)
         2. progeny mortality calculated from the LTW equations and is a function of birth weight, birth type and chill index at birth
-        3. dam mortality that is a function of dam CS at birth
+        3. dam mortality that is a function of dam CS at birth. This is the increase in mortality for reproducing ewes and 
+            is the same for single and twin bearing ewes.
         4. Weaner mortality is included in the base mortality through ebg being compared with normal growth rate.
         '''
 def f_mortality_base_mu(cd, cg, rc_start, ebg_start, d_nw_max, days_period, sap_mortalityb=0):
@@ -1322,11 +1323,13 @@ def f_mortality_weaner_mu():
     return 0
 
 
-def f_mortality_dam_mu(cu2, cs_birth_dams, period_is_birth, sap_mortalitye):
+def f_mortality_dam_mu(cu2, cs_birth_dams, period_is_birth, nfoet_b1, sap_mortalitye):
     ## transformed Dam mortality at birth
     t_mortalitye_mu = cu2[22, 0, ...] * cs_birth_dams + cu2[22, 1, ...] * cs_birth_dams ** 2 + cu2[22, -1, ...]
     ##Back transform the mortality
     mortalitye_mu = np.exp(t_mortalitye_mu) / (1 + np.exp(t_mortalitye_mu)) * period_is_birth
+    ##no increase in mortality for the non reproducing ewes (n_foet == 0)
+    mortalitye_mu = mortalitye_mu * (nfoet_b1 > 0)
     ##Adjust by sensitivity on dam mortality
     mortalitye_mu = fun.f_sa(mortalitye_mu, sap_mortalitye, sa_type = 1, value_min = 0)
     return mortalitye_mu
