@@ -25,11 +25,10 @@ Note: If reporting dates from a numpy array it is necessary to convert to dateti
 import numpy as np
 import pandas as pd
 import os
+import sys
 
 import ReportFunctions as rep
 import Functions as fun
-
-#todo The reports would be easier to change if the arith axes where calculated from those that aren't in the index or columns (on the basis that I think that if they are not in the table then they need to have arithmetic done)
 
 ##read in exp log
 exp_data_nosort = fun.f_read_exp()
@@ -50,12 +49,21 @@ trials = np.array(range(len(exp_data_index)))[pd.Series(exp_data_index.get_level
 ##check the trials you want to run exist and are up to date
 rep.f_errors(exp_data_index, trial_outdated, trials)
 
-##read in excel that controls which reports to run
-report_run = pd.read_excel('exp.xlsm', sheet_name='Run Report', index_col=[0], header=[0], engine='openpyxl')
+##read in excel that controls which reports to run and slice for the selected experiment.
+## If no arg passed in or the experiment is not set up with custom col in report_run then default col is used
+report_run = pd.read_excel('exp.xlsm', sheet_name='Run Report', index_col=[0], header=[0,1], engine='openpyxl')
+try:
+    exp_group = int(sys.argv[1])  # reads in as string so need to convert to int, the script path is the first value hence take the second.
+except IndexError:  # incase no arg passed to python
+    exp_group = "Default"
+try:
+    report_run = report_run.loc[:,('Run',exp_group)]
+except KeyError:  # incase the experiment is not set up with custom report_run
+    report_run = report_run.loc[:,('Run',"Default")]
 
 ##print out the reports being run and number of trials
 print("The following trials will be reported: \n", trials)
-print("The following reports will be run: \n", report_run.index[report_run.loc[:,'Run']])
+print("The following reports will be run: \n", report_run.index[report_run])
 
 ##create empty df to stack each trial results into
 stacked_summary = pd.DataFrame()  # 1 line summary of each trial
@@ -110,23 +118,23 @@ for row in trials:
     lp_vars,r_vals = rep.load_pkl(trial_name)
 
     ##run report functions
-    if report_run.loc['run_summary','Run']:
+    if report_run.loc['run_summary']:
         summary = rep.f_summary(lp_vars,r_vals,trial_name)
         stacked_summary = stacked_summary.append(summary)
     
-    if report_run.loc['run_areasum', 'Run']:
+    if report_run.loc['run_areasum']:
         option = 1
         areasum = rep.f_area_summary(lp_vars, r_vals, option=option)
         areasum = pd.concat([areasum],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_areasum = stacked_areasum.append(areasum)
     
-    if report_run.loc['run_pnl', 'Run']:
+    if report_run.loc['run_pnl']:
         pnl = rep.f_profitloss_table(lp_vars, r_vals)
         pnl = pd.concat([pnl],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_pnl = stacked_pnl.append(pnl)
 
     
-    if report_run.loc['run_profitarea', 'Run']:
+    if report_run.loc['run_profitarea']:
         area_option = 3
         profit_option = 0
         profitarea = pd.DataFrame(index=[trial_name], columns=['area','profit'])
@@ -135,7 +143,7 @@ for row in trials:
         stacked_profitarea = stacked_profitarea.append(profitarea)
 
     
-    if report_run.loc['run_saleprice', 'Run']:
+    if report_run.loc['run_saleprice']:
         option = 2
         grid = [0,5,6]
         weight = [22,40,25]
@@ -145,87 +153,81 @@ for row in trials:
         stacked_saleprice = stacked_saleprice.append(saleprice)
 
     
-    if report_run.loc['run_saledate_offs', 'Run']:
-        #todo Currently this can return a date prior to the start of the generator. Some animals must not have a date
+    if report_run.loc['run_saledate_offs']:
         type = 'stock'
         prod = 'saledate_k3k5tvnwziaxyg3'
         weights = 'offs_numbers_k3k5tvnwziaxyg3'
         keys = 'offs_keys_k3k5tvnwziaxyg3'
         arith = 1
-        arith_axis = [4,6,7,8,10,11]
         index =[3,5]
         cols =[0,1,2,9]
         saledate_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
-                               keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols).astype('datetime64[D]')
+                               keys=keys, arith=arith, index=index, cols=cols).astype('datetime64[D]')
         saledate_offs = pd.concat([saledate_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_saledate_offs = stacked_saledate_offs.append(saledate_offs)
 
-    if report_run.loc['run_cfw_dams', 'Run']:
+    if report_run.loc['run_cfw_dams']:
         type = 'stock'
         prod = 'cfw_hdmob_k2tva1nwziyg1'
         weights = 'dams_numbers_k2tvanwziy1g1'
         keys = 'dams_keys_k2tvanwziy1g1'
         arith = 1
-        arith_axis = [3,4,5,6,7,8,9]
         index =[2]
         cols =[0,1]
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         cfw_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
-                               keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+                               keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
         cfw_dams = pd.concat([cfw_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_cfw_dams = stacked_cfw_dams.append(cfw_dams)
 
-    if report_run.loc['run_fd_dams', 'Run']:
+    if report_run.loc['run_fd_dams']:
         type = 'stock'
         prod = 'fd_hdmob_k2tva1nwziyg1'
         weights = 'dams_numbers_k2tvanwziy1g1'
         keys = 'dams_keys_k2tvanwziy1g1'
         arith = 1
-        arith_axis = [3,4,5,6,7,8,9]
         index =[2]
         cols =[0,1]
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         fd_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
-                               keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+                               keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
         fd_dams = pd.concat([fd_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_fd_dams = stacked_fd_dams.append(fd_dams)
 
-    if report_run.loc['run_wbe_dams', 'Run']:
+    if report_run.loc['run_wbe_dams']:
         type = 'stock'
         prod = 'wbe_k2va1nwziyg1'
         na_prod = [1]
         weights = 'dams_numbers_k2tvanwziy1g1'
         keys = 'dams_keys_k2tvanwziy1g1'
         arith = 1
-        arith_axis = [1,3,4,5,6,7,8,9]
         index =[2]
         cols =[0]
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         wbe_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
-                               keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+                               keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
         wbe_dams = pd.concat([wbe_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_wbe_dams = stacked_wbe_dams.append(wbe_dams)
 
-    if report_run.loc['run_wbe_offs', 'Run']:
+    if report_run.loc['run_wbe_offs']:
         type = 'stock'
         prod = 'wbe_k3k5vnwziaxyg3'
         na_prod = [2]
         weights = 'offs_numbers_k3k5tvnwziaxyg3'
         keys = 'offs_keys_k3k5tvnwziaxyg3'
         arith = 1
-        arith_axis = [4,5,6,7,8,9,10,11]
         index =[3]
         cols =[0,1,2]
         axis_slice = {}
         wbe_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
-                               keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+                               keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
         wbe_offs = pd.concat([wbe_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_wbe_offs = stacked_wbe_offs.append(wbe_offs)
 
-    if report_run.loc['run_lw_dams', 'Run']:
+    if report_run.loc['run_lw_dams']:
         type = 'stock'
         prod = 'lw_dams_k2vpa1e1b1nw8ziyg1'
         na_prod = [1]
@@ -234,19 +236,18 @@ for row in trials:
         den_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1'
         keys = 'dams_keys_k2tvpaebnwziy1g1'
         arith = 1
-        arith_axis = [0,1,2,4,5,7,8,9,10,11,12]  #reporting p(3) & b1(6)
         index =[3]
         cols =[6]
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         lw_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights
                                  , den_weights=den_weights, na_prod=na_prod, na_weights=na_weights
-                                 , keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+                                 , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
         lw_dams = pd.concat([lw_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_lw_dams = stacked_lw_dams.append(lw_dams)
 
 
-    if report_run.loc['run_ffcfw_dams', 'Run']:
+    if report_run.loc['run_ffcfw_dams']:
         type = 'stock'
         prod = 'ffcfw_dams_k2vpa1e1b1nw8ziyg1'
         na_prod = [1]
@@ -255,19 +256,18 @@ for row in trials:
         den_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1'
         keys = 'dams_keys_k2tvpaebnwziy1g1'
         arith = 1
-        arith_axis = [0, 1, 2, 4, 5, 7, 8, 9, 10, 11, 12]  #reporting p(3) & b1(6)
         index = [3]
         cols = [6]
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         ffcfw_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights
                                  , den_weights=den_weights, na_prod=na_prod, na_weights=na_weights
-                                 , keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+                                 , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
         ffcfw_dams = pd.concat([ffcfw_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_ffcfw_dams = stacked_ffcfw_dams.append(ffcfw_dams)
 
 
-    if report_run.loc['run_fec_dams', 'Run']:
+    if report_run.loc['run_fec_dams']:
         type = 'stock'
         prod = 'fec_dams_k2vpa1e1b1nw8ziyg1'
         na_prod = [1]
@@ -276,36 +276,34 @@ for row in trials:
         den_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1'
         keys = 'dams_keys_k2tvpaebnwziy1g1'
         arith = 1
-        arith_axis = [0,1,2,4,5,7,8,9,10,11,12]  #reporting p(3) & b1(6)
         index =[3]
         cols =[6]
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         fec_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
                                den_weights=den_weights, na_prod=na_prod, na_weights=na_weights,
-                               keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+                               keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
         fec_dams = pd.concat([fec_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_fec_dams = stacked_fec_dams.append(fec_dams)
 
 
-    if report_run.loc['run_ffcfw_prog', 'Run']:
+    if report_run.loc['run_ffcfw_prog']:
         type = 'stock'
         prod = 'ffcfw_prog_zia0xg2w9'
         weights = 1
         keys = 'prog_keys_zia0xg2w9'
         arith = 0
-        arith_axis = []
         index = [5]
         cols = [0,1,2,3,4]
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         ffcfw_prog = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights
-                                 , keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+                                 , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
         ffcfw_prog = pd.concat([ffcfw_prog],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_ffcfw_prog = stacked_ffcfw_prog.append(ffcfw_prog)
 
 
-    if report_run.loc['run_ffcfw_offs', 'Run']:
+    if report_run.loc['run_ffcfw_offs']:
         type = 'stock'
         prod = 'ffcfw_offs_k3k5vpnw8zida0e0b0xyg3'
         na_prod = [2]
@@ -314,7 +312,6 @@ for row in trials:
         den_weights = 'pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3'
         keys = 'offs_keys_k3k5tvpnwzidaebxyg3'
         arith = 1
-        arith_axis = [0,1,3,5,6,7,8,9,10,11,13,14,15]  # reporting p(4) & b0(12)
         index = [4]
         cols = [2,12]
         axis_slice = {}
@@ -323,12 +320,12 @@ for row in trials:
         axis_slice[15] = [0,1,1] #BBB
         ffcfw_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights
                                  , den_weights=den_weights, na_prod=na_prod, na_weights=na_weights
-                                 , keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+                                 , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
         ffcfw_offs = pd.concat([ffcfw_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_ffcfw_offs = stacked_ffcfw_offs.append(ffcfw_offs)
 
 
-    if report_run.loc['run_fec_offs', 'Run']:
+    if report_run.loc['run_fec_offs']:
         type = 'stock'
         prod = 'fec_offs_k3k5vpnw8zida0e0b0xyg3'
         na_prod = [2]
@@ -337,7 +334,6 @@ for row in trials:
         den_weights = 'pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3'
         keys = 'offs_keys_k3k5tvpnwzidaebxyg3'
         arith = 1
-        arith_axis = [0,1,3,5,6,7,8,9,10,11,13,14,15]  # reporting p(4) & b0(12)
         index =[4]
         cols =[2,12]
         axis_slice = {}
@@ -346,78 +342,69 @@ for row in trials:
         axis_slice[15] = [0,1,1] #BBB
         fec_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
                                den_weights=den_weights, na_prod=na_prod, na_weights=na_weights,
-                               keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+                               keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
         fec_offs = pd.concat([fec_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_fec_offs = stacked_fec_offs.append(fec_offs)
 
     
-    if report_run.loc['run_lamb_survival', 'Run']:
+    if report_run.loc['run_lamb_survival']:
         option = 0
-        arith_axis = [0,1,3,4,6,7,8,9,10]
         index =[2]
         cols =[5]
         axis_slice = {}
-        lamb_survival = rep.f_lambing_status(lp_vars, r_vals, option=option, arith_axis=arith_axis,
-                                    index=index, cols=cols, axis_slice=axis_slice)
+        lamb_survival = rep.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols, axis_slice=axis_slice)
         lamb_survival = pd.concat([lamb_survival],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_lamb_survival = stacked_lamb_survival.append(lamb_survival)
 
     
-    if report_run.loc['run_weanper', 'Run']:
+    if report_run.loc['run_weanper']:
         option = 1
-        arith_axis = [0,1,3,4,5,6,7,8,9]
         index =[2]
         cols =[]
         axis_slice = {}
-        weanper = rep.f_lambing_status(lp_vars, r_vals, option=option, arith_axis=arith_axis,
-                                    index=index, cols=cols, axis_slice=axis_slice)
+        weanper = rep.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols, axis_slice=axis_slice)
         weanper = pd.concat([weanper],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_weanper = stacked_weanper.append(weanper)
 
     
-    if report_run.loc['run_scanper', 'Run']:
+    if report_run.loc['run_scanper']:
         option = 2
-        arith_axis = [0,1,3,4,5,6,7,8,9]
         index =[2]
         cols =[]
         axis_slice = {}
-        scanper = rep.f_lambing_status(lp_vars, r_vals, option=option, arith_axis=arith_axis,
-                                    index=index, cols=cols, axis_slice=axis_slice)
+        scanper = rep.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols, axis_slice=axis_slice)
         scanper = pd.concat([scanper],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_scanper = stacked_scanper.append(scanper)
 
-    if report_run.loc['run_dry_propn', 'Run']:
+    if report_run.loc['run_dry_propn']:
         option = 3
-        arith_axis = [0,1,3,4,5,6,7,8,9]
         index =[2]
         cols =[]
         axis_slice = {}
-        dry_propn = rep.f_lambing_status(lp_vars, r_vals, option=option, arith_axis=arith_axis,
-                                    index=index, cols=cols, axis_slice=axis_slice)
+        dry_propn = rep.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols, axis_slice=axis_slice)
         dry_propn = pd.concat([dry_propn],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_dry_propn = stacked_dry_propn.append(dry_propn)
 
-    if report_run.loc['run_daily_mei_dams', 'Run']:
+    if report_run.loc['run_daily_mei_dams']:
         type = 'stock'
         prod = 'mei_dams_k2p6ftva1nw8ziyg1'
         weights = 'dams_numbers_k2tvanwziy1g1'
         na_weights = [1, 2]
         den_weights = 'stock_days_k2p6ftva1nwziyg1'
         keys = 'dams_keys_k2p6ftvanwziy1g1'
-        arith = 1
-        arith_axis = [3,5,6,7,8,9,10,11]    # for FP only [2,3,4,5,6,7,8,9,10,11]
+        arith = 1                                    # for FP only
         index =[4,1]                                    # [1]
         cols =[0,2]                                     # [0]
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         daily_mei_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
                                na_weights=na_weights, den_weights=den_weights, keys=keys, arith=arith,
-                               arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+                               index=index, cols=cols, axis_slice=axis_slice)
         daily_mei_dams = pd.concat([daily_mei_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_daily_mei_dams = stacked_daily_mei_dams.append(daily_mei_dams)
 
     
-    if report_run.loc['run_daily_pi_dams', 'Run']:
+    if report_run.loc['run_daily_pi_dams']:
         type = 'stock'
         prod = 'pi_dams_k2p6ftva1nw8ziyg1'
         weights = 'dams_numbers_k2tvanwziy1g1'
@@ -425,144 +412,131 @@ for row in trials:
         den_weights = 'stock_days_k2p6ftva1nwziyg1'
         keys = 'dams_keys_k2p6ftvanwziy1g1'
         arith = 1
-        arith_axis = [3,5,6,7,8,9,10,11]    # for FP only [2,3,4,5,6,7,8,9,10,11]
-        index =[4,1]                                    # [1]
-        cols =[0,2]                                     # [0]
+        index =[4,1]
+        cols =[0,2]
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         daily_pi_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
                                    na_weights=na_weights, den_weights=den_weights, keys=keys, arith=arith,
-                                   arith_axis=arith_axis, index=index, cols=cols,
-                                   axis_slice=axis_slice)
+                                   index=index, cols=cols, axis_slice=axis_slice)
         daily_pi_dams = pd.concat([daily_pi_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_daily_pi_dams = stacked_daily_pi_dams.append(daily_pi_dams)
 
     
-    if report_run.loc['run_numbers_dams', 'Run']:
+    if report_run.loc['run_numbers_dams']:
         type = 'stock'
         weights = 'dams_numbers_k2tvanwziy1g1'
         keys = 'dams_keys_k2tvanwziy1g1'
         arith = 2
-        arith_axis = [3,4,5,6,7,8,9]
         index =[2]
         cols =[0,1]
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         numbers_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,
-                               keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols,
-                               axis_slice=axis_slice)
+                               keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
         numbers_dams = pd.concat([numbers_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_numbers_dams = stacked_numbers_dams.append(numbers_dams)
 
-    if report_run.loc['run_numbers_dams_p', 'Run']:
+    if report_run.loc['run_numbers_dams_p']:
         type = 'stock'
         prod = 'on_hand_k2tvpa1nwziyg1'
         weights = 'dams_numbers_k2tvanwziy1g1'
         na_weights = [3]
         keys = 'dams_keys_k2tvpanwziy1g1'
         arith = 2
-        arith_axis = [4,5,6,7,8,9,10]
         index =[2,3]
         cols =[0,1]
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         numbers_dams_p = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
-                               na_weights=na_weights, keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols,
-                               axis_slice=axis_slice)
+                               na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
         numbers_dams_p = pd.concat([numbers_dams_p],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_numbers_dams_p = stacked_numbers_dams_p.append(numbers_dams_p)
 
 
-    if report_run.loc['run_numbers_prog', 'Run']:
+    if report_run.loc['run_numbers_prog']:
         type = 'stock'
         weights = 'prog_numbers_k5twzida0xg2'
         keys = 'prog_keys_k5twzida0xg2'
         arith = 2
-        arith_axis = [3,4,5,6,7,8]
         index =[2]
         cols =[0,1]
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         numbers_prog = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,
-                               keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols,
-                               axis_slice=axis_slice)
+                               keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
         numbers_prog = pd.concat([numbers_prog],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_numbers_prog = stacked_numbers_prog.append(numbers_prog)
 
 
-    if report_run.loc['run_numbers_offs', 'Run']:
+    if report_run.loc['run_numbers_offs']:
         type = 'stock'
         weights = 'offs_numbers_k3k5tvnwziaxyg3'
         keys = 'offs_keys_k3k5tvnwziaxyg3'
         arith = 2
-        arith_axis = [4,5,6,7,8,10,11]
         index =[3]
         cols =[0,1,2,9]
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         numbers_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,
-                               keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols,
-                               axis_slice=axis_slice)
+                               keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
         numbers_offs = pd.concat([numbers_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_numbers_offs = stacked_numbers_offs.append(numbers_offs)
 
-    if report_run.loc['run_numbers_offs_p', 'Run']:
+    if report_run.loc['run_numbers_offs_p']:
         type = 'stock'
         prod = 'on_hand_k3k5tvpnwziaxyg3'
         weights = 'offs_numbers_k3k5tvnwziaxyg3'
         na_weights = [4]
         keys = 'offs_keys_k3k5tvpnwziaxyg3'
         arith = 2
-        arith_axis = [3,5,6,7,8,9,10,11,12]
         index =[4]
         cols =[0,1,2]
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         numbers_offs_p = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
-                               na_weights=na_weights, keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols,
+                               na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols,
                                axis_slice=axis_slice)
         numbers_offs_p = pd.concat([numbers_offs_p],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_numbers_offs_p = stacked_numbers_offs_p.append(numbers_offs_p)
 
 
-    if report_run.loc['run_mort_dams', 'Run']:
+    if report_run.loc['run_mort_dams']:
         type = 'stock'
         prod = 'mort_k2tvpa1nwziyg1'
         weights = 1 #this could be weighted by numbers if required
         na_weights = []
         keys = 'dams_keys_k2tvpanwziy1g1'
         arith = 4
-        arith_axis = [2,4,5,7,8,9,10]
         index =[3]
         cols =[0,1,6]
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         mort_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
-                               na_weights=na_weights, keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols,
+                               na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols,
                                axis_slice=axis_slice)
         mort_dams = pd.concat([mort_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_mort_dams = stacked_mort_dams.append(mort_dams)
 
-    if report_run.loc['run_mort_offs', 'Run']:
+    if report_run.loc['run_mort_offs']:
         type = 'stock'
         prod = 'mort_k3k5tvpnwziaxyg3'
         weights = 1 #this could be weighted by numbers if required
         na_weights = []
         keys = 'offs_keys_k3k5tvpnwziaxyg3'
         arith = 4
-        arith_axis = [3,5,7,8,9,10,11,12]
         index =[4]
         cols =[0,1,2,6]
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         mort_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
-                               na_weights=na_weights, keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols,
+                               na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols,
                                axis_slice=axis_slice)
         mort_offs = pd.concat([mort_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_mort_offs = stacked_mort_offs.append(mort_offs)
 
 
-    if report_run.loc['run_dse', 'Run']:
+    if report_run.loc['run_dse']:
         ##you can go into f_dse to change the axis being reported.
         per_ha = True
 
@@ -585,140 +559,133 @@ for row in trials:
         stacked_dse1_offs = stacked_dse1_offs.append(dse1_offs)
 
     
-    if report_run.loc['run_grnfoo', 'Run']:
+    if report_run.loc['run_grnfoo']:
         #returns foo at end of each fp
         type = 'pas'
         prod = 'foo_end_grnha_goflzt'
         weights = 'greenpas_ha_vgoflzt'
         keys = 'keys_vgoflzt'
         arith = 2
-        arith_axis = [0,1,2,4,5]
         index =[3]
         cols =[]
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         grnfoo = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
-                               keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+                               keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
         grnfoo = pd.concat([grnfoo],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_grnfoo = stacked_grnfoo.append(grnfoo)
 
     
-    if report_run.loc['run_dryfoo', 'Run']:
+    if report_run.loc['run_dryfoo']:
         #returns foo at end of each fp
         type = 'pas'
         prod = 1000
         weights = 'drypas_transfer_dfzt'
         keys = 'keys_dfzt'
         arith = 2
-        arith_axis = [0,2]
         index =[1]
         cols =[]
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         dryfoo = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
-                               keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+                               keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
         dryfoo = pd.concat([dryfoo],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_dryfoo = stacked_dryfoo.append(dryfoo)
 
     
-    if report_run.loc['run_napfoo', 'Run']:
+    if report_run.loc['run_napfoo']:
         #returns foo at end of each fp
         prod = 1000
         type = 'pas'
         weights = 'nap_transfer_dfzt'
         keys = 'keys_dfzt'
         arith = 2
-        arith_axis = [0,2]
         index =[1]
         cols =[]
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         napfoo = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
-                               keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+                               keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
         napfoo = pd.concat([napfoo],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_napfoo = stacked_napfoo.append(napfoo)
 
     
-    if report_run.loc['run_grncon', 'Run']:
+    if report_run.loc['run_grncon']:
         #returns consumption in each fp
         prod = 'cons_grnha_t_goflzt'
         type = 'pas'
         weights = 'greenpas_ha_vgoflzt'
         keys = 'keys_vgoflzt'
         arith = 2
-        arith_axis = [0,1,2,4,5]
         index =[3]
         cols =[]
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         grncon = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
-                               keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+                               keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
         grncon = pd.concat([grncon],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_grncon = stacked_grncon.append(grncon)
 
     
-    if report_run.loc['run_drycon', 'Run']:
+    if report_run.loc['run_drycon']:
         #returns consumption in each fp
         prod = 1000
         type = 'pas'
         weights = 'drypas_consumed_vdfzt'
         keys = 'keys_vdfzt'
         arith = 2
-        arith_axis = [0,1,3]
         index =[2]
         cols =[]
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         drycon = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
-                               keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+                               keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
         drycon = pd.concat([drycon],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_drycon = stacked_drycon.append(drycon)
 
     
-    if report_run.loc['run_napcon', 'Run']:
+    if report_run.loc['run_napcon']:
         #returns consumption in each fp
         prod = 1000
         type = 'pas'
         weights = 'nap_consumed_vdfzt'
         keys = 'keys_vdfzt'
         arith = 2
-        arith_axis = [0,1,3]
         index =[2]
         cols =[]
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         napcon = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
-                               keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+                               keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
         napcon = pd.concat([napcon],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_napcon = stacked_napcon.append(napcon)
 
     
-    if report_run.loc['run_poccon', 'Run']:
+    if report_run.loc['run_poccon']:
         #returns consumption in each fp
         prod = 1000
         type = 'pas'
         weights = 'poc_consumed_vflz'
         keys = 'keys_vflz'
         arith = 2
-        arith_axis = [0,2]
         index =[1]
         cols =[3]
         axis_slice = {}
         # axis_slice[0] = [0, 2, 1]
         poccon = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
-                               keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+                               keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
         poccon = pd.concat([poccon],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_poccon = stacked_poccon.append(poccon)
 
     
-    if report_run.loc['run_supcon', 'Run']:
+    if report_run.loc['run_supcon']:
         #returns consumption in each fp
         option = 1
         supcon = rep.f_grain_sup_summary(lp_vars, r_vals, option=option)
         supcon = pd.concat([supcon],keys=[trial_name],names=['Trial'])  # add trial name as index level
         stacked_supcon = stacked_supcon.append(supcon)
 
-    if report_run.loc['run_stubcon', 'Run']:
+    if report_run.loc['run_stubcon']:
         #returns consumption in each fp
         stubcon = rep.f_stubble_summary(lp_vars, r_vals)
         stubcon = pd.concat([stubcon],keys=[trial_name],names=['Trial'])  # add trial name as index level
@@ -744,68 +711,68 @@ writer = pd.ExcelWriter('Output/Report.xlsx',engine='xlsxwriter')
 df_settings = pd.DataFrame(columns=['index', 'cols'])
 
 ##write to excel
-if report_run.loc['run_summary', 'Run']:
+if report_run.loc['run_summary']:
     df_settings = rep.f_df2xl(writer, stacked_summary, 'summary', df_settings, option=1)
-if report_run.loc['run_areasum', 'Run']:
+if report_run.loc['run_areasum']:
     df_settings = rep.f_df2xl(writer, stacked_areasum, 'areasum', df_settings, option=1)
-if report_run.loc['run_pnl', 'Run']:
+if report_run.loc['run_pnl']:
     df_settings = rep.f_df2xl(writer, stacked_pnl, 'pnl', df_settings, option=1)
-if report_run.loc['run_profitarea', 'Run']:
+if report_run.loc['run_profitarea']:
     plot = rep.f_xy_graph(stacked_profitarea)
     plot.savefig('Output/profitarea_curve.png')
-if report_run.loc['run_saleprice', 'Run']:
+if report_run.loc['run_saleprice']:
     df_settings = rep.f_df2xl(writer, stacked_saleprice, 'saleprice', df_settings, option=1)
-if report_run.loc['run_saledate_offs', 'Run']:
+if report_run.loc['run_saledate_offs']:
     stacked_saledate_offs = stacked_saledate_offs.astype(object)
     stacked_saledate_offs[stacked_saledate_offs==np.datetime64('1970-01-01')] = 0
     df_settings = rep.f_df2xl(writer, stacked_saledate_offs, 'saledate_offs', df_settings, option=1)
-if report_run.loc['run_cfw_dams', 'Run']:
+if report_run.loc['run_cfw_dams']:
     df_settings = rep.f_df2xl(writer, stacked_cfw_dams, 'cfw_dams', df_settings, option=1)
-if report_run.loc['run_fd_dams', 'Run']:
+if report_run.loc['run_fd_dams']:
     df_settings = rep.f_df2xl(writer, stacked_fd_dams, 'fd_dams', df_settings, option=1)
-if report_run.loc['run_wbe_dams', 'Run']:
+if report_run.loc['run_wbe_dams']:
     df_settings = rep.f_df2xl(writer, stacked_wbe_dams, 'wbe_dams', df_settings, option=1)
-if report_run.loc['run_wbe_offs', 'Run']:
+if report_run.loc['run_wbe_offs']:
     df_settings = rep.f_df2xl(writer, stacked_wbe_offs, 'wbe_offs', df_settings, option=1)
-if report_run.loc['run_lw_dams', 'Run']:
+if report_run.loc['run_lw_dams']:
     df_settings = rep.f_df2xl(writer, stacked_lw_dams, 'lw_dams', df_settings, option=1)
-if report_run.loc['run_ffcfw_dams', 'Run']:
+if report_run.loc['run_ffcfw_dams']:
     df_settings = rep.f_df2xl(writer, stacked_ffcfw_dams, 'ffcfw_dams', df_settings, option=1)
-if report_run.loc['run_fec_dams', 'Run']:
+if report_run.loc['run_fec_dams']:
     df_settings = rep.f_df2xl(writer, stacked_fec_dams, 'fec_dams', df_settings, option=1)
-if report_run.loc['run_ffcfw_prog', 'Run']:
+if report_run.loc['run_ffcfw_prog']:
     df_settings = rep.f_df2xl(writer, stacked_ffcfw_prog, 'ffcfw_prog', df_settings, option=1)
-if report_run.loc['run_ffcfw_offs', 'Run']:
+if report_run.loc['run_ffcfw_offs']:
     df_settings = rep.f_df2xl(writer, stacked_ffcfw_offs, 'ffcfw_offs', df_settings, option=1)
-if report_run.loc['run_fec_offs', 'Run']:
+if report_run.loc['run_fec_offs']:
     df_settings = rep.f_df2xl(writer, stacked_fec_offs, 'fec_offs', df_settings, option=1)
-if report_run.loc['run_lamb_survival', 'Run']:
+if report_run.loc['run_lamb_survival']:
     df_settings = rep.f_df2xl(writer, stacked_lamb_survival, 'lamb_survival', df_settings, option=1)
-if report_run.loc['run_weanper', 'Run']:
+if report_run.loc['run_weanper']:
     df_settings = rep.f_df2xl(writer, stacked_weanper, 'wean_per', df_settings, option=1)
-if report_run.loc['run_scanper', 'Run']:
+if report_run.loc['run_scanper']:
     df_settings = rep.f_df2xl(writer, stacked_scanper, 'scan_per', df_settings, option=1)
-if report_run.loc['run_dry_propn', 'Run']:
+if report_run.loc['run_dry_propn']:
     df_settings = rep.f_df2xl(writer, stacked_dry_propn, 'dry_propn', df_settings, option=1)
-if report_run.loc['run_daily_mei_dams', 'Run']:
+if report_run.loc['run_daily_mei_dams']:
     df_settings = rep.f_df2xl(writer, stacked_daily_mei_dams, 'daily_mei_dams', df_settings, option=1)
-if report_run.loc['run_daily_pi_dams', 'Run']:
+if report_run.loc['run_daily_pi_dams']:
     df_settings = rep.f_df2xl(writer, stacked_daily_pi_dams, 'daily_pi_dams', df_settings, option=1)
-if report_run.loc['run_numbers_dams', 'Run']:
+if report_run.loc['run_numbers_dams']:
     df_settings = rep.f_df2xl(writer, stacked_numbers_dams, 'numbers_dams', df_settings, option=1)
-if report_run.loc['run_numbers_dams_p', 'Run']:
+if report_run.loc['run_numbers_dams_p']:
     df_settings = rep.f_df2xl(writer, stacked_numbers_dams_p, 'numbers_dams_p', df_settings, option=1)
-if report_run.loc['run_numbers_prog', 'Run']:
+if report_run.loc['run_numbers_prog']:
     df_settings = rep.f_df2xl(writer, stacked_numbers_prog, 'numbers_prog', df_settings, option=1)
-if report_run.loc['run_numbers_offs', 'Run']:
+if report_run.loc['run_numbers_offs']:
     df_settings = rep.f_df2xl(writer, stacked_numbers_offs, 'numbers_offs', df_settings, option=1)
-if report_run.loc['run_numbers_offs_p', 'Run']:
+if report_run.loc['run_numbers_offs_p']:
     df_settings = rep.f_df2xl(writer, stacked_numbers_offs_p, 'numbers_offs_p', df_settings, option=1)
-if report_run.loc['run_mort_dams', 'Run']:
+if report_run.loc['run_mort_dams']:
     df_settings = rep.f_df2xl(writer, stacked_mort_dams, 'mort_dams', df_settings, option=1)
-if report_run.loc['run_mort_offs', 'Run']:
+if report_run.loc['run_mort_offs']:
     df_settings = rep.f_df2xl(writer, stacked_mort_offs, 'mort_offs', df_settings, option=1)
-if report_run.loc['run_dse', 'Run']:
+if report_run.loc['run_dse']:
     dams_start_col = len(stacked_dse_sire.columns) + stacked_dse_sire.index.nlevels + 1
     offs_start_col = dams_start_col + len(stacked_dse_dams.columns) + stacked_dse_dams.index.nlevels + 1
     df_settings = rep.f_df2xl(writer, stacked_dse_sire, 'dse_wt', df_settings, option=0, colstart=0)
@@ -814,23 +781,23 @@ if report_run.loc['run_dse', 'Run']:
     df_settings = rep.f_df2xl(writer, stacked_dse1_sire, 'dse_mei', df_settings, option=0, colstart=0)
     df_settings = rep.f_df2xl(writer, stacked_dse1_dams, 'dse_mei', df_settings, option=0, colstart=dams_start_col)
     df_settings = rep.f_df2xl(writer, stacked_dse1_offs, 'dse_mei', df_settings, option=0, colstart=offs_start_col)
-if report_run.loc['run_grnfoo', 'Run']:
+if report_run.loc['run_grnfoo']:
     df_settings = rep.f_df2xl(writer, stacked_grnfoo, 'grnfoo', df_settings, option=1)
-if report_run.loc['run_dryfoo', 'Run']:
+if report_run.loc['run_dryfoo']:
     df_settings = rep.f_df2xl(writer, stacked_dryfoo, 'dryfoo', df_settings, option=1)
-if report_run.loc['run_napfoo', 'Run']:
+if report_run.loc['run_napfoo']:
     df_settings = rep.f_df2xl(writer, stacked_napfoo, 'napfoo', df_settings, option=1)
-if report_run.loc['run_grncon', 'Run']:
+if report_run.loc['run_grncon']:
     df_settings = rep.f_df2xl(writer, stacked_grncon, 'grncon', df_settings, option=1)
-if report_run.loc['run_drycon', 'Run']:
+if report_run.loc['run_drycon']:
     df_settings = rep.f_df2xl(writer, stacked_drycon, 'drycon', df_settings, option=1)
-if report_run.loc['run_napcon', 'Run']:
+if report_run.loc['run_napcon']:
     df_settings = rep.f_df2xl(writer, stacked_napcon, 'napcon', df_settings, option=1)
-if report_run.loc['run_poccon', 'Run']:
+if report_run.loc['run_poccon']:
     df_settings = rep.f_df2xl(writer, stacked_poccon, 'poccon', df_settings, option=1)
-if report_run.loc['run_supcon', 'Run']:
+if report_run.loc['run_supcon']:
     df_settings = rep.f_df2xl(writer, stacked_supcon, 'supcon', df_settings, option=1)
-if report_run.loc['run_stubcon', 'Run']:
+if report_run.loc['run_stubcon']:
     df_settings = rep.f_df2xl(writer, stacked_stubcon, 'stubcon', df_settings, option=1)
 
 df_settings.to_excel(writer, 'df_settings')

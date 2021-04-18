@@ -952,7 +952,7 @@ def f_profit(lp_vars, r_vals, option=0):
         return obj_profit_z + minroe_z + (asset_value_z * r_vals['fin']['opportunity_cost_capital'])
 
 
-def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None, index=[], cols=[], arith=0, arith_axis=[],
+def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None, index=[], cols=[], arith=0,
                             prod=1, na_prod=[], weights=None, na_weights=[], axis_slice={},
                             na_denweights=[], den_weights=1, na_denom=[], denom=1):
     '''
@@ -973,7 +973,6 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None
             option 2: total production for a given axis np.sum(prod * weight, axis)
             option 3: total production for each activity
             option 4: return weighted average of production param (using denominator weight returns the average production for period eg less if animal is sold part way through)
-    :key arith_axis (optional, default = []): list: axis to preform arithmetic operation along.
     :key prod (optional, default = 1): str/int/float: if it is a string then it is used as a key for stock_vars, if it is an number that number is used as the prod value
     :key na_prod (optional, default = []): list: position to add new axis
     :key weights (optional, default = None): str: weights to be used in arith (typically a lp variable eg numbers). Only required when arith>0
@@ -1014,12 +1013,14 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None
     if isinstance(den_weights, str):
         den_weights = r_vals[den_weights]
 
-
     ##other manipulation
     prod, weights, den_weights, denom = f_add_axis(prod, weights, den_weights, denom, na_weights, na_prod, na_denweights, na_denom)
     prod, weights, den_weights, keys = f_slice(prod, weights, den_weights, keys, arith, axis_slice)
+    ##preform arith. if an axis is not reported it is included in the arith and the axis disapears
+    report_idx = index + cols
+    arith_axis = list(set(range(len(prod.shape))) - set(report_idx))
     prod = f_arith(prod, weights, den_weights, arith, arith_axis)
-    # prod = fun.f_divide(prod, denom)
+    ##check for errors
     f_numpy2df_error(prod, weights, arith_axis, index, cols)
     if build_df:
         prod = f_numpy2df(prod, keys, index, cols)
@@ -1028,7 +1029,7 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None
         return prod, keys
 
 
-def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], arith_axis=[], axis_slice={}):
+def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], axis_slice={}):
     '''
     Depending on the option selected this function can calc:
         Lamb survival
@@ -1086,9 +1087,9 @@ def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], ar
 
     ##colate the lp and report vals using f_stock_pasture_summary
     numerator, keys_sliced = f_stock_pasture_summary(lp_vars, r_vals, build_df=False, type=type, prod=prod, weights=weights,
-                           na_weights=na_weights, keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+                           na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
     denominator, keys_sliced = f_stock_pasture_summary(lp_vars, r_vals, build_df=False, type=type, prod=prod2, weights=weights,
-                           na_weights=na_weights, keys=keys, arith=arith, arith_axis=arith_axis, index=index, cols=cols, axis_slice=axis_slice)
+                           na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
 
     ##calcs for survival
     if option == 0:
