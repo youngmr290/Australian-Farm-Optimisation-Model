@@ -77,7 +77,6 @@ def sets() :
     except AttributeError:
         pass
     model.s_feed_pools = Set(initialize=sinp.general['sheep_pools'][ev_mask_v],doc='nutritive value pools')
-    print('tes')
 
 
 #######################
