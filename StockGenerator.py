@@ -5459,7 +5459,7 @@ def generator(params,r_vals,ev,plots = False):
     #### but don't want to increase the numbers if joining for multiple cycles
     numbers_progreq_k2k3k5tva1e1b1nw8zida0e0b0xyg1g9w9 = 1 * np.sum(np.any(mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9, axis=e1_pos-1, keepdims=True)[0, ...,na,:]
                                                                     * mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[:,na,na,:,0:1,...,na,na]  # mask based on the t axis for dvp0
-                                                                    * (index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,..., na,na] == 0)
+                                                                    * (index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,..., na,na] == 0) #only NM slice requires prog
                                                                     * (index_g1[...,na]==index_g1)[...,na]
                                                                     * btrt_propn_b0xyg1[...,na,na].astype(dtype)
                                                                     * e0_propn_ida0e0b0xyg[...,na,na].astype(dtype)
