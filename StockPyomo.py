@@ -755,11 +755,13 @@ def stockpyomo_local(params):
         model.del_component(model.con_prog2damsR)
     except AttributeError:
         pass
+    ##k5 is the common k sets between prog and dams. It is being summed which means an b0 prog can provide a dam. See google doc for further explanation.
     def prog2damR(model, k3, v1, i, y1, g9, w9):
         if v1==l_v1[0] and any(model.p_progreq_dams[k2, k3, k5, t1, w18, i, y1, g1, g9, w9] for k5 in model.s_k5_birth_offs
                                for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for w18 in model.s_lw_dams for g1 in model.s_groups_dams):
             return (sum(- model.v_prog[k5, t2, w28, i, d, a0, x, g2] * model.p_progprov_dams[k3, t2, w28, i, d, a0, x, y1, g2,g9,w9]
-                        for k5 in model.s_k5_birth_offs for d in model.s_damage for a0 in model.s_wean_times for x in model.s_gender for w28 in model.s_lw_prog for t2 in model.s_sale_prog for g2 in model.s_groups_prog
+                        for k5 in model.s_k5_birth_offs for d in model.s_damage for a0 in model.s_wean_times for x in model.s_gender
+                        for w28 in model.s_lw_prog for t2 in model.s_sale_prog for g2 in model.s_groups_prog
                         if pe.value(model.p_progprov_dams[k3, t2, w28, i, d, a0, x, y1, g2,g9,w9])!= 0)
                        + sum(model.v_dams[k2, t1, v1, a1, n1, w18, i, y1, g1]  * model.p_progreq_dams[k2, k3, k5, t1, w18, i, y1, g1, g9, w9]
                         for k5 in model.s_k5_birth_offs for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams
