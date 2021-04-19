@@ -77,6 +77,7 @@ saa['husb_labour'] = np.zeros(uinp.sheep_inp['i_husb_operations_labourreq_l2h2']
 ##stock parameters
 saa['sfd_c2'] = 0.0                       #std fibre diameter genotype params
 saa['cl0_c2'] = np.zeros(uinp.parameters_inp['i_cl0_c2'].shape, dtype=np.float64)  #SA value for litter size genotype params.
+saa['scan_std_c2'] = 0                #std birth type of a genotype params eg the propn of sing/twin/trip that makes up an average dam.
 
 ######
 #SAT #
