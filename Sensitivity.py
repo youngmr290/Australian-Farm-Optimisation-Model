@@ -77,7 +77,7 @@ saa['husb_labour_l2h2'] = np.zeros(uinp.sheep_inp['i_husb_operations_labourreq_l
 ##stock parameters
 saa['sfd_c2'] = 0.0                       #std fibre diameter genotype params
 saa['cl0_c2'] = np.zeros(uinp.parameters_inp['i_cl0_c2'].shape, dtype=np.float64)  #SA value for litter size genotype params.
-saa['scan_std_c2'] = 0                #std birth type of a genotype params eg the propn of sing/twin/trip that makes up an average dam.
+saa['scan_std_c2'] = 0                #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT..
 
 ######
 #SAT #

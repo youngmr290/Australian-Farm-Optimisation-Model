@@ -52,7 +52,7 @@ import CorePyomo as core
 ## the upper limit of number of processes (concurrent trials) based on the memory capacity of this machine
 try:
     maximum_processes = int(sys.argv[2])  # reads in as string so need to convert to int, the script path is the first value hence take the second.
-except IndexError:  # incase no arg passed to python
+except IndexError:  # in case no arg passed to python
     maximum_processes = 12  # available memory / value determined by size of the model being run (~5GB for the small model)
 
 start_time1 = time.time()
@@ -208,7 +208,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
                     for v in model.component_objects(pe.Var, active=True):
                         f.write("Variable %s\n" %v)   
                         for index in v:
-                            try: #incase variable has no index
+                            try: #in case variable has no index
                                 print("      ", index, model.rc[v[index]], file=f)
                             except: pass
                     f.write('Slacks\n')  # this can be used in search to find the start of this in the txt file

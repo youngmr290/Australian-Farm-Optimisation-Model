@@ -1193,7 +1193,7 @@ def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, nfoet_
     else:
         ## relative size and condition score of the dams at mating are the determinants of conception
         ### the dams being mated are those in slices e1[0] and b1[0] (first cycle, not mated)
-        ## #todo scan_std probably should change based on date of joining
+        ## #todo scan_std probably should change based on date of joining (could use CSIRO function)
         relsize_mating_e1b1sliced = f_dynamic_slice(relsize_mating, sinp.stock['i_e1_pos'], 0, 1, sinp.stock['i_b1_pos'], 0, 1) #take slice e1[0] & b1[0]
         cs_mating_e1b1sliced = f_dynamic_slice(cs_mating, sinp.stock['i_e1_pos'], 0, 1, sinp.stock['i_b1_pos'], 0, 1) #take slice e1[0] & b1[0]
         ##Adjust standard scanning percentage based on relative size (to reduce scanning percentage of younger animals)

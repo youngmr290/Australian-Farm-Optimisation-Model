@@ -224,7 +224,7 @@ for row in range(len(exp_data)):
                     for v in model.component_objects(pe.Var, active=True):
                         f.write("Variable %s\n" %v)
                         for index in v:
-                            try: #incase variable has no index
+                            try: #in case variable has no index
                                 print("      ", index, model.rc[v[index]], file=f)
                             except: pass
                     f.write('Slacks\n')  # this can be used in search to find the start of this in the txt file
