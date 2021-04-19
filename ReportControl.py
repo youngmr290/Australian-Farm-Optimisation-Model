@@ -54,11 +54,11 @@ rep.f_errors(exp_data_index, trial_outdated, trials)
 report_run = pd.read_excel('exp.xlsm', sheet_name='Run Report', index_col=[0], header=[0,1], engine='openpyxl')
 try:
     exp_group = int(sys.argv[1])  # reads in as string so need to convert to int, the script path is the first value hence take the second.
-except IndexError:  # incase no arg passed to python
+except IndexError:  # in case no arg passed to python
     exp_group = "Default"
 try:
     report_run = report_run.loc[:,('Run',exp_group)]
-except KeyError:  # incase the experiment is not set up with custom report_run
+except KeyError:  # in case the experiment is not set up with custom report_run
     report_run = report_run.loc[:,('Run',"Default")]
 
 ##print out the reports being run and number of trials

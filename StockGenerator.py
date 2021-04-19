@@ -1209,12 +1209,12 @@ def generator(params,r_vals,ev,plots = False):
 
     ##convert variable from c2 to g (yatf is not used, only here because it is return from the function) then adjust by initial lw pattern
     lw_initial_yg0, lw_initial_yg1, lw_initial_yatf, lw_initial_yg3 = sfun.f_c2g(uinp.parameters['i_lw_initial_c2'], uinp.parameters['i_lw_initial_y'])
-    ###the inital lw input is a proportion of srw
+    ###the initial lw input is a proportion of srw
     lw_initial_wzida0e0b0xyg0 = (lw_initial_yg0 * (1 + adjp_lw_initial_wzida0e0b0xyg0)) * srw_female_yg0
     lw_initial_wzida0e0b0xyg1 = (lw_initial_yg1 * (1 + adjp_lw_initial_wzida0e0b0xyg1)) * srw_female_yg1
     lw_initial_wzida0e0b0xyg3 = (lw_initial_yg3 * (1 + adjp_lw_initial_wzida0e0b0xyg3)) * srw_female_yg3
     cfw_initial_yg0, cfw_initial_yg1, cfw_initial_yatf, cfw_initial_yg3 = sfun.f_c2g(uinp.parameters['i_cfw_initial_c2'], uinp.parameters['i_cfw_initial_y'])
-    ###the inital cfw input is a proportion of sfw
+    ###the initial cfw input is a proportion of sfw
     cfw_initial_wzida0e0b0xyg0 = (cfw_initial_yg0 * (1 + adjp_cfw_initial_wzida0e0b0xyg0)) * sfw_yg0
     cfw_initial_wzida0e0b0xyg1 = (cfw_initial_yg1 * (1 + adjp_cfw_initial_wzida0e0b0xyg1)) * sfw_yg1
     cfw_initial_wzida0e0b0xyg3 = (cfw_initial_yg3 * (1 + adjp_cfw_initial_wzida0e0b0xyg3)) * sfw_yg3
@@ -2997,7 +2997,7 @@ def generator(params,r_vals,ev,plots = False):
                 scanning = fun.f_update(scanning, t_scanning, period_is_scan_pa1e1b1nwzida0e0b0xyg1[p])
 
 
-            ## base mortality - comments about mortality functins can be found in sfun.
+            ## base mortality - comments about mortality functions can be found in sfun.
             eqn_group = 14
             eqn_system = 0 # CSIRO = 0
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
@@ -3076,7 +3076,7 @@ def generator(params,r_vals,ev,plots = False):
                     if eqn_compare:
                         r_compare_q0q1q2poffs[eqn_system, eqn_group, 0, p, ...] = temp0
 
-            ##weaner mortality - comments about mortality functins can be found in sfun.
+            ##weaner mortality - comments about mortality functions can be found in sfun.
             eqn_group = 2
             eqn_system = 0 # CSIRO = 0
             ####sire
@@ -3138,7 +3138,7 @@ def generator(params,r_vals,ev,plots = False):
                     if eqn_compare:
                         r_compare_q0q1q2poffs[eqn_system, eqn_group, 0, p, ...] = temp0
 
-            ##Peri-natal Dam mortality - comments about mortality functins can be found in sfun.
+            ##Peri-natal Dam mortality - comments about mortality functions can be found in sfun.
             #todo consider combining CSIRO & MU to represent both Preg Tox and ewe mortality due to low CS at birth
             eqn_group = 3
             eqn_system = 0 # CSIRO = 0
@@ -3163,7 +3163,7 @@ def generator(params,r_vals,ev,plots = False):
                     if eqn_compare:
                         r_compare_q0q1q2pdams[eqn_system, eqn_group, 0, p, ...] = temp0
 
-            ### Peri-natal progeny mortality (progeny survival) - comments about mortality functins can be found in sfun.
+            ### Peri-natal progeny mortality (progeny survival) - comments about mortality functions can be found in sfun.
             eqn_group = 1
             eqn_system = 0 # CSIRO = 0
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group

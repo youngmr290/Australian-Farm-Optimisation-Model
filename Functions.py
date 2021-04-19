@@ -644,7 +644,7 @@ def f_read_exp():
     ##set the group of trials being run. If no argument is passed in then all trials are run. To pass in argument need to run via terminal.
     try:
         exp_group = int(sys.argv[1]) #reads in as string so need to convert to int, the script path is the first value hence take the second.
-    except IndexError: #incase no arg passed to python
+    except IndexError: #in case no arg passed to python
         exp_group = None
 
     ##read and drop irrelevant cols

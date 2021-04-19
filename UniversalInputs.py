@@ -212,7 +212,7 @@ def universal_inp_sa():
     ###SAA - these have to be converted to float so that the blank column becomes nan rather that None
     parameters['i_sfd_c2'] = fun.f_sa(parameters_inp['i_sfd_c2'].astype(float),sen.saa['sfd_c2'], 2)
     parameters['i_cl0_c2'] = fun.f_sa(parameters_inp['i_cl0_c2'].astype(float), sen.saa['cl0_c2'], 2) #genotype litter size params
-    parameters['i_scan_std_c2'] = fun.f_sa(parameters_inp['i_scan_std_c2'].astype(float), sen.saa['scan_std_c2'], 2) #genotype litter size params
+    parameters['i_scan_std_c2'] = fun.f_sa(parameters_inp['i_scan_std_c2'].astype(float), sen.saa['scan_std_c2'], 2) #genotype scanning percent params
     ###SAV - these have to be converted to float so that the blank column becomes nan rather that None
     parameters['i_srw_c2'] = fun.f_sa(parameters_inp['i_srw_c2'].astype(float), sen.sav['srw_c2'], 5) #genotype srw
 
