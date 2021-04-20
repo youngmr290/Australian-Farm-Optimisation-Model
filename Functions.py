@@ -577,8 +577,7 @@ def f_run_required(exp_data1, check_pyomo=True):
     this function is also used by report.py to calculate if reports are being generated with out of date data.
     '''
     ##add run cols to be populated
-    exp_data1['run'] = False
-    exp_data1['runpyomo'] = False
+    exp_data1['run_req'] = False
 
     ###if only ReportControl.py or ReportFunctions.py have been updated precalcs don't need to be re-run therefore newest is equal to the newest py file that isn't a report
     sorted_list = sorted(glob.iglob('*.py'), key=os.path.getmtime)
@@ -588,17 +587,16 @@ def f_run_required(exp_data1, check_pyomo=True):
         newest = sorted_list[-2]
     else:
         newest = sorted_list[-3]
-    newest_pyomo = max(glob.iglob('*Pyomo.py'), key=os.path.getmtime)
 
     try: #in case pkl_exp doesn't exist
         with open('pkl/pkl_exp.pkl',"rb") as f:
             prev_exp = pkl.load(f)
 
         ##get a list of all sa cols (including the name of the trial because two trial may have the same values but have a different name)
-        keys_hist = list(prev_exp.reset_index().columns[2:].values)
-        keys_current = list(exp_data1.reset_index().columns[2:].values)
+        keys_hist = list(prev_exp.reset_index().columns[3:].values)
+        keys_current = list(exp_data1.reset_index().columns[3:].values)
 
-        ##update prev_exp run column - check if trial was run then model crashed before pickling prev_exp
+        ##update prev_exp run column - check if trial was run when the model was last run. This handles the case when the model crashes after it had completed some trials.
         run_crash = []
         for trial in prev_exp.index.get_level_values(3):
             try:
@@ -608,37 +606,28 @@ def f_run_required(exp_data1, check_pyomo=True):
                     run_crash.append(False)
             except FileNotFoundError:
                 run_crash.append(False)
-        prev_exp.loc[run_crash, ('run', '', '', '')] = False
-        prev_exp.loc[run_crash, ('runpyomo', '', '', '')] = False
+        prev_exp.loc[run_crash, ('run_req', '', '', '')] = False
 
         ##if headers are the same, code is the same and the excel inputs are the same then test if the values in exp.xls are the same
         if (keys_current==keys_hist and os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime(newest)
                                     and os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime("Universal.xlsx")
-                                    and os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime("Property.xlsx")):
-            ###check if each exp has the same values in exp.xls as last time it was run.
+                                    and os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime("Property.xlsx")
+                                    and os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime("Structural.xlsx")):
+            ###check if each trial has the same values in exp.xls as last time it was run.
             i3 = prev_exp.reset_index().set_index(keys_hist).index  # have to reset index because the name of the trial is going to be included in the new index so it must first be dropped from current index
             i4 = exp_data1.reset_index().set_index(keys_current).index
-            exp_data1.loc[~i4.isin(i3),('run', '', '', '')] = True
+            exp_data1.loc[~i4.isin(i3),('run_req', '', '', '')] = True
         ##if headers are different or py code has changed then all trials need to be re-run
-        else: exp_data1['run']=True
-        ##pyomo must be run if pyomo modules have changed since the trial was last run, if the precalc params are different (tested later) or if the trial needed to run last time but the user opted not to.
-        if os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime(newest_pyomo) and check_pyomo==True:
-            ###check if trial needed to be run last time but user opted not to run.
-            ###compare trial name and runpyomo status with previous
-            i3 = prev_exp.reset_index().set_index([keys_hist[0],keys_hist[-1]]).index  # have to reset index because the name of the trial is going to be included in the new index so it must first be dropped from current index
-            i4 = exp_data1.reset_index().set_index([keys_current[0],keys_current[-1]]).index
-            exp_data1.loc[~i4.isin(i3),('runpyomo', '', '', '')] = True
-        else: exp_data1['runpyomo']=True
+        else: exp_data1['run_req']=True
     except FileNotFoundError:
-        exp_data1['run']=True
-        exp_data1['runpyomo'] = True
+        exp_data1['run_req']=True
     return exp_data1
 
 def f_read_exp():
     '''
 
-    :param exp_group: optional int - specifying which group of trials to run.
-    :return:
+    1. Read in exp.xl, set index and cols and drop un-required cols.
+    2. Determine which trials are in the experiment the user specified to run.
     '''
 
     ##set the group of trials being run. If no argument is passed in then all trials are run. To pass in argument need to run via terminal.
@@ -647,21 +636,39 @@ def f_read_exp():
     except IndexError: #in case no arg passed to python
         exp_group = None
 
-    ##read and drop irrelevant cols
+    ##read excel
     exp_data = pd.read_excel('exp.xlsm', index_col=None, header=[0,1,2,3], engine='openpyxl')
+
+    ##determine trials which are in specified experiment group. If no group passed in then all trials will be included in the experiment.
     if exp_group is not None:
         exp_group_bool = exp_data.loc[:,('Drop','blank','blank','Exp Group')].values==exp_group
     else:
         exp_group_bool = exp_data.loc[:,('Drop','blank','blank','Exp Group')].values >= 0 #this will remove the blank rows
-    exp_data = exp_data.iloc[exp_group_bool, exp_data.columns.get_level_values(0)!='Drop']
+
+    ##drop irrelevant cols and set index
+    exp_data = exp_data.iloc[:, exp_data.columns.get_level_values(0)!='Drop']
     exp_data = exp_data.set_index(list(exp_data.columns[0:4]))
 
+    ##get the name of each trial in the experiment group
+    experiment_trials = exp_data.index.get_level_values(3)[exp_group_bool]
+
     ##check if any trials have the same name
-    if len(exp_data.index.get_level_values(3)) == len(set(exp_data.index.get_level_values(3))):
+    if len(experiment_trials) == len(set(experiment_trials)):
         pass
     else:
         raise exc.TrialError('''Exp.xl has multiple trials with the same name.''')
 
+    return exp_data, experiment_trials
+
+
+def f_group_exp(exp_data, experiment_trials):
+    '''
+    Cuts exp based on the group passed in as argument by user. If no argument then all trials are run.
+    '''
+
+    ##cut exp based on group argument
+    exp_group_bool = exp_data.index.get_level_values(3).isin(experiment_trials)
+    exp_data = exp_data.loc[exp_group_bool]
     return exp_data
 
 def f_update_sen(row, exp_data, sam, saa, sap, sar, sat, sav):

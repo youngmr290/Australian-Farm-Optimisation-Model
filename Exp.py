@@ -44,11 +44,10 @@ run_pyomo = True #do you want pyomo to run (default is True but if testing repor
 
 
 #########################
-#Exp loop               # #^maybe there is a cleaner way to do some of the stuff below ie a way that doesn't need as many if statements?
+#Exp loop               #
 #########################
-##read in exp log 
-
-exp_data = fun.f_read_exp()
+##read in exp.xl and determine which trials are in the experiment group.
+exp_data, experiment_trials = fun.f_read_exp()
 exp_data = exp_data.sort_index() #had to sort to stop performance warning, this means runs may not be executed in order of exp.xls
 exp_data1=exp_data.copy() #copy made so that the run and runpyomo cols can be added - the original df is used to allocate sa values (would cause an error if run col existed but i can't drop it because it is used to determine if the trial is run)
 
@@ -58,7 +57,6 @@ exp_data1=exp_data.copy() #copy made so that the run and runpyomo cols can be ad
 ##  1. exp.xls has changed
 ##  2. any python module has been updated
 ##  3. the trial needed to be run last time but the user opted not to run that trial
-
 exp_data1 = fun.f_run_required(exp_data1)
 
 if __name__ == '__main__':
@@ -76,9 +74,13 @@ if __name__ == '__main__':
     else:
         os.mkdir('Output/infeasible')
 
-    ##plk a copy of exp in case the code crashes before the end. (this is tracks if a trial needed to be run)
+    ##plk a copy of exp. Used next time the model is run to identify which trials are up to date.
     with open('pkl/pkl_exp.pkl', "wb") as f:
         pkl.dump(exp_data1, f, protocol=pkl.HIGHEST_PROTOCOL)
+
+##cut exp_data based on the experiment group
+exp_data = fun.f_group_exp(exp_data, experiment_trials)
+exp_data1 = fun.f_group_exp(exp_data1, experiment_trials)
 
 
 ##print out number of trials to run
@@ -94,7 +96,7 @@ for row in range(len(exp_data)):
 
 
     ##check to make sure user wants to run this trial - note pyomo is never run without precalcs being run (this could possibly be change by making a more custom function to check only precalc module time and then altering the 'continue' call below)
-    if exp_data1.index[row][0] == False or (exp_data1.loc[exp_data1.index[row],'run'].squeeze()==False and force_run==False):
+    if exp_data1.index[row][0] == False or (exp_data1.loc[exp_data1.index[row],'run_req'].squeeze()==False and force_run==False):
         continue   # move to next row of the trial
 
     ##get trial name - used for outputs
@@ -103,8 +105,7 @@ for row in range(len(exp_data)):
     if run_pyomo != True:
         print("\n **** Pyomo is turned off... are you sure? ****\n")
 
-    # print('precalcs',exp_data1.index[row][2])
-    exp_data1.loc[exp_data1.index[row],('run', '', '', '')] = False
+    ##tally trials run
     run+=1
 
     ##update sensitivity values
@@ -158,24 +159,8 @@ for row in range(len(exp_data)):
     print('precalcs: ', precalc_end - precalc_start)
     
     
-    ##does pyomo need to be run?
-    ##pyomo is run unless the user has specified not to run it.
-    # ##check if the two dicts are the same, it is possible that the current dict has less keys than the previous dict eg if a value becomes nan (because you removed the cell in excel inputs) and when it is stacked it disappears (this is very unlikely though so not going to test for it since this step is already slow)
-    # ##try to load in params dict, if it doesn't exist then create a new dict
-    # try:
-    #     with open('pkl/pkl_params_{0}.pkl'.format(trial_name),"rb") as f:
-    #         prev_params = pkl.load(f)
-    # except FileNotFoundError:
-    #     prev_params = {}
-    # ##check if the two dicts are the same, it is possible that the current dict has less keys than the previous dict eg if a value becomes nan (because you removed the cell in excel inputs) and when it is stacked it disappears (this is very unlikely though so not going to test for it since this step is already slow)
-    # try: #try required in case the key (trial) doesn't exist in the old dict, if this is the case pyomo must be run
-    #     run_pyomo_params=fun.findDiff(params, prev_params)
-    # except KeyError:
-    #     run_pyomo_params= True
-
     ##determine if pyomo should run, note if pyomo doesn't run there will be no full solution (they are the same as before so no need)
-    if run_pyomo: #or exp_data1.loc[exp_data1.index[row],'runpyomo'].squeeze():
-        # print('run pyomo')
+    if run_pyomo:
         ##call pyomo model function, must call them in the correct order (core must be last)
         pyomocalc_start = time.time()
         crtmod.sets() #certain sets have to be updated each iteration of exp
@@ -190,8 +175,6 @@ for row in range(len(exp_data)):
         suppy.suppyomo_local(params['sup'])
         stubpy.stubpyomo_local(params['stub'])
         spy.stockpyomo_local(params['stock'])
-        ###if re-run update runpyomo to false
-        exp_data1.loc[exp_data1.index[row], ('runpyomo', '', '', '')] = False
         ###bounds-this must be done last because it uses sets built in some of the other modules
         bndpy.boundarypyomo_local(params)
 
@@ -296,12 +279,6 @@ for row in range(len(exp_data)):
     remaining = trials_to_go * average_time
     print("total time taken this loop: ", time_taken - start_time)
     print('Time remaining: %s' %remaining)
-
-
-
-##drop results into pickle file
-with open('pkl/pkl_exp.pkl', "wb") as f:
-    pkl.dump(exp_data1, f, protocol=pkl.HIGHEST_PROTOCOL)
 
 end_time1 = time.time()
 print('total trials completed: ', run)

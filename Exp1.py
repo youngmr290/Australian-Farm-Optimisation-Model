@@ -63,10 +63,9 @@ start_time1 = time.time()
 #load exp               # 
 #########################
 ##read in exp and drop all false runs ie runs not being run this time
-exp_data = fun.f_read_exp()
+exp_data, experiment_trials = fun.f_read_exp()
 exp_data = exp_data.sort_index() #had to sort to stop performance warning, this means runs may not be executed in order of exp.xls
 exp_data1=exp_data.copy() #copy made so that the run col can be added - the original df is used to allocate sa values (would cause an error if run col existed but i can't drop it because it is used to determine if the trial is run)
-
 
 
 ##check if precalcs and pyomo need to be recalculated.
@@ -74,7 +73,6 @@ exp_data1=exp_data.copy() #copy made so that the run col can be added - the orig
 ##  1. exp.xls has changed
 ##  2. any python module has been updated
 ##  3. the trial needed to be run last time but the user opted not to run that trial
-
 exp_data1 = fun.f_run_required(exp_data1)
 
 if __name__ == '__main__':
@@ -92,9 +90,13 @@ if __name__ == '__main__':
     else:
         os.mkdir('Output/infeasible')
 
-    ##plk a copy of exp in case the code crashes before the end. (this is tracks if a trial needed to be run)
+    ##plk a copy of exp. Used next time the model is run to identify which trials are up to date.
     with open('pkl/pkl_exp.pkl', "wb") as f:
         pkl.dump(exp_data1, f, protocol=pkl.HIGHEST_PROTOCOL)
+
+##cut exp_data based on the experiment group
+exp_data = fun.f_group_exp(exp_data, experiment_trials)
+exp_data1 = fun.f_group_exp(exp_data1, experiment_trials)
 
 
 #########################
@@ -273,11 +275,8 @@ def exp(row):  # called with command: pool.map(exp, dataset)
     with open('pkl/pkl_r_vals_{0}.pkl'.format(trial_name),"wb") as f:
         pkl.dump(r_vals,f,protocol=pkl.HIGHEST_PROTOCOL)
 
-    ##track the successful execution of trial - so we don't update a trial that didn't finish
-    trials_successfully_run = row
-
     ##determine expected time to completion - trials left multiplied by average time per trial &time for current loop
-    dataset = list(np.flatnonzero(np.array(exp_data.index.get_level_values(0)) * np.array(exp_data1['run']))) #gets the ordinal index values for the trials the user wants to run that are not up to date
+    dataset = list(np.flatnonzero(np.array(exp_data.index.get_level_values(0)) * np.array(exp_data1['run_req']))) #gets the ordinal index values for the trials the user wants to run that are not up to date
     processes = min(multiprocessing.cpu_count(), len(dataset), maximum_processes)
     total_batches = math.ceil(len(dataset) / processes )
     current_batch = math.ceil( (dataset.index(row)+1) / processes ) #add 1 because python starts at 0
@@ -289,14 +288,14 @@ def exp(row):  # called with command: pool.map(exp, dataset)
     print("total time taken this loop: ", end_time - start_time)
     print('Time remaining: %s' %time_remaining)
 
-    return trials_successfully_run
+    return row
 
 ##works when run through anaconda prompt - if 9 runs and 8 processors, the first processor to finish, will start the 9th run
 #   using map it returns outputs in the order they go in ie in the order of the exp
 ##the result after the different processes are done is a list of dicts (because each iteration returns a dict and the multiprocess stuff returns a list)
 def main():
     ## Define the dataset - trials that require at least the precalcs done (user wants it run and it is out of date)
-    dataset = list(np.flatnonzero(np.array(exp_data.index.get_level_values(0)) * np.array(exp_data1['run']))) #gets the ordinal index values for the trials the user wants to run that are not up to date
+    dataset = list(np.flatnonzero(np.array(exp_data.index.get_level_values(0)) * np.array(exp_data1['run_req']))) #gets the ordinal index values for the trials the user wants to run that are not up to date
     ##prints out start status - number of trials to run, date and time exp.xl was last saved and output summary  
     print('Number of trials to run: ',len(dataset))
     print('Number of full solutions: ',sum((exp_data.index[row][1] == True) and (exp_data.index[row][0] == True) for row in range(len(exp_data))))
@@ -307,18 +306,10 @@ def main():
     with multiprocessing.Pool(processes=agents) as pool:
         trials_successfully_run = pool.map(exp, dataset)
 
-    ##update run require status - trials just run are now up to date for both pyomo and precalcs - all trials that the user wanted to run are now up to date (even if they didn't run because they were already up to date)
-    exp_data1.loc[exp_data1.index[trials_successfully_run],['run']] = False
-    exp_data1.loc[exp_data1.index[trials_successfully_run],['runpyomo']] = False
-    ##return pyomo results and params dict
-    return exp_data1
+    return
 
 if __name__ == '__main__':
-    exp_data1 = main() #returns a list is the same order of exp
-    with open('pkl/pkl_exp.pkl', "wb") as f:
-        pkl.dump(exp_data1, f, protocol=pkl.HIGHEST_PROTOCOL)
-
-
+    main() #returns a list is the same order of exp
     end=time.time()
     print('total time',end-start)
 
