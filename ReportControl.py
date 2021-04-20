@@ -31,7 +31,7 @@ import ReportFunctions as rep
 import Functions as fun
 
 ##read in exp log
-exp_data_nosort = fun.f_read_exp()
+exp_data_nosort, experiment_trials = fun.f_read_exp()
 exp_data_index = exp_data_nosort.index #need to use this so user can specify the trial number as per exp.xls
 exp_data = exp_data_nosort.sort_index() #had to sort to stop performance warning, this means runs may not be executed in order of exp.xls
 
@@ -41,6 +41,7 @@ exp_data = exp_data_nosort.sort_index() #had to sort to stop performance warning
 ##  2. any python module has been updated
 ##  3. the trial needed to be run last time but the user opted not to run that trial
 exp_data = fun.f_run_required(exp_data, check_pyomo=False)
+exp_data = fun.f_group_exp(exp_data, experiment_trials) #cut exp_data based on the experiment group
 trial_outdated = exp_data['run'] #returns true if trial is out of date
 
 ## enter the trials to summarise and the reports to include
