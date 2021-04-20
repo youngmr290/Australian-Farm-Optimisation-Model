@@ -694,6 +694,7 @@ for row in trials:
 ####################################
 #run between trial reports and save#
 ####################################
+print("Writing to Excel")
 ##first check that excel is not open (microsoft puts a lock on files so they can't be updated from elsewhere while open)
 if os.path.isfile("Output/Report.xlsx"): #to check if report.xl exists
     while True:   # repeat until the try statement succeeds
