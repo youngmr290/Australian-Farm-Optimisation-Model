@@ -295,7 +295,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
 ##the result after the different processes are done is a list of dicts (because each iteration returns a dict and the multiprocess stuff returns a list)
 def main():
     ## Define the dataset - trials that require at least the precalcs done (user wants it run and it is out of date)
-    dataset = list(np.flatnonzero(np.array(exp_data.index.get_level_values(0)) * np.array(exp_data1['run_req']))) #gets the ordinal index values for the trials the user wants to run that are not up to date
+    dataset = list(np.flatnonzero(np.nan_to_num(np.array(exp_data.index.get_level_values(0))) * np.array(exp_data1['run_req']))) #gets the ordinal index values for the trials the user wants to run that are not up to date
     ##prints out start status - number of trials to run, date and time exp.xl was last saved and output summary  
     print('Number of trials to run: ',len(dataset))
     print('Number of full solutions: ',sum((exp_data.index[row][1] == True) and (exp_data.index[row][0] == True) for row in range(len(exp_data))))
