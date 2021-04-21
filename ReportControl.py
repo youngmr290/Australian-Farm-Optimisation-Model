@@ -31,24 +31,6 @@ import multiprocessing
 import ReportFunctions as rep
 import Functions as fun
 
-##read in exp log
-exp_data_nosort, experiment_trials = fun.f_read_exp()
-exp_data = exp_data_nosort.sort_index() #had to sort to stop performance warning, this means runs may not be executed in order of exp.xls
-
-
-##check if trial results are up to date. Out-dated if:
-##  1. exp.xls has changed
-##  2. any python module has been updated
-##  3. the trial needed to be run last time but the user opted not to run that trial
-exp_data = fun.f_run_required(exp_data, check_pyomo=False)
-exp_data = fun.f_group_exp(exp_data, experiment_trials) #cut exp_data based on the experiment group
-trial_outdated = exp_data['run_req'] #returns true if trial is out of date
-
-## enter the trials to summarise and the reports to include
-trials = np.array(exp_data.index.get_level_values(3))[pd.Series(exp_data.index.get_level_values(2)).fillna(0).astype(bool)] #this is slightly complicated because blank rows in exp.xl result in nan, so nan must be converted to 0.
-
-##check the trials you want to run exist and are up to date
-rep.f_errors(trial_outdated, trials)
 
 ##read in excel that controls which reports to run and slice for the selected experiment.
 ## If no arg passed in or the experiment is not set up with custom col in report_run then default col is used
@@ -64,11 +46,11 @@ except KeyError:  # in case the experiment is not set up with custom report_run
 report_run = report_run.to_frame()
 report_run = report_run.droplevel(1, axis=1)
 
-##determine the processor for each report
-agents = min(multiprocessing.cpu_count(), np.count_nonzero(report_run.values))
-report_run['processor'] = np.cumsum(report_run.values) % agents
 
-def f_report(process):
+
+def f_report(processor, trials):
+    print('Start processor: {0}'.format(processor))
+    print('Start trials: {0}'.format(trials))
     ##create empty df to stack each trial results into
     stacked_summary = pd.DataFrame()  # 1 line summary of each trial
     stacked_areasum = pd.DataFrame()  # area summary
@@ -120,23 +102,23 @@ def f_report(process):
         lp_vars,r_vals = rep.load_pkl(trial_name)
 
         ##run report functions
-        if report_run.loc['run_summary', 'Run'] and report_run.loc['run_summary', 'processor']==process:
+        if report_run.loc['run_summary', 'Run']:
             summary = rep.f_summary(lp_vars,r_vals,trial_name)
             stacked_summary = stacked_summary.append(summary)
 
-        if report_run.loc['run_areasum', 'Run'] and report_run.loc['run_areasum', 'processor']==process:
+        if report_run.loc['run_areasum', 'Run']:
             option = 1
             areasum = rep.f_area_summary(lp_vars, r_vals, option=option)
             areasum = pd.concat([areasum],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_areasum = stacked_areasum.append(areasum)
 
-        if report_run.loc['run_pnl', 'Run'] and report_run.loc['run_pnl', 'processor']==process:
+        if report_run.loc['run_pnl', 'Run']:
             pnl = rep.f_profitloss_table(lp_vars, r_vals)
             pnl = pd.concat([pnl],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_pnl = stacked_pnl.append(pnl)
 
 
-        if report_run.loc['run_profitarea', 'Run'] and report_run.loc['run_profitarea', 'processor']==process:
+        if report_run.loc['run_profitarea', 'Run']:
             area_option = 3
             profit_option = 0
             profitarea = pd.DataFrame(index=[trial_name], columns=['area','profit'])
@@ -145,7 +127,7 @@ def f_report(process):
             stacked_profitarea = stacked_profitarea.append(profitarea)
 
 
-        if report_run.loc['run_saleprice', 'Run'] and report_run.loc['run_saleprice', 'processor']==process:
+        if report_run.loc['run_saleprice', 'Run']:
             option = 2
             grid = [0,5,6]
             weight = [22,40,25]
@@ -155,7 +137,7 @@ def f_report(process):
             stacked_saleprice = stacked_saleprice.append(saleprice)
 
 
-        if report_run.loc['run_saledate_offs', 'Run'] and report_run.loc['run_saledate_offs', 'processor']==process:
+        if report_run.loc['run_saledate_offs', 'Run']:
             type = 'stock'
             prod = 'saledate_k3k5tvnwziaxyg3'
             weights = 'offs_numbers_k3k5tvnwziaxyg3'
@@ -168,7 +150,7 @@ def f_report(process):
             saledate_offs = pd.concat([saledate_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_saledate_offs = stacked_saledate_offs.append(saledate_offs)
 
-        if report_run.loc['run_cfw_dams', 'Run'] and report_run.loc['run_cfw_dams', 'processor']==process:
+        if report_run.loc['run_cfw_dams', 'Run']:
             type = 'stock'
             prod = 'cfw_hdmob_k2tva1nwziyg1'
             weights = 'dams_numbers_k2tvanwziy1g1'
@@ -183,7 +165,7 @@ def f_report(process):
             cfw_dams = pd.concat([cfw_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_cfw_dams = stacked_cfw_dams.append(cfw_dams)
 
-        if report_run.loc['run_fd_dams', 'Run'] and report_run.loc['run_fd_dams', 'processor']==process:
+        if report_run.loc['run_fd_dams', 'Run']:
             type = 'stock'
             prod = 'fd_hdmob_k2tva1nwziyg1'
             weights = 'dams_numbers_k2tvanwziy1g1'
@@ -198,7 +180,7 @@ def f_report(process):
             fd_dams = pd.concat([fd_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_fd_dams = stacked_fd_dams.append(fd_dams)
 
-        if report_run.loc['run_wbe_dams', 'Run'] and report_run.loc['run_wbe_dams', 'processor']==process:
+        if report_run.loc['run_wbe_dams', 'Run']:
             type = 'stock'
             prod = 'wbe_k2va1nwziyg1'
             na_prod = [1]
@@ -214,7 +196,7 @@ def f_report(process):
             wbe_dams = pd.concat([wbe_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_wbe_dams = stacked_wbe_dams.append(wbe_dams)
 
-        if report_run.loc['run_wbe_offs', 'Run'] and report_run.loc['run_wbe_offs', 'processor']==process:
+        if report_run.loc['run_wbe_offs', 'Run']:
             type = 'stock'
             prod = 'wbe_k3k5vnwziaxyg3'
             na_prod = [2]
@@ -229,7 +211,7 @@ def f_report(process):
             wbe_offs = pd.concat([wbe_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_wbe_offs = stacked_wbe_offs.append(wbe_offs)
 
-        if report_run.loc['run_lw_dams', 'Run'] and report_run.loc['run_lw_dams', 'processor']==process:
+        if report_run.loc['run_lw_dams', 'Run']:
             type = 'stock'
             prod = 'lw_dams_k2vpa1e1b1nw8ziyg1'
             na_prod = [1]
@@ -249,7 +231,7 @@ def f_report(process):
             stacked_lw_dams = stacked_lw_dams.append(lw_dams)
 
 
-        if report_run.loc['run_ffcfw_dams', 'Run'] and report_run.loc['run_ffcfw_dams', 'processor']==process:
+        if report_run.loc['run_ffcfw_dams', 'Run']:
             type = 'stock'
             prod = 'ffcfw_dams_k2vpa1e1b1nw8ziyg1'
             na_prod = [1]
@@ -269,7 +251,7 @@ def f_report(process):
             stacked_ffcfw_dams = stacked_ffcfw_dams.append(ffcfw_dams)
 
 
-        if report_run.loc['run_fec_dams', 'Run'] and report_run.loc['run_fec_dams', 'processor']==process:
+        if report_run.loc['run_fec_dams', 'Run']:
             type = 'stock'
             prod = 'fec_dams_k2vpa1e1b1nw8ziyg1'
             na_prod = [1]
@@ -289,7 +271,7 @@ def f_report(process):
             stacked_fec_dams = stacked_fec_dams.append(fec_dams)
 
 
-        if report_run.loc['run_ffcfw_prog', 'Run'] and report_run.loc['run_ffcfw_prog', 'processor']==process:
+        if report_run.loc['run_ffcfw_prog', 'Run']:
             type = 'stock'
             prod = 'ffcfw_prog_zia0xg2w9'
             weights = 1
@@ -305,7 +287,7 @@ def f_report(process):
             stacked_ffcfw_prog = stacked_ffcfw_prog.append(ffcfw_prog)
 
 
-        if report_run.loc['run_ffcfw_offs', 'Run'] and report_run.loc['run_ffcfw_offs', 'processor']==process:
+        if report_run.loc['run_ffcfw_offs', 'Run']:
             type = 'stock'
             prod = 'ffcfw_offs_k3k5vpnw8zida0e0b0xyg3'
             na_prod = [2]
@@ -327,7 +309,7 @@ def f_report(process):
             stacked_ffcfw_offs = stacked_ffcfw_offs.append(ffcfw_offs)
 
 
-        if report_run.loc['run_fec_offs', 'Run'] and report_run.loc['run_fec_offs', 'processor']==process:
+        if report_run.loc['run_fec_offs', 'Run']:
             type = 'stock'
             prod = 'fec_offs_k3k5vpnw8zida0e0b0xyg3'
             na_prod = [2]
@@ -349,7 +331,7 @@ def f_report(process):
             stacked_fec_offs = stacked_fec_offs.append(fec_offs)
 
 
-        if report_run.loc['run_lamb_survival', 'Run'] and report_run.loc['run_lamb_survival', 'processor']==process:
+        if report_run.loc['run_lamb_survival', 'Run']:
             option = 0
             index =[2]
             cols =[5]
@@ -359,7 +341,7 @@ def f_report(process):
             stacked_lamb_survival = stacked_lamb_survival.append(lamb_survival)
 
 
-        if report_run.loc['run_weanper', 'Run'] and report_run.loc['run_weanper', 'processor']==process:
+        if report_run.loc['run_weanper', 'Run']:
             option = 1
             index =[2]
             cols =[]
@@ -369,7 +351,7 @@ def f_report(process):
             stacked_weanper = stacked_weanper.append(weanper)
 
 
-        if report_run.loc['run_scanper', 'Run'] and report_run.loc['run_scanper', 'processor']==process:
+        if report_run.loc['run_scanper', 'Run']:
             option = 2
             index =[2]
             cols =[]
@@ -378,7 +360,7 @@ def f_report(process):
             scanper = pd.concat([scanper],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_scanper = stacked_scanper.append(scanper)
 
-        if report_run.loc['run_dry_propn', 'Run'] and report_run.loc['run_dry_propn', 'processor']==process:
+        if report_run.loc['run_dry_propn', 'Run']:
             option = 3
             index =[2]
             cols =[]
@@ -387,7 +369,7 @@ def f_report(process):
             dry_propn = pd.concat([dry_propn],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_dry_propn = stacked_dry_propn.append(dry_propn)
 
-        if report_run.loc['run_daily_mei_dams', 'Run'] and report_run.loc['run_daily_mei_dams', 'processor']==process:
+        if report_run.loc['run_daily_mei_dams', 'Run']:
             type = 'stock'
             prod = 'mei_dams_k2p6ftva1nw8ziyg1'
             weights = 'dams_numbers_k2tvanwziy1g1'
@@ -406,7 +388,7 @@ def f_report(process):
             stacked_daily_mei_dams = stacked_daily_mei_dams.append(daily_mei_dams)
 
 
-        if report_run.loc['run_daily_pi_dams', 'Run'] and report_run.loc['run_daily_pi_dams', 'processor']==process:
+        if report_run.loc['run_daily_pi_dams', 'Run']:
             type = 'stock'
             prod = 'pi_dams_k2p6ftva1nw8ziyg1'
             weights = 'dams_numbers_k2tvanwziy1g1'
@@ -425,7 +407,7 @@ def f_report(process):
             stacked_daily_pi_dams = stacked_daily_pi_dams.append(daily_pi_dams)
 
 
-        if report_run.loc['run_numbers_dams', 'Run'] and report_run.loc['run_numbers_dams', 'processor']==process:
+        if report_run.loc['run_numbers_dams', 'Run']:
             type = 'stock'
             weights = 'dams_numbers_k2tvanwziy1g1'
             keys = 'dams_keys_k2tvanwziy1g1'
@@ -439,7 +421,7 @@ def f_report(process):
             numbers_dams = pd.concat([numbers_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_numbers_dams = stacked_numbers_dams.append(numbers_dams)
 
-        if report_run.loc['run_numbers_dams_p', 'Run'] and report_run.loc['run_numbers_dams_p', 'processor']==process:
+        if report_run.loc['run_numbers_dams_p', 'Run']:
             type = 'stock'
             prod = 'on_hand_k2tvpa1nwziyg1'
             weights = 'dams_numbers_k2tvanwziy1g1'
@@ -456,7 +438,7 @@ def f_report(process):
             stacked_numbers_dams_p = stacked_numbers_dams_p.append(numbers_dams_p)
 
 
-        if report_run.loc['run_numbers_prog', 'Run'] and report_run.loc['run_numbers_prog', 'processor']==process:
+        if report_run.loc['run_numbers_prog', 'Run']:
             type = 'stock'
             weights = 'prog_numbers_k5twzida0xg2'
             keys = 'prog_keys_k5twzida0xg2'
@@ -471,7 +453,7 @@ def f_report(process):
             stacked_numbers_prog = stacked_numbers_prog.append(numbers_prog)
 
 
-        if report_run.loc['run_numbers_offs', 'Run'] and report_run.loc['run_numbers_offs', 'processor']==process:
+        if report_run.loc['run_numbers_offs', 'Run']:
             type = 'stock'
             weights = 'offs_numbers_k3k5tvnwziaxyg3'
             keys = 'offs_keys_k3k5tvnwziaxyg3'
@@ -485,7 +467,7 @@ def f_report(process):
             numbers_offs = pd.concat([numbers_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_numbers_offs = stacked_numbers_offs.append(numbers_offs)
 
-        if report_run.loc['run_numbers_offs_p', 'Run'] and report_run.loc['run_numbers_offs_p', 'processor']==process:
+        if report_run.loc['run_numbers_offs_p', 'Run']:
             type = 'stock'
             prod = 'on_hand_k3k5tvpnwziaxyg3'
             weights = 'offs_numbers_k3k5tvnwziaxyg3'
@@ -503,7 +485,7 @@ def f_report(process):
             stacked_numbers_offs_p = stacked_numbers_offs_p.append(numbers_offs_p)
 
 
-        if report_run.loc['run_mort_dams', 'Run'] and report_run.loc['run_mort_dams', 'processor']==process:
+        if report_run.loc['run_mort_dams', 'Run']:
             type = 'stock'
             prod = 'mort_k2tvpa1nwziyg1'
             weights = 1 #this could be weighted by numbers if required
@@ -520,7 +502,7 @@ def f_report(process):
             mort_dams = pd.concat([mort_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_mort_dams = stacked_mort_dams.append(mort_dams)
 
-        if report_run.loc['run_mort_offs', 'Run'] and report_run.loc['run_mort_offs', 'processor']==process:
+        if report_run.loc['run_mort_offs', 'Run']:
             type = 'stock'
             prod = 'mort_k3k5tvpnwziaxyg3'
             weights = 1 #this could be weighted by numbers if required
@@ -538,7 +520,7 @@ def f_report(process):
             stacked_mort_offs = stacked_mort_offs.append(mort_offs)
 
 
-        if report_run.loc['run_dse', 'Run'] and report_run.loc['run_dse', 'processor']==process:
+        if report_run.loc['run_dse', 'Run']:
             ##you can go into f_dse to change the axis being reported.
             per_ha = True
 
@@ -561,7 +543,7 @@ def f_report(process):
             stacked_dse1_offs = stacked_dse1_offs.append(dse1_offs)
 
 
-        if report_run.loc['run_grnfoo', 'Run'] and report_run.loc['run_grnfoo', 'processor']==process:
+        if report_run.loc['run_grnfoo', 'Run']:
             #returns foo at end of each fp
             type = 'pas'
             prod = 'foo_end_grnha_goflzt'
@@ -578,7 +560,7 @@ def f_report(process):
             stacked_grnfoo = stacked_grnfoo.append(grnfoo)
 
 
-        if report_run.loc['run_dryfoo', 'Run'] and report_run.loc['run_dryfoo', 'processor']==process:
+        if report_run.loc['run_dryfoo', 'Run']:
             #returns foo at end of each fp
             type = 'pas'
             prod = 1000
@@ -595,7 +577,7 @@ def f_report(process):
             stacked_dryfoo = stacked_dryfoo.append(dryfoo)
 
 
-        if report_run.loc['run_napfoo', 'Run'] and report_run.loc['run_napfoo', 'processor']==process:
+        if report_run.loc['run_napfoo', 'Run']:
             #returns foo at end of each fp
             prod = 1000
             type = 'pas'
@@ -612,7 +594,7 @@ def f_report(process):
             stacked_napfoo = stacked_napfoo.append(napfoo)
 
 
-        if report_run.loc['run_grncon', 'Run'] and report_run.loc['run_grncon', 'processor']==process:
+        if report_run.loc['run_grncon', 'Run']:
             #returns consumption in each fp
             prod = 'cons_grnha_t_goflzt'
             type = 'pas'
@@ -629,7 +611,7 @@ def f_report(process):
             stacked_grncon = stacked_grncon.append(grncon)
 
 
-        if report_run.loc['run_drycon', 'Run'] and report_run.loc['run_drycon', 'processor']==process:
+        if report_run.loc['run_drycon', 'Run']:
             #returns consumption in each fp
             prod = 1000
             type = 'pas'
@@ -646,7 +628,7 @@ def f_report(process):
             stacked_drycon = stacked_drycon.append(drycon)
 
 
-        if report_run.loc['run_napcon', 'Run'] and report_run.loc['run_napcon', 'processor']==process:
+        if report_run.loc['run_napcon', 'Run']:
             #returns consumption in each fp
             prod = 1000
             type = 'pas'
@@ -663,7 +645,7 @@ def f_report(process):
             stacked_napcon = stacked_napcon.append(napcon)
 
 
-        if report_run.loc['run_poccon', 'Run'] and report_run.loc['run_poccon', 'processor']==process:
+        if report_run.loc['run_poccon', 'Run']:
             #returns consumption in each fp
             prod = 1000
             type = 'pas'
@@ -680,14 +662,14 @@ def f_report(process):
             stacked_poccon = stacked_poccon.append(poccon)
 
 
-        if report_run.loc['run_supcon', 'Run'] and report_run.loc['run_supcon', 'processor']==process:
+        if report_run.loc['run_supcon', 'Run']:
             #returns consumption in each fp
             option = 1
             supcon = rep.f_grain_sup_summary(lp_vars, r_vals, option=option)
             supcon = pd.concat([supcon],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_supcon = stacked_supcon.append(supcon)
 
-        if report_run.loc['run_stubcon', 'Run'] and report_run.loc['run_stubcon', 'processor']==process:
+        if report_run.loc['run_stubcon', 'Run']:
             #returns consumption in each fp
             stubcon = rep.f_stubble_summary(lp_vars, r_vals)
             stubcon = pd.concat([stubcon],keys=[trial_name],names=['Trial'])  # add trial name as index level
@@ -698,84 +680,84 @@ def f_report(process):
     ####################################
     print("Writing to Excel")
     ##first check that excel is not open (microsoft puts a lock on files so they can't be updated from elsewhere while open)
-    if os.path.isfile("Output/Report{0}.xlsx".format(process)): #to check if report.xl exists
+    if os.path.isfile("Output/Report{0}.xlsx".format(processor)): #to check if report.xl exists
         while True:   # repeat until the try statement succeeds
             try:
-                myfile = open("Output/Report{0}.xlsx".format(process),"w") # chucks an error if excel file is open
+                myfile = open("Output/Report{0}.xlsx".format(processor),"w") # chucks an error if excel file is open
                 break                             # exit the loop
             except IOError:
                 input("Could not open file! Please close Excel. Press Enter to retry.")
                 # restart the loop
 
     ## Create a Pandas Excel writer using XlsxWriter as the engine. used to write to multiple sheets in excel
-    writer = pd.ExcelWriter('Output/Report{0}.xlsx'.format(process),engine='xlsxwriter')
+    writer = pd.ExcelWriter('Output/Report{0}.xlsx'.format(processor),engine='xlsxwriter')
 
     ##make empty df to store row and col index settings. Used when combining multiple report.xl
     df_settings = pd.DataFrame(columns=['index', 'cols'])
 
     ##write to excel
-    if report_run.loc['run_summary', 'Run'] and report_run.loc['run_summary', 'processor']==process:
+    if report_run.loc['run_summary', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_summary, 'summary', df_settings, option=1)
-    if report_run.loc['run_areasum', 'Run'] and report_run.loc['run_areasum', 'processor']==process:
+    if report_run.loc['run_areasum', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_areasum, 'areasum', df_settings, option=1)
-    if report_run.loc['run_pnl', 'Run'] and report_run.loc['run_pnl', 'processor']==process:
+    if report_run.loc['run_pnl', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_pnl, 'pnl', df_settings, option=1)
-    if report_run.loc['run_profitarea', 'Run'] and report_run.loc['run_profitarea', 'processor']==process:
+    if report_run.loc['run_profitarea', 'Run']:
         plot = rep.f_xy_graph(stacked_profitarea)
         plot.savefig('Output/profitarea_curve.png')
-    if report_run.loc['run_saleprice', 'Run'] and report_run.loc['run_saleprice', 'processor']==process:
+    if report_run.loc['run_saleprice', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_saleprice, 'saleprice', df_settings, option=1)
-    if report_run.loc['run_saledate_offs', 'Run'] and report_run.loc['run_saledate_offs', 'processor']==process:
+    if report_run.loc['run_saledate_offs', 'Run']:
         stacked_saledate_offs = stacked_saledate_offs.astype(object)
         stacked_saledate_offs[stacked_saledate_offs==np.datetime64('1970-01-01')] = 0
         df_settings = rep.f_df2xl(writer, stacked_saledate_offs, 'saledate_offs', df_settings, option=1)
-    if report_run.loc['run_cfw_dams', 'Run'] and report_run.loc['run_cfw_dams', 'processor']==process:
+    if report_run.loc['run_cfw_dams', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_cfw_dams, 'cfw_dams', df_settings, option=1)
-    if report_run.loc['run_fd_dams', 'Run'] and report_run.loc['run_fd_dams', 'processor']==process:
+    if report_run.loc['run_fd_dams', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_fd_dams, 'fd_dams', df_settings, option=1)
-    if report_run.loc['run_wbe_dams', 'Run'] and report_run.loc['run_wbe_dams', 'processor']==process:
+    if report_run.loc['run_wbe_dams', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_wbe_dams, 'wbe_dams', df_settings, option=1)
-    if report_run.loc['run_wbe_offs', 'Run'] and report_run.loc['run_wbe_offs', 'processor']==process:
+    if report_run.loc['run_wbe_offs', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_wbe_offs, 'wbe_offs', df_settings, option=1)
-    if report_run.loc['run_lw_dams', 'Run'] and report_run.loc['run_lw_dams', 'processor']==process:
+    if report_run.loc['run_lw_dams', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_lw_dams, 'lw_dams', df_settings, option=1)
-    if report_run.loc['run_ffcfw_dams', 'Run'] and report_run.loc['run_ffcfw_dams', 'processor']==process:
+    if report_run.loc['run_ffcfw_dams', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_ffcfw_dams, 'ffcfw_dams', df_settings, option=1)
-    if report_run.loc['run_fec_dams', 'Run'] and report_run.loc['run_fec_dams', 'processor']==process:
+    if report_run.loc['run_fec_dams', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_fec_dams, 'fec_dams', df_settings, option=1)
-    if report_run.loc['run_ffcfw_prog', 'Run'] and report_run.loc['run_ffcfw_prog', 'processor']==process:
+    if report_run.loc['run_ffcfw_prog', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_ffcfw_prog, 'ffcfw_prog', df_settings, option=1)
-    if report_run.loc['run_ffcfw_offs', 'Run'] and report_run.loc['run_ffcfw_offs', 'processor']==process:
+    if report_run.loc['run_ffcfw_offs', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_ffcfw_offs, 'ffcfw_offs', df_settings, option=1)
-    if report_run.loc['run_fec_offs', 'Run'] and report_run.loc['run_fec_offs', 'processor']==process:
+    if report_run.loc['run_fec_offs', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_fec_offs, 'fec_offs', df_settings, option=1)
-    if report_run.loc['run_lamb_survival', 'Run'] and report_run.loc['run_lamb_survival', 'processor']==process:
+    if report_run.loc['run_lamb_survival', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_lamb_survival, 'lamb_survival', df_settings, option=1)
-    if report_run.loc['run_weanper', 'Run'] and report_run.loc['run_weanper', 'processor']==process:
+    if report_run.loc['run_weanper', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_weanper, 'wean_per', df_settings, option=1)
-    if report_run.loc['run_scanper', 'Run'] and report_run.loc['run_scanper', 'processor']==process:
+    if report_run.loc['run_scanper', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_scanper, 'scan_per', df_settings, option=1)
-    if report_run.loc['run_dry_propn', 'Run'] and report_run.loc['run_dry_propn', 'processor']==process:
+    if report_run.loc['run_dry_propn', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_dry_propn, 'dry_propn', df_settings, option=1)
-    if report_run.loc['run_daily_mei_dams', 'Run'] and report_run.loc['run_daily_mei_dams', 'processor']==process:
+    if report_run.loc['run_daily_mei_dams', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_daily_mei_dams, 'daily_mei_dams', df_settings, option=1)
-    if report_run.loc['run_daily_pi_dams', 'Run'] and report_run.loc['run_daily_pi_dams', 'processor']==process:
+    if report_run.loc['run_daily_pi_dams', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_daily_pi_dams, 'daily_pi_dams', df_settings, option=1)
-    if report_run.loc['run_numbers_dams', 'Run'] and report_run.loc['run_numbers_dams', 'processor']==process:
+    if report_run.loc['run_numbers_dams', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_numbers_dams, 'numbers_dams', df_settings, option=1)
-    if report_run.loc['run_numbers_dams_p', 'Run'] and report_run.loc['run_numbers_dams_p', 'processor']==process:
+    if report_run.loc['run_numbers_dams_p', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_numbers_dams_p, 'numbers_dams_p', df_settings, option=1)
-    if report_run.loc['run_numbers_prog', 'Run'] and report_run.loc['run_numbers_prog', 'processor']==process:
+    if report_run.loc['run_numbers_prog', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_numbers_prog, 'numbers_prog', df_settings, option=1)
-    if report_run.loc['run_numbers_offs', 'Run'] and report_run.loc['run_numbers_offs', 'processor']==process:
+    if report_run.loc['run_numbers_offs', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_numbers_offs, 'numbers_offs', df_settings, option=1)
-    if report_run.loc['run_numbers_offs_p', 'Run'] and report_run.loc['run_numbers_offs_p', 'processor']==process:
+    if report_run.loc['run_numbers_offs_p', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_numbers_offs_p, 'numbers_offs_p', df_settings, option=1)
-    if report_run.loc['run_mort_dams', 'Run'] and report_run.loc['run_mort_dams', 'processor']==process:
+    if report_run.loc['run_mort_dams', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_mort_dams, 'mort_dams', df_settings, option=1)
-    if report_run.loc['run_mort_offs', 'Run'] and report_run.loc['run_mort_offs', 'processor']==process:
+    if report_run.loc['run_mort_offs', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_mort_offs, 'mort_offs', df_settings, option=1)
-    if report_run.loc['run_dse', 'Run'] and report_run.loc['run_dse', 'processor']==process:
+    if report_run.loc['run_dse', 'Run']:
         dams_start_col = len(stacked_dse_sire.columns) + stacked_dse_sire.index.nlevels + 1
         offs_start_col = dams_start_col + len(stacked_dse_dams.columns) + stacked_dse_dams.index.nlevels + 1
         df_settings = rep.f_df2xl(writer, stacked_dse_sire, 'dse_wt', df_settings, option=0, colstart=0)
@@ -784,104 +766,78 @@ def f_report(process):
         df_settings = rep.f_df2xl(writer, stacked_dse1_sire, 'dse_mei', df_settings, option=0, colstart=0)
         df_settings = rep.f_df2xl(writer, stacked_dse1_dams, 'dse_mei', df_settings, option=0, colstart=dams_start_col)
         df_settings = rep.f_df2xl(writer, stacked_dse1_offs, 'dse_mei', df_settings, option=0, colstart=offs_start_col)
-    if report_run.loc['run_grnfoo', 'Run'] and report_run.loc['run_grnfoo', 'processor']==process:
+    if report_run.loc['run_grnfoo', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_grnfoo, 'grnfoo', df_settings, option=1)
-    if report_run.loc['run_dryfoo', 'Run'] and report_run.loc['run_dryfoo', 'processor']==process:
+    if report_run.loc['run_dryfoo', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_dryfoo, 'dryfoo', df_settings, option=1)
-    if report_run.loc['run_napfoo', 'Run'] and report_run.loc['run_napfoo', 'processor']==process:
+    if report_run.loc['run_napfoo', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_napfoo, 'napfoo', df_settings, option=1)
-    if report_run.loc['run_grncon', 'Run'] and report_run.loc['run_grncon', 'processor']==process:
+    if report_run.loc['run_grncon', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_grncon, 'grncon', df_settings, option=1)
-    if report_run.loc['run_drycon', 'Run'] and report_run.loc['run_drycon', 'processor']==process:
+    if report_run.loc['run_drycon', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_drycon, 'drycon', df_settings, option=1)
-    if report_run.loc['run_napcon', 'Run'] and report_run.loc['run_napcon', 'processor']==process:
+    if report_run.loc['run_napcon', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_napcon, 'napcon', df_settings, option=1)
-    if report_run.loc['run_poccon', 'Run'] and report_run.loc['run_poccon', 'processor']==process:
+    if report_run.loc['run_poccon', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_poccon, 'poccon', df_settings, option=1)
-    if report_run.loc['run_supcon', 'Run'] and report_run.loc['run_supcon', 'processor']==process:
+    if report_run.loc['run_supcon', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_supcon, 'supcon', df_settings, option=1)
-    if report_run.loc['run_stubcon', 'Run'] and report_run.loc['run_stubcon', 'processor']==process:
+    if report_run.loc['run_stubcon', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_stubcon, 'stubcon', df_settings, option=1)
 
-    #todo need to combine this across the processors
+
     df_settings.to_excel(writer, 'df_settings')
     writer.save()
 
+    print("Report complete. Processor: {0}".format(processor))
+
 
 if __name__ == '__main__':
+    ##read in exp log
+    exp_data_nosort,experiment_trials = fun.f_read_exp()
+    exp_data = exp_data_nosort.sort_index()  # had to sort to stop performance warning, this means runs may not be executed in order of exp.xls
+
+    ##check if trial results are up to date. Out-dated if:
+    ##  1. exp.xls has changed
+    ##  2. any python module has been updated
+    ##  3. the trial needed to be run last time but the user opted not to run that trial
+    exp_data = fun.f_run_required(exp_data,check_pyomo=False)
+    exp_data = fun.f_group_exp(exp_data,experiment_trials)  # cut exp_data based on the experiment group
+    trial_outdated = exp_data['run_req']  # returns true if trial is out of date
+
+    ## enter the trials to summarise and the reports to include
+    trials = np.array(exp_data.index.get_level_values(3))[
+        pd.Series(exp_data.index.get_level_values(2)).fillna(0).astype(
+            bool)]  # this is slightly complicated because blank rows in exp.xl result in nan, so nan must be converted to 0.
+
+    ##check the trials you want to run exist and are up to date
+    rep.f_errors(trial_outdated,trials)
+
+
     ##print out the reports being run and number of trials
     print("The following trials will be reported: \n", trials)
     print("The following reports will be run: \n", report_run.index[report_run.loc[:,'Run']])
-    reports = list(range(len(report_run.index[report_run.loc[:,'Run']])))
+    # reports = list(range(len(report_run.index[report_run.loc[:,'Run']])))
+
+    ##determine the processor for each report
+    ## the upper limit of number of processes (concurrent trials) based on the memory capacity of this machine
+    try:
+        maximum_processes = int(sys.argv[2])  # reads in as string so need to convert to int, the script path is the first value hence take the second.
+    except IndexError:  # in case no arg passed to python
+        maximum_processes = 15
+
     ##start multiprocessing
     ### number of agents (processes) should be min of the num of cpus, number of trials or the user specified limit due to memory capacity
-    # agents = min(multiprocessing.cpu_count(), len(reports))
-    # with multiprocessing.Pool(processes=agents) as pool:
-    #     pool.map(f_report, list(range(agents)))
-
-    # print("combining reports form each processor")
-    #remember need to concat the df settings
-    # import openpyxl
-    # from openpyxl.worksheet.copier import WorksheetCopy
-    #
-    # workbook2 = openpyxl.Workbook()
-    # workbook = openpyxl.load_workbook('Output/Report0.xlsx')
-    # target = workbook.copy_worksheet(workbook["fd_dams"])
-    # # template_worksheet = workbook["fd_dams"]
-    # # # template_worksheet = workbook.get_sheet_by_name("fd_dams")
-    # new_worksheet = workbook2.create_sheet('New_Sheet_Name')
-    # instance = WorksheetCopy(template_worksheet,new_worksheet)
-    # # WorksheetCopy.copy_worksheet(instance)
-    # # workbook2.save('Output/output.xlsx')
-    # target.save('Output/output.xlsx')
-
-    # importing openpyxl module
-    # import openpyxl as xl
-    # from win32com.client import Dispatch
-    # opening the destination excel file
-    # wb2 = xl.Workbook()
-
-    # files = os.listdir('Output')
-    # for file in files:  # loop through Excel files
-    #     if not file.startswith('~') and file.endswith('.xlsx'):# and file != 'combined_file.xlsx':
-    #         print(file)
-    #         # opening the source excel file
-    #         # wb1 = xl.load_workbook('Output/{0}'.format(file))
-    #         for sheet_name in wb1.sheetnames:
-    #
-    #             xl = Dispatch("Excel.Application")
-    #
-    #             wb1 = xl.Workbooks.Open('Output/{0}'.format(file))
-    #
-    #             ws1 = wb1.Worksheets(1)
-    #             ws1.Copy(Before=wb2.Worksheets(1))
-    #
-    #             wb2.Close(SaveChanges=True)
-    #             xl.Quit()
-
-
-
-
-                # ws1 = wb1[sheet_name]
-                #
-                # ws2 = wb2.create_sheet(sheet_name)
-                #
-                # # calculate total number of rows and
-                # # columns in source excel file
-                # mr = ws1.max_row
-                # mc = ws1.max_column
-                #
-                # # copying the cell values from source
-                # # excel file to destination excel file
-                # for i in range(1,mr + 1):
-                #     for j in range(1,mc + 1):
-                #         # reading cell value from source excel file
-                #         c = ws1.cell(row=i,column=j)
-                #
-                #         # writing the read value to destination excel file
-                #         ws2.cell(row=i,column=j).value = c.value
-
-    # saving the destination excel file
-    # wb2.save('Output/output.xlsx')
+    agents = min(multiprocessing.cpu_count(), len(trials), maximum_processes)
+    ###set up dataset for f_report
+    args = []
+    for agent in list(range(agents)):
+        start_trial = int(len(trials)/agents * agent)
+        end_trial = int(len(trials)/agents * (agent+1))
+        process_trials = trials[start_trial:end_trial]
+        arg = [agent,process_trials]
+        args.append(arg)
+    with multiprocessing.Pool(processes=agents) as pool:
+        pool.starmap(f_report, args)
 
     print("Reports successfully completed")
