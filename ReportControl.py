@@ -794,14 +794,15 @@ def f_report(processor, trials):
 
 if __name__ == '__main__':
     ##read in exp log
-    exp_data_nosort,experiment_trials = fun.f_read_exp()
-    exp_data = exp_data_nosort.sort_index()  # had to sort to stop performance warning, this means runs may not be executed in order of exp.xls
+    # exp_data_nosort,experiment_trials = fun.f_read_exp()
+    exp_data ,experiment_trials = fun.f_read_exp()
+    # exp_data = exp_data_nosort.sort_index()  # had to sort to stop performance warning, this means runs may not be executed in order of exp.xls
 
     ##check if trial results are up to date. Out-dated if:
     ##  1. exp.xls has changed
     ##  2. any python module has been updated
     ##  3. the trial needed to be run last time but the user opted not to run that trial
-    exp_data = fun.f_run_required(exp_data,check_pyomo=False)
+    exp_data = fun.f_run_required(exp_data)
     exp_data = fun.f_group_exp(exp_data,experiment_trials)  # cut exp_data based on the experiment group
     trial_outdated = exp_data['run_req']  # returns true if trial is out of date
 
@@ -817,7 +818,6 @@ if __name__ == '__main__':
     ##print out the reports being run and number of trials
     print("The following trials will be reported: \n", trials)
     print("The following reports will be run: \n", report_run.index[report_run.loc[:,'Run']])
-    # reports = list(range(len(report_run.index[report_run.loc[:,'Run']])))
 
     ##determine the processor for each report
     ## the upper limit of number of processes (concurrent trials) based on the memory capacity of this machine

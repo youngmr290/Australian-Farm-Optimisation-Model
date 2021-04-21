@@ -568,7 +568,7 @@ def f_sa(value, sa, sa_type=0, target=0, value_min=-np.inf,pandas=False, axis=0)
 
     return value
 
-def f_run_required(exp_data1, check_pyomo=True):
+def f_run_required(exp_data1):
     '''
     here we check if precalcs and pyomo need to be recalculated. this is slightly complicated by the fact that columns and rows can be added to exp.xls
     and the fact that a user can opt not to run a trial even if it is out of date so the run requirement must be tracked
