@@ -104,6 +104,7 @@ def f_report(processor, trials):
         ##run report functions
         if report_run.loc['run_summary', 'Run']:
             summary = rep.f_summary(lp_vars,r_vals,trial_name)
+            summary.index.name = 'Trial'
             stacked_summary = stacked_summary.append(summary)
 
         if report_run.loc['run_areasum', 'Run']:
