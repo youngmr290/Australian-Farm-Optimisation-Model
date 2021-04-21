@@ -27,6 +27,7 @@ import pandas as pd
 import os
 import sys
 import multiprocessing
+import glob
 
 import ReportFunctions as rep
 import Functions as fun
@@ -795,16 +796,14 @@ def f_report(processor, trials):
 
 if __name__ == '__main__':
     ##read in exp log
-    # exp_data_nosort,experiment_trials = fun.f_read_exp()
-    exp_data ,experiment_trials = fun.f_read_exp()
-    # exp_data = exp_data_nosort.sort_index()  # had to sort to stop performance warning, this means runs may not be executed in order of exp.xls
+    exp_data, experiment_trials = fun.f_read_exp()
 
     ##check if trial results are up to date. Out-dated if:
     ##  1. exp.xls has changed
     ##  2. any python module has been updated
     ##  3. the trial needed to be run last time but the user opted not to run that trial
     exp_data = fun.f_run_required(exp_data)
-    exp_data = fun.f_group_exp(exp_data,experiment_trials)  # cut exp_data based on the experiment group
+    exp_data = fun.f_group_exp(exp_data, experiment_trials)  # cut exp_data based on the experiment group
     trial_outdated = exp_data['run_req']  # returns true if trial is out of date
 
     ## enter the trials to summarise and the reports to include
@@ -814,6 +813,10 @@ if __name__ == '__main__':
 
     ##check the trials you want to run exist and are up to date
     rep.f_errors(trial_outdated,trials)
+
+    ##clear the old report.xlsx
+    for f in glob.glob("Output/*.xlsx"):
+        os.remove(f)
 
 
     ##print out the reports being run and number of trials
