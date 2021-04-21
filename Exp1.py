@@ -98,6 +98,11 @@ if __name__ == '__main__':
 exp_data = fun.f_group_exp(exp_data, experiment_trials)
 exp_data1 = fun.f_group_exp(exp_data1, experiment_trials)
 
+## Define the dataset - trials that require at least the precalcs done (user wants it run and it is out of date)
+dataset = list(np.flatnonzero(np.nan_to_num(np.array(exp_data.index.get_level_values(0))) * np.array(exp_data1['run_req'])))  # gets the ordinal index values for the trials the user wants to run that are not up to date
+## number of agents (processes) should be min of the num of cpus, number of trials or the user specified limit due to memory capacity
+n_processes = min(multiprocessing.cpu_count(),len(dataset),maximum_processes)
+
 
 #########################
 #Exp loop               #
@@ -113,8 +118,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
 
     ##get trial name - used for outputs
     trial_name = exp_data.index[row][3]
-    run = row - list(exp_data.index.get_level_values(0))[:row].count(False)
-    print(time.ctime()," : Starting trial %d, %s" %(run, trial_name))
+    print(time.ctime()," : Starting trial %s" %(trial_name))
 
     ##updaye sensitivity values
     fun.f_update_sen(row,exp_data,sen.sam,sen.saa,sen.sap,sen.sar,sen.sat,sen.sav)
@@ -276,10 +280,8 @@ def exp(row):  # called with command: pool.map(exp, dataset)
         pkl.dump(r_vals,f,protocol=pkl.HIGHEST_PROTOCOL)
 
     ##determine expected time to completion - trials left multiplied by average time per trial &time for current loop
-    dataset = list(np.flatnonzero(np.array(exp_data.index.get_level_values(0)) * np.array(exp_data1['run_req']))) #gets the ordinal index values for the trials the user wants to run that are not up to date
-    processes = min(multiprocessing.cpu_count(), len(dataset), maximum_processes)
-    total_batches = math.ceil(len(dataset) / processes )
-    current_batch = math.ceil( (dataset.index(row)+1) / processes ) #add 1 because python starts at 0
+    total_batches = math.ceil(len(dataset) / n_processes)
+    current_batch = math.ceil((dataset.index(row)+1) / n_processes) #add 1 because python starts at 0
     remaining_batches = total_batches - current_batch
     time_taken = time.time() - start_time1
     batch_time = time_taken / current_batch
@@ -294,16 +296,12 @@ def exp(row):  # called with command: pool.map(exp, dataset)
 #   using map it returns outputs in the order they go in ie in the order of the exp
 ##the result after the different processes are done is a list of dicts (because each iteration returns a dict and the multiprocess stuff returns a list)
 def main():
-    ## Define the dataset - trials that require at least the precalcs done (user wants it run and it is out of date)
-    dataset = list(np.flatnonzero(np.nan_to_num(np.array(exp_data.index.get_level_values(0))) * np.array(exp_data1['run_req']))) #gets the ordinal index values for the trials the user wants to run that are not up to date
-    ##prints out start status - number of trials to run, date and time exp.xl was last saved and output summary  
+    ##prints out start status - number of trials to run, date and time exp.xl was last saved and output summary
     print('Number of trials to run: ',len(dataset))
     print('Number of full solutions: ',sum((exp_data.index[row][1] == True) and (exp_data.index[row][0] == True) for row in range(len(exp_data))))
     print('Exp.xls last saved: ',datetime.fromtimestamp(round(os.path.getmtime("exp.xlsm"))))
     ##start multiprocessing
-    ### number of agents (processes) should be min of the num of cpus, number of trials or the user specified limit due to memory capacity
-    agents = min(multiprocessing.cpu_count(), len(dataset), maximum_processes)
-    with multiprocessing.Pool(processes=agents) as pool:
+    with multiprocessing.Pool(processes=n_processes) as pool:
         trials_successfully_run = pool.map(exp, dataset)
 
     return
