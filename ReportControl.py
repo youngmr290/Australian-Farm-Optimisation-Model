@@ -820,7 +820,7 @@ if __name__ == '__main__':
 
 
     ##print out the reports being run and number of trials
-    print("The following trials will be reported: \n", trials)
+    print('Number of trials to run: ', len(trials))
     print("The following reports will be run: \n", report_run.index[report_run.loc[:,'Run']])
 
     ##determine the processor for each report
