@@ -135,7 +135,7 @@ sav['nut_spread_n1'] = np.full(pinp.sheep_inp['i_nut_spread_n1'].shape, '-', dty
 sav['nut_spread_n3'] = np.full(pinp.sheep_inp['i_nut_spread_n3'].shape, '-', dtype=object)      #nut spread dams
 sav['drys_sold'] = '-'   #SA to force drys to be sold
 sav['drys_retained'] = '-'   #SA to force drys to be retained
-sav['r1_izg1'] = '-'   #SA to change the base feed option for dams
+sav['r1_izg1'] = np.full(pinp.sheep_inp['ia_r1_zig1'].shape, '-', dtype=object)   #SA to change the base feed option for dams
 
 ##stock parameters
 sav['srw_c2'] = np.full(uinp.parameters_inp['i_srw_c2'].shape, '-', dtype=object)  #SA value for srw of each c2 genotype.
