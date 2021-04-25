@@ -462,7 +462,7 @@ def generator(params,r_vals,ev,plots = False):
     ###sire
     date_shear_sida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['i_date_shear_sixg0'], 'sire', x_pos, swap=True
                                           ,left_pos2=i_pos,right_pos2=x_pos, condition=pinp.sheep['i_masksire_i'], axis=i_pos
-                                          )[...,0:1,:,:].astype('datetime64[D]') #slice x axis for only female
+                                          )[...,0:1,:,:].astype('datetime64[D]') #slice x axis for only male
     mask_shear_g0 = np.max(date_shear_sida0e0b0xyg0<=date_end_p[-1], axis=tuple(range(i_pos, 0))) #mask out shearing opps that occur after gen is done
     date_shear_sida0e0b0xyg0 = date_shear_sida0e0b0xyg0[mask_shear_g0]
     ###dam
@@ -6859,7 +6859,7 @@ def generator(params,r_vals,ev,plots = False):
     dvp_date_k3k5tviaxyg3 = params['dvp3'][:,:,:,:,0,0,...]
     index_tviaxyg3 = fun.f_expand(np.arange(len_t3),-7)
     mask_v_prior_shear_k3k5tviaxyg3 = np.logical_and(dvp_date_k3k5tviaxyg3 < shear_date_iaxyg3,
-                                                   np.logical_and(index_tviaxyg3 >= 1, index_xyg == 1)) #mask for females, in the sale t slice before the first shearing.
+                                                   np.logical_and(index_tviaxyg3 >= 1, gender_xyg[mask_x] == 1)) #mask for females, in the sale t slice before the first shearing.
     ###build array for the axes of the specified slices
     sale_offs_yearling_k3k5tviaxyg3 = np.full(mask_v_prior_shear_k3k5tviaxyg3.shape,np.inf)
     ###set the bound
