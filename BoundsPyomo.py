@@ -148,10 +148,13 @@ def boundarypyomo_local(params):
             except AttributeError:
                 pass
             def f_dam_mating_upperbound(model, k28, v):
-                return sum(model.v_dams[k28,t,v,a,n,w8,i,y,g1] for t in model.s_sale_dams
-                           for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
-                           for i in model.s_tol for y in model.s_gen_merit_dams for g1 in model.s_groups_dams
-                           ) <= dam_mating_upperbound[k28, v]
+                if dam_mating_upperbound[k28, v]==np.inf:
+                    return pe.Constraint.Skip
+                else:
+                    return sum(model.v_dams[k28,t,v,a,n,w8,i,y,g1] for t in model.s_sale_dams
+                               for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
+                               for i in model.s_tol for y in model.s_gen_merit_dams for g1 in model.s_groups_dams
+                               ) <= dam_mating_upperbound[k28, v]
             model.con_dam_mating_upperbound = pe.Constraint(model.s_k2_birth_dams, model.s_dvp_dams, rule=f_dam_mating_upperbound,
                                                     doc='max number of dams in a slice')
 
@@ -185,8 +188,11 @@ def boundarypyomo_local(params):
             except AttributeError:
                 pass
             def f_sale_yearling_upperbound_dams(model, k2, t, v, a, i, y, g1):
-                return sum(model.v_dams[k2,t,v,a,n,w8,i,y,g1] for n in model.s_nut_dams for w8 in model.s_lw_dams
-                           ) <= model.p_sale_dams_yearling_upperbound[k2,t,v,a,i,y,g1]
+                if model.p_sale_dams_yearling_upperbound[k2,t,v,a,i,y,g1]==np.inf:
+                    return pe.Constraint.Skip
+                else:
+                    return sum(model.v_dams[k2,t,v,a,n,w8,i,y,g1] for n in model.s_nut_dams for w8 in model.s_lw_dams
+                               ) <= model.p_sale_dams_yearling_upperbound[k2,t,v,a,i,y,g1]
             model.con_sale_yearling_upperbound_dams = pe.Constraint(model.s_k2_birth_dams, model.s_sale_dams, model.s_dvp_dams,
                                         model.s_wean_times, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, rule=f_sale_yearling_upperbound_dams,
                                                     doc='max number of yearling ewes sold for the dam activity')
