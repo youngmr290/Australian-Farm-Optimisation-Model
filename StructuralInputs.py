@@ -44,14 +44,17 @@ if inputs_from_pickle == False:
         stock_inp = fun.xl_all_named_ranges('Structural.xlsx','Stock',numpy=True)
         pkl.dump(stock_inp,f,protocol=pkl.HIGHEST_PROTOCOL)
 
+        ##sa inputs (these variables can have sensitivity applied from exp.xl
+        structuralsa_inp = fun.xl_all_named_ranges('Structural.xlsx','StructuralSA',numpy=True)
+        pkl.dump(stock_inp,f,protocol=pkl.HIGHEST_PROTOCOL)
 
 ##else the inputs are read in from the pickle file
 ##note this must be in the same order as above
 else:
     with open(filename,"rb") as f:
         general_inp = pkl.load(f)
-
         stock_inp = pkl.load(f)
+        sastructure_inp = pkl.load(f)
 
 print('- finished')
 
@@ -79,6 +82,7 @@ stock_inp['ia_k2_mlsb1'] = np.reshape(stock_inp['ia_k2_mlsb1'],mlsb1)
 ##copy inputs so there is an original (before SA) version
 general = general_inp.copy()
 stock = stock_inp.copy()
+sastructure = sastructure_inp.copy()
 
 ##############
 #phases      #

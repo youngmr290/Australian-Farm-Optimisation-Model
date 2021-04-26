@@ -612,6 +612,14 @@ def f_dynamic_slice(arr, axis, start, stop, axis2=None, start2=None, stop2=None)
         return arr
 
 
+def f_rev_update(trait_name, trait_value, rev_trait_value):
+    if sinp.structuralsa['rev_trait_inc'][trait_name]:
+        if sinp.structuralsa['rev_create']:
+            rev_trait_value[trait_name] = trait_value
+        else:
+            trait_value = rev_trait_value[trait_name]
+    return trait_value
+
 
 def f_history(history, new_value, days_in_period):
     '''
@@ -632,7 +640,6 @@ def f_history(history, new_value, days_in_period):
     t_history = np.nan_to_num(history) #convert nan to 0
     lagged = fun.f_weighted_average(t_history, weights=weights, axis = 0)
     return lagged, history
-
 
 
 def roll_slices(array, roll, roll_axis=0):
@@ -656,14 +663,6 @@ def roll_slices(array, roll, roll_axis=0):
     rows = rows - r
     result = a[rows, column_indices]
     return (result.reshape(array.shape))
-
-
-
-
-
-
-
-
 
 
 def f_potential_intake_cs(ci, cl, srw, relsize_start, rc_start, temp_lc_dams, temp_ave, temp_max, temp_min, rain_intake
@@ -698,11 +697,8 @@ def f_potential_intake_mu(srw):
     return np.maximum(0,pi)
 
 
-
-
 def f_ra_mu(cu0, foo, hf, zf=1):
     return 1 - cu0[0, ...] ** (hf * zf * foo)
-
 
 
 def f_intake(cr, pi, ra, rq, md_herb, feedsupply, intake_s, i_md_supp, legume, mp2=0):
@@ -782,7 +778,6 @@ def f_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb
     return kg
 
 
-
 def f_energy_cs(ck, cx, cm, lw_start, ffcfw_start, mr_age, mei, omer_history_start, days_period, md_solid, i_md_supp,
                 md_herb, lgf_eff, dlf_eff, i_steepness, density, foo, feedsupply, intake_f, dmd, mei_propn_milk=0, sam_kg=1, sam_mr=1):
     ##Efficiency for maintenance	
@@ -845,12 +840,14 @@ def f_foetus_cs(cp, cb1, kc, nfoet, relsize_start, rc_start, w_b_std_y, w_f_star
     # return w_f, nec_cum, mec, nec, w_b_exp_y, nw_f, guw
     return w_f, mec, nec, w_b_exp_y, nw_f, guw
 
+
 def f_birthweight_cs(cx, w_b_yatf, w_f_dams, period_is_birth):
     ##set BW = foetal weight at end of period (if born)	
     t_w_b = w_f_dams * cx[15, ...] * period_is_birth
     ##update birth weight if it is birth period
     w_b_yatf = fun.f_update(w_b_yatf, t_w_b, period_is_birth)
     return w_b_yatf
+
 
 def f_birthweight_mu(cu1, cb1, cx, ce, w_b, cf_w_b_dams, ffcfw_birth_dams, ebg_dams, days_period, gest_propn, period_between_joinscan, period_between_scanbirth, period_is_birth):
     ##Carry forward BW increment	
@@ -871,6 +868,7 @@ def f_weanweight_cs(w_w_yatf, ffcfw_start_yatf, ebg_yatf, days_period, period_is
     w_w_yatf = fun.f_update(w_w_yatf, t_w_w, period_is_wean)
     return w_w_yatf
 
+
 def f_weanweight_mu(cu1, cb1, cx, ce, nyatf, w_w, cf_w_w_dams, ffcfw_wean_dams, ebg_dams, foo, foo_ave_start, days_period, day_of_lactation
                     , period_between_joinscan, period_between_scanbirth, period_between_birthwean, period_is_wean):
     ##Calculate average FOO to end of this period
@@ -885,6 +883,7 @@ def f_weanweight_mu(cu1, cb1, cx, ce, nyatf, w_w, cf_w_w_dams, ffcfw_wean_dams, 
     ##Update w_w if it is weaning	
     w_w = fun.f_update(w_w, t_w_w, period_is_wean)
     return w_w, cf_w_w_dams, foo_ave_end
+
 
 #todo Consider combining into 1 function f_progenyltw
 def f_progenycfw_mu(cu1, cfw_adj, cf_cfw_dams, ffcfw_birth_dams, ffcfw_birth_std_dams, ebg_dams, days_period, gest_propn, period_between_joinscan, period_between_scanbirth, period_is_birth):
@@ -901,6 +900,7 @@ def f_progenycfw_mu(cu1, cfw_adj, cf_cfw_dams, ffcfw_birth_dams, ffcfw_birth_std
     cfw_adj = fun.f_update(cfw_adj, t_cfw_yatf, period_is_birth)
     return cfw_adj, cf_cfw_dams
 
+
 def f_progenyfd_mu(cu1, fd_adj, cf_fd_dams, ffcfw_birth_dams, ffcfw_birth_std_dams, ebg_dams, days_period, gest_propn, period_between_joinscan, period_between_scanbirth, period_is_birth):
     ##impact on progeny FD of the dam LW profile being different from the standard pattern
     ### LTW coefficients are multiplied by the difference in the LW profile from the standard profile. This only requires representing explicitly for LW at birth because the std LW change is 0. Std pattern is lambing in CS 3, so LW = normal weight
@@ -914,6 +914,7 @@ def f_progenyfd_mu(cu1, fd_adj, cf_fd_dams, ffcfw_birth_dams, ffcfw_birth_std_da
     ##Update FD if it is birth
     fd_adj = fun.f_update(fd_adj, t_fd_yatf, period_is_birth)
     return fd_adj, cf_fd_dams
+
 
 def f_milk(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_start, ffcfw75_exp_yatf, lb_start, ldr_start, age_yatf, mp_age_y,  mp2_age_y, i_x_pos, days_period_yatf, kl, lact_nut_effect):
     ##Max milk prodn based on dam rc birth
@@ -943,12 +944,9 @@ def f_milk(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_start,
     return mp2, mel, nel, ldr, lb
 
 
-
-
-
 def f_fibre(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_m2g, mei_g, mew_min_g, d_cfw_ave_g
             , sfd_a0e0b0xyg, wge_a0e0b0xyg, af_wool_g, dlf_wool_g,  kw_yg, days_period_g, sfw_ltwadj_g, sfd_ltwadj_g
-            , mec_g1=0, mel_g1=0, gest_propn_g1=0, lact_propn_g1=0, sam_pi=1):
+            , rev_trait_value, mec_g1=0, mel_g1=0, gest_propn_g1=0, lact_propn_g1=0, sam_pi=1):
     ##adjust wge, cfw_ave, mew_min & sfd for the LTW adjustments (CFW is a scalar and FD is an addition)
     wge_a0e0b0xyg = wge_a0e0b0xyg * sfw_ltwadj_g
     d_cfw_ave_g = d_cfw_ave_g * sfw_ltwadj_g
@@ -961,6 +959,8 @@ def f_fibre(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_m2g,
     mew_xs_g = np.maximum(mew_min_g * relsize_start_g, mei_g - (mec_g1 * gest_propn_g1 + mel_g1 * lact_propn_g1))
     ##Wool growth (protein weight-as shorn i.e. not DM) if there was no lag
     d_cfw_nolag_g = cw_g[8, ...] * wge_a0e0b0xyg * af_wool_g * dlf_wool_g * mew_xs_g
+    ##Process the CFW REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
+    d_cfw_nolag_g = f_rev_update('cfw', d_cfw_nolag_g, rev_trait_value)
     ##Wool growth (protein weight) with lag and updated history
     d_cfw_g, d_cfw_history_m2g = f_history(d_cfw_history_start_m2g, d_cfw_nolag_g, days_period_g)
     ##Net energy required for wool
@@ -969,12 +969,13 @@ def f_fibre(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_m2g,
     mew_g = new_g / kw_yg #can be negative because mem assumes 4g of wool is grown therefore if less energy is used mew essentially gives the energy back.
     ##Fibre diameter for the days growth
     d_fd_g = sfd_a0e0b0xyg * fun.f_divide(d_cfw_g, d_cfw_ave_g) ** cw_g[13, ...]  #func to stop div/0 error when d_cfw_ave=0 so does d_cfw (only have a 0 when day period = 0)
+    ##Process the FD REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
+    d_fd_g = f_rev_update('fd', d_fd_g, rev_trait_value)
     ##Surface Area
     area = cc_g[1, ...] * ffcfw_start_g ** (2/3)
     ##Daily fibre length growth
-    d_fl_g = 100 * fun.f_divide(d_cfw_g, cw_g[10, ...] * cw_g[11, ...] * area * np.pi * (0.5 * d_fd_g / 10**6) ** 2) #func to stop div/0 error when d_fd=0 so does d_cfw
+    d_fl_g = 100 * fun.f_divide(d_cfw_g, cw_g[10, ...] * cw_g[11, ...] * area * np.pi * (0.5 * d_fd_g / 10**6) ** 2) #func to stop div/0 error, when d_fd==0 so does d_cfw
     return d_cfw_g, d_fd_g, d_fl_g, d_cfw_history_m2g, mew_g, new_g
-
 
 
 def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, meme, mew, new, km, kg_supp, kg_fodd, mei_propn_supp
@@ -1112,7 +1113,8 @@ def convert_fec2fs(fec_input, fec_p6f, feedsupply_f, a_p6_pz):
     return fs
 
 
-def f_feedsupply(feedsupply_std_a1e1b1nwzida0e0b0xyg, paststd_foo_a1e1b1j0wzida0e0b0xyg, paststd_dmd_a1e1b1j0wzida0e0b0xyg, paststd_hf_a1e1b1j0wzida0e0b0xyg, pi):
+def f_feedsupply(feedsupply_std_a1e1b1nwzida0e0b0xyg, paststd_foo_a1e1b1j0wzida0e0b0xyg, paststd_dmd_a1e1b1j0wzida0e0b0xyg
+                 , paststd_hf_a1e1b1j0wzida0e0b0xyg, pi):
     ##level of pasture
     level_a1e1b1nwzida0e0b0xyg = np.trunc(np.minimum(2, feedsupply_std_a1e1b1nwzida0e0b0xyg)).astype('int') #note np.trunc rounds down to the nearest int (need to specify int type for the take along axis function below)
     ##next level up of pasture
@@ -1139,9 +1141,8 @@ def f_feedsupply(feedsupply_std_a1e1b1nwzida0e0b0xyg, paststd_foo_a1e1b1j0wzida0
     return foo_a1e1b1nwzida0e0b0xyg, hf_a1e1b1nwzida0e0b0xyg, dmd_a1e1b1nwzida0e0b0xyg, intake_s, herb_md
 
 
-
-
-def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, nyatf_b1any, period_is_mating, index_e1):
+def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, nyatf_b1any, period_is_mating, index_e1
+                    , rev_trait_value):
     '''CSIRO system: The general calculation is probability of conception greater than or equal to 1,2,3 foetuses
     Probability is calculated from a sigmoid relationship based on relative size * relative condition at birth
     The cumulative probability is scaled by a factor that varies with (litter size * latitude * day of the year)
@@ -1180,9 +1181,14 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         conception[tuple(slc)] = -np.sum(f_dynamic_slice(conception, sinp.stock['i_b1_pos'],1, None), axis = (uinp.parameters['i_b1_pos']), keepdims=True)
         temporary = (index_e1 == 0) * np.sum(conception, axis=sinp.stock['i_e1_pos'], keepdims=True) #sum across e axis into slice e[0]
         conception = fun.f_update(conception, temporary, (nyatf_b1any == 0)) #Put sum of e1 into slice e1[0] and don't overwrite the slices where nyatf != 0
+    ##Process the Conception & Litter size REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
+    conception[:, :, 1, ...] = f_rev_update('conception', conception[:, :, 1, ...], rev_trait_value)
+    conception[:, :, 2:, ...] = f_rev_update('litter_size', conception[:, :, 2:, ...], rev_trait_value)
     return conception
 
-def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, nfoet_b1any, nyatf_b1any, period_is_mating, index_e1):
+
+def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, nfoet_b1any, nyatf_b1any, period_is_mating
+                     , index_e1, rev_trait_value):
     ''' LTW system: The general calculation is scanning percentage is defined by a linear function of CS
     The standard value (CS 3) is determined by the genotype and relative size
     The slope varies with day of year
@@ -1225,9 +1231,10 @@ def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, nfoet_
         conception[tuple(slc)] = -np.sum(f_dynamic_slice(conception, sinp.stock['i_b1_pos'],1, None), axis = (uinp.parameters['i_b1_pos']), keepdims=True)
         temporary = (index_e1 == 0) * np.sum(conception, axis=sinp.stock['i_e1_pos'], keepdims=True)  # sum across e axis into slice e[0]
         conception = fun.f_update(conception, temporary, (nyatf_b1any == 0))  #Put sum of e1 into slice e1[0] and don't overwrite the slices where nyatf != 0
+    ##Process the Conception & Litter size REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
+    conception[:, :, 1, ...] = f_rev_update('conception', conception[:, :, 1, ...], rev_trait_value)
+    conception[:, :, 2:, ...] = f_rev_update('litter_size', conception[:, :, 2:, ...], rev_trait_value)
     return conception
-
-
 
 
 def f_sire_req(sire_propn_a1e1b1nwzida0e0b0xyg1g0, sire_periods_g0p8, i_sire_recovery, i_startyear, date_end_p, period_is_prejoin_a1e1b1nwzida0e0b0xyg1):
@@ -1254,12 +1261,14 @@ def f_sire_req(sire_propn_a1e1b1nwzida0e0b0xyg1g0, sire_periods_g0p8, i_sire_rec
             a. mortality due to preg toxemia in the last 6 weeks of pregnancy. This occurs for multiple bearing dams and is affected by rate of LW loss
             b. mortality due to dystocia. It is assumed that ewe death is associated with a fixed proportion of the lambs deaths from dystocia
             '''
-def f_mortality_base_cs(cd, cg, rc_start, ebg_start, d_nw_max, days_period, sap_mortalityb=0):
+def f_mortality_base_cs(cd, cg, rc_start, ebg_start, d_nw_max, days_period, rev_trait_value, sap_mortalityb):
     ## a minimum level of mortality per day that is increased if RC is below a threshold and LWG is below a threshold
     ### i.e. increased mortality only for thin animals that are growing slowly (< 20% of normal growth rate)
-    mortality = (cd[1, ...] + cd[2, ...] * np.maximum(0, cd[3, ...] - rc_start) * ((cd[16, ...] * d_nw_max) > (ebg_start * cg[18, ...]))) * days_period #mul by days period to convert from mort per day to per period
-    mortality = fun.f_sa(mortality, sap_mortalityb, sa_type = 1, value_min = 0)
-    return mortality
+    mortalityb = (cd[1, ...] + cd[2, ...] * np.maximum(0, cd[3, ...] - rc_start) * ((cd[16, ...] * d_nw_max) > (ebg_start * cg[18, ...]))) * days_period #mul by days period to convert from mort per day to per period
+    mortalityb = fun.f_sa(mortalityb, sap_mortalityb, sa_type = 1, value_min = 0)
+    ##Process the Mortality REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
+    mortalityb = f_rev_update('mortality', mortalityb, rev_trait_value)
+    return mortalityb
 
 
 def f_mortality_weaner_cs(cd, cg, age, ebg_start, d_nw_max,days_period):
@@ -1279,7 +1288,8 @@ def f_mortality_dam_cs(cb1, cg, nw_start, ebg, days_period, period_between_birth
     return mort
 
     
-def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, w_b_exp_y, period_is_birth, chill_index_m1, nfoet_b1, sap_mortalityp):
+def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, w_b_exp_y, period_is_birth, chill_index_m1, nfoet_b1
+                           , rev_trait_value, sap_mortalityp):
     ##Progeny losses due to large progeny (dystocia)
     mortalityd_yatf = f_sig(fun.f_divide(w_b, w_b_exp_y) * np.maximum(1, rc_birth), cb1[6, ...], cb1[7, ...]) * period_is_birth
     ##add sensitivity
@@ -1294,6 +1304,8 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, w_b_exp_y, period_is_birth, c
     mortalityx = np.average(np.exp(xo) / (1 + np.exp(xo)) ,axis = -1) * period_is_birth #axis -1 is m1
     ##Apply SA to progeny mortality due to exposure
     mortalityx = fun.f_sa(mortalityx, sap_mortalityp, sa_type = 1, value_min = 0)
+    ##Process the Ewe Rearing Ability REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
+    mortalityx = f_rev_update('era', mortalityx, rev_trait_value)
     return mortalityx, mortalityd_yatf, mortalityd_dams
 
 ####################
@@ -1307,14 +1319,16 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, w_b_exp_y, period_is_birth, c
             is the same for single and twin bearing ewes.
         4. Weaner mortality is included in the base mortality through ebg being compared with normal growth rate.
         '''
-def f_mortality_base_mu(cd, cg, rc_start, ebg_start, d_nw_max, days_period, sap_mortalityb=0):
+def f_mortality_base_mu(cd, cg, rc_start, ebg_start, d_nw_max, days_period, rev_trait_value, sap_mortalityb):
     ## a minimum level of mortality per day that is increased if RC is below a threshold and LWG is below a threshold
     ### the mortality rate increases in a quadratic function for lower RC & greater disparity between EBG and normal gain
     rc_mortality_scalar = (np.minimum(0, rc_start - cd[24, ...]) / (cd[23, ...] - cd[24, ...]))**2
     ebg_mortality_scalar = (np.minimum(0, ebg_start * cg[18, ...] - cd[26, ...] - d_nw_max) / (cd[25, ...] - cd[26, ...]))**2
-    mortality = (cd[1, ...] + cd[22, ...] * rc_mortality_scalar * ebg_mortality_scalar) * days_period  #mul by days period to convert from mort per day to per period
-    mortality = fun.f_sa(mortality, sap_mortalityb, sa_type = 1, value_min = 0)
-    return mortality
+    mortalityb = (cd[1, ...] + cd[22, ...] * rc_mortality_scalar * ebg_mortality_scalar) * days_period  #mul by days period to convert from mort per day to per period
+    mortalityb = fun.f_sa(mortalityb, sap_mortalityb, sa_type = 1, value_min = 0)
+    ##Process the Mortality REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
+    mortalityb = f_rev_update('mortality', mortalityb, rev_trait_value)
+    return mortalityb
 
 
 def f_mortality_weaner_mu():
@@ -1335,7 +1349,7 @@ def f_mortality_dam_mu(cu2, cs_birth_dams, period_is_birth, nfoet_b1, sap_mortal
     return mortalitye_mu
 
     
-def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, foo, chill_index_m1, period_is_birth, sap_mortalityp):
+def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, foo, chill_index_m1, period_is_birth, rev_trait_value, sap_mortalityx):
     ##transformed survival for actual & standard
     t_survival = cu2[8, 0, ..., na] * w_b[..., na] + cu2[8, 1, ..., na] * w_b[..., na] ** 2 + cu2[8, 2, ..., na] * chill_index_m1  \
                       + cu2[8, 3, ..., na] * foo[..., na] + cu2[8, 4, ..., na] * foo[..., na] ** 2 + cu2[8, 5, ..., na]   \
@@ -1344,17 +1358,16 @@ def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, foo, chill_index_m1, 
                       + cu2[8, 3, ..., na] * foo[..., na] + cu2[8, 4, ..., na] * foo[..., na] ** 2 + cu2[8, 5, ..., na]   \
                       + cb1[8, ..., na] + cx[8, ..., na] + cx[9, ..., na] * chill_index_m1 + ce[8, ..., na]
     ##back transformed & converted to mortality
-    mortality = (1 - np.average(1 / (1 + np.exp(-t_survival)),axis = -1)) * period_is_birth #m1 axis averaged
-    mortality_std = (1 - np.average(1 / (1 + np.exp(-t_survival_std)),axis = -1)) * period_is_birth #m1 axis averaged
+    mortalityx = (1 - np.average(1 / (1 + np.exp(-t_survival)),axis = -1)) * period_is_birth #m1 axis averaged
+    mortalityx_std = (1 - np.average(1 / (1 + np.exp(-t_survival_std)),axis = -1)) * period_is_birth #m1 axis averaged
     ##Scale progeny survival using paddock level scalars
-    mortality = mortality_std + (mortality - mortality_std) * cb1[9, ...]
+    mortalityx = mortalityx_std + (mortalityx - mortalityx_std) * cb1[9, ...]
     ##Apply SA to progeny mortality at birth (LTW)
-    mortality = fun.f_sa(mortality, sap_mortalityp, sa_type = 1, value_min = 0)
-    return mortality
+    mortalityx = fun.f_sa(mortalityx, sap_mortalityx, sa_type = 1, value_min = 0)
+    ##Process the Ewe Rearing Ability REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
+    mortalityx = f_rev_update('era', mortalityx, rev_trait_value)
+    return mortalityx
         
-
-
-
 
 def f_comb(n,k):
     # ##Create an array of factorial values up to n
@@ -1368,8 +1381,6 @@ def f_comb(n,k):
     ##Combination
     combinations = factorial[n]/(factorial[k]*factorial[n-k])
     return combinations
-
-
 
 
 def f_period_start_prod(numbers, var, prejoin_tup, season_tup, period_is_startseason, mask_min_lw_z, period_is_prejoin=0, group=None):
@@ -1388,6 +1399,7 @@ def f_period_start_prod(numbers, var, prejoin_tup, season_tup, period_is_startse
         ##Set values where it is beginning of FVP
         var_start = fun.f_update(var_start, temporary, period_is_prejoin)
     return var_start
+
 
 def f_season_wa(numbers, var, season, mask_min_lw_z, period_is_startseason):
     '''
@@ -1408,6 +1420,7 @@ def f_season_wa(numbers, var, season, mask_min_lw_z, period_is_startseason):
     ###Set values where it is beginning of FVP
     var = fun.f_update(var,temporary,period_is_startseason)
     return var
+
 
 def f_condensed(numbers, var, lw_idx, prejoin_tup, season_tup, i_n_len, i_w_len, i_n_fvp_period, numbers_start_condense, period_is_condense):
     """
