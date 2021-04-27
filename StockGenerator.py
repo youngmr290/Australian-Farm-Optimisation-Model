@@ -746,13 +746,17 @@ def generator(params,r_vals,ev,plots = False):
     # Feed variation period calcs dams#
     ###################################
     ##fvp/dvp types
-    season_vtype1 = sinp.structuralsa['i_fvp_type1'][0]
-    prejoin_vtype1 = sinp.structuralsa['i_fvp_type1'][1]
+    fvp_type1 = np.cumsum(fvp_mask_dams)-1
+    if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1:
+        season_vtype1 = -1 #season vtype must be -1 if steady state because we dont want to distribute.
+    else:
+        season_vtype1 = fvp_type1[3]
+    prejoin_vtype1 = fvp_type1[0]
     condense_vtype1 = prejoin_vtype1 #currently for dams condensing must occur at prejoining, most of the code is flexible to handle different timing except the lw_distribution section.
-    scan_vtype1 = sinp.structuralsa['i_fvp_type1'][2]
-    birth_vtype1 = sinp.structuralsa['i_fvp_type1'][3]
-    wean_ftype1 = sinp.structuralsa['i_fvp_type1'][4]
-    other_ftype1 = sinp.structuralsa['i_fvp_type1'][5]
+    scan_vtype1 = fvp_type1[1]
+    birth_vtype1 = fvp_type1[2]
+    wean_ftype1 = fvp_type1[4]
+    other_ftype1 = fvp_type1[5]
 
     ##beginning - first day of generator
     fvp_begin_start_ba1e1b1nwzida0e0b0xyg1 = date_start_pa1e1b1nwzida0e0b0xyg[0:1]
@@ -784,21 +788,24 @@ def generator(params,r_vals,ev,plots = False):
     fvp_other_start_ya1e1b1nwzida0e0b0xyg = date_start_p[idx_ya1e1b1nwzida0e0b0xyg]
 
     ##create shape which has max size of each fvp array. Exclude the first dimension because that can be different sizes because only the other dimensions need to be the same for stacking
-    shape = np.maximum.reduce([seasonstart_ya1e1b1nwzida0e0b0xyg.shape[1:],fvp_prejoin_start_oa1e1b1nwzida0e0b0xyg1.shape[1:],
-                               fvp_scan_start_oa1e1b1nwzida0e0b0xyg1.shape[1:], fvp_birth_start_oa1e1b1nwzida0e0b0xyg1.shape[1:],
-                               fvp_begin_start_ba1e1b1nwzida0e0b0xyg1.shape[1:], fvp_wean_start_oa1e1b1nwzida0e0b0xyg1.shape[1:],
+    shape = np.maximum.reduce([fvp_prejoin_start_oa1e1b1nwzida0e0b0xyg1.shape[1:], fvp_scan_start_oa1e1b1nwzida0e0b0xyg1.shape[1:],
+                               fvp_birth_start_oa1e1b1nwzida0e0b0xyg1.shape[1:], fvp_begin_start_ba1e1b1nwzida0e0b0xyg1.shape[1:],
+                               seasonstart_ya1e1b1nwzida0e0b0xyg.shape[1:], fvp_wean_start_oa1e1b1nwzida0e0b0xyg1.shape[1:],
                                fvp_other_start_ya1e1b1nwzida0e0b0xyg.shape[1:]]) #create shape which has the max size, this is used for o array
 
     ##broadcast the start arrays so that they are all the same size (except axis 0 can be different size)
-    fvp_seasonstart_ya1e1b1nwzida0e0b0xyg = np.broadcast_to(seasonstart_ya1e1b1nwzida0e0b0xyg,(seasonstart_ya1e1b1nwzida0e0b0xyg.shape[0],)+tuple(shape))
     fvp_prejoin_start_oa1e1b1nwzida0e0b0xyg1 = np.broadcast_to(fvp_prejoin_start_oa1e1b1nwzida0e0b0xyg1,(fvp_prejoin_start_oa1e1b1nwzida0e0b0xyg1.shape[0],)+tuple(shape))
     fvp_scan_start_oa1e1b1nwzida0e0b0xyg1 = np.broadcast_to(fvp_scan_start_oa1e1b1nwzida0e0b0xyg1,(fvp_scan_start_oa1e1b1nwzida0e0b0xyg1.shape[0],)+tuple(shape))
     fvp_birth_start_oa1e1b1nwzida0e0b0xyg1 = np.broadcast_to(fvp_birth_start_oa1e1b1nwzida0e0b0xyg1,(fvp_birth_start_oa1e1b1nwzida0e0b0xyg1.shape[0],)+tuple(shape))
+    fvp_seasonstart_ya1e1b1nwzida0e0b0xyg = np.broadcast_to(seasonstart_ya1e1b1nwzida0e0b0xyg,(seasonstart_ya1e1b1nwzida0e0b0xyg.shape[0],)+tuple(shape))
     fvp_wean_start_oa1e1b1nwzida0e0b0xyg1 = np.broadcast_to(fvp_wean_start_oa1e1b1nwzida0e0b0xyg1,(fvp_wean_start_oa1e1b1nwzida0e0b0xyg1.shape[0],)+tuple(shape))
     fvp_other_start_ya1e1b1nwzida0e0b0xyg = np.broadcast_to(fvp_other_start_ya1e1b1nwzida0e0b0xyg,(fvp_other_start_ya1e1b1nwzida0e0b0xyg.shape[0],)+tuple(shape))
     fvp_begin_start_ba1e1b1nwzida0e0b0xyg1 = np.broadcast_to(fvp_begin_start_ba1e1b1nwzida0e0b0xyg1,(fvp_begin_start_ba1e1b1nwzida0e0b0xyg1.shape[0],)+tuple(shape))
 
     ##create fvp type arrays. these are the same shape as the start arrays and are filled with the number corresponding to the fvp number
+    fvp_prejoin_type_va1e1b1nwzida0e0b0xyg1 = np.full(fvp_prejoin_start_oa1e1b1nwzida0e0b0xyg1.shape,prejoin_vtype1)
+    fvp_scan_type_va1e1b1nwzida0e0b0xyg1 = np.full(fvp_scan_start_oa1e1b1nwzida0e0b0xyg1.shape,scan_vtype1)
+    fvp_birth_type_va1e1b1nwzida0e0b0xyg1 = np.full(fvp_birth_start_oa1e1b1nwzida0e0b0xyg1.shape,birth_vtype1)
     fvp_season_type_va1e1b1nwzida0e0b0xyg1 = np.full(fvp_seasonstart_ya1e1b1nwzida0e0b0xyg.shape,season_vtype1)
     fvp_prejoin_type_va1e1b1nwzida0e0b0xyg1 = np.full(fvp_prejoin_start_oa1e1b1nwzida0e0b0xyg1.shape,prejoin_vtype1)
     fvp_scan_type_va1e1b1nwzida0e0b0xyg1 = np.full(fvp_scan_start_oa1e1b1nwzida0e0b0xyg1.shape,scan_vtype1)
@@ -807,13 +814,13 @@ def generator(params,r_vals,ev,plots = False):
     fvp_other_type_va1e1b1nwzida0e0b0xyg1 = np.full(fvp_other_start_ya1e1b1nwzida0e0b0xyg.shape,other_ftype1)
     fvp_begin_type_va1e1b1nwzida0e0b0xyg1 = np.full(fvp_begin_start_ba1e1b1nwzida0e0b0xyg1.shape,condense_vtype1)
     ##stack & mask which dvps are included - this must be in the order as per the input mask
-    fvp_date_all_f1 = np.array([fvp_begin_start_ba1e1b1nwzida0e0b0xyg1,fvp_seasonstart_ya1e1b1nwzida0e0b0xyg,
-                               fvp_prejoin_start_oa1e1b1nwzida0e0b0xyg1, fvp_scan_start_oa1e1b1nwzida0e0b0xyg1,
-                               fvp_birth_start_oa1e1b1nwzida0e0b0xyg1, fvp_wean_start_oa1e1b1nwzida0e0b0xyg1,
+    fvp_date_all_f1 = np.array([fvp_begin_start_ba1e1b1nwzida0e0b0xyg1, fvp_prejoin_start_oa1e1b1nwzida0e0b0xyg1,
+                                fvp_scan_start_oa1e1b1nwzida0e0b0xyg1, fvp_birth_start_oa1e1b1nwzida0e0b0xyg1,
+                                fvp_seasonstart_ya1e1b1nwzida0e0b0xyg, fvp_wean_start_oa1e1b1nwzida0e0b0xyg1,
                                fvp_other_start_ya1e1b1nwzida0e0b0xyg], dtype=object)
-    fvp_type_all_f1 = np.array([fvp_begin_type_va1e1b1nwzida0e0b0xyg1,fvp_season_type_va1e1b1nwzida0e0b0xyg1,
-                               fvp_prejoin_type_va1e1b1nwzida0e0b0xyg1, fvp_scan_type_va1e1b1nwzida0e0b0xyg1,
-                               fvp_birth_type_va1e1b1nwzida0e0b0xyg1, fvp_wean_type_va1e1b1nwzida0e0b0xyg1,
+    fvp_type_all_f1 = np.array([fvp_begin_type_va1e1b1nwzida0e0b0xyg1, fvp_prejoin_type_va1e1b1nwzida0e0b0xyg1,
+                                fvp_scan_type_va1e1b1nwzida0e0b0xyg1, fvp_birth_type_va1e1b1nwzida0e0b0xyg1,
+                                fvp_season_type_va1e1b1nwzida0e0b0xyg1, fvp_wean_type_va1e1b1nwzida0e0b0xyg1,
                                fvp_other_type_va1e1b1nwzida0e0b0xyg1], dtype=object)
     fvp1_inc = np.concatenate([np.array([True]), fvp_mask_dams]) #True at start is to count for the period from the start of the sim (this is not included in fvp mask because it is not a real fvp as it doesnt occur each year)
     fvp_date_inc_f1 = fvp_date_all_f1[fvp1_inc]
