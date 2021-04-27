@@ -616,7 +616,7 @@ def f_rev_update(trait_name, trait_value, rev_trait_value):
     trait_idx = sinp.structuralsa['rev_trait_name'].tolist().index(trait_name)
     if sinp.structuralsa['rev_trait_inc'][trait_idx]:
         if sinp.structuralsa['rev_create']:
-            rev_trait_value[trait_name] = trait_value.copy()
+            rev_trait_value[trait_name] = trait_value.copy() #have to copy so that traits (eg mort) that are added to using += do not also update the rev value
         else:
             trait_value = rev_trait_value[trait_name]
     return trait_value
