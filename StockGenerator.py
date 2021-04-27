@@ -3198,12 +3198,10 @@ def generator(params,r_vals,ev,plots = False):
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)   # equation used is based on the yatf system
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                    temp0, temp1, temp2 = sfun.f_mortality_progeny_cs(cd_yatf, cb1_yatf, w_b_yatf, rc_start_dams, w_b_exp_y_dams
-                                                                      , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]
-                                                                      , chill_index_pa1e1b1nwzida0e0b0xygm1[p]
-                                                                      , nfoet_b1nwzida0e0b0xyg
-                                                                      , rev_trait_values['yatf'][p]
-                                                                      , sen.sap['mortalityp'])
+                    temp0, temp1, temp2 = sfun.f_mortality_progeny_cs(cd_yatf, cb1_yatf, w_b_yatf, rc_start_dams
+                                    , w_b_exp_y_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]
+                                    , chill_index_pa1e1b1nwzida0e0b0xygm1[p], nfoet_b1nwzida0e0b0xyg
+                                    , rev_trait_values['yatf'][p], sen.sap['mortalityp'])
                     if eqn_used:
                         mortality_birth_yatf = temp1 #mortalityd, assign first because it has x axis
                         mortality_birth_yatf += temp0 #mortalityx

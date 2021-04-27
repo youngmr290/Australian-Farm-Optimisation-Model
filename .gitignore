@@ -10,7 +10,7 @@ flowcharts
 /log
 /.spyproject
 /flowcharts
-/Results Archive
+/Archive*
 /*.dia
 /*.pkl
 /*.npy
@@ -21,3 +21,4 @@ flowcharts
 /pkl
 /*.json
 /*.csv
+/*.jpg

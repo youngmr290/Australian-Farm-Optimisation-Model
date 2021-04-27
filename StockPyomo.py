@@ -689,8 +689,8 @@ def stockpyomo_local(params):
     start_con_offR=time.time()
     model.con_offR = pe.Constraint(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_dvp_offs, model.s_wean_times, model.s_tol, model.s_gender,
                                    model.s_gen_merit_dams, model.s_groups_offs, model.s_lw_offs, rule=offR, doc='transfer off to off from last dvp to current dvp.')
-    end_start_con_offR=time.time()
-    # print('con_offR: ',end_start_con_offR - start_con_offR)
+    end_con_offR=time.time()
+    # print('con_offR: ',end_con_offR - start_con_offR)
 
     try:
         model.del_component(model.con_damR_index)
