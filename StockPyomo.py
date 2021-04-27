@@ -128,7 +128,6 @@ def stockpyomo_local(params):
     #####################
     ##  setup variables # #variables that use dynamic sets must be defined each iteration of exp
     #####################
-    print('set up variables')
     ##animals
     try:
         model.del_component(model.v_sire)
@@ -177,7 +176,6 @@ def stockpyomo_local(params):
     ######################
     ### setup parameters #
     ######################
-    print('set up params')
     param_start = time.time()
 
     ##used to index the season key in params
@@ -625,7 +623,7 @@ def stockpyomo_local(params):
 
 
     end_params = time.time()
-    print('params time: ',end_params-param_start)
+    # print('params time: ',end_params-param_start)
 
     ########################
     ### set up constraints #
@@ -646,8 +644,6 @@ def stockpyomo_local(params):
     - using if statements to save summing 0 values is faster but it still takes time to evaluate the if therefore it saves time to select the minimum number of if statements
     - constraints can only be skipped on based on the req param. if the provide side is 0 and you skip the constraint then that would mean there would be no restriction for the require variable.
     '''
-
-    print('set up constraints')
 
 
     ##turn sets into list so they can be indexed (required for advanced method to save time)
