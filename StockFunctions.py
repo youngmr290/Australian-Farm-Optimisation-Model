@@ -1440,6 +1440,7 @@ def f_condensed(numbers, var, lw_idx, prejoin_tup, season_tup, i_n_len, i_w_len,
     :return:
     """
     if np.any(period_is_condense):
+        var = np.broadcast_to(var,lw_idx.shape)
         temporary = var.copy()  #this is done to ensure that temp has the same size as var.
         ##test if array has diagonal and calc temp variables as if start of dvp - if there is not a diagonal use the alternative system for reallocating at the end of a DVP
         if i_n_len >= i_w_len:

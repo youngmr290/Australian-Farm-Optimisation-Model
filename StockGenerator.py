@@ -1864,22 +1864,24 @@ def generator(params,r_vals,ev,plots = False):
         w_f_start_dams = np.array([0.0])
         nw_f_start_dams = np.array([0.0])
         nec_cum_start_dams = np.array([0.0])
-        cf_w_b_start_dams = np.array([0.0])
         cfw_ltwadj_start_dams = np.array([0.0])
-        cf_cfwltw_start_dams = np.array([0.0])
         fd_ltwadj_start_dams = np.array([0.0])
+        cf_cfwltw_start_dams = np.array([0.0])
+        cf_cfwltw_dams = np.array([0.0]) #this is required as default when mu fleece function is not being called (it is required in the start production function)
         cf_fdltw_start_dams = np.array([0.0])
+        cf_fdltw_dams = np.array([0.0]) #this is required as default when mu fleece function is not being called (it is required in the start production function)
+        cf_w_b_start_dams = np.array([0.0])
+        cf_w_b_dams = np.array([0.0]) #this is required as default when mu birth weight function is not being called (it is required in the start production function)
         cf_w_w_start_dams = np.array([0.0])
-        cf_w_w_dams = 0 #this is required as default when mu wean function is not being called (it is required in the start production function)
+        cf_w_w_dams = np.array([0.0]) #this is required as default when mu wean function is not being called (it is required in the start production function)
         cf_conception_start_dams = np.array([0.0])
+        cf_conception_dams = np.array([0.0]) #this is required as default when mu concep function is not being called (it is required in the start production function)
         conception_dams = 0.0 #initialise so it can be added to (conception += conception)
         guw_start_dams = np.array([0.0])
         rc_birth_start_dams = np.array([1.0])
         ffcfw_start_dams = fun.f_expand(lw_initial_wzida0e0b0xyg1 - cfw_initial_wzida0e0b0xyg1 / cw_dams[3, ...], p_pos, right_pos=w_pos) #add axis w to a1 because e and b axis are sliced before they are added via calculation
         ffcfw_max_start_dams = ffcfw_start_dams
         ffcfw_mating_dams = 0.0
-        # ffcfw_birth_dams = 0.0
-        # ffcfw_weaning_dams = 0.0
         omer_history_start_m3g1[...] = np.nan
         d_cfw_history_start_m2g1[...] = np.nan
         cfw_start_dams = cfw_initial_wzida0e0b0xyg1
@@ -2634,7 +2636,6 @@ def generator(params,r_vals,ev,plots = False):
                     temp0 = sfun.f_birthweight_cs(cx_yatf[:,mask_x,...], w_b_start_yatf, w_f_start_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]) #pass in wf_start because animal is born on first day of period
                     if eqn_used:
                         w_b_yatf = temp0 * (nfoet_b1nwzida0e0b0xyg>0) #so that only b slices with yatf have a weight
-                        # cf_w_b_dams = 0 #this is only returned by mu function but variable needs to be defined so it doesnt give error in start function - default is 0
                     if eqn_compare:
                         r_compare_q0q1q2pyatf[eqn_system, eqn_group, 0, p, ...] = temp0
             eqn_system = 1 # MU = 1
@@ -2662,8 +2663,6 @@ def generator(params,r_vals,ev,plots = False):
                 #     if eqn_used:
                 #         cfw_ltwadj_dams = temp0
                 #         fdltw = temp1
-                #         cf_cfwltw_dams = 0 #this is only returned by mu function but variable needs to be defined so it doesnt give error in start function - default is 0
-                #         cf_fdltw_dams = 0  #this is only returned by mu function but variable needs to be defined so it doesnt give error in start function - default is 0
                 #     if eqn_compare:
                 #         r_compare_q0q1q2pyatf[eqn_system, eqn_group, 0, p, ...] = temp0
                 #         r_compare_q0q1q2pyatf[eqn_system, eqn_group, 1, p, ...] = temp1
@@ -2899,7 +2898,6 @@ def generator(params,r_vals,ev,plots = False):
                                                  , period_is_wean_pa1e1b1nwzida0e0b0xyg1[p])  #it is okay to use ebg of current period because it is mul by lact propn
                     if eqn_used:
                         w_w_yatf = temp0
-                    #    cf_w_w_dams = 0 #this is only returned by mu function but variable needs to be defined so it doesnt give error in start function - default is 0
                     if eqn_compare:
                         r_compare_q0q1q2pyatf[eqn_system, eqn_group, 0, p, ...] = temp0
             eqn_system = 1 # Mu = 1   #it is okay to use ebg of current period because it is mul by lact propn
@@ -2975,19 +2973,19 @@ def generator(params,r_vals,ev,plots = False):
                                                  , index_e1b1nwzida0e0b0xyg, sinp.structuralsa['rev_trait_value']['dams'][p])
                     if eqn_used:
                         conception_dams =  temp0
-                        # cf_conception_dams = 0 #default set to 0 because required in start production function (only used in lmat conception function)
                     if eqn_compare:
                         r_compare_q0q1q2pdams[eqn_system, eqn_group, 0, p, ...] = temp0
             eqn_system = 1 # MU LTW = 1
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    #todo this need to be replaced by LMAT formula
+                    #todo this need to be replaced by LMAT formula, if cf_conception_start is used in the LMAT formula you will need to move cf_conception_dams = temp0 out of the if used statement.
                     temp0 = sfun.f_conception_ltw(cf_dams, cu0_dams, relsize_mating_dams, cs_mating_dams, scan_std_yg1, doy_pa1e1b1nwzida0e0b0xyg[p]
                                                   , nfoet_b1nwzida0e0b0xyg, nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]
                                                   , index_e1b1nwzida0e0b0xyg, sinp.structuralsa['rev_trait_value']['dams'][p])
                     cf_conception_dams = temp0*0  #default set to 0 because required in start production function (only used in lmat conception function)
                     if eqn_used:
+                        cf_conception_dams = temp0*0  #default set to 0 because required in start production function (only used in lmat conception function)
                         conception_dams = temp0
                     ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                     if eqn_compare:
