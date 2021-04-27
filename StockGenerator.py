@@ -134,8 +134,8 @@ def generator(params,r_vals,ev,plots = False):
     mask_o_dams = np.max(date_born1st_oa1e1b1nwzida0e0b0xyg2<=date_end_p[-1], axis=tuple(range(p_pos+1, 0))) #compare each birth opp with the end date of the sim and make the mask - the mask is of the longest axis (ie to handle situations where say bbb and bbm have birth at different times so one has 6 opp and the other has 5 opp)
     mask_d_offs = np.max(date_born1st_oa1e1b1nwzida0e0b0xyg2<=date_end_p[-1], axis=tuple(range(p_pos+1, 0))) #compare each birth opp with the end date of the sim and make the mask - the mask is of the longest axis (ie to handle situations where say bbb and bbm have birth at different times so one has 6 opp and the other has 5 opp)
     mask_x = pinp.sheep['i_gender_propn_x']>0
-    fvp_mask_dams = sinp.stock['i_fvp_mask_dams']
-    fvp_mask_offs = sinp.stock['i_fvp_mask_offs']
+    fvp_mask_dams = sinp.structuralsa['i_fvp_mask_dams']
+    fvp_mask_offs = sinp.structuralsa['i_fvp_mask_offs']
 
     ###################################
     ### axis len                      #
@@ -191,20 +191,20 @@ def generator(params,r_vals,ev,plots = False):
     #dvp/fvp related inputs #
     ########################
     ##sire
-    n_fs_g0 = sinp.stock['i_n0_len']
-    n_fvp_periods_sire = sinp.stock['i_n_fvp_period0']
+    n_fs_g0 = sinp.structuralsa['i_n0_len']
+    n_fvp_periods_sire = sinp.structuralsa['i_n_fvp_period0']
 
     ##dams & yatf
-    w_start_len1 = sinp.stock['i_w_start_len1']
-    n_fs_dams = sinp.stock['i_n1_len']
+    w_start_len1 = sinp.structuralsa['i_w_start_len1']
+    n_fs_dams = sinp.structuralsa['i_n1_len']
     n_fvp_periods_dams = np.count_nonzero(fvp_mask_dams)
     len_w1 = w_start_len1 * n_fs_dams ** n_fvp_periods_dams
     n_lw1_total = w_start_len1 * n_fs_dams ** (len(fvp_mask_dams))  # total lw if all dvps included
     len_w2 = len_w1 #yatf and dams are same
 
     ##offspring
-    w_start_len3 = sinp.stock['i_w_start_len3']
-    n_fs_offs = sinp.stock['i_n3_len']
+    w_start_len3 = sinp.structuralsa['i_w_start_len3']
+    n_fs_offs = sinp.structuralsa['i_n3_len']
     n_fvp_periods_offs= np.count_nonzero(fvp_mask_offs)
     len_w3 = w_start_len3 * n_fs_offs ** n_fvp_periods_offs
     n_lw3_total = w_start_len3 * n_fs_offs ** (len(fvp_mask_offs))  # total lw if all dvps included
@@ -212,8 +212,8 @@ def generator(params,r_vals,ev,plots = False):
     ########################
     #ev masks and len      #
     ########################
-    confinement_inc = np.maximum(np.max(pinp.sheep['i_nut_spread_n1'][0:n_fs_dams]),
-                                 np.max(pinp.sheep['i_nut_spread_n3'][0:n_fs_offs])) > 3 #if fs>3 then need to include confinement feeding
+    confinement_inc = np.maximum(np.max(sinp.structuralsa['i_nut_spread_n1'][0:n_fs_dams]),
+                                 np.max(sinp.structuralsa['i_nut_spread_n3'][0:n_fs_offs])) > 3 #if fs>3 then need to include confinement feeding
     ev_is_not_confinement_f = sinp.general['ev_is_not_confinement']
     ev_mask_f = np.logical_or(ev_is_not_confinement_f, confinement_inc)
     ev_is_not_confinement_f = ev_is_not_confinement_f[ev_mask_f]
@@ -642,8 +642,8 @@ def generator(params,r_vals,ev,plots = False):
     density_p6a1e1b1nwzida0e0b0xyg = pinp.f_seasonal_inp(density_p6a1e1b1nwzida0e0b0xyg,numpy=True,axis=z_pos).astype(
         int)
     ##nutrition adjustment for expected stocking density
-    density_nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_density_n1'][0:n_fs_dams],n_pos) # cut to the correct length based on number of nutrition options (i_len_n structural input)
-    density_nwzida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_density_n3'][0:n_fs_offs],n_pos) # cut to the correct length based on number of nutrition options (i_len_n structural input)
+    density_nwzida0e0b0xyg1 = fun.f_expand(sinp.structuralsa['i_density_n1'][0:n_fs_dams],n_pos) # cut to the correct length based on number of nutrition options (i_len_n structural input)
+    density_nwzida0e0b0xyg3 = fun.f_expand(sinp.structuralsa['i_density_n3'][0:n_fs_offs],n_pos) # cut to the correct length based on number of nutrition options (i_len_n structural input)
     ##Calculation of rainfall distribution across the week - i_rain_distribution_m4m1 = how much rain falls on each day of the week sorted in order of quantity of rain. SO the most rain falls on the day with the highest rainfall.
     rain_m4a1e1b1nwzida0e0b0xygm1 = fun.f_expand(
         pinp.sheep['i_rain_m4'][...,na] * pinp.sheep['i_rain_distribution_m4m1'] * (7 / 30.4),p_pos - 1,
@@ -746,13 +746,13 @@ def generator(params,r_vals,ev,plots = False):
     # Feed variation period calcs dams#
     ###################################
     ##fvp/dvp types
-    season_vtype1 = sinp.stock['i_fvp_type1'][0]
-    prejoin_vtype1 = sinp.stock['i_fvp_type1'][1]
+    season_vtype1 = sinp.structuralsa['i_fvp_type1'][0]
+    prejoin_vtype1 = sinp.structuralsa['i_fvp_type1'][1]
     condense_vtype1 = prejoin_vtype1 #currently for dams condensing must occur at prejoining, most of the code is flexible to handle different timing except the lw_distribution section.
-    scan_vtype1 = sinp.stock['i_fvp_type1'][2]
-    birth_vtype1 = sinp.stock['i_fvp_type1'][3]
-    wean_ftype1 = sinp.stock['i_fvp_type1'][4]
-    other_ftype1 = sinp.stock['i_fvp_type1'][5]
+    scan_vtype1 = sinp.structuralsa['i_fvp_type1'][2]
+    birth_vtype1 = sinp.structuralsa['i_fvp_type1'][3]
+    wean_ftype1 = sinp.structuralsa['i_fvp_type1'][4]
+    other_ftype1 = sinp.structuralsa['i_fvp_type1'][5]
 
     ##beginning - first day of generator
     fvp_begin_start_ba1e1b1nwzida0e0b0xyg1 = date_start_pa1e1b1nwzida0e0b0xyg[0:1]
@@ -778,7 +778,7 @@ def generator(params,r_vals,ev,plots = False):
     ##weaning
     fvp_wean_start_oa1e1b1nwzida0e0b0xyg1 = date_weaned_oa1e1b1nwzida0e0b0xyg2
     ##user defined fvp - rounded to nearest sim period
-    fvp_other_yi = sinp.stock['i_fvp4_date_i'].astype(np.datetime64) + np.arange(np.ceil(sim_years))[:,na] * np.timedelta64(365,'D')
+    fvp_other_yi = sinp.structuralsa['i_fvp4_date_i'].astype(np.datetime64) + np.arange(np.ceil(sim_years))[:,na] * np.timedelta64(365,'D')
     fvp_other_ya1e1b1nwzida0e0b0xyg = fun.f_expand(fvp_other_yi, left_pos=i_pos, left_pos2=p_pos, right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
     idx_ya1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, fvp_other_ya1e1b1nwzida0e0b0xyg, 'right')-1 #gets the sim period index for the period when season breaks (eg break of season fvp starts at the beginning of the sim period when season breaks), side=right so that if the date is already the start of a period it remains in that period.
     fvp_other_start_ya1e1b1nwzida0e0b0xyg = date_start_p[idx_ya1e1b1nwzida0e0b0xyg]
@@ -843,11 +843,11 @@ def generator(params,r_vals,ev,plots = False):
     # Feed variation period calcs offs #
     ####################################
     ##fvp/dvp types
-    season_vtype3=sinp.stock['i_fvp_type3'][0]
-    shear_vtype3 = sinp.stock['i_fvp_type3'][1]
-    condense_vtype3 = sinp.stock['i_condensefvp_type3']
-    inter1_vtype3 = sinp.stock['i_fvp_type3'][2]
-    inter2_vtype3 = sinp.stock['i_fvp_type3'][3]
+    season_vtype3=sinp.structuralsa['i_fvp_type3'][0]
+    shear_vtype3 = sinp.structuralsa['i_fvp_type3'][1]
+    condense_vtype3 = sinp.structuralsa['i_condensefvp_type3']
+    inter1_vtype3 = sinp.structuralsa['i_fvp_type3'][2]
+    inter2_vtype3 = sinp.structuralsa['i_fvp_type3'][3]
 
     ##fvp's between weaning and first shearing - there will be 3 fvp's equally spaced between wean and first shearing (unless shearing occurs within 3 periods from weaning - if weaning and shearing are close the extra fvp are masked out in the stacking process below)
     ###b0
@@ -1190,21 +1190,21 @@ def generator(params,r_vals,ev,plots = False):
 
     ##convert i_adjp to adjp - add necessary axes for 'a' and 'w'
     adjp_lw_initial_a0e0b0xyg = fun.f_expand(pinp.sheep['i_adjp_lw_initial_a'], a0_pos, condition=pinp.sheep['i_mask_a'], axis=a0_pos)
-    adjp_lw_initial_wzida0e0b0xyg0 = fun.f_expand(pinp.sheep['i_adjp_lw_initial_w0'], w_pos)
-    adjp_lw_initial_wzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_adjp_lw_initial_w1'][np.trunc(index_w1/step_w1).astype(int)], w_pos)
-    adjp_lw_initial_wzida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_adjp_lw_initial_w3'][np.trunc(index_w3/step_w3).astype(int)], w_pos)
+    adjp_lw_initial_wzida0e0b0xyg0 = fun.f_expand(sinp.structuralsa['i_adjp_lw_initial_w0'], w_pos)
+    adjp_lw_initial_wzida0e0b0xyg1 = fun.f_expand(sinp.structuralsa['i_adjp_lw_initial_w1'][np.trunc(index_w1/step_w1).astype(int)], w_pos)
+    adjp_lw_initial_wzida0e0b0xyg3 = fun.f_expand(sinp.structuralsa['i_adjp_lw_initial_w3'][np.trunc(index_w3/step_w3).astype(int)], w_pos)
     adjp_cfw_initial_a0e0b0xyg = fun.f_expand(pinp.sheep['i_adjp_cfw_initial_a'], a0_pos, condition=pinp.sheep['i_mask_a'], axis=a0_pos)
-    adjp_cfw_initial_wzida0e0b0xyg0 = fun.f_expand(pinp.sheep['i_adjp_cfw_initial_w0'], w_pos)
-    adjp_cfw_initial_wzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_adjp_cfw_initial_w1'][np.trunc(index_w1/step_w1).astype(int)], w_pos)
-    adjp_cfw_initial_wzida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_adjp_cfw_initial_w3'][np.trunc(index_w3/step_w3).astype(int)], w_pos)
+    adjp_cfw_initial_wzida0e0b0xyg0 = fun.f_expand(sinp.structuralsa['i_adjp_cfw_initial_w0'], w_pos)
+    adjp_cfw_initial_wzida0e0b0xyg1 = fun.f_expand(sinp.structuralsa['i_adjp_cfw_initial_w1'][np.trunc(index_w1/step_w1).astype(int)], w_pos)
+    adjp_cfw_initial_wzida0e0b0xyg3 = fun.f_expand(sinp.structuralsa['i_adjp_cfw_initial_w3'][np.trunc(index_w3/step_w3).astype(int)], w_pos)
     adjp_fd_initial_a0e0b0xyg = fun.f_expand(pinp.sheep['i_adjp_fd_initial_a'], a0_pos, condition=pinp.sheep['i_mask_a'], axis=a0_pos)
-    adjp_fd_initial_wzida0e0b0xyg0 = fun.f_expand(pinp.sheep['i_adjp_fd_initial_w0'], w_pos)
-    adjp_fd_initial_wzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_adjp_fd_initial_w1'][np.trunc(index_w1/step_w1).astype(int)], w_pos)
-    adjp_fd_initial_wzida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_adjp_fd_initial_w3'][np.trunc(index_w3/step_w3).astype(int)], w_pos)
+    adjp_fd_initial_wzida0e0b0xyg0 = fun.f_expand(sinp.structuralsa['i_adjp_fd_initial_w0'], w_pos)
+    adjp_fd_initial_wzida0e0b0xyg1 = fun.f_expand(sinp.structuralsa['i_adjp_fd_initial_w1'][np.trunc(index_w1/step_w1).astype(int)], w_pos)
+    adjp_fd_initial_wzida0e0b0xyg3 = fun.f_expand(sinp.structuralsa['i_adjp_fd_initial_w3'][np.trunc(index_w3/step_w3).astype(int)], w_pos)
     adjp_fl_initial_a0e0b0xyg = fun.f_expand(pinp.sheep['i_adjp_fl_initial_a'], a0_pos, condition=pinp.sheep['i_mask_a'], axis=a0_pos)
-    adjp_fl_initial_wzida0e0b0xyg0 = fun.f_expand(pinp.sheep['i_adjp_fl_initial_w0'], w_pos)
-    adjp_fl_initial_wzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_adjp_fl_initial_w1'][np.trunc(index_w1/step_w1).astype(int)], w_pos)
-    adjp_fl_initial_wzida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_adjp_fl_initial_w3'][np.trunc(index_w3/step_w3).astype(int)], w_pos)
+    adjp_fl_initial_wzida0e0b0xyg0 = fun.f_expand(sinp.structuralsa['i_adjp_fl_initial_w0'], w_pos)
+    adjp_fl_initial_wzida0e0b0xyg1 = fun.f_expand(sinp.structuralsa['i_adjp_fl_initial_w1'][np.trunc(index_w1/step_w1).astype(int)], w_pos)
+    adjp_fl_initial_wzida0e0b0xyg3 = fun.f_expand(sinp.structuralsa['i_adjp_fl_initial_w3'][np.trunc(index_w3/step_w3).astype(int)], w_pos)
 
 
     ##convert variable from c2 to g (yatf is not used, only here because it is return from the function) then adjust by initial lw pattern
@@ -1720,20 +1720,20 @@ def generator(params,r_vals,ev,plots = False):
     ### the nut_spread inputs are the proportion of std and min or max feed supply.
     ### Unless nut_spread is greater than 3 in which case the value becomes the actual feed supply
     ###convert  nut_spread inputs to numpy array and cut to the correct length based on number of nutrition options (i_len_n structural input)
-    if isinstance(pinp.sheep['i_nut_spread_n0'], np.ndarray):
-        nut_spread_g0_n = pinp.sheep['i_nut_spread_n0'][0:n_fs_g0]
+    if isinstance(sinp.structuralsa['i_nut_spread_n0'], np.ndarray):
+        nut_spread_g0_n = sinp.structuralsa['i_nut_spread_n0'][0:n_fs_g0]
     else:
-        nut_spread_g0_n = np.array([pinp.sheep['i_nut_spread_n0']])[0:n_fs_g0]
+        nut_spread_g0_n = np.array([sinp.structuralsa['i_nut_spread_n0']])[0:n_fs_g0]
 
-    if isinstance(pinp.sheep['i_nut_spread_n1'], np.ndarray): #so it can handle 1 nut pattern
-        nut_spread_g1_n = pinp.sheep['i_nut_spread_n1'][0:n_fs_dams]
+    if isinstance(sinp.structuralsa['i_nut_spread_n1'], np.ndarray): #so it can handle 1 nut pattern
+        nut_spread_g1_n = sinp.structuralsa['i_nut_spread_n1'][0:n_fs_dams]
     else:
-        nut_spread_g1_n = np.array([pinp.sheep['i_nut_spread_n1']])[0:n_fs_dams]
+        nut_spread_g1_n = np.array([sinp.structuralsa['i_nut_spread_n1']])[0:n_fs_dams]
 
-    if isinstance(pinp.sheep['i_nut_spread_n3'], np.ndarray): #so it can handle 1 nut pattern
-        nut_spread_g3_n = pinp.sheep['i_nut_spread_n3'][0:n_fs_offs]
+    if isinstance(sinp.structuralsa['i_nut_spread_n3'], np.ndarray): #so it can handle 1 nut pattern
+        nut_spread_g3_n = sinp.structuralsa['i_nut_spread_n3'][0:n_fs_offs]
     else:
-        nut_spread_g3_n = np.array([pinp.sheep['i_nut_spread_n3']])[0:n_fs_offs]
+        nut_spread_g3_n = np.array([sinp.structuralsa['i_nut_spread_n3']])[0:n_fs_offs]
 
     ###a- create a ‘j0’ by ‘n’ array that is the multipliers that weight each ‘j0’ for that level of ‘n’
     ###the slices of j0 are Std, minimum & maximum respectively
@@ -4298,7 +4298,7 @@ def generator(params,r_vals,ev,plots = False):
 
     ##dams
     ###dvp controls
-    dvp_mask_f1 = sinp.stock['i_dvp_mask_f1'] * fvp_mask_dams #is the fvp a dvp that is included
+    dvp_mask_f1 = sinp.structuralsa['i_dvp_mask_f1'] * fvp_mask_dams #is the fvp a dvp that is included
     dvp_mask_dams = fvp_mask_dams[dvp_mask_f1]
     n_dvp_periods_g1 = np.count_nonzero(dvp_mask_dams)
     ###transfer
@@ -4359,15 +4359,15 @@ def generator(params,r_vals,ev,plots = False):
     ####association between reproduction dvp and full dvp list. Returns array which is v long and points at the repro type each dvp falls in.
     #### rtype is 0 to len(r) and this is the index for the reproduction cycle - this is the desired result
     #### rdvp is the dvp type for each of the reproduction dvps
-    rdvp_type = sinp.stock['i_fvp_type1'][sinp.stock['i_fvp_is_rdvp_f1']]  #the fvp/dvp type of each reproduction dvp
+    rdvp_type = sinp.structuralsa['i_fvp_type1'][sinp.structuralsa['i_fvp_is_rdvp_f1']]  #the fvp/dvp type of each reproduction dvp
     dvp_is_repro_va1e1b1nwzida0e0b0xyg1 = np.isin(dvp_type_va1e1b1nwzida0e0b0xyg1, rdvp_type) #which of the full list of dvps are reproduction dvps.
     a_rdvp_va1e1b1nwzida0e0b0xyg1 = np.maximum.accumulate(dvp_is_repro_va1e1b1nwzida0e0b0xyg1 * index_va1e1b1nwzida0e0b0xyg1, axis=0) #return the index for each rdvp or index for previous rdvp if the dvp is not an rdvp
     rdvp_type_va1e1b1nwzida0e0b0xyg = np.take_along_axis(dvp_type_va1e1b1nwzida0e0b0xyg1,a_rdvp_va1e1b1nwzida0e0b0xyg1, axis=0) #the dvp type of the previous repro dvp
     post_prejoining_mask = np.maximum.accumulate(dvp_type_va1e1b1nwzida0e0b0xyg1 == prejoin_vtype1, axis=0) #which dvps occur prior to the first prejoining. These must be set to the prejoining r type because no special clustering happens between weaning and first prejoining.
     rdvp_type_va1e1b1nwzida0e0b0xyg[~post_prejoining_mask] = prejoin_vtype1
     #####convert rdvp to rtype
-    for r in range(len(sinp.stock['rdvp_type_r'])):
-        rdvp = sinp.stock['rdvp_type_r'][r]
+    for r in range(len(sinp.structuralsa['rdvp_type_r'])):
+        rdvp = sinp.structuralsa['rdvp_type_r'][r]
         rdvp_type_va1e1b1nwzida0e0b0xyg[rdvp_type_va1e1b1nwzida0e0b0xyg==rdvp] = r
     a_r_va1e1b1nwzida0e0b0xyg1 = rdvp_type_va1e1b1nwzida0e0b0xyg
     ####expand cluster input from rtype to v
@@ -4375,7 +4375,7 @@ def generator(params,r_vals,ev,plots = False):
 
     ##offs
     ###dvp controls
-    dvp_mask_f3 = sinp.stock['i_dvp_mask_f3'] * fvp_mask_offs #is the fvp a dvp that is included
+    dvp_mask_f3 = sinp.structuralsa['i_dvp_mask_f3'] * fvp_mask_offs #is the fvp a dvp that is included
     dvp_mask_offs = fvp_mask_offs[dvp_mask_f3]
     n_dvp_periods_g3 = np.count_nonzero(dvp_mask_offs)
     ###build dvps from fvps
@@ -5962,8 +5962,8 @@ def generator(params,r_vals,ev,plots = False):
     keys_lw3 = np.array(['w%03d'%i for i in range(len_w3)])
     keys_lw_prog = np.array(['w%03d'%i for i in range(len_w_prog)])
     # keys_n0 = sinp.stock['i_n_idx_sire']
-    keys_n1 = np.array(['n%s'%i for i in range(sinp.stock['i_n1_matrix_len'])])
-    keys_n3 = np.array(['n%s'%i for i in range(sinp.stock['i_n3_matrix_len'])])
+    keys_n1 = np.array(['n%s'%i for i in range(sinp.structuralsa['i_n1_matrix_len'])])
+    keys_n3 = np.array(['n%s'%i for i in range(sinp.structuralsa['i_n3_matrix_len'])])
     keys_p5 = np.array(per.p_date2_df().index).astype('str')
     keys_p6 = pinp.period['i_fp_idx']
     keys_p8 = np.array(['g0p%s'%i for i in range(len_p8)])

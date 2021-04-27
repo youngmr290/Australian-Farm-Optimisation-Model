@@ -1502,7 +1502,7 @@ def f_condensed(numbers, var, lw_idx, prejoin_tup, season_tup, i_n_len, i_w_len,
             var_sorted_mort = np.ma.masked_array(var_sorted, np.logical_not(mort_mask1))
 
             ##to handle varying number of initial lws
-            if sinp.stock['i_w_start_len1'] == 2:
+            if sinp.structuralsa['i_w_start_len1'] == 2:
                 ###add high pattern - this will not handle situations where the top 10% lw animals all have higher mortality than the threshold.
                 temporary[...] = np.mean(
                     f_dynamic_slice(var_sorted_mort,sinp.stock['i_w_pos'],i_w_len - 1 - int(math.ceil(i_w_len / 10)), None), # ceil is used to handle cases where nutrition options is 1 (eg only 3 lw patterns)

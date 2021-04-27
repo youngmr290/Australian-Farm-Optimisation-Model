@@ -28,6 +28,7 @@ start=time.time()
 from CreateModel import model
 import CreateModel as crtmod
 import BoundsPyomo as bndpy
+import StructuralInputs as sinp
 import UniversalInputs as uinp
 import PropertyInputs as pinp
 import Sensitivity as sen
@@ -124,6 +125,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
     fun.f_update_sen(row,exp_data,sen.sam,sen.saa,sen.sap,sen.sar,sen.sat,sen.sav)
 
     ##call sa functions - assigns sa variables to relevant inputs
+    sinp.structural_inp_sa()
     uinp.universal_inp_sa()
     pinp.property_inp_sa()
     ##create empty dicts - have to do it here because need the trial as the first key, so whole trial can be compared when determining if pyomo needs to be run

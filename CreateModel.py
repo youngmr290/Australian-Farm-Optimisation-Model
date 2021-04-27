@@ -66,10 +66,8 @@ def sets() :
     model.s_pastures = Set(initialize=sinp.general['pastures'][pinp.general['pas_inc']],doc='feed periods')
 
     ##feed pool
-    confinement_inc = np.maximum(np.max(pinp.sheep['i_nut_spread_n1'][0:sinp.stock['i_n1_len']]),
-                                 np.max(pinp.sheep['i_nut_spread_n3'][
-                                        0:sinp.stock[
-                                            'i_n3_len']])) > 3  # if fs>3 then need to include confinment feeding
+    confinement_inc = np.maximum(np.max(sinp.structuralsa['i_nut_spread_n1'][0:sinp.structuralsa['i_n1_len']]),
+                                 np.max(sinp.structuralsa['i_nut_spread_n3'][0:sinp.structuralsa['i_n3_len']])) > 3  # if fs>3 then need to include confinment feeding
     ev_is_not_confinement_v = sinp.general['ev_is_not_confinement']
     ev_mask_v = np.logical_or(ev_is_not_confinement_v,confinement_inc)
     try:
@@ -177,13 +175,13 @@ model.s_infrastructure = Set(initialize=uinp.sheep['i_h1_idx'], doc='core sheep 
 # model.s_sire_periods = Set(initialize=, doc='sire capacity periods')
 
 ##dams
-model.s_nut_dams = Set(initialize=np.array(['n%s'%i for i in range(sinp.stock['i_n1_matrix_len'])]), doc='Nutrition levels in each feed period for dams')
+model.s_nut_dams = Set(initialize=np.array(['n%s'%i for i in range(sinp.structuralsa['i_n1_matrix_len'])]), doc='Nutrition levels in each feed period for dams')
 ##offs
 model.s_sale_offs = Set(initialize=['t%s'%i for i in range(pinp.sheep['i_t3_len'])], doc='Sales within the year for offs')
-model.s_nut_offs = Set(initialize=np.array(['n%s'%i for i in range(sinp.stock['i_n3_matrix_len'])]), doc='Nutrition levels in each feed period for offs')
+model.s_nut_offs = Set(initialize=np.array(['n%s'%i for i in range(sinp.structuralsa['i_n3_matrix_len'])]), doc='Nutrition levels in each feed period for offs')
 ##prog
 model.s_sale_prog = Set(initialize=['t%s'%i for i in range(pinp.sheep['i_t2_len'])], doc='Sales and transfers options for yatf')
-model.s_lw_prog = Set(initialize=['w%03d'%i for i in range(sinp.stock['i_progeny_w2_len'])], doc='Standard LW patterns prog')
+model.s_lw_prog = Set(initialize=['w%03d'%i for i in range(sinp.structuralsa['i_progeny_w2_len'])], doc='Standard LW patterns prog')
 
 
 

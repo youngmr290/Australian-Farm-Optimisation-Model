@@ -43,8 +43,8 @@ def stubble_all(params):
         - harv con limit
     '''
     ##ev stuff
-    confinement_inc = np.maximum(np.max(pinp.sheep['i_nut_spread_n1'][0:sinp.stock['i_n1_len']]),
-                                 np.max(pinp.sheep['i_nut_spread_n3'][0:sinp.stock['i_n3_len']])) > 3 #if fs>3 then need to include confinment feeding
+    confinement_inc = np.maximum(np.max(sinp.structuralsa['i_nut_spread_n1'][0:sinp.structuralsa['i_n1_len']]),
+                                 np.max(sinp.structuralsa['i_nut_spread_n3'][0:sinp.structuralsa['i_n3_len']])) > 3 #if fs>3 then need to include confinment feeding
     ev_is_not_confinement_v = sinp.general['ev_is_not_confinement']
     ev_mask_v = np.logical_or(ev_is_not_confinement_v, confinement_inc)
     ev_is_not_confinement_v = ev_is_not_confinement_v[ev_mask_v]
