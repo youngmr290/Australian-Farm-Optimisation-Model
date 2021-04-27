@@ -46,7 +46,7 @@ if inputs_from_pickle == False:
 
         ##sa inputs (these variables can have sensitivity applied from exp.xl
         structuralsa_inp = fun.xl_all_named_ranges('Structural.xlsx','StructuralSA',numpy=True)
-        pkl.dump(stock_inp,f,protocol=pkl.HIGHEST_PROTOCOL)
+        pkl.dump(structuralsa_inp,f,protocol=pkl.HIGHEST_PROTOCOL)
 
 ##else the inputs are read in from the pickle file
 ##note this must be in the same order as above
@@ -54,7 +54,7 @@ else:
     with open(filename,"rb") as f:
         general_inp = pkl.load(f)
         stock_inp = pkl.load(f)
-        sastructure_inp = pkl.load(f)
+        structuralsa_inp = pkl.load(f)
 
 print('- finished')
 
@@ -82,7 +82,35 @@ stock_inp['ia_k2_mlsb1'] = np.reshape(stock_inp['ia_k2_mlsb1'],mlsb1)
 ##copy inputs so there is an original (before SA) version
 general = general_inp.copy()
 stock = stock_inp.copy()
-sastructure = sastructure_inp.copy()
+structuralsa = structuralsa_inp.copy()
+
+
+#######################
+#apply SA             #
+#######################
+def structural_inp_sa():
+    '''
+
+    Returns
+    -------
+    None.
+
+    Applies sensitivity adjustment to relevant inputs. Note only inputs in StructuralSA should have sensitivities applied.
+    This function gets called at the beginning of each loop in the exp.py module
+
+    '''
+    ##have to import it here since sen.py imports this module
+    import Sensitivity as sen
+
+    ##SAV
+    structuralsa['i_nut_spread_n1'] = fun.f_sa(structuralsa_inp['i_nut_spread_n1'], sen.sav['nut_spread_n1'],5)
+    structuralsa['i_nut_spread_n3'] = fun.f_sa(structuralsa_inp['i_nut_spread_n3'], sen.sav['nut_spread_n3'],5)
+    structuralsa['i_n1_len'] = fun.f_sa(structuralsa_inp['i_n1_len'], sen.sav['n_fs_dams'],5)
+    structuralsa['i_n3_len'] = fun.f_sa(structuralsa_inp['i_n3_len'], sen.sav['n_fs_offs'],5)
+    structuralsa['rev_create'] = fun.f_sa(structuralsa_inp['rev_create'], sen.sav['rev_create'],5)
+    structuralsa['rev_number'] = fun.f_sa(structuralsa_inp['rev_number'], sen.sav['rev_number'],5)
+    structuralsa['rev_trait_inc'] = fun.f_sa(structuralsa_inp['rev_trait_inc'], sen.sav['rev_trait_inc'],5)
+
 
 ##############
 #phases      #

@@ -12,6 +12,7 @@ This is where all sensitivity values must be initialised.
 import numpy as np
 import PropertyInputs as pinp
 import UniversalInputs as uinp
+import StructuralInputs as sinp
 import Periods as per
 
 ##create dict - store sa variables in dict so they can easily be changed in the exp loop
@@ -97,6 +98,9 @@ sat['salep_score_scalar'] = 0  #Scalar for score impact across the grid
 ##if you initialise an array it must be type object (so that you can assign int/float/bool into the array)
 ##general
 sav['steady_state']      = '-'                  #SA to alter if the model is steady state
+sav['rev_create']      = '-'                  #SA to alter if the trial is being used to create rev std values
+sav['rev_number']      = '-'                  #SA to alter rev number - rev number is appended to the std rev value pkl file and can be used to select which rev is used as std for a given trial.
+sav['rev_trait_inc'] = np.full_like(sinp.structuralsa_inp['rev_trait_inc'], '-', dtype=object) #SA value for which traits are to be held constant in REV analysis.
 
 ##finance
 sav['minroe']      = '-'                  #SA to alter the minroe (applied to both steady-state and dsp minroe inputs)
@@ -129,10 +133,14 @@ sav['woolp_fdprem_percentile'] = '-'            # sa value for fd premium percen
 sav['woolp_fdprem'] = '-'                       # sa value for fd premium
 sav['salep_percentile'] = '-'                   #Value for percentile for all sale grids
 sav['salep_max'] = '-'                          #max sale price in grid
-sav['nut_mask_dams'] = np.full(pinp.sheep_inp['i_sai_lw_dams_owi'].shape, '-', dtype=object)    #masks the nutrition options available eg high low high - the options selected are available for each starting weight
-sav['nut_mask_offs'] = np.full(pinp.sheep_inp['i_sai_lw_offs_swix'].shape, '-', dtype=object)   #masks the nutrition options available eg high low high - the options selected are available for each starting weight
-sav['nut_spread_n1'] = np.full(pinp.sheep_inp['i_nut_spread_n1'].shape, '-', dtype=object)      #nut spread dams
-sav['nut_spread_n3'] = np.full(pinp.sheep_inp['i_nut_spread_n3'].shape, '-', dtype=object)      #nut spread dams
+len_max_w1 = sinp.structuralsa_inp['i_w_start_len1'] * len(sinp.structuralsa_inp['i_nut_spread_n1']) ** len(sinp.structuralsa_inp['i_fvp_mask_dams']) #the max size of w if all n and fvps included.
+len_max_w3 = sinp.structuralsa_inp['i_w_start_len3'] * len(sinp.structuralsa_inp['i_nut_spread_n3']) ** len(sinp.structuralsa_inp['i_fvp_mask_offs']) #the max size of w if all n and fvps included.
+sav['nut_mask_dams'] = np.full((pinp.sheep_inp['i_i_len'], pinp.sheep_inp['i_o_len'], len_max_w1), '-', dtype=object)    #masks the nutrition options available eg high low high - the options selected are available for each starting weight. This array is cut down in the code to the correct w len.
+sav['nut_mask_offs'] = np.full((pinp.sheep_inp['i_i_len'], pinp.sheep_inp['i_s_len'], pinp.sheep_inp['i_x_len'], len_max_w3), '-', dtype=object)   #masks the nutrition options available eg high low high - the options selected are available for each starting weight. This array is cut down in the code to the correct w len.
+sav['nut_spread_n1'] = np.full(sinp.structuralsa_inp['i_nut_spread_n1'].shape, '-', dtype=object)      #nut spread dams
+sav['nut_spread_n3'] = np.full(sinp.structuralsa_inp['i_nut_spread_n3'].shape, '-', dtype=object)      #nut spread offs
+sav['n_fs_dams'] = '-'      #nut options dams
+sav['n_fs_offs'] = '-'      #nut options offs
 sav['drys_sold'] = '-'   #SA to force drys to be sold
 sav['drys_retained'] = '-'   #SA to force drys to be retained
 sav['r1_izg1'] = np.full(pinp.sheep_inp['ia_r1_zig1'].shape, '-', dtype=object)   #SA to change the base feed option for dams

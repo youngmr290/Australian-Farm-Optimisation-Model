@@ -20,7 +20,6 @@ to do:
 
 
 """
-from PropertyInputs import n_fvp_periods_dams
 
 """
 import functions from other modules
@@ -28,8 +27,10 @@ import functions from other modules
 # import datetime as dt
 # import pandas as pd
 import numpy as np
+import pickle as pkl
 #import matplotlib.pyplot as plt
 import time
+import collections
 # from numba import jit
 
 import Functions as fun
@@ -141,51 +142,48 @@ def generator(params,r_vals,ev,plots = False):
     ### axis len                      #
     ###################################
     ## Final length of axis after any masks have been applied, used to initialise arrays and in code below (note: these are not used to reshape input array).
-    len_m1 = int(step / np.timedelta64(1, 'D')) #convert timedelta to float by dividing by one day
-    len_m2 = sinp.stock['i_lag_wool']
-    len_m3 = sinp.stock['i_lag_organs']
-    len_q0	 = uinp.sheep['i_eqn_exists_q0q1'].shape[1]
-    len_q1	 = len(uinp.sheep['i_eqn_reportvars_q1'])
-    len_q2	 = np.max(uinp.sheep['i_eqn_reportvars_q1'])
-    len_p = len(date_start_p)
-    len_c = len(sinp.general['cashflow_periods'])
-    len_p3 = len(offs_date_start_p)
-    len_p8 = np.count_nonzero(pinp.sheep['i_mask_p8'])
-    len_a1 = np.count_nonzero(pinp.sheep['i_mask_a'])
-    len_e1 = np.max(pinp.sheep['i_join_cycles_ig1'])
-    len_b1 = len(sinp.stock['i_mask_b0_b1'])
-    len_n0 = sinp.stock['i_n0_matrix_len']
-    len_n1 = sinp.stock['i_n1_matrix_len']
-    len_n2 = sinp.stock['i_n1_matrix_len'] #same as dams
-    len_n3 = sinp.stock['i_n3_matrix_len']
-    len_w0 = sinp.stock['i_w0_len']
-    # len_w1 = sinp.stock['i_w1_len']
-    # len_w2 = sinp.stock['i_w1_len'] #same as dams
-    len_w_prog = sinp.stock['i_progeny_w2_len']
-    # len_w3 = len_w3
-    if pinp.general['steady_state']:
-        len_z = 1
-    else:
-        len_z = np.count_nonzero(pinp.general['i_mask_z'])
-    len_i = np.count_nonzero(pinp.sheep['i_mask_i'])
-    lensire_i = np.count_nonzero(pinp.sheep['i_masksire_i'])
-    len_d = np.count_nonzero(mask_d_offs)
-    len_o = np.count_nonzero(mask_o_dams)
     len_a0 = np.count_nonzero(pinp.sheep['i_mask_a'])
-    len_e0 = np.max(pinp.sheep['i_join_cycles_ig1'])
+    len_a1 = np.count_nonzero(pinp.sheep['i_mask_a'])
     len_b0 = np.count_nonzero(sinp.stock['i_mask_b0_b1'])
-    len_x = np.count_nonzero(mask_x)
-    len_y1 = np.count_nonzero(uinp.parameters['i_mask_y'])
-    len_y2 = np.count_nonzero(uinp.parameters['i_mask_y'])
-    len_y3 = np.count_nonzero(uinp.parameters['i_mask_y'])
+    len_b1 = len(sinp.stock['i_mask_b0_b1'])
+    len_c = len(sinp.general['cashflow_periods'])
+    len_d = np.count_nonzero(mask_d_offs)
+    len_e0 = np.max(pinp.sheep['i_join_cycles_ig1'])
+    len_e1 = np.max(pinp.sheep['i_join_cycles_ig1'])
     len_g0 = np.count_nonzero(mask_sire_inc_g0)
     len_g1 = np.count_nonzero(mask_dams_inc_g1)
     len_g2 = np.count_nonzero(mask_dams_inc_g1) #same as dams
     len_g3 = np.count_nonzero(mask_offs_inc_g3)
+    len_i = np.count_nonzero(pinp.sheep['i_mask_i'])
+    lensire_i = np.count_nonzero(pinp.sheep['i_masksire_i'])
+    len_n0 = sinp.structuralsa['i_n0_matrix_len']
+    len_n1 = sinp.structuralsa['i_n1_matrix_len']
+    len_n2 = sinp.structuralsa['i_n1_matrix_len'] #same as dams
+    len_n3 = sinp.structuralsa['i_n3_matrix_len']
+    len_m1 = int(step / np.timedelta64(1, 'D')) #convert timedelta to float by dividing by one day
+    len_m2 = sinp.stock['i_lag_wool']
+    len_m3 = sinp.stock['i_lag_organs']
+    len_o = np.count_nonzero(mask_o_dams)
+    len_p = len(date_start_p)
+    len_p3 = len(offs_date_start_p)
+    len_p6 = len(per.f_feed_periods()) - 1 #-1 because the end feed period date is included
+    len_p8 = np.count_nonzero(pinp.sheep['i_mask_p8'])
+    len_q0	 = uinp.sheep['i_eqn_exists_q0q1'].shape[1]
+    len_q1	 = len(uinp.sheep['i_eqn_reportvars_q1'])
+    len_q2	 = np.max(uinp.sheep['i_eqn_reportvars_q1'])
     len_t1 = pinp.sheep['i_n_dam_sales'] + len_g0
     len_t2 = pinp.sheep['i_t2_len']
     len_t3 = pinp.sheep['i_t3_len']
-    len_p6 = len(per.f_feed_periods()) - 1 #-1 because the end feed period date is included
+    len_w0 = sinp.structuralsa['i_w0_len']
+    len_w_prog = sinp.structuralsa['i_progeny_w2_len']
+    len_x = np.count_nonzero(mask_x)
+    len_y1 = np.count_nonzero(uinp.parameters['i_mask_y'])
+    len_y2 = np.count_nonzero(uinp.parameters['i_mask_y'])
+    len_y3 = np.count_nonzero(uinp.parameters['i_mask_y'])
+    if pinp.general['steady_state']:
+        len_z = 1
+    else:
+        len_z = np.count_nonzero(pinp.general['i_mask_z'])
 
     ########################
     #dvp/fvp related inputs #
@@ -201,6 +199,7 @@ def generator(params,r_vals,ev,plots = False):
     len_w1 = w_start_len1 * n_fs_dams ** n_fvp_periods_dams
     n_lw1_total = w_start_len1 * n_fs_dams ** (len(fvp_mask_dams))  # total lw if all dvps included
     len_w2 = len_w1 #yatf and dams are same
+    len_nut_dams = (n_fs_dams ** n_fvp_periods_dams)
 
     ##offspring
     w_start_len3 = sinp.structuralsa['i_w_start_len3']
@@ -208,6 +207,7 @@ def generator(params,r_vals,ev,plots = False):
     n_fvp_periods_offs= np.count_nonzero(fvp_mask_offs)
     len_w3 = w_start_len3 * n_fs_offs ** n_fvp_periods_offs
     n_lw3_total = w_start_len3 * n_fs_offs ** (len(fvp_mask_offs))  # total lw if all dvps included
+    len_nut_offs = (n_fs_offs ** n_fvp_periods_offs)
 
     ########################
     #ev masks and len      #
@@ -248,7 +248,7 @@ def generator(params,r_vals,ev,plots = False):
     index_wzida0e0b0xyg0 = fun.f_expand(index_w0, w_pos)
     index_w1 = np.arange(len_w1)
     index_wzida0e0b0xyg1 = fun.f_expand(index_w1, w_pos)
-    index_w2 = np.arange(sinp.stock['i_progeny_w2_len'])
+    index_w2 = np.arange(len_w_prog)
     index_w3 = np.arange(len_w3)
     index_wzida0e0b0xyg3 = fun.f_expand(index_w3, w_pos)
     index_tva1e1b1nw8zida0e0b0xyg1 = fun.f_expand(np.arange(len_t1), p_pos-1)
@@ -1830,7 +1830,7 @@ def generator(params,r_vals,ev,plots = False):
     sfw_ltwadj_a1e1b1nwzida0e0b0xyg3 = np.ones(pg3)[0, ...]  # slice the p axis to remove
     sfd_ltwadj_a1e1b1nwzida0e0b0xyg3 = np.zeros(pg3)[0, ...]  # slice the p axis to remove
 
-    for loop_ltw in range(2):
+    for loop_ltw in range(1):
 
         ####################################
         ### initialise arrays for sim loop  # axis names not always track from now on because they change between p=0 and p=1
@@ -1948,6 +1948,19 @@ def generator(params,r_vals,ev,plots = False):
         ######################
         ### sim engine       #
         ######################
+        ##load in or create REV dict if doing a relative economic value analysis
+        rev_number = sinp.structuralsa['rev_number']
+        if sinp.structuralsa['rev_create'] or not np.any(sinp.structuralsa['rev_trait_inc']): #if rev is not being used an empty dict is still required.
+            rev_trait_values = collections.defaultdict(dict)
+            for p in range(n_sim_periods - 1):
+                rev_trait_values['sire'][p] = {}
+                rev_trait_values['dams'][p] = {}
+                rev_trait_values['yatf'][p] = {}
+                rev_trait_values['offs'][p] = {}
+        elif np.any(sinp.structuralsa['rev_trait_inc']):
+            print('REV values being used.')
+            with open('pkl/pkl_rev_trait{0}.pkl'.format(rev_number),"rb") as f:
+                rev_trait_values = pkl.load(f)
 
         ## Loop through each week of the simulation (p) for ewes
         for p in range(n_sim_periods-1):   #-1 because assigns to [p+1] for start values
@@ -2435,7 +2448,7 @@ def generator(params,r_vals,ev,plots = False):
                                        , d_cfw_ave_pa1e1b1nwzida0e0b0xyg0[p, ...],  sfd_a0e0b0xyg0, wge_a0e0b0xyg0
                                        , af_wool_pa1e1b1nwzida0e0b0xyg0[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg0[p, ...]
                                        , kw_yg0, days_period_pa1e1b1nwzida0e0b0xyg0[p], sfw_ltwadj_g0, sfd_ltwadj_g0
-                                       , sinp.structuralsa['rev_trait_value']['sire'][p], sam_pi = sam_pi_sire)
+                                       , rev_trait_values['sire'][p], sam_pi = sam_pi_sire)
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     d_cfw_dams, d_fd_dams, d_fl_dams, d_cfw_history_dams_m2, mew_dams, new_dams  \
                         = sfun.f_fibre(cw_dams, cc_dams, ffcfw_start_dams, relsize_start_dams, d_cfw_history_start_m2g1
@@ -2444,7 +2457,7 @@ def generator(params,r_vals,ev,plots = False):
                                        , af_wool_pa1e1b1nwzida0e0b0xyg1[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg1[p, ...]
                                        , kw_yg1, days_period_pa1e1b1nwzida0e0b0xyg1[p]
                                        , sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[p, ...], sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[p, ...]
-                                       , sinp.structuralsa['rev_trait_value']['dams'][p]
+                                       , rev_trait_values['dams'][p]
                                        , mec_dams, mel_dams, gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
                                        , lact_propn_pa1e1b1nwzida0e0b0xyg1[p], sam_pi = sam_pi_dams)
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
@@ -2454,7 +2467,7 @@ def generator(params,r_vals,ev,plots = False):
                                        , d_cfw_ave_pa1e1b1nwzida0e0b0xyg3[p, ...], sfd_da0e0b0xyg3, wge_da0e0b0xyg3
                                        , af_wool_pa1e1b1nwzida0e0b0xyg3[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg3[p, ...]
                                        , kw_yg3, days_period_pa1e1b1nwzida0e0b0xyg3[p], sfw_ltwadj_a1e1b1nwzida0e0b0xyg3
-                                       , sfd_ltwadj_a1e1b1nwzida0e0b0xyg3, sinp.structuralsa['rev_trait_value']['offs'][p]
+                                       , sfd_ltwadj_a1e1b1nwzida0e0b0xyg3, rev_trait_values['offs'][p]
                                        , sam_pi = sam_pi_offs)
 
                 ##energy to offset chilling
@@ -2843,7 +2856,7 @@ def generator(params,r_vals,ev,plots = False):
                                    , wge_pa1e1b1nwzida0e0b0xyg2[p], af_wool_pa1e1b1nwzida0e0b0xyg2[p, ...]
                                    , dlf_wool_pa1e1b1nwzida0e0b0xyg2[p, ...], kw_yg2
                                    , days_period_pa1e1b1nwzida0e0b0xyg2[p], sfw_ltwadj_g2, sfd_ltwadj_g2
-                                   , sinp.structuralsa['rev_trait_value']['yatf'][p], sam_pi = sam_pi_yatf)
+                                   , rev_trait_values['yatf'][p], sam_pi = sam_pi_yatf)
 
 
             ##energy to offset chilling - yatf
@@ -2970,7 +2983,7 @@ def generator(params,r_vals,ev,plots = False):
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     temp0 = sfun.f_conception_cs(cf_dams, cb1_dams, relsize_mating_dams, rc_mating_dams, crg_doy_pa1e1b1nwzida0e0b0xyg1[p]
                                                  , nfoet_b1nwzida0e0b0xyg, nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]
-                                                 , index_e1b1nwzida0e0b0xyg, sinp.structuralsa['rev_trait_value']['dams'][p])
+                                                 , index_e1b1nwzida0e0b0xyg, rev_trait_values['dams'][p])
                     if eqn_used:
                         conception_dams =  temp0
                     if eqn_compare:
@@ -2982,8 +2995,7 @@ def generator(params,r_vals,ev,plots = False):
                     #todo this need to be replaced by LMAT formula, if cf_conception_start is used in the LMAT formula you will need to move cf_conception_dams = temp0 out of the if used statement.
                     temp0 = sfun.f_conception_ltw(cf_dams, cu0_dams, relsize_mating_dams, cs_mating_dams, scan_std_yg1, doy_pa1e1b1nwzida0e0b0xyg[p]
                                                   , nfoet_b1nwzida0e0b0xyg, nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]
-                                                  , index_e1b1nwzida0e0b0xyg, sinp.structuralsa['rev_trait_value']['dams'][p])
-                    cf_conception_dams = temp0*0  #default set to 0 because required in start production function (only used in lmat conception function)
+                                                  , index_e1b1nwzida0e0b0xyg, rev_trait_values['dams'][p])
                     if eqn_used:
                         cf_conception_dams = temp0*0  #default set to 0 because required in start production function (only used in lmat conception function)
                         conception_dams = temp0
@@ -3007,7 +3019,7 @@ def generator(params,r_vals,ev,plots = False):
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                     temp0 = sfun.f_mortality_base_cs(cd_sire, cg_sire, rc_start_sire, ebg_sire, d_nw_max_pa1e1b1nwzida0e0b0xyg0[p]
                                                      , days_period_pa1e1b1nwzida0e0b0xyg0[p]
-                                                     , sinp.structuralsa['rev_trait_value']['sire'][p], sen.sap['mortalityb'])
+                                                     , rev_trait_values['sire'][p], sen.sap['mortalityb'])
                     if eqn_used:
                         mortality_sire = temp0
                     if eqn_compare:
@@ -3017,7 +3029,7 @@ def generator(params,r_vals,ev,plots = False):
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     temp0 = sfun.f_mortality_base_cs(cd_dams, cg_dams, rc_start_dams, ebg_dams, d_nw_max_pa1e1b1nwzida0e0b0xyg1[p]
                                                      , days_period_pa1e1b1nwzida0e0b0xyg1[p]
-                                                     , sinp.structuralsa['rev_trait_value']['dams'][p], sen.sap['mortalityb'])
+                                                     , rev_trait_values['dams'][p], sen.sap['mortalityb'])
                     if eqn_used:
                         mortality_dams = temp0
                     if eqn_compare:
@@ -3027,7 +3039,7 @@ def generator(params,r_vals,ev,plots = False):
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                     temp0 = sfun.f_mortality_base_cs(cd_yatf, cg_yatf, rc_start_yatf, ebg_yatf, d_nw_max_yatf
                                                      , days_period_pa1e1b1nwzida0e0b0xyg2[p]
-                                                     , sinp.structuralsa['rev_trait_value']['yatf'][p], sen.sap['mortalityb'])
+                                                     , rev_trait_values['yatf'][p], sen.sap['mortalityb'])
                     if eqn_used:
                         mortality_yatf = temp0
                     if eqn_compare:
@@ -3037,7 +3049,7 @@ def generator(params,r_vals,ev,plots = False):
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
                     temp0 = sfun.f_mortality_base_cs(cd_offs, cg_offs, rc_start_offs, ebg_offs, d_nw_max_pa1e1b1nwzida0e0b0xyg3[p]
                                                      , days_period_pa1e1b1nwzida0e0b0xyg3[p]
-                                                     , sinp.structuralsa['rev_trait_value']['offs'][p], sen.sap['mortalityb'])
+                                                     , rev_trait_values['offs'][p], sen.sap['mortalityb'])
                     if eqn_used:
                         mortality_offs = temp0
                     if eqn_compare:
@@ -3049,7 +3061,7 @@ def generator(params,r_vals,ev,plots = False):
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                     temp0 = sfun.f_mortality_base_mu(cd_sire, cg_sire, rc_start_sire, ebg_sire, d_nw_max_pa1e1b1nwzida0e0b0xyg0[p]
                                                      , days_period_pa1e1b1nwzida0e0b0xyg0[p]
-                                                     , sinp.structuralsa['rev_trait_value']['sire'][p], sen.sap['mortalityb'])
+                                                     , rev_trait_values['sire'][p], sen.sap['mortalityb'])
                     if eqn_used:
                         mortality_sire = temp0
                     if eqn_compare:
@@ -3059,7 +3071,7 @@ def generator(params,r_vals,ev,plots = False):
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     temp0 = sfun.f_mortality_base_mu(cd_dams, cg_dams, rc_start_dams, ebg_dams, d_nw_max_pa1e1b1nwzida0e0b0xyg1[p]
                                                      , days_period_pa1e1b1nwzida0e0b0xyg1[p]
-                                                     , sinp.structuralsa['rev_trait_value']['dams'][p], sen.sap['mortalityb'])
+                                                     , rev_trait_values['dams'][p], sen.sap['mortalityb'])
                     if eqn_used:
                         mortality_dams = temp0
                     if eqn_compare:
@@ -3069,7 +3081,7 @@ def generator(params,r_vals,ev,plots = False):
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                     temp0 = sfun.f_mortality_base_mu(cd_yatf, cg_yatf, rc_start_yatf, ebg_yatf, d_nw_max_yatf
                                                      , days_period_pa1e1b1nwzida0e0b0xyg2[p]
-                                                     , sinp.structuralsa['rev_trait_value']['yatf'][p], sen.sap['mortalityb'])
+                                                     , rev_trait_values['yatf'][p], sen.sap['mortalityb'])
                     if eqn_used:
                         mortality_yatf = temp0
                     if eqn_compare:
@@ -3079,7 +3091,7 @@ def generator(params,r_vals,ev,plots = False):
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
                     temp0 = sfun.f_mortality_base_mu(cd_offs, cg_offs, rc_start_offs, ebg_offs, d_nw_max_pa1e1b1nwzida0e0b0xyg3[p]
                                                      , days_period_pa1e1b1nwzida0e0b0xyg3[p]
-                                                     , sinp.structuralsa['rev_trait_value']['offs'][p], sen.sap['mortalityb'])
+                                                     , rev_trait_values['offs'][p], sen.sap['mortalityb'])
                     if eqn_used:
                         mortality_offs = temp0
                     if eqn_compare:
@@ -3182,7 +3194,7 @@ def generator(params,r_vals,ev,plots = False):
                                                                       , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]
                                                                       , chill_index_pa1e1b1nwzida0e0b0xygm1[p]
                                                                       , nfoet_b1nwzida0e0b0xyg
-                                                                      , sinp.structuralsa['rev_trait_value']['yatf'][p]
+                                                                      , rev_trait_values['yatf'][p]
                                                                       , sen.sap['mortalityp'])
                     if eqn_used:
                         mortality_birth_yatf = temp1 #mortalityd, assign first because it has x axis
@@ -3203,7 +3215,7 @@ def generator(params,r_vals,ev,plots = False):
                     temp0 = sfun.f_mortality_progeny_mu(cu2_yatf, cb1_yatf, cx_yatf[:,mask_x,...], ce_yatf[:,p,...], w_b_yatf
                                     , w_b_ltw_std_yatf, foo_yatf, chill_index_pa1e1b1nwzida0e0b0xygm1[p]
                                     , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]
-                                    , sinp.structuralsa['rev_trait_value']['yatf'][p], sen.sap['mortalityp'])
+                                    , rev_trait_values['yatf'][p], sen.sap['mortalityp'])
                     if eqn_used:
                         mortality_birth_yatf = temp0 #mortality
                     if eqn_compare:
@@ -4270,7 +4282,9 @@ def generator(params,r_vals,ev,plots = False):
     ##dams
     sale_delay_sa1e1b1nwzida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['i_sales_delay_sg1'], 'dams', p_pos) #periods after shearing that sale occurs
     ###mask for nutrition profiles. this doesnt have a full w axis because it only has the nutrition options it is expanded to w further down.
-    mask_nut_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_sai_lw_dams_owi'],i_pos, left_pos2=w_pos, left_pos3=p_pos,
+    sav_mask_nut_dams_owi = sen.sav['nut_mask_dams'][...,0:len_nut_dams] #This controls if a nutrition pattern is included.
+    mask_nut_dams_owi = fun.f_sa(np.array(True), sav_mask_nut_dams_owi,5) #all nut options included unless SAV is false
+    mask_nut_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(mask_nut_dams_owi,i_pos, left_pos2=w_pos, left_pos3=p_pos,
                                                            right_pos2=i_pos, right_pos3=w_pos,swap=True, swap2=True,
                                                            condition=pinp.sheep['i_mask_i'], axis=i_pos, condition2=mask_o_dams, axis2=p_pos)
     ##offs
@@ -4282,11 +4296,15 @@ def generator(params,r_vals,ev,plots = False):
     target_weight_tsa1e1b1nwzida0e0b0xyg3 = sfun.f_g2g(pinp.sheep['i_target_weight_tsg3'], 'offs', p_pos, condition=dvp_mask_g3, axis=p_pos) #plus 1 because it is shearing opp and weaning (ie the dvp for offs)
     ###number of periods before sale that shearing occurs in each dvp
     shearing_offset_tsa1e1b1nwzida0e0b0xyg3= sfun.f_g2g(pinp.sheep['i_shear_prior_tsg3'], 'offs', p_pos, condition=dvp_mask_g3, axis=p_pos) #plus 1 because it is shearing opp and weaning (ie the dvp for offs)
+
+
     ###mask for nutrition profiles. this doesnt have a full w axis because it only has the nutrition options it is expanded to w further down.
-    mask_nut_sa1e1b1nwzida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_sai_lw_offs_swix'], x_pos, left_pos2=i_pos, left_pos3=w_pos,left_pos4=p_pos,
-                                                           right_pos2=x_pos,right_pos3=i_pos,right_pos4=w_pos,
-                                                           swap=True, move=True, source=-1, dest=1, condition=pinp.sheep['i_mask_i'], axis=i_pos,
-                                                           condition2=mask_shear_g3, axis2=p_pos, condition3=mask_x, axis3=x_pos)
+    sav_mask_nut_offs_swix = sen.sav['nut_mask_offs'][...,0:len_nut_offs] #This controls if a nutrition pattern is included.
+    mask_nut_offs_swix = fun.f_sa(np.array(True), sav_mask_nut_offs_swix,5) #all nut options included unless SAV is false
+    mask_nut_sa1e1b1nwzida0e0b0xyg3 = fun.f_expand(mask_nut_offs_swix, x_pos, left_pos2=i_pos, left_pos3=w_pos,left_pos4=p_pos,
+                                                   right_pos2=x_pos,right_pos3=i_pos,right_pos4=w_pos,
+                                                   swap=True, move=True, source=-1, dest=1, condition=pinp.sheep['i_mask_i'], axis=i_pos,
+                                                   condition2=mask_shear_g3, axis2=p_pos, condition3=mask_x, axis3=x_pos)
 
     #################################
     ##post processing associations  #
@@ -5089,7 +5107,7 @@ def generator(params,r_vals,ev,plots = False):
     ##mask for nutrition profiles (this allows the user to examine certain nutrition patterns eg high high high vs low low low) - this mask is combined with the other w8 masks below
     mask_nut_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(mask_nut_oa1e1b1nwzida0e0b0xyg1, a_o_va1e1b1nwzida0e0b0xyg1, axis=0)
     ###association between the shortlist of nutrition profile inputs and the full range of LW patterns that include starting LW
-    a_shortlist_w1 = index_w1 % (n_fs_dams ** n_fvp_periods_dams)
+    a_shortlist_w1 = index_w1 % len_nut_dams
     mask_nut_va1e1b1nwzida0e0b0xyg1 = mask_nut_va1e1b1nwzida0e0b0xyg1[:,:,:,:,:,a_shortlist_w1,...]  # expands the nutrition mask to all lw patterns.
     ### match the pattern requested with the pattern that is the 'history' for that pattern in previous DVPs
     mask_w8nut_va1e1b1nzida0e0b0xyg1w9 = np.sum(mask_nut_va1e1b1nwzida0e0b0xyg1[...,na] *
@@ -5163,7 +5181,7 @@ def generator(params,r_vals,ev,plots = False):
     ##mask for nutrition profiles (this allows the user to examine certain nutrition patterns eg high high high vs low low low) - this mask is renamed the w8 masks to be consistent with dams
     mask_nut_va1e1b1nwzida0e0b0xyg3 = np.take_along_axis(mask_nut_sa1e1b1nwzida0e0b0xyg3, a_s_va1e1b1nwzida0e0b0xyg3, axis=0)
     ###association between the shortlist of nutrition profile inputs and the full range of LW patterns that include starting LW
-    a_shortlist_w3 = index_w3 % (n_fs_offs ** n_fvp_periods_offs)
+    a_shortlist_w3 = index_w3 % len_nut_offs
     mask_w8vars_va1e1b1nw8zida0e0b0xyg3 = mask_nut_va1e1b1nwzida0e0b0xyg3[:,:,:,:,:,a_shortlist_w3,...]  # expands the nutrition mask to all lw patterns.
     ###The gap between the active constraints is required
     step_con3 = n_fs_offs ** n_fvp_periods_offs
@@ -5439,7 +5457,7 @@ def generator(params,r_vals,ev,plots = False):
     ind_sorted_zia0xg2k = np.argsort(ffcfw_range_zia0xg2k, axis = -1)
     ### Select the values for the 10 equally spaced values spanning lowest to highest inclusive. Adding w9 axis at -1
     start_zia0xg2 = ffcfw_range_zia0xg2k.shape[-1] - np.count_nonzero(ffcfw_range_zia0xg2k, axis=-1)
-    ind_selected_a1zixg2w9 = np.linspace(start_zia0xg2, ffcfw_range_zia0xg2k.shape[-1] - 1, sinp.stock['i_progeny_w2_len'], dtype = int, axis=-1)
+    ind_selected_a1zixg2w9 = np.linspace(start_zia0xg2, ffcfw_range_zia0xg2k.shape[-1] - 1, len_w_prog, dtype = int, axis=-1)
     ### The indices for the required values are the selected values from the sorted indices
     ind = np.take_along_axis(ind_sorted_zia0xg2k, ind_selected_a1zixg2w9, axis=-1)
     ### Extract the condensed weights, the numbers and the sale_value of the condensed vars
@@ -5447,8 +5465,8 @@ def generator(params,r_vals,ev,plots = False):
     ffcfw_prog_zia0xg2w9 = np.take_along_axis(ffcfw_range_zia0xg2k, ind, axis = -1)
     salevalue_zia0xg2w9 = np.take_along_axis(salevalue_range_zia0xg2k, ind, axis = -1)
     ###Reshape the progeny arrays to put axes in place - keeping w9 on the right hand end
-    ffcfw_prog_zida0e0b0xyg2w9 = ffcfw_prog_zia0xg2w9.reshape(len_z, len_i, 1, len_a1, 1, 1, len_x, 1, len_g2, sinp.stock['i_progeny_w2_len'])
-    salevalue_prog_zida0e0b0xyg2w9 = salevalue_zia0xg2w9.reshape(len_z, len_i, 1, len_a1, 1, 1, len_x, 1, len_g2, sinp.stock['i_progeny_w2_len'])
+    ffcfw_prog_zida0e0b0xyg2w9 = ffcfw_prog_zia0xg2w9.reshape(len_z, len_i, 1, len_a1, 1, 1, len_x, 1, len_g2, len_w_prog)
+    salevalue_prog_zida0e0b0xyg2w9 = salevalue_zia0xg2w9.reshape(len_z, len_i, 1, len_a1, 1, 1, len_x, 1, len_g2, len_w_prog)
 
     ## move progeny weight axis to normal position for distribution to dams & offs at beginning of dvp0
     ffcfw_prog_wzida0e0b0xyg2 = np.moveaxis(ffcfw_prog_zida0e0b0xyg2w9,-1,w_pos)
@@ -6597,6 +6615,13 @@ def generator(params,r_vals,ev,plots = False):
 
 
 
+    ###############
+    # REV         #
+    ###############
+    ##store rev if trial is rev_create
+    if sinp.structuralsa['rev_create']:
+        with open('pkl/pkl_rev_trait{0}.pkl'.format(rev_number),"wb") as f:
+            pkl.dump(rev_trait_values, f)
 
     ###############
     # report      #
@@ -6945,22 +6970,22 @@ def generator(params,r_vals,ev,plots = False):
 
 
 
-
+    ##times - uncomment to report times.
     finish = time.time()
     # print('onhand and shearing arrays: ',calc_cost_start - onhandshear_start)
     # print('wool value calcs :', wool_finish - calc_cost_start)
     # print('sale value calcs :', sale_finish - wool_finish)
     # print('husb cost calcs :', husb_finish - sale_finish)
-    print('calc cost and income: ',feedpools_start - calc_cost_start)
+    # print('calc cost and income: ',feedpools_start - calc_cost_start)
     # print('feed pools arrays: ',p2v_start - feedpools_start)
     # print('p2v: ',lwdist_start - p2v_start)
     # print('lw distribution: ',cluster_start - lwdist_start)
     # print('clustering: ',allocation_start - cluster_start)
     # print('allocation: ',production_param_start - allocation_start)
-    print('p2v and building masks: ',lwdist_start - p2v_start)
-    print('production params: ', number_param_start - production_param_start)
-    print('number params: ', keys_start - number_param_start)
-    print('convert numpy to pyomo dict and reporting: ',finish - keys_start)
+    # print('p2v and building masks: ',lwdist_start - p2v_start)
+    # print('production params: ', number_param_start - production_param_start)
+    # print('number params: ', keys_start - number_param_start)
+    # print('convert numpy to pyomo dict and reporting: ',finish - keys_start)
 
     ## Call Steve's graph generator.
     ## Will be bypassed unless called from SheepTest.py or line below is uncommented

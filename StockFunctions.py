@@ -613,9 +613,10 @@ def f_dynamic_slice(arr, axis, start, stop, axis2=None, start2=None, stop2=None)
 
 
 def f_rev_update(trait_name, trait_value, rev_trait_value):
-    if sinp.structuralsa['rev_trait_inc'][trait_name]:
+    trait_idx = sinp.structuralsa['rev_trait_name'].tolist().index(trait_name)
+    if sinp.structuralsa['rev_trait_inc'][trait_idx]:
         if sinp.structuralsa['rev_create']:
-            rev_trait_value[trait_name] = trait_value
+            rev_trait_value[trait_name] = trait_value.copy()
         else:
             trait_value = rev_trait_value[trait_name]
     return trait_value
@@ -1181,9 +1182,9 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         conception[tuple(slc)] = -np.sum(f_dynamic_slice(conception, sinp.stock['i_b1_pos'],1, None), axis = (uinp.parameters['i_b1_pos']), keepdims=True)
         temporary = (index_e1 == 0) * np.sum(conception, axis=sinp.stock['i_e1_pos'], keepdims=True) #sum across e axis into slice e[0]
         conception = fun.f_update(conception, temporary, (nyatf_b1any == 0)) #Put sum of e1 into slice e1[0] and don't overwrite the slices where nyatf != 0
-    ##Process the Conception & Litter size REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
-    conception[:, :, 1, ...] = f_rev_update('conception', conception[:, :, 1, ...], rev_trait_value)
-    conception[:, :, 2:, ...] = f_rev_update('litter_size', conception[:, :, 2:, ...], rev_trait_value)
+        ##Process the Conception & Litter size REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
+        conception[:, :, 1, ...] = f_rev_update('conception', conception[:, :, 1, ...], rev_trait_value)
+        conception[:, :, 2:, ...] = f_rev_update('litter_size', conception[:, :, 2:, ...], rev_trait_value)
     return conception
 
 
@@ -1231,9 +1232,9 @@ def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, nfoet_
         conception[tuple(slc)] = -np.sum(f_dynamic_slice(conception, sinp.stock['i_b1_pos'],1, None), axis = (uinp.parameters['i_b1_pos']), keepdims=True)
         temporary = (index_e1 == 0) * np.sum(conception, axis=sinp.stock['i_e1_pos'], keepdims=True)  # sum across e axis into slice e[0]
         conception = fun.f_update(conception, temporary, (nyatf_b1any == 0))  #Put sum of e1 into slice e1[0] and don't overwrite the slices where nyatf != 0
-    ##Process the Conception & Litter size REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
-    conception[:, :, 1, ...] = f_rev_update('conception', conception[:, :, 1, ...], rev_trait_value)
-    conception[:, :, 2:, ...] = f_rev_update('litter_size', conception[:, :, 2:, ...], rev_trait_value)
+        ##Process the Conception & Litter size REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
+        conception[:, :, 1, ...] = f_rev_update('conception', conception[:, :, 1, ...], rev_trait_value)
+        conception[:, :, 2:, ...] = f_rev_update('litter_size', conception[:, :, 2:, ...], rev_trait_value)
     return conception
 
 
