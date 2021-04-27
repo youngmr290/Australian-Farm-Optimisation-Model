@@ -1032,10 +1032,14 @@ def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, meme, mew, new, km,
 
 def f_lwc_cs(cg, rc_start, mei, mem, mew, z1f, z2f, kg, mec = 0,
               mel = 0, gest_propn = 0, lact_propn = 0):
+    ## requirement for maintenance
+    maintenance = mem + mec * gest_propn + mel * lact_propn + mew
     ##Level of feeding (maint = 0)
-    level = (mei /  (mem + mec * gest_propn + mel * lact_propn + mew)) - 1
+    level = (mei / maintenance) - 1
+    ##Energy intake that is surplus to maintenance
+    surplus_energy = mei - maintenance
     ##Net energy gain (based on ME)
-    neg = kg * (mei - (mem + mec * gest_propn + mel * lact_propn + mew))
+    neg = kg * surplus_energy
     ##Energy Value of gain
     evg = cg[8, ...] - z1f * (cg[9, ...] - cg[10, ...] * (level - 1)) + z2f * cg[11, ...] * (rc_start - 1)
     ##Protein content of gain (some uncertainty for sign associated with zf2.
@@ -1047,15 +1051,19 @@ def f_lwc_cs(cg, rc_start, mei, mem, mew, z1f, z2f, kg, mec = 0,
     pg = pcg * ebg
     ##fat gain
     fg = (neg - pg * cg[21, ...]) / cg[22, ...]
-    return ebg, evg, pg, fg, level
+    return ebg, evg, pg, fg, level, surplus_energy
 
 
 def f_lwc_mu(cg, rc_start, mei, mem, mew, z1f, z2f, kg, mec = 0,
               mel = 0, gest_propn = 0, lact_propn = 0):
+    ## requirement for maintenance
+    maintenance = mem + mec * gest_propn + mel * lact_propn + mew
     ##Level of feeding (maint = 0)
-    level = (mei /  (mem + mec * gest_propn + mel * lact_propn + mew)) - 1
+    level = (mei / maintenance) - 1
+    ##Energy intake that is surplus to maintenance
+    surplus_energy = mei - maintenance
     ##Net energy gain (based on ME)
-    neg = kg * (mei - (mem + mec * gest_propn + mel * lact_propn + mew))
+    neg = kg * surplus_energy
     ##Energy Value of gain as calculated.
     c_evg = cg[8, ...] - z1f * (cg[9, ...] - cg[10, ...] * (level - 1)) + z2f * cg[11, ...] * (rc_start - 1)
     # evg = fun.f_update(evg , temporary, z2f < 1)
@@ -1071,7 +1079,7 @@ def f_lwc_mu(cg, rc_start, mei, mem, mew, z1f, z2f, kg, mec = 0,
     adipose_propn = (evg - (cg[21, ...] * cg[19, ...])) / ((cg[22, ...] * cg[20, ...]) - (cg[21, ...] * cg[19, ...]))
     fg = ebg * adipose_propn * cg[20, ...]
     pg = (neg - fg * cg[22, ...]) / cg[21, ...]
-    return ebg, evg, pg, fg, level
+    return ebg, evg, pg, fg, level, surplus_energy
 
 
 def f_wbe(aw, mw, cg):
