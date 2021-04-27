@@ -440,8 +440,8 @@ def period_generator():
     mask_o_dams = np.max(date_born1st_oa1e1b1nwzida0e0b0xyg2<=date_end_p[-1], axis=tuple(range(p_pos+1, 0))) #compare each birth opp with the end date of the sim and make the mask - the mask is of the longest axis (ie to handle situations where say bbb and bbm have birth at different times so one has 6 opp and the other has 5 opp)
     mask_d_offs = np.max(date_born1st_oa1e1b1nwzida0e0b0xyg2<=date_end_p[-1], axis=tuple(range(p_pos+1, 0))) #compare each birth opp with the end date of the sim and make the mask - the mask is of the longest axis (ie to handle situations where say bbb and bbm have birth at different times so one has 6 opp and the other has 5 opp)
     mask_x = pinp.sheep['i_gender_propn_x']>0
-    fvp_mask_dams = sinp.stock['i_fvp_mask_dams']
-    fvp_mask_offs = sinp.stock['i_fvp_mask_offs']
+    fvp_mask_dams = np.concatenate([sinp.stock['i_fixed_fvp_mask_dams'], sinp.structuralsa['i_fvp_mask_dams']])
+    fvp_mask_offs = np.concatenate([sinp.stock['i_fixed_fvp_mask_offs'], [sinp.structuralsa['i_fvp_mask_offs']]]) #todo will need to remove [] if i_fvp_mask_offs becomes more than single bool.
 
     ###################################
     ### axis len                      #
@@ -693,9 +693,10 @@ def period_generator():
 #    fvp_other_type_va1e1b1nwzida0e0b0xyg1 = np.full(fvp_other_start_ya1e1b1nwzida0e0b0xyg.shape,other_ftype1)
 #    fvp_begin_type_va1e1b1nwzida0e0b0xyg1 = np.full(fvp_begin_start_ba1e1b1nwzida0e0b0xyg1.shape,condense_vtype1)
     ##stack & mask which dvps are included - this must be in the order as per the input mask
-    fvp_date_all_f1 = np.array([fvp_begin_start_ba1e1b1nwzida0e0b0xyg1,fvp_seasonstart_ya1e1b1nwzida0e0b0xyg,
+    fvp_date_all_f1 = np.array([fvp_begin_start_ba1e1b1nwzida0e0b0xyg1,
                                fvp_prejoin_start_oa1e1b1nwzida0e0b0xyg1, fvp_scan_start_oa1e1b1nwzida0e0b0xyg1,
-                               fvp_birth_start_oa1e1b1nwzida0e0b0xyg1, fvp_wean_start_oa1e1b1nwzida0e0b0xyg1,
+                               fvp_birth_start_oa1e1b1nwzida0e0b0xyg1, fvp_seasonstart_ya1e1b1nwzida0e0b0xyg,
+                                fvp_wean_start_oa1e1b1nwzida0e0b0xyg1,
                                fvp_other_start_ya1e1b1nwzida0e0b0xyg], dtype=object)
 #    fvp_type_all_f1 = np.array([fvp_begin_type_va1e1b1nwzida0e0b0xyg1,fvp_season_type_va1e1b1nwzida0e0b0xyg1,
 #                               fvp_prejoin_type_va1e1b1nwzida0e0b0xyg1, fvp_scan_type_va1e1b1nwzida0e0b0xyg1,
@@ -780,9 +781,9 @@ def period_generator():
 
     ##stack & mask which dvps are included - this must be in the order as per the input mask
     fvp_date_all_f3 = np.array([fvp_b0_start_ba1e1b1nwzida0e0b0xyg3,fvp_b1_start_ba1e1b1nwzida0e0b0xyg3,
-                               fvp_b2_start_ba1e1b1nwzida0e0b0xyg3, fvp_seasonstart_ya1e1b1nwzida0e0b0xyg3,
+                               fvp_b2_start_ba1e1b1nwzida0e0b0xyg3,
                                fvp_0_start_sa1e1b1nwzida0e0b0xyg3, fvp_1_start_sa1e1b1nwzida0e0b0xyg3,
-                               fvp_2_start_sa1e1b1nwzida0e0b0xyg3], dtype=object)
+                               fvp_2_start_sa1e1b1nwzida0e0b0xyg3, fvp_seasonstart_ya1e1b1nwzida0e0b0xyg3], dtype=object)
 #    fvp_type_all_f3 = np.array([fvp_b0_type_va1e1b1nwzida0e0b0xyg3, fvp_b1_type_va1e1b1nwzida0e0b0xyg3,
 #                               fvp_b2_type_va1e1b1nwzida0e0b0xyg3, fvp_season_type_va1e1b1nwzida0e0b0xyg3,
 #                               fvp_0_type_va1e1b1nwzida0e0b0xyg3, fvp_1_type_va1e1b1nwzida0e0b0xyg3,

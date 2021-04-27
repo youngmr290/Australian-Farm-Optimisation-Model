@@ -135,8 +135,8 @@ def generator(params,r_vals,ev,plots = False):
     mask_o_dams = np.max(date_born1st_oa1e1b1nwzida0e0b0xyg2<=date_end_p[-1], axis=tuple(range(p_pos+1, 0))) #compare each birth opp with the end date of the sim and make the mask - the mask is of the longest axis (ie to handle situations where say bbb and bbm have birth at different times so one has 6 opp and the other has 5 opp)
     mask_d_offs = np.max(date_born1st_oa1e1b1nwzida0e0b0xyg2<=date_end_p[-1], axis=tuple(range(p_pos+1, 0))) #compare each birth opp with the end date of the sim and make the mask - the mask is of the longest axis (ie to handle situations where say bbb and bbm have birth at different times so one has 6 opp and the other has 5 opp)
     mask_x = pinp.sheep['i_gender_propn_x']>0
-    fvp_mask_dams = sinp.structuralsa['i_fvp_mask_dams']
-    fvp_mask_offs = sinp.structuralsa['i_fvp_mask_offs']
+    fvp_mask_dams = np.concatenate([sinp.stock['i_fixed_fvp_mask_dams'], sinp.structuralsa['i_fvp_mask_dams']])
+    fvp_mask_offs = np.concatenate([sinp.stock['i_fixed_fvp_mask_offs'], [sinp.structuralsa['i_fvp_mask_offs']]]) #todo will need to remove [] if i_fvp_mask_offs becomes more than single bool.
 
     ###################################
     ### axis len                      #
@@ -748,9 +748,9 @@ def generator(params,r_vals,ev,plots = False):
     ##fvp/dvp types
     fvp_type1 = np.cumsum(fvp_mask_dams)-1
     if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1:
-        season_vtype1 = -1 #season vtype must be -1 if steady state because we dont want to distribute.
-    else:
-        season_vtype1 = fvp_type1[3]
+        fvp_type1[3] = -1 #season vtype must be -1 if steady state because we dont want to distribute.
+
+    season_vtype1 = fvp_type1[3]
     prejoin_vtype1 = fvp_type1[0]
     condense_vtype1 = prejoin_vtype1 #currently for dams condensing must occur at prejoining, most of the code is flexible to handle different timing except the lw_distribution section.
     scan_vtype1 = fvp_type1[1]
@@ -807,9 +807,6 @@ def generator(params,r_vals,ev,plots = False):
     fvp_scan_type_va1e1b1nwzida0e0b0xyg1 = np.full(fvp_scan_start_oa1e1b1nwzida0e0b0xyg1.shape,scan_vtype1)
     fvp_birth_type_va1e1b1nwzida0e0b0xyg1 = np.full(fvp_birth_start_oa1e1b1nwzida0e0b0xyg1.shape,birth_vtype1)
     fvp_season_type_va1e1b1nwzida0e0b0xyg1 = np.full(fvp_seasonstart_ya1e1b1nwzida0e0b0xyg.shape,season_vtype1)
-    fvp_prejoin_type_va1e1b1nwzida0e0b0xyg1 = np.full(fvp_prejoin_start_oa1e1b1nwzida0e0b0xyg1.shape,prejoin_vtype1)
-    fvp_scan_type_va1e1b1nwzida0e0b0xyg1 = np.full(fvp_scan_start_oa1e1b1nwzida0e0b0xyg1.shape,scan_vtype1)
-    fvp_birth_type_va1e1b1nwzida0e0b0xyg1 = np.full(fvp_birth_start_oa1e1b1nwzida0e0b0xyg1.shape,birth_vtype1)
     fvp_wean_type_va1e1b1nwzida0e0b0xyg1 = np.full(fvp_wean_start_oa1e1b1nwzida0e0b0xyg1.shape,wean_ftype1)
     fvp_other_type_va1e1b1nwzida0e0b0xyg1 = np.full(fvp_other_start_ya1e1b1nwzida0e0b0xyg.shape,other_ftype1)
     fvp_begin_type_va1e1b1nwzida0e0b0xyg1 = np.full(fvp_begin_start_ba1e1b1nwzida0e0b0xyg1.shape,condense_vtype1)
@@ -850,11 +847,15 @@ def generator(params,r_vals,ev,plots = False):
     # Feed variation period calcs offs #
     ####################################
     ##fvp/dvp types
-    season_vtype3=sinp.structuralsa['i_fvp_type3'][0]
-    shear_vtype3 = sinp.structuralsa['i_fvp_type3'][1]
-    condense_vtype3 = sinp.structuralsa['i_condensefvp_type3']
-    inter1_vtype3 = sinp.structuralsa['i_fvp_type3'][2]
-    inter2_vtype3 = sinp.structuralsa['i_fvp_type3'][3]
+    fvp_type3 = np.cumsum(fvp_mask_offs)-1
+    if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1:
+        fvp_type3[3] = -1 #season vtype must be -1 if steady state because we dont want to distribute.
+
+    season_vtype3 = fvp_type3[3]
+    shear_vtype3 = fvp_type3[0]
+    condense_vtype3 = sinp.stock['i_condensefvp_type3']
+    inter1_vtype3 = fvp_type3[1]
+    inter2_vtype3 = fvp_type3[2]
 
     ##fvp's between weaning and first shearing - there will be 3 fvp's equally spaced between wean and first shearing (unless shearing occurs within 3 periods from weaning - if weaning and shearing are close the extra fvp are masked out in the stacking process below)
     ###b0
@@ -908,13 +909,13 @@ def generator(params,r_vals,ev,plots = False):
 
     ##stack & mask which dvps are included - this must be in the order as per the input mask
     fvp_date_all_f3 = np.array([fvp_b0_start_ba1e1b1nwzida0e0b0xyg3,fvp_b1_start_ba1e1b1nwzida0e0b0xyg3,
-                               fvp_b2_start_ba1e1b1nwzida0e0b0xyg3, fvp_seasonstart_ya1e1b1nwzida0e0b0xyg3,
-                               fvp_0_start_sa1e1b1nwzida0e0b0xyg3, fvp_1_start_sa1e1b1nwzida0e0b0xyg3,
-                               fvp_2_start_sa1e1b1nwzida0e0b0xyg3], dtype=object)
+                                fvp_b2_start_ba1e1b1nwzida0e0b0xyg3, fvp_0_start_sa1e1b1nwzida0e0b0xyg3,
+                                fvp_1_start_sa1e1b1nwzida0e0b0xyg3, fvp_2_start_sa1e1b1nwzida0e0b0xyg3,
+                                fvp_seasonstart_ya1e1b1nwzida0e0b0xyg3], dtype=object)
     fvp_type_all_f3 = np.array([fvp_b0_type_va1e1b1nwzida0e0b0xyg3, fvp_b1_type_va1e1b1nwzida0e0b0xyg3,
-                               fvp_b2_type_va1e1b1nwzida0e0b0xyg3, fvp_season_type_va1e1b1nwzida0e0b0xyg3,
-                               fvp_0_type_va1e1b1nwzida0e0b0xyg3, fvp_1_type_va1e1b1nwzida0e0b0xyg3,
-                               fvp_2_type_va1e1b1nwzida0e0b0xyg3], dtype=object)
+                                fvp_b2_type_va1e1b1nwzida0e0b0xyg3, fvp_0_type_va1e1b1nwzida0e0b0xyg3,
+                                fvp_1_type_va1e1b1nwzida0e0b0xyg3, fvp_2_type_va1e1b1nwzida0e0b0xyg3,
+                                fvp_season_type_va1e1b1nwzida0e0b0xyg3], dtype=object)
     ###create the fvp mask. fvps are masked out depending on what the user has specified (the extra fvps at the start are always included but set to the start date of generator if weaning is within 3weeks of shearing).
     mask_initial_fvp = (date_shear_sa1e1b1nwzida0e0b0xyg3[0:1] - date_weaned_ida0e0b0xyg3) < ((step.astype('timedelta64[D]')+1)*3)  #true if not enough gap between weaning and shearing for extra dvps.
     fvp3_inc = np.concatenate([np.array([True, True, True, ]), fvp_mask_offs]) #Trues at start is to count for the extra fvp at the start of the sim (this is not included in fvp mask because it is not a real fvp as it doesnt occur each year)
@@ -4323,9 +4324,8 @@ def generator(params,r_vals,ev,plots = False):
 
     ##dams
     ###dvp controls
-    dvp_mask_f1 = sinp.structuralsa['i_dvp_mask_f1'] * fvp_mask_dams #is the fvp a dvp that is included
-    dvp_mask_dams = fvp_mask_dams[dvp_mask_f1]
-    n_dvp_periods_g1 = np.count_nonzero(dvp_mask_dams)
+    dvp_mask_f1 = np.concatenate([sinp.stock['i_fixed_dvp_mask_f1'],sinp.structuralsa['i_dvp_mask_f1']])
+    dvp_mask_f1 = dvp_mask_f1 * fvp_mask_dams #is the fvp a dvp that is included
     ###transfer
     a_g1_tpa1e1b1nwzida0e0b0xyg1 = sfun.f_g2g(sinp.stock['ia_g1_tg1'], 'dams', p_pos-1)
     transfer_exists_tpa1e1b1nwzida0e0b0xyg1 = sfun.f_g2g(sinp.stock['i_transfer_exists_tg1'], 'dams', p_pos-1)
@@ -4384,15 +4384,16 @@ def generator(params,r_vals,ev,plots = False):
     ####association between reproduction dvp and full dvp list. Returns array which is v long and points at the repro type each dvp falls in.
     #### rtype is 0 to len(r) and this is the index for the reproduction cycle - this is the desired result
     #### rdvp is the dvp type for each of the reproduction dvps
-    rdvp_type = sinp.structuralsa['i_fvp_type1'][sinp.structuralsa['i_fvp_is_rdvp_f1']]  #the fvp/dvp type of each reproduction dvp
+    fvp_is_rdvp_f1 = np.concatenate([sinp.stock['i_fixed_fvp_is_rdvp_f1'], sinp.structuralsa['i_fvp_is_rdvp_f1']])
+    rdvp_type = fvp_type1[fvp_is_rdvp_f1]  #the fvp/dvp type of each reproduction dvp
     dvp_is_repro_va1e1b1nwzida0e0b0xyg1 = np.isin(dvp_type_va1e1b1nwzida0e0b0xyg1, rdvp_type) #which of the full list of dvps are reproduction dvps.
     a_rdvp_va1e1b1nwzida0e0b0xyg1 = np.maximum.accumulate(dvp_is_repro_va1e1b1nwzida0e0b0xyg1 * index_va1e1b1nwzida0e0b0xyg1, axis=0) #return the index for each rdvp or index for previous rdvp if the dvp is not an rdvp
     rdvp_type_va1e1b1nwzida0e0b0xyg = np.take_along_axis(dvp_type_va1e1b1nwzida0e0b0xyg1,a_rdvp_va1e1b1nwzida0e0b0xyg1, axis=0) #the dvp type of the previous repro dvp
     post_prejoining_mask = np.maximum.accumulate(dvp_type_va1e1b1nwzida0e0b0xyg1 == prejoin_vtype1, axis=0) #which dvps occur prior to the first prejoining. These must be set to the prejoining r type because no special clustering happens between weaning and first prejoining.
     rdvp_type_va1e1b1nwzida0e0b0xyg[~post_prejoining_mask] = prejoin_vtype1
-    #####convert rdvp to rtype
-    for r in range(len(sinp.structuralsa['rdvp_type_r'])):
-        rdvp = sinp.structuralsa['rdvp_type_r'][r]
+    #####convert rdvp to rtype - to handle when repro dvps are not dvp0,1,2.
+    for r in range(len(sinp.stock['rdvp_type_r'])):
+        rdvp = sinp.stock['rdvp_type_r'][r]
         rdvp_type_va1e1b1nwzida0e0b0xyg[rdvp_type_va1e1b1nwzida0e0b0xyg==rdvp] = r
     a_r_va1e1b1nwzida0e0b0xyg1 = rdvp_type_va1e1b1nwzida0e0b0xyg
     ####expand cluster input from rtype to v
@@ -4400,7 +4401,7 @@ def generator(params,r_vals,ev,plots = False):
 
     ##offs
     ###dvp controls
-    dvp_mask_f3 = sinp.structuralsa['i_dvp_mask_f3'] * fvp_mask_offs #is the fvp a dvp that is included
+    dvp_mask_f3 = np.concatenate([sinp.stock['i_fixed_dvp_mask_f3'], [sinp.structuralsa['i_dvp_mask_f3']]]) * fvp_mask_offs #is the fvp a dvp that is included
     dvp_mask_offs = fvp_mask_offs[dvp_mask_f3]
     n_dvp_periods_g3 = np.count_nonzero(dvp_mask_offs)
     ###build dvps from fvps
