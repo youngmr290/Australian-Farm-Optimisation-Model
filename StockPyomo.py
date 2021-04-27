@@ -609,6 +609,8 @@ def stockpyomo_local(params):
     #                                  model.s_gen_merit_dams, model.s_groups_dams, model.s_groups_dams,
     #                                  initialize=, default=0.0, doc='Proportion of the animals distributed to each of the starting LWs of the recipient animals at the beginning of the recipients next feed variation period')
 
+
+    ##write param to text file.
     # textbuffer = StringIO()
     # model.p_numbers_prov_dams.pprint(textbuffer)
     # textbuffer.write('\n')
@@ -688,11 +690,11 @@ def stockpyomo_local(params):
                     for t3 in model.s_sale_offs for n3 in model.s_nut_offs for w8 in model.s_lw_offs
                    if pe.value(model.p_numbers_req_offs[k3,k5,v3,w8,i,x,g3,w9]) != 0
                    or pe.value(model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,i,a,x,y3,g3,w9]) != 0) <=0 #need to use both in the if statement (even though it is slower) because there are situations eg dvp4 (prejoining) where prov will have a value and req will not.
-    start=time.time()
+    start_con_offR=time.time()
     model.con_offR = pe.Constraint(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_dvp_offs, model.s_wean_times, model.s_tol, model.s_gender,
                                    model.s_gen_merit_dams, model.s_groups_offs, model.s_lw_offs, rule=offR, doc='transfer off to off from last dvp to current dvp.')
-    end=time.time()
-    print('con_offR method 3: ',end-start)
+    end_start_con_offR=time.time()
+    # print('con_offR: ',end_start_con_offR - start_con_offR)
 
     try:
         model.del_component(model.con_damR_index)
@@ -723,11 +725,11 @@ def stockpyomo_local(params):
                    or pe.value(model.p_numbers_prov_dams[k28, k29, t1, v1_prev, a, n1, w8, i, y1, g1, g9, w9]) != 0
                    or pe.value(model.p_numbers_provthis_dams[k28, k29, t1, v1, a, n1, w8, i, y1, g1, g9, w9]) != 0) <=0
 
-    start=time.time()
+    start_con_damR=time.time()
     model.con_damR = pe.Constraint(model.s_k2_birth_dams, model.s_dvp_dams, model.s_wean_times, model.s_tol, model.s_gen_merit_dams,
                                    model.s_groups_dams, model.s_lw_dams, rule=damR, doc='transfer dam to dam from last dvp to current dvp.')
-    end=time.time()
-    print('con_damR method 3: ',end-start)
+    end_con_damR=time.time()
+    # print('con_damR: ',end_con_damR-start_con_damR)
 
     try:
         model.del_component(model.con_progR_index)
@@ -743,12 +745,12 @@ def stockpyomo_local(params):
                           if pe.value(model.p_npw_req[t2,d,x,g1])!=0))<=0
         else:
             return pe.Constraint.Skip
-    start = time.time()
+    start_con_progR = time.time()
     model.con_progR = pe.Constraint(model.s_k5_birth_offs, model.s_wean_times, model.s_tol,
                                     model.s_damage, model.s_gender, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_prog, rule=progR,
                                    doc='transfer npw from dams to prog.')
-    end = time.time()
-    print('con_progR ',end-start)
+    end_con_progR = time.time()
+    # print('con_progR: ',end_con_progR-start_con_progR)
 
     try:
         model.del_component(model.con_prog2damsR_index)
@@ -769,12 +771,12 @@ def stockpyomo_local(params):
                              if pe.value(model.p_progreq_dams[k2, k3, k5, t1, w18, i, y1, g1, g9, w9])!= 0))<=0
         else:
             return pe.Constraint.Skip
-    start = time.time()
+    start_con_prog2damsR = time.time()
     model.con_prog2damsR = pe.Constraint(model.s_k3_damage_offs, model.s_dvp_dams,
                                    model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_dams, rule=prog2damR,
                                    doc='transfer prog to dams in dvp 0.')
-    end = time.time()
-    print('con_prog2damsR ',end-start)
+    end_con_prog2damsR = time.time()
+    # print('con_prog2damsR: ',end_con_prog2damsR-start_con_prog2damsR)
 
     try:
         model.del_component(model.con_prog2offsR_index)
@@ -791,12 +793,12 @@ def stockpyomo_local(params):
                              if pe.value(model.p_progreq_offs[k3, v3, w38, i, x, g3, w9])!= 0))<=0
         else:
             return pe.Constraint.Skip
-    start = time.time()
+    start_con_prog2offR = time.time()
     model.con_prog2offsR = pe.Constraint(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_dvp_dams, model.s_tol,
                                    model.s_wean_times, model.s_gender, model.s_gen_merit_dams, model.s_groups_offs, model.s_lw_offs, rule=prog2offsR,
                                    doc='transfer prog to off in dvp 0.')
-    end = time.time()
-    print('con_prog2offR ',end-start)
+    end_con_prog2offR = time.time()
+    # print('con_prog2offR: ',end_con_prog2offR-start_con_prog2offR)
 
     try:
         model.del_component(model.con_matingR_index)
@@ -828,8 +830,9 @@ def stockpyomo_local(params):
     model.con_stockinfra = pe.Constraint(model.s_infrastructure, rule=stockinfra, doc='Requirement for infrastructure (based on number of times yarded and shearing activity)')
 
     end_cons=time.time()
-    print('time con: ', end_cons-end_params)
+    # print('time stock con: ', end_cons-end_params)
 
+    ##write constraint to text file
     # textbuffer = StringIO()
     # model.con_offR.pprint(textbuffer)
     # textbuffer.write('\n')
@@ -842,9 +845,9 @@ def stockpyomo_local(params):
 ##infrastructure
 model.v_infrastructure = pe.Var(model.s_infrastructure, bounds = (0,None) , doc='amount of infrastructure required for given animal enterprise (based on number of sheep through infra)')
 
-# ##################################
-# ### setup core model constraints #
-# ##################################
+##################################
+### setup core model constraints #
+##################################
 
 def stock_me(model,f,p6):
     return sum(model.v_sire[g0] * model.p_mei_sire[p6,f,g0] for g0 in model.s_groups_sire)\
