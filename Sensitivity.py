@@ -142,6 +142,10 @@ sav['nut_spread_n1'] = np.full(sinp.structuralsa_inp['i_nut_spread_n1'].shape, '
 sav['nut_spread_n3'] = np.full(sinp.structuralsa_inp['i_nut_spread_n3'].shape, '-', dtype=object)      #nut spread offs
 sav['n_fs_dams'] = '-'      #nut options dams
 sav['n_fs_offs'] = '-'      #nut options offs
+sav['mask_fvp_dams'] = np.full(sinp.structuralsa_inp['i_fvp_mask_dams'].shape, '-', dtype=object)      #SA to mask changeable fvps.
+sav['fvp_is_dvp_dams'] = np.full(sinp.structuralsa_inp['i_dvp_mask_f1'].shape, '-', dtype=object)      #SA to control if changeable fvp is a dvp.
+sav['mask_fvp_offs'] = '-'      #SA to mask changeable fvps.
+sav['fvp_is_dvp_offs'] = '-'      #SA to control if changeable fvp is a dvp.
 sav['drys_sold'] = '-'   #SA to force drys to be sold
 sav['drys_retained'] = '-'   #SA to force drys to be retained
 sav['r1_izg1'] = np.full(pinp.sheep_inp['ia_r1_zig1'].shape, '-', dtype=object)   #SA to change the base feed option for dams
