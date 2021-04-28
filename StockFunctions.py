@@ -1030,8 +1030,7 @@ def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, meme, mew, new, km,
     return mem, temp_lc_a1e1b1nwzida0e0b0xyg, kg
 
 
-def f_lwc_cs(cg, rc_start, mei, mem, mew, z1f, z2f, kg, mec = 0,
-              mel = 0, gest_propn = 0, lact_propn = 0):
+def f_lwc_cs(cg, rc_start, mei, mem, mew, z1f, z2f, kg, mec = 0, rev_trait_value, mel = 0, gest_propn = 0, lact_propn = 0):
     ## requirement for maintenance
     maintenance = mem + mec * gest_propn + mel * lact_propn + mew
     ##Level of feeding (maint = 0)
@@ -1047,6 +1046,8 @@ def f_lwc_cs(cg, rc_start, mei, mem, mew, z1f, z2f, kg, mec = 0,
     pcg = cg[12, ...] - z1f * (cg[13, ...] - cg[14, ...] * (level - 1)) - z2f * cg[15, ...] * (rc_start - 1)
     ##Empty bodyweight gain
     ebg = neg / evg
+    ##Process the Liveweight REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
+    ebg = f_rev_update('lw', ebg, rev_trait_value)
     ##Protein gain
     pg = pcg * ebg
     ##fat gain
@@ -1054,8 +1055,7 @@ def f_lwc_cs(cg, rc_start, mei, mem, mew, z1f, z2f, kg, mec = 0,
     return ebg, evg, pg, fg, level, surplus_energy
 
 
-def f_lwc_mu(cg, rc_start, mei, mem, mew, z1f, z2f, kg, mec = 0,
-              mel = 0, gest_propn = 0, lact_propn = 0):
+def f_lwc_mu(cg, rc_start, mei, mem, mew, z1f, z2f, kg, rev_trait_value, mec = 0, mel = 0, gest_propn = 0, lact_propn = 0):
     ## requirement for maintenance
     maintenance = mem + mec * gest_propn + mel * lact_propn + mew
     ##Level of feeding (maint = 0)
@@ -1071,6 +1071,8 @@ def f_lwc_mu(cg, rc_start, mei, mem, mew, z1f, z2f, kg, mec = 0,
     evg = c_evg * (1 + sen.sap['evg'] * z2f)
     ##Empty bodyweight gain
     ebg = neg / evg
+    ##Process the Liveweight REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
+    ebg = f_rev_update('lw', ebg, rev_trait_value)
     # ##Protein gain
     # pg = pcg * ebg
     # ##fat gain
