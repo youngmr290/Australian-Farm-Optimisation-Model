@@ -1505,7 +1505,7 @@ def f_condensed(numbers, var, lw_idx, prejoin_tup, season_tup, i_n_len, i_w_len,
             ###mask for animals with greater than 10% mort
             numbers_start_sorted = np.take_along_axis(numbers_start_condense, lw_idx, axis=sinp.stock['i_w_pos'])
             numbers_sorted = np.take_along_axis(numbers, lw_idx, axis=sinp.stock['i_w_pos'])
-            mort_mask = (np.sum(numbers_start_sorted, axis=prejoin_tup + (season_tup,), keepdims=True)
+            mort_mask = (np.sum(numbers_start_sorted, axis=prejoin_tup + (season_tup,), keepdims=True)  #if this give warning it probably means the feedsuply is too low.
                         / np.sum(numbers_sorted, axis=prejoin_tup + (season_tup,), keepdims=True)) > 0.9 #sum e,b,z axis because numbers are distributed along those axis so need to sum to determine if w has more > 10%
             mort_mask1 = np.broadcast_to(mort_mask, var_sorted.shape)
             var_sorted_mort = np.ma.masked_array(var_sorted, np.logical_not(mort_mask1))
