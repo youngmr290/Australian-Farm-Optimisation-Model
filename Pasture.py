@@ -46,7 +46,7 @@ def f_pasture(params, r_vals, ev):
     ##ev stuff             #
     ########################
     confinement_inc = np.maximum(np.max(sinp.structuralsa['i_nut_spread_n1'][0:sinp.structuralsa['i_n1_len']]),
-                                 np.max(sinp.structuralsa['i_nut_spread_n3'][0:sinp.structuralsa['i_n3_len']])) > 3 #if fs>3 then need to include confinment feeding
+                                 np.max(sinp.structuralsa['i_nut_spread_n3'][0:sinp.structuralsa['i_n3_len']])) > 3 #if fs>3 then need to include confinement feeding
     ev_is_not_confinement_v = sinp.general['ev_is_not_confinement']
     ev_mask_v = np.logical_or(ev_is_not_confinement_v, confinement_inc)
     ev_is_not_confinement_v = ev_is_not_confinement_v[ev_mask_v]
@@ -98,7 +98,7 @@ def f_pasture(params, r_vals, ev):
     # vdft    = (n_feed_pools, n_dry_groups, n_feed_periods, n_pasture_types)
     vfzt    = (n_feed_pools, n_feed_periods, n_season_types, n_pasture_types)
     # dft     = (n_dry_groups, n_feed_periods, n_pasture_types)
-    goflzt  = (n_grazing_int, n_foo_levels, n_feed_periods, n_lmu,  n_season_types, n_pasture_types)
+    # goflzt  = (n_grazing_int, n_foo_levels, n_feed_periods, n_lmu,  n_season_types, n_pasture_types)
     # goft    = (n_grazing_int, n_foo_levels, n_feed_periods, n_pasture_types)
     gft     = (n_grazing_int, n_feed_periods, n_pasture_types)
     gt      = (n_grazing_int, n_pasture_types)
@@ -343,7 +343,7 @@ def f_pasture(params, r_vals, ev):
     ##season inputs not required in t loop above
     harv_date_z         = pinp.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0).astype(np.datetime64)
     i_pasture_stage_p6z = np.rint(pinp.f_seasonal_inp(np.moveaxis(pinp.sheep['i_pasture_stage_p6z'],0,-1), numpy=True, axis=-1)
-                                  ).astype(int) #it would be better if z axis was treated after pas_stage has been used (like in stock.py) because it is used as an index. But there wasnt anyway to do this without doubling up a lot of code. This is only a limitation in the weighted average version of model.
+                                  ).astype(int) #it would be better if z axis was treated after pas_stage has been used (like in stock.py) because it is used as an index. But there wasn't any way to do this without doubling up a lot of code. This is only a limitation in the weighted average version of model.
     ### pasture params used to convert foo for rel availability
     cu3 = uinp.pastparameters['i_cu3_c4'][...,pinp.sheep['i_pasture_type']].astype(float)
     cu4 = uinp.pastparameters['i_cu4_c4'][...,pinp.sheep['i_pasture_type']].astype(float)
@@ -681,7 +681,7 @@ def f_pasture(params, r_vals, ev):
                                               ,        grn_ri_goflzt
                                               , i_me_eff_gainlose_ft[:, na, na, :])
     me_cons_grnha_vgoflzt = me_cons_grnha_vgoflzt * mask_greenfeed_exists_fzt[:, na, ...]  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
-    me_cons_grnha_vgoflzt = me_cons_grnha_vgoflzt * ev_is_not_confinement_v[:,na,na,na,na,na,na] #me from pasture is 0 in the confinment pool
+    me_cons_grnha_vgoflzt = me_cons_grnha_vgoflzt * ev_is_not_confinement_v[:,na,na,na,na,na,na] #me from pasture is 0 in the confinement pool
 
     volume_grnha_goflzt    =  cons_grnha_t_goflzt / grn_ri_goflzt              # parameters for the growth/grazing activities: Total volume of feed consumed from the hectare
     volume_grnha_goflzt = volume_grnha_goflzt * mask_greenfeed_exists_fzt[:, na, ...]  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
@@ -723,7 +723,7 @@ def f_pasture(params, r_vals, ev):
                                ,           dry_ri_dfzt
                                , i_me_eff_gainlose_ft[:,na,:])
     dry_mecons_t_vdfzt = dry_mecons_t_vdfzt * mask_dryfeed_exists_fzt  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
-    dry_mecons_t_vdfzt = dry_mecons_t_vdfzt * ev_is_not_confinement_v[:,na,na,na,na] #me from pasture is 0 in the confinment pool
+    dry_mecons_t_vdfzt = dry_mecons_t_vdfzt * ev_is_not_confinement_v[:,na,na,na,na] #me from pasture is 0 in the confinement pool
 
     ## dry, animal removal
     dry_removal_t_ft  = 1000 * (1 + i_dry_trampling_ft)
@@ -759,7 +759,7 @@ def f_pasture(params, r_vals, ev):
     poc_con_fl = i_poc_intake_daily_flt[..., 0] / 1000 #divide 1000 to convert to tonnes of foo per ha
     ## md per tonne
     poc_md_f = fun.dmd_to_md(i_poc_dmd_ft[..., 0]) * 1000 #times 1000 to convert to mj per tonne
-    poc_md_vf = poc_md_f * ev_is_not_confinement_v[:,na] #me from pasture is 0 in the confinment pool
+    poc_md_vf = poc_md_f * ev_is_not_confinement_v[:,na] #me from pasture is 0 in the confinement pool
 
     ## vol
     ### calc relative quality - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
@@ -856,7 +856,7 @@ def f_pasture(params, r_vals, ev):
     r_vals['keys_d'] = keys_d
     r_vals['keys_v'] = keys_v
     r_vals['keys_f'] = keys_f
-    r_vals['keys_g'] =  keys_g
+    r_vals['keys_g'] = keys_g
     r_vals['keys_l'] = keys_l
     r_vals['keys_o'] = keys_o
     r_vals['keys_p'] = keys_p

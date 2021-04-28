@@ -44,7 +44,7 @@ def stubble_all(params):
     '''
     ##ev stuff
     confinement_inc = np.maximum(np.max(sinp.structuralsa['i_nut_spread_n1'][0:sinp.structuralsa['i_n1_len']]),
-                                 np.max(sinp.structuralsa['i_nut_spread_n3'][0:sinp.structuralsa['i_n3_len']])) > 3 #if fs>3 then need to include confinment feeding
+                                 np.max(sinp.structuralsa['i_nut_spread_n3'][0:sinp.structuralsa['i_n3_len']])) > 3 #if fs>3 then need to include confinement feeding
     ev_is_not_confinement_v = sinp.general['ev_is_not_confinement']
     ev_mask_v = np.logical_or(ev_is_not_confinement_v, confinement_inc)
     ev_is_not_confinement_v = ev_is_not_confinement_v[ev_mask_v]
@@ -140,7 +140,7 @@ def stubble_all(params):
     ## Therefore, there is scope to alter average diet quality by altering the grazing time and the proportion of the stubble consumed.
     md_p6zks1 = np.clip(fun.dmd_to_md(dmd_cat_p6zks1) * 1000, 0, np.inf) #mul to convert to tonnes
     md_p6zks1 = md_p6zks1 * mask_stubble_exists_p6zk[...,na] #stop md being provided if stubble doesnt exist
-    md_vp6zks1 = md_p6zks1 * ev_is_not_confinement_v[:,na,na,na,na] #me from pasture is 0 in the confinment pool
+    md_vp6zks1 = md_p6zks1 * ev_is_not_confinement_v[:,na,na,na,na] #me from pasture is 0 in the confinement pool
 
     ###########
     #trampling#
