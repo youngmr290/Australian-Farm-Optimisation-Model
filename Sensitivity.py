@@ -138,7 +138,7 @@ sav['salep_percentile'] = '-'                   #Value for percentile for all sa
 sav['salep_max'] = '-'                          #max sale price in grid
 len_max_w1 = sinp.structuralsa_inp['i_w_start_len1'] * len(sinp.structuralsa_inp['i_nut_spread_n1']) ** (
         len(sinp.stock_inp['i_fixed_fvp_mask_dams'])+len(sinp.structuralsa_inp['i_fvp_mask_dams'])) #the max size of w if all n and fvps included.
-len_max_w3 = sinp.structuralsa_inp['i_w_start_len3'] * len(sinp.structuralsa_inp['i_nut_spread_n3']) ** len([sinp.structuralsa_inp['i_fvp_mask_offs']]) #the max size of w if all n and fvps included.
+len_max_w3 = sinp.structuralsa_inp['i_w_start_len3'] * len(sinp.structuralsa_inp['i_nut_spread_n3']) ** (3+len([sinp.structuralsa_inp['i_fvp_mask_offs']])) #the max size of w if all n and fvps included.
 sav['nut_mask_dams'] = np.full((pinp.sheep_inp['i_i_len'], pinp.sheep_inp['i_o_len'], len_max_w1), '-', dtype=object)    #masks the nutrition options available eg high low high - the options selected are available for each starting weight. This array is cut down in the code to the correct w len.
 sav['nut_mask_offs'] = np.full((pinp.sheep_inp['i_i_len'], pinp.sheep_inp['i_s_len'], pinp.sheep_inp['i_x_len'], len_max_w3), '-', dtype=object)   #masks the nutrition options available eg high low high - the options selected are available for each starting weight. This array is cut down in the code to the correct w len.
 sav['nut_spread_n1'] = np.full(sinp.structuralsa_inp['i_nut_spread_n1'].shape, '-', dtype=object)      #nut spread dams
