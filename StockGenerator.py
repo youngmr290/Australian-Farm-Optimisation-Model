@@ -2507,43 +2507,46 @@ def generator(params,r_vals,ev,plots = False):
                     ###sire
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                        temp0, temp1, temp2, temp3, temp4 = sfun.f_lwc_cs(cg_sire, rc_start_sire, mei_sire, mem_sire, mew_sire
-                                                                , z1f_sire, z2f_sire, kg_sire)
+                        temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_sire, rc_start_sire, mei_sire
+                                                                , mem_sire, mew_sire, z1f_sire, z2f_sire, kg_sire)
                         if eqn_used:
                             ebg_sire = temp0
                             evg_sire = temp1
                             pg_sire = temp2
                             fg_sire = temp3
                             level_sire = temp4
+                            surplus_energy_sire = temp5
                         if eqn_compare:
                             r_compare_q0q1q2psire[eqn_system, eqn_group, 0, p, ...] = temp0
                             r_compare_q0q1q2psire[eqn_system, eqn_group, 1, p, ...] = temp1
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                        temp0, temp1, temp2, temp3, temp4 = sfun.f_lwc_cs(cg_dams, rc_start_dams, mei_dams, mem_dams, mew_dams
-                                                                , z1f_dams, z2f_dams, kg_dams, mec_dams, mel_dams
-                                                                , gest_propn_pa1e1b1nwzida0e0b0xyg1[p], lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
+                        temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_dams, rc_start_dams, mei_dams
+                                                , mem_dams, mew_dams, z1f_dams, z2f_dams, kg_dams, mec_dams, mel_dams
+                                                , gest_propn_pa1e1b1nwzida0e0b0xyg1[p], lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
                         if eqn_used:
                             ebg_dams = temp0
                             evg_dams = temp1
                             pg_dams = temp2
                             fg_dams = temp3
                             level_dams = temp4
+                            surplus_energy_dams = temp5
                         if eqn_compare:
                             r_compare_q0q1q2pdams[eqn_system, eqn_group, 0, p, ...] = temp0
                             r_compare_q0q1q2pdams[eqn_system, eqn_group, 1, p, ...] = temp1
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                        temp0, temp1, temp2, temp3, temp4 = sfun.f_lwc_cs(cg_offs, rc_start_offs, mei_offs, mem_offs, mew_offs
-                                                                , z1f_offs, z2f_offs, kg_offs)
+                        temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_offs, rc_start_offs, mei_offs
+                                                                , mem_offs, mew_offs, z1f_offs, z2f_offs, kg_offs)
                         if eqn_used:
                             ebg_offs = temp0
                             evg_offs = temp1
                             pg_offs = temp2
                             fg_offs = temp3
                             level_offs = temp4
+                            surplus_energy_offs = temp5
                         if eqn_compare:
                             r_compare_q0q1q2poffs[eqn_system, eqn_group, 0, p, ...] = temp0
                             r_compare_q0q1q2poffs[eqn_system, eqn_group, 1, p, ...] = temp1
@@ -2553,43 +2556,46 @@ def generator(params,r_vals,ev,plots = False):
                     ###sire
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                        temp0, temp1, temp2, temp3, temp4 = sfun.f_lwc_mu(cg_sire, rc_start_sire, mei_sire, mem_sire, mew_sire
-                                                                , z1f_sire, z2f_sire, kg_sire)
+                        temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_mu(cg_sire, rc_start_sire, mei_sire
+                                                                , mem_sire, mew_sire, z1f_sire, z2f_sire, kg_sire)
                         if eqn_used:
                             ebg_sire = temp0
                             evg_sire = temp1
                             pg_sire = temp2
                             fg_sire = temp3
                             level_sire = temp4
+                            surplus_energy_sire = temp5
                         if eqn_compare:
                             r_compare_q0q1q2psire[eqn_system, eqn_group, 0, p, ...] = temp0
                             r_compare_q0q1q2psire[eqn_system, eqn_group, 1, p, ...] = temp1
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                        temp0, temp1, temp2, temp3, temp4 = sfun.f_lwc_mu(cg_dams, rc_start_dams, mei_dams, mem_dams, mew_dams
-                                                                , z1f_dams, z2f_dams, kg_dams, mec_dams, mel_dams
-                                                                , gest_propn_pa1e1b1nwzida0e0b0xyg1[p], lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
+                        temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_mu(cg_dams, rc_start_dams, mei_dams
+                                                , mem_dams, mew_dams, z1f_dams, z2f_dams, kg_dams, mec_dams, mel_dams
+                                                , gest_propn_pa1e1b1nwzida0e0b0xyg1[p], lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
                         if eqn_used:
                             ebg_dams = temp0
                             evg_dams = temp1
                             pg_dams = temp2
                             fg_dams = temp3
                             level_dams = temp4
+                            surplus_energy_dams = temp5
                         if eqn_compare:
                             r_compare_q0q1q2pdams[eqn_system, eqn_group, 0, p, ...] = temp0
                             r_compare_q0q1q2pdams[eqn_system, eqn_group, 1, p, ...] = temp1
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                        temp0, temp1, temp2, temp3, temp4 = sfun.f_lwc_mu(cg_offs, rc_start_offs, mei_offs, mem_offs, mew_offs
-                                                                , z1f_offs, z2f_offs, kg_offs)
+                        temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_mu(cg_offs, rc_start_offs, mei_offs
+                                                                , mem_offs, mew_offs, z1f_offs, z2f_offs, kg_offs)
                         if eqn_used:
                             ebg_offs = temp0
                             evg_offs = temp1
                             pg_offs = temp2
                             fg_offs = temp3
                             level_offs = temp4
+                            surplus_energy_offs = temp5
                         if eqn_compare:
                             r_compare_q0q1q2poffs[eqn_system, eqn_group, 0, p, ...] = temp0
                             r_compare_q0q1q2poffs[eqn_system, eqn_group, 1, p, ...] = temp1
@@ -2882,13 +2888,15 @@ def generator(params,r_vals,ev,plots = False):
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                    temp0, temp1, temp2, temp3, temp4 = sfun.f_lwc_cs(cg_yatf, rc_start_yatf, mei_yatf, mem_yatf, mew_yatf, z1f_yatf, z2f_yatf, kg_yatf)
+                    temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_yatf, rc_start_yatf, mei_yatf, mem_yatf
+                                                                             , mew_yatf, z1f_yatf, z2f_yatf, kg_yatf)
                     if eqn_used:
                         ebg_yatf = temp0
                         evg_yatf = temp1
                         pg_yatf = temp2
                         fg_yatf = temp3
                         level_yatf = temp4
+                        surplus_energy_yatf = temp5
                     if eqn_compare:
                         r_compare_q0q1q2pyatf[eqn_system, eqn_group, 0, p, ...] = temp0
                         r_compare_q0q1q2pyatf[eqn_system, eqn_group, 1, p, ...] = temp1
@@ -2897,13 +2905,15 @@ def generator(params,r_vals,ev,plots = False):
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                    temp0, temp1, temp2, temp3, temp4 = sfun.f_lwc_mu(cg_yatf, rc_start_yatf, mei_yatf, mem_yatf, mew_yatf, z1f_yatf, z2f_yatf, kg_yatf)
+                    temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_mu(cg_yatf, rc_start_yatf, mei_yatf, mem_yatf
+                                                                             , mew_yatf, z1f_yatf, z2f_yatf, kg_yatf)
                     if eqn_used:
                         ebg_yatf = temp0
                         evg_yatf = temp1
                         pg_yatf = temp2
                         fg_yatf = temp3
                         level_yatf = temp4
+                        surplus_energy_yatf = temp5
                     if eqn_compare:
                         r_compare_q0q1q2pyatf[eqn_system, eqn_group, 0, p, ...] = temp0
                         r_compare_q0q1q2pyatf[eqn_system, eqn_group, 1, p, ...] = temp1
@@ -3383,6 +3393,61 @@ def generator(params,r_vals,ev,plots = False):
                 sl_offs = (fl_offs - fl_shear_yg0) / cw_offs[15, ...]
                 ##Staple strength if shorn(end)
                 ss_offs = fd_min_offs ** 2 / fd_offs ** 2 * cw_offs[16, ...]
+
+            ###########################################
+            #post calculation sensitivity for intake & energy#
+            ###########################################
+            ##These sensitivity alter potential intake and me intake required without altering the liveweight profile
+            ##or the production levels (cfw, fd, reproduction, mortality). Production may change if altered in loop
+            ##so post loop altering requires thinking through how the production level of the genotype was calibrated.
+            ###sire
+            if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
+                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on z2f - the sensitivity is only for adults
+                sam_pi = fun.f_update(1, sen.sam['pi_post'], z2f_sire == 1)   #potential intake
+                sap_mr = fun.f_update(0, sen.sap['mr_post'], z2f_sire == 1)   #maintenance energy (MEm - doesn't include gestation and lactation requirements)
+                sap_kg = fun.f_update(0, sen.sap['kg_post'], z2f_sire == 1)   #efficiency of gain (kg)
+                #### alter potential intake
+                pi_sire = fun.f_sa(pi_sire, sam_pi)
+                #### alter mei
+                mei_solid_sire = mei_solid_sire + (mem_sire * sap_mr
+                                                   - surplus_energy_sire * sap_kg / (1 + sap_kg))
+
+            ###dams
+            if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
+                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on z2f - the sensitivity is only for adults
+                sam_pi = fun.f_update(1, sen.sam['pi_post'], z2f_dams == 1)   #potential intake
+                sap_mr = fun.f_update(0, sen.sap['mr_post'], z2f_dams == 1)   #maintenance energy (MEm - doesn't include gestation and lactation requirements)
+                sap_kg = fun.f_update(0, sen.sap['kg_post'], z2f_dams == 1)   #efficiency of gain (kg)
+                #### alter potential intake
+                pi_dams = fun.f_sa(pi_dams, sam_pi)
+                #### alter mei
+                mei_solid_dams = mei_solid_dams + (mem_dams * sap_mr
+                                                   - surplus_energy_dams * sap_kg / (1 + sap_kg))
+
+            ###yatf
+            if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
+                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on z2f - the sensitivity is only for adults
+                sam_pi = fun.f_update(1, sen.sam['pi_post'], z2f_yatf == 1)   #potential intake
+                sap_mr = fun.f_update(0, sen.sap['mr_post'], z2f_yatf == 1)   #maintenance energy (MEm - doesn't include gestation and lactation requirements)
+                sap_kg = fun.f_update(0, sen.sap['kg_post'], z2f_yatf == 1)   #efficiency of gain (kg)
+                #### alter potential intake
+                pi_yatf = fun.f_sa(pi_yatf, sam_pi)
+                #### alter mei
+                mei_solid_yatf = mei_solid_yatf + (mem_yatf * sap_mr
+                                                   - surplus_energy_yatf * sap_kg / (1 + sap_kg))
+
+            ###offs
+            if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
+                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on z2f - the sensitivity is only for adults
+                sam_pi = fun.f_update(1, sen.sam['pi_post'], z2f_offs == 1)   #potential intake
+                sap_mr = fun.f_update(0, sen.sap['mr_post'], z2f_offs == 1)   #maintenance energy (MEm - doesn't include gestation and lactation requirements)
+                sap_kg = fun.f_update(0, sen.sap['kg_post'], z2f_offs == 1)   #efficiency of gain (kg)
+                #### alter potential intake
+                pi_offs = fun.f_sa(pi_offs, sam_pi)
+                #### alter mei
+                mei_solid_offs = mei_solid_offs + (mem_offs * sap_mr
+                                                   - surplus_energy_offs * sap_kg / (1 + sap_kg))
+
 
             ######################################
             #store postprocessing and report vars#

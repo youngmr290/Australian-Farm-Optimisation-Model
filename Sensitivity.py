@@ -54,6 +54,7 @@ sam['mr'] = 1.0                             #Maintenance requirement of adults (
 sam['pi'] = 1.0                             #Potential intake of adults (zf2==1)
 sam['LTW_dams'] = 1.0                       #adjust impact of life time wool fleece effects
 sam['LTW_offs'] = 1.0                       #adjust impact of life time wool fleece effects
+sam['pi_post'] = 1.0                        #Post loop potential intake of adults (zf2==1)
 
 ##stock parameters
 sam['ci_c2'] = np.ones(uinp.parameters_inp['i_ci_c2'].shape, dtype=np.float64)  #intake params for genotypes
@@ -63,9 +64,11 @@ sam['sfw_c2'] = 1.0                       #std fleece weight genotype params
 #SAP #
 ######
 sap['evg'] = 0.0               #energy content of liveweight gain - this is a high level sa, it impacts within a calculation not on an input and is only implemented on adults
-sap['mortalityp'] = 0          #Scale the calculated progeny mortality at birth relative - this is a high level sa, it impacts within a calculation not on an input
-sap['mortalitye'] = 0          #Scale the calculated dam mortality at birth - this is a high level sa, it impacts within a calculation not on an input
-sap['mortalityb'] = 0          #Scale the calculated base mortality - this is a high level sa, it impacts within a calculation not on an input
+sap['mortalityp'] = 0.0        #Scale the calculated progeny mortality at birth relative - this is a high level sa, it impacts within a calculation not on an input
+sap['mortalitye'] = 0.0        #Scale the calculated dam mortality at birth - this is a high level sa, it impacts within a calculation not on an input
+sap['mortalityb'] = 0.0        #Scale the calculated base mortality - this is a high level sa, it impacts within a calculation not on an input
+sap['kg_post'] = 0.0           #Post loop energy efficiency of adults (zf2==1)
+sap['mr_post'] = 0.0           #Post loop maintenance requirement of adults (zf2==1)
 
 
 ######
@@ -78,13 +81,13 @@ saa['husb_labour_l2h2'] = np.zeros(uinp.sheep_inp['i_husb_operations_labourreq_l
 ##stock parameters
 saa['sfd_c2'] = 0.0                       #std fibre diameter genotype params
 saa['cl0_c2'] = np.zeros(uinp.parameters_inp['i_cl0_c2'].shape, dtype=np.float64)  #SA value for litter size genotype params.
-saa['scan_std_c2'] = 0                #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT..
+saa['scan_std_c2'] = 0.0                  #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT..
 
 ######
 #SAT #
 ######
-sat['salep_weight_scalar'] = 0 #Scalar for LW impact across grid 1
-sat['salep_score_scalar'] = 0  #Scalar for score impact across the grid
+sat['salep_weight_scalar'] = 0.0 #Scalar for LW impact across grid 1
+sat['salep_score_scalar'] = 0.0  #Scalar for score impact across the grid
 
 
 ######
@@ -135,7 +138,7 @@ sav['salep_percentile'] = '-'                   #Value for percentile for all sa
 sav['salep_max'] = '-'                          #max sale price in grid
 len_max_w1 = sinp.structuralsa_inp['i_w_start_len1'] * len(sinp.structuralsa_inp['i_nut_spread_n1']) ** (
         len(sinp.stock_inp['i_fixed_fvp_mask_dams'])+len(sinp.structuralsa_inp['i_fvp_mask_dams'])) #the max size of w if all n and fvps included.
-len_max_w3 = sinp.structuralsa_inp['i_w_start_len3'] * len(sinp.structuralsa_inp['i_nut_spread_n3']) ** len([sinp.structuralsa_inp['i_fvp_mask_offs']]) #the max size of w if all n and fvps included.
+len_max_w3 = sinp.structuralsa_inp['i_w_start_len3'] * len(sinp.structuralsa_inp['i_nut_spread_n3']) ** len(sinp.structuralsa_inp['i_fvp_mask_offs']) #the max size of w if all n and fvps included.
 sav['nut_mask_dams_owi'] = np.full((pinp.sheep_inp['i_o_len'], pinp.sheep_inp['i_i_len'], len_max_w1), '-', dtype=object)    #masks the nutrition options available eg high low high - the options selected are available for each starting weight. This array is cut down in the code to the correct w len.
 sav['nut_mask_offs_swix'] = np.full((pinp.sheep_inp['i_s_len'], len_max_w3, pinp.sheep_inp['i_i_len'], pinp.sheep_inp['i_x_len']), '-', dtype=object)   #masks the nutrition options available eg high low high - the options selected are available for each starting weight. This array is cut down in the code to the correct w len.
 sav['nut_spread_n1'] = np.full(sinp.structuralsa_inp['i_nut_spread_n1'].shape, '-', dtype=object)      #nut spread dams
