@@ -1030,7 +1030,7 @@ def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, meme, mew, new, km,
     return mem, temp_lc_a1e1b1nwzida0e0b0xyg, kg
 
 
-def f_lwc_cs(cg, rc_start, mei, mem, mew, z1f, z2f, kg, mec = 0, rev_trait_value, mel = 0, gest_propn = 0, lact_propn = 0):
+def f_lwc_cs(cg, rc_start, mei, mem, mew, z1f, z2f, kg, rev_trait_value, mec = 0, mel = 0, gest_propn = 0, lact_propn = 0):
     ## requirement for maintenance
     maintenance = mem + mec * gest_propn + mel * lact_propn + mew
     ##Level of feeding (maint = 0)
@@ -1047,7 +1047,7 @@ def f_lwc_cs(cg, rc_start, mei, mem, mew, z1f, z2f, kg, mec = 0, rev_trait_value
     ##Empty bodyweight gain
     ebg = neg / evg
     ##Process the Liveweight REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
-    ebg = f_rev_update('lw', ebg, rev_trait_value)
+    ebg = f_rev_update('lwc', ebg, rev_trait_value)
     ##Protein gain
     pg = pcg * ebg
     ##fat gain
@@ -1072,7 +1072,7 @@ def f_lwc_mu(cg, rc_start, mei, mem, mew, z1f, z2f, kg, rev_trait_value, mec = 0
     ##Empty bodyweight gain
     ebg = neg / evg
     ##Process the Liveweight REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
-    ebg = f_rev_update('lw', ebg, rev_trait_value)
+    ebg = f_rev_update('lwc', ebg, rev_trait_value)
     # ##Protein gain
     # pg = pcg * ebg
     # ##fat gain

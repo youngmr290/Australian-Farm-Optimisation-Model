@@ -2508,7 +2508,7 @@ def generator(params,r_vals,ev,plots = False):
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_sire, rc_start_sire, mei_sire
-                                                                , mem_sire, mew_sire, z1f_sire, z2f_sire, kg_sire)
+                                                                , mem_sire, mew_sire, z1f_sire, z2f_sire, kg_sire, rev_trait_values['sire'][p])
                         if eqn_used:
                             ebg_sire = temp0
                             evg_sire = temp1
@@ -2523,7 +2523,7 @@ def generator(params,r_vals,ev,plots = False):
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_dams, rc_start_dams, mei_dams
-                                                , mem_dams, mew_dams, z1f_dams, z2f_dams, kg_dams, mec_dams, mel_dams
+                                                , mem_dams, mew_dams, z1f_dams, z2f_dams, kg_dams, rev_trait_values['dams'][p], mec_dams, mel_dams
                                                 , gest_propn_pa1e1b1nwzida0e0b0xyg1[p], lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
                         if eqn_used:
                             ebg_dams = temp0
@@ -2539,7 +2539,7 @@ def generator(params,r_vals,ev,plots = False):
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_offs, rc_start_offs, mei_offs
-                                                                , mem_offs, mew_offs, z1f_offs, z2f_offs, kg_offs)
+                                                                , mem_offs, mew_offs, z1f_offs, z2f_offs, kg_offs, rev_trait_values['offs'][p])
                         if eqn_used:
                             ebg_offs = temp0
                             evg_offs = temp1
@@ -2557,7 +2557,7 @@ def generator(params,r_vals,ev,plots = False):
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_mu(cg_sire, rc_start_sire, mei_sire
-                                                                , mem_sire, mew_sire, z1f_sire, z2f_sire, kg_sire)
+                                                                , mem_sire, mew_sire, z1f_sire, z2f_sire, kg_sire, rev_trait_values['sire'][p])
                         if eqn_used:
                             ebg_sire = temp0
                             evg_sire = temp1
@@ -2572,7 +2572,7 @@ def generator(params,r_vals,ev,plots = False):
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_mu(cg_dams, rc_start_dams, mei_dams
-                                                , mem_dams, mew_dams, z1f_dams, z2f_dams, kg_dams, mec_dams, mel_dams
+                                                , mem_dams, mew_dams, z1f_dams, z2f_dams, kg_dams, rev_trait_values['dams'][p], mec_dams, mel_dams
                                                 , gest_propn_pa1e1b1nwzida0e0b0xyg1[p], lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
                         if eqn_used:
                             ebg_dams = temp0
@@ -2588,7 +2588,7 @@ def generator(params,r_vals,ev,plots = False):
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_mu(cg_offs, rc_start_offs, mei_offs
-                                                                , mem_offs, mew_offs, z1f_offs, z2f_offs, kg_offs)
+                                                                , mem_offs, mew_offs, z1f_offs, z2f_offs, kg_offs, rev_trait_values['offs'][p])
                         if eqn_used:
                             ebg_offs = temp0
                             evg_offs = temp1
@@ -2889,7 +2889,7 @@ def generator(params,r_vals,ev,plots = False):
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                     temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_cs(cg_yatf, rc_start_yatf, mei_yatf, mem_yatf
-                                                                             , mew_yatf, z1f_yatf, z2f_yatf, kg_yatf)
+                                                                             , mew_yatf, z1f_yatf, z2f_yatf, kg_yatf, rev_trait_values['yatf'][p])
                     if eqn_used:
                         ebg_yatf = temp0
                         evg_yatf = temp1
@@ -2906,7 +2906,7 @@ def generator(params,r_vals,ev,plots = False):
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                     temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_lwc_mu(cg_yatf, rc_start_yatf, mei_yatf, mem_yatf
-                                                                             , mew_yatf, z1f_yatf, z2f_yatf, kg_yatf)
+                                                                             , mew_yatf, z1f_yatf, z2f_yatf, kg_yatf, rev_trait_values['yatf'][p])
                     if eqn_used:
                         ebg_yatf = temp0
                         evg_yatf = temp1
