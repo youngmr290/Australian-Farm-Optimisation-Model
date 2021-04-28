@@ -815,7 +815,7 @@ if __name__ == '__main__':
     rep.f_errors(trial_outdated,trials)
 
     ##clear the old report.xlsx
-    for f in glob.glob("Output/*.xlsx"):
+    for f in glob.glob("Output/Report*.xlsx"):
         os.remove(f)
 
 
