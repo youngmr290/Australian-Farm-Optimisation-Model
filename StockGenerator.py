@@ -4288,11 +4288,11 @@ def generator(params,r_vals,ev,plots = False):
     ##dams
     sale_delay_sa1e1b1nwzida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['i_sales_delay_sg1'], 'dams', p_pos) #periods after shearing that sale occurs
     ###mask for nutrition profiles. this doesnt have a full w axis because it only has the nutrition options it is expanded to w further down.
-    sav_mask_nut_dams_owi = sen.sav['nut_mask_dams'][...,0:len_nut_dams] #This controls if a nutrition pattern is included.
+    sav_mask_nut_dams_owi = sen.sav['nut_mask_dams_owi'][:,0:len_nut_dams,:] #This controls if a nutrition pattern is included.
     mask_nut_dams_owi = fun.f_sa(np.array(True), sav_mask_nut_dams_owi,5) #all nut options included unless SAV is false
     mask_nut_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(mask_nut_dams_owi,i_pos, left_pos2=w_pos, left_pos3=p_pos,
-                                                           right_pos2=i_pos, right_pos3=w_pos,swap=True, swap2=True,
-                                                           condition=pinp.sheep['i_mask_i'], axis=i_pos, condition2=mask_o_dams, axis2=p_pos)
+                                                   right_pos2=i_pos, right_pos3=w_pos, condition=pinp.sheep['i_mask_i'],
+                                                   axis=i_pos, condition2=mask_o_dams, axis2=p_pos)
     ##offs
     ###dvp mask - basically the shearing mask plus a true for the first dvp which is weaning
     dvp_mask_g3 = np.concatenate([np.array([True]), mask_shear_g3]) #need to add true to the start of the shear mask because the first dvp is weaning
@@ -4305,11 +4305,11 @@ def generator(params,r_vals,ev,plots = False):
 
 
     ###mask for nutrition profiles. this doesnt have a full w axis because it only has the nutrition options it is expanded to w further down.
-    sav_mask_nut_offs_swix = sen.sav['nut_mask_offs'][...,0:len_nut_offs] #This controls if a nutrition pattern is included.
+    sav_mask_nut_offs_swix = sen.sav['nut_mask_offs_swix'][:,0:len_nut_offs,...] #This controls if a nutrition pattern is included.
     mask_nut_offs_swix = fun.f_sa(np.array(True), sav_mask_nut_offs_swix,5) #all nut options included unless SAV is false
     mask_nut_sa1e1b1nwzida0e0b0xyg3 = fun.f_expand(mask_nut_offs_swix, x_pos, left_pos2=i_pos, left_pos3=w_pos,left_pos4=p_pos,
                                                    right_pos2=x_pos,right_pos3=i_pos,right_pos4=w_pos,
-                                                   swap=True, move=True, source=-1, dest=1, condition=pinp.sheep['i_mask_i'], axis=i_pos,
+                                                   condition=pinp.sheep['i_mask_i'], axis=i_pos,
                                                    condition2=mask_shear_g3, axis2=p_pos, condition3=mask_x, axis3=x_pos)
 
     #################################
