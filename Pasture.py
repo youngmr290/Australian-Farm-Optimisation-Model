@@ -574,7 +574,6 @@ def f_pasture(params, r_vals, ev):
     '''
 
     ## initialise numpy arrays used only in this method
-    grn_dmd_selectivity_goflzt = np.zeros(goflzt,  dtype = 'float64')
     senesce_propn_dgoflzt      = np.zeros(dgoflzt, dtype = 'float64')
     nap_dflrzt                 = np.zeros(dflrzt,  dtype = 'float64')
     me_threshold_vfzt          = np.zeros(vfzt,    dtype = 'float64')   # the threshold for the EV pools which define the animals feed quality requirements
@@ -612,7 +611,8 @@ def f_pasture(params, r_vals, ev):
                                            * (1-np.sum(pasture_rt[:, na, :], axis=-1)))    # sum pasture proportion across the t axis to get area of crop
 
     ## green initial FOO for the 'grnha' decision variables
-    foo_start_grnha_oflzt = np.maximum(i_fxg_foo_oflzt, i_base_ft[:, na, na, :])  # to ensure that final foo can not be below the base level
+    foo_start_grnha_oflzt = i_fxg_foo_oflzt
+#    foo_start_grnha_oflzt = np.maximum(i_fxg_foo_oflzt, i_base_ft[:, na, na, :])  # to ensure that final foo can not be below the base level
     max_foo_flzt                 = np.maximum(i_fxg_foo_oflzt[1,...], grn_foo_start_ungrazed_flzt)     #maximum of ungrazed foo and foo from the medium foo level
     foo_start_grnha_oflzt[2,...] = np.maximum.accumulate(max_foo_flzt,axis=0)                          #maximum accumulated along the feed periods axis, i.e. max to date
     # foo_start_grnha_oflt[...]   = np.maximum(foo_start_grnha_oflt
@@ -622,77 +622,47 @@ def f_pasture(params, r_vals, ev):
 
     ## green, pasture growth for the 'grnha' decision variables
     pgr_grnday_oflzt = np.maximum(0.01, i_fxg_pgr_oflzt)                  # use maximum to ensure that the pgr is non zero (because foo_days requires dividing by pgr)
-    pgr_grnha_goflzt =       pgr_grnday_oflzt     \
-                     *          length_fz[:,na, :, na]      \
-                     * c_pgr_gi_scalar_gft[:, na, :, na, na, :]
+    pgr_grnha_goflzt = pgr_grnday_oflzt * length_fz[:,na, :, na] * c_pgr_gi_scalar_gft[:, na, :, na, na, :]
 
     ## green, final foo from initial, pgr and senescence
     ### foo at end of period if ungrazed
-    foo_ungrazed_grnha_oflzt  = foo_start_grnha_oflzt    * (1-grn_senesce_startfoo_fzt[:, na, ...])   \
-                              + pgr_grnha_goflzt[0, ...] * (1- grn_senesce_pgrcons_fzt[:, na, ...])
+    foo_end_ungrazed_grnha_oflzt  = foo_start_grnha_oflzt * (1 - grn_senesce_startfoo_fzt[:, na, ...])   \
+                                   + pgr_grnha_goflzt[0, ...] * (1 - grn_senesce_pgrcons_fzt[:, na, ...])
     ### foo at end of period with range of grazing intensity prior to eos senescence
-    foo_endprior_grnha_goflzt =    foo_ungrazed_grnha_oflzt \
-                                - (foo_ungrazed_grnha_oflzt
-                                   -            i_base_ft[:, na, na,: ]) \
-                                *    i_foo_graze_propn_gt[:, na, na, na, na, :] \
-                                +               i_base_ft[:, na, na, :]
+    foo_endprior_grnha_goflzt = (foo_end_ungrazed_grnha_oflzt
+                                 - (foo_end_ungrazed_grnha_oflzt - i_base_ft[:, na, na,: ])
+                                 * i_foo_graze_propn_gt[:, na, na, na, na, :])
     senesce_eos_grnha_goflzt = foo_endprior_grnha_goflzt * i_grn_senesce_eos_fzt[:, na, ...]
     foo_end_grnha_goflzt = foo_endprior_grnha_goflzt - senesce_eos_grnha_goflzt
-    foo_end_grnha_goflzt = foo_end_grnha_goflzt * mask_greenfeed_exists_fzt[:, na, ...]  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
+    #apply mask to remove any green foo at the end of period in periods when green pas doesnt exist.
+    foo_end_grnha_goflzt = foo_end_grnha_goflzt * mask_greenfeed_exists_fzt[:, na, ...]
 
     ## green, removal & dmi
-    ### divide by (1 - grn_senesce_pgrcons) to allows for consuming feed reducing senescence (but it also converts to per day, so have to multiply by days in period)
-    removal_grnha_goflzt =np.maximum(0,   foo_start_grnha_oflzt
-                               * (1 - grn_senesce_startfoo_fzt[:, na, ...])
-                               +               pgr_grnha_goflzt
-                               * (1 -  grn_senesce_pgrcons_fzt[:, na, :])
-                               -      foo_endprior_grnha_goflzt)          \
-                          / (1 -       grn_senesce_pgrcons_fzt[:, na, :])
-    cons_grnha_t_goflzt  =      removal_grnha_goflzt   \
-                          /(1 + i_grn_trampling_ft[:, na, na, :])
+    ### divide by (1 - grn_senesce_pgrcons) to allows for consuming feed reducing senescence
+    removal_grnha_goflzt =np.maximum(0, (foo_start_grnha_oflzt * (1 - grn_senesce_startfoo_fzt[:, na, ...])
+                                         + pgr_grnha_goflzt * (1 - grn_senesce_pgrcons_fzt[:, na, :])
+                                         - foo_endprior_grnha_goflzt)
+                                        / (1 - grn_senesce_pgrcons_fzt[:, na, :]))
+    cons_grnha_t_goflzt  = removal_grnha_goflzt / (1 + i_grn_trampling_ft[:, na, na, :])
 
-    ## green, dmd & md from average and change due to foo & grazing intensity
-    ### # to calculate foo_days requires calculating number of days in current period and adding days from the previous period (if required)
-
-    ###set the default to Clip between -1 and 0 for low FOO level
-    min_oflzt = np.zeros(n_foo_levels).reshape((-1,1,1,1,1))
-    max_oflzt = np.ones(n_foo_levels).reshape((-1,1,1,1,1))
-    # ### and clip between 0 and 1 for high FOO level
-    # min_oflt[0,...] = 0
-    # max_oflt[0,...] = 0
-
-    propn_period_oflzt               = (  foo_start_grnha_oflzt
-                                        - foo_start_grnha_oflzt[0:1, ...])            \
-                                      /        pgr_grnha_goflzt[0, ...]
-    propn_periodprev_oflzt           = (  foo_start_grnha_oflzt[:, 1:, ...]
-                                        - foo_start_grnha_oflzt[0:1, 1:, ...]
-                                        -      pgr_grnha_goflzt[0, :, 1:, ...])     \
-                                      /        pgr_grnha_goflzt[0, :, :-1, ...]      # pgr from the previous period
-    foo_days_grnha_oflzt             = np.clip(propn_period_oflzt, min_oflzt, max_oflzt)              \
-                                      *               length_fz[:, na, :, na]
-    foo_days_grnha_oflzt[:,1:, ...] += np.clip(propn_periodprev_oflzt, min_oflzt, max_oflzt)          \
-                                     *                    length_fz[:-1, na, :, na] # length from previous period
-    ### convert monthly decline to daily decline
-    grn_dmd_declinefoo_ft           = i_grn_dmd_declinefoo_ft / 30.5
-    ### change in sward average digestibility due to increasing foo
-    grn_dmd_fooadj_oflzt             = ((1 - grn_dmd_declinefoo_ft[:, na, na, :])
-                                         **     foo_days_grnha_oflzt) - 1
-    dmd_sward_grnha_goflzt           =            i_grn_dig_flzt                        \
-                                      +     grn_dmd_fooadj_oflzt                       \
-    ### change in digestibility associated with diet selection (altered by level of grazing)
-    #### The maximum digestibility is unchanged (fresh growth is fresh growth).
-    #### The minimum digestibility is reduced by double the reduction in average digestibility
-    grn_dmd_range_oflzt              = i_grn_dmd_range_ft[:, na, na, :] - grn_dmd_fooadj_oflzt * 2
-    grn_dmd_selectivity_goflzt[1,...] = 0.5000 * grn_dmd_range_oflzt
-    grn_dmd_selectivity_goflzt[2,...] = 0.3333 * grn_dmd_range_oflzt  #todo could improve this by making the selectivity proportion a formula based on proportion grazed
-    grn_dmd_selectivity_goflzt[3,...] = 0
-    dmd_diet_grnha_goflzt =      dmd_sward_grnha_goflzt                       \
-                           + grn_dmd_selectivity_goflzt
+    ## green, dmd & md from input values and impact of foo & grazing intensity
+    ### sward digestibility is reduced with higher FOO (based on start FOO)
+    ### diet digestibility is reduced with higher FOO if grazing intensity is greater than 25%
+    #### Low FOO or low grazing intensity is input
+    #### High FOO with 100% grazing is reduced by half the range in digestibility.
+    #### Between low and high FOO, and between 25% & 100% grazing intensity is a linear interpolation
+    dmd_sward_grnha_goflzt = (i_grn_dig_flzt - i_grn_dmd_range_ft[:, na, na, :] /2
+                              * fun.f_divide(foo_start_grnha_oflzt - foo_start_grnha_oflzt[0,...]
+                                              , foo_start_grnha_oflzt[-1,...] - foo_start_grnha_oflzt[0,...]))
+    dmd_diet_grnha_goflzt = (i_grn_dig_flzt - i_grn_dmd_range_ft[:, na, na, :] /2
+                             * fun.f_divide(foo_start_grnha_oflzt - foo_start_grnha_oflzt[0,...]
+                                            , foo_start_grnha_oflzt[-1,...] - foo_start_grnha_oflzt[0,...])
+                             * (i_foo_graze_propn_gt[:, na, na, na, na, :] - 0.25)/(1 - 0.25))  # 0.25 is grazing intensity that gives diet quality == input value.
     grn_md_grnha_goflzt = fun.dmd_to_md(dmd_diet_grnha_goflzt)
 
     ## green, mei & volume
-    foo_ave_grnha_goflzt = ( foo_start_grnha_oflzt
-                            + foo_end_grnha_goflzt)/2
+    ###Average FOO is calculated using FOO at the end prior to EOS senescence (which assumes all pasture senesces after grazing)
+    foo_ave_grnha_goflzt = (foo_start_grnha_oflzt + foo_endprior_grnha_goflzt)/2
     ### pasture params used to convert foo for rel availability
     pasture_stage_flzt = i_pasture_stage_p6z[:, na, :, na]
     ### adjust foo and calc hf
@@ -738,8 +708,8 @@ def f_pasture(params, r_vals, ev):
     ### calc relative quality - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
     if uinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
         dry_ri_quality_dfzt = sfun.f_rq_cs(dry_dmd_dfzt, i_legume_zt)
-    dry_ri_dfzt = dry_ri_quality_dfzt * dry_ri_availability_dfzt
-    dry_ri_dfzt[dry_ri_dfzt<0.05] = 0.05 #set the minimum RI to 0.05
+    dry_ri_dfzt = np.maximum(0.05, dry_ri_quality_dfzt * dry_ri_availability_dfzt)  #set the minimum RI to 0.05
+#    dry_ri_dfzt[dry_ri_dfzt<0.05] = 0.05 #set the minimum RI to 0.05
     dry_volume_t_dfzt = 1000 / dry_ri_dfzt                 # parameters for the dry feed grazing activities: Total volume of the tonne consumed
     dry_volume_t_dfzt = dry_volume_t_dfzt * mask_dryfeed_exists_fzt  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
 
@@ -801,7 +771,7 @@ def f_pasture(params, r_vals, ev):
     ### calc relative availability - note that the equation system used is the one selected for dams in p1 - need to hook up mu function
     if uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used
         ri_quan_fz = sfun.f_ra_cs(i_poc_foo_fz, hf)
-        poc_vol_fz = fun.f_divide(1,(ri_qual_fz*ri_quan_fz)) * 1000 #times 1000 to convert to vol to per tonne
+        poc_vol_fz = fun.f_divide(1, (ri_qual_fz * ri_quan_fz)) * 1000 #times 1000 to convert to vol to per tonne
 
 
     ###########
@@ -900,5 +870,5 @@ def f_pasture(params, r_vals, ev):
     r_vals['days_p6z'] = length_fz
 
     r_vals['pgr_grnha_goflzt'] = pgr_grnha_goflzt #store for reporting
-    r_vals['foo_end_grnha_goflzt'] = foo_end_grnha_goflzt #store for reporting
+    r_vals['foo_end_grnha_goflzt'] = foo_endprior_grnha_goflzt #store for reporting. Green FOO prior to eos senescence
     r_vals['cons_grnha_t_goflzt'] = cons_grnha_t_goflzt #store for reporting
