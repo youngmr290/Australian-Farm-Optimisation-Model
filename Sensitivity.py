@@ -139,7 +139,7 @@ sav['salep_max'] = '-'                          #max sale price in grid
 len_max_w1 = sinp.structuralsa_inp['i_w_start_len1'] * len(sinp.structuralsa_inp['i_nut_spread_n1']) ** (
         len(sinp.stock_inp['i_fixed_fvp_mask_dams'])+len(sinp.structuralsa_inp['i_fvp_mask_dams'])) #the max size of w if all n and fvps included.
 len_max_w3 = sinp.structuralsa_inp['i_w_start_len3'] * len(sinp.structuralsa_inp['i_nut_spread_n3']) ** len(sinp.structuralsa_inp['i_fvp_mask_offs']) #the max size of w if all n and fvps included.
-sav['nut_mask_dams_owi'] = np.full((pinp.sheep_inp['i_o_len'], pinp.sheep_inp['i_i_len'], len_max_w1), '-', dtype=object)    #masks the nutrition options available eg high low high - the options selected are available for each starting weight. This array is cut down in the code to the correct w len.
+sav['nut_mask_dams_owi'] = np.full((pinp.sheep_inp['i_o_len'], len_max_w1, pinp.sheep_inp['i_i_len']), '-', dtype=object)    #masks the nutrition options available eg high low high - the options selected are available for each starting weight. This array is cut down in the code to the correct w len.
 sav['nut_mask_offs_swix'] = np.full((pinp.sheep_inp['i_s_len'], len_max_w3, pinp.sheep_inp['i_i_len'], pinp.sheep_inp['i_x_len']), '-', dtype=object)   #masks the nutrition options available eg high low high - the options selected are available for each starting weight. This array is cut down in the code to the correct w len.
 sav['nut_spread_n1'] = np.full(sinp.structuralsa_inp['i_nut_spread_n1'].shape, '-', dtype=object)      #nut spread dams
 sav['nut_spread_n3'] = np.full(sinp.structuralsa_inp['i_nut_spread_n3'].shape, '-', dtype=object)      #nut spread offs
@@ -147,8 +147,8 @@ sav['n_fs_dams'] = '-'      #nut options dams
 sav['n_fs_offs'] = '-'      #nut options offs
 sav['mask_fvp_dams'] = np.full(sinp.structuralsa_inp['i_fvp_mask_dams'].shape, '-', dtype=object)      #SA to mask changeable fvps.
 sav['fvp_is_dvp_dams'] = np.full(sinp.structuralsa_inp['i_dvp_mask_f1'].shape, '-', dtype=object)      #SA to control if changeable fvp is a dvp.
-sav['mask_fvp_offs'] = '-'      #SA to mask changeable fvps.
-sav['fvp_is_dvp_offs'] = '-'      #SA to control if changeable fvp is a dvp.
+sav['mask_fvp_offs'] = np.full(sinp.structuralsa_inp['i_fvp_mask_offs'].shape, '-', dtype=object)      #SA to mask changeable fvps.
+sav['fvp_is_dvp_offs'] = np.full(sinp.structuralsa_inp['i_fvp_mask_offs'].shape, '-', dtype=object)      #SA to control if changeable fvp is a dvp.
 sav['drys_sold'] = '-'   #SA to force drys to be sold
 sav['drys_retained'] = '-'   #SA to force drys to be retained
 sav['r1_izg1'] = np.full(pinp.sheep_inp['ia_r1_zig1'].shape, '-', dtype=object)   #SA to change the base feed option for dams

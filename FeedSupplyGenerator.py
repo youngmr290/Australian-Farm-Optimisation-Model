@@ -441,7 +441,7 @@ def period_generator():
     mask_d_offs = np.max(date_born1st_oa1e1b1nwzida0e0b0xyg2<=date_end_p[-1], axis=tuple(range(p_pos+1, 0))) #compare each birth opp with the end date of the sim and make the mask - the mask is of the longest axis (ie to handle situations where say bbb and bbm have birth at different times so one has 6 opp and the other has 5 opp)
     mask_x = pinp.sheep['i_gender_propn_x']>0
     fvp_mask_dams = np.concatenate([sinp.stock['i_fixed_fvp_mask_dams'], sinp.structuralsa['i_fvp_mask_dams']])
-    fvp_mask_offs = np.concatenate([sinp.stock['i_fixed_fvp_mask_offs'], [sinp.structuralsa['i_fvp_mask_offs']]]) #todo will need to remove [] if i_fvp_mask_offs becomes more than single bool.
+    fvp_mask_offs = sinp.structuralsa['i_fvp_mask_offs']
 
     ###################################
     ### axis len                      #
