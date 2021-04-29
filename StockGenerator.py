@@ -1258,10 +1258,10 @@ def generator(params,r_vals,ev,plots = False):
     adja_fd_initial_x_xyg0 = cx_sire[13, 0:1, ...]
     adja_fd_initial_x_xyg1 = cx_dams[13, 1:2, ...]
     adja_fd_initial_x_xyg3 = cx_offs[13, mask_x, ...]
-    adja_fl_initial_x_wzida0e0b0xyg0 = cx_sire[12, 0:1, ...] * fl_initial_wzida0e0b0xyg0 / sfw_a0e0b0xyg0 #Should be fl_initial / sfw  So more understandable to think of the eqn as being fl_initial * cx[0] (cfw adj due to gender) / sfw
+    adja_fl_initial_x_wzida0e0b0xyg0 = cx_sire[12, 0:1, ...] * fl_initial_wzida0e0b0xyg0 / sfw_a0e0b0xyg0 # more understandable to think of the eqn as being fl_initial * cx[12] (cfw adj due to gender) / sfw
     adja_fl_initial_x_wzida0e0b0xyg1 = cx_dams[12, 1:2, ...] * fl_initial_wzida0e0b0xyg1 / sfw_a0e0b0xyg1
     adja_fl_initial_x_wzida0e0b0xyg3 = cx_offs[12, mask_x, ...] * fl_initial_wzida0e0b0xyg3 / sfw_da0e0b0xyg3
-    ##adjust for dam age. Note cfw changes throughout the year therefore the adjustment factor will not be the same all yr hence divide by std_fw (same for fl) eg the impact of gender on cfw will be much less after only a small time (the parameter is a yearly factor eg male sheep have 0.02 kg more wool each yr)
+    ##adjust for dam age. Note cfw & fl accumulate during the year therefore the adjustment factor is divided by std_fw because the full effect is only realised after a full wool growth cycle (whereas a fibre diameter difference is expressed every day)
     adja_lw_initial_d_a0e0b0xyg0 = np.sum(ce_sire[17, ...] * agedam_propn_da0e0b0xyg0, axis=0) #d axis lost when summing
     adja_lw_initial_d_a0e0b0xyg1 = np.sum(ce_dams[17, ...] * agedam_propn_da0e0b0xyg1, axis=0)
     adja_lw_initial_d_da0e0b0xyg3 = ce_offs[17, ...]
