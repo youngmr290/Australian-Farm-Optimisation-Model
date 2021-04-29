@@ -851,7 +851,7 @@ def dmd_to_md(dmd):
         if (dmd > 1).all() : dmd /= 100 # if dmd is a list or an array and is not a decimal then convert to decimal (in excel 80% is 0.8 in python)
     except:
         if dmd > 1:          dmd /= 100 # if dmd is a scalar and is not a decimal then convert to decimal   ^ alternative would be to convert scalar values to a list (if dmd isinstance not list: dmd=[dmd]) or perhaps type is float]
-    return np.maximum(0, 17 * dmd - 0.02)                # formula 1.13C from SCA 1990 pg 9
+    return np.maximum(0, 17 * dmd - 2)                # formula 1.13C from SCA 1990 pg 9
 
 def md_to_dmd(md):
     '''basically a rearranged version of the function above
