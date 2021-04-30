@@ -891,7 +891,7 @@ def f_profitloss_table(lp_vars, r_vals):
     keys_z = r_vals['stock']['keys_z']
     subtype_rev = ['grain', 'sheep sales', 'wool', 'Total Revenue']
     subtype_exp = ['crop', 'pasture', 'stock', 'machinery', 'labour', 'fixed', 'Total expenses']
-    subtype_tot = ['assets', 'depreciation', 'minRoe', 'EBITD', 'Interest', 'obj']
+    subtype_tot = ['asset_value', 'depreciation', 'minRoe', 'EBITD', 'Interest', 'obj']
     pnl_rev_index = pd.MultiIndex.from_product([keys_z, ['Revenue'], subtype_rev], names=['Season', 'Type', 'Subtype'])
     pnl_exp_index = pd.MultiIndex.from_product([keys_z, ['Expense'], subtype_exp], names=['Season', 'Type', 'Subtype'])
     pnl_tot_index = pd.MultiIndex.from_product([keys_z, ['Total'], subtype_tot], names=['Season', 'Type', 'Subtype'])
@@ -959,7 +959,7 @@ def f_profitloss_table(lp_vars, r_vals):
 
     ##add the assets & minroe & depreciation
     pnl.loc[idx[:, 'Total', 'depreciation'],'Full year'] = dep_z
-    pnl.loc[idx[:, 'Total', 'assets'],'Full year'] = asset_value_z.values
+    pnl.loc[idx[:, 'Total', 'asset_value'],'Full year'] = asset_value_z.values
     pnl.loc[idx[:, 'Total', 'minRoe'],'Full year'] = minroe_z.values
 
     ##add the objective
@@ -1240,6 +1240,7 @@ def f_arith(prod, weight, den_weights, arith, axis):
     option 2: total production for a given axis
     option 3: total production for each activity
     option 4: return weighted average of production param using prod>0 as the weights
+    option 5: return the maximum value across the slices of the axes
 
     :param prod: array: production param
     :param weight: array: weights (typically the variable associated with the prod param)
@@ -1263,7 +1264,10 @@ def f_arith(prod, weight, den_weights, arith, axis):
         prod = prod * weight
     ##option 4
     if arith == 4:
-        prod = np.sum(prod * (prod>0),tuple(axis),keepdims=keepdims)
+        prod = np.sum(prod * (prod>0), tuple(axis), keepdims=keepdims)
+    ##option 5
+    if arith == 5:
+        prod = np.max(prod, tuple(axis), keepdims=keepdims)
 
     return prod
 

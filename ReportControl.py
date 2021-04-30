@@ -97,6 +97,8 @@ def f_report(processor, trials):
     stacked_poccon = pd.DataFrame()  # pasture on crop paddocks feed consumed
     stacked_supcon = pd.DataFrame()  # supplement feed consumed
     stacked_stubcon = pd.DataFrame()  # stubble feed consumed
+    stacked_grnfec = pd.DataFrame()  # FEC of green foo
+    stacked_dryfec = pd.DataFrame()  # FEC of dry foo
 
     ##read in the pickled results
     for trial_name in trials:
@@ -553,7 +555,7 @@ def f_report(processor, trials):
             keys = 'keys_vgoflzt'
             arith = 2
             index =[3]
-            cols =[]
+            cols =[4]
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             grnfoo = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
@@ -570,7 +572,7 @@ def f_report(processor, trials):
             keys = 'keys_dfzt'
             arith = 2
             index =[1]
-            cols =[]
+            cols =[0]
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             dryfoo = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
@@ -628,6 +630,37 @@ def f_report(processor, trials):
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             drycon = pd.concat([drycon],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_drycon = stacked_drycon.append(drycon)
+
+        if report_run.loc['run_grnfec', 'Run']:
+            #returns fec during each fp regardless of whether selected or not
+            type = 'pas'
+            prod = 'fec_grnha_vgoflzt'
+            weights = 1
+            keys = 'keys_vgoflzt'
+            arith = 5
+            index = [3]
+            cols = [2, 1]
+            axis_slice = {}
+            grnfec = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
+                                   keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+            grnfec = pd.concat([grnfec],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_grnfec = stacked_grnfec.append(grnfec)
+
+
+        if report_run.loc['run_dryfec', 'Run']:
+            #returns fec during each fp regardless of whether selected or not
+            type = 'pas'
+            prod = 'fec_dry_vdfzt'
+            weights = 1
+            keys = 'keys_vdfzt'
+            arith = 5
+            index = [2]
+            cols = [1]
+            axis_slice = {}
+            dryfec = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
+                                   keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+            dryfec = pd.concat([dryfec],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_dryfec = stacked_dryfec.append(dryfec)
 
 
         if report_run.loc['run_napcon', 'Run']:
@@ -778,6 +811,10 @@ def f_report(processor, trials):
         df_settings = rep.f_df2xl(writer, stacked_grncon, 'grncon', df_settings, option=1)
     if report_run.loc['run_drycon', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_drycon, 'drycon', df_settings, option=1)
+    if report_run.loc['run_grnfec', 'Run']:
+        df_settings = rep.f_df2xl(writer, stacked_grnfec, 'grnfec', df_settings, option=1)
+    if report_run.loc['run_dryfec', 'Run']:
+        df_settings = rep.f_df2xl(writer, stacked_dryfec, 'dryfec', df_settings, option=1)
     if report_run.loc['run_napcon', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_napcon, 'napcon', df_settings, option=1)
     if report_run.loc['run_poccon', 'Run']:
