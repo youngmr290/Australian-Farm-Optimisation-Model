@@ -378,12 +378,16 @@ def f_mach_summary(lp_vars, r_vals, option=0):
     fertchem_cost_rz_c = fertchem_cost_rzl_c.mul(rot_area_zrl.swaplevel(0,1).sort_index(), axis=0).sum(axis=0, level=(0,1))  # mul area and sum lmu
     fertchem_cost_c_zk = fertchem_cost_rz_c.unstack(1).reindex(phases_rk.index, axis=0, level=0).sum(axis=0,
                                                                                       level=1).stack(0).unstack(0)  # reindex to include landuse and sum rot
+
+    ##insurance
+    mach_insurance_c = r_vals['mach']['mach_insurance']
+
     ##conbime all costs
-    exp_mach_c_zk = pd.concat([fertchem_cost_c_zk, seeding_cost_own_c_zk, seeding_cost_contract_c_zk, harvest_cost_c_zk], axis=0).sum(
-        axis=0, level=0)
+    exp_mach_c_zk = pd.concat([fertchem_cost_c_zk, seeding_cost_own_c_zk, seeding_cost_contract_c_zk, harvest_cost_c_zk
+                               ], axis=0).sum(axis=0, level=0)
     ##return all if option==0
     if option == 0:
-        return exp_mach_c_zk
+        return exp_mach_c_zk, mach_insurance_c
 
 
 def f_grain_sup_summary(lp_vars, r_vals, option=0):
@@ -863,7 +867,7 @@ def f_profitloss_table(lp_vars, r_vals):
     '''
     ##read stuff from other functions that is used in rev and cost section
     exp_fert_k_cz, exp_chem_k_cz, misc_exp_k_cz, rev_grain_k_cz = f_crop_summary(lp_vars, r_vals, option=0)
-    exp_mach_c_zk = f_mach_summary(lp_vars, r_vals)
+    exp_mach_c_zk, mach_insurance_c = f_mach_summary(lp_vars, r_vals)
     stocksale_cz, wool_cz, stockcost_cz = f_stock_cash_summary(lp_vars, r_vals)
     ##other info required below
     all_pas = r_vals['rot']['all_pastures']  # landuse sets
@@ -892,6 +896,7 @@ def f_profitloss_table(lp_vars, r_vals):
     ##expenses
     ####machinery
     mach_c_z = exp_mach_c_zk.sum(axis=1,level=0)  # sum landuse
+    mach_c_z = mach_c_z.add(mach_insurance_c, axis=0)
     ####crop & pasture
     pasfert_c_z = exp_fert_k_cz[exp_fert_k_cz.index.isin(all_pas)].sum(axis=0).unstack()
     cropfert_c_z = exp_fert_k_cz[~exp_fert_k_cz.index.isin(all_pas)].sum(axis=0).unstack()

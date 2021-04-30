@@ -957,7 +957,7 @@ def f_harvest_dep():
 #insurance on all gear
 #######################################################################################################################################################
 #######################################################################################################################################################
-def f_insurance():
+def f_insurance(r_vals):
     '''
 
     Returns
@@ -969,11 +969,14 @@ def f_insurance():
     value_all_mach = f_total_clearing_value()
     insurance = value_all_mach * uinp.finance['equip_insurance']
     ##determine cash period
+    length = dt.timedelta(days=1) #assume all insurance is paid on 1 day
     p_dates = per.cashflow_periods()['start date']
     p_name = per.cashflow_periods()['cash period']
     start = uinp.mach_general['insurance_date']
-    allocation=fun.period_allocation(p_dates, p_name,start)
-    return {allocation:insurance}
+    allocation = fun.period_allocation(p_dates, p_name,start,length).replace(np.nan,0).set_index('period').squeeze()
+    insurance_c = allocation * insurance
+    r_vals['mach_insurance'] = insurance_c
+    return insurance_c.squeeze().to_dict()
 
 
 #######################################################################################################################################################
@@ -1001,7 +1004,7 @@ def f_mach_params(params,r_vals):
     harv_dep = f_harvest_dep()
     seeding_gear_clearing_value = f_seeding_gear_clearing_value()
     seeding_dep = f_seeding_dep()
-    insurance = f_insurance()
+    insurance = f_insurance(r_vals)
     mach_asset_value = f_total_clearing_value()
 
     ##add inputs that are params to dict
