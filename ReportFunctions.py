@@ -415,10 +415,12 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
     ##grain fed
     grain_fed_zkgvp6 = f_vars2df(lp_vars, 'v_sup_con', keys_z)
     grain_fed_zkg = grain_fed_zkgvp6.sum(level=(0, 1, 2))  # sum feed pool and feed period
-    grain_fed_zkp6 = grain_fed_zkgvp6.sum(level=(0, 1, 4)).swaplevel()  # sum feed pool and grain pool
+    grain_fed_zkp6 = grain_fed_zkgvp6.sum(level=(0, 1, 4))  # sum feed pool and grain pool
     grain_fed_zp6 = grain_fed_zkgvp6.sum(level=(0, 4))  # sum feed pool, landuse and grain pool
     if option == 1:
         return grain_fed_zp6.to_frame()
+    if option == 2:
+        return grain_fed_zkp6.unstack(0)
     ##total grain produced by crop enterprise
     total_grain_produced_zkg = grain_sold_zkg + grain_fed_zkg - grain_purchased_zkg  # total grain produced by crop enterprise
     grains_sale_price_zkg_c = grains_sale_price_kg_c.unstack().reindex(total_grain_produced_zkg.unstack().index, axis=0,level=1).stack()
@@ -654,6 +656,11 @@ def f_stock_cash_summary(lp_vars, r_vals):
     ##get reshaped variable
     stock_vars = f_stock_reshape(lp_vars, r_vals)
 
+    ##keys
+    keys_c = r_vals['fin']['keys_c']
+    keys_p6 = r_vals['stock']['keys_p6']
+    keys_k = r_vals['pas']['keys_k']
+
     ##numbers
     sire_numbers_zg0 = stock_vars['sire_numbers_zg0']
     dams_numbers_k2tvanwziy1g1 = stock_vars['dams_numbers_k2tvanwziy1g1']
@@ -696,7 +703,14 @@ def f_stock_cash_summary(lp_vars, r_vals):
     ##expenses sup feeding
     ###read in dict from grain summary
     grain_summary = f_grain_sup_summary(lp_vars, r_vals)
-    sup_cost_cz = grain_summary['sup_exp_c_z']
+    sup_grain_cost_cz = grain_summary['sup_exp_c_z']
+    grain_fed_kp6_z = f_grain_sup_summary(lp_vars, r_vals, option=2)
+    index_ckp6 = pd.MultiIndex.from_product([keys_c, keys_k, keys_p6])
+    sup_feedingstoring_cost_ckp6_z = r_vals['sup']['total_sup_cost_ckp6_z']
+    grain_fed_ckp6_z = grain_fed_kp6_z.unstack().reindex(sup_feedingstoring_cost_ckp6_z.unstack().index,axis=0,level=1).stack()
+    sup_feedingstoring_cost_ckp6_z = sup_feedingstoring_cost_ckp6_z.mul(grain_fed_ckp6_z)
+    sup_feedingstoring_cost_c_z = sup_feedingstoring_cost_ckp6_z.sum(level=(0))
+    sup_feedingstoring_cost_cz = sup_feedingstoring_cost_c_z.reindex(keys_c).values #to get c axis in correct order (becasue is was sorted alpebetically)
 
     ##infrastructure
     fixed_infra_cost_c = np.sum(r_vals['stock']['rm_stockinfra_fix_h1c'], axis=0)
@@ -704,7 +718,7 @@ def f_stock_cash_summary(lp_vars, r_vals):
     total_infra_cost_cz = fixed_infra_cost_c[:,na] + var_infra_cost_cz
 
     ##total costs
-    stockcost_cz = sirecost_cz + damscost_cz + offscost_cz + sup_cost_cz.values + total_infra_cost_cz
+    stockcost_cz = sirecost_cz + damscost_cz + offscost_cz + sup_grain_cost_cz.values + total_infra_cost_cz + sup_feedingstoring_cost_cz
 
     return stocksale_cz, wool_cz, stockcost_cz
 
