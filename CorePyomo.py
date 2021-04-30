@@ -337,7 +337,8 @@ def coremodel_all(params, trial_name):
     except AttributeError:
         pass
     def asset(model):
-        return suppy.sup_asset(model) + macpy.mach_asset(model) + stkpy.stock_asset(model) - model.v_asset <=0   
+        return (suppy.sup_asset(model) + macpy.mach_asset(model) + stkpy.stock_asset(model) * uinp.finance['opportunity_cost_capital']
+                ) - model.v_asset <=0
     model.con_asset = pe.Constraint( rule=asset, doc='tallies asset from all activities so it can be transferred to objective to represent ROE')
     
     ######################
@@ -365,7 +366,7 @@ def coremodel_all(params, trial_name):
         def profit(model):
             c = sinp.general['cashflow_periods']
             i = len(c) - 1 # minus one because index starts from 0
-            return model.v_credit[c[i]]-model.v_debit[c[i]] - model.v_dep - model.v_minroe - (model.v_asset * uinp.finance['opportunity_cost_capital'])  #have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.
+            return model.v_credit[c[i]]-model.v_debit[c[i]] - model.v_dep - model.v_minroe - model.v_asset   #have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.
         try:
             model.del_component(model.profit)
         except AttributeError:

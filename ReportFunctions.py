@@ -942,11 +942,11 @@ def f_profit(lp_vars, r_vals, option=0):
     elif option==1:
         minroe = sum(minroe_z * prob_z)
         asset_value = sum(asset_value_z * prob_z)
-        return lp_vars['profit'] + minroe + (asset_value * r_vals['fin']['opportunity_cost_capital'])
+        return lp_vars['profit'] + minroe + asset_value
     elif option == 2:
         return obj_profit_z
     elif option==3:
-        return obj_profit_z + minroe_z + (asset_value_z * r_vals['fin']['opportunity_cost_capital'])
+        return obj_profit_z + minroe_z + asset_value_z
 
 
 def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None, index=[], cols=[], arith=0,
