@@ -37,7 +37,7 @@ import Functions as fun
 ## If no arg passed in or the experiment is not set up with custom col in report_run then default col is used
 report_run = pd.read_excel('exp.xlsm', sheet_name='Run Report', index_col=[0], header=[0,1], engine='openpyxl')
 try:
-    exp_group = int(sys.argv[1])  # reads in as string so need to convert to int, the script path is the first value hence take the second.
+    exp_group = int(sys.argv[3])  # reads in as string so need to convert to int, the script path is the first value hence take the second.
 except IndexError:  # in case no arg passed to python
     exp_group = "Default"
 try:
