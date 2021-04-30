@@ -75,6 +75,7 @@ def finance_rep(r_vals):
     keys_c = sinp.general['cashflow_periods']
     r_vals['keys_c'] = keys_c
     r_vals['opportunity_cost_capital'] = uinp.finance['opportunity_cost_capital']
+    r_vals['interest_rate'] = debit_interest()
 
 
 

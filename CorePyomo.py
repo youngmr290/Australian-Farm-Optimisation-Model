@@ -246,7 +246,7 @@ def coremodel_all(params, trial_name):
     model.con_grain_transfer = pe.Constraint(model.s_grain_pools, model.s_crops, rule=grain_transfer, doc='constrain grain transfer between rotation and sup feeding')
     
     ##combined grain sold and purchased to get a $ amount which is added to the cashflow constrain
-    def yield_income(model,c):
+    def grain_income(model,c):
         return sum(model.v_sell_grain[k,g] * model.p_grain_price[k,c,g] - model.v_buy_grain[k,g]* model.p_buy_grain_price[k,c,g] for k in model.s_crops for g in model.s_grain_pools)
     
     ######################
@@ -288,25 +288,26 @@ def coremodel_all(params, trial_name):
 
     ######################
     #cashflow constraints#
-    ######################    
-    def cash_flow(model,i): 
+    ######################
+
+    def cash_flow(model,i):
         '''
         Returns
         -------
         Constraint
-            combines all cashflow functions from each module and includes debit and credit to form constraint. 
-            for each cashflow period dollar flow must be greater than 0. this is accomplished by taking a loan from the bank (if there is more exp than income) or depositing money in the bank. 
+            combines all cashflow functions from each module and includes debit and credit to form constraint.
+            for each cashflow period dollar flow must be greater than 0. this is accomplished by taking a loan from the bank (if there is more exp than income) or depositing money in the bank.
             the money withdrawn or deposited in the bank (debit or credit) is then carried over to the next period.
             the debit and credit carried over is multiplied by j because there is no carry over in the first period (there may be a better way to do it though)
-            Carryover basically represents interest free cash at the start of the year. It requires cash from ND and provides in JF. 
+            Carryover basically represents interest free cash at the start of the year. It requires cash from ND and provides in JF.
 
         '''
         c = sinp.general['cashflow_periods']
         ##j becomes a list which has 0 as first value and 1 after that. this is then indexed by i and multiplied by previous periods debit and credit.
-        ##this means the first period doesn't include the previous debit or credit (because it doesn't exist, because it is the first period) 
+        ##this means the first period doesn't include the previous debit or credit (because it doesn't exist, because it is the first period)
         j = [1] * len(c)
         j[0] = 0
-        return (-yield_income(model,c[i]) + crppy.rotation_cost(model,c[i]) + labpy.labour_cost(model,c[i]) + macpy.mach_cost(model,c[i]) + suppy.sup_cost(model,c[i]) + model.p_overhead_cost[c[i]]
+        return (-grain_income(model,c[i]) + crppy.rotation_cost(model,c[i]) + labpy.labour_cost(model,c[i]) + macpy.mach_cost(model,c[i]) + suppy.sup_cost(model,c[i]) + model.p_overhead_cost[c[i]]
                 - stkpy.stock_cashflow(model,c[i])
                 - model.v_debit[c[i]] + model.v_credit[c[i]]  + model.v_debit[c[i-1]] * fin.debit_interest() - model.v_credit[c[i-1]] * fin.credit_interest() * j[i] #mul by j so that credit in ND doesnt provide into JF otherwise it will be unbounded because it will get interest
                 ) <= 0
@@ -317,7 +318,7 @@ def coremodel_all(params, trial_name):
     except AttributeError:
         pass
     model.con_cashflow = pe.Constraint(range(len(model.s_cashflow_periods)), rule=cash_flow, doc='cashflow')
-    
+
     ######################
     #dep                 #
     ###################### 

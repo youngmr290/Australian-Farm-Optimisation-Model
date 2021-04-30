@@ -826,7 +826,7 @@ def write_variablesummary(model, row, exp_data, obj, option=0):
         file.write("Variable %s\n" % v)  # \n makes new line
         for index in v:
             try:
-                if v[index].value > 0.0001:
+                if v[index].value > 0.0001 or v[index].value < -0.0001:
                     file.write("   %s %s\n" % (index,v[index].value))
             except:
                 pass

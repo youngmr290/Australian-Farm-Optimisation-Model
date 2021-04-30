@@ -707,9 +707,8 @@ def f_stock_cash_summary(lp_vars, r_vals):
     ##expenses sup feeding
     ###read in dict from grain summary
     grain_summary = f_grain_sup_summary(lp_vars, r_vals)
-    sup_grain_cost_cz = grain_summary['sup_exp_c_z']
+    sup_grain_cost_cz = grain_summary['sup_exp_c_z'].reindex(keys_c) #get index into correct order
     grain_fed_kp6_z = f_grain_sup_summary(lp_vars, r_vals, option=2)
-    index_ckp6 = pd.MultiIndex.from_product([keys_c, keys_k, keys_p6])
     sup_feedingstoring_cost_ckp6_z = r_vals['sup']['total_sup_cost_ckp6_z']
     grain_fed_ckp6_z = grain_fed_kp6_z.unstack().reindex(sup_feedingstoring_cost_ckp6_z.unstack().index,axis=0,level=1).stack()
     sup_feedingstoring_cost_ckp6_z = sup_feedingstoring_cost_ckp6_z.mul(grain_fed_ckp6_z)
@@ -783,16 +782,11 @@ def f_labour_summary(lp_vars, r_vals, option=0):
 
 
 def f_dep_summary(lp_vars, r_vals):
-    keys_c = r_vals['fin']['keys_c']
+    ##depreciation total
     keys_z = r_vals['stock']['keys_z']
-    len_c = len(keys_c)
     len_z = len(keys_z)
-
     dep_z = f_vars2np(lp_vars, 'v_dep', len_z, keys_z, z_pos=-1)
-    ##dep - depreciation is yearly but for the profit and loss it is equally divided into each cash period
-    dep_z = dep_z / len_c  # convert to dep per cashflow period
-    dep_zc = np.stack([dep_z] * len_c, axis=1) #add c axis
-    return dep_zc
+    return dep_z
 
 def f_minroe_summary(lp_vars, r_vals):
     ##min return on expense cost
@@ -896,8 +890,8 @@ def f_profitloss_table(lp_vars, r_vals):
     idx = pd.IndexSlice
     keys_z = r_vals['stock']['keys_z']
     subtype_rev = ['grain', 'sheep sales', 'wool', 'Total Revenue']
-    subtype_exp = ['crop', 'pasture', 'stock', 'machinery', 'labour', 'fixed', 'depreciation', 'Total expenses']
-    subtype_tot = ['assets', 'minRoe', 'EBIT', 'obj']
+    subtype_exp = ['crop', 'pasture', 'stock', 'machinery', 'labour', 'fixed', 'Total expenses']
+    subtype_tot = ['assets', 'depreciation', 'minRoe', 'EBITD', 'Interest', 'obj']
     pnl_rev_index = pd.MultiIndex.from_product([keys_z, ['Revenue'], subtype_rev], names=['Season', 'Type', 'Subtype'])
     pnl_exp_index = pd.MultiIndex.from_product([keys_z, ['Expense'], subtype_exp], names=['Season', 'Type', 'Subtype'])
     pnl_tot_index = pd.MultiIndex.from_product([keys_z, ['Total'], subtype_tot], names=['Season', 'Type', 'Subtype'])
@@ -927,12 +921,6 @@ def f_profitloss_table(lp_vars, r_vals):
     crop_c_z = pd.concat([cropfert_c_z, cropchem_c_z, cropmisc_c_z], axis=0).sum(axis=0, level=0)
     ####labour
     labour_zc = f_labour_summary(lp_vars, r_vals, option=0)
-    ####depreciation
-    dep_zc = f_dep_summary(lp_vars, r_vals)
-    ####asset opportunity cost
-    minroe_z = f_minroe_summary(lp_vars,r_vals)
-    ####minroe
-    asset_value_z = f_asset_value_summary(lp_vars,r_vals)
     ####fixed overhead expenses
     exp_fix_c = f_overhead_summary(r_vals)
     exp_fix_cz = pd.concat([exp_fix_c] * len(keys_z),axis=1).values
@@ -943,16 +931,34 @@ def f_profitloss_table(lp_vars, r_vals):
     pnl.loc[idx[:, 'Expense', 'machinery'], :] = mach_c_z.T.reindex(keys_c, axis=1).values
     pnl.loc[idx[:, 'Expense', 'labour'], :] = labour_zc
     pnl.loc[idx[:, 'Expense', 'fixed'], :] = exp_fix_cz.T
-    pnl.loc[idx[:, 'Expense', 'depreciation'], :] = dep_zc
     pnl.loc[idx[:, 'Expense', 'Total expenses'], :] = pnl.loc[pnl.index.get_level_values(1) == 'Expense'].sum(axis=0,level=0).values
 
     ##EBIT
-    pnl.loc[idx[:, 'Total', 'EBIT'], :] = (pnl.loc[idx[:, 'Revenue', 'Total Revenue']] - pnl.loc[idx[:, 'Expense', 'Total expenses']]).values
+    ebitd = (pnl.loc[idx[:, 'Revenue', 'Total Revenue']] - pnl.loc[idx[:, 'Expense', 'Total expenses']]).values
+    pnl.loc[idx[:, 'Total', 'EBITD'], :] = ebitd
+
+    ##interest - note this is debit (currently debit and credit are the same if this changes the calc below will need to be modified)
+    interest = r_vals['fin']['interest_rate']
+    mo_interest = np.zeros(ebitd.shape)
+    for i in range(ebitd.shape[-1] - 1): #-1 becasue last period gets no interest.
+        cum_cash = np.sum(ebitd[:,0:i+1])
+        cum_interest = np.sum(mo_interest[:,0:i+1])
+        mo_interest[:,i] = (interest-1) * (cum_cash + cum_interest)
+    pnl.loc[idx[:, 'Total', 'Interest'], :] = mo_interest
 
     ##add a column which is total of all cashflow period
     pnl['Full year'] = pnl.sum(axis=1)
 
-    ##add the assets & minroe
+    ##intrest, depreciation asset opp and minroe
+    ###depreciation
+    dep_z = f_dep_summary(lp_vars, r_vals)
+    ###minroe
+    minroe_z = f_minroe_summary(lp_vars,r_vals)
+    ###asset opportunity cost
+    asset_value_z = f_asset_value_summary(lp_vars,r_vals)
+
+    ##add the assets & minroe & depreciation
+    pnl.loc[idx[:, 'Total', 'depreciation'],'Full year'] = dep_z
     pnl.loc[idx[:, 'Total', 'assets'],'Full year'] = asset_value_z.values
     pnl.loc[idx[:, 'Total', 'minRoe'],'Full year'] = minroe_z.values
 
