@@ -307,6 +307,7 @@ def coremodel_all(params, trial_name):
         ##this means the first period doesn't include the previous debit or credit (because it doesn't exist, because it is the first period)
         j = [1] * len(c)
         j[0] = 0
+        #todo Revisit the interest calcualtion at some stage because it didn't tally with the back of envelope estimate by $1000
         return (-grain_income(model,c[i]) + crppy.rotation_cost(model,c[i]) + labpy.labour_cost(model,c[i]) + macpy.mach_cost(model,c[i]) + suppy.sup_cost(model,c[i]) + model.p_overhead_cost[c[i]]
                 - stkpy.stock_cashflow(model,c[i])
                 - model.v_debit[c[i]] + model.v_credit[c[i]]  + model.v_debit[c[i-1]] * fin.debit_interest() - model.v_credit[c[i-1]] * fin.credit_interest() * j[i] #mul by j so that credit in ND doesnt provide into JF otherwise it will be unbounded because it will get interest

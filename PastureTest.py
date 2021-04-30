@@ -4,7 +4,7 @@ Created on Mon Nov 11 10:15:40 2019
 
 Version Control:
 Version     Date        Person  Change
-   1.1      30Dec19     JMY     Added timing to check elapased time for each function in pasture functions
+   1.1      30Dec19     JMY     Added timing to check elapsed time for each function in pasture functions
 
 Known problems:
 Fixed   Date    ID by   Problem
@@ -77,7 +77,7 @@ for time_step, time in enumerate(time_list):
     time_elapsed = time-time_prev
     if time_elapsed > 0: print(time_was[time_step], f"{time_elapsed:0.4f}", "secs")
     time_prev=time
-print("elapsed total time for pasture module", f"{time_list[-1] - time_list[0]:0.4f}", "secs") # Time in secondsfirst
+print("elapsed total time for pasture module", f"{time_list[-1] - time_list[0]:0.4f}", "secs") # Time in seconds
 
 
 #test times

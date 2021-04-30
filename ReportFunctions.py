@@ -709,11 +709,11 @@ def f_stock_cash_summary(lp_vars, r_vals):
     grain_summary = f_grain_sup_summary(lp_vars, r_vals)
     sup_grain_cost_cz = grain_summary['sup_exp_c_z'].reindex(keys_c) #get index into correct order
     grain_fed_kp6_z = f_grain_sup_summary(lp_vars, r_vals, option=2)
-    sup_feedingstoring_cost_ckp6_z = r_vals['sup']['total_sup_cost_ckp6_z']
-    grain_fed_ckp6_z = grain_fed_kp6_z.unstack().reindex(sup_feedingstoring_cost_ckp6_z.unstack().index,axis=0,level=1).stack()
-    sup_feedingstoring_cost_ckp6_z = sup_feedingstoring_cost_ckp6_z.mul(grain_fed_ckp6_z)
-    sup_feedingstoring_cost_c_z = sup_feedingstoring_cost_ckp6_z.sum(level=(0))
-    sup_feedingstoring_cost_cz = sup_feedingstoring_cost_c_z.reindex(keys_c).values #to get c axis in correct order (becasue is was sorted alpebetically)
+    supp_feedstorage_cost_ckp6_z = r_vals['sup']['total_sup_cost_ckp6_z']
+    grain_fed_ckp6_z = grain_fed_kp6_z.unstack().reindex(supp_feedstorage_cost_ckp6_z.unstack().index,axis=0,level=1).stack()
+    supp_feedstorage_cost_ckp6_z = supp_feedstorage_cost_ckp6_z.mul(grain_fed_ckp6_z)
+    supp_feedstorage_cost_c_z = supp_feedstorage_cost_ckp6_z.sum(level=(0))
+    supp_feedstorage_cost_cz = supp_feedstorage_cost_c_z.reindex(keys_c).values #to get c axis in correct order (because is was sorted alphabetically)
 
     ##infrastructure
     fixed_infra_cost_c = np.sum(r_vals['stock']['rm_stockinfra_fix_h1c'], axis=0)
@@ -722,7 +722,7 @@ def f_stock_cash_summary(lp_vars, r_vals):
 
     ##total costs
     stockcost_cz = (sirecost_cz + damscost_cz + offscost_cz + sup_grain_cost_cz.values + total_infra_cost_cz
-                    + sup_feedingstoring_cost_cz + sire_purchcost_cz)
+                    + supp_feedstorage_cost_cz + sire_purchcost_cz)
 
     return stocksale_cz, wool_cz, stockcost_cz
 
@@ -891,7 +891,7 @@ def f_profitloss_table(lp_vars, r_vals):
     keys_z = r_vals['stock']['keys_z']
     subtype_rev = ['grain', 'sheep sales', 'wool', 'Total Revenue']
     subtype_exp = ['crop', 'pasture', 'stock', 'machinery', 'labour', 'fixed', 'Total expenses']
-    subtype_tot = ['assets', 'depreciation', 'minRoe', 'EBITD', 'Interest', 'obj']
+    subtype_tot = ['asset_value', 'depreciation', 'minRoe', 'EBITD', 'Interest', 'obj']
     pnl_rev_index = pd.MultiIndex.from_product([keys_z, ['Revenue'], subtype_rev], names=['Season', 'Type', 'Subtype'])
     pnl_exp_index = pd.MultiIndex.from_product([keys_z, ['Expense'], subtype_exp], names=['Season', 'Type', 'Subtype'])
     pnl_tot_index = pd.MultiIndex.from_product([keys_z, ['Total'], subtype_tot], names=['Season', 'Type', 'Subtype'])
@@ -940,7 +940,7 @@ def f_profitloss_table(lp_vars, r_vals):
     ##interest - note this is debit (currently debit and credit are the same if this changes the calc below will need to be modified)
     interest = r_vals['fin']['interest_rate']
     mo_interest = np.zeros(ebitd.shape)
-    for i in range(ebitd.shape[-1] - 1): #-1 becasue last period gets no interest.
+    for i in range(ebitd.shape[-1] - 1): #-1 because last period gets no interest.
         cum_cash = np.sum(ebitd[:,0:i+1])
         cum_interest = np.sum(mo_interest[:,0:i+1])
         mo_interest[:,i] = (interest-1) * (cum_cash + cum_interest)
@@ -959,7 +959,7 @@ def f_profitloss_table(lp_vars, r_vals):
 
     ##add the assets & minroe & depreciation
     pnl.loc[idx[:, 'Total', 'depreciation'],'Full year'] = dep_z
-    pnl.loc[idx[:, 'Total', 'assets'],'Full year'] = asset_value_z.values
+    pnl.loc[idx[:, 'Total', 'asset_value'],'Full year'] = asset_value_z.values
     pnl.loc[idx[:, 'Total', 'minRoe'],'Full year'] = minroe_z.values
 
     ##add the objective
@@ -1062,7 +1062,7 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None
     ##other manipulation
     prod, weights, den_weights, denom = f_add_axis(prod, weights, den_weights, denom, na_weights, na_prod, na_denweights, na_denom)
     prod, weights, den_weights, keys = f_slice(prod, weights, den_weights, keys, arith, axis_slice)
-    ##preform arith. if an axis is not reported it is included in the arith and the axis disapears
+    ##preform arith. if an axis is not reported it is included in the arith and the axis disappears
     report_idx = index + cols
     arith_axis = list(set(range(len(prod.shape))) - set(report_idx))
     prod = f_arith(prod, weights, den_weights, arith, arith_axis)
@@ -1240,6 +1240,7 @@ def f_arith(prod, weight, den_weights, arith, axis):
     option 2: total production for a given axis
     option 3: total production for each activity
     option 4: return weighted average of production param using prod>0 as the weights
+    option 5: return the maximum value across the slices of the axes
 
     :param prod: array: production param
     :param weight: array: weights (typically the variable associated with the prod param)
@@ -1263,7 +1264,10 @@ def f_arith(prod, weight, den_weights, arith, axis):
         prod = prod * weight
     ##option 4
     if arith == 4:
-        prod = np.sum(prod * (prod>0),tuple(axis),keepdims=keepdims)
+        prod = np.sum(prod * (prod>0), tuple(axis), keepdims=keepdims)
+    ##option 5
+    if arith == 5:
+        prod = np.max(prod, tuple(axis), keepdims=keepdims)
 
     return prod
 
