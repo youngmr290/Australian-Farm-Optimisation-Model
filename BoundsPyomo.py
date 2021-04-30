@@ -34,8 +34,8 @@ def boundarypyomo_local(params):
     ##set bounds to include
     bounds_inc = True #controls all bounds (typically on)
     rot_lobound_inc = False #controls rot bound
-    dams_lobound_inc = False #controls rot bound
-    dams_upperbound_inc = False #upper bound on dams
+    dams_lobound_inc = False #lower bound dams
+    dams_upperbound_inc = True #upper bound on dams
     yearling_mating_upperbound_inc = fun.f_sa(False, sen.sav['bnd_mateyearlings_inc'], 5) #allow exclusion of mating yearlings (by default yearlings are not allowed to mate)
     sale_yearling_upperbound_inc = fun.f_sa(False, sen.sav['bnd_sellyearlings_inc'], 5) #upperbound on ewe lambs sold
     sr_bound_inc = False #controls sr bound
@@ -101,28 +101,31 @@ def boundarypyomo_local(params):
         ##dams upper bound - specified by k2 & v and totalled across other axes
         if dams_upperbound_inc:
             ###keys to build arrays for the specified slices
-            arrays = [model.s_dvp_dams]   #more sets can be added here to customise the bound
-            index_k2v = fun.cartesian_product_simple_transpose(arrays)
+            arrays = [model.s_sale_dams, model.s_dvp_dams]   #more sets can be added here to customise the bound
+            index_tv = fun.cartesian_product_simple_transpose(arrays)
             ###build array for the axes of the specified slices
-            dams_upperbound_v = np.full((len(model.s_dvp_dams),), np.inf)
+            dams_upperbound_tv = np.full((len(model.s_sale_dams), len(model.s_dvp_dams)), np.inf)
             ###set the bound
-            dams_upperbound_v[1] = 10000
+            dams_upperbound_tv[0:2,4:14] = 0 #no dam sales before dvp14
             ###ravel and zip bound and dict
-            dams_upperbound = dams_upperbound_v.ravel()
-            tup_k2v = tuple(map(tuple, index_k2v))
-            dams_upperbound = dict(zip(tup_k2v, dams_upperbound))
+            dams_upperbound = dams_upperbound_tv.ravel()
+            tup_tv = tuple(map(tuple, index_tv))
+            dams_upperbound = dict(zip(tup_tv, dams_upperbound))
             ###constraint
             try:
                 model.del_component(model.con_dam_upperbound)
                 model.del_component(model.con_dam_upperbound_index)
             except AttributeError:
                 pass
-            def f_dam_upperbound(model, v):
-                return sum(model.v_dams[k28,t,v,a,n,w8,i,y,g1] for k28 in model.s_k2_birth_dams for t in model.s_sale_dams
-                           for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
-                           for i in model.s_tol for y in model.s_gen_merit_dams for g1 in model.s_groups_dams
-                           ) <= dams_upperbound[v]
-            model.con_dam_upperbound = pe.Constraint(model.s_dvp_dams, rule=f_dam_upperbound,
+            def f_dam_upperbound(model, t, v):
+                if dams_upperbound[t, v]==np.inf:
+                    return pe.Constraint.Skip
+                else:
+                    return sum(model.v_dams[k28,t,v,a,n,w8,i,y,g1] for k28 in model.s_k2_birth_dams
+                               for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
+                               for i in model.s_tol for y in model.s_gen_merit_dams for g1 in model.s_groups_dams
+                               ) <= dams_upperbound[t, v]
+            model.con_dam_upperbound = pe.Constraint(model.s_sale_dams, model.s_dvp_dams, rule=f_dam_upperbound,
                                                     doc='max number of dams')
 
         ##bound to stop yearlings being mated - specified by k2 & v and totalled across other axes
