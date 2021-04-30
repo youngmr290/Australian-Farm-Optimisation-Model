@@ -709,11 +709,11 @@ def f_stock_cash_summary(lp_vars, r_vals):
     grain_summary = f_grain_sup_summary(lp_vars, r_vals)
     sup_grain_cost_cz = grain_summary['sup_exp_c_z'].reindex(keys_c) #get index into correct order
     grain_fed_kp6_z = f_grain_sup_summary(lp_vars, r_vals, option=2)
-    sup_feedingstoring_cost_ckp6_z = r_vals['sup']['total_sup_cost_ckp6_z']
-    grain_fed_ckp6_z = grain_fed_kp6_z.unstack().reindex(sup_feedingstoring_cost_ckp6_z.unstack().index,axis=0,level=1).stack()
-    sup_feedingstoring_cost_ckp6_z = sup_feedingstoring_cost_ckp6_z.mul(grain_fed_ckp6_z)
-    sup_feedingstoring_cost_c_z = sup_feedingstoring_cost_ckp6_z.sum(level=(0))
-    sup_feedingstoring_cost_cz = sup_feedingstoring_cost_c_z.reindex(keys_c).values #to get c axis in correct order (becasue is was sorted alpebetically)
+    supp_feedstorage_cost_ckp6_z = r_vals['sup']['total_sup_cost_ckp6_z']
+    grain_fed_ckp6_z = grain_fed_kp6_z.unstack().reindex(supp_feedstorage_cost_ckp6_z.unstack().index,axis=0,level=1).stack()
+    supp_feedstorage_cost_ckp6_z = supp_feedstorage_cost_ckp6_z.mul(grain_fed_ckp6_z)
+    supp_feedstorage_cost_c_z = supp_feedstorage_cost_ckp6_z.sum(level=(0))
+    supp_feedstorage_cost_cz = supp_feedstorage_cost_c_z.reindex(keys_c).values #to get c axis in correct order (because is was sorted alphabetically)
 
     ##infrastructure
     fixed_infra_cost_c = np.sum(r_vals['stock']['rm_stockinfra_fix_h1c'], axis=0)
@@ -722,7 +722,7 @@ def f_stock_cash_summary(lp_vars, r_vals):
 
     ##total costs
     stockcost_cz = (sirecost_cz + damscost_cz + offscost_cz + sup_grain_cost_cz.values + total_infra_cost_cz
-                    + sup_feedingstoring_cost_cz + sire_purchcost_cz)
+                    + supp_feedstorage_cost_cz + sire_purchcost_cz)
 
     return stocksale_cz, wool_cz, stockcost_cz
 
@@ -940,7 +940,7 @@ def f_profitloss_table(lp_vars, r_vals):
     ##interest - note this is debit (currently debit and credit are the same if this changes the calc below will need to be modified)
     interest = r_vals['fin']['interest_rate']
     mo_interest = np.zeros(ebitd.shape)
-    for i in range(ebitd.shape[-1] - 1): #-1 becasue last period gets no interest.
+    for i in range(ebitd.shape[-1] - 1): #-1 because last period gets no interest.
         cum_cash = np.sum(ebitd[:,0:i+1])
         cum_interest = np.sum(mo_interest[:,0:i+1])
         mo_interest[:,i] = (interest-1) * (cum_cash + cum_interest)
@@ -1062,7 +1062,7 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None
     ##other manipulation
     prod, weights, den_weights, denom = f_add_axis(prod, weights, den_weights, denom, na_weights, na_prod, na_denweights, na_denom)
     prod, weights, den_weights, keys = f_slice(prod, weights, den_weights, keys, arith, axis_slice)
-    ##preform arith. if an axis is not reported it is included in the arith and the axis disapears
+    ##preform arith. if an axis is not reported it is included in the arith and the axis disappears
     report_idx = index + cols
     arith_axis = list(set(range(len(prod.shape))) - set(report_idx))
     prod = f_arith(prod, weights, den_weights, arith, arith_axis)

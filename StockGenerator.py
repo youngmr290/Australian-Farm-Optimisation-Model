@@ -5898,14 +5898,14 @@ def generator(params,r_vals,ev,plots = False):
         r_cum_dvp_mort_k2tvpa1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams',r_cum_dvp_mort_tvpa1e1b1nwzida0e0b0xyg1,
                                                                               a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...],
                                                                               index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],
-                                                                              numbers_start_vg = on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...],  #to handle the periods when e slices are in different dvps (eg cant just have default 1 otherwise it will divide by 2 becasue both e gets summed)
+                                                                              numbers_start_vg = on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...],  #to handle the periods when e slices are in different dvps (eg cant just have default 1 otherwise it will divide by 2 because both e gets summed)
                                                                               mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1[:,na,...])
         r_cum_dvp_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs',r_cum_dvp_mort_tvpa1e1b1nwzida0e0b0xyg3,
                                                                                      a_k3cluster_da0e0b0xyg3,
                                                                                      index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],
                                                                                      a_k5cluster_da0e0b0xyg3,
                                                                                      index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...],
-                                                                                     numbers_start_vg=on_hand_tpa1e1b1nwzida0e0b0xyg3[:,na,...], # to handle the periods when e slices are in different dvps (eg cant just have default 1 otherwise it will divide by 2 becasue both e gets summed)
+                                                                                     numbers_start_vg=on_hand_tpa1e1b1nwzida0e0b0xyg3[:,na,...], # to handle the periods when e slices are in different dvps (eg cant just have default 1 otherwise it will divide by 2 because both e gets summed)
                                                                                      mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3[:,na,...])
 
     ##on hand - this is used so that the numbers report can have a p axis so the number of animals can be more specific than just dvp
