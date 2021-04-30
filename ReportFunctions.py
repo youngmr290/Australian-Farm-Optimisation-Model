@@ -672,6 +672,9 @@ def f_stock_cash_summary(lp_vars, r_vals):
     dams_cost_k2ctva1nwziyg1 = r_vals['stock']['dams_cost_k2ctva1nwziyg1'] * dams_numbers_k2tvanwziy1g1[:, na, ...]
     offs_cost_k3k5ctvnwziaxyg3 = r_vals['stock']['offs_cost_k3k5ctvnwziaxyg3'] * offs_numbers_k3k5tvnwziaxyg3[:, :, na, ...]
 
+    ##purchase cost
+    sire_purchcost_czg0 = r_vals['stock']['purchcost_sire_cg0'] * sire_numbers_zg0
+
     ##sale income
     salevalue_czg0 = r_vals['stock']['salevalue_czg0'] * sire_numbers_zg0
     salevalue_k2ctva1nwziyg1 = r_vals['stock']['salevalue_k2ctva1nwziyg1'] * dams_numbers_k2tvanwziy1g1[:, na, ...]
@@ -699,6 +702,7 @@ def f_stock_cash_summary(lp_vars, r_vals):
     damscost_cz = fun.f_reduce_skipfew(np.sum, dams_cost_k2ctva1nwziyg1, preserveAxis=(1,7))  # sum all axis except c
     offscost_cz = fun.f_reduce_skipfew(np.sum, offs_cost_k3k5ctvnwziaxyg3, preserveAxis=(2,7))  # sum all axis except c
 
+    sire_purchcost_cz = fun.f_reduce_skipfew(np.sum, sire_purchcost_czg0, preserveAxis=(0,1))  # sum all axis except c
 
     ##expenses sup feeding
     ###read in dict from grain summary
@@ -718,7 +722,8 @@ def f_stock_cash_summary(lp_vars, r_vals):
     total_infra_cost_cz = fixed_infra_cost_c[:,na] + var_infra_cost_cz
 
     ##total costs
-    stockcost_cz = sirecost_cz + damscost_cz + offscost_cz + sup_grain_cost_cz.values + total_infra_cost_cz + sup_feedingstoring_cost_cz
+    stockcost_cz = (sirecost_cz + damscost_cz + offscost_cz + sup_grain_cost_cz.values + total_infra_cost_cz
+                    + sup_feedingstoring_cost_cz + sire_purchcost_cz)
 
     return stocksale_cz, wool_cz, stockcost_cz
 

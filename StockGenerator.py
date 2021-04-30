@@ -6844,6 +6844,9 @@ def generator(params,r_vals,ev,plots = False):
     r_vals['rm_stockinfra_var_h1c'] = rm_stockinfra_var_h1c
     r_vals['rm_stockinfra_fix_h1c'] = rm_stockinfra_fix_h1c
 
+    ###purchase costs
+    r_vals['purchcost_sire_cg0'] = purchcost_cva1e1b1nwzida0e0b0xyg0.reshape(czg0_shape)
+
     ###sale date
     r_vals['saledate_k3k5tvnwziaxyg3'] = r_saledate_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
 
