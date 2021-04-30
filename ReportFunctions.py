@@ -862,8 +862,8 @@ def f_profitloss_table(lp_vars, r_vals):
     idx = pd.IndexSlice
     keys_z = r_vals['stock']['keys_z']
     subtype_rev = ['grain', 'sheep sales', 'wool', 'Total Revenue']
-    subtype_exp = ['Crop', 'pasture', 'stock', 'machinery', 'labour', 'fixed', 'depreciation', 'Total expenses']
-    subtype_tot = ['EBIT', 'Obj']
+    subtype_exp = ['crop', 'pasture', 'stock', 'machinery', 'labour', 'fixed', 'depreciation', 'Total expenses']
+    subtype_tot = ['Assets', 'EBIT', 'Obj']
     pnl_rev_index = pd.MultiIndex.from_product([keys_z, ['Revenue'], subtype_rev], names=['Season', 'Type', 'Subtype'])
     pnl_exp_index = pd.MultiIndex.from_product([keys_z, ['Expense'], subtype_exp], names=['Season', 'Type', 'Subtype'])
     pnl_tot_index = pd.MultiIndex.from_product([keys_z, ['Total'], subtype_tot], names=['Season', 'Type', 'Subtype'])
@@ -898,7 +898,7 @@ def f_profitloss_table(lp_vars, r_vals):
     exp_fix_c = f_overhead_summary(r_vals)
     exp_fix_cz = pd.concat([exp_fix_c] * len(keys_z),axis=1).values
     ###add to p/l table each as a new row
-    pnl.loc[idx[:, 'Expense', 'Crop'], :] = crop_c_z.T.reindex(keys_c, axis=1).values
+    pnl.loc[idx[:, 'Expense', 'crop'], :] = crop_c_z.T.reindex(keys_c, axis=1).values
     pnl.loc[idx[:, 'Expense', 'pasture'], :] = pas_c_z.T.reindex(keys_c, axis=1).values
     pnl.loc[idx[:, 'Expense', 'stock'], :] = stockcost_cz.T
     pnl.loc[idx[:, 'Expense', 'machinery'], :] = mach_c_z.T.reindex(keys_c, axis=1).values
@@ -912,6 +912,10 @@ def f_profitloss_table(lp_vars, r_vals):
 
     ##add a column which is total of all cashflow period
     pnl['Full year'] = pnl.sum(axis=1)
+
+    # ##add the assets & minroe
+    # pnl.loc[idx[:, 'Total', 'assets'],'Full year'] = f_profit(lp_vars, r_vals, option=2).values
+    # pnl.loc[idx[:, 'Total', 'minroe'],'Full year'] = f_profit(lp_vars, r_vals, option=2).values
 
     ##add the objective
     pnl.loc[idx[:, 'Total', 'Obj'],'Full year'] = f_profit(lp_vars, r_vals, option=2).values

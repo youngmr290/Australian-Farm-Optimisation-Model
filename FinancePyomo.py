@@ -60,9 +60,9 @@ model.v_debit = Var(model.s_cashflow_periods, bounds = (0.0, None), doc = 'amoun
 ##dep
 model.v_dep = Var(bounds = (0.0, None), doc = 'transfers total dep to objective')
 ##dep
-model.v_asset = Var(bounds = (0.0, None), doc = 'transfers total value of asset to objective to ensure opportuninty cost is represented')
+model.v_asset = Var(bounds = (0.0, None), doc = 'transfers total value of asset to objective to ensure opportunity cost is represented')
 ##minroe
-model.v_minroe = Var(bounds = (0.0, None), doc = 'total expenditure, used to ensure min returen is met')
+model.v_minroe = Var(bounds = (0.0, None), doc = 'total expenditure, used to ensure min return is met')
 # #carryover credit
 # model.v_carryover_credit = Var(bounds = (0.0, max(0,pinp.finance['bank_bal_start'])), doc = 'amount of net positive cashflow brought into each year')
 # #carryover debit
