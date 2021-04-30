@@ -771,6 +771,17 @@ def f_dep_summary(lp_vars, r_vals):
     dep_zc = np.stack([dep_z] * len_c, axis=1) #add c axis
     return dep_zc
 
+def f_minroe_summary(lp_vars, r_vals):
+    ##min return on expense cost
+    keys_z = r_vals['stock']['keys_z']
+    minroe_z = f_vars2df(lp_vars, 'v_minroe', keys_z).droplevel(1) #drop level 1 because no sets therefore nan
+    return minroe_z
+
+def f_asset_value_summary(lp_vars, r_vals):
+    ##asset opportunity cost
+    keys_z = r_vals['stock']['keys_z']
+    asset_value_z = f_vars2df(lp_vars, 'v_asset', keys_z).droplevel(1) #drop level 1 because no sets therefore nan
+    return asset_value_z
 
 def f_overhead_summary(r_vals):
     ##overheads/fixed expenses
@@ -863,7 +874,7 @@ def f_profitloss_table(lp_vars, r_vals):
     keys_z = r_vals['stock']['keys_z']
     subtype_rev = ['grain', 'sheep sales', 'wool', 'Total Revenue']
     subtype_exp = ['crop', 'pasture', 'stock', 'machinery', 'labour', 'fixed', 'depreciation', 'Total expenses']
-    subtype_tot = ['Assets', 'EBIT', 'Obj']
+    subtype_tot = ['assets', 'minRoe', 'EBIT', 'obj']
     pnl_rev_index = pd.MultiIndex.from_product([keys_z, ['Revenue'], subtype_rev], names=['Season', 'Type', 'Subtype'])
     pnl_exp_index = pd.MultiIndex.from_product([keys_z, ['Expense'], subtype_exp], names=['Season', 'Type', 'Subtype'])
     pnl_tot_index = pd.MultiIndex.from_product([keys_z, ['Total'], subtype_tot], names=['Season', 'Type', 'Subtype'])
@@ -894,6 +905,10 @@ def f_profitloss_table(lp_vars, r_vals):
     labour_zc = f_labour_summary(lp_vars, r_vals, option=0)
     ####depreciation
     dep_zc = f_dep_summary(lp_vars, r_vals)
+    ####asset opportunity cost
+    minroe_z = f_minroe_summary(lp_vars,r_vals)
+    ####minroe
+    asset_value_z = f_asset_value_summary(lp_vars,r_vals)
     ####fixed overhead expenses
     exp_fix_c = f_overhead_summary(r_vals)
     exp_fix_cz = pd.concat([exp_fix_c] * len(keys_z),axis=1).values
@@ -913,12 +928,12 @@ def f_profitloss_table(lp_vars, r_vals):
     ##add a column which is total of all cashflow period
     pnl['Full year'] = pnl.sum(axis=1)
 
-    # ##add the assets & minroe
-    # pnl.loc[idx[:, 'Total', 'assets'],'Full year'] = f_profit(lp_vars, r_vals, option=2).values
-    # pnl.loc[idx[:, 'Total', 'minroe'],'Full year'] = f_profit(lp_vars, r_vals, option=2).values
+    ##add the assets & minroe
+    pnl.loc[idx[:, 'Total', 'assets'],'Full year'] = asset_value_z.values
+    pnl.loc[idx[:, 'Total', 'minRoe'],'Full year'] = minroe_z.values
 
     ##add the objective
-    pnl.loc[idx[:, 'Total', 'Obj'],'Full year'] = f_profit(lp_vars, r_vals, option=2).values
+    pnl.loc[idx[:, 'Total', 'obj'],'Full year'] = f_profit(lp_vars, r_vals, option=2).values
 
     ##round numbers in df
     pnl = pnl.astype(float).round(1)  # have to go to float so rounding works
@@ -939,8 +954,8 @@ def f_profit(lp_vars, r_vals, option=0):
     keys_z = r_vals['stock']['keys_z']
     prob_z =r_vals['stock']['prob_z']
     obj_profit_z = f_vars2df(lp_vars, 'scenario_profit', keys_z).droplevel(1) #drop level 1 because no sets therefore nan
-    minroe_z = f_vars2df(lp_vars, 'v_minroe', keys_z).droplevel(1) #drop level 1 because no sets therefore nan
-    asset_value_z = f_vars2df(lp_vars, 'v_asset', keys_z).droplevel(1) #drop level 1 because no sets therefore nan
+    minroe_z = f_minroe_summary(lp_vars, r_vals)
+    asset_value_z = f_asset_value_summary(lp_vars, r_vals)
     if option == 0:
         return lp_vars['profit']
     elif option==1:
