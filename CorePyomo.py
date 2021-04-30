@@ -337,8 +337,8 @@ def coremodel_all(params, trial_name):
     except AttributeError:
         pass
     def asset(model):
-        return (suppy.sup_asset(model) + macpy.mach_asset(model) + stkpy.stock_asset(model) * uinp.finance['opportunity_cost_capital']
-                ) - model.v_asset <=0
+        return (suppy.sup_asset(model) + macpy.mach_asset(model) + stkpy.stock_asset(model)) * uinp.finance['opportunity_cost_capital']  \
+                - model.v_asset <=0
     model.con_asset = pe.Constraint( rule=asset, doc='tallies asset from all activities so it can be transferred to objective to represent ROE')
     
     ######################
