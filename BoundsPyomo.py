@@ -106,7 +106,7 @@ def boundarypyomo_local(params):
             ###build array for the axes of the specified slices
             dams_upperbound_tv = np.full((len(model.s_sale_dams), len(model.s_dvp_dams)), np.inf)
             ###set the bound
-            dams_upperbound_tv[0:2,4:14] = 0 #no dam sales before dvp14
+            dams_upperbound_tv[0:2,0:14] = 0 #no dam sales before dvp14
             ###ravel and zip bound and dict
             dams_upperbound = dams_upperbound_tv.ravel()
             tup_tv = tuple(map(tuple, index_tv))
