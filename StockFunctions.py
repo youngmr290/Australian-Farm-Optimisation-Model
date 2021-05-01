@@ -1193,8 +1193,8 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         temporary = (index_e1 == 0) * np.sum(conception, axis=sinp.stock['i_e1_pos'], keepdims=True) #sum across e axis into slice e[0]
         conception = fun.f_update(conception, temporary, (nyatf_b1any == 0)) #Put sum of e1 into slice e1[0] and don't overwrite the slices where nyatf != 0
         ##Process the Conception & Litter size REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
-        conception[:, :, 1, ...] = f_rev_update('conception', conception[:, :, 1, ...], rev_trait_value)
-        conception[:, :, 2:, ...] = f_rev_update('litter_size', conception[:, :, 2:, ...], rev_trait_value)
+        conception[:, :, 2, ...] = f_rev_update('conception', conception[:, :, 2, ...], rev_trait_value)
+        conception[:, :, 3:, ...] = f_rev_update('litter_size', conception[:, :, 3:, ...], rev_trait_value)
     return conception
 
 
@@ -1507,8 +1507,9 @@ def f_condensed(numbers, var, lw_idx, prejoin_tup, season_tup, i_n_len, i_w_len,
             ###mask for animals with greater than 10% mort
             numbers_start_sorted = np.take_along_axis(numbers_start_condense, lw_idx, axis=sinp.stock['i_w_pos'])
             numbers_sorted = np.take_along_axis(numbers, lw_idx, axis=sinp.stock['i_w_pos'])
-            mort_mask = (np.sum(numbers_start_sorted, axis=prejoin_tup + (season_tup,), keepdims=True)  #if this gives warning it probably means the feedsupply is too low.
-                        / np.sum(numbers_sorted, axis=prejoin_tup + (season_tup,), keepdims=True)) > 0.9 #sum e,b,z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10%
+            ####true means mort is less than 10%
+            mort_mask = (np.sum(numbers_sorted, axis=prejoin_tup + (season_tup,), keepdims=True)  #if this gives warning it probably means the feedsupply is too low.
+                        / np.sum(numbers_start_sorted, axis=prejoin_tup + (season_tup,), keepdims=True)) > 0.9 #sum e,b,z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10%
             mort_mask1 = np.broadcast_to(mort_mask, var_sorted.shape)
             var_sorted_mort = np.ma.masked_array(var_sorted, np.logical_not(mort_mask1))
 
