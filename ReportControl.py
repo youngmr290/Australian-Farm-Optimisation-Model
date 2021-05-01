@@ -58,6 +58,10 @@ def f_report(processor, trials):
     stacked_pnl = pd.DataFrame()  # profit and loss statement
     stacked_profitarea = pd.DataFrame()  # profit by land area
     stacked_saleprice = pd.DataFrame()  # sale price
+    stacked_salevalue_dams = pd.DataFrame()  # average sale value dams
+    stacked_salevalue_offs = pd.DataFrame()  # average sale value offs
+    stacked_woolvalue_dams = pd.DataFrame()  # average wool value dams
+    stacked_woolvalue_offs = pd.DataFrame()  # average wool value offs
     stacked_saledate_offs = pd.DataFrame()  # offs sale date
     stacked_cfw_dams = pd.DataFrame()  # clean fleece weight dams
     stacked_fd_dams = pd.DataFrame()  # fibre diameter dams
@@ -140,6 +144,62 @@ def f_report(processor, trials):
             saleprice = pd.concat([saleprice],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_saleprice = stacked_saleprice.append(saleprice)
 
+
+        if True: #report_run.loc['run_salevalue_dams', 'Run']: todo need to add this to exp.xl and uncomment
+            type = 'stock'
+            prod = 'salevalue_k2ctva1nwziyg1'
+            weights = 'dams_numbers_k2tvanwziy1g1'
+            na_weights = 1
+            keys = 'dams_keys_k2ctvanwziy1g1'
+            arith = 1
+            index =[3]
+            cols =[1,2]
+            salevalue_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
+                                   na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
+            salevalue_dams = pd.concat([salevalue_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_salevalue_dams = stacked_salevalue_dams.append(salevalue_dams)
+
+        if True: #report_run.loc['run_salevalue_offs', 'Run']: todo need to add this to exp.xl and uncomment
+            type = 'stock'
+            prod = 'salevalue_k3k5ctvnwziaxyg3'
+            weights = 'offs_numbers_k3k5tvnwziaxyg3'
+            na_weights = 2
+            keys = 'offs_keys_k3k5ctvnwziaxyg3'
+            arith = 1
+            index =[4,10]
+            cols =[2, 3]
+            salevalue_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
+                                   na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
+            salevalue_offs = pd.concat([salevalue_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_salevalue_offs = stacked_salevalue_offs.append(salevalue_offs)
+
+        if True: #report_run.loc['run_woolvalue_dams', 'Run']: todo need to add this to exp.xl and uncomment
+            type = 'stock'
+            prod = 'woolvalue_k2ctva1nwziyg1'
+            weights = 'dams_numbers_k2tvanwziy1g1'
+            na_weights = 1
+            keys = 'dams_keys_k2ctvanwziy1g1'
+            arith = 1
+            index =[3]
+            cols =[1,2]
+            woolvalue_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
+                                   na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
+            woolvalue_dams = pd.concat([woolvalue_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_woolvalue_dams = stacked_woolvalue_dams.append(woolvalue_dams)
+
+        if True: #report_run.loc['run_woolvalue_offs', 'Run']: todo need to add this to exp.xl and uncomment
+            type = 'stock'
+            prod = 'woolvalue_k3k5ctvnwziaxyg3'
+            weights = 'offs_numbers_k3k5tvnwziaxyg3'
+            na_weights = 2
+            keys = 'offs_keys_k3k5ctvnwziaxyg3'
+            arith = 1
+            index =[4,10]
+            cols =[2, 3]
+            woolvalue_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
+                                   na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
+            woolvalue_offs = pd.concat([woolvalue_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_woolvalue_offs = stacked_woolvalue_offs.append(woolvalue_offs)
 
         if report_run.loc['run_saledate_offs', 'Run']:
             type = 'stock'
@@ -742,6 +802,14 @@ def f_report(processor, trials):
         plot.savefig('Output/profitarea_curve.png')
     if report_run.loc['run_saleprice', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_saleprice, 'saleprice', df_settings, option=1)
+    if True: #report_run.loc['run_salevalue_offs', 'Run']: todo hookup
+        df_settings = rep.f_df2xl(writer, stacked_salevalue_offs, 'salevalue_offs', df_settings, option=1)
+    if True: #report_run.loc['run_salevalue_dams', 'Run']: todo hookup
+        df_settings = rep.f_df2xl(writer, stacked_salevalue_dams, 'salevalue_dams', df_settings, option=1)
+    if True: #report_run.loc['run_woolvalue_offs', 'Run']: todo hookup
+        df_settings = rep.f_df2xl(writer, stacked_woolvalue_offs, 'woolvalue_offs', df_settings, option=1)
+    if True: #report_run.loc['run_woolvalue_dams', 'Run']: todo hookup
+        df_settings = rep.f_df2xl(writer, stacked_woolvalue_dams, 'woolvalue_dams', df_settings, option=1)
     if report_run.loc['run_saledate_offs', 'Run']:
         stacked_saledate_offs = stacked_saledate_offs.astype(object)
         stacked_saledate_offs[stacked_saledate_offs==np.datetime64('1970-01-01')] = 0

@@ -1015,10 +1015,11 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None
     :key cols (optional, default = []): list: axis you want as the cols of pandas df (order of list is the col level order).
     :key arith (optional, default = 0): int: arithmetic operation used.
             option 0: return production param, averaged on given axis
-            option 1: return weighted average of production param (using denominator weight return production per day the animal is on hand)
+            option 1: return weighted average of production param (optional denominator weight param)
             option 2: total production for a given axis np.sum(prod * weight, axis)
             option 3: total production for each activity
-            option 4: return weighted average of production param (using denominator weight returns the average production for period eg less if animal is sold part way through)
+            option 4: return weighted average of production param using prod>0 as the weights
+            option 5: return the maximum value across the slices of the axes
     :key prod (optional, default = 1): str/int/float: if it is a string then it is used as a key for stock_vars, if it is an number that number is used as the prod value
     :key na_prod (optional, default = []): list: position to add new axis
     :key weights (optional, default = None): str: weights to be used in arith (typically a lp variable eg numbers). Only required when arith>0
@@ -1078,8 +1079,8 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None
 def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], axis_slice={}):
     '''
     Depending on the option selected this function can calc:
-        Lamb survival
-        Weaning %
+        Lamb survival (per ewe at start of dvp when lambing occurs - eg mort is included)
+        Weaning %  (per dam at the start of the dvp when mating occurs - eg mort is included)
         Scanning %
         Proportion of dry ewes
 
@@ -1089,6 +1090,7 @@ def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], ax
             option 0: survival %
             option 1: wean %
             option 2: scan %
+            option 3: Proportion of dry ewes
     :key index (optional, default = []): list: axis you want as the index of pandas df (order of list is the index level order).
     :key cols (optional, default = []): list: axis you want as the cols of pandas df (order of list is the col level order).
     :key arith_axis (optional, default = []): list: axis to preform arithmetic operation along.
@@ -1146,13 +1148,6 @@ def f_lambing_status(lp_vars, r_vals, option=0, keys=None, index=[], cols=[], ax
     ##calc for wean % or scan %
     else:
         percentage= fun.f_divide(numerator, denominator)
-
-    # ##calc for scan %
-    # elif option == 2:
-    #     # ##roll the number of dams along the v axis to align the joining number with the numerator
-    #     # roll = 1
-    #     denominator = np.roll(denominator,roll,axis=-8)
-    #     percentage= fun.f_divide(numerator, denominator)
 
     ##make table
     percentage = f_numpy2df(percentage, keys_sliced, index, cols)
