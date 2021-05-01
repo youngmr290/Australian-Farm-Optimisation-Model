@@ -292,7 +292,7 @@ def boundarypyomo_local(params):
                 return (
                         sum(model.v_phase_area[r,l] * model.p_pasture_area[r,t] for r in model.s_phases for l in
                             model.s_lmus for t in model.s_pastures)
-                        == total_pas_area)
+                        >= total_pas_area)
             model.con_pas_bound = pe.Constraint(rule=pas_bound,doc='bound on total pasture area')
 
 
