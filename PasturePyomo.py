@@ -281,8 +281,8 @@ def paspyomo_local(params):
         model.del_component(model.con_pasarea)
     except AttributeError:
         pass
-    def pasarea(model,f,l,t):  #todo add if statement to the rotation sum
-        return sum(-model.v_phase_area[r,l] * model.p_phase_area[f,l,r,t] for r in model.s_phases)   \
+    def pasarea(model,f,l,t):
+        return sum(-model.v_phase_area[r,l] * model.p_phase_area[f,l,r,t] for r in model.s_phases if pe.value(model.p_phase_area[f,l,r,t]) != 0)   \
                         + sum(model.v_greenpas_ha[v,g,o,f,l,t] for v in model.s_feed_pools for g in model.s_grazing_int for o in model.s_foo_levels) <=0
     model.con_pasarea = pe.Constraint(model.s_feed_periods, model.s_lmus, model.s_pastures, rule = pasarea, doc='Pasture area row for growth constraint of each type on each soil for each feed period (ha)')
     
