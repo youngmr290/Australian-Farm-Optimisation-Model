@@ -1171,23 +1171,21 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         crg = crg_doy * f_sig(relsize_mating_e1b1sliced * rc_mating_e1b1sliced, cb1[2, ...], cb1[3, ...])
         ##Set proportions to 0 for dams that gave birth and lost - this is required so that numbers in pp behave correctly
         crg *= (nfoet_b1any == nyatf_b1any)
+        ##Define the temp array shape & populate with values from crg (values are required for the proportion of the highest parity dams)
+        t_cr = crg.copy()
         ##probability of a given number of foetuses (calculated from the difference in the cumulative probability)
-        t_cr = crg - np.roll(crg, -1, uinp.parameters['i_b1_pos'])
-        #todo may be simplified by rolling the array on the b1 axis
-        # ##Define the temp array shape & populate with values from crg (values are required for the proportion of the highest parity dams)
-        # t_cr = crg.copy()
-        # slc = [slice(None)] * len(t_cr.shape)
-        # slc[sinp.stock['i_b1_pos']] = slice(1,-1)
-        # t_cr[tuple(slc)] = np.maximum(0, f_dynamic_slice(crg, sinp.stock['i_b1_pos'], 1, -1) - f_dynamic_slice(crg, uinp.parameters['i_b1_pos'], 2, None))    # (difference between '>x' and '>x+1')
+        slc = [slice(None)] * len(t_cr.shape)
+        slc[sinp.stock['i_b1_pos']] = slice(1,-1)
+        t_cr[tuple(slc)] = np.maximum(0, f_dynamic_slice(crg, sinp.stock['i_b1_pos'], 1, -1) - f_dynamic_slice(crg, uinp.parameters['i_b1_pos'], 2, None))    # (difference between '>x' and '>x+1')
         ##Process the Conception REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
         t_cr[:, :, 2, ...] = f_rev_update('conception', t_cr[:, :, 2, ...], rev_trait_value)
         ## Calculate proportion of singles, twins & triplets so litter size can be stored as a REV trait & then restored from the REV
         ## requires a mask for the pregnant dams that is the same shape as t_cr
-        mask = nfoet_b1any > 0
-        mask = np.broadcast_to(mask, t_cr)
-        litter_propn = t_cr[mask] / np.sum(t_cr[mask], sinp.stock['i_b1_pos'], keepdims=True)
+        mask = nfoet_b1any.squeeze() > 0
+        t_cr_masked = np.compress(mask, t_cr, sinp.stock['i_b1_pos'])
+        litter_propn = t_cr_masked / np.sum(t_cr_masked, sinp.stock['i_b1_pos'], keepdims=True)
         litter_propn = f_rev_update('litter_size', litter_propn, rev_trait_value)
-        t_cr[mask] = litter_propn * np.sum(t_cr[mask], sinp.stock['i_b1_pos'], keepdims=True)
+        t_cr[:,:,mask,...] = litter_propn * np.sum(t_cr_masked, sinp.stock['i_b1_pos'], keepdims=True)
         ##Dams that implant (i.e. do not return to service) but don't retain to 3rd trimester are added to 00 slice (b1[1:2]) rather than staying in NM slice
         ###Number is based on a proportion (cf[5]) of the ewes that implant (propn_preg) losing their foetuses/embryos
         ###The number can't be more than the number of ewes that are not pregnant in the 3rd trimester (1 - propn_preg).
