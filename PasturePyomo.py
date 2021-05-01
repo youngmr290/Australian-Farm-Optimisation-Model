@@ -250,6 +250,7 @@ def paspyomo_local(params):
                             - model.v_greenpas_ha[v,g,o,fs,l,t] * model.p_foo_end_grnha[g,o,fs,l,t] for v in model.s_feed_pools for g in model.s_grazing_int for o in model.s_foo_levels) <=0
         else:
             return pe.Constraint.Skip
+    #todo the greenpas (FOO) and pasarea (ha) could be replaced by a grnha constraint that passes area and foo together. Needs a FooB (base level) and reseeding foo removal and addition associated with the reseeding rotation phases
     model.con_greenpas = pe.Constraint(model.s_feed_periods, model.s_lmus, model.s_pastures, rule = greenpas, doc='green pasture of each type available on each soil type in each feed period')
 
     try:
