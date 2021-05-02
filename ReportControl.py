@@ -144,7 +144,7 @@ def f_report(processor, trials):
             saleprice = pd.concat([saleprice],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_saleprice = stacked_saleprice.append(saleprice)
 
-        if True: #report_run.loc['run_salevalue_dams', 'Run']: todo need to add this to exp.xl and uncomment
+        if report_run.loc['run_salevalue_dams', 'Run']:
             type = 'stock'
             prod = 'salevalue_k2ctva1nwziyg1'
             weights = 'dams_numbers_k2tvanwziy1g1'
@@ -158,7 +158,7 @@ def f_report(processor, trials):
             salevalue_dams = pd.concat([salevalue_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_salevalue_dams = stacked_salevalue_dams.append(salevalue_dams)
 
-        if True: #report_run.loc['run_salevalue_offs', 'Run']: todo need to add this to exp.xl and uncomment
+        if report_run.loc['run_salevalue_offs', 'Run']:
             type = 'stock'
             prod = 'salevalue_k3k5ctvnwziaxyg3'
             weights = 'offs_numbers_k3k5tvnwziaxyg3'
@@ -172,7 +172,7 @@ def f_report(processor, trials):
             salevalue_offs = pd.concat([salevalue_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_salevalue_offs = stacked_salevalue_offs.append(salevalue_offs)
 
-        if True: #report_run.loc['run_woolvalue_dams', 'Run']: todo need to add this to exp.xl and uncomment
+        if report_run.loc['run_woolvalue_dams', 'Run']:
             type = 'stock'
             prod = 'woolvalue_k2ctva1nwziyg1'
             weights = 'dams_numbers_k2tvanwziy1g1'
@@ -186,7 +186,7 @@ def f_report(processor, trials):
             woolvalue_dams = pd.concat([woolvalue_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_woolvalue_dams = stacked_woolvalue_dams.append(woolvalue_dams)
 
-        if True: #report_run.loc['run_woolvalue_offs', 'Run']: todo need to add this to exp.xl and uncomment
+        if report_run.loc['run_woolvalue_offs', 'Run']:
             type = 'stock'
             prod = 'woolvalue_k3k5ctvnwziaxyg3'
             weights = 'offs_numbers_k3k5tvnwziaxyg3'
@@ -243,7 +243,7 @@ def f_report(processor, trials):
             fd_dams = pd.concat([fd_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_fd_dams = stacked_fd_dams.append(fd_dams)
 
-        if True: #report_run.loc['run_cfw_offs', 'Run']: todo hookup
+        if report_run.loc['run_cfw_offs', 'Run']:
             type = 'stock'
             prod = 'cfw_hdmob_k3k5tvnwziaxyg3'
             weights = 'offs_numbers_k3k5tvnwziaxyg3'
@@ -258,7 +258,7 @@ def f_report(processor, trials):
             cfw_offs = pd.concat([cfw_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_cfw_offs = stacked_cfw_offs.append(cfw_offs)
 
-        if True: #report_run.loc['run_fd_offs', 'Run']: todo hookup
+        if report_run.loc['run_fd_offs', 'Run']:
             type = 'stock'
             prod = 'fd_hdmob_k3k5tvnwziaxyg3'
             weights = 'offs_numbers_k3k5tvnwziaxyg3'
@@ -808,13 +808,13 @@ def f_report(processor, trials):
         plot.savefig('Output/profitarea_curve.png')
     if report_run.loc['run_saleprice', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_saleprice, 'saleprice', df_settings, option=1)
-    if True: #report_run.loc['run_salevalue_offs', 'Run']: todo hookup
+    if report_run.loc['run_salevalue_offs', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_salevalue_offs, 'salevalue_offs', df_settings, option=1)
-    if True: #report_run.loc['run_salevalue_dams', 'Run']: todo hookup
+    if report_run.loc['run_salevalue_dams', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_salevalue_dams, 'salevalue_dams', df_settings, option=1)
-    if True: #report_run.loc['run_woolvalue_offs', 'Run']: todo hookup
+    if report_run.loc['run_woolvalue_offs', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_woolvalue_offs, 'woolvalue_offs', df_settings, option=1)
-    if True: #report_run.loc['run_woolvalue_dams', 'Run']: todo hookup
+    if report_run.loc['run_woolvalue_dams', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_woolvalue_dams, 'woolvalue_dams', df_settings, option=1)
     if report_run.loc['run_saledate_offs', 'Run']:
         stacked_saledate_offs = stacked_saledate_offs.astype(object)
@@ -824,9 +824,9 @@ def f_report(processor, trials):
         df_settings = rep.f_df2xl(writer, stacked_cfw_dams, 'cfw_dams', df_settings, option=1)
     if report_run.loc['run_fd_dams', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_fd_dams, 'fd_dams', df_settings, option=1)
-    if True:#report_run.loc['run_cfw_offs', 'Run']: todo hookup
+    if report_run.loc['run_cfw_offs', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_cfw_offs, 'cfw_offs', df_settings, option=1)
-    if True: #report_run.loc['run_fd_offs', 'Run']: todo hookup
+    if report_run.loc['run_fd_offs', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_fd_offs, 'fd_offs', df_settings, option=1)
     if report_run.loc['run_wbe_dams', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_wbe_dams, 'wbe_dams', df_settings, option=1)
