@@ -210,7 +210,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
                     model.display(ostream=f)
 
                 ##write rc, duals and slacks to txt file. Duals are slow to write so that option must be turn on
-                write_duals = False
+                write_duals = True
                 with open('Output/Rc and Duals - %s.txt' %trial_name,'w') as f:  #file name has to have capital
                     f.write('RC\n')
                     for v in model.component_objects(pe.Var, active=True):
@@ -219,12 +219,14 @@ def exp(row):  # called with command: pool.map(exp, dataset)
                             try: #in case variable has no index
                                 print("      ", index, model.rc[v[index]], file=f)
                             except: pass
-                    f.write('Slacks\n')  # this can be used in search to find the start of this in the txt file
+                    f.write('Slacks (no entry means no slack)\n')  # this can be used in search to find the start of this in the txt file
                     for c in model.component_objects(pe.Constraint,active=True):
                         f.write("Constraint %s\n" % c)
                         for index in c:
-                            print("      ",index,c[index].lslack(),file=f)
-                            print("      ",index,c[index].uslack(),file=f)
+                            if c[index].lslack() != 0 and c[index].lslack() != np.inf:
+                                print("  L   ",index,c[index].lslack(),file=f)
+                            if c[index].uslack() != 0 and c[index].lslack() != np.inf:
+                                print("  U   ",index,c[index].uslack(),file=f)
                     if write_duals:
                         f.write('Dual\n')   #this can be used in search to find the start of this in the txt file
                         for c in model.component_objects(pe.Constraint, active=True):
