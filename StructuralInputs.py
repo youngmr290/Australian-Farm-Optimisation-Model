@@ -12,6 +12,7 @@ This module has no SA
 import pickle as pkl
 import pandas as pd
 import numpy as np
+import copy
 
 import Functions as fun
 
@@ -80,9 +81,9 @@ stock_inp['ia_k2_mlsb1'] = np.reshape(stock_inp['ia_k2_mlsb1'],mlsb1)
 
 
 ##copy inputs so there is an original (before SA) version
-general = general_inp.copy()
-stock = stock_inp.copy()
-structuralsa = structuralsa_inp.copy()
+general = copy.deepcopy(general_inp)
+stock = copy.deepcopy(stock_inp)
+structuralsa = copy.deepcopy(structuralsa_inp)
 
 
 #######################

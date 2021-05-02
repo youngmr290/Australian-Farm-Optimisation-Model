@@ -12,6 +12,7 @@ module: universal module - contains all the core input data - usually held const
 ##python modules
 import pickle as pkl
 import numpy as np
+import copy
 
 import Functions as fun
 
@@ -152,15 +153,15 @@ pastparameters_inp['i_cu4_c4'] = pastparameters_inp['i_cu4_c4'].reshape(pastpara
 
 
 ##copy inputs so there is an original (before SA) version
-price = price_inp.copy()
-finance = finance_inp.copy()
-mach_general = mach_general_inp.copy()
-supfeed = sup_inp.copy()
-crop = crop_inp.copy()
-sheep = sheep_inp.copy()
-parameters = parameters_inp.copy()
-pastparameters = pastparameters_inp.copy()
-mach = machine_options_dict_inp.copy()
+price = copy.deepcopy(price_inp)
+finance = copy.deepcopy(finance_inp)
+mach_general = copy.deepcopy(mach_general_inp)
+supfeed = copy.deepcopy(sup_inp)
+crop = copy.deepcopy(crop_inp)
+sheep = copy.deepcopy(sheep_inp)
+parameters = copy.deepcopy(parameters_inp)
+pastparameters = copy.deepcopy(pastparameters_inp)
+mach = copy.deepcopy(machine_options_dict_inp)
 
 #######################
 #apply SA             #

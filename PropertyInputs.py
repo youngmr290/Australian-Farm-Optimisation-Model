@@ -9,6 +9,7 @@ import pickle as pkl
 import os.path
 import numpy as np
 import pandas as pd
+import copy
 
 ##AFO modules
 import Functions as fun
@@ -191,18 +192,18 @@ feedsupply_inp['i_feedoptions_r1pj0'] = np.reshape(feedsupply_inp['i_feedoptions
 
 ##create a copy of each input dict - this means there is always a copy of the original inputs (the second copy has SA applied to it)
 ##the copy created is the one used in the actual modules
-general=general_inp.copy()
-rep=rep_inp.copy()
-labour=labour_inp.copy()
-crop=crop_inp.copy()
-mach=mach_inp.copy()
-stubble=stubble_inp.copy()
-finance=finance_inp.copy()
-period=period_inp.copy()
-supfeed=sup_inp.copy()
-sheep=sheep_inp.copy()
-feedsupply=feedsupply_inp.copy()
-pasture_inputs=pasture_inp.copy()
+general=copy.deepcopy(general_inp)
+rep=copy.deepcopy(rep_inp)
+labour= copy.deepcopy(labour_inp)
+crop= copy.deepcopy(crop_inp)
+mach= copy.deepcopy(mach_inp)
+stubble= copy.deepcopy(stubble_inp)
+finance= copy.deepcopy(finance_inp)
+period= copy.deepcopy(period_inp)
+supfeed= copy.deepcopy(sup_inp)
+sheep= copy.deepcopy(sheep_inp)
+feedsupply=copy.deepcopy(feedsupply_inp)
+pasture_inputs=copy.deepcopy(pasture_inp)
 
 #######################
 #apply SA             #
@@ -222,19 +223,19 @@ def property_inp_sa():
     import Sensitivity as sen
     ##general
     ###sav
-    general['steady_state'] = fun.f_sa(general_inp['steady_state'],sen.sav['steady_state'],5)
+    general['steady_state'] = fun.f_sa(general_inp['steady_state'], sen.sav['steady_state'], 5)
 
 
     ##pasture
     ###sav
-    general['pas_inc'] = fun.f_sa(general_inp['pas_inc'],sen.sav['pas_inc'],5)
+    general['pas_inc'] = fun.f_sa(general_inp['pas_inc'], sen.sav['pas_inc'], 5)
     for pasture in sinp.general['pastures'][general['pas_inc']]: #all pasture inputs are adjusted even if a given pasture is not included
         ###SAM
         pasture_inputs[pasture]['GermStd'] = fun.f_sa(pasture_inp[pasture]['GermStd'], sen.sam[('germ',pasture)])
         pasture_inputs[pasture]['GermScalarLMU'] = fun.f_sa(pasture_inp[pasture]['GermScalarLMU'], sen.sam[('germ_l',pasture)])
         ##Do the PGR sensitivity on LowPGR & MedPGR sequentially building on the previous value. Alter code if lines are deleted
         pasture_inputs[pasture]['LowPGR'] = fun.f_sa(pasture_inp[pasture]['LowPGR'], sen.sam[('pgr',pasture)])
-        pasture_inputs[pasture]['LowPGR'] = fun.f_sa(pasture_inputs[pasture]['LowPGR'], sen.sam[('pgr_f',pasture)][...,na])
+        pasture_inputs[pasture]['LowPGR'] = fun.f_sa(pasture_inp[pasture]['LowPGR'], sen.sam[('pgr_f',pasture)][...,na])
         pasture_inputs[pasture]['LowPGR'] = fun.f_sa(pasture_inputs[pasture]['LowPGR'], sen.sam[('pgr_l',pasture)])
         pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inp[pasture]['MedPGR'], sen.sam[('pgr',pasture)])
         pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inputs[pasture]['MedPGR'], sen.sam[('pgr_f',pasture)][...,na])
