@@ -1853,16 +1853,18 @@ def f_sale_value(cu0, cx, o_rc, o_ffcfw_pg, dressp_adj_yg, dresspercent_adj_s6pg
     sale_value = np.max(sale_value_s7pg, axis=0) #take max on s6 axis as well to remove it (it is singleton so no effect)
     return sale_value
 
-def f_animal_trigger_levels(index_pg, age_start, period_is_shearing_pg, a_next_s_pg, period_is_wean_pg, gender,
+def f_animal_trigger_levels(index_pg, age_start, period_is_shearing_pg, period_is_wean_pg, gender,
                             o_ebg_p, wool_genes, period_is_joining_pg, animal_mated, period_is_endmating_pg):
     ##Trigger value 1 - week of year
     trigger1_pg = index_pg % 52
     ##Trigger value 2 - age
     trigger2_pg = np.trunc(age_start / 7)
     ##Trigger value 3 - Weeks from previous shearing
-    trigger3_pg = index_pg - np.maximum.accumulate(index_pg*period_is_shearing_pg)
-    ##Trigger value 4 - weeks to next shearing - can't use period is array like in the other situations
-    trigger4_pg = a_next_s_pg - index_pg #this will return 0 when the current period is shearing because the next association points at the current period when period is
+    trigger3_pg = index_pg - np.maximum.accumulate(index_pg*period_is_shearing_pg, axis=sinp.stock['i_p_pos'])
+    ##Trigger value 4 - weeks to next shearing
+    shear_idx = index_pg * period_is_shearing_pg
+    shear_idx[np.logical_not(period_is_shearing_pg)] = np.max(index_pg) * 2 #set index to large number if not shearing
+    trigger4_pg = np.flip(np.minimum.accumulate(np.flip(shear_idx, axis=sinp.stock['i_p_pos']), axis=sinp.stock['i_p_pos']), axis=sinp.stock['i_p_pos']) - index_pg
     ##Trigger value 5 - weeks from previous joining
     trigger5_pg = index_pg - np.maximum.accumulate(index_pg*period_is_joining_pg)
     ##Trigger value 6 - weeks from end of mating
@@ -2042,14 +2044,14 @@ def f_contract_cost(application_level_h2pg, treatment_units_h8pg, husb_operation
     return cost_pg
 
 def f_husbandry(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, operations_triggerlevels_h5h7h2pg, index_pg,
-                age_start, period_is_shear_pg, a_next_s_pg, period_is_wean_pg, gender, o_ebg_p, wool_genes,
+                age_start, period_is_shear_pg, period_is_wean_pg, gender, o_ebg_p, wool_genes,
                 husb_operations_muster_propn_h2pg, husb_requisite_cost_h6pg, husb_operations_requisites_prob_h6h2pg,
                 operations_per_hour_l2h2pg, husb_operations_infrastructurereq_h1h2pg,
                 husb_operations_contract_cost_h2pg, husb_muster_requisites_prob_h6h4pg,
                 musters_per_hour_l2h4pg, husb_muster_infrastructurereq_h1h4pg,
                 a_nyatf_b1g=0,period_is_joining_pg=False, animal_mated=False, period_is_endmating_pg=False, dtype=None):
     ##An array of the trigger values for the animal classes in each period - these values are compared against a threshold to determine if the husb is required
-    animal_triggervalues_h7pg = f_animal_trigger_levels(index_pg, age_start, period_is_shear_pg, a_next_s_pg, period_is_wean_pg, gender,
+    animal_triggervalues_h7pg = f_animal_trigger_levels(index_pg, age_start, period_is_shear_pg, period_is_wean_pg, gender,
                             o_ebg_p, wool_genes, period_is_joining_pg, animal_mated, period_is_endmating_pg).astype(dtype)
     ##The number of treatment units per animal in each period - each slice has a different unit eg mobsize, nyatf etc the treatment unit can be selected and applied for a given husb operation
     treatment_units_h8pg = f_treatment_unit_numbers(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, a_nyatf_b1g).astype(dtype)
