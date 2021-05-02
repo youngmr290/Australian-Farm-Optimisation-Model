@@ -65,6 +65,8 @@ def f_report(processor, trials):
     stacked_saledate_offs = pd.DataFrame()  # offs sale date
     stacked_cfw_dams = pd.DataFrame()  # clean fleece weight dams
     stacked_fd_dams = pd.DataFrame()  # fibre diameter dams
+    stacked_cfw_offs = pd.DataFrame()  # clean fleece weight dams
+    stacked_fd_offs = pd.DataFrame()  # fibre diameter dams
     stacked_wbe_dams = pd.DataFrame()  # whole body energy content dams
     stacked_wbe_offs = pd.DataFrame()  # whole body energy content offs
     stacked_lw_dams = pd.DataFrame()  # live weight dams (large array with p, e and b axis)
@@ -243,6 +245,36 @@ def f_report(processor, trials):
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             fd_dams = pd.concat([fd_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_fd_dams = stacked_fd_dams.append(fd_dams)
+
+        if True: #report_run.loc['run_cfw_offs', 'Run']: todo hookup
+            type = 'stock'
+            prod = 'cfw_hdmob_k3k5tvnwziaxyg3'
+            weights = 'offs_numbers_k3k5tvnwziaxyg3'
+            keys = 'offs_keys_k3k5tvnwziaxyg3'
+            arith = 1
+            index =[3]
+            cols =[0,1,2]
+            axis_slice = {}
+            # axis_slice[0] = [0, 2, 1]
+            cfw_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
+                                   keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+            cfw_offs = pd.concat([cfw_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_cfw_offs = stacked_cfw_offs.append(cfw_offs)
+
+        if True: #report_run.loc['run_fd_offs', 'Run']: todo hookup
+            type = 'stock'
+            prod = 'fd_hdmob_k3k5tvnwziaxyg3'
+            weights = 'offs_numbers_k3k5tvnwziaxyg3'
+            keys = 'offs_keys_k3k5tvnwziaxyg3'
+            arith = 1
+            index =[3]
+            cols =[0,1,2]
+            axis_slice = {}
+            # axis_slice[0] = [0, 2, 1]
+            fd_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
+                                   keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+            fd_offs = pd.concat([fd_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_fd_offs = stacked_fd_offs.append(fd_offs)
 
         if report_run.loc['run_wbe_dams', 'Run']:
             type = 'stock'
@@ -818,6 +850,10 @@ def f_report(processor, trials):
         df_settings = rep.f_df2xl(writer, stacked_cfw_dams, 'cfw_dams', df_settings, option=1)
     if report_run.loc['run_fd_dams', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_fd_dams, 'fd_dams', df_settings, option=1)
+    if True:#report_run.loc['run_cfw_offs', 'Run']: todo hookup
+        df_settings = rep.f_df2xl(writer, stacked_cfw_offs, 'cfw_offs', df_settings, option=1)
+    if True: #report_run.loc['run_fd_offs', 'Run']: todo hookup
+        df_settings = rep.f_df2xl(writer, stacked_fd_offs, 'fd_offs', df_settings, option=1)
     if report_run.loc['run_wbe_dams', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_wbe_dams, 'wbe_dams', df_settings, option=1)
     if report_run.loc['run_wbe_offs', 'Run']:
