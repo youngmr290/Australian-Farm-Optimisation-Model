@@ -50,8 +50,8 @@ report_run = report_run.droplevel(1, axis=1)
 
 
 def f_report(processor, trials):
-    print('Start processor: {0}'.format(processor))
-    print('Start trials: {0}'.format(trials))
+    # print('Start processor: {0}'.format(processor))
+    # print('Start trials: {0}'.format(trials))
     ##create empty df to stack each trial results into
     stacked_summary = pd.DataFrame()  # 1 line summary of each trial
     stacked_areasum = pd.DataFrame()  # area summary
@@ -253,7 +253,7 @@ def f_report(processor, trials):
             keys = 'offs_keys_k3k5tvnwziaxyg3'
             arith = 1
             index =[3]
-            cols =[0,1,2]
+            cols =[0,1,2,9]
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             cfw_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
@@ -268,7 +268,7 @@ def f_report(processor, trials):
             keys = 'offs_keys_k3k5tvnwziaxyg3'
             arith = 1
             index =[3]
-            cols =[0,1,2]
+            cols =[0,1,2,9]
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             fd_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
