@@ -5599,7 +5599,7 @@ def generator(params,r_vals,ev,plots = False):
                                                                     * (a_k3cluster_da0e0b0xyg3 == index_k3tva1e1b1nwzida0e0b0xyg3)[...,na,na]
                                                                     , axis=(b0_pos-2, e0_pos-2),keepdims=True))
     ###numbers required - no d axis for Dam DVs
-    ####the total number required for each dam is 1.0 when summed across the progeny k3 (progeny BTRT) & k5 (progeny dam age) axes
+    ####the total number required for each dam is 1.0 when summed across the progeny k3 (progeny dam age) & k5 (progeny BTRT) axes
     ####collapse the e1 axis on the mask prior to np.sum because can't test for > 0 as per other numbers_req (because need proportions of age & BTRT)
     #### but don't want to increase the numbers if joining for multiple cycles
     numbers_progreq_k2k3k5tva1e1b1nw8zida0e0b0xyg1g9w9 = 1 * np.sum(np.any(mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9, axis=e1_pos-1, keepdims=True)[0, ...,na,:]
