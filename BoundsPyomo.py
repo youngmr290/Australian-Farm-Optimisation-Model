@@ -207,8 +207,11 @@ def boundarypyomo_local(params):
             except AttributeError:
                 pass
             def f_sale_yearling_upperbound_offs(model, k3, k5, t, v, i, a, x, y, g1):
-                return sum(model.v_offs[k3, k5, t, v, n, w, i, a, x, y, g1] for n in model.s_nut_offs for w in model.s_lw_offs
-                           ) <= model.p_sale_offs_yearling_upperbound[k3, k5, t, v, i, a, x, y, g1]
+                if model.p_sale_offs_yearling_upperbound[k3, k5, t, v, i, a, x, y, g1]==np.inf:
+                    return pe.Constraint.Skip
+                else:
+                    return sum(model.v_offs[k3, k5, t, v, n, w, i, a, x, y, g1] for n in model.s_nut_offs for w in model.s_lw_offs
+                               ) <= model.p_sale_offs_yearling_upperbound[k3, k5, t, v, i, a, x, y, g1]
             model.con_sale_yearling_upperbound_offs = pe.Constraint(model.s_k3_damage_offs,model.s_k5_birth_offs,
                                         model.s_sale_offs,model.s_dvp_offs, model.s_tol,model.s_wean_times,model.s_gender,model.s_gen_merit_offs,
                                         model.s_groups_offs, rule=f_sale_yearling_upperbound_offs,
