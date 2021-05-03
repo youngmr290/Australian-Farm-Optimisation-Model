@@ -127,7 +127,7 @@ def boundarypyomo_local(params):
                                for i in model.s_tol for y in model.s_gen_merit_dams for g1 in model.s_groups_dams
                                ) <= dams_upperbound[t, v]
             model.con_dam_upperbound = pe.Constraint(model.s_sale_dams, model.s_dvp_dams, rule=f_dam_upperbound,
-                                                    doc='max number of dams')
+                                                    doc='max number of dams_tv')
 
         ##bound to stop yearlings being mated - specified by k2 & v and totalled across other axes
         #todo would be good to implement this as a proportion of the yearlings that can be mated. So the constrain is: (1- x) number mated <= (x) number not mated (where x is max propn mated).
@@ -160,7 +160,7 @@ def boundarypyomo_local(params):
                                for i in model.s_tol for y in model.s_gen_merit_dams for g1 in model.s_groups_dams
                                ) <= dam_mating_upperbound[k28, v]
             model.con_dam_mating_upperbound = pe.Constraint(model.s_k2_birth_dams, model.s_dvp_dams, rule=f_dam_mating_upperbound,
-                                                    doc='max number of dams in a slice')
+                                                    doc='max number of dams_k2v')
 
         ##bound 0 sale of ewe lambs - Need this because it is normal to retain the young merino ewes until shearing as a hogget so that the ones retained can be selected including an assessment of wool quality
         if sale_yearling_upperbound_inc:

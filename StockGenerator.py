@@ -7002,6 +7002,7 @@ def generator(params,r_vals,ev,plots = False):
 
     ##bound to stop sale of ewe lambs before the first shearing for the dam activity
     ###dam dvp when first shearing occurs
+    #todo this will be an unstable way to constrain the sale of females prior to 'hogget' shearing because it operates on DVP date start and 'lamb' shearing
     shear_date_iyg1 = date_shear_sida0e0b0xyg1[0,:,0,0,0,0,0,:,:]
     dvp_date_k2tvaiyg1 = params['dvp1'][:,:,:,:,0,0,...]
     index_tvaiyg1 = fun.f_expand(np.arange(len_t1),-6)
@@ -7013,6 +7014,7 @@ def generator(params,r_vals,ev,plots = False):
     sale_dam_yearling_k2tvaiyg1[mask_v_prior_shear_k2tvaiyg1] = 0
 
     ##bound to stop sale of ewe lambs before the first shearing for the offs activity
+    #todo this will be an unstable way to constrain the sale of females prior to 'hogget' shearing because it operates on DVP date start and 'lamb' shearing
     ###offs dvp when first shearing occurs
     shear_date_iaxyg3 = date_shear_sida0e0b0xyg3[0,:,0,0,0,0,...]
     dvp_date_k3k5tviaxyg3 = params['dvp3'][:,:,:,:,0,0,...]
