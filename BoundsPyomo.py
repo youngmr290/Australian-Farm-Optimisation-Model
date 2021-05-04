@@ -132,6 +132,7 @@ def boundarypyomo_local(params):
 
         ##bound to stop yearlings being mated - specified by k2 & v and totalled across other axes
         #todo would be good to implement this as a proportion of the yearlings that can be mated. So the constrain is: (1- x) number mated <= (x) number not mated (where x is max propn mated).
+        # and use the same input to control the averaging of the weight at prejoining - are the e & b slices included in the average or just the NM
         if yearling_mating_upperbound_inc:
             ###keys to build arrays for the specified slices
             arrays = [model.s_k2_birth_dams, model.s_dvp_dams, model.s_groups_dams]
