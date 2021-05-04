@@ -108,6 +108,7 @@ def structural_inp_sa():
     structuralsa['i_nut_spread_n3'] = fun.f_sa(structuralsa_inp['i_nut_spread_n3'], sen.sav['nut_spread_n3'],5)
     structuralsa['i_n1_len'] = fun.f_sa(structuralsa_inp['i_n1_len'], sen.sav['n_fs_dams'],5)
     structuralsa['i_n3_len'] = fun.f_sa(structuralsa_inp['i_n3_len'], sen.sav['n_fs_offs'],5)
+    structuralsa['i_adjp_lw_initial_w1'] = fun.f_sa(structuralsa_inp['i_adjp_lw_initial_w1'], sen.sav['adjp_lw_initial_w1'],5)
     structuralsa['i_fvp_mask_dams'] = fun.f_sa(structuralsa_inp['i_fvp_mask_dams'], sen.sav['mask_fvp_dams'],5)
     structuralsa['i_dvp_mask_f1'] = fun.f_sa(structuralsa_inp['i_dvp_mask_f1'], sen.sav['fvp_is_dvp_dams'],5)
     structuralsa['i_fvp_mask_offs'] = fun.f_sa(structuralsa_inp['i_fvp_mask_offs'], sen.sav['mask_fvp_offs'],5)
