@@ -475,14 +475,27 @@ def f_weighted_average(array, weights, axis, keepdims=False, non_zero=False, den
     averaged_array[mask] = weighted_array[mask] / weights[mask]
     return averaged_array
 
-def f_divide(numerator, denominator,dtype='float64'):
+def f_divide(numerator, denominator, dtype='float64', option=0):
     '''
-    Function divides two arrays. If the denominator = 0 then 0 is return (elementwise)
+    Elementwise divides two arrays.
+    If the denominator = 0 then return value depends on 'option'
+     option == 0 then return 0
+     option == 1 then return 1 if the numerator is also 0
+
+     option == 1 will also return 1 if both the numerator and denominator are np.inf
+
     '''
     numerator, denominator = np.broadcast_arrays(numerator, denominator)
     result = np.zeros(numerator.shape, dtype=dtype) #make it a float in case the numerator is int
-    mask = denominator!=0
+    ##use ~np.isclose to capture when the denominator is 0 within rounding tolerances
+    mask = ~np.isclose(denominator, 0)
     result[mask] = numerator[mask]/denominator[mask]
+
+    ##If option is 1 then return 1 if the numerator and the denominator are the same (both 0 or both inf)
+    #todo if useful sign could be included and np.inf / (-np.inf) could calculate to -1
+    if option == 1:
+        mask = np.isclose(denominator, numerator)
+        result[mask] = 1
     return result
 
 def f_bilinear_interpolate(im, x_im, y_im, x, y):
