@@ -153,8 +153,8 @@ sav['fvp_is_dvp_offs'] = np.full(sinp.structuralsa_inp['i_fvp_mask_offs'].shape,
 sav['bnd_drys_sold'] = '-'   #SA to force drys to be sold
 sav['bnd_drys_retained'] = '-'   #SA to force drys to be retained
 sav['bnd_sr_t'] = np.full(pinp.sheep_inp['i_sr_constraint_t'].shape, '-', dtype=object)   #SA to fix stocking rate
-sav['bnd_low_age_wether_sale_g3'] = np.full(pinp.sheep_inp['i_g3_inc'].shape, '-', dtype=object)   #SA to set lowest age wether can be sold
-sav['bnd_upper_age_wether_sale_g3'] = np.full(pinp.sheep_inp['i_g3_inc'].shape, '-', dtype=object)   #SA to set oldest age wether can be sold
+sav['bnd_min_sale_age_wether_g3'] = np.full(pinp.sheep_inp['i_g3_inc'].shape, '-', dtype=object)   #SA to set min age wether can be sold
+sav['bnd_max_sale_age_wether_g3'] = np.full(pinp.sheep_inp['i_g3_inc'].shape, '-', dtype=object)   #SA to set max age wether can be sold
 sav['r1_izg1'] = np.full(pinp.sheep_inp['ia_r1_zig1'].shape, '-', dtype=object)   #SA to change the base feed option for dams
 
 ##stock parameters

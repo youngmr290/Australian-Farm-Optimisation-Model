@@ -1389,7 +1389,7 @@ def generator(params,r_vals,ev,plots = False):
     age_pa1e1b1nwzida0e0b0xyg2 = (age_start_pa1e1b1nwzida0e0b0xyg2 + age_end_pa1e1b1nwzida0e0b0xyg2 +1) /2
     age_pa1e1b1nwzida0e0b0xyg3 = (age_start_pa1e1b1nwzida0e0b0xyg3 + age_end_pa1e1b1nwzida0e0b0xyg3 +1) /2
 
-    ##days in each period for each animal
+    ##days in each period for each animal - cant mask the offs p axis becasue need full axis so it can be used in the generator (if days_period[p] > 0)
     days_period_pa1e1b1nwzida0e0b0xyg0 = age_end_pa1e1b1nwzida0e0b0xyg0 +1 - age_start_pa1e1b1nwzida0e0b0xyg0
     days_period_pa1e1b1nwzida0e0b0xyg1 = age_end_pa1e1b1nwzida0e0b0xyg1 +1 - age_start_pa1e1b1nwzida0e0b0xyg1
     days_period_pa1e1b1nwzida0e0b0xyg2 = age_end_pa1e1b1nwzida0e0b0xyg2 +1 - age_start_pa1e1b1nwzida0e0b0xyg2
@@ -4543,7 +4543,13 @@ def generator(params,r_vals,ev,plots = False):
                                                      weight_pa1e1b1nwzida0e0b0xyg3<target_weight_tpa1e1b1nwzida0e0b0xyg3)
     ###period is sale - one true per dvp when sale actually occurs - sale occurs in the period where sheep were on hand at the beginning and not on hand at the beginning of the next period
     period_is_sale_tpa1e1b1nwzida0e0b0xyg3 = np.logical_and(on_hand_tpa1e1b1nwzida0e0b0xyg3==True, np.roll(on_hand_tpa1e1b1nwzida0e0b0xyg3,-1,axis=1)==False)
-
+    ###bound wether sale age - default is to allow all ages to be sold. User can change this using wether sale SAV.
+    min_age_wether_sale_g3 = fun.f_sa(0, sen.sav['bnd_min_sale_age_wether_g3'][mask_offs_inc_g3], 5)
+    max_age_wether_sale_g3 = fun.f_sa(sim_years*365, sen.sav['bnd_max_sale_age_wether_g3'][mask_offs_inc_g3], 5)
+    wether_sale_mask_pa1e1b1nwzida0e0b0xyg3 = np.logical_and(
+        np.logical_and((gender_xyg[mask_x] == 2), age_start_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p] > min_age_wether_sale_g3),
+        age_start_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p] < max_age_wether_sale_g3)
+    period_is_sale_tpa1e1b1nwzida0e0b0xyg3 = np.logical_and(period_is_sale_tpa1e1b1nwzida0e0b0xyg3, wether_sale_mask_pa1e1b1nwzida0e0b0xyg3)
     ###shearing - one true per dvp when shearing actually occurs
     ###in t0 shearing occurs on specified date, in t1 & t2 it happens a certain number of gen periods before sale.
     ####convert from s/dvp to p

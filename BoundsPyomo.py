@@ -39,8 +39,8 @@ def boundarypyomo_local(params):
     yearling_mating_upperbound_inc = fun.f_sa(False, sen.sav['bnd_mateyearlings_inc'], 5) #allow exclusion of mating yearlings (by default yearlings are not allowed to mate)
     sale_yearling_upperbound_inc = fun.f_sa(False, sen.sav['bnd_sellyearlings_inc'], 5) #upperbound on ewe lambs sold
     sr_bound_inc = fun.f_sa(False, sen.sav['bnd_sr_inc'], 5) #controls sr bound
-    total_pasture_bound = fun.f_sa(False, sen.sav['bnd_pasarea_inc'], 5)  #bound on total pasture (hence also total crop)
-    landuse_bound = False #bound on area of each landuse
+    total_pasture_bound_inc = fun.f_sa(False, sen.sav['bnd_pasarea_inc'], 5)  #bound on total pasture (hence also total crop)
+    landuse_bound_inc = False #bound on area of each landuse
 
 
     if bounds_inc:
@@ -132,36 +132,35 @@ def boundarypyomo_local(params):
 
         ##bound to stop yearlings being mated - specified by k2 & v and totalled across other axes
         #todo would be good to implement this as a proportion of the yearlings that can be mated. So the constrain is: (1- x) number mated <= (x) number not mated (where x is max propn mated).
-        # also would be good to add genotype as axis because if composite then default would be to mate them but default not to mate merino yearlings.
         if yearling_mating_upperbound_inc:
             ###keys to build arrays for the specified slices
-            arrays = [model.s_k2_birth_dams, model.s_dvp_dams]   #JMY not sure why this has _birth_ in the variable name. Is it just k2_dams??
-            index_k2v = fun.cartesian_product_simple_transpose(arrays)
+            arrays = [model.s_k2_birth_dams, model.s_dvp_dams, model.s_groups_dams]
+            index_k2vg1 = fun.cartesian_product_simple_transpose(arrays)
             ###build array for the axes of the specified slices
-            dam_mating_upperbound_k2v = np.full((len(model.s_k2_birth_dams), len(model.s_dvp_dams)), np.inf)
+            dam_mating_upperbound_k2vg1 = np.full((len(model.s_k2_birth_dams), len(model.s_dvp_dams), len(model.s_groups_dams)), np.inf)
             ###set the bound
             ### to exclude mating yearling. Mating yearlings is DVP = 1 & k2 = 1: (00 slice and greater) therefore only allowing NM in slice 0.
-            dam_mating_upperbound_k2v[1:,1] = 0
+            dam_mating_upperbound_k2vg1[1:,1,0] = 0
             ###ravel and zip bound and dict
-            dam_mating_upperbound = dam_mating_upperbound_k2v.ravel()
-            tup_k2v = tuple(map(tuple, index_k2v))
-            dam_mating_upperbound = dict(zip(tup_k2v, dam_mating_upperbound))
+            dam_mating_upperbound = dam_mating_upperbound_k2vg1.ravel()
+            tup_k2vg1 = tuple(map(tuple, index_k2vg1))
+            dam_mating_upperbound = dict(zip(tup_k2vg1, dam_mating_upperbound))
             ###constraint
             try:
                 model.del_component(model.con_dam_mating_upperbound)
                 model.del_component(model.con_dam_mating_upperbound_index)
             except AttributeError:
                 pass
-            def f_dam_mating_upperbound(model, k28, v):
-                if dam_mating_upperbound[k28, v]==np.inf:
+            def f_dam_mating_upperbound(model, k28, v, g1):
+                if dam_mating_upperbound[k28, v, g1]==np.inf:
                     return pe.Constraint.Skip
                 else:
                     return sum(model.v_dams[k28,t,v,a,n,w8,i,y,g1] for t in model.s_sale_dams
                                for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
-                               for i in model.s_tol for y in model.s_gen_merit_dams for g1 in model.s_groups_dams
-                               ) <= dam_mating_upperbound[k28, v]
-            model.con_dam_mating_upperbound = pe.Constraint(model.s_k2_birth_dams, model.s_dvp_dams, rule=f_dam_mating_upperbound,
-                                                    doc='max number of dams_k2v')
+                               for i in model.s_tol for y in model.s_gen_merit_dams
+                               ) <= dam_mating_upperbound[k28, v, g1]
+            model.con_dam_mating_upperbound = pe.Constraint(model.s_k2_birth_dams, model.s_dvp_dams, model.s_groups_dams, rule=f_dam_mating_upperbound,
+                                                    doc='max number of dams_k2vg1')
 
         ##bound 0 sale of ewe lambs - Need this because it is normal to retain the young merino ewes until shearing as a hogget so that the ones retained can be selected including an assessment of wool quality
         if sale_yearling_upperbound_inc:
@@ -263,7 +262,7 @@ def boundarypyomo_local(params):
 
 
         ##landuse bound
-        if landuse_bound:
+        if landuse_bound_inc:
             ##initilise bound - note zero is the equivalent of no bound
             landuse_bound_k = pd.Series(0,index=model.s_landuses) #use landuse2 because that is the expanded version of pasture phases eg t, tr not just tedera
             ##set bound - note that setting to zero is the equivalent of no bound
@@ -285,7 +284,7 @@ def boundarypyomo_local(params):
             model.con_pas_bound = pe.Constraint(model.s_landuses, rule=k_bound, doc='bound on total pasture area')
 
         ##total pasture area - hence also total crop area
-        if total_pasture_bound != False:
+        if total_pasture_bound_inc:
             ###setbound
             total_pas_area = sen.sav['bnd_total_pas_area']
             ###constraint
@@ -297,7 +296,7 @@ def boundarypyomo_local(params):
                 return (
                         sum(model.v_phase_area[r,l] * model.p_pasture_area[r,t] for r in model.s_phases for l in
                             model.s_lmus for t in model.s_pastures)
-                        >= total_pas_area)
+                        == total_pas_area)
             model.con_pas_bound = pe.Constraint(rule=pas_bound,doc='bound on total pasture area')
 
 
