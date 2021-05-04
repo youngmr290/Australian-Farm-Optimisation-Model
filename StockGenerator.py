@@ -5035,18 +5035,22 @@ def generator(params,r_vals,ev,plots = False):
     ffcfw_dest_condense_va1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(o_ffcfw_condensed_poffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=nextperiod_is_condense_pa1e1b1nwzida0e0b0xyg3) #numbers not required for ffcfw
     ffcfw_dest_season_va1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(o_ffcfw_season_poffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg3)  #numbers not required for ffcfw
 
-    ##distributing at condensing - all lws back to three lws and dams to different sires at prejoining
-    ###T0 and t1 are distributed however this is not used because t0 and t1 don't transfer to next dvp
-    distribution_condense_tva1e1b1nw8zida0e0b0xyg1w9 = sfun.f_lw_distribution(ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg1, ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg1,
-                                                                     dvp_type_next_tva1e1b1nwzida0e0b0xyg1[...,na], condense_vtype1)
-    distribution_condense_va1e1b1nw8zida0e0b0xyg3w9 = sfun.f_lw_distribution(ffcfw_dest_condense_va1e1b1nwzida0e0b0xyg3, ffcfw_source_condense_va1e1b1nwzida0e0b0xyg3,
-                                                                            dvp_type_next_va1e1b1nwzida0e0b0xyg3[...,na], condense_vtype3)
+    ##distributing at condensing - all lws back to starting number of LWs and dams to different sires at prejoining
+    ###t0 and t1 are distributed however this is not used because t0 and t1 don't transfer to next dvp
+    distribution_condense_tva1e1b1nw8zida0e0b0xyg1w9 = sfun.f_lw_distribution(
+                        ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg1, ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg1,
+                        index_wzida0e0b0xyg1, dvp_type_next_tva1e1b1nwzida0e0b0xyg1[...,na], condense_vtype1)
+    distribution_condense_va1e1b1nw8zida0e0b0xyg3w9 = sfun.f_lw_distribution(
+                        ffcfw_dest_condense_va1e1b1nwzida0e0b0xyg3, ffcfw_source_condense_va1e1b1nwzida0e0b0xyg3,
+                        index_wzida0e0b0xyg3, dvp_type_next_va1e1b1nwzida0e0b0xyg3[...,na], condense_vtype3)
 
     ##redistribute at season start - all seasons back into a common season
-    distribution_season_va1e1b1nw8zida0e0b0xyg1w9 = sfun.f_lw_distribution(ffcfw_dest_season_va1e1b1nwzida0e0b0xyg1, ffcfw_source_season_va1e1b1nwzida0e0b0xyg1,
-                                                                           dvp_type_next_va1e1b1nwzida0e0b0xyg1[...,na], season_vtype1)
-    distribution_season_va1e1b1nw8zida0e0b0xyg3w9 = sfun.f_lw_distribution(ffcfw_dest_season_va1e1b1nwzida0e0b0xyg3, ffcfw_source_season_va1e1b1nwzida0e0b0xyg3,
-                                                                            dvp_type_next_va1e1b1nwzida0e0b0xyg3[...,na], season_vtype3)
+    distribution_season_va1e1b1nw8zida0e0b0xyg1w9 = sfun.f_lw_distribution(
+                        ffcfw_dest_season_va1e1b1nwzida0e0b0xyg1, ffcfw_source_season_va1e1b1nwzida0e0b0xyg1,
+                        index_wzida0e0b0xyg1, dvp_type_next_va1e1b1nwzida0e0b0xyg1[...,na], season_vtype1)
+    distribution_season_va1e1b1nw8zida0e0b0xyg3w9 = sfun.f_lw_distribution(
+                        ffcfw_dest_season_va1e1b1nwzida0e0b0xyg3, ffcfw_source_season_va1e1b1nwzida0e0b0xyg3,
+                        index_wzida0e0b0xyg3, dvp_type_next_va1e1b1nwzida0e0b0xyg3[...,na], season_vtype3)
 
     ##combine distributions
     distribution_tva1e1b1nw8zida0e0b0xyg1w9 = distribution_condense_tva1e1b1nw8zida0e0b0xyg1w9 * distribution_season_va1e1b1nw8zida0e0b0xyg1w9
@@ -5538,8 +5542,9 @@ def generator(params,r_vals,ev,plots = False):
     salevalue_prog_wzida0e0b0xyg2 = np.moveaxis(salevalue_prog_zida0e0b0xyg2w9,-1,w_pos)
 
     ##distribute the yatf to the intermediate progeny activity
-    distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 = sfun.f_lw_distribution(fun.f_expand(ffcfw_prog_wzida0e0b0xyg2, left_pos=p_pos-1, right_pos=w_pos),
-                                                                          ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1)
+    distribution_2prog_va1e1b1nw8zida0e0b0xyg1w9 = sfun.f_lw_distribution(
+                        fun.f_expand(ffcfw_prog_wzida0e0b0xyg2, left_pos=p_pos-1, right_pos=w_pos),
+                        ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1)
 
     ##add t axis to progeny - slice 0 is sold as sucker, slice 1 and 2 are retained
     index_tpa1e1b1nwzida0e0b0xyg2 = fun.f_expand(index_t2, p_pos-1)
@@ -5618,7 +5623,8 @@ def generator(params,r_vals,ev,plots = False):
     ffcfw_initial_wzida0e0b0xyg3 = (lw_initial_wzida0e0b0xyg3 - cfw_initial_wzida0e0b0xyg3 / cw_offs[3, ...]).astype(dtype)
     ffcfw_initial_k5tva1e1b1nwzida0e0b0xyg3 = np.mean(ffcfw_initial_wzida0e0b0xyg3 * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)
                                                       , axis=(b0_pos, e0_pos),keepdims=True)
-    distribution_2offs_k5tva1e1b1nwzida0e0b0xyg2w9 = sfun.f_lw_distribution(ffcfw_initial_k5tva1e1b1nwzida0e0b0xyg3, ffcfw_prog_wzida0e0b0xyg2)
+    distribution_2offs_k5tva1e1b1nwzida0e0b0xyg2w9 = sfun.f_lw_distribution(ffcfw_initial_k5tva1e1b1nwzida0e0b0xyg3
+                                                                            , ffcfw_prog_wzida0e0b0xyg2)
 
     numbers_prog2offs_k3k5tva1e1b1nwzida0e0b0xyg2w9 = (distribution_2offs_k5tva1e1b1nwzida0e0b0xyg2w9
                                                              * mask_numbers_prog2offsw8w9_w9
@@ -7002,6 +7008,7 @@ def generator(params,r_vals,ev,plots = False):
 
     ##bound to stop sale of ewe lambs before the first shearing for the dam activity
     ###dam dvp when first shearing occurs
+    #todo this will be an unstable way to constrain the sale of females prior to 'hogget' shearing because it operates on DVP date start and 'lamb' shearing
     shear_date_iyg1 = date_shear_sida0e0b0xyg1[0,:,0,0,0,0,0,:,:]
     dvp_date_k2tvaiyg1 = params['dvp1'][:,:,:,:,0,0,...]
     index_tvaiyg1 = fun.f_expand(np.arange(len_t1),-6)
@@ -7013,6 +7020,7 @@ def generator(params,r_vals,ev,plots = False):
     sale_dam_yearling_k2tvaiyg1[mask_v_prior_shear_k2tvaiyg1] = 0
 
     ##bound to stop sale of ewe lambs before the first shearing for the offs activity
+    #todo this will be an unstable way to constrain the sale of females prior to 'hogget' shearing because it operates on DVP date start and 'lamb' shearing
     ###offs dvp when first shearing occurs
     shear_date_iaxyg3 = date_shear_sida0e0b0xyg3[0,:,0,0,0,0,...]
     dvp_date_k3k5tviaxyg3 = params['dvp3'][:,:,:,:,0,0,...]
