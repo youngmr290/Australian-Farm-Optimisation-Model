@@ -7020,12 +7020,13 @@ def generator(params,r_vals,ev,plots = False):
     sale_dam_yearling_k2tvaiyg1[mask_v_prior_shear_k2tvaiyg1] = 0
 
     ##bound to stop sale of ewe lambs before the first shearing for the offs activity
-    #todo this will be an unstable way to constrain the sale of females prior to 'hogget' shearing because it operates on DVP date start and 'lamb' shearing
+    #todo this will be an unstable way to constrain the sale of females prior to 'hogget' shearing because it operates on DVP date start and 'lamb' shearing. If the inputs change then the first shearing may be a hog shearing not a lamb shearing. so that would mean changing this from dvp1 to 0 thus not the best option.
+    # a better method would be to implement this in the PP.
     ###offs dvp when first shearing occurs
-    shear_date_iaxyg3 = date_shear_sida0e0b0xyg3[0,:,0,0,0,0,...]
+    shear_date_iaxyg3 = date_shear_sida0e0b0xyg3[1,:,0,0,0,0,...]
     dvp_date_k3k5tviaxyg3 = params['dvp3'][:,:,:,:,0,0,...]
     index_tviaxyg3 = fun.f_expand(np.arange(len_t3),-7)
-    mask_v_prior_shear_k3k5tviaxyg3 = np.logical_and(dvp_date_k3k5tviaxyg3 < shear_date_iaxyg3,
+    mask_v_prior_shear_k3k5tviaxyg3 = np.logical_and(dvp_date_k3k5tviaxyg3 <= shear_date_iaxyg3,
                                                    np.logical_and(index_tviaxyg3 >= 1, gender_xyg[mask_x] == 1)) #mask for females, in the sale t slice before the first shearing.
     ###build array for the axes of the specified slices
     sale_offs_yearling_k3k5tviaxyg3 = np.full(mask_v_prior_shear_k3k5tviaxyg3.shape,np.inf)

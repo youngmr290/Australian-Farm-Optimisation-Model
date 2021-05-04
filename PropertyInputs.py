@@ -253,9 +253,10 @@ def property_inp_sa():
     sheep['i_g3_inc'] = fun.f_sa(sheep_inp['i_g3_inc'], sen.sav['g3_included'],5)
     sheep['a_c2_c0'] = fun.f_sa(sheep_inp['a_c2_c0'], sen.sav['genotype'],5)
     sheep['i_scan_og1'] = fun.f_sa(sheep_inp['i_scan_og1'], sen.sav['scan_og1'],5)
-    sheep['i_dry_sales_forced'] = fun.f_sa(sheep_inp['i_dry_sales_forced'], sen.sav['drys_sold'],5)
-    sheep['i_dry_retained_forced'] = fun.f_sa(sheep_inp['i_dry_retained_forced'], sen.sav['drys_retained'],5)
+    sheep['i_dry_sales_forced'] = fun.f_sa(sheep_inp['i_dry_sales_forced'], sen.sav['bnd_drys_sold'],5)
+    sheep['i_dry_retained_forced'] = fun.f_sa(sheep_inp['i_dry_retained_forced'], sen.sav['bnd_drys_retained'],5)
     sheep['ia_r1_zig1'] = fun.f_sa(sheep_inp['ia_r1_zig1'], sen.sav['r1_izg1'],5)
+    sheep['i_sr_constraint_t'] = fun.f_sa(sheep_inp['i_sr_constraint_t'], sen.sav['bnd_sr_t'],5)
 
     ##report controls
     ###SAV
