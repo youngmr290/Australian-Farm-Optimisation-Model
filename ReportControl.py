@@ -109,7 +109,7 @@ def f_report(processor, trials):
     ##read in the pickled results
     for trial_name in trials:
         lp_vars,r_vals = rep.load_pkl(trial_name)
-
+        #todo add %pasture and dse/ha
         ##run report functions
         if report_run.loc['run_summary', 'Run']:
             summary = rep.f_summary(lp_vars,r_vals,trial_name)
