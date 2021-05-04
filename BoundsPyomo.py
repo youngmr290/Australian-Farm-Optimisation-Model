@@ -99,6 +99,7 @@ def boundarypyomo_local(params):
                                                     doc='min number of all dams')
 
         ##dams upper bound - specified by k2 & v and totalled across other axes
+        #todo need a parameter so that the upperbound can be masked by mask_w8vars
         if dams_upperbound_inc:
             ###keys to build arrays for the specified slices
             arrays = [model.s_sale_dams, model.s_dvp_dams]   #more sets can be added here to customise the bound
