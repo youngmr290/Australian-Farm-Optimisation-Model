@@ -504,6 +504,7 @@ def f_report(processor, trials):
             numbers_dams = pd.concat([numbers_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_numbers_dams = stacked_numbers_dams.append(numbers_dams)
 
+        #todo not right - needs to return a 0 when dvp and period not together.
         if report_run.loc['run_numbers_dams_p', 'Run']:
             type = 'stock'
             prod = 'on_hand_k2tvpa1nwziyg1'
@@ -512,7 +513,7 @@ def f_report(processor, trials):
             keys = 'dams_keys_k2tvpanwziy1g1'
             arith = 2
             index =[2,3]
-            cols =[0,1]
+            cols =[0,1,6]
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             numbers_dams_p = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
