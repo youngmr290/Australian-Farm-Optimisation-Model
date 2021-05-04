@@ -753,24 +753,25 @@ def stockpyomo_local(params):
         model.del_component(model.con_prog2damsR)
     except AttributeError:
         pass
-    ##k5 is the common k sets between prog and dams. It is being summed which means an b0 prog can provide a dam. See google doc for further explanation.
-    def prog2damR(model, k3, v1, i, y1, g9, w9):
+    ##k5 is a set which contains the common k slices (11,22,33) between prog and dams. It is being summed which means any b0 prog can provide a dam.
+    ## the same happens for k3. See google doc for further explanation.
+    def prog2damR(model, v1, i, y1, g9, w9):
         if v1==l_v1[0] and any(model.p_progreq_dams[k2, k3, k5, t1, w18, i, y1, g1, g9, w9] for k5 in model.s_k5_birth_offs
-                               for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for w18 in model.s_lw_dams for g1 in model.s_groups_dams):
+                               for k3 in model.s_k3_damage_offs for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams
+                               for w18 in model.s_lw_dams for g1 in model.s_groups_dams):
             return (sum(- model.v_prog[k5, t2, w28, i, d, a0, x, g2] * model.p_progprov_dams[k3, t2, w28, i, d, a0, x, y1, g2,g9,w9]
-                        for k5 in model.s_k5_birth_offs for d in model.s_damage for a0 in model.s_wean_times for x in model.s_gender
-                        for w28 in model.s_lw_prog for t2 in model.s_sale_prog for g2 in model.s_groups_prog
+                        for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for d in model.s_damage for a0 in model.s_wean_times
+                        for x in model.s_gender for w28 in model.s_lw_prog for t2 in model.s_sale_prog for g2 in model.s_groups_prog
                         if pe.value(model.p_progprov_dams[k3, t2, w28, i, d, a0, x, y1, g2,g9,w9])!= 0)
                        + sum(model.v_dams[k2, t1, v1, a1, n1, w18, i, y1, g1]  * model.p_progreq_dams[k2, k3, k5, t1, w18, i, y1, g1, g9, w9]
-                        for k5 in model.s_k5_birth_offs for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams
+                        for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams
                              for a1 in model.s_wean_times for n1 in model.s_nut_dams for w18 in model.s_lw_dams for g1 in model.s_groups_dams
                              if pe.value(model.p_progreq_dams[k2, k3, k5, t1, w18, i, y1, g1, g9, w9])!= 0))<=0
         else:
             return pe.Constraint.Skip
     start_con_prog2damsR = time.time()
-    model.con_prog2damsR = pe.Constraint(model.s_k3_damage_offs, model.s_dvp_dams,
-                                   model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_dams, rule=prog2damR,
-                                   doc='transfer prog to dams in dvp 0.')
+    model.con_prog2damsR = pe.Constraint(model.s_dvp_dams, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams,
+                                         model.s_lw_dams, rule=prog2damR, doc='transfer prog to dams in dvp 0.')
     end_con_prog2damsR = time.time()
     # print('con_prog2damsR: ',end_con_prog2damsR-start_con_prog2damsR)
 
