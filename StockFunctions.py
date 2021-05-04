@@ -1542,10 +1542,10 @@ def f_condensed(numbers, var, lw_idx, prejoin_tup, season_tup, i_n_len, i_w_len,
                 ###if there is 2n then medium condense is the average of all animals with less than 10% mort.
                 sl = [slice(None)] * temporary.ndim
                 sl[sinp.stock['i_w_pos']] = slice(0, int(i_n_len ** i_n_fvp_period))
-                if i_n_len >= 3:
-                    temporary[tuple(sl)] = f_dynamic_slice(var, sinp.stock['i_w_pos'], 0, 1)  # the pattern that is feed supply 1 (median) for the entire year (the top w pattern)
-                else:
+                if i_n_len == 2:
                     temporary[tuple(sl)] = np.mean(var_sorted_mort, axis=sinp.stock['i_w_pos'], keepdims=True)  # average of all animals with less than 10% mort
+                else:
+                    temporary[tuple(sl)] = f_dynamic_slice(var, sinp.stock['i_w_pos'], 0, 1)  # the pattern that is feed supply 1 (median) for the entire year (the top w pattern)
 
                 ###low pattern - production level of the lowest nutrition profile that has a mortality less than 10% for the year
                 low_slice = np.argmax(mort_mask, axis=sinp.stock['i_w_pos'])  # returns the index of the first w slice that has mort less the 10%. (argmax takes the first occurrence of the highest number)
