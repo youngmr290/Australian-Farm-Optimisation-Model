@@ -22,11 +22,9 @@ Bounds
 
 note:
 -forcing sale/retention of drys is done in the stock module (there are inputs which user can control this with)
+-wether sale age bound is in stock module (controlled via SAV)
 '''
 
-#todo At some stage it would be good to have a constraint that forces a proportion of the yearlings to be mated.
-# So an equal constraints between the number of NM (k2[0]) and the rest(k2[1:])
-# so that we can look at how profit changes as the proportion of ewe lambs that are mated varies.
 
 
 def boundarypyomo_local(params):
@@ -132,6 +130,8 @@ def boundarypyomo_local(params):
 
         ##bound to stop yearlings being mated - specified by k2 & v and totalled across other axes
         #todo would be good to implement this as a proportion of the yearlings that can be mated. So the constrain is: (1- x) number mated <= (x) number not mated (where x is max propn mated).
+        # So an equal constraints between the number of NM (k2[0]) and the rest(k2[1:])
+        # so that we can look at how profit changes as the proportion of ewe lambs that are mated varies.
         # and use the same input to control the averaging of the weight at prejoining - are the e & b slices included in the average or just the NM
         if yearling_mating_upperbound_inc:
             ###keys to build arrays for the specified slices
@@ -162,77 +162,6 @@ def boundarypyomo_local(params):
                                ) <= dam_mating_upperbound[k28, v, g1]
             model.con_dam_mating_upperbound = pe.Constraint(model.s_k2_birth_dams, model.s_dvp_dams, model.s_groups_dams, rule=f_dam_mating_upperbound,
                                                     doc='max number of dams_k2vg1')
-
-        ##bound 0 sale of ewe lambs - Need this because it is normal to retain the young merino ewes until shearing as a hogget so that the ones retained can be selected including an assessment of wool quality
-        if sale_yearling_upperbound_inc:
-
-            ###params
-            try:
-                model.del_component(model.p_sale_dams_yearling_upperbound_index)
-                model.del_component(model.p_sale_dams_yearling_upperbound)
-            except AttributeError:
-                pass
-            model.p_sale_dams_yearling_upperbound = pe.Param(model.s_k2_birth_dams, model.s_sale_dams, model.s_dvp_dams,
-                                        model.s_wean_times, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, 
-                                        initialize=params['stock']['sale_dams_yearling_upperbound'],default=0.0,mutable=False,
-                                        doc='upper bound for number of ewe lambs sold in the dams activity')
-
-            try:
-                model.del_component(model.p_sale_offs_yearling_upperbound_index)
-                model.del_component(model.p_sale_offs_yearling_upperbound)
-            except AttributeError:
-                pass
-            model.p_sale_offs_yearling_upperbound = pe.Param(model.s_k3_damage_offs,model.s_k5_birth_offs,
-                                        model.s_sale_offs,model.s_dvp_offs, model.s_tol,model.s_wean_times,model.s_gender,model.s_gen_merit_offs,
-                                        model.s_groups_offs, initialize=params['stock']['sale_offs_yearling_upperbound'],default=0.0,mutable=False,
-                                        doc='upper bound for number of ewe lambs sold in the offs activity')
-            ###constraints
-            try:
-                model.del_component(model.con_sale_yearling_upperbound_dams)
-                model.del_component(model.con_sale_yearling_upperbound_dams_index)
-            except AttributeError:
-                pass
-            def f_sale_yearling_upperbound_dams(model, k2, t, v, a, i, y, g1):
-                if model.p_sale_dams_yearling_upperbound[k2,t,v,a,i,y,g1]==np.inf:
-                    return pe.Constraint.Skip
-                else:
-                    return sum(model.v_dams[k2,t,v,a,n,w8,i,y,g1] for n in model.s_nut_dams for w8 in model.s_lw_dams
-                               ) <= model.p_sale_dams_yearling_upperbound[k2,t,v,a,i,y,g1]
-            model.con_sale_yearling_upperbound_dams = pe.Constraint(model.s_k2_birth_dams, model.s_sale_dams, model.s_dvp_dams,
-                                        model.s_wean_times, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, rule=f_sale_yearling_upperbound_dams,
-                                                    doc='max number of yearling ewes sold for the dam activity')
-
-            try:
-                model.del_component(model.con_sale_yearling_upperbound_offs)
-                model.del_component(model.con_sale_yearling_upperbound_offs_index)
-            except AttributeError:
-                pass
-            def f_sale_yearling_upperbound_offs(model, k3, k5, t, v, i, a, x, y, g1):
-                if model.p_sale_offs_yearling_upperbound[k3, k5, t, v, i, a, x, y, g1]==np.inf:
-                    return pe.Constraint.Skip
-                else:
-                    return sum(model.v_offs[k3, k5, t, v, n, w, i, a, x, y, g1] for n in model.s_nut_offs for w in model.s_lw_offs
-                               ) <= model.p_sale_offs_yearling_upperbound[k3, k5, t, v, i, a, x, y, g1]
-            model.con_sale_yearling_upperbound_offs = pe.Constraint(model.s_k3_damage_offs,model.s_k5_birth_offs,
-                                        model.s_sale_offs,model.s_dvp_offs, model.s_tol,model.s_wean_times,model.s_gender,model.s_gen_merit_offs,
-                                        model.s_groups_offs, rule=f_sale_yearling_upperbound_offs,
-                                                    doc='max number of yearling ewes sold for the off activity')
-
-            try:
-                model.del_component(model.con_sale_yearling_upperbound_prog)
-                model.del_component(model.con_sale_yearling_upperbound_prog_index)
-            except AttributeError:
-                pass
-            def f_sale_yearling_upperbound_prog(model, t, x):
-                if t=='t0' and x=='F':
-                    return sum(model.v_prog[k5, t, w, i, d, a, x, g2] for k5 in model.s_k5_birth_offs for w in model.s_lw_prog
-                              for i in model.s_tol for d in model.s_damage for a in model.s_wean_times for g2 in model.s_groups_prog
-                               ) <= 0
-                else:
-                    return pe.Constraint.Skip
-            model.con_sale_yearling_upperbound_prog = pe.Constraint(model.s_sale_prog, model.s_gender, rule=f_sale_yearling_upperbound_prog,
-                                                    doc='max number of yearling ewes sold for the off activity')
-
 
         ##SR - this can't set the sr on an actual pasture but it means different pastures provide a different level of carry capacity although nothing fixes sheep to that pasture
         if sr_bound_inc:

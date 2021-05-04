@@ -4523,6 +4523,8 @@ def generator(params,r_vals,ev,plots = False):
 
 
     ##offs
+    ###t0 - retained
+    ###t1&2 - sold slice date_p=sale_date or weight=target weight
     ###calc sale date then determine shearing date
     ###sale - on date
     sale_date_tsa1e1b1nwzida0e0b0xyg3 = (sales_offset_tsa1e1b1nwzida0e0b0xyg3 + date_wean_shearing_sa1e1b1nwzida0e0b0xyg3)  #date of dvp plus sale offset
@@ -4544,12 +4546,16 @@ def generator(params,r_vals,ev,plots = False):
     ###period is sale - one true per dvp when sale actually occurs - sale occurs in the period where sheep were on hand at the beginning and not on hand at the beginning of the next period
     period_is_sale_tpa1e1b1nwzida0e0b0xyg3 = np.logical_and(on_hand_tpa1e1b1nwzida0e0b0xyg3==True, np.roll(on_hand_tpa1e1b1nwzida0e0b0xyg3,-1,axis=1)==False)
     ###bound wether sale age - default is to allow all ages to be sold. User can change this using wether sale SAV.
-    min_age_wether_sale_g3 = fun.f_sa(0, sen.sav['bnd_min_sale_age_wether_g3'][mask_offs_inc_g3], 5)
-    max_age_wether_sale_g3 = fun.f_sa(sim_years*365, sen.sav['bnd_max_sale_age_wether_g3'][mask_offs_inc_g3], 5)
-    wether_sale_mask_pa1e1b1nwzida0e0b0xyg3 = np.logical_and(
-        np.logical_and((gender_xyg[mask_x] == 2), age_start_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p] > min_age_wether_sale_g3),
-        age_start_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p] < max_age_wether_sale_g3)
+    min_age_wether_sale_g3 = fun.f_sa(np.array([0]), sen.sav['bnd_min_sale_age_wether_g3'][mask_offs_inc_g3], 5)
+    max_age_wether_sale_g3 = fun.f_sa(np.array([sim_years*365]), sen.sav['bnd_max_sale_age_wether_g3'][mask_offs_inc_g3], 5)
+    wether_sale_mask_pa1e1b1nwzida0e0b0xyg3 = np.logical_or((gender_xyg[mask_x] != 2),
+        np.logical_and(age_start_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p] > min_age_wether_sale_g3,
+                       age_start_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p] < max_age_wether_sale_g3))
     period_is_sale_tpa1e1b1nwzida0e0b0xyg3 = np.logical_and(period_is_sale_tpa1e1b1nwzida0e0b0xyg3, wether_sale_mask_pa1e1b1nwzida0e0b0xyg3)
+    ###bound female sale age - this sets the minimum age a ewe offs can be sold. Default is no min age eg can be sold anytime.
+    min_age_female_sale_g3 = fun.f_sa(np.array([0]), sen.sav['bnd_min_sale_age_female_g3'][mask_offs_inc_g3], 5)
+    ewe_sale_mask_pa1e1b1nwzida0e0b0xyg3 = np.logical_or((gender_xyg[mask_x] != 1), age_start_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p] > min_age_female_sale_g3)
+    period_is_sale_tpa1e1b1nwzida0e0b0xyg3 = np.logical_and(period_is_sale_tpa1e1b1nwzida0e0b0xyg3, ewe_sale_mask_pa1e1b1nwzida0e0b0xyg3)
     ###shearing - one true per dvp when shearing actually occurs
     ###in t0 shearing occurs on specified date, in t1 & t2 it happens a certain number of gen periods before sale.
     ####convert from s/dvp to p
@@ -4595,6 +4601,11 @@ def generator(params,r_vals,ev,plots = False):
     period_is_sale_tpa1e1b1nwzida0e0b0xyg1[...]=False
     period_is_sale_tpa1e1b1nwzida0e0b0xyg1[0] = period_is_sale_t0_pa1e1b1nwzida0e0b0xyg1
     period_is_sale_tpa1e1b1nwzida0e0b0xyg1[1] = period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1
+    ###bound female sale age - this sets the minimum age dams can be sold. Default is no min age eg can be sold anytime.
+    min_age_female_sale_g1 = fun.f_sa(np.array([0]), sen.sav['bnd_min_sale_age_female_g3'][mask_dams_inc_g1], 5)
+    ewe_sale_mask_pa1e1b1nwzida0e0b0xyg1 = age_start_pa1e1b1nwzida0e0b0xyg1 > min_age_female_sale_g1
+    period_is_sale_tpa1e1b1nwzida0e0b0xyg1 = np.logical_and(period_is_sale_tpa1e1b1nwzida0e0b0xyg1, ewe_sale_mask_pa1e1b1nwzida0e0b0xyg1)
+
     ####transfer - calculate period_is_finish when the dams are transferred from the current g slice to the destination g slice
     period_is_transfer_tpa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(nextperiod_is_prejoin_pa1e1b1nwzida0e0b0xyg1[na, ...], a_g1_tpa1e1b1nwzida0e0b0xyg1, -1) * transfer_exists_tpa1e1b1nwzida0e0b0xyg1
     ###on hand - combine period_is_sale & period_is_transfer then use cumulative max to convert to on_hand
@@ -4605,9 +4616,10 @@ def generator(params,r_vals,ev,plots = False):
     ###t0 = sold at weaning as sucker, t1 & t2 = retained
     ###the other t slices are added further down in the code
     period_is_sale_t0_pa1e1b1nwzida0e0b0xyg2 = period_is_wean_pa1e1b1nwzida0e0b0xyg2
-    # period_is_sale_t1_2_pa1e1b1nwzida0e0b0xyg2 = np.full_like(period_is_sale_t0_pa1e1b1nwzida0e0b0xyg2, False)
-    # period_is_sale_tpa1e1b1nwzida0e0b0xyg2 = np.stack([period_is_sale_t0_pa1e1b1nwzida0e0b0xyg2 ,period_is_sale_t1_2_pa1e1b1nwzida0e0b0xyg2, period_is_sale_t1_2_pa1e1b1nwzida0e0b0xyg2],0)
-    # on_hand_tpa1e1b1nwzida0e0b0xyg2 = np.logical_not(period_is_sale_tpa1e1b1nwzida0e0b0xyg2)
+    ###bound female sale age - this sets the minimum age a female prog can be sold. Default is no min age eg can be sold anytime.
+    min_age_female_sale_g2 = fun.f_sa(np.array([0]), sen.sav['bnd_min_sale_age_female_g3'][mask_dams_inc_g1], 5)
+    ewe_sale_mask_pa1e1b1nwzida0e0b0xyg2 = np.logical_or((gender_xyg[mask_x] != 1), age_start_pa1e1b1nwzida0e0b0xyg2 > min_age_female_sale_g2)
+    period_is_sale_t0_pa1e1b1nwzida0e0b0xyg2 = np.logical_and(period_is_sale_t0_pa1e1b1nwzida0e0b0xyg2, ewe_sale_mask_pa1e1b1nwzida0e0b0xyg2)
 
 
     ######################
@@ -7007,52 +7019,6 @@ def generator(params,r_vals,ev,plots = False):
     params['date_born_prog'] = np.broadcast_to(date_born_k5twidaxg2, k5twidaxg2_shape)
     dvp_date_k3k5tvnwiaxyg3 = dvp_date_va1e1b1nwzida0e0b0xyg3[na,na,na,:,0,0,0,:,:,0,:,0,:,0,0,:,:,:]
     params['dvp3'] = np.broadcast_to(dvp_date_k3k5tvnwiaxyg3, k3k5tvnwiaxyg3_shape)
-
-    ###############
-    # bound params#
-    ###############
-
-    ##bound to stop sale of ewe lambs before the first shearing for the dam activity
-    ###dam dvp when first shearing occurs
-    #todo this will be an unstable way to constrain the sale of females prior to 'hogget' shearing because it operates on DVP date start and 'lamb' shearing
-    shear_date_iyg1 = date_shear_sida0e0b0xyg1[0,:,0,0,0,0,0,:,:]
-    dvp_date_k2tvaiyg1 = params['dvp1'][:,:,:,:,0,0,...]
-    index_tvaiyg1 = fun.f_expand(np.arange(len_t1),-6)
-    mask_v_prior_shear_k2tvaiyg1 = np.logical_and(dvp_date_k2tvaiyg1 < shear_date_iyg1,
-                                                   index_tvaiyg1 < pinp.sheep['i_n_dam_sales'])
-    ###build array for the axes of the specified slices
-    sale_dam_yearling_k2tvaiyg1 = np.full(mask_v_prior_shear_k2tvaiyg1.shape,np.inf)
-    ###set the bound
-    sale_dam_yearling_k2tvaiyg1[mask_v_prior_shear_k2tvaiyg1] = 0
-
-    ##bound to stop sale of ewe lambs before the first shearing for the offs activity
-    #todo this will be an unstable way to constrain the sale of females prior to 'hogget' shearing because it operates on DVP date start and 'lamb' shearing. If the inputs change then the first shearing may be a hog shearing not a lamb shearing. so that would mean changing this from dvp1 to 0 thus not the best option.
-    # a better method would be to implement this in the PP.
-    ###offs dvp when first shearing occurs
-    shear_date_iaxyg3 = date_shear_sida0e0b0xyg3[1,:,0,0,0,0,...]
-    dvp_date_k3k5tviaxyg3 = params['dvp3'][:,:,:,:,0,0,...]
-    index_tviaxyg3 = fun.f_expand(np.arange(len_t3),-7)
-    mask_v_prior_shear_k3k5tviaxyg3 = np.logical_and(dvp_date_k3k5tviaxyg3 <= shear_date_iaxyg3,
-                                                   np.logical_and(index_tviaxyg3 >= 1, gender_xyg[mask_x] == 1)) #mask for females, in the sale t slice before the first shearing.
-    ###build array for the axes of the specified slices
-    sale_offs_yearling_k3k5tviaxyg3 = np.full(mask_v_prior_shear_k3k5tviaxyg3.shape,np.inf)
-    ###set the bound
-    sale_offs_yearling_k3k5tviaxyg3[mask_v_prior_shear_k3k5tviaxyg3] = 0
-
-    ##create the params (the bounds are the same for all seasons - if you want to change this you will need to add active z axis and build param with a loop)
-    ###yearling sale bound for dam activity
-    arrays = [keys_k2,keys_t1,keys_v1,keys_a,keys_i,keys_y1,keys_g1]
-    index_k2tvaiyg1 = fun.cartesian_product_simple_transpose(arrays)
-    sale_dam_yearling = sale_dam_yearling_k2tvaiyg1.ravel()
-    tup_k2tvaiyg1 = tuple(map(tuple,index_k2tvaiyg1))
-    params['sale_dams_yearling_upperbound'] = dict(zip(tup_k2tvaiyg1,sale_dam_yearling))
-
-    ###yearling sale bound for offs activity
-    arrays = [keys_k3,keys_k5,keys_t3,keys_v3,keys_i,keys_a,keys_x,keys_y3,keys_g3]
-    index_k3k5tviaxyg3 = fun.cartesian_product_simple_transpose(arrays)
-    sale_offs_yearling = sale_offs_yearling_k3k5tviaxyg3.ravel()
-    tup_k3k5tviaxyg3 = tuple(map(tuple,index_k3k5tviaxyg3))
-    params['sale_offs_yearling_upperbound'] = dict(zip(tup_k3k5tviaxyg3, sale_offs_yearling))
 
 
 
