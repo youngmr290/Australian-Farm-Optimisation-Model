@@ -589,6 +589,7 @@ def f_pasture(params, r_vals, ev):
     me_threshold_vfzt[me_threshold_vfzt < i_fec_maintenance_t] = i_fec_maintenance_t
 
     ## dry, DM decline (high = low pools)
+    #todo look at masking the dry transfer to only those periods that dry exist (decay eos > 0)
     dry_transfer_t_fzt = 1000 * (1-dry_decay_period_fzt)
 
     ## FOO on the non-arable areas in crop paddocks is ungrazed FOO of pasture type 0 (annual), therefore calculate the profile based on the pasture type 0 values
