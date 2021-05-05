@@ -490,7 +490,7 @@ def f_report(processor, trials):
             daily_pi_dams = pd.concat([daily_pi_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_daily_pi_dams = stacked_daily_pi_dams.append(daily_pi_dams)
 
-        if True:#report_run.loc['run_daily_mei_offs', 'Run']: todo hookup
+        if report_run.loc['run_daily_mei_offs', 'Run']:
             type = 'stock'
             prod = 'mei_offs_k3k5p6ftvnw8ziaxyg3'
             weights = 'offs_numbers_k3k5tvnwziaxyg3'
@@ -508,7 +508,7 @@ def f_report(processor, trials):
             daily_mei_dams = pd.concat([daily_mei_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_daily_mei_dams = stacked_daily_mei_dams.append(daily_mei_dams)
 
-        if True:# report_run.loc['run_daily_pi_offs', 'Run']: todo hookup
+        if report_run.loc['run_daily_pi_offs', 'Run']:
             type = 'stock'
             prod = 'pi_offs_k3k5p6ftvnw8ziaxyg3'
             weights = 'offs_numbers_k3k5tvnwziaxyg3'

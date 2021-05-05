@@ -112,7 +112,7 @@ sav['minroe']      = '-'                  #SA to alter the minroe (applied to bo
 sav['bnd_total_pas_area'] = '-'  #Total pasture area for bound. '-' is default so it will chuck an error if the bound is turned on without a specified area
 sav['bnd_pasarea_inc'] = '-'   #SA to turn on the pasture area bound
 sav['bnd_mateyearlings_inc'] = '-'   #SA to bound no mating of ewe yearlings.
-sav['bnd_sellyearlings_inc'] = '-'   #SA to bound no selling of ewe yearlings.
+#sav['bnd_sellyearlings_inc'] = '-'   #SA to bound no selling of ewe yearlings.
 
 ##pasture
 sav['pas_inc'] = np.full_like(pinp.general_inp['pas_inc'], '-', dtype=object) #SA value for pastures included mask
