@@ -378,6 +378,7 @@ def generator(params,r_vals,ev,plots = False):
     o_rc_start_pyatf = np.zeros(pg2, dtype =dtype)
     ###arrays for report variables
     r_compare_q0q1q2pyatf = np.zeros(qg2, dtype = dtype) #empty arrays to store different return values from the equation systems in the p loop.
+    r_ffcfw_start_pyatf = np.zeros(pg2, dtype =dtype)   # requires a variable separate from o_ffcfw_start_pyatf so that it is only stored when days_period > 0
     r_ebg_pyatf = np.zeros(pg2, dtype = dtype)
     r_evg_pyatf = np.zeros(pg2, dtype = dtype)
     r_mem_pyatf = np.zeros(pg2, dtype = dtype)
@@ -1913,6 +1914,7 @@ def generator(params,r_vals,ev,plots = False):
         nw_start_yatf = 0.0
         rc_start_yatf = 0.0
         ffcfw_start_yatf = w_b_std_y_b1nwzida0e0b0xyg1 #this is just an estimate, it is updated with the real weight at birth - needed to calc milk production in birth period because milk prod is calculated before yatf weight is updated)
+        #todo will this cause an error for the second lambing because ffcfw_start_yatf will be last years weaning weight rather than this years expected birth weight - hard to see how the weight can be reset unless it is done the period after weaning
         ffcfw_max_start_yatf = ffcfw_start_yatf
         mortality_birth_yatf=0.0 #required for dam numbers before progeny born
         cfw_start_yatf = 0.0
@@ -3291,7 +3293,7 @@ def generator(params,r_vals,ev,plots = False):
 
 
 
-        ###dams
+            ###dams
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                 ##FFCFW (end - fleece free conceptus free)
                 ffcfw_dams = np.maximum(0,ffcfw_start_dams + cg_dams[18, ...] * ebg_dams * days_period_pa1e1b1nwzida0e0b0xyg1[p])
@@ -3327,10 +3329,10 @@ def generator(params,r_vals,ev,plots = False):
                 ss_dams = fd_min_dams ** 2 / fd_dams ** 2 * cw_dams[16, ...]
 
 
-        ###yatf
+            ###yatf
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                 ##FFCFW (end - fleece free conceptus free)
-                ffcfw_yatf = np.maximum(0,ffcfw_start_yatf + cg_yatf[18, ...] * ebg_yatf * days_period_pa1e1b1nwzida0e0b0xyg2[p])
+                ffcfw_yatf = np.maximum(0, ffcfw_start_yatf + cg_yatf[18, ...] * ebg_yatf * days_period_pa1e1b1nwzida0e0b0xyg2[p])
                 ##FFCFW maximum to date
                 ffcfw_max_yatf = np.maximum(ffcfw_yatf, ffcfw_max_start_yatf)
                 ##Weight of fat adipose (end)
@@ -3342,7 +3344,7 @@ def generator(params,r_vals,ev,plots = False):
                 ##Weight of water (end)
                 ww_yatf = mw_yatf * (1 - cg_yatf[19, ...]) + aw_yatf * (1 - cg_yatf[20, ...])
                 ##Weight of gutfill (end)
-                gw_yatf = ffcfw_yatf* (1 - 1 / cg_yatf[18, ...])
+                gw_yatf = ffcfw_yatf * (1 - 1 / cg_yatf[18, ...])
                 ##Clean fleece weight (end)
                 cfw_yatf = cfw_start_yatf + d_cfw_yatf * days_period_pa1e1b1nwzida0e0b0xyg2[p] * cfw_propn_yg2
                 ##Greasy fleece weight (end)
@@ -3545,6 +3547,11 @@ def generator(params,r_vals,ev,plots = False):
             o_numbers_start_pyatf[p] = numbers_start_yatf #used for npw calculation - use numbers start because weaning is start of period - has to be out of the 'if' because there is 0 days in the period when weaning occurs but we still want to store the start numbers (because once they are weaned they are not yatf therefore 0 days per period)
             o_rc_start_pyatf[p] = rc_start_yatf #outside because used for sale value which is weaning which has 0 days per period because weaning is first day (this means the rc at weaning is actually the rc at the start of the previous period because it doesnt recalculate once days per period goes to 0) (because once they are weaned they are not yatf therefore 0 days per period)
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
+                ## store a report version of ffcfw_yatf
+                ###use ffcfw_start to get birth weight which is at the start of the period.
+                ### Need a separate variable to o_ffcfw_start_pyatf because that variable is non-zero all year and this affects the reported birth weight when averaging across the e & b axes
+                ### Store a zero value if yatf don't exist for this slice (e1 or i)
+                r_ffcfw_start_pyatf[p] = ffcfw_start_yatf * (days_period_pa1e1b1nwzida0e0b0xyg2[p,...] > 0)
 
                 ###sorted index of w. used for condensing.
                 idx_sorted_w_yatf = np.argsort(ffcfw_yatf, axis=w_pos)
@@ -3578,7 +3585,7 @@ def generator(params,r_vals,ev,plots = False):
 
 
 
-        ###offs
+            ###offs
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
 
                 ###sorted index of w. used for condensing.
@@ -5950,6 +5957,8 @@ def generator(params,r_vals,ev,plots = False):
         r_ffcfw_sire_psire = o_ffcfw_psire
         r_ffcfw_dams_k2tvpdams = (o_ffcfw_pdams * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
                                * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
+        r_ffcfw_yatf_k2tvpyatf = (r_ffcfw_start_pyatf * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+                               * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
         r_ffcfw_offs_k3k5tvpoffs = (o_ffcfw_poffs * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
                                  * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
                                  * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...]))
@@ -6044,7 +6053,7 @@ def generator(params,r_vals,ev,plots = False):
 
     # plt.plot(o_ffcfw_pdams[:, 0, 0:2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])         #compare e1 for singles
     # plt.plot(o_ffcfw_pdams[:, 0, 1, 3, 0, 17:19, 0, 0, 0, 0, 0, 0, 0, 0, 0])         #compare w for singles and e1[1]
-    # plt.plot(o_ffcfw_start_pyatf[:, 0, 0:2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])   #compare e1 for singles
+    # plt.plot(r_ffcfw_start_pyatf[:, 0, 0:2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])   #compare e1 for singles
     # plt.plot(o_ebg_pdams[:, 0, 0:2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])           #compare e1 for singles
     # plt.plot(o_pi_pdams[:, 0, 0:2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])            #compare e1 for singles
     # plt.plot(o_mei_solid_pdams[:, 0, 0, :, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])           #compare b1 for first cycle
@@ -6784,6 +6793,8 @@ def generator(params,r_vals,ev,plots = False):
                                              keys_y1, keys_g1]
     r_vals['dams_keys_k2p6ftvanwziy1g1'] = [keys_k2, keys_p6, keys_f, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1,
                                                 keys_z, keys_i, keys_y1, keys_g1]
+    r_vals['yatf_keys_k2tvpaebnwzixy1g1'] = [keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1
+                                              , keys_z, keys_i, keys_x, keys_y1, keys_g1]
     r_vals['prog_keys_k5twzida0xg2'] = [keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i, keys_d, keys_a, keys_x, keys_g2]
     r_vals['prog_keys_zia0xg2w9'] = [keys_z, keys_i, keys_a, keys_x, keys_g2, keys_lw_prog]
     r_vals['offs_keys_k3k5tvnwziaxyg3'] = [keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i,
@@ -6816,6 +6827,7 @@ def generator(params,r_vals,ev,plots = False):
     ####kvpeb
     pzg0_shape = len_p, len_z, len_g0
     k2vpa1e1b1nwziyg1_shape = len_k2, len_v1, len_p, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
+    k2vpa1e1b1nwzixyg1_shape = len_k2, len_v1, len_p, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_x, len_y1, len_g1
     k3k5vpnwzidae0b0xyg3_shape = len_k3, len_k5, len_v3, len_p3, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3
 
     ####ktvp
@@ -6966,6 +6978,7 @@ def generator(params,r_vals,ev,plots = False):
     if pinp.rep['i_store_ffcfw_rep']:
         r_vals['ffcfw_sire_pzg0'] = r_ffcfw_sire_psire.reshape(pzg0_shape)
         r_vals['ffcfw_dams_k2vpa1e1b1nw8ziyg1'] = r_ffcfw_dams_k2tvpdams.reshape(k2vpa1e1b1nwziyg1_shape)
+        r_vals['ffcfw_yatf_k2vpa1e1b1nw8zixyg1'] = r_ffcfw_yatf_k2tvpyatf.reshape(k2vpa1e1b1nwzixyg1_shape)
         r_vals['ffcfw_prog_zia0xg2w9'] = ffcfw_prog_zia0xg2w9 #no e, b, p axis
         r_vals['ffcfw_offs_k3k5vpnw8zida0e0b0xyg3'] = r_ffcfw_offs_k3k5tvpoffs.reshape(k3k5vpnwzidae0b0xyg3_shape)
 
