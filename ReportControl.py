@@ -490,6 +490,42 @@ def f_report(processor, trials):
             daily_pi_dams = pd.concat([daily_pi_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_daily_pi_dams = stacked_daily_pi_dams.append(daily_pi_dams)
 
+        if True:#report_run.loc['run_daily_mei_offs', 'Run']: todo hookup
+            type = 'stock'
+            prod = 'mei_offs_k3k5p6ftvnw8ziaxyg3'
+            weights = 'offs_numbers_k3k5tvnwziaxyg3'
+            na_weights = [2, 3]
+            den_weights = 'stock_days_k3k5p6ftvnwziaxyg3'
+            keys = 'offs_keys_k3k5p6ftvnwziaxyg3'
+            arith = 1                                    # for FP only
+            index =[5,2]                                    # [1]
+            cols =[1,3]                                     # [0]
+            axis_slice = {}
+            # axis_slice[0] = [0, 2, 1]
+            daily_mei_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
+                                   na_weights=na_weights, den_weights=den_weights, keys=keys, arith=arith,
+                                   index=index, cols=cols, axis_slice=axis_slice)
+            daily_mei_dams = pd.concat([daily_mei_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_daily_mei_dams = stacked_daily_mei_dams.append(daily_mei_dams)
+
+        if True:# report_run.loc['run_daily_pi_offs', 'Run']: todo hookup
+            type = 'stock'
+            prod = 'pi_offs_k3k5p6ftvnw8ziaxyg3'
+            weights = 'offs_numbers_k3k5tvnwziaxyg3'
+            na_weights = [2, 3]
+            den_weights = 'stock_days_k3k5p6ftvnwziaxyg3'
+            keys = 'offs_keys_k3k5p6ftvnwziaxyg3'
+            arith = 1
+            index =[5,2]                                    # [1]
+            cols =[1,3]                                     # [0]
+            axis_slice = {}
+            # axis_slice[0] = [0, 2, 1]
+            daily_pi_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
+                                       na_weights=na_weights, den_weights=den_weights, keys=keys, arith=arith,
+                                       index=index, cols=cols, axis_slice=axis_slice)
+            daily_pi_dams = pd.concat([daily_pi_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_daily_pi_dams = stacked_daily_pi_dams.append(daily_pi_dams)
+
         if report_run.loc['run_numbers_dams', 'Run']:
             type = 'stock'
             weights = 'dams_numbers_k2tvanwziy1g1'
@@ -591,7 +627,7 @@ def f_report(processor, trials):
             keys = 'offs_keys_k3k5tvpnwziaxyg3'
             arith = 4
             index =[4]
-            cols =[0,1,2,6]
+            cols =[1,2,6,10]
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             mort_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
