@@ -72,6 +72,7 @@ def f_report(processor, trials):
     stacked_lw_dams = pd.DataFrame()  # live weight dams (large array with p, e and b axis)
     stacked_ffcfw_dams = pd.DataFrame()  # fleece free conceptus free weight dams (large array with p, e and b axis)
     stacked_fec_dams = pd.DataFrame()  # feed energy content dams (large array with p, e and b axis)
+    stacked_ffcfw_yatf = pd.DataFrame()  # fleece free conceptus free weight yatf (large array with p, e and b axis)
     stacked_ffcfw_prog = pd.DataFrame()  # fleece free conceptus free weight prog (large array with p, e and b axis)
     stacked_ffcfw_offs = pd.DataFrame()  # fleece free conceptus free weight offs (large array with p, e and b axis)
     stacked_fec_offs = pd.DataFrame()  # feed energy content offs (large array with p, e and b axis)
@@ -347,6 +348,25 @@ def f_report(processor, trials):
             ffcfw_dams = pd.concat([ffcfw_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_ffcfw_dams = stacked_ffcfw_dams.append(ffcfw_dams)
 
+        if report_run.loc['run_ffcfw_yatf', 'Run']:
+            type = 'stock'
+            prod = 'ffcfw_yatf_k2vpa1e1b1nw8zixyg1'
+            na_prod = [1]                               #t
+            weights = 'dams_numbers_k2tvanwziy1g1'      #todo this is not quite right. It should be 'dams_numbers' * nyatf, so that the average over the e & b axes works correctly
+            na_weights = [3, 5, 6, 11]                  #p, e1, b1, x
+            den_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1'
+            na_denweights = [11]                             #x
+            keys = 'yatf_keys_k2tvpaebnwzixy1g1'
+            arith = 1
+            index = [3]                                 #p
+            cols = [11, 6, 5, 8]                           #x, b1, e1, w8
+            axis_slice = {}
+            ffcfw_yatf = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights
+                                     , den_weights=den_weights, na_prod=na_prod, na_weights=na_weights, na_denweights=na_denweights
+                                     , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+            ffcfw_yatf = pd.concat([ffcfw_yatf],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_ffcfw_yatf = stacked_ffcfw_yatf.append(ffcfw_yatf)
+
         if report_run.loc['run_fec_dams', 'Run']:
             type = 'stock'
             prod = 'fec_dams_k2vpa1e1b1nw8ziyg1'
@@ -495,7 +515,7 @@ def f_report(processor, trials):
             daily_pi_dams = pd.concat([daily_pi_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_daily_pi_dams = stacked_daily_pi_dams.append(daily_pi_dams)
 
-        if True:#report_run.loc['run_daily_mei_offs', 'Run']: todo hookup
+        if report_run.loc['run_daily_mei_offs', 'Run']:
             type = 'stock'
             prod = 'mei_offs_k3k5p6ftvnw8ziaxyg3'
             weights = 'offs_numbers_k3k5tvnwziaxyg3'
@@ -513,7 +533,7 @@ def f_report(processor, trials):
             daily_mei_dams = pd.concat([daily_mei_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_daily_mei_dams = stacked_daily_mei_dams.append(daily_mei_dams)
 
-        if True:# report_run.loc['run_daily_pi_offs', 'Run']: todo hookup
+        if report_run.loc['run_daily_pi_offs', 'Run']:
             type = 'stock'
             prod = 'pi_offs_k3k5p6ftvnw8ziaxyg3'
             weights = 'offs_numbers_k3k5tvnwziaxyg3'
@@ -878,6 +898,8 @@ def f_report(processor, trials):
         df_settings = rep.f_df2xl(writer, stacked_lw_dams, 'lw_dams', df_settings, option=1)
     if report_run.loc['run_ffcfw_dams', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_ffcfw_dams, 'ffcfw_dams', df_settings, option=1)
+    if report_run.loc['run_ffcfw_yatf', 'Run']:
+        df_settings = rep.f_df2xl(writer, stacked_ffcfw_yatf, 'ffcfw_yatf', df_settings, option=1)
     if report_run.loc['run_fec_dams', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_fec_dams, 'fec_dams', df_settings, option=1)
     if report_run.loc['run_ffcfw_prog', 'Run']:
