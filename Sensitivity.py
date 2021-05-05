@@ -112,7 +112,12 @@ sav['minroe']      = '-'                  #SA to alter the minroe (applied to bo
 sav['bnd_total_pas_area'] = '-'  #Total pasture area for bound. '-' is default so it will chuck an error if the bound is turned on without a specified area
 sav['bnd_pasarea_inc'] = '-'   #SA to turn on the pasture area bound
 sav['bnd_mateyearlings_inc'] = '-'   #SA to bound no mating of ewe yearlings.
-sav['bnd_sellyearlings_inc'] = '-'   #SA to bound no selling of ewe yearlings.
+sav['bnd_drys_sold'] = '-'   #SA to force drys to be sold
+sav['bnd_drys_retained'] = '-'   #SA to force drys to be retained
+sav['bnd_sr_t'] = np.full(pinp.sheep_inp['i_sr_constraint_t'].shape, '-', dtype=object)   #SA to fix stocking rate
+sav['bnd_min_sale_age_wether_g3'] = np.full(pinp.sheep_inp['i_g3_inc'].shape, '-', dtype=object)   #SA to set min age wether can be sold
+sav['bnd_max_sale_age_wether_g3'] = np.full(pinp.sheep_inp['i_g3_inc'].shape, '-', dtype=object)   #SA to set max age wether can be sold
+sav['bnd_min_sale_age_female_g3'] = np.full(pinp.sheep_inp['i_g3_inc'].shape, '-', dtype=object)   #SA to set min age a female can be sold - used to bound prog, offs & dams
 
 ##pasture
 sav['pas_inc'] = np.full_like(pinp.general_inp['pas_inc'], '-', dtype=object) #SA value for pastures included mask
@@ -150,12 +155,6 @@ sav['mask_fvp_dams'] = np.full(sinp.structuralsa_inp['i_fvp_mask_dams'].shape, '
 sav['fvp_is_dvp_dams'] = np.full(sinp.structuralsa_inp['i_dvp_mask_f1'].shape, '-', dtype=object)      #SA to control if changeable fvp is a dvp.
 sav['mask_fvp_offs'] = np.full(sinp.structuralsa_inp['i_fvp_mask_offs'].shape, '-', dtype=object)      #SA to mask changeable fvps.
 sav['fvp_is_dvp_offs'] = np.full(sinp.structuralsa_inp['i_fvp_mask_offs'].shape, '-', dtype=object)      #SA to control if changeable fvp is a dvp.
-sav['bnd_drys_sold'] = '-'   #SA to force drys to be sold
-sav['bnd_drys_retained'] = '-'   #SA to force drys to be retained
-sav['bnd_sr_t'] = np.full(pinp.sheep_inp['i_sr_constraint_t'].shape, '-', dtype=object)   #SA to fix stocking rate
-sav['bnd_min_sale_age_wether_g3'] = np.full(pinp.sheep_inp['i_g3_inc'].shape, '-', dtype=object)   #SA to set min age wether can be sold
-sav['bnd_max_sale_age_wether_g3'] = np.full(pinp.sheep_inp['i_g3_inc'].shape, '-', dtype=object)   #SA to set max age wether can be sold
-sav['bnd_min_sale_age_female_g3'] = np.full(pinp.sheep_inp['i_g3_inc'].shape, '-', dtype=object)   #SA to set min age a female can be sold - used to bound prog, offs & dams
 sav['r1_izg1'] = np.full(pinp.sheep_inp['ia_r1_zig1'].shape, '-', dtype=object)   #SA to change the base feed option for dams
 
 ##stock parameters

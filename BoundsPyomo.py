@@ -35,7 +35,6 @@ def boundarypyomo_local(params):
     dams_lobound_inc = False #lower bound dams
     dams_upperbound_inc = True #upper bound on dams
     yearling_mating_upperbound_inc = fun.f_sa(False, sen.sav['bnd_mateyearlings_inc'], 5) #allow exclusion of mating yearlings (by default yearlings are not allowed to mate)
-    sale_yearling_upperbound_inc = fun.f_sa(False, sen.sav['bnd_sellyearlings_inc'], 5) #upperbound on ewe lambs sold
     sr_bound_inc = fun.f_sa(False, sen.sav['bnd_sr_inc'], 5) #controls sr bound
     total_pasture_bound_inc = fun.f_sa(False, sen.sav['bnd_pasarea_inc'], 5)  #bound on total pasture (hence also total crop)
     landuse_bound_inc = False #bound on area of each landuse
