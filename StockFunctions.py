@@ -1524,7 +1524,7 @@ def f_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period, 
                 ###low pattern - production level of the lowest nutrition profile that has a mortality less than 10% for the year
                 sl = [slice(None)] * temporary.ndim
                 sl[sinp.stock['i_w_pos']] = slice(-int(i_n_len ** i_n_fvp_period), None)
-                temporary[tuple(sl)] = np.take_along_axis(ma_var_sorted, idx_min_lw, sinp.stock['i_w_pos'])
+                temporary[tuple(sl)] = np.take_along_axis(ma_var_sorted, idx_min_lw, sinp.stock['i_w_pos']) #if you get an error here it probably means no animals had mort less than 10%
 
             else:
                 ###add high pattern - this will not handle situations where the top 10% lw animals all have higher mortality than the threshold.
@@ -1544,7 +1544,7 @@ def f_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period, 
                 ###low pattern - production level of the lowest nutrition profile that has a mortality less than 10% for the year
                 sl = [slice(None)] * temporary.ndim
                 sl[sinp.stock['i_w_pos']] = slice(-int(i_n_len ** i_n_fvp_period), None)
-                temporary[tuple(sl)] = np.take_along_axis(ma_var_sorted, idx_min_lw, sinp.stock['i_w_pos'])
+                temporary[tuple(sl)] = np.take_along_axis(ma_var_sorted, idx_min_lw, sinp.stock['i_w_pos']) #if you get an error here it probably means no animals had mort less than 10%
         ###Update if the period is start of year (shearing for offs and prejoining for dams)
         var = fun.f_update(var, temporary, period_is_condense)
 
