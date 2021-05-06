@@ -753,7 +753,7 @@ def generator(params,r_vals,ev,plots = False):
     ##fvp/dvp types
     fvp_type1 = np.cumsum(fvp_mask_dams)-1
     if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1:
-        fvp_type1[3] = -1 #season vtype must be -1 if steady state because we dont want to distribute.
+        fvp_type1[3] = -1 #season vtype must be -1 if steady state because we don't want to distribute.
 
     season_vtype1 = fvp_type1[3]
     prejoin_vtype1 = fvp_type1[0]
@@ -854,7 +854,7 @@ def generator(params,r_vals,ev,plots = False):
     ##fvp/dvp types
     fvp_type3 = np.cumsum(fvp_mask_offs)-1
     if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1:
-        fvp_type3[3] = -1 #season vtype must be -1 if steady state because we dont want to distribute.
+        fvp_type3[3] = -1 #season vtype must be -1 if steady state because we don't want to distribute.
 
     season_vtype3 = fvp_type3[3]
     shear_vtype3 = fvp_type3[0]
@@ -1394,7 +1394,7 @@ def generator(params,r_vals,ev,plots = False):
     age_pa1e1b1nwzida0e0b0xyg2 = (age_start_pa1e1b1nwzida0e0b0xyg2 + age_end_pa1e1b1nwzida0e0b0xyg2 +1) /2
     age_pa1e1b1nwzida0e0b0xyg3 = (age_start_pa1e1b1nwzida0e0b0xyg3 + age_end_pa1e1b1nwzida0e0b0xyg3 +1) /2
 
-    ##days in each period for each animal - cant mask the offs p axis becasue need full axis so it can be used in the generator (if days_period[p] > 0)
+    ##days in each period for each animal - cant mask the offs p axis because need full axis so it can be used in the generator (if days_period[p] > 0)
     days_period_pa1e1b1nwzida0e0b0xyg0 = age_end_pa1e1b1nwzida0e0b0xyg0 +1 - age_start_pa1e1b1nwzida0e0b0xyg0
     days_period_pa1e1b1nwzida0e0b0xyg1 = age_end_pa1e1b1nwzida0e0b0xyg1 +1 - age_start_pa1e1b1nwzida0e0b0xyg1
     days_period_pa1e1b1nwzida0e0b0xyg2 = age_end_pa1e1b1nwzida0e0b0xyg2 +1 - age_start_pa1e1b1nwzida0e0b0xyg2
@@ -3457,14 +3457,14 @@ def generator(params,r_vals,ev,plots = False):
             ######################################
             ###sire
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p, ...] > 0):
-                ###create a mask used to exclude w slices in the condensing func. excelude w slices that have greater than 10% mort or have been in the feedlot.
-                ### The logic behind this is that the model will not want to select animals with greater than 10% mort so not point using them to determine condensed weigts
-                ### and animals that have been in the feed lot will have been sold therefore it is not usefull to include these animal in the condensing becasue
+                ###create a mask used to exclude w slices in the condensing func. exclude w slices that have greater than 10% mort or have been in the feedlot.
+                ### The logic behind this is that the model will not want to select animals with greater than 10% mort so not point using them to determine condensed weights
+                ### and animals that have been in the feed lot will have been sold therefore it is not useful to include these animal in the condensing because
                 ### this will increase the condensing weight but all the heavy animals were sold so the high condense weight becomes too high for many animals to distribute into and hence is a waste.
                 fs_mask_sire = np.all(feedsupplyw_pa1e1b1nwzida0e0b0xyg0[0:p] < 3, axis=p_pos)  # if the animal has ever been in feedlot it is masked out
 
                 ###mask for animals with greater than 10% mort - true means mort is less than 10%
-                numbers_start_condense_sire = np.broadcast_to(numbers_start_condense_sire, numbers_end_sire.shape) #required for the first condensing becasue condense numbers start doesnt have all the axis.
+                numbers_start_condense_sire = np.broadcast_to(numbers_start_condense_sire, numbers_end_sire.shape) #required for the first condensing because condense numbers start doesnt have all the axis.
                 mort_mask_sire = (np.sum(numbers_end_sire,axis=prejoin_tup + (season_tup,), keepdims=True)  # if this gives warning it probably means the feedsupply is too low.
                              / np.sum(numbers_start_condense_sire, axis=prejoin_tup + (season_tup,), keepdims=True)) > 0.9  # sum e,b,z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10%
 
@@ -3498,14 +3498,14 @@ def generator(params,r_vals,ev,plots = False):
 
             ###dams
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                ###create a mask used to exclude w slices in the condensing func. excelude w slices that have greater than 10% mort or have been in the feedlot.
-                ### The logic behind this is that the model will not want to select animals with greater than 10% mort so not point using them to determine condensed weigts
-                ### and animals that have been in the feed lot will have been sold therefore it is not usefull to include these animal in the condensing becasue
+                ###create a mask used to exclude w slices in the condensing func. exclude w slices that have greater than 10% mort or have been in the feedlot.
+                ### The logic behind this is that the model will not want to select animals with greater than 10% mort so not point using them to determine condensed weights
+                ### and animals that have been in the feed lot will have been sold therefore it is not useful to include these animal in the condensing because
                 ### this will increase the condensing weight but all the heavy animals were sold so the high condense weight becomes too high for many animals to distribute into and hence is a waste.
                 fs_mask_dams = np.all(feedsupplyw_pa1e1b1nwzida0e0b0xyg1[0:p] < 3, axis=p_pos)  # if the animal has ever been in feedlot it is masked out
 
                 ###mask for animals with greater than 10% mort - true means mort is less than 10%
-                numbers_start_condense_dams = np.broadcast_to(numbers_start_condense_dams, numbers_end_dams.shape) #required for the first condensing becasue condense numbers start doesnt have all the axis.
+                numbers_start_condense_dams = np.broadcast_to(numbers_start_condense_dams, numbers_end_dams.shape) #required for the first condensing because condense numbers start doesnt have all the axis.
                 mort_mask_dams = (np.sum(numbers_end_dams,axis=prejoin_tup + (season_tup,), keepdims=True)  # if this gives warning it probably means the feedsupply is too low.
                              / np.sum(numbers_start_condense_dams, axis=prejoin_tup + (season_tup,), keepdims=True)) > 0.9  # sum e,b,z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10%
 
@@ -3574,14 +3574,14 @@ def generator(params,r_vals,ev,plots = False):
             o_numbers_start_pyatf[p] = numbers_start_yatf #used for npw calculation - use numbers start because weaning is start of period - has to be out of the 'if' because there is 0 days in the period when weaning occurs but we still want to store the start numbers (because once they are weaned they are not yatf therefore 0 days per period)
             o_rc_start_pyatf[p] = rc_start_yatf #outside because used for sale value which is weaning which has 0 days per period because weaning is first day (this means the rc at weaning is actually the rc at the start of the previous period because it doesnt recalculate once days per period goes to 0) (because once they are weaned they are not yatf therefore 0 days per period)
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                ###create a mask used to exclude w slices in the condensing func. excelude w slices that have greater than 10% mort or have been in the feedlot.
-                ### The logic behind this is that the model will not want to select animals with greater than 10% mort so not point using them to determine condensed weigts
-                ### and animals that have been in the feed lot will have been sold therefore it is not usefull to include these animal in the condensing becasue
+                ###create a mask used to exclude w slices in the condensing func. exclude w slices that have greater than 10% mort or have been in the feedlot.
+                ### The logic behind this is that the model will not want to select animals with greater than 10% mort so not point using them to determine condensed weights
+                ### and animals that have been in the feed lot will have been sold therefore it is not useful to include these animal in the condensing because
                 ### this will increase the condensing weight but all the heavy animals were sold so the high condense weight becomes too high for many animals to distribute into and hence is a waste.
                 fs_mask_yatf = np.all(feedsupplyw_pa1e1b1nwzida0e0b0xyg1[0:p] < 3, axis=p_pos)  # if the animal has ever been in feedlot it is masked out
 
                 ###mask for animals with greater than 10% mort - true means mort is less than 10%
-                numbers_start_condense_yatf = np.broadcast_to(numbers_start_condense_yatf, numbers_end_yatf.shape) #required for the first condensing becasue condense numbers start doesnt have all the axis.
+                numbers_start_condense_yatf = np.broadcast_to(numbers_start_condense_yatf, numbers_end_yatf.shape) #required for the first condensing because condense numbers start doesnt have all the axis.
                 mort_mask_yatf = (np.sum(numbers_end_yatf,axis=prejoin_tup + (season_tup,), keepdims=True)  # if this gives warning it probably means the feedsupply is too low.
                              / np.sum(numbers_start_condense_yatf, axis=prejoin_tup + (season_tup,), keepdims=True)) > 0.9  # sum e,b,z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10%
 
@@ -3627,14 +3627,14 @@ def generator(params,r_vals,ev,plots = False):
 
             ###offs
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                ###create a mask used to exclude w slices in the condensing func. excelude w slices that have greater than 10% mort or have been in the feedlot.
-                ### The logic behind this is that the model will not want to select animals with greater than 10% mort so not point using them to determine condensed weigts
-                ### and animals that have been in the feed lot will have been sold therefore it is not usefull to include these animal in the condensing becasue
+                ###create a mask used to exclude w slices in the condensing func. exclude w slices that have greater than 10% mort or have been in the feedlot.
+                ### The logic behind this is that the model will not want to select animals with greater than 10% mort so not point using them to determine condensed weights
+                ### and animals that have been in the feed lot will have been sold therefore it is not useful to include these animal in the condensing because
                 ### this will increase the condensing weight but all the heavy animals were sold so the high condense weight becomes too high for many animals to distribute into and hence is a waste.
                 fs_mask_offs = np.all(feedsupplyw_pa1e1b1nwzida0e0b0xyg3[0:p] < 3, axis=p_pos)  # if the animal has ever been in feedlot it is masked out
 
                 ###mask for animals with greater than 10% mort - true means mort is less than 10%
-                numbers_start_condense_offs = np.broadcast_to(numbers_start_condense_offs, numbers_end_offs.shape) #required for the first condensing becasue condense numbers start doesnt have all the axis.
+                numbers_start_condense_offs = np.broadcast_to(numbers_start_condense_offs, numbers_end_offs.shape) #required for the first condensing because condense numbers start doesnt have all the axis.
                 mort_mask = (np.sum(numbers_end_offs,axis=prejoin_tup + (season_tup,), keepdims=True)  # if this gives warning it probably means the feedsupply is too low.
                              / np.sum(numbers_start_condense_offs, axis=prejoin_tup + (season_tup,), keepdims=True)) > 0.9  # sum e,b,z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10%
 
@@ -4761,7 +4761,7 @@ def generator(params,r_vals,ev,plots = False):
 
     sale_finish= time.time()
 
-    ##Husbandry - shearing costs apply to p[0] but they are dropped becasue no numbers in p[0] #todo add feedbudgeting and labour for maintenance of infrastructure (it is currently has a cost that is representing materials and labour)
+    ##Husbandry - shearing costs apply to p[0] but they are dropped because no numbers in p[0] #todo add feedbudgeting and labour for maintenance of infrastructure (it is currently has a cost that is representing materials and labour)
     ###Sire: cost, labour and infrastructure requirements
     husbandry_cost_pg0, husbandry_labour_l2pg0, husbandry_infrastructure_h1pg0 = sfun.f_husbandry(
         uinp.sheep['i_head_adjust_sire'], mobsize_pa1e1b1nwzida0e0b0xyg0, o_ffcfw_psire, o_cfw_psire, operations_triggerlevels_h5h7h2pg,
