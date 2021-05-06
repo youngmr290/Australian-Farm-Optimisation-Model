@@ -156,6 +156,7 @@ sav['fvp_is_dvp_dams'] = np.full(sinp.structuralsa_inp['i_dvp_mask_f1'].shape, '
 sav['mask_fvp_offs'] = np.full(sinp.structuralsa_inp['i_fvp_mask_offs'].shape, '-', dtype=object)      #SA to mask changeable fvps.
 sav['fvp_is_dvp_offs'] = np.full(sinp.structuralsa_inp['i_fvp_mask_offs'].shape, '-', dtype=object)      #SA to control if changeable fvp is a dvp.
 sav['r1_izg1'] = np.full(pinp.sheep_inp['ia_r1_zig1'].shape, '-', dtype=object)   #SA to change the base feed option for dams
+sav['r1_izg3'] = np.full(pinp.sheep_inp['ia_r1_zig3'].shape, '-', dtype=object)   #SA to change the base feed option for dams
 
 ##stock parameters
 sav['srw_c2'] = np.full(uinp.parameters_inp['i_srw_c2'].shape, '-', dtype=object)  #SA value for srw of each c2 genotype.
