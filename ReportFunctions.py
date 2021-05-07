@@ -114,7 +114,7 @@ def f_errors(trial_outdated, trials):
             pass
     if infeasible_trials:
         print("Infeasible trials being reported:\n", infeasible_trials)
-        sys.exit()
+        # sys.exit()
 
     ##second check if data exists for each desired trial
     for trial_name in trials:

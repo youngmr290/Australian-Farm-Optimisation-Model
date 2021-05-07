@@ -793,6 +793,16 @@ def findDiff(d1, d2):
                             return a #only return if true
     return a
 
+def f_clean_dict(d):
+    '''Replace None values with 0 in a dict.'''
+    for k in d:
+        if type(d[k]) is dict:  # check if value is a dict. if so go a level deeper
+            f_clean_dict(d[k])
+        else:
+            if d[k] == None:
+                d[k] = 0
+    return d
+
 def f_produce_df(data, rows, columns, row_names=None, column_names=None):
     """rows is a list of lists that will be used to build a MultiIndex
     columns is a list of lists that will be used to build a MultiIndex"""

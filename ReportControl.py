@@ -53,6 +53,7 @@ def f_report(processor, trials):
     # print('Start processor: {0}'.format(processor))
     # print('Start trials: {0}'.format(trials))
     ##create empty df to stack each trial results into
+    stacked_infeasible = pd.DataFrame()  # name of any infeasible trials
     stacked_summary = pd.DataFrame()  # 1 line summary of each trial
     stacked_areasum = pd.DataFrame()  # area summary
     stacked_pnl = pd.DataFrame()  # profit and loss statement
@@ -107,14 +108,20 @@ def f_report(processor, trials):
     stacked_grnfec = pd.DataFrame()  # FEC of green foo
     stacked_dryfec = pd.DataFrame()  # FEC of dry foo
 
-#todo add: A marginal value of feed component. I had set this up in the old MIDAS so you could look at the vlaue of feed of different qualities (using the RC). It requires a number of DVs that are FP by FEC that are all bound to 0. They all have a me_cons parameter of -100 and a volume parameter that differes so that me/vol varies from 3 to 12 in steps of 1 MJ/kg.
-# Means that there are 100 DV's (10 x 10).
-# Requires one constraint that is the sum(v_mvf_p6v) == 0
-# It gets added in if a full solution is requested, because it only tells us anything if we can look at the RC's.
+    #todo add: A marginal value of feed component. I had set this up in the old MIDAS so you could look at the vlaue of feed of different qualities (using the RC). It requires a number of DVs that are FP by FEC that are all bound to 0. They all have a me_cons parameter of -100 and a volume parameter that differes so that me/vol varies from 3 to 12 in steps of 1 MJ/kg.
+    # Means that there are 100 DV's (10 x 10).
+    # Requires one constraint that is the sum(v_mvf_p6v) == 0
+    # It gets added in if a full solution is requested, because it only tells us anything if we can look at the RC's.
 
     ##read in the pickled results
     for trial_name in trials:
         lp_vars,r_vals = rep.load_pkl(trial_name)
+
+        ##handle infeasible trials
+        if os.path.isfile('Output/infeasible/{0}.txt'.format(trial_name)):
+            stacked_infeasible = stacked_infeasible.append(pd.Series(trial_name), ignore_index=True)
+            lp_vars = fun.f_clean_dict(lp_vars) #if a trial is infeasible or doesnt solve all the lp values are None. This function converts them to 0 so the report can still run.
+
         #todo add %pasture and dse/ha
         ##run report functions
         if report_run.loc['run_summary', 'Run']:
@@ -359,7 +366,7 @@ def f_report(processor, trials):
             keys = 'yatf_keys_k2tvpaebnwzixy1g1'
             arith = 1
             index = [3]                                 #p
-            cols = [11, 6, 5, 8]                           #x, b1, e1, w8
+            cols = [8]                           #x, b1, e1, w8
             axis_slice = {}
             ffcfw_yatf = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights
                                      , den_weights=den_weights, na_prod=na_prod, na_weights=na_weights, na_denweights=na_denweights
@@ -411,7 +418,7 @@ def f_report(processor, trials):
             keys = 'offs_keys_k3k5tvpnwzidaebxyg3'
             arith = 1
             index = [9,4]   #d,p. d here to save columns when many w
-            cols = [13,12,2,6]  #x,b,t,w
+            cols = [2,6]  #x,b,t,w
             axis_slice = {}
             axis_slice[11] = [0,1,1] #first cycle
             axis_slice[9] = [2,-1,1] #Adult
@@ -557,7 +564,7 @@ def f_report(processor, trials):
             keys = 'dams_keys_k2tvanwziy1g1'
             arith = 2
             index =[2]
-            cols =[0,1]
+            cols =[0,5]
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             numbers_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,
@@ -602,7 +609,7 @@ def f_report(processor, trials):
             keys = 'offs_keys_k3k5tvnwziaxyg3'
             arith = 2
             index =[3]
-            cols =[9,0,1,2]
+            cols =[9,0,1,2,5]
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             numbers_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,
@@ -859,6 +866,7 @@ def f_report(processor, trials):
     df_settings = pd.DataFrame(columns=['index', 'cols'])
 
     ##write to excel
+    df_settings = rep.f_df2xl(writer, stacked_infeasible, 'infeasible', df_settings, option=1)
     if report_run.loc['run_summary', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_summary, 'summary', df_settings, option=1)
     if report_run.loc['run_areasum', 'Run']:
