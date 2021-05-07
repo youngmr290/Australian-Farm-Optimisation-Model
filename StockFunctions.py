@@ -1582,14 +1582,22 @@ def f_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfoe
     if group==1:
         ###b) conception - conception is the change in numbers +ve for animals getting pregnancy and -ve in the NM e-0 slice (note the conception for e slice 1 and higher puts the negative numbers in the e-0 nm slice)
         if np.any(period_is_mating):
-            temporary = numbers + conception * numbers[:, 0:1, 0:1, ...]  # numbers_dams[..., 0,0, ...] is the NM slice of cycle 0 ie the number of animals yet to be mated (conception will have negative value in nm slice)
+            temporary = numbers + conception * numbers[:, 0:1, 0:1, ...]  # numbers_dams[:,0,0,...] is the NM slice of cycle 0 ie the number of animals yet to be mated (conception will have negative value in nm slice)
             numbers = fun.f_update(numbers, temporary, np.any(period_is_mating, axis=sinp.stock['i_e1_pos'])) #needs to be previous period else conception is not calculated because numbers happens at beginning of p loop
         ###at the end of mating move any remaining numbers from nm to 00 slice (note only the nm slice for e-0 has numbers - this is handled in the conception function)
         ###Set temporary to copy of current numbers
         if np.any(period_is_matingend):
             temporary  = np.copy(numbers)
-            temporary[:, 0:1, 1:2, ...] += numbers[:, 0:1, 0:1, ...]
-            temporary[:, 0, 0, ...] = 0.00001 #so nm can be an activity without nan. want a small number relative to mortality (after allowing for multiple slices getting the small number)
+            temporary[:, 0:1, 1:2, ...] += numbers[:, 0:1, 0:1, ...]   # add the number remaining unmated tot he dry slice in e1[0]
+            temporary[:, :, 0:1, ...] = 0 #set the NM slice to 0 (because they have just been added to drys)
+            ##handle the proportion mated #todo passed into the function
+            mated_propn = np.maximum(1, fun.f_sa(1, sen.sav['bnd_propn_yearlings_mated_g1'], 5)) #maximum value of 1 because default is inf, otherwise propn to be mated.
+            ### the number in the NM slice e1[0] is a proportion of the total numbers
+            ### need a minimum number otherwise get nan later. Want a small number relative to mortality (after allowing for multiple slices getting the small number)
+            temporary[:, 0:1, 0:1, ...] = np.minimum(0.00001, np.sum(temporary, sinp.stock['i_b1_pos'], keepdims=True) * (1 - mated_propn))
+            ### the numbers in the slices other than NM get scaled by the proportion mated
+            temporary[:, :, 1:, ...] = np.minimum(0.00001, temporary[:, :, 1:, ...] * mated_propn)
+            ###update numbers with the temporary calculations if it is the end of mating
             numbers = fun.f_update(numbers, temporary, period_is_matingend)
         ###d) birth (account for birth status and if drys are retained)
         if np.any(period_is_birth):
