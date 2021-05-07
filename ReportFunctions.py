@@ -857,9 +857,9 @@ def f_dse(lp_vars, r_vals, method, per_ha):
     ##dse per ha if user opts for this level of detail
     if per_ha:
         pasture_area = f_area_summary(lp_vars, r_vals, option=2)
-        dse_sire = dse_sire / pasture_area
-        dse_dams = dse_dams / pasture_area
-        dse_offs = dse_offs / pasture_area
+        dse_sire = fun.f_divide(dse_sire, pasture_area)
+        dse_dams = fun.f_divide(dse_dams, pasture_area)
+        dse_offs = fun.f_divide(dse_offs, pasture_area)
 
     ##turn to table - rows and cols need to be a list of lists/arrays
     dse_sire = fun.f_produce_df(dse_sire.ravel(), rows=sire_key, columns=[['Sire DSE']])
