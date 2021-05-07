@@ -5724,7 +5724,7 @@ def generator(params,r_vals,ev,plots = False):
     r_fd_hd_tvg3 = sfun.f_p2v(o_fd_poffs, a_v_pa1e1b1nwzida0e0b0xyg3, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg3,
                                period_is_tp=period_is_shearing_tpa1e1b1nwzida0e0b0xyg3)
 
-    ##wbe - not accounting for mortality
+    ##wbe at start of the DVP - not accounting for mortality
     r_wbe_vg1 = sfun.f_p2v(r_wbe_pdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
     r_wbe_vg3 = sfun.f_p2v(r_wbe_poffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3)
 

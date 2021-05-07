@@ -57,7 +57,7 @@ def f_df2xl(writer, df, sheet, df_settings=None, rowstart=0, colstart=0, option=
     ## collapse rows and cols with all 0's
     if option==1:
         df = df.round(5)  # round so that very small numbers are dropped out in the next step
-        for row in range(len(df)):
+        for row in range(len(df)-1):   #todo: in range(len(df)) hides the last blank row but causes a blank line in some of report.xl
             if (df.iloc[row]==0).all():
                 offset = df.columns.nlevels #number of columns used for names
                 if offset>1:
