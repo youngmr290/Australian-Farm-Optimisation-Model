@@ -122,7 +122,6 @@ def f_report(processor, trials):
             stacked_infeasible = stacked_infeasible.append(pd.Series(trial_name), ignore_index=True)
             lp_vars = fun.f_clean_dict(lp_vars) #if a trial is infeasible or doesnt solve all the lp values are None. This function converts them to 0 so the report can still run.
 
-        #todo add %pasture and dse/ha
         ##run report functions
         if report_run.loc['run_summary', 'Run']:
             summary = rep.f_summary(lp_vars,r_vals,trial_name)

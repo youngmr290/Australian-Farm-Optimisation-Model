@@ -270,12 +270,15 @@ def f_price_summary(lp_vars, r_vals, option, grid, weight, fs):
 
 def f_summary(lp_vars, r_vals, trial):
     '''Returns a simple 1 row summary of the trial (season results are averaged)'''
-    summary_df = pd.DataFrame(index=[trial], columns=['obj', 'profit'])
+    summary_df = pd.DataFrame(index=[trial], columns=['obj', 'profit', 'SR', 'Pas %'])
     ##obj
     summary_df.loc[trial, 'obj'] = f_profit(lp_vars, r_vals, option=0)
     ##profit - no minroe and asset
     summary_df.loc[trial, 'profit'] = f_profit(lp_vars, r_vals, option=1)
-
+    ##total dse/ha in fp0
+    summary_df.loc[trial, 'SR'] = f_dse(lp_vars, r_vals, method=0, per_ha=True, summary=True)
+    ##pasture %
+    summary_df.loc[trial, 'Pas %'] = f_area_summary(lp_vars, r_vals, option=5)
     return summary_df
 
 
@@ -307,6 +310,7 @@ def f_area_summary(lp_vars, r_vals, option):
         2: float total pasture area
         3: float total crop area
         4: table crop and pasture area by lmu
+        5: float pasture %
     '''
 
     ##read from other functions
@@ -330,10 +334,13 @@ def f_area_summary(lp_vars, r_vals, option):
 
     ##crop & pasture area by lmu
     croppas_area_l = pd.DataFrame()
-    croppas_area_l.loc['pasture'] = pasture_area_l
-    croppas_area_l.loc['crop'] = crop_area_l
+    croppas_area_l['pasture'] = pasture_area_l
+    croppas_area_l['crop'] = crop_area_l
     if option == 4:
         return croppas_area_l.round(0)
+
+    if option==5:
+        return (fun.f_divide(pasture_area_l.sum(), rot_area_zr_l.to_numpy().sum()) * 100).round(0)
 
     ##return all if option==0
     if option == 0:
@@ -806,17 +813,19 @@ def f_overhead_summary(r_vals):
     return exp_fix_c
 
 #todo this should probably report z as an index rather than summing it.
-def f_dse(lp_vars, r_vals, method, per_ha):
+def f_dse(lp_vars, r_vals, method, per_ha, summary=False):
     '''
     DSE calculation
 
     :param lp_vars: dict: results from pyomo
     :param r_vals: dict: report variable
-    :key method: int
+    :param method: int
             0 - dse by normal weight
             1 - dse by mei
-    :key per_ha: Bool
+    :param per_ha: Bool
         if true it returns DSE/ha else it returns total dse
+    :param summary: Bool
+        if true it returns the total DSE/ha in fp0
     :return DSE per pasture hectare for each sheep group:
     '''
     ##keys for table that is reported
@@ -832,6 +841,13 @@ def f_dse(lp_vars, r_vals, method, per_ha):
     offs_preserve_ax = (2, 4)
     offs_key = [keys_p6, keys_v3]
 
+    if summary:
+        sire_preserve_ax = 0
+        sire_key = [keys_p6]
+        dams_preserve_ax = 1
+        dams_key = [keys_p6]
+        offs_preserve_ax = 2
+        offs_key = [keys_p6]
 
     stock_vars = f_stock_reshape(lp_vars, r_vals)
 
@@ -866,7 +882,10 @@ def f_dse(lp_vars, r_vals, method, per_ha):
     dse_dams = fun.f_produce_df(dse_dams.ravel(), rows=dams_key, columns=[['Dams DSE']])
     dse_offs = fun.f_produce_df(dse_offs.ravel(), rows=offs_key, columns=[['Offs DSE']])
 
-    return dse_sire, dse_dams, dse_offs
+    if summary:
+        return (dse_sire.iloc[0, 0] + dse_dams.iloc[0, 0] + dse_offs.iloc[0, 0]).round(1)  #sum SR for all sheep groups in FP0 (to return winter sr)
+    else:
+        return dse_sire, dse_dams, dse_offs
 
 
 def f_profitloss_table(lp_vars, r_vals):
