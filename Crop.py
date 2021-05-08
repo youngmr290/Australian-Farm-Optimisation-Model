@@ -53,7 +53,7 @@ import Mach as mac
 ########################
 ##makes a df of all possible rotation phases
 phases_df =sinp.phases['phases']
-phases_df2=phases_df.copy() #make a copy so that it doesn't alter the phases df that exists outside this func #todo once season finished check if df2 is getting used anywhere
+phases_df2=phases_df.copy() #make a copy so that it doesn't alter the phases df that exists outside this func
 phases_df2.columns = pd.MultiIndex.from_product([phases_df2.columns, ['']])  #make the df multi index so that when it merges with other df below the indexs remanin separate (otherwise it turn into a one leveled tuple)
 phases_df3=phases_df.copy() #make a copy so that it doesn't alter the phases df that exists outside this func
 phases_df3.columns = pd.MultiIndex.from_product([phases_df3.columns, [''], ['']])  #make the df multi index so that when it merges with other df below the indexs remanin separate (otherwise it turn into a one leveled tuple)

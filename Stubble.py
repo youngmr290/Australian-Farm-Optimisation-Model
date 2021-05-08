@@ -135,12 +135,12 @@ def stubble_all(params):
     vol_p6zks1 = (1/(ri_availability_p6zks1 * ri_quality_p6zks1))*1000/(1+SA.sap['pi'])
     vol_p6zks1 = vol_p6zks1 * mask_stubble_exists_p6zk[...,na] #stop md being provided if stubble doesnt exist
 
-    ##convert dmd to M/D #todo when confinement pool is added set stubble md to zero because stubble can't be grazed in confinement
+    ##convert dmd to M/D
     ## Stubble doesn't include calculation of effective mei because stubble is generally low quality feed with a wide variation in quality within the sward.
     ## Therefore, there is scope to alter average diet quality by altering the grazing time and the proportion of the stubble consumed.
     md_p6zks1 = np.clip(fun.dmd_to_md(dmd_cat_p6zks1) * 1000, 0, np.inf) #mul to convert to tonnes
     md_p6zks1 = md_p6zks1 * mask_stubble_exists_p6zk[...,na] #stop md being provided if stubble doesnt exist
-    md_vp6zks1 = md_p6zks1 * ev_is_not_confinement_v[:,na,na,na,na] #me from pasture is 0 in the confinement pool
+    md_vp6zks1 = md_p6zks1 * ev_is_not_confinement_v[:,na,na,na,na] #me from stubble is 0 in the confinement pool
 
     ###########
     #trampling#

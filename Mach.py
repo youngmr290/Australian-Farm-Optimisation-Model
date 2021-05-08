@@ -200,41 +200,6 @@ def f_grazing_days():
     total_grazing_days = pd.DataFrame(total_grazing_days_p6p5z, index=pinp.period['i_fp_idx'], columns=cols)
     return total_grazing_days.stack(0)
 
-
-
-
-    # ##drop last date from feed periods because it as the start date at the end
-    # feed_periods_date = per.f_feed_periods()[:-1]
-    # feed_periods_length = per.f_feed_periods(option=1)
-    # ##run mach period func to get all the seeding day info
-    # seed_days = f_seed_days()
-    #
-    # ##create df which all grazing days are added
-    # grazing_days_df = pd.DataFrame(index=pinp.period['i_fp_idx'])
-    #
-    # ##loop through labour/mach periods.
-    # for mach_p_start, seeding_days, mach_p_num in zip(mach_periods, seed_days,seed_days.index):
-    #     grazing_days_list=[]
-    #     season_break = feed_periods_date[0] #todo probs won't handle z axis
-    #     effective_break = season_break + destock_days #accounts for the time before seeding that destocking must occur
-    #     for i in range(len(feed_periods_date)):
-    #         fp_end_date = feed_periods_date[i] + dt.timedelta(days = feed_periods_length[i]) #todo this will not handle Z axis either need to loop or maybe use numpy
-    #         seed_end_date = mach_p_start + dt.timedelta(days = seeding_days)
-    #         ##if the feed period finishes before the start of seeding it will receive a grazing day for each day since the break of season times the number of seeding days in the current seed period minus the grazing days in the previous periods
-    #         if fp_end_date <= mach_p_start:
-    #             fp_grazing_days = max((fp_end_date- effective_break).days * seeding_days - sum(grazing_days_list) , 0) #max required in case fp ends before effective break - don't want a negative value
-    #         ##if the end date of the feed period is after the end date of the seeding period it will get the full grazing days minus the grazing days in the previous periods
-    #         elif fp_end_date >= seed_end_date:
-    #             fp_grazing_days = max((mach_p_start- effective_break).days * seeding_days + (0.5 * seeding_days * seeding_days)  - sum(grazing_days_list) ,0)
-    #         ##if it isn't one of the conditions above then the feed period date must fall somewhere within the seed periods. This means the grazing days equal to the number of days between the season start and the start of the current seed period plus the diminishing number of days in the current period
-    #         else:
-    #             fp_grazing_days = max((mach_p_start- effective_break).days * seeding_days + (0.5 * seeding_days * seeding_days) -(0.5 * (seed_end_date-fp_end_date).days**2) - sum(grazing_days_list) , 0)
-    #         grazing_days_list.append(fp_grazing_days)
-    #     grazing_days_df[mach_p_num] = grazing_days_list #annoyingly both mach periods and feedperiods are defined as just numbers
-    #     ##have to divide by the seeding days per period to return the grazing days if 1 ha was sown per period - this can now be multiplied by the ha sowed (done in pyomo)
-    #     grazing_days_df[mach_p_num] = grazing_days_df[mach_p_num]/ seeding_days
-    # params['grazing_days'] = grazing_days_df.stack().to_dict()
-    #
 #################################################
 #seeding ha/day for each crop on each lmu  type #
 #################################################

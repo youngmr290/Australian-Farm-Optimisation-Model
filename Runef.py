@@ -107,7 +107,7 @@ if run_testDSP_rapper:
 #     scenario_data = self.scenario_data
 #
 #     # create instances for different szenarios and write the unique scenariodata into the instance
-#     instance = model.clone()   #todo solution time beschleunigen
+#     instance = model.clone()
 #     instance.stochastic_data.store_values(scenario_data[scenario_name])
 #     return instance
 #
