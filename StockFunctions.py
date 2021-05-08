@@ -2105,44 +2105,6 @@ def f_p2v_std(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tv
     ## sum along p axis to leave just a v axis (sumadj is to handle nsire that has a p8 axis at the end)
     return np.sum(production_ftvpany, axis=sinp.stock['i_p_pos']-sumadj)
 
-
-# ##Method 4 - loop over v and sum p - this save p and v axis being on the same array but requires lots of looping so isn't much faster
-# def f_p2v_loop(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tvp=True, days_period_p=1, period_is_tvp=True, a_ev_p=1, index_ftvp=1, a_p6_p=1, index_p6ftvp=1):
-#     try: days_period_p = days_period_p.astype('float32')  #convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it can't be converted to float (because int object is not numpy)
-#     except AttributeError:
-#         pass
-#     ##mul everything
-#     production_ftpany = (production_p * numbers_p * days_period_p * period_is_tvp
-#                         * on_hand_tvp * (a_ev_p==index_ftvp)
-#                         * (a_p6_p==index_p6ftvp))
-#
-#     shape = production_ftpany.shape[0:3] + (np.max(dvp_pointer_p)+1,) + production_ftpany.shape[4:]  # bit messy because need v t and all the other axis (but not p)
-#     final=np.zeros(shape).astype('float32')
-#     for i in range(np.max(dvp_pointer_p)+1):
-#         temp_prod = np.sum(production_ftpany * (dvp_pointer_p==i), axis=sinp.stock['i_p_pos'])
-#         final[:,:,:,i,...] = temp_prod  #asign to correct v slice
-#     return final
-
-# ##Method 3 - use groupby to sum p, this means p and v don't exist on the same array - not as fast as method 2
-# import numpy_indexed as npi
-# def f_p2v_groupby(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tvp=True, days_period_p=1, period_is_tvp=True, a_ev_p=1, index_ftvp=1, a_p6_p=1, index_p6ftvp=1):
-#     try: days_period_p = days_period_p.astype('float32')  #convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it can't be converted to float (because int object is not numpy)
-#     except AttributeError:
-#         pass
-#     ##mul everything
-#     production_ftpany = (production_p * numbers_p * days_period_p * period_is_tvp
-#                         * on_hand_tvp * (a_ev_p==index_ftvp)
-#                         * (a_p6_p==index_p6ftvp))
-#     ##convert p to v
-#     shape = production_ftpany.shape[0:3] + (np.max(dvp_pointer_p)+1,) + production_ftpany.shape[4:]  # bit messy because need v t and all the other axis (but not p)
-#     result=np.zeros(shape).astype('float32')
-#     shape = dvp_pointer_p.shape
-#     for e1 in range(shape[-13]):
-#         for g in range(shape[-1]):
-#             result[:,:,:,:, :, e1:e1+1, :, :, :, :, :, :, :, :, :, :, :, g:g+1] = npi.GroupBy(dvp_pointer_p[:, 0, e1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, g], axis=0).sum(
-#                                                                     production_ftpany[:, :, :, :, :, e1:e1+1, :, :, :, :, :, :, :, :, :, :, :, g:g+1], axis=sinp.stock['i_p_pos'])[1]
-#     return result
-
 ##Method 2 (fastest)- sum sections of p axis to leave v (almost like sum if) this is fast because don't need p and v axis in same array
 def f_p2v(production_p, dvp_pointer_p=1, numbers_p=1, on_hand_tp=True, days_period_p=1, period_is_tp=True, a_any1_p=1, index_any1tp=1, a_any2_p=1, index_any2any1tp=1):
     #convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it can't be converted to float (because int object is not numpy)
@@ -2195,8 +2157,62 @@ def f_p2v(production_p, dvp_pointer_p=1, numbers_p=1, on_hand_tp=True, days_peri
                                                                                   , np.r_[0, np.where(np.diff(dvp_pointer_p[:, a1, e1, b1, n, w, z, i, d, a0, e0, b0, x, y, g]))[0] + 1], axis=sinp.stock['i_p_pos']) #np.r_ basically concats two 1d arrays (so here we are just adding 0 to the start of the array)
     return result
 
+# ##Method 5 numexpr (slow - even with fv33n33 it is much slower than the current method
+# import numexpr as ne
+# def f_p2v_5(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tvp=True, days_period_p=1,
+#             period_is_tvp=True, a_any1_p=1, index_any1tvp=1, a_any2_p=1, index_any2any1tvp=1, sumadj=0):
+#     ## convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it can't be converted to float (because int object is not numpy)
+#     try:
+#         days_period_p = days_period_p.astype('float32')
+#     except AttributeError:
+#         pass
+#     ##mul everything
+#     production_ftpany = (production_p * numbers_p * days_period_p * period_is_tvp
+#                         * on_hand_tvp * (a_any1_p==index_any1tvp)
+#                         * (a_any2_p==index_any2any1tvp))* (dvp_pointer_p == index_vp)
+#     ##mul everything and sum - both methods below are slow. but the least amount of calc in the ne.eval the better.
+#     production_ftvany = ne.evaluate("sum(production_ftpany,axis=5)")
+#     # production_ftvany = ne.evaluate("sum(production_p * numbers_p * days_period_p * period_is_tvp * on_hand_tvp * (dvp_pointer_p == index_vp) * (a_any1_p == index_any1tvp) * (a_any2_p == index_any2any1tvp),axis=5)")
+#
+#     return production_ftvany
 
 
+# ##Method 4 - loop over v and sum p - this save p and v axis being on the same array but requires lots of looping so isn't much faster
+# def f_p2v_loop(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tvp=True, days_period_p=1, period_is_tvp=True, a_ev_p=1, index_ftvp=1, a_p6_p=1, index_p6ftvp=1):
+#     try: days_period_p = days_period_p.astype('float32')  #convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it can't be converted to float (because int object is not numpy)
+#     except AttributeError:
+#         pass
+#     ##mul everything
+#     production_ftpany = (production_p * numbers_p * days_period_p * period_is_tvp
+#                         * on_hand_tvp * (a_ev_p==index_ftvp)
+#                         * (a_p6_p==index_p6ftvp))
+#
+#     shape = production_ftpany.shape[0:3] + (np.max(dvp_pointer_p)+1,) + production_ftpany.shape[4:]  # bit messy because need v t and all the other axis (but not p)
+#     final=np.zeros(shape).astype('float32')
+#     for i in range(np.max(dvp_pointer_p)+1):
+#         temp_prod = np.sum(production_ftpany * (dvp_pointer_p==i), axis=sinp.stock['i_p_pos'])
+#         final[:,:,:,i,...] = temp_prod  #asign to correct v slice
+#     return final
+
+# ##Method 3 - use groupby to sum p, this means p and v don't exist on the same array - not as fast as method 2
+# import numpy_indexed as npi
+# def f_p2v_groupby(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tvp=True, days_period_p=1, period_is_tvp=True, a_ev_p=1, index_ftvp=1, a_p6_p=1, index_p6ftvp=1):
+#     try: days_period_p = days_period_p.astype('float32')  #convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it can't be converted to float (because int object is not numpy)
+#     except AttributeError:
+#         pass
+#     ##mul everything
+#     production_ftpany = (production_p * numbers_p * days_period_p * period_is_tvp
+#                         * on_hand_tvp * (a_ev_p==index_ftvp)
+#                         * (a_p6_p==index_p6ftvp))
+#     ##convert p to v
+#     shape = production_ftpany.shape[0:3] + (np.max(dvp_pointer_p)+1,) + production_ftpany.shape[4:]  # bit messy because need v t and all the other axis (but not p)
+#     result=np.zeros(shape).astype('float32')
+#     shape = dvp_pointer_p.shape
+#     for e1 in range(shape[-13]):
+#         for g in range(shape[-1]):
+#             result[:,:,:,:, :, e1:e1+1, :, :, :, :, :, :, :, :, :, :, :, g:g+1] = npi.GroupBy(dvp_pointer_p[:, 0, e1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, g], axis=0).sum(
+#                                                                     production_ftpany[:, :, :, :, :, e1:e1+1, :, :, :, :, :, :, :, :, :, :, :, g:g+1], axis=sinp.stock['i_p_pos'])[1]
+#     return result
 
 
 def f_cum_dvp(arr,dvp_pointer,axis=0,shift=0):
