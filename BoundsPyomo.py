@@ -34,7 +34,6 @@ def boundarypyomo_local(params):
     rot_lobound_inc = False #controls rot bound
     dams_lobound_inc = False #lower bound dams
     dams_upperbound_inc = True #upper bound on dams
-    yearling_mating_upperbound_inc = fun.f_sa(False, sen.sav['bnd_mateyearlings_inc'], 5) #allow exclusion of mating yearlings (by default yearlings are not allowed to mate)
     sr_bound_inc = fun.f_sa(False, sen.sav['bnd_sr_inc'], 5) #controls sr bound
     total_pasture_bound_inc = fun.f_sa(False, sen.sav['bnd_pasarea_inc'], 5)  #bound on total pasture (hence also total crop)
     landuse_bound_inc = False #bound on area of each landuse
@@ -105,7 +104,7 @@ def boundarypyomo_local(params):
             dams_upperbound_tv = np.full((len(model.s_sale_dams), len(model.s_dvp_dams)), np.inf)
             ###set the bound
             dams_upperbound_tv[0:2, 0:14] = 0  #no dam sales before dvp14
-            dams_upperbound_tv[0:1, 3:4] = np.inf   #allow sale after shearing t[0] for yearlings dvp3
+            dams_upperbound_tv[0:1, 3:4] = np.inf   #allow sale after shearing t[0] for dams dvp3
             ###ravel and zip bound and dict
             dams_upperbound = dams_upperbound_tv.ravel()
             tup_tv = tuple(map(tuple, index_tv))
@@ -127,40 +126,28 @@ def boundarypyomo_local(params):
             model.con_dam_upperbound = pe.Constraint(model.s_sale_dams, model.s_dvp_dams, rule=f_dam_upperbound,
                                                     doc='max number of dams_tv')
 
-        ##bound to stop yearlings being mated - specified by k2 & v and totalled across other axes
-        #todo would be good to implement this as a proportion of the yearlings that can be mated. So the constrain is: (1- x) number mated <= (x) number not mated (where x is max propn mated).
-        # So an equal constraints between the number of NM (k2[0]) and the rest(k2[1:])
-        # so that we can look at how profit changes as the proportion of ewe lambs that are mated varies.
-        # and use the same input to control the averaging of the weight at prejoining - are the e & b slices included in the average or just the NM
-        if yearling_mating_upperbound_inc:
-            ###keys to build arrays for the specified slices
-            arrays = [model.s_k2_birth_dams, model.s_dvp_dams, model.s_groups_dams]
-            index_k2vg1 = fun.cartesian_product_simple_transpose(arrays)
-            ###build array for the axes of the specified slices
-            dam_mating_upperbound_k2vg1 = np.full((len(model.s_k2_birth_dams), len(model.s_dvp_dams), len(model.s_groups_dams)), np.inf)
-            ###set the bound
-            ### to exclude mating yearling. Mating yearlings is DVP = 1 & k2 = 1: (00 slice and greater) therefore only allowing NM in slice 0.
-            dam_mating_upperbound_k2vg1[1:,1,0] = 0
-            ###ravel and zip bound and dict
-            dam_mating_upperbound = dam_mating_upperbound_k2vg1.ravel()
-            tup_k2vg1 = tuple(map(tuple, index_k2vg1))
-            dam_mating_upperbound = dict(zip(tup_k2vg1, dam_mating_upperbound))
+        ##bound to fix the proportion of dams being mated - typically used to exclude yearlings
+        if np.any(sen.sav['bnd_propn_dams_mated_og1']!='-'):
+            ###build param - inf values are skipped in the constraint building so inf means the model can optimise the propn mated
+            model.p_prop_dams_mated = pe.Param(model.s_dvp_dams, model.s_groups_dams, initialize=params['stock']['p_prop_dams_mated'])
             ###constraint
             try:
-                model.del_component(model.con_dam_mating_upperbound)
-                model.del_component(model.con_dam_mating_upperbound_index)
+                model.del_component(model.con_propn_dams_mated)
+                model.del_component(model.con_propn_dams_mated_index)
             except AttributeError:
                 pass
-            def f_dam_mating_upperbound(model, k28, v, g1):
-                if dam_mating_upperbound[k28, v, g1]==np.inf:
+            def f_propn_dams_mated(model, v, g1):
+                if model.p_prop_dams_mated[v, g1]==np.inf:
                     return pe.Constraint.Skip
                 else:
-                    return sum(model.v_dams[k28,t,v,a,n,w8,i,y,g1] for t in model.s_sale_dams
+                    return sum(model.v_dams['NM-0',t,v,a,n,w8,i,y,g1] for t in model.s_sale_dams
                                for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
                                for i in model.s_tol for y in model.s_gen_merit_dams
-                               ) <= dam_mating_upperbound[k28, v, g1]
-            model.con_dam_mating_upperbound = pe.Constraint(model.s_k2_birth_dams, model.s_dvp_dams, model.s_groups_dams, rule=f_dam_mating_upperbound,
-                                                    doc='max number of dams_k2vg1')
+                               ) == sum(model.v_dams[k2,t,v,a,n,w8,i,y,g1] for k2 in model.s_k2_birth_dams for t in model.s_sale_dams
+                               for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
+                               for i in model.s_tol for y in model.s_gen_merit_dams) * (1 - model.p_prop_dams_mated[v, g1])
+            model.con_propn_dams_mated = pe.Constraint(model.s_dvp_dams, model.s_groups_dams, rule=f_propn_dams_mated,
+                                                       doc='proportion of dams mated')
 
         ##SR - this can't set the sr on an actual pasture but it means different pastures provide a different level of carry capacity although nothing fixes sheep to that pasture
         if sr_bound_inc:

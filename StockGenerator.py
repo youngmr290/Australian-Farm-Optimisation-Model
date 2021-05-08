@@ -459,6 +459,13 @@ def generator(params,r_vals,ev,plots = False):
                                                    axis=i_pos, condition2=mask_o_dams, axis2=p_pos)
     sire_periods_p8g0 = sfun.f_g2g(pinp.sheep['i_sire_periods_p8g0'], 'sire', condition=pinp.sheep['i_mask_p8'], axis=0)
     sire_periods_g0p8 = np.swapaxes(sire_periods_p8g0, 0, 1) #can't swap in function above because g needs to be in pos-1
+
+    ##propn of dams mated - default is inf which gets skipped in the bound constraint hence the model can optimise to propn mated.
+    prop_dams_mated_og1 = fun.f_sa(np.array([999],dtype=float), sen.sav['bnd_propn_dams_mated_og1'], 5) #999 just an arbitary value used then converted to np.inf becasue np.inf causes errors in the f_update which is called by f_sa
+    prop_dams_mated_og1[prop_dams_mated_og1==999] = np.inf
+    prop_dams_mated_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(prop_dams_mated_og1, left_pos=p_pos, right_pos=-1,
+                                                          condition=mask_o_dams, axis=p_pos, condition2=mask_dams_inc_g1, axis2=-1)
+
     ##Shearing date - set to be on the last day of a sim period
     ###sire
     date_shear_sida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['i_date_shear_sixg0'], 'sire', x_pos, swap=True
@@ -1011,15 +1018,17 @@ def generator(params,r_vals,ev,plots = False):
         eg if you use a_prev_joining the date in the p slice will increment at joining each time.
     
     '''
-    ###shearing
+    ##shearing
     date_shear_pa1e1b1nwzida0e0b0xyg0=np.take_along_axis(date_shear_sa1e1b1nwzida0e0b0xyg0,a_prev_s_pa1e1b1nwzida0e0b0xyg0,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
     date_shear_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(date_shear_sa1e1b1nwzida0e0b0xyg1,a_prev_s_pa1e1b1nwzida0e0b0xyg1,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
     date_shear_pa1e1b1nwzida0e0b0xyg3=np.take_along_axis(date_shear_sa1e1b1nwzida0e0b0xyg3,a_prev_s_pa1e1b1nwzida0e0b0xyg3,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
-    ###management for weaning, gbal and scan options
+
+    ##management for weaning, gbal and scan options
     wean_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(wean_oa1e1b1nwzida0e0b0xyg1,a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
     gbal_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(gbal_oa1e1b1nwzida0e0b0xyg1,a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
     scan_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(scan_oa1e1b1nwzida0e0b0xyg1,a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
-    ###date, age, timing
+
+    ##date, age, timing
     date_born1st_pa1e1b1nwzida0e0b0xyg2=np.take_along_axis(date_born1st_oa1e1b1nwzida0e0b0xyg2,a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0)
     date_born_pa1e1b1nwzida0e0b0xyg2=np.take_along_axis(date_born_oa1e1b1nwzida0e0b0xyg2,a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0)
     date_born1st2_pa1e1b1nwzida0e0b0xyg2=np.take_along_axis(date_born1st_oa1e1b1nwzida0e0b0xyg2,a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #increments at prejoining
@@ -1027,26 +1036,33 @@ def generator(params,r_vals,ev,plots = False):
     date_prejoin_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(prejoining_oa1e1b1nwzida0e0b0xyg1,a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0)
     date_joined_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(date_joined_oa1e1b1nwzida0e0b0xyg1,a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1,0)
     date_joined2_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(date_joined_oa1e1b1nwzida0e0b0xyg1,a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #increments at prejoining
-    ###condensing
+
+    ##condensing
     date_condensing_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(condensing_date_oa1e1b1nwzida0e0b0xyg1,a_condensing_pa1e1b1nwzida0e0b0xyg1,0)
     date_condensing_pa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(condensing_date_oa1e1b1nwzida0e0b0xyg3,a_condensing_pa1e1b1nwzida0e0b0xyg3,0)
-    ####create age wean yatf
+
+    ###create age wean yatf
     age_wean1st_oa1e1b1nwzida0e0b0xyg2 = np.swapaxes(age_wean1st_oa1e1b1nwzida0e0b0xyg2, a0_pos, a1_pos) #swap a0 and a1 because yatf have to be same shape as dams
     age_wean1st_oa1e1b1nwzida0e0b0xyg2 = np.swapaxes(age_wean1st_oa1e1b1nwzida0e0b0xyg2, e0_pos, e1_pos) #swap e0 and e1 because yatf have to be same shape as dams
     age_wean1st_pa1e1b1nwzida0e0b0xyg2=np.take_along_axis(age_wean1st_oa1e1b1nwzida0e0b0xyg2,a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0)#use off wean age - may vary by d axis therefore have to convert to a p array
     age_wean1st2_pa1e1b1nwzida0e0b0xyg2=np.take_along_axis(age_wean1st_oa1e1b1nwzida0e0b0xyg2,a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #increments at prejoining
+
     ##yatf sim params - turn d to p axis
     ce_yatf = np.expand_dims(ce_yatf, axis = tuple(range(p_pos,d_pos)))
     ce_yatf = np.take_along_axis(ce_yatf,a_prevbirth_d_pa1e1b1nwzida0e0b0xyg2[na,...],d_pos)
+
     ##feed period
     legume_pa1e1b1nwzida0e0b0xyg = np.take_along_axis(legume_p6a1e1b1nwzida0e0b0xyg, a_p6_pa1e1b1nwzida0e0b0xyg, 0)
+
     ##expected stocking density
     density_pa1e1b1nwzida0e0b0xyg = np.take_along_axis(density_p6a1e1b1nwzida0e0b0xyg, a_p6_pa1e1b1nwzida0e0b0xyg, 0)
+
     ##select which equation is used for the sheep sim functions for each period
     eqn_used_g0_q1p = uinp.sheep['i_eqn_used_g0_q1p7'][:, a_g0_p7_p]
     eqn_used_g1_q1p = uinp.sheep['i_eqn_used_g1_q1p7'][:, a_g1_p7_p]
     eqn_used_g2_q1p = uinp.sheep['i_eqn_used_g2_q1p7'][:, a_g2_p7_p]
     eqn_used_g3_q1p = uinp.sheep['i_eqn_used_g3_q1p7'][:, a_g3_p7_p]
+
     ##convert foo, hf and dmd for each feed period to each sim period
     paststd_foo_pa1e1b1j0wzida0e0b0xyg0 = np.take_along_axis(paststd_foo_p6a1e1b1j0wzida0e0b0xyg0, a_p6_pa1e1b1nwzida0e0b0xyg, 0)
     paststd_foo_pa1e1b1j0wzida0e0b0xyg1 = np.take_along_axis(paststd_foo_p6a1e1b1j0wzida0e0b0xyg1, a_p6_pa1e1b1nwzida0e0b0xyg, 0)
@@ -1057,6 +1073,7 @@ def generator(params,r_vals,ev,plots = False):
     paststd_hf_pa1e1b1j0wzida0e0b0xyg2 = np.take_along_axis(paststd_hf_p6a1e1b1j0wzida0e0b0xyg2, a_p6_pa1e1b1nwzida0e0b0xyg, 0)
     paststd_hf_pa1e1b1j0wzida0e0b0xyg3 = np.take_along_axis(paststd_hf_p6a1e1b1j0wzida0e0b0xyg3, a_p6_pa1e1b1nwzida0e0b0xyg, 0)
     paststd_dmd_pa1e1b1j0wzida0e0b0xyg = np.take_along_axis(paststd_dmd_p6a1e1b1j0wzida0e0b0xyg, a_p6_pa1e1b1nwzida0e0b0xyg, 0)
+
     ##mating
     sire_propn_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(sire_propn_oa1e1b1nwzida0e0b0xyg1,a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1,0) #np.take_along uses the number in the second array as the index for the first array. and returns a same shaped array
     sire_include_idx = np.arange(len(mask_sire_inc_g0))[mask_sire_inc_g0]
@@ -1068,11 +1085,16 @@ def generator(params,r_vals,ev,plots = False):
     temp_ave_pa1e1b1nwzida0e0b0xyg= temp_ave_m4a1e1b1nwzida0e0b0xyg[a_m4_p]
     temp_max_pa1e1b1nwzida0e0b0xyg= temp_max_m4a1e1b1nwzida0e0b0xyg[a_m4_p]
     temp_min_pa1e1b1nwzida0e0b0xyg= temp_min_m4a1e1b1nwzida0e0b0xyg[a_m4_p]
+
     ##feed variation
     fvp_type_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(fvp_type_fa1e1b1nwzida0e0b0xyg1,a_fvp_pa1e1b1nwzida0e0b0xyg1,0)
     fvp_type_pa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(fvp_type_fa1e1b1nwzida0e0b0xyg3,a_fvp_pa1e1b1nwzida0e0b0xyg3,0)
     fvp_date_start_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(fvp_date_start_fa1e1b1nwzida0e0b0xyg1,a_fvp_pa1e1b1nwzida0e0b0xyg1,0)
     fvp_date_start_pa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(fvp_date_start_fa1e1b1nwzida0e0b0xyg3,a_fvp_pa1e1b1nwzida0e0b0xyg3,0)
+
+    ##propn of dams mated
+    prop_dams_mated_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_oa1e1b1nwzida0e0b0xyg1,a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #increments at prejoining
+
     ##break of season
     date_prev_seasonstart_pa1e1b1nwzida0e0b0xyg=np.take_along_axis(seasonstart_ya1e1b1nwzida0e0b0xyg,a_seasonstart_pa1e1b1nwzida0e0b0xyg,0)
 
@@ -3246,11 +3268,12 @@ def generator(params,r_vals,ev,plots = False):
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                 numbers_end_sire, pp_numbers_end_sire = sfun.f_period_end_nums(numbers_start_sire, mortality_sire, numbers_min_b1nwzida0e0b0xyg, group=0)
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                numbers_end_dams, pp_numbers_end_dams = sfun.f_period_end_nums(numbers_start_dams, mortality_dams, numbers_min_b1nwzida0e0b0xyg, mortality_yatf=mortality_birth_yatf, nfoet_b1=nfoet_b1nwzida0e0b0xyg,
-                                                     nyatf_b1=nyatf_b1nwzida0e0b0xyg, group=1, conception=conception_dams, scan= scan_pa1e1b1nwzida0e0b0xyg1[p],
-                                                     gbal = gbal_pa1e1b1nwzida0e0b0xyg1[p], gender_propn_x=gender_propn_xyg, period_is_mating = period_is_mating_pa1e1b1nwzida0e0b0xyg1[p],
-                                                     period_is_matingend=period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p],
-                                                     period_is_birth = period_is_birth_pa1e1b1nwzida0e0b0xyg1[p], period_is_scan=period_is_scan_pa1e1b1nwzida0e0b0xyg1[p])
+                numbers_end_dams, pp_numbers_end_dams = sfun.f_period_end_nums(numbers_start_dams, mortality_dams, numbers_min_b1nwzida0e0b0xyg, mortality_yatf=mortality_birth_yatf,
+                             nfoet_b1=nfoet_b1nwzida0e0b0xyg, nyatf_b1=nyatf_b1nwzida0e0b0xyg, group=1, conception=conception_dams, scan= scan_pa1e1b1nwzida0e0b0xyg1[p],
+                             gbal = gbal_pa1e1b1nwzida0e0b0xyg1[p], gender_propn_x=gender_propn_xyg, period_is_mating = period_is_mating_pa1e1b1nwzida0e0b0xyg1[p],
+                             period_is_matingend=period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p], period_is_birth = period_is_birth_pa1e1b1nwzida0e0b0xyg1[p],
+                             period_is_scan=period_is_scan_pa1e1b1nwzida0e0b0xyg1[p], propn_dams_mated=prop_dams_mated_pa1e1b1nwzida0e0b0xyg1[p])
+
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                 numbers_end_yatf, pp_numbers_end_yatf = sfun.f_period_end_nums(numbers_start_yatf, mortality_yatf, numbers_min_b1nwzida0e0b0xyg, group=2)
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
@@ -3522,6 +3545,7 @@ def generator(params,r_vals,ev,plots = False):
                 ###store output variables for the post processing
                 o_numbers_start_pdams[p] = numbers_start_dams
                 o_numbers_end_pdams[p] = pp_numbers_end_dams
+
                 ###store the start numbers at prejoining - used to scale numbers when back dating from mating to prejoining
                 if np.any(period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p]):
                     t_numbers_start_prejoin = fun.f_update(t_numbers_start_prejoin, numbers_start_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p])
@@ -6705,6 +6729,24 @@ def generator(params,r_vals,ev,plots = False):
         with open('pkl/pkl_rev_trait{0}.pkl'.format(rev_number),"wb") as f:
             pkl.dump(rev_trait_values, f)
 
+    ################
+    # Bound params #
+    ################
+    '''store params used in BoundsPyomo.py'''
+    ###shapes
+    len_v1 = len(keys_v1)
+    len_v3 = len(keys_v3)
+
+    ##proportion of dams mated. inf means the model can optimise the proportion becasue inf is used to skip the constraint.
+    arrays = [keys_v1, keys_g1]
+    index_vg1 = fun.cartesian_product_simple_transpose(arrays)
+    tup_vg1 = tuple(map(tuple,index_vg1))
+    prop_dams_mated_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] becasue e doesnt impact mating propn
+    prop_dams_mated_vg1 = prop_dams_mated_va1e1b1nwzida0e0b0xyg1.ravel()
+    params['p_prop_dams_mated'] = dict(zip(tup_vg1, prop_dams_mated_vg1))
+
+
+
     ###############
     # report      #
     ###############
@@ -6788,9 +6830,6 @@ def generator(params,r_vals,ev,plots = False):
     r_vals['offs_keys_k3k5p6ftvnwziaxyg3'] = [keys_k3, keys_k5, keys_p6, keys_f, keys_t3, keys_v3, keys_n3,
                                                   keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
 
-    ###shapes
-    len_v1 = len(keys_v1)
-    len_v3 = len(keys_v3)
     ####std
     zg0_shape = len_z, len_g0
     k2tva1nwziyg1_shape = len_k2, len_t1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1

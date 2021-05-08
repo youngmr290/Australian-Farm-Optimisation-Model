@@ -1570,7 +1570,7 @@ def f_period_start_nums(numbers, prejoin_tup, season_tup, period_is_startseason,
 
 def f_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfoet_b1 = 0, nyatf_b1 = 0, group=None
                       , conception = 0, scan=0, gbal=0, gender_propn_x=1, period_is_mating = False
-                      , period_is_matingend = False, period_is_birth=False, period_is_scan=False):
+                      , period_is_matingend = False, period_is_birth=False, period_is_scan=False, propn_dams_mated=1):
     '''
     This adjusts numbers for things like conception and mortality that happen during a given period
     '''
@@ -1590,13 +1590,14 @@ def f_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfoe
             temporary  = np.copy(numbers)
             temporary[:, 0:1, 1:2, ...] += numbers[:, 0:1, 0:1, ...]   # add the number remaining unmated tot he dry slice in e1[0]
             temporary[:, :, 0:1, ...] = 0 #set the NM slice to 0 (because they have just been added to drys)
-            ##handle the proportion mated #todo passed into the function
-            mated_propn = np.maximum(1, fun.f_sa(1, sen.sav['bnd_propn_yearlings_mated_g1'], 5)) #maximum value of 1 because default is inf, otherwise propn to be mated.
+            ##handle the proportion mated
+            mated_propn = np.minimum(1, propn_dams_mated) #maximum value of 1 because default is inf, otherwise propn to be mated.
             ### the number in the NM slice e1[0] is a proportion of the total numbers
             ### need a minimum number otherwise get nan later. Want a small number relative to mortality (after allowing for multiple slices getting the small number)
-            temporary[:, 0:1, 0:1, ...] = np.minimum(0.00001, np.sum(temporary, sinp.stock['i_b1_pos'], keepdims=True) * (1 - mated_propn))
-            ### the numbers in the slices other than NM get scaled by the proportion mated
-            temporary[:, :, 1:, ...] = np.minimum(0.00001, temporary[:, :, 1:, ...] * mated_propn)
+            temporary[:, 0:1, 0:1, ...] = np.maximum(0.00001, np.sum(temporary, axis=(sinp.stock['i_e1_pos'], sinp.stock['i_b1_pos']),
+                                                                     keepdims=True) * (1 - mated_propn))
+            ### the numbers in the other mated slices other than NM get scaled by the proportion mated
+            temporary[:, :, 1:, ...] = np.maximum(0, temporary[:, :, 1:, ...] * mated_propn)
             ###update numbers with the temporary calculations if it is the end of mating
             numbers = fun.f_update(numbers, temporary, period_is_matingend)
         ###d) birth (account for birth status and if drys are retained)
