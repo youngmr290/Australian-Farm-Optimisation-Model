@@ -129,11 +129,16 @@ def boundarypyomo_local(params):
         ##bound to fix the proportion of dams being mated - typically used to exclude yearlings
         if np.any(sen.sav['bnd_propn_dams_mated_og1']!='-'):
             ###build param - inf values are skipped in the constraint building so inf means the model can optimise the propn mated
+            try:
+                model.del_component(model.p_prop_dams_mated_index)
+                model.del_component(model.p_prop_dams_mated)
+            except AttributeError:
+                pass
             model.p_prop_dams_mated = pe.Param(model.s_dvp_dams, model.s_groups_dams, initialize=params['stock']['p_prop_dams_mated'])
             ###constraint
             try:
-                model.del_component(model.con_propn_dams_mated)
                 model.del_component(model.con_propn_dams_mated_index)
+                model.del_component(model.con_propn_dams_mated)
             except AttributeError:
                 pass
             def f_propn_dams_mated(model, v, g1):
