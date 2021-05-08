@@ -573,7 +573,6 @@ def f_report(processor, trials):
             numbers_dams = pd.concat([numbers_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_numbers_dams = stacked_numbers_dams.append(numbers_dams)
 
-        #todo not right - needs to return a 0 when dvp and period not together.
         if report_run.loc['run_numbers_dams_p', 'Run']:
             type = 'stock'
             prod = 'on_hand_k2tvpa1nwziyg1'
