@@ -53,7 +53,7 @@ def f_report(processor, trials):
     # print('Start processor: {0}'.format(processor))
     # print('Start trials: {0}'.format(trials))
     ##create empty df to stack each trial results into
-    stacked_infeasible = pd.DataFrame()  # name of any infeasible trials
+    stacked_infeasible = pd.DataFrame().rename_axis('Trial')  # name of any infeasible trials
     stacked_summary = pd.DataFrame()  # 1 line summary of each trial
     stacked_areasum = pd.DataFrame()  # area summary
     stacked_pnl = pd.DataFrame()  # profit and loss statement
@@ -118,8 +118,10 @@ def f_report(processor, trials):
         lp_vars,r_vals = rep.load_pkl(trial_name)
 
         ##handle infeasible trials
+
+
         if os.path.isfile('Output/infeasible/{0}.txt'.format(trial_name)):
-            stacked_infeasible = stacked_infeasible.append(pd.Series(trial_name), ignore_index=True)
+            stacked_infeasible = stacked_infeasible.append(pd.DataFrame([trial_name]).rename_axis('Trial'))
             lp_vars = fun.f_clean_dict(lp_vars) #if a trial is infeasible or doesnt solve all the lp values are None. This function converts them to 0 so the report can still run.
 
         ##run report functions
