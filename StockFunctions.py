@@ -670,7 +670,7 @@ def f_potential_intake_cs(ci, cl, srw, relsize_start, rc_start, temp_lc_dams, te
                           , rc_birth_start=1, pi_age_y=0, lb_start=0, mp2=0, piyf=1, period_between_birthwean=1, sam_pi=1):
     ##Condition factor on PI
     picf= np.minimum(1, rc_start * (ci[20, ...] - rc_start) / (ci[20, ...] - 1))
-    ##Lactation adjustment (BC at parturition) - dam only because lb start = 0 for everything except lb
+    ##Lactation adjustment (RC at parturition) - only active for dams
     la = 1 + ci[15, ...] * (rc_birth_start - 1)
     ##Lactation factor on PI - dam only
     pilf = 1 + pi_age_y * la * lb_start
@@ -954,7 +954,8 @@ def f_fibre(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_m2g,
     mew_min_g = mew_min_g * sfw_ltwadj_g
     sfd_a0e0b0xyg = sfd_a0e0b0xyg + sfd_ltwadj_g
     ##adjust wge by sam_pi so the intake sensitivity doesn't alter the wool growth outcome for the genotype
-    ###this is required for the GEPEP analysis that is calibrating the intake and the fleece weight
+    ###this scaling could be applied to sfw but is applied here so that pi can be altered for a single age group
+    ###which is required for the GEPEP analysis that is calibrating the adult intake and the fleece weight
     wge_a0e0b0xyg = wge_a0e0b0xyg / sam_pi
     ##ME available for wool growth
     mew_xs_g = np.maximum(mew_min_g * relsize_start_g, mei_g - (mec_g1 * gest_propn_g1 + mel_g1 * lact_propn_g1))

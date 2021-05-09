@@ -3282,10 +3282,14 @@ def generator(params,r_vals,ev,plots = False):
             ##################################################
             #post calculation sensitivity for intake & energy#
             ##################################################
-            ##These sensitivity alter potential intake and me intake required without altering the liveweight profile
-            ##or the production levels (cfw, fd, reproduction, mortality). Production may change if altered in loop
-            ##so post loop altering requires thinking through how the production level of the genotype was calibrated.
-            ##This needs to be before 'end values' so d_cfw can be changed
+            ##These sensitivities alter potential intake and me intake required without altering the liveweight profile.
+            ##They have the same effect as using the within function sa and then altering the feed supply to generate the same LW profile
+            ## they just require less work to test the effect of not altering LW profile (as per old MIDAS)
+            ##To do this requires altering d_cfw and d_fl. These would both change in f_fibre if using the within function sa
+            ##Adjustments must be made for pi_post because wge is scaled by sam_pi in f_fibre (rather than scaling sfw in the main code)
+            ##Adjustments are required for mr_post and kg_post because these both reduce the mei required in this section. If cfw and fl
+            ## were not scaled it would imply an increased wool growth efficiency (and this would be inconsistent with the in function sa)
+
             ###sire
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                 ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on z2f - the sensitivity is only for adults
@@ -3336,12 +3340,13 @@ def generator(params,r_vals,ev,plots = False):
                 sap_kg = fun.f_update(0, sen.sap['kg_post'], z2f_yatf == 1)   #efficiency of gain (kg)
                 #### alter potential intake
                 pi_yatf = fun.f_sa(pi_yatf, sam_pi)
-                #### alter mei
+                #### alter mei (only calculate impact on mei_solid because that passes to the mei parameter in the matrix)
+                #### this is an error in this application because all the change in energy is related to pasture and none to milk)
                 mei_solid_yatf = mei_solid_yatf + (mem_yatf * sap_mr
                                                    - surplus_energy_yatf * sap_kg / (1 + sap_kg))
-                ####alter wool production as energy params change
-                scalar_mr = (1 + sap_mr * mem_yatf / mei_solid_yatf)
-                scalar_kg = 1 - sap_kg / (1 + sap_kg) * surplus_energy_yatf / mei_solid_yatf
+                ####alter wool production as energy params change (use mei rather than mei_solid so it is change as a proportion of total mei)
+                scalar_mr = (1 + sap_mr * mem_yatf / mei_yatf)
+                scalar_kg = 1 - sap_kg / (1 + sap_kg) * surplus_energy_yatf / mei_yatf
                 d_cfw_yatf = d_cfw_yatf / sam_pi
                 d_fl_yatf = d_fl_yatf / sam_pi
                 d_cfw_yatf = d_cfw_yatf / scalar_mr
