@@ -3279,6 +3279,97 @@ def generator(params,r_vals,ev,plots = False):
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
                 numbers_end_offs, pp_numbers_end_offs = sfun.f_period_end_nums(numbers_start_offs, mortality_offs, numbers_min_b1nwzida0e0b0xyg, group=3)
 
+            ##################################################
+            #post calculation sensitivity for intake & energy#
+            ##################################################
+            ##These sensitivity alter potential intake and me intake required without altering the liveweight profile
+            ##or the production levels (cfw, fd, reproduction, mortality). Production may change if altered in loop
+            ##so post loop altering requires thinking through how the production level of the genotype was calibrated.
+            ##This needs to be before 'end values' so d_cfw can be changed
+            ###sire
+            if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
+                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on z2f - the sensitivity is only for adults
+                sam_pi = fun.f_update(1, sen.sam['pi_post'], z2f_sire == 1)   #potential intake
+                sap_mr = fun.f_update(0, sen.sap['mr_post'], z2f_sire == 1)   #maintenance energy (MEm - doesn't include gestation and lactation requirements)
+                sap_kg = fun.f_update(0, sen.sap['kg_post'], z2f_sire == 1)   #efficiency of gain (kg)
+                #### alter potential intake
+                pi_sire = fun.f_sa(pi_sire, sam_pi)
+                #### alter mei
+                mei_solid_sire = mei_solid_sire + (mem_sire * sap_mr
+                                                   - surplus_energy_sire * sap_kg / (1 + sap_kg))
+                ####alter wool production as energy params change
+                scalar_mr = (1 + sap_mr * mem_sire / mei_solid_sire)
+                scalar_kg = 1 - sap_kg / (1 + sap_kg) * surplus_energy_sire / mei_solid_sire
+                d_cfw_sire = d_cfw_sire / sam_pi
+                d_fl_sire = d_fl_sire / sam_pi
+                d_cfw_sire = d_cfw_sire / scalar_mr
+                d_fl_sire = d_fl_sire / scalar_mr
+                d_cfw_sire = d_cfw_sire / scalar_kg
+                d_fl_sire = d_fl_sire / scalar_kg
+
+            ###dams
+            if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
+                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on z2f - the sensitivity is only for adults
+                sam_pi = fun.f_update(1, sen.sam['pi_post'], z2f_dams == 1)   #potential intake
+                sap_mr = fun.f_update(0, sen.sap['mr_post'], z2f_dams == 1)   #maintenance energy (MEm - doesn't include gestation and lactation requirements)
+                sap_kg = fun.f_update(0, sen.sap['kg_post'], z2f_dams == 1)   #efficiency of gain (kg)
+                #### alter potential intake
+                pi_dams = fun.f_sa(pi_dams, sam_pi)
+                #### alter mei
+                mei_solid_dams = mei_solid_dams + (mem_dams * sap_mr
+                                                   - surplus_energy_dams * sap_kg / (1 + sap_kg))
+                ####alter wool production as energy params change
+                scalar_mr = (1 + sap_mr * mem_dams / mei_solid_dams)
+                scalar_kg = 1 - sap_kg / (1 + sap_kg) * surplus_energy_dams / mei_solid_dams
+                d_cfw_dams = d_cfw_dams / sam_pi
+                d_fl_dams = d_fl_dams / sam_pi
+                d_cfw_dams = d_cfw_dams / scalar_mr
+                d_fl_dams = d_fl_dams / scalar_mr
+                d_cfw_dams = d_cfw_dams / scalar_kg
+                d_fl_dams = d_fl_dams / scalar_kg
+
+            ###yatf
+            if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
+                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on z2f - the sensitivity is only for adults
+                sam_pi = fun.f_update(1, sen.sam['pi_post'], z2f_yatf == 1)   #potential intake
+                sap_mr = fun.f_update(0, sen.sap['mr_post'], z2f_yatf == 1)   #maintenance energy (MEm - doesn't include gestation and lactation requirements)
+                sap_kg = fun.f_update(0, sen.sap['kg_post'], z2f_yatf == 1)   #efficiency of gain (kg)
+                #### alter potential intake
+                pi_yatf = fun.f_sa(pi_yatf, sam_pi)
+                #### alter mei
+                mei_solid_yatf = mei_solid_yatf + (mem_yatf * sap_mr
+                                                   - surplus_energy_yatf * sap_kg / (1 + sap_kg))
+                ####alter wool production as energy params change
+                scalar_mr = (1 + sap_mr * mem_yatf / mei_solid_yatf)
+                scalar_kg = 1 - sap_kg / (1 + sap_kg) * surplus_energy_yatf / mei_solid_yatf
+                d_cfw_yatf = d_cfw_yatf / sam_pi
+                d_fl_yatf = d_fl_yatf / sam_pi
+                d_cfw_yatf = d_cfw_yatf / scalar_mr
+                d_fl_yatf = d_fl_yatf / scalar_mr
+                d_cfw_yatf = d_cfw_yatf / scalar_kg
+                d_fl_yatf = d_fl_yatf / scalar_kg
+
+            ###offs
+            if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
+                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on z2f - the sensitivity is only for adults
+                sam_pi = fun.f_update(1, sen.sam['pi_post'], z2f_offs == 1)   #potential intake
+                sap_mr = fun.f_update(0, sen.sap['mr_post'], z2f_offs == 1)   #maintenance energy (MEm - doesn't include gestation and lactation requirements)
+                sap_kg = fun.f_update(0, sen.sap['kg_post'], z2f_offs == 1)   #efficiency of gain (kg)
+                #### alter potential intake
+                pi_offs = fun.f_sa(pi_offs, sam_pi)
+                #### alter mei
+                mei_solid_offs = mei_solid_offs + (mem_offs * sap_mr
+                                                   - surplus_energy_offs * sap_kg / (1 + sap_kg))
+                ####alter wool production as energy params change
+                scalar_mr = (1 + sap_mr * mem_offs / mei_solid_offs)
+                scalar_kg = 1 - sap_kg / (1 + sap_kg) * surplus_energy_offs / mei_solid_offs
+                d_cfw_offs = d_cfw_offs / sam_pi
+                d_fl_offs = d_fl_offs / sam_pi
+                d_cfw_offs = d_cfw_offs / scalar_mr
+                d_fl_offs = d_fl_offs / scalar_mr
+                d_cfw_offs = d_cfw_offs / scalar_kg
+                d_fl_offs = d_fl_offs / scalar_kg
+
             ##############
             ##end values #
             ##############
@@ -3420,61 +3511,6 @@ def generator(params,r_vals,ev,plots = False):
                 sl_offs = (fl_offs - fl_shear_yg0) / cw_offs[15, ...]
                 ##Staple strength if shorn(end)
                 ss_offs = fd_min_offs ** 2 / fd_offs ** 2 * cw_offs[16, ...]
-
-            ###########################################
-            #post calculation sensitivity for intake & energy#
-            ###########################################
-            ##These sensitivity alter potential intake and me intake required without altering the liveweight profile
-            ##or the production levels (cfw, fd, reproduction, mortality). Production may change if altered in loop
-            ##so post loop altering requires thinking through how the production level of the genotype was calibrated.
-            ###sire
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on z2f - the sensitivity is only for adults
-                sam_pi = fun.f_update(1, sen.sam['pi_post'], z2f_sire == 1)   #potential intake
-                sap_mr = fun.f_update(0, sen.sap['mr_post'], z2f_sire == 1)   #maintenance energy (MEm - doesn't include gestation and lactation requirements)
-                sap_kg = fun.f_update(0, sen.sap['kg_post'], z2f_sire == 1)   #efficiency of gain (kg)
-                #### alter potential intake
-                pi_sire = fun.f_sa(pi_sire, sam_pi)
-                #### alter mei
-                mei_solid_sire = mei_solid_sire + (mem_sire * sap_mr
-                                                   - surplus_energy_sire * sap_kg / (1 + sap_kg))
-
-            ###dams
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on z2f - the sensitivity is only for adults
-                sam_pi = fun.f_update(1, sen.sam['pi_post'], z2f_dams == 1)   #potential intake
-                sap_mr = fun.f_update(0, sen.sap['mr_post'], z2f_dams == 1)   #maintenance energy (MEm - doesn't include gestation and lactation requirements)
-                sap_kg = fun.f_update(0, sen.sap['kg_post'], z2f_dams == 1)   #efficiency of gain (kg)
-                #### alter potential intake
-                pi_dams = fun.f_sa(pi_dams, sam_pi)
-                #### alter mei
-                mei_solid_dams = mei_solid_dams + (mem_dams * sap_mr
-                                                   - surplus_energy_dams * sap_kg / (1 + sap_kg))
-
-            ###yatf
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on z2f - the sensitivity is only for adults
-                sam_pi = fun.f_update(1, sen.sam['pi_post'], z2f_yatf == 1)   #potential intake
-                sap_mr = fun.f_update(0, sen.sap['mr_post'], z2f_yatf == 1)   #maintenance energy (MEm - doesn't include gestation and lactation requirements)
-                sap_kg = fun.f_update(0, sen.sap['kg_post'], z2f_yatf == 1)   #efficiency of gain (kg)
-                #### alter potential intake
-                pi_yatf = fun.f_sa(pi_yatf, sam_pi)
-                #### alter mei
-                mei_solid_yatf = mei_solid_yatf + (mem_yatf * sap_mr
-                                                   - surplus_energy_yatf * sap_kg / (1 + sap_kg))
-
-            ###offs
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                ###sensitivity on kg (efficiency of gain), MR (maintenance req) and PI (Potential intake) based on z2f - the sensitivity is only for adults
-                sam_pi = fun.f_update(1, sen.sam['pi_post'], z2f_offs == 1)   #potential intake
-                sap_mr = fun.f_update(0, sen.sap['mr_post'], z2f_offs == 1)   #maintenance energy (MEm - doesn't include gestation and lactation requirements)
-                sap_kg = fun.f_update(0, sen.sap['kg_post'], z2f_offs == 1)   #efficiency of gain (kg)
-                #### alter potential intake
-                pi_offs = fun.f_sa(pi_offs, sam_pi)
-                #### alter mei
-                mei_solid_offs = mei_solid_offs + (mem_offs * sap_mr
-                                                   - surplus_energy_offs * sap_kg / (1 + sap_kg))
-
 
             ######################################
             #store postprocessing and report vars#
