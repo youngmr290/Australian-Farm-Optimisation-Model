@@ -3345,8 +3345,8 @@ def generator(params,r_vals,ev,plots = False):
                 mei_solid_yatf = mei_solid_yatf + (mem_yatf * sap_mr
                                                    - surplus_energy_yatf * sap_kg / (1 + sap_kg))
                 ####alter wool production as energy params change (use mei rather than mei_solid so it is change as a proportion of total mei)
-                scalar_mr = (1 + sap_mr * mem_yatf / mei_yatf)
-                scalar_kg = 1 - sap_kg / (1 + sap_kg) * surplus_energy_yatf / mei_yatf
+                scalar_mr = 1 + sap_mr * fun.f_divide(mem_yatf, mei_yatf)
+                scalar_kg = 1 - sap_kg / (1 + sap_kg) * fun.f_divide(surplus_energy_yatf, mei_yatf)
                 d_cfw_yatf = d_cfw_yatf / sam_pi
                 d_fl_yatf = d_fl_yatf / sam_pi
                 d_cfw_yatf = d_cfw_yatf / scalar_mr
