@@ -883,7 +883,7 @@ def f_dse(lp_vars, r_vals, method, per_ha, summary=False):
     dse_offs = fun.f_produce_df(dse_offs.ravel(), rows=offs_key, columns=[['Offs DSE']])
 
     if summary:
-        return (dse_sire.iloc[0, 0] + dse_dams.iloc[0, 0] + dse_offs.iloc[0, 0]).round(1)  #sum SR for all sheep groups in FP0 (to return winter sr)
+        return (dse_sire.iloc[0, 0] + dse_dams.iloc[0, 0] + dse_offs.iloc[0, 0]).round(2)  #sum SR for all sheep groups in FP0 (to return winter sr)
     else:
         return dse_sire, dse_dams, dse_offs
 
