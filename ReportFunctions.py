@@ -270,7 +270,7 @@ def f_price_summary(lp_vars, r_vals, option, grid, weight, fs):
 
 def f_summary(lp_vars, r_vals, trial):
     '''Returns a simple 1 row summary of the trial (season results are averaged)'''
-    summary_df = pd.DataFrame(index=[trial], columns=['obj', 'profit', 'SR', 'Pas %'])
+    summary_df = pd.DataFrame(index=[trial], columns=['obj', 'profit', 'SR', 'Pas %', 'Sup'])
     ##obj
     summary_df.loc[trial, 'obj'] = f_profit(lp_vars, r_vals, option=0)
     ##profit - no minroe and asset
@@ -279,6 +279,8 @@ def f_summary(lp_vars, r_vals, trial):
     summary_df.loc[trial, 'SR'] = f_dse(lp_vars, r_vals, method=0, per_ha=True, summary=True)
     ##pasture %
     summary_df.loc[trial, 'Pas %'] = f_area_summary(lp_vars, r_vals, option=5)
+    ##supplement
+    summary_df.loc[trial, 'Sup'] = f_grain_sup_summary(lp_vars,r_vals,option=3)
     return summary_df
 
 
@@ -404,6 +406,8 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
     :param option: int:
             0: return dict with various elements
             1: return total supplement fed in each feed period
+            2: return total of each grain supplement fed in each feed period
+            3: return total sup fed
 
     '''
     ##create dict to store grain variables
@@ -428,6 +432,8 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
         return grain_fed_zp6.to_frame()
     if option == 2:
         return grain_fed_zkp6.unstack(0)
+    if option == 3:
+        return grain_fed_zkgvp6.sum().round(1)
     ##total grain produced by crop enterprise
     total_grain_produced_zkg = grain_sold_zkg + grain_fed_zkg - grain_purchased_zkg  # total grain produced by crop enterprise
     grains_sale_price_zkg_c = grains_sale_price_kg_c.unstack().reindex(total_grain_produced_zkg.unstack().index, axis=0,level=1).stack()
