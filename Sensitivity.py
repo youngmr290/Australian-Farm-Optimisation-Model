@@ -150,6 +150,7 @@ sav['nut_spread_n1'] = np.full(sinp.structuralsa_inp['i_nut_spread_n1'].shape, '
 sav['nut_spread_n3'] = np.full(sinp.structuralsa_inp['i_nut_spread_n3'].shape, '-', dtype=object)      #nut spread offs
 sav['n_fs_dams'] = '-'      #nut options dams
 sav['n_fs_offs'] = '-'      #nut options offs
+sav['n_initial_lw_dams'] = '-'      #number of initial lws dams - note with the current code this can only be 2 or 3
 sav['adjp_lw_initial_w1'] = np.full(sinp.structuralsa_inp['i_adjp_lw_initial_w1'].shape, '-', dtype=object)      #initial lw adjustment dams
 sav['mask_fvp_dams'] = np.full(sinp.structuralsa_inp['i_fvp_mask_dams'].shape, '-', dtype=object)      #SA to mask changeable fvps.
 sav['fvp_is_dvp_dams'] = np.full(sinp.structuralsa_inp['i_dvp_mask_f1'].shape, '-', dtype=object)      #SA to control if changeable fvp is a dvp.
