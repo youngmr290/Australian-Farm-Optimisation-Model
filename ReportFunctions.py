@@ -342,7 +342,7 @@ def f_area_summary(lp_vars, r_vals, option):
         return croppas_area_l.round(0)
 
     if option==5:
-        return (fun.f_divide(pasture_area_l.sum(), rot_area_zr_l.to_numpy().sum()) * 100).round(0)
+        return (fun.f_divide(pasture_area_l.sum(), rot_area_zr_l.to_numpy().sum()) * 100).round(1)
 
     ##return all if option==0
     if option == 0:
