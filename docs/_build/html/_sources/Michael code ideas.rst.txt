@@ -1,0 +1,7 @@
+Michael code ideas module
+=========================
+
+.. automodule:: Michael code ideas
+   :members:
+   :undoc-members:
+   :show-inheritance:
