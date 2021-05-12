@@ -14,8 +14,8 @@
     <script src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="General" href="model_doc.html" />
-    <link rel="prev" title="Output &amp; Reporting" href="reporting.html" />
+    <link rel="next" title="Model Logic" href="model_doc.html" />
+    <link rel="prev" title="ReportFunctions module" href="ReportFunctions.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -36,10 +36,15 @@
 <h1>Debugging<a class="headerlink" href="#debugging" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="possible-model-errors">
 <h2>Possible model errors<a class="headerlink" href="#possible-model-errors" title="Permalink to this headline">¶</a></h2>
-<p>Outline the problem and then any symptoms
-You are altering the original inputs because you have operated on a view not a copy.
-Run one trial and it works fine, run multiple trials that should be the same and they are not
-The model is inconsistently deciding to run pyomo ie the parameters are different but they should be the same
+<ul class="simple">
+<li><p>You are altering the original inputs because you have operated on a view not a copy.</p></li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li><p>Symptoms: Run one trial and it works fine, run multiple trials that should be the same and they are not</p></li>
+</ul>
+</div></blockquote>
+<p>The model is inconsistently deciding to run pyomo ie the parameters are different but they should be the same
 Model is not selecting any livestock.
 Symptoms: Reducing the number of nutrition options causes no sheep or changing the feedsupply causes no sheep.
 Solution: This problem is likely caused by dams not being able to provide enough prog to replace themselves. This is because the weight distributions don’t align and prog will be getting lost (eg initial dam weights are not similar enough to the prog weights so the prog are not able to provide dams). To fix this you can alter the initial lw of the dams (property inputs: i_adjp_lw_initial_w1).</p>
@@ -127,7 +132,7 @@ In my case the upper bound on dams numbers constraint was throwing an error. To 
 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="usage.html">Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="model_doc.html">General</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_doc.html">Model Logic</a></li>
 </ul>
 
 <div class="relations">
@@ -135,8 +140,8 @@ In my case the upper bound on dams numbers constraint was throwing an error. To 
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
   <li><a href="usage.html">Usage</a><ul>
-      <li>Previous: <a href="reporting.html" title="previous chapter">Output &amp; Reporting</a></li>
-      <li>Next: <a href="model_doc.html" title="next chapter">General</a></li>
+      <li>Previous: <a href="ReportFunctions.html" title="previous chapter">ReportFunctions module</a></li>
+      <li>Next: <a href="model_doc.html" title="next chapter">Model Logic</a></li>
   </ul></li>
   </ul></li>
 </ul>
