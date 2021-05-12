@@ -14,8 +14,6 @@
     <script src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="PlotViewer module" href="PlotViewer.html" />
-    <link rel="prev" title="PastureTest module" href="PastureTest.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -32,8 +30,64 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="periods-module">
-<h1>Periods module<a class="headerlink" href="#periods-module" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-Periods">
+<span id="periods-module"></span><h1>Periods module<a class="headerlink" href="#module-Periods" title="Permalink to this headline">¶</a></h1>
+<p>Created on Tue Nov 12 15:25:08 2019</p>
+<dl>
+<dt>module: builds a df with period definitions</dt><dd><p>this is one of the first modules calculated and therefore should only import input modules</p>
+<p>note: there must be a better way to do this!!</p>
+</dd>
+</dl>
+<p>Version Control:
+Version     Date        Person  Change</p>
+<blockquote>
+<div><p>1.1      25Dec19     John    altered the import statements to import as inp. &amp; ci.</p>
+</div></blockquote>
+<p>Known problems:
+Fixed   Date    ID by   Problem</p>
+<p>&#64;author: young</p>
+<dl class="py function">
+<dt id="Periods.cashflow_periods">
+<code class="sig-prename descclassname"><span class="pre">Periods.</span></code><code class="sig-name descname"><span class="pre">cashflow_periods</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Periods.cashflow_periods" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="Periods.f_feed_periods">
+<code class="sig-prename descclassname"><span class="pre">Periods.</span></code><code class="sig-name descname"><span class="pre">f_feed_periods</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">option</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Periods.f_feed_periods" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>option</strong> – int:
+0 = return feed period date
+1 = return feed period length (days)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Periods.p_date2_df">
+<code class="sig-prename descclassname"><span class="pre">Periods.</span></code><code class="sig-name descname"><span class="pre">p_date2_df</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Periods.p_date2_df" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="Periods.p_dates_df">
+<code class="sig-prename descclassname"><span class="pre">Periods.</span></code><code class="sig-name descname"><span class="pre">p_dates_df</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Periods.p_dates_df" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="Periods.period_dates">
+<code class="sig-prename descclassname"><span class="pre">Periods.</span></code><code class="sig-name descname"><span class="pre">period_dates</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Periods.period_dates" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="Periods.period_end_date">
+<code class="sig-prename descclassname"><span class="pre">Periods.</span></code><code class="sig-name descname"><span class="pre">period_end_date</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Periods.period_end_date" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="Periods.wet_seeding_start_date">
+<code class="sig-prename descclassname"><span class="pre">Periods.</span></code><code class="sig-name descname"><span class="pre">wet_seeding_start_date</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Periods.wet_seeding_start_date" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </div>
 
 
@@ -54,70 +108,15 @@
 
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">AFO</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="BoundsPyomo.html">BoundsPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="CorePyomo.html">CorePyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="CreateModel.html">CreateModel module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Crop.html">Crop module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="CropPyomo.html">CropPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Exceptions.html">Exceptions module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Exp.html">Exp module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Exp1.html">Exp1 module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="FeedSupplyGenerator.html">FeedSupplyGenerator module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="FeedTest.html">FeedTest module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Finance.html">Finance module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="FinancePyomo.html">FinancePyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Functions.html">Functions module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="InputTest.html">InputTest module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Labour.html">Labour module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="LabourCrop.html">LabourCrop module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="LabourCropPyomo.html">LabourCropPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="LabourFixed.html">LabourFixed module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="LabourFixedPyomo.html">LabourFixedPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="LabourPyomo.html">LabourPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mach.html">Mach module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="MachPyomo.html">MachPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Michael%20code%20ideas.html">Michael code ideas module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Pasture.html">Pasture module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="PastureFunctions.html">PastureFunctions module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="PasturePyomo.html">PasturePyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="PastureTest.html">PastureTest module</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Periods module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="PlotViewer.html">PlotViewer module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="PropertyInputs.html">PropertyInputs module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ReferenceModel.html">ReferenceModel module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ReportControl.html">ReportControl module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ReportFunctions.html">ReportFunctions module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="RotGeneration.html">RotGeneration module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="RotationPhases.html">RotationPhases module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="RotationPyomo.html">RotationPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Runef.html">Runef module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Sensitivity.html">Sensitivity module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="SheepTest.html">SheepTest module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="StockFunctions.html">StockFunctions module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="StockGenerator.html">StockGenerator module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="StockPyomo.html">StockPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="StructuralInputs.html">StructuralInputs module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Stubble.html">Stubble module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="StubblePyomo.html">StubblePyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="StubbleSim.html">StubbleSim module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="SupFeed.html">SupFeed module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="SupFeedPyomo.html">SupFeedPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="UniversalInputs.html">UniversalInputs module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="XlCombine.html">XlCombine module</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_doc.html">General</a></li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-  <li><a href="modules.html">AFO</a><ul>
-      <li>Previous: <a href="PastureTest.html" title="previous chapter">PastureTest module</a></li>
-      <li>Next: <a href="PlotViewer.html" title="next chapter">PlotViewer module</a></li>
-  </ul></li>
   </ul></li>
 </ul>
 </div>
@@ -144,7 +143,7 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2021, Michael & John Young.
+      &copy;2021, Michael Young & John Young.
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.4</a>

@@ -18,8 +18,8 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'Australian Farm Optimisation Model'
-copyright = '2021, Michael & John Young'
-author = 'Michael & John Young'
+copyright = '2021, Michael Young & John Young'
+author = 'Michael Young & John Young'
 
 # The full version, including alpha/beta/rc tags
 release = '0.0.1'
@@ -31,7 +31,11 @@ release = '0.0.1'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'sphinx.ext.autodoc',  # Core library for html generation from docstrings
+    # 'sphinx.ext.autosummary',  # Create neat summary tables
 ]
+autosummary_generate = True  # Turn on sphinx.ext.autosummary
+
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

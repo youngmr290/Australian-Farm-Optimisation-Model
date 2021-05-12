@@ -14,8 +14,6 @@
     <script src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="StockPyomo module" href="StockPyomo.html" />
-    <link rel="prev" title="StockFunctions module" href="StockFunctions.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -32,8 +30,30 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="stockgenerator-module">
-<h1>StockGenerator module<a class="headerlink" href="#stockgenerator-module" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-StockGenerator">
+<span id="stockgenerator-module"></span><h1>StockGenerator module<a class="headerlink" href="#module-StockGenerator" title="Permalink to this headline">¶</a></h1>
+<p>Created on Thu Feb 13 09:35:18 2020</p>
+<p>&#64;author: John</p>
+<p>Code structure
+1. when reshaping input arrays use the <a href="#id1"><span class="problematic" id="id2">i_len_</span></a>? values but in the rest of the code use the <a href="#id3"><span class="problematic" id="id4">len_</span></a>? values.
+2. sim params use their own pos and len variables.</p>
+<p>Notes
+1. Inputs need to be put together. One sheet in property.xl and one in universal.xl (and parameter sheet in universal so basically three sheets total)
+2. Find and replace all the sheep input dicts so only the final ones used.</p>
+<dl class="simple">
+<dt>to do:</dt><dd><p>check the inputs in structure. and update them</p>
+</dd>
+</dl>
+<dl class="py function">
+<dt id="StockGenerator.generator">
+<code class="sig-prename descclassname"><span class="pre">StockGenerator.</span></code><code class="sig-name descname"><span class="pre">generator</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#StockGenerator.generator" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function to wrap the generator and post processing that can be called by SheepPyomo.</p>
+<p>Called after the sensitivity variables have been updated.
+It populates the arrays by looping through the time periods
+Globally define arrays are used to transfer results to sheep_parameters()</p>
+<p>None.</p>
+</dd></dl>
+
 </div>
 
 
@@ -54,70 +74,15 @@
 
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">AFO</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="BoundsPyomo.html">BoundsPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="CorePyomo.html">CorePyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="CreateModel.html">CreateModel module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Crop.html">Crop module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="CropPyomo.html">CropPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Exceptions.html">Exceptions module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Exp.html">Exp module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Exp1.html">Exp1 module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="FeedSupplyGenerator.html">FeedSupplyGenerator module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="FeedTest.html">FeedTest module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Finance.html">Finance module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="FinancePyomo.html">FinancePyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Functions.html">Functions module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="InputTest.html">InputTest module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Labour.html">Labour module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="LabourCrop.html">LabourCrop module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="LabourCropPyomo.html">LabourCropPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="LabourFixed.html">LabourFixed module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="LabourFixedPyomo.html">LabourFixedPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="LabourPyomo.html">LabourPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mach.html">Mach module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="MachPyomo.html">MachPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Michael%20code%20ideas.html">Michael code ideas module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Pasture.html">Pasture module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="PastureFunctions.html">PastureFunctions module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="PasturePyomo.html">PasturePyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="PastureTest.html">PastureTest module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Periods.html">Periods module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="PlotViewer.html">PlotViewer module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="PropertyInputs.html">PropertyInputs module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ReferenceModel.html">ReferenceModel module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ReportControl.html">ReportControl module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ReportFunctions.html">ReportFunctions module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="RotGeneration.html">RotGeneration module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="RotationPhases.html">RotationPhases module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="RotationPyomo.html">RotationPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Runef.html">Runef module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Sensitivity.html">Sensitivity module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="SheepTest.html">SheepTest module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="StockFunctions.html">StockFunctions module</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">StockGenerator module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="StockPyomo.html">StockPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="StructuralInputs.html">StructuralInputs module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Stubble.html">Stubble module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="StubblePyomo.html">StubblePyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="StubbleSim.html">StubbleSim module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="SupFeed.html">SupFeed module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="SupFeedPyomo.html">SupFeedPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="UniversalInputs.html">UniversalInputs module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="XlCombine.html">XlCombine module</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_doc.html">General</a></li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-  <li><a href="modules.html">AFO</a><ul>
-      <li>Previous: <a href="StockFunctions.html" title="previous chapter">StockFunctions module</a></li>
-      <li>Next: <a href="StockPyomo.html" title="next chapter">StockPyomo module</a></li>
-  </ul></li>
   </ul></li>
 </ul>
 </div>
@@ -144,7 +109,7 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2021, Michael & John Young.
+      &copy;2021, Michael Young & John Young.
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.4</a>

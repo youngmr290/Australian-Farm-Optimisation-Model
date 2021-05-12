@@ -14,8 +14,6 @@
     <script src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="MachPyomo module" href="MachPyomo.html" />
-    <link rel="prev" title="LabourPyomo module" href="LabourPyomo.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -32,8 +30,339 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="mach-module">
-<h1>Mach module<a class="headerlink" href="#mach-module" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-Mach">
+<span id="mach-module"></span><h1>Mach module<a class="headerlink" href="#module-Mach" title="Permalink to this headline">¶</a></h1>
+<p>Created on Sat Nov  2 17:06:04 2019</p>
+<p>module: machinery module</p>
+<p>extra - use mach_input rather than selecting a specific option from input sheet</p>
+<dl class="simple">
+<dt>key: green section title is major title </dt><dd><p>‘#’ around a title is a minor section title
+std ‘#’ comment about a given line of code</p>
+</dd>
+</dl>
+<p>formatting; try to avoid capitals (reduces possible mistakes in future)</p>
+<p>&#64;author: young</p>
+<dl class="py function">
+<dt id="Mach.chem_app_cost_ha">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">chem_app_cost_ha</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.chem_app_cost_ha" title="Permalink to this definition">¶</a></dt>
+<dd><dl>
+<dt>Float</dt><dd><blockquote>
+<div><p>Application cost per ha - account for time to spread 1ha</p>
+</div></blockquote>
+<ul class="simple">
+<li><p>multiplied by passes to account for the number of application (in crop module)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Mach.cost_harv">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">cost_harv</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.cost_harv" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Dataframe</dt><dd><p>Harvesting cost ($/hr).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Mach.f_contract_harv_rate">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">f_contract_harv_rate</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.f_contract_harv_rate" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Dict for pyomo.</dt><dd><p>Grain harvested per hr by contractor (t/hr)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Mach.f_contract_harvest_cost_period">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">f_contract_harvest_cost_period</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Mach.f_contract_harvest_cost_period" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Dict for pyomo</dt><dd><p>Cost of contract harvest in each cashflow period ($/hr).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Mach.f_contract_seed_cost">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">f_contract_seed_cost</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Mach.f_contract_seed_cost" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Dict</dt><dd><p>Contract seeding cost in each cashflow period, currently, contract cost is the same for all lmus and crops.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Mach.f_contractseeding_occurs">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">f_contractseeding_occurs</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.f_contractseeding_occurs" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function just sets the period when contract seeding must occur (period when wet seeding begins).
+Contract seeding is not hooked up to yield penalty because if your going to hire someone you will hire
+them at the optimum time. Contract seeding is hooked up to poc so this param stops the model having late seeding.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Mach.f_fix_dep">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">f_fix_dep</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.f_fix_dep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="Mach.f_grazing_days">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">f_grazing_days</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.f_grazing_days" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Dict for pyomo.</dt><dd><p>Grazing days provided by wet seeding activity (ha/day/feed period)
+The maths behind this func is a little hard to explain - check google doc for better info</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Mach.f_harv_cost_alloc">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">f_harv_cost_alloc</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.f_harv_cost_alloc" title="Permalink to this definition">¶</a></dt>
+<dd><p>allocation of harvest cost into cashflow period</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Mach.f_harv_rate_period">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">f_harv_rate_period</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.f_harv_rate_period" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Dict for pyomo</dt><dd><p>Harv rate in each mach period for each crops.
+- account for crops that can be harvested early ie crops that can’t be harvested early are given 0 harv rate in the first harv period</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Mach.f_harvest_cost">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">f_harvest_cost</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Mach.f_harvest_cost" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Dict for pyomo</dt><dd><p>Cost of harvest in each cashflow period ($/hr).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Mach.f_harvest_dep">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">f_harvest_dep</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.f_harvest_dep" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Float for pyomo</dt><dd><p>Average variable dep for harvesting $/hr.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Mach.f_hay_making_cost">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">f_hay_making_cost</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.f_hay_making_cost" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>series - used in pyomo</dt><dd><p>Cost to make hay ($/t).</p>
+</dd>
+</dl>
+<p>Currently it is assumed that hay is allocated into the same cashflow periods in all seasons.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Mach.f_insurance">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">f_insurance</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Mach.f_insurance" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Dict for pyomo.</dt><dd><p>cost of insurance for all machinery</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Mach.f_mach_params">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">f_mach_params</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Mach.f_mach_params" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="Mach.f_max_harv_hours">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">f_max_harv_hours</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.f_max_harv_hours" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maximum hours that can be spent harvesting in a given period per crop gear compliment.
+This is not crop specific.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Mach.f_overall_seed_rate">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">f_overall_seed_rate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Mach.f_overall_seed_rate" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>rate_direct_drill_day<span class="classifier">Dict for pyomo</span></dt><dd><p>Combines lmu seeding rate and crop adjustment to determine the seeding rate ha/day on each lmu type for each crop</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Mach.f_seed_cost_alloc">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">f_seed_cost_alloc</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.f_seed_cost_alloc" title="Permalink to this definition">¶</a></dt>
+<dd><p>period allocation for seeding costs</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Mach.f_seed_days">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">f_seed_days</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.f_seed_days" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>DataFrame - used in pyomo and also grazing days</dt><dd><p>Determines the number of wet and dry seeding days in each period.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Mach.f_seed_time_lmus">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">f_seed_time_lmus</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.f_seed_time_lmus" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>DataFrame</dt><dd><p>time taken to direct drill 1ha of wheat on each lmu.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Mach.f_seeding_cost">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">f_seeding_cost</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Mach.f_seeding_cost" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Dataframe for pyomo</dt><dd><p>Returns the seeding cost allocation into cashflow periods.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Mach.f_seeding_dep">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">f_seeding_dep</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.f_seeding_dep" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Dict for pyomo</dt><dd><p>Average variable dep for seeding $/ha.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Mach.f_seeding_gear_clearing_value">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">f_seeding_gear_clearing_value</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.f_seeding_gear_clearing_value" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="Mach.f_total_clearing_value">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">f_total_clearing_value</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.f_total_clearing_value" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="Mach.f_yield_penalty">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">f_yield_penalty</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.f_yield_penalty" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Dict for pyomo</dt><dd><p>Calcs the penalty in each mach period (dry seeding and wet) - kg/ha/period/crop.
+Used in pyomo to calculate loss of cashflow and reduction in stubble</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Mach.fert_app_cost_ha">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">fert_app_cost_ha</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.fert_app_cost_ha" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Dataframe</dt><dd><p>Application cost per ha - account for time to spread 1ha
+- multiplied by passes to account for the number of application (in crop module)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Mach.fert_app_cost_t">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">fert_app_cost_t</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.fert_app_cost_t" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Dataframe</dt><dd><p>Application cost per tonne, this is to account for filling up and driving to and from paddock.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Mach.fuel_price">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">fuel_price</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.fuel_price" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="Mach.fuel_use_seeding">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">fuel_use_seeding</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.fuel_use_seeding" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>DataFrame</dt><dd><p>Fuel use L/ha used by tractor to seed on each lmu.
+Used to calculate fuel &amp; oil cost and r&amp;m cost in the functions below</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Mach.harv_time_ha">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">harv_time_ha</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.harv_time_ha" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Dataframe</dt><dd><p>Harvest rate for each crop (hr/ha).
+- has to be kept as a separate function because it is used in multiple places
+- harv sped is entered relative to a given yield for each crop</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Mach.harvest_gear_clearing_value">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">harvest_gear_clearing_value</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.harvest_gear_clearing_value" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="Mach.maint_cost_seeder">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">maint_cost_seeder</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.maint_cost_seeder" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>DataFrame</dt><dd><p>Seeder r&amp;m during seeding ($/ha).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Mach.spray_time_ha">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">spray_time_ha</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.spray_time_ha" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="Mach.spreader_cost_hr">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">spreader_cost_hr</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.spreader_cost_hr" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Float</dt><dd><p>Cost to spread fert for one hour.
+-used to determine fert application cost per hour and per ha</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Mach.stubble_cost_ha">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">stubble_cost_ha</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.stubble_cost_ha" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Dataframe that is passed to crop.py which determine rotation cost of stubble handling</dt><dd><p>Cost to handle stubble for 1 ha.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Mach.sup_mach_cost">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">sup_mach_cost</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.sup_mach_cost" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Series.</dt><dd><p>Cost of machinery to feed 1t of each grain to sheep.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Mach.time_cubic">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">time_cubic</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.time_cubic" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="Mach.time_ha">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">time_ha</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.time_ha" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="Mach.tractor_cost_seeding">
+<code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">tractor_cost_seeding</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.tractor_cost_seeding" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>DataFrame</dt><dd><p>Tractor costs of seeding per ha ($/ha).
+-includes; fuel, oil, grease and r&amp;m.</p>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
 
 
@@ -54,70 +383,15 @@
 
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">AFO</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="BoundsPyomo.html">BoundsPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="CorePyomo.html">CorePyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="CreateModel.html">CreateModel module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Crop.html">Crop module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="CropPyomo.html">CropPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Exceptions.html">Exceptions module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Exp.html">Exp module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Exp1.html">Exp1 module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="FeedSupplyGenerator.html">FeedSupplyGenerator module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="FeedTest.html">FeedTest module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Finance.html">Finance module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="FinancePyomo.html">FinancePyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Functions.html">Functions module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="InputTest.html">InputTest module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Labour.html">Labour module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="LabourCrop.html">LabourCrop module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="LabourCropPyomo.html">LabourCropPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="LabourFixed.html">LabourFixed module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="LabourFixedPyomo.html">LabourFixedPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="LabourPyomo.html">LabourPyomo module</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Mach module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="MachPyomo.html">MachPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Michael%20code%20ideas.html">Michael code ideas module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Pasture.html">Pasture module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="PastureFunctions.html">PastureFunctions module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="PasturePyomo.html">PasturePyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="PastureTest.html">PastureTest module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Periods.html">Periods module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="PlotViewer.html">PlotViewer module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="PropertyInputs.html">PropertyInputs module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ReferenceModel.html">ReferenceModel module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ReportControl.html">ReportControl module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ReportFunctions.html">ReportFunctions module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="RotGeneration.html">RotGeneration module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="RotationPhases.html">RotationPhases module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="RotationPyomo.html">RotationPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Runef.html">Runef module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Sensitivity.html">Sensitivity module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="SheepTest.html">SheepTest module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="StockFunctions.html">StockFunctions module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="StockGenerator.html">StockGenerator module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="StockPyomo.html">StockPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="StructuralInputs.html">StructuralInputs module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Stubble.html">Stubble module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="StubblePyomo.html">StubblePyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="StubbleSim.html">StubbleSim module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="SupFeed.html">SupFeed module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="SupFeedPyomo.html">SupFeedPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="UniversalInputs.html">UniversalInputs module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="XlCombine.html">XlCombine module</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_doc.html">General</a></li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-  <li><a href="modules.html">AFO</a><ul>
-      <li>Previous: <a href="LabourPyomo.html" title="previous chapter">LabourPyomo module</a></li>
-      <li>Next: <a href="MachPyomo.html" title="next chapter">MachPyomo module</a></li>
-  </ul></li>
   </ul></li>
 </ul>
 </div>
@@ -144,7 +418,7 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2021, Michael & John Young.
+      &copy;2021, Michael Young & John Young.
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.4</a>

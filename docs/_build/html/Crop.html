@@ -14,8 +14,6 @@
     <script src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="CropPyomo module" href="CropPyomo.html" />
-    <link rel="prev" title="CreateModel module" href="CreateModel.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -32,8 +30,244 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="crop-module">
-<h1>Crop module<a class="headerlink" href="#crop-module" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-Crop">
+<span id="crop-module"></span><h1>Crop module<a class="headerlink" href="#module-Crop" title="Permalink to this headline">¶</a></h1>
+<p>Created on Thu Oct 17 15:05:00 2019</p>
+<p>module: crop/rotation module</p>
+<dl class="simple">
+<dt>key: green section title is major title </dt><dd><p>‘#’ around a title is a minor section title
+std ‘#’ comment about a given line of code</p>
+</dd>
+</dl>
+<p>Version Control:
+Version     Date        Person  Change
+1.1         27Dec19     MRY     Updated rotation phase function, and crop functions (individual costs separated and one funct to sum them all at the bottom)
+1.1         28Dec19     MRY     alterd stubble handling to work with new rotation system (stubble handling cost is now associated with the current phase rather than the previous phase)
+1.2         16Jan20     M       separated grain price from yield - it is now separate so it can be combined with yield penalty and crop grazing yield penalty before being multiplied by price.</p>
+<p>Known problems:
+Fixed   Date        ID by   Problem</p>
+<blockquote>
+<div><p>28/12/19    MRY     No input optimisation (solution is to convert crop into a simulation)
+28/12/19    MRY     All lmus receive a fert app cost per ha even if the fert applied to that lmu is 0 (generally not a problem bevause all lmus receive some fert. and the per tonne cost accounts for variable lmu rates)
+28/12/19    MRY     Stubble handeling cost still aplies even if the next phase would be pasture (difficult to fix but only a minor issue)</p>
+</div></blockquote>
+<p>Things to add to this module: some input optimisation</p>
+<p>&#64;author: young</p>
+<dl class="py function">
+<dt id="Crop.chem_cost_allocation">
+<code class="sig-prename descclassname"><span class="pre">Crop.</span></code><code class="sig-name descname"><span class="pre">chem_cost_allocation</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Crop.chem_cost_allocation" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Dataframe; multiplied with chem cashflows </dt><dd><p>Determines the cashflow period allocation for costs associated with each different chem</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Crop.crop_params">
+<code class="sig-prename descclassname"><span class="pre">Crop.</span></code><code class="sig-name descname"><span class="pre">crop_params</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Crop.crop_params" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="Crop.f_base_yield">
+<code class="sig-prename descclassname"><span class="pre">Crop.</span></code><code class="sig-name descname"><span class="pre">f_base_yield</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Crop.f_base_yield" title="Permalink to this definition">¶</a></dt>
+<dd><p>base yield - used in stubble as well to calc foo for relativie availability</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Crop.f_chem_application">
+<code class="sig-prename descclassname"><span class="pre">Crop.</span></code><code class="sig-name descname"><span class="pre">f_chem_application</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Crop.f_chem_application" title="Permalink to this definition">¶</a></dt>
+<dd><p>number of applications for each chemical for each rotation
+Arable area accounted for here</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Crop.f_chem_cost">
+<code class="sig-prename descclassname"><span class="pre">Crop.</span></code><code class="sig-name descname"><span class="pre">f_chem_cost</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Crop.f_chem_cost" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Dataframe: Total cost of chemical and application - summed with other cashflow items at the end of this section </dt><dd><p>-Calcs the raw chem cost for each rotation phase (ie doesn’t include application)
+-Application cost per ha ($/rotation)
+-Arable area accounted for in application funciton above</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Crop.f_cont_pas">
+<code class="sig-prename descclassname"><span class="pre">Crop.</span></code><code class="sig-name descname"><span class="pre">f_cont_pas</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cost_array</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Crop.f_cont_pas" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculates the cost for continuos pasture that is resown a proportion of the time. eg tc (cont tedera)
+the cost of cont pasture is a combination of the cost of normal and resown eg tc = t + tr (weighted by the frequency of resowing)
+This function requires the index to be the landuse with no other levels. You can use unstack to ensure landuse is the only index.
+Generally this function is applied early in the cost process (before landuse has been dropped)
+Cont pasture only needs to exist if the phase has been included in the rotation.</p>
+<p>Note: if a new pasture is added which has a continuos option that is resown occasionally it will need to be added to this function.</p>
+<p>:param
+cost_array - df with landues axis. this array will be returned with the addition of the continuos pasture landuse</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Crop.f_crop_sow">
+<code class="sig-prename descclassname"><span class="pre">Crop.</span></code><code class="sig-name descname"><span class="pre">f_crop_sow</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Crop.f_crop_sow" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Dict for pyomo.</dt><dd><p>Crop sow (wet or dry or spring) requirement for each rot phase</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Crop.f_farmgate_grain_price">
+<code class="sig-prename descclassname"><span class="pre">Crop.</span></code><code class="sig-name descname"><span class="pre">f_farmgate_grain_price</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r_vals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Crop.f_farmgate_grain_price" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Dataframe - used below and to calculate insurance and sup feed purchase price.</dt><dd><p>Price includes:
+-offspec grain
+-cartage cost
+-other fees ie cbh and levies</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Crop.f_fert_passes">
+<code class="sig-prename descclassname"><span class="pre">Crop.</span></code><code class="sig-name descname"><span class="pre">f_fert_passes</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Crop.f_fert_passes" title="Permalink to this definition">¶</a></dt>
+<dd><p>passes over arable area</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Crop.f_fert_req">
+<code class="sig-prename descclassname"><span class="pre">Crop.</span></code><code class="sig-name descname"><span class="pre">f_fert_req</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Crop.f_fert_req" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Dataframe; used to calc fert cost in the next function</dt><dd><p>Fert required by 1ha of each phases (kg/ha) after accounting for arable area</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Crop.f_grain_price">
+<code class="sig-prename descclassname"><span class="pre">Crop.</span></code><code class="sig-name descname"><span class="pre">f_grain_price</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Crop.f_grain_price" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Dict.</dt><dd><p>Farm gate price for each grain - allocated into cash periods</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Crop.f_nap_fert_passes">
+<code class="sig-prename descclassname"><span class="pre">Crop.</span></code><code class="sig-name descname"><span class="pre">f_nap_fert_passes</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Crop.f_nap_fert_passes" title="Permalink to this definition">¶</a></dt>
+<dd><p>hectares spread on non arable area</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Crop.f_nap_fert_req">
+<code class="sig-prename descclassname"><span class="pre">Crop.</span></code><code class="sig-name descname"><span class="pre">f_nap_fert_req</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Crop.f_nap_fert_req" title="Permalink to this definition">¶</a></dt>
+<dd><p>fert applied to non arable pasture area</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Crop.f_rot_cost">
+<code class="sig-prename descclassname"><span class="pre">Crop.</span></code><code class="sig-name descname"><span class="pre">f_rot_cost</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Crop.f_rot_cost" title="Permalink to this definition">¶</a></dt>
+<dd><p>collates all the rotation costs</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Crop.f_rot_yield">
+<code class="sig-prename descclassname"><span class="pre">Crop.</span></code><code class="sig-name descname"><span class="pre">f_rot_yield</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Crop.f_rot_yield" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Dataframe - passed to pyomo and used to calc insurance &amp; stubble handling</dt><dd><p>Grain yield for each rotation.
+Yield includes:
+-arable area
+-seeding rate (if farmers use thier own seed)
+-lmu factor
+-frost</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Crop.f_stubble_production">
+<code class="sig-prename descclassname"><span class="pre">Crop.</span></code><code class="sig-name descname"><span class="pre">f_stubble_production</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Crop.f_stubble_production" title="Permalink to this definition">¶</a></dt>
+<dd><p>stubble produced by each rotation phase
+kgs of dry matter</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Crop.f_total_fert_req">
+<code class="sig-prename descclassname"><span class="pre">Crop.</span></code><code class="sig-name descname"><span class="pre">f_total_fert_req</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Crop.f_total_fert_req" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the total fert req after accounting for arable area.
+this is used in the LabourCropPyomo</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Crop.fert_cost">
+<code class="sig-prename descclassname"><span class="pre">Crop.</span></code><code class="sig-name descname"><span class="pre">fert_cost</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Crop.fert_cost" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Dataframe; summed with other fert cashflow items at the end of this section </dt><dd><p>Calcs;
+- cost of actual fertiliser for each rotation phase (including transport)
+- Application cost per tonne ($/rotation)
+- Application cost per ha ($/rotation)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Crop.fert_cost_allocation">
+<code class="sig-prename descclassname"><span class="pre">Crop.</span></code><code class="sig-name descname"><span class="pre">fert_cost_allocation</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Crop.fert_cost_allocation" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Dataframe; multiplied with fert cashflows </dt><dd><p>Determines the cashflow period allocation for costs associated with each different fert</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Crop.grain_pool_proportions">
+<code class="sig-prename descclassname"><span class="pre">Crop.</span></code><code class="sig-name descname"><span class="pre">grain_pool_proportions</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Crop.grain_pool_proportions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="Crop.insurance">
+<code class="sig-prename descclassname"><span class="pre">Crop.</span></code><code class="sig-name descname"><span class="pre">insurance</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Crop.insurance" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Dataframe to add with other rotation costs</dt><dd><p>Misc costs
+- crop insurance
+<a href="#id1"><span class="problematic" id="id2">*</span></a>note - arable area is already counted for by the yield calculation.</p>
+</dd>
+</dl>
+<p>Crop insurance is typically based off the farmers estimaiton of yield in mid spring.
+This is not going to exactly be equal to final yield but it is closer than using the average yield.
+The small amount of error in this assumption will have little impact due to the small magnitude of
+financial impact of insurance.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Crop.nap_fert_cost">
+<code class="sig-prename descclassname"><span class="pre">Crop.</span></code><code class="sig-name descname"><span class="pre">nap_fert_cost</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Crop.nap_fert_cost" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Dataframe- to be added to total costs at the end.</dt><dd><p>Fert applied to non arable pasture - currently setup so that only pasture phases get fert on the non arable areas hence it needs to be a separate function.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Crop.phase_stubble_cost">
+<code class="sig-prename descclassname"><span class="pre">Crop.</span></code><code class="sig-name descname"><span class="pre">phase_stubble_cost</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Crop.phase_stubble_cost" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Dataframe</dt><dd><p>Cost to handle stubble for each rotation - summed with other costs in final function below.
+<a href="#id3"><span class="problematic" id="id4">*</span></a>note - arable area accounted for in the yield (it is the same as accounting for it at the end ie yield x 0.8 / threshold x cost == yield / threshold x cost x 0.8)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="Crop.seedcost">
+<code class="sig-prename descclassname"><span class="pre">Crop.</span></code><code class="sig-name descname"><span class="pre">seedcost</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Crop.seedcost" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Dataframe to add with other rotation costs</dt><dd><p>Misc costs includes:
+- seed treatment
+- raw seed cost (incurred if seed is purchased as aposed to using last yrs seed)
+- crop insurance
+- arable area</p>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
 
 
@@ -54,70 +288,15 @@
 
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">AFO</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="BoundsPyomo.html">BoundsPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="CorePyomo.html">CorePyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="CreateModel.html">CreateModel module</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Crop module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="CropPyomo.html">CropPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Exceptions.html">Exceptions module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Exp.html">Exp module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Exp1.html">Exp1 module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="FeedSupplyGenerator.html">FeedSupplyGenerator module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="FeedTest.html">FeedTest module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Finance.html">Finance module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="FinancePyomo.html">FinancePyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Functions.html">Functions module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="InputTest.html">InputTest module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Labour.html">Labour module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="LabourCrop.html">LabourCrop module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="LabourCropPyomo.html">LabourCropPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="LabourFixed.html">LabourFixed module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="LabourFixedPyomo.html">LabourFixedPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="LabourPyomo.html">LabourPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mach.html">Mach module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="MachPyomo.html">MachPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Michael%20code%20ideas.html">Michael code ideas module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Pasture.html">Pasture module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="PastureFunctions.html">PastureFunctions module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="PasturePyomo.html">PasturePyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="PastureTest.html">PastureTest module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Periods.html">Periods module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="PlotViewer.html">PlotViewer module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="PropertyInputs.html">PropertyInputs module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ReferenceModel.html">ReferenceModel module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ReportControl.html">ReportControl module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ReportFunctions.html">ReportFunctions module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="RotGeneration.html">RotGeneration module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="RotationPhases.html">RotationPhases module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="RotationPyomo.html">RotationPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Runef.html">Runef module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Sensitivity.html">Sensitivity module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="SheepTest.html">SheepTest module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="StockFunctions.html">StockFunctions module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="StockGenerator.html">StockGenerator module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="StockPyomo.html">StockPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="StructuralInputs.html">StructuralInputs module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Stubble.html">Stubble module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="StubblePyomo.html">StubblePyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="StubbleSim.html">StubbleSim module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="SupFeed.html">SupFeed module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="SupFeedPyomo.html">SupFeedPyomo module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="UniversalInputs.html">UniversalInputs module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="XlCombine.html">XlCombine module</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_doc.html">General</a></li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-  <li><a href="modules.html">AFO</a><ul>
-      <li>Previous: <a href="CreateModel.html" title="previous chapter">CreateModel module</a></li>
-      <li>Next: <a href="CropPyomo.html" title="next chapter">CropPyomo module</a></li>
-  </ul></li>
   </ul></li>
 </ul>
 </div>
@@ -144,7 +323,7 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2021, Michael & John Young.
+      &copy;2021, Michael Young & John Young.
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.4</a>
