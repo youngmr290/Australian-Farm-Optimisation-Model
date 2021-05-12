@@ -3302,8 +3302,8 @@ def generator(params,r_vals,ev,plots = False):
                 mei_solid_sire = mei_solid_sire + (mem_sire * sap_mr
                                                    - surplus_energy_sire * sap_kg / (1 + sap_kg))
                 ####alter wool production as energy params change
-                scalar_mr = (1 + sap_mr * mem_sire / mei_solid_sire)
-                scalar_kg = 1 - sap_kg / (1 + sap_kg) * surplus_energy_sire / mei_solid_sire
+                scalar_mr = 1 + sap_mr * fun.f_divide(mem_sire, mei_solid_sire)
+                scalar_kg = 1 - sap_kg / (1 + sap_kg) * fun.f_divide(surplus_energy_sire, mei_solid_sire)
                 d_cfw_sire = d_cfw_sire / sam_pi
                 d_fl_sire = d_fl_sire / sam_pi
                 d_cfw_sire = d_cfw_sire / scalar_mr
@@ -3323,8 +3323,8 @@ def generator(params,r_vals,ev,plots = False):
                 mei_solid_dams = mei_solid_dams + (mem_dams * sap_mr
                                                    - surplus_energy_dams * sap_kg / (1 + sap_kg))
                 ####alter wool production as energy params change
-                scalar_mr = (1 + sap_mr * mem_dams / mei_solid_dams)
-                scalar_kg = 1 - sap_kg / (1 + sap_kg) * surplus_energy_dams / mei_solid_dams
+                scalar_mr = 1 + sap_mr * fun.f_divide(mem_dams, mei_solid_dams)
+                scalar_kg = 1 - sap_kg / (1 + sap_kg) * fun.f_divide(surplus_energy_dams, mei_solid_dams)
                 d_cfw_dams = d_cfw_dams / sam_pi
                 d_fl_dams = d_fl_dams / sam_pi
                 d_cfw_dams = d_cfw_dams / scalar_mr
@@ -3366,8 +3366,8 @@ def generator(params,r_vals,ev,plots = False):
                 mei_solid_offs = mei_solid_offs + (mem_offs * sap_mr
                                                    - surplus_energy_offs * sap_kg / (1 + sap_kg))
                 ####alter wool production as energy params change
-                scalar_mr = (1 + sap_mr * mem_offs / mei_solid_offs)
-                scalar_kg = 1 - sap_kg / (1 + sap_kg) * surplus_energy_offs / mei_solid_offs
+                scalar_mr = 1 + sap_mr * fun.f_divide(mem_offs, mei_solid_offs)
+                scalar_kg = 1 - sap_kg / (1 + sap_kg) * fun.f_divide(surplus_energy_offs, mei_solid_offs)
                 d_cfw_offs = d_cfw_offs / sam_pi
                 d_fl_offs = d_fl_offs / sam_pi
                 d_cfw_offs = d_cfw_offs / scalar_mr
