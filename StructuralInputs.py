@@ -1,11 +1,13 @@
 """
-Created on 5/2/21
 
-module: structural module - contains all the structural inputs (only to be change by a core AFO developer)
+Contains all the structural inputs relating to the operation of the model.
 
-This module has no SA
+The inputs are read in from Structural.xlsx.
 
-@author: young
+.. note::
+    Only to be changed by experienced AFO developers.
+
+author: young
 """
 
 ##python modules (CAN'T import PropertyInputs)
@@ -91,13 +93,10 @@ structuralsa = copy.deepcopy(structuralsa_inp)
 #######################
 def structural_inp_sa():
     '''
-
-    Returns
-    -------
-    None.
-
-    Applies sensitivity adjustment to relevant inputs. Note only inputs in StructuralSA should have sensitivities applied.
+    Applies sensitivity adjustment to relevant inputs. Note only inputs in StructuralSA sheet can have sensitivities applied.
     This function gets called at the beginning of each loop in the exp.py module
+
+    :return: None.
 
     '''
     ##have to import it here since sen.py imports this module
@@ -252,6 +251,8 @@ landuse['z']={'z'}
 
 
 def end_col():
-    #specify the column name/number for the current landuse
+    '''Specifies the column number for the current landuse in the rotation dataframe.
+    Used in the crop module
+    '''
     end_col  = [general['phase_len']-1]
     return end_col

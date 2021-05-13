@@ -1,12 +1,14 @@
-# -*- coding: utf-8 -*-
 """
-Created on Tue Oct 22 16:06:06 2019
 
-module: universal module - contains all the core input data - usually held constant/doesn't change between regions or farms'
+These are inputs that are expected to remain constant between regions and properties, this includes:
 
+* Prices of inputs
+* Value of outputs (grain, wool ,meat)
+* Interest rates & depreciation rates
+* Machinery options
+* Sheep parameters and definition of genotypes
 
-
-@author: young
+author: young
 """
 
 ##python modules
@@ -168,13 +170,10 @@ mach = copy.deepcopy(machine_options_dict_inp)
 #######################
 def universal_inp_sa():
     '''
-    
-    Returns
-    -------
-    None.
-    
     Applies sensitivity adjustment to each input.
     This function gets called at the beginning of each loop in the exp.py module
+
+    :return: None.
 
     '''
     ##have to import it here since sen.py imports this module
