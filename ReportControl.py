@@ -1015,7 +1015,7 @@ if __name__ == '__main__':
     try:
         maximum_processes = int(sys.argv[2])  # reads in as string so need to convert to int, the script path is the first value hence take the second.
     except IndexError:  # in case no arg passed to python
-        maximum_processes = 15
+        maximum_processes = 1
 
     ##start multiprocessing
     ### number of agents (processes) should be min of the num of cpus, number of trials or the user specified limit due to memory capacity

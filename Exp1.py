@@ -54,7 +54,7 @@ import CorePyomo as core
 try:
     maximum_processes = int(sys.argv[2])  # reads in as string so need to convert to int, the script path is the first value hence take the second.
 except IndexError:  # in case no arg passed to python
-    maximum_processes = 12  # available memory / value determined by size of the model being run (~5GB for the small model)
+    maximum_processes = 1  # available memory / value determined by size of the model being run (~5GB for the small model)
 
 start_time1 = time.time()
 
