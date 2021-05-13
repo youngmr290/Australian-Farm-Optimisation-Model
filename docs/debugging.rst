@@ -34,10 +34,15 @@ Possible model errors
 Process to debug
 ----------------
 #. Check the variable summary. This will point out any obvious issues and help to determine where to start looking.
+
 #. Turn off bounds (overdraw, erosion limit, labour, sr, rotation area).
+
 #. Simplify the model as much as possible to make it easier to debug (reduce TOL options, reduce lw patterns, reduce genotypes etc).
+
 #. To locate where the problem is you can often just comment out constraints until the model solves. This can further indicate where to look.
+
 #. Go back to the last working version (using the power of git) and compare outputs with current. If you have some idea where the issue is you can even compare the params between the two versions to see if something jumps out.
+
 #. Once you have an idea where the problem is you can look in more detail using:
     - The lp file.
     - The params dictionary.
@@ -58,7 +63,6 @@ option ``--nopresol``. This can be done as follows:
 
 Pyomo errors
 -------------
-
 #. ERROR: evaluating object as numeric value: v_phase_area[GAANw,lmu1] (object: <class 'pyomo.core.base.var._GeneralVarData'>) No value for uninitialized NumericValue object v_phase_area[GAANw,lmu1]
     You are most likely trying to evaluate an equation with a variable, variables don’t
     have a value at this time hence the error ie trying to do a conditional statement on an equation

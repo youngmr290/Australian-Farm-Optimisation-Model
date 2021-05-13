@@ -4,7 +4,9 @@ Running
 Overview
 ---------
 AFO requires Python to be installed on your device and can be run using any IDLE or through
-the teminal. To customise the execution you can pass in optional args <experiment number> <processors>
+the teminal. The model is controlled via the Exp1.py module and exp.xlsx spreadsheet. AFO is run from Exp1.py
+but the trials which are run and the application of any sensitivities are controlled using exp.xlsx.
+To customise the execution you can pass in optional args to Exp1.py <experiment number> <processors>
 which control the experiment to be run and the number of processors used. If no arguments are passed
 experiment type 0 will be executed using 1 processor. Once the model has been run two output files per trial will have been
 saved to the pkl folder. To generate an excel report run ReportControl.py. The execution can also

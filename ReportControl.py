@@ -1,25 +1,45 @@
 """
-Created on Thu Dec 2 09:35:26 2020
 
+Background and usage
+---------------------
+Reports are generated in a two step process. Firstly, each trial undergoes some ‘within trial’ calculations
+(e.g. calc the sale price for a trial), the results are stacked together and stored in a table
+(each report has its own table). The resulting table can then undergo some ‘between trial’ calculations
+(e.g. graphing profit by sale price).
 
-How this module works:
+Tweaking the output of a given report is done in the ReportControl.py. Here the user specifies the report
+properties. For example they can specify which axis to report in the table and which to average or another
+example. The user can also specify report options. For example, what type of profit (eg is asset opportunity
+cost included or not) they want to use in the profit by area curve.
+
+To run execute this module with optional args <processor number> <report number>. If no arguments are passed
+the 1 processor is used and the 'default' report group is run.
+
 The trials to report are controlled in exp.xl.
-The reports to run are controlled in exp.xl
-The code loops through each 'on' trial and calculates the reports. The resulting table from each trial is stacked
- together. Once the loop is completed the between trial reports (reports that require info from all trials) are
- calculated.
+The reports to run for a given report number are controlled in exp.xl.
 
-To add a report:
-1. Make the relevant code.
-2. add it to exp.xl
-3. add an empty df to stack results
-4. add if statement to store final report to excel
+How to add a report:
+--------------------
+#. Add the required report variables to the ``r_vals`` dictionary - this is done in precalcs
+#. Build a 'within trial' report function in Report.py (if an existing one does not meet your criteria)
+#. Build a 'between trial' function (if an existing one does not meet your criteria). This is done
+   in the 'Final reports' subsection of ReportFunctions.py
+#. Add it to exp.xlsx
+#. in ReportControl.py add an empty df to stack results
+#. in ReportControl.py build the 'within trial' and 'between trial' sections (this can easily be done by copying
+   existing code and makeing the relevant changes).
 
-Note: If reporting dates from a numpy array it is necessary to convert to datetime64[ns] prior to converting to a DataFrame
+.. tip:: When creating r_vals values try and do it in obvious spots so it is easier to understand later.
+
+.. note:: For livestock: livestock is slightly more complicated. If you add a r_val or lp_vars you
+    will also need to add it to f_stock_reshape the allows you to get the shape correct
+    (remove singlton axis and converts lp_vars from dict to numpy).
+
+.. note:: If reporting dates from a numpy array it is necessary to convert to datetime64[ns] prior to converting to a DataFrame
     For example:
     data_df3 = pd.DataFrame(fvp_fdams.astype('datetime64[ns]'))  # conversion to dataframe only works with this datatype
 
-@author: Young
+author: Young
 """
 
 import numpy as np
@@ -38,7 +58,7 @@ import Functions as fun
 report_run = pd.read_excel('exp.xlsm', sheet_name='Run Report', index_col=[0], header=[0,1], engine='openpyxl')
 try:
     exp_group = int(sys.argv[3])  # reads in as string so need to convert to int, the script path is the first value hence take the second.
-except IndexError:  # in case no arg passed to python
+except:  # in case no arg passed to python
     exp_group = "Default"
 try:
     report_run = report_run.loc[:,('Run',exp_group)]
@@ -50,6 +70,7 @@ report_run = report_run.droplevel(1, axis=1)
 
 
 def f_report(processor, trials):
+    '''Function to wrap ReportControl.py so that multiprocessing can be used.'''
     # print('Start processor: {0}'.format(processor))
     # print('Start trials: {0}'.format(trials))
     ##create empty df to stack each trial results into

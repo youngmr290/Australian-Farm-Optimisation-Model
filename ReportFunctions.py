@@ -1,11 +1,22 @@
-# -*- coding: utf-8 -*-
 """
-Created on Sat Apr  4 09:58:05 2020
 
-@author: young
+This module contains function which are used for three main jobs:
 
-This module should not import inputs (in case the inputs are adjusted during the exp so they will not be correct for r_vals)
-When creating r_vals values try and do it in obvious spots even if you need to go out of the way to do it eg phases in rotation.py
+#.  General jobs including error checking and reading and writing output files.
+#.  'within trial' calculations. These functions manipulate the output variables from the LP and the
+    values from the precalcs. These functions all return a data array.
+#.  'between trial' calculations. These functions summarise the data array from the 'within trial' functions
+    for all the trials in an experiment. These functions can return table or figures.
+
+.. note:: This module should not import inputs (in case the inputs are adjusted during the exp
+    so they will not be correct for r_vals)
+
+.. tip:: There are cases where the report requires more detail than the decision variable returned from
+    the lp contains. For example some livestock reports (e.g. FEC) need an e b and p axis but the
+    clustering has removed this level of detail in the lp variables.
+    To handle this we make the corresponding r_vals array with both the detailed and clustered axis.
+
+author: young
 """
 
 import pandas as pd
@@ -27,6 +38,7 @@ na = np.newaxis
 def f_df2xl(writer, df, sheet, df_settings=None, rowstart=0, colstart=0, option=0):
     '''
     Pandas to excel. https://xlsxwriter.readthedocs.io/working_with_pandas.html
+
         - You can simply stick a dataframe from pandas into excel using df.to_excel() function.
           for this you can specify the workbook the sheet and the start row or col (so you can put
           multiple dfs in one sheet)
@@ -97,13 +109,18 @@ def f_df2xl(writer, df, sheet, df_settings=None, rowstart=0, colstart=0, option=
 
 def f_errors(trial_outdated, trials):
     '''
-    Error checks:
-        1. Any trials infeasible.
-        2. Any trials don't exist.
-        3. Any trials out of date.
+    The report module conducts three error checks before commencing:
+
+    #. Have you run the main model for each trial you are trying to report. If not an exception will arise.
+    #. Are any trials out of date E.g. have you run the main model since updating the inputs or the code.
+       If trials are out of date a warning message will be printed but the report code will continue to execute.
+    #. Did all the trials you are reporting solve optimally. Infeasible trials are still reported the reports are just
+       filled with 0's. A list of infeasible trials will be printed to the consol and reported in the final Report.xlsx
+       document.
+
     :param trial_outdated: boolean list of all trials stating if trial is out of date.
     :param trials: list of trials being run
-    :return:
+    :return: None.
     '''
     ##first check if data exists for each desired trial
     infeasible_trials=[]
@@ -134,7 +151,8 @@ def f_errors(trial_outdated, trials):
     return
 
 def load_pkl(trial_name):
-    ##load in params dict, if it doesn't exist then create a new dict
+    '''load in lp_vars and r_vals output file.
+    '''
     with open('pkl/pkl_lp_vars_{0}.pkl'.format(trial_name),"rb") as f:
         lp_vars = pkl.load(f)
     with open('pkl/pkl_r_vals_{0}.pkl'.format(trial_name),"rb") as f:
@@ -143,12 +161,12 @@ def load_pkl(trial_name):
 
 def f_vars2np(lp_vars, var_key, shape, keys_z, z_pos):
     '''
-    converts lp vars to numpy.
+    converts lp_vars to numpy.
     :param lp_vars: dict of lp variables
     :param var_key: string - name of variable to convert to numpy
     :param shape: shape of desired numpy array
     :param z_pos: position to add z axis
-    :return:
+    :return: numpy array with season axis.
     '''
     final_vars = np.zeros(shape)
     if isinstance(shape,int):
@@ -178,7 +196,7 @@ def f_vars2np(lp_vars, var_key, shape, keys_z, z_pos):
 
 def f_vars2df(lp_vars, var_key, z_keys):
     '''
-    converts lp vars to series.
+    converts lp_vars to pandas series.
     :param lp_vars: dict of variables.
     :param var_key: string - name of variable to convert to series.
     :return: series with season as index level 0
@@ -197,9 +215,10 @@ def f_vars2df(lp_vars, var_key, z_keys):
 # across trial reports #
 ########################
 def f_xy_graph(data):
-    '''returns graph of crop area (x - axis) by profit (y - axis)
+    '''Generic x-y line graphing function.
 
-    :param data: df with data to plot. first col contains x values and second col contains y values
+    :param data: df with data to plot. First col contains x values and second col contains y values
+    :return: x-y plot
 
     '''
     ##loop through trials and generate pnl table
@@ -215,15 +234,18 @@ def f_xy_graph(data):
 
 def f_price_summary(lp_vars, r_vals, option, grid, weight, fs):
     '''Returns price summaries
+
     :param r_vals:
-    :key option:
-            0- farmgate grain price
-            1- wool price STB price for FNF (free or nearly free of fault)
-            2- sale price for specified grid at given weight and fat score
-    :key grid: list - sale grids to report. Has to be int between 0 and 7 inclusive.
-    :key weight: float/int - stock weight to report price for.
-    :key fs: int - fat score to report price for. Has to be number between 1-5 inclusive.
-    :return: df
+    :param option:
+
+            #. farmgate grain price
+            #. wool price STB price for FNF (free or nearly free of fault)
+            #. sale price for specified grid at given weight and fat score
+
+    :param grid: list - sale grids to report. Has to be int between 0 and 7 inclusive.
+    :param weight: float/int - stock weight to report price for.
+    :param fs: int - fat score to report price for. Has to be number between 1-5 inclusive.
+    :return: price summary df
     '''
 
     ##grain price - farmgate (price received by farmer)
@@ -307,12 +329,14 @@ def f_area_summary(lp_vars, r_vals, option):
     :param lp_vars: dict
     :param r_vals: dict
     :key option:
-        0: tuple all results wrapped in tuple
-        1: table all rotations by lmu
-        2: float total pasture area
-        3: float total crop area
-        4: table crop and pasture area by lmu
-        5: float pasture %
+
+        #. tuple all results wrapped in tuple
+        #. table all rotations by lmu
+        #. float total pasture area
+        #. float total crop area
+        #. table crop and pasture area by lmu
+        #. float pasture %
+
     '''
 
     ##read from other functions
@@ -352,8 +376,9 @@ def f_area_summary(lp_vars, r_vals, option):
 def f_mach_summary(lp_vars, r_vals, option=0):
     '''
     Machine summary.
-    return options:
-    0- table: total machine cost for each crop in each cash period
+    :param option:
+
+        #. table: total machine cost for each crop in each cash period
 
     '''
     ##call rotation function to get rotation info
@@ -404,10 +429,11 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
     Summary of grain, supplement and their costs
 
     :param option: int:
-            0: return dict with various elements
-            1: return total supplement fed in each feed period
-            2: return total of each grain supplement fed in each feed period
-            3: return total sup fed
+
+            #. return dict with various elements
+            #. return total supplement fed in each feed period
+            #. return total of each grain supplement fed in each feed period
+            #. return total sup fed
 
     '''
     ##create dict to store grain variables
@@ -457,8 +483,9 @@ def f_stubble_summary(lp_vars, r_vals):
 def f_crop_summary(lp_vars, r_vals, option=0):
     '''
     Crop summary. Includes pasture inputs.
-    return options:
-    0- tuple: fert cost, chem cost, miscellaneous costs and grain revenue for each landuse
+    :param option:
+
+        #. Return - tuple: fert cost, chem cost, miscellaneous costs and grain revenue for each landuse
 
     '''
     ##call rotation function to get rotation info
@@ -663,7 +690,8 @@ def f_pasture_reshape(lp_vars, r_vals):
 def f_stock_cash_summary(lp_vars, r_vals):
     '''
     Returns:
-    0- expense and revenue items
+
+        #. expense and revenue items
 
     '''
     ##get reshaped variable
@@ -742,9 +770,11 @@ def f_stock_cash_summary(lp_vars, r_vals):
 
 def f_labour_summary(lp_vars, r_vals, option=0):
     '''
-    :return:
-    0- total labour cost
-    1- amount for each enterprise
+    :param option:
+
+        #. return total labour cost
+        #. return amount for each enterprise
+
     '''
 
     ##shapes
@@ -821,18 +851,20 @@ def f_overhead_summary(r_vals):
 #todo this should probably report z as an index rather than summing it.
 def f_dse(lp_vars, r_vals, method, per_ha, summary=False):
     '''
-    DSE calculation
+    DSE calculation.
 
     :param lp_vars: dict: results from pyomo
     :param r_vals: dict: report variable
     :param method: int
-            0 - dse by normal weight
-            1 - dse by mei
+
+            0. dse by normal weight
+            1. dse by mei
+
     :param per_ha: Bool
         if true it returns DSE/ha else it returns total dse
     :param summary: Bool
         if true it returns the total DSE/ha in fp0
-    :return DSE per pasture hectare for each sheep group:
+    :return DSE per pasture hectare for each sheep group.
     '''
     ##keys for table that is reported
     keys_p6 = r_vals['stock']['keys_p6']
@@ -1027,9 +1059,11 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None
                             prod=1, na_prod=[], weights=None, na_weights=[], axis_slice={},
                             na_denweights=[], den_weights=1, na_denom=[], denom=1):
     '''
-    Returns summary of a numpy array in a pandas table.
-    Note: 1. prod and weights must be broadcastable.
-          2. Specify axes the broadcasted/expanded version.
+
+    ..Note::
+
+        #. prod and weights must be broadcastable.
+        #. Specify axes the broadcasted/expanded version.
 
     :param lp_vars: dict: results from pyomo
     :param r_vals: dict: report variable
@@ -1054,7 +1088,7 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None
     :key denom (optional, default = 1): str: keys to r_vals indicating denominator to divide production by (after other operations have been applied).
     :key na_denom (optional, default = []): list: position to add new axis
     :key axis_slice (optional, default = {}): dict: keys (int) is the axis. value (list) is the start, stop and step of the slice
-    :return: pandas df
+    :return: summary of a numpy array in a pandas table.
     '''
     keys_key = keys
 
