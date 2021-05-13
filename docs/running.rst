@@ -80,9 +80,18 @@ This table is a record of the resources used for different trials. The number of
    * - FVP 4,3 N 4,5 scan=0, everything else small
      - 64GB ubuntu
      - Max 39GB,
+   * - FVP 4,3 N 4,4 scan=0, everything else small
+     - 64GB ubuntu, 2 processors
+     - Killed 1 processor.
+   * - FVP 4,3 N 4,4 scan=0, everything else small
+     - 64GB ubuntu, 30GB swap, 2 processors
+     - Successful (required 3GB of swap) 1460sec
    * - FVP 4,3 N 3,4 scan=0, everything else small
      - Uni Multiprocess with 5 proccessors
      - 6mins ish. Didnt check RAM but it handled 5 without crashing
+   * - FVP 3,3 N 1,2 scan=0, everything else small
+     - Uni Multiprocess with 16 proccessors
+     - 20GB (36s per loop)
    * - FVP 3,3 N 5,6 scan=0, everything else small
      - T7600 with 64GB 1 processor used
      - 26 mins. Only possible w/o the full report information
@@ -103,7 +112,7 @@ This table is a record of the resources used for different trials. The number of
      - Completed in 900sec. Used most memory (about 26GB)
    * - FVP4,3 N5,4 LWi2 Scan=0 without large reports
      - GoogleCloud 786GB N2D 8 processors
-     - Max memory 624gb 40mis per cycle
+     - Max memory 624gb 40mis per cycle (tried and failed with 10 processorrs)
    * - FVP4,3 N5,4 LWi2 Scan=0 without large reports
      - GoogleCloud 256GB N2D Highmem ($2.20/hr)
      - With 3 processors one was killed. With 2 processors max memory 79.8%, pkl files 0.3GB, 35mins per cycle
