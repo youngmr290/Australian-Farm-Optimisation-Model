@@ -11,7 +11,7 @@ Usage
    tips
    inputs
    apsim_integration
-   sensitivity
+   sensitivity_index
    reporting
    debugging
 

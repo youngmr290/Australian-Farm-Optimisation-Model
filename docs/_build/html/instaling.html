@@ -32,6 +32,64 @@
             
   <div class="section" id="installing">
 <h1>Installing<a class="headerlink" href="#installing" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="requirments">
+<h2>Requirments<a class="headerlink" href="#requirments" title="Permalink to this headline">¶</a></h2>
+<p>AFO is a Python based optimisation program. To run it requires access to Python and the necessary Python
+packages as well as a linear programming solver. There are a number of options available that satisfies these
+requirements however only the most commonly used method is documented below.</p>
+<ol class="arabic">
+<li><p>Install Anaconda.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Download the installer (<a class="reference external" href="https://www.anaconda.com/products/individual#Downloads">https://www.anaconda.com/products/individual#Downloads</a>).</p></li>
+<li><p>Run the installer and follow the instructions.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>Install Pyomo. Pyomo is a Python package that is not installed with Anaconda by default.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Open Anaconda prompt which is located in start menu under the Anaconda folder.</p></li>
+<li><p>Enter: <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">install</span> <span class="pre">-c</span> <span class="pre">conda-forge</span> <span class="pre">pyomo</span></code></p></li>
+</ul>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>To install it pyomo to a specific env:  conda install –name AFO -c conda-forge pyomo (pyomo = package, AFO = env)</p>
+</div>
+</div></blockquote>
+</li>
+<li><p>Install solver. AFO requires a linear programming solver to optimise the problem. For this GLPK is used becasue it
+is open source.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">install</span> <span class="pre">-c</span> <span class="pre">conda-forge</span> <span class="pre">glpk</span></code></p></li>
+</ul>
+</div></blockquote>
+</li>
+</ol>
+</div>
+<div class="section" id="afo-access">
+<h2>AFO access<a class="headerlink" href="#afo-access" title="Permalink to this headline">¶</a></h2>
+<p>AFO is managed through Github which gives everyone the ability to use and develop the model. The following
+process can be used to get the source code.</p>
+<ol class="arabic">
+<li><p>Create a GitHub account.</p></li>
+<li><p>Install git.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference external" href="https://git-scm.com/downloads">https://git-scm.com/downloads</a></p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>Clone AFO repository (this essentially downloads all the AFO source code onto your local device).</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>In the git terminal: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span> <span class="pre">https://github.com/youngmr290/Australian-Farm-Optimising-Model.git</span></code></p></li>
+</ul>
+</div></blockquote>
+</li>
+</ol>
+</div>
 </div>
 
 
@@ -54,7 +112,7 @@
 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="model_doc.html">General</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_doc.html">Model Logic</a></li>
 </ul>
 
 <div class="relations">

@@ -14,6 +14,8 @@
     <script src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="ReportControl module" href="ReportControl.html" />
+    <link rel="prev" title="Output &amp; Reporting" href="reporting.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -32,10 +34,27 @@
             
   <div class="section" id="module-ReportFunctions">
 <span id="reportfunctions-module"></span><h1>ReportFunctions module<a class="headerlink" href="#module-ReportFunctions" title="Permalink to this headline">¶</a></h1>
-<p>Created on Sat Apr  4 09:58:05 2020</p>
-<p>&#64;author: young</p>
-<p>This module should not import inputs (in case the inputs are adjusted during the exp so they will not be correct for r_vals)
-When creating r_vals values try and do it in obvious spots even if you need to go out of the way to do it eg phases in rotation.py</p>
+<p>This module contains function which are used for three main jobs:</p>
+<ol class="arabic simple">
+<li><p>General jobs including error checking and reading and writing output files.</p></li>
+<li><p>‘within trial’ calculations. These functions manipulate the output variables from the LP and the
+values from the precalcs. These functions all return a data array.</p></li>
+<li><p>‘between trial’ calculations. These functions summarise the data array from the ‘within trial’ functions
+for all the trials in an experiment. These functions can return table or figures.</p></li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This module should not import inputs (in case the inputs are adjusted during the exp
+so they will not be correct for r_vals)</p>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>There are cases where the report requires more detail than the decision variable returned from
+the lp contains. For example some livestock reports (e.g. FEC) need an e b and p axis but the
+clustering has removed this level of detail in the lp variables.
+To handle this we make the corresponding r_vals array with both the detailed and clustered axis.</p>
+</div>
+<p>author: young</p>
 <dl class="py function">
 <dt id="ReportFunctions.f_add_axis">
 <code class="sig-prename descclassname"><span class="pre">ReportFunctions.</span></code><code class="sig-name descname"><span class="pre">f_add_axis</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prod</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">den_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">denom</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">na_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">na_prod</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">na_denweights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">na_denom</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ReportFunctions.f_add_axis" title="Permalink to this definition">¶</a></dt>
@@ -68,12 +87,14 @@ return options:</p>
 </ul>
 </dd>
 <dt class="field-even">Key option</dt>
-<dd class="field-even"><p>0: tuple all results wrapped in tuple
-1: table all rotations by lmu
-2: float total pasture area
-3: float total crop area
-4: table crop and pasture area by lmu
-5: float pasture %</p>
+<dd class="field-even"><ol class="arabic simple">
+<li><p>tuple all results wrapped in tuple</p></li>
+<li><p>table all rotations by lmu</p></li>
+<li><p>float total pasture area</p></li>
+<li><p>float total crop area</p></li>
+<li><p>table crop and pasture area by lmu</p></li>
+<li><p>float pasture %</p></li>
+</ol>
 </dd>
 </dl>
 </dd></dl>
@@ -111,8 +132,12 @@ option 5: return the maximum value across the slices of the axes</p>
 <dt id="ReportFunctions.f_crop_summary">
 <code class="sig-prename descclassname"><span class="pre">ReportFunctions.</span></code><code class="sig-name descname"><span class="pre">f_crop_summary</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lp_vars</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">option</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ReportFunctions.f_crop_summary" title="Permalink to this definition">¶</a></dt>
 <dd><p>Crop summary. Includes pasture inputs.
-return options:
-0- tuple: fert cost, chem cost, miscellaneous costs and grain revenue for each landuse</p>
+:param option:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Return - tuple: fert cost, chem cost, miscellaneous costs and grain revenue for each landuse</p></li>
+</ol>
+</div></blockquote>
 </dd></dl>
 
 <dl class="py function">
@@ -123,16 +148,16 @@ return options:
 <dl class="py function">
 <dt id="ReportFunctions.f_df2xl">
 <code class="sig-prename descclassname"><span class="pre">ReportFunctions.</span></code><code class="sig-name descname"><span class="pre">f_df2xl</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">writer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sheet</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df_settings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rowstart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colstart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">option</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ReportFunctions.f_df2xl" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>Pandas to excel. <a class="reference external" href="https://xlsxwriter.readthedocs.io/working_with_pandas.html">https://xlsxwriter.readthedocs.io/working_with_pandas.html</a></dt><dd><ul class="simple">
+<dd><p>Pandas to excel. <a class="reference external" href="https://xlsxwriter.readthedocs.io/working_with_pandas.html">https://xlsxwriter.readthedocs.io/working_with_pandas.html</a></p>
+<blockquote>
+<div><ul class="simple">
 <li><p>You can simply stick a dataframe from pandas into excel using df.to_excel() function.
 for this you can specify the workbook the sheet and the start row or col (so you can put
 multiple dfs in one sheet)</p></li>
 <li><p>The next level involves interacting with xlsxwriter. This allows you to do custom things like
 creating graphs, hiding rows/cols, filtering or grouping.</p></li>
 </ul>
-</dd>
-</dl>
+</div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -153,37 +178,40 @@ creating graphs, hiding rows/cols, filtering or grouping.</p></li>
 <dl class="py function">
 <dt id="ReportFunctions.f_dse">
 <code class="sig-prename descclassname"><span class="pre">ReportFunctions.</span></code><code class="sig-name descname"><span class="pre">f_dse</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lp_vars</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">per_ha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">summary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ReportFunctions.f_dse" title="Permalink to this definition">¶</a></dt>
-<dd><p>DSE calculation</p>
+<dd><p>DSE calculation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>lp_vars</strong> – dict: results from pyomo</p></li>
 <li><p><strong>r_vals</strong> – dict: report variable</p></li>
-<li><p><strong>method</strong> – int
-0 - dse by normal weight
-1 - dse by mei</p></li>
+<li><p><strong>method</strong> – <p>int</p>
+<ol class="arabic simple" start="0">
+<li><p>dse by normal weight</p></li>
+<li><p>dse by mei</p></li>
+</ol>
+</p></li>
 <li><p><strong>per_ha</strong> – Bool
 if true it returns DSE/ha else it returns total dse</p></li>
 <li><p><strong>summary</strong> – Bool
 if true it returns the total DSE/ha in fp0</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return DSE per pasture hectare for each sheep group</dt>
-<dd class="field-even"><p></p></dd>
 </dl>
+<p>:return DSE per pasture hectare for each sheep group.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt id="ReportFunctions.f_errors">
 <code class="sig-prename descclassname"><span class="pre">ReportFunctions.</span></code><code class="sig-name descname"><span class="pre">f_errors</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trial_outdated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trials</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ReportFunctions.f_errors" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>Error checks:</dt><dd><ol class="arabic simple">
-<li><p>Any trials infeasible.</p></li>
-<li><p>Any trials don’t exist.</p></li>
-<li><p>Any trials out of date.</p></li>
+<dd><p>The report module conducts three error checks before commencing:</p>
+<ol class="arabic simple">
+<li><p>Have you run the main model for each trial you are trying to report. If not an exception will arise.</p></li>
+<li><p>Are any trials out of date E.g. have you run the main model since updating the inputs or the code.
+If trials are out of date a warning message will be printed but the report code will continue to execute.</p></li>
+<li><p>Did all the trials you are reporting solve optimally. Infeasible trials are still reported the reports are just
+filled with 0’s. A list of infeasible trials will be printed to the consol and reported in the final Report.xlsx
+document.</p></li>
 </ol>
-</dd>
-</dl>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -192,7 +220,7 @@ if true it returns the total DSE/ha in fp0</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
+<dd class="field-even"><p>None.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -203,11 +231,14 @@ if true it returns the total DSE/ha in fp0</p></li>
 <dd><p>Summary of grain, supplement and their costs</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>option</strong> – int:
-0: return dict with various elements
-1: return total supplement fed in each feed period
-2: return total of each grain supplement fed in each feed period
-3: return total sup fed</p>
+<dd class="field-odd"><p><strong>option</strong> – <p>int:</p>
+<ol class="arabic simple">
+<li><p>return dict with various elements</p></li>
+<li><p>return total supplement fed in each feed period</p></li>
+<li><p>return total of each grain supplement fed in each feed period</p></li>
+<li><p>return total sup fed</p></li>
+</ol>
+</p>
 </dd>
 </dl>
 </dd></dl>
@@ -216,12 +247,14 @@ if true it returns the total DSE/ha in fp0</p></li>
 <dt id="ReportFunctions.f_labour_summary">
 <code class="sig-prename descclassname"><span class="pre">ReportFunctions.</span></code><code class="sig-name descname"><span class="pre">f_labour_summary</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lp_vars</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">option</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ReportFunctions.f_labour_summary" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p></p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>option</strong> – <ol class="arabic simple">
+<li><p>return total labour cost</p></li>
+<li><p>return amount for each enterprise</p></li>
+</ol>
+</p>
 </dd>
 </dl>
-<p>0- total labour cost
-1- amount for each enterprise</p>
 </dd></dl>
 
 <dl class="py function">
@@ -270,8 +303,12 @@ option 3: Proportion of dry ewes</p>
 <dt id="ReportFunctions.f_mach_summary">
 <code class="sig-prename descclassname"><span class="pre">ReportFunctions.</span></code><code class="sig-name descname"><span class="pre">f_mach_summary</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lp_vars</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">option</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ReportFunctions.f_mach_summary" title="Permalink to this definition">¶</a></dt>
 <dd><p>Machine summary.
-return options:
-0- table: total machine cost for each crop in each cash period</p>
+:param option:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>table: total machine cost for each crop in each cash period</p></li>
+</ol>
+</div></blockquote>
 </dd></dl>
 
 <dl class="py function">
@@ -311,26 +348,24 @@ return options:
 <dl class="py function">
 <dt id="ReportFunctions.f_price_summary">
 <code class="sig-prename descclassname"><span class="pre">ReportFunctions.</span></code><code class="sig-name descname"><span class="pre">f_price_summary</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lp_vars</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">option</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ReportFunctions.f_price_summary" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns price summaries
-:param r_vals:
-:key option:</p>
-<blockquote>
-<div><p>0- farmgate grain price
-1- wool price STB price for FNF (free or nearly free of fault)
-2- sale price for specified grid at given weight and fat score</p>
-</div></blockquote>
+<dd><p>Returns price summaries</p>
 <dl class="field-list simple">
-<dt class="field-odd">Key grid</dt>
-<dd class="field-odd"><p>list - sale grids to report. Has to be int between 0 and 7 inclusive.</p>
-</dd>
-<dt class="field-even">Key weight</dt>
-<dd class="field-even"><p>float/int - stock weight to report price for.</p>
-</dd>
-<dt class="field-odd">Key fs</dt>
-<dd class="field-odd"><p>int - fat score to report price for. Has to be number between 1-5 inclusive.</p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>r_vals</strong> – </p></li>
+<li><p><strong>option</strong> – <ol class="arabic simple">
+<li><p>farmgate grain price</p></li>
+<li><p>wool price STB price for FNF (free or nearly free of fault)</p></li>
+<li><p>sale price for specified grid at given weight and fat score</p></li>
+</ol>
+</p></li>
+<li><p><strong>grid</strong> – list - sale grids to report. Has to be int between 0 and 7 inclusive.</p></li>
+<li><p><strong>weight</strong> – float/int - stock weight to report price for.</p></li>
+<li><p><strong>fs</strong> – int - fat score to report price for. Has to be number between 1-5 inclusive.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>df</p>
+<dd class="field-even"><p>price summary df</p>
 </dd>
 </dl>
 </dd></dl>
@@ -390,20 +425,22 @@ return options:
 <dl class="py function">
 <dt id="ReportFunctions.f_stock_cash_summary">
 <code class="sig-prename descclassname"><span class="pre">ReportFunctions.</span></code><code class="sig-name descname"><span class="pre">f_stock_cash_summary</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lp_vars</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ReportFunctions.f_stock_cash_summary" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns:
-0- expense and revenue items</p>
+<dd><p>Returns:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>expense and revenue items</p></li>
+</ol>
+</div></blockquote>
 </dd></dl>
 
 <dl class="py function">
 <dt id="ReportFunctions.f_stock_pasture_summary">
 <code class="sig-prename descclassname"><span class="pre">ReportFunctions.</span></code><code class="sig-name descname"><span class="pre">f_stock_pasture_summary</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lp_vars</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">build_df</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cols</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arith</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prod</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">na_prod</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">na_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis_slice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">na_denweights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">den_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">na_denom</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">denom</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ReportFunctions.f_stock_pasture_summary" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns summary of a numpy array in a pandas table.
-Note: 1. prod and weights must be broadcastable.</p>
-<blockquote>
-<div><ol class="arabic simple" start="2">
-<li><p>Specify axes the broadcasted/expanded version.</p></li>
-</ol>
-</div></blockquote>
+<dd><p>..Note:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#. prod and weights must be broadcastable.</span>
+<span class="c1">#. Specify axes the broadcasted/expanded version.</span>
+</pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -461,7 +498,7 @@ option 5: return the maximum value across the slices of the axes</p>
 <dd class="field-odd"><p>dict: keys (int) is the axis. value (list) is the start, stop and step of the slice</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>pandas df</p>
+<dd class="field-even"><p>summary of a numpy array in a pandas table.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -487,7 +524,7 @@ Returns a dictionary with stock params.</p>
 <dl class="py function">
 <dt id="ReportFunctions.f_vars2df">
 <code class="sig-prename descclassname"><span class="pre">ReportFunctions.</span></code><code class="sig-name descname"><span class="pre">f_vars2df</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lp_vars</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_keys</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ReportFunctions.f_vars2df" title="Permalink to this definition">¶</a></dt>
-<dd><p>converts lp vars to series.
+<dd><p>converts lp_vars to pandas series.
 :param lp_vars: dict of variables.
 :param var_key: string - name of variable to convert to series.
 :return: series with season as index level 0</p>
@@ -496,21 +533,24 @@ Returns a dictionary with stock params.</p>
 <dl class="py function">
 <dt id="ReportFunctions.f_vars2np">
 <code class="sig-prename descclassname"><span class="pre">ReportFunctions.</span></code><code class="sig-name descname"><span class="pre">f_vars2np</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lp_vars</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keys_z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_pos</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ReportFunctions.f_vars2np" title="Permalink to this definition">¶</a></dt>
-<dd><p>converts lp vars to numpy.
+<dd><p>converts lp_vars to numpy.
 :param lp_vars: dict of lp variables
 :param var_key: string - name of variable to convert to numpy
 :param shape: shape of desired numpy array
 :param z_pos: position to add z axis
-:return:</p>
+:return: numpy array with season axis.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt id="ReportFunctions.f_xy_graph">
 <code class="sig-prename descclassname"><span class="pre">ReportFunctions.</span></code><code class="sig-name descname"><span class="pre">f_xy_graph</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ReportFunctions.f_xy_graph" title="Permalink to this definition">¶</a></dt>
-<dd><p>returns graph of crop area (x - axis) by profit (y - axis)</p>
+<dd><p>Generic x-y line graphing function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>data</strong> – df with data to plot. first col contains x values and second col contains y values</p>
+<dd class="field-odd"><p><strong>data</strong> – df with data to plot. First col contains x values and second col contains y values</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>x-y plot</p>
 </dd>
 </dl>
 </dd></dl>
@@ -518,7 +558,8 @@ Returns a dictionary with stock params.</p>
 <dl class="py function">
 <dt id="ReportFunctions.load_pkl">
 <code class="sig-prename descclassname"><span class="pre">ReportFunctions.</span></code><code class="sig-name descname"><span class="pre">load_pkl</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trial_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ReportFunctions.load_pkl" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>load in lp_vars and r_vals output file.</p>
+</dd></dl>
 
 </div>
 
@@ -540,15 +581,21 @@ Returns a dictionary with stock params.</p>
 
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="model_doc.html">General</a></li>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_doc.html">Model Logic</a></li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="usage.html">Usage</a><ul>
+  <li><a href="reporting.html">Output &amp; Reporting</a><ul>
+      <li>Previous: <a href="reporting.html" title="previous chapter">Output &amp; Reporting</a></li>
+      <li>Next: <a href="ReportControl.html" title="next chapter">ReportControl module</a></li>
+  </ul></li>
+  </ul></li>
   </ul></li>
 </ul>
 </div>

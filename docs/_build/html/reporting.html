@@ -15,7 +15,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="ReportFunctions module" href="ReportFunctions.html" />
-    <link rel="prev" title="Simulation intergration" href="apsim_integration.html" />
+    <link rel="prev" title="Sensitivity" href="sensitivity_index.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -36,17 +36,137 @@
 <h1>Output &amp; Reporting<a class="headerlink" href="#output-reporting" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="model-output">
 <h2>Model output<a class="headerlink" href="#model-output" title="Permalink to this headline">¶</a></h2>
+<p>Definitions:</p>
+<ul class="simple">
+<li><p>Slacks - this is the slack on each constraint</p></li>
+<li><p>Duals - this is the effect on the objective if the RHS of the constraint is increase by one</p></li>
+<li><p>Rc - this is the effect on the objective if one extra of a given variable is included</p></li>
+</ul>
+<div class="section" id="output">
+<h3>Output<a class="headerlink" href="#output" title="Permalink to this headline">¶</a></h3>
+<p>Printed on screen at the beginning of the execution:</p>
+<ul class="simple">
+<li><p>Time when exp.xlsx was last saved</p></li>
+<li><p>Number of trials to be run</p></li>
+<li><p>Number of full solutions</p></li>
+</ul>
+<p>Printed on screen for each trial:</p>
+<ul class="simple">
+<li><p>Profit</p></li>
+<li><p>Solver status</p></li>
+<li><p>Time for current loop</p></li>
+<li><p>Eta to completion</p></li>
+</ul>
+<p>To check during execution:</p>
+<ul class="simple">
+<li><p>Variable summary: Text file with each activity level - this file is overwritten each iteration but provides a summary of all the variables, only positive variables are included.</p></li>
+</ul>
+<p>If the user selects that they want the ‘full output’ in the exp.xlsx the model will return additional
+information:</p>
+<ul class="simple">
+<li><p>A summary of all activity levels.</p></li>
+<li><p>a lp file: this is a file containing the linear equations of the whole model ie what the solver sees. This can be read via the lpviewer.xlsx document to make it easier to navigate.</p></li>
+<li><p>a text file with the full model print out: this contains the all the activities and constraints, you can also see any slack in the constraints</p></li>
+<li><p>A text file with the reduced costs (effect on profit if one more variable forced into solution) of the variables, the duals (effect on profit if RHS is increased by one) of each constraint and the slack on each constraint.</p></li>
+</ul>
+<p>For reporting:</p>
+<ul>
+<li><p>A dict (lp_vars) with the model variable results determined from the solver for each trial is saved as a pickle file. The pickle file is loaded each time before the execution therefore if the trial has been run already it is overwritten however if this is the first time the trial has run it is added to the existing dict. This dict can be accessed for post run calculations.</p></li>
+<li><p>A dict (r_vals) with report variables from the pre-calcs. These will include:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>A selection of the parameter values</p></li>
+<li><p>Some specifically defined report variables.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div>
+<div class="section" id="using-output">
+<h3>Using output<a class="headerlink" href="#using-output" title="Permalink to this headline">¶</a></h3>
+<p>There are 4 fairly distinct phases in which the model results are used. Each requires different output
+and is carried out differently. There will be some overlapping between the output required for each
+steps. Eg. when understanding the farm system it might be necessary to check if there is an error in
+the model definition, and likewise when reporting scenarios it might be necessary to understand the farm
+system.</p>
+<ol class="arabic">
+<li><p>Debugging model operation (is the maths what we think it is).</p>
+<blockquote>
+<div><p>When a new component has been added it is necessary to check that it is operating correctly and the LP is
+defined correctly. Checking the model definition is the voluminous part. Model definition is the matrix:
+what constraints are defined for what variables (activities) and what is the parameter (coefficient).
+This can be done using:</p>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p>The ‘full output’ method which generates full lp file, variable summary, RC, duals and slacks.</p></li>
+<li><p>You can use LPviewer to aid in viewing the lp file.</p></li>
+</ol>
+</div></blockquote>
+</div></blockquote>
+</li>
+<li><p>Understanding the results of the analysis (why does the farm optimise the way it does).</p>
+<blockquote>
+<div><p>Once confident that the model is solving correctly, the next step is understanding the ‘why’ of the farming
+system. This is usually achieved by looking at details of why a particular solution is the optimum and not
+another that was expected to be more profitable. This can be done by:</p>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p>examining detailed reports (discussed in more detail in the next topic) associated with the
+optimal solution.</p></li>
+<li><p>examining the reduced costs of the model variables and shadow prices of the constraints.</p></li>
+<li><p>bounding individual variables and checking the impact on the optimal solution.</p></li>
+</ol>
+</div></blockquote>
+</div></blockquote>
+</li>
+<li><p>Reporting values for inclusion in reports (what scenarios need to be described for the reader).
+This can be done by:</p>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p>Generating reports using lp_vars &amp; r_vals (discussed in more detail in the next topic).</p></li>
+</ol>
+</div></blockquote>
+</li>
+<li><p>Viewing the results whilst the model is running.</p>
+<blockquote>
+<div><p>This is for large analyses to check that the model is solving satisfactorily, or whether the analysis should be aborted prior to normal completion. This can be done by:</p>
+<ol class="loweralpha simple">
+<li><p>Inspecting the console print out.</p></li>
+<li><p>Inspecting the variable summary which is saved each iteration.</p></li>
+</ol>
+</div></blockquote>
+</li>
+</ol>
+</div>
 </div>
 <div class="section" id="reporting">
 <h2>Reporting<a class="headerlink" href="#reporting" title="Permalink to this headline">¶</a></h2>
-<p>somehow need to hook up auto documentation of each report.
-maybe just document the report funtions.py then the user knows all the possible reports and
-can then structure reportcontrol as they please.</p>
+<div class="section" id="how-to-use">
+<h3>How to use<a class="headerlink" href="#how-to-use" title="Permalink to this headline">¶</a></h3>
+<p>Running the reports is much like running the model (see section or running), simply just run
+ReportControl.py inplace of Exp.py. As with running the core model an argument can be passed into the
+script when running via the terminal which controls which experiment to report. ReportControl.py calls the
+neccessary report functions in ReportFunctions.py. For more information on the process to add reports and information regarding the existing
+reports see below.</p>
+</div>
+<div class="section" id="about">
+<h3>About<a class="headerlink" href="#about" title="Permalink to this headline">¶</a></h3>
+<p>The detailed budgets are created by multiplying the optimal LP primal variable levels (lp_vars) by values from
+the pre-calcs (r_vals), although in some cases it can be using the slacks from the constraints.
+An example of using the slacks is when following the fate of a product (pasture, stubble, grain) in the
+production chain. In this case slack on a row is a ‘sink’ for the product and understanding that is where
+it is going helps understand the output (it may also identify an error, if slack is not expected…ungrazed
+pasture and stubble (slack) are common outcomes, unsold grain (slack) would indicate an error.</p>
 <div class="toctree-wrapper compound">
-<p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="ReportFunctions.html">ReportFunctions module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ReportControl.html">ReportControl module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ReportControl.html#background-and-usage">Background and usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ReportControl.html#how-to-add-a-report">How to add a report:</a></li>
 </ul>
+</li>
+</ul>
+</div>
 </div>
 </div>
 </div>
@@ -79,7 +199,7 @@ can then structure reportcontrol as they please.</p>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
   <li><a href="usage.html">Usage</a><ul>
-      <li>Previous: <a href="apsim_integration.html" title="previous chapter">Simulation intergration</a></li>
+      <li>Previous: <a href="sensitivity_index.html" title="previous chapter">Sensitivity</a></li>
       <li>Next: <a href="ReportFunctions.html" title="next chapter">ReportFunctions module</a></li>
   </ul></li>
   </ul></li>

@@ -14,7 +14,7 @@
     <script src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Output &amp; Reporting" href="reporting.html" />
+    <link rel="next" title="Sensitivity" href="sensitivity_index.html" />
     <link rel="prev" title="UniversalInputs module" href="UniversalInputs.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -34,6 +34,32 @@
             
   <div class="section" id="simulation-intergration">
 <h1>Simulation intergration<a class="headerlink" href="#simulation-intergration" title="Permalink to this headline">¶</a></h1>
+<p>Currently in AFO the crop and pasture modules do not represent the plant life cycle at a biological level (sun, leaf area and soil properties).
+Rather, the modules require inputs of a higher level.
+For example:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>The crop module requires the user to specify the yield obtained for a given crop on a given soil type with a certain level of fertiliser and chemical application.</p></li>
+<li><p>The pasture module requires inputs which specify the growth curve at different FOO levels throughout the year.</p></li>
+</ul>
+</div></blockquote>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>AFO does represent livestock at a detail biological level and thus already captures the detail include in
+a simulation model.</p>
+</div>
+<p>Generating inputs for AFO’s pasture and crop modules can be challenging particularly when you are examining
+unknown scenarios. To aid with this process dtailed simulation models that represent plant life cycle at a biological
+level can be used. APSIM is a detailed whole farm simulation model that can be used to generate inputs for AFO.
+Full documentation can be found here: <a class="reference external" href="https://apsimnextgeneration.netlify.app/">https://apsimnextgeneration.netlify.app/</a>.</p>
+<div class="section" id="crop-inupt-generation">
+<h2>Crop inupt generation<a class="headerlink" href="#crop-inupt-generation" title="Permalink to this headline">¶</a></h2>
+<p>coming</p>
+</div>
+<div class="section" id="pasture-input-generation">
+<h2>Pasture input generation<a class="headerlink" href="#pasture-input-generation" title="Permalink to this headline">¶</a></h2>
+<p>coming</p>
+</div>
 </div>
 
 
@@ -56,7 +82,7 @@
 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="usage.html">Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="model_doc.html">General</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_doc.html">Model Logic</a></li>
 </ul>
 
 <div class="relations">
@@ -65,7 +91,7 @@
   <li><a href="index.html">Documentation overview</a><ul>
   <li><a href="usage.html">Usage</a><ul>
       <li>Previous: <a href="UniversalInputs.html" title="previous chapter">UniversalInputs module</a></li>
-      <li>Next: <a href="reporting.html" title="next chapter">Output &amp; Reporting</a></li>
+      <li>Next: <a href="sensitivity_index.html" title="next chapter">Sensitivity</a></li>
   </ul></li>
   </ul></li>
 </ul>

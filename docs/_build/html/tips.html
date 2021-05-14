@@ -34,6 +34,69 @@
             
   <div class="section" id="tips">
 <h1>Tips<a class="headerlink" href="#tips" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="model-structure-overview">
+<h2>Model structure overview<a class="headerlink" href="#model-structure-overview" title="Permalink to this headline">¶</a></h2>
+<p>The general flow of data in the model is;</p>
+<p>Inputs → apply sensitivities → adjustments calculations (functions and methods) →
+pyomo (compiles linear model) → solve.</p>
+<dl class="simple">
+<dt>The core units of the model are:</dt><dd><ol class="lowerroman simple">
+<li><p>Inputs.</p></li>
+<li><p>Precalcs.</p></li>
+<li><p>Pyomo and solver.</p></li>
+</ol>
+</dd>
+<dt>Inputs</dt><dd><p>The model inputs are stored in three excel spread sheets. The first contains inputs that are likely to
+change for different regions or properties such as farm area and the second, contains inputs that are
+‘universal’ and likely to be consistent for different regions or properties such as prices. Thirdly,
+the structural inputs, which are typically fixed and only changed by experienced users.</p>
+</dd>
+<dt>Precalcs</dt><dd><p>The precalcs are the calculations applied to the input data to generate the data for the Pyomo
+parameters (in other terms, the coefficients for the matrix).</p>
+</dd>
+<dt>Pyomo</dt><dd><p>This is the ‘guts’ of the model, it defines all the variables and parameters then utilised them to
+construct the model equations (constraints). Pyomo formulates all the equations into a linear program
+format and passes the file to a solver. Many solvers are compatible with the Pyomo, currently GLPK
+(GNU Linear Programming Kit) (Makhorin 2014) is used.</p>
+</dd>
+</dl>
+<p>Firstly, the inputs are read in from excel, they are then adjusted according to the user defined sensitivities.
+For example, the user may be interested in the impact of increasing prices hence the price inputs are
+adjusted. Secondly, each module containing precalcs is executed. The produced parameters are stored in a
+python data structure called a dictionary, which is passed to the Pyomo modules.
+The pyomo section of AFO creates the variables, creates parameters, populates the parameters with the
+coefficients passed in from the precalcs, constructs the model constraints and passes the information to
+a linear solver. The results from the solver reveal the maximum farm profit and the optimal levels of each
+variable to maximise the profit. From here the user can create
+any number of different reports.</p>
+<dl class="simple">
+<dt>Execution flow:</dt><dd><ol class="arabic simple">
+<li><p>Exp1.py is run</p></li>
+<li><p>Inputs and exp.xlsx read</p></li>
+<li><p>Determine which trials require running. Trials are only run if set to True in exp.xlsx and the trial
+is out of date (code has changed, inputs have changed or the sensitivity values for that trial have
+changed since it was last run)</p></li>
+<li><p>Apply the sensitivities.</p></li>
+<li><p>Run the precalcs.</p></li>
+<li><p>Run Pyomo.</p></li>
+<li><p>Solve.</p></li>
+<li><p>Pickle and save output files</p></li>
+</ol>
+</dd>
+</dl>
+</div>
+<div class="section" id="multiprocessing">
+<h2>Multiprocessing<a class="headerlink" href="#multiprocessing" title="Permalink to this headline">¶</a></h2>
+<p>Python’s global interpreter lock (GIL), allows only one thread to carry the Python interpreter at any given
+time. The GIL was implemented to handle a memory management issue, but as a result, Python is limited to
+using a single processor. This also limits the ability to utilise the multithreading module in python.</p>
+<p>AFO has been designed such that each trial is independant to all the other trials. Thus to utilise all
+processing power of the computer, AFO can be run using multiple processes that are executed
+simultaneously. This is made possible by the multiprocessing package available in python. The number of processors
+used is determined by passing in an argument when executing the program. If the number of trials to be run is less
+than the number of processors specified the number of processors used will automtically scale to match the
+number of trials.</p>
+</div>
 <div class="section" id="rotation">
 <h2>Rotation<a class="headerlink" href="#rotation" title="Permalink to this headline">¶</a></h2>
 </div>
@@ -42,6 +105,56 @@
 </div>
 <div class="section" id="pyomo">
 <h2>Pyomo<a class="headerlink" href="#pyomo" title="Permalink to this headline">¶</a></h2>
+<p>Speed
+Parameters: initialization of large parameters can take time (for example in the stock module). To save time mask out the 0 values when creating the param dict and set default argument in the parameter to 0. This make it quicker to build the dictionary in the first place and makes it much faster to initilise the parameter in pyomo (see stock pyomo for examples of this)</p>
+<p>Constraints: building constraints can be slow however efficiency can be improved by using if statement which reduce the summing required. Additionally in certain circumstances (eg stock numbers) you can alter the parameters so that duplicate constraints are not built and then use the constraint.skip method to jump over.
+It takes longer than I would have expected to evaluate if statements when building a pyomo constraint so time can be saved when summing by only evaluating required items in the if statement/s.</p>
+<div class="section" id="slacks-duals-rc">
+<h3>Slacks/duals/rc<a class="headerlink" href="#slacks-duals-rc" title="Permalink to this headline">¶</a></h3>
+<p>Duals, reduced costs and constraints slacks are not reported by default in pyomo.
+You must explicity specify them. By default AFO does this. However, they are only processed
+if <code class="docutils literal notranslate"><span class="pre">full</span> <span class="pre">output</span> <span class="pre">==</span> <span class="pre">True</span></code>.</p>
+<p>Access duals, rc and duals:</p>
+<blockquote>
+<div><ol class="arabic">
+<li><p>Tell pyomo to store the information (pre solving):</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">model.rc</span> <span class="pre">=</span> <span class="pre">pe.Suffix(direction=pe.Suffix.IMPORT)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">model.slack</span> <span class="pre">=</span> <span class="pre">pe.Suffix(direction=pe.Suffix.IMPORT)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">model.dual</span> <span class="pre">=</span> <span class="pre">pe.Suffix(direction=pe.Suffix.IMPORT)</span></code></p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>Report the information (post solving):</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">model.rc[model.variable]</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">constraint.uslack()</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">model.dual[model.constraint]</span></code></p></li>
+</ul>
+<p>As a full example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">component_objects</span><span class="p">(</span><span class="n">pe</span><span class="o">.</span><span class="n">Constraint</span><span class="p">,</span> <span class="n">active</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">c</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;      &quot;</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">dual</span><span class="p">[</span><span class="n">c</span><span class="p">[</span><span class="n">index</span><span class="p">]],</span> <span class="n">file</span><span class="o">=</span><span class="n">f</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+</ol>
+</div></blockquote>
+</div>
+<div class="section" id="code-snippets">
+<h3>Code snippets<a class="headerlink" href="#code-snippets" title="Permalink to this headline">¶</a></h3>
+<p>Print a param to file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">textbuffer</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
+<span class="n">model</span><span class="o">.</span><span class="n">p_numbers_req_dams</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">textbuffer</span><span class="p">)</span>
+<span class="n">textbuffer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;number_prov.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outputfile</span><span class="p">:</span>
+    <span class="n">outputfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">textbuffer</span><span class="o">.</span><span class="n">getvalue</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
 </div>
 </div>
 

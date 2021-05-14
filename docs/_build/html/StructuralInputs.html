@@ -34,21 +34,30 @@
             
   <div class="section" id="module-StructuralInputs">
 <span id="structuralinputs-module"></span><h1>StructuralInputs module<a class="headerlink" href="#module-StructuralInputs" title="Permalink to this headline">¶</a></h1>
-<p>Created on 5/2/21</p>
-<p>module: structural module - contains all the structural inputs (only to be change by a core AFO developer)</p>
-<p>This module has no SA</p>
-<p>&#64;author: young</p>
+<p>Contains all the structural inputs relating to the operation of the model.</p>
+<p>The inputs are read in from Structural.xlsx.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Only to be changed by experienced AFO developers.</p>
+</div>
+<p>author: young</p>
 <dl class="py function">
 <dt id="StructuralInputs.end_col">
 <code class="sig-prename descclassname"><span class="pre">StructuralInputs.</span></code><code class="sig-name descname"><span class="pre">end_col</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#StructuralInputs.end_col" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Specifies the column number for the current landuse in the rotation dataframe.
+Used in the crop module</p>
+</dd></dl>
 
 <dl class="py function">
 <dt id="StructuralInputs.structural_inp_sa">
 <code class="sig-prename descclassname"><span class="pre">StructuralInputs.</span></code><code class="sig-name descname"><span class="pre">structural_inp_sa</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#StructuralInputs.structural_inp_sa" title="Permalink to this definition">¶</a></dt>
-<dd><p>None.</p>
-<p>Applies sensitivity adjustment to relevant inputs. Note only inputs in StructuralSA should have sensitivities applied.
+<dd><p>Applies sensitivity adjustment to relevant inputs. Note only inputs in StructuralSA sheet can have sensitivities applied.
 This function gets called at the beginning of each loop in the exp.py module</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>None.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </div>
@@ -73,7 +82,7 @@ This function gets called at the beginning of each loop in the exp.py module</p>
 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="model_doc.html">General</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_doc.html">Model Logic</a></li>
 </ul>
 
 <div class="relations">

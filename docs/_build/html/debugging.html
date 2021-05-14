@@ -15,7 +15,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Model Logic" href="model_doc.html" />
-    <link rel="prev" title="ReportFunctions module" href="ReportFunctions.html" />
+    <link rel="prev" title="ReportControl module" href="ReportControl.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -36,79 +36,150 @@
 <h1>Debugging<a class="headerlink" href="#debugging" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="possible-model-errors">
 <h2>Possible model errors<a class="headerlink" href="#possible-model-errors" title="Permalink to this headline">¶</a></h2>
-<ul class="simple">
-<li><p>You are altering the original inputs because you have operated on a view not a copy.</p></li>
-</ul>
+<ol class="arabic">
+<li><p>Two trials that should be the same are giving different results.</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>Symptoms: Run one trial and it works fine, run multiple trials that should be the same and they are not</p></li>
+<li><dl class="simple">
+<dt>Symptoms:</dt><dd><ul>
+<li><p>Run one trial and it works fine, run multiple trials that are the same and they do not result in the same answer.</p></li>
+<li></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Solution:</dt><dd><ul>
+<li><p>You may be altering the original inputs because you have operated on a view not a copy.
+Create a copy() the problematic input or array. In some cases with co plex data structures you may need a deepcopy()</p></li>
+</ul>
+</dd>
+</dl>
+</li>
 </ul>
 </div></blockquote>
-<p>The model is inconsistently deciding to run pyomo ie the parameters are different but they should be the same
-Model is not selecting any livestock.
-Symptoms: Reducing the number of nutrition options causes no sheep or changing the feedsupply causes no sheep.
-Solution: This problem is likely caused by dams not being able to provide enough prog to replace themselves. This is because the weight distributions don’t align and prog will be getting lost (eg initial dam weights are not similar enough to the prog weights so the prog are not able to provide dams). To fix this you can alter the initial lw of the dams (property inputs: i_adjp_lw_initial_w1).</p>
+</li>
+<li><p>The model is not selecting any livestock.</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="simple">
+<dt>Symptoms:</dt><dd><ul>
+<li><p>Reducing the number of nutrition options causes no sheep or changing the feedsupply causes no sheep.</p></li>
+<li><p>The model becomes infeasible if you force in some livestock without allowing purchasing.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Solution:</dt><dd><ul>
+<li><p>This problem is likely caused by dams not being able to provide enough prog to replace themselves.
+This is because the weight distributions don’t align and prog will be getting lost (eg initial dam weights are not similar enough to the prog weights so the prog are not able to provide dams). To fix this you can alter the initial lw of the dams (property inputs: i_adjp_lw_initial_w1).</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>Infeasible model for no apparent reason.</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="simple">
+<dt>Symptoms:</dt><dd><ul>
+<li><p>Model not solving. Solver exit status returned ‘other’</p></li>
+<li><p>Other very similar trials solve.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Solution:</dt><dd><ul>
+<li><p>In the past we have had issue with no solution being found but the model is not infeasible.
+This could be due to very small numbers getting passed to the solver.
+To fix this tweak a sensitivity value slightly (remove some decimals if possible).</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+</li>
+</ol>
 </div>
 <div class="section" id="process-to-debug">
 <h2>Process to debug<a class="headerlink" href="#process-to-debug" title="Permalink to this headline">¶</a></h2>
-<p>Simplify the model as much as possible to make it easier to debug (reduce TOL options, reduce lw patterns, reduce genotypes etc).
-Check the variable summary. This will point out any obvious issues and help to determine where to start looking.
-To locate where the problem is you can often just comment out constraints until the model solves. This can further indicate where to look.
-Go back to the last working version (using the power of git) and compare outputs with current. If you have some idea where the issue is you can even compare the params between the two versions to see if something jumps out.
-Once you have an idea where the problem is you can look in more detail using:
-The lp file.
-The params dictionary.
-The arrays (assessable in debug mode).</p>
+<ol class="arabic simple">
+<li><p>Check the variable summary. This will point out any obvious issues and help to determine where to start looking.</p></li>
+<li><p>Turn off bounds (overdraw, erosion limit, labour, sr, rotation area).</p></li>
+<li><p>Simplify the model as much as possible to make it easier to debug (reduce TOL options, reduce lw patterns, reduce genotypes etc).</p></li>
+<li><p>To locate where the problem is you can often just comment out constraints until the model solves. This can further indicate where to look.</p></li>
+<li><p>Go back to the last working version (using the power of git) and compare outputs with current. If you have some idea where the issue is you can even compare the params between the two versions to see if something jumps out.</p></li>
+<li><dl class="simple">
+<dt>Once you have an idea where the problem is you can look in more detail using:</dt><dd><ul class="simple">
+<li><p>The lp file.</p></li>
+<li><p>The params dictionary.</p></li>
+<li><p>The arrays (assessable in debug mode).</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ol>
 </div>
 <div class="section" id="solving-an-infeasible-model">
 <h2>Solving an infeasible model<a class="headerlink" href="#solving-an-infeasible-model" title="Permalink to this headline">¶</a></h2>
-<p>If the model is infeasible then solving the model through the code does not return a solution. If the model is run from the command prompt then the option “–nopresol” can be included and a result file will be created.</p>
-<p>Open a command prompt, change to the AFO directory that contains the test.lp (where test.lp is the lp file generated by pyomo before solving - the line to do this must be uncommented) file that was created from the code and type the command:</p>
-<p>C:ModelsAFO&gt;glpsol –lp –nopresol test.lp –output resultfile</p>
-<p>It will generate a screen report of solver info and create a file resultfile (or whatever name was specified) in the AFO directory.</p>
-<p>Infeasible model
-This was caused once by having a very small negative number (-2e-16) returned from the crop sim (sometimes python returns a small negitive number instead of 0), the solver clearly didn’t like it (even though i thought it would just be treated as a 0 or as a small value)
-The model has before not solved returning ‘other’ as the solver status. This may be caused by the solver stalling. Check SA values dont have too many decimals (this may have been an issue once).</p>
+<p>If the model is infeasible then the typical execution of the model will not return a solution.
+To force the model to create an output run the .lp file through the command prompt and specify the
+option <code class="docutils literal notranslate"><span class="pre">--nopresol</span></code>. This can be done as follows:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Create the .lp file. This can be done by including <code class="docutils literal notranslate"><span class="pre">model.write('Output/test.lp',io_options={'symbolic_solver_labels':True})</span></code>
+in CorePyomo prior to solving.</p></li>
+<li><p>Open a command prompt, change to the AFO directory (where the .lp file is located)</p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">C:\Models\AFO&gt;glpsol</span> <span class="pre">--lp</span> <span class="pre">--nopresol</span> <span class="pre">test.lp</span> <span class="pre">--output</span> <span class="pre">resultfile</span></code></p></li>
+<li><p>This will generate a screen report of solver info and create a file resultfile
+(or whatever name was specified) in the AFO directory.</p></li>
+</ul>
+</div></blockquote>
 </div>
-<div class="section" id="pyomo">
-<h2>Pyomo<a class="headerlink" href="#pyomo" title="Permalink to this headline">¶</a></h2>
-<p>Speed
-Parameters: initialization of large parameters can take time (for example in the stock module). To save time mask out the 0 values when creating the param dict and set default argument in the parameter to 0. This make it quicker to build the dictionary in the first place and makes it much faster to initilise the parameter in pyomo (see stock pyomo for examples of this)</p>
-<p>Constraints: building constraints can be slow however efficiency can be improved by using if statement which reduce the summing required. Additionally in certain circumstances (eg stock numbers) you can alter the parameters so that duplicate constraints are not built and then use the constraint.skip method to jump over.
-It takes longer than I would have expected to evaluate if statements when building a pyomo constraint so time can be saved when summing by only evaluating required items in the if statement/s.</p>
-<p>Errors
-1)
-ERROR: evaluating object as numeric value: v_phase_area[GAANw,lmu1]</p>
-<blockquote>
-<div><blockquote>
-<div><p>(object: &lt;class ‘pyomo.core.base.var._GeneralVarData’&gt;)</p>
-</div></blockquote>
-<p>No value for uninitialized NumericValue object v_phase_area[GAANw,lmu1]</p>
-</div></blockquote>
-<p>You are most likely trying to evaluate an equation with a variable, variables don’t have a value at this time hence the error ie trying to do a conditional statement on an equation</p>
-<p>2)
-Error: Constraint resulting in boolean
-Often because param is default to 0 and that is multiplying by other stuff in the equation therefore overall results is 0.
+<div class="section" id="pyomo-errors">
+<h2>Pyomo errors<a class="headerlink" href="#pyomo-errors" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li><dl class="simple">
+<dt>ERROR: evaluating object as numeric value: v_phase_area[GAANw,lmu1] (object: &lt;class ‘pyomo.core.base.var._GeneralVarData’&gt;) No value for uninitialized NumericValue object v_phase_area[GAANw,lmu1]</dt><dd><p>You are most likely trying to evaluate an equation with a variable, variables don’t
+have a value at this time hence the error ie trying to do a conditional statement on an equation</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Error: Constraint resulting in boolean</dt><dd><p>Often because param is default to 0 and that is multiplying by other stuff in the equation therefore overall results is 0.
 Can fix by using if statement to cut out that constrain and use Constraint.Skip (example of this is con_stubble_a in coremodel.py)</p>
-<p>3)
-ERROR: Solver (glpk) returned non-zero return code (1)
-ERROR: See the solver log above for diagnostic information.
--this may be due to an inf number as a param</p>
-<p>4)
-Error: cant evaluate a quadratic
-GLPK can’t evaluate a formula where one variable is being multiplied by another variable. Often to solve this you may need to add a variable and make a transfer constraint.
-5)
-No value for uninitialized NumericValue object v_credit[ND$FLOW]
-This means the solver returned a no feasible solution
-This was caused once by having a very small negative number (-2e-16) returned from the crop sim (sometimes python returns a small negitive number instead of 0), the solver clearly didn’t like it (even though i thought it would just be treated as a 0 or as a small value)
-6) infeasible model:</p>
-<blockquote>
-<div><p>-remove constraints to see which is causing infeasibility
-- remove bounds (overdraw, erosion limit, labour, sr, rotation area</p>
-</div></blockquote>
-<p>7) Writing full solution: No value for uninitialized NumericValue object
-This means a variable has None as its value. This can happen for some variables eg sheep which have been masked out and hence are not really included in the model. When writing the full model the constraints are evaluated. This can cause errors if variables have None value. To fix this error you should skip building constraints which are not required.
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>ERROR: Solver (glpk) returned non-zero return code (1) ERROR: See the solver log above for diagnostic information.</dt><dd><p>This may be due to an inf number as a param</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Error: cant evaluate a quadratic</dt><dd><p>GLPK can’t evaluate a formula where one variable is being multiplied by another variable.
+Often to solve this you may need to add a variable and make a transfer constraint.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>No value for uninitialized NumericValue object v_credit[ND$FLOW]</dt><dd><p>This means the solver returned a no feasible solution
+This was caused once by having a very small negative number (-2e-16) returned from the crop sim (sometimes python returns a small negitive number instead of 0), the solver clearly didn’t like it (even though i thought it would just be treated as a 0 or as a small value)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Writing full solution: No value for uninitialized NumericValue object</dt><dd><p>This means a variable has None as its value. This can happen for some variables eg sheep which have been masked out and hence are not really included in the model. When writing the full model the constraints are evaluated. This can cause errors if variables have None value. To fix this error you should skip building constraints which are not required.
 In my case the upper bound on dams numbers constraint was throwing an error. To fix the problem i skipped the constraints when upper bound was equal to inf (eg when the bound was not doing anything).</p>
+</dd>
+</dl>
+</li>
+</ol>
 </div>
 </div>
 
@@ -140,7 +211,7 @@ In my case the upper bound on dams numbers constraint was throwing an error. To 
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
   <li><a href="usage.html">Usage</a><ul>
-      <li>Previous: <a href="ReportFunctions.html" title="previous chapter">ReportFunctions module</a></li>
+      <li>Previous: <a href="ReportControl.html" title="previous chapter">ReportControl module</a></li>
       <li>Next: <a href="model_doc.html" title="next chapter">Model Logic</a></li>
   </ul></li>
   </ul></li>
