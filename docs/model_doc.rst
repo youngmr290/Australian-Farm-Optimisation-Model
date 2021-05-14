@@ -13,6 +13,8 @@ Model Logic
    labour_index
    livestock_index
    machinery_index
+   bibliography
+
 
 
 

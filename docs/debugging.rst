@@ -29,7 +29,7 @@ Possible model errors
     - Solution:
         - In the past we have had issue with no solution being found but the model is not infeasible.
           This could be due to very small numbers getting passed to the solver.
-          To fix this tweak a sensitivity value slightly.
+          To fix this tweak a sensitivity value slightly (remove some decimals if possible).
 
 Process to debug
 ----------------

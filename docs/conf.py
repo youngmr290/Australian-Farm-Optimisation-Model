@@ -33,9 +33,10 @@ release = '0.0.1'
 extensions = [
     'sphinx.ext.autodoc',  # Core library for html generation from docstrings
     # 'sphinx.ext.autosummary',  # Create neat summary tables
+    'sphinxcontrib.bibtex',  # Used for referencing
 ]
 autosummary_generate = True  # Turn on sphinx.ext.autosummary
-
+bibtex_bibfiles = ['refs.bib']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
