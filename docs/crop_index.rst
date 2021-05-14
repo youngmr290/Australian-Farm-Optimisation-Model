@@ -8,7 +8,7 @@ Precalcs
    :maxdepth: 1
 
    Crop
-   CropLabour
+   LabourCrop
 
 Pyomo
 -----
@@ -17,6 +17,6 @@ Pyomo
    :maxdepth: 1
 
    CropPyomo
-   CropLbourPyomo
+   LabourCropPyomo
 
 

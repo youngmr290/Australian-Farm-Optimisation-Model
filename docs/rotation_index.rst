@@ -1,142 +1,304 @@
-Running
-=======
+Rotation
+========
 
-Overview
----------
-AFO requires Python to be installed on your device and can be run using any IDLE or through
-the teminal. The model is controlled via the Exp1.py module and exp.xlsx spreadsheet. AFO is run from Exp1.py
-but the trials which are run and the application of any sensitivities are controlled using exp.xlsx.
-To customise the execution you can pass in optional args to Exp1.py <experiment number> <processors>
-which control the experiment to be run and the number of processors used. If no arguments are passed
-experiment type 0 will be executed using 1 processor. Once the model has been run two output files per trial will have been
-saved to the pkl folder. To generate an excel report run ReportControl.py. The execution can also
-customised by passing in some optional args <experiment number> <processors> <report number>.
-If no arguments are passed experiment type 0 will be reported using 1 processor and the default report settings.
+Rotation background
+-------------------
 
-IDLE
-----
-Scripts can be run by any python interpreter. Although the necessary packages must be installed (this can be done using ``pip``).
-Anaconda comes with the spyder idle. Spyder has its strong points but it becomes tediously slow when
-debugging the livestock module due to the large arrays. So we tend to used Pycharm.
-Pycharm IDLE handles the debugging efficiently and has many useful capabilities built in. For more information
-check out the documentation or youtube help videos. To run AFO from an IDLE, simply navigate to the Exp1.py module and
-and apply the run command (usually a play button or the like).
+Modelling of cropping or crop-pasture rotations to date has primarily been based on a predetermined,
+restricted set of rotations as “activities” of a LP matrix :cite:p:`RN78`. For example,
+MIDAS applies this same framework. This approach, however, limits the potential rotations that can be
+selected by the model and does not support the flexible nature of real-life rotation selection. For
+example, if the start to a growing season is late, farmers may opt to reduce the area of crop in
+their rotations. It also results in the necessity to build entirely new modules for each agro-climatic
+region due to differences in crop and rotation choices that are available and applicable to each region.
 
-Run using cmd/terminal
-----------------------
-The model can be run through the cmd/terminal. This is used for cloud computing.
-To run the script on terminal; navigate to the directory with the model and run the script
-using the following command: ``python Exp1.py <experiment number> <processors>``
-The python used is the one listed in PATH but you can use others by specifying
-the path when running the command eg ``/PATH/python Exp1.py <experiment number> <processors>``.
-A similar process can be done using the anaconda prompt.
+In AFO we adopt an alternative method proposed by Wimalasuriya and Eigenraam :cite:p:`RN78`, where
+the model solves for the optimal rotation from all possibilities. Each land use [#lmu]_ in the optimal
+solution is determined based on the paddock history and the productivity of the land use that
+follows the given history. This is an unrestricted approach that supports a large range of possible
+rotations and allows greater flexibility for adding new land uses. Additionally, the approach aligns
+more closely with reality, facilitating a more detailed and accurate representation of effects of
+weather-year type on rotation choice.
 
-Exp.xlsx
---------
-Firstly some Terminology.
+We define a rotation phase as a land use (‘current land use’) with a specific sequence of prior
+land uses (‘history required’). Each rotation phase has a level of production (grain and stubble
+production from crops and a pattern and magnitude of pasture production), a level of costs and
+provides a history (‘history provided’). The history provided is the sequence of previous land uses.
+As a simple example, consider the rotation phase Canola: Barley: Wheat. Canola, the current land use.
+Barley – Wheat is the history required and Canola – Wheat is the history provided. To utilise this
+rotation structure in LP requires introducing a constraint to ensure that for the model to select
+a given rotation phase the history required must match a history provide from another rotation.
 
-Analysis:
-    An analysis is all the lines of Exp.xlsx and may also include the same Exp.xlsx being used on multiple regional models.
-Experiment:
-    An experiment is a block of Exp.xlsx that is examining an individual question pertaining to that analysis
-Trial:
-    A trial is a single line within an experiment.
+The terminology used in AFO to distinguish each land use in a rotation is that the current land
+use is termed year 0. The prior year land use is year 1 and so on working backwards through the
+rotation phase. For example, in the rotation Canola: Barley: Wheat; Canola is year 0, Barley is
+year 1 and Wheat is year 2.
 
-Exp.xlsx is used to control the sensitivity values for each trial. It also controls if the
-trial is run, the level of output and if the trial is reported. Trials are grouped into
-experiments in the ‘Exp Group’ column. Trials with the same number are in the same experiment.
-The user can then select which experiment to run by passing in a number when running the
-scripts from terminal (e.g. python Exp.py 2 this will run all the trials with a 2 in the
-‘Exp Group’ column). If no argument is passed in then all trials are included. In Pycharm
-you can pass in an argument by right click on the module name then there is an option to
-Create (it changes to Edit once yo have used it). In there is a parameter box which you put
-a value in. Within an experiment you can use True/False in the ‘Run Trials’ column to
-control if a given trial is executed.
+The rotation phases are designed to be as simple or general as possible, covering all potential
+performance and management variants. A myriad of rotation phases are considered involving land
+uses over a set number of years, and then the infeasible options are removed.
 
-Reporting
-    Running the reports is much like running the model (see above), simply just run
-    ReportControl.py inplace of Exp.py. As with running the core model an argument can be
-    passed into the script when running via the terminal which controls which experiment to report.
-    For further information on reporting see the report section.
+The length of the rotation phases and the level of generalisation possible is determined such
+that the impacts of the history required on the current land use production and costs are captured.
+These can be summarised by:
 
-Size: RAM & Speed
------------------
-This table is a record of the resources used for different trials. The number of slices in the stock axes for both dams and offspring, and the number of rotations are the main variables that will alter resources
+#. The need to track the number of crop phases to determine if an annual pasture needs reseeding.
+#. The need to track the effect of a land use on the productivity or costs of subsequent land uses.
+   This can be either:
 
-.. list-table:: Running
+    a. Fixing of soil nitrogen and the effect on following crops. This requires tracking:
+
+        - The number of years of the legume as it affects the quantity of organic nitrogen.
+
+        - The number of years since the legume to determine the remaining nitrogen.
+
+    b. Impacts on disease levels
+
+    c. Impact on weed seed levels
+
+#. The impact of cropping on subsequent annual pasture germination.
+
+The impacts and assumptions of land use history on production and costs that are being captured
+in the rotation phases developed are:
+
+#. Annual pasture will be resown if the four most recent land uses in the history are crops.
+   Resowing impacts the current year and the succeeding year.
+
+#. Lucerne (or Tedera) will be resown if the immediately preceding land use is not Lucerne (or Tedera)
+
+#. The impacts of spray-topping and manipulating pastures lasts for two years.
+
+#. Germination of annual pasture is affected by
+
+    a. The two most recent land uses in the history.
+
+    b. The crop type immediately prior to the resown annual pasture. Specifically:
+
+        - Oat fodder crop increases pasture germination
+
+        - a pulse crop increases growth of annual pastures (which is represented by an increase in
+          germination)
+
+#. A history of legume pasture (annual, Lucerne and Tedera) provides organic nitrogen for subsequent
+   non-legume crops (cereal or Canola).
+
+    a. The amount of organic nitrogen increases up to 5 years of consecutive legume pasture.
+
+    b. The utilisation of the organic nitrogen lasts for 2 years for a non-legume crop if 1 or 2 years
+       of preceding legume pastures occur. It lasts for 3 years if there is 3+ years of legume pasture.
+
+#. Pulse crops provide organic nitrogen for subsequent non-legume crops.
+
+    a. The impact of the organic nitrogen lasts for a maximum of 3 years.
+
+#. Leaf disease and root disease builds up for each land use and reduces productivity of subsequent
+   repeats of the land use. There is variation in the length of the break required and the duration
+   of the benefit.
+
+    a. It is assumed that the maximum level of disease is reached after 4 consecutive years of a land use.
+
+To capture all the factors listed above the length of the rotation phases represented in AFO is
+defined to a maximum of 6 years, allowing a history of 5 pastures to be tracked. To reduce the number
+of rotation phases, land uses in the history that are assumed to have the same impact on the production
+and cost of the current land use are grouped into ‘land use sets’ (see `Table 2`_). Whilst still capturing
+the factors listed above, the following generalisations apply to history in rotations:
+
+    #. All cereal crops can be treated the same, except for fodder which must be tracked in year 1.
+    #. All pulses can be treated the same.
+    #. All crops can be treated the same after year 3.
+    #. Resown annuals can be treated as any annual pasture after year 1.
+    #. Manipulated and spray-topped pastures can be treated as any pasture after year 2.
+
+After accounting for these generalisations, the following land use options as listed in `Table 1`_ are
+represented in each year of a rotation phase:
+
+* Year 0: all the land use options need to be included
+
+* Year 1: E1, N, OF, P, A, S, U, X, T, J, ar, sr, m
+
+* Year 2: E, N, P, A, S, M, U, X, T, J
+
+* Year 3: the sets E, N, P, A, U, T
+
+* Year 4 → year X [#x]_ : the land use sets Y, A, U, T
+
+Some of the rotation phases constructed will be illogical and must be removed. For example, annual
+pasture is only resown after 4 years of continuous crop therefore, any rotation phase that are
+generated with resown annual that do not have 4 years of crops preceding it must be removed. The
+following rules are implemented to remove illogical rotation phases:
+
+#. If it is Lucerne after non-Lucerne then it must be resown
+
+#. If it is Tedera after non-Tedera then it must be resown
+
+#. If it is annual pasture after 4 other non-annual pasture phases then the annual pasture must be resown
+
+To further reduce the possible number of rotation phases in the model, unprofitable and unused land
+sequences are removed. The following rules apply to lessen the number of likely applicable rotation
+phases:
+
+#. No continuous canola (due to canola disease)
+
+#. No continuous pulse crops (due to pulse disease)
+
+#. No pulse crop after a pasture (this would constitute a poor use of N fixed by the legume pasture)
+
+#. No annual pasture after a spray-topped annual pasture (spray-topping reduces future germination
+   and is almost always solely used to prepare a field for subsequent cropping)
+
+#. No annual pasture (other than spray-topped pasture) after a manipulated annual pasture (usually the
+   purpose of pasture manipulation is to help prepare a field for subsequent cropping. However, cropping
+   aside, a spray-topped pasture is feasible use of a field that has had its pasture manipulated)
+
+#. No single year of Tedera or Lucerne (1yr of a perennial is not a likely profitable use of that perennial)
+
+#. Only a single pasture variety in a rotation phase.
+
+
+.. _Table 1:
+
+.. list-table:: Table 1: Land uses represented by the rotation phases.
    :header-rows: 1
 
-   * - Trial details
-     - Scenario description CPU/RAM (gb)/# of processors
-     - Amount used RAM, pkl file size, time per loop
+   * - Key
+     - Land use
+   * - a
+     - Annual (no chemical)
+   * - ar
+     - Annual resown
+   * - b
+     - Barley
+   * - f
+     - Faba
+   * - h
+     - Hay
+   * - i
+     - Lentil
+   * - j
+     - Tedera (manipulated)
+   * - jc
+     - Continuous Tedera (manipulated)
+   * - jr
+     - Tedera resown (manipulated)
+   * - k
+     - Chickpea
+   * - l
+     - Lupins
+   * - m
+     - Annual (manipulated in winter)
+   * - o
+     - Oats
+   * - of
+     - Oats fodder crop
+   * - r
+     - Canola (RoundUp Ready)
+   * - s
+     - Annual (spray-topped)
+   * - sr
+     - Annual (spray-topped & resown)
+   * - t
+     - Tedera (mixed sward)
+   * - tc
+     - Continuous Tedera (resown every 10yrs) [#tc]_
+   * - tr
+     - Tedera resown (mixed sward)
+   * - u
+     - Lucerne (mixed sward)
+   * - uc
+     - Continuous Lucerne (mixed sward)
+   * - ur
+     - Lucerne resown (mixed sward)
+   * - v
+     - Vetch
+   * - w
+     - Wheat
+   * - x
+     - Lucerne (monoculture)
+   * - xc
+     - Continuous Lucerne (monoculture)
+   * - xr
+     - Lucerne resown (monoculture)
+   * - z
+     - Canola (Triazine Tolerant)
 
-   * - FVP 4,3 N 5,4 (1875, 192) scan=0, everything else small
-     - 48 / 384 / 1
-     - ~50%, , 60 mins
-   * - FVP 5,3 N 3,4 (375, 192) scan=0, everything else small
-     - 64GB ubuntu
-     - Max ~33GB, , 20 mins
-   * - FVP 5,3 N 3,5 scan=0, everything else small
-     - 64GB ubuntu
-     - Max 39GB,
-   * - FVP 4,3 N 4,5 scan=0, everything else small
-     - 64GB ubuntu
-     - Max 39GB,
-   * - FVP 4,3 N 4,4 scan=0, everything else small
-     - 64GB ubuntu, 2 processors
-     - Killed 1 processor.
-   * - FVP 4,3 N 4,4 scan=0, everything else small
-     - 64GB ubuntu, 30GB swap, 2 processors
-     - Successful (required 3GB of swap) 1460sec
-   * - FVP 4,3 N 3,4 scan=0, everything else small
-     - Uni Multiprocess with 5 proccessors
-     - 6mins ish. Didnt check RAM but it handled 5 without crashing
-   * - FVP 3,3 N 1,2 scan=0, everything else small
-     - Uni Multiprocess with 16 proccessors
-     - 20GB (36s per loop)
-   * - FVP 3,3 N 5,6 scan=0, everything else small
-     - T7600 with 64GB 1 processor used
-     - 26 mins. Only possible w/o the full report information
-   * - FVP 3,3 N 5,5 scan=0, everything else small
-     - T7600 with 64GB 1 processor used
-     - 20 mins. Handled storing the full report information
-   * - FVP 3,3 N 3,3 scan=1, everything else small
-     - 64GB ubuntu Multiprocess with 12 proccessors
-     - Handled no problem
-   * - FVP 3,3 N 3,3 scan=2, everything else small
-     - 64GB ubuntu Multiprocess with 12 proccessors
-     - Handled sitting around 50GB RAM
-   * - FVP 3,3 N 3,3 scan=3, everything else small
-     - 64GB ubuntu Multiprocess with 12 proccessors
-     - Killed one processor
-   * - FVP3,3 N1,6
-     - 32GB HP 1 processor
-     - Completed in 900sec. Used most memory (about 26GB)
-   * - FVP4,3 N5,4 LWi2 Scan=0 without large reports
-     - GoogleCloud 786GB N2D 8 processors
-     - Max memory 624gb 40mis per cycle (tried and failed with 10 processorrs)
-   * - FVP4,3 N5,4 LWi2 Scan=0 without large reports
-     - GoogleCloud 256GB N2D Highmem ($2.20/hr)
-     - With 3 processors one was killed. With 2 processors max memory 79.8%, pkl files 0.3GB, 35mins per cycle
 
+.. _Table 2:
 
-
-
-
-
-.. list-table:: Reporting
+.. list-table:: Table 2: Land use sets used in the rotation phase histories.
    :header-rows: 1
 
-   * - Trial details
-     - Scenario description CPU/RAM (gb)/# of processors
-     - Amount used RAM, pkl file size, time per loop
+   * - Key
+     - Land use set
+   * - A
+     - Annual (a, ar)
+   * - E
+     - Cereal (b, h, o, of, w)
+   * - E1
+     - Cereal without fodder (b, h, o, w)
+   * - J
+     - Manipulated Tedera (j, jr)
+   * - N
+     - Canola (r, z)
+   * - P
+     - Pulse (f, i, k, l, v)
+   * - S
+     - Spray-topped annual pasture (s, sr)
+   * - T
+     - Tedera (t, tr)
+   * - U
+     - Lucerne (u, ur)
+   * - X
+     - Manipulated Lucerne (x, xr)
+   * - Y
+     - Anything not annual (E, E1, P, N, J, T, U, X)
 
-   * - FVP 4,3 N 3,4 Large reports included
-     - 64GB ubuntu Multiprocess with 16 proccessors
-     - Slower and ran out of RAM. Cut down to 3 processors and it seemed to be okay. But close to limit.
+
+Land heterogeneity
+------------------
+
+Land quality can vary significantly across a farm, predominantly due to variations in soil type. This
+can impact:
+
+#. The efficiency of machinery use and its rate of wear.
+#. The proportion of arable area.
+#. The level of inputs applied.
+#. The level of production.
+
+AFO represents land variation by splitting the farm area into a specified number of land management
+units. Each land management unit has its own parameters reflecting the factors as listed above.
+Phases of rotations are possible on each land management unit. The model can solve how to best utilize
+the area of each land management unit. Each LMU has a specified proportion of arable area. Non arable
+area can not be cropped however it is accessible by livestock.
+
+.. [#lmu] Use of paddock in a given year.
+.. [#x] Year X is the final year of the rotation phase. This is set by the user.
+.. [#tc] Continuous Tedera/Lucerne are separate land use so that resowing every 10 years can be included.
 
 
- 
+Modules
+-------
 
+Rotation generation
+^^^^^^^^^^^^^^^^^^^
 
+.. toctree::
+   :maxdepth: 1
+
+   RotGeneration
+
+Precalcs
+^^^^^^^^^
+
+.. toctree::
+   :maxdepth: 1
+
+   RotationPhases
+
+Pyomo
+^^^^^^^
+
+.. toctree::
+   :maxdepth: 1
+
+   RotationPyomo
 

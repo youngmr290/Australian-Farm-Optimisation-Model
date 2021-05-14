@@ -1,16 +1,6 @@
-# -*- coding: utf-8 -*-
 """
-Created on Wed Jan  8 10:50:11 2020
+author: young
 
-Version Control:
-Version     Date        Person  Change
-1.1         22/02/202   MRY      commented out con2 as it is not needed - don't delete in case we are wrong and it is required.
-
-Known problems:
-Fixed   Date    ID by   Problem
-     
-
-@author: young
 """
 
 #python modules
@@ -21,6 +11,13 @@ import RotationPhases as rps
 from CreateModel import *
 
 def rotation_precalcs(params, report):
+    '''
+    Call rotation precalc functions.
+
+    :param params: dictionary which stores all arrays used to populate pyomo parameters.
+    :param report: dictionary which stores all report values.
+
+    '''
     rps.rot_params(params)
     rps.landuses_phases(params,report)
     
