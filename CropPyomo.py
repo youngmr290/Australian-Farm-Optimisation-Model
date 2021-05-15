@@ -1,19 +1,8 @@
-# -*- coding: utf-8 -*-
+
 """
-Created on Mon Nov  4 12:07:19 2019
 
-module: labour pyomo module - contains pyomo params, variables and constraints
+author: young
 
-Version Control:
-Version     Date        Person  Change
-1.1         11Dec19     M        update pyomo constrain rule structure - increase constrain building time by using smart (sparse) set indexing
-1.2         16Jan20     M        removed yield from cashflow con - it is now separate so it can be combined with yield penalty and crop grazing yield penalty before being multiplied by price.
-
-Known problems:
-Fixed   Date    ID by   Problem
-     
-
-@author: young
 """
 
 #python modules

@@ -247,10 +247,9 @@ def grain_pool_proportions():
 
 def fert_cost_allocation():
     '''
-    Returns
-    ----------
-    Dataframe; multiplied with fert cashflows 
-        Determines the cashflow period allocation for costs associated with each different fert
+
+    :return Dataframe with the allocation of each fertiliser cost into cashflow periods.
+
     '''
     start_df = pinp.crop['fert_info']['app_date'] #needed for allocation func
     length_df = pinp.crop['fert_info']['app_len'].astype('timedelta64[D]') #needed for allocation func
@@ -358,10 +357,10 @@ def fert_cost(r_vals):
     Cost of fertilising the arable areas. Includes the fertiliser cost and the application cost.
 
     The cost of fertilising is made up from the cost of the fertilisers its self, the cost getting
-    the fertiliser delivered to the farm, the labour cost (documented and accounted for in the crop labour section)
-    and the machinery cost of application (detailed in the machinery section). The cost is incurred in the
-    cashflow period when it is applied. The assumption is that fertilizer is purchased shortly before
-    application because farmers wait to see how the year unfolds before locking in a fertiliser plan.
+    the fertiliser delivered to the farm and the machinery cost of application (detailed in the machinery section).
+    The cost is incurred in the cashflow period when it is applied. The assumption is that fertilizer is
+    purchased shortly before application because farmers wait to see how the year unfolds before locking
+    in a fertiliser plan.
 
     Fertiser application cost is broken into two components (detailed in the machinery section).
 
@@ -499,8 +498,7 @@ frost is not included because that doesn't reduce biomass
 
 def phase_stubble_cost(r_vals):
     '''
-    Yields
-    ------
+
     Dataframe
         Cost to handle stubble for each rotation - summed with other costs in final function below.
         *note - arable area accounted for in the yield (it is the same as accounting for it at the end ie yield x 0.8 / threshold x cost == yield / threshold x cost x 0.8)
@@ -526,10 +524,9 @@ def phase_stubble_cost(r_vals):
 
 def chem_cost_allocation():
     '''
-    Returns
-    ----------
-    Dataframe; multiplied with chem cashflows 
-        Determines the cashflow period allocation for costs associated with each different chem
+
+    :return Dataframe with the allocation of each chemical cost into cashflow periods.
+
     '''
     start_df = pinp.crop['chem_info']['app_date'] #needed for allocation func
     length_df = pinp.crop['chem_info']['app_len'].astype('timedelta64[D]') #needed for allocation func
@@ -539,8 +536,24 @@ def chem_cost_allocation():
 # t_allocation=chem_cost_allocation()
     
 def f_chem_application():
-    '''number of applications for each chemical for each rotation
-        Arable area accounted for here
+    '''
+
+    Number of applications of each chemical option for each rotation.
+
+    AFO represents a customisable number of spraying options (e.g. pre seeding knock down, pre-emergent
+    and post emergent) and the chemical cost of each. The number of applications of each spraying option for each
+    rotation phase is entered by the user or obtained from the simulation output .
+    The number of applications is dependent on the rotation
+    history and the current landuse. This is because the initial levels of weed burden and fungi and
+    pest presence are impacted by previous landuses. Furthermore, chemicals can be specific for certain
+    crops and have varying levels of effectiveness for different weeds and diseases which levels are
+    impacted by previous landuses. Therefore, the number of applications of each spray option is highly
+    dependent on the rotation phase.
+
+    Similar to fertiliser, the number of chemical applications is the
+    same for all LMUs because it is assumed that the spray rate varies rather than the frequency of
+    application. However, the area sprayed is adjusted by the arable proportion for each LMU.
+
     '''
     ##read in chem passes
     if pinp.crop['user_crop_rot']:
@@ -569,12 +582,26 @@ def f_chem_application():
 
 def f_chem_cost(r_vals):
     '''
-    Returns
-    ----------
-    Dataframe: Total cost of chemical and application - summed with other cashflow items at the end of this section 
-        -Calcs the raw chem cost for each rotation phase (ie doesn't include application)
-        -Application cost per ha ($/rotation)
-        -Arable area accounted for in application funciton above
+
+    Calculates the cost of spraying for each rotation phase on each LMU.
+
+    To simplify the input process, the cost of each spray option on the base LMU for each land use is
+    entered as an input by the user. This saves the step of going from a volume of chemical to a cost
+    which means AFO does not need to represent the large array of chemical options available. Making it
+    easier to keep AFO up to date. The chemical cost of each spray option is adjustable by an LMU
+    factor because the spray rate may vary for according to LMU (e.g. a higher chemical concentration
+    may be used on LMU5 vs LMU1).
+
+    The cost of spraying chemicals is made up from the cost of the chemical itself and the machinery
+    cost of application (detailed in the machinery section). The
+    chemical cost is incurred in the cashflow period when it is applied. The assumption is that
+    chemical is purchased shortly before application because farmers wait to see how the year unfolds
+    before locking in a spraying plan.
+
+
+    :return Total cost of chemical and application for each rotation phase - summed with other cashflow
+    items at the end of this section.
+
     '''
     ##read in necessary bits and adjust indexed
     i_chem_cost = pinp.crop['chem_cost'].sort_index()
