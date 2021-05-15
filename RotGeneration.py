@@ -1,6 +1,9 @@
 """
 author: young
 
+Background
+----------
+
 This module generate the rotation info and writes it to excel.
 This is because it is a bit slow and only need to be recalculated
 when rotation rules are changed or new land uses are added.
@@ -16,6 +19,81 @@ There are three options
    3. Generate a custom list of rotations and their inputs. The user can input the phases and their respective
       yield, chem and fert requirements into property.xlsx. RotGeneration.py is still required to be executed because
       it generates the coefficients for each rotation activity for the rotation constraints.
+
+
+Automatic phase generation
+--------------------------
+The process for generating the phases is:
+
+    #. Generate all combinations of the landuses that are possible in each year. The necessary landuses to represent reduces for the older years in the history because the rotations can be generalised.
+    #. Run the ‘drop’ rules to delete those phases that are not required because they are unprofitable or non logical and don’t need to be included.
+    #. Create the ‘history required’ = Yr5, Yr4, Yr3, Yr2, Yr1
+    #. Create the ‘history provided’ = Yr4, Yr3, Yr2, Yr1, Yr 0
+
+Parameters that define the rotation phases.
+
+    These are the fundamental concepts that control the generalisation of rotation phases. If multiple land uses in the
+    history are deemed to have the same effect on the current land use then they can be clustered which reduces the
+    number of rotation phases which need to be represented. For example, if the assumption is that all cereal crops
+    three years ago have the same impact on the current land use then we can reduce the number of rotations phases
+    by cluster all cereal crop in yr3 of the history. See below for the current rules used for clustering.
+
+    .. note:: rotations are built in an inflexible way currently, in the future it would be good to build them more
+        automatically using the params below.
+
+    Number of years:
+
+    * of consecutive cereal before yields plateau (c_cereal = 3)
+    * of consecutive non-annual pasture before annual pasture needs to be resown (resow_a = 4)
+    * ...ditto for lucerne (resow_u = 1)
+    * ...ditto for tedera (resow_t = 1)
+    * that spraytopping or pasture manipulation impacts on crop yields or pasture seed bank (spraytop = 1).
+    * that pasture manipulation followed by spraytopping impacts on yields or seed bank (manip_sprayt=2) on the assumption that manipulation + spraytopping has a greater effect than spraytopping alone.
+    * of legume pasture that will still be increasing soil N levels (build_n = 5)
+    * of non-legume crop to utilise all soil organic N, if built to maximum levels (use_n = 3)
+    * of annual pasture till the seed bank is fully replenished and independent of crop history (build_seed = 2)
+    * of consecutive non-annual that continues to deplete the seed bank (deplete_seed = 3)
+    * of non-canola till canola disease levels have decreased to a minimum (canola_disease = 3)
+    * of non-pulse till pulse disease levels have decreased to a minimum (pulse_disease = 3)
+    * of years of continuous tedera before it needs resowing (tedera_resowing = 10)
+    * of Lucerne before it needs to be resown (lucerne_resowing = 5)
+
+    Length of rotation phase = maximum(resow_a, resow_u, resow_t, use_n, canola disease, pulse disease, spraytopping, manip_sprayt) + 1
+    Year to start numbering the legume pasture landuses = phase_length - use_n + 1
+    Maximum landuse number for legume pasture = build_n
+
+
+The following rules are implemented to remove illogical rotation phases:
+
+    #. If it is Lucerne after non-Lucerne then it must be resown
+
+    #. If it is Tedera after non-Tedera then it must be resown
+
+    #. If it is annual pasture after 4 other non-annual pasture phases then the annual pasture must be resown
+
+The following rules are implemented to remove unprofitable rotation phases:
+
+    .. note:: These rules may need to be tweaked for certain analyses. For example, in the seasonal variation model it may
+        be sensible to include a after s and m or maybe s after s and m after m. This will allow tactical adjustment to
+        remain with annual pasture even though cropping was the strategic decision.
+
+    #. No continuous canola (due to canola disease)
+
+    #. No continuous pulse crops (due to pulse disease)
+
+    #. No pulse crop after a pasture (this would constitute a poor use of N fixed by the legume pasture)
+
+    #. No annual pasture after a spray-topped annual pasture (spray-topping reduces future germination
+       and is almost always solely used to prepare a field for subsequent cropping)
+
+    #. No annual pasture (other than spray-topped pasture) after a manipulated annual pasture (usually the
+       purpose of pasture manipulation is to help prepare a field for subsequent cropping. However, cropping
+       aside, a spray-topped pasture is feasible use of a field that has had its pasture manipulated)
+
+    #. No single year of Tedera or Lucerne (1yr of a perennial is not a likely profitable use of that perennial)
+
+    #. Only a single pasture variety in a rotation phase.
+
 
 
 """
