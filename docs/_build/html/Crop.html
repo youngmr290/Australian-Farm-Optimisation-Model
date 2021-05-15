@@ -75,10 +75,7 @@ requirement and number of chemical applications for a wide range of rotations.</
 <dl class="py function">
 <dt id="Crop.chem_cost_allocation">
 <code class="sig-prename descclassname"><span class="pre">Crop.</span></code><code class="sig-name descname"><span class="pre">chem_cost_allocation</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Crop.chem_cost_allocation" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>Dataframe; multiplied with chem cashflows </dt><dd><p>Determines the cashflow period allocation for costs associated with each different chem</p>
-</dd>
-</dl>
+<dd><p>:return Dataframe with the allocation of each chemical cost into cashflow periods.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -107,19 +104,38 @@ from Property.xl depending on what the user has specified to do.</p>
 <dl class="py function">
 <dt id="Crop.f_chem_application">
 <code class="sig-prename descclassname"><span class="pre">Crop.</span></code><code class="sig-name descname"><span class="pre">f_chem_application</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Crop.f_chem_application" title="Permalink to this definition">¶</a></dt>
-<dd><p>number of applications for each chemical for each rotation
-Arable area accounted for here</p>
+<dd><p>Number of applications of each chemical option for each rotation.</p>
+<p>AFO represents a customisable number of spraying options (e.g. pre seeding knock down, pre-emergent
+and post emergent) and the chemical cost of each. The number of applications of each spraying option for each
+rotation phase is entered by the user or obtained from the simulation output .
+The number of applications is dependent on the rotation
+history and the current landuse. This is because the initial levels of weed burden and fungi and
+pest presence are impacted by previous landuses. Furthermore, chemicals can be specific for certain
+crops and have varying levels of effectiveness for different weeds and diseases which levels are
+impacted by previous landuses. Therefore, the number of applications of each spray option is highly
+dependent on the rotation phase.</p>
+<p>Similar to fertiliser, the number of chemical applications is the
+same for all LMUs because it is assumed that the spray rate varies rather than the frequency of
+application. However, the area sprayed is adjusted by the arable proportion for each LMU.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt id="Crop.f_chem_cost">
 <code class="sig-prename descclassname"><span class="pre">Crop.</span></code><code class="sig-name descname"><span class="pre">f_chem_cost</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Crop.f_chem_cost" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>Dataframe: Total cost of chemical and application - summed with other cashflow items at the end of this section </dt><dd><p>-Calcs the raw chem cost for each rotation phase (ie doesn’t include application)
--Application cost per ha ($/rotation)
--Arable area accounted for in application funciton above</p>
-</dd>
-</dl>
+<dd><p>Calculates the cost of spraying for each rotation phase on each LMU.</p>
+<p>To simplify the input process, the cost of each spray option on the base LMU for each land use is
+entered as an input by the user. This saves the step of going from a volume of chemical to a cost
+which means AFO does not need to represent the large array of chemical options available. Making it
+easier to keep AFO up to date. The chemical cost of each spray option is adjustable by an LMU
+factor because the spray rate may vary for according to LMU (e.g. a higher chemical concentration
+may be used on LMU5 vs LMU1).</p>
+<p>The cost of spraying chemicals is made up from the cost of the chemical itself and the machinery
+cost of application (detailed in the machinery section). The
+chemical cost is incurred in the cashflow period when it is applied. The assumption is that
+chemical is purchased shortly before application because farmers wait to see how the year unfolds
+before locking in a spraying plan.</p>
+<p>:return Total cost of chemical and application for each rotation phase - summed with other cashflow
+items at the end of this section.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -270,10 +286,10 @@ this is used in the LabourCropPyomo</p>
 <code class="sig-prename descclassname"><span class="pre">Crop.</span></code><code class="sig-name descname"><span class="pre">fert_cost</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Crop.fert_cost" title="Permalink to this definition">¶</a></dt>
 <dd><p>Cost of fertilising the arable areas. Includes the fertiliser cost and the application cost.</p>
 <p>The cost of fertilising is made up from the cost of the fertilisers its self, the cost getting
-the fertiliser delivered to the farm, the labour cost (documented and accounted for in the crop labour section)
-and the machinery cost of application (detailed in the machinery section). The cost is incurred in the
-cashflow period when it is applied. The assumption is that fertilizer is purchased shortly before
-application because farmers wait to see how the year unfolds before locking in a fertiliser plan.</p>
+the fertiliser delivered to the farm and the machinery cost of application (detailed in the machinery section).
+The cost is incurred in the cashflow period when it is applied. The assumption is that fertilizer is
+purchased shortly before application because farmers wait to see how the year unfolds before locking
+in a fertiliser plan.</p>
 <p>Fertiser application cost is broken into two components (detailed in the machinery section).</p>
 <blockquote>
 <div><ol class="arabic simple">
@@ -287,10 +303,7 @@ application because farmers wait to see how the year unfolds before locking in a
 <dl class="py function">
 <dt id="Crop.fert_cost_allocation">
 <code class="sig-prename descclassname"><span class="pre">Crop.</span></code><code class="sig-name descname"><span class="pre">fert_cost_allocation</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Crop.fert_cost_allocation" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>Dataframe; multiplied with fert cashflows </dt><dd><p>Determines the cashflow period allocation for costs associated with each different fert</p>
-</dd>
-</dl>
+<dd><p>:return Dataframe with the allocation of each fertiliser cost into cashflow periods.</p>
 </dd></dl>
 
 <dl class="py function">

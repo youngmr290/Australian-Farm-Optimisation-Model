@@ -6,3 +6,4 @@ openpyxl
 networkx
 matplotlib
 scipy
+xlsxwriter
