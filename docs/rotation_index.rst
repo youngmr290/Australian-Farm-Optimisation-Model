@@ -124,36 +124,11 @@ represented in each year of a rotation phase:
 
 Some of the rotation phases constructed will be illogical and must be removed. For example, annual
 pasture is only resown after 4 years of continuous crop therefore, any rotation phase that are
-generated with resown annual that do not have 4 years of crops preceding it must be removed. The
-following rules are implemented to remove illogical rotation phases:
-
-#. If it is Lucerne after non-Lucerne then it must be resown
-
-#. If it is Tedera after non-Tedera then it must be resown
-
-#. If it is annual pasture after 4 other non-annual pasture phases then the annual pasture must be resown
+generated with resown annual that do not have 4 years of crops preceding it must be removed. See RotGeneration_
+for the full list of illogical rules.
 
 To further reduce the possible number of rotation phases in the model, unprofitable and unused land
-sequences are removed. The following rules apply to lessen the number of likely applicable rotation
-phases:
-
-#. No continuous canola (due to canola disease)
-
-#. No continuous pulse crops (due to pulse disease)
-
-#. No pulse crop after a pasture (this would constitute a poor use of N fixed by the legume pasture)
-
-#. No annual pasture after a spray-topped annual pasture (spray-topping reduces future germination
-   and is almost always solely used to prepare a field for subsequent cropping)
-
-#. No annual pasture (other than spray-topped pasture) after a manipulated annual pasture (usually the
-   purpose of pasture manipulation is to help prepare a field for subsequent cropping. However, cropping
-   aside, a spray-topped pasture is feasible use of a field that has had its pasture manipulated)
-
-#. No single year of Tedera or Lucerne (1yr of a perennial is not a likely profitable use of that perennial)
-
-#. Only a single pasture variety in a rotation phase.
-
+sequences are removed. See RotGeneration_ for the full list of rules.
 
 .. _Table 1:
 
@@ -270,6 +245,16 @@ Phases of rotations are possible on each land management unit. The model can sol
 the area of each land management unit. Each LMU has a specified proportion of arable area. Non arable
 area can not be cropped however it is accessible by livestock.
 
+.. note:: If different crop management prior to a pasture phase (e.g. reduced expenditure on herbicide
+    because weed seed control is not important) is to be represented then this will require extra landuse
+    options for the previous crop and extra landuse options for the germinating pasture.
+
+.. note:: The FOO level at the end of spring is not carried into the next year as a weed burden (e.g.
+    the weed burden in the current year is the same independent of grazing/season last year). This could be
+    represented by adding pasture phases that have spring FOO level as a part of the definition e.g. EEEEah
+    which is annual pasture with high spring FOO following multiple cereals.
+
+
 .. [#lmu] Use of paddock in a given year.
 .. [#x] Year X is the final year of the rotation phase. This is set by the user.
 .. [#tc] Continuous Tedera/Lucerne are separate land use so that resowing every 10 years can be included.
@@ -280,6 +265,7 @@ Modules
 
 Rotation generation
 ^^^^^^^^^^^^^^^^^^^
+.. _RotGeneration:
 
 .. toctree::
    :maxdepth: 1
