@@ -1,2 +1,4 @@
 sphinxcontrib-bibtex
-sphinx.ext.autodoc
+pandas
+numpy
+pyomo
