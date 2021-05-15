@@ -1211,4 +1211,12 @@ def f_baseyr(periods, base_year=None):
     periods = periods - (np.timedelta64(365, 'D') * year_offset)
     return periods
 
-
+def np_extrap(x, xp, yp):
+    ## np.interp function with linear extrapolation if x is beyond the input date (xp)
+    ### from https://stackoverflow.com/questions/2745329/how-to-make-scipy-interpolate-give-an-extrapolated-result-beyond-the-input-range"""
+    y = np.array(np.interp(x, xp, yp))  #convert y to array so that it can be masked (required if x is a scalar)
+    ##use a mask to adjust values if extrapolating x below the lowest input value in xp
+    y[x < xp[0]] = yp[0] + (x[x<xp[0]]-xp[0]) * (yp[0]-yp[1]) / (xp[0]-xp[1])
+    ##use a mask to adjust values if extrapolating x above the highest input value in xp
+    y[x > xp[-1]]= yp[-1] + (x[x>xp[-1]]-xp[-1])*(yp[-1]-yp[-2])/(xp[-1]-xp[-2])
+    return y

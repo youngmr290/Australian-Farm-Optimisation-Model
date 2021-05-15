@@ -1674,16 +1674,16 @@ def f_woolprice():
     '''
     ##input value for micron price guide percentile to use (adjusted by SAV during the input process)
     mpg_percentile = uinp.sheep['i_woolp_mpg_percentile']
-    ##price for the std FD at selected percentile
-    mpg_stdfd = np.interp(mpg_percentile, uinp.sheep['i_woolp_mpg_range_w5'], uinp.sheep['i_woolp_mpg_w5'])
+    ##extrapolate price for the std FD at selected percentile (can go beyond the data input range)
+    mpg_stdfd = fun.np_extrap(mpg_percentile, uinp.sheep['i_woolp_mpg_range_w5'], uinp.sheep['i_woolp_mpg_w5'])
     ##adjust price for the std FD using sav
     mpg_stdfd = fun.f_sa(mpg_stdfd, sen.sav['woolp_mpg'], 5)
     ##adjust price for the std FD using sam
     mpg_stdfd = fun.f_sa(mpg_stdfd, sen.sam['woolp_mpg'])
     ##FD percentile to use (adjusted by SAV during the input process)
     fd_percentile = uinp.sheep['i_woolp_fdprem_percentile']
-    ##FD premium at selected percentile for each FD
-    fdprem_w4 = np.array([np.interp(fd_percentile, uinp.sheep['i_woolp_fdprem_range_w5'], uinp.sheep['i_woolp_fdprem_w4w5'][i])
+    ##extrapolate FD premium at selected percentile for each FD (can go beyond the data input range)
+    fdprem_w4 = np.array([fun.np_extrap(fd_percentile, uinp.sheep['i_woolp_fdprem_range_w5'], uinp.sheep['i_woolp_fdprem_w4w5'][i])
                           for i in range(uinp.sheep['i_woolp_fdprem_w4w5'].shape[0])])
     ##adjust FD premium using sav
     fdprem_w4 = fun.f_sa(fdprem_w4, sen.sav['woolp_fdprem'], 5)
@@ -1751,12 +1751,12 @@ def f_norm_cdf(x, mu, cv):
 def f_saleprice(score_pricescalar_s7s5s6, weight_pricescalar_s7s5s6, dtype=None):
     ##Sale price percentile to use (adjusted by sav)
     salep_percentile = uinp.sheep['i_salep_percentile']
-    ##Max price in grids at selected percentile - 1d interpolation along the s4 axis for each grid (s7 axis)
-    grid_max_s7 = (np.array([np.interp(salep_percentile, uinp.sheep['i_salep_percentile_range_s4'], uinp.sheep['i_salep_percentile_scalar_s7s4'][i])
+    ##Max price in each grid (s7 axis) at selected percentile - 1d extrapolation along the s4 axis (can go beyond the input range)
+    grid_max_s7 = (np.array([fun.np_extrap(salep_percentile, uinp.sheep['i_salep_percentile_range_s4'], uinp.sheep['i_salep_percentile_scalar_s7s4'][i])
                             for i in range(uinp.sheep['i_salep_percentile_scalar_s7s4'].shape[0])]) * uinp.sheep['i_salep_price_max_s7']).astype(dtype)
-    ##Max price in grids (adj sav)
+    ##Max price in grids (adj sav - overwrites the previous values)
     grid_max_s7 = fun.f_sa(grid_max_s7, sen.sav['salep_max'], 5)
-    ##Max price in grids (adj sam)
+    ##Max price in grids (adj sam - scales the values)
     grid_max_s7 = fun.f_sa(grid_max_s7, sen.sam['salep_max'])
     ##Scalar for weight impact across the grid (sat adjusted)
     weight_scalar_s7s5s6 = weight_pricescalar_s7s5s6
