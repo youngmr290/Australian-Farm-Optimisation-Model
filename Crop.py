@@ -1,30 +1,40 @@
-# -*- coding: utf-8 -*-
 """
-Created on Thu Oct 17 15:05:00 2019
 
-module: crop/rotation module
+author: young
 
-key: green section title is major title 
-     '#' around a title is a minor section title
-     std '#' comment about a given line of code
- 
-Version Control:
-Version     Date        Person  Change
-1.1         27Dec19     MRY     Updated rotation phase function, and crop functions (individual costs separated and one funct to sum them all at the bottom)
-1.1         28Dec19     MRY     alterd stubble handling to work with new rotation system (stubble handling cost is now associated with the current phase rather than the previous phase)
-1.2         16Jan20     M       separated grain price from yield - it is now separate so it can be combined with yield penalty and crop grazing yield penalty before being multiplied by price.
+The cropping module is driven by the inputs [#i]_ for yield production, fertiliser and chemical
+requirements for each rotation phase on each LMU. AFO can then optimise the area of each rotation
+on each LMU. AFO does not currently simulate the biology of plant growth under different technical
+management. Thus, the model is unable to optimise technical aspects of cropping such as timing and
+level of controls5. However, the user has the capacity to do this more manually by altering the
+inputs (more like the technique of simulation modelling) or by including additional land uses
+which represent varying levels of production and controls. When determining the inputs for each
+rotation the user must consider the rotation history. The rotation history can influence the soil
+fertility, weed burden and disease and pest levels. These factors impact the potential yield and
+the optimal level of controls.
 
-Known problems:
-Fixed   Date        ID by   Problem
-        28/12/19    MRY     No input optimisation (solution is to convert crop into a simulation)
-        28/12/19    MRY     All lmus receive a fert app cost per ha even if the fert applied to that lmu is 0 (generally not a problem bevause all lmus receive some fert. and the per tonne cost accounts for variable lmu rates)
-        28/12/19    MRY     Stubble handeling cost still aplies even if the next phase would be pasture (difficult to fix but only a minor issue)
+There are two methods that can be used to generate cropping inputs for the model:
 
-    
-Things to add to this module: some input optimisation
+#. Manually enter the inputs for selected rotation phases:
+
+    The user can manually input the fertiliser and chemical requirement of given phases in a rotation
+    and the resulting yield. To do this accurately requires an in-depth knowledge of cropping in the
+    location being modelled. Thus, the process is often done in collaboration with a consultant or
+    specialist in the field. This input method can be limiting if the user is hoping to include a
+    large number of rotation phases or landuses that are not well established in the given location
+    because it can be difficult to determine accurate inputs.
+
+#. Generate using simulation modelling:
+
+    APSIM is a whole farm simulation model widely used in Australia. APSIM has detailed modules which
+    use robust relationships to simulate plant growth. The parameters used in APSIM can be altered to
+    represent plant growth in many different situations. For example, different soil conditions. A-F-O users
+    can use APSIM to generate yield, fertiliser requirement, number of fertiliser applications, chemical
+    requirement and number of chemical applications for a wide range of rotations.
+
+.. [#i] Inputs – A-F-O parameters.
 
 
-@author: young
 """
 
 #python modules
@@ -43,10 +53,6 @@ import Periods as per
 import Mach as mac
 
   
-               
-        
-
-
 
 ########################
 #phases                #
@@ -83,13 +89,17 @@ if len(phases_df) != len(base_yields):
 def f_farmgate_grain_price(r_vals={}):
     '''
 
-    Returns
-    -------
-    Dataframe - used below and to calculate insurance and sup feed purchase price.
-                Price includes:
-                -offspec grain
-                -cartage cost
-                -other fees ie cbh and levies
+    Calculates the grain price received by the farmer.
+
+    The farm gate grain price [#]_ is calculated for each grain pool. Different grain pools are included to
+    represent different grain qualities. Depending on the grain variety used, the season and the farmers skill
+    the grain produced will change quality and hence receive a different price. The price received by the farmer is the
+    market price received less any selling costs. The selling costs includes the transport cost which are
+    dependent on the location of the modelled farm, and the selling fees which often includes receival
+    and testing fees, and government levies.
+
+    .. [#] Farm gate price – price received by the farmer after fees.
+
     '''
     grain_price_info_df=uinp.price['grain_price'] #create a copy of grain price df so you don't have to reference input module each time
     ##gets the price of firsts and seconds for each grain
@@ -106,10 +116,9 @@ def f_farmgate_grain_price(r_vals={}):
 
 def f_grain_price(r_vals):
     '''
-    Returns
-    -------
-    Dict.
-        Farm gate price for each grain - allocated into cash periods
+    Allocates grain price into a cashflow period and stores parameter data for pyomo.
+
+    :return Dict of farm gate price received for each grain in each cashflow period.
         
     '''
     ##calc farm gate grain price for each cashflow period - accounts for tols and other fees
@@ -126,17 +135,24 @@ def f_grain_price(r_vals):
     return grain_price.stack([0,1])
 # a=grain_price()
 
-##function to determine the proportion of grain in each pool 
-def grain_pool_proportions():
-    prop = uinp.price['grain_price'][['prop_firsts','prop_seconds']]
-    prop.columns=['firsts','seconds']
-    return prop.stack()
-
 #########################
 #yield                  #
 #########################
 def f_base_yield():
-    '''base yield - used in stubble as well to calc foo for relativie availability'''
+    '''
+    Yield for each rotation on the base LMU before adjusting for arable area and frost. This is also used
+    in stubble.py to calc FOO for relative availability.
+
+    The crop yield for each rotation phase, on the base LMU [#]_, before frost adjustment, is entered as an input.
+    As mentioned, the yield input considers the history of the land ues and hence the current level of soil
+    fertility, weed burden, and disease prominence, and how the current land use is affected by the existing
+    levels of each.
+
+    This function essentially just reads in the yield inputs from either the simulation output or
+    from Property.xl depending on what the user has specified to do.
+
+    .. [#] Base LMU – standardise LMU to which other LMUs are compared against.
+    '''
 
     ##read in yields
     if pinp.crop['user_crop_rot']:
@@ -152,15 +168,36 @@ def f_base_yield():
 
 def f_rot_yield():
     '''
-    Returns
-    ----------
-    Dataframe - passed to pyomo and used to calc insurance & stubble handling
-        Grain yield for each rotation.
-        Yield includes:
-        -arable area
-        -seeding rate (if farmers use thier own seed)
-        -lmu factor
-        -frost
+    Adjusts the base yield returning the crop yield for each rotation phase on each LMU if seeding was completed
+    on time.
+
+    To extrapolate the inputs from the base LMU to the other LMUs an LMU adjustment factor is
+    applied which determines the yield on each other LMU as a proportion of the base LMU. The LMU adjustment
+    factor accounts for the variation in yield on different LMUs when management is the same.
+
+    The decision variable represented in the model is the yield per hectare on a given LMU. To account for
+    the fact that LMUs are rarely 100% arable due to patches of rocks, gully’s, waterlogged area and uncleared
+    trees the yield is adjusted by the arable proportion. (eg if wheat yields 4 t/ha on LMU5 and LMU5 is 80%
+    arable then 1 unit of the decision variable will yield 3.2t of wheat).
+
+    Crop yield can also be adversely impacted by frost during the plants flowing stage :cite:p:`RN144`. Thus,
+    the yield of each rotation phase is adjusted by a frost factor. The frost factor can be customised for each
+    crop which is required because different crops flower at different times, changing the impact probability of
+    frost yield reduction. Frost factor can be customised for each LMU because frost effects can be altered by
+    the LMU topography and soil type. For example, sandy soils are more affected by frost because the lower
+    moisture holding capacity reduces the heat buffering from the soil.
+
+    .. note:: Potentailly frost can be accounted for in the inputs (particularly if the simulation model accounts
+        for frost). The LMU yield factor must then capture the difference of yield on different LMUS.
+
+    Furthermore, as detailed in the machinery chapter, sowing timeliness can also impact yield. Dry sowing tends [#]_
+    to incur a yield reduction due to forgoing an initial knockdown spray. While later sowing incurs a yield
+    loss due to a reduced growing season.
+
+    .. [#] Dry sowing may not incur a yield penalty in seasons with a late break.
+
+    :return Dataframe of rotation yields - passed to pyomo and used to calc grain insurance & stubble handling cost
+
     '''
     ##base yields
     base_yields = f_base_yield().stack()
@@ -176,6 +213,20 @@ def f_rot_yield():
     yields=yields.sub(seeding_rate,axis=0).clip(lower=0) #we don't want negative yields so clip at 0 (if any values are neg they become 0)
     return yields.stack()
 
+
+def grain_pool_proportions():
+    '''Calculate the proportion of grain in each pool.
+
+    The total adjusted yield is split into two pools (firsts and seconds) to represent the grain that does
+    and does not meet the quality specifications. Grain that does not meet the specifications is downgraded
+    and sold for a discount. Each grain pool is represented as a separate grain transfer constraint, providing
+    the option for the model to optimise the grain outcome. For example, the model has the option to sell high
+    quality grain (firsts) to market and retain the lower quality grain (seconds) for livestock feed.
+
+    '''
+    prop = uinp.price['grain_price'][['prop_firsts','prop_seconds']]
+    prop.columns = ['firsts','seconds']
+    return prop.stack()
 
 
 #######
@@ -211,10 +262,20 @@ def fert_cost_allocation():
 
 def f_fert_req():
     '''
-    Returns
-    ----------
-    Dataframe; used to calc fert cost in the next function
-        Fert required by 1ha of each phases (kg/ha) after accounting for arable area
+    Fert required by 1ha of each rotation phase (kg/ha) after accounting for arable area.
+
+    The fertiliser requirement is broken into two sections. Firstly, fixed fertiliser which is the
+    amount of each fertiliser that applies to a land use independent of the phase history (e.g. lime
+    which is typically applied routinely irrelevant of the land use history). Secondly, variable
+    fertiliser which is applied to a rotation phase based on both the current land use and the
+    history. This method is necessary because crops have varying nutrient requirements, have
+    varying methods to obtain nutrients from the soil and leave the soil in varying states (e.g.
+    pulse crop are able to fix nitrogen which typically reduces their requirement for external
+    nitrogen and also leaves the soil with more nitrogen for the following years).
+
+    For both fixed and variable applications the fertiliser requirement for each rotation phase, for
+    the base LMU is entered by the user or obtained from the simulation output for each rotation.
+    The fertiliser requirement is then adjusted by an LMU factor and the arable area factor.
 
     '''
     ##read in fert by soil
@@ -252,7 +313,15 @@ def f_fert_req():
 
 
 def f_fert_passes():
-    '''passes over arable area'''
+    '''
+    Hectares of fertilising required over arable area.
+
+    For both fixed and variable fertiliser the number of applications for each rotation phase
+    is entered by the user or obtained from the simulation output. The
+    number of fertiliser applications is the same for all LMUs because it is assumed that the rate
+    of application varies rather than the frequency of application.
+
+    '''
     ####read in passes
     if pinp.crop['user_crop_rot']:
         ### User defined
@@ -286,13 +355,21 @@ def f_fert_passes():
 
 def fert_cost(r_vals):
     '''
-    Returns
-    ----------
-    Dataframe; summed with other fert cashflow items at the end of this section 
-        Calcs;
-        - cost of actual fertiliser for each rotation phase (including transport)
-        - Application cost per tonne ($/rotation)
-        - Application cost per ha ($/rotation)
+    Cost of fertilising the arable areas. Includes the fertiliser cost and the application cost.
+
+    The cost of fertilising is made up from the cost of the fertilisers its self, the cost getting
+    the fertiliser delivered to the farm, the labour cost (documented and accounted for in the crop labour section)
+    and the machinery cost of application (detailed in the machinery section). The cost is incurred in the
+    cashflow period when it is applied. The assumption is that fertilizer is purchased shortly before
+    application because farmers wait to see how the year unfolds before locking in a fertiliser plan.
+
+    Fertiser application cost is broken into two components (detailed in the machinery section).
+
+        #. Application cost per tonne ($/rotation)
+        #. Application cost per ha ($/rotation)
+
+    :return Dataframe of fertiliser costs. Summed with other cashflow items at the end of the module
+
     '''
     ##call functions and read inputs used within this function
     fertreq = f_fert_req()
@@ -318,7 +395,15 @@ def fert_cost(r_vals):
     return fert_cost_total
 
 def f_nap_fert_req():
-    '''fert applied to non arable pasture area'''
+    '''
+    Fert applied to non arable pasture area.
+
+    Fertiliser is applied to non-arable area in a pasture phases, it is not applied to
+    non-arable pasture in a crop phase because the non-arable pasture in a crop phase is not able to
+    be grazed until the end of the year, by which time it is rank and therefore it is a waste of
+    money to fertilise. Fertiliser rate for non-arable areas can be adjusted separately to the arable area.
+
+    '''
     arable = pinp.crop['arable'].squeeze()  # read in arable area df
     fertreq_na = pinp.crop['nap_fert'].reset_index().set_index(['fert','landuse'])
     fertreq_na = fertreq_na.mul(1 - arable)
@@ -330,7 +415,10 @@ def f_nap_fert_req():
     return fertreq_na
 
 def f_nap_fert_passes():
-    '''hectares spread on non arable area'''
+    '''
+    Hectares of fertilising required over non arable area.
+
+    '''
     ##passes over non arable pasture area (only for pasture phases because for pasture the non arable areas also receive fert)
     passes_na = pinp.crop['nap_passes'].reset_index().set_index(['fert','landuse'])
     arable = pinp.crop['arable'].squeeze() #need to adjust for only non arable area
@@ -344,11 +432,11 @@ def f_nap_fert_passes():
 
 def nap_fert_cost(r_vals):
     '''
-    
-    Returns
-    -------
-    Dataframe- to be added to total costs at the end.
-        Fert applied to non arable pasture - currently setup so that only pasture phases get fert on the non arable areas hence it needs to be a separate function.
+    Cost of fertilising the arable areas. Includes the fertiliser cost and the application cost.
+
+    .. note:: Currently setup so that only pasture phases get fertertiliser on the non arable areas
+        hence it needs to be a separate function.
+
     '''
     allocation = fert_cost_allocation()
     ##fert cost
