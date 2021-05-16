@@ -1,4 +1,4 @@
-# The Australian Farm Optimising Model (A-F-O)
+# The Australian Farm Optimisation Model (A-F-O)
 Whole Farm Bioeconomical Optimisation Model
 
 The base version (steady state linear program) is now working and the developers are working
