@@ -19,7 +19,7 @@ import PropertyInputs as pinp
 
 def crop_precalcs(params, r_vals):
     '''
-    Call rotation precalc functions.
+    Call crop precalc functions.
 
     :param params: dictionary which stores all arrays used to populate pyomo parameters.
     :param report: dictionary which stores all report values.

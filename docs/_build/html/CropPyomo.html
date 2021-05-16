@@ -38,32 +38,50 @@
 <dl class="py function">
 <dt id="CropPyomo.crop_precalcs">
 <code class="sig-prename descclassname"><span class="pre">CropPyomo.</span></code><code class="sig-name descname"><span class="pre">crop_precalcs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CropPyomo.crop_precalcs" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Call crop precalc functions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>params</strong> – dictionary which stores all arrays used to populate pyomo parameters.</p></li>
+<li><p><strong>report</strong> – dictionary which stores all report values.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py function">
 <dt id="CropPyomo.croppyomo_local">
 <code class="sig-prename descclassname"><span class="pre">CropPyomo.</span></code><code class="sig-name descname"><span class="pre">croppyomo_local</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CropPyomo.croppyomo_local" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Builds pyomo variables, parameters and constraints</p>
+</dd></dl>
 
 <dl class="py function">
 <dt id="CropPyomo.cropsow">
 <code class="sig-prename descclassname"><span class="pre">CropPyomo.</span></code><code class="sig-name descname"><span class="pre">cropsow</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CropPyomo.cropsow" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Calculate the seeding requirement for each crop rotation phase.</p>
+<p>Used in global constraint (con_sow). See CorePyomo</p>
+</dd></dl>
 
 <dl class="py function">
 <dt id="CropPyomo.rot_stubble">
 <code class="sig-prename descclassname"><span class="pre">CropPyomo.</span></code><code class="sig-name descname"><span class="pre">rot_stubble</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CropPyomo.rot_stubble" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Calculate the volume of stubble provide directly after harvest for rotation phase.</p>
+<p>Used in global constraint (con_stubble). See CorePyomo</p>
+</dd></dl>
 
 <dl class="py function">
 <dt id="CropPyomo.rotation_cost">
 <code class="sig-prename descclassname"><span class="pre">CropPyomo.</span></code><code class="sig-name descname"><span class="pre">rotation_cost</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CropPyomo.rotation_cost" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Calculate the cost of each rotation phase.</p>
+<p>Used in global constraint (con_cashflow). See CorePyomo</p>
+</dd></dl>
 
 <dl class="py function">
 <dt id="CropPyomo.rotation_yield_transfer">
 <code class="sig-prename descclassname"><span class="pre">CropPyomo.</span></code><code class="sig-name descname"><span class="pre">rotation_yield_transfer</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CropPyomo.rotation_yield_transfer" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Calculate the yield from each crop rotation phase.</p>
+<p>Used in global constraint (con_grain_transfer). See CorePyomo</p>
+</dd></dl>
 
 </div>
 

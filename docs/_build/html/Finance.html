@@ -34,39 +34,48 @@
             
   <div class="section" id="module-Finance">
 <span id="finance-module"></span><h1>Finance module<a class="headerlink" href="#module-Finance" title="Permalink to this headline">¶</a></h1>
-<p>Created on Wed Oct 30 21:26:59 2019</p>
-<p>module: finance module</p>
+<p>author: young</p>
+<p>To capture debit and credit interest the year is split into bi-monthly cashflow periods. Activities with a
+cost or income add to or remove from the cashflow balance. To support the sporadic nature of farming income
+finance is often drawn from the bank throughout the year to fund costly operations such as seeding. This
+is also represented in AFO however a user input exist which sets the maximum overdraw limit. At the end
+of a period the positive or negative bank balance plus interest is transferred to the next period.</p>
+<p>There is no representation of a starting cash balance. If it is included the model just selects the
+highest amount because that earns the most interest. The model can get loan from bank if it needs
+cash, so this does not affect model solution.</p>
+<p>Tax is also not represented for several reasons:</p>
+<ol class="arabic simple">
+<li><p>There are several mechanisms by which farmers seek to lessen their tax liabilities. Not all
+are ‘economically rational’ and not all are easily represented in an LP model.</p></li>
+<li><p>Many farmers nowadays invest in farm management deposits and income-averaging as a means
+of taxable income averaging and smoothing working capital borrowings. if the FMDs could be used
+‘perfectly’ then each year would have the same taxable profit. Thus, the optimal farm management
+is unaffected by the inclusion of tax.</p></li>
+<li><p>AFO is a bioeconomical model with the aim of optimising farm management. It is not a finance model.</p></li>
+</ol>
 <dl class="simple">
-<dt>key: green section title is major title </dt><dd><p>‘#’ around a title is a minor section title
-std ‘#’ comment about a given line of code</p>
+<dt>Asset value</dt><dd><p>Asset value is used to capture the opportunity cost of investing in farm assets including livestock,
+machinery and infrastructure (sheds, yards etc). To be selected an asset must return more than the
+interest cost on the asset which ensures the optimal solution does not include an asset that returns
+less than investing the same money in high interest savings.
+For livestock this ensures that the flock structure optimisation accounts for the opportunity cost
+of interest foregone from holding an animal for an extra year.</p>
+</dd>
+<dt>Minimum return on expenditure</dt><dd><p>AFO tallies the total farm expenditure, adjusts it by a user defined return on expense factor and
+includes it in the objective to ensure the model achieves a minimum return on expenditure. The
+purpose of this is to represent farmer behaviour. The rate of MinROE is specified by the user and
+can be turned off.</p>
 </dd>
 </dl>
-<p>formatting; try to avoid capitals (reduces possible mistakes in future)</p>
-<p>&#64;author: young</p>
-<dl class="py function">
-<dt id="Finance.credit_interest">
-<code class="sig-prename descclassname"><span class="pre">Finance.</span></code><code class="sig-name descname"><span class="pre">credit_interest</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Finance.credit_interest" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt id="Finance.debit_interest">
-<code class="sig-prename descclassname"><span class="pre">Finance.</span></code><code class="sig-name descname"><span class="pre">debit_interest</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Finance.debit_interest" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt id="Finance.f_min_roe">
-<code class="sig-prename descclassname"><span class="pre">Finance.</span></code><code class="sig-name descname"><span class="pre">f_min_roe</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Finance.f_min_roe" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt id="Finance.finance_rep">
-<code class="sig-prename descclassname"><span class="pre">Finance.</span></code><code class="sig-name descname"><span class="pre">finance_rep</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Finance.finance_rep" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 <dl class="py function">
 <dt id="Finance.overheads">
 <code class="sig-prename descclassname"><span class="pre">Finance.</span></code><code class="sig-name descname"><span class="pre">overheads</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#Finance.overheads" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Calculate overhead costs in each cashflow period.</p>
+<p>Overheads are ongoing business expenses that are not directly attributed to creating a product
+or service. In AFO the user has the discretion to add, remove or alter the overheads that are
+including. Examples of overhead costs include; electricity, gas, shire rates, licenses,
+professional services, insurance and household expense.</p>
+</dd></dl>
 
 </div>
 
@@ -88,9 +97,9 @@ std ‘#’ comment about a given line of code</p>
 
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="model_doc.html">Model Logic</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="model_doc.html">Model Logic</a></li>
 </ul>
 
 <div class="relations">

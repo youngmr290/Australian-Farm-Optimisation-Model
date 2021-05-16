@@ -229,7 +229,7 @@ sequences are removed. See RotGeneration_ for the full list of rules.
 
 
 Land heterogeneity
-------------------
+^^^^^^^^^^^^^^^^^^^
 
 Land quality can vary significantly across a farm, predominantly due to variations in soil type. This
 can impact:
