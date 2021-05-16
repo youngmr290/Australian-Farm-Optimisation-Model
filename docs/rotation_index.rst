@@ -260,11 +260,9 @@ area can not be cropped however it is accessible by livestock.
 .. [#tc] Continuous Tedera/Lucerne are separate land use so that resowing every 10 years can be included.
 
 
-Modules
--------
-
 Rotation generation
-^^^^^^^^^^^^^^^^^^^
+-------------------
+
 .. _RotGeneration:
 
 .. toctree::
@@ -273,7 +271,7 @@ Rotation generation
    RotGeneration
 
 Precalcs
-^^^^^^^^^
+---------
 
 .. toctree::
    :maxdepth: 1
@@ -281,7 +279,7 @@ Precalcs
    RotationPhases
 
 Pyomo
-^^^^^^^
+-----
 
 .. toctree::
    :maxdepth: 1

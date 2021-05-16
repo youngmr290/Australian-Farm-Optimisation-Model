@@ -552,7 +552,8 @@ def f_chem_application():
 
     Similar to fertiliser, the number of chemical applications is the
     same for all LMUs because it is assumed that the spray rate varies rather than the frequency of
-    application. However, the area sprayed is adjusted by the arable proportion for each LMU.
+    application. However, the area sprayed is adjusted by the arable proportion for each LMU. The assumption
+    is that non arable areas do not receive any spray.
 
     '''
     ##read in chem passes

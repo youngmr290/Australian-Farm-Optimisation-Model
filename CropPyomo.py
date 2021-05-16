@@ -3,6 +3,9 @@
 
 author: young
 
+
+
+
 """
 
 #python modules
@@ -15,10 +18,19 @@ from CreateModel import *
 import PropertyInputs as pinp
 
 def crop_precalcs(params, r_vals):
+    '''
+    Call rotation precalc functions.
+
+    :param params: dictionary which stores all arrays used to populate pyomo parameters.
+    :param report: dictionary which stores all report values.
+
+    '''
+
     crp.crop_params(params, r_vals)
 
 
 def croppyomo_local(params):
+    ''' Builds pyomo variables, parameters and constraints'''
     
     #########
     #param  #
@@ -106,7 +118,12 @@ model.v_sell_grain = pe.Var(model.s_crops, model.s_grain_pools, bounds=(0,None),
 ###alternative would have been to add another key/index/set to the yield parameter that was k, although i suspect this would make it a bit slower due to being bigger but it might be tidier
 
 def rotation_yield_transfer(model,g,k):
-    # i=sinp.general['phase_len']-1
+    '''
+    Calculate the yield from each crop rotation phase.
+
+    Used in global constraint (con_grain_transfer). See CorePyomo
+    '''
+
     ##h is a disaggregated version of r, it can be indexed. h[0:i] is the rotation history. Have to check if k==h otherwise when h[0:i] is combined with k you can get the wrong rotation
     return sum(sum(model.p_rotation_yield[r,k,l]*model.v_phase_area[r,l] * model.p_grainpool_proportion[k,g] for r in model.s_phases
                    if pe.value(model.p_rotation_yield[r,k,l]) != 0)for l in model.s_lmus) \
@@ -118,12 +135,12 @@ def rotation_yield_transfer(model,g,k):
 ##############
 ##similar to yield - this is more complex because we want to mul with phase area variable then sum based on the current landuse (k)
 ##returns a tuple, the boolean part indicates if the constraint needs to exist
-# def cropsow(model,k,l):
-#     if any(model.p_cropsow[r,k,l] for r in model.s_phases):
-#         return True, sum(model.p_cropsow[r,k,l]*model.v_phase_area[r,l]  for r in model.s_phases if model.p_cropsow[r,k,l] != 0) #+ model.x[k] >=0 # if ((r,)+(k,)+(l,)) in model.p_cropsow
-#     else:
-#         return False, 0
 def cropsow(model,k,l):
+    '''
+    Calculate the seeding requirement for each crop rotation phase.
+
+    Used in global constraint (con_sow). See CorePyomo
+    '''
     if any(model.p_cropsow[r,k,l] for r in model.s_phases):
         return sum(model.p_cropsow[r,k,l]*model.v_phase_area[r,l]  for r in model.s_phases
                    if pe.value(model.p_cropsow[r,k,l]) != 0) #+ model.x[k] >=0 # if ((r,)+(k,)+(l,)) in model.p_cropsow
@@ -136,6 +153,12 @@ def cropsow(model,k,l):
 #####################################
 
 def rotation_cost(model,c):
+    '''
+    Calculate the cost of each rotation phase.
+
+    Used in global constraint (con_cashflow). See CorePyomo
+    '''
+
     return sum(sum(model.p_rotation_cost[r,l,c]*model.v_phase_area[r,l] for r in model.s_phases
                    if pe.value(model.p_rotation_cost[r,l,c]) != 0) for l in model.s_lmus )#+ model.x[c] >=0 #0.10677s
    
@@ -143,7 +166,13 @@ def rotation_cost(model,c):
 #stubble     #
 ##############
 def rot_stubble(model,k,s):
-      return sum(sum(model.p_rotation_yield[r,k,l]*model.v_phase_area[r,l] * model.p_rot_stubble[k,s] for r in model.s_phases
+    '''
+    Calculate the volume of stubble provide directly after harvest for rotation phase.
+
+    Used in global constraint (con_stubble). See CorePyomo
+    '''
+
+    return sum(sum(model.p_rotation_yield[r,k,l]*model.v_phase_area[r,l] * model.p_rot_stubble[k,s] for r in model.s_phases
                      if pe.value(model.p_rotation_yield[r,k,l]) != 0)for l in model.s_lmus if pe.value(model.p_rot_stubble[k,s]) !=0 ) \
                       
 
