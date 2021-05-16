@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
+
 """
-Created on Wed Nov 13 10:13:44 2019
-
-module - labour crop pyomo stuff
-
-@author: young
+author: young
 """
 #python modules
 import pyomo.environ as pe
@@ -17,9 +13,18 @@ import PropertyInputs as pinp
 
 
 def crplab_precalcs(params, r_vals):
+    '''
+    Call crop labour precalc functions.
+
+    :param params: dictionary which stores all arrays used to populate pyomo parameters.
+    :param report: dictionary which stores all report values.
+
+    '''
     lcrp.f_labcrop_params(params, r_vals)
 
 def labcrppyomo_local(params):
+    ''' Builds pyomo variables, parameters and constraints'''
+
     #########
     #param  #
     #########
@@ -93,19 +98,11 @@ def labcrppyomo_local(params):
 #labour req by 
 def mach_labour_anyone(model,p):
     '''
-    Parameters
-    ----------
+    Aggregate labour required by anyone for fertilising, spraying, seeding, harvest, preperation,
+    packing and monitoring.
 
-    p : Set
-        Period set from pyomo.
+    Used in global constraint (con_labour_anyone). See CorePyomo
 
-    Returns
-    -------
-    Pyomo function for core model
-        All landuse labour;
-        1- seeding and harv, includes helper time
-        2- fert application, per tonne & per ha 
-        3- chem application
     '''
     seed_labour = sum(sum(model.v_seeding_machdays[p, k, l] for k in model.s_landuses) for l in model.s_lmus)        \
     * model.p_daily_seed_hours *(1 + model.p_seeding_helper)
@@ -123,17 +120,11 @@ def mach_labour_anyone(model,p):
 #labour req by
 def mach_labour_perm(model,p):
     '''
-    Parameters
-    ----------
+    Aggregate labour required by permanent staff for fertilising, spraying, seeding, harvest, preperation,
+    packing and monitoring.
 
-    p : Set
-        Period set from pyomo.
+    Used in global constraint (con_labour_perm). See CorePyomo
 
-    Returns
-    -------
-    Pyomo function for core model
-        mach labour done by perm and manager;
-        1- crop monitoring time
     '''
     fixed_monitor_time = model.p_fixed_crop_monitor[p]
     variable_monitor_time = sum(model.p_variable_crop_monitor[r,p] * model.v_phase_area[r,l]  for r in model.s_phases for l in model.s_lmus

@@ -1,19 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sat Nov  2 17:06:04 2019
 
-module: machinery module
+author: young
 
-extra - use mach_input rather than selecting a specific option from input sheet
 
-key: green section title is major title 
-     '#' around a title is a minor section title
-     std '#' comment about a given line of code
-     
-formatting; try to avoid capitals (reduces possible mistakes in future)
-   
-
-@author: young
 """
 
 #python modules
@@ -30,24 +20,6 @@ import Periods as per
 import Functions as fun
 
 na = np.newaxis
-# ################
-# #mach option   #
-# ################
-# ##this selects the correct mach option from inputs and changes the dict name to mach_input, which is used in this module
-# ##to access specific mach input data use mach_opt, and then assign mach_opt with a given option (done in property.xlsx)
-# mach_opt = uinp.mach[pinp.mach['mach_option']]
-
-# def select_mach_opt():
-#     '''
-    
-#     Returns
-#     -------
-#     None.
-#         This function is called from pyomo, which will update the mach option if necessary
-
-#     '''
-#     mach_opt = uinp.machine_options['mach_' + str(pinp.mach['mach_option'])]
-
 
 ################
 #fuel price    #
@@ -103,16 +75,6 @@ def f_seed_days():
     days = pd.DataFrame(length_pz, index=mach_periods.index[:-1], columns=mach_periods.columns)
     return days
 
-
-    # for i in range(len(mach_periods)-1):
-    #     days = (mach_periods.loc[mach_periods.index[i+1],'date'] - mach_periods.loc[mach_periods.index[i],'date']).days
-    #     mach_periods.loc[mach_periods.index[i],'seed_days'] = days
-    # ## drop last row, because it has na because it only contains the end date, therefore not a period
-    # mach_periods.drop(mach_periods.tail(1).index,inplace=True)
-    # if params:
-    #     params[0]['seed_days'] = mach_periods['seed_days'].to_dict()
-    # else: return mach_periods
-
 def f_contractseeding_occurs():
     '''
     This function just sets the period when contract seeding must occur (period when wet seeding begins).
@@ -128,36 +90,6 @@ def f_contractseeding_occurs():
     return contractseeding_occur_pz
     # params['contractseeding_occur'] = (mach_periods==contract_start).squeeze().to_dict()
 
-
-# seed_days()
-# def seed_days():
-#     '''
-#     Returns
-#     -------
-#     DataFrame - used in pyomo and also grazing days
-#         Determines the number of wet and dry seeding days in each period.
-#     '''
-#     mach_periods = per.p_dates_df()
-#     dry_seed_start = pinp.crop['dry_seed_start']
-#     dry_seed_end = pinp.period['feed_periods'].loc[0,'date']#dry seeding finishes when the season breaks
-#     dry_seed_len = dry_seed_end - dry_seed_start
-#     ##determine the days of dry seeding occurring in each mach period
-#     dry_days=fun.period_allocation(mach_periods['date'],mach_periods.index,dry_seed_start,dry_seed_len)['allocation'].dropna()*dry_seed_len #use the period allocation func to determine the proportion of total dry seeding occurring in each period
-#     dry_days=dry_days/np.timedelta64(1,'D') #convert to int
-#     wet_seed_start = per.wet_seeding_start_date()
-#     seed_end = per.period_end_date(wet_seed_start, pinp.crop['seed_period_lengths'])
-#     for i in range(len(mach_periods['date'])-1):
-#         ##check wet seed dates
-#         if wet_seed_start<= mach_periods.loc[i,'date'] < seed_end:
-#             days = (mach_periods.loc[i+1,'date'] - mach_periods.loc[i,'date']).days
-#         else:
-#             days = 0
-#         mach_periods.loc[i,'wet_seed_days'] = days
-#     mach_periods['seed_days'] = mach_periods['wet_seed_days'].add(dry_days,fill_value=0)
-#     ## drop last row, because it has na because it only contains the end date, therefore not a period
-#     mach_periods.drop(mach_periods.tail(1).index,inplace=True) 
-#     return mach_periods
-# # seed_days()   
 
 def f_grazing_days():
     '''
@@ -288,15 +220,6 @@ def maint_cost_seeder():
     ##equals r&m on base lmu x lmu adj factor
     tillage_lmu_df = uinp.mach[pinp.mach['option']]['tillage_maint'] * pinp.mach['tillage_maint_lmu_adj']
     return  tillage_lmu_df
-
-# def seeding_cost_lmu():
-#     '''
-#     Returns
-#     -------
-#     DataFrame
-#         Total cost seeding on each lmu $/ha.
-#     '''
-#     return tractor_cost_seeding() + maint_cost_seeder()
 
 def f_seed_cost_alloc():
     '''period allocation for seeding costs'''

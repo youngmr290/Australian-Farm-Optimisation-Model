@@ -1,10 +1,19 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Nov 13 10:13:44 2019
 
-Module - calcs for crop labour
+author: young
 
-@author: young
+Crop labour represents the labour associated with each rotation phase. This
+includes the both crop and pasture phases. Rotation labour includes the labour required
+for seeding, harvest, spraying, fertilising and monitoring. The time each operation takes
+is dependent on the rotation phase, LMU and machinery complement. The rate at which
+seeding, harvest, spraying and fertilising can be done is calculated and documented in the machinery
+section. In this section the machine time for each operation is converted to a labour required by including
+a helper factor and allocating it to the labour periods. For example, the machinery time taken for
+harvest is equal to the time the harvester is running but from a labour perspective there is a
+header driver, chaser bin driver and often some helper labour for busy times such as moving paddocks.
+
+
 """
 #python modules
 import pandas as pd
@@ -28,7 +37,10 @@ na = np.newaxis
 #pack and prep time     #
 #########################
 def f_prep_labour():
-    '''labour required for preperation for all cropping operations'''
+    '''
+    Labour required for preparation and packing for each cropping operation.
+
+    '''
     ##inputs
     labour_period = per.p_dates_df()
     keys_p5 = labour_period.index[:-1]
@@ -80,7 +92,8 @@ def f_prep_labour():
 
 #allocation of fert costs into each cash period for each fert ie depending on the date diff ferts are in diff cash periods
 def f_lab_allocation():
-    '''fert application labour period allocation'''
+    '''Allocation of fertiliser applications into each labour period'''
+
     fert_info = pinp.crop['fert_info']
     fert_date_f = fert_info['app_date'].values
     fert_length_f = fert_info['app_len'].values.astype('timedelta64[D]')
@@ -99,6 +112,16 @@ def f_lab_allocation():
 #time/per ha - needs to be multiplied by the number of phases and then added to phases df because the previous phases can effect number of passes and hence time
 #also need to account for arable area
 def f_fert_app_time_ha():
+    '''
+
+    Fertilising labour part 1: time required per hectare.
+
+    The labour required for fertilising is calculated in two parts. Part 1 is the time required per hectare
+    for each rotation phase which represents the time taken spreading fertiliser in the paddock (calculated in Mach.py).
+    This is adjusted for the number of fertiliser applications and allocated into a labour period/s.
+
+    '''
+
     ##fert passes - arable (arable area accounted for in passes function)
     passes_arable = crp.f_fert_passes()
     ##non arable fert passes
@@ -120,6 +143,17 @@ def f_fert_app_time_ha():
 
 #time/t - need to convert m3 to tone and allocate into lab periods
 def f_fert_app_time_t():
+    '''
+
+    Fertilising labour part 2: time required per tonne.
+
+    The labour required for fertilising is calculated in two parts. Part 2 is the time required per tonne
+    which represents the time taken driving to and from the paddock and filling up (calculated in Mach.py).
+    This is adjusted for the number of fertiliser applications and allocated into a labour period/s.
+
+
+    '''
+
     spreader_proportion = pd.DataFrame([pinp.crop['fert_info']['spreader_proportion']])
     conversion = pd.DataFrame([pinp.crop['fert_info']['fert_density']])
     time = (mac.time_cubic() / conversion).mul(spreader_proportion.squeeze(),axis=1)
@@ -133,22 +167,8 @@ def f_fert_app_time_t():
 #chem application time   #  this is similar to app cost done in mach sheet
 ###########################
 
-# def chem_lab_allocation():
-#     '''
-#     Returns
-#     -------
-#     DataFrame
-#         Collates all the data needed then calls the allocation function, which returns \
-#         the allocation of labour for chem application into labour periods.
-#     '''
-#     start_df = pinp.crop['chem_info']['app_date']
-#     length_df = pinp.crop['chem_info']['app_len'].astype('timedelta64[D]')
-#     p_dates = per.p_dates_df()['date']
-#     p_name = per.p_dates_df().index
-#     return fun.period_allocation2(start_df, length_df, p_dates, p_name)
-
 def f_chem_lab_allocation():
-    '''chem application labour period allocation'''
+    '''Allocation of chemical applications into each labour period'''
     chem_info = pinp.crop['chem_info']
     chem_date_f = chem_info['app_date'].values
     chem_length_f = chem_info['app_len'].values.astype('timedelta64[D]')
@@ -166,12 +186,16 @@ def f_chem_lab_allocation():
 
 def f_chem_app_time_ha():
     '''
-    Returns
-    ----------
-    Dict for pyomo
-        Labour required by each rotation phase for spraying
-        -arable area accounted for in crop.py
+
+    Calculate labour required for spraying for each rotation and allocate it into the labour periods.
+
+    The labour required for spraying is calculated from the time to spray 1ha (calculated in Mach.py)
+    and the number of chemical applications for each rotation phase (calculated in Crop.py).
+
     '''
+
+    ##note arable area accounted for in crop.py
+
     ##passes
     passes = crp.f_chem_application()
     ##adjust chem labour across each labour period
@@ -183,13 +207,7 @@ def f_chem_app_time_ha():
     time = time.stack(0).sum(level=[1], axis=1) #sum across fert type
     return time
 
-    # time = passes.mul(time, axis=1,level=1) #total time
-    # time=time.sum(level=[0], axis=1).stack()
-    # params['chem_app_time_ha'] = time.to_dict()
-    #
-# # t_chemlab=chem_app_time_ha()
 
-    
 
 
 ###########################
@@ -198,9 +216,18 @@ def f_chem_app_time_ha():
 
 def f_crop_monitoring():
     '''
-    Returns
-    -------
-    Dict for pyomo
+    Labour required for monitoring crop paddocks.
+
+    .. note:: Pasture monitoring is documented in detail in the pasture section.
+
+    For crop paddocks, monitoring time is broken into two section.
+    Firstly, a fixed (irrelevant of crop area) labour requirement which is a user defined input stating
+    the hours per week in each labour period. Secondly, a variable labour requirement which is incurred
+    for each hectare of crop. This is also an input, but it can vary by crop type as well as period. The
+    logic behind splitting the monitoring into two components is that typically farmers will spend longer
+    examining a small number of paddocks, irrelevant of the total crop area and then examine the remaining
+    paddocks much faster.
+
     '''
     ##allocation
     fixed_crop_monitor = pinp.labour['fixed_crop_monitoring']
