@@ -966,7 +966,7 @@ def coremodel_all(params, trial_name):
                                        'ef')  # i don't know what the first arg does?? it needs to exist but can put any string without changing output
 
     ##this prints trial name, overall profit and feasibility for each trial
-    print("\nDisplaying Solution for trial: %s\n" % trial_name,'-' * 60,'\n%s' % obj)
+    print("Displaying Solution for trial: %s\n" % trial_name,'-' * 60,'\n%s' % obj)
 
     ##this check if the solver is optimal - if infeasible or error the model will save a file in Output/infeasible/ directory. This will be accessed in reporting to stop you reporting infeasible trials.
     ##the model will keep running the next trials even if one is infeasible.
