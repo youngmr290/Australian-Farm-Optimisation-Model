@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Mar 19 08:03:17 2020
-
-@author: young
+author: young
 """
 #python modules
 from pyomo import environ as pe
@@ -13,11 +11,20 @@ import SupFeed as sup
 import PropertyInputs as pinp
 
 def sup_precalcs(params, r_vals):
-    ##call sup functions
+    '''
+    Call crop labour precalc functions.
+
+    :param params: dictionary which stores all arrays used to populate pyomo parameters.
+    :param report: dictionary which stores all report values.
+
+    '''
+
     sup.f_sup_params(params,r_vals)
 
     
 def suppyomo_local(params):
+    ''' Builds pyomo variables, parameters'''
+
     ############
     # variable #
     ############
@@ -104,21 +111,57 @@ def suppyomo_local(params):
 #######################################################################################################################################################
 #######################################################################################################################################################
 def sup_cost(model,c):
+    '''
+    Calculate the total cost of feeding the selected level of supplement.
+
+    Used in global constraint (con_cashflow). See CorePyomo
+    '''
+
     return sum(model.v_sup_con[k,g,v,f] * model.p_sup_cost[c,k,f] for v in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for f in model.s_feed_periods)
 
 def sup_me(model,v,f):
+    '''
+    Calculate the total energy provided to each ev pool by feed the selected amount of supplement.
+
+    Used in global constraint (con_me). See CorePyomo
+    '''
+
     return sum(model.v_sup_con[k,g,v,f] * model.p_sup_md[k]for g in model.s_grain_pools for k in model.s_crops)
 
 def sup_vol(model,v,f):
+    '''
+    Calculate the total volume required by each ev pool to feed the selected amount of supplement.
+
+    Used in global constraint (con_vol). See CorePyomo
+    '''
+
     return sum(model.v_sup_con[k,g,v,f] * model.p_sup_vol[k] for g in model.s_grain_pools for k in model.s_crops)
 
 def sup_dep(model):
+    '''
+    Calculate the total depreciation of silos.
+
+    Used in global constraint (con_dep). See CorePyomo
+    '''
+
     return sum(model.v_sup_con[k,g,v,f] * model.p_sup_dep[k] for v in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for f in model.s_feed_periods)
 
 def sup_asset(model):
+    '''
+    Calculate the total asset value of silos.
+
+    Used in global constraint (con_asset). See CorePyomo
+    '''
+
     return sum(model.v_sup_con[k,g,v,f] * model.p_sup_asset[k] for v in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for f in model.s_feed_periods)
     
 def sup_labour(model,p):
+    '''
+    Calculate the total labour required for supplementary feeding.
+
+    Used in global constraint (con_labour_any). See CorePyomo
+    '''
+
     return sum(model.v_sup_con[k,g,v,f] * model.p_sup_labour[p,f,k] for v in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for f in model.s_feed_periods)
     
     

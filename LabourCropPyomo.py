@@ -98,7 +98,7 @@ def labcrppyomo_local(params):
 #labour req by 
 def mach_labour_anyone(model,p):
     '''
-    Aggregate labour required by anyone for fertilising, spraying, seeding, harvest, preperation,
+    Calculate the total labour required by anyone for fertilising, spraying, seeding, harvest, preperation,
     packing and monitoring.
 
     Used in global constraint (con_labour_anyone). See CorePyomo
@@ -120,7 +120,7 @@ def mach_labour_anyone(model,p):
 #labour req by
 def mach_labour_perm(model,p):
     '''
-    Aggregate labour required by permanent staff for fertilising, spraying, seeding, harvest, preperation,
+    Calculate the total labour required by permanent staff for fertilising, spraying, seeding, harvest, preperation,
     packing and monitoring.
 
     Used in global constraint (con_labour_perm). See CorePyomo

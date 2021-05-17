@@ -119,7 +119,7 @@ model.v_sell_grain = pe.Var(model.s_crops, model.s_grain_pools, bounds=(0,None),
 
 def rotation_yield_transfer(model,g,k):
     '''
-    Calculate the yield from each crop rotation phase.
+    Calculate the total of each grain produced from selected rotation phases.
 
     Used in global constraint (con_grain_transfer). See CorePyomo
     '''
@@ -137,7 +137,7 @@ def rotation_yield_transfer(model,g,k):
 ##returns a tuple, the boolean part indicates if the constraint needs to exist
 def cropsow(model,k,l):
     '''
-    Calculate the seeding requirement for each crop rotation phase.
+    Calculate the seeding requirement for each crop from the selected rotation phases.
 
     Used in global constraint (con_sow). See CorePyomo
     '''
@@ -154,7 +154,7 @@ def cropsow(model,k,l):
 
 def rotation_cost(model,c):
     '''
-    Calculate the cost of each rotation phase.
+    Calculate the total cost of the selected rotation phases.
 
     Used in global constraint (con_cashflow). See CorePyomo
     '''
@@ -167,7 +167,7 @@ def rotation_cost(model,c):
 ##############
 def rot_stubble(model,k,s):
     '''
-    Calculate the volume of stubble provide directly after harvest for rotation phase.
+    Calculate the total volume of stubble provide directly after harvest from the selected rotation phases.
 
     Used in global constraint (con_stubble). See CorePyomo
     '''
