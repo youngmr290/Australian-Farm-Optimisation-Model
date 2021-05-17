@@ -1,17 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Nov  6 09:49:18 2019
 
-module: machinery pyomo module
+author: young
 
-key: green section title is major title 
-     '#' around a title is a minor section title
-     std '#' comment about a given line of code
-     
-formatting; try to avoid capitals (reduces possible mistakes in future)
-   
-
-@author: young
 """
 
 #python modules
@@ -223,11 +214,30 @@ def machpyomo_local(params):
     model.p_seeding_occur = pe.Param(initialize=params['seeding_occur'], default = 0.0, doc='proportion of time seeding can occur each period')
 
     ###################################
-    #local constraints                #
+    #call local constraints           #
     ###################################
-    ##days of seeding is limited by seed period length and the number of crop gear (ie 2 crop gear gives you double the penalty free days)
-    ##constraint to limit the number of seed days in each period ()
-    ##includes a factor to account for days that are too wet or dry to seed (this used to be accounted for in seeding rate, but that meant a labour cost was occured for time that was too wet or dry)
+
+
+
+
+###################################
+#local constraints                #
+###################################
+    f_con_seed_period_days()
+    con_harv_hours_limit
+    con_sow_supply()
+
+
+
+def f_con_seed_period_days():
+    '''
+    Constraint which acts to bound the variable that is the number of days seeding for each crop on each LMU
+    in each machinery period.
+
+    The number of days of seeding is limited by the length of each machinery period and the number
+    of crop gear (ie two seeders allows you to seed twice as much). The constraint includes a factor
+    to account for days that are too wet or dry to seed.
+    '''
     try:
         model.del_component(model.con_seed_period_days)
     except AttributeError:
@@ -236,8 +246,15 @@ def machpyomo_local(params):
         return sum(sum(model.v_seeding_machdays[p,k,l] for k in model.s_crops)for l in model.s_lmus) <= \
         model.p_seed_days[p] * model.p_number_seeding_gear * model.p_seeding_occur
     model.con_seed_period_days = pe.Constraint(model.s_labperiods, rule=seed_period_days, doc='constrain the number of seeding days per seed period')
-    
-    ##constraint to limit the number of hours of harvest to the amount that can be supplied by x crop gear
+
+def con_harv_hours_limit():
+    '''
+    Constraint which acts to bound the variable that is the hours of harvesting for each crop on each LMU
+    in each machinery period.
+
+    The number of hours of harvest is limited by the max harvest hours in each harvest period and the number
+    of harvest gear (ie two harvesters allows you to harvest twice as much).
+    '''
     try:
         model.del_component(model.con_harv_hours_limit)
     except AttributeError:
@@ -245,8 +262,15 @@ def machpyomo_local(params):
     def harv_hours_limit(model, p):
         return sum(model.v_harv_hours[p, k] for k in model.s_harvcrops) <= model.p_harv_hrs_max[p] * model.p_number_harv_gear
     model.con_harv_hours_limit = pe.Constraint(model.s_labperiods, rule=harv_hours_limit, doc='constrain the number of hours of harvest x crop gear can provide')
-    
-    ##link sow supply to crop and pas variable - this has to be done because crop is not by period and pasture is
+
+def con_sow_supply():
+    '''
+    Constraint between the hectares sown and the supply.
+
+    The hectares of pasture and crop seeded must be less than the amount supplied by either farmers machinery or
+    contract services. The amount supplied from the farmers equipment is limited by the seeding days and the
+    rate of seeding per day.
+    '''
     try:
         model.del_component(model.con_sow_supply_index)
         model.del_component(model.con_sow_supply)
@@ -263,12 +287,14 @@ def machpyomo_local(params):
 
 def ha_pasture_crop_paddocks(model,f,l):
     '''
-    Returns
-    -------
-    Pyomo function.
-        Total hectares that can be grazed on crop paddocks before seeding
-        *note poc is only on crop paddocks but the seeding activity includes pastures, to stop pasture paddocks providing poc only loop through the crop set
+    Calculate the total hectares that can be grazed on crop paddocks before seeding based on the
+    seeding activities selected.
+
+    Used in global constraint (con_poc_available). See CorePyomo
+
+    Note: poc is only on crop paddocks but the seeding activity includes pastures, to stop pasture paddocks providing poc only loop through the crop set
     '''
+
     ##number of grazable pasture ha provided by contract seeding
     ha_contract= sum(sum(model.p_seeding_grazingdays[f,p] * model.v_contractseeding_ha[p,k,l] for k in model.s_crops) for p in model.s_labperiods)
     ##number of grazable pasture ha provided by farmer seeding
@@ -277,6 +303,12 @@ def ha_pasture_crop_paddocks(model,f,l):
 
 #function to determine late seeding penalty, this will be passed to core model
 def late_seed_penalty(model,g,k):
+    '''
+    Calculate the yield penalty based on the seeding activities selected.
+
+    Used in global constraint (con_grain_transfer). See CorePyomo
+    '''
+
     return  sum(sum(model.p_seeding_rate[k,l] * model.v_seeding_machdays[p,k,l] * model.p_yield_penalty[p, k] for l in model.s_lmus) for p in model.s_labperiods)  \
                 * model.p_grainpool_proportion[k,g]
 #function to determine late seeding stubble penalty, this will be passed to core model
@@ -286,14 +318,17 @@ def stubble_penalty(model,k,s):
     
 
 def harv_supply(model,k):
+    '''
+    Calculate the total hectares of each crop that can be harvested based on the allocation of harvesting
+    time.
+
+    Used in global constraint (con_harv). See CorePyomo
+    '''
+
     #total harvest availability for each crop, period doesn't matter i think hence sum
     farmer_harv = sum(model.v_harv_hours[p, k] * model.p_harv_rate[p, k]  for p in model.s_labperiods  )
     contract_harv = model.v_contractharv_hours[k] * model.p_contractharv_rate[k] 
     return farmer_harv + contract_harv
-
-# #make hay, this will be passed to core model
-# def make_hay(model):
-#     return model.v_hay_made
 
 #function to determine seeding cost, this will be passed to core model
 def seeding_cost(model,c):
@@ -310,12 +345,25 @@ def harvesting_cost(model,c):
 
 #includes hay cost
 def mach_cost(model,c):
+    '''
+    Calculate the cost of machinery for insurance, seeding, harvesting and making hay based on the level
+    of machinery activities selected.
+
+    Used in global constraint (con_cashflow). See CorePyomo
+    '''
+
     hay_cost = model.v_hay_made * model.p_contracthay_cost[c]
     return harvesting_cost(model,c) + seeding_cost(model,c) + hay_cost + model.p_mach_insurance[c]
 
 #function to determine derpriciation cost, this will be passed to core model
 #equals seeding dep plus harv dep plus fixed dep
 def total_dep(model):
+    '''
+    Calculate the total depreciation of farm machinery.
+
+    Used in global constraint (con_dep). See CorePyomo
+    '''
+
     #fixed dep = total sale value of equipment x fixed rate of dep, number of crop fear accounted for before this step
     fixed_dep = model.p_fixed_dep
     #cost per ha seeding dep x number of days seeding x ha per day
@@ -325,6 +373,12 @@ def total_dep(model):
     return seeding_depreciation + fixed_dep + harv_dep
 
 def mach_asset(model):
+    '''
+    Calculate the total asset value of farm machinery.
+
+    Used in global constraint (con_asset). See CorePyomo
+    '''
+
     return model.p_mach_asset
 
 
