@@ -34,47 +34,41 @@
             
   <div class="section" id="module-LabourCropPyomo">
 <span id="labourcroppyomo-module"></span><h1>LabourCropPyomo module<a class="headerlink" href="#module-LabourCropPyomo" title="Permalink to this headline">¶</a></h1>
-<p>Created on Wed Nov 13 10:13:44 2019</p>
-<p>module - labour crop pyomo stuff</p>
-<p>&#64;author: young</p>
+<p>author: young</p>
 <dl class="py function">
 <dt id="LabourCropPyomo.crplab_precalcs">
 <code class="sig-prename descclassname"><span class="pre">LabourCropPyomo.</span></code><code class="sig-name descname"><span class="pre">crplab_precalcs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#LabourCropPyomo.crplab_precalcs" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt id="LabourCropPyomo.labcrppyomo_local">
-<code class="sig-prename descclassname"><span class="pre">LabourCropPyomo.</span></code><code class="sig-name descname"><span class="pre">labcrppyomo_local</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#LabourCropPyomo.labcrppyomo_local" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt id="LabourCropPyomo.mach_labour_anyone">
-<code class="sig-prename descclassname"><span class="pre">LabourCropPyomo.</span></code><code class="sig-name descname"><span class="pre">mach_labour_anyone</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#LabourCropPyomo.mach_labour_anyone" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>p<span class="classifier">Set</span></dt><dd><p>Period set from pyomo.</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>Pyomo function for core model</dt><dd><p>All landuse labour;
-1- seeding and harv, includes helper time
-2- fert application, per tonne &amp; per ha 
-3- chem application</p>
+<dd><p>Call crop labour precalc functions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>params</strong> – dictionary which stores all arrays used to populate pyomo parameters.</p></li>
+<li><p><strong>report</strong> – dictionary which stores all report values.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
+<dt id="LabourCropPyomo.labcrppyomo_local">
+<code class="sig-prename descclassname"><span class="pre">LabourCropPyomo.</span></code><code class="sig-name descname"><span class="pre">labcrppyomo_local</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#LabourCropPyomo.labcrppyomo_local" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds pyomo variables, parameters and constraints</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="LabourCropPyomo.mach_labour_anyone">
+<code class="sig-prename descclassname"><span class="pre">LabourCropPyomo.</span></code><code class="sig-name descname"><span class="pre">mach_labour_anyone</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#LabourCropPyomo.mach_labour_anyone" title="Permalink to this definition">¶</a></dt>
+<dd><p>Aggregate labour required by anyone for fertilising, spraying, seeding, harvest, preperation,
+packing and monitoring.</p>
+<p>Used in global constraint (con_labour_anyone). See CorePyomo</p>
+</dd></dl>
+
+<dl class="py function">
 <dt id="LabourCropPyomo.mach_labour_perm">
 <code class="sig-prename descclassname"><span class="pre">LabourCropPyomo.</span></code><code class="sig-name descname"><span class="pre">mach_labour_perm</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#LabourCropPyomo.mach_labour_perm" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>p<span class="classifier">Set</span></dt><dd><p>Period set from pyomo.</p>
-</dd>
-</dl>
-<dl class="simple">
-<dt>Pyomo function for core model</dt><dd><p>mach labour done by perm and manager;
-1- crop monitoring time</p>
-</dd>
-</dl>
+<dd><p>Aggregate labour required by permanent staff for fertilising, spraying, seeding, harvest, preperation,
+packing and monitoring.</p>
+<p>Used in global constraint (con_labour_perm). See CorePyomo</p>
 </dd></dl>
 
 </div>

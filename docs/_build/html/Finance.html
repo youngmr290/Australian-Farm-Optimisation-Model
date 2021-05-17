@@ -54,13 +54,39 @@ is unaffected by the inclusion of tax.</p></li>
 <li><p>AFO is a bioeconomical model with the aim of optimising farm management. It is not a finance model.</p></li>
 </ol>
 <dl class="simple">
-<dt>Asset value</dt><dd><p>Asset value is used to capture the opportunity cost of investing in farm assets including livestock,
+<dt>Asset value</dt><dd><p>Asset value is the value of all assest on a specific day of the year specified by the model administrator.
+The asset value is used to capture the opportunity cost of investing in farm assets including livestock,
 machinery and infrastructure (sheds, yards etc). To be selected an asset must return more than the
 interest cost on the asset which ensures the optimal solution does not include an asset that returns
 less than investing the same money in high interest savings.
 For livestock this ensures that the flock structure optimisation accounts for the opportunity cost
 of interest foregone from holding an animal for an extra year.</p>
 </dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>To ensure accurate representation of asset opportunity cost the date when the assets are valued
+must be the date when the cashflow periods begin.</p>
+</div>
+<p>The cashflow operates in conjunction with the asset value in representing the opportunity cost of holding assets.
+Livestock flock structure is the main ‘decision’ that is altered by the inclusion of an asset value. Without
+interest if animals are sold early in the year there would not be an offsetting value that would
+make early sale a ‘reasonable’ option. For example, selling the day after the asset is valued for the price
+that the animal was valued should be an ‘equal’ outcome solution, but this will only occur if there is
+interest ‘earned’ in the cashflow.</p>
+<p>The interest rate for credit &amp; debit are different for farmers ‘real money’ in the bank.
+However, in the model equal debit and credit interest rates are used (this caon be changed by the user).
+The reason equal interest rates are set as the default are:</p>
+<ol class="arabic simple">
+<li><p>Many farmers have a core debt, so the farm cash position is always negative even though
+their short term operating account may occasionally be positive. The differential interest
+rates are only justified if the farmer does not operate with a sweep facility to pay down
+core debt and then redraw when required later.</p></li>
+<li><p>As discussed above the asset value and the cashflow operate together in the optimisation of
+flock structure. This implies that the interest rate for the cash flow should be the same as
+the discount rate for the asset value.</p></li>
+</ol>
+<dl class="simple">
 <dt>Minimum return on expenditure</dt><dd><p>AFO tallies the total farm expenditure, adjusts it by a user defined return on expense factor and
 includes it in the objective to ensure the model achieves a minimum return on expenditure. The
 purpose of this is to represent farmer behaviour. The rate of MinROE is specified by the user and

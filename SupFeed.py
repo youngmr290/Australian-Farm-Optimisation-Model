@@ -1,8 +1,22 @@
-# -*- coding: utf-8 -*-
 """
-Created on Wed Mar 18 08:12:20 2020
 
-@author: young
+author: young
+
+Supplementary feeding is the supply of additional feed, primarily grain and hay, to livestock.
+Supplementary feeding is commonly used to help meet liveweight targets during Summer and Autumn
+months when pasture is limiting and enhance lamb diet for increase growth prior to sale. Additionally,
+feeding supplement can be used as a tactic to allow pastures to be deferred. Grain and hay are the
+primary supplements fed and hence represented in the model.
+
+Grain and hay for supplementary feeding can either be grown on farm or purchased from another
+farmer at farm gate price (net price of a product after selling costs have been subtracted)
+plus the transaction and transport costs.
+
+.. note:: Other grains can be added as supplements. Just remember to add their inputs in the mach
+    sheet in universal.xlsx for each machine option and  the sup sheet in both universal.xlsx and property.xlsx.
+
+
+
 """
 #python modules
 import pandas as pd
@@ -28,13 +42,13 @@ na = np.newaxis
 
 def f_buy_grain_price(r_vals):
     '''
-    Returns
-    -------
-    Dict.
-        purchase price of grain from neighbour for sup feeding
-        Price includes:
-        -transaction
-        -cartage cost
+
+    Cost to purchase a tonne of supplement off farm.
+
+    Purchase price of grain off farm is slightly different to the selling price. The purchase price is
+    equal to the price the selling farmer would receive had they sold to market (ie farm gate price)
+    plus a transaction fee and transport cost.
+
     '''
     ##purchase price from neighbour is farm gate price plus transaction and transport
     price_df = crp.f_farmgate_grain_price()
@@ -55,6 +69,28 @@ def f_buy_grain_price(r_vals):
     return buy_grain_price.stack([0,1])
 
 def f_sup_cost(r_vals):
+    '''
+
+    Machinery, storage and depreciation costs incurred to feed 1t of supplement.
+
+    Grain for supplementary feeding is generally stored in large on farm silos and hay in a hay shed.
+    There are both variable cost and depreciation costs associated with the storage of supplementary
+    feed. The variable cost represents the expenditure on insurance, silo preparation, insect management
+    and grain shrinkage/loss. The depreciation represents the yearly reduction in the value of the silos
+    and hay sheds.
+
+    In the short term storage costs are fixed, that is, the farmer incurs the same variable and depreciation
+    cost of storage independent of the amount of supplement fed. Additionally, the farmer is limited
+    to only feed as much supplement as the storage capacity. However, AFO is built to evaluate
+    the medium term where storage capacity can be varied. To account for this the cost
+    of the storage is divided by the storage capacity returning the storage cost per tonne of supplement.
+    This cost then applies to each tonne of supplement fed.
+
+    The machinery cost to feed a tonne of supplement is added in this function however it
+    is calculated in Mach.py (see Mach.py for details on machinery cost to feed supplement).
+
+    '''
+
     #todo there could be a limitation here. We are assuming the silo is only filled once each year - the cost of the silo per tonne of sup is calculated based on the silos capacity, if the silo is fill multiple times this will overestimate the cost.
     ##calculate the insurance/dep/asset value per yr for the silos
     silo_info = pinp.supfeed['storage_type']
@@ -114,6 +150,15 @@ def f_sup_cost(r_vals):
     
     
 def f_sup_md_vol():
+    '''
+    M/D and DM content of each supplement are known inputs.
+    Unlike stubble and pasture, the energy content of supplementary
+    feed is expressed including moisture content. Therefore M/D must be adjusted by the DM content
+    of the feed. The volume of supplementary feed is calculated based on the quality of the feed.
+    It is assumed that the availability of supplementary feed is high and hence
+    does not affect intake. Furthermore, it is assumed that there is no limit on the proportion of
+    the sheep’s diet that can be provided by supplementary feeding.
+    '''
     ##calc vol
     sup_md_vol = uinp.supfeed['sup_md_vol']    
     ###convert md to dmd
@@ -132,6 +177,34 @@ def f_sup_md_vol():
     
     
 def f_sup_labour():
+    '''
+    The labour required to feed sheep one tonne of supplement is calculated as the time spent
+    traveling to and from the silo, filling the sheep feeder, emptying the feeder, and transporting
+    between paddocks. The transport time to and from the silo and the time to fill up are inputs which
+    are divided by the capacity of the feeder to return the hours per tonne. The rate of emptying
+    the feeder at eight different times of the year are inputs which determine the time taken to feed
+    a tonne of supplement at different times of the year. The time spent traveling between paddocks
+    (not to the silo) is calculated based on the estimated feed rate per sheep (g/hd/d), the estimated
+    number of sheep in each paddock and the average time taken to travel to the next paddock.
+
+    To improve the accuracy between different grains, the time taken to fill and empty the feeder rate is
+    calculated in cubic meter units (because a m3 is the same for all grain) and then converted to hr/tonne
+    in the last step. However m3/hr is not an input many can relate to, so in the effort of making the model
+    easier to calibrate the inputs are entered in a more common format for a specific grain and then converted
+    to m3. For example the inputs used to determine time to empty the feeder are the feeding rate of lupins
+    in kg/sec, this is then adjusted to m3/hr using the density of lupins.
+    The time spent traveling between paddocks (not to the silo) is calculated slightly differently. Driving
+    from one paddock to the next takes a given amount of time. This time is then allocated to each megajoule
+    being fed. This time is associated with the energy fed because farmers have a target for how many megajoules
+    to feed before going to the next paddock. Using energy also allows all grains to be compared on an equal
+    playing field, because the target is the same for each feed.
+
+    .. note:: The main limitations to this method are if the estimated rates of feeding are wrong compared
+        to the model solution, it is a difficult limitation to avoid because the inputs are not aligned with
+        the activities ie there is no activity that is the rate of feeding sheep so we have to make an estimated
+        link between feeding rate and the total tonnes feed.
+
+    '''
     ##time to fill up
     fill_df= pinp.supfeed['time_fill_feeder']
     fill_time = (fill_df.loc['drive time']+fill_df.loc['fill time'])/fill_df.loc['capacity']

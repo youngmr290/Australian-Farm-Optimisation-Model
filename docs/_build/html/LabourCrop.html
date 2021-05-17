@@ -34,56 +34,75 @@
             
   <div class="section" id="module-LabourCrop">
 <span id="labourcrop-module"></span><h1>LabourCrop module<a class="headerlink" href="#module-LabourCrop" title="Permalink to this headline">¶</a></h1>
-<p>Created on Wed Nov 13 10:13:44 2019</p>
-<p>Module - calcs for crop labour</p>
-<p>&#64;author: young</p>
+<p>author: young</p>
+<p>Crop labour represents the labour associated with each rotation phase. This
+includes the both crop and pasture phases. Rotation labour includes the labour required
+for seeding, harvest, spraying, fertilising and monitoring. The time each operation takes
+is dependent on the rotation phase, LMU and machinery complement. The rate at which
+seeding, harvest, spraying and fertilising can be done is calculated and documented in the machinery
+section. In this section the machine time for each operation is converted to a labour required by including
+a helper factor and allocating it to the labour periods. For example, the machinery time taken for
+harvest is equal to the time the harvester is running but from a labour perspective there is a
+header driver, chaser bin driver and often some helper labour for busy times such as moving paddocks.</p>
 <dl class="py function">
 <dt id="LabourCrop.f_chem_app_time_ha">
 <code class="sig-prename descclassname"><span class="pre">LabourCrop.</span></code><code class="sig-name descname"><span class="pre">f_chem_app_time_ha</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#LabourCrop.f_chem_app_time_ha" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>Dict for pyomo</dt><dd><p>Labour required by each rotation phase for spraying
--arable area accounted for in crop.py</p>
-</dd>
-</dl>
+<dd><p>Calculate labour required for spraying for each rotation and allocate it into the labour periods.</p>
+<p>The labour required for spraying is calculated from the time to spray 1ha (calculated in Mach.py)
+and the number of chemical applications for each rotation phase (calculated in Crop.py).</p>
 </dd></dl>
 
 <dl class="py function">
 <dt id="LabourCrop.f_chem_lab_allocation">
 <code class="sig-prename descclassname"><span class="pre">LabourCrop.</span></code><code class="sig-name descname"><span class="pre">f_chem_lab_allocation</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#LabourCrop.f_chem_lab_allocation" title="Permalink to this definition">¶</a></dt>
-<dd><p>chem application labour period allocation</p>
+<dd><p>Allocation of chemical applications into each labour period</p>
 </dd></dl>
 
 <dl class="py function">
 <dt id="LabourCrop.f_crop_monitoring">
 <code class="sig-prename descclassname"><span class="pre">LabourCrop.</span></code><code class="sig-name descname"><span class="pre">f_crop_monitoring</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#LabourCrop.f_crop_monitoring" title="Permalink to this definition">¶</a></dt>
-<dd><p>Dict for pyomo</p>
+<dd><p>Labour required for monitoring crop paddocks.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Pasture monitoring is documented in detail in the pasture section.</p>
+</div>
+<p>For crop paddocks, monitoring time is broken into two section.
+Firstly, a fixed (irrelevant of crop area) labour requirement which is a user defined input stating
+the hours per week in each labour period. Secondly, a variable labour requirement which is incurred
+for each hectare of crop. This is also an input, but it can vary by crop type as well as period. The
+logic behind splitting the monitoring into two components is that typically farmers will spend longer
+examining a small number of paddocks, irrelevant of the total crop area and then examine the remaining
+paddocks much faster.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt id="LabourCrop.f_fert_app_time_ha">
 <code class="sig-prename descclassname"><span class="pre">LabourCrop.</span></code><code class="sig-name descname"><span class="pre">f_fert_app_time_ha</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#LabourCrop.f_fert_app_time_ha" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Fertilising labour part 1: time required per hectare.</p>
+<p>The labour required for fertilising is calculated in two parts. Part 1 is the time required per hectare
+for each rotation phase which represents the time taken spreading fertiliser in the paddock (calculated in Mach.py).
+This is adjusted for the number of fertiliser applications and allocated into a labour period/s.</p>
+</dd></dl>
 
 <dl class="py function">
 <dt id="LabourCrop.f_fert_app_time_t">
 <code class="sig-prename descclassname"><span class="pre">LabourCrop.</span></code><code class="sig-name descname"><span class="pre">f_fert_app_time_t</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#LabourCrop.f_fert_app_time_t" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Fertilising labour part 2: time required per tonne.</p>
+<p>The labour required for fertilising is calculated in two parts. Part 2 is the time required per tonne
+which represents the time taken driving to and from the paddock and filling up (calculated in Mach.py).
+This is adjusted for the number of fertiliser applications and allocated into a labour period/s.</p>
+</dd></dl>
 
 <dl class="py function">
 <dt id="LabourCrop.f_lab_allocation">
 <code class="sig-prename descclassname"><span class="pre">LabourCrop.</span></code><code class="sig-name descname"><span class="pre">f_lab_allocation</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#LabourCrop.f_lab_allocation" title="Permalink to this definition">¶</a></dt>
-<dd><p>fert application labour period allocation</p>
+<dd><p>Allocation of fertiliser applications into each labour period</p>
 </dd></dl>
-
-<dl class="py function">
-<dt id="LabourCrop.f_labcrop_params">
-<code class="sig-prename descclassname"><span class="pre">LabourCrop.</span></code><code class="sig-name descname"><span class="pre">f_labcrop_params</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#LabourCrop.f_labcrop_params" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 <dl class="py function">
 <dt id="LabourCrop.f_prep_labour">
 <code class="sig-prename descclassname"><span class="pre">LabourCrop.</span></code><code class="sig-name descname"><span class="pre">f_prep_labour</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#LabourCrop.f_prep_labour" title="Permalink to this definition">¶</a></dt>
-<dd><p>labour required for preperation for all cropping operations</p>
+<dd><p>Labour required for preparation and packing for each cropping operation.</p>
 </dd></dl>
 
 </div>

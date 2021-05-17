@@ -34,16 +34,9 @@
             
   <div class="section" id="module-Mach">
 <span id="mach-module"></span><h1>Mach module<a class="headerlink" href="#module-Mach" title="Permalink to this headline">¶</a></h1>
-<p>Created on Sat Nov  2 17:06:04 2019</p>
-<p>module: machinery module</p>
-<p>extra - use mach_input rather than selecting a specific option from input sheet</p>
-<dl class="simple">
-<dt>key: green section title is major title </dt><dd><p>‘#’ around a title is a minor section title
-std ‘#’ comment about a given line of code</p>
-</dd>
-</dl>
-<p>formatting; try to avoid capitals (reduces possible mistakes in future)</p>
-<p>&#64;author: young</p>
+<p>author: young</p>
+<p>The functions in this module calculate the rate at which machinery can be used, the cost incurred
+and the timeliness of certain jobs.</p>
 <dl class="py function">
 <dt id="Mach.chem_app_cost_ha">
 <code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">chem_app_cost_ha</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.chem_app_cost_ha" title="Permalink to this definition">¶</a></dt>
@@ -339,10 +332,19 @@ Used to calculate fuel &amp; oil cost and r&amp;m cost in the functions below</p
 <dl class="py function">
 <dt id="Mach.sup_mach_cost">
 <code class="sig-prename descclassname"><span class="pre">Mach.</span></code><code class="sig-name descname"><span class="pre">sup_mach_cost</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#Mach.sup_mach_cost" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>Series.</dt><dd><p>Cost of machinery to feed 1t of each grain to sheep.</p>
-</dd>
-</dl>
+<dd><p>Cost of machinery to feed 1t of each grain to sheep.</p>
+<p>The task of feeding the supplement has a cost reflecting the fuel and machine repairs and maintenance.
+This is a variable cost incurred for each tonne of supplement fed. The cost is calculated simply from
+inputs which state the litres required and repairs and maintenance cost to feed 1 tonne of each supplement.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method of calculating the cost is satisfactory but it could be improved by linking
+the cost of feeding to the distance travelled which is controlled by the rate of feeding (g/hd),
+sheep numbers and the stocking rate (ie lower stocking rate means sheep are spread over a larger area).
+Rate of feeding could be calculated from the tonnes for feed fed (activity), the frequency of feeding
+(input) and the number of sheep (activity). Then somehow adjusted for the spread of sheep over the
+property using the stocking rate. Or maybe it could be calculated more like the labour required.</p>
+</div>
 </dd></dl>
 
 <dl class="py function">
