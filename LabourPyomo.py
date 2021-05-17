@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Nov  4 11:55:51 2019
+author: young
 
-module: labour pyomo module - contains pyomo params, variables and constraints
+.. note:: Labour is uncondensed in pyomo. We have code which builds constraints for casual, perm and manager
+    (rather than using a worker level set). The transfer labour variables do have a worker set which
+    indicates what level of job is being done. The level is fixed for each constraint. Eg manager can do
+    casual jobs, in con_sheep_anyone (sheep jobs that can be done by anyone) w (worker set) is fixed to ‘casual’.
+    Eventually all the labour constraints could be condensed so there is one constraint for all the worker levels.
+    This would require using the worker set as a set that is passed into the constraint. Would also need a
+    param which indicates which level of working each source supplies eg casual needs to provide 0 manager
+    level jobs.
 
-key: green section title is major title 
-     '#' around a title is a minor section title
-     std '#' comment about a given line of code
-     
-formatting; try to avoid capitals (reduces possible mistakes in future)
-
-@author: young
 """
 
 #python modules
@@ -22,6 +22,13 @@ from CreateModel import *
 import PropertyInputs as pinp
 
 def lab_precalcs(params, r_vals):
+    '''
+    Call crop precalc functions.
+
+    :param params: dictionary which stores all arrays used to populate pyomo parameters.
+    :param report: dictionary which stores all report values.
+
+    '''
     lab.labour_general(params, r_vals)
     lab.perm_cost(params, r_vals)
     lab.manager_cost(params, r_vals)
@@ -33,8 +40,9 @@ def lab_precalcs(params, r_vals):
 
 
 def labpyomo_local(params):
+    ''' Builds pyomo variables, parameters and constraints'''
     ############
-    # variable  #
+    # variable #
     ############
 
     # Casual supervision
@@ -233,9 +241,22 @@ def labpyomo_local(params):
     model.p_casual_lower = Param(model.s_labperiods, initialize = params[season]['casual lb'], mutable=True, doc = 'casual availability lower bound')
 
     ###############################
-    #local constraints            #
+    #call local constraints       #
     ###############################
-    #to constrain the amount of casual labour in each period
+    f_con_casual_bounds()
+    f_con_casual_supervision()
+    f_con_labour_transfer_manager()
+    f_con_labour_transfer_permanent()
+    f_con_labour_transfer_casual()
+
+
+###############################
+#local constraints            #
+###############################
+def f_con_casual_bounds():
+    '''
+    Optional constraint to bound the level of casual staff in each period.
+    '''
     #this can't be done with variable bounds because it's not a constant value for each period (seeding and harv may differ)
     try:
         model.del_component(model.con_casual_bounds)
@@ -244,7 +265,13 @@ def labpyomo_local(params):
     def casual_labour_availability(model, p):
         return  (model.p_casual_lower[p], model.v_quantity_casual[p], model.p_casual_upper[p]) #pyomos way of: lower <= x <= upper
     model.con_casual_bounds = Constraint(model.s_labperiods, rule = casual_labour_availability, doc='bounds the casual labour in each period')
-    
+
+def f_con_casual_supervision():
+    '''
+    Casual labourers require a certain amount of supervision per period. Supervision can be provided
+    by either permanent or manager staff. This constraint ensures ensures that the supervision requirement
+    is met.
+    '''
     ##casual supervision - can be done by either perm or manager
     try:
         model.del_component(model.con_casual_supervision)
@@ -254,6 +281,8 @@ def labpyomo_local(params):
         return -model.v_casualsupervision_manager[p] - model.v_casualsupervision_perm[p] + (model.p_casual_supervision[p] * model.v_quantity_casual[p]) <= 0
     model.con_casual_supervision = Constraint(model.s_labperiods, rule = transfer_casual_supervision, doc='casual require supervision from perm or manager')
 
+def f_con_labour_transfer_manager():
+    '''Transfer manager labour to livestock, cropping, fixed and supervising activities.'''
     #manager, this is a little more complex because also need to subtract the supervision hours off of the manager supply of workable hours
     try:
         model.del_component(model.con_labour_transfer_manager)
@@ -264,7 +293,9 @@ def labpyomo_local(params):
         + sum(model.v_sheep_labour_manager[p,w] + model.v_crop_labour_manager[p,w] + model.v_fixed_labour_manager[p,w] for w in model.s_worker_levels)  <= 0
     model.con_labour_transfer_manager = Constraint(model.s_labperiods, rule = labour_transfer_manager, doc='labour from manager to sheep and crop and fixed')
 
-    #permanent 
+def f_con_labour_transfer_permanent():
+    '''Transfer permanent labour to livestock, cropping, fixed and supervising activities.'''
+    #permanent
     try:
         model.del_component(model.con_labour_transfer_permanent)
     except AttributeError:
@@ -273,7 +304,9 @@ def labpyomo_local(params):
         return -(model.v_quantity_perm * model.p_perm_hours[p]) + model.v_casualsupervision_perm[p]  \
         + sum(model.v_sheep_labour_permanent[p,w] + model.v_crop_labour_permanent[p,w] + model.v_fixed_labour_permanent[p,w] for w in model.s_worker_levels if w in sinp.general['worker_levels'][0:-1]) <= 0 #if statement just to remove unnecessary activities from lp output
     model.con_labour_transfer_permanent = Constraint(model.s_labperiods, rule = labour_transfer_permanent, doc='labour from permanent staff to sheep and crop and fixed')
-    
+
+def f_con_labour_transfer_casual():
+    '''Transfer casual labour to livestock, cropping and fixed activities.'''
     #casual note perm and manager can do casual tasks - variables may need to change name so to be less confusing
     try:
         model.del_component(model.con_labour_transfer_casual)
@@ -298,6 +331,11 @@ def perm(model,c):
 def manager(model,c):
     return model.v_quantity_manager * model.p_manager_cost[c] 
 def labour_cost(model,c):
+    '''
+    Calculate the total cost of the selected labour activities.
+
+    Used in global constraint (con_cashflow). See CorePyomo
+    '''
     return casual(model,c) + perm(model,c) + manager(model,c)
 
 

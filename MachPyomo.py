@@ -224,8 +224,8 @@ def machpyomo_local(params):
 #local constraints                #
 ###################################
     f_con_seed_period_days()
-    con_harv_hours_limit
-    con_sow_supply()
+    f_con_harv_hours_limit
+    f_con_sow_supply()
 
 
 
@@ -247,7 +247,7 @@ def f_con_seed_period_days():
         model.p_seed_days[p] * model.p_number_seeding_gear * model.p_seeding_occur
     model.con_seed_period_days = pe.Constraint(model.s_labperiods, rule=seed_period_days, doc='constrain the number of seeding days per seed period')
 
-def con_harv_hours_limit():
+def f_con_harv_hours_limit():
     '''
     Constraint which acts to bound the variable that is the hours of harvesting for each crop on each LMU
     in each machinery period.
@@ -263,7 +263,7 @@ def con_harv_hours_limit():
         return sum(model.v_harv_hours[p, k] for k in model.s_harvcrops) <= model.p_harv_hrs_max[p] * model.p_number_harv_gear
     model.con_harv_hours_limit = pe.Constraint(model.s_labperiods, rule=harv_hours_limit, doc='constrain the number of hours of harvest x crop gear can provide')
 
-def con_sow_supply():
+def f_con_sow_supply():
     '''
     Constraint between the hectares sown and the supply.
 

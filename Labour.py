@@ -1,17 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Oct 22 15:47:33 2019
-
-module: labour module
-
-key: green section title is major title 
-     '#' around a title is a minor section title
-     std '#' comment about a given line of code
-     
-formatting; try to avoid capitals (reduces possible mistakes in future)
-     
-     
-@author: young
+author: young
 """
 #python modules
 import pandas as pd
@@ -27,10 +16,7 @@ import StructuralInputs as sinp
 import Periods as per
 import Functions as fun
 
- 
-'''
-labour periods and length
-'''
+
 ###################################################################
 # make a df containing labour availability for each labour period #
 ###################################################################
@@ -39,15 +25,43 @@ na = np.newaxis
 
 def labour_general(params,r_vals):
     '''
-    Returns
-    -------
-    None.
-        Wraps labour into function.
-        1- calcs day and length of each labour period
-        2- calcs the leave for staff in each period
-        3- calcs max days that can be worked per periods (on the weekend and weekdays)
-        4- calcs the hours available in each period
-        5- calcs supervision requirement for casual and permanent staff
+    Calculates labour supply, labour cost and supervision requirements.
+
+    To capture the dynamics of labour, the year is broken into periods :cite:p:`RN89`. The supply of
+    labour in each period by each labour source is calculated and the labour required by each farm
+    activity is determined and assigned to the given period/s.
+
+    The amount of time available to work in each period depends on the hours that each worker works
+    each day. Labour can be supplied by three sources:
+
+    #. Casual staff – In the unrestricted model casual staff can come and go at any time throughout the
+       year as the model chooses. However, the user has the power to fix the number of casual staff employed
+       during each part of the year.
+
+    #. Permanent staff – Permanent staff work on the property all year.
+
+    #. Manager staff (commonly the farm owner) – The farm manager works on the property all year. They control
+       the overall farm plan and thus spend a fixed amount of time each quarter for farm planning, learning,
+       record-keeping, purchasing and selling, and other office work.
+
+    The farm manager and permanent staff have four weeks of holiday each year during December, January, and
+    July. All labour sources take days off for Christmas, New Year’s Day, and Easter. Permanent staff are
+    also allocated a certain number of sick days per year. The user has the ability to alter the length
+    and timing of worker leave
+
+    The timeliness and labour intensity of seeding and harvest means staff often work longer days during
+    those periods :cite:p:`RN89`. To accommodate this, the user specifies the hours worked by each type of
+    staff on the weekdays and weekends for both standard periods and seeding and harvest periods.
+
+    Casual and permanent staff both require a certain amount of supervision from the farm manager. The
+    proportion of supervision is specified separately for seeding and harvesting periods and all other
+    labour periods. This is because during seeding and harvest it is likely that less supervision is
+    required. Casual staff are generally less experienced and/or acquainted with the farm operation than
+    permanent staff and thus require more supervision.
+
+    Casual staff are paid on a per hour basis and the manager and permanent staff are paid an annual wage.
+    All labour costs include superannuation and workers’ compensation.
+
 
     '''
     ##########################
