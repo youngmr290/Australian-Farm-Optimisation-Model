@@ -35,12 +35,37 @@ na = np.newaxis
 
 def stubble_all(params):
     '''
-    Wraps all of stubble into a function that is called in pyomo 
-    
-    Returns; multiple dicts
-        - stubble transfer
-        - md and vol
-        - harv con limit
+    Calculates the stubble available, MD provided, volume required and the proportion of the way through
+    the harvest period that stubble becomes available.
+
+    Stubble is a key feed source for sheep during the summer months. In general sheep graze stubbles
+    selectively preferring the higher quality components.  Thus, they tend to eat grain first followed
+    by leaf and finally stem.  In AFO, total stubble is split into four categories (A, B, C & D) to
+    reflect the selectivity of grazing.  For cereals, category A is mainly grain and leaf blade,
+    category B is mainly leaf blade, leaf sheath and cocky chaff, category C is mainly cocky chaff and
+    stem and category D is the remaining fraction that is not grazed. The total mass of stubble at harvest
+    time is calculated as a product of the grain yield. Overtime if the stubble is not consumed it
+    deteriorates in quality and quantity due to adverse effects of weather and the impact of sheep trampling.
+
+    To represent stubble in AFO requires the proportion of each category, the DMD of each category and the
+    proportion of each component in each category. The DMD of each component has been determined by other
+    work :cite:p:`RN108` and can be used to determine the proportion of each component in each category based
+    on the DMD of each category. The quantity and DMD of each stubble category were determined using the AFO
+    sheep generator (documented in a future section). The DMD of the feed was altered until the liveweight of
+    the sheep in the simulation matched the that of an equivalent sheep in a stubble trial (Riggall 2017 pers comm).
+    This provided the feed DMD and the intake required to achieve the given liveweight. Based on the number of
+    sheep and the total stubble available in the trial the simulation results can be extrapolated to provide
+    the stubble DMD for different levels of intake. These results can be summaries into the 4 stubble categories
+    providing the DMD and proportion of the total stubble in each.
+
+    The energy provided from consuming each stubble category is calculated from DMD. Like pasture, stubble
+    FOO is expressed in units of dry matter (excluding moisture) therefore feed energy is expressed as MD
+    (does not require dry matter content conversion). The volume of each stubble category is calculated
+    based on both the quality and availability of the feed.
+
+    Farmer often rack and burn stubbles in preparation for the following seeding. This is represented as a
+    cost see Crop.py for further information.
+
     '''
     ##ev stuff
     confinement_inc = np.maximum(np.max(sinp.structuralsa['i_nut_spread_n1'][0:sinp.structuralsa['i_n1_len']]),

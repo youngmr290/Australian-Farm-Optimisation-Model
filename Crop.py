@@ -498,10 +498,42 @@ frost is not included because that doesn't reduce biomass
 
 def phase_stubble_cost(r_vals):
     '''
+    Cost to handle stubble for 1 ha.
 
-    Dataframe
-        Cost to handle stubble for each rotation - summed with other costs in final function below.
-        *note - arable area accounted for in the yield (it is the same as accounting for it at the end ie yield x 0.8 / threshold x cost == yield / threshold x cost x 0.8)
+    The stubble handling cost per hectare is calculated based on machinery usage (see Mach.py).
+    The cost is then adjusted by the probability of each rotation phase requiring handling which is
+    determined by the ration of the crop yield to the critical threashold.
+
+    General rules regarding stubble handling;
+    #. Stubble handling is not required if the land use is a legume crop, pasture or lucerne
+    #. Once cereal crops are big enough to yield more than 3.5t of grain/ha their stubble residue
+       starts to become an issue when sowing the next crop.
+    #. Wheat stubble is the most problematic
+    #. Barley stubble tends to be less problematic because barley crops tend to get harvested at a lower
+       height, barley stubble seems to break down quicker than wheat and livestock tend to graze barley stubbles harder.
+    #. Once canola crops are big enough to yield more than 2.3t of grain/ha their stubble residue
+       starts to become an issue when sowing the next crop.
+
+    The biggest factor determining whether stubble will require handling is the amount of stubble present,
+    which largely depends on season type (other factors include width between crop rows, what type of seeding
+    setup is used, how low crop was harvested, if the header was equipped with a straw chopper). All of this
+    makes the requirement for stubble handling hard to represent in a steady state model. Hence the probability-based
+    approach adopted in this Table.
+    This probability is calculated by dividing the average yield for that LMU by the critical grain yield.
+    This means the likelihood of stubble handling being req’d increases for higher yielding soil types etc, which
+    is logical. However, the probability isn’t accurately linked to the likelihood that stubble will actually
+    require handling. For instance, just because the average steady-state wht yield of a LMU is 1.75t/ha doesn’t
+    necessarily mean that the wheat stubble on that LMU will need handling 1.75/3.5 = 50% of the time.
+    This structure assumes that even if the preceding landuse is pasture the current phase will still get
+    handling cost this is because the rotation phases use sets so you can’t determine exactly which land use is
+    before or after the current phase.
+
+
+    .. note:: An improvement could be to include harvest index in the calculation of handling probability. Also,
+        with seasonal variation represented the probability is not required.
+
+    Note: arable area accounted for in the yield (it is the same as accounting for it at the end
+    ie yield x 0.8 / threshold x cost == yield / threshold x cost x 0.8)
     '''
     ##first calculate the probability of a rotation phase needing stubble handling
     base_yields = f_rot_yield()
