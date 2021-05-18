@@ -14,12 +14,19 @@ from CreateModel import model
 import PropertyInputs as pinp
 
 def stub_precalcs(params, report):
-    ##call the stubble function
+    '''
+    Call crop precalc functions.
+
+    :param params: dictionary which stores all arrays used to populate pyomo parameters.
+    :param report: dictionary which stores all report values.
+
+    '''
     stub.stubble_all(params)
     
     
     
 def stubpyomo_local(params):
+    ''' Builds pyomo variables, parameters and constraints'''
     ###################
     # variable         #
     ###################
@@ -95,9 +102,21 @@ def stubpyomo_local(params):
     model.p_fp_transfer = pe.Param(model.s_feed_periods, model.s_crops, initialize=params[season]['per_transfer'], default = 0.0, mutable=False, doc='stubble cat B or cat C transferred to the next feed period')
     
 
-    ###################
-    #local constraint #
-    ###################
+    ########################
+    #call local constraint #
+    ########################
+    f_con_stubble_bcd()
+
+
+
+###################
+#local constraint #
+###################
+def f_con_stubble_bcd():
+    ''' Links the consumption of a given category with the provision of another category or the transfer of
+    stubble to the following period. Eg category A consumption provides category B. Category B can either be
+    consumed (hence providing cat C) or transferred to the following period.
+    '''
     ##stubble transter from category to category and period to period
     try:
         model.del_component(model.con_stubble_bcd_index)
@@ -114,21 +133,34 @@ def stubpyomo_local(params):
                     + sum(-model.v_stub_con[v,f,k,ss] * model.p_bc_prov[k,s] + model.v_stub_con[v,f,k,s] * model.p_bc_req[k,s] for v in model.s_feed_pools) <=0
     model.con_stubble_bcd = pe.Constraint(model.s_feed_periods, model.s_crops, model.s_stub_cat, rule = stubble_transfer, doc='links rotation stubble production with consumption of cat A')
 
-
-
-
 ###################
 #constraint global#
 ###################
 ##stubble transter from category to category and period to period
 def stubble_req_a(model,k,s):
+    '''
+    Calculate the total stubble required to consume the selected volume category A stubble in each period.
+
+    Used in global constraint (con_stubble_a). See CorePyomo
+    '''
+
     return sum(model.v_stub_con[v,f,k,s] * model.p_a_req[f,k,s] for v in model.s_feed_pools for f in model.s_feed_periods if pe.value(model.p_a_req[f,k,s]) !=0)
 
 
 ##stubble md
 def stubble_me(model,v,f):
+    '''
+    Calculate the total energy provided to each ev pool by feed the selected amount of stubble.
+
+    Used in global constraint (con_me). See CorePyomo
+    '''
     return sum(model.v_stub_con[v,f,k,s] * model.p_stub_md[v,f,k,s] for k in model.s_crops for s in model.s_stub_cat)
     
 ##stubble vol
 def stubble_vol(model,v,f):
+    '''
+    Calculate the total volume required by each ev pool to feed the selected amount of stubble.
+
+    Used in global constraint (con_vol). See CorePyomo
+    '''
     return sum(model.v_stub_con[v,f,k,s] * model.p_stub_vol[f,k,s] for k in model.s_crops for s in model.s_stub_cat)
