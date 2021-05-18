@@ -132,8 +132,40 @@ def f_contractseeding_occurs():
 
 def f_grazing_days():
     '''
-    Grazing days provided by wet seeding activity (ha/day/feed period)
-    The maths behind this func is a little hard to explain - check google doc for better info
+    Grazing days provided by wet seeding activity (days/ha sown in each mach period/feed period).
+
+    Grazing days is the number of days a hectare can be grazed in each feed period for each seeding period.
+    For example if seeding occurs early less grazing can occur beforehand whereas if seeding occurs in a
+    later machine period more grazing can occur.
+
+    The grazing days in each feed period per hectare sown in each seeding
+    period is made up of two parts. Firstly, a rectangular component which represents the each hectare
+    being grazed each day from the break of season up until the begining of the machine period (or destocking
+    date if that is before).
+    Secondly, a triangle component which represents the grazing during the seeding period.
+    The area grazed each day diminishes associated with the area sown being spread across the seeding period.
+    For example at the start of the period all area can be grazed but by the end of the period once
+    all the area has been sown no grazing can occur.
+
+    Rectangular component: The base of the rectangle is defined by the later of the break and the
+    start of the feed period through to the earlier of the end of the feed period or the start of
+    the machine period.
+
+    Triangular component: The base of the triangle starts at the latter of the start of the feed period,
+    the break of season and the start of the machinery period minus the defer period. It ends at the
+    earlier of the end of the feed period and the end of the machinery period minus the defer period.
+    The height at the start is the length of the machinery period reduced by 1 for each day after the
+    start of the machinery period. The end height is the number of days prior to the end of the
+    machinery period. The height is the average of the start and the finish.
+
+    The above returns the number of hectare days that ‘1ha of seeding in each seed period’ provides,
+    which can then just be multiplied by the rate of seeding and the number of days seeded in each
+    period to get the total number of hectare days. The last step happens in pyomo.
+
+    The assumption is that; seeding is done evenly throughout a given period. In reality this is wrong eg if a
+    period is 5 days long but the farmer only has to sow 20ha they will do it on the first day of the period not
+    4ha each day of the period. Therefore, the calculation overestimates the amount of grazing achieved.
+
     '''
     ##inputs
     date_feed_periods = per.f_feed_periods().astype('datetime64')
@@ -332,6 +364,11 @@ def f_yield_penalty():
 
     Yield penalty reduces grain available to sell and reduces stubble production.
 
+    The assumption is that; seeding is done evenly throughout a given period. In reality this is wrong eg if a
+    period is 5 days long but the farmer only has to sow 20ha they will do it on the first day of the period not
+    4ha each day of the period. Therefore, the calculation overestimates the yield penalty.
+
+
     '''
     ##inputs
     seed_period_lengths_pz = pinp.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
@@ -469,23 +506,6 @@ def f_max_harv_hours():
     max_hours_pz = days_pz * harv_occur_pz * pinp.mach['daily_harvest_hours']
     return max_hours_pz
 
-
-# def cost_harv():
-#     '''
-#     Returns
-#     -------
-#     Dataframe
-#         Harvesting cost ($/hr).
-#     '''
-#     ##fuel used L/hr - same for each crop
-#     fuel_used = uinp.mach[pinp.mach['option']]['harv_fuel_consumption']
-#     ##determine cost of fuel and oil and grease $/ha
-#     fuel_cost_hr = fuel_used * fuel_price()
-#     oil_cost_hr = fuel_used * uinp.mach[pinp.mach['option']]['oil_grease_factor_harv'] * fuel_price()
-#     ##determine fuel and oil cost per hr
-#     fuel_oil_cost_hr = fuel_cost_hr + oil_cost_hr
-#     ##return fuel and oil cost plus r & m ($/hr)
-#     return fuel_oil_cost_hr + uinp.mach[pinp.mach['option']]['harvest_maint']
 
 def f_harv_cost_alloc():
     ##allocation of harvest cost into cashflow period
