@@ -205,7 +205,7 @@ def universal_inp_sa():
     sheep['i_woolp_fdprem_percentile'] = fun.f_sa(sheep_inp['i_woolp_fdprem_percentile'], sen.sav['woolp_fdprem_percentile'], 5) #replaces the std percentile input with the sa value
     sheep['i_salep_percentile'] = fun.f_sa(sheep_inp['i_salep_percentile'], sen.sav['salep_percentile'], 5) #Value for percentile for all sale grids
 
-    ##parameters
+    ##parameters (c2 genotype sensitivity)
     ###SAM - these have to be converted to float so that the blank column becomes nan rather that None
     parameters['i_ci_c2'] = fun.f_sa(parameters_inp['i_ci_c2'].astype(float),sen.sam['ci_c2'])
     parameters['i_sfw_c2'] = fun.f_sa(parameters_inp['i_sfw_c2'].astype(float),sen.sam['sfw_c2'])
@@ -216,5 +216,11 @@ def universal_inp_sa():
     ###SAV - these have to be converted to float so that the blank column becomes nan rather that None
     parameters['i_srw_c2'] = fun.f_sa(parameters_inp['i_srw_c2'].astype(float), sen.sav['srw_c2'], 5) #genotype srw
 
+    ##parameters (overall sensitivity - carried out after the c2 genotype sa)
+    ###SAM - these have to be converted to float so that the blank column becomes nan rather that None
+    parameters['i_scan_std_c2'] = fun.f_sa(parameters['i_scan_std_c2'].astype(float), sen.sam['scanper']) #genotype scanning percent params
+    ###SAA - these have to be converted to float so that the blank column becomes nan rather that None
+    parameters['i_scan_std_c2'] = fun.f_sa(parameters['i_scan_std_c2'].astype(float), sen.saa['scanper'], 2
+                                           ) * (parameters['i_scan_std_c2'] > 0)  #stays as zero if original value was zero
 
 
