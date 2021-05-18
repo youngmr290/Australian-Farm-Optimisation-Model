@@ -39,6 +39,8 @@ import SupFeedPyomo as suppy
 import StubblePyomo as stubpy
 import StockPyomo as spy
 import CorePyomo as core
+import MVF as mvf
+
 
 force_run=True #force precalcs to be run
 run_pyomo = True #do you want pyomo to run (default is True but if testing reports it can be useful to only run the precalcs)
@@ -177,6 +179,7 @@ for row in range(len(exp_data)):
         suppy.suppyomo_local(params['sup'])
         stubpy.stubpyomo_local(params['stub'])
         spy.stockpyomo_local(params['stock'])
+        mvf.mvf_pyomo()
         ###bounds-this must be done last because it uses sets built in some of the other modules
         bndpy.boundarypyomo_local(params)
 

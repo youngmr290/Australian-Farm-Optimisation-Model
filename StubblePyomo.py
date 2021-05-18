@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Nov 24 09:10:55 2019
-
-@author: young
+author: young
 """
 
 #python modules

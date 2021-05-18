@@ -38,6 +38,7 @@ import PasturePyomo as paspy
 import SupFeedPyomo as suppy
 import StubblePyomo as stubpy
 import StockPyomo as stkpy
+import MVF as mvf
  
 import Finance as fin
 
@@ -271,7 +272,8 @@ def coremodel_all(params, trial_name):
     except AttributeError:
         pass
     def me(model,f,v):
-        return -paspy.pas_me(model,v,f) - paspy.nappas_me(model,v,f) - suppy.sup_me(model,v,f) - stubpy.stubble_me(model,v,f) + stkpy.stock_me(model,v,f) <=0
+        return -paspy.pas_me(model,v,f) - paspy.nappas_me(model,v,f) - suppy.sup_me(model,v,f) - stubpy.stubble_me(model,v,f) \
+               + stkpy.stock_me(model,v,f) - mvf.mvf_me(model,v,f) <=0
     model.con_me = pe.Constraint(model.s_feed_periods, model.s_feed_pools, rule=me, doc='constraint between me available and consumed')
 
     ######################
@@ -283,7 +285,8 @@ def coremodel_all(params, trial_name):
     except AttributeError:
         pass
     def vol(model,f,v):
-        return paspy.pas_vol(model,v,f) + suppy.sup_vol(model,v,f) + stubpy.stubble_vol(model,v,f) - stkpy.stock_pi(model,v,f) <=0
+        return paspy.pas_vol(model,v,f) + suppy.sup_vol(model,v,f) + stubpy.stubble_vol(model,v,f) - stkpy.stock_pi(model,v,f) \
+               + mvf.mvf_vol(model,v,f) <=0
     model.con_vol = pe.Constraint(model.s_feed_periods, model.s_feed_pools, rule=vol, doc='constraint between me available and consumed')
 
     ######################

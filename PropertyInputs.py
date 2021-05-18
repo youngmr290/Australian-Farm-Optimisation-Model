@@ -76,6 +76,9 @@ if inputs_from_pickle == False:
         feedsupply_inp  = fun.xl_all_named_ranges('Property.xlsx', 'FeedSupply', numpy=True)
         pkl.dump(feedsupply_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
+        mvf_inp  = fun.xl_all_named_ranges('Property.xlsx', 'MVEnergy', numpy=True)
+        pkl.dump(mvf_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
+
         pasture_inp=dict()
         for pasture in sinp.general['pastures'][sinp.general['pastures_exist']]:
             pasture_inp[pasture] = fun.xl_all_named_ranges('Property.xlsx', pasture, numpy=True)
@@ -106,6 +109,8 @@ else:
         sheep_inp  = pkl.load(f)
         
         feedsupply_inp  = pkl.load(f)
+
+        mvf_inp  = pkl.load(f)
 
         pasture_inp = pkl.load(f)
 
@@ -211,6 +216,7 @@ period= copy.deepcopy(period_inp)
 supfeed= copy.deepcopy(sup_inp)
 sheep= copy.deepcopy(sheep_inp)
 feedsupply=copy.deepcopy(feedsupply_inp)
+mvf = copy.deepcopy(mvf_inp)
 pasture_inputs=copy.deepcopy(pasture_inp)
 
 #######################

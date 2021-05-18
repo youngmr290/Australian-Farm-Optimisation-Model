@@ -151,6 +151,11 @@ model.s_rotconstraints = Set(initialize=s_rotcon1.index, doc='rotation constrain
 
 
 #######################
+#mvf                  #
+#######################
+model.s_mvf_q = Set(initialize=pinp.mvf['i_q_idx'], doc='mvf levels')
+
+#######################
 #sheep                 #
 #######################
 ##all groups
