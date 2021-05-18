@@ -337,9 +337,9 @@ def f_DSTw(scan_g, cycles=1):
 
     '''
     ## predict the proportion of dry, single, twins & triplets if the dams were mated for the calibration period (n cycles)
-    scan_powers_s = uinp.sheep['i_scan_powers']  #scan powers are the exponential powers used in the quadratic formula ie ^0, ^1, ^2, ^3, ^4
+    scan_powers_s = uinp.sheep['i_scan_powers']  #scan powers are the exponential powers used in the polynomial formula ie ^0, ^1, ^2, ^3, ^4
     scan_power_gs = scan_g[...,na] ** scan_powers_s #raises scan_std to scan_powers_s ie x^0, x^1, x^2, x^3, x^4
-    dstwtr_n_gl0 = np.sum(uinp.sheep['i_scan_coeff_l0s'] * scan_power_gs[...,na,:], axis = -1) #add the coefficients and sum all the elements of the equation ie int+ax+bx^2+cx^3+dx^4
+    dstwtr_n_gl0 = np.sum(uinp.sheep['i_scan_coeff_l0s'] * scan_power_gs[...,na,:], axis = -1) #add the coefficients and sum all the elements of the equation ie intercept+ax+bx^2+cx^3+dx^4
 
     ##convert the litter size proportion for the calibration period to the prediction period (1 cycle)
     dstwtr_1_gl0 = np.zeros_like(dstwtr_n_gl0)
@@ -1589,7 +1589,7 @@ def f_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfoe
         ###Set temporary to copy of current numbers
         if np.any(period_is_matingend):
             temporary  = np.copy(numbers)
-            temporary[:, 0:1, 1:2, ...] += numbers[:, 0:1, 0:1, ...]   # add the number remaining unmated tot he dry slice in e1[0]
+            temporary[:, 0:1, 1:2, ...] += numbers[:, 0:1, 0:1, ...]   # add the number remaining unmated to the dry slice in e1[0]
             temporary[:, :, 0:1, ...] = 0 #set the NM slice to 0 (because they have just been added to drys)
             ##handle the proportion mated
             mated_propn = np.minimum(1, propn_dams_mated) #maximum value of 1 because default is inf, otherwise propn to be mated.
