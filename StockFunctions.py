@@ -1230,7 +1230,7 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         propn_dst = np.moveaxis(f_DSTw(repro_rate, cycles = 1)[...,sinp.stock['a_nfoet_b1']], -1, b1_pos)
         ## apply the sa to the repro rate and convert the adjusted value to a proportion of dry, singles, twins & triplets after 1 cycle
         repro_rate_adj = fun.f_sa(repro_rate, sen.sam['scanper'])
-        repro_rate_adj = fun.f_sa(repro_rate_adj, sen.saa['scanper']) * (repro_rate > 0)     # only non-zero if original value was non-zero
+        repro_rate_adj = fun.f_sa(repro_rate_adj, sen.saa['scanper'], 2) * (repro_rate > 0)     # only non-zero if original value was non-zero
         propn_dst_adj = np.moveaxis(f_DSTw(repro_rate_adj, cycles = 1)[..., sinp.stock['a_nfoet_b1']], -1, b1_pos) #move the l0 axis into the b1 position. and expand to b1 size.
         ##calculate the change in the expected proportions due to altering the scanning percentage & apply to calculated proportions
         propn_dst_change = propn_dst_adj - propn_dst
