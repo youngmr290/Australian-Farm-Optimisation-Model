@@ -505,60 +505,6 @@ def f_feedsupply_adjust(attempts,feedsupply,itn):
     return feedsupply
 
 
-
-def f_rq_cs(dmd,legume,cr=None, i_sf=0):
-    ##To work for DMD as a % or a proportion
-    try:
-        if (dmd >= 1).any() : dmd /= 100
-    except:
-        if dmd >= 1:          dmd /= 100
-    ##create scalar cr if not passed in
-    if cr is None:
-        ###Scalar version of cr[1,…] using c2[0] (finewool merino)
-        cr1 = uinp.parameters['i_cr_c2'][1,0]
-        ###Scalar version of cr[3,…] using c2[0] (finewool merino)
-        cr3 = uinp.parameters['i_cr_c2'][3,0]
-    else:
-        cr1=cr[1, ...]
-        cr3=cr[3, ...]
-    ##Scalar version of formula
-    try:
-        ###Relative ingestibility
-        rq = max(0.01, min(1, 1 - cr3 * (cr1 - (dmd +  i_sf * (1 - legume))))) #(1-legume) because sf is actually a factor related to the grass component of the sward
-    ##Numpy version of formula
-    except:
-        ###Relative ingestibility
-        rq = np.maximum(0.01, np.minimum(1, 1 - cr3 * (cr1 - (dmd +  i_sf * (1 - legume))))) #(1-legume) because sf is actually a factor related to the grass component of the sward
-    return rq
-
-def f_ra_cs(foo, hf, cr=None, zf=1):
-    ##create scalar cr if not passed in
-    if cr is None:
-        ###Scalar version of cr[1,…] using c2[0] (finewool merino)
-        cr4 = uinp.parameters['i_cr_c2'][4,0]
-        cr5 = uinp.parameters['i_cr_c2'][5,0]
-        cr6 = uinp.parameters['i_cr_c2'][6,0]
-        cr13 = uinp.parameters['i_cr_c2'][13,0]
-    else:
-        cr4=cr[4, ...]
-        cr5=cr[5, ...]
-        cr6=cr[6, ...]
-        cr13=cr[13, ...]
-    try: 
-        ##Relative rate of eating	
-        rr = 1 - math.exp(-(1+cr13 * 1) * cr4 * hf * zf * foo) #*1 is a reminder that this formula could be improved in a future version
-        ##Relative time spent grazing	
-        rt = 1 + cr5 * math.exp(-(1 + cr13 * 1) * (cr6 * hf * zf * foo)**2)
-    except: #numpy version
-        ##Relative rate of eating	
-        rr = 1 - np.exp(-(1+cr13 * 1) * cr4 * hf * zf * foo) #*1 is a reminder that this formula could be improved in a future version
-        ##Relative time spent grazing	
-        rt = 1 + cr5 * np.exp(-(1 + cr13 * 1) * (cr6 * hf * zf * foo)**2)
-    ##Relative availability	
-    ra = rr * rt
-    return ra
-
-
 def f_foo_convert(cu3, cu4, foo, pasture_stage, legume=0, cr=None, z_pos=-1, treat_z=False):
     '''
     Parameters
@@ -701,14 +647,99 @@ def f_potential_intake_mu(srw):
     return np.maximum(0,pi)
 
 
-def f_ra_mu(cu0, foo, hf, zf=1):
-    return 1 - cu0[0, ...] ** (hf * zf * foo)
+def f_ra_cs(foo, hf, cr=None, zf=1):
+    ##Only pass cr parameter if called from Stock_generator that have a g axis
+    ##create scalar cr if not passed in
+    if cr is None:
+        ###Scalar version of cr[…] using c2[0] (finewool merino)
+        cr4 = uinp.parameters['i_cr_c2'][4, 0]
+        cr5 = uinp.parameters['i_cr_c2'][5, 0]
+        cr6 = uinp.parameters['i_cr_c2'][6, 0]
+        cr13 = uinp.parameters['i_cr_c2'][13, 0]
+    else:
+        cr4 = cr[4, ...]
+        cr5 = cr[5, ...]
+        cr6 = cr[6, ...]
+        cr13 = cr[13, ...]
+    ##Relative rate of eating (rr) & Relative time spent grazing (rt)
+    try:
+        ###Scalar version
+        rr = 1 - math.exp(-(1 + cr13 * 1) * cr4 * hf * zf * foo) #*1 is a reminder that this formula could be improved in a future version
+        rt = 1 + cr5 * math.exp(-(1 + cr13 * 1) * (cr6 * hf * zf * foo)**2)
+    except:
+        ###Numpy version
+        rr = 1 - np.exp(-(1 + cr13 * 1) * cr4 * hf * zf * foo) #*1 is a reminder that this formula could be improved in a future version
+        rt = 1 + cr5 * np.exp(-(1 + cr13 * 1) * (cr6 * hf * zf * foo)**2)
+    ##Relative availability
+    ra = rr * rt
+    return ra
 
 
-def f_intake(cr, pi, ra, rq, md_herb, feedsupply, intake_s, i_md_supp, legume, mp2=0):
-    ##Relative Intake	
-    ri = ra * rq * (1 + cr[2, ...] * ra **2 * legume)
-    ##Pasture intake	
+def f_rq_cs(dmd, legume, cr=None, sf=0):
+    ##Only pass cr parameter if called from Stock_generator that require a g axis
+    ##sf is currently not used. Will be required if using tropical species
+    ##To work for DMD as a % or a proportion
+    try:
+        if (dmd >= 1).any() : dmd /= 100
+    except:
+        if dmd >= 1:          dmd /= 100
+    ##create scalar cr if not passed in
+    if cr is None:
+        ###Scalar version of cr[…] using c2[0] (finewool merino)
+        cr1 = uinp.parameters['i_cr_c2'][1, 0]
+        cr3 = uinp.parameters['i_cr_c2'][3, 0]
+    else:
+        cr1 = cr[1, ...]
+        cr3 = cr[3, ...]
+    ##Relative ingestibility
+    try:
+        ###Scalar version of formula
+        rq = max(0.01, min(1, 1 - cr3 * (cr1 - (dmd +  sf * (1 - legume))))) #(1-legume) because sf is actually a factor related to the grass component of the sward
+    except:
+        ###Numpy version of formula
+        rq = np.maximum(0.01, np.minimum(1, 1 - cr3 * (cr1 - (dmd +  sf * (1 - legume))))) #(1-legume) because sf is actually a factor related to the grass component of the sward
+    return rq
+
+
+def f_ra_mu(foo, hf, zf=1, cu0=None):
+    ##Only pass cu0 parameter if called from Stock_generator that require a g axis
+    ##create scalar cr if not passed in
+    if cu0 is None:
+        ###Scalar version of cr[…] using c2[0] (finewool merino)
+        cu0 = uinp.parameters['i_cu0_c2'][0, 0]
+    else:
+        cu0 = cu0[0, ...]
+    ##Relative availability
+    try:
+        ###Scalar version
+        ra = 1 - cu0 ** (hf * zf * foo)
+    except:
+        ###Numpy version (exact same so not required atm)
+        ra = 1 - cu0 ** (hf * zf * foo)
+    return ra
+
+
+def f_rel_intake(ra, rq, legume, cr=None):
+    ##Only pass cr parameter if called from Stock_generator that require a g axis
+    ##create scalar cr if not passed in
+    if cr is None:
+        ###Scalar version of cr[…] using c2[0] (finewool merino)
+        cr2 = uinp.parameters['i_cr_c2'][2, 0]
+    else:
+        cr2=cr[2, ...]
+
+    ##Relative intake
+    try:
+        ###Scalar version of formula
+        ri = max(0.05, ra * rq * (1 + cr2 * ra**2 * legume))
+    except:
+        ###Numpy version of formula
+        ri = np.maximum(0.05, ra * rq * (1 + cr2 * ra**2 * legume))
+    return ri
+
+
+def f_intake(pi, ri, md_herb, feedsupply, intake_s, i_md_supp, mp2=0):
+    ##Pasture intake
     intake_f = np.maximum(0, pi - intake_s) * ri * (feedsupply < 3)
     ##ME intake from forage	
     mei_forage = 0

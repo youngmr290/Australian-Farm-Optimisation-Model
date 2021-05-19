@@ -674,7 +674,7 @@ def f_pasture(params, r_vals, ev):
     ### calc relative quality - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
     if uinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
         grn_ri_quality_goflzt = sfun.f_rq_cs(dmd_diet_grnha_goflzt, i_legume_zt)
-    grn_ri_goflzt = np.maximum( 0.05, grn_ri_quality_goflzt * grn_ri_availability_goflzt)   # set the minimum RI to 0.05
+    grn_ri_goflzt = sfun.f_rel_intake(grn_ri_availability_goflzt, grn_ri_quality_goflzt, i_legume_zt)
 
     me_cons_grnha_vgoflzt = fun.f_effective_mei( cons_grnha_t_goflzt
                                               ,  grn_md_grnha_goflzt
@@ -709,8 +709,8 @@ def f_pasture(params, r_vals, ev):
     ### calc relative quality - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
     if uinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
         dry_ri_quality_dfzt = sfun.f_rq_cs(dry_dmd_dfzt, i_legume_zt)
-    dry_ri_dfzt = np.maximum(0.05, dry_ri_quality_dfzt * dry_ri_availability_dfzt)  #set the minimum RI to 0.05
-#    dry_ri_dfzt[dry_ri_dfzt<0.05] = 0.05 #set the minimum RI to 0.05
+    dry_ri_dfzt = sfun.f_rel_intake(dry_ri_availability_dfzt, dry_ri_quality_dfzt, i_legume_zt)  #set the minimum RI to 0.05
+
     dry_volume_t_dfzt = 1000 / dry_ri_dfzt                 # parameters for the dry feed grazing activities: Total volume of the tonne consumed
     dry_volume_t_dfzt = dry_volume_t_dfzt * mask_dryfeed_exists_fzt  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
 
@@ -765,14 +765,16 @@ def f_pasture(params, r_vals, ev):
     ## vol
     ### calc relative quality - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
     if uinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
-        ri_qual_fz = sfun.f_rq_cs(i_poc_dmd_ft[..., na, 0], i_legume_zt[..., 0])
+        poc_ri_qual_fz = sfun.f_rq_cs(i_poc_dmd_ft[..., na, 0], i_legume_zt[..., 0])
     
     ### adjust foo and calc hf
     i_poc_foo_fz, hf = sfun.f_foo_convert(cu3, cu4, i_poc_foo_ft[:,na,0], i_pasture_stage_p6z, i_legume_zt[...,0], z_pos=-1)
     ### calc relative availability - note that the equation system used is the one selected for dams in p1 - need to hook up mu function
     if uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used
-        ri_quan_fz = sfun.f_ra_cs(i_poc_foo_fz, hf)
-        poc_vol_fz = fun.f_divide(1, (ri_qual_fz * ri_quan_fz)) * 1000 #times 1000 to convert to vol to per tonne
+        poc_ri_quan_fz = sfun.f_ra_cs(i_poc_foo_fz, hf)
+
+    poc_ri_fz = sfun.f_rel_intake(poc_ri_quan_fz, poc_ri_qual_fz, i_legume_zt[..., 0])
+    poc_vol_fz = fun.f_divide(1000, poc_ri_fz)  # 1000 to convert to vol per tonne
 
 
     ###########

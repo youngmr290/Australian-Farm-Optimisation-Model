@@ -147,18 +147,19 @@ def stubble_all(params):
     ###adjust the foo for each catergory because the good stuff is eaten first therefore there is less foo when the sheep start eating the poorer stubble
     cat_propn_ks1 = pinp.stubble['stub_cat_prop']
     cat_propn_rolled_ks1 = np.roll(cat_propn_ks1, shift=1, axis=1) #roll along the cat axis. So that the previous cat lines up with the current cat
-    cat_propn_rolled_ks1[:,0] = 0 #set the first slice to 0 because no stubble is consumed before cat A is consumed eg there is 100% of foo available when sheep are consuming cat A
+    cat_propn_rolled_ks1[:, 0] = 0 #set the first slice to 0 because no stubble is consumed before cat A is consumed eg there is 100% of foo available when sheep are consuming cat A
     cat_cum_propn_ks1 = np.cumsum(cat_propn_rolled_ks1, axis=1) #cumulative sum of the component sizes.
-    stubble_foo_zks1 = stub_foo_harv_zk[...,na] *  (1 - cat_cum_propn_ks1)
+    stubble_foo_zks1 = stub_foo_harv_zk[..., na] *  (1 - cat_cum_propn_ks1)
     ###adjust for quantity delcine due to deterioration
-    stubble_foo_p6zks1 = stubble_foo_zks1 * (1 - quant_decline_p6zk[...,na])
+    stubble_foo_p6zks1 = stubble_foo_zks1 * (1 - quant_decline_p6zk[..., na])
     ###ri availiabilty
     if uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used - note that the equation system used is the one selected for dams in p1
         ri_availability_p6zks1 = sfun.f_ra_cs(stubble_foo_p6zks1, pinp.stubble['i_hf'])
 
     ##combine ri quality and ri availability to calc overall vol (potential intake)
-    vol_p6zks1 = (1/(ri_availability_p6zks1 * ri_quality_p6zks1))*1000/(1+SA.sap['pi'])
-    vol_p6zks1 = vol_p6zks1 * mask_stubble_exists_p6zk[...,na] #stop md being provided if stubble doesnt exist
+    ri_p6zks1 = sfun.f_rel_intake(ri_availability_p6zks1, ri_quality_p6zks1, pinp.stubble['clover_propn_in_sward_stubble'])
+    vol_p6zks1 = (1000 / ri_p6zks1) / (1 + SA.sap['pi'])
+    vol_p6zks1 = vol_p6zks1 * mask_stubble_exists_p6zk[..., na] #stop md being provided if stubble doesnt exist
 
     ##convert dmd to M/D
     ## Stubble doesn't include calculation of effective mei because stubble is generally low quality feed with a wide variation in quality within the sward.

@@ -345,7 +345,7 @@ def feed_generator():
             ###dams
             eqn_used = (eqn_used_g1_q1p[eqn_group, 0] == eqn_system)
             if eqn_used:
-                ra_dams = sfun.f_ra_mu(cu0_dams, foo_dams, hf_dams, zf_dams)
+                ra_dams = sfun.f_ra_mu(foo_dams, hf_dams, zf_dams, cu0_dams)
 
 
         ##relative quality/ingestibility
@@ -355,12 +355,13 @@ def feed_generator():
             ###dams
             eqn_used = (eqn_used_g1_q1p[eqn_group, 0] == eqn_system)
             if eqn_used:
-                rq_dams = sfun.f_rq_cs(dmd_dams, legume_pa1e1b1nwzida0e0b0xyg[p], cr_dams, pinp.sheep['i_sf'])
+                rq_dams = sfun.f_rq_cs(dmd_dams, legume_pa1e1b1nwzida0e0b0xyg[p], cr_dams)
 
         ##intake
+        ri_dams = sfun.f_rel_intake(ra_dams, rq_dams, legume_pa1e1b1nwzida0e0b0xyg[p])
         mei_dams, mei_solid_dams, intake_f_dams, md_solid_dams, mei_propn_milk_dams, mei_propn_herb_dams, mei_propn_supp_dams  \
-            = sfun.f_intake(cr_dams, pi_dams, ra_dams, rq_dams,  md_herb_dams, feedsupplyw_pa1e1b1nwzida0e0b0xyg1[p]
-                            , intake_s_dams, pinp.sheep['i_md_supp'], legume_pa1e1b1nwzida0e0b0xyg[p])
+            = sfun.f_intake(pi_dams, ri_dams,  md_herb_dams, feedsupplyw_pa1e1b1nwzida0e0b0xyg1[p]
+                            , intake_s_dams, pinp.sheep['i_md_supp'])
 
 
 

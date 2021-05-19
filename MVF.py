@@ -29,9 +29,10 @@ def f_mvf_vol():
         ###dams
         eqn_used = (eqn_used_g1_q1p[eqn_group,0] == eqn_system)
         if eqn_used:
-            ri_qual_q = sfun.f_rq_cs(dmd_q, clover_propn)
-    volume_q = 1/ri_qual_q
-    volume_100mj_q = volume_q/me_q * mvf_me
+            rq_q = sfun.f_rq_cs(dmd_q, clover_propn)
+        ri_qual_q = sfun.f_rel_intake(1, rq_q, clover_propn)  # base the quality groups on ra = 1
+    volume_q = 1 / ri_qual_q
+    volume_100mj_q = volume_q / me_q * mvf_me
     ##make vol a dict for pyomo
     keys = pinp.mvf['i_q_idx']
     volume = dict(zip(keys, volume_100mj_q))

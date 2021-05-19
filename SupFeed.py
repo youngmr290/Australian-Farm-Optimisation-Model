@@ -152,26 +152,31 @@ def f_sup_cost(r_vals):
 def f_sup_md_vol():
     '''
     M/D and DM content of each supplement are known inputs.
-    Unlike stubble and pasture, the energy content of supplementary
-    feed is expressed including moisture content. Therefore M/D must be adjusted by the DM content
-    of the feed. The volume of supplementary feed is calculated based on the quality of the feed.
-    It is assumed that the availability of supplementary feed is high and hence
-    does not affect intake. Furthermore, it is assumed that there is no limit on the proportion of
-    the sheep’s diet that can be provided by supplementary feeding.
+    Unlike stubble and pasture, the quantity of supplementary feed consumed (the decision variables)
+    are expressed including moisture content (i.e. as fed). Therefore M/D must be adjusted by the DM
+    content of the feed.
+    The volume of supplementary feed is calculated based on the quality of the feed. So, lower quality
+    supplements (like oats) will substitute more for pasture than high quality supplements (like lupins).
+    It is assumed that the availability of supplementary feed is high and that supplement is consumed as
+    the first component of the animals diet. Furthermore, it is assumed that if sufficient levels of
+    supplement are offered then all the sheep’s diet will be provided by supplementary feeding.
+    This representation does not include an effect of high protein supplements (like lupins) overcoming
+    a protein deficiency and therefore acting as a 'true' supplement and increasing intake.
     '''
     ##calc vol
     sup_md_vol = uinp.supfeed['sup_md_vol']    
     ###convert md to dmd
-    dmd=(sup_md_vol.loc['energy']/1000).apply(fun.md_to_dmd)
+    dmd=(sup_md_vol.loc['energy'] / 1000).apply(fun.md_to_dmd)
     ##calc relative quality - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
     if uinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
-        rq = sfun.f_rq_cs(dmd,0)
-    ###use max(1,...) to make it the same as midas - this increases lupin vol slightly from what the equation returns
-    vol_kg=np.maximum(1,1/rq)
+        rq = sfun.f_rq_cs(dmd, 0)
+    ###use max(1,...) to make it the same as MIDAS - this increases lupin vol slightly from what the equation returns
+    ###do not calculate ra (relative availability) because assume that supplement has high availability
+    vol_kg = np.maximum(1, 1 / rq)
     ###convert vol per kg to per tonne fed - have to adjust for the actual dry matter content and wastage
-    vol_tonne=vol_kg*1000*sup_md_vol.loc['prop consumed']*sup_md_vol.loc['dry matter content']
-    ##calc ME
-    md_tonne=sup_md_vol.loc['energy']*sup_md_vol.loc['prop consumed']*sup_md_vol.loc['dry matter content']
+    vol_tonne = vol_kg * 1000 * sup_md_vol.loc['prop consumed'] * sup_md_vol.loc['dry matter content']
+    ##calc ME (note: value in dict is MJ/t of DM, so doesn't need to be multiplied by 1000)
+    md_tonne = sup_md_vol.loc['energy'] * sup_md_vol.loc['prop consumed'] * sup_md_vol.loc['dry matter content']
     ##load into params dict for pyomo
     return vol_tonne, md_tonne
     
