@@ -1191,13 +1191,16 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         ##Apply scanning percentage sa to the probability of the number of foetuses.
         ### Carried out here so that the sa affects the REV and is included in proportion of NM
         ### Achieved by calculating the impact of the sa on the scanning percentage and then adjusting the proportion of dry, singles and twins
-        ## calculate the scanning percentage from the probabilities and convert to an expected proportion of dry, singles, twins & triplets after 1 cycle
-        scanper = f_convert_scan2cycles(t_cr, nfoet_b1any, cycles = 1)
-        propn_dst = np.moveaxis(f_DSTw(scanper, cycles = 1)[...,sinp.stock['a_nfoet_b1']], -1, b1_pos) #move the l0 axis into the b1 position. and expand to b1 size.
-        ## apply the sa to the scan percentage and convert the adjusted value to a proportion of dry, singles, twins & triplets after 1 cycle
-        scanper_adj = fun.f_sa(scanper, sen.sam['scanper'])
-        scanper_adj = fun.f_sa(scanper_adj, sen.saa['scanper']) * (scanper > 0)     # only non-zero if original value was non-zero
-        propn_dst_adj = np.moveaxis(f_DSTw(scanper_adj, cycles = 1)[..., sinp.stock['a_nfoet_b1']], -1, b1_pos) #move the l0 axis into the b1 position. and expand to b1 size.
+        ## calculate the repro rate from the probabilities above and convert to an expected proportion of dry, singles, twins & triplets after 1 cycle
+        repro_rate = f_convert_scan2cycles(t_cr, nfoet_b1any, cycles = 1)
+        ###remove singleton b1 axis by squeezing because it is replaced by the l0 axis in f_DSTw
+        repro_rate = np.squeeze(repro_rate, axis=b1_pos)
+        ### The proportions returned are in axis -1 and needs the slices altered (shape of l0 to b1) and moving to b1 position.
+        propn_dst = np.moveaxis(f_DSTw(repro_rate, cycles = 1)[...,sinp.stock['a_nfoet_b1']], -1, b1_pos)
+        ## apply the sa to the repro rate and convert the adjusted value to a proportion of dry, singles, twins & triplets after 1 cycle
+        repro_rate_adj = fun.f_sa(repro_rate, sen.sam['scanper'])
+        repro_rate_adj = fun.f_sa(repro_rate_adj, sen.saa['scanper']) * (repro_rate > 0)     # only non-zero if original value was non-zero
+        propn_dst_adj = np.moveaxis(f_DSTw(repro_rate_adj, cycles = 1)[..., sinp.stock['a_nfoet_b1']], -1, b1_pos) #move the l0 axis into the b1 position. and expand to b1 size.
         ##calculate the change in the expected proportions due to altering the scanning percentage & apply to calculated proportions
         propn_dst_change = propn_dst_adj - propn_dst
         t_cr += propn_dst_change
@@ -1256,13 +1259,14 @@ def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, nfoet_
         slope = np.maximum(cu0[4, ...], cu0[2, ...] + np.sin(2 * np.pi * doy_p / 365) * cu0[3, ...])
         ##Reproduction rate for dams as if mated for the number of cycles in the calibration data.
         repro_rate = scan_std + (cs_mating_e1b1sliced - 3) * slope
-        ###remove singleton b1 axis by squeezing because it is replaced by the l0 axis (the proportions generated in f_DSTw)
-        repro_rate = np.squeeze(repro_rate, axis=b1_pos)
 
-        ##Conception - propn dry/single/twin for given repro rate
-        ### Return the litter size proportion for 1 cycle
+        ##Calculate the propn dry/single/twin for given repro rate.
+        ###remove singleton b1 axis by squeezing because it is replaced by the l0 axis in f_DSTw)
+        repro_rate = np.squeeze(repro_rate, axis=b1_pos)
+        ### Note: repro rate calculated above is based on a calibration with 2 cycles
+        ### Require the proportions of dry, singles, twins & triplets for 1 cycle
         ### The proportions returned are in axis -1 and needs the slices altered (shape of l0 to b1) and moving to b1 position.
-        t_cr = np.moveaxis(f_DSTw(repro_rate, cycles = 1)[...,sinp.stock['a_nfoet_b1']], -1, b1_pos) #move the l0 axis into the b1 position. and expand to b1 size.
+        t_cr = np.moveaxis(f_DSTw(repro_rate, cycles = 1)[...,sinp.stock['a_nfoet_b1']], -1, b1_pos)
         ##Set proportions to 0 for dams that gave birth and lost - this is required so that numbers in pp behave correctly
         t_cr *= (nfoet_b1any == nyatf_b1any)
         ##Dams that implant (i.e. do not return to service) but don't retain to 3rd trimester are added to 00 slice rather than staying in NM slice
