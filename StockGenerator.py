@@ -3603,11 +3603,14 @@ def generator(params,r_vals,ev,plots = False):
                     t_scaled_numbers = np.maximum(pp_numbers_end_dams,
                                                   pp_numbers_end_dams * (np.sum(t_numbers_start_prejoin, axis=(e1_pos,b1_pos), keepdims=True)
                                                                             / np.sum(pp_numbers_end_dams, axis=(e1_pos,b1_pos), keepdims=True)))
-                    o_numbers_start_pdams = fun.f_update(o_numbers_start_pdams, t_scaled_numbers.astype(dtype), (period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p] * between_prejoinnow))
+                    o_numbers_start_pdams = fun.f_update(o_numbers_start_pdams, t_scaled_numbers.astype(dtype)
+                                                         , (period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p] * between_prejoinnow))
                 o_ffcfw_pdams[p] = ffcfw_dams
-                o_ffcfw_season_pdams[p] = sfun.f_season_wa(numbers_end_dams, ffcfw_dams, season_tup, mask_min_lw_z_dams, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1])
-                o_ffcfw_condensed_pdams[p] = sfun.f_condensed(ffcfw_dams, idx_sorted_w_dams, condense_w_mask_dams, n_fs_dams, len_w1, n_fvp_periods_dams,
-                                                              period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])  #condensed lw at the end of the period
+                o_ffcfw_season_pdams[p] = sfun.f_season_wa(numbers_end_dams, ffcfw_dams, season_tup, mask_min_lw_z_dams
+                                                           , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1])
+                o_ffcfw_condensed_pdams[p] = sfun.f_condensed(ffcfw_dams, idx_sorted_w_dams, condense_w_mask_dams
+                                                              , n_fs_dams, len_w1, n_fvp_periods_dams
+                                                              , period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])  #condensed lw at the end of the period
                 o_nw_start_pdams[p] = nw_start_dams
                 numbers_join_dams = fun.f_update(numbers_join_dams, numbers_start_dams, period_is_join_pa1e1b1nwzida0e0b0xyg1[p])
                 o_numbers_join_pdams[p] = numbers_join_dams #store the numbers at joining until next
@@ -3721,7 +3724,8 @@ def generator(params,r_vals,ev,plots = False):
                 o_numbers_start_poffs[p] = numbers_start_offs
                 o_numbers_end_poffs[p] = numbers_end_offs
                 o_ffcfw_poffs[p] = ffcfw_offs
-                o_ffcfw_season_poffs[p] = sfun.f_season_wa(numbers_end_offs, ffcfw_offs, season_tup, mask_min_lw_z_offs, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1])
+                o_ffcfw_season_poffs[p] = sfun.f_season_wa(numbers_end_offs, ffcfw_offs, season_tup, mask_min_lw_z_offs
+                                                           , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1])
                 o_ffcfw_condensed_poffs[p] = sfun.f_condensed(ffcfw_offs, idx_sorted_w_offs, condense_w_mask_offs,
                                                               n_fs_offs, len_w3, n_fvp_periods_offs,
                                                               period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])  #condensed lw at the end of the period before fvp0
@@ -3978,7 +3982,7 @@ def generator(params,r_vals,ev,plots = False):
 
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] > 0):
                 numbers_end_condensed_offs = sfun.f_condensed(numbers_end_offs, idx_sorted_w_offs, condense_w_mask_offs
-                                        , n_fs_offs, len_w3, n_fvp_periods_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p + 1])
+                                        , n_fs_offs, len_w3, n_fvp_periods_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
 
             ##start production - this requires condensed end number
             ###sire
@@ -4233,23 +4237,24 @@ def generator(params,r_vals,ev,plots = False):
                                         , period_is_prejoin=period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###numbers at the beginning of fvp 0 (used to calc mort for the lw patterns to determine the lowest feasible level - used in the start prod func)
                 numbers_start_condense_dams = fun.f_update(numbers_start_condense_dams, numbers_start_dams
-                                                           , period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1])
+                                                           , period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
 
-            if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
+            if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p+1,...] >0):
                 numbers_start_yatf = sfun.f_period_start_nums(numbers_end_yatf, prejoin_tup, season_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], season_propn_zida0e0b0xyg
                                         , nyatf_b1=nyatf_b1nwzida0e0b0xyg, gender_propn_x=gender_propn_xyg
                                         , period_is_birth=period_is_birth_pa1e1b1nwzida0e0b0xyg1[p+1], group=2)
                 ###numbers at the beginning of fvp 0 (used to calc mort for the lw patterns to determine the lowest feasible level - used in the start prod func)
-                numbers_start_condense_yatf = fun.f_update(numbers_start_condense_yatf, numbers_start_yatf
-                                                           , period_is_condense_pa1e1b1nwzida0e0b0xyg1[p + 1])
+                if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p, ...] > 0):
+                    numbers_start_condense_yatf = fun.f_update(numbers_start_condense_yatf, numbers_start_yatf
+                                                           , period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
 
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
                 numbers_start_offs = sfun.f_period_start_nums(numbers_end_offs, prejoin_tup, season_tup
                                         , period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], season_propn_zida0e0b0xyg, group=3)
                 ###numbers at the beginning of fvp 0 (used to calc mort for the lw patterns to determine the lowest feasible level - used in the start prod func)
                 numbers_start_condense_offs = fun.f_update(numbers_start_condense_offs, numbers_start_offs
-                                                           , period_is_condense_pa1e1b1nwzida0e0b0xyg3[p + 1])
+                                                           , period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
 
         ## Calculate LTW sfw multiplier & sfd addition then repeat the generator loops with updated LTW adjuster
         ### sires don't have an adjuster calculated because they are born off-farm & unrelated to the dam nutrition profile
