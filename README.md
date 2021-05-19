@@ -9,4 +9,7 @@ AFO is superseded version of the whole farm model called MIDAS. The model repres
 We are happy to colaborate with others who may like to use this model as long as you share your improvements with us at the end. Hopefully resulting in an improved model.
 The model is designed such that it is very flexible and hence it should facilitate any desired developments.
 
-More information and contact details can be found: https://youngsfarmanalysis.com.au/
+More information and contact details can be found: 
+
+* https://australian-farm-optimising-model.readthedocs.io/en/latest/
+* https://youngsfarmanalysis.com.au/
