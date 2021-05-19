@@ -329,7 +329,7 @@ def f_DSTw(scan_g, cycles=1):
     Parameters
     ----------
     scan_g : np array - scanning percentage of genotypes if mated for the number of calibration cycles.
-    cycles: int, optional - the number of cycles for which the predicton is required.
+    cycles: int, optional - the number of cycles for which the prediction is required.
     Returns
     -------
     Proportion of dry, single, twins & triplets.
@@ -344,10 +344,10 @@ def f_DSTw(scan_g, cycles=1):
 
     ##convert the litter size proportion for the calibration period to the prediction period (the prediction period is the value of the cycles argument)
     dstwtr_gl0 = np.zeros_like(dstwtr_cal_gl0)
-    dry_propn_cal = dstwtr_cal_gl0[..., 0:1]
-    dry_propn = dry_propn_cal ** (cycles / calibration_cycles)
-    dstwtr_gl0[..., 0:1] = dry_propn
-    dstwtr_gl0[..., 1:] = dstwtr_cal_gl0[...,1:] * (1 - dry_propn) / (1 - dry_propn_cal)
+    dry_propn_cal_gl0 = dstwtr_cal_gl0[..., 0:1]
+    dry_propn_gl0 = dry_propn_cal_gl0 ** (cycles / calibration_cycles)
+    dstwtr_gl0[..., 0:1] = dry_propn_gl0
+    dstwtr_gl0[..., 1:] = dstwtr_cal_gl0[..., 1:] * (1 - dry_propn_gl0) / (1 - dry_propn_cal_gl0)
 
     ##set values between 0 & 1 and adjust singles so that total is 1
     dstwtr_gl0 = np.clip(dstwtr_gl0, 0, 1)
@@ -1197,7 +1197,7 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         ## apply the sa to the scan percentage and convert the adjusted value to a proportion of dry, singles, twins & triplets after 1 cycle
         scanper_adj = fun.f_sa(scanper, sen.sam['scanper'])
         scanper_adj = fun.f_sa(scanper_adj, sen.saa['scanper']) * (scanper > 0)     # only non-zero if original value was non-zero
-        propn_dst_adj = np.moveaxis(f_DSTw(scanper_adj, cycles = 1)[...,sinp.stock['a_nfoet_b1']], -1, b1_pos) #move the l0 axis into the b1 position. and expand to b1 size.
+        propn_dst_adj = np.moveaxis(f_DSTw(scanper_adj, cycles = 1)[..., sinp.stock['a_nfoet_b1']], -1, b1_pos) #move the l0 axis into the b1 position. and expand to b1 size.
         ##calculate the change in the expected proportions due to altering the scanning percentage & apply to calculated proportions
         propn_dst_change = propn_dst_adj - propn_dst
         t_cr += propn_dst_change
@@ -1295,7 +1295,7 @@ def f_convert_scan2cycles(dst_propn, nfoet_b1any, cycles = 1):
     scanper = np.sum(dst_propn * nfoet_b1any, axis = sinp.stock['i_b1_pos'], keepdims = True)
 
     ##convert by scaling by the proportion of drys such that litter size stays constant
-    dry_propn = f_dynamic_slice(dst_propn, sinp.stock['i_b1_pos'], 0, 1)
+    dry_propn = f_dynamic_slice(dst_propn, sinp.stock['i_b1_pos'], 1, 2)
     dry_propn_cal = dry_propn ** (calibration_cycles / cycles)
     scanper_cal = scanper * fun.f_divide(1 - dry_propn_cal, 1 - dry_propn)
 
