@@ -1297,7 +1297,7 @@ def f_convert_scan2cycles(dst_propn, nfoet_b1any, cycles = 1):
     ##convert by scaling by the proportion of drys such that litter size stays constant
     dry_propn = f_dynamic_slice(dst_propn, sinp.stock['i_b1_pos'], 0, 1)
     dry_propn_cal = dry_propn ** (calibration_cycles / cycles)
-    scanper_cal = scanper * (1 - dry_propn_cal) / (1 - dry_propn)
+    scanper_cal = scanper * fun.f_divide(1 - dry_propn_cal, 1 - dry_propn)
 
     return scanper_cal
 
