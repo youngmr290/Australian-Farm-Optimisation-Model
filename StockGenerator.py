@@ -1867,6 +1867,8 @@ def generator(params,r_vals,ev,plots = False):
     sfd_ltwadj_a1e1b1nwzida0e0b0xyg3 = np.zeros(pg3)[0, ...]  # slice the p axis to remove
 
     for loop_ltw in range(2):
+        #todo The double loop could be replaced by separating the offspring into their own loop
+        #todo this would reduce the number of calculations, allow offspring wean wt to be based on ffcfw_yat at weaning and allow loop length to be customised
 
         ####################################
         ### initialise arrays for sim loop  # axis names not always track from now on because they change between p=0 and p=1
@@ -4277,9 +4279,9 @@ def generator(params,r_vals,ev,plots = False):
         sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = o_fd_ltwadj_pdams * nyatf_b1nwzida0e0b0xyg / npw_std_xyg1 * uinp.sheep['i_sam_LTW_dams']
 
 
-        ## the offspring lifetime adjustment is based on dam LW pattern 0
-        ### required because there is not a link in the matrix between dam profile and the offspring DVs, so a dam pattern must be selected.
-        ### the progeny CFW effect is the dam LTW effect as a proportion of the dam sfw
+        ## the offspring lifetime adjustment is based on dam LW pattern 0. Selecting a pattern is required
+        ### because there is not a link in the matrix between dam profile and the offspring DVs.
+        ### the offspring CFW effect is the dam LTW effect as a proportion of the dam sfw
         ### need the p slice from nextisprejoin (or period_is_lambing) to be in the d axis using a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1
         ###         e1 axis in the position of e0
         ###         b1 axis in the position of b0 and simplified using a_b0_b1
