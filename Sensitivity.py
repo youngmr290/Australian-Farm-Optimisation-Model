@@ -111,6 +111,10 @@ sav['rev_trait_inc'] = np.full_like(sinp.structuralsa_inp['rev_trait_inc'], '-',
 ##finance
 sav['minroe']      = '-'                  #SA to alter the minroe (applied to both steady-state and dsp minroe inputs)
 
+##price
+sav['grain_percentile'] = '-'  #grain price percentile
+
+
 ##bounds
 sav['bnd_total_pas_area'] = '-'  #Total pasture area for bound. '-' is default so it will chuck an error if the bound is turned on without a specified area
 sav['bnd_pasarea_inc'] = '-'   #SA to turn on the pasture area bound
