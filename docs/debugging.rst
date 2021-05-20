@@ -31,7 +31,7 @@ Possible model errors
           This could be due to very small numbers getting passed to the solver.
           To fix this tweak a sensitivity value slightly (remove some decimals if possible).
 
-4. KeyError: 1247829999.
+4. KeyError: 1247829999 (key can be any bunch of numbers).
 
     - Symptoms:
         - Model throwing key error in presolve stage.
