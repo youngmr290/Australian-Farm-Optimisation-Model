@@ -55,6 +55,7 @@ sam['pi'] = 1.0                             #Potential intake of adults (zf2==1)
 sam['LTW_dams'] = 1.0                       #adjust impact of life time wool fleece effects
 sam['LTW_offs'] = 1.0                       #adjust impact of life time wool fleece effects
 sam['pi_post'] = 1.0                        #Post loop potential intake of adults (zf2==1)
+sam['chill'] = 1.0                        #intermediate sam on chill.
 
 ##stock parameters
 sam['ci_c2'] = np.ones(uinp.parameters_inp['i_ci_c2'].shape, dtype=np.float64)  #intake params for genotypes
@@ -116,6 +117,9 @@ sav['bnd_pasarea_inc'] = '-'   #SA to turn on the pasture area bound
 sav['bnd_propn_dams_mated_og1'] = np.full((pinp.len_d,) + pinp.sheep_inp['i_g3_inc'].shape, '-', dtype=object)   #proportion of dams mated
 sav['bnd_drys_sold'] = '-'   #SA to force drys to be sold
 sav['bnd_drys_retained'] = '-'   #SA to force drys to be retained
+sav['bnd_sale_twice_dry_inc'] = '-'   #SA to include the the bound which forces twice dry dams to be sold
+sav['bnd_twice_dry_propn'] = '-'   #SA to change twice dry dam proportion
+sav['bnd_upper_dam_inc'] = '-'   #control if dam upper bound is on.
 sav['bnd_sr_t'] = np.full(pinp.sheep_inp['i_sr_constraint_t'].shape, '-', dtype=object)   #SA to fix stocking rate
 sav['bnd_min_sale_age_wether_g3'] = np.full(pinp.sheep_inp['i_g3_inc'].shape, '-', dtype=object)   #SA to set min age wether can be sold
 sav['bnd_max_sale_age_wether_g3'] = np.full(pinp.sheep_inp['i_g3_inc'].shape, '-', dtype=object)   #SA to set max age wether can be sold

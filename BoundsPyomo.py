@@ -33,9 +33,9 @@ def boundarypyomo_local(params):
     bounds_inc = True #controls all bounds (typically on)
     rot_lobound_inc = False #controls rot bound
     dams_lobound_inc = False #lower bound dams
-    dams_upperbound_inc = True #upper bound on dams
+    dams_upperbound_inc = fun.f_sa(False, sen.sav['bnd_upper_dam_inc'], 5) #upper bound on dams
     bnd_propn_dams_mated = np.any(sen.sav['bnd_propn_dams_mated_og1'] != '-')
-    bnd_sale_twice_drys_inc = False #proportion of drys sold (can be sold at either sale opp)
+    bnd_sale_twice_drys_inc = fun.f_sa(False, sen.sav['bnd_sale_twice_dry_inc'], 5) #proportion of drys sold (can be sold at either sale opp)
     sr_bound_inc = fun.f_sa(False, sen.sav['bnd_sr_inc'], 5) #controls sr bound
     total_pasture_bound_inc = fun.f_sa(False, sen.sav['bnd_pasarea_inc'], 5)  #bound on total pasture (hence also total crop)
     landuse_bound_inc = False #bound on area of each landuse
