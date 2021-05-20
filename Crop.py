@@ -98,12 +98,29 @@ def f_farmgate_grain_price(r_vals={}):
     dependent on the location of the modelled farm, and the selling fees which often includes receival
     and testing fees, and government levies.
 
+    The market price is inputted for three different price percentiles. This is extrapolated to return
+    the market price for the specified percentile.
+
     .. [#] Farm gate price – price received by the farmer after fees.
 
     '''
-    grain_price_info_df=uinp.price['grain_price'] #create a copy of grain price df so you don't have to reference input module each time
+    ##inputs
+    grain_price_info_df = uinp.price['grain_price_info'] #grain info
+    percentile_price_df = uinp.price['grain_price'] #grain price for 3 different percentiles
+    grain_price_percentile = uinp.price['grain_price_percentile'] #price percentile to use
+
+    ##extrapolate price for the selected percentile (can go beyond the data input range)
+    grain_price_firsts = pd.Series()
+    for k in percentile_price_df.index:
+        grain_price_firsts[k] = fun.np_extrap(np.array([grain_price_percentile]), percentile_price_df.columns, percentile_price_df.loc[k].values)[0] #returns as one value in an array thus take [0]
+    ##seconds price
+    grain_price_seconds = grain_price_firsts * (1-grain_price_info_df['seconds_discount'])
+
     ##gets the price of firsts and seconds for each grain
-    price_df = grain_price_info_df[['firsts','seconds']]
+    price_df = pd.DataFrame(columns=['firsts','seconds'])
+    price_df['firsts'] = grain_price_firsts
+    price_df['seconds'] = grain_price_seconds
+
     ##determine cost of selling
     cartage=(grain_price_info_df['cartage_km_cost']*pinp.general['road_cartage_distance']
             + pinp.general['rail_cartage'] + uinp.price['flagfall'])
@@ -224,7 +241,7 @@ def grain_pool_proportions():
     quality grain (firsts) to market and retain the lower quality grain (seconds) for livestock feed.
 
     '''
-    prop = uinp.price['grain_price'][['prop_firsts','prop_seconds']]
+    prop = uinp.price['grain_price_info'][['prop_firsts','prop_seconds']]
     prop.columns = ['firsts','seconds']
     return prop.stack()
 
@@ -742,8 +759,8 @@ def insurance(r_vals):
     financial impact of insurance.
     '''
     ##first need to combine each grain pool to get average price
-    ave_price=np.multiply(f_farmgate_grain_price(),uinp.price['grain_price'][['prop_firsts','prop_seconds']]).sum(axis=1)#np multiply doen't look at the column names and indexs
-    insurance=ave_price*uinp.price['grain_price']['insurance']/100  #div by 100 because insurance is a percent
+    ave_price=np.multiply(f_farmgate_grain_price(),uinp.price['grain_price_info'][['prop_firsts','prop_seconds']]).sum(axis=1)#np multiply doen't look at the column names and indexs
+    insurance=ave_price*uinp.price['grain_price_info']['insurance']/100  #div by 100 because insurance is a percent
     rot_insurance = f_rot_yield().mul(insurance, axis=0, level = 1)/1000 #divide by 1000 to convert yield to tonnes
     rot_insurance = rot_insurance.droplevel(1).unstack()
     ##cost allocation
