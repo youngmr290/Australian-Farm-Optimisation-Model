@@ -161,8 +161,10 @@ def f_sup_md_vol():
     the first component of the animals diet. Furthermore, it is assumed that if sufficient levels of
     supplement are offered then all the sheep’s diet will be provided by supplementary feeding.
     This representation does not include an effect of high protein supplements (like lupins) overcoming
-    a protein deficiency and therefore acting as a 'true' supplement and increasing intake.
+    a protein deficiency and therefore acting as a 'true' supplement and increasing intake. If this was represented it
+    would likely make low rate lupin supplementation optimal in early summer/autumn to overcome a protein deficiency.
     '''
+    #todo review the volume of supplementary feed, especially the max RI==1 and non-inclusion of protein supplementation.
     ##calc vol
     sup_md_vol = uinp.supfeed['sup_md_vol']    
     ###convert md to dmd

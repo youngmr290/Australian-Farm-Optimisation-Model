@@ -720,6 +720,11 @@ def f_ra_mu(foo, hf, zf=1, cu0=None):
 
 
 def f_rel_intake(ra, rq, legume, cr=None):
+    ## Calculation of relative intake including the effect of feed availability, feed quality and the interaction.
+    ## This is not called for feeds (such as supplements) that do not have an 'availability' characteristic.
+    ## The calculated RI can be greater than 1 - which implies that actual intake can be greater than potential intake
+    ## This can occur if rq is greater than 1, due to the 'legume' effect on the intercept or if DMD is greater than cr1
+
     ##Only pass cr parameter if called from Stock_generator that require a g axis
     ##create scalar cr if not passed in
     if cr is None:
@@ -729,6 +734,7 @@ def f_rel_intake(ra, rq, legume, cr=None):
         cr2=cr[2, ...]
 
     ##Relative intake
+
     try:
         ###Scalar version of formula
         ri = max(0.05, ra * rq * (1 + cr2 * ra**2 * legume))
