@@ -3246,7 +3246,7 @@ def generator(params,r_vals,ev,plots = False):
                     temp0, temp1, temp2 = sfun.f_mortality_progeny_cs(cd_yatf, cb1_yatf, w_b_yatf, rc_start_dams
                                     , w_b_exp_y_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]
                                     , chill_index_pa1e1b1nwzida0e0b0xygm1[p], nfoet_b1nwzida0e0b0xyg
-                                    , rev_trait_values['yatf'][p], sen.sap['mortalityp'])
+                                    , rev_trait_values['yatf'][p], sen.sap['mortalityp'], sen.saa['mortalityx'])
                     if eqn_used:
                         mortality_birth_yatf = temp1 #mortalityd, assign first because it has x axis
                         mortality_birth_yatf += temp0 #mortalityx
@@ -3259,14 +3259,16 @@ def generator(params,r_vals,ev,plots = False):
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)   # equation used is based on the yatf system
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                     ##calculate the standard BW which is used in the paddock level scaling
-                    w_b_ltw_std_yatf, t_cf = sfun.f_birthweight_mu(cu1_yatf, cb1_yatf, cx_yatf[:,mask_x,...], ce_yatf[:,p-1,...]
-                                    , w_b_ltw_std_yatf, 0, nw_start_dams , 0, days_period_pa1e1b1nwzida0e0b0xyg1[p]
-                                    , gest_propn_pa1e1b1nwzida0e0b0xyg1[p],  period_between_joinscan_pa1e1b1nwzida0e0b0xyg1[p]
-                                    , period_between_scanbirth_pa1e1b1nwzida0e0b0xyg1[p], period_is_birth_pa1e1b1nwzida0e0b0xyg1[p])
-                    temp0 = sfun.f_mortality_progeny_mu(cu2_yatf, cb1_yatf, cx_yatf[:,mask_x,...], ce_yatf[:,p,...], w_b_yatf
-                                    , w_b_ltw_std_yatf, foo_yatf, chill_index_pa1e1b1nwzida0e0b0xygm1[p]
-                                    , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]
-                                    , rev_trait_values['yatf'][p], sen.sap['mortalityp'])
+                    w_b_ltw_std_yatf, t_cf = sfun.f_birthweight_mu(cu1_yatf, cb1_yatf, cx_yatf[:,mask_x,...]
+                                    , ce_yatf[:,p-1,...], w_b_ltw_std_yatf, 0, nw_start_dams , 0
+                                    , days_period_pa1e1b1nwzida0e0b0xyg1[p], gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
+                                    , period_between_joinscan_pa1e1b1nwzida0e0b0xyg1[p]
+                                    , period_between_scanbirth_pa1e1b1nwzida0e0b0xyg1[p]
+                                    , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p])
+                    temp0 = sfun.f_mortality_progeny_mu(cu2_yatf, cb1_yatf, cx_yatf[:,mask_x,...], ce_yatf[:,p,...]
+                                    , w_b_yatf, w_b_ltw_std_yatf, foo_yatf, chill_index_pa1e1b1nwzida0e0b0xygm1[p]
+                                    , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p], rev_trait_values['yatf'][p]
+                                    , sen.sap['mortalityp'], sen.saa['mortalityx'])
                     if eqn_used:
                         mortality_birth_yatf = temp0 #mortality
                     if eqn_compare:

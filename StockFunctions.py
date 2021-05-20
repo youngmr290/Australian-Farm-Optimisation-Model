@@ -1400,14 +1400,14 @@ def f_mortality_dam_cs(cb1, cg, nw_start, ebg, days_period, period_between_birth
 
     
 def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, w_b_exp_y, period_is_birth, chill_index_m1, nfoet_b1
-                           , rev_trait_value, sap_mortalityp):
-    ##Progeny losses due to large progeny (dystocia)
+                           , rev_trait_value, sap_mortalityp, saa_mortalityx):
+    ##Progeny losses due to large progeny or slow birth process (dystocia)
     mortalityd_yatf = f_sig(fun.f_divide(w_b, w_b_exp_y) * np.maximum(1, rc_birth), cb1[6, ...], cb1[7, ...]) * period_is_birth
     ##add sensitivity
     mortalityd_yatf = fun.f_sa(mortalityd_yatf, sap_mortalityp, sa_type = 1, value_min = 0)
     ##dam mort due to large progeny or lack of energy at birth (dystocia) - returns 0 mort if there is 0 nfoet also the fact that more prog die per dam when the dams has multiple nfoet (eg for a trip only one ewe dies for every 3 yatf)
     mortalityd_dams = fun.f_divide(np.mean(mortalityd_yatf, axis=sinp.stock['i_x_pos'], keepdims=True) * cd[21,...], nfoet_b1)
-    ##Progeny losses due to large progeny (dystocia) - so there is no double counting of progeny loses associated with dam mortality
+    ##Reduce progeny losses due to large progeny (dystocia) - so not double counting progeny losses associated with dam mortality
     mortalityd_yatf = mortalityd_yatf * (1- cd[21,...])
     ##Exposure index
     xo = cd[8, ..., na] - cd[9, ..., na] * rc_birth[..., na] + cd[10, ..., na] * chill_index_m1 + cb1[11, ..., na]
@@ -1415,6 +1415,7 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, w_b_exp_y, period_is_birth, c
     mortalityx = np.average(np.exp(xo) / (1 + np.exp(xo)) ,axis = -1) * period_is_birth #axis -1 is m1
     ##Apply SA to progeny mortality due to exposure
     mortalityx = fun.f_sa(mortalityx, sap_mortalityp, sa_type = 1, value_min = 0)
+    mortalityx = fun.f_sa(mortalityx, saa_mortalityx, sa_type = 2, value_min = 0)
     ##Process the Ewe Rearing Ability REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
     mortalityx = f_rev_update('era', mortalityx, rev_trait_value)
     return mortalityx, mortalityd_yatf, mortalityd_dams
@@ -1460,21 +1461,31 @@ def f_mortality_dam_mu(cu2, cs_birth_dams, period_is_birth, nfoet_b1, sap_mortal
     return mortalitye_mu
 
     
-def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, foo, chill_index_m1, period_is_birth, rev_trait_value, sap_mortalityx):
+def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, foo, chill_index_m1, period_is_birth, rev_trait_value
+                           , sap_mortalityp, saa_mortalityx):
+    ##calculate the mortality of progeny at birth due to mis-mothering and exposure
+    ## using the LTW prediction equations (Oldham et al. 2011) with inclusion of chill index.
+    ##The paddock level scalar is added (Young et al 2011) however, this is not calibrated for high chill environments (>1000)
+    ##The scalar adjusts the difference in survival if birth weight is different from the standard birthweight
+    ##this is to reflect the difference in survival observed in the LTW paddock trial compared with the plot scale trials.
+
     ##transformed survival for actual & standard
-    t_survival = cu2[8, 0, ..., na] * w_b[..., na] + cu2[8, 1, ..., na] * w_b[..., na] ** 2 + cu2[8, 2, ..., na] * chill_index_m1  \
-                      + cu2[8, 3, ..., na] * foo[..., na] + cu2[8, 4, ..., na] * foo[..., na] ** 2 + cu2[8, 5, ..., na]   \
-                      + cb1[8, ..., na] + cx[8, ..., na] + cx[9, ..., na] * chill_index_m1 + ce[8, ..., na]
-    t_survival_std = cu2[8, 0, ..., na] * w_b_std[..., na] + cu2[8, 1, ..., na] * w_b_std[..., na] ** 2 + cu2[8, 2, ..., na] * chill_index_m1  \
-                      + cu2[8, 3, ..., na] * foo[..., na] + cu2[8, 4, ..., na] * foo[..., na] ** 2 + cu2[8, 5, ..., na]   \
-                      + cb1[8, ..., na] + cx[8, ..., na] + cx[9, ..., na] * chill_index_m1 + ce[8, ..., na]
+    t_survival = (cu2[8, 0, ..., na] * w_b[..., na] + cu2[8, 1, ..., na] * w_b[..., na] ** 2
+                      + cu2[8, 2, ..., na] * chill_index_m1 + cu2[8, 3, ..., na] * foo[..., na]
+                      + cu2[8, 4, ..., na] * foo[..., na] ** 2 + cu2[8, 5, ..., na] + cb1[8, ..., na]
+                      + cx[8, ..., na] + cx[9, ..., na] * chill_index_m1 + ce[8, ..., na])
+    t_survival_std = (cu2[8, 0, ..., na] * w_b_std[..., na] + cu2[8, 1, ..., na] * w_b_std[..., na] ** 2
+                      + cu2[8, 2, ..., na] * chill_index_m1 + cu2[8, 3, ..., na] * foo[..., na]
+                      + cu2[8, 4, ..., na] * foo[..., na] ** 2 + cu2[8, 5, ..., na] + cb1[8, ..., na]
+                      + cx[8, ..., na] + cx[9, ..., na] * chill_index_m1 + ce[8, ..., na])
     ##back transformed & converted to mortality
     mortalityx = (1 - np.average(1 / (1 + np.exp(-t_survival)),axis = -1)) * period_is_birth #m1 axis averaged
     mortalityx_std = (1 - np.average(1 / (1 + np.exp(-t_survival_std)),axis = -1)) * period_is_birth #m1 axis averaged
     ##Scale progeny survival using paddock level scalars
     mortalityx = mortalityx_std + (mortalityx - mortalityx_std) * cb1[9, ...]
     ##Apply SA to progeny mortality at birth (LTW)
-    mortalityx = fun.f_sa(mortalityx, sap_mortalityx, sa_type = 1, value_min = 0)
+    mortalityx = fun.f_sa(mortalityx, sap_mortalityp, sa_type = 1, value_min = 0)
+    mortalityx = fun.f_sa(mortalityx, saa_mortalityx, sa_type = 2, value_min = 0)
     ##Process the Ewe Rearing Ability REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
     mortalityx = f_rev_update('era', mortalityx, rev_trait_value)
     return mortalityx
