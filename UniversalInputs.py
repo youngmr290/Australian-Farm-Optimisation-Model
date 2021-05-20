@@ -190,6 +190,10 @@ def universal_inp_sa():
     finance['minroe'] = fun.f_sa(finance_inp['minroe'], sen.sav['minroe'], 5)  #value for minroe (same sav as below)
     finance['minroe_dsp'] = fun.f_sa(finance_inp['minroe_dsp'], sen.sav['minroe'], 5)  #value for minroe (same sav as above)
 
+    ##price
+    price['grain_price_percentile'] = fun.f_sa(price_inp['grain_price_percentile'],sen.sav['grain_percentile'], 5)
+
+
     ##sheep
     ###SAM
     sheep['i_sam_LTW_dams'] = fun.f_sa(sheep_inp['i_sam_LTW_dams'],sen.sam['LTW_dams'])
