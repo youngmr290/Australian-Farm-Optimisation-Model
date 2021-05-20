@@ -1471,7 +1471,7 @@ def generator(params,r_vals,ev,plots = False):
     chill_index_pa1e1b1nwzida0e0b0xygm1 = (481 + (11.7 + 3.1 * ws_pa1e1b1nwzida0e0b0xyg[..., na] ** 0.5)
                                            * (40 - temp_ave_pa1e1b1nwzida0e0b0xyg[..., na])
                                            + 418 * (1-np.exp(-0.04 * rain_pa1e1b1nwzida0e0b0xygm1)))
-    #todo add sam on chill index here
+    chill_index_pa1e1b1nwzida0e0b0xygm1 = fun.f_sa(chill_index_pa1e1b1nwzida0e0b0xygm1, sen.sam['chill'])
 
     ##Proportion of SRW with age
     srw_age_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(np.exp(-cn_sire[1, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg0m1 / srw_xyg0[..., na] ** cn_sire[2, ..., na]), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg0m1, axis = -1)
