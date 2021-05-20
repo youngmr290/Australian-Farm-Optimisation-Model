@@ -33,9 +33,9 @@ def boundarypyomo_local(params):
     bounds_inc = True #controls all bounds (typically on)
     rot_lobound_inc = False #controls rot bound
     dams_lobound_inc = False #lower bound dams
-    dams_upperbound_inc = False #upper bound on dams
+    dams_upperbound_inc = True #upper bound on dams
     bnd_propn_dams_mated = np.any(sen.sav['bnd_propn_dams_mated_og1'] != '-')
-    bnd_sale_propn_drys = False #proportion of drys sold (can be sold at either sale opp)
+    bnd_sale_twice_drys_inc = False #proportion of drys sold (can be sold at either sale opp)
     sr_bound_inc = fun.f_sa(False, sen.sav['bnd_sr_inc'], 5) #controls sr bound
     total_pasture_bound_inc = fun.f_sa(False, sen.sav['bnd_pasarea_inc'], 5)  #bound on total pasture (hence also total crop)
     landuse_bound_inc = False #bound on area of each landuse
@@ -101,7 +101,6 @@ def boundarypyomo_local(params):
                                                     doc='min number of all dams')
 
         ##dams upper bound - specified by k2 & v and totalled across other axes
-        #todo need a parameter so that the upperbound can be masked by mask_w8vars to save those variables being displayed in .lp
         ###delete the bound (outside if statement incase the bound was active for last trial)
         try:
             model.del_component(model.con_dam_upperbound)
@@ -124,12 +123,17 @@ def boundarypyomo_local(params):
             dams_upperbound = dict(zip(tup_tv, dams_upperbound))
             ###constraint
             def f_dam_upperbound(model, t, v):
-                if dams_upperbound[t, v]==np.inf:
+                if dams_upperbound[t, v]==np.inf or all(model.p_numbers_req_dams[k28,k29,t,v,a,n,w8,i,y,g1,g9,w9] == 0
+                                      for k29 in model.s_k2_birth_dams for w9 in model.s_lw_dams for g9 in model.s_groups_dams for k28 in model.s_k2_birth_dams
+                                      for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
+                                      for i in model.s_tol for y in model.s_gen_merit_dams for g1 in model.s_groups_dams):
                     return pe.Constraint.Skip
                 else:
                     return sum(model.v_dams[k28,t,v,a,n,w8,i,y,g1] for k28 in model.s_k2_birth_dams
                                for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
                                for i in model.s_tol for y in model.s_gen_merit_dams for g1 in model.s_groups_dams
+                               if any(model.p_numbers_req_dams[k28,k29,t,v,a,n,w8,i,y,g1,g9,w9] == 1
+                                      for k29 in model.s_k2_birth_dams for w9 in model.s_lw_dams for g9 in model.s_groups_dams) #if removes the masked out dams so they dont show up in .lp output.
                                ) <= dams_upperbound[t, v]
             model.con_dam_upperbound = pe.Constraint(model.s_sale_dams, model.s_dvp_dams, rule=f_dam_upperbound,
                                                     doc='max number of dams_tv')
@@ -174,7 +178,7 @@ def boundarypyomo_local(params):
         except AttributeError:
             pass
         ###build bound if turned on
-        if bnd_sale_propn_drys:
+        if bnd_sale_twice_drys_inc:
             '''Constraint forces x percent of the dry dams to be sold (all the twice drys). They can be sold in either sale op (after scanning or at shearing).
              Thus the drys just have to be sold sometime between scanning and the following prejoining.'''
             ###build param - inf values are skipped in the constraint building so inf means the model can optimise the propn mated
@@ -183,16 +187,17 @@ def boundarypyomo_local(params):
                 model.del_component(model.p_prop_twice_dry_dams)
             except AttributeError:
                 pass
-            model.p_prop_twice_dry_dams = pe.Param(model.s_dvp_dams, model.s_gen_merit_dams, model.s_groups_dams, initialize=params['stock']['p_prop_twice_dry_dams'])
+            model.p_prop_twice_dry_dams = pe.Param(model.s_dvp_dams, model.s_tol, model.s_gen_merit_dams,
+                                                   model.s_groups_dams, initialize=params['stock']['p_prop_twice_dry_dams'])
 
             l_v1 = list(model.s_dvp_dams)
             scan_v = list(params['stock']['p_scan_v_dams'])
-            prejoin_v = list(params['stock']['p_prejoin_v_dams'])
+            prejoin_v = list(params['stock']['p_prejoin_v_dams'])[1:] #remove the start dvp which is not a real prejoin dvp (it just has type condense).
             next_prejoin_v = prejoin_v[1:] #dvp before following prejoining
 
             ###constraint
             def f_propn_drys_sold(model, v, i, y, g1):
-                if v in scan_v[:-1] and model.p_prop_twice_dry_dams[v, y, g1]!=0: #use 00 numbers at scanning. Dont want to include the last prejoining dvp becasue there is no sale limit in the last year.
+                if v in scan_v[:-1] and model.p_prop_twice_dry_dams[v, i, y, g1]!=0: #use 00 numbers at scanning. Dont want to include the last prejoining dvp becasue there is no sale limit in the last year.
                     idx_scan = scan_v.index(v) #which prejoining is the current v
                     idx_v_next_prejoin = next_prejoin_v[idx_scan] #all the twice drys must be sold by the following prejoining
                     v_sale = l_v1[l_v1.index(idx_v_next_prejoin) - 1]
@@ -202,7 +207,7 @@ def boundarypyomo_local(params):
                                for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
                                         if any(model.p_numbers_req_dams['00-0',k29,t,v,a,n,w8,i,y,g1,g9,w9] == 1
                                                for k29 in model.s_k2_birth_dams for w9 in model.s_lw_dams for g9 in model.s_groups_dams)
-                                        ) * model.p_prop_twice_dry_dams[v, y, g1]
+                                        ) * model.p_prop_twice_dry_dams[v, i, y, g1]
                 else:
                     return pe.Constraint.Skip
             model.con_propn_drys_sold = pe.Constraint(model.s_dvp_dams, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, rule=f_propn_drys_sold,

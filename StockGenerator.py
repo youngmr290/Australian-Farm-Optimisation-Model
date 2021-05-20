@@ -6800,6 +6800,32 @@ def generator(params,r_vals,ev,plots = False):
     prop_dams_mated_vg1 = prop_dams_mated_va1e1b1nwzida0e0b0xyg1.ravel()
     params['p_prop_dams_mated'] = dict(zip(tup_vg1, prop_dams_mated_vg1))
 
+    ##proportion of drys that are twice dry
+    ###expand for p axis
+    prop_twice_dry_dams_oa1e1b1nwzia0e0b0xyg1 = np.moveaxis(ce_dams[2,...], source=d_pos, destination=0) #move d axis to p pos
+    prop_twice_dry_dams_oa1e1b1nwzida0e0b0xyg1 = np.expand_dims(prop_twice_dry_dams_oa1e1b1nwzia0e0b0xyg1, d_pos) #add singleton d axis
+    prop_twice_dry_dams_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_twice_dry_dams_oa1e1b1nwzida0e0b0xyg1, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0) #increments at prejoining
+    ###convert to v axis
+    prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_twice_dry_dams_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] becasue e doesnt impact mating propn
+    ###adjust maidens twices drys for yearling mating (if no yearlings are mated then there can not be any twice dry maidens)
+    ####calc propn of dams mated in previous opportunity.
+    prop_dams_mated_prev_oa1e1b1nwzida0e0b0xyg1 = np.roll(prop_dams_mated_oa1e1b1nwzida0e0b0xyg1, shift=1, axis=0)
+    prop_dams_mated_prev_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_prev_oa1e1b1nwzida0e0b0xyg1, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0) #increments at prejoining
+    prop_dams_mated_prev_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_prev_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] becasue e doesnt impact mating propn
+    prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1 = prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1 * (prop_dams_mated_prev_va1e1b1nwzida0e0b0xyg1>1)
+    ##create param
+    arrays = [keys_v1, keys_i, keys_y1, keys_g1]
+    index_viyg1 = fun.cartesian_product_simple_transpose(arrays)
+    tup_viyg1 = tuple(map(tuple,index_viyg1))
+    prop_twice_dry_dams_viyg1 = prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1.ravel()
+    params['p_prop_twice_dry_dams'] = dict(zip(tup_viyg1, prop_twice_dry_dams_viyg1))
+    params['p_prejoin_v_dams'] = keys_v1[dvp_type_va1e1b1nwzida0e0b0xyg1[:,0,0,0,0,0,0,0,0,0,0,0,0,0,0]==prejoin_vtype1] #get the dvp keys which are prejoining (same for all animals hence take slice 0)
+    params['p_scan_v_dams'] = keys_v1[dvp_type_va1e1b1nwzida0e0b0xyg1[:,0,0,0,0,0,0,0,0,0,0,0,0,0,0]==scan_vtype1] #get the dvp keys which are scan (same for all animals hence take slice 0)
+
+
+
+
+
 
 
     ###############
