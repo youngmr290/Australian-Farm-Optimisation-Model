@@ -2956,7 +2956,7 @@ def generator(params,r_vals,ev,plots = False):
                 ##based on days_period_dams because weaning occurs at start of period so days_period_yatf==0
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     temp0 = sfun.f_weanweight_cs(w_w_start_yatf, ffcfw_start_yatf, ebg_yatf, days_period_pa1e1b1nwzida0e0b0xyg2[p]
-                                                 , period_is_wean_pa1e1b1nwzida0e0b0xyg1[p])  #it is okay to use ebg of current period because it is mul by lact propn
+                                                 , period_is_wean_pa1e1b1nwzida0e0b0xyg1[p])
                     if eqn_used:
                         w_w_yatf = temp0
                     if eqn_compare:
@@ -2972,7 +2972,7 @@ def generator(params,r_vals,ev,plots = False):
                                             , age_start_pa1e1b1nwzida0e0b0xyg2[p], period_between_joinscan_pa1e1b1nwzida0e0b0xyg1[p]
                                             , period_between_scanbirth_pa1e1b1nwzida0e0b0xyg1[p], period_between_birthwean_pa1e1b1nwzida0e0b0xyg1[p]
                                             , period_is_wean_pa1e1b1nwzida0e0b0xyg1[p]) #have to use yatf days per period if using prejoining to scanning
-                    ## these variables need to be stored even if the equation system is not used so that the equations can be compared
+                    ## these variables need to be available if being compared (but not used) so they can be condensed
                     cf_w_w_dams = temp1
                     foo_lact_ave = temp2
                     if eqn_used:
@@ -3877,7 +3877,7 @@ def generator(params,r_vals,ev,plots = False):
                 cf_conception_condensed_dams = sfun.f_condensed(cf_conception_dams
                                         , idx_sorted_w_dams, condense_w_mask_dams
                                         , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
-                ###Weaning weight carryover (running tally of foetal weight diff)
+                ###Weaning weight carryover (running tally of weaning weight diff)
                 cf_w_w_condensed_dams = sfun.f_condensed(cf_w_w_dams, idx_sorted_w_dams, condense_w_mask_dams
                                         , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Average FOO during lactation (for weaning weight calculation)
