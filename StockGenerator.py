@@ -1468,7 +1468,10 @@ def generator(params,r_vals,ev,plots = False):
     ##Age of lamb relative to peak lactation-with minor axis
     lmm_pa1e1b1nwzida0e0b0xyg1m1 = (age_m1_pa1e1b1nwzida0e0b0xyg2m1 + cl_dams[1, ..., na]) / cl_dams[2, ..., na]
     ##Chill index for lamb survival
-    chill_index_pa1e1b1nwzida0e0b0xygm1 = (481 + (11.7 + 3.1 * ws_pa1e1b1nwzida0e0b0xyg[..., na] ** 0.5) * (40 - temp_ave_pa1e1b1nwzida0e0b0xyg[..., na]) + 418 * (1-np.exp(-0.04 * rain_pa1e1b1nwzida0e0b0xygm1)))
+    chill_index_pa1e1b1nwzida0e0b0xygm1 = (481 + (11.7 + 3.1 * ws_pa1e1b1nwzida0e0b0xyg[..., na] ** 0.5)
+                                           * (40 - temp_ave_pa1e1b1nwzida0e0b0xyg[..., na])
+                                           + 418 * (1-np.exp(-0.04 * rain_pa1e1b1nwzida0e0b0xygm1)))
+    #todo add sam on chill index here
 
     ##Proportion of SRW with age
     srw_age_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(np.exp(-cn_sire[1, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg0m1 / srw_xyg0[..., na] ** cn_sire[2, ..., na]), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg0m1, axis = -1)
