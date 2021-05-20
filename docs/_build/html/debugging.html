@@ -104,6 +104,28 @@ To fix this tweak a sensitivity value slightly (remove some decimals if possible
 </ul>
 </div></blockquote>
 </li>
+<li><p>KeyError: 1247829999 (key can be any bunch of numbers).</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="simple">
+<dt>Symptoms:</dt><dd><ul>
+<li><p>Model throwing key error in presolve stage.</p></li>
+<li><p>If you run one trial it works.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Solution:</dt><dd><ul>
+<li><p>This may be because a bound or constraint is still active from the last trial.
+You need to make sure constrains are being deleted between trials or being re-built correctly.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+</li>
 </ol>
 </div>
 <div class="section" id="process-to-debug">

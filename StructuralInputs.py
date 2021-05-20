@@ -15,6 +15,7 @@ import pickle as pkl
 import pandas as pd
 import numpy as np
 import copy
+import os.path
 
 import Functions as fun
 
@@ -23,10 +24,15 @@ import Functions as fun
 # read in excel
 #########################################################################################################################################################################################################
 #########################################################################################################################################################################################################
-import os.path
+
+##build path this way so that readthedocs can read correctly.
+directory_path = os.path.dirname(os.path.abspath(__file__))
+structural_xl_path = os.path.join(directory_path, "Structural.xlsx")
+structural_pkl_path = os.path.join(directory_path, "pkl_structural.pkl")
+
 
 try:
-    if os.path.getmtime("Structural.xlsx") > os.path.getmtime("pkl_structural.pkl"):
+    if os.path.getmtime(structural_xl_path) > os.path.getmtime(structural_pkl_path):
         inputs_from_pickle = False
     else:
         inputs_from_pickle = True
@@ -34,27 +40,26 @@ try:
 except FileNotFoundError:
     inputs_from_pickle = False
 
-filename = 'pkl_structural.pkl'
 ##if inputs are not read from pickle then they are read from excel and written to pickle
 if inputs_from_pickle == False:
     print('Reading structural inputs from Excel',end=' ',flush=True)
-    with open(filename,"wb") as f:
+    with open(structural_pkl_path,"wb") as f:
         ##general
-        general_inp = fun.xl_all_named_ranges("Structural.xlsx","General")
+        general_inp = fun.xl_all_named_ranges(structural_xl_path,"General")
         pkl.dump(general_inp,f,protocol=pkl.HIGHEST_PROTOCOL)
 
         ##sheep inputs
-        stock_inp = fun.xl_all_named_ranges('Structural.xlsx','Stock',numpy=True)
+        stock_inp = fun.xl_all_named_ranges(structural_xl_path,'Stock',numpy=True)
         pkl.dump(stock_inp,f,protocol=pkl.HIGHEST_PROTOCOL)
 
         ##sa inputs (these variables can have sensitivity applied from exp.xl
-        structuralsa_inp = fun.xl_all_named_ranges('Structural.xlsx','StructuralSA',numpy=True)
+        structuralsa_inp = fun.xl_all_named_ranges(structural_xl_path,'StructuralSA',numpy=True)
         pkl.dump(structuralsa_inp,f,protocol=pkl.HIGHEST_PROTOCOL)
 
 ##else the inputs are read in from the pickle file
 ##note this must be in the same order as above
 else:
-    with open(filename,"rb") as f:
+    with open(structural_pkl_path,"rb") as f:
         general_inp = pkl.load(f)
         stock_inp = pkl.load(f)
         structuralsa_inp = pkl.load(f)

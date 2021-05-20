@@ -34,44 +34,76 @@
             
   <div class="section" id="module-LabourPyomo">
 <span id="labourpyomo-module"></span><h1>LabourPyomo module<a class="headerlink" href="#module-LabourPyomo" title="Permalink to this headline">¶</a></h1>
-<p>Created on Mon Nov  4 11:55:51 2019</p>
-<p>module: labour pyomo module - contains pyomo params, variables and constraints</p>
-<dl class="simple">
-<dt>key: green section title is major title </dt><dd><p>‘#’ around a title is a minor section title
-std ‘#’ comment about a given line of code</p>
-</dd>
-</dl>
-<p>formatting; try to avoid capitals (reduces possible mistakes in future)</p>
-<p>&#64;author: young</p>
+<p>author: young</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Labour is uncondensed in pyomo. We have code which builds constraints for casual, perm and manager
+(rather than using a worker level set). The transfer labour variables do have a worker set which
+indicates what level of job is being done. The level is fixed for each constraint. Eg manager can do
+casual jobs, in con_sheep_anyone (sheep jobs that can be done by anyone) w (worker set) is fixed to ‘casual’.
+Eventually all the labour constraints could be condensed so there is one constraint for all the worker levels.
+This would require using the worker set as a set that is passed into the constraint. Would also need a
+param which indicates which level of working each source supplies eg casual needs to provide 0 manager
+level jobs.</p>
+</div>
 <dl class="py function">
-<dt id="LabourPyomo.casual">
-<code class="sig-prename descclassname"><span class="pre">LabourPyomo.</span></code><code class="sig-name descname"><span class="pre">casual</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#LabourPyomo.casual" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="LabourPyomo.f_con_casual_bounds">
+<code class="sig-prename descclassname"><span class="pre">LabourPyomo.</span></code><code class="sig-name descname"><span class="pre">f_con_casual_bounds</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#LabourPyomo.f_con_casual_bounds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Optional constraint to bound the level of casual staff in each period.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="LabourPyomo.f_con_casual_supervision">
+<code class="sig-prename descclassname"><span class="pre">LabourPyomo.</span></code><code class="sig-name descname"><span class="pre">f_con_casual_supervision</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#LabourPyomo.f_con_casual_supervision" title="Permalink to this definition">¶</a></dt>
+<dd><p>Casual labourers require a certain amount of supervision per period. Supervision can be provided
+by either permanent or manager staff. This constraint ensures ensures that the supervision requirement
+is met.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="LabourPyomo.f_con_labour_transfer_casual">
+<code class="sig-prename descclassname"><span class="pre">LabourPyomo.</span></code><code class="sig-name descname"><span class="pre">f_con_labour_transfer_casual</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#LabourPyomo.f_con_labour_transfer_casual" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transfer casual labour to livestock, cropping and fixed activities.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="LabourPyomo.f_con_labour_transfer_manager">
+<code class="sig-prename descclassname"><span class="pre">LabourPyomo.</span></code><code class="sig-name descname"><span class="pre">f_con_labour_transfer_manager</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#LabourPyomo.f_con_labour_transfer_manager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transfer manager labour to livestock, cropping, fixed and supervising activities.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="LabourPyomo.f_con_labour_transfer_permanent">
+<code class="sig-prename descclassname"><span class="pre">LabourPyomo.</span></code><code class="sig-name descname"><span class="pre">f_con_labour_transfer_permanent</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#LabourPyomo.f_con_labour_transfer_permanent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transfer permanent labour to livestock, cropping, fixed and supervising activities.</p>
+</dd></dl>
 
 <dl class="py function">
 <dt id="LabourPyomo.lab_precalcs">
 <code class="sig-prename descclassname"><span class="pre">LabourPyomo.</span></code><code class="sig-name descname"><span class="pre">lab_precalcs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#LabourPyomo.lab_precalcs" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Call crop precalc functions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>params</strong> – dictionary which stores all arrays used to populate pyomo parameters.</p></li>
+<li><p><strong>report</strong> – dictionary which stores all report values.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py function">
 <dt id="LabourPyomo.labour_cost">
 <code class="sig-prename descclassname"><span class="pre">LabourPyomo.</span></code><code class="sig-name descname"><span class="pre">labour_cost</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#LabourPyomo.labour_cost" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Calculate the total cost of the selected labour activities.</p>
+<p>Used in global constraint (con_cashflow). See CorePyomo</p>
+</dd></dl>
 
 <dl class="py function">
 <dt id="LabourPyomo.labpyomo_local">
 <code class="sig-prename descclassname"><span class="pre">LabourPyomo.</span></code><code class="sig-name descname"><span class="pre">labpyomo_local</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#LabourPyomo.labpyomo_local" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt id="LabourPyomo.manager">
-<code class="sig-prename descclassname"><span class="pre">LabourPyomo.</span></code><code class="sig-name descname"><span class="pre">manager</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#LabourPyomo.manager" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt id="LabourPyomo.perm">
-<code class="sig-prename descclassname"><span class="pre">LabourPyomo.</span></code><code class="sig-name descname"><span class="pre">perm</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#LabourPyomo.perm" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Builds pyomo variables, parameters and constraints</p>
+</dd></dl>
 
 </div>
 

@@ -25,8 +25,14 @@ import Functions as fun
 #########################################################################################################################################################################################################
 #########################################################################################################################################################################################################
 import os.path
+
+##build path this way so that readthedocs can read correctly.
+directory_path = os.path.dirname(os.path.abspath(__file__))
+universal_xl_path = os.path.join(directory_path, "Universal.xlsx")
+universal_pkl_path = os.path.join(directory_path, "pkl_universal.pkl")
+
 try:
-    if os.path.getmtime("Universal.xlsx") > os.path.getmtime("pkl_universal.pkl"):
+    if os.path.getmtime(universal_xl_path) > os.path.getmtime(universal_pkl_path):
         inputs_from_pickle = False 
     else: 
         inputs_from_pickle = True
@@ -34,49 +40,48 @@ try:
 except FileNotFoundError:      
     inputs_from_pickle = False
 
-filename= 'pkl_universal.pkl'
 ##if inputs are not read from pickle then they are read from excel and written to pickle
 if inputs_from_pickle == False:
     print('Reading universal inputs from Excel', end=' ', flush=True)
-    with open(filename, "wb") as f:
+    with open(universal_pkl_path, "wb") as f:
         ##prices
-        price_inp = fun.xl_all_named_ranges("Universal.xlsx","Price")
+        price_inp = fun.xl_all_named_ranges(universal_xl_path,"Price")
         pkl.dump(price_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
         
         ##Finance inputs
-        finance_inp = fun.xl_all_named_ranges("Universal.xlsx","Finance")
+        finance_inp = fun.xl_all_named_ranges(universal_xl_path,"Finance")
         pkl.dump(finance_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
         
         ##mach inputs - general
-        mach_general_inp = fun.xl_all_named_ranges("Universal.xlsx","Mach General")
+        mach_general_inp = fun.xl_all_named_ranges(universal_xl_path,"Mach General")
         pkl.dump(mach_general_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
         ##sup inputs
-        sup_inp = fun.xl_all_named_ranges("Universal.xlsx","Sup Feed")
+        sup_inp = fun.xl_all_named_ranges(universal_xl_path,"Sup Feed")
         pkl.dump(sup_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
         
         ##crop inputs
-        crop_inp = fun.xl_all_named_ranges("Universal.xlsx","Crop Sim")
+        crop_inp = fun.xl_all_named_ranges(universal_xl_path,"Crop Sim")
         pkl.dump(crop_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
         
         ##sheep inputs
-        sheep_inp = fun.xl_all_named_ranges('Universal.xlsx', 'Sheep', numpy=True)
+        sheep_inp = fun.xl_all_named_ranges(universal_xl_path, 'Sheep', numpy=True)
         pkl.dump(sheep_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
-        parameters_inp = fun.xl_all_named_ranges('Universal.xlsx', 'Parameters', numpy=True)
+        parameters_inp = fun.xl_all_named_ranges(universal_xl_path, 'Parameters', numpy=True)
         pkl.dump(parameters_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
-        pastparameters_inp = fun.xl_all_named_ranges('Universal.xlsx', 'PastParameters', numpy=True)
+        pastparameters_inp = fun.xl_all_named_ranges(universal_xl_path, 'PastParameters', numpy=True)
         pkl.dump(pastparameters_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
         
         ##mach options
         ###create a dict to store all options - this allows the user to select an option
         machine_options_dict_inp={}
-        machine_options_dict_inp[1] = fun.xl_all_named_ranges("Universal.xlsx","Mach 1")
+        machine_options_dict_inp[1] = fun.xl_all_named_ranges(universal_xl_path,"Mach 1")
         pkl.dump(machine_options_dict_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
 ##else the inputs are read in from the pickle file
 ##note this must be in the same order as above
 else:
-    with open(filename, "rb") as f:
+    with open(universal_pkl_path, "rb") as f:
         price_inp = pkl.load(f)
         
         finance_inp = pkl.load(f)

@@ -34,32 +34,55 @@
             
   <div class="section" id="module-StubblePyomo">
 <span id="stubblepyomo-module"></span><h1>StubblePyomo module<a class="headerlink" href="#module-StubblePyomo" title="Permalink to this headline">¶</a></h1>
-<p>Created on Sun Nov 24 09:10:55 2019</p>
-<p>&#64;author: young</p>
+<p>author: young</p>
+<dl class="py function">
+<dt id="StubblePyomo.f_con_stubble_bcd">
+<code class="sig-prename descclassname"><span class="pre">StubblePyomo.</span></code><code class="sig-name descname"><span class="pre">f_con_stubble_bcd</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#StubblePyomo.f_con_stubble_bcd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Links the consumption of a given category with the provision of another category or the transfer of
+stubble to the following period. Eg category A consumption provides category B. Category B can either be
+consumed (hence providing cat C) or transferred to the following period.</p>
+</dd></dl>
+
 <dl class="py function">
 <dt id="StubblePyomo.stub_precalcs">
 <code class="sig-prename descclassname"><span class="pre">StubblePyomo.</span></code><code class="sig-name descname"><span class="pre">stub_precalcs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#StubblePyomo.stub_precalcs" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Call crop precalc functions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>params</strong> – dictionary which stores all arrays used to populate pyomo parameters.</p></li>
+<li><p><strong>report</strong> – dictionary which stores all report values.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py function">
 <dt id="StubblePyomo.stubble_me">
 <code class="sig-prename descclassname"><span class="pre">StubblePyomo.</span></code><code class="sig-name descname"><span class="pre">stubble_me</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#StubblePyomo.stubble_me" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Calculate the total energy provided to each ev pool by feed the selected amount of stubble.</p>
+<p>Used in global constraint (con_me). See CorePyomo</p>
+</dd></dl>
 
 <dl class="py function">
 <dt id="StubblePyomo.stubble_req_a">
 <code class="sig-prename descclassname"><span class="pre">StubblePyomo.</span></code><code class="sig-name descname"><span class="pre">stubble_req_a</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#StubblePyomo.stubble_req_a" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Calculate the total stubble required to consume the selected volume category A stubble in each period.</p>
+<p>Used in global constraint (con_stubble_a). See CorePyomo</p>
+</dd></dl>
 
 <dl class="py function">
 <dt id="StubblePyomo.stubble_vol">
 <code class="sig-prename descclassname"><span class="pre">StubblePyomo.</span></code><code class="sig-name descname"><span class="pre">stubble_vol</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#StubblePyomo.stubble_vol" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Calculate the total volume required by each ev pool to feed the selected amount of stubble.</p>
+<p>Used in global constraint (con_vol). See CorePyomo</p>
+</dd></dl>
 
 <dl class="py function">
 <dt id="StubblePyomo.stubpyomo_local">
 <code class="sig-prename descclassname"><span class="pre">StubblePyomo.</span></code><code class="sig-name descname"><span class="pre">stubpyomo_local</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#StubblePyomo.stubpyomo_local" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Builds pyomo variables, parameters and constraints</p>
+</dd></dl>
 
 </div>
 

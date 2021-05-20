@@ -34,74 +34,80 @@
             
   <div class="section" id="module-MachPyomo">
 <span id="machpyomo-module"></span><h1>MachPyomo module<a class="headerlink" href="#module-MachPyomo" title="Permalink to this headline">¶</a></h1>
-<p>Created on Wed Nov  6 09:49:18 2019</p>
-<p>module: machinery pyomo module</p>
-<dl class="simple">
-<dt>key: green section title is major title </dt><dd><p>‘#’ around a title is a minor section title
-std ‘#’ comment about a given line of code</p>
-</dd>
-</dl>
-<p>formatting; try to avoid capitals (reduces possible mistakes in future)</p>
-<p>&#64;author: young</p>
+<p>author: young</p>
+<dl class="py function">
+<dt id="MachPyomo.f_con_harv_hours_limit">
+<code class="sig-prename descclassname"><span class="pre">MachPyomo.</span></code><code class="sig-name descname"><span class="pre">f_con_harv_hours_limit</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MachPyomo.f_con_harv_hours_limit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constraint which acts to bound the variable that is the hours of harvesting for each crop on each LMU
+in each machinery period.</p>
+<p>The number of hours of harvest is limited by the max harvest hours in each harvest period and the number
+of harvest gear (ie two harvesters allows you to harvest twice as much).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="MachPyomo.f_con_seed_period_days">
+<code class="sig-prename descclassname"><span class="pre">MachPyomo.</span></code><code class="sig-name descname"><span class="pre">f_con_seed_period_days</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MachPyomo.f_con_seed_period_days" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constraint which acts to bound the variable that is the number of days seeding for each crop on each LMU
+in each machinery period.</p>
+<p>The number of days of seeding is limited by the length of each machinery period and the number
+of crop gear (ie two seeders allows you to seed twice as much). The constraint includes a factor
+to account for days that are too wet or dry to seed.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="MachPyomo.f_con_sow_supply">
+<code class="sig-prename descclassname"><span class="pre">MachPyomo.</span></code><code class="sig-name descname"><span class="pre">f_con_sow_supply</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MachPyomo.f_con_sow_supply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constraint between the hectares sown and the supply.</p>
+<p>The hectares of pasture and crop seeded must be less than the amount supplied by either farmers machinery or
+contract services. The amount supplied from the farmers equipment is limited by the seeding days and the
+rate of seeding per day.</p>
+</dd></dl>
+
 <dl class="py function">
 <dt id="MachPyomo.ha_pasture_crop_paddocks">
 <code class="sig-prename descclassname"><span class="pre">MachPyomo.</span></code><code class="sig-name descname"><span class="pre">ha_pasture_crop_paddocks</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MachPyomo.ha_pasture_crop_paddocks" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>Pyomo function.</dt><dd><p>Total hectares that can be grazed on crop paddocks before seeding
-<a href="#id1"><span class="problematic" id="id2">*</span></a>note poc is only on crop paddocks but the seeding activity includes pastures, to stop pasture paddocks providing poc only loop through the crop set</p>
-</dd>
-</dl>
+<dd><p>Calculate the total hectares that can be grazed on crop paddocks before seeding based on the
+seeding activities selected.</p>
+<p>Used in global constraint (con_poc_available). See CorePyomo</p>
+<p>Note: poc is only on crop paddocks but the seeding activity includes pastures, to stop pasture paddocks providing poc only loop through the crop set</p>
 </dd></dl>
 
 <dl class="py function">
 <dt id="MachPyomo.harv_supply">
 <code class="sig-prename descclassname"><span class="pre">MachPyomo.</span></code><code class="sig-name descname"><span class="pre">harv_supply</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MachPyomo.harv_supply" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt id="MachPyomo.harvesting_cost">
-<code class="sig-prename descclassname"><span class="pre">MachPyomo.</span></code><code class="sig-name descname"><span class="pre">harvesting_cost</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MachPyomo.harvesting_cost" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Calculate the total hectares of each crop that can be harvested based on the allocation of harvesting
+time.</p>
+<p>Used in global constraint (con_harv). See CorePyomo</p>
+</dd></dl>
 
 <dl class="py function">
 <dt id="MachPyomo.late_seed_penalty">
 <code class="sig-prename descclassname"><span class="pre">MachPyomo.</span></code><code class="sig-name descname"><span class="pre">late_seed_penalty</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MachPyomo.late_seed_penalty" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Calculate the yield penalty based on the seeding activities selected.</p>
+<p>Used in global constraint (con_grain_transfer). See CorePyomo</p>
+</dd></dl>
 
 <dl class="py function">
 <dt id="MachPyomo.mach_asset">
 <code class="sig-prename descclassname"><span class="pre">MachPyomo.</span></code><code class="sig-name descname"><span class="pre">mach_asset</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MachPyomo.mach_asset" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Calculate the total asset value of farm machinery.</p>
+<p>Used in global constraint (con_asset). See CorePyomo</p>
+</dd></dl>
 
 <dl class="py function">
 <dt id="MachPyomo.mach_cost">
 <code class="sig-prename descclassname"><span class="pre">MachPyomo.</span></code><code class="sig-name descname"><span class="pre">mach_cost</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MachPyomo.mach_cost" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt id="MachPyomo.mach_precalcs">
-<code class="sig-prename descclassname"><span class="pre">MachPyomo.</span></code><code class="sig-name descname"><span class="pre">mach_precalcs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_vals</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MachPyomo.mach_precalcs" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt id="MachPyomo.machpyomo_local">
-<code class="sig-prename descclassname"><span class="pre">MachPyomo.</span></code><code class="sig-name descname"><span class="pre">machpyomo_local</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MachPyomo.machpyomo_local" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt id="MachPyomo.seeding_cost">
-<code class="sig-prename descclassname"><span class="pre">MachPyomo.</span></code><code class="sig-name descname"><span class="pre">seeding_cost</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MachPyomo.seeding_cost" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt id="MachPyomo.stubble_penalty">
-<code class="sig-prename descclassname"><span class="pre">MachPyomo.</span></code><code class="sig-name descname"><span class="pre">stubble_penalty</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MachPyomo.stubble_penalty" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Calculate the cost of machinery for insurance, seeding, harvesting and making hay based on the level
+of machinery activities selected.</p>
+<p>Used in global constraint (con_cashflow). See CorePyomo</p>
+</dd></dl>
 
 <dl class="py function">
 <dt id="MachPyomo.total_dep">
 <code class="sig-prename descclassname"><span class="pre">MachPyomo.</span></code><code class="sig-name descname"><span class="pre">total_dep</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MachPyomo.total_dep" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Calculate the total depreciation of farm machinery.</p>
+<p>Used in global constraint (con_dep). See CorePyomo</p>
+</dd></dl>
 
 </div>
 

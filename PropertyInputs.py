@@ -28,8 +28,12 @@ na = np.newaxis
 ##############
 #read inputs #
 ##############
+##build path this way so that readthedocs can read correctly.
+directory_path = os.path.dirname(os.path.abspath(__file__))
+property_xl_path = os.path.join(directory_path, "Property.xlsx")
+property_pkl_path = os.path.join(directory_path, "pkl_property.pkl")
 try:
-    if os.path.getmtime("Property.xlsx") > os.path.getmtime("pkl_property.pkl"):
+    if os.path.getmtime(property_xl_path) > os.path.getmtime(property_pkl_path):
         inputs_from_pickle = False 
     else: 
         inputs_from_pickle = True
@@ -38,56 +42,55 @@ except FileNotFoundError:
     inputs_from_pickle = False
 
 
-filename= 'pkl_property.pkl'
 ##if inputs are not read from pickle then they are read from excel and written to pickle
 if inputs_from_pickle == False:
     print('Reading property inputs from Excel', end=' ', flush=True)
-    with open(filename, "wb") as f:
-        general_inp = fun.xl_all_named_ranges("Property.xlsx","General")
+    with open(property_pkl_path, "wb") as f:
+        general_inp = fun.xl_all_named_ranges(property_xl_path,"General")
         pkl.dump(general_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
-        rep_inp = fun.xl_all_named_ranges("Property.xlsx","Report Settings")
+        rep_inp = fun.xl_all_named_ranges(property_xl_path,"Report Settings")
         pkl.dump(rep_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
-        labour_inp = fun.xl_all_named_ranges("Property.xlsx","Labour")
+        labour_inp = fun.xl_all_named_ranges(property_xl_path,"Labour")
         pkl.dump(labour_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
-        crop_inp = fun.xl_all_named_ranges("Property.xlsx","Crop")
+        crop_inp = fun.xl_all_named_ranges(property_xl_path,"Crop")
         pkl.dump(crop_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
-        mach_inp = fun.xl_all_named_ranges("Property.xlsx","Mach")
+        mach_inp = fun.xl_all_named_ranges(property_xl_path,"Mach")
         pkl.dump(mach_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
-        stubble_inp = fun.xl_all_named_ranges("Property.xlsx","Stubble", numpy=True)
+        stubble_inp = fun.xl_all_named_ranges(property_xl_path,"Stubble", numpy=True)
         pkl.dump(stubble_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
-        finance_inp = fun.xl_all_named_ranges("Property.xlsx","Finance")
+        finance_inp = fun.xl_all_named_ranges(property_xl_path,"Finance")
         pkl.dump(finance_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
-        period_inp = fun.xl_all_named_ranges("Property.xlsx","Periods", numpy=True) #automatically read in the periods as dates
+        period_inp = fun.xl_all_named_ranges(property_xl_path,"Periods", numpy=True) #automatically read in the periods as dates
         pkl.dump(period_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
-        sup_inp = fun.xl_all_named_ranges("Property.xlsx","Sup Feed")
+        sup_inp = fun.xl_all_named_ranges(property_xl_path,"Sup Feed")
         pkl.dump(sup_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
-        sheep_inp  = fun.xl_all_named_ranges('Property.xlsx', 'Sheep', numpy=True)
+        sheep_inp  = fun.xl_all_named_ranges(property_xl_path, 'Sheep', numpy=True)
         pkl.dump(sheep_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
-        feedsupply_inp  = fun.xl_all_named_ranges('Property.xlsx', 'FeedSupply', numpy=True)
+        feedsupply_inp  = fun.xl_all_named_ranges(property_xl_path, 'FeedSupply', numpy=True)
         pkl.dump(feedsupply_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
-        mvf_inp  = fun.xl_all_named_ranges('Property.xlsx', 'MVEnergy', numpy=True)
+        mvf_inp  = fun.xl_all_named_ranges(property_xl_path, 'MVEnergy', numpy=True)
         pkl.dump(mvf_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
         pasture_inp=dict()
         for pasture in sinp.general['pastures'][sinp.general['pastures_exist']]:
-            pasture_inp[pasture] = fun.xl_all_named_ranges('Property.xlsx', pasture, numpy=True)
+            pasture_inp[pasture] = fun.xl_all_named_ranges(property_xl_path, pasture, numpy=True)
         pkl.dump(pasture_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
 ##else the inputs are read in from the pickle file
 ##note this must be in the same order as above
 else:
-    with open(filename, "rb") as f:
+    with open(property_pkl_path, "rb") as f:
         general_inp = pkl.load(f)
 
         rep_inp = pkl.load(f)

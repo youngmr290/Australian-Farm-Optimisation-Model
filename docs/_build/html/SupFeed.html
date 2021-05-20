@@ -111,12 +111,16 @@ link between feeding rate and the total tonnes feed.</p>
 <dt id="SupFeed.f_sup_md_vol">
 <code class="sig-prename descclassname"><span class="pre">SupFeed.</span></code><code class="sig-name descname"><span class="pre">f_sup_md_vol</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#SupFeed.f_sup_md_vol" title="Permalink to this definition">¶</a></dt>
 <dd><p>M/D and DM content of each supplement are known inputs.
-Unlike stubble and pasture, the energy content of supplementary
-feed is expressed including moisture content. Therefore M/D must be adjusted by the DM content
-of the feed. The volume of supplementary feed is calculated based on the quality of the feed.
-It is assumed that the availability of supplementary feed is high and hence
-does not affect intake. Furthermore, it is assumed that there is no limit on the proportion of
-the sheep’s diet that can be provided by supplementary feeding.</p>
+Unlike stubble and pasture, the quantity of supplementary feed consumed (the decision variables)
+are expressed including moisture content (i.e. as fed). Therefore M/D must be adjusted by the DM
+content of the feed.
+The volume of supplementary feed is calculated based on the quality of the feed. So, lower quality
+supplements (like oats) will substitute more for pasture than high quality supplements (like lupins).
+It is assumed that the availability of supplementary feed is high and that supplement is consumed as
+the first component of the animals diet. Furthermore, it is assumed that if sufficient levels of
+supplement are offered then all the sheep’s diet will be provided by supplementary feeding.
+This representation does not include an effect of high protein supplements (like lupins) overcoming
+a protein deficiency and therefore acting as a ‘true’ supplement and increasing intake.</p>
 </dd></dl>
 
 </div>

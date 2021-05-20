@@ -51,10 +51,9 @@ Created on Sat Feb 29 08:05:09 2020</p>
 <dt id="StockFunctions.f_DSTw">
 <code class="sig-prename descclassname"><span class="pre">StockFunctions.</span></code><code class="sig-name descname"><span class="pre">f_DSTw</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scan_g</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cycles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#StockFunctions.f_DSTw" title="Permalink to this definition">¶</a></dt>
 <dd><p>A numpy based calculation of the proportion of dry, single, twin &amp; triplet bearing dams from a scanning percentage.
-Prediction is a polynomial formula y=intercept+ax+bx^2+cx^3+dx^4, where x is the scanning %
-The coefficients for the prediction are assumed to have been derived from mating for 2 cycles.</p>
+Prediction is a polynomial formula y=intercept+ax+bx^2+cx^3+dx^4, where x is the scanning %</p>
 <p>scan_g : np array - scanning percentage of genotypes if mated for the number of calibration cycles.
-cycles: int, optional - the number of calibration cycles relative to the number of prediction cycles.
+cycles: int, optional - the number of cycles for which the prediction is required.
 Returns
 ——-
 Proportion of dry, single, twins &amp; triplets.</p>
@@ -123,11 +122,13 @@ progeny_total_xyg: np array, total number of progeny alive after birth per ewe m
 <dl class="py function">
 <dt id="StockFunctions.f_conception_cs">
 <code class="sig-prename descclassname"><span class="pre">StockFunctions.</span></code><code class="sig-name descname"><span class="pre">f_conception_cs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cb1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relsize_mating</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rc_mating</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crg_doy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nfoet_b1any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nyatf_b1any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">period_is_mating</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index_e1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rev_trait_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#StockFunctions.f_conception_cs" title="Permalink to this definition">¶</a></dt>
-<dd><p>CSIRO system: The general calculation is probability of conception greater than or equal to 1,2,3 foetuses
-Probability is calculated from a sigmoid relationship based on relative size * relative condition at birth
-The cumulative probability is scaled by a factor that varies with (litter size * latitude * day of the year)
+<dd><p>CSIRO system: The general approach is to calculate the probability of conception greater than or equal to 1,2,3 foetuses
+Probability is calculated from a sigmoid relationship based on relative size * relative condition at joining
+The estimation of cumulative probability is scaled by a factor that varies with (litter size * latitude * day of the year)
 The probability is an estimate of the number of dams carrying that number in the third trimester.
-Some dams conceive (and don’t return to service) but don’t carry to the third trimester, this is taken into account.</p>
+Some dams conceive (and don’t return to service) but don’t carry to the third trimester, this is taken into account.
+The values are altered by a sensitivity analysis on scanning percentage
+Conception (proportion of dams that are dry) and litter size (number of foetuses per pregnant dam) can be controlled for relative economic values</p>
 </dd></dl>
 
 <dl class="py function">
@@ -136,7 +137,8 @@ Some dams conceive (and don’t return to service) but don’t carry to the thir
 <dd><p>LTW system: The general calculation is scanning percentage is defined by a linear function of CS
 The standard value (CS 3) is determined by the genotype and relative size
 The slope varies with day of year
-The proportion of dry, single, twin &amp; triplet is estimated as a function of the scanning percentage.</p>
+The proportion of dry, single, twin &amp; triplet is estimated as a function of the scanning percentage using f_DSTw
+Note: sa is not applied in this function because it is applied to the input scan_std (which is also used to determine the BTRT effect on fleece)</p>
 </dd></dl>
 
 <dl class="py function">
@@ -178,6 +180,11 @@ Returns: condition score - float</p>
 <dl class="py function">
 <dt id="StockFunctions.f_contract_cost">
 <code class="sig-prename descclassname"><span class="pre">StockFunctions.</span></code><code class="sig-name descname"><span class="pre">f_contract_cost</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">application_level_h2pg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">treatment_units_h8pg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">husb_operations_contract_cost_h2pg</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#StockFunctions.f_contract_cost" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="StockFunctions.f_convert_scan2cycles">
+<code class="sig-prename descclassname"><span class="pre">StockFunctions.</span></code><code class="sig-name descname"><span class="pre">f_convert_scan2cycles</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dst_propn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nfoet_b1any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cycles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#StockFunctions.f_convert_scan2cycles" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
@@ -354,7 +361,7 @@ The process is:</p>
 
 <dl class="py function">
 <dt id="StockFunctions.f_intake">
-<code class="sig-prename descclassname"><span class="pre">StockFunctions.</span></code><code class="sig-name descname"><span class="pre">f_intake</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ra</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">md_herb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feedsupply</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intake_s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i_md_supp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legume</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mp2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#StockFunctions.f_intake" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">StockFunctions.</span></code><code class="sig-name descname"><span class="pre">f_intake</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ri</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">md_herb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feedsupply</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intake_s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i_md_supp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mp2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#StockFunctions.f_intake" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
@@ -558,7 +565,7 @@ Arg 2: period offset (this may be needed if evaluating the end of the period.</p
 
 <dl class="py function">
 <dt id="StockFunctions.f_ra_mu">
-<code class="sig-prename descclassname"><span class="pre">StockFunctions.</span></code><code class="sig-name descname"><span class="pre">f_ra_mu</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cu0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">foo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#StockFunctions.f_ra_mu" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">StockFunctions.</span></code><code class="sig-name descname"><span class="pre">f_ra_mu</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">foo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cu0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#StockFunctions.f_ra_mu" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
@@ -568,13 +575,18 @@ Arg 2: period offset (this may be needed if evaluating the end of the period.</p
 </dd></dl>
 
 <dl class="py function">
+<dt id="StockFunctions.f_rel_intake">
+<code class="sig-prename descclassname"><span class="pre">StockFunctions.</span></code><code class="sig-name descname"><span class="pre">f_rel_intake</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ra</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legume</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#StockFunctions.f_rel_intake" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
 <dt id="StockFunctions.f_rev_update">
 <code class="sig-prename descclassname"><span class="pre">StockFunctions.</span></code><code class="sig-name descname"><span class="pre">f_rev_update</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trait_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trait_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rev_trait_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#StockFunctions.f_rev_update" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt id="StockFunctions.f_rq_cs">
-<code class="sig-prename descclassname"><span class="pre">StockFunctions.</span></code><code class="sig-name descname"><span class="pre">f_rq_cs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dmd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legume</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i_sf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#StockFunctions.f_rq_cs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">StockFunctions.</span></code><code class="sig-name descname"><span class="pre">f_rq_cs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dmd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legume</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#StockFunctions.f_rq_cs" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
