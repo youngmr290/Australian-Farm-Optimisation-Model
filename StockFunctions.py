@@ -884,13 +884,16 @@ def f_birthweight_cs(cx, w_b_yatf, w_f_dams, period_is_birth):
     return w_b_yatf
 
 
-def f_birthweight_mu(cu1, cb1, cx, ce, w_b, cf_w_b_dams, ffcfw_birth_dams, ebg_dams, days_period, gest_propn, period_between_joinscan, period_between_scanbirth, period_is_birth):
+def f_birthweight_mu(cu1, cb1, cx, ce, w_b, cf_w_b_dams, ffcfw_birth_dams, ebg_dams, days_period, gest_propn
+                     , period_between_joinscan, period_between_scanbirth, period_is_birth):
     ##Carry forward BW increment	
-    d_cf_w_b = f_carryforward_u1(cu1[16, ...], ebg_dams, False, period_between_joinscan, period_between_scanbirth, False, days_period, gest_propn)
+    d_cf_w_b = f_carryforward_u1(cu1[16, ...], ebg_dams, False, period_between_joinscan, period_between_scanbirth
+                                 , False, days_period, gest_propn)
     ##Increment the total carry forward BW
     cf_w_b_dams = cf_w_b_dams + d_cf_w_b
     ##estimate BW by including the intercept, the effect of dam weight at birth and other non-LW coefficients
-    t_w_b_yatf = (cf_w_b_dams + cu1[16, -1, ...] + cu1[16, 0, ...] * ffcfw_birth_dams + cb1[16, ...] + cx[16, ...] + ce[16, ...])
+    t_w_b_yatf = (cf_w_b_dams + cu1[16, -1, ...] + cu1[16, 0, ...] * ffcfw_birth_dams + cb1[16, ...]
+                  + cx[16, ...] + ce[16, ...])
     ##Update w_b if period is birth
     w_b = fun.f_update(w_b, t_w_b_yatf, period_is_birth)
     return w_b, cf_w_b_dams
@@ -904,12 +907,14 @@ def f_weanweight_cs(w_w_yatf, ffcfw_start_yatf, ebg_yatf, days_period, period_is
     return w_w_yatf
 
 
-def f_weanweight_mu(cu1, cb1, cx, ce, nyatf, w_w, cf_w_w_dams, ffcfw_wean_dams, ebg_dams, foo, foo_ave_start, days_period, day_of_lactation
-                    , period_between_joinscan, period_between_scanbirth, period_between_birthwean, period_is_wean):
-    ##Calculate average FOO to end of this period
+def f_weanweight_mu(cu1, cb1, cx, ce, nyatf, w_w, cf_w_w_dams, ffcfw_wean_dams, ebg_dams, foo, foo_ave_start
+                    , days_period, day_of_lactation, period_between_joinscan, period_between_scanbirth
+                    , period_between_birthwean, period_is_wean):
+    ##Calculate average FOO to end of this period (increment the running average to date)
     foo_ave_end = fun.f_divide(foo_ave_start * day_of_lactation + foo * days_period, day_of_lactation + days_period)
     ##Carry forward WWt increment
-    d_cf_w_w = f_carryforward_u1(cu1[17, ...], ebg_dams, False, period_between_joinscan, period_between_scanbirth, period_between_birthwean, days_period)
+    d_cf_w_w = f_carryforward_u1(cu1[17, ...], ebg_dams, False, period_between_joinscan, period_between_scanbirth
+                                 , period_between_birthwean, days_period)
     ##Increment the total Carry forward WWt
     cf_w_w_dams = cf_w_w_dams + d_cf_w_w
     ##add intercept, impact of dam LW at weaning, FOO, BTRT, gender and dam age effects to the carry forward value
