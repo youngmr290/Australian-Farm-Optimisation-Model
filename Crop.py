@@ -53,6 +53,14 @@ import Periods as per
 import Mach as mac
 
   
+def f_mask_lmu(df, axis):
+    lmu_mask = pinp.general['lmu_area'].squeeze() > 0
+    if axis==0:
+        df = df.loc[lmu_mask]
+    if axis==1:
+        df = df.loc[:, lmu_mask]
+    return df
+
 
 ########################
 #phases                #
@@ -219,7 +227,7 @@ def f_rot_yield():
     ##base yields
     base_yields = f_base_yield().stack()
     ##colate other info
-    yields_lmus = pinp.crop['yield_by_lmu'] #soil yield factor
+    yields_lmus = f_mask_lmu(pinp.crop['yield_by_lmu'], axis=1) #soil yield factor
     seeding_rate = pinp.crop['seeding_rate'].mul(pinp.crop['own_seed'],axis=0)#seeding rate adjusted by if the farmer is using their own seed from last yr
     frost = pinp.crop['frost'] #frost
     arable = pinp.crop['arable'].stack().droplevel(0) #read in arable area df
@@ -295,7 +303,7 @@ def f_fert_req():
 
     '''
     ##read in fert by soil
-    fert_by_soil = pinp.crop['fert_by_lmu'] 
+    fert_by_soil = f_mask_lmu(pinp.crop['fert_by_lmu'], axis=1)
     ##read in fert
     if pinp.crop['user_crop_rot']:
         ### User defined
@@ -655,7 +663,7 @@ def f_chem_cost(r_vals):
     '''
     ##read in necessary bits and adjust indexed
     i_chem_cost = pinp.crop['chem_cost'].sort_index()
-    chem_by_soil = pinp.crop['chem_by_lmu'] #read in chem by soil
+    chem_by_soil = f_mask_lmu(pinp.crop['chem_by_lmu'], axis=1) #read in chem by soil
     ##add cont pasture to chem cost array
     i_chem_cost = f_cont_pas(i_chem_cost)
     ##number of applications for each rotation
