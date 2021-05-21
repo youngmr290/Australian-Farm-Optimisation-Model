@@ -61,6 +61,12 @@ def f_pasture(params, r_vals, ev):
     pastures        = sinp.general['pastures'][pinp.general['pas_inc']]
 
     ########################
+    ##masks                #
+    ########################
+    ##lmu
+    lmu_mask_l = pinp.general['lmu_area'].squeeze().values>0
+
+    ########################
     ##constants required   #
     ########################
     ## define some parameters required to size arrays.
@@ -69,7 +75,7 @@ def f_pasture(params, r_vals, ev):
     n_grazing_int   = len(sinp.general['grazing_int'])          # grazing intensity in the growth/grazing activities
     n_foo_levels    = len(sinp.general['foo_levels'])           # Low, medium & high FOO level in the growth/grazing activities
     n_feed_periods  = len(per.f_feed_periods()) - 1
-    n_lmu           = len(pinp.general['lmu_area'])
+    n_lmu           = np.count_nonzero(pinp.general['lmu_area'])
     n_phases_rotn   = len(phases_rotn_df.index)
     n_pasture_types = len(pastures)   #^ need to sort timing of the definition of pastures
     # n_total_seasons = len(pinp.general['i_mask_z']) #used to reshape inputs
@@ -87,7 +93,7 @@ def f_pasture(params, r_vals, ev):
     r_idx = np.arange(n_phases_rotn)
 
 
-    arable_l = np.array(pinp.crop['arable']).reshape(-1)
+    arable_l = pinp.crop['arable'].squeeze().values[lmu_mask_l]
     # length_f  = np.array(pinp.period['feed_periods'].loc[:pinp.period['feed_periods'].index[-2],'length']) # not including last row because that is the start of the following year. #todo as above this will need z axis
     # feed_period_dates_f = np.array(i_feed_period_dates,dtype='datetime64[D]')
     length_fz  = np.array(per.f_feed_periods(option=1),dtype='float64')
@@ -196,7 +202,7 @@ def f_pasture(params, r_vals, ev):
     keys_v  = np.asarray(sinp.general['sheep_pools'][ev_mask_v])
     keys_f  = pinp.period['i_fp_idx']
     keys_g  = np.asarray(sinp.general['grazing_int'])
-    keys_l  = np.array(pinp.general['lmu_area'].index).astype('str')    # lmu index description
+    keys_l  = np.array(pinp.general['lmu_area'].index[lmu_mask_l]).astype('str')    # lmu index description
     keys_o  = np.asarray(sinp.general['foo_levels'])
     keys_p  = np.array(per.p_date2_df().index).astype('str')
     keys_r  = np.array(phases_rotn_df.index).astype('str')
@@ -283,7 +289,7 @@ def f_pasture(params, r_vals, ev):
         # i_ri_foo_t[t]                       = exceldata['RIFOO']
         i_end_of_gs_zt[...,t]               = pinp.f_seasonal_inp(exceldata['EndGS'], numpy=True)
         i_dry_decay_t[t]                    = exceldata['PastDecay']
-        i_poc_intake_daily_flt[...,t]       = exceldata['POCCons']
+        i_poc_intake_daily_flt[...,t]       = exceldata['POCCons'][:,lmu_mask_l]
         i_legume_zt[...,t]                  = pinp.f_seasonal_inp(exceldata['Legume'], numpy=True)
         i_restock_grn_propn_t[t]            = exceldata['FaG_PropnGrn']
         i_grn_dmd_senesce_redn_fzt[...,t]   = pinp.f_seasonal_inp(np.swapaxes(exceldata['DigRednSenesce'],0,1), numpy=True, axis=1)
@@ -296,10 +302,10 @@ def f_pasture(params, r_vals, ev):
         i_dry_cp_ft[...,t]                  = exceldata['CPDry']
         i_poc_dmd_ft[...,t]                 = exceldata['DigPOC']
         i_poc_foo_ft[...,t]                 = exceldata['FOOPOC']
-        i_germ_scalar_lzt[...,t]            = pinp.f_seasonal_inp(np.swapaxes(exceldata['GermScalarLMU'],0,1), numpy=True, axis=1)
-        i_restock_fooscalar_lt[...,t]       = exceldata['FaG_LMU']  #todo may need a z axis
+        i_germ_scalar_lzt[...,t]            = pinp.f_seasonal_inp(np.swapaxes(exceldata['GermScalarLMU'],0,1), numpy=True, axis=1)[lmu_mask_l,...]
+        i_restock_fooscalar_lt[...,t]       = exceldata['FaG_LMU'][lmu_mask_l]  #todo may need a z axis
 
-        i_lmu_conservation_flt[...,t]       = exceldata['ErosionLimit']
+        i_lmu_conservation_flt[...,t]       = exceldata['ErosionLimit'][:, lmu_mask_l]
 
         i_reseeding_date_start_zt[...,t]    = pinp.f_seasonal_inp(exceldata['Date_Seeding'], numpy=True)
         i_reseeding_date_end_zt[...,t]      = pinp.f_seasonal_inp(exceldata['pas_seeding_end'], numpy=True)
@@ -319,17 +325,17 @@ def f_pasture(params, r_vals, ev):
         #### impact of grazing intensity (at the other levels) on PGR during the period
         c_pgr_gi_scalar_gft[...,t]      = 1 - i_foo_graze_propn_gt[..., na, t] ** 2 * (1 - np.asfarray(exceldata['PGRScalarH']))
 
-        i_fxg_foo_oflzt[0,...,t]        = pinp.f_seasonal_inp(np.moveaxis(exceldata['LowFOO'],0,-1), numpy=True, axis=-1)
-        i_fxg_foo_oflzt[1,...,t]        = pinp.f_seasonal_inp(np.moveaxis(exceldata['MedFOO'],0,-1), numpy=True, axis=-1)
+        i_fxg_foo_oflzt[0,...,t]        = pinp.f_seasonal_inp(np.moveaxis(exceldata['LowFOO'],0,-1), numpy=True, axis=-1)[:,lmu_mask_l,...]
+        i_fxg_foo_oflzt[1,...,t]        = pinp.f_seasonal_inp(np.moveaxis(exceldata['MedFOO'],0,-1), numpy=True, axis=-1)[:,lmu_mask_l,...]
         i_me_eff_gainlose_ft[...,t]     = exceldata['MaintenanceEff'][:,0]
         # i_me_maintenance_vft[...,t]     = exceldata['MaintenanceEff'].iloc[:,1:].to_numpy().T  # replaced by the ev_cutoff. Still used in PastureTest
         i_fec_maintenance_t[t]          = exceldata['MaintenanceFEC']
         ## # i_fxg_foo_oflt[-1,...] is calculated later and is the maximum foo that can be achieved (on that lmu in that period)
         ## # it is affected by sa on pgr so it must be calculated during the experiment where sam might be altered.
-        i_fxg_pgr_oflzt[0,...,t]        = pinp.f_seasonal_inp(np.moveaxis(exceldata['LowPGR'],0,-1), numpy=True, axis=-1)
-        i_fxg_pgr_oflzt[1,...,t]        = pinp.f_seasonal_inp(np.moveaxis(exceldata['MedPGR'],0,-1), numpy=True, axis=-1)
-        i_fxg_pgr_oflzt[2,...,t]        = pinp.f_seasonal_inp(np.moveaxis(exceldata['MedPGR'],0,-1), numpy=True, axis=-1)  #PGR for high (last entry) is the same as PGR for medium
-        i_grn_dig_flzt[...,t]           = pinp.f_seasonal_inp(np.moveaxis(exceldata['DigGrn'],0,-1), numpy=True, axis=-1)  # numpy array of inputs for green pasture digestibility on each LMU.
+        i_fxg_pgr_oflzt[0,...,t]        = pinp.f_seasonal_inp(np.moveaxis(exceldata['LowPGR'],0,-1), numpy=True, axis=-1)[:,lmu_mask_l,...]
+        i_fxg_pgr_oflzt[1,...,t]        = pinp.f_seasonal_inp(np.moveaxis(exceldata['MedPGR'],0,-1), numpy=True, axis=-1)[:,lmu_mask_l,...]
+        i_fxg_pgr_oflzt[2,...,t]        = pinp.f_seasonal_inp(np.moveaxis(exceldata['MedPGR'],0,-1), numpy=True, axis=-1)[:,lmu_mask_l,...]  #PGR for high (last entry) is the same as PGR for medium
+        i_grn_dig_flzt[...,t]           = pinp.f_seasonal_inp(np.moveaxis(exceldata['DigGrn'],0,-1), numpy=True, axis=-1)[:,lmu_mask_l,...]  # numpy array of inputs for green pasture digestibility on each LMU.
 
         i_phase_germ_dict[pasture]      = pd.DataFrame(exceldata['GermPhases'])  #DataFrame with germ scalar and resown
         # i_phase_germ_dict[pasture].reset_index(inplace=True)                                # replace index read from Excel with numbers to match later merging

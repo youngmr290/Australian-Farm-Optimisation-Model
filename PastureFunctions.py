@@ -25,7 +25,7 @@ def calc_foo_profile(germination_flzt, dry_decay_fzt, length_of_periods_fz,
     An array[feed_period,lmu,type]: foo at the start of the period.
     '''
     n_feed_periods = len(per.f_feed_periods()) - 1
-    n_lmu = len(pinp.general['lmu_area'])
+    n_lmu = np.count_nonzero(pinp.general['lmu_area'])
     n_pasture_types = germination_flzt.shape[-1]
     n_season = length_of_periods_fz.shape[-1]
     flzt = (n_feed_periods, n_lmu, n_season, n_pasture_types)
@@ -83,14 +83,17 @@ def update_reseeding_foo(foo_grn_reseeding_flrzt, foo_dry_reseeding_flrzt,
     and the amount of grazing available if the feed is dry
     If there is an adjustment to the dry feed then it is spread equally between the high & the low quality pools.
     '''
+    ##lmu mask
+    lmu_mask_l = pinp.general['lmu_area'].squeeze().values > 0
+
     ##base inputs
     n_feed_periods = len(per.f_feed_periods()) - 1
     len_t = np.count_nonzero(pinp.general['pas_inc'])
-    n_lmu = len(pinp.general['lmu_area'])
+    n_lmu = np.count_nonzero(pinp.general['lmu_area'])
     len_z = period_zt.shape[0]
     len_r = resown_rt.shape[0]
     lzt = (n_lmu,len_z,len_t)
-    arable_l = np.array(pinp.crop['arable']).reshape(-1)
+    arable_l = pinp.crop['arable'].squeeze().values[lmu_mask_l]
     ##create arrays
     foo_arable_lzt      = np.zeros(lzt, dtype = 'float64')             # create the array foo_arable_lt with the required shape - needed because different sized arrays are passed in
     foo_arable_lzt[...] = foo_arable_zt                                # broadcast foo_arable into foo_arable_lt (to handle foo_arable not having an lmu axis)
