@@ -1240,8 +1240,8 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         ### The proportions returned are in axis -1 and needs the slices altered (shape of l0 to b1) and moving to b1 position.
         propn_dst = np.moveaxis(f_DSTw(repro_rate, cycles = 1)[...,sinp.stock['a_nfoet_b1']], -1, b1_pos)
         ## apply the sa to the repro rate and convert the adjusted value to a proportion of dry, singles, twins & triplets after 1 cycle
-        repro_rate_adj = fun.f_sa(repro_rate, sen.sam['scanper'])
-        repro_rate_adj = fun.f_sa(repro_rate_adj, sen.saa['scanper'], 2) * (repro_rate > 0)     # only non-zero if original value was non-zero
+        repro_rate_adj = fun.f_sa(repro_rate, sen.sam['rr'])
+        repro_rate_adj = fun.f_sa(repro_rate_adj, sen.saa['rr'], 2) * (repro_rate > 0)     # only non-zero if original value was non-zero
         propn_dst_adj = np.moveaxis(f_DSTw(repro_rate_adj, cycles = 1)[..., sinp.stock['a_nfoet_b1']], -1, b1_pos) #move the l0 axis into the b1 position. and expand to b1 size.
         ##calculate the change in the expected proportions due to altering the scanning percentage & apply to calculated proportions
         propn_dst_change = propn_dst_adj - propn_dst
@@ -1338,14 +1338,14 @@ def f_convert_scan2cycles(dst_propn, nfoet_b1any, cycles = 1):
     calibration_cycles = 2  #The data used to calibrate the coefficients used are assumed to have been derived from mating for 2 cycles.
 
     ##scanning percentage for the specified number of cycles
-    scanper = np.sum(dst_propn * nfoet_b1any, axis = sinp.stock['i_b1_pos'], keepdims = True)
+    repro_rate = np.sum(dst_propn * nfoet_b1any, axis = sinp.stock['i_b1_pos'], keepdims = True)
 
     ##convert by scaling by the proportion of drys such that litter size stays constant
     dry_propn = f_dynamic_slice(dst_propn, sinp.stock['i_b1_pos'], 1, 2)
     dry_propn_cal = dry_propn ** (calibration_cycles / cycles)
-    scanper_cal = scanper * fun.f_divide(1 - dry_propn_cal, 1 - dry_propn)
+    repro_rate_cal = repro_rate * fun.f_divide(1 - dry_propn_cal, 1 - dry_propn)
 
-    return scanper_cal
+    return repro_rate_cal
 
 
 def f_sire_req(sire_propn_a1e1b1nwzida0e0b0xyg1g0, sire_periods_g0p8, i_sire_recovery, i_startyear, date_end_p, period_is_prejoin_a1e1b1nwzida0e0b0xyg1):

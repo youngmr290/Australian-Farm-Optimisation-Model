@@ -60,7 +60,7 @@ sam['chill'] = 1.0                        #intermediate sam on chill.
 ##stock parameters
 sam['ci_c2'] = np.ones(uinp.parameters_inp['i_ci_c2'].shape, dtype=np.float64)  #intake params for genotypes
 sam['sfw_c2'] = 1.0                         #std fleece weight genotype params
-sam['scanper'] = 1.0                        #scanning percentage (adjust the standard scanning % for f_conception_ltw and within function for f_conception_cs
+sam['rr'] = 1.0                        #scanning percentage (adjust the standard scanning % for f_conception_ltw and within function for f_conception_cs
 
 ######
 #SAP #
@@ -84,7 +84,7 @@ saa['husb_labour_l2h2'] = np.zeros(uinp.sheep_inp['i_husb_operations_labourreq_l
 saa['sfd_c2'] = 0.0                     #std fibre diameter genotype params
 saa['cl0_c2'] = np.zeros(uinp.parameters_inp['i_cl0_c2'].shape, dtype=np.float64)  #SA value for litter size genotype params.
 saa['scan_std_c2'] = 0.0                #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT..
-saa['scanper'] = 0.0                    #scanning percentage (adjust the standard scanning % for f_conception_ltw and within function for f_conception_cs
+saa['rr'] = 0.0                    #scanning percentage (adjust the standard scanning % for f_conception_ltw and within function for f_conception_cs
 saa['mortalityx'] = np.zeros(np.max(sinp.stock['a_nfoet_b1'])+1, dtype=np.float64)  #Adjust the progeny mortality due to exposure at birth relative - this is a high level sa, it impacts within a calculation not on an input
 
 ######
