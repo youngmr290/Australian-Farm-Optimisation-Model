@@ -258,10 +258,13 @@ def generator(params,r_vals,ev,plots = False):
     index_tva1e1b1nw8zida0e0b0xyg3w9 = fun.f_expand(np.arange(len_t3), p_pos-2)
     index_xyg = fun.f_expand(np.arange(len_x), x_pos)
 
-
-
     prejoin_tup = (a1_pos, b1_pos, e1_pos)
     season_tup = (z_pos)
+
+    ######################
+    #adjust sensitivities#
+    ######################
+    saa_mortalityx_b1nwzida0e0b0xyg = fun.f_expand(sen.saa['mortalityx'][sinp.stock['a_nfoet_b1']], b1_pos)
 
     ############################
     ### initialise arrays      #
@@ -3246,7 +3249,7 @@ def generator(params,r_vals,ev,plots = False):
                     temp0, temp1, temp2 = sfun.f_mortality_progeny_cs(cd_yatf, cb1_yatf, w_b_yatf, rc_start_dams
                                     , w_b_exp_y_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]
                                     , chill_index_pa1e1b1nwzida0e0b0xygm1[p], nfoet_b1nwzida0e0b0xyg
-                                    , rev_trait_values['yatf'][p], sen.sap['mortalityp'], sen.saa['mortalityx'])
+                                    , rev_trait_values['yatf'][p], sen.sap['mortalityp'], saa_mortalityx_b1nwzida0e0b0xyg)
                     if eqn_used:
                         mortality_birth_yatf = temp1 #mortalityd, assign first because it has x axis
                         mortality_birth_yatf += temp0 #mortalityx
@@ -3268,7 +3271,7 @@ def generator(params,r_vals,ev,plots = False):
                     temp0 = sfun.f_mortality_progeny_mu(cu2_yatf, cb1_yatf, cx_yatf[:,mask_x,...], ce_yatf[:,p,...]
                                     , w_b_yatf, w_b_ltw_std_yatf, foo_yatf, chill_index_pa1e1b1nwzida0e0b0xygm1[p]
                                     , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p], rev_trait_values['yatf'][p]
-                                    , sen.sap['mortalityp'], sen.saa['mortalityx'])
+                                    , sen.sap['mortalityp'], saa_mortalityx_b1nwzida0e0b0xyg)
                     if eqn_used:
                         mortality_birth_yatf = temp0 #mortality
                     if eqn_compare:
