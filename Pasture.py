@@ -144,7 +144,6 @@ def f_pasture(params, r_vals, ev):
 
     i_germ_scalar_lzt           = np.zeros(lzt,  dtype = 'float64') # scale the germination levels for each lmu
     i_restock_fooscalar_lt      = np.zeros(lt,  dtype = 'float64')  # scalar for FOO between LMUs when pastures are restocked after reseeding
-    i_restock_dry_dmd_lt        = np.zeros(lt,  dtype = 'float64')  # Average digestibility of any dry FOO when pastures are restocked (if there is any)
 
     i_me_eff_gainlose_ft        = np.zeros(ft,  dtype = 'float64')  # Reduction in efficiency if M/D is above requirement for target LW pattern
     i_grn_trampling_ft          = np.zeros(ft,  dtype = 'float64')  # green pasture trampling in each feed period as proportion of intake.
@@ -299,7 +298,6 @@ def f_pasture(params, r_vals, ev):
         i_poc_foo_ft[...,t]                 = exceldata['FOOPOC']
         i_germ_scalar_lzt[...,t]            = pinp.f_seasonal_inp(np.swapaxes(exceldata['GermScalarLMU'],0,1), numpy=True, axis=1)
         i_restock_fooscalar_lt[...,t]       = exceldata['FaG_LMU']  #todo may need a z axis
-        i_restock_dry_dmd_lt[...,t]         = exceldata['FaG_digDry']
 
         i_lmu_conservation_flt[...,t]       = exceldata['ErosionLimit']
 
@@ -363,9 +361,9 @@ def f_pasture(params, r_vals, ev):
 
     ###create equation coefficients for pgr = a+b*foo
     i_fxg_foo_oflzt[2,...]  = 100000 #large number so that the np.searchsorted doesn't go above
-    c_fxg_b_oflzt[0,...] =  i_fxg_pgr_oflzt[0,...] / i_fxg_foo_oflzt[0,...]
-    c_fxg_b_oflzt[1,...] =   ((i_fxg_pgr_oflzt[1,...] - i_fxg_pgr_oflzt[0,...])
-                            / (i_fxg_foo_oflzt[1,...] - i_fxg_foo_oflzt[0,...]))
+    c_fxg_b_oflzt[0,...] =  fun.f_divide(i_fxg_pgr_oflzt[0,...], i_fxg_foo_oflzt[0,...])
+    c_fxg_b_oflzt[1,...] =   fun.f_divide((i_fxg_pgr_oflzt[1,...] - i_fxg_pgr_oflzt[0,...])
+                            , (i_fxg_foo_oflzt[1,...] - i_fxg_foo_oflzt[0,...]))
     c_fxg_b_oflzt[2,...] =  0
     c_fxg_a_oflzt[0,...] =  0
     c_fxg_a_oflzt[1,...] =  i_fxg_pgr_oflzt[0,...] - c_fxg_b_oflzt[1,...] * i_fxg_foo_oflzt[0,...]
