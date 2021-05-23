@@ -741,8 +741,7 @@ def f_pasture(params, r_vals, ev):
     ## the pasture that senesces at the eos is assumed to be senescing at the end of the growth period and doesn't decay
     ## the pasture that senseces during the period decays prior to being transferred
     ## the senesced feed that is available to stock is that which senesces at the end of the growing season (i.e. not during the growing season)
-    ##todo may need revisiting for perennial pastures where green & dry feed are part of a mixed diet.
-    senesce_total_grnha_goflzt    = senesce_eos_grnha_goflzt + senesce_period_grnha_goflzt * (1 - dry_decay_period_fzt)
+    senesce_total_grnha_goflzt    = senesce_eos_grnha_goflzt + senesce_period_grnha_goflzt * (1 - dry_decay_period_fzt[:, na, ...])
     grn_dmd_senesce_goflzt        =       dmd_sward_grnha_goflzt       \
                                    + i_grn_dmd_senesce_redn_fzt[:, na, ...]
     senesce_propn_dgoflzt[1,...]  = np.clip(( grn_dmd_senesce_goflzt                     # senescence to high pool. np.clip reduces the range of the dmd to the range of dmd in the dry feed pools
