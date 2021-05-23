@@ -131,6 +131,7 @@ def f_pasture(params, r_vals, ev):
     i_grn_senesce_eos_fzt       = np.zeros(fzt,  dtype = 'float64')             # proportion of green feed that senesces in period (due to a water deficit or completing life cycle)
     dry_decay_daily_fzt         = np.zeros(fzt,  dtype = 'float64')             # daily decline in dry foo in each period
     i_end_of_gs_zt              = np.zeros(zt, dtype = 'int')                   # the period number when the pasture senesces due to lack of water or end of life cycle
+    i_dry_exists_zt              = np.zeros(zt, dtype = 'int')                   # the period number when the pasture senesces due to lack of water or end of life cycle
     i_dry_decay_t               = np.zeros(n_pasture_types, dtype = 'float64')  # decay rate of dry pasture during the dry feed phase (Note: 100% during growing season)
 
     # i_me_maintenance_vft        = np.zeros(vft,  dtype = 'float64')     # M/D level for target LW pattern
@@ -288,6 +289,7 @@ def f_pasture(params, r_vals, ev):
         i_germination_std_zt[...,t]         = pinp.f_seasonal_inp(exceldata['GermStd'], numpy=True)
         # i_ri_foo_t[t]                       = exceldata['RIFOO']
         i_end_of_gs_zt[...,t]               = pinp.f_seasonal_inp(exceldata['EndGS'], numpy=True)
+        i_dry_exists_zt[...,t]               = pinp.f_seasonal_inp(exceldata['i_dry_exists'], numpy=True)
         i_dry_decay_t[t]                    = exceldata['PastDecay']
         i_poc_intake_daily_flt[...,t]       = exceldata['POCCons'][:,lmu_mask_l]
         i_legume_zt[...,t]                  = pinp.f_seasonal_inp(exceldata['Legume'], numpy=True)
@@ -354,16 +356,16 @@ def f_pasture(params, r_vals, ev):
 
     ## one time data manipulation for the inputs just read
     ### calculate dry_decay_period (used in reseeding and green&dry)
+    ### dry_decay_daily is decay of dry foo at the start of the period that was transferred in from scenesence in the previous period. dry_decay_daily does not effect green feed that sceneses during the current period.
     dry_decay_daily_fzt[...] = i_dry_decay_t
     for t in range(n_pasture_types):
         for z in range(n_season_types):
-            dry_decay_daily_fzt[0:i_end_of_gs_zt[z,t], z, t] = 1  #couldn't do this without loops - advanced indexing doesnt appear to work when taking multiple slices
+            dry_decay_daily_fzt[0:i_dry_exists_zt[z,t], z, t] = 1  #couldn't do this without loops - advanced indexing doesnt appear to work when taking multiple slices
     dry_decay_period_fzt[...] = 1 - (1 - dry_decay_daily_fzt) ** length_fz[...,na]
 
     ###create dry pasture exists mask - in the current structure dry pasture only exists after the growing season.
-    # todo this is a limitation of pasture (green and dry pasture don't exist simultaneously) this is okay for wa but may need work for places with perennials.
-    mask_dryfeed_exists_fzt[...] = index_f[:, na, na] > i_end_of_gs_zt   #green exists in the period which is the end of growing season hence >
-    mask_greenfeed_exists_fzt[...] = np.logical_not(mask_dryfeed_exists_fzt)
+    mask_dryfeed_exists_fzt[...] = index_f[:, na, na] >= i_dry_exists_zt   #mask periods when dry feed is available to livestock.
+    mask_greenfeed_exists_fzt[...] = index_f[:, na, na] <= i_end_of_gs_zt   #green exists in the period which is the end of growing season hence <=
 
     ###create equation coefficients for pgr = a+b*foo
     i_fxg_foo_oflzt[2,...]  = 100000 #large number so that the np.searchsorted doesn't go above

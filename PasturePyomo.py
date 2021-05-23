@@ -260,7 +260,7 @@ def paspyomo_local(params):
         pass
     def drypas(model,d,f,t):
         fs = l_fp[l_fp.index(f) - 1] #need the activity level from last feed period
-        return sum(sum(model.v_greenpas_ha[v,g,o,f,l,t] * -model.p_senesce_grnha[d,g,o,f,l,t] for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus)        \
+        return sum(sum(model.v_greenpas_ha[v,g,o,fs,l,t] * -model.p_senesce_grnha[d,g,o,fs,l,t] for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus)        \
                        + model.v_drypas_consumed[v,d,f,t] * model.p_dry_removal_t[f,t] for v in model.s_feed_pools) \
                        - model.v_drypas_transfer[d,fs,t] * model.p_dry_transfer_t[fs,t] + model.v_drypas_transfer[d,f,t] * 1000 <=0 #minus 1000 is what you are transferring into constraint, p_dry_transfer is how much you get in the current period if you transferred 1t from previous period (not 1000 because you have to account for deterioration)
     model.con_drypas = pe.Constraint(model.s_dry_groups, model.s_feed_periods, model.s_pastures, rule = drypas, doc='High and low quality dry pasture of each type available in each period')
@@ -293,7 +293,9 @@ def paspyomo_local(params):
     except AttributeError:
         pass
     def erosion(model,f,l,t):
-        return sum(sum(model.v_greenpas_ha[v,g,o,f,l,t] for v in model.s_feed_pools) *  -model.p_foo_end_grnha[g,o,f,l,t] for g in model.s_grazing_int for o in model.s_foo_levels) \
+        #senesce is included here becasue it is passed into the following fp dry feed pool. Thus senesced feed is not included in green or dry pasture in the period it is senesced.
+        return sum(sum(model.v_greenpas_ha[v,g,o,f,l,t] for v in model.s_feed_pools) * -(model.p_foo_end_grnha[g,o,f,l,t] +
+                   sum(model.p_senesce_grnha[d,g,o,f,l,t] for d in model.s_dry_groups)) for g in model.s_grazing_int for o in model.s_foo_levels) \
                 -  sum(model.v_drypas_transfer[d,f,t] * 1000 for d in model.s_dry_groups) \
                 + sum(model.v_phase_area[r,l]  * model.p_erosion[f,l,r,t] for r in model.s_phases if pe.value(model.p_erosion[f,l,r,t]) != 0) <=0
     model.con_erosion = pe.Constraint(model.s_feed_periods, model.s_lmus, model.s_pastures, rule = erosion, doc='total pasture available of each type on each soil type in each feed period')
