@@ -1141,6 +1141,7 @@ def range_allocation_np(period_dates, start, length, opposite=None, shape=None):
             allocation_period[i,...] = np.maximum(0, (calc_end - calc_start) / (per_end - per_start)) #days between calc_end and calc_start (0 if end before start) divided by length of the period, use f_divide in case any period lengths are 0 (this is likely to occur in season version)
     return allocation_period
 
+
 def period_proportion_np(period_dates, date_array):
     ''' Numpy version - The period that a given date falls in. and the proportion of the way through the period the date occurs.
 
@@ -1211,6 +1212,7 @@ def f_baseyr(periods, base_year=None):
     periods = periods - (np.timedelta64(365, 'D') * year_offset)
     return periods
 
+
 def np_extrap(x, xp, yp):
     ## np.interp function with linear extrapolation if x is beyond the input date (xp)
     ### from https://stackoverflow.com/questions/2745329/how-to-make-scipy-interpolate-give-an-extrapolated-result-beyond-the-input-range"""
@@ -1220,3 +1222,15 @@ def np_extrap(x, xp, yp):
     ##use a mask to adjust values if extrapolating x above the highest input value in xp
     y[x > xp[-1]]= yp[-1] + (x[x>xp[-1]]-xp[-1])*(yp[-1]-yp[-2])/(xp[-1]-xp[-2])
     return y
+
+
+def f_ditribution7(mean, sd):
+    ##create a distribution around the mean for a variable that can be applied in any non-linear relationships
+    ##Create 7 intervals with equal probability
+    ## Equaly probablity allows the non-linear result to be averaged with equal weighting
+
+    ## The distribution of standardised x based on the mid point of 7 intervals of 14.3%
+    dist7_m1 = np.array([-1.535, -0.82, -0.375, 0, 0.375, 0.82, 1.535])
+    ## Apply the distribution to the mean using the std deviation
+    var_m1 = mean[..., na] + sd * dist7_m1
+    return var_m1
