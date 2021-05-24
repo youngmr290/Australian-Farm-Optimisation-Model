@@ -92,5 +92,8 @@ Pyomo errors
         This was caused once by having a very small negative number (-2e-16) returned from the crop sim (sometimes python returns a small negitive number instead of 0), the solver clearly didn’t like it (even though i thought it would just be treated as a 0 or as a small value)
 
 #. Writing full solution: No value for uninitialized NumericValue object
-        This means a variable has None as its value. This can happen for some variables eg sheep which have been masked out and hence are not really included in the model. When writing the full model the constraints are evaluated. This can cause errors if variables have None value. To fix this error you should skip building constraints which are not required.
-        In my case the upper bound on dams numbers constraint was throwing an error. To fix the problem i skipped the constraints when upper bound was equal to inf (eg when the bound was not doing anything).
+        This means a variable has None as its value. This can happen for some variables eg sheep which
+        have been masked out and hence are not really included in the model. When writing the full model the
+        constraints are evaluated. This can cause errors if variables have None value. To fix this error you
+        should skip building constraints which are not required and/or use if statements when summing variables.
+        An example is the mating dams propn bound.

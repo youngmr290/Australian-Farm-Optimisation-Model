@@ -156,15 +156,23 @@ def boundarypyomo_local(params):
             model.p_prop_dams_mated = pe.Param(model.s_dvp_dams, model.s_groups_dams, initialize=params['stock']['p_prop_dams_mated'])
             ###constraint
             def f_propn_dams_mated(model, v, g1):
-                if model.p_prop_dams_mated[v, g1]==np.inf:
+                if model.p_prop_dams_mated[v, g1]==np.inf or all(model.p_numbers_req_dams[k28,k29,t,v,a,n,w8,i,y,g1,g9,w9] == 0
+                                      for k29 in model.s_k2_birth_dams for w9 in model.s_lw_dams for g9 in model.s_groups_dams for k28 in model.s_k2_birth_dams
+                                      for t in model.s_sale_dams for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
+                                      for i in model.s_tol for y in model.s_gen_merit_dams):
                     return pe.Constraint.Skip
                 else:
                     return sum(model.v_dams['NM-0',t,v,a,n,w8,i,y,g1] for t in model.s_sale_dams
                                for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
                                for i in model.s_tol for y in model.s_gen_merit_dams
+                               if any(model.p_numbers_req_dams['NM-0',k29,t,v,a,n,w8,i,y,g1,g9,w9] == 1
+                                      for k29 in model.s_k2_birth_dams for w9 in model.s_lw_dams for g9 in model.s_groups_dams)
                                ) == sum(model.v_dams[k2,t,v,a,n,w8,i,y,g1] for k2 in model.s_k2_birth_dams for t in model.s_sale_dams
                                for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
-                               for i in model.s_tol for y in model.s_gen_merit_dams) * (1 - model.p_prop_dams_mated[v, g1])
+                               for i in model.s_tol for y in model.s_gen_merit_dams
+                               if any(model.p_numbers_req_dams[k2,k29,t,v,a,n,w8,i,y,g1,g9,w9] == 1
+                                      for k29 in model.s_k2_birth_dams for w9 in model.s_lw_dams for g9 in model.s_groups_dams)
+                                        ) * (1 - model.p_prop_dams_mated[v, g1])
             model.con_propn_dams_mated = pe.Constraint(model.s_dvp_dams, model.s_groups_dams, rule=f_propn_dams_mated,
                                                        doc='proportion of dams mated')
 
