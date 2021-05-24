@@ -34,6 +34,8 @@ def boundarypyomo_local(params):
     rot_lobound_inc = False #controls rot bound
     dams_lobound_inc = False #lower bound dams
     dams_upperbound_inc = fun.f_sa(False, sen.sav['bnd_upper_dam_inc'], 5) #upper bound on dams
+    total_dams_scanned_bound_inc = np.any(sen.sav['bnd_total_dams_scanned'] != '-') #equal to bound on the total number of scanned dams
+    force_5yo_retention_inc = np.any(sen.sav['bnd_propn_dam5_retained'] != '-') #force a propn of 5yo dams to be retained.
     bnd_propn_dams_mated = np.any(sen.sav['bnd_propn_dams_mated_og1'] != '-')
     bnd_sale_twice_drys_inc = fun.f_sa(False, sen.sav['bnd_sale_twice_dry_inc'], 5) #proportion of drys sold (can be sold at either sale opp)
     sr_bound_inc = fun.f_sa(False, sen.sav['bnd_sr_inc'], 5) #controls sr bound
@@ -138,6 +140,66 @@ def boundarypyomo_local(params):
             model.con_dam_upperbound = pe.Constraint(model.s_sale_dams, model.s_dvp_dams, rule=f_dam_upperbound,
                                                     doc='max number of dams_tv')
 
+        ##total dams scanned. Sums dams in all scanning dvps
+        ###delete the bound (outside if statement incase the bound was active for last trial)
+        try:
+            model.del_component(model.con_total_dams_scanned)
+        except AttributeError:
+            pass
+        ###build bound if turned on
+        if total_dams_scanned_bound_inc:
+            ###set the bound
+            total_dams_scanned = fun.f_sa(np.inf, sen.sav['bnd_total_dams_scanned'], 5)
+            ###scan dvps
+            scan_v = list(params['stock']['p_scan_v_dams'])
+            ###constraint - sum all mated dams in scan dvp.
+            def f_total_dams_scanned(model):
+                if propn_dams_retained == np.inf:
+                    pe.Constraint.Skip
+                else:
+                    return sum(model.v_dams[k28,t,v,a,n,w8,i,y,g1] for k28 in model.s_k2_birth_dams for t in model.s_sale_dams
+                               for v in model.s_dvp_dams for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
+                               for i in model.s_tol for y in model.s_gen_merit_dams for g1 in model.s_groups_dams
+                               if any(model.p_numbers_req_dams[k28,k29,t,v,a,n,w8,i,y,g1,g9,w9] == 1 for k29 in model.s_k2_birth_dams
+                                      for w9 in model.s_lw_dams for g9 in model.s_groups_dams) and v in scan_v and k28 != 'NM-0') \
+                       == total_dams_scanned
+            model.con_total_dams_scanned = pe.Constraint(rule=f_total_dams_scanned, doc='total dams scanned')
+
+        ##force 5yo dam retention - fix a proportion of dams at 6yo scanning dvp.
+        ###delete the bound (outside if statement incase the bound was active for last trial)
+        try:
+            model.del_component(model.con_retention_5yo_dams)
+        except AttributeError:
+            pass
+        ###build bound if turned on
+        if force_5yo_retention_inc:
+            ###set the bound
+            propn_dams_retained = fun.f_sa(np.inf, sen.sav['bnd_propn_dam5_retained'], 5)
+            ###5yr scan dvp
+            scan5_v = list(params['stock']['p_scan_v_dams'])[4]
+            ###6yr scan dvp
+            scan6_v = list(params['stock']['p_scan_v_dams'])[5]
+            ###constraint - sum all mated dams in scan dvp.
+            def retention_5yo_dams(model):
+                if propn_dams_retained == np.inf:
+                    pe.Constraint.Skip
+                else:
+                    return (propn_dams_retained) * sum(model.v_dams[k28,t,v,a,n,w8,i,y,g1] for k28 in model.s_k2_birth_dams
+                                                       for t in model.s_sale_dams for v in model.s_dvp_dams
+                                                       for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
+                                                       for i in model.s_tol for y in model.s_gen_merit_dams for g1 in model.s_groups_dams
+                                                       if any(model.p_numbers_req_dams[k28,k29,t,v,a,n,w8,i,y,g1,g9,w9] == 1
+                                                              for k29 in model.s_k2_birth_dams for w9 in model.s_lw_dams for g9 in model.s_groups_dams)
+                                                       and v in scan5_v) \
+                       == sum(model.v_dams[k28,t,v,a,n,w8,i,y,g1] for k28 in model.s_k2_birth_dams
+                              for t in model.s_sale_dams for v in model.s_dvp_dams for a in model.s_wean_times
+                              for n in model.s_nut_dams for w8 in model.s_lw_dams for i in model.s_tol
+                              for y in model.s_gen_merit_dams for g1 in model.s_groups_dams
+                              if any(model.p_numbers_req_dams[k28,k29,t,v,a,n,w8,i,y,g1,g9,w9] == 1
+                                     for k29 in model.s_k2_birth_dams for w9 in model.s_lw_dams for g9 in model.s_groups_dams)
+                              and v in scan6_v)
+            model.con_retention_5yo_dams = pe.Constraint(rule=retention_5yo_dams, doc='force retention of 5yo dams')
+
         ##bound to fix the proportion of dams being mated - typically used to exclude yearlings
         ###delete the bound (outside if statement incase the bound was active for last trial)
         try:
@@ -176,9 +238,7 @@ def boundarypyomo_local(params):
             model.con_propn_dams_mated = pe.Constraint(model.s_dvp_dams, model.s_groups_dams, rule=f_propn_dams_mated,
                                                        doc='proportion of dams mated')
 
-        ##bound to fix the proportion of dry dams sold. All dams that have been dry twice are sold. Proportion of twice dry dams is an input in uinp ce[2, ....].
-
-        ##bound propn twice drys to be sold
+        ##bound to fix the proportion of twice dry dams sold. Proportion of twice dry dams is an input in uinp ce[2, ....].
         ###delete the bound (outside if statement incase the bound was active for last trial)
         try:
             model.del_component(model.con_propn_drys_sold_index)

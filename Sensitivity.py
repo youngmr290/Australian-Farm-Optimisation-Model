@@ -126,6 +126,8 @@ sav['bnd_drys_retained'] = '-'   #SA to force drys to be retained
 sav['bnd_sale_twice_dry_inc'] = '-'   #SA to include the the bound which forces twice dry dams to be sold
 sav['bnd_twice_dry_propn'] = '-'   #SA to change twice dry dam proportion
 sav['bnd_upper_dam_inc'] = '-'   #control if dam upper bound is on.
+sav['bnd_total_dams_scanned'] = '-'   #total dams scanned (summed over all dvps) - this also controls if bound is on.
+sav['bnd_propn_dam5_retained'] = '-'   #propn of 5yo dams retained - this also controls if bound is on.
 sav['bnd_sr_t'] = np.full(pinp.sheep_inp['i_sr_constraint_t'].shape, '-', dtype=object)   #SA to fix stocking rate
 sav['bnd_min_sale_age_wether_g3'] = np.full(pinp.sheep_inp['i_g3_inc'].shape, '-', dtype=object)   #SA to set min age wether can be sold
 sav['bnd_max_sale_age_wether_g3'] = np.full(pinp.sheep_inp['i_g3_inc'].shape, '-', dtype=object)   #SA to set max age wether can be sold
