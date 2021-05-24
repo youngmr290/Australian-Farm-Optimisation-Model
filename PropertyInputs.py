@@ -231,6 +231,8 @@ def property_inp_sa():
     Applies sensitivity adjustment to each input.
     This function gets called at the beginning of each loop in the exp.py module
 
+    SA order is: sav, sam, sap, saa, sat, sar.
+
     :return: None.
 
     '''
@@ -240,12 +242,18 @@ def property_inp_sa():
     ###sav
     general['steady_state'] = fun.f_sa(general_inp['steady_state'], sen.sav['steady_state'], 5)
 
+    ###sam
+    ###sap
+    ###saa
+    ###sat
+    ###sar
 
     ##pasture
     ###sav
     general['pas_inc'] = fun.f_sa(general_inp['pas_inc'], sen.sav['pas_inc'], 5)
 
     for pasture in sinp.general['pastures'][general['pas_inc']]: #all pasture inputs are adjusted even if a given pasture is not included
+        ###sav
         ###SAM
         pasture_inputs[pasture]['GermStd'] = fun.f_sa(pasture_inp[pasture]['GermStd'], sen.sam[('germ',pasture)])
         pasture_inputs[pasture]['GermScalarLMU'] = fun.f_sa(pasture_inp[pasture]['GermScalarLMU'], sen.sam[('germ_l',pasture)])
@@ -262,6 +270,11 @@ def property_inp_sa():
         pasture_inputs[pasture]['DigDeclineFOO'] = fun.f_sa(pasture_inp[pasture]['DigDeclineFOO'], sen.sam[('grn_dmd_declinefoo_f',pasture)])
         pasture_inputs[pasture]['DigRednSenesce'] = fun.f_sa(pasture_inp[pasture]['DigRednSenesce'], sen.sam[('grn_dmd_senesce_f',pasture)])
 
+        ###sap
+        ###saa
+        ###sat
+        ###sar
+
     ##sheep
     ###SAV
     sheep['i_mask_i'] = fun.f_sa(sheep_inp['i_mask_i'], sen.sav['TOL_inc'], 5)
@@ -271,8 +284,17 @@ def property_inp_sa():
     sheep['i_dry_sales_forced'] = fun.f_sa(sheep_inp['i_dry_sales_forced'], sen.sav['bnd_drys_sold'],5)
     sheep['i_dry_retained_forced'] = fun.f_sa(sheep_inp['i_dry_retained_forced'], sen.sav['bnd_drys_retained'],5)
     sheep['ia_r1_zig1'] = fun.f_sa(sheep_inp['ia_r1_zig1'], sen.sav['r1_izg1'],5)
+    sheep['ia_r2_k2ig1'] = fun.f_sa(sheep_inp['ia_r2_k2ig1'], sen.sav['r2_ik2g1'],5)
     sheep['ia_r1_zig3'] = fun.f_sa(sheep_inp['ia_r1_zig3'], sen.sav['r1_izg3'],5)
     sheep['i_sr_constraint_t'] = fun.f_sa(sheep_inp['i_sr_constraint_t'], sen.sav['bnd_sr_t'],5)
+
+    ###sam
+    ###sap
+    ###saa
+    feedsupply['i_feedoptions_r1pj0'] = fun.f_sa(feedsupply_inp['i_feedoptions_r1pj0'], sen.saa['feedoptions_rjp'], 2)
+    ###sat
+    ###sar
+
 
     ##report controls
     ###SAV

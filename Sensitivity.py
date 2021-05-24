@@ -79,6 +79,7 @@ sap['mr_post'] = 0.0           #Post loop maintenance requirement of adults (zf2
 ##stock
 saa['husb_cost_h2'] = np.zeros(uinp.sheep_inp['i_husb_operations_contract_cost_h2'].shape, dtype=np.float64)  #SA value for husbandry costs.
 saa['husb_labour_l2h2'] = np.zeros(uinp.sheep_inp['i_husb_operations_labourreq_l2h2'].shape, dtype=np.float64)  #SA value for husbandry labour.
+saa['feedoptions_rjp'] = np.zeros(pinp.feedsupply_inp['i_feedoptions_r1pj0'].shape, dtype=np.float64)  #SA value for feedsupply.
 
 ##stock parameters
 saa['sfd_c2'] = 0.0                     #std fibre diameter genotype params
@@ -169,7 +170,9 @@ sav['fvp_is_dvp_dams'] = np.full(sinp.structuralsa_inp['i_dvp_mask_f1'].shape, '
 sav['mask_fvp_offs'] = np.full(sinp.structuralsa_inp['i_fvp_mask_offs'].shape, '-', dtype=object)      #SA to mask changeable fvps.
 sav['fvp_is_dvp_offs'] = np.full(sinp.structuralsa_inp['i_fvp_mask_offs'].shape, '-', dtype=object)      #SA to control if changeable fvp is a dvp.
 sav['r1_izg1'] = np.full(pinp.sheep_inp['ia_r1_zig1'].shape, '-', dtype=object)   #SA to change the base feed option for dams
+sav['r2_ik2g1'] = np.full(pinp.sheep_inp['ia_r2_k2ig1'].shape, '-', dtype=object)   #SA to Change the selected feed variations selected for the k2 axis (LSLN) for dams
 sav['r1_izg3'] = np.full(pinp.sheep_inp['ia_r1_zig3'].shape, '-', dtype=object)   #SA to change the base feed option for dams
 
 ##stock parameters
 sav['srw_c2'] = np.full(uinp.parameters_inp['i_srw_c2'].shape, '-', dtype=object)  #SA value for srw of each c2 genotype.
+sav['cl0_c2'] = np.full(uinp.parameters_inp['i_cl0_c2'].shape, '-', dtype=object)  #SA value for litter size genotype params.

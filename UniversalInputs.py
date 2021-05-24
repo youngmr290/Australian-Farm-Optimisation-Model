@@ -176,7 +176,9 @@ mach = copy.deepcopy(machine_options_dict_inp)
 def universal_inp_sa():
     '''
     Applies sensitivity adjustment to each input.
-    This function gets called at the beginning of each loop in the exp.py module
+    This function gets called at the beginning of each loop in the exp.py module.
+
+    SA order is: sav, sam, sap, saa, sat, sar.
 
     :return: None.
 
@@ -191,19 +193,11 @@ def universal_inp_sa():
     finance['minroe_dsp'] = fun.f_sa(finance_inp['minroe_dsp'], sen.sav['minroe'], 5)  #value for minroe (same sav as above)
 
     ##price
+    ###sav
     price['grain_price_percentile'] = fun.f_sa(price_inp['grain_price_percentile'],sen.sav['grain_percentile'], 5)
 
 
     ##sheep
-    ###SAM
-    sheep['i_sam_LTW_dams'] = fun.f_sa(sheep_inp['i_sam_LTW_dams'],sen.sam['LTW_dams'])
-    sheep['i_sam_LTW_offs'] = fun.f_sa(sheep_inp['i_sam_LTW_offs'],sen.sam['LTW_offs'])
-    ###SAA
-    sheep['i_husb_operations_contract_cost_h2'] = fun.f_sa(sheep_inp['i_husb_operations_contract_cost_h2'],sen.saa['husb_cost_h2'], 2)
-    sheep['i_husb_operations_labourreq_l2h2'] = fun.f_sa(sheep_inp['i_husb_operations_labourreq_l2h2'],sen.saa['husb_labour_l2h2'], 2)
-    ###SAT
-    sheep['i_salep_weight_scalar_s7s5s6'] = fun.f_sa(sheep_inp['i_salep_weight_scalar_s7s5s6'], sen.sat['salep_weight_scalar'], 3, 1, 0) #Scalar for LW impact across grid 1 (sat adjusted)
-    sheep['i_salep_score_scalar_s7s5s6'] = fun.f_sa(sheep_inp['i_salep_score_scalar_s7s5s6'], sen.sat['salep_score_scalar'], 3, 1, 0) #Scalar for score impact across the grid (sat adjusted)
     ###SAV
     sheep['i_eqn_compare'] = fun.f_sa(sheep_inp['i_eqn_compare'], sen.sav['eqn_compare'], 5)  #determines if both equation systems are being run and compared
     sheep['i_eqn_used_g0_q1p7'] = fun.f_sa(sheep_inp['i_eqn_used_g0_q1p7'], sen.sav['eqn_used_g0_q1p7'], 5)  #determines if both equation systems are being run and compared
@@ -213,18 +207,31 @@ def universal_inp_sa():
     sheep['i_woolp_mpg_percentile'] = fun.f_sa(sheep_inp['i_woolp_mpg_percentile'], sen.sav['woolp_mpg_percentile'], 5) #replaces the std percentile input with the sa value
     sheep['i_woolp_fdprem_percentile'] = fun.f_sa(sheep_inp['i_woolp_fdprem_percentile'], sen.sav['woolp_fdprem_percentile'], 5) #replaces the std percentile input with the sa value
     sheep['i_salep_percentile'] = fun.f_sa(sheep_inp['i_salep_percentile'], sen.sav['salep_percentile'], 5) #Value for percentile for all sale grids
+    ###SAM
+    sheep['i_sam_LTW_dams'] = fun.f_sa(sheep_inp['i_sam_LTW_dams'],sen.sam['LTW_dams'])
+    sheep['i_sam_LTW_offs'] = fun.f_sa(sheep_inp['i_sam_LTW_offs'],sen.sam['LTW_offs'])
+    ###SAP
+    ###SAA
+    sheep['i_husb_operations_contract_cost_h2'] = fun.f_sa(sheep_inp['i_husb_operations_contract_cost_h2'],sen.saa['husb_cost_h2'], 2)
+    sheep['i_husb_operations_labourreq_l2h2'] = fun.f_sa(sheep_inp['i_husb_operations_labourreq_l2h2'],sen.saa['husb_labour_l2h2'], 2)
+    ###SAT
+    sheep['i_salep_weight_scalar_s7s5s6'] = fun.f_sa(sheep_inp['i_salep_weight_scalar_s7s5s6'], sen.sat['salep_weight_scalar'], 3, 1, 0) #Scalar for LW impact across grid 1 (sat adjusted)
+    sheep['i_salep_score_scalar_s7s5s6'] = fun.f_sa(sheep_inp['i_salep_score_scalar_s7s5s6'], sen.sat['salep_score_scalar'], 3, 1, 0) #Scalar for score impact across the grid (sat adjusted)
+    ###SAR
 
     ##parameters (c2 genotype sensitivity)
+    ###SAV - these have to be converted to float so that the blank column becomes nan rather that None
+    parameters['i_srw_c2'] = fun.f_sa(parameters_inp['i_srw_c2'].astype(float), sen.sav['srw_c2'], 5) #genotype srw
+    parameters['i_ce_c2'][2,...] = fun.f_sa(parameters_inp['i_ce_c2'][2,...].astype(float), sen.sav['bnd_twice_dry_propn'], 5) #propn of twice drys
+    parameters['i_cl0_c2'] = fun.f_sa(parameters_inp['i_cl0_c2'].astype(float), sen.sav['cl0_c2'], 5) #genotype litter size params
     ###SAM - these have to be converted to float so that the blank column becomes nan rather that None
     parameters['i_ci_c2'] = fun.f_sa(parameters_inp['i_ci_c2'].astype(float),sen.sam['ci_c2'])
     parameters['i_sfw_c2'] = fun.f_sa(parameters_inp['i_sfw_c2'].astype(float),sen.sam['sfw_c2'])
+    ###SAP
     ###SAA - these have to be converted to float so that the blank column becomes nan rather that None
     parameters['i_sfd_c2'] = fun.f_sa(parameters_inp['i_sfd_c2'].astype(float),sen.saa['sfd_c2'], 2)
     parameters['i_cl0_c2'] = fun.f_sa(parameters_inp['i_cl0_c2'].astype(float), sen.saa['cl0_c2'], 2) #genotype litter size params
     parameters['i_scan_std_c2'] = fun.f_sa(parameters_inp['i_scan_std_c2'].astype(float), sen.saa['scan_std_c2'], 2) #genotype scanning percent params
-    ###SAV - these have to be converted to float so that the blank column becomes nan rather that None
-    parameters['i_srw_c2'] = fun.f_sa(parameters_inp['i_srw_c2'].astype(float), sen.sav['srw_c2'], 5) #genotype srw
-    parameters['i_ce_c2'][2,...] = fun.f_sa(parameters_inp['i_ce_c2'][2,...].astype(float), sen.sav['bnd_twice_dry_propn'], 5) #propn of twice drys
 
     ##parameters (overall sensitivity - carried out after the c2 genotype sa)
     ###SAM - these have to be converted to float so that the blank column becomes nan rather that None
