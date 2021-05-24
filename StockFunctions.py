@@ -1372,29 +1372,42 @@ def f_sire_req(sire_propn_a1e1b1nwzida0e0b0xyg1g0, sire_periods_g0p8, i_sire_rec
             a. mortality due to preg toxemia in the last 6 weeks of pregnancy. This occurs for multiple bearing dams and is affected by rate of LW loss
             b. mortality due to dystocia. It is assumed that ewe death is associated with a fixed proportion of the lambs deaths from dystocia
             '''
-def f_mortality_base_cs(cd, cg, rc_start, ebg_start, d_nw_max, days_period, rev_trait_value, sap_mortalityb):
+def f_mortality_base_cs(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max, days_period, rev_trait_value, sap_mortalityb):
     ## a minimum level of mortality per day that is increased if RC is below a threshold and LWG is below a threshold
     ### i.e. increased mortality only for thin animals that are growing slowly (< 20% of normal growth rate)
-    #todo add distribution to ebg_start_m1 and then average (axis =-1)
-    mortalityb = (cd[1, ...] + cd[2, ...] * np.maximum(0, cd[3, ...] - rc_start) * ((cd[16, ...] * d_nw_max) > (ebg_start * cg[18, ...]))) * days_period #mul by days period to convert from mort per day to per period
+    ###distribution on ebg & rc_start, calculate mort and then average (axis =-1,-2)
+    ebg_start_m1m2 = fun.f_ditribution7(ebg_start, sd=sd_ebg)[...,na]
+    rc_start_m1m2 = fun.f_ditribution7(rc_start, cv=cv_weight)[...,na,:]
+    mortalityb_m1m2 = (cd[1, ...,na,na] + cd[2, ...,na,na] *
+                     np.maximum(0, cd[3, ...,na,na] - rc_start_m1m2) *
+                     ((cd[16, ...,na,na] * d_nw_max[...,na,na]) > (ebg_start_m1m2 * cg[18, ...,na,na]))) * days_period[...,na,na] #mul by days period to convert from mort per day to per period
+    ###average m1 axis
+    mortalityb = np.mean(mortalityb_m1m2, axis=(-1,-2))
+    ##apply sensitivity
     mortalityb = fun.f_sa(mortalityb, sap_mortalityb, sa_type = 1, value_min = 0)
     ##Process the Mortality REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
     mortalityb = f_rev_update('mortality', mortalityb, rev_trait_value)
     return mortalityb
 
 
-def f_mortality_weaner_cs(cd, cg, age, ebg_start, d_nw_max,days_period):
+def f_mortality_weaner_cs(cd, cg, age, ebg_start, sd_ebg, d_nw_max,days_period):
     ## mortality increases (cd[13]) for slow growing young animals (< 20% of normal growth rate).
     ### mortality does not increase with severity of under-nutrition, simply a switch based on growth rate
     ### the mortality increment varies with age. Full increment below 300 days (cd[14]) and ramping down to 0 at 365 days (cd[15])
-    #todo add distribution to ebg_start_m1 and then average (axis =-1)
-    return cd[13, ...] * f_ramp(age, cd[15, ...], cd[14, ...]) * ((cd[16, ...] * d_nw_max) > (ebg_start * cg[18, ...]))* days_period #mul by days period to convert from mort per day to per period
+    ###distribution on ebg - add distribution to ebg_start_m1 and then average (axis =-1)
+    ebg_start_m1 = fun.f_ditribution7(ebg_start, sd=sd_ebg)
+    mort_weaner_m1 = cd[13, ...,na] * f_ramp(age[...,na], cd[15, ...,na], cd[14, ...,na]
+                                             ) * ((cd[16, ...,na] * d_nw_max[...,na]
+                                                   ) > (ebg_start_m1 * cg[18, ...,na]))* days_period[...,na] #mul by days period to convert from mort per day to per period
+    return np.mean(mort_weaner_m1, axis=-1)
 
-
-def f_mortality_dam_cs(cb1, cg, nw_start, ebg, days_period, period_between_birth6wks, gest_propn, sap_mortalitye):
+def f_mortality_dam_cs(cb1, cg, nw_start, ebg, sd_ebg, days_period, period_between_birth6wks, gest_propn, sap_mortalitye):
     ##(Twin) Dam mortality in last 6 weeks (preg tox)
-    #todo add distribution to ebg_m1 and then take the average (axis =-1)
-    t_mort = days_period * gest_propn /42 * f_sig(-42 * ebg * cg[18, ...] / nw_start, cb1[4, ...], cb1[5, ...]) #mul by days period to convert from mort per day to per period
+    ###distribution on ebg - add distribution to ebg_start_m1 and then average (axis =-1)
+    ebg_m1 = fun.f_ditribution7(ebg, sd=sd_ebg)
+    t_mort_m1 = days_period[...,na] * gest_propn[...,na] /42 * f_sig(-42 * ebg_m1 * cg[18, ...,na] / nw_start[...,na],
+                                                                      cb1[4, ...,na], cb1[5, ...,na]) #mul by days period to convert from mort per day to per period
+    t_mort = np.mean(t_mort_m1, axis=-1)
     ##If not last 6 weeks then = 0
     mort = t_mort * period_between_birth6wks
     ##Adjust by sensitivity on dam mortality
@@ -1402,11 +1415,15 @@ def f_mortality_dam_cs(cb1, cg, nw_start, ebg, days_period, period_between_birth
     return mort
 
     
-def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, w_b_exp_y, period_is_birth, chill_index_m1, nfoet_b1
+def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, cv_weight, w_b_exp_y, period_is_birth, chill_index_m1, nfoet_b1
                            , rev_trait_value, sap_mortalityp, saa_mortalityx):
-    ##Progeny losses due to large progeny or slow birth process (dystocia)
-    #todo add a distribution to w_b_m1[...,na] and rc_birth_m1[...,na,:] and then average axis=(-1,-2)
-    mortalityd_yatf = f_sig(fun.f_divide(w_b, w_b_exp_y) * np.maximum(1, rc_birth), cb1[6, ...], cb1[7, ...]) * period_is_birth
+    '''Progeny losses due to large progeny or slow birth process (dystocia)'''
+    ###distribution on w_b & rc_birth - add distribution to ebg_start_m1 and then average (axis =-1)
+    w_b_m1m2 = fun.f_ditribution7(w_b, cv=cv_weight)[...,na]
+    rc_birth_m1m2 = fun.f_ditribution7(rc_birth, cv=cv_weight)[...,na,:]
+    mortalityd_yatf_m1m2 = f_sig(fun.f_divide(w_b_m1m2, w_b_exp_y[...,na,na]) * np.maximum(1, rc_birth_m1m2),
+                                 cb1[6, ...,na,na], cb1[7, ...,na,na]) * period_is_birth[...,na,na]
+    mortalityd_yatf = np.mean(mortalityd_yatf_m1m2, axis=(-1,-2))
     ##add sensitivity
     mortalityd_yatf = fun.f_sa(mortalityd_yatf, sap_mortalityp, sa_type = 1, value_min = 0)
     ##dam mort due to large progeny or lack of energy at birth (dystocia) - returns 0 mort if there is 0 nfoet also the fact that more prog die per dam when the dams has multiple nfoet (eg for a trip only one ewe dies for every 3 yatf)
@@ -1414,11 +1431,9 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, w_b_exp_y, period_is_birth, c
     ##Reduce progeny losses due to large progeny (dystocia) - so not double counting progeny losses associated with dam mortality
     mortalityd_yatf = mortalityd_yatf * (1- cd[21,...])
     ##Exposure index
-    #todo add distribution to rc_birth_m1[...,na,:] and create xo with 2 m1 axes (so that the 2 m1 axes aren't multiplied together)
-    xo = cd[8, ..., na] - cd[9, ..., na] * rc_birth[..., na] + cd[10, ..., na] * chill_index_m1 + cb1[11, ..., na]
+    xo_m1m2 = cd[8, ..., na,na] - cd[9, ..., na,na] * rc_birth_m1m2 + cd[10, ..., na,na] * chill_index_m1[..., na,na] + cb1[11, ..., na,na]
     ##Progeny mortality at birth from exposure
-    #todo average with axis = (-1,-2)
-    mortalityx = np.average(np.exp(xo) / (1 + np.exp(xo)) ,axis = -1) * period_is_birth #axis -1 is m1
+    mortalityx = np.average(np.exp(xo_m1m2) / (1 + np.exp(xo_m1m2)) ,axis = (-1,-2)) * period_is_birth #axis -1 is m1
     ##Apply SA to progeny mortality due to exposure
     mortalityx = fun.f_sa(mortalityx, sap_mortalityp, sa_type = 1, value_min = 0)
     mortalityx = fun.f_sa(mortalityx, saa_mortalityx, sa_type = 2, value_min = 0)
@@ -1437,14 +1452,18 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, w_b_exp_y, period_is_birth, c
             is the same for single and twin bearing ewes.
         4. Weaner mortality is included in the base mortality through ebg being compared with normal growth rate.
         '''
-def f_mortality_base_mu(cd, cg, rc_start, ebg_start, d_nw_max, days_period, rev_trait_value, sap_mortalityb):
+def f_mortality_base_mu(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max, days_period, rev_trait_value, sap_mortalityb):
     ## a minimum level of mortality per day that is increased if RC is below a threshold and LWG is below a threshold
     ### the mortality rate increases in a quadratic function for lower RC & greater disparity between EBG and normal gain
-    #todo add distribution to rc_start_m1[...,na] & ebg_start_m1[...,na,:]
-    rc_mortality_scalar = (np.minimum(0, rc_start - cd[24, ...]) / (cd[23, ...] - cd[24, ...]))**2
-    ebg_mortality_scalar = (np.minimum(0, ebg_start * cg[18, ...] - cd[26, ...] - d_nw_max) / (cd[25, ...] - cd[26, ...]))**2
-    #todo take average axis=(-1,-2)
-    mortalityb = (cd[1, ...] + cd[22, ...] * rc_mortality_scalar * ebg_mortality_scalar) * days_period  #mul by days period to convert from mort per day to per period
+    ###distribution on ebg & rc_start, calculate mort and then average (axis =-1,-2)
+    ebg_start_m1m2 = fun.f_ditribution7(ebg_start, sd=sd_ebg)[...,na]
+    rc_start_m1m2 = fun.f_ditribution7(rc_start, cv=cv_weight)[...,na,:]
+    ###calc mort scalars
+    rc_mortality_scalar_m1m2 = (np.minimum(0, rc_start_m1m2 - cd[24, ...,na,na]) / (cd[23, ...,na,na] - cd[24, ...,na,na]))**2
+    ebg_mortality_scalar_m1m2 = (np.minimum(0, ebg_start_m1m2 * cg[18, ...,na,na] - cd[26, ...,na,na] - d_nw_max[...,na,na]) / (cd[25, ...,na,na] - cd[26, ...,na,na]))**2
+    mortalityb_m1m2 = (cd[1, ...,na,na] + cd[22, ...,na,na] * rc_mortality_scalar_m1m2 * ebg_mortality_scalar_m1m2) * days_period[...,na,na]  #mul by days period to convert from mort per day to per period
+    mortalityb = np.mean(mortalityb_m1m2, axis=(-1,-2))
+    ##apply sensitivity
     mortalityb = fun.f_sa(mortalityb, sap_mortalityb, sa_type = 1, value_min = 0)
     ##Process the Mortality REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
     mortalityb = f_rev_update('mortality', mortalityb, rev_trait_value)
@@ -1457,13 +1476,15 @@ def f_mortality_weaner_mu():
     return 0
 
 
-def f_mortality_dam_mu(cu2, cs_birth_dams, period_is_birth, nfoet_b1, sap_mortalitye):
+def f_mortality_dam_mu(cu2, cs_birth_dams, cv_cs, period_is_birth, nfoet_b1, sap_mortalitye):
     ## transformed Dam mortality at birth
-    #todo add distribution to cs_birth_dams_m1
-    t_mortalitye_mu = cu2[22, 0, ...] * cs_birth_dams + cu2[22, 1, ...] * cs_birth_dams ** 2 + cu2[22, -1, ...]
+    ###distribution on cs_birth, calculate mort and then average (axis =-1)
+    cs_birth_dams_m1 = fun.f_ditribution7(cs_birth_dams, cv=cv_cs)
+    ###calc mort
+    t_mortalitye_mu_m1 = cu2[22, 0, ...,na] * cs_birth_dams_m1 + cu2[22, 1, ...,na] * cs_birth_dams_m1 ** 2 + cu2[22, -1, ...,na]
     ##Back transform the mortality
-    #todo take average (axis=-1)
-    mortalitye_mu = np.exp(t_mortalitye_mu) / (1 + np.exp(t_mortalitye_mu)) * period_is_birth
+    mortalitye_mu_m1 = np.exp(t_mortalitye_mu_m1) / (1 + np.exp(t_mortalitye_mu_m1)) * period_is_birth[...,na]
+    mortalitye_mu = np.mean(mortalitye_mu_m1, axis=-1)
     ##no increase in mortality for the non reproducing ewes (n_foet == 0)
     mortalitye_mu = mortalitye_mu * (nfoet_b1 > 0)
     ##Adjust by sensitivity on dam mortality
@@ -1471,28 +1492,31 @@ def f_mortality_dam_mu(cu2, cs_birth_dams, period_is_birth, nfoet_b1, sap_mortal
     return mortalitye_mu
 
     
-def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, foo, chill_index_m1, period_is_birth, rev_trait_value
+def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, cv_weight, foo, chill_index_m1, period_is_birth, rev_trait_value
                            , sap_mortalityp, saa_mortalityx):
-    ##calculate the mortality of progeny at birth due to mis-mothering and exposure
-    ## using the LTW prediction equations (Oldham et al. 2011) with inclusion of chill index.
-    ##The paddock level scalar is added (Young et al 2011) however, this is not calibrated for high chill environments (>1000)
-    ##The scalar adjusts the difference in survival if birth weight is different from the standard birthweight
-    ##this is to reflect the difference in survival observed in the LTW paddock trial compared with the plot scale trials.
-
+    '''
+    Calculate the mortality of progeny at birth due to mis-mothering and exposure
+    using the LTW prediction equations (Oldham et al. 2011) with inclusion of chill index.
+    The paddock level scalar is added (Young et al 2011) however, this is not calibrated for high chill environments (>1000)
+    The scalar adjusts the difference in survival if birth weight is different from the standard birthweight
+    this is to reflect the difference in survival observed in the LTW paddock trial compared with the plot scale trials.
+    '''
     ##transformed survival for actual & standard
-    #todo add distribution to w_b_m1[...,na,:] & w_b_std_m1[...,na,:]
-    t_survival = (cu2[8, 0, ..., na] * w_b[..., na] + cu2[8, 1, ..., na] * w_b[..., na] ** 2
-                      + cu2[8, 2, ..., na] * chill_index_m1 + cu2[8, 3, ..., na] * foo[..., na]
-                      + cu2[8, 4, ..., na] * foo[..., na] ** 2 + cu2[8, 5, ..., na] + cb1[8, ..., na]
-                      + cx[8, ..., na] + cx[9, ..., na] * chill_index_m1 + ce[8, ..., na])
-    t_survival_std = (cu2[8, 0, ..., na] * w_b_std[..., na] + cu2[8, 1, ..., na] * w_b_std[..., na] ** 2
-                      + cu2[8, 2, ..., na] * chill_index_m1 + cu2[8, 3, ..., na] * foo[..., na]
-                      + cu2[8, 4, ..., na] * foo[..., na] ** 2 + cu2[8, 5, ..., na] + cb1[8, ..., na]
-                      + cx[8, ..., na] + cx[9, ..., na] * chill_index_m1 + ce[8, ..., na])
+    ###distribution on w_b & rc_birth - add distribution to ebg_start_m1 and then average (axis =-1)
+    w_b_m1m2 = fun.f_ditribution7(w_b, cv=cv_weight)[...,na,:]
+    w_b_std_m1m2 = fun.f_ditribution7(w_b_std, cv=cv_weight)[...,na,:]
+
+    t_survival_m1m2 = (cu2[8, 0, ...,na,na] * w_b_m1m2 + cu2[8, 1, ..., na,na] * w_b_m1m2 ** 2
+                      + cu2[8, 2, ..., na,na] * chill_index_m1[...,na] + cu2[8, 3, ..., na,na] * foo[..., na,na]
+                      + cu2[8, 4, ..., na,na] * foo[..., na,na] ** 2 + cu2[8, 5, ..., na,na] + cb1[8, ..., na,na]
+                      + cx[8, ..., na,na] + cx[9, ..., na,na] * chill_index_m1[...,na] + ce[8, ..., na,na])
+    t_survival_std_m1m2 = (cu2[8, 0, ..., na,na] * w_b_std_m1m2 + cu2[8, 1, ..., na,na] * w_b_std_m1m2 ** 2
+                      + cu2[8, 2, ..., na,na] * chill_index_m1[...,na] + cu2[8, 3, ..., na,na] * foo[..., na,na]
+                      + cu2[8, 4, ..., na,na] * foo[..., na,na] ** 2 + cu2[8, 5, ..., na,na] + cb1[8, ..., na,na]
+                      + cx[8, ..., na,na] + cx[9, ..., na,na] * chill_index_m1[...,na] + ce[8, ..., na,na])
     ##back transformed & converted to mortality
-    #todo take average with axis=(-1,-2)
-    mortalityx = (1 - np.average(1 / (1 + np.exp(-t_survival)),axis = -1)) * period_is_birth #m1 axis averaged
-    mortalityx_std = (1 - np.average(1 / (1 + np.exp(-t_survival_std)),axis = -1)) * period_is_birth #m1 axis averaged
+    mortalityx = (1 - np.average(1 / (1 + np.exp(-t_survival_m1m2)),axis = (-1,-2))) * period_is_birth #m1 axis averaged
+    mortalityx_std = (1 - np.average(1 / (1 + np.exp(-t_survival_std_m1m2)),axis = (-1,-2))) * period_is_birth #m1 axis averaged
     ##Scale progeny survival using paddock level scalars
     mortalityx = mortalityx_std + (mortalityx - mortalityx_std) * cb1[9, ...]
     ##Apply SA to progeny mortality at birth (LTW)

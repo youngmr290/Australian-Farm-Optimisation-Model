@@ -1224,11 +1224,15 @@ def np_extrap(x, xp, yp):
     return y
 
 
-def f_ditribution7(mean, sd):
+def f_ditribution7(mean, sd=0, cv=0):
+    '''
     ##create a distribution around the mean for a variable that can be applied in any non-linear relationships
     ##Create 7 intervals with equal probability
     ## Equaly probablity allows the non-linear result to be averaged with equal weighting
+    '''
 
+    if sd == 0:
+        sd = cv * mean
     ## The distribution of standardised x based on the mid point of 7 intervals of 14.3%
     dist7_m1 = np.array([-1.535, -0.82, -0.375, 0, 0.375, 0.82, 1.535])
     ## Apply the distribution to the mean using the std deviation
