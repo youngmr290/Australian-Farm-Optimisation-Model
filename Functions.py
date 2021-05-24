@@ -1236,5 +1236,5 @@ def f_ditribution7(mean, sd=0, cv=0):
     ## The distribution of standardised x based on the mid point of 7 intervals of 14.3%
     dist7_m1 = np.array([-1.535, -0.82, -0.375, 0, 0.375, 0.82, 1.535])
     ## Apply the distribution to the mean using the std deviation
-    var_m1 = mean[..., na] + sd * dist7_m1
+    var_m1 = mean[..., na] + sd[..., na] * dist7_m1
     return var_m1
