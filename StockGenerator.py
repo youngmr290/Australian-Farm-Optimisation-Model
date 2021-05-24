@@ -330,7 +330,6 @@ def generator(params,r_vals,ev,plots = False):
     o_numbers_join_pdams = np.zeros(pg1, dtype =dtype)
     o_numbers_end_pdams = np.zeros(pg1, dtype =dtype) #default 1 so that transfer can exist for dvps before weaning
     o_ffcfw_pdams = np.zeros(pg1, dtype =dtype)
-    basemort = np.zeros(pg1, dtype =dtype)
     o_ffcfw_season_pdams = np.zeros(pg1, dtype =dtype)
     o_ffcfw_condensed_pdams = np.zeros(pg1, dtype =dtype)
     o_nw_start_pdams = np.zeros(pg1, dtype = dtype)
@@ -3136,7 +3135,6 @@ def generator(params,r_vals,ev,plots = False):
                                                      , rev_trait_values['dams'][p], sen.sap['mortalityb'])
                     if eqn_used:
                         mortality_dams = temp0
-                        basemort[p]=temp0
                     if eqn_compare:
                         r_compare_q0q1q2pdams[eqn_system, eqn_group, 0, p, ...] = temp0
                 ####yatf
