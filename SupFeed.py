@@ -25,7 +25,6 @@ import datetime as dt
 from dateutil import relativedelta as rdelta
 
 #AFO modules
-import UniversalInputs as uinp
 import Functions as fun
 import Periods as per
 import PropertyInputs as pinp
@@ -55,7 +54,7 @@ def f_buy_grain_price(r_vals):
     cartage=uinp.price['sup_cartage']
     transaction_fee=uinp.price['sup_transaction']
     price_df = price_df + cartage + transaction_fee
-    ##calc farm gate grain price for each cashflow period - accounts for tols and other fees
+    ##calc farm gate grain price for each cashflow period - accounts for tolls and other fees
     start = uinp.price['grain_income_date']
     length = dt.timedelta(days=uinp.price['grain_income_length'])
     p_dates = per.cashflow_periods()['start date']
@@ -96,7 +95,7 @@ def f_sup_cost(r_vals):
     silo_info = pinp.supfeed['storage_type']
     silo_info.loc['dep'] = (silo_info.loc['price'] - silo_info.loc['salvage value'])/silo_info.loc['life']
     silo_info.loc['insurance'] = silo_info.loc['price'] * uinp.finance['equip_insurance']
-    silo_info.loc['asset'] = (silo_info.loc['price'] - silo_info.loc['salvage value'])/2 #calculate the average value of the asset - used in the asset ROE constrinate
+    silo_info.loc['asset'] = (silo_info.loc['price'] - silo_info.loc['salvage value'])/2 #calculate the average value of the asset - used in the asset ROE constraint
     ##using the capacity of each silo for each grain determine the costs per tonne foe each grain
     grain_info=uinp.supfeed['grain_density'].T.reset_index() #reindex so it can be combined with silo df
     grain_info=grain_info.set_index(['index','silo type']).T
@@ -221,7 +220,7 @@ def f_sup_labour():
     ##convert to hr/m3 for lupins and hr/bale for hay
     grain_density= uinp.supfeed['grain_density'].T.reset_index() #reindex so it can be combined with different grains
     grain_density=grain_density.set_index(['index','silo type']).squeeze()
-    empty_df[('grain','empty rate lupins')]=1/(empty_df[('grain','empty rate lupins')]*60*60/1000/grain_density.loc['l','grain']) #convert from kg/sec lupins to hr/m3 (which is the same for all grains). First convert kg/sec to t/hr then divid by density
+    empty_df[('grain','empty rate lupins')]=1/(empty_df[('grain','empty rate lupins')]*60*60/1000/grain_density.loc['l','grain']) #convert from kg/sec lupins to hr/m3 (which is the same for all grains). First convert kg/sec to t/hr then divide by density
     empty_df[('hay','empty rate')]=empty_df[('hay','empty rate')]/60 #convert min/bale to hr/bale
     ##combine time to fill and empty then convert to per tonne for each grain
     empty_df=empty_df.droplevel(1, axis=1)
@@ -235,14 +234,14 @@ def f_sup_labour():
     mj_mob_per_trip = mj * feedrate['mob size'] * 7 / pinp.supfeed['feed_freq']
     ###time per mj. this is just the time to drive between two paddocks divided by the mj fed
     time_mj=pinp.supfeed['time_between_pad']/mj_mob_per_trip
-    ###convert to time per tonne - multile time per mj by energy content of each grain.
+    ###convert to time per tonne - multiply time per mj by energy content of each grain.
     energy = uinp.supfeed['sup_md_vol'].loc['energy']
     time_mj = pd.concat([time_mj]*len(energy), keys=energy.index, axis=1)
     transport_tonne=time_mj.mul(energy,axis=1)
     ##add transport with filling and emptying
     total_time=transport_tonne+fill_empty_tonne
     ##determine time in each labour period
-    ###determine the time taken to feed a tonne of feed in each labour perior - this depends on the allocation of the labour periods into the entered sup feed dates
+    ###determine the time taken to feed a tonne of feed in each labour period - this depends on the allocation of the labour periods into the entered sup feed dates
     lp_dates_p5z = per.p_dates_df()
     start_p8 = total_time.index.values
     end_p8 = np.roll(start_p8, -1)

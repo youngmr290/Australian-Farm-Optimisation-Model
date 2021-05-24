@@ -265,7 +265,7 @@ def boundarypyomo_local(params):
 
             ###constraint
             def f_propn_drys_sold(model, v, i, y, g1):
-                if v in scan_v[:-1] and model.p_prop_twice_dry_dams[v, i, y, g1]!=0: #use 00 numbers at scanning. Dont want to include the last prejoining dvp becasue there is no sale limit in the last year.
+                if v in scan_v[:-1] and model.p_prop_twice_dry_dams[v, i, y, g1]!=0: #use 00 numbers at scanning. Dont want to include the last prejoining dvp because there is no sale limit in the last year.
                     idx_scan = scan_v.index(v) #which prejoining is the current v
                     idx_v_next_prejoin = next_prejoin_v[idx_scan] #all the twice drys must be sold by the following prejoining
                     v_sale = l_v1[l_v1.index(idx_v_next_prejoin) - 1]

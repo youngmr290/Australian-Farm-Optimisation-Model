@@ -464,7 +464,7 @@ def generator(params,r_vals,ev,plots = False):
     sire_periods_g0p8 = np.swapaxes(sire_periods_p8g0, 0, 1) #can't swap in function above because g needs to be in pos-1
 
     ##propn of dams mated - default is inf which gets skipped in the bound constraint hence the model can optimise to propn mated.
-    prop_dams_mated_og1 = fun.f_sa(np.array([999],dtype=float), sen.sav['bnd_propn_dams_mated_og1'], 5) #999 just an arbitary value used then converted to np.inf becasue np.inf causes errors in the f_update which is called by f_sa
+    prop_dams_mated_og1 = fun.f_sa(np.array([999],dtype=float), sen.sav['bnd_propn_dams_mated_og1'], 5) #999 just an arbitrary value used then converted to np.inf because np.inf causes errors in the f_update which is called by f_sa
     prop_dams_mated_og1[prop_dams_mated_og1==999] = np.inf
     prop_dams_mated_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(prop_dams_mated_og1, left_pos=p_pos, right_pos=-1,
                                                           condition=mask_o_dams, axis=p_pos, condition2=mask_dams_inc_g1, axis2=-1)
@@ -2704,7 +2704,7 @@ def generator(params,r_vals,ev,plots = False):
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     temp0 = sfun.f_birthweight_cs(cx_yatf[:,mask_x,...], w_b_start_yatf, w_f_start_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]) #pass in wf_start because animal is born on first day of period
                     if eqn_used:
-                        w_b_yatf = temp0 * (nfoet_b1nwzida0e0b0xyg>0) #so that only b slices with nfoet have a weight (need to leave a weight in 30, 20, 10 becasue used in prog mort)
+                        w_b_yatf = temp0 * (nfoet_b1nwzida0e0b0xyg>0) #so that only b slices with nfoet have a weight (need to leave a weight in 30, 20, 10 because used in prog mort)
                     if eqn_compare:
                         r_compare_q0q1q2pyatf[eqn_system, eqn_group, 0, p, ...] = temp0
             eqn_system = 1 # MU = 1
@@ -2718,7 +2718,7 @@ def generator(params,r_vals,ev,plots = False):
                     ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                     cf_w_b_dams = temp1
                     if eqn_used:
-                        w_b_yatf = temp0 * (nfoet_b1nwzida0e0b0xyg>0) #so that only b slices with nfoet have a weight (need to leave a weight in 30, 20, 10 becasue used in prog mort)
+                        w_b_yatf = temp0 * (nfoet_b1nwzida0e0b0xyg>0) #so that only b slices with nfoet have a weight (need to leave a weight in 30, 20, 10 because used in prog mort)
                     if eqn_compare:
                         r_compare_q0q1q2pyatf[eqn_system, eqn_group, 0, p, ...] = temp0
 
@@ -6807,11 +6807,11 @@ def generator(params,r_vals,ev,plots = False):
     len_v1 = len(keys_v1)
     len_v3 = len(keys_v3)
 
-    ##proportion of dams mated. inf means the model can optimise the proportion becasue inf is used to skip the constraint.
+    ##proportion of dams mated. inf means the model can optimise the proportion because inf is used to skip the constraint.
     arrays = [keys_v1, keys_g1]
     index_vg1 = fun.cartesian_product_simple_transpose(arrays)
     tup_vg1 = tuple(map(tuple,index_vg1))
-    prop_dams_mated_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] becasue e doesnt impact mating propn
+    prop_dams_mated_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesnt impact mating propn
     prop_dams_mated_vg1 = prop_dams_mated_va1e1b1nwzida0e0b0xyg1.ravel()
     params['p_prop_dams_mated'] = dict(zip(tup_vg1, prop_dams_mated_vg1))
 
@@ -6819,15 +6819,15 @@ def generator(params,r_vals,ev,plots = False):
     ###expand for p axis
     prop_twice_dry_dams_oa1e1b1nwzia0e0b0xyg1 = np.moveaxis(ce_dams[2,...], source=d_pos, destination=0) #move d axis to p pos
     prop_twice_dry_dams_oa1e1b1nwzida0e0b0xyg1 = np.expand_dims(prop_twice_dry_dams_oa1e1b1nwzia0e0b0xyg1, d_pos) #add singleton d axis
-    prop_twice_dry_dams_oa1e1b1nwzida0e0b0xyg1[0] = 0 #cant have any twice drys in the fisrt mating opportunity. (this line is just here to stop error if user accidently puts in a value for o[0]).
+    prop_twice_dry_dams_oa1e1b1nwzida0e0b0xyg1[0] = 0 #cant have any twice drys in the first mating opportunity. (this line is just here to stop error if user accidentally puts in a value for o[0]).
     prop_twice_dry_dams_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_twice_dry_dams_oa1e1b1nwzida0e0b0xyg1, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0) #increments at prejoining
     ###convert to v axis
-    prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_twice_dry_dams_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] becasue e doesnt impact mating propn
-    ###adjust maidens twices drys for yearling mating (if no yearlings are mated then there can not be any twice dry maidens)
+    prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_twice_dry_dams_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesnt impact mating propn
+    ###adjust maidens twice drys for yearling mating (if no yearlings are mated then there can not be any twice dry maidens)
     ####calc propn of dams mated in previous opportunity.
     prop_dams_mated_prev_oa1e1b1nwzida0e0b0xyg1 = np.roll(prop_dams_mated_oa1e1b1nwzida0e0b0xyg1, shift=1, axis=0)
     prop_dams_mated_prev_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_prev_oa1e1b1nwzida0e0b0xyg1, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0) #increments at prejoining
-    prop_dams_mated_prev_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_prev_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] becasue e doesnt impact mating propn
+    prop_dams_mated_prev_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_prev_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesnt impact mating propn
     prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1 = prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1 * (prop_dams_mated_prev_va1e1b1nwzida0e0b0xyg1>1)
     ##create param
     arrays = [keys_v1, keys_i, keys_y1, keys_g1]

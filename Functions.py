@@ -1224,11 +1224,11 @@ def np_extrap(x, xp, yp):
     return y
 
 
-def f_ditribution7(mean, sd=0, cv=0):
+def f_distribution7(mean, sd=0, cv=0):
     '''
     ##create a distribution around the mean for a variable that can be applied in any non-linear relationships
     ##Create 7 intervals with equal probability
-    ## Equaly probablity allows the non-linear result to be averaged with equal weighting
+    ## Equal probability allows the non-linear result to be averaged with equal weighting
     '''
 
     if sd == 0:

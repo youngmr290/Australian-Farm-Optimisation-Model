@@ -235,7 +235,7 @@ def paspyomo_local(params):
     ### Local constraints
     #####################################################################################################################################################################################################
     #####################################################################################################################################################################################################
-    l_fp = list(model.s_feed_periods)#have to convert to a list first beacuse indexing of an ordered set starts at 1
+    l_fp = list(model.s_feed_periods)#have to convert to a list first because indexing of an ordered set starts at 1
     try:
         model.del_component(model.con_greenpas_index)
         model.del_component(model.con_greenpas)
@@ -293,7 +293,7 @@ def paspyomo_local(params):
     except AttributeError:
         pass
     def erosion(model,f,l,t):
-        #senesce is included here becasue it is passed into the following fp dry feed pool. Thus senesced feed is not included in green or dry pasture in the period it is senesced.
+        #senescence is included here because it is passed into the dry feed pool in the following fp. Thus senesced feed is not included in green or dry pasture in the period it senesced.
         return sum(sum(model.v_greenpas_ha[v,g,o,f,l,t] for v in model.s_feed_pools) * -(model.p_foo_end_grnha[g,o,f,l,t] +
                    sum(model.p_senesce_grnha[d,g,o,f,l,t] for d in model.s_dry_groups)) for g in model.s_grazing_int for o in model.s_foo_levels) \
                 -  sum(model.v_drypas_transfer[d,f,t] * 1000 for d in model.s_dry_groups) \

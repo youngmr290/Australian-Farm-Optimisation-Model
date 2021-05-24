@@ -39,7 +39,7 @@ def stubble_all(params):
     the harvest period that stubble becomes available.
 
     Stubble is a key feed source for sheep during the summer months. In general sheep graze stubbles
-    selectively preferring the higher quality components.  Thus, they tend to eat grain first followed
+    selectively, preferring the higher quality components.  Thus, they tend to eat grain first followed
     by leaf and finally stem.  In AFO, total stubble is split into four categories (A, B, C & D) to
     reflect the selectivity of grazing.  For cereals, category A is mainly grain and leaf blade,
     category B is mainly leaf blade, leaf sheath and cocky chaff, category C is mainly cocky chaff and
@@ -144,7 +144,7 @@ def stubble_all(params):
             stub_foo_harv_zk[:,crop_idx] = base_yields.loc[crop].mean() * stubble_per_grain[(crop,'a')]
         except KeyError: #if the crop is not in any of the rotations assign average foo to stop error - this is not used so could assign any value.
             stub_foo_harv_zk[:,crop_idx] = base_yields.mean()
-    ###adjust the foo for each catergory because the good stuff is eaten first therefore there is less foo when the sheep start eating the poorer stubble
+    ###adjust the foo for each category because the good stuff is eaten first therefore there is less foo when the sheep start eating the poorer stubble
     cat_propn_ks1 = pinp.stubble['stub_cat_prop']
     cat_propn_rolled_ks1 = np.roll(cat_propn_ks1, shift=1, axis=1) #roll along the cat axis. So that the previous cat lines up with the current cat
     cat_propn_rolled_ks1[:, 0] = 0 #set the first slice to 0 because no stubble is consumed before cat A is consumed eg there is 100% of foo available when sheep are consuming cat A
@@ -152,7 +152,7 @@ def stubble_all(params):
     stubble_foo_zks1 = stub_foo_harv_zk[..., na] *  (1 - cat_cum_propn_ks1)
     ###adjust for quantity delcine due to deterioration
     stubble_foo_p6zks1 = stubble_foo_zks1 * (1 - quant_decline_p6zk[..., na])
-    ###ri availiabilty
+    ###ri availability
     if uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used - note that the equation system used is the one selected for dams in p1
         ri_availability_p6zks1 = sfun.f_ra_cs(stubble_foo_p6zks1, pinp.stubble['i_hf'])
 
