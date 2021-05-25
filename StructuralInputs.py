@@ -87,7 +87,9 @@ stock_inp['ia_k2_mlsb1'] = np.reshape(stock_inp['ia_k2_mlsb1'],mlsb1)
 
 
 
-##copy inputs so there is an original (before SA) version
+##create a copy of each input dict - so that the base inputs remain unchanged
+##the copy created is the one used in the actual modules
+###NOTE: if an input sheet is added remember to add it to the dict reset in f_sa() below.
 general = copy.deepcopy(general_inp)
 stock = copy.deepcopy(stock_inp)
 structuralsa = copy.deepcopy(structuralsa_inp)
@@ -107,20 +109,24 @@ def structural_inp_sa():
     ##have to import it here since sen.py imports this module
     import Sensitivity as sen
 
+    ##reset inputs to base at the start of each trial before applying SA  - old method was to update the SA based on the _inp dict but that doesnt work well when multiple SA on the same variale.
+    fun.f_dict_reset(structuralsa, structuralsa_inp)
+
+
     ##SAV
-    structuralsa['i_nut_spread_n1'] = fun.f_sa(structuralsa_inp['i_nut_spread_n1'], sen.sav['nut_spread_n1'],5)
-    structuralsa['i_nut_spread_n3'] = fun.f_sa(structuralsa_inp['i_nut_spread_n3'], sen.sav['nut_spread_n3'],5)
-    structuralsa['i_n1_len'] = fun.f_sa(structuralsa_inp['i_n1_len'], sen.sav['n_fs_dams'],5).astype(int)
-    structuralsa['i_n3_len'] = fun.f_sa(structuralsa_inp['i_n3_len'], sen.sav['n_fs_offs'],5).astype(int)
-    structuralsa['i_w_start_len1'] = fun.f_sa(structuralsa_inp['i_w_start_len1'], sen.sav['n_initial_lw_dams'],5)
-    structuralsa['i_adjp_lw_initial_w1'] = fun.f_sa(structuralsa_inp['i_adjp_lw_initial_w1'], sen.sav['adjp_lw_initial_w1'],5)
-    structuralsa['i_fvp_mask_dams'] = fun.f_sa(structuralsa_inp['i_fvp_mask_dams'], sen.sav['mask_fvp_dams'],5)
-    structuralsa['i_dvp_mask_f1'] = fun.f_sa(structuralsa_inp['i_dvp_mask_f1'], sen.sav['fvp_is_dvp_dams'],5)
-    structuralsa['i_fvp_mask_offs'] = fun.f_sa(structuralsa_inp['i_fvp_mask_offs'], sen.sav['mask_fvp_offs'],5)
-    structuralsa['i_dvp_mask_f3'] = fun.f_sa(structuralsa_inp['i_dvp_mask_f3'], sen.sav['fvp_is_dvp_offs'],5)
-    structuralsa['rev_create'] = fun.f_sa(structuralsa_inp['rev_create'], sen.sav['rev_create'],5)
-    structuralsa['rev_number'] = fun.f_sa(structuralsa_inp['rev_number'], sen.sav['rev_number'],5)
-    structuralsa['rev_trait_inc'] = fun.f_sa(structuralsa_inp['rev_trait_inc'], sen.sav['rev_trait_inc'],5)
+    structuralsa['i_nut_spread_n1'] = fun.f_sa(structuralsa['i_nut_spread_n1'], sen.sav['nut_spread_n1'],5)
+    structuralsa['i_nut_spread_n3'] = fun.f_sa(structuralsa['i_nut_spread_n3'], sen.sav['nut_spread_n3'],5)
+    structuralsa['i_n1_len'] = fun.f_sa(structuralsa['i_n1_len'], sen.sav['n_fs_dams'],5).astype(int)
+    structuralsa['i_n3_len'] = fun.f_sa(structuralsa['i_n3_len'], sen.sav['n_fs_offs'],5).astype(int)
+    structuralsa['i_w_start_len1'] = fun.f_sa(structuralsa['i_w_start_len1'], sen.sav['n_initial_lw_dams'],5)
+    structuralsa['i_adjp_lw_initial_w1'] = fun.f_sa(structuralsa['i_adjp_lw_initial_w1'], sen.sav['adjp_lw_initial_w1'],5)
+    structuralsa['i_fvp_mask_dams'] = fun.f_sa(structuralsa['i_fvp_mask_dams'], sen.sav['mask_fvp_dams'],5)
+    structuralsa['i_dvp_mask_f1'] = fun.f_sa(structuralsa['i_dvp_mask_f1'], sen.sav['fvp_is_dvp_dams'],5)
+    structuralsa['i_fvp_mask_offs'] = fun.f_sa(structuralsa['i_fvp_mask_offs'], sen.sav['mask_fvp_offs'],5)
+    structuralsa['i_dvp_mask_f3'] = fun.f_sa(structuralsa['i_dvp_mask_f3'], sen.sav['fvp_is_dvp_offs'],5)
+    structuralsa['rev_create'] = fun.f_sa(structuralsa['rev_create'], sen.sav['rev_create'],5)
+    structuralsa['rev_number'] = fun.f_sa(structuralsa['rev_number'], sen.sav['rev_number'],5)
+    structuralsa['rev_trait_inc'] = fun.f_sa(structuralsa['rev_trait_inc'], sen.sav['rev_trait_inc'],5)
 
 
 ##############

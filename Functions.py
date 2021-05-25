@@ -37,6 +37,7 @@ import os.path
 import glob
 import pyomo.environ as pe
 import sys
+import copy
 
 #this module shouldn't import other AFO modules
 import Exceptions as exc #can import exceptions because exceptions imports no modules
@@ -504,6 +505,17 @@ def f_clean_dict(d):
             if d[k] == None:
                 d[k] = 0
     return d
+
+def f_dict_reset(used_dict, base_dict):
+    '''
+
+    :param used_dict: dictionary that is being reset (must have same keys as base_dict)
+    :param base_dict: dictionary with base values used to reset (must have same keys as used_dict).
+    :return: None
+    '''
+
+    for key in base_dict:
+        used_dict[key] = copy.deepcopy(base_dict[key])
 
 def f_produce_df(data, rows, columns, row_names=None, column_names=None):
     """rows is a list of lists that will be used to build a MultiIndex

@@ -203,24 +203,23 @@ sheep_inp['i_shear_prior_tsg3'] = np.reshape(sheep_inp['i_shear_prior_tsg3'], t3
 sheep_inp['ia_i_idg2'] = np.reshape(sheep_inp['ia_i_idg2'], idg)
 feedsupply_inp['i_feedoptions_r1pj0'] = np.reshape(feedsupply_inp['i_feedoptions_r1pj0'], r1j0P)
 
-
-
-
-##create a copy of each input dict - this means there is always a copy of the original inputs (the second copy has SA applied to it)
+##create a copy of each input dict - so that the base inputs remain unchanged
 ##the copy created is the one used in the actual modules
-general=copy.deepcopy(general_inp)
-rep=copy.deepcopy(rep_inp)
-labour= copy.deepcopy(labour_inp)
-crop= copy.deepcopy(crop_inp)
-mach= copy.deepcopy(mach_inp)
-stubble= copy.deepcopy(stubble_inp)
-finance= copy.deepcopy(finance_inp)
-period= copy.deepcopy(period_inp)
-supfeed= copy.deepcopy(sup_inp)
-sheep= copy.deepcopy(sheep_inp)
-feedsupply=copy.deepcopy(feedsupply_inp)
+###NOTE: if an input sheet is added remember to add it to the dict reset in f_sa() below.
+general = copy.deepcopy(general_inp)
+rep = copy.deepcopy(rep_inp)
+labour = copy.deepcopy(labour_inp)
+crop = copy.deepcopy(crop_inp)
+mach = copy.deepcopy(mach_inp)
+stubble = copy.deepcopy(stubble_inp)
+finance = copy.deepcopy(finance_inp)
+period = copy.deepcopy(period_inp)
+supfeed = copy.deepcopy(sup_inp)
+sheep = copy.deepcopy(sheep_inp)
+feedsupply = copy.deepcopy(feedsupply_inp)
 mvf = copy.deepcopy(mvf_inp)
-pasture_inputs=copy.deepcopy(pasture_inp)
+pasture_inputs = copy.deepcopy(pasture_inp)
+
 
 #######################
 #apply SA             #
@@ -232,15 +231,32 @@ def property_inp_sa():
     This function gets called at the beginning of each loop in the exp.py module
 
     SA order is: sav, sam, sap, saa, sat, sar.
+    So that multiple SA can be applied to one input.
 
     :return: None.
 
     '''
     ##have to import it here since sen.py imports this module
     import Sensitivity as sen
+
+    ##reset inputs to base at the start of each trial before applying SA - old method was to update the SA based on the _inp dict but that doesnt work well when multiple SA on the same variale.
+    fun.f_dict_reset(general, general_inp)
+    fun.f_dict_reset(rep, rep_inp)
+    fun.f_dict_reset(labour, labour_inp)
+    fun.f_dict_reset(crop, crop_inp)
+    fun.f_dict_reset(mach, mach_inp)
+    fun.f_dict_reset(stubble, stubble_inp)
+    fun.f_dict_reset(finance, finance_inp)
+    fun.f_dict_reset(period, period_inp)
+    fun.f_dict_reset(supfeed, sup_inp)
+    fun.f_dict_reset(sheep, sheep_inp)
+    fun.f_dict_reset(feedsupply, feedsupply_inp)
+    fun.f_dict_reset(mvf, mvf_inp)
+    fun.f_dict_reset(pasture_inputs, pasture_inp)
+
     ##general
     ###sav
-    general['steady_state'] = fun.f_sa(general_inp['steady_state'], sen.sav['steady_state'], 5)
+    general['steady_state'] = fun.f_sa(general['steady_state'], sen.sav['steady_state'], 5)
 
     ###sam
     ###sap
@@ -250,25 +266,24 @@ def property_inp_sa():
 
     ##pasture
     ###sav
-    general['pas_inc'] = fun.f_sa(general_inp['pas_inc'], sen.sav['pas_inc'], 5)
+    general['pas_inc'] = fun.f_sa(general['pas_inc'], sen.sav['pas_inc'], 5)
 
     for pasture in sinp.general['pastures'][general['pas_inc']]: #all pasture inputs are adjusted even if a given pasture is not included
         ###sav
         ###SAM
-        pasture_inputs[pasture]['GermStd'] = fun.f_sa(pasture_inp[pasture]['GermStd'], sen.sam[('germ',pasture)])
-        pasture_inputs[pasture]['GermScalarLMU'] = fun.f_sa(pasture_inp[pasture]['GermScalarLMU'], sen.sam[('germ_l',pasture)])
-        ##Do the PGR sensitivity on LowPGR & MedPGR sequentially building on the previous value. Alter code if lines are deleted
-        pasture_inputs[pasture]['LowPGR'] = fun.f_sa(pasture_inp[pasture]['LowPGR'], sen.sam[('pgr',pasture)])
+        pasture_inputs[pasture]['GermStd'] = fun.f_sa(pasture_inputs[pasture]['GermStd'], sen.sam[('germ',pasture)])
+        pasture_inputs[pasture]['GermScalarLMU'] = fun.f_sa(pasture_inputs[pasture]['GermScalarLMU'], sen.sam[('germ_l',pasture)])
+        pasture_inputs[pasture]['LowPGR'] = fun.f_sa(pasture_inputs[pasture]['LowPGR'], sen.sam[('pgr',pasture)])
         pasture_inputs[pasture]['LowPGR'] = fun.f_sa(pasture_inputs[pasture]['LowPGR'], sen.sam[('pgr_f',pasture)][...,na])
         pasture_inputs[pasture]['LowPGR'] = fun.f_sa(pasture_inputs[pasture]['LowPGR'], sen.sam[('pgr_l',pasture)])
-        pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inp[pasture]['MedPGR'], sen.sam[('pgr',pasture)])
+        pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inputs[pasture]['MedPGR'], sen.sam[('pgr',pasture)])
         pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inputs[pasture]['MedPGR'], sen.sam[('pgr_f',pasture)][...,na])
         pasture_inputs[pasture]['MedPGR'] = fun.f_sa(pasture_inputs[pasture]['MedPGR'], sen.sam[('pgr_l',pasture)])
-        pasture_inputs[pasture]['DigDryAve'] = (pasture_inp[pasture]['DigDryAve'] * sen.sam[('dry_dmd_decline',pasture)]
-                                                + np.max(pasture_inp[pasture]['DigDryAve'],axis=1) * (1 - sen.sam[('dry_dmd_decline',pasture)]))
-        pasture_inputs[pasture]['DigSpread'] = fun.f_sa(pasture_inp[pasture]['DigSpread'], sen.sam[('grn_dmd_range_f',pasture)])
-        pasture_inputs[pasture]['DigDeclineFOO'] = fun.f_sa(pasture_inp[pasture]['DigDeclineFOO'], sen.sam[('grn_dmd_declinefoo_f',pasture)])
-        pasture_inputs[pasture]['DigRednSenesce'] = fun.f_sa(pasture_inp[pasture]['DigRednSenesce'], sen.sam[('grn_dmd_senesce_f',pasture)])
+        pasture_inputs[pasture]['DigDryAve'] = (pasture_inputs[pasture]['DigDryAve'] * sen.sam[('dry_dmd_decline',pasture)]
+                                                + np.max(pasture_inputs[pasture]['DigDryAve'],axis=1) * (1 - sen.sam[('dry_dmd_decline',pasture)]))
+        pasture_inputs[pasture]['DigSpread'] = fun.f_sa(pasture_inputs[pasture]['DigSpread'], sen.sam[('grn_dmd_range_f',pasture)])
+        pasture_inputs[pasture]['DigDeclineFOO'] = fun.f_sa(pasture_inputs[pasture]['DigDeclineFOO'], sen.sam[('grn_dmd_declinefoo_f',pasture)])
+        pasture_inputs[pasture]['DigRednSenesce'] = fun.f_sa(pasture_inputs[pasture]['DigRednSenesce'], sen.sam[('grn_dmd_senesce_f',pasture)])
 
         ###sap
         ###saa
@@ -277,33 +292,33 @@ def property_inp_sa():
 
     ##sheep
     ###SAV
-    sheep['i_mask_i'] = fun.f_sa(sheep_inp['i_mask_i'], sen.sav['TOL_inc'], 5)
-    sheep['i_g3_inc'] = fun.f_sa(sheep_inp['i_g3_inc'], sen.sav['g3_included'],5)
-    sheep['a_c2_c0'] = fun.f_sa(sheep_inp['a_c2_c0'], sen.sav['genotype'],5)
-    sheep['i_scan_og1'] = fun.f_sa(sheep_inp['i_scan_og1'], sen.sav['scan_og1'],5)
-    sheep['i_dry_sales_forced'] = fun.f_sa(sheep_inp['i_dry_sales_forced'], sen.sav['bnd_drys_sold'],5)
-    sheep['i_dry_retained_forced'] = fun.f_sa(sheep_inp['i_dry_retained_forced'], sen.sav['bnd_drys_retained'],5)
-    sheep['ia_r1_zig1'] = fun.f_sa(sheep_inp['ia_r1_zig1'], sen.sav['r1_izg1'],5)
-    sheep['ia_r2_k2ig1'] = fun.f_sa(sheep_inp['ia_r2_k2ig1'], sen.sav['r2_ik2g1'],5)
-    sheep['ia_r1_zig3'] = fun.f_sa(sheep_inp['ia_r1_zig3'], sen.sav['r1_izg3'],5)
-    sheep['i_sr_constraint_t'] = fun.f_sa(sheep_inp['i_sr_constraint_t'], sen.sav['bnd_sr_t'],5)
+    sheep['i_mask_i'] = fun.f_sa(sheep['i_mask_i'], sen.sav['TOL_inc'], 5)
+    sheep['i_g3_inc'] = fun.f_sa(sheep['i_g3_inc'], sen.sav['g3_included'],5)
+    sheep['a_c2_c0'] = fun.f_sa(sheep['a_c2_c0'], sen.sav['genotype'],5)
+    sheep['i_scan_og1'] = fun.f_sa(sheep['i_scan_og1'], sen.sav['scan_og1'],5)
+    sheep['i_dry_sales_forced'] = fun.f_sa(sheep['i_dry_sales_forced'], sen.sav['bnd_drys_sold'],5)
+    sheep['i_dry_retained_forced'] = fun.f_sa(sheep['i_dry_retained_forced'], sen.sav['bnd_drys_retained'],5)
+    sheep['ia_r1_zig1'] = fun.f_sa(sheep['ia_r1_zig1'], sen.sav['r1_izg1'],5)
+    sheep['ia_r2_k2ig1'] = fun.f_sa(sheep['ia_r2_k2ig1'], sen.sav['r2_ik2g1'],5)
+    sheep['ia_r1_zig3'] = fun.f_sa(sheep['ia_r1_zig3'], sen.sav['r1_izg3'],5)
+    sheep['i_sr_constraint_t'] = fun.f_sa(sheep['i_sr_constraint_t'], sen.sav['bnd_sr_t'],5)
 
     ###sam
     ###sap
     ###saa
-    feedsupply['i_feedoptions_r1pj0'] = fun.f_sa(feedsupply_inp['i_feedoptions_r1pj0'], sen.saa['feedoptions_rjp'], 2)
-    feedsupply['i_feedoptions_var_r2p'] = fun.f_sa(feedsupply_inp['i_feedoptions_var_r2p'], sen.saa['feedoptions_var_rp'], 2)
+    feedsupply['i_feedoptions_r1pj0'] = fun.f_sa(feedsupply['i_feedoptions_r1pj0'], sen.saa['feedoptions_rjp'], 2)
+    feedsupply['i_feedoptions_var_r2p'] = fun.f_sa(feedsupply['i_feedoptions_var_r2p'], sen.saa['feedoptions_var_rp'], 2)
     ###sat
     ###sar
 
 
     ##report controls
     ###SAV
-    rep['i_store_fec_rep'] = fun.f_sa(rep_inp['i_store_fec_rep'], sen.sav['fec_inc'], 5)
-    rep['i_store_lw_rep'] = fun.f_sa(rep_inp['i_store_lw_rep'], sen.sav['lw_inc'], 5)
-    rep['i_store_ffcfw_rep'] = fun.f_sa(rep_inp['i_store_ffcfw_rep'], sen.sav['ffcfw_inc'], 5)
-    rep['i_store_on_hand'] = fun.f_sa(rep_inp['i_store_on_hand'], sen.sav['onhand_p_inc'], 5)
-    rep['i_store_mort'] = fun.f_sa(rep_inp['i_store_mort'], sen.sav['mort_inc'], 5)
+    rep['i_store_fec_rep'] = fun.f_sa(rep['i_store_fec_rep'], sen.sav['fec_inc'], 5)
+    rep['i_store_lw_rep'] = fun.f_sa(rep['i_store_lw_rep'], sen.sav['lw_inc'], 5)
+    rep['i_store_ffcfw_rep'] = fun.f_sa(rep['i_store_ffcfw_rep'], sen.sav['ffcfw_inc'], 5)
+    rep['i_store_on_hand'] = fun.f_sa(rep['i_store_on_hand'], sen.sav['onhand_p_inc'], 5)
+    rep['i_store_mort'] = fun.f_sa(rep['i_store_mort'], sen.sav['mort_inc'], 5)
 
 
 def f_z_prob():
