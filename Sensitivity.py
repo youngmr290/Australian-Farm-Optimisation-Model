@@ -80,6 +80,7 @@ sap['mr_post'] = 0.0           #Post loop maintenance requirement of adults (zf2
 saa['husb_cost_h2'] = np.zeros(uinp.sheep_inp['i_husb_operations_contract_cost_h2'].shape, dtype=np.float64)  #SA value for husbandry costs.
 saa['husb_labour_l2h2'] = np.zeros(uinp.sheep_inp['i_husb_operations_labourreq_l2h2'].shape, dtype=np.float64)  #SA value for husbandry labour.
 saa['feedoptions_rjp'] = np.zeros(pinp.feedsupply_inp['i_feedoptions_r1pj0'].shape, dtype=np.float64)  #SA value for feedsupply.
+saa['feedoptions_var_rp'] = np.zeros(pinp.feedsupply_inp['i_feedoptions_var_r2p'].shape, dtype=np.float64)  #SA value for feedsupply variation.
 
 ##stock parameters
 saa['sfd_c2'] = 0.0                     #std fibre diameter genotype params

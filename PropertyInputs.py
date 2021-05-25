@@ -292,6 +292,7 @@ def property_inp_sa():
     ###sap
     ###saa
     feedsupply['i_feedoptions_r1pj0'] = fun.f_sa(feedsupply_inp['i_feedoptions_r1pj0'], sen.saa['feedoptions_rjp'], 2)
+    feedsupply['i_feedoptions_var_r2p'] = fun.f_sa(feedsupply_inp['i_feedoptions_var_r2p'], sen.saa['feedoptions_var_rp'], 2)
     ###sat
     ###sar
 

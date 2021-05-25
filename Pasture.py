@@ -356,7 +356,7 @@ def f_pasture(params, r_vals, ev):
 
     ## one time data manipulation for the inputs just read
     ### calculate dry_decay_period (used in reseeding and green&dry)
-    ### dry_decay_daily is decay of dry foo at the start of the period that was transferred in from scenesence in the previous period. dry_decay_daily does not effect green feed that sceneses during the current period.
+    ### dry_decay_daily is decay of dry foo at the start of the period that was transferred in from senescence in the previous period. dry_decay_daily does not effect green feed that sceneses during the current period.
     dry_decay_daily_fzt[...] = i_dry_decay_t
     for t in range(n_pasture_types):
         for z in range(n_season_types):
@@ -739,7 +739,7 @@ def f_pasture(params, r_vals, ev):
 
     ## senescence from green to dry - green, total senescence for the period (available in the next period)
     ## the pasture that senesces at the eos is assumed to be senescing at the end of the growth period and doesn't decay
-    ## the pasture that senseces during the period decays prior to being transferred
+    ## the pasture that senesces during the period decays prior to being transferred
     ## the senesced feed that is available to stock is that which senesces at the end of the growing season (i.e. not during the growing season)
     senesce_total_grnha_goflzt    = senesce_eos_grnha_goflzt + senesce_period_grnha_goflzt * (1 - dry_decay_period_fzt[:, na, ...])
     grn_dmd_senesce_goflzt        =       dmd_sward_grnha_goflzt       \

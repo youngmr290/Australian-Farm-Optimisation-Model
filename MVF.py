@@ -2,7 +2,7 @@
 Marginal value of feed.
 
 Module is built differently to normal (pyomo and precalcs together) to keep it as simple as possible
-This is becasue this module is an add-on. So I have built it as solo as possible.
+This is because this module is an add-on. So it is built as solo as possible.
 The functions are called from corepyomo.py.
 '''
 import pyomo.environ as pe
