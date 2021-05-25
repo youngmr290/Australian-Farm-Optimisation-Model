@@ -330,7 +330,7 @@ def f_update(existing_value, new_value, mask_for_new):
         pass
     try:
         if updated.dtype == object:
-            print('dtype error in f_update') #will give warning if ever returning a numpy object
+            print('dtype error in f_update (type object is being returned)') #will give warning if ever returning a numpy object
     except: pass
 
     return updated
