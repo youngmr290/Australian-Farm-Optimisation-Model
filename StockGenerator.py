@@ -262,10 +262,6 @@ def generator(params,r_vals,ev,plots = False):
     prejoin_tup = (a1_pos, b1_pos, e1_pos)
     season_tup = (z_pos)
 
-    ######################
-    #adjust sensitivities#
-    ######################
-    saa_mortalityx_b1nwzida0e0b0xyg = fun.f_expand(sen.saa['mortalityx'][sinp.stock['a_nfoet_b1']], b1_pos)
 
     ############################
     ### initialise arrays      #
@@ -1129,10 +1125,27 @@ def generator(params,r_vals,ev,plots = False):
     a_n_pa1e1b1nwzida0e0b0xyg3 = (np.trunc(index_wzida0e0b0xyg3 / (n_fs_offs ** ((n_fvp_periods_offs-1) - n_prior_fvps_pa1e1b1nwzida0e0b0xyg3))) % n_fs_offs).astype(int) #needs to be int so it can be an indice
 
 
+    ######################
+    #adjust sensitivities#
+    ######################
+    saa_mortalityx_b1nwzida0e0b0xyg = fun.f_expand(sen.saa['mortalityx'][sinp.stock['a_nfoet_b1']], b1_pos)
+    ## sum saa[rr] and saa[rr_age] so there is only one saa to handle in f_conception_cs & f_conception_ltw
+    ## Note: the proportions of the BTRT doesn't include rr_age_og1 because those calculations can't vary by age of the dam
+    rr_age_og1 = sen.saa['rr_age_og1']
+    saa_rr_age_oa1e1b1nwzida0e0b0xyg1 = sfun.f_g2g(rr_age_og1, 'dams', p_pos, condition=mask_o_dams, axis=p_pos)
+    saa_rr_age_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(saa_rr_age_oa1e1b1nwzida0e0b0xyg1,
+                                                     a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0)  #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
+    ## Alter the standard scanning rate for f_conception_ltw to include saa['rr_age'] (scan_std_yg0 has already been adjusted by saa['rr']
+    scan_std_pa1e1b1nwzida0e0b0xyg1 = scan_std_yg1 + saa_rr_age_pa1e1b1nwzida0e0b0xyg1
+    ## Combine saa['rr'] and saa['rr_age'] for f_conception_cs
+    saa_rr_age_pa1e1b1nwzida0e0b0xyg1 = saa_rr_age_pa1e1b1nwzida0e0b0xyg1 + sen.saa['rr']
+
+
     ###########################
     ##genotype calculations   #
     ###########################
     ##calc proportion of dry, singles, twin and triplets
+    ###calculated without saa['rr_age']. These calculations do not include a 'p' axis because it is one value for all the initial animals
     dstwtr_l0yg0 = np.moveaxis(sfun.f_DSTw(scan_std_yg0), -1, 0)
     dstwtr_l0yg1 = np.moveaxis(sfun.f_DSTw(scan_std_yg1), -1, 0)
     dstwtr_l0yg3 = np.moveaxis(sfun.f_DSTw(scan_dams_std_yg3), -1, 0)
@@ -3043,9 +3056,11 @@ def generator(params,r_vals,ev,plots = False):
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    temp0 = sfun.f_conception_cs(cf_dams, cb1_dams, relsize_mating_dams, rc_mating_dams, crg_doy_pa1e1b1nwzida0e0b0xyg1[p]
-                                                 , nfoet_b1nwzida0e0b0xyg, nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]
-                                                 , index_e1b1nwzida0e0b0xyg, rev_trait_values['dams'][p])
+                    temp0 = sfun.f_conception_cs(cf_dams, cb1_dams, relsize_mating_dams, rc_mating_dams
+                                                 , crg_doy_pa1e1b1nwzida0e0b0xyg1[p], nfoet_b1nwzida0e0b0xyg
+                                                 , nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]
+                                                 , index_e1b1nwzida0e0b0xyg, rev_trait_values['dams'][p]
+                                                 , saa_rr_age_pa1e1b1nwzida0e0b0xyg1[p])
                     if eqn_used:
                         conception_dams =  temp0
                     if eqn_compare:
@@ -3055,8 +3070,10 @@ def generator(params,r_vals,ev,plots = False):
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     #todo this need to be replaced by LMAT formula, if cf_conception_start is used in the LMAT formula you will need to move cf_conception_dams = temp0 out of the if used statement.
-                    temp0 = sfun.f_conception_ltw(cf_dams, cu0_dams, relsize_mating_dams, cs_mating_dams, scan_std_yg1, doy_pa1e1b1nwzida0e0b0xyg[p]
-                                                  , nfoet_b1nwzida0e0b0xyg, nyatf_b1nwzida0e0b0xyg, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]
+                    temp0 = sfun.f_conception_ltw(cf_dams, cu0_dams, relsize_mating_dams, cs_mating_dams
+                                                  , scan_std_pa1e1b1nwzida0e0b0xyg1, doy_pa1e1b1nwzida0e0b0xyg[p]
+                                                  , nfoet_b1nwzida0e0b0xyg, nyatf_b1nwzida0e0b0xyg
+                                                  , period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]
                                                   , index_e1b1nwzida0e0b0xyg, rev_trait_values['dams'][p])
                     if eqn_used:
                         cf_conception_dams = temp0*0  #default set to 0 because required in start production function (only used in lmat conception function)

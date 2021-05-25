@@ -88,7 +88,8 @@ saa['feedoptions_var_rp'] = np.zeros(pinp.feedsupply_inp['i_feedoptions_var_r2p'
 saa['sfd_c2'] = 0.0                     #std fibre diameter genotype params
 saa['cl0_c2'] = np.zeros(uinp.parameters_inp['i_cl0_c2'].shape, dtype=np.float64)  #SA value for litter size genotype params.
 saa['scan_std_c2'] = 0.0                #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT..
-saa['rr'] = 0.0                    #scanning percentage (adjust the standard scanning % for f_conception_ltw and within function for f_conception_cs
+saa['rr'] = 0.0                    #reproductive rate/scanning percentage (adjust the standard scanning % for f_conception_ltw and within function for f_conception_cs
+saa['rr_age_og1'] = np.zeros(pinp.sheep_inp['i_scan_og1'].shape, dtype=np.float64)    # reproductive rate by age. Use shape that has og1
 saa['mortalityx'] = np.zeros(np.max(sinp.stock['a_nfoet_b1'])+1, dtype=np.float64)  #Adjust the progeny mortality due to exposure at birth relative - this is a high level sa, it impacts within a calculation not on an input
 
 ######

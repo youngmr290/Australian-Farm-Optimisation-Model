@@ -1082,7 +1082,7 @@ def f_feedsupply(feedsupply_std_a1e1b1nwzida0e0b0xyg, paststd_foo_a1e1b1j0wzida0
 
 
 def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, nyatf_b1any, period_is_mating, index_e1
-                    , rev_trait_value):
+                    , rev_trait_value, saa_rr):
     '''CSIRO system: The general approach is to calculate the probability of conception greater than or equal to 1,2,3 foetuses
     Probability is calculated from a sigmoid relationship based on relative size * relative condition at joining
     The estimation of cumulative probability is scaled by a factor that varies with (litter size * latitude * day of the year)
@@ -1120,11 +1120,12 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         repro_rate = f_convert_scan2cycles(t_cr, nfoet_b1any, cycles = 1)
         ###remove singleton b1 axis by squeezing because it is replaced by the l0 axis in f_DSTw
         repro_rate = np.squeeze(repro_rate, axis=b1_pos)
+        saa_rr = np.squeeze(saa_rr, axis=b1_pos)
         ### The proportions returned are in axis -1 and needs the slices altered (shape of l0 to b1) and moving to b1 position.
         propn_dst = np.moveaxis(f_DSTw(repro_rate, cycles = 1)[...,sinp.stock['a_nfoet_b1']], -1, b1_pos)
         ## apply the sa to the repro rate and convert the adjusted value to a proportion of dry, singles, twins & triplets after 1 cycle
         repro_rate_adj = fun.f_sa(repro_rate, sen.sam['rr'])
-        repro_rate_adj = fun.f_sa(repro_rate_adj, sen.saa['rr'], 2) * (repro_rate > 0)     # only non-zero if original value was non-zero
+        repro_rate_adj = fun.f_sa(repro_rate_adj, saa_rr, 2) * (repro_rate > 0)     # only non-zero if original value was non-zero
         propn_dst_adj = np.moveaxis(f_DSTw(repro_rate_adj, cycles = 1)[..., sinp.stock['a_nfoet_b1']], -1, b1_pos) #move the l0 axis into the b1 position. and expand to b1 size.
         ##calculate the change in the expected proportions due to altering the scanning percentage & apply to calculated proportions
         propn_dst_change = propn_dst_adj - propn_dst
