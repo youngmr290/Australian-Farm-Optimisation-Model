@@ -23,7 +23,7 @@ pd.set_option('mode.chained_assignment', 'raise')
 
 #AFO modules
 import Functions as fun
-import StockFunctions as sfun
+import FeedsupplyFunctions as fsfun
 import PropertyInputs as pinp
 import UniversalInputs as uinp
 import StructuralInputs as sinp
@@ -133,7 +133,7 @@ def stubble_all(params):
 
     ##calc relative quality before converting dmd to md - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
     if uinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
-        ri_quality_p6zks1 = sfun.f_rq_cs(dmd_cat_p6zks1, pinp.stubble['clover_propn_in_sward_stubble'])
+        ri_quality_p6zks1 = fsfun.f_rq_cs(dmd_cat_p6zks1, pinp.stubble['clover_propn_in_sward_stubble'])
 
     ##ri availability - first calc stubble foo (stub available) this is the average from all rotations because we just need one value for foo
     ###try calc the base yield for each crop but if the crop is not one of the rotation phases then assign the average foo (this is only to stop error. it doesnt matter because the crop doesnt exist so the stubble is never used)
@@ -154,17 +154,17 @@ def stubble_all(params):
     stubble_foo_p6zks1 = stubble_foo_zks1 * (1 - quant_decline_p6zk[..., na])
     ###ri availiabilty
     if uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used - note that the equation system used is the one selected for dams in p1
-        ri_availability_p6zks1 = sfun.f_ra_cs(stubble_foo_p6zks1, pinp.stubble['i_hf'])
+        ri_availability_p6zks1 = fsfun.f_ra_cs(stubble_foo_p6zks1, pinp.stubble['i_hf'])
 
     ##combine ri quality and ri availability to calc overall vol (potential intake)
-    ri_p6zks1 = sfun.f_rel_intake(ri_availability_p6zks1, ri_quality_p6zks1, pinp.stubble['clover_propn_in_sward_stubble'])
+    ri_p6zks1 = fsfun.f_rel_intake(ri_availability_p6zks1, ri_quality_p6zks1, pinp.stubble['clover_propn_in_sward_stubble'])
     vol_p6zks1 = (1000 / ri_p6zks1) / (1 + SA.sap['pi'])
     vol_p6zks1 = vol_p6zks1 * mask_stubble_exists_p6zk[..., na] #stop md being provided if stubble doesnt exist
 
     ##convert dmd to M/D
     ## Stubble doesn't include calculation of effective mei because stubble is generally low quality feed with a wide variation in quality within the sward.
     ## Therefore, there is scope to alter average diet quality by altering the grazing time and the proportion of the stubble consumed.
-    md_p6zks1 = np.clip(fun.dmd_to_md(dmd_cat_p6zks1) * 1000, 0, np.inf) #mul to convert to tonnes
+    md_p6zks1 = np.clip(fsfun.dmd_to_md(dmd_cat_p6zks1) * 1000, 0, np.inf) #mul to convert to tonnes
     md_p6zks1 = md_p6zks1 * mask_stubble_exists_p6zk[...,na] #stop md being provided if stubble doesnt exist
     md_vp6zks1 = md_p6zks1 * ev_is_not_confinement_v[:,na,na,na,na] #me from stubble is 0 in the confinement pool
 

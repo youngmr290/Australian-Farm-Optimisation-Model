@@ -275,109 +275,6 @@ def f_expand(array, left_pos=0, swap=False, ax1=0, ax2=1, right_pos=0, left_pos2
         else:
             array = np.compress(condition3, array, axis3)
     return array
-# def f_reshape_expand(array, left_pos=0, len_ax0=0, len_ax1=0, len_ax2=0, swap=False, ax1=0, ax2=1, right_pos=0, left_pos2=0, right_pos2=0
-#                      , left_pos3=0, right_pos3=0, condition = None, axis = 0, len_ax3=0, swap2=False, ax1_2=1, ax2_2=2,
-#                      condition2=None, axis2=0, condition3=None, axis3=0, left_pos4=0, right_pos4=0, move=False, source=0, dest=1):
-#     '''
-#     *note: if adding two sets of new axis add from right to left (then the pos variables align)
-#     *note: mask applied last (after expanding and reshaping)
-#
-#     Parameters
-#     ----------
-#     array : array
-#         parameter array - input from excel.
-#     left_pos : int
-#         position of axis to the left of where the new axis will be added.
-#     len_ax0 : int
-#         length of axis 0 - used to reshape input array into multi dimension array (this should be i_len_?).
-#     len_ax1 : int
-#         length of axis 1 - used to reshape input array into multi dimension array (this should be i_len_?).
-#     len_ax2 : int, optional
-#         length of axis 2 - used to reshape input array into multi dimension array (this should be i_len_?). The default is 0.
-#     len_ax3 : int, optional
-#         length of axis 3 - used to reshape input array into multi dimension array (this should be i_len_?). The default is 0.
-#     swap : boolean, optional
-#         do you want to swap the first tow axis?. The default is False.
-#     right_pos : int, optional
-#         the position of the axis to the right of the singleton axis being added. The default is -1, for when the axis to the right is g?.
-#     left_pos2 : int
-#         position of axis to the left of where the new axis will be added.
-#     right_pos2 : int, optional
-#         the position of the axis to the right of the singleton axis being added. The default is -1, for when the axis to the right is g?.
-#     condition: boolean, optional
-#         mask used to slice given axis.
-#     axis: int, optional
-#         axis to apply mask to.
-#
-#     Returns
-#     -------
-#     Reshapes, swaps axis if required, expands and apply a mask to a given axis if required.
-#     '''
-#     ##convert int to 1d array if required
-#     if type(array) == int:
-#         array = np.array([array])
-#     if len_ax3>0:
-#         shape=(len_ax0,len_ax1,len_ax2,len_ax3)
-#         array = array.reshape(shape)
-#     elif len_ax2>0:
-#         shape=(len_ax0,len_ax1,len_ax2)
-#         array = array.reshape(shape)
-#     elif len_ax1>0:
-#         shape=(len_ax0,len_ax1)
-#         array = array.reshape(shape)
-#     else:
-#         pass#don't need to reshape
-#     ##swap axis if necessary
-#     if swap:
-#         array = np.swapaxes(array, ax1, ax2)
-#     ##swap axis if necessary
-#     if swap2:
-#         array = np.swapaxes(array, ax1_2, ax2_2)
-#     ##move axis if necessary
-#     if move:
-#         array = np.moveaxis(array, source=source, destination=dest)
-#     ##get axis into correct position 1
-#     if left_pos != 0:
-#         extra_axes = tuple(range((left_pos + 1), right_pos))
-#     else: extra_axes = ()
-#     array = np.expand_dims(array, axis = extra_axes)
-#     ##get axis into correct position 2 (some arrays need singleton axis added in multiple places ie separated by a used axis)
-#     if left_pos2 != 0:
-#         extra_axes = tuple(range((left_pos2 + 1), right_pos2))
-#     else: extra_axes = ()
-#     array = np.expand_dims(array, axis = extra_axes)
-#     ##get axis into correct position 3 (some arrays need singleton axis added in multiple places ie separated by a used axis)
-#     if left_pos3 != 0:
-#         extra_axes = tuple(range((left_pos3 + 1), right_pos3))
-#     else: extra_axes = ()
-#     array = np.expand_dims(array, axis = extra_axes)
-#     ##get axis into correct position 4 (some arrays need singleton axis added in multiple places ie separated by a used axis)
-#     if left_pos4 != 0:
-#         extra_axes = tuple(range((left_pos4 + 1), right_pos4))
-#     else: extra_axes = ()
-#     array = np.expand_dims(array, axis = extra_axes)
-#     ##apply mask if required
-#     if condition is not None: #see if condition exists
-#         if type(condition) == bool: #check if array or single value - note array of T & F is not type bool (it is array)
-#             condition= np.asarray([condition]) #convert to numpy if it is singular input
-#             array = np.compress(condition, array, axis)
-#         else:
-#             array = np.compress(condition, array, axis)
-#     ##apply mask if required
-#     if condition2 is not None: #see if condition exists
-#         if type(condition2) == bool: #check if array or single value - note array of T & F is not type bool (it is array)
-#             condition2= np.asarray([condition2]) #convert to numpy if it is singular input
-#             array = np.compress(condition2, array, axis2)
-#         else:
-#             array = np.compress(condition2, array, axis2)
-#     ##apply mask if required
-#     if condition3 is not None: #see if condition exists
-#         if type(condition3) == bool: #check if array or single value - note array of T & F is not type bool (it is array)
-#             condition3= np.asarray([condition3]) #convert to numpy if it is singular input
-#             array = np.compress(condition3, array, axis3)
-#         else:
-#             array = np.compress(condition3, array, axis3)
-#     return array
 
 def f_update(existing_value, new_value, mask_for_new):
     '''
@@ -398,14 +295,6 @@ def f_update(existing_value, new_value, mask_for_new):
     '''
     ##dtype for output (primarily needed for pp when int32 and float32 create float64 which we don't want)
     ##if the new value is an object (eg contains '-') then we want to return the original dtype otherwise return the biggest dtype
-
-    # try:
-    #     if new_value.dtype == object:
-    #         dtype = existing_value.dtype
-    #     else:
-    #         dtype = max(existing_value.dtype, new_value.dtype)
-    # except AttributeError:
-    #     pass
 
     if isinstance(new_value,np.ndarray) and isinstance(existing_value,np.ndarray):
         if new_value.dtype == object:
@@ -527,6 +416,31 @@ def f_bilinear_interpolate(im, x_im, y_im, x, y):
 
     return wa*Ia + wb*Ib + wc*Ic + wd*Id
 
+def np_extrap(x, xp, yp):
+    ## np.interp function with linear extrapolation if x is beyond the input date (xp)
+    ### from https://stackoverflow.com/questions/2745329/how-to-make-scipy-interpolate-give-an-extrapolated-result-beyond-the-input-range"""
+    y = np.array(np.interp(x, xp, yp))  #convert y to array so that it can be masked (required if x is a scalar)
+    ##use a mask to adjust values if extrapolating x below the lowest input value in xp
+    y[x < xp[0]] = yp[0] + (x[x<xp[0]]-xp[0]) * (yp[0]-yp[1]) / (xp[0]-xp[1])
+    ##use a mask to adjust values if extrapolating x above the highest input value in xp
+    y[x > xp[-1]]= yp[-1] + (x[x>xp[-1]]-xp[-1])*(yp[-1]-yp[-2])/(xp[-1]-xp[-2])
+    return y
+
+def f_ditribution7(mean, sd=0, cv=0):
+    '''
+    ##create a distribution around the mean for a variable that can be applied in any non-linear relationships
+    ##Create 7 intervals with equal probability
+    ## Equaly probablity allows the non-linear result to be averaged with equal weighting
+    '''
+
+    if sd == 0:
+        sd = cv * mean
+    ## The distribution of standardised x based on the mid point of 7 intervals of 14.3%
+    dist7_m1 = np.array([-1.535, -0.82, -0.375, 0, 0.375, 0.82, 1.535])
+    ## Apply the distribution to the mean using the std deviation
+    var_m1 = mean[..., na] + sd[..., na] * dist7_m1
+    return var_m1
+
 def f_find_closest(A, target):
     ##info here: https://stackoverflow.com/questions/8914491/finding-the-nearest-value-and-return-the-index-of-array-in-python
     #A must be sorted
@@ -544,6 +458,79 @@ def f_reduce_skipfew(ufunc, foo, preserveAxis=None):
         preserveAxis = tuple(np.delete(r, preserveAxis))
     return ufunc(foo, axis=preserveAxis)
 
+##check if two param dicts are the same.
+def findDiff(d1, d2):
+    a=False
+    ##check if all the keys in d2 exist in d1
+    for k in d2:
+        if (k not in d1):  # check if the key in current params is in previous params dict.
+            # print('DIFFERENT')
+            a = True
+            return a
+
+    ##checks if all the keys in d1 exist in d2. if so it check the value stored is the same
+    for k in d1:
+        if a != True: #this stops it looping through the rest of the keys once it finds a difference
+            if (k not in d2): #check if the key in current params is in previous params dict.
+                # print('DIFFERENT')
+                a = True
+                return a
+            else:
+                if type(d1[k]) is dict and type(d2[k]) is dict: #need to check both are dicts in case extra level was added.
+                    # print('going level deeper',k)
+                    a=findDiff(d1[k],d2[k])
+                    # print(k,a)
+                else:
+                    try: #have to try both ways because sometimes param is array and other times it is scalar
+                        if np.any(d1[k] != d2[k]): #if keys are the same, check if the values are the same
+                            # print('DIFFERENT',k)
+                            a=True
+                            return a #only return if true
+                    except ValueError: #if the array is a different length then we get value error
+                        a = True
+                        return a  # only return if true
+                    except TypeError:
+                        if d1[k] != d2[k]: #if keys are the same, check if the values are the same
+                            a=True
+                            return a #only return if true
+    return a
+
+def f_clean_dict(d):
+    '''Replace None values with 0 in a dict.'''
+    for k in d:
+        if type(d[k]) is dict:  # check if value is a dict. if so go a level deeper
+            f_clean_dict(d[k])
+        else:
+            if d[k] == None:
+                d[k] = 0
+    return d
+
+def f_produce_df(data, rows, columns, row_names=None, column_names=None):
+    """rows is a list of lists that will be used to build a MultiIndex
+    columns is a list of lists that will be used to build a MultiIndex"""
+    ##if either cols or rows don't exist then add a default 0 as name
+    if len(rows) == 0:  #check if no index
+        row_index=[0]
+    elif not any(isinstance(i, (list, np.ndarray,object)) for i in rows): #check if nested list
+        row_index = rows
+    elif len(rows)==1: #check if nested list with one element eg don't need to create multiindex
+        row_index = rows[0]
+    else:
+        row_index = pd.MultiIndex.from_product(rows, names=row_names)
+    if len(columns) == 0: #check if no index
+        col_index=[0]
+    elif not any(isinstance(i, (list, np.ndarray,object)) for i in columns): #check if nested list
+        col_index = columns
+    elif len(columns)==1: #check if nested list with one element eg don't need to create multiindex
+        col_index = columns[0]
+    else:
+        col_index = pd.MultiIndex.from_product(columns, names=column_names)
+    return pd.DataFrame(data, index=row_index, columns=col_index)
+
+
+#######################
+#Specific AFO function#
+#######################
 def f_sa(value, sa, sa_type=0, target=0, value_min=-np.inf,pandas=False, axis=0):
     '''applies SA. Function can handle numpy or pandas'''
 
@@ -756,75 +743,6 @@ def f_update_sen(row, exp_data, sam, saa, sap, sar, sat, sav):
             elif dic == 'sav':
                 sav[key1]=value
 
-##check if two param dicts are the same.
-def findDiff(d1, d2):
-    a=False
-    ##check if all the keys in d2 exist in d1
-    for k in d2:
-        if (k not in d1):  # check if the key in current params is in previous params dict.
-            # print('DIFFERENT')
-            a = True
-            return a
-
-    ##checks if all the keys in d1 exist in d2. if so it check the value stored is the same
-    for k in d1:
-        if a != True: #this stops it looping through the rest of the keys once it finds a difference
-            if (k not in d2): #check if the key in current params is in previous params dict.
-                # print('DIFFERENT')
-                a = True
-                return a
-            else:
-                if type(d1[k]) is dict and type(d2[k]) is dict: #need to check both are dicts in case extra level was added.
-                    # print('going level deeper',k)
-                    a=findDiff(d1[k],d2[k])
-                    # print(k,a)
-                else:
-                    try: #have to try both ways because sometimes param is array and other times it is scalar
-                        if np.any(d1[k] != d2[k]): #if keys are the same, check if the values are the same
-                            # print('DIFFERENT',k)
-                            a=True
-                            return a #only return if true
-                    except ValueError: #if the array is a different length then we get value error
-                        a = True
-                        return a  # only return if true
-                    except TypeError:
-                        if d1[k] != d2[k]: #if keys are the same, check if the values are the same
-                            a=True
-                            return a #only return if true
-    return a
-
-def f_clean_dict(d):
-    '''Replace None values with 0 in a dict.'''
-    for k in d:
-        if type(d[k]) is dict:  # check if value is a dict. if so go a level deeper
-            f_clean_dict(d[k])
-        else:
-            if d[k] == None:
-                d[k] = 0
-    return d
-
-def f_produce_df(data, rows, columns, row_names=None, column_names=None):
-    """rows is a list of lists that will be used to build a MultiIndex
-    columns is a list of lists that will be used to build a MultiIndex"""
-    ##if either cols or rows don't exist then add a default 0 as name
-    if len(rows) == 0:  #check if no index
-        row_index=[0]
-    elif not any(isinstance(i, (list, np.ndarray,object)) for i in rows): #check if nested list
-        row_index = rows
-    elif len(rows)==1: #check if nested list with one element eg don't need to create multiindex
-        row_index = rows[0]
-    else:
-        row_index = pd.MultiIndex.from_product(rows, names=row_names)
-    if len(columns) == 0: #check if no index
-        col_index=[0]
-    elif not any(isinstance(i, (list, np.ndarray,object)) for i in columns): #check if nested list
-        col_index = columns
-    elif len(columns)==1: #check if nested list with one element eg don't need to create multiindex
-        col_index = columns[0]
-    else:
-        col_index = pd.MultiIndex.from_product(columns, names=column_names)
-    return pd.DataFrame(data, index=row_index, columns=col_index)
-
 def write_variablesummary(model, row, exp_data, obj, option=0):
     '''
 
@@ -854,58 +772,6 @@ def write_variablesummary(model, row, exp_data, obj, option=0):
             except:
                 pass
     file.close()
-
-
-#######################################
-#function for feed budget & livestock #
-#######################################
-def dmd_to_md(dmd):
-    '''define a function to return M/D from DMD
-
-    dmd can be either a percentage or a decimal
-    returns M/D in MJ of ME per kg of DM
-    dmd can be a numpy array or a scalar (not sure if it handles lists and data frames)
-
-    ^ this could be expanded to include forage (0.172 * dmd - 1.7)
-       and supplement (.133 * dmd + 23.4 ee + 1.32)
-       using an extra 'type' input that is default 'herbage'
-    '''
-    try:
-        if (dmd > 1).all() : dmd /= 100 # if dmd is a list or an array and is not a decimal then convert to decimal (in excel 80% is 0.8 in python)
-    except:
-        if dmd > 1:          dmd /= 100 # if dmd is a scalar and is not a decimal then convert to decimal   ^ alternative would be to convert scalar values to a list (if dmd isinstance not list: dmd=[dmd]) or perhaps type is float]
-    return np.maximum(0, 17 * dmd - 2)                # formula 1.13C from SCA 1990 pg 9
-
-def md_to_dmd(md):
-    '''basically a rearranged version of the function above
-    returns dmd as a decimal'''
-    return (md+2)/17
-
-
-def f_effective_mei(dmi, md, threshold, ri=1, eff_above=0.5):
-    """Calculate MEI and scale for reduced efficiency if quality is above animal requirements.
-
-    Parameters
-    ----------
-    dmi       : value or array - Dry matter intake (kg).
-    md        : value or array - M/D of the feed (MJ of ME / kg of DM).
-    threshold : value or array - Diet quality (ME/Vol) required by animals. Below the threshold: effective m/d == m/d
-    ri        : value or array, optional (1.0) - Relative intake (quality and quantity).
-    eff_above : value or array, optional (0.5) - Efficiency that energy is used if above required quality, and animals are gaining then losing weight.
-
-    If inputs are provided in arrays then they must be broadcastable.
-
-    Returns
-    -------
-    ME available to the animal to meet their ME requirements, from the quantity of DM consumed.
-
-    """
-    fec = md * ri
-    fec_effective  = np.minimum(fec, threshold + (fec - threshold) * eff_above)
-    md_effective = fec_effective / ri
-    mei_effective = dmi * md_effective
-    return mei_effective
-
 
 
 ##########################
@@ -983,77 +849,6 @@ def period_allocation(period_dates,periods,start_d,length=None):
                 allocation_p = period_name
                 break
         return allocation_p
-
-
-# def df_period_total(p_dates,p_name,*dfs):
-#     '''
-#
-#
-#     Parameters
-#     ----------
-#     p_dates : List
-#         Dates of the period you are matching ie cashflow or labour. Includes the end date of the last period
-#     p_name : List
-#         Names of the period you are matching ie cashflow or labour. Includes the a name for the last date which is not a period (it is just the end date of the last period)
-#     *dfs : Dataframe or Series (1d)
-#         Each df has dates as a index and a corresponding value in col 0 that you want to add to a period.
-#
-#     Returns
-#     -------
-#     Dict.
-#         -The function determines what period each date falls into and adds the value to that period. This is repeated for each df.
-#         -This func is good if you have multiple df with values that you want to add to the relevant period (you can only add values that are in the same period but you don't know what period the value is in until running the allocation func)
-#         #example of this func is in the labourcrop module
-#
-#     '''
-#     ## drop last row, because it has na because it only contains the end date, therefore not a period
-#     p_name = p_name[0:-1]
-#     #create empty numpy array that i will add the labour time in each period to
-#     array = np.zeros(len(p_name))
-#     #have to loops to allow for passing in multiple dicts
-#     for d in dfs:
-# #        print(dic)
-#         for date in d.index:
-#             # date = parse(key, dayfirst = False) #parse - simple way to go from string to datetime
-#             period_name = period_allocation(p_dates,p_name,date)
-#             period_idx = list(p_name).index(period_name)
-#             array[period_idx] += d.loc[date,d.columns]
-#     return dict(zip(p_name,array))
-
-##functions below are used to manipulate the period allocation from the func above into necessary format
-##they depend on the input type ie dict of df, and the number of entries
-
-#^if this doesn't get used much it should be removed it really doesn't do much
-# def period_allocation_reindex(df, p_dates, p_name, start, length):
-#     '''
-#     Parameters
-#     ----------
-#     df : Dataframe
-#         1d dataframe or series.
-#     p_dates : List
-#         Dates of the period you are matching ie cashflow or labour. Includes the end date of the last period
-#     p_name : List
-#         Names of the period you are matching ie cashflow or labour. Includes the a name for the last date which is not a period (it is just the end date of the last period)
-#     start : Datetime
-#         Start date of the df activity ie start date of seeding.
-#     length : Datetime
-#         Length of the df activity ie length of seeding.
-#
-#     Returns
-#     -------
-#     Dataframe 2D
-#         This function is used when multiple activities have the same period allocation.
-#         - this func basically just calls the main allocation func then reindexes the df so it applies to all activities.
-#         eg the cost of seeding for each lmu is incurred over the same period so we just want to return a df with a certain cost in it for each lmu and each cashflow period (the cost may differ but the allocation will be the same for each lmu, so the allocation func is called once then reindexed then multiplied by the different costs)
-#     '''
-#     allocation = period_allocation(p_dates, p_name,start,length)
-#     allocation = allocation.set_index('period')
-#     columns = pd.MultiIndex.from_product([allocation.columns, df.index])
-#     allocation = allocation.reindex(columns,axis=1,level=0) #add level so mul can happen
-#     allocation.columns = allocation.columns.droplevel(0) #drop added level
-#     # cost = df.rename(index={0:'allocation'}).stack()
-#     df = allocation.mul(df.iloc[:,0],axis=1)
-#     return df
 
 def period_allocation2(start_df, length_df, p_dates, p_name):
     '''
@@ -1213,28 +1008,3 @@ def f_baseyr(periods, base_year=None):
     return periods
 
 
-def np_extrap(x, xp, yp):
-    ## np.interp function with linear extrapolation if x is beyond the input date (xp)
-    ### from https://stackoverflow.com/questions/2745329/how-to-make-scipy-interpolate-give-an-extrapolated-result-beyond-the-input-range"""
-    y = np.array(np.interp(x, xp, yp))  #convert y to array so that it can be masked (required if x is a scalar)
-    ##use a mask to adjust values if extrapolating x below the lowest input value in xp
-    y[x < xp[0]] = yp[0] + (x[x<xp[0]]-xp[0]) * (yp[0]-yp[1]) / (xp[0]-xp[1])
-    ##use a mask to adjust values if extrapolating x above the highest input value in xp
-    y[x > xp[-1]]= yp[-1] + (x[x>xp[-1]]-xp[-1])*(yp[-1]-yp[-2])/(xp[-1]-xp[-2])
-    return y
-
-
-def f_ditribution7(mean, sd=0, cv=0):
-    '''
-    ##create a distribution around the mean for a variable that can be applied in any non-linear relationships
-    ##Create 7 intervals with equal probability
-    ## Equaly probablity allows the non-linear result to be averaged with equal weighting
-    '''
-
-    if sd == 0:
-        sd = cv * mean
-    ## The distribution of standardised x based on the mid point of 7 intervals of 14.3%
-    dist7_m1 = np.array([-1.535, -0.82, -0.375, 0, 0.375, 0.82, 1.535])
-    ## Apply the distribution to the mean using the std deviation
-    var_m1 = mean[..., na] + sd[..., na] * dist7_m1
-    return var_m1

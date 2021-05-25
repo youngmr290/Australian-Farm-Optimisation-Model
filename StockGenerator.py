@@ -34,6 +34,7 @@ import collections
 # from numba import jit
 
 import Functions as fun
+import FeedsupplyFunctions as fsfun
 import Sensitivity as sen
 import PropertyInputs as pinp
 import UniversalInputs as uinp
@@ -613,25 +614,25 @@ def generator(params,r_vals,ev,plots = False):
                                                          left_pos2=p_pos,
                                                          right_pos2=z_pos)  # p6 axis converted to p axis later (association section), z is treated later also
     ##foo corrected to hand shears and estimated height - the z axis is also treated in this step
-    paststd_foo_p6a1e1b1j0wzida0e0b0xyg0, paststd_hf_p6a1e1b1j0wzida0e0b0xyg0 = sfun.f_foo_convert(cu3, cu4,
+    paststd_foo_p6a1e1b1j0wzida0e0b0xyg0, paststd_hf_p6a1e1b1j0wzida0e0b0xyg0 = fsfun.f_foo_convert(cu3, cu4,
                                                                                      paststd_foo_p6a1e1b1j0wzida0e0b0xyg,
                                                                                      pasture_stage_p6a1e1b1j0wzida0e0b0xyg,
                                                                                      legume_p6a1e1b1nwzida0e0b0xyg,
                                                                                      cr_sire,
                                                                                      z_pos=sinp.stock['i_z_pos'], treat_z=True)
-    paststd_foo_p6a1e1b1j0wzida0e0b0xyg1, paststd_hf_p6a1e1b1j0wzida0e0b0xyg1 = sfun.f_foo_convert(cu3, cu4,
+    paststd_foo_p6a1e1b1j0wzida0e0b0xyg1, paststd_hf_p6a1e1b1j0wzida0e0b0xyg1 = fsfun.f_foo_convert(cu3, cu4,
                                                                                      paststd_foo_p6a1e1b1j0wzida0e0b0xyg,
                                                                                      pasture_stage_p6a1e1b1j0wzida0e0b0xyg,
                                                                                      legume_p6a1e1b1nwzida0e0b0xyg,
                                                                                      cr_dams,
                                                                                      z_pos=sinp.stock['i_z_pos'], treat_z=True)
-    paststd_foo_p6a1e1b1j0wzida0e0b0xyg2, paststd_hf_p6a1e1b1j0wzida0e0b0xyg2 = sfun.f_foo_convert(cu3, cu4,
+    paststd_foo_p6a1e1b1j0wzida0e0b0xyg2, paststd_hf_p6a1e1b1j0wzida0e0b0xyg2 = fsfun.f_foo_convert(cu3, cu4,
                                                                                      paststd_foo_p6a1e1b1j0wzida0e0b0xyg,
                                                                                      pasture_stage_p6a1e1b1j0wzida0e0b0xyg,
                                                                                      legume_p6a1e1b1nwzida0e0b0xyg,
                                                                                      cr_yatf,
                                                                                      z_pos=sinp.stock['i_z_pos'], treat_z=True)
-    paststd_foo_p6a1e1b1j0wzida0e0b0xyg3, paststd_hf_p6a1e1b1j0wzida0e0b0xyg3 = sfun.f_foo_convert(cu3, cu4,
+    paststd_foo_p6a1e1b1j0wzida0e0b0xyg3, paststd_hf_p6a1e1b1j0wzida0e0b0xyg3 = fsfun.f_foo_convert(cu3, cu4,
                                                                                      paststd_foo_p6a1e1b1j0wzida0e0b0xyg,
                                                                                      pasture_stage_p6a1e1b1j0wzida0e0b0xyg,
                                                                                      legume_p6a1e1b1nwzida0e0b0xyg,
@@ -2287,7 +2288,7 @@ def generator(params,r_vals,ev,plots = False):
                     ###sire
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                        temp0 = sfun.f_ra_cs(foo_sire, hf_sire, cr_sire, zf_sire)
+                        temp0 = fsfun.f_ra_cs(foo_sire, hf_sire, cr_sire, zf_sire)
                         if eqn_used:
                             ra_sire = temp0
                         if eqn_compare:
@@ -2295,7 +2296,7 @@ def generator(params,r_vals,ev,plots = False):
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                        temp0 = sfun.f_ra_cs(foo_dams, hf_dams, cr_dams, zf_dams)
+                        temp0 = fsfun.f_ra_cs(foo_dams, hf_dams, cr_dams, zf_dams)
                         if eqn_used:
                             ra_dams = temp0
                         if eqn_compare:
@@ -2303,7 +2304,7 @@ def generator(params,r_vals,ev,plots = False):
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                        temp0 = sfun.f_ra_cs(foo_offs, hf_offs, cr_offs, zf_offs)
+                        temp0 = fsfun.f_ra_cs(foo_offs, hf_offs, cr_offs, zf_offs)
                         if eqn_used:
                             ra_offs = temp0
                         if eqn_compare:
@@ -2314,7 +2315,7 @@ def generator(params,r_vals,ev,plots = False):
                     ###sire
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                        temp0 = sfun.f_ra_mu(foo_sire, hf_sire, zf_sire, cu0_sire)
+                        temp0 = fsfun.f_ra_mu(foo_sire, hf_sire, zf_sire, cu0_sire)
                         if eqn_used:
                             ra_sire = temp0
                         if eqn_compare:
@@ -2322,7 +2323,7 @@ def generator(params,r_vals,ev,plots = False):
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                        temp0 = sfun.f_ra_mu(foo_dams, hf_dams, zf_dams, cu0_dams)
+                        temp0 = fsfun.f_ra_mu(foo_dams, hf_dams, zf_dams, cu0_dams)
                         if eqn_used:
                             ra_dams = temp0
                         if eqn_compare:
@@ -2330,7 +2331,7 @@ def generator(params,r_vals,ev,plots = False):
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                        temp0 = sfun.f_ra_mu(foo_offs, hf_offs, zf_offs, cu0_offs)
+                        temp0 = fsfun.f_ra_mu(foo_offs, hf_offs, zf_offs, cu0_offs)
                         if eqn_used:
                             ra_offs = temp0
                         if eqn_compare:
@@ -2344,7 +2345,7 @@ def generator(params,r_vals,ev,plots = False):
                     ###sire
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                        temp0 = sfun.f_rq_cs(dmd_sire, legume_pa1e1b1nwzida0e0b0xyg[p], cr_sire, pinp.sheep['i_sf'])
+                        temp0 = fsfun.f_rq_cs(dmd_sire, legume_pa1e1b1nwzida0e0b0xyg[p], cr_sire, pinp.sheep['i_sf'])
                         if eqn_used:
                             rq_sire = temp0
                         if eqn_compare:
@@ -2352,7 +2353,7 @@ def generator(params,r_vals,ev,plots = False):
                     ###dams
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                        temp0 = sfun.f_rq_cs(dmd_dams, legume_pa1e1b1nwzida0e0b0xyg[p], cr_dams, pinp.sheep['i_sf'])
+                        temp0 = fsfun.f_rq_cs(dmd_dams, legume_pa1e1b1nwzida0e0b0xyg[p], cr_dams, pinp.sheep['i_sf'])
                         if eqn_used:
                             rq_dams = temp0
                         if eqn_compare:
@@ -2360,7 +2361,7 @@ def generator(params,r_vals,ev,plots = False):
                     ###offs
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                        temp0 = sfun.f_rq_cs(dmd_offs, legume_pa1e1b1nwzida0e0b0xyg[p], cr_offs, pinp.sheep['i_sf'])
+                        temp0 = fsfun.f_rq_cs(dmd_offs, legume_pa1e1b1nwzida0e0b0xyg[p], cr_offs, pinp.sheep['i_sf'])
                         if eqn_used:
                             rq_offs = temp0
                         if eqn_compare:
@@ -2368,17 +2369,17 @@ def generator(params,r_vals,ev,plots = False):
 
                 ##intake
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                    ri_sire = sfun.f_rel_intake(ra_sire, rq_sire, legume_pa1e1b1nwzida0e0b0xyg[p], cr_sire)
+                    ri_sire = fsfun.f_rel_intake(ra_sire, rq_sire, legume_pa1e1b1nwzida0e0b0xyg[p], cr_sire)
                     mei_sire, mei_solid_sire, intake_f_sire, md_solid_sire, mei_propn_milk_sire, mei_propn_herb_sire, mei_propn_supp_sire \
                             = sfun.f_intake(pi_sire, ri_sire, md_herb_sire, feedsupplyw_pa1e1b1nwzida0e0b0xyg0[p]
                                             , intake_s_sire, pinp.sheep['i_md_supp'])
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    ri_dams = sfun.f_rel_intake(ra_dams, rq_dams, legume_pa1e1b1nwzida0e0b0xyg[p], cr_dams)
+                    ri_dams = fsfun.f_rel_intake(ra_dams, rq_dams, legume_pa1e1b1nwzida0e0b0xyg[p], cr_dams)
                     mei_dams, mei_solid_dams, intake_f_dams, md_solid_dams, mei_propn_milk_dams, mei_propn_herb_dams, mei_propn_supp_dams  \
                             = sfun.f_intake(pi_dams, ri_dams, md_herb_dams, feedsupplyw_pa1e1b1nwzida0e0b0xyg1[p]
                                             , intake_s_dams, pinp.sheep['i_md_supp'])
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                    ri_offs = sfun.f_rel_intake(ra_offs, rq_offs, legume_pa1e1b1nwzida0e0b0xyg[p], cr_offs)
+                    ri_offs = fsfun.f_rel_intake(ra_offs, rq_offs, legume_pa1e1b1nwzida0e0b0xyg[p], cr_offs)
                     mei_offs, mei_solid_offs, intake_f_offs, md_solid_offs, mei_propn_milk_offs, mei_propn_herb_offs, mei_propn_supp_offs  \
                             = sfun.f_intake(pi_offs, ri_offs, md_herb_offs, feedsupplyw_pa1e1b1nwzida0e0b0xyg3[p]
                                             , intake_s_offs, pinp.sheep['i_md_supp'])
@@ -2842,7 +2843,7 @@ def generator(params,r_vals,ev,plots = False):
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                    temp0 = sfun.f_ra_cs(foo_yatf, hf_yatf, cr_yatf, zf_yatf)
+                    temp0 = fsfun.f_ra_cs(foo_yatf, hf_yatf, cr_yatf, zf_yatf)
                     if eqn_used:
                         ra_yatf = temp0
                     if eqn_compare:
@@ -2851,7 +2852,7 @@ def generator(params,r_vals,ev,plots = False):
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                    temp0 = sfun.f_ra_mu(foo_yatf, hf_yatf, zf_yatf, cu0_yatf)
+                    temp0 = fsfun.f_ra_mu(foo_yatf, hf_yatf, zf_yatf, cu0_yatf)
                     if eqn_used:
                         ra_yatf = temp0
                     if eqn_compare:
@@ -2865,7 +2866,7 @@ def generator(params,r_vals,ev,plots = False):
                 ###sire
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                    temp0 = sfun.f_rq_cs(dmd_yatf, legume_pa1e1b1nwzida0e0b0xyg[p], cr_yatf, pinp.sheep['i_sf'])
+                    temp0 = fsfun.f_rq_cs(dmd_yatf, legume_pa1e1b1nwzida0e0b0xyg[p], cr_yatf, pinp.sheep['i_sf'])
                     if eqn_used:
                         rq_yatf = temp0
                     if eqn_compare:
@@ -2874,7 +2875,7 @@ def generator(params,r_vals,ev,plots = False):
 
             ##intake - yatf
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                ri_yatf = sfun.f_rel_intake(ra_yatf, rq_yatf, legume_pa1e1b1nwzida0e0b0xyg[p], cr_yatf)
+                ri_yatf = fsfun.f_rel_intake(ra_yatf, rq_yatf, legume_pa1e1b1nwzida0e0b0xyg[p], cr_yatf)
                 mei_yatf, mei_solid_yatf, intake_f_yatf, md_solid_yatf, mei_propn_milk_yatf, mei_propn_herb_yatf, mei_propn_supp_yatf \
                             = sfun.f_intake(pi_yatf, ri_yatf, md_herb_yatf, feedsupplyw_pa1e1b1nwzida0e0b0xyg1[p]
                                             , intake_s_yatf, pinp.sheep['i_md_supp'], mp2_yatf)   #same feedsupply as dams

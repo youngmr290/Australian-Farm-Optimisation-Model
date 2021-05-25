@@ -27,6 +27,7 @@ from dateutil import relativedelta as rdelta
 #AFO modules
 import UniversalInputs as uinp
 import Functions as fun
+import FeedsupplyFunctions as fsfun
 import Periods as per
 import PropertyInputs as pinp
 import UniversalInputs as uinp
@@ -168,10 +169,10 @@ def f_sup_md_vol():
     ##calc vol
     sup_md_vol = uinp.supfeed['sup_md_vol']    
     ###convert md to dmd
-    dmd=(sup_md_vol.loc['energy'] / 1000).apply(fun.md_to_dmd)
+    dmd=(sup_md_vol.loc['energy'] / 1000).apply(fsfun.md_to_dmd)
     ##calc relative quality - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
     if uinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
-        rq = sfun.f_rq_cs(dmd, 0)
+        rq = fsfun.f_rq_cs(dmd, 0)
     ###use max(1,...) to make it the same as MIDAS - this increases lupin vol slightly from what the equation returns
     ###do not calculate ra (relative availability) because assume that supplement has high availability
     vol_kg = np.maximum(1, 1 / rq)

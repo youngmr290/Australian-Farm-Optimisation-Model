@@ -16,12 +16,17 @@ import time
 # from dateutil.relativedelta import relativedelta
 
 import Functions as fun
+import FeedsupplyFunctions as fsfun
 import PropertyInputs as pinp
 import UniversalInputs as uinp
 import StructuralInputs as sinp
 import Sensitivity as sen
 
 na=np.newaxis
+
+###################
+#general functions# todo these could be moved to fun.py
+###################
 
 def f_sig(x,a,b):
     ''' Sig function CSIRO equation 124 ^the equation below is the sig function from SheepExplorer'''
@@ -34,6 +39,52 @@ def f_ramp(x,a,b):
 def f_dim(x,y):
     '''a function that minimum value of zero otherwise difference between the 2 inputs '''
     return np.maximum(0,x-y)
+
+def f_dynamic_slice(arr, axis, start, stop, axis2=None, start2=None, stop2=None):
+    ##check if arr is int - this is the case for the first loop because arr may be initialised as 0
+    if type(arr)==int:
+        return arr
+    else:
+        ##first axis slice if it is not singleton
+        if arr.shape[axis]!=1:
+            sl = [slice(None)] * arr.ndim
+            sl[axis] = slice( start, stop)
+            arr = arr[tuple(sl)]
+        if axis2 is not None:
+            ##second axis slice if required and not singleton
+            if arr.shape[axis2] != 1:
+                sl = [slice(None)] * arr.ndim
+                sl[axis2] = slice( start2, stop2)
+                arr = arr[tuple(sl)]
+        return arr
+
+#todo this doesnt seem to be used. maybe it should be commented out.
+def roll_slices(array, roll, roll_axis=0):
+    '''
+    The function rolls each slice for a given axis (the np roll function rolls each slice the same)
+    you can roll different slices by different amounts
+    :param array: array to be rolled
+    :param roll: number of times the slice is to be rolled - this array should have one less dim than the main array
+    :param roll_axis: axis to roll down
+    :return:
+    '''
+    #flattern array if multi dim
+    a = array.reshape(array.shape[roll_axis], int(np.prod(array.shape)/array.shape[roll_axis]))
+    r = roll.reshape(int(np.prod(roll.shape)))
+
+    rows, column_indices = np.ogrid[:a.shape[0], :a.shape[1]]
+
+    # Use always a negative shift, so that column_indices are valid.
+    # (could also use module operation)
+    r[r < 0] += a.shape[0]
+    rows = rows - r
+    result = a[rows, column_indices]
+    return (result.reshape(array.shape))
+
+
+##################
+#timing functions#
+##################
 
 def f_daylength(dayOfYear, lat):
     """Computes the length of the day (the time between sunrise and
@@ -150,6 +201,42 @@ def sim_periods(start_year, periods_per_year, oldest_animal):
     date_end_p = (np.datetime64(start_date - dt.timedelta(days=1)) + (step * (index_p+1))).astype('datetime64[D]') #minus one day to get the last day in the period not the first day of the next period.
     return n_sim_periods, date_start_p, date_end_p, index_p, step
 
+def f_period_is_(period_is, date_array, date_start_p=0, date_array2 = 0, date_end_p=0):
+    '''
+    Parameters
+    ----------
+    period_is : string
+        type of period is calc to return.
+    date_start_p : datetime64[D]
+        start date of each period (must have all axis).
+    date_end_p : datetime64[D]
+        end date of each period (must have all axis).
+    date_array : datetime64[D]
+        array of dates of interest eg mating dates.
+    date_array2 : datetime64[D]
+        array of end dates used to determine if period is between.
+
+    Returns
+    -------
+    period_is: boolean array shaped like the date array with the addition of the p axis. This is is true if a given date from date array is within the date of a given period and false if not.
+
+    period_is_any: 1D boolean array shape of the period dates array. True if any of the dates in the date array fall into a given period.
+
+    period_is_between: return true if a the period is between two dates (it is inclusive ie if an activity occurs during the period that period will be treated as between the two dates)
+    '''
+    if period_is == 'period_is':
+        period_is=np.logical_and((date_array>=date_start_p) , (date_array<=date_end_p))
+        return period_is
+    if period_is == 'period_is_any':
+        period_is=np.logical_and((date_array>=date_start_p) , (date_array<=date_end_p))
+        period_is_any = np.any(period_is,axis=tuple(range(1,period_is.ndim)))
+        return period_is_any
+    if period_is == 'period_is_pre':
+        period_is_pre=(date_array>date_end_p)
+        return period_is_pre
+    if period_is == 'period_is_between':
+        period_is_between= np.logical_and((date_array<=date_end_p) , (date_array2>date_start_p))
+        return period_is_between
 
 
 ###################################
@@ -430,42 +517,6 @@ def f_btrt0(dstwtr_propn,lss,lstw,lstr): #^this function is inflexible ie if you
 #     btrt_b1nwzida0e0b0xyg = np.expand_dims(btrt_b1yg, axis = tuple(range((uinp.parameters['i_cl1_pos'] + 1), -2))) #note i_cl1_pos refers to b1 position
 #     return btrt_b1nwzida0e0b0xyg
 
-def f_period_is_(period_is, date_array, date_start_p=0, date_array2 = 0, date_end_p=0):
-    '''
-    Parameters
-    ----------
-    period_is : string
-        type of period is calc to return.
-    date_start_p : datetime64[D]
-        start date of each period (must have all axis).
-    date_end_p : datetime64[D]
-        end date of each period (must have all axis).
-    date_array : datetime64[D]
-        array of dates of interest eg mating dates.
-    date_array2 : datetime64[D]
-        array of end dates used to determine if period is between.
-
-    Returns
-    -------
-    period_is: boolean array shaped like the date array with the addition of the p axis. This is is true if a given date from date array is within the date of a given period and false if not.
-
-    period_is_any: 1D boolean array shape of the period dates array. True if any of the dates in the date array fall into a given period.
-
-    period_is_between: return true if a the period is between two dates (it is inclusive ie if an activity occurs during the period that period will be treated as between the two dates)
-    '''
-    if period_is == 'period_is':
-        period_is=np.logical_and((date_array>=date_start_p) , (date_array<=date_end_p))
-        return period_is
-    if period_is == 'period_is_any':
-        period_is=np.logical_and((date_array>=date_start_p) , (date_array<=date_end_p))
-        period_is_any = np.any(period_is,axis=tuple(range(1,period_is.ndim)))
-        return period_is_any
-    if period_is == 'period_is_pre':
-        period_is_pre=(date_array>date_end_p)
-        return period_is_pre
-    if period_is == 'period_is_between':
-        period_is_between= np.logical_and((date_array<=date_end_p) , (date_array2>date_start_p))
-        return period_is_between
 
 
 ################
@@ -504,63 +555,6 @@ def f_feedsupply_adjust(attempts,feedsupply,itn):
     feedsupply[~binary_mask] = ((2 * attempts[...,-1,1]) / slope)[~binary_mask] # x2 to overshoot then switch to binary.
     return feedsupply
 
-
-def f_foo_convert(cu3, cu4, foo, pasture_stage, legume=0, cr=None, z_pos=-1, treat_z=False):
-    '''
-    Parameters
-    ----------
-    cu3 :
-        this parameter should already be slice on the c4 axis.
-    cu4 :
-        this parameter should already be slice on the c4 axis.
-    '''
-    ##create scalar cr if not passed in
-    if cr is None:
-        ###Scalar version of cr[1,…] using c2[0] (finewool merino)
-        cr12 = uinp.parameters['i_cr_c2'][12,0]
-    else:
-        cr12=cr[12, ...]
-    ##pasture conversion scenario (convert the region and pasture stage to an index
-    ### because the second axis of cu3 is a combination of region & stage)
-    conversion_scenario = pinp.sheep['i_region'] * uinp.pastparameters['i_n_pasture_stage'] + pasture_stage
-    ##select cu3&4 params for the specified region and stage. Remaining axes are season and formula coefficient (intercept & slope)
-    cu3=cu3[..., conversion_scenario]
-    cu4=cu4[..., conversion_scenario]
-    ##Convert FOO to hand shears measurement
-    foo_shears = np.maximum(0, np.minimum(foo, cu3[2] + cu3[0] * foo + cu3[1] * legume))
-    ##Estimate height of pasture
-    height = np.maximum(0, np.exp(cu4[3] + cu4[0] * foo + cu4[1] * legume + cu4[2] * foo * legume) + cu4[5] + cu4[4] * foo)
-    ##Height density (height per unit FOO)
-    hd = fun.f_divide(height, foo_shears) #handles div0 (eg if in feedlot with no pasture or adjusted foo is less than 0)
-    ##height ratio
-    hr = pinp.sheep['i_hr_scalar'] * hd / uinp.pastparameters['i_hd_std']
-    ##calc hf
-    hf = 1 + cr12 * (hr -1)
-    ##apply z treatment
-    if treat_z:
-        foo_shears = pinp.f_seasonal_inp(foo_shears,numpy=True,axis=z_pos)
-        hf = pinp.f_seasonal_inp(hf,numpy=True,axis=z_pos)
-    return foo_shears, hf
-
-def f_dynamic_slice(arr, axis, start, stop, axis2=None, start2=None, stop2=None):
-    ##check if arr is int - this is the case for the first loop because arr may be initialised as 0
-    if type(arr)==int:
-        return arr
-    else:
-        ##first axis slice if it is not singleton
-        if arr.shape[axis]!=1:
-            sl = [slice(None)] * arr.ndim
-            sl[axis] = slice( start, stop)
-            arr = arr[tuple(sl)]
-        if axis2 is not None:
-            ##second axis slice if required and not singleton
-            if arr.shape[axis2] != 1:
-                sl = [slice(None)] * arr.ndim
-                sl[axis2] = slice( start2, stop2)
-                arr = arr[tuple(sl)]
-        return arr
-
-
 def f_rev_update(trait_name, trait_value, rev_trait_value):
     trait_idx = sinp.structuralsa['rev_trait_name'].tolist().index(trait_name)
     if sinp.structuralsa['rev_trait_inc'][trait_idx]:
@@ -590,29 +584,6 @@ def f_history(history, new_value, days_in_period):
     t_history = np.nan_to_num(history) #convert nan to 0
     lagged = fun.f_weighted_average(t_history, weights=weights, axis = 0)
     return lagged, history
-
-
-def roll_slices(array, roll, roll_axis=0):
-    '''
-    The function rolls each slice for a given axis (the np roll function rolls each slice the same)
-    you can roll different slices by different amounts
-    :param array: array to be rolled
-    :param roll: number of times the slice is to be rolled - this array should have one less dim than the main array
-    :param roll_axis: axis to roll down
-    :return:
-    '''
-    #flattern array if multi dim
-    a = array.reshape(array.shape[roll_axis], int(np.prod(array.shape)/array.shape[roll_axis]))
-    r = roll.reshape(int(np.prod(roll.shape)))
-
-    rows, column_indices = np.ogrid[:a.shape[0], :a.shape[1]]
-
-    # Use always a negative shift, so that column_indices are valid.
-    # (could also use module operation)
-    r[r < 0] += a.shape[0]
-    rows = rows - r
-    result = a[rows, column_indices]
-    return (result.reshape(array.shape))
 
 
 def f_potential_intake_cs(ci, cl, srw, relsize_start, rc_start, temp_lc_dams, temp_ave, temp_max, temp_min, rain_intake
@@ -645,104 +616,6 @@ def f_potential_intake_cs(ci, cl, srw, relsize_start, rc_start, temp_lc_dams, te
 def f_potential_intake_mu(srw):
     pi = 0.028 * srw
     return np.maximum(0,pi)
-
-
-def f_ra_cs(foo, hf, cr=None, zf=1):
-    ##Only pass cr parameter if called from Stock_generator that have a g axis
-    ##create scalar cr if not passed in
-    if cr is None:
-        ###Scalar version of cr[…] using c2[0] (finewool merino)
-        cr4 = uinp.parameters['i_cr_c2'][4, 0]
-        cr5 = uinp.parameters['i_cr_c2'][5, 0]
-        cr6 = uinp.parameters['i_cr_c2'][6, 0]
-        cr13 = uinp.parameters['i_cr_c2'][13, 0]
-    else:
-        cr4 = cr[4, ...]
-        cr5 = cr[5, ...]
-        cr6 = cr[6, ...]
-        cr13 = cr[13, ...]
-    ##Relative rate of eating (rr) & Relative time spent grazing (rt)
-    try:
-        ###Scalar version
-        rr = 1 - math.exp(-(1 + cr13 * 1) * cr4 * hf * zf * foo) #*1 is a reminder that this formula could be improved in a future version
-        rt = 1 + cr5 * math.exp(-(1 + cr13 * 1) * (cr6 * hf * zf * foo)**2)
-    except:
-        ###Numpy version
-        rr = 1 - np.exp(-(1 + cr13 * 1) * cr4 * hf * zf * foo) #*1 is a reminder that this formula could be improved in a future version
-        rt = 1 + cr5 * np.exp(-(1 + cr13 * 1) * (cr6 * hf * zf * foo)**2)
-    ##Relative availability
-    ra = rr * rt
-    return ra
-
-
-def f_rq_cs(dmd, legume, cr=None, sf=0):
-    ##Only pass cr parameter if called from Stock_generator that require a g axis
-    ##sf is currently not used. Will be required if using tropical species
-    ##To work for DMD as a % or a proportion
-    try:
-        if (dmd >= 1).any() : dmd /= 100
-    except:
-        if dmd >= 1:          dmd /= 100
-    ##create scalar cr if not passed in
-    if cr is None:
-        ###Scalar version of cr[…] using c2[0] (finewool merino)
-        cr1 = uinp.parameters['i_cr_c2'][1, 0]
-        cr3 = uinp.parameters['i_cr_c2'][3, 0]
-    else:
-        cr1 = cr[1, ...]
-        cr3 = cr[3, ...]
-    ##Relative ingestibility
-    try:
-        ###Scalar version of formula
-        rq = max(0.01, min(1, 1 - cr3 * (cr1 - (dmd +  sf * (1 - legume))))) #(1-legume) because sf is actually a factor related to the grass component of the sward
-    except:
-        ###Numpy version of formula
-        rq = np.maximum(0.01, np.minimum(1, 1 - cr3 * (cr1 - (dmd +  sf * (1 - legume))))) #(1-legume) because sf is actually a factor related to the grass component of the sward
-    return rq
-
-
-def f_ra_mu(foo, hf, zf=1, cu0=None):
-    ##Only pass cu0 parameter if called from Stock_generator that require a g axis
-    ##create scalar cr if not passed in
-    if cu0 is None:
-        ###Scalar version of cr[…] using c2[0] (finewool merino)
-        cu0 = uinp.parameters['i_cu0_c2'][0, 0]
-    else:
-        cu0 = cu0[0, ...]
-    ##Relative availability
-    try:
-        ###Scalar version
-        ra = 1 - cu0 ** (hf * zf * foo)
-    except:
-        ###Numpy version (exact same so not required atm)
-        ra = 1 - cu0 ** (hf * zf * foo)
-    return ra
-
-
-def f_rel_intake(ra, rq, legume, cr=None):
-    ## Calculation of relative intake including the effect of feed availability, feed quality and the interaction.
-    ## This is not called for feeds (such as supplements) that do not have an 'availability' characteristic.
-    ## The calculated RI can be greater than 1 - which implies that actual intake can be greater than potential intake
-    ## This can occur if rq is greater than 1, due to the 'legume' effect on the intercept or if DMD is greater than cr1
-
-    ##Only pass cr parameter if called from Stock_generator that require a g axis
-    ##create scalar cr if not passed in
-    if cr is None:
-        ###Scalar version of cr[…] using c2[0] (finewool merino)
-        cr2 = uinp.parameters['i_cr_c2'][2, 0]
-    else:
-        cr2=cr[2, ...]
-
-    ##Relative intake
-
-    try:
-        ###Scalar version of formula
-        ri = max(0.05, ra * rq * (1 + cr2 * ra**2 * legume))
-    except:
-        ###Numpy version of formula
-        ri = np.maximum(0.05, ra * rq * (1 + cr2 * ra**2 * legume))
-    return ri
-
 
 def f_intake(pi, ri, md_herb, feedsupply, intake_s, i_md_supp, mp2=0):
     ##Pasture intake
@@ -881,6 +754,16 @@ def f_foetus_cs(cp, cb1, kc, nfoet, relsize_start, rc_start, w_b_std_y, w_f_star
     # return w_f, nec_cum, mec, nec, w_b_exp_y, nw_f, guw
     return w_f, mec, nec, w_b_exp_y, nw_f, guw
 
+def f_carryforward_u1(cu1, ebg, period_between_joinstartend, period_between_joinscan, period_between_scanbirth, period_between_birthwean, days_period, period_propn=1):
+    ##Select coefficient to increment the carry forward quantity based on the current period
+    ### can only be the coefficient from one of the periods and the later period overwrites the earlier period.
+    coeff_cf1 = fun.f_update(0, cu1[1,...], period_between_joinstartend) #note cu1 has already had the first axis (production parameter) sliced when it was passed in
+    coeff_cf1 = fun.f_update(coeff_cf1, cu1[2,...], period_between_joinscan)
+    coeff_cf1 = fun.f_update(coeff_cf1, cu1[3,...], period_between_scanbirth)
+    coeff_cf1 = fun.f_update(coeff_cf1, cu1[4,...], period_between_birthwean)
+    ##Calculate the increment (d_cf) from the coefficient, the change in LW (kg/d) and the days per period
+    d_cf = coeff_cf1 * ebg * days_period * period_propn
+    return d_cf
 
 def f_birthweight_cs(cx, w_b_yatf, w_f_dams, period_is_birth):
     ##set BW = foetal weight at end of period (if born)	
@@ -1194,7 +1077,7 @@ def f_feedsupply(feedsupply_std_a1e1b1nwzida0e0b0xyg, paststd_foo_a1e1b1j0wzida0
     supp_propn_a1e1b1nwzida0e0b0xyg = proportion_a1e1b1nwzida0e0b0xyg * (feedsupply_std_a1e1b1nwzida0e0b0xyg > 2) + (feedsupply_std_a1e1b1nwzida0e0b0xyg == 4)   # the proportion of diet if the value is above 2 and equal to 1.0 if fs==4 (at fs 3 sheep have 0 sup and 0 fodder at fs4 sheep have 100% of pi is sup)
     intake_s = pi * supp_propn_a1e1b1nwzida0e0b0xyg
     ##calc herb md
-    herb_md = fun.dmd_to_md(dmd_a1e1b1nwzida0e0b0xyg)
+    herb_md = fsfun.dmd_to_md(dmd_a1e1b1nwzida0e0b0xyg)
     return foo_a1e1b1nwzida0e0b0xyg, hf_a1e1b1nwzida0e0b0xyg, dmd_a1e1b1nwzida0e0b0xyg, intake_s, herb_md
 
 
@@ -1525,7 +1408,10 @@ def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, cv_weight, foo, chill
     ##Process the Ewe Rearing Ability REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
     mortalityx = f_rev_update('era', mortalityx, rev_trait_value)
     return mortalityx
-        
+
+#######################
+#end of loop functions#
+#######################
 
 def f_comb(n,k):
     # ##Create an array of factorial values up to n
@@ -1766,18 +1652,10 @@ def f_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfoe
 
 
     
-def f_carryforward_u1(cu1, ebg, period_between_joinstartend, period_between_joinscan, period_between_scanbirth, period_between_birthwean, days_period, period_propn=1):
-    ##Select coefficient to increment the carry forward quantity based on the current period
-    ### can only be the coefficient from one of the periods and the later period overwrites the earlier period.
-    coeff_cf1 = fun.f_update(0, cu1[1,...], period_between_joinstartend) #note cu1 has already had the first axis (production parameter) sliced when it was passed in
-    coeff_cf1 = fun.f_update(coeff_cf1, cu1[2,...], period_between_joinscan)
-    coeff_cf1 = fun.f_update(coeff_cf1, cu1[3,...], period_between_scanbirth)
-    coeff_cf1 = fun.f_update(coeff_cf1, cu1[4,...], period_between_birthwean)
-    ##Calculate the increment (d_cf) from the coefficient, the change in LW (kg/d) and the days per period
-    d_cf = coeff_cf1 * ebg * days_period * period_propn
-    return d_cf
 
-
+#################
+#post processing#
+#################
 def f_wool_additional(fd, sl, ss, vm,  pmb, cvfd=0.22, cvsl=0.18):
     cu5_u5c5=uinp.sheep['i_cu5_c5']
     i_eqn_ph=uinp.sheep['i_eqn_ph']

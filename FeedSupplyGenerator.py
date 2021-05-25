@@ -29,6 +29,7 @@ import functions from other modules
 import numpy as np
 
 import Functions as fun
+import FeedsupplyFunctions as fsfun
 import PropertyInputs as pinp
 import StockFunctions as sfun
 import UniversalInputs as uinp
@@ -154,7 +155,7 @@ def feed_generator():
                                                          left_pos2=p_pos,
                                                          right_pos2=z_pos)  # p6 axis converted to p axis later (association section), z is treated later also
     ##foo for a region of measurement with pasture stage converted to hand shears and estimated height (for GrazFeed) - the z axis is also treated in this step
-    paststd_foo_p6a1e1b1j0wzida0e0b0xyg1, paststd_hf_p6a1e1b1j0wzida0e0b0xyg1 = sfun.f_foo_convert(cu3, cu4,
+    paststd_foo_p6a1e1b1j0wzida0e0b0xyg1, paststd_hf_p6a1e1b1j0wzida0e0b0xyg1 = fsfun.f_foo_convert(cu3, cu4,
                                                                                      paststd_foo_p6a1e1b1j0wzida0e0b0xyg,
                                                                                      pasture_stage_p6a1e1b1j0wzida0e0b0xyg,
                                                                                      legume_p6a1e1b1nwzida0e0b0xyg,
@@ -338,14 +339,14 @@ def feed_generator():
             ###dams
             eqn_used = (eqn_used_g1_q1p[eqn_group, 0] == eqn_system)
             if eqn_used:
-                ra_dams = sfun.f_ra_cs(foo_dams, hf_dams, cr_dams, zf_dams)
+                ra_dams = fsfun.f_ra_cs(foo_dams, hf_dams, cr_dams, zf_dams)
 
         eqn_system = 1 # Murdoch = 1
         if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
             ###dams
             eqn_used = (eqn_used_g1_q1p[eqn_group, 0] == eqn_system)
             if eqn_used:
-                ra_dams = sfun.f_ra_mu(foo_dams, hf_dams, zf_dams, cu0_dams)
+                ra_dams = fsfun.f_ra_mu(foo_dams, hf_dams, zf_dams, cu0_dams)
 
 
         ##relative quality/ingestibility
@@ -355,10 +356,10 @@ def feed_generator():
             ###dams
             eqn_used = (eqn_used_g1_q1p[eqn_group, 0] == eqn_system)
             if eqn_used:
-                rq_dams = sfun.f_rq_cs(dmd_dams, legume_pa1e1b1nwzida0e0b0xyg[p], cr_dams)
+                rq_dams = fsfun.f_rq_cs(dmd_dams, legume_pa1e1b1nwzida0e0b0xyg[p], cr_dams)
 
         ##intake
-        ri_dams = sfun.f_rel_intake(ra_dams, rq_dams, legume_pa1e1b1nwzida0e0b0xyg[p])
+        ri_dams = fsfun.f_rel_intake(ra_dams, rq_dams, legume_pa1e1b1nwzida0e0b0xyg[p])
         mei_dams, mei_solid_dams, intake_f_dams, md_solid_dams, mei_propn_milk_dams, mei_propn_herb_dams, mei_propn_supp_dams  \
             = sfun.f_intake(pi_dams, ri_dams,  md_herb_dams, feedsupplyw_pa1e1b1nwzida0e0b0xyg1[p]
                             , intake_s_dams, pinp.sheep['i_md_supp'])
