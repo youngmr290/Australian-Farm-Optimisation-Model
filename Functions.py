@@ -426,14 +426,14 @@ def np_extrap(x, xp, yp):
     y[x > xp[-1]]= yp[-1] + (x[x>xp[-1]]-xp[-1])*(yp[-1]-yp[-2])/(xp[-1]-xp[-2])
     return y
 
-def f_distribution7(mean, sd=0, cv=0):
+def f_distribution7(mean, sd=None, cv=None):
     '''
     ##create a distribution around the mean for a variable that can be applied in any non-linear relationships
     ##Create 7 intervals with equal probability
     ## Equal probability allows the non-linear result to be averaged with equal weighting
     '''
 
-    if sd == 0:
+    if sd is None:
         sd = cv * mean
     ## The distribution of standardised x based on the mid point of 7 intervals of 14.3%
     dist7_m1 = np.array([-1.535, -0.82, -0.375, 0, 0.375, 0.82, 1.535])
@@ -526,7 +526,6 @@ def f_produce_df(data, rows, columns, row_names=None, column_names=None):
     else:
         col_index = pd.MultiIndex.from_product(columns, names=column_names)
     return pd.DataFrame(data, index=row_index, columns=col_index)
-
 
 #######################
 #Specific AFO function#
