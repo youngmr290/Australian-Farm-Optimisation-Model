@@ -210,10 +210,12 @@ def universal_inp_sa():
     ###SAM
     sheep['i_sam_LTW_dams'] = fun.f_sa(sheep_inp['i_sam_LTW_dams'],sen.sam['LTW_dams'])
     sheep['i_sam_LTW_offs'] = fun.f_sa(sheep_inp['i_sam_LTW_offs'],sen.sam['LTW_offs'])
+    sheep['i_husb_operations_contract_cost_h2'] = fun.f_sa(sheep_inp['i_husb_operations_contract_cost_h2'],sen.sam['husb_cost_h2'])
+    sheep['i_husb_operations_labourreq_l2h2'] = fun.f_sa(sheep_inp['i_husb_operations_labourreq_l2h2'],sen.sam['husb_labour_l2h2'])
     ###SAP
     ###SAA
-    sheep['i_husb_operations_contract_cost_h2'] = fun.f_sa(sheep_inp['i_husb_operations_contract_cost_h2'],sen.saa['husb_cost_h2'], 2)
-    sheep['i_husb_operations_labourreq_l2h2'] = fun.f_sa(sheep_inp['i_husb_operations_labourreq_l2h2'],sen.saa['husb_labour_l2h2'], 2)
+    sheep['i_husb_operations_contract_cost_h2'] = fun.f_sa(sheep['i_husb_operations_contract_cost_h2'],sen.saa['husb_cost_h2'], 2)
+    sheep['i_husb_operations_labourreq_l2h2'] = fun.f_sa(sheep['i_husb_operations_labourreq_l2h2'],sen.saa['husb_labour_l2h2'], 2)
     ###SAT
     sheep['i_salep_weight_scalar_s7s5s6'] = fun.f_sa(sheep_inp['i_salep_weight_scalar_s7s5s6'], sen.sat['salep_weight_scalar'], 3, 1, 0) #Scalar for LW impact across grid 1 (sat adjusted)
     sheep['i_salep_score_scalar_s7s5s6'] = fun.f_sa(sheep_inp['i_salep_score_scalar_s7s5s6'], sen.sat['salep_score_scalar'], 3, 1, 0) #Scalar for score impact across the grid (sat adjusted)

@@ -61,6 +61,8 @@ sam['chill'] = 1.0                        #intermediate sam on chill.
 sam['ci_c2'] = np.ones(uinp.parameters_inp['i_ci_c2'].shape, dtype=np.float64)  #intake params for genotypes
 sam['sfw_c2'] = 1.0                         #std fleece weight genotype params
 sam['rr'] = 1.0                        #scanning percentage (adjust the standard scanning % for f_conception_ltw and within function for f_conception_cs
+sam['husb_cost_h2'] = np.ones(uinp.sheep_inp['i_husb_operations_contract_cost_h2'].shape, dtype=np.float64)  #SA value for contract cost of husbandry operations.
+sam['husb_labour_l2h2'] = np.ones(uinp.sheep_inp['i_husb_operations_labourreq_l2h2'].shape, dtype=np.float64)  #units of the job carried out per husbandry labour hour
 
 ######
 #SAP #
@@ -77,8 +79,8 @@ sap['mr_post'] = 0.0           #Post loop maintenance requirement of adults (zf2
 #SAA #
 ######
 ##stock
-saa['husb_cost_h2'] = np.zeros(uinp.sheep_inp['i_husb_operations_contract_cost_h2'].shape, dtype=np.float64)  #SA value for husbandry costs.
-saa['husb_labour_l2h2'] = np.zeros(uinp.sheep_inp['i_husb_operations_labourreq_l2h2'].shape, dtype=np.float64)  #SA value for husbandry labour.
+saa['husb_cost_h2'] = np.zeros(uinp.sheep_inp['i_husb_operations_contract_cost_h2'].shape, dtype=np.float64)  #SA value for contract cost of husbandry operations.
+saa['husb_labour_l2h2'] = np.zeros(uinp.sheep_inp['i_husb_operations_labourreq_l2h2'].shape, dtype=np.float64)  #units of the job carried out per husbandry labour hour
 saa['feedoptions_rjp'] = np.zeros(pinp.feedsupply_inp['i_feedoptions_r1pj0'].shape, dtype=np.float64)  #SA value for feedsupply.
 saa['feedoptions_var_rp'] = np.zeros(pinp.feedsupply_inp['i_feedoptions_var_r2p'].shape, dtype=np.float64)  #SA value for feedsupply variation.
 
