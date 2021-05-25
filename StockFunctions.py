@@ -1285,12 +1285,19 @@ def f_mortality_weaner_cs(cd, cg, age, ebg_start, sd_ebg, d_nw_max,days_period):
                                                    ) > (ebg_start_m1 * cg[18, ...,na]))* days_period[...,na] #mul by days period to convert from mort per day to per period
     return np.mean(mort_weaner_m1, axis=-1)
 
+# def f_mortality_dam_cs():
+#     ## Dam mortality at birth. Currently the CSIRO system includes dam mortality due to PregTox and dam mortality due to
+#     ##dystocia but there is no calculation of deaths from other causes, such as those that might effect twin bearing dams at birth.
+#     return 0
+
+
+#todo convert this to f_mortality_pregtox_cs and call from a new equation system (& uncomment the function above)
 def f_mortality_dam_cs(cb1, cg, nw_start, ebg, sd_ebg, days_period, period_between_birth6wks, gest_propn, sap_mortalitye):
-    ##(Twin) Dam mortality in last 6 weeks (preg tox)
+    ##(Twin) Dam mortality in last 6 weeks (preg tox). This increments mortality associated with LWL in the base mortality function.
     ###distribution on ebg - add distribution to ebg_start_m1 and then average (axis =-1)
     ebg_m1 = fun.f_distribution7(ebg, sd=sd_ebg)
-    t_mort_m1 = days_period[...,na] * gest_propn[...,na] /42 * f_sig(-42 * ebg_m1 * cg[18, ...,na] / nw_start[...,na],
-                                                                      cb1[4, ...,na], cb1[5, ...,na]) #mul by days period to convert from mort per day to per period
+    t_mort_m1 = days_period[..., na] * gest_propn[..., na] / 42 * f_sig(-42 * ebg_m1 * cg[18, ..., na] / nw_start[..., na]
+                                                                        , cb1[4, ..., na], cb1[5, ..., na]) #mul by days period to convert from mort per day to per period
     t_mort = np.mean(t_mort_m1, axis=-1)
     ##If not last 6 weeks then = 0
     mort = t_mort * period_between_birth6wks
