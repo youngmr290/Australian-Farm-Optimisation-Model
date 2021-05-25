@@ -15,15 +15,20 @@ import UniversalInputs as uinp
 #function for feed budget & livestock #
 #######################################
 def dmd_to_md(dmd):
-    '''define a function to return M/D from DMD
+    '''
+    Calculation of megajoules energy per kg dry matter (MD) from dry matter digestibility (DMD).
 
-    dmd can be either a percentage or a decimal
-    returns M/D in MJ of ME per kg of DM
-    dmd can be a numpy array or a scalar (not sure if it handles lists and data frames)
+    Where:
 
-    ^ this could be expanded to include forage (0.172 * dmd - 1.7)
-       and supplement (.133 * dmd + 23.4 ee + 1.32)
-       using an extra 'type' input that is default 'herbage'
+        * MD is megajoules of energy per unit of dry matter,
+        * DMD is dry matter digestibility.
+
+    :param dmd: dmd can be a numpy array or a scalar it can be either a percentage or a decimal.
+    :returns: M/D in MJ of ME per kg of DM
+
+    Note: this could be expanded to include forage (0.172 * dmd - 1.7)
+          and supplement (.133 * dmd + 23.4 ee + 1.32)
+          using an extra 'type' input that is default 'herbage'
     '''
     try:
         if (dmd > 1).all() : dmd /= 100 # if dmd is a list or an array and is not a decimal then convert to decimal (in excel 80% is 0.8 in python)
@@ -32,27 +37,33 @@ def dmd_to_md(dmd):
     return np.maximum(0, 17 * dmd - 2)                # formula 1.13C from SCA 1990 pg 9
 
 def md_to_dmd(md):
-    '''basically a rearranged version of the function above
-    returns dmd as a decimal'''
+    '''
+    Calculation of dry matter digestibility (dmd) from megajoule per kg of dry matter (MD).
+
+    Where:
+
+        * DMD is dry matter digestibility.
+        * MD is megajoules of energy per unit of dry matter
+
+    :param md: MJ of ME per kg of DM
+    :returns: dmd as a decimal
+    '''
     return (md+2)/17
 
 
 def f_effective_mei(dmi, md, threshold, ri=1, eff_above=0.5):
     """Calculate MEI and scale for reduced efficiency if quality is above animal requirements.
 
-    Parameters
-    ----------
-    dmi       : value or array - Dry matter intake (kg).
-    md        : value or array - M/D of the feed (MJ of ME / kg of DM).
-    threshold : value or array - Diet quality (ME/Vol) required by animals. Below the threshold: effective m/d == m/d
-    ri        : value or array, optional (1.0) - Relative intake (quality and quantity).
-    eff_above : value or array, optional (0.5) - Efficiency that energy is used if above required quality, and animals are gaining then losing weight.
+    :param dmi: value or array - Dry matter intake (kg).
+    :param md: value or array - M/D of the feed (MJ of ME / kg of DM).
+    :param threshold: value or array - Diet quality (ME/Vol) required by animals. Below the threshold: effective m/d == m/d
+    :param ri: value or array, optional (1.0) - Relative intake (quality and quantity).
+    :param eff_above: value or array, optional (0.5) - Efficiency that energy is used if above required quality, and
+                      animals are gaining then losing weight.
 
     If inputs are provided in arrays then they must be broadcastable.
 
-    Returns
-    -------
-    ME available to the animal to meet their ME requirements, from the quantity of DM consumed.
+    :return: ME available to the animal to meet their ME requirements, from the quantity of DM consumed.
 
     """
     fec = md * ri
@@ -64,12 +75,21 @@ def f_effective_mei(dmi, md, threshold, ri=1, eff_above=0.5):
 
 def f_foo_convert(cu3, cu4, foo, pasture_stage, legume=0, cr=None, z_pos=-1, treat_z=False):
     '''
-    Parameters
-    ----------
-    cu3 :
-        this parameter should already be slice on the c4 axis.
-    cu4 :
-        this parameter should already be slice on the c4 axis.
+    Adjust FOO for measurement method.
+
+    Depending on the region FOO can be measured differently. For example, in WA when measuring FOO
+    feed is cut at a very low level using a scalpel verses NSW where it is cut at a higher level
+    with shears. This results in the same amount of feed being valued at a higher FOO in WA.
+    The FOO is adjusted to the method which is used in the livestock production equations which
+    is the shears method.
+
+    FOO only needs to be adjusted for the intake equations. It does not need to be adjusted for the pasture
+    activities because the pasture growth rate will be the same under both FOO measurement methods.
+    The base FOO level (level which grazing can not occur below) will account for differences in a
+    regions FOO measurement method. Thus in WA the base FOO level is higher than NSW.
+
+    :param cu3: this parameter should already be slice on the c4 axis.
+    :param cu4: this parameter should already be slice on the c4 axis.
     '''
     ##create scalar cr if not passed in
     if cr is None:
@@ -100,7 +120,14 @@ def f_foo_convert(cu3, cu4, foo, pasture_stage, legume=0, cr=None, z_pos=-1, tre
     return foo_shears, hf
 
 def f_ra_cs(foo, hf, cr=None, zf=1):
-    ##Only pass cr parameter if called from Stock_generator that have a g axis
+    '''
+    CSIRO relative availability of a feed.
+
+    Relative availability is the availability of a feed to livestock. It is the product of two
+    components; relative rate of eating (RR) and relative time spent grazing (RT).
+
+    NOTE: Only pass cr parameter if called from Stock_generator that have a g axis
+    '''
     ##create scalar cr if not passed in
     if cr is None:
         ###Scalar version of cr[…] using c2[0] (finewool merino)
@@ -128,8 +155,12 @@ def f_ra_cs(foo, hf, cr=None, zf=1):
 
 
 def f_rq_cs(dmd, legume, cr=None, sf=0):
-    ##Only pass cr parameter if called from Stock_generator that require a g axis
-    ##sf is currently not used. Will be required if using tropical species
+    '''
+    CSIRO relative ingestibility (rq) of a feed source.
+
+    NOTE: Only pass cr parameter if called from Stock_generator that have a g axis
+    NOTE 2: sf is currently not used. Will be required if using tropical species
+    '''
     ##To work for DMD as a % or a proportion
     try:
         if (dmd >= 1).any() : dmd /= 100
@@ -154,7 +185,13 @@ def f_rq_cs(dmd, legume, cr=None, sf=0):
 
 
 def f_ra_mu(foo, hf, zf=1, cu0=None):
-    ##Only pass cu0 parameter if called from Stock_generator that require a g axis
+    '''
+    Murdoch relative availability of a feed.
+
+    Relative availability is the availability of a feed to livestock.
+
+    NOTE: Only pass cr parameter if called from Stock_generator that have a g axis
+    '''
     ##create scalar cr if not passed in
     if cu0 is None:
         ###Scalar version of cr[…] using c2[0] (finewool merino)
@@ -172,12 +209,17 @@ def f_ra_mu(foo, hf, zf=1, cu0=None):
 
 
 def f_rel_intake(ra, rq, legume, cr=None):
-    ## Calculation of relative intake including the effect of feed availability, feed quality and the interaction.
-    ## This is not called for feeds (such as supplements) that do not have an 'availability' characteristic.
-    ## The calculated RI can be greater than 1 - which implies that actual intake can be greater than potential intake
-    ## This can occur if rq is greater than 1, due to the 'legume' effect on the intercept or if DMD is greater than cr1
+    '''
+    Relative intake – The proportion of livestock potential intake required to consume 1kg of
+    feed given the availability and digestibility.
 
-    ##Only pass cr parameter if called from Stock_generator that require a g axis
+    Calculation of relative intake includes the effect of feed availability, feed quality and the interaction.
+    This function is not called for feeds (such as supplements) that do not have an 'availability' characteristic.
+    The calculated RI can be greater than 1 - which implies that actual intake can be greater than potential intake
+    This can occur if rq is greater than 1, due to the 'legume' effect on the intercept or if DMD is greater than cr1.
+
+    NOTE: Only pass cr parameter if called from Stock_generator that have a g axis
+    '''
     ##create scalar cr if not passed in
     if cr is None:
         ###Scalar version of cr[…] using c2[0] (finewool merino)
