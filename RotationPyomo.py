@@ -84,6 +84,8 @@ def rotationpyomo(params):
 ######################
 #rotation constraints#
 ######################
+##rotation constraints are usually the same each loop. but if the lmu mask changes they need to be built again
+##thus they are just built each loop. Maybe this could be changed if running lots of rotations.
 
     #todo i might not need the root hist variable and whatnot with new season structure
 
@@ -114,39 +116,43 @@ def f_con_rotation(params):
         except AttributeError:
             pass
 
-        ##only build this con if it doesn't exist already ie the rotation link never changes
+        ##steady state rotation constraint
         try:
-            if model.con_rotationcon1:
-                pass
+            model.del_component(model.con_rotationcon1)  # if running the dsp model we don't need the steady state rotation constraints
+            model.del_component(model.con_rotationcon1_index)  # if running the dsp model we don't need the steady state rotation constraints
         except AttributeError:
-            def rot_phase_link(model,l,h):
-                return sum(model.v_phase_area[r,l]*model.p_hist_prov[r,h] for r in model.s_phases if ((r,)+(h,)) in params['hist_prov'].keys()) \
-                           + sum(model.v_phase_area[r,l]*model.p_hist_req[r,h] for r in model.s_phases if ((r,)+(h,)) in params['hist_req'].keys())<=0
-            model.con_rotationcon1 = Constraint(model.s_lmus, model.s_rotconstraints, rule=rot_phase_link, doc='rotation phases constraint')
+            pass
+        def rot_phase_link(model,l,h):
+            return sum(model.v_phase_area[r,l]*model.p_hist_prov[r,h] for r in model.s_phases if ((r,)+(h,)) in params['hist_prov'].keys()) \
+                       + sum(model.v_phase_area[r,l]*model.p_hist_req[r,h] for r in model.s_phases if ((r,)+(h,)) in params['hist_req'].keys())<=0
+        model.con_rotationcon1 = Constraint(model.s_lmus, model.s_rotconstraints, rule=rot_phase_link, doc='rotation phases constraint')
 
     else:
         try:
             model.del_component(model.con_rotationcon1)  # if running the dsp model we don't need the steady state rotation constraints
+            model.del_component(model.con_rotationcon1_index)  # if running the dsp model we don't need the steady state rotation constraints
         except AttributeError:
             pass
 
-        ##only build this con if it doesn't exist already ie the rotation link never changes
+        ##DSP rotation constraint
         try:
-            if model.con_root_hist and model.con_root2rotation:
-                pass
+            model.del_component(model.con_root_hist) #if running the steady state model we don't need the dsp rotation constraints
+            model.del_component(model.con_root_hist_index) #if running the steady state model we don't need the dsp rotation constraints
+            model.del_component(model.con_root2rotation) #if running the steady state model we don't need the dsp rotation constraints
+            model.del_component(model.con_root2rotation_index) #if running the steady state model we don't need the dsp rotation constraints
         except AttributeError:
+            pass
+        ##constraint for history provided to history root. This is only required in the stochastic model so that each season starts from a common place.
+        def rot_hist(model,l,h):
+            return model.v_root_hist[h,l] + sum(model.v_phase_area[r,l]*model.p_hist_prov[r,h]
+                        for r in model.s_phases if ((r,)+(h,)) in params['hist_prov'].keys())<=0
+        model.con_rot_hist = Constraint(model.s_lmus, model.s_rotconstraints, rule=rot_hist, doc='constraint between rotation history provided and root history')
 
-            ##constraint for history provided to history root. This is only required in the stochastic model so that each season starts from a common place.
-            def rot_hist(model,l,h):
-                return model.v_root_hist[h,l] + sum(model.v_phase_area[r,l]*model.p_hist_prov[r,h]
-                            for r in model.s_phases if ((r,)+(h,)) in params['hist_prov'].keys())<=0
-            model.con_rot_hist = Constraint(model.s_lmus, model.s_rotconstraints, rule=rot_hist, doc='constraint between rotation history provided and root history')
-
-            ##constraint for history provided to history root. This is only required in the stochastic model so that each season starts from a common place.
-            def rot_phase_link(model,l,h):
-                return - model.v_root_hist[h,l] + sum(model.v_phase_area[r,l]*model.p_hist_req[r,h]
-                            for r in model.s_phases if ((r,)+(h,)) in params['hist_req'].keys())<=0
-            model.con_root2rotation = Constraint(model.s_lmus, model.s_rotconstraints, rule=rot_phase_link, doc='constraint between rotation history root and rotation')
+        ##constraint for history provided to history root. This is only required in the stochastic model so that each season starts from a common place.
+        def rot_phase_link(model,l,h):
+            return - model.v_root_hist[h,l] + sum(model.v_phase_area[r,l]*model.p_hist_req[r,h]
+                        for r in model.s_phases if ((r,)+(h,)) in params['hist_req'].keys())<=0
+        model.con_root2rotation = Constraint(model.s_lmus, model.s_rotconstraints, rule=rot_phase_link, doc='constraint between rotation history root and rotation')
 
 
 ########
@@ -169,11 +175,4 @@ def f_con_area():
     model.con_area = Constraint(model.s_lmus, rule=area_rule, doc='rotation area constraint')
     
 
-
-
-#######################################################################################################################################################
-#######################################################################################################################################################
-#variables - don't need to be included in the function that is re-run - i got an error when trying to move this into function... (weird)
-#######################################################################################################################################################
-#######################################################################################################################################################
 

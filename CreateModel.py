@@ -78,6 +78,10 @@ def sets() :
 
     ##lmus
     lmu_mask = pinp.general['lmu_area'].squeeze() > 0
+    try:
+        model.del_component(model.s_lmus)
+    except AttributeError:
+        pass
     model.s_lmus = Set(initialize=pinp.general['lmu_area'].index[lmu_mask],doc='defined the soil type a given rotation is on')
 
 

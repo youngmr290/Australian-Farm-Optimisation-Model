@@ -37,8 +37,12 @@ Possible model errors
         - Model throwing key error in presolve stage.
         - If you run one trial it works.
     - Solution:
-        - This may be because a bound or constraint is still active from the last trial.
+        - This occurs when an object in pyomo is being called that doesnt exist.
+        - This may be because a bound or constraint is still active from the last trial however
+          the variable that it is referencing has been deleted or changed.
           You need to make sure constrains are being deleted between trials or being re-built correctly.
+        - This may be because a variable has been deleted and rebuilt but a constraint referencing that
+          variable was not rebuilt. To fix this the constraint will also need to be deleted and rebuilt.
 
 Process to debug
 ----------------
