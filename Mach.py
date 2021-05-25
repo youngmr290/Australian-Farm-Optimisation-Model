@@ -214,8 +214,11 @@ def f_seed_time_lmus():
     through the soil. The rate inputs are set for the base LMU and then adjusted by a
     user defined LMU factor.
     '''
+    ##mask lmu input
+    lmu_mask = pinp.general['lmu_area'].squeeze() > 0
+    seeder_speed_lmu_adj = pinp.mach['seeder_speed_lmu_adj'][lmu_mask]
     ##first turn seeding speed on each lmu to df so it can be manipulated (it was entered as a dict in machinputs)
-    speed_lmu_df = pinp.mach['seeder_speed_lmu_adj']*uinp.mach[pinp.mach['option']]['seeder_speed_base']
+    speed_lmu_df = seeder_speed_lmu_adj * uinp.mach[pinp.mach['option']]['seeder_speed_base']
     ##convert speed to rate of direct drill for wheat on each lmu type (hr/ha)
     rate_direct_drill = 1 / (speed_lmu_df * uinp.mach[pinp.mach['option']]['seeding_eff'] * uinp.mach[pinp.mach['option']]['seeder_width'] / 10)
     return rate_direct_drill
@@ -253,10 +256,13 @@ def fuel_use_seeding():
     '''
     Fuel use L/ha used by tractor to seed on each lmu.
     '''
+    ##mask lmu input
+    lmu_mask = pinp.general['lmu_area'].squeeze() > 0
+    seeding_fuel_lmu_adj = pinp.mach['seeding_fuel_lmu_adj'][lmu_mask]
     ##determine fuel use on base lmu (draft x tractor factor)
     base_lmu_seeding_fuel = uinp.mach[pinp.mach['option']]['draft_seeding'] * uinp.mach[pinp.mach['option']]['fuel_adj_tractor']
     ##determine fuel use on all soils by adjusting s5 fuel use with input adjustment factors
-    df_seeding_fuel_lmu = base_lmu_seeding_fuel * pinp.mach['seeding_fuel_lmu_adj']
+    df_seeding_fuel_lmu = base_lmu_seeding_fuel * seeding_fuel_lmu_adj
     #second multiply base cost by adj, to produce df with seeding fuel use for each lmu (L/ha)
     return df_seeding_fuel_lmu 
     
@@ -286,8 +292,11 @@ def maint_cost_seeder():
     gear at different rates. The cost inputs are set for the base LMU and then adjusted by a
     user defined LMU factor.
     '''
+    ##mask lmu input
+    lmu_mask = pinp.general['lmu_area'].squeeze() > 0
+    tillage_maint_lmu_adj = pinp.mach['tillage_maint_lmu_adj'][lmu_mask]
     ##equals r&m on base lmu x lmu adj factor
-    tillage_lmu_df = uinp.mach[pinp.mach['option']]['tillage_maint'] * pinp.mach['tillage_maint_lmu_adj']
+    tillage_lmu_df = uinp.mach[pinp.mach['option']]['tillage_maint'] * tillage_maint_lmu_adj
     return  tillage_lmu_df
 
 def f_seed_cost_alloc():

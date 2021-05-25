@@ -230,7 +230,7 @@ def f_rot_yield():
     yields_lmus = f_mask_lmu(pinp.crop['yield_by_lmu'], axis=1) #soil yield factor
     seeding_rate = pinp.crop['seeding_rate'].mul(pinp.crop['own_seed'],axis=0)#seeding rate adjusted by if the farmer is using their own seed from last yr
     frost = pinp.crop['frost'] #frost
-    arable = pinp.crop['arable'].stack().droplevel(0) #read in arable area df
+    arable = f_mask_lmu(pinp.crop['arable'].squeeze(), axis=0) #read in arable area df
     ##calculate yield - base yield * arable area * frost * lmu factor - seeding rate
     yield_arable_by_soil = yields_lmus.mul(arable).mul(1-frost) #mul arable area to the the lmu factor (easy because dfs have the same axis's). THen mul frost
     yields=yield_arable_by_soil.reindex(base_yields.index, axis=0, level=1).mul(base_yields,axis=0) #reindes and mul with base yields
@@ -331,7 +331,7 @@ def f_fert_req():
     fert_by_soil = fert_by_soil.stack() #read in fert by soil
     fert=base_fert.stack(level=0).mul(fert_by_soil,axis=1,level=0).stack()
     ##account for arable area
-    arable = pinp.crop['arable'].squeeze() #read in arable area df
+    arable = f_mask_lmu(pinp.crop['arable'].squeeze(), axis=0) #read in arable area df
     fert=fert.mul(arable, axis=0, level=2) #add arable to df
     return fert
 
@@ -370,7 +370,7 @@ def f_fert_passes():
     ##drop landuse from index
     fert_passes = fert_passes.droplevel(0, axis=0)
     ##adjust fert passes by arable area
-    arable = pinp.crop['arable'].squeeze()
+    arable = f_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)
     index = pd.MultiIndex.from_product([fert_passes.index, arable.index])
     fert_passes = fert_passes.reindex(index, axis=0,level=0)
     fert_passes=fert_passes.mul(arable,axis=0,level=1)
@@ -428,7 +428,7 @@ def f_nap_fert_req():
     money to fertilise. Fertiliser rate for non-arable areas can be adjusted separately to the arable area.
 
     '''
-    arable = pinp.crop['arable'].squeeze()  # read in arable area df
+    arable = f_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)  # read in arable area df
     fertreq_na = pinp.crop['nap_fert'].reset_index().set_index(['fert','landuse'])
     fertreq_na = fertreq_na.mul(1 - arable)
     ##add cont pasture fert req
@@ -445,7 +445,7 @@ def f_nap_fert_passes():
     '''
     ##passes over non arable pasture area (only for pasture phases because for pasture the non arable areas also receive fert)
     passes_na = pinp.crop['nap_passes'].reset_index().set_index(['fert','landuse'])
-    arable = pinp.crop['arable'].squeeze() #need to adjust for only non arable area
+    arable = f_mask_lmu(pinp.crop['arable'].squeeze(), axis=0) #need to adjust for only non arable area
     passes_na= passes_na.mul(1-arable) #adjust for the non arable area
     ##add cont pasture fert req
     passes_na = f_cont_pas(passes_na.unstack(0))
@@ -631,7 +631,7 @@ def f_chem_application():
     ##drop landuse from index
     base_chem = base_chem.droplevel(0, axis=0)
     ##arable area.
-    arable = pinp.crop['arable'].squeeze()
+    arable = f_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)
     #adjust chem passes by arable area
     index = pd.MultiIndex.from_product([base_chem.index, arable.index])
     base_chem = base_chem.reindex(index, axis=0,level=0)
@@ -717,7 +717,7 @@ def seedcost(r_vals):
     rate1 = pinp.crop['seed_info']['Rate1'] #rate (ml/100g) for dressing 1
     rate2 = pinp.crop['seed_info']['Rate2'] #rate (ml/100g) for dressing 2
     percent_dressed = pinp.crop['seed_info']['percent dressed'] #rate (ml/100g) for dressing 2
-    arable = pinp.crop['arable'].squeeze()
+    arable = f_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)
     ##adjust for arable area.
     seeding_rate = seeding_rate.mul(arable, axis=1)
     ##overall seed grading cost per tonne
@@ -829,10 +829,10 @@ def f_crop_sow():
 
     '''
     ##sow = arable area
-    arable = pinp.crop['arable']
-    cropsow = arable.reindex(pd.MultiIndex.from_product([sinp.landuse['C'],arable.index]), axis=0, level=1).droplevel(1)
+    arable = f_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)
+    cropsow = arable.reindex(pd.MultiIndex.from_product([sinp.landuse['C'],arable.index]), axis=0, level=1)
     ##merge to rot phases
-    cropsow = pd.merge(phases_df, cropsow, how='left', left_on=sinp.end_col(), right_index = True)
+    cropsow = pd.merge(phases_df, cropsow.unstack(), how='left', left_on=sinp.end_col(), right_index = True)
     ##add current crop to index
     cropsow.set_index(sinp.end_col(), append=True, inplace=True)
     crop_sow = cropsow.drop(list(range(sinp.general['phase_len']-1)), axis=1).stack()

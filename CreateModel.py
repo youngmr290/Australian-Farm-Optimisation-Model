@@ -76,6 +76,10 @@ def sets() :
         pass
     model.s_feed_pools = Set(initialize=sinp.general['sheep_pools'][ev_mask_v],doc='nutritive value pools')
 
+    ##lmus
+    lmu_mask = pinp.general['lmu_area'].squeeze() > 0
+    model.s_lmus = Set(initialize=pinp.general['lmu_area'].index[lmu_mask],doc='defined the soil type a given rotation is on')
+
 
 #######################
 #labour               #
@@ -117,10 +121,6 @@ model.s_crops = Set(ordered=False, initialize=sinp.landuse['C'], doc='crop types
 
 ##all crops and each pasture landuse eg t, tr
 model.s_landuses = Set(ordered=False, initialize=sinp.landuse['All'], doc='landuses')
-
-#soils
-model.s_lmus = Set(initialize=pinp.general['lmu_area'].index, doc='defined the soil type a given rotation is on')
-# model.s_lmus.pprint()
 
 ##different fert options - used in labourcroppyomo
 model.s_fert_type = Set(initialize=uinp.price['fert_cost'].index, doc='fertiliser options')

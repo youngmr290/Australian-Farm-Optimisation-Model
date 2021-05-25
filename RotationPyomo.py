@@ -28,6 +28,14 @@ def rotationpyomo(params):
     #variables  #
     #############
     try:
+        model.del_component(model.v_phase_area)
+        model.del_component(model.v_phase_area_index)
+    except AttributeError:
+        pass
+    ##Amount of each phase on each soil, Positive Variable.
+    model.v_phase_area = Var(model.s_phases,model.s_lmus,bounds=(0,None),doc='number of ha of each phase')
+
+    try:
         model.del_component(model.v_root_hist)
         model.del_component(model.v_root_hist_index)
     except AttributeError:
@@ -168,11 +176,4 @@ def f_con_area():
 #variables - don't need to be included in the function that is re-run - i got an error when trying to move this into function... (weird)
 #######################################################################################################################################################
 #######################################################################################################################################################
-try:
-    model.del_component(model.v_phase_area)
-    model.del_component(model.v_phase_area_index)
-except AttributeError:
-    pass
-##Amount of each phase on each soil, Positive Variable.
-model.v_phase_area = Var(model.s_phases, model.s_lmus, bounds=(0,None), doc='number of ha of each phase')
 

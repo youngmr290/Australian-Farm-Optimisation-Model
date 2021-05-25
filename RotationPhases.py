@@ -39,7 +39,8 @@ def rot_params(params):
 
     '''
     ##area
-    params['lmu_area'] =  pinp.general['lmu_area'].squeeze().to_dict()
+    lmu_mask = pinp.general['lmu_area'].squeeze() > 0
+    params['lmu_area'] =  pinp.general['lmu_area'].squeeze()[lmu_mask].to_dict()
 
     #############################
     #rotation phase constraint1 #
