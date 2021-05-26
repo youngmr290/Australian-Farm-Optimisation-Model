@@ -27,13 +27,13 @@ How to add a report:
 #. Add it to exp.xlsx
 #. in ReportControl.py add an empty df to stack results
 #. in ReportControl.py build the 'within trial' and 'between trial' sections (this can easily be done by copying
-   existing code and makeing the relevant changes).
+   existing code and making the relevant changes).
 
 .. tip:: When creating r_vals values try and do it in obvious spots so it is easier to understand later.
 
 .. note:: For livestock: livestock is slightly more complicated. If you add a r_val or lp_vars you
     will also need to add it to f_stock_reshape the allows you to get the shape correct
-    (remove singlton axis and converts lp_vars from dict to numpy).
+    (remove singleton axis and converts lp_vars from dict to numpy).
 
 .. note:: If reporting dates from a numpy array it is necessary to convert to datetime64[ns] prior to converting to a DataFrame
     For example:
@@ -129,7 +129,7 @@ def f_report(processor, trials):
     stacked_grnfec = pd.DataFrame()  # FEC of green foo
     stacked_dryfec = pd.DataFrame()  # FEC of dry foo
 
-    #todo add: A marginal value of feed component. I had set this up in the old MIDAS so you could look at the vlaue of feed of different qualities (using the RC). It requires a number of DVs that are FP by FEC that are all bound to 0. They all have a me_cons parameter of -100 and a volume parameter that differes so that me/vol varies from 3 to 12 in steps of 1 MJ/kg.
+    #todo add: A marginal value of feed component. I had set this up in the old MIDAS so you could look at the value of feed of different qualities (using the RC). It requires a number of DVs that are FP by FEC that are all bound to 0. They all have a me_cons parameter of -100 and a volume parameter that differs so that me/vol varies from 3 to 12 in steps of 1 MJ/kg.
     # Means that there are 100 DV's (10 x 10).
     # Requires one constraint that is the sum(v_mvf_p6v) == 0
     # It gets added in if a full solution is requested, because it only tells us anything if we can look at the RC's.
@@ -406,7 +406,7 @@ def f_report(processor, trials):
             keys = 'dams_keys_k2tvpaebnwziy1g1'
             arith = 1
             index =[3]
-            cols =[6]
+            cols =[12,1,6]   #g1, t & b1
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             fec_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
