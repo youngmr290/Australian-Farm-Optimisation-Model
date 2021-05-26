@@ -12,6 +12,8 @@ Description of this pasture module: This representation includes at optimisation
         Note: There is not a constraint that ensures that the high quality pool is grazed prior to the low quality pool (as there is in the stubble selective grazing)
 
 This is the version that uses an extra axis on the array rather than a class.
+
+#todo add labour required for feed budgeting. Inputs are currently in the sheep sheet of Property.xls
 """
 
 
