@@ -225,6 +225,7 @@ def universal_inp_sa():
     sheep['i_sam_LTW_offs'] = fun.f_sa(sheep['i_sam_LTW_offs'],sen.sam['LTW_offs'])
     sheep['i_husb_operations_contract_cost_h2'] = fun.f_sa(sheep['i_husb_operations_contract_cost_h2'],sen.sam['husb_cost_h2'])
     sheep['i_husb_operations_labourreq_l2h2'] = fun.f_sa(sheep['i_husb_operations_labourreq_l2h2'],sen.sam['husb_labour_l2h2'])
+    sheep['i_salep_months_priceadj_s7s9m4'] = fun.f_sa(sheep['i_salep_months_priceadj_s7s9m4'],sen.sam['salep_month_adjust_s7s9m4'])
     ###SAP
     ###SAA
     sheep['i_husb_operations_contract_cost_h2'] = fun.f_sa(sheep['i_husb_operations_contract_cost_h2'],sen.saa['husb_cost_h2'], 2)

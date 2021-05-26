@@ -49,6 +49,7 @@ sam['grn_dmd_senesce_f','annual']       = np.ones((len(per.f_feed_periods()) - 1
 ##livestock
 sam['woolp_mpg'] = 1.0                      # sa multiplier for wool price at std micron
 sam['salep_max'] = 1.0                      #max sale price in grid
+sam['salep_month_adjust_s7s9m4'] = np.ones(uinp.sheep['i_salep_months_priceadj_s7s9m4'].shape, dtype=np.float64)      #monthly sale price
 sam['kg'] = 1.0                             #energy efficiency of adults (zf2==1)
 sam['mr'] = 1.0                             #Maintenance requirement of adults (zf2==1)
 sam['pi'] = 1.0                             #Potential intake of adults (zf2==1)
@@ -58,11 +59,11 @@ sam['pi_post'] = 1.0                        #Post loop potential intake of adult
 sam['chill'] = 1.0                        #intermediate sam on chill.
 
 ##stock parameters
-sam['ci_c2'] = np.ones(uinp.parameters_inp['i_ci_c2'].shape, dtype=np.float64)  #intake params for genotypes
+sam['ci_c2'] = np.ones(uinp.parameters['i_ci_c2'].shape, dtype=np.float64)  #intake params for genotypes
 sam['sfw_c2'] = 1.0                         #std fleece weight genotype params
 sam['rr'] = 1.0                        #scanning percentage (adjust the standard scanning % for f_conception_ltw and within function for f_conception_cs
-sam['husb_cost_h2'] = np.ones(uinp.sheep_inp['i_husb_operations_contract_cost_h2'].shape, dtype=np.float64)  #SA value for contract cost of husbandry operations.
-sam['husb_labour_l2h2'] = np.ones(uinp.sheep_inp['i_husb_operations_labourreq_l2h2'].shape, dtype=np.float64)  #units of the job carried out per husbandry labour hour
+sam['husb_cost_h2'] = np.ones(uinp.sheep['i_husb_operations_contract_cost_h2'].shape, dtype=np.float64)  #SA value for contract cost of husbandry operations.
+sam['husb_labour_l2h2'] = np.ones(uinp.sheep['i_husb_operations_labourreq_l2h2'].shape, dtype=np.float64)  #units of the job carried out per husbandry labour hour
 
 ######
 #SAP #
@@ -79,17 +80,17 @@ sap['mr_post'] = 0.0           #Post loop maintenance requirement of adults (zf2
 #SAA #
 ######
 ##stock
-saa['husb_cost_h2'] = np.zeros(uinp.sheep_inp['i_husb_operations_contract_cost_h2'].shape, dtype=np.float64)  #SA value for contract cost of husbandry operations.
-saa['husb_labour_l2h2'] = np.zeros(uinp.sheep_inp['i_husb_operations_labourreq_l2h2'].shape, dtype=np.float64)  #units of the job carried out per husbandry labour hour
-saa['feedoptions_rjp'] = np.zeros(pinp.feedsupply_inp['i_feedoptions_r1pj0'].shape, dtype=np.float64)  #SA value for feedsupply.
-saa['feedoptions_var_rp'] = np.zeros(pinp.feedsupply_inp['i_feedoptions_var_r2p'].shape, dtype=np.float64)  #SA value for feedsupply variation.
+saa['husb_cost_h2'] = np.zeros(uinp.sheep['i_husb_operations_contract_cost_h2'].shape, dtype=np.float64)  #SA value for contract cost of husbandry operations.
+saa['husb_labour_l2h2'] = np.zeros(uinp.sheep['i_husb_operations_labourreq_l2h2'].shape, dtype=np.float64)  #units of the job carried out per husbandry labour hour
+saa['feedoptions_rjp'] = np.zeros(pinp.feedsupply['i_feedoptions_r1pj0'].shape, dtype=np.float64)  #SA value for feedsupply.
+saa['feedoptions_var_rp'] = np.zeros(pinp.feedsupply['i_feedoptions_var_r2p'].shape, dtype=np.float64)  #SA value for feedsupply variation.
 
 ##stock parameters
 saa['sfd_c2'] = 0.0                     #std fibre diameter genotype params
-saa['cl0_c2'] = np.zeros(uinp.parameters_inp['i_cl0_c2'].shape, dtype=np.float64)  #SA value for litter size genotype params.
+saa['cl0_c2'] = np.zeros(uinp.parameters['i_cl0_c2'].shape, dtype=np.float64)  #SA value for litter size genotype params.
 saa['scan_std_c2'] = 0.0                #std scanning percentage of a genotype. Controls the MU repro, initial propn of sing/twin/trip prog required to replace the dams, the lifetime productivity of the dams as affected by their BTRT..
 saa['rr'] = 0.0                    #reproductive rate/scanning percentage (adjust the standard scanning % for f_conception_ltw and within function for f_conception_cs
-saa['rr_age_og1'] = np.zeros(pinp.sheep_inp['i_scan_og1'].shape, dtype=np.float64)    # reproductive rate by age. Use shape that has og1
+saa['rr_age_og1'] = np.zeros(pinp.sheep['i_scan_og1'].shape, dtype=np.float64)    # reproductive rate by age. Use shape that has og1
 saa['mortalityx'] = np.zeros(np.max(sinp.stock['a_nfoet_b1'])+1, dtype=np.float64)  #Adjust the progeny mortality due to exposure at birth relative - this is a high level sa, it impacts within a calculation not on an input
 
 ######
@@ -112,7 +113,7 @@ sat['salep_score_scalar'] = 0.0  #Scalar for score impact across the grid
 sav['steady_state']      = '-'                  #SA to alter if the model is steady state
 sav['rev_create']      = '-'                  #SA to alter if the trial is being used to create rev std values
 sav['rev_number']      = '-'                  #SA to alter rev number - rev number is appended to the std rev value pkl file and can be used to select which rev is used as std for a given trial.
-sav['rev_trait_inc'] = np.full_like(sinp.structuralsa_inp['rev_trait_inc'], '-', dtype=object) #SA value for which traits are to be held constant in REV analysis.
+sav['rev_trait_inc'] = np.full_like(sinp.structuralsa['rev_trait_inc'], '-', dtype=object) #SA value for which traits are to be held constant in REV analysis.
 
 ##finance
 sav['minroe']      = '-'                  #SA to alter the minroe (applied to both steady-state and dsp minroe inputs)
@@ -124,7 +125,7 @@ sav['grain_percentile'] = '-'  #grain price percentile
 ##bounds
 sav['bnd_total_pas_area'] = '-'  #Total pasture area for bound. '-' is default so it will chuck an error if the bound is turned on without a specified area
 sav['bnd_pasarea_inc'] = '-'   #SA to turn on the pasture area bound
-sav['bnd_propn_dams_mated_og1'] = np.full((pinp.len_d,) + pinp.sheep_inp['i_g3_inc'].shape, '-', dtype=object)   #proportion of dams mated
+sav['bnd_propn_dams_mated_og1'] = np.full((pinp.len_d,) + pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #proportion of dams mated
 sav['bnd_drys_sold'] = '-'   #SA to force drys to be sold
 sav['bnd_drys_retained'] = '-'   #SA to force drys to be retained
 sav['bnd_sale_twice_dry_inc'] = '-'   #SA to include the the bound which forces twice dry dams to be sold
@@ -132,53 +133,53 @@ sav['bnd_twice_dry_propn'] = '-'   #SA to change twice dry dam proportion
 sav['bnd_upper_dam_inc'] = '-'   #control if dam upper bound is on.
 sav['bnd_total_dams_scanned'] = '-'   #total dams scanned (summed over all dvps) - this also controls if bound is on.
 sav['bnd_propn_dam5_retained'] = '-'   #propn of 5yo dams retained - this also controls if bound is on.
-sav['bnd_sr_t'] = np.full(pinp.sheep_inp['i_sr_constraint_t'].shape, '-', dtype=object)   #SA to fix stocking rate
-sav['bnd_min_sale_age_wether_g3'] = np.full(pinp.sheep_inp['i_g3_inc'].shape, '-', dtype=object)   #SA to set min age wether can be sold
-sav['bnd_max_sale_age_wether_g3'] = np.full(pinp.sheep_inp['i_g3_inc'].shape, '-', dtype=object)   #SA to set max age wether can be sold
-sav['bnd_min_sale_age_female_g1'] = np.full(pinp.sheep_inp['i_g3_inc'].shape, '-', dtype=object)   #SA to set min age a dam can be sold - BBT offspring can be sold but BBT dams can't (because they are BB)
-sav['bnd_min_sale_age_female_g3'] = np.full(pinp.sheep_inp['i_g3_inc'].shape, '-', dtype=object)   #SA to set min age a female can be sold - used to bound prog & offs
+sav['bnd_sr_t'] = np.full(pinp.sheep['i_sr_constraint_t'].shape, '-', dtype=object)   #SA to fix stocking rate
+sav['bnd_min_sale_age_wether_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set min age wether can be sold
+sav['bnd_max_sale_age_wether_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set max age wether can be sold
+sav['bnd_min_sale_age_female_g1'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set min age a dam can be sold - BBT offspring can be sold but BBT dams can't (because they are BB)
+sav['bnd_min_sale_age_female_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)   #SA to set min age a female can be sold - used to bound prog & offs
 
 ##pasture
-sav['pas_inc'] = np.full_like(pinp.general_inp['pas_inc'], '-', dtype=object) #SA value for pastures included mask
+sav['pas_inc'] = np.full_like(pinp.general['pas_inc'], '-', dtype=object) #SA value for pastures included mask
 
 ##Stock
 sav['fec_inc'] = '-'    #SA to store FEC report values
 sav['lw_inc'] = '-'     #SA to store LW report values
 sav['ffcfw_inc'] = '-'  #SA to store FFCFW report values
 sav['eqn_compare']      = '-'                  #SA to alter if the different equation systems in the sheep sim are run and compared
-sav['eqn_used_g0_q1p7'] = np.full(uinp.sheep_inp['i_eqn_used_g0_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
-sav['eqn_used_g1_q1p7'] = np.full(uinp.sheep_inp['i_eqn_used_g1_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
-sav['eqn_used_g2_q1p7'] = np.full(uinp.sheep_inp['i_eqn_used_g2_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
-sav['eqn_used_g3_q1p7'] = np.full(uinp.sheep_inp['i_eqn_used_g3_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
-sav['TOL_inc']          = np.full(pinp.sheep_inp['i_mask_i'].shape, '-', dtype=object)      # SA value for the inclusion of each TOL
-sav['g3_included']      = np.full(pinp.sheep_inp['i_g3_inc'].shape, '-', dtype=object)      # SA value for the inclusion of each offspring genotype
-sav['genotype']         = np.full(pinp.sheep_inp['a_c2_c0'].shape, '-', dtype=object)       # this is the selection of the genotypes of the sires for B, M & T
-sav['scan_og1']         = np.full(pinp.sheep_inp['i_scan_og1'].shape, '-', dtype=object)    # SA value for the scanning management option
+sav['eqn_used_g0_q1p7'] = np.full(uinp.sheep['i_eqn_used_g0_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
+sav['eqn_used_g1_q1p7'] = np.full(uinp.sheep['i_eqn_used_g1_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
+sav['eqn_used_g2_q1p7'] = np.full(uinp.sheep['i_eqn_used_g2_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
+sav['eqn_used_g3_q1p7'] = np.full(uinp.sheep['i_eqn_used_g3_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
+sav['TOL_inc']          = np.full(pinp.sheep['i_mask_i'].shape, '-', dtype=object)      # SA value for the inclusion of each TOL
+sav['g3_included']      = np.full(pinp.sheep['i_g3_inc'].shape, '-', dtype=object)      # SA value for the inclusion of each offspring genotype
+sav['genotype']         = np.full(pinp.sheep['a_c2_c0'].shape, '-', dtype=object)       # this is the selection of the genotypes of the sires for B, M & T
+sav['scan_og1']         = np.full(pinp.sheep['i_scan_og1'].shape, '-', dtype=object)    # SA value for the scanning management option
 sav['woolp_mpg_percentile'] = '-'               #sa value for the wool price percentile
 sav['woolp_mpg'] = '-'                          # sa value for wool price at std micron
 sav['woolp_fdprem_percentile'] = '-'            # sa value for fd premium percentile (premium received by fd compared to std)
 sav['woolp_fdprem'] = '-'                       # sa value for fd premium
 sav['salep_percentile'] = '-'                   #Value for percentile for all sale grids
 sav['salep_max'] = '-'                          #max sale price in grid
-len_max_w1 = sinp.structuralsa_inp['i_w_start_len1'] * len(sinp.structuralsa_inp['i_nut_spread_n1']) ** (
-        len(sinp.stock_inp['i_fixed_fvp_mask_dams'])+len(sinp.structuralsa_inp['i_fvp_mask_dams'])) #the max size of w if all n and fvps included.
-len_max_w3 = sinp.structuralsa_inp['i_w_start_len3'] * len(sinp.structuralsa_inp['i_nut_spread_n3']) ** len(sinp.structuralsa_inp['i_fvp_mask_offs']) #the max size of w if all n and fvps included.
-sav['nut_mask_dams_owi'] = np.full((pinp.sheep_inp['i_o_len'], len_max_w1, pinp.sheep_inp['i_i_len']), '-', dtype=object)    #masks the nutrition options available eg high low high - the options selected are available for each starting weight. This array is cut down in the code to the correct w len.
-sav['nut_mask_offs_swix'] = np.full((pinp.sheep_inp['i_s_len'], len_max_w3, pinp.sheep_inp['i_i_len'], pinp.sheep_inp['i_x_len']), '-', dtype=object)   #masks the nutrition options available eg high low high - the options selected are available for each starting weight. This array is cut down in the code to the correct w len.
-sav['nut_spread_n1'] = np.full(sinp.structuralsa_inp['i_nut_spread_n1'].shape, '-', dtype=object)      #nut spread dams
-sav['nut_spread_n3'] = np.full(sinp.structuralsa_inp['i_nut_spread_n3'].shape, '-', dtype=object)      #nut spread offs
+len_max_w1 = sinp.structuralsa['i_w_start_len1'] * len(sinp.structuralsa['i_nut_spread_n1']) ** (
+        len(sinp.stock['i_fixed_fvp_mask_dams'])+len(sinp.structuralsa['i_fvp_mask_dams'])) #the max size of w if all n and fvps included.
+len_max_w3 = sinp.structuralsa['i_w_start_len3'] * len(sinp.structuralsa['i_nut_spread_n3']) ** len(sinp.structuralsa['i_fvp_mask_offs']) #the max size of w if all n and fvps included.
+sav['nut_mask_dams_owi'] = np.full((pinp.sheep['i_o_len'], len_max_w1, pinp.sheep['i_i_len']), '-', dtype=object)    #masks the nutrition options available eg high low high - the options selected are available for each starting weight. This array is cut down in the code to the correct w len.
+sav['nut_mask_offs_swix'] = np.full((pinp.sheep['i_s_len'], len_max_w3, pinp.sheep['i_i_len'], pinp.sheep['i_x_len']), '-', dtype=object)   #masks the nutrition options available eg high low high - the options selected are available for each starting weight. This array is cut down in the code to the correct w len.
+sav['nut_spread_n1'] = np.full(sinp.structuralsa['i_nut_spread_n1'].shape, '-', dtype=object)      #nut spread dams
+sav['nut_spread_n3'] = np.full(sinp.structuralsa['i_nut_spread_n3'].shape, '-', dtype=object)      #nut spread offs
 sav['n_fs_dams'] = '-'      #nut options dams
 sav['n_fs_offs'] = '-'      #nut options offs
 sav['n_initial_lw_dams'] = '-'      #number of initial lws dams - note with the current code this can only be 2 or 3
-sav['adjp_lw_initial_w1'] = np.full(sinp.structuralsa_inp['i_adjp_lw_initial_w1'].shape, '-', dtype=object)      #initial lw adjustment dams
-sav['mask_fvp_dams'] = np.full(sinp.structuralsa_inp['i_fvp_mask_dams'].shape, '-', dtype=object)      #SA to mask changeable fvps.
-sav['fvp_is_dvp_dams'] = np.full(sinp.structuralsa_inp['i_dvp_mask_f1'].shape, '-', dtype=object)      #SA to control if changeable fvp is a dvp.
-sav['mask_fvp_offs'] = np.full(sinp.structuralsa_inp['i_fvp_mask_offs'].shape, '-', dtype=object)      #SA to mask changeable fvps.
-sav['fvp_is_dvp_offs'] = np.full(sinp.structuralsa_inp['i_fvp_mask_offs'].shape, '-', dtype=object)      #SA to control if changeable fvp is a dvp.
-sav['r1_izg1'] = np.full(pinp.sheep_inp['ia_r1_zig1'].shape, '-', dtype=object)   #SA to change the base feed option for dams
-sav['r2_ik2g1'] = np.full(pinp.sheep_inp['ia_r2_k2ig1'].shape, '-', dtype=object)   #SA to Change the selected feed variations selected for the k2 axis (LSLN) for dams
-sav['r1_izg3'] = np.full(pinp.sheep_inp['ia_r1_zig3'].shape, '-', dtype=object)   #SA to change the base feed option for dams
+sav['adjp_lw_initial_w1'] = np.full(sinp.structuralsa['i_adjp_lw_initial_w1'].shape, '-', dtype=object)      #initial lw adjustment dams
+sav['mask_fvp_dams'] = np.full(sinp.structuralsa['i_fvp_mask_dams'].shape, '-', dtype=object)      #SA to mask changeable fvps.
+sav['fvp_is_dvp_dams'] = np.full(sinp.structuralsa['i_dvp_mask_f1'].shape, '-', dtype=object)      #SA to control if changeable fvp is a dvp.
+sav['mask_fvp_offs'] = np.full(sinp.structuralsa['i_fvp_mask_offs'].shape, '-', dtype=object)      #SA to mask changeable fvps.
+sav['fvp_is_dvp_offs'] = np.full(sinp.structuralsa['i_fvp_mask_offs'].shape, '-', dtype=object)      #SA to control if changeable fvp is a dvp.
+sav['r1_izg1'] = np.full(pinp.sheep['ia_r1_zig1'].shape, '-', dtype=object)   #SA to change the base feed option for dams
+sav['r2_ik2g1'] = np.full(pinp.sheep['ia_r2_k2ig1'].shape, '-', dtype=object)   #SA to Change the selected feed variations selected for the k2 axis (LSLN) for dams
+sav['r1_izg3'] = np.full(pinp.sheep['ia_r1_zig3'].shape, '-', dtype=object)   #SA to change the base feed option for dams
 
 ##stock parameters
-sav['srw_c2'] = np.full(uinp.parameters_inp['i_srw_c2'].shape, '-', dtype=object)  #SA value for srw of each c2 genotype.
-sav['cl0_c2'] = np.full(uinp.parameters_inp['i_cl0_c2'].shape, '-', dtype=object)  #SA value for litter size genotype params.
+sav['srw_c2'] = np.full(uinp.parameters['i_srw_c2'].shape, '-', dtype=object)  #SA value for srw of each c2 genotype.
+sav['cl0_c2'] = np.full(uinp.parameters['i_cl0_c2'].shape, '-', dtype=object)  #SA value for litter size genotype params.
