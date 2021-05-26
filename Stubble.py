@@ -155,6 +155,8 @@ def stubble_all(params):
     ###ri availability
     if uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used - note that the equation system used is the one selected for dams in p1
         ri_availability_p6zks1 = fsfun.f_ra_cs(stubble_foo_p6zks1, pinp.stubble['i_hf'])
+    elif uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==1: #Murdoch function used - note that the equation system used is the one selected for dams in p1
+        ri_availability_p6zks1 = fsfun.f_ra_mu(stubble_foo_p6zks1, pinp.stubble['i_hf'])
 
     ##combine ri quality and ri availability to calc overall vol (potential intake)
     ri_p6zks1 = fsfun.f_rel_intake(ri_availability_p6zks1, ri_quality_p6zks1, pinp.stubble['clover_propn_in_sward_stubble'])

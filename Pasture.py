@@ -676,9 +676,11 @@ def f_pasture(params, r_vals, ev):
     pasture_stage_flzt = i_pasture_stage_p6z[:, na, :, na]
     ### adjust foo and calc hf
     foo_ave_grnha_goflzt, hf = fsfun.f_foo_convert(cu3, cu4, foo_ave_grnha_goflzt, pasture_stage_flzt, i_legume_zt, z_pos=-2)
-    ### calc relative availability - note that the equation system used is the one selected for dams in p1 - need to hook up mu function
+    ### calc relative availability - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used
         grn_ri_availability_goflzt = fsfun.f_ra_cs(foo_ave_grnha_goflzt, hf)
+    elif uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==1: #Murdoch function used
+        grn_ri_availability_goflzt = fsfun.f_ra_mu(foo_ave_grnha_goflzt, hf)
     ### calc relative quality - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
     if uinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
         grn_ri_quality_goflzt = fsfun.f_rq_cs(dmd_diet_grnha_goflzt, i_legume_zt)
@@ -710,9 +712,11 @@ def f_pasture(params, r_vals, ev):
     ### adjust foo and calc hf
     pasture_stage_fzt = i_pasture_stage_p6z[...,na]
     dry_foo_dfzt, hf = fsfun.f_foo_convert(cu3, cu4, dry_foo_dfzt, pasture_stage_fzt, i_legume_zt, z_pos=-2)
-    ### calc relative availability - note that the equation system used is the one selected for dams in p1 - need to hook up mu function
+    ### calc relative availability - note that the equation system used is the one selected for dams in p1
     if uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used
         dry_ri_availability_dfzt = fsfun.f_ra_cs(dry_foo_dfzt, hf)
+    elif uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==1: #Murdoch function used
+        dry_ri_availability_dfzt = fsfun.f_ra_mu(dry_foo_dfzt, hf)
 
     ### calc relative quality - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
     if uinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
@@ -781,6 +785,8 @@ def f_pasture(params, r_vals, ev):
     ### calc relative availability - note that the equation system used is the one selected for dams in p1 - need to hook up mu function
     if uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used
         poc_ri_quan_fz = fsfun.f_ra_cs(i_poc_foo_fz, hf)
+    elif uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==1: #Murdoch function used
+        poc_ri_quan_fz = fsfun.f_ra_mu(i_poc_foo_fz, hf)
 
     poc_ri_fz = fsfun.f_rel_intake(poc_ri_quan_fz, poc_ri_qual_fz, i_legume_zt[..., 0])
     poc_vol_fz = fun.f_divide(1000, poc_ri_fz)  # 1000 to convert to vol per tonne
