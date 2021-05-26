@@ -1254,7 +1254,7 @@ def f_sire_req(sire_propn_a1e1b1nwzida0e0b0xyg1g0, sire_periods_g0p8, i_sire_rec
             b. mortality due to difficult birth (mortalityd - dystocia) that depends on the lamb birth weight and ewe relative condition at birth
         4. dam mortality that is the sum of
             a. mortality due to preg toxemia in the last 6 weeks of pregnancy. This occurs for multiple bearing dams and is affected by rate of LW loss
-            b. mortality due to dystocia. It is assumed that ewe death is associated with a fixed proportion of the lambs deaths from dystocia
+            b. mortality due to dystocia (calculated in f_mortality_progeny_cs). It is assumed that ewe death is associated with a fixed proportion of the lambs deaths from dystocia.
             '''
 def f_mortality_base_cs(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max, days_period, rev_trait_value, sap_mortalityb):
     ## a minimum level of mortality per day that is increased if RC is below a threshold and LWG is below a threshold
@@ -1285,15 +1285,26 @@ def f_mortality_weaner_cs(cd, cg, age, ebg_start, sd_ebg, d_nw_max,days_period):
                                                    ) > (ebg_start_m1 * cg[18, ...,na]))* days_period[...,na] #mul by days period to convert from mort per day to per period
     return np.mean(mort_weaner_m1, axis=-1)
 
-# def f_mortality_dam_cs():
-#     ## Dam mortality at birth. Currently the CSIRO system includes dam mortality due to PregTox and dam mortality due to
-#     ##dystocia but there is no calculation of deaths from other causes, such as those that might effect twin bearing dams at birth.
-#     return 0
+def f_mortality_dam_cs():
+    '''
+    Peri natal (at birth) Dam mortality.
+    Currently the CSIRO system includes dam mortality due to PregTox (f_mortality_pregtox_cs) and dam mortality due to
+    dystocia (included in f_mortality_progeny_cs) but there is no calculation of deaths from other causes,
+    such as those that might effect twin bearing dams at birth.
+    '''
+    return 0
 
 
-#todo convert this to f_mortality_pregtox_cs and call from a new equation system (& uncomment the function above)
-def f_mortality_dam_cs(cb1, cg, nw_start, ebg, sd_ebg, days_period, period_between_birth6wks, gest_propn, sap_mortalitye):
-    ##(Twin) Dam mortality in last 6 weeks (preg tox). This increments mortality associated with LWL in the base mortality function.
+def f_mortality_pregtox_cs(cb1, cg, nw_start, ebg, sd_ebg, days_period, period_between_birth6wks, gest_propn, sap_mortalitye):
+    '''
+    (Twin) Dam mortality in last 6 weeks (preg tox). This increments mortality associated with LWL in the base mortality function.
+
+    Preg tox is short for pregnancy toxaemia. It is associated with ketosis where the ewe switches into burning fat
+    (rather than carbohydrates) because they are losing weight. It is predominantly a problem for twin bearing ewes
+    because they have the highest energy demands close to lambing and the least capacity to eat more (because their
+    insides are full of lambs and this restricts stomach capacity). It is usually also more of a problem for ewes
+    that start out in better condition.
+    '''
     ###distribution on ebg - add distribution to ebg_start_m1 and then average (axis =-1)
     ebg_m1 = fun.f_distribution7(ebg, sd=sd_ebg)
     t_mort_m1 = days_period[..., na] * gest_propn[..., na] / 42 * f_sig(-42 * ebg_m1 * cg[18, ..., na] / nw_start[..., na]
@@ -1308,7 +1319,12 @@ def f_mortality_dam_cs(cb1, cg, nw_start, ebg, sd_ebg, days_period, period_betwe
     
 def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, cv_weight, w_b_exp_y, period_is_birth, chill_index_m1, nfoet_b1
                            , rev_trait_value, sap_mortalityp, saa_mortalityx):
-    '''Progeny losses due to large progeny or slow birth process (dystocia)'''
+    '''Progeny losses due to large progeny or slow birth process (dystocia)
+
+    Dystocia definition is a difficult birth that leads to brain damage, which can be due to physical trauma
+    but also lack of oxygen. The difficult birth can be a larger single lamb but it is also quite prevalent
+    in twins not due to large lambs but due to a slow birth because the ewe is lacking energy to push.
+    '''
     ###distribution on w_b & rc_birth - add distribution to ebg_start_m1 and then average (axis =-1)
     w_b_m1m2 = fun.f_distribution7(w_b, cv=cv_weight)[...,na]
     rc_birth_m1m2 = fun.f_distribution7(rc_birth, cv=cv_weight)[...,na,:]
@@ -1335,14 +1351,17 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, cv_weight, w_b_exp_y, period_
 ####################
 #Mortality Murdoch #
 ####################
-''' The Murdoch Uni system includes
-        1.  a base mortality for all animal classes which is a non reducible amount plus an increment
-            The increment varies quadratically with both RC if below a threshold and ebg if below a threshold (relative to normal weight change)
-        2. progeny mortality calculated from the LTW equations and is a function of birth weight, birth type and chill index at birth
-        3. dam mortality that is a function of dam CS at birth. This is the increase in mortality for reproducing ewes and 
-            is the same for single and twin bearing ewes.
-        4. Weaner mortality is included in the base mortality through ebg being compared with normal growth rate.
-        '''
+''' 
+    The Murdoch Uni system includes:
+        1. a base mortality for all animal classes which is a non reducible amount plus an increment
+           The increment varies quadratically with both RC if below a threshold and ebg if below a threshold (relative to normal weight change)
+        2. Weaner mortality is included in the base mortality through ebg being compared with normal growth rate.
+        3. progeny mortality calculated from the LTW equations and is a function of birth weight, birth type and chill index at birth
+        4. dam mortality: 
+            a. f_mortality_dam_mu - a function of dam CS at birth. This is the increase in mortality for reproducing ewes and 
+               is the same for single and twin bearing ewes.
+            b. f_mortality_pregtox_cs - currently this is just 0 it needs to be built.
+'''
 def f_mortality_base_mu(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max, days_period, rev_trait_value, sap_mortalityb):
     ## a minimum level of mortality per day that is increased if RC is below a threshold and LWG is below a threshold
     ### the mortality rate increases in a quadratic function for lower RC & greater disparity between EBG and normal gain
@@ -1368,7 +1387,7 @@ def f_mortality_weaner_mu():
 
 
 def f_mortality_dam_mu(cu2, cs_birth_dams, cv_cs, period_is_birth, nfoet_b1, sap_mortalitye):
-    ## transformed Dam mortality at birth
+    ## transformed Dam mortality at birth due to low CS.
     ###distribution on cs_birth, calculate mort and then average (axis =-1)
     cs_birth_dams_m1 = fun.f_distribution7(cs_birth_dams, cv=cv_cs)
     ###calc mort
@@ -1382,7 +1401,20 @@ def f_mortality_dam_mu(cu2, cs_birth_dams, cv_cs, period_is_birth, nfoet_b1, sap
     mortalitye_mu = fun.f_sa(mortalitye_mu, sap_mortalitye, sa_type = 1, value_min = 0)
     return mortalitye_mu
 
-    
+
+def f_mortality_pregtox_mu():
+    '''
+    (Twin) Dam mortality in last 6 weeks (preg tox).
+
+    Preg tox is short for pregnancy toxaemia. It is associated with ketosis where the ewe switches into burning fat
+    (rather than carbohydrates) because they are losing weight. It is predominantly a problem for twin bearing ewes
+    because they have the highest energy demands close to lambing and the least capacity to eat more (because their
+    insides are full of lambs and this restricts stomach capacity). It is usually also more of a problem for ewes
+    that start out in better condition.
+    '''
+    #todo hook this up with relationships developed in Lifetime maternals project
+    return 0
+
 def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, cv_weight, foo, chill_index_m1, period_is_birth, rev_trait_value
                            , sap_mortalityp, saa_mortalityx):
     '''

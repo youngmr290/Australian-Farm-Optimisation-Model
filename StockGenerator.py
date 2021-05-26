@@ -3238,18 +3238,15 @@ def generator(params,r_vals,ev,plots = False):
                     if eqn_compare:
                         r_compare_q0q1q2poffs[eqn_system, eqn_group, 0, p, ...] = temp0
 
-            ##Peri-natal Dam mortality - comments about mortality functions can be found in sfun.
-            #todo consider combining CSIRO & MU to represent both Preg Tox and ewe mortality due to low CS at birth
+            ##Peri-natal (around birth) Dam mortality - comments about mortality functions can be found in sfun.
             eqn_group = 3
             eqn_system = 0 # CSIRO = 0
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    temp0 = sfun.f_mortality_dam_cs(cb1_dams, cg_dams, nw_start_dams, ebg_dams, sd_ebg_dams, days_period_pa1e1b1nwzida0e0b0xyg1[p]
-                                                    , period_between_birth6wks_pa1e1b1nwzida0e0b0xyg1[p]
-                                                    , gest_propn_pa1e1b1nwzida0e0b0xyg1[p], sen.sap['mortalitye'])
+                    temp0 = sfun.f_mortality_dam_cs()
                     if eqn_used:
-                        mortality_dams += temp0 #mortality due to preg toxemia
+                        mortality_dams += temp0
                     if eqn_compare:
                         r_compare_q0q1q2pdams[eqn_system, eqn_group, 0, p, ...] = temp0
             eqn_system = 1 # mu = 1
@@ -3260,6 +3257,29 @@ def generator(params,r_vals,ev,plots = False):
                                                     , nfoet_b1nwzida0e0b0xyg, sen.sap['mortalitye'])
                     if eqn_used:
                         mortality_dams += temp0 #dam mort at birth due to low CS
+                    if eqn_compare:
+                        r_compare_q0q1q2pdams[eqn_system, eqn_group, 0, p, ...] = temp0
+
+            ##preg tox Dam mortality - comments about mortality functions can be found in sfun.
+            eqn_group = 15
+            eqn_system = 0 # CSIRO = 0
+            if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
+                eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
+                    temp0 = sfun.f_mortality_pregtox_cs(cb1_dams, cg_dams, nw_start_dams, ebg_dams, sd_ebg_dams, days_period_pa1e1b1nwzida0e0b0xyg1[p]
+                                                    , period_between_birth6wks_pa1e1b1nwzida0e0b0xyg1[p]
+                                                    , gest_propn_pa1e1b1nwzida0e0b0xyg1[p], sen.sap['mortalitye'])
+                    if eqn_used:
+                        mortality_dams += temp0
+                    if eqn_compare:
+                        r_compare_q0q1q2pdams[eqn_system, eqn_group, 0, p, ...] = temp0
+            eqn_system = 1 # mu = 1
+            if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
+                eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
+                if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
+                    temp0 = sfun.f_mortality_pregtox_cs()
+                    if eqn_used:
+                        mortality_dams += temp0
                     if eqn_compare:
                         r_compare_q0q1q2pdams[eqn_system, eqn_group, 0, p, ...] = temp0
 
