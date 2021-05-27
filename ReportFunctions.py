@@ -656,7 +656,9 @@ def f_pasture_reshape(lp_vars, r_vals):
 
     # store keys - must be in axis order
     pas_vars['keys_vgoflzt'] = [keys_v, keys_g, keys_o, keys_f, keys_l, keys_z, keys_t]
+    pas_vars['keys_goflzt'] = [keys_g, keys_o, keys_f, keys_l, keys_z, keys_t]
     pas_vars['keys_vdfzt'] = [keys_v, keys_d, keys_f, keys_z, keys_t]
+    pas_vars['keys_dfzt'] = [keys_d, keys_f, keys_z, keys_t]
     pas_vars['keys_dfzt'] = [keys_d, keys_f, keys_z, keys_t]
     pas_vars['keys_vflz'] = [keys_v, keys_f, keys_l, keys_z]
 

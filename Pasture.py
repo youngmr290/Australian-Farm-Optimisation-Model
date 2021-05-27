@@ -889,8 +889,12 @@ def f_pasture(params, r_vals, ev):
     r_vals['keys_pastures'] = pastures
     r_vals['days_p6z'] = length_fz
 
-    r_vals['pgr_grnha_goflzt'] = pgr_grnha_goflzt #store for reporting
-    r_vals['foo_end_grnha_goflzt'] = foo_endprior_grnha_goflzt #store for reporting. Green FOO prior to eos senescence
-    r_vals['cons_grnha_t_goflzt'] = cons_grnha_t_goflzt #store for reporting
-    r_vals['fec_grnha_vgoflzt'] = fun.f_divide(me_cons_grnha_vgoflzt, volume_grnha_goflzt) #store for reporting
-    r_vals['fec_dry_vdfzt'] = fun.f_divide(dry_mecons_t_vdfzt, dry_volume_t_dfzt)  #store for reporting
+    r_vals['pgr_grnha_goflzt'] = pgr_grnha_goflzt
+    r_vals['foo_end_grnha_goflzt'] = foo_endprior_grnha_goflzt #Green FOO prior to eos senescence
+    r_vals['cons_grnha_t_goflzt'] = cons_grnha_t_goflzt
+    r_vals['fec_grnha_vgoflzt'] = fun.f_divide(me_cons_grnha_vgoflzt, volume_grnha_goflzt)
+    r_vals['fec_dry_vdfzt'] = fun.f_divide(dry_mecons_t_vdfzt, dry_volume_t_dfzt)
+    r_vals['foo_ave_grnha_goflzt'] = foo_ave_grnha_goflzt
+    r_vals['dmd_diet_grnha_goflzt'] = dmd_diet_grnha_goflzt
+    r_vals['dry_foo_dfzt'] = dry_foo_dfzt
+    r_vals['dry_dmd_dfzt'] = dry_dmd_dfzt
