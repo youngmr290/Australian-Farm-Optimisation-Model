@@ -680,7 +680,7 @@ def generator(params,r_vals,ev,plots = False):
     ########################################
     #adjust input to align with gen periods#
     ########################################
-    # 1. Adjust date born (average) = start period
+    # 1. Adjust date born (average) = start period  (only yatf date born needs to be adjusted to start of generator period becasue it is used for fvp)
     # 2. Calc date born1st from slice 0 subtract 8 days
     # 3. Calc wean date
     # 4 adjust wean date to occur at start period
@@ -690,19 +690,16 @@ def generator(params,r_vals,ev,plots = False):
     ###sire
     date_born_ida0e0b0xyg0 = date_born1st_ida0e0b0xyg0 + 0.5 * cf_sire[4, 0:1,:].astype('timedelta64[D]')	 #times by 0.5 to get the average birth date for all lambs because ewes can be conceived anytime within joining cycle
     date_born_idx_ida0e0b0xyg0=sfun.f_next_prev_association(date_start_p, date_born_ida0e0b0xyg0, 0, 'left')
-    date_born_ida0e0b0xyg0 = date_start_p[date_born_idx_ida0e0b0xyg0]
     ###dams
     date_born_ida0e0b0xyg1 = date_born1st_ida0e0b0xyg1 + 0.5 * cf_dams[4, 0:1,:].astype('timedelta64[D]')	 #times by 0.5 to get the average birth date for all lambs because ewes can be conceived anytime within joining cycle
-    date_born_idx_ida0e0b0xyg1=sfun.f_next_prev_association(date_start_p, date_born_ida0e0b0xyg1, 0, 'left')
-    date_born_ida0e0b0xyg1 = date_start_p[date_born_idx_ida0e0b0xyg1]
-    ###yatf
+    date_born_idx_ida0e0b0xyg1 = sfun.f_next_prev_association(date_start_p,date_born_ida0e0b0xyg1,0,'left')
+    ###yatf - needs to be rounded to start of gen period becasue this controls the start of a dvp
     date_born_oa1e1b1nwzida0e0b0xyg2 = date_born1st_oa1e1b1nwzida0e0b0xyg2 + (index_e1b1nwzida0e0b0xyg + 0.5) * cf_yatf[4, 0:1,:].astype('timedelta64[D]')	 #times by 0.5 to get the average birth date for all lambs because ewes can be conceived anytime within joining cycle. e_index is to account for ewe cycles.
     date_born_idx_oa1e1b1nwzida0e0b0xyg2 =sfun.f_next_prev_association(date_start_p, date_born_oa1e1b1nwzida0e0b0xyg2, 0, 'left')
     date_born_oa1e1b1nwzida0e0b0xyg2 = date_start_p[date_born_idx_oa1e1b1nwzida0e0b0xyg2]
     ###offs
     date_born_ida0e0b0xyg3 = date_born1st_ida0e0b0xyg3 + (index_e0b0xyg + 0.5) * cf_offs[4, 0:1,:].astype('timedelta64[D]')	 #times by 0.5 to get the average birth date for all lambs because ewes can be conceived anytime within joining cycle
     date_born_idx_ida0e0b0xyg3=sfun.f_next_prev_association(offs_date_start_p, date_born_ida0e0b0xyg3, 0, 'left')
-    date_born_ida0e0b0xyg3 = offs_date_start_p[date_born_idx_ida0e0b0xyg3]
     ##recalc date_born1st from the adjusted average birth date
     date_born1st_ida0e0b0xyg0 = date_born_ida0e0b0xyg0 - 0.5 * cf_sire[4, 0:1,:].astype('timedelta64[D]')
     date_born1st_ida0e0b0xyg1 = date_born_ida0e0b0xyg1 - 0.5 * cf_dams[4, 0:1,:].astype('timedelta64[D]')
@@ -792,11 +789,9 @@ def generator(params,r_vals,ev,plots = False):
     late_preg_oa1e1b1nwzida0e0b0xyg1 = date_joined_oa1e1b1nwzida0e0b0xyg1 + join_cycles_ida0e0b0xyg1 * cf_dams[4, 0:1, :].astype('timedelta64[D]') + pinp.sheep['i_scan_day'][scan_oa1e1b1nwzida0e0b0xyg1].astype('timedelta64[D]')
     idx_oa1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, late_preg_oa1e1b1nwzida0e0b0xyg1, 'right')-1 #gets the sim period index for the period when dams in late preg (eg late preg fvp starts at the beginning of the sim period when late preg occurs), side=right so that if the date is already the start of a period it remains in that period.
     fvp_scan_start_oa1e1b1nwzida0e0b0xyg1 = date_start_p[idx_oa1e1b1nwzida0e0b0xyg]
-    ## lactation fvp start - average date of lambing (with e axis)
-    lactation_date_oa1e1b1nwzida0e0b0xyg1 = date_born_oa1e1b1nwzida0e0b0xyg2
-    idx_oa1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, lactation_date_oa1e1b1nwzida0e0b0xyg1, 'right')-1 #gets the sim period index for the period when lactation starts (eg lactation fvp starts at the beginning of the sim period when lactation occurs), side=right so that if the date is already the start of a period it remains in that period.
-    fvp_birth_start_oa1e1b1nwzida0e0b0xyg1 = date_start_p[idx_oa1e1b1nwzida0e0b0xyg]
-    ##weaning
+    ## lactation fvp start - average date of lambing (with e axis) (already adjusted to start of gen period)
+    fvp_birth_start_oa1e1b1nwzida0e0b0xyg1 = date_born_oa1e1b1nwzida0e0b0xyg2
+    ##weaning (already adjusted to start of gen period)
     fvp_wean_start_oa1e1b1nwzida0e0b0xyg1 = date_weaned_oa1e1b1nwzida0e0b0xyg2
     ##user defined fvp - rounded to nearest sim period
     fvp_other_yi = sinp.structuralsa['i_fvp4_date_i'].astype(np.datetime64) + np.arange(np.ceil(sim_years))[:,na] * np.timedelta64(365,'D')
