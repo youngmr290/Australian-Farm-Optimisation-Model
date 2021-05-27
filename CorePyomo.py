@@ -39,6 +39,7 @@ import SupFeedPyomo as suppy
 import StubblePyomo as stubpy
 import StockPyomo as stkpy
 import MVF as mvf
+import Sensitivity as sen
  
 import Finance as fin
 
@@ -371,7 +372,8 @@ def coremodel_all(params, trial_name):
         def profit(model):
             c = sinp.general['cashflow_periods']
             i = len(c) - 1 # minus one because index starts from 0
-            return model.v_credit[c[i]]-model.v_debit[c[i]] - model.v_dep - model.v_minroe - model.v_asset   #have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.
+            return model.v_credit[c[i]]-model.v_debit[c[i]] - model.v_dep - model.v_minroe - model.v_asset - (0.1 * sen.sam['GLPK_fix'])  #have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.
+                                                                                                                    #sen used to tweak model to to fix glpk when not solving.
         try:
             model.del_component(model.profit)
         except AttributeError:

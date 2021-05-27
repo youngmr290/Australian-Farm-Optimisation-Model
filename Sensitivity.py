@@ -33,6 +33,10 @@ sap['pi']=0 #global potential intake (this increases animal intake without alter
 ######
 #SAM #
 ######
+##general
+sam['GLPK_fix'] = 1.0        # SA multiplier used to tweak a param to make glpk solve
+
+
 ## Annual module sensitivity variables - these need to have the same name for each pasture type
 sam['germ','annual']                    = 1.0                                                          # SA multiplier for germination on all lmus in all periods
 sam['germ_l','annual']                  = np.ones((len(pinp.general['lmu_area'])),  dtype=np.float64)  # SA multiplier for germination on each lmus in all periods
