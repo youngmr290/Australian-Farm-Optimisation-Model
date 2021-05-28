@@ -1495,7 +1495,6 @@ def generator(params,r_vals,ev,plots = False):
     lmm_pa1e1b1nwzida0e0b0xyg1m1 = (age_m1_pa1e1b1nwzida0e0b0xyg2m1 + cl_dams[1, ..., na]) / cl_dams[2, ..., na]
     ##Chill index for lamb survival
     #todo consider adding m1m2m3 axes for chill for rain, ws & temp_ave.
-    #perhaps split into 2 values so that m1 axis for rain and m1m2 for ws & temp (because the rainfall component is added)
     chill_index_pa1e1b1nwzida0e0b0xygm1 = (481 + (11.7 + 3.1 * ws_pa1e1b1nwzida0e0b0xyg[..., na] ** 0.5)
                                            * (40 - temp_ave_pa1e1b1nwzida0e0b0xyg[..., na])
                                            + 418 * (1-np.exp(-0.04 * rain_pa1e1b1nwzida0e0b0xygm1)))
