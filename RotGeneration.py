@@ -109,8 +109,7 @@ import PropertyInputs as pinp
 
 ##if you want to use a customised list of rotations this can be set to false - populate the array further down the module.
 customised_rotations = False
-
-if __name__ == '__main__': #use this so that sphinx doesnt run all the code when generating the docs
+def f_rot_gen():
     yr0 = np.array(['b', 'h', 'o','of', 'w', 'f', 'l', 'z','r'
                    , 'a', 'ar'
                    , 's', 'sr'
@@ -376,7 +375,8 @@ if __name__ == '__main__': #use this so that sphinx doesnt run all the code when
 
 
 
-
+if __name__ == '__main__': #use this so that sphinx doesnt run all the code when generating the docs
+    f_rot_gen()
 
 
 

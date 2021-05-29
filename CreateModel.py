@@ -51,7 +51,7 @@ def sets() :
     else:
         model.s_season_types = Set(initialize=pinp.general['i_z_idx'][pinp.general['i_mask_z']], doc='season types') #mask season types by the ones included
 
-    #labour periods
+    ##labour periods
     try:
         model.del_component(model.s_labperiods)
     except AttributeError:
@@ -83,6 +83,21 @@ def sets() :
     except AttributeError:
         pass
     model.s_lmus = Set(initialize=pinp.general['lmu_area'].index[lmu_mask],doc='defined the soil type a given rotation is on')
+
+    ##phases
+    try:
+        model.del_component(model.s_phases)
+    except AttributeError:
+        pass
+    model.s_phases = Set(initialize=sinp.f_phases().index,doc='rotation phases set')
+
+    ##rotation con1 set
+    try:
+        model.del_component(model.s_rotconstraints)
+    except AttributeError:
+        pass
+    s_rotcon1 = pd.read_excel('Rotation.xlsx',sheet_name='rotation con1 set',header=None,index_col=0,engine='openpyxl')
+    model.s_rotconstraints = Set(initialize=s_rotcon1.index,doc='rotation constraints histories')
 
 
 #######################
@@ -132,8 +147,6 @@ model.s_fert_type = Set(initialize=uinp.price['fert_cost'].index, doc='fertilise
 ###########
 #rotation #
 ###########
-##phases
-model.s_phases = Set(initialize=sinp.phases['phases'].index, doc='rotation phases set')
 # model.s_phases.pprint()
 
 # ##phases disaggregated - used in rot yield transfer
@@ -143,9 +156,6 @@ model.s_phases = Set(initialize=sinp.phases['phases'].index, doc='rotation phase
 # model.s_phases_dis = Set(dimen=sinp.general['phase_len'], ordered=True, initialize=phases_dis(), doc='rotation phases disaggregated')
 # model.s_phases_dis.pprint()
 
-##con1 set
-s_rotcon1 = pd.read_excel('Rotation.xlsx', sheet_name='rotation con1 set', header= None, index_col = 0, engine='openpyxl')
-model.s_rotconstraints = Set(initialize=s_rotcon1.index, doc='rotation constraints histories')
 # model.s_rotconstraints.pprint()
 
 ##con2 set

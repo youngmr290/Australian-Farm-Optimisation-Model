@@ -23,10 +23,10 @@ def landuses_phases(params,report):
     * Store rotation list and pasture phases list to report dictionary
 
     '''
-    phases=sinp.phases['phases']
+    phases=sinp.f_phases()
     phases_rk = phases.set_index(5, append=True) #add landuse as index level
     params['phases_rk'] = dict.fromkeys(phases_rk.index,1)
-    report['phases']=sinp.phases['phases']
+    report['phases']=phases
     report['all_pastures']=sinp.landuse['All_pas'] #all_pas2 includes the cont pasture landuses
 
 

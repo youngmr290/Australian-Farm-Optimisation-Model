@@ -58,7 +58,7 @@ def f_pasture(params, r_vals, ev):
     ########################
     ## read the rotation phases information from inputs
     # phase_len       = sinp.general['phase_len']
-    phases_rotn_df  = sinp.phases['phases']
+    phases_rotn_df  = sinp.f_phases()
     pasture_sets    = sinp.landuse['pasture_sets']
     pastures        = sinp.general['pastures'][pinp.general['pas_inc']]
 

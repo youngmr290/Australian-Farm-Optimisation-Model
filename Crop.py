@@ -6,7 +6,7 @@ The cropping module is driven by the inputs [#i]_ for yield production, fertilis
 requirements for each rotation phase on each LMU. AFO can then optimise the area of each rotation
 on each LMU. AFO does not currently simulate the biology of plant growth under different technical
 management. Thus, the model is unable to optimise technical aspects of cropping such as timing and
-level of controls5. However, the user has the capacity to do this more manually by altering the
+level of controls [#j]_. However, the user has the capacity to do this more manually by altering the
 inputs (more like the technique of simulation modelling) or by including additional land uses
 which represent varying levels of production and controls. When determining the inputs for each
 rotation the user must consider the rotation history. The rotation history can influence the soil
@@ -32,7 +32,8 @@ There are two methods that can be used to generate cropping inputs for the model
     can use APSIM to generate yield, fertiliser requirement, number of fertiliser applications, chemical
     requirement and number of chemical applications for a wide range of rotations.
 
-.. [#i] Inputs – A-F-O parameters.
+.. [#i] Inputs – AFO parameters.
+.. [#j] Controls – chemicals and fertilisers.
 
 
 """
@@ -62,31 +63,32 @@ def f_mask_lmu(df, axis):
     return df
 
 
-########################
-#phases                #
-########################
-##makes a df of all possible rotation phases
-phases_df =sinp.phases['phases']
-phases_df2=phases_df.copy() #make a copy so that it doesn't alter the phases df that exists outside this func
-phases_df2.columns = pd.MultiIndex.from_product([phases_df2.columns, ['']])  #make the df multi index so that when it merges with other df below the indexs remanin separate (otherwise it turn into a one leveled tuple)
-phases_df3=phases_df.copy() #make a copy so that it doesn't alter the phases df that exists outside this func
-phases_df3.columns = pd.MultiIndex.from_product([phases_df3.columns, [''], ['']])  #make the df multi index so that when it merges with other df below the indexs remanin separate (otherwise it turn into a one leveled tuple)
+def f_rot_check():
+    ##check that the rotations match the inputs. If not then quit and leave error message
+    if pinp.crop['user_crop_rot']:
+        ### User defined
+        base_yields = pinp.crop['yields']
+    else:
+        ### AusFarm ^need to complete
+        base_yields
 
-##check that the rotations match the inputs. If not then quit and leave error message
-if pinp.crop['user_crop_rot']:
-    ### User defined
-    base_yields = pinp.crop['yields']
-else:        
-    ### AusFarm ^need to complete
-    base_yields
+    phases_df = sinp.f_phases()
 
-if len(phases_df) != len(base_yields): 
-    print ('''Rotations don't match inputs.
-           Things to check: 
-           1. if you have generated new rotations have you re-run AusFarm?
-           2. if you added new rotations in the user defined section have you re-run the rotation generator?
-           3. the named ranges in for the user defined rotations and inputs are all correct''')
-    sys.exit()
+    if len(phases_df) != len(base_yields):
+        ##if the rotations dont match inputs then rerun rotation generation.
+        import RotGeneration
+        RotGeneration.f_rot_gen()
+
+        ##read in newly generated rotations and see if the inputs now match
+        phases_df = sinp.f_phases()
+
+        ##if they still don't match then the user will need to either re-run simulation model (apsim) or change rotgeneration to line up with the rotations that have been simulated.
+        if len(phases_df) != len(base_yields):
+            print('''WARNING: Rotations don't match inputs.
+                   Things to check: 
+                   1. if you have generated new rotations have you re-run AusFarm?
+                   2. the named ranges in for the user defined rotations and inputs are all correct''')
+            sys.exit()
 
 
 
@@ -178,6 +180,8 @@ def f_base_yield():
 
     .. [#] Base LMU – standardise LMU to which other LMUs are compared against.
     '''
+    ##read phases
+    phases_df = sinp.f_phases()
 
     ##read in yields
     if pinp.crop['user_crop_rot']:
@@ -302,6 +306,9 @@ def f_fert_req():
     The fertiliser requirement is then adjusted by an LMU factor and the arable area factor.
 
     '''
+    ##read phases
+    phases_df = sinp.f_phases()
+
     ##read in fert by soil
     fert_by_soil = f_mask_lmu(pinp.crop['fert_by_lmu'], axis=1)
     ##read in fert
@@ -346,6 +353,9 @@ def f_fert_passes():
     of application varies rather than the frequency of application.
 
     '''
+    ##read phases
+    phases_df = sinp.f_phases()
+
     ####read in passes
     if pinp.crop['user_crop_rot']:
         ### User defined
@@ -428,6 +438,10 @@ def f_nap_fert_req():
     money to fertilise. Fertiliser rate for non-arable areas can be adjusted separately to the arable area.
 
     '''
+    ##read phases and add empty header level
+    phases_df2 = sinp.f_phases()
+    phases_df2.columns = pd.MultiIndex.from_product([phases_df2.columns,['']])  # make the df multi index so that when it merges with other df below the indexs remanin separate (otherwise it turn into a one leveled tuple)
+    ##adj arable
     arable = f_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)  # read in arable area df
     fertreq_na = pinp.crop['nap_fert'].reset_index().set_index(['fert','landuse'])
     fertreq_na = fertreq_na.mul(1 - arable)
@@ -443,6 +457,10 @@ def f_nap_fert_passes():
     Hectares of fertilising required over non arable area.
 
     '''
+    ##read phases and add empty header level
+    phases_df2 = sinp.f_phases()
+    phases_df2.columns = pd.MultiIndex.from_product([phases_df2.columns,['']])  # make the df multi index so that when it merges with other df below the indexs remanin separate (otherwise it turn into a one leveled tuple)
+
     ##passes over non arable pasture area (only for pasture phases because for pasture the non arable areas also receive fert)
     passes_na = pinp.crop['nap_passes'].reset_index().set_index(['fert','landuse'])
     arable = f_mask_lmu(pinp.crop['arable'].squeeze(), axis=0) #need to adjust for only non arable area
@@ -614,6 +632,9 @@ def f_chem_application():
 
     '''
     ##read in chem passes
+    ##read phases
+    phases_df = sinp.f_phases()
+
     if pinp.crop['user_crop_rot']:
         ### User defined
         base_chem = pinp.crop['chem']
@@ -661,6 +682,9 @@ def f_chem_cost(r_vals):
     items at the end of this section.
 
     '''
+    ##read phases
+    phases_df = sinp.f_phases()
+
     ##read in necessary bits and adjust indexed
     i_chem_cost = pinp.crop['chem_cost'].sort_index()
     chem_by_soil = f_mask_lmu(pinp.crop['chem_by_lmu'], axis=1) #read in chem by soil
@@ -704,6 +728,10 @@ def seedcost(r_vals):
         - crop insurance
         - arable area
     '''
+    ##read phases and add two empty col levels
+    phases_df3 = sinp.f_phases()
+    phases_df3.columns = pd.MultiIndex.from_product([phases_df3.columns,[''],['']])  # make the df multi index so that when it merges with other df below the indexs remanin separate (otherwise it turn into a one leveled tuple)
+
     ##seasonal inputs
     seed_period_lengths = pinp.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
     i_z_idx = pinp.f_keys_z()
@@ -828,6 +856,9 @@ def f_crop_sow():
         Crop sow (wet or dry or spring) requirement for each rot phase
 
     '''
+    ##read phases
+    phases_df = sinp.f_phases()
+
     ##sow = arable area
     arable = f_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)
     cropsow = arable.reindex(pd.MultiIndex.from_product([sinp.landuse['C'],arable.index]), axis=0, level=1)
@@ -887,6 +918,9 @@ def f_cont_pas(cost_array):
     :param
     cost_array - df with landues axis. this array will be returned with the addition of the continuos pasture landuse
     '''
+    ##read phases
+    phases_df = sinp.f_phases()
+
     pastures = sinp.general['pastures'][pinp.general['pas_inc']]
     ##if cont tedera is in rotation list and tedera is included in the pasture modules then generate the inputs for it
     if any(phases_df.iloc[:,-1].isin(['tc'])) and 'tedera' in pastures:
