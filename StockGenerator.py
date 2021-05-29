@@ -651,6 +651,9 @@ def generator(params,r_vals,ev,plots = False):
         season_propn_zida0e0b0xyg = fun.f_expand(i_season_propn_z, z_pos)
 
     ##wind speed
+    #todo add a distribution to the windspeed (after checking the importance for chill_index)
+    #might need to do this with a longer axis length so that it is not the distribution in the week but in the month
+    #enter a number of days above a threshold (along with the threshold values maybe 1) and then average values for the windiest days in the month.
     ws_m4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_ws_m4'],p_pos)
     ##expected stocking density
     density_p6a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_density_p6z'],z_pos,source=0,dest=-1,
@@ -666,6 +669,7 @@ def generator(params,r_vals,ev,plots = False):
         pinp.sheep['i_rain_m4'][...,na] * pinp.sheep['i_rain_distribution_m4m1'] * (7 / 30.4),p_pos - 1,
         right_pos=-1)  # -1 because p is -16 when m1 axis is included
     ##Mean daily temperature
+    #todo examine importance of temperature variation on chill_index with view to adding
     temp_ave_m4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_temp_ave_m4'],p_pos)
     ##Mean daily maximum temperature
     temp_max_m4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_temp_max_m4'],p_pos)
@@ -1489,6 +1493,7 @@ def generator(params,r_vals,ev,plots = False):
     ##Age of lamb relative to peak lactation-with minor axis
     lmm_pa1e1b1nwzida0e0b0xyg1m1 = (age_m1_pa1e1b1nwzida0e0b0xyg2m1 + cl_dams[1, ..., na]) / cl_dams[2, ..., na]
     ##Chill index for lamb survival
+    #todo consider adding m1m2m3 axes for chill for rain, ws & temp_ave.
     chill_index_pa1e1b1nwzida0e0b0xygm1 = (481 + (11.7 + 3.1 * ws_pa1e1b1nwzida0e0b0xyg[..., na] ** 0.5)
                                            * (40 - temp_ave_pa1e1b1nwzida0e0b0xyg[..., na])
                                            + 418 * (1-np.exp(-0.04 * rain_pa1e1b1nwzida0e0b0xygm1)))
