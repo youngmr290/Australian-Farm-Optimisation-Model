@@ -437,7 +437,7 @@ def coremodel_all(params, trial_name):
         ##solve - tee=True will print out solver information. With an iteration limit of 100 seconds
         solver = pe.SolverFactory('glpk')
         solver.options['tmlim'] = 100
-        solver_result = solver.solve(model, tee=False)  #turn to true for solver output - may be useful for troubleshooting
+        solver_result = solver.solve(model, tee=True)  #turn to true for solver output - may be useful for troubleshooting
         try: #to handle infeasible (there is no profit component when infeasible)
             obj = pe.value(model.profit)
         except ValueError:

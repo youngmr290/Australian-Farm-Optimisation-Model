@@ -32,7 +32,7 @@ def boundarypyomo_local(params):
     ##set bounds to include
     bounds_inc = True #controls all bounds (typically on)
     rot_lobound_inc = False #controls rot bound
-    dams_lobound_inc = False #lower bound dams
+    dams_lobound_inc = True #lower bound dams
     dams_upperbound_inc = fun.f_sa(False, sen.sav['bnd_upper_dam_inc'], 5) #upper bound on dams
     total_dams_scanned_bound_inc = np.any(sen.sav['bnd_total_dams_scanned'] != '-') #equal to bound on the total number of scanned dams
     force_5yo_retention_inc = np.any(sen.sav['bnd_propn_dam5_retained'] != '-') #force a propn of 5yo dams to be retained.
@@ -81,25 +81,41 @@ def boundarypyomo_local(params):
                                                     doc='lo bound for the number of each phase')
 
         ##total dam min bound - total number includes each dvp (the sheep in a given yr equal total for all dvp divided by the number of dvps in 1 yr)
-        ##to customise the bound could make it more like the upper bound below
         ###delete the bound (outside if statement incase the bound was active for last trial)
         try:
             model.del_component(model.con_dam_lobound)
+            model.del_component(model.con_dam_lobound_index)
         except AttributeError:
             pass
         ###build bound if turned on
         if dams_lobound_inc:
+            ###keys to build arrays for the specified slices
+            arrays = [model.s_dvp_dams, model.s_groups_dams]   #more sets can be added here to customise the bound
+            index_vg = fun.cartesian_product_simple_transpose(arrays)
+            ###build array for the axes of the specified slices
+            dams_upperbound_vg = np.zeros((len(model.s_dvp_dams), len(model.s_groups_dams)))
             ###set the bound
-            dam_lobound = 15000
+            dams_upperbound_vg[4:14,-1] = 50  #min of 50 bbt
+            ###ravel and zip bound and dict
+            dams_upperbound = dams_upperbound_vg.ravel()
+            tup_tv = tuple(map(tuple, index_vg))
+            dams_upperbound = dict(zip(tup_tv, dams_upperbound))
+
             ###constraint
-            def dam_lo_bound(model):
-                return sum(model.v_dams[k28,t,v,a,n,w8,i,y,g1] for k28 in model.s_k2_birth_dams for t in model.s_sale_dams
-                           for v in model.s_dvp_dams for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
-                           for i in model.s_tol for y in model.s_gen_merit_dams for g1 in model.s_groups_dams
-                           if any(model.p_numbers_req_dams[k28,k29,t,v,a,n,w8,i,y,g1,g9,w9] == 1 for k29 in model.s_k2_birth_dams
-                                  for w9 in model.s_lw_dams for g9 in model.s_groups_dams)) \
-                       >= dam_lobound
-            model.con_dam_lobound = pe.Constraint(rule=dam_lo_bound,
+            def dam_lo_bound(model,v,g1):
+                if all(model.p_numbers_req_dams[k28,k29,t,v,a,n,w8,i,y,g1,g9,w9] == 0
+                       for k29 in model.s_k2_birth_dams for w9 in model.s_lw_dams for g9 in model.s_groups_dams for k28 in model.s_k2_birth_dams
+                       for t in model.s_sale_dams for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
+                       for i in model.s_tol for y in model.s_gen_merit_dams):
+                    return pe.Constraint.Skip
+                else:
+                    return sum(model.v_dams[k28,t,v,a,n,w8,i,y,g1] for k28 in model.s_k2_birth_dams for t in model.s_sale_dams
+                               for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
+                               for i in model.s_tol for y in model.s_gen_merit_dams
+                               if any(model.p_numbers_req_dams[k28,k29,t,v,a,n,w8,i,y,g1,g9,w9] == 1 for k29 in model.s_k2_birth_dams
+                                      for w9 in model.s_lw_dams for g9 in model.s_groups_dams)) \
+                           >= dams_upperbound[v,g1]
+            model.con_dam_lobound = pe.Constraint(model.s_dvp_dams, model.s_groups_dams, rule=dam_lo_bound,
                                                     doc='min number of all dams')
 
         ##dams upper bound - specified by k2 & v and totalled across other axes
