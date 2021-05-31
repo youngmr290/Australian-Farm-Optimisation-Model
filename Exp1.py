@@ -181,6 +181,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
     ##determine if pyomo should run, note if pyomo doesn't run there will be no full solution (they are the same as before so no need)
     if run_pyomo_params:
         ##call core model function, must call them in the correct order (core must be last)
+        pyomocalc_start = time.time()
         crtmod.sets() #certain sets have to be updated each iteration of exp
         rotpy.rotationpyomo(params['rot'])
         crppy.croppyomo_local(params['crop'])
@@ -196,7 +197,10 @@ def exp(row):  # called with command: pool.map(exp, dataset)
         mvf.mvf_pyomo()
         ###bounds-this must be done last because it uses sets built in some of the other modules
         bndpy.boundarypyomo_local(params)
+        pyomocalc_end = time.time()
+        print('localpyomo: ', pyomocalc_end - pyomocalc_start)
         obj = core.coremodel_all(params, trial_name) #have to do this so i can access the solver status
+        print('corepyomo: ',time.time() - pyomocalc_end)
 
         if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1:
             ##This writes variable summary each iteration with generic file name - it is overwritten each iteration and is created so the run progress can be monitored
