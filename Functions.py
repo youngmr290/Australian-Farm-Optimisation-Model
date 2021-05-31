@@ -675,6 +675,7 @@ def f_read_exp():
 def f_group_exp(exp_data, experiment_trials):
     '''
     Cuts exp based on the group passed in as argument by user. If no argument then all trials are run.
+    This has to be a separate function so that the run required code has access to the full exp.
     '''
 
     ##cut exp based on group argument
