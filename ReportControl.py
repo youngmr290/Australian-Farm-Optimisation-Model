@@ -133,11 +133,6 @@ def f_report(processor, trials):
     stacked_drydmd = pd.DataFrame()  # dmd of dry pas
     stacked_avedryfoo = pd.DataFrame()  # Average Foo of dry pas
 
-    #todo add: A marginal value of feed component. I had set this up in the old MIDAS so you could look at the value of feed of different qualities (using the RC). It requires a number of DVs that are FP by FEC that are all bound to 0. They all have a me_cons parameter of -100 and a volume parameter that differs so that me/vol varies from 3 to 12 in steps of 1 MJ/kg.
-    # Means that there are 100 DV's (10 x 10).
-    # Requires one constraint that is the sum(v_mvf_p6v) == 0
-    # It gets added in if a full solution is requested, because it only tells us anything if we can look at the RC's.
-
     ##read in the pickled results
     for trial_name in trials:
         lp_vars,r_vals = rep.load_pkl(trial_name)
