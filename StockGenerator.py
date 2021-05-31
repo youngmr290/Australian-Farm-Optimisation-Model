@@ -5650,6 +5650,13 @@ def generator(params,r_vals,ev,plots = False):
     numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9[:,:,:,0,...] = 0
     numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9[:,:,:,0,...] = 0
 
+
+    ##mask dams activity (used in bounds)
+    mask_dams_k2tva1e1b1nw8zida0e0b0xyg1 =  1 * (np.sum(mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1
+                                                               * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1)
+                                                                  , axis = (b1_pos, e1_pos), keepdims=True)>0)
+
+
     #################
     #progeny weaned#
     #################
@@ -6235,7 +6242,7 @@ def generator(params,r_vals,ev,plots = False):
     params['y_idx_offs'] = keys_y3
     params['x_idx_offs'] = keys_x
     ##make param indexs
-    ###k2k2tvanwiyg1g0p8 - nsire
+    ###k2tvanwiyg1g0p8 - nsire
     arrays = [keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_i, keys_y1, keys_g1, keys_g0, keys_p8]
     index_k2tvanwiyg1g0p8 = fun.cartesian_product_simple_transpose(arrays)
 
@@ -6848,6 +6855,13 @@ def generator(params,r_vals,ev,plots = False):
     ###shapes
     len_v1 = len(keys_v1)
     len_v3 = len(keys_v3)
+
+    ##mask for dam activities
+    arrays = [keys_k2, keys_t1, keys_v1, keys_lw1]
+    index_ktvw = fun.cartesian_product_simple_transpose(arrays)
+    tup_ktvw = tuple(map(tuple,index_ktvw))
+    mask_dams_ktvw = mask_dams_k2tva1e1b1nw8zida0e0b0xyg1.ravel()
+    params['p_mask_dams'] = dict(zip(tup_ktvw, mask_dams_ktvw))
 
     ##proportion of dams mated. inf means the model can optimise the proportion because inf is used to skip the constraint.
     arrays = [keys_v1, keys_g1]
