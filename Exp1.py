@@ -66,8 +66,7 @@ start_time1 = time.time()
 #load exp               # 
 #########################
 ##read in exp and drop all false runs ie runs not being run this time
-exp_data, experiment_trials = fun.f_read_exp()
-exp_data = exp_data.sort_index() #had to sort to stop performance warning, this means runs may not be executed in order of exp.xls
+exp_data, exp_group_bool = fun.f_read_exp()
 exp_data1=exp_data.copy() #copy made so that the run col can be added - the original df is used to allocate sa values (would cause an error if run col existed but i can't drop it because it is used to determine if the trial is run)
 
 
@@ -98,8 +97,8 @@ if __name__ == '__main__':
         pkl.dump(exp_data1, f, protocol=pkl.HIGHEST_PROTOCOL)
 
 ##cut exp_data based on the experiment group
-exp_data = fun.f_group_exp(exp_data, experiment_trials)
-exp_data1 = fun.f_group_exp(exp_data1, experiment_trials)
+exp_data = fun.f_group_exp(exp_data, exp_group_bool)
+exp_data1 = fun.f_group_exp(exp_data1, exp_group_bool)
 
 ## Define the dataset - trials that require at least the precalcs done (user wants it run and it is out of date)
 dataset = list(np.flatnonzero(np.nan_to_num(np.array(exp_data.index.get_level_values(0))) * np.array(exp_data1['run_req'])))  # gets the ordinal index values for the trials the user wants to run that are not up to date

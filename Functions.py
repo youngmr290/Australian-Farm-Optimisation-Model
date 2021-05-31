@@ -669,17 +669,16 @@ def f_read_exp():
     else:
         raise exc.TrialError('''Exp.xl has multiple trials with the same name.''')
 
-    return exp_data, experiment_trials
+    return exp_data, exp_group_bool
 
 
-def f_group_exp(exp_data, experiment_trials):
+def f_group_exp(exp_data, exp_group_bool):
     '''
     Cuts exp based on the group passed in as argument by user. If no argument then all trials are run.
     This has to be a separate function so that the run required code has access to the full exp.
     '''
 
     ##cut exp based on group argument
-    exp_group_bool = exp_data.index.get_level_values(3).isin(experiment_trials)
     exp_data = exp_data.loc[exp_group_bool]
     return exp_data
 

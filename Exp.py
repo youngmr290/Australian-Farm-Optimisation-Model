@@ -51,8 +51,7 @@ run_pyomo = True #do you want pyomo to run (default is True but if testing repor
 #Exp loop               #
 #########################
 ##read in exp.xl and determine which trials are in the experiment group.
-exp_data, experiment_trials = fun.f_read_exp()
-exp_data = exp_data.sort_index() #had to sort to stop performance warning, this means runs may not be executed in order of exp.xls
+exp_data, exp_group_bool = fun.f_read_exp()
 exp_data1=exp_data.copy() #copy made so that the run and runpyomo cols can be added - the original df is used to allocate sa values (would cause an error if run col existed but i can't drop it because it is used to determine if the trial is run)
 
 
@@ -83,8 +82,8 @@ if __name__ == '__main__':
         pkl.dump(exp_data1, f, protocol=pkl.HIGHEST_PROTOCOL)
 
 ##cut exp_data based on the experiment group
-exp_data = fun.f_group_exp(exp_data, experiment_trials)
-exp_data1 = fun.f_group_exp(exp_data1, experiment_trials)
+exp_data = fun.f_group_exp(exp_data, exp_group_bool)
+exp_data1 = fun.f_group_exp(exp_data1, exp_group_bool)
 
 
 ##print out number of trials to run
