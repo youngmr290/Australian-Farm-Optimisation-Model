@@ -105,7 +105,7 @@ def boundarypyomo_local(params):
             ###build array for the axes of the specified slices
             dams_lowbound_vg = np.zeros((len(model.s_dvp_dams), len(model.s_groups_dams)))
             ###set the bound
-            dams_lowbound_vg[4:14,-1] = 2000  #min of 50 bbt
+            dams_lowbound_vg[4:14,-1] = 50  #min of 50 bbt
             ###ravel and zip bound and dict
             dams_lowbound = dams_lowbound_vg.ravel()
             tup_tv = tuple(map(tuple, index_vg))
