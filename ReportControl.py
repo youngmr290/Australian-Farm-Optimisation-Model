@@ -412,7 +412,7 @@ def f_report(processor, trials):
             index =[3]
             cols =[12,1,6]   #g1, t & b1
             axis_slice = {}
-            # axis_slice[0] = [0, 2, 1]
+            axis_slice[5] = [0, 1, 1]   #only the first cycle of e1
             fec_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
                                    den_weights=den_weights, na_prod=na_prod, na_weights=na_weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
