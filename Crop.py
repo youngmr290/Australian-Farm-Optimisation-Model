@@ -545,7 +545,7 @@ def phase_stubble_cost(r_vals):
 
     The stubble handling cost per hectare is calculated based on machinery usage (see Mach.py).
     The cost is then adjusted by the probability of each rotation phase requiring handling which is
-    determined by the ration of the crop yield to the critical threashold.
+    determined by the ration of the crop yield to the critical threshold.
 
     General rules regarding stubble handling;
     #. Stubble handling is not required if the land use is a legume crop, pasture or lucerne
