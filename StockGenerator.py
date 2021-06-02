@@ -3589,10 +3589,12 @@ def generator(params,r_vals,ev,plots = False):
                 ### this will increase the condensing weight but all the heavy animals were sold so the high condense weight becomes too high for many animals to distribute into and hence is a waste.
                 fs_mask_sire = np.all(feedsupplyw_pa1e1b1nwzida0e0b0xyg0[0:p] < 3, axis=p_pos)  # if the animal has ever been in feedlot it is masked out
 
-                ###mask for animals with greater than 10% mort - true means mort is less than 10%
+                ###mask for animals with greater than x% mort - true means mort is less than x% (where x% is a mortality threashold)
                 numbers_start_condense_sire = np.broadcast_to(numbers_start_condense_sire, numbers_end_sire.shape) #required for the first condensing because condense numbers start doesnt have all the axis.
-                mort_mask_sire = (np.sum(numbers_end_sire,axis=prejoin_tup + (season_tup,), keepdims=True)  # if this gives warning it probably means the feedsupply is too low.
-                             / np.sum(numbers_start_condense_sire, axis=prejoin_tup + (season_tup,), keepdims=True)) > 0.9  # sum e,b,z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10%
+                mort_sire = (np.sum(numbers_end_sire,axis=prejoin_tup + (season_tup,), keepdims=True)  # if this gives warning it probably means the feedsupply is too low.
+                             / np.sum(numbers_start_condense_sire, axis=prejoin_tup + (season_tup,), keepdims=True))  # sum e,b,z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10%
+                treashold = np.minimum(0.9, np.mean(mort_sire, axis=w_pos, keepdims=True)) #mort threashold is max of 10% or average mort
+                mort_mask_sire = mort_sire > treashold  # determine which w has mortality > x%
 
                 ###combine mort and feedlot mask
                 condense_w_mask_sire = np.logical_and(fs_mask_sire, mort_mask_sire)
@@ -3630,10 +3632,12 @@ def generator(params,r_vals,ev,plots = False):
                 ### this will increase the condensing weight but all the heavy animals were sold so the high condense weight becomes too high for many animals to distribute into and hence is a waste.
                 fs_mask_dams = np.all(feedsupplyw_pa1e1b1nwzida0e0b0xyg1[0:p] < 3, axis=p_pos)  # if the animal has ever been in feedlot it is masked out
 
-                ###mask for animals with greater than 10% mort - true means mort is less than 10%
+                ###mask for animals with greater than x% mort - true means mort is less than x% (where x% is a mortality threashold)
                 numbers_start_condense_dams = np.broadcast_to(numbers_start_condense_dams, numbers_end_dams.shape) #required for the first condensing because condense numbers start doesnt have all the axis.
-                mort_mask_dams = (np.sum(numbers_end_dams,axis=prejoin_tup + (season_tup,), keepdims=True)  # if this gives warning it probably means the feedsupply is too low.
-                             / np.sum(numbers_start_condense_dams, axis=prejoin_tup + (season_tup,), keepdims=True)) > 0.9  # sum e,b,z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10%
+                mort_dams = (np.sum(numbers_end_dams,axis=prejoin_tup + (season_tup,), keepdims=True)  # if this gives warning it probably means the feedsupply is too low.
+                             / np.sum(numbers_start_condense_dams, axis=prejoin_tup + (season_tup,), keepdims=True))  # sum e,b,z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10%
+                treashold = np.minimum(0.9, np.mean(mort_dams, axis=w_pos, keepdims=True)) #mort threashold is max of 10% or average mort
+                mort_mask_dams = mort_dams > treashold  # determine which w has mortality > x%
 
                 ###combine mort and feedlot mask
                 condense_w_mask_dams = np.logical_and(fs_mask_dams, mort_mask_dams)
@@ -3710,10 +3714,12 @@ def generator(params,r_vals,ev,plots = False):
                 ### this will increase the condensing weight but all the heavy animals were sold so the high condense weight becomes too high for many animals to distribute into and hence is a waste.
                 fs_mask_yatf = np.all(feedsupplyw_pa1e1b1nwzida0e0b0xyg1[0:p] < 3, axis=p_pos)  # if the animal has ever been in feedlot it is masked out
 
-                ###mask for animals with greater than 10% mort - true means mort is less than 10%
+                ###mask for animals with greater than x% mort - true means mort is less than x% (where x% is a mortality threashold)
                 numbers_start_condense_yatf = np.broadcast_to(numbers_start_condense_yatf, numbers_end_yatf.shape) #required for the first condensing because condense numbers start doesnt have all the axis.
-                mort_mask_yatf = (np.sum(numbers_end_yatf,axis=prejoin_tup + (season_tup,), keepdims=True)  # if this gives warning it probably means the feedsupply is too low.
-                             / np.sum(numbers_start_condense_yatf, axis=prejoin_tup + (season_tup,), keepdims=True)) > 0.9  # sum e,b,z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10%
+                mort_yatf = fun.f_divide(np.sum(numbers_end_yatf,axis=season_tup, keepdims=True)  # if this gives warning it probably means the feedsupply is too low.
+                                        , np.sum(numbers_start_condense_yatf, axis=season_tup, keepdims=True))  # sum z axis because numbers are distributed along z axis so need to sum to determine if w has mortality > 10% (dont sum e&b becasue yatf stay in the same slice)
+                treashold = np.minimum(0.9, np.mean(mort_yatf, axis=w_pos, keepdims=True)) #mort threashold is max of 10% or average mort
+                mort_mask_yatf = mort_yatf > treashold  # determine which w has mortality > x%
 
                 ###combine mort and feedlot mask
                 condense_w_mask_yatf = np.logical_and(fs_mask_yatf, mort_mask_yatf)
@@ -3763,13 +3769,15 @@ def generator(params,r_vals,ev,plots = False):
                 ### this will increase the condensing weight but all the heavy animals were sold so the high condense weight becomes too high for many animals to distribute into and hence is a waste.
                 fs_mask_offs = np.all(feedsupplyw_pa1e1b1nwzida0e0b0xyg3[0:p] < 3, axis=p_pos)  # if the animal has ever been in feedlot it is masked out
 
-                ###mask for animals with greater than 10% mort - true means mort is less than 10%
+                ###mask for animals with greater than x% mort - true means mort is less than x% (where x% is a mortality threashold)
                 numbers_start_condense_offs = np.broadcast_to(numbers_start_condense_offs, numbers_end_offs.shape) #required for the first condensing because condense numbers start doesnt have all the axis.
-                mort_mask = (np.sum(numbers_end_offs,axis=prejoin_tup + (season_tup,), keepdims=True)  # if this gives warning it probably means the feedsupply is too low.
-                             / np.sum(numbers_start_condense_offs, axis=prejoin_tup + (season_tup,), keepdims=True)) > 0.9  # sum e,b,z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10%
+                mort_offs = (np.sum(numbers_end_offs,axis=season_tup, keepdims=True)  # if this gives warning it probably means the feedsupply is too low.
+                             / np.sum(numbers_start_condense_offs, axis=season_tup, keepdims=True))  # sum z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10% (dont sum e&b becasue offfs dont change slice)
+                treashold = np.minimum(0.9, np.mean(mort_offs, axis=w_pos, keepdims=True)) #mort threashold is max of 10% or average mort
+                mort_mask_offs = mort_offs > treashold  # determine which w has mortality > x%
 
                 ###combine mort and feedlot mask
-                condense_w_mask_offs = np.logical_and(fs_mask_offs, mort_mask)
+                condense_w_mask_offs = np.logical_and(fs_mask_offs, mort_mask_offs)
 
                 ###sorted index of w. used for condensing.
                 idx_sorted_w_offs = np.argsort(ffcfw_offs * condense_w_mask_offs, axis=w_pos) #set animal
