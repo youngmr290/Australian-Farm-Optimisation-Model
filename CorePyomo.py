@@ -18,10 +18,11 @@ import time
 import pyomo.environ as pe
 import numpy as np
 import networkx
-import pyomo.pysp.util.rapper as rapper
-import pyomo.pysp.plugins.csvsolutionwriter as csvw
-import pyomo.pysp.plugins.jsonsolutionwriter as jsonw
+# import pyomo.pysp.util.rapper as rapper
+# import pyomo.pysp.plugins.csvsolutionwriter as csvw
+# import pyomo.pysp.plugins.jsonsolutionwriter as jsonw
 import os
+import shutil
 
 #AFO modules - should only be pyomo modules
 import UniversalInputs as uinp
@@ -434,9 +435,14 @@ def coremodel_all(params, trial_name):
         except AttributeError:
             pass
         model.slack = pe.Suffix(direction=pe.Suffix.IMPORT)
-        ##solve - tee=True will print out solver information. With an iteration limit of 100 seconds
-        solver = pe.SolverFactory('glpk')
-        solver.options['tmlim'] = 100
+        ##solve - uses cplex if it exists else glpk - tee=True will print out solver information.
+        if not shutil.which("cplex") == None:
+            ##solve with cplex if it exists
+            solver = pe.SolverFactory('cplex')
+        else:
+            ##solve with glkp
+            solver = pe.SolverFactory('glpk')
+            solver.options['tmlim'] = 100 #limit solving time to 100sec incase solver stalls.
         solver_result = solver.solve(model, tee=True)  #turn to true for solver output - may be useful for troubleshooting
         try: #to handle infeasible (there is no profit component when infeasible)
             obj = pe.value(model.profit)
