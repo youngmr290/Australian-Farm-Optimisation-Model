@@ -243,7 +243,7 @@ def f_rot_yield():
     return yields.stack()
 
 
-def grain_pool_proportions():
+def f_grain_pool_proportions():
     '''Calculate the proportion of grain in each pool.
 
     The total adjusted yield is split into two pools (firsts and seconds) to represent the grain that does
@@ -254,7 +254,7 @@ def grain_pool_proportions():
 
     '''
     prop = uinp.price['grain_price_info'][['prop_firsts','prop_seconds']]
-    prop.columns = ['firsts','seconds']
+    prop.columns = sinp.general['grain_pools']
     return prop.stack()
 
 
@@ -761,10 +761,6 @@ def seedcost(r_vals):
     ##add cost for cont pasture
     phase_cost = f_cont_pas(phase_cost)
     ##cost allocation
-    # if pinp.general['steady_state']:
-    #     start_z = np.array([per.wet_seeding_start_date()], dtype=np.datetime64)
-    #     # length_z = np.sum(seed_period_lengths, axis=0).astype('timedelta64[D]') #add season axis
-    # else:
     start_z = per.wet_seeding_start_date().astype(np.datetime64)
     length_z = np.sum(seed_period_lengths, axis=0).astype('timedelta64[D]')
     p_dates_c = per.cashflow_periods()['start date'].values
@@ -795,7 +791,8 @@ def insurance(r_vals):
     financial impact of insurance.
     '''
     ##first need to combine each grain pool to get average price
-    ave_price=np.multiply(f_farmgate_grain_price(),uinp.price['grain_price_info'][['prop_firsts','prop_seconds']]).sum(axis=1)#np multiply doen't look at the column names and indexs
+    grain_pool_proportions = f_grain_pool_proportions()
+    ave_price = f_farmgate_grain_price().mul(grain_pool_proportions.unstack()).sum(axis=1)
     insurance=ave_price*uinp.price['grain_price_info']['insurance']/100  #div by 100 because insurance is a percent
     rot_insurance = f_rot_yield().mul(insurance, axis=0, level = 1)/1000 #divide by 1000 to convert yield to tonnes
     rot_insurance = rot_insurance.droplevel(1).unstack()
@@ -876,7 +873,7 @@ def f_crop_sow():
 def crop_params(params,r_vals):
     cost = f_rot_cost(r_vals).stack().unstack(1)  # to make season axis the columns so it can easily be sliced when building params
     yields = f_rot_yield().unstack(2)  # to make season axis the columns so it can easily be sliced when building params
-    propn = grain_pool_proportions()
+    propn = f_grain_pool_proportions()
     grain_price = f_grain_price(r_vals)
     stubble_production = f_stubble_production()
     cropsow = f_crop_sow()

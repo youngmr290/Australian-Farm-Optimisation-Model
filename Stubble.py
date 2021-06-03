@@ -125,7 +125,7 @@ def stubble_all(params):
     for crop, crop_idx in zip(pinp.crop['start_harvest_crops'].index, range(len(pinp.crop['start_harvest_crops']))):
         try: #required if the crop does not have stubble sim inputs
             stub_cat_component_proportion_ks0s1[crop_idx,...] = pd.read_excel('stubble sim.xlsx',sheet_name=crop,header=None, engine='openpyxl')
-        except KeyError:
+        except KeyError or ValueError: #todo once everyone has updated to new packages keyerror can be removed since new version of read_excel throws valueerror.
             pass
 
     ##quality of each category in each period - multiply quality by proportion of components in each category (a, b, c, d) then sum the components axis
