@@ -115,7 +115,7 @@ def f_errors(trial_outdated, trials):
     #. Are any trials out of date E.g. have you run the main model since updating the inputs or the code.
        If trials are out of date a warning message will be printed but the report code will continue to execute.
     #. Did all the trials you are reporting solve optimally. Infeasible trials are still reported the reports are just
-       filled with 0's. A list of infeasible trials will be printed to the consol and reported in the final Report.xlsx
+       filled with 0's. A list of infeasible trials will be printed to the console and reported in the final Report.xlsx
        document.
 
     :param trial_outdated: boolean list of all trials stating if trial is out of date.

@@ -75,7 +75,7 @@ def f_rot_check():
     phases_df = sinp.f_phases()
 
     if len(phases_df) != len(base_yields):
-        ##if the rotations dont match inputs then rerun rotation generation.
+        ##if the rotations don't match inputs then rerun rotation generation.
         import RotGeneration
         RotGeneration.f_rot_gen()
 
