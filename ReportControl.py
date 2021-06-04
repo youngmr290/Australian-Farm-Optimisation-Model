@@ -344,7 +344,6 @@ def f_report(processor, trials):
             ##Average dam lw with p, e & b axis. Lw is adjusted for animals that are sold but not adjusted by mortality
             ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
             ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
-            #todo need to copy the comment to others and see if i can stop broadcasting so i dont need the denom weights.
             type = 'stock'
             prod = 'lw_dams_k2vpa1e1b1nw8ziyg1'
             na_prod = [1]
@@ -366,9 +365,14 @@ def f_report(processor, trials):
             stacked_lw_dams = stacked_lw_dams.append(lw_dams)
 
         if report_run.loc['run_ffcfw_dams', 'Run']:
+            ##Average dam ffcfw with p, e & b axis. ffcfw is adjusted for animals that are sold but not adjusted by mortality
+            ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
+            ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
             type = 'stock'
             prod = 'ffcfw_dams_k2vpa1e1b1nw8ziyg1'
             na_prod = [1]
+            prod_weights = 'on_hand_tpa1e1b1nw8ziyg1' #this will make weight 0 if the animal is sold.
+            na_prod_weights = [1]
             weights = 'dams_numbers_k2tvanwziy1g1'
             na_weights = [3, 5, 6]
             den_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1'
@@ -378,13 +382,16 @@ def f_report(processor, trials):
             cols = [6]
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
-            ffcfw_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights
-                                     , den_weights=den_weights, na_prod=na_prod, na_weights=na_weights
-                                     , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+            ffcfw_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights
+                                     , na_weights=na_weights, prod_weights=prod_weights, na_prod_weights=na_prod_weights
+                                     , den_weights=den_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             ffcfw_dams = pd.concat([ffcfw_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_ffcfw_dams = stacked_ffcfw_dams.append(ffcfw_dams)
 
         if report_run.loc['run_ffcfw_yatf', 'Run']:
+            ##Average yatf ffcfw with p, e & b axis. ffcfw is not adjusted by mortality
+            ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
+            ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
             type = 'stock'
             prod = 'ffcfw_yatf_k2vpa1e1b1nw8zixyg1'
             na_prod = [1]                               #t
@@ -397,16 +404,21 @@ def f_report(processor, trials):
             index = [3]     #p
             cols = [13, 8]  #g2, w8
             axis_slice = {}
-            ffcfw_yatf = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights
-                                     , den_weights=den_weights, na_prod=na_prod, na_weights=na_weights, na_denweights=na_denweights
-                                     , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+            ffcfw_yatf = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights
+                                     , na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights, keys=keys
+                                     , arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             ffcfw_yatf = pd.concat([ffcfw_yatf],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_ffcfw_yatf = stacked_ffcfw_yatf.append(ffcfw_yatf)
 
         if report_run.loc['run_fec_dams', 'Run']:
+            ##Average dam fec with p, e & b axis. fec is adjusted for animals that are sold but not adjusted by mortality
+            ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
+            ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
             type = 'stock'
             prod = 'fec_dams_k2vpa1e1b1nw8ziyg1'
             na_prod = [1]
+            prod_weights = 'on_hand_tpa1e1b1nw8ziyg1' #this will make weight 0 if the animal is sold.
+            na_prod_weights = [1]
             weights = 'dams_numbers_k2tvanwziy1g1'
             na_weights = [3,5,6]
             den_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1'
@@ -416,8 +428,9 @@ def f_report(processor, trials):
             cols = [12, 5, 1, 6]    #g1, e, t & b1
             axis_slice = {}
             # axis_slice[5] = [0, 1, 1]   #only the first cycle of e1
-            fec_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
-                                   den_weights=den_weights, na_prod=na_prod, na_weights=na_weights,
+            fec_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod,
+                                   prod_weights=prod_weights, na_prod_weights=na_prod_weights, weights=weights,
+                                   na_weights=na_weights, den_weights=den_weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             fec_dams = pd.concat([fec_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_fec_dams = stacked_fec_dams.append(fec_dams)
@@ -438,9 +451,14 @@ def f_report(processor, trials):
             stacked_ffcfw_prog = stacked_ffcfw_prog.append(ffcfw_prog)
 
         if report_run.loc['run_ffcfw_offs', 'Run']:
+            ##Average offs ffcfw with p, e & b axis. fec is adjusted for animals that are sold but not adjusted by mortality
+            ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
+            ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
             type = 'stock'
             prod = 'ffcfw_offs_k3k5vpnw8zida0e0b0xyg3'
             na_prod = [2]
+            prod_weights = 'on_hand_tpnw8zida0e0b0xyg3' #this will make weight 0 if the animal is sold.
+            na_prod_weights = [1]
             weights = 'offs_numbers_k3k5tvnwziaxyg3'
             na_weights = [4, 9, 11, 12]
             den_weights = 'pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3'
@@ -452,16 +470,22 @@ def f_report(processor, trials):
             axis_slice[11] = [0,1,1] #e: first cycle
             axis_slice[9] = [2,-1,1] #dam age: Adult
             # axis_slice[15] = [0,1,1] #g3: BBB
-            ffcfw_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights
+            ffcfw_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, prod_weights=prod_weights
+                                     , na_prod_weights=na_prod_weights, weights=weights
                                      , den_weights=den_weights, na_prod=na_prod, na_weights=na_weights
                                      , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             ffcfw_offs = pd.concat([ffcfw_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_ffcfw_offs = stacked_ffcfw_offs.append(ffcfw_offs)
 
         if report_run.loc['run_fec_offs', 'Run']:
+            ##Average offs fec with p, e & b axis. fec is adjusted for animals that are sold but not adjusted by mortality
+            ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
+            ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
             type = 'stock'
             prod = 'fec_offs_k3k5vpnw8zida0e0b0xyg3'
             na_prod = [2]
+            prod_weights = 'on_hand_tpnw8zida0e0b0xyg3' #this will make weight 0 if the animal is sold.
+            na_prod_weights = [1]
             weights = 'offs_numbers_k3k5tvnwziaxyg3'
             na_weights = [4,9,11,12]
             den_weights = 'pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3'
@@ -473,8 +497,8 @@ def f_report(processor, trials):
             axis_slice[11] = [0,1,1] #first cycle
             axis_slice[9] = [2,-1,1] #Adult
             axis_slice[15] = [0,1,1] #BBB
-            fec_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
-                                   den_weights=den_weights, na_prod=na_prod, na_weights=na_weights,
+            fec_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights,
+                                   na_prod_weights=na_prod_weights, weights=weights, den_weights=den_weights, na_weights=na_weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             fec_offs = pd.concat([fec_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_fec_offs = stacked_fec_offs.append(fec_offs)

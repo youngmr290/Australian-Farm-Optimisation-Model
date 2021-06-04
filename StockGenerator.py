@@ -7136,6 +7136,7 @@ def generator(params,r_vals,ev,plots = False):
         r_vals['on_hand_tpnw8zida0e0b0xyg3'] = on_hand_tpa1e1b1nwzida0e0b0xyg3.squeeze(axis=(a1_pos, e1_pos, b1_pos))
 
         ###weights the denominator - required for reports when p, e and b are added and weighted average is taken (otherwise broadcasting the variable activity to the new axis causes error)
+        ###If these arrays get too big might have to add a second denom weight in reporting.
         r_vals['pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1'] = ((a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
                                                              *(a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...])
                                                              * on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...]
