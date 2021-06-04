@@ -134,6 +134,7 @@ sav['bnd_drys_sold'] = '-'   #SA to force drys to be sold
 sav['bnd_drys_retained'] = '-'   #SA to force drys to be retained
 sav['bnd_sale_twice_dry_inc'] = '-'   #SA to include the the bound which forces twice dry dams to be sold
 sav['bnd_twice_dry_propn'] = '-'   #SA to change twice dry dam proportion
+sav['bnd_lower_dam_inc'] = '-'   #control if dam lower bound is on.
 sav['bnd_upper_dam_inc'] = '-'   #control if dam upper bound is on.
 sav['bnd_total_dams_scanned'] = '-'   #total dams scanned (summed over all dvps) - this also controls if bound is on.
 sav['bnd_propn_dam5_retained'] = '-'   #propn of 5yo dams retained - this also controls if bound is on.
@@ -150,6 +151,8 @@ sav['pas_inc'] = np.full_like(pinp.general['pas_inc'], '-', dtype=object) #SA va
 sav['fec_inc'] = '-'    #SA to store FEC report values
 sav['lw_inc'] = '-'     #SA to store LW report values
 sav['ffcfw_inc'] = '-'  #SA to store FFCFW report values
+sav['onhand_mort_p_inc'] = '-'  #SA to store onhand report values
+sav['mort_inc'] = '-'  #SA to store mort report values
 sav['eqn_compare']      = '-'                  #SA to alter if the different equation systems in the sheep sim are run and compared
 sav['eqn_used_g0_q1p7'] = np.full(uinp.sheep['i_eqn_used_g0_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use
 sav['eqn_used_g1_q1p7'] = np.full(uinp.sheep['i_eqn_used_g1_q1p7'].shape, '-', dtype=object) #SA value for which equation system to use

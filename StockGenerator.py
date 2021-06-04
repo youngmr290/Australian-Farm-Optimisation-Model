@@ -6042,8 +6042,8 @@ def generator(params,r_vals,ev,plots = False):
     ##############
     #big reports #
     ##############
-    ##mortality - at the start of each dvp mortality is 0. it accumulates over the dvp. This is its own report as well as affecting the other big reports that have p axis.
-    if pinp.rep['i_store_lw_rep'] or pinp.rep['i_store_ffcfw_rep'] or pinp.rep['i_store_fec_rep'] or pinp.rep['i_store_on_hand'] or pinp.rep['i_store_mort']:
+    ##mortality - at the start of each dvp mortality is 0. it accumulates over the dvp. This is its own report as well as used in on_hand_mort.
+    if pinp.rep['i_store_on_hand_mort'] or pinp.rep['i_store_mort']:
         ###get the cumulative mort for periods in each dvp
         r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg1 = sfun.f_cum_sum_dvp(o_mortality_dams, a_v_pa1e1b1nwzida0e0b0xyg1)
         r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg3 = sfun.f_cum_sum_dvp(o_mortality_offs, a_v_pa1e1b1nwzida0e0b0xyg3)
@@ -6066,13 +6066,13 @@ def generator(params,r_vals,ev,plots = False):
                                                                                      numbers_start_vg=on_hand_tpa1e1b1nwzida0e0b0xyg3[:,na,...], # to handle the periods when e slices are in different dvps (eg cant just have default 1 otherwise it will divide by 2 because both e gets summed)
                                                                                      mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3[:,na,...])
 
-    ##on hand - this is used so that the numbers report can have a p axis so the number of animals can be more specific than just dvp
-    ##          also used for numbers weights with e and b axis (used for ffcfw_peb and lw and fec reports)
-    if pinp.rep['i_store_lw_rep'] or pinp.rep['i_store_ffcfw_rep'] or pinp.rep['i_store_fec_rep'] or pinp.rep['i_store_on_hand']:
-        r_on_hand_k2tvpa1e1b1nwzida0e0b0xyg1 = 1 - r_cum_dvp_mort_k2tvpa1e1b1nwzida0e0b0xyg1
-        r_on_hand_k2tvpa1e1b1nwzida0e0b0xyg1[r_cum_dvp_mort_k2tvpa1e1b1nwzida0e0b0xyg1==0] = 0 #if mort is 0 the animal is not on hand
-        r_on_hand_k3k5tvpa1e1b1nwzida0e0b0xyg3 = 1 - r_cum_dvp_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3
-        r_on_hand_k3k5tvpa1e1b1nwzida0e0b0xyg3[r_cum_dvp_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3==0] = 0 #if mort is 0 the animal is not on hand
+    ##on hand mort- this is used for numbers_p report so that the report can have a p axis to increase numbers detail.
+    ##              accounts for mortality as well as on hand.
+    if pinp.rep['i_store_on_hand_mort']:
+        r_on_hand_mort_k2tvpa1e1b1nwzida0e0b0xyg1 = 1 - r_cum_dvp_mort_k2tvpa1e1b1nwzida0e0b0xyg1
+        r_on_hand_mort_k2tvpa1e1b1nwzida0e0b0xyg1[r_cum_dvp_mort_k2tvpa1e1b1nwzida0e0b0xyg1==0] = 0 #if mort is 0 the animal is not on hand
+        r_on_hand_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3 = 1 - r_cum_dvp_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3
+        r_on_hand_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3[r_cum_dvp_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3==0] = 0 #if mort is 0 the animal is not on hand
 
     ###lw - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. Don't need it because it doesnt effect lw
     if pinp.rep['i_store_lw_rep']:
@@ -6083,7 +6083,7 @@ def generator(params,r_vals,ev,plots = False):
                                  * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
                                  * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...]))
 
-        ###ffcfw - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. Don't need it because it doesnt effect lw
+    ##ffcfw - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. Don't need it because it doesnt effect ffcfw
     if pinp.rep['i_store_ffcfw_rep']:
         r_ffcfw_sire_psire = o_ffcfw_psire
         r_ffcfw_dams_k2tvpdams = (o_ffcfw_pdams * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
@@ -6094,8 +6094,7 @@ def generator(params,r_vals,ev,plots = False):
                                  * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
                                  * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...]))
 
-    ###fec - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns.
-    ### This is a big array so only stored if user wants. t is not required because it doesnt effect lw
+    ##fec - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. t is not required because it doesnt effect fec
     if pinp.rep['i_store_fec_rep']:
         r_fec_sire_pg = ev_psire
         r_fec_dams_k2tvpg = (ev_pdams * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
@@ -7068,16 +7067,6 @@ def generator(params,r_vals,ev,plots = False):
     ###sale date
     r_vals['saledate_k3k5tvnwziaxyg3'] = r_saledate_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
 
-    ###mort
-    if pinp.rep['i_store_mort']:
-        r_vals['mort_k2tvpa1nwziyg1'] = r_cum_dvp_mort_k2tvpa1e1b1nwzida0e0b0xyg1.reshape(k2tvpa1nwziyg1_shape)
-        r_vals['mort_k3k5tvpnwziaxyg3'] = r_cum_dvp_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3.reshape(k3k5tvpnwziaxyg3_shape)
-
-    ###on hand
-    if pinp.rep['i_store_on_hand']:
-        r_vals['on_hand_k2tvpa1nwziyg1'] = r_on_hand_k2tvpa1e1b1nwzida0e0b0xyg1.reshape(k2tvpa1nwziyg1_shape)
-        r_vals['on_hand_k3k5tvpnwziaxyg3'] = r_on_hand_k3k5tvpa1e1b1nwzida0e0b0xyg3.reshape(k3k5tvpnwziaxyg3_shape)
-
     ###wbe
     r_vals['wbe_k2va1nwziyg1'] = r_wbe_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2va1nwziyg1_shape)
     r_vals['wbe_k3k5vnwziaxyg3'] = r_wbe_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5vnwziaxyg3_shape)
@@ -7130,17 +7119,32 @@ def generator(params,r_vals,ev,plots = False):
     nyatf_b1nwzida0e0b0xygb9 = nyatf_b1nwzida0e0b0xyg[...,na] == index_b9
     r_vals['mask_b1b9_preg_b1nwziygb9'] = nfoet_b1nwzida0e0b0xygb9.squeeze(axis=(d_pos-1, a0_pos-1, e0_pos-1, b0_pos-1, x_pos-1))
 
+    ###mort
+    if pinp.rep['i_store_mort']:
+        r_vals['mort_k2tvpa1nwziyg1'] = r_cum_dvp_mort_k2tvpa1e1b1nwzida0e0b0xyg1.reshape(k2tvpa1nwziyg1_shape)
+        r_vals['mort_k3k5tvpnwziaxyg3'] = r_cum_dvp_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3.reshape(k3k5tvpnwziaxyg3_shape)
+
+    ###on hand mort
+    if pinp.rep['i_store_on_hand_mort']:
+        r_vals['on_hand_mort_k2tvpa1nwziyg1'] = r_on_hand_mort_k2tvpa1e1b1nwzida0e0b0xyg1.reshape(k2tvpa1nwziyg1_shape)
+        r_vals['on_hand_mort_k3k5tvpnwziaxyg3'] = r_on_hand_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3.reshape(k3k5tvpnwziaxyg3_shape)
+
     ###numbers weights for reports with arrays that keep axis that are not present in lp array.
     if pinp.rep['i_store_lw_rep'] or pinp.rep['i_store_ffcfw_rep'] or pinp.rep['i_store_fec_rep']:
+        ###weights the numerator to account for on hand
+        r_vals['on_hand_tpa1e1b1nw8ziyg1'] = on_hand_tpa1e1b1nwzida0e0b0xyg1.squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos))
+        r_vals['on_hand_tpnw8zida0e0b0xyg3'] = on_hand_tpa1e1b1nwzida0e0b0xyg3.squeeze(axis=(a1_pos, e1_pos, b1_pos))
+
+        ###weights the denominator - required for reports when p, e and b are added and weighted average is taken (otherwise broadcasting the variable activity to the new axis causes error)
         r_vals['pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1'] = ((a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
                                                              *(a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...])
-                                                             * r_on_hand_k2tvpa1e1b1nwzida0e0b0xyg1
+                                                             * on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...]
                                                              ).squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos))
 
         r_vals['pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3'] = ((a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
                                                                     * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
                                                                     * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...])
-                                                                    * r_on_hand_k3k5tvpa1e1b1nwzida0e0b0xyg3
+                                                                    * on_hand_tpa1e1b1nwzida0e0b0xyg3[:,na,...]
                                                                     ).squeeze(axis=(a1_pos, e1_pos, b1_pos))
 
     # r_vals['e1b1_denom_weights_k2tva1e1b1nw8ziyg1'] = (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1).squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos))

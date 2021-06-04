@@ -1059,7 +1059,7 @@ def f_profit(lp_vars, r_vals, option=0):
 
 def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None, index=[], cols=[], arith=0,
                             prod=1, na_prod=[], weights=None, na_weights=[], axis_slice={},
-                            na_denweights=[], den_weights=1, na_denom=[], denom=1):
+                            na_denweights=[], den_weights=1, na_prod_weights=[], prod_weights=1):
     '''
 
     ..Note::
@@ -1087,8 +1087,8 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None
     :key na_weights (optional, default = []): list: position to add new axis
     :key den_weights (optional, default = 1): str: key to variable used to weight the denominator in the weighted average (required p6 reporting)
     :key na_denweights (optional, default = []): list: position to add new axis
-    :key denom (optional, default = 1): str: keys to r_vals indicating denominator to divide production by (after other operations have been applied).
-    :key na_denom (optional, default = []): list: position to add new axis
+    :key prod_weights (optional, default = 1): str: keys to r_vals referencing array used to weight production.
+    :key na_prod_weights (optional, default = []): list: position to add new axis
     :key axis_slice (optional, default = {}): dict: keys (int) is the axis. value (list) is the start, stop and step of the slice
     :return: summary of a numpy array in a pandas table.
     '''
@@ -1112,22 +1112,29 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None
     except KeyError:
         weights = None
 
-    ###if production doesnt exist eg it is 1 or some other number (this means you can preform arith with any number - mainly used for pasture when there is no production param)
+    ##initilise prod array from either r_vals or default value (this means you can preform arith with any number - mainly used for pasture when there is no production param)
     if isinstance(prod, str):
         prod = r_vals[prod]
     else:
         prod = np.array([prod])
-    ###den weight - used in weighted average calc (default is 1)
+
+    ##initilise prod_weight array from either r_vals or default value
+    if isinstance(prod_weights, str):
+        prod_weights = r_vals[prod_weights]
+    else:
+        prod_weights = np.array([prod_weights])
+
+    ##den weight - used in weighted average calc (default is 1)
     if isinstance(den_weights, str):
         den_weights = r_vals[den_weights]
 
     ##other manipulation
-    prod, weights, den_weights, denom = f_add_axis(prod, weights, den_weights, denom, na_weights, na_prod, na_denweights, na_denom)
-    prod, weights, den_weights, keys = f_slice(prod, weights, den_weights, keys, arith, axis_slice)
+    prod, weights, den_weights, prod_weights = f_add_axis(prod, na_prod, prod_weights, na_prod_weights, weights, na_weights, den_weights, na_denweights)
+    prod, prod_weights, weights, den_weights, keys = f_slice(prod, prod_weights, weights, den_weights, keys, arith, axis_slice)
     ##preform arith. if an axis is not reported it is included in the arith and the axis disappears
     report_idx = index + cols
     arith_axis = list(set(range(len(prod.shape))) - set(report_idx))
-    prod = f_arith(prod, weights, den_weights, arith, arith_axis)
+    prod = f_arith(prod, prod_weights, weights, den_weights, arith, arith_axis)
     ##check for errors
     f_numpy2df_error(prod, weights, arith_axis, index, cols)
     if build_df:
@@ -1242,7 +1249,7 @@ def f_numpy2df_error(prod, weights, arith_axis, index, cols):
     return
 
 
-def f_add_axis(prod, weights, den_weights, denom, na_weights, na_prod, na_denweights, na_denom):
+def f_add_axis(prod, na_prod, prod_weights, na_prod_weights, weights, na_weights, den_weights, na_denweights):
     '''
     Adds new axis if required.
 
@@ -1255,15 +1262,16 @@ def f_add_axis(prod, weights, den_weights, denom, na_weights, na_prod, na_denwei
     weights = np.expand_dims(weights, na_weights)
     den_weights = np.expand_dims(den_weights, na_denweights)
     prod = np.expand_dims(prod, na_prod)
-    denom = np.expand_dims(denom, na_denom)
-    return prod, weights, den_weights, denom
+    prod_weights = np.expand_dims(prod_weights, na_prod_weights)
+    return prod, weights, den_weights, prod_weights
 
 
-def f_slice(prod, weights, den_weights, keys, arith, axis_slice):
+def f_slice(prod, prod_weights, weights, den_weights, keys, arith, axis_slice):
     '''
     Slices the prod, weights and key arrays
 
     :param prod: array: production param
+    :param prod_weights: array: production param weights
     :param weights: array: weights (typically the variable associated with the prod param)
     :param keys: list: keys for axes
     :param axis_slice: dict: containing list of with slice params (start, stop, step)
@@ -1278,18 +1286,16 @@ def f_slice(prod, weights, den_weights, keys, arith, axis_slice):
         sl[axis] = slice(start, stop, step)
         keys[axis] = keys[axis][start:stop:step]
     ###apply slice to np array
-    if arith == 0:
-        prod = prod[tuple(sl)]
-    else:
-        prod, weights, den_weights = np.broadcast_arrays(prod, weights,
-                                                         den_weights)  # if arith is being conducted these arrays need to be the same size so slicing can work
-        prod = prod[tuple(sl)]
-        weights = weights[tuple(sl)]
-        den_weights = den_weights[tuple(sl)]
-    return prod, weights, den_weights, keys
+    prod, prod_weights, weights, den_weights = np.broadcast_arrays(prod, prod_weights, weights,
+                                                     den_weights)  # if arith is being conducted these arrays need to be the same size so slicing can work
+    prod = prod[tuple(sl)]
+    prod_weights = prod_weights[tuple(sl)]
+    weights = weights[tuple(sl)]
+    den_weights = den_weights[tuple(sl)]
+    return prod, prod_weights, weights, den_weights, keys
 
 
-def f_arith(prod, weight, den_weights, arith, axis):
+def f_arith(prod, prod_weights, weight, den_weights, arith, axis):
     '''
     option 0: return production param averaged on specified axis
     option 1: return weighted average of production param (using denominator weight return production per day the animal is on hand)
@@ -1299,11 +1305,15 @@ def f_arith(prod, weight, den_weights, arith, axis):
     option 5: return the maximum value across the slices of the axes
 
     :param prod: array: production param
+    :param prod_weight: array: weights the production param
     :param weight: array: weights (typically the variable associated with the prod param)
+    :param den_weight: array: weights the denominator in the weighted average calculation
     :param arith: int: arith option
     :param axis: list: axes to preform arith along
     :return: array
     '''
+    ##adjust prod by prod_weights
+    prod = prod * prod_weights
     ##calc if keep dims
     keepdims = len(axis) != len(prod.shape)
     ##option 0
