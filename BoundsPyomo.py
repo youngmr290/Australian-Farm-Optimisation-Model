@@ -33,7 +33,7 @@ def boundarypyomo_local(params):
     ##set bounds to include
     bounds_inc = True #controls all bounds (typically on)
     rot_lobound_inc = False #controls rot bound
-    dams_lobound_inc = True #lower bound dams
+    dams_lobound_inc = fun.f_sa(False, sen.sav['bnd_lower_dam_inc'], 5) #lower bound dams
     dams_upperbound_inc = fun.f_sa(False, sen.sav['bnd_upper_dam_inc'], 5) #upper bound on dams
     total_dams_scanned_bound_inc = np.any(sen.sav['bnd_total_dams_scanned'] != '-') #equal to bound on the total number of scanned dams
     force_5yo_retention_inc = np.any(sen.sav['bnd_propn_dam5_retained'] != '-') #force a propn of 5yo dams to be retained.
@@ -140,7 +140,7 @@ def boundarypyomo_local(params):
             ###build array for the axes of the specified slices
             dams_upperbound_tv = np.full((len(model.s_sale_dams), len(model.s_dvp_dams)), np.inf)
             ###set the bound
-            dams_upperbound_tv[0:2, 0:14] = 0  #no dam sales before dvp14
+            dams_upperbound_tv[0:2, 0:14] = 0  #no dam sales before dvp14 (except in DVP3 - after hgt shearing)
             dams_upperbound_tv[0:1, 3:4] = np.inf   #allow sale after shearing t[0] for dams dvp3
             ###ravel and zip bound and dict
             dams_upperbound = dams_upperbound_tv.ravel()

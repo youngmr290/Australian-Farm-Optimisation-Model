@@ -4364,7 +4364,7 @@ def generator(params,r_vals,ev,plots = False):
         sfd_ltwadj_a1e1b1nwzida0e0b0xyg3 = temporary * uinp.sheep['i_sam_LTW_offs']
 
     postp_start=time.time()
-    print('generator :', postp_start - generator_start)
+    print('generator loops :', postp_start - generator_start)
 
 
     ## Call Steve graphing routine here if Generator is throwing an error in the post processing.
@@ -7257,4 +7257,4 @@ def generator(params,r_vals,ev,plots = False):
             traceback.print_exc(file=sys.stdout)
             scan_spreadsheet = input("Enter 1 to rescan spreadsheet for new plots: ")
 
-    print('end of generator')   # a line that can be used to break at the end of the generator
+    print('end of post processing in the generator')   # a line that can be used to break at the end of the generator

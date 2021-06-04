@@ -712,7 +712,7 @@ def f_report(processor, trials):
             stacked_dse1_offs = stacked_dse1_offs.append(dse1_offs)
 
         if report_run.loc['run_grnfoo', 'Run']:
-            #returns foo at end of each fp
+            #returns foo at end of each FP
             type = 'pas'
             prod = 'foo_end_grnha_goflzt'
             weights = 'greenpas_ha_vgoflzt'
@@ -728,7 +728,7 @@ def f_report(processor, trials):
             stacked_grnfoo = stacked_grnfoo.append(grnfoo)
 
         if report_run.loc['run_dryfoo', 'Run']:
-            #returns foo at end of each fp
+            #returns foo at end of each FP
             type = 'pas'
             prod = 1000
             weights = 'drypas_transfer_dfzt'
@@ -744,7 +744,7 @@ def f_report(processor, trials):
             stacked_dryfoo = stacked_dryfoo.append(dryfoo)
 
         if report_run.loc['run_napfoo', 'Run']:
-            #returns foo at end of each fp
+            #returns foo at end of each FP
             prod = 1000
             type = 'pas'
             weights = 'nap_transfer_dfzt'
@@ -760,7 +760,7 @@ def f_report(processor, trials):
             stacked_napfoo = stacked_napfoo.append(napfoo)
 
         if report_run.loc['run_grncon', 'Run']:
-            #returns consumption in each fp
+            #returns consumption in each FP
             prod = 'cons_grnha_t_goflzt'
             type = 'pas'
             weights = 'greenpas_ha_vgoflzt'
@@ -776,7 +776,7 @@ def f_report(processor, trials):
             stacked_grncon = stacked_grncon.append(grncon)
 
         if report_run.loc['run_drycon', 'Run']:
-            #returns consumption in each fp
+            #returns consumption in each FP
             prod = 1000
             type = 'pas'
             weights = 'drypas_consumed_vdfzt'
@@ -792,7 +792,7 @@ def f_report(processor, trials):
             stacked_drycon = stacked_drycon.append(drycon)
 
         if report_run.loc['run_grnfec', 'Run']:
-            #returns fec during each fp regardless of whether selected or not
+            #returns FEC during each FP regardless of whether selected or not
             type = 'pas'
             prod = 'fec_grnha_vgoflzt'
             weights = 1
@@ -806,8 +806,8 @@ def f_report(processor, trials):
             grnfec = pd.concat([grnfec],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_grnfec = stacked_grnfec.append(grnfec)
 
-        if True: # report_run.loc['run_grndmd', 'Run']: todo need to hook up to exp.xl
-            #returns dmd during each fp regardless of whether selected or not
+        if report_run.loc['run_grndmd', 'Run']:
+            #returns DMD during each FP (regardless of whether selected or not)
             type = 'pas'
             prod = 'dmd_diet_grnha_goflzt'
             weights = 1
@@ -818,11 +818,11 @@ def f_report(processor, trials):
             axis_slice = {}
             grndmd = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
-            grnfec = pd.concat([grndmd],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            grndmd = pd.concat([grndmd],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_grndmd = stacked_grndmd.append(grndmd)
 
-        if True: #report_run.loc['run_avegrnfoo', 'Run']: todo need to hook up to exp.xl
-            #returns average FOO during each fp regardless of whether selected or not
+        if report_run.loc['run_avegrnfoo', 'Run']:
+            #returns average FOO during each FP (regardless of whether selected or not)
             type = 'pas'
             prod = 'foo_ave_grnha_goflzt'
             weights = 1
@@ -837,7 +837,7 @@ def f_report(processor, trials):
             stacked_avegrnfoo = stacked_avegrnfoo.append(grnfoo)
 
         if report_run.loc['run_dryfec', 'Run']:
-            #returns fec during each fp regardless of whether selected or not
+            #returns FEC during each FP (regardless of whether selected or not)
             type = 'pas'
             prod = 'fec_dry_vdfzt'
             weights = 1
@@ -851,8 +851,8 @@ def f_report(processor, trials):
             dryfec = pd.concat([dryfec],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_dryfec = stacked_dryfec.append(dryfec)
 
-        if True: #report_run.loc['run_drydmd', 'Run']: todo need to hook up to exp.xl
-            #returns dmd during each fp regardless of whether selected or not
+        if report_run.loc['run_drydmd', 'Run']:
+            #returns DMD during each FP (regardless of whether selected or not)
             type = 'pas'
             prod = 'dry_dmd_dfzt'
             weights = 1
@@ -866,8 +866,8 @@ def f_report(processor, trials):
             drydmd = pd.concat([drydmd],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_drydmd = stacked_drydmd.append(drydmd)
 
-        if True: #report_run.loc['run_dryfoo', 'Run']: todo need to hook up to exp.xl
-            #returns average foo during each fp regardless of whether selected or not
+        if report_run.loc['run_dryfoo', 'Run']:
+            #returns average FOO during each FP (regardless of whether selected or not)
             type = 'pas'
             prod = 'dry_foo_dfzt'
             weights = 1
@@ -882,7 +882,7 @@ def f_report(processor, trials):
             stacked_avedryfoo = stacked_avedryfoo.append(dryfoo)
 
         if report_run.loc['run_napcon', 'Run']:
-            #returns consumption in each fp
+            #returns consumption in each FP
             prod = 1000
             type = 'pas'
             weights = 'nap_consumed_vdfzt'
@@ -898,7 +898,7 @@ def f_report(processor, trials):
             stacked_napcon = stacked_napcon.append(napcon)
 
         if report_run.loc['run_poccon', 'Run']:
-            #returns consumption in each fp
+            #returns consumption in each FP
             prod = 1000
             type = 'pas'
             weights = 'poc_consumed_vflz'
@@ -914,14 +914,14 @@ def f_report(processor, trials):
             stacked_poccon = stacked_poccon.append(poccon)
 
         if report_run.loc['run_supcon', 'Run']:
-            #returns consumption in each fp
+            #returns consumption in each FP
             option = 1
             supcon = rep.f_grain_sup_summary(lp_vars, r_vals, option=option)
             supcon = pd.concat([supcon],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_supcon = stacked_supcon.append(supcon)
 
         if report_run.loc['run_stubcon', 'Run']:
-            #returns consumption in each fp
+            #returns consumption in each FP
             stubcon = rep.f_stubble_summary(lp_vars, r_vals)
             stubcon = pd.concat([stubcon],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_stubcon = stacked_stubcon.append(stubcon)
@@ -1044,15 +1044,15 @@ def f_report(processor, trials):
         df_settings = rep.f_df2xl(writer, stacked_drycon, 'drycon', df_settings, option=1)
     if report_run.loc['run_grnfec', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_grnfec, 'grnfec', df_settings, option=1)
-    if True:#report_run.loc['run_grndmd', 'Run']: todo complete once hooked up to exp.xl
+    if report_run.loc['run_grndmd', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_grndmd, 'grndmd', df_settings, option=1)
-    if True:#report_run.loc['run_avegrnfoo', 'Run']: todo complete once hooked up to exp.xl
+    if report_run.loc['run_avegrnfoo', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_avegrnfoo, 'avegrnfoo', df_settings, option=1)
     if report_run.loc['run_dryfec', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_dryfec, 'dryfec', df_settings, option=1)
-    if True:#report_run.loc['run_drydmd', 'Run']: todo complete once hooked up to exp.xl
+    if report_run.loc['run_drydmd', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_drydmd, 'drydmd', df_settings, option=1)
-    if True:#report_run.loc['run_avedryfoo', 'Run']: todo complete once hooked up to exp.xl
+    if report_run.loc['run_avedryfoo', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_avedryfoo, 'avedryfoo', df_settings, option=1)
     if report_run.loc['run_napcon', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_napcon, 'napcon', df_settings, option=1)
