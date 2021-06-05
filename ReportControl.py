@@ -393,7 +393,7 @@ def f_report(processor, trials):
             ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
             ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
             ##For yatf the denom weight also includes a weighting for nyatf. The numerator also gets weighted by this.
-            ##v_dam must be used becasue v_prog has a different w axis than yatf.
+            ##v_dam must be used because v_prog has a different w axis than yatf.
             type = 'stock'
             prod = 'ffcfw_yatf_k2vpa1e1b1nw8zixyg1'
             na_prod = [1]                               #t

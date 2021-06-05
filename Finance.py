@@ -22,14 +22,16 @@ Tax is also not represented for several reasons:
    'perfectly' then each year would have the same taxable profit. Thus, the optimal farm management
    is unaffected by the inclusion of tax.
 
-#. AFO is a bioeconomical model with the aim of optimising farm management. It is not a finance model.
+#. AFO is a bioeconomic model with the aim of optimising farm management. It is not a finance model.
 
 Asset value
-    Asset value is the value of all assest on a specific day of the year specified by the model administrator.
-    The asset value is used to capture the opportunity cost of investing in farm assets including livestock,
-    machinery and infrastructure (sheds, yards etc). To be selected an asset must return more than the
-    interest cost on the asset which ensures the optimal solution does not include an asset that returns
-    less than investing the same money in high interest savings.
+    Asset value is the value of all assets on the first day of the cashflow year. It captures the opportunity
+    cost of investing in farm assets including livestock, machinery and infrastructure (sheds, yards etc).
+    The role of the asset value is to ensure that all assets that are selected have a return more than the
+    interest cost, this ensures the optimal solution does not include assets that returns
+    less than investing the same money in high interest savings (or to reduce core debt).
+    This structure makes the static equilibrium model generate a result similar to a multi-period optimisation
+    that accounts for interest cost of money.
     For livestock this ensures that the flock structure optimisation accounts for the opportunity cost
     of interest foregone from holding an animal for an extra year.
 
@@ -40,14 +42,14 @@ The cashflow operates in conjunction with the asset value in representing the op
 Livestock flock structure is the main 'decision' that is altered by the inclusion of an asset value. Without
 interest if animals are sold early in the year there would not be an offsetting value that would
 make early sale a ‘reasonable’ option. For example, selling the day after the asset is valued for the price
-that the animal was valued should be an ‘equal’ outcome solution, but this will only occur if there is
+that the animal was valued should be an ‘equal’ outcome solution, but this only occurs if there is
 interest ‘earned’ in the cashflow.
 
 The interest rate for credit & debit are different for farmers ‘real money’ in the bank.
-However, in the model equal debit and credit interest rates are used (this caon be changed by the user).
+However, in the model very similar debit and credit interest rates are used (this can be changed by the user).
 The reason equal interest rates are set as the default are:
 
-#. Many farmers have a core debt, so the farm cash position is always negative even though
+#. Many farmers often have a core debt, so the farm cash position is usually negative even though
    their short term operating account may occasionally be positive. The differential interest
    rates are only justified if the farmer does not operate with a sweep facility to pay down
    core debt and then redraw when required later.
@@ -59,8 +61,11 @@ The reason equal interest rates are set as the default are:
 Minimum return on expenditure
     AFO tallies the total farm expenditure, adjusts it by a user defined return on expense factor and
     includes it in the objective to ensure the model achieves a minimum return on expenditure. The
-    purpose of this is to represent farmer behaviour. The rate of MinROE is specified by the user and
-    can be turned off.
+    purpose of this is to represent farmer behaviour. It can also be used in the static equilibrium
+    version to 'fudge' the risk associated with seasonal variation and reduce the optimal stocking rate
+    to better align with on-farm values.
+    The rate of MinROE is specified by the user and can be turned off. Comparison of the model output
+    with on-farm benchmarking has been used to calibrate the selected value.
 
 """
 ##python modules
@@ -82,7 +87,7 @@ interest
 
 #If it's compound interest, which it generally is, take the annual interest rate (r) and raise it to the reciprocal of 12 to get your monthly rate.
 #Why? Because there are 12 months in a year, and compound interest means exponential growth. Taking an exponent accounts for this.
-#Converting yeary compound r to some shorter period m, use the following formula:
+#Converting yearly compound r to some shorter period m, use the following formula:
 #[(1 + r)^(1/m)] - 1
 
 #convert pa interest into per cashflow period
@@ -106,7 +111,7 @@ def overheads(params, r_vals):
     including. Examples of overhead costs include; electricity, gas, shire rates, licenses,
     professional services, insurance and household expense.
     '''
-    overheads=pinp.general['overheads'] 
+    overheads = pinp.general['overheads']
     overheads = overheads.squeeze().sum()/ len(sinp.general['cashflow_periods'])
     overheads = dict.fromkeys(sinp.general['cashflow_periods'], overheads)
     params['overheads'] = overheads

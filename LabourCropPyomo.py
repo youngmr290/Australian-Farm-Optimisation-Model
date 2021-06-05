@@ -54,7 +54,7 @@ def labcrppyomo_local(params):
         model.del_component(model.p_prep_pack)
     except AttributeError:
         pass
-    model.p_prep_pack = pe.Param(model.s_labperiods, initialize=params[season]['prep_labour'], default = 0.0, mutable=False, doc='labour for preperation and packing up for seeding and harv')
+    model.p_prep_pack = pe.Param(model.s_labperiods, initialize=params[season]['prep_labour'], default = 0.0, mutable=False, doc='labour for preparation and packing up for seeding and harv')
     
     try:
         model.del_component(model.p_fert_app_hour_tonne_index)
@@ -98,7 +98,7 @@ def labcrppyomo_local(params):
 #labour req by 
 def mach_labour_anyone(model,p):
     '''
-    Calculate the total labour required by anyone for fertilising, spraying, seeding, harvest, preperation,
+    Calculate the total labour required by anyone for fertilising, spraying, seeding, harvest, preparation,
     packing and monitoring.
 
     Used in global constraint (con_labour_anyone). See CorePyomo
@@ -120,7 +120,7 @@ def mach_labour_anyone(model,p):
 #labour req by
 def mach_labour_perm(model,p):
     '''
-    Calculate the total labour required by permanent staff for fertilising, spraying, seeding, harvest, preperation,
+    Calculate the total labour required by permanent staff for fertilising, spraying, seeding, harvest, preparation,
     packing and monitoring.
 
     Used in global constraint (con_labour_perm). See CorePyomo

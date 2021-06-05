@@ -64,14 +64,14 @@ def labour_general(params,r_vals):
 
 
     '''
-    ##########################
-    #inputs and initilisation#
-    ##########################
+    ###########################
+    #inputs and initialisation#
+    ###########################
     
     ##season inputs through input func
     harv_date_z = pinp.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0)
 
-    ##initilise periond data
+    ##initialise period data
     lp_p5z = per.p_dates_df().values
     lp_start_p5z = per.p_dates_df().iloc[:-1].values#.astype('datetime64[D]')
     lp_end_p5z = per.p_dates_df().iloc[1:].values#.astype('datetime64[D]')
@@ -96,7 +96,7 @@ def labour_general(params,r_vals):
     perm_leave_alloc_p5z = fun.range_allocation_np(lp_p5z, start, length, True, shape=lp_p5z.shape)
     perm_leave_p5z = perm_leave_alloc_p5z * length.astype(float)
     perm_leave_p5z = perm_leave_p5z[:-1] #drop last row because it is just the end date of last period
-    ###sick leave - x days split equaly into each period
+    ###sick leave - x days split equally into each period
     perm_sick_leave_p5z = pinp.labour['sick_leave_permanent']/365 * lp_len_p5z
     ###total leave
     perm_leave_p5z = perm_leave_p5z + perm_sick_leave_p5z
@@ -194,7 +194,7 @@ def labour_general(params,r_vals):
     lb_cas_pz[seedharv_mask_pz] = pinp.labour['min_casual_seedharv']
     lb_cas_pz[np.logical_not(seedharv_mask_pz)] = pinp.labour['min_casual']
 
-    ##determine cashflow period each labour period alines with
+    ##determine cashflow period each labour period aligns with
     ###get cashflow period dates and names - used in the following loop
     p_dates = per.cashflow_periods()['start date']#get cashflow period dates
     p_dates_start_c = p_dates.values[:-1]
@@ -213,7 +213,7 @@ def labour_general(params,r_vals):
     #     alloc_cz = np.logical_and(p_dates_start_c[:,na] <= lp_date_z, lp_date_z < p_dates_end_c[:,na])
     #     cashflow_alloc_p5z[lp_idx] = p_name[alloc_cz]
 
-    ##cost of casual for each labour period - wage plus super plus workers comp (multipled by wage because super and others are %)
+    ##cost of casual for each labour period - wage plus super plus workers comp (multiplied by wage because super and others are %)
     ##differect to perm and manager because they are at a fixed level throughout the year ie same number of perm staff all yr.
     casual_cost_p5z = cas_hrs_total_p5z * (uinp.price['casual_cost'] + uinp.price['casual_cost'] * uinp.price['casual_super'] + uinp.price['casual_cost'] * uinp.price['casual_workers_comp'])
     casual_cost_p5zc = casual_cost_p5z[...,na] * alloc_pzc
@@ -305,13 +305,13 @@ def labour_general(params,r_vals):
 #     ###available days in the period minus leave multiplied by fraction of weekend days
 #     labour_periods['manager weekend'] = (labour_periods['days'] - labour_periods['manager leave']) * 2/7
 #
-#     ##determine possible labour days worked by permanent staff during the week and on weekend in a given labour perios
+#     ##determine possible labour days worked by permanent staff during the week and on weekend in a given labour period
 #     ###available days in the period minus leave multiplied by fraction of weekdays
 #     labour_periods['permanent weekdays'] = (labour_periods['days'] - labour_periods['permanent leave']) * 5/7
 #     ###available days in the period minus leave multiplied by fraction of weekend days
 #     labour_periods['permanent weekend'] = (labour_periods['days'] - labour_periods['permanent leave']) * 2/7
 #
-#     ##function to determine possible labour days worked by casual staff during the week and on weekend in a given labour perios
+#     ##function to determine possible labour days worked by casual staff during the week and on weekend in a given labour period
 #     ###available days in the period multiplied by fraction of weekdays
 #     labour_periods['casual weekdays'] = labour_periods['days'] * 5/7
 #     ###available days in the period multiplied by fraction of weekend days
@@ -402,10 +402,10 @@ def labour_general(params,r_vals):
 #         else:
 #             labour_periods.loc[labour_periods['date']==i , 'casual lb'] = pinp.labour['min_casual']
 #
-#         ##determine cashflow period each labour period alines with
+#         ##determine cashflow period each labour period aligns with
 #         labour_periods.loc[labour_periods['date']==i , 'cashflow'] = fun.period_allocation(p_dates,p_name,i)
 #
-#     ##cost of casual for each labour period - wage plus super plus workers comp (multipled by wage because super and others are %)
+#     ##cost of casual for each labour period - wage plus super plus workers comp (multiplied by wage because super and others are %)
 #     ##differect to perm and manager because they are at a fixed level throughout the year ie same number of perm staff all yr.
 #     labour_periods['casual_cost'] = labour_periods['casual hours'] * (uinp.price['casual_cost'] + uinp.price['casual_cost'] * uinp.price['casual_super'] + uinp.price['casual_cost'] * uinp.price['casual_workers_comp'])
 #     ## drop last row, because it has na because it only contains the end date, therefore not a period
@@ -426,7 +426,7 @@ def labour_general(params,r_vals):
 
 
 
-#permanent cost per cashflow period - wage plus super plus workers comp and leave ls (multipled by wage because super and others are %)
+#permanent cost per cashflow period - wage plus super plus workers comp and leave ls (multiplied by wage because super and others are %)
 def perm_cost(params, r_vals):
     perm_cost = (uinp.price['permanent_cost'] + uinp.price['permanent_cost'] * uinp.price['permanent_super'] \
     + uinp.price['permanent_cost'] * uinp.price['permanent_workers_comp'] + uinp.price['permanent_cost'] * uinp.price['permanent_ls_leave']) / len(sinp.general['cashflow_periods'])

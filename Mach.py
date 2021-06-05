@@ -13,9 +13,10 @@ then select which machine option they want in the analysis.
 The user inputs the desired machinery option in property input section. If the user wants
 to test the impact of different machine options they can alter the input using a saa sensitivity variable.
 
-All machine option inputs (located in Universal.xlsx) are calibrated to represent cropping on a loamy sand,
-with granite outcropping where whitegum is a common tree. To allow for the differences between the calibration
-and the actual LMUs there are LMU adjustment factors in Property.xlsx.
+All machine option inputs (located in Universal.xlsx) are calibrated to represent cropping on a standard LMU.
+In GSM it is the loamy sand, with granite outcropping where Wandoo (white gum) is a common tree.
+To allow for the differences between the calibration and the actual LMUs there are LMU adjustment
+factors in Property.xlsx.
 
 To reduce space and complexity the model currently only represents machinery activities for seeding and
 harvest (all other machinery usage is directly converted to a cost linked with another activity).
@@ -140,7 +141,7 @@ def f_grazing_days():
 
     The grazing days in each feed period per hectare sown in each seeding
     period is made up of two parts. Firstly, a rectangular component which represents the each hectare
-    being grazed each day from the break of season up until the begining of the machine period (or destocking
+    being grazed each day from the break of season up until the beginning of the machine period (or destocking
     date if that is before).
     Secondly, a triangle component which represents the grazing during the seeding period.
     The area grazed each day diminishes associated with the area sown being spread across the seeding period.
