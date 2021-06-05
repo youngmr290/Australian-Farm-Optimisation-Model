@@ -86,8 +86,8 @@ sap['mr_post'] = 0.0           #Post loop maintenance requirement of adults (zf2
 ##stock
 saa['husb_cost_h2'] = np.zeros(uinp.sheep['i_husb_operations_contract_cost_h2'].shape, dtype=np.float64)  #SA value for contract cost of husbandry operations.
 saa['husb_labour_l2h2'] = np.zeros(uinp.sheep['i_husb_operations_labourreq_l2h2'].shape, dtype=np.float64)  #units of the job carried out per husbandry labour hour
-saa['r1_izg1'] = np.zeros(pinp.sheep['ia_r1_zig1'].shape, dtype=np.float64)   #SA to change the base feed option selected for dams
-saa['r1_izg3'] = np.zeros(pinp.sheep['ia_r1_zig3'].shape, dtype=np.float64)   #SA to change the base feed option selected for offspring
+saa['r1_izg1'] = np.zeros(pinp.sheep['ia_r1_zig1'].shape, dtype=int)   #SA to change the base feed option selected for dams
+saa['r1_izg3'] = np.zeros(pinp.sheep['ia_r1_zig3'].shape, dtype=int)   #SA to change the base feed option selected for offspring
 saa['feedoptions_rjp'] = np.zeros(pinp.feedsupply['i_feedoptions_r1pj0'].shape, dtype=np.float64)  #SA value for feedsupply.
 saa['feedoptions_var_rp'] = np.zeros(pinp.feedsupply['i_feedoptions_var_r2p'].shape, dtype=np.float64)  #SA value for feedsupply variation.
 
