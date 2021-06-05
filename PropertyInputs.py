@@ -306,6 +306,8 @@ def property_inp_sa():
     ###sam
     ###sap
     ###saa
+    sheep['ia_r1_zig1'] = fun.f_sa(sheep['ia_r1_zig1'], sen.saa['r1_izg1'],2)
+    sheep['ia_r1_zig3'] = fun.f_sa(sheep['ia_r1_zig3'], sen.saa['r1_izg3'],2)
     feedsupply['i_feedoptions_r1pj0'] = fun.f_sa(feedsupply['i_feedoptions_r1pj0'], sen.saa['feedoptions_rjp'], 2)
     feedsupply['i_feedoptions_var_r2p'] = fun.f_sa(feedsupply['i_feedoptions_var_r2p'], sen.saa['feedoptions_var_rp'], 2)
     ###sat
