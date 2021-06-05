@@ -392,20 +392,22 @@ def f_report(processor, trials):
             ##Average yatf ffcfw with p, e & b axis. ffcfw is not adjusted by mortality
             ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
             ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
+            ##For yatf the denom weight also includes a weighting for nyatf. The numerator also gets weighted by this.
+            ##v_dam must be used becasue v_prog has a different w axis than yatf.
             type = 'stock'
             prod = 'ffcfw_yatf_k2vpa1e1b1nw8zixyg1'
             na_prod = [1]                               #t
-            weights = 'dams_numbers_k2tvanwziy1g1'      #todo this is not quite right. It should be 'dams_numbers' * nyatf, so that the average over the e & b axes works correctly
+            prod_weights = 'nyatf_b1nwzixyg' #this will make weight 0 if the animal is sold.
+            weights = 'dams_numbers_k2tvanwziy1g1'
             na_weights = [3, 5, 6, 11]                  #p, e1, b1, x
-            den_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1'
-            na_denweights = [11]                             #x
+            den_weights = 'pe1b1_nyatf_numbers_weights_k2tvpa1e1b1nw8zixyg1'
             keys = 'yatf_keys_k2tvpaebnwzixy1g1'
             arith = 1
             index = [3]     #p
             cols = [13, 8]  #g2, w8
             axis_slice = {}
-            ffcfw_yatf = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights
-                                     , na_weights=na_weights, den_weights=den_weights, na_denweights=na_denweights, keys=keys
+            ffcfw_yatf = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights
+                                     , weights=weights, na_weights=na_weights, den_weights=den_weights, keys=keys
                                      , arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             ffcfw_yatf = pd.concat([ffcfw_yatf],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_ffcfw_yatf = stacked_ffcfw_yatf.append(ffcfw_yatf)
