@@ -100,30 +100,30 @@ def boundarypyomo_local(params):
         ###build bound if turned on
         if dams_lobound_inc:
             ###keys to build arrays for the specified slices
-            arrays = [model.s_dvp_dams, model.s_groups_dams]   #more sets can be added here to customise the bound
-            index_vg = fun.cartesian_product_simple_transpose(arrays)
+            arrays = [model.s_sale_dams, model.s_dvp_dams, model.s_groups_dams]   #more sets can be added here to customise the bound
+            index_tvg = fun.cartesian_product_simple_transpose(arrays)
             ###build array for the axes of the specified slices
-            dams_lowbound_vg = np.zeros((len(model.s_dvp_dams), len(model.s_groups_dams)))
+            dams_lowbound_tvg = np.zeros((len(model.s_sale_dams), len(model.s_dvp_dams), len(model.s_groups_dams)))
             ###set the bound
-            dams_lowbound_vg[4:14,-1] = 50  #min of 50 bbt
+            dams_lowbound_tvg[-1, 4:14,-1] = 50  #min of 50 bbt in t3
             ###ravel and zip bound and dict
-            dams_lowbound = dams_lowbound_vg.ravel()
-            tup_tv = tuple(map(tuple, index_vg))
-            dams_lowbound = dict(zip(tup_tv, dams_lowbound))
+            dams_lowbound = dams_lowbound_tvg.ravel()
+            tup_tvg = tuple(map(tuple, index_tvg))
+            dams_lowbound = dict(zip(tup_tvg, dams_lowbound))
 
             ###constraint
-            def dam_lo_bound(model,v,g1):
+            def dam_lo_bound(model,t, v,g1):
                 if all(model.p_mask_dams[k2,t,v,w8] == 0
-                       for k2 in model.s_k2_birth_dams for t in model.s_sale_dams for w8 in model.s_lw_dams):
+                       for k2 in model.s_k2_birth_dams for w8 in model.s_lw_dams):
                     return pe.Constraint.Skip
                 else:
-                    return sum(model.v_dams[k2,t,v,a,n,w8,i,y,g1] for k2 in model.s_k2_birth_dams for t in model.s_sale_dams
+                    return sum(model.v_dams[k2,t,v,a,n,w8,i,y,g1] for k2 in model.s_k2_birth_dams
                                for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
                                for i in model.s_tol for y in model.s_gen_merit_dams
                                if model.p_mask_dams[k2,t,v,w8] == 1) \
-                           >= dams_lowbound[v,g1]
-            model.con_dam_lobound = pe.Constraint(model.s_dvp_dams, model.s_groups_dams, rule=dam_lo_bound,
-                                                    doc='min number of all dams')
+                           >= dams_lowbound[t, v,g1]
+            model.con_dam_lobound = pe.Constraint(model.s_sale_dams, model.s_dvp_dams, model.s_groups_dams, rule=dam_lo_bound,
+                                                    doc='min number of dams')
 
         ##dams upper bound - specified by k2 & v and totalled across other axes
         ###delete the bound (outside if statement in case the bound was active for last trial)
