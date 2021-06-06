@@ -34,7 +34,7 @@ sap['pi']=0 #global potential intake (this increases animal intake without alter
 #SAM #
 ######
 ##general
-sam['GLPK_fix'] = 1.0        # SA multiplier used to tweak a param to make glpk solve
+sam['random'] = 1.0   # SA multiplier used to tweak any random variable when debugging or checking something (after being used it is best to remove it)
 
 
 ## Annual module sensitivity variables - these need to have the same name for each pasture type
