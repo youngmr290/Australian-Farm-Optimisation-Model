@@ -162,6 +162,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
     ev = {} #dict to store ev params from StockGenerator to be used in pasture
 
     ##call precalcs
+    precalc_start = time.time()
     rotpy.rotation_precalcs(params['rot'],r_vals['rot'])
     crppy.crop_precalcs(params['crop'],r_vals['crop'])
     macpy.mach_precalcs(params['mach'],r_vals['mach'])
@@ -173,6 +174,8 @@ def exp(row):  # called with command: pool.map(exp, dataset)
     stubpy.stub_precalcs(params['stub'],r_vals['stub'])
     spy.stock_precalcs(params['stock'],r_vals['stock'],ev)
     paspy.paspyomo_precalcs(params['pas'],r_vals['pas'],ev)
+    precalc_end = time.time()
+    print('precalcs: ', precalc_end - precalc_start)
 
     ##does pyomo need to be run? In exp1 pyomo is always run because creating params file take up lots of time, RAM and disc space
     run_pyomo_params = True
