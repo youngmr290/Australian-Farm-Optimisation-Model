@@ -5683,6 +5683,7 @@ def generator(params,r_vals,ev,plots = False):
     ##mask dams activity (used in bounds)
     mask_dams_k2tva1e1b1nw8zida0e0b0xyg1 =  1 * (np.sum(mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1
                                                                * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1)
+                                                               * (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)
                                                                   , axis = (b1_pos, e1_pos), keepdims=True)>0)
 
 
@@ -6885,11 +6886,11 @@ def generator(params,r_vals,ev,plots = False):
     len_v3 = len(keys_v3)
 
     ##mask for dam activities
-    arrays = [keys_k2, keys_t1, keys_v1, keys_lw1]
-    index_ktvw = fun.cartesian_product_simple_transpose(arrays)
-    tup_ktvw = tuple(map(tuple,index_ktvw))
-    mask_dams_ktvw = mask_dams_k2tva1e1b1nw8zida0e0b0xyg1.ravel()
-    params['p_mask_dams'] = dict(zip(tup_ktvw, mask_dams_ktvw))
+    arrays = [keys_k2, keys_t1, keys_v1, keys_lw1, keys_g1]
+    index_ktvwg1 = fun.cartesian_product_simple_transpose(arrays)
+    tup_ktvwg1 = tuple(map(tuple,index_ktvwg1))
+    mask_dams_ktvwg1 = mask_dams_k2tva1e1b1nw8zida0e0b0xyg1.ravel()
+    params['p_mask_dams'] = dict(zip(tup_ktvwg1, mask_dams_ktvwg1))
 
     ##proportion of dams mated. inf means the model can optimise the proportion because inf is used to skip the constraint.
     arrays = [keys_v1, keys_g1]
