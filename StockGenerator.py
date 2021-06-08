@@ -498,7 +498,8 @@ def generator(params,r_vals,ev,plots = False):
     ###feed variation for dams
     a_r2_k0e1b1nwzida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['ia_r2_k0ig1'],'dams',i_pos, swap=True,left_pos2=a1_pos,right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
     a_r2_k1b1nwzida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['ia_r2_k1ig1'],'dams',i_pos, swap=True,left_pos2=e1_pos,right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
-    a_r2_k2nwzida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['ia_r2_k2ig1'],'dams',i_pos, swap=True,left_pos2=b1_pos,right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)  #add axis between g and i and i and b1
+    a_r2_spk0k1k2nwzida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['ia_r2_sk2ig1'],'dams',i_pos, left_pos2=b1_pos,right_pos2=i_pos,
+                                              left_pos3=p_pos-1, right_pos3=b1_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos, move=True, source=0, dest=2)  #add axis between g and i and i and b1
     ###feed variation for offs
     a_r2_idk0e0b0xyg3 = sfun.f_g2g(pinp.sheep['ia_r2_ik0g3'],'offs',a0_pos, left_pos2=i_pos,right_pos2=a0_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
     a_r2_ik3a0e0b0xyg3 = sfun.f_g2g(pinp.sheep['ia_r2_ik3g3'],'offs',d_pos,  condition=pinp.sheep['i_mask_i'], axis=i_pos)
@@ -1697,9 +1698,6 @@ def generator(params,r_vals,ev,plots = False):
     ##This is the end of the Mating period. (no active e axis - end of mating inclusive of all e slices)
     period_is_matingend_pa1e1b1nwzida0e0b0xyg1 = np.any(np.logical_and(period_is_mating_pa1e1b1nwzida0e0b0xyg1, index_e1b1nwzida0e0b0xyg == np.max(pinp.sheep['i_join_cycles_ig1']) - 1), axis=e1_pos,keepdims=True)
 
-
-
-
     ############################
     ### feed supply calcs      # todo need to add something about break of season..? and need to add e variation
     ############################
@@ -1719,26 +1717,9 @@ def generator(params,r_vals,ev,plots = False):
     t_feedsupply_pj0zida0e0b0xyg3 = pinp.f_seasonal_inp(t_feedsupply_pj0zida0e0b0xyg3,numpy=True,axis=z_pos)
     t_feedsupply_pa1e1b1j0wzida0e0b0xyg3 = fun.f_expand(t_feedsupply_pj0zida0e0b0xyg3, left_pos=n_pos, right_pos=z_pos, left_pos2=p_pos,right_pos2=n_pos, condition=mask_p_offs_p, axis=0) #add  a1,e1,b1,w axis. Note n and j are the same thing (as far a position goes), mask p axis for offs
 
-    ##2) calculate the feedsupply variation for each sheep class
-    t_fs_ageweaned_pk0k1k2j0wzida0e0b0xyg1 = np.rollaxis(feedoptions_var_r2p[a_r2_k0e1b1nwzida0e0b0xyg1],-1,0)
-    t_fs_cycle_pk0k1k2j0wzida0e0b0xyg1 = np.expand_dims(np.rollaxis(feedoptions_var_r2p[a_r2_k1b1nwzida0e0b0xyg1],-1,0), axis = tuple(range(p_pos+1,e1_pos))) #add k0
-    t_fs_lsln_pk0k1k2j0wzida0e0b0xyg1 = np.expand_dims(np.rollaxis(feedoptions_var_r2p[a_r2_k2nwzida0e0b0xyg1],-1,0), axis = tuple(range(p_pos+1,b1_pos))) #add k0,k1
-    t_fs_agedam_pa1e1b1j0wzik3a0e0b0xyg3 = np.expand_dims(np.rollaxis(feedoptions_var_r2p[a_r2_ik3a0e0b0xyg3],-1,0), axis = tuple(range(p_pos+1,i_pos))) #add from i to p
-    t_fs_ageweaned_pa1e1b1j0wzidk0e0b0xyg3 = np.expand_dims(np.rollaxis(feedoptions_var_r2p[a_r2_idk0e0b0xyg3],-1,0), axis = tuple(range(p_pos+1,i_pos))) #add from i to p
-    t_fs_btrt_a1e1b1j0wzida0e0k4xyg3 = np.expand_dims(np.rollaxis(feedoptions_var_r2p[a_r2_ida0e0k4xyg3],-1,0), axis = tuple(range(p_pos+1,i_pos))) #add from i to p
-    t_fs_gender_pa1e1b1j0wzida0e0b0k5yg3 = np.expand_dims(np.rollaxis(feedoptions_var_r2p[a_r2_ida0e0b0k5yg3],-1,0), axis = tuple(range(p_pos+1,i_pos))) #add from i to p
-
-
-    ##3)Based on the animal management selected (scan, gbal and wean) and whether the animals are differentially managed in this trial
-    ###a) weaning age variation
-    a_k0_pa1e1b1nwzida0e0b0xyg1 = period_between_weanprejoin_pa1e1b1nwzida0e0b0xyg1 * pinp.sheep['i_dam_wean_diffman'] * fun.f_expand(np.arange(len_a1)+1, a1_pos) #len_a+1 because that is the association between k0 and a1
-    t_fs_ageweaned_pa1e1b1j0wzida0e0b0xyg1 = np.take_along_axis(t_fs_ageweaned_pk0k1k2j0wzida0e0b0xyg1, a_k0_pa1e1b1nwzida0e0b0xyg1, 1)
-
-    ###b)b.	Dams Cluster k1 – oestrus cycle (e1): The association required is
-    #^Have decided to drop this out of version 1. Will require multiple nutrition patterns in order to test value of scanning for foetal age
-
-    ###c)Dams Cluster k2 – BTRT (b1)
-    ####have to create a_t array so that it is maximum size of the arrays that are used it mask it. Then use broadcasting function to allow a smaller mask to be applied.
+    ##2) calc lsln management association based on sheep identification options (scanning vs no scaning), management practise (differential management once identifying different groups) & time of the year (eg even if you scan you still need to manage sheep the same before scanning)
+    ####have to create a_t array that is maximum size of the arrays that are used to mask it.
+    ####t = 0 is prescan, 1 is postscan, 2 is lactation, 3 not used in V1 but would be is post wean
     shape = np.maximum.reduce([period_between_prejoinscan_pa1e1b1nwzida0e0b0xyg1.shape, period_between_scanbirth_pa1e1b1nwzida0e0b0xyg1.shape
                                   , period_between_birthwean_pa1e1b1nwzida0e0b0xyg1.shape]) #create shape which has the max size
     a_t_pa1e1b1nwzida0e0b0xyg1 = np.zeros(shape)
@@ -1751,19 +1732,36 @@ def generator(params,r_vals,ev,plots = False):
     a_t_pa1e1b1nwzida0e0b0xyg1[period_between_scanbirth_mask] = 1 #t = 0 is prescan, 1 is postscan, 2 is lactation, 3 is not used in V1 but would be post wean
     a_t_pa1e1b1nwzida0e0b0xyg1[period_between_birthwean_mask] = 2 #t = 0 is prescan, 1 is postscan, 2 is lactation, 3 is not used in V1 but would be post wean
 
-    # a_t_pa1e1b1nwzida0e0b0xyg1[period_is_postscan_pa1e1b1nwzida0e0b0xyg1] = 1 #t = 0 is prescan, 1 is postscan, 2 is lactation, 3 is post wean
-    # a_t_pa1e1b1nwzida0e0b0xyg1[period_is_postlactation_pa1e1b1nwzida0e0b0xyg1] = 2 #t = 0 is prescan, 1 is postscan, 2 is lactation, 3 is post wean
-    # a_t_pa1e1b1nwzida0e0b0xyg1[period_is_postwean_pa1e1b1nwzida0e0b0xyg1] = 3 #t = 0 is prescan, 1 is postscan, 2 is lactation, 3 is post wean
-    # a_t_pa1e1b1nwzida0e0b0xyg1[period_is_prescan_pa1e1b1nwzida0e0b0xyg1] = 0 #t = 0 is prescan, 1 is postscan, 2 is lactation, 3 is post wean
-
-
-    ####dams management in each period
+    ####dams management in each period based on scanning detail, time of the year (even if you are scanning you cant manage sheep differently before scanning) and management (you can scan and then not differentially manage)
     scan_pa1e1b1nwzida0e0b0xyg1 = (scan_pa1e1b1nwzida0e0b0xyg1) * (a_t_pa1e1b1nwzida0e0b0xyg1 >= 1) * pinp.sheep['i_dam_lsln_diffman_t'][1]
     gbal_pa1e1b1nwzida0e0b0xyg1 = (gbal_pa1e1b1nwzida0e0b0xyg1 -1 ) * (a_t_pa1e1b1nwzida0e0b0xyg1 >= 2) * pinp.sheep['i_dam_lsln_diffman_t'][2] + 1  #minus 1 then plus 1 ensures that the wean option before lactation is 1
     wean_pa1e1b1nwzida0e0b0xyg1 = (wean_pa1e1b1nwzida0e0b0xyg1 -1 ) * (a_t_pa1e1b1nwzida0e0b0xyg1 >= 3) * pinp.sheep['i_dam_lsln_diffman_t'][3] + 1  #minus 1 then plus 1 ensures that the wean option before weaning is 1
+
+    ##3) calculate the feedsupply variation for each sheep class
+    ###a) just for lsln - select whic lsln variation is used based on scanning option (scanning option can effect optimal fs pattern before scanning)
+    a_r2_pk0k1k2nwzida0e0b0xyg1 = np.take_along_axis(a_r2_spk0k1k2nwzida0e0b0xyg1, scan_pa1e1b1nwzida0e0b0xyg1[na,...], axis=0)[0] #slice scan axis then remove the singleton
+    feedoptions_var_r2pk0k1k2nwzida0e0b0xyg1 = fun.f_expand(feedoptions_var_r2p,p_pos) #add other axis as singleton
+    ###b) calculate the feedsupply variation for each sheep class
+    t_fs_ageweaned_pk0k1k2j0wzida0e0b0xyg1 = np.rollaxis(feedoptions_var_r2p[a_r2_k0e1b1nwzida0e0b0xyg1],-1,0)
+    t_fs_cycle_pk0k1k2j0wzida0e0b0xyg1 = np.expand_dims(np.rollaxis(feedoptions_var_r2p[a_r2_k1b1nwzida0e0b0xyg1],-1,0), axis = tuple(range(p_pos+1,e1_pos))) #add k0
+    t_fs_lsln_pk0k1k2j0wzida0e0b0xyg1 = np.take_along_axis(feedoptions_var_r2pk0k1k2nwzida0e0b0xyg1, a_r2_pk0k1k2nwzida0e0b0xyg1[na,...], axis=0)[0] #[0] to remove the singleton
+    t_fs_agedam_pa1e1b1j0wzik3a0e0b0xyg3 = np.expand_dims(np.rollaxis(feedoptions_var_r2p[a_r2_ik3a0e0b0xyg3],-1,0), axis = tuple(range(p_pos+1,i_pos))) #add from i to p
+    t_fs_ageweaned_pa1e1b1j0wzidk0e0b0xyg3 = np.expand_dims(np.rollaxis(feedoptions_var_r2p[a_r2_idk0e0b0xyg3],-1,0), axis = tuple(range(p_pos+1,i_pos))) #add from i to p
+    t_fs_btrt_a1e1b1j0wzida0e0k4xyg3 = np.expand_dims(np.rollaxis(feedoptions_var_r2p[a_r2_ida0e0k4xyg3],-1,0), axis = tuple(range(p_pos+1,i_pos))) #add from i to p
+    t_fs_gender_pa1e1b1j0wzida0e0b0k5yg3 = np.expand_dims(np.rollaxis(feedoptions_var_r2p[a_r2_ida0e0b0k5yg3],-1,0), axis = tuple(range(p_pos+1,i_pos))) #add from i to p
+
+    ##4)Adjust the fs variation based on the animal management in current trial (eg if you are not identifying or managing sheep differently then all sheep must get same fs)
+    ###a) weaning age variation
+    a_k0_pa1e1b1nwzida0e0b0xyg1 = period_between_weanprejoin_pa1e1b1nwzida0e0b0xyg1 * pinp.sheep['i_dam_wean_diffman'] * fun.f_expand(np.arange(len_a1)+1, a1_pos) #len_a+1 because that is the association between k0 and a1
+    t_fs_ageweaned_pa1e1b1j0wzida0e0b0xyg1 = np.take_along_axis(t_fs_ageweaned_pk0k1k2j0wzida0e0b0xyg1, a_k0_pa1e1b1nwzida0e0b0xyg1, 1)
+
+    ###b)b.	Dams Cluster k1 – oestrus cycle (e1): The association required is
+    #^Have decided to drop this out of version 1. Will require multiple nutrition patterns in order to test value of scanning for foetal age
+
+    ###c)Dams Cluster k2 – BTRT (b1)
     ####a_k2_mlsb1 states the feed variation slice for different management. In this step we slice a_k2_mlsb1 for the selected management in each period.
     a_k2_pa1e1b1nwzida0e0b0xyg1 = np.rollaxis(a_k2_mlsb1[wean_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], gbal_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], scan_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], ...],-1,3) #remove the singleton b1 axis from the association arrays because a populated b1 axis comes from a_k2_mlsb1
-    ####select feed variation pattern
+    ####select feed variation pattern based on the k2 clustering in each period.
     t_fs_lsln_pa1e1b1j0wzida0e0b0xyg1 = np.take_along_axis(t_fs_lsln_pk0k1k2j0wzida0e0b0xyg1, a_k2_pa1e1b1nwzida0e0b0xyg1, b1_pos)
 
     ###d) todo come back to offs (remember gender needs to be masked)
@@ -3639,6 +3637,13 @@ def generator(params,r_vals,ev,plots = False):
                 threshold = np.minimum(0.9, np.mean(surv_dams, axis=w_pos, keepdims=True)) #threshold is the lower of average survival and 90%
                 mort_mask_dams = surv_dams > threshold
 
+                ###print warning if min mort is greater than 10%
+                if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]):
+                    min_mort = 1- np.max(surv_dams, axis=w_pos)
+                    if np.any(min_mort > 0.1):
+                        print('WARNING: HIGH MORTALITY DAMS ')
+
+
                 ###combine mort and feedlot mask
                 condense_w_mask_dams = np.logical_and(fs_mask_dams, mort_mask_dams)
 
@@ -3775,6 +3780,11 @@ def generator(params,r_vals,ev,plots = False):
                              / np.sum(numbers_start_condense_offs, axis=season_tup, keepdims=True))  # sum z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10% (don't sum e&b because offs don't change slice)
                 threshold = np.minimum(0.9, np.mean(surv_offs, axis=w_pos, keepdims=True)) #threshold is the lower of average survival and 90%
                 mort_mask_offs = surv_offs > threshold
+                ###print warning if min mort is greater than 10%
+                if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]):
+                    min_mort = 1- np.max(surv_offs, axis=w_pos)
+                    if np.any(min_mort > 0.1):
+                        print('WARNING: HIGH MORTALITY OFFS ')
 
                 ###combine mort and feedlot mask
                 condense_w_mask_offs = np.logical_and(fs_mask_offs, mort_mask_offs)
@@ -5683,6 +5693,7 @@ def generator(params,r_vals,ev,plots = False):
     ##mask dams activity (used in bounds)
     mask_dams_k2tva1e1b1nw8zida0e0b0xyg1 =  1 * (np.sum(mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1
                                                                * (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1)
+                                                               * (a_g1_tpa1e1b1nwzida0e0b0xyg1 == index_g1)
                                                                   , axis = (b1_pos, e1_pos), keepdims=True)>0)
 
 
@@ -6885,11 +6896,11 @@ def generator(params,r_vals,ev,plots = False):
     len_v3 = len(keys_v3)
 
     ##mask for dam activities
-    arrays = [keys_k2, keys_t1, keys_v1, keys_lw1]
-    index_ktvw = fun.cartesian_product_simple_transpose(arrays)
-    tup_ktvw = tuple(map(tuple,index_ktvw))
-    mask_dams_ktvw = mask_dams_k2tva1e1b1nw8zida0e0b0xyg1.ravel()
-    params['p_mask_dams'] = dict(zip(tup_ktvw, mask_dams_ktvw))
+    arrays = [keys_k2, keys_t1, keys_v1, keys_lw1, keys_g1]
+    index_ktvwg1 = fun.cartesian_product_simple_transpose(arrays)
+    tup_ktvwg1 = tuple(map(tuple,index_ktvwg1))
+    mask_dams_ktvwg1 = mask_dams_k2tva1e1b1nw8zida0e0b0xyg1.ravel()
+    params['p_mask_dams'] = dict(zip(tup_ktvwg1, mask_dams_ktvwg1))
 
     ##proportion of dams mated. inf means the model can optimise the proportion because inf is used to skip the constraint.
     arrays = [keys_v1, keys_g1]

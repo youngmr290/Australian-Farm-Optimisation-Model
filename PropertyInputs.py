@@ -136,7 +136,8 @@ len_l = len(general_inp['lmu_area'])
 len_o = sheep_inp['i_o_len']
 len_p6 = len(period_inp['i_fp_idx'])
 len_r1 = feedsupply_inp['i_r1_len']
-len_s = sheep_inp['i_s_len']
+len_s = sheep_inp['i_s_len'] #s = shear
+len_sc = sinp.stock['i_len_s'] #sc = scan
 len_t3 = sheep_inp['i_t3_len']
 len_x = sheep_inp['i_x_len']
 len_z = len(general_inp['i_mask_z'])
@@ -153,7 +154,7 @@ isxg = (len_i, len_s, len_x, -1)
 izg = (len_i, len_z, -1)
 ik0g = (len_i, len_k0, -1)
 ik1g = (len_i, len_k1, -1)
-ik2g = (len_i, len_k2, -1)
+isk2g = (len_i, len_sc, len_k2, -1)
 ik3g = (len_i, len_k3, -1)
 ik4g = (len_i, len_k4, -1)
 ik5g = (len_i, len_k5, -1)
@@ -192,7 +193,7 @@ sheep_inp['ia_r1_zig1'] = np.reshape(sheep_inp['ia_r1_zig1'], izg)
 sheep_inp['ia_r1_zig3'] = np.reshape(sheep_inp['ia_r1_zig3'], izg)
 sheep_inp['ia_r2_k0ig1'] = np.reshape(sheep_inp['ia_r2_k0ig1'], ik0g)
 sheep_inp['ia_r2_k1ig1'] = np.reshape(sheep_inp['ia_r2_k1ig1'], ik1g)
-sheep_inp['ia_r2_k2ig1'] = np.reshape(sheep_inp['ia_r2_k2ig1'], ik2g)
+sheep_inp['ia_r2_sk2ig1'] = np.reshape(sheep_inp['ia_r2_sk2ig1'], isk2g)
 sheep_inp['ia_r2_ik0g3'] = np.reshape(sheep_inp['ia_r2_ik0g3'], ik0g)
 sheep_inp['ia_r2_ik3g3'] = np.reshape(sheep_inp['ia_r2_ik3g3'], ik3g)
 sheep_inp['ia_r2_ik4g3'] = np.reshape(sheep_inp['ia_r2_ik4g3'], ik4g)
@@ -299,7 +300,7 @@ def property_inp_sa():
     sheep['i_dry_sales_forced'] = fun.f_sa(sheep['i_dry_sales_forced'], sen.sav['bnd_drys_sold'],5)
     sheep['i_dry_retained_forced'] = fun.f_sa(sheep['i_dry_retained_forced'], sen.sav['bnd_drys_retained'],5)
     sheep['ia_r1_zig1'] = fun.f_sa(sheep['ia_r1_zig1'], sen.sav['r1_izg1'],5)
-    sheep['ia_r2_k2ig1'] = fun.f_sa(sheep['ia_r2_k2ig1'], sen.sav['r2_ik2g1'],5)
+    sheep['ia_r2_sk2ig1'] = fun.f_sa(sheep['ia_r2_sk2ig1'], sen.sav['r2_isk2g1'],5)
     sheep['ia_r1_zig3'] = fun.f_sa(sheep['ia_r1_zig3'], sen.sav['r1_izg3'],5)
     sheep['i_sr_constraint_t'] = fun.f_sa(sheep['i_sr_constraint_t'], sen.sav['bnd_sr_t'],5)
 
