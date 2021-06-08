@@ -3637,6 +3637,13 @@ def generator(params,r_vals,ev,plots = False):
                 threshold = np.minimum(0.9, np.mean(surv_dams, axis=w_pos, keepdims=True)) #threshold is the lower of average survival and 90%
                 mort_mask_dams = surv_dams > threshold
 
+                ###print warning if min mort is greater than 10%
+                if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]):
+                    min_mort = 1- np.max(surv_dams, axis=w_pos)
+                    if np.any(min_mort > 0.1):
+                        print('WARNING: HIGH MORTALITY DAMS ')
+
+
                 ###combine mort and feedlot mask
                 condense_w_mask_dams = np.logical_and(fs_mask_dams, mort_mask_dams)
 
