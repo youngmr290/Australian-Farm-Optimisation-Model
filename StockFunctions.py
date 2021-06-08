@@ -324,7 +324,8 @@ def f_c2g(params_c2, y=0, var_pos=0, condition=None, axis=0, dtype=False):
     return param_sire, param_dams, param_yatf, param_offs
 
 
-def f_g2g(array_g,group,left_pos=0,swap=False,right_pos=-1,left_pos2=0,right_pos2=-1, condition = None, axis = 0, condition2 = None, axis2 = 0):
+def f_g2g(array_g,group,left_pos=0,swap=False,right_pos=-1,left_pos2=0,right_pos2=-1, left_pos3=0, right_pos3=0,
+          condition = None, axis = 0, condition2 = None, axis2 = 0, move=False, source=0, dest=1):
     '''
     Parameters
     ----------
@@ -364,6 +365,11 @@ def f_g2g(array_g,group,left_pos=0,swap=False,right_pos=-1,left_pos2=0,right_pos
     if swap:
         array_g = np.swapaxes(array_g, 0, 1)
 
+    ##move axis if necessary
+    if move:
+        array_g = np.moveaxis(array_g, source=source, destination=dest)
+
+
     ##get axis into correct position 1
     if left_pos != None or left_pos != 0:
         extra_axes = tuple(range((left_pos + 1), right_pos))
@@ -375,6 +381,13 @@ def f_g2g(array_g,group,left_pos=0,swap=False,right_pos=-1,left_pos2=0,right_pos
         extra_axes = tuple(range((left_pos2 + 1), right_pos2))
     else: extra_axes = ()
     array_g = np.expand_dims(array_g, axis = extra_axes)
+
+    ##get axis into correct position 3 (some arrays need singleton axis added in multiple places ie separated by a used axis)
+    if left_pos3 != 0:
+        extra_axes = tuple(range((left_pos3 + 1), right_pos3))
+    else: extra_axes = ()
+    array_g = np.expand_dims(array_g, axis = extra_axes)
+
     ##select the required genotypes based on the offspring the user wants to model.
     if group == 'sire':
         ##create mask g?g

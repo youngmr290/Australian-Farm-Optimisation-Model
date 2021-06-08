@@ -186,7 +186,7 @@ sav['fvp_is_dvp_dams'] = np.full(sinp.structuralsa['i_dvp_mask_f1'].shape, '-', 
 sav['mask_fvp_offs'] = np.full(sinp.structuralsa['i_fvp_mask_offs'].shape, '-', dtype=object)      #SA to mask changeable fvps.
 sav['fvp_is_dvp_offs'] = np.full(sinp.structuralsa['i_fvp_mask_offs'].shape, '-', dtype=object)      #SA to control if changeable fvp is a dvp.
 sav['r1_izg1'] = np.full(pinp.sheep['ia_r1_zig1'].shape, '-', dtype=object)   #SA to change the base feed option selected for dams
-sav['r2_ik2g1'] = np.full(pinp.sheep['ia_r2_k2ig1'].shape, '-', dtype=object)   #SA to Change the selected feed variations selected for the k2 axis (LSLN) for dams
+sav['r2_isk2g1'] = np.full(pinp.sheep['ia_r2_sk2ig1'].shape, '-', dtype=object)   #SA to Change the selected feed variations selected for the k2 axis (LSLN) for dams
 sav['r1_izg3'] = np.full(pinp.sheep['ia_r1_zig3'].shape, '-', dtype=object)   #SA to change the base feed option selected for offspring
 
 ##stock parameters
