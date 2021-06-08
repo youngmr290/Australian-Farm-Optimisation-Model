@@ -3773,6 +3773,11 @@ def generator(params,r_vals,ev,plots = False):
                              / np.sum(numbers_start_condense_offs, axis=season_tup, keepdims=True))  # sum z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10% (don't sum e&b because offs don't change slice)
                 threshold = np.minimum(0.9, np.mean(surv_offs, axis=w_pos, keepdims=True)) #threshold is the lower of average survival and 90%
                 mort_mask_offs = surv_offs > threshold
+                ###print warning if min mort is greater than 10%
+                if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]):
+                    min_mort = 1- np.max(surv_offs, axis=w_pos)
+                    if np.any(min_mort > 0.1):
+                        print('WARNING: HIGH MORTALITY OFFS ')
 
                 ###combine mort and feedlot mask
                 condense_w_mask_offs = np.logical_and(fs_mask_offs, mort_mask_offs)
