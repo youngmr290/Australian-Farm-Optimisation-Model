@@ -690,16 +690,16 @@ def f_report(processor, trials):
 
         if report_run.loc['run_mort_dams', 'Run']:
             type = 'stock'
-            prod = 'mort_k2tvpa1nwziyg1'
-            weights = 1 #this could be weighted by numbers if required
+            prod = 'mort_pa1e1b1nwziyg1' #uses b axis instead of k for extra detail when scan=0
+            weights = 1
             na_weights = []
-            keys = 'dams_keys_k2tvpanwziy1g1'
+            keys = 'dams_keys_paebnwziy1g1'
             arith = 4
-            index =[2,3]
-            cols =[0,1,10,6]
+            index =[0]
+            cols =[3,5]
             axis_slice = {}
-            axis_slice[0] = [2, 3, 1]
-            axis_slice[1] = [2, 4, 1]
+            # axis_slice[0] = [2, 3, 1]
+            # axis_slice[1] = [2, 4, 1]
             mort_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
                                    na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols,
                                    axis_slice=axis_slice)
@@ -708,13 +708,13 @@ def f_report(processor, trials):
 
         if report_run.loc['run_mort_offs', 'Run']:
             type = 'stock'
-            prod = 'mort_k3k5tvpnwziaxyg3'
-            weights = 1 #this could be weighted by numbers if required
+            prod = 'mort_pnwzida0e0b0xyg3' #uses b axis instead of k for extra detail when scan=0
+            weights = 1
             na_weights = []
-            keys = 'offs_keys_k3k5tvpnwziaxyg3'
+            keys = 'offs_keys_pnwzidaebxyg3'
             arith = 4
-            index =[4]              #p
-            cols =[12, 1, 2, 6, 10]     #g3, BTRT, t, w, gender
+            index =[0]              #p
+            cols =[11, 8, 2, 9]     #g3, BTRT, w, gender
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             mort_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
