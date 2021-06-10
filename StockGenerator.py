@@ -6083,6 +6083,17 @@ def generator(params,r_vals,ev,plots = False):
         ###get the cumulative mort for periods in each dvp
         r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg1 = sfun.f_cum_sum_dvp(o_mortality_dams, a_v_pa1e1b1nwzida0e0b0xyg1)
         r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg3 = sfun.f_cum_sum_dvp(o_mortality_offs, a_v_pa1e1b1nwzida0e0b0xyg3)
+        ###mask w slices
+        mask_w8vars_pa1e1b1nw8zida0e0b0xyg1 = np.take_along_axis(mask_w8vars_va1e1b1nw8zida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1
+                                                                 , axis=0)
+        mask_w8vars_pa1e1b1nw8zida0e0b0xyg3 = np.take_along_axis(mask_w8vars_va1e1b1nw8zida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3
+                                                                 , axis=0)
+        r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg1 = r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg1 * mask_w8vars_pa1e1b1nw8zida0e0b0xyg1
+        r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg3 = r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg3 * mask_w8vars_pa1e1b1nw8zida0e0b0xyg3
+
+    ##on hand mort- this is used for numbers_p report so that the report can have a p axis to increase numbers detail.
+    ##              accounts for mortality as well as on hand.
+    if pinp.rep['i_store_on_hand_mort']:
         ###add v axis and adjust for onhand
         r_cum_dvp_mort_tvpa1e1b1nwzida0e0b0xyg1 = r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg1 * on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...] * (
                                                   a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
@@ -6092,19 +6103,15 @@ def generator(params,r_vals,ev,plots = False):
         r_cum_dvp_mort_k2tvpa1e1b1nwzida0e0b0xyg1 = sfun.f_create_production_param('dams',r_cum_dvp_mort_tvpa1e1b1nwzida0e0b0xyg1,
                                                                               a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...],
                                                                               index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...],
-                                                                              numbers_start_vg = on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...],  #to handle the periods when e slices are in different dvps (eg cant just have default 1 otherwise it will divide by 2 because both e gets summed)
-                                                                              mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg1[:,na,...])
+                                                                              numbers_start_vg = on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...])  #on_hand to handle the periods when e slices are in different dvps (eg cant just have default 1 otherwise it will divide by 2 because both e gets summed)
         r_cum_dvp_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3 = sfun.f_create_production_param('offs',r_cum_dvp_mort_tvpa1e1b1nwzida0e0b0xyg3,
                                                                                      a_k3cluster_da0e0b0xyg3,
                                                                                      index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...],
                                                                                      a_k5cluster_da0e0b0xyg3,
                                                                                      index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...],
-                                                                                     numbers_start_vg=on_hand_tpa1e1b1nwzida0e0b0xyg3[:,na,...], # to handle the periods when e slices are in different dvps (eg cant just have default 1 otherwise it will divide by 2 because both e gets summed)
-                                                                                     mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3[:,na,...])
+                                                                                     numbers_start_vg=on_hand_tpa1e1b1nwzida0e0b0xyg3[:,na,...]) #on_hand to handle the periods when e slices are in different dvps (eg cant just have default 1 otherwise it will divide by 2 because both e gets summed)
 
-    ##on hand mort- this is used for numbers_p report so that the report can have a p axis to increase numbers detail.
-    ##              accounts for mortality as well as on hand.
-    if pinp.rep['i_store_on_hand_mort']:
+        ###convert to on hand mort (1-mort)
         r_on_hand_mort_k2tvpa1e1b1nwzida0e0b0xyg1 = 1 - r_cum_dvp_mort_k2tvpa1e1b1nwzida0e0b0xyg1
         r_on_hand_mort_k2tvpa1e1b1nwzida0e0b0xyg1[r_cum_dvp_mort_k2tvpa1e1b1nwzida0e0b0xyg1==0] = 0 #if mort is 0 the animal is not on hand
         r_on_hand_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3 = 1 - r_cum_dvp_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3
@@ -7011,10 +7018,14 @@ def generator(params,r_vals,ev,plots = False):
                                              keys_y1, keys_g1]
     r_vals['dams_keys_k2p6ftvanwziy1g1'] = [keys_k2, keys_p6, keys_f, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1,
                                                 keys_z, keys_i, keys_y1, keys_g1]
+    r_vals['dams_keys_paebnwziy1g1'] = [keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
+
     r_vals['yatf_keys_k2tvpaebnwzixy1g1'] = [keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1
                                               , keys_z, keys_i, keys_x, keys_y1, keys_g1]
+
     r_vals['prog_keys_k5twzida0xg2'] = [keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i, keys_d, keys_a, keys_x, keys_g2]
     r_vals['prog_keys_zia0xg2w9'] = [keys_z, keys_i, keys_a, keys_x, keys_g2, keys_lw_prog]
+
     r_vals['offs_keys_k3k5tvnwziaxyg3'] = [keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i,
                                                keys_a, keys_x, keys_y3, keys_g3]
     r_vals['offs_keys_k3k5ctvnwziaxyg3'] = [keys_k3, keys_k5, keys_c, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i,
@@ -7025,6 +7036,9 @@ def generator(params,r_vals,ev,plots = False):
                                                keys_d, keys_a, keys_e0, keys_b0, keys_x, keys_y3, keys_g3]
     r_vals['offs_keys_k3k5p6ftvnwziaxyg3'] = [keys_k3, keys_k5, keys_p6, keys_f, keys_t3, keys_v3, keys_n3,
                                                   keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
+
+    r_vals['offs_keys_pnwzidaebxyg3'] = [keys_p3, keys_n3, keys_lw3, keys_z, keys_i, keys_d, keys_a, keys_e0, keys_b0,
+                                         keys_x, keys_y3, keys_g3]
 
     ####std
     zg0_shape = len_z, len_g0
@@ -7155,12 +7169,12 @@ def generator(params,r_vals,ev,plots = False):
     nyatf_b1nwzida0e0b0xygb9 = nyatf_b1nwzida0e0b0xyg[...,na] == index_b9
     r_vals['mask_b1b9_preg_b1nwziygb9'] = nfoet_b1nwzida0e0b0xygb9.squeeze(axis=(d_pos-1, a0_pos-1, e0_pos-1, b0_pos-1, x_pos-1))
 
-    ###mort
+    ###mort - uses b axis instead of k for extra detail when scan=0
     if pinp.rep['i_store_mort']:
-        r_vals['mort_k2tvpa1nwziyg1'] = r_cum_dvp_mort_k2tvpa1e1b1nwzida0e0b0xyg1.reshape(k2tvpa1nwziyg1_shape)
-        r_vals['mort_k3k5tvpnwziaxyg3'] = r_cum_dvp_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3.reshape(k3k5tvpnwziaxyg3_shape)
+        r_vals['mort_pa1e1b1nwziyg1'] = r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg1.squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos))
+        r_vals['mort_pnwzida0e0b0xyg3'] = r_cum_dvp_mort_pa1e1b1nwzida0e0b0xyg3.squeeze(axis=(a1_pos, e1_pos, b1_pos))
 
-    ###on hand mort
+    ###on hand mort - proportion of each sheep remaining in each period after accounting for mort
     if pinp.rep['i_store_on_hand_mort']:
         r_vals['on_hand_mort_k2tvpa1nwziyg1'] = r_on_hand_mort_k2tvpa1e1b1nwzida0e0b0xyg1.reshape(k2tvpa1nwziyg1_shape)
         r_vals['on_hand_mort_k3k5tvpnwziaxyg3'] = r_on_hand_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3.reshape(k3k5tvpnwziaxyg3_shape)
