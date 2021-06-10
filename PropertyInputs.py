@@ -202,7 +202,7 @@ sheep_inp['i_sales_offset_tsg3'] = np.reshape(sheep_inp['i_sales_offset_tsg3'], 
 sheep_inp['i_target_weight_tsg3'] = np.reshape(sheep_inp['i_target_weight_tsg3'], t3Sg)
 sheep_inp['i_shear_prior_tsg3'] = np.reshape(sheep_inp['i_shear_prior_tsg3'], t3Sg)
 sheep_inp['ia_i_idg2'] = np.reshape(sheep_inp['ia_i_idg2'], idg)
-feedsupply_inp['i_feedsupply_r1pj0'] = np.reshape(feedsupply_inp['i_feedsupply_r1pj0'], r1j0P)
+feedsupply_inp['i_feedsupply_options_r1pj0'] = np.reshape(feedsupply_inp['i_feedsupply_options_r1pj0'], r1j0P)
 
 ##create a copy of each input dict - so that the base inputs remain unchanged
 ##the copy created is the one used in the actual modules
@@ -309,8 +309,8 @@ def property_inp_sa():
     ###saa
     sheep['ia_r1_zig1'] = fun.f_sa(sheep['ia_r1_zig1'], sen.saa['r1_izg1'],2)
     sheep['ia_r1_zig3'] = fun.f_sa(sheep['ia_r1_zig3'], sen.saa['r1_izg3'],2)
-    feedsupply['i_feedsupply_r1pj0'] = fun.f_sa(feedsupply['i_feedsupply_r1pj0'], sen.saa['feedsupply_r1jp'], 2)
-    feedsupply['i_feedsupply_adj_r2p'] = fun.f_sa(feedsupply['i_feedsupply_adj_r2p'], sen.saa['feedsupply_adj_r2p'], 2)
+    feedsupply['i_feedsupply_options_r1pj0'] = fun.f_sa(feedsupply['i_feedsupply_options_r1pj0'], sen.saa['feedsupply_r1jp'], 2)
+    feedsupply['i_feedsupply_adj_options_r2p'] = fun.f_sa(feedsupply['i_feedsupply_adj_options_r2p'], sen.saa['feedsupply_adj_r2p'], 2)
     ###sat
     ###sar
 
