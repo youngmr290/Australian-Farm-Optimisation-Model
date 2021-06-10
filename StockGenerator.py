@@ -507,9 +507,9 @@ def generator(params,r_vals,ev,plots = False):
     a_r2_ida0e0b0k5yg3 = sfun.f_g2g(pinp.sheep['ia_r2_ik5g3'],'offs',x_pos, left_pos2=i_pos,right_pos2=x_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)  #add axis between g and b0 and b0 and i
 
     ##std feed options
-    feedoptions_r1j0p = pinp.feedsupply['i_feedoptions_r1pj0'][...,0:len_p].astype(np.float) #slice off extra p periods so it is the same length as the sim periods
+    feedsupply_r1j0p = pinp.feedsupply['i_feedsupply_r1pj0'][...,0:len_p].astype(np.float) #slice off extra p periods so it is the same length as the sim periods
     ##feed variation
-    feedoptions_var_r2p = pinp.feedsupply['i_feedoptions_var_r2p'][:,0:len_p].astype(np.float) #slice off extra p periods so it is the same length as the sim periods
+    feedsupply_adj_r2p = pinp.feedsupply['i_feedsupply_adj_r2p'][:,0:len_p].astype(np.float) #slice off extra p periods so it is the same length as the sim periods
     ##an association between the k2 cluster (feed variation) and reproductive management (scanning, gbal & weaning).
     a_k2_mlsb1 = sinp.stock['ia_k2_mlsb1']
 
@@ -1701,19 +1701,23 @@ def generator(params,r_vals,ev,plots = False):
     ############################
     ### feed supply calcs      # todo need to add something about break of season..? and need to add e variation
     ############################
+    ##r1 & r2 are the axes for the inputs that are the options of different feed supply.
+    # r1 is the choices for the full year feed supply for the undifferentiated animal.
+    # r2 is the variation for different classes or different management.
+
     ##1)	Compile the standard pattern from the inputs and handle the z axis (need to apply z treatment here because a_r_zida0e0b0xyg0 didn't get the season treatment)
     ###sire
-    t_feedsupply_pj0zida0e0b0xyg0 = np.moveaxis(np.moveaxis(feedoptions_r1j0p[a_r_zida0e0b0xyg0],-1,0),-1,1) #had to rollaxis twice once for p and once for j0 (couldn't find a way to do both at the same time)
+    t_feedsupply_pj0zida0e0b0xyg0 = np.moveaxis(np.moveaxis(feedsupply_r1j0p[a_r_zida0e0b0xyg0],-1,0),-1,1) #had to rollaxis twice once for p and once for j0 (couldn't find a way to do both at the same time)
     t_feedsupply_pj0zida0e0b0xyg0 = pinp.f_seasonal_inp(t_feedsupply_pj0zida0e0b0xyg0,numpy=True,axis=z_pos)
     t_feedsupply_pa1e1b1j0wzida0e0b0xyg0 = fun.f_expand(t_feedsupply_pj0zida0e0b0xyg0, left_pos=n_pos, right_pos=z_pos, left_pos2=p_pos,right_pos2=n_pos) #add  a1,e1,b1,w axis. Note n and j are the same thing (as far a position goes)
 
     ###dams
-    t_feedsupply_pj0zida0e0b0xyg1 = np.moveaxis(np.moveaxis(feedoptions_r1j0p[a_r_zida0e0b0xyg1],-1,0),-1,1) #had to rollaxis twice once for p and once for j0 (couldn't find a way to do both at the same time)
+    t_feedsupply_pj0zida0e0b0xyg1 = np.moveaxis(np.moveaxis(feedsupply_r1j0p[a_r_zida0e0b0xyg1],-1,0),-1,1) #had to rollaxis twice once for p and once for j0 (couldn't find a way to do both at the same time)
     t_feedsupply_pj0zida0e0b0xyg1 = pinp.f_seasonal_inp(t_feedsupply_pj0zida0e0b0xyg1,numpy=True,axis=z_pos)
     t_feedsupply_pa1e1b1j0wzida0e0b0xyg1 = fun.f_expand(t_feedsupply_pj0zida0e0b0xyg1, left_pos=n_pos, right_pos=z_pos, left_pos2=p_pos,right_pos2=n_pos) #add  a1,e1,b1,w axis. Note n and j are the same thing (as far a position goes)
 
     ###offs
-    t_feedsupply_pj0zida0e0b0xyg3 = np.moveaxis(np.moveaxis(feedoptions_r1j0p[a_r_zida0e0b0xyg3],-1,0),-1,1) #had to rollaxis twice once for p and once for j0 (couldn't find a way to do both at the same time)
+    t_feedsupply_pj0zida0e0b0xyg3 = np.moveaxis(np.moveaxis(feedsupply_r1j0p[a_r_zida0e0b0xyg3],-1,0),-1,1) #had to rollaxis twice once for p and once for j0 (couldn't find a way to do both at the same time)
     t_feedsupply_pj0zida0e0b0xyg3 = pinp.f_seasonal_inp(t_feedsupply_pj0zida0e0b0xyg3,numpy=True,axis=z_pos)
     t_feedsupply_pa1e1b1j0wzida0e0b0xyg3 = fun.f_expand(t_feedsupply_pj0zida0e0b0xyg3, left_pos=n_pos, right_pos=z_pos, left_pos2=p_pos,right_pos2=n_pos, condition=mask_p_offs_p, axis=0) #add  a1,e1,b1,w axis. Note n and j are the same thing (as far a position goes), mask p axis for offs
 
@@ -1740,15 +1744,15 @@ def generator(params,r_vals,ev,plots = False):
     ##3) calculate the feedsupply variation for each sheep class
     ###a) just for lsln - select whic lsln variation is used based on scanning option (scanning option can effect optimal fs pattern before scanning)
     a_r2_pk0k1k2nwzida0e0b0xyg1 = np.take_along_axis(a_r2_spk0k1k2nwzida0e0b0xyg1, scan_pa1e1b1nwzida0e0b0xyg1[na,...], axis=0)[0] #slice scan axis then remove the singleton
-    feedoptions_var_r2pk0k1k2nwzida0e0b0xyg1 = fun.f_expand(feedoptions_var_r2p,p_pos) #add other axis as singleton
+    feedsupply_adj_r2pk0k1k2nwzida0e0b0xyg1 = fun.f_expand(feedsupply_adj_r2p,p_pos) #add other axis as singleton
     ###b) calculate the feedsupply variation for each sheep class
-    t_fs_ageweaned_pk0k1k2j0wzida0e0b0xyg1 = np.rollaxis(feedoptions_var_r2p[a_r2_k0e1b1nwzida0e0b0xyg1],-1,0)
-    t_fs_cycle_pk0k1k2j0wzida0e0b0xyg1 = np.expand_dims(np.rollaxis(feedoptions_var_r2p[a_r2_k1b1nwzida0e0b0xyg1],-1,0), axis = tuple(range(p_pos+1,e1_pos))) #add k0
-    t_fs_lsln_pk0k1k2j0wzida0e0b0xyg1 = np.take_along_axis(feedoptions_var_r2pk0k1k2nwzida0e0b0xyg1, a_r2_pk0k1k2nwzida0e0b0xyg1[na,...], axis=0)[0] #[0] to remove the singleton
-    t_fs_agedam_pa1e1b1j0wzik3a0e0b0xyg3 = np.expand_dims(np.rollaxis(feedoptions_var_r2p[a_r2_ik3a0e0b0xyg3],-1,0), axis = tuple(range(p_pos+1,i_pos))) #add from i to p
-    t_fs_ageweaned_pa1e1b1j0wzidk0e0b0xyg3 = np.expand_dims(np.rollaxis(feedoptions_var_r2p[a_r2_idk0e0b0xyg3],-1,0), axis = tuple(range(p_pos+1,i_pos))) #add from i to p
-    t_fs_btrt_a1e1b1j0wzida0e0k4xyg3 = np.expand_dims(np.rollaxis(feedoptions_var_r2p[a_r2_ida0e0k4xyg3],-1,0), axis = tuple(range(p_pos+1,i_pos))) #add from i to p
-    t_fs_gender_pa1e1b1j0wzida0e0b0k5yg3 = np.expand_dims(np.rollaxis(feedoptions_var_r2p[a_r2_ida0e0b0k5yg3],-1,0), axis = tuple(range(p_pos+1,i_pos))) #add from i to p
+    t_fs_ageweaned_pk0k1k2j0wzida0e0b0xyg1 = np.rollaxis(feedsupply_adj_r2p[a_r2_k0e1b1nwzida0e0b0xyg1],-1,0)
+    t_fs_cycle_pk0k1k2j0wzida0e0b0xyg1 = np.expand_dims(np.rollaxis(feedsupply_adj_r2p[a_r2_k1b1nwzida0e0b0xyg1],-1,0), axis = tuple(range(p_pos+1,e1_pos))) #add k0
+    t_fs_lsln_pk0k1k2j0wzida0e0b0xyg1 = np.take_along_axis(feedsupply_adj_r2pk0k1k2nwzida0e0b0xyg1, a_r2_pk0k1k2nwzida0e0b0xyg1[na,...], axis=0)[0] #[0] to remove the singleton
+    t_fs_agedam_pa1e1b1j0wzik3a0e0b0xyg3 = np.expand_dims(np.rollaxis(feedsupply_adj_r2p[a_r2_ik3a0e0b0xyg3],-1,0), axis = tuple(range(p_pos+1,i_pos))) #add from i to p
+    t_fs_ageweaned_pa1e1b1j0wzidk0e0b0xyg3 = np.expand_dims(np.rollaxis(feedsupply_adj_r2p[a_r2_idk0e0b0xyg3],-1,0), axis = tuple(range(p_pos+1,i_pos))) #add from i to p
+    t_fs_btrt_a1e1b1j0wzida0e0k4xyg3 = np.expand_dims(np.rollaxis(feedsupply_adj_r2p[a_r2_ida0e0k4xyg3],-1,0), axis = tuple(range(p_pos+1,i_pos))) #add from i to p
+    t_fs_gender_pa1e1b1j0wzida0e0b0k5yg3 = np.expand_dims(np.rollaxis(feedsupply_adj_r2p[a_r2_ida0e0b0k5yg3],-1,0), axis = tuple(range(p_pos+1,i_pos))) #add from i to p
 
     ##4)Adjust the fs variation based on the animal management in current trial (eg if you are not identifying or managing sheep differently then all sheep must get same fs)
     ###a) weaning age variation
