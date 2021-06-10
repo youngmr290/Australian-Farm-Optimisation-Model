@@ -4372,7 +4372,7 @@ def generator(params,r_vals,ev,plots = False):
                                                                         , agedam_propn_oa1e1b1nwzida0e0b0xyg1 * btrt_propn_b1nwzida0e0b0xyg1
                                                                         , axis=0) * uinp.sheep['i_sam_LTW_dams']
             ###FD
-            t_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(o_cfw_ltwadj_pdams, a_p_nextisprejoin_oa1e1b1nwzida0e0b0xyg1, axis=0)
+            t_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(o_fd_ltwadj_pdams, a_p_nextisprejoin_oa1e1b1nwzida0e0b0xyg1, axis=0)
             ## take a weighted average of the ltw effect based on the number of dams expected in the flock (age & repro status)
             t_sfd_ltwadj_a1e1b1nwzida0e0b0xyg1 = 1 + fun.f_weighted_average(t_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1
                                                                         , agedam_propn_oa1e1b1nwzida0e0b0xyg1 * btrt_propn_b1nwzida0e0b0xyg1
