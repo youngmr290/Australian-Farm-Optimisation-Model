@@ -193,14 +193,14 @@ def boundarypyomo_local(params):
         ###build bound if turned on
         if force_5yo_retention_inc:
             ###set the bound
-            propn_dams_retained = fun.f_sa(np.inf, sen.sav['bnd_propn_dam5_retained'], 5)
+            propn_dams_retained = fun.f_sa(999, sen.sav['bnd_propn_dam5_retained'], 5) #999 is arbitarty default value which mean skip constraint
             ###5yr scan dvp
             scan5_v = list(params['stock']['p_scan_v_dams'])[4]
             ###6yr scan dvp
             scan6_v = list(params['stock']['p_scan_v_dams'])[5]
             ###constraint - sum all mated dams in scan dvp.
             def retention_5yo_dams(model):
-                if propn_dams_retained == np.inf:
+                if propn_dams_retained == 999:
                     pe.Constraint.Skip
                 else:
                     return (propn_dams_retained) * sum(model.v_dams[k28,t,v,a,n,w8,i,y,g1] for k28 in model.s_k2_birth_dams
