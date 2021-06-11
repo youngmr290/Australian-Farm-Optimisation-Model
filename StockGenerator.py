@@ -4355,8 +4355,8 @@ def generator(params,r_vals,ev,plots = False):
         # this is an improvement when N==1 as it works correctly for BBM & BBT
         if n_fs_dams>1:
             sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1 = 1 + (o_cfw_ltwadj_pdams * nyatf_b1nwzida0e0b0xyg
-                                                     / npw_std_xyg1 / sfw_a0e0b0xyg1) * uinp.sheep['i_sam_LTW_dams']
-            sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = o_fd_ltwadj_pdams * nyatf_b1nwzida0e0b0xyg / npw_std_xyg1 * uinp.sheep['i_sam_LTW_dams']
+                                                     / npw_std_xyg1 / sfw_a0e0b0xyg1) * sen.sam['LTW_dams']
+            sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = o_fd_ltwadj_pdams * nyatf_b1nwzida0e0b0xyg / npw_std_xyg1 * sen.sam['LTW_dams']
 
         else:
             ## convert the ltw effect to have an o axis. It is a temporary variable until it is allocated to the correct slices
@@ -4374,7 +4374,7 @@ def generator(params,r_vals,ev,plots = False):
                                                                         , agedam_propn_oa1e1b1nwzida0e0b0xyg1 * btrt_propn_b1nwzida0e0b0xyg1
                                                                         * season_propn_zida0e0b0xyg * e0_propn_e1b1nwzida0e0b0xyg
                                                                         , axis=(p_pos, e1_pos, b1_pos, z_pos)
-                                                                        , keepdims=True) * uinp.sheep['i_sam_LTW_dams']
+                                                                        , keepdims=True) * sen.sam['LTW_dams']
             ###FD
             t_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(o_fd_ltwadj_pdams, a_p_nextisprejoin_oa1e1b1nwzida0e0b0xyg1, axis=0)
             ## take a weighted average of the ltw effect based on the number of dams expected in the flock (age & repro status)
@@ -4382,7 +4382,7 @@ def generator(params,r_vals,ev,plots = False):
                                                                         , agedam_propn_oa1e1b1nwzida0e0b0xyg1 * btrt_propn_b1nwzida0e0b0xyg1
                                                                         * season_propn_zida0e0b0xyg * e0_propn_e1b1nwzida0e0b0xyg
                                                                         , axis=(p_pos, e1_pos, b1_pos, z_pos)
-                                                                        , keepdims=True) * uinp.sheep['i_sam_LTW_dams']
+                                                                        , keepdims=True) * sen.sam['LTW_dams']
 
             ## allocate to the correct slices of g1.
             ## nutrition of BBB dams [0:1] affects BB-B, BB-M & BB-T during their lifetime.
@@ -4410,7 +4410,7 @@ def generator(params,r_vals,ev,plots = False):
         temporary = np.sum(temporary * (a_b0_b1nwzida0e0b0xyg == index_b0xyg), axis=b1_pos, keepdims=True)
         t_season_propn_pg = np.broadcast_to(season_propn_zida0e0b0xyg, temporary.shape)
         temporary = np.average(temporary, axis=z_pos, weights=t_season_propn_pg)
-        sfw_ltwadj_a1e1b1nwzida0e0b0xyg3 = 1 + temporary * uinp.sheep['i_sam_LTW_offs']
+        sfw_ltwadj_a1e1b1nwzida0e0b0xyg3 = 1 + temporary * sen.sam['LTW_offs']
 
         ## repeat for FD
         temporary = np.sum(o_fd_ltwadj_pdams[:, :, :, :, :, 0:1, ...] * (a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1 == index_da0e0b0xyg), axis = 0)
@@ -4418,7 +4418,7 @@ def generator(params,r_vals,ev,plots = False):
         temporary = np.sum(temporary * (a_b0_b1nwzida0e0b0xyg == index_b0xyg), axis=b1_pos, keepdims=True)
         t_season_propn_pg = np.broadcast_to(season_propn_zida0e0b0xyg, temporary.shape)
         temporary = np.average(temporary, axis=z_pos, weights=t_season_propn_pg)
-        sfd_ltwadj_a1e1b1nwzida0e0b0xyg3 = temporary * uinp.sheep['i_sam_LTW_offs']
+        sfd_ltwadj_a1e1b1nwzida0e0b0xyg3 = temporary * sen.sam['LTW_offs']
 
     postp_start=time.time()
     print('generator loops :', postp_start - generator_start)
