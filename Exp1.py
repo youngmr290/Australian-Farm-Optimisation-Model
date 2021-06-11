@@ -312,7 +312,7 @@ def main():
     ##prints out start status - number of trials to run, date and time exp.xl was last saved and output summary
     print('Number of trials to run: ',len(dataset))
     print('Number of full solutions: ',sum((exp_data.index[row][1] == True) and (exp_data.index[row][0] == True) for row in range(len(exp_data))))
-    print('Exp.xls last saved: ',datetime.fromtimestamp(round(os.path.getmtime("exp.xlsm"))))
+    print('Exp.xls last saved: ',datetime.fromtimestamp(round(os.path.getmtime("exp.xlsx"))))
     ##start multiprocessing
     with multiprocessing.Pool(processes=n_processes) as pool:
         trials_successfully_run = pool.map(exp, dataset)
