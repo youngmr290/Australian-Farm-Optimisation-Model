@@ -695,8 +695,8 @@ def f_report(processor, trials):
             na_weights = []
             keys = 'dams_keys_paebnwziy1g1'
             arith = 4
-            index =[0]
-            cols =[3,5]
+            index =[0]          #period
+            cols =[9, 3, 5]     #genotype, LSLN, w
             axis_slice = {}
             # axis_slice[0] = [2, 3, 1]
             # axis_slice[1] = [2, 4, 1]

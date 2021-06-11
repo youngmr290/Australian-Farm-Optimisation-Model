@@ -1330,7 +1330,7 @@ def f_arith(prod, prod_weights, weight, den_weights, arith, axis):
         prod = prod * weight
     ##option 4
     if arith == 4:
-        prod = fun.f_divide(np.sum(prod, tuple(axis), keepdims=keepdims), np.sum(prod>0, tuple(axis), keepdims=keepdims))
+        prod = fun.f_divide(np.sum(prod * (prod>0), tuple(axis), keepdims=keepdims), np.sum(prod>0, tuple(axis), keepdims=keepdims))
     ##option 5
     if arith == 5:
         prod = np.max(prod, tuple(axis), keepdims=keepdims)

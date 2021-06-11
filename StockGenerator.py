@@ -4345,7 +4345,7 @@ def generator(params,r_vals,ev,plots = False):
         a_nextisprejoin_pa1e1b1nwzida0e0b0xyg1 = sfun.f_next_prev_association(date_end_p, date_prejoin_next_pa1e1b1nwzida0e0b0xyg1, 1, 'right').astype(dtypeint) #p indx of period before prejoining - when nextperiod is prejoining this returns the current period
 
         ## the dam lifetime adjustment (for the p, e1, b1 & w axes) are based on the LW profile of the dams themselves and scaled by the number of progeny they rear as a proportion of the total number weaned.
-        ##Thus ltw adjustment is 0 for dams with no yatf (condition of ewe with no yatf does not effect next generation)
+        ##Thus ltw adjustment is 0 for dams with no yatf (the LW profile of ewe with no yatf does not effect the next generation)
         ### cfw is a scalar so it is the LTW effect as a proportion of sfw. FD is a change so it not scaled by sfd.
         ### populate ltwadj with the value from the period before prejoining. That value is the final value that has been carried forward from the whole profile change
         o_cfw_ltwadj_pdams = np.take_along_axis(o_cfw_ltwadj_pdams, a_nextisprejoin_pa1e1b1nwzida0e0b0xyg1, axis=0)
@@ -4374,19 +4374,18 @@ def generator(params,r_vals,ev,plots = False):
             ###FD
             t_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(o_fd_ltwadj_pdams, a_p_nextisprejoin_oa1e1b1nwzida0e0b0xyg1, axis=0)
             ## take a weighted average of the ltw effect based on the number of dams expected in the flock (age & repro status)
-            t_sfd_ltwadj_a1e1b1nwzida0e0b0xyg1 = 1 + fun.f_weighted_average(t_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1
+            t_sfd_ltwadj_a1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(t_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1
                                                                         , agedam_propn_oa1e1b1nwzida0e0b0xyg1 * btrt_propn_b1nwzida0e0b0xyg1
                                                                         , axis=0) * uinp.sheep['i_sam_LTW_dams']
 
             ## allocate to the correct slices of g1.
-            ## nutrition of BBB dams affects BB-B, BB-M & BB-T during their lifetime.
-            #needs to allow for masking of the g1 axis
-            sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[...] = t_sfw_ltwadj_a1e1b1nwzida0e0b0xyg1[...,0:1]
-            sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[...] = t_sfd_ltwadj_a1e1b1nwzida0e0b0xyg1[...,0:1]
-            ## nutrition of BBM dams affects BM-T during their lifetime.
+            ## nutrition of BBB dams [0:1] affects BB-B, BB-M & BB-T during their lifetime.
+            sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[...] = t_sfw_ltwadj_a1e1b1nwzida0e0b0xyg1[..., 0]
+            sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[...] = t_sfd_ltwadj_a1e1b1nwzida0e0b0xyg1[..., 0]
+            ## nutrition of BBM dams [1] affects BM-T [-1] during their lifetime. (Needs to be [-1] to handle if BBT have been masked)
             if mask_dams_inc_g1[3:4]:
-                sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[...,3:4] = t_sfw_ltwadj_a1e1b1nwzida0e0b0xyg1[...,1]
-                sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[...,3:4] = t_sfd_ltwadj_a1e1b1nwzida0e0b0xyg1[...,1]
+                sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[..., -1] = t_sfw_ltwadj_a1e1b1nwzida0e0b0xyg1[..., 1]
+                sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[..., -1] = t_sfd_ltwadj_a1e1b1nwzida0e0b0xyg1[..., 1]
 
         ## the offspring lifetime adjustment is based on dam LW pattern 0. The dam pattern must be specified/estimated
         ### because there is not a link in the matrix between dam profile and the offspring DVs.
