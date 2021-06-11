@@ -4371,14 +4371,14 @@ def generator(params,r_vals,ev,plots = False):
             t_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1 = 1 + fun.f_weighted_average(t_sfw_ltwadj_oa1e1b1nwzida0e0b0xyg1
                                                                         , agedam_propn_oa1e1b1nwzida0e0b0xyg1 * btrt_propn_b1nwzida0e0b0xyg1
                                                                         * season_propn_zida0e0b0xyg, axis=(p_pos, b1_pos, z_pos)
-                                                                        , keepdims=True) * uinp.sheep['i_sam_LTW_dams']*0
+                                                                        , keepdims=True) * uinp.sheep['i_sam_LTW_dams']
             ###FD
             t_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(o_fd_ltwadj_pdams, a_p_nextisprejoin_oa1e1b1nwzida0e0b0xyg1, axis=0)
             ## take a weighted average of the ltw effect based on the number of dams expected in the flock (age & repro status)
             t_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(t_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1
                                                                         , agedam_propn_oa1e1b1nwzida0e0b0xyg1 * btrt_propn_b1nwzida0e0b0xyg1
                                                                         * season_propn_zida0e0b0xyg, axis=(p_pos, b1_pos, z_pos)
-                                                                        , keepdims=True) * uinp.sheep['i_sam_LTW_dams']*0
+                                                                        , keepdims=True) * uinp.sheep['i_sam_LTW_dams']
 
             ## allocate to the correct slices of g1.
             ## nutrition of BBB dams [0:1] affects BB-B, BB-M & BB-T during their lifetime.
