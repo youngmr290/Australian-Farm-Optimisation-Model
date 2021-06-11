@@ -4365,19 +4365,23 @@ def generator(params,r_vals,ev,plots = False):
             btrt_propn_b0nwzida0e0b0xyg1 = fun.f_expand(btrt_propn_b0xyg1, b1_pos, right_pos=x_pos)
             btrt_propn_b1nwzida0e0b0xyg1 = btrt_propn_b0nwzida0e0b0xyg1[sinp.stock['ia_b0_b1']] * (nyatf_b1nwzida0e0b0xyg>0) #0 for dams with no yatf (condition of ewe with no yatf does not effect next generation)
             agedam_propn_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(agedam_propn_da0e0b0xyg1, p_pos, right_pos=a0_pos)
+            e0_propn_e1b1nwzida0e0b0xyg = fun.f_expand(e0_propn_ida0e0b0xyg[na,...], swap=True, ax1=0, ax2=4, #swap e0 and e1
+                                                left_pos=e1_pos, right_pos=i_pos)
             ###cfw
             t_sfw_ltwadj_oa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(o_cfw_ltwadj_pdams, a_p_nextisprejoin_oa1e1b1nwzida0e0b0xyg1, axis=0)
             ## take a weighted average of the ltw effect based on the number of dams expected in the flock (age & repro status)
             t_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1 = 1 + fun.f_weighted_average(t_sfw_ltwadj_oa1e1b1nwzida0e0b0xyg1
                                                                         , agedam_propn_oa1e1b1nwzida0e0b0xyg1 * btrt_propn_b1nwzida0e0b0xyg1
-                                                                        * season_propn_zida0e0b0xyg, axis=(p_pos, b1_pos, z_pos)
+                                                                        * season_propn_zida0e0b0xyg * e0_propn_e1b1nwzida0e0b0xyg
+                                                                        , axis=(p_pos, e1_pos, b1_pos, z_pos)
                                                                         , keepdims=True) * uinp.sheep['i_sam_LTW_dams']
             ###FD
             t_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(o_fd_ltwadj_pdams, a_p_nextisprejoin_oa1e1b1nwzida0e0b0xyg1, axis=0)
             ## take a weighted average of the ltw effect based on the number of dams expected in the flock (age & repro status)
             t_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(t_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1
                                                                         , agedam_propn_oa1e1b1nwzida0e0b0xyg1 * btrt_propn_b1nwzida0e0b0xyg1
-                                                                        * season_propn_zida0e0b0xyg, axis=(p_pos, b1_pos, z_pos)
+                                                                        * season_propn_zida0e0b0xyg * e0_propn_e1b1nwzida0e0b0xyg
+                                                                        , axis=(p_pos, e1_pos, b1_pos, z_pos)
                                                                         , keepdims=True) * uinp.sheep['i_sam_LTW_dams']
 
             ## allocate to the correct slices of g1.
