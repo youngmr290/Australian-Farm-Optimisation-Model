@@ -1035,7 +1035,7 @@ def generator(params,r_vals,ev,plots = False):
     ##management for weaning, gbal and scan options
     wean_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(wean_oa1e1b1nwzida0e0b0xyg1,a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
     gbal_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(gbal_oa1e1b1nwzida0e0b0xyg1,a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
-    scan_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(scan_oa1e1b1nwzida0e0b0xyg1,a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
+    scan_option_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(scan_oa1e1b1nwzida0e0b0xyg1,a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
 
     ##date, age, timing
     date_born1st_pa1e1b1nwzida0e0b0xyg2=np.take_along_axis(date_born1st_oa1e1b1nwzida0e0b0xyg2,a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0)
@@ -1652,7 +1652,7 @@ def generator(params,r_vals,ev,plots = False):
     # management calc       #
     #########################
     ##scan
-    date_scan_pa1e1b1nwzida0e0b0xyg1 = date_joined2_pa1e1b1nwzida0e0b0xyg1 + join_cycles_ida0e0b0xyg1 * cf_dams[4, 0:1, :].astype('timedelta64[D]') + pinp.sheep['i_scan_day'][scan_pa1e1b1nwzida0e0b0xyg1].astype('timedelta64[D]')
+    date_scan_pa1e1b1nwzida0e0b0xyg1 = date_joined2_pa1e1b1nwzida0e0b0xyg1 + join_cycles_ida0e0b0xyg1 * cf_dams[4, 0:1, :].astype('timedelta64[D]') + pinp.sheep['i_scan_day'][scan_option_pa1e1b1nwzida0e0b0xyg1].astype('timedelta64[D]')
     # retain_scan_b1nwzida0e0b0xyg = np.max(pinp.sheep['i_drysretained_scan'], np.min(1, nfoet_b1nwzida0e0b0xyg))
     # retain_birth_b1nwzida0e0b0xyg = np.max(pinp.sheep['i_drysretained_birth'], np.min(1, nyatf_b1nwzida0e0b0xyg))
     ##Expected stocking density
@@ -1737,13 +1737,13 @@ def generator(params,r_vals,ev,plots = False):
     a_t_pa1e1b1nwzida0e0b0xyg1[period_between_birthwean_mask] = 2 #t = 0 is prescan, 1 is postscan, 2 is lactation, 3 is not used in V1 but would be post wean
 
     ####dams management in each period based on scanning detail, time of the year (even if you are scanning you cant manage sheep differently before scanning) and management (you can scan and then not differentially manage)
-    scan_pa1e1b1nwzida0e0b0xyg1 = (scan_pa1e1b1nwzida0e0b0xyg1) * (a_t_pa1e1b1nwzida0e0b0xyg1 >= 1) * pinp.sheep['i_dam_lsln_diffman_t'][1]
+    scan_management_pa1e1b1nwzida0e0b0xyg1 = (scan_option_pa1e1b1nwzida0e0b0xyg1) * (a_t_pa1e1b1nwzida0e0b0xyg1 >= 1) * pinp.sheep['i_dam_lsln_diffman_t'][1]
     gbal_pa1e1b1nwzida0e0b0xyg1 = (gbal_pa1e1b1nwzida0e0b0xyg1 -1 ) * (a_t_pa1e1b1nwzida0e0b0xyg1 >= 2) * pinp.sheep['i_dam_lsln_diffman_t'][2] + 1  #minus 1 then plus 1 ensures that the wean option before lactation is 1
     wean_pa1e1b1nwzida0e0b0xyg1 = (wean_pa1e1b1nwzida0e0b0xyg1 -1 ) * (a_t_pa1e1b1nwzida0e0b0xyg1 >= 3) * pinp.sheep['i_dam_lsln_diffman_t'][3] + 1  #minus 1 then plus 1 ensures that the wean option before weaning is 1
 
     ##3) calculate the feedsupply variation for each sheep class
     ###a) just for lsln - select whic lsln variation is used based on scanning option (scanning option can effect optimal fs pattern before scanning)
-    a_r2_pk0k1k2nwzida0e0b0xyg1 = np.take_along_axis(a_r2_spk0k1k2nwzida0e0b0xyg1, scan_pa1e1b1nwzida0e0b0xyg1[na,...], axis=0)[0] #slice scan axis then remove the singleton
+    a_r2_pk0k1k2nwzida0e0b0xyg1 = np.take_along_axis(a_r2_spk0k1k2nwzida0e0b0xyg1, scan_management_pa1e1b1nwzida0e0b0xyg1[na,...], axis=0)[0] #slice scan axis then remove the singleton
     feedsupply_adj_options_r2pk0k1k2nwzida0e0b0xyg1 = fun.f_expand(feedsupply_adj_options_r2p,p_pos) #add other axis as singleton
     ###b) calculate the feedsupply variation for each sheep class
     t_fs_ageweaned_pk0k1k2j0wzida0e0b0xyg1 = np.rollaxis(feedsupply_adj_options_r2p[a_r2_k0e1b1nwzida0e0b0xyg1],-1,0)
@@ -1764,7 +1764,7 @@ def generator(params,r_vals,ev,plots = False):
 
     ###c)Dams Cluster k2 – BTRT (b1)
     ####a_k2_mlsb1 states the feed variation slice for different management. In this step we slice a_k2_mlsb1 for the selected management in each period.
-    a_k2_pa1e1b1nwzida0e0b0xyg1 = np.rollaxis(a_k2_mlsb1[wean_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], gbal_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], scan_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], ...],-1,3) #remove the singleton b1 axis from the association arrays because a populated b1 axis comes from a_k2_mlsb1
+    a_k2_pa1e1b1nwzida0e0b0xyg1 = np.rollaxis(a_k2_mlsb1[wean_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], gbal_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], scan_management_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], ...],-1,3) #remove the singleton b1 axis from the association arrays because a populated b1 axis comes from a_k2_mlsb1
     ####select feed variation pattern based on the k2 clustering in each period.
     t_fs_lsln_pa1e1b1j0wzida0e0b0xyg1 = np.take_along_axis(t_fs_lsln_pk0k1k2j0wzida0e0b0xyg1, a_k2_pa1e1b1nwzida0e0b0xyg1, b1_pos)
 
@@ -3332,7 +3332,7 @@ def generator(params,r_vals,ev,plots = False):
                 numbers_end_sire, pp_numbers_end_sire = sfun.f_period_end_nums(numbers_start_sire, mortality_sire, numbers_min_b1nwzida0e0b0xyg, group=0)
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                 numbers_end_dams, pp_numbers_end_dams = sfun.f_period_end_nums(numbers_start_dams, mortality_dams, numbers_min_b1nwzida0e0b0xyg, mortality_yatf=mortality_birth_yatf,
-                             nfoet_b1=nfoet_b1nwzida0e0b0xyg, nyatf_b1=nyatf_b1nwzida0e0b0xyg, group=1, conception=conception_dams, scan= scan_pa1e1b1nwzida0e0b0xyg1[p],
+                             nfoet_b1=nfoet_b1nwzida0e0b0xyg, nyatf_b1=nyatf_b1nwzida0e0b0xyg, group=1, conception=conception_dams, scan= scan_management_pa1e1b1nwzida0e0b0xyg1[p],
                              gbal = gbal_pa1e1b1nwzida0e0b0xyg1[p], gender_propn_x=gender_propn_xyg, period_is_mating = period_is_mating_pa1e1b1nwzida0e0b0xyg1[p],
                              period_is_matingend=period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p], period_is_birth = period_is_birth_pa1e1b1nwzida0e0b0xyg1[p],
                              period_is_scan=period_is_scan_pa1e1b1nwzida0e0b0xyg1[p], propn_dams_mated=prop_dams_mated_pa1e1b1nwzida0e0b0xyg1[p])
@@ -4773,7 +4773,7 @@ def generator(params,r_vals,ev,plots = False):
     period_is_sale_t0_pa1e1b1nwzida0e0b0xyg1 = sale_period_pa1e1b1nwzida0e0b0xyg1 == p_index_pa1e1b1nwzida0e0b0xyg
     period_is_sale_t0_pa1e1b1nwzida0e0b0xyg1[0] = False #don't want period 0 to be sale (but it will default to sale because the sale period association is 0 at the beginning which ==index in p[0])
     ###determine t1 slice - dry dams sold at scanning
-    period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1 = period_is_scan_pa1e1b1nwzida0e0b0xyg1 * (scan_pa1e1b1nwzida0e0b0xyg1>=1) * (not pinp.sheep['i_dry_retained_forced']) #not is required because variable is drys off hand ie sold. if forced to retain the variable wants to be false
+    period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1 = period_is_scan_pa1e1b1nwzida0e0b0xyg1 * (scan_management_pa1e1b1nwzida0e0b0xyg1>=1) * (not pinp.sheep['i_dry_retained_forced']) #not is required because variable is drys off hand ie sold. if forced to retain the variable wants to be false
     period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1 = period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1 * (nfoet_b1nwzida0e0b0xyg==0) #make sure selling is not an option for animals with foet (have to do it this way so that b axis is added)
     period_is_sale_drys_pa1e1b1nwzida0e0b0xyg1[:,:,:,0:1,...] = False #make sure selling is not an option for not mated ^ may turn on again in seasonality version
     ###combine sale t slices (t0 & t1) to produce period is sale
@@ -4971,8 +4971,8 @@ def generator(params,r_vals,ev,plots = False):
         period_is_wean_pa1e1b1nwzida0e0b0xyg1, gender_xyg[1], o_ebg_pdams, wool_genes_yg1, husb_operations_muster_propn_h2pg,
         husb_requisite_cost_h6pg, husb_operations_requisites_prob_h6h2pg, operations_per_hour_l2h2pg,
         husb_operations_infrastructurereq_h1h2pg, husb_operations_contract_cost_h2pg, husb_muster_requisites_prob_h6h4pg,
-        musters_per_hour_l2h4pg, husb_muster_infrastructurereq_h1h4pg,
-        nyatf_b1nwzida0e0b0xyg, period_is_join_pa1e1b1nwzida0e0b0xyg1, animal_mated_b1g1, period_is_matingend_pa1e1b1nwzida0e0b0xyg1, dtype=dtype)
+        musters_per_hour_l2h4pg, husb_muster_infrastructurereq_h1h4pg, nyatf_b1nwzida0e0b0xyg, period_is_join_pa1e1b1nwzida0e0b0xyg1,
+        animal_mated_b1g1, scan_option_pa1e1b1nwzida0e0b0xyg1, period_is_matingend_pa1e1b1nwzida0e0b0xyg1, dtype=dtype)
     ###offs: cost, labour and infrastructure requirements
     husbandry_cost_tpg3, husbandry_labour_l2tpg3, husbandry_infrastructure_h1tpg3 = sfun.f_husbandry(
         uinp.sheep['i_head_adjust_offs'], mobsize_pa1e1b1nwzida0e0b0xyg3, o_ffcfw_poffs, o_cfw_poffs[na,...], operations_triggerlevels_h5h7h2pg[:,:,:,na,...],
@@ -5278,7 +5278,7 @@ def generator(params,r_vals,ev,plots = False):
     ##dams
     ###create k2 association based on scanning and gbal
     gbal_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(gbal_pa1e1b1nwzida0e0b0xyg1,a_p_va1e1b1nwzida0e0b0xyg1,0)
-    scan_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(scan_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1,0)
+    scan_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(scan_management_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1,0)
     a_k2cluster_va1e1b1nwzida0e0b0xyg1 = np.sum(a_ppk2g1_va1e1b1nwzida0e0b0xygsl * (gbal_va1e1b1nwzida0e0b0xyg1[...,na,na]==index_l) * (scan_va1e1b1nwzida0e0b0xyg1[...,na,na]==index_s[:,na]), axis = (-1,-2))
     a_k2cluster_va1e1b1nwzida0e0b0xyg1 = a_k2cluster_va1e1b1nwzida0e0b0xyg1 + (len(sinp.stock['a_nfoet_b1']) * index_e1b1nwzida0e0b0xyg * (scan_va1e1b1nwzida0e0b0xyg1 == 4) * (nfoet_b1nwzida0e0b0xyg >= 1)) #If scanning for foetal age add 10 to the animals in the second & subsequent cycles that were scanned as pregnant (nfoet_b1 >= 1)
     ### Cluster with a t axis required for k29 which is associated with tvgg9. na to put result in g9 axis

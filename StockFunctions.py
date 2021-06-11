@@ -1928,8 +1928,8 @@ def f_sale_value(cu0, cx, o_rc, o_ffcfw_pg, dressp_adj_yg, dresspercent_adj_s6pg
     sale_value = np.max(sale_value_s7pg, axis=0) #take max on s6 axis as well to remove it (it is singleton so no effect)
     return sale_value
 
-def f_animal_trigger_levels(index_pg, age_start, period_is_shearing_pg, period_is_wean_pg, gender,
-                            o_ebg_p, wool_genes, period_is_joining_pg, animal_mated, period_is_endmating_pg):
+def f_animal_trigger_levels(index_pg, age_start, period_is_shearing_pg, period_is_wean_pg, gender, o_ebg_p, wool_genes,
+                            period_is_joining_pg, animal_mated, scan_option, period_is_endmating_pg):
     ##Trigger value 1 - week of year
     trigger1_pg = index_pg % 52
     ##Trigger value 2 - age
@@ -1948,14 +1948,18 @@ def f_animal_trigger_levels(index_pg, age_start, period_is_shearing_pg, period_i
     trigger7_pg = index_pg - np.maximum.accumulate(index_pg*period_is_wean_pg)
     ##Trigger value 8 - whether animals was mated
     trigger8_pg = animal_mated
-    ##Trigger value 9 - gender of the animal
-    trigger9_pg = gender
-    ##Trigger value 10 - rate of empty body gain
-    trigger10_pg = o_ebg_p
-    ##Trigger value 11 - the 'wooliness' of the genotype
-    trigger11_pg = wool_genes
+    ##Trigger value 9 - scanning option being used
+    trigger9_pg = scan_option
+    ##Trigger value 10 - gender of the animal
+    trigger10_pg = gender
+    ##Trigger value 11 - rate of empty body gain
+    trigger11_pg = o_ebg_p
+    ##Trigger value 12 - the 'wooliness' of the genotype
+    trigger12_pg = wool_genes
     ##Stack the triggers
-    animal_triggervalues_h7pg = np.stack(np.broadcast_arrays(trigger1_pg, trigger2_pg, trigger3_pg, trigger4_pg, trigger5_pg, trigger6_pg, trigger7_pg, trigger8_pg, trigger9_pg, trigger10_pg, trigger11_pg), axis = 0)
+    animal_triggervalues_h7pg = np.stack(np.broadcast_arrays(trigger1_pg, trigger2_pg, trigger3_pg, trigger4_pg,
+                                                             trigger5_pg, trigger6_pg, trigger7_pg, trigger8_pg, trigger9_pg,
+                                                             trigger10_pg, trigger11_pg, trigger12_pg), axis = 0)
     return animal_triggervalues_h7pg
 
 
@@ -2124,10 +2128,10 @@ def f_husbandry(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, operations_trigge
                 operations_per_hour_l2h2pg, husb_operations_infrastructurereq_h1h2pg,
                 husb_operations_contract_cost_h2pg, husb_muster_requisites_prob_h6h4pg,
                 musters_per_hour_l2h4pg, husb_muster_infrastructurereq_h1h4pg,
-                a_nyatf_b1g=0,period_is_joining_pg=False, animal_mated=False, period_is_endmating_pg=False, dtype=None):
+                a_nyatf_b1g=0,period_is_joining_pg=False, animal_mated=False, scan_option=0, period_is_endmating_pg=False, dtype=None):
     ##An array of the trigger values for the animal classes in each period - these values are compared against a threshold to determine if the husb is required
     animal_triggervalues_h7pg = f_animal_trigger_levels(index_pg, age_start, period_is_shear_pg, period_is_wean_pg, gender,
-                            o_ebg_p, wool_genes, period_is_joining_pg, animal_mated, period_is_endmating_pg).astype(dtype)
+                            o_ebg_p, wool_genes, period_is_joining_pg, animal_mated, scan_option, period_is_endmating_pg).astype(dtype)
     ##The number of treatment units per animal in each period - each slice has a different unit eg mobsize, nyatf etc the treatment unit can be selected and applied for a given husb operation
     treatment_units_h8pg = f_treatment_unit_numbers(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, a_nyatf_b1g).astype(dtype)
     ##Is the husb operation triggered in the period for each class
