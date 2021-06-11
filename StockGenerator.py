@@ -5515,8 +5515,11 @@ def generator(params,r_vals,ev,plots = False):
     #Masking numbers for forced sale of drys#
     #########################################
     ''' Create a mask to remove retaining dry dams when sale of drys is forced
-    The transfer is removed if all the following are true: they are in the dry cluster that is not a sale group, DVP is scanning, ewes are scanned, dry sales are forced '''
-    #todo add force sale of drys at shearing - bit more complex because shearing could be in different dvps. therefore might need period_is_shear_tvg. Also need to workout which way to handle how to allow model to choose if it wants to sell at scanning or shearing (could do this by just forcing sale at shearing then the model chooses if it does it at scanning or shearing)
+    The transfer is removed if all the following are true: they are in the dry cluster that is not a sale group, DVP is scanning, ewes are scanned, dry sales are forced.
+    Dams must be sold in the scaning dvp.'''
+    #todo would be good to be able to specify if sale occurs at scanning, shearing or any. Tricky becasue shearing can be in different dvps and there is no drys identified in prejoining dvp.
+    # as a temp solution you can change dvp type to birth which give the model the option to sell at shearing or scanning (this only works when shearing is in birth dvp though). Basically this would mean the drys can be sold any time before the next prejoining.
+    # Alternatively: you could make a bound (in bound.py) which forces a propn (based on the propn of drys) of the dams to be sold (like the twice drys bound)
     ##dams
     mask_numbers_provdry_k28k29tva1e1b1nwzida0e0b0xyg1 = np.logical_not((index_k28k29tva1e1b1nwzida0e0b0xyg1 == 1) * (index_tva1e1b1nw8zida0e0b0xyg1 >= 2)
                                                          * (dvp_type_va1e1b1nwzida0e0b0xyg1 == scan_vtype1) * (scan_va1e1b1nwzida0e0b0xyg1 >= 1) #dvp1 because that's the scanning dvp

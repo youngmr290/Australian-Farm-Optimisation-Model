@@ -258,8 +258,11 @@ def boundarypyomo_local(params):
             pass
         ###build bound if turned on
         if bnd_sale_twice_drys_inc:
-            '''Constraint forces x percent of the dry dams to be sold (all the twice drys). They can be sold in either sale op (after scanning or at shearing).
-             Thus the drys just have to be sold sometime between scanning and the following prejoining.'''
+            '''Constraint forces x percent of the dry dams to be sold (all the twice drys). They can be sold in either 
+             sale op (after scanning or at shearing if shearing occurs before the next prejoining).
+             Thus the drys just have to be sold sometime between scanning and the following prejoining.
+             
+             This constraint is equal to and really says only retain drys that are not twice dry.'''
             ###build param - inf values are skipped in the constraint building so inf means the model can optimise the propn mated
             try:
                 model.del_component(model.p_prop_twice_dry_dams_index)
@@ -276,6 +279,7 @@ def boundarypyomo_local(params):
 
             ###constraint
             def f_propn_drys_sold(model, v, i, y, g1):
+                '''Force the model so that the only drys that can be retain are not twice dry (essentially forcing the sale of twice drys)'''
                 if v in scan_v[:-1] and model.p_prop_twice_dry_dams[v, i, y, g1]!=0: #use 00 numbers at scanning. Don't want to include the last prejoining dvp because there is no sale limit in the last year.
                     idx_scan = scan_v.index(v) #which prejoining is the current v
                     idx_v_next_prejoin = next_prejoin_v[idx_scan] #all the twice drys must be sold by the following prejoining
@@ -285,7 +289,7 @@ def boundarypyomo_local(params):
                                ) == sum(model.v_dams['00-0',t,v,a,n,w8,i,y,g1] for t in model.s_sale_dams
                                for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
                                         if model.p_mask_dams['00-0',t,v,w8,g1] == 1
-                                        ) * model.p_prop_twice_dry_dams[v, i, y, g1]
+                                        ) * (1-model.p_prop_twice_dry_dams[v, i, y, g1]) #todo a limitation is that the model can optimise the sale along the w axis (not sure if this is important)
                 else:
                     return pe.Constraint.Skip
             model.con_propn_drys_sold = pe.Constraint(model.s_dvp_dams, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, rule=f_propn_drys_sold,
