@@ -1748,7 +1748,7 @@ def generator(params,r_vals,ev,plots = False):
     t_feedsupply_pj0zida0e0b0xyg3 = pinp.f_seasonal_inp(t_feedsupply_pj0zida0e0b0xyg3,numpy=True,axis=z_pos)
     t_feedsupply_pa1e1b1j0wzida0e0b0xyg3 = fun.f_expand(t_feedsupply_pj0zida0e0b0xyg3, left_pos=n_pos, right_pos=z_pos, left_pos2=p_pos,right_pos2=n_pos, condition=mask_p_offs_p, axis=0) #add  a1,e1,b1,w axis. Note n and j are the same thing (as far a position goes), mask p axis for offs
 
-    ##2) calc lsln management association based on sheep identification options (scanning vs no scaning), management practise (differential management once identifying different groups) & time of the year (eg even if you scan you still need to manage sheep the same before scanning)
+    ##2) calc lsln management association based on sheep identification options (scanning vs no scanning), management practise (differential management once identifying different groups) & time of the year (eg even if you scan you still need to manage sheep the same before scanning)
     ####have to create a_t array that is maximum size of the arrays that are used to mask it.
     ####t = 0 is prescan, 1 is postscan, 2 is lactation, 3 not used in V1 but would be is post wean
     shape = np.maximum.reduce([period_between_prejoinscan_pa1e1b1nwzida0e0b0xyg1.shape, period_between_scanbirth_pa1e1b1nwzida0e0b0xyg1.shape
@@ -1769,7 +1769,7 @@ def generator(params,r_vals,ev,plots = False):
     wean_pa1e1b1nwzida0e0b0xyg1 = (wean_pa1e1b1nwzida0e0b0xyg1 -1 ) * (a_t_pa1e1b1nwzida0e0b0xyg1 >= 3) * pinp.sheep['i_dam_lsln_diffman_t'][3] + 1  #minus 1 then plus 1 ensures that the wean option before weaning is 1
 
     ##3) calculate the feedsupply variation for each sheep class
-    ###a) just for lsln - select whic lsln variation is used based on scanning option (scanning option can effect optimal fs pattern before scanning)
+    ###a) just for lsln - select which lsln variation is used based on scanning option (scanning option can effect optimal fs pattern before scanning)
     a_r2_pk0k1k2nwzida0e0b0xyg1 = np.take_along_axis(a_r2_spk0k1k2nwzida0e0b0xyg1, scan_management_pa1e1b1nwzida0e0b0xyg1[na,...], axis=0)[0] #slice scan axis then remove the singleton
     feedsupply_adj_options_r2pk0k1k2nwzida0e0b0xyg1 = fun.f_expand(feedsupply_adj_options_r2p,p_pos) #add other axis as singleton
     ###b) calculate the feedsupply variation for each sheep class
@@ -4387,10 +4387,9 @@ def generator(params,r_vals,ev,plots = False):
         ### populate ltwadj with the value from the period before prejoining. That value is the final value that has been carried forward from the whole profile change
         o_cfw_ltwadj_pdams = np.take_along_axis(o_cfw_ltwadj_pdams, a_nextisprejoin_pa1e1b1nwzida0e0b0xyg1, axis=0)
         o_fd_ltwadj_pdams = np.take_along_axis(o_fd_ltwadj_pdams, a_nextisprejoin_pa1e1b1nwzida0e0b0xyg1, axis=0)
-        #todo use current method if N for dams > 1. if N==1 then use a calculation like the offspring
-        # but based on a weighted average across the o axis and for BBM & BBT calculated from BBB. For BMT calculated from BBM
-        # this is an improvement when N==1 as it works correctly for BBM & BBT
+
         if n_fs_dams>1:
+            #an approximation of the LTW effect of dam nutrition on the progeny that are the replacement dams
             sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1 = 1 + (o_cfw_ltwadj_pdams * nyatf_b1nwzida0e0b0xyg
                                                      / npw_std_xyg1 / sfw_a0e0b0xyg1) * sen.sam['LTW_dams']
             sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = o_fd_ltwadj_pdams * nyatf_b1nwzida0e0b0xyg / npw_std_xyg1 * sen.sam['LTW_dams']
@@ -4412,33 +4411,6 @@ def generator(params,r_vals,ev,plots = False):
                                                                 * nyatf_b1nwzida0e0b0xyg * season_propn_zida0e0b0xyg
                                                                 , axis=(p_pos, a1_pos, e1_pos, b1_pos, w_pos, z_pos)
                                                                 , keepdims=True) * sen.sam['LTW_dams']
-
-            # ## convert the ltw effect to have an o axis. It is a temporary variable until it is allocated to the correct slices
-            # a_p_nextisprejoin_oa1e1b1nwzida0e0b0xyg1 = sfun.f_next_prev_association(date_end_p,prejoining_oa1e1b1nwzida0e0b0xyg1,1,
-            #                                                           'right').astype(dtypeint)  # returns the period index for the start of each dvp
-            # btrt_propn_b0nwzida0e0b0xyg1 = fun.f_expand(btrt_propn_b0xyg1, b1_pos, right_pos=x_pos)
-            # btrt_propn_b1nwzida0e0b0xyg1 = btrt_propn_b0nwzida0e0b0xyg1[sinp.stock['ia_b0_b1']] * (nyatf_b1nwzida0e0b0xyg>0) #0 for dams with no yatf (condition of ewe with no yatf does not effect next generation)
-            # agedam_propn_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(agedam_propn_da0e0b0xyg1, p_pos, right_pos=a0_pos)
-            # e0_propn_e1b1nwzida0e0b0xyg = fun.f_expand(e0_propn_ida0e0b0xyg[na,...], swap=True, ax1=0, ax2=4, #swap e0 and e1
-            #                                     left_pos=e1_pos, right_pos=i_pos)
-            # ###cfw
-            # t_sfw_ltwadj_oa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(o_cfw_ltwadj_pdams, a_p_nextisprejoin_oa1e1b1nwzida0e0b0xyg1, axis=0)
-            # ## take a weighted average of the ltw effect based on the number of dams expected in the flock (age & repro status)
-            # t_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1 = 1 + fun.f_weighted_average(t_sfw_ltwadj_oa1e1b1nwzida0e0b0xyg1
-            #                                                             , agedam_propn_oa1e1b1nwzida0e0b0xyg1 * btrt_propn_b1nwzida0e0b0xyg1
-            #                                                             * season_propn_zida0e0b0xyg * e0_propn_e1b1nwzida0e0b0xyg
-            #                                                             * nyatf_b1nwzida0e0b0xyg
-            #                                                             , axis=(p_pos, e1_pos, b1_pos, z_pos)
-            #                                                             , keepdims=True) * sen.sam['LTW_dams']
-            # ###FD
-            # t_sfd_ltwadj_oa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(o_fd_ltwadj_pdams, a_p_nextisprejoin_oa1e1b1nwzida0e0b0xyg1, axis=0)
-            # ## take a weighted average of the ltw effect based on the number of dams expected in the flock (age & repro status)
-            # t_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(t_sfd_ltwadj_oa1e1b1nwzida0e0b0xyg1
-            #                                                             , agedam_propn_oa1e1b1nwzida0e0b0xyg1 * btrt_propn_b1nwzida0e0b0xyg1
-            #                                                             * season_propn_zida0e0b0xyg * e0_propn_e1b1nwzida0e0b0xyg
-            #                                                             * nyatf_b1nwzida0e0b0xyg
-            #                                                             , axis=(p_pos, e1_pos, b1_pos, z_pos)
-            #                                                             , keepdims=True) * sen.sam['LTW_dams']
 
             ## allocate the LTW adjustment to the slices of g1 based on the female parent of each g1 slice.
             ## nutrition of BBB dams [0:1] affects BB-B, BB-M & BB-T during their lifetime.
@@ -5578,8 +5550,8 @@ def generator(params,r_vals,ev,plots = False):
     #########################################
     ''' Create a mask to remove retaining dry dams when sale of drys is forced
     The transfer is removed if all the following are true: they are in the dry cluster that is not a sale group, DVP is scanning, ewes are scanned, dry sales are forced.
-    Dams must be sold in the scaning dvp.'''
-    #todo would be good to be able to specify if sale occurs at scanning, shearing or any. Tricky becasue shearing can be in different dvps and there is no drys identified in prejoining dvp.
+    Dams must be sold in the scanning dvp.'''
+    #todo would be good to be able to specify if sale occurs at scanning, shearing or any. Tricky because shearing can be in different dvps and there is no drys identified in prejoining dvp.
     # as a temp solution you can change dvp type to birth which give the model the option to sell at shearing or scanning (this only works when shearing is in birth dvp though). Basically this would mean the drys can be sold any time before the next prejoining.
     # Alternatively: you could make a bound (in bound.py) which forces a propn (based on the propn of drys) of the dams to be sold (like the twice drys bound)
     ##dams
