@@ -460,7 +460,7 @@ def generator(params,r_vals,ev,plots = False):
     sire_periods_p8g0 = sfun.f_g2g(pinp.sheep['i_sire_periods_p8g0'], 'sire', condition=pinp.sheep['i_mask_p8'], axis=0)
     sire_periods_g0p8 = np.swapaxes(sire_periods_p8g0, 0, 1) #can't swap in function above because g needs to be in pos-1
 
-    ##propn of dams mated - default is inf which gets skipped in the bound constraint hence the model can optimise to propn mated.
+    ##propn of dams mated - default is inf which gets skipped in the bound constraint hence the model can optimise the propn mated.
     prop_dams_mated_og1 = fun.f_sa(np.array([999],dtype=float), sen.sav['bnd_propn_dams_mated_og1'], 5) #999 just an arbitrary value used then converted to np.inf because np.inf causes errors in the f_update which is called by f_sa
     prop_dams_mated_og1[prop_dams_mated_og1==999] = np.inf
     prop_dams_mated_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(prop_dams_mated_og1, left_pos=p_pos, right_pos=-1,
@@ -4361,39 +4361,58 @@ def generator(params,r_vals,ev,plots = False):
             sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = o_fd_ltwadj_pdams * nyatf_b1nwzida0e0b0xyg / npw_std_xyg1 * sen.sam['LTW_dams']
 
         else:
-            ## convert the ltw effect to have an o axis. It is a temporary variable until it is allocated to the correct slices
-            a_p_nextisprejoin_oa1e1b1nwzida0e0b0xyg1 = sfun.f_next_prev_association(date_end_p,prejoining_oa1e1b1nwzida0e0b0xyg1,1,
-                                                                      'right').astype(dtypeint)  # returns the period index for the start of each dvp
-            btrt_propn_b0nwzida0e0b0xyg1 = fun.f_expand(btrt_propn_b0xyg1, b1_pos, right_pos=x_pos)
-            btrt_propn_b1nwzida0e0b0xyg1 = btrt_propn_b0nwzida0e0b0xyg1[sinp.stock['ia_b0_b1']] * (nyatf_b1nwzida0e0b0xyg>0) #0 for dams with no yatf (condition of ewe with no yatf does not effect next generation)
-            agedam_propn_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(agedam_propn_da0e0b0xyg1, p_pos, right_pos=a0_pos)
-            e0_propn_e1b1nwzida0e0b0xyg = fun.f_expand(e0_propn_ida0e0b0xyg[na,...], swap=True, ax1=0, ax2=4, #swap e0 and e1
-                                                left_pos=e1_pos, right_pos=i_pos)
-            ###cfw
-            t_sfw_ltwadj_oa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(o_cfw_ltwadj_pdams, a_p_nextisprejoin_oa1e1b1nwzida0e0b0xyg1, axis=0)
-            ## take a weighted average of the ltw effect based on the number of dams expected in the flock (age & repro status)
-            t_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1 = 1 + fun.f_weighted_average(t_sfw_ltwadj_oa1e1b1nwzida0e0b0xyg1
-                                                                        , agedam_propn_oa1e1b1nwzida0e0b0xyg1 * btrt_propn_b1nwzida0e0b0xyg1
-                                                                        * season_propn_zida0e0b0xyg * e0_propn_e1b1nwzida0e0b0xyg
-                                                                        , axis=(p_pos, e1_pos, b1_pos, z_pos)
-                                                                        , keepdims=True) * sen.sam['LTW_dams']
-            ###FD
-            t_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(o_fd_ltwadj_pdams, a_p_nextisprejoin_oa1e1b1nwzida0e0b0xyg1, axis=0)
-            ## take a weighted average of the ltw effect based on the number of dams expected in the flock (age & repro status)
-            t_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(t_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1
-                                                                        , agedam_propn_oa1e1b1nwzida0e0b0xyg1 * btrt_propn_b1nwzida0e0b0xyg1
-                                                                        * season_propn_zida0e0b0xyg * e0_propn_e1b1nwzida0e0b0xyg
-                                                                        , axis=(p_pos, e1_pos, b1_pos, z_pos)
-                                                                        , keepdims=True) * sen.sam['LTW_dams']
+            ## if n==1 the average LTW adjustment for the next generation is the average of the dam effects weighted by
+            ##the number of progeny from each class of dams.
+            ## Note: if the propn mated inputs are set to optimise (np.inf) then it is treated as 100% mated (included in numbers_start)
+            ## Note: The approximation doesn't account for dam mortality during the year or Progeny mortality during lactation
+            ## the weighted average is across all active axes except i, y & g1 (because these represent classes that are not combined at prejoining)
+            ### CFW (as a proportion of sfw)
+            t_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1 = 1 + fun.f_weighted_average(o_cfw_ltwadj_pdams, o_numbers_start_pdams
+                                                                * nyatf_b1nwzida0e0b0xyg * season_propn_zida0e0b0xyg
+                                                                , axis=(p_pos, a1_pos, e1_pos, b1_pos, w_pos, z_pos)
+                                                                , keepdims=True) / sfw_a0e0b0xyg1 * sen.sam['LTW_dams']
 
-            ## allocate to the correct slices of g1.
+            ### FD (an absolute adjustment)
+            t_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(o_fd_ltwadj_pdams, o_numbers_start_pdams
+                                                                * nyatf_b1nwzida0e0b0xyg * season_propn_zida0e0b0xyg
+                                                                , axis=(p_pos, a1_pos, e1_pos, b1_pos, w_pos, z_pos)
+                                                                , keepdims=True) * sen.sam['LTW_dams']
+
+            # ## convert the ltw effect to have an o axis. It is a temporary variable until it is allocated to the correct slices
+            # a_p_nextisprejoin_oa1e1b1nwzida0e0b0xyg1 = sfun.f_next_prev_association(date_end_p,prejoining_oa1e1b1nwzida0e0b0xyg1,1,
+            #                                                           'right').astype(dtypeint)  # returns the period index for the start of each dvp
+            # btrt_propn_b0nwzida0e0b0xyg1 = fun.f_expand(btrt_propn_b0xyg1, b1_pos, right_pos=x_pos)
+            # btrt_propn_b1nwzida0e0b0xyg1 = btrt_propn_b0nwzida0e0b0xyg1[sinp.stock['ia_b0_b1']] * (nyatf_b1nwzida0e0b0xyg>0) #0 for dams with no yatf (condition of ewe with no yatf does not effect next generation)
+            # agedam_propn_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(agedam_propn_da0e0b0xyg1, p_pos, right_pos=a0_pos)
+            # e0_propn_e1b1nwzida0e0b0xyg = fun.f_expand(e0_propn_ida0e0b0xyg[na,...], swap=True, ax1=0, ax2=4, #swap e0 and e1
+            #                                     left_pos=e1_pos, right_pos=i_pos)
+            # ###cfw
+            # t_sfw_ltwadj_oa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(o_cfw_ltwadj_pdams, a_p_nextisprejoin_oa1e1b1nwzida0e0b0xyg1, axis=0)
+            # ## take a weighted average of the ltw effect based on the number of dams expected in the flock (age & repro status)
+            # t_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1 = 1 + fun.f_weighted_average(t_sfw_ltwadj_oa1e1b1nwzida0e0b0xyg1
+            #                                                             , agedam_propn_oa1e1b1nwzida0e0b0xyg1 * btrt_propn_b1nwzida0e0b0xyg1
+            #                                                             * season_propn_zida0e0b0xyg * e0_propn_e1b1nwzida0e0b0xyg
+            #                                                             * nyatf_b1nwzida0e0b0xyg
+            #                                                             , axis=(p_pos, e1_pos, b1_pos, z_pos)
+            #                                                             , keepdims=True) * sen.sam['LTW_dams']
+            # ###FD
+            # t_sfd_ltwadj_oa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(o_fd_ltwadj_pdams, a_p_nextisprejoin_oa1e1b1nwzida0e0b0xyg1, axis=0)
+            # ## take a weighted average of the ltw effect based on the number of dams expected in the flock (age & repro status)
+            # t_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(t_sfd_ltwadj_oa1e1b1nwzida0e0b0xyg1
+            #                                                             , agedam_propn_oa1e1b1nwzida0e0b0xyg1 * btrt_propn_b1nwzida0e0b0xyg1
+            #                                                             * season_propn_zida0e0b0xyg * e0_propn_e1b1nwzida0e0b0xyg
+            #                                                             * nyatf_b1nwzida0e0b0xyg
+            #                                                             , axis=(p_pos, e1_pos, b1_pos, z_pos)
+            #                                                             , keepdims=True) * sen.sam['LTW_dams']
+
+            ## allocate the LTW adjustment to the slices of g1 based on the female parent of each g1 slice.
             ## nutrition of BBB dams [0:1] affects BB-B, BB-M & BB-T during their lifetime.
             sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[...] = t_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[..., 0:1]
             sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[...] = t_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[..., 0:1]
             ## nutrition of BBM dams [1] affects BM-T [-1] during their lifetime. (Needs to be [-1] to handle if BBT have been masked)
             if mask_dams_inc_g1[3:4]:
-                sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[..., -1] = t_sfw_ltwadj_a1e1b1nwzida0e0b0xyg1[..., 1]
-                sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[..., -1] = t_sfd_ltwadj_a1e1b1nwzida0e0b0xyg1[..., 1]
+                sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[..., -1] = t_sfw_ltwadj_pa1e1b1nwzida0e0b0xyg1[..., 1]
+                sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[..., -1] = t_sfd_ltwadj_pa1e1b1nwzida0e0b0xyg1[..., 1]
 
         ## the offspring lifetime adjustment is based on dam LW pattern 0. The dam pattern must be specified/estimated
         ### because there is not a link in the matrix between dam profile and the offspring DVs.
@@ -4404,7 +4423,7 @@ def generator(params,r_vals,ev,plots = False):
         ###         e1 axis in the position of e0
         ###         b1 axis in the position of b0 and simplified using a_b0_b1
         ###         w axis to only have slice 0
-        ###         z axis is the weighted average
+        ###         z axis is the weighted average across season types
         temporary = np.sum(o_cfw_ltwadj_pdams[:, :, :, :, :, 0:1, ...] / sfw_a0e0b0xyg1
                            * (a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1 == index_da0e0b0xyg)
                            * period_is_join_pa1e1b1nwzida0e0b0xyg1, axis = 0)
