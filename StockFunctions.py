@@ -218,7 +218,7 @@ def f_period_is_(period_is, date_array, date_start_p=0, date_array2 = 0, date_en
 
     Returns
     -------
-    period_is: boolean array shaped like the date array with the addition of the p axis. This is is true if a given date from date array is within the date of a given period and false if not.
+    period_is: boolean array shaped like the date array with the addition of the p axis. This is true if a given date from date array is within the date of a given period and false if not.
 
     period_is_any: 1D boolean array shape of the period dates array. True if any of the dates in the date array fall into a given period.
 
@@ -767,15 +767,16 @@ def f_foetus_cs(cp, cb1, kc, nfoet, relsize_start, rc_start, w_b_std_y, w_f_star
     # return w_f, nec_cum, mec, nec, w_b_exp_y, nw_f, guw
     return w_f, mec, nec, w_b_exp_y, nw_f, guw
 
-def f_carryforward_u1(cu1, ebg, period_between_joinstartend, period_between_joinscan, period_between_scanbirth, period_between_birthwean, days_period, period_propn=1):
+def f_carryforward_u1(cu1, cg, ebg, period_between_joinstartend, period_between_mated90, period_between_d90birth
+                      , period_between_birthwean, days_period, period_propn=1):
     ##Select coefficient to increment the carry forward quantity based on the current period
     ### can only be the coefficient from one of the periods and the later period overwrites the earlier period.
     coeff_cf1 = fun.f_update(0, cu1[1,...], period_between_joinstartend) #note cu1 has already had the first axis (production parameter) sliced when it was passed in
-    coeff_cf1 = fun.f_update(coeff_cf1, cu1[2,...], period_between_joinscan)
-    coeff_cf1 = fun.f_update(coeff_cf1, cu1[3,...], period_between_scanbirth)
+    coeff_cf1 = fun.f_update(coeff_cf1, cu1[2,...], period_between_mated90)
+    coeff_cf1 = fun.f_update(coeff_cf1, cu1[3,...], period_between_d90birth)
     coeff_cf1 = fun.f_update(coeff_cf1, cu1[4,...], period_between_birthwean)
     ##Calculate the increment (d_cf) from the coefficient, the change in LW (kg/d) and the days per period
-    d_cf = coeff_cf1 * ebg * days_period * period_propn
+    d_cf = coeff_cf1 * ebg * cg[18, ...] * days_period * period_propn
     return d_cf
 
 def f_birthweight_cs(cx, w_b_yatf, w_f_dams, period_is_birth):
@@ -786,10 +787,10 @@ def f_birthweight_cs(cx, w_b_yatf, w_f_dams, period_is_birth):
     return w_b_yatf
 
 
-def f_birthweight_mu(cu1, cb1, cx, ce, w_b, cf_w_b_dams, ffcfw_birth_dams, ebg_dams, days_period, gest_propn
+def f_birthweight_mu(cu1, cb1, cg, cx, ce, w_b, cf_w_b_dams, ffcfw_birth_dams, ebg_dams, days_period, gest_propn
                      , period_between_joinscan, period_between_scanbirth, period_is_birth):
     ##Carry forward BW increment	
-    d_cf_w_b = f_carryforward_u1(cu1[16, ...], ebg_dams, False, period_between_joinscan, period_between_scanbirth
+    d_cf_w_b = f_carryforward_u1(cu1[16, ...], cg, ebg_dams, False, period_between_joinscan, period_between_scanbirth
                                  , False, days_period, gest_propn)
     ##Increment the total carry forward BW
     cf_w_b_dams = cf_w_b_dams + d_cf_w_b
@@ -809,13 +810,13 @@ def f_weanweight_cs(w_w_yatf, ffcfw_start_yatf, ebg_yatf, days_period, period_is
     return w_w_yatf
 
 
-def f_weanweight_mu(cu1, cb1, cx, ce, nyatf, w_w, cf_w_w_dams, ffcfw_wean_dams, ebg_dams, foo, foo_ave_start
+def f_weanweight_mu(cu1, cb1, cg, cx, ce, nyatf, w_w, cf_w_w_dams, ffcfw_wean_dams, ebg_dams, foo, foo_ave_start
                     , days_period, day_of_lactation, period_between_joinscan, period_between_scanbirth
                     , period_between_birthwean, period_is_wean):
     ##Calculate average FOO to end of this period (increment the running average to date)
     foo_ave_end = fun.f_divide(foo_ave_start * day_of_lactation + foo * days_period, day_of_lactation + days_period)
     ##Carry forward WWt increment
-    d_cf_w_w = f_carryforward_u1(cu1[17, ...], ebg_dams, False, period_between_joinscan, period_between_scanbirth
+    d_cf_w_w = f_carryforward_u1(cu1[17, ...], cg, ebg_dams, False, period_between_joinscan, period_between_scanbirth
                                  , period_between_birthwean, days_period)
     ##Increment the total Carry forward WWt
     cf_w_w_dams = cf_w_w_dams + d_cf_w_w
@@ -828,11 +829,12 @@ def f_weanweight_mu(cu1, cb1, cx, ce, nyatf, w_w, cf_w_w_dams, ffcfw_wean_dams, 
 
 
 #todo Consider combining into 1 function f_progenyltw
-def f_progenycfw_mu(cu1, cfw_adj, cf_cfw_dams, ffcfw_birth_dams, ffcfw_birth_std_dams, ebg_dams, days_period, gest_propn, period_between_joinscan, period_between_scanbirth, period_is_birth):
+def f_progenycfw_mu(cu1, cg, cfw_adj, cf_cfw_dams, ffcfw_birth_dams, ffcfw_birth_std_dams, ebg_dams, days_period
+                    , gest_propn, period_between_mated90, period_between_d90birth, period_is_birth):
     ##impact on progeny CFW of the dam LW profile being different from the standard pattern
     ### LTW coefficients are multiplied by the difference in the LW profile from the standard profile. This only requires representing explicitly for LW at birth because the std LW change is 0. Std pattern is lambing in CS 3, so LW = normal weight
     ##Carry forward CFW increment
-    d_cf_cfw = f_carryforward_u1(cu1[12, ...], ebg_dams, False, period_between_joinscan, period_between_scanbirth, False, days_period, gest_propn)
+    d_cf_cfw = f_carryforward_u1(cu1[12, ...], cg, ebg_dams, False, period_between_mated90, period_between_d90birth, False, days_period, gest_propn)
     ##Increment the total Carry forward CFW
     cf_cfw_dams = cf_cfw_dams + d_cf_cfw
     ##temporary calculation including difference in current dam LW (only used if period is birth)
@@ -843,11 +845,12 @@ def f_progenycfw_mu(cu1, cfw_adj, cf_cfw_dams, ffcfw_birth_dams, ffcfw_birth_std
     return cfw_adj, cf_cfw_dams
 
 
-def f_progenyfd_mu(cu1, fd_adj, cf_fd_dams, ffcfw_birth_dams, ffcfw_birth_std_dams, ebg_dams, days_period, gest_propn, period_between_joinscan, period_between_scanbirth, period_is_birth):
+def f_progenyfd_mu(cu1, cg, fd_adj, cf_fd_dams, ffcfw_birth_dams, ffcfw_birth_std_dams, ebg_dams, days_period
+                   , gest_propn, period_between_mated90, period_between_d90birth, period_is_birth):
     ##impact on progeny FD of the dam LW profile being different from the standard pattern
     ### LTW coefficients are multiplied by the difference in the LW profile from the standard profile. This only requires representing explicitly for LW at birth because the std LW change is 0. Std pattern is lambing in CS 3, so LW = normal weight
     ##Carry forward FD increment
-    d_cf_fd = f_carryforward_u1(cu1[13, ...], ebg_dams, False, period_between_joinscan, period_between_scanbirth, False, days_period, gest_propn)
+    d_cf_fd = f_carryforward_u1(cu1[13, ...], cg, ebg_dams, False, period_between_mated90, period_between_d90birth, False, days_period, gest_propn)
     ##Increment the total Carry forward FD
     cf_fd_dams = cf_fd_dams + d_cf_fd
     ##temporary calculation including difference in current dam LW (only used if period is birth)
@@ -1671,7 +1674,7 @@ def f_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfoe
             temporary  = np.copy(numbers)
             temporary[:, 0:1, 1:2, ...] += numbers[:, 0:1, 0:1, ...]   # add the number remaining unmated to the dry slice in e1[0]
             temporary[:, :, 0:1, ...] = 0 #set the NM slice to 0 (because they have just been added to drys)
-            ##handle the proportion mated
+            ##handle the proportion mated. Note: if the inputs are set to optimise the proportion (np.inf) then it is treated as 100% mated
             mated_propn = np.minimum(1, propn_dams_mated) #maximum value of 1 because default is inf, otherwise propn to be mated.
             ### the number in the NM slice e1[0] is a proportion of the total numbers
             ### need a minimum number otherwise get nan later. Want a small number relative to mortality (after allowing for multiple slices getting the small number)

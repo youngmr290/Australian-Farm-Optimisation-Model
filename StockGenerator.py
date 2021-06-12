@@ -1028,33 +1028,35 @@ def generator(params,r_vals,ev,plots = False):
     
     '''
     ##shearing
-    date_shear_pa1e1b1nwzida0e0b0xyg0=np.take_along_axis(date_shear_sa1e1b1nwzida0e0b0xyg0,a_prev_s_pa1e1b1nwzida0e0b0xyg0,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
-    date_shear_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(date_shear_sa1e1b1nwzida0e0b0xyg1,a_prev_s_pa1e1b1nwzida0e0b0xyg1,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
-    date_shear_pa1e1b1nwzida0e0b0xyg3=np.take_along_axis(date_shear_sa1e1b1nwzida0e0b0xyg3,a_prev_s_pa1e1b1nwzida0e0b0xyg3,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
+    date_shear_pa1e1b1nwzida0e0b0xyg0 = np.take_along_axis(date_shear_sa1e1b1nwzida0e0b0xyg0, a_prev_s_pa1e1b1nwzida0e0b0xyg0,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
+    date_shear_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(date_shear_sa1e1b1nwzida0e0b0xyg1, a_prev_s_pa1e1b1nwzida0e0b0xyg1,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
+    date_shear_pa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(date_shear_sa1e1b1nwzida0e0b0xyg3, a_prev_s_pa1e1b1nwzida0e0b0xyg3,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
 
     ##management for weaning, gbal and scan options
-    wean_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(wean_oa1e1b1nwzida0e0b0xyg1,a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
-    gbal_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(gbal_oa1e1b1nwzida0e0b0xyg1,a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
-    scan_option_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(scan_oa1e1b1nwzida0e0b0xyg1,a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
+    wean_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(wean_oa1e1b1nwzida0e0b0xyg1, a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
+    gbal_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(gbal_oa1e1b1nwzida0e0b0xyg1, a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
+    scan_option_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(scan_oa1e1b1nwzida0e0b0xyg1, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #np.takealong uses the number in the second array as the index for the first array. and returns a same shaped array
 
     ##date, age, timing
-    date_born1st_pa1e1b1nwzida0e0b0xyg2=np.take_along_axis(date_born1st_oa1e1b1nwzida0e0b0xyg2,a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0)
-    date_born_pa1e1b1nwzida0e0b0xyg2=np.take_along_axis(date_born_oa1e1b1nwzida0e0b0xyg2,a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0)
-    date_born1st2_pa1e1b1nwzida0e0b0xyg2=np.take_along_axis(date_born1st_oa1e1b1nwzida0e0b0xyg2,a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #increments at prejoining
-    date_prejoin_next_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(prejoining_oa1e1b1nwzida0e0b0xyg1,a_nextprejoining_o_pa1e1b1nwzida0e0b0xyg1,0)
-    date_prejoin_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(prejoining_oa1e1b1nwzida0e0b0xyg1,a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0)
-    date_joined_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(date_joined_oa1e1b1nwzida0e0b0xyg1,a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1,0)
-    date_joined2_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(date_joined_oa1e1b1nwzida0e0b0xyg1,a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #increments at prejoining
+    date_born1st_pa1e1b1nwzida0e0b0xyg2 = np.take_along_axis(date_born1st_oa1e1b1nwzida0e0b0xyg2, a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0)
+    date_born_pa1e1b1nwzida0e0b0xyg2 = np.take_along_axis(date_born_oa1e1b1nwzida0e0b0xyg2, a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0)
+    date_born1st2_pa1e1b1nwzida0e0b0xyg2 = np.take_along_axis(date_born1st_oa1e1b1nwzida0e0b0xyg2, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #increments at prejoining
+    date_born2_pa1e1b1nwzida0e0b0xyg2 = date_born1st2_pa1e1b1nwzida0e0b0xyg2 + (index_e1b1nwzida0e0b0xyg + 0.5) * cf_yatf[4, 0:1,:].astype('timedelta64[D]')	 #increments at prejoining #times by 0.5 to get the average birth date for all lambs because ewes can be conceived anytime within joining cycle. e_index is to account for ewe cycles.
+    date_prejoin_next_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prejoining_oa1e1b1nwzida0e0b0xyg1, a_nextprejoining_o_pa1e1b1nwzida0e0b0xyg1,0)
+    date_prejoin_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prejoining_oa1e1b1nwzida0e0b0xyg1, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0)
+    date_joined_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(date_joined_oa1e1b1nwzida0e0b0xyg1, a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1,0)
+    date_joined2_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(date_joined_oa1e1b1nwzida0e0b0xyg1, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #increments at prejoining
 
     ##condensing
-    date_condensing_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(condensing_date_oa1e1b1nwzida0e0b0xyg1,a_condensing_pa1e1b1nwzida0e0b0xyg1,0)
-    date_condensing_pa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(condensing_date_oa1e1b1nwzida0e0b0xyg3,a_condensing_pa1e1b1nwzida0e0b0xyg3,0)
+    date_condensing_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(condensing_date_oa1e1b1nwzida0e0b0xyg1, a_condensing_pa1e1b1nwzida0e0b0xyg1,0)
+    date_condensing_pa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(condensing_date_oa1e1b1nwzida0e0b0xyg3, a_condensing_pa1e1b1nwzida0e0b0xyg3,0)
 
-    ###create age wean yatf
+    ###create age & date weaned yatf
     age_wean1st_oa1e1b1nwzida0e0b0xyg2 = np.swapaxes(age_wean1st_oa1e1b1nwzida0e0b0xyg2, a0_pos, a1_pos) #swap a0 and a1 because yatf have to be same shape as dams
     age_wean1st_oa1e1b1nwzida0e0b0xyg2 = np.swapaxes(age_wean1st_oa1e1b1nwzida0e0b0xyg2, e0_pos, e1_pos) #swap e0 and e1 because yatf have to be same shape as dams
-    age_wean1st_pa1e1b1nwzida0e0b0xyg2=np.take_along_axis(age_wean1st_oa1e1b1nwzida0e0b0xyg2,a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0)#use off wean age - may vary by d axis therefore have to convert to a p array
-    age_wean1st2_pa1e1b1nwzida0e0b0xyg2=np.take_along_axis(age_wean1st_oa1e1b1nwzida0e0b0xyg2,a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #increments at prejoining
+    age_wean1st_pa1e1b1nwzida0e0b0xyg2 = np.take_along_axis(age_wean1st_oa1e1b1nwzida0e0b0xyg2, a_prevbirth_o_pa1e1b1nwzida0e0b0xyg2,0)#use off wean age - may vary by d axis therefore have to convert to a p array
+    age_wean1st2_pa1e1b1nwzida0e0b0xyg2 = np.take_along_axis(age_wean1st_oa1e1b1nwzida0e0b0xyg2, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1,0) #increments at prejoining
+    date_weaned2_pa1e1b1nwzida0e0b0xyg2 = date_born1st2_pa1e1b1nwzida0e0b0xyg2 + age_wean1st2_pa1e1b1nwzida0e0b0xyg2 #this needs to increment at prejoining for period between weaning and prejoining, so that it is false after prejoining and before weaning.
 
     ##yatf sim params - turn d to p axis
     ce_yatf = np.expand_dims(ce_yatf, axis = tuple(range(p_pos,d_pos)))
@@ -1405,8 +1407,11 @@ def generator(params,r_vals,ev,plots = False):
     ##Age, date, timing 1 #
     #######################
 
-    ## date mated (when the ewe actually conceives)
-    date_mated_pa1e1b1nwzida0e0b0xyg1 = date_joined_pa1e1b1nwzida0e0b0xyg1.astype('datetime64[D]') + (cf_dams[4, ..., 0:1, :] * (index_e1b1nwzida0e0b0xyg + 0.5)).astype('timedelta64[D]')
+    ## date mated (average date that the dams conceive in this cycle)
+    date_mated_pa1e1b1nwzida0e0b0xyg1 = date_joined2_pa1e1b1nwzida0e0b0xyg1.astype('datetime64[D]') + (cf_dams[4, ..., 0:1, :]
+                                                            * (index_e1b1nwzida0e0b0xyg + 0.5)).astype('timedelta64[D]')
+    ##day90 after mating (for use in the LTW calculations)
+    date_d90_pa1e1b1nwzida0e0b0xyg1 = date_mated_pa1e1b1nwzida0e0b0xyg1 + np.array([90]).astype('timedelta64[D]')
     ##Age of dam when first lamb is born
     agedam_lamb1st_a1e1b1nwzida0e0b0xyg3 = np.swapaxes(date_born1st_oa1e1b1nwzida0e0b0xyg2 - date_born1st_ida0e0b0xyg1,0,d_pos)[0,...] #replace the d axis with the o axis then remove the d axis by taking slice 0 (note the d axis was not active)
     if np.count_nonzero(pinp.sheep['i_mask_i']) > 1: #complicated by the fact that sire tol is not necessarily the same as dams and off
@@ -1452,8 +1457,11 @@ def generator(params,r_vals,ev,plots = False):
 
     ##Age of foetus (start of period, end of period and mid period - days)
     age_f_start_open_pa1e1b1nwzida0e0b0xyg1 = date_start_pa1e1b1nwzida0e0b0xyg - date_mated_pa1e1b1nwzida0e0b0xyg1
-    age_f_start_pa1e1b1nwzida0e0b0xyg1 = np.maximum(np.array([0]).astype('timedelta64[D]'), np.minimum(cp_dams[1, 0:1, :].astype('timedelta64[D]'), date_start_pa1e1b1nwzida0e0b0xyg - date_mated_pa1e1b1nwzida0e0b0xyg1))
-    age_f_end_pa1e1b1nwzida0e0b0xyg1 = np.minimum(cp_dams[1, 0:1, :].astype('timedelta64[D]') - 1, date_end_pa1e1b1nwzida0e0b0xyg - date_mated_pa1e1b1nwzida0e0b0xyg1) #open at bottom capped at top, cp -1 so that the period_days formula below is correct when p_date - date_mated is greater than cp (because plus 1)
+    age_f_start_pa1e1b1nwzida0e0b0xyg1 = np.maximum(np.array([0]).astype('timedelta64[D]')
+                                            , np.minimum(cp_dams[1, 0:1, :].astype('timedelta64[D]')
+                                                , date_start_pa1e1b1nwzida0e0b0xyg - date_mated_pa1e1b1nwzida0e0b0xyg1))
+    age_f_end_pa1e1b1nwzida0e0b0xyg1 = np.minimum(cp_dams[1, 0:1, :].astype('timedelta64[D]') - 1
+                                                  , date_end_pa1e1b1nwzida0e0b0xyg - date_mated_pa1e1b1nwzida0e0b0xyg1) #open at bottom capped at top, cp -1 so that the period_days formula below is correct when p_date - date_mated is greater than cp (because plus 1)
 
 
     ############################
@@ -1651,8 +1659,9 @@ def generator(params,r_vals,ev,plots = False):
     #########################
     # management calc       #
     #########################
-    ##scan
-    date_scan_pa1e1b1nwzida0e0b0xyg1 = date_joined2_pa1e1b1nwzida0e0b0xyg1 + join_cycles_ida0e0b0xyg1 * cf_dams[4, 0:1, :].astype('timedelta64[D]') + pinp.sheep['i_scan_day'][scan_option_pa1e1b1nwzida0e0b0xyg1].astype('timedelta64[D]')
+    ##scan (the specified number of days after sires are removed)
+    date_scan_pa1e1b1nwzida0e0b0xyg1 = date_joined2_pa1e1b1nwzida0e0b0xyg1 + join_cycles_ida0e0b0xyg1 * cf_dams[4, 0:1, :].astype('timedelta64[D]') \
+                                       + pinp.sheep['i_scan_day'][scan_option_pa1e1b1nwzida0e0b0xyg1].astype('timedelta64[D]')
     # retain_scan_b1nwzida0e0b0xyg = np.max(pinp.sheep['i_drysretained_scan'], np.min(1, nfoet_b1nwzida0e0b0xyg))
     # retain_birth_b1nwzida0e0b0xyg = np.max(pinp.sheep['i_drysretained_birth'], np.min(1, nyatf_b1nwzida0e0b0xyg))
     ##Expected stocking density
@@ -1670,33 +1679,51 @@ def generator(params,r_vals,ev,plots = False):
     #########################
     # period is ...         #
     #########################
-    period_between_prejoinscan_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is_between', date_prejoin_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_scan_pa1e1b1nwzida0e0b0xyg1, date_end_pa1e1b1nwzida0e0b0xyg)
-    period_between_joinscan_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is_between', date_joined_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_scan_pa1e1b1nwzida0e0b0xyg1, date_end_pa1e1b1nwzida0e0b0xyg)
-    date_born2_pa1e1b1nwzida0e0b0xyg2 = date_born1st2_pa1e1b1nwzida0e0b0xyg2 + (index_e1b1nwzida0e0b0xyg + 0.5) * cf_yatf[4, 0:1,:].astype('timedelta64[D]')	 #increments at prejoining #times by 0.5 to get the average birth date for all lambs because ewes can be conceived anytime within joining cycle. e_index is to account for ewe cycles.
-    period_between_scanbirth_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is_between', date_scan_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_born2_pa1e1b1nwzida0e0b0xyg2, date_end_pa1e1b1nwzida0e0b0xyg) #use date born that increments at joining
-    period_between_birthwean_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is_between', date_born_pa1e1b1nwzida0e0b0xyg2, date_start_pa1e1b1nwzida0e0b0xyg, date_weaned_pa1e1b1nwzida0e0b0xyg2, date_end_pa1e1b1nwzida0e0b0xyg)
-    date_weaned2_pa1e1b1nwzida0e0b0xyg2 = date_born1st2_pa1e1b1nwzida0e0b0xyg2 + age_wean1st2_pa1e1b1nwzida0e0b0xyg2 #this needs to increment at prejoining for period between weaning and prejoining, so that it is false after prejoining and before weaning.
-    period_between_weanprejoin_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is_between', date_weaned2_pa1e1b1nwzida0e0b0xyg2, date_start_pa1e1b1nwzida0e0b0xyg, date_prejoin_next_pa1e1b1nwzida0e0b0xyg1, date_end_pa1e1b1nwzida0e0b0xyg)
-    period_is_scan_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is', date_scan_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg) #g2 date born is the equivalent of date lambed g1
-    period_is_birth_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is', date_born_pa1e1b1nwzida0e0b0xyg2, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg) #g2 date born is the equivalent of date lambed g1
-    period_is_wean_pa1e1b1nwzida0e0b0xyg2 = sfun.f_period_is_('period_is', date_weaned_pa1e1b1nwzida0e0b0xyg2, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg) #g2 date born is the equivalent of date lambed g1
+    period_between_prejoinscan_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is_between', date_prejoin_pa1e1b1nwzida0e0b0xyg1
+                        , date_start_pa1e1b1nwzida0e0b0xyg, date_scan_pa1e1b1nwzida0e0b0xyg1, date_end_pa1e1b1nwzida0e0b0xyg)
+    period_between_mated90_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is_between', date_mated_pa1e1b1nwzida0e0b0xyg1
+                        , date_start_pa1e1b1nwzida0e0b0xyg, date_d90_pa1e1b1nwzida0e0b0xyg1, date_end_pa1e1b1nwzida0e0b0xyg)
+    period_between_scanbirth_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is_between', date_scan_pa1e1b1nwzida0e0b0xyg1
+                        , date_start_pa1e1b1nwzida0e0b0xyg, date_born2_pa1e1b1nwzida0e0b0xyg2, date_end_pa1e1b1nwzida0e0b0xyg) #use date born that increments at joining
+    period_between_d90birth_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is_between', date_d90_pa1e1b1nwzida0e0b0xyg1
+                        , date_start_pa1e1b1nwzida0e0b0xyg, date_born2_pa1e1b1nwzida0e0b0xyg2, date_end_pa1e1b1nwzida0e0b0xyg) #use date born that increments at joining
+    period_between_birthwean_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is_between', date_born_pa1e1b1nwzida0e0b0xyg2
+                        , date_start_pa1e1b1nwzida0e0b0xyg, date_weaned_pa1e1b1nwzida0e0b0xyg2, date_end_pa1e1b1nwzida0e0b0xyg)
+    period_between_weanprejoin_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is_between', date_weaned2_pa1e1b1nwzida0e0b0xyg2
+                        , date_start_pa1e1b1nwzida0e0b0xyg, date_prejoin_next_pa1e1b1nwzida0e0b0xyg1, date_end_pa1e1b1nwzida0e0b0xyg)
+    period_is_scan_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is', date_scan_pa1e1b1nwzida0e0b0xyg1
+                        , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg) #g2 date born is the equivalent of date lambed g1
+    period_is_birth_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is', date_born_pa1e1b1nwzida0e0b0xyg2
+                        , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg) #g2 date born is the equivalent of date lambed g1
+    period_is_wean_pa1e1b1nwzida0e0b0xyg2 = sfun.f_period_is_('period_is', date_weaned_pa1e1b1nwzida0e0b0xyg2
+                        , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg) #g2 date born is the equivalent of date lambed g1
     period_is_wean_pa1e1b1nwzida0e0b0xyg1 = period_is_wean_pa1e1b1nwzida0e0b0xyg2
     # prev_period_is_birth_pa1e1b1nwzida0e0b0xyg1 = np.roll(period_is_birth_pa1e1b1nwzida0e0b0xyg1,1,axis=p_pos)
-    period_is_mating_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is', date_mated_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg) #g2 date born is the equivalent of date lambed g1
-    period_between_birth6wks_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is_between', date_born_pa1e1b1nwzida0e0b0xyg2, date_start_pa1e1b1nwzida0e0b0xyg, date_born_pa1e1b1nwzida0e0b0xyg2+np.array([(6*7)]).astype('timedelta64[D]'), date_end_pa1e1b1nwzida0e0b0xyg) #This is within 6 weeks of the Birth period
+    period_is_mating_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is', date_mated_pa1e1b1nwzida0e0b0xyg1
+                        , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg) #g2 date born is the equivalent of date lambed g1
+    period_between_birth6wks_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is_between', date_born_pa1e1b1nwzida0e0b0xyg2
+                        , date_start_pa1e1b1nwzida0e0b0xyg, date_born_pa1e1b1nwzida0e0b0xyg2+np.array([(6*7)]).astype('timedelta64[D]'), date_end_pa1e1b1nwzida0e0b0xyg) #This is within 6 weeks of the Birth period
     ###shearing
-    period_is_shearing_pa1e1b1nwzida0e0b0xyg0 = sfun.f_period_is_('period_is', date_shear_pa1e1b1nwzida0e0b0xyg0, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
-    period_is_shearing_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is', date_shear_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
-    period_is_shearing_pa1e1b1nwzida0e0b0xyg3 = sfun.f_period_is_('period_is', date_shear_pa1e1b1nwzida0e0b0xyg3, date_start_pa1e1b1nwzida0e0b0xyg3, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3)
-    period_is_startseason_pa1e1b1nwzida0e0b0xyg = sfun.f_period_is_('period_is', date_prev_seasonstart_pa1e1b1nwzida0e0b0xyg, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
+    period_is_shearing_pa1e1b1nwzida0e0b0xyg0 = sfun.f_period_is_('period_is', date_shear_pa1e1b1nwzida0e0b0xyg0
+                        , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
+    period_is_shearing_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is', date_shear_pa1e1b1nwzida0e0b0xyg1
+                        , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
+    period_is_shearing_pa1e1b1nwzida0e0b0xyg3 = sfun.f_period_is_('period_is', date_shear_pa1e1b1nwzida0e0b0xyg3
+                        , date_start_pa1e1b1nwzida0e0b0xyg3, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3)
+    period_is_startseason_pa1e1b1nwzida0e0b0xyg = sfun.f_period_is_('period_is', date_prev_seasonstart_pa1e1b1nwzida0e0b0xyg
+                        , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
     nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg = np.roll(period_is_startseason_pa1e1b1nwzida0e0b0xyg,-1,axis=0)
     nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg3 = np.roll(period_is_startseason_pa1e1b1nwzida0e0b0xyg,-1,axis=0)[mask_p_offs_p]
-    period_is_prejoin_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is', date_prejoin_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg) #g2 date born is the equivalent of date lambed g1
-    period_is_join_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is', date_joined_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg) #g2 date born is the equivalent of date lambed g1
+    period_is_prejoin_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is', date_prejoin_pa1e1b1nwzida0e0b0xyg1
+                        , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg) #g2 date born is the equivalent of date lambed g1
+    period_is_join_pa1e1b1nwzida0e0b0xyg1 = sfun.f_period_is_('period_is', date_joined_pa1e1b1nwzida0e0b0xyg1
+                        , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg) #g2 date born is the equivalent of date lambed g1
     # period_is_startfvp_pa1e1b1nwzida0e0b0xyg1 =  fvp_type_pa1e1b1nwzida0e0b0xyg1 != np.roll(fvp_type_pa1e1b1nwzida0e0b0xyg1,1, axis=0)  #all periods except the first will be the same type is the array is rolled once   #old method
 
     ##This is the end of the Mating period. (no active e axis - end of mating inclusive of all e slices)
-    period_is_matingend_pa1e1b1nwzida0e0b0xyg1 = np.any(np.logical_and(period_is_mating_pa1e1b1nwzida0e0b0xyg1, index_e1b1nwzida0e0b0xyg == np.max(pinp.sheep['i_join_cycles_ig1']) - 1), axis=e1_pos,keepdims=True)
+    period_is_matingend_pa1e1b1nwzida0e0b0xyg1 = np.any(np.logical_and(period_is_mating_pa1e1b1nwzida0e0b0xyg1
+                                                , index_e1b1nwzida0e0b0xyg == np.max(pinp.sheep['i_join_cycles_ig1']) - 1)
+                                                , axis=e1_pos,keepdims=True)
 
     ############################
     ### feed supply calcs      # todo need to add something about break of season..? and need to add e variation
@@ -2701,9 +2728,9 @@ def generator(params,r_vals,ev,plots = False):
                 ffcfw_mating_dams = fun.f_update(ffcfw_mating_dams, t_w_mating, period_is_mating_pa1e1b1nwzida0e0b0xyg1[p])
                 ##Relative condition of the dam at mating - required to determine milk production
                 rc_mating_dams = ffcfw_mating_dams / nw_start_dams
-                ##Condition score of the dam at  mating
+                ##Condition score of the dams at mating
                 cs_mating_dams = sfun.f_condition_score(rc_mating_dams, cu0_dams)
-                ##Relative size of the dame at mating
+                ##Relative size of the dams at mating
                 relsize_mating_dams = relsize_start_dams
 
                 ##Dam weight at birth ^probs don't need this since birth is first day of period - just need to pass in ffcfw_start to function
@@ -2732,10 +2759,12 @@ def generator(params,r_vals,ev,plots = False):
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)  # equation used is based on the yatf system
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    temp0, temp1 = sfun.f_birthweight_mu(cu1_yatf, cb1_yatf, cx_yatf[:,mask_x,...], ce_yatf[:,p-1,...], w_b_start_yatf
-                                                         , cf_w_b_start_dams, ffcfw_start_dams , ebg_dams, days_period_pa1e1b1nwzida0e0b0xyg1[p]
-                                                         , gest_propn_pa1e1b1nwzida0e0b0xyg1[p],  period_between_joinscan_pa1e1b1nwzida0e0b0xyg1[p]
-                                                         , period_between_scanbirth_pa1e1b1nwzida0e0b0xyg1[p], period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]) #have to use yatf days per period if using prejoinng to scanning
+                    temp0, temp1 = sfun.f_birthweight_mu(cu1_yatf, cb1_yatf, cg_yatf, cx_yatf[:,mask_x,...], ce_yatf[:,p-1,...]
+                                        , w_b_start_yatf, cf_w_b_start_dams, ffcfw_start_dams, ebg_dams
+                                        , days_period_pa1e1b1nwzida0e0b0xyg1[p], gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , period_between_mated90_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , period_between_d90birth_pa1e1b1nwzida0e0b0xyg1[p]
+                                        , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]) #have to use yatf days per period if using prejoinng to scanning
                     ## these variables need to be stored even if the equation system is not used so that the equations can be compared
                     cf_w_b_dams = temp1
                     if eqn_used:
@@ -2760,14 +2789,18 @@ def generator(params,r_vals,ev,plots = False):
             if uinp.sheep['i_eqn_exists_q0q1'][eqn_group, eqn_system]:  # proceed with call & assignment if this system exists for this group
                 eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    temp0, temp1 = sfun.f_progenycfw_mu(cu1_yatf, cfw_ltwadj_start_dams, cf_cfwltw_start_dams, ffcfw_start_dams
-                                        , nw_start_dams, ebg_dams, days_period_pa1e1b1nwzida0e0b0xyg1[p], gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
-                                        ,  period_between_joinscan_pa1e1b1nwzida0e0b0xyg1[p], period_between_scanbirth_pa1e1b1nwzida0e0b0xyg1[p]
-                                        , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]) #have to use yatf days per period if using prejoinng to scanning
-                    temp2, temp3 = sfun.f_progenyfd_mu(cu1_yatf, fd_ltwadj_start_dams, cf_fdltw_start_dams, ffcfw_start_dams
-                                        , nw_start_dams, ebg_dams, days_period_pa1e1b1nwzida0e0b0xyg1[p], gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
-                                        ,  period_between_joinscan_pa1e1b1nwzida0e0b0xyg1[p], period_between_scanbirth_pa1e1b1nwzida0e0b0xyg1[p]
-                                        , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]) #have to use yatf days per period if using prejoinng to scanning
+                    temp0, temp1 = sfun.f_progenycfw_mu(cu1_yatf, cg_yatf, cfw_ltwadj_start_dams, cf_cfwltw_start_dams
+                                            , ffcfw_start_dams, nw_start_dams, ebg_dams
+                                            , days_period_pa1e1b1nwzida0e0b0xyg1[p], gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
+                                            , period_between_mated90_pa1e1b1nwzida0e0b0xyg1[p]
+                                            , period_between_d90birth_pa1e1b1nwzida0e0b0xyg1[p]
+                                            , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p])
+                    temp2, temp3 = sfun.f_progenyfd_mu(cu1_yatf, cg_yatf, fd_ltwadj_start_dams, cf_fdltw_start_dams
+                                            , ffcfw_start_dams, nw_start_dams, ebg_dams
+                                            , days_period_pa1e1b1nwzida0e0b0xyg1[p], gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
+                                            , period_between_mated90_pa1e1b1nwzida0e0b0xyg1[p]
+                                            , period_between_d90birth_pa1e1b1nwzida0e0b0xyg1[p]
+                                            , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p])
                     #if eqn_used:
                     ## these variables all need to be stored even if the equation system is not used so that the equations can be compared
                     cfw_ltwadj_dams = temp0
@@ -3000,11 +3033,13 @@ def generator(params,r_vals,ev,plots = False):
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)  # equation used is based on the yatf system
                 ##based on days_period_dams because weaning occurs at start of period so days_period_yatf==0
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    temp0, temp1, temp2 = sfun.f_weanweight_mu(cu1_yatf, cb1_yatf, cx_yatf[:,mask_x,...], ce_yatf[:,p-1,...]
-                                            , nyatf_b1nwzida0e0b0xyg, w_w_start_yatf, cf_w_w_start_dams, ffcfw_start_dams
-                                            , ebg_dams, foo_dams ,foo_lact_ave_start, days_period_pa1e1b1nwzida0e0b0xyg2[p]
-                                            , age_start_pa1e1b1nwzida0e0b0xyg2[p], period_between_joinscan_pa1e1b1nwzida0e0b0xyg1[p]
-                                            , period_between_scanbirth_pa1e1b1nwzida0e0b0xyg1[p], period_between_birthwean_pa1e1b1nwzida0e0b0xyg1[p]
+                    temp0, temp1, temp2 = sfun.f_weanweight_mu(cu1_yatf, cb1_yatf, cg_yatf, cx_yatf[:,mask_x,...]
+                                            , ce_yatf[:,p-1,...], nyatf_b1nwzida0e0b0xyg, w_w_start_yatf, cf_w_w_start_dams
+                                            , ffcfw_start_dams, ebg_dams, foo_dams, foo_lact_ave_start
+                                            , days_period_pa1e1b1nwzida0e0b0xyg2[p], age_start_pa1e1b1nwzida0e0b0xyg2[p]
+                                            , period_between_mated90_pa1e1b1nwzida0e0b0xyg1[p]
+                                            , period_between_d90birth_pa1e1b1nwzida0e0b0xyg1[p]
+                                            , period_between_birthwean_pa1e1b1nwzida0e0b0xyg1[p]
                                             , period_is_wean_pa1e1b1nwzida0e0b0xyg1[p]) #have to use yatf days per period if using prejoining to scanning
                     ## these variables need to be available if being compared (but not used) so they can be condensed
                     cf_w_w_dams = temp1
@@ -3312,12 +3347,12 @@ def generator(params,r_vals,ev,plots = False):
                 eqn_used = (eqn_used_g2_q1p[eqn_group, p] == eqn_system)   # equation used is based on the yatf system
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                     ##calculate the standard BW which is used in the paddock level scaling
-                    w_b_ltw_std_yatf, t_cf = sfun.f_birthweight_mu(cu1_yatf, cb1_yatf, cx_yatf[:,mask_x,...]
-                                    , ce_yatf[:,p-1,...], w_b_ltw_std_yatf, 0, nw_start_dams , 0
-                                    , days_period_pa1e1b1nwzida0e0b0xyg1[p], gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
-                                    , period_between_joinscan_pa1e1b1nwzida0e0b0xyg1[p]
-                                    , period_between_scanbirth_pa1e1b1nwzida0e0b0xyg1[p]
-                                    , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p])
+                    w_b_ltw_std_yatf, t_cf = sfun.f_birthweight_mu(cu1_yatf, cb1_yatf, cg_yatf, cx_yatf[:,mask_x,...]
+                                                    , ce_yatf[:,p-1,...], w_b_ltw_std_yatf, 0, nw_start_dams, 0
+                                                    , days_period_pa1e1b1nwzida0e0b0xyg1[p], gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
+                                                    , period_between_mated90_pa1e1b1nwzida0e0b0xyg1[p]
+                                                    , period_between_d90birth_pa1e1b1nwzida0e0b0xyg1[p]
+                                                    , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p])
                     temp0 = sfun.f_mortality_progeny_mu(cu2_yatf, cb1_yatf, cx_yatf[:,mask_x,...], ce_yatf[:,p,...]
                                     , w_b_yatf, w_b_ltw_std_yatf, cv_weight_yatf, foo_yatf, chill_index_pa1e1b1nwzida0e0b0xygm1[p]
                                     , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p], rev_trait_values['yatf'][p]
