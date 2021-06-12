@@ -1896,7 +1896,8 @@ def generator(params,r_vals,ev,plots = False):
 
     for loop_ltw in range(2):
         #todo The double loop could be replaced by separating the offspring into their own loop
-        #todo this would reduce the number of calculations, allow offspring wean wt to be based on ffcfw_yat at weaning and allow loop length to be customised
+        # it doesn't remove the requirement to loop for the dams because they need to have the first loop to generate the inputs for the second loop
+        # but it would reduce the number of offspring calculations, allow offspring wean wt to be based on ffcfw_yat at weaning and allow loop length to be customised
 
         ####################################
         ### initialise arrays for sim loop  # axis names not always track from now on because they change between p=0 and p=1
@@ -2536,9 +2537,9 @@ def generator(params,r_vals,ev,plots = False):
                                        , mei_offs, mew_min_pa1e1b1nwzida0e0b0xyg3[p]
                                        , d_cfw_ave_pa1e1b1nwzida0e0b0xyg3[p, ...], sfd_da0e0b0xyg3, wge_da0e0b0xyg3
                                        , af_wool_pa1e1b1nwzida0e0b0xyg3[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg3[p, ...]
-                                       , kw_yg3, days_period_pa1e1b1nwzida0e0b0xyg3[p], sfw_ltwadj_a1e1b1nwzida0e0b0xyg3
-                                       , sfd_ltwadj_a1e1b1nwzida0e0b0xyg3, rev_trait_values['offs'][p]
-                                       , sam_pi = sam_pi_offs)
+                                       , kw_yg3, days_period_pa1e1b1nwzida0e0b0xyg3[p]
+                                       , sfw_ltwadj_a1e1b1nwzida0e0b0xyg3, sfd_ltwadj_a1e1b1nwzida0e0b0xyg3
+                                       , rev_trait_values['offs'][p], sam_pi = sam_pi_offs)
 
                 ##energy to offset chilling
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
@@ -3641,11 +3642,11 @@ def generator(params,r_vals,ev,plots = False):
                 threshold = np.minimum(0.9, np.mean(surv_dams, axis=w_pos, keepdims=True)) #threshold is the lower of average survival and 90%
                 mort_mask_dams = surv_dams > threshold
 
-                ###print warning if min mort is greater than 10%
+                ###print warning if min mort is greater than 10% since the previous condense
                 if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1]):
                     min_mort = 1- np.max(surv_dams, axis=w_pos)
                     if np.any(min_mort > 0.1):
-                        print('WARNING: HIGH MORTALITY DAMS ')
+                        print('WARNING: HIGH MORTALITY DAMS: period ', p)
 
 
                 ###combine mort and feedlot mask
@@ -3784,11 +3785,12 @@ def generator(params,r_vals,ev,plots = False):
                              / np.sum(numbers_start_condense_offs, axis=season_tup, keepdims=True))  # sum z axis because numbers are distributed along those axis so need to sum to determine if w has mortality > 10% (don't sum e&b because offs don't change slice)
                 threshold = np.minimum(0.9, np.mean(surv_offs, axis=w_pos, keepdims=True)) #threshold is the lower of average survival and 90%
                 mort_mask_offs = surv_offs > threshold
-                ###print warning if min mort is greater than 10%
+
+                ###print warning if min mort is greater than 10% since the previous condense
                 if np.any(period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1]):
                     min_mort = 1- np.max(surv_offs, axis=w_pos)
                     if np.any(min_mort > 0.1):
-                        print('WARNING: HIGH MORTALITY OFFS ')
+                        print('WARNING: HIGH MORTALITY OFFS: period ', p)
 
                 ###combine mort and feedlot mask
                 condense_w_mask_offs = np.logical_and(fs_mask_offs, mort_mask_offs)
@@ -4406,18 +4408,24 @@ def generator(params,r_vals,ev,plots = False):
         temporary = np.sum(o_cfw_ltwadj_pdams[:, :, :, :, :, 0:1, ...] / sfw_a0e0b0xyg1
                            * (a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1 == index_da0e0b0xyg)
                            * period_is_join_pa1e1b1nwzida0e0b0xyg1, axis = 0)
+        ##dams have a e1 axis, whereas offspring have an e0 axis, swap the e1 into position of e0
         temporary = np.swapaxes(temporary, e1_pos, e0_pos)
-        temporary = np.sum(temporary * (a_b0_b1nwzida0e0b0xyg == index_b0xyg), axis=b1_pos, keepdims=True)
+        ##the b1 axis needs to be transformed into b0 because they are different lengths.
+        temporary = np.sum(temporary * (a_b0_b1nwzida0e0b0xyg == index_b0xyg) * (nyatf_b1nwzida0e0b0xyg > 0)
+                           , axis=b1_pos, keepdims=True)  #0 for dams with no yatf because for those b1 slices there is no corresponding slice in b0
         t_season_propn_pg = np.broadcast_to(season_propn_zida0e0b0xyg, temporary.shape)
-        temporary = np.average(temporary, axis=z_pos, weights=t_season_propn_pg)
+        temporary = fun.f_weighted_average(temporary, t_season_propn_pg, axis=z_pos, keepdims=True)
         sfw_ltwadj_a1e1b1nwzida0e0b0xyg3 = 1 + temporary * sen.sam['LTW_offs']
 
         ## repeat for FD
-        temporary = np.sum(o_fd_ltwadj_pdams[:, :, :, :, :, 0:1, ...] * (a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1 == index_da0e0b0xyg), axis = 0)
+        temporary = np.sum(o_fd_ltwadj_pdams[:, :, :, :, :, 0:1, ...]
+                           * (a_prevjoining_o_pa1e1b1nwzida0e0b0xyg1 == index_da0e0b0xyg)
+                           * period_is_join_pa1e1b1nwzida0e0b0xyg1, axis = 0)
         temporary = np.swapaxes(temporary, e1_pos, e0_pos)
-        temporary = np.sum(temporary * (a_b0_b1nwzida0e0b0xyg == index_b0xyg), axis=b1_pos, keepdims=True)
+        temporary = np.sum(temporary * (a_b0_b1nwzida0e0b0xyg == index_b0xyg) * (nyatf_b1nwzida0e0b0xyg > 0)
+                           , axis=b1_pos, keepdims=True)  #0 for dams with no yatf because for those b1 slices there is no corresponding slice in b0
         t_season_propn_pg = np.broadcast_to(season_propn_zida0e0b0xyg, temporary.shape)
-        temporary = np.average(temporary, axis=z_pos, weights=t_season_propn_pg)
+        temporary = fun.f_weighted_average(temporary, t_season_propn_pg, axis=z_pos, keepdims=True)
         sfd_ltwadj_a1e1b1nwzida0e0b0xyg3 = temporary * sen.sam['LTW_offs']
 
     postp_start=time.time()

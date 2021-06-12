@@ -339,7 +339,9 @@ def f_update(existing_value, new_value, mask_for_new):
 
 def f_weighted_average(array, weights, axis, keepdims=False, non_zero=False, den_weights=1):
     '''
-    Calculates weighted average (similar to np.average however this will handle if the sum of the weights is 0 (np.average doesnt handle this)
+    Calculates weighted average (similar to np.average however this will handle:
+        if the sum of the weights is 0 (np.average doesnt handle this)
+        keeping the axis (using the keepdims argument)
     'non-zero' handles how the average is calculated
     Note: if non-zero is false then when sum weights = 0 the numbers being averaged also = 0 (so can divide by 1 instead of 0)
     The function is also called from the reporting module with den_weights. den_weights can be 0, in which case 'non-zero' handles how the average is calculated
