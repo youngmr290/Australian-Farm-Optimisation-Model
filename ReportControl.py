@@ -69,12 +69,13 @@ report_run = report_run.droplevel(1, axis=1)
 
 
 
-def f_report(processor, trials):
+def f_report(processor, trials, non_exist_trials):
     '''Function to wrap ReportControl.py so that multiprocessing can be used.'''
     # print('Start processor: {0}'.format(processor))
     # print('Start trials: {0}'.format(trials))
     ##create empty df to stack each trial results into
     stacked_infeasible = pd.DataFrame().rename_axis('Trial')  # name of any infeasible trials
+    stacked_non_exist = pd.DataFrame(non_exist_trials).rename_axis('Trial')  # name of any infeasible trials
     stacked_summary = pd.DataFrame()  # 1 line summary of each trial
     stacked_areasum = pd.DataFrame()  # area summary
     stacked_pnl = pd.DataFrame()  # profit and loss statement
@@ -140,8 +141,6 @@ def f_report(processor, trials):
         lp_vars,r_vals = rep.load_pkl(trial_name)
 
         ##handle infeasible trials
-
-
         if os.path.isfile('Output/infeasible/{0}.txt'.format(trial_name)):
             stacked_infeasible = stacked_infeasible.append(pd.DataFrame([trial_name]).rename_axis('Trial'))
             lp_vars = fun.f_clean_dict(lp_vars) #if a trial is infeasible or doesnt solve all the lp values are None. This function converts them to 0 so the report can still run.
@@ -982,6 +981,8 @@ def f_report(processor, trials):
 
     ##write to excel
     df_settings = rep.f_df2xl(writer, stacked_infeasible, 'infeasible', df_settings, option=1)
+    df_settings = rep.f_df2xl(writer, stacked_non_exist,'Non-exist',df_settings,option=0,colstart=0)
+
     if report_run.loc['run_summary', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_summary, 'summary', df_settings, option=1)
     if report_run.loc['run_areasum', 'Run']:
@@ -1121,8 +1122,9 @@ if __name__ == '__main__':
         pd.Series(exp_data.index.get_level_values(2)).fillna(0).astype(
             bool)]  # this is slightly complicated because blank rows in exp.xl result in nan, so nan must be converted to 0.
 
-    ##check the trials you want to run exist and are up to date
-    rep.f_errors(trial_outdated,trials)
+    ##check the trials you want to run exist and are up to date - if trial doesnt exist it is removed from trials to
+    # report array so that the others can still be run. A list of trials that dont exist is the 'non_exist' sheet in report excel.
+    trials, non_exist_trials = rep.f_errors(trial_outdated,trials)
 
     ##clear the old report.xlsx
     for f in glob.glob("Output/Report*.xlsx"):
@@ -1149,7 +1151,7 @@ if __name__ == '__main__':
         start_trial = int(len(trials)/agents * agent)
         end_trial = int(len(trials)/agents * (agent+1))
         process_trials = trials[start_trial:end_trial]
-        arg = [agent,process_trials]
+        arg = [agent,process_trials, non_exist_trials]
         args.append(arg)
     with multiprocessing.Pool(processes=agents) as pool:
         pool.starmap(f_report, args)

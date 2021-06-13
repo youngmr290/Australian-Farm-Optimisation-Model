@@ -111,7 +111,9 @@ def f_errors(trial_outdated, trials):
     '''
     The report module conducts three error checks before commencing:
 
-    #. Have you run the main model for each trial you are trying to report. If not an exception will arise.
+    #. Have you run the main model for each trial you are trying to report. If not a warning will be printed and
+       the given trial will be removed from the list of trials to report (allowing the remaining trials to still
+       be reported).
     #. Are any trials out of date E.g. have you run the main model since updating the inputs or the code.
        If trials are out of date a warning message will be printed but the report code will continue to execute.
     #. Did all the trials you are reporting solve optimally. Infeasible trials are still reported the reports are just
@@ -131,14 +133,16 @@ def f_errors(trial_outdated, trials):
             pass
     if infeasible_trials:
         print("Infeasible trials being reported:\n", infeasible_trials)
-        # sys.exit()
 
     ##second check if data exists for each desired trial
+    non_exist_trials = []
     for trial_name in trials:
         if os.path.isfile('pkl/pkl_r_vals_{0}.pkl'.format(trial_name)):
             pass
         else:
-            raise exc.TrialError('''Trials for reporting don't all exist''')
+            print('''WARNING: Trials for reporting don't all exist''')
+            trials = trials[trials!=trial_name] #remove trials that dont exist from the list of trials to run.
+            non_exist_trials.append(trial_name)
 
     ##third check if generating results using out of date data.
     outdatedbool = trial_outdated.loc[(slice(None), slice(None), slice(None), trials)].values  # have to use the trial name because the order is different
@@ -148,7 +152,7 @@ def f_errors(trial_outdated, trials):
               Generating reports from out dated data: Trial %s
                 
               ''' %np.array(trials)[outdatedbool])
-    return
+    return trials, non_exist_trials
 
 def load_pkl(trial_name):
     '''load in lp_vars and r_vals output file.
