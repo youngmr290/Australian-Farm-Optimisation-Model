@@ -25,7 +25,6 @@ import numpy as np
 print("Experiment commenced at: ", time.ctime())
 start=time.time()
 
-from CreateModel import model
 import CreateModel as crtmod
 import BoundsPyomo as bndpy
 import StructuralInputs as sinp
@@ -181,24 +180,25 @@ def exp(row):  # called with command: pool.map(exp, dataset)
     if run_pyomo_params:
         ##call core model function, must call them in the correct order (core must be last)
         pyomocalc_start = time.time()
-        crtmod.sets() #certain sets have to be updated each iteration of exp
-        rotpy.rotationpyomo(params['rot'])
-        crppy.croppyomo_local(params['crop'])
-        macpy.machpyomo_local(params['mach'])
-        finpy.finpyomo_local(params['fin'])
-        lfixpy.labfxpyomo_local(params['labfx'])
-        labpy.labpyomo_local(params['lab'])
-        lcrppy.labcrppyomo_local(params['crplab'])
-        paspy.paspyomo_local(params['pas'])
-        suppy.suppyomo_local(params['sup'])
-        stubpy.stubpyomo_local(params['stub'])
-        spy.stockpyomo_local(params['stock'])
-        mvf.mvf_pyomo()
+        model = pe.ConcreteModel() #create pyomo model - done each loop becasue memory was being leaked when just deleting and re adding the components.
+        crtmod.sets(model) #certain sets have to be updated each iteration of exp
+        rotpy.rotationpyomo(params['rot'], model)
+        crppy.croppyomo_local(params['crop'], model)
+        macpy.machpyomo_local(params['mach'], model)
+        finpy.finpyomo_local(params['fin'], model)
+        lfixpy.labfxpyomo_local(params['labfx'], model)
+        labpy.labpyomo_local(params['lab'], model)
+        lcrppy.labcrppyomo_local(params['crplab'], model)
+        paspy.paspyomo_local(params['pas'], model)
+        suppy.suppyomo_local(params['sup'], model)
+        stubpy.stubpyomo_local(params['stub'], model)
+        spy.stockpyomo_local(params['stock'], model)
+        mvf.mvf_pyomo(model)
         ###bounds-this must be done last because it uses sets built in some of the other modules
-        bndpy.boundarypyomo_local(params)
+        bndpy.boundarypyomo_local(params, model)
         pyomocalc_end = time.time()
         print('localpyomo: ', pyomocalc_end - pyomocalc_start)
-        obj = core.coremodel_all(params, trial_name) #have to do this so i can access the solver status
+        obj = core.coremodel_all(params, trial_name, model)
         print('corepyomo: ',time.time() - pyomocalc_end)
 
         if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1:

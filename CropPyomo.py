@@ -14,7 +14,6 @@ import timeit
 
 #AFO modules
 import Crop as crp
-from CreateModel import *
 import PropertyInputs as pinp
 
 def crop_precalcs(params, r_vals):
@@ -29,9 +28,15 @@ def crop_precalcs(params, r_vals):
     crp.crop_params(params, r_vals)
 
 
-def croppyomo_local(params):
+def croppyomo_local(params, model):
     ''' Builds pyomo variables, parameters and constraints'''
-    
+
+    ############
+    # variable #
+    ############
+    model.v_sell_grain = pe.Var(model.s_crops,model.s_grain_pools,bounds=(0,None),
+                                doc='tonnes of grain in each pool sold')
+
     #########
     #param  #
     #########
@@ -39,70 +44,23 @@ def croppyomo_local(params):
     ##used to index the season key in params
     season = pinp.general['i_z_idx'][pinp.general['i_mask_z']][0]
 
-    try:
-        model.del_component(model.p_rotation_cost)
-        model.del_component(model.p_rotation_cost_index)
-    except AttributeError:
-        pass
     model.p_rotation_cost = pe.Param(model.s_phases,model.s_lmus,model.s_cashflow_periods, initialize=params[season]['rot_cost'], default=0, mutable=False, doc='total cost for 1 unit of rotation')
        
-    try:
-        model.del_component(model.p_rotation_yield)
-        model.del_component(model.p_rotation_yield_index)
-    except AttributeError:
-        pass
     model.p_rotation_yield = pe.Param(model.s_phases, model.s_crops, model.s_lmus, initialize=params[season]['rot_yield'], default = 0.0, mutable=False, doc='grain production for all crops for 1 unit of rotation')
 
-    try:
-        model.del_component(model.p_grainpool_proportion)
-        model.del_component(model.p_grainpool_proportion_index)
-    except AttributeError:
-        pass
     model.p_grainpool_proportion = pe.Param(model.s_crops, model.s_grain_pools, initialize=params['grain_pool_proportions'], default = 0.0, doc='proportion of grain in each pool')
     
-    try:
-        model.del_component(model.p_grain_price)
-        model.del_component(model.p_grain_price_index)
-    except AttributeError:
-        pass
     model.p_grain_price = pe.Param(model.s_crops, model.s_cashflow_periods, model.s_grain_pools, initialize=params['grain_price'],default = 0.0, doc='farm gate price per tonne of each grain')
     
-    try:
-        model.del_component(model.p_rot_stubble_index)
-        model.del_component(model.p_rot_stubble)
-    except AttributeError:
-        pass
     model.p_rot_stubble = pe.Param(model.s_crops, model.s_stub_cat, initialize=params['stubble_production'], default = 0.0, doc='stubble category A produced per kg grain harvested')
     
-    try:
-        model.del_component(model.p_cropsow_index)
-        model.del_component(model.p_cropsow)
-    except AttributeError:
-        pass
     model.p_cropsow = pe.Param(model.s_phases, model.s_crops, model.s_lmus, initialize=params['crop_sow'], default = 0.0, doc='ha of sow activity required by each rot phase')
     
-    try:
-        model.del_component(model.p_phasefert_index)
-        model.del_component(model.p_phasefert)
-    except AttributeError:
-        pass
     ##only used in croplabour pyomo to determine labour per tonne of fert
     model.p_phasefert = pe.Param(model.s_phases, model.s_lmus, model.s_fert_type, initialize=params[season]['fert_req'], default = 0.0, mutable=False, doc='fert required by 1 unit of phase')
    
     
     
-      
-    
-    
-#######################################################################################################################################################
-#######################################################################################################################################################
-#variable
-#######################################################################################################################################################
-#######################################################################################################################################################
-model.v_sell_grain = pe.Var(model.s_crops, model.s_grain_pools, bounds=(0,None), doc='tonnes of grain in each pool sold')
-    
-
-
 #######################################################################################################################################################
 #######################################################################################################################################################
 #functions used in global constraints

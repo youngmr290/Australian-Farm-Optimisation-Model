@@ -14,7 +14,6 @@ import Sensitivity as sen
 import UniversalInputs as uinp
 import StructuralInputs as sinp
 import PropertyInputs as pinp
-from CreateModel import model
 import pyomo.environ as pe
 
 
@@ -28,7 +27,7 @@ note:
 
 
 
-def boundarypyomo_local(params):
+def boundarypyomo_local(params, model):
 
     ##set bounds to include
     bounds_inc = True #controls all bounds (typically on)
@@ -56,21 +55,10 @@ def boundarypyomo_local(params):
             4.build the constraint '''
 
         ##params used in multiple bounds
-        try:
-            model.del_component(model.p_mask_dams)
-            model.del_component(model.p_mask_dams_index)
-        except AttributeError:
-            pass
         model.p_mask_dams = pe.Param(model.s_k2_birth_dams, model.s_sale_dams, model.s_dvp_dams, model.s_lw_dams, model.s_groups_dams,
                                            initialize=params['stock']['p_mask_dams'])
 
         ##rotations
-        ###delete the bound (outside if statement in case the bound was active for last trial)
-        try:
-            model.del_component(model.con_rotation_lobound)
-            model.del_component(model.con_rotation_lobound_index)
-        except AttributeError:
-            pass
         ###build bound if turned on
         if rot_lobound_inc:
             ###keys to build arrays
@@ -91,12 +79,6 @@ def boundarypyomo_local(params):
                                                     doc='lo bound for the number of each phase')
 
         ##total dam min bound - total number includes each dvp (the sheep in a given yr equal total for all dvp divided by the number of dvps in 1 yr)
-        ###delete the bound (outside if statement in case the bound was active for last trial)
-        try:
-            model.del_component(model.con_dam_lobound)
-            model.del_component(model.con_dam_lobound_index)
-        except AttributeError:
-            pass
         ###build bound if turned on
         if dams_lobound_inc:
             ###keys to build arrays for the specified slices
@@ -126,12 +108,6 @@ def boundarypyomo_local(params):
                                                     doc='min number of dams')
 
         ##dams upper bound - specified by k2 & v and totalled across other axes
-        ###delete the bound (outside if statement in case the bound was active for last trial)
-        try:
-            model.del_component(model.con_dam_upperbound)
-            model.del_component(model.con_dam_upperbound_index)
-        except AttributeError:
-            pass
         ###build bound if turned on
         if dams_upperbound_inc:
             ###keys to build arrays for the specified slices
@@ -161,11 +137,6 @@ def boundarypyomo_local(params):
                                                     doc='max number of dams_tv')
 
         ##total dams scanned. Sums dams in all scanning dvps
-        ###delete the bound (outside if statement in case the bound was active for last trial)
-        try:
-            model.del_component(model.con_total_dams_scanned)
-        except AttributeError:
-            pass
         ###build bound if turned on
         if total_dams_scanned_bound_inc:
             ###set the bound
@@ -185,11 +156,6 @@ def boundarypyomo_local(params):
             model.con_total_dams_scanned = pe.Constraint(rule=f_total_dams_scanned, doc='total dams scanned')
 
         ##force 5yo dam retention - fix a proportion of dams at 6yo scanning dvp.
-        ###delete the bound (outside if statement in case the bound was active for last trial)
-        try:
-            model.del_component(model.con_retention_5yo_dams)
-        except AttributeError:
-            pass
         ###build bound if turned on
         if force_5yo_retention_inc:
             ###set the bound
@@ -216,20 +182,9 @@ def boundarypyomo_local(params):
             model.con_retention_5yo_dams = pe.Constraint(rule=retention_5yo_dams, doc='force retention of 5yo dams')
 
         ##bound to fix the proportion of dams being mated - typically used to exclude yearlings
-        ###delete the bound (outside if statement in case the bound was active for last trial)
-        try:
-            model.del_component(model.con_propn_dams_mated_index)
-            model.del_component(model.con_propn_dams_mated)
-        except AttributeError:
-            pass
         ###build bound if turned on
         if bnd_propn_dams_mated:
             ###build param - inf values are skipped in the constraint building so inf means the model can optimise the propn mated
-            try:
-                model.del_component(model.p_prop_dams_mated_index)
-                model.del_component(model.p_prop_dams_mated)
-            except AttributeError:
-                pass
             model.p_prop_dams_mated = pe.Param(model.s_dvp_dams, model.s_groups_dams, initialize=params['stock']['p_prop_dams_mated'])
             ###constraint
             def f_propn_dams_mated(model, v, g1):
@@ -250,12 +205,6 @@ def boundarypyomo_local(params):
                                                        doc='proportion of dams mated')
 
         ##bound to fix the proportion of twice dry dams sold. Proportion of twice dry dams is an input in uinp ce[2, ....].
-        ###delete the bound (outside if statement in case the bound was active for last trial)
-        try:
-            model.del_component(model.con_propn_drys_sold_index)
-            model.del_component(model.con_propn_drys_sold)
-        except AttributeError:
-            pass
         ###build bound if turned on
         if bnd_sale_twice_drys_inc:
             '''Constraint forces x percent of the dry dams to be sold (all the twice drys). They can be sold in either 
@@ -264,11 +213,6 @@ def boundarypyomo_local(params):
              
              This constraint is equal to and really says only retain drys that are not twice dry.'''
             ###build param - inf values are skipped in the constraint building so inf means the model can optimise the propn mated
-            try:
-                model.del_component(model.p_prop_twice_dry_dams_index)
-                model.del_component(model.p_prop_twice_dry_dams)
-            except AttributeError:
-                pass
             model.p_prop_twice_dry_dams = pe.Param(model.s_dvp_dams, model.s_tol, model.s_gen_merit_dams,
                                                    model.s_groups_dams, initialize=params['stock']['p_prop_twice_dry_dams'])
 
@@ -296,12 +240,6 @@ def boundarypyomo_local(params):
                                                        doc='proportion of dry dams sold each year')
 
         ##SR - this can't set the sr on an actual pasture but it means different pastures provide a different level of carry capacity although nothing fixes sheep to that pasture
-        ###delete the bound (outside if statement in case the bound was active for last trial)
-        try:
-            model.del_component(model.con_SR_bound)
-            model.del_component(model.con_SR_bound_index)
-        except AttributeError:
-            pass
         ###build bound
         if sr_bound_inc:
             ###initilise
@@ -326,11 +264,6 @@ def boundarypyomo_local(params):
 
 
         ##landuse bound
-        ###delete the bound (outside if statement in case the bound was active for last trial)
-        try:
-            model.del_component(model.con_landuse_bound)
-        except AttributeError:
-            pass
         ###build bound if turned on
         if landuse_bound_inc:
             ##initilise bound - note zero is the equivalent of no bound
@@ -350,20 +283,11 @@ def boundarypyomo_local(params):
             model.con_pas_bound = pe.Constraint(model.s_landuses, rule=k_bound, doc='bound on total pasture area')
 
         ##total pasture area - hence also total crop area
-        ###delete the bound (outside if statement in case the bound was active for last trial)
-        try:
-            model.del_component(model.con_landuse_bound)
-        except AttributeError:
-            pass
         ###build bound if turned on
         if total_pasture_bound_inc:
             ###setbound
             total_pas_area = sen.sav['bnd_total_pas_area']
             ###constraint
-            try:
-                model.del_component(model.con_pas_bound)
-            except AttributeError:
-                pass
             def pas_bound(model):
                 return (
                         sum(model.v_phase_area[r,l] * model.p_pasture_area[r,t] for r in model.s_phases for l in
