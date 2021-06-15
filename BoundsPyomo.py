@@ -125,7 +125,7 @@ def boundarypyomo_local(params, model):
             ###constraint
             def f_dam_upperbound(model, t, v):
                 if dams_upperbound[t, v]==np.inf or all(model.p_mask_dams[k2,t,v,w8,g1] == 0
-                       for k2 in model.s_k2_birth_dams for t in model.s_sale_dams for w8 in model.s_lw_dams for g1 in model.s_groups_dams):
+                       for k2 in model.s_k2_birth_dams for w8 in model.s_lw_dams for g1 in model.s_groups_dams):
                     return pe.Constraint.Skip
                 else:
                     return sum(model.v_dams[k28,t,v,a,n,w8,i,y,g1] for k28 in model.s_k2_birth_dams
