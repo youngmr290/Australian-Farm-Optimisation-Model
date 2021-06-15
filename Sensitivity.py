@@ -67,6 +67,7 @@ sam['ci_c2'] = np.ones(uinp.parameters['i_ci_c2'].shape, dtype=np.float64)  #int
 sam['sfw_c2'] = 1.0                         #std fleece weight genotype params
 sam['rr'] = 1.0                        #scanning percentage (adjust the standard scanning % for f_conception_ltw and within function for f_conception_cs
 sam['husb_cost_h2'] = np.ones(uinp.sheep['i_husb_operations_contract_cost_h2'].shape, dtype=np.float64)  #SA value for contract cost of husbandry operations.
+sam['husb_mustering_h2'] = np.ones(uinp.sheep['i_husb_operations_muster_propn_h2'].shape, dtype=np.float64)  #SA value for mustering required for husbandry operations.
 sam['husb_labour_l2h2'] = np.ones(uinp.sheep['i_husb_operations_labourreq_l2h2'].shape, dtype=np.float64)  #units of the job carried out per husbandry labour hour
 
 ######

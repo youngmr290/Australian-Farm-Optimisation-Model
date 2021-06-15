@@ -1385,8 +1385,10 @@ def f_mortality_base_mu(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max
     ebg_start_m1m2 = fun.f_distribution7(ebg_start, sd=sd_ebg)[...,na]
     rc_start_m1m2 = fun.f_distribution7(rc_start, cv=cv_weight)[...,na,:]
     ###calc mort scalars
-    rc_mortality_scalar_m1m2 = (np.minimum(0, rc_start_m1m2 - cd[24, ...,na,na]) / (cd[23, ...,na,na] - cd[24, ...,na,na]))**2
-    ebg_mortality_scalar_m1m2 = (np.minimum(0, ebg_start_m1m2 * cg[18, ...,na,na] - cd[26, ...,na,na] - d_nw_max[...,na,na]) / (cd[25, ...,na,na] - cd[26, ...,na,na]))**2
+    rc_mortality_scalar_m1m2 = (np.minimum(0, rc_start_m1m2 - cd[24, ...,na,na])
+                                / (cd[23, ...,na,na] - cd[24, ...,na,na]))**2
+    ebg_mortality_scalar_m1m2 = (np.minimum(0, ebg_start_m1m2 * cg[18, ...,na,na] - cd[26, ...,na,na] - d_nw_max[...,na,na])
+                                 / (cd[25, ...,na,na] - cd[26, ...,na,na]))**2
     mortalityb_m1m2 = (cd[1, ...,na,na] + cd[22, ...,na,na] * rc_mortality_scalar_m1m2 * ebg_mortality_scalar_m1m2) * days_period[...,na,na]  #mul by days period to convert from mort per day to per period
     mortalityb = np.mean(mortalityb_m1m2, axis=(-1,-2))
     ##apply sensitivity
@@ -1431,8 +1433,8 @@ def f_mortality_pregtox_mu():
     #todo hook this up with relationships developed in Lifetime maternals project
     return 0
 
-def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, cv_weight, foo, chill_index_m1, period_is_birth, rev_trait_value
-                           , sap_mortalityp, saa_mortalityx):
+def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, cv_weight, foo, chill_index_m1, period_is_birth
+                           , rev_trait_value, sap_mortalityp, saa_mortalityx):
     '''
     Calculate the mortality of progeny at birth due to mis-mothering and exposure
     using the LTW prediction equations (Oldham et al. 2011) with inclusion of chill index.
