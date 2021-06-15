@@ -102,7 +102,7 @@ def boundarypyomo_local(params, model):
                     return sum(model.v_dams[k2,t,v,a,n,w8,i,y,g1] for k2 in model.s_k2_birth_dams
                                for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
                                for i in model.s_tol for y in model.s_gen_merit_dams
-                               if model.p_mask_dams[k2,t,v,w8,g1] == 1) \
+                               if pe.value(model.p_mask_dams[k2,t,v,w8,g1]) == 1) \
                            >= dams_lowbound[t, v,g1]
             model.con_dam_lobound = pe.Constraint(model.s_sale_dams, model.s_dvp_dams, model.s_groups_dams, rule=dam_lo_bound,
                                                     doc='min number of dams')
@@ -131,7 +131,7 @@ def boundarypyomo_local(params, model):
                     return sum(model.v_dams[k28,t,v,a,n,w8,i,y,g1] for k28 in model.s_k2_birth_dams
                                for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
                                for i in model.s_tol for y in model.s_gen_merit_dams for g1 in model.s_groups_dams
-                               if model.p_mask_dams[k28,t,v,w8,g1] == 1 #if removes the masked out dams so they don't show up in .lp output.
+                               if pe.value(model.p_mask_dams[k28,t,v,w8,g1]) == 1 #if removes the masked out dams so they don't show up in .lp output.
                                ) <= dams_upperbound[t, v]
             model.con_dam_upperbound = pe.Constraint(model.s_sale_dams, model.s_dvp_dams, rule=f_dam_upperbound,
                                                     doc='max number of dams_tv')
@@ -151,7 +151,7 @@ def boundarypyomo_local(params, model):
                     return sum(model.v_dams[k28,t,v,a,n,w8,i,y,g1] for k28 in model.s_k2_birth_dams for t in model.s_sale_dams
                                for v in model.s_dvp_dams for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
                                for i in model.s_tol for y in model.s_gen_merit_dams for g1 in model.s_groups_dams
-                               if model.p_mask_dams[k28,t,v,w8,g1] == 1 and v in scan_v and k28 != 'NM-0') \
+                               if pe.value(model.p_mask_dams[k28,t,v,w8,g1]) == 1 and v in scan_v and k28 != 'NM-0') \
                        == total_dams_scanned
             model.con_total_dams_scanned = pe.Constraint(rule=f_total_dams_scanned, doc='total dams scanned')
 
@@ -173,12 +173,12 @@ def boundarypyomo_local(params, model):
                                                        for t in model.s_sale_dams for v in model.s_dvp_dams
                                                        for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
                                                        for i in model.s_tol for y in model.s_gen_merit_dams for g1 in model.s_groups_dams
-                                                       if model.p_mask_dams[k28,t,v,w8,g1] == 1 and v in scan5_v) \
+                                                       if pe.value(model.p_mask_dams[k28,t,v,w8,g1]) == 1 and v in scan5_v) \
                        == sum(model.v_dams[k28,t,v,a,n,w8,i,y,g1] for k28 in model.s_k2_birth_dams
                               for t in model.s_sale_dams for v in model.s_dvp_dams for a in model.s_wean_times
                               for n in model.s_nut_dams for w8 in model.s_lw_dams for i in model.s_tol
                               for y in model.s_gen_merit_dams for g1 in model.s_groups_dams
-                              if model.p_mask_dams[k28,t,v,w8,g1] == 1 and v in scan6_v)
+                              if pe.value(model.p_mask_dams[k28,t,v,w8,g1]) == 1 and v in scan6_v)
             model.con_retention_5yo_dams = pe.Constraint(rule=retention_5yo_dams, doc='force retention of 5yo dams')
 
         ##bound to fix the proportion of dams being mated - typically used to exclude yearlings
@@ -195,11 +195,11 @@ def boundarypyomo_local(params, model):
                     return sum(model.v_dams['NM-0',t,v,a,n,w8,i,y,g1] for t in model.s_sale_dams
                                for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
                                for i in model.s_tol for y in model.s_gen_merit_dams
-                               if model.p_mask_dams['NM-0',t,v,w8,g1] == 1
+                               if pe.value(model.p_mask_dams['NM-0',t,v,w8,g1]) == 1
                                ) == sum(model.v_dams[k2,t,v,a,n,w8,i,y,g1] for k2 in model.s_k2_birth_dams for t in model.s_sale_dams
                                for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
                                for i in model.s_tol for y in model.s_gen_merit_dams
-                               if model.p_mask_dams[k2,t,v,w8,g1] == 1
+                               if pe.value(model.p_mask_dams[k2,t,v,w8,g1]) == 1
                                         ) * (1 - model.p_prop_dams_mated[v, g1])
             model.con_propn_dams_mated = pe.Constraint(model.s_dvp_dams, model.s_groups_dams, rule=f_propn_dams_mated,
                                                        doc='proportion of dams mated')
@@ -210,6 +210,9 @@ def boundarypyomo_local(params, model):
             '''Constraint forces x percent of the dry dams to be sold (all the twice drys). They can be sold in either 
              sale op (after scanning or at shearing if shearing occurs before the next prejoining).
              Thus the drys just have to be sold sometime between scanning and the following prejoining.
+             
+             The assumption is that the twice dry propn is the same for all w slices and thus a propn of the drys 
+             must be sold from each w slice.
              
              This constraint is equal to and really says only retain drys that are not twice dry.'''
             ###build param - inf values are skipped in the constraint building so inf means the model can optimise the propn mated
@@ -222,21 +225,22 @@ def boundarypyomo_local(params, model):
             next_prejoin_v = prejoin_v[1:] #dvp before following prejoining
 
             ###constraint
-            def f_propn_drys_sold(model, v, i, y, g1):
+            def f_propn_drys_sold(model, v, w, i, y, g1):
                 '''Force the model so that the only drys that can be retain are not twice dry (essentially forcing the sale of twice drys)'''
                 if v in scan_v[:-1] and model.p_prop_twice_dry_dams[v, i, y, g1]!=0: #use 00 numbers at scanning. Don't want to include the last prejoining dvp because there is no sale limit in the last year.
                     idx_scan = scan_v.index(v) #which prejoining is the current v
                     idx_v_next_prejoin = next_prejoin_v[idx_scan] #all the twice drys must be sold by the following prejoining
                     v_sale = l_v1[l_v1.index(idx_v_next_prejoin) - 1]
-                    return sum(model.v_dams['00-0','t2',v_sale,a,n,w8,i,y,g1]
-                               for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
-                               ) == sum(model.v_dams['00-0',t,v,a,n,w8,i,y,g1] for t in model.s_sale_dams
-                               for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
-                                        if model.p_mask_dams['00-0',t,v,w8,g1] == 1
-                                        ) * (1-model.p_prop_twice_dry_dams[v, i, y, g1]) #todo a limitation is that the model can optimise the sale along the w axis (not sure if this is important)
+                    return sum(model.v_dams['00-0','t2',v_sale,a,n,w,i,y,g1]
+                               for a in model.s_wean_times for n in model.s_nut_dams
+                               if pe.value(model.p_mask_dams['00-0','t2',v_sale,w,g1]) == 1
+                               ) == sum(model.v_dams['00-0',t,v,a,n,w,i,y,g1] for t in model.s_sale_dams
+                                        for a in model.s_wean_times for n in model.s_nut_dams
+                                        if pe.value(model.p_mask_dams['00-0',t,v,w,g1]) == 1
+                                        ) * (1-model.p_prop_twice_dry_dams[v, i, y, g1])
                 else:
                     return pe.Constraint.Skip
-            model.con_propn_drys_sold = pe.Constraint(model.s_dvp_dams, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, rule=f_propn_drys_sold,
+            model.con_propn_drys_sold = pe.Constraint(model.s_dvp_dams, model.s_lw_dams, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, rule=f_propn_drys_sold,
                                                        doc='proportion of dry dams sold each year')
 
         ##SR - this can't set the sr on an actual pasture but it means different pastures provide a different level of carry capacity although nothing fixes sheep to that pasture
@@ -251,13 +255,15 @@ def boundarypyomo_local(params, model):
             def SR_bound(model, p6):
                 return(
                 - sum(model.v_phase_area[r, l] * model.p_pasture_area[r, t] * pasture_dse_carry[t] for r in model.s_phases for l in model.s_lmus for t in model.s_pastures)
-                + sum(model.v_sire[g0] * model.p_dse_sire[p6,g0] for g0 in model.s_groups_sire if model.p_dse_sire[p6,g0]!=0)
+                + sum(model.v_sire[g0] * model.p_dse_sire[p6,g0] for g0 in model.s_groups_sire if pe.value(model.p_dse_sire[p6,g0])!=0)
                 + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_dse_dams[k2,p6,t1,v1,a,n1,w1,z,i,y1,g1]
-                         for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
-                         for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams if model.p_dse_dams[k2,p6,t1,v1,a,n1,w1,z,i,y1,g1]!=0)
+                          for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
+                          for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
+                          if pe.value(model.p_dse_dams[k2,p6,t1,v1,a,n1,w1,z,i,y1,g1])!=0)
                     + sum(model.v_offs[k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_dse_offs[k3,k5,p6,t3,v3,n3,w3,z,i,a,x,y3,g3]
                           for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
-                          for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs if model.p_dse_offs[k3,k5,p6,t3,v3,n3,w3,z,i,a,x,y3,g3]!=0)
+                          for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
+                          if pe.value(model.p_dse_offs[k3,k5,p6,t3,v3,n3,w3,z,i,a,x,y3,g3])!=0)
                for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol) ==0)
             model.con_SR_bound = pe.Constraint(model.s_feed_periods, rule=SR_bound,
                                                 doc='stocking rate bound for each feed period')
