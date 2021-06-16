@@ -6988,6 +6988,19 @@ def generator(params,r_vals,ev,plots = False):
     prop_dams_mated_vg1 = prop_dams_mated_va1e1b1nwzida0e0b0xyg1.ravel()
     params['p_prop_dams_mated'] = dict(zip(tup_vg1, prop_dams_mated_vg1))
 
+    ##proportion of dry dams as a propn of preg dams at shearing sale. This is different to the propn in the dry report becasue it is the propn at a given time rather than per animal at the beginning of mating.
+    # This is used to force retention of drys at the main (t[0]) sale time. You can only sell drys if you sell non-drys. This param indicates the propn of dry that can be sold per non-dry dam.
+    propn_drys_pg1 = fun.f_divide(np.sum(o_numbers_end_pdams*n_drys_b1g1, axis=(e1_pos,b1_pos), keepdims=True),
+                              np.sum(o_numbers_end_pdams * (nyatf_b1nwzida0e0b0xyg>0),axis=(e1_pos,b1_pos), keepdims=True))
+    propn_drys_vg1 = sfun.f_p2v(propn_drys_pg1, a_v_pa1e1b1nwzida0e0b0xyg1,
+                                period_is_tp=period_is_sale_t0_pa1e1b1nwzida0e0b0xyg1[:,:,0:1,...]) #only interested in the shearing sale, take e[0] it is the same as e[1] so dont need it.
+    # propn_drys_vg1 = np.max(propn_drys_vg1, axis=) #get the max propn of drys along select axes to reduce size. Needs to be max so that all drys can be s
+    arrays = [keys_v1, keys_a, keys_n1, keys_lw1, keys_i, keys_y1, keys_g1]
+    index_vanwiyg1 = fun.cartesian_product_simple_transpose(arrays)
+    tup_vanwiyg1 = tuple(map(tuple,index_vanwiyg1))
+    propn_drys_vanwiyg1 = propn_drys_vg1.ravel()
+    params['p_prop_dry_dams'] = dict(zip(tup_vanwiyg1, propn_drys_vanwiyg1))
+
     ##proportion of drys that are twice dry
     ###expand for p axis
     prop_twice_dry_dams_oa1e1b1nwzia0e0b0xyg1 = np.moveaxis(ce_dams[2,...], source=d_pos, destination=0) #move d axis to p pos
@@ -7002,7 +7015,7 @@ def generator(params,r_vals,ev,plots = False):
     prop_dams_mated_prev_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_prev_oa1e1b1nwzida0e0b0xyg1, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0) #increments at prejoining
     prop_dams_mated_prev_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(prop_dams_mated_prev_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e doesnt impact mating propn
     prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1 = prop_twice_dry_dams_va1e1b1nwzida0e0b0xyg1 * (prop_dams_mated_prev_va1e1b1nwzida0e0b0xyg1>1)
-    ##create param
+    ###create param
     arrays = [keys_v1, keys_i, keys_y1, keys_g1]
     index_viyg1 = fun.cartesian_product_simple_transpose(arrays)
     tup_viyg1 = tuple(map(tuple,index_viyg1))

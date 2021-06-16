@@ -38,6 +38,7 @@ def boundarypyomo_local(params, model):
     force_5yo_retention_inc = np.any(sen.sav['bnd_propn_dam5_retained'] != '-') #force a propn of 5yo dams to be retained.
     bnd_propn_dams_mated = np.any(sen.sav['bnd_propn_dams_mated_og1'] != '-')
     bnd_sale_twice_drys_inc = fun.f_sa(False, sen.sav['bnd_sale_twice_dry_inc'], 5) #proportion of drys sold (can be sold at either sale opp)
+    bnd_dry_retained_inc = fun.f_sa(False, pinp.sheep['i_dry_retained_forced'], 5) #force the retention of drys in t[0] (t[1] is handled in the generator.
     sr_bound_inc = fun.f_sa(False, sen.sav['bnd_sr_inc'], 5) #controls sr bound
     total_pasture_bound_inc = fun.f_sa(False, sen.sav['bnd_pasarea_inc'], 5)  #bound on total pasture (hence also total crop)
     landuse_bound_inc = False #bound on area of each landuse
@@ -242,6 +243,32 @@ def boundarypyomo_local(params, model):
                     return pe.Constraint.Skip
             model.con_propn_drys_sold = pe.Constraint(model.s_dvp_dams, model.s_lw_dams, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, rule=f_propn_drys_sold,
                                                        doc='proportion of dry dams sold each year')
+
+        ##bound to force the retention of drys until the dvp when other ewes are sold.
+        # The bound is only for t[0] (sale at shearing) t[1] (sale at scaning) is handled in the generator.
+        if bnd_dry_retained_inc:
+            ###build param
+            model.p_prop_dry_dams = pe.Param(model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams, model.s_tol, model.s_gen_merit_dams,
+                                                   model.s_groups_dams, initialize=params['stock']['p_prop_dry_dams'])
+
+            ###constraint
+            def f_retention_drys(model, v, i, g1):
+                '''Force the model so that the drys can only be sold when the other ewes are sold (essentially forcing the retention of drys).
+                   The number of drys sold muct be less than the sum of the other k2 slices'''
+                if all(model.p_mask_dams['00-0','t0',v,w,g1] for w in model.s_lw_dams)==0:
+                    return pe.Constraint.Skip
+                else:
+                    return sum(model.v_dams['00-0','t0',v,a,n,w,i,y,g1]
+                               for a in model.s_wean_times for n in model.s_nut_dams for w in model.s_lw_dams for y in model.s_gen_merit_dams
+                               if pe.value(model.p_mask_dams['00-0','t0',v,w,g1]) == 1
+                               ) <= max(model.p_prop_dry_dams[v,a,n,w,i,y,g1] for a in model.s_wean_times for n in model.s_nut_dams  #take max to reduce size. Needs to be max so that all drys can be sold. This will allow a tiny bit of slipage (can sell more slightly more drys than the exact dry propn)
+                                        for w in model.s_lw_dams for y in model.s_gen_merit_dams) * sum(model.v_dams[k2,'t0',v,a,n,w,i,y,g1]
+                                        for k2 in model.s_k2_birth_dams for a in model.s_wean_times for n in model.s_nut_dams
+                                        for w in model.s_lw_dams for y in model.s_gen_merit_dams
+                                        if k2!='00-0' and pe.value(model.p_mask_dams['00-0','t0',v,w,g1]) == 1) #sums the k2 axis except for drys.
+
+            model.con_retention_drys = pe.Constraint(model.s_dvp_dams, model.s_tol, model.s_groups_dams, rule=f_retention_drys,
+                                                       doc='force the retention of drys until other dams are sold')
 
         ##SR - this can't set the sr on an actual pasture but it means different pastures provide a different level of carry capacity although nothing fixes sheep to that pasture
         ###build bound
