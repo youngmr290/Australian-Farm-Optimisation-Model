@@ -116,7 +116,7 @@ def boundarypyomo_local(params, model):
             ###build array for the axes of the specified slices
             dams_upperbound_tv = np.full((len(model.s_sale_dams), len(model.s_dvp_dams)), np.inf)
             ###set the bound
-            dams_upperbound_tv[0:2, 0:16] = 0  #no dam sales before dvp14 (except in DVP3 - after hgt shearing)
+            dams_upperbound_tv[0:1, 0:16] = 0  #no dam sales before dvp14 (except in DVP3 - after hgt shearing)
             dams_upperbound_tv[0:1, 3:4] = np.inf   #allow sale after shearing t[0] for dams dvp3
             ###ravel and zip bound and dict
             dams_upperbound = dams_upperbound_tv.ravel()

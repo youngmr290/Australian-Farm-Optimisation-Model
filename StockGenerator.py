@@ -5566,7 +5566,7 @@ def generator(params,r_vals,ev,plots = False):
     # Alternatively: you could make a bound (in bound.py) which forces a propn (based on the propn of drys) of the dams to be sold (like the twice drys bound)
     ##dams
     mask_numbers_provdry_k28k29tva1e1b1nwzida0e0b0xyg1 = np.logical_not((index_k28k29tva1e1b1nwzida0e0b0xyg1 == 1) * (index_tva1e1b1nw8zida0e0b0xyg1 >= 2)
-                                                         * (dvp_type_va1e1b1nwzida0e0b0xyg1 == scan_vtype1) * (scan_va1e1b1nwzida0e0b0xyg1 >= 1) #dvp1 because that's the scanning dvp
+                                                         * (dvp_type_next_va1e1b1nwzida0e0b0xyg1 == prejoin_vtype1) * (scan_va1e1b1nwzida0e0b0xyg1 >= 1) #dvp1 because that's the scanning dvp
                                                          * (pinp.sheep['i_dry_sales_forced']))
 
     ###########################
