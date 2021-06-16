@@ -5560,10 +5560,8 @@ def generator(params,r_vals,ev,plots = False):
     #########################################
     ''' Create a mask to remove retaining dry dams when sale of drys is forced
     The transfer is removed if all the following are true: they are in the dry cluster that is not a sale group, DVP is scanning, ewes are scanned, dry sales are forced.
-    Dams must be sold in the scanning dvp.'''
+    Dry dams must be sold before the next prejoining (eg they can be sold in any sale opp).'''
     #todo would be good to be able to specify if sale occurs at scanning, shearing or any. Tricky because shearing can be in different dvps and there is no drys identified in prejoining dvp.
-    # as a temp solution you can change dvp type to birth which give the model the option to sell at shearing or scanning (this only works when shearing is in birth dvp though). Basically this would mean the drys can be sold any time before the next prejoining.
-    # Alternatively: you could make a bound (in bound.py) which forces a propn (based on the propn of drys) of the dams to be sold (like the twice drys bound)
     ##dams
     mask_numbers_provdry_k28k29tva1e1b1nwzida0e0b0xyg1 = np.logical_not((index_k28k29tva1e1b1nwzida0e0b0xyg1 == 1) * (index_tva1e1b1nw8zida0e0b0xyg1 >= 2)
                                                          * (dvp_type_next_va1e1b1nwzida0e0b0xyg1 == prejoin_vtype1) * (scan_va1e1b1nwzida0e0b0xyg1 >= 1) #dvp1 because that's the scanning dvp
