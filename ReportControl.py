@@ -67,7 +67,8 @@ except KeyError:  # in case the experiment is not set up with custom report_run
 report_run = report_run.to_frame()
 report_run = report_run.droplevel(1, axis=1)
 
-
+#todo Reports to add:
+# 1. report which idenfifies which sale grid sheep go into. Mybe this can be done using arg sorted on the saleprice array (last step of the sale value function).
 
 def f_report(processor, trials, non_exist_trials):
     '''Function to wrap ReportControl.py so that multiprocessing can be used.'''
@@ -187,7 +188,7 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'dams_keys_k2ctvanwziy1g1'
             arith = 1
             index =[3]
-            cols =[1,2]
+            cols =[0,1,2]
             salevalue_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
                                    na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
             salevalue_dams = pd.concat([salevalue_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
