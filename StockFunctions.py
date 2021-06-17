@@ -1145,6 +1145,7 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         propn_dst_adj = np.moveaxis(f_DSTw(repro_rate_adj, cycles = 1)[..., sinp.stock['a_nfoet_b1']], -1, b1_pos) #move the l0 axis into the b1 position. and expand to b1 size.
         ##calculate the change in the expected proportions due to altering the scanning percentage & apply to calculated proportions
         propn_dst_change = propn_dst_adj - propn_dst
+        propn_dst_change = propn_dst_change * (nfoet_b1any==nyatf_b1any) #dont want to add any conception to the lambed and lost slices.
         t_cr += propn_dst_change
 
         ##Process the Conception REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
