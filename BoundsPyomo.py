@@ -141,12 +141,12 @@ def boundarypyomo_local(params, model):
         ###build bound if turned on
         if total_dams_scanned_bound_inc:
             ###set the bound
-            total_dams_scanned = fun.f_sa(np.inf, sen.sav['bnd_total_dams_scanned'], 5)
+            total_dams_scanned = fun.f_sa(999999, sen.sav['bnd_total_dams_scanned'], 5) #999999 is arbitrary default value which mean skip constraint
             ###scan dvps
             scan_v = list(params['stock']['p_scan_v_dams'])
             ###constraint - sum all mated dams in scan dvp.
             def f_total_dams_scanned(model):
-                if propn_dams_retained == np.inf:
+                if total_dams_scanned == 999999:
                     pe.Constraint.Skip
                 else:
                     return sum(model.v_dams[k28,t,v,a,n,w8,i,y,g1] for k28 in model.s_k2_birth_dams for t in model.s_sale_dams
