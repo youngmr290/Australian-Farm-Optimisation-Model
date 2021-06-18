@@ -495,12 +495,12 @@ def generator(params,r_vals,ev,plots = False):
     a_r_zida0e0b0xyg0 = sfun.f_g2g(pinp.sheep['ia_r1_zig0'],'sire',i_pos, swap=True, condition=pinp.sheep['i_masksire_i'], axis=i_pos).astype(int)
     a_r_zida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['ia_r1_zig1'],'dams',i_pos, swap=True, condition=pinp.sheep['i_mask_i'], axis=i_pos).astype(int)
     a_r_zida0e0b0xyg3 = sfun.f_g2g(pinp.sheep['ia_r1_zig3'],'offs',i_pos, swap=True, condition=pinp.sheep['i_mask_i'], axis=i_pos).astype(int)
-    ###feed variation for dams
+    ###feed adjustment for dams
     a_r2_k0e1b1nwzida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['ia_r2_k0ig1'],'dams',i_pos, swap=True,left_pos2=a1_pos,right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
     a_r2_k1b1nwzida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['ia_r2_k1ig1'],'dams',i_pos, swap=True,left_pos2=e1_pos,right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
     a_r2_spk0k1k2nwzida0e0b0xyg1 = sfun.f_g2g(pinp.sheep['ia_r2_sk2ig1'],'dams',i_pos, left_pos2=b1_pos,right_pos2=i_pos,
                                               left_pos3=p_pos-1, right_pos3=b1_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos, move=True, source=0, dest=2)  #add axis between g and i and i and b1
-    ###feed variation for offs
+    ###feed adjustment for offs
     a_r2_idk0e0b0xyg3 = sfun.f_g2g(pinp.sheep['ia_r2_ik0g3'],'offs',a0_pos, left_pos2=i_pos,right_pos2=a0_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
     a_r2_ik3a0e0b0xyg3 = sfun.f_g2g(pinp.sheep['ia_r2_ik3g3'],'offs',d_pos,  condition=pinp.sheep['i_mask_i'], axis=i_pos)
     a_r2_ida0e0k4xyg3 = sfun.f_g2g(pinp.sheep['ia_r2_ik4g3'],'offs',b0_pos, left_pos2=i_pos,right_pos2=b0_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)  #add axis between g and b0 and b0 and i
@@ -508,9 +508,9 @@ def generator(params,r_vals,ev,plots = False):
 
     ##std feed options
     feedsupply_options_r1j0p = pinp.feedsupply['i_feedsupply_options_r1pj0'][...,0:len_p].astype(np.float) #slice off extra p periods so it is the same length as the sim periods
-    ##feed supply variation
+    ##feed supply adjustment
     feedsupply_adj_options_r2p = pinp.feedsupply['i_feedsupply_adj_options_r2p'][:,0:len_p].astype(np.float) #slice off extra p periods so it is the same length as the sim periods
-    ##an association between the k2 cluster (feed variation) and reproductive management (scanning, gbal & weaning).
+    ##an association between the k2 cluster (feed adjustment) and reproductive management (scanning, gbal & weaning).
     a_k2_mlsb1 = sinp.stock['ia_k2_mlsb1']
 
     ############
@@ -1740,7 +1740,7 @@ def generator(params,r_vals,ev,plots = False):
     ############################
     ##r1 & r2 are the axes for the inputs that are the options of different feed supply.
     # r1 is the choices for the full year feed supply for the undifferentiated animal.
-    # r2 is the variation for different classes or different management.
+    # r2 is the adjustment for different classes or different management.
 
     ##1)	Compile the standard pattern from the inputs and handle the z axis (need to apply z treatment here because a_r_zida0e0b0xyg0 didn't get the season treatment)
     ###sire
@@ -1778,7 +1778,7 @@ def generator(params,r_vals,ev,plots = False):
     gbal_pa1e1b1nwzida0e0b0xyg1 = (gbal_pa1e1b1nwzida0e0b0xyg1 -1 ) * (a_t_pa1e1b1nwzida0e0b0xyg1 >= 2) * pinp.sheep['i_dam_lsln_diffman_t'][2] + 1  #minus 1 then plus 1 ensures that the wean option before lactation is 1
     wean_pa1e1b1nwzida0e0b0xyg1 = (wean_pa1e1b1nwzida0e0b0xyg1 -1 ) * (a_t_pa1e1b1nwzida0e0b0xyg1 >= 3) * pinp.sheep['i_dam_lsln_diffman_t'][3] + 1  #minus 1 then plus 1 ensures that the wean option before weaning is 1
 
-    ##3) calculate the feedsupply variation OPTION for each sheep class
+    ##3) calculate the feedsupply adjustment OPTION for each sheep class
     ###a)wean
     a_k0_pa1e1b1nwzida0e0b0xyg1 = period_between_weanprejoin_pa1e1b1nwzida0e0b0xyg1 * pinp.sheep['i_dam_wean_diffman'] * fun.f_expand(np.arange(len_a1)+1, a1_pos) #len_a+1 because that is the association between k0 and a1
     a_r2_wean_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(a_r2_k0e1b1nwzida0e0b0xyg1[na,...], a_k0_pa1e1b1nwzida0e0b0xyg1, a1_pos)
@@ -1788,11 +1788,11 @@ def generator(params,r_vals,ev,plots = False):
     # a_r2_oestrus_pa1e1b1nwzida0e0b0xyg1 =
 
     ###c)lsln
-    ####a_k2_mlsb1 states the feedsupply variation option for each LSLN cluster based on selected management. In this step we slice a_k2_mlsb1 for the selected management in each period.
+    ####a_k2_mlsb1 states the feedsupply adjustment option for each LSLN cluster based on selected management. In this step we slice a_k2_mlsb1 for the selected management in each period.
     a_k2_pa1e1b1nwzida0e0b0xyg1 = np.rollaxis(a_k2_mlsb1[wean_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], gbal_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], scan_management_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], ...],-1,3) #remove the singleton b1 axis from the association arrays because a populated b1 axis comes from a_k2_mlsb1
-    ####slice scan axis - required becasue feedsupply variation may differ for each scan option (scanning option can effect optimal fs pattern before scanning)
+    ####slice scan axis - required because feedsupply adjustment may differ for each scan option (scanning option can effect optimal fs pattern before scanning)
     a_r2_pk0k1k2nwzida0e0b0xyg1 = np.take_along_axis(a_r2_spk0k1k2nwzida0e0b0xyg1, scan_management_pa1e1b1nwzida0e0b0xyg1[na,...], axis=0)[0] #slice scan axis then remove the singleton
-    ####select feedsupply variation option for each b slice.
+    ####select feedsupply adjustment option for each b slice based on the 'k2 input cluster' association.
     a_r2_lsln_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(a_r2_pk0k1k2nwzida0e0b0xyg1, a_k2_pa1e1b1nwzida0e0b0xyg1, b1_pos)
 
     ###d) todo come back to offs (remember gender needs to be masked)
@@ -1802,7 +1802,7 @@ def generator(params,r_vals,ev,plots = False):
     # t_fs_gender_pj0zida0e0b0xg3 = t_fs_gender_pj0zik3k0k4k5g3
 
 
-    ##3) calculate the feedsupply variation for each sheep class
+    ##3) calculate the feedsupply adjustment for each sheep class
     feedsupply_adj_options_r2pa1e1b1nwzida0e0b0xyg1 = fun.f_expand(feedsupply_adj_options_r2p,p_pos) #add other axis as singleton
     ###a)wean
     t_fs_ageweaned_pa1e1b1j0wzida0e0b0xyg1 = np.take_along_axis(feedsupply_adj_options_r2pa1e1b1nwzida0e0b0xyg1, a_r2_wean_pa1e1b1nwzida0e0b0xyg1[na,...], axis=0)[0] #[0] to remove the singleton
@@ -1818,7 +1818,7 @@ def generator(params,r_vals,ev,plots = False):
 
 
 
-    ##4) add variation to std pattern (the variation is added to the standard and the minimum and the maximum
+    ##4) add adjustment to std pattern (the adjustment is added to the standard and the minimum and the maximum)
     t_feedsupply_pa1e1b1j0wzida0e0b0xyg1 = (t_feedsupply_pa1e1b1j0wzida0e0b0xyg1 + t_fs_ageweaned_pa1e1b1j0wzida0e0b0xyg1 + t_fs_lsln_pa1e1b1j0wzida0e0b0xyg1) #can't use += for some reason
     # t_feedsupply_pa1e1b1j0wzida0e0b0xyg3 = (t_feedsupply_pa1e1b1j0wzida0e0b0xyg3 + t_fs_agedam_pj0zida0e0b0xg3
     #                                             + t_fs_ageweaned_pj0zida0e0b0xg3 + t_fs_gender_pj0zida0e0b0xg3)
@@ -6996,12 +6996,12 @@ def generator(params,r_vals,ev,plots = False):
     prop_dams_mated_vg1 = prop_dams_mated_va1e1b1nwzida0e0b0xyg1.ravel()
     params['p_prop_dams_mated'] = dict(zip(tup_vg1, prop_dams_mated_vg1))
 
-    ##proportion of dry dams as a propn of preg dams at shearing sale. This is different to the propn in the dry report becasue it is the propn at a given time rather than per animal at the beginning of mating.
+    ##proportion of dry dams as a propn of preg dams at shearing sale. This is different to the propn in the dry report because it is the propn at a given time rather than per animal at the beginning of mating.
     # This is used to force retention of drys at the main (t[0]) sale time. You can only sell drys if you sell non-drys. This param indicates the propn of dry that can be sold per non-dry dam.
     propn_drys_pg1 = fun.f_divide(np.sum(o_numbers_end_pdams*n_drys_b1g1, axis=(e1_pos,b1_pos), keepdims=True),
                               np.sum(o_numbers_end_pdams * (nyatf_b1nwzida0e0b0xyg>0),axis=(e1_pos,b1_pos), keepdims=True))
     propn_drys_vg1 = sfun.f_p2v(propn_drys_pg1, a_v_pa1e1b1nwzida0e0b0xyg1,
-                                period_is_tp=period_is_sale_t0_pa1e1b1nwzida0e0b0xyg1[:,:,0:1,...]) #only interested in the shearing sale, take e[0] it is the same as e[1] so dont need it.
+                                period_is_tp=period_is_sale_t0_pa1e1b1nwzida0e0b0xyg1[:,:,0:1,...]) #only interested in the shearing sale, take e[0] it is the same as e[1] so don't need it.
     # propn_drys_vg1 = np.max(propn_drys_vg1, axis=) #get the max propn of drys along select axes to reduce size. Needs to be max so that all drys can be s
     arrays = [keys_v1, keys_a, keys_n1, keys_lw1, keys_i, keys_y1, keys_g1]
     index_vanwiyg1 = fun.cartesian_product_simple_transpose(arrays)

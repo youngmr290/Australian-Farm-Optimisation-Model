@@ -90,7 +90,7 @@ saa['husb_labour_l2h2'] = np.zeros(uinp.sheep['i_husb_operations_labourreq_l2h2'
 saa['r1_izg1'] = np.zeros(pinp.sheep['ia_r1_zig1'].shape, dtype=int)   #SA to change the base feed option selected for dams
 saa['r1_izg3'] = np.zeros(pinp.sheep['ia_r1_zig3'].shape, dtype=int)   #SA to change the base feed option selected for offspring
 saa['feedsupply_r1jp'] = np.zeros(pinp.feedsupply['i_feedsupply_options_r1pj0'].shape, dtype=np.float64)  #SA value for feedsupply.
-saa['feedsupply_adj_r2p'] = np.zeros(pinp.feedsupply['i_feedsupply_adj_options_r2p'].shape, dtype=np.float64)  #SA value for feedsupply variation.
+saa['feedsupply_adj_r2p'] = np.zeros(pinp.feedsupply['i_feedsupply_adj_options_r2p'].shape, dtype=np.float64)  #SA value for feedsupply adjustment.
 
 ##stock parameters
 saa['sfd_c2'] = 0.0                     #std fibre diameter genotype params
@@ -187,7 +187,7 @@ sav['fvp_is_dvp_dams'] = np.full(sinp.structuralsa['i_dvp_mask_f1'].shape, '-', 
 sav['mask_fvp_offs'] = np.full(sinp.structuralsa['i_fvp_mask_offs'].shape, '-', dtype=object)      #SA to mask changeable fvps.
 sav['fvp_is_dvp_offs'] = np.full(sinp.structuralsa['i_fvp_mask_offs'].shape, '-', dtype=object)      #SA to control if changeable fvp is a dvp.
 sav['r1_izg1'] = np.full(pinp.sheep['ia_r1_zig1'].shape, '-', dtype=object)   #SA to change the base feed option selected for dams
-sav['r2_isk2g1'] = np.full(pinp.sheep['ia_r2_sk2ig1'].shape, '-', dtype=object)   #SA to Change the selected feed variations selected for the k2 axis (LSLN) for dams
+sav['r2_isk2g1'] = np.full(pinp.sheep['ia_r2_sk2ig1'].shape, '-', dtype=object)   #SA to Change the selected feed adjustments selected for the k2 axis (LSLN) for dams
 sav['r1_izg3'] = np.full(pinp.sheep['ia_r1_zig3'].shape, '-', dtype=object)   #SA to change the base feed option selected for offspring
 
 ##stock parameters

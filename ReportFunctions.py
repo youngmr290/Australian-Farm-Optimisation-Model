@@ -141,7 +141,7 @@ def f_errors(trial_outdated, trials):
             pass
         else:
             print('''WARNING: Trials for reporting don't all exist''')
-            trials = trials[trials!=trial_name] #remove trials that dont exist from the list of trials to run.
+            trials = trials[trials!=trial_name] #remove trials that don't exist from the list of trials to run.
             non_exist_trials.append(trial_name)
 
     ##third check if generating results using out of date data.

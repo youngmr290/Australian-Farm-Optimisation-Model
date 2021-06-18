@@ -172,7 +172,7 @@ for row in range(len(exp_data)):
     if run_pyomo:
         ##call pyomo model function, must call them in the correct order (core must be last)
         pyomocalc_start = time.time()
-        model = pe.ConcreteModel() #create pyomo model - done each loop becasue memory was being leaked when just deleting and re adding the components.
+        model = pe.ConcreteModel() #create pyomo model - done each loop because memory was being leaked when just deleting and re adding the components.
         crtmod.sets(model) #certain sets have to be updated each iteration of exp
         rotpy.rotationpyomo(params['rot'], model)
         crppy.croppyomo_local(params['crop'], model)

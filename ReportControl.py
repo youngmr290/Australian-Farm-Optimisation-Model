@@ -68,7 +68,7 @@ report_run = report_run.to_frame()
 report_run = report_run.droplevel(1, axis=1)
 
 #todo Reports to add:
-# 1. report which idenfifies which sale grid sheep go into. Mybe this can be done using arg sorted on the saleprice array (last step of the sale value function).
+# 1. report which identifies which sale grid sheep go into. Maybe this can be done using arg sorted on the saleprice array (last step of the sale value function).
 
 def f_report(processor, trials, non_exist_trials):
     '''Function to wrap ReportControl.py so that multiprocessing can be used.'''
@@ -1124,7 +1124,7 @@ if __name__ == '__main__':
             bool)]  # this is slightly complicated because blank rows in exp.xl result in nan, so nan must be converted to 0.
 
     ##check the trials you want to run exist and are up to date - if trial doesnt exist it is removed from trials to
-    # report array so that the others can still be run. A list of trials that dont exist is the 'non_exist' sheet in report excel.
+    # report array so that the others can still be run. A list of trials that don't exist is the 'non_exist' sheet in report excel.
     trials, non_exist_trials = rep.f_errors(trial_outdated,trials)
 
     ##clear the old report.xlsx

@@ -189,7 +189,7 @@ def universal_inp_sa():
     ##have to import it here since sen.py imports this module
     import Sensitivity as sen 
 
-    ##reset inputs to base at the start of each trial before applying SA  - old method was to update the SA based on the _inp dict but that doesnt work well when multiple SA on the same variale.
+    ##reset inputs to base at the start of each trial before applying SA  - old method was to update the SA based on the _inp dict but that doesnt work well when multiple SA on the same variable.
     fun.f_dict_reset(price, price_inp)
     fun.f_dict_reset(finance, finance_inp)
     fun.f_dict_reset(mach_general, mach_general_inp)
