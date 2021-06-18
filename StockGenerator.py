@@ -1778,38 +1778,45 @@ def generator(params,r_vals,ev,plots = False):
     gbal_pa1e1b1nwzida0e0b0xyg1 = (gbal_pa1e1b1nwzida0e0b0xyg1 -1 ) * (a_t_pa1e1b1nwzida0e0b0xyg1 >= 2) * pinp.sheep['i_dam_lsln_diffman_t'][2] + 1  #minus 1 then plus 1 ensures that the wean option before lactation is 1
     wean_pa1e1b1nwzida0e0b0xyg1 = (wean_pa1e1b1nwzida0e0b0xyg1 -1 ) * (a_t_pa1e1b1nwzida0e0b0xyg1 >= 3) * pinp.sheep['i_dam_lsln_diffman_t'][3] + 1  #minus 1 then plus 1 ensures that the wean option before weaning is 1
 
-    ##3) calculate the feedsupply variation for each sheep class
-    ###a) just for lsln - select which lsln variation is used based on scanning option (scanning option can effect optimal fs pattern before scanning)
-    a_r2_pk0k1k2nwzida0e0b0xyg1 = np.take_along_axis(a_r2_spk0k1k2nwzida0e0b0xyg1, scan_management_pa1e1b1nwzida0e0b0xyg1[na,...], axis=0)[0] #slice scan axis then remove the singleton
-    feedsupply_adj_options_r2pk0k1k2nwzida0e0b0xyg1 = fun.f_expand(feedsupply_adj_options_r2p,p_pos) #add other axis as singleton
-    ###b) calculate the feedsupply variation for each sheep class
-    t_fs_ageweaned_pk0k1k2j0wzida0e0b0xyg1 = np.rollaxis(feedsupply_adj_options_r2p[a_r2_k0e1b1nwzida0e0b0xyg1],-1,0)
-    t_fs_cycle_pk0k1k2j0wzida0e0b0xyg1 = np.expand_dims(np.rollaxis(feedsupply_adj_options_r2p[a_r2_k1b1nwzida0e0b0xyg1],-1,0), axis = tuple(range(p_pos+1,e1_pos))) #add k0
-    t_fs_lsln_pk0k1k2j0wzida0e0b0xyg1 = np.take_along_axis(feedsupply_adj_options_r2pk0k1k2nwzida0e0b0xyg1, a_r2_pk0k1k2nwzida0e0b0xyg1[na,...], axis=0)[0] #[0] to remove the singleton
-    t_fs_agedam_pa1e1b1j0wzik3a0e0b0xyg3 = np.expand_dims(np.rollaxis(feedsupply_adj_options_r2p[a_r2_ik3a0e0b0xyg3],-1,0), axis = tuple(range(p_pos+1,i_pos))) #add from i to p
-    t_fs_ageweaned_pa1e1b1j0wzidk0e0b0xyg3 = np.expand_dims(np.rollaxis(feedsupply_adj_options_r2p[a_r2_idk0e0b0xyg3],-1,0), axis = tuple(range(p_pos+1,i_pos))) #add from i to p
-    t_fs_btrt_a1e1b1j0wzida0e0k4xyg3 = np.expand_dims(np.rollaxis(feedsupply_adj_options_r2p[a_r2_ida0e0k4xyg3],-1,0), axis = tuple(range(p_pos+1,i_pos))) #add from i to p
-    t_fs_gender_pa1e1b1j0wzida0e0b0k5yg3 = np.expand_dims(np.rollaxis(feedsupply_adj_options_r2p[a_r2_ida0e0b0k5yg3],-1,0), axis = tuple(range(p_pos+1,i_pos))) #add from i to p
-
-    ##4)Adjust the fs variation based on the animal management in current trial (eg if you are not identifying or managing sheep differently then all sheep must get same fs)
-    ###a) weaning age variation
+    ##3) calculate the feedsupply variation OPTION for each sheep class
+    ###a)wean
     a_k0_pa1e1b1nwzida0e0b0xyg1 = period_between_weanprejoin_pa1e1b1nwzida0e0b0xyg1 * pinp.sheep['i_dam_wean_diffman'] * fun.f_expand(np.arange(len_a1)+1, a1_pos) #len_a+1 because that is the association between k0 and a1
-    t_fs_ageweaned_pa1e1b1j0wzida0e0b0xyg1 = np.take_along_axis(t_fs_ageweaned_pk0k1k2j0wzida0e0b0xyg1, a_k0_pa1e1b1nwzida0e0b0xyg1, 1)
+    a_r2_wean_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(a_r2_k0e1b1nwzida0e0b0xyg1[na,...], a_k0_pa1e1b1nwzida0e0b0xyg1, a1_pos)
 
     ###b)b.	Dams Cluster k1 – oestrus cycle (e1): The association required is
     #^Have decided to drop this out of version 1. Will require multiple nutrition patterns in order to test value of scanning for foetal age
+    # a_r2_oestrus_pa1e1b1nwzida0e0b0xyg1 =
 
-    ###c)Dams Cluster k2 – BTRT (b1)
-    ####a_k2_mlsb1 states the feed variation slice for different management. In this step we slice a_k2_mlsb1 for the selected management in each period.
+    ###c)lsln
+    ####a_k2_mlsb1 states the feedsupply variation option for each LSLN cluster based on selected management. In this step we slice a_k2_mlsb1 for the selected management in each period.
     a_k2_pa1e1b1nwzida0e0b0xyg1 = np.rollaxis(a_k2_mlsb1[wean_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], gbal_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], scan_management_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], ...],-1,3) #remove the singleton b1 axis from the association arrays because a populated b1 axis comes from a_k2_mlsb1
-    ####select feed variation pattern based on the k2 clustering in each period.
-    t_fs_lsln_pa1e1b1j0wzida0e0b0xyg1 = np.take_along_axis(t_fs_lsln_pk0k1k2j0wzida0e0b0xyg1, a_k2_pa1e1b1nwzida0e0b0xyg1, b1_pos)
+    ####slice scan axis - required becasue feedsupply variation may differ for each scan option (scanning option can effect optimal fs pattern before scanning)
+    a_r2_pk0k1k2nwzida0e0b0xyg1 = np.take_along_axis(a_r2_spk0k1k2nwzida0e0b0xyg1, scan_management_pa1e1b1nwzida0e0b0xyg1[na,...], axis=0)[0] #slice scan axis then remove the singleton
+    ####select feedsupply variation option for each b slice.
+    a_r2_lsln_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(a_r2_pk0k1k2nwzida0e0b0xyg1, a_k2_pa1e1b1nwzida0e0b0xyg1, b1_pos)
 
     ###d) todo come back to offs (remember gender needs to be masked)
     # t_fs_agedam_pj0zida0e0b0xg3 = t_fs_agedam_pj0zik3k0k4k5g3
     # t_fs_ageweaned_pj0zida0e0b0xg3 = t_fs_ageweaned_pj0zik3k0k4k5g3
     # t_fs_btrt_pj0zida0e0b0xg3 = t_fs_btrt_pj0zik3k0k4k5g3
     # t_fs_gender_pj0zida0e0b0xg3 = t_fs_gender_pj0zik3k0k4k5g3
+
+
+    ##3) calculate the feedsupply variation for each sheep class
+    feedsupply_adj_options_r2pa1e1b1nwzida0e0b0xyg1 = fun.f_expand(feedsupply_adj_options_r2p,p_pos) #add other axis as singleton
+    ###a)wean
+    t_fs_ageweaned_pa1e1b1j0wzida0e0b0xyg1 = np.take_along_axis(feedsupply_adj_options_r2pa1e1b1nwzida0e0b0xyg1, a_r2_wean_pa1e1b1nwzida0e0b0xyg1[na,...], axis=0)[0] #[0] to remove the singleton
+    ###b)oestrus
+    # t_fs_cycle_pa1e1b1j0wzida0e0b0xyg1 = np.take_along_axis(feedsupply_adj_options_r2pa1e1b1nwzida0e0b0xyg1, a_r2_oestrus_pa1e1b1nwzida0e0b0xyg1[na,...], axis=0)[0] #[0] to remove the singleton
+    ###c)lsln
+    t_fs_lsln_pa1e1b1j0wzida0e0b0xyg1 = np.take_along_axis(feedsupply_adj_options_r2pa1e1b1nwzida0e0b0xyg1, a_r2_lsln_pa1e1b1nwzida0e0b0xyg1[na,...], axis=0)[0] #[0] to remove the singleton
+
+    # t_fs_agedam_pa1e1b1j0wzik3a0e0b0xyg3 =
+    # t_fs_ageweaned_pa1e1b1j0wzidk0e0b0xyg3 =
+    # t_fs_btrt_a1e1b1j0wzida0e0k4xyg3 =
+    # t_fs_gender_pa1e1b1j0wzida0e0b0k5yg3 =
+
+
 
     ##4) add variation to std pattern (the variation is added to the standard and the minimum and the maximum
     t_feedsupply_pa1e1b1j0wzida0e0b0xyg1 = (t_feedsupply_pa1e1b1j0wzida0e0b0xyg1 + t_fs_ageweaned_pa1e1b1j0wzida0e0b0xyg1 + t_fs_lsln_pa1e1b1j0wzida0e0b0xyg1) #can't use += for some reason
