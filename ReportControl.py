@@ -901,6 +901,7 @@ def f_report(processor, trials, non_exist_trials):
             stacked_drydmd = stacked_drydmd.append(drydmd)
 
         if report_run.loc['run_dryfoo', 'Run']:
+            #todo this report throws error when combining multiple excel... why??
             #returns average FOO during each FP (regardless of whether selected or not)
             type = 'pas'
             prod = 'dry_foo_dfzt'
