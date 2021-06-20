@@ -68,7 +68,14 @@ def boundarypyomo_local(params, model):
             ###build array
             rot_lobound_rl = np.zeros((len(model.s_phases), len(model.s_lmus)))
             ###set the bound
-            rot_lobound_rl[0,2] = 150
+            rot_lobound_rl[0,0] = 150
+            rot_lobound_rl[0,2] = 13
+            rot_lobound_rl[2,1] = 570
+            rot_lobound_rl[2,2] = 20
+            rot_lobound_rl[9,1] = 11
+            rot_lobound_rl[9,2] = 87
+            rot_lobound_rl[15,1] = 11
+            rot_lobound_rl[15,2] = 87
             ###ravel and zip bound and dict
             rot_lobound = rot_lobound_rl.ravel()
             tup_rl = tuple(map(tuple, index_rl))
@@ -83,29 +90,32 @@ def boundarypyomo_local(params, model):
         ###build bound if turned on
         if dams_lobound_inc:
             ###keys to build arrays for the specified slices
-            arrays = [model.s_sale_dams, model.s_dvp_dams, model.s_groups_dams]   #more sets can be added here to customise the bound
-            index_tvg = fun.cartesian_product_simple_transpose(arrays)
+            arrays = [model.s_sale_dams, model.s_dvp_dams, model.s_lw_dams, model.s_groups_dams]   #more sets can be added here to customise the bound
+            index_tvwg = fun.cartesian_product_simple_transpose(arrays)
             ###build array for the axes of the specified slices
-            dams_lowbound_tvg = np.zeros((len(model.s_sale_dams), len(model.s_dvp_dams), len(model.s_groups_dams)))
+            dams_lowbound_tvwg = np.zeros((len(model.s_sale_dams), len(model.s_dvp_dams), len(model.s_lw_dams), len(model.s_groups_dams)))
             ###set the bound
-            dams_lowbound_tvg[-1, 4:14,-1] = 50  #min of 50 bbt in t3
+            dams_lowbound_tvwg[-1, 4:14, :, -1] = 50  #min of 50 bbt in t3
+            # dams_lowbound_tvwg[-1, 0,0,0] = 940.67  #min of 50 bbt in t3
+            # dams_lowbound_tvwg[-1, 0,1,0] = 572.09  #min of 50 bbt in t3
+            # dams_lowbound_tvwg[-1, 0,2,0] = 13.001  #min of 50 bbt in t3
             ###ravel and zip bound and dict
-            dams_lowbound = dams_lowbound_tvg.ravel()
-            tup_tvg = tuple(map(tuple, index_tvg))
-            dams_lowbound = dict(zip(tup_tvg, dams_lowbound))
+            dams_lowbound = dams_lowbound_tvwg.ravel()
+            tup_tvwg = tuple(map(tuple, index_tvwg))
+            dams_lowbound = dict(zip(tup_tvwg, dams_lowbound))
 
             ###constraint
-            def dam_lo_bound(model,t, v,g1):
+            def dam_lo_bound(model,t, v,w8, g1):
                 if all(model.p_mask_dams[k2,t,v,w8, g1] == 0
-                       for k2 in model.s_k2_birth_dams for w8 in model.s_lw_dams):
+                       for k2 in model.s_k2_birth_dams):
                     return pe.Constraint.Skip
                 else:
                     return sum(model.v_dams[k2,t,v,a,n,w8,i,y,g1] for k2 in model.s_k2_birth_dams
-                               for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
+                               for a in model.s_wean_times for n in model.s_nut_dams
                                for i in model.s_tol for y in model.s_gen_merit_dams
                                if pe.value(model.p_mask_dams[k2,t,v,w8,g1]) == 1) \
-                           >= dams_lowbound[t, v,g1]
-            model.con_dam_lobound = pe.Constraint(model.s_sale_dams, model.s_dvp_dams, model.s_groups_dams, rule=dam_lo_bound,
+                           >= dams_lowbound[t, v,w8,g1]
+            model.con_dam_lobound = pe.Constraint(model.s_sale_dams, model.s_dvp_dams, model.s_lw_dams, model.s_groups_dams, rule=dam_lo_bound,
                                                     doc='min number of dams')
 
         ##dams upper bound - specified by k2 & v and totalled across other axes
