@@ -1817,16 +1817,6 @@ def f_fat_score(rc, cu0):
     return np.maximum(1, 3 + (rc - 1) / cu0[1, ...]) #FS 1 is the lowest possible measurement. FS1 is between 0 and 5mm of tissue at the GR site.
 
 
-def f_norm_cdf(x, mu, cv):
-    ##sd - standard deviation - maximum to stop div0 errors in next step.
-    sd = mu * cv
-    ##standardise x. f_divide in case SD is 0 (either mu is 0 or CV is 0)
-    xstd = fun.f_divide(x - mu,  sd)
-    ##probability (<=x)
-    prob = 1 / (np.exp(-358 / 23 * xstd + 111 * np.arctan(37 / 294 * xstd)) + 1)
-    return prob
-
-
 def f_saleprice(score_pricescalar_s7s5s6, weight_pricescalar_s7s5s6, dtype=None):
     ##Sale price percentile to use (adjusted by sav)
     salep_percentile = uinp.sheep['i_salep_percentile']
@@ -1858,11 +1848,11 @@ def f_salep_mob(weight_s7pg, scores_s7s6pg, cvlw_s7s5pg, cvscore_s7s6pg,
     for s7 in range(weight_s7pg.shape[0]):
         ## Probability for each lw step in grid based on the mob average weight and the coefficient of variation (CV) of weight
         ### probability of being less than the upper value of the step (roll) - probability of less than the lower value of the step
-        prob_lw_s5pg = np.maximum(0, f_norm_cdf(np.roll(grid_weightrange_s7s5pg[s7,...], -1, axis = 0), weight_s7pg[s7,...], cvlw_s7s5pg[s7,...])
-                              - f_norm_cdf(grid_weightrange_s7s5pg[s7,...], weight_s7pg[s7,...], cvlw_s7s5pg[s7,...]))
+        prob_lw_s5pg = np.maximum(0, fun.f_norm_cdf(np.roll(grid_weightrange_s7s5pg[s7,...], -1, axis = 0), weight_s7pg[s7,...], cvlw_s7s5pg[s7,...])
+                              - fun.f_norm_cdf(grid_weightrange_s7s5pg[s7,...], weight_s7pg[s7,...], cvlw_s7s5pg[s7,...]))
         ## Probability for each score step in grid (fat score/CS) based on the mob average score and the CV of quality score
-        prob_score_s6pg = np.maximum(0, f_norm_cdf(np.roll(grid_scorerange_s7s6p5g[s7,...], -1, axis = 0), scores_s7s6pg[s7,...], cvscore_s7s6pg[s7,...])
-                                 - f_norm_cdf(grid_scorerange_s7s6p5g[s7,...], scores_s7s6pg[s7,...], cvscore_s7s6pg[s7,...]))
+        prob_score_s6pg = np.maximum(0, fun.f_norm_cdf(np.roll(grid_scorerange_s7s6p5g[s7,...], -1, axis = 0), scores_s7s6pg[s7,...], cvscore_s7s6pg[s7,...])
+                                 - fun.f_norm_cdf(grid_scorerange_s7s6p5g[s7,...], scores_s7s6pg[s7,...], cvscore_s7s6pg[s7,...]))
         ##Probability for each cell of grid (assuming that weight & score are independent allows multiplying weight and score probabilities)
         prob_grid_s5s6pg = prob_lw_s5pg[:,na, ...] * prob_score_s6pg
 
