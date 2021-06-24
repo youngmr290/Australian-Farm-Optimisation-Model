@@ -7270,31 +7270,27 @@ def generator(params,r_vals,ev,plots = False):
 
     ###numbers weights for reports with arrays that keep axis that are not present in lp array.
     if pinp.rep['i_store_lw_rep'] or pinp.rep['i_store_ffcfw_rep'] or pinp.rep['i_store_fec_rep']:
-        ###weights the numerator to account for on hand
-        r_vals['on_hand_tpa1e1b1nw8ziyg1'] = on_hand_tpa1e1b1nwzida0e0b0xyg1.squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos))
-        r_vals['on_hand_tpnw8zida0e0b0xyg3'] = on_hand_tpa1e1b1nwzida0e0b0xyg3.squeeze(axis=(a1_pos, e1_pos, b1_pos))
 
-        ###weights the denominator - required for reports when p, e and b are added and weighted average is taken (otherwise broadcasting the variable activity to the new axis causes error)
+        ###weights the denominator and numerator - required for reports when p, e and b are added and weighted average is taken (otherwise broadcasting the variable activity to the new axis causes error in result)
         ###If these arrays get too big might have to add a second denom weight in reporting.
         r_vals['pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1'] = ((a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
                                                              *(a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...])
                                                              * on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...]
+                                                             * o_numbers_start_pdams
                                                              ).squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos))
         ###for yatf a b1 weighting must be given
         r_vals['pe1b1_nyatf_numbers_weights_k2tvpa1e1b1nw8zixyg1'] = ((a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
                                                              *(a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...])
                                                              * on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...]
-                                                             * nyatf_b1nwzida0e0b0xyg
+                                                             * o_numbers_start_pyatf
                                                              ).squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos))
-        r_vals['nyatf_b1nwzixyg'] = nyatf_b1nwzida0e0b0xyg.squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos))
 
         r_vals['pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3'] = ((a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
                                                                     * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
                                                                     * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...])
                                                                     * on_hand_tpa1e1b1nwzida0e0b0xyg3[:,na,...]
+                                                                    * o_numbers_start_poffs
                                                                     ).squeeze(axis=(a1_pos, e1_pos, b1_pos))
-
-    # r_vals['e1b1_denom_weights_k2tva1e1b1nw8ziyg1'] = (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1).squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos))
 
         # r_vals['de0b0_denom_weights_k3k5tvnw8zida0e0b0xyg3'] = ((a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)
         #                                                     *(a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)).squeeze(axis=(a1_pos, e1_pos, b1_pos))
