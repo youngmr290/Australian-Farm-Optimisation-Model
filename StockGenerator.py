@@ -7112,7 +7112,7 @@ def generator(params,r_vals,ev,plots = False):
                                               , keys_z, keys_i, keys_x, keys_y1, keys_g1]
 
     r_vals['prog_keys_k5twzida0xg2'] = [keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i, keys_d, keys_a, keys_x, keys_g2]
-    r_vals['prog_keys_zia0xg2w9'] = [keys_z, keys_i, keys_a, keys_x, keys_g2, keys_lw_prog]
+    r_vals['prog_keys_k5twzida0e0b0xg2'] = [keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i, keys_d, keys_a, keys_e0, keys_b0, keys_x, keys_g2]
 
     r_vals['offs_keys_k3k5tvnwziaxyg3'] = [keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i,
                                                keys_a, keys_x, keys_y3, keys_g3]
@@ -7145,6 +7145,7 @@ def generator(params,r_vals,ev,plots = False):
     pzg0_shape = len_p, len_z, len_g0
     k2vpa1e1b1nwziyg1_shape = len_k2, len_v1, len_p, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
     k2vpa1e1b1nwzixyg1_shape = len_k2, len_v1, len_p, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_x, len_y1, len_g1
+    k5wzida0e0b0xyg2_shape = len_k5, len_w_prog, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x,len_y2,  len_g2
     k3k5vpnwzidae0b0xyg3_shape = len_k3, len_k5, len_v3, len_p3, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3
 
     ####ktvp
@@ -7295,8 +7296,11 @@ def generator(params,r_vals,ev,plots = False):
 
     # r_vals['e1b1_denom_weights_k2tva1e1b1nw8ziyg1'] = (a_k2cluster_va1e1b1nwzida0e0b0xyg1 == index_k2tva1e1b1nwzida0e0b0xyg1).squeeze(axis=(d_pos, a0_pos, e0_pos, b0_pos, x_pos))
 
-    # r_vals['de0b0_denom_weights_k3k5tvnw8zida0e0b0xyg3'] = ((a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)
-    #                                                     *(a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)).squeeze(axis=(a1_pos, e1_pos, b1_pos))
+        # r_vals['de0b0_denom_weights_k3k5tvnw8zida0e0b0xyg3'] = ((a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)
+        #                                                     *(a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)).squeeze(axis=(a1_pos, e1_pos, b1_pos))
+        r_vals['e0b0_denom_weights_prog_k5tw8zida0e0b0xyg3'] = ((a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3) #todo cluster d
+                                                                 * numbers_start_d_prog_a0e0b0_a1e1b1nwzida0e0b0xyg2
+                                                                ).squeeze(axis=(p_pos, a1_pos, e1_pos, b1_pos, n_pos))
 
     ###lw - with p, e, b
     if pinp.rep['i_store_lw_rep']:
@@ -7309,7 +7313,7 @@ def generator(params,r_vals,ev,plots = False):
         r_vals['ffcfw_sire_pzg0'] = r_ffcfw_sire_psire.reshape(pzg0_shape)
         r_vals['ffcfw_dams_k2vpa1e1b1nw8ziyg1'] = r_ffcfw_dams_k2tvpdams.reshape(k2vpa1e1b1nwziyg1_shape)
         r_vals['ffcfw_yatf_k2vpa1e1b1nw8zixyg1'] = r_ffcfw_yatf_k2tvpyatf.reshape(k2vpa1e1b1nwzixyg1_shape)
-        r_vals['ffcfw_prog_zia0xg2w9'] = ffcfw_prog_zia0xg2w9 #no e, b, p axis
+        r_vals['ffcfw_prog_k5wzida0e0b0xyg2'] = r_ffcfw_prog_k5tva1e1b1nwzida0e0b0xyg3.reshape(k5wzida0e0b0xyg2_shape) #no p axis
         r_vals['ffcfw_offs_k3k5vpnw8zida0e0b0xyg3'] = r_ffcfw_offs_k3k5tvpoffs.reshape(k3k5vpnwzidae0b0xyg3_shape)
 
     ###fec - with p, e, b

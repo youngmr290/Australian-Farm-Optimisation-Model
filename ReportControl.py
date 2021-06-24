@@ -439,16 +439,22 @@ def f_report(processor, trials, non_exist_trials):
 
         if report_run.loc['run_ffcfw_prog', 'Run']:
             type = 'stock'
-            prod = 'ffcfw_prog_zia0xg2w9'
-            weights = 1
-            keys = 'prog_keys_zia0xg2w9'
-            arith = 0
-            index = [5]             #w9
-            cols = [0, 4, 3]  #z, g2, gender
+            prod = 'ffcfw_prog_k5wzida0e0b0xyg2'
+            na_prod = [1]
+            prod_weights = 'e0b0_denom_weights_prog_k5tw8zida0e0b0xyg3' #weight prod for propn of animals in e and b slice
+            weights = 'prog_numbers_k5twzida0xg2'
+            na_weights = [7,8,10] #e,b,y
+            den_weights = 'e0b0_denom_weights_prog_k5tw8zida0e0b0xyg3' #weight numbers for propn of animals in e and b slice
+            keys = 'prog_keys_k5twzida0e0b0xg2'
+            arith = 1
+            index = [2]             #w9
+            cols = [0,3,9,10]  #k2, z, gender, g2
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
-            ffcfw_prog = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights
-                                     , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+            ffcfw_prog = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod
+                                                     , prod_weights=prod_weights, weights=weights
+                                                     , na_weights=na_weights, den_weights=den_weights, keys=keys
+                                                     , arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             ffcfw_prog = pd.concat([ffcfw_prog],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_ffcfw_prog = stacked_ffcfw_prog.append(ffcfw_prog)
 
@@ -649,7 +655,7 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'prog_keys_k5twzida0xg2'
             arith = 2
             index =[2]
-            cols =[0, 1]
+            cols =[0, 1, 5, 7]
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             numbers_prog = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,
