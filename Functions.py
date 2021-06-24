@@ -439,7 +439,7 @@ def f_norm_cdf(x, mu, cv):
     ##sd - standard deviation - maximum to stop div0 errors in next step.
     sd = mu * cv
     ##standardise x. f_divide in case SD is 0 (either mu is 0 or CV is 0)
-    xstd = fun.f_divide(x - mu,  sd)
+    xstd = f_divide(x - mu,  sd)
     ##probability (<=x)
     prob = 1 / (np.exp(-358 / 23 * xstd + 111 * np.arctan(37 / 294 * xstd)) + 1)
     return prob
