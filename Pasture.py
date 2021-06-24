@@ -47,12 +47,10 @@ def f_pasture(params, r_vals, ev):
     ########################
     ##ev stuff             #
     ########################
-    confinement_inc = np.maximum(np.max(sinp.structuralsa['i_nut_spread_n1'][0:sinp.structuralsa['i_n1_len']]),
-                                 np.max(sinp.structuralsa['i_nut_spread_n3'][0:sinp.structuralsa['i_n3_len']])) > 3 #if fs>3 then need to include confinement feeding
-    ev_is_not_confinement_v = sinp.general['ev_is_not_confinement']
-    ev_mask_v = np.logical_or(ev_is_not_confinement_v, confinement_inc)
-    ev_is_not_confinement_v = ev_is_not_confinement_v[ev_mask_v]
-    len_v1 = np.count_nonzero(ev_is_not_confinement_v) #number of normal ev pools (doesnt including confinement)
+    len_ev = ev['len_ev']
+    ev_is_not_confinement_v = np.full(len_ev, True)
+    ev_is_not_confinement_v[-1] = np.logical_not(ev['confinement_inc']) #if confinment period is included the last fev pool is confinment.
+
     ########################
     ##phases               #
     ########################
@@ -72,7 +70,7 @@ def f_pasture(params, r_vals, ev):
     ##constants required   #
     ########################
     ## define some parameters required to size arrays.
-    n_feed_pools    = np.count_nonzero(ev_mask_v)
+    n_feed_pools    = len_ev
     n_dry_groups    = len(sinp.general['dry_groups'])           # Low & high quality groups for dry feed
     n_grazing_int   = len(sinp.general['grazing_int'])          # grazing intensity in the growth/grazing activities
     n_foo_levels    = len(sinp.general['foo_levels'])           # Low, medium & high FOO level in the growth/grazing activities
@@ -202,7 +200,7 @@ def f_pasture(params, r_vals, ev):
     ## create numpy index for param dicts ^creating indexes is a bit slow
     ### the array returned must be of type object, if string the dict keys become a numpy string and when indexed in pyomo it doesn't work.
     keys_d  = np.asarray(sinp.general['dry_groups'])
-    keys_v  = np.asarray(sinp.general['sheep_pools'][ev_mask_v])
+    keys_v  = np.array(['fev{0}' .format(i) for i in range(len_ev)])
     keys_f  = pinp.period['i_fp_idx']
     keys_g  = np.asarray(sinp.general['grazing_int'])
     keys_l  = np.array(pinp.general['lmu_area'].index[lmu_mask_l]).astype('str')    # lmu index description
@@ -588,10 +586,7 @@ def f_pasture(params, r_vals, ev):
 
     ## create numpy array of threshold values from the ev dictionary
     ### note: v in pasture is f in StockGen and f in pasture is p6 in StockGen
-    ev_cutoff_vfzt = np.swapaxes(ev['ev_cutoff_p6fz'][..., na], axis1=0, axis2=1)
-    ev_max_vfzt = ev['ev_max_p6z'][na,...,na]
-    ev = np.concatenate([ev_cutoff_vfzt, ev_max_vfzt], axis=0)
-    me_threshold_vfzt[0:len_v1, ...] = ev #assign to all slices except confinement (if it is active)
+    me_threshold_vfzt[...] = np.swapaxes(ev['fev_cutoff_ave_p6f'], axis1=0, axis2=1)[...,na,na]
     ### if the threshold is below the expected maintenance quality set to the maintenance quality
     ### switching from one below maintenance feed to another that is further below maintenance doesn't affect average efficiency
     me_threshold_vfzt[me_threshold_vfzt < i_fec_maintenance_t] = i_fec_maintenance_t

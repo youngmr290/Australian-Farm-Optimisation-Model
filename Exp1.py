@@ -169,9 +169,9 @@ def exp(row):  # called with command: pool.map(exp, dataset)
     labpy.lab_precalcs(params['lab'],r_vals['lab'])
     lcrppy.crplab_precalcs(params['crplab'],r_vals['crplab'])
     suppy.sup_precalcs(params['sup'],r_vals['sup'])
-    stubpy.stub_precalcs(params['stub'],r_vals['stub'])
     spy.stock_precalcs(params['stock'],r_vals['stock'],ev)
-    paspy.paspyomo_precalcs(params['pas'],r_vals['pas'],ev)
+    stubpy.stub_precalcs(params['stub'],r_vals['stub'], ev) #stub must be after stock because it uses ev dict which is populated in stock.py
+    paspy.paspyomo_precalcs(params['pas'],r_vals['pas'], ev) #pas must be after stock because it uses ev dict which is populated in stock.py
 
     ##does pyomo need to be run? In exp1 pyomo is always run because creating params file take up lots of time, RAM and disc space
     run_pyomo_params = True
@@ -181,7 +181,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
         ##call core model function, must call them in the correct order (core must be last)
         pyomocalc_start = time.time()
         model = pe.ConcreteModel() #create pyomo model - done each loop because memory was being leaked when just deleting and re adding the components.
-        crtmod.sets(model) #certain sets have to be updated each iteration of exp
+        crtmod.sets(model, ev) #certain sets have to be updated each iteration of exp
         rotpy.rotationpyomo(params['rot'], model)
         crppy.croppyomo_local(params['crop'], model)
         macpy.machpyomo_local(params['mach'], model)

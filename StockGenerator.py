@@ -210,16 +210,6 @@ def generator(params,r_vals,ev,plots = False):
     n_lw3_total = w_start_len3 * n_fs_offs ** (len(fvp_mask_offs))  # total lw if all dvps included
     len_nut_offs = (n_fs_offs ** n_fvp_periods_offs)
 
-    ########################
-    #ev masks and len      #
-    ########################
-    confinement_inc = np.maximum(np.max(sinp.structuralsa['i_nut_spread_n1'][0:n_fs_dams]),
-                                 np.max(sinp.structuralsa['i_nut_spread_n3'][0:n_fs_offs])) > 3 #if fs>3 then need to include confinement feeding
-    ev_is_not_confinement_f = sinp.general['ev_is_not_confinement']
-    ev_mask_f = np.logical_or(ev_is_not_confinement_f, confinement_inc)
-    ev_is_not_confinement_f = ev_is_not_confinement_f[ev_mask_f]
-    len_f = len(sinp.general['sheep_pools'][ev_mask_f])
-
     ###################################
     ### index arrays                  #
     ###################################
@@ -4525,8 +4515,6 @@ def generator(params,r_vals,ev,plots = False):
     assetvalue_timing_pa1e1b1nwzida0e0b0xyg = assetvalue_timing_y[a_assetvalue_pa1e1b1nwzida0e0b0xyg]
     period_is_assetvalue_pa1e1b1nwzida0e0b0xyg = sfun.f_period_is_('period_is', assetvalue_timing_pa1e1b1nwzida0e0b0xyg, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
     ###feed pool - sheep are grouped based on energy volume ratio
-    ev_propn_f = np.array([0.25, 0.50, 0.75]) #Set the values for the ranges required (same values for all 10 matrix feed periods). This spreads the feed pools evenly between the highest and lowest quality feed required by any of the animals.
-    index_fpa1e1b1nwzida0e0b0xyg = fun.f_expand(np.arange(len_f), p_pos-1)
     ##wool
     vm_m4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_vm_m4'], p_pos).astype(dtype)
     pmb_m4s4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_pmb_m4s'], p_pos).astype(dtype)
@@ -5091,61 +5079,114 @@ def generator(params,r_vals,ev,plots = False):
      fix inputs.
     '''
     feedpools_start = time.time()
+    ##fev masks and len
+    confinement_inc = np.maximum(np.max(feedsupplyw_pa1e1b1nwzida0e0b0xyg1),
+                                 np.max(feedsupplyw_pa1e1b1nwzida0e0b0xyg3)) > 3 #if fs>3 then need to include confinement feeding
+    n_non_confinement_pools = sinp.structuralsa['i_len_f']
+    len_f = n_non_confinement_pools + confinement_inc
+    index_fpa1e1b1nwzida0e0b0xyg = fun.f_expand(np.arange(len_f), p_pos-1)
+    ###store info for pasture and stubble modules.
+    ev['confinement_inc'] = confinement_inc
+    ev['len_ev'] = len_f
+
     ##Calculate the feed pools (f) and allocate each intake period to a feed pool based on mei/volume (E/V). - this is done like this to handle the big arrays easier - also handles situations where offs and dams may have diff length p axis
     ###calculate ‘ev’ for each animal class.
     ev_psire = fun.f_divide(o_mei_solid_psire, o_pi_psire, dtype=dtype)
     ev_pdams = fun.f_divide(o_mei_solid_pdams, o_pi_pdams, dtype=dtype)
     ev_poffs = fun.f_divide(o_mei_solid_poffs, o_pi_poffs, dtype=dtype)
-    ###Find the values that divides the values into 4 equal groups by finding the minimum and maximum in each feed period (p6)
-    ####Remove any values where animals are being fed in confinement
-    t_ev_pa1e1b1nwzida0e0b0xyg1 = ev_pdams * (feedsupplyw_pa1e1b1nwzida0e0b0xyg1 < 3) # feedsupply >= 3 (ie the animals are in confinement)
-    t_ev_pa1e1b1nwzida0e0b0xyg3 = ev_poffs * (feedsupplyw_pa1e1b1nwzida0e0b0xyg3 < 3) # feedsupply >= 3 (ie the animals are in confinement)
-    ####set 0 to high value so it doesnt get included in calculation of the range in the next steps
-    t_ev_min_pa1e1b1nwzida0e0b0xyg1 = t_ev_pa1e1b1nwzida0e0b0xyg1.copy() #have to copy so other array is not changed
-    t_ev_min_pa1e1b1nwzida0e0b0xyg3 = t_ev_pa1e1b1nwzida0e0b0xyg3.copy()
-    t_ev_min_pa1e1b1nwzida0e0b0xyg1[t_ev_min_pa1e1b1nwzida0e0b0xyg1<=0] = 100
-    t_ev_min_pa1e1b1nwzida0e0b0xyg3[t_ev_min_pa1e1b1nwzida0e0b0xyg3<=0] = 100
-    ####calc max and min - set 0 to high value so it doesnt get included in the next steps
-    #### min or max over all axes leaving p
-    t_axes = tuple(range(a1_pos,z_pos)) + tuple(range(z_pos+1,0))
-    t_evmax_dams_pz = np.max(t_ev_pa1e1b1nwzida0e0b0xyg1,axis=t_axes)
-    t_evmin_dams_pz = np.min(t_ev_min_pa1e1b1nwzida0e0b0xyg1,axis=t_axes)
-    t_evmax_offs_pz = np.max(t_ev_pa1e1b1nwzida0e0b0xyg3,axis=t_axes)
-    t_evmin_offs_pz = np.min(t_ev_min_pa1e1b1nwzida0e0b0xyg3,axis=t_axes)
-    ####Create the p6p arrays
-    t_evmax_dams_p6pz = t_evmax_dams_pz * (a_p6_pz == index_p6[:,na,na])
-    t_evmin_dams_p6pz = t_evmin_dams_pz * (a_p6_pz == index_p6[:,na,na])
-    t_evmax_offs_p6pz = t_evmax_offs_pz * (a_p6_pz[mask_p_offs_p] == index_p6[:,na,na])
-    t_evmin_offs_p6pz = t_evmin_offs_pz * (a_p6_pz[mask_p_offs_p] == index_p6[:,na,na])
-    ####set 0 to nan for p slices that are not in p6
-    t_evmax_dams_p6pz[t_evmax_dams_p6pz<=0] = np.nan
-    t_evmin_dams_p6pz[t_evmin_dams_p6pz<=0] = np.nan
-    t_evmax_offs_p6pz[t_evmax_offs_p6pz<=0] = np.nan
-    t_evmin_offs_p6pz[t_evmin_offs_p6pz<=0] = np.nan
-    ####Calculate the max and min over the p axis for each p6
-    t_evmax_dams_p6z = np.nanmax(t_evmax_dams_p6pz,axis=1)
-    t_evmin_dams_p6z = np.nanmin(t_evmin_dams_p6pz,axis=1)
-    t_evmax_offs_p6z = np.nanmax(t_evmax_offs_p6pz,axis=1)
-    t_evmin_offs_p6z = np.nanmin(t_evmin_offs_p6pz,axis=1)
-    ####Calculate the overall min & max for p6 by taking min & max of dams & offs
-    t_evmax_p6z = np.maximum(t_evmax_dams_p6z, t_evmax_offs_p6z)
-    t_evmin_p6z = np.minimum(t_evmin_dams_p6z, t_evmin_offs_p6z)
-    ###Calculate the EV for each cutoff (upper value) for each matrix feed period (based on equal spacing, not equal numbers)
-    ev_cutoff_p6fz = t_evmax_p6z[:,na,:] * ev_propn_f[na,:,na] + t_evmin_p6z[:,na,:] * (1 - ev_propn_f[na,:,na])
-    ##allocate each sheep class to an ev group - use MRY version of searchsort which handles 2d array
-    ev_cutoff_pfz = np.take_along_axis(ev_cutoff_p6fz, a_p6_pz[:,na,:], 0)
-    ev_cutoff_cut_pfz = np.take_along_axis(ev_cutoff_p6fz, a_p6_pz[mask_p_offs_p,na,:], 0)
-    a_ev_pa1e1b1nwzida0e0b0xyg0 = fun.searchsort_multiple_dim(ev_cutoff_pfz, ev_psire, 0, -1, 0, z_pos)
-    a_ev_pa1e1b1nwzida0e0b0xyg1 = fun.searchsort_multiple_dim(ev_cutoff_pfz, ev_pdams, 0, -1, 0, z_pos)
-    a_ev_pa1e1b1nwzida0e0b0xyg3 = fun.searchsort_multiple_dim(ev_cutoff_cut_pfz, ev_poffs, 0, -1, 0, z_pos)
 
-    ##Any animals with feedsupply >= 3 has ev_group = 4 (the confinement pattern)
-    a_ev_pa1e1b1nwzida0e0b0xyg0 = fun.f_update(a_ev_pa1e1b1nwzida0e0b0xyg0,4,(feedsupplyw_pa1e1b1nwzida0e0b0xyg0 >= 3)).astype(dtypeint) #for some reason adding float32 with int32 results in float64
-    a_ev_pa1e1b1nwzida0e0b0xyg1 = fun.f_update(a_ev_pa1e1b1nwzida0e0b0xyg1,4,(feedsupplyw_pa1e1b1nwzida0e0b0xyg1 >= 3)).astype(dtypeint) #for some reason adding float32 with int32 results in float64
-    a_ev_pa1e1b1nwzida0e0b0xyg3 = fun.f_update(a_ev_pa1e1b1nwzida0e0b0xyg3,4,(feedsupplyw_pa1e1b1nwzida0e0b0xyg3 >= 3)).astype(dtypeint) #for some reason adding float32 with int32 results in float64
-    ##add ev params to dict for use in pasture.py
-    ev['ev_cutoff_p6fz'] = ev_cutoff_p6fz
-    ev['ev_max_p6z'] = t_evmax_p6z
+
+    # ###Find the values that divides the values into 4 equal groups by finding the minimum and maximum in each feed period (p6)
+    # ####Remove any values where animals are being fed in confinement
+    # t_ev_pa1e1b1nwzida0e0b0xyg1 = ev_pdams * (feedsupplyw_pa1e1b1nwzida0e0b0xyg1 < 3) # feedsupply >= 3 (ie the animals are in confinement)
+    # t_ev_pa1e1b1nwzida0e0b0xyg3 = ev_poffs * (feedsupplyw_pa1e1b1nwzida0e0b0xyg3 < 3) # feedsupply >= 3 (ie the animals are in confinement)
+    # ####set 0 to high value so it doesnt get included in calculation of the range in the next steps
+    # t_ev_min_pa1e1b1nwzida0e0b0xyg1 = t_ev_pa1e1b1nwzida0e0b0xyg1.copy() #have to copy so other array is not changed
+    # t_ev_min_pa1e1b1nwzida0e0b0xyg3 = t_ev_pa1e1b1nwzida0e0b0xyg3.copy()
+    # t_ev_min_pa1e1b1nwzida0e0b0xyg1[t_ev_min_pa1e1b1nwzida0e0b0xyg1<=0] = 100
+    # t_ev_min_pa1e1b1nwzida0e0b0xyg3[t_ev_min_pa1e1b1nwzida0e0b0xyg3<=0] = 100
+    # ####calc max and min - set 0 to high value so it doesnt get included in the next steps
+    # #### min or max over all axes leaving p
+    # t_axes = tuple(range(a1_pos,z_pos)) + tuple(range(z_pos+1,0))
+    # t_evmax_dams_pz = np.max(t_ev_pa1e1b1nwzida0e0b0xyg1,axis=t_axes)
+    # t_evmin_dams_pz = np.min(t_ev_min_pa1e1b1nwzida0e0b0xyg1,axis=t_axes)
+    # t_evmax_offs_pz = np.max(t_ev_pa1e1b1nwzida0e0b0xyg3,axis=t_axes)
+    # t_evmin_offs_pz = np.min(t_ev_min_pa1e1b1nwzida0e0b0xyg3,axis=t_axes)
+    # ####Create the p6p arrays
+    # t_evmax_dams_p6pz = t_evmax_dams_pz * (a_p6_pz == index_p6[:,na,na])
+    # t_evmin_dams_p6pz = t_evmin_dams_pz * (a_p6_pz == index_p6[:,na,na])
+    # t_evmax_offs_p6pz = t_evmax_offs_pz * (a_p6_pz[mask_p_offs_p] == index_p6[:,na,na])
+    # t_evmin_offs_p6pz = t_evmin_offs_pz * (a_p6_pz[mask_p_offs_p] == index_p6[:,na,na])
+    # ####set 0 to nan for p slices that are not in p6
+    # t_evmax_dams_p6pz[t_evmax_dams_p6pz<=0] = np.nan
+    # t_evmin_dams_p6pz[t_evmin_dams_p6pz<=0] = np.nan
+    # t_evmax_offs_p6pz[t_evmax_offs_p6pz<=0] = np.nan
+    # t_evmin_offs_p6pz[t_evmin_offs_p6pz<=0] = np.nan
+    # ####Calculate the max and min over the p axis for each p6
+    # t_evmax_dams_p6z = np.nanmax(t_evmax_dams_p6pz,axis=1)
+    # t_evmin_dams_p6z = np.nanmin(t_evmin_dams_p6pz,axis=1)
+    # t_evmax_offs_p6z = np.nanmax(t_evmax_offs_p6pz,axis=1)
+    # t_evmin_offs_p6z = np.nanmin(t_evmin_offs_p6pz,axis=1)
+    # ####Calculate the overall min & max for p6 by taking min & max of dams & offs
+    # t_evmax_p6z = np.maximum(t_evmax_dams_p6z, t_evmax_offs_p6z)
+    # t_evmin_p6z = np.minimum(t_evmin_dams_p6z, t_evmin_offs_p6z)
+    # ###Calculate the EV for each cutoff (upper value) for each matrix feed period (based on equal spacing, not equal numbers)
+    # ev_cutoff_p6fz = t_evmax_p6z[:,na,:] * ev_propn_f[na,:,na] + t_evmin_p6z[:,na,:] * (1 - ev_propn_f[na,:,na])
+
+    ##create the upper and lower cutoffs. If there is a confinement slice then it will be populated with values but they never get used.
+    fev_upper_p6fpg = fun.f_expand(sinp.structuralsa['i_fev_upper_p6'], p_pos-2)
+    fev_lower_p6fpg = fun.f_expand(sinp.structuralsa['i_fev_lower_p6'], p_pos-2)
+    fev_cutoff_lower_p6fpg = fev_lower_p6fpg + (fev_upper_p6fpg - fev_lower_p6fpg)/n_non_confinement_pools * index_fpa1e1b1nwzida0e0b0xyg
+    fev_cutoff_upper_p6fpg = fev_lower_p6fpg + (fev_upper_p6fpg - fev_lower_p6fpg)/n_non_confinement_pools * (index_fpa1e1b1nwzida0e0b0xyg + 1)
+    ###Average these values to be passed to Pasture.py for efficiency of utilising ME and add to the dict
+    fev_cutoff_ave_p6fpg = (fev_cutoff_lower_p6fpg + fev_cutoff_upper_p6fpg) / 2
+    ev['fev_cutoff_ave_p6f'] = np.squeeze(fev_cutoff_ave_p6fpg, axis=tuple(range(p_pos,0)))
+
+    ##So that no animals are excluded the lowest cutoff[0] is set to -np.inf and the highest cutoff is set to np.inf
+    fev_cutoff_lower_p6fpg[:, 0, ...] = -np.inf
+    fev_cutoff_upper_p6fpg[:, n_non_confinement_pools - 1, ...] = np.inf # use i_len_f rather than -1 to allow for the confinement slice if it exists
+
+    ##allocate each sheep class to an ev group
+    ###Determining a std deviation for the distribution. This is an unknown but the value has been selected so that if
+    ### an animal has an fev that is the mid-point of a feed pool then most of the mei & pi for that animal will occur
+    ### in that feed pool. This is achieved by dividing the range of the feed pool by 6, because plus/minus 3 standard
+    ### deviations from the mean is most of the range.
+    fev_cutoffs_sd_p6fpg = (fev_upper_p6fpg - fev_lower_p6fpg) / n_non_confinement_pools / 6
+    ###Calculate a proportion of the mei & pi that goes in each pool
+    fev_propn_p6fpsire = fun.f_norm_cdf(fev_cutoff_upper_p6fpg, ev_psire, sd=fev_cutoffs_sd_p6fpg) \
+                       - fun.f_norm_cdf(fev_cutoff_lower_p6fpg, ev_psire, sd=fev_cutoffs_sd_p6fpg)
+    fev_propn_p6fpdams = fun.f_norm_cdf(fev_cutoff_upper_p6fpg, ev_pdams, sd=fev_cutoffs_sd_p6fpg) \
+                       - fun.f_norm_cdf(fev_cutoff_lower_p6fpg, ev_pdams, sd=fev_cutoffs_sd_p6fpg)
+    fev_propn_p6fpoffs = fun.f_norm_cdf(fev_cutoff_upper_p6fpg, ev_poffs, sd=fev_cutoffs_sd_p6fpg) \
+                       - fun.f_norm_cdf(fev_cutoff_lower_p6fpg, ev_poffs, sd=fev_cutoffs_sd_p6fpg)
+    ###adjust the calculated proportions for the confinement pool. If in confinement then:
+    ####set all the slices to 0
+    fev_propn_p6fpsire = fun.f_update(fev_propn_p6fpsire, 0.0, (feedsupplyw_pa1e1b1nwzida0e0b0xyg0 >= 3))
+    fev_propn_p6fpdams = fun.f_update(fev_propn_p6fpdams, 0.0, (feedsupplyw_pa1e1b1nwzida0e0b0xyg1 >= 3))
+    fev_propn_p6fpoffs = fun.f_update(fev_propn_p6fpoffs, 0.0, (feedsupplyw_pa1e1b1nwzida0e0b0xyg3 >= 3))
+    ####set the confinement slice to 1.0
+    fev_propn_p6fpsire[:, -1, ...] = fun.f_update(fev_propn_p6fpsire[:, -1, ...], 1.0, (feedsupplyw_pa1e1b1nwzida0e0b0xyg0 >= 3))
+    fev_propn_p6fpdams[:, -1, ...] = fun.f_update(fev_propn_p6fpdams[:, -1, ...], 1.0, (feedsupplyw_pa1e1b1nwzida0e0b0xyg1 >= 3))
+    fev_propn_p6fpoffs[:, -1, ...] = fun.f_update(fev_propn_p6fpoffs[:, -1, ...], 1.0, (feedsupplyw_pa1e1b1nwzida0e0b0xyg3 >= 3))
+
+
+
+
+
+    # ##allocate each sheep class to an ev group - use MRY version of searchsort which handles 2d array
+    # ev_cutoff_pfz = np.take_along_axis(ev_cutoff_p6fz, a_p6_pz[:,na,:], 0)
+    # ev_cutoff_cut_pfz = np.take_along_axis(ev_cutoff_p6fz, a_p6_pz[mask_p_offs_p,na,:], 0)
+    # a_ev_pa1e1b1nwzida0e0b0xyg0 = fun.searchsort_multiple_dim(ev_cutoff_pfz, ev_psire, 0, -1, 0, z_pos)
+    # a_ev_pa1e1b1nwzida0e0b0xyg1 = fun.searchsort_multiple_dim(ev_cutoff_pfz, ev_pdams, 0, -1, 0, z_pos)
+    # a_ev_pa1e1b1nwzida0e0b0xyg3 = fun.searchsort_multiple_dim(ev_cutoff_cut_pfz, ev_poffs, 0, -1, 0, z_pos)
+    #
+    # ##Any animals with feedsupply >= 3 has ev_group = 4 (the confinement pattern)
+    # a_ev_pa1e1b1nwzida0e0b0xyg0 = fun.f_update(a_ev_pa1e1b1nwzida0e0b0xyg0,4,(feedsupplyw_pa1e1b1nwzida0e0b0xyg0 >= 3)).astype(dtypeint) #for some reason adding float32 with int32 results in float64
+    # a_ev_pa1e1b1nwzida0e0b0xyg1 = fun.f_update(a_ev_pa1e1b1nwzida0e0b0xyg1,4,(feedsupplyw_pa1e1b1nwzida0e0b0xyg1 >= 3)).astype(dtypeint) #for some reason adding float32 with int32 results in float64
+    # a_ev_pa1e1b1nwzida0e0b0xyg3 = fun.f_update(a_ev_pa1e1b1nwzida0e0b0xyg3,4,(feedsupplyw_pa1e1b1nwzida0e0b0xyg3 >= 3)).astype(dtypeint) #for some reason adding float32 with int32 results in float64
+    # ##add ev params to dict for use in pasture.py
+    # ev['ev_cutoff_p6fz'] = ev_cutoff_p6fz
+    # ev['ev_max_p6z'] = t_evmax_p6z
 
     ################################
     #convert variables from p to v #
@@ -5153,28 +5194,28 @@ def generator(params,r_vals,ev,plots = False):
     p2v_start = time.time()
     ##every period - with f & p6 axis
     ###sire - use p2v_std because there is not dvp so this version of the function may as well be used.
-    mei_p6fa1e1b1nwzida0e0b0xyg0 = sfun.f_p2v_std(o_mei_solid_psire, numbers_p=o_numbers_end_psire, on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0
-                                         , days_period_p=days_period_pa1e1b1nwzida0e0b0xyg0, a_any1_p=a_ev_pa1e1b1nwzida0e0b0xyg0, index_any1tvp=index_fpa1e1b1nwzida0e0b0xyg
-                                        , a_any2_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any2any1tvp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,...])
-    pi_p6fa1e1b1nwzida0e0b0xyg0 = sfun.f_p2v_std(o_pi_psire, numbers_p=o_numbers_end_psire, on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0
-                                         , days_period_p=days_period_pa1e1b1nwzida0e0b0xyg0, a_any1_p=a_ev_pa1e1b1nwzida0e0b0xyg0, index_any1tvp=index_fpa1e1b1nwzida0e0b0xyg
-                                        , a_any2_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any2any1tvp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,...])
+    mei_p6fa1e1b1nwzida0e0b0xyg0 = sfun.f_p2v_std(o_mei_solid_psire * fev_propn_p6fpsire, numbers_p=o_numbers_end_psire
+                                        , on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0, days_period_p=days_period_pa1e1b1nwzida0e0b0xyg0
+                                        , a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any1tvp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,...])
+    pi_p6fa1e1b1nwzida0e0b0xyg0 = sfun.f_p2v_std(o_pi_psire * fev_propn_p6fpsire, numbers_p=o_numbers_end_psire
+                                        , on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0, days_period_p=days_period_pa1e1b1nwzida0e0b0xyg0
+                                        , a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any1tvp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,...])
     ###dams
-    mei_p6ftva1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_mei_solid_pdams, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_pdams
-                                       , on_hand_tpa1e1b1nwzida0e0b0xyg1, days_period_pa1e1b1nwzida0e0b0xyg1, a_any1_p=a_ev_pa1e1b1nwzida0e0b0xyg1, index_any1tp=index_fpa1e1b1nwzida0e0b0xyg[:,na,...]
-                                       , a_any2_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any2any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,na,...])
+    mei_p6ftva1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_mei_solid_pdams * fev_propn_p6fpdams[:,:,na,...], a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_pdams
+                                       , on_hand_tpa1e1b1nwzida0e0b0xyg1, days_period_pa1e1b1nwzida0e0b0xyg1
+                                       , a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,na,...])
 
-    pi_p6ftva1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_pi_pdams, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_pdams
-                                           , on_hand_tpa1e1b1nwzida0e0b0xyg1, days_period_pa1e1b1nwzida0e0b0xyg1, a_any1_p=a_ev_pa1e1b1nwzida0e0b0xyg1, index_any1tp=index_fpa1e1b1nwzida0e0b0xyg[:,na,...]
-                                           , a_any2_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any2any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,na,...])
+    pi_p6ftva1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(o_pi_pdams * fev_propn_p6fpdams[:,:,na,...], a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_pdams
+                                           , on_hand_tpa1e1b1nwzida0e0b0xyg1, days_period_pa1e1b1nwzida0e0b0xyg1
+                                           , a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,na,...])
 
     ###offs
-    mei_p6ftva1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(o_mei_solid_poffs, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_poffs
-                                       , on_hand_tpa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3, a_any1_p=a_ev_pa1e1b1nwzida0e0b0xyg3, index_any1tp=index_fpa1e1b1nwzida0e0b0xyg[:,na,...]
-                                       , a_any2_p=a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p], index_any2any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,na,...])
-    pi_p6ftva1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(o_pi_poffs, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_poffs
-                                           , on_hand_tpa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3, a_any1_p=a_ev_pa1e1b1nwzida0e0b0xyg3, index_any1tp=index_fpa1e1b1nwzida0e0b0xyg[:,na,...]
-                                           , a_any2_p=a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p], index_any2any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,na,...])
+    mei_p6ftva1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(o_mei_solid_poffs * fev_propn_p6fpoffs[:,:,na,...], a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_poffs
+                                       , on_hand_tpa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3
+                                       , a_any2_p=a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p], index_any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,na,...])
+    pi_p6ftva1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(o_pi_poffs * fev_propn_p6fpoffs[:,:,na,...], a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_poffs
+                                           , on_hand_tpa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3
+                                           , a_any2_p=a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p], index_any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,na,...])
 
     ##every period - with sire periods
     nsire_tva1e1b1nwzida0e0b0xyg1g0p8 = sfun.f_p2v_std(o_n_sire_pa1e1b1nwzida0e0b0xyg1g0p8, a_v_pa1e1b1nwzida0e0b0xyg1[...,na,na], index_vpa1e1b1nwzida0e0b0xyg1[...,na,na]
@@ -6307,15 +6348,15 @@ def generator(params,r_vals,ev,plots = False):
     ##and the number variable returned from pyomo does not have p6 axis. So need to account for the propn of the dvp that the feed period exists.
     ##using a_p6_p is not perfect because a_p6_p is such that a generator period is only allocated to a single feed period
     ## eg if the feed period changed mid gen period the proportion will be slightly off (exaggerated for smaller feed periods).
-    stock_days_p6fa1e1b1nwzida0e0b0xyg0 = sfun.f_p2v_std(on_hand_pa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_psire,
-                                        days_period_p=days_period_pa1e1b1nwzida0e0b0xyg0, a_any1_p=a_ev_pa1e1b1nwzida0e0b0xyg0, index_any1tvp=index_fpa1e1b1nwzida0e0b0xyg,
-                                        a_any2_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any2any1tvp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,...])
-    stock_days_p6ftva1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(on_hand_tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, numbers_p=o_numbers_end_pdams,
-                                            days_period_p=days_period_pa1e1b1nwzida0e0b0xyg1, a_any1_p=a_ev_pa1e1b1nwzida0e0b0xyg1, index_any1tp=index_fpa1e1b1nwzida0e0b0xyg[:,na,...],
-                                            a_any2_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any2any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,na,...])
-    stock_days_p6ftva1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(on_hand_tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, numbers_p=o_numbers_end_poffs,
-                                            days_period_p=days_period_cut_pa1e1b1nwzida0e0b0xyg3, a_any1_p=a_ev_pa1e1b1nwzida0e0b0xyg3, index_any1tp=index_fpa1e1b1nwzida0e0b0xyg[:,na,...],
-                                            a_any2_p=a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p], index_any2any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,na,...])
+    stock_days_p6fa1e1b1nwzida0e0b0xyg0 = sfun.f_p2v_std(on_hand_pa1e1b1nwzida0e0b0xyg0 * fev_propn_p6fpsire
+                                        , numbers_p=o_numbers_end_psire, days_period_p=days_period_pa1e1b1nwzida0e0b0xyg0
+                                        , a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any1tvp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,...])
+    stock_days_p6ftva1e1b1nwzida0e0b0xyg1 = sfun.f_p2v(on_hand_tpa1e1b1nwzida0e0b0xyg1 * fev_propn_p6fpdams[:,:,na,...], a_v_pa1e1b1nwzida0e0b0xyg1
+                                            , numbers_p=o_numbers_end_pdams, days_period_p=days_period_pa1e1b1nwzida0e0b0xyg1
+                                            , a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,na,...])
+    stock_days_p6ftva1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(on_hand_tpa1e1b1nwzida0e0b0xyg3 * fev_propn_p6fpoffs[:,:,na,...], a_v_pa1e1b1nwzida0e0b0xyg3
+                                            , numbers_p=o_numbers_end_poffs, days_period_p=days_period_cut_pa1e1b1nwzida0e0b0xyg3,
+                                            a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p], index_any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,na,...])
 
     ##cluster and account for numbers/mortality
     stock_days_p6fa1e1b1nwzida0e0b0xyg0 = sfun.f_create_production_param('sire', stock_days_p6fa1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
@@ -6352,7 +6393,7 @@ def generator(params,r_vals,ev,plots = False):
     keys_g1 = sfun.f_g2g(pinp.sheep['i_g_idx_dams'],'dams')
     keys_g2 = keys_g1
     keys_g3 = sfun.f_g2g(pinp.sheep['i_g_idx_offs'],'offs')
-    keys_f = np.asarray(sinp.general['sheep_pools'][ev_mask_f])
+    keys_f = np.array(['fev{0}' .format(i) for i in range(len_f)])
     keys_h1 = np.asarray(uinp.sheep['i_h1_idx'])
     keys_i = pinp.sheep['i_i_idx'][pinp.sheep['i_mask_i']]
     keys_k3 = np.ravel(pinp.sheep['i_k3_idx_offs'])[:len_k3]

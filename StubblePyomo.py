@@ -10,7 +10,7 @@ import pyomo.environ as pe
 import Stubble as stub
 import PropertyInputs as pinp
 
-def stub_precalcs(params, report):
+def stub_precalcs(params, report, ev):
     '''
     Call crop precalc functions.
 
@@ -18,7 +18,7 @@ def stub_precalcs(params, report):
     :param report: dictionary which stores all report values.
 
     '''
-    stub.stubble_all(params)
+    stub.stubble_all(params, report, ev)
     
     
     
