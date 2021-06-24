@@ -42,6 +42,8 @@ How to add a report:
 author: Young
 """
 
+#todo add a second mortality report that the weighted average mortality for the animals selected (to complement the current report that is mortality for each w axis)
+
 import numpy as np
 import pandas as pd
 import os
