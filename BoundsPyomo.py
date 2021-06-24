@@ -32,7 +32,9 @@ def boundarypyomo_local(params, model):
     ##set bounds to include
     bounds_inc = True #controls all bounds (typically on)
     rot_lobound_inc = False #controls rot bound
+    sup_lobound_inc = False #controls sup feed bound
     dams_lobound_inc = fun.f_sa(False, sen.sav['bnd_lower_dam_inc'], 5) #lower bound dams
+    offs_lobound_inc = False #lower bound offs
     dams_upperbound_inc = fun.f_sa(False, sen.sav['bnd_upper_dam_inc'], 5) #upper bound on dams
     total_dams_scanned_bound_inc = np.any(sen.sav['bnd_total_dams_scanned'] != '-') #equal to bound on the total number of scanned dams
     force_5yo_retention_inc = np.any(sen.sav['bnd_propn_dam5_retained'] != '-') #force a propn of 5yo dams to be retained.
@@ -86,6 +88,13 @@ def boundarypyomo_local(params, model):
             model.con_rotation_lobound = pe.Constraint(model.s_phases, model.s_lmus, rule=rot_lo_bound,
                                                     doc='lo bound for the number of each phase')
 
+        ##bound on livestock supplementary feed.
+        if sup_lobound_inc:
+            def sup_upper_bound(model):
+                return sum(model.v_sup_con[k,g,v,f] for k in model.s_crops for g in model.s_grain_pools for v in model.s_feed_pools
+                for f in model.s_feed_periods) >= 115
+            model.con_sup_upper_bound = pe.Constraint(rule=sup_upper_bound, doc='upper bound for livestock sup feed')
+
         ##total dam min bound - total number includes each dvp (the sheep in a given yr equal total for all dvp divided by the number of dvps in 1 yr)
         ###build bound if turned on
         if dams_lobound_inc:
@@ -95,10 +104,10 @@ def boundarypyomo_local(params, model):
             ###build array for the axes of the specified slices
             dams_lowbound_tvwg = np.zeros((len(model.s_sale_dams), len(model.s_dvp_dams), len(model.s_lw_dams), len(model.s_groups_dams)))
             ###set the bound
-            dams_lowbound_tvwg[-1, 4:14, :, -1] = 50  #min of 50 bbt in t3
-            # dams_lowbound_tvwg[-1, 0,0,0] = 940.67  #min of 50 bbt in t3
-            # dams_lowbound_tvwg[-1, 0,1,0] = 572.09  #min of 50 bbt in t3
-            # dams_lowbound_tvwg[-1, 0,2,0] = 13.001  #min of 50 bbt in t3
+            # dams_lowbound_tvwg[-1, 4:14, :, -1] = 5  #min of 50 bbt in t3
+            # dams_lowbound_tvwg[-1, 0,0,0] = 758 #min of 50 bbt in t3
+            # dams_lowbound_tvwg[-1, 0,1,0] = 758  #min of 50 bbt in t3
+            # dams_lowbound_tvwg[-1, 0,2,0] = 7.8 #min of 50 bbt in t3
             ###ravel and zip bound and dict
             dams_lowbound = dams_lowbound_tvwg.ravel()
             tup_tvwg = tuple(map(tuple, index_tvwg))
@@ -117,6 +126,30 @@ def boundarypyomo_local(params, model):
                            >= dams_lowbound[t, v,w8,g1]
             model.con_dam_lobound = pe.Constraint(model.s_sale_dams, model.s_dvp_dams, model.s_lw_dams, model.s_groups_dams, rule=dam_lo_bound,
                                                     doc='min number of dams')
+
+        if offs_lobound_inc:
+            ###keys to build arrays for the specified slices
+            arrays = [model.s_sale_offs, model.s_dvp_offs, model.s_lw_offs,model.s_gender, model.s_groups_offs]   #more sets can be added here to customise the bound
+            index_tvwxg = fun.cartesian_product_simple_transpose(arrays)
+            ###build array for the axes of the specified slices
+            offs_lowbound_tvwxg = np.zeros((len(model.s_sale_offs), len(model.s_dvp_offs), len(model.s_lw_offs), len(model.s_gender), len(model.s_groups_offs)))
+            ###set the bound
+            offs_lowbound_tvwxg[0, 0,0,0,0] = 50
+            offs_lowbound_tvwxg[0, 0,1,0,0] = 50
+            offs_lowbound_tvwxg[0, 0,2,0,0] = 0
+            ###ravel and zip bound and dict
+            offs_lowbound = offs_lowbound_tvwxg.ravel()
+            tup_tvwxg = tuple(map(tuple, index_tvwxg))
+            offs_lowbound = dict(zip(tup_tvwxg, offs_lowbound))
+
+            ###constraint
+            def off_lo_bound(model,t, v, w8, x, g3):
+                return sum(model.v_offs[k3,k5,t,v,n3,w8,i,a,x,y3,g3] for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs
+                           for a in model.s_wean_times for n3 in model.s_nut_offs
+                           for i in model.s_tol for y3 in model.s_gen_merit_offs) \
+                       >= offs_lowbound[t, v,w8,x,g3]
+            model.con_offs_lobound = pe.Constraint(model.s_sale_offs, model.s_dvp_offs, model.s_lw_offs, model.s_gender, model.s_groups_offs, rule=off_lo_bound,
+                                                    doc='min number of offs')
 
         ##dams upper bound - specified by k2 & v and totalled across other axes
         ###build bound if turned on
