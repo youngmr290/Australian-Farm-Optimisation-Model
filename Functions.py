@@ -429,15 +429,18 @@ def np_extrap(x, xp, yp):
     y[x > xp[-1]]= yp[-1] + (x[x>xp[-1]]-xp[-1])*(yp[-1]-yp[-2])/(xp[-1]-xp[-2])
     return y
 
-def f_norm_cdf(x, mu, cv):
+def f_norm_cdf(x, mu, cv=0.2, sd=0):
     '''
     ## returns the probability of the value being less than or equal to x
-    ## based on a normal distribution with mean mu and coefficient of variation cv
+    ## based on a normal distribution with mean mu and either a
+    ## coefficient of variation cv (default 20%) or standard deviation sd.
+    ## If provided the sd is used.
     ## Calculated using an approximation of the normal probability function
     '''
 
     ##sd - standard deviation - maximum to stop div0 errors in next step.
-    sd = mu * cv
+    if sd == 0:
+        sd = mu * cv
     ##standardise x. f_divide in case SD is 0 (either mu is 0 or CV is 0)
     xstd = fun.f_divide(x - mu,  sd)
     ##probability (<=x)
