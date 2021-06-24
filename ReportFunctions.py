@@ -1079,12 +1079,12 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None
     :key index (optional, default = []): list: axis you want as the index of pandas df (order of list is the index level order).
     :key cols (optional, default = []): list: axis you want as the cols of pandas df (order of list is the col level order).
     :key arith (optional, default = 0): int: arithmetic operation used.
-            option 0: return production param, averaged on given axis
-            option 1: return weighted average of production param (optional denominator weight param)
-            option 2: total production for a given axis np.sum(prod * weight, axis)
-            option 3: total production for each activity
-            option 4: return weighted average of production param using prod>0 as the weights
-            option 5: return the maximum value across the slices of the axes
+                option 0: return production param averaged across all axis that are not reported.
+                option 1: return weighted average of production param (using denominator weight return production per day the animal is on hand)
+                option 2: weighted total production summed across all axis that are not reported.
+                option 3: weighted total production for each  (axis not reported are disregarded)
+                option 4: return weighted average of production param using prod>0 as the weights
+                option 5: return the maximum value across all axis that are not reported.
     :key prod (optional, default = 1): str/int/float: if it is a string then it is used as a key for stock_vars, if it is an number that number is used as the prod value
     :key na_prod (optional, default = []): list: position to add new axis
     :key weights (optional, default = None): str: weights to be used in arith (typically a lp variable eg numbers). Only required when arith>0
@@ -1301,12 +1301,12 @@ def f_slice(prod, prod_weights, weights, den_weights, keys, arith, axis_slice):
 
 def f_arith(prod, prod_weights, weight, den_weights, arith, axis):
     '''
-    option 0: return production param averaged on specified axis
+    option 0: return production param averaged across all axis that are not reported.
     option 1: return weighted average of production param (using denominator weight return production per day the animal is on hand)
-    option 2: total production for a given axis
-    option 3: total production for each activity
+    option 2: weighted total production summed across all axis that are not reported.
+    option 3: weighted total production for each  (axis not reported are disregarded)
     option 4: return weighted average of production param using prod>0 as the weights
-    option 5: return the maximum value across the slices of the axes
+    option 5: return the maximum value across all axis that are not reported.
 
     :param prod: array: production param
     :param prod_weight: array: weights the production param
