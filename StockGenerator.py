@@ -5212,10 +5212,10 @@ def generator(params,r_vals,ev,plots = False):
     ###offs
     mei_p6ftva1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(o_mei_solid_poffs * fev_propn_p6fpoffs[:,:,na,...], a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_poffs
                                        , on_hand_tpa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3
-                                       , a_any2_p=a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p], index_any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,na,...])
+                                       , a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p], index_any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,na,...])
     pi_p6ftva1e1b1nwzida0e0b0xyg3 = sfun.f_p2v(o_pi_poffs * fev_propn_p6fpoffs[:,:,na,...], a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_poffs
                                            , on_hand_tpa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3
-                                           , a_any2_p=a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p], index_any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,na,...])
+                                           , a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p], index_any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,na,...])
 
     ##every period - with sire periods
     nsire_tva1e1b1nwzida0e0b0xyg1g0p8 = sfun.f_p2v_std(o_n_sire_pa1e1b1nwzida0e0b0xyg1g0p8, a_v_pa1e1b1nwzida0e0b0xyg1[...,na,na], index_vpa1e1b1nwzida0e0b0xyg1[...,na,na]
