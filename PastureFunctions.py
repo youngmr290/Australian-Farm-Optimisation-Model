@@ -227,9 +227,9 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_oflzt, i_fxg_pgr_oflzt, c_pgr_gi_scalar_gf
     ## green, final foo from initial, pgr and senescence
     ### senescence during the period is senescence of the starting FOO and of the FOO that is added/reduced by growth/grazing
     senesce_period_grnha_goflzt = (foo_start_grnha_oflzt * grn_senesce_startfoo_fzt[:, na, ...]
-                                   + pgr_grnha_goflzt[0, ...] * grn_senesce_pgrcons_fzt[:, na, ...])
+                                   + pgr_grnha_goflzt * grn_senesce_pgrcons_fzt[:, na, ...])
     ### foo at end of period if ungrazed
-    foo_end_ungrazed_grnha_oflzt = foo_start_grnha_oflzt + pgr_grnha_goflzt[0, ...] - senesce_period_grnha_goflzt
+    foo_end_ungrazed_grnha_oflzt = foo_start_grnha_oflzt + pgr_grnha_goflzt[0, ...] - senesce_period_grnha_goflzt[0, ...]
     ### foo at end of period with range of grazing intensity prior to eos senescence
     foo_endprior_grnha_goflzt = (foo_end_ungrazed_grnha_oflzt
                                  - (foo_end_ungrazed_grnha_oflzt - i_base_ft[:, na, na, :])
@@ -306,8 +306,8 @@ def f_senescence(senesce_period_grnha_goflzt, senesce_eos_grnha_goflzt, dry_deca
     ## the pasture that senesces at the eos is assumed to be senescing at the end of the growth period and doesn't decay
     ## the pasture that senesces during the period decays prior to being transferred
     ## the senesced feed that is available to stock is that which senesces at the end of the growing season (i.e. not during the growing season)
-    senesce_total_grnha_goflzt    = senesce_eos_grnha_goflzt + senesce_period_grnha_goflzt * (1 - dry_decay_period_fzt[:, na, ...])
-    grn_dmd_senesce_goflzt        =       dmd_sward_grnha_goflzt       \
+    senesce_total_grnha_goflzt    = (senesce_eos_grnha_goflzt + senesce_period_grnha_goflzt) * (1 - dry_decay_period_fzt[:, na, ...])
+    grn_dmd_senesce_goflzt        =       dmd_sward_grnha_goflzt[na]       \
                                    + i_grn_dmd_senesce_redn_fzt[:, na, ...]
     senesce_propn_h_goflzt  = np.clip((grn_dmd_senesce_goflzt               # senescence to high pool. np.clip reduces the range of the dmd to the range of dmd in the dry feed pools
                                              -      dry_dmd_dfzt[0,:, na, :])
