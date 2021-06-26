@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
 """
-Created on Tue Nov  5 19:46:24 2019
-@author: john
+@author: young
 
 Description of this pasture module: This representation includes at optimisation (ie the following options are represented in the variables of the model)
     Growth rate of pasture (PGR) varies with FOO at the start of the period and grazing intensity during the period
@@ -11,10 +9,49 @@ Description of this pasture module: This representation includes at optimisation
     Selective grazing of dry pasture. 2 dry pasture quality pools are represented and either can be selected for grazing
         Note: There is not a constraint that ensures that the high quality pool is grazed prior to the low quality pool (as there is in the stubble selective grazing)
 
-This is the version that uses an extra axis on the array rather than a class.
+Pasture is a primary livestock feed source because in an extensive system it is a good source of megajoules per doll ar. In AFO the biological
+details of pasture are represented in detail. Including the relationship between FOO, PGR and quality, the effects of
+rotation on pasture production, the life cycle over the year, pasture conservation and pasture availability to livestock.
+Pasture is split into the following sections:
+
+    #. Germination & Reseeding of pasture
+    #. Green & dry feed: growth, senescence & consumption
+    #. Pasture consumed on crop paddocks
+    #. Limit on grazing for soil conservation
+
+The green pasture activity represents FOO at the start of the period, FOO at the end of the period, animal removal,
+energy per unit of dry matter and volume. These aspects are aggregated to allow the effects of FOO level and level
+of defoliation on diet quality to be included. The reasons for this are:
+
+    #. The intake capacity of livestock is affected by the level of FOO (e.g. when there is more FOO, animals can eat
+       more and achieve higher growth rates).
+    #. Livestock diet quality change with grazing pressure (eg. by running a lower stocking rate livestock can improve
+       their diet quality through increased diet selectivity). This selectivity can be important for finishing animals
+       for market or fattening animals for mating.
+    #. The digestibility of pasture decreases as the length of time from the last defoliation increases (i.e. older
+       leaves are less digestible). Having consumption and FOO in the same activity allows a drop in digestibility
+       associated with old leaf to be included by linking digestibility to FOO. This is especially important for species
+       such as kikuyu that drop in digestibility rapidly if pastures are grazed laxly and FOO increases.
+
+These issues are more important in a system producing meat, where growth rate of animals and hence diet quality is
+critical to profitability. In a meat system the trade-off between quantity of feed utilised and quality of feed is
+quite different than the trade-off for a wool system.
+For a given period the activities are defined by starting FOO level and grazing intensity. There are three foo levels;
+low, medium and high starting FOO and four grazing intensities; no grazing, low, medium and high. Green pasture
+activities represent the total green pasture on the farm in each period. The activities are initially provided based
+on the area of pasture and its level of establishment. Pasture establishment is dependant on the rotation history and
+whether or not the pasture is resown. Additionally, the option to manipulate pasture (e.g. spraytop) is included. Each
+different management option (i.e. reseeding and manipulation) are represented as individual land use options so the
+model can optimise which to select. When the pasture senesces, it is removed from the green activities and allocated
+into the dry pasture activities. Dry pasture is represented by a low and high quality activities. Over time the quality
+of the dry pasture changes and the quantity changes as it decays and is consumed.
+AFO can handle multiple pasture types. The user simply needs to create a copy of the inputs and calibrate them to the
+new pasture.
+
+
+"""
 
 #todo add labour required for feed budgeting. Inputs are currently in the sheep sheet of Property.xls
-"""
 
 
 '''
@@ -354,18 +391,21 @@ def f_pasture(params, r_vals, ev):
     cu3 = uinp.pastparameters['i_cu3_c4'][...,pinp.sheep['i_pasture_type']].astype(float)
     cu4 = uinp.pastparameters['i_cu4_c4'][...,pinp.sheep['i_pasture_type']].astype(float)
 
-    ## one time data manipulation for the inputs just read
+    ###create dry pasture exists mask - in the current structure dry pasture only exists after the growing season.
+    mask_dryfeed_exists_fzt[...] = index_f[:, na, na] >= i_dry_exists_zt   #mask periods when dry feed is available to livestock.
+    mask_greenfeed_exists_fzt[...] = index_f[:, na, na] <= i_end_of_gs_zt   #green exists in the period which is the end of growing season hence <=
+
     ### calculate dry_decay_period (used in reseeding and green&dry)
-    ### dry_decay_daily is decay of dry foo at the start of the period that was transferred in from senescence in the previous period. dry_decay_daily does not effect green feed that sceneses during the current period.
+    ### dry_decay_daily is decay of dry foo at the start of the period that was transferred in from senescence in the previous period.
+    ### dry_decay_daily does not effect green feed that sceneses during the current period.
     dry_decay_daily_fzt[...] = i_dry_decay_t
     for t in range(n_pasture_types):
         for z in range(n_season_types):
             dry_decay_daily_fzt[0:i_dry_exists_zt[z,t], z, t] = 1  #couldn't do this without loops - advanced indexing doesnt appear to work when taking multiple slices
     dry_decay_period_fzt[...] = 1 - (1 - dry_decay_daily_fzt) ** length_fz[...,na]
-
-    ###create dry pasture exists mask - in the current structure dry pasture only exists after the growing season.
-    mask_dryfeed_exists_fzt[...] = index_f[:, na, na] >= i_dry_exists_zt   #mask periods when dry feed is available to livestock.
-    mask_greenfeed_exists_fzt[...] = index_f[:, na, na] <= i_end_of_gs_zt   #green exists in the period which is the end of growing season hence <=
+    ## dry, DM decline (high = low pools)
+    #todo look at masking the dry transfer to only those periods that dry exist (decay eos > 0)
+    dry_transfer_t_fzt = 1000 * (1-dry_decay_period_fzt)
 
     ###create equation coefficients for pgr = a+b*foo
     i_fxg_foo_oflzt[2,...]  = 100000 #large number so that the np.searchsorted doesn't go above
@@ -419,26 +459,8 @@ def f_pasture(params, r_vals, ev):
     ## area of green pasture being grazed and growing
     phase_area_flrzt = pfun.f_green_area(resown_rt, pasture_rt, periods_destocked_fzt, arable_l)
 
-    ############################################################
     ## erosion limit. The minimum FOO at the end of each period#
-    ############################################################
-    arable_erosion_flrt = i_lmu_conservation_flt[..., na,:]  \
-                                    *  arable_l[:, na, na]  \
-                                    * pasture_rt
-    na_erosion_flrt[...,0] = np.sum(i_lmu_conservation_flt[..., na,:]
-                                    *         (1-arable_l[:, na, na])
-                                    *           pasture_rt
-                                    , axis = -1)
-    erosion_flrt = arable_erosion_flrt + na_erosion_flrt
-
-    ##############
-    ## PGR & FOO #
-    ##############
-    ''' Populates the parameter arrays for green and dry feed.
-
-    Pasture growth, consumption and senescence of green feed.
-    Consumption & deferment of dry feed.
-    '''
+    erosion_flrt = pfun.f_erosion(i_lmu_conservation_flt, arable_l, pasture_rt)
 
     ## initialise numpy arrays used only in this method
     senesce_propn_dgoflzt      = np.zeros(dgoflzt, dtype = 'float64')
@@ -451,10 +473,6 @@ def f_pasture(params, r_vals, ev):
     ### if the threshold is below the expected maintenance quality set to the maintenance quality
     ### switching from one below maintenance feed to another that is further below maintenance doesn't affect average efficiency
     me_threshold_vfzt[me_threshold_vfzt < i_fec_maintenance_t] = i_fec_maintenance_t
-
-    ## dry, DM decline (high = low pools)
-    #todo look at masking the dry transfer to only those periods that dry exist (decay eos > 0)
-    dry_transfer_t_fzt = 1000 * (1-dry_decay_period_fzt)
 
     ## FOO on the non-arable areas in crop paddocks is ungrazed FOO of pasture type 0 (annual), therefore calculate the profile based on the pasture type 0 values
     grn_foo_start_ungrazed_flzt, dry_foo_start_ungrazed_flzt = pfun.f1_calc_foo_profile(
@@ -470,149 +488,32 @@ def f_pasture(params, r_vals, ev):
     # params['p_harvest_period_prop']  = dict([(pinp.period['feed_periods'].index[harv_period_z], harv_proportion_z)])
 
     ### all pasture from na area goes into the Low pool (#1) because it is rank & low quality
-    nap_dflrzt[0,harv_period_z,l_idx[:,na,na], r_idx[:,na], z_idx, 0] = (
-                                            dry_foo_start_ungrazed_flzt[harv_period_z, l_idx[:,na], z_idx, 0][:,na,:]
+    nap_dflrzt[0, harv_period_z, l_idx[:,na,na], r_idx[:,na], z_idx, 0] = (
+                                             dry_foo_start_ungrazed_flzt[harv_period_z, l_idx[:,na], z_idx, 0][:,na,:]
                                            * (1-arable_l[:, na,na])
                                            * (1-np.sum(pasture_rt[:, na, :], axis=-1)))    # sum pasture proportion across the t axis to get area of crop
 
-    ## green initial FOO for the 'grnha' decision variables
-    foo_start_grnha_oflzt = i_fxg_foo_oflzt
-#    foo_start_grnha_oflzt = np.maximum(i_fxg_foo_oflzt, i_base_ft[:, na, na, :])  # to ensure that final foo can not be below the base level
-    max_foo_flzt                 = np.maximum(i_fxg_foo_oflzt[1,...], grn_foo_start_ungrazed_flzt)     #maximum of ungrazed foo and foo from the medium foo level
-    foo_start_grnha_oflzt[2,...] = np.maximum.accumulate(max_foo_flzt,axis=0)                          #maximum accumulated along the feed periods axis, i.e. max to date
-    # foo_start_grnha_oflt[...]   = np.maximum(foo_start_grnha_oflt
-    #                                          , i_base_ft[:, na,:])         # to ensure that final foo can not be below 0
-    foo_start_grnha_oflzt = foo_start_grnha_oflzt * mask_greenfeed_exists_fzt[:, na, ...]  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
+    ## Pasture growth, consumption of green feed.
+    me_cons_grnha_vgoflzt, volume_grnha_goflzt, senesce_period_grnha_goflzt, senesce_eos_grnha_goflzt, dmd_sward_grnha_goflzt     \
+         = pfun.f_grn_pasture(cu3, cu4, i_fxg_foo_oflzt, i_fxg_pgr_oflzt, c_pgr_gi_scalar_gft, grn_foo_start_ungrazed_flzt
+                              , i_foo_graze_propn_gt, grn_senesce_startfoo_fzt, grn_senesce_pgrcons_fzt, i_grn_senesce_eos_fzt
+                              , i_base_ft, i_grn_trampling_ft, i_grn_dig_flzt, i_grn_dmd_range_ft, i_pasture_stage_p6z
+                              , i_legume_zt, me_threshold_vfzt, i_me_eff_gainlose_ft, mask_greenfeed_exists_fzt
+                              , length_fz, ev_is_not_confinement_v)
 
-
-    ## green, pasture growth for the 'grnha' decision variables
-    pgr_grnday_oflzt = np.maximum(0.01, i_fxg_pgr_oflzt)                  # use maximum to ensure that the pgr is non zero (because foo_days requires dividing by pgr)
-    pgr_grnha_goflzt = pgr_grnday_oflzt * length_fz[:,na, :, na] * c_pgr_gi_scalar_gft[:, na, :, na, na, :]
-
-    ## green, final foo from initial, pgr and senescence
-    ### senescence during the period is senescence of the starting FOO and of the FOO that is added/reduced by growth/grazing
-    senesce_period_grnha_goflzt = (foo_start_grnha_oflzt * grn_senesce_startfoo_fzt[:, na, ...]
-                                   + pgr_grnha_goflzt[0, ...] * grn_senesce_pgrcons_fzt[:, na, ...])
-    ### foo at end of period if ungrazed
-    foo_end_ungrazed_grnha_oflzt  = foo_start_grnha_oflzt + pgr_grnha_goflzt[0, ...] - senesce_period_grnha_goflzt
-    ### foo at end of period with range of grazing intensity prior to eos senescence
-    foo_endprior_grnha_goflzt = (foo_end_ungrazed_grnha_oflzt
-                                 - (foo_end_ungrazed_grnha_oflzt - i_base_ft[:, na, na,: ])
-                                 * i_foo_graze_propn_gt[:, na, na, na, na, :])
-    senesce_eos_grnha_goflzt = foo_endprior_grnha_goflzt * i_grn_senesce_eos_fzt[:, na, ...]
-    foo_end_grnha_goflzt = foo_endprior_grnha_goflzt - senesce_eos_grnha_goflzt
-    #apply mask to remove any green foo at the end of period in periods when green pas doesnt exist.
-    foo_end_grnha_goflzt = foo_end_grnha_goflzt * mask_greenfeed_exists_fzt[:, na, ...]
-
-    ## green, removal & dmi
-    ### divide by (1 - grn_senesce_pgrcons) to allows for consuming feed reducing senescence
-    removal_grnha_goflzt =np.maximum(0, (foo_start_grnha_oflzt * (1 - grn_senesce_startfoo_fzt[:, na, ...])
-                                         + pgr_grnha_goflzt * (1 - grn_senesce_pgrcons_fzt[:, na, :])
-                                         - foo_endprior_grnha_goflzt)
-                                        / (1 - grn_senesce_pgrcons_fzt[:, na, :]))
-    cons_grnha_t_goflzt  = removal_grnha_goflzt / (1 + i_grn_trampling_ft[:, na, na, :])
-
-    ## green, dmd & md from input values and impact of foo & grazing intensity
-    ### sward digestibility is reduced with higher FOO (based on start FOO)
-    ### diet digestibility is reduced with higher FOO if grazing intensity is greater than 25%
-    #### Low FOO or low grazing intensity is input
-    #### High FOO with 100% grazing is reduced by half the range in digestibility.
-    #### Between low and high FOO, and between 25% & 100% grazing intensity is a linear interpolation
-    dmd_sward_grnha_goflzt = (i_grn_dig_flzt - i_grn_dmd_range_ft[:, na, na, :] /2
-                              * fun.f_divide(foo_start_grnha_oflzt - foo_start_grnha_oflzt[0,...]
-                                              , foo_start_grnha_oflzt[-1,...] - foo_start_grnha_oflzt[0,...]))
-    dmd_diet_grnha_goflzt = (i_grn_dig_flzt - i_grn_dmd_range_ft[:, na, na, :] /2
-                             * fun.f_divide(foo_start_grnha_oflzt - foo_start_grnha_oflzt[0,...]
-                                            , foo_start_grnha_oflzt[-1,...] - foo_start_grnha_oflzt[0,...])
-                             * (i_foo_graze_propn_gt[:, na, na, na, na, :] - 0.25)/(1 - 0.25))  # 0.25 is grazing intensity that gives diet quality == input value.
-    grn_md_grnha_goflzt = fsfun.dmd_to_md(dmd_diet_grnha_goflzt)
-
-    ## green, mei & volume
-    ###Average FOO is calculated using FOO at the end prior to EOS senescence (which assumes all pasture senesces after grazing)
-    foo_ave_grnha_goflzt = (foo_start_grnha_oflzt + foo_endprior_grnha_goflzt)/2
-    ### pasture params used to convert foo for rel availability
-    pasture_stage_flzt = i_pasture_stage_p6z[:, na, :, na]
-    ### adjust foo and calc hf
-    foo_ave_grnha_goflzt, hf = fsfun.f_foo_convert(cu3, cu4, foo_ave_grnha_goflzt, pasture_stage_flzt, i_legume_zt, z_pos=-2)
-    ### calc relative availability - note that the equation system used is the one selected for dams in p1
-    if uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used
-        grn_ri_availability_goflzt = fsfun.f_ra_cs(foo_ave_grnha_goflzt, hf)
-    elif uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==1: #Murdoch function used
-        grn_ri_availability_goflzt = fsfun.f_ra_mu(foo_ave_grnha_goflzt, hf)
-    ### calc relative quality - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
-    if uinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
-        grn_ri_quality_goflzt = fsfun.f_rq_cs(dmd_diet_grnha_goflzt, i_legume_zt)
-    grn_ri_goflzt = fsfun.f_rel_intake(grn_ri_availability_goflzt, grn_ri_quality_goflzt, i_legume_zt)
-
-    me_cons_grnha_vgoflzt = fsfun.f_effective_mei( cons_grnha_t_goflzt
-                                              ,  grn_md_grnha_goflzt
-                                              ,   me_threshold_vfzt[:, na, na,:, na, ...]
-                                              ,        grn_ri_goflzt
-                                              , i_me_eff_gainlose_ft[:, na, na, :])
-    me_cons_grnha_vgoflzt = me_cons_grnha_vgoflzt * mask_greenfeed_exists_fzt[:, na, ...]  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
-    me_cons_grnha_vgoflzt = me_cons_grnha_vgoflzt * ev_is_not_confinement_v[:,na,na,na,na,na,na] #me from pasture is 0 in the confinement pool
-
-    volume_grnha_goflzt    =  cons_grnha_t_goflzt / grn_ri_goflzt              # parameters for the growth/grazing activities: Total volume of feed consumed from the hectare
-    volume_grnha_goflzt = volume_grnha_goflzt * mask_greenfeed_exists_fzt[:, na, ...]  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
 
     ## dry, dmd & foo of feed consumed
-    ### do sensitivity adjustment for dry_dmd_input based on increasing/reducing the reduction in dmd from the maximum (starting value)
-    dry_dmd_adj_fzt  = (i_dry_dmd_ave_fzt - np.max(i_dry_dmd_ave_fzt, axis=0)) * sen.sam['dry_dmd_decline','annual']
-    dry_dmd_high_fzt = np.max(i_dry_dmd_ave_fzt, axis=0) + dry_dmd_adj_fzt + i_dry_dmd_range_fzt/2
-    dry_dmd_low_fzt  = np.max(i_dry_dmd_ave_fzt, axis=0) + dry_dmd_adj_fzt - i_dry_dmd_range_fzt/2
-    dry_dmd_dfzt     = np.stack((dry_dmd_low_fzt, dry_dmd_high_fzt), axis=0)    # create an array with a new axis 0 by stacking the existing arrays
-
-    dry_foo_high_fzt = i_dry_foo_high_fzt * 3/4
-    dry_foo_low_fzt  = i_dry_foo_high_fzt * 1/4                               # assuming half the foo is high quality and the remainder is low quality
-    dry_foo_dfzt     = np.stack((dry_foo_low_fzt, dry_foo_high_fzt),axis=0)  # create an array with a new axis 0 by stacking the existing arrays
-
-    ## dry, volume of feed consumed per tonne
-    ### adjust foo and calc hf
-    pasture_stage_fzt = i_pasture_stage_p6z[...,na]
-    dry_foo_dfzt, hf = fsfun.f_foo_convert(cu3, cu4, dry_foo_dfzt, pasture_stage_fzt, i_legume_zt, z_pos=-2)
-    ### calc relative availability - note that the equation system used is the one selected for dams in p1
-    if uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used
-        dry_ri_availability_dfzt = fsfun.f_ra_cs(dry_foo_dfzt, hf)
-    elif uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==1: #Murdoch function used
-        dry_ri_availability_dfzt = fsfun.f_ra_mu(dry_foo_dfzt, hf)
-
-    ### calc relative quality - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
-    if uinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
-        dry_ri_quality_dfzt = fsfun.f_rq_cs(dry_dmd_dfzt, i_legume_zt)
-    dry_ri_dfzt = fsfun.f_rel_intake(dry_ri_availability_dfzt, dry_ri_quality_dfzt, i_legume_zt)  #set the minimum RI to 0.05
-
-    dry_volume_t_dfzt = 1000 / dry_ri_dfzt                 # parameters for the dry feed grazing activities: Total volume of the tonne consumed
-    dry_volume_t_dfzt = dry_volume_t_dfzt * mask_dryfeed_exists_fzt  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
-
-    ## dry, ME consumed per kg consumed
-    dry_md_dfzt        = fsfun.dmd_to_md(dry_dmd_dfzt)
-    dry_md_vdfzt       = np.stack([dry_md_dfzt] * n_feed_pools, axis = 0)
-    ## convert to effective quality per tonne
-    dry_mecons_t_vdfzt = fsfun.f_effective_mei( 1000                                    # parameters for the dry feed grazing activities: Total ME of the tonne consumed
-                               ,          dry_md_vdfzt
-                               ,     me_threshold_vfzt[:, na, ...]
-                               ,           dry_ri_dfzt
-                               , i_me_eff_gainlose_ft[:,na,:])
-    dry_mecons_t_vdfzt = dry_mecons_t_vdfzt * mask_dryfeed_exists_fzt  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
-    dry_mecons_t_vdfzt = dry_mecons_t_vdfzt * ev_is_not_confinement_v[:,na,na,na,na] #me from pasture is 0 in the confinement pool
+    dry_mecons_t_vdfzt, dry_volume_t_dfzt, dry_dmd_dfzt = pfun.f_dry_pasture(cu3, cu4, i_dry_dmd_ave_fzt, i_dry_dmd_range_fzt
+                                , i_dry_foo_high_fzt, me_threshold_vfzt, i_me_eff_gainlose_ft, mask_dryfeed_exists_fzt
+                                , i_pasture_stage_p6z, ev_is_not_confinement_v, i_legume_zt, n_feed_pools)
 
     ## dry, animal removal
     dry_removal_t_ft  = 1000 * (1 + i_dry_trampling_ft)
 
-    ## senescence from green to dry - green, total senescence for the period (available in the next period)
-    ## the pasture that senesces at the eos is assumed to be senescing at the end of the growth period and doesn't decay
-    ## the pasture that senesces during the period decays prior to being transferred
-    ## the senesced feed that is available to stock is that which senesces at the end of the growing season (i.e. not during the growing season)
-    senesce_total_grnha_goflzt    = senesce_eos_grnha_goflzt + senesce_period_grnha_goflzt * (1 - dry_decay_period_fzt[:, na, ...])
-    grn_dmd_senesce_goflzt        =       dmd_sward_grnha_goflzt       \
-                                   + i_grn_dmd_senesce_redn_fzt[:, na, ...]
-    senesce_propn_dgoflzt[1,...]  = np.clip(( grn_dmd_senesce_goflzt                     # senescence to high pool. np.clip reduces the range of the dmd to the range of dmd in the dry feed pools
-                                             -      dry_dmd_low_fzt[:, na, :])
-                                            / (    dry_dmd_high_fzt[:, na,:]
-                                               -    dry_dmd_low_fzt[:, na,:]), 0, 1)
-    senesce_propn_dgoflzt[0,...] = 1- senesce_propn_dgoflzt[1,...]                       # senescence to low pool
-    senesce_grnha_dgoflzt        = senesce_total_grnha_goflzt * senesce_propn_dgoflzt       # ^alternative in one array parameters for the growth/grazing activities: quantity of green that senesces to the high pool
-    senesce_grnha_dgoflzt        = senesce_grnha_dgoflzt * mask_greenfeed_exists_fzt[:, na, ...]  # apply mask - green pasture only senesces when green pas exists.
+    ## Senescence of green feed into the dry pool.
+    senesce_grnha_dgoflzt = pfun.f_senescence(senesce_period_grnha_goflzt, senesce_eos_grnha_goflzt, dry_decay_period_fzt
+                                              , dmd_sward_grnha_goflzt, i_grn_dmd_senesce_redn_fzt, dry_dmd_dfzt
+                                              , mask_greenfeed_exists_fzt)
 
 
     ######
