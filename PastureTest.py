@@ -39,9 +39,23 @@ pastures = sinp.general['pastures'][pas_inc]
 exceldata = pinp.pasture_inputs[pastures[0]]           # assign to exceldata the pasture data for the first pasture type (annuals)
 i_me_maintenance_vf = exceldata['MaintenanceEff'][:, 1:].T
 ##add ev params to dict for use in pasture.py
-ev['ev_cutoff_p6fz'] = i_me_maintenance_vf[0:-1, ...].T[..., None]
-ev['ev_max_p6z'] = i_me_maintenance_vf[-1, :, None]
+n_non_confinement_pools=4
+confinement_inc = False
+index_f = np.arange(n_non_confinement_pools+confinement_inc)
+##create the upper and lower cutoffs. If there is a confinement slice then it will be populated with values but they never get used.
+fev_upper_p6f = sinp.structuralsa['i_fev_upper_p6'][:,None]
+fev_lower_p6f = sinp.structuralsa['i_fev_lower_p6'][:,None]
+fev_cutoff_lower_p6f = fev_lower_p6f + (
+            fev_upper_p6f - fev_lower_p6f) / n_non_confinement_pools * index_f
+fev_cutoff_upper_p6f = fev_lower_p6f + (fev_upper_p6f - fev_lower_p6f) / n_non_confinement_pools * (
+            index_f + 1)
+###Average these values to be passed to Pasture.py for efficiency of utilising ME and add to the dict
+fev_cutoff_ave_p6f = (fev_cutoff_lower_p6f + fev_cutoff_upper_p6f) / 2
+ev['fev_cutoff_ave_p6f'] = fev_cutoff_ave_p6f
+ev['confinement_inc'] = confinement_inc
+ev['len_ev'] = n_non_confinement_pools+confinement_inc
 
+##call pasture module
 pas.f_pasture(params, r_vals, ev)
 
 
