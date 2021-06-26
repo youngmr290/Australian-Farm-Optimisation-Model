@@ -1,58 +1,33 @@
 """
-@author: young
+author: Young
 
-Description of this pasture module: This representation includes at optimisation (ie the following options are represented in the variables of the model)
-    Growth rate of pasture (PGR) varies with FOO at the start of the period and grazing intensity during the period
-        Grazing intensity operates by altering the average FOO during the period
-    The nutritive value of the green feed consumed (as represented by ME & volume) varies with FOO & grazing intensity.
-        Grazing intensity alters the average FOO during the period and the capacity of the animals to select a higher quality diet.
-    Selective grazing of dry pasture. 2 dry pasture quality pools are represented and either can be selected for grazing
-        Note: There is not a constraint that ensures that the high quality pool is grazed prior to the low quality pool (as there is in the stubble selective grazing)
+Pasture is the primary livestock feed source because in an extensive farming system it is a cost effective
+source of energy that is available for the entire year (ref, ?Rossiter 1966). Different pasture types can be
+represented by adding inputs for each pasture type. The default pasture type is “annual pasture”, however,
+this can be changed by altering the inputs.
 
-Pasture is a primary livestock feed source because in an extensive system it is a good source of megajoules per doll ar. In AFO the biological
-details of pasture are represented in detail. Including the relationship between FOO, PGR and quality, the effects of
-rotation on pasture production, the life cycle over the year, pasture conservation and pasture availability to livestock.
-Pasture is split into the following sections:
+The pasture feed source can be supplemented with concentrates and in a mixed crop-livestock farm system
+the pasture can be complemented with dry residues from crop production (stubbles).
+The biology and logistics of pasture growth rate that are represented in AFO is:
 
-    #. Germination & Reseeding of pasture
-    #. Green & dry feed: growth, senescence & consumption
-    #. Pasture consumed on crop paddocks
-    #. Limit on grazing for soil conservation
+    * PGR is dependent on pasture leaf area, which is quantified by the level of feed on offer (FOO, kg of DM/ha),
+    * PGR for each pasture type varies with the phase during its life cycle, soil moisture and sunlight. All are quantified by land management unit, time of year and season.
+    * Germination of annual pastures at the break of season is dependent on the seed bank. Seed bank is controlled by the rotation in which the pasture is grown.
+    * The digestibility of the diet selected by animals grazing pasture is dependent on their capacity for selective grazing.
+    * The intake of animals grazing pasture is dependent on FOO and diet DMD.
+    * The risk of resource degradation increases when ground cover is lower.
 
-The green pasture activity represents FOO at the start of the period, FOO at the end of the period, animal removal,
-energy per unit of dry matter and volume. These aspects are aggregated to allow the effects of FOO level and level
-of defoliation on diet quality to be included. The reasons for this are:
+The decision variables that can be optimised in AFO that represent the above biology are:
 
-    #. The intake capacity of livestock is affected by the level of FOO (e.g. when there is more FOO, animals can eat
-       more and achieve higher growth rates).
-    #. Livestock diet quality change with grazing pressure (eg. by running a lower stocking rate livestock can improve
-       their diet quality through increased diet selectivity). This selectivity can be important for finishing animals
-       for market or fattening animals for mating.
-    #. The digestibility of pasture decreases as the length of time from the last defoliation increases (i.e. older
-       leaves are less digestible). Having consumption and FOO in the same activity allows a drop in digestibility
-       associated with old leaf to be included by linking digestibility to FOO. This is especially important for species
-       such as kikuyu that drop in digestibility rapidly if pastures are grazed laxly and FOO increases.
-
-These issues are more important in a system producing meat, where growth rate of animals and hence diet quality is
-critical to profitability. In a meat system the trade-off between quantity of feed utilised and quality of feed is
-quite different than the trade-off for a wool system.
-For a given period the activities are defined by starting FOO level and grazing intensity. There are three foo levels;
-low, medium and high starting FOO and four grazing intensities; no grazing, low, medium and high. Green pasture
-activities represent the total green pasture on the farm in each period. The activities are initially provided based
-on the area of pasture and its level of establishment. Pasture establishment is dependant on the rotation history and
-whether or not the pasture is resown. Additionally, the option to manipulate pasture (e.g. spraytop) is included. Each
-different management option (i.e. reseeding and manipulation) are represented as individual land use options so the
-model can optimise which to select. When the pasture senesces, it is removed from the green activities and allocated
-into the dry pasture activities. Dry pasture is represented by a low and high quality activities. Over time the quality
-of the dry pasture changes and the quantity changes as it decays and is consumed.
-AFO can handle multiple pasture types. The user simply needs to create a copy of the inputs and calibrate them to the
-new pasture.
+    * The rotation phases in which pasture can be grown on each LMU
+    * A discrete range of FOO level (low, medium and high) at the start of each feed period
+    * A discrete range of the severity of defoliation (0, 25%, 50% & 100%) in each feed period
+    * The quantity of dry feed consumed from each of 2 dry feed quality group in each feed period
 
 
 """
 
 #todo add labour required for feed budgeting. Inputs are currently in the sheep sheet of Property.xls
-
 
 '''
 import functions from other modules
@@ -432,7 +407,7 @@ def f_pasture(params, r_vals, ev):
 
 
     ## define instantiate arrays that are assigned in slices
-    na_erosion_flrt      = np.zeros(flrt,  dtype = 'float64')
+    # na_erosion_flrt      = np.zeros(flrt,  dtype = 'float64')
     # na_phase_area_flrzt  = np.zeros(flrzt, dtype = 'float64')
     # grn_restock_foo_flzt = np.zeros(flzt,  dtype = 'float64')
     # dry_restock_foo_flzt = np.zeros(flzt,  dtype = 'float64')
@@ -494,18 +469,20 @@ def f_pasture(params, r_vals, ev):
                                            * (1-np.sum(pasture_rt[:, na, :], axis=-1)))    # sum pasture proportion across the t axis to get area of crop
 
     ## Pasture growth, consumption of green feed.
-    me_cons_grnha_vgoflzt, volume_grnha_goflzt, senesce_period_grnha_goflzt, senesce_eos_grnha_goflzt, dmd_sward_grnha_goflzt     \
-         = pfun.f_grn_pasture(cu3, cu4, i_fxg_foo_oflzt, i_fxg_pgr_oflzt, c_pgr_gi_scalar_gft, grn_foo_start_ungrazed_flzt
-                              , i_foo_graze_propn_gt, grn_senesce_startfoo_fzt, grn_senesce_pgrcons_fzt, i_grn_senesce_eos_fzt
-                              , i_base_ft, i_grn_trampling_ft, i_grn_dig_flzt, i_grn_dmd_range_ft, i_pasture_stage_p6z
-                              , i_legume_zt, me_threshold_vfzt, i_me_eff_gainlose_ft, mask_greenfeed_exists_fzt
-                              , length_fz, ev_is_not_confinement_v)
+    me_cons_grnha_vgoflzt, volume_grnha_goflzt, foo_start_grnha_oflzt, foo_end_grnha_goflzt, senesce_period_grnha_goflzt \
+    , senesce_eos_grnha_goflzt, dmd_sward_grnha_goflzt, pgr_grnha_goflzt, foo_endprior_grnha_goflzt, cons_grnha_t_goflzt \
+    , foo_ave_grnha_goflzt, dmd_diet_grnha_goflzt = pfun.f_grn_pasture(
+        cu3, cu4, i_fxg_foo_oflzt, i_fxg_pgr_oflzt, c_pgr_gi_scalar_gft, grn_foo_start_ungrazed_flzt
+        , i_foo_graze_propn_gt, grn_senesce_startfoo_fzt, grn_senesce_pgrcons_fzt, i_grn_senesce_eos_fzt
+        , i_base_ft, i_grn_trampling_ft, i_grn_dig_flzt, i_grn_dmd_range_ft, i_pasture_stage_p6z
+        , i_legume_zt, me_threshold_vfzt, i_me_eff_gainlose_ft, mask_greenfeed_exists_fzt
+        , length_fz, ev_is_not_confinement_v)
 
 
     ## dry, dmd & foo of feed consumed
-    dry_mecons_t_vdfzt, dry_volume_t_dfzt, dry_dmd_dfzt = pfun.f_dry_pasture(cu3, cu4, i_dry_dmd_ave_fzt, i_dry_dmd_range_fzt
-                                , i_dry_foo_high_fzt, me_threshold_vfzt, i_me_eff_gainlose_ft, mask_dryfeed_exists_fzt
-                                , i_pasture_stage_p6z, ev_is_not_confinement_v, i_legume_zt, n_feed_pools)
+    dry_mecons_t_vdfzt, dry_volume_t_dfzt, dry_dmd_dfzt, dry_foo_dfzt = pfun.f_dry_pasture(
+        cu3, cu4, i_dry_dmd_ave_fzt, i_dry_dmd_range_fzt, i_dry_foo_high_fzt, me_threshold_vfzt, i_me_eff_gainlose_ft
+        , mask_dryfeed_exists_fzt, i_pasture_stage_p6z, ev_is_not_confinement_v, i_legume_zt, n_feed_pools)
 
     ## dry, animal removal
     dry_removal_t_ft  = 1000 * (1 + i_dry_trampling_ft)

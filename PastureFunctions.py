@@ -9,6 +9,8 @@ import StructuralInputs as sinp
 import Periods as per
 import FeedsupplyFunctions as fsfun
 import Functions as fun
+import Sensitivity as sen
+
 
 na = np.newaxis
 
@@ -190,11 +192,12 @@ def f_erosion(i_lmu_conservation_flt, arable_l, pasture_rt):
     arable_erosion_flrt = i_lmu_conservation_flt[..., na,:]  \
                                     *  arable_l[:, na, na]  \
                                     * pasture_rt
-    na_erosion_flrt[...,0] = np.sum(i_lmu_conservation_flt[..., na,:]
+    na_erosion_flr = np.sum(i_lmu_conservation_flt[..., na,:]
                                     *         (1-arable_l[:, na, na])
                                     *           pasture_rt
                                     , axis = -1)
-    erosion_flrt = arable_erosion_flrt + na_erosion_flrt
+    erosion_flrt = arable_erosion_flrt
+    erosion_flrt[..., 0] = erosion_flrt[..., 0] + na_erosion_flr #non arable area is annual pasture thus add to the annual slice
     return erosion_flrt
 
 
@@ -292,7 +295,9 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_oflzt, i_fxg_pgr_oflzt, c_pgr_gi_scalar_gf
     volume_grnha_goflzt = cons_grnha_t_goflzt / grn_ri_goflzt
     #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
     volume_grnha_goflzt = volume_grnha_goflzt * mask_greenfeed_exists_fzt[:, na,...]
-    return me_cons_grnha_vgoflzt, volume_grnha_goflzt, senesce_period_grnha_goflzt, senesce_eos_grnha_goflzt, dmd_sward_grnha_goflzt
+    return (me_cons_grnha_vgoflzt, volume_grnha_goflzt, foo_start_grnha_oflzt, foo_end_grnha_goflzt
+           , senesce_period_grnha_goflzt, senesce_eos_grnha_goflzt, dmd_sward_grnha_goflzt, pgr_grnha_goflzt
+           , foo_endprior_grnha_goflzt, cons_grnha_t_goflzt, foo_ave_grnha_goflzt, dmd_diet_grnha_goflzt)
 
 
 def f_senescence(senesce_period_grnha_goflzt, senesce_eos_grnha_goflzt, dry_decay_period_fzt, dmd_sward_grnha_goflzt
@@ -304,11 +309,12 @@ def f_senescence(senesce_period_grnha_goflzt, senesce_eos_grnha_goflzt, dry_deca
     senesce_total_grnha_goflzt    = senesce_eos_grnha_goflzt + senesce_period_grnha_goflzt * (1 - dry_decay_period_fzt[:, na, ...])
     grn_dmd_senesce_goflzt        =       dmd_sward_grnha_goflzt       \
                                    + i_grn_dmd_senesce_redn_fzt[:, na, ...]
-    senesce_propn_dgoflzt[1,...]  = np.clip(( grn_dmd_senesce_goflzt                     # senescence to high pool. np.clip reduces the range of the dmd to the range of dmd in the dry feed pools
-                                             -      dry_dmd_low_fzt[:, na, :])
-                                            / (    dry_dmd_high_fzt[:, na,:]
-                                               -    dry_dmd_low_fzt[:, na,:]), 0, 1)
-    senesce_propn_dgoflzt[0,...] = 1- senesce_propn_dgoflzt[1,...]                       # senescence to low pool
+    senesce_propn_h_goflzt  = np.clip((grn_dmd_senesce_goflzt               # senescence to high pool. np.clip reduces the range of the dmd to the range of dmd in the dry feed pools
+                                             -      dry_dmd_dfzt[0,:, na, :])
+                                            / (    dry_dmd_dfzt[1,:, na,:]
+                                               -    dry_dmd_dfzt[0,:, na,:]), 0, 1)
+    senesce_propn_l_dgoflzt = 1- senesce_propn_h_goflzt                       # senescence to low pool
+    senesce_propn_dgoflzt = np.stack([senesce_propn_l_dgoflzt, senesce_propn_h_goflzt])
     senesce_grnha_dgoflzt        = senesce_total_grnha_goflzt * senesce_propn_dgoflzt       # ^alternative in one array parameters for the growth/grazing activities: quantity of green that senesces to the high pool
     senesce_grnha_dgoflzt        = senesce_grnha_dgoflzt * mask_greenfeed_exists_fzt[:, na, ...]  # apply mask - green pasture only senesces when green pas exists.
     return senesce_grnha_dgoflzt
@@ -357,7 +363,7 @@ def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_fzt, i_dry_dmd_range_fzt, i_dry_foo_hi
                                , i_me_eff_gainlose_ft[:,na,:])
     dry_mecons_t_vdfzt = dry_mecons_t_vdfzt * mask_dryfeed_exists_fzt  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
     dry_mecons_t_vdfzt = dry_mecons_t_vdfzt * ev_is_not_confinement_v[:,na,na,na,na] #me from pasture is 0 in the confinement pool
-    return dry_mecons_t_vdfzt, dry_volume_t_dfzt, dry_dmd_dfzt
+    return dry_mecons_t_vdfzt, dry_volume_t_dfzt, dry_dmd_dfzt, dry_foo_dfzt
 
 
 def f_poc(cu3, cu4, i_poc_intake_daily_flt, i_poc_dmd_ft, i_poc_foo_ft, i_legume_zt, i_pasture_stage_p6z, ev_is_not_confinement_v):
