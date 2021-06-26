@@ -22,3 +22,7 @@ flowcharts
 /*.json
 /*.csv
 /*.jpg
+/docs/_build
+/docs/_static
+/docs/_templates
+
