@@ -134,12 +134,33 @@ def update_reseeding_foo(foo_grn_reseeding_flrzt, foo_dry_reseeding_flrzt,
 
 def f_poc(cu3, cu4, i_poc_intake_daily_flt, i_poc_dmd_ft, i_poc_foo_ft, i_legume_zt, i_pasture_stage_p6z, ev_is_not_confinement_v):
     '''
-    The amount of pasture consumption that can occur on crop paddocks each day before seeding
-    - this is adjusted for lmu and feed period
-    The quality of pasture on crop paddocks each day before seeding
-    - this is adjusted for feed period
-    The relative intake of pasture on crop paddocks each day before seeding
-    - this is adjusted for feed period
+    Calculate energy, volume and consumption parameters for pasture consumed on crop paddocks before seeding.
+
+    The amount of pasture consumption that can occur on crop paddocks per hectare per day before seeding
+    - adjusted for lmu and feed period
+    The energy provided by the consumption of 1 tonne of pasture on crop paddocks.
+    - adjusted for feed period
+    The livestock intake volume required to consume 1 tonne of pasture on crop paddocks.
+    - adjusted for feed period
+
+    Pasture can be grazed on crop paddocks if seeding occurs after pasture germination. Grazing can occur between
+    pasture germination and destocking. Destocking date occurs a certain number of days before seeding, this is to
+    allow the pasture leaf area to grow so that the knock down spray is effective. The amount of pasture that can be
+    consumed per day is a user defined input that can vary by LMU. The grazing days provide by each seeding activity
+    are calculated in mach.py and depend on the time between the break of season and destocking prior to seeding.
+
+    :param cu3: params used to convert foo for rel availability.
+    :param cu4: params used to convert height for rel availability.
+    :param i_poc_intake_daily_flt: maximum daily intake available from 1ha of pasture on crop paddocks
+    :param i_poc_dmd_ft: average digestibility of pasture on crop paddocks.
+    :param i_poc_foo_ft: average foo of pasture on crop paddocks.
+    :param i_legume_zt: legume content of pasture.
+    :param i_pasture_stage_p6z: maturity of the pasture (establishment or vegetative as defined by CSIRO)
+    :param ev_is_not_confinement_v: boolean array stating which fev pools are not confinement feeding pools.
+    :return:
+        - poc_con_fl - tonnes of dry matter available per hectare per day on crop paddocks before seeding.
+        - poc_md_vf - md per tonne of poc.
+        - poc_vol_fz - volume required to consume 1 tonne of poc.
     '''
     ### poc is assumed to be annual hence the 0 slice in the last axis
     ## con
@@ -165,4 +186,4 @@ def f_poc(cu3, cu4, i_poc_intake_daily_flt, i_poc_dmd_ft, i_poc_foo_ft, i_legume
     poc_vol_fz = fun.f_divide(1000, poc_ri_fz)  # 1000 to convert to vol per tonne
 
 
-    return poc_con_fl, poc_md_vf, poc_ri_fz, poc_vol_fz
+    return poc_con_fl, poc_md_vf, poc_vol_fz

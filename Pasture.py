@@ -757,8 +757,8 @@ def f_pasture(params, r_vals, ev):
     ######
     #poc #
     ######
-
-    poc_con_fl, poc_md_vf, poc_ri_fz, poc_vol_fz = pfun.f_poc(cu3, cu4, i_poc_intake_daily_flt, i_poc_dmd_ft, i_poc_foo_ft
+    ##call poc function - info about poc can be found in function doc string.
+    poc_con_fl, poc_md_vf, poc_vol_fz = pfun.f_poc(cu3, cu4, i_poc_intake_daily_flt, i_poc_dmd_ft, i_poc_foo_ft
                                                               , i_legume_zt, i_pasture_stage_p6z, ev_is_not_confinement_v)
 
     ###########
