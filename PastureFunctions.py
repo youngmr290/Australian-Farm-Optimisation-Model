@@ -3,7 +3,10 @@ import numpy as np
 
 ##import AFO modules
 import PropertyInputs as pinp
+import UniversalInputs as uinp
 import Periods as per
+import FeedsupplyFunctions as fsfun
+import Functions as fun
 
 na = np.newaxis
 
@@ -128,3 +131,38 @@ def update_reseeding_foo(foo_grn_reseeding_flrzt, foo_dry_reseeding_flrzt,
     foo_dry_reseeding_flrzt[next_period_lrzt,l_idx,r_idx,z_idx,t_idx] = foo_change_lrzt * (1-proportion_zt) * (1-propn_grn) * 0.5  # add the remainder to the next period (wrapped if past the 10th period)
 
     return foo_grn_reseeding_flrzt, foo_dry_reseeding_flrzt
+
+def f_poc(cu3, cu4, i_poc_intake_daily_flt, i_poc_dmd_ft, i_poc_foo_ft, i_legume_zt, i_pasture_stage_p6z, ev_is_not_confinement_v):
+    '''
+    The amount of pasture consumption that can occur on crop paddocks each day before seeding
+    - this is adjusted for lmu and feed period
+    The quality of pasture on crop paddocks each day before seeding
+    - this is adjusted for feed period
+    The relative intake of pasture on crop paddocks each day before seeding
+    - this is adjusted for feed period
+    '''
+    ### poc is assumed to be annual hence the 0 slice in the last axis
+    ## con
+    poc_con_fl = i_poc_intake_daily_flt[..., 0] / 1000 #divide 1000 to convert to tonnes of foo per ha
+    ## md per tonne
+    poc_md_f = fsfun.dmd_to_md(i_poc_dmd_ft[..., 0]) * 1000 #times 1000 to convert to mj per tonne
+    poc_md_vf = poc_md_f * ev_is_not_confinement_v[:,na] #me from pasture is 0 in the confinement pool
+
+    ## vol
+    ### calc relative quality - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
+    if uinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
+        poc_ri_qual_fz = fsfun.f_rq_cs(i_poc_dmd_ft[..., na, 0], i_legume_zt[..., 0])
+
+    ### adjust foo and calc hf
+    i_poc_foo_fz, hf = fsfun.f_foo_convert(cu3, cu4, i_poc_foo_ft[:,na,0], i_pasture_stage_p6z, i_legume_zt[...,0], z_pos=-1)
+    ### calc relative availability - note that the equation system used is the one selected for dams in p1 - need to hook up mu function
+    if uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used
+        poc_ri_quan_fz = fsfun.f_ra_cs(i_poc_foo_fz, hf)
+    elif uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==1: #Murdoch function used
+        poc_ri_quan_fz = fsfun.f_ra_mu(i_poc_foo_fz, hf)
+
+    poc_ri_fz = fsfun.f_rel_intake(poc_ri_quan_fz, poc_ri_qual_fz, i_legume_zt[..., 0])
+    poc_vol_fz = fun.f_divide(1000, poc_ri_fz)  # 1000 to convert to vol per tonne
+
+
+    return poc_con_fl, poc_md_vf, poc_ri_fz, poc_vol_fz
