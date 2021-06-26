@@ -153,7 +153,7 @@ def cartesian_product_simple_transpose(arrays):
     return arr.reshape(la, -1).T
 
 
-def searchsort_multiple_dim(a,v,axis_a0,axis_a1,axis_v0,axis_v1, side='left'):
+def searchsort_multiple_dim(a, v, axis_a0, axis_v0, axis_a1=None, axis_v1=None, side='left'):
     '''
     Find the indices into a sorted array a such that, if the corresponding elements in 'v' were inserted before the indices, the order of 'a' would be preserved.
     It does this iteratively down the specified axis (therefore the specified axis must be present in both 'a' and 'v'
@@ -182,11 +182,16 @@ def searchsort_multiple_dim(a,v,axis_a0,axis_a1,axis_v0,axis_v1, side='left'):
     slc_a = [slice(None)] * len(a.shape)
     slc_v = [slice(None)] * len(v.shape)
     for i in range(a.shape[axis_a0]):
-        for j in range(a.shape[axis_a1]):
+        if axis_a1 is not None:
+            for j in range(a.shape[axis_a1]):
+                slc_a[axis_a0] = slice(i, i+1)
+                slc_a[axis_a1] = slice(j, j+1)
+                slc_v[axis_v0] = slice(i, i+1)
+                slc_v[axis_v1] = slice(j, j+1)
+                final[tuple(slc_v)] = np.searchsorted(np.squeeze(a[tuple(slc_a)]), v[tuple(slc_v)], side)
+        else:
             slc_a[axis_a0] = slice(i, i+1)
-            slc_a[axis_a1] = slice(j, j+1)
             slc_v[axis_v0] = slice(i, i+1)
-            slc_v[axis_v1] = slice(j, j+1)
             final[tuple(slc_v)] = np.searchsorted(np.squeeze(a[tuple(slc_a)]), v[tuple(slc_v)], side)
     return final
 

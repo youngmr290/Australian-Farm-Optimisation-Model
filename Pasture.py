@@ -190,7 +190,7 @@ def f_pasture(params, r_vals, ev):
 #    germination_flrzt           = np.zeros(flrzt,  dtype = 'float64')  # germination for each rotation phase (kg/ha)
     foo_grn_reseeding_flrzt     = np.zeros(flrzt,  dtype = 'float64')  # green FOO adjustment for destocking and restocking of the resown area (kg/ha)
     foo_dry_reseeding_flrzt     = np.zeros(flrzt,  dtype = 'float64')  # dry FOO adjustment for destocking and restocking of the resown area (kg/ha)
-    foo_dry_reseeding_dflrzt    = np.zeros(dflrzt, dtype = 'float64')  # dry FOO adjustment allocated to the low & high quality dry feed pools (kg/ha)
+    # foo_dry_reseeding_dflrzt    = np.zeros(dflrzt, dtype = 'float64')  # dry FOO adjustment allocated to the low & high quality dry feed pools (kg/ha)
     # dry_removal_t_ft            = np.zeros(ft,   dtype = 'float64')  # Total DM removal from the tonne consumed (includes trampling)
 
     ### define the array that links rotation phase and pasture type
@@ -393,9 +393,9 @@ def f_pasture(params, r_vals, ev):
 
     ## define instantiate arrays that are assigned in slices
     na_erosion_flrt      = np.zeros(flrt,  dtype = 'float64')
-    na_phase_area_flrzt  = np.zeros(flrzt, dtype = 'float64')
-    grn_restock_foo_flzt = np.zeros(flzt,  dtype = 'float64')
-    dry_restock_foo_flzt = np.zeros(flzt,  dtype = 'float64')
+    # na_phase_area_flrzt  = np.zeros(flrzt, dtype = 'float64')
+    # grn_restock_foo_flzt = np.zeros(flzt,  dtype = 'float64')
+    # dry_restock_foo_flzt = np.zeros(flzt,  dtype = 'float64')
     foo_na_destock_fzt   = np.zeros(fzt,   dtype = 'float64')
     germ_scalar_rt       = np.zeros(rt,    dtype='float64')
     resown_rt            = np.zeros(rt,    dtype='int')
@@ -406,7 +406,12 @@ def f_pasture(params, r_vals, ev):
                                                                 , i_germ_scalar_fzt, pasture_rt, arable_l,  resown_rt
                                                                 , pastures, phase_germresow_df, i_phase_germ_dict)
 
-    foo_grn_reseeding_flrzt, foo_dry_reseeding_dflrzt, periods_destocked_fzt = pfun.f_reseeding()
+    foo_grn_reseeding_flrzt, foo_dry_reseeding_dflrzt, periods_destocked_fzt = pfun.f_reseeding(
+        i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, i_restock_grn_propn_t, resown_rt, feed_period_dates_fz
+        , foo_grn_reseeding_flrzt, foo_dry_reseeding_flrzt, foo_na_destock_fzt, i_restock_fooscalar_lt
+        , i_restock_foo_arable_t, dry_decay_period_fzt, i_fxg_foo_oflzt, c_fxg_a_oflzt, c_fxg_b_oflzt, i_grn_senesce_eos_fzt
+        , grn_senesce_startfoo_fzt, grn_senesce_pgrcons_fzt, length_fz, n_feed_periods, max_germination_flz
+        , t_idx, z_idx, l_idx)
 
     ## sow param determination
     pas_sow_plrkz = pfun.f_pas_sow(i_reseeding_date_start_zt, i_reseeding_date_end_zt, resown_rt, arable_l, phases_rotn_df)
@@ -452,10 +457,10 @@ def f_pasture(params, r_vals, ev):
     dry_transfer_t_fzt = 1000 * (1-dry_decay_period_fzt)
 
     ## FOO on the non-arable areas in crop paddocks is ungrazed FOO of pasture type 0 (annual), therefore calculate the profile based on the pasture type 0 values
-    grn_foo_start_ungrazed_flzt , dry_foo_start_ungrazed_flzt \
-         = pfun.f1_calc_foo_profile(max_germination_flz[..., na], dry_decay_period_fzt[..., 0:1], length_fz
-                                 , i_fxg_foo_oflzt[..., 0:1], c_fxg_a_oflzt[..., 0:1], c_fxg_b_oflzt[..., 0:1]
-                                 , i_grn_senesce_eos_fzt[..., 0:1], grn_senesce_startfoo_fzt[..., 0:1], grn_senesce_pgrcons_fzt[..., 0:1])
+    grn_foo_start_ungrazed_flzt, dry_foo_start_ungrazed_flzt = pfun.f1_calc_foo_profile(
+        max_germination_flz[..., na], dry_decay_period_fzt[..., 0:1], length_fz, i_fxg_foo_oflzt[..., 0:1]
+        , c_fxg_a_oflzt[..., 0:1], c_fxg_b_oflzt[..., 0:1], i_grn_senesce_eos_fzt[..., 0:1], grn_senesce_startfoo_fzt[..., 0:1]
+        , grn_senesce_pgrcons_fzt[..., 0:1])
 
     ### non arable pasture becomes available to graze at the beginning of the first harvest period
     # harvest_period  = fun.period_allocation(pinp.period['feed_periods']['date'], range(len(pinp.period['feed_periods'])), pinp.period['harv_date']) #use range(len()) to get the row number that harvest occurs has to be row number not index name because it is used to index numpy below

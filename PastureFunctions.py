@@ -1,9 +1,11 @@
 ##import core modules
 import numpy as np
+import pandas as pd
 
 ##import AFO modules
 import PropertyInputs as pinp
 import UniversalInputs as uinp
+import StructuralInputs as sinp
 import Periods as per
 import FeedsupplyFunctions as fsfun
 import Functions as fun
@@ -63,33 +65,28 @@ def f_germination(i_germination_std_zt, i_germ_scalar_lzt, germ_scalar_rt, i_ger
     germination_flrzt[..., 0] += na_germination_flrz * (1 - arable_l[:,na,na])
     return germination_flrzt, max_germination_flz
 
-
-def f_reseeding(i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, grn_restock_foo_flzt, dry_restock_foo_flzt
-                , resown_rt, feed_period_dates_fz
-                , foo_grn_reseeding_flrzt, foo_dry_reseeding_flrzt, foo_na_destock_fzt
+def f_reseeding(i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, i_restock_grn_propn_t, resown_rt
+                , feed_period_dates_fz, foo_grn_reseeding_flrzt, foo_dry_reseeding_flrzt, foo_na_destock_fzt
                 , i_restock_fooscalar_lt, i_restock_foo_arable_t, dry_decay_period_fzt
                 , i_fxg_foo_oflzt, c_fxg_a_oflzt, c_fxg_b_oflzt, i_grn_senesce_eos_fzt
                 , grn_senesce_startfoo_fzt, grn_senesce_pgrcons_fzt, length_fz, n_feed_periods
-                , max_germination_flz, n_pasture_types):
+                , max_germination_flz, t_idx, z_idx, l_idx):
     ##reseeding: generates the green & dry FOO that is lost and gained from reseeding pasture. It is stored in a numpy array (phase, lmu, feed period)
     ##Results are stored in p_...._reseeding
     #todo test the calculation of FOO on the resown area when the full set of rotation phases is included
+
     ## the green feed to remove from matrix when pasture is destocked.
     foo_arable_destock_zt = i_destock_foo_zt
     foo_na_destock_zt =  i_destock_foo_zt
-    ## the periods from which to remove based on date destocked.
-    period_zt, proportion_zt = fun.period_proportion_np(feed_period_dates_fz[...,na]  # which feed period does destocking occur & the proportion that destocking occurs during the period.
+    ## the periods from which to remove foo based on date destocked. Returns feed period destocking occurs & the proportion of the way that destocking occurs.
+    period_zt, proportion_zt = fun.period_proportion_np(feed_period_dates_fz[...,na]
                                                           , i_destock_date_zt)
     ## the change (reduction) in green and dry FOO on the arable and non-arable areas when pasture is destocked for spraying prior to reseeding
     ### the change in FOO on the nonarable area occurs in pasture type 0 (annuals) because it is assumed that other pasture species have not been established.
     ### Note: the arable proportion is accounted for in function
-    foo_grn_reseeding_flrzt, foo_dry_reseeding_flrzt = update_reseeding_foo(foo_grn_reseeding_flrzt
-                                                                            , foo_dry_reseeding_flrzt
-                                                                            ,              resown_rt
-                                                                            ,               period_zt
-                                                                            ,       1 - proportion_zt
-                                                                            ,  -foo_arable_destock_zt
-                                                                            ,      -foo_na_destock_zt) # Assumes that all feed lost is green
+    foo_grn_reseeding_flrzt, foo_dry_reseeding_flrzt = f1_update_reseeding_foo(
+        foo_grn_reseeding_flrzt, foo_dry_reseeding_flrzt, resown_rt, period_zt, 1 - proportion_zt, -foo_arable_destock_zt
+        , -foo_na_destock_zt) # Assumes that all feed lost is green
 
     ##FOO on the arable area of each LMU when reseeded pasture is restocked (this is calculated from input values)
     foo_arable_restock_lt =  i_restock_fooscalar_lt * i_restock_foo_arable_t
@@ -102,10 +99,8 @@ def f_reseeding(i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, grn_rest
     #### the period from destocking to restocking (for germination and growth)
     destock_duration_zt = i_restock_date_zt - i_destock_date_zt
     shape_fzt = feed_period_dates_fz.shape + (i_destock_date_zt.shape[-1],)
-    periods_destocked_fzt = fun.range_allocation_np(feed_period_dates_fz[...,na]
-                                                    ,   i_destock_date_zt
-                                                    , destock_duration_zt
-                                                    ,     shape=shape_fzt)[0:n_feed_periods,...]
+    periods_destocked_fzt = fun.range_allocation_np(feed_period_dates_fz[...,na], i_destock_date_zt, destock_duration_zt
+                                                    , shape=shape_fzt)[0:n_feed_periods,...]
     days_each_period_fzt = periods_destocked_fzt * length_fz[..., na]
     #### period when restocking occurs and the proportion through the period that it occurs
     period_zt, proportion_zt = fun.period_proportion_np(feed_period_dates_fz[...,na], i_restock_date_zt)
@@ -114,24 +109,20 @@ def f_reseeding(i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, grn_rest
     germination_destocked_flzt = max_germination_flz[..., na] * periods_destocked_fzt[:, na, ...]
 
     ### Calculate the FOO profile on the non arable area from destocking through to restocking
-    #### need to loop through t because FOO at destocking and reseeding date can change
-    for t in range(n_pasture_types):
-        ### green FOO to start the profile is FOO at destocking plus germination that occurs during the destocking period
-        #### assumes FOO at destocking of pasture type 0 on the non arable area is equivalent to the pasture itself.
-        grn_foo_na_initial_flzt = foo_na_destock_fzt[:, na, :, t:t + 1] + germination_destocked_flzt[..., t: t+1]
-        ##FOO at the end of the destocked period is calculated from the FOO profile from destocking to restocking
-        grn_restock, dry_restock = f1_calc_foo_profile(grn_foo_na_initial_flzt  # axes are aligned in the function
-                                                       , dry_decay_period_fzt[..., 0:1]
-                                                       , days_each_period_fzt[...,t]
-                                                       , i_fxg_foo_oflzt[..., 0:1]
-                                                       , c_fxg_a_oflzt[..., 0:1]
-                                                       , c_fxg_b_oflzt[..., 0:1]
-                                                       , i_grn_senesce_eos_fzt[..., 0:1]
-                                                       , grn_senesce_startfoo_fzt[..., 0:1]
-                                                       , grn_senesce_pgrcons_fzt[..., 0:1])
-        #### assign the growth to a variable to store all the pasture types
-        grn_restock_foo_flzt[...,t:t+1] = grn_restock
-        dry_restock_foo_flzt[...,t:t+1] = dry_restock
+    ### green FOO to start the profile is FOO at destocking plus germination that occurs during the destocking period
+    #### assumes FOO at destocking of pasture type 0 on the non arable area is equivalent to the pasture itself.
+    grn_foo_na_initial_flzt = foo_na_destock_fzt[:, na, ...] + germination_destocked_flzt
+    ##FOO at the end of the destocked period is calculated from the FOO profile from destocking to restocking
+    grn_restock_foo_flzt, dry_restock_foo_flzt = f1_calc_foo_profile(grn_foo_na_initial_flzt  # axes are aligned in the function
+                                                                     , dry_decay_period_fzt[..., 0:1]
+                                                                     , days_each_period_fzt
+                                                                     , i_fxg_foo_oflzt[..., 0:1]
+                                                                     , c_fxg_a_oflzt[..., 0:1]
+                                                                     , c_fxg_b_oflzt[..., 0:1]
+                                                                     , i_grn_senesce_eos_fzt[..., 0:1]
+                                                                     , grn_senesce_startfoo_fzt[..., 0:1]
+                                                                     , grn_senesce_pgrcons_fzt[..., 0:1])
+
     ### combine dry and grn foo because the proportion of green at restocking is an input
     #### foo is calculated at the start of period, +1 to get end period FOO.
     foo_na_restock_lzt = grn_restock_foo_flzt[period_zt+1,l_idx[:,na,na], z_idx[:,na], t_idx]   \
@@ -143,7 +134,7 @@ def f_reseeding(i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, grn_rest
     ## combine the non-arable and arable foo to get the resulting foo in the green and dry pools when paddocks are restocked. Spread between periods based on date grazed. (arable proportion accounted for in function)
     ### the change in FOO on the nonarable area occurs in pasture type 0 (annuals) because it is assumed that other pasture species have not been established.
     ### Note: the arable proportion is accounted for in function
-    foo_grn_reseeding_flrzt, foo_dry_reseeding_flrzt = pfun.update_reseeding_foo(foo_grn_reseeding_flrzt  #axes aligned in function
+    foo_grn_reseeding_flrzt, foo_dry_reseeding_flrzt = f1_update_reseeding_foo(foo_grn_reseeding_flrzt  #axes aligned in function
                                                                                , foo_dry_reseeding_flrzt
                                                                                ,                 resown_rt
                                                                                ,               period_zt
@@ -172,7 +163,9 @@ def f_pas_sow(i_reseeding_date_start_zt, i_reseeding_date_end_zt, resown_rt, ara
     pas_sown_lrt = resown_rt * arable_l[:, na, na]
     pas_sow_plrzt = pas_sown_lrt[...,na,:] * reseeding_machperiod_p5zt[:, na, na,...]
     pas_sow_plrz = np.sum(pas_sow_plrzt, axis=-1) #sum the t axis. the different pastures are tracked by the rotation.
-    pas_sow_plrkz = pas_sow_plrz[..., na,:] * (keys_k[:, na]==phases_rotn_df.iloc[:,-1].values[:, na,na]) #add k (landuse axis) this is required for sow param
+    ### add k (landuse axis) - this is required for sow param
+    keys_k = np.asarray(list(sinp.landuse['All']))
+    pas_sow_plrkz = pas_sow_plrz[..., na,:] * (keys_k[:, na]==phases_rotn_df.iloc[:,-1].values[:, na,na])
     return pas_sow_plrkz
 
 
@@ -223,40 +216,37 @@ def f1_calc_foo_profile(germination_flzt, dry_decay_fzt, length_of_periods_fz
     grn_foo_end_flzt     = np.zeros(flzt, dtype = 'float64')
     dry_foo_start_flzt   = np.zeros(flzt, dtype = 'float64')
     dry_foo_end_flzt     = np.zeros(flzt, dtype = 'float64')
-    pgr_daily_l          = np.zeros(n_lmu,dtype=float)  #only required if using the ## loop on lmu. The boolean filter method creates the array
+    pgr_daily_lt          = np.zeros((n_lmu, n_pasture_types), dtype=float)  #only required if using the ## loop on lmu. The boolean filter method creates the array
 
-    # grn_foo_end_flzt[-1,...] = 0 # ensure foo_end[-1] is 0 because it is used in calculation of foo_start[0].
-    # dry_foo_end_flzt[-1,...] = 0 # ensure foo_end[-1] is 0 because it is used in calculation of foo_start[0].
-    ### loop through the pasture types
-    for t in range(n_pasture_types):   #^ is this loop required?
-        ## loop through the feed periods and calculate the foo at the start of each period
-        for f in range(n_feed_periods):
-            grn_foo_start_flzt[f,:,:,t] = germination_flzt[f,:,:,t] + grn_foo_end_flzt[f-1,:,:,t]
-            dry_foo_start_flzt[f,:,:,t] = dry_foo_end_flzt[f-1,:,:,t]
-            ##loop season
-            for z in range(n_season):
-                ## alternative approach (a1)
-                ## for pgr by creating an index using searchsorted (requires an lmu loop). ^ More readable than other but requires pgr_daily matrix to be predefined
-                for l in [*range(n_lmu)]: #loop through lmu
-                    idx = np.searchsorted(i_fxg_foo_oflzt[:,f,l,z,t], grn_foo_start_flzt[f,l,z,t], side='left')   # find where foo_start fits into the input data
-                    pgr_daily_l[l] = (       c_fxg_a_oflzt[idx,f,l,z,t]
-                                      +      c_fxg_b_oflzt[idx,f,l,z,t]
-                                      * grn_foo_start_flzt[f,l,z,t])
-                grn_foo_end_flzt[f,:,z,t] = (              grn_foo_start_flzt[f,:,z,t]
-                                             * (1 - grn_senesce_startfoo_fzt[f,z,t])
-                                             +                 pgr_daily_l
-                                             *         length_of_periods_fz[f,z]
-                                             * (1 -  grn_senesce_pgrcons_fzt[f,z,t])) \
-                                            * (1 -     i_grn_senesce_eos_fzt[f,z,t])
-                senescence_l = grn_foo_start_flzt[f,:,z,t]  \
-                              +    pgr_daily_l * length_of_periods_fz[f,z]  \
-                              -  grn_foo_end_flzt[f,:,z,t]
-                dry_foo_end_flzt[f,:,z,t] = dry_foo_start_flzt[f,:,z,t] \
-                                        * (1 - dry_decay_fzt[f,z,t]) \
-                                        + senescence_l
+    ## loop through the feed periods and calculate the foo at the start of each period
+    for f in range(n_feed_periods):
+        grn_foo_start_flzt[f,:,:,:] = germination_flzt[f,:,:,:] + grn_foo_end_flzt[f-1,:,:,:]
+        dry_foo_start_flzt[f,:,:,:] = dry_foo_end_flzt[f-1,:,:,:]
+        ##loop season
+        for z in range(n_season):
+            ## alternative approach (a1)
+            ## for pgr by creating an index using searchsorted (requires an lmu loop). ^ More readable than other but requires pgr_daily matrix to be predefined
+            for l in [*range(n_lmu)]: #loop through lmu
+                ###find where foo_start fits into the input data
+                idx = fun.searchsort_multiple_dim(i_fxg_foo_oflzt[:,f,l,z,:], grn_foo_start_flzt[f,l,z,:], axis_a0=1, axis_v0=0, side='left')
+                pgr_daily_lt[l] = (       c_fxg_a_oflzt[idx,f,l,z,:]
+                                  +      c_fxg_b_oflzt[idx,f,l,z,:]
+                                  * grn_foo_start_flzt[f,l,z,:])
+            grn_foo_end_flzt[f,:,z,:] = (              grn_foo_start_flzt[f,:,z,:]
+                                         * (1 - grn_senesce_startfoo_fzt[f,z,:])
+                                         +                 pgr_daily_lt
+                                         *         length_of_periods_fz[f,z]
+                                         * (1 -  grn_senesce_pgrcons_fzt[f,z,:])) \
+                                        * (1 -     i_grn_senesce_eos_fzt[f,z,:])
+            senescence_l = grn_foo_start_flzt[f,:,z,:]  \
+                          +    pgr_daily_lt * length_of_periods_fz[f,z]  \
+                          -  grn_foo_end_flzt[f,:,z,:]
+            dry_foo_end_flzt[f,:,z,:] = dry_foo_start_flzt[f,:,z,:] \
+                                    * (1 - dry_decay_fzt[f,z,:]) \
+                                    + senescence_l
     return grn_foo_start_flzt, dry_foo_start_flzt
 
-def update_reseeding_foo(foo_grn_reseeding_flrzt, foo_dry_reseeding_flrzt,
+def f1_update_reseeding_foo(foo_grn_reseeding_flrzt, foo_dry_reseeding_flrzt,
                          resown_rt, period_zt, proportion_zt,
                          foo_arable_zt, foo_na_zt, propn_grn=1): #, dmd_dry=0):
     ''' Adjust p_foo parameters due to changes associated with reseeding: destocking pastures prior to spraying and restocking after reseeding

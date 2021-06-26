@@ -1062,7 +1062,7 @@ def convert_fec2fs(fec_input, fec_p6f, feedsupply_f, a_p6_pz):
     fec_pzf = fec_p6f[a_p6_pz, :]
     ###the position of the feedsupply input in the conversion array
     z_pos = sinp.stock['i_z_pos']
-    fs_col_pa1e1b1nwzida0e0b0xyg = fun.searchsort_multiple_dim(fec_pzf, fec_input, 0, 1, 0, z_pos, 'right') - 1
+    fs_col_pa1e1b1nwzida0e0b0xyg = fun.searchsort_multiple_dim(fec_pzf, fec_input, axis_a0=0, axis_v0=0, axis_a1=1, axis_v1=z_pos, side='right') - 1
     fs_col_pa1e1b1nwzida0e0b0xyg = np.maximum(0, fs_col_pa1e1b1nwzida0e0b0xyg)
     ###the value from the feedsupply array in column fs_col.
     fs = feedsupply_f[fs_col_pa1e1b1nwzida0e0b0xyg]
