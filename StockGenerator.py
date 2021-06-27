@@ -5071,7 +5071,7 @@ def generator(params,r_vals,ev,plots = False):
 
 
     ############
-    #feed pools#
+    #feed pools# todo name change: fev/ev to nv (nutritive value)
     ############
     '''
     If you are in the season version and get warning because all slices are nan it is likely because some of the
