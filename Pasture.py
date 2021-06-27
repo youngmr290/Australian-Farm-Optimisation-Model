@@ -432,7 +432,7 @@ def f_pasture(params, r_vals, ev):
     pas_sow_plrkz = pfun.f_pas_sow(i_reseeding_date_start_zt, i_reseeding_date_end_zt, resown_rt, arable_l, phases_rotn_df)
 
     ## area of green pasture being grazed and growing
-    phase_area_flrzt = pfun.f_green_area(resown_rt, pasture_rt, periods_destocked_fzt, arable_l)
+    phase_area_flrzt = pfun.f1_green_area(resown_rt, pasture_rt, periods_destocked_fzt, arable_l)
 
     ## erosion limit. The minimum FOO at the end of each period#
     erosion_flrt = pfun.f_erosion(i_lmu_conservation_flt, arable_l, pasture_rt)

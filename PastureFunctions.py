@@ -171,7 +171,7 @@ def f_pas_sow(i_reseeding_date_start_zt, i_reseeding_date_end_zt, resown_rt, ara
     return pas_sow_plrkz
 
 
-def f_green_area(resown_rt, pasture_rt, periods_destocked_fzt, arable_l):
+def f1_green_area(resown_rt, pasture_rt, periods_destocked_fzt, arable_l):
     ## area of green pasture being grazed and growing
     ### calculate the area (for all the phases) that is growing pasture for each feed period. The area can be 0 for a pasture phase if it has been destocked for reseeding.
     arable_phase_area_flrzt = (1 - (resown_rt[:,na,:] * periods_destocked_fzt[:, na, na, ...]))  \
@@ -205,7 +205,32 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_oflzt, i_fxg_pgr_oflzt, c_pgr_gi_scalar_gf
                   , i_foo_graze_propn_gt, grn_senesce_startfoo_fzt, grn_senesce_pgrcons_fzt, i_grn_senesce_eos_fzt
                   , i_base_ft, i_grn_trampling_ft, i_grn_dig_flzt, i_grn_dmd_range_ft, i_pasture_stage_p6z, i_legume_zt
                   , me_threshold_vfzt, i_me_eff_gainlose_ft, mask_greenfeed_exists_fzt, length_fz, ev_is_not_confinement_v):
-    #Pasture growth, consumption and senescence of green feed.
+    '''
+    Pasture growth, consumption and senescence of green feed.
+    :param cu3:
+    :param cu4:
+    :param i_fxg_foo_oflzt:
+    :param i_fxg_pgr_oflzt:
+    :param c_pgr_gi_scalar_gft:
+    :param grn_foo_start_ungrazed_flzt:
+    :param i_foo_graze_propn_gt:
+    :param grn_senesce_startfoo_fzt:
+    :param grn_senesce_pgrcons_fzt:
+    :param i_grn_senesce_eos_fzt:
+    :param i_base_ft:
+    :param i_grn_trampling_ft:
+    :param i_grn_dig_flzt:
+    :param i_grn_dmd_range_ft:
+    :param i_pasture_stage_p6z:
+    :param i_legume_zt:
+    :param me_threshold_vfzt:
+    :param i_me_eff_gainlose_ft:
+    :param mask_greenfeed_exists_fzt:
+    :param length_fz:
+    :param ev_is_not_confinement_v:
+    :return:
+    '''
+    #
 
     ## green initial FOO for the 'grnha' decision variables
     foo_start_grnha_oflzt = i_fxg_foo_oflzt
@@ -218,7 +243,7 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_oflzt, i_fxg_pgr_oflzt, c_pgr_gi_scalar_gf
     foo_start_grnha_oflzt = foo_start_grnha_oflzt * mask_greenfeed_exists_fzt[:, na,...]
 
     ## green, pasture growth for the 'grnha' decision variables
-#    pgr_grnday_oflzt = np.maximum(0.01, i_fxg_pgr_oflzt)  # use maximum to ensure that the pgr is non zero (because foo_days requires dividing by pgr)
+    #todo revisit the effect of gi on PGR by basing the reduction on the effect of gi on average FOO (rather than c_pgr_gi_scalar)
     pgr_grnha_goflzt = (i_fxg_pgr_oflzt * length_fz[:, na, :, na]
                         * c_pgr_gi_scalar_gft[:, na, :, na, na, :] * mask_greenfeed_exists_fzt[:, na, ...])
 
