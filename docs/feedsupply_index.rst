@@ -4,14 +4,31 @@ Feed supply
 Summary
 -------
 The feed supply for livestock is represented by changes in the type, amount and quality of feed
-throughout the year. The year is partitioned into 10 feed periods. The dates of the feed periods
-are selected to minimise feed variation within each period. Hence the period definitions may
-alter depending on the farm being modelled. Energy is the main nutritional limitation for the
-livestock enterprise :cite:p:`RN2` thus, energy is the only nutritional value
-tracked in the model. The volume [#]_ of each feed is also track because the voluntary feed intake
-capacities of sheep vary depending on the feed quality (relative ingestibility) and feed
-availability (relative availability) :cite:p:`Freer2007`. The main sources of feed considered
-in the model are; pasture, stubble and supplement. See below for more information.
+throughout the year. The year is partitioned into 10 feed periods. The feed periods in AFO are
+equivalent to the timestep in a simulation model, however, they are much longer than a typical
+simulation model as a requirement of computing capacity. The dates of the feed periods
+during the growing season are selected to group periods that have a similar response of pasture
+growth to defoliation. During the dry feed phase the dates are selected to minimise feed variation
+within each period and are shorter after pasture senescence and the break of season. The selection
+of the period definitions is likely to alter depending on the region being modelled.
+
+Energy is the primary nutritional constraint for extensive ruminant livestock enterprises
+:cite:p:`RN2` (maybe Phil would have a better nutritionist reference to back that comment) as such,
+energy is the only nutritional element that is constrained in the model to ensure that supply is
+greater than demand.
+The volume [#]_ of each feed is also constrained to ensure that the diet selection is feassible and
+the voluntary feed intake capacities of sheep are sufficient to consume the quantity of feed
+selected. The volume of each feed source (kg of intake capacity / kg of feed DM) varies depending on
+the feed quality (relative ingestibility) and feed availability (relative availability) :cite:p:`Freer2007`.
+
+The constraints on energy and volume are grouped into feed energy/volume pools (fev pools). A single fev pool
+would only ensure that the total quantity of feed required for the flock could be consumed by all the
+animals in the flock, this allows cross subsidisation of the volume from a class of animals that has a low
+nutritive value requirement to a group that has a high nutritive value requirement, with the outcome that
+both groups are fed a medium quality diet that will likely be less expensive. To circumvent this problem
+multiple fev pools can be created and the number is controlled in the inputs.
+
+The main sources of feed considered in the model are; pasture, stubble and supplement. See below for more information.
 
 .. [#]  Volume - livestock intake capacity required to consume specific mass of a given feed.
 
