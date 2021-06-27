@@ -210,19 +210,17 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_oflzt, i_fxg_pgr_oflzt, c_pgr_gi_scalar_gf
     ## green initial FOO for the 'grnha' decision variables
     foo_start_grnha_oflzt = i_fxg_foo_oflzt
     #    foo_start_grnha_oflzt = np.maximum(i_fxg_foo_oflzt, i_base_ft[:, na, na, :])  # to ensure that final foo can not be below the base level
-    max_foo_flzt = np.maximum(i_fxg_foo_oflzt[1, ...],
-                              grn_foo_start_ungrazed_flzt)  #maximum of ungrazed foo and foo from the medium foo level
-    foo_start_grnha_oflzt[2, ...] = np.maximum.accumulate(max_foo_flzt,
-                                                          axis=0)  #maximum accumulated along the feed periods axis, i.e. max to date
-    # foo_start_grnha_oflt[...]   = np.maximum(foo_start_grnha_oflt
-    #                                          , i_base_ft[:, na,:])         # to ensure that final foo can not be below 0
-    foo_start_grnha_oflzt = foo_start_grnha_oflzt * mask_greenfeed_exists_fzt[:, na,
-                                                    ...]  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
+    #FOO of the high FOO slice is the maximum of ungrazed foo and foo from the medium foo level
+    max_foo_flzt = np.maximum(i_fxg_foo_oflzt[1, ...], grn_foo_start_ungrazed_flzt)
+    #maximum accumulated along the feed periods axis, i.e. max to date
+    foo_start_grnha_oflzt[2, ...] = np.maximum.accumulate(max_foo_flzt, axis=0)
+    #masks out any green foo at the end of periods in which green pasture doesn't exist.
+    foo_start_grnha_oflzt = foo_start_grnha_oflzt * mask_greenfeed_exists_fzt[:, na,...]
 
     ## green, pasture growth for the 'grnha' decision variables
-    pgr_grnday_oflzt = np.maximum(0.01,
-                                  i_fxg_pgr_oflzt)  # use maximum to ensure that the pgr is non zero (because foo_days requires dividing by pgr)
-    pgr_grnha_goflzt = pgr_grnday_oflzt * length_fz[:, na, :, na] * c_pgr_gi_scalar_gft[:, na, :, na, na, :]
+#    pgr_grnday_oflzt = np.maximum(0.01, i_fxg_pgr_oflzt)  # use maximum to ensure that the pgr is non zero (because foo_days requires dividing by pgr)
+    pgr_grnha_goflzt = (i_fxg_pgr_oflzt * length_fz[:, na, :, na]
+                        * c_pgr_gi_scalar_gft[:, na, :, na, na, :] * mask_greenfeed_exists_fzt[:, na, ...])
 
     ## green, final foo from initial, pgr and senescence
     ### senescence during the period is senescence of the starting FOO and of the FOO that is added/reduced by growth/grazing
@@ -252,15 +250,20 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_oflzt, i_fxg_pgr_oflzt, c_pgr_gi_scalar_gf
     ### diet digestibility is reduced with higher FOO if grazing intensity is greater than 25%
     #### Low FOO or low grazing intensity is input
     #### High FOO with 100% grazing is reduced by half the range in digestibility.
-    #### Between low and high FOO, and between 25% & 100% grazing intensity is a linear interpolation
-    dmd_sward_grnha_goflzt = (i_grn_dig_flzt - i_grn_dmd_range_ft[:, na, na, :] / 2
-                              * fun.f_divide(foo_start_grnha_oflzt - foo_start_grnha_oflzt[0, ...]
-                                             , foo_start_grnha_oflzt[-1, ...] - foo_start_grnha_oflzt[0, ...]))
+    #### Between low and high FOO it is a linear interpolation
+    dmd_sward_start_grnha_oflzt = (i_grn_dig_flzt - i_grn_dmd_range_ft[:, na, na, :] / 2
+                                   * fun.f_divide(foo_start_grnha_oflzt - foo_start_grnha_oflzt[0, ...]
+                                                  , foo_start_grnha_oflzt[-1, ...] - foo_start_grnha_oflzt[0, ...]))
+    #### Diet digestibility includes a linear interpolation of selectivity
+    #### 0.25 is grazing intensity that gives diet quality == input value.
     dmd_diet_grnha_goflzt = (i_grn_dig_flzt - i_grn_dmd_range_ft[:, na, na, :] / 2
                              * fun.f_divide(foo_start_grnha_oflzt - foo_start_grnha_oflzt[0, ...]
                                             , foo_start_grnha_oflzt[-1, ...] - foo_start_grnha_oflzt[0, ...])
-                             * (i_foo_graze_propn_gt[:, na, na, na, na, :] - 0.25) / (
-                                         1 - 0.25))  # 0.25 is grazing intensity that gives diet quality == input value.
+                             * (i_foo_graze_propn_gt[:, na, na, na, na, :] - 0.25) / (1 - 0.25))
+    #### dmd of the sward after grazing is reduced due to removal of the high quality feed from selective grazing
+    dmd_sward_end_grnha_goflzt = dmd_sward_start_grnha_oflzt - ((dmd_diet_grnha_goflzt - dmd_sward_start_grnha_oflzt)
+                                                                * fun.f_divide(i_foo_graze_propn_gt[:, na, na, na, na, :]
+                                                                    , 1 - i_foo_graze_propn_gt[:, na, na, na, na, :]))
     grn_md_grnha_goflzt = fsfun.dmd_to_md(dmd_diet_grnha_goflzt)
 
     ## green, mei & volume
@@ -296,27 +299,25 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_oflzt, i_fxg_pgr_oflzt, c_pgr_gi_scalar_gf
     #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
     volume_grnha_goflzt = volume_grnha_goflzt * mask_greenfeed_exists_fzt[:, na,...]
     return (me_cons_grnha_vgoflzt, volume_grnha_goflzt, foo_start_grnha_oflzt, foo_end_grnha_goflzt
-           , senesce_period_grnha_goflzt, senesce_eos_grnha_goflzt, dmd_sward_grnha_goflzt, pgr_grnha_goflzt
+           , senesce_period_grnha_goflzt, senesce_eos_grnha_goflzt, dmd_sward_end_grnha_goflzt, pgr_grnha_goflzt
            , foo_endprior_grnha_goflzt, cons_grnha_t_goflzt, foo_ave_grnha_goflzt, dmd_diet_grnha_goflzt)
 
 
-def f_senescence(senesce_period_grnha_goflzt, senesce_eos_grnha_goflzt, dry_decay_period_fzt, dmd_sward_grnha_goflzt
+def f_senescence(senesce_period_grnha_goflzt, senesce_eos_grnha_goflzt, dry_decay_period_fzt, dmd_sward_end_grnha_goflzt
                  , i_grn_dmd_senesce_redn_fzt, dry_dmd_dfzt, mask_greenfeed_exists_fzt):
     ## senescence from green to dry - green, total senescence for the period (available in the next period)
     ## the pasture that senesces at the eos is assumed to be senescing at the end of the growth period and doesn't decay
     ## the pasture that senesces during the period decays prior to being transferred
     ## the senesced feed that is available to stock is that which senesces at the end of the growing season (i.e. not during the growing season)
-    senesce_total_grnha_goflzt    = (senesce_eos_grnha_goflzt + senesce_period_grnha_goflzt) * (1 - dry_decay_period_fzt[:, na, ...])
-    grn_dmd_senesce_goflzt        =       dmd_sward_grnha_goflzt[na]       \
-                                   + i_grn_dmd_senesce_redn_fzt[:, na, ...]
-    senesce_propn_h_goflzt  = np.clip((grn_dmd_senesce_goflzt               # senescence to high pool. np.clip reduces the range of the dmd to the range of dmd in the dry feed pools
-                                             -      dry_dmd_dfzt[0,:, na, :])
-                                            / (    dry_dmd_dfzt[1,:, na,:]
-                                               -    dry_dmd_dfzt[0,:, na,:]), 0, 1)
+    senesce_total_grnha_goflzt = senesce_eos_grnha_goflzt + senesce_period_grnha_goflzt * (1 - dry_decay_period_fzt[:, na, ...])
+    grn_dmd_senesce_goflzt = dmd_sward_end_grnha_goflzt + i_grn_dmd_senesce_redn_fzt[:, na, ...]
+    # senescence to high pool. np.clip reduces the range of the dmd to the range of dmd in the dry feed pools
+    senesce_propn_h_goflzt = np.clip((grn_dmd_senesce_goflzt - dry_dmd_dfzt[0,:, na, :])
+                                      / (dry_dmd_dfzt[1,:, na,:] - dry_dmd_dfzt[0,:, na,:]), 0, 1)
     senesce_propn_l_dgoflzt = 1- senesce_propn_h_goflzt                       # senescence to low pool
     senesce_propn_dgoflzt = np.stack([senesce_propn_l_dgoflzt, senesce_propn_h_goflzt])
-    senesce_grnha_dgoflzt        = senesce_total_grnha_goflzt * senesce_propn_dgoflzt       # ^alternative in one array parameters for the growth/grazing activities: quantity of green that senesces to the high pool
-    senesce_grnha_dgoflzt        = senesce_grnha_dgoflzt * mask_greenfeed_exists_fzt[:, na, ...]  # apply mask - green pasture only senesces when green pas exists.
+    senesce_grnha_dgoflzt = senesce_total_grnha_goflzt * senesce_propn_dgoflzt       # ^alternative in one array parameters for the growth/grazing activities: quantity of green that senesces to the high pool
+    senesce_grnha_dgoflzt = senesce_grnha_dgoflzt * mask_greenfeed_exists_fzt[:, na, ...]  # apply mask - green pasture only senesces when green pas exists.
     return senesce_grnha_dgoflzt
 
 
