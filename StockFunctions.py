@@ -218,7 +218,7 @@ def f_period_is_(period_is, date_array, date_start_p=0, date_array2 = 0, date_en
 
     Returns
     -------
-    period_is: boolean array shaped like the date array with the addition of the p axis. This is is true if a given date from date array is within the date of a given period and false if not.
+    period_is: boolean array shaped like the date array with the addition of the p axis. This is true if a given date from date array is within the date of a given period and false if not.
 
     period_is_any: 1D boolean array shape of the period dates array. True if any of the dates in the date array fall into a given period.
 
@@ -767,15 +767,16 @@ def f_foetus_cs(cp, cb1, kc, nfoet, relsize_start, rc_start, w_b_std_y, w_f_star
     # return w_f, nec_cum, mec, nec, w_b_exp_y, nw_f, guw
     return w_f, mec, nec, w_b_exp_y, nw_f, guw
 
-def f_carryforward_u1(cu1, ebg, period_between_joinstartend, period_between_joinscan, period_between_scanbirth, period_between_birthwean, days_period, period_propn=1):
+def f_carryforward_u1(cu1, cg, ebg, period_between_joinstartend, period_between_mated90, period_between_d90birth
+                      , period_between_birthwean, days_period, period_propn=1):
     ##Select coefficient to increment the carry forward quantity based on the current period
     ### can only be the coefficient from one of the periods and the later period overwrites the earlier period.
     coeff_cf1 = fun.f_update(0, cu1[1,...], period_between_joinstartend) #note cu1 has already had the first axis (production parameter) sliced when it was passed in
-    coeff_cf1 = fun.f_update(coeff_cf1, cu1[2,...], period_between_joinscan)
-    coeff_cf1 = fun.f_update(coeff_cf1, cu1[3,...], period_between_scanbirth)
+    coeff_cf1 = fun.f_update(coeff_cf1, cu1[2,...], period_between_mated90)
+    coeff_cf1 = fun.f_update(coeff_cf1, cu1[3,...], period_between_d90birth)
     coeff_cf1 = fun.f_update(coeff_cf1, cu1[4,...], period_between_birthwean)
     ##Calculate the increment (d_cf) from the coefficient, the change in LW (kg/d) and the days per period
-    d_cf = coeff_cf1 * ebg * days_period * period_propn
+    d_cf = coeff_cf1 * ebg * cg[18, ...] * days_period * period_propn
     return d_cf
 
 def f_birthweight_cs(cx, w_b_yatf, w_f_dams, period_is_birth):
@@ -786,10 +787,10 @@ def f_birthweight_cs(cx, w_b_yatf, w_f_dams, period_is_birth):
     return w_b_yatf
 
 
-def f_birthweight_mu(cu1, cb1, cx, ce, w_b, cf_w_b_dams, ffcfw_birth_dams, ebg_dams, days_period, gest_propn
+def f_birthweight_mu(cu1, cb1, cg, cx, ce, w_b, cf_w_b_dams, ffcfw_birth_dams, ebg_dams, days_period, gest_propn
                      , period_between_joinscan, period_between_scanbirth, period_is_birth):
     ##Carry forward BW increment	
-    d_cf_w_b = f_carryforward_u1(cu1[16, ...], ebg_dams, False, period_between_joinscan, period_between_scanbirth
+    d_cf_w_b = f_carryforward_u1(cu1[16, ...], cg, ebg_dams, False, period_between_joinscan, period_between_scanbirth
                                  , False, days_period, gest_propn)
     ##Increment the total carry forward BW
     cf_w_b_dams = cf_w_b_dams + d_cf_w_b
@@ -809,13 +810,13 @@ def f_weanweight_cs(w_w_yatf, ffcfw_start_yatf, ebg_yatf, days_period, period_is
     return w_w_yatf
 
 
-def f_weanweight_mu(cu1, cb1, cx, ce, nyatf, w_w, cf_w_w_dams, ffcfw_wean_dams, ebg_dams, foo, foo_ave_start
+def f_weanweight_mu(cu1, cb1, cg, cx, ce, nyatf, w_w, cf_w_w_dams, ffcfw_wean_dams, ebg_dams, foo, foo_ave_start
                     , days_period, day_of_lactation, period_between_joinscan, period_between_scanbirth
                     , period_between_birthwean, period_is_wean):
     ##Calculate average FOO to end of this period (increment the running average to date)
     foo_ave_end = fun.f_divide(foo_ave_start * day_of_lactation + foo * days_period, day_of_lactation + days_period)
     ##Carry forward WWt increment
-    d_cf_w_w = f_carryforward_u1(cu1[17, ...], ebg_dams, False, period_between_joinscan, period_between_scanbirth
+    d_cf_w_w = f_carryforward_u1(cu1[17, ...], cg, ebg_dams, False, period_between_joinscan, period_between_scanbirth
                                  , period_between_birthwean, days_period)
     ##Increment the total Carry forward WWt
     cf_w_w_dams = cf_w_w_dams + d_cf_w_w
@@ -828,11 +829,12 @@ def f_weanweight_mu(cu1, cb1, cx, ce, nyatf, w_w, cf_w_w_dams, ffcfw_wean_dams, 
 
 
 #todo Consider combining into 1 function f_progenyltw
-def f_progenycfw_mu(cu1, cfw_adj, cf_cfw_dams, ffcfw_birth_dams, ffcfw_birth_std_dams, ebg_dams, days_period, gest_propn, period_between_joinscan, period_between_scanbirth, period_is_birth):
+def f_progenycfw_mu(cu1, cg, cfw_adj, cf_cfw_dams, ffcfw_birth_dams, ffcfw_birth_std_dams, ebg_dams, days_period
+                    , gest_propn, period_between_mated90, period_between_d90birth, period_is_birth):
     ##impact on progeny CFW of the dam LW profile being different from the standard pattern
     ### LTW coefficients are multiplied by the difference in the LW profile from the standard profile. This only requires representing explicitly for LW at birth because the std LW change is 0. Std pattern is lambing in CS 3, so LW = normal weight
     ##Carry forward CFW increment
-    d_cf_cfw = f_carryforward_u1(cu1[12, ...], ebg_dams, False, period_between_joinscan, period_between_scanbirth, False, days_period, gest_propn)
+    d_cf_cfw = f_carryforward_u1(cu1[12, ...], cg, ebg_dams, False, period_between_mated90, period_between_d90birth, False, days_period, gest_propn)
     ##Increment the total Carry forward CFW
     cf_cfw_dams = cf_cfw_dams + d_cf_cfw
     ##temporary calculation including difference in current dam LW (only used if period is birth)
@@ -843,11 +845,12 @@ def f_progenycfw_mu(cu1, cfw_adj, cf_cfw_dams, ffcfw_birth_dams, ffcfw_birth_std
     return cfw_adj, cf_cfw_dams
 
 
-def f_progenyfd_mu(cu1, fd_adj, cf_fd_dams, ffcfw_birth_dams, ffcfw_birth_std_dams, ebg_dams, days_period, gest_propn, period_between_joinscan, period_between_scanbirth, period_is_birth):
+def f_progenyfd_mu(cu1, cg, fd_adj, cf_fd_dams, ffcfw_birth_dams, ffcfw_birth_std_dams, ebg_dams, days_period
+                   , gest_propn, period_between_mated90, period_between_d90birth, period_is_birth):
     ##impact on progeny FD of the dam LW profile being different from the standard pattern
     ### LTW coefficients are multiplied by the difference in the LW profile from the standard profile. This only requires representing explicitly for LW at birth because the std LW change is 0. Std pattern is lambing in CS 3, so LW = normal weight
     ##Carry forward FD increment
-    d_cf_fd = f_carryforward_u1(cu1[13, ...], ebg_dams, False, period_between_joinscan, period_between_scanbirth, False, days_period, gest_propn)
+    d_cf_fd = f_carryforward_u1(cu1[13, ...], cg, ebg_dams, False, period_between_mated90, period_between_d90birth, False, days_period, gest_propn)
     ##Increment the total Carry forward FD
     cf_fd_dams = cf_fd_dams + d_cf_fd
     ##temporary calculation including difference in current dam LW (only used if period is birth)
@@ -1059,7 +1062,7 @@ def convert_fec2fs(fec_input, fec_p6f, feedsupply_f, a_p6_pz):
     fec_pzf = fec_p6f[a_p6_pz, :]
     ###the position of the feedsupply input in the conversion array
     z_pos = sinp.stock['i_z_pos']
-    fs_col_pa1e1b1nwzida0e0b0xyg = fun.searchsort_multiple_dim(fec_pzf, fec_input, 0, 1, 0, z_pos, 'right') - 1
+    fs_col_pa1e1b1nwzida0e0b0xyg = fun.searchsort_multiple_dim(fec_pzf, fec_input, axis_a0=0, axis_v0=0, axis_a1=1, axis_v1=z_pos, side='right') - 1
     fs_col_pa1e1b1nwzida0e0b0xyg = np.maximum(0, fs_col_pa1e1b1nwzida0e0b0xyg)
     ###the value from the feedsupply array in column fs_col.
     fs = feedsupply_f[fs_col_pa1e1b1nwzida0e0b0xyg]
@@ -1142,6 +1145,7 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         propn_dst_adj = np.moveaxis(f_DSTw(repro_rate_adj, cycles = 1)[..., sinp.stock['a_nfoet_b1']], -1, b1_pos) #move the l0 axis into the b1 position. and expand to b1 size.
         ##calculate the change in the expected proportions due to altering the scanning percentage & apply to calculated proportions
         propn_dst_change = propn_dst_adj - propn_dst
+        propn_dst_change = propn_dst_change * (nfoet_b1any==nyatf_b1any) #don't want to add any conception to the lambed and lost slices.
         t_cr += propn_dst_change
 
         ##Process the Conception REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
@@ -1351,7 +1355,7 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, cv_weight, w_b_exp_y, period_
     ##Reduce progeny losses due to large progeny (dystocia) - so not double counting progeny losses associated with dam mortality
     mortalityd_yatf = mortalityd_yatf * (1- cd[21,...])
     ##Exposure index
-    xo_m1m2 = cd[8, ..., na,na] - cd[9, ..., na,na] * rc_birth_m1m2 + cd[10, ..., na,na] * chill_index_m1[..., na,na] + cb1[11, ..., na,na]
+    xo_m1m2 = cd[8, ..., na,na] - cd[9, ..., na,na] * rc_birth_m1m2 + cd[10, ..., na,na] * chill_index_m1[..., na] + cb1[11, ..., na,na]
     ##Progeny mortality at birth from exposure
     mortalityx = np.average(np.exp(xo_m1m2) / (1 + np.exp(xo_m1m2)) ,axis = (-1,-2)) * period_is_birth #axis -1 is m1
     ##Apply SA to progeny mortality due to exposure
@@ -1382,8 +1386,10 @@ def f_mortality_base_mu(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max
     ebg_start_m1m2 = fun.f_distribution7(ebg_start, sd=sd_ebg)[...,na]
     rc_start_m1m2 = fun.f_distribution7(rc_start, cv=cv_weight)[...,na,:]
     ###calc mort scalars
-    rc_mortality_scalar_m1m2 = (np.minimum(0, rc_start_m1m2 - cd[24, ...,na,na]) / (cd[23, ...,na,na] - cd[24, ...,na,na]))**2
-    ebg_mortality_scalar_m1m2 = (np.minimum(0, ebg_start_m1m2 * cg[18, ...,na,na] - cd[26, ...,na,na] - d_nw_max[...,na,na]) / (cd[25, ...,na,na] - cd[26, ...,na,na]))**2
+    rc_mortality_scalar_m1m2 = (np.minimum(0, rc_start_m1m2 - cd[24, ...,na,na])
+                                / (cd[23, ...,na,na] - cd[24, ...,na,na]))**2
+    ebg_mortality_scalar_m1m2 = (np.minimum(0, ebg_start_m1m2 * cg[18, ...,na,na] - cd[26, ...,na,na] - d_nw_max[...,na,na])
+                                 / (cd[25, ...,na,na] - cd[26, ...,na,na]))**2
     mortalityb_m1m2 = (cd[1, ...,na,na] + cd[22, ...,na,na] * rc_mortality_scalar_m1m2 * ebg_mortality_scalar_m1m2) * days_period[...,na,na]  #mul by days period to convert from mort per day to per period
     mortalityb = np.mean(mortalityb_m1m2, axis=(-1,-2))
     ##apply sensitivity
@@ -1428,8 +1434,8 @@ def f_mortality_pregtox_mu():
     #todo hook this up with relationships developed in Lifetime maternals project
     return 0
 
-def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, cv_weight, foo, chill_index_m1, period_is_birth, rev_trait_value
-                           , sap_mortalityp, saa_mortalityx):
+def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, cv_weight, foo, chill_index_m1, period_is_birth
+                           , rev_trait_value, sap_mortalityp, saa_mortalityx):
     '''
     Calculate the mortality of progeny at birth due to mis-mothering and exposure
     using the LTW prediction equations (Oldham et al. 2011) with inclusion of chill index.
@@ -1671,7 +1677,7 @@ def f_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfoe
             temporary  = np.copy(numbers)
             temporary[:, 0:1, 1:2, ...] += numbers[:, 0:1, 0:1, ...]   # add the number remaining unmated to the dry slice in e1[0]
             temporary[:, :, 0:1, ...] = 0 #set the NM slice to 0 (because they have just been added to drys)
-            ##handle the proportion mated
+            ##handle the proportion mated. Note: if the inputs are set to optimise the proportion (np.inf) then it is treated as 100% mated
             mated_propn = np.minimum(1, propn_dams_mated) #maximum value of 1 because default is inf, otherwise propn to be mated.
             ### the number in the NM slice e1[0] is a proportion of the total numbers
             ### need a minimum number otherwise get nan later. Want a small number relative to mortality (after allowing for multiple slices getting the small number)
@@ -1811,16 +1817,6 @@ def f_fat_score(rc, cu0):
     return np.maximum(1, 3 + (rc - 1) / cu0[1, ...]) #FS 1 is the lowest possible measurement. FS1 is between 0 and 5mm of tissue at the GR site.
 
 
-def f_norm_cdf(x, mu, cv):
-    ##sd - standard deviation - maximum to stop div0 errors in next step.
-    sd = mu * cv
-    ##standardise x. f_divide in case SD is 0 (either mu is 0 or CV is 0)
-    xstd = fun.f_divide(x - mu,  sd)
-    ##probability (<=x)
-    prob = 1 / (np.exp(-358 / 23 * xstd + 111 * np.arctan(37 / 294 * xstd)) + 1)
-    return prob
-
-
 def f_saleprice(score_pricescalar_s7s5s6, weight_pricescalar_s7s5s6, dtype=None):
     ##Sale price percentile to use (adjusted by sav)
     salep_percentile = uinp.sheep['i_salep_percentile']
@@ -1852,11 +1848,11 @@ def f_salep_mob(weight_s7pg, scores_s7s6pg, cvlw_s7s5pg, cvscore_s7s6pg,
     for s7 in range(weight_s7pg.shape[0]):
         ## Probability for each lw step in grid based on the mob average weight and the coefficient of variation (CV) of weight
         ### probability of being less than the upper value of the step (roll) - probability of less than the lower value of the step
-        prob_lw_s5pg = np.maximum(0, f_norm_cdf(np.roll(grid_weightrange_s7s5pg[s7,...], -1, axis = 0), weight_s7pg[s7,...], cvlw_s7s5pg[s7,...])
-                              - f_norm_cdf(grid_weightrange_s7s5pg[s7,...], weight_s7pg[s7,...], cvlw_s7s5pg[s7,...]))
+        prob_lw_s5pg = np.maximum(0, fun.f_norm_cdf(np.roll(grid_weightrange_s7s5pg[s7,...], -1, axis = 0), weight_s7pg[s7,...], cvlw_s7s5pg[s7,...])
+                              - fun.f_norm_cdf(grid_weightrange_s7s5pg[s7,...], weight_s7pg[s7,...], cvlw_s7s5pg[s7,...]))
         ## Probability for each score step in grid (fat score/CS) based on the mob average score and the CV of quality score
-        prob_score_s6pg = np.maximum(0, f_norm_cdf(np.roll(grid_scorerange_s7s6p5g[s7,...], -1, axis = 0), scores_s7s6pg[s7,...], cvscore_s7s6pg[s7,...])
-                                 - f_norm_cdf(grid_scorerange_s7s6p5g[s7,...], scores_s7s6pg[s7,...], cvscore_s7s6pg[s7,...]))
+        prob_score_s6pg = np.maximum(0, fun.f_norm_cdf(np.roll(grid_scorerange_s7s6p5g[s7,...], -1, axis = 0), scores_s7s6pg[s7,...], cvscore_s7s6pg[s7,...])
+                                 - fun.f_norm_cdf(grid_scorerange_s7s6p5g[s7,...], scores_s7s6pg[s7,...], cvscore_s7s6pg[s7,...]))
         ##Probability for each cell of grid (assuming that weight & score are independent allows multiplying weight and score probabilities)
         prob_grid_s5s6pg = prob_lw_s5pg[:,na, ...] * prob_score_s6pg
 
@@ -1928,8 +1924,8 @@ def f_sale_value(cu0, cx, o_rc, o_ffcfw_pg, dressp_adj_yg, dresspercent_adj_s6pg
     sale_value = np.max(sale_value_s7pg, axis=0) #take max on s6 axis as well to remove it (it is singleton so no effect)
     return sale_value
 
-def f_animal_trigger_levels(index_pg, age_start, period_is_shearing_pg, period_is_wean_pg, gender,
-                            o_ebg_p, wool_genes, period_is_joining_pg, animal_mated, period_is_endmating_pg):
+def f_animal_trigger_levels(index_pg, age_start, period_is_shearing_pg, period_is_wean_pg, gender, o_ebg_p, wool_genes,
+                            period_is_joining_pg, animal_mated, scan_option, period_is_endmating_pg):
     ##Trigger value 1 - week of year
     trigger1_pg = index_pg % 52
     ##Trigger value 2 - age
@@ -1948,14 +1944,18 @@ def f_animal_trigger_levels(index_pg, age_start, period_is_shearing_pg, period_i
     trigger7_pg = index_pg - np.maximum.accumulate(index_pg*period_is_wean_pg)
     ##Trigger value 8 - whether animals was mated
     trigger8_pg = animal_mated
-    ##Trigger value 9 - gender of the animal
-    trigger9_pg = gender
-    ##Trigger value 10 - rate of empty body gain
-    trigger10_pg = o_ebg_p
-    ##Trigger value 11 - the 'wooliness' of the genotype
-    trigger11_pg = wool_genes
+    ##Trigger value 9 - scanning option being used
+    trigger9_pg = scan_option
+    ##Trigger value 10 - gender of the animal
+    trigger10_pg = gender
+    ##Trigger value 11 - rate of empty body gain
+    trigger11_pg = o_ebg_p
+    ##Trigger value 12 - the 'wooliness' of the genotype
+    trigger12_pg = wool_genes
     ##Stack the triggers
-    animal_triggervalues_h7pg = np.stack(np.broadcast_arrays(trigger1_pg, trigger2_pg, trigger3_pg, trigger4_pg, trigger5_pg, trigger6_pg, trigger7_pg, trigger8_pg, trigger9_pg, trigger10_pg, trigger11_pg), axis = 0)
+    animal_triggervalues_h7pg = np.stack(np.broadcast_arrays(trigger1_pg, trigger2_pg, trigger3_pg, trigger4_pg,
+                                                             trigger5_pg, trigger6_pg, trigger7_pg, trigger8_pg, trigger9_pg,
+                                                             trigger10_pg, trigger11_pg, trigger12_pg), axis = 0)
     return animal_triggervalues_h7pg
 
 
@@ -2124,10 +2124,10 @@ def f_husbandry(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, operations_trigge
                 operations_per_hour_l2h2pg, husb_operations_infrastructurereq_h1h2pg,
                 husb_operations_contract_cost_h2pg, husb_muster_requisites_prob_h6h4pg,
                 musters_per_hour_l2h4pg, husb_muster_infrastructurereq_h1h4pg,
-                a_nyatf_b1g=0,period_is_joining_pg=False, animal_mated=False, period_is_endmating_pg=False, dtype=None):
+                a_nyatf_b1g=0,period_is_joining_pg=False, animal_mated=False, scan_option=0, period_is_endmating_pg=False, dtype=None):
     ##An array of the trigger values for the animal classes in each period - these values are compared against a threshold to determine if the husb is required
     animal_triggervalues_h7pg = f_animal_trigger_levels(index_pg, age_start, period_is_shear_pg, period_is_wean_pg, gender,
-                            o_ebg_p, wool_genes, period_is_joining_pg, animal_mated, period_is_endmating_pg).astype(dtype)
+                            o_ebg_p, wool_genes, period_is_joining_pg, animal_mated, scan_option, period_is_endmating_pg).astype(dtype)
     ##The number of treatment units per animal in each period - each slice has a different unit eg mobsize, nyatf etc the treatment unit can be selected and applied for a given husb operation
     treatment_units_h8pg = f_treatment_unit_numbers(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, a_nyatf_b1g).astype(dtype)
     ##Is the husb operation triggered in the period for each class

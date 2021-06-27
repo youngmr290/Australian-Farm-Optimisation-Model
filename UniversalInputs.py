@@ -189,7 +189,7 @@ def universal_inp_sa():
     ##have to import it here since sen.py imports this module
     import Sensitivity as sen 
 
-    ##reset inputs to base at the start of each trial before applying SA  - old method was to update the SA based on the _inp dict but that doesnt work well when multiple SA on the same variale.
+    ##reset inputs to base at the start of each trial before applying SA  - old method was to update the SA based on the _inp dict but that doesnt work well when multiple SA on the same variable.
     fun.f_dict_reset(price, price_inp)
     fun.f_dict_reset(finance, finance_inp)
     fun.f_dict_reset(mach_general, mach_general_inp)
@@ -221,9 +221,8 @@ def universal_inp_sa():
     sheep['i_woolp_fdprem_percentile'] = fun.f_sa(sheep['i_woolp_fdprem_percentile'], sen.sav['woolp_fdprem_percentile'], 5) #replaces the std percentile input with the sa value
     sheep['i_salep_percentile'] = fun.f_sa(sheep['i_salep_percentile'], sen.sav['salep_percentile'], 5) #Value for percentile for all sale grids
     ###SAM
-    sheep['i_sam_LTW_dams'] = fun.f_sa(sheep['i_sam_LTW_dams'],sen.sam['LTW_dams'])
-    sheep['i_sam_LTW_offs'] = fun.f_sa(sheep['i_sam_LTW_offs'],sen.sam['LTW_offs'])
     sheep['i_husb_operations_contract_cost_h2'] = fun.f_sa(sheep['i_husb_operations_contract_cost_h2'],sen.sam['husb_cost_h2'])
+    sheep['i_husb_operations_muster_propn_h2'] = fun.f_sa(sheep['i_husb_operations_muster_propn_h2'], sen.sam['husb_mustering_h2'])
     sheep['i_husb_operations_labourreq_l2h2'] = fun.f_sa(sheep['i_husb_operations_labourreq_l2h2'],sen.sam['husb_labour_l2h2'])
     sheep['i_salep_months_priceadj_s7s9m4'] = fun.f_sa(sheep['i_salep_months_priceadj_s7s9m4'],sen.sam['salep_month_adjust_s7s9m4'])
     ###SAP

@@ -42,6 +42,8 @@ How to add a report:
 author: Young
 """
 
+#todo add a second mortality report that the weighted average mortality for the animals selected (to complement the current report that is mortality for each w axis)
+
 import numpy as np
 import pandas as pd
 import os
@@ -55,7 +57,7 @@ import Functions as fun
 
 ##read in excel that controls which reports to run and slice for the selected experiment.
 ## If no arg passed in or the experiment is not set up with custom col in report_run then default col is used
-report_run = pd.read_excel('exp.xlsm', sheet_name='Run Report', index_col=[0], header=[0,1], engine='openpyxl')
+report_run = pd.read_excel('exp.xlsx', sheet_name='Run Report', index_col=[0], header=[0,1], engine='openpyxl')
 try:
     exp_group = int(sys.argv[3])  # reads in as string so need to convert to int, the script path is the first value hence take the second.
 except:  # in case no arg passed to python
@@ -67,14 +69,16 @@ except KeyError:  # in case the experiment is not set up with custom report_run
 report_run = report_run.to_frame()
 report_run = report_run.droplevel(1, axis=1)
 
+#todo Reports to add:
+# 1. report which identifies which sale grid sheep go into. Maybe this can be done using arg sorted on the saleprice array (last step of the sale value function).
 
-
-def f_report(processor, trials):
+def f_report(processor, trials, non_exist_trials):
     '''Function to wrap ReportControl.py so that multiprocessing can be used.'''
     # print('Start processor: {0}'.format(processor))
     # print('Start trials: {0}'.format(trials))
     ##create empty df to stack each trial results into
     stacked_infeasible = pd.DataFrame().rename_axis('Trial')  # name of any infeasible trials
+    stacked_non_exist = pd.DataFrame(non_exist_trials).rename_axis('Trial')  # name of any infeasible trials
     stacked_summary = pd.DataFrame()  # 1 line summary of each trial
     stacked_areasum = pd.DataFrame()  # area summary
     stacked_pnl = pd.DataFrame()  # profit and loss statement
@@ -140,8 +144,6 @@ def f_report(processor, trials):
         lp_vars,r_vals = rep.load_pkl(trial_name)
 
         ##handle infeasible trials
-
-
         if os.path.isfile('Output/infeasible/{0}.txt'.format(trial_name)):
             stacked_infeasible = stacked_infeasible.append(pd.DataFrame([trial_name]).rename_axis('Trial'))
             lp_vars = fun.f_clean_dict(lp_vars) #if a trial is infeasible or doesnt solve all the lp values are None. This function converts them to 0 so the report can still run.
@@ -188,7 +190,7 @@ def f_report(processor, trials):
             keys = 'dams_keys_k2ctvanwziy1g1'
             arith = 1
             index =[3]
-            cols =[1,2]
+            cols =[0,1,2]
             salevalue_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
                                    na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
             salevalue_dams = pd.concat([salevalue_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
@@ -347,11 +349,10 @@ def f_report(processor, trials):
             type = 'stock'
             prod = 'lw_dams_k2vpa1e1b1nw8ziyg1'
             na_prod = [1]
-            prod_weights = 'on_hand_tpa1e1b1nw8ziyg1' #this will make weight 0 if the animal is sold.
-            na_prod_weights = [1]
+            prod_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1' #weight prod for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off hand)
             weights = 'dams_numbers_k2tvanwziy1g1'
             na_weights = [3,5,6]
-            den_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1'
+            den_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1' #weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off hand)
             keys = 'dams_keys_k2tvpaebnwziy1g1'
             arith = 1
             index = [3]
@@ -359,8 +360,8 @@ def f_report(processor, trials):
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             lw_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights
-                                     , na_weights=na_weights, prod_weights=prod_weights, na_prod_weights=na_prod_weights
-                                     , den_weights=den_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+                                     , na_weights=na_weights, prod_weights=prod_weights, den_weights=den_weights
+                                     , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             lw_dams = pd.concat([lw_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_lw_dams = stacked_lw_dams.append(lw_dams)
 
@@ -371,11 +372,10 @@ def f_report(processor, trials):
             type = 'stock'
             prod = 'ffcfw_dams_k2vpa1e1b1nw8ziyg1'
             na_prod = [1]
-            prod_weights = 'on_hand_tpa1e1b1nw8ziyg1' #this will make weight 0 if the animal is sold.
-            na_prod_weights = [1]
+            prod_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1' #weight prod for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off hand)
             weights = 'dams_numbers_k2tvanwziy1g1'
             na_weights = [3, 5, 6]
-            den_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1'
+            den_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1' #weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off hand)
             keys = 'dams_keys_k2tvpaebnwziy1g1'
             arith = 1
             index = [3]
@@ -383,10 +383,33 @@ def f_report(processor, trials):
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             ffcfw_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights
-                                     , na_weights=na_weights, prod_weights=prod_weights, na_prod_weights=na_prod_weights
+                                     , na_weights=na_weights, prod_weights=prod_weights
                                      , den_weights=den_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             ffcfw_dams = pd.concat([ffcfw_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_ffcfw_dams = stacked_ffcfw_dams.append(ffcfw_dams)
+
+        if report_run.loc['run_fec_dams', 'Run']:
+            ##Average dam fec with p, e & b axis. fec is adjusted for animals that are sold but not adjusted by mortality
+            ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
+            ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
+            type = 'stock'
+            prod = 'fec_dams_k2vpa1e1b1nw8ziyg1'
+            na_prod = [1]
+            prod_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1' #weight prod for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off hand)
+            weights = 'dams_numbers_k2tvanwziy1g1'
+            na_weights = [3,5,6]
+            den_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1' #weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off hand)
+            keys = 'dams_keys_k2tvpaebnwziy1g1'
+            arith = 1
+            index = [3]             #p
+            cols = [12, 5, 1, 6]    #g1, e, t & b1
+            axis_slice = {}
+            # axis_slice[5] = [0, 1, 1]   #only the first cycle of e1
+            fec_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod,
+                                   prod_weights=prod_weights, weights=weights, na_weights=na_weights, den_weights=den_weights,
+                                   keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+            fec_dams = pd.concat([fec_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_fec_dams = stacked_fec_dams.append(fec_dams)
 
         if report_run.loc['run_ffcfw_yatf', 'Run']:
             ##Average yatf ffcfw with p, e & b axis. ffcfw is not adjusted by mortality
@@ -397,10 +420,10 @@ def f_report(processor, trials):
             type = 'stock'
             prod = 'ffcfw_yatf_k2vpa1e1b1nw8zixyg1'
             na_prod = [1]                               #t
-            prod_weights = 'nyatf_b1nwzixyg' #this will make weight 0 if the animal is sold.
+            prod_weights = 'pe1b1_nyatf_numbers_weights_k2tvpa1e1b1nw8zixyg1' #weight prod for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off hand)
             weights = 'dams_numbers_k2tvanwziy1g1'
             na_weights = [3, 5, 6, 11]                  #p, e1, b1, x
-            den_weights = 'pe1b1_nyatf_numbers_weights_k2tvpa1e1b1nw8zixyg1'
+            den_weights = 'pe1b1_nyatf_numbers_weights_k2tvpa1e1b1nw8zixyg1' #weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off hand)
             keys = 'yatf_keys_k2tvpaebnwzixy1g1'
             arith = 1
             index = [3]     #p
@@ -412,43 +435,24 @@ def f_report(processor, trials):
             ffcfw_yatf = pd.concat([ffcfw_yatf],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_ffcfw_yatf = stacked_ffcfw_yatf.append(ffcfw_yatf)
 
-        if report_run.loc['run_fec_dams', 'Run']:
-            ##Average dam fec with p, e & b axis. fec is adjusted for animals that are sold but not adjusted by mortality
-            ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
-            ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
-            type = 'stock'
-            prod = 'fec_dams_k2vpa1e1b1nw8ziyg1'
-            na_prod = [1]
-            prod_weights = 'on_hand_tpa1e1b1nw8ziyg1' #this will make weight 0 if the animal is sold.
-            na_prod_weights = [1]
-            weights = 'dams_numbers_k2tvanwziy1g1'
-            na_weights = [3,5,6]
-            den_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1'
-            keys = 'dams_keys_k2tvpaebnwziy1g1'
-            arith = 1
-            index = [3]             #p
-            cols = [12, 5, 1, 6]    #g1, e, t & b1
-            axis_slice = {}
-            # axis_slice[5] = [0, 1, 1]   #only the first cycle of e1
-            fec_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod,
-                                   prod_weights=prod_weights, na_prod_weights=na_prod_weights, weights=weights,
-                                   na_weights=na_weights, den_weights=den_weights,
-                                   keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
-            fec_dams = pd.concat([fec_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_fec_dams = stacked_fec_dams.append(fec_dams)
-
         if report_run.loc['run_ffcfw_prog', 'Run']:
             type = 'stock'
-            prod = 'ffcfw_prog_zia0xg2w9'
-            weights = 1
-            keys = 'prog_keys_zia0xg2w9'
-            arith = 0
-            index = [5]             #w9
-            cols = [0, 4, 3]  #z, g2, gender
+            prod = 'ffcfw_prog_k5wzida0e0b0xyg2'
+            na_prod = [1]
+            prod_weights = 'e0b0_denom_weights_prog_k5tw8zida0e0b0xyg3' #weight prod for propn of animals in e and b slice
+            weights = 'prog_numbers_k5twzida0xg2'
+            na_weights = [7,8,10] #e,b,y
+            den_weights = 'e0b0_denom_weights_prog_k5tw8zida0e0b0xyg3' #weight numbers for propn of animals in e and b slice
+            keys = 'prog_keys_k5twzida0e0b0xg2'
+            arith = 1
+            index = [2]             #w9
+            cols = [0,3,9,10]  #k2, z, gender, g2
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
-            ffcfw_prog = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights
-                                     , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+            ffcfw_prog = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod
+                                                     , prod_weights=prod_weights, weights=weights
+                                                     , na_weights=na_weights, den_weights=den_weights, keys=keys
+                                                     , arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             ffcfw_prog = pd.concat([ffcfw_prog],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_ffcfw_prog = stacked_ffcfw_prog.append(ffcfw_prog)
 
@@ -459,11 +463,10 @@ def f_report(processor, trials):
             type = 'stock'
             prod = 'ffcfw_offs_k3k5vpnw8zida0e0b0xyg3'
             na_prod = [2]
-            prod_weights = 'on_hand_tpnw8zida0e0b0xyg3' #this will make weight 0 if the animal is sold.
-            na_prod_weights = [1]
+            prod_weights = 'pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3' #weight prod for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off hand)
             weights = 'offs_numbers_k3k5tvnwziaxyg3'
             na_weights = [4, 9, 11, 12]
-            den_weights = 'pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3'
+            den_weights = 'pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3' #weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off hand)
             keys = 'offs_keys_k3k5tvpnwzidaebxyg3'
             arith = 1
             index = [9, 4]      #d, p. d here to save columns when many w
@@ -473,8 +476,7 @@ def f_report(processor, trials):
             axis_slice[9] = [2,-1,1] #dam age: Adult
             # axis_slice[15] = [0,1,1] #g3: BBB
             ffcfw_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, prod_weights=prod_weights
-                                     , na_prod_weights=na_prod_weights, weights=weights
-                                     , den_weights=den_weights, na_prod=na_prod, na_weights=na_weights
+                                     , weights=weights, den_weights=den_weights, na_prod=na_prod, na_weights=na_weights
                                      , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             ffcfw_offs = pd.concat([ffcfw_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_ffcfw_offs = stacked_ffcfw_offs.append(ffcfw_offs)
@@ -486,11 +488,10 @@ def f_report(processor, trials):
             type = 'stock'
             prod = 'fec_offs_k3k5vpnw8zida0e0b0xyg3'
             na_prod = [2]
-            prod_weights = 'on_hand_tpnw8zida0e0b0xyg3' #this will make weight 0 if the animal is sold.
-            na_prod_weights = [1]
+            prod_weights = 'pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3' #weight prod for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off hand)
             weights = 'offs_numbers_k3k5tvnwziaxyg3'
             na_weights = [4,9,11,12]
-            den_weights = 'pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3'
+            den_weights = 'pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3' #weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off hand)
             keys = 'offs_keys_k3k5tvpnwzidaebxyg3'
             arith = 1
             index =[4]
@@ -499,9 +500,9 @@ def f_report(processor, trials):
             axis_slice[11] = [0,1,1] #first cycle
             axis_slice[9] = [2,-1,1] #Adult
             axis_slice[15] = [0,1,1] #BBB
-            fec_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights,
-                                   na_prod_weights=na_prod_weights, weights=weights, den_weights=den_weights, na_weights=na_weights,
-                                   keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+            fec_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights
+                                   , weights=weights, den_weights=den_weights, na_weights=na_weights
+                                   , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             fec_offs = pd.concat([fec_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_fec_offs = stacked_fec_offs.append(fec_offs)
 
@@ -649,7 +650,7 @@ def f_report(processor, trials):
             keys = 'prog_keys_k5twzida0xg2'
             arith = 2
             index =[2]
-            cols =[0, 1]
+            cols =[0, 1, 5, 7]
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             numbers_prog = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,
@@ -695,8 +696,8 @@ def f_report(processor, trials):
             na_weights = []
             keys = 'dams_keys_paebnwziy1g1'
             arith = 4
-            index =[0]
-            cols =[3,5]
+            index =[0]          #period
+            cols =[9, 3, 5]     #genotype, LSLN, w
             axis_slice = {}
             # axis_slice[0] = [2, 3, 1]
             # axis_slice[1] = [2, 4, 1]
@@ -901,6 +902,7 @@ def f_report(processor, trials):
             stacked_drydmd = stacked_drydmd.append(drydmd)
 
         if report_run.loc['run_dryfoo', 'Run']:
+            #todo this report throws error when combining multiple excel... why??
             #returns average FOO during each FP (regardless of whether selected or not)
             type = 'pas'
             prod = 'dry_foo_dfzt'
@@ -982,6 +984,8 @@ def f_report(processor, trials):
 
     ##write to excel
     df_settings = rep.f_df2xl(writer, stacked_infeasible, 'infeasible', df_settings, option=1)
+    df_settings = rep.f_df2xl(writer, stacked_non_exist,'Non-exist',df_settings,option=0,colstart=0)
+
     if report_run.loc['run_summary', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_summary, 'summary', df_settings, option=1)
     if report_run.loc['run_areasum', 'Run']:
@@ -1121,8 +1125,9 @@ if __name__ == '__main__':
         pd.Series(exp_data.index.get_level_values(2)).fillna(0).astype(
             bool)]  # this is slightly complicated because blank rows in exp.xl result in nan, so nan must be converted to 0.
 
-    ##check the trials you want to run exist and are up to date
-    rep.f_errors(trial_outdated,trials)
+    ##check the trials you want to run exist and are up to date - if trial doesnt exist it is removed from trials to
+    # report array so that the others can still be run. A list of trials that don't exist is the 'non_exist' sheet in report excel.
+    trials, non_exist_trials = rep.f_errors(trial_outdated,trials)
 
     ##clear the old report.xlsx
     for f in glob.glob("Output/Report*.xlsx"):
@@ -1149,7 +1154,7 @@ if __name__ == '__main__':
         start_trial = int(len(trials)/agents * agent)
         end_trial = int(len(trials)/agents * (agent+1))
         process_trials = trials[start_trial:end_trial]
-        arg = [agent,process_trials]
+        arg = [agent,process_trials, non_exist_trials]
         args.append(arg)
     with multiprocessing.Pool(processes=agents) as pool:
         pool.starmap(f_report, args)

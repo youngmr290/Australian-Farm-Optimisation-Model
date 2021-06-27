@@ -64,7 +64,8 @@ def f_mask_lmu(df, axis):
 
 
 def f_rot_check():
-    ##check that the rotations match the inputs. If not then quit and leave error message
+    ##check that the rotations match the inputs. If not then re-run rotation generation. If still not the same
+    # quit and leave error message (most likely the user needs to re-run APSIM)
     if pinp.crop['user_crop_rot']:
         ### User defined
         base_yields = pinp.crop['yields']

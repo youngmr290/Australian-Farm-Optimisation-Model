@@ -7,7 +7,6 @@ module: experiment module - this is the module that runs everything and controls
 @author: young
 """
 #import datetime
-import pandas as pd
 import numpy as np
 import pyomo.environ as pe
 import time
@@ -16,12 +15,16 @@ import json
 from datetime import datetime
 import pickle as pkl
 
+##used to trace memory
+# import tracemalloc
+# tracemalloc.start(10)
+# snapshots = []
+
 #report the clock time that the experiment was started
 print("Experiment commenced at: ", time.ctime())
 
 import CreateModel as crtmod
 import BoundsPyomo as bndpy
-from CreateModel import model
 import StructuralInputs as sinp
 import UniversalInputs as uinp
 import PropertyInputs as pinp 
@@ -90,7 +93,7 @@ exp_data1 = fun.f_group_exp(exp_data1, exp_group_bool)
 total_trials=sum(exp_data.index[row][0] == True for row in range(len(exp_data)))
 print('Number of trials to run: ',total_trials)
 print('Number of full solutions: ',sum((exp_data.index[row][1] == True) and (exp_data.index[row][0] == True) for row in range(len(exp_data))))
-print('exp.xls last saved: ',datetime.fromtimestamp(round(os.path.getmtime("exp.xlsm"))))
+print('exp.xls last saved: ',datetime.fromtimestamp(round(os.path.getmtime("exp.xlsx"))))
 start_time1 = time.time()
 run=0 #counter to work out average time per loop
 for row in range(len(exp_data)):
@@ -158,9 +161,9 @@ for row in range(len(exp_data)):
     labpy.lab_precalcs(params['lab'],r_vals['lab'])
     lcrppy.crplab_precalcs(params['crplab'],r_vals['crplab'])
     suppy.sup_precalcs(params['sup'],r_vals['sup'])
-    stubpy.stub_precalcs(params['stub'],r_vals['stub'])
     spy.stock_precalcs(params['stock'],r_vals['stock'],ev)
-    paspy.paspyomo_precalcs(params['pas'],r_vals['pas'],ev) #pas must be after stock because it uses ev dict which is populated in stock.py
+    stubpy.stub_precalcs(params['stub'],r_vals['stub'], ev) #stub must be after stock because it uses ev dict which is populated in stock.py
+    paspy.paspyomo_precalcs(params['pas'],r_vals['pas'], ev) #pas must be after stock because it uses ev dict which is populated in stock.py
     precalc_end = time.time()
     print('precalcs: ', precalc_end - precalc_start)
     
@@ -169,25 +172,26 @@ for row in range(len(exp_data)):
     if run_pyomo:
         ##call pyomo model function, must call them in the correct order (core must be last)
         pyomocalc_start = time.time()
-        crtmod.sets() #certain sets have to be updated each iteration of exp
-        rotpy.rotationpyomo(params['rot'])
-        crppy.croppyomo_local(params['crop'])
-        macpy.machpyomo_local(params['mach'])
-        finpy.finpyomo_local(params['fin'])
-        lfixpy.labfxpyomo_local(params['labfx'])
-        labpy.labpyomo_local(params['lab'])
-        lcrppy.labcrppyomo_local(params['crplab'])
-        paspy.paspyomo_local(params['pas'])
-        suppy.suppyomo_local(params['sup'])
-        stubpy.stubpyomo_local(params['stub'])
-        spy.stockpyomo_local(params['stock'])
-        mvf.mvf_pyomo()
+        model = pe.ConcreteModel() #create pyomo model - done each loop because memory was being leaked when just deleting and re adding the components.
+        crtmod.sets(model, ev) #certain sets have to be updated each iteration of exp
+        rotpy.rotationpyomo(params['rot'], model)
+        crppy.croppyomo_local(params['crop'], model)
+        macpy.machpyomo_local(params['mach'], model)
+        finpy.finpyomo_local(params['fin'], model)
+        lfixpy.labfxpyomo_local(params['labfx'], model)
+        labpy.labpyomo_local(params['lab'], model)
+        lcrppy.labcrppyomo_local(params['crplab'], model)
+        paspy.paspyomo_local(params['pas'], model)
+        suppy.suppyomo_local(params['sup'], model)
+        stubpy.stubpyomo_local(params['stub'], model)
+        spy.stockpyomo_local(params['stock'], model)
+        mvf.mvf_pyomo(model)
         ###bounds-this must be done last because it uses sets built in some of the other modules
-        bndpy.boundarypyomo_local(params)
+        bndpy.boundarypyomo_local(params, model)
 
         pyomocalc_end = time.time()
         print('localpyomo: ', pyomocalc_end - pyomocalc_start)
-        obj = core.coremodel_all(params, trial_name)
+        obj = core.coremodel_all(params, trial_name, model)
         print('corepyomo: ',time.time() - pyomocalc_end)
 
         if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1:
@@ -296,81 +300,19 @@ try:
 except ZeroDivisionError: pass
 
 
+##code to track memory. Add this in at the end of exp loop
+    # import gc
+    # gc.collect()
+    # snapshots.append(tracemalloc.take_snapshot())
+    # if len(snapshots) > 1:
+    #
+    #     stats = snapshots[-1].compare_to(snapshots[-2], 'filename')
+    #     # stats = snapshots[-1].compare_to(snapshots[-2],'traceback')
+    #
+    #     for stat in stats[:10]:
+    #         print(stat)
+    #         # for line in stat.traceback.format():
+    #         #     print(line)
 
-    ##use the code below so that dsp can be run using command line. This allows the generation of lp file. (cant seem to generate lp file using the rapper method.
 
-        # import networkx
-        # root_vars=['v_hay_made[*]']
-        #
-        # stage2_vars=['v_quantity_casual[*]','v_quantity_perm[*]','v_quantity_manager[*]','v_phase_area[*,*]','v_sell_grain[*,*]',
-        #              'v_credit[*]',
-        #              'v_debit[*]',
-        #              'v_dep[*]',
-        #              'v_asset[*]',
-        #              'v_minroe[*]',
-        #              'v_buy_grain[*,*]',
-        #              'v_sup_con[*,*,*,*]',
-        #              'v_stub_con[*,*,*,*]',
-        #              'v_stub_transfer[*,*,*]',
-        #              'v_infrastructure[*]',
-        #              'v_seeding_machdays[*,*,*]',
-        #              'v_seeding_pas[*,*,*]',
-        #              'v_seeding_crop[*,*,*]',
-        #              'v_contractseeding_ha[*,*,*]',
-        #              'v_harv_hours[*,*]',
-        #              'v_contractharv_hours[*]',
-        #
-        #              'v_learn_allocation[*]',
-        #              'v_casualsupervision_perm[*]',
-        #              'v_casualsupervision_manager[*]',
-        #              'v_sheep_labour_manager[*,*]',
-        #              'v_crop_labour_manager[*,*]',
-        #              'v_fixed_labour_manager[*,*]',
-        #              'v_sheep_labour_permanent[*,*]',
-        #              'v_crop_labour_permanent[*,*]',
-        #              'v_fixed_labour_permanent[*,*]',
-        #              'v_sheep_labour_casual[*,*]',
-        #              'v_crop_labour_casual[*,*]',
-        #              'v_fixed_labour_casual[*,*]',
-        #              'v_greenpas_ha[*,*,*,*,*,*]',
-        #              'v_drypas_consumed[*,*,*,*]',
-        #              'v_drypas_transfer[*,*,*]',
-        #              'v_nap_consumed[*,*,*,*]',
-        #              'v_nap_transfer[*,*,*]',
-        #              'v_poc[*,*,*]',
-        #              'v_sire[*]',
-        #              'v_dams[*,*,*,*,*,*,*,*,*]',
-        #              'v_offs[*,*,*,*,*,*,*,*,*,*,*]',
-        #              'v_prog[*,*,*,*,*,*,*,*]'
-        #              ] #buy grain may not be in stage 3, i feel like you retain grain for the year ahead without knowing the type of season. but then the model will just counter by altering sale of grain.
-        #
-        #
-        #
-        # def pysp_scenario_tree_model_callback():
-        #     # Return a NetworkX scenario tree.
-        #     g = networkx.DiGraph()
-        #
-        #     ce1 = 'FirstStageCost'
-        #     g.add_node("Root",
-        #                cost=ce1,
-        #                variables=root_vars,
-        #                derived_variables=[])
-        #
-        #     ce2 = 'SecondStageCost'
-        #     g.add_node("z0",
-        #                cost=ce2,
-        #                variables=stage2_vars, #todo these will be different for each season potentially in the actual version.
-        #                derived_variables=[])
-        #     g.add_edge("Root","z0",weight=0.5) #todo this will need to be the season proportion input
-        #
-        #     g.add_node("z1",
-        #                cost=ce2,
-        #                variables=stage2_vars,
-        #                derived_variables=[])
-        #     g.add_edge("Root","z1",weight=0.5)
-        #
-        #     return g
-        #
-        # def pysp_instance_creation_callback(scenario_name,node_names):
-        #     instance = model.clone()
-        #     return instance
+

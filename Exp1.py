@@ -25,7 +25,6 @@ import numpy as np
 print("Experiment commenced at: ", time.ctime())
 start=time.time()
 
-from CreateModel import model
 import CreateModel as crtmod
 import BoundsPyomo as bndpy
 import StructuralInputs as sinp
@@ -171,9 +170,9 @@ def exp(row):  # called with command: pool.map(exp, dataset)
     labpy.lab_precalcs(params['lab'],r_vals['lab'])
     lcrppy.crplab_precalcs(params['crplab'],r_vals['crplab'])
     suppy.sup_precalcs(params['sup'],r_vals['sup'])
-    stubpy.stub_precalcs(params['stub'],r_vals['stub'])
     spy.stock_precalcs(params['stock'],r_vals['stock'],ev)
-    paspy.paspyomo_precalcs(params['pas'],r_vals['pas'],ev)
+    stubpy.stub_precalcs(params['stub'],r_vals['stub'], ev) #stub must be after stock because it uses ev dict which is populated in stock.py
+    paspy.paspyomo_precalcs(params['pas'],r_vals['pas'], ev) #pas must be after stock because it uses ev dict which is populated in stock.py
     precalc_end = time.time()
     print('precalcs: ', precalc_end - precalc_start)
 
@@ -184,24 +183,25 @@ def exp(row):  # called with command: pool.map(exp, dataset)
     if run_pyomo_params:
         ##call core model function, must call them in the correct order (core must be last)
         pyomocalc_start = time.time()
-        crtmod.sets() #certain sets have to be updated each iteration of exp
-        rotpy.rotationpyomo(params['rot'])
-        crppy.croppyomo_local(params['crop'])
-        macpy.machpyomo_local(params['mach'])
-        finpy.finpyomo_local(params['fin'])
-        lfixpy.labfxpyomo_local(params['labfx'])
-        labpy.labpyomo_local(params['lab'])
-        lcrppy.labcrppyomo_local(params['crplab'])
-        paspy.paspyomo_local(params['pas'])
-        suppy.suppyomo_local(params['sup'])
-        stubpy.stubpyomo_local(params['stub'])
-        spy.stockpyomo_local(params['stock'])
-        mvf.mvf_pyomo()
+        model = pe.ConcreteModel() #create pyomo model - done each loop because memory was being leaked when just deleting and re adding the components.
+        crtmod.sets(model, ev) #certain sets have to be updated each iteration of exp
+        rotpy.rotationpyomo(params['rot'], model)
+        crppy.croppyomo_local(params['crop'], model)
+        macpy.machpyomo_local(params['mach'], model)
+        finpy.finpyomo_local(params['fin'], model)
+        lfixpy.labfxpyomo_local(params['labfx'], model)
+        labpy.labpyomo_local(params['lab'], model)
+        lcrppy.labcrppyomo_local(params['crplab'], model)
+        paspy.paspyomo_local(params['pas'], model)
+        suppy.suppyomo_local(params['sup'], model)
+        stubpy.stubpyomo_local(params['stub'], model)
+        spy.stockpyomo_local(params['stock'], model)
+        mvf.mvf_pyomo(model)
         ###bounds-this must be done last because it uses sets built in some of the other modules
-        bndpy.boundarypyomo_local(params)
+        bndpy.boundarypyomo_local(params, model)
         pyomocalc_end = time.time()
         print('localpyomo: ', pyomocalc_end - pyomocalc_start)
-        obj = core.coremodel_all(params, trial_name) #have to do this so i can access the solver status
+        obj = core.coremodel_all(params, trial_name, model)
         print('corepyomo: ',time.time() - pyomocalc_end)
 
         if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1:
@@ -315,7 +315,7 @@ def main():
     ##prints out start status - number of trials to run, date and time exp.xl was last saved and output summary
     print('Number of trials to run: ',len(dataset))
     print('Number of full solutions: ',sum((exp_data.index[row][1] == True) and (exp_data.index[row][0] == True) for row in range(len(exp_data))))
-    print('Exp.xls last saved: ',datetime.fromtimestamp(round(os.path.getmtime("exp.xlsm"))))
+    print('Exp.xls last saved: ',datetime.fromtimestamp(round(os.path.getmtime("exp.xlsx"))))
     ##start multiprocessing
     with multiprocessing.Pool(processes=n_processes) as pool:
         trials_successfully_run = pool.map(exp, dataset)

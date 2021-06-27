@@ -6,8 +6,6 @@ author: young
 import pyomo.environ as pe
 
 #AFO modules
-# from MachPyomo import *
-from CreateModel import *
 import LabourCrop as lcrp
 import PropertyInputs as pinp
 
@@ -22,7 +20,7 @@ def crplab_precalcs(params, r_vals):
     '''
     lcrp.f_labcrop_params(params, r_vals)
 
-def labcrppyomo_local(params):
+def labcrppyomo_local(params, model):
     ''' Builds pyomo variables, parameters and constraints'''
 
     #########
@@ -32,63 +30,22 @@ def labcrppyomo_local(params):
     ##used to index the season key in params
     season = pinp.general['i_z_idx'][pinp.general['i_mask_z']][0]
 
-    try:
-        model.del_component(model.p_harv_helper)
-    except AttributeError:
-        pass
     model.p_harv_helper = pe.Param(model.s_crops, initialize=params['harvest_helper'], default = 0.0, doc='harvest helper time per crop')
     
-    try:
-        model.del_component(model.p_daily_seed_hours)
-    except AttributeError:
-        pass
     model.p_daily_seed_hours = pe.Param(initialize=params['daily_seed_hours'], default = 0.0, doc='machine hours per day of seeding ie labour required per mach day')
     
-    try:
-        model.del_component(model.p_seeding_helper)
-    except AttributeError:
-        pass
     model.p_seeding_helper = pe.Param( initialize=params['seeding_helper'], default = 0.0, doc='proportion of time helper is needed for seeding')
 
-    try:
-        model.del_component(model.p_prep_pack)
-    except AttributeError:
-        pass
     model.p_prep_pack = pe.Param(model.s_labperiods, initialize=params[season]['prep_labour'], default = 0.0, mutable=False, doc='labour for preparation and packing up for seeding and harv')
     
-    try:
-        model.del_component(model.p_fert_app_hour_tonne_index)
-        model.del_component(model.p_fert_app_hour_tonne)
-    except AttributeError:
-        pass
     model.p_fert_app_hour_tonne = pe.Param(model.s_labperiods, model.s_fert_type, initialize= params[season]['fert_app_time_t'], default = 0.0, mutable=False, doc='time required for fert application per tonne of each fert (filling up and driving to paddock cost)')
  
-    try:
-        # model.del_component(model.p_fert_app_hour_ha_index_index_0)
-        model.del_component(model.p_fert_app_hour_ha_index)
-        model.del_component(model.p_fert_app_hour_ha)
-    except AttributeError:
-        pass
     model.p_fert_app_hour_ha = pe.Param(model.s_phases, model.s_lmus, model.s_labperiods, initialize= params[season]['fert_app_time_ha'], default = 0.0, mutable=False, doc='time required for fert application per ha of each fert (driving around paddock cost)')
     
-    try:
-        model.del_component(model.p_chem_app_lab_index)
-        model.del_component(model.p_chem_app_lab)
-    except AttributeError:
-        pass
     model.p_chem_app_lab = pe.Param(model.s_phases, model.s_lmus, model.s_labperiods, initialize= params[season]['chem_app_time_ha'], default = 0.0, mutable=False, doc='time required for chem application per ha (hr/ha)')
 
-    try:
-        model.del_component(model.p_variable_crop_monitor_index)
-        model.del_component(model.p_variable_crop_monitor)
-    except AttributeError:
-        pass
     model.p_variable_crop_monitor = pe.Param(model.s_phases, model.s_labperiods, initialize= params[season]['variable_crop_monitor'], default = 0.0, mutable=False, doc='time required for crop monitoring (hr/ha)')
 
-    try:
-        model.del_component(model.p_fixed_crop_monitor)
-    except AttributeError:
-        pass
     model.p_fixed_crop_monitor = pe.Param(model.s_labperiods, initialize= params[season]['fixed_crop_monitor'], default = 0.0, mutable=False, doc='fixed time required for crop monitoring (hr/period)')
 
 

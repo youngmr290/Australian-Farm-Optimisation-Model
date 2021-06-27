@@ -153,7 +153,7 @@ def cartesian_product_simple_transpose(arrays):
     return arr.reshape(la, -1).T
 
 
-def searchsort_multiple_dim(a,v,axis_a0,axis_a1,axis_v0,axis_v1, side='left'):
+def searchsort_multiple_dim(a, v, axis_a0, axis_v0, axis_a1=None, axis_v1=None, side='left'):
     '''
     Find the indices into a sorted array a such that, if the corresponding elements in 'v' were inserted before the indices, the order of 'a' would be preserved.
     It does this iteratively down the specified axis (therefore the specified axis must be present in both 'a' and 'v'
@@ -182,11 +182,16 @@ def searchsort_multiple_dim(a,v,axis_a0,axis_a1,axis_v0,axis_v1, side='left'):
     slc_a = [slice(None)] * len(a.shape)
     slc_v = [slice(None)] * len(v.shape)
     for i in range(a.shape[axis_a0]):
-        for j in range(a.shape[axis_a1]):
+        if axis_a1 is not None:
+            for j in range(a.shape[axis_a1]):
+                slc_a[axis_a0] = slice(i, i+1)
+                slc_a[axis_a1] = slice(j, j+1)
+                slc_v[axis_v0] = slice(i, i+1)
+                slc_v[axis_v1] = slice(j, j+1)
+                final[tuple(slc_v)] = np.searchsorted(np.squeeze(a[tuple(slc_a)]), v[tuple(slc_v)], side)
+        else:
             slc_a[axis_a0] = slice(i, i+1)
-            slc_a[axis_a1] = slice(j, j+1)
             slc_v[axis_v0] = slice(i, i+1)
-            slc_v[axis_v1] = slice(j, j+1)
             final[tuple(slc_v)] = np.searchsorted(np.squeeze(a[tuple(slc_a)]), v[tuple(slc_v)], side)
     return final
 
@@ -339,7 +344,9 @@ def f_update(existing_value, new_value, mask_for_new):
 
 def f_weighted_average(array, weights, axis, keepdims=False, non_zero=False, den_weights=1):
     '''
-    Calculates weighted average (similar to np.average however this will handle if the sum of the weights is 0 (np.average doesnt handle this)
+    Calculates weighted average (similar to np.average however this will handle:
+        if the sum of the weights is 0 (np.average doesnt handle this)
+        keeping the axis (using the keepdims argument)
     'non-zero' handles how the average is calculated
     Note: if non-zero is false then when sum weights = 0 the numbers being averaged also = 0 (so can divide by 1 instead of 0)
     The function is also called from the reporting module with den_weights. den_weights can be 0, in which case 'non-zero' handles how the average is calculated
@@ -426,6 +433,25 @@ def np_extrap(x, xp, yp):
     ##use a mask to adjust values if extrapolating x above the highest input value in xp
     y[x > xp[-1]]= yp[-1] + (x[x>xp[-1]]-xp[-1])*(yp[-1]-yp[-2])/(xp[-1]-xp[-2])
     return y
+
+def f_norm_cdf(x, mu, cv=0.2, sd=None):
+    '''
+    ## returns the probability of the value being less than or equal to x
+    ## based on a normal distribution with mean mu and either a
+    ## coefficient of variation cv (default 20%) or standard deviation sd.
+    ## If provided the sd is used.
+    ## Calculated using an approximation of the normal probability function
+    '''
+
+    ##sd - standard deviation - maximum to stop div0 errors in next step.
+    if sd is None:
+        sd = mu * cv
+    ##standardise x. f_divide in case SD is 0 (either mu is 0 or CV is 0)
+    xstd = f_divide(x - mu,  sd)
+    ##probability (<=x)
+    prob = 1 / (np.exp(-358 / 23 * xstd + 111 * np.arctan(37 / 294 * xstd)) + 1)
+    return prob
+
 
 def f_distribution7(mean, sd=None, cv=None):
     '''
@@ -648,7 +674,7 @@ def f_read_exp():
         exp_group = None
 
     ##read excel
-    exp_data = pd.read_excel('exp.xlsm', index_col=None, header=[0,1,2,3], engine='openpyxl')
+    exp_data = pd.read_excel('exp.xlsx', index_col=None, header=[0,1,2,3], engine='openpyxl')
 
     ##determine trials which are in specified experiment group. If no group passed in then all trials will be included in the experiment.
     if exp_group is not None:

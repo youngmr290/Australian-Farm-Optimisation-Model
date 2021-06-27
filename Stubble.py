@@ -33,7 +33,7 @@ import Periods as per
 
 na = np.newaxis
 
-def stubble_all(params):
+def stubble_all(params, report, ev):
     '''
     Calculates the stubble available, MD provided, volume required and the proportion of the way through
     the harvest period that stubble becomes available.
@@ -68,11 +68,9 @@ def stubble_all(params):
 
     '''
     ##ev stuff
-    confinement_inc = np.maximum(np.max(sinp.structuralsa['i_nut_spread_n1'][0:sinp.structuralsa['i_n1_len']]),
-                                 np.max(sinp.structuralsa['i_nut_spread_n3'][0:sinp.structuralsa['i_n3_len']])) > 3 #if fs>3 then need to include confinement feeding
-    ev_is_not_confinement_v = sinp.general['ev_is_not_confinement']
-    ev_mask_v = np.logical_or(ev_is_not_confinement_v, confinement_inc)
-    ev_is_not_confinement_v = ev_is_not_confinement_v[ev_mask_v]
+    len_ev = ev['len_ev']
+    ev_is_not_confinement_v = np.full(len_ev, True)
+    ev_is_not_confinement_v[-1] = np.logical_not(ev['confinement_inc']) #if confinment period is included the last fev pool is confinment.
 
 
 
@@ -210,7 +208,7 @@ def stubble_all(params):
     keys_s1_cut = np.array(['b', 'c'])
     keys_s1_cut2 = np.array(['a'])
     keys_s1 = pinp.stubble['stub_cat_idx']
-    keys_v  = np.asarray(sinp.general['sheep_pools'][ev_mask_v])
+    keys_v  = np.array(['fev{0}' .format(i) for i in range(len_ev)])
     keys_z = pinp.f_keys_z()
 
 

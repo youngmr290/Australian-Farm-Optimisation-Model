@@ -111,7 +111,9 @@ def f_errors(trial_outdated, trials):
     '''
     The report module conducts three error checks before commencing:
 
-    #. Have you run the main model for each trial you are trying to report. If not an exception will arise.
+    #. Have you run the main model for each trial you are trying to report. If not a warning will be printed and
+       the given trial will be removed from the list of trials to report (allowing the remaining trials to still
+       be reported).
     #. Are any trials out of date E.g. have you run the main model since updating the inputs or the code.
        If trials are out of date a warning message will be printed but the report code will continue to execute.
     #. Did all the trials you are reporting solve optimally. Infeasible trials are still reported the reports are just
@@ -131,14 +133,16 @@ def f_errors(trial_outdated, trials):
             pass
     if infeasible_trials:
         print("Infeasible trials being reported:\n", infeasible_trials)
-        # sys.exit()
 
     ##second check if data exists for each desired trial
+    non_exist_trials = []
     for trial_name in trials:
         if os.path.isfile('pkl/pkl_r_vals_{0}.pkl'.format(trial_name)):
             pass
         else:
-            raise exc.TrialError('''Trials for reporting don't all exist''')
+            print('''WARNING: Trials for reporting don't all exist''')
+            trials = trials[trials!=trial_name] #remove trials that don't exist from the list of trials to run.
+            non_exist_trials.append(trial_name)
 
     ##third check if generating results using out of date data.
     outdatedbool = trial_outdated.loc[(slice(None), slice(None), slice(None), trials)].values  # have to use the trial name because the order is different
@@ -148,7 +152,7 @@ def f_errors(trial_outdated, trials):
               Generating reports from out dated data: Trial %s
                 
               ''' %np.array(trials)[outdatedbool])
-    return
+    return trials, non_exist_trials
 
 def load_pkl(trial_name):
     '''load in lp_vars and r_vals output file.
@@ -721,7 +725,7 @@ def f_stock_cash_summary(lp_vars, r_vals):
     ##sale income
     salevalue_czg0 = r_vals['stock']['salevalue_czg0'] * sire_numbers_zg0
     salevalue_k2ctva1nwziyg1 = r_vals['stock']['salevalue_k2ctva1nwziyg1'] * dams_numbers_k2tvanwziy1g1[:, na, ...]
-    salevalue_k5ctwzida0xg2 = r_vals['stock']['salevalue_ctwzia0xg2'][..., na, :, :, :] * prog_numbers_k5twzida0xg2[:, na,
+    salevalue_k5ctwzida0xg2 = r_vals['stock']['salevalue_k5ctwzia0xg2'][..., na, :, :, :] * prog_numbers_k5twzida0xg2[:, na,
                                                                                      ...]
     salevalue_k3k5ctvnwziaxyg3 = r_vals['stock']['salevalue_k3k5ctvnwziaxyg3'] * offs_numbers_k3k5tvnwziaxyg3[:, :, na, ...]
 
@@ -1075,12 +1079,12 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None
     :key index (optional, default = []): list: axis you want as the index of pandas df (order of list is the index level order).
     :key cols (optional, default = []): list: axis you want as the cols of pandas df (order of list is the col level order).
     :key arith (optional, default = 0): int: arithmetic operation used.
-            option 0: return production param, averaged on given axis
-            option 1: return weighted average of production param (optional denominator weight param)
-            option 2: total production for a given axis np.sum(prod * weight, axis)
-            option 3: total production for each activity
-            option 4: return weighted average of production param using prod>0 as the weights
-            option 5: return the maximum value across the slices of the axes
+                option 0: return production param averaged across all axis that are not reported.
+                option 1: return weighted average of production param (using denominator weight return production per day the animal is on hand)
+                option 2: weighted total production summed across all axis that are not reported.
+                option 3: weighted total production for each  (axis not reported are disregarded)
+                option 4: return weighted average of production param using prod>0 as the weights
+                option 5: return the maximum value across all axis that are not reported.
     :key prod (optional, default = 1): str/int/float: if it is a string then it is used as a key for stock_vars, if it is an number that number is used as the prod value
     :key na_prod (optional, default = []): list: position to add new axis
     :key weights (optional, default = None): str: weights to be used in arith (typically a lp variable eg numbers). Only required when arith>0
@@ -1297,12 +1301,12 @@ def f_slice(prod, prod_weights, weights, den_weights, keys, arith, axis_slice):
 
 def f_arith(prod, prod_weights, weight, den_weights, arith, axis):
     '''
-    option 0: return production param averaged on specified axis
+    option 0: return production param averaged across all axis that are not reported.
     option 1: return weighted average of production param (using denominator weight return production per day the animal is on hand)
-    option 2: total production for a given axis
-    option 3: total production for each activity
+    option 2: weighted total production summed across all axis that are not reported.
+    option 3: weighted total production for each  (axis not reported are disregarded)
     option 4: return weighted average of production param using prod>0 as the weights
-    option 5: return the maximum value across the slices of the axes
+    option 5: return the maximum value across all axis that are not reported.
 
     :param prod: array: production param
     :param prod_weight: array: weights the production param
@@ -1330,7 +1334,7 @@ def f_arith(prod, prod_weights, weight, den_weights, arith, axis):
         prod = prod * weight
     ##option 4
     if arith == 4:
-        prod = fun.f_divide(np.sum(prod, tuple(axis), keepdims=keepdims), np.sum(prod>0, tuple(axis), keepdims=keepdims))
+        prod = fun.f_divide(np.sum(prod * (prod>0), tuple(axis), keepdims=keepdims), np.sum(prod>0, tuple(axis), keepdims=keepdims))
     ##option 5
     if arith == 5:
         prod = np.max(prod, tuple(axis), keepdims=keepdims)
