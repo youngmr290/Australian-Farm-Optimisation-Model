@@ -7,7 +7,6 @@ Precalcs
 .. toctree::
    :maxdepth: 1
 
-   StockGenerator
    StockFunctions
 
 Pyomo
