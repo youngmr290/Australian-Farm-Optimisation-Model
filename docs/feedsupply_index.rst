@@ -107,7 +107,6 @@ Precalcs
 .. toctree::
    :maxdepth: 1
 
-   Pasture
    PastureFunctions
 
 Pyomo
