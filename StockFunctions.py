@@ -1099,13 +1099,29 @@ def f_feedsupply(feedsupply_std_a1e1b1nwzida0e0b0xyg, paststd_foo_a1e1b1j0wzida0
 
 def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, nyatf_b1any, period_is_mating, index_e1
                     , rev_trait_value, saa_rr):
-    '''CSIRO system: The general approach is to calculate the probability of conception greater than or equal to 1,2,3 foetuses
+    ''''
+    Calculation of dam conception using CSIRO equation system
+
+    The general approach is to calculate the probability of conception greater than or equal to 1,2,3 foetuses
     Probability is calculated from a sigmoid relationship based on relative size * relative condition at joining
     The estimation of cumulative probability is scaled by a factor that varies with (litter size * latitude * day of the year)
     The probability is an estimate of the number of dams carrying that number in the third trimester.
     Some dams conceive (and don't return to service) but don't carry to the third trimester, this is taken into account.
     The values are altered by a sensitivity analysis on scanning percentage
     Conception (proportion of dams that are dry) and litter size (number of foetuses per pregnant dam) can be controlled for relative economic values
+
+    :param cf:
+    :param cb1: GrazPlan parameter stating the probability of conception with different number of foetuses.
+    :param relsize_mating:
+    :param rc_mating:
+    :param crg_doy:
+    :param nfoet_b1any:
+    :param nyatf_b1any:
+    :param period_is_mating:
+    :param index_e1:
+    :param rev_trait_value:
+    :param saa_rr:
+    :return: Dam conception.
     '''
     if ~np.any(period_is_mating):
         conception = np.zeros_like(relsize_mating)
@@ -1123,6 +1139,7 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         crg *= (nfoet_b1any == nyatf_b1any)
 
         ##Temporary array for probability of a given number of foetuses (calculated from the difference in the cumulative probability)
+        ##The probability of conception being a specific number of foetuses (=x, rather than >= x) is achieved by calculating the difference between the array and the array values offset by one slice (difference between '>x' and '>x+1').
         ### Define the temp array shape & populate with values from crg (values are required for the proportion of the highest parity dams)
         t_cr = crg.copy()
         slc = [slice(None)] * len(t_cr.shape)
@@ -1168,8 +1185,10 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         propn_pregnant = f_dynamic_slice(crg, b1_pos, 2, 3)
         slc[b1_pos] = slice(1,2)
         t_cr[tuple(slc)] = np.minimum((cf[5, ...] / (1 - cf[5, ...])) * propn_pregnant, 1 - propn_pregnant)
+
         ##If the period is mating then set conception = temporary probability array
         conception = t_cr * period_is_mating
+
         ##Subtract conception of 00, 11, 22 & 33 from the NM slice (in e1[0])
         slc = [slice(None)] * len(conception.shape)
         slc[b1_pos] = slice(0,1)
