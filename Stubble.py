@@ -1,19 +1,5 @@
-# -*- coding: utf-8 -*-
 """
-Created on Sun Nov 24 09:10:54 2019
-
-
-Stubble:
-
-Total Grain = HI * (above ground) biomass
-Leaf + Stem = (1-HI) * biomass
-Harvested grain = (1 - spilt%) * Total grain
-Spilt grain = spilt% * Total grain
-Stubble = Leaf + Stem + Spilt grain
-
-Spilt grain as a proportion of the stubble = (HI * spilt %) / (1 - HI(1 - spilt%))
-
-@author: young
+author: young
 """
 #python modules
 import numpy as np
@@ -66,7 +52,21 @@ def stubble_all(params, report, ev):
     Farmer often rack and burn stubbles in preparation for the following seeding. This is represented as a
     cost see Crop.py for further information.
 
+
+
     '''
+    '''
+    Stubble definitions:
+
+    Total Grain = HI * (above ground) biomass
+    Leaf + Stem = (1-HI) * biomass
+    Harvested grain = (1 - spilt%) * Total grain
+    Spilt grain = spilt% * Total grain
+    Stubble = Leaf + Stem + Spilt grain
+    
+    Spilt grain as a proportion of the stubble = (HI * spilt %) / (1 - HI(1 - spilt%))
+    '''
+
     ##ev stuff
     len_ev = ev['len_ev']
     ev_is_not_confinement_v = np.full(len_ev, True)
