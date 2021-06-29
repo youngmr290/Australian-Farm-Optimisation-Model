@@ -17,13 +17,24 @@ na = np.newaxis
 def f_germination(i_germination_std_zt, i_germ_scalar_lzt, germ_scalar_rt, i_germ_scalar_fzt
                   , pasture_rt, arable_l,  resown_rt, pastures, phase_germresow_df, i_phase_germ_dict):
     '''
-    create an array called p_germination_flrt being the parameters to be passed to pyomo
+    Calculate pasture germination for each rotaion phase.
+
+    Pasture germination is calculated for each pasture rotation phase based on the LMU and rotation history.
+    The phase history is assumed only to impact pasture seed bank and hence pasture establishment. Phase
+    history impacts the seed bank for three main reasons. Firstly, spraying out the weeds during the crop
+    phase reduces seed set. Secondly, pasture manipulation in the prior years can reduce seed set. Thirdly,
+    reseeding in the previous year can have carry forward benefits. For LMUs that have a component of
+    non-arable area, the germination on the arable area is affected by the phase history whereas the
+    germination on the non-arable area is assumed to be the same as the germination in a continuous
+    pasture rotation. Additionally, resown pastures or perennial pastures (e.g. Lucerne & Tedera)
+    are only established on the arable areas, the non-arable areas are assumed to be growing annual pasture.
+
     :param i_germination_std_zt:
     :param i_germ_scalar_lzt:
     :param germ_scalar_rt:
     :param i_germ_scalar_fzt:
     :param pasture_rt:
-    :param arable_l:
+    :param arable_l: Proportion of arable land on each LMU.
     :param resown_rt:
     :param pastures:
     :param phase_germresow_df:
@@ -73,6 +84,37 @@ def f_reseeding(i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, i_restoc
                 , i_fxg_foo_oflzt, c_fxg_a_oflzt, c_fxg_b_oflzt, i_grn_senesce_eos_fzt
                 , grn_senesce_startfoo_fzt, grn_senesce_pgrcons_fzt, length_fz, n_feed_periods
                 , max_germination_flz, t_idx, z_idx, l_idx):
+    '''
+    Adjust FOO for resown pasture phases.
+
+    Resown pastures germinate as a usual pasture (see f_germination) the FOO is then set to 0 for the periods
+    when the paddock is ungrazable due to reseeding. At the time of restocking the FOO on the arable areas
+    is set based on user specified input and the FOO on the non-arable area is calculated from the FOO at
+    destocking plus the growth over the destocked period. Pastures that are resown after the break of season
+    can be grazed until user specified destocking date prior to reseeding. To give the resown pasture time
+    to establish, the paddocks remain unstocked until a user specified restock date.
+
+    :param i_destock_date_zt:
+    :param i_restock_date_zt:
+    :param i_destock_foo_zt:
+    :param i_restock_grn_propn_t:
+    :param resown_rt:
+    :param feed_period_dates_fz:
+    :param foo_grn_reseeding_flrzt:
+    :param foo_dry_reseeding_flrzt:
+    :param foo_na_destock_fzt:
+    :param i_restock_fooscalar_lt:
+    :param i_restock_foo_arable_t:
+    :param dry_decay_period_fzt:
+    :param i_fxg_foo_oflzt:
+    :param c_fxg_a_oflzt:
+    :param c_fxg_b_oflzt:
+    :param i_grn_senesce_eos_fzt:
+    :param grn_senesce_startfoo_fzt:
+    :param grn_senesce_pgrcons_fzt:
+    :param max_germination_flz:
+    :return:
+    '''
     ##reseeding: generates the green & dry FOO that is lost and gained from reseeding pasture. It is stored in a numpy array (phase, lmu, feed period)
     ##Results are stored in p_...._reseeding
     #todo test the calculation of FOO on the resown area when the full set of rotation phases is included
@@ -97,7 +139,6 @@ def f_reseeding(i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, i_restoc
     ### FOO on non-arable areas at restocking equals foo at destocking plus any germination occurring in the destocked period plus growth from destocking to grazing
     #### FOO at destocking is an input, allocate the input to the destocking feed period
     foo_na_destock_fzt[period_zt, z_idx[:,na], t_idx] = foo_na_destock_zt
-
     #### the period from destocking to restocking (for germination and growth)
     destock_duration_zt = i_restock_date_zt - i_destock_date_zt
     shape_fzt = feed_period_dates_fz.shape + (i_destock_date_zt.shape[-1],)
@@ -152,6 +193,15 @@ def f_reseeding(i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, i_restoc
 
 
 def f_pas_sow(i_reseeding_date_start_zt, i_reseeding_date_end_zt, resown_rt, arable_l, phases_rotn_df):
+    '''
+    Calculate the machinery sowing requirement for pasture phases.
+
+    :param i_reseeding_date_start_zt: Date reseeding begins.
+    :param i_reseeding_date_end_zt: Date reseeding ends.
+    :param resown_rt: Boolean array denoting which rotations phases are resown.
+    :param arable_l: Proportion of arable land on each LMU.
+    :return: Pasture sowing requirement for all rotation phases.
+    '''
     ### sow param determination
     ### determine the labour periods pas seeding occurs
     i_seeding_length_zt = i_reseeding_date_end_zt - i_reseeding_date_start_zt
@@ -186,9 +236,19 @@ def f1_green_area(resown_rt, pasture_rt, periods_destocked_fzt, arable_l):
 
 
 def f_erosion(i_lmu_conservation_flt, arable_l, pasture_rt):
-    ############################################################
-    ## erosion limit. The minimum FOO at the end of each period#
-    ############################################################
+    '''
+    The minimum FOO at the end of each period.
+
+    Due to sustainability bare paddocks are often avoided by farmers. To represent this in the model pasture
+    paddocks have user defined erosion limit which specifies how much FOO must still cover the paddocks in the
+    following year. This stops the model consuming all the dry feed and leaving the paddocks bare and exposed
+    to wind erosion.
+
+    :param i_lmu_conservation_flt: Minimum foo at end of each period to reduce risk of wind & water erosion.
+    :param arable_l: Proportion of arable land on each LMU.
+    :param pasture_rt: Boolean array linking pasture type to rotation phase.
+    :return: The minimum FOO at the end of each period for each rotation phase.
+    '''
     arable_erosion_flrt = i_lmu_conservation_flt[..., na,:]  \
                                     *  arable_l[:, na, na]  \
                                     * pasture_rt
@@ -207,30 +267,74 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_oflzt, i_fxg_pgr_oflzt, c_pgr_gi_scalar_gf
                   , me_threshold_vfzt, i_me_eff_gainlose_ft, mask_greenfeed_exists_fzt, length_fz, ev_is_not_confinement_v):
     '''
     Pasture growth, consumption and senescence of green feed.
+
+    The green pasture decision variables combine the representation of FOO at the start of the period, FOO at the
+    end of the period, animal removal, energy per unit of dry matter and volume. Aggregating the decision variable
+    to include all these factors allows representation (and optimisation) of:
+
+        #. The intake capacity of livestock is affected by the level of FOO at the start of the period & level of grazing
+           intensity. Both affect average FOO which controls the intake by stock. When there is more FOO, animals can
+           eat more and achieve higher growth rates.
+
+        #. Livestock diet quality change with grazing pressure (eg. by running a lower stocking rate livestock can
+           improve their diet quality through increased diet selectivity). This selectivity can be important for
+           finishing animals for market or fattening animals for mating.
+
+        #. The digestibility of pasture decreases as the length of time from the last defoliation increases (i.e. older
+           leaves are less digestible). Having consumption and FOO in the same activity allows a drop in digestibility
+           associated with old leaf to be included by linking digestibility to FOO. This is especially important for
+           species such as kikuyu that drop in digestibility rapidly if pastures are grazed laxly and FOO increases.
+
+        #. The pasture growth is reduced with higher grazing intensity because the average leaf area is reduced
+           during the growth period.
+
+    These issues are likely more important in a system producing meat, where growth rate of animals and hence
+    diet quality is critical to profitability. In a meat system the trade-off between quantity of feed utilised
+    and quality of feed is quite different than the trade-off for a wool system.
+
+    For a given period, the decision variables are defined by starting FOO level and grazing intensity. There
+    are three foo levels; low, medium and high starting FOO and four grazing intensities; no grazing, low,
+    medium and high. Green pasture decision variables represent the total green pasture on the farm in each
+    period. The level of the decision variables at the start of the growing season are determined by the area
+    of pasture and its level of establishment (see f_germination).
+
+    Gross pasture growth rate for each activity is calculated as a linear interpolation of the inputs of PGR
+    by FOO using the input FOO level for the growth/consumption activity and grazing intensity during a period
+    reduces growth rate during the period.
+
+    Diet digestibility is the overall quality of the pasture consumed by the livestock. The input value is the
+    quality of the high quality component of the sward when animals have capacity to graze selectively
+    (25% grazing intensity). At higher grazing intensity the reduction in diet quality depends on the (input)
+    range of digestibility within the sward. The reduction in digestibility for the 100% grazing intensity
+    decision variable is half the range of digestibility within the sward.
+
     :param cu3:
     :param cu4:
-    :param i_fxg_foo_oflzt:
-    :param i_fxg_pgr_oflzt:
-    :param c_pgr_gi_scalar_gft:
-    :param grn_foo_start_ungrazed_flzt:
-    :param i_foo_graze_propn_gt:
-    :param grn_senesce_startfoo_fzt:
-    :param grn_senesce_pgrcons_fzt:
-    :param i_grn_senesce_eos_fzt:
-    :param i_base_ft:
-    :param i_grn_trampling_ft:
-    :param i_grn_dig_flzt:
-    :param i_grn_dmd_range_ft:
+    :param i_fxg_foo_oflzt: each level of starting FOO used inconjunction with PGR.
+    :param i_fxg_pgr_oflzt: PGR at each level of starting FOO if the pasture is not grazed for each soil type (typically derived from a simulation model).
+    :param c_pgr_gi_scalar_gft: The impact of grazing intensity within the period on the PGR achieved.
+    :param grn_foo_start_ungrazed_flzt:  FOO at the start of the period if the pasture has been ungrazed from the start of the growing season.
+    :param i_foo_graze_propn_gt: proportion of the FOO available (greater than the base level) that is grazed for each level of grazing intensity.
+    :param grn_senesce_startfoo_fzt: The proportion of the green feed at the start of the period that senesces.
+    :param grn_senesce_pgrcons_fzt: The proportion of the green feed that grows during the period that senesces (or the reduction in senescence if FOO reduces due to grazing).
+    :param i_grn_senesce_eos_fzt: The proportion of the green feed at the end of the period that senesces because it is the end of the growing season.
+    :param i_base_ft: The base FOO level which represents the level below which the pasture can’t be grazed. This base
+                      level is set with several criteria in mind; the physical limit at which animals can graze, an
+                      erosion limit below which farmers wouldn’t or shouldn’t graze; the optimum level of FOO based on
+                      the trade-off between PGR and FOO.
+    :param i_grn_trampling_ft: amount of feed that is trampled while green feed is being consumed as a proportion of the feed consumed.
+    :param i_grn_dig_flzt: DMD of the green feed that would be consumed if animals graze with 25% grazing intensity a sward that has medium FOO level in each feed period on each LMU.
+    :param i_grn_dmd_range_ft: range of DMDin the sward between the 25th percentile to the 75th percentile.
     :param i_pasture_stage_p6z:
     :param i_legume_zt:
     :param me_threshold_vfzt:
     :param i_me_eff_gainlose_ft:
-    :param mask_greenfeed_exists_fzt:
+    :param mask_greenfeed_exists_fzt: mask associated the period in which plants senesce at the end of the growing season.
     :param length_fz:
     :param ev_is_not_confinement_v:
     :return:
     '''
-    #
+    #todo review the research data to decide if trampling is more closely related to FOO or consumption (currently represented as a propn of feed consumed).
 
     ## green initial FOO for the 'grnha' decision variables
     foo_start_grnha_oflzt = i_fxg_foo_oflzt
@@ -348,6 +452,39 @@ def f_senescence(senesce_period_grnha_goflzt, senesce_eos_grnha_goflzt, dry_deca
 
 def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_fzt, i_dry_dmd_range_fzt, i_dry_foo_high_fzt, me_threshold_vfzt, i_me_eff_gainlose_ft, mask_dryfeed_exists_fzt
                   , i_pasture_stage_p6z, ev_is_not_confinement_v, i_legume_zt, n_feed_pools):
+    '''
+    Calculate the the quality and quantity of dry pasture available throughout the year.
+
+    Dry pasture is represented by a low- and high-quality decision variable. When green feed senesces a proportion
+    of the feed enters each pool based on the digestibility of the senescing feed. This representation allows some
+    diet selection to occur, with the higher quality component grazed by different sheep than the lower quality.
+    The ‘high’ pool has digestibility of the 25th percentile and the ‘low’ group the 75th percentile.
+
+    Non arable area on crop paddocks grow pasture all season, calculated as an ungrazed green annual pasture
+    (see f_grn_pas). After harvest pasture on non-arable areas can be consumed. All pasture grown on the
+    non-arable area of crop paddock is allocated to the low-quality dry pasture pool because it has grown
+    all year without being grazed.
+
+    Dry pasture that is not consumed is passed to the same pool in the next period and the average quality
+    and quantity reduces each period as it decays. Consumption of the high quality/high FOO component further
+    reduces the average as the feed available skews towards the low-quality pool.
+
+    .. Note:: There is not a constraint that ensures that the high-quality pasture pool is grazed prior to the
+        low-quality pool (unlike the grazing of stubbles where it does exist).
+
+    :param cu3:
+    :param cu4:
+    :param i_dry_dmd_ave_fzt:
+    :param i_dry_dmd_range_fzt:
+    :param i_dry_foo_high_fzt:
+    :param me_threshold_vfzt:
+    :param i_me_eff_gainlose_ft:
+    :param mask_dryfeed_exists_fzt:
+    :param i_pasture_stage_p6z:
+    :param ev_is_not_confinement_v:
+    :param i_legume_zt:
+    :return:
+    '''
     #Consumption & deferment of dry feed.
     ## dry, dmd & foo of feed consumed
     ### do sensitivity adjustment for dry_dmd_input based on increasing/reducing the reduction in dmd from the maximum (starting value)
