@@ -24,173 +24,16 @@ import Sensitivity as sen
 
 na=np.newaxis
 
-###################
-#general functions# todo these could be moved to fun.py
-###################
-#todo move to Functions: f_sig, f_ramp, f_dim, f_dynamic_slice, f_day_length, f_next_prev_association,
 
-def f_sig(x,a,b):
-    ''' Sig function CSIRO equation 124 ^the equation below is the sig function from SheepExplorer'''
-    return  1/(1+np.exp(-((2*(np.log(0.95) - np.log(0.05))/(b-a))*(x-(a+b)/2))))
-
-
-def f_ramp(x,a,b):
-    ''' RAMP function CSIRO equation 125a'''
-    return  np.minimum(1,np.maximum(0,(a-x)/(a-b)))
-
-
-def f_dim(x,y):
-    '''a function that minimum value of zero otherwise difference between the 2 inputs '''
-    return np.maximum(0,x-y)
-
-
-def f_dynamic_slice(arr, axis, start, stop, axis2=None, start2=None, stop2=None):
-    ##check if arr is int - this is the case for the first loop because arr may be initialised as 0
-    if type(arr)==int:
-        return arr
-    else:
-        ##first axis slice if it is not singleton
-        if arr.shape[axis]!=1:
-            sl = [slice(None)] * arr.ndim
-            sl[axis] = slice( start, stop)
-            arr = arr[tuple(sl)]
-        if axis2 is not None:
-            ##second axis slice if required and not singleton
-            if arr.shape[axis2] != 1:
-                sl = [slice(None)] * arr.ndim
-                sl[axis2] = slice( start2, stop2)
-                arr = arr[tuple(sl)]
-        return arr
-
-
-#todo this doesnt seem to be used. maybe it should be commented out.
-def roll_slices(array, roll, roll_axis=0):
+def f1_sim_periods(start_year, periods_per_year, oldest_animal):
     '''
-    The function rolls each slice for a given axis (the np roll function rolls each slice the same)
-    you can roll different slices by different amounts
-    :param array: array to be rolled
-    :param roll: number of times the slice is to be rolled - this array should have one less dim than the main array
-    :param roll_axis: axis to roll down
-    :return:
-    '''
-    #flattern array if multi dim
-    a = array.reshape(array.shape[roll_axis], int(np.prod(array.shape)/array.shape[roll_axis]))
-    r = roll.reshape(int(np.prod(roll.shape)))
-
-    rows, column_indices = np.ogrid[:a.shape[0], :a.shape[1]]
-
-    # Use always a negative shift, so that column_indices are valid.
-    # (could also use module operation)
-    r[r < 0] += a.shape[0]
-    rows = rows - r
-    result = a[rows, column_indices]
-    return (result.reshape(array.shape))
-
-
-##################
-#timing functions#
-##################
-
-def f_daylength(dayOfYear, lat):
-    """Computes the length of the day (the time between sunrise and
-    sunset) given the day of the year and latitude of the location.
-    Function uses the Brock model for the computations.
-    For more information see, for example,
-    Forsythe et al., "A model comparison for daylength as a
-    function of latitude and day of year", Ecological Modelling,
-    1995.
-    Parameters
-    ----------
-    dayOfYear : int
-        The day of the year. 1 corresponds to 1st of January
-        and 365 to 31st December (on a non-leap year).
-    lat : float
-        Latitude of the location in degrees. Positive values
-        for north and negative for south.
-    Returns
-    -------
-    d : float
-        Daylength in hours.
-    """
-    dl=np.zeros_like(dayOfYear, dtype='float64')
-    latInRad = np.deg2rad(lat)
-    declinationOfEarth = 23.45*np.sin(np.deg2rad(360.0*(283.0+dayOfYear)/365.0))
-    m1 = (-np.tan(latInRad) * np.tan(np.deg2rad(declinationOfEarth))) <= -1.0
-    m2 = (-np.tan(latInRad) * np.tan(np.deg2rad(declinationOfEarth))) >= 1.0
-    hourAngle = np.rad2deg(np.arccos(-np.tan(latInRad) * np.tan(np.deg2rad(declinationOfEarth))))
-    daylen = 2.0*hourAngle/15.0
-    dl[m1] = 24
-    dl[m2] = 0
-    dl[~np.logical_and(m2, m1)] = daylen[~np.logical_and(m2, m1)]
-    return dl
-#^this function can handle 2 multi D arrays. not required for P associations because P is 1D array
-# def f_next_prev_joining(joining_date,age,offset):
-#     '''
-#     Parameters
-#     ----------
-#     Params must have identical axis 1 and 2
-
-#     joining_date : Array
-#         Joining date.
-#     age : Array
-#         age of animal at the beginning of each period.
-
-#     Returns
-#     -------
-#     Array.
-
-#     '''
-#     a_next = np.zeros(len(age[0]) * len(joining_date[1]) * len(joining_date[2])).reshape(len(age[0]), len(joining_date[1]), len(joining_date[2]))
-#     for i in range(len(joining_date[1])):
-#         for c in range(len(joining_date[2])):
-#             ###next joining date
-#             a_next[:,l,c1] = np.searchsorted(joining_date[:,l,c1], age[:,l,c1])
-#     ###previous joining date
-#     return np.minimum(a_next_o_plc1 - offset, len(age)-1)
-
-
-def f_next_prev_association(datearray_slice,*args):
-    '''
-    Depending on the inputs this function will return the next or previous association.
-    eg it can be used to determine the next lambing opportunity for each period.
-    See john stuff.py for alternative methods.
-
-    Parameters
-    ----------
-    datearray_slice : any
-        This is 1d array which the second array is sorted into (this must be sorted).
-    *args : 1 - array, 2 - int
-        Arg 1: the period array 1d that is the index is being found for, note the index is based off the start date therefore must do [1:-1] if you want idx based on end date.
-        Arg 2: period offset (this may be needed if evaluating the end of the period.
-
-    Returns
-    -------
-    Array
-        The function finds the index value of the datearray which is either the next or previous date for a given input date.
-        ## The previous opportunity is the latest opportunity date that is less than the date at the end of the period
-        ## eg ('end of the period' so that if joining occurs during the period it is the previous
-        ## The next opportunity is the earliest joining date that is greater than the date at the start of the period
-        ## eg So it is the prev + 1 except if the joining is occurring within the period, in which case it points to this one.
-
-
-    '''
-    date=args[0]
-    offset=args[1] #offset is used to get the previous datearray period
-    side=args[2]
-    idx_next = np.searchsorted(datearray_slice, date,side)
-    idx = np.clip(idx_next - offset, 0, len(datearray_slice)-1) #makes the max value equal to the length of joining array, because if the period date is after the last lambing opportunity there is no 'next'
-    return idx
-
-
-#todo f1_
-def sim_periods(start_year, periods_per_year, oldest_animal):
-    '''Define the dates for the simulation periods.
+    Define the dates for the simulation periods.
     Starts on 1 Jan of the year with the earliest birthdate.
 
     Parameters:
     start_year = int: year to start simulation.
-    periods_per_year = int:
-    oldest_animal = float: age of the oldest animal to be simulated (yrs)
+    periods_per_year = int: number of periods per year.
+    oldest_animal = float: age of the oldest animal to be simulated (yrs).
 
     Returns:
     n_sim_periods
@@ -209,8 +52,7 @@ def sim_periods(start_year, periods_per_year, oldest_animal):
     return n_sim_periods, date_start_p, date_end_p, index_p, step
 
 
-#todo f1_
-def f_period_is_(period_is, date_array, date_start_p=0, date_array2 = 0, date_end_p=0):
+def f1_period_is_(period_is, date_array, date_start_p=0, date_array2 = 0, date_end_p=0):
     '''
     Parameters
     ----------
@@ -251,8 +93,8 @@ def f_period_is_(period_is, date_array, date_start_p=0, date_array2 = 0, date_en
 ###################################
 #input and manipulation functions #
 ###################################
-#todo f1_
-def f_c2g(params_c2, y=0, var_pos=0, condition=None, axis=0, dtype=False):
+
+def f1_c2g(params_c2, y=0, var_pos=0, condition=None, axis=0, dtype=False):
     '''
     Parameters
     ----------
@@ -333,8 +175,7 @@ def f_c2g(params_c2, y=0, var_pos=0, condition=None, axis=0, dtype=False):
     return param_sire, param_dams, param_yatf, param_offs
 
 
-#todo f1_
-def f_g2g(array_g,group,left_pos=0,swap=False,right_pos=-1,left_pos2=0,right_pos2=-1, left_pos3=0, right_pos3=0,
+def f1_g2g(array_g,group,left_pos=0,swap=False,right_pos=-1,left_pos2=0,right_pos2=-1, left_pos3=0, right_pos3=0,
           condition = None, axis = 0, condition2 = None, axis2 = 0, move=False, source=0, dest=1):
     '''
     Parameters
@@ -431,8 +272,7 @@ def f_g2g(array_g,group,left_pos=0,swap=False,right_pos=-1,left_pos2=0,right_pos
     return array
 
 
-#todo f1_
-def f_DSTw(scan_g, cycles=1):
+def f1_DSTw(scan_g, cycles=1):
     '''
     A numpy based calculation of the proportion of dry, single, twin & triplet bearing dams from a scanning percentage.
     Prediction is a polynomial formula y=intercept+ax+bx^2+cx^3+dx^4, where x is the scanning %
@@ -467,8 +307,7 @@ def f_DSTw(scan_g, cycles=1):
     return dstwtr_gl0
 
 
-#todo f1_
-def f_btrt0(dstwtr_propn,lss,lstw,lstr): #^this function is inflexible ie if you want to add quadruplets
+def f1_btrt0(dstwtr_propn,lss,lstw,lstr): #^this function is inflexible ie if you want to add quadruplets
     '''
     Parameters
     ----------
@@ -507,7 +346,6 @@ def f_btrt0(dstwtr_propn,lss,lstw,lstr): #^this function is inflexible ie if you
 
 
 #BTRT for b1 - code below not currently used but may be a little helpful later on.
-
 # def f_btrt1(dstwtr,pss,pstw,pstr): #^this function is inflexible ie if you want to add quadruplets
 #     '''
 #     Parameters
@@ -547,8 +385,8 @@ def f_btrt0(dstwtr_propn,lss,lstw,lstr): #^this function is inflexible ie if you
 ################
 #Sim functions #
 ################
-#todo f1_
-def f_feedsupply_adjust(attempts,feedsupply,itn):
+
+def f1_feedsupply_adjust(attempts,feedsupply,itn):
     ##create empty array to put new feedsupply into, this is done so it doesnt have the itn axis (probably could just create from attempts array shape without last axis)
     feedsupply = np.zeros_like(feedsupply)
     ##which feedsupplies can be calculated using binary method - must have a negative and positive error
@@ -582,8 +420,7 @@ def f_feedsupply_adjust(attempts,feedsupply,itn):
     return feedsupply
 
 
-#todo f1_
-def f_rev_update(trait_name, trait_value, rev_trait_value):
+def f1_rev_update(trait_name, trait_value, rev_trait_value):
     trait_idx = sinp.structuralsa['rev_trait_name'].tolist().index(trait_name)
     if sinp.structuralsa['rev_trait_inc'][trait_idx]:
         if sinp.structuralsa['rev_create']:
@@ -593,10 +430,9 @@ def f_rev_update(trait_name, trait_value, rev_trait_value):
     return trait_value
 
 
-#todo f1_
-def f_history(history, new_value, days_in_period):
+def f1_history(history, new_value, days_in_period):
     '''
-    The idea that the f_history is implementing is for traits that have a lag from increased nutrition to increased production. 
+    The idea that the f1_history is implementing is for traits that have a lag from increased nutrition to increased production. 
     The representation being that the production today is an average of the non-lagged estimated production from the last x days (where x is either len_m2 or len_m3, either of which can be 1 but are expected to be 25).
     The history function is keeping track of the last x days of estimated production (slice 0 is the most recent day, slice -1 is the oldest day of the history). 
     The process is:
@@ -617,6 +453,27 @@ def f_history(history, new_value, days_in_period):
 
 def f_potential_intake_cs(ci, cl, srw, relsize_start, rc_start, temp_lc_dams, temp_ave, temp_max, temp_min, rain_intake
                           , rc_birth_start=1, pi_age_y=0, lb_start=0, mp2=0, piyf=1, period_between_birthwean=1, sam_pi=1):
+    '''
+
+    :param ci:
+    :param cl:
+    :param srw:
+    :param relsize_start:
+    :param rc_start:
+    :param temp_lc_dams:
+    :param temp_ave:
+    :param temp_max:
+    :param temp_min:
+    :param rain_intake:
+    :param rc_birth_start:
+    :param pi_age_y:
+    :param lb_start:
+    :param mp2:
+    :param piyf:
+    :param period_between_birthwean:
+    :param sam_pi:
+    :return:
+    '''
     ##Condition factor on PI
     picf= np.minimum(1, rc_start * (ci[20, ...] - rc_start) / (ci[20, ...] - 1))
     ##Lactation adjustment (RC at parturition) - only active for dams
@@ -671,8 +528,7 @@ def f_intake(pi, ri, md_herb, feedsupply, intake_s, i_md_supp, mp2=0):
     return mei, mei_solid, intake_f, md_solid, mei_propn_milk, mei_propn_herb, mei_propn_supp
 
 
-#todo f1_
-def f_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb
+def f1_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb
          , kl = 0, mei_propn_milk = 0, lact_propn = 0):
     '''
 
@@ -744,13 +600,12 @@ def f_energy_cs(ck, cx, cm, lw_start, ffcfw_start, mr_age, mei, omer_history_sta
     ##Energy required for grazing (chewing and walking around)
     egraze = cm[6, ...] * ffcfw_start * intake_f * (cm[7, ...] - dmd) + emove
     ##Energy associated with organ activity
-    omer, omer_history = f_history(omer_history_start, cm[1, ...] * mei, days_period)
+    omer, omer_history = f1_history(omer_history_start, cm[1, ...] * mei, days_period)
     ##ME requirement for maintenance (before ECold)
     meme = ((emetab + egraze) / km + omer) * sam_mr
     return meme, omer_history, km, kg_fodd, kg_supp, kl
 
 
-# def f_foetus_cs(cp, cb1, kc, nfoet, relsize_start, rc_start, nec_cum_start, w_b_std_y, w_f_start, nw_f_start, nwf_age_f, guw_age_f, dce_age_f, days_period_f):
 def f_foetus_cs(cp, cb1, kc, nfoet, relsize_start, rc_start, w_b_std_y, w_f_start, nw_f_start, nwf_age_f, guw_age_f, dce_age_f):
     ##expected normal birth weight with dam age adj.
     w_b_exp_y = (1 - cp[4, ...] * (1 - relsize_start)) * w_b_std_y
@@ -786,8 +641,7 @@ def f_foetus_cs(cp, cb1, kc, nfoet, relsize_start, rc_start, w_b_std_y, w_f_star
     return w_f, mec, nec, w_b_exp_y, nw_f, guw
 
 
-#todo f1_
-def f_carryforward_u1(cu1, cg, ebg, period_between_joinstartend, period_between_mated90, period_between_d90birth
+def f1_carryforward_u1(cu1, cg, ebg, period_between_joinstartend, period_between_mated90, period_between_d90birth
                       , period_between_birthwean, days_period, period_propn=1):
     ##Select coefficient to increment the carry forward quantity based on the current period
     ### can only be the coefficient from one of the periods and the later period overwrites the earlier period.
@@ -811,7 +665,7 @@ def f_birthweight_cs(cx, w_b_yatf, w_f_dams, period_is_birth):
 def f_birthweight_mu(cu1, cb1, cg, cx, ce, w_b, cf_w_b_dams, ffcfw_birth_dams, ebg_dams, days_period, gest_propn
                      , period_between_joinscan, period_between_scanbirth, period_is_birth):
     ##Carry forward BW increment	
-    d_cf_w_b = f_carryforward_u1(cu1[16, ...], cg, ebg_dams, False, period_between_joinscan, period_between_scanbirth
+    d_cf_w_b = f1_carryforward_u1(cu1[16, ...], cg, ebg_dams, False, period_between_joinscan, period_between_scanbirth
                                  , False, days_period, gest_propn)
     ##Increment the total carry forward BW
     cf_w_b_dams = cf_w_b_dams + d_cf_w_b
@@ -837,7 +691,7 @@ def f_weanweight_mu(cu1, cb1, cg, cx, ce, nyatf, w_w, cf_w_w_dams, ffcfw_wean_da
     ##Calculate average FOO to end of this period (increment the running average to date)
     foo_ave_end = fun.f_divide(foo_ave_start * day_of_lactation + foo * days_period, day_of_lactation + days_period)
     ##Carry forward WWt increment
-    d_cf_w_w = f_carryforward_u1(cu1[17, ...], cg, ebg_dams, False, period_between_joinscan, period_between_scanbirth
+    d_cf_w_w = f1_carryforward_u1(cu1[17, ...], cg, ebg_dams, False, period_between_joinscan, period_between_scanbirth
                                  , period_between_birthwean, days_period)
     ##Increment the total Carry forward WWt
     cf_w_w_dams = cf_w_w_dams + d_cf_w_w
@@ -855,7 +709,7 @@ def f_progenycfw_mu(cu1, cg, cfw_adj, cf_cfw_dams, ffcfw_birth_dams, ffcfw_birth
     ##impact on progeny CFW of the dam LW profile being different from the standard pattern
     ### LTW coefficients are multiplied by the difference in the LW profile from the standard profile. This only requires representing explicitly for LW at birth because the std LW change is 0. Std pattern is lambing in CS 3, so LW = normal weight
     ##Carry forward CFW increment
-    d_cf_cfw = f_carryforward_u1(cu1[12, ...], cg, ebg_dams, False, period_between_mated90, period_between_d90birth, False, days_period, gest_propn)
+    d_cf_cfw = f1_carryforward_u1(cu1[12, ...], cg, ebg_dams, False, period_between_mated90, period_between_d90birth, False, days_period, gest_propn)
     ##Increment the total Carry forward CFW
     cf_cfw_dams = cf_cfw_dams + d_cf_cfw
     ##temporary calculation including difference in current dam LW (only used if period is birth)
@@ -871,7 +725,7 @@ def f_progenyfd_mu(cu1, cg, fd_adj, cf_fd_dams, ffcfw_birth_dams, ffcfw_birth_st
     ##impact on progeny FD of the dam LW profile being different from the standard pattern
     ### LTW coefficients are multiplied by the difference in the LW profile from the standard profile. This only requires representing explicitly for LW at birth because the std LW change is 0. Std pattern is lambing in CS 3, so LW = normal weight
     ##Carry forward FD increment
-    d_cf_fd = f_carryforward_u1(cu1[13, ...], cg, ebg_dams, False, period_between_mated90, period_between_d90birth, False, days_period, gest_propn)
+    d_cf_fd = f1_carryforward_u1(cu1[13, ...], cg, ebg_dams, False, period_between_mated90, period_between_d90birth, False, days_period, gest_propn)
     ##Increment the total Carry forward FD
     cf_fd_dams = cf_fd_dams + d_cf_fd
     ##temporary calculation including difference in current dam LW (only used if period is birth)
@@ -894,7 +748,7 @@ def f_milk(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_start,
     ##Milk production based on energy available	
     mp1 = cl[7, ...] * mpmax / (1 + np.exp(-(-cl[19, ...] + cl[20, ...] * milk_ratio + cl[21, ...] * ad * (milk_ratio - cl[22, ...] * ad) - cl[23, ...] * rc_start * (milk_ratio - cl[24, ...] * rc_start))))
     ##Milk production (per animal) based on suckling volume	(milk production per day of lactation)
-    mp2 = np.minimum(mp1, np.mean(f_dynamic_slice(ffcfw75_exp_yatf, i_x_pos, 1, None), axis = i_x_pos, keepdims=True) * mp2_age_y)   # averages female and castrates weight, ffcfw75 is metabolic weight
+    mp2 = np.minimum(mp1, np.mean(fun.f_dynamic_slice(ffcfw75_exp_yatf, i_x_pos, 1, None), axis = i_x_pos, keepdims=True) * mp2_age_y)   # averages female and castrates weight, ffcfw75 is metabolic weight
     ##ME for lactation (per day lactating)	
     mel = mp2 / (cl[5, ...] * kl)
     ##NE for lactation	
@@ -927,9 +781,9 @@ def f_fibre(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_m2g,
     ##Wool growth (protein weight-as shorn i.e. not DM) if there was no lag
     d_cfw_nolag_g = cw_g[8, ...] * wge_a0e0b0xyg * af_wool_g * dlf_wool_g * mew_xs_g
     ##Process the CFW REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
-    d_cfw_nolag_g = f_rev_update('cfw', d_cfw_nolag_g, rev_trait_value)
+    d_cfw_nolag_g = f1_rev_update('cfw', d_cfw_nolag_g, rev_trait_value)
     ##Wool growth (protein weight) with lag and updated history
-    d_cfw_g, d_cfw_history_m2g = f_history(d_cfw_history_start_m2g, d_cfw_nolag_g, days_period_g)
+    d_cfw_g, d_cfw_history_m2g = f1_history(d_cfw_history_start_m2g, d_cfw_nolag_g, days_period_g)
     ##Net energy required for wool
     new_g = cw_g[1, ...] * (d_cfw_g - cw_g[2, ...] * relsize_start_g) / cw_g[3, ...]
     ##ME required for wool (above basal)
@@ -937,7 +791,7 @@ def f_fibre(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_m2g,
     ##Fibre diameter for the days growth
     d_fd_g = sfd_a0e0b0xyg * fun.f_divide(d_cfw_g, d_cfw_ave_g) ** cw_g[13, ...]  #func to stop div/0 error when d_cfw_ave=0 so does d_cfw (only have a 0 when day period = 0)
     ##Process the FD REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
-    d_fd_g = f_rev_update('fd', d_fd_g, rev_trait_value)
+    d_fd_g = f1_rev_update('fd', d_fd_g, rev_trait_value)
     ##Surface Area
     area = cc_g[1, ...] * ffcfw_start_g ** (2/3)
     ##Daily fibre length growth
@@ -952,7 +806,7 @@ def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, meme, mew, new, km,
     ##Animal is below maintenance
     belowmaint = mei < (meme + mec + mel + mew)
     ##Efficiency for growth (before ECold)
-    kge = f_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb, kl, mei_propn_milk, lact_propn)
+    kge = f1_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb, kl, mei_propn_milk, lact_propn)
     ##Sinusoidal variation in temp & wind
     sin_var_m0 = np.sin(2 * np.pi / 12 *(index_m0 - 3))
     ##Ambient temp (2 hourly)
@@ -986,13 +840,13 @@ def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, meme, mew, new, km,
     ##Lower critical temperature (period)
     temp_lc_a1e1b1nwzida0e0b0xyg = np.average(temp_lc_a1e1b1nwzida0e0b0xygm0m1, axis = (-1,-2))
     ##Extra ME required to keep warm
-    mecold_a1e1b1nwzida0e0b0xyg = area * np.average(f_dim(temp_lc_a1e1b1nwzida0e0b0xygm0m1, temperature_a1e1b1nwzida0e0b0xygm0[..., na]) /(in_tissue[..., na, na] + in_ext_a1e1b1nwzida0e0b0xygm0m1), axis = (-1,-2))
+    mecold_a1e1b1nwzida0e0b0xyg = area * np.average(fun.f_dim(temp_lc_a1e1b1nwzida0e0b0xygm0m1, temperature_a1e1b1nwzida0e0b0xygm0[..., na]) /(in_tissue[..., na, na] + in_ext_a1e1b1nwzida0e0b0xygm0m1), axis = (-1,-2))
     ##ME requirement for maintenance (inc ECold)
     mem = meme + mecold_a1e1b1nwzida0e0b0xyg
     ##Animal is below maintenance (incl ecold)
     belowmaint = mei < (mem + mec + mel + mew)
     ##Efficiency for growth (inc ECold) -different to the second line because belowmaint includes ecold
-    kg = f_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb, kl, mei_propn_milk, lact_propn)
+    kg = f1_kg(ck, belowmaint, km, kg_supp, mei_propn_supp, kg_fodd, mei_propn_herb, kl, mei_propn_milk, lact_propn)
     return mem, temp_lc_a1e1b1nwzida0e0b0xyg, kg
 
 
@@ -1013,7 +867,7 @@ def f_lwc_cs(cg, rc_start, mei, mem, mew, z1f, z2f, kg, rev_trait_value, mec = 0
     ##Empty bodyweight gain
     ebg = neg / evg
     ##Process the Liveweight REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
-    ebg = f_rev_update('lwc', ebg, rev_trait_value)
+    ebg = f1_rev_update('lwc', ebg, rev_trait_value)
     ##Protein gain
     pg = pcg * ebg
     ##fat gain
@@ -1038,7 +892,7 @@ def f_lwc_mu(cg, rc_start, mei, mem, mew, z1f, z2f, kg, rev_trait_value, mec = 0
     ##Empty bodyweight gain
     ebg = neg / evg
     ##Process the Liveweight REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
-    ebg = f_rev_update('lwc', ebg, rev_trait_value)
+    ebg = f1_rev_update('lwc', ebg, rev_trait_value)
     # ##Protein gain
     # pg = pcg * ebg
     # ##fat gain
@@ -1064,8 +918,7 @@ def f_emissions_bc(ch, intake_f, intake_s, md_solid, level):
     return ch4_total, ch4_animal
 
 
-#todo f1_ and rename fec to nv
-def convert_fs2fec(fs_input, fec_p6f, feedsupply_f, a_p6_pa1e1b1nwzida0e0b0xyg):
+def f1_convert_fs2nv(fs_input, fec_p6f, feedsupply_f, a_p6_pa1e1b1nwzida0e0b0xyg):
     ##convert a feed supply array (feed) and return an fec array using a conversion array (fec_p6f) for a corresponding feedsupply (feedsupply_f)
     ## expect feed to have a p axis as axis 0.
     ###the position of the feedsupply input in the conversion array
@@ -1077,8 +930,7 @@ def convert_fs2fec(fs_input, fec_p6f, feedsupply_f, a_p6_pa1e1b1nwzida0e0b0xyg):
     return fec_pa1e1b1nwzida0e0b0xygf[...,0] #remove singleton f axis - no longer needed.
 
 
-#todo f1_ and rename fec to nv
-def convert_fec2fs(fec_input, fec_p6f, feedsupply_f, a_p6_pz):
+def f1_convert_nv2fs(fec_input, fec_p6f, feedsupply_f, a_p6_pz):
     ##convert a feed supply array (feed) and return an fec array using a conversion array (fec_p6f) for a corresponding feedsupply (feedsupply_f)
     ## expect feed to have a p axis as axis 0.
     ### multi dim search sorted requires the axes to be the same, so convert p6 to p in the lookup array
@@ -1092,8 +944,7 @@ def convert_fec2fs(fec_input, fec_p6f, feedsupply_f, a_p6_pz):
     return fs
 
 
-#todo f1_
-def f_feedsupply(feedsupply_std_a1e1b1nwzida0e0b0xyg, paststd_foo_a1e1b1j0wzida0e0b0xyg, paststd_dmd_a1e1b1j0wzida0e0b0xyg
+def f1_feedsupply(feedsupply_std_a1e1b1nwzida0e0b0xyg, paststd_foo_a1e1b1j0wzida0e0b0xyg, paststd_dmd_a1e1b1j0wzida0e0b0xyg
                  , paststd_hf_a1e1b1j0wzida0e0b0xyg, pi):
     ##level of pasture
     level_a1e1b1nwzida0e0b0xyg = np.trunc(np.minimum(2, feedsupply_std_a1e1b1nwzida0e0b0xyg)).astype('int') #note np.trunc rounds down to the nearest int (need to specify int type for the take along axis function below)
@@ -1154,11 +1005,11 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
 
         ## relative size and relative condition of the dams at mating are the determinants of conception
         ### the dams being mated are those in slices e1[0] and b1[0] (first cycle, not mated)
-        relsize_mating_e1b1sliced = f_dynamic_slice(relsize_mating, sinp.stock['i_e1_pos'], 0, 1, b1_pos, 0, 1) #take slice from e1 & b1 axis
-        rc_mating_e1b1sliced = f_dynamic_slice(rc_mating, sinp.stock['i_e1_pos'], 0, 1, b1_pos, 0, 1) #take slice from e1 & b1 axis
+        relsize_mating_e1b1sliced = fun.f_dynamic_slice(relsize_mating, sinp.stock['i_e1_pos'], 0, 1, b1_pos, 0, 1) #take slice from e1 & b1 axis
+        rc_mating_e1b1sliced = fun.f_dynamic_slice(rc_mating, sinp.stock['i_e1_pos'], 0, 1, b1_pos, 0, 1) #take slice from e1 & b1 axis
 
         ## probability of at least a given number of foetuses
-        crg = crg_doy * f_sig(relsize_mating_e1b1sliced * rc_mating_e1b1sliced, cb1[2, ...], cb1[3, ...])
+        crg = crg_doy * fun.f_sig(relsize_mating_e1b1sliced * rc_mating_e1b1sliced, cb1[2, ...], cb1[3, ...])
         ##Set proportions to 0 for dams that gave birth and lost - this is required so that numbers in pp behave correctly
         crg *= (nfoet_b1any == nyatf_b1any)
 
@@ -1168,22 +1019,22 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         t_cr = crg.copy()
         slc = [slice(None)] * len(t_cr.shape)
         slc[b1_pos] = slice(1,-1)
-        t_cr[tuple(slc)] = np.maximum(0, f_dynamic_slice(crg, b1_pos, 1, -1) - f_dynamic_slice(crg, b1_pos, 2, None))    # (difference between '>x' and '>x+1')
+        t_cr[tuple(slc)] = np.maximum(0, fun.f_dynamic_slice(crg, b1_pos, 1, -1) - fun.f_dynamic_slice(crg, b1_pos, 2, None))    # (difference between '>x' and '>x+1')
 
         ##Apply scanning percentage sa to the probability of the number of foetuses.
         ### Carried out here so that the sa affects the REV and is included in proportion of NM
         ### Achieved by calculating the impact of the sa on the scanning percentage and then adjusting the proportion of dry, singles and twins
         ## calculate the repro rate from the probabilities above and convert to an expected proportion of dry, singles, twins & triplets after 1 cycle
-        repro_rate = f_convert_scan2cycles(t_cr, nfoet_b1any, cycles = 1)
-        ###remove singleton b1 axis by squeezing because it is replaced by the l0 axis in f_DSTw
+        repro_rate = f1_convert_scan2cycles(t_cr, nfoet_b1any, cycles = 1)
+        ###remove singleton b1 axis by squeezing because it is replaced by the l0 axis in f1_DSTw
         repro_rate = np.squeeze(repro_rate, axis=b1_pos)
         saa_rr = np.squeeze(saa_rr, axis=b1_pos)
         ### The proportions returned are in axis -1 and needs the slices altered (shape of l0 to b1) and moving to b1 position.
-        propn_dst = np.moveaxis(f_DSTw(repro_rate, cycles = 1)[...,sinp.stock['a_nfoet_b1']], -1, b1_pos)
+        propn_dst = np.moveaxis(f1_DSTw(repro_rate, cycles = 1)[...,sinp.stock['a_nfoet_b1']], -1, b1_pos)
         ## apply the sa to the repro rate and convert the adjusted value to a proportion of dry, singles, twins & triplets after 1 cycle
         repro_rate_adj = fun.f_sa(repro_rate, sen.sam['rr'])
         repro_rate_adj = fun.f_sa(repro_rate_adj, saa_rr, 2) * (repro_rate > 0)     # only non-zero if original value was non-zero
-        propn_dst_adj = np.moveaxis(f_DSTw(repro_rate_adj, cycles = 1)[..., sinp.stock['a_nfoet_b1']], -1, b1_pos) #move the l0 axis into the b1 position. and expand to b1 size.
+        propn_dst_adj = np.moveaxis(f1_DSTw(repro_rate_adj, cycles = 1)[..., sinp.stock['a_nfoet_b1']], -1, b1_pos) #move the l0 axis into the b1 position. and expand to b1 size.
         ##calculate the change in the expected proportions due to altering the scanning percentage & apply to calculated proportions
         propn_dst_change = propn_dst_adj - propn_dst
         propn_dst_change = propn_dst_change * (nfoet_b1any==nyatf_b1any) #don't want to add any conception to the lambed and lost slices.
@@ -1192,21 +1043,21 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         ##Process the Conception REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
         ###Conception is the proportion of dams that are dry. The split between dry and pregnant alters the proportion of single bearing ewes b1[2].
         ### The proportion of Drys is then calculated (later) as the animals that didn't get pregnant.
-        t_cr[:, :, 2, ...] = f_rev_update('conception', t_cr[:, :, 2, ...], rev_trait_value)
+        t_cr[:, :, 2, ...] = f1_rev_update('conception', t_cr[:, :, 2, ...], rev_trait_value)
 
         ## Calculate proportion of singles, twins & triplets so litter size can be stored as a REV trait & then restored from the REV
         ## requires a mask for the pregnant dams that is the same shape as t_cr
         mask = nfoet_b1any.squeeze() > 0
         t_cr_masked = np.compress(mask, t_cr, b1_pos)
         litter_propn = t_cr_masked / np.sum(t_cr_masked, b1_pos, keepdims=True)
-        litter_propn = f_rev_update('litter_size', litter_propn, rev_trait_value)
+        litter_propn = f1_rev_update('litter_size', litter_propn, rev_trait_value)
         ###calculate t_cr from litter size. t_cr will only change from the original value if litter_size REV is active
         t_cr[:,:,mask,...] = litter_propn * np.sum(t_cr_masked, b1_pos, keepdims=True)
 
         ##Dams that implant (i.e. do not return to service) but don't retain to 3rd trimester are added to 00 slice (b1[1:2]) rather than staying in NM slice
         ###Number is based on a proportion (cf[5]) of the ewes that implant (propn_preg) losing their foetuses/embryos
         ###The number can't be more than the number of ewes that are not pregnant in the 3rd trimester (1 - propn_preg).
-        propn_pregnant = f_dynamic_slice(crg, b1_pos, 2, 3)
+        propn_pregnant = fun.f_dynamic_slice(crg, b1_pos, 2, 3)
         slc[b1_pos] = slice(1,2)
         t_cr[tuple(slc)] = np.minimum((cf[5, ...] / (1 - cf[5, ...])) * propn_pregnant, 1 - propn_pregnant)
 
@@ -1216,7 +1067,7 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         ##Subtract conception of 00, 11, 22 & 33 from the NM slice (in e1[0])
         slc = [slice(None)] * len(conception.shape)
         slc[b1_pos] = slice(0,1)
-        conception[tuple(slc)] = -np.sum(f_dynamic_slice(conception, b1_pos,1, None), axis = b1_pos, keepdims=True)
+        conception[tuple(slc)] = -np.sum(fun.f_dynamic_slice(conception, b1_pos,1, None), axis = b1_pos, keepdims=True)
         temporary = (index_e1 == 0) * np.sum(conception, axis=sinp.stock['i_e1_pos'], keepdims=True) #sum across e axis into slice e[0]
         conception = fun.f_update(conception, temporary, (nyatf_b1any == 0)) #Put sum of e1 into slice e1[0] and don't overwrite the slices where nyatf != 0
     return conception
@@ -1227,7 +1078,7 @@ def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, nfoet_
     ''' LTW system: The general calculation is scanning percentage is defined by a linear function of CS
     The standard value (CS 3) is determined by the genotype and relative size
     The slope varies with day of year
-    The proportion of dry, single, twin & triplet is estimated as a function of the scanning percentage using f_DSTw
+    The proportion of dry, single, twin & triplet is estimated as a function of the scanning percentage using f1_DSTw
     Note: sa is not applied in this function because it is applied to the input scan_std (which is also used to determine the BTRT effect on fleece)
     '''
     if ~np.any(period_is_mating):
@@ -1237,8 +1088,8 @@ def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, nfoet_
         ## relative size and condition score of the dams at mating are the determinants of conception
         ### the dams being mated are those in slices e1[0] and b1[0] (first cycle, not mated)
         ## #todo scan_std probably should change based on date of joining (could use CSIRO function)
-        relsize_mating_e1b1sliced = f_dynamic_slice(relsize_mating, sinp.stock['i_e1_pos'], 0, 1, b1_pos, 0, 1) #take slice e1[0] & b1[0]
-        cs_mating_e1b1sliced = f_dynamic_slice(cs_mating, sinp.stock['i_e1_pos'], 0, 1, b1_pos, 0, 1) #take slice e1[0] & b1[0]
+        relsize_mating_e1b1sliced = fun.f_dynamic_slice(relsize_mating, sinp.stock['i_e1_pos'], 0, 1, b1_pos, 0, 1) #take slice e1[0] & b1[0]
+        cs_mating_e1b1sliced = fun.f_dynamic_slice(cs_mating, sinp.stock['i_e1_pos'], 0, 1, b1_pos, 0, 1) #take slice e1[0] & b1[0]
         ##Adjust standard scanning percentage based on relative size (to reduce scanning percentage of younger animals)
         scan_std = scan_std * relsize_mating_e1b1sliced
         ##Slope of the RR vs CS relationship based on time of the year
@@ -1247,18 +1098,18 @@ def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, nfoet_
         repro_rate = scan_std + (cs_mating_e1b1sliced - 3) * slope
 
         ##Calculate the propn dry/single/twin for given repro rate.
-        ###remove singleton b1 axis by squeezing because it is replaced by the l0 axis in f_DSTw)
+        ###remove singleton b1 axis by squeezing because it is replaced by the l0 axis in f1_DSTw)
         repro_rate = np.squeeze(repro_rate, axis=b1_pos)
         ### Note: repro rate calculated above is based on a calibration with 2 cycles
         ### Require the proportions of dry, singles, twins & triplets for 1 cycle
         ### The proportions returned are in axis -1 and needs the slices altered (shape of l0 to b1) and moving to b1 position.
-        t_cr = np.moveaxis(f_DSTw(repro_rate, cycles = 1)[...,sinp.stock['a_nfoet_b1']], -1, b1_pos)
+        t_cr = np.moveaxis(f1_DSTw(repro_rate, cycles = 1)[...,sinp.stock['a_nfoet_b1']], -1, b1_pos)
         ##Set proportions to 0 for dams that gave birth and lost - this is required so that numbers in pp behave correctly
         t_cr *= (nfoet_b1any == nyatf_b1any)
         ##Dams that implant (i.e. do not return to service) but don't retain to 3rd trimester are added to 00 slice rather than staying in NM slice
         ###Number is based on a proportion (cf[5]) of the ewes that implant (propn_preg) losing their foetuses/embryos
         ###The number can't be more than the number of ewes that are not pregnant in the 3rd trimester (1 - propn_preg).
-        propn_pregnant = np.sum(f_dynamic_slice(t_cr, b1_pos, 2, None), axis = b1_pos, keepdims = True)
+        propn_pregnant = np.sum(fun.f_dynamic_slice(t_cr, b1_pos, 2, None), axis = b1_pos, keepdims = True)
         slc = [slice(None)] * len(t_cr.shape)
         slc[b1_pos] = slice(1,2)
         t_cr[tuple(slc)] = np.minimum((cf[5, ...] / (1 - cf[5, ...])) * propn_pregnant, 1 - propn_pregnant)
@@ -1267,17 +1118,16 @@ def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, nfoet_
         ##Subtract conception of 00, 11, 22 & 33 from the NM slice (in e1[0])
         slc = [slice(None)] * len(conception.shape)
         slc[b1_pos] = slice(0,1)
-        conception[tuple(slc)] = -np.sum(f_dynamic_slice(conception, b1_pos,1, None), axis = b1_pos, keepdims=True)
+        conception[tuple(slc)] = -np.sum(fun.f_dynamic_slice(conception, b1_pos,1, None), axis = b1_pos, keepdims=True)
         temporary = (index_e1 == 0) * np.sum(conception, axis=sinp.stock['i_e1_pos'], keepdims=True)  # sum across e axis into slice e[0]
         conception = fun.f_update(conception, temporary, (nyatf_b1any == 0))  #Put sum of e1 into slice e1[0] and don't overwrite the slices where nyatf != 0
         ##Process the Conception & Litter size REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
-        conception[:, :, 1, ...] = f_rev_update('conception', conception[:, :, 1, ...], rev_trait_value)
-        conception[:, :, 2:, ...] = f_rev_update('litter_size', conception[:, :, 2:, ...], rev_trait_value)
+        conception[:, :, 1, ...] = f1_rev_update('conception', conception[:, :, 1, ...], rev_trait_value)
+        conception[:, :, 2:, ...] = f1_rev_update('litter_size', conception[:, :, 2:, ...], rev_trait_value)
     return conception
 
 
-#todo f1_
-def f_convert_scan2cycles(dst_propn, nfoet_b1any, cycles = 1):
+def f1_convert_scan2cycles(dst_propn, nfoet_b1any, cycles = 1):
     ##Convert from a proportion of dry, singles, twins and triplets from specified number of cycles to an equivalent scanning percentage if mated for the calibration number of cycles
 
     calibration_cycles = 2  #The data used to calibrate the coefficients used are assumed to have been derived from mating for 2 cycles.
@@ -1286,7 +1136,7 @@ def f_convert_scan2cycles(dst_propn, nfoet_b1any, cycles = 1):
     repro_rate = np.sum(dst_propn * nfoet_b1any, axis = sinp.stock['i_b1_pos'], keepdims = True)
 
     ##convert by scaling by the proportion of drys such that litter size stays constant
-    dry_propn = f_dynamic_slice(dst_propn, sinp.stock['i_b1_pos'], 1, 2)
+    dry_propn = fun.f_dynamic_slice(dst_propn, sinp.stock['i_b1_pos'], 1, 2)
     dry_propn_cal = dry_propn ** (calibration_cycles / cycles)
     repro_rate_cal = repro_rate * fun.f_divide(1 - dry_propn_cal, 1 - dry_propn)
 
@@ -1331,7 +1181,7 @@ def f_mortality_base_cs(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max
     ##apply sensitivity
     mortalityb = fun.f_sa(mortalityb, sap_mortalityb, sa_type = 1, value_min = 0)
     ##Process the Mortality REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
-    mortalityb = f_rev_update('mortality', mortalityb, rev_trait_value)
+    mortalityb = f1_rev_update('mortality', mortalityb, rev_trait_value)
     return mortalityb
 
 
@@ -1341,7 +1191,7 @@ def f_mortality_weaner_cs(cd, cg, age, ebg_start, sd_ebg, d_nw_max,days_period):
     ### the mortality increment varies with age. Full increment below 300 days (cd[14]) and ramping down to 0 at 365 days (cd[15])
     ###distribution on ebg - add distribution to ebg_start_m1 and then average (axis =-1)
     ebg_start_m1 = fun.f_distribution7(ebg_start, sd=sd_ebg)
-    mort_weaner_m1 = cd[13, ...,na] * f_ramp(age[...,na], cd[15, ...,na], cd[14, ...,na]
+    mort_weaner_m1 = cd[13, ...,na] * fun.f_ramp(age[...,na], cd[15, ...,na], cd[14, ...,na]
                                              ) * ((cd[16, ...,na] * d_nw_max[...,na]
                                                    ) > (ebg_start_m1 * cg[18, ...,na]))* days_period[...,na] #mul by days period to convert from mort per day to per period
     return np.mean(mort_weaner_m1, axis=-1)
@@ -1368,7 +1218,7 @@ def f_mortality_pregtox_cs(cb1, cg, nw_start, ebg, sd_ebg, days_period, period_b
     '''
     ###distribution on ebg - add distribution to ebg_start_m1 and then average (axis =-1)
     ebg_m1 = fun.f_distribution7(ebg, sd=sd_ebg)
-    t_mort_m1 = days_period[..., na] * gest_propn[..., na] / 42 * f_sig(-42 * ebg_m1 * cg[18, ..., na] / nw_start[..., na]
+    t_mort_m1 = days_period[..., na] * gest_propn[..., na] / 42 * fun.f_sig(-42 * ebg_m1 * cg[18, ..., na] / nw_start[..., na]
                                                                         , cb1[4, ..., na], cb1[5, ..., na]) #mul by days period to convert from mort per day to per period
     t_mort = np.mean(t_mort_m1, axis=-1)
     ##If not last 6 weeks then = 0
@@ -1389,7 +1239,7 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, cv_weight, w_b_exp_y, period_
     ###distribution on w_b & rc_birth - add distribution to ebg_start_m1 and then average (axis =-1)
     w_b_m1m2 = fun.f_distribution7(w_b, cv=cv_weight)[...,na]
     rc_birth_m1m2 = fun.f_distribution7(rc_birth, cv=cv_weight)[...,na,:]
-    mortalityd_yatf_m1m2 = f_sig(fun.f_divide(w_b_m1m2, w_b_exp_y[...,na,na]) * np.maximum(1, rc_birth_m1m2),
+    mortalityd_yatf_m1m2 = fun.f_sig(fun.f_divide(w_b_m1m2, w_b_exp_y[...,na,na]) * np.maximum(1, rc_birth_m1m2),
                                  cb1[6, ...,na,na], cb1[7, ...,na,na]) * period_is_birth[...,na,na]
     mortalityd_yatf = np.mean(mortalityd_yatf_m1m2, axis=(-1,-2))
     ##add sensitivity
@@ -1406,7 +1256,7 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, cv_weight, w_b_exp_y, period_
     mortalityx = fun.f_sa(mortalityx, sap_mortalityp, sa_type = 1, value_min = 0)
     mortalityx = fun.f_sa(mortalityx, saa_mortalityx, sa_type = 2, value_min = 0)
     ##Process the Ewe Rearing Ability REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
-    mortalityx = f_rev_update('era', mortalityx, rev_trait_value)
+    mortalityx = f1_rev_update('era', mortalityx, rev_trait_value)
     return mortalityx, mortalityd_yatf, mortalityd_dams
 
 ####################
@@ -1439,7 +1289,7 @@ def f_mortality_base_mu(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max
     ##apply sensitivity
     mortalityb = fun.f_sa(mortalityb, sap_mortalityb, sa_type = 1, value_min = 0)
     ##Process the Mortality REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
-    mortalityb = f_rev_update('mortality', mortalityb, rev_trait_value)
+    mortalityb = f1_rev_update('mortality', mortalityb, rev_trait_value)
     return mortalityb
 
 
@@ -1509,29 +1359,14 @@ def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, cv_weight, foo, chill
     mortalityx = fun.f_sa(mortalityx, sap_mortalityp, sa_type = 1, value_min = 0)
     mortalityx = fun.f_sa(mortalityx, saa_mortalityx, sa_type = 2, value_min = 0)
     ##Process the Ewe Rearing Ability REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
-    mortalityx = f_rev_update('era', mortalityx, rev_trait_value)
+    mortalityx = f1_rev_update('era', mortalityx, rev_trait_value)
     return mortalityx
 
 #######################
 #end of loop functions#
 #######################
-#todo Move to Functions
-def f_comb(n,k):
-    # ##Create an array of factorial values up to n
-    # factorial = np.cumprod(np.arange(np.max(n))+1)
-    # ##Combination
-    # combinations = factorial[n-1]/(factorial[k-1]*factorial[n-k-1])
-    ##Create an array of factorial values up to n
-    factorial_range = np.arange(np.max(n)+1)
-    factorial_range[0] = 1
-    factorial = np.cumprod(factorial_range)
-    ##Combination
-    combinations = factorial[n]/(factorial[k]*factorial[n-k])
-    return combinations
 
-
-#todo f1_
-def f_period_start_prod(numbers, var, prejoin_tup, season_tup, period_is_startseason, mask_min_lw_z, period_is_prejoin=0, group=None):
+def f1_period_start_prod(numbers, var, prejoin_tup, season_tup, period_is_startseason, mask_min_lw_z, period_is_prejoin=0, group=None):
     ##Set variable level = value at end of previous	
     var_start = var
     ##make sure numbers and var are same shape - this is required for the np.average func below
@@ -1539,7 +1374,7 @@ def f_period_start_prod(numbers, var, prejoin_tup, season_tup, period_is_startse
 
     ##a) Calculate temporary values as if period is start of season
     if np.any(period_is_startseason):
-        var_start = f_season_wa(numbers, var_start, season_tup, mask_min_lw_z, period_is_startseason)
+        var_start = f1_season_wa(numbers, var_start, season_tup, mask_min_lw_z, period_is_startseason)
 
     ##b) Calculate temporary values as if period_is_prejoin
     if group==1 and np.any(period_is_prejoin):
@@ -1549,8 +1384,7 @@ def f_period_start_prod(numbers, var, prejoin_tup, season_tup, period_is_startse
     return var_start
 
 
-#todo f1_
-def f_season_wa(numbers, var, season, mask_min_lw_z, period_is_startseason):
+def f1_season_wa(numbers, var, season, mask_min_lw_z, period_is_startseason):
     '''
     Perform weighted average across seasons, at the beginning of each season.
     So all seasons start from a common place.
@@ -1571,8 +1405,7 @@ def f_season_wa(numbers, var, season, mask_min_lw_z, period_is_startseason):
     return var
 
 
-#todo f1_
-def f_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period, period_is_condense):
+def f1_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period, period_is_condense):
     """
     Condense variable to x common points along the w axis when period_is_condense.
     Currently this function only handle 2 or 3 initial liveweights. The order of the returned W axis is M, H, L for 3 initial lws or H, L for 2 initial lws.
@@ -1652,7 +1485,7 @@ def f_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period, 
             if sinp.structuralsa['i_w_start_len1'] == 2:
                 ###add high pattern - this will not handle situations where the top 10% lw animals all have higher mortality than the threshold.
                 temporary[...] = np.mean(
-                    f_dynamic_slice(ma_var_sorted,sinp.stock['i_w_pos'],i_w_len - int(math.ceil(n_lw / 10)), None), # ceil is used to handle cases where nutrition options is 1 (eg only 3 lw patterns)
+                    fun.f_dynamic_slice(ma_var_sorted,sinp.stock['i_w_pos'],i_w_len - int(math.ceil(n_lw / 10)), None), # ceil is used to handle cases where nutrition options is 1 (eg only 3 lw patterns)
                     sinp.stock['i_w_pos'],keepdims=True)  # average of the top lw patterns
 
                 ###low pattern - production level of the lowest nutrition profile that has a mortality less than 10% for the year
@@ -1662,7 +1495,7 @@ def f_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period, 
 
             else:
                 ###add high pattern - this will not handle situations where the top 10% lw animals all have higher mortality than the threshold.
-                temporary[...] = np.mean(f_dynamic_slice(ma_var_sorted, sinp.stock['i_w_pos'], i_w_len - int(math.ceil(n_lw / 10)), None),  #ceil is used to handle cases where nutrition options is 1 (eg only 3 lw patterns)
+                temporary[...] = np.mean(fun.f_dynamic_slice(ma_var_sorted, sinp.stock['i_w_pos'], i_w_len - int(math.ceil(n_lw / 10)), None),  #ceil is used to handle cases where nutrition options is 1 (eg only 3 lw patterns)
                                          sinp.stock['i_w_pos'], keepdims=True)  # average of the top lw patterns
 
                 ###add mid pattern (w 0 - 27) - use slice method in case w axis changes position (can't use MRYs dynamic slice function because we are assigning)
@@ -1673,7 +1506,7 @@ def f_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period, 
                 if i_n_len == 2:
                     temporary[tuple(sl)] = np.mean(ma_var_sorted, axis=sinp.stock['i_w_pos'], keepdims=True)  # average of all animals with less than 10% mort
                 else:
-                    temporary[tuple(sl)] = f_dynamic_slice(var, sinp.stock['i_w_pos'], 0, 1)  # the pattern that is feed supply 1 (median) for the entire year (the top w pattern)
+                    temporary[tuple(sl)] = fun.f_dynamic_slice(var, sinp.stock['i_w_pos'], 0, 1)  # the pattern that is feed supply 1 (median) for the entire year (the top w pattern)
 
                 ###low pattern - production level of the lowest nutrition profile that has a mortality less than 10% for the year
                 sl = [slice(None)] * temporary.ndim
@@ -1685,8 +1518,7 @@ def f_condensed(var, lw_idx, condense_w_mask, i_n_len, i_w_len, i_n_fvp_period, 
     return var
 
 
-#todo f1_
-def f_period_start_nums(numbers, prejoin_tup, season_tup, period_is_startseason, season_propn_z, group=None, nyatf_b1 = 0
+def f1_period_start_nums(numbers, prejoin_tup, season_tup, period_is_startseason, season_propn_z, group=None, nyatf_b1 = 0
                         , numbers_initial_repro=0, gender_propn_x=1, period_is_prejoin=0, period_is_birth=False):
     ##a) reallocate for season type
     if np.any(period_is_startseason):
@@ -1704,8 +1536,7 @@ def f_period_start_nums(numbers, prejoin_tup, season_tup, period_is_startseason,
     return numbers
 
 
-#todo f1_
-def f_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfoet_b1 = 0, nyatf_b1 = 0, group=None
+def f1_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfoet_b1 = 0, nyatf_b1 = 0, group=None
                       , conception = 0, scan=0, gbal=0, gender_propn_x=1, period_is_mating = False
                       , period_is_matingend = False, period_is_birth=False, period_is_scan=False, propn_dams_mated=1):
     '''
@@ -1739,7 +1570,7 @@ def f_period_end_nums(numbers, mortality, numbers_min_b1, mortality_yatf=0, nfoe
             numbers = fun.f_update(numbers, temporary, period_is_matingend)
         ###d) birth (account for birth status and if drys are retained)
         if np.any(period_is_birth):
-            dam_propn_birth_b1 = f_comb(nfoet_b1, nyatf_b1) * (1 - mortality_yatf) ** nyatf_b1 * mortality_yatf ** (nfoet_b1 - nyatf_b1) # the proportion of dams of each LSLN based on (progeny) mortality
+            dam_propn_birth_b1 = fun.f_comb(nfoet_b1, nyatf_b1) * (1 - mortality_yatf) ** nyatf_b1 * mortality_yatf ** (nfoet_b1 - nyatf_b1) # the proportion of dams of each LSLN based on (progeny) mortality
             ##have to average x axis so that it is not active for dams - times by gender propn to give approx weighting (ie because offs are not usually entire males so they will get low weighting)
             temp = np.sum(dam_propn_birth_b1 * gender_propn_x, axis=sinp.stock['i_x_pos'], keepdims=True) * numbers[:,:,sinp.stock['ia_prepost_b1'],...]
             pp_numbers = fun.f_update(numbers, temp, period_is_birth)  # calculated in the period after birth when progeny mortality due to exposure is calculated
@@ -1787,8 +1618,7 @@ def f_wool_additional(fd, sl, ss, vm,  pmb, cvfd=0.22, cvsl=0.18):
     return ph, cvh, romaine
 
 
-#todo f1_
-def f_woolprice():
+def f1_woolprice():
     '''Calculate the micron price guide (MPG) for a range of FD (where the FD is of the fleece component of the clip)
     Includes sensitivity on the average micron price guide (MPG) and the premium for finer wool
     The inputs for the function are:
@@ -1850,8 +1680,7 @@ def f_wool_value(mpg_w4, cfw_pg, fd_pg, sl_pg, ss_pg, vm_pg, pmb_pg,dtype=None):
     wool_value_pg = woolp_stbnib_pg * cfw_pg
     return wool_value_pg, woolp_stbnib_pg
 
-#todo f1_
-def f_condition_score(rc, cu0):
+def f1_condition_score(rc, cu0):
     ''' Estimate CS from LW. Works with scalars or arrays - provided they are broadcastable into ffcfw.
 
        ffcfw: (kg) Fleece free, conceptus free liveweight. normal_weight: (kg). cs_propn: (0.19) change in LW
@@ -1864,13 +1693,11 @@ def f_condition_score(rc, cu0):
 
 
 #todo needs updating - currently just a copy of the cs function
-#todo f1_
-def f_fat_score(rc, cu0):
+def f1_fat_score(rc, cu0):
     return np.maximum(1, 3 + (rc - 1) / cu0[1, ...]) #FS 1 is the lowest possible measurement. FS1 is between 0 and 5mm of tissue at the GR site.
 
 
-#todo f1_
-def f_saleprice(score_pricescalar_s7s5s6, weight_pricescalar_s7s5s6, dtype=None):
+def f1_saleprice(score_pricescalar_s7s5s6, weight_pricescalar_s7s5s6, dtype=None):
     ##Sale price percentile to use (adjusted by sav)
     salep_percentile = uinp.sheep['i_salep_percentile']
     ##Max price in each grid (s7 axis) at selected percentile - 1d extrapolation along the s4 axis (can go beyond the input range)
@@ -1889,8 +1716,7 @@ def f_saleprice(score_pricescalar_s7s5s6, weight_pricescalar_s7s5s6, dtype=None)
     return grid_s7s5s6
 
 
-#todo f1_
-def f_salep_mob(weight_s7pg, scores_s7s6pg, cvlw_s7s5pg, cvscore_s7s6pg,
+def f1_salep_mob(weight_s7pg, scores_s7s6pg, cvlw_s7s5pg, cvscore_s7s6pg,
                 grid_weightrange_s7s5pg, grid_scorerange_s7s6p5g, grid_priceslw_s7s5s6pg):
     '''A function to calculate the average price of the mob based on the average specifications in the mob.
     This is to represent that the distribution of weight & specification reduces the mob average price
@@ -1921,9 +1747,9 @@ def f_sale_value(cu0, cx, o_rc, o_ffcfw_pg, dressp_adj_yg, dresspercent_adj_s6pg
                  grid_weightrange_s7s5pg, grid_scorerange_s7s6pg, age_end_p5g1, discount_age_s7pg,sale_cost_pc_s7pg,
                  sale_cost_hd_s7pg, mask_s7x_s7pg, sale_agemax_s7pg1, dtype=None):
     ##Calculate condition score from relative condition
-    cs_pg = f_condition_score(o_rc, cu0)
+    cs_pg = f1_condition_score(o_rc, cu0)
     ##Calculate fat score from relative condition
-    fs_pg = f_fat_score(o_rc, cu0)
+    fs_pg = f1_fat_score(o_rc, cu0)
     ##Combine the scores into single array
     scores_s8p = np.stack([fs_pg, cs_pg], axis=0)
     ##Select the quality scores (s8) for each price grid (s7)
@@ -1949,7 +1775,7 @@ def f_sale_value(cu0, cx, o_rc, o_ffcfw_pg, dressp_adj_yg, dresspercent_adj_s6pg
     weight_for_lookup_s7pg = o_ffcfw_pg * dresspercent_wt_s7pg
 
     ##Calculate mob average price in each grid from the mob average and the distribution of weight & score within the mob (this is just the price, not the total animal value)
-    price_mobaverage_s7pg = f_salep_mob(weight_for_lookup_s7pg, scores_s7s6pg, cvlw_s7s5pg, cvscore_s7s6pg,
+    price_mobaverage_s7pg = f1_salep_mob(weight_for_lookup_s7pg, scores_s7s6pg, cvlw_s7s5pg, cvscore_s7s6pg,
                                                       grid_weightrange_s7s5pg, grid_scorerange_s7s6pg, grid_priceslw_s7s5s6pg)
 
     ##Scale price received based on month of sale
@@ -1978,8 +1804,7 @@ def f_sale_value(cu0, cx, o_rc, o_ffcfw_pg, dressp_adj_yg, dresspercent_adj_s6pg
     sale_value = np.max(sale_value_s7pg, axis=0) #take max on s6 axis as well to remove it (it is singleton so no effect)
     return sale_value
 
-#todo f1_
-def f_animal_trigger_levels(index_pg, age_start, period_is_shearing_pg, period_is_wean_pg, gender, o_ebg_p, wool_genes,
+def f1_animal_trigger_levels(index_pg, age_start, period_is_shearing_pg, period_is_wean_pg, gender, o_ebg_p, wool_genes,
                             period_is_joining_pg, animal_mated, scan_option, period_is_endmating_pg):
     ##Trigger value 1 - week of year
     trigger1_pg = index_pg % 52
@@ -2032,8 +1857,7 @@ def f_treatment_unit_numbers(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, a_ny
     return treatment_units_h8pg
 
 
-#todo f1_
-def f_operations_triggered(animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg):
+def f1_operations_triggered(animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg):
     shape = (operations_triggerlevels_h5h7h2pg.shape[2],) + animal_triggervalues_h7pg.shape[1:]
     triggered_h2pg = np.zeros(shape, dtype=bool)
     for h2 in range(operations_triggerlevels_h5h7h2pg.shape[2]):
@@ -2051,8 +1875,7 @@ def f_operations_triggered(animal_triggervalues_h7pg, operations_triggerlevels_h
     return triggered_h2pg
 
 
-#todo f1_
-def f_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg):
+def f1_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg):
     ##loop on h2 axis to save memory
     level_h2pg = np.ones_like(operation_triggered_h2pg, dtype='float32')
     for h2 in range(operation_triggered_h2pg.shape[0]):
@@ -2121,8 +1944,7 @@ def f_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, ope
     return level_h2pg
 
 
-#todo f1_
-def f_mustering_required(application_level_h2pg, husb_operations_muster_propn_h2pg):
+def f1_mustering_required(application_level_h2pg, husb_operations_muster_propn_h2pg):
     ##Total mustering required for all operations
     musters_pg = np.sum(application_level_h2pg * husb_operations_muster_propn_h2pg, axis=0)
     ##Round up to the next integer
@@ -2130,17 +1952,15 @@ def f_mustering_required(application_level_h2pg, husb_operations_muster_propn_h2
     return musters_pg
 
 
-#todo f1_
-def f_husbandry_component(level, treatment_units, requirements, association, axes_tup):
-    ##Number of treatment units for contract
-    units = treatment_units[association]
-    ##Infrastructure requirement for each animal class during the period
-    component = np.sum(level * units * requirements, axis=axes_tup)
-    return component
+# def f_husbandry_component(level, treatment_units, requirements, association, axes_tup):
+#     ##Number of treatment units for contract
+#     units = treatment_units[association]
+#     ##Infrastructure requirement for each animal class during the period
+#     component = np.sum(level * units * requirements, axis=axes_tup)
+#     return component
 
 
-#todo f1_
-def f_husbandry_requisites(level_hpg, treatment_units_h8pg, husb_requisite_cost_h6pg, husb_requisites_prob_h6hpg,a_h8_h):
+def f1_husbandry_requisites(level_hpg, treatment_units_h8pg, husb_requisite_cost_h6pg, husb_requisites_prob_h6hpg,a_h8_h):
     ##Number of treatment units for requisites
     if type(a_h8_h)==int:
         units_hpg = treatment_units_h8pg[a_h8_h:a_h8_h+1] #so the h axis is kept
@@ -2155,8 +1975,7 @@ def f_husbandry_requisites(level_hpg, treatment_units_h8pg, husb_requisite_cost_
     return cost_pg
 
 
-#todo f1_
-def f_husbandry_labour(level_hpg, treatment_units_h8pg, units_per_labourhour_l2hpg, a_h8_h):
+def f1_husbandry_labour(level_hpg, treatment_units_h8pg, units_per_labourhour_l2hpg, a_h8_h):
     ##Number of treatment units for contract
     if type(a_h8_h)==int:
         units_hpg = treatment_units_h8pg[a_h8_h:a_h8_h+1] #so the h axis is kept
@@ -2170,8 +1989,7 @@ def f_husbandry_labour(level_hpg, treatment_units_h8pg, units_per_labourhour_l2h
     return hours_l2pg
 
 
-#todo f1_
-def f_husbandry_infrastructure(level_hpg, husb_infrastructurereq_h1h2pg):
+def f1_husbandry_infrastructure(level_hpg, husb_infrastructurereq_h1h2pg):
     ##Infrastructure requirement for each animal class during the period
     ##calculated using loop to reduce memory
     infrastructure_h1pg = 0
@@ -2180,8 +1998,7 @@ def f_husbandry_infrastructure(level_hpg, husb_infrastructurereq_h1h2pg):
     return infrastructure_h1pg
 
 
-#todo f1_
-def f_contract_cost(application_level_h2pg, treatment_units_h8pg, husb_operations_contract_cost_h2pg):
+def f1_contract_cost(application_level_h2pg, treatment_units_h8pg, husb_operations_contract_cost_h2pg):
     ##Number of animal units for contract
     units_h2pg = treatment_units_h8pg[uinp.sheep['ia_h8_h2']]
     ##Contract cost for each animal class during the period
@@ -2189,7 +2006,6 @@ def f_contract_cost(application_level_h2pg, treatment_units_h8pg, husb_operation
     return cost_pg
 
 
-#todo f1_
 def f_husbandry(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, operations_triggerlevels_h5h7h2pg, index_pg,
                 age_start, period_is_shear_pg, period_is_wean_pg, gender, o_ebg_p, wool_genes,
                 husb_operations_muster_propn_h2pg, husb_requisite_cost_h6pg, husb_operations_requisites_prob_h6h2pg,
@@ -2198,30 +2014,30 @@ def f_husbandry(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, operations_trigge
                 musters_per_hour_l2h4pg, husb_muster_infrastructurereq_h1h4pg,
                 a_nyatf_b1g=0,period_is_joining_pg=False, animal_mated=False, scan_option=0, period_is_endmating_pg=False, dtype=None):
     ##An array of the trigger values for the animal classes in each period - these values are compared against a threshold to determine if the husb is required
-    animal_triggervalues_h7pg = f_animal_trigger_levels(index_pg, age_start, period_is_shear_pg, period_is_wean_pg, gender,
+    animal_triggervalues_h7pg = f1_animal_trigger_levels(index_pg, age_start, period_is_shear_pg, period_is_wean_pg, gender,
                             o_ebg_p, wool_genes, period_is_joining_pg, animal_mated, scan_option, period_is_endmating_pg).astype(dtype)
     ##The number of treatment units per animal in each period - each slice has a different unit eg mobsize, nyatf etc the treatment unit can be selected and applied for a given husb operation
     treatment_units_h8pg = f_treatment_unit_numbers(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, a_nyatf_b1g).astype(dtype)
     ##Is the husb operation triggered in the period for each class
-    operation_triggered_h2pg = f_operations_triggered(animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg)
+    operation_triggered_h2pg = f1_operations_triggered(animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg)
     ##The level of the operation in each period for the class of livestock (proportion of animals that receive treatment) - this accounts for the fact that just because the operation is triggered the operation may not be done to all animals
-    application_level_h2pg = f_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg)
+    application_level_h2pg = f1_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg)
     ##The number of times the mob must be mustered
-    mustering_level_h4pg = f_mustering_required(application_level_h2pg, husb_operations_muster_propn_h2pg)[na,...] #needs a h4 axis for the functions below
+    mustering_level_h4pg = f1_mustering_required(application_level_h2pg, husb_operations_muster_propn_h2pg)[na,...] #needs a h4 axis for the functions below
     ##The cost of requisites for the operations
-    operations_requisites_cost_pg = f_husbandry_requisites(application_level_h2pg, treatment_units_h8pg, husb_requisite_cost_h6pg, husb_operations_requisites_prob_h6h2pg, uinp.sheep['ia_h8_h2'])
+    operations_requisites_cost_pg = f1_husbandry_requisites(application_level_h2pg, treatment_units_h8pg, husb_requisite_cost_h6pg, husb_operations_requisites_prob_h6h2pg, uinp.sheep['ia_h8_h2'])
     ##The labour requirement for the operations
-    operations_labourreq_l2pg = f_husbandry_labour(application_level_h2pg, treatment_units_h8pg, operations_per_hour_l2h2pg, uinp.sheep['ia_h8_h2'])
+    operations_labourreq_l2pg = f1_husbandry_labour(application_level_h2pg, treatment_units_h8pg, operations_per_hour_l2h2pg, uinp.sheep['ia_h8_h2'])
     ##The infrastructure requirements for the operations
-    operations_infrastructurereq_h1pg = f_husbandry_infrastructure(application_level_h2pg, husb_operations_infrastructurereq_h1h2pg)
+    operations_infrastructurereq_h1pg = f1_husbandry_infrastructure(application_level_h2pg, husb_operations_infrastructurereq_h1h2pg)
     ##Contract cost for husbandry
-    contract_cost_pg = f_contract_cost(application_level_h2pg, treatment_units_h8pg, husb_operations_contract_cost_h2pg)
+    contract_cost_pg = f1_contract_cost(application_level_h2pg, treatment_units_h8pg, husb_operations_contract_cost_h2pg)
     ##The cost of requisites for mustering
-    mustering_requisites_cost_pg = f_husbandry_requisites(mustering_level_h4pg, treatment_units_h8pg, husb_requisite_cost_h6pg, husb_muster_requisites_prob_h6h4pg, uinp.sheep['ia_h8_h4'])
+    mustering_requisites_cost_pg = f1_husbandry_requisites(mustering_level_h4pg, treatment_units_h8pg, husb_requisite_cost_h6pg, husb_muster_requisites_prob_h6h4pg, uinp.sheep['ia_h8_h4'])
     ##The labour requirement for mustering
-    mustering_labourreq_l2pg = f_husbandry_labour(mustering_level_h4pg, treatment_units_h8pg, musters_per_hour_l2h4pg, uinp.sheep['ia_h8_h4'])
+    mustering_labourreq_l2pg = f1_husbandry_labour(mustering_level_h4pg, treatment_units_h8pg, musters_per_hour_l2h4pg, uinp.sheep['ia_h8_h4'])
     ##The infrastructure requirements for mustering
-    mustering_infrastructurereq_h1pg = f_husbandry_infrastructure(mustering_level_h4pg, husb_muster_infrastructurereq_h1h4pg)
+    mustering_infrastructurereq_h1pg = f1_husbandry_infrastructure(mustering_level_h4pg, husb_muster_infrastructurereq_h1h4pg)
     ##Total cost of husbandry
     husbandry_cost_pg = operations_requisites_cost_pg + mustering_requisites_cost_pg + contract_cost_pg
     ##Labour requirement for husbandry
@@ -2236,8 +2052,7 @@ def f_husbandry(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, operations_trigge
 ##################
 
 ##Method 1 (still used)- add p and v axis together then sum p axis - this may be a good method for faster computers with more memory
-#todo f1_
-def f_p2v_std(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tvp=True, days_period_p=1,
+def f1_p2v_std(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tvp=True, days_period_p=1,
             period_is_tvp=True, a_any1_p=1, index_any1tvp=1, a_any2_p=1, index_any2any1tvp=1, sumadj=0):
     ## convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it can't be converted to float (because int object is not numpy)
     try:
@@ -2253,8 +2068,7 @@ def f_p2v_std(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tv
 
 
 ##Method 2 (fastest)- sum sections of p axis to leave v (almost like sum if) this is fast because don't need p and v axis in same array
-#todo f1_
-def f_p2v(production_p, dvp_pointer_p=1, numbers_p=1, on_hand_tp=True, days_period_p=1, period_is_tp=True, a_any1_p=1, index_any1tp=1, a_any2_p=1, index_any2any1tp=1):
+def f1_p2v(production_p, dvp_pointer_p=1, numbers_p=1, on_hand_tp=True, days_period_p=1, period_is_tp=True, a_any1_p=1, index_any1tp=1, a_any2_p=1, index_any2any1tp=1):
     #convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it can't be converted to float (because int object is not numpy)
     try:
         days_period_p = days_period_p.astype('float32')
@@ -2307,7 +2121,7 @@ def f_p2v(production_p, dvp_pointer_p=1, numbers_p=1, on_hand_tp=True, days_peri
 
 # ##Method 5 numexpr (slow - even with fv33n33 it is much slower than the current method
 # import numexpr as ne
-# def f_p2v_5(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tvp=True, days_period_p=1,
+# def f1_p2v_5(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tvp=True, days_period_p=1,
 #             period_is_tvp=True, a_any1_p=1, index_any1tvp=1, a_any2_p=1, index_any2any1tvp=1, sumadj=0):
 #     ## convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it can't be converted to float (because int object is not numpy)
 #     try:
@@ -2326,7 +2140,7 @@ def f_p2v(production_p, dvp_pointer_p=1, numbers_p=1, on_hand_tp=True, days_peri
 
 
 # ##Method 4 - loop over v and sum p - this save p and v axis being on the same array but requires lots of looping so isn't much faster
-# def f_p2v_loop(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tvp=True, days_period_p=1, period_is_tvp=True, a_ev_p=1, index_ftvp=1, a_p6_p=1, index_p6ftvp=1):
+# def f1_p2v_loop(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tvp=True, days_period_p=1, period_is_tvp=True, a_ev_p=1, index_ftvp=1, a_p6_p=1, index_p6ftvp=1):
 #     try: days_period_p = days_period_p.astype('float32')  #convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it can't be converted to float (because int object is not numpy)
 #     except AttributeError:
 #         pass
@@ -2344,7 +2158,7 @@ def f_p2v(production_p, dvp_pointer_p=1, numbers_p=1, on_hand_tp=True, days_peri
 
 # ##Method 3 - use groupby to sum p, this means p and v don't exist on the same array - not as fast as method 2
 # import numpy_indexed as npi
-# def f_p2v_groupby(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tvp=True, days_period_p=1, period_is_tvp=True, a_ev_p=1, index_ftvp=1, a_p6_p=1, index_p6ftvp=1):
+# def f1_p2v_groupby(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tvp=True, days_period_p=1, period_is_tvp=True, a_ev_p=1, index_ftvp=1, a_p6_p=1, index_p6ftvp=1):
 #     try: days_period_p = days_period_p.astype('float32')  #convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it can't be converted to float (because int object is not numpy)
 #     except AttributeError:
 #         pass
@@ -2363,8 +2177,7 @@ def f_p2v(production_p, dvp_pointer_p=1, numbers_p=1, on_hand_tp=True, days_peri
 #     return result
 
 
-#todo f1_
-def f_cum_dvp(arr,dvp_pointer,axis=0,shift=0):
+def f1_cum_dvp(arr,dvp_pointer,axis=0,shift=0):
     '''This function does accumulative max but it resets at each dvp.
     '''
     final = np.zeros_like(arr)
@@ -2379,8 +2192,7 @@ def f_cum_dvp(arr,dvp_pointer,axis=0,shift=0):
     return final
 
 
-#todo f1_
-def f_cum_sum_dvp(arr,dvp_pointer,axis=0,shift=0):
+def f1_cum_sum_dvp(arr,dvp_pointer,axis=0,shift=0):
     '''This function does accumulative sum but it resets at each dvp.
     '''
     final = np.zeros_like(arr)
@@ -2395,8 +2207,7 @@ def f_cum_sum_dvp(arr,dvp_pointer,axis=0,shift=0):
     return final
 
 
-#todo f1_
-def f_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, index_w8=None, dvp_type_next_tvgw=0, vtype=0): #, w_pos, i_n_len, i_n_fvp_period, dvp_type_next_tvgw=0, vtype=0):
+def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, index_w8=None, dvp_type_next_tvgw=0, vtype=0): #, w_pos, i_n_len, i_n_fvp_period, dvp_type_next_tvgw=0, vtype=0):
     '''distributing animals on LW at the start of dvp
         the 8 or 9 is dropped from the w if singleton'''
     ## Move w axis of dest_w8g to -1 and f_expand to retain the original ‘w’ as a singleton
@@ -2468,8 +2279,7 @@ def f_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, index_w8=None, dvp_type_
     return distribution_w8gw9
 
 
-#todo f1_
-def f_create_production_param(group, production_vg, a_kcluster_vg_1=1, index_ktvg_1=1, a_kcluster_vg_2=1, index_kktvg_2=1, numbers_start_vg=1, mask_vg=True, pos_offset=0):
+def f1_create_production_param(group, production_vg, a_kcluster_vg_1=1, index_ktvg_1=1, a_kcluster_vg_2=1, index_kktvg_2=1, numbers_start_vg=1, mask_vg=True, pos_offset=0):
     '''Can convert total production to per animal production including impact of death if numbers have been included.
     Apply the k clustering and collapse the e, b & d axes
     If numbers_start are not included then only applies k clustering - this is usually done if production is already per head'''

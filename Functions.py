@@ -565,6 +565,53 @@ def f_produce_df(data, rows, columns, row_names=None, column_names=None):
         col_index = pd.MultiIndex.from_product(columns, names=column_names)
     return pd.DataFrame(data, index=row_index, columns=col_index)
 
+def f_sig(x,a,b):
+    ''' Sig function CSIRO equation 124 ^the equation below is the sig function from SheepExplorer'''
+    return  1/(1+np.exp(-((2*(np.log(0.95) - np.log(0.05))/(b-a))*(x-(a+b)/2))))
+
+
+def f_ramp(x,a,b):
+    ''' RAMP function CSIRO equation 125a'''
+    return  np.minimum(1,np.maximum(0,(a-x)/(a-b)))
+
+
+def f_dim(x,y):
+    '''a function that minimum value of zero otherwise difference between the 2 inputs '''
+    return np.maximum(0,x-y)
+
+
+def f_comb(n,k):
+    # ##Create an array of factorial values up to n
+    # factorial = np.cumprod(np.arange(np.max(n))+1)
+    # ##Combination
+    # combinations = factorial[n-1]/(factorial[k-1]*factorial[n-k-1])
+    ##Create an array of factorial values up to n
+    factorial_range = np.arange(np.max(n)+1)
+    factorial_range[0] = 1
+    factorial = np.cumprod(factorial_range)
+    ##Combination
+    combinations = factorial[n]/(factorial[k]*factorial[n-k])
+    return combinations
+
+
+def f_dynamic_slice(arr, axis, start, stop, axis2=None, start2=None, stop2=None):
+    ##check if arr is int - this is the case for the first loop because arr may be initialised as 0
+    if type(arr)==int:
+        return arr
+    else:
+        ##first axis slice if it is not singleton
+        if arr.shape[axis]!=1:
+            sl = [slice(None)] * arr.ndim
+            sl[axis] = slice( start, stop)
+            arr = arr[tuple(sl)]
+        if axis2 is not None:
+            ##second axis slice if required and not singleton
+            if arr.shape[axis2] != 1:
+                sl = [slice(None)] * arr.ndim
+                sl[axis2] = slice( start2, stop2)
+                arr = arr[tuple(sl)]
+        return arr
+
 #######################
 #Specific AFO function#
 #######################
@@ -1024,6 +1071,76 @@ def period_proportion_np(period_dates, date_array):
     proportion_array = (date_array - per_start) / (per_end - per_start)
     # print('propn, date, stat, end, start', proportion_array,date_array,per_start,per_end,per_start)
     return period_array, proportion_array
+
+##################
+#timing functions#
+##################
+
+def f_daylength(dayOfYear, lat):
+    """Computes the length of the day (the time between sunrise and
+    sunset) given the day of the year and latitude of the location.
+    Function uses the Brock model for the computations.
+    For more information see, for example,
+    Forsythe et al., "A model comparison for daylength as a
+    function of latitude and day of year", Ecological Modelling,
+    1995.
+    Parameters
+    ----------
+    dayOfYear : int
+        The day of the year. 1 corresponds to 1st of January
+        and 365 to 31st December (on a non-leap year).
+    lat : float
+        Latitude of the location in degrees. Positive values
+        for north and negative for south.
+    Returns
+    -------
+    d : float
+        Daylength in hours.
+    """
+    dl=np.zeros_like(dayOfYear, dtype='float64')
+    latInRad = np.deg2rad(lat)
+    declinationOfEarth = 23.45*np.sin(np.deg2rad(360.0*(283.0+dayOfYear)/365.0))
+    m1 = (-np.tan(latInRad) * np.tan(np.deg2rad(declinationOfEarth))) <= -1.0
+    m2 = (-np.tan(latInRad) * np.tan(np.deg2rad(declinationOfEarth))) >= 1.0
+    hourAngle = np.rad2deg(np.arccos(-np.tan(latInRad) * np.tan(np.deg2rad(declinationOfEarth))))
+    daylen = 2.0*hourAngle/15.0
+    dl[m1] = 24
+    dl[m2] = 0
+    dl[~np.logical_and(m2, m1)] = daylen[~np.logical_and(m2, m1)]
+    return dl
+
+
+def f_next_prev_association(datearray_slice,*args):
+    '''
+    Depending on the inputs this function will return the next or previous association.
+    eg it can be used to determine the next lambing opportunity for each period.
+    See john stuff.py for alternative methods.
+
+    Parameters
+    ----------
+    datearray_slice : any
+        This is 1d array which the second array is sorted into (this must be sorted).
+    *args : 1 - array, 2 - int
+        Arg 1: the period array 1d that is the index is being found for, note the index is based off the start date therefore must do [1:-1] if you want idx based on end date.
+        Arg 2: period offset (this may be needed if evaluating the end of the period.
+
+    Returns
+    -------
+    Array
+        The function finds the index value of the datearray which is either the next or previous date for a given input date.
+        ## The previous opportunity is the latest opportunity date that is less than the date at the end of the period
+        ## eg ('end of the period' so that if joining occurs during the period it is the previous
+        ## The next opportunity is the earliest joining date that is greater than the date at the start of the period
+        ## eg So it is the prev + 1 except if the joining is occurring within the period, in which case it points to this one.
+
+
+    '''
+    date=args[0]
+    offset=args[1] #offset is used to get the previous datearray period
+    side=args[2]
+    idx_next = np.searchsorted(datearray_slice, date,side)
+    idx = np.clip(idx_next - offset, 0, len(datearray_slice)-1) #makes the max value equal to the length of joining array, because if the period date is after the last lambing opportunity there is no 'next'
+    return idx
 
 
 def f_baseyr(periods, base_year=None):
