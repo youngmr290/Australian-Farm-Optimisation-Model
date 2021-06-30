@@ -1159,51 +1159,61 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
 
         ## probability of at least a given number of foetuses
         crg = crg_doy * f_sig(relsize_mating_e1b1sliced * rc_mating_e1b1sliced, cb1[2, ...], cb1[3, ...])
-        ##Set proportions to 0 for dams that gave birth and lost - this is required so that numbers in pp behave correctly
+        ##Set proportions to 0 for dams that gave birth and lost - this is required so that numbers in pp calculate correctly
         crg *= (nfoet_b1any == nyatf_b1any)
 
         ##Temporary array for probability of a given number of foetuses (calculated from the difference in the cumulative probability)
-        ##The probability of conception being a specific number of foetuses (=x, rather than >= x) is achieved by calculating the difference between the array and the array values offset by one slice (difference between '>x' and '>x+1').
+        ##Calculate probability from cumulative probability by the difference between the array and the array values offset by one slice (difference between '>x' and '>x+1').
         ### Define the temp array shape & populate with values from crg (values are required for the proportion of the highest parity dams)
         t_cr = crg.copy()
         slc = [slice(None)] * len(t_cr.shape)
         slc[b1_pos] = slice(1,-1)
-        t_cr[tuple(slc)] = np.maximum(0, f_dynamic_slice(crg, b1_pos, 1, -1) - f_dynamic_slice(crg, b1_pos, 2, None))    # (difference between '>x' and '>x+1')
+        t_cr[tuple(slc)] = np.maximum(0, f_dynamic_slice(crg, b1_pos, 1, -1) - f_dynamic_slice(crg, b1_pos, 2, None))
 
-        ##Apply scanning percentage sa to the probability of the number of foetuses.
+        ##Apply scanning percentage sa to adjust the probability of the number of foetuses.
         ### Carried out here so that the sa affects the REV and is included in proportion of NM
-        ### Achieved by calculating the impact of the sa on the scanning percentage and then adjusting the proportion of dry, singles and twins
-        ## calculate the repro rate from the probabilities above and convert to an expected proportion of dry, singles, twins & triplets after 1 cycle
-        repro_rate = f_convert_scan2cycles(t_cr, nfoet_b1any, cycles = 1)
-        ###remove singleton b1 axis by squeezing because it is replaced by the l0 axis in f_DSTw
+        ### Achieved by calculating the impact of the sa on the scanning percentage and the change in the 'standardised'
+        ### proportions of DST. Then adjusting the actual proportions of dry, singles and twins by that amount.
+        # Calculate the repro rate from the probabilities above (t_cr) and convert to an expected proportion of dry,
+        # # singles, twins & triplets after 1 cycle
+        #### convert the proportion of DST in t_cr to an equivalent scanning % after the calibration number of cycles.
+        repro_rate = f_convert_scancycles(t_cr, nfoet_b1any, cycles = 1)
+        ####remove singleton b1 axis by squeezing because it is replaced by the l0 axis in f_DSTw
         repro_rate = np.squeeze(repro_rate, axis=b1_pos)
         saa_rr = np.squeeze(saa_rr, axis=b1_pos)
-        ### The proportions returned are in axis -1 and needs the slices altered (shape of l0 to b1) and moving to b1 position.
-        propn_dst = np.moveaxis(f_DSTw(repro_rate, cycles = 1)[...,sinp.stock['a_nfoet_b1']], -1, b1_pos)
         ## apply the sa to the repro rate and convert the adjusted value to a proportion of dry, singles, twins & triplets after 1 cycle
         repro_rate_adj = fun.f_sa(repro_rate, sen.sam['rr'])
         repro_rate_adj = fun.f_sa(repro_rate_adj, saa_rr, 2) * (repro_rate > 0)     # only non-zero if original value was non-zero
-        propn_dst_adj = np.moveaxis(f_DSTw(repro_rate_adj, cycles = 1)[..., sinp.stock['a_nfoet_b1']], -1, b1_pos) #move the l0 axis into the b1 position. and expand to b1 size.
-        ##calculate the change in the expected proportions due to altering the scanning percentage & apply to calculated proportions
-        propn_dst_change = propn_dst_adj - propn_dst
-        propn_dst_change = propn_dst_change * (nfoet_b1any==nyatf_b1any) #don't want to add any conception to the lambed and lost slices.
+        #### Convert the repro rate and adjusted repro rate to a 'standardised' proportion of DST after 1 cycle
+        #### The proportions returned are in axis -1 and needs the slices altered (shape of l0 to b1) and moving to b1 position.
+        propn_dst = np.moveaxis(f_DSTw(repro_rate, cycles=1)[..., sinp.stock['a_nfoet_b1']], -1, b1_pos)
+        propn_dst_adj = np.moveaxis(f_DSTw(repro_rate_adj, cycles = 1)[..., sinp.stock['a_nfoet_b1']], -1, b1_pos)
+        ####calculate the change in the expected proportions due to altering the scanning percentage,
+        #### only apply to the conception slices - don't want to add any conception to the lambed and lost slices.
+        propn_dst_change = (propn_dst_adj - propn_dst) * (nfoet_b1any==nyatf_b1any)
+        ####apply the change to the original calculated proportions
         t_cr += propn_dst_change
 
         ##Process the Conception REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
-        ###Conception is the proportion of dams that are dry. The split between dry and pregnant alters the proportion of single bearing ewes b1[2].
+        ###Conception is the proportion of dams that are dry and a change in conception is assumed to be converting
+        ### a dry ewe into a single bearing ewe. It is calculated by altering the proportion of single bearing ewes b1[2].
         ### The proportion of Drys is then calculated (later) as the animals that didn't get pregnant.
         t_cr[:, :, 2, ...] = f_rev_update('conception', t_cr[:, :, 2, ...], rev_trait_value)
 
-        ## Calculate proportion of singles, twins & triplets so litter size can be stored as a REV trait & then restored from the REV
-        ## requires a mask for the pregnant dams that is the same shape as t_cr
+        ##Process the Litter size REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
+        ##The litter size REV is stored as the proportion of the pregnant dams that are single-, twin- & triplet-bearing
+        ###Steps: Calculate litter size from t_cr, adjust litter size (if required) then recalculate t_cr from new litter size
+        ### Calculating litter size (# of foetuses / dam pregnant) requires a mask for the pregnant dams that is the same shape as t_cr
         mask = nfoet_b1any.squeeze() > 0
         t_cr_masked = np.compress(mask, t_cr, b1_pos)
+        ### Calculate the proportion of single-, twin- & triplet-bearing dams
         litter_propn = t_cr_masked / np.sum(t_cr_masked, b1_pos, keepdims=True)
         litter_propn = f_rev_update('litter_size', litter_propn, rev_trait_value)
-        ###calculate t_cr from litter size. t_cr will only change from the original value if litter_size REV is active
+        ###calculate t_cr from the REV adjusted litter size. t_cr will only change from the original value if litter_size REV is active
         t_cr[:,:,mask,...] = litter_propn * np.sum(t_cr_masked, b1_pos, keepdims=True)
 
-        ##Dams that implant (i.e. do not return to service) but don't retain to 3rd trimester are added to 00 slice (b1[1:2]) rather than staying in NM slice
+        ##Dams that implant (i.e. do not return to service) but don't retain to 3rd trimester
+        ## are added to 00 slice (b1[1:2]) and removed from the NM slice
         ###Number is based on a proportion (cf[5]) of the ewes that implant (propn_preg) losing their foetuses/embryos
         ###The number can't be more than the number of ewes that are not pregnant in the 3rd trimester (1 - propn_preg).
         propn_pregnant = f_dynamic_slice(crg, b1_pos, 2, 3)
@@ -1214,15 +1224,21 @@ def f_conception_cs(cf, cb1, relsize_mating, rc_mating, crg_doy, nfoet_b1any, ny
         conception = t_cr * period_is_mating
 
         ##Subtract conception of 00, 11, 22 & 33 from the NM slice (in e1[0])
+        #todo could this be simplified with the logic conception_e1b1[0,0] = np.sum(conception_e1b1[:, 1:] (as commented below).
         slc = [slice(None)] * len(conception.shape)
         slc[b1_pos] = slice(0,1)
         conception[tuple(slc)] = -np.sum(f_dynamic_slice(conception, b1_pos,1, None), axis = b1_pos, keepdims=True)
         temporary = (index_e1 == 0) * np.sum(conception, axis=sinp.stock['i_e1_pos'], keepdims=True) #sum across e axis into slice e[0]
         conception = fun.f_update(conception, temporary, (nyatf_b1any == 0)) #Put sum of e1 into slice e1[0] and don't overwrite the slices where nyatf != 0
+
+        # slc = [slice(None)] * len(conception.shape)
+        # slc[e1_pos] = slice(0, 1)
+        # slc[b1_pos] = slice(0, 1)
+        # conception[tuple(slc)] = -np.sum(f_dynamic_slice(conception, b1_pos, 1, None), axis=(e1_pos, b1_pos), keepdims=True)
     return conception
 
 
-def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, nfoet_b1any, nyatf_b1any, period_is_mating
+def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, crg_doy, nfoet_b1any, nyatf_b1any, period_is_mating
                      , index_e1, rev_trait_value):
     ''' LTW system: The general calculation is scanning percentage is defined by a linear function of CS
     The standard value (CS 3) is determined by the genotype and relative size
@@ -1236,11 +1252,10 @@ def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, nfoet_
         b1_pos = sinp.stock['i_b1_pos']  #because used in many places in the function
         ## relative size and condition score of the dams at mating are the determinants of conception
         ### the dams being mated are those in slices e1[0] and b1[0] (first cycle, not mated)
-        ## #todo scan_std probably should change based on date of joining (could use CSIRO function)
         relsize_mating_e1b1sliced = f_dynamic_slice(relsize_mating, sinp.stock['i_e1_pos'], 0, 1, b1_pos, 0, 1) #take slice e1[0] & b1[0]
         cs_mating_e1b1sliced = f_dynamic_slice(cs_mating, sinp.stock['i_e1_pos'], 0, 1, b1_pos, 0, 1) #take slice e1[0] & b1[0]
         ##Adjust standard scanning percentage based on relative size (to reduce scanning percentage of younger animals)
-        scan_std = scan_std * relsize_mating_e1b1sliced
+        scan_std = scan_std * relsize_mating_e1b1sliced * crg_doy
         ##Slope of the RR vs CS relationship based on time of the year
         slope = np.maximum(cu0[4, ...], cu0[2, ...] + np.sin(2 * np.pi * doy_p / 365) * cu0[3, ...])
         ##Reproduction rate for dams as if mated for the number of cycles in the calibration data.
@@ -1277,15 +1292,18 @@ def f_conception_ltw(cf, cu0, relsize_mating, cs_mating, scan_std, doy_p, nfoet_
 
 
 #todo f1_
-def f_convert_scan2cycles(dst_propn, nfoet_b1any, cycles = 1):
-    ##Convert from a proportion of dry, singles, twins and triplets from specified number of cycles to an equivalent scanning percentage if mated for the calibration number of cycles
+def f_convert_scancycles(dst_propn, nfoet_b1any, cycles = 1):
+    ##Convert from a proportion of dry, singles, twins and triplets from specified number of cycles (usually 1)
+    ## to an equivalent scanning percentage if mated for the calibration number of cycles (usually 2)
+    ## it is assumed that the litter size is constant and the factor that changes is the proportion of dams that are dry
 
-    calibration_cycles = 2  #The data used to calibrate the coefficients used are assumed to have been derived from mating for 2 cycles.
+    #The data used to calibrate the coefficients used are assumed to have been derived from mating for 2 cycles.
+    calibration_cycles = 2
 
     ##scanning percentage for the specified number of cycles
     repro_rate = np.sum(dst_propn * nfoet_b1any, axis = sinp.stock['i_b1_pos'], keepdims = True)
 
-    ##convert by scaling by the proportion of drys such that litter size stays constant
+    ##convert number of cycles by scaling the proportion of drys (holding litter size constant)
     dry_propn = f_dynamic_slice(dst_propn, sinp.stock['i_b1_pos'], 1, 2)
     dry_propn_cal = dry_propn ** (calibration_cycles / cycles)
     repro_rate_cal = repro_rate * fun.f_divide(1 - dry_propn_cal, 1 - dry_propn)
