@@ -5080,7 +5080,7 @@ def generator(params,r_vals,nv,plots = False):
      fix inputs.
     '''
     feedpools_start = time.time()
-    ##fev masks and len
+    ##nv masks and len
     confinement_inc = np.maximum(np.max(feedsupplyw_pa1e1b1nwzida0e0b0xyg1),
                                  np.max(feedsupplyw_pa1e1b1nwzida0e0b0xyg3)) > 3 #if fs>3 then need to include confinement feeding
     n_non_confinement_pools = sinp.structuralsa['i_len_f']
@@ -5111,7 +5111,7 @@ def generator(params,r_vals,nv,plots = False):
 
     ##allocate each sheep class to an nv group
     ###Determining a std deviation for the distribution. This is an unknown but the value has been selected so that if
-    ### an animal has an fev that is the mid-point of a feed pool then most of the mei & pi for that animal will occur
+    ### an animal has an nv that is the mid-point of a feed pool then most of the mei & pi for that animal will occur
     ### in that feed pool. This is achieved by dividing the range of the feed pool by 6, because plus/minus 3 standard
     ### deviations from the mean is most of the range.
     nv_cutoffs_sd_p6fpg = (nv_upper_p6fpg - nv_lower_p6fpg) / n_non_confinement_pools / 6
@@ -6338,7 +6338,7 @@ def generator(params,r_vals,nv,plots = False):
     keys_g1 = sfun.f1_g2g(pinp.sheep['i_g_idx_dams'],'dams')
     keys_g2 = keys_g1
     keys_g3 = sfun.f1_g2g(pinp.sheep['i_g_idx_offs'],'offs')
-    keys_f = np.array(['fev{0}' .format(i) for i in range(len_f)])
+    keys_f = np.array(['nv{0}' .format(i) for i in range(len_f)])
     keys_h1 = np.asarray(uinp.sheep['i_h1_idx'])
     keys_i = pinp.sheep['i_i_idx'][pinp.sheep['i_mask_i']]
     keys_k3 = np.ravel(pinp.sheep['i_k3_idx_offs'])[:len_k3]

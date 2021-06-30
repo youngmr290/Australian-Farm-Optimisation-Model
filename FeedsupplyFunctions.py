@@ -75,9 +75,9 @@ def f_effective_mei(dmi, md, threshold, ri=1, eff_above=0.5):
     :return: ME available to the animal to meet their ME requirements for the target profile, from the quantity of DM consumed in the feed decision variable.
 
     """
-    fev = md * ri
-    fev_effective  = np.minimum(fev, threshold + (fev - threshold) * eff_above)
-    md_effective = fev_effective / ri
+    nv = md * ri
+    nv_effective  = np.minimum(nv, threshold + (nv - threshold) * eff_above)
+    md_effective = nv_effective / ri
     mei_effective = dmi * md_effective
     return mei_effective
 

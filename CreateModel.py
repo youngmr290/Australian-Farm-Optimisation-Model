@@ -126,7 +126,7 @@ def sets(model, nv):
     model.s_infrastructure = Set(initialize=uinp.sheep['i_h1_idx'], doc='core sheep infrastructure')
 
     ##feed pool
-    keys_nv = np.array(['fev{0}' .format(i) for i in range(nv['len_nv'])])
+    keys_nv = np.array(['nv{0}' .format(i) for i in range(nv['len_nv'])])
     model.s_feed_pools = Set(initialize=keys_nv, doc='nutritive value pools')
 
     ##dams

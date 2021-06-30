@@ -69,8 +69,8 @@ def stubble_all(params, report, nv):
 
     ##nv stuff
     len_nv = nv['len_nv']
-    ev_is_not_confinement_f = np.full(len_nv, True)
-    ev_is_not_confinement_f[-1] = np.logical_not(nv['confinement_inc']) #if confinement period is included the last fev pool is confinement.
+    nv_is_not_confinement_f = np.full(len_nv, True)
+    nv_is_not_confinement_f[-1] = np.logical_not(nv['confinement_inc']) #if confinement period is included the last fev pool is confinement.
 
 
 
@@ -166,7 +166,7 @@ def stubble_all(params, report, nv):
     ## Therefore, there is scope to alter average diet quality by altering the grazing time and the proportion of the stubble consumed.
     md_p6zks1 = np.clip(fsfun.dmd_to_md(dmd_cat_p6zks1) * 1000, 0, np.inf) #mul to convert to tonnes
     md_p6zks1 = md_p6zks1 * mask_stubble_exists_p6zk[...,na] #stop md being provided if stubble doesnt exist
-    md_vp6zks1 = md_p6zks1 * ev_is_not_confinement_f[:,na,na,na,na] #me from stubble is 0 in the confinement pool
+    md_vp6zks1 = md_p6zks1 * nv_is_not_confinement_f[:,na,na,na,na] #me from stubble is 0 in the confinement pool
 
     ###########
     #trampling#
@@ -208,7 +208,7 @@ def stubble_all(params, report, nv):
     keys_s1_cut = np.array(['b', 'c'])
     keys_s1_cut2 = np.array(['a'])
     keys_s1 = pinp.stubble['stub_cat_idx']
-    keys_f  = np.array(['fev{0}' .format(i) for i in range(len_nv)])
+    keys_f  = np.array(['nv{0}' .format(i) for i in range(len_nv)])
     keys_z = pinp.f_keys_z()
 
 

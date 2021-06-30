@@ -317,7 +317,7 @@ def f_erosion(i_lmu_conservation_p6lt, arable_l, pasture_rt):
 def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_gp6t, grn_foo_start_ungrazed_p6lzt
                   , i_foo_graze_propn_gt, grn_senesce_startfoo_p6zt, grn_senesce_pgrcons_p6zt, i_grn_senesce_eos_p6zt
                   , i_base_ft, i_grn_trampling_ft, i_grn_dig_p6lzt, i_grn_dmd_range_ft, i_pasture_stage_p6z, i_legume_zt
-                  , me_threshold_fp6zt, i_me_eff_gainlose_ft, mask_greenfeed_exists_p6zt, length_fz, ev_is_not_confinement_f):
+                  , me_threshold_fp6zt, i_me_eff_gainlose_ft, mask_greenfeed_exists_p6zt, length_fz, nv_is_not_confinement_f):
     '''
     Pasture growth, consumption and senescence of green feed.
 
@@ -392,7 +392,7 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
     :param me_threshold_fp6zt: The nutritive value above which scaling will occur for the NV pool.
     :param i_me_eff_gainlose_ft: Reduction in efficiency if M/D is above requirement for target LW pattern.
     :param mask_greenfeed_exists_p6zt: Boolean array stating which periods dry pasture exists.
-    :param ev_is_not_confinement_f: boolean array stating which fev pools are not confinement feeding pools.
+    :param nv_is_not_confinement_f: boolean array stating which nv pools are not confinement feeding pools.
     :return: Quantity and quality of green pasture.
     '''
     #todo review the research data to decide if trampling is more closely related to FOO or consumption (currently represented as a propn of feed consumed).
@@ -482,7 +482,7 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
     #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
     me_cons_grnha_fgop6lzt = me_cons_grnha_fgop6lzt * mask_greenfeed_exists_p6zt[:, na, ...]
     #me from pasture is 0 in the confinement pool
-    me_cons_grnha_fgop6lzt = me_cons_grnha_fgop6lzt * ev_is_not_confinement_f[:, na, na, na, na, na, na]
+    me_cons_grnha_fgop6lzt = me_cons_grnha_fgop6lzt * nv_is_not_confinement_f[:, na, na, na, na, na, na]
 
     # parameters for the growth/grazing activities: Total volume of feed consumed from the hectare
     volume_grnha_gop6lzt = cons_grnha_t_gop6lzt / grn_ri_gop6lzt
@@ -527,7 +527,7 @@ def f1_senescence(senesce_period_grnha_gop6lzt, senesce_eos_grnha_gop6lzt, dry_d
 
 
 def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_high_p6zt, me_threshold_fp6zt, i_me_eff_gainlose_p6t, mask_dryfeed_exists_p6zt
-                  , i_pasture_stage_p6z, ev_is_not_confinement_f, i_legume_zt, n_feed_pools):
+                  , i_pasture_stage_p6z, nv_is_not_confinement_f, i_legume_zt, n_feed_pools):
     '''
     Calculate the the quality and quantity of dry pasture available throughout the year.
 
@@ -560,7 +560,7 @@ def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_
     :param i_me_eff_gainlose_ft: Reduction in efficiency if M/D is above requirement for target LW pattern
     :param mask_dryfeed_exists_p6zt: Boolean array stating which periods dry pasture exists.
     :param i_pasture_stage_p6z: maturity of the pasture (establishment or vegetative as defined by CSIRO)
-    :param ev_is_not_confinement_f: boolean array stating which fev pools are not confinement feeding pools.
+    :param nv_is_not_confinement_f: boolean array stating which nv pools are not confinement feeding pools.
     :param i_legume_zt: legume content of pasture.
     :return: Quantity and quality of dry pasture.
     '''
@@ -604,11 +604,11 @@ def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_
                                ,           dry_ri_dp6zt
                                , i_me_eff_gainlose_p6t[:,na,:])
     dry_mecons_t_fdp6zt = dry_mecons_t_fdp6zt * mask_dryfeed_exists_p6zt  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
-    dry_mecons_t_fdp6zt = dry_mecons_t_fdp6zt * ev_is_not_confinement_f[:,na,na,na,na] #me from pasture is 0 in the confinement pool
+    dry_mecons_t_fdp6zt = dry_mecons_t_fdp6zt * nv_is_not_confinement_f[:,na,na,na,na] #me from pasture is 0 in the confinement pool
     return dry_mecons_t_fdp6zt, dry_volume_t_dp6zt, dry_dmd_dp6zt, dry_foo_dp6zt
 
 
-def f_poc(cu3, cu4, i_poc_intake_daily_p6lt, i_poc_dmd_p6t, i_poc_foo_p6t, i_legume_zt, i_pasture_stage_p6z, ev_is_not_confinement_f):
+def f_poc(cu3, cu4, i_poc_intake_daily_p6lt, i_poc_dmd_p6t, i_poc_foo_p6t, i_legume_zt, i_pasture_stage_p6z, nv_is_not_confinement_f):
     '''
     Calculate energy, volume and consumption parameters for pasture consumed on crop paddocks before seeding.
 
@@ -632,7 +632,7 @@ def f_poc(cu3, cu4, i_poc_intake_daily_p6lt, i_poc_dmd_p6t, i_poc_foo_p6t, i_leg
     :param i_poc_foo_ft: average foo of pasture on crop paddocks.
     :param i_legume_zt: legume content of pasture.
     :param i_pasture_stage_p6z: maturity of the pasture (establishment or vegetative as defined by CSIRO)
-    :param ev_is_not_confinement_f: boolean array stating which fev pools are not confinement feeding pools.
+    :param nv_is_not_confinement_f: boolean array stating which nv pools are not confinement feeding pools.
     :return:
         - poc_con_fl - tonnes of dry matter available per hectare per day on crop paddocks before seeding.
         - poc_md_fp6 - md per tonne of poc.
@@ -643,7 +643,7 @@ def f_poc(cu3, cu4, i_poc_intake_daily_p6lt, i_poc_dmd_p6t, i_poc_foo_p6t, i_leg
     poc_con_p6l = i_poc_intake_daily_p6lt[..., 0] / 1000 #divide 1000 to convert to tonnes of foo per ha
     ## md per tonne
     poc_md_p6 = fsfun.dmd_to_md(i_poc_dmd_p6t[..., 0]) * 1000 #times 1000 to convert to mj per tonne
-    poc_md_fp6 = poc_md_p6 * ev_is_not_confinement_f[:,na] #me from pasture is 0 in the confinement pool
+    poc_md_fp6 = poc_md_p6 * nv_is_not_confinement_f[:,na] #me from pasture is 0 in the confinement pool
 
     ## vol
     ### calc relative quality - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
