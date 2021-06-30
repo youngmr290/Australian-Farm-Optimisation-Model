@@ -32,7 +32,7 @@ import Periods as per
 pyomo sets
 '''
 ##define sets - sets are redefined for each exp in case they change due to SA
-def sets(model, ev):
+def sets(model, nv):
     ##season types - set only has one season if steady state model is being used
     if pinp.general['steady_state']:
         model.s_season_types = Set(initialize=[pinp.general['i_z_idx'][pinp.general['i_mask_z']][0]], doc='season types')
@@ -126,8 +126,8 @@ def sets(model, ev):
     model.s_infrastructure = Set(initialize=uinp.sheep['i_h1_idx'], doc='core sheep infrastructure')
 
     ##feed pool
-    keys_ev = np.array(['fev{0}' .format(i) for i in range(ev['len_ev'])])
-    model.s_feed_pools = Set(initialize=keys_ev, doc='nutritive value pools')
+    keys_nv = np.array(['fev{0}' .format(i) for i in range(nv['len_nv'])])
+    model.s_feed_pools = Set(initialize=keys_nv, doc='nutritive value pools')
 
     ##dams
     model.s_nut_dams = Set(initialize=np.array(['n%s'%i for i in range(sinp.structuralsa['i_n1_matrix_len'])]), doc='Nutrition levels in each feed period for dams')

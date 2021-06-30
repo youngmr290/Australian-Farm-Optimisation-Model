@@ -15,8 +15,8 @@ import StockGenerator as sgen
 import PropertyInputs as pinp
 
 
-def stock_precalcs(params, r_vals, ev):
-    sgen.generator(params, r_vals, ev)
+def stock_precalcs(params, r_vals, nv):
+    sgen.generator(params, r_vals, nv)
 
 
 
@@ -459,7 +459,7 @@ def stockpyomo_local(params, model):
 ### setup core model constraints #
 ##################################
 
-def stock_me(model,f,p6):
+def stock_me(model,p6,f):
     return sum(model.v_sire[g0] * model.p_mei_sire[p6,f,g0] for g0 in model.s_groups_sire)\
            + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,i,y1,g1] * model.p_mei_dams[k2,p6,f,t1,v1,a,n1,w1,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
@@ -472,7 +472,7 @@ def stock_me(model,f,p6):
                for a in model.s_wean_times for i in model.s_tol)
 
 
-def stock_pi(model,f,p6):
+def stock_pi(model,p6,f):
     return sum(model.v_sire[g0] * model.p_pi_sire[p6,f,g0] for g0 in model.s_groups_sire)\
            + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,i,y1,g1] * model.p_pi_dams[k2,p6,f,t1,v1,a,n1,w1,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams

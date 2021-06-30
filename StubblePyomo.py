@@ -10,7 +10,7 @@ import pyomo.environ as pe
 import Stubble as stub
 import PropertyInputs as pinp
 
-def stub_precalcs(params, report, ev):
+def stub_precalcs(params, report, nv):
     '''
     Call crop precalc functions.
 
@@ -18,7 +18,7 @@ def stub_precalcs(params, report, ev):
     :param report: dictionary which stores all report values.
 
     '''
-    stub.stubble_all(params, report, ev)
+    stub.stubble_all(params, report, nv)
     
     
     
@@ -95,19 +95,19 @@ def stubble_req_a(model,k,s):
 
 
 ##stubble md
-def stubble_me(model,v,f):
+def stubble_me(model,p6,f):
     '''
-    Calculate the total energy provided to each ev pool by feed the selected amount of stubble.
+    Calculate the total energy provided to each nv pool by feed the selected amount of stubble.
 
     Used in global constraint (con_me). See CorePyomo
     '''
-    return sum(model.v_stub_con[v,f,k,s] * model.p_stub_md[v,f,k,s] for k in model.s_crops for s in model.s_stub_cat)
+    return sum(model.v_stub_con[f,p6,k,s] * model.p_stub_md[f,p6,k,s] for k in model.s_crops for s in model.s_stub_cat)
     
 ##stubble vol
-def stubble_vol(model,v,f):
+def stubble_vol(model,p6,f):
     '''
-    Calculate the total volume required by each ev pool to feed the selected amount of stubble.
+    Calculate the total volume required by each nv pool to feed the selected amount of stubble.
 
     Used in global constraint (con_vol). See CorePyomo
     '''
-    return sum(model.v_stub_con[v,f,k,s] * model.p_stub_vol[f,k,s] for k in model.s_crops for s in model.s_stub_cat)
+    return sum(model.v_stub_con[f,p6,k,s] * model.p_stub_vol[p6,k,s] for k in model.s_crops for s in model.s_stub_cat)

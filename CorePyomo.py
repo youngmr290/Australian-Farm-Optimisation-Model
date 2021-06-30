@@ -104,10 +104,10 @@ def coremodel_all(params, trial_name, model):
     #######################################
     #stubble & nap consumption at harvest #
     #######################################
-    def harv_stub_nap_cons(model,f):
-        if any(model.p_nap_prop[f] or model.p_harv_prop[f,k] for k in model.s_crops):
-            return sum(-paspy.pas_me(model,v,f) + sum(model.p_harv_prop[f,k]/(1-model.p_harv_prop[f,k]) * model.v_stub_con[v,f,k,s] * model.p_stub_md[v,f,k,s] for k in model.s_crops for s in model.s_stub_cat)
-                    +  model.p_nap_prop[f]/(1-model.p_nap_prop[f]) * paspy.nappas_me(model,v,f) for v in model.s_feed_pools) <= 0
+    def harv_stub_nap_cons(model,p6):
+        if any(model.p_nap_prop[p6] or model.p_harv_prop[p6,k] for k in model.s_crops):
+            return sum(-paspy.pas_me(model,p6,f) + sum(model.p_harv_prop[p6,k]/(1-model.p_harv_prop[p6,k]) * model.v_stub_con[f,p6,k,s] * model.p_stub_md[f,p6,k,s] for k in model.s_crops for s in model.s_stub_cat)
+                    +  model.p_nap_prop[p6]/(1-model.p_nap_prop[p6]) * paspy.nappas_me(model,p6,f) for f in model.s_feed_pools) <= 0
         else:
             return pe.Constraint.Skip
     model.con_harv_stub_nap_cons = pe.Constraint(model.s_feed_periods, rule = harv_stub_nap_cons, doc='limit stubble and nap consumption in the period harvest occurs')
@@ -185,17 +185,17 @@ def coremodel_all(params, trial_name, model):
     ######################
     #  ME                #
     ######################
-    def me(model,f,v):
-        return -paspy.pas_me(model,v,f) - paspy.nappas_me(model,v,f) - suppy.sup_me(model,v,f) - stubpy.stubble_me(model,v,f) \
-               + stkpy.stock_me(model,v,f) - mvf.mvf_me(model,v,f) <=0
+    def me(model,p6,f):
+        return -paspy.pas_me(model,p6,f) - paspy.nappas_me(model,p6,f) - suppy.sup_me(model,p6,f) - stubpy.stubble_me(model,p6,f) \
+               + stkpy.stock_me(model,p6,f) - mvf.mvf_me(model,p6,f) <=0
     model.con_me = pe.Constraint(model.s_feed_periods, model.s_feed_pools, rule=me, doc='constraint between me available and consumed')
 
     ######################
     #Vol                 #
     ######################
-    def vol(model,f,v):
-        return paspy.pas_vol(model,v,f) + suppy.sup_vol(model,v,f) + stubpy.stubble_vol(model,v,f) - stkpy.stock_pi(model,v,f) \
-               + mvf.mvf_vol(model,v,f) <=0
+    def vol(model,p6,f):
+        return paspy.pas_vol(model,p6,f) + suppy.sup_vol(model,p6,f) + stubpy.stubble_vol(model,p6,f) - stkpy.stock_pi(model,p6,f) \
+               + mvf.mvf_vol(model,p6,f) <=0
     model.con_vol = pe.Constraint(model.s_feed_periods, model.s_feed_pools, rule=vol, doc='constraint between me available and consumed')
 
     ######################
@@ -757,22 +757,22 @@ def coremodel_all(params, trial_name, model):
             instance.p_phasefert.store_values(params['crop'][scenario_name]['fert_req'])
 
             ##pasture
-            instance.p_germination.store_values(params['pas'][scenario_name]['p_germination_flrt'])
-            instance.p_foo_grn_reseeding.store_values(params['pas'][scenario_name]['p_foo_grn_reseeding_flrt'])
-            instance.p_foo_dry_reseeding.store_values(params['pas'][scenario_name]['p_foo_dry_reseeding_dflrt'])
-            instance.p_foo_end_grnha.store_values(params['pas'][scenario_name]['p_foo_end_grnha_goflt'])
-            instance.p_foo_start_grnha.store_values(params['pas'][scenario_name]['p_foo_start_grnha_oflt'])
-            instance.p_senesce_grnha.store_values(params['pas'][scenario_name]['p_senesce_grnha_dgoflt'])
-            instance.p_me_cons_grnha.store_values(params['pas'][scenario_name]['p_me_cons_grnha_vgoflt'])
-            instance.p_volume_grnha.store_values(params['pas'][scenario_name]['p_volume_grnha_goflt'])
-            instance.p_dry_mecons_t.store_values(params['pas'][scenario_name]['p_dry_mecons_t_vdft'])
-            instance.p_dry_volume_t.store_values(params['pas'][scenario_name]['p_dry_volume_t_dft'])
+            instance.p_germination.store_values(params['pas'][scenario_name]['p_germination_p6lrt'])
+            instance.p_foo_grn_reseeding.store_values(params['pas'][scenario_name]['p_foo_grn_reseeding_p6lrt'])
+            instance.p_foo_dry_reseeding.store_values(params['pas'][scenario_name]['p_foo_dry_reseeding_dp6lrt'])
+            instance.p_foo_end_grnha.store_values(params['pas'][scenario_name]['p_foo_end_grnha_gop6lt'])
+            instance.p_foo_start_grnha.store_values(params['pas'][scenario_name]['p_foo_start_grnha_op6lt'])
+            instance.p_senesce_grnha.store_values(params['pas'][scenario_name]['p_senesce_grnha_dgop6lt'])
+            instance.p_me_cons_grnha.store_values(params['pas'][scenario_name]['p_me_cons_grnha_fgop6lt'])
+            instance.p_volume_grnha.store_values(params['pas'][scenario_name]['p_volume_grnha_gop6lt'])
+            instance.p_dry_mecons_t.store_values(params['pas'][scenario_name]['p_dry_mecons_t_fdp6t'])
+            instance.p_dry_volume_t.store_values(params['pas'][scenario_name]['p_dry_volume_t_dp6t'])
             instance.p_dry_transfer_t.store_values(params['pas'][scenario_name]['p_dry_transfer_t_ft'])
-            instance.p_nap.store_values(params['pas'][scenario_name]['p_nap_dflrt'])
+            instance.p_nap.store_values(params['pas'][scenario_name]['p_nap_dp6lrt'])
             instance.p_nap_prop.store_values(params['pas'][scenario_name]['p_harvest_period_prop'])
-            instance.p_phase_area.store_values(params['pas'][scenario_name]['p_phase_area_flrt'])
+            instance.p_phase_area.store_values(params['pas'][scenario_name]['p_phase_area_p6lrt'])
             instance.p_pas_sow.store_values(params['pas'][scenario_name]['p_pas_sow_plrk'])
-            instance.p_poc_vol.store_values(params['pas'][scenario_name]['p_poc_vol_f'])
+            instance.p_poc_vol.store_values(params['pas'][scenario_name]['p_poc_vol_p6'])
 
             ##machine
             instance.p_contractseeding_occur.store_values(params['mach'][scenario_name]['contractseeding_occur'])

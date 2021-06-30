@@ -366,8 +366,6 @@ def f_seasonal_inp(inp, numpy=False, axis=0, level=0):
         inp = np.compress(z_mask, inp, axis)
 
         ##weighted average if steady state
-        #todo will this work OK in all situations given that np.average removes the axis.
-        # Should fun.f_weighted_average(keepdims=True) be used instead
         if general['steady_state']:
             try:  # in case array is datearray
                 inp = np.expand_dims(np.average(inp, axis=axis, weights=z_prob), axis)

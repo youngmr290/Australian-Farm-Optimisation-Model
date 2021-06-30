@@ -75,23 +75,23 @@ def sup_cost(model,c):
 
     return sum(model.v_sup_con[k,g,v,f] * model.p_sup_cost[c,k,f] for v in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for f in model.s_feed_periods)
 
-def sup_me(model,v,f):
+def sup_me(model,p6,f):
     '''
-    Calculate the total energy provided to each ev pool by feed the selected amount of supplement.
+    Calculate the total energy provided to each nv pool by feed the selected amount of supplement.
 
     Used in global constraint (con_me). See CorePyomo
     '''
 
-    return sum(model.v_sup_con[k,g,v,f] * model.p_sup_md[k]for g in model.s_grain_pools for k in model.s_crops)
+    return sum(model.v_sup_con[k,g,f,p6] * model.p_sup_md[k]for g in model.s_grain_pools for k in model.s_crops)
 
-def sup_vol(model,v,f):
+def sup_vol(model,p6,f):
     '''
-    Calculate the total volume required by each ev pool to feed the selected amount of supplement.
+    Calculate the total volume required by each nv pool to feed the selected amount of supplement.
 
     Used in global constraint (con_vol). See CorePyomo
     '''
 
-    return sum(model.v_sup_con[k,g,v,f] * model.p_sup_vol[k] for g in model.s_grain_pools for k in model.s_crops)
+    return sum(model.v_sup_con[k,g,f,p6] * model.p_sup_vol[k] for g in model.s_grain_pools for k in model.s_crops)
 
 def sup_dep(model):
     '''

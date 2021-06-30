@@ -158,7 +158,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
     r_vals['sup']={}
     r_vals['stub']={}
     r_vals['stock']={}
-    ev = {} #dict to store ev params from StockGenerator to be used in pasture
+    nv = {} #dict to store nv params from StockGenerator to be used in pasture
 
     ##call precalcs
     precalc_start = time.time()
@@ -170,9 +170,9 @@ def exp(row):  # called with command: pool.map(exp, dataset)
     labpy.lab_precalcs(params['lab'],r_vals['lab'])
     lcrppy.crplab_precalcs(params['crplab'],r_vals['crplab'])
     suppy.sup_precalcs(params['sup'],r_vals['sup'])
-    spy.stock_precalcs(params['stock'],r_vals['stock'],ev)
-    stubpy.stub_precalcs(params['stub'],r_vals['stub'], ev) #stub must be after stock because it uses ev dict which is populated in stock.py
-    paspy.paspyomo_precalcs(params['pas'],r_vals['pas'], ev) #pas must be after stock because it uses ev dict which is populated in stock.py
+    spy.stock_precalcs(params['stock'],r_vals['stock'],nv)
+    stubpy.stub_precalcs(params['stub'],r_vals['stub'], nv) #stub must be after stock because it uses nv dict which is populated in stock.py
+    paspy.paspyomo_precalcs(params['pas'],r_vals['pas'], nv) #pas must be after stock because it uses nv dict which is populated in stock.py
     precalc_end = time.time()
     print('precalcs: ', precalc_end - precalc_start)
 
@@ -184,7 +184,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
         ##call core model function, must call them in the correct order (core must be last)
         pyomocalc_start = time.time()
         model = pe.ConcreteModel() #create pyomo model - done each loop because memory was being leaked when just deleting and re adding the components.
-        crtmod.sets(model, ev) #certain sets have to be updated each iteration of exp
+        crtmod.sets(model, nv) #certain sets have to be updated each iteration of exp
         rotpy.rotationpyomo(params['rot'], model)
         crppy.croppyomo_local(params['crop'], model)
         macpy.machpyomo_local(params['mach'], model)

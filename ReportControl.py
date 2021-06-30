@@ -587,7 +587,7 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'offs_keys_k3k5p6ftvnwziaxyg3'
             arith = 1
             index =[5, 2]       #DVP
-            cols =[13, 1, 3]    #g3, BTRT, EV
+            cols =[13, 1, 3]    #g3, BTRT, nv
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             daily_mei_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
@@ -605,7 +605,7 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'offs_keys_k3k5p6ftvnwziaxyg3'
             arith = 1
             index =[5, 2]       #DVP
-            cols =[13, 1, 3]    #g3, BTRT, EV
+            cols =[13, 1, 3]    #g3, BTRT, nv
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             daily_pi_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
@@ -749,9 +749,9 @@ def f_report(processor, trials, non_exist_trials):
         if report_run.loc['run_grnfoo', 'Run']:
             #returns foo at end of each FP
             type = 'pas'
-            prod = 'foo_end_grnha_goflzt'
-            weights = 'greenpas_ha_vgoflzt'
-            keys = 'keys_vgoflzt'
+            prod = 'foo_end_grnha_gop6lzt'
+            weights = 'greenpas_ha_fgop6lzt'
+            keys = 'keys_fgop6lzt'
             arith = 2
             index =[3]
             cols =[4]
@@ -766,8 +766,8 @@ def f_report(processor, trials, non_exist_trials):
             #returns foo at end of each FP
             type = 'pas'
             prod = 1000
-            weights = 'drypas_transfer_dfzt'
-            keys = 'keys_dfzt'
+            weights = 'drypas_transfer_dp6zt'
+            keys = 'keys_dp6zt'
             arith = 2
             index =[1]
             cols =[0]
@@ -782,8 +782,8 @@ def f_report(processor, trials, non_exist_trials):
             #returns foo at end of each FP
             prod = 1000
             type = 'pas'
-            weights = 'nap_transfer_dfzt'
-            keys = 'keys_dfzt'
+            weights = 'nap_transfer_dp6zt'
+            keys = 'keys_dp6zt'
             arith = 2
             index =[1]
             cols =[]
@@ -796,10 +796,10 @@ def f_report(processor, trials, non_exist_trials):
 
         if report_run.loc['run_grncon', 'Run']:
             #returns consumption in each FP
-            prod = 'cons_grnha_t_goflzt'
+            prod = 'cons_grnha_t_gop6lzt'
             type = 'pas'
-            weights = 'greenpas_ha_vgoflzt'
-            keys = 'keys_vgoflzt'
+            weights = 'greenpas_ha_fgop6lzt'
+            keys = 'keys_fgop6lzt'
             arith = 2
             index =[3]
             cols =[]
@@ -814,8 +814,8 @@ def f_report(processor, trials, non_exist_trials):
             #returns consumption in each FP
             prod = 1000
             type = 'pas'
-            weights = 'drypas_consumed_vdfzt'
-            keys = 'keys_vdfzt'
+            weights = 'drypas_consumed_fdp6zt'
+            keys = 'keys_fdp6zt'
             arith = 2
             index =[2]
             cols =[]
@@ -829,9 +829,9 @@ def f_report(processor, trials, non_exist_trials):
         if report_run.loc['run_grnfec', 'Run']:
             #returns FEC during each FP regardless of whether selected or not
             type = 'pas'
-            prod = 'fec_grnha_vgoflzt'
+            prod = 'fec_grnha_fgop6lzt'
             weights = 1
-            keys = 'keys_vgoflzt'
+            keys = 'keys_fgop6lzt'
             arith = 5
             index = [3]
             cols = [2, 1]
@@ -844,9 +844,9 @@ def f_report(processor, trials, non_exist_trials):
         if report_run.loc['run_grndmd', 'Run']:
             #returns DMD during each FP (regardless of whether selected or not)
             type = 'pas'
-            prod = 'dmd_diet_grnha_goflzt'
+            prod = 'dmd_diet_grnha_gop6lzt'
             weights = 1
-            keys = 'keys_goflzt'
+            keys = 'keys_gop6lzt'
             arith = 5
             index = [2]
             cols = [0, 1]
@@ -859,9 +859,9 @@ def f_report(processor, trials, non_exist_trials):
         if report_run.loc['run_avegrnfoo', 'Run']:
             #returns average FOO during each FP (regardless of whether selected or not)
             type = 'pas'
-            prod = 'foo_ave_grnha_goflzt'
+            prod = 'foo_ave_grnha_gop6lzt'
             weights = 1
-            keys = 'keys_goflzt'
+            keys = 'keys_gop6lzt'
             arith = 5
             index = [2]
             cols = [0, 1]
@@ -874,9 +874,9 @@ def f_report(processor, trials, non_exist_trials):
         if report_run.loc['run_dryfec', 'Run']:
             #returns FEC during each FP (regardless of whether selected or not)
             type = 'pas'
-            prod = 'fec_dry_vdfzt'
+            prod = 'fec_dry_fdp6zt'
             weights = 1
-            keys = 'keys_vdfzt'
+            keys = 'keys_fdp6zt'
             arith = 5
             index = [2]
             cols = [1]
@@ -889,9 +889,9 @@ def f_report(processor, trials, non_exist_trials):
         if report_run.loc['run_drydmd', 'Run']:
             #returns DMD during each FP (regardless of whether selected or not)
             type = 'pas'
-            prod = 'dry_dmd_dfzt'
+            prod = 'dry_dmd_dp6zt'
             weights = 1
-            keys = 'keys_dfzt'
+            keys = 'keys_dp6zt'
             arith = 5
             index = [1]
             cols = [0]
@@ -905,9 +905,9 @@ def f_report(processor, trials, non_exist_trials):
             #todo this report throws error when combining multiple excel... why??
             #returns average FOO during each FP (regardless of whether selected or not)
             type = 'pas'
-            prod = 'dry_foo_dfzt'
+            prod = 'dry_foo_dp6zt'
             weights = 1
-            keys = 'keys_dfzt'
+            keys = 'keys_dp6zt'
             arith = 5
             index = [1]
             cols = [0]
@@ -921,8 +921,8 @@ def f_report(processor, trials, non_exist_trials):
             #returns consumption in each FP
             prod = 1000
             type = 'pas'
-            weights = 'nap_consumed_vdfzt'
-            keys = 'keys_vdfzt'
+            weights = 'nap_consumed_fdp6zt'
+            keys = 'keys_fdp6zt'
             arith = 2
             index =[2]
             cols =[]

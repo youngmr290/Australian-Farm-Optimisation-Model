@@ -30,33 +30,33 @@ time_list.append(timer()) ; time_was.append("import Pasture")
 params={}
 r_vals={}
 
-##Populate the ev dict with the input values for the ev cutoffs (normally are from StockGenerator)
-### create ev dict
-ev={}
+##Populate the nv dict with the input values for the nv cutoffs (normally are from StockGenerator)
+### create nv dict
+nv={}
 ### read values from the pasture_inputs dictionary
 pas_inc = np.array(pinp.general['pas_inc'])
 pastures = sinp.general['pastures'][pas_inc]
 exceldata = pinp.pasture_inputs[pastures[0]]           # assign to exceldata the pasture data for the first pasture type (annuals)
 i_me_maintenance_vf = exceldata['MaintenanceEff'][:, 1:].T
-##add ev params to dict for use in pasture.py
+##add nv params to dict for use in pasture.py
 n_non_confinement_pools=4
 confinement_inc = False
 index_f = np.arange(n_non_confinement_pools+confinement_inc)
 ##create the upper and lower cutoffs. If there is a confinement slice then it will be populated with values but they never get used.
-fev_upper_p6f = sinp.structuralsa['i_fev_upper_p6'][:,None]
-fev_lower_p6f = sinp.structuralsa['i_fev_lower_p6'][:,None]
-fev_cutoff_lower_p6f = fev_lower_p6f + (
-            fev_upper_p6f - fev_lower_p6f) / n_non_confinement_pools * index_f
-fev_cutoff_upper_p6f = fev_lower_p6f + (fev_upper_p6f - fev_lower_p6f) / n_non_confinement_pools * (
+nv_upper_p6f = sinp.structuralsa['i_nv_upper_p6'][:,None]
+nv_lower_p6f = sinp.structuralsa['i_nv_lower_p6'][:,None]
+nv_cutoff_lower_p6f = nv_lower_p6f + (
+            nv_upper_p6f - nv_lower_p6f) / n_non_confinement_pools * index_f
+nv_cutoff_upper_p6f = nv_lower_p6f + (nv_upper_p6f - nv_lower_p6f) / n_non_confinement_pools * (
             index_f + 1)
 ###Average these values to be passed to Pasture.py for efficiency of utilising ME and add to the dict
-fev_cutoff_ave_p6f = (fev_cutoff_lower_p6f + fev_cutoff_upper_p6f) / 2
-ev['fev_cutoff_ave_p6f'] = fev_cutoff_ave_p6f
-ev['confinement_inc'] = confinement_inc
-ev['len_ev'] = n_non_confinement_pools+confinement_inc
+nv_cutoff_ave_p6f = (nv_cutoff_lower_p6f + nv_cutoff_upper_p6f) / 2
+nv['nv_cutoff_ave_p6f'] = nv_cutoff_ave_p6f
+nv['confinement_inc'] = confinement_inc
+nv['len_nv'] = n_non_confinement_pools+confinement_inc
 
 ##call pasture module
-pas.f_pasture(params, r_vals, ev)
+pas.f_pasture(params, r_vals, nv)
 
 
 time_list.append(timer()) ; time_was.append("Pasture complete")
@@ -68,17 +68,17 @@ time_list.append(timer()) ; time_was.append("Pasture complete")
 
 
 # pas.calculate_germ_and_reseed(params)                          # calculate the germination for each rotation phase
-# a = pas.foo_grn_reseeding_flrt
+# a = pas.foo_grn_reseeding_p6lrt
 # b = a[:,4,...]
 # c = np.sum(b, axis = 1)
 # time_list.append(timer()) ; time_was.append("germination & reseeding")
 
-# pas.green_and_dry(params, r_vals, ev)                            # calculate the FOO lost when destocked and the FOO gained when grazed after establishment
+# pas.green_and_dry(params, r_vals, nv)                            # calculate the FOO lost when destocked and the FOO gained when grazed after establishment
 # time_list.append(timer()) ; time_was.append("green feed & dry feed")
 
-# poc_con_ft = pas.poc(params)                            # calculate the pasture on crop paddocks
-# poc_md_ft = pas.poc_md()                              # calculate the pasture on crop paddocks
-# poc_vol_ft = pas.poc_vol()                            # calculate the pasture on crop paddocks
+# poc_con_p6t = pas.poc(params)                            # calculate the pasture on crop paddocks
+# poc_md_p6t = pas.poc_md()                              # calculate the pasture on crop paddocks
+# poc_vol_p6t = pas.poc_vol()                            # calculate the pasture on crop paddocks
 # print(poc_vol_ft)
 # time_list.append(timer()) ; time_was.append("poc")
 

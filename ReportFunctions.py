@@ -632,25 +632,25 @@ def f_pasture_reshape(lp_vars, r_vals):
     :return: dict
     '''
     keys_d = r_vals['pas']['keys_d']
-    keys_v = r_vals['pas']['keys_v']
     keys_f = r_vals['pas']['keys_f']
+    keys_p6 = r_vals['pas']['keys_p6']
     keys_g = r_vals['pas']['keys_g']
     keys_k = r_vals['pas']['keys_k']
     keys_l = r_vals['pas']['keys_l']
     keys_o = r_vals['pas']['keys_o']
-    keys_p = r_vals['pas']['keys_p']
+    keys_p5 = r_vals['pas']['keys_p5']
     keys_r = r_vals['pas']['keys_r']
     keys_t = r_vals['pas']['keys_t']
     keys_z = r_vals['stock']['keys_z']
 
     len_d = len(keys_d)
-    len_v = len(keys_v)
     len_f = len(keys_f)
+    len_p6 = len(keys_p6)
     len_g = len(keys_g)
     len_k = len(keys_k)
     len_l = len(keys_l)
     len_o = len(keys_o)
-    len_p = len(keys_p)
+    len_p5 = len(keys_p5)
     len_r = len(keys_r)
     len_t = len(keys_t)
     len_z = len(keys_z)
@@ -659,36 +659,36 @@ def f_pasture_reshape(lp_vars, r_vals):
     pas_vars = {}
 
     # store keys - must be in axis order
-    pas_vars['keys_vgoflzt'] = [keys_v, keys_g, keys_o, keys_f, keys_l, keys_z, keys_t]
-    pas_vars['keys_goflzt'] = [keys_g, keys_o, keys_f, keys_l, keys_z, keys_t]
-    pas_vars['keys_vdfzt'] = [keys_v, keys_d, keys_f, keys_z, keys_t]
-    pas_vars['keys_dfzt'] = [keys_d, keys_f, keys_z, keys_t]
-    pas_vars['keys_dfzt'] = [keys_d, keys_f, keys_z, keys_t]
-    pas_vars['keys_vflz'] = [keys_v, keys_f, keys_l, keys_z]
+    pas_vars['keys_fgop6lzt'] = [keys_f, keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
+    pas_vars['keys_gop6lzt'] = [keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
+    pas_vars['keys_fdp6zt'] = [keys_f, keys_d, keys_p6, keys_z, keys_t]
+    pas_vars['keys_dp6zt'] = [keys_d, keys_p6, keys_z, keys_t]
+    pas_vars['keys_dp6zt'] = [keys_d, keys_p6, keys_z, keys_t]
+    pas_vars['keys_fp6lz'] = [keys_f, keys_p6, keys_l, keys_z]
 
     ##shapes
-    vgoflzt = len_v, len_g, len_o, len_f, len_l, len_z, len_t
-    vdfzt = len_v, len_d, len_f, len_z, len_t
-    dfzt = len_d, len_f, len_z, len_t
-    vflz = len_v, len_f, len_l, len_z
+    fgop6lzt = keys_f, len_g, len_o, len_p6, len_l, len_z, len_t
+    fdp6zt = keys_f, len_d, len_p6, len_z, len_t
+    dp6zt = len_d, len_p6, len_z, len_t
+    fp6lz = keys_f, len_p6, len_l, len_z
 
     ##reshape green pasture hectare variable
-    pas_vars['greenpas_ha_vgoflzt'] = f_vars2np(lp_vars, 'v_greenpas_ha', vgoflzt, keys_z, z_pos=-2)
+    pas_vars['greenpas_ha_fgop6lzt'] = f_vars2np(lp_vars, 'v_greenpas_ha', fgop6lzt, keys_z, z_pos=-2)
 
     ##dry end period
-    pas_vars['drypas_transfer_dfzt'] = f_vars2np(lp_vars, 'v_drypas_transfer', dfzt, keys_z, z_pos=-2)
+    pas_vars['drypas_transfer_dp6zt'] = f_vars2np(lp_vars, 'v_drypas_transfer', dp6zt, keys_z, z_pos=-2)
 
     ##nap end period
-    pas_vars['nap_transfer_dfzt'] = f_vars2np(lp_vars, 'v_nap_transfer', dfzt, keys_z, z_pos=-2)
+    pas_vars['nap_transfer_dp6zt'] = f_vars2np(lp_vars, 'v_nap_transfer', dp6zt, keys_z, z_pos=-2)
 
     ##dry consumed
-    pas_vars['drypas_consumed_vdfzt'] = f_vars2np(lp_vars, 'v_drypas_consumed', vdfzt, keys_z, z_pos=-2)
+    pas_vars['drypas_consumed_fdp6zt'] = f_vars2np(lp_vars, 'v_drypas_consumed', fdp6zt, keys_z, z_pos=-2)
 
     ##nap consumed
-    pas_vars['nap_consumed_vdfzt'] = f_vars2np(lp_vars, 'v_nap_consumed', vdfzt, keys_z, z_pos=-2)
+    pas_vars['nap_consumed_fdp6zt'] = f_vars2np(lp_vars, 'v_nap_consumed', fdp6zt, keys_z, z_pos=-2)
 
     ##poc consumed
-    pas_vars['poc_consumed_vflz'] = f_vars2np(lp_vars, 'v_poc', vflz, keys_z, z_pos=-1)
+    pas_vars['poc_consumed_vflz'] = f_vars2np(lp_vars, 'v_poc', fp6lz, keys_z, z_pos=-1)
 
     return pas_vars
 
