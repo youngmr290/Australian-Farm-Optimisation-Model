@@ -448,12 +448,14 @@ def f_pasture(params, r_vals, ev):
         , i_base_ft, i_grn_trampling_ft, i_grn_dig_flzt, i_grn_dmd_range_ft, i_pasture_stage_p6z
         , i_legume_zt, me_threshold_vfzt, i_me_eff_gainlose_ft, mask_greenfeed_exists_fzt
         , length_fz, ev_is_not_confinement_v)
+    volume_grnha_goflzt = volume_grnha_goflzt / (1 + sen.sap['pi'])
 
 
     ## dry, dmd & foo of feed consumed
     dry_mecons_t_vdfzt, dry_volume_t_dfzt, dry_dmd_dfzt, dry_foo_dfzt = pfun.f_dry_pasture(
         cu3, cu4, i_dry_dmd_ave_fzt, i_dry_dmd_range_fzt, i_dry_foo_high_fzt, me_threshold_vfzt, i_me_eff_gainlose_ft
         , mask_dryfeed_exists_fzt, i_pasture_stage_p6z, ev_is_not_confinement_v, i_legume_zt, n_feed_pools)
+    dry_volume_t_dfzt = dry_volume_t_dfzt / (1 + sen.sap['pi'])
 
     ## dry, animal removal
     dry_removal_t_fzt  = 1000 * (1 + i_dry_trampling_ft[:,na,:]) * mask_dryfeed_exists_fzt #mask out consumption in periods where dry doesnt exist to remove the activity in the lp.
@@ -470,6 +472,7 @@ def f_pasture(params, r_vals, ev):
     ##call poc function - info about poc can be found in function doc string.
     poc_con_fl, poc_md_vf, poc_vol_fz = pfun.f_poc(cu3, cu4, i_poc_intake_daily_flt, i_poc_dmd_ft, i_poc_foo_ft
                                                               , i_legume_zt, i_pasture_stage_p6z, ev_is_not_confinement_v)
+    poc_vol_fz = poc_vol_fz/ (1 + sen.sap['pi'])
 
     ###########
     #params   #

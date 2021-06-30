@@ -28,7 +28,7 @@ sar = dict()
 ######
 
 ##Global
-sap['pi']=0 #global potential intake (this increases animal intake without altering animal energy profile, to alter the energy profile use ci[1:2,...] todo this has not been applied globally to the model yet (currently only in stubble)
+sap['pi']=0 #global potential intake (this increases animal intake without altering animal energy profile, to alter the energy profile use ci[1:2,...]
 
 ######
 #SAM #

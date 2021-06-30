@@ -32,7 +32,7 @@ import PropertyInputs as pinp
 import UniversalInputs as uinp
 import Crop as crp
 import Mach as mac
-import StockFunctions as sfun
+import Sensitivity as sen
 
 na = np.newaxis
 
@@ -177,6 +177,7 @@ def f_sup_md_vol():
     vol_kg = np.maximum(1, 1 / rq)
     ###convert vol per kg to per tonne fed - have to adjust for the actual dry matter content and wastage
     vol_tonne = vol_kg * 1000 * sup_md_vol.loc['prop consumed'] * sup_md_vol.loc['dry matter content']
+    vol_tonne = vol_tonne / (1 + sen.sap['pi'])
     ##calc ME (note: value in dict is MJ/t of DM, so doesn't need to be multiplied by 1000)
     md_tonne = sup_md_vol.loc['energy'] * sup_md_vol.loc['prop consumed'] * sup_md_vol.loc['dry matter content']
     ##load into params dict for pyomo
