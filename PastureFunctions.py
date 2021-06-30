@@ -135,8 +135,7 @@ def f_germination(i_germination_std_zt, i_germ_scalar_lzt, i_germ_scalar_fzt
     return germination_flrzt, max_germination_flz, resown_rt
 
 def f_reseeding(i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, i_restock_grn_propn_t, resown_rt
-                , feed_period_dates_fz, foo_na_destock_fzt
-                , i_restock_fooscalar_lt, i_restock_foo_arable_t, dry_decay_period_fzt
+                , feed_period_dates_fz, i_restock_fooscalar_lt, i_restock_foo_arable_t, dry_decay_period_fzt
                 , i_fxg_foo_oflzt, c_fxg_a_oflzt, c_fxg_b_oflzt, i_grn_senesce_eos_fzt
                 , grn_senesce_startfoo_fzt, grn_senesce_pgrcons_fzt, max_germination_flz
                 , length_fz, n_feed_periods, flrzt, fzt, t_idx, z_idx, l_idx):
