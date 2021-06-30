@@ -3390,8 +3390,8 @@ def generator(params,r_vals,nv,plots = False):
             #post calculation sensitivity for intake & energy#
             ##################################################
             ##These sensitivities alter potential intake and me intake required without altering the liveweight profile.
-            ##They have the same effect as using the within function sa and then altering the feed supply to generate the same LW profile
-            ## they just require less work to test the effect of not altering LW profile (as per old MIDAS)
+            ##The aim is to have the same effect as using the within function sa and then altering the feed supply to
+            ##  generate the same LW profile, they just require less work to test the effect of not altering LW profile (as per old MIDAS)
             ##To do this requires altering d_cfw and d_fl. These would both change in f_fibre if using the within function sa
             ##Adjustments must be made for pi_post because wge is scaled by sam_pi in f_fibre (rather than scaling sfw in the main code)
             ##Adjustments are required for mr_post and kg_post because these both reduce the mei required in this section. If cfw and fl
@@ -5817,7 +5817,7 @@ def generator(params,r_vals,nv,plots = False):
     salevalue_prog_cta1e1b1nwzida0e0b0xyg2 = (sfun.f1_p2v_std(salevalue_prog_tpa1e1b1nwzida0e0b0xyg2, period_is_tvp=period_is_wean_d_pa1e1b1nwzida0e0b0xyg2[:,:,0:1,...], #weaning is same for all e slices
                                      a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg,index_any1tvp=index_ctpa1e1b1nwzida0e0b0xyg)).astype(dtype)
 
-    ## cluster sale value - can use offs function becasue clustering is the same.
+    ## cluster sale value - can use offs function because clustering is the same.
     salevalue_prog_k5ctva1e1b1nwzida0e0b0xyg2 = sfun.f1_create_production_param('offs',
                                                                                   salevalue_prog_cta1e1b1nwzida0e0b0xyg2[:,:, na,...],
                                                                                   # a_k3cluster_da0e0b0xyg3,todo for now d axis is not clustered. it could be though i think. but will come back to this.

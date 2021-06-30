@@ -35,7 +35,7 @@ def f_pasture(params, r_vals, nv):
     ########################
     len_nv = nv['len_nv']
     ev_is_not_confinement_f = np.full(len_nv, True)
-    ev_is_not_confinement_f[-1] = np.logical_not(nv['confinement_inc']) #if confinment period is included the last fev pool is confinment.
+    ev_is_not_confinement_f[-1] = np.logical_not(nv['confinement_inc']) #if confinement period is included the last fev pool is confinement.
 
     ########################
     ##phases               #
