@@ -1,7 +1,6 @@
 '''
 Pasture documentation can be found in PastureFunctions.py
 '''
-#todo add labour required for feed budgeting. Inputs are currently in the sheep sheet of Property.xls
 
 '''
 import functions from other modules
@@ -22,7 +21,8 @@ import Periods as per
 import Sensitivity as sen
 import PastureFunctions as pfun
 
-#todo Will need to add the foo reduction in the current year for manipulated pasture and a germination reduction in the following year.
+#1. todo add labour required for feed budgeting. Inputs are currently in the sheep sheet of Property.xls
+#2. todo Will need to add the foo reduction in the current year for manipulated pasture and a germination reduction in the following year.
 
 def f_pasture(params, r_vals, ev):
     ######################
@@ -80,8 +80,6 @@ def f_pasture(params, r_vals, ev):
 
 
     arable_l = pinp.crop['arable'].squeeze().values[lmu_mask_l]
-    # length_f  = np.array(pinp.period['feed_periods'].loc[:pinp.period['feed_periods'].index[-2],'length']) # not including last row because that is the start of the following year. #todo as above this will need z axis
-    # feed_period_dates_f = np.array(i_feed_period_dates,dtype='datetime64[D]')
     length_fz  = np.array(per.f_feed_periods(option=1),dtype='float64')
     feed_period_dates_fz = fun.f_baseyr(per.f_feed_periods()).astype('datetime64[D]') #feed periods are all date to the base yr (eg 2019) - this is required for some of the allocation formulas
 
@@ -341,6 +339,7 @@ def f_pasture(params, r_vals, ev):
     ###create dry pasture exists mask - in the current structure dry pasture only exists after the growing season.
     mask_dryfeed_exists_fzt[...] = index_f[:, na, na] >= i_dry_exists_zt   #mask periods when dry feed is available to livestock.
     mask_greenfeed_exists_fzt[...] = index_f[:, na, na] <= i_end_of_gs_zt   #green exists in the period which is the end of growing season hence <=
+    mask_dryfeed_exists_next_fzt = np.roll(mask_dryfeed_exists_fzt, shift=-1, axis=0)   #dry feed exists in the following feed period
 
     ### calculate dry_decay_period (used in reseeding and green&dry)
     ### dry_decay_daily is decay of dry foo at the start of the period that was transferred in from senescence in the previous period.
@@ -351,8 +350,10 @@ def f_pasture(params, r_vals, ev):
             dry_decay_daily_fzt[0:i_dry_exists_zt[z,t], z, t] = 1  #couldn't do this without loops - advanced indexing doesnt appear to work when taking multiple slices
     dry_decay_period_fzt[...] = 1 - (1 - dry_decay_daily_fzt) ** length_fz[...,na]
     ## dry, DM decline (high = low pools)
-    #todo look at masking the dry transfer to only those periods that dry exist (decay eos > 0)
-    dry_transfer_t_fzt = 1000 * (1-dry_decay_period_fzt)
+    ###dry transfer prov is the amount of dry feed that is transferred into the current period from the previous (1000 - decay)
+    dry_transfer_prov_t_fzt = 1000 * (1-dry_decay_period_fzt) * mask_dryfeed_exists_next_fzt #if no dry feed exists in the next period then we dont need the transfer prov DV.
+    ###dry transfer required is the amount of dry feed required in the current period to transfer into the next period (1000 mask by dry exists)
+    dry_transfer_req_t_fzt = 1000 * mask_dryfeed_exists_fzt #this parameter exists so that the constraint wont be built for fp when no dry feed exists.
 
     ###create equation coefficients for pgr = a+b*foo
     i_fxg_foo_oflzt[2,...]  = 100000 #large number so that the np.searchsorted doesn't go above
@@ -455,7 +456,7 @@ def f_pasture(params, r_vals, ev):
         , mask_dryfeed_exists_fzt, i_pasture_stage_p6z, ev_is_not_confinement_v, i_legume_zt, n_feed_pools)
 
     ## dry, animal removal
-    dry_removal_t_ft  = 1000 * (1 + i_dry_trampling_ft)
+    dry_removal_t_fzt  = 1000 * (1 + i_dry_trampling_ft[:,na,:]) * mask_dryfeed_exists_fzt #mask out consumption in periods where dry doesnt exist to remove the activity in the lp.
 
     ## Senescence of green feed into the dry pool.
     senesce_grnha_dgoflzt = pfun.f1_senescence(senesce_period_grnha_goflzt, senesce_eos_grnha_goflzt, dry_decay_period_fzt
@@ -480,9 +481,6 @@ def f_pasture(params, r_vals, ev):
     erosion_rav_flrt = erosion_flrt.ravel()
     params['p_erosion_flrt'] = dict(zip(index_flrt,erosion_rav_flrt))
 
-    dry_removal_t_rav_ft = dry_removal_t_ft.ravel()
-    params['p_dry_removal_t_ft'] = dict(zip(index_ft,dry_removal_t_rav_ft))
-
     poc_con_rav_fl = poc_con_fl.ravel()
     params['p_poc_con_fl'] = dict(zip(index_fl,poc_con_rav_fl))
 
@@ -500,6 +498,9 @@ def f_pasture(params, r_vals, ev):
 
         ###create param from numpy
 
+        dry_removal_t_rav_ft = dry_removal_t_fzt[...,z,:].ravel()
+        params[scenario]['p_dry_removal_t_ft'] = dict(zip(index_ft,dry_removal_t_rav_ft))
+
         ##convert the change in dry and green FOO at destocking and restocking into a pyomo param (for the area that is resown)
         foo_dry_reseeding_rav_dflrt = foo_dry_reseeding_dflrzt[...,z,:].ravel()
         params[scenario]['p_foo_dry_reseeding_dflrt'] = dict(zip(index_dflrt,foo_dry_reseeding_rav_dflrt))
@@ -512,8 +513,11 @@ def f_pasture(params, r_vals, ev):
         phase_area_rav_flrt = phase_area_flrzt[...,z,:].ravel()
         params[scenario]['p_phase_area_flrt'] = dict(zip(index_flrt,phase_area_rav_flrt))
 
-        dry_transfer_t_rav_ft = dry_transfer_t_fzt[...,z,:].ravel()
-        params[scenario]['p_dry_transfer_t_ft'] = dict(zip(index_ft,dry_transfer_t_rav_ft))
+        dry_transfer_prov_t_rav_ft = dry_transfer_prov_t_fzt[...,z,:].ravel()
+        params[scenario]['p_dry_transfer_prov_t_ft'] = dict(zip(index_ft,dry_transfer_prov_t_rav_ft))
+
+        dry_transfer_req_t_rav_ft = dry_transfer_req_t_fzt[...,z,:].ravel()
+        params[scenario]['p_dry_transfer_req_t_ft'] = dict(zip(index_ft,dry_transfer_req_t_rav_ft))
 
         germination_rav_flrt = germination_flrzt[...,z,:].ravel()
         params[scenario]['p_germination_flrt'] = dict(zip(index_flrt,germination_rav_flrt))

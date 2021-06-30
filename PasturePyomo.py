@@ -69,9 +69,11 @@ def paspyomo_local(params, model):
     
     model.p_dry_volume_t = pe.Param(model.s_dry_groups, model.s_feed_periods, model.s_pastures, initialize=params[season]['p_dry_volume_t_dft'], default=0, mutable=False, doc='Total Vol from grazing a tonne of dry feed')
     
-    model.p_dry_transfer_t = pe.Param(model.s_feed_periods, model.s_pastures, initialize=params[season]['p_dry_transfer_t_ft'], default=0, mutable=False, doc='quantity of dry feed transferred out of the period to the next')
-    
-    model.p_dry_removal_t = pe.Param(model.s_feed_periods, model.s_pastures, initialize=params['p_dry_removal_t_ft'], default=0, doc='quantity of dry feed removed for sheep to consume 1t, accounts for trampling')
+    model.p_dry_transfer_prov_t = pe.Param(model.s_feed_periods, model.s_pastures, initialize=params[season]['p_dry_transfer_prov_t_ft'], default=0, mutable=False, doc='quantity of dry feed transferred out of the previous period to the current (allows for decay)')
+
+    model.p_dry_transfer_req_t = pe.Param(model.s_feed_periods, model.s_pastures, initialize=params[season]['p_dry_transfer_req_t_ft'], default=0, mutable=False, doc='quantity of dry feed required to transfer a tonne of dry feed to the following period (this parameter is always 1000 unless dry feed doesnt exist)')
+
+    model.p_dry_removal_t = pe.Param(model.s_feed_periods, model.s_pastures, initialize=params[season]['p_dry_removal_t_ft'], default=0, doc='quantity of dry feed removed for sheep to consume 1t, accounts for trampling')
     
     model.p_nap = pe.Param(model.s_dry_groups, model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=params[season]['p_nap_dflrt'], default=0, mutable=False, doc='pasture on non arable areas in crop paddocks')
     
@@ -110,16 +112,24 @@ def paspyomo_local(params, model):
 
     def drypas(model,d,f,t):
         fs = l_fp[l_fp.index(f) - 1] #need the activity level from last feed period
-        return sum(sum(model.v_greenpas_ha[v,g,o,fs,l,t] * -model.p_senesce_grnha[d,g,o,fs,l,t] for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus)        \
+        if model.p_dry_removal_t[f,t] == 0 and model.p_dry_transfer_req_t[f,t] == 0:
+            return pe.Constraint.Skip
+        else:
+            return sum(sum(- model.v_greenpas_ha[v,g,o,fs,l,t] * model.p_senesce_grnha[d,g,o,fs,l,t] for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus)        \
                        + model.v_drypas_consumed[v,d,f,t] * model.p_dry_removal_t[f,t] for v in model.s_feed_pools) \
-                       - model.v_drypas_transfer[d,fs,t] * model.p_dry_transfer_t[fs,t] + model.v_drypas_transfer[d,f,t] * 1000 <=0 #minus 1000 is what you are transferring into constraint, p_dry_transfer is how much you get in the current period if you transferred 1t from previous period (not 1000 because you have to account for deterioration)
+                   - model.v_drypas_transfer[d,fs,t] * model.p_dry_transfer_prov_t[fs,t] \
+                   + model.v_drypas_transfer[d,f,t] * model.p_dry_transfer_req_t[f,t] <=0
     model.con_drypas = pe.Constraint(model.s_dry_groups, model.s_feed_periods, model.s_pastures, rule = drypas, doc='High and low quality dry pasture of each type available in each period')
-    
+
     def nappas(model,d,f,t):
         fs = l_fp[l_fp.index(f) - 1] #need the activity level from last feed period
-        return sum(sum(sum(model.v_phase_area[r,l] * -model.p_nap[d,f,l,r,t] for r in model.s_phases if pe.value(model.p_nap[d,f,l,r,t]) != 0)for l in model.s_lmus)        \
+        if model.p_dry_removal_t[f,t] == 0 and model.p_dry_transfer_req_t[f,t] == 0:
+            return pe.Constraint.Skip
+        else:
+            return sum(sum(- model.v_phase_area[r,l] * model.p_nap[d,f,l,r,t] for r in model.s_phases for l in model.s_lmus if pe.value(model.p_nap[d,f,l,r,t]) != 0)
                        + model.v_nap_consumed[v,d,f,t] * model.p_dry_removal_t[f,t] for v in model.s_feed_pools) \
-                       - model.v_nap_transfer[d,fs,t] * model.p_dry_transfer_t[fs,t] + model.v_nap_transfer[d,f,t] * 1000 <=0 #minus 1000 is what you are transferring into constraint, p_dry_transfer is how much you get in the current period if you transferred 1t from previous period (not 1000 because you have to account for deterioration)
+                   - model.v_nap_transfer[d,fs,t] * model.p_dry_transfer_prov_t[fs,t] \
+                   + model.v_nap_transfer[d,f,t] * model.p_dry_transfer_req_t[f,t] <=0
     model.con_nappas = pe.Constraint(model.s_dry_groups, model.s_feed_periods, model.s_pastures, rule = nappas, doc='High and low quality dry pasture of each type available in each period')
     
     def pasarea(model,f,l,t):
