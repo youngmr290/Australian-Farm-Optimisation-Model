@@ -433,7 +433,7 @@ def f1_rev_update(trait_name, trait_value, rev_trait_value):
 def f1_history(history, new_value, days_in_period):
     '''
     The idea that the f1_history is implementing is for traits that have a lag from increased nutrition to increased production.
-    The representation being that the production today is an average of the non-lagged estimated production from the last x days (where x is either len_m2 or len_m3, either of which can be 1 but are expected to be 25).
+    The representation being that the production today is an average of the non-lagged estimated production from the last x days (where x is either len_p2 or len_p3, either of which can be 1 but are expected to be 25).
     The history function is keeping track of the last x days of estimated production (slice 0 is the most recent day, slice -1 is the oldest day of the history). 
     The process is:
         1. move the most recent history back (to make space for the production from this period: days_period) 
@@ -764,7 +764,7 @@ def f_milk(cl, srw, relsize_start, rc_birth_start, mei, meme, mew_min, rc_start,
     return mp2, mel, nel, ldr, lb
 
 
-def f_fibre(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_m2g, mei_g, mew_min_g, d_cfw_ave_g
+def f_fibre(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_p2g, mei_g, mew_min_g, d_cfw_ave_g
             , sfd_a0e0b0xyg, wge_a0e0b0xyg, af_wool_g, dlf_wool_g,  kw_yg, days_period_g, sfw_ltwadj_g, sfd_ltwadj_g
             , rev_trait_value, mec_g1=0, mel_g1=0, gest_propn_g1=0, lact_propn_g1=0, sam_pi=1):
     ##adjust wge, cfw_ave, mew_min & sfd for the LTW adjustments (CFW is a scalar and FD is an addition)
@@ -783,7 +783,7 @@ def f_fibre(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_m2g,
     ##Process the CFW REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
     d_cfw_nolag_g = f1_rev_update('cfw', d_cfw_nolag_g, rev_trait_value)
     ##Wool growth (protein weight) with lag and updated history
-    d_cfw_g, d_cfw_history_m2g = f1_history(d_cfw_history_start_m2g, d_cfw_nolag_g, days_period_g)
+    d_cfw_g, d_cfw_history_p2g = f1_history(d_cfw_history_start_p2g, d_cfw_nolag_g, days_period_g)
     ##Net energy required for wool
     new_g = cw_g[1, ...] * (d_cfw_g - cw_g[2, ...] * relsize_start_g) / cw_g[3, ...]
     ##ME required for wool (above basal)
@@ -796,12 +796,12 @@ def f_fibre(cw_g, cc_g, ffcfw_start_g, relsize_start_g, d_cfw_history_start_m2g,
     area = cc_g[1, ...] * ffcfw_start_g ** (2/3)
     ##Daily fibre length growth
     d_fl_g = 100 * fun.f_divide(d_cfw_g, cw_g[10, ...] * cw_g[11, ...] * area * np.pi * (0.5 * d_fd_g / 10**6) ** 2) #func to stop div/0 error, when d_fd==0 so does d_cfw
-    return d_cfw_g, d_fd_g, d_fl_g, d_cfw_history_m2g, mew_g, new_g
+    return d_cfw_g, d_fd_g, d_fl_g, d_cfw_history_p2g, mew_g, new_g
 
 
 def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, meme, mew, new, km, kg_supp, kg_fodd, mei_propn_supp
                , mei_propn_herb, temp_ave_a1e1b1nwzida0e0b0xyg, temp_max_a1e1b1nwzida0e0b0xyg, temp_min_a1e1b1nwzida0e0b0xyg
-               , ws_a1e1b1nwzida0e0b0xyg, rain_a1e1b1nwzida0e0b0xygm1, index_m0, guw = 0, kl = 0, mei_propn_milk = 0
+               , ws_a1e1b1nwzida0e0b0xyg, rain_a1e1b1nwzida0e0b0xygp1, index_m0, guw = 0, kl = 0, mei_propn_milk = 0
                , mec = 0, mel = 0, nec = 0, nel = 0, gest_propn	= 0, lact_propn = 0):
     ##Animal is below maintenance
     belowmaint = mei < (meme + mec + mel + mew)
@@ -814,13 +814,13 @@ def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, meme, mew, new, km,
     ##Wind velocity (2 hourly)
     wind_a1e1b1nwzida0e0b0xygm0 = ws_a1e1b1nwzida0e0b0xyg[..., na] * (1 + 0.35 * sin_var_m0)
     ##Proportion of sky that is clear
-    sky_clear_a1e1b1nwzida0e0b0xygm1 = 0.7 * np.exp(-0.25 * rain_a1e1b1nwzida0e0b0xygm1)
+    sky_clear_a1e1b1nwzida0e0b0xygp1 = 0.7 * np.exp(-0.25 * rain_a1e1b1nwzida0e0b0xygp1)
     ##radius of animal
     radius = np.maximum(0.001,cc[2, ...] * ffcfw_start ** (1/3)) #max because realistic values of radius can be small for lambs - stops div0 error
     ##surface area of animal
-    area = np.maximum(0.001,cc[1, ...] * ffcfw_start ** (2/3)) #max because area is in m2 so realistic values of area can be small for lambs
+    area = np.maximum(0.001,cc[1, ...] * ffcfw_start ** (2/3)) #max because area is in p2 so realistic values of area can be small for lambs
     ##Impact of wet fleece on insulation
-    wetflc_a1e1b1nwzida0e0b0xygm1 = cc[5, ..., na] + (1 - cc[5, ..., na]) * np.exp(-cc[6, ..., na] * rain_a1e1b1nwzida0e0b0xygm1 / sl_start[..., na])
+    wetflc_a1e1b1nwzida0e0b0xygp1 = cc[5, ..., na] + (1 - cc[5, ..., na]) * np.exp(-cc[6, ..., na] * rain_a1e1b1nwzida0e0b0xygp1 / sl_start[..., na])
     ##Insulation of air (2 hourly)
     in_air_a1e1b1nwzida0e0b0xygm0 = radius[..., na] / (radius[..., na] + sl_start[..., na]) / (cc[7, ..., na] + cc[8, ..., na] * np.sqrt(wind_a1e1b1nwzida0e0b0xygm0))
     ##Insulation of coat (2 hourly)
@@ -828,19 +828,19 @@ def f_chill_cs(cc, ck, ffcfw_start, rc_start, sl_start, mei, meme, mew, new, km,
     ##Insulation of  tissue
     in_tissue = cc[3, ...] * (rc_start - cc[4, ...] * (rc_start - 1))
     ##Insulation of  air + coat (2 hourly)
-    in_ext_a1e1b1nwzida0e0b0xygm0m1 = wetflc_a1e1b1nwzida0e0b0xygm1[..., na, :] * (in_air_a1e1b1nwzida0e0b0xygm0[..., na] + in_coat_a1e1b1nwzida0e0b0xygm0[..., na])
+    in_ext_a1e1b1nwzida0e0b0xygm0p1 = wetflc_a1e1b1nwzida0e0b0xygp1[..., na, :] * (in_air_a1e1b1nwzida0e0b0xygm0[..., na] + in_coat_a1e1b1nwzida0e0b0xygm0[..., na])
     ##Impact of clear night skies on ME loss
-    sky_temp_a1e1b1nwzida0e0b0xygm0m1 = sky_clear_a1e1b1nwzida0e0b0xygm1[..., na, :] * cc[13,..., na, na] * np.exp(-cc[14, ..., na, na] * np.minimum(0, cc[15, ..., na, na] - temperature_a1e1b1nwzida0e0b0xygm0[..., na]) ** 2)
-    ##Heat production per m2
+    sky_temp_a1e1b1nwzida0e0b0xygm0p1 = sky_clear_a1e1b1nwzida0e0b0xygp1[..., na, :] * cc[13,..., na, na] * np.exp(-cc[14, ..., na, na] * np.minimum(0, cc[15, ..., na, na] - temperature_a1e1b1nwzida0e0b0xygm0[..., na]) ** 2)
+    ##Heat production per p2
     heat = (mei - nec * gest_propn - nel * lact_propn - new - kge * (mei
             - (meme + mec * gest_propn + mel * lact_propn + mew))
             + cc[16, ...] * guw) / area
     ##Lower critical temperature (2 hourly)
-    temp_lc_a1e1b1nwzida0e0b0xygm0m1 = cc[11, ..., na, na]+ cc[12, ..., na, na] - heat[..., na, na] * (in_tissue[..., na, na] + in_ext_a1e1b1nwzida0e0b0xygm0m1) + sky_temp_a1e1b1nwzida0e0b0xygm0m1
+    temp_lc_a1e1b1nwzida0e0b0xygm0p1 = cc[11, ..., na, na]+ cc[12, ..., na, na] - heat[..., na, na] * (in_tissue[..., na, na] + in_ext_a1e1b1nwzida0e0b0xygm0p1) + sky_temp_a1e1b1nwzida0e0b0xygm0p1
     ##Lower critical temperature (period)
-    temp_lc_a1e1b1nwzida0e0b0xyg = np.average(temp_lc_a1e1b1nwzida0e0b0xygm0m1, axis = (-1,-2))
+    temp_lc_a1e1b1nwzida0e0b0xyg = np.average(temp_lc_a1e1b1nwzida0e0b0xygm0p1, axis = (-1,-2))
     ##Extra ME required to keep warm
-    mecold_a1e1b1nwzida0e0b0xyg = area * np.average(fun.f_dim(temp_lc_a1e1b1nwzida0e0b0xygm0m1, temperature_a1e1b1nwzida0e0b0xygm0[..., na]) /(in_tissue[..., na, na] + in_ext_a1e1b1nwzida0e0b0xygm0m1), axis = (-1,-2))
+    mecold_a1e1b1nwzida0e0b0xyg = area * np.average(fun.f_dim(temp_lc_a1e1b1nwzida0e0b0xygm0p1, temperature_a1e1b1nwzida0e0b0xygm0[..., na]) /(in_tissue[..., na, na] + in_ext_a1e1b1nwzida0e0b0xygm0p1), axis = (-1,-2))
     ##ME requirement for maintenance (inc ECold)
     mem = meme + mecold_a1e1b1nwzida0e0b0xyg
     ##Animal is below maintenance (incl ecold)
@@ -1189,13 +1189,13 @@ def f_mortality_base_cs(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max
     ## a minimum level of mortality per day that is increased if RC is below a threshold and LWG is below a threshold
     ### i.e. increased mortality only for thin animals that are growing slowly (< 20% of normal growth rate)
     ###distribution on ebg & rc_start, calculate mort and then average (axis =-1,-2)
-    ebg_start_m1m2 = fun.f_distribution7(ebg_start, sd=sd_ebg)[...,na]
-    rc_start_m1m2 = fun.f_distribution7(rc_start, cv=cv_weight)[...,na,:]
-    mortalityb_m1m2 = (cd[1, ...,na,na] + cd[2, ...,na,na] *
-                     np.maximum(0, cd[3, ...,na,na] - rc_start_m1m2) *
-                     ((cd[16, ...,na,na] * d_nw_max[...,na,na]) > (ebg_start_m1m2 * cg[18, ...,na,na]))) * days_period[...,na,na] #mul by days period to convert from mort per day to per period
-    ###average m1 axis
-    mortalityb = np.mean(mortalityb_m1m2, axis=(-1,-2))
+    ebg_start_p1p2 = fun.f_distribution7(ebg_start, sd=sd_ebg)[...,na]
+    rc_start_p1p2 = fun.f_distribution7(rc_start, cv=cv_weight)[...,na,:]
+    mortalityb_p1p2 = (cd[1, ...,na,na] + cd[2, ...,na,na] *
+                     np.maximum(0, cd[3, ...,na,na] - rc_start_p1p2) *
+                     ((cd[16, ...,na,na] * d_nw_max[...,na,na]) > (ebg_start_p1p2 * cg[18, ...,na,na]))) * days_period[...,na,na] #mul by days period to convert from mort per day to per period
+    ###average p1 axis
+    mortalityb = np.mean(mortalityb_p1p2, axis=(-1,-2))
     ##apply sensitivity
     mortalityb = fun.f_sa(mortalityb, sap_mortalityb, sa_type = 1, value_min = 0)
     ##Process the Mortality REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
@@ -1207,12 +1207,12 @@ def f_mortality_weaner_cs(cd, cg, age, ebg_start, sd_ebg, d_nw_max,days_period):
     ## mortality increases (cd[13]) for slow growing young animals (< 20% of normal growth rate).
     ### mortality does not increase with severity of under-nutrition, simply a switch based on growth rate
     ### the mortality increment varies with age. Full increment below 300 days (cd[14]) and ramping down to 0 at 365 days (cd[15])
-    ###distribution on ebg - add distribution to ebg_start_m1 and then average (axis =-1)
-    ebg_start_m1 = fun.f_distribution7(ebg_start, sd=sd_ebg)
-    mort_weaner_m1 = cd[13, ...,na] * fun.f_ramp(age[...,na], cd[15, ...,na], cd[14, ...,na]
+    ###distribution on ebg - add distribution to ebg_start_p1 and then average (axis =-1)
+    ebg_start_p1 = fun.f_distribution7(ebg_start, sd=sd_ebg)
+    mort_weaner_p1 = cd[13, ...,na] * fun.f_ramp(age[...,na], cd[15, ...,na], cd[14, ...,na]
                                              ) * ((cd[16, ...,na] * d_nw_max[...,na]
-                                                   ) > (ebg_start_m1 * cg[18, ...,na]))* days_period[...,na] #mul by days period to convert from mort per day to per period
-    return np.mean(mort_weaner_m1, axis=-1)
+                                                   ) > (ebg_start_p1 * cg[18, ...,na]))* days_period[...,na] #mul by days period to convert from mort per day to per period
+    return np.mean(mort_weaner_p1, axis=-1)
 
 def f_mortality_dam_cs():
     '''
@@ -1234,11 +1234,11 @@ def f_mortality_pregtox_cs(cb1, cg, nw_start, ebg, sd_ebg, days_period, period_b
     insides are full of lambs and this restricts stomach capacity). It is usually also more of a problem for ewes
     that start out in better condition.
     '''
-    ###distribution on ebg - add distribution to ebg_start_m1 and then average (axis =-1)
-    ebg_m1 = fun.f_distribution7(ebg, sd=sd_ebg)
-    t_mort_m1 = days_period[..., na] * gest_propn[..., na] / 42 * fun.f_sig(-42 * ebg_m1 * cg[18, ..., na] / nw_start[..., na]
+    ###distribution on ebg - add distribution to ebg_start_p1 and then average (axis =-1)
+    ebg_p1 = fun.f_distribution7(ebg, sd=sd_ebg)
+    t_mort_p1 = days_period[..., na] * gest_propn[..., na] / 42 * fun.f_sig(-42 * ebg_p1 * cg[18, ..., na] / nw_start[..., na]
                                                                         , cb1[4, ..., na], cb1[5, ..., na]) #mul by days period to convert from mort per day to per period
-    t_mort = np.mean(t_mort_m1, axis=-1)
+    t_mort = np.mean(t_mort_p1, axis=-1)
     ##If not last 6 weeks then = 0
     mort = t_mort * period_between_birth6wks
     ##Adjust by sensitivity on dam mortality
@@ -1246,7 +1246,7 @@ def f_mortality_pregtox_cs(cb1, cg, nw_start, ebg, sd_ebg, days_period, period_b
     return mort
 
     
-def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, cv_weight, w_b_exp_y, period_is_birth, chill_index_m1, nfoet_b1
+def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, cv_weight, w_b_exp_y, period_is_birth, chill_index_p1, nfoet_b1
                            , rev_trait_value, sap_mortalityp, saa_mortalityx):
     '''Progeny losses due to large progeny or slow birth process (dystocia)
 
@@ -1254,12 +1254,12 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, cv_weight, w_b_exp_y, period_
     but also lack of oxygen. The difficult birth can be a larger single lamb but it is also quite prevalent
     in twins not due to large lambs but due to a slow birth because the ewe is lacking energy to push.
     '''
-    ###distribution on w_b & rc_birth - add distribution to ebg_start_m1 and then average (axis =-1)
-    w_b_m1m2 = fun.f_distribution7(w_b, cv=cv_weight)[...,na]
-    rc_birth_m1m2 = fun.f_distribution7(rc_birth, cv=cv_weight)[...,na,:]
-    mortalityd_yatf_m1m2 = fun.f_sig(fun.f_divide(w_b_m1m2, w_b_exp_y[...,na,na]) * np.maximum(1, rc_birth_m1m2),
+    ###distribution on w_b & rc_birth - add distribution to ebg_start_p1 and then average (axis =-1)
+    w_b_p1p2 = fun.f_distribution7(w_b, cv=cv_weight)[...,na]
+    rc_birth_p1p2 = fun.f_distribution7(rc_birth, cv=cv_weight)[...,na,:]
+    mortalityd_yatf_p1p2 = fun.f_sig(fun.f_divide(w_b_p1p2, w_b_exp_y[...,na,na]) * np.maximum(1, rc_birth_p1p2),
                                  cb1[6, ...,na,na], cb1[7, ...,na,na]) * period_is_birth[...,na,na]
-    mortalityd_yatf = np.mean(mortalityd_yatf_m1m2, axis=(-1,-2))
+    mortalityd_yatf = np.mean(mortalityd_yatf_p1p2, axis=(-1,-2))
     ##add sensitivity
     mortalityd_yatf = fun.f_sa(mortalityd_yatf, sap_mortalityp, sa_type = 1, value_min = 0)
     ##dam mort due to large progeny or lack of energy at birth (dystocia) - returns 0 mort if there is 0 nfoet also the fact that more prog die per dam when the dams has multiple nfoet (eg for a trip only one ewe dies for every 3 yatf)
@@ -1267,9 +1267,9 @@ def f_mortality_progeny_cs(cd, cb1, w_b, rc_birth, cv_weight, w_b_exp_y, period_
     ##Reduce progeny losses due to large progeny (dystocia) - so not double counting progeny losses associated with dam mortality
     mortalityd_yatf = mortalityd_yatf * (1- cd[21,...])
     ##Exposure index
-    xo_m1m2 = cd[8, ..., na,na] - cd[9, ..., na,na] * rc_birth_m1m2 + cd[10, ..., na,na] * chill_index_m1[..., na] + cb1[11, ..., na,na]
+    xo_p1p2 = cd[8, ..., na,na] - cd[9, ..., na,na] * rc_birth_p1p2 + cd[10, ..., na,na] * chill_index_p1[..., na] + cb1[11, ..., na,na]
     ##Progeny mortality at birth from exposure
-    mortalityx = np.average(np.exp(xo_m1m2) / (1 + np.exp(xo_m1m2)) ,axis = (-1,-2)) * period_is_birth #axis -1 is m1
+    mortalityx = np.average(np.exp(xo_p1p2) / (1 + np.exp(xo_p1p2)) ,axis = (-1,-2)) * period_is_birth #axis -1 is p1
     ##Apply SA to progeny mortality due to exposure
     mortalityx = fun.f_sa(mortalityx, sap_mortalityp, sa_type = 1, value_min = 0)
     mortalityx = fun.f_sa(mortalityx, saa_mortalityx, sa_type = 2, value_min = 0)
@@ -1295,15 +1295,15 @@ def f_mortality_base_mu(cd, cg, rc_start, cv_weight, ebg_start, sd_ebg, d_nw_max
     ## a minimum level of mortality per day that is increased if RC is below a threshold and LWG is below a threshold
     ### the mortality rate increases in a quadratic function for lower RC & greater disparity between EBG and normal gain
     ###distribution on ebg & rc_start, calculate mort and then average (axis =-1,-2)
-    ebg_start_m1m2 = fun.f_distribution7(ebg_start, sd=sd_ebg)[...,na]
-    rc_start_m1m2 = fun.f_distribution7(rc_start, cv=cv_weight)[...,na,:]
+    ebg_start_p1p2 = fun.f_distribution7(ebg_start, sd=sd_ebg)[...,na]
+    rc_start_p1p2 = fun.f_distribution7(rc_start, cv=cv_weight)[...,na,:]
     ###calc mort scalars
-    rc_mortality_scalar_m1m2 = (np.minimum(0, rc_start_m1m2 - cd[24, ...,na,na])
+    rc_mortality_scalar_p1p2 = (np.minimum(0, rc_start_p1p2 - cd[24, ...,na,na])
                                 / (cd[23, ...,na,na] - cd[24, ...,na,na]))**2
-    ebg_mortality_scalar_m1m2 = (np.minimum(0, ebg_start_m1m2 * cg[18, ...,na,na] - cd[26, ...,na,na] - d_nw_max[...,na,na])
+    ebg_mortality_scalar_p1p2 = (np.minimum(0, ebg_start_p1p2 * cg[18, ...,na,na] - cd[26, ...,na,na] - d_nw_max[...,na,na])
                                  / (cd[25, ...,na,na] - cd[26, ...,na,na]))**2
-    mortalityb_m1m2 = (cd[1, ...,na,na] + cd[22, ...,na,na] * rc_mortality_scalar_m1m2 * ebg_mortality_scalar_m1m2) * days_period[...,na,na]  #mul by days period to convert from mort per day to per period
-    mortalityb = np.mean(mortalityb_m1m2, axis=(-1,-2))
+    mortalityb_p1p2 = (cd[1, ...,na,na] + cd[22, ...,na,na] * rc_mortality_scalar_p1p2 * ebg_mortality_scalar_p1p2) * days_period[...,na,na]  #mul by days period to convert from mort per day to per period
+    mortalityb = np.mean(mortalityb_p1p2, axis=(-1,-2))
     ##apply sensitivity
     mortalityb = fun.f_sa(mortalityb, sap_mortalityb, sa_type = 1, value_min = 0)
     ##Process the Mortality REV: either save the trait value to the dictionary or over write trait value with value from the dictionary
@@ -1320,12 +1320,12 @@ def f_mortality_weaner_mu():
 def f_mortality_dam_mu(cu2, cs_birth_dams, cv_cs, period_is_birth, nfoet_b1, sap_mortalitye):
     ## transformed Dam mortality at birth due to low CS.
     ###distribution on cs_birth, calculate mort and then average (axis =-1)
-    cs_birth_dams_m1 = fun.f_distribution7(cs_birth_dams, cv=cv_cs)
+    cs_birth_dams_p1 = fun.f_distribution7(cs_birth_dams, cv=cv_cs)
     ###calc mort
-    t_mortalitye_mu_m1 = cu2[22, 0, ...,na] * cs_birth_dams_m1 + cu2[22, 1, ...,na] * cs_birth_dams_m1 ** 2 + cu2[22, -1, ...,na]
+    t_mortalitye_mu_p1 = cu2[22, 0, ...,na] * cs_birth_dams_p1 + cu2[22, 1, ...,na] * cs_birth_dams_p1 ** 2 + cu2[22, -1, ...,na]
     ##Back transform the mortality
-    mortalitye_mu_m1 = np.exp(t_mortalitye_mu_m1) / (1 + np.exp(t_mortalitye_mu_m1)) * period_is_birth[...,na]
-    mortalitye_mu = np.mean(mortalitye_mu_m1, axis=-1)
+    mortalitye_mu_p1 = np.exp(t_mortalitye_mu_p1) / (1 + np.exp(t_mortalitye_mu_p1)) * period_is_birth[...,na]
+    mortalitye_mu = np.mean(mortalitye_mu_p1, axis=-1)
     ##no increase in mortality for the non reproducing ewes (n_foet == 0)
     mortalitye_mu = mortalitye_mu * (nfoet_b1 > 0)
     ##Adjust by sensitivity on dam mortality
@@ -1346,7 +1346,7 @@ def f_mortality_pregtox_mu():
     #todo hook this up with relationships developed in Lifetime maternals project
     return 0
 
-def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, cv_weight, foo, chill_index_m1, period_is_birth
+def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, cv_weight, foo, chill_index_p1, period_is_birth
                            , rev_trait_value, sap_mortalityp, saa_mortalityx):
     '''
     Calculate the mortality of progeny at birth due to mis-mothering and exposure
@@ -1356,21 +1356,21 @@ def f_mortality_progeny_mu(cu2, cb1, cx, ce, w_b, w_b_std, cv_weight, foo, chill
     this is to reflect the difference in survival observed in the LTW paddock trial compared with the plot scale trials.
     '''
     ##transformed survival for actual & standard
-    ###distribution on w_b & rc_birth - add distribution to ebg_start_m1 and then average (axis =-1)
-    w_b_m1m2 = fun.f_distribution7(w_b, cv=cv_weight)[...,na,:]
-    w_b_std_m1m2 = fun.f_distribution7(w_b_std, cv=cv_weight)[...,na,:]
+    ###distribution on w_b & rc_birth - add distribution to ebg_start_p1 and then average (axis =-1)
+    w_b_p1p2 = fun.f_distribution7(w_b, cv=cv_weight)[...,na,:]
+    w_b_std_p1p2 = fun.f_distribution7(w_b_std, cv=cv_weight)[...,na,:]
 
-    t_survival_m1m2 = (cu2[8, 0, ...,na,na] * w_b_m1m2 + cu2[8, 1, ..., na,na] * w_b_m1m2 ** 2
-                      + cu2[8, 2, ..., na,na] * chill_index_m1[...,na] + cu2[8, 3, ..., na,na] * foo[..., na,na]
+    t_survival_p1p2 = (cu2[8, 0, ...,na,na] * w_b_p1p2 + cu2[8, 1, ..., na,na] * w_b_p1p2 ** 2
+                      + cu2[8, 2, ..., na,na] * chill_index_p1[...,na] + cu2[8, 3, ..., na,na] * foo[..., na,na]
                       + cu2[8, 4, ..., na,na] * foo[..., na,na] ** 2 + cu2[8, 5, ..., na,na] + cb1[8, ..., na,na]
-                      + cx[8, ..., na,na] + cx[9, ..., na,na] * chill_index_m1[...,na] + ce[8, ..., na,na])
-    t_survival_std_m1m2 = (cu2[8, 0, ..., na,na] * w_b_std_m1m2 + cu2[8, 1, ..., na,na] * w_b_std_m1m2 ** 2
-                      + cu2[8, 2, ..., na,na] * chill_index_m1[...,na] + cu2[8, 3, ..., na,na] * foo[..., na,na]
+                      + cx[8, ..., na,na] + cx[9, ..., na,na] * chill_index_p1[...,na] + ce[8, ..., na,na])
+    t_survival_std_p1p2 = (cu2[8, 0, ..., na,na] * w_b_std_p1p2 + cu2[8, 1, ..., na,na] * w_b_std_p1p2 ** 2
+                      + cu2[8, 2, ..., na,na] * chill_index_p1[...,na] + cu2[8, 3, ..., na,na] * foo[..., na,na]
                       + cu2[8, 4, ..., na,na] * foo[..., na,na] ** 2 + cu2[8, 5, ..., na,na] + cb1[8, ..., na,na]
-                      + cx[8, ..., na,na] + cx[9, ..., na,na] * chill_index_m1[...,na] + ce[8, ..., na,na])
+                      + cx[8, ..., na,na] + cx[9, ..., na,na] * chill_index_p1[...,na] + ce[8, ..., na,na])
     ##back transformed & converted to mortality
-    mortalityx = (1 - np.average(1 / (1 + np.exp(-t_survival_m1m2)),axis = (-1,-2))) * period_is_birth #m1 axis averaged
-    mortalityx_std = (1 - np.average(1 / (1 + np.exp(-t_survival_std_m1m2)),axis = (-1,-2))) * period_is_birth #m1 axis averaged
+    mortalityx = (1 - np.average(1 / (1 + np.exp(-t_survival_p1p2)),axis = (-1,-2))) * period_is_birth #p1 axis averaged
+    mortalityx_std = (1 - np.average(1 / (1 + np.exp(-t_survival_std_p1p2)),axis = (-1,-2))) * period_is_birth #p1 axis averaged
     ##Scale progeny survival using paddock level scalars
     mortalityx = mortalityx_std + (mortalityx - mortalityx_std) * cb1[9, ...]
     ##Apply SA to progeny mortality at birth (LTW)

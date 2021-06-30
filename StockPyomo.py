@@ -255,7 +255,7 @@ def stockpyomo_local(params, model):
     #                                  model.s_co_fd, model.s_co_min_fd, model.s_co_fl, model.s_groups_dams, model.s_dvp_dams, model.s_wean_times,
     #                                  model.s_k2_birth_dams, model.s_lw_dams, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams,
     #                                  initialize=, default=0.0, doc='Proportion of the offs distributed to each of the starting LWs at the beginning of the current dam feed variation period')
-    # model.p_dam2sire_numbers = Param(model.s_dvp_dams, model.s_wean_times, model.s_k2_birth_dams, model.s_lw_dams, model.s_tol,
+    # model.p_dap2sire_numbers = Param(model.s_dvp_dams, model.s_wean_times, model.s_k2_birth_dams, model.s_lw_dams, model.s_tol,
     #                                  model.s_gen_merit_dams, model.s_groups_dams, model.s_groups_dams,
     #                                  initialize=, default=0.0, doc='Proportion of the animals distributed to each of the starting LWs of the recipient animals at the beginning of the recipients next feed variation period')
 
@@ -604,7 +604,7 @@ def stock_asset(model):
     #                for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams for w8 in model.s_lw_dams
     #                if model.p_numbers_req_dams[k28,k29,v1,a,n1,w8,i,y1,g1,w9] !=0 or model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,i,y1,g1,w9] !=0) <= 0
     #         # + sum(model.v_dams2sire[v1,a,b1,n1,w1,i,y1,g1,g1_new]
-    #         #       - model.v_dams2sire[v1_prev,a,b1,n1,w1,i,y1,g1,g1_new] * model.p_dam2sire_numbers[v1,a,b1,n1,w1,i,y1,g1,g1_new]
+    #         #       - model.v_dams2sire[v1_prev,a,b1,n1,w1,i,y1,g1,g1_new] * model.p_dap2sire_numbers[v1,a,b1,n1,w1,i,y1,g1,g1_new]
     #         #       for n1 in model.s_nut_dams for g1_new in model.s_groups_dams) \
     #         # - model.v_purchase_dams[v1,w1,i,g1] * model.p_numberpurch_dam[v1,a,b1,w1,i,y1,g1] \ #p_numpurch allocates the purchased dams into certain sets, in this case it is correct to multiply a var with less sets to a param with more sets
     #         # - sum(model.v_offs2dam[v3,n3,w3,z3,i3,d,a3,b3,x,y3,g3,g1_off] * model.p_offs2dam_numbers[v3,n3,w3,z3,i3,d,a3,b3,x,y3,g3,g1_off,v1,a,b1,w1,i,y1,g1]

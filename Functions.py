@@ -463,10 +463,10 @@ def f_distribution7(mean, sd=None, cv=None):
     if sd is None:
         sd = cv * mean
     ## The distribution of standardised x based on the mid point of 7 intervals of 14.3%
-    dist7_m1 = np.array([-1.535, -0.82, -0.375, 0, 0.375, 0.82, 1.535])
+    dist7_p1 = np.array([-1.535, -0.82, -0.375, 0, 0.375, 0.82, 1.535])
     ## Apply the distribution to the mean using the std deviation
-    var_m1 = mean[..., na] + sd[..., na] * dist7_m1
-    return var_m1
+    var_p1 = mean[..., na] + sd[..., na] * dist7_p1
+    return var_p1
 
 def f_find_closest(A, target):
     ##info here: https://stackoverflow.com/questions/8914491/finding-the-nearest-value-and-return-the-index-of-array-in-python
@@ -1100,13 +1100,13 @@ def f_daylength(dayOfYear, lat):
     dl=np.zeros_like(dayOfYear, dtype='float64')
     latInRad = np.deg2rad(lat)
     declinationOfEarth = 23.45*np.sin(np.deg2rad(360.0*(283.0+dayOfYear)/365.0))
-    m1 = (-np.tan(latInRad) * np.tan(np.deg2rad(declinationOfEarth))) <= -1.0
-    m2 = (-np.tan(latInRad) * np.tan(np.deg2rad(declinationOfEarth))) >= 1.0
+    p1 = (-np.tan(latInRad) * np.tan(np.deg2rad(declinationOfEarth))) <= -1.0
+    p2 = (-np.tan(latInRad) * np.tan(np.deg2rad(declinationOfEarth))) >= 1.0
     hourAngle = np.rad2deg(np.arccos(-np.tan(latInRad) * np.tan(np.deg2rad(declinationOfEarth))))
     daylen = 2.0*hourAngle/15.0
-    dl[m1] = 24
-    dl[m2] = 0
-    dl[~np.logical_and(m2, m1)] = daylen[~np.logical_and(m2, m1)]
+    dl[p1] = 24
+    dl[p2] = 0
+    dl[~np.logical_and(p2, p1)] = daylen[~np.logical_and(p2, p1)]
     return dl
 
 

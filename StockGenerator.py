@@ -161,12 +161,12 @@ def generator(params,r_vals,nv,plots = False):
     len_n1 = sinp.structuralsa['i_n1_matrix_len']
     len_n2 = sinp.structuralsa['i_n1_matrix_len'] #same as dams
     len_n3 = sinp.structuralsa['i_n3_matrix_len']
-    len_m1 = int(step / np.timedelta64(1, 'D')) #convert timedelta to float by dividing by one day
-    len_m2 = sinp.stock['i_lag_wool']
-    len_m3 = sinp.stock['i_lag_organs']
+    len_p1 = int(step / np.timedelta64(1, 'D')) #convert timedelta to float by dividing by one day
+    len_p2 = sinp.stock['i_lag_wool']
+    len_p3 = sinp.stock['i_lag_organs']
     len_o = np.count_nonzero(mask_o_dams)
     len_p = len(date_start_p)
-    len_p3 = len(offs_date_start_p)
+    lenoffs_p = len(offs_date_start_p)
     len_p6 = len(per.f_feed_periods()) - 1 #-1 because the end feed period date is included
     len_p8 = np.count_nonzero(pinp.sheep['i_mask_p8'])
     len_q0	 = uinp.sheep['i_eqn_exists_q0q1'].shape[1]
@@ -232,7 +232,7 @@ def generator(params,r_vals,nv,plots = False):
     index_i = np.arange(len_i)
     index_ida0e0b0xyg = fun.f_expand(index_i, i_pos)
     index_i9 = index_i
-    index_m1 = np.arange(len_m1)
+    index_p1 = np.arange(len_p1)
     index_m0 = np.arange(12)*2  #2hourly steps for chill calculations
     index_z = np.arange(len_z)
     index_w0 = np.arange(len_w0)
@@ -261,19 +261,19 @@ def generator(params,r_vals,nv,plots = False):
     qg0 = (len_q0, len_q1, len_q2, len_p, 1, 1, 1, 1, 1, len_z, lensire_i, 1, 1, 1, 1, 1, 1, len_g0)
     qg1 = (len_q0, len_q1, len_q2, len_p, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, 1, 1, 1, 1, 1, len_y1, len_g1)
     qg2 = (len_q0, len_q1, len_q2, len_p, len_a1, len_e1, len_b1, len_n2, len_w2, len_z, len_i, 1, 1, 1, 1, len_x, len_y2, len_g1)
-    qg3 = (len_q0, len_q1, len_q2, len_p3, 1, 1, 1, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3)
+    qg3 = (len_q0, len_q1, len_q2, lenoffs_p, 1, 1, 1, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3)
     pg0 = (len_p, 1, 1, 1, 1, 1, len_z, lensire_i, 1, 1, 1, 1, 1, 1, len_g0)
     pg1 = (len_p, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, 1, 1, 1, 1, 1, len_y1, len_g1)
     pg2 = (len_p, len_a1, len_e1, len_b1, len_n2, len_w2, len_z, len_i, 1, 1, 1, 1, len_x, len_y2, len_g1)
-    pg3 = (len_p3, 1, 1, 1, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3)
-    m2g0 = (len_m2, 1, 1, 1, 1, 1, len_z, lensire_i, 1, 1, 1, 1, 1, 1, len_g0)
-    m2g1 = (len_m2, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, 1, 1, 1, 1, 1, len_y1, len_g1)
-    m2g2 = (len_m2, len_a1, len_e1, len_b1, len_n2, len_w2, len_z, len_i, 1, 1, 1, 1, len_x, len_y2, len_g2)
-    m2g3 = (len_m2, 1, 1, 1, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3)
-    m3g0 = (len_m3, 1, 1, 1, 1, 1, len_z, lensire_i, 1, 1, 1, 1, 1, 1, len_g0)
-    m3g1 = (len_m3, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, 1, 1, 1, 1, 1, len_y1, len_g1)
-    m3g2 = (len_m3, len_a1, len_e1, len_b1, len_n2, len_w2, len_z, len_i, 1, 1, 1, 1, len_x, len_y2, len_g2)
-    m3g3 = (len_m3, 1, 1, 1, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3)
+    pg3 = (lenoffs_p, 1, 1, 1, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3)
+    p2g0 = (len_p2, 1, 1, 1, 1, 1, len_z, lensire_i, 1, 1, 1, 1, 1, 1, len_g0)
+    p2g1 = (len_p2, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, 1, 1, 1, 1, 1, len_y1, len_g1)
+    p2g2 = (len_p2, len_a1, len_e1, len_b1, len_n2, len_w2, len_z, len_i, 1, 1, 1, 1, len_x, len_y2, len_g2)
+    p2g3 = (len_p2, 1, 1, 1, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3)
+    p3g0 = (len_p3, 1, 1, 1, 1, 1, len_z, lensire_i, 1, 1, 1, 1, 1, 1, len_g0)
+    p3g1 = (len_p3, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, 1, 1, 1, 1, 1, len_y1, len_g1)
+    p3g2 = (len_p3, len_a1, len_e1, len_b1, len_n2, len_w2, len_z, len_i, 1, 1, 1, 1, len_x, len_y2, len_g2)
+    p3g3 = (len_p3, 1, 1, 1, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3)
 
 
     ##output variables for postprocessing & reporting
@@ -282,8 +282,8 @@ def generator(params,r_vals,nv,plots = False):
 
     ##sire
     ###array for generator
-    omer_history_start_m3g0 = np.zeros(m3g0, dtype = 'float64')
-    d_cfw_history_start_m2g0 = np.zeros(m2g0, dtype = 'float64')
+    omer_history_start_p3g0 = np.zeros(p3g0, dtype = 'float64')
+    d_cfw_history_start_p2g0 = np.zeros(p2g0, dtype = 'float64')
     woolvalue_pa1e1b1nwzida0e0b0xyg0 = np.zeros(pg0, dtype =dtype)
     salevalue_pa1e1b1nwzida0e0b0xyg0 = np.zeros(pg0, dtype =dtype)
     ###arrays for postprocessing
@@ -308,8 +308,8 @@ def generator(params,r_vals,nv,plots = False):
 
     ##dams
     ###array for generator
-    omer_history_start_m3g1 = np.zeros(m3g1, dtype = 'float64')
-    d_cfw_history_start_m2g1 = np.zeros(m2g1, dtype = 'float64')
+    omer_history_start_p3g1 = np.zeros(p3g1, dtype = 'float64')
+    d_cfw_history_start_p2g1 = np.zeros(p2g1, dtype = 'float64')
     woolvalue_pa1e1b1nwzida0e0b0xyg1 = np.zeros(pg1, dtype =dtype)
     salevalue_pa1e1b1nwzida0e0b0xyg1 = np.zeros(pg1, dtype =dtype)
     ###arrays for postprocessing
@@ -349,8 +349,8 @@ def generator(params,r_vals,nv,plots = False):
 
     ##yatf
     ###array for generator
-    omer_history_start_m3g2 = np.zeros(m3g2, dtype = 'float64')
-    d_cfw_history_start_m2g2 = np.zeros(m2g2, dtype = 'float64')
+    omer_history_start_p3g2 = np.zeros(p3g2, dtype = 'float64')
+    d_cfw_history_start_p2g2 = np.zeros(p2g2, dtype = 'float64')
     ###array for postprocessing
     o_numbers_start_pyatf = np.zeros(pg2, dtype =dtype)
     # o_numbers_end_pyatf = np.zeros(pg2, dtype =dtype)
@@ -384,8 +384,8 @@ def generator(params,r_vals,nv,plots = False):
 
     ##offs
     ###array for generator
-    omer_history_start_m3g3 = np.zeros(m3g3, dtype = 'float64')
-    d_cfw_history_start_m2g3 = np.zeros(m2g3, dtype = 'float64')
+    omer_history_start_p3g3 = np.zeros(p3g3, dtype = 'float64')
+    d_cfw_history_start_p2g3 = np.zeros(p2g3, dtype = 'float64')
     woolvalue_tpa1e1b1nwzida0e0b0xyg3 = np.zeros((len_t3,)+pg3, dtype =dtype)
     salevalue_pa1e1b1nwzida0e0b0xyg3 = np.zeros(pg3, dtype =dtype)
     ###array for postprocessing
@@ -433,7 +433,7 @@ def generator(params,r_vals,nv,plots = False):
     a_g0_g1 = sfun.f1_g2g(pinp.sheep['ia_g0_g1'],'dams')
     a_g3_g0 = sfun.f1_g2g(pinp.sheep['ia_g3_g0'],'sire')  # the sire association (pure bred B, M & T) are all based on purebred B because there are no pure bred M & T inputs
     a_g3_g1 = sfun.f1_g2g(pinp.sheep['ia_g3_g1'],'dams')  # if BMT exist then BBM exist and they will be in slice 1, therefore the association value doesn't need to be adjusted for "prior exclusions"
-    ##age weaning- used to calc wean date and also to calc m1 stuff, sire and dams have no active a0 slice therefore just take the first slice
+    ##age weaning- used to calc wean date and also to calc p1 stuff, sire and dams have no active a0 slice therefore just take the first slice
     age_wean1st_a0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['i_age_wean_a0g3'],'offs',a0_pos).astype('timedelta64[D]')[pinp.sheep['i_mask_a']]
     age_wean1st_e0b0xyg0 = np.rollaxis(age_wean1st_a0e0b0xyg3[0, ...,a_g3_g0],0,age_wean1st_a0e0b0xyg3.ndim-1) #when you slice one slice of the array and also take multiple slices from another axis the axis with multiple slices jumps to the front therefore need to roll the g axis back to the end
     age_wean1st_e0b0xyg1 = np.rollaxis(age_wean1st_a0e0b0xyg3[0, ...,a_g3_g1],0,age_wean1st_a0e0b0xyg3.ndim-1) #when you slice one slice of the array and also take multiple slices from another axis the axis with multiple slices jumps to the front therefore need to roll the g axis back to the end
@@ -536,7 +536,7 @@ def generator(params,r_vals,nv,plots = False):
     sfw_yg0, sfw_yg1, sfw_yg2, sfw_yg3 = sfun.f1_c2g(uinp.parameters['i_sfw_c2'], uinp.parameters['i_sfw_y'])
     srw_female_yg0, srw_female_yg1, srw_female_yg2, srw_female_yg3 = sfun.f1_c2g(uinp.parameters['i_srw_c2'], uinp.parameters['i_srw_y']) #srw of a female of the given genotype (this is the definition of the inputs)
 
-    ###m1 variation params (used for mort)
+    ###p1 variation params (used for mort)
     cv_weight_sire, cv_weight_dams, cv_weight_yatf, cv_weight_offs = sfun.f1_c2g(uinp.parameters['i_cv_weight_c2'], uinp.parameters['i_cv_weight_y'])
     cv_cs_sire, cv_cs_dams, cv_cs_yatf, cv_cs_offs = sfun.f1_c2g(uinp.parameters['i_cv_cs_c2'], uinp.parameters['i_cv_cs_y'])
     sd_ebg_sire, sd_ebg_dams, sd_ebg_yatf, sd_ebg_offs = sfun.f1_c2g(uinp.parameters['i_sd_ebg_c2'], uinp.parameters['i_sd_ebg_y'])
@@ -646,7 +646,7 @@ def generator(params,r_vals,nv,plots = False):
     #todo add a distribution to the windspeed (after checking the importance for chill_index)
     #might need to do this with a longer axis length so that it is not the distribution in the week but in the month
     #enter a number of days above a threshold (along with the threshold values maybe 1) and then average values for the windiest days in the month.
-    ws_m4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_ws_m4'],p_pos)
+    ws_p4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_ws_p4'],p_pos)
     ##expected stocking density
     density_p6a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_density_p6z'],z_pos,source=0,dest=-1,
                                                   left_pos2=p_pos,
@@ -656,17 +656,17 @@ def generator(params,r_vals,nv,plots = False):
     ##nutrition adjustment for expected stocking density
     density_nwzida0e0b0xyg1 = fun.f_expand(sinp.structuralsa['i_density_n1'][0:n_fs_dams],n_pos) # cut to the correct length based on number of nutrition options (i_len_n structural input)
     density_nwzida0e0b0xyg3 = fun.f_expand(sinp.structuralsa['i_density_n3'][0:n_fs_offs],n_pos) # cut to the correct length based on number of nutrition options (i_len_n structural input)
-    ##Calculation of rainfall distribution across the week - i_rain_distribution_m4m1 = how much rain falls on each day of the week sorted in order of quantity of rain. SO the most rain falls on the day with the highest rainfall.
-    rain_m4a1e1b1nwzida0e0b0xygm1 = fun.f_expand(
-        pinp.sheep['i_rain_m4'][...,na] * pinp.sheep['i_rain_distribution_m4m1'] * (7 / 30.4),p_pos - 1,
-        right_pos=-1)  # -1 because p is -16 when m1 axis is included
+    ##Calculation of rainfall distribution across the week - i_rain_distribution_p4p1 = how much rain falls on each day of the week sorted in order of quantity of rain. SO the most rain falls on the day with the highest rainfall.
+    rain_p4a1e1b1nwzida0e0b0xygp1 = fun.f_expand(
+        pinp.sheep['i_rain_p4'][...,na] * pinp.sheep['i_rain_distribution_p4p1'] * (7 / 30.4),p_pos - 1,
+        right_pos=-1)  # -1 because p is -16 when p1 axis is included
     ##Mean daily temperature
     #todo examine importance of temperature variation on chill_index with view to adding
-    temp_ave_m4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_temp_ave_m4'],p_pos)
+    temp_ave_p4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_temp_ave_p4'],p_pos)
     ##Mean daily maximum temperature
-    temp_max_m4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_temp_max_m4'],p_pos)
+    temp_max_p4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_temp_max_p4'],p_pos)
     ##Mean daily minimum temperature
-    temp_min_m4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_temp_min_m4'],p_pos)
+    temp_min_p4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_temp_min_p4'],p_pos)
     ##latitude
     lat_deg = pinp.sheep['i_latitude']
     lat_rad = np.radians(pinp.sheep['i_latitude'])
@@ -1004,7 +1004,7 @@ def generator(params,r_vals,nv,plots = False):
     a_g2_p7_p = np.apply_along_axis(fun.f_next_prev_association, 0, pinp.sheep['i_eqn_date_g2_p7'].astype('datetime64[D]'), date_end_p, 1,'right')
     a_g3_p7_p = np.apply_along_axis(fun.f_next_prev_association, 0, pinp.sheep['i_eqn_date_g3_p7'].astype('datetime64[D]'), date_end_p, 1,'right')
     ##month of each period (0 - 11 not 1 -12 because this is association array)
-    a_m4_p = date_start_p.astype('datetime64[M]').astype(int) % 12
+    a_p4_p = date_start_p.astype('datetime64[M]').astype(int) % 12
     ##feed variation period
     a_fvp_pa1e1b1nwzida0e0b0xyg1 = np.apply_along_axis(fun.f_next_prev_association, 0, fvp_date_start_fa1e1b1nwzida0e0b0xyg1, date_end_p, 1,'right')
     a_fvp_pa1e1b1nwzida0e0b0xyg3 = np.apply_along_axis(fun.f_next_prev_association, 0, fvp_date_start_fa1e1b1nwzida0e0b0xyg3, offs_date_end_p, 1,'right')
@@ -1082,11 +1082,11 @@ def generator(params,r_vals,nv,plots = False):
     sire_propn_pa1e1b1nwzida0e0b0xyg1g0=sire_propn_pa1e1b1nwzida0e0b0xyg1[..., na] * (a_g0_g1[:,na] == sire_include_idx) #add g0 axis
 
     ##weather
-    ws_pa1e1b1nwzida0e0b0xyg = ws_m4a1e1b1nwzida0e0b0xyg[a_m4_p]
-    rain_pa1e1b1nwzida0e0b0xygm1 = rain_m4a1e1b1nwzida0e0b0xygm1[a_m4_p]
-    temp_ave_pa1e1b1nwzida0e0b0xyg= temp_ave_m4a1e1b1nwzida0e0b0xyg[a_m4_p]
-    temp_max_pa1e1b1nwzida0e0b0xyg= temp_max_m4a1e1b1nwzida0e0b0xyg[a_m4_p]
-    temp_min_pa1e1b1nwzida0e0b0xyg= temp_min_m4a1e1b1nwzida0e0b0xyg[a_m4_p]
+    ws_pa1e1b1nwzida0e0b0xyg = ws_p4a1e1b1nwzida0e0b0xyg[a_p4_p]
+    rain_pa1e1b1nwzida0e0b0xygp1 = rain_p4a1e1b1nwzida0e0b0xygp1[a_p4_p]
+    temp_ave_pa1e1b1nwzida0e0b0xyg= temp_ave_p4a1e1b1nwzida0e0b0xyg[a_p4_p]
+    temp_max_pa1e1b1nwzida0e0b0xyg= temp_max_p4a1e1b1nwzida0e0b0xyg[a_p4_p]
+    temp_min_pa1e1b1nwzida0e0b0xyg= temp_min_p4a1e1b1nwzida0e0b0xyg[a_p4_p]
 
     ##feed variation
     fvp_type_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(fvp_type_fa1e1b1nwzida0e0b0xyg1,a_fvp_pa1e1b1nwzida0e0b0xyg1,0)
@@ -1414,7 +1414,7 @@ def generator(params,r_vals,nv,plots = False):
     ##wean date (weaning input is counting from the date of the first lamb (not the date of the average lamb in the first cycle))
     date_weaned_pa1e1b1nwzida0e0b0xyg2 = date_born1st_pa1e1b1nwzida0e0b0xyg2 + age_wean1st_pa1e1b1nwzida0e0b0xyg2 #use offs wean age input and has the same birth day (offset by a yr) therefore it will automatically align with a period start
 
-    ##age start open (not capped at weaning or before birth) used to calc m1 stuff
+    ##age start open (not capped at weaning or before birth) used to calc p1 stuff
     age_start_open_pa1e1b1nwzida0e0b0xyg0 = date_start_pa1e1b1nwzida0e0b0xyg - date_born_ida0e0b0xyg0
     age_start_open_pa1e1b1nwzida0e0b0xyg1 = date_start_pa1e1b1nwzida0e0b0xyg - date_born_ida0e0b0xyg1
     age_start_open_pa1e1b1nwzida0e0b0xyg3 = date_start_pa1e1b1nwzida0e0b0xyg3 - date_born_ida0e0b0xyg3
@@ -1461,64 +1461,64 @@ def generator(params,r_vals,nv,plots = False):
     ##This info determines the side with > or >=
 
 
-    ##add m1 axis
-    date_start_pa1e1b1nwzida0e0b0xygm1 = date_start_pa1e1b1nwzida0e0b0xyg[...,na] + index_m1
-    doy_pa1e1b1nwzida0e0b0xygm1= doy_pa1e1b1nwzida0e0b0xyg[...,na] + index_m1
+    ##add p1 axis
+    date_start_pa1e1b1nwzida0e0b0xygp1 = date_start_pa1e1b1nwzida0e0b0xyg[...,na] + index_p1
+    doy_pa1e1b1nwzida0e0b0xygp1= doy_pa1e1b1nwzida0e0b0xyg[...,na] + index_p1
     ##age open ie not capped at weaning
-    age_m1_pa1e1b1nwzida0e0b0xyg0m1 = (age_start_open_pa1e1b1nwzida0e0b0xyg0[..., na] + index_m1) /np.timedelta64(1, 'D') #divide by 1 day to get int. need int so that i can put np.nan into array
-    age_m1_pa1e1b1nwzida0e0b0xyg1m1 = (age_start_open_pa1e1b1nwzida0e0b0xyg1[..., na] + index_m1) /np.timedelta64(1, 'D') #divide by 1 day to get int. need int so that i can put np.nan into array
-    age_m1_pa1e1b1nwzida0e0b0xyg2m1 = (age_start_open_pa1e1b1nwzida0e0b0xyg2[..., na] + index_m1) /np.timedelta64(1, 'D') #divide by 1 day to get int. need int so that i can put np.nan into array
-    age_m1_pa1e1b1nwzida0e0b0xyg3m1 = (age_start_open_pa1e1b1nwzida0e0b0xyg3[..., na] + index_m1) /np.timedelta64(1, 'D') #divide by 1 day to get int. need int so that i can put np.nan into array
-    ##calc m1 weights - if age<=weaning it has 0 weighting (ie false) else weighting = 1 (ie true) - need so that the values are not included in the mean calculations below which determine the average production for a given m1 period.
-    age_m1_weights_pa1e1b1nwzida0e0b0xyg0m1 = age_m1_pa1e1b1nwzida0e0b0xyg0m1>=(date_weaned_ida0e0b0xyg0 - date_born_ida0e0b0xyg0)[..., na].astype(int) #use date_wean - date born because that results in the average weaning age of all animal (age_weaned variable is just the age of the first animal)
-    age_m1_weights_pa1e1b1nwzida0e0b0xyg1m1 = age_m1_pa1e1b1nwzida0e0b0xyg1m1>=(date_weaned_ida0e0b0xyg1 - date_born_ida0e0b0xyg1)[..., na].astype(int) #use date_wean - date born because that results in the average weaning age of all animal (age_weaned variable is just the age of the first animal)
-    age_m1_weights_pa1e1b1nwzida0e0b0xyg3m1 = age_m1_pa1e1b1nwzida0e0b0xyg3m1>=(date_weaned_ida0e0b0xyg3 - date_born_ida0e0b0xyg3)[..., na].astype(int) #use date_wean - date born because that results in the average weaning age of all animal (age_weaned variable is just the age of the first animal)
-    ##calc yatf m1 weighting - if age is greater than weaning or less than 0 it will have 0 weighting in the m1 means calculated below else it will have weighting 1
-    age_m1_weights_pa1e1b1nwzida0e0b0xyg2m1 = np.logical_and(age_m1_pa1e1b1nwzida0e0b0xyg2m1>=0, age_m1_pa1e1b1nwzida0e0b0xyg2m1<(date_weaned_pa1e1b1nwzida0e0b0xyg2 - date_born_pa1e1b1nwzida0e0b0xyg2)[..., na].astype(int)) #use date_wean - date born because that results in the average weaning age of all animal (age_weaned variable is just the age of the first animal)
+    age_p1_pa1e1b1nwzida0e0b0xyg0p1 = (age_start_open_pa1e1b1nwzida0e0b0xyg0[..., na] + index_p1) /np.timedelta64(1, 'D') #divide by 1 day to get int. need int so that i can put np.nan into array
+    age_p1_pa1e1b1nwzida0e0b0xyg1p1 = (age_start_open_pa1e1b1nwzida0e0b0xyg1[..., na] + index_p1) /np.timedelta64(1, 'D') #divide by 1 day to get int. need int so that i can put np.nan into array
+    age_p1_pa1e1b1nwzida0e0b0xyg2p1 = (age_start_open_pa1e1b1nwzida0e0b0xyg2[..., na] + index_p1) /np.timedelta64(1, 'D') #divide by 1 day to get int. need int so that i can put np.nan into array
+    age_p1_pa1e1b1nwzida0e0b0xyg3p1 = (age_start_open_pa1e1b1nwzida0e0b0xyg3[..., na] + index_p1) /np.timedelta64(1, 'D') #divide by 1 day to get int. need int so that i can put np.nan into array
+    ##calc p1 weights - if age<=weaning it has 0 weighting (ie false) else weighting = 1 (ie true) - need so that the values are not included in the mean calculations below which determine the average production for a given p1 period.
+    age_p1_weights_pa1e1b1nwzida0e0b0xyg0p1 = age_p1_pa1e1b1nwzida0e0b0xyg0p1>=(date_weaned_ida0e0b0xyg0 - date_born_ida0e0b0xyg0)[..., na].astype(int) #use date_wean - date born because that results in the average weaning age of all animal (age_weaned variable is just the age of the first animal)
+    age_p1_weights_pa1e1b1nwzida0e0b0xyg1p1 = age_p1_pa1e1b1nwzida0e0b0xyg1p1>=(date_weaned_ida0e0b0xyg1 - date_born_ida0e0b0xyg1)[..., na].astype(int) #use date_wean - date born because that results in the average weaning age of all animal (age_weaned variable is just the age of the first animal)
+    age_p1_weights_pa1e1b1nwzida0e0b0xyg3p1 = age_p1_pa1e1b1nwzida0e0b0xyg3p1>=(date_weaned_ida0e0b0xyg3 - date_born_ida0e0b0xyg3)[..., na].astype(int) #use date_wean - date born because that results in the average weaning age of all animal (age_weaned variable is just the age of the first animal)
+    ##calc yatf p1 weighting - if age is greater than weaning or less than 0 it will have 0 weighting in the p1 means calculated below else it will have weighting 1
+    age_p1_weights_pa1e1b1nwzida0e0b0xyg2p1 = np.logical_and(age_p1_pa1e1b1nwzida0e0b0xyg2p1>=0, age_p1_pa1e1b1nwzida0e0b0xyg2p1<(date_weaned_pa1e1b1nwzida0e0b0xyg2 - date_born_pa1e1b1nwzida0e0b0xyg2)[..., na].astype(int)) #use date_wean - date born because that results in the average weaning age of all animal (age_weaned variable is just the age of the first animal)
     ##Age of foetus with minor axis (days)
-    age_f_m1_pa1e1b1nwzida0e0b0xyg1m1 = (age_f_start_open_pa1e1b1nwzida0e0b0xyg1[...,na] + index_m1) /np.timedelta64(1, 'D') #divide by 1 day to get int. need int so that i can put np.nan into array
-    ##calc foetus m1 weighting - if age is greater than birth or less than 0 it will have 0 weighting in the m1 means calculated below else it will have weighting 1
-    age_f_m1_weights_pa1e1b1nwzida0e0b0xyg1m1 = np.logical_and(age_f_m1_pa1e1b1nwzida0e0b0xyg1m1>=0, age_f_m1_pa1e1b1nwzida0e0b0xyg1m1<cp_dams[1, 0, :, na])
-    #age_f_m1_pa1e1b1nwzida0e0b0xyg1m1[age_f_m1_pa1e1b1nwzida0e0b0xyg1m1 <= 0] = np.nan
-    #age_f_m1_pa1e1b1nwzida0e0b0xyg1m1[age_f_m1_pa1e1b1nwzida0e0b0xyg1m1 > cp_dams[1, 0, :, na]] = np.nan
+    age_f_p1_pa1e1b1nwzida0e0b0xyg1p1 = (age_f_start_open_pa1e1b1nwzida0e0b0xyg1[...,na] + index_p1) /np.timedelta64(1, 'D') #divide by 1 day to get int. need int so that i can put np.nan into array
+    ##calc foetus p1 weighting - if age is greater than birth or less than 0 it will have 0 weighting in the p1 means calculated below else it will have weighting 1
+    age_f_p1_weights_pa1e1b1nwzida0e0b0xyg1p1 = np.logical_and(age_f_p1_pa1e1b1nwzida0e0b0xyg1p1>=0, age_f_p1_pa1e1b1nwzida0e0b0xyg1p1<cp_dams[1, 0, :, na])
+    #age_f_p1_pa1e1b1nwzida0e0b0xyg1p1[age_f_p1_pa1e1b1nwzida0e0b0xyg1p1 <= 0] = np.nan
+    #age_f_p1_pa1e1b1nwzida0e0b0xyg1p1[age_f_p1_pa1e1b1nwzida0e0b0xyg1p1 > cp_dams[1, 0, :, na]] = np.nan
     ##adjusted age of young (adjusted by intake factor - basically the factor of how age of young effect dam intake, the adjustment factor basically alters the age of the young to influence intake.)
-    age_y_adj_pa1e1b1nwzida0e0b0xyg1m1 = age_m1_pa1e1b1nwzida0e0b0xyg2m1 + np.maximum(0, (date_start_pa1e1b1nwzida0e0b0xygm1 - date_weaned_pa1e1b1nwzida0e0b0xyg2[..., na]) /np.timedelta64(1, 'D')) * (ci_dams[21, ..., na] - 1) #minus 1 because the ci factor is applied to the age post weaning but using the open date means it has already been included once ie we want x + y *ci but using date open gives  x  + y + y*ci, x = age to weaning, y = age between period and weaning, therefore minus 1 x  + y + y*(ci-1)
-    ##calc young m1 weighting - if age is less than 0 it will have 0 weighting in the m1 means calculated below else it will have weighting 1
-    age_y_adj_weights_pa1e1b1nwzida0e0b0xyg1m1 = age_y_adj_pa1e1b1nwzida0e0b0xyg1m1 > 0  #no max cap (ie represents age young would be if never weaned off mum)
+    age_y_adj_pa1e1b1nwzida0e0b0xyg1p1 = age_p1_pa1e1b1nwzida0e0b0xyg2p1 + np.maximum(0, (date_start_pa1e1b1nwzida0e0b0xygp1 - date_weaned_pa1e1b1nwzida0e0b0xyg2[..., na]) /np.timedelta64(1, 'D')) * (ci_dams[21, ..., na] - 1) #minus 1 because the ci factor is applied to the age post weaning but using the open date means it has already been included once ie we want x + y *ci but using date open gives  x  + y + y*ci, x = age to weaning, y = age between period and weaning, therefore minus 1 x  + y + y*(ci-1)
+    ##calc young p1 weighting - if age is less than 0 it will have 0 weighting in the p1 means calculated below else it will have weighting 1
+    age_y_adj_weights_pa1e1b1nwzida0e0b0xyg1p1 = age_y_adj_pa1e1b1nwzida0e0b0xyg1p1 > 0  #no max cap (ie represents age young would be if never weaned off mum)
     ##Foetal age relative to parturition with minor axis
-    relage_f_pa1e1b1nwzida0e0b0xyg1m1 = np.maximum(0,age_f_m1_pa1e1b1nwzida0e0b0xyg1m1 / cp_dams[1, 0, :, na])
+    relage_f_pa1e1b1nwzida0e0b0xyg1p1 = np.maximum(0,age_f_p1_pa1e1b1nwzida0e0b0xyg1p1 / cp_dams[1, 0, :, na])
     ##Age of lamb relative to peak intake-with minor function
-    pimi_pa1e1b1nwzida0e0b0xyg1m1 = age_y_adj_pa1e1b1nwzida0e0b0xyg1m1 / ci_dams[8, ..., na]
+    pimi_pa1e1b1nwzida0e0b0xyg1p1 = age_y_adj_pa1e1b1nwzida0e0b0xyg1p1 / ci_dams[8, ..., na]
     ##Age of lamb relative to peak lactation-with minor axis
-    lmm_pa1e1b1nwzida0e0b0xyg1m1 = (age_m1_pa1e1b1nwzida0e0b0xyg2m1 + cl_dams[1, ..., na]) / cl_dams[2, ..., na]
+    lmm_pa1e1b1nwzida0e0b0xyg1p1 = (age_p1_pa1e1b1nwzida0e0b0xyg2p1 + cl_dams[1, ..., na]) / cl_dams[2, ..., na]
     ##Chill index for lamb survival
-    #todo consider adding m1m2m3 axes for chill for rain, ws & temp_ave.
-    chill_index_pa1e1b1nwzida0e0b0xygm1 = (481 + (11.7 + 3.1 * ws_pa1e1b1nwzida0e0b0xyg[..., na] ** 0.5)
+    #todo consider adding p1p2p3 axes for chill for rain, ws & temp_ave.
+    chill_index_pa1e1b1nwzida0e0b0xygp1 = (481 + (11.7 + 3.1 * ws_pa1e1b1nwzida0e0b0xyg[..., na] ** 0.5)
                                            * (40 - temp_ave_pa1e1b1nwzida0e0b0xyg[..., na])
-                                           + 418 * (1-np.exp(-0.04 * rain_pa1e1b1nwzida0e0b0xygm1)))
-    chill_index_pa1e1b1nwzida0e0b0xygm1 = fun.f_sa(chill_index_pa1e1b1nwzida0e0b0xygm1, sen.sam['chill'])
+                                           + 418 * (1-np.exp(-0.04 * rain_pa1e1b1nwzida0e0b0xygp1)))
+    chill_index_pa1e1b1nwzida0e0b0xygp1 = fun.f_sa(chill_index_pa1e1b1nwzida0e0b0xygp1, sen.sam['chill'])
 
     ##Proportion of SRW with age
-    srw_age_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(np.exp(-cn_sire[1, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg0m1 / srw_xyg0[..., na] ** cn_sire[2, ..., na]), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg0m1, axis = -1)
-    srw_age_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.exp(-cn_dams[1, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg1m1 / srw_xyg1[..., na] ** cn_dams[2, ..., na]), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg1m1, axis = -1)
-    srw_age_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(np.exp(-cn_yatf[1, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg2m1 / srw_xyg2[..., na] ** cn_yatf[2, ..., na]), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg2m1, axis = -1)
-    srw_age_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(np.exp(-cn_offs[1, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg3m1 / srw_xyg3[..., na] ** cn_offs[2, ..., na]), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg3m1, axis = -1)
+    srw_age_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(np.exp(-cn_sire[1, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg0p1 / srw_xyg0[..., na] ** cn_sire[2, ..., na]), weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg0p1, axis = -1)
+    srw_age_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.exp(-cn_dams[1, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg1p1 / srw_xyg1[..., na] ** cn_dams[2, ..., na]), weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg1p1, axis = -1)
+    srw_age_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(np.exp(-cn_yatf[1, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg2p1 / srw_xyg2[..., na] ** cn_yatf[2, ..., na]), weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg2p1, axis = -1)
+    srw_age_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(np.exp(-cn_offs[1, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg3p1 / srw_xyg3[..., na] ** cn_offs[2, ..., na]), weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg3p1, axis = -1)
 
-    #srw_age_pa1e1b1nwzida0e0b0xyg0 = np.nanmean(np.exp(-cn_sire[1, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg0m1 / srw_xyg0[..., na] ** cn_sire[2, ..., na]), axis = -1)
-    #srw_age_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(np.exp(-cn_dams[1, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg1m1 / srw_xyg1[..., na] ** cn_dams[2, ..., na]), axis = -1)
-    #srw_age_pa1e1b1nwzida0e0b0xyg2 = np.nanmean(np.exp(-cn_yatf[1, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg2m1 / srw_xyg2[..., na] ** cn_yatf[2, ..., na]), axis = -1)
-    #srw_age_pa1e1b1nwzida0e0b0xyg3 = np.nanmean(np.exp(-cn_offs[1, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg3m1 / srw_xyg3[..., na] ** cn_offs[2, ..., na]), axis = -1)
+    #srw_age_pa1e1b1nwzida0e0b0xyg0 = np.nanmean(np.exp(-cn_sire[1, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg0p1 / srw_xyg0[..., na] ** cn_sire[2, ..., na]), axis = -1)
+    #srw_age_pa1e1b1nwzida0e0b0xyg1 = np.nanmean(np.exp(-cn_dams[1, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg1p1 / srw_xyg1[..., na] ** cn_dams[2, ..., na]), axis = -1)
+    #srw_age_pa1e1b1nwzida0e0b0xyg2 = np.nanmean(np.exp(-cn_yatf[1, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg2p1 / srw_xyg2[..., na] ** cn_yatf[2, ..., na]), axis = -1)
+    #srw_age_pa1e1b1nwzida0e0b0xyg3 = np.nanmean(np.exp(-cn_offs[1, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg3p1 / srw_xyg3[..., na] ** cn_offs[2, ..., na]), axis = -1)
 
     ##age factor wool part 1- reduces fleece growth early in life
-    af1_wool_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(cw_sire[5, ..., na] + (1 - cw_sire[5, ..., na])*(1-np.exp(-cw_sire[12, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg0m1)), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg0m1, axis = -1)
-    af1_wool_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cw_dams[5, ..., na] + (1 - cw_dams[5, ..., na])*(1-np.exp(-cw_dams[12, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg1m1)), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg1m1, axis = -1)
-    af1_wool_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(cw_yatf[5, ..., na] + (1 - cw_yatf[5, ..., na])*(1-np.exp(-cw_yatf[12, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg2m1)), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg2m1, axis = -1)
-    af1_wool_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(cw_offs[5, ..., na] + (1 - cw_offs[5, ..., na])*(1-np.exp(-cw_offs[12, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg3m1)), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg3m1, axis = -1)
+    af1_wool_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(cw_sire[5, ..., na] + (1 - cw_sire[5, ..., na])*(1-np.exp(-cw_sire[12, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg0p1)), weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg0p1, axis = -1)
+    af1_wool_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cw_dams[5, ..., na] + (1 - cw_dams[5, ..., na])*(1-np.exp(-cw_dams[12, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg1p1)), weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg1p1, axis = -1)
+    af1_wool_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(cw_yatf[5, ..., na] + (1 - cw_yatf[5, ..., na])*(1-np.exp(-cw_yatf[12, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg2p1)), weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg2p1, axis = -1)
+    af1_wool_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(cw_offs[5, ..., na] + (1 - cw_offs[5, ..., na])*(1-np.exp(-cw_offs[12, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg3p1)), weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg3p1, axis = -1)
     ##age factor wool part 2 - reduces fleece growth later in life (data used to create equations from Lifetime Productivity by Richards&Atkins)
-    af2_wool_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(2 - np.exp(cw_sire[17, ..., na] * np.maximum(0,age_m1_pa1e1b1nwzida0e0b0xyg0m1 - cw_sire[18, ..., na])**cw_sire[19, ..., na]), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg0m1, axis = -1)
-    af2_wool_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(2 - np.exp(cw_dams[17, ..., na] * np.maximum(0,age_m1_pa1e1b1nwzida0e0b0xyg1m1 - cw_dams[18, ..., na])**cw_dams[19, ..., na]), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg1m1, axis = -1)
-    af2_wool_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(2 - np.exp(cw_yatf[17, ..., na] * np.maximum(0,age_m1_pa1e1b1nwzida0e0b0xyg2m1 - cw_yatf[18, ..., na])**cw_yatf[19, ..., na]), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg2m1, axis = -1)
-    af2_wool_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(2 - np.exp(cw_offs[17, ..., na] * np.maximum(0,age_m1_pa1e1b1nwzida0e0b0xyg3m1 - cw_offs[18, ..., na])**cw_offs[19, ..., na]), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg3m1, axis = -1)
+    af2_wool_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(2 - np.exp(cw_sire[17, ..., na] * np.maximum(0,age_p1_pa1e1b1nwzida0e0b0xyg0p1 - cw_sire[18, ..., na])**cw_sire[19, ..., na]), weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg0p1, axis = -1)
+    af2_wool_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(2 - np.exp(cw_dams[17, ..., na] * np.maximum(0,age_p1_pa1e1b1nwzida0e0b0xyg1p1 - cw_dams[18, ..., na])**cw_dams[19, ..., na]), weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg1p1, axis = -1)
+    af2_wool_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(2 - np.exp(cw_yatf[17, ..., na] * np.maximum(0,age_p1_pa1e1b1nwzida0e0b0xyg2p1 - cw_yatf[18, ..., na])**cw_yatf[19, ..., na]), weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg2p1, axis = -1)
+    af2_wool_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(2 - np.exp(cw_offs[17, ..., na] * np.maximum(0,age_p1_pa1e1b1nwzida0e0b0xyg3p1 - cw_offs[18, ..., na])**cw_offs[19, ..., na]), weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg3p1, axis = -1)
     ##overall age factor - reduction for young animals and older animals
     af_wool_pa1e1b1nwzida0e0b0xyg0 = af1_wool_pa1e1b1nwzida0e0b0xyg0 * af2_wool_pa1e1b1nwzida0e0b0xyg0
     af_wool_pa1e1b1nwzida0e0b0xyg1 = af1_wool_pa1e1b1nwzida0e0b0xyg1 * af2_wool_pa1e1b1nwzida0e0b0xyg1
@@ -1526,36 +1526,36 @@ def generator(params,r_vals,nv,plots = False):
     af_wool_pa1e1b1nwzida0e0b0xyg3 = af1_wool_pa1e1b1nwzida0e0b0xyg3 * af2_wool_pa1e1b1nwzida0e0b0xyg3
 
     ##Day length factor on efficiency
-    dlf_eff_pa1e1b1nwzida0e0b0xyg = np.average(lat_deg / 40 * np.sin(2 * np.pi * doy_pa1e1b1nwzida0e0b0xygm1 / 365), axis = -1)
+    dlf_eff_pa1e1b1nwzida0e0b0xyg = np.average(lat_deg / 40 * np.sin(2 * np.pi * doy_pa1e1b1nwzida0e0b0xygp1 / 365), axis = -1)
     ##Pattern of maintenance with age
-    mr_age_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(np.maximum(cm_sire[4, ..., na], np.exp(-cm_sire[3, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg0m1)), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg0m1, axis = -1)
-    mr_age_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.maximum(cm_dams[4, ..., na], np.exp(-cm_dams[3, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg1m1)), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg1m1, axis = -1)
-    mr_age_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(np.maximum(cm_offs[4, ..., na], np.exp(-cm_offs[3, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg2m1)), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg2m1, axis = -1)
-    mr_age_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(np.maximum(cm_yatf[4, ..., na], np.exp(-cm_yatf[3, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg3m1)), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg3m1, axis = -1)
+    mr_age_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(np.maximum(cm_sire[4, ..., na], np.exp(-cm_sire[3, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg0p1)), weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg0p1, axis = -1)
+    mr_age_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.maximum(cm_dams[4, ..., na], np.exp(-cm_dams[3, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg1p1)), weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg1p1, axis = -1)
+    mr_age_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(np.maximum(cm_offs[4, ..., na], np.exp(-cm_offs[3, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg2p1)), weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg2p1, axis = -1)
+    mr_age_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(np.maximum(cm_yatf[4, ..., na], np.exp(-cm_yatf[3, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg3p1)), weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg3p1, axis = -1)
     ##Impact of rainfall on 'cold' intake increment
-    rain_intake_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(np.maximum(0, 1 - rain_pa1e1b1nwzida0e0b0xygm1 / ci_sire[18, ..., na]),  weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg0m1, axis = -1)
-    rain_intake_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.maximum(0, 1 - rain_pa1e1b1nwzida0e0b0xygm1 / ci_dams[18, ..., na]),  weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg1m1, axis = -1)
-    rain_intake_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(np.maximum(0, 1 - rain_pa1e1b1nwzida0e0b0xygm1 / ci_offs[18, ..., na]),  weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg2m1, axis = -1)
-    rain_intake_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(np.maximum(0, 1 - rain_pa1e1b1nwzida0e0b0xygm1[mask_p_offs_p] / ci_yatf[18, ..., na]),  weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg3m1, axis = -1)
+    rain_intake_pa1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(np.maximum(0, 1 - rain_pa1e1b1nwzida0e0b0xygp1 / ci_sire[18, ..., na]),  weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg0p1, axis = -1)
+    rain_intake_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.maximum(0, 1 - rain_pa1e1b1nwzida0e0b0xygp1 / ci_dams[18, ..., na]),  weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg1p1, axis = -1)
+    rain_intake_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(np.maximum(0, 1 - rain_pa1e1b1nwzida0e0b0xygp1 / ci_offs[18, ..., na]),  weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg2p1, axis = -1)
+    rain_intake_pa1e1b1nwzida0e0b0xyg3 = fun.f_weighted_average(np.maximum(0, 1 - rain_pa1e1b1nwzida0e0b0xygp1[mask_p_offs_p] / ci_yatf[18, ..., na]),  weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg3p1, axis = -1)
     ##Proportion of peak intake due to time from birth
-    pi_age_y_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cb1_dams[19, ..., na] * np.maximum(0,pimi_pa1e1b1nwzida0e0b0xyg1m1) ** ci_dams[9, ..., na] * np.exp(ci_dams[9, ..., na] * (1 - pimi_pa1e1b1nwzida0e0b0xyg1m1)), weights=age_y_adj_weights_pa1e1b1nwzida0e0b0xyg1m1, axis = -1) #maximum to stop error in power (not sure why the negatives were causing a problem)
+    pi_age_y_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cb1_dams[19, ..., na] * np.maximum(0,pimi_pa1e1b1nwzida0e0b0xyg1p1) ** ci_dams[9, ..., na] * np.exp(ci_dams[9, ..., na] * (1 - pimi_pa1e1b1nwzida0e0b0xyg1p1)), weights=age_y_adj_weights_pa1e1b1nwzida0e0b0xyg1p1, axis = -1) #maximum to stop error in power (not sure why the negatives were causing a problem)
     ##Peak milk production pattern (time from birth)
-    mp_age_y_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cb1_dams[0, ..., na] * lmm_pa1e1b1nwzida0e0b0xyg1m1 ** cl_dams[3, ..., na] * np.exp(cl_dams[3, ..., na]* (1 - lmm_pa1e1b1nwzida0e0b0xyg1m1)), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg2m1, axis = -1)
+    mp_age_y_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(cb1_dams[0, ..., na] * lmm_pa1e1b1nwzida0e0b0xyg1p1 ** cl_dams[3, ..., na] * np.exp(cl_dams[3, ..., na]* (1 - lmm_pa1e1b1nwzida0e0b0xyg1p1)), weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg2p1, axis = -1)
     ##Suckling volume pattern
-    mp2_age_y_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(nyatf_b1nwzida0e0b0xyg[...,na] * cl_dams[6, ..., na] * ( cl_dams[12, ..., na] + cl_dams[13, ..., na] * np.exp(-cl_dams[14, ..., na] * age_m1_pa1e1b1nwzida0e0b0xyg2m1)), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg2m1, axis = -1)
+    mp2_age_y_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(nyatf_b1nwzida0e0b0xyg[...,na] * cl_dams[6, ..., na] * ( cl_dams[12, ..., na] + cl_dams[13, ..., na] * np.exp(-cl_dams[14, ..., na] * age_p1_pa1e1b1nwzida0e0b0xyg2p1)), weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg2p1, axis = -1)
     ##Pattern of conception efficiency (doy)
-    crg_doy_pa1e1b1nwzida0e0b0xyg1 = np.average(np.maximum(0,1 - cb1_dams[1, ..., na] * (1 - np.sin(2 * np.pi * (doy_pa1e1b1nwzida0e0b0xygm1 + 10) / 365) * np.sin(lat_rad) / -0.57)), axis = -1)
+    crg_doy_pa1e1b1nwzida0e0b0xyg1 = np.average(np.maximum(0,1 - cb1_dams[1, ..., na] * (1 - np.sin(2 * np.pi * (doy_pa1e1b1nwzida0e0b0xygp1 + 10) / 365) * np.sin(lat_rad) / -0.57)), axis = -1)
     ##Rumen development factor on PI - yatf
-    piyf_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(1/(1 + np.exp(-ci_yatf[3, ..., na] * (age_m1_pa1e1b1nwzida0e0b0xyg2m1 - ci_yatf[4, ..., na]))), weights=age_m1_weights_pa1e1b1nwzida0e0b0xyg2m1, axis = -1)
+    piyf_pa1e1b1nwzida0e0b0xyg2 = fun.f_weighted_average(1/(1 + np.exp(-ci_yatf[3, ..., na] * (age_p1_pa1e1b1nwzida0e0b0xyg2p1 - ci_yatf[4, ..., na]))), weights=age_p1_weights_pa1e1b1nwzida0e0b0xyg2p1, axis = -1)
     piyf_pa1e1b1nwzida0e0b0xyg2 = piyf_pa1e1b1nwzida0e0b0xyg2 * (nyatf_b1nwzida0e0b0xyg > 0) #set pi to 0 if no yatf.
     ##Foetal normal weight pattern (mid period)
-    nwf_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.exp(cp_dams[2, ..., na] * (1 - np.exp(cp_dams[3, ..., na] * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1m1)))), weights=age_f_m1_weights_pa1e1b1nwzida0e0b0xyg1m1, axis = -1)
+    nwf_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.exp(cp_dams[2, ..., na] * (1 - np.exp(cp_dams[3, ..., na] * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1p1)))), weights=age_f_p1_weights_pa1e1b1nwzida0e0b0xyg1p1, axis = -1)
     ##Conceptus weight pattern (mid period)
-    guw_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.exp(cp_dams[6, ..., na] * (1 - np.exp(cp_dams[7, ..., na] * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1m1)))), weights=age_f_m1_weights_pa1e1b1nwzida0e0b0xyg1m1, axis = -1)
+    guw_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.exp(cp_dams[6, ..., na] * (1 - np.exp(cp_dams[7, ..., na] * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1p1)))), weights=age_f_p1_weights_pa1e1b1nwzida0e0b0xyg1p1, axis = -1)
     ##Conceptus energy pattern (end of period)
-    # ce_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.exp(cp_dams[9, ..., na] * (1 - np.exp(cp_dams[10, ..., na] * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1m1)))), weights=age_f_m1_weights_pa1e1b1nwzida0e0b0xyg1m1, axis = -1)
+    # ce_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average(np.exp(cp_dams[9, ..., na] * (1 - np.exp(cp_dams[10, ..., na] * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1p1)))), weights=age_f_p1_weights_pa1e1b1nwzida0e0b0xyg1p1, axis = -1)
     ##Conceptus energy pattern (d_nec)
-    dce_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average((cp_dams[9, ..., na] - cp_dams[10, ..., na]) / cp_dams[1, 0, ..., na] * np.exp(cp_dams[10, ..., na] * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1m1) + cp_dams[9, ..., na] * (1 - np.exp(cp_dams[10, ..., na] * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1m1)))), weights=age_f_m1_weights_pa1e1b1nwzida0e0b0xyg1m1, axis = -1)
+    dce_age_f_pa1e1b1nwzida0e0b0xyg1 = fun.f_weighted_average((cp_dams[9, ..., na] - cp_dams[10, ..., na]) / cp_dams[1, 0, ..., na] * np.exp(cp_dams[10, ..., na] * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1p1) + cp_dams[9, ..., na] * (1 - np.exp(cp_dams[10, ..., na] * (1 - relage_f_pa1e1b1nwzida0e0b0xyg1p1)))), weights=age_f_p1_weights_pa1e1b1nwzida0e0b0xyg1p1, axis = -1)
 
     ##genotype calc that requires af_wool. ME for minimum wool growth (with no intake, relsize = 1)
     mew_min_pa1e1b1nwzida0e0b0xyg0 =cw_sire[14, ...] * sfw_a0e0b0xyg0[0, ...] / cw_sire[3,...] / 365 * af_wool_pa1e1b1nwzida0e0b0xyg0 * dlf_wool_pa1e1b1nwzida0e0b0xyg0 * cw_sire[1, ...] / kw_yg0
@@ -1943,8 +1943,8 @@ def generator(params,r_vals,nv,plots = False):
         ##sire
         ffcfw_start_sire = lw_initial_wzida0e0b0xyg0 - cfw_initial_wzida0e0b0xyg0 / cw_sire[3, ...]
         ffcfw_max_start_sire = ffcfw_start_sire
-        omer_history_start_m3g0[...] = np.nan
-        d_cfw_history_start_m2g0[...] = np.nan
+        omer_history_start_p3g0[...] = np.nan
+        d_cfw_history_start_p2g0[...] = np.nan
         cfw_start_sire = cfw_initial_wzida0e0b0xyg0
         fd_start_sire = fd_initial_wzida0e0b0xyg0
         fl_start_sire = fl_initial_wzida0e0b0xyg0
@@ -1984,8 +1984,8 @@ def generator(params,r_vals,nv,plots = False):
         ffcfw_start_dams = fun.f_expand(lw_initial_wzida0e0b0xyg1 - cfw_initial_wzida0e0b0xyg1 / cw_dams[3, ...], p_pos, right_pos=w_pos) #add axis w to a1 because e and b axis are sliced before they are added via calculation
         ffcfw_max_start_dams = ffcfw_start_dams
         ffcfw_mating_dams = 0.0
-        omer_history_start_m3g1[...] = np.nan
-        d_cfw_history_start_m2g1[...] = np.nan
+        omer_history_start_p3g1[...] = np.nan
+        d_cfw_history_start_p2g1[...] = np.nan
         cfw_start_dams = cfw_initial_wzida0e0b0xyg1
         fd_start_dams = fd_initial_wzida0e0b0xyg1
         fl_start_dams = fl_initial_wzida0e0b0xyg1
@@ -2001,8 +2001,8 @@ def generator(params,r_vals,nv,plots = False):
         # ebg_start_dams=0
 
         ##yatf
-        omer_history_start_m3g2[...] = np.nan
-        d_cfw_history_start_m2g2[...] = np.nan
+        omer_history_start_p3g2[...] = np.nan
+        d_cfw_history_start_p2g2[...] = np.nan
         nw_start_yatf = 0.0
         rc_start_yatf = 0.0
         ffcfw_start_yatf = w_b_std_y_b1nwzida0e0b0xyg1 #this is just an estimate, it is updated with the real weight at birth - needed to calc milk production in birth period because milk prod is calculated before yatf weight is updated)
@@ -2032,8 +2032,8 @@ def generator(params,r_vals,nv,plots = False):
         ##offs
         ffcfw_start_offs = lw_initial_wzida0e0b0xyg3 - cfw_initial_wzida0e0b0xyg3 / cw_offs[3, ...]
         ffcfw_max_start_offs = ffcfw_start_offs
-        omer_history_start_m3g3[...] = np.nan
-        d_cfw_history_start_m2g3[...] = np.nan
+        omer_history_start_p3g3[...] = np.nan
+        d_cfw_history_start_p2g3[...] = np.nan
         cfw_start_offs = cfw_initial_wzida0e0b0xyg3
         fd_start_offs = fd_initial_wzida0e0b0xyg3
         fl_start_offs = fl_initial_wzida0e0b0xyg3
@@ -2447,7 +2447,7 @@ def generator(params,r_vals,nv,plots = False):
                     eqn_used = (eqn_used_g0_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_energy_cs(ck_sire, cx_sire[:,0:1,...], cm_sire, lw_start_sire, ffcfw_start_sire
-                                                                    , mr_age_pa1e1b1nwzida0e0b0xyg0[p], mei_sire, omer_history_start_m3g0
+                                                                    , mr_age_pa1e1b1nwzida0e0b0xyg0[p], mei_sire, omer_history_start_p3g0
                                                                     , days_period_pa1e1b1nwzida0e0b0xyg0[p], md_solid_sire, pinp.sheep['i_md_supp']
                                                                     , md_herb_sire, lgf_eff_pa1e1b1nwzida0e0b0xyg0[p, ...]
                                                                     , dlf_eff_pa1e1b1nwzida0e0b0xyg[p,...], pinp.sheep['i_steepness']
@@ -2466,7 +2466,7 @@ def generator(params,r_vals,nv,plots = False):
                     eqn_used = (eqn_used_g1_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_energy_cs(ck_dams, cx_dams[:,1:2,...], cm_dams, lw_start_dams, ffcfw_start_dams
-                                                                    , mr_age_pa1e1b1nwzida0e0b0xyg1[p], mei_dams, omer_history_start_m3g1
+                                                                    , mr_age_pa1e1b1nwzida0e0b0xyg1[p], mei_dams, omer_history_start_p3g1
                                                                     , days_period_pa1e1b1nwzida0e0b0xyg1[p], md_solid_dams, pinp.sheep['i_md_supp']
                                                                     , md_herb_dams, lgf_eff_pa1e1b1nwzida0e0b0xyg1[p, ...]
                                                                     , dlf_eff_pa1e1b1nwzida0e0b0xyg[p,...], pinp.sheep['i_steepness']
@@ -2486,7 +2486,7 @@ def generator(params,r_vals,nv,plots = False):
                     eqn_used = (eqn_used_g3_q1p[eqn_group, p] == eqn_system)
                     if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
                         temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_energy_cs(ck_offs, cx_offs[:,mask_x,...], cm_offs, lw_start_offs, ffcfw_start_offs
-                                                                    , mr_age_pa1e1b1nwzida0e0b0xyg3[p], mei_offs, omer_history_start_m3g3
+                                                                    , mr_age_pa1e1b1nwzida0e0b0xyg3[p], mei_offs, omer_history_start_p3g3
                                                                     , days_period_pa1e1b1nwzida0e0b0xyg3[p], md_solid_offs, pinp.sheep['i_md_supp']
                                                                     , md_herb_offs, lgf_eff_pa1e1b1nwzida0e0b0xyg3[p, ...]
                                                                     , dlf_eff_pa1e1b1nwzida0e0b0xyg[p,...], pinp.sheep['i_steepness']
@@ -2533,11 +2533,11 @@ def generator(params,r_vals,nv,plots = False):
 
                 ##milk production
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    ###Expected ffcfw of yatf with m1 axis - each period
-                    ffcfw_exp_a1e1b1nwzida0e0b0xyg2m1 = (ffcfw_start_yatf[..., na] + (index_m1 * cn_yatf[7, ...][...,na])) * (
-                                index_m1 < days_period_pa1e1b1nwzida0e0b0xyg2[...,na][p])
+                    ###Expected ffcfw of yatf with p1 axis - each period
+                    ffcfw_exp_a1e1b1nwzida0e0b0xyg2p1 = (ffcfw_start_yatf[..., na] + (index_p1 * cn_yatf[7, ...][...,na])) * (
+                                index_p1 < days_period_pa1e1b1nwzida0e0b0xyg2[...,na][p])
                     ###Expected average metabolic LW of yatf during period
-                    ffcfw75_exp_yatf = np.sum(ffcfw_exp_a1e1b1nwzida0e0b0xyg2m1 ** 0.75, axis=-1) / np.maximum(1, days_period_pa1e1b1nwzida0e0b0xyg2[p, ...])
+                    ffcfw75_exp_yatf = np.sum(ffcfw_exp_a1e1b1nwzida0e0b0xyg2p1 ** 0.75, axis=-1) / np.maximum(1, days_period_pa1e1b1nwzida0e0b0xyg2[p, ...])
 
                     mp2_dams, mel_dams, nel_dams, ldr_dams, lb_dams \
                         = sfun.f_milk(cl_dams, srw_xyg1, relsize_start_dams, rc_birth_dams, mei_dams, meme_dams, mew_min_pa1e1b1nwzida0e0b0xyg1[p]
@@ -2548,16 +2548,16 @@ def generator(params,r_vals,nv,plots = False):
 
                 ##wool production
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg0[p,...] >0):
-                    d_cfw_sire, d_fd_sire, d_fl_sire, d_cfw_history_sire_m2, mew_sire, new_sire  \
-                        = sfun.f_fibre(cw_sire, cc_sire, ffcfw_start_sire, relsize_start_sire, d_cfw_history_start_m2g0
+                    d_cfw_sire, d_fd_sire, d_fl_sire, d_cfw_history_sire_p2, mew_sire, new_sire  \
+                        = sfun.f_fibre(cw_sire, cc_sire, ffcfw_start_sire, relsize_start_sire, d_cfw_history_start_p2g0
                                        , mei_sire, mew_min_pa1e1b1nwzida0e0b0xyg0[p]
                                        , d_cfw_ave_pa1e1b1nwzida0e0b0xyg0[p, ...],  sfd_a0e0b0xyg0, wge_a0e0b0xyg0
                                        , af_wool_pa1e1b1nwzida0e0b0xyg0[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg0[p, ...]
                                        , kw_yg0, days_period_pa1e1b1nwzida0e0b0xyg0[p], sfw_ltwadj_g0, sfd_ltwadj_g0
                                        , rev_trait_values['sire'][p], sam_pi = sam_pi_sire)
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
-                    d_cfw_dams, d_fd_dams, d_fl_dams, d_cfw_history_dams_m2, mew_dams, new_dams  \
-                        = sfun.f_fibre(cw_dams, cc_dams, ffcfw_start_dams, relsize_start_dams, d_cfw_history_start_m2g1
+                    d_cfw_dams, d_fd_dams, d_fl_dams, d_cfw_history_dams_p2, mew_dams, new_dams  \
+                        = sfun.f_fibre(cw_dams, cc_dams, ffcfw_start_dams, relsize_start_dams, d_cfw_history_start_p2g1
                                        , mei_dams, mew_min_pa1e1b1nwzida0e0b0xyg1[p]
                                        , d_cfw_ave_pa1e1b1nwzida0e0b0xyg1[p, ...], sfd_a0e0b0xyg1, wge_a0e0b0xyg1
                                        , af_wool_pa1e1b1nwzida0e0b0xyg1[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg1[p, ...]
@@ -2567,8 +2567,8 @@ def generator(params,r_vals,nv,plots = False):
                                        , mec_dams, mel_dams, gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
                                        , lact_propn_pa1e1b1nwzida0e0b0xyg1[p], sam_pi = sam_pi_dams)
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
-                    d_cfw_offs, d_fd_offs, d_fl_offs, d_cfw_history_offs_m2, mew_offs, new_offs  \
-                        = sfun.f_fibre(cw_offs, cc_offs, ffcfw_start_offs, relsize_start_offs, d_cfw_history_start_m2g3
+                    d_cfw_offs, d_fd_offs, d_fl_offs, d_cfw_history_offs_p2, mew_offs, new_offs  \
+                        = sfun.f_fibre(cw_offs, cc_offs, ffcfw_start_offs, relsize_start_offs, d_cfw_history_start_p2g3
                                        , mei_offs, mew_min_pa1e1b1nwzida0e0b0xyg3[p]
                                        , d_cfw_ave_pa1e1b1nwzida0e0b0xyg3[p, ...], sfd_da0e0b0xyg3, wge_da0e0b0xyg3
                                        , af_wool_pa1e1b1nwzida0e0b0xyg3[p, ...], dlf_wool_pa1e1b1nwzida0e0b0xyg3[p, ...]
@@ -2581,13 +2581,13 @@ def generator(params,r_vals,nv,plots = False):
                     mem_sire, temp_lc_sire, kg_sire = sfun.f_chill_cs(cc_sire, ck_sire, ffcfw_start_sire, rc_start_sire, sl_start_sire, mei_sire
                                                             , meme_sire, mew_sire, new_sire, km_sire, kg_supp_sire, kg_fodd_sire, mei_propn_supp_sire
                                                             , mei_propn_herb_sire, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
-                                                            , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p], rain_pa1e1b1nwzida0e0b0xygm1[p]
+                                                            , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p], rain_pa1e1b1nwzida0e0b0xygp1[p]
                                                             , index_m0)
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     mem_dams, temp_lc_dams, kg_dams = sfun.f_chill_cs(cc_dams, ck_dams, ffcfw_start_dams, rc_start_dams, sl_start_dams, mei_dams
                                                             , meme_dams, mew_dams, new_dams, km_dams, kg_supp_dams, kg_fodd_dams, mei_propn_supp_dams
                                                             , mei_propn_herb_dams, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
-                                                            , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p], rain_pa1e1b1nwzida0e0b0xygm1[p]
+                                                            , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p], rain_pa1e1b1nwzida0e0b0xygp1[p]
                                                             , index_m0, guw = guw_dams, kl = kl_dams, mei_propn_milk = mei_propn_milk_dams, mec = mec_dams
                                                             , mel = mel_dams, nec = nec_dams, nel = nel_dams, gest_propn = gest_propn_pa1e1b1nwzida0e0b0xyg1[p]
                                                             , lact_propn = lact_propn_pa1e1b1nwzida0e0b0xyg1[p])
@@ -2595,7 +2595,7 @@ def generator(params,r_vals,nv,plots = False):
                     mem_offs, temp_lc_offs, kg_offs = sfun.f_chill_cs(cc_offs, ck_offs, ffcfw_start_offs, rc_start_offs, sl_start_offs, mei_offs
                                                             , meme_offs, mew_offs, new_offs, km_offs, kg_supp_offs, kg_fodd_offs, mei_propn_supp_offs
                                                             , mei_propn_herb_offs, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p]
-                                                            , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p], rain_pa1e1b1nwzida0e0b0xygm1[p]
+                                                            , temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p], rain_pa1e1b1nwzida0e0b0xygp1[p]
                                                             , index_m0)
 
                 ##calc lwc
@@ -2949,7 +2949,7 @@ def generator(params,r_vals,nv,plots = False):
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                     temp0, temp1, temp2, temp3, temp4, temp5 = sfun.f_energy_cs(ck_yatf, cx_yatf[:,mask_x,...], cm_yatf, lw_start_yatf
                                                                 , ffcfw_start_yatf, mr_age_pa1e1b1nwzida0e0b0xyg2[p], mei_yatf
-                                                                , omer_history_start_m3g2, days_period_pa1e1b1nwzida0e0b0xyg2[p]
+                                                                , omer_history_start_p3g2, days_period_pa1e1b1nwzida0e0b0xyg2[p]
                                                                 , md_solid_yatf, pinp.sheep['i_md_supp'], md_herb_yatf
                                                                 , lgf_eff_pa1e1b1nwzida0e0b0xyg2[p], dlf_eff_pa1e1b1nwzida0e0b0xyg[p]
                                                                 , pinp.sheep['i_steepness'], densityw_pa1e1b1nwzida0e0b0xyg2[p]
@@ -2968,8 +2968,8 @@ def generator(params,r_vals,nv,plots = False):
 
             ##wool production - yatf
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                d_cfw_yatf, d_fd_yatf, d_fl_yatf, d_cfw_history_yatf_m2, mew_yatf, new_yatf  \
-                    = sfun.f_fibre(cw_yatf, cc_yatf, ffcfw_start_yatf, relsize_start_yatf, d_cfw_history_start_m2g2
+                d_cfw_yatf, d_fd_yatf, d_fl_yatf, d_cfw_history_yatf_p2, mew_yatf, new_yatf  \
+                    = sfun.f_fibre(cw_yatf, cc_yatf, ffcfw_start_yatf, relsize_start_yatf, d_cfw_history_start_p2g2
                                    , mei_yatf, mew_min_pa1e1b1nwzida0e0b0xyg2[p]
                                    , d_cfw_ave_pa1e1b1nwzida0e0b0xyg2[p, ...], sfd_pa1e1b1nwzida0e0b0xyg2[p]
                                    , wge_pa1e1b1nwzida0e0b0xyg2[p], af_wool_pa1e1b1nwzida0e0b0xyg2[p, ...]
@@ -2983,7 +2983,7 @@ def generator(params,r_vals,nv,plots = False):
                 mem_yatf, temp_lc_yatf, kg_yatf = sfun.f_chill_cs(cc_yatf, ck_yatf, ffcfw_start_yatf, rc_start_yatf, sl_start_yatf, mei_yatf,
                                                                   meme_yatf, mew_yatf, new_yatf, km_yatf, kg_supp_yatf, kg_fodd_yatf, mei_propn_supp_yatf,
                                                                   mei_propn_herb_yatf, temp_ave_pa1e1b1nwzida0e0b0xyg[p], temp_max_pa1e1b1nwzida0e0b0xyg[p],
-                                                                  temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p], rain_pa1e1b1nwzida0e0b0xygm1[p],
+                                                                  temp_min_pa1e1b1nwzida0e0b0xyg[p], ws_pa1e1b1nwzida0e0b0xyg[p], rain_pa1e1b1nwzida0e0b0xygp1[p],
                                                                   index_m0,  mei_propn_milk=mei_propn_milk_yatf)
 
 
@@ -3341,7 +3341,7 @@ def generator(params,r_vals,nv,plots = False):
                 if (eqn_used or eqn_compare) and np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
                     temp0, temp1, temp2 = sfun.f_mortality_progeny_cs(cd_yatf, cb1_yatf, w_b_yatf, rc_start_dams, cv_weight_yatf
                                     , w_b_exp_y_dams, period_is_birth_pa1e1b1nwzida0e0b0xyg1[p]
-                                    , chill_index_pa1e1b1nwzida0e0b0xygm1[p], nfoet_b1nwzida0e0b0xyg
+                                    , chill_index_pa1e1b1nwzida0e0b0xygp1[p], nfoet_b1nwzida0e0b0xyg
                                     , rev_trait_values['yatf'][p], sen.sap['mortalityp'], saa_mortalityx_b1nwzida0e0b0xyg)
                     if eqn_used:
                         mortality_birth_yatf = temp1 #mortalityd, assign first because it has x axis
@@ -3362,7 +3362,7 @@ def generator(params,r_vals,nv,plots = False):
                                                     , period_between_d90birth_pa1e1b1nwzida0e0b0xyg1[p]
                                                     , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p])
                     temp0 = sfun.f_mortality_progeny_mu(cu2_yatf, cb1_yatf, cx_yatf[:,mask_x,...], ce_yatf[:,p,...]
-                                    , w_b_yatf, w_b_ltw_std_yatf, cv_weight_yatf, foo_yatf, chill_index_pa1e1b1nwzida0e0b0xygm1[p]
+                                    , w_b_yatf, w_b_ltw_std_yatf, cv_weight_yatf, foo_yatf, chill_index_pa1e1b1nwzida0e0b0xygp1[p]
                                     , period_is_birth_pa1e1b1nwzida0e0b0xyg1[p], rev_trait_values['yatf'][p]
                                     , sen.sap['mortalityp'], saa_mortalityx_b1nwzida0e0b0xyg)
                     if eqn_used:
@@ -3906,13 +3906,13 @@ def generator(params,r_vals,nv,plots = False):
                 bw_condensed_sire = sfun.f1_condensed(bw_sire, idx_sorted_w_sire, condense_w_mask_sire
                                         , n_fs_g0, len_w0, n_fvp_periods_sire, False)
                 ###Organ energy requirement (condense)
-                omer_history_condensed_m3g0 = sfun.f1_condensed(omer_history_sire, idx_sorted_w_sire[na,...], condense_w_mask_sire[na,...]
+                omer_history_condensed_p3g0 = sfun.f1_condensed(omer_history_sire, idx_sorted_w_sire[na,...], condense_w_mask_sire[na,...]
                                         , n_fs_g0, len_w0, n_fvp_periods_sire, False)  #increment the p slice, note this doesnt impact the p loop - this is required for the next section because we are calculating the production and numbers for the start of the next period.
                 ###Clean fleece weight (condense)
                 cfw_condensed_sire = sfun.f1_condensed(cfw_sire, idx_sorted_w_sire, condense_w_mask_sire
                                         , n_fs_g0, len_w0, n_fvp_periods_sire, False)
                 ###Clean fleece weight (condense)
-                d_cfw_history_condensed_m2g0 = sfun.f1_condensed(d_cfw_history_sire_m2, idx_sorted_w_sire[na,...], condense_w_mask_sire[na,...]
+                d_cfw_history_condensed_p2g0 = sfun.f1_condensed(d_cfw_history_sire_p2, idx_sorted_w_sire[na,...], condense_w_mask_sire[na,...]
                                         , n_fs_g0, len_w0, n_fvp_periods_sire, False)
                 ###Fibre length since shearing (condense)
                 fl_condensed_sire = sfun.f1_condensed(fl_sire, idx_sorted_w_sire, condense_w_mask_sire
@@ -3945,14 +3945,14 @@ def generator(params,r_vals,nv,plots = False):
                 bw_condensed_dams = sfun.f1_condensed(bw_dams, idx_sorted_w_dams, condense_w_mask_dams
                                         , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Organ energy requirement (condense)
-                omer_history_condensed_m3g1 = sfun.f1_condensed(omer_history_dams, idx_sorted_w_dams[na,...]
+                omer_history_condensed_p3g1 = sfun.f1_condensed(omer_history_dams, idx_sorted_w_dams[na,...]
                                         , condense_w_mask_dams[na,...], n_fs_dams, len_w1, n_fvp_periods_dams
                                         , period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Clean fleece weight (condense)
                 cfw_condensed_dams = sfun.f1_condensed(cfw_dams, idx_sorted_w_dams, condense_w_mask_dams
                                         , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Clean fleece weight (condense)
-                d_cfw_history_condensed_m2g1 = sfun.f1_condensed(d_cfw_history_dams_m2, idx_sorted_w_dams[na,...]
+                d_cfw_history_condensed_p2g1 = sfun.f1_condensed(d_cfw_history_dams_p2, idx_sorted_w_dams[na,...]
                                         , condense_w_mask_dams[na,...], n_fs_dams, len_w1, n_fvp_periods_dams
                                         , period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Fibre length since shearing (condense)
@@ -4029,13 +4029,13 @@ def generator(params,r_vals,nv,plots = False):
                 bw_condensed_yatf = sfun.f1_condensed(bw_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
                                         , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Organ energy requirement (condense)
-                omer_history_condensed_m3g2 = sfun.f1_condensed(omer_history_yatf, idx_sorted_w_yatf[na,...], condense_w_mask_yatf[na,...]
+                omer_history_condensed_p3g2 = sfun.f1_condensed(omer_history_yatf, idx_sorted_w_yatf[na,...], condense_w_mask_yatf[na,...]
                                         , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Clean fleece weight (condense)
                 cfw_condensed_yatf = sfun.f1_condensed(cfw_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
                                         , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Clean fleece weight (condense)
-                d_cfw_history_condensed_m2g2 = sfun.f1_condensed(d_cfw_history_yatf_m2, idx_sorted_w_yatf[na,...], condense_w_mask_yatf[na,...]
+                d_cfw_history_condensed_p2g2 = sfun.f1_condensed(d_cfw_history_yatf_p2, idx_sorted_w_yatf[na,...], condense_w_mask_yatf[na,...]
                                         , n_fs_dams, len_w1, n_fvp_periods_dams, period_is_condense_pa1e1b1nwzida0e0b0xyg1[p+1])
                 ###Fibre length since shearing (condense)
                 fl_condensed_yatf = sfun.f1_condensed(fl_yatf, idx_sorted_w_yatf, condense_w_mask_yatf
@@ -4073,13 +4073,13 @@ def generator(params,r_vals,nv,plots = False):
                 bw_condensed_offs = sfun.f1_condensed(bw_offs, idx_sorted_w_offs, condense_w_mask_offs
                                         , n_fs_offs, len_w3, n_fvp_periods_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###Organ energy requirement (condense)
-                omer_history_condensed_m3g3 = sfun.f1_condensed(omer_history_offs, idx_sorted_w_offs[na,...], condense_w_mask_offs[na,...]
+                omer_history_condensed_p3g3 = sfun.f1_condensed(omer_history_offs, idx_sorted_w_offs[na,...], condense_w_mask_offs[na,...]
                                         , n_fs_offs, len_w3, n_fvp_periods_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###Clean fleece weight (condense)
                 cfw_condensed_offs = sfun.f1_condensed(cfw_offs, idx_sorted_w_offs, condense_w_mask_offs
                                         , n_fs_offs, len_w3, n_fvp_periods_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###Clean fleece weight (condense)
-                d_cfw_history_condensed_m2g3 = sfun.f1_condensed(d_cfw_history_offs_m2, idx_sorted_w_offs[na,...], condense_w_mask_offs[na,...]
+                d_cfw_history_condensed_p2g3 = sfun.f1_condensed(d_cfw_history_offs_p2, idx_sorted_w_offs[na,...], condense_w_mask_offs[na,...]
                                         , n_fs_offs, len_w3, n_fvp_periods_offs, period_is_condense_pa1e1b1nwzida0e0b0xyg3[p+1])
                 ###Fibre length since shearing (condense)
                 fl_condensed_offs = sfun.f1_condensed(fl_offs, idx_sorted_w_offs, condense_w_mask_offs
@@ -4130,13 +4130,13 @@ def generator(params,r_vals,nv,plots = False):
                 bw_start_sire = sfun.f1_period_start_prod(numbers_end_condensed_sire, bw_condensed_sire, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_sire)
                 ###Organ energy requirement (start)
-                omer_history_start_m3g0 = sfun.f1_period_start_prod(numbers_end_condensed_sire, omer_history_condensed_m3g0
+                omer_history_start_p3g0 = sfun.f1_period_start_prod(numbers_end_condensed_sire, omer_history_condensed_p3g0
                                         , prejoin_tup, season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_sire[na,...])
                 ###Clean fleece weight (start)
                 cfw_start_sire = sfun.f1_period_start_prod(numbers_end_condensed_sire, cfw_condensed_sire, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_sire)
                 ###Clean fleece weight (start)
-                d_cfw_history_start_m2g0 = sfun.f1_period_start_prod(numbers_end_condensed_sire, d_cfw_history_condensed_m2g0, prejoin_tup
+                d_cfw_history_start_p2g0 = sfun.f1_period_start_prod(numbers_end_condensed_sire, d_cfw_history_condensed_p2g0, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_sire[na,...])
                 ###Fibre length since shearing (start)
                 fl_start_sire = sfun.f1_period_start_prod(numbers_end_condensed_sire, fl_condensed_sire, prejoin_tup
@@ -4175,8 +4175,8 @@ def generator(params,r_vals,nv,plots = False):
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1)
                 ###Organ energy requirement (start)
-                omer_history_start_m3g1 = sfun.f1_period_start_prod(numbers_end_condensed_dams
-                                        , omer_history_condensed_m3g1, prejoin_tup
+                omer_history_start_p3g1 = sfun.f1_period_start_prod(numbers_end_condensed_dams
+                                        , omer_history_condensed_p3g1, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams[na,...]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1)
                 ###Clean fleece weight (start)
@@ -4184,8 +4184,8 @@ def generator(params,r_vals,nv,plots = False):
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1)
                 ###Clean fleece weight (start)
-                d_cfw_history_start_m2g1 = sfun.f1_period_start_prod(numbers_end_condensed_dams
-                                        , d_cfw_history_condensed_m2g1, prejoin_tup
+                d_cfw_history_start_p2g1 = sfun.f1_period_start_prod(numbers_end_condensed_dams
+                                        , d_cfw_history_condensed_p2g1, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_dams[na,...]
                                         , period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p+1], group=1)
                 ###Fibre length since shearing (start)
@@ -4280,15 +4280,15 @@ def generator(params,r_vals,nv,plots = False):
                 bw_start_yatf = sfun.f1_period_start_prod(numbers_end_condensed_yatf, bw_condensed_yatf, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_yatf)
                 ###Organ energy requirement (start)
-                omer_history_start_m3g2 = sfun.f1_period_start_prod(numbers_end_condensed_yatf
-                                        , omer_history_condensed_m3g2, prejoin_tup
+                omer_history_start_p3g2 = sfun.f1_period_start_prod(numbers_end_condensed_yatf
+                                        , omer_history_condensed_p3g2, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_yatf[na,...])
                 ###Clean fleece weight (start)
                 cfw_start_yatf = sfun.f1_period_start_prod(numbers_end_condensed_yatf, cfw_condensed_yatf, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_yatf)
                 ###Clean fleece weight (start)
-                d_cfw_history_start_m2g2 = sfun.f1_period_start_prod(numbers_end_condensed_yatf
-                                        , d_cfw_history_condensed_m2g2, prejoin_tup
+                d_cfw_history_start_p2g2 = sfun.f1_period_start_prod(numbers_end_condensed_yatf
+                                        , d_cfw_history_condensed_p2g2, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_yatf[na,...])
                 ###Fibre length since shearing (start)
                 fl_start_yatf = sfun.f1_period_start_prod(numbers_end_condensed_yatf, fl_condensed_yatf, prejoin_tup
@@ -4326,15 +4326,15 @@ def generator(params,r_vals,nv,plots = False):
                 bw_start_offs = sfun.f1_period_start_prod(numbers_end_condensed_offs, bw_condensed_offs, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_offs)
                 ###Organ energy requirement (start)
-                omer_history_start_m3g3 = sfun.f1_period_start_prod(numbers_end_condensed_offs
-                                        , omer_history_condensed_m3g3, prejoin_tup
+                omer_history_start_p3g3 = sfun.f1_period_start_prod(numbers_end_condensed_offs
+                                        , omer_history_condensed_p3g3, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_offs[na,...])
                 ###Clean fleece weight (start)
                 cfw_start_offs = sfun.f1_period_start_prod(numbers_end_condensed_offs, cfw_condensed_offs, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_offs)
                 ###Clean fleece weight (start)
-                d_cfw_history_start_m2g3 = sfun.f1_period_start_prod(numbers_end_condensed_offs
-                                        , d_cfw_history_condensed_m2g3, prejoin_tup
+                d_cfw_history_start_p2g3 = sfun.f1_period_start_prod(numbers_end_condensed_offs
+                                        , d_cfw_history_condensed_p2g3, prejoin_tup
                                         , season_tup, period_is_startseason_pa1e1b1nwzida0e0b0xyg[p+1], mask_min_lw_z_offs[na,...])
                 ###Fibre length since shearing (start)
                 fl_start_offs = sfun.f1_period_start_prod(numbers_end_condensed_offs, fl_condensed_offs, prejoin_tup
@@ -4517,11 +4517,11 @@ def generator(params,r_vals,nv,plots = False):
     period_is_assetvalue_pa1e1b1nwzida0e0b0xyg = sfun.f1_period_is_('period_is', assetvalue_timing_pa1e1b1nwzida0e0b0xyg, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
     ###feed pool - sheep are grouped based on energy volume ratio
     ##wool
-    vm_m4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_vm_m4'], p_pos).astype(dtype)
-    pmb_m4s4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_pmb_m4s'], p_pos).astype(dtype)
+    vm_p4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_vm_p4'], p_pos).astype(dtype)
+    pmb_p4s4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_pmb_p4s'], p_pos).astype(dtype)
     ##sale
     score_range_s8s6pa1e1b1nwzida0e0b0xyg = fun.f_expand(uinp.sheep['i_salep_score_range_s8s6'], p_pos - 1).astype(dtype)
-    price_adj_months_s7s9m4a1e1b1nwzida0e0b0xyg = fun.f_expand(uinp.sheep['i_salep_months_priceadj_s7s9m4'], p_pos).astype(dtype)
+    price_adj_months_s7s9p4a1e1b1nwzida0e0b0xyg = fun.f_expand(uinp.sheep['i_salep_months_priceadj_s7s9p4'], p_pos).astype(dtype)
     dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg = fun.f_expand(uinp.sheep['i_salep_dressp_adj_s6'], p_pos-1).astype(dtype)
     dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg = fun.f_expand(uinp.sheep['i_salep_dressp_adj_s7'], p_pos-1).astype(dtype)
     score_pricescalar_s7s5s6 = uinp.sheep['i_salep_score_scalar_s7s5s6'].astype(dtype)
@@ -4871,13 +4871,13 @@ def generator(params,r_vals,nv,plots = False):
     period_is_shearing_p9a1e1b1nwzida0e0b0xyg1 = period_is_shearing_pa1e1b1nwzida0e0b0xyg1[shear_mask_p1,...]
     period_is_shearing_tp9a1e1b1nwzida0e0b0xyg3 = period_is_shearing_tpa1e1b1nwzida0e0b0xyg3[:,shear_mask_p3,...]
     ###Vegatative Matter if shorn(end)
-    vm_p9a1e1b1nwzida0e0b0xyg0 = vm_m4a1e1b1nwzida0e0b0xyg[a_m4_p,...][shear_mask_p0]
-    vm_p9a1e1b1nwzida0e0b0xyg1 = vm_m4a1e1b1nwzida0e0b0xyg[a_m4_p,...][shear_mask_p1]
-    vm_p9a1e1b1nwzida0e0b0xyg3 = vm_m4a1e1b1nwzida0e0b0xyg[a_m4_p[mask_p_offs_p],...][shear_mask_p3]
+    vm_p9a1e1b1nwzida0e0b0xyg0 = vm_p4a1e1b1nwzida0e0b0xyg[a_p4_p,...][shear_mask_p0]
+    vm_p9a1e1b1nwzida0e0b0xyg1 = vm_p4a1e1b1nwzida0e0b0xyg[a_p4_p,...][shear_mask_p1]
+    vm_p9a1e1b1nwzida0e0b0xyg3 = vm_p4a1e1b1nwzida0e0b0xyg[a_p4_p[mask_p_offs_p],...][shear_mask_p3]
     ###pmb - a little complex because it is dependent on time since previous shearing
-    pmb_p9s4a1e1b1nwzida0e0b0xyg0 = pmb_m4s4a1e1b1nwzida0e0b0xyg[a_m4_p,...][shear_mask_p0]
-    pmb_p9s4a1e1b1nwzida0e0b0xyg1 = pmb_m4s4a1e1b1nwzida0e0b0xyg[a_m4_p,...][shear_mask_p1]
-    pmb_p9s4a1e1b1nwzida0e0b0xyg3 = pmb_m4s4a1e1b1nwzida0e0b0xyg[a_m4_p[mask_p_offs_p],...][shear_mask_p3]
+    pmb_p9s4a1e1b1nwzida0e0b0xyg0 = pmb_p4s4a1e1b1nwzida0e0b0xyg[a_p4_p,...][shear_mask_p0]
+    pmb_p9s4a1e1b1nwzida0e0b0xyg1 = pmb_p4s4a1e1b1nwzida0e0b0xyg[a_p4_p,...][shear_mask_p1]
+    pmb_p9s4a1e1b1nwzida0e0b0xyg3 = pmb_p4s4a1e1b1nwzida0e0b0xyg[a_p4_p[mask_p_offs_p],...][shear_mask_p3]
     period_current_shearing_p9a1e1b1nwzida0e0b0xyg0 = np.maximum.accumulate(a_p_p9a1e1b1nwzida0e0b0xyg0 * period_is_shearing_p9a1e1b1nwzida0e0b0xyg0, axis=0) #returns the period number that the most recent shearing occurred
     period_current_shearing_p9a1e1b1nwzida0e0b0xyg1 = np.maximum.accumulate(a_p_p9a1e1b1nwzida0e0b0xyg1 * period_is_shearing_p9a1e1b1nwzida0e0b0xyg1, axis=0) #returns the period number that the most recent shearing occurred
     period_current_shearing_tp9a1e1b1nwzida0e0b0xyg3 = np.maximum.accumulate(a_p_p9a1e1b1nwzida0e0b0xyg3 * period_is_shearing_tp9a1e1b1nwzida0e0b0xyg3, axis=1) #returns the period number that the most recent shearing occurred
@@ -4933,8 +4933,8 @@ def generator(params,r_vals,nv,plots = False):
     sale_mask_p3 = fun.f_reduce_skipfew(np.any, np.logical_or(period_is_sale_tpa1e1b1nwzida0e0b0xyg3, period_is_assetvalue_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p]), preserveAxis=1)  #preforms np.any on all axis except 1
     ###manipulate axis with associations
     grid_scorerange_s7s6pa1e1b1nwzida0e0b0xyg = score_range_s8s6pa1e1b1nwzida0e0b0xyg[uinp.sheep['ia_s8_s7']] #s8 to s7
-    month_scalar_s7pa1e1b1nwzida0e0b0xyg = price_adj_months_s7s9m4a1e1b1nwzida0e0b0xyg[:, 0, a_m4_p] #month to p
-    month_discount_s7pa1e1b1nwzida0e0b0xyg = price_adj_months_s7s9m4a1e1b1nwzida0e0b0xyg[:, 1, a_m4_p] #month to p
+    month_scalar_s7pa1e1b1nwzida0e0b0xyg = price_adj_months_s7s9p4a1e1b1nwzida0e0b0xyg[:, 0, a_p4_p] #month to p
+    month_discount_s7pa1e1b1nwzida0e0b0xyg = price_adj_months_s7s9p4a1e1b1nwzida0e0b0xyg[:, 1, a_p4_p] #month to p
     ###Sale price grids for selected price percentile and the scalars for LW & quality score
     grid_price_s7s5s6 = sfun.f1_saleprice(score_pricescalar_s7s5s6, weight_pricescalar_s7s5s6, dtype)
     r_vals['grid_price_s7s5s6'] = grid_price_s7s5s6
@@ -7163,12 +7163,12 @@ def generator(params,r_vals,nv,plots = False):
     k2vpa1e1b1nwziyg1_shape = len_k2, len_v1, len_p, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
     k2vpa1e1b1nwzixyg1_shape = len_k2, len_v1, len_p, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_x, len_y1, len_g1
     k5wzida0e0b0xyg2_shape = len_k5, len_w_prog, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x,len_y2,  len_g2
-    k3k5vpnwzidae0b0xyg3_shape = len_k3, len_k5, len_v3, len_p3, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3
+    k3k5vpnwzidae0b0xyg3_shape = len_k3, len_k5, len_v3, lenoffs_p, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3
 
     ####ktvp
     pzg0_shape = len_p, len_z, len_g0
     k2tvpa1nwziyg1_shape = len_k2, len_t1, len_v1, len_p, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
-    k3k5tvpnwziaxyg3_shape = len_k3, len_k5, len_t3, len_v3, len_p3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
+    k3k5tvpnwziaxyg3_shape = len_k3, len_k5, len_t3, len_v3, lenoffs_p, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
     ####p6
     p6zg0_shape = len_p6, len_z, len_g0
