@@ -607,7 +607,7 @@ def f_stock_reshape(lp_vars, r_vals):
     ###shapes
     sire_shape = len_z, len_g0
     dams_shape = len_k2, len_t1, len_v1, len_a, len_n1, len_lw1, len_z, len_i, len_y1, len_g1
-    prog_shape = len_k5, len_t2, len_lw_prog, len_z, len_i, len_d, len_a, len_x, len_g2
+    prog_shape = len_k3, len_k5, len_t2, len_lw_prog, len_z, len_i, len_a, len_x, len_g2
     offs_shape = len_k3, len_k5, len_t3, len_v3, len_n3, len_lw3, len_z, len_i, len_a, len_x, len_y3, len_g3
     infra_shape = len_h1, len_z
     ###sire
@@ -615,7 +615,7 @@ def f_stock_reshape(lp_vars, r_vals):
     ###dams
     stock_vars['dams_numbers_k2tvanwziy1g1'] = f_vars2np(lp_vars, 'v_dams', dams_shape, keys_z, z_pos=-4).astype(float)
     ###prog
-    stock_vars['prog_numbers_k5twzida0xg2'] = f_vars2np(lp_vars, 'v_prog', prog_shape, keys_z, z_pos=-6).astype(float)
+    stock_vars['prog_numbers_k3k5twzia0xg2'] = f_vars2np(lp_vars, 'v_prog', prog_shape, keys_z, z_pos=-5).astype(float)
     ###offs
     stock_vars['offs_numbers_k3k5tvnwziaxyg3'] = f_vars2np(lp_vars, 'v_offs', offs_shape, keys_z, z_pos=-6).astype(float)
     ###infrastructure
@@ -667,10 +667,10 @@ def f_pasture_reshape(lp_vars, r_vals):
     pas_vars['keys_fp6lz'] = [keys_f, keys_p6, keys_l, keys_z]
 
     ##shapes
-    fgop6lzt = keys_f, len_g, len_o, len_p6, len_l, len_z, len_t
-    fdp6zt = keys_f, len_d, len_p6, len_z, len_t
+    fgop6lzt = len_f, len_g, len_o, len_p6, len_l, len_z, len_t
+    fdp6zt = len_f, len_d, len_p6, len_z, len_t
     dp6zt = len_d, len_p6, len_z, len_t
-    fp6lz = keys_f, len_p6, len_l, len_z
+    fp6lz = len_f, len_p6, len_l, len_z
 
     ##reshape green pasture hectare variable
     pas_vars['greenpas_ha_fgop6lzt'] = f_vars2np(lp_vars, 'v_greenpas_ha', fgop6lzt, keys_z, z_pos=-2)
@@ -688,7 +688,7 @@ def f_pasture_reshape(lp_vars, r_vals):
     pas_vars['nap_consumed_fdp6zt'] = f_vars2np(lp_vars, 'v_nap_consumed', fdp6zt, keys_z, z_pos=-2)
 
     ##poc consumed
-    pas_vars['poc_consumed_vflz'] = f_vars2np(lp_vars, 'v_poc', fp6lz, keys_z, z_pos=-1)
+    pas_vars['poc_consumed_fp6lz'] = f_vars2np(lp_vars, 'v_poc', fp6lz, keys_z, z_pos=-1)
 
     return pas_vars
 
@@ -711,7 +711,7 @@ def f_stock_cash_summary(lp_vars, r_vals):
     ##numbers
     sire_numbers_zg0 = stock_vars['sire_numbers_zg0']
     dams_numbers_k2tvanwziy1g1 = stock_vars['dams_numbers_k2tvanwziy1g1']
-    prog_numbers_k5twzida0xg2 = stock_vars['prog_numbers_k5twzida0xg2']
+    prog_numbers_k3k5twzia0xg2 = stock_vars['prog_numbers_k3k5twzia0xg2']
     offs_numbers_k3k5tvnwziaxyg3 = stock_vars['offs_numbers_k3k5tvnwziaxyg3']
 
     ##husb cost

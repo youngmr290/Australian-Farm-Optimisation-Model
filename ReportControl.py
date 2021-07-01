@@ -437,16 +437,16 @@ def f_report(processor, trials, non_exist_trials):
 
         if report_run.loc['run_ffcfw_prog', 'Run']:
             type = 'stock'
-            prod = 'ffcfw_prog_k5wzida0e0b0xyg2'
-            na_prod = [1]
-            prod_weights = 'e0b0_denom_weights_prog_k5tw8zida0e0b0xyg3' #weight prod for propn of animals in e and b slice
-            weights = 'prog_numbers_k5twzida0xg2'
-            na_weights = [7,8,10] #e,b,y
-            den_weights = 'e0b0_denom_weights_prog_k5tw8zida0e0b0xyg3' #weight numbers for propn of animals in e and b slice
-            keys = 'prog_keys_k5twzida0e0b0xg2'
+            prod = 'ffcfw_prog_k3k5wzida0e0b0xyg2'
+            na_prod = [2]
+            prod_weights = 'de0b0_denom_weights_prog_k3k5tw8zida0e0b0xyg2' #weight prod for propn of animals in e and b slice
+            weights = 'prog_numbers_k3k5twzia0xg2'
+            na_weights = [6,8,9,11] #d, e,b,y
+            den_weights = 'de0b0_denom_weights_prog_k3k5tw8zida0e0b0xyg2' #weight numbers for propn of animals in e and b slice
+            keys = 'prog_keys_k3k5twzida0e0b0xyg2'
             arith = 1
-            index = [2]             #w9
-            cols = [0,3,9,10]  #k2, z, gender, g2
+            index = [3]             #w9
+            cols = [1,4,10,11]  #k2, z, gender, g2
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             ffcfw_prog = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod
@@ -646,8 +646,8 @@ def f_report(processor, trials, non_exist_trials):
 
         if report_run.loc['run_numbers_prog', 'Run']:
             type = 'stock'
-            weights = 'prog_numbers_k5twzida0xg2'
-            keys = 'prog_keys_k5twzida0xg2'
+            weights = 'prog_numbers_k3k5twzia0xg2'
+            keys = 'prog_keys_k3k5twzia0xg2'
             arith = 2
             index =[2]
             cols =[0, 1, 5, 7]
@@ -750,6 +750,7 @@ def f_report(processor, trials, non_exist_trials):
             #returns foo at end of each FP
             type = 'pas'
             prod = 'foo_end_grnha_gop6lzt'
+            na_prod = [0]
             weights = 'greenpas_ha_fgop6lzt'
             keys = 'keys_fgop6lzt'
             arith = 2
@@ -757,7 +758,7 @@ def f_report(processor, trials, non_exist_trials):
             cols =[4]
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
-            grnfoo = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
+            grnfoo = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             grnfoo = pd.concat([grnfoo],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_grnfoo = stacked_grnfoo.append(grnfoo)
@@ -937,8 +938,8 @@ def f_report(processor, trials, non_exist_trials):
             #returns consumption in each FP
             prod = 1000
             type = 'pas'
-            weights = 'poc_consumed_vflz'
-            keys = 'keys_vflz'
+            weights = 'poc_consumed_fp6lz'
+            keys = 'keys_fp6lz'
             arith = 2
             index =[1]
             cols =[3]

@@ -5216,6 +5216,8 @@ def generator(params,r_vals,nv,plots = False):
     numbers_end_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_numbers_end_pdams, a_v_pa1e1b1nwzida0e0b0xyg1, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1,
                                                      period_is_tp=np.logical_or(period_is_transfer_tpa1e1b1nwzida0e0b0xyg1, nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg1))  #t axis so that the early termination of a dvp is accounted for when transferring between ram groups
     numbers_start_va1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_numbers_start_pdams, a_v_pa1e1b1nwzida0e0b0xyg1,period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
+    numbers_start_d_va1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_numbers_start_pdams, a_v_pa1e1b1nwzida0e0b0xyg1,period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1
+                                                         , a_any1_p=a_prevbirth_d_pa1e1b1nwzida0e0b0xyg2, index_any1tp=index_da0e0b0xyg) #with a d axis.
     # r_numbers_join_va1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_numbers_join_pdams, a_v_pa1e1b1nwzida0e0b0xyg1,period_is_tp=period_is_join_pa1e1b1nwzida0e0b0xyg1) #used to calc wean %
     # r_numbers_birth_va1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_numbers_end_pdams, a_v_pa1e1b1nwzida0e0b0xyg1,period_is_tp=period_is_birth_pa1e1b1nwzida0e0b0xyg1) #need to use numbers end so that the numbers represent the different b1 slices after birth
     numbers_end_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_numbers_end_poffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg3)
@@ -5241,8 +5243,10 @@ def generator(params,r_vals,nv,plots = False):
                                         on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_wean_pa1e1b1nwzida0e0b0xyg2) #use numbers start because weaning is beginning of period
 
     ###yatf can be sold as sucker, not shorn therefore only include sale value. husbandry is accounted for with dams so don't need that here.
-    salevalue_d_a1e1b1nwzida0e0b0xyg2 = sfun.f1_p2v_std(salevalue_p9a1e1b1nwzida0e0b0xyg2, period_is_tvp=period_is_sale_t0_pa1e1b1nwzida0e0b0xyg2[sale_mask_p2],
-                                                   a_any1_p=a_prevbirth_d_pa1e1b1nwzida0e0b0xyg2[sale_mask_p2], index_any1tvp=index_da0e0b0xyg)
+    salevalue_d_cta1e1b1nwzida0e0b0xyg2 = sfun.f1_p2v_std(salevalue_p9a1e1b1nwzida0e0b0xyg2, period_is_tvp=period_is_sale_t0_pa1e1b1nwzida0e0b0xyg2[sale_mask_p2]
+                                                   , numbers_p=(o_numbers_start_pyatf * o_numbers_start_pdams)[sale_mask_p2]
+                                                   , a_any1_p=a_prevbirth_d_pa1e1b1nwzida0e0b0xyg2[sale_mask_p2], index_any1tvp=index_da0e0b0xyg
+                                                   , a_any2_p=a_c_pa1e1b1nwzida0e0b0xyg[sale_mask_p2],index_any2any1tvp=index_ctpa1e1b1nwzida0e0b0xyg)
 
     ##################
     #lw distribution #
@@ -5775,7 +5779,7 @@ def generator(params,r_vals,nv,plots = False):
     ##condense yatf from total number of finishing lw to 10
     ### mask the ffcfw & salevalue for only those that have numbers > 0. Removes animals that have died or don't exist
     ffcfw_range_a1e1b1nwzida0e0b0xyg2 = ffcfw_start_d_yatf_a1e1b1nwzida0e0b0xyg2 * (numbers_start_d_yatf_a1e1b1nwzida0e0b0xyg2 > 0)
-    salevalue_range_a1e1b1nwzida0e0b0xyg2 = salevalue_d_a1e1b1nwzida0e0b0xyg2 * (numbers_start_d_yatf_a1e1b1nwzida0e0b0xyg2 > 0)
+    salevalue_range_cta1e1b1nwzida0e0b0xyg2 = salevalue_d_cta1e1b1nwzida0e0b0xyg2 * (numbers_start_d_yatf_a1e1b1nwzida0e0b0xyg2 > 0)
     ### The index that sorts the weight array
     ind_sorted_a1e1b1nwzida0e0b0xyg2 = np.argsort(ffcfw_range_a1e1b1nwzida0e0b0xyg2, axis = w_pos)
     ### Select the values for the 10 equally spaced values spanning lowest to highest inclusive. Adding w9 axis at -1
@@ -5786,7 +5790,7 @@ def generator(params,r_vals,nv,plots = False):
     ### Extract the condensed weights, the numbers and the sale_value of the condensed vars
     #### Later these variables are used with the 10 weights in the i_w_pos, so note whether w9 on end or not
     ffcfw_prog_a1e1b1_a1e1b1nwzida0e0b0xyg2 = np.take_along_axis(ffcfw_range_a1e1b1nwzida0e0b0xyg2, ind, axis = w_pos)
-    salevalue_prog_a1e1b1_a1e1b1nwzida0e0b0xyg2 = np.take_along_axis(salevalue_range_a1e1b1nwzida0e0b0xyg2, ind, axis = w_pos)
+    salevalue_prog_a1e1b1_cta1e1b1nwzida0e0b0xyg2 = np.take_along_axis(salevalue_range_cta1e1b1nwzida0e0b0xyg2, ind[na,na,...], axis = w_pos)
     t_numbers_start_d_prog_a1e1b1_a1e1b1nwzida0e0b0xyg2 = np.take_along_axis(numbers_start_d_yatf_a1e1b1nwzida0e0b0xyg2, ind, axis = w_pos)
 
     ##distribute the yatf to the intermediate progeny activity
@@ -5797,25 +5801,27 @@ def generator(params,r_vals,nv,plots = False):
     ##convert a1, e1 & b1 to a0, e0 & b0 so prog can interact with offs
     t_ffcfw_prog_a1e1b0_a1e1b1nwzida0e0b0xyg2 = np.sum(ffcfw_prog_a1e1b1_a1e1b1nwzida0e0b0xyg2 * (a_b0_b1nwzida0e0b0xyg == index_b0xyg) * (nyatf_b1nwzida0e0b0xyg > 0)
                                               , axis=b1_pos, keepdims=True) #convert b1 to b0
-    t_salevalue_prog_a1e1b0_a1e1b1nwzida0e0b0xyg2 = np.sum(salevalue_prog_a1e1b1_a1e1b1nwzida0e0b0xyg2 * (a_b0_b1nwzida0e0b0xyg == index_b0xyg) * (nyatf_b1nwzida0e0b0xyg > 0)
+    t_salevalue_prog_a1e1b0_cta1e1b1nwzida0e0b0xyg2 = np.sum(salevalue_prog_a1e1b1_cta1e1b1nwzida0e0b0xyg2 * (a_b0_b1nwzida0e0b0xyg == index_b0xyg) * (nyatf_b1nwzida0e0b0xyg > 0)
                                               , axis=b1_pos, keepdims=True) #convert b1 to b0
     t_numbers_start_d_prog_a1e1b0_a1e1b1nwzida0e0b0xyg2 = np.sum(t_numbers_start_d_prog_a1e1b1_a1e1b1nwzida0e0b0xyg2 * (a_b0_b1nwzida0e0b0xyg == index_b0xyg) * (nyatf_b1nwzida0e0b0xyg > 0)
                                               , axis=b1_pos, keepdims=True) #convert b1 to b0
     t_ffcfw_prog_a0e1b0_a1e1b1nwzida0e0b0xyg2 = np.swapaxes(t_ffcfw_prog_a1e1b0_a1e1b1nwzida0e0b0xyg2, a1_pos, a0_pos) #swap a1 and a0
     ffcfw_prog_a0e0b0_a1e1b1nwzida0e0b0xyg2 = np.swapaxes(t_ffcfw_prog_a0e1b0_a1e1b1nwzida0e0b0xyg2, e1_pos, e0_pos) #swap e1 and e0
-    t_salevalue_prog_a0e1b0_a1e1b1nwzida0e0b0xyg2 = np.swapaxes(t_salevalue_prog_a1e1b0_a1e1b1nwzida0e0b0xyg2, a1_pos, a0_pos) #swap a1 and a0
-    salevalue_prog_a0e0b0_a1e1b1nwzida0e0b0xyg2 = np.swapaxes(t_salevalue_prog_a0e1b0_a1e1b1nwzida0e0b0xyg2, e1_pos, e0_pos) #swap e1 and e0
+    t_salevalue_prog_a0e1b0_cta1e1b1nwzida0e0b0xyg2 = np.swapaxes(t_salevalue_prog_a1e1b0_cta1e1b1nwzida0e0b0xyg2, a1_pos, a0_pos) #swap a1 and a0
+    salevalue_prog_a0e0b0_cta1e1b1nwzida0e0b0xyg2 = np.swapaxes(t_salevalue_prog_a0e1b0_cta1e1b1nwzida0e0b0xyg2, e1_pos, e0_pos) #swap e1 and e0
     t_numbers_start_d_prog_a0e1b0_a1e1b1nwzida0e0b0xyg2 = np.swapaxes(t_numbers_start_d_prog_a1e1b0_a1e1b1nwzida0e0b0xyg2, a1_pos, a0_pos) #swap a1 and a0
     numbers_start_d_prog_a0e0b0_a1e1b1nwzida0e0b0xyg2 = np.swapaxes(t_numbers_start_d_prog_a0e1b0_a1e1b1nwzida0e0b0xyg2, e1_pos, e0_pos) #swap e1 and e0
 
     ##add t axis to progeny - slice 0 is sold as sucker, slice 1 and 2 are retained
     index_tpa1e1b1nwzida0e0b0xyg2 = fun.f_expand(index_t2, p_pos-1)
-    salevalue_prog_tpa1e1b1nwzida0e0b0xyg2 = salevalue_prog_a0e0b0_a1e1b1nwzida0e0b0xyg2 * (index_tpa1e1b1nwzida0e0b0xyg2==0)
+    salevalue_prog_ctva1e1b1nwzida0e0b0xyg2 = salevalue_prog_a0e0b0_cta1e1b1nwzida0e0b0xyg2[:,:,na,...] * (index_tpa1e1b1nwzida0e0b0xyg2==0)
 
-    ##add c axis to prog - using period_is_wean so that correct c slice is activated
-    period_is_wean_d_pa1e1b1nwzida0e0b0xyg2 = period_is_wean_pa1e1b1nwzida0e0b0xyg2 *  (a_prevbirth_d_pa1e1b1nwzida0e0b0xyg2==index_da0e0b0xyg)
-    salevalue_prog_cta1e1b1nwzida0e0b0xyg2 = (sfun.f1_p2v_std(salevalue_prog_tpa1e1b1nwzida0e0b0xyg2, period_is_tvp=period_is_wean_d_pa1e1b1nwzida0e0b0xyg2[:,:,0:1,...], #weaning is same for all e slices
-                                     a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg,index_any1tvp=index_ctpa1e1b1nwzida0e0b0xyg)).astype(dtype)
+    #add c axis to prog - using period_is_wean so that correct c slice is activated
+    # period_is_wean_d_pa1e1b1nwzida0e0b0xyg2 = period_is_wean_pa1e1b1nwzida0e0b0xyg2 *  (a_prevbirth_d_pa1e1b1nwzida0e0b0xyg2==index_da0e0b0xyg)
+    # salevalue_prog_cta1e1b1nwzida0e0b0xyg2 = (sfun.f1_p2v_std(salevalue_prog_tpa1e1b1nwzida0e0b0xyg2,
+    #                                                           numbers_p=numbers_start_d_prog_a0e0b0_a1e1b1nwzida0e0b0xyg2,
+    #                                                           period_is_tvp=period_is_wean_d_pa1e1b1nwzida0e0b0xyg2[:,:,0:1,...], #weaning is same for all e slices
+    #                                  a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg,index_any1tvp=index_ctpa1e1b1nwzida0e0b0xyg)).astype(dtype)
 
     ## cluster sale value - can use offs function because clustering is the same.
     salevalue_prog_k3k5ctva1e1b1nwzida0e0b0xyg2 = sfun.f1_create_production_param('offs',
@@ -6230,7 +6236,8 @@ def generator(params,r_vals,nv,plots = False):
         r_ffcfw_offs_k3k5tvpoffs = (o_ffcfw_poffs * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
                                  * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
                                  * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...]))
-        r_ffcfw_prog_k5tva1e1b1nwzida0e0b0xyg3 = ffcfw_prog_a0e0b0_a1e1b1nwzida0e0b0xyg2 \
+        r_ffcfw_prog_k3k5tva1e1b1nwzida0e0b0xyg3 = ffcfw_prog_a0e0b0_a1e1b1nwzida0e0b0xyg2 \
+                                                 * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3) \
                                                  * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3) #todo cluster d
 
     ##fec - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. t is not required because it doesnt effect fec
@@ -7133,8 +7140,8 @@ def generator(params,r_vals,nv,plots = False):
     r_vals['yatf_keys_k2tvpaebnwzixy1g1'] = [keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1
                                               , keys_z, keys_i, keys_x, keys_y1, keys_g1]
 
-    r_vals['prog_keys_k5twzida0xg2'] = [keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i, keys_d, keys_a, keys_x, keys_g2]
-    r_vals['prog_keys_k5twzida0e0b0xg2'] = [keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i, keys_d, keys_a, keys_e0, keys_b0, keys_x, keys_g2]
+    r_vals['prog_keys_k3k5twzia0xg2'] = [keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i, keys_a, keys_x, keys_g2]
+    r_vals['prog_keys_k3k5twzida0e0b0xyg2'] = [keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i, keys_d, keys_a, keys_e0, keys_b0, keys_x, keys_y3, keys_g2]
 
     r_vals['offs_keys_k3k5tvnwziaxyg3'] = [keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i,
                                                keys_a, keys_x, keys_y3, keys_g3]
@@ -7167,7 +7174,7 @@ def generator(params,r_vals,nv,plots = False):
     pzg0_shape = len_p, len_z, len_g0
     k2vpa1e1b1nwziyg1_shape = len_k2, len_v1, len_p, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
     k2vpa1e1b1nwzixyg1_shape = len_k2, len_v1, len_p, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_x, len_y1, len_g1
-    k5wzida0e0b0xyg2_shape = len_k5, len_w_prog, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x,len_y2,  len_g2
+    k3k5wzida0e0b0xyg2_shape = len_k3, len_k5, len_w_prog, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y2,  len_g2
     k3k5vpnwzidae0b0xyg3_shape = len_k3, len_k5, len_v3, lenoffs_p, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3
 
     ####ktvp
@@ -7311,9 +7318,8 @@ def generator(params,r_vals,nv,plots = False):
                                                                     * on_hand_tpa1e1b1nwzida0e0b0xyg3[:,na,...]
                                                                     * o_numbers_start_poffs).squeeze(axis=(a1_pos, e1_pos, b1_pos))
 
-        # r_vals['de0b0_denom_weights_k3k5tvnw8zida0e0b0xyg3'] = ((a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)
-        #                                                     *(a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)).squeeze(axis=(a1_pos, e1_pos, b1_pos))
-        r_vals['e0b0_denom_weights_prog_k5tw8zida0e0b0xyg3'] = ((a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3) #todo cluster d
+        r_vals['de0b0_denom_weights_prog_k3k5tw8zida0e0b0xyg2'] = ((a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3)
+                                                                 * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)
                                                                  * numbers_start_d_prog_a0e0b0_a1e1b1nwzida0e0b0xyg2
                                                                 ).squeeze(axis=(p_pos, a1_pos, e1_pos, b1_pos, n_pos))
 
@@ -7328,7 +7334,7 @@ def generator(params,r_vals,nv,plots = False):
         r_vals['ffcfw_sire_pzg0'] = r_ffcfw_sire_psire.reshape(pzg0_shape)
         r_vals['ffcfw_dams_k2vpa1e1b1nw8ziyg1'] = r_ffcfw_dams_k2tvpdams.reshape(k2vpa1e1b1nwziyg1_shape)
         r_vals['ffcfw_yatf_k2vpa1e1b1nw8zixyg1'] = r_ffcfw_yatf_k2tvpyatf.reshape(k2vpa1e1b1nwzixyg1_shape)
-        r_vals['ffcfw_prog_k5wzida0e0b0xyg2'] = r_ffcfw_prog_k5tva1e1b1nwzida0e0b0xyg3.reshape(k5wzida0e0b0xyg2_shape) #no p axis
+        r_vals['ffcfw_prog_k3k5wzida0e0b0xyg2'] = r_ffcfw_prog_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5wzida0e0b0xyg2_shape) #no p axis
         r_vals['ffcfw_offs_k3k5vpnw8zida0e0b0xyg3'] = r_ffcfw_offs_k3k5tvpoffs.reshape(k3k5vpnwzidae0b0xyg3_shape)
 
     ###fec - with p, e, b

@@ -97,14 +97,14 @@ def boundarypyomo_local(params, model):
 
         ##total dam min bound - total number includes each dvp (the sheep in a given yr equal total for all dvp divided by the number of dvps in 1 yr)
         ###build bound if turned on
-        if dams_lobound_inc:
+        if True:#dams_lobound_inc:
             ###keys to build arrays for the specified slices
             arrays = [model.s_sale_dams, model.s_dvp_dams, model.s_lw_dams, model.s_groups_dams]   #more sets can be added here to customise the bound
             index_tvwg = fun.cartesian_product_simple_transpose(arrays)
             ###build array for the axes of the specified slices
             dams_lowbound_tvwg = np.zeros((len(model.s_sale_dams), len(model.s_dvp_dams), len(model.s_lw_dams), len(model.s_groups_dams)))
             ###set the bound
-            # dams_lowbound_tvwg[-1, 4:14, :, -1] = 5  #min of 50 bbt in t3
+            dams_lowbound_tvwg[-1, 4:14, 0, -1] = 5  #min of 50 bbt in t3
             # dams_lowbound_tvwg[-1, 0,0,0] = 758 #min of 50 bbt in t3
             # dams_lowbound_tvwg[-1, 0,1,0] = 758  #min of 50 bbt in t3
             # dams_lowbound_tvwg[-1, 0,2,0] = 7.8 #min of 50 bbt in t3
