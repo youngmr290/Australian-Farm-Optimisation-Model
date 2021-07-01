@@ -54,8 +54,8 @@ def stockpyomo_local(params, model):
     model.v_offs = pe.Var(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
                           model.s_tol, model.s_wean_times, model.s_gender, model.s_gen_merit_offs,
                           model.s_groups_offs, bounds = (0,None) , doc='number of offs animals')
-    model.v_prog = pe.Var(model.s_k5_birth_offs, model.s_sale_prog, model.s_lw_prog,
-                          model.s_tol, model.s_damage, model.s_wean_times, model.s_gender,
+    model.v_prog = pe.Var(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_prog, model.s_lw_prog,
+                          model.s_tol, model.s_wean_times, model.s_gender,
                           model.s_groups_prog, bounds = (0,None) , doc='number of offs animals')
 
     ##purchases
@@ -84,19 +84,19 @@ def stockpyomo_local(params, model):
                                initialize=params[season]['p_nsire_prov_sire'], default=0.0, mutable=False, doc='sires available for mating')
 
     ##progeny
-    model.p_npw = pe.Param(model.s_k5_birth_offs, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams,
-                              model.s_tol, model.s_damage, model.s_gender, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_prog, model.s_tol,
+    model.p_npw = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams,
+                              model.s_tol, model.s_gender, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_prog, model.s_tol,
                               initialize=params[season]['p_npw_dams'], default=0.0, mutable=False, doc='number of progeny weaned')
-    model.p_npw_req = pe.Param(model.s_sale_prog, model.s_damage, model.s_gender, model.s_groups_prog,
+    model.p_npw_req = pe.Param(model.s_k3_damage_offs, model.s_sale_prog, model.s_gender, model.s_groups_prog,
                               initialize=params['p_npw_req_prog'], default=0.0, doc='number of yatf required by the prog activity')
     model.p_progprov_dams = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_prog, model.s_lw_prog,model.s_tol,
-                              model.s_damage, model.s_wean_times, model.s_gender, model.s_gen_merit_dams, model.s_groups_prog, model.s_groups_dams, model.s_lw_dams,
+                              model.s_wean_times, model.s_gender, model.s_gen_merit_dams, model.s_groups_prog, model.s_groups_dams, model.s_lw_dams,
                               initialize=params[season]['p_progprov_dams'], default=0.0, mutable=False, doc='number of progeny provided to dams')
     model.p_progreq_dams = pe.Param(model.s_k2_birth_dams, model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_dams, model.s_lw_dams,
                               model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_groups_dams, model.s_lw_dams,
                               initialize=params['p_progreq_dams'], default=0.0, doc='number of progeny required by dams')
     model.p_progprov_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_prog, model.s_lw_prog,
-                              model.s_tol, model.s_damage, model.s_wean_times, model.s_gender, model.s_gen_merit_offs, model.s_groups_offs, model.s_lw_offs,
+                              model.s_tol, model.s_wean_times, model.s_gender, model.s_gen_merit_offs, model.s_groups_offs, model.s_lw_offs,
                               initialize=params[season]['p_progprov_offs'], default=0.0, mutable=False, doc='number of progeny provided to dams')
     model.p_progreq_offs = pe.Param(model.s_k3_damage_offs, model.s_dvp_offs, model.s_lw_offs, model.s_tol, model.s_gender, model.s_groups_offs, model.s_lw_offs,
                               initialize=params['p_progreq_offs'], default=0.0, doc='number of progeny required by dams')
@@ -157,7 +157,7 @@ def stockpyomo_local(params, model):
     model.p_cashflow_dams = pe.Param(model.s_k2_birth_dams, model.s_cashflow_periods, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams,
                                   model.s_lw_dams, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams,
                                   initialize=params[season]['p_cashflow_dams'], default=0.0, mutable=False, doc='cashflow dams')
-    model.p_cashflow_prog = pe.Param(model.s_k5_birth_offs, model.s_cashflow_periods, model.s_sale_prog, model.s_lw_prog,
+    model.p_cashflow_prog = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_cashflow_periods, model.s_sale_prog, model.s_lw_prog,
                                      model.s_tol, model.s_wean_times, model.s_gender, model.s_groups_dams,
                                   initialize=params[season]['p_cashflow_prog'], default=0.0, mutable=False, doc='cashflow prog - made up from just sale value')
     model.p_cashflow_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_cashflow_periods, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
@@ -369,18 +369,18 @@ def stockpyomo_local(params, model):
     end_con_damR=time.time()
     # print('con_damR: ',end_con_damR-start_con_damR)
 
-    def progR(model, k5, a, i9, d, x, y1, g1, w9):
-        if any(model.p_npw_req[t2,d,x,g1] for t2 in model.s_sale_prog):
-            return (- sum(model.v_dams[k5, t1, v1, a, n1, w18, i, y1, g1]  * model.p_npw[k5, t1, v1, a, n1, w18, i, d, x, y1, g1, w9, i9] #pass in the k5 set to dams - each slice of k5 aligns with a slice in k2 eg 11 and 22. we don't need other k2 slices eg nm
+    def progR(model, k3, k5, a, i9, x, y1, g1, w9):
+        if any(model.p_npw_req[k3, t2, x, g1] for t2 in model.s_sale_prog):
+            return (- sum(model.v_dams[k5, t1, v1, a, n1, w18, i, y1, g1]  * model.p_npw[k3, k5, t1, v1, a, n1, w18, i, x, y1, g1, w9, i9] #pass in the k5 set to dams - each slice of k5 aligns with a slice in k2 eg 11 and 22. we don't need other k2 slices eg nm
                         for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams for w18 in model.s_lw_dams for i in model.s_tol
-                             if pe.value(model.p_npw[k5, t1, v1, a, n1, w18, i, d, x, y1, g1, w9, i9])!=0)
-                    + sum(model.v_prog[k5, t2, w9, i9, d, a, x, g1] * model.p_npw_req[t2,d,x,g1] for t2 in model.s_sale_prog
-                          if pe.value(model.p_npw_req[t2,d,x,g1])!=0))<=0
+                             if pe.value(model.p_npw[k3, k5, t1, v1, a, n1, w18, i, x, y1, g1, w9, i9])!=0)
+                    + sum(model.v_prog[k3, k5, t2, w9, i9, a, x, g1] * model.p_npw_req[k3, t2, x, g1] for t2 in model.s_sale_prog
+                          if pe.value(model.p_npw_req[k3, t2,x,g1])!=0))<=0
         else:
             return pe.Constraint.Skip
     start_con_progR = time.time()
-    model.con_progR = pe.Constraint(model.s_k5_birth_offs, model.s_wean_times, model.s_tol,
-                                    model.s_damage, model.s_gender, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_prog, rule=progR,
+    model.con_progR = pe.Constraint(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_wean_times, model.s_tol,
+                                    model.s_gender, model.s_gen_merit_dams, model.s_groups_dams, model.s_lw_prog, rule=progR,
                                    doc='transfer npw from dams to prog.')
     end_con_progR = time.time()
     # print('con_progR: ',end_con_progR-start_con_progR)
@@ -391,10 +391,10 @@ def stockpyomo_local(params, model):
         if v1==l_v1[0] and any(model.p_progreq_dams[k2, k3, k5, t1, w18, i, y1, g1, g9, w9] for k5 in model.s_k5_birth_offs
                                for k3 in model.s_k3_damage_offs for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams
                                for w18 in model.s_lw_dams for g1 in model.s_groups_dams):
-            return (sum(- model.v_prog[k5, t2, w28, i, d, a0, x, g2] * model.p_progprov_dams[k3, k5, t2, w28, i, d, a0, x, y1, g2,g9,w9]
-                        for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for d in model.s_damage for a0 in model.s_wean_times
+            return (sum(- model.v_prog[k3, k5, t2, w28, i, a0, x, g2] * model.p_progprov_dams[k3, k5, t2, w28, i, a0, x, y1, g2,g9,w9]
+                        for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for a0 in model.s_wean_times
                         for x in model.s_gender for w28 in model.s_lw_prog for t2 in model.s_sale_prog for g2 in model.s_groups_prog
-                        if pe.value(model.p_progprov_dams[k3, k5, t2, w28, i, d, a0, x, y1, g2,g9,w9])!= 0)
+                        if pe.value(model.p_progprov_dams[k3, k5, t2, w28, i, a0, x, y1, g2,g9,w9])!= 0)
                        + sum(model.v_dams[k2, t1, v1, a1, n1, w18, i, y1, g1]  * model.p_progreq_dams[k2, k3, k5, t1, w18, i, y1, g1, g9, w9]
                         for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams
                              for a1 in model.s_wean_times for n1 in model.s_nut_dams for w18 in model.s_lw_dams for g1 in model.s_groups_dams
@@ -409,9 +409,9 @@ def stockpyomo_local(params, model):
 
     def prog2offsR(model, k3, k5, v3, i, a, x, y3, g3, w9):
         if v3==l_v3[0] and any(model.p_progreq_offs[k3, v3, w38, i, x, g3, w9] for w38 in model.s_lw_offs):
-            return (sum(- model.v_prog[k5, t2, w28, i, d, a, x, g3] * model.p_progprov_offs[k3, k5, t2, w28, i, d, a, x, y3, g3, w9] #use g3 (same as g2)
-                        for d in model.s_damage for w28 in model.s_lw_prog for t2 in model.s_sale_prog
-                        if pe.value(model.p_progprov_offs[k3, k5, t2, w28, i, d, a, x, y3, g3, w9])!= 0)
+            return (sum(- model.v_prog[k3, k5, t2, w28, i, a, x, g3] * model.p_progprov_offs[k3, k5, t2, w28, i, a, x, y3, g3, w9] #use g3 (same as g2)
+                        for w28 in model.s_lw_prog for t2 in model.s_sale_prog
+                        if pe.value(model.p_progprov_offs[k3, k5, t2, w28, i, a, x, y3, g3, w9])!= 0)
                        + sum(model.v_offs[k3,k5,t3,v3,n3,w38,i,a,x,y3,g3]  * model.p_progreq_offs[k3, v3, w38, i, x, g3, w9]
                         for t3 in model.s_sale_offs for n3 in model.s_nut_dams for w38 in model.s_lw_offs
                              if pe.value(model.p_progreq_offs[k3, v3, w38, i, x, g3, w9])!= 0))<=0
@@ -492,9 +492,9 @@ def stock_cashflow(model,c):
                       for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                       for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
                      if pe.value(model.p_cashflow_dams[k2,c,t1,v1,a,n1,w1,i,y1,g1]) != 0)
-                + sum(model.v_prog[k5, t2, w2, i, d, a, x, g2] * model.p_cashflow_prog[k5, c, t2, w2, i, a, x, g2]
-                      for k5 in model.s_k5_birth_offs for t2 in model.s_sale_prog for w2 in model.s_lw_prog for d in model.s_damage
-                      for x in model.s_gender for g2 in model.s_groups_prog if model.p_cashflow_prog[k5, c, t2, w2, i, a, x, g2] != 0)
+                + sum(model.v_prog[k3, k5, t2, w2, i, a, x, g2] * model.p_cashflow_prog[k3, k5, c, t2, w2, i, a, x, g2]
+                      for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t2 in model.s_sale_prog for w2 in model.s_lw_prog
+                      for x in model.s_gender for g2 in model.s_groups_prog if model.p_cashflow_prog[k3, k5, c, t2, w2, i, a, x, g2] != 0)
                 + sum(model.v_offs[k3,k5,t3,v3,n3,w3,i,a,x,y3,g3]  * model.p_cashflow_offs[k3,k5,c,t3,v3,n3,w3,i,a,x,y3,g3]
                       for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
                       for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs

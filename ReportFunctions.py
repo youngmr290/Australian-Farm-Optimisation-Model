@@ -725,7 +725,7 @@ def f_stock_cash_summary(lp_vars, r_vals):
     ##sale income
     salevalue_czg0 = r_vals['stock']['salevalue_czg0'] * sire_numbers_zg0
     salevalue_k2ctva1nwziyg1 = r_vals['stock']['salevalue_k2ctva1nwziyg1'] * dams_numbers_k2tvanwziy1g1[:, na, ...]
-    salevalue_k5ctwzida0xg2 = r_vals['stock']['salevalue_k5ctwzia0xg2'][..., na, :, :, :] * prog_numbers_k5twzida0xg2[:, na,
+    salevalue_k3k5ctwzia0xg2 = r_vals['stock']['salevalue_k3k5ctwzia0xg2'] * prog_numbers_k3k5twzia0xg2[:, na,
                                                                                      ...]
     salevalue_k3k5ctvnwziaxyg3 = r_vals['stock']['salevalue_k3k5ctvnwziaxyg3'] * offs_numbers_k3k5tvnwziaxyg3[:, :, na, ...]
 
@@ -737,7 +737,7 @@ def f_stock_cash_summary(lp_vars, r_vals):
     ###sum axis to return total income in each cash period
     siresale_cz = fun.f_reduce_skipfew(np.sum, salevalue_czg0, preserveAxis=(0,1))  # sum all axis except c
     damssale_cz = fun.f_reduce_skipfew(np.sum, salevalue_k2ctva1nwziyg1, preserveAxis=(1,7))  # sum all axis except c
-    progsale_cz = fun.f_reduce_skipfew(np.sum, salevalue_k5ctwzida0xg2, preserveAxis=(1,4))  # sum all axis except c
+    progsale_cz = fun.f_reduce_skipfew(np.sum, salevalue_k3k5ctwzia0xg2, preserveAxis=(2,5))  # sum all axis except c
     offssale_cz = fun.f_reduce_skipfew(np.sum, salevalue_k3k5ctvnwziaxyg3, preserveAxis=(2,7))  # sum all axis except c
     sirewool_cz = fun.f_reduce_skipfew(np.sum, woolvalue_czg0, preserveAxis=(0,1))  # sum all axis except c
     damswool_cz = fun.f_reduce_skipfew(np.sum, woolvalue_k2ctva1nwziyg1, preserveAxis=(1,7))  # sum all axis except c
