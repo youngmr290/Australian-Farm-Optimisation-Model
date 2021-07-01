@@ -688,7 +688,7 @@ def f_pasture_reshape(lp_vars, r_vals):
     pas_vars['nap_consumed_fdp6zt'] = f_vars2np(lp_vars, 'v_nap_consumed', fdp6zt, keys_z, z_pos=-2)
 
     ##poc consumed
-    pas_vars['poc_consumed_vflz'] = f_vars2np(lp_vars, 'v_poc', fp6lz, keys_z, z_pos=-1)
+    pas_vars['poc_consumed_fp6lz'] = f_vars2np(lp_vars, 'v_poc', fp6lz, keys_z, z_pos=-1)
 
     return pas_vars
 

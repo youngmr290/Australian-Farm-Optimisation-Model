@@ -937,8 +937,8 @@ def f_report(processor, trials, non_exist_trials):
             #returns consumption in each FP
             prod = 1000
             type = 'pas'
-            weights = 'poc_consumed_vflz'
-            keys = 'keys_vflz'
+            weights = 'poc_consumed_fp6lz'
+            keys = 'keys_fp6lz'
             arith = 2
             index =[1]
             cols =[3]
