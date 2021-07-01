@@ -6,9 +6,9 @@ Created on Thu Feb 13 09:35:18 2020
 
 
 A module of 2 functions that is called by FeedTest.py to calculate
-    1. the FEC for increments of the feed supply inputs
+    1. the NV for increments of the feed supply inputs
     2. the dates of the FVPs (for graphing).
-The structure is based on the Sheep Generator but only calculates the feed inputs (FEC) for dams
+The structure is based on the Sheep Generator but only calculates the feed inputs (NV) for dams
  (because sheep class doesn't alter the values i.e. no effect of age or gender on relative intake, although small impact for cattle of bite size)
 
 The FVPs are calculated for both dams and offspring.
@@ -39,7 +39,7 @@ import Periods as per
 
 def feed_generator():
     """
-    A function that generates the feed energy concentration (FEC) for each feed supply value in each feed period.
+    A function that generates the nutritive value (NV) for each feed supply value in each feed period.
 
     Called after the sensitivity variables have been updated.
     It populates the arrays by looping through the feed periods
@@ -76,7 +76,7 @@ def feed_generator():
     ## Final length of axis after any masks have been applied, used to initialise arrays and in code below (note: these are not used to reshape input array).
     len_p = len(date_start_p)
     #len_n = 3
-    len_w = 301
+    len_w = 3001
 
     index_p = np.arange(len_p)
     index_pa1e1b1nwzida0e0b0xyg = np.expand_dims(index_p, axis=tuple(range(sinp.stock['i_p_pos'] + 1, 0)))
@@ -106,8 +106,8 @@ def feed_generator():
     ### Create feedsupply             #
     ###################################
 
-    # create a feed supply between 0 and 3 in 0.1 increments across the w axis.
-    feedsupply = index_wzida0e0b0xyg / 100 #  + index_nwzida0e0b0xyg
+    # create a feed supply between 0 and 3 in 0.01 increments across the w axis.
+    feedsupply = index_wzida0e0b0xyg / 1000 #  + index_nwzida0e0b0xyg
     ## make the last entry 4, which is ad lib supplement in confinement
     feedsupply[-1] = 4
 
@@ -377,11 +377,11 @@ def feed_generator():
         o_pi[p] = pi
         o_mei[p] = mei
 
-    # calculate feed energy concentration
-    r_fec = o_mei / o_pi
-    # print (r_fec)
+    # calculate nutritive value of the diet
+    r_nv = o_mei / o_pi
+    # print (r_nv)
 
-    return r_fec, np.squeeze(feedsupply)
+    return r_nv, np.squeeze(feedsupply)
 
 
 

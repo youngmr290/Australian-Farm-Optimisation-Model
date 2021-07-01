@@ -45,11 +45,11 @@ def stubble_all(params, report, nv):
     providing the DMD and proportion of the total stubble in each.
 
     The energy provided from consuming each stubble category is calculated from DMD. Like pasture, stubble
-    FOO is expressed in units of dry matter (excluding moisture) therefore feed energy is expressed as MD
+    FOO is expressed in units of dry matter (excluding moisture) therefore feed energy is expressed as M/D
     (does not require dry matter content conversion). The volume of each stubble category is calculated
     based on both the quality and availability of the feed.
 
-    Farmer often rack and burn stubbles in preparation for the following seeding. This is represented as a
+    Farmer often rake and burn stubbles in preparation for the following seeding. This is represented as a
     cost see Crop.py for further information.
 
 

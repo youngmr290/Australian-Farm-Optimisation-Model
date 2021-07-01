@@ -1837,7 +1837,7 @@ def generator(params,r_vals,nv,plots = False):
     ###a- create a ‘j0’ by ‘n’ array that is the multipliers that weight each ‘j0’ for that level of ‘n’
     ###the slices of j0 are Std, minimum & maximum respectively
     ###the nut_mult does an array equivalent of feed supply = std + (max - std) * spread (if spread > 0, (min - std) if spread < 0)
-    ###the nut_mult step is carried out on FEC (MJ of MEI / intake volume required)
+    ###the nut_mult step is carried out on NV (MJ of MEI / intake volume required)
     nut_mult_g0_j0n = np.empty((j0_len,n_fs_g0))
     nut_mult_g0_j0n[0, ...] = 1 - np.abs(nut_spread_g0_n)
     nut_mult_g0_j0n[1, ...] = np.abs(np.minimum(0, nut_spread_g0_n))
@@ -1865,31 +1865,31 @@ def generator(params,r_vals,nv,plots = False):
     nut_mult_g3_j0n[:,nut_spread_g3_n >=3] = 0 #if nut_add exists then nut_mult=0
 
     ###c - feedsupply_std with n axis (instead of j axis).
-    #### an array to convert feedsupply to FEC and then to revert. Used to create the feedsupply with nut_spread.
+    #### an array to convert feedsupply to NV and then to revert. Used to create the feedsupply with nut_spread.
     #### the FeedSupplyGenerator is based on code from StockGenerator but with different period definitions
     #todo there may be a way to save duplication of code
-    fec_p6f, feedsupply_f = fgen.feed_generator()
+    nv_p6f, feedsupply_f = fgen.feed_generator()
 
     nut_mult_g0_pk0k1k2j0nwzida0e0b0xyg = np.expand_dims(nut_mult_g0_j0n[na,na,na,na,...], axis = tuple(range(n_pos+1,0))) #expand axis to line up with feedsupply, add axis from g to n and j0 to p
     nut_add_g0_pk0k1k2nwzida0e0b0xyg = np.expand_dims(nut_add_g0_n, axis = (tuple(range(p_pos,n_pos)) + tuple(range(n_pos+1,0)))) #add axis from p to n and n to g
-    t_fec_pa1e1b1j0wzida0e0b0xyg0 = sfun.f1_convert_fs2nv(t_feedsupply_pa1e1b1j0wzida0e0b0xyg0, fec_p6f, feedsupply_f, a_p6_pa1e1b1nwzida0e0b0xyg) #convert fs to fec
-    t_fec_pa1e1b1j0nwzida0e0b0xyg0 = np.expand_dims(t_fec_pa1e1b1j0wzida0e0b0xyg0, axis = n_pos) #add n axis
-    fec_std_pa1e1b1nwzida0e0b0xyg0 = np.sum(t_fec_pa1e1b1j0nwzida0e0b0xyg0 * nut_mult_g0_pk0k1k2j0nwzida0e0b0xyg, axis = n_pos-1 ) #sum j axis, minus 1 because n axis was added therefore shifting j0 position (it was originally in the same place). Sum across j0 axis and leave just the n axis
-    feedsupply_std_pa1e1b1nwzida0e0b0xyg0 = sfun.f1_convert_nv2fs(fec_std_pa1e1b1nwzida0e0b0xyg0, fec_p6f, feedsupply_f, a_p6_pz) #convert fec back to fs
+    t_nv_pa1e1b1j0wzida0e0b0xyg0 = sfun.f1_convert_fs2nv(t_feedsupply_pa1e1b1j0wzida0e0b0xyg0, nv_p6f, feedsupply_f, a_p6_pa1e1b1nwzida0e0b0xyg) #convert fs to NV
+    t_nv_pa1e1b1j0nwzida0e0b0xyg0 = np.expand_dims(t_nv_pa1e1b1j0wzida0e0b0xyg0, axis = n_pos) #add n axis
+    nv_std_pa1e1b1nwzida0e0b0xyg0 = np.sum(t_nv_pa1e1b1j0nwzida0e0b0xyg0 * nut_mult_g0_pk0k1k2j0nwzida0e0b0xyg, axis = n_pos-1 ) #sum j axis, minus 1 because n axis was added therefore shifting j0 position (it was originally in the same place). Sum across j0 axis and leave just the n axis
+    feedsupply_std_pa1e1b1nwzida0e0b0xyg0 = sfun.f1_convert_nv2fs(nv_std_pa1e1b1nwzida0e0b0xyg0, nv_p6f, feedsupply_f, a_p6_pz) #convert NV back to fs
 
     nut_mult_g1_pk0k1k2j0nwzida0e0b0xyg = np.expand_dims(nut_mult_g1_j0n[na,na,na,na,...], axis = tuple(range(n_pos+1,0))) #expand axis to line up with feedsupply, add axis from g to n and j0 to p
     nut_add_g1_pk0k1k2nwzida0e0b0xyg = np.expand_dims(nut_add_g1_n, axis = (tuple(range(p_pos,n_pos)) + tuple(range(n_pos+1,0)))) #add axis from p to n and n to g
-    t_fec_pa1e1b1j0wzida0e0b0xyg1 = sfun.f1_convert_fs2nv(t_feedsupply_pa1e1b1j0wzida0e0b0xyg1, fec_p6f, feedsupply_f, a_p6_pa1e1b1nwzida0e0b0xyg) #convert fs to fec
-    t_fec_pa1e1b1j0nwzida0e0b0xyg1 = np.expand_dims(t_fec_pa1e1b1j0wzida0e0b0xyg1, axis = n_pos) #add n axis
-    fec_std_pa1e1b1nwzida0e0b0xyg1 = np.sum(t_fec_pa1e1b1j0nwzida0e0b0xyg1 * nut_mult_g1_pk0k1k2j0nwzida0e0b0xyg, axis = n_pos-1 ) #minus 1 because n axis was added therefore shifting j0 position (it was originally in the place of n). Sum across j0 axis leaving the n axis
-    feedsupply_std_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_convert_nv2fs(fec_std_pa1e1b1nwzida0e0b0xyg1, fec_p6f, feedsupply_f, a_p6_pz) #convert fec back to fs
+    t_nv_pa1e1b1j0wzida0e0b0xyg1 = sfun.f1_convert_fs2nv(t_feedsupply_pa1e1b1j0wzida0e0b0xyg1, nv_p6f, feedsupply_f, a_p6_pa1e1b1nwzida0e0b0xyg) #convert fs to NV
+    t_nv_pa1e1b1j0nwzida0e0b0xyg1 = np.expand_dims(t_nv_pa1e1b1j0wzida0e0b0xyg1, axis = n_pos) #add n axis
+    nv_std_pa1e1b1nwzida0e0b0xyg1 = np.sum(t_nv_pa1e1b1j0nwzida0e0b0xyg1 * nut_mult_g1_pk0k1k2j0nwzida0e0b0xyg, axis = n_pos-1 ) #minus 1 because n axis was added therefore shifting j0 position (it was originally in the place of n). Sum across j0 axis leaving the n axis
+    feedsupply_std_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_convert_nv2fs(nv_std_pa1e1b1nwzida0e0b0xyg1, nv_p6f, feedsupply_f, a_p6_pz) #convert NV back to fs
 
     nut_mult_g3_pk0k1k2j0nwzida0e0b0xyg = np.expand_dims(nut_mult_g3_j0n[na,na,na,na,...], axis = tuple(range(n_pos+1,0))) #expand axis to line up with feedsupply, add axis from g to n and j0 to p
     nut_add_g3_pk0k1k2nwzida0e0b0xyg = np.expand_dims(nut_add_g3_n, axis = (tuple(range(p_pos,n_pos)) + tuple(range(n_pos+1,0)))) #add axis from p to n and n to g
-    t_fec_pa1e1b1j0wzida0e0b0xyg3 = sfun.f1_convert_fs2nv(t_feedsupply_pa1e1b1j0wzida0e0b0xyg3, fec_p6f, feedsupply_f, a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p]) #convert fs to fec
-    t_fec_pa1e1b1j0nwzida0e0b0xyg3 = np.expand_dims(t_fec_pa1e1b1j0wzida0e0b0xyg3, axis = n_pos) #add n axis
-    fec_std_pa1e1b1nwzida0e0b0xyg3 = np.sum(t_fec_pa1e1b1j0nwzida0e0b0xyg3 * nut_mult_g3_pk0k1k2j0nwzida0e0b0xyg, axis = n_pos-1 ) #minus 1 because n axis was added therefore shifting j0 position (it was originally in the same place). Sum across j0 axis and leave just the n axis
-    feedsupply_std_pa1e1b1nwzida0e0b0xyg3 = sfun.f1_convert_nv2fs(fec_std_pa1e1b1nwzida0e0b0xyg3, fec_p6f, feedsupply_f, a_p6_pz[mask_p_offs_p]) #convert fec back to fs
+    t_nv_pa1e1b1j0wzida0e0b0xyg3 = sfun.f1_convert_fs2nv(t_feedsupply_pa1e1b1j0wzida0e0b0xyg3, nv_p6f, feedsupply_f, a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p]) #convert fs to NV
+    t_nv_pa1e1b1j0nwzida0e0b0xyg3 = np.expand_dims(t_nv_pa1e1b1j0wzida0e0b0xyg3, axis = n_pos) #add n axis
+    nv_std_pa1e1b1nwzida0e0b0xyg3 = np.sum(t_nv_pa1e1b1j0nwzida0e0b0xyg3 * nut_mult_g3_pk0k1k2j0nwzida0e0b0xyg, axis = n_pos-1 ) #minus 1 because n axis was added therefore shifting j0 position (it was originally in the same place). Sum across j0 axis and leave just the n axis
+    feedsupply_std_pa1e1b1nwzida0e0b0xyg3 = sfun.f1_convert_nv2fs(nv_std_pa1e1b1nwzida0e0b0xyg3, nv_p6f, feedsupply_f, a_p6_pz[mask_p_offs_p]) #convert NV back to fs
 
     ###Ensure that feed supplies generated by nut_spread inputs < 3 are less than 3
     feedsupply_std_pa1e1b1nwzida0e0b0xyg0 = np.minimum(2.99, feedsupply_std_pa1e1b1nwzida0e0b0xyg0)
@@ -6240,12 +6240,12 @@ def generator(params,r_vals,nv,plots = False):
                                                  * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3) \
                                                  * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3) #todo cluster d
 
-    ##fec - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. t is not required because it doesnt effect fec
-    if pinp.rep['i_store_fec_rep']:
-        r_fec_sire_pg = nv_psire
-        r_fec_dams_k2tvpg = (nv_pdams * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
+    ##NV - need to add v and k2 axis but still keep p, e and b so that we can graph the desired patterns. This is a big array so only stored if user wants. t is not required because it doesnt effect NV
+    if pinp.rep['i_store_nv_rep']:
+        r_nv_sire_pg = nv_psire
+        r_nv_dams_k2tvpg = (nv_pdams * (a_v_pa1e1b1nwzida0e0b0xyg1 == index_vpa1e1b1nwzida0e0b0xyg1)
                              * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,na,...] == index_k2tva1e1b1nwzida0e0b0xyg1[:,:,:,na,...]))
-        r_fec_offs_k3k5tvpg = (nv_poffs * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
+        r_nv_offs_k3k5tvpg = (nv_poffs * (a_v_pa1e1b1nwzida0e0b0xyg3 == index_vpa1e1b1nwzida0e0b0xyg3)
                                * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,:,na,...])
                                * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...]))
 
@@ -7257,7 +7257,7 @@ def generator(params,r_vals,nv,plots = False):
     r_vals['fd_hd_k2tva1nwziyg1'] = r_fd_hd_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
     r_vals['fd_hd_k3k5tvnwziaxyg3'] = r_fd_hd_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
 
-    ###mei and pi and fec (feed energy concentration)
+    ###mei and pi and NV (nutritive value)
     r_vals['mei_sire_p6fzg0'] = mei_p6fa1e1b1nwzida0e0b0xyg0.reshape(p6fzg0_shape)
     r_vals['mei_dams_k2p6ftva1nw8ziyg1'] = mei_k2p6ftva1e1b1nwzida0e0b0xyg1.reshape(k2p6ftva1nwziyg1_shape)
     r_vals['mei_offs_k3k5p6ftvnw8ziaxyg3'] = mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3.reshape(k3k5p6ftvnwziaxyg3_shape)
@@ -7298,7 +7298,7 @@ def generator(params,r_vals,nv,plots = False):
         r_vals['on_hand_mort_k3k5tvpnwziaxyg3'] = r_on_hand_mort_k3k5tvpa1e1b1nwzida0e0b0xyg3.reshape(k3k5tvpnwziaxyg3_shape)
 
     ###numbers weights for reports with arrays that keep axis that are not present in lp array.
-    if pinp.rep['i_store_lw_rep'] or pinp.rep['i_store_ffcfw_rep'] or pinp.rep['i_store_fec_rep']:
+    if pinp.rep['i_store_lw_rep'] or pinp.rep['i_store_ffcfw_rep'] or pinp.rep['i_store_nv_rep']:
 
         ###weights the denominator and numerator - required for reports when p, e and b are added and weighted average is taken (otherwise broadcasting the variable activity to the new axis causes error in result)
         ###If these arrays get too big might have to add a second denom weight in reporting.
@@ -7337,11 +7337,11 @@ def generator(params,r_vals,nv,plots = False):
         r_vals['ffcfw_prog_k3k5wzida0e0b0xyg2'] = r_ffcfw_prog_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5wzida0e0b0xyg2_shape) #no p axis
         r_vals['ffcfw_offs_k3k5vpnw8zida0e0b0xyg3'] = r_ffcfw_offs_k3k5tvpoffs.reshape(k3k5vpnwzidae0b0xyg3_shape)
 
-    ###fec - with p, e, b
-    if pinp.rep['i_store_fec_rep']:
-        r_vals['fec_sire_pzg0'] = r_fec_sire_pg.reshape(pzg0_shape)
-        r_vals['fec_dams_k2vpa1e1b1nw8ziyg1'] = r_fec_dams_k2tvpg.reshape(k2vpa1e1b1nwziyg1_shape)
-        r_vals['fec_offs_k3k5vpnw8zida0e0b0xyg3'] = r_fec_offs_k3k5tvpg.reshape(k3k5vpnwzidae0b0xyg3_shape)
+    ###NV - with p, e, b
+    if pinp.rep['i_store_nv_rep']:
+        r_vals['nv_sire_pzg0'] = r_nv_sire_pg.reshape(pzg0_shape)
+        r_vals['nv_dams_k2vpa1e1b1nw8ziyg1'] = r_nv_dams_k2tvpg.reshape(k2vpa1e1b1nwziyg1_shape)
+        r_vals['nv_offs_k3k5vpnw8zida0e0b0xyg3'] = r_nv_offs_k3k5tvpg.reshape(k3k5vpnwzidae0b0xyg3_shape)
 
 
 

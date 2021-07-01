@@ -2,7 +2,7 @@
 """
 Created on Thu Feb 13 09:35:26 2020
 
-A module to create a table of the FEC for increments of the feed supply and the dates of the FVPs
+A module to create a table of the NV for increments of the feed supply and the dates of the FVPs
 The output is used in the [Feed supply calculator.xlsx] to generate the optimum profiles in an iterative process.
 
 @author: John
@@ -21,7 +21,7 @@ print("")
 na = np.newaxis
 
 ## Create a Pandas Excel writer using XlsxWriter as the engine. used to write to multiple sheets in excel
-writer = pd.ExcelWriter('Output/r_FEC.xlsx',engine='xlsxwriter', datetime_format="dd-mmm-yy")
+writer = pd.ExcelWriter('Output/r_NV.xlsx',engine='xlsxwriter', datetime_format="dd-mmm-yy")
 ### Set some standard values for the workbook
 workbook = writer.book
 format_0hidden2dp = workbook.add_format({'num_format': '# ##0.00;-0.00;;@'})
@@ -38,15 +38,15 @@ format_header = workbook.add_format({
 ## j - axis1 alternative: the levels of the feed supply. The slices are feedsupply level 0: between 0 and 1, 1: between 1 and 2, 2: between 2 and 3
 ## i - axis2: the index or power of the polynomial
 
-# call the feedsupply generator that returns the FEC for each feedsupply between 0 and 3
-r_fec_p6f, feedsupply_f = fgen.feed_generator()
+# call the feedsupply generator that returns the NV for each feedsupply between 0 and 3
+r_nv_p6f, feedsupply_f = fgen.feed_generator()
 # reset last feedsupply to 3 for fitting the polynomial
 feedsupply_f[-1] = 3
-# concatenate the feedsupply & the FEC into a single array and then convert to a dataframe for saving to Excel
-temp = np.concatenate((feedsupply_f[na,:],r_fec_p6f), axis=0)
+# concatenate the feedsupply & the NV into a single array and then convert to a dataframe for saving to Excel
+temp = np.concatenate((feedsupply_f[na,:],r_nv_p6f), axis=0)
 data_df1 = pd.DataFrame(temp)
 
-## call the period generator that returns the FEC for each feedsupply between 0 and 3
+## call the period generator that returns the NV for each feedsupply between 0 and 3
 date_start_p, fvp_fdams, fvp_foffs, a_p6_pz = fgen.period_generator()
 ## reduce dimension of the fvp arrays to 2 dimensions
 # todo this needs to be altered if shape of the inputs is altered
@@ -76,9 +76,9 @@ data_df5 = pd.DataFrame(np.squeeze(fvp_foffs).astype('datetime64[ns]'))
 
 
 
-## write the data and the polynomials to Excel (overwriting file r_fec.xlsx)
+## write the data and the polynomials to Excel (overwriting file r_nv.xlsx)
 ### aim to keep a blank column between the output (to highlight when the data has over run)
-data_df1.to_excel(writer, 'FEC', index=False, header=False, startrow=0, startcol=0)
+data_df1.to_excel(writer, 'NV', index=False, header=False, startrow=0, startcol=0)
 
 ##The period date dataframe
 first_col_df2 = 0
@@ -113,7 +113,7 @@ for col_num, value in enumerate(data_df5.columns.values):
 
 
 # # set some values required for the polynomials
-# len_p6 = r_fec_p6f.shape[0]
+# len_p6 = r_nv_p6f.shape[0]
 # len_j = 3
 # max_order = 5
 # r2_target = 0.9995
@@ -129,14 +129,14 @@ for col_num, value in enumerate(data_df5.columns.values):
 #
 #     ### calculate the total sum of squares for the slice range for each p6
 #     #### calculate y bar for each p6
-#     ybar = np.mean(r_fec_p6f[:,slc].T, axis = 0)
+#     ybar = np.mean(r_nv_p6f[:,slc].T, axis = 0)
 #     #### calculate the total sum of squares
-#     tss = np.sum(np.square(r_fec_p6f[:,slc].T - ybar), axis = 0)
+#     tss = np.sum(np.square(r_nv_p6f[:,slc].T - ybar), axis = 0)
 #
 #     ## loop down through the order of the polynomial
 #     for order in range(max_order,0,-1):
 #         ### fit the polynomial and return the full results so that r2 can be calculated
-#         polyresults = np.polyfit(feedsupply_f[slc], r_fec_p6f[:,slc].T, order, full=True)
+#         polyresults = np.polyfit(feedsupply_f[slc], r_nv_p6f[:,slc].T, order, full=True)
 #         rsquared_p6 = 1 - (polyresults[1] / tss)
 #         ###store the polynomial coefficients if r2 is greater than the target
 #         ####access the coefficients
@@ -153,10 +153,10 @@ for col_num, value in enumerate(data_df5.columns.values):
 #         poly_coeff[:,j,:] = fun.f_update(poly_coeff[:,j,:], temporary, rsquared_p6[:,na] >= r2_target)
 #
 #     poly_coeff_df = pd.DataFrame(poly_coeff[:,j,:])
-#     ## write the data and the polynomials to Excel (overwriting file r_fec.xlsx)
+#     ## write the data and the polynomials to Excel (overwriting file r_nv.xlsx)
 #     sheetname = "Coeff" + str(j)
 #     poly_coeff_df.to_excel(writer, sheetname, index=False, header=False)
 
 writer.save()
 
-print("Feed Generator complete")
+print("Feed Generator complete, r_NV.xlsx has been created")

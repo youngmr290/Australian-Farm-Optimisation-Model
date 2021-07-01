@@ -151,7 +151,7 @@ sav['bnd_min_sale_age_female_g3'] = np.full(pinp.sheep['i_g3_inc'].shape, '-', d
 sav['pas_inc'] = np.full_like(pinp.general['pas_inc'], '-', dtype=object) #SA value for pastures included mask
 
 ##Stock
-sav['fec_inc'] = '-'    #SA to store FEC report values
+sav['nv_inc'] = '-'    #SA to store NV report values
 sav['lw_inc'] = '-'     #SA to store LW report values
 sav['ffcfw_inc'] = '-'  #SA to store FFCFW report values
 sav['onhand_mort_p_inc'] = '-'  #SA to store onhand report values

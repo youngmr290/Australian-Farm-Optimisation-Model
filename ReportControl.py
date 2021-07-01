@@ -97,11 +97,11 @@ def f_report(processor, trials, non_exist_trials):
     stacked_wbe_offs = pd.DataFrame()  # whole body energy content offs
     stacked_lw_dams = pd.DataFrame()  # live weight dams (large array with p, e and b axis)
     stacked_ffcfw_dams = pd.DataFrame()  # fleece free conceptus free weight dams (large array with p, e and b axis)
-    stacked_fec_dams = pd.DataFrame()  # feed energy content dams (large array with p, e and b axis)
+    stacked_nv_dams = pd.DataFrame()  # diet nutritive value for dams (large array with p, e and b axis)
     stacked_ffcfw_yatf = pd.DataFrame()  # fleece free conceptus free weight yatf (large array with p, e and b axis)
     stacked_ffcfw_prog = pd.DataFrame()  # fleece free conceptus free weight prog (large array with p, e and b axis)
     stacked_ffcfw_offs = pd.DataFrame()  # fleece free conceptus free weight offs (large array with p, e and b axis)
-    stacked_fec_offs = pd.DataFrame()  # feed energy content offs (large array with p, e and b axis)
+    stacked_nv_offs = pd.DataFrame()  # diet nutritive value for offs (large array with p, e and b axis)
     stacked_weanper = pd.DataFrame()  # weaning percent
     stacked_scanper = pd.DataFrame()  # scan percent
     stacked_dry_propn = pd.DataFrame()  # dry ewe proportion
@@ -132,10 +132,10 @@ def f_report(processor, trials, non_exist_trials):
     stacked_poccon = pd.DataFrame()  # pasture on crop paddocks feed consumed
     stacked_supcon = pd.DataFrame()  # supplement feed consumed
     stacked_stubcon = pd.DataFrame()  # stubble feed consumed
-    stacked_grnfec = pd.DataFrame()  # FEC of green pas
+    stacked_grnnv = pd.DataFrame()  # NV of green pas
     stacked_grndmd = pd.DataFrame()  # dmd of green pas
     stacked_avegrnfoo = pd.DataFrame()  # Average Foo of green pas
-    stacked_dryfec = pd.DataFrame()  # FEC of dry pas
+    stacked_drynv = pd.DataFrame()  # NV of dry pas
     stacked_drydmd = pd.DataFrame()  # dmd of dry pas
     stacked_avedryfoo = pd.DataFrame()  # Average Foo of dry pas
 
@@ -388,12 +388,12 @@ def f_report(processor, trials, non_exist_trials):
             ffcfw_dams = pd.concat([ffcfw_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_ffcfw_dams = stacked_ffcfw_dams.append(ffcfw_dams)
 
-        if report_run.loc['run_fec_dams', 'Run']:
-            ##Average dam fec with p, e & b axis. fec is adjusted for animals that are sold but not adjusted by mortality
+        if report_run.loc['run_nv_dams', 'Run']:
+            ##Average dam NV with p, e & b axis. NV is adjusted for animals that are sold but not adjusted by mortality
             ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
             ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
             type = 'stock'
-            prod = 'fec_dams_k2vpa1e1b1nw8ziyg1'
+            prod = 'nv_dams_k2vpa1e1b1nw8ziyg1'
             na_prod = [1]
             prod_weights = 'pe1b1_numbers_weights_k2tvpa1e1b1nw8ziyg1' #weight prod for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off hand)
             weights = 'dams_numbers_k2tvanwziy1g1'
@@ -405,11 +405,11 @@ def f_report(processor, trials, non_exist_trials):
             cols = [12, 5, 1, 6]    #g1, e, t & b1
             axis_slice = {}
             # axis_slice[5] = [0, 1, 1]   #only the first cycle of e1
-            fec_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod,
+            nv_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod,
                                    prod_weights=prod_weights, weights=weights, na_weights=na_weights, den_weights=den_weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
-            fec_dams = pd.concat([fec_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_fec_dams = stacked_fec_dams.append(fec_dams)
+            nv_dams = pd.concat([nv_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_nv_dams = stacked_nv_dams.append(nv_dams)
 
         if report_run.loc['run_ffcfw_yatf', 'Run']:
             ##Average yatf ffcfw with p, e & b axis. ffcfw is not adjusted by mortality
@@ -457,7 +457,7 @@ def f_report(processor, trials, non_exist_trials):
             stacked_ffcfw_prog = stacked_ffcfw_prog.append(ffcfw_prog)
 
         if report_run.loc['run_ffcfw_offs', 'Run']:
-            ##Average offs ffcfw with p, e & b axis. fec is adjusted for animals that are sold but not adjusted by mortality
+            ##Average offs ffcfw with p, e & b axis. ffcfw is adjusted for animals that are sold but not adjusted by mortality
             ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
             ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
             type = 'stock'
@@ -481,12 +481,12 @@ def f_report(processor, trials, non_exist_trials):
             ffcfw_offs = pd.concat([ffcfw_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_ffcfw_offs = stacked_ffcfw_offs.append(ffcfw_offs)
 
-        if report_run.loc['run_fec_offs', 'Run']:
-            ##Average offs fec with p, e & b axis. fec is adjusted for animals that are sold but not adjusted by mortality
+        if report_run.loc['run_nv_offs', 'Run']:
+            ##Average offs NV with p, e & b axis. NV is adjusted for animals that are sold but not adjusted by mortality
             ## because it adds an extra level of complexity for minimal gain (to include mort both the numerator and denominator need to be adjusted).
             ##Denom (numbers) also needs to be weighted because of the new axis (p,e&b) being added and then summed in the weighted average.
             type = 'stock'
-            prod = 'fec_offs_k3k5vpnw8zida0e0b0xyg3'
+            prod = 'nv_offs_k3k5vpnw8zida0e0b0xyg3'
             na_prod = [2]
             prod_weights = 'pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3' #weight prod for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off hand)
             weights = 'offs_numbers_k3k5tvnwziaxyg3'
@@ -500,11 +500,11 @@ def f_report(processor, trials, non_exist_trials):
             axis_slice[11] = [0,1,1] #first cycle
             axis_slice[9] = [2,-1,1] #Adult
             axis_slice[15] = [0,1,1] #BBB
-            fec_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights
+            nv_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, prod_weights=prod_weights
                                    , weights=weights, den_weights=den_weights, na_weights=na_weights
                                    , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
-            fec_offs = pd.concat([fec_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_fec_offs = stacked_fec_offs.append(fec_offs)
+            nv_offs = pd.concat([nv_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_nv_offs = stacked_nv_offs.append(nv_offs)
 
         if report_run.loc['run_lamb_survival', 'Run']:
             option = 0
@@ -827,20 +827,20 @@ def f_report(processor, trials, non_exist_trials):
             drycon = pd.concat([drycon],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_drycon = stacked_drycon.append(drycon)
 
-        if report_run.loc['run_grnfec', 'Run']:
-            #returns FEC during each FP regardless of whether selected or not
+        if report_run.loc['run_grnnv', 'Run']:
+            #returns NV during each FP regardless of whether selected or not
             type = 'pas'
-            prod = 'fec_grnha_fgop6lzt'
+            prod = 'nv_grnha_fgop6lzt'
             weights = 1
             keys = 'keys_fgop6lzt'
             arith = 5
             index = [3]
             cols = [2, 1]
             axis_slice = {}
-            grnfec = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
+            grnnv = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
-            grnfec = pd.concat([grnfec],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_grnfec = stacked_grnfec.append(grnfec)
+            grnnv = pd.concat([grnnv],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_grnnv = stacked_grnnv.append(grnnv)
 
         if report_run.loc['run_grndmd', 'Run']:
             #returns DMD during each FP (regardless of whether selected or not)
@@ -872,20 +872,20 @@ def f_report(processor, trials, non_exist_trials):
             grnfoo = pd.concat([grnfoo],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_avegrnfoo = stacked_avegrnfoo.append(grnfoo)
 
-        if report_run.loc['run_dryfec', 'Run']:
-            #returns FEC during each FP (regardless of whether selected or not)
+        if report_run.loc['run_drynv', 'Run']:
+            #returns NV during each FP (regardless of whether selected or not)
             type = 'pas'
-            prod = 'fec_dry_fdp6zt'
+            prod = 'nv_dry_fdp6zt'
             weights = 1
             keys = 'keys_fdp6zt'
             arith = 5
             index = [2]
             cols = [1]
             axis_slice = {}
-            dryfec = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
+            drynv = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
-            dryfec = pd.concat([dryfec],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_dryfec = stacked_dryfec.append(dryfec)
+            drynv = pd.concat([drynv],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_drynv = stacked_drynv.append(drynv)
 
         if report_run.loc['run_drydmd', 'Run']:
             #returns DMD during each FP (regardless of whether selected or not)
@@ -1028,14 +1028,14 @@ def f_report(processor, trials, non_exist_trials):
         df_settings = rep.f_df2xl(writer, stacked_ffcfw_dams, 'ffcfw_dams', df_settings, option=1)
     if report_run.loc['run_ffcfw_yatf', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_ffcfw_yatf, 'ffcfw_yatf', df_settings, option=1)
-    if report_run.loc['run_fec_dams', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_fec_dams, 'fec_dams', df_settings, option=1)
+    if report_run.loc['run_nv_dams', 'Run']:
+        df_settings = rep.f_df2xl(writer, stacked_nv_dams, 'nv_dams', df_settings, option=1)
     if report_run.loc['run_ffcfw_prog', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_ffcfw_prog, 'ffcfw_prog', df_settings, option=1)
     if report_run.loc['run_ffcfw_offs', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_ffcfw_offs, 'ffcfw_offs', df_settings, option=1)
-    if report_run.loc['run_fec_offs', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_fec_offs, 'fec_offs', df_settings, option=1)
+    if report_run.loc['run_nv_offs', 'Run']:
+        df_settings = rep.f_df2xl(writer, stacked_nv_offs, 'nv_offs', df_settings, option=1)
     if report_run.loc['run_lamb_survival', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_lamb_survival, 'lamb_survival', df_settings, option=1)
     if report_run.loc['run_weanper', 'Run']:
@@ -1081,14 +1081,14 @@ def f_report(processor, trials, non_exist_trials):
         df_settings = rep.f_df2xl(writer, stacked_grncon, 'grncon', df_settings, option=1)
     if report_run.loc['run_drycon', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_drycon, 'drycon', df_settings, option=1)
-    if report_run.loc['run_grnfec', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_grnfec, 'grnfec', df_settings, option=1)
+    if report_run.loc['run_grnnv', 'Run']:
+        df_settings = rep.f_df2xl(writer, stacked_grnnv, 'grnnv', df_settings, option=1)
     if report_run.loc['run_grndmd', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_grndmd, 'grndmd', df_settings, option=1)
     if report_run.loc['run_avegrnfoo', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_avegrnfoo, 'avegrnfoo', df_settings, option=1)
-    if report_run.loc['run_dryfec', 'Run']:
-        df_settings = rep.f_df2xl(writer, stacked_dryfec, 'dryfec', df_settings, option=1)
+    if report_run.loc['run_drynv', 'Run']:
+        df_settings = rep.f_df2xl(writer, stacked_drynv, 'drynv', df_settings, option=1)
     if report_run.loc['run_drydmd', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_drydmd, 'drydmd', df_settings, option=1)
     if report_run.loc['run_avedryfoo', 'Run']:

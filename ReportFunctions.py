@@ -12,7 +12,7 @@ This module contains function which are used for three main jobs:
     so they will not be correct for r_vals)
 
 .. tip:: There are cases where the report requires more detail than the decision variable returned from
-    the lp contains. For example some livestock reports (e.g. FEC) need an e b and p axis but the
+    the lp contains. For example some livestock reports (e.g. NV) need an e b and p axis but the
     clustering has removed this level of detail in the lp variables.
     To handle this we make the corresponding r_vals array with both the detailed and clustered axis.
 

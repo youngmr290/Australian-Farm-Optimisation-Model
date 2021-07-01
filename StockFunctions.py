@@ -1018,26 +1018,26 @@ def f_emissions_bc(ch, intake_f, intake_s, md_solid, level):
     return ch4_total, ch4_animal
 
 
-def f1_convert_fs2nv(fs_input, fec_p6f, feedsupply_f, a_p6_pa1e1b1nwzida0e0b0xyg):
-    ##convert a feed supply array (feed) and return an fec array using a conversion array (fec_p6f) for a corresponding feedsupply (feedsupply_f)
+def f1_convert_fs2nv(fs_input, nv_p6f, feedsupply_f, a_p6_pa1e1b1nwzida0e0b0xyg):
+    ##convert a feed supply array (feed) and return an NV array using a conversion array (nv_p6f) for a corresponding feedsupply (feedsupply_f)
     ## expect feed to have a p axis as axis 0.
     ###the position of the feedsupply input in the conversion array
     fs_col_pa1e1b1nwzida0e0b0xyg = np.searchsorted(feedsupply_f, fs_input, 'right') - 1
     fs_col_pa1e1b1nwzida0e0b0xyg = np.maximum(0, fs_col_pa1e1b1nwzida0e0b0xyg)
     ###the value from the conversion array in column fs_col in the row associated with the feed period for that generator period.
-    fec_pa1e1b1nwzida0e0b0xygf = fec_p6f[a_p6_pa1e1b1nwzida0e0b0xyg, :]
-    fec_pa1e1b1nwzida0e0b0xygf = np.take_along_axis(fec_pa1e1b1nwzida0e0b0xygf, fs_col_pa1e1b1nwzida0e0b0xyg[...,na], axis=-1)
-    return fec_pa1e1b1nwzida0e0b0xygf[...,0] #remove singleton f axis - no longer needed.
+    nv_pa1e1b1nwzida0e0b0xygf = nv_p6f[a_p6_pa1e1b1nwzida0e0b0xyg, :]
+    nv_pa1e1b1nwzida0e0b0xygf = np.take_along_axis(nv_pa1e1b1nwzida0e0b0xygf, fs_col_pa1e1b1nwzida0e0b0xyg[...,na], axis=-1)
+    return nv_pa1e1b1nwzida0e0b0xygf[...,0] #remove singleton f axis - no longer needed.
 
 
-def f1_convert_nv2fs(fec_input, fec_p6f, feedsupply_f, a_p6_pz):
-    ##convert a feed supply array (feed) and return an fec array using a conversion array (fec_p6f) for a corresponding feedsupply (feedsupply_f)
+def f1_convert_nv2fs(nv_input, nv_p6f, feedsupply_f, a_p6_pz):
+    ##convert a feed supply array (feed) and return an NV array using a conversion array (nv_p6f) for a corresponding feedsupply (feedsupply_f)
     ## expect feed to have a p axis as axis 0.
     ### multi dim search sorted requires the axes to be the same, so convert p6 to p in the lookup array
-    fec_pzf = fec_p6f[a_p6_pz, :]
+    nv_pzf = nv_p6f[a_p6_pz, :]
     ###the position of the feedsupply input in the conversion array
     z_pos = sinp.stock['i_z_pos']
-    fs_col_pa1e1b1nwzida0e0b0xyg = fun.searchsort_multiple_dim(fec_pzf, fec_input, axis_a0=0, axis_v0=0, axis_a1=1, axis_v1=z_pos, side='right') - 1
+    fs_col_pa1e1b1nwzida0e0b0xyg = fun.searchsort_multiple_dim(nv_pzf, nv_input, axis_a0=0, axis_v0=0, axis_a1=1, axis_v1=z_pos, side='right') - 1
     fs_col_pa1e1b1nwzida0e0b0xyg = np.maximum(0, fs_col_pa1e1b1nwzida0e0b0xyg)
     ###the value from the feedsupply array in column fs_col.
     fs = feedsupply_f[fs_col_pa1e1b1nwzida0e0b0xyg]

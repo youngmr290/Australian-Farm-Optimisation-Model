@@ -169,7 +169,7 @@ def f_pasture(params, r_vals, nv):
     # poc_days_of_grazing_t       = np.zeros(n_pasture_types, dtype = 'float64')  # number of days after the pasture break that (moist) seeding can begin
     i_legume_zt                 = np.zeros(zt, dtype = 'float64')               # proportion of legume in the sward
     i_restock_grn_propn_t       = np.zeros(n_pasture_types, dtype = 'float64')  # Proportion of the FOO that is green when pastures are restocked after reseeding
-    i_fec_maintenance_t         = np.zeros(n_pasture_types, dtype = 'float64')  # approximate feed energy concentration for maintenance (FEC = M/D * relative intake)
+    i_nv_maintenance_t         = np.zeros(n_pasture_types, dtype = 'float64')  # approximate nutritive value for maintenance (NV = M/D * relative intake)
 
 #    germination_p6lrzt           = np.zeros(p6lrzt,  dtype = 'float64')  # germination for each rotation phase (kg/ha)
     # foo_dry_reseeding_dp6lrzt    = np.zeros(dp6lrzt, dtype = 'float64')  # dry FOO adjustment allocated to the low & high quality dry feed pools (kg/ha)
@@ -313,7 +313,7 @@ def f_pasture(params, r_vals, nv):
         i_fxg_foo_op6lzt[1,...,t]        = pinp.f_seasonal_inp(np.moveaxis(exceldata['MedFOO'],0,-1), numpy=True, axis=-1)[:,lmu_mask_l,...]
         i_me_eff_gainlose_p6t[...,t]     = exceldata['MaintenanceEff'][:,0]
         # i_me_maintenance_vp6t[...,t]     = exceldata['MaintenanceEff'].iloc[:,1:].to_numpy().T  # replaced by the nv_cutoff. Still used in PastureTest
-        i_fec_maintenance_t[t]          = exceldata['MaintenanceFEC']
+        i_nv_maintenance_t[t]          = exceldata['MaintenanceNV']
         ## # i_fxg_foo_op6lt[-1,...] is calculated later and is the maximum foo that can be achieved (on that lmu in that period)
         ## # it is affected by sa on pgr so it must be calculated during the experiment where sam might be altered.
         i_fxg_pgr_op6lzt[0,...,t]        = pinp.f_seasonal_inp(np.moveaxis(exceldata['LowPGR'],0,-1), numpy=True, axis=-1)[:,lmu_mask_l,...]
@@ -418,7 +418,7 @@ def f_pasture(params, r_vals, nv):
     me_threshold_fp6zt[...] = np.swapaxes(nv['nv_cutoff_ave_p6f'], axis1=0, axis2=1)[...,na,na]
     ###threshold is the greater of the maintenance or the NV required in the pool because switching from one below
     ### maintenance feed to another that is further below maintenance doesn't affect average efficiency.
-    me_threshold_fp6zt[me_threshold_fp6zt < i_fec_maintenance_t] = i_fec_maintenance_t
+    me_threshold_fp6zt[me_threshold_fp6zt < i_nv_maintenance_t] = i_nv_maintenance_t
 
     ## FOO on the non-arable areas in crop paddocks is ungrazed FOO of pasture type 0 (annual), therefore calculate the profile based on the pasture type 0 values
     grn_foo_start_ungrazed_p6lzt, dry_foo_start_ungrazed_p6lzt = pfun.f1_calc_foo_profile(
@@ -575,8 +575,8 @@ def f_pasture(params, r_vals, nv):
     r_vals['pgr_grnha_gop6lzt'] = pgr_grnha_gop6lzt
     r_vals['foo_end_grnha_gop6lzt'] = foo_endprior_grnha_gop6lzt #Green FOO prior to eos senescence
     r_vals['cons_grnha_t_gop6lzt'] = cons_grnha_t_gop6lzt
-    r_vals['fec_grnha_fgop6lzt'] = fun.f_divide(me_cons_grnha_fgop6lzt, volume_grnha_gop6lzt)
-    r_vals['fec_dry_fdp6zt'] = fun.f_divide(dry_mecons_t_fdp6zt, dry_volume_t_dp6zt)
+    r_vals['nv_grnha_fgop6lzt'] = fun.f_divide(me_cons_grnha_fgop6lzt, volume_grnha_gop6lzt)
+    r_vals['nv_dry_fdp6zt'] = fun.f_divide(dry_mecons_t_fdp6zt, dry_volume_t_dp6zt)
     r_vals['foo_ave_grnha_gop6lzt'] = foo_ave_grnha_gop6lzt
     r_vals['dmd_diet_grnha_gop6lzt'] = dmd_diet_grnha_gop6lzt
     r_vals['dry_foo_dp6zt'] = dry_foo_dp6zt
