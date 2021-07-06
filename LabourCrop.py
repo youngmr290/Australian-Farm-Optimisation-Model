@@ -268,33 +268,26 @@ def f_crop_monitoring():
     ###convert date range to labour periods
     fixed_crop_monitor_pz = np.sum(fixed_crop_monitor_d * monitoring_allocation_pzd, axis=-1) #sum the d axis (monitoring date axis)
     fixed_crop_monitor = pd.DataFrame(fixed_crop_monitor_pz, index=keys_p5, columns=keys_z)
-    return variable_crop_monitor, fixed_crop_monitor
+    return variable_crop_monitor.stack(), fixed_crop_monitor.stack()
 
 ##collates all the params
 def f_labcrop_params(params,r_vals):
-    prep_labour = f_prep_labour()
-    fert_app_time_t = f_fert_app_time_t()
-    fert_app_time_ha = f_fert_app_time_ha()
-    chem_app_time_ha = f_chem_app_time_ha()
+    prep_labour = f_prep_labour().stack()
+    fert_app_time_t = f_fert_app_time_t().stack()
+    fert_app_time_ha = f_fert_app_time_ha().stack()
+    chem_app_time_ha = f_chem_app_time_ha().stack()
     variable_crop_monitor, fixed_crop_monitor = f_crop_monitoring()
 
     ##add params which are inputs
     params['harvest_helper'] = pinp.labour['harvest_helper'].squeeze().to_dict()
     params['daily_seed_hours'] = pinp.mach['daily_seed_hours']
     params['seeding_helper'] = pinp.labour['seeding_helper']
-
-    ##create season params in loop
-    keys_z = pinp.f_keys_z()
-    for z in range(len(keys_z)):
-        ##create season key for params dict
-        scenario = keys_z[z]
-        params[scenario] = {}
-        params[scenario]['prep_labour'] = prep_labour[scenario].to_dict()
-        params[scenario]['fert_app_time_t'] = fert_app_time_t[scenario].to_dict()
-        params[scenario]['fert_app_time_ha'] = fert_app_time_ha[scenario].to_dict()
-        params[scenario]['chem_app_time_ha'] = chem_app_time_ha[scenario].to_dict()
-        params[scenario]['variable_crop_monitor'] = variable_crop_monitor[scenario].to_dict()
-        params[scenario]['fixed_crop_monitor'] = fixed_crop_monitor[scenario].to_dict()
+    params['prep_labour'] = prep_labour.to_dict()
+    params['fert_app_time_t'] = fert_app_time_t.to_dict()
+    params['fert_app_time_ha'] = fert_app_time_ha.to_dict()
+    params['chem_app_time_ha'] = chem_app_time_ha.to_dict()
+    params['variable_crop_monitor'] = variable_crop_monitor.to_dict()
+    params['fixed_crop_monitor'] = fixed_crop_monitor.to_dict()
 
 
 

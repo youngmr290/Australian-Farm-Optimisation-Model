@@ -296,12 +296,7 @@ def f_sup_params(params,r_vals):
     params['md_tonne'] = md_tonne.to_dict()
     params['buy_grain_price'] = buy_grain_price.to_dict()
 
-    ##create season params in loop
-    keys_z = pinp.f_keys_z()
-    for z in range(len(keys_z)):
-        ##create season key for params dict
-        scenario = keys_z[z]
-        params[scenario] = {}
-        params[scenario]['total_sup_cost'] = total_sup_cost[scenario].to_dict()
-        params[scenario]['sup_labour'] = sup_labour[scenario].to_dict()
+    ##create season params
+    params['total_sup_cost'] = total_sup_cost.stack().to_dict()
+    params['sup_labour'] = sup_labour.stack().to_dict()
 

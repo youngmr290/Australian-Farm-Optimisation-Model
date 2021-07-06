@@ -61,148 +61,150 @@ def coremodel_all(params, trial_name, model):
     #Labour fixed        #
     ######################
     ##Fixed labour jobs that can be completed by anyone ie this constraint links labour fixed casual and perm and manager supply and requirement.
-    def labour_fixed_casual(model,p,w):
-        return -model.v_fixed_labour_casual[p,w] - model.v_fixed_labour_permanent[p,w] - model.v_fixed_labour_manager[p,w] +  model.p_super_labour[p] + model.p_tax_labour[p] + model.p_bas_labour[p] <= 0
-    model.con_labour_fixed_anyone = pe.Constraint(model.s_labperiods, ['any'], rule = labour_fixed_casual, doc='link between labour supply and requirement by fixed jobs for casual and above')
+    def labour_fixed_casual(model, p, w, z):
+        return -model.v_fixed_labour_casual[p,w,z] - model.v_fixed_labour_permanent[p,w,z] - model.v_fixed_labour_manager[p,w,z] \
+               +  model.p_super_labour[p,z] + model.p_tax_labour[p,z] + model.p_bas_labour[p,z] <= 0
+    model.con_labour_fixed_anyone = pe.Constraint(model.s_labperiods, ['any'], model.s_season_types, rule = labour_fixed_casual, doc='link between labour supply and requirement by fixed jobs for casual and above')
     
     ##Fixed labour jobs that must be completed by the manager ie this constraint links labour fixed manager supply and requirement.
-    def labour_fixed_manager(model,p,w):
-        return -model.v_fixed_labour_manager[p,w] +  model.p_planning_labour[p] + (model.p_learn_labour * model.v_learn_allocation[p]) <= 0
-    model.con_labour_fixed_manager = pe.Constraint(model.s_labperiods, ['mngr'], rule = labour_fixed_manager, doc='link between labour supply and requirement by fixed jobs for manager')
+    def labour_fixed_manager(model, p, w, z):
+        return -model.v_fixed_labour_manager[p,w,z] +  model.p_planning_labour[p,z] + (model.p_learn_labour * model.v_learn_allocation[p,z]) <= 0
+    model.con_labour_fixed_manager = pe.Constraint(model.s_labperiods, ['mngr'], model.s_season_types, rule = labour_fixed_manager, doc='link between labour supply and requirement by fixed jobs for manager')
     
     ######################
     #Labour crop         #
     ######################
     ##labour crop - can be done by anyone
-    def labour_crop_anyone(model,p,w):
-        return -model.v_crop_labour_casual[p,w] - model.v_crop_labour_permanent[p,w] - model.v_crop_labour_manager[p,w] + lcrppy.mach_labour_anyone(model,p) <= 0
-    model.con_labour_crop_anyone = pe.Constraint(model.s_labperiods, ['any'], rule = labour_crop_anyone, doc='link between labour supply and requirement by crop jobs for all labour sources')
+    def labour_crop_anyone(model, p, w, z):
+        return -model.v_crop_labour_casual[p,w,z] - model.v_crop_labour_permanent[p,w,z] - model.v_crop_labour_manager[p,w,z] + lcrppy.mach_labour_anyone(model,p, z) <= 0
+    model.con_labour_crop_anyone = pe.Constraint(model.s_labperiods, ['any'], model.s_season_types, rule = labour_crop_anyone, doc='link between labour supply and requirement by crop jobs for all labour sources')
     
     ##labour crop - can be done by perm and manager
-    def labour_crop_perm(model,p,w):
-        return - model.v_crop_labour_permanent[p,w] - model.v_crop_labour_manager[p,w] + lcrppy.mach_labour_perm(model,p) <= 0
-    model.con_labour_crop_perm = pe.Constraint(model.s_labperiods, ['perm'], rule = labour_crop_perm, doc='link between labour supply and requirement by crop jobs for perm and manager labour sources')
+    def labour_crop_perm(model,p,w,z):
+        return - model.v_crop_labour_permanent[p,w,z] - model.v_crop_labour_manager[p,w,z] + lcrppy.mach_labour_perm(model,p,z) <= 0
+    model.con_labour_crop_perm = pe.Constraint(model.s_labperiods, ['perm'], model.s_season_types, rule = labour_crop_perm, doc='link between labour supply and requirement by crop jobs for perm and manager labour sources')
 
     ######################
     #labour Sheep        #
     ######################
     ##labour sheep - can be done by anyone
-    def labour_sheep_cas(model,p,w):
-        return -model.v_sheep_labour_casual[p,w] - model.v_sheep_labour_permanent[p,w] - model.v_sheep_labour_manager[p,w] + suppy.sup_labour(model,p) + stkpy.stock_labour_anyone(model,p) <= 0
-    model.con_labour_sheep_anyone = pe.Constraint(model.s_labperiods, ['any'], rule = labour_sheep_cas, doc='link between labour supply and requirement by sheep jobs for all labour sources')
+    def labour_sheep_cas(model,p,w,z):
+        return -model.v_sheep_labour_casual[p,w,z] - model.v_sheep_labour_permanent[p,w,z] - model.v_sheep_labour_manager[p,w,z] + suppy.sup_labour(model,p,z) + stkpy.stock_labour_anyone(model,p,z) <= 0
+    model.con_labour_sheep_anyone = pe.Constraint(model.s_labperiods, ['any'], model.s_season_types, rule = labour_sheep_cas, doc='link between labour supply and requirement by sheep jobs for all labour sources')
 
     ##labour sheep - can be done by permanent and manager staff
-    def labour_sheep_perm(model,p,w):
-        return - model.v_sheep_labour_permanent[p,w] - model.v_sheep_labour_manager[p,w] + stkpy.stock_labour_perm(model,p) <= 0
-    model.con_labour_sheep_perm = pe.Constraint(model.s_labperiods, ['perm'], rule = labour_sheep_perm, doc='link between labour supply and requirement by sheep jobs for perm labour sources')
+    def labour_sheep_perm(model,p,w,z):
+        return - model.v_sheep_labour_permanent[p,w,z] - model.v_sheep_labour_manager[p,w,z] + stkpy.stock_labour_perm(model,p,z) <= 0
+    model.con_labour_sheep_perm = pe.Constraint(model.s_labperiods, ['perm'], model.s_season_types, rule = labour_sheep_perm, doc='link between labour supply and requirement by sheep jobs for perm labour sources')
 
     ##labour sheep - can be done by manager
-    def labour_sheep_manager(model,p,w):
-        return  - model.v_sheep_labour_manager[p,w] + stkpy.stock_labour_manager(model,p)   <= 0
-    model.con_labour_sheep_manager = pe.Constraint(model.s_labperiods, ['mngr'], rule = labour_sheep_manager, doc='link between labour supply and requirement by sheep jobs for manager labour sources')
+    def labour_sheep_manager(model,p,w,z):
+        return  - model.v_sheep_labour_manager[p,w,z] + stkpy.stock_labour_manager(model,p,z)   <= 0
+    model.con_labour_sheep_manager = pe.Constraint(model.s_labperiods, ['mngr'], model.s_season_types, rule = labour_sheep_manager, doc='link between labour supply and requirement by sheep jobs for manager labour sources')
 
     #######################################
     #stubble & nap consumption at harvest #
     #######################################
-    def harv_stub_nap_cons(model,p6):
-        if any(model.p_nap_prop[p6] or model.p_harv_prop[p6,k] for k in model.s_crops):
-            return sum(-paspy.pas_me(model,p6,f) + sum(model.p_harv_prop[p6,k]/(1-model.p_harv_prop[p6,k]) * model.v_stub_con[f,p6,k,s] * model.p_stub_md[f,p6,k,s] for k in model.s_crops for s in model.s_stub_cat)
-                    +  model.p_nap_prop[p6]/(1-model.p_nap_prop[p6]) * paspy.nappas_me(model,p6,f) for f in model.s_feed_pools) <= 0
+    def harv_stub_nap_cons(model,p6,z):
+        if any(model.p_nap_prop[p6,z] or model.p_harv_prop[p6,z,k] for k in model.s_crops):
+            return sum(-paspy.pas_me(model,p6,f,z) + sum(model.p_harv_prop[p6,z,k]/(1-model.p_harv_prop[p6,z,k])
+                                                         * model.v_stub_con[f,p6,z,k,s] * model.p_stub_md[f,p6,z,k,s] for k in model.s_crops for s in model.s_stub_cat)
+                    +  model.p_nap_prop[p6,z]/(1-model.p_nap_prop[p6,z]) * paspy.nappas_me(model,p6,f,z) for f in model.s_feed_pools) <= 0
         else:
             return pe.Constraint.Skip
-    model.con_harv_stub_nap_cons = pe.Constraint(model.s_feed_periods, rule = harv_stub_nap_cons, doc='limit stubble and nap consumption in the period harvest occurs')
+    model.con_harv_stub_nap_cons = pe.Constraint(model.s_feed_periods, model.s_season_types, rule = harv_stub_nap_cons, doc='limit stubble and nap consumption in the period harvest occurs')
 
     ######################
     #stubble             #
     ###################### 
 
-    def stubble_a(model,k,s):
+    def stubble_a(model,k,s,z):
         if model.p_rot_stubble[k,s] !=0:
-            return   -crppy.rot_stubble(model,k,s) + macpy.stubble_penalty(model,k,s) + stubpy.stubble_req_a(model,k,s) <= 0
+            return   -crppy.rot_stubble(model,k,s,z) + macpy.stubble_penalty(model,k,s,z) + stubpy.stubble_req_a(model,z,k,s) <= 0
         else:
             return pe.Constraint.Skip
-    model.con_stubble_a = pe.Constraint(model.s_crops, model.s_stub_cat, rule = stubble_a, doc='links rotation stubble production with consumption of cat A')
+    model.con_stubble_a = pe.Constraint(model.s_crops, model.s_stub_cat, model.s_season_types, rule = stubble_a, doc='links rotation stubble production with consumption of cat A')
     
     ######################
     #sow landuse        #
     ###################### 
    
     ##links crop sow req with mach sow provide - no p set because model can optimise crop sowing time
-    def cropsow_link(model,k,l):
-        if type(crppy.cropsow(model,k,l)) == int: #if crop sow param is zero this will be int (can't do if==0 because when it is not 0 it is a complex pyomo object which can't be evaluated)
+    def cropsow_link(model,k,l,z):
+        if type(crppy.cropsow(model,k,l,z)) == int: #if crop sow param is zero this will be int (can't do if==0 because when it is not 0 it is a complex pyomo object which can't be evaluated)
             return pe.Constraint.Skip #skip constraint if no crop is being sown on given rotation
         else:
-            return sum(-model.v_seeding_crop[p,k,l] for p in model.s_labperiods) + crppy.cropsow(model,k,l)  <= 0
-    model.con_cropsow = pe.Constraint(model.s_crops, model.s_lmus, rule = cropsow_link, doc='link between mach sow provide and rotation crop sow require')
+            return sum(-model.v_seeding_crop[p,k,l,z] for p in model.s_labperiods) + crppy.cropsow(model,k,l,z)  <= 0
+    model.con_cropsow = pe.Constraint(model.s_crops, model.s_lmus, model.s_season_types, rule = cropsow_link, doc='link between mach sow provide and rotation crop sow require')
    
     ##links pasture sow req with mach sow provide - requires a p set because the timing of sowing pasture is not optimisable (pasture sowing can occur in any period so the user specifies the periods when a given pasture must be sown)
     ##pasture sow has separate constraint from crop rotations because pas sow has a p axis so that user can specify period when pasture is sown (pasture has no yield penalty so model doesnt optimise seeding time like it does for crop)
-    def passow_link(model,p,k,l):
-        if type(paspy.passow(model,p,k,l)) == int: #if crop sow param is zero this will be int (can't do if==0 because when it is not 0 it is a complex pyomo object which can't be evaluated)
+    def passow_link(model,p,k,l,z):
+        if type(paspy.passow(model,p,k,l,z)) == int: #if crop sow param is zero this will be int (can't do if==0 because when it is not 0 it is a complex pyomo object which can't be evaluated)
             return pe.Constraint.Skip #skip constraint if no pasture is being sown
         else:
-            return -model.v_seeding_pas[p,k,l]  + paspy.passow(model,p,k,l) <= 0
-    model.con_passow = pe.Constraint( model.s_labperiods, model.s_landuses, model.s_lmus, rule = passow_link, doc='link between mach sow provide and rotation pas sow require')
+            return -model.v_seeding_pas[p,k,l,z]  + paspy.passow(model,p,k,l,z) <= 0
+    model.con_passow = pe.Constraint( model.s_labperiods, model.s_landuses, model.s_lmus, model.s_season_types, rule = passow_link, doc='link between mach sow provide and rotation pas sow require')
 
     ######################
     #harvest crops       #
     ###################### 
     ##links crop and mach pyomo together
-    def harv(model,k):
-        return  -macpy.harv_supply(model,k) + sum(crppy.rotation_yield_transfer(model,g,k)/1000 for g in model.s_grain_pools)  <= 0
-    model.con_harv = pe.Constraint(model.s_harvcrops, rule = harv, doc='harvest constraint')
+    def harv(model,k,z):
+        return  -macpy.harv_supply(model,k,z) + sum(crppy.rotation_yield_transfer(model,g,k,z)/1000 for g in model.s_grain_pools)  <= 0
+    model.con_harv = pe.Constraint(model.s_harvcrops, model.s_season_types, rule = harv, doc='harvest constraint')
 
 
     ######################
     #harvest hay         #
     ###################### 
     ##links crop and mach pyomo together
-    def harv(model,k):
-        return  sum(-model.v_hay_made + crppy.rotation_yield_transfer(model,g,k)/1000 for g in model.s_grain_pools)  <= 0
-    model.con_makehay = pe.Constraint(model.s_haycrops, rule = harv, doc='make hay constraint')
+    def harv(model,k,z):
+        return  sum(-model.v_hay_made[z] + crppy.rotation_yield_transfer(model,g,k,z)/1000 for g in model.s_grain_pools)  <= 0
+    model.con_makehay = pe.Constraint(model.s_haycrops, model.s_season_types, rule = harv, doc='make hay constraint')
 
     #############################
     #yield income & transfer    #
     #############################
     ##combines rotation yield, on-farm sup feed and yield penalties from untimely sowing and crop grazing. Then passes to cashflow constraint.
-    def grain_transfer(model,g,k):
-        return -crppy.rotation_yield_transfer(model,g,k) + macpy.late_seed_penalty(model,g,k) + sum(model.v_sup_con[k,g,v,f]*1000 for v in model.s_feed_pools for f in model.s_feed_periods)\
-                - model.v_buy_grain[k,g]*1000 + model.v_sell_grain[k,g]*1000 <=0
-    model.con_grain_transfer = pe.Constraint(model.s_grain_pools, model.s_crops, rule=grain_transfer, doc='constrain grain transfer between rotation and sup feeding')
+    def grain_transfer(model,g,k,z):
+        return -crppy.rotation_yield_transfer(model,g,k,z) + macpy.late_seed_penalty(model,g,k,z) + sum(model.v_sup_con[k,g,v,f,z]*1000 for v in model.s_feed_pools for f in model.s_feed_periods)\
+               - model.v_buy_grain[k,g,z]*1000 + model.v_sell_grain[k,g,z]*1000 <=0
+    model.con_grain_transfer = pe.Constraint(model.s_grain_pools, model.s_crops, model.s_season_types, rule=grain_transfer, doc='constrain grain transfer between rotation and sup feeding')
     
     ##combined grain sold and purchased to get a $ amount which is added to the cashflow constrain
-    def grain_income(model,c):
-        return sum(model.v_sell_grain[k,g] * model.p_grain_price[k,c,g] - model.v_buy_grain[k,g]* model.p_buy_grain_price[k,c,g] for k in model.s_crops for g in model.s_grain_pools)
+    def grain_income(model,c,z):
+        return sum(model.v_sell_grain[k,g,z] * model.p_grain_price[k,c,g] - model.v_buy_grain[k,g,z]* model.p_buy_grain_price[k,c,g] for k in model.s_crops for g in model.s_grain_pools)
     
     ######################
     #feed                #
     ###################### 
     ##green grazing on crop paddock before seeding
-    def poc(model,f,l):
-        return -macpy.ha_days_pasture_crop_paddocks(model,f,l) * model.p_poc_con[f,l] + sum(model.v_poc[v,f,l] for v in model.s_feed_pools) <=0
-    model.con_poc_available = pe.Constraint(model.s_feed_periods, model.s_lmus, rule=poc, doc='constraint between poc available and consumed')
+    def poc(model,f,l,z):
+        return -macpy.ha_days_pasture_crop_paddocks(model,f,l,z) * model.p_poc_con[f,l] + sum(model.v_poc[v,f,l,z] for v in model.s_feed_pools) <=0
+    model.con_poc_available = pe.Constraint(model.s_feed_periods, model.s_lmus, model.s_season_types, rule=poc, doc='constraint between poc available and consumed')
 
     ######################
     #  ME                #
     ######################
-    def me(model,p6,f):
-        return -paspy.pas_me(model,p6,f) - paspy.nappas_me(model,p6,f) - suppy.sup_me(model,p6,f) - stubpy.stubble_me(model,p6,f) \
-               + stkpy.stock_me(model,p6,f) - mvf.mvf_me(model,p6,f) <=0
-    model.con_me = pe.Constraint(model.s_feed_periods, model.s_feed_pools, rule=me, doc='constraint between me available and consumed')
+    def me(model,p6,f,z):
+        return -paspy.pas_me(model,p6,f,z) - paspy.nappas_me(model,p6,f,z) - suppy.sup_me(model,p6,f,z) - stubpy.stubble_me(model,p6,f,z) \
+               + stkpy.stock_me(model,p6,f,z) - mvf.mvf_me(model,p6,f) <=0
+    model.con_me = pe.Constraint(model.s_feed_periods, model.s_feed_pools, model.s_season_types, rule=me, doc='constraint between me available and consumed')
 
     ######################
     #Vol                 #
     ######################
-    def vol(model,p6,f):
-        return paspy.pas_vol(model,p6,f) + suppy.sup_vol(model,p6,f) + stubpy.stubble_vol(model,p6,f) - stkpy.stock_pi(model,p6,f) \
+    def vol(model,p6,f,z):
+        return paspy.pas_vol(model,p6,f,z) + suppy.sup_vol(model,p6,f,z) + stubpy.stubble_vol(model,p6,f,z) - stkpy.stock_pi(model,p6,f,z) \
                + mvf.mvf_vol(model,p6,f) <=0
-    model.con_vol = pe.Constraint(model.s_feed_periods, model.s_feed_pools, rule=vol, doc='constraint between me available and consumed')
+    model.con_vol = pe.Constraint(model.s_feed_periods, model.s_feed_pools, model.s_season_types, rule=vol, doc='constraint between me available and consumed')
 
     ######################
     #cashflow constraints#
     ######################
 
-    def cash_flow(model,i):
+    def cash_flow(model,i,z):
         '''
         Returns
         -------
@@ -220,35 +222,36 @@ def coremodel_all(params, trial_name, model):
         j = [1] * len(c)
         j[0] = 0
         #todo Revisit the interest calculation at some stage because it didn't tally with the back of envelope estimate by $1000
-        return (-grain_income(model,c[i]) + crppy.rotation_cost(model,c[i]) + labpy.labour_cost(model,c[i]) + macpy.mach_cost(model,c[i]) + suppy.sup_cost(model,c[i]) + model.p_overhead_cost[c[i]]
-                - stkpy.stock_cashflow(model,c[i])
+        return (-grain_income(model,c[i], z) + crppy.rotation_cost(model,c[i], z) + labpy.labour_cost(model,c[i], z)
+                + macpy.mach_cost(model,c[i], z) + suppy.sup_cost(model,c[i], z) + model.p_overhead_cost[c[i]]
+                - stkpy.stock_cashflow(model,c[i], z)
                 - model.v_debit[c[i]] + model.v_credit[c[i]]  + model.v_debit[c[i-1]] * fin.debit_interest() - model.v_credit[c[i-1]] * fin.credit_interest() * j[i] #mul by j so that credit in ND doesnt provide into JF otherwise it will be unbounded because it will get interest
                 ) <= 0
-
-    model.con_cashflow = pe.Constraint(range(len(model.s_cashflow_periods)), rule=cash_flow, doc='cashflow')
+    model.con_cashflow = pe.Constraint(range(len(model.s_cashflow_periods)), model.s_season_types, rule=cash_flow, doc='cashflow')
 
     ######################
     #dep                 #
     ######################
-    def dep(model):
-        return  macpy.total_dep(model) + suppy.sup_dep(model) - model.v_dep <=0
-    model.con_dep = pe.Constraint( rule=dep, doc='tallies depreciation from all activities so it can be transferred to objective')
+    def dep(model,z):
+        return  macpy.total_dep(model,z) + suppy.sup_dep(model,z) - model.v_dep <=0
+    model.con_dep = pe.Constraint(model.s_season_types, rule=dep, doc='tallies depreciation from all activities so it can be transferred to objective')
     
     ######################
     #asset               #
     ######################
-    def asset(model):
-        return (suppy.sup_asset(model) + macpy.mach_asset(model) + stkpy.stock_asset(model)) * uinp.finance['opportunity_cost_capital']  \
+    def asset(model,z):
+        return (suppy.sup_asset(model,z) + macpy.mach_asset(model) + stkpy.stock_asset(model,z)) * uinp.finance['opportunity_cost_capital']  \
                 - model.v_asset <=0
-    model.con_asset = pe.Constraint( rule=asset, doc='tallies asset from all activities so it can be transferred to objective to represent ROE')
+    model.con_asset = pe.Constraint(model.s_season_types, rule=asset, doc='tallies asset from all activities so it can be transferred to objective to represent ROE')
     
     ######################
     #Min ROE             #
     ######################
-    def minroe(model):
-        return (sum(crppy.rotation_cost(model,c)  + labpy.labour_cost(model,c) + macpy.mach_cost(model,c) + suppy.sup_cost(model,c) for c in model.s_cashflow_periods) + stkpy.stock_cost(model)) * fin.f_min_roe() \
+    def minroe(model,z):
+        return (sum(crppy.rotation_cost(model,c,z)  + labpy.labour_cost(model,c,z) + macpy.mach_cost(model,c,z)
+                    + suppy.sup_cost(model,c,z) for c in model.s_cashflow_periods) + stkpy.stock_cost(model,z)) * fin.f_min_roe() \
                 - model.v_minroe <=0   
-    model.con_minroe = pe.Constraint(rule=minroe, doc='tallies total expenditure to ensure minimum roe is met')
+    model.con_minroe = pe.Constraint(model.s_season_types, rule=minroe, doc='tallies total expenditure to ensure minimum roe is met')
     
     #######################################################################################################################################################
     #######################################################################################################################################################

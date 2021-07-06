@@ -71,15 +71,11 @@ def fixed(params):
     tax = pd.DataFrame(tax_p5z, index=keys_p5, columns=keys_z)
 
 
-    ##create season params in loop
-    for z in range(len(keys_z)):
-        ##create season key for params dict
-        scenario = keys_z[z]
-        params[scenario] = {}
-        params[scenario]['super'] = super[scenario].to_dict()
-        params[scenario]['bas'] = bas[scenario].to_dict()
-        params[scenario]['planning'] = planning[scenario].to_dict()
-        params[scenario]['tax'] = tax[scenario].to_dict()
+    ##create params
+    params['super'] = super.stack().to_dict()
+    params['bas'] = bas.stack().to_dict()
+    params['planning'] = planning.stack().to_dict()
+    params['tax'] = tax.stack().to_dict()
 
 
 

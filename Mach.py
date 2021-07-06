@@ -941,19 +941,19 @@ def f_insurance(r_vals):
 
 ##collates all the params
 def f_mach_params(params,r_vals):
-    seed_days = f_seed_days()
-    contractseeding_occur = f_contractseeding_occurs()
+    seed_days = f_seed_days().stack()
+    contractseeding_occur = f_contractseeding_occurs().stack()
     seedrate = f_overall_seed_rate(r_vals)
-    seeding_cost = f_seeding_cost(r_vals).stack(0)
-    contract_seed_cost = f_contract_seed_cost(r_vals)
-    harv_rate_period = f_harv_rate_period()
+    seeding_cost = f_seeding_cost(r_vals).stack([0,1])
+    contract_seed_cost = f_contract_seed_cost(r_vals).stack()
+    harv_rate_period = f_harv_rate_period().stack()
     contract_harv_rate = f_contract_harv_rate()
-    max_harv_hours = f_max_harv_hours()
-    harvest_cost = f_harvest_cost(r_vals)
-    contract_harvest_cost = f_contract_harvest_cost_period(r_vals)
+    max_harv_hours = f_max_harv_hours().stack()
+    harvest_cost = f_harvest_cost(r_vals).stack()
+    contract_harvest_cost = f_contract_harvest_cost_period(r_vals).stack()
     hay_making_cost = f_hay_making_cost()
-    yield_penalty = f_yield_penalty()
-    grazing_days = f_grazing_days()
+    yield_penalty = f_yield_penalty().stack()
+    grazing_days = f_grazing_days().stack()
     fixed_dep = f_fix_dep()
     harv_dep = f_harvest_dep()
     seeding_gear_clearing_value = f_seeding_gear_clearing_value()
@@ -977,21 +977,16 @@ def f_mach_params(params,r_vals):
     params['mach_asset_value'] = mach_asset_value
     params['insurance'] = insurance
 
-    ##create season params in loop
-    keys_z = pinp.f_keys_z()
-    for z in range(len(keys_z)):
-        ##create season key for params dict
-        scenario = keys_z[z]
-        params[scenario] = {}
-        params[scenario]['seed_days'] = seed_days[scenario].to_dict()
-        params[scenario]['contractseeding_occur'] = contractseeding_occur[scenario].to_dict()
-        params[scenario]['seeding_cost'] = seeding_cost[scenario].to_dict()
-        params[scenario]['contract_seed_cost'] = contract_seed_cost[scenario].to_dict()
-        params[scenario]['harv_rate_period'] = harv_rate_period[scenario].to_dict()
-        params[scenario]['harvest_cost'] = harvest_cost[scenario].to_dict()
-        params[scenario]['max_harv_hours'] = max_harv_hours[scenario].to_dict()
-        params[scenario]['contract_harvest_cost'] = contract_harvest_cost[scenario].to_dict()
-        params[scenario]['yield_penalty'] = yield_penalty[scenario].to_dict()
-        params[scenario]['grazing_days'] = grazing_days[scenario].to_dict()
+    ##create season params 
+    params['seed_days'] = seed_days.to_dict()
+    params['contractseeding_occur'] = contractseeding_occur.to_dict()
+    params['seeding_cost'] = seeding_cost.to_dict()
+    params['contract_seed_cost'] = contract_seed_cost.to_dict()
+    params['harv_rate_period'] = harv_rate_period.to_dict()
+    params['harvest_cost'] = harvest_cost.to_dict()
+    params['max_harv_hours'] = max_harv_hours.to_dict()
+    params['contract_harvest_cost'] = contract_harvest_cost.to_dict()
+    params['yield_penalty'] = yield_penalty.to_dict()
+    params['grazing_days'] = grazing_days.to_dict()
 
 

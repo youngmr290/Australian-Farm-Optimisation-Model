@@ -872,29 +872,22 @@ def f_crop_sow():
 #########
 ##collates all the params
 def crop_params(params,r_vals):
-    cost = f_rot_cost(r_vals).stack().unstack(1)  # to make season axis the columns so it can easily be sliced when building params
-    yields = f_rot_yield().unstack(2)  # to make season axis the columns so it can easily be sliced when building params
+    cost = f_rot_cost(r_vals).stack()
+    yields = f_rot_yield()
     propn = f_grain_pool_proportions()
     grain_price = f_grain_price(r_vals)
     stubble_production = f_stubble_production()
     cropsow = f_crop_sow()
-    fert_total = f_total_fert_req().unstack(1)
+    fert_total = f_total_fert_req()
 
     ##create non seasonal params
     params['grain_pool_proportions'] = propn.to_dict()
     params['grain_price'] = grain_price.to_dict()
     params['stubble_production'] = stubble_production #already a dict
     params['crop_sow'] = cropsow.to_dict()
-
-    ##create season params in loop
-    keys_z = pinp.f_keys_z()
-    for z in range(len(keys_z)):
-        ##create season key for params dict
-        scenario = keys_z[z]
-        params[scenario] = {}
-        params[scenario]['rot_cost'] = cost[scenario].to_dict()
-        params[scenario]['rot_yield'] = yields[scenario].to_dict()
-        params[scenario]['fert_req'] = fert_total[scenario].to_dict()
+    params['rot_cost'] = cost.to_dict()
+    params['rot_yield'] = yields.to_dict()
+    params['fert_req'] = fert_total.to_dict()
 
 
 

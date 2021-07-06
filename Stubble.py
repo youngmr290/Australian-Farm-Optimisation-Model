@@ -216,18 +216,18 @@ def stubble_all(params, report, nv):
     ###ks1 - stub transfer (cat b & c)
     arrays = [keys_k, keys_s1_cut]
     index_bc_ks1 = fun.cartesian_product_simple_transpose(arrays)
-    ###p6ks1 - category A req
-    arrays = [keys_p6, keys_k, keys_s1_cut2]
-    index_a_p6ks1 = fun.cartesian_product_simple_transpose(arrays)
-    ###p6ks1 - md & vol
-    arrays = [keys_p6, keys_k, keys_s1]
-    index_p6ks1 = fun.cartesian_product_simple_transpose(arrays)
-    ###p6ks1 - md & vol
-    arrays = [keys_f, keys_p6, keys_k, keys_s1]
-    index_vp6ks1 = fun.cartesian_product_simple_transpose(arrays)
-    ###p6k - p7con & feed period transfer
-    arrays = [keys_p6, keys_k]
-    index_p6k = fun.cartesian_product_simple_transpose(arrays)
+    ###p6zks1 - category A req
+    arrays = [keys_p6, keys_z, keys_k, keys_s1_cut2]
+    index_a_p6zks1 = fun.cartesian_product_simple_transpose(arrays)
+    ###p6zks1 - md & vol
+    arrays = [keys_p6, keys_z, keys_k, keys_s1]
+    index_p6zks1 = fun.cartesian_product_simple_transpose(arrays)
+    ###p6zks1 - md & vol
+    arrays = [keys_f, keys_p6, keys_z, keys_k, keys_s1]
+    index_vp6zks1 = fun.cartesian_product_simple_transpose(arrays)
+    ###p6zk - p7con & feed period transfer
+    arrays = [keys_p6, keys_z, keys_k]
+    index_p6zk = fun.cartesian_product_simple_transpose(arrays)
 
     ################
     ##pyomo params #
@@ -245,35 +245,26 @@ def stubble_all(params, report, nv):
     tup_ks1 = tuple(map(tuple, index_bc_ks1))
     params['transfer_prov'] =dict(zip(tup_ks1, stub_prov_ks1))
 
-    ##create season params in loop
-    for z in range(len(keys_z)):
-        ##create season key for params dict
-        params[keys_z[z]] = {}
-        scenario = keys_z[z]
+    ##create season params
 
-        ###p7con
-        cons_propn_p6k = cons_propn_p6zk[:,z,:].ravel()
-        tup_p6k = tuple(map(tuple, index_p6k))
-        params[scenario]['cons_prop'] =dict(zip(tup_p6k, cons_propn_p6k))
+    ###p7con
+    tup_p6zk = tuple(map(tuple, index_p6zk))
+    params['cons_prop'] =dict(zip(tup_p6zk, cons_propn_p6zk.ravel()))
 
-        ###feed period transfer
-        per_transfer_p6k = per_transfer_p6zk[:,z,:].ravel()
-        tup_p6k = tuple(map(tuple, index_p6k))
-        params[scenario]['per_transfer'] =dict(zip(tup_p6k, per_transfer_p6k))
+    ###feed period transfer
+    tup_p6zk = tuple(map(tuple, index_p6zk))
+    params['per_transfer'] =dict(zip(tup_p6zk, per_transfer_p6zk.ravel()))
 
-        ###category A transfer 'require' param
-        cat_a_st_req_p6k = cat_a_st_req_p6zk[:,z,:].ravel()
-        tup_p6k = tuple(map(tuple, index_a_p6ks1))
-        params[scenario]['cat_a_st_req'] =dict(zip(tup_p6k, cat_a_st_req_p6k))
+    ###category A transfer 'require' param
+    tup_p6zks1 = tuple(map(tuple, index_a_p6zks1))
+    params['cat_a_st_req'] =dict(zip(tup_p6zks1, cat_a_st_req_p6zk.ravel()))
 
-        ##md
-        md_vp6ks1 = md_vp6zks1[:,:,z,:,:].ravel()
-        tup_vp6ks1 = tuple(map(tuple, index_vp6ks1))
-        params[scenario]['md'] =dict(zip(tup_vp6ks1, md_vp6ks1))
+    ##md
+    tup_vp6zks1 = tuple(map(tuple, index_vp6zks1))
+    params['md'] =dict(zip(tup_vp6zks1, md_vp6zks1.ravel()))
 
-        ##vol
-        vol_p6ks1 = vol_p6zks1[:,z,:,:].ravel()
-        tup_p6ks1 = tuple(map(tuple, index_p6ks1))
-        params[scenario]['vol'] =dict(zip(tup_p6ks1, vol_p6ks1))
+    ##vol
+    tup_p6zks1 = tuple(map(tuple, index_p6zks1))
+    params['vol'] =dict(zip(tup_p6zks1, vol_p6zks1.ravel()))
 
 

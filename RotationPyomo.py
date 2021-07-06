@@ -29,7 +29,7 @@ def rotationpyomo(params, model):
     #variables  #
     #############
     ##Amount of each phase on each soil, Positive Variable.
-    model.v_phase_area = Var(model.s_phases,model.s_lmus, bounds=(0,None),doc='number of ha of each phase')
+    model.v_phase_area = Var(model.s_phases,model.s_lmus, model.s_season_types, bounds=(0,None),doc='number of ha of each phase')
 
     if not pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1: #only needed for dsp version.
         model.v_root_hist = Var(model.s_rotconstraints, model.s_lmus, bounds=(0,None),doc='rotation history provided in the root stage')
@@ -89,25 +89,25 @@ def f_con_rotation(params, model):
     if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1:
 
         ##steady state rotation constraint
-        def rot_phase_link(model,l,h):
-            return sum(model.v_phase_area[r,l]*model.p_hist_prov[r,h] for r in model.s_phases if ((r,)+(h,)) in params['hist_prov'].keys()) \
-                       + sum(model.v_phase_area[r,l]*model.p_hist_req[r,h] for r in model.s_phases if ((r,)+(h,)) in params['hist_req'].keys())<=0
-        model.con_rotationcon1 = Constraint(model.s_lmus, model.s_rotconstraints, rule=rot_phase_link, doc='rotation phases constraint')
+        def rot_phase_link(model,l,h,z):
+            return sum(model.v_phase_area[r,l,z]*model.p_hist_prov[r,h] for r in model.s_phases if ((r,)+(h,)) in params['hist_prov'].keys()) \
+                       + sum(model.v_phase_area[r,l,z]*model.p_hist_req[r,h] for r in model.s_phases if ((r,)+(h,)) in params['hist_req'].keys())<=0
+        model.con_rotationcon1 = Constraint(model.s_lmus, model.s_rotconstraints, model.s_season_types, rule=rot_phase_link, doc='rotation phases constraint')
 
     else:
 
         ##DSP rotation constraint
         ##constraint for history provided to history root. This is only required in the stochastic model so that each season starts from a common place.
-        def rot_hist(model,l,h):
-            return model.v_root_hist[h,l] + sum(model.v_phase_area[r,l]*model.p_hist_prov[r,h]
+        def rot_hist(model,l,h,z):
+            return model.v_root_hist[h,l] + sum(model.v_phase_area[r,l,z]*model.p_hist_prov[r,h]
                         for r in model.s_phases if ((r,)+(h,)) in params['hist_prov'].keys())<=0
-        model.con_rot_hist = Constraint(model.s_lmus, model.s_rotconstraints, rule=rot_hist, doc='constraint between rotation history provided and root history')
+        model.con_rot_hist = Constraint(model.s_lmus, model.s_rotconstraints, model.s_season_types, rule=rot_hist, doc='constraint between rotation history provided and root history')
 
         ##constraint for history provided to history root. This is only required in the stochastic model so that each season starts from a common place.
-        def rot_phase_link(model,l,h):
-            return - model.v_root_hist[h,l] + sum(model.v_phase_area[r,l]*model.p_hist_req[r,h]
+        def rot_phase_link(model,l,h,z):
+            return - model.v_root_hist[h,l] + sum(model.v_phase_area[r,l,z]*model.p_hist_req[r,h]
                         for r in model.s_phases if ((r,)+(h,)) in params['hist_req'].keys())<=0
-        model.con_root2rotation = Constraint(model.s_lmus, model.s_rotconstraints, rule=rot_phase_link, doc='constraint between rotation history root and rotation')
+        model.con_root2rotation = Constraint(model.s_lmus, model.s_rotconstraints, model.s_season_types, rule=rot_phase_link, doc='constraint between rotation history root and rotation')
 
 
 ########
@@ -121,9 +121,9 @@ def f_con_area(model):
     The area of rotation on a given soil can't be more than the amount of that soil available on the farm.
     '''
 
-    def area_rule(model, l):
-      return sum(model.v_phase_area[r,l] for r in model.s_phases) <= model.p_area[l] 
-    model.con_area = Constraint(model.s_lmus, rule=area_rule, doc='rotation area constraint')
+    def area_rule(model, l, z):
+      return sum(model.v_phase_area[r,l,z] for r in model.s_phases) <= model.p_area[l]
+    model.con_area = Constraint(model.s_lmus, model.s_season_types, rule=area_rule, doc='rotation area constraint')
     
 
 

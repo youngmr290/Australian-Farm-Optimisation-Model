@@ -193,10 +193,10 @@ def f_pasture(params, r_vals, nv):
     keys_k  = np.asarray(list(sinp.landuse['All']))                     #landuse
     keys_z  = pinp.f_keys_z()
 
-    ### plrk
-    arrays=[keys_p5, keys_l, keys_r, keys_k]
-    index_plrk=fun.cartesian_product_simple_transpose(arrays)
-    index_plrk=tuple(map(tuple, index_plrk)) #create a tuple rather than a list because tuples are faster
+    ### plrkz
+    arrays=[keys_p5, keys_l, keys_r, keys_k, keys_z]
+    index_plrkz=fun.cartesian_product_simple_transpose(arrays)
+    index_plrkz=tuple(map(tuple, index_plrkz)) #create a tuple rather than a list because tuples are faster
 
     ### rt
     arrays=[keys_r, keys_t]
@@ -208,40 +208,45 @@ def f_pasture(params, r_vals, nv):
     index_p6lrt=fun.cartesian_product_simple_transpose(arrays)
     index_p6lrt=tuple(map(tuple, index_p6lrt)) #create a tuple rather than a list because tuples are faster
 
-    ### op6lt
-    arrays=[keys_o, keys_p6, keys_l, keys_t]
-    index_op6lt=fun.cartesian_product_simple_transpose(arrays)
-    index_op6lt=tuple(map(tuple, index_op6lt)) #create a tuple rather than a list because tuples are faster
+    ### p6lrzt
+    arrays=[keys_p6, keys_l, keys_r, keys_z, keys_t]
+    index_p6lrzt=fun.cartesian_product_simple_transpose(arrays)
+    index_p6lrzt=tuple(map(tuple, index_p6lrzt)) #create a tuple rather than a list because tuples are faster
 
-    ### gop6lt
-    arrays=[keys_g, keys_o, keys_p6, keys_l, keys_t]
-    index_gop6lt=fun.cartesian_product_simple_transpose(arrays)
-    index_gop6lt=tuple(map(tuple, index_gop6lt)) #create a tuple rather than a list because tuples are faster
+    ### op6lzt
+    arrays=[keys_o, keys_p6, keys_l, keys_z, keys_t]
+    index_op6lzt=fun.cartesian_product_simple_transpose(arrays)
+    index_op6lzt=tuple(map(tuple, index_op6lzt)) #create a tuple rather than a list because tuples are faster
 
-    ### fgop6lt
-    arrays=[keys_f, keys_g, keys_o, keys_p6, keys_l, keys_t]
-    index_fgop6lt=fun.cartesian_product_simple_transpose(arrays)
-    index_fgop6lt=tuple(map(tuple, index_fgop6lt)) #create a tuple rather than a list because tuples are faster
+    ### gop6lzt
+    arrays=[keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
+    index_gop6lzt=fun.cartesian_product_simple_transpose(arrays)
+    index_gop6lzt=tuple(map(tuple, index_gop6lzt)) #create a tuple rather than a list because tuples are faster
 
-    ### dgop6lt
-    arrays=[keys_d, keys_g, keys_o, keys_p6, keys_l, keys_t]
-    index_dgop6lt=fun.cartesian_product_simple_transpose(arrays)
-    index_dgop6lt=tuple(map(tuple, index_dgop6lt)) #create a tuple rather than a list because tuples are faster
+    ### fgop6lzt
+    arrays=[keys_f, keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
+    index_fgop6lzt=fun.cartesian_product_simple_transpose(arrays)
+    index_fgop6lzt=tuple(map(tuple, index_fgop6lzt)) #create a tuple rather than a list because tuples are faster
 
-    ### dp6lrt
-    arrays=[keys_d, keys_p6, keys_l, keys_r, keys_t]
-    index_dp6lrt=fun.cartesian_product_simple_transpose(arrays)
-    index_dp6lrt=tuple(map(tuple, index_dp6lrt)) #create a tuple rather than a list because tuples are faster
+    ### dgop6lzt
+    arrays=[keys_d, keys_g, keys_o, keys_p6, keys_l, keys_z, keys_t]
+    index_dgop6lzt=fun.cartesian_product_simple_transpose(arrays)
+    index_dgop6lzt=tuple(map(tuple, index_dgop6lzt)) #create a tuple rather than a list because tuples are faster
 
-    ### fdp6t
-    arrays=[keys_f, keys_d, keys_p6, keys_t]
-    index_fdp6t=fun.cartesian_product_simple_transpose(arrays)
-    index_fdp6t=tuple(map(tuple, index_fdp6t)) #create a tuple rather than a list because tuples are faster
+    ### dp6lrzt
+    arrays=[keys_d, keys_p6, keys_l, keys_r, keys_z, keys_t]
+    index_dp6lrzt=fun.cartesian_product_simple_transpose(arrays)
+    index_dp6lrzt=tuple(map(tuple, index_dp6lrzt)) #create a tuple rather than a list because tuples are faster
 
-    ### dp6t
-    arrays=[keys_d, keys_p6, keys_t]
-    index_dp6t=fun.cartesian_product_simple_transpose(arrays)
-    index_dp6t=tuple(map(tuple, index_dp6t)) #create a tuple rather than a list because tuples are faster
+    ### fdp6zt
+    arrays=[keys_f, keys_d, keys_p6, keys_z, keys_t]
+    index_fdp6zt=fun.cartesian_product_simple_transpose(arrays)
+    index_fdp6zt=tuple(map(tuple, index_fdp6zt)) #create a tuple rather than a list because tuples are faster
+
+    ### dp6zt
+    arrays=[keys_d, keys_p6, keys_z, keys_t]
+    index_dp6zt=fun.cartesian_product_simple_transpose(arrays)
+    index_dp6zt=tuple(map(tuple, index_dp6zt)) #create a tuple rather than a list because tuples are faster
 
     ### fp6
     arrays=[keys_f, keys_p6]
@@ -253,10 +258,15 @@ def f_pasture(params, r_vals, nv):
     index_p6l=fun.cartesian_product_simple_transpose(arrays)
     index_p6l=tuple(map(tuple, index_p6l)) #create a tuple rather than a list because tuples are faster
 
-    ### p6t
-    arrays=[keys_p6, keys_t]
-    index_p6t=fun.cartesian_product_simple_transpose(arrays)
-    index_p6t=tuple(map(tuple, index_p6t)) #create a tuple rather than a list because tuples are faster
+    ### p6zt
+    arrays=[keys_p6, keys_z, keys_t]
+    index_p6zt=fun.cartesian_product_simple_transpose(arrays)
+    index_p6zt=tuple(map(tuple, index_p6zt)) #create a tuple rather than a list because tuples are faster
+
+    ### p6z
+    arrays=[keys_p6, keys_z]
+    index_p6z=fun.cartesian_product_simple_transpose(arrays)
+    index_p6z=tuple(map(tuple, index_p6z)) #create a tuple rather than a list because tuples are faster
 
     ###########
     #map_excel#
@@ -490,67 +500,46 @@ def f_pasture(params, r_vals, nv):
     poc_md_rav_vf = poc_md_fp6.ravel()
     params['p_poc_md_fp6'] = dict(zip(index_fp6,poc_md_rav_vf))
 
-    ##create season params in loop
-    for z in range(len(keys_z)):
-        ##create season key for params dict
-        params[keys_z[z]] = {}
-        scenario = keys_z[z]
+    ##create season params 
 
-        ###create param from dataframe
-        params[scenario]['p_harvest_period_prop'] = harvest_period_prop[scenario].to_dict()
+    ###create param from dataframe
+    params['p_harvest_period_prop'] = harvest_period_prop.stack().to_dict()
 
-        ###create param from numpy
+    ###create param from numpy
 
-        dry_removal_t_rav_p6t = dry_removal_t_p6zt[...,z,:].ravel()
-        params[scenario]['p_dry_removal_t_p6t'] = dict(zip(index_p6t,dry_removal_t_rav_p6t))
+    params['p_dry_removal_t_p6zt'] = dict(zip(index_p6zt,dry_removal_t_p6zt.ravel()))
 
-        ##convert the change in dry and green FOO at destocking and restocking into a pyomo param (for the area that is resown)
-        foo_dry_reseeding_rav_dp6lrt = foo_dry_reseeding_dp6lrzt[...,z,:].ravel()
-        params[scenario]['p_foo_dry_reseeding_dp6lrt'] = dict(zip(index_dp6lrt,foo_dry_reseeding_rav_dp6lrt))
-        foo_grn_reseeding_rav_p6lrt = foo_grn_reseeding_p6lrzt[...,z,:].ravel()
-        params[scenario]['p_foo_grn_reseeding_p6lrt'] = dict(zip(index_p6lrt,foo_grn_reseeding_rav_p6lrt))
+    ##convert the change in dry and green FOO at destocking and restocking into a pyomo param (for the area that is resown)
+    params['p_foo_dry_reseeding_dp6lrzt'] = dict(zip(index_dp6lrzt,foo_dry_reseeding_dp6lrzt.ravel()))
+    params['p_foo_grn_reseeding_p6lrzt'] = dict(zip(index_p6lrzt,foo_grn_reseeding_p6lrzt.ravel()))
 
-        pas_sow_rav_p5lrk = pas_sow_p5lrkz[...,z].ravel()
-        params[scenario]['p_pas_sow_p5lrk'] = dict(zip(index_plrk,pas_sow_rav_p5lrk))
+    params['p_pas_sow_p5lrkz'] = dict(zip(index_plrkz,pas_sow_p5lrkz.ravel()))
 
-        phase_area_rav_p6lrt = phase_area_p6lrzt[...,z,:].ravel()
-        params[scenario]['p_phase_area_p6lrt'] = dict(zip(index_p6lrt,phase_area_rav_p6lrt))
+    params['p_phase_area_p6lrzt'] = dict(zip(index_p6lrzt,phase_area_p6lrzt.ravel()))
 
-        dry_transfer_prov_t_rav_p6t = dry_transfer_prov_t_p6zt[...,z,:].ravel()
-        params[scenario]['p_dry_transfer_prov_t_p6t'] = dict(zip(index_p6t,dry_transfer_prov_t_rav_p6t))
+    params['p_dry_transfer_prov_t_p6zt'] = dict(zip(index_p6zt,dry_transfer_prov_t_p6zt.ravel()))
 
-        dry_transfer_req_t_rav_p6t = dry_transfer_req_t_p6zt[...,z,:].ravel()
-        params[scenario]['p_dry_transfer_req_t_p6t'] = dict(zip(index_p6t,dry_transfer_req_t_rav_p6t))
+    params['p_dry_transfer_req_t_p6zt'] = dict(zip(index_p6zt,dry_transfer_req_t_p6zt.ravel()))
 
-        germination_rav_p6lrt = germination_p6lrzt[...,z,:].ravel()
-        params[scenario]['p_germination_p6lrt'] = dict(zip(index_p6lrt,germination_rav_p6lrt))
+    params['p_germination_p6lrzt'] = dict(zip(index_p6lrzt,germination_p6lrzt.ravel()))
 
-        nap_rav_dp6lrt = nap_dp6lrzt[...,z,:].ravel()
-        params[scenario]['p_nap_dp6lrt'] = dict(zip(index_dp6lrt,nap_rav_dp6lrt))
+    params['p_nap_dp6lrzt'] = dict(zip(index_dp6lrzt,nap_dp6lrzt.ravel()))
 
-        foo_start_grnha_rav_op6lt = foo_start_grnha_op6lzt[...,z,:].ravel()
-        params[scenario]['p_foo_start_grnha_op6lt'] = dict(zip(index_op6lt ,foo_start_grnha_rav_op6lt))
+    params['p_foo_start_grnha_op6lzt'] = dict(zip(index_op6lzt ,foo_start_grnha_op6lzt.ravel()))
 
-        foo_end_grnha_rav_gop6lt = foo_end_grnha_gop6lzt[...,z,:].ravel()
-        params[scenario]['p_foo_end_grnha_gop6lt'] = dict( zip(index_gop6lt ,foo_end_grnha_rav_gop6lt))
+    params['p_foo_end_grnha_gop6lzt'] = dict( zip(index_gop6lzt ,foo_end_grnha_gop6lzt.ravel()))
 
-        me_cons_grnha_rav_fgop6lt = me_cons_grnha_fgop6lzt[...,z,:].ravel()
-        params[scenario]['p_me_cons_grnha_fgop6lt'] = dict(zip(index_fgop6lt,me_cons_grnha_rav_fgop6lt))
+    params['p_me_cons_grnha_fgop6lzt'] = dict(zip(index_fgop6lzt,me_cons_grnha_fgop6lzt.ravel()))
 
-        dry_mecons_t_rav_fdp6t = dry_mecons_t_fdp6zt[...,z,:].ravel()
-        params[scenario]['p_dry_mecons_t_fdp6t'] = dict(zip(index_fdp6t,dry_mecons_t_rav_fdp6t))
+    params['p_dry_mecons_t_fdp6zt'] = dict(zip(index_fdp6zt,dry_mecons_t_fdp6zt.ravel()))
 
-        volume_grnha_rav_gop6lt = volume_grnha_gop6lzt[...,z,:].ravel()
-        params[scenario]['p_volume_grnha_gop6lt'] = dict(zip(index_gop6lt,volume_grnha_rav_gop6lt))
+    params['p_volume_grnha_gop6lzt'] = dict(zip(index_gop6lzt,volume_grnha_gop6lzt.ravel()))
 
-        dry_volume_t_rav_dp6t = dry_volume_t_dp6zt[...,z,:].ravel()
-        params[scenario]['p_dry_volume_t_dp6t'] = dict(zip(index_dp6t,dry_volume_t_rav_dp6t))
+    params['p_dry_volume_t_dp6zt'] = dict(zip(index_dp6zt,dry_volume_t_dp6zt.ravel()))
 
-        senesce_grnha_rav_dgop6lt = senesce_grnha_dgop6lzt[...,z,:].ravel()
-        params[scenario]['p_senesce_grnha_dgop6lt'] = dict(zip(index_dgop6lt,senesce_grnha_rav_dgop6lt))
+    params['p_senesce_grnha_dgop6lzt'] = dict(zip(index_dgop6lzt,senesce_grnha_dgop6lzt.ravel()))
 
-        poc_vol_rav_p6 = poc_vol_p6z[...,z].ravel()
-        params[scenario]['p_poc_vol_p6'] = dict(zip(keys_p6,poc_vol_rav_p6))
+    params['p_poc_vol_p6z'] = dict(zip(index_p6z,poc_vol_p6z.ravel()))
 
     ###########
     #report   #

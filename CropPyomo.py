@@ -34,19 +34,16 @@ def croppyomo_local(params, model):
     ############
     # variable #
     ############
-    model.v_sell_grain = pe.Var(model.s_crops,model.s_grain_pools,bounds=(0,None),
+    model.v_sell_grain = pe.Var(model.s_crops, model.s_grain_pools, model.s_season_types, bounds=(0,None),
                                 doc='tonnes of grain in each pool sold')
 
     #########
     #param  #
     #########
 
-    ##used to index the season key in params
-    season = pinp.general['i_z_idx'][pinp.general['i_mask_z']][0]
-
-    model.p_rotation_cost = pe.Param(model.s_phases,model.s_lmus,model.s_cashflow_periods, initialize=params[season]['rot_cost'], default=0, mutable=False, doc='total cost for 1 unit of rotation')
+    model.p_rotation_cost = pe.Param(model.s_phases, model.s_season_types, model.s_lmus, model.s_cashflow_periods, initialize=params['rot_cost'], default=0, mutable=False, doc='total cost for 1 unit of rotation')
        
-    model.p_rotation_yield = pe.Param(model.s_phases, model.s_crops, model.s_lmus, initialize=params[season]['rot_yield'], default = 0.0, mutable=False, doc='grain production for all crops for 1 unit of rotation')
+    model.p_rotation_yield = pe.Param(model.s_phases, model.s_crops, model.s_season_types, model.s_lmus, initialize=params['rot_yield'], default = 0.0, mutable=False, doc='grain production for all crops for 1 unit of rotation')
 
     model.p_grainpool_proportion = pe.Param(model.s_crops, model.s_grain_pools, initialize=params['grain_pool_proportions'], default = 0.0, doc='proportion of grain in each pool')
     
@@ -57,7 +54,7 @@ def croppyomo_local(params, model):
     model.p_cropsow = pe.Param(model.s_phases, model.s_crops, model.s_lmus, initialize=params['crop_sow'], default = 0.0, doc='ha of sow activity required by each rot phase')
     
     ##only used in croplabour pyomo to determine labour per tonne of fert
-    model.p_phasefert = pe.Param(model.s_phases, model.s_lmus, model.s_fert_type, initialize=params[season]['fert_req'], default = 0.0, mutable=False, doc='fert required by 1 unit of phase')
+    model.p_phasefert = pe.Param(model.s_phases, model.s_season_types, model.s_lmus, model.s_fert_type, initialize=params['fert_req'], default = 0.0, mutable=False, doc='fert required by 1 unit of phase')
    
     
     
@@ -75,7 +72,7 @@ def croppyomo_local(params, model):
 ### yield needs to be disaggregated so that it returns the grain transfer for each crop - this is so it is compatible with yield penalty and sup feed activities.
 ###alternative would have been to add another key/index/set to the yield parameter that was k, although i suspect this would make it a bit slower due to being bigger but it might be tidier
 
-def rotation_yield_transfer(model,g,k):
+def rotation_yield_transfer(model,g,k,z):
     '''
     Calculate the total of each grain produced from selected rotation phases.
 
@@ -83,8 +80,8 @@ def rotation_yield_transfer(model,g,k):
     '''
 
     ##h is a disaggregated version of r, it can be indexed. h[0:i] is the rotation history. Have to check if k==h otherwise when h[0:i] is combined with k you can get the wrong rotation
-    return sum(sum(model.p_rotation_yield[r,k,l]*model.v_phase_area[r,l] * model.p_grainpool_proportion[k,g] for r in model.s_phases
-                   if pe.value(model.p_rotation_yield[r,k,l]) != 0)for l in model.s_lmus) \
+    return sum(sum(model.p_rotation_yield[r,k,z,l]*model.v_phase_area[r,l,z] * model.p_grainpool_proportion[k,g] for r in model.s_phases
+                   if pe.value(model.p_rotation_yield[r,k,z,l]) != 0)for l in model.s_lmus) \
                    
 
 
@@ -93,14 +90,14 @@ def rotation_yield_transfer(model,g,k):
 ##############
 ##similar to yield - this is more complex because we want to mul with phase area variable then sum based on the current landuse (k)
 ##returns a tuple, the boolean part indicates if the constraint needs to exist
-def cropsow(model,k,l):
+def cropsow(model,k,l,z):
     '''
     Calculate the seeding requirement for each crop from the selected rotation phases.
 
     Used in global constraint (con_sow). See CorePyomo
     '''
     if any(model.p_cropsow[r,k,l] for r in model.s_phases):
-        return sum(model.p_cropsow[r,k,l]*model.v_phase_area[r,l]  for r in model.s_phases
+        return sum(model.p_cropsow[r,k,l]*model.v_phase_area[r,l,z]  for r in model.s_phases
                    if pe.value(model.p_cropsow[r,k,l]) != 0) #+ model.x[k] >=0 # if ((r,)+(k,)+(l,)) in model.p_cropsow
     else:
         return 0
@@ -110,28 +107,28 @@ def cropsow(model,k,l):
 # functions used to define cashflow #
 #####################################
 
-def rotation_cost(model,c):
+def rotation_cost(model,c,z):
     '''
     Calculate the total cost of the selected rotation phases.
 
     Used in global constraint (con_cashflow). See CorePyomo
     '''
 
-    return sum(sum(model.p_rotation_cost[r,l,c]*model.v_phase_area[r,l] for r in model.s_phases
-                   if pe.value(model.p_rotation_cost[r,l,c]) != 0) for l in model.s_lmus )#+ model.x[c] >=0 #0.10677s
+    return sum(sum(model.p_rotation_cost[r,z,l,c]*model.v_phase_area[r,l,z] for r in model.s_phases
+                   if pe.value(model.p_rotation_cost[r,z,l,c]) != 0) for l in model.s_lmus )#+ model.x[c] >=0 #0.10677s
    
 ##############
 #stubble     #
 ##############
-def rot_stubble(model,k,s):
+def rot_stubble(model,k,s,z):
     '''
     Calculate the total volume of stubble provide directly after harvest from the selected rotation phases.
 
     Used in global constraint (con_stubble). See CorePyomo
     '''
 
-    return sum(sum(model.p_rotation_yield[r,k,l]*model.v_phase_area[r,l] * model.p_rot_stubble[k,s] for r in model.s_phases
-                     if pe.value(model.p_rotation_yield[r,k,l]) != 0)for l in model.s_lmus if pe.value(model.p_rot_stubble[k,s]) !=0 ) \
+    return sum(sum(model.p_rotation_yield[r,k,z,l]*model.v_phase_area[r,l,z] * model.p_rot_stubble[k,s] for r in model.s_phases
+                     if pe.value(model.p_rotation_yield[r,k,z,l]) != 0)for l in model.s_lmus if pe.value(model.p_rot_stubble[k,s]) !=0 ) \
                       
 
 
