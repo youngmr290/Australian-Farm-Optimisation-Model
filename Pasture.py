@@ -50,7 +50,7 @@ def f_pasture(params, r_vals, nv):
     ##masks                #
     ########################
     ##lmu
-    lmu_mask_l = pinp.general['lmu_area'].squeeze().values>0
+    lmu_mask_l = pinp.general['i_lmu_area'] > 0
 
     ########################
     ##constants required   #
@@ -61,7 +61,7 @@ def f_pasture(params, r_vals, nv):
     n_grazing_int   = len(sinp.general['grazing_int'])          # grazing intensity in the growth/grazing activities
     n_foo_levels    = len(sinp.general['foo_levels'])           # Low, medium & high FOO level in the growth/grazing activities
     n_feed_periods  = len(per.f_feed_periods()) - 1
-    n_lmu           = np.count_nonzero(pinp.general['lmu_area'])
+    n_lmu           = np.count_nonzero(pinp.general['i_lmu_area'])
     n_phases_rotn   = len(phases_rotn_df.index)
     n_pasture_types = len(pastures)   #^ need to sort timing of the definition of pastures
     # n_total_seasons = len(pinp.general['i_mask_z']) #used to reshape inputs
@@ -185,7 +185,7 @@ def f_pasture(params, r_vals, nv):
     keys_f  = np.array(['nv{0}' .format(i) for i in range(len_nv)])
     keys_p6  = pinp.period['i_fp_idx']
     keys_g  = np.asarray(sinp.general['grazing_int'])
-    keys_l  = np.array(pinp.general['lmu_area'].index[lmu_mask_l]).astype('str')    # lmu index description
+    keys_l  = pinp.general['i_lmu_idx']   # lmu index description
     keys_o  = np.asarray(sinp.general['foo_levels'])
     keys_p5  = np.array(per.p_date2_df().index).astype('str')
     keys_r  = np.array(phases_rotn_df.index).astype('str')

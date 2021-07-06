@@ -55,7 +55,7 @@ import Mach as mac
 
   
 def f_mask_lmu(df, axis):
-    lmu_mask = pinp.general['lmu_area'].squeeze() > 0
+    lmu_mask = pinp.general['i_lmu_area'] > 0
     if axis==0:
         df = df.loc[lmu_mask]
     if axis==1:

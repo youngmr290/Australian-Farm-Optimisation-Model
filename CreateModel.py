@@ -88,8 +88,8 @@ def sets(model, nv):
     ###########
 
     ##lmus
-    lmu_mask = pinp.general['lmu_area'].squeeze() > 0
-    model.s_lmus = Set(initialize=pinp.general['lmu_area'].index[lmu_mask],doc='defined the soil type a given rotation is on')
+    lmu_mask = pinp.general['i_lmu_area'] > 0
+    model.s_lmus = Set(initialize=pinp.general['i_lmu_idx'].index[lmu_mask],doc='defined the soil type a given rotation is on')
 
     ##phases
     model.s_phases = Set(initialize=sinp.f_phases().index,doc='rotation phases set')

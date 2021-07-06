@@ -216,7 +216,7 @@ def f_seed_time_lmus():
     user defined LMU factor.
     '''
     ##mask lmu input
-    lmu_mask = pinp.general['lmu_area'].squeeze() > 0
+    lmu_mask = pinp.general['i_lmu_area'] > 0
     seeder_speed_lmu_adj = pinp.mach['seeder_speed_lmu_adj'][lmu_mask]
     ##first turn seeding speed on each lmu to df so it can be manipulated (it was entered as a dict in machinputs)
     speed_lmu_df = seeder_speed_lmu_adj * uinp.mach[pinp.mach['option']]['seeder_speed_base']
@@ -258,7 +258,7 @@ def fuel_use_seeding():
     Fuel use L/ha used by tractor to seed on each lmu.
     '''
     ##mask lmu input
-    lmu_mask = pinp.general['lmu_area'].squeeze() > 0
+    lmu_mask = pinp.general['i_lmu_area'] > 0
     seeding_fuel_lmu_adj = pinp.mach['seeding_fuel_lmu_adj'][lmu_mask]
     ##determine fuel use on base lmu (draft x tractor factor)
     base_lmu_seeding_fuel = uinp.mach[pinp.mach['option']]['draft_seeding'] * uinp.mach[pinp.mach['option']]['fuel_adj_tractor']
@@ -294,7 +294,7 @@ def maint_cost_seeder():
     user defined LMU factor.
     '''
     ##mask lmu input
-    lmu_mask = pinp.general['lmu_area'].squeeze() > 0
+    lmu_mask = pinp.general['i_lmu_area'] > 0
     tillage_maint_lmu_adj = pinp.mach['tillage_maint_lmu_adj'][lmu_mask]
     ##equals r&m on base lmu x lmu adj factor
     tillage_lmu_df = uinp.mach[pinp.mach['option']]['tillage_maint'] * tillage_maint_lmu_adj

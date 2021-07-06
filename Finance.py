@@ -111,8 +111,8 @@ def overheads(params, r_vals):
     including. Examples of overhead costs include; electricity, gas, shire rates, licenses,
     professional services, insurance and household expense.
     '''
-    overheads = pinp.general['overheads']
-    overheads = overheads.squeeze().sum()/ len(sinp.general['cashflow_periods'])
+    overheads = pinp.general['i_overheads']
+    overheads = overheads.sum()/ len(sinp.general['cashflow_periods'])
     overheads = dict.fromkeys(sinp.general['cashflow_periods'], overheads)
     params['overheads'] = overheads
     r_vals['overheads'] = pd.Series(overheads)

@@ -46,7 +46,7 @@ except FileNotFoundError:
 if inputs_from_pickle == False:
     print('Reading property inputs from Excel', end=' ', flush=True)
     with open(property_pkl_path, "wb") as f:
-        general_inp = fun.xl_all_named_ranges(property_xl_path,"General")
+        general_inp = fun.xl_all_named_ranges(property_xl_path,"General", numpy=True)
         pkl.dump(general_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
         rep_inp = fun.xl_all_named_ranges(property_xl_path,"Report Settings")
@@ -132,7 +132,7 @@ len_k2 = sheep_inp['i_k2_len']
 len_k3 = sheep_inp['i_k3_len']
 len_k4 = sheep_inp['i_k4_len']
 len_k5 = sheep_inp['i_k5_len']
-len_l = len(general_inp['lmu_area'])
+len_l = len(general_inp['i_lmu_area'])
 len_o = sheep_inp['i_o_len']
 len_p6 = len(period_inp['i_fp_idx'])
 len_r1 = feedsupply_inp['i_r1_len']

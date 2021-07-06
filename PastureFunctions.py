@@ -681,7 +681,7 @@ def f1_calc_foo_profile(germination_p6lzt, dry_decay_p6zt, length_of_periods_fz
     An array[feed_period,lmu,type]: foo at the start of the period.
     '''
     n_feed_periods = len(per.f_feed_periods()) - 1
-    n_lmu = np.count_nonzero(pinp.general['lmu_area'])
+    n_lmu = np.count_nonzero(pinp.general['i_lmu_area'])
     n_pasture_types = germination_p6lzt.shape[-1]
     n_season = length_of_periods_fz.shape[-1]
     p6lzt = (n_feed_periods, n_lmu, n_season, n_pasture_types)
@@ -737,12 +737,12 @@ def f1_update_reseeding_foo(foo_grn_reseeding_p6lrzt, foo_dry_reseeding_p6lrzt,
     If there is an adjustment to the dry feed then it is spread equally between the high & the low quality pools.
     '''
     ##lmu mask
-    lmu_mask_l = pinp.general['lmu_area'].squeeze().values > 0
+    lmu_mask_l = pinp.general['i_lmu_area'] > 0
 
     ##base inputs
     n_feed_periods = len(per.f_feed_periods()) - 1
     len_t = np.count_nonzero(pinp.general['pas_inc'])
-    n_lmu = np.count_nonzero(pinp.general['lmu_area'])
+    n_lmu = np.count_nonzero(pinp.general['i_lmu_area'])
     len_z = period_zt.shape[0]
     len_r = resown_rt.shape[0]
     lzt = (n_lmu,len_z,len_t)
