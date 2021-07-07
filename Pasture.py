@@ -185,7 +185,7 @@ def f_pasture(params, r_vals, nv):
     keys_f  = np.array(['nv{0}' .format(i) for i in range(len_nv)])
     keys_p6  = pinp.period['i_fp_idx']
     keys_g  = np.asarray(sinp.general['grazing_int'])
-    keys_l  = pinp.general['i_lmu_idx']   # lmu index description
+    keys_l  = pinp.general['i_lmu_idx'][lmu_mask_l]   # lmu index description
     keys_o  = np.asarray(sinp.general['foo_levels'])
     keys_p5  = np.array(per.p_date2_df().index).astype('str')
     keys_r  = np.array(phases_rotn_df.index).astype('str')
@@ -510,36 +510,36 @@ def f_pasture(params, r_vals, nv):
     params['p_dry_removal_t_p6zt'] = dict(zip(index_p6zt,dry_removal_t_p6zt.ravel()))
 
     ##convert the change in dry and green FOO at destocking and restocking into a pyomo param (for the area that is resown)
-    params['p_foo_dry_reseeding_dp6lrzt'] = dict(zip(index_dp6lrzt,foo_dry_reseeding_dp6lrzt.ravel()))
-    params['p_foo_grn_reseeding_p6lrzt'] = dict(zip(index_p6lrzt,foo_grn_reseeding_p6lrzt.ravel()))
+    params['p_foo_dry_reseeding_dp6lrzt'] = dict(zip(index_dp6lrzt, foo_dry_reseeding_dp6lrzt.ravel()))
+    params['p_foo_grn_reseeding_p6lrzt'] = dict(zip(index_p6lrzt, foo_grn_reseeding_p6lrzt.ravel()))
 
-    params['p_pas_sow_p5lrkz'] = dict(zip(index_plrkz,pas_sow_p5lrkz.ravel()))
+    params['p_pas_sow_p5lrkz'] = dict(zip(index_plrkz, pas_sow_p5lrkz.ravel()))
 
-    params['p_phase_area_p6lrzt'] = dict(zip(index_p6lrzt,phase_area_p6lrzt.ravel()))
+    params['p_phase_area_p6lrzt'] = dict(zip(index_p6lrzt, phase_area_p6lrzt.ravel()))
 
-    params['p_dry_transfer_prov_t_p6zt'] = dict(zip(index_p6zt,dry_transfer_prov_t_p6zt.ravel()))
+    params['p_dry_transfer_prov_t_p6zt'] = dict(zip(index_p6zt, dry_transfer_prov_t_p6zt.ravel()))
 
-    params['p_dry_transfer_req_t_p6zt'] = dict(zip(index_p6zt,dry_transfer_req_t_p6zt.ravel()))
+    params['p_dry_transfer_req_t_p6zt'] = dict(zip(index_p6zt, dry_transfer_req_t_p6zt.ravel()))
 
-    params['p_germination_p6lrzt'] = dict(zip(index_p6lrzt,germination_p6lrzt.ravel()))
+    params['p_germination_p6lrzt'] = dict(zip(index_p6lrzt, germination_p6lrzt.ravel()))
 
     params['p_nap_dp6lrzt'] = dict(zip(index_dp6lrzt,nap_dp6lrzt.ravel()))
 
-    params['p_foo_start_grnha_op6lzt'] = dict(zip(index_op6lzt ,foo_start_grnha_op6lzt.ravel()))
+    params['p_foo_start_grnha_op6lzt'] = dict(zip(index_op6lzt, foo_start_grnha_op6lzt.ravel()))
 
-    params['p_foo_end_grnha_gop6lzt'] = dict( zip(index_gop6lzt ,foo_end_grnha_gop6lzt.ravel()))
+    params['p_foo_end_grnha_gop6lzt'] = dict( zip(index_gop6lzt, foo_end_grnha_gop6lzt.ravel()))
 
-    params['p_me_cons_grnha_fgop6lzt'] = dict(zip(index_fgop6lzt,me_cons_grnha_fgop6lzt.ravel()))
+    params['p_me_cons_grnha_fgop6lzt'] = dict(zip(index_fgop6lzt, me_cons_grnha_fgop6lzt.ravel()))
 
-    params['p_dry_mecons_t_fdp6zt'] = dict(zip(index_fdp6zt,dry_mecons_t_fdp6zt.ravel()))
+    params['p_dry_mecons_t_fdp6zt'] = dict(zip(index_fdp6zt, dry_mecons_t_fdp6zt.ravel()))
 
-    params['p_volume_grnha_gop6lzt'] = dict(zip(index_gop6lzt,volume_grnha_gop6lzt.ravel()))
+    params['p_volume_grnha_gop6lzt'] = dict(zip(index_gop6lzt, volume_grnha_gop6lzt.ravel()))
 
-    params['p_dry_volume_t_dp6zt'] = dict(zip(index_dp6zt,dry_volume_t_dp6zt.ravel()))
+    params['p_dry_volume_t_dp6zt'] = dict(zip(index_dp6zt, dry_volume_t_dp6zt.ravel()))
 
-    params['p_senesce_grnha_dgop6lzt'] = dict(zip(index_dgop6lzt,senesce_grnha_dgop6lzt.ravel()))
+    params['p_senesce_grnha_dgop6lzt'] = dict(zip(index_dgop6lzt, senesce_grnha_dgop6lzt.ravel()))
 
-    params['p_poc_vol_p6z'] = dict(zip(index_p6z,poc_vol_p6z.ravel()))
+    params['p_poc_vol_p6z'] = dict(zip(index_p6z, poc_vol_p6z.ravel()))
 
     ###########
     #report   #
