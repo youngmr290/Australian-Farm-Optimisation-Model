@@ -665,7 +665,7 @@ def f_poc(cu3, cu4, i_poc_intake_daily_p6lt, i_poc_dmd_p6t, i_poc_foo_p6t, i_leg
     return poc_con_p6l, poc_md_fp6, poc_vol_p6z
 
 
-def f1_calc_foo_profile(germination_p6lzt, dry_decay_p6zt, length_of_periods_fz
+def f1_calc_foo_profile(germination_p6lzt, dry_decay_p6zt, length_of_periods_fzt
                         , i_fxg_foo_op6lzt, c_fxg_a_op6lzt, c_fxg_b_op6lzt, i_grn_senesce_eos_p6zt
                         , grn_senesce_startfoo_p6zt, grn_senesce_pgrcons_p6zt):
     '''
@@ -683,7 +683,7 @@ def f1_calc_foo_profile(germination_p6lzt, dry_decay_p6zt, length_of_periods_fz
     n_feed_periods = len(per.f_feed_periods()) - 1
     n_lmu = np.count_nonzero(pinp.general['i_lmu_area'])
     n_pasture_types = germination_p6lzt.shape[-1]
-    n_season = length_of_periods_fz.shape[-1]
+    n_season = length_of_periods_fzt.shape[-2]
     p6lzt = (n_feed_periods, n_lmu, n_season, n_pasture_types)
     ### reshape the inputs passed and set some initial variables that are required
     grn_foo_start_p6lzt   = np.zeros(p6lzt, dtype = 'float64')
@@ -709,11 +709,11 @@ def f1_calc_foo_profile(germination_p6lzt, dry_decay_p6zt, length_of_periods_fz
             grn_foo_end_p6lzt[f,:,z,:] = (              grn_foo_start_p6lzt[f,:,z,:]
                                          * (1 - grn_senesce_startfoo_p6zt[f,z,:])
                                          +                 pgr_daily_lt
-                                         *         length_of_periods_fz[f,z]
+                                         *         length_of_periods_fzt[f,z,:]
                                          * (1 -  grn_senesce_pgrcons_p6zt[f,z,:])) \
                                         * (1 -     i_grn_senesce_eos_p6zt[f,z,:])
             senescence_l = grn_foo_start_p6lzt[f,:,z,:]  \
-                          +    pgr_daily_lt * length_of_periods_fz[f,z]  \
+                          +    pgr_daily_lt * length_of_periods_fzt[f,z,:]  \
                           -  grn_foo_end_p6lzt[f,:,z,:]
             dry_foo_end_p6lzt[f,:,z,:] = dry_foo_start_p6lzt[f,:,z,:] \
                                     * (1 - dry_decay_p6zt[f,z,:]) \

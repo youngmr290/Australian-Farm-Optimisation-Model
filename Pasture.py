@@ -432,7 +432,7 @@ def f_pasture(params, r_vals, nv):
 
     ## FOO on the non-arable areas in crop paddocks is ungrazed FOO of pasture type 0 (annual), therefore calculate the profile based on the pasture type 0 values
     grn_foo_start_ungrazed_p6lzt, dry_foo_start_ungrazed_p6lzt = pfun.f1_calc_foo_profile(
-        max_germination_flz[..., na], dry_decay_period_p6zt[..., 0:1], length_fz, i_fxg_foo_op6lzt[..., 0:1]
+        max_germination_flz[..., na], dry_decay_period_p6zt[..., 0:1], length_fz[...,na], i_fxg_foo_op6lzt[..., 0:1]
         , c_fxg_a_op6lzt[..., 0:1], c_fxg_b_op6lzt[..., 0:1], i_grn_senesce_eos_p6zt[..., 0:1], grn_senesce_startfoo_p6zt[..., 0:1]
         , grn_senesce_pgrcons_p6zt[..., 0:1])
 
