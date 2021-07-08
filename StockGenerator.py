@@ -6252,7 +6252,7 @@ def generator(params,r_vals,nv,plots = False):
     ###############
     ## report dse # #todo check if this is using much memory or time. if so then convert to float32
     ###############
-    days_p6z = np.array(per.f_feed_periods(option=1))
+    days_p6z = np.array(per.f_feed_periods(option=1), dtype='float64')
     days_p6_p6tva1e1b1nwzida0e0b0xyg = fun.f_expand(days_p6z, z_pos,  left_pos2=p_pos-2, right_pos2=z_pos)
     ###DSE based on MJ/d
     ####returns the average mj/d for each animal for the each feed period (mei accounts for if the animal is on hand - if the animal is sold the average mei/d will be lower in that dvp)

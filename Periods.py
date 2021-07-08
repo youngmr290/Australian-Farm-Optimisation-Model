@@ -29,6 +29,7 @@ from dateutil.relativedelta import relativedelta
 import UniversalInputs as uinp
 import StructuralInputs as sinp
 import PropertyInputs as pinp
+import Functions as fun
 
 
 
@@ -177,23 +178,43 @@ def f_feed_periods(option=0):
     :param option: int:
         0 = return feed period date
         1 = return feed period length (days)
+        2 = return association between std feed periods and node adjusted feed periods
     '''
-    # idx = pd.IndexSlice
-    # fp = pinp.period['i_dsp_fp']
-    # fp = fp.T.set_index(['period'],append=True).T
+    ##calc feed period dates from inputs plus adjust for node dates.
+    fp_std_p6z = pinp.period['i_dsp_fp_date'].astype('datetime64')
+    ###add node dates as feed peirods if dsp
+    if pinp.general['i_inc_node_periods'] or np.logical_not(pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1):
+        date_node_mz = pinp.general['i_date_node_zm'].astype('datetime64').T
+        date_node_mz = date_node_mz + (np.timedelta64(365, 'D') * (date_node_mz < fp_std_p6z[0,:]))
+        fp_p6z = np.concatenate([fp_std_p6z, date_node_mz[1:]]) #[1:] becasue first node is break of season which already exists in fp array.
+        fp_p6z = np.sort(fp_p6z, axis=0)
+    else: #if nodes are not added then the adjusted fps are the same as the std fp.
+        fp_p6z = pinp.period['i_dsp_fp_date'].astype('datetime64')
 
-    ## return array of fp dates
+    ###handle z axis
+    fp_std_p6z = pinp.f_seasonal_inp(fp_std_p6z, numpy=True, axis=1)
+    fp_p6z = pinp.f_seasonal_inp(fp_p6z, numpy=True, axis=1)
+
+    ### return array of fp dates
     if option==0:
-        # fp = fp.loc[:, idx[:, 'date']]
-        fp = pinp.period['i_dsp_fp_date']
-        fp = pinp.f_seasonal_inp(fp, numpy=True, axis=1)
-        return fp
-    ## return length
-    else:
-        # fp = fp.loc[:fp.index[-2], idx[:, 'length']] #last row not included because that only contains the end date of last period
-        fp = pinp.period['i_dsp_fp_len']
-        fp = pinp.f_seasonal_inp(fp, numpy=True, axis=1)
-        return fp
+        return fp_p6z
+
+    ### return length
+    if option==1:
+        fp_len = (fp_p6z[1:,:] - fp_p6z[:-1,:]).astype('timedelta64[D]')
+        return fp_len
+
+    ###return association between fp inputs and fp after node adjustment
+    if option==2:
+        ###build association between fp inputs and fp after adjustment (for steady state this is simply 1:1 association)
+        a_p6_std_p6z = fun.searchsort_multiple_dim(fp_std_p6z, fp_p6z, 1, 1, side='right')-1
+        return a_p6_std_p6z
+
+    # else:
+    #     # fp = fp.loc[:fp.index[-2], idx[:, 'length']] #last row not included because that only contains the end date of last period
+    #     fp = pinp.period['i_dsp_fp_len']
+    #     fp = pinp.f_seasonal_inp(fp, numpy=True, axis=1)
+    #     return fp
 
     #     if pinp.general['steady_state']:
     #         # fp = pinp.period['feed_periods']

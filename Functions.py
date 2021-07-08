@@ -1138,7 +1138,7 @@ def f_next_prev_association(datearray_slice,*args):
     date=args[0]
     offset=args[1] #offset is used to get the previous datearray period
     side=args[2]
-    idx_next = np.searchsorted(datearray_slice, date,side)
+    idx_next = np.searchsorted(datearray_slice, date, side)
     idx = np.clip(idx_next - offset, 0, len(datearray_slice)-1) #makes the max value equal to the length of joining array, because if the period date is after the last lambing opportunity there is no 'next'
     return idx
 

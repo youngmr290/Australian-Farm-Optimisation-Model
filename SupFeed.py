@@ -114,7 +114,7 @@ def f_sup_cost(r_vals):
 
     ##feed period data - need to convert all dates to the same year
     start_p6z = fun.f_baseyr(per.f_feed_periods())[:-1,:]
-    length_p6z = per.f_feed_periods(option=1).astype('timedelta64[D]')
+    length_p6z = per.f_feed_periods(option=1)
 
     ##deterimine cashflow allocation
     alloc_cpz=fun.range_allocation_np(p_dates_c[...,na], start_p6z, length_p6z, True)[:-1] #drop last c row because it is just the end date of last period.
@@ -259,7 +259,7 @@ def f_sup_labour():
 
     ##link feed periods to labour periods, ie determine the proportion of each feed period in each labour period so the time taken to sup feed can be divided up accordingly
     start_p6z = fun.f_baseyr(per.f_feed_periods())[:-1,:]
-    length_p6z = per.f_feed_periods(option=1).astype('timedelta64[D]')
+    length_p6z = per.f_feed_periods(option=1)
     shape_p5p6z = (lp_dates_p5z.shape[0],) + length_p6z.shape
     alloc_p5p6z = fun.range_allocation_np(lp_dates_p5z.values[:,na,:], start_p6z, length_p6z, True, shape=shape_p5p6z)[:-1]
 
