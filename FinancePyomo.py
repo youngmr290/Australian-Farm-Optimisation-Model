@@ -35,11 +35,11 @@ def finpyomo_local(params, model):
     #debit for a given time period (time period defined by cashflow set)
     model.v_debit = Var(model.s_cashflow_periods, bounds = (0.0, None), doc = 'amount of net negative cashflow in a given period')
     ##dep
-    model.v_dep = Var(bounds = (0.0, None), doc = 'transfers total dep to objective')
+    model.v_dep = Var(model.s_season_types, bounds = (0.0, None), doc = 'transfers total dep to objective')
     ##dep
-    model.v_asset = Var(bounds = (0.0, None), doc = 'transfers total value of asset to objective to ensure opportunity cost is represented')
+    model.v_asset = Var(model.s_season_types, bounds = (0.0, None), doc = 'transfers total value of asset to objective to ensure opportunity cost is represented')
     ##minroe
-    model.v_minroe = Var(bounds = (0.0, None), doc = 'total expenditure, used to ensure min return is met')
+    model.v_minroe = Var(model.s_season_types, bounds = (0.0, None), doc = 'total expenditure, used to ensure min return is met')
 
     ####################
     #params            #
