@@ -168,13 +168,13 @@ def coremodel_all(params, trial_name, model):
     #############################
     ##combines rotation yield, on-farm sup feed and yield penalties from untimely sowing and crop grazing. Then passes to cashflow constraint.
     def grain_transfer(model,g,k,z):
-        return -crppy.rotation_yield_transfer(model,g,k,z) + macpy.late_seed_penalty(model,g,k,z) + sum(model.v_sup_con[k,g,v,f,z]*1000 for v in model.s_feed_pools for f in model.s_feed_periods)\
-               - model.v_buy_grain[k,g,z]*1000 + model.v_sell_grain[k,g,z]*1000 <=0
+        return -crppy.rotation_yield_transfer(model,g,k,z) + macpy.late_seed_penalty(model,g,k,z) + sum(model.v_sup_con[z,k,g,f,p6]*1000 for f in model.s_feed_pools for p6 in model.s_feed_periods)\
+               - model.v_buy_grain[z,k,g]*1000 + model.v_sell_grain[z,k,g]*1000 <=0
     model.con_grain_transfer = pe.Constraint(model.s_grain_pools, model.s_crops, model.s_season_types, rule=grain_transfer, doc='constrain grain transfer between rotation and sup feeding')
     
     ##combined grain sold and purchased to get a $ amount which is added to the cashflow constrain
     def grain_income(model,c,z):
-        return sum(model.v_sell_grain[k,g,z] * model.p_grain_price[k,c,g] - model.v_buy_grain[k,g,z]* model.p_buy_grain_price[k,c,g] for k in model.s_crops for g in model.s_grain_pools)
+        return sum(model.v_sell_grain[z,k,g] * model.p_grain_price[k,c,g] - model.v_buy_grain[z,k,g]* model.p_buy_grain_price[k,c,g] for k in model.s_crops for g in model.s_grain_pools)
     
     ######################
     #feed                #
