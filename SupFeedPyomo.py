@@ -27,9 +27,9 @@ def suppyomo_local(params, model):
     ############
     # variable #
     ############
-    model.v_buy_grain = pe.Var(model.s_crops, model.s_grain_pools, model.s_season_types, bounds=(0,None),
+    model.v_buy_grain = pe.Var(model.s_season_types, model.s_crops, model.s_grain_pools, bounds=(0,None),
                                doc='tonnes of grain in each pool purchased for sup feeding')
-    model.v_sup_con = pe.Var(model.s_crops,model.s_grain_pools,model.s_feed_pools,model.s_feed_periods,model.s_season_types,
+    model.v_sup_con = pe.Var(model.s_season_types, model.s_crops, model.s_grain_pools, model.s_feed_pools, model.s_feed_periods,
                              bounds=(0,None), doc='tonnes of grain consumed in each pool')
 
     #########
@@ -70,7 +70,7 @@ def sup_cost(model,c,z):
     Used in global constraint (con_cashflow). See CorePyomo
     '''
 
-    return sum(model.v_sup_con[k,g,v,f,z] * model.p_sup_cost[c,k,f,z] for v in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for f in model.s_feed_periods)
+    return sum(model.v_sup_con[z,k,g,f,p6] * model.p_sup_cost[c,k,p6,z] for f in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for p6 in model.s_feed_periods)
 
 def sup_me(model,p6,f,z):
     '''
@@ -79,7 +79,7 @@ def sup_me(model,p6,f,z):
     Used in global constraint (con_me). See CorePyomo
     '''
 
-    return sum(model.v_sup_con[k,g,f,p6,z] * model.p_sup_md[k]for g in model.s_grain_pools for k in model.s_crops)
+    return sum(model.v_sup_con[z,k,g,f,p6] * model.p_sup_md[k]for g in model.s_grain_pools for k in model.s_crops)
 
 def sup_vol(model,p6,f,z):
     '''
@@ -88,7 +88,7 @@ def sup_vol(model,p6,f,z):
     Used in global constraint (con_vol). See CorePyomo
     '''
 
-    return sum(model.v_sup_con[k,g,f,p6,z] * model.p_sup_vol[k] for g in model.s_grain_pools for k in model.s_crops)
+    return sum(model.v_sup_con[z,k,g,f,p6] * model.p_sup_vol[k] for g in model.s_grain_pools for k in model.s_crops)
 
 def sup_dep(model,z):
     '''
@@ -97,7 +97,7 @@ def sup_dep(model,z):
     Used in global constraint (con_dep). See CorePyomo
     '''
 
-    return sum(model.v_sup_con[k,g,v,f,z] * model.p_sup_dep[k] for v in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for f in model.s_feed_periods)
+    return sum(model.v_sup_con[z,k,g,f,p6] * model.p_sup_dep[k] for f in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for p6 in model.s_feed_periods)
 
 def sup_asset(model,z):
     '''
@@ -106,16 +106,16 @@ def sup_asset(model,z):
     Used in global constraint (con_asset). See CorePyomo
     '''
 
-    return sum(model.v_sup_con[k,g,v,f,z] * model.p_sup_asset[k] for v in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for f in model.s_feed_periods)
+    return sum(model.v_sup_con[z,k,g,f,p6] * model.p_sup_asset[k] for f in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for p6 in model.s_feed_periods)
     
-def sup_labour(model,p,z):
+def sup_labour(model,p5,z):
     '''
     Calculate the total labour required for supplementary feeding.
 
     Used in global constraint (con_labour_any). See CorePyomo
     '''
 
-    return sum(model.v_sup_con[k,g,v,f,z] * model.p_sup_labour[p,f,k,z] for v in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for f in model.s_feed_periods)
+    return sum(model.v_sup_con[z,k,g,f,p6] * model.p_sup_labour[p5,p6,k,z] for f in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for p6 in model.s_feed_periods)
     
     
     

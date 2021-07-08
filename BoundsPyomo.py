@@ -91,8 +91,8 @@ def boundarypyomo_local(params, model):
         ##bound on livestock supplementary feed.
         if sup_lobound_inc:
             def sup_upper_bound(model, z):
-                return sum(model.v_sup_con[k,g,v,f,z] for k in model.s_crops for g in model.s_grain_pools for v in model.s_feed_pools
-                for f in model.s_feed_periods) >= 115
+                return sum(model.v_sup_con[z,k,g,f,p6] for k in model.s_crops for g in model.s_grain_pools for f in model.s_feed_pools
+                for p6 in model.s_feed_periods) >= 115
             model.con_sup_upper_bound = pe.Constraint(model.s_season_types, rule=sup_upper_bound, doc='upper bound for livestock sup feed')
 
         ##total dam min bound - total number includes each dvp (the sheep in a given yr equal total for all dvp divided by the number of dvps in 1 yr)
@@ -369,7 +369,7 @@ def boundarypyomo_local(params, model):
             ###constraint
             def pas_bound(model, z):
                 return (
-                        sum(model.v_phase_area[r,l,z] * model.p_pasture_area[r,t] for r in model.s_phases for l in
+                        sum(model.v_phase_area[z,r,l] * model.p_pasture_area[r,t] for r in model.s_phases for l in
                             model.s_lmus for t in model.s_pastures)
                         == total_pas_area)
             model.con_pas_bound = pe.Constraint(model.s_season_types, rule=pas_bound,doc='bound on total pasture area')

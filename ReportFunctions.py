@@ -163,6 +163,7 @@ def load_pkl(trial_name):
         r_vals = pkl.load(f)
     return lp_vars, r_vals
 
+#todo once this method is finalised remove the old code and unrequired args. Do the same for vars2df
 def f_vars2np(lp_vars, var_key, shape, keys_z, z_pos):
     '''
     converts lp_vars to numpy.
@@ -172,31 +173,41 @@ def f_vars2np(lp_vars, var_key, shape, keys_z, z_pos):
     :param z_pos: position to add z axis
     :return: numpy array with season axis.
     '''
-    final_vars = np.zeros(shape)
-    if isinstance(shape,int):
-        shape_wo_z = 1
-        len_z = shape
-        len_shape = 1
-    elif z_pos == -1:
-        shape_wo_z = shape[0:z_pos] + (1,) #make z singleton
-        len_z = shape[z_pos]
-        len_shape = len(shape)
-    else:
-        shape_wo_z = shape[0:z_pos] + (1,)+ shape[z_pos+1:] #make z singleton
-        len_z = shape[z_pos]
-        len_shape = len(shape)
-    for z in range(len_z):
-        z_key = keys_z[z]
-        try:
-            vars = np.array(list(lp_vars[z_key][var_key].values()))
-        except KeyError:
-            vars = np.array(list(lp_vars.values()))
-        vars = vars.reshape(shape_wo_z)
-        vars[vars == None] = 0  # replace None with 0
-        slc = [slice(None)] * len_shape
-        slc[z_pos] = slice(z,z+1)
-        final_vars[tuple(slc)] = vars
-    return final_vars
+    #todo the decision variables with season axis will be clustered and thus some will be set to 0. Here i will need to use an association to do the opposite to clustering.
+    # eg if z0 and z1 are the same then i will need to set z1 to z0 value.
+
+    # final_vars = np.zeros(shape)
+    # if isinstance(shape,int):
+    #     shape_wo_z = 1
+    #     len_z = shape
+    #     len_shape = 1
+    # elif z_pos == -1:
+    #     shape_wo_z = shape[0:z_pos] + (1,) #make z singleton
+    #     len_z = shape[z_pos]
+    #     len_shape = len(shape)
+    # else:
+    #     shape_wo_z = shape[0:z_pos] + (1,)+ shape[z_pos+1:] #make z singleton
+    #     len_z = shape[z_pos]
+    #     len_shape = len(shape)
+    #
+    # for z in range(len_z):
+    #     z_key = keys_z[z]
+    #     try:
+    #         vars = np.array(list(lp_vars[z_key][var_key].values()))
+    #     except KeyError:
+    #         vars = np.array(list(lp_vars.values()))
+    #     vars = vars.reshape(shape_wo_z)
+    #     vars[vars == None] = 0  # replace None with 0
+    #     slc = [slice(None)] * len_shape
+    #     slc[z_pos] = slice(z,z+1)
+    #     final_vars[tuple(slc)] = vars
+    # return final_vars
+
+    vars = np.array(list(lp_vars[var_key].values()))
+    vars = vars.reshape(shape)
+    vars[vars == None] = 0  # replace None with 0
+    return vars
+
 
 def f_vars2df(lp_vars, var_key, z_keys):
     '''
@@ -205,14 +216,17 @@ def f_vars2df(lp_vars, var_key, z_keys):
     :param var_key: string - name of variable to convert to series.
     :return: series with season as index level 0
     '''
-    for z_key, z in zip(z_keys,range(len(z_keys))):
-        var_series = pd.Series(lp_vars[z_key][var_key])
-        var_series = pd.concat([var_series], keys=[z_key])
-        if z == 0:
-            final_series = var_series
-        else:
-            final_series = pd.concat([final_series, var_series])
-    return final_series.sort_index()
+    # for z_key, z in zip(z_keys,range(len(z_keys))):
+    #     var_series = pd.Series(lp_vars[z_key][var_key])
+    #     var_series = pd.concat([var_series], keys=[z_key])
+    #     if z == 0:
+    #         final_series = var_series
+    #     else:
+    #         final_series = pd.concat([final_series, var_series])
+    # return final_series.sort_index()
+
+    var_series = pd.Series(lp_vars[var_key])
+    return var_series.sort_index()
 
 
 ########################
@@ -480,8 +494,8 @@ def f_grain_sup_summary(lp_vars, r_vals, option=0):
 
 def f_stubble_summary(lp_vars, r_vals):
     keys_z = r_vals['stock']['keys_z']
-    stub_zfp6ks = f_vars2df(lp_vars, 'v_stub_con', keys_z)
-    return stub_zfp6ks.sum(level=(0,2, 4)).unstack()
+    stub_fp6zks = f_vars2df(lp_vars, 'v_stub_con', keys_z)
+    return stub_fp6zks.sum(level=(1, 2, 4)).unstack()
 
 
 def f_crop_summary(lp_vars, r_vals, option=0):
@@ -840,13 +854,13 @@ def f_dep_summary(lp_vars, r_vals):
 def f_minroe_summary(lp_vars, r_vals):
     ##min return on expense cost
     keys_z = r_vals['stock']['keys_z']
-    minroe_z = f_vars2df(lp_vars, 'v_minroe', keys_z).droplevel(1) #drop level 1 because no sets therefore nan
+    minroe_z = f_vars2df(lp_vars, 'v_minroe', keys_z)#.droplevel(1) #drop level 1 because no sets therefore nan
     return minroe_z
 
 def f_asset_value_summary(lp_vars, r_vals):
     ##asset opportunity cost
     keys_z = r_vals['stock']['keys_z']
-    asset_value_z = f_vars2df(lp_vars, 'v_asset', keys_z).droplevel(1) #drop level 1 because no sets therefore nan
+    asset_value_z = f_vars2df(lp_vars, 'v_asset', keys_z)#.droplevel(1) #drop level 1 because no sets therefore nan
     return asset_value_z
 
 def f_overhead_summary(r_vals):
@@ -1046,7 +1060,7 @@ def f_profit(lp_vars, r_vals, option=0):
     '''
     keys_z = r_vals['stock']['keys_z']
     prob_z =r_vals['stock']['prob_z']
-    obj_profit_z = f_vars2df(lp_vars, 'scenario_profit', keys_z).droplevel(1) #drop level 1 because no sets therefore nan
+    obj_profit_z = f_vars2df(lp_vars, 'scenario_profit', keys_z)#.droplevel(1) #drop level 1 because no sets therefore nan
     minroe_z = f_minroe_summary(lp_vars, r_vals)
     asset_value_z = f_asset_value_summary(lp_vars, r_vals)
     if option == 0:

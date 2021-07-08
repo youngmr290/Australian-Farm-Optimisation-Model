@@ -240,8 +240,8 @@ for row in range(len(exp_data)):
             season = pinp.f_keys_z()[0]
             lp_vars = {}
             variables=model.component_objects(pe.Var, active=True)
-            lp_vars[season] = {str(v):{s:v[s].value for s in v} for v in variables}     #creates dict with variable in it. This is tricky since pyomo returns a generator object
-            lp_vars[season]['scenario_profit'] = obj #todo this will need to change with new season structure eg just remove this.
+            lp_vars = {str(v):{s:v[s].value for s in v} for v in variables}     #creates dict with variable in it. This is tricky since pyomo returns a generator object
+            lp_vars['scenario_profit'] = obj #todo this will need to change with new season structure eg just remove this.
             ##store profit
             lp_vars['profit'] = obj
 

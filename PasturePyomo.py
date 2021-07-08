@@ -97,7 +97,7 @@ def paspyomo_local(params, model):
     def greenpas(model,p6,l,z,t):
         p6s = l_fp[l_fp.index(p6) - 1] #need the activity level from last feed period
         if any(model.p_foo_start_grnha[o,p6,l,z,t] for o in model.s_foo_levels):
-            return sum(model.v_phase_area[r,l,z] * (-model.p_germination[p6,l,r,z,t] - model.p_foo_grn_reseeding[p6,l,r,z,t]) for r in model.s_phases
+            return sum(model.v_phase_area[z,r,l] * (-model.p_germination[p6,l,r,z,t] - model.p_foo_grn_reseeding[p6,l,r,z,t]) for r in model.s_phases
                        if pe.value(model.p_germination[p6,l,r,z,t])!=0 or model.p_foo_grn_reseeding[p6,l,r,z,t]!=0)         \
                             + sum(model.v_greenpas_ha[f,g,o,p6,l,z,t] * model.p_foo_start_grnha[o,p6,l,z,t]   \
                             - model.v_greenpas_ha[f,g,o,p6s,l,z,t] * model.p_foo_end_grnha[g,o,p6s,l,z,t] for f in model.s_feed_pools for g in model.s_grazing_int for o in model.s_foo_levels) <=0
@@ -122,14 +122,14 @@ def paspyomo_local(params, model):
         if model.p_dry_removal_t[p6,z,t] == 0 and model.p_dry_transfer_req_t[p6,z,t] == 0:
             return pe.Constraint.Skip
         else:
-            return sum(sum(- model.v_phase_area[r,l,z] * model.p_nap[d,p6,l,r,z,t] for r in model.s_phases for l in model.s_lmus if pe.value(model.p_nap[d,p6,l,r,z,t]) != 0)
+            return sum(sum(- model.v_phase_area[z,r,l] * model.p_nap[d,p6,l,r,z,t] for r in model.s_phases for l in model.s_lmus if pe.value(model.p_nap[d,p6,l,r,z,t]) != 0)
                        + model.v_nap_consumed[f,d,p6,z,t] * model.p_dry_removal_t[p6,z,t] for f in model.s_feed_pools) \
                    - model.v_nap_transfer[d,p6s,z,t] * model.p_dry_transfer_prov_t[p6s,z,t] \
                    + model.v_nap_transfer[d,p6,z,t] * model.p_dry_transfer_req_t[p6,z,t] <=0
     model.con_nappas = pe.Constraint(model.s_dry_groups, model.s_feed_periods, model.s_season_types, model.s_pastures, rule = nappas, doc='High and low quality dry pasture of each type available in each period')
     
     def pasarea(model,p6,l,z,t):
-        return sum(-model.v_phase_area[r,l,z] * model.p_phase_area[p6,l,r,z,t] for r in model.s_phases if pe.value(model.p_phase_area[p6,l,r,z,t]) != 0)   \
+        return sum(-model.v_phase_area[z,r,l] * model.p_phase_area[p6,l,r,z,t] for r in model.s_phases if pe.value(model.p_phase_area[p6,l,r,z,t]) != 0)   \
                         + sum(model.v_greenpas_ha[f,g,o,p6,l,z,t] for f in model.s_feed_pools for g in model.s_grazing_int for o in model.s_foo_levels) <=0
     model.con_pasarea = pe.Constraint(model.s_feed_periods, model.s_lmus, model.s_season_types, model.s_pastures, rule = pasarea, doc='Pasture area row for growth constraint of each type on each soil for each feed period (ha)')
     
@@ -138,7 +138,7 @@ def paspyomo_local(params, model):
         return sum(sum(model.v_greenpas_ha[f,g,o,p6,l,z,t] for f in model.s_feed_pools) * -(model.p_foo_end_grnha[g,o,p6,l,z,t] +
                    sum(model.p_senesce_grnha[d,g,o,p6,l,z,t] for d in model.s_dry_groups)) for g in model.s_grazing_int for o in model.s_foo_levels) \
                 -  sum(model.v_drypas_transfer[d,p6,z,t] * 1000 for d in model.s_dry_groups) \
-                + sum(model.v_phase_area[r,l,z]  * model.p_erosion[p6,l,r,t] for r in model.s_phases if pe.value(model.p_erosion[p6,l,r,t]) != 0) <=0
+                + sum(model.v_phase_area[z,r,l]  * model.p_erosion[p6,l,r,t] for r in model.s_phases if pe.value(model.p_erosion[p6,l,r,t]) != 0) <=0
     model.con_erosion = pe.Constraint(model.s_feed_periods, model.s_lmus, model.s_season_types, model.s_pastures, rule = erosion, doc='total pasture available of each type on each soil type in each feed period')
 
     
@@ -155,7 +155,7 @@ def paspyomo_local(params, model):
 ##############
 def passow(model,p,k,l,z):
     if any(model.p_pas_sow[p,l,r,k,z] for r in model.s_phases):
-        return sum(model.p_pas_sow[p,l,r,k,z]*model.v_phase_area[r,l,z] for r in model.s_phases if pe.value(model.p_pas_sow[p,l,r,k,z]) != 0)
+        return sum(model.p_pas_sow[p,l,r,k,z]*model.v_phase_area[z,r,l] for r in model.s_phases if pe.value(model.p_pas_sow[p,l,r,k,z]) != 0)
     else:
         return 0
 

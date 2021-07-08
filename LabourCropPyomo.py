@@ -58,15 +58,15 @@ def mach_labour_anyone(model,p, z):
     Used in global constraint (con_labour_anyone). See CorePyomo
 
     '''
-    seed_labour = sum(sum(model.v_seeding_machdays[p, k, l, z] for k in model.s_landuses) for l in model.s_lmus)        \
+    seed_labour = sum(sum(model.v_seeding_machdays[z, p, k, l] for k in model.s_landuses) for l in model.s_lmus)        \
     * model.p_daily_seed_hours *(1 + model.p_seeding_helper)
-    harv_labour = sum(model.v_harv_hours[p,k,z] * (1 + model.p_harv_helper[k])  for k in model.s_harvcrops)
+    harv_labour = sum(model.v_harv_hours[z,p,k] * (1 + model.p_harv_helper[k])  for k in model.s_harvcrops)
     prep_labour = model.p_prep_pack[p,z]
-    fert_t_time = sum(sum(sum(model.p_phasefert[r,z,l,n]*model.v_phase_area[r,l,z]*(model.p_fert_app_hour_tonne[p,n,z]/1000)  for r in model.s_phases
+    fert_t_time = sum(sum(sum(model.p_phasefert[r,z,l,n]*model.v_phase_area[z,r,l]*(model.p_fert_app_hour_tonne[p,n,z]/1000)  for r in model.s_phases
                               if pe.value(model.p_phasefert[r,z,l,n]) != 0)for l in model.s_lmus)for n in model.s_fert_type )
-    fert_ha_time = sum(sum(model.v_phase_area[r,l,z]*(model.p_fert_app_hour_ha[r,l,p,z]) for r in model.s_phases
+    fert_ha_time = sum(sum(model.v_phase_area[z,r,l]*(model.p_fert_app_hour_ha[r,l,p,z]) for r in model.s_phases
                            if pe.value(model.p_fert_app_hour_ha[r,l,p,z]) != 0) for l in model.s_lmus)
-    chem_time = sum(sum(model.v_phase_area[r,l,z]*(model.p_chem_app_lab[r,l,p,z]) for r in model.s_phases
+    chem_time = sum(sum(model.v_phase_area[z,r,l]*(model.p_chem_app_lab[r,l,p,z]) for r in model.s_phases
                         if pe.value(model.p_chem_app_lab[r,l,p,z]) != 0) for l in model.s_lmus)
     return seed_labour + harv_labour + prep_labour + fert_t_time + fert_ha_time + chem_time
 
@@ -81,7 +81,7 @@ def mach_labour_perm(model,p,z):
 
     '''
     fixed_monitor_time = model.p_fixed_crop_monitor[p,z]
-    variable_monitor_time = sum(model.p_variable_crop_monitor[r,p,z] * model.v_phase_area[r,l,z]  for r in model.s_phases for l in model.s_lmus
+    variable_monitor_time = sum(model.p_variable_crop_monitor[r,p,z] * model.v_phase_area[z,r,l]  for r in model.s_phases for l in model.s_lmus
                                 if pe.value(model.p_variable_crop_monitor[r,p,z]) != 0)
     return variable_monitor_time + fixed_monitor_time
 

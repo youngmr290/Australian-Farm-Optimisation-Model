@@ -34,7 +34,7 @@ def croppyomo_local(params, model):
     ############
     # variable #
     ############
-    model.v_sell_grain = pe.Var(model.s_crops, model.s_grain_pools, model.s_season_types, bounds=(0,None),
+    model.v_sell_grain = pe.Var(model.s_season_types, model.s_crops, model.s_grain_pools, bounds=(0,None),
                                 doc='tonnes of grain in each pool sold')
 
     #########
@@ -80,7 +80,7 @@ def rotation_yield_transfer(model,g,k,z):
     '''
 
     ##h is a disaggregated version of r, it can be indexed. h[0:i] is the rotation history. Have to check if k==h otherwise when h[0:i] is combined with k you can get the wrong rotation
-    return sum(sum(model.p_rotation_yield[r,k,z,l]*model.v_phase_area[r,l,z] * model.p_grainpool_proportion[k,g] for r in model.s_phases
+    return sum(sum(model.p_rotation_yield[r,k,z,l]*model.v_phase_area[z,r,l] * model.p_grainpool_proportion[k,g] for r in model.s_phases
                    if pe.value(model.p_rotation_yield[r,k,z,l]) != 0)for l in model.s_lmus) \
                    
 
@@ -97,7 +97,7 @@ def cropsow(model,k,l,z):
     Used in global constraint (con_sow). See CorePyomo
     '''
     if any(model.p_cropsow[r,k,l] for r in model.s_phases):
-        return sum(model.p_cropsow[r,k,l]*model.v_phase_area[r,l,z]  for r in model.s_phases
+        return sum(model.p_cropsow[r,k,l]*model.v_phase_area[z,r,l]  for r in model.s_phases
                    if pe.value(model.p_cropsow[r,k,l]) != 0) #+ model.x[k] >=0 # if ((r,)+(k,)+(l,)) in model.p_cropsow
     else:
         return 0
@@ -114,7 +114,7 @@ def rotation_cost(model,c,z):
     Used in global constraint (con_cashflow). See CorePyomo
     '''
 
-    return sum(sum(model.p_rotation_cost[r,z,l,c]*model.v_phase_area[r,l,z] for r in model.s_phases
+    return sum(sum(model.p_rotation_cost[r,z,l,c]*model.v_phase_area[z,r,l] for r in model.s_phases
                    if pe.value(model.p_rotation_cost[r,z,l,c]) != 0) for l in model.s_lmus )#+ model.x[c] >=0 #0.10677s
    
 ##############
@@ -127,7 +127,7 @@ def rot_stubble(model,k,s,z):
     Used in global constraint (con_stubble). See CorePyomo
     '''
 
-    return sum(sum(model.p_rotation_yield[r,k,z,l]*model.v_phase_area[r,l,z] * model.p_rot_stubble[k,s] for r in model.s_phases
+    return sum(sum(model.p_rotation_yield[r,k,z,l]*model.v_phase_area[z,r,l] * model.p_rot_stubble[k,s] for r in model.s_phases
                      if pe.value(model.p_rotation_yield[r,k,z,l]) != 0)for l in model.s_lmus if pe.value(model.p_rot_stubble[k,s]) !=0 ) \
                       
 
