@@ -2232,7 +2232,9 @@ def f1_p2v(production_p, dvp_pointer_p=1, numbers_p=1, on_hand_tp=True, days_per
                                                         y_slc = slice(y, y + 1) if shape[-2] > 1 else slice(0, None)
                                                         for g in range(shape[-1]):
                                                             g_slc = slice(g, g + 1) if shape[-1] > 1 else slice(0, None)
-                                                            result[..., a1_slc, e1_slc, b1_slc, n_slc, w_slc, z_slc, i_slc, d_slc, a0_slc, e0_slc, b0_slc, x_slc, y_slc, g_slc] \
+                                                            #calc the v length and only assign to that
+                                                            len_v = len(np.unique(dvp_pointer_p[:, a1, e1, b1, n, w, z, i, d, a0, e0, b0, x, y, g]))
+                                                            result[..., :len_v, a1_slc, e1_slc, b1_slc, n_slc, w_slc, z_slc, i_slc, d_slc, a0_slc, e0_slc, b0_slc, x_slc, y_slc, g_slc] \
                                                                 = np.add.reduceat(production_ftpany[..., a1_slc, e1_slc, b1_slc, n_slc, w_slc, z_slc, i_slc, d_slc, a0_slc, e0_slc, b0_slc, x_slc, y_slc, g_slc]
                                                                                   , np.r_[0, np.where(np.diff(dvp_pointer_p[:, a1, e1, b1, n, w, z, i, d, a0, e0, b0, x, y, g]))[0] + 1], axis=sinp.stock['i_p_pos']) #np.r_ basically concats two 1d arrays (so here we are just adding 0 to the start of the array)
     return result
