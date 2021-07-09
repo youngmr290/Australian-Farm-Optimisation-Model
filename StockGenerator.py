@@ -5065,10 +5065,18 @@ def generator(params,r_vals,nv,plots = False):
     sale_finish= time.time()
 
     ##Husbandry - shearing costs apply to p[0] but they are dropped because no numbers in p[0] #todo add feedbudgeting and labour for maintenance of infrastructure (it is currently has a cost that is representing materials and labour)
+    ###create special period_is_shear to handle t axis. This is used for the trigger which is periods since shearing. If
+    # in a sale t slice then periods since shearing must also look at the retained t slice because animals transfer from
+    # there in the last dvp. This method isnt perfect but works becasue shearing in the retained slice occurs at the end
+    # of the dvp (a full proof solution would be to add a v axis to period is sale).
+    period_is_shearing_husb_pa1e1b1nwzida0e0b0xyg0 = period_is_shearing_pa1e1b1nwzida0e0b0xyg0 #sires have no t slice so this step just creates a copy
+    period_is_shearing_husb_pa1e1b1nwzida0e0b0xyg1 = period_is_shearing_pa1e1b1nwzida0e0b0xyg1 #dams have no t slice so this step just creates a copy
+    period_is_shearing_husb_tpa1e1b1nwzida0e0b0xyg3 = np.logical_or(period_is_shearing_tpa1e1b1nwzida0e0b0xyg3, period_is_shearing_tpa1e1b1nwzida0e0b0xyg3[0,...])
+
     ###Sire: cost, labour and infrastructure requirements
     husbandry_cost_pg0, husbandry_labour_l2pg0, husbandry_infrastructure_h1pg0 = sfun.f_husbandry(
         uinp.sheep['i_head_adjust_sire'], mobsize_pa1e1b1nwzida0e0b0xyg0, o_ffcfw_psire, o_cfw_psire, operations_triggerlevels_h5h7h2pg,
-        p_index_pa1e1b1nwzida0e0b0xyg, age_start_pa1e1b1nwzida0e0b0xyg0, period_is_shearing_pa1e1b1nwzida0e0b0xyg0,
+        p_index_pa1e1b1nwzida0e0b0xyg, age_start_pa1e1b1nwzida0e0b0xyg0, period_is_shearing_pa1e1b1nwzida0e0b0xyg0, period_is_shearing_husb_pa1e1b1nwzida0e0b0xyg0,
         period_is_wean_pa1e1b1nwzida0e0b0xyg0, gender_xyg[0], o_ebg_psire, wool_genes_yg0, husb_operations_muster_propn_h2pg,
         husb_requisite_cost_h6pg, husb_operations_requisites_prob_h6h2pg, operations_per_hour_l2h2pg,
         husb_operations_infrastructurereq_h1h2pg, husb_operations_contract_cost_h2pg, husb_muster_requisites_prob_h6h4pg,
@@ -5076,7 +5084,7 @@ def generator(params,r_vals,nv,plots = False):
     ###Dams: cost, labour and infrastructure requirements - accounts for yatf costs as well
     husbandry_cost_pg1, husbandry_labour_l2pg1, husbandry_infrastructure_h1pg1 = sfun.f_husbandry(
         uinp.sheep['i_head_adjust_dams'], mobsize_pa1e1b1nwzida0e0b0xyg1, o_ffcfw_pdams, o_cfw_pdams, operations_triggerlevels_h5h7h2pg,
-        p_index_pa1e1b1nwzida0e0b0xyg, age_start_pa1e1b1nwzida0e0b0xyg1, period_is_shearing_pa1e1b1nwzida0e0b0xyg1,
+        p_index_pa1e1b1nwzida0e0b0xyg, age_start_pa1e1b1nwzida0e0b0xyg1, period_is_shearing_pa1e1b1nwzida0e0b0xyg1, period_is_shearing_husb_pa1e1b1nwzida0e0b0xyg1,
         period_is_wean_pa1e1b1nwzida0e0b0xyg1, gender_xyg[1], o_ebg_pdams, wool_genes_yg1, husb_operations_muster_propn_h2pg,
         husb_requisite_cost_h6pg, husb_operations_requisites_prob_h6h2pg, operations_per_hour_l2h2pg,
         husb_operations_infrastructurereq_h1h2pg, husb_operations_contract_cost_h2pg, husb_muster_requisites_prob_h6h4pg,
@@ -5085,7 +5093,7 @@ def generator(params,r_vals,nv,plots = False):
     ###offs: cost, labour and infrastructure requirements
     husbandry_cost_tpg3, husbandry_labour_l2tpg3, husbandry_infrastructure_h1tpg3 = sfun.f_husbandry(
         uinp.sheep['i_head_adjust_offs'], mobsize_pa1e1b1nwzida0e0b0xyg3, o_ffcfw_poffs, o_cfw_poffs[na,...], operations_triggerlevels_h5h7h2pg[:,:,:,na,...],
-        p_index_pa1e1b1nwzida0e0b0xyg3, age_start_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p], period_is_shearing_tpa1e1b1nwzida0e0b0xyg3,
+        p_index_pa1e1b1nwzida0e0b0xyg3, age_start_pa1e1b1nwzida0e0b0xyg3[mask_p_offs_p], period_is_shearing_tpa1e1b1nwzida0e0b0xyg3, period_is_shearing_husb_tpa1e1b1nwzida0e0b0xyg3,
         period_is_wean_pa1e1b1nwzida0e0b0xyg3, gender_xyg[mask_x], o_ebg_poffs, wool_genes_yg3, husb_operations_muster_propn_h2pg[:,na,...],
         husb_requisite_cost_h6pg[:,na,...], husb_operations_requisites_prob_h6h2pg[:,:,na,...], operations_per_hour_l2h2pg[:,:,na,...],
         husb_operations_infrastructurereq_h1h2pg[:,:,na,...], husb_operations_contract_cost_h2pg[:,na,...], husb_muster_requisites_prob_h6h4pg[:,:,na,...],
