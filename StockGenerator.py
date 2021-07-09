@@ -87,7 +87,6 @@ def generator(params,r_vals,nv,plots = False):
     e0_pos = sinp.stock['i_e0_pos']
     e1_pos = sinp.stock['i_e1_pos']
     i_pos = sinp.stock['i_i_pos']
-    j0_len = pinp.feedsupply['i_j0_len']
     k2_pos = sinp.stock['i_k2_pos']
     k3_pos = sinp.stock['i_k3_pos']
     k5_pos = sinp.stock['i_k5_pos']
@@ -157,6 +156,8 @@ def generator(params,r_vals,nv,plots = False):
     len_g3 = np.count_nonzero(mask_offs_inc_g3)
     len_i = np.count_nonzero(pinp.sheep['i_mask_i'])
     lensire_i = np.count_nonzero(pinp.sheep['i_masksire_i'])
+    len_j0 = pinp.feedsupply['i_j0_len']
+    len_k3 = len(pinp.sheep['i_k3_idx_offs'])
     len_n0 = sinp.structuralsa['i_n0_matrix_len']
     len_n1 = sinp.structuralsa['i_n1_matrix_len']
     len_n2 = sinp.structuralsa['i_n1_matrix_len'] #same as dams
@@ -232,6 +233,7 @@ def generator(params,r_vals,nv,plots = False):
     index_i = np.arange(len_i)
     index_ida0e0b0xyg = fun.f_expand(index_i, i_pos)
     index_i9 = index_i
+    index_k3k5tva1e1b1nwzida0e0b0xyg3 = fun.f_expand(np.arange(len_k3),k3_pos)
     index_p1 = np.arange(len_p1)
     index_m0 = np.arange(12)*2  #2hourly steps for chill calculations
     index_z = np.arange(len_z)
@@ -421,28 +423,37 @@ def generator(params,r_vals,nv,plots = False):
     gender_propn_xyg = fun.f_expand(pinp.sheep['i_gender_propn_x'], x_pos, condition=mask_x, axis=0).astype(dtype)
     ##join
     join_cycles_ida0e0b0xyg1 = sfun.f1_g2g(pinp.sheep['i_join_cycles_ig1'],'dams',i_pos)[pinp.sheep['i_mask_i'],...]
+
     ##lamb and lost
     gbal_oa1e1b1nwzida0e0b0xyg1 = sfun.f1_g2g(pinp.sheep['i_gbal_og1'],'dams',p_pos, condition=mask_o_dams, axis=p_pos) #need axis up to p so that p association can be applied
     gbal_da0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['i_gbal_og1'],'dams',d_pos, condition=mask_d_offs, axis=d_pos) #need axis up to p so that p association can be applied
+
     ##scanning
     scan_oa1e1b1nwzida0e0b0xyg1 = sfun.f1_g2g(pinp.sheep['i_scan_og1'],'dams',p_pos, condition=mask_o_dams, axis=p_pos) #need axis up to p so that p association can be applied
     scan_da0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['i_scan_og1'],'dams',d_pos, condition=mask_d_offs, axis=d_pos) #need axis up to p so that p association can be applied
+
     ##post weaning management
     wean_oa1e1b1nwzida0e0b0xyg1 = sfun.f1_g2g(pinp.sheep['i_wean_og1'],'dams',p_pos, condition=mask_o_dams, axis=p_pos) #need axis up to p so that p association can be applied
+
     ##association between offspring and sire/dam (used to determine the wean age of sire and dams based on the inputted wean age of offs)
     a_g0_g1 = sfun.f1_g2g(pinp.sheep['ia_g0_g1'],'dams')
     a_g3_g0 = sfun.f1_g2g(pinp.sheep['ia_g3_g0'],'sire')  # the sire association (pure bred B, M & T) are all based on purebred B because there are no pure bred M & T inputs
     a_g3_g1 = sfun.f1_g2g(pinp.sheep['ia_g3_g1'],'dams')  # if BMT exist then BBM exist and they will be in slice 1, therefore the association value doesn't need to be adjusted for "prior exclusions"
+
     ##age weaning- used to calc wean date and also to calc p1 stuff, sire and dams have no active a0 slice therefore just take the first slice
+    ###note: if age_wean_g3 gets a d axis it need to be the same for all animals that get clustered (see date born below)
     age_wean1st_a0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['i_age_wean_a0g3'],'offs',a0_pos).astype('timedelta64[D]')[pinp.sheep['i_mask_a']]
     age_wean1st_e0b0xyg0 = np.rollaxis(age_wean1st_a0e0b0xyg3[0, ...,a_g3_g0],0,age_wean1st_a0e0b0xyg3.ndim-1) #when you slice one slice of the array and also take multiple slices from another axis the axis with multiple slices jumps to the front therefore need to roll the g axis back to the end
     age_wean1st_e0b0xyg1 = np.rollaxis(age_wean1st_a0e0b0xyg3[0, ...,a_g3_g1],0,age_wean1st_a0e0b0xyg3.ndim-1) #when you slice one slice of the array and also take multiple slices from another axis the axis with multiple slices jumps to the front therefore need to roll the g axis back to the end
+
     ##date first lamb is born - need to apply i mask to these inputs - make sure animals are born at beginning of gen period
     date_born1st_ida0e0b0xyg0 = sfun.f1_g2g(pinp.sheep['i_date_born1st_ig0'],'sire',i_pos, condition=pinp.sheep['i_masksire_i'], axis=i_pos).astype('datetime64[D]')
     date_born1st_ida0e0b0xyg1 = sfun.f1_g2g(pinp.sheep['i_date_born1st_ig1'],'dams',i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos).astype('datetime64[D]')
     date_born1st_oa1e1b1nwzida0e0b0xyg2 = date_born1st_oa1e1b1nwzida0e0b0xyg2[mask_o_dams,...] #input read in in the mask section
     date_born1st_ida0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['i_date_born1st_idg3'],'offs',d_pos, condition=pinp.sheep['i_mask_i']
                                            , axis=i_pos, condition2=mask_d_offs, axis2=d_pos).astype('datetime64[D]')
+    date_born1st_ida0e0b0xyg3[:,len_k3-1:,...] = date_born1st_ida0e0b0xyg3[:,len_k3-1,...] #for animals in the same d cluster date born must be the same (so that the dvp and fvp dates are the same for all animals that get clustered)
+
     ##mating
     sire_propn_oa1e1b1nwzida0e0b0xyg1 = sfun.f1_g2g(pinp.sheep['i_sire_propn_oig1'],'dams', i_pos, swap=True,
                                                    left_pos2=p_pos,right_pos2=i_pos, condition=pinp.sheep['i_mask_i'],
@@ -471,6 +482,7 @@ def generator(params,r_vals,nv,plots = False):
     date_shear_sida0e0b0xyg1 = date_shear_sida0e0b0xyg1[mask_shear_g1]
     ###off - the first shearing must occur as offspring because if yatf were shorn then all lambs would have to be shorn (ie no scope to not shear the lambs that are going to be fed up and sold)
     #### the offspring decision variables are not linked to the yatf (which are in the dam decision variables) and it would require doubling the dam DVs to have shorn and unshorn yatf
+    ####note: if age_wean_g3 gets a d axis it need to be the same for all animals that get clustered (see date born below)
     date_shear_sida0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['i_date_shear_sixg3'],'offs',x_pos,swap=True,left_pos2=i_pos,right_pos2=x_pos,
                                           condition=pinp.sheep['i_mask_i'], axis=i_pos
                                           , condition2=mask_x, axis2=x_pos).astype('datetime64[D]')
@@ -785,8 +797,16 @@ def generator(params,r_vals,nv,plots = False):
     late_preg_oa1e1b1nwzida0e0b0xyg1 = date_joined_oa1e1b1nwzida0e0b0xyg1 + join_cycles_ida0e0b0xyg1 * cf_dams[4, 0:1, :].astype('timedelta64[D]') + pinp.sheep['i_scan_day'][scan_oa1e1b1nwzida0e0b0xyg1].astype('timedelta64[D]')
     idx_oa1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, late_preg_oa1e1b1nwzida0e0b0xyg1, 'right')-1 #gets the sim period index for the period when dams in late preg (eg late preg fvp starts at the beginning of the sim period when late preg occurs), side=right so that if the date is already the start of a period it remains in that period.
     fvp_scan_start_oa1e1b1nwzida0e0b0xyg1 = date_start_p[idx_oa1e1b1nwzida0e0b0xyg]
-    ## lactation fvp start - average date of lambing (with e axis) (already adjusted to start of gen period)
-    fvp_birth_start_oa1e1b1nwzida0e0b0xyg1 = date_born_oa1e1b1nwzida0e0b0xyg2
+
+    ## lactation fvp start - average date of lambing (with e axis if scanning/managing e differentially) (already adjusted to start of gen period)
+    fvp_birth_start_oa1e1b1nwzida0e0b0xyg1 = date_born_oa1e1b1nwzida0e0b0xyg2.copy()
+    ### birth fvp/dvp must be the same when e axis is clustered (otherwise something goes wrong in the pp/matrix).
+    t_fvp_birth_start_oa1e1b1nwzida0e0b0xyg1 = fvp_birth_start_oa1e1b1nwzida0e0b0xyg1.copy()
+    t_fvp_birth_start_oa1e1b1nwzida0e0b0xyg1[...] = fvp_birth_start_oa1e1b1nwzida0e0b0xyg1[:,:,-1:,...] #needs to be the final e slice so that all e slices have lambed when new dvp starts.
+    e_fvp_mask = (scan_oa1e1b1nwzida0e0b0xyg1 < 4)  #mask with true when fvp/dvp date should be the same along the e axis
+    e_fvp_mask = np.broadcast_to(e_fvp_mask, fvp_birth_start_oa1e1b1nwzida0e0b0xyg1.shape)
+    fvp_birth_start_oa1e1b1nwzida0e0b0xyg1[e_fvp_mask] = t_fvp_birth_start_oa1e1b1nwzida0e0b0xyg1[e_fvp_mask]
+
     ##weaning (already adjusted to start of gen period)
     fvp_wean_start_oa1e1b1nwzida0e0b0xyg1 = date_weaned_oa1e1b1nwzida0e0b0xyg2
     ##user defined fvp - rounded to nearest sim period
@@ -863,6 +883,9 @@ def generator(params,r_vals,nv,plots = False):
     ####################################
     # Feed variation period calcs offs #
     ####################################
+    ##Animals which are clustered must have the same fvp/dvps. To handle this inputs (dateborn) with a d axis that effect
+    # dvp/fvps are set to be the same within a cluster.
+
     ##fvp/dvp types
     fvp_type3 = np.cumsum(fvp_mask_offs)-1
     if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1:
@@ -1857,15 +1880,15 @@ def generator(params,r_vals,nv,plots = False):
     ###the slices of j0 are Std, minimum & maximum respectively
     ###the nut_mult does an array equivalent of feed supply = std + (max - std) * spread (if spread > 0, (min - std) if spread < 0)
     ###the nut_mult step is carried out on NV (MJ of MEI / intake volume required)
-    nut_mult_g0_j0n = np.empty((j0_len,n_fs_g0))
+    nut_mult_g0_j0n = np.empty((len_j0,n_fs_g0))
     nut_mult_g0_j0n[0, ...] = 1 - np.abs(nut_spread_g0_n)
     nut_mult_g0_j0n[1, ...] = np.abs(np.minimum(0, nut_spread_g0_n))
     nut_mult_g0_j0n[2, ...] = np.abs(np.maximum(0, nut_spread_g0_n))
-    nut_mult_g1_j0n = np.empty((j0_len,n_fs_dams))
+    nut_mult_g1_j0n = np.empty((len_j0,n_fs_dams))
     nut_mult_g1_j0n[0, ...] = 1 - np.abs(nut_spread_g1_n)
     nut_mult_g1_j0n[1, ...] = np.abs(np.minimum(0, nut_spread_g1_n))
     nut_mult_g1_j0n[2, ...] = np.abs(np.maximum(0, nut_spread_g1_n))
-    nut_mult_g3_j0n = np.empty((j0_len,n_fs_offs))
+    nut_mult_g3_j0n = np.empty((len_j0,n_fs_offs))
     nut_mult_g3_j0n[0, ...] = 1 - np.abs(nut_spread_g3_n)
     nut_mult_g3_j0n[1, ...] = np.abs(np.minimum(0, nut_spread_g3_n))
     nut_mult_g3_j0n[2, ...] = np.abs(np.maximum(0, nut_spread_g3_n))
@@ -5386,14 +5409,12 @@ def generator(params,r_vals,nv,plots = False):
     index_k28k29tva1e1b1nwzida0e0b0xyg1 = index_k2tva1e1b1nwzida0e0b0xyg1[:,na,...]
 
     ##offs
-    ### d cluster
-    a_k3cluster_da0e0b0xyg3 = fun.f_expand(np.minimum(len(pinp.sheep['i_k3_idx_offs'])-1, index_d), d_pos)
+    ### d cluster - to change this cluster definition len_k3 needs to change (which can be done by changing k3_idx).
+    a_k3cluster_da0e0b0xyg3 = fun.f_expand(np.minimum(len_k3-1, index_d), d_pos)
     ###b0 and e0 cluster
     a_k5cluster_da0e0b0xyg3 = np.sum(a_k5cluster_b0xygls * (gbal_da0e0b0xyg3[...,na,na]==index_l[:,na]) * (scan_da0e0b0xyg3[...,na,na]==index_s), axis = (-1,-2))
     a_k5cluster_da0e0b0xyg3 = a_k5cluster_da0e0b0xyg3 + (len_b0 * index_e0b0xyg * (scan_da0e0b0xyg3 == 4)) #If scanning for foetal age add 6 to the animals in the second & subsequent cycles. 6 is the number of slices in the b0 axes
-    len_k3 = np.max(a_k3cluster_da0e0b0xyg3)+1  #Added +1 because python starts at 0.
     len_k5 = np.max(a_k5cluster_da0e0b0xyg3)+1  #Added +1 because python starts at 0.
-    index_k3k5tva1e1b1nwzida0e0b0xyg3 = fun.f_expand(np.arange(len_k3), k3_pos)
     index_k5tva1e1b1nwzida0e0b0xyg3 = fun.f_expand(np.arange(len_k5), k5_pos)
 
 
