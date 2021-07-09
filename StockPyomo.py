@@ -92,13 +92,14 @@ def stockpyomo_local(params, model):
                                      model.s_groups_prog, model.s_groups_dams, model.s_lw_dams,
                                      initialize=params['p_progprov_dams'], default=0.0, mutable=False, doc='number of progeny provided to dams')
     model.p_progreq_dams = pe.Param(model.s_k2_birth_dams, model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_dams, model.s_lw_dams,
-                              model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_groups_dams, model.s_lw_dams,
+                              model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_groups_dams, model.s_lw_dams,
                               initialize=params['p_progreq_dams'], default=0.0, doc='number of progeny required by dams')
     model.p_progprov_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_prog, model.s_lw_prog,
                                      model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender, 
                                      model.s_gen_merit_offs, model.s_groups_offs, model.s_lw_offs,
                                      initialize=params['p_progprov_offs'], default=0.0, mutable=False, doc='number of progeny provided to dams')
-    model.p_progreq_offs = pe.Param(model.s_k3_damage_offs, model.s_dvp_offs, model.s_lw_offs, model.s_tol, model.s_gender, model.s_groups_offs, model.s_lw_offs,
+    model.p_progreq_offs = pe.Param(model.s_k3_damage_offs, model.s_dvp_offs, model.s_lw_offs, model.s_season_types,
+                                    model.s_tol, model.s_gender, model.s_groups_offs, model.s_lw_offs,
                               initialize=params['p_progreq_offs'], default=0.0, doc='number of progeny required by dams')
 
 
@@ -115,9 +116,10 @@ def stockpyomo_local(params, model):
                                          initialize=params['p_numbers_provthis_dams'], default=0.0, mutable=False,
                                          doc='numbers provided by each dam transfer activity into this period')
 
-    model.p_numbers_req_dams = pe.Param(model.s_k2_birth_dams, model.s_k2_birth_dams, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams,
-                                         model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_groups_dams, model.s_lw_dams,
-                                         initialize=params['p_numbers_req_dams'], default=0.0, doc='numbers required by each dam activity in the current period')
+    model.p_numbers_req_dams = pe.Param(model.s_k2_birth_dams, model.s_k2_birth_dams, model.s_sale_dams, model.s_dvp_dams,
+                                        model.s_wean_times, model.s_nut_dams, model.s_lw_dams, model.s_season_types,
+                                        model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_groups_dams, model.s_lw_dams,
+                                        initialize=params['p_numbers_req_dams'], default=0.0, doc='numbers required by each dam activity in the current period')
 
     ##stock - offs
     model.p_numbers_prov_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_offs, model.s_dvp_offs, 
@@ -125,7 +127,7 @@ def stockpyomo_local(params, model):
                                          model.s_gender, model.s_gen_merit_offs, model.s_groups_offs, model.s_lw_offs,
                                  initialize=params['p_numbers_prov_offs'], default=0.0, mutable=False, doc='numbers provided into the current period from the previous periods activities')
     model.p_numbers_req_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_dvp_offs, model.s_lw_offs,
-                                        model.s_tol, model.s_gender, model.s_groups_offs, model.s_lw_offs,
+                                        model.s_season_types, model.s_tol, model.s_gender, model.s_groups_offs, model.s_lw_offs,
                                         initialize=params['p_numbers_req_offs'], default=0.0, doc='requirement of off in the current period')
 
     ##energy intake
@@ -326,16 +328,17 @@ def stockpyomo_local(params, model):
         t_k3 = l_k3.index(k3)
         t_k5 = l_k5.index(k5)
         t_v3 = l_v3.index(v3)
+        t_z = l_z.index(z)
         t_i = l_i.index(i)
         t_x = l_x.index(x)
         t_g3 = l_g3.index(g3)
         t_w9 = l_w9_offs.index(w9)
-        if not np.any(params['numbers_req_numpyversion_k3k5vw8ixg3w9'][t_k3,t_k5,t_v3,:,t_i,t_x,t_g3,t_w9]):
+        if not np.any(params['numbers_req_numpyversion_k3k5vw8zixg3w9'][t_k3,t_k5,t_v3,:,t_z,t_i,t_x,t_g3,t_w9]):
             return pe.Constraint.Skip
-        return sum(model.v_offs[k3,k5,t3,v3,n3,w8,z,i,a,x,y3,g3] * model.p_numbers_req_offs[k3,k5,v3,w8,i,x,g3,w9]
+        return sum(model.v_offs[k3,k5,t3,v3,n3,w8,z,i,a,x,y3,g3] * model.p_numbers_req_offs[k3,k5,v3,w8,z,i,x,g3,w9]
                    - model.v_offs[k3,k5,t3,v3_prev,n3,w8,z,i,a,x,y3,g3] * model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z,i,a,x,y3,g3,w9]
                     for t3 in model.s_sale_offs for n3 in model.s_nut_offs for w8 in model.s_lw_offs
-                   if pe.value(model.p_numbers_req_offs[k3,k5,v3,w8,i,x,g3,w9]) != 0
+                   if pe.value(model.p_numbers_req_offs[k3,k5,v3,w8,z,i,x,g3,w9]) != 0
                    or pe.value(model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z,i,a,x,y3,g3,w9]) != 0) <=0 #need to use both in the if statement (even though it is slower) because there are situations eg dvp4 (prejoining) where prov will have a value and req will not.
     start_con_offR=time.time()
     model.con_offR = pe.Constraint(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_dvp_offs, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gender,
@@ -350,20 +353,21 @@ def stockpyomo_local(params, model):
         t_k29 = l_k29.index(k29)
         t_v1 = l_v1.index(v1)
         t_a = l_a.index(a)
+        t_z = l_z.index(z)
         t_i = l_i.index(i)
         t_y1 = l_y1.index(y1)
         t_g9 = l_g9.index(g9)
         t_w9 = l_w9.index(w9)
-        if not np.any(params['numbers_req_numpyversion_k2k2tva1nw8iyg1g9w9'][:,t_k29,:,t_v1,t_a,:,:,t_i,t_y1,:,t_g9,t_w9]):
+        if not np.any(params['numbers_req_numpyversion_k2k2tva1nw8ziyg1g9w9'][:,t_k29,:,t_v1,t_a,:,:,t_z,t_i,t_y1,:,t_g9,t_w9]):
             return pe.Constraint.Skip
         ##need to use both provide & require in this if statement (even though it is slower) because there are situations eg dvp4 (prejoining) where prov will have a value and req will not.
         ##but the prov parameter is necessary as it allows other dam permutations on this constraint
-        return sum(model.v_dams[k28,t1,v1,a,n1,w8,z,i,y1,g1] * model.p_numbers_req_dams[k28,k29,t1,v1,a,n1,w8,i,y1,g1,g9,w9]
+        return sum(model.v_dams[k28,t1,v1,a,n1,w8,z,i,y1,g1] * model.p_numbers_req_dams[k28,k29,t1,v1,a,n1,w8,z,i,y1,g1,g9,w9]
                    - model.v_dams[k28,t1,v1_prev,a,n1,w8,z,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z,i,y1,g1,g9,w9]
                    - model.v_dams[k28,t1,v1,a,n1,w8,z,i,y1,g1] * model.p_numbers_provthis_dams[k28,k29,t1,v1,a,n1,w8,z,i,y1,g1,g9,w9]
                    for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams
                    for n1 in model.s_nut_dams for w8 in model.s_lw_dams for g1 in model.s_groups_dams
-                   if pe.value(model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, i, y1, g1,g9, w9]) != 0
+                   if pe.value(model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, z, i, y1, g1,g9, w9]) != 0
                    or pe.value(model.p_numbers_prov_dams[k28, k29, t1, v1_prev, a, n1, w8, z, i, y1, g1, g9, w9]) != 0
                    or pe.value(model.p_numbers_provthis_dams[k28, k29, t1, v1, a, n1, w8, z, i, y1, g1, g9, w9]) != 0) <=0
 
@@ -392,17 +396,17 @@ def stockpyomo_local(params, model):
     ##k5 is a set which contains the common k slices (11,22,33) between prog and dams. It is being summed which means any b0 prog can provide a dam.
     ## the same happens for k3. See google doc for further explanation.
     def prog2damR(model, v1, z, i, y1, g9, w9):
-        if v1==l_v1[0] and any(model.p_progreq_dams[k2, k3, k5, t1, w18, i, y1, g1, g9, w9] for k5 in model.s_k5_birth_offs
+        if v1==l_v1[0] and any(model.p_progreq_dams[k2, k3, k5, t1, w18, z, i, y1, g1, g9, w9] for k5 in model.s_k5_birth_offs
                                for k3 in model.s_k3_damage_offs for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams
                                for w18 in model.s_lw_dams for g1 in model.s_groups_dams):
             return (sum(- model.v_prog[k3, k5, t2, w28, z, i, a0, x, g2] * model.p_progprov_dams[k3, k5, t2, w28, z, i, a0, x, y1, g2,g9,w9]
                         for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for a0 in model.s_wean_times
                         for x in model.s_gender for w28 in model.s_lw_prog for t2 in model.s_sale_prog for g2 in model.s_groups_prog
                         if pe.value(model.p_progprov_dams[k3, k5, t2, w28, z, i, a0, x, y1, g2,g9,w9])!= 0)
-                       + sum(model.v_dams[k2, t1, v1, a1, n1, w18, z, i, y1, g1]  * model.p_progreq_dams[k2, k3, k5, t1, w18, i, y1, g1, g9, w9]
+                       + sum(model.v_dams[k2, t1, v1, a1, n1, w18, z, i, y1, g1]  * model.p_progreq_dams[k2, k3, k5, t1, w18, z, i, y1, g1, g9, w9]
                         for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams
                              for a1 in model.s_wean_times for n1 in model.s_nut_dams for w18 in model.s_lw_dams for g1 in model.s_groups_dams
-                             if pe.value(model.p_progreq_dams[k2, k3, k5, t1, w18, i, y1, g1, g9, w9])!= 0))<=0
+                             if pe.value(model.p_progreq_dams[k2, k3, k5, t1, w18, z, i, y1, g1, g9, w9])!= 0))<=0
         else:
             return pe.Constraint.Skip
     start_con_prog2damsR = time.time()
@@ -412,13 +416,13 @@ def stockpyomo_local(params, model):
     # print('con_prog2damsR: ',end_con_prog2damsR-start_con_prog2damsR)
 
     def prog2offsR(model, k3, k5, v3, z, i, a, x, y3, g3, w9):
-        if v3==l_v3[0] and any(model.p_progreq_offs[k3, v3, w38, i, x, g3, w9] for w38 in model.s_lw_offs):
+        if v3==l_v3[0] and any(model.p_progreq_offs[k3, v3, w38, z, i, x, g3, w9] for w38 in model.s_lw_offs):
             return (sum(- model.v_prog[k3, k5, t2, w28, z, i, a, x, g3] * model.p_progprov_offs[k3, k5, t2, w28, z, i, a, x, y3, g3, w9] #use g3 (same as g2)
                         for w28 in model.s_lw_prog for t2 in model.s_sale_prog
                         if pe.value(model.p_progprov_offs[k3, k5, t2, w28, z, i, a, x, y3, g3, w9])!= 0)
-                       + sum(model.v_offs[k3,k5,t3,v3,n3,w38, z, i,a,x,y3,g3]  * model.p_progreq_offs[k3, v3, w38, i, x, g3, w9]
+                       + sum(model.v_offs[k3,k5,t3,v3,n3,w38, z, i,a,x,y3,g3]  * model.p_progreq_offs[k3, v3, w38, z, i, x, g3, w9]
                         for t3 in model.s_sale_offs for n3 in model.s_nut_dams for w38 in model.s_lw_offs
-                             if pe.value(model.p_progreq_offs[k3, v3, w38, i, x, g3, w9])!= 0))<=0
+                             if pe.value(model.p_progreq_offs[k3, v3, w38, z, i, x, g3, w9])!= 0))<=0
         else:
             return pe.Constraint.Skip
     start_con_prog2offR = time.time()
