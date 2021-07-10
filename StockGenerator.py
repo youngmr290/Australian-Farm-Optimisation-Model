@@ -4693,7 +4693,7 @@ def generator(params,r_vals,nv,plots = False):
     ###build dvps from fvps
     mask_node_is_dvp = np.full(len_m, True) * (pinp.general['i_inc_node_periods'] or
                                                np.logical_not(pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1)) #node fvp/dvp are not included if it is steadystate.
-    dvp_mask_f1 = np.concatenate([sinp.stock['i_fixed_dvp_mask_f1'], sinp.structuralsa['i_dvp_mask_f1'], mask_node_is_dvp*np.array([False, False])])
+    dvp_mask_f1 = np.concatenate([sinp.stock['i_fixed_dvp_mask_f1'], sinp.structuralsa['i_dvp_mask_f1'], mask_node_is_dvp])
     dvp1_inc = np.concatenate([np.array([True]), dvp_mask_f1]) #True at start is to count for the period from the start of the sim (this is not included in fvp mask because it is not a real fvp as it doesnt occur each year)
     dvp_date_inc_v1 = fvp_date_all_f1[dvp1_inc]
     dvp_type_inc_v1 = fvp_type_all_f1[dvp1_inc]
