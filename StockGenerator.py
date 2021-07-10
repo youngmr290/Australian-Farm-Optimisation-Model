@@ -2027,7 +2027,6 @@ def generator(params,r_vals,nv,plots = False):
         # ebg_start_sire=0
 
         ##dams
-        t_numbers_start_prejoin = 0
         numbers_join_dams = 0
         ldr_start_dams = np.array([1.0])
         lb_start_dams = np.array([1.0])
@@ -3773,19 +3772,20 @@ def generator(params,r_vals,nv,plots = False):
                 o_numbers_start_pdams[p] = numbers_start_dams
                 o_numbers_end_pdams[p] = pp_numbers_end_dams
 
-                ###store the start numbers at prejoining - used to scale numbers when back dating from mating to prejoining
-                if np.any(period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p]):
-                    t_numbers_start_prejoin = fun.f_update(t_numbers_start_prejoin, numbers_start_dams, period_is_prejoin_pa1e1b1nwzida0e0b0xyg1[p])
+                ###back date numbers from end of mating to prejoining
                 if np.any(period_is_mating_pa1e1b1nwzida0e0b0xyg1[p]): #need to back date the numbers from conception to prejoining because otherwise in the matrix there is not a dvp between prejoining and mating therefore this is require so that other slices have energy etc requirement
                     ###period is between prejoining and the end of current period (testing this for each p slice)
                     between_prejoinnow = sfun.f1_period_is_('period_is_between', date_prejoin_pa1e1b1nwzida0e0b0xyg1[p], date_start_pa1e1b1nwzida0e0b0xyg, date_end_pa1e1b1nwzida0e0b0xyg[p], date_end_pa1e1b1nwzida0e0b0xyg)
-                    ###if period is mating back date the end number after mating to all the periods since prejoining
-                    o_numbers_end_pdams = fun.f_update(o_numbers_end_pdams, pp_numbers_end_dams.astype(dtype), (period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p] * between_prejoinnow))
-                    ###scale end numbers (to account for mortality) before back dating to the start (only start numbers need scaling because end numbers don't need to be correct at the start of the dvp)
-                    t_scaled_numbers = np.maximum(pp_numbers_end_dams,
-                                                  pp_numbers_end_dams * (np.sum(t_numbers_start_prejoin, axis=(e1_pos,b1_pos), keepdims=True)
+                    ###scale numbers at the end of mating (to account for mortality) to each period (note only the periods between prejoining and end of mating get used)
+                    t_scaled_end_numbers = np.maximum(pp_numbers_end_dams,
+                                                  pp_numbers_end_dams * (np.sum(o_numbers_end_pdams, axis=(e1_pos,b1_pos), keepdims=True)
                                                                             / np.sum(pp_numbers_end_dams, axis=(e1_pos,b1_pos), keepdims=True)))
-                    o_numbers_start_pdams = fun.f_update(o_numbers_start_pdams, t_scaled_numbers.astype(dtype)
+                    t_scaled_start_numbers = np.maximum(pp_numbers_end_dams,
+                                                  pp_numbers_end_dams * (np.sum(o_numbers_start_pdams, axis=(e1_pos,b1_pos), keepdims=True)
+                                                                            / np.sum(pp_numbers_end_dams, axis=(e1_pos,b1_pos), keepdims=True)))
+                    ###if period is mating back date the end number after mating to all the periods since prejoining
+                    o_numbers_end_pdams = fun.f_update(o_numbers_end_pdams, t_scaled_end_numbers.astype(dtype), (period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p] * between_prejoinnow))
+                    o_numbers_start_pdams = fun.f_update(o_numbers_start_pdams, t_scaled_start_numbers.astype(dtype)
                                                          , (period_is_matingend_pa1e1b1nwzida0e0b0xyg1[p] * between_prejoinnow))
                 o_ffcfw_pdams[p] = ffcfw_dams
                 o_ffcfw_season_pdams[p] = sfun.f1_season_wa(numbers_end_dams, ffcfw_dams, season_tup, mask_min_lw_z_dams
