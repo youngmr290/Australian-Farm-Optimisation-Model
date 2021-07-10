@@ -671,7 +671,7 @@ def f_report(processor, trials, non_exist_trials):
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             numbers_offs = pd.concat([numbers_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_numbers_offs = stacked_numbers_offs.append(numbers_offs)
-
+    #todo numbers_p has a bit of an error for dams and offs (numbers seem to reduce a bit quickly)
         if report_run.loc['run_numbers_offs_p', 'Run']:
             type = 'stock'
             prod = 'on_hand_mort_k3k5tvpnwziaxyg3'
