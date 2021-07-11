@@ -84,7 +84,7 @@ def boundarypyomo_local(params, model):
             rot_lobound = dict(zip(tup_rl, rot_lobound))
             ###constraint
             def rot_lo_bound(model, r, l, z):
-                return model.v_phase_area[r, l, z] >= rot_lobound[r,l]
+                return model.v_phase_area[z, r, l] >= rot_lobound[r,l]
             model.con_rotation_lobound = pe.Constraint(model.s_phases, model.s_lmus, model.s_season_types, rule=rot_lo_bound,
                                                     doc='lo bound for the number of each phase')
 
@@ -327,7 +327,7 @@ def boundarypyomo_local(params, model):
             ###constraint
             def SR_bound(model, p6, z):
                 return(
-                - sum(model.v_phase_area[r, l, z] * model.p_pasture_area[r, t] * pasture_dse_carry[t] for r in model.s_phases for l in model.s_lmus for t in model.s_pastures)
+                - sum(model.v_phase_area[z, r, l] * model.p_pasture_area[r, t] * pasture_dse_carry[t] for r in model.s_phases for l in model.s_lmus for t in model.s_pastures)
                 + sum(model.v_sire[z, g0] * model.p_dse_sire[p6,z,g0] for g0 in model.s_groups_sire if pe.value(model.p_dse_sire[p6,z,g0])!=0)
                 + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_dse_dams[k2,p6,t1,v1,a,n1,w1,z,i,y1,g1]
                           for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
@@ -355,7 +355,7 @@ def boundarypyomo_local(params, model):
             def k_bound(model, k, z):
                 if landuse_area_bound[k]!=0:  #bound will not be built if param == 0
                     return(
-                           sum(model.v_phase_area[r, l, z] * model.p_landuse_area[r, k] for r in model.s_phases for l in model.s_lmus for t in model.s_pastures)
+                           sum(model.v_phase_area[z, r, l] * model.p_landuse_area[r, k] for r in model.s_phases for l in model.s_lmus for t in model.s_pastures)
                            == landuse_area_bound[k])
                 else:
                     pe.Constraint.Skip
