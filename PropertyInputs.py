@@ -372,7 +372,8 @@ def property_inp_sa():
         ###end of growing season and period when dry feed exists need special handling because they are fp pointer
         index_p6z = np.arange(len(a_p6std_p6z))[:,na]
         pasture_inputs[pasture]['EndGS'] = np.max((a_p6std_p6z == pasture_inputs[pasture]['EndGS']) * index_p6z, axis=0)
-        pasture_inputs[pasture]['i_dry_exists'] = np.max((a_p6std_p6z == pasture_inputs[pasture]['i_dry_exists']) * index_p6z, axis=0)
+        pasture_inputs[pasture]['i_dry_exists'] = np.max((a_p6std_p6z == pasture_inputs[pasture]['i_dry_exists']) * index_p6z, axis=0) \
+                                                  - (np.count_nonzero(a_p6std_p6z == pasture_inputs[pasture]['i_dry_exists'], axis=0) -1) #have to minus count non zero incase an extra fp is added in the period dry pas become available. becasue in this case we still want to point at the first period it become available (opposite to end of gs)
 
     ###fp index needs special handling because it isnt just expanded it is rebuilt
     period['i_fp_idx'] = ['fp%02d'%i for i in range(len(a_p6std_p6z))]
