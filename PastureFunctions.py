@@ -45,7 +45,7 @@ Pasture is split into the following functions (see PastureFunctions):
     #.	Reseeding of pasture (f_reseeding)
     #.	Requirement for machinery for reseeding (f_pas_sow)
     #.	Green pasture: consumption, growth (f_grn_pasture)
-    #.	Senescence of green pasture (f_senesence)
+    #.	Senescence of green pasture (f_senescence)
     #.	Dry pasture: consumption and decay (f_dry_pasture)
     #.	Pasture consumed on crop paddocks (f_poc)
     #.	Limit on grazing for soil conservation (f_erosion)
@@ -75,7 +75,7 @@ na = np.newaxis
 def f_germination(i_germination_std_zt, i_germ_scalar_lzt, i_germ_scalar_p6zt
                   , pasture_rt, arable_l,  pastures, phase_germresow_df, i_phase_germ_dict, rt):
     '''
-    Calculate pasture germination for each rotaion phase.
+    Calculate pasture germination for each rotation phase.
 
     Pasture germination is calculated for each pasture rotation phase based on the LMU and rotation history.
     The phase history is assumed only to impact pasture seed bank and hence pasture establishment. Phase
@@ -147,7 +147,7 @@ def f_reseeding(i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, i_restoc
     is set based on user specified input and the FOO on the non-arable area is calculated from the FOO at
     destocking plus the growth over the destocked period. Pastures that are resown after the break of season
     can be grazed until user specified destocking date prior to reseeding. To give the resown pasture time
-    to establish, the paddocks remain unstocked until a user specified restock date.
+    to establish, the paddocks remain destocked until a user specified restock date.
 
     :param i_destock_date_zt: Date of destocking prior to reseeding.
     :param i_restock_date_zt: Date of restocking post reseeding.
@@ -172,7 +172,7 @@ def f_reseeding(i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, i_restoc
     foo_dry_reseeding_p6lrzt     = np.zeros(p6lrzt,  dtype = 'float64')  # dry FOO adjustment for destocking and restocking of the resown area (kg/ha)
     foo_na_destock_p6zt = np.zeros(p6zt, dtype = 'float64')
 
-    ## the green feed to remove from matrix when pasture is destocked (this is an input because we dont know how hard the paddock was grazed prior to reseeding so we just estimate the FOO level).
+    ## the green feed to remove from matrix when pasture is destocked (this is an input because we don't know how hard the paddock was grazed prior to reseeding so we just estimate the FOO level).
     foo_arable_destock_zt = i_destock_foo_zt
     foo_na_destock_zt =  i_destock_foo_zt
     ## the periods from which to remove foo based on date destocked. Returns feed period destocking occurs & the proportion of the way that destocking occurs.
@@ -382,7 +382,7 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
     :param i_grn_senesce_eos_p6zt: The proportion of the green feed at the end of the period that senesces because it is the end of the growing season.
     :param i_base_p6zt: The base FOO level which represents the level below which the pasture can’t be grazed. This base
                       level is set with several criteria in mind; the physical limit at which animals can graze, an
-                      erosion limit below which farmers wouldn’t or shouldn’t graze; the optimum level of FOO based on
+                      erosion limit below which farmers wouldn't or shouldn't graze; the optimum level of FOO based on
                       the trade-off between PGR and FOO.
     :param i_grn_trampling_ft: amount of feed that is trampled while green feed is being consumed as a proportion of the feed consumed.
     :param i_grn_dig_p6lzt: DMD of the green feed that would be consumed if animals graze with 25% grazing intensity a sward that has medium FOO level in each feed period on each LMU.
@@ -496,13 +496,13 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
 def f1_senescence(senesce_period_grnha_gop6lzt, senesce_eos_grnha_gop6lzt, dry_decay_period_p6zt, dmd_sward_end_grnha_gop6lzt
                  , i_grn_dmd_senesce_redn_p6zt, dry_dmd_dp6zt, mask_greenfeed_exists_p6zt):
     '''
-    Combines the components of senescense and allocates to the dry pasture pools.
+    Combines the components of senescence and allocates to the dry pasture pools.
 
     The proportion of senesced pasture that enters the high and low quality dry pasture pool is calculated based
     on the range of quality in the senescing green feed.
 
-    :param senesce_period_grnha_gop6lzt: senescense of green pasture during the period.
-    :param senesce_eos_grnha_gop6lzt: end of season senescense of green pasture.
+    :param senesce_period_grnha_gop6lzt: senescence of green pasture during the period.
+    :param senesce_eos_grnha_gop6lzt: end of season senescence of green pasture.
     :param dry_decay_period_p6zt: decline in dry foo for each period.
     :param dmd_sward_end_grnha_gop6lzt: dmd of the sward after grazing is reduced due to removal of the high quality feed from selective grazing.
     :param i_grn_dmd_senesce_redn_p6zt: reduction in digestibility of green feed when it senesces
