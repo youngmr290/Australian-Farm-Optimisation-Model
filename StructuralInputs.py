@@ -101,6 +101,8 @@ structuralsa = copy.deepcopy(structuralsa_inp)
 def structural_inp_sa():
     '''
     Applies sensitivity adjustment to relevant inputs. Note only inputs in StructuralSA sheet can have sensitivities applied.
+    After the sensitivities are applied, when using the DSP model, inputs with a feed period index are expanded to
+    account for additional feed periods that are added due to season nodes.
     This function gets called at the beginning of each loop in the exp.py module
 
     :return: None.
@@ -127,6 +129,19 @@ def structural_inp_sa():
     structuralsa['rev_create'] = fun.f_sa(structuralsa['rev_create'], sen.sav['rev_create'],5)
     structuralsa['rev_number'] = fun.f_sa(structuralsa['rev_number'], sen.sav['rev_number'],5)
     structuralsa['rev_trait_inc'] = fun.f_sa(structuralsa['rev_trait_inc'], sen.sav['rev_trait_inc'],5)
+
+
+    ##When using DSP, expand inputs with a p6 axis for each season node.
+    ##have to import it here since sen.py imports this module
+    import Periods as per
+
+    ###get association between the input fp and the node adjusted fp
+    a_p6std_p6z = per.f_feed_periods(option=2)
+    ###apply association
+    ####stock
+    structuralsa['i_nv_upper_p6z'] = np.take_along_axis(structuralsa['i_nv_upper_p6'][:,None], a_p6std_p6z, axis=0)
+    structuralsa['i_nv_lower_p6z'] = np.take_along_axis(structuralsa['i_nv_lower_p6'][:,None], a_p6std_p6z, axis=0)
+
 
 
 ##############

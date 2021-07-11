@@ -75,15 +75,15 @@ def paspyomo_local(params, model):
     
     model.p_nap_prop = pe.Param(model.s_feed_periods, model.s_season_types, initialize=params['p_harvest_period_prop'], default=0, mutable=False, doc='proportion of the way through each period nap becomes available')
     
-    model.p_erosion = pe.Param(model.s_feed_periods, model.s_lmus, model.s_phases, model.s_pastures, initialize=params['p_erosion_p6lrt'], default=0, doc='erosion limit in each period')
+    model.p_erosion = pe.Param(model.s_feed_periods, model.s_lmus, model.s_phases, model.s_season_types, model.s_pastures, initialize=params['p_erosion_p6lrzt'], default=0, doc='erosion limit in each period')
     
     model.p_phase_area = pe.Param(model.s_feed_periods, model.s_lmus, model.s_phases, model.s_season_types, model.s_pastures, initialize=params['p_phase_area_p6lrzt'], default=0, mutable=False, doc='pasture area in each rotation for each feed period')
     
     model.p_pas_sow = pe.Param(model.s_labperiods, model.s_lmus, model.s_phases, model.s_landuses, model.s_season_types, initialize=params['p_pas_sow_p5lrkz'], default=0, mutable=False, doc='pasture sown for each rotation')
     
-    model.p_poc_con = pe.Param(model.s_feed_periods ,model.s_lmus, initialize=params['p_poc_con_p6l'],default=0, doc='available consumption of pasture on 1ha of a crop paddock each day for each lmu in each feed period')
+    model.p_poc_con = pe.Param(model.s_feed_periods ,model.s_lmus, model.s_season_types, initialize=params['p_poc_con_p6lz'],default=0, doc='available consumption of pasture on 1ha of a crop paddock each day for each lmu in each feed period')
 
-    model.p_poc_md = pe.Param(model.s_feed_pools, model.s_feed_periods, initialize=params['p_poc_md_fp6'],default=0, doc='md of pasture on crop paddocks for each feed period')
+    model.p_poc_md = pe.Param(model.s_feed_pools, model.s_feed_periods, model.s_season_types, initialize=params['p_poc_md_fp6z'],default=0, doc='md of pasture on crop paddocks for each feed period')
     
     model.p_poc_vol = pe.Param(model.s_feed_periods, model.s_season_types, initialize=params['p_poc_vol_p6z'],default=0, mutable=False, doc='vol (ri intake) of pasture on crop paddocks for each feed period')
     
@@ -138,7 +138,7 @@ def paspyomo_local(params, model):
         return sum(sum(model.v_greenpas_ha[f,g,o,p6,l,z,t] for f in model.s_feed_pools) * -(model.p_foo_end_grnha[g,o,p6,l,z,t] +
                    sum(model.p_senesce_grnha[d,g,o,p6,l,z,t] for d in model.s_dry_groups)) for g in model.s_grazing_int for o in model.s_foo_levels) \
                 -  sum(model.v_drypas_transfer[d,p6,z,t] * 1000 for d in model.s_dry_groups) \
-                + sum(model.v_phase_area[z,r,l]  * model.p_erosion[p6,l,r,t] for r in model.s_phases if pe.value(model.p_erosion[p6,l,r,t]) != 0) <=0
+                + sum(model.v_phase_area[z,r,l]  * model.p_erosion[p6,l,r,z,t] for r in model.s_phases if pe.value(model.p_erosion[p6,l,r,z,t]) != 0) <=0
     model.con_erosion = pe.Constraint(model.s_feed_periods, model.s_lmus, model.s_season_types, model.s_pastures, rule = erosion, doc='total pasture available of each type on each soil type in each feed period')
 
     
@@ -165,7 +165,7 @@ def passow(model,p,k,l,z):
 def pas_me(model,p6,f,z):
     return sum(sum(model.v_greenpas_ha[f,g,o,p6,l,z,t] * model.p_me_cons_grnha[f,g,o,p6,l,z,t] for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus) \
                + sum(model.v_drypas_consumed[f,d,p6,z,t] * model.p_dry_mecons_t[f,d,p6,z,t] for d in model.s_dry_groups) for t in model.s_pastures) \
-               + sum(model.v_poc[f,p6,l,z] * model.p_poc_md[f,p6] for l in model.s_lmus) #have to sum lmu here again, otherwise other axis will broadcast
+               + sum(model.v_poc[f,p6,l,z] * model.p_poc_md[f,p6,z] for l in model.s_lmus) #have to sum lmu here again, otherwise other axis will broadcast
 
 def nappas_me(model,p6,f,z):
     return sum(model.v_nap_consumed[f,d,p6,z,t] * model.p_dry_mecons_t[f,d,p6,z,t] for d in model.s_dry_groups for t in model.s_pastures)

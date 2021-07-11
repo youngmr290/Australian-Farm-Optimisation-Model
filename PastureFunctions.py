@@ -288,7 +288,7 @@ def f1_green_area(resown_rt, pasture_rt, periods_destocked_p6zt, arable_l):
     return phase_area_p6lrzt
 
 
-def f_erosion(i_lmu_conservation_p6lt, arable_l, pasture_rt):
+def f_erosion(i_lmu_conservation_p6lzt, arable_l, pasture_rt):
     '''
     The minimum FOO at the end of each period.
 
@@ -297,27 +297,27 @@ def f_erosion(i_lmu_conservation_p6lt, arable_l, pasture_rt):
     following year. This stops the model consuming all the dry feed and leaving the paddocks bare and exposed
     to wind erosion.
 
-    :param i_lmu_conservation_p6lt: Minimum foo at end of each period to reduce risk of wind & water erosion.
+    :param i_lmu_conservation_p6lzt: Minimum foo at end of each period to reduce risk of wind & water erosion.
     :param arable_l: Proportion of arable land on each LMU.
     :param pasture_rt: Boolean array linking pasture type to rotation phase.
     :return: The minimum FOO at the end of each period for each rotation phase.
     '''
-    arable_erosion_p6lrt = i_lmu_conservation_p6lt[..., na,:]  \
-                                    *  arable_l[:, na, na]  \
-                                    * pasture_rt
-    na_erosion_flr = np.sum(i_lmu_conservation_p6lt[..., na,:]
-                                    *         (1-arable_l[:, na, na])
-                                    *           pasture_rt
+    arable_erosion_p6lrzt = i_lmu_conservation_p6lzt[..., na,:,:]  \
+                                    *  arable_l[:, na, na, na]  \
+                                    * pasture_rt[:,na,:]
+    na_erosion_p6lrz = np.sum(i_lmu_conservation_p6lzt[..., na,:,:]
+                                    *         (1-arable_l[:, na, na, na])
+                                    *           pasture_rt[:,na,:]
                                     , axis = -1)
-    erosion_p6lrt = arable_erosion_p6lrt
-    erosion_p6lrt[..., 0] = erosion_p6lrt[..., 0] + na_erosion_flr #non arable area is annual pasture thus add to the annual slice
-    return erosion_p6lrt
+    erosion_p6lrzt = arable_erosion_p6lrzt
+    erosion_p6lrzt[..., 0] = erosion_p6lrzt[..., 0] + na_erosion_p6lrz #non arable area is annual pasture thus add to the annual slice
+    return erosion_p6lrzt
 
 
-def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_gp6t, grn_foo_start_ungrazed_p6lzt
+def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_gp6zt, grn_foo_start_ungrazed_p6lzt
                   , i_foo_graze_propn_gt, grn_senesce_startfoo_p6zt, grn_senesce_pgrcons_p6zt, i_grn_senesce_eos_p6zt
-                  , i_base_ft, i_grn_trampling_ft, i_grn_dig_p6lzt, i_grn_dmd_range_ft, i_pasture_stage_p6z, i_legume_zt
-                  , me_threshold_fp6zt, i_me_eff_gainlose_ft, mask_greenfeed_exists_p6zt, length_fz, nv_is_not_confinement_f):
+                  , i_base_p6zt, i_grn_trampling_ft, i_grn_dig_p6lzt, i_grn_dmd_range_p6zt, i_pasture_stage_p6z, i_legume_zt
+                  , me_threshold_fp6zt, i_me_eff_gainlose_p6zt, mask_greenfeed_exists_p6zt, length_fz, nv_is_not_confinement_f):
     '''
     Pasture growth, consumption and senescence of green feed.
 
@@ -374,23 +374,23 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
     :param cu4: params used to convert height for rel availability.
     :param i_fxg_foo_op6lzt: each level of starting FOO used in conjunction with PGR.
     :param i_fxg_pgr_op6lzt: PGR at each level of starting FOO if the pasture is not grazed for each soil type (typically derived from a simulation model).
-    :param c_pgr_gi_scalar_gp6t: The impact of grazing intensity within the period on the PGR achieved.
+    :param c_pgr_gi_scalar_gp6zt: The impact of grazing intensity within the period on the PGR achieved.
     :param grn_foo_start_ungrazed_p6lzt:  FOO at the start of the period if the pasture has been ungrazed from the start of the growing season.
     :param i_foo_graze_propn_gt: proportion of the FOO available (greater than the base level) that is grazed for each level of grazing intensity.
     :param grn_senesce_startfoo_p6zt: The proportion of the green feed at the start of the period that senesces.
     :param grn_senesce_pgrcons_p6zt: The proportion of the green feed that grows during the period that senesces (or the reduction in senescence if FOO reduces due to grazing).
     :param i_grn_senesce_eos_p6zt: The proportion of the green feed at the end of the period that senesces because it is the end of the growing season.
-    :param i_base_ft: The base FOO level which represents the level below which the pasture can’t be grazed. This base
+    :param i_base_p6zt: The base FOO level which represents the level below which the pasture can’t be grazed. This base
                       level is set with several criteria in mind; the physical limit at which animals can graze, an
                       erosion limit below which farmers wouldn’t or shouldn’t graze; the optimum level of FOO based on
                       the trade-off between PGR and FOO.
     :param i_grn_trampling_ft: amount of feed that is trampled while green feed is being consumed as a proportion of the feed consumed.
     :param i_grn_dig_p6lzt: DMD of the green feed that would be consumed if animals graze with 25% grazing intensity a sward that has medium FOO level in each feed period on each LMU.
-    :param i_grn_dmd_range_ft: Range of DMDin the sward between the 25th percentile to the 75th percentile.
+    :param i_grn_dmd_range_p6zt: Range of DMDin the sward between the 25th percentile to the 75th percentile.
     :param i_pasture_stage_p6z: Maturity of the pasture (establishment or vegetative as defined by CSIRO)
     :param i_legume_zt: Legume content of pasture.
     :param me_threshold_fp6zt: The nutritive value above which scaling will occur for the NV pool.
-    :param i_me_eff_gainlose_ft: Reduction in efficiency if M/D is above requirement for target LW pattern.
+    :param i_me_eff_gainlose_p6zt: Reduction in efficiency if M/D is above requirement for target LW pattern.
     :param mask_greenfeed_exists_p6zt: Boolean array stating which periods dry pasture exists.
     :param nv_is_not_confinement_f: boolean array stating which nv pools are not confinement feeding pools.
     :return: Quantity and quality of green pasture.
@@ -410,7 +410,7 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
     ## green, pasture growth for the 'grnha' decision variables
     #todo revisit the effect of gi on PGR by basing the reduction on the effect of gi on average FOO (rather than c_pgr_gi_scalar)
     pgr_grnha_gop6lzt = (i_fxg_pgr_op6lzt * length_fz[:, na, :, na]
-                        * c_pgr_gi_scalar_gp6t[:, na, :, na, na, :] * mask_greenfeed_exists_p6zt[:, na, ...])
+                        * c_pgr_gi_scalar_gp6zt[:, na, :, na, :, :] * mask_greenfeed_exists_p6zt[:, na, ...])
 
     ## green, final foo from initial, pgr and senescence
     ### senescence during the period is senescence of the starting FOO and of the FOO that is added/reduced by growth/grazing
@@ -420,7 +420,7 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
     foo_end_ungrazed_grnha_op6lzt = foo_start_grnha_op6lzt + pgr_grnha_gop6lzt[0, ...] - senesce_period_grnha_gop6lzt[0, ...]
     ### foo at end of period with range of grazing intensity prior to eos senescence
     foo_endprior_grnha_gop6lzt = (foo_end_ungrazed_grnha_op6lzt
-                                 - (foo_end_ungrazed_grnha_op6lzt - i_base_ft[:, na, na, :])
+                                 - (foo_end_ungrazed_grnha_op6lzt - i_base_p6zt[:, na, :, :])
                                  * i_foo_graze_propn_gt[:, na, na, na, na, :])
     senesce_eos_grnha_gop6lzt = foo_endprior_grnha_gop6lzt * i_grn_senesce_eos_p6zt[:, na, ...]
     foo_end_grnha_gop6lzt = foo_endprior_grnha_gop6lzt - senesce_eos_grnha_gop6lzt
@@ -441,12 +441,12 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
     #### Low FOO or low grazing intensity is input
     #### High FOO with 100% grazing is reduced by half the range in digestibility.
     #### Between low and high FOO it is a linear interpolation
-    dmd_sward_start_grnha_op6lzt = (i_grn_dig_p6lzt - i_grn_dmd_range_ft[:, na, na, :] / 2
+    dmd_sward_start_grnha_op6lzt = (i_grn_dig_p6lzt - i_grn_dmd_range_p6zt[:, na, :, :] / 2
                                    * fun.f_divide(foo_start_grnha_op6lzt - foo_start_grnha_op6lzt[0, ...]
                                                   , foo_start_grnha_op6lzt[-1, ...] - foo_start_grnha_op6lzt[0, ...]))
     #### Diet digestibility includes a linear interpolation of selectivity
     #### 0.25 is grazing intensity that gives diet quality == input value.
-    dmd_diet_grnha_gop6lzt = (i_grn_dig_p6lzt - i_grn_dmd_range_ft[:, na, na, :] / 2
+    dmd_diet_grnha_gop6lzt = (i_grn_dig_p6lzt - i_grn_dmd_range_p6zt[:, na, :, :] / 2
                              * fun.f_divide(foo_start_grnha_op6lzt - foo_start_grnha_op6lzt[0, ...]
                                             , foo_start_grnha_op6lzt[-1, ...] - foo_start_grnha_op6lzt[0, ...])
                              * (i_foo_graze_propn_gt[:, na, na, na, na, :] - 0.25) / (1 - 0.25))
@@ -478,7 +478,7 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
                                                   , grn_md_grnha_gop6lzt
                                                   , me_threshold_fp6zt[:, na, na, :, na, ...]
                                                   , grn_ri_gop6lzt
-                                                  , i_me_eff_gainlose_ft[:, na, na, :])
+                                                  , i_me_eff_gainlose_p6zt[:, na, :, :])
     #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
     me_cons_grnha_fgop6lzt = me_cons_grnha_fgop6lzt * mask_greenfeed_exists_p6zt[:, na, ...]
     #me from pasture is 0 in the confinement pool
@@ -526,7 +526,7 @@ def f1_senescence(senesce_period_grnha_gop6lzt, senesce_eos_grnha_gop6lzt, dry_d
     return senesce_grnha_dgop6lzt
 
 
-def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_high_p6zt, me_threshold_fp6zt, i_me_eff_gainlose_p6t, mask_dryfeed_exists_p6zt
+def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_high_p6zt, me_threshold_fp6zt, i_me_eff_gainlose_p6zt, mask_dryfeed_exists_p6zt
                   , i_pasture_stage_p6z, nv_is_not_confinement_f, i_legume_zt, n_feed_pools):
     '''
     Calculate the the quality and quantity of dry pasture available throughout the year.
@@ -557,7 +557,7 @@ def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_
     :param i_dry_dmd_range_p6zt: range in digestibility of dry feed if it is not grazed.
     :param i_dry_foo_high_p6zt: expected foo for the dry pasture in the high quality pool.
     :param me_threshold_fp6zt: the nutritive value above which scaling will occur for the NV pool.
-    :param i_me_eff_gainlose_ft: Reduction in efficiency if M/D is above requirement for target LW pattern
+    :param i_me_eff_gainlose_p6zt: Reduction in efficiency if M/D is above requirement for target LW pattern
     :param mask_dryfeed_exists_p6zt: Boolean array stating which periods dry pasture exists.
     :param i_pasture_stage_p6z: maturity of the pasture (establishment or vegetative as defined by CSIRO)
     :param nv_is_not_confinement_f: boolean array stating which nv pools are not confinement feeding pools.
@@ -602,13 +602,13 @@ def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_
                                ,          dry_md_fdp6zt
                                ,     me_threshold_fp6zt[:, na, ...]
                                ,           dry_ri_dp6zt
-                               , i_me_eff_gainlose_p6t[:,na,:])
+                               , i_me_eff_gainlose_p6zt)
     dry_mecons_t_fdp6zt = dry_mecons_t_fdp6zt * mask_dryfeed_exists_p6zt  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
     dry_mecons_t_fdp6zt = dry_mecons_t_fdp6zt * nv_is_not_confinement_f[:,na,na,na,na] #me from pasture is 0 in the confinement pool
     return dry_mecons_t_fdp6zt, dry_volume_t_dp6zt, dry_dmd_dp6zt, dry_foo_dp6zt
 
 
-def f_poc(cu3, cu4, i_poc_intake_daily_p6lt, i_poc_dmd_p6t, i_poc_foo_p6t, i_legume_zt, i_pasture_stage_p6z, nv_is_not_confinement_f):
+def f_poc(cu3, cu4, i_poc_intake_daily_p6lzt, i_poc_dmd_p6zt, i_poc_foo_p6zt, i_legume_zt, i_pasture_stage_p6z, nv_is_not_confinement_f):
     '''
     Calculate energy, volume and consumption parameters for pasture consumed on crop paddocks before seeding.
 
@@ -627,9 +627,9 @@ def f_poc(cu3, cu4, i_poc_intake_daily_p6lt, i_poc_dmd_p6t, i_poc_foo_p6t, i_leg
 
     :param cu3: params used to convert foo for rel availability.
     :param cu4: params used to convert height for rel availability.
-    :param i_poc_intake_daily_p6lt: maximum daily intake available from 1ha of pasture on crop paddocks
-    :param i_poc_dmd_ft: average digestibility of pasture on crop paddocks.
-    :param i_poc_foo_ft: average foo of pasture on crop paddocks.
+    :param i_poc_intake_daily_p6lzt: maximum daily intake available from 1ha of pasture on crop paddocks
+    :param i_poc_dmd_p6zt: average digestibility of pasture on crop paddocks.
+    :param i_poc_foo_p6zt: average foo of pasture on crop paddocks.
     :param i_legume_zt: legume content of pasture.
     :param i_pasture_stage_p6z: maturity of the pasture (establishment or vegetative as defined by CSIRO)
     :param nv_is_not_confinement_f: boolean array stating which nv pools are not confinement feeding pools.
@@ -640,18 +640,18 @@ def f_poc(cu3, cu4, i_poc_intake_daily_p6lt, i_poc_dmd_p6t, i_poc_foo_p6t, i_leg
     '''
     ### poc is assumed to be annual hence the 0 slice in the last axis
     ## con
-    poc_con_p6l = i_poc_intake_daily_p6lt[..., 0] / 1000 #divide 1000 to convert to tonnes of foo per ha
+    poc_con_p6lz = i_poc_intake_daily_p6lzt[..., 0] / 1000 #divide 1000 to convert to tonnes of foo per ha
     ## md per tonne
-    poc_md_p6 = fsfun.dmd_to_md(i_poc_dmd_p6t[..., 0]) * 1000 #times 1000 to convert to mj per tonne
-    poc_md_fp6 = poc_md_p6 * nv_is_not_confinement_f[:,na] #me from pasture is 0 in the confinement pool
+    poc_md_p6z = fsfun.dmd_to_md(i_poc_dmd_p6zt[..., 0]) * 1000 #times 1000 to convert to mj per tonne
+    poc_md_fp6z = poc_md_p6z * nv_is_not_confinement_f[:,na,na] #me from pasture is 0 in the confinement pool
 
     ## vol
     ### calc relative quality - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
     if uinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
-        poc_ri_qual_p6z = fsfun.f_rq_cs(i_poc_dmd_p6t[..., na, 0], i_legume_zt[..., 0])
+        poc_ri_qual_p6z = fsfun.f_rq_cs(i_poc_dmd_p6zt[..., :, 0], i_legume_zt[..., 0])
 
     ### adjust foo and calc hf
-    i_poc_foo_p6z, hf = fsfun.f_foo_convert(cu3, cu4, i_poc_foo_p6t[:,na,0], i_pasture_stage_p6z, i_legume_zt[...,0], z_pos=-1)
+    i_poc_foo_p6z, hf = fsfun.f_foo_convert(cu3, cu4, i_poc_foo_p6zt[:,:,0], i_pasture_stage_p6z, i_legume_zt[...,0], z_pos=-1)
     ### calc relative availability - note that the equation system used is the one selected for dams in p1 - need to hook up mu function
     if uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used
         poc_ri_quan_p6z = fsfun.f_ra_cs(i_poc_foo_p6z, hf)
@@ -662,7 +662,7 @@ def f_poc(cu3, cu4, i_poc_intake_daily_p6lt, i_poc_dmd_p6t, i_poc_foo_p6t, i_leg
     poc_vol_p6z = fun.f_divide(1000, poc_ri_p6z)  # 1000 to convert to vol per tonne
 
 
-    return poc_con_p6l, poc_md_fp6, poc_vol_p6z
+    return poc_con_p6lz, poc_md_fp6z, poc_vol_p6z
 
 
 def f1_calc_foo_profile(germination_p6lzt, dry_decay_p6zt, length_of_periods_fzt

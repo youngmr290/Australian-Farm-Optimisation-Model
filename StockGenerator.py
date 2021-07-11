@@ -607,17 +607,14 @@ def generator(params,r_vals,nv,plots = False):
     ##nyatf expanded to b1 & b0
     nyatf_b1nwzida0e0b0xyg = fun.f_expand(sinp.stock['a_nyatf_b1'],b1_pos)
     ##legume proportion in each period
-    legume_p6a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_legume_p6z'],z_pos,source=0,dest=-1,left_pos2=p_pos,
-                                                 right_pos2=z_pos)  # p6 axis converted to p axis later (association section)
+    legume_p6a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_legume_p6z'], z_pos, move=True, source=0, dest=-1,
+                                                 left_pos2=p_pos, right_pos2=z_pos)  # p6 axis converted to p axis later (association section)
     ##estimated foo and dmd for the feed periods (p6) periods
     paststd_foo_p6a1e1b1j0wzida0e0b0xyg = fun.f_expand(pinp.sheep['i_paststd_foo_p6zj0'],z_pos,move=True,source=0,
-                                                       dest=2,
-                                                       left_pos2=n_pos,right_pos2=z_pos,left_pos3=p_pos,
+                                                       dest=2, left_pos2=n_pos,right_pos2=z_pos,left_pos3=p_pos,
                                                        right_pos3=n_pos)  # p6 axis converted to p axis later (association section), axis order doesnt matter because sliced when used
-    pasture_stage_p6a1e1b1j0wzida0e0b0xyg = fun.f_expand(pinp.sheep['i_pasture_stage_p6z'],z_pos,move=True,source=0,
-                                                         dest=-1,
-                                                         left_pos2=p_pos,
-                                                         right_pos2=z_pos)  # p6 axis converted to p axis later (association section), z is treated later also
+    pasture_stage_p6a1e1b1j0wzida0e0b0xyg = fun.f_expand(pinp.sheep['i_pasture_stage_p6z'], z_pos, move=True, source=0,
+                                                         dest=-1, left_pos2=p_pos, right_pos2=z_pos)  # p6 axis converted to p axis later (association section), z is treated later also
     ##foo corrected to hand shears and estimated height - the z axis is also treated in this step
     paststd_foo_p6a1e1b1j0wzida0e0b0xyg0, paststd_hf_p6a1e1b1j0wzida0e0b0xyg0 = fsfun.f_foo_convert(cu3, cu4,
                                                                                      paststd_foo_p6a1e1b1j0wzida0e0b0xyg,
@@ -665,9 +662,8 @@ def generator(params,r_vals,nv,plots = False):
     #enter a number of days above a threshold (along with the threshold values maybe 1) and then average values for the windiest days in the month.
     ws_p4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_ws_p4'],p_pos)
     ##expected stocking density
-    density_p6a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_density_p6z'],z_pos,source=0,dest=-1,
-                                                  left_pos2=p_pos,
-                                                  right_pos2=z_pos)  # p6 axis converted to p axis later (association section)
+    density_p6a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_density_p6z'], z_pos, move=True, source=0, dest=-1,
+                                                  left_pos2=p_pos, right_pos2=z_pos)  # p6 axis converted to p axis later (association section)
     density_p6a1e1b1nwzida0e0b0xyg = pinp.f_seasonal_inp(density_p6a1e1b1nwzida0e0b0xyg,numpy=True,axis=z_pos).astype(
         int)
     ##nutrition adjustment for expected stocking density
@@ -4610,11 +4606,14 @@ def generator(params,r_vals,nv,plots = False):
     dresspercent_adj_yg0, dresspercent_adj_yg1, dresspercent_adj_yg2, dresspercent_adj_yg3 = sfun.f1_c2g(uinp.parameters['i_dressp_adj_c2'],uinp.parameters['i_dressp_adj_y'], dtype=dtype)
     ##husbandry
     wool_genes_yg0, wool_genes_yg1, wool_genes_yg2, wool_genes_yg3 = sfun.f1_c2g(uinp.parameters['i_wool_genes_c2'],uinp.parameters['i_wool_genes_y'], dtype=dtype)
-    mobsize_p6a1e1b1nwzida0e0b0xyg0 = fun.f_expand(pinp.sheep['i_mobsize_sire_p6i'], i_pos, left_pos2=p_pos, right_pos2=i_pos, condition=pinp.sheep['i_masksire_i'], axis=i_pos)
-    mobsize_pa1e1b1nwzida0e0b0xyg0 = np.take_along_axis(mobsize_p6a1e1b1nwzida0e0b0xyg0,a_p6_pa1e1b1nwzida0e0b0xyg,0)
-    mobsize_p6a1e1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_mobsize_dams_p6i'], i_pos, left_pos2=p_pos, right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
+    mobsize_p6a1e1b1nwzida0e0b0xyg0 = fun.f_expand(pinp.sheep['i_mobsize_sire_p6zi'], i_pos, left_pos2=p_pos, right_pos2=z_pos, condition=pinp.sheep['i_masksire_i'], axis=i_pos)
+    mobsize_p6a1e1b1nwzida0e0b0xyg0 = pinp.f_seasonal_inp(mobsize_p6a1e1b1nwzida0e0b0xyg0,numpy=True,axis=z_pos)
+    mobsize_pa1e1b1nwzida0e0b0xyg0 = np.take_along_axis(mobsize_p6a1e1b1nwzida0e0b0xyg0, a_p6_pa1e1b1nwzida0e0b0xyg,0)
+    mobsize_p6a1e1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_mobsize_dams_p6zi'], i_pos, left_pos2=p_pos, right_pos2=z_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
+    mobsize_p6a1e1b1nwzida0e0b0xyg1 = pinp.f_seasonal_inp(mobsize_p6a1e1b1nwzida0e0b0xyg1,numpy=True,axis=z_pos)
     mobsize_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(mobsize_p6a1e1b1nwzida0e0b0xyg1,a_p6_pa1e1b1nwzida0e0b0xyg,0)
-    mobsize_p6a1e1b1nwzida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_mobsize_offs_p6i'], i_pos, left_pos2=p_pos, right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
+    mobsize_p6a1e1b1nwzida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_mobsize_offs_p6zi'], i_pos, left_pos2=p_pos, right_pos2=z_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
+    mobsize_p6a1e1b1nwzida0e0b0xyg3 = pinp.f_seasonal_inp(mobsize_p6a1e1b1nwzida0e0b0xyg3,numpy=True,axis=z_pos)
     mobsize_pa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(mobsize_p6a1e1b1nwzida0e0b0xyg3, a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p], 0)
     animal_mated_b1g1 = fun.f_expand(sinp.stock['i_mated_b1'], b1_pos)
     operations_triggerlevels_h5h7h2pg = fun.f_convert_to_inf(fun.f_expand(pinp.sheep['i_husb_operations_triggerlevels_h5h7h2'], p_pos-1,
@@ -5186,31 +5185,33 @@ def generator(params,r_vals,nv,plots = False):
     nv_poffs = fun.f_divide(o_mei_solid_poffs, o_pi_poffs, dtype=dtype)
 
     ##create the upper and lower cutoffs. If there is a confinement slice then it will be populated with values but they never get used.
-    nv_upper_p6fpg = fun.f_expand(sinp.structuralsa['i_nv_upper_p6'], p_pos-2)
-    nv_lower_p6fpg = fun.f_expand(sinp.structuralsa['i_nv_lower_p6'], p_pos-2)
-    nv_cutoff_lower_p6fpg = nv_lower_p6fpg + (nv_upper_p6fpg - nv_lower_p6fpg)/n_non_confinement_pools * index_fpa1e1b1nwzida0e0b0xyg
-    nv_cutoff_upper_p6fpg = nv_lower_p6fpg + (nv_upper_p6fpg - nv_lower_p6fpg)/n_non_confinement_pools * (index_fpa1e1b1nwzida0e0b0xyg + 1)
+    nv_upper_p6fpzg = fun.f_expand(sinp.structuralsa['i_nv_upper_p6z'], left_pos=z_pos, left_pos2=p_pos-2, right_pos2=z_pos)
+    nv_upper_p6fpzg = pinp.f_seasonal_inp(nv_upper_p6fpzg,numpy=True,axis=z_pos)
+    nv_lower_p6fpzg = fun.f_expand(sinp.structuralsa['i_nv_lower_p6z'], left_pos=z_pos, left_pos2=p_pos-2, right_pos2=z_pos)
+    nv_lower_p6fpzg = pinp.f_seasonal_inp(nv_lower_p6fpzg,numpy=True,axis=z_pos)
+    nv_cutoff_lower_p6fpzg = nv_lower_p6fpzg + (nv_upper_p6fpzg - nv_lower_p6fpzg)/n_non_confinement_pools * index_fpa1e1b1nwzida0e0b0xyg
+    nv_cutoff_upper_p6fpzg = nv_lower_p6fpzg + (nv_upper_p6fpzg - nv_lower_p6fpzg)/n_non_confinement_pools * (index_fpa1e1b1nwzida0e0b0xyg + 1)
     ###Average these values to be passed to Pasture.py for efficiency of utilising ME and add to the dict
-    nv_cutoff_ave_p6fpg = (nv_cutoff_lower_p6fpg + nv_cutoff_upper_p6fpg) / 2
-    nv['nv_cutoff_ave_p6f'] = np.squeeze(nv_cutoff_ave_p6fpg, axis=tuple(range(p_pos,0)))
+    nv_cutoff_ave_p6fpzg = (nv_cutoff_lower_p6fpzg + nv_cutoff_upper_p6fpzg) / 2
+    nv['nv_cutoff_ave_p6fz'] = np.squeeze(nv_cutoff_ave_p6fpzg, axis=tuple(range(p_pos,z_pos))+tuple(range(z_pos+1,0)))
 
     ##So that no animals are excluded the lowest cutoff[0] is set to -np.inf and the highest cutoff is set to np.inf
-    nv_cutoff_lower_p6fpg[:, 0, ...] = -np.inf
-    nv_cutoff_upper_p6fpg[:, n_non_confinement_pools - 1, ...] = np.inf # use i_len_f rather than -1 to allow for the confinement slice if it exists
+    nv_cutoff_lower_p6fpzg[:, 0, ...] = -np.inf
+    nv_cutoff_upper_p6fpzg[:, n_non_confinement_pools - 1, ...] = np.inf # use i_len_f rather than -1 to allow for the confinement slice if it exists
 
     ##allocate each sheep class to an nv group
     ###Determining a std deviation for the distribution. This is an unknown but the value has been selected so that if
     ### an animal has an nv that is the mid-point of a feed pool then most of the mei & pi for that animal will occur
     ### in that feed pool. This is achieved by dividing the range of the feed pool by 6, because plus/minus 3 standard
     ### deviations from the mean is most of the range.
-    nv_cutoffs_sd_p6fpg = (nv_upper_p6fpg - nv_lower_p6fpg) / n_non_confinement_pools / 6
+    nv_cutoffs_sd_p6fpzg = (nv_upper_p6fpzg - nv_lower_p6fpzg) / n_non_confinement_pools / 6
     ###Calculate a proportion of the mei & pi that goes in each pool
-    nv_propn_p6fpsire = fun.f_norm_cdf(nv_cutoff_upper_p6fpg, nv_psire, sd=nv_cutoffs_sd_p6fpg) \
-                       - fun.f_norm_cdf(nv_cutoff_lower_p6fpg, nv_psire, sd=nv_cutoffs_sd_p6fpg)
-    nv_propn_p6fpdams = fun.f_norm_cdf(nv_cutoff_upper_p6fpg, nv_pdams, sd=nv_cutoffs_sd_p6fpg) \
-                       - fun.f_norm_cdf(nv_cutoff_lower_p6fpg, nv_pdams, sd=nv_cutoffs_sd_p6fpg)
-    nv_propn_p6fpoffs = fun.f_norm_cdf(nv_cutoff_upper_p6fpg, nv_poffs, sd=nv_cutoffs_sd_p6fpg) \
-                       - fun.f_norm_cdf(nv_cutoff_lower_p6fpg, nv_poffs, sd=nv_cutoffs_sd_p6fpg)
+    nv_propn_p6fpsire = fun.f_norm_cdf(nv_cutoff_upper_p6fpzg, nv_psire, sd=nv_cutoffs_sd_p6fpzg) \
+                       - fun.f_norm_cdf(nv_cutoff_lower_p6fpzg, nv_psire, sd=nv_cutoffs_sd_p6fpzg)
+    nv_propn_p6fpdams = fun.f_norm_cdf(nv_cutoff_upper_p6fpzg, nv_pdams, sd=nv_cutoffs_sd_p6fpzg) \
+                       - fun.f_norm_cdf(nv_cutoff_lower_p6fpzg, nv_pdams, sd=nv_cutoffs_sd_p6fpzg)
+    nv_propn_p6fpoffs = fun.f_norm_cdf(nv_cutoff_upper_p6fpzg, nv_poffs, sd=nv_cutoffs_sd_p6fpzg) \
+                       - fun.f_norm_cdf(nv_cutoff_lower_p6fpzg, nv_poffs, sd=nv_cutoffs_sd_p6fpzg)
     ###adjust the calculated proportions for the confinement pool. If in confinement then:
     ####set all the slices to 0
     nv_propn_p6fpsire = fun.f_update(nv_propn_p6fpsire, 0.0, (feedsupplyw_pa1e1b1nwzida0e0b0xyg0 >= 3))
@@ -6354,7 +6355,8 @@ def generator(params,r_vals,nv,plots = False):
     dsehd_p6tva1e1b1nwzida0e0b0xyg1 = nw_ave_p6tva1e1b1nwzida0e0b0xyg1 / pinp.sheep['i_dse_nw']**0.75
     dsehd_p6tva1e1b1nwzida0e0b0xyg3 = nw_ave_p6tva1e1b1nwzida0e0b0xyg3 / pinp.sheep['i_dse_nw']**0.75
     ####account for b1 axis effect on dse & select the dse group (note sire and offs don't have b1 axis so simple slice)
-    dse_group_dp6tva1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_dse_group'], p_pos - 2)
+    dse_group_dp6tva1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_dse_group'], z_pos, left_pos2=p_pos - 2, right_pos2=z_pos)
+    dse_group_dp6tva1e1b1nwzida0e0b0xyg = pinp.f_seasonal_inp(dse_group_dp6tva1e1b1nwzida0e0b0xyg, numpy=True, axis=z_pos)
     dams_dsegroup_b1p6tva1e1bnwzida0e0b0xyg = fun.f_expand(sinp.stock['ia_dams_dsegroup_b1'], p_pos-3) #put the b1 axis in the same place as the dse group axis
     dsenw_p6tva1e1b1nwzida0e0b0xyg0 = dsehd_p6tva1e1b1nwzida0e0b0xyg0 * dse_group_dp6tva1e1b1nwzida0e0b0xyg[sinp.stock['ia_sire_dsegroup']]
     dsenw_p6tva1e1b1nwzida0e0b0xyg1 = dsehd_p6tva1e1b1nwzida0e0b0xyg1 * np.moveaxis(np.take_along_axis(dse_group_dp6tva1e1b1nwzida0e0b0xyg, dams_dsegroup_b1p6tva1e1bnwzida0e0b0xyg,0)[...,0], 0, b1_pos) #take along the dse group axis, remove the last axis, then move b1 axis into place

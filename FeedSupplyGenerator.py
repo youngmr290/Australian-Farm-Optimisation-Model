@@ -64,9 +64,9 @@ def feed_generator():
     ######################
     na=np.newaxis
     ## define the periods - default (dams and sires)
-    n_sim_periods = 11  #number of feed periods + 1
     date_start_pz = per.f_feed_periods()[0:-1].astype('datetime64') #remove last date because that is the end date of the last period (not required)
     date_start_p = date_start_pz[:, 0] # to take only the first slice of the z axis. The Feed supply calculator.xlsx is not set to handle different seasons
+    n_sim_periods = len(date_start_pz)+1  #number of feed periods + 1
     # date_start_pa1e1b1nwzida0e0b0xyg = np.expand_dims(date_start_p, axis = tuple(range(sinp.stock['i_p_pos']+1, 0)))
 
 
@@ -143,10 +143,10 @@ def feed_generator():
     ###group independent              #  type(pinp.sheep['i_mask_z']).dtype
     ###################################
     ##legume proportion in each period
-    legume_p6a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_legume_p6z'],z_pos,source=0,dest=-1,left_pos2=p_pos,
+    legume_p6a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_legume_p6z'], z_pos, move=True, source=0,dest=-1, left_pos2=p_pos,
                                                  right_pos2=z_pos)  # p6 axis converted to p axis later (association section)
     ##estimated foo and dmd for the feed periods (p6) periods
-    paststd_foo_p6a1e1b1j0wzida0e0b0xyg = fun.f_expand(pinp.sheep['i_paststd_foo_p6zj0'],z_pos,move=True,source=0,
+    paststd_foo_p6a1e1b1j0wzida0e0b0xyg = fun.f_expand(pinp.sheep['i_paststd_foo_p6zj0'], z_pos, move=True,source=0,
                                                        dest=2,
                                                        left_pos2=n_pos,right_pos2=z_pos,left_pos3=p_pos,
                                                        right_pos3=n_pos)  # p6 axis converted to p axis later (association section), axis order doesnt matter because sliced when used

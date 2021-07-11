@@ -182,6 +182,10 @@ def f_feed_periods(option=0):
     '''
     ##calc feed period dates from inputs plus adjust for node dates.
     fp_std_p6z = pinp.period['i_dsp_fp_date'].astype('datetime64')
+
+    ##adjust end date of the last period (needs to be the date of the latest break so that pasture season junction has the correct length of the final fp)
+    #todo add this when doing season stuff.
+
     ###add node dates as feed peirods if dsp
     if pinp.general['i_inc_node_periods'] or np.logical_not(pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1):
         date_node_mz = pinp.general['i_date_node_zm'].astype('datetime64').T
@@ -191,8 +195,13 @@ def f_feed_periods(option=0):
     else: #if nodes are not added then the adjusted fps are the same as the std fp.
         fp_p6z = pinp.period['i_dsp_fp_date'].astype('datetime64')
 
+    ###return association between fp inputs and fp after node adjustment (before handling z axis)
+    if option==2:
+        ###build association between fp inputs and fp after adjustment (for steady state this is simply 1:1 association)
+        a_p6std_p6z = fun.searchsort_multiple_dim(fp_std_p6z, fp_p6z, 1, 1, side='right')-1
+        return a_p6std_p6z[:-1,:] #drop the last period since that is just the end of the final fp (not a real period)
+
     ###handle z axis
-    fp_std_p6z = pinp.f_seasonal_inp(fp_std_p6z, numpy=True, axis=1)
     fp_p6z = pinp.f_seasonal_inp(fp_p6z, numpy=True, axis=1)
 
     ### return array of fp dates
@@ -204,11 +213,6 @@ def f_feed_periods(option=0):
         fp_len = (fp_p6z[1:,:] - fp_p6z[:-1,:]).astype('timedelta64[D]')
         return fp_len
 
-    ###return association between fp inputs and fp after node adjustment
-    if option==2:
-        ###build association between fp inputs and fp after adjustment (for steady state this is simply 1:1 association)
-        a_p6_std_p6z = fun.searchsort_multiple_dim(fp_std_p6z, fp_p6z, 1, 1, side='right')-1
-        return a_p6_std_p6z
 
     # else:
     #     # fp = fp.loc[:fp.index[-2], idx[:, 'length']] #last row not included because that only contains the end date of last period

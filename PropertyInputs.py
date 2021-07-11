@@ -228,7 +228,8 @@ pasture_inputs = copy.deepcopy(pasture_inp)
 def property_inp_sa():
     '''
 
-    Applies sensitivity adjustment to each input.
+    Applies sensitivity adjustment to each input. After the sensitivities are applied, when using the DSP model, inputs
+    with a feed period index are expanded to account for additional feed periods that are added due to season nodes.
     This function gets called at the beginning of each loop in the exp.py module
 
     SA order is: sav, sam, sap, saa, sat, sar.
@@ -314,7 +315,6 @@ def property_inp_sa():
     ###sat
     ###sar
 
-
     ##report controls
     ###SAV
     rep['i_store_nv_rep'] = fun.f_sa(rep['i_store_nv_rep'], sen.sav['nv_inc'], 5)
@@ -322,6 +322,62 @@ def property_inp_sa():
     rep['i_store_ffcfw_rep'] = fun.f_sa(rep['i_store_ffcfw_rep'], sen.sav['ffcfw_inc'], 5)
     rep['i_store_on_hand_mort'] = fun.f_sa(rep['i_store_on_hand_mort'], sen.sav['onhand_mort_p_inc'], 5)
     rep['i_store_mort'] = fun.f_sa(rep['i_store_mort'], sen.sav['mort_inc'], 5)
+
+
+
+    ##When using DSP, expand inputs with a p6 axis for each season node.
+    ##have to import it here since sen.py imports this module
+    import Periods as per
+
+    ###get association between the input fp and the node adjusted fp
+    a_p6std_p6z = per.f_feed_periods(option=2)
+    a_p6_std_zp6 = a_p6std_p6z.T
+    ###apply association
+    ####stock
+    sheep['i_legume_p6z'] = np.take_along_axis(sheep['i_legume_p6z'], a_p6_std_zp6, axis=1)
+    sheep['i_paststd_foo_p6zj0'] = np.take_along_axis(sheep['i_paststd_foo_p6zj0'], a_p6_std_zp6[...,na], axis=1)
+    sheep['i_paststd_dmd_p6zj0'] = np.take_along_axis(sheep['i_paststd_dmd_p6zj0'], a_p6_std_zp6[...,na], axis=1)
+    sheep['i_pasture_stage_p6z'] = np.take_along_axis(sheep['i_pasture_stage_p6z'], a_p6_std_zp6, axis=1)
+    sheep['i_density_p6z'] = np.take_along_axis(sheep['i_density_p6z'], a_p6_std_zp6, axis=1)
+    sheep['i_mobsize_sire_p6zi'] = np.take_along_axis(sheep['i_mobsize_sire_p6i'][:,na,:], a_p6std_p6z[:,:,na], axis=0)
+    sheep['i_mobsize_dams_p6zi'] = np.take_along_axis(sheep['i_mobsize_dams_p6i'][:,na,:], a_p6std_p6z[:,:,na], axis=0)
+    sheep['i_mobsize_offs_p6zi'] = np.take_along_axis(sheep['i_mobsize_offs_p6i'][:,na,:], a_p6std_p6z[:,:,na], axis=0)
+    sheep['i_dse_group'] = np.take_along_axis(sheep['i_dse_group'][:,:,na], a_p6std_p6z[na,:,:], axis=1)
+
+    ####pasture
+    for pasture in sinp.general['pastures'][general['pas_inc']]:
+        pasture_inputs[pasture]['POCCons'] = np.take_along_axis(pasture_inputs[pasture]['POCCons'][:,:,na], a_p6std_p6z[:,na,:], axis=0)
+        pasture_inputs[pasture]['DigRednSenesce'] = np.take_along_axis(pasture_inputs[pasture]['DigRednSenesce'], a_p6_std_zp6, axis=1)
+        pasture_inputs[pasture]['DigDryAve'] = np.take_along_axis(pasture_inputs[pasture]['DigDryAve'], a_p6_std_zp6, axis=1)
+        pasture_inputs[pasture]['DigDryRange'] = np.take_along_axis(pasture_inputs[pasture]['DigDryRange'], a_p6_std_zp6, axis=1)
+        pasture_inputs[pasture]['FOODryH'] = np.take_along_axis(pasture_inputs[pasture]['FOODryH'], a_p6_std_zp6, axis=1)
+        pasture_inputs[pasture]['GermScalarFP'] = np.take_along_axis(pasture_inputs[pasture]['GermScalarFP'], a_p6_std_zp6, axis=1)
+        pasture_inputs[pasture]['CPGrn'] = np.take_along_axis(pasture_inputs[pasture]['CPGrn'][:,na], a_p6std_p6z, axis=0)
+        pasture_inputs[pasture]['CPDry'] = np.take_along_axis(pasture_inputs[pasture]['CPDry'][:,na], a_p6std_p6z, axis=0)
+        pasture_inputs[pasture]['DigPOC'] = np.take_along_axis(pasture_inputs[pasture]['DigPOC'][:,na], a_p6std_p6z, axis=0)
+        pasture_inputs[pasture]['FOOPOC'] = np.take_along_axis(pasture_inputs[pasture]['FOOPOC'][:,na], a_p6std_p6z, axis=0)
+        pasture_inputs[pasture]['DigSpread'] = np.take_along_axis(pasture_inputs[pasture]['DigSpread'][:,na], a_p6std_p6z, axis=0)
+        pasture_inputs[pasture]['PGRScalarH'] = np.take_along_axis(pasture_inputs[pasture]['PGRScalarH'][:,na], a_p6std_p6z, axis=0)
+        pasture_inputs[pasture]['BaseLevelInput'] = np.take_along_axis(pasture_inputs[pasture]['BaseLevelInput'][:,na], a_p6std_p6z, axis=0)
+        pasture_inputs[pasture]['ErosionLimit'] = np.take_along_axis(pasture_inputs[pasture]['ErosionLimit'][:,:,na], a_p6std_p6z[:,na,:], axis=0)
+        pasture_inputs[pasture]['SenescePropn'] = np.take_along_axis(pasture_inputs[pasture]['SenescePropn'][:,na], a_p6std_p6z, axis=0)
+        pasture_inputs[pasture]['SenesceEOS'] = np.take_along_axis(pasture_inputs[pasture]['SenesceEOS'], a_p6std_p6z, axis=0)
+        pasture_inputs[pasture]['LowFOO'] = np.take_along_axis(pasture_inputs[pasture]['LowFOO'], a_p6_std_zp6[:,:,na], axis=1)
+        pasture_inputs[pasture]['MedFOO'] = np.take_along_axis(pasture_inputs[pasture]['MedFOO'], a_p6_std_zp6[:,:,na], axis=1)
+        pasture_inputs[pasture]['LowPGR'] = np.take_along_axis(pasture_inputs[pasture]['LowPGR'], a_p6_std_zp6[:,:,na], axis=1)
+        pasture_inputs[pasture]['MedPGR'] = np.take_along_axis(pasture_inputs[pasture]['MedPGR'], a_p6_std_zp6[:,:,na], axis=1)
+        pasture_inputs[pasture]['DigGrn'] = np.take_along_axis(pasture_inputs[pasture]['DigGrn'], a_p6_std_zp6[:,:,na], axis=1)
+        pasture_inputs[pasture]['MaintenanceEff'] = np.take_along_axis(pasture_inputs[pasture]['MaintenanceEff'][:,na,:], a_p6std_p6z[:,:,na], axis=0)
+
+        ###end of growing season and period when dry feed exists need special handling because they are fp pointer
+        index_p6z = np.arange(len(a_p6std_p6z))[:,na]
+        pasture_inputs[pasture]['EndGS'] = np.max((a_p6std_p6z == pasture_inputs[pasture]['EndGS']) * index_p6z, axis=0)
+        pasture_inputs[pasture]['i_dry_exists'] = np.max((a_p6std_p6z == pasture_inputs[pasture]['i_dry_exists']) * index_p6z, axis=0)
+
+    ###fp index needs special handling because it isnt just expanded it is rebuilt
+    period['i_fp_idx'] = ['fp%02d'%i for i in range(len(a_p6std_p6z))]
+
+
 
 
 def f_z_prob():
