@@ -505,19 +505,28 @@ def generator(params,r_vals,nv,plots = False):
     ############################
     ##feedsupply
     ###feedsupply option selected - keep the z axis here and then handle the z axis after the feedsupply is calculated
-    a_r_zida0e0b0xyg0 = sfun.f1_g2g(pinp.sheep['ia_r1_zig0'],'sire',i_pos, swap=True, condition=pinp.sheep['i_masksire_i'], axis=i_pos).astype(int)
-    a_r_zida0e0b0xyg1 = sfun.f1_g2g(pinp.sheep['ia_r1_zig1'],'dams',i_pos, swap=True, condition=pinp.sheep['i_mask_i'], axis=i_pos).astype(int)
-    a_r_zida0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['ia_r1_zig3'],'offs',i_pos, swap=True, condition=pinp.sheep['i_mask_i'], axis=i_pos).astype(int)
+    a_r_zida0e0b0xyg0 = sfun.f1_g2g(pinp.sheep['ia_r1_zig0'], 'sire',i_pos, swap=True, condition=pinp.sheep['i_masksire_i']
+                                    , axis=i_pos).astype(int)
+    a_r_zida0e0b0xyg1 = sfun.f1_g2g(pinp.sheep['ia_r1_zig1'], 'dams',i_pos, swap=True, condition=pinp.sheep['i_mask_i']
+                                    , axis=i_pos).astype(int)
+    a_r_zida0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['ia_r1_zig3'], 'offs',i_pos, swap=True, condition=pinp.sheep['i_mask_i']
+                                    , axis=i_pos).astype(int)
     ###feed adjustment for dams
-    a_r2_k0e1b1nwzida0e0b0xyg1 = sfun.f1_g2g(pinp.sheep['ia_r2_k0ig1'],'dams',i_pos, swap=True,left_pos2=a1_pos,right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
-    a_r2_k1b1nwzida0e0b0xyg1 = sfun.f1_g2g(pinp.sheep['ia_r2_k1ig1'],'dams',i_pos, swap=True,left_pos2=e1_pos,right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
-    a_r2_spk0k1k2nwzida0e0b0xyg1 = sfun.f1_g2g(pinp.sheep['ia_r2_sk2ig1'],'dams',i_pos, left_pos2=b1_pos,right_pos2=i_pos,
-                                              left_pos3=p_pos-1, right_pos3=b1_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos, move=True, source=0, dest=2)  #add axis between g and i and i and b1
+    a_r2_k0e1b1nwzida0e0b0xyg1 = sfun.f1_g2g(pinp.sheep['ia_r2_k0ig1'], 'dams',i_pos, swap=True, left_pos2=a1_pos
+                                             , right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
+    a_r2_k1b1nwzida0e0b0xyg1 = sfun.f1_g2g(pinp.sheep['ia_r2_k1ig1'], 'dams', i_pos, swap=True, left_pos2=e1_pos
+                                           , right_pos2=i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
+    a_r2_spk0k1k2nwzida0e0b0xyg1 = sfun.f1_g2g(pinp.sheep['ia_r2_sk2ig1'], 'dams',i_pos, left_pos2=b1_pos, right_pos2=i_pos
+                                               , left_pos3=p_pos-1, right_pos3=b1_pos, condition=pinp.sheep['i_mask_i']
+                                               , axis=i_pos, move=True, source=0, dest=2)  #add axis between g and i and i and b1
     ###feed adjustment for offs
-    a_r2_idk0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['ia_r2_ik0g3'],'offs',a0_pos, left_pos2=i_pos,right_pos2=a0_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
-    a_r2_ik3a0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['ia_r2_ik3g3'],'offs',d_pos,  condition=pinp.sheep['i_mask_i'], axis=i_pos)
-    a_r2_ida0e0k4xyg3 = sfun.f1_g2g(pinp.sheep['ia_r2_ik4g3'],'offs',b0_pos, left_pos2=i_pos,right_pos2=b0_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)  #add axis between g and b0 and b0 and i
-    a_r2_ida0e0b0k5yg3 = sfun.f1_g2g(pinp.sheep['ia_r2_ik5g3'],'offs',x_pos, left_pos2=i_pos,right_pos2=x_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)  #add axis between g and b0 and b0 and i
+    a_r2_idk0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['ia_r2_ik0g3'], 'offs',a0_pos, left_pos2=i_pos, right_pos2=a0_pos
+                                    , condition=pinp.sheep['i_mask_i'], axis=i_pos)
+    a_r2_ik3a0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['ia_r2_ik3g3'], 'offs',d_pos,  condition=pinp.sheep['i_mask_i'], axis=i_pos)
+    a_r2_ida0e0k4xyg3 = sfun.f1_g2g(pinp.sheep['ia_r2_ik4g3'], 'offs',b0_pos, left_pos2=i_pos, right_pos2=b0_pos
+                                    , condition=pinp.sheep['i_mask_i'], axis=i_pos)  #add axis between g and b0 and b0 and i
+    a_r2_ida0e0b0k5yg3 = sfun.f1_g2g(pinp.sheep['ia_r2_ik5g3'], 'offs',x_pos, left_pos2=i_pos, right_pos2=x_pos
+                                     , condition=pinp.sheep['i_mask_i'], axis=i_pos)  #add axis between g and b0 and b0 and i
 
     ##std feed options
     feedsupply_options_r1j0p = pinp.feedsupply['i_feedsupply_options_r1pj0'][...,0:len_p].astype(np.float) #slice off extra p periods so it is the same length as the sim periods
@@ -1843,10 +1852,18 @@ def generator(params,r_vals,nv,plots = False):
     # a_r2_oestrus_pa1e1b1nwzida0e0b0xyg1 =
 
     ###c)lsln
-    ####a_k2_mlsb1 states the feedsupply adjustment option for each LSLN cluster based on selected management. In this step we slice a_k2_mlsb1 for the selected management in each period.
-    a_k2_pa1e1b1nwzida0e0b0xyg1 = np.rollaxis(a_k2_mlsb1[wean_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], gbal_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], scan_management_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], ...],-1,3) #remove the singleton b1 axis from the association arrays because a populated b1 axis comes from a_k2_mlsb1
-    ####slice scan axis - required because feedsupply adjustment may differ for each scan option (scanning option can effect optimal fs pattern before scanning)
-    a_r2_pk0k1k2nwzida0e0b0xyg1 = np.take_along_axis(a_r2_spk0k1k2nwzida0e0b0xyg1, scan_management_pa1e1b1nwzida0e0b0xyg1[na,...], axis=0)[0] #slice scan axis then remove the singleton
+    ####a_k2_mlsb1 is the k2 input cluster for each b1 slice (LSLN) with different management options.
+    #### In this step we slice a_k2_mlsb1 for the selected management in each period.
+    #####remove the singleton b1 axis from the association arrays because a populated b1 axis comes from a_k2_mlsb1
+    a_k2_pa1e1b1nwzida0e0b0xyg1 = np.rollaxis(a_k2_mlsb1[wean_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...]
+                                                         , gbal_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...]
+                                                         , scan_management_pa1e1b1nwzida0e0b0xyg1[:,:,:,0,...], ...],-1,3)
+    ####a_r2_spk0k1k2nwzida0e0b0xyg1 (k2 active) is the feedsupply adjustment option for each k2 input cluster for each scanning options.
+    ####The scan axis is required because the feedsupply for a cluster can vary based on how the other classes are clustered
+    #### eg the optimum feedsupply prior to scanning may change depending on whether singles and twins are identified
+    #todo the above comment is correct however, it is not represented in the inputs of the model. Undiff/mated is always 0 regardless of the scanning level
+    #####take along the scan axis then remove the singleton scan axis with [0]
+    a_r2_pk0k1k2nwzida0e0b0xyg1 = np.take_along_axis(a_r2_spk0k1k2nwzida0e0b0xyg1, scan_management_pa1e1b1nwzida0e0b0xyg1[na,...], axis=0)[0]
     ####select feedsupply adjustment option for each b slice based on the 'k2 input cluster' association.
     a_r2_lsln_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(a_r2_pk0k1k2nwzida0e0b0xyg1, a_k2_pa1e1b1nwzida0e0b0xyg1, b1_pos)
 
@@ -1859,12 +1876,15 @@ def generator(params,r_vals,nv,plots = False):
 
     ##3) calculate the feedsupply adjustment for each sheep class
     feedsupply_adj_options_r2pa1e1b1nwzida0e0b0xyg1 = fun.f_expand(feedsupply_adj_options_r2p,p_pos) #add other axis as singleton
-    ###a)wean
-    t_fs_ageweaned_pa1e1b1j0wzida0e0b0xyg1 = np.take_along_axis(feedsupply_adj_options_r2pa1e1b1nwzida0e0b0xyg1, a_r2_wean_pa1e1b1nwzida0e0b0xyg1[na,...], axis=0)[0] #[0] to remove the singleton
-    ###b)oestrus
-    # t_fs_cycle_pa1e1b1j0wzida0e0b0xyg1 = np.take_along_axis(feedsupply_adj_options_r2pa1e1b1nwzida0e0b0xyg1, a_r2_oestrus_pa1e1b1nwzida0e0b0xyg1[na,...], axis=0)[0] #[0] to remove the singleton
-    ###c)lsln
-    t_fs_lsln_pa1e1b1j0wzida0e0b0xyg1 = np.take_along_axis(feedsupply_adj_options_r2pa1e1b1nwzida0e0b0xyg1, a_r2_lsln_pa1e1b1nwzida0e0b0xyg1[na,...], axis=0)[0] #[0] to remove the singleton
+    ###a)wean (take along the r2 axis and then remove the singleton axis with [0])
+    t_fs_ageweaned_pa1e1b1j0wzida0e0b0xyg1 = np.take_along_axis(feedsupply_adj_options_r2pa1e1b1nwzida0e0b0xyg1
+                                                                , a_r2_wean_pa1e1b1nwzida0e0b0xyg1[na,...], axis=0)[0]
+    ###b)oestrus (take along the r2 axis and then remove the singleton axis with [0])
+    # t_fs_cycle_pa1e1b1j0wzida0e0b0xyg1 = np.take_along_axis(feedsupply_adj_options_r2pa1e1b1nwzida0e0b0xyg1
+    #                                                         , a_r2_oestrus_pa1e1b1nwzida0e0b0xyg1[na,...], axis=0)[0]
+    ###c)lsln (take along the r2 axis and then remove the singleton axis with [0])
+    t_fs_lsln_pa1e1b1j0wzida0e0b0xyg1 = np.take_along_axis(feedsupply_adj_options_r2pa1e1b1nwzida0e0b0xyg1
+                                                           , a_r2_lsln_pa1e1b1nwzida0e0b0xyg1[na,...], axis=0)[0]
 
     # t_fs_agedam_pa1e1b1j0wzik3a0e0b0xyg3 =
     # t_fs_ageweaned_pa1e1b1j0wzidk0e0b0xyg3 =
@@ -1873,16 +1893,21 @@ def generator(params,r_vals,nv,plots = False):
 
 
 
-    ##4) add adjustment to std pattern (the adjustment is added to the standard and the minimum and the maximum)
-    t_feedsupply_pa1e1b1j0wzida0e0b0xyg1 = (t_feedsupply_pa1e1b1j0wzida0e0b0xyg1 + t_fs_ageweaned_pa1e1b1j0wzida0e0b0xyg1 + t_fs_lsln_pa1e1b1j0wzida0e0b0xyg1) #can't use += for some reason
-    # t_feedsupply_pa1e1b1j0wzida0e0b0xyg3 = (t_feedsupply_pa1e1b1j0wzida0e0b0xyg3 + t_fs_agedam_pj0zida0e0b0xg3
-    #                                             + t_fs_ageweaned_pj0zida0e0b0xg3 + t_fs_gender_pj0zida0e0b0xg3)
+    ##4) add adjustment to std pattern (the adjustment is broadcast across j0 (the standard, minimum and maximum))
+    ##Limit the result to the range 0 to 2.999, where 2.999 is the maximum feedsupply before being a 'confinement' feedsupply
+    ##Note: the adjustment is in FS units (not in MJ/kg)
+    #todo potential problem here is that the adjustment could take the value outside the sensible range on the low side.
+    # address this when inputs are converted to nv by including the 'sensible range' as an input
+    t_feedsupply_pa1e1b1j0wzida0e0b0xyg1 = np.clip(t_feedsupply_pa1e1b1j0wzida0e0b0xyg1 + t_fs_ageweaned_pa1e1b1j0wzida0e0b0xyg1
+                                                   + t_fs_lsln_pa1e1b1j0wzida0e0b0xyg1, 0, 2.999) #can't use += for some reason
+    # t_feedsupply_pa1e1b1j0wzida0e0b0xyg3 = np.clip(t_feedsupply_pa1e1b1j0wzida0e0b0xyg3 + t_fs_agedam_pj0zida0e0b0xg3
+    #                                             + t_fs_ageweaned_pj0zida0e0b0xg3 + t_fs_gender_pj0zida0e0b0xg3, 0 , 2.999)
 
 
     ##6)Convert the ‘j0’ axis to an ‘n’ axis using the nut_spread inputs.
     ### the nut_spread inputs are the proportion of std and min or max feed supply.
     ### Unless nut_spread is greater than 3 in which case the value becomes the actual feed supply
-    ###convert  nut_spread inputs to numpy array and cut to the correct length based on number of nutrition options (i_len_n structural input)
+    ###convert nut_spread inputs to numpy array and cut to the correct length based on number of nutrition options (i_len_n structural input)
     if isinstance(sinp.structuralsa['i_nut_spread_n0'], np.ndarray):
         nut_spread_g0_n = sinp.structuralsa['i_nut_spread_n0'][0:n_fs_g0]
     else:
@@ -4527,7 +4552,7 @@ def generator(params,r_vals,nv,plots = False):
         sfd_ltwadj_a1e1b1nwzida0e0b0xyg3 = temporary * sen.sam['LTW_offs']
 
     postp_start=time.time()
-    print('generator loops :', postp_start - generator_start)
+    print(f'completed generator loops: {postp_start - generator_start}')
 
 
     ## Call Steve graphing routine here if Generator is throwing an error in the post processing.
@@ -4719,14 +4744,17 @@ def generator(params,r_vals,nv,plots = False):
     dvp_type_va1e1b1nwzida0e0b0xyg1[mask] = condense_vtype1
 
     ###dvp pointer and index
-    a_v_pa1e1b1nwzida0e0b0xyg1 =  np.apply_along_axis(fun.f_next_prev_association, 0, dvp_start_va1e1b1nwzida0e0b0xyg1, date_end_p, 1,'right')
+    a_v_pa1e1b1nwzida0e0b0xyg1 =  np.apply_along_axis(fun.f_next_prev_association, 0, dvp_start_va1e1b1nwzida0e0b0xyg1
+                                                      , date_end_p, 1,'right')
     index_va1e1b1nwzida0e0b0xyg1 = fun.f_expand(np.arange(np.max(a_v_pa1e1b1nwzida0e0b0xyg1)+1), p_pos)
     index_vpa1e1b1nwzida0e0b0xyg1 = fun.f_expand(np.arange(np.max(a_v_pa1e1b1nwzida0e0b0xyg1)+1), p_pos-1)
     ###other dvp associations and masks
-    a_p_va1e1b1nwzida0e0b0xyg1 = fun.f_next_prev_association(date_start_p, dvp_start_va1e1b1nwzida0e0b0xyg1, 1, 'right').astype(dtypeint) #returns the period index for the start of each dvp
+    a_p_va1e1b1nwzida0e0b0xyg1 = fun.f_next_prev_association(date_start_p, dvp_start_va1e1b1nwzida0e0b0xyg1
+                                                             , 1, 'right').astype(dtypeint) #returns the period index for the start of each dvp
     dvp_date_pa1e1b1nwzida0e0b0xyg1=np.take_along_axis(dvp_start_va1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1,0)
     dvp_type_next_va1e1b1nwzida0e0b0xyg1 = np.roll(dvp_type_va1e1b1nwzida0e0b0xyg1, -1, axis=p_pos)
-    period_is_startdvp_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is', dvp_date_pa1e1b1nwzida0e0b0xyg1, date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
+    period_is_startdvp_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_period_is_('period_is', dvp_date_pa1e1b1nwzida0e0b0xyg1
+                                        , date_start_pa1e1b1nwzida0e0b0xyg, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg)
     nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg1 = np.roll(period_is_startdvp_pa1e1b1nwzida0e0b0xyg1,-1,axis=0)
     nextperiod_is_prejoin_pa1e1b1nwzida0e0b0xyg1 = np.roll(period_is_prejoin_pa1e1b1nwzida0e0b0xyg1,-1,axis=0)
     #### the transfer to a dvp_type other than type==0 only occurs when transferring to and from the same genotype
@@ -4768,12 +4796,14 @@ def generator(params,r_vals,nv,plots = False):
     dvp_type_va1e1b1nwzida0e0b0xyg3 = np.concatenate(dvp_type_inc_v3,axis=0)
     dvp_date_presort_va1e1b1nwzida0e0b0xyg3 = np.concatenate(dvp_date_inc_v3,axis=0)
     ###mask any that occur before weaning and set to last date of generator and type to 0 so they are essentially ignored.
-    mask = np.logical_and(dvp_date_presort_va1e1b1nwzida0e0b0xyg3 <= date_weaned_ida0e0b0xyg3, dvp_date_presort_va1e1b1nwzida0e0b0xyg3 > offs_date_start_p[0])
+    mask = np.logical_and(dvp_date_presort_va1e1b1nwzida0e0b0xyg3 <= date_weaned_ida0e0b0xyg3
+                          , dvp_date_presort_va1e1b1nwzida0e0b0xyg3 > offs_date_start_p[0])
     dvp_date_presort_va1e1b1nwzida0e0b0xyg3[mask] = offs_date_start_p[-1]
     ###mask any fvp period dates that exist twice (cant have 0 day fvp so duplicates get moved to the end).
     duplicate_mask = np.full_like(mask, False)
     for f in range(dvp_date_presort_va1e1b1nwzida0e0b0xyg3.shape[0]): #maybe there is a way to do this without a loop.
-        duplicate_mask[f,...] = np.any(dvp_date_presort_va1e1b1nwzida0e0b0xyg3[f,...] == dvp_date_presort_va1e1b1nwzida0e0b0xyg3[0:f,...], axis=0, keepdims=True)
+        duplicate_mask[f,...] = np.any(dvp_date_presort_va1e1b1nwzida0e0b0xyg3[f,...]
+                                       == dvp_date_presort_va1e1b1nwzida0e0b0xyg3[0:f,...], axis=0, keepdims=True)
     dvp_date_presort_va1e1b1nwzida0e0b0xyg3[duplicate_mask] = offs_date_start_p[-1]
     ###sort into order
     ind=np.argsort(dvp_date_presort_va1e1b1nwzida0e0b0xyg3, axis=0)
@@ -4787,26 +4817,29 @@ def generator(params,r_vals,nv,plots = False):
     mask = dvp_start_va1e1b1nwzida0e0b0xyg3 == offs_date_start_p[-1] #can't use the existing mask (above) in case there is an fvp on the last day of generator that we didn't manually put there.
     dvp_type_va1e1b1nwzida0e0b0xyg3[mask] = condense_vtype3
 
-    ###build array of shearing dates including weaning - weaning is used for sale stuff because inputs are based on weaning date.
+    ###build array of shearing dates including the initial weaning - weaning is used for sale stuff because inputs are based on weaning date.
     date_weaned_a1e1b1nwzida0e0b0xyg3 = np.broadcast_to(date_weaned_ida0e0b0xyg3,fvp_0_start_sa1e1b1nwzida0e0b0xyg3.shape[1:]) #need wean date rather than first day of yr because selling inputs are days from weaning.
-    date_wean_shearing_sa1e1b1nwzida0e0b0xyg3 = np.concatenate([date_weaned_a1e1b1nwzida0e0b0xyg3[na,...],fvp_0_start_sa1e1b1nwzida0e0b0xyg3], axis=0)
+    date_wean_shearing_sa1e1b1nwzida0e0b0xyg3 = np.concatenate([date_weaned_a1e1b1nwzida0e0b0xyg3[na,...]
+                                                                , fvp_0_start_sa1e1b1nwzida0e0b0xyg3], axis=0)
 
     ###dvp pointer and index
-    a_v_pa1e1b1nwzida0e0b0xyg3 =  np.apply_along_axis(fun.f_next_prev_association, 0, dvp_start_va1e1b1nwzida0e0b0xyg3, offs_date_end_p, 1,'right')
-    a_p_va1e1b1nwzida0e0b0xyg3 = fun.f_next_prev_association(date_start_p, dvp_start_va1e1b1nwzida0e0b0xyg3, 1, 'right').astype(dtypeint) #returns the period index for the start of each dvp
+    a_v_pa1e1b1nwzida0e0b0xyg3 =  np.apply_along_axis(fun.f_next_prev_association, 0, dvp_start_va1e1b1nwzida0e0b0xyg3
+                                                      , offs_date_end_p, 1,'right')
+    a_p_va1e1b1nwzida0e0b0xyg3 = fun.f_next_prev_association(date_start_p, dvp_start_va1e1b1nwzida0e0b0xyg3
+                                                             , 1, 'right').astype(dtypeint) #returns the period index for the start of each dvp
     index_va1e1b1nwzida0e0b0xyg3 = fun.f_expand(np.arange(np.max(a_v_pa1e1b1nwzida0e0b0xyg3)+1), p_pos)
     index_vpa1e1b1nwzida0e0b0xyg3 = fun.f_expand(np.arange(np.max(a_v_pa1e1b1nwzida0e0b0xyg3)+1), p_pos-1)
     dvp_type_next_va1e1b1nwzida0e0b0xyg3 = np.roll(dvp_type_va1e1b1nwzida0e0b0xyg3, -1, axis=p_pos)
     dvp_date_pa1e1b1nwzida0e0b0xyg3=np.take_along_axis(dvp_start_va1e1b1nwzida0e0b0xyg3,a_v_pa1e1b1nwzida0e0b0xyg3,0)
-    period_is_startdvp_pa1e1b1nwzida0e0b0xyg3 = sfun.f1_period_is_('period_is', dvp_date_pa1e1b1nwzida0e0b0xyg3, date_start_pa1e1b1nwzida0e0b0xyg3, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3)
+    period_is_startdvp_pa1e1b1nwzida0e0b0xyg3 = sfun.f1_period_is_('period_is', dvp_date_pa1e1b1nwzida0e0b0xyg3
+                                    , date_start_pa1e1b1nwzida0e0b0xyg3, date_end_p = date_end_pa1e1b1nwzida0e0b0xyg3)
     nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg3 = np.roll(period_is_startdvp_pa1e1b1nwzida0e0b0xyg3,-1,axis=0)
     nextperiod_is_condense_pa1e1b1nwzida0e0b0xyg3 = np.roll(period_is_condense_pa1e1b1nwzida0e0b0xyg3,-1,axis=0)
 
     ####association between dvp and shearing - this is required because in the last dvp that the animal exist (ie when the generator ends) the sheep did not exist at shearing.
     a_s_va1e1b1nwzida0e0b0xyg3 = np.take_along_axis(a_prev_s_pa1e1b1nwzida0e0b0xyg3, a_p_va1e1b1nwzida0e0b0xyg3, axis=0)
-    a_sw_pa1e1b1nwzida0e0b0xyg3 = np.apply_along_axis(fun.f_next_prev_association,0,                                   #shearing opp with weaning included.
-                                                          date_wean_shearing_sa1e1b1nwzida0e0b0xyg3,offs_date_end_p,1,
-                                                          'right')
+    a_sw_pa1e1b1nwzida0e0b0xyg3 = np.apply_along_axis(fun.f_next_prev_association,0, date_wean_shearing_sa1e1b1nwzida0e0b0xyg3
+                                                      , offs_date_end_p, 1, 'right')  #shearing opp with weaning included.
     ###cluster
     a_k5cluster_lsb0xyg = fun.f_expand(sinp.stock['ia_ppk5_lsb0'], b0_pos)
     a_k5cluster_b0xygls = np.moveaxis(np.moveaxis(a_k5cluster_lsb0xyg, 0,-1),0,-1) #put s and l at the end they are summed away shortly
@@ -7135,41 +7168,43 @@ def generator(params,r_vals,nv,plots = False):
 
     r_vals['sire_keys_g0'] = [keys_g0]
     r_vals['sire_keys_p6fg0'] = [keys_p6, keys_f, keys_g0]
-    r_vals['dams_keys_k2tvanwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i,
-                                             keys_y1, keys_g1]
-    r_vals['dams_keys_k2ctvanwziy1g1'] = [keys_k2, keys_c, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i,
-                                             keys_y1, keys_g1]
-    r_vals['dams_keys_k2tvaeb9nwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_a, keys_e, keys_b9, keys_n1, keys_lw1, keys_z, keys_i,
-                                             keys_y1, keys_g1]
-    r_vals['dams_keys_k2tvaebnwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_a, keys_e, keys_b, keys_n1, keys_lw1, keys_z, keys_i,
-                                             keys_y1, keys_g1]
-    r_vals['dams_keys_k2tvpanwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_n1, keys_lw1, keys_z, keys_i,
-                                             keys_y1, keys_g1]
-    r_vals['dams_keys_k2tvpaebnwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1, keys_z, keys_i,
-                                             keys_y1, keys_g1]
-    r_vals['dams_keys_k2p6ftvanwziy1g1'] = [keys_k2, keys_p6, keys_f, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1,
-                                                keys_z, keys_i, keys_y1, keys_g1]
-    r_vals['dams_keys_paebnwziy1g1'] = [keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
-
+    r_vals['dams_keys_k2tvanwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
+                                             , keys_z, keys_i, keys_y1, keys_g1]
+    r_vals['dams_keys_k2ctvanwziy1g1'] = [keys_k2, keys_c, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
+                                             , keys_z, keys_i, keys_y1, keys_g1]
+    r_vals['dams_keys_k2tvaeb9nwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_a, keys_e, keys_b9, keys_n1, keys_lw1
+                                             , keys_z, keys_i, keys_y1, keys_g1]
+    r_vals['dams_keys_k2tvaebnwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_a, keys_e, keys_b, keys_n1, keys_lw1
+                                             , keys_z, keys_i, keys_y1, keys_g1]
+    r_vals['dams_keys_k2tvpanwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_n1, keys_lw1
+                                            , keys_z, keys_i, keys_y1, keys_g1]
+    r_vals['dams_keys_k2tvpaebnwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1
+                                            , keys_z, keys_i, keys_y1, keys_g1]
+    r_vals['dams_keys_k2p6ftvanwziy1g1'] = [keys_k2, keys_p6, keys_f, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
+                                            , keys_z, keys_i, keys_y1, keys_g1]
+    r_vals['dams_keys_paebnwziy1g1'] = [keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1
+                                            , keys_z, keys_i, keys_y1, keys_g1]
     r_vals['yatf_keys_k2tvpaebnwzixy1g1'] = [keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1
-                                              , keys_z, keys_i, keys_x, keys_y1, keys_g1]
+                                            , keys_z, keys_i, keys_x, keys_y1, keys_g1]
 
-    r_vals['prog_keys_k3k5twzia0xg2'] = [keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i, keys_a, keys_x, keys_g2]
-    r_vals['prog_keys_k3k5twzida0e0b0xyg2'] = [keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i, keys_d, keys_a, keys_e0, keys_b0, keys_x, keys_y3, keys_g2]
+    r_vals['prog_keys_k3k5twzia0xg2'] = [keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i
+                                            , keys_a, keys_x, keys_g2]
+    r_vals['prog_keys_k3k5twzida0e0b0xyg2'] = [keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i, keys_d
+                                            , keys_a, keys_e0, keys_b0, keys_x, keys_y3, keys_g2]
 
-    r_vals['offs_keys_k3k5tvnwziaxyg3'] = [keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i,
-                                               keys_a, keys_x, keys_y3, keys_g3]
-    r_vals['offs_keys_k3k5ctvnwziaxyg3'] = [keys_k3, keys_k5, keys_c, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i,
-                                               keys_a, keys_x, keys_y3, keys_g3]
-    r_vals['offs_keys_k3k5tvpnwziaxyg3'] = [keys_k3, keys_k5, keys_t3, keys_v3, keys_p3, keys_n3, keys_lw3, keys_z, keys_i,
-                                               keys_a, keys_x, keys_y3, keys_g3]
-    r_vals['offs_keys_k3k5tvpnwzidaebxyg3'] = [keys_k3, keys_k5, keys_t3, keys_v3, keys_p3, keys_n3, keys_lw3, keys_z, keys_i,
-                                               keys_d, keys_a, keys_e0, keys_b0, keys_x, keys_y3, keys_g3]
-    r_vals['offs_keys_k3k5p6ftvnwziaxyg3'] = [keys_k3, keys_k5, keys_p6, keys_f, keys_t3, keys_v3, keys_n3,
-                                                  keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
+    r_vals['offs_keys_k3k5tvnwziaxyg3'] = [keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i
+                                            , keys_a, keys_x, keys_y3, keys_g3]
+    r_vals['offs_keys_k3k5ctvnwziaxyg3'] = [keys_k3, keys_k5, keys_c, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i
+                                            , keys_a, keys_x, keys_y3, keys_g3]
+    r_vals['offs_keys_k3k5tvpnwziaxyg3'] = [keys_k3, keys_k5, keys_t3, keys_v3, keys_p3, keys_n3, keys_lw3, keys_z
+                                            , keys_i, keys_a, keys_x, keys_y3, keys_g3]
+    r_vals['offs_keys_k3k5tvpnwzidaebxyg3'] = [keys_k3, keys_k5, keys_t3, keys_v3, keys_p3, keys_n3, keys_lw3, keys_z
+                                            , keys_i, keys_d, keys_a, keys_e0, keys_b0, keys_x, keys_y3, keys_g3]
+    r_vals['offs_keys_k3k5p6ftvnwziaxyg3'] = [keys_k3, keys_k5, keys_p6, keys_f, keys_t3, keys_v3, keys_n3
+                                            , keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
 
-    r_vals['offs_keys_pnwzidaebxyg3'] = [keys_p3, keys_n3, keys_lw3, keys_z, keys_i, keys_d, keys_a, keys_e0, keys_b0,
-                                         keys_x, keys_y3, keys_g3]
+    r_vals['offs_keys_pnwzidaebxyg3'] = [keys_p3, keys_n3, keys_lw3, keys_z, keys_i, keys_d, keys_a, keys_e0, keys_b0
+                                            , keys_x, keys_y3, keys_g3]
 
     ####std
     zg0_shape = len_z, len_g0
@@ -7178,6 +7213,7 @@ def generator(params,r_vals,nv,plots = False):
     k3k5tvnwziaxyg3_shape = len_k3, len_k5, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
     ####kv with a singleton t axis (so that it can be divided by numbers with a t axis - but t is not in the name)
+    #todo 'singleton t' doesn't seem to be the case
     k2va1nwziyg1_shape = len_k2, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
     k3k5vnwziaxyg3_shape = len_k3, len_k5, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 

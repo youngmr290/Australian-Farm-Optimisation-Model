@@ -22,8 +22,8 @@ import json
 import numpy as np
 
 #report the clock time that the experiment was started
-print("Experiment commenced at: ", time.ctime())
-start=time.time()
+print(f'Experiment commenced at: {time.ctime()}')
+start = time.time()
 
 import CreateModel as crtmod
 import BoundsPyomo as bndpy
@@ -56,8 +56,6 @@ try:
     maximum_processes = int(sys.argv[2])  # reads in as string so need to convert to int, the script path is the first value hence take the second.
 except IndexError:  # in case no arg passed to python
     maximum_processes = 1  # available memory / value determined by size of the model being run (~5GB for the small model)
-
-start_time1 = time.time()
 
 
     
@@ -104,6 +102,9 @@ dataset = list(np.flatnonzero(np.nan_to_num(np.array(exp_data.index.get_level_va
 ## number of agents (processes) should be min of the num of cpus, number of trials or the user specified limit due to memory capacity
 n_processes = min(multiprocessing.cpu_count(),len(dataset),maximum_processes)
 
+## set the start time at the beginning of the multiprocessing loops
+start_time1 = time.time()
+
 
 #########################
 #Exp loop               #
@@ -122,9 +123,10 @@ def exp(row):  # called with command: pool.map(exp, dataset)
 
     ##get trial name - used for outputs
     trial_name = exp_data.index[row][3]
-    print("\n", time.ctime()," : Starting trial %s" %(trial_name))
+    trial_description = f'{dataset.index(row)+1} {trial_name}'
+    print(f'\n{trial_description}, Starting trial at: {time.ctime()}')
 
-    ##updaye sensitivity values
+    ##update sensitivity values
     fun.f_update_sen(row,exp_data,sen.sam,sen.saa,sen.sap,sen.sar,sen.sat,sen.sav)
 
     ##call sa functions - assigns sa variables to relevant inputs
@@ -174,7 +176,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
     stubpy.stub_precalcs(params['stub'],r_vals['stub'], nv) #stub must be after stock because it uses nv dict which is populated in stock.py
     paspy.paspyomo_precalcs(params['pas'],r_vals['pas'], nv) #pas must be after stock because it uses nv dict which is populated in stock.py
     precalc_end = time.time()
-    print('precalcs: ', precalc_end - precalc_start)
+    print(f'{trial_description}, total time for precalcs: {precalc_end - precalc_start:.2f} finished at {time.ctime()}')
 
     ##does pyomo need to be run? In exp1 pyomo is always run because creating params file take up lots of time, RAM and disc space
     run_pyomo_params = True
@@ -200,9 +202,9 @@ def exp(row):  # called with command: pool.map(exp, dataset)
         ###bounds-this must be done last because it uses sets built in some of the other modules
         bndpy.boundarypyomo_local(params, model)
         pyomocalc_end = time.time()
-        print('localpyomo: ', pyomocalc_end - pyomocalc_start)
+        print(f'{trial_description}, time for localpyomo: {pyomocalc_end - pyomocalc_start:.2f} finished at {time.ctime()}')
         obj = core.coremodel_all(params, trial_name, model)
-        print('corepyomo: ',time.time() - pyomocalc_end)
+        print(f'{trial_description}, time for corepyomo: {time.time() - pyomocalc_end:.2f} finished at {time.ctime()}')
 
         if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1:
             ##This writes variable summary each iteration with generic file name - it is overwritten each iteration and is created so the run progress can be monitored
@@ -246,7 +248,6 @@ def exp(row):  # called with command: pool.map(exp, dataset)
                             for index in c:
                                 print("      ", index, model.dual[c[index]], file=f)
 
-            #last step is to print the time for the current trial to run
             season = pinp.f_keys_z()[0]
             lp_vars = {}
             variables=model.component_objects(pe.Var, active=True)
@@ -295,16 +296,30 @@ def exp(row):  # called with command: pool.map(exp, dataset)
     with open('pkl/pkl_r_vals_{0}.pkl'.format(trial_name),"wb") as f:
         pkl.dump(r_vals,f,protocol=pkl.HIGHEST_PROTOCOL)
 
-    ##determine expected time to completion - trials left multiplied by average time per trial &time for current loop
+    #last step is to print the time for the current trial to run
+    ##determine expected time to completion - trials left multiplied by average time per trial
+    ##this approach works well if chunksize = 1
     total_batches = math.ceil(len(dataset) / n_processes)
     current_batch = math.ceil((dataset.index(row)+1) / n_processes) #add 1 because python starts at 0
     remaining_batches = total_batches - current_batch
-    time_taken = time.time() - start_time1
+    time_taken = time.time() - start_time1   #start of the multiprocessing loops
     batch_time = time_taken / current_batch
     time_remaining = remaining_batches * batch_time
-    end_time = time.time()
-    print("total time taken this loop: ", end_time - start_time)
-    print('Time remaining: %s' %time_remaining)
+    finish_time_expected = time.time() + time_remaining
+
+    # ## determine expected time to completion - total time is time this loop multiplied by the number of batches
+    loop_time = time.time() - start_time
+    # ## finish time if all batches take the same time as this loop.
+    # ## This approach underestimates the final time if this loop was quicker than average
+    # ## not accurate if the experiment has trials with different model specifications (scan, F or N)
+    # finish_time_expected = start_time1 + loop_time * total_batches
+
+    print(f'{trial_description}, total time taken this loop: {loop_time:.2f}')
+    message = f'{trial_description}, Expected finish time: \033[1m{time.ctime(finish_time_expected)}\033[0m at {time.ctime()}'
+    #replace message if this process is complete
+    if remaining_batches == 0:
+        message = f'{trial_description}, this process is complete'
+    print(message)
 
     return row
 
@@ -312,24 +327,23 @@ def exp(row):  # called with command: pool.map(exp, dataset)
 #   using map it returns outputs in the order they go in ie in the order of the exp
 ##the result after the different processes are done is a list of dicts (because each iteration returns a dict and the multiprocess stuff returns a list)
 def main():
-    ##prints out start status - number of trials to run, date and time exp.xl was last saved and output summary
-    print('Number of trials to run: ',len(dataset))
-    print('Number of full solutions: ',sum((exp_data.index[row][1] == True) and (exp_data.index[row][0] == True) for row in range(len(exp_data))))
-    print('Exp.xls last saved: ',datetime.fromtimestamp(round(os.path.getmtime("exp.xlsx"))))
+    ##displays start status - number of trials to run, date and time exp.xl was last saved and output summary
+    print(f'Number of trials to run: {len(dataset)}')
+    print(f'Number of full solutions: {sum((exp_data.index[row][1] == True) and (exp_data.index[row][0] == True) for row in range(len(exp_data)))}')
+    print(f'Exp.xls last saved: {datetime.fromtimestamp(round(os.path.getmtime("exp.xlsx")))}')
     ##start multiprocessing
     with multiprocessing.Pool(processes=n_processes) as pool:
-        trials_successfully_run = pool.map(exp, dataset)
+        ##size 1 has similar speed even for N11 model and allows better reporting (will be even better on a larger model)
+        ##a drawback of chunksize = 1 is that if there is an error in the multiprocessed code then every trial is still processed
+        trials_successfully_run = pool.map(exp, dataset, chunksize = 1)
 
     return
 
 if __name__ == '__main__':
-    main() #returns a list is the same order of exp
-    end=time.time()
-    print('total time',end-start)
-
-
-
-
-
-
-
+    main() #returns a list of dicts in the order of exp
+    end = time.time()
+    print(f'\n\033[1mExperiment completed at:\033[0m {time.ctime()}, total time taken: {end - start:.2f}')
+    try:
+        print(f'average time taken for each loop: {(end - start) / len(dataset):.2f}')  #average time since start of experiment
+    except ZeroDivisionError:
+        pass
