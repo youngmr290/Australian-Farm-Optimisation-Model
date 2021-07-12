@@ -118,6 +118,7 @@ sat['salep_score_scalar'] = 0.0  #Scalar for score impact across the grid
 ##if you initialise an array it must be type object (so that you can assign int/float/bool into the array)
 ##general
 sav['steady_state']      = '-'                  #SA to alter if the model is steady state
+sav['inc_node_periods']      = '-'              #SA to alter if season nodes are included in the steady state model (note they are always included in the dsp version this only effects if they are included in steady state)
 sav['rev_create']      = '-'                  #SA to alter if the trial is being used to create rev std values
 sav['rev_number']      = '-'                  #SA to alter rev number - rev number is appended to the std rev value pkl file and can be used to select which rev is used as std for a given trial.
 sav['rev_trait_inc'] = np.full_like(sinp.structuralsa['rev_trait_inc'], '-', dtype=object) #SA value for which traits are to be held constant in REV analysis.
