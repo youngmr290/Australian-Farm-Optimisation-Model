@@ -1922,14 +1922,19 @@ def f_sale_value(cu0, cx, o_rc, o_ffcfw_pg, dressp_adj_yg, dresspercent_adj_s6pg
     sale_value = np.max(sale_value_s7pg, axis=0) #take max on s6 axis as well to remove it (it is singleton so no effect)
     return sale_value
 
-def f1_animal_trigger_levels(index_pg, age_start, period_is_shearing_pg, period_is_shearing_husb_pg, period_is_wean_pg, gender, o_ebg_p, wool_genes,
+def f1_animal_trigger_levels(index_pg, age_start, period_is_shearing_pg, period_is_wean_pg, gender, o_ebg_p, wool_genes,
                             period_is_joining_pg, animal_mated, scan_option, period_is_endmating_pg):
+    '''
+
+    .. note:: animal_triggervalues_th7pg3 requires an h2 axis when it is applied, however, due to size the h2 axis is only added at the point it is used
+
+    '''
     ##Trigger value 1 - week of year
     trigger1_pg = index_pg % 52
     ##Trigger value 2 - age
     trigger2_pg = np.trunc(age_start / 7)
     ##Trigger value 3 - Weeks from previous shearing
-    trigger3_pg = index_pg - np.maximum.accumulate(index_pg*period_is_shearing_husb_pg, axis=sinp.stock['i_p_pos'])
+    trigger3_pg = index_pg - np.maximum.accumulate(index_pg*period_is_shearing_pg, axis=sinp.stock['i_p_pos'])
     ##Trigger value 4 - weeks to next shearing
     shear_idx = index_pg * period_is_shearing_pg
     shear_idx[np.logical_not(period_is_shearing_pg)] = np.max(index_pg) * 2 #set index to large number if not shearing
@@ -1974,18 +1979,51 @@ def f_treatment_unit_numbers(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, a_ny
     treatment_units_h8pg = np.stack(np.broadcast_arrays(unit0_pg, unit1_pg, unit2_pg, unit3_pg, unit4_pg, unit5_pg), axis=0)
     return treatment_units_h8pg
 
+def f1_adjust_triggervalues_for_t(animal_triggervalues_h7tpg, operations_triggerlevels_h5h7pg):
+    '''
+    The t slice on period_is_shearing means that a randomness can be introduced in the husbandry.
+    For example if animal classing is done 1 week before shearing but shearing for the t[2] (sale slice)
+    occurs on the first period on a dvp then the husbandry will be triggered in the previous dvp
+    but t[2] animals are in t[0] (retained) slice in the previous dvp therefore they do not incur the classing cost.
+
+    The best solution we could come up with is to base husb triggers off the retained slice unless the trigger is ==0
+    If the input value for time since 'x' or time to 'x' is 0 then you use t[:] if the value is anything other
+    than 0 (i.e. it might be in a different DVP) then t[0] is used.
+
+    Currently only offs have a t axis so this function only effect them. If shearing ever gets a t axis for dams this
+    function will need to become a bit more complex using the association between t and g (a_g1_tpa1e1b1nwzida0e0b0xyg1).
+    Although i think it will have to be a_t_g (which doesnt exist). So a_t_g will become an arg and it will eed to be passed
+    in for dams and offs. For offs a_t_g will just be [0,0,0,0].
+
+    This function must be called each time the trigger_values are used. It needs to be called inside a h2
+    loop so that triggervalues never has a full h2 axis (that would be too big).
+
+    '''
+    ##only need to handle the t axis for groups that have a t axis (currently just offs)
+    if len(animal_triggervalues_h7tpg.shape) == (-1*sinp.stock['i_p_pos'])+2:
+
+        #which of the trigger level inputs are operating on the current generator period which means we can use t[:] rather than the retained animal.
+        #the slices h7[2:7] relate to time from previous or time to next, the values for these slices need to be 0 or default
+        trigger_is_not_current_pg = np.logical_not(np.any(operations_triggerlevels_h5h7pg[1, 2:7, ...] == 0, axis=0))
+
+        # select t[0] (retained) if the trigger_is_not_current
+        animal_triggervalues_h7tpg = fun.f_update(animal_triggervalues_h7tpg, animal_triggervalues_h7tpg[:,0:1,...], trigger_is_not_current_pg)
+
+    return animal_triggervalues_h7tpg
 
 def f1_operations_triggered(animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg):
     shape = (operations_triggerlevels_h5h7h2pg.shape[2],) + animal_triggervalues_h7pg.shape[1:]
     triggered_h2pg = np.zeros(shape, dtype=bool)
     for h2 in range(operations_triggerlevels_h5h7h2pg.shape[2]):
+        ##adjust triggervalues for t axis
+        adj_animal_triggervalues_h7pg = f1_adjust_triggervalues_for_t(animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg[:,:,h2,...])
         ##Test slice 0 of h5 axis
-        slice0_h7pg = animal_triggervalues_h7pg[:, ...] <= operations_triggerlevels_h5h7h2pg[0, :, h2, ...]
+        slice0_h7pg = adj_animal_triggervalues_h7pg[:, ...] <= operations_triggerlevels_h5h7h2pg[0, :, h2, ...]
         ##Test slice 1 of h5 axis
-        slice1_h7pg = np.logical_or(animal_triggervalues_h7pg[:, ...] == operations_triggerlevels_h5h7h2pg[1, :, h2, ...],
+        slice1_h7pg = np.logical_or(adj_animal_triggervalues_h7pg[:, ...] == operations_triggerlevels_h5h7h2pg[1, :, h2, ...],
                                     operations_triggerlevels_h5h7h2pg[1, :, h2, ...] == np.inf)
         ##Test slice 2 of h5 axis
-        slice2_h7pg = animal_triggervalues_h7pg[:, ...] >= operations_triggerlevels_h5h7h2pg[2, :, h2, ...]
+        slice2_h7pg = adj_animal_triggervalues_h7pg[:, ...] >= operations_triggerlevels_h5h7h2pg[2, :, h2, ...]
         ##Test across the conditions
         slices_all_h7pg = np.logical_and(slice0_h7pg, np.logical_and(slice1_h7pg, slice2_h7pg))
         ##Test across the rules (& collapse s7 axis)
@@ -1997,6 +2035,8 @@ def f1_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, op
     ##loop on h2 axis to save memory
     level_h2pg = np.ones_like(operation_triggered_h2pg, dtype='float32')
     for h2 in range(operation_triggered_h2pg.shape[0]):
+        ##adjust triggervalues for t axis
+        adj_animal_triggervalues_h7pg = f1_adjust_triggervalues_for_t(animal_triggervalues_h7pg, operations_triggerlevels_h5h7h2pg[:,:,h2,...])
 
         ## mask & remove the slices of the h7 axis that don't require calculation of the application level (not required because inputs do not include a range input)
         ## must be same mask for 'le' and 'ge'
@@ -2008,7 +2048,7 @@ def f1_application_level(operation_triggered_h2pg, animal_triggervalues_h7pg, op
         ##if all values in mask are false (eg no range level needs to be calculated) then skip to next h2 (final array has 1 as default value so nothing needs to happen)
         if any(maskh7_h7):
             ### mask the input arrays to minimise slices of h7
-            animal_triggervalues_h7mask_h7pg = animal_triggervalues_h7pg[maskh7_h7]
+            animal_triggervalues_h7mask_h7pg = adj_animal_triggervalues_h7pg[maskh7_h7]
             operations_triggerlevels_h7mask_h5h7pg = operations_triggerlevels_h5h7h2pg[:, maskh7_h7, h2, ...]
 
 
@@ -2125,14 +2165,14 @@ def f1_contract_cost(application_level_h2pg, treatment_units_h8pg, husb_operatio
 
 
 def f_husbandry(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, operations_triggerlevels_h5h7h2pg, index_pg,
-                age_start, period_is_shear_pg, period_is_shearing_husb_pg, period_is_wean_pg, gender, o_ebg_p, wool_genes,
+                age_start, period_is_shear_pg, period_is_wean_pg, gender, o_ebg_p, wool_genes,
                 husb_operations_muster_propn_h2pg, husb_requisite_cost_h6pg, husb_operations_requisites_prob_h6h2pg,
                 operations_per_hour_l2h2pg, husb_operations_infrastructurereq_h1h2pg,
                 husb_operations_contract_cost_h2pg, husb_muster_requisites_prob_h6h4pg,
                 musters_per_hour_l2h4pg, husb_muster_infrastructurereq_h1h4pg,
                 a_nyatf_b1g=0,period_is_joining_pg=False, animal_mated=False, scan_option=0, period_is_endmating_pg=False, dtype=None):
     ##An array of the trigger values for the animal classes in each period - these values are compared against a threshold to determine if the husb is required
-    animal_triggervalues_h7pg = f1_animal_trigger_levels(index_pg, age_start, period_is_shear_pg, period_is_shearing_husb_pg, period_is_wean_pg, gender,
+    animal_triggervalues_h7pg = f1_animal_trigger_levels(index_pg, age_start, period_is_shear_pg, period_is_wean_pg, gender,
                             o_ebg_p, wool_genes, period_is_joining_pg, animal_mated, scan_option, period_is_endmating_pg).astype(dtype)
     ##The number of treatment units per animal in each period - each slice has a different unit eg mobsize, nyatf etc the treatment unit can be selected and applied for a given husb operation
     treatment_units_h8pg = f_treatment_unit_numbers(head_adjust, mobsize_pg, o_ffcfw_pg, o_cfw_pg, a_nyatf_b1g).astype(dtype)
