@@ -2005,7 +2005,8 @@ def f1_adjust_triggervalues_for_t(animal_triggervalues_h7tpg, operations_trigger
 
         #which of the trigger level inputs are operating on the current generator period which means we can use t[:] rather than the retained animal.
         #the slices h7[2:7] relate to time from previous or time to next, the values for these slices need to be 0 or default
-        trigger_is_not_current_pg = np.logical_not(np.any(operations_triggerlevels_h5h7pg[1, 2:7, ...] == 0, axis=0))
+        trigger_is_not_current_pg = np.logical_not(np.all(np.logical_or(np.abs(operations_triggerlevels_h5h7pg[:,2:7,...]) == np.inf,
+                                                     operations_triggerlevels_h5h7pg[:,2:7,...] == 0), axis=(0,1)))
 
         # select t[0] (retained) if the trigger_is_not_current
         animal_triggervalues_h7tpg = fun.f_update(animal_triggervalues_h7tpg, animal_triggervalues_h7tpg[:,0:1,...], trigger_is_not_current_pg)
