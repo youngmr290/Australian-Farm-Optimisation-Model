@@ -93,12 +93,12 @@ def stubble_all(params, report, nv):
     average_days_since_harv_p6zk = average_days_since_harv_p6zk.astype(float)
 
     ##calc the quantity decline % for each period - used in transfer constraints, need to average the number of days in the period of interest
-    quant_decline_p6zk = 1 - (1 - pinp.stubble['quantity_deterioration']) ** average_days_since_harv_p6zk.astype(float)
+    quant_declined_p6zk = (1 - pinp.stubble['quantity_deterioration']) ** average_days_since_harv_p6zk.astype(float)
 
     ##calc dmd for each component in each period for each crop
     deterioration_factor_ks0 = pinp.stubble['quality_deterioration']
     dmd_component_harv_ks0 = pinp.stubble['component_dmd']
-    dmd_component_p6zks0 = (1 - (deterioration_factor_ks0 * average_days_since_harv_p6zk[...,na])) * dmd_component_harv_ks0
+    dmd_component_p6zks0 = ((1 - deterioration_factor_ks0) ** average_days_since_harv_p6zk[...,na]) * dmd_component_harv_ks0
 
     ###############
     # M/D & vol   #
@@ -149,7 +149,7 @@ def stubble_all(params, report, nv):
     cat_cum_propn_ks1 = np.cumsum(cat_propn_rolled_ks1, axis=1) #cumulative sum of the component sizes.
     stubble_foo_zks1 = stub_foo_harv_zk[..., na] *  (1 - cat_cum_propn_ks1)
     ###adjust for quantity delcine due to deterioration
-    stubble_foo_p6zks1 = stubble_foo_zks1 * (1 - quant_decline_p6zk[..., na])
+    stubble_foo_p6zks1 = stubble_foo_zks1 * quant_declined_p6zk[..., na]
     ###ri availability
     if uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used - note that the equation system used is the one selected for dams in p1
         ri_availability_p6zks1 = fsfun.f_ra_cs(stubble_foo_p6zks1, pinp.stubble['i_hf'])
@@ -178,17 +178,17 @@ def stubble_all(params, report, nv):
     # allow access to next category#   #^this is a little inflexible ie you would need to add or remove code if a stubble cat was added or removed
     ################################
 
-    cat_a_st_req_p6zk = (1/(1-quant_decline_p6zk))*(1+tramp_effect_ks1[:,0])*(1/cat_propn_ks1[:,0])*1000 #*1000 - to convert to tonnes
-    cat_b_st_prov_k = cat_propn_ks1[:,1]/cat_propn_ks1[:,0]*1000 #cat b provided by consuming 1t of cat a.
+    cat_a_st_req_p6zk = (1/quant_declined_p6zk)*(1+tramp_effect_ks1[:,0])*(1/cat_propn_ks1[:,0])*1000 #*1000 - to convert to tonnes
+    cat_a_st_prov_k = cat_propn_ks1[:,1]/cat_propn_ks1[:,0]*1000 #cat b provided by consuming 1t of cat a.
     cat_b_st_req_k = 1000*(1+tramp_effect_ks1[:,1])
-    cat_c_st_prov_k = cat_propn_ks1[:,2]/cat_propn_ks1[:,1]*1000
+    cat_b_st_prov_k = cat_propn_ks1[:,2]/cat_propn_ks1[:,1]*1000
     cat_c_st_req_k = 1000*(1+tramp_effect_ks1[:,2])
 
     ##############################
     #transfers between periods   #
     ##############################
     ##transfer a given cat to the next period.
-    per_transfer_p6zk = 1000 - quant_decline_p6zk*1000
+    per_transfer_p6zk = 1000 * np.roll(quant_declined_p6zk, shift=-1, axis=0)/quant_declined_p6zk
     per_transfer_p6zk = per_transfer_p6zk * mask_stubble_exists_p6zk  #no transfer can occur when stubble doesnt exist
 
     ###############
@@ -205,7 +205,8 @@ def stubble_all(params, report, nv):
     ##keys
     keys_k = np.array(pinp.crop['start_harvest_crops'].index)
     keys_p6 = pinp.period['i_fp_idx']
-    keys_s1_cut = np.array(['b', 'c'])
+    keys_s1_bc_cut = np.array(['b', 'c'])
+    keys_s1_ab_cut = np.array(['a', 'b'])
     keys_s1_cut2 = np.array(['a'])
     keys_s1 = pinp.stubble['stub_cat_idx']
     keys_f  = np.array(['nv{0}' .format(i) for i in range(len_nv)])
@@ -214,8 +215,11 @@ def stubble_all(params, report, nv):
 
     ##array indexes
     ###ks1 - stub transfer (cat b & c)
-    arrays = [keys_k, keys_s1_cut]
+    arrays = [keys_k, keys_s1_bc_cut]
     index_bc_ks1 = fun.cartesian_product_simple_transpose(arrays)
+    ###ks1 - stub transfer (cat a & b)
+    arrays = [keys_k, keys_s1_ab_cut]
+    index_ab_ks1 = fun.cartesian_product_simple_transpose(arrays)
     ###p6zks1 - category A req
     arrays = [keys_p6, keys_z, keys_k, keys_s1_cut2]
     index_a_p6zks1 = fun.cartesian_product_simple_transpose(arrays)
@@ -240,12 +244,10 @@ def stubble_all(params, report, nv):
     params['transfer_req'] =dict(zip(tup_ks1, stub_req_ks1))
 
     ###'provide' from cat to cat ie consuming 1t of cat A provides 2t of cat b
-    stub_prov_ks1 = np.stack([cat_b_st_prov_k, cat_c_st_prov_k], 1)
+    stub_prov_ks1 = np.stack([cat_a_st_prov_k, cat_b_st_prov_k], 1)
     stub_prov_ks1 = stub_prov_ks1.ravel()
-    tup_ks1 = tuple(map(tuple, index_bc_ks1))
+    tup_ks1 = tuple(map(tuple, index_ab_ks1))
     params['transfer_prov'] =dict(zip(tup_ks1, stub_prov_ks1))
-
-    ##create season params
 
     ###p7con
     tup_p6zk = tuple(map(tuple, index_p6zk))

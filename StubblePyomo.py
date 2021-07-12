@@ -74,8 +74,8 @@ def f_con_stubble_bcd(model):
         else:
             ss = list(model.s_stub_cat)[list(model.s_stub_cat).index(s)-1] #previous stubble cat - used to transfer from current cat to the next, list is required because indexing of an ordered set starts at 1 which means index of 0 chucks error
             p6s = list(model.s_feed_periods)[list(model.s_feed_periods).index(p6)-1] #have to convert to a list first because indexing of an ordered set starts at 1
-            return  - model.v_stub_transfer[p6s,z,k,s] * model.p_fp_transfer[p6,z,k]  + model.v_stub_transfer[p6,z,k,s] * 1000 \
-                    + sum(-model.v_stub_con[f,p6,z,k,ss] * model.p_bc_prov[k,s] + model.v_stub_con[f,p6,z,k,s] * model.p_bc_req[k,s] for f in model.s_feed_pools) <=0
+            return  - model.v_stub_transfer[p6s,z,k,s] * model.p_fp_transfer[p6s,z,k]  + model.v_stub_transfer[p6,z,k,s] * 1000 \
+                    + sum(-model.v_stub_con[f,p6,z,k,ss] * model.p_bc_prov[k,ss] + model.v_stub_con[f,p6,z,k,s] * model.p_bc_req[k,s] for f in model.s_feed_pools) <=0
     model.con_stubble_bcd = pe.Constraint(model.s_feed_periods, model.s_season_types, model.s_crops, model.s_stub_cat, rule = stubble_transfer, doc='links rotation stubble production with consumption of cat A')
 
 ###################
