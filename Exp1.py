@@ -21,9 +21,6 @@ import pickle as pkl
 import json
 import numpy as np
 
-#report the clock time that the experiment was started
-print(f'Experiment commenced at: {time.ctime()}')
-start = time.time()
 
 import CreateModel as crtmod
 import BoundsPyomo as bndpy
@@ -46,6 +43,10 @@ import StubblePyomo as stubpy
 import StockPyomo as spy
 import CorePyomo as core
 import MVF as mvf
+
+##report the clock time that the experiment was started
+print(f'Experiment commenced at: {time.ctime()}')
+start = time.time()
 
 ##used to get status on multiprocessing
 # import logging

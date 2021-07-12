@@ -20,33 +20,34 @@ import pickle as pkl
 # tracemalloc.start(10)
 # snapshots = []
 
-#report the clock time that the experiment was started
-print(f'Experiment commenced at: {time.ctime()}')
-start = time.time()
 
 import CreateModel as crtmod
 import BoundsPyomo as bndpy
 import StructuralInputs as sinp
 import UniversalInputs as uinp
-import PropertyInputs as pinp 
+import PropertyInputs as pinp
 import Sensitivity as sen
 import Functions as fun
-import RotationPyomo as rotpy 
+import RotationPyomo as rotpy
 import Crop as crp
 import CropPyomo as crppy
 import MachPyomo as macpy
 import FinancePyomo as finpy
-import LabourFixedPyomo as lfixpy 
-import LabourPyomo as labpy 
-import LabourCropPyomo as lcrppy 
-import PasturePyomo as paspy 
+import LabourFixedPyomo as lfixpy
+import LabourPyomo as labpy
+import LabourCropPyomo as lcrppy
+import PasturePyomo as paspy
 import SupFeedPyomo as suppy
 import StubblePyomo as stubpy
 import StockPyomo as spy
 import CorePyomo as core
 import MVF as mvf
 
+#report the clock time that the experiment was started
+print(f'Experiment commenced at: {time.ctime()}')
+start = time.time()
 
+##settings
 force_run=True #force precalcs to be run
 run_pyomo = True #do you want pyomo to run (default is True but if testing reports it can be useful to only run the precalcs)
 
