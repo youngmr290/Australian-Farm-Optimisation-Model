@@ -5220,33 +5220,38 @@ def generator(params,r_vals,nv,plots = False):
     nv_cutoff_ave_p6fpzg = (nv_cutoff_lower_p6fpzg + nv_cutoff_upper_p6fpzg) / 2
     nv['nv_cutoff_ave_p6fz'] = np.squeeze(nv_cutoff_ave_p6fpzg, axis=tuple(range(p_pos,z_pos))+tuple(range(z_pos+1,0)))
 
-    ##So that no animals are excluded the lowest cutoff[0] is set to -np.inf and the highest cutoff is set to np.inf
-    nv_cutoff_lower_p6fpzg[:, 0, ...] = -np.inf
-    nv_cutoff_upper_p6fpzg[:, n_non_confinement_pools - 1, ...] = np.inf # use i_len_f rather than -1 to allow for the confinement slice if it exists
-
-    ##allocate each sheep class to an nv group
-    ###Determining a std deviation for the distribution. This is an unknown but the value has been selected so that if
+    ##Determining a std deviation for the distribution. This is an unknown but the value has been selected so that if
     ### an animal has an nv that is the mid-point of a feed pool then most of the mei & pi for that animal will occur
     ### in that feed pool. This is achieved by dividing the range of the feed pool by 6, because plus/minus 3 standard
     ### deviations from the mean is most of the range.
     nv_cutoffs_sd_p6fpzg = (nv_upper_p6fpzg - nv_lower_p6fpzg) / n_non_confinement_pools / 6
+
+    ##convert p6 to p - this reduces the final array size to save memory (otherwise final array would have p and p6 axis)
+    nv_cutoff_upper_fpzg = np.sum(nv_cutoff_upper_p6fpzg * (a_p6_pa1e1b1nwzida0e0b0xyg==index_p6pa1e1b1nwzida0e0b0xyg[:,na,...]), axis=0)
+    nv_cutoff_lower_fpzg = np.sum(nv_cutoff_lower_p6fpzg * (a_p6_pa1e1b1nwzida0e0b0xyg==index_p6pa1e1b1nwzida0e0b0xyg[:,na,...]), axis=0)
+    nv_cutoffs_sd_fpzg = np.sum(nv_cutoffs_sd_p6fpzg * (a_p6_pa1e1b1nwzida0e0b0xyg==index_p6pa1e1b1nwzida0e0b0xyg[:,na,...]), axis=0)
+
+    ##So that no animals are excluded the lowest cutoff[0] is set to -np.inf and the highest cutoff (excluding confinement pool) is set to np.inf
+    nv_cutoff_lower_fpzg[0, ...] = -np.inf
+    nv_cutoff_upper_fpzg[n_non_confinement_pools - 1, ...] = np.inf
+
+    ##allocate each sheep class to an nv group
     ###Calculate a proportion of the mei & pi that goes in each pool
-    nv_propn_p6fpsire = fun.f_norm_cdf(nv_cutoff_upper_p6fpzg, nv_psire, sd=nv_cutoffs_sd_p6fpzg) \
-                       - fun.f_norm_cdf(nv_cutoff_lower_p6fpzg, nv_psire, sd=nv_cutoffs_sd_p6fpzg)
-    nv_propn_p6fpdams = fun.f_norm_cdf(nv_cutoff_upper_p6fpzg, nv_pdams, sd=nv_cutoffs_sd_p6fpzg) \
-                       - fun.f_norm_cdf(nv_cutoff_lower_p6fpzg, nv_pdams, sd=nv_cutoffs_sd_p6fpzg)
-    nv_propn_p6fpoffs = fun.f_norm_cdf(nv_cutoff_upper_p6fpzg, nv_poffs, sd=nv_cutoffs_sd_p6fpzg) \
-                       - fun.f_norm_cdf(nv_cutoff_lower_p6fpzg, nv_poffs, sd=nv_cutoffs_sd_p6fpzg)
+    nv_propn_fpsire = fun.f_norm_cdf(nv_cutoff_upper_fpzg, nv_psire, sd=nv_cutoffs_sd_fpzg).astype(dtype) \
+                       - fun.f_norm_cdf(nv_cutoff_lower_fpzg, nv_psire, sd=nv_cutoffs_sd_fpzg).astype(dtype)
+    nv_propn_fpdams = fun.f_norm_cdf(nv_cutoff_upper_fpzg, nv_pdams, sd=nv_cutoffs_sd_fpzg).astype(dtype)  \
+                       - fun.f_norm_cdf(nv_cutoff_lower_fpzg, nv_pdams, sd=nv_cutoffs_sd_fpzg).astype(dtype)
+    nv_propn_fpoffs = fun.f_norm_cdf(nv_cutoff_upper_fpzg[:,mask_p_offs_p,...], nv_poffs, sd=nv_cutoffs_sd_fpzg[:,mask_p_offs_p,...]).astype(dtype)  \
+                       - fun.f_norm_cdf(nv_cutoff_lower_fpzg[:,mask_p_offs_p,...], nv_poffs, sd=nv_cutoffs_sd_fpzg[:,mask_p_offs_p,...]).astype(dtype)
     ###adjust the calculated proportions for the confinement pool. If in confinement then:
     ####set all the slices to 0
-    nv_propn_p6fpsire = fun.f_update(nv_propn_p6fpsire, 0.0, (feedsupplyw_pa1e1b1nwzida0e0b0xyg0 >= 3))
-    nv_propn_p6fpdams = fun.f_update(nv_propn_p6fpdams, 0.0, (feedsupplyw_pa1e1b1nwzida0e0b0xyg1 >= 3))
-    nv_propn_p6fpoffs = fun.f_update(nv_propn_p6fpoffs, 0.0, (feedsupplyw_pa1e1b1nwzida0e0b0xyg3 >= 3))
+    nv_propn_fpsire = fun.f_update(nv_propn_fpsire, 0.0, (feedsupplyw_pa1e1b1nwzida0e0b0xyg0 >= 3))
+    nv_propn_fpdams = fun.f_update(nv_propn_fpdams, 0.0, (feedsupplyw_pa1e1b1nwzida0e0b0xyg1 >= 3))
+    nv_propn_fpoffs = fun.f_update(nv_propn_fpoffs, 0.0, (feedsupplyw_pa1e1b1nwzida0e0b0xyg3 >= 3))
     ####set the confinement slice to 1.0
-    nv_propn_p6fpsire[:, -1, ...] = fun.f_update(nv_propn_p6fpsire[:, -1, ...], 1.0, (feedsupplyw_pa1e1b1nwzida0e0b0xyg0 >= 3))
-    nv_propn_p6fpdams[:, -1, ...] = fun.f_update(nv_propn_p6fpdams[:, -1, ...], 1.0, (feedsupplyw_pa1e1b1nwzida0e0b0xyg1 >= 3))
-    nv_propn_p6fpoffs[:, -1, ...] = fun.f_update(nv_propn_p6fpoffs[:, -1, ...], 1.0, (feedsupplyw_pa1e1b1nwzida0e0b0xyg3 >= 3))
-
+    nv_propn_fpsire[-1, ...] = fun.f_update(nv_propn_fpsire[-1, ...], 1.0, (feedsupplyw_pa1e1b1nwzida0e0b0xyg0 >= 3))
+    nv_propn_fpdams[-1, ...] = fun.f_update(nv_propn_fpdams[-1, ...], 1.0, (feedsupplyw_pa1e1b1nwzida0e0b0xyg1 >= 3))
+    nv_propn_fpoffs[-1, ...] = fun.f_update(nv_propn_fpoffs[-1, ...], 1.0, (feedsupplyw_pa1e1b1nwzida0e0b0xyg3 >= 3))
 
     ################################
     #convert variables from p to v #
@@ -5254,26 +5259,26 @@ def generator(params,r_vals,nv,plots = False):
     p2v_start = time.time()
     ##every period - with f & p6 axis
     ###sire - use p2v_std because there is not dvp so this version of the function may as well be used.
-    mei_p6fa1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(o_mei_solid_psire * nv_propn_p6fpsire, numbers_p=o_numbers_end_psire
+    mei_p6fa1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(o_mei_solid_psire * nv_propn_fpsire, numbers_p=o_numbers_end_psire
                                         , on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0, days_period_p=days_period_pa1e1b1nwzida0e0b0xyg0
                                         , a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any1tvp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,...])
-    pi_p6fa1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(o_pi_psire * nv_propn_p6fpsire, numbers_p=o_numbers_end_psire
+    pi_p6fa1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(o_pi_psire * nv_propn_fpsire, numbers_p=o_numbers_end_psire
                                         , on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0, days_period_p=days_period_pa1e1b1nwzida0e0b0xyg0
                                         , a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any1tvp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,...])
     ###dams
-    mei_p6ftva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_mei_solid_pdams * nv_propn_p6fpdams[:,:,na,...], a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_pdams
+    mei_p6ftva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_mei_solid_pdams * nv_propn_fpdams[:,na,...], a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_pdams
                                        , on_hand_tpa1e1b1nwzida0e0b0xyg1, days_period_pa1e1b1nwzida0e0b0xyg1
                                        , a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,na,...])
 
-    pi_p6ftva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_pi_pdams * nv_propn_p6fpdams[:,:,na,...], a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_pdams
+    pi_p6ftva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_pi_pdams * nv_propn_fpdams[:,na,...], a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_pdams
                                            , on_hand_tpa1e1b1nwzida0e0b0xyg1, days_period_pa1e1b1nwzida0e0b0xyg1
                                            , a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,na,...])
 
     ###offs
-    mei_p6ftva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_mei_solid_poffs * nv_propn_p6fpoffs[:,:,na,...], a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_poffs
+    mei_p6ftva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_mei_solid_poffs * nv_propn_fpoffs[:,na,...], a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_poffs
                                        , on_hand_tpa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3
                                        , a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p], index_any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,na,...])
-    pi_p6ftva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_pi_poffs * nv_propn_p6fpoffs[:,:,na,...], a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_poffs
+    pi_p6ftva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_pi_poffs * nv_propn_fpoffs[:,na,...], a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_poffs
                                            , on_hand_tpa1e1b1nwzida0e0b0xyg3, days_period_cut_pa1e1b1nwzida0e0b0xyg3
                                            , a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p], index_any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,na,...])
 
@@ -6401,13 +6406,13 @@ def generator(params,r_vals,nv,plots = False):
     ##and the number variable returned from pyomo does not have p6 axis. So need to account for the propn of the dvp that the feed period exists.
     ##using a_p6_p is not perfect because a_p6_p is such that a generator period is only allocated to a single feed period
     ## eg if the feed period changed mid gen period the proportion will be slightly off (exaggerated for smaller feed periods).
-    stock_days_p6fa1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(on_hand_pa1e1b1nwzida0e0b0xyg0 * nv_propn_p6fpsire
+    stock_days_p6fa1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(on_hand_pa1e1b1nwzida0e0b0xyg0 * nv_propn_fpsire
                                         , numbers_p=o_numbers_end_psire, days_period_p=days_period_pa1e1b1nwzida0e0b0xyg0
                                         , a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any1tvp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,...])
-    stock_days_p6ftva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(on_hand_tpa1e1b1nwzida0e0b0xyg1 * nv_propn_p6fpdams[:,:,na,...], a_v_pa1e1b1nwzida0e0b0xyg1
+    stock_days_p6ftva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(on_hand_tpa1e1b1nwzida0e0b0xyg1 * nv_propn_fpdams[:,na,...], a_v_pa1e1b1nwzida0e0b0xyg1
                                             , numbers_p=o_numbers_end_pdams, days_period_p=days_period_pa1e1b1nwzida0e0b0xyg1
                                             , a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg, index_any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,na,...])
-    stock_days_p6ftva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(on_hand_tpa1e1b1nwzida0e0b0xyg3 * nv_propn_p6fpoffs[:,:,na,...], a_v_pa1e1b1nwzida0e0b0xyg3
+    stock_days_p6ftva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(on_hand_tpa1e1b1nwzida0e0b0xyg3 * nv_propn_fpoffs[:,na,...], a_v_pa1e1b1nwzida0e0b0xyg3
                                             , numbers_p=o_numbers_end_poffs, days_period_p=days_period_cut_pa1e1b1nwzida0e0b0xyg3,
                                             a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p], index_any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,na,...])
 
