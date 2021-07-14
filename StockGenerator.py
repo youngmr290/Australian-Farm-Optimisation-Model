@@ -6350,9 +6350,9 @@ def generator(params,r_vals,nv,plots = False):
                                * (a_k5cluster_da0e0b0xyg3 == index_k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...]))
 
     ###############
-    ## report dse # #todo check if this is using much memory or time. if so then convert to float32
+    ## report dse #
     ###############
-    days_p6z = np.array(per.f_feed_periods(option=1), dtype='float64')
+    days_p6z = np.array(per.f_feed_periods(option=1), dtype=dtype)
     days_p6_p6tva1e1b1nwzida0e0b0xyg = fun.f_expand(days_p6z, z_pos,  left_pos2=p_pos-2, right_pos2=z_pos)
     ###DSE based on MJ/d
     ####returns the average mj/d for each animal for the each feed period (mei accounts for if the animal is on hand - if the animal is sold the average mei/d will be lower in that dvp)
@@ -7217,8 +7217,7 @@ def generator(params,r_vals,nv,plots = False):
     k5twzidaxyg2_shape = len_k5, len_t2, len_w_prog, len_z, len_i, len_d, len_a1, len_x, len_g2
     k3k5tvnwziaxyg3_shape = len_k3, len_k5, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
-    ####kv with a singleton t axis (so that it can be divided by numbers with a t axis - but t is not in the name)
-    #todo 'singleton t' doesn't seem to be the case
+    ####kv
     k2va1nwziyg1_shape = len_k2, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
     k3k5vnwziaxyg3_shape = len_k3, len_k5, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
@@ -7402,7 +7401,7 @@ def generator(params,r_vals,nv,plots = False):
 
 
     ###############
-    # season      #
+    # season      # todo this can be removed with the new season structure
     ###############
     '''
     stuff needed to allocate variable to stages for dsp

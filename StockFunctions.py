@@ -2372,6 +2372,9 @@ def f1_cum_sum_dvp(arr,dvp_pointer,axis=0,shift=0):
 def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, index_w8=None, dvp_type_next_tvgw=0, vtype=0): #, w_pos, i_n_len, i_n_fvp_period, dvp_type_next_tvgw=0, vtype=0):
     '''distributing animals on LW at the start of dvp
         the 8 or 9 is dropped from the w if singleton'''
+    ##set dtype
+    dtype = ffcfw_dest_w8g.dtype
+
     ## Move w axis of dest_w8g to -1 and f_expand to retain the original ‘w’ as a singleton
     ffcfw_dest_wgw9 = fun.f_expand(np.moveaxis(ffcfw_dest_w8g, sinp.stock['i_w_pos'],-1), sinp.stock['i_n_pos']-1, right_pos=sinp.stock['i_z_pos']-1)
     ## create index for w9 based on shape of the (now) last axis (to be used later)
@@ -2413,20 +2416,20 @@ def f1_lw_distribution(ffcfw_dest_w8g, ffcfw_source_w8g, index_w8=None, dvp_type
     ### weights have converged or the dest and source weight is 0 for all slices (eg if animals don't exist or distribution doesnt occur in the dvp)
     #### nearest
     proportion = fun.f_divide(ffcfw_source_w8g[...,na] - next_nearestw9_w8gw
-                              , nearestw9_w8gw - next_nearestw9_w8gw, option=1)
+                              , nearestw9_w8gw - next_nearestw9_w8gw, dtype=dtype, option=1)
     # handle situation when the destination weights are replicated but source is not (not sure that this can occur)
     proportion = fun.f_update(proportion, 1, np.isclose(nearestw9_w8gw, next_nearestw9_w8gw))
     np.put_along_axis(distribution_nearest_w8gw9, nearestw9_idx_w8g[...,na], proportion, axis=-1)
     #### next nearest
     proportion = fun.f_divide(nearestw9_w8gw - ffcfw_source_w8g[...,na]
-                              , nearestw9_w8gw - next_nearestw9_w8gw, option=1)
+                              , nearestw9_w8gw - next_nearestw9_w8gw, dtype=dtype, option=1)
     np.put_along_axis(distribution_nextnearest_w8gw9, next_nearestw9_idx_w8g[...,na], proportion, axis=-1)
 
     ## Handle the special cases where source weight is less than the lowest destination weight
     ### the light animals are transferred such that total LW remains the same prior to and after the distribution.
     ### therefore the number of animals is reduced during the transfer by the ratio: source wt / lowest destination wt.
     ### to transfer the full number of the light animals the minimum destination weight will need to be altered.
-    ratio_w8gw = fun.f_divide(ffcfw_source_w8g, np.min(ffcfw_dest_wgw9,axis=-1))[...,na]
+    ratio_w8gw = fun.f_divide(ffcfw_source_w8g, np.min(ffcfw_dest_wgw9, axis=-1), dtype=dtype)[...,na]
     ### where the ratio is below 1 it is applied to the nearest w9 slice
     mask_w8gw9 = (ratio_w8gw < 1) * (nearestw9_idx_w8g[...,na] == index_w9)
     distribution_nearest_w8gw9 = fun.f_update(distribution_nearest_w8gw9, ratio_w8gw, mask_w8gw9)
