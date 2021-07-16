@@ -5055,12 +5055,12 @@ def generator(params,r_vals,nv,plots = False):
     r_vals['salegrid_keys'] = uinp.sheep['i_salegrid_keys']
     grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg = fun.f_expand(grid_price_s7s5s6,p_pos-1)
     ###apply condensed periods mask
-    month_scalar_s7p9a1e1b1nwzida0e0b0xyg0 = month_scalar_s7pa1e1b1nwzida0e0b0xyg[:,sale_mask_p0] 
-    month_scalar_s7p9a1e1b1nwzida0e0b0xyg1 = month_scalar_s7pa1e1b1nwzida0e0b0xyg[:,sale_mask_p1] 
+    month_scalar_s7p9a1e1b1nwzida0e0b0xyg0 = month_scalar_s7pa1e1b1nwzida0e0b0xyg[:,sale_mask_p0]
+    month_scalar_s7p9a1e1b1nwzida0e0b0xyg1 = month_scalar_s7pa1e1b1nwzida0e0b0xyg[:,sale_mask_p1]
     month_scalar_s7p9a1e1b1nwzida0e0b0xyg2 = month_scalar_s7pa1e1b1nwzida0e0b0xyg[:,sale_mask_p2]
     month_scalar_s7p9a1e1b1nwzida0e0b0xyg3 = month_scalar_s7pa1e1b1nwzida0e0b0xyg[:,mask_p_offs_p][:,sale_mask_p3] #mask p axis with off p mask then mask p axis with sale mask
-    month_discount_s7p9a1e1b1nwzida0e0b0xyg0 = month_discount_s7pa1e1b1nwzida0e0b0xyg[:,sale_mask_p0] 
-    month_discount_s7p9a1e1b1nwzida0e0b0xyg1 = month_discount_s7pa1e1b1nwzida0e0b0xyg[:,sale_mask_p1] 
+    month_discount_s7p9a1e1b1nwzida0e0b0xyg0 = month_discount_s7pa1e1b1nwzida0e0b0xyg[:,sale_mask_p0]
+    month_discount_s7p9a1e1b1nwzida0e0b0xyg1 = month_discount_s7pa1e1b1nwzida0e0b0xyg[:,sale_mask_p1]
     month_discount_s7p9a1e1b1nwzida0e0b0xyg2 = month_discount_s7pa1e1b1nwzida0e0b0xyg[:,sale_mask_p2]
     month_discount_s7p9a1e1b1nwzida0e0b0xyg3 = month_discount_s7pa1e1b1nwzida0e0b0xyg[:,mask_p_offs_p][:,sale_mask_p3] #mask p axis with off p mask then mask p axis with sale mask
     rc_start_sire_p9 = o_rc_start_psire[sale_mask_p0]
@@ -5663,13 +5663,18 @@ def generator(params,r_vals,nv,plots = False):
     #Masking numbers for forced sale of drys#
     #########################################
     ''' Create a mask to remove retaining dry dams when sale of drys is forced
-    The transfer is removed if all the following are true: they are in the dry cluster that is not a sale group, DVP is scanning, ewes are scanned, dry sales are forced.
+    The transfer is removed if all the following are true: they are in the dry cluster that is not a sale group, next DVP is prejoining, ewes are scanned, dry sales are forced.
     Dry dams must be sold before the next prejoining (eg they can be sold in any sale opp).'''
     #todo would be good to be able to specify if sale occurs at scanning, shearing or any. Tricky because shearing can be in different dvps and there is no drys identified in prejoining dvp.
-    ##dams
+    ##convert o to v.
+    dry_sales_forced_oa1e1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_dry_sales_forced_o'], p_pos)
+    dry_sales_forced_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(dry_sales_forced_oa1e1b1nwzida0e0b0xyg1, a_prevprejoining_o_pa1e1b1nwzida0e0b0xyg1, 0) #increments at prejoining
+    dry_sales_forced_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(dry_sales_forced_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1[:,:,0:1,...], axis=0) #take e[0] because e is the same for prejoining
+    ##make mask
     mask_numbers_provdry_k28k29tva1e1b1nwzida0e0b0xyg1 = np.logical_not((index_k28k29tva1e1b1nwzida0e0b0xyg1 == 1) * (index_tva1e1b1nw8zida0e0b0xyg1 >= 2)
-                                                         * (dvp_type_next_va1e1b1nwzida0e0b0xyg1 == prejoin_vtype1) * (scan_va1e1b1nwzida0e0b0xyg1 >= 1) #dvp1 because that's the scanning dvp
-                                                         * (pinp.sheep['i_dry_sales_forced']))
+                                                         * (scan_va1e1b1nwzida0e0b0xyg1 >= 1) #dvp1 because that's the scanning dvp
+                                                         * (dvp_type_next_va1e1b1nwzida0e0b0xyg1 == prejoin_vtype1)
+                                                         * dry_sales_forced_va1e1b1nwzida0e0b0xyg1)
 
     ###########################
     #create production params #
