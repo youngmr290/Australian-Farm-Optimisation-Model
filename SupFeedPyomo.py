@@ -74,7 +74,7 @@ def sup_cost(model,c,z):
 
 def sup_me(model,p6,f,z):
     '''
-    Calculate the total energy provided to each nv pool by feed the selected amount of supplement.
+    Calculate the total energy provided to each nv pool from the selected amount of supplement.
 
     Used in global constraint (con_me). See CorePyomo
     '''
@@ -83,7 +83,7 @@ def sup_me(model,p6,f,z):
 
 def sup_vol(model,p6,f,z):
     '''
-    Calculate the total volume required by each nv pool to feed the selected amount of supplement.
+    Calculate the total volume required by each nv pool to consume the selected level of supplement.
 
     Used in global constraint (con_vol). See CorePyomo
     '''

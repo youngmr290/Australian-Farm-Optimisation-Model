@@ -1,26 +1,30 @@
-# -*- coding: utf-8 -*-
 """
-Created on Sat Dec 28 15:00:25 2019
-
-@author: John
+author: Young
 """
-#python modules
+##python modules
 from pyomo import environ as pe
-import PropertyInputs as pinp
 
-#AFO modules
+##AFO modules
 import Pasture as pas
 
 
 def paspyomo_precalcs(params, r_vals, nv):
+    '''
+    Call crop precalc functions.
+
+    :param params: dictionary which stores all arrays used to populate pyomo parameters.
+    :param r_vals: dictionary which stores all report values.
+    :param nv: dictionary which stores nutrient pool info from StockGenerator.py.
+
+    '''
+
     pas.f_pasture(params, r_vals, nv)
 
 def paspyomo_local(params, model):
-    #####################################################################################################################################################################################################
-    #####################################################################################################################################################################################################
-    ### Variables
-    #####################################################################################################################################################################################################
-    #####################################################################################################################################################################################################
+    ''' Builds pyomo variables, parameters and constraints'''
+    ###################
+    # variable         #
+    ###################
     model.v_greenpas_ha = pe.Var(model.s_feed_pools, model.s_grazing_int, model.s_foo_levels, model.s_feed_periods,
                                  model.s_lmus, model.s_season_types, model.s_pastures,bounds=(0,None),
                                  doc='hectares grazed each period for each grazing intensity on each soil in each period')
@@ -37,12 +41,9 @@ def paspyomo_local(params, model):
     model.v_poc = pe.Var(model.s_feed_pools, model.s_feed_periods, model.s_lmus, model.s_season_types, bounds=(0,None),
                          doc='tonnes of poc consumed by each sheep pool in each period on each lmu')
 
-    #####################################################################################################################################################################################################
-    #####################################################################################################################################################################################################
-    ### Params
-    #####################################################################################################################################################################################################
-    #####################################################################################################################################################################################################
-
+    ####################
+    #define parameters #
+    ####################
     model.p_pasture_area = pe.Param(model.s_phases, model.s_pastures, initialize=params['pasture_area_rt'], default=0, doc='pasture area of each rotation')
     
     model.p_germination = pe.Param(model.s_feed_periods, model.s_lmus, model.s_phases, model.s_season_types, model.s_pastures, initialize=params['p_germination_p6lrzt'], default=0, mutable=False, doc='pasture germination for each rotation')
@@ -88,12 +89,26 @@ def paspyomo_local(params, model):
     model.p_poc_vol = pe.Param(model.s_feed_periods, model.s_season_types, initialize=params['p_poc_vol_p6z'],default=0, mutable=False, doc='vol (ri intake) of pasture on crop paddocks for each feed period')
     
     
-    #####################################################################################################################################################################################################
-    #####################################################################################################################################################################################################
-    ### Local constraints
-    #####################################################################################################################################################################################################
-    #####################################################################################################################################################################################################
-    l_fp = list(model.s_feed_periods)#have to convert to a list first because indexing of an ordered set starts at 1
+    ########################
+    #call local constraint #
+    ########################
+    f_con_greenpas(model)
+    f_con_drypas(model)
+    f_con_nappas(model)
+    f_con_pasarea(model)
+    f_con_erosion(model)
+
+
+###################
+#local constraint #
+###################
+def f_con_greenpas(model):
+    '''
+    Constrain the green pasture available on each soil type in each feed period. Determined by rotation selection (germination
+    and resowing), growth and consumption on each hectare of pasture landuse.
+    '''
+    ##convert feed period set to a list so it can be indexed
+    l_fp = list(model.s_feed_periods)
     def greenpas(model,p6,l,z,t):
         p6s = l_fp[l_fp.index(p6) - 1] #need the activity level from last feed period
         if any(model.p_foo_start_grnha[o,p6,l,z,t] for o in model.s_foo_levels):
@@ -106,6 +121,15 @@ def paspyomo_local(params, model):
     #todo the greenpas (FOO) and pasarea (ha) could be replaced by a grnha constraint that passes area and foo together. Needs a FooB (base level) and reseeding foo removal and addition associated with the reseeding rotation phases
     model.con_greenpas = pe.Constraint(model.s_feed_periods, model.s_lmus, model.s_season_types, model.s_pastures, rule = greenpas, doc='green pasture of each type available on each soil type in each feed period')
 
+def f_con_drypas(model):
+    '''
+    Constrains the high and low quality dry pasture available in each period. Determined by senesced green pasture
+    in the current period, dry pasture transferred from previous period and livestock consumption. Pasture decay and
+    trampling are factored into the consumption and transfer activities (e.g. the transfer activity removes 1000kg
+    from the previous period and provides 1000 - decay - trampling kg into the current period).
+    '''
+    ##convert feed period set to a list so it can be indexed
+    l_fp = list(model.s_feed_periods)
     def drypas(model,d,p6,z,t):
         p6s = l_fp[l_fp.index(p6) - 1] #need the activity level from last feed period
         if model.p_dry_removal_t[p6,z,t] == 0 and model.p_dry_transfer_req_t[p6,z,t] == 0:
@@ -117,6 +141,18 @@ def paspyomo_local(params, model):
                    + model.v_drypas_transfer[d,p6,z,t] * model.p_dry_transfer_req_t[p6,z,t] <=0
     model.con_drypas = pe.Constraint(model.s_dry_groups, model.s_feed_periods, model.s_season_types, model.s_pastures, rule = drypas, doc='High and low quality dry pasture of each type available in each period')
 
+def f_con_nappas(model):
+    '''
+    Constrains the high and low quality dry pasture available from non arable areas of crop paddocks in each period.
+    Determined by rotation and ungrazed growth rate of pasture during the growing season. This pasture becomes available
+    for livestock to graze once harvest is done.
+    Pasture decay and trampling are factored into the consumption and transfer activities (e.g. the transfer activity removes 1000kg
+    from the previous period and provides 1000 - decay - trampling kg into the current period).
+
+    This has to be a separate constraint from dry_pas so that nap doesn’t provide pasture in the erosion constraint.
+    '''
+    ##convert feed period set to a list so it can be indexed
+    l_fp = list(model.s_feed_periods)
     def nappas(model,d,p6,z,t):
         p6s = l_fp[l_fp.index(p6) - 1] #need the activity level from last feed period
         if model.p_dry_removal_t[p6,z,t] == 0 and model.p_dry_transfer_req_t[p6,z,t] == 0:
@@ -127,12 +163,22 @@ def paspyomo_local(params, model):
                    - model.v_nap_transfer[d,p6s,z,t] * model.p_dry_transfer_prov_t[p6s,z,t] \
                    + model.v_nap_transfer[d,p6,z,t] * model.p_dry_transfer_req_t[p6,z,t] <=0
     model.con_nappas = pe.Constraint(model.s_dry_groups, model.s_feed_periods, model.s_season_types, model.s_pastures, rule = nappas, doc='High and low quality dry pasture of each type available in each period')
-    
+
+def f_con_pasarea(model):
+    '''
+    Constrains the pasture area (used in con_greenpas) on each LMU based on the rotation selected.
+    This accounts for arable area and destocking for reseeding.
+    '''
     def pasarea(model,p6,l,z,t):
         return sum(-model.v_phase_area[z,r,l] * model.p_phase_area[p6,l,r,z,t] for r in model.s_phases if pe.value(model.p_phase_area[p6,l,r,z,t]) != 0)   \
                         + sum(model.v_greenpas_ha[f,g,o,p6,l,z,t] for f in model.s_feed_pools for g in model.s_grazing_int for o in model.s_foo_levels) <=0
     model.con_pasarea = pe.Constraint(model.s_feed_periods, model.s_lmus, model.s_season_types, model.s_pastures, rule = pasarea, doc='Pasture area row for growth constraint of each type on each soil for each feed period (ha)')
-    
+
+def f_con_erosion(model):
+    '''
+    Constraint on the erosion limit at the end of the period. This ensure that at the end of the growing season
+    paddocks have some cover as a sustainability measure.
+    '''
     def erosion(model,p6,l,z,t):
         #senescence is included here because it is passed into the dry feed pool in the following fp. Thus senesced feed is not included in green or dry pasture in the period it senesced.
         return sum(sum(model.v_greenpas_ha[f,g,o,p6,l,z,t] for f in model.s_feed_pools) * -(model.p_foo_end_grnha[g,o,p6,l,z,t] +
@@ -142,38 +188,47 @@ def paspyomo_local(params, model):
     model.con_erosion = pe.Constraint(model.s_feed_periods, model.s_lmus, model.s_season_types, model.s_pastures, rule = erosion, doc='total pasture available of each type on each soil type in each feed period')
 
     
+###################
+#constraint global#
+###################
+##sow
+def passow(model,p5,k,l,z):
+    '''
+    Calculate the hectares of pasture that are resown.
 
-
-#####################################################################################################################################################################################################
-#####################################################################################################################################################################################################
-### Functions for coremodel
-#####################################################################################################################################################################################################
-#####################################################################################################################################################################################################
-
-##############
-#sow         #
-##############
-def passow(model,p,k,l,z):
-    if any(model.p_pas_sow[p,l,r,k,z] for r in model.s_phases):
-        return sum(model.p_pas_sow[p,l,r,k,z]*model.v_phase_area[z,r,l] for r in model.s_phases if pe.value(model.p_pas_sow[p,l,r,k,z]) != 0)
+    Used in global constraint (con_passow). See CorePyomo.
+    '''
+    if any(model.p_pas_sow[p5,l,r,k,z] for r in model.s_phases):
+        return sum(model.p_pas_sow[p5,l,r,k,z]*model.v_phase_area[z,r,l] for r in model.s_phases if pe.value(model.p_pas_sow[p5,l,r,k,z]) != 0)
     else:
         return 0
 
-##############
-#ME          #
-##############
+##ME
 def pas_me(model,p6,f,z):
+    '''
+    Calculate the total energy provided to each nv pool from the selected level of dry and green pasture consumption.
+
+    Used in global constraint (con_me). See CorePyomo
+    '''
     return sum(sum(model.v_greenpas_ha[f,g,o,p6,l,z,t] * model.p_me_cons_grnha[f,g,o,p6,l,z,t] for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus) \
                + sum(model.v_drypas_consumed[f,d,p6,z,t] * model.p_dry_mecons_t[f,d,p6,z,t] for d in model.s_dry_groups) for t in model.s_pastures) \
                + sum(model.v_poc[f,p6,l,z] * model.p_poc_md[f,p6,z] for l in model.s_lmus) #have to sum lmu here again, otherwise other axis will broadcast
 
 def nappas_me(model,p6,f,z):
+    '''
+    Calculate the total energy provided to each nv pool from the selected level of non arable pasture consumption.
+
+    Used in global constraint (con_me). See CorePyomo
+    '''
     return sum(model.v_nap_consumed[f,d,p6,z,t] * model.p_dry_mecons_t[f,d,p6,z,t] for d in model.s_dry_groups for t in model.s_pastures)
 
-##############
-#Vol         #
-##############
+##Vol
 def pas_vol(model,p6,f,z):
+    '''
+    Calculate the total volume required by each nv pool to consume the selected level of pasture.
+
+    Used in global constraint (con_vol). See CorePyomo
+    '''
     return sum(sum(model.v_greenpas_ha[f,g,o,p6,l,z,t] * model.p_volume_grnha[g,o,p6,l,z,t] for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus) \
                + sum(model.v_drypas_consumed[f,d,p6,z,t] * model.p_dry_volume_t[d,p6,z,t] \
                + model.v_nap_consumed[f,d,p6,z,t] * model.p_dry_volume_t[d,p6,z,t] for d in model.s_dry_groups) for t in model.s_pastures)\

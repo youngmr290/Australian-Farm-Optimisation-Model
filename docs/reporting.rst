@@ -108,7 +108,7 @@ pasture and stubble (slack) are common outcomes, unsold grain (slack) would indi
    :maxdepth: 2
 
    ReportFunctions
-   ReportControl
+   
 
 
 

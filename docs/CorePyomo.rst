@@ -1,4 +1,4 @@
-CorePyomo module
+CorePyomo
 ================
 
 .. automodule:: CorePyomo

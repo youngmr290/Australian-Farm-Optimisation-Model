@@ -95,7 +95,7 @@ def stubble_req_a(model,z,k,s):
 ##stubble md
 def stubble_me(model,p6,f,z):
     '''
-    Calculate the total energy provided to each nv pool by feed the selected amount of stubble.
+    Calculate the total energy provided to each nv pool from the selected amount of stubble.
 
     Used in global constraint (con_me). See CorePyomo
     '''
@@ -104,7 +104,7 @@ def stubble_me(model,p6,f,z):
 ##stubble vol
 def stubble_vol(model,p6,f,z):
     '''
-    Calculate the total volume required by each nv pool to feed the selected amount of stubble.
+    Calculate the total volume required by each nv pool to consume the selected level of stubble.
 
     Used in global constraint (con_vol). See CorePyomo
     '''
