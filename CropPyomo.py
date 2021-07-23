@@ -25,7 +25,7 @@ def crop_precalcs(params, r_vals):
 
     '''
 
-    crp.crop_params(params, r_vals)
+    crp.f1_crop_params(params, r_vals)
 
 
 def croppyomo_local(params, model):
