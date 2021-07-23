@@ -1,4 +1,4 @@
-Simulation intergration
+Simulation integration
 =======================
 
 Currently in AFO the crop and pasture modules do not represent the plant life cycle at a biological level (sun, leaf area and soil properties).
@@ -19,7 +19,7 @@ Full documentation can be found here: https://apsimnextgeneration.netlify.app/.
 
 
 
-Crop inupt generation
+Crop input generation
 ------------------------
 
 coming

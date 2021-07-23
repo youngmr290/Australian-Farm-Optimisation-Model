@@ -92,7 +92,7 @@ How to use
 Running the reports is much like running the model (see section or running), simply just run
 ReportControl.py inplace of Exp.py. As with running the core model an argument can be passed into the
 script when running via the terminal which controls which experiment to report. ReportControl.py calls the
-neccessary report functions in ReportFunctions.py. For more information on the process to add reports and information regarding the existing
+necessary report functions in ReportFunctions.py. For more information on the process to add reports and information regarding the existing
 reports see below.
 
 About

@@ -3,7 +3,7 @@ Sensitivity
 
 General
 --------
-AFO uses sensitivity to allow the user to examine various senarios. For example, price. Sensisivities are
+AFO uses sensitivity to allow the user to examine various scenarios. For example, price. Sensitivities are
 controlled in exp.xlsx. The sensitivity values for a trial are read from the relevant trial in exp.xlsx and
 stored in a dictionary. They are then applied in the relevant place in the code.
 
@@ -11,7 +11,7 @@ The sensitivity analyses are implemented in 2 distinct places during the executi
 
 #. At the input level - the SA is directly applied to an input variable that have been read
    from one of the <input>.xlsx workbooks. This is done in one of the input modules (PropertyInputs.py, UniversalInputs.py
-   or StructuralInputs.py). This is the preferred sensitivity method becasue it is simple and easy to check.
+   or StructuralInputs.py). This is the preferred sensitivity method because it is simple and easy to check.
 #. At a function level during the precalcs - the SA is carried out on intermediate variables
    in the body of the code.
 
@@ -22,7 +22,7 @@ How to use:
 #. Check sensitivity.py to ensure the SA variable does not already exist.
 #. Add the SA variable to the sensitivity.py module. This requires allocating the variable to a sensitivity dictionary, setting a default value and giving the variable a description.
 #. Add it to the relevant module - if the SA is acting on an input (most common) the applying is done in the one of the input modules. if the SA is acting on an intermediate calculation the applying is done in the given module. To make this process easy there is a SA function fun.f_sa. Note: if you are applying multiple SA to the same variable (eg applying saa and sam) you must consider the order. The recommended order is  sai, sav, saa, sap, sam, sat, sar.
-#. The sensitivity variable is not limited to being a single number. You can also initialize an array. In exp.xlsx you can assign to different slices of the array by specifying the inicies.
+#. The sensitivity variable is not limited to being a single number. You can also initialize an array. In exp.xlsx you can assign to different slices of the array by specifying the indices.
 #. Add the SA variable to the exp.xlsx document. The model will run without this step however this step is required inorder to use SA.
 
 .. note::

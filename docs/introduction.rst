@@ -216,7 +216,9 @@ Furthermore, constraints can be applied to the model to limit
 #. Animals to graze at their voluntary feed intake level (i.e. that intake reflects the FOO & DMD offered to the animals i.e. feed is not rationed through active management of the stock, although pasture management can be altered to vary the FOO & quality profile)
 
 If desired the model can also represent and compare (but not optimise in a single model solution)
-#. The length of the joining period (measured in number of cycles mated). Includes the tradeoff between the number of ewes conceiving and the distribution of size and energy requirments of the later born progeny
+
+#. The length of the joining period (measured in number of cycles mated). Includes the tradeoff between the number of
+   ewes conceiving and the distribution of size and energy requirements of the later born progeny
 #. Altering the age that the young ewes are mated, for example a 7 month mating versus a 8.5 month mating for ewe lambs.
 #. Accelerated lambing, where ewes are mated every 8 months and therefore have 3 lambs in 2 years.
 #. Variation in timing of lamb, hogget and adult shearing
