@@ -6,7 +6,6 @@ Model Logic
    :caption: Contents:
 
    introduction
-   model_capacity
    mathematical_summary
    rotation_index
    crop_index
