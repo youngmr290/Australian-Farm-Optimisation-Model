@@ -27,7 +27,7 @@ note:
 
 
 
-def boundarypyomo_local(params, model):
+def f1_boundarypyomo_local(params, model):
 
     ##set bounds to include
     bounds_inc = True #controls all bounds (typically on)

@@ -28,7 +28,7 @@ def crop_precalcs(params, r_vals):
     crp.f1_crop_params(params, r_vals)
 
 
-def croppyomo_local(params, model):
+def f1_croppyomo_local(params, model):
     ''' Builds pyomo variables, parameters and constraints'''
 
     ############

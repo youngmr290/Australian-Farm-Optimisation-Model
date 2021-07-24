@@ -22,7 +22,7 @@ def stub_precalcs(params, report, nv):
     
     
     
-def stubpyomo_local(params, model):
+def f1_stubpyomo_local(params, model):
     ''' Builds pyomo variables, parameters and constraints'''
     ###################
     # variable         #

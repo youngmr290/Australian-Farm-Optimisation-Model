@@ -44,7 +44,7 @@ def lab_precalcs(params, r_vals):
                     
 
 
-def labpyomo_local(params, model):
+def f1_labpyomo_local(params, model):
     ''' Builds pyomo variables, parameters and constraints'''
     ############
     # variable #

@@ -20,7 +20,7 @@ def paspyomo_precalcs(params, r_vals, nv):
 
     pas.f_pasture(params, r_vals, nv)
 
-def paspyomo_local(params, model):
+def f1_paspyomo_local(params, model):
     ''' Builds pyomo variables, parameters and constraints'''
     ###################
     # variable         #

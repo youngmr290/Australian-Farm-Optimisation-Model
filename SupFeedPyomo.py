@@ -21,7 +21,7 @@ def sup_precalcs(params, r_vals):
     sup.f_sup_params(params,r_vals)
 
     
-def suppyomo_local(params, model):
+def f1_suppyomo_local(params, model):
     ''' Builds pyomo variables, parameters'''
 
     ############

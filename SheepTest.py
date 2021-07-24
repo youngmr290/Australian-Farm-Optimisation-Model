@@ -24,7 +24,7 @@ nv={}
 model.sets()
 # spy.stock_precalcs(params,report)
 sgen.generator(params, r_vals, nv, plots=True)  # call generator direct so StockPyomo code is not cluttered
-spy.stockpyomo_local(params)
+spy.f1_stockpyomo_local(params)
 
 
 # time_list.append(timer()) ; time_was.append("simulation loops")

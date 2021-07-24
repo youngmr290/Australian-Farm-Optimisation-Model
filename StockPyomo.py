@@ -20,7 +20,7 @@ def stock_precalcs(params, r_vals, nv):
 
 
 
-def stockpyomo_local(params, model):
+def f1_stockpyomo_local(params, model):
 
     ##these sets require info from the stock module
     model.s_wean_times = pe.Set(initialize=params['a_idx'], doc='weaning options')

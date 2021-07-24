@@ -40,7 +40,7 @@ def f_mvf_vol():
 #######
 #pyomo#
 #######
-def mvf_pyomo(model):
+def f1_mvf_pyomo(model):
     model.v_mvf = pe.Var(model.s_feed_periods,model.s_feed_pools, model.s_mvf_q,bounds=(0,0),
                        doc='marginal value of feed. Must be bound to 0. Can be examined in duals to see value of extra ME.')
 

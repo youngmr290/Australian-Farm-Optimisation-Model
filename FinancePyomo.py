@@ -23,7 +23,7 @@ def fin_precalcs(params, r_vals):
     params['overdraw'] = pinp.finance['overdraw_limit']
 
 
-def finpyomo_local(params, model):
+def f1_finpyomo_local(params, model):
     ''' Builds pyomo variables, parameters and constraints'''
 
     ############

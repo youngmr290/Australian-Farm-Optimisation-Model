@@ -17,7 +17,7 @@ def mach_precalcs(params, r_vals):
 
 
 
-def machpyomo_local(params, model):
+def f1_machpyomo_local(params, model):
     ############
     #variable  #
     ############

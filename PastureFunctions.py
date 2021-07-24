@@ -94,7 +94,7 @@ def f_germination(i_germination_std_zt, i_germ_scalar_lzt, i_germ_scalar_p6zt
     :param arable_l: Proportion of arable land on each LMU.
     :param phase_germresow_df: array of rotation phases.
     :param i_phase_germ_dict: Dictionary with inputs of rotation germination for each pasture type.
-    :return pasture germination in each rotation phase.
+    :return: pasture germination in each rotation phase.
     '''
     #todo currently all germination occurs in period 0, however, other code handles germination in other periods if the inputs & this code are changed
     germ_scalar_rt = np.zeros(rt,dtype = 'float64')
@@ -545,7 +545,7 @@ def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_
     and quantity reduces each period as it decays. Consumption of the high quality/high FOO component further
     reduces the average as the feed available skews towards the low-quality pool.
 
-    .. Note:: There is not a constraint that ensures that the high-quality pasture pool is grazed prior to the
+    .. note:: There is not a constraint that ensures that the high-quality pasture pool is grazed prior to the
         low-quality pool (unlike the grazing of stubbles where it does exist).
 
     :param cu3: params used to convert foo for rel availability.

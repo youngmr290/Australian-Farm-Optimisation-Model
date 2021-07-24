@@ -20,7 +20,7 @@ def crplab_precalcs(params, r_vals):
     '''
     lcrp.f_labcrop_params(params, r_vals)
 
-def labcrppyomo_local(params, model):
+def f1_labcrppyomo_local(params, model):
     ''' Builds pyomo variables, parameters and constraints'''
 
     #########

@@ -24,7 +24,7 @@ def labfx_precalcs(params, report):
     lfix.fixed(params)
     params['learn'] = pinp.labour['learn']
     
-def labfxpyomo_local(params, model):
+def f1_labfxpyomo_local(params, model):
     ############
     # variables #
     ############

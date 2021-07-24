@@ -22,7 +22,7 @@ def rotation_precalcs(params, report):
     rps.rot_params(params)
     rps.landuses_phases(params,report)
     
-def rotationpyomo(params, model):
+def f1_rotationpyomo(params, model):
     ''' Builds pyomo variables, parameters and constraints'''
 
     #############
