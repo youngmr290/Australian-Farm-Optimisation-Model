@@ -2018,7 +2018,13 @@ def generator(params,r_vals,nv,plots = False):
     sfw_ltwadj_a1e1b1nwzida0e0b0xyg3 = np.ones(pg3)[0, ...]  # slice the p axis to remove
     sfd_ltwadj_a1e1b1nwzida0e0b0xyg3 = np.zeros(pg3)[0, ...]  # slice the p axis to remove
 
-    for loop_ltw in range(2):
+    ## set whether it is necessary to loop for the LTW calculations. If both dams & offs are not used then don't loop
+    if sen.sam['LTW_dams'] == 0 and sen.sam['LTW_offs'] == 0:
+        loop_ltw_len = 1
+    else:
+        loop_ltw_len = 2
+
+    for loop_ltw in range(loop_ltw_len):
         #todo The double loop could be replaced by separating the offspring into their own loop
         # it doesn't remove the requirement to loop for the dams because they need to have the first loop to generate the inputs for the second loop
         # but it would reduce the number of offspring calculations, allow offspring wean wt to be based on ffcfw_yat at weaning and allow loop length to be customised
