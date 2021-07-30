@@ -680,17 +680,24 @@ def f_run_required(exp_data1):
         keys_hist = list(prev_exp.reset_index().columns[3:].values)
         keys_current = list(exp_data1.reset_index().columns[3:].values)
 
-        ##update prev_exp run column - check if trial was run when the model was last run. This handles the case when the model crashes after it had completed some trials.
-        run_crash = []
+        ##update prev_exp run column
+        ###if the trial was run the last time the model was run (r_vals are newer than exp.pkl) this trial doesnt need to be re-run unless code or inputs have changed.
+        ###if r_vals dont exist the trial needs to be re-run (this allows the user to delete r_vals to re-run a trial).
+        run_last = []
+        no_r_vals = []
         for trial in prev_exp.index.get_level_values(3):
             try:
                 if os.path.getmtime('pkl/pkl_exp.pkl') <= os.path.getmtime('pkl/pkl_r_vals_{0}.pkl'.format(trial)):
-                    run_crash.append(True)
+                    run_last.append(True)
+                    no_r_vals.append(False)
                 else:
-                    run_crash.append(False)
+                    run_last.append(False)
+                    no_r_vals.append(False)
             except FileNotFoundError:
-                run_crash.append(False)
-        prev_exp.loc[run_crash, ('run_req', '', '', '')] = False
+                run_last.append(False)
+                no_r_vals.append(True)
+        prev_exp.loc[run_last, ('run_req', '', '', '')] = False #set run req to false if trial was run last itteration of the model.
+        prev_exp.loc[no_r_vals, ('run_req', '', '', '')] = True #set run req to True if r_vals dont exist
 
         ##if headers are the same, code is the same and the excel inputs are the same then test if the values in exp.xls are the same
         if (keys_current==keys_hist and os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime(newest)
