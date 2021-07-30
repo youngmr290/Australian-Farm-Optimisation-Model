@@ -452,7 +452,7 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'prog_keys_k3k5twzida0e0b0xyg2'
             arith = 1
             index = [3]             #w9
-            cols = [1,4,10,11]  #k2, z, gender, g2
+            cols = [1,4,10,12]  #k2, z, gender, g2
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             ffcfw_prog = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod
@@ -475,7 +475,7 @@ def f_report(processor, trials, non_exist_trials):
             den_weights = 'pde0b0_numbers_weights_k3k5tvpnw8zida0e0b0xyg3' #weight numbers for propn of animals in e and b slice and on hand (prod will be equal to 0 if animal is off hand)
             keys = 'offs_keys_k3k5tvpnwzidaebxyg3'
             arith = 1
-            index = [9, 4]      #d, p. d here to save columns when many w
+            index = [0, 4]      #k3, p. k3 here to save columns when many w
             cols = [15, 2, 6]   #g3, t, w
             axis_slice = {}
             axis_slice[11] = [0,1,1] #e: first cycle
@@ -592,7 +592,7 @@ def f_report(processor, trials, non_exist_trials):
             den_weights = 'stock_days_k3k5p6ftvnwziaxyg3'
             keys = 'offs_keys_k3k5p6ftvnwziaxyg3'
             arith = 1
-            index =[5, 2]       #DVP
+            index =[5, 2]       #DVP, fp
             cols =[13, 1, 3]    #g3, BTRT, nv
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
@@ -610,7 +610,7 @@ def f_report(processor, trials, non_exist_trials):
             den_weights = 'stock_days_k3k5p6ftvnwziaxyg3'
             keys = 'offs_keys_k3k5p6ftvnwziaxyg3'
             arith = 1
-            index =[5, 2]       #DVP
+            index =[5, 2]       #DVP, fp
             cols =[13, 1, 3]    #g3, BTRT, nv
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
@@ -655,8 +655,8 @@ def f_report(processor, trials, non_exist_trials):
             weights = 'prog_numbers_k3k5twzia0xg2'
             keys = 'prog_keys_k3k5twzia0xg2'
             arith = 2
-            index =[2]
-            cols =[0, 1, 5, 7]
+            index =[3]   #w
+            cols =[0, 1, 2, 7] #dam age, birth type, t slice, gender
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             numbers_prog = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,
@@ -686,7 +686,7 @@ def f_report(processor, trials, non_exist_trials):
             keys = 'offs_keys_k3k5tvpnwziaxyg3'
             arith = 2
             index =[4]              #p
-            cols =[12, 0,10,1,2,6]  #dam age, gender, BTRT, t, w
+            cols =[12, 0,10,1,2,6]  #genotype, dam age, gender, BTRT, t, w
             axis_slice = {}
             # axis_slice[0] = [0, 2, 1]
             numbers_offs_p = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
