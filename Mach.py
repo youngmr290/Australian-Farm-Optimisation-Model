@@ -382,8 +382,8 @@ def f_yield_penalty():
     '''
     ##inputs
     seed_period_lengths_pz = pinp.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
-    dry_seeding_penalty_k_z = pinp.f_seasonal_inp(pinp.crop['yield_penalty_wet'], axis=1)
-    wet_seeding_penalty_k_z = pinp.f_seasonal_inp(pinp.crop['yield_penalty_dry'], axis=1)
+    dry_seeding_penalty_k_z = pinp.f_seasonal_inp(pinp.crop['yield_penalty_dry'], axis=1)
+    wet_seeding_penalty_k_z = pinp.f_seasonal_inp(pinp.crop['yield_penalty_wet'], axis=1)
 
     ##general info
     mach_periods = per.p_dates_df()
