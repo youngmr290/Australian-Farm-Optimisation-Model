@@ -72,7 +72,7 @@ def f1_croppyomo_local(params, model):
 ### yield needs to be disaggregated so that it returns the grain transfer for each crop - this is so it is compatible with yield penalty and sup feed activities.
 ###alternative would have been to add another key/index/set to the yield parameter that was k, although i suspect this would make it a bit slower due to being bigger but it might be tidier
 
-def rotation_yield_transfer(model,g,k,z):
+def f_rotation_yield_transfer(model,g,k,z):
     '''
     Calculate the total of each grain produced from selected rotation phases.
 
@@ -90,7 +90,7 @@ def rotation_yield_transfer(model,g,k,z):
 ##############
 ##similar to yield - this is more complex because we want to mul with phase area variable then sum based on the current landuse (k)
 ##returns a tuple, the boolean part indicates if the constraint needs to exist
-def cropsow(model,k,l,z):
+def f_cropsow(model,k,l,z):
     '''
     Calculate the seeding requirement for each crop from the selected rotation phases.
 
@@ -107,7 +107,7 @@ def cropsow(model,k,l,z):
 # functions used to define cashflow #
 #####################################
 
-def rotation_cost(model,c,z):
+def f_rotation_cost(model,c,z):
     '''
     Calculate the total cost of the selected rotation phases.
 
@@ -120,7 +120,7 @@ def rotation_cost(model,c,z):
 ##############
 #stubble     #
 ##############
-def rot_stubble(model,k,s,z):
+def f_rot_stubble(model,k,s,z):
     '''
     Calculate the total volume of stubble provide directly after harvest from the selected rotation phases.
 

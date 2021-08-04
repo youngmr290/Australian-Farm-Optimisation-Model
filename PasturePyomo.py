@@ -192,7 +192,7 @@ def f_con_erosion(model):
 #constraint global#
 ###################
 ##sow
-def passow(model,p5,k,l,z):
+def f_passow(model,p5,k,l,z):
     '''
     Calculate the hectares of pasture that are resown.
 
@@ -204,7 +204,7 @@ def passow(model,p5,k,l,z):
         return 0
 
 ##ME
-def pas_me(model,p6,f,z):
+def f_pas_me(model,p6,f,z):
     '''
     Calculate the total energy provided to each nv pool from the selected level of dry and green pasture consumption.
 
@@ -214,7 +214,7 @@ def pas_me(model,p6,f,z):
                + sum(model.v_drypas_consumed[f,d,p6,z,t] * model.p_dry_mecons_t[f,d,p6,z,t] for d in model.s_dry_groups) for t in model.s_pastures) \
                + sum(model.v_poc[f,p6,l,z] * model.p_poc_md[f,p6,z] for l in model.s_lmus) #have to sum lmu here again, otherwise other axis will broadcast
 
-def nappas_me(model,p6,f,z):
+def f_nappas_me(model,p6,f,z):
     '''
     Calculate the total energy provided to each nv pool from the selected level of non arable pasture consumption.
 
@@ -223,7 +223,7 @@ def nappas_me(model,p6,f,z):
     return sum(model.v_nap_consumed[f,d,p6,z,t] * model.p_dry_mecons_t[f,d,p6,z,t] for d in model.s_dry_groups for t in model.s_pastures)
 
 ##Vol
-def pas_vol(model,p6,f,z):
+def f_pas_vol(model,p6,f,z):
     '''
     Calculate the total volume required by each nv pool to consume the selected level of pasture.
 

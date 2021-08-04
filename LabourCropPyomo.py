@@ -1,4 +1,3 @@
-
 """
 author: young
 """
@@ -48,8 +47,7 @@ def f1_labcrppyomo_local(params, model):
 ###################################
 #functions for core model         #
 ###################################
-#labour req by 
-def mach_labour_anyone(model,p, z):
+def f_mach_labour_anyone(model,p,z):
     '''
     Calculate the total labour required by anyone for fertilising, spraying, seeding, harvest, preparation,
     packing and monitoring.
@@ -70,8 +68,7 @@ def mach_labour_anyone(model,p, z):
     return seed_labour + harv_labour + prep_labour + fert_t_time + fert_ha_time + chem_time
 
 
-#labour req by
-def mach_labour_perm(model,p,z):
+def f_mach_labour_perm(model,p,z):
     '''
     Calculate the total labour required by permanent staff for fertilising, spraying, seeding, harvest, preparation,
     packing and monitoring.

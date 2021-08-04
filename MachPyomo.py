@@ -135,7 +135,7 @@ def f_con_sow_supply(model):
 #functions for core model         #
 ###################################   
 
-def ha_days_pasture_crop_paddocks(model,f,l,z):
+def f_ha_days_pasture_crop_paddocks(model,f,l,z):
     '''
     Calculate the total hectare grazing days that can be grazed on crop paddocks before seeding based on the
     seeding activities selected.
@@ -152,7 +152,7 @@ def ha_days_pasture_crop_paddocks(model,f,l,z):
     return ha_days_contract + ha_days_personal
 
 #function to determine late seeding penalty, this will be passed to core model
-def late_seed_penalty(model,g,k,z):
+def f_late_seed_penalty(model,g,k,z):
     '''
     Calculate the yield penalty based on the timeliness of the selected contract and farmer seeding activities.
 
@@ -168,7 +168,7 @@ def late_seed_penalty(model,g,k,z):
     return farmer_penalty + contract_penalty
 
 #function to determine late seeding stubble penalty, this will be passed to core model
-def stubble_penalty(model,k,s,z):
+def f_stubble_penalty(model,k,s,z):
     '''
     Calculate the stubble production penalty based on the timeliness of the selected contract and farmer seeding activities.
 
@@ -185,7 +185,7 @@ def stubble_penalty(model,k,s,z):
     return farmer_penalty + contract_penalty
     
 
-def harv_supply(model,k,z):
+def f_harv_supply(model,k,z):
     '''
     Calculate the total hectares of each crop that can be harvested based on the allocation of harvesting
     time.
@@ -199,7 +199,7 @@ def harv_supply(model,k,z):
     return farmer_harv + contract_harv
 
 #function to determine seeding cost, this will be passed to core model
-def seeding_cost(model,c,z):
+def f1_seeding_cost(model,c,z):
     #contract cost
     contract_cost = sum(sum(sum(model.v_contractseeding_ha[z,p,k1,l] * model.p_contract_seeding_cost[c,z] for l in model.s_lmus) for p in model.s_labperiods) for k1 in model.s_landuses)
     #cost per ha x number of days seeding x ha per day
@@ -207,12 +207,12 @@ def seeding_cost(model,c,z):
     return contract_cost + seeding_cost
  
 #function to determine harv cost, this will be passed to core model
-def harvesting_cost(model,c,z):
+def f1_harvesting_cost(model,c,z):
     ##contract cost and owner cost (cost per hr x number of hours)
     return sum(model.v_contractharv_hours[z,k] * model.p_contractharv_cost[c,k,z] + sum(model.p_harv_cost[c,k,z] * model.v_harv_hours[z, p, k] for p in model.s_labperiods) for k in model.s_harvcrops)
 
 #includes hay cost
-def mach_cost(model,c,z):
+def f_mach_cost(model,c,z):
     '''
     Calculate the cost of machinery for insurance, seeding, harvesting and making hay based on the level
     of machinery activities selected.
@@ -221,11 +221,11 @@ def mach_cost(model,c,z):
     '''
 
     hay_cost = model.v_hay_made[z] * model.p_contracthay_cost[c]
-    return harvesting_cost(model,c,z) + seeding_cost(model,c,z) + hay_cost + model.p_mach_insurance[c]
+    return f1_harvesting_cost(model,c,z) + f1_seeding_cost(model,c,z) + hay_cost + model.p_mach_insurance[c]
 
 #function to determine derpriciation cost, this will be passed to core model
 #equals seeding dep plus harv dep plus fixed dep
-def total_dep(model,z):
+def f_total_dep(model,z):
     '''
     Calculate the total depreciation of farm machinery.
 
@@ -240,7 +240,7 @@ def total_dep(model,z):
     harv_dep = model.p_harv_dep * sum(sum(model.v_harv_hours[z,p,k] for k in model.s_harvcrops) for p in model.s_labperiods)
     return seeding_depreciation + fixed_dep + harv_dep
 
-def mach_asset(model):
+def f_mach_asset(model):
     '''
     Calculate the total asset value of farm machinery.
 

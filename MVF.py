@@ -11,7 +11,7 @@ import PropertyInputs as pinp
 import UniversalInputs as uinp
 import FeedsupplyFunctions as fsfun
 
-def f_mvf_vol():
+def f_vol():
     '''calc volume of 100mj with different digestibility.'''
     dmd_q = pinp.mvf['i_mvf_dmd_q']
     mvf_me = pinp.mvf['i_mvf_me'] #me used for mvf
@@ -47,7 +47,7 @@ def f1_mvf_pyomo(model):
 
 
 ##me and vol functions called by corepyomo
-def mvf_me(model,p6,f):
+def f_mvf_me(model,p6,f):
     '''
     Calculate the total energy provided by each MVF activity.
 
@@ -55,10 +55,10 @@ def mvf_me(model,p6,f):
     '''
     return sum(model.v_mvf[p6,f,q] * pinp.mvf['i_mvf_me'] for q in model.s_mvf_q)
 
-def mvf_vol(model,p6,f):
+def f_mvf_vol(model,p6,f):
     '''
     Calculate the total volume required by each MVF activity.
 
     Used in global constraint (con_vol). See CorePyomo
     '''
-    return sum(model.v_mvf[p6,f,q] * f_mvf_vol()[q] for q in model.s_mvf_q)
+    return sum(model.v_mvf[p6,f,q] * f_vol()[q] for q in model.s_mvf_q)

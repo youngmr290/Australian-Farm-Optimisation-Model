@@ -63,7 +63,7 @@ def f1_suppyomo_local(params, model):
 #functions for core model
 #######################################################################################################################################################
 #######################################################################################################################################################
-def sup_cost(model,c,z):
+def f_sup_cost(model,c,z):
     '''
     Calculate the total cost of feeding the selected level of supplement.
 
@@ -72,7 +72,7 @@ def sup_cost(model,c,z):
 
     return sum(model.v_sup_con[z,k,g,f,p6] * model.p_sup_cost[c,k,p6,z] for f in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for p6 in model.s_feed_periods)
 
-def sup_me(model,p6,f,z):
+def f_sup_me(model,p6,f,z):
     '''
     Calculate the total energy provided to each nv pool from the selected amount of supplement.
 
@@ -81,7 +81,7 @@ def sup_me(model,p6,f,z):
 
     return sum(model.v_sup_con[z,k,g,f,p6] * model.p_sup_md[k]for g in model.s_grain_pools for k in model.s_crops)
 
-def sup_vol(model,p6,f,z):
+def f_sup_vol(model,p6,f,z):
     '''
     Calculate the total volume required by each nv pool to consume the selected level of supplement.
 
@@ -90,7 +90,7 @@ def sup_vol(model,p6,f,z):
 
     return sum(model.v_sup_con[z,k,g,f,p6] * model.p_sup_vol[k] for g in model.s_grain_pools for k in model.s_crops)
 
-def sup_dep(model,z):
+def f_sup_dep(model,z):
     '''
     Calculate the total depreciation of silos.
 
@@ -99,7 +99,7 @@ def sup_dep(model,z):
 
     return sum(model.v_sup_con[z,k,g,f,p6] * model.p_sup_dep[k] for f in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for p6 in model.s_feed_periods)
 
-def sup_asset(model,z):
+def f_sup_asset(model,z):
     '''
     Calculate the total asset value of silos.
 
@@ -108,7 +108,7 @@ def sup_asset(model,z):
 
     return sum(model.v_sup_con[z,k,g,f,p6] * model.p_sup_asset[k] for f in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for p6 in model.s_feed_periods)
     
-def sup_labour(model,p5,z):
+def f_sup_labour(model,p5,z):
     '''
     Calculate the total labour required for supplementary feeding.
 

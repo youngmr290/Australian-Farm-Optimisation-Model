@@ -467,7 +467,7 @@ def f1_stockpyomo_local(params, model):
 ### setup core model constraints #
 ##################################
 
-def stock_me(model,p6,f,z):
+def f_stock_me(model,p6,f,z):
     return sum(model.v_sire[z,g0] * model.p_mei_sire[p6,f,z,g0] for g0 in model.s_groups_sire)\
            + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_mei_dams[k2,p6,f,t1,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
@@ -480,7 +480,7 @@ def stock_me(model,p6,f,z):
                for a in model.s_wean_times for i in model.s_tol)
 
 
-def stock_pi(model,p6,f,z):
+def f_stock_pi(model,p6,f,z):
     return sum(model.v_sire[z,g0] * model.p_pi_sire[p6,f,z,g0] for g0 in model.s_groups_sire)\
            + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_pi_dams[k2,p6,f,t1,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
@@ -492,7 +492,7 @@ def stock_pi(model,p6,f,z):
                       if pe.value(model.p_pi_offs[k3,k5,p6,f,t3,v3,n3,w3,z,i,a,x,y3,g3]) != 0)
                for a in model.s_wean_times for i in model.s_tol)
 
-def stock_cashflow(model,c,z):
+def f_stock_cashflow(model,c,z):
     infrastructure = sum(model.p_rm_stockinfra_fix[h1,c] + model.p_rm_stockinfra_var[h1,c] * model.v_infrastructure[h1,z]
                          for h1 in model.s_infrastructure)
     stock = sum(model.v_sire[z,g0] * model.p_cashflow_sire[c,z,g0] for g0 in model.s_groups_sire) \
@@ -518,7 +518,7 @@ def stock_cashflow(model,c,z):
 #     return stock - infrastructure - purchases
 
 
-def stock_cost(model,z):
+def f_stock_cost(model,z):
     infrastructure = sum(model.p_rm_stockinfra_fix[h1,c] + model.p_rm_stockinfra_var[h1,c] * model.v_infrastructure[h1,z]
                          for h1 in model.s_infrastructure for c in model.s_cashflow_periods)
     stock = sum(model.v_sire[z,g0] * model.p_cost_sire[z,g0] for g0 in model.s_groups_sire) \
@@ -535,7 +535,7 @@ def stock_cost(model,z):
     return  stock + infrastructure + purchases
 #
 #
-def stock_labour_anyone(model,p5,z):
+def f_stock_labour_anyone(model,p5,z):
     # infrastructure = sum(model.p_lab_stockinfra[h1,p5] * model.v_infrastructure[h1,p5] for h1 in model.s_infrastructure)
     stock = sum(model.v_sire[z,g0] * model.p_lab_anyone_sire[p5,z,g0] for g0 in model.s_groups_sire)\
             + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_lab_anyone_dams[k2,p5,t1,v1,a,n1,w1,z,i,y1,g1]
@@ -549,7 +549,7 @@ def stock_labour_anyone(model,p5,z):
                for a in model.s_wean_times for i in model.s_tol)
     return stock
 
-def stock_labour_perm(model,p5,z):
+def f_stock_labour_perm(model,p5,z):
     # infrastructure = sum(model.p_lab_stockinfra[h1,p5] * model.v_infrastructure[h1,p5] for h1 in model.s_infrastructure)
     stock = sum(model.v_sire[z,g0] * model.p_lab_perm_sire[p5,z,g0] for g0 in model.s_groups_sire)\
             + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_lab_perm_dams[k2,p5,t1,v1,a,n1,w1,z,i,y1,g1]
@@ -563,7 +563,7 @@ def stock_labour_perm(model,p5,z):
                for a in model.s_wean_times for i in model.s_tol)
     return stock
 
-def stock_labour_manager(model,p5,z):
+def f_stock_labour_manager(model,p5,z):
     # infrastructure = sum(model.p_lab_stockinfra[h1,p5] * model.v_infrastructure[h1,p5] for h1 in model.s_infrastructure)
     stock = sum(model.v_sire[z,g0] * model.p_lab_manager_sire[p5,z,g0] for g0 in model.s_groups_sire)\
             + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_lab_manager_dams[k2,p5,t1,v1,a,n1,w1,z,i,y1,g1]
@@ -579,7 +579,7 @@ def stock_labour_manager(model,p5,z):
 #
 
 
-def stock_asset(model, z):
+def f_stock_asset(model, z):
     infrastructure = sum(model.p_asset_stockinfra[h1] for h1 in model.s_infrastructure)
     stock = sum(model.v_sire[z,g0] * model.p_asset_sire[z,g0] for g0 in model.s_groups_sire) \
             + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_asset_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1]

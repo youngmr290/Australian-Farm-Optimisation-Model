@@ -82,7 +82,7 @@ def f_con_stubble_bcd(model):
 #constraint global#
 ###################
 ##stubble transter from category to category and period to period
-def stubble_req_a(model,z,k,s):
+def f_stubble_req_a(model,z,k,s):
     '''
     Calculate the total stubble required to consume the selected volume category A stubble in each period.
 
@@ -93,7 +93,7 @@ def stubble_req_a(model,z,k,s):
 
 
 ##stubble md
-def stubble_me(model,p6,f,z):
+def f_stubble_me(model,p6,f,z):
     '''
     Calculate the total energy provided to each nv pool from the selected amount of stubble.
 
@@ -102,7 +102,7 @@ def stubble_me(model,p6,f,z):
     return sum(model.v_stub_con[f,p6,z,k,s] * model.p_stub_md[f,p6,z,k,s] for k in model.s_crops for s in model.s_stub_cat)
     
 ##stubble vol
-def stubble_vol(model,p6,f,z):
+def f_stubble_vol(model,p6,f,z):
     '''
     Calculate the total volume required by each nv pool to consume the selected level of stubble.
 

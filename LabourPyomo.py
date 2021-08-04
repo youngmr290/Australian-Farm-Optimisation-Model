@@ -198,19 +198,19 @@ def f_con_labour_transfer_casual(model):
 #######################
 
 #sum the cost of perm, casual and manager labour. When i tried to do it all in one function it didn't work (it should be possible though )
-def casual(model,c,z):
+def f1_casual(model,c,z):
     return sum( model.v_quantity_casual[p,z] * model.p_casual_cost[p,z,c] for p in model.s_labperiods) 
-def perm(model,c):
+def f1_perm(model,c):
     return model.v_quantity_perm * model.p_perm_cost[c] 
-def manager(model,c):
+def f1_manager(model,c):
     return model.v_quantity_manager * model.p_manager_cost[c] 
-def labour_cost(model,c,z):
+def f_labour_cost(model,c,z):
     '''
     Calculate the total cost of the selected labour activities.
 
     Used in global constraint (con_cashflow). See CorePyomo
     '''
-    return casual(model,c,z) + perm(model,c) + manager(model,c)
+    return f1_casual(model,c,z) + f1_perm(model,c) + f1_manager(model,c)
 
 
 
