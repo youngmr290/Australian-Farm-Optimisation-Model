@@ -151,25 +151,25 @@ def f_report(processor, trials, non_exist_trials):
 
         ##handle infeasible trials
         if os.path.isfile('Output/infeasible/{0}.txt'.format(trial_name)):
-            stacked_infeasible = stacked_infeasible.append(pd.DataFrame([trial_name]).rename_axis('Trial'))
+            stacked_infeasible = rep.f_append_dfs(stacked_infeasible, pd.DataFrame([trial_name]).rename_axis('Trial'))
             lp_vars = fun.f_clean_dict(lp_vars) #if a trial is infeasible or doesnt solve all the lp values are None. This function converts them to 0 so the report can still run.
 
         ##run report functions
         if report_run.loc['run_summary', 'Run']:
             summary = rep.f_summary(lp_vars,r_vals,trial_name)
             summary.index.name = 'Trial'
-            stacked_summary = stacked_summary.append(summary)
+            stacked_summary = rep.f_append_dfs(stacked_summary, summary)
 
         if report_run.loc['run_areasum', 'Run']:
             option = 1
             areasum = rep.f_area_summary(lp_vars, r_vals, option=option)
             areasum = pd.concat([areasum],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_areasum = stacked_areasum.append(areasum)
+            stacked_areasum = rep.f_append_dfs(stacked_areasum, areasum)
 
         if report_run.loc['run_pnl', 'Run']:
             pnl = rep.f_profitloss_table(lp_vars, r_vals)
             pnl = pd.concat([pnl],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_pnl = stacked_pnl.append(pnl)
+            stacked_pnl = rep.f_append_dfs(stacked_pnl, pnl)
 
         if report_run.loc['run_profitarea', 'Run']:
             area_option = 3
@@ -177,7 +177,7 @@ def f_report(processor, trials, non_exist_trials):
             profitarea = pd.DataFrame(index=[trial_name], columns=['area','profit'])
             profitarea.loc[trial_name, 'area'] = rep.f_area_summary(lp_vars,r_vals,area_option)
             profitarea.loc[trial_name,'profit'] = rep.f_profit(lp_vars,r_vals,profit_option)
-            stacked_profitarea = stacked_profitarea.append(profitarea)
+            stacked_profitarea = rep.f_append_dfs(stacked_profitarea, profitarea)
 
         if report_run.loc['run_saleprice', 'Run']:
             option = 2
@@ -186,7 +186,7 @@ def f_report(processor, trials, non_exist_trials):
             fs = [2,3,2]
             saleprice = rep.f_price_summary(lp_vars, r_vals, option=option, grid=grid, weight=weight, fs=fs)
             saleprice = pd.concat([saleprice],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_saleprice = stacked_saleprice.append(saleprice)
+            stacked_saleprice = rep.f_append_dfs(stacked_saleprice, saleprice)
 
         if report_run.loc['run_salevalue_dams', 'Run']:
             type = 'stock'
@@ -200,7 +200,7 @@ def f_report(processor, trials, non_exist_trials):
             salevalue_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
                                    na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
             salevalue_dams = pd.concat([salevalue_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_salevalue_dams = stacked_salevalue_dams.append(salevalue_dams)
+            stacked_salevalue_dams = rep.f_append_dfs(stacked_salevalue_dams, salevalue_dams)
 
         if report_run.loc['run_salevalue_offs', 'Run']:
             type = 'stock'
@@ -214,7 +214,7 @@ def f_report(processor, trials, non_exist_trials):
             salevalue_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
                                    na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
             salevalue_offs = pd.concat([salevalue_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_salevalue_offs = stacked_salevalue_offs.append(salevalue_offs)
+            stacked_salevalue_offs = rep.f_append_dfs(stacked_salevalue_offs, salevalue_offs)
 
         if report_run.loc['run_woolvalue_dams', 'Run']:
             type = 'stock'
@@ -228,7 +228,7 @@ def f_report(processor, trials, non_exist_trials):
             woolvalue_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
                                    na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
             woolvalue_dams = pd.concat([woolvalue_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_woolvalue_dams = stacked_woolvalue_dams.append(woolvalue_dams)
+            stacked_woolvalue_dams = rep.f_append_dfs(stacked_woolvalue_dams, woolvalue_dams)
 
         if report_run.loc['run_woolvalue_offs', 'Run']:
             type = 'stock'
@@ -242,7 +242,7 @@ def f_report(processor, trials, non_exist_trials):
             woolvalue_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
                                    na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
             woolvalue_offs = pd.concat([woolvalue_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_woolvalue_offs = stacked_woolvalue_offs.append(woolvalue_offs)
+            stacked_woolvalue_offs = rep.f_append_dfs(stacked_woolvalue_offs, woolvalue_offs)
 
         if report_run.loc['run_saledate_offs', 'Run']:
             type = 'stock'
@@ -255,7 +255,7 @@ def f_report(processor, trials, non_exist_trials):
             saledate_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
                                    keys=keys, arith=arith, index=index, cols=cols).astype('datetime64[D]')
             saledate_offs = pd.concat([saledate_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_saledate_offs = stacked_saledate_offs.append(saledate_offs)
+            stacked_saledate_offs = rep.f_append_dfs(stacked_saledate_offs, saledate_offs)
 
         if report_run.loc['run_cfw_dams', 'Run']:
             type = 'stock'
@@ -270,7 +270,7 @@ def f_report(processor, trials, non_exist_trials):
             cfw_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             cfw_dams = pd.concat([cfw_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_cfw_dams = stacked_cfw_dams.append(cfw_dams)
+            stacked_cfw_dams = rep.f_append_dfs(stacked_cfw_dams, cfw_dams)
 
         if report_run.loc['run_fd_dams', 'Run']:
             type = 'stock'
@@ -285,7 +285,7 @@ def f_report(processor, trials, non_exist_trials):
             fd_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             fd_dams = pd.concat([fd_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_fd_dams = stacked_fd_dams.append(fd_dams)
+            stacked_fd_dams = rep.f_append_dfs(stacked_fd_dams, fd_dams)
 
         if report_run.loc['run_cfw_offs', 'Run']:
             type = 'stock'
@@ -300,7 +300,7 @@ def f_report(processor, trials, non_exist_trials):
             cfw_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             cfw_offs = pd.concat([cfw_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_cfw_offs = stacked_cfw_offs.append(cfw_offs)
+            stacked_cfw_offs = rep.f_append_dfs(stacked_cfw_offs, cfw_offs)
 
         if report_run.loc['run_fd_offs', 'Run']:
             type = 'stock'
@@ -315,7 +315,7 @@ def f_report(processor, trials, non_exist_trials):
             fd_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             fd_offs = pd.concat([fd_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_fd_offs = stacked_fd_offs.append(fd_offs)
+            stacked_fd_offs = rep.f_append_dfs(stacked_fd_offs, fd_offs)
 
         if report_run.loc['run_wbe_dams', 'Run']:
             type = 'stock'
@@ -331,7 +331,7 @@ def f_report(processor, trials, non_exist_trials):
             wbe_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             wbe_dams = pd.concat([wbe_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_wbe_dams = stacked_wbe_dams.append(wbe_dams)
+            stacked_wbe_dams = rep.f_append_dfs(stacked_wbe_dams, wbe_dams)
 
         if report_run.loc['run_wbe_offs', 'Run']:
             type = 'stock'
@@ -346,7 +346,7 @@ def f_report(processor, trials, non_exist_trials):
             wbe_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, na_prod=na_prod, weights=weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             wbe_offs = pd.concat([wbe_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_wbe_offs = stacked_wbe_offs.append(wbe_offs)
+            stacked_wbe_offs = rep.f_append_dfs(stacked_wbe_offs, wbe_offs)
 
         if report_run.loc['run_lw_dams', 'Run']:
             ##Average dam lw with p, e & b axis. Lw is adjusted for animals that are sold but not adjusted by mortality
@@ -369,7 +369,7 @@ def f_report(processor, trials, non_exist_trials):
                                      , na_weights=na_weights, prod_weights=prod_weights, den_weights=den_weights
                                      , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             lw_dams = pd.concat([lw_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_lw_dams = stacked_lw_dams.append(lw_dams)
+            stacked_lw_dams = rep.f_append_dfs(stacked_lw_dams, lw_dams)
 
         if report_run.loc['run_ffcfw_dams', 'Run']:
             ##Average dam ffcfw with p, e & b axis. ffcfw is adjusted for animals that are sold but not adjusted by mortality
@@ -392,7 +392,7 @@ def f_report(processor, trials, non_exist_trials):
                                      , na_weights=na_weights, prod_weights=prod_weights
                                      , den_weights=den_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             ffcfw_dams = pd.concat([ffcfw_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_ffcfw_dams = stacked_ffcfw_dams.append(ffcfw_dams)
+            stacked_ffcfw_dams = rep.f_append_dfs(stacked_ffcfw_dams, ffcfw_dams)
 
         if report_run.loc['run_nv_dams', 'Run']:
             ##Average dam NV with p, e & b axis. NV is adjusted for animals that are sold but not adjusted by mortality
@@ -415,7 +415,7 @@ def f_report(processor, trials, non_exist_trials):
                                    prod_weights=prod_weights, weights=weights, na_weights=na_weights, den_weights=den_weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             nv_dams = pd.concat([nv_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_nv_dams = stacked_nv_dams.append(nv_dams)
+            stacked_nv_dams = rep.f_append_dfs(stacked_nv_dams, nv_dams)
 
         if report_run.loc['run_ffcfw_yatf', 'Run']:
             ##Average yatf ffcfw with p, e & b axis. ffcfw is not adjusted by mortality
@@ -439,7 +439,7 @@ def f_report(processor, trials, non_exist_trials):
                                      , weights=weights, na_weights=na_weights, den_weights=den_weights, keys=keys
                                      , arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             ffcfw_yatf = pd.concat([ffcfw_yatf],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_ffcfw_yatf = stacked_ffcfw_yatf.append(ffcfw_yatf)
+            stacked_ffcfw_yatf = rep.f_append_dfs(stacked_ffcfw_yatf, ffcfw_yatf)
 
         if report_run.loc['run_ffcfw_prog', 'Run']:
             type = 'stock'
@@ -460,7 +460,7 @@ def f_report(processor, trials, non_exist_trials):
                                                      , na_weights=na_weights, den_weights=den_weights, keys=keys
                                                      , arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             ffcfw_prog = pd.concat([ffcfw_prog],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_ffcfw_prog = stacked_ffcfw_prog.append(ffcfw_prog)
+            stacked_ffcfw_prog = rep.f_append_dfs(stacked_ffcfw_prog, ffcfw_prog)
 
         if report_run.loc['run_ffcfw_offs', 'Run']:
             ##Average offs ffcfw with p, e & b axis. ffcfw is adjusted for animals that are sold but not adjusted by mortality
@@ -485,7 +485,7 @@ def f_report(processor, trials, non_exist_trials):
                                      , weights=weights, den_weights=den_weights, na_prod=na_prod, na_weights=na_weights
                                      , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             ffcfw_offs = pd.concat([ffcfw_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_ffcfw_offs = stacked_ffcfw_offs.append(ffcfw_offs)
+            stacked_ffcfw_offs = rep.f_append_dfs(stacked_ffcfw_offs, ffcfw_offs)
 
         if report_run.loc['run_nv_offs', 'Run']:
             ##Average offs NV with p, e & b axis. NV is adjusted for animals that are sold but not adjusted by mortality
@@ -510,7 +510,7 @@ def f_report(processor, trials, non_exist_trials):
                                    , weights=weights, den_weights=den_weights, na_weights=na_weights
                                    , keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             nv_offs = pd.concat([nv_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_nv_offs = stacked_nv_offs.append(nv_offs)
+            stacked_nv_offs = rep.f_append_dfs(stacked_nv_offs, nv_offs)
 
         if report_run.loc['run_lamb_survival', 'Run']:
             option = 0
@@ -519,7 +519,7 @@ def f_report(processor, trials, non_exist_trials):
             axis_slice = {}
             lamb_survival = rep.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols, axis_slice=axis_slice)
             lamb_survival = pd.concat([lamb_survival],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_lamb_survival = stacked_lamb_survival.append(lamb_survival)
+            stacked_lamb_survival = rep.f_append_dfs(stacked_lamb_survival, lamb_survival)
 
         if report_run.loc['run_weanper', 'Run']:
             option = 1
@@ -528,7 +528,7 @@ def f_report(processor, trials, non_exist_trials):
             axis_slice = {}
             weanper = rep.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols, axis_slice=axis_slice)
             weanper = pd.concat([weanper],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_weanper = stacked_weanper.append(weanper)
+            stacked_weanper = rep.f_append_dfs(stacked_weanper, weanper)
 
         if report_run.loc['run_scanper', 'Run']:
             option = 2
@@ -537,7 +537,7 @@ def f_report(processor, trials, non_exist_trials):
             axis_slice = {}
             scanper = rep.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols, axis_slice=axis_slice)
             scanper = pd.concat([scanper],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_scanper = stacked_scanper.append(scanper)
+            stacked_scanper = rep.f_append_dfs(stacked_scanper, scanper)
 
         if report_run.loc['run_dry_propn', 'Run']:
             option = 3
@@ -546,7 +546,7 @@ def f_report(processor, trials, non_exist_trials):
             axis_slice = {}
             dry_propn = rep.f_lambing_status(lp_vars, r_vals, option=option, index=index, cols=cols, axis_slice=axis_slice)
             dry_propn = pd.concat([dry_propn],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_dry_propn = stacked_dry_propn.append(dry_propn)
+            stacked_dry_propn = rep.f_append_dfs(stacked_dry_propn, dry_propn)
 
         if report_run.loc['run_daily_mei_dams', 'Run']:
             type = 'stock'
@@ -564,7 +564,7 @@ def f_report(processor, trials, non_exist_trials):
                                    na_weights=na_weights, den_weights=den_weights, keys=keys, arith=arith,
                                    index=index, cols=cols, axis_slice=axis_slice)
             daily_mei_dams = pd.concat([daily_mei_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_daily_mei_dams = stacked_daily_mei_dams.append(daily_mei_dams)
+            stacked_daily_mei_dams = rep.f_append_dfs(stacked_daily_mei_dams, daily_mei_dams)
 
         if report_run.loc['run_daily_pi_dams', 'Run']:
             type = 'stock'
@@ -582,7 +582,7 @@ def f_report(processor, trials, non_exist_trials):
                                        na_weights=na_weights, den_weights=den_weights, keys=keys, arith=arith,
                                        index=index, cols=cols, axis_slice=axis_slice)
             daily_pi_dams = pd.concat([daily_pi_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_daily_pi_dams = stacked_daily_pi_dams.append(daily_pi_dams)
+            stacked_daily_pi_dams = rep.f_append_dfs(stacked_daily_pi_dams, daily_pi_dams)
 
         if report_run.loc['run_daily_mei_offs', 'Run']:
             type = 'stock'
@@ -600,7 +600,7 @@ def f_report(processor, trials, non_exist_trials):
                                    na_weights=na_weights, den_weights=den_weights, keys=keys, arith=arith,
                                    index=index, cols=cols, axis_slice=axis_slice)
             daily_mei_offs = pd.concat([daily_mei_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_daily_mei_offs = stacked_daily_mei_offs.append(daily_mei_offs)
+            stacked_daily_mei_offs = rep.f_append_dfs(stacked_daily_mei_offs, daily_mei_offs)
 
         if report_run.loc['run_daily_pi_offs', 'Run']:
             type = 'stock'
@@ -618,7 +618,7 @@ def f_report(processor, trials, non_exist_trials):
                                        na_weights=na_weights, den_weights=den_weights, keys=keys, arith=arith,
                                        index=index, cols=cols, axis_slice=axis_slice)
             daily_pi_offs = pd.concat([daily_pi_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_daily_pi_offs = stacked_daily_pi_offs.append(daily_pi_offs)
+            stacked_daily_pi_offs = rep.f_append_dfs(stacked_daily_pi_offs, daily_pi_offs)
 
         if report_run.loc['run_numbers_dams', 'Run']:
             type = 'stock'
@@ -632,7 +632,7 @@ def f_report(processor, trials, non_exist_trials):
             numbers_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             numbers_dams = pd.concat([numbers_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_numbers_dams = stacked_numbers_dams.append(numbers_dams)
+            stacked_numbers_dams = rep.f_append_dfs(stacked_numbers_dams, numbers_dams)
 
         if report_run.loc['run_numbers_dams_p', 'Run']:
             type = 'stock'
@@ -648,7 +648,7 @@ def f_report(processor, trials, non_exist_trials):
             numbers_dams_p = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
                                    na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             numbers_dams_p = pd.concat([numbers_dams_p],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_numbers_dams_p = stacked_numbers_dams_p.append(numbers_dams_p)
+            stacked_numbers_dams_p = rep.f_append_dfs(stacked_numbers_dams_p, numbers_dams_p)
 
         if report_run.loc['run_numbers_prog', 'Run']:
             type = 'stock'
@@ -662,7 +662,7 @@ def f_report(processor, trials, non_exist_trials):
             numbers_prog = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             numbers_prog = pd.concat([numbers_prog],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_numbers_prog = stacked_numbers_prog.append(numbers_prog)
+            stacked_numbers_prog = rep.f_append_dfs(stacked_numbers_prog, numbers_prog)
 
         if report_run.loc['run_numbers_offs', 'Run']:
             type = 'stock'
@@ -676,7 +676,7 @@ def f_report(processor, trials, non_exist_trials):
             numbers_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, weights=weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             numbers_offs = pd.concat([numbers_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_numbers_offs = stacked_numbers_offs.append(numbers_offs)
+            stacked_numbers_offs = rep.f_append_dfs(stacked_numbers_offs, numbers_offs)
     #todo numbers_p has a bit of an error for dams and offs (numbers seem to reduce a bit quickly)
         if report_run.loc['run_numbers_offs_p', 'Run']:
             type = 'stock'
@@ -693,7 +693,7 @@ def f_report(processor, trials, non_exist_trials):
                                    na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols,
                                    axis_slice=axis_slice)
             numbers_offs_p = pd.concat([numbers_offs_p],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_numbers_offs_p = stacked_numbers_offs_p.append(numbers_offs_p)
+            stacked_numbers_offs_p = rep.f_append_dfs(stacked_numbers_offs_p, numbers_offs_p)
 
         if report_run.loc['run_mort_dams', 'Run']:
             type = 'stock'
@@ -711,7 +711,7 @@ def f_report(processor, trials, non_exist_trials):
                                    na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols,
                                    axis_slice=axis_slice)
             mort_dams = pd.concat([mort_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_mort_dams = stacked_mort_dams.append(mort_dams)
+            stacked_mort_dams = rep.f_append_dfs(stacked_mort_dams, mort_dams)
 
         if report_run.loc['run_mort_offs', 'Run']:
             type = 'stock'
@@ -728,7 +728,7 @@ def f_report(processor, trials, non_exist_trials):
                                    na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols,
                                    axis_slice=axis_slice)
             mort_offs = pd.concat([mort_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_mort_offs = stacked_mort_offs.append(mort_offs)
+            stacked_mort_offs = rep.f_append_dfs(stacked_mort_offs, mort_offs)
 
         if report_run.loc['run_dse', 'Run']:
             ##you can go into f_dse to change the axis being reported.
@@ -739,18 +739,18 @@ def f_report(processor, trials, non_exist_trials):
             dse_sire = pd.concat([dse_sire],keys=[trial_name],names=['Trial'])  # add trial name as index level
             dse_dams = pd.concat([dse_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
             dse_offs = pd.concat([dse_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_dse_sire = stacked_dse_sire.append(dse_sire)
-            stacked_dse_dams = stacked_dse_dams.append(dse_dams)
-            stacked_dse_offs = stacked_dse_offs.append(dse_offs)
+            stacked_dse_sire = rep.f_append_dfs(stacked_dse_sire, dse_sire)
+            stacked_dse_dams = rep.f_append_dfs(stacked_dse_dams, dse_dams)
+            stacked_dse_offs = rep.f_append_dfs(stacked_dse_offs, dse_offs)
 
             method = 1
             dse1_sire, dse1_dams, dse1_offs = rep.f_dse(lp_vars, r_vals, method = method, per_ha = per_ha)
             dse1_sire = pd.concat([dse1_sire],keys=[trial_name],names=['Trial'])  # add trial name as index level
             dse1_dams = pd.concat([dse1_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
             dse1_offs = pd.concat([dse1_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_dse1_sire = stacked_dse1_sire.append(dse1_sire)
-            stacked_dse1_dams = stacked_dse1_dams.append(dse1_dams)
-            stacked_dse1_offs = stacked_dse1_offs.append(dse1_offs)
+            stacked_dse1_sire = rep.f_append_dfs(stacked_dse1_sire, dse1_sire)
+            stacked_dse1_dams = rep.f_append_dfs(stacked_dse1_dams, dse1_dams)
+            stacked_dse1_offs = rep.f_append_dfs(stacked_dse1_offs, dse1_offs)
 
         if report_run.loc['run_grnfoo', 'Run']:
             #returns foo at end of each FP
@@ -767,7 +767,7 @@ def f_report(processor, trials, non_exist_trials):
             grnfoo = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             grnfoo = pd.concat([grnfoo],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_grnfoo = stacked_grnfoo.append(grnfoo)
+            stacked_grnfoo = rep.f_append_dfs(stacked_grnfoo, grnfoo)
 
         if report_run.loc['run_dryfoo', 'Run']:
             #returns foo at end of each FP
@@ -783,7 +783,7 @@ def f_report(processor, trials, non_exist_trials):
             dryfoo = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             dryfoo = pd.concat([dryfoo],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_dryfoo = stacked_dryfoo.append(dryfoo)
+            stacked_dryfoo = rep.f_append_dfs(stacked_dryfoo, dryfoo)
 
         if report_run.loc['run_napfoo', 'Run']:
             #returns foo at end of each FP
@@ -799,7 +799,7 @@ def f_report(processor, trials, non_exist_trials):
             napfoo = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             napfoo = pd.concat([napfoo],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_napfoo = stacked_napfoo.append(napfoo)
+            stacked_napfoo = rep.f_append_dfs(stacked_napfoo, napfoo)
 
         if report_run.loc['run_grncon', 'Run']:
             #returns consumption in each FP
@@ -815,7 +815,7 @@ def f_report(processor, trials, non_exist_trials):
             grncon = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             grncon = pd.concat([grncon],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_grncon = stacked_grncon.append(grncon)
+            stacked_grncon = rep.f_append_dfs(stacked_grncon, grncon)
 
         if report_run.loc['run_drycon', 'Run']:
             #returns consumption in each FP
@@ -831,7 +831,7 @@ def f_report(processor, trials, non_exist_trials):
             drycon = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             drycon = pd.concat([drycon],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_drycon = stacked_drycon.append(drycon)
+            stacked_drycon = rep.f_append_dfs(stacked_drycon, drycon)
 
         if report_run.loc['run_grnnv', 'Run']:
             #returns NV during each FP regardless of whether selected or not
@@ -846,7 +846,7 @@ def f_report(processor, trials, non_exist_trials):
             grnnv = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             grnnv = pd.concat([grnnv],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_grnnv = stacked_grnnv.append(grnnv)
+            stacked_grnnv = rep.f_append_dfs(stacked_grnnv, grnnv)
 
         if report_run.loc['run_grndmd', 'Run']:
             #returns DMD during each FP (regardless of whether selected or not)
@@ -861,7 +861,7 @@ def f_report(processor, trials, non_exist_trials):
             grndmd = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             grndmd = pd.concat([grndmd],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_grndmd = stacked_grndmd.append(grndmd)
+            stacked_grndmd = rep.f_append_dfs(stacked_grndmd, grndmd)
 
         if report_run.loc['run_avegrnfoo', 'Run']:
             #returns average FOO during each FP (regardless of whether selected or not)
@@ -876,7 +876,7 @@ def f_report(processor, trials, non_exist_trials):
             grnfoo = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             grnfoo = pd.concat([grnfoo],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_avegrnfoo = stacked_avegrnfoo.append(grnfoo)
+            stacked_avegrnfoo = rep.f_append_dfs(stacked_avegrnfoo, grnfoo)
 
         if report_run.loc['run_drynv', 'Run']:
             #returns NV during each FP (regardless of whether selected or not)
@@ -891,7 +891,7 @@ def f_report(processor, trials, non_exist_trials):
             drynv = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             drynv = pd.concat([drynv],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_drynv = stacked_drynv.append(drynv)
+            stacked_drynv = rep.f_append_dfs(stacked_drynv, drynv)
 
         if report_run.loc['run_drydmd', 'Run']:
             #returns DMD during each FP (regardless of whether selected or not)
@@ -906,7 +906,7 @@ def f_report(processor, trials, non_exist_trials):
             drydmd = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             drydmd = pd.concat([drydmd],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_drydmd = stacked_drydmd.append(drydmd)
+            stacked_drydmd = rep.f_append_dfs(stacked_drydmd, drydmd)
 
         if report_run.loc['run_dryfoo', 'Run']:
             #todo this report throws error when combining multiple excel... why??
@@ -922,7 +922,7 @@ def f_report(processor, trials, non_exist_trials):
             dryfoo = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             dryfoo = pd.concat([dryfoo],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_avedryfoo = stacked_avedryfoo.append(dryfoo)
+            stacked_avedryfoo = rep.f_append_dfs(stacked_avedryfoo, dryfoo)
 
         if report_run.loc['run_napcon', 'Run']:
             #returns consumption in each FP
@@ -938,7 +938,7 @@ def f_report(processor, trials, non_exist_trials):
             napcon = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             napcon = pd.concat([napcon],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_napcon = stacked_napcon.append(napcon)
+            stacked_napcon = rep.f_append_dfs(stacked_napcon, napcon)
 
         if report_run.loc['run_poccon', 'Run']:
             #returns consumption in each FP
@@ -954,20 +954,20 @@ def f_report(processor, trials, non_exist_trials):
             poccon = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, type=type, weights=weights,
                                    keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
             poccon = pd.concat([poccon],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_poccon = stacked_poccon.append(poccon)
+            stacked_poccon = rep.f_append_dfs(stacked_poccon, poccon)
 
         if report_run.loc['run_supcon', 'Run']:
             #returns consumption in each FP
             option = 1
             supcon = rep.f_grain_sup_summary(lp_vars, r_vals, option=option)
             supcon = pd.concat([supcon],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_supcon = stacked_supcon.append(supcon)
+            stacked_supcon = rep.f_append_dfs(stacked_supcon, supcon)
 
         if report_run.loc['run_stubcon', 'Run']:
             #returns consumption in each FP
             stubcon = rep.f_stubble_summary(lp_vars, r_vals)
             stubcon = pd.concat([stubcon],keys=[trial_name],names=['Trial'])  # add trial name as index level
-            stacked_stubcon = stacked_stubcon.append(stubcon)
+            stacked_stubcon = rep.f_append_dfs(stacked_stubcon, stubcon)
 
     ####################################
     #run between trial reports and save#

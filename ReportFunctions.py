@@ -228,6 +228,12 @@ def f_vars2df(lp_vars, var_key, z_keys):
     var_series = pd.Series(lp_vars[var_key])
     return var_series.sort_index()
 
+def f_append_dfs(stacked_df, additional_df):
+    new_stacked_df = stacked_df.append(additional_df)
+    ##reset index order. If two dfs are appended with different columns the pandas append function sorts the index.
+    cols = stacked_df.columns.union(additional_df.columns,sort=False)
+    new_stacked_df = new_stacked_df.reindex(cols,axis=1)
+    return new_stacked_df.fillna(0) #fill na with 0 so that the function that writes to xl can hide the rows/cols (na gets entered if the two dfs being appended dont have all the same cols)
 
 ########################
 # across trial reports #
