@@ -46,8 +46,8 @@ def coremodel_all(params,trial_name,model):
     f_con_labour_fixed_anyone(model)
     f_con_labour_fixed_manager(model)
     # Labour crop
-    f_con_labour_crop_anyone(model)
-    f_con_labour_crop_perm(model)
+    f_con_labour_phase_anyone(model)
+    f_con_labour_phase_perm(model)
     # labour Sheep
     f_con_labour_sheep_anyone(model)
     f_con_labour_sheep_perm(model)
@@ -167,13 +167,13 @@ def f_con_labour_fixed_manager(model):
                                                    doc='link between labour supply and requirement by fixed jobs for manager')
 
 
-def f_con_labour_crop_anyone(model):
+def f_con_labour_phase_anyone(model):
     '''
     Tallies labour used in the crop enterprise that can be completed by anyone (casual/permanent/manager) and ensures
     that there is sufficient labour available to carry out the jobs.
     '''
     def labour_crop_anyone(model,p,w,z):
-        return -model.v_crop_labour_casual[p,w,z] - model.v_crop_labour_permanent[p,w,z] - model.v_crop_labour_manager[
+        return -model.v_phase_labour_casual[p,w,z] - model.v_phase_labour_permanent[p,w,z] - model.v_phase_labour_manager[
             p,w,z] + lphspy.f_mach_labour_anyone(model,p,z) <= 0
 
     model.con_labour_crop_anyone = pe.Constraint(model.s_labperiods,['any'],model.s_season_types,
@@ -181,13 +181,13 @@ def f_con_labour_crop_anyone(model):
                                                  doc='link between labour supply and requirement by crop jobs for all labour sources')
 
 
-def f_con_labour_crop_perm(model):
+def f_con_labour_phase_perm(model):
     '''
     Tallies labour used in the crop enterprise that can be completed by permanent or manager staff and ensures that
     there is sufficient labour available to carry out the jobs.
     '''
     def labour_crop_perm(model,p,w,z):
-        return - model.v_crop_labour_permanent[p,w,z] - model.v_crop_labour_manager[p,w,z] + lphspy.f_mach_labour_perm(
+        return - model.v_phase_labour_permanent[p,w,z] - model.v_phase_labour_manager[p,w,z] + lphspy.f_mach_labour_perm(
             model,p,z) <= 0
 
     model.con_labour_crop_perm = pe.Constraint(model.s_labperiods,['perm'],model.s_season_types,rule=labour_crop_perm,

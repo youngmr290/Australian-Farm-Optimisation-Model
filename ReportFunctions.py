@@ -839,9 +839,9 @@ def f_labour_summary(lp_vars, r_vals, option=0):
         casual_sheep_p5w = pd.Series(lp_vars['v_sheep_labour_casual']).unstack()
         sheep_labour = pd.concat([manager_sheep_p5w, prem_sheep_p5w, casual_sheep_p5w], axis=1).sum(axis=1, level=0)
         ###crop
-        manager_crop_p5w = pd.Series(lp_vars['v_crop_labour_manager']).unstack()
-        prem_crop_p5w = pd.Series(lp_vars['v_crop_labour_permanent']).unstack()
-        casual_crop_p5w = pd.Series(lp_vars['v_crop_labour_casual']).unstack()
+        manager_crop_p5w = pd.Series(lp_vars['v_phase_labour_manager']).unstack()
+        prem_crop_p5w = pd.Series(lp_vars['v_phase_labour_permanent']).unstack()
+        casual_crop_p5w = pd.Series(lp_vars['v_phase_labour_casual']).unstack()
         crop_labour = pd.concat([manager_crop_p5w, prem_crop_p5w, casual_crop_p5w], axis=1).sum(axis=1, level=0)
         ###fixed
         manager_fixed_p5w = pd.Series(lp_vars['v_fixed_labour_manager']).unstack()
