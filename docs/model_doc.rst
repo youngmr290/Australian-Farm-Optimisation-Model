@@ -8,7 +8,7 @@ Model Logic
    introduction
    mathematical_summary
    rotation_index
-   crop_index
+   Phase_index
    feedsupply_index
    finance_index
    labour_index

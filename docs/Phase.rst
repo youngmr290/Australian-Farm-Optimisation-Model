@@ -1,7 +1,7 @@
-Crop module
-===========
+Phase module
+============
 
-.. automodule:: Crop
+.. automodule:: Phase
    :members:
    :undoc-members:
    :show-inheritance:

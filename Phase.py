@@ -551,7 +551,8 @@ def f_phase_stubble_cost(r_vals):
     The cost is then adjusted by the probability of each rotation phase requiring handling which is
     determined by the ration of the crop yield to the critical threshold.
 
-    General rules regarding stubble handling;
+    General rules regarding stubble handling:
+
     #. Stubble handling is not required if the land use is a legume crop, pasture or lucerne
     #. Once cereal crops are big enough to yield more than 3.5t of grain/ha their stubble residue
        starts to become an issue when sowing the next crop.
