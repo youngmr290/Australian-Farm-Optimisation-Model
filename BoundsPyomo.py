@@ -113,12 +113,14 @@ def f1_boundarypyomo_local(params, model):
 
             ###constraint
             def dam_lo_bound(model,t, v, g1):
-                if dams_lowbound[t,v,g1] == 0:
+                if dams_lowbound[t,v,g1] == 0 or all(model.p_mask_dams[k2,t,v,w8, g1] == 0
+                       for k2 in model.s_k2_birth_dams for w8 in model.s_lw_dams):
                     return pe.Constraint.Skip
                 else:
                     return sum(model.v_dams[k2,t,v,a,n,w8,i,y,g1] for k2 in model.s_k2_birth_dams
                                for a in model.s_wean_times for n in model.s_nut_dams for w8 in model.s_lw_dams
-                               for i in model.s_tol for y in model.s_gen_merit_dams) \
+                               for i in model.s_tol for y in model.s_gen_merit_dams
+                               if pe.value(model.p_mask_dams[k2,t,v,w8,g1]) == 1) \
                            >= dams_lowbound[t,v,g1]
             model.con_dam_lobound = pe.Constraint(model.s_sale_dams, model.s_dvp_dams, model.s_groups_dams, rule=dam_lo_bound,
                                                     doc='min number of dams')
