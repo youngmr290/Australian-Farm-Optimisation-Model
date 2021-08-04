@@ -36,7 +36,7 @@ import MachPyomo as macpy
 import FinancePyomo as finpy
 import LabourFixedPyomo as lfixpy
 import LabourPyomo as labpy
-import LabourCropPyomo as lcrppy
+import LabourPhasePyomo as lphspy
 import PasturePyomo as paspy
 import SupFeedPyomo as suppy
 import StubblePyomo as stubpy
@@ -171,7 +171,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
     finpy.fin_precalcs(params['fin'],r_vals['fin'])
     lfixpy.labfx_precalcs(params['labfx'],r_vals['labfx'])
     labpy.lab_precalcs(params['lab'],r_vals['lab'])
-    lcrppy.crplab_precalcs(params['crplab'],r_vals['crplab'])
+    lphspy.crplab_precalcs(params['crplab'],r_vals['crplab'])
     suppy.sup_precalcs(params['sup'],r_vals['sup'])
     spy.stock_precalcs(params['stock'],r_vals['stock'],nv)
     stubpy.stub_precalcs(params['stub'],r_vals['stub'], nv) #stub must be after stock because it uses nv dict which is populated in stock.py
@@ -194,7 +194,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
         finpy.f1_finpyomo_local(params['fin'], model)
         lfixpy.f1_labfxpyomo_local(params['labfx'], model)
         labpy.f1_labpyomo_local(params['lab'], model)
-        lcrppy.f1_labcrppyomo_local(params['crplab'], model)
+        lphspy.f1_labcrppyomo_local(params['crplab'], model)
         paspy.f1_paspyomo_local(params['pas'], model)
         suppy.f1_suppyomo_local(params['sup'], model)
         stubpy.f1_stubpyomo_local(params['stub'], model)

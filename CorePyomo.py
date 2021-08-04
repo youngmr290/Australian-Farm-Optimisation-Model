@@ -20,14 +20,13 @@ import StructuralInputs as sinp
 import CropPyomo as crppy
 import MachPyomo as macpy
 import LabourPyomo as labpy
-import LabourCropPyomo as lcrppy
+import LabourPhasePyomo as lphspy
 import PasturePyomo as paspy
 import SupFeedPyomo as suppy
 import StubblePyomo as stubpy
 import StockPyomo as stkpy
 import MVF as mvf
 import Sensitivity as sen
-
 import Finance as fin
 
 
@@ -175,7 +174,7 @@ def f_con_labour_crop_anyone(model):
     '''
     def labour_crop_anyone(model,p,w,z):
         return -model.v_crop_labour_casual[p,w,z] - model.v_crop_labour_permanent[p,w,z] - model.v_crop_labour_manager[
-            p,w,z] + lcrppy.f_mach_labour_anyone(model,p,z) <= 0
+            p,w,z] + lphspy.f_mach_labour_anyone(model,p,z) <= 0
 
     model.con_labour_crop_anyone = pe.Constraint(model.s_labperiods,['any'],model.s_season_types,
                                                  rule=labour_crop_anyone,
@@ -188,7 +187,7 @@ def f_con_labour_crop_perm(model):
     there is sufficient labour available to carry out the jobs.
     '''
     def labour_crop_perm(model,p,w,z):
-        return - model.v_crop_labour_permanent[p,w,z] - model.v_crop_labour_manager[p,w,z] + lcrppy.f_mach_labour_perm(
+        return - model.v_crop_labour_permanent[p,w,z] - model.v_crop_labour_manager[p,w,z] + lphspy.f_mach_labour_perm(
             model,p,z) <= 0
 
     model.con_labour_crop_perm = pe.Constraint(model.s_labperiods,['perm'],model.s_season_types,rule=labour_crop_perm,
