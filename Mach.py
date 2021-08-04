@@ -642,7 +642,7 @@ def stubble_cost_ha():
 
     Stubble handling cost per hectare includes tractor costs and rack costs. Tractor costs consist of fuel, oil,
     grease and r&m. Rack costs consist of just repairs and maintenance. This cost is adjusted rotation
-    phase and LMU cost in Crop.py.
+    phase and LMU cost in Phase.py.
 
     '''
     start = pinp.mach['stub_handling_date'] #needed for allocation func

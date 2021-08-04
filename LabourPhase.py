@@ -24,7 +24,7 @@ import timeit
 #AFO modules
 # from LabourCropInputs import *
 import Functions as fun
-import Crop as crp
+import Phase as phs
 import Periods as per
 import Mach as mac
 import PropertyInputs as pinp
@@ -123,9 +123,9 @@ def f_fert_app_time_ha():
     '''
 
     ##fert passes - arable (arable area accounted for in passes function)
-    passes_arable = crp.f_fert_passes()
+    passes_arable = phs.f_fert_passes()
     ##non arable fert passes
-    passes_na = crp.f_nap_fert_passes() #on pasture phases only
+    passes_na = phs.f_nap_fert_passes() #on pasture phases only
     ##add fert for arable area and fert for nonarable area, na_fert doesnt have season axis so need to reindex first
     passes_na = passes_na.unstack().reindex(passes_arable.unstack().index, axis=0, level=0).stack()
     total_passes = pd.concat([passes_arable, passes_na], axis=1).sum(axis=1, level=0)
@@ -190,14 +190,14 @@ def f_chem_app_time_ha():
     Calculate labour required for spraying for each rotation and allocate it into the labour periods.
 
     The labour required for spraying is calculated from the time to spray 1ha (calculated in Mach.py)
-    and the number of chemical applications for each rotation phase (calculated in Crop.py).
+    and the number of chemical applications for each rotation phase (calculated in Phase.py).
 
     '''
 
     ##note arable area accounted for in crop.py
 
     ##passes
-    passes = crp.f_chem_application()
+    passes = phs.f_chem_application()
     ##adjust chem labour across each labour period
     time = f_chem_lab_allocation() * mac.spray_time_ha() #time for 1 pass for each chem.
     ##adjust for passes

@@ -13,7 +13,7 @@ import pyomo.environ as pe
 import timeit
 
 #AFO modules
-import Crop as crp
+import Phase as phs
 import PropertyInputs as pinp
 
 def crop_precalcs(params, r_vals):
@@ -25,7 +25,7 @@ def crop_precalcs(params, r_vals):
 
     '''
 
-    crp.f1_crop_params(params, r_vals)
+    phs.f1_crop_params(params, r_vals)
 
 
 def f1_croppyomo_local(params, model):
@@ -245,15 +245,15 @@ def f_rot_stubble(model,k,s,z):
 
     # #calling a function multiple times takes time. call it once and assign result to a unique variable. 
     # #local variables are easier for python to locate
-    # # a=crp.phase_yields()
-    # # b=crp.fert()
-    # # c=crp.stubble_handling_prob()
-    # # d=crp.grain_price()
-    # #e=crp.fert_cost()
+    # # a=phs.phase_yields()
+    # # b=phs.fert()
+    # # c=phs.stubble_handling_prob()
+    # # d=phs.grain_price()
+    # #e=phs.fert_cost()
     # # f=mac.fert_app_t()
     # # g=mac.fert_app_ha()
-    # h=crp.rot_phase_mps()
-    # g=crp.rot_phase_mps2()
+    # h=phs.rot_phase_mps()
+    # g=phs.rot_phase_mps2()
     # #'''
     # ##define parameters
 
@@ -298,14 +298,14 @@ def f_rot_stubble(model,k,s,z):
 # print(timeit.timeit(test2,number=10)/10)
     
 
-    # # model.rotation_cost= Param(crp.f.keys(), initialize=crp.f)
+    # # model.rotation_cost= Param(phs.f.keys(), initialize=phs.f)
     # #model.rotation_cost.pprint()
-    # # model.rotation_cashflow = Param(crp.rot_cashflow().keys(), initialize=crp.rot_cashflow(), doc='total cashflow for 1 unit of rotation')
+    # # model.rotation_cashflow = Param(phs.rot_cashflow().keys(), initialize=phs.rot_cashflow(), doc='total cashflow for 1 unit of rotation')
     # # model.phasefert = Param(b.keys(), initialize=b, doc='fert required by 1 unit of phase')
     # # model.stubble_handling_prob = Param(c.keys(), initialize=c, doc='probability of each phase that requires stubble handling')
     # # model.stubble_handling_cost = Param(model.cashflow_periods, initialize=mac.stubble_cost_ha(),default = 0.0, doc='cost to handle 1ha of stubble')
     # model.area = Param(model.lmus, initialize=gi.general_input['lmu_area'], doc='available area on farm for each soil') #alternate way to initialise a parameter
-    # model.lo = Param(model.phases, initialize=crp.lo_bound, doc='lo bound of the number of ha of rot_phase') 
+    # model.lo = Param(model.phases, initialize=phs.lo_bound, doc='lo bound of the number of ha of rot_phase')
     
     # #model.area = Param(model.lmus, initialize=gi.general_input['lmu_area'], doc='available area on farm for each soil') #alternate way to initialise a parameter
     # # model.grainincome = Param(d.keys(), initialize=d, doc='farm gate price per tonne of each grain')
@@ -320,14 +320,14 @@ def f_rot_stubble(model,k,s,z):
     # '''
     
     #requirement parameters for rotations are read in from csv but to complete model i have hand inputted some parameters
-    #    model.rotationyield = Param(model.phases, model.lmus, initialize=crp.phase_yields(), default = 0.0, doc='grain production for all crops for 1 unit of rotation')
-    #    model.phasefert = Param(model.phases, model.lmus, model.fert_type, initialize=crp.fert(), default = 0.0, doc='fert required by 1 unit of phase')
-    #    model.stubble_handling_prob = Param(model.phases, model.lmus, initialize=crp.stubble_handling_prob(), default = 0.0, doc='probability of each phase that requires stubble handling')
+    #    model.rotationyield = Param(model.phases, model.lmus, initialize=phs.phase_yields(), default = 0.0, doc='grain production for all crops for 1 unit of rotation')
+    #    model.phasefert = Param(model.phases, model.lmus, model.fert_type, initialize=phs.fert(), default = 0.0, doc='fert required by 1 unit of phase')
+    #    model.stubble_handling_prob = Param(model.phases, model.lmus, initialize=phs.stubble_handling_prob(), default = 0.0, doc='probability of each phase that requires stubble handling')
     #    model.stubble_handling_cost = Param(model.cashflow_periods, initialize=mac.stubble_cost_ha(),default = 0.0, doc='cost to handle 1ha of stubble')
     #    model.area = Param(model.lmus, initialize=gi.general_input['lmu_area'], doc='available area on farm for each soil') #alternate way to initialise a parameter
-    #    model.grainincome = Param(model.cashflow_periods, model.crops, initialize=crp.grain_price(),default = 0.0, doc='farm gate price per tonne of each grain')
-    #    model.fert_type_cost = Param(model.cashflow_periods, model.fert_type, initialize=crp.fert_cost(), default = 0.0, doc='price per tonne of each fert')
+    #    model.grainincome = Param(model.cashflow_periods, model.crops, initialize=phs.grain_price(),default = 0.0, doc='farm gate price per tonne of each grain')
+    #    model.fert_type_cost = Param(model.cashflow_periods, model.fert_type, initialize=phs.fert_cost(), default = 0.0, doc='price per tonne of each fert')
     #    model.fert_app_cost_tonne = Param(model.cashflow_periods, model.fert_type, initialize= mac.fert_app_t(), default = 0.0, doc='cost of fert application per tonne of each fert (filling up and driving to paddock cost)')
     #    model.fert_app_cost_ha = Param(model.phases, model.cashflow_periods, model.lmus, initialize= mac.fert_app_ha(), default = 0.0, doc='cost of fert application per ha of each fert (driving around paddock cost)')
-    #    model.stubble = Param(model.crops, initialize=crp.stubble_production(), default = 0.0, doc='stubble produced / kg grain harvested')
+    #    model.stubble = Param(model.crops, initialize=phs.stubble_production(), default = 0.0, doc='stubble produced / kg grain harvested')
     

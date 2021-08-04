@@ -30,7 +30,7 @@ import FeedsupplyFunctions as fsfun
 import Periods as per
 import PropertyInputs as pinp
 import UniversalInputs as uinp
-import Crop as crp
+import Phase as phs
 import Mach as mac
 import Sensitivity as sen
 
@@ -51,7 +51,7 @@ def f_buy_grain_price(r_vals):
 
     '''
     ##purchase price from neighbour is farm gate price plus transaction and transport
-    price_df = crp.f_farmgate_grain_price()
+    price_df = phs.f_farmgate_grain_price()
     cartage=uinp.price['sup_cartage']
     transaction_fee=uinp.price['sup_transaction']
     price_df = price_df + cartage + transaction_fee

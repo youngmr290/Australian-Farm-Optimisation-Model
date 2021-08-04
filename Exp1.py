@@ -30,7 +30,7 @@ import PropertyInputs as pinp
 import Sensitivity as sen
 import Functions as fun
 import RotationPyomo as rotpy
-import Crop as crp
+import Phase as phs
 import CropPyomo as crppy
 import MachPyomo as macpy
 import FinancePyomo as finpy
@@ -120,7 +120,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
     start_time = time.time()
 
     ##check the rotations and inputs align - this means rotation method can be controlled using a SA
-    crp.f1_rot_check()
+    phs.f1_rot_check()
 
     ##get trial name - used for outputs
     trial_name = exp_data.index[row][3]

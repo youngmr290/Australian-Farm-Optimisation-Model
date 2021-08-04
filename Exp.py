@@ -29,7 +29,7 @@ import PropertyInputs as pinp
 import Sensitivity as sen
 import Functions as fun
 import RotationPyomo as rotpy
-import Crop as crp
+import Phase as phs
 import CropPyomo as crppy
 import MachPyomo as macpy
 import FinancePyomo as finpy
@@ -103,7 +103,7 @@ for row in range(len(exp_data)):
     start_time = time.time()
 
     ##check the rotations and inputs align - this means rotation method can be controlled using a SA
-    crp.f1_rot_check()
+    phs.f1_rot_check()
 
     ##check to make sure user wants to run this trial - note pyomo is never run without precalcs being run (this could possibly be change by making a more custom function to check only precalc module time and then altering the 'continue' call below)
     if exp_data1.index[row][0] == False or (exp_data1.loc[exp_data1.index[row],'run_req'].squeeze()==False and force_run==False):

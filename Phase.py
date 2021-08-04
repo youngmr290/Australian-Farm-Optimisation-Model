@@ -2,9 +2,11 @@
 
 author: young
 
-The cropping module is driven by the inputs [#i]_ for yield production, fertiliser and chemical
-requirements for each rotation phase on each LMU. AFO can then optimise the area of each rotation
-on each LMU. AFO does not currently simulate the biology of plant growth under different technical
+The phase module is driven by the inputs [#i]_ for yield production, fertiliser and chemical
+requirements for each rotation phase on each LMU. For pasture phases this module only generates data for
+fertiliser, chemical and seed (if resown) requirement. Growth, consumption etc is generated in the
+pasture module. AFO can then optimise the area of each rotation
+on each LMU. AFO does not currently simulate the biology of crop plant growth under different technical
 management. Thus, the model is unable to optimise technical aspects of cropping such as timing and
 level of controls [#j]_. However, the user has the capacity to do this more manually by altering the
 inputs (more like the technique of simulation modelling) or by including additional land uses
