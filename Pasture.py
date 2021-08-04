@@ -22,7 +22,7 @@ import Periods as per
 import Sensitivity as sen
 import PastureFunctions as pfun
 
-#1. todo add labour required for feed budgeting. Inputs are currently in the sheep sheet of Property.xls
+#1. todo add labour required for feed budgeting. Inputs are currently in the sheep sheet of Property.xls (would be best if this can be built in phase_labour module)
 #2. todo Will need to add the foo reduction in the current year for manipulated pasture and a germination reduction in the following year.
 
 def f_pasture(params, r_vals, nv):
