@@ -17,7 +17,7 @@ import shutil
 import UniversalInputs as uinp
 import PropertyInputs as pinp
 import StructuralInputs as sinp
-import CropPyomo as crppy
+import PhasePyomo as phspy
 import MachPyomo as macpy
 import LabourPyomo as labpy
 import LabourPhasePyomo as lphspy
@@ -262,7 +262,7 @@ def f_con_stubble_a(model):
     '''
     def stubble_a(model,k,s,z):
         if model.p_rot_stubble[k,s] != 0:
-            return -crppy.f_rot_stubble(model,k,s,z) + macpy.f_stubble_penalty(model,k,s,z) + stubpy.f_stubble_req_a(model,z,
+            return -phspy.f_rot_stubble(model,k,s,z) + macpy.f_stubble_penalty(model,k,s,z) + stubpy.f_stubble_req_a(model,z,
                                                                                                                k,s) <= 0
         else:
             return pe.Constraint.Skip
@@ -279,11 +279,11 @@ def f_con_cropsow(model):
     No p5 set because model can optimise crop sowing time
     '''
     def cropsow_link(model,k,l,z):
-        if type(crppy.f_cropsow(model,k,l,
+        if type(phspy.f_cropsow(model,k,l,
                               z)) == int:  # if crop sow param is zero this will be int (can't do if==0 because when it is not 0 it is a complex pyomo object which can't be evaluated)
             return pe.Constraint.Skip  # skip constraint if no crop is being sown on given rotation
         else:
-            return sum(-model.v_seeding_crop[p,k,l,z] for p in model.s_labperiods) + crppy.f_cropsow(model,k,l,z) <= 0
+            return sum(-model.v_seeding_crop[p,k,l,z] for p in model.s_labperiods) + phspy.f_cropsow(model,k,l,z) <= 0
 
     model.con_cropsow = pe.Constraint(model.s_crops,model.s_lmus,model.s_season_types,rule=cropsow_link,
                                       doc='link between mach sow provide and rotation crop sow require')
@@ -317,7 +317,7 @@ def f_con_harv(model):
     '''
     def harv(model,k,z):
         return -macpy.f_harv_supply(model,k,z) + sum(
-            crppy.f_rotation_yield_transfer(model,g,k,z) / 1000 for g in model.s_grain_pools) <= 0
+            phspy.f_rotation_yield_transfer(model,g,k,z) / 1000 for g in model.s_grain_pools) <= 0
 
     model.con_harv = pe.Constraint(model.s_harvcrops,model.s_season_types,rule=harv,doc='harvest constraint')
 
@@ -329,7 +329,7 @@ def f_con_makehay(model):
     '''
     def harv(model,k,z):
         return sum(
-            -model.v_hay_made[z] + crppy.f_rotation_yield_transfer(model,g,k,z) / 1000 for g in model.s_grain_pools) <= 0
+            -model.v_hay_made[z] + phspy.f_rotation_yield_transfer(model,g,k,z) / 1000 for g in model.s_grain_pools) <= 0
 
     model.con_makehay = pe.Constraint(model.s_haycrops,model.s_season_types,rule=harv,doc='make hay constraint')
 
@@ -342,7 +342,7 @@ def f_con_grain_transfer(model):
     '''
     ##combines rotation yield, on-farm sup feed and yield penalties from untimely sowing and crop grazing. Then passes to cashflow constraint.
     def grain_transfer(model,g,k,z):
-        return -crppy.f_rotation_yield_transfer(model,g,k,z) + macpy.f_late_seed_penalty(model,g,k,z) + sum(
+        return -phspy.f_rotation_yield_transfer(model,g,k,z) + macpy.f_late_seed_penalty(model,g,k,z) + sum(
             model.v_sup_con[z,k,g,f,p6] * 1000 for f in model.s_feed_pools for p6 in model.s_feed_periods) \
                - model.v_buy_grain[z,k,g] * 1000 + model.v_sell_grain[z,k,g] * 1000 <= 0
 
@@ -429,7 +429,7 @@ def f_con_cashflow(model):
         j = [1] * len(c)
         j[0] = 0
         # todo Revisit the interest calculation at some stage because it didn't tally with the back of envelope estimate by $1000
-        return (-f1_grain_income(model,c[i],z) + crppy.f_rotation_cost(model,c[i],z) + labpy.f_labour_cost(model,c[i],z)
+        return (-f1_grain_income(model,c[i],z) + phspy.f_rotation_cost(model,c[i],z) + labpy.f_labour_cost(model,c[i],z)
                 + macpy.f_mach_cost(model,c[i],z) + suppy.f_sup_cost(model,c[i],z) + model.p_overhead_cost[c[i]]
                 - stkpy.f_stock_cashflow(model,c[i],z)
                 - model.v_debit[c[i]] + model.v_credit[c[i]] + model.v_debit[c[i - 1]] * fin.debit_interest() -
@@ -466,7 +466,7 @@ def f_con_asset(model):
 def f_con_minroe(model):
     '''Tallies the total expenditure to ensure that there is a minimum ROI on cash expenditure.'''
     def minroe(model,z):
-        return (sum(crppy.f_rotation_cost(model,c,z) + labpy.f_labour_cost(model,c,z) + macpy.f_mach_cost(model,c,z)
+        return (sum(phspy.f_rotation_cost(model,c,z) + labpy.f_labour_cost(model,c,z) + macpy.f_mach_cost(model,c,z)
                     + suppy.f_sup_cost(model,c,z) for c in model.s_cashflow_periods) + stkpy.f_stock_cost(model,z)) * fin.f_min_roe() \
                - model.v_minroe[z] <= 0
 

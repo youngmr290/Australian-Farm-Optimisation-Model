@@ -31,7 +31,7 @@ import Sensitivity as sen
 import Functions as fun
 import RotationPyomo as rotpy
 import Phase as phs
-import CropPyomo as crppy
+import PhasePyomo as phspy
 import MachPyomo as macpy
 import FinancePyomo as finpy
 import LabourFixedPyomo as lfixpy
@@ -166,7 +166,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
     ##call precalcs
     precalc_start = time.time()
     rotpy.rotation_precalcs(params['rot'],r_vals['rot'])
-    crppy.crop_precalcs(params['crop'],r_vals['crop'])
+    phspy.crop_precalcs(params['crop'],r_vals['crop'])
     macpy.mach_precalcs(params['mach'],r_vals['mach'])
     finpy.fin_precalcs(params['fin'],r_vals['fin'])
     lfixpy.labfx_precalcs(params['labfx'],r_vals['labfx'])
@@ -189,7 +189,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
         model = pe.ConcreteModel() #create pyomo model - done each loop because memory was being leaked when just deleting and re adding the components.
         crtmod.sets(model, nv) #certain sets have to be updated each iteration of exp
         rotpy.f1_rotationpyomo(params['rot'], model)
-        crppy.f1_croppyomo_local(params['crop'], model)
+        phspy.f1_croppyomo_local(params['crop'], model)
         macpy.f1_machpyomo_local(params['mach'], model)
         finpy.f1_finpyomo_local(params['fin'], model)
         lfixpy.f1_labfxpyomo_local(params['labfx'], model)
