@@ -129,6 +129,7 @@ def f_report(processor, trials, non_exist_trials):
     stacked_dse1_sire = pd.DataFrame()  # dse based on mei
     stacked_dse1_dams = pd.DataFrame()  # dse based on mei
     stacked_dse1_offs = pd.DataFrame()  # dse based on mei
+    stacked_pgr = pd.DataFrame()  # pasture growth
     stacked_grnfoo = pd.DataFrame()  # green foo
     stacked_dryfoo = pd.DataFrame()  # dry foo
     stacked_napfoo = pd.DataFrame()  # non arable pasture foo
@@ -769,6 +770,23 @@ def f_report(processor, trials, non_exist_trials):
             grnfoo = pd.concat([grnfoo],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_grnfoo = rep.f_append_dfs(stacked_grnfoo, grnfoo)
 
+        if report_run.loc['run_pgr', 'Run']:
+            #returns foo at end of each FP
+            type = 'pas'
+            prod = 'pgr_grnha_gop6lzt'
+            na_prod = [0]
+            weights = 'greenpas_ha_fgop6lzt'
+            keys = 'keys_fgop6lzt'
+            arith = 2
+            index =[3]
+            cols =[4]
+            axis_slice = {}
+            # axis_slice[0] = [0, 2, 1]
+            pgr = rep.f_stock_pasture_summary(lp_vars, r_vals, prod=prod, na_prod=na_prod, type=type, weights=weights,
+                                   keys=keys, arith=arith, index=index, cols=cols, axis_slice=axis_slice)
+            pgr = pd.concat([pgr],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_pgr = rep.f_append_dfs(stacked_pgr, pgr)
+
         if report_run.loc['run_dryfoo', 'Run']:
             #returns foo at end of each FP
             type = 'pas'
@@ -1077,6 +1095,8 @@ def f_report(processor, trials, non_exist_trials):
         df_settings = rep.f_df2xl(writer, stacked_dse1_sire, 'dse_mei', df_settings, option=0, colstart=0)
         df_settings = rep.f_df2xl(writer, stacked_dse1_dams, 'dse_mei', df_settings, option=0, colstart=dams_start_col)
         df_settings = rep.f_df2xl(writer, stacked_dse1_offs, 'dse_mei', df_settings, option=0, colstart=offs_start_col)
+    if report_run.loc['run_pgr', 'Run']:
+        df_settings = rep.f_df2xl(writer, stacked_pgr, 'pgr', df_settings, option=1)
     if report_run.loc['run_grnfoo', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_grnfoo, 'grnfoo', df_settings, option=1)
     if report_run.loc['run_dryfoo', 'Run']:
