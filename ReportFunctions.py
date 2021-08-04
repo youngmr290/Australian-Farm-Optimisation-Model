@@ -782,10 +782,11 @@ def f_stock_cash_summary(lp_vars, r_vals):
     total_infra_cost_cz = fixed_infra_cost_c[:,na] + var_infra_cost_cz
 
     ##total costs
-    stockcost_cz = (sirecost_cz + damscost_cz + offscost_cz + sup_grain_cost_cz.values + total_infra_cost_cz
-                    + supp_feedstorage_cost_cz + sire_purchcost_cz)
+    husbcost_cz = sirecost_cz + damscost_cz + offscost_cz + total_infra_cost_cz
+    supcost_cz = sup_grain_cost_cz.values + supp_feedstorage_cost_cz
+    purchasecost_cz = sire_purchcost_cz
 
-    return stocksale_cz, wool_cz, stockcost_cz
+    return stocksale_cz, wool_cz, husbcost_cz, supcost_cz, purchasecost_cz
 
 
 def f_labour_summary(lp_vars, r_vals, option=0):
@@ -959,7 +960,7 @@ def f_profitloss_table(lp_vars, r_vals):
     ##read stuff from other functions that is used in rev and cost section
     exp_fert_k_cz, exp_chem_k_cz, misc_exp_k_cz, rev_grain_k_cz = f_crop_summary(lp_vars, r_vals, option=0)
     exp_mach_c_zk, mach_insurance_c = f_mach_summary(lp_vars, r_vals)
-    stocksale_cz, wool_cz, stockcost_cz = f_stock_cash_summary(lp_vars, r_vals)
+    stocksale_cz, wool_cz, husbcost_cz, supcost_cz, purchasecost_cz = f_stock_cash_summary(lp_vars, r_vals)
     ##other info required below
     all_pas = r_vals['rot']['all_pastures']  # landuse sets
     keys_c = r_vals['fin']['keys_c']
@@ -968,7 +969,7 @@ def f_profitloss_table(lp_vars, r_vals):
     idx = pd.IndexSlice
     keys_z = r_vals['stock']['keys_z']
     subtype_rev = ['grain', 'sheep sales', 'wool', 'Total Revenue']
-    subtype_exp = ['crop', 'pasture', 'stock', 'machinery', 'labour', 'fixed', 'Total expenses']
+    subtype_exp = ['crop', 'pasture', 'stock husb', 'stock sup', 'stock purchase', 'machinery', 'labour', 'fixed', 'Total expenses']
     subtype_tot = ['asset_value', 'depreciation', 'minRoe', 'EBITD', 'Interest', 'obj']
     pnl_rev_index = pd.MultiIndex.from_product([keys_z, ['Revenue'], subtype_rev], names=['Season', 'Type', 'Subtype'])
     pnl_exp_index = pd.MultiIndex.from_product([keys_z, ['Expense'], subtype_exp], names=['Season', 'Type', 'Subtype'])
@@ -1005,7 +1006,9 @@ def f_profitloss_table(lp_vars, r_vals):
     ###add to p/l table each as a new row
     pnl.loc[idx[:, 'Expense', 'crop'], :] = crop_c_z.T.reindex(keys_c, axis=1).values
     pnl.loc[idx[:, 'Expense', 'pasture'], :] = pas_c_z.T.reindex(keys_c, axis=1).values
-    pnl.loc[idx[:, 'Expense', 'stock'], :] = stockcost_cz.T
+    pnl.loc[idx[:, 'Expense', 'stock husb'], :] = husbcost_cz.T
+    pnl.loc[idx[:, 'Expense', 'stock sup'], :] = supcost_cz.T
+    pnl.loc[idx[:, 'Expense', 'stock purchase'], :] = purchasecost_cz.T
     pnl.loc[idx[:, 'Expense', 'machinery'], :] = mach_c_z.T.reindex(keys_c, axis=1).values
     pnl.loc[idx[:, 'Expense', 'labour'], :] = labour_zc
     pnl.loc[idx[:, 'Expense', 'fixed'], :] = exp_fix_cz.T
