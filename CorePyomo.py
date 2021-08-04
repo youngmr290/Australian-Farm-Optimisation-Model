@@ -432,9 +432,8 @@ def f_con_cashflow(model):
         return (-f1_grain_income(model,c[i],z) + phspy.f_rotation_cost(model,c[i],z) + labpy.f_labour_cost(model,c[i],z)
                 + macpy.f_mach_cost(model,c[i],z) + suppy.f_sup_cost(model,c[i],z) + model.p_overhead_cost[c[i]]
                 - stkpy.f_stock_cashflow(model,c[i],z)
-                - model.v_debit[c[i]] + model.v_credit[c[i]] + model.v_debit[c[i - 1]] * fin.debit_interest() -
-                model.v_credit[c[i - 1]] * fin.credit_interest() * j[i]
-                # mul by j so that credit in ND doesnt provide into JF otherwise it will be unbounded because it will get interest
+                - model.v_debit[c[i]] + model.v_credit[c[i]]
+                + (model.v_debit[c[i - 1]] * fin.debit_interest() - model.v_credit[c[i - 1]] * fin.credit_interest()) * j[i] # mul by j so that credit in ND doesnt provide into JF otherwise it will be unbounded because it will get interest
                 ) <= 0
 
     model.con_cashflow = pe.Constraint(range(len(model.s_cashflow_periods)),model.s_season_types,rule=cash_flow,
