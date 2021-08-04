@@ -32,6 +32,7 @@ import pickle as pkl
 import time
 import collections
 # from numba import jit
+import sys,traceback
 
 import Functions as fun
 import FeedsupplyFunctions as fsfun
@@ -43,7 +44,7 @@ import StockFunctions as sfun
 import FeedSupplyGenerator as fgen
 import Periods as per
 import PlotViewer as pv
-import sys,traceback
+
 
 # np.seterr(all='raise')
 
@@ -6118,7 +6119,7 @@ def generator(params,r_vals,nv,plots = False):
     r_n_drys_tvg1 = sfun.f1_p2v(n_drys_b1g1*1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_pdams,
                                 on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_scan_pa1e1b1nwzida0e0b0xyg1)
 
-    ##numbers mated
+    ##numbers mated per animal at the start of the dvp.
     r_n_mated_tvg1 = sfun.f1_p2v(animal_mated_b1g1*1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_pdams,
                                 on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_mating_pa1e1b1nwzida0e0b0xyg1)
     ###update dvps that are not mating with mating numbers
@@ -7228,7 +7229,7 @@ def generator(params,r_vals,nv,plots = False):
     k5twzidaxyg2_shape = len_k5, len_t2, len_w_prog, len_z, len_i, len_d, len_a1, len_x, len_g2
     k3k5tvnwziaxyg3_shape = len_k3, len_k5, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
-    ####kv
+    ####kv with no t axis
     k2va1nwziyg1_shape = len_k2, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
     k3k5vnwziaxyg3_shape = len_k3, len_k5, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 

@@ -523,6 +523,8 @@ def f_report(processor, trials, non_exist_trials):
             stacked_lamb_survival = rep.f_append_dfs(stacked_lamb_survival, lamb_survival)
 
         if report_run.loc['run_weanper', 'Run']:
+            #todo there is an error here if drys are sold at scanning. We cant think of an easy way to fix it. (note if scan=4 then birth dvp may be different across e axis)
+            #with the current structure w CANNOT be reported
             option = 1
             index =[2]
             cols =[]
