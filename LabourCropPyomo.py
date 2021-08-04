@@ -6,8 +6,7 @@ author: young
 import pyomo.environ as pe
 
 #AFO modules
-import LabourCrop as lcrp
-import PropertyInputs as pinp
+import LabourPhase as lphs
 
 
 def crplab_precalcs(params, r_vals):
@@ -18,7 +17,7 @@ def crplab_precalcs(params, r_vals):
     :param report: dictionary which stores all report values.
 
     '''
-    lcrp.f_labcrop_params(params, r_vals)
+    lphs.f1_labcrop_params(params, r_vals)
 
 def f1_labcrppyomo_local(params, model):
     ''' Builds pyomo variables, parameters and constraints'''
