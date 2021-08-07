@@ -989,6 +989,10 @@ def range_allocation_np(period_dates, start, length, opposite=None, shape=None):
     a Numpy array with shape(period_dates, start array).
     Containing the proportion of the respective period for that test date.
     '''
+    ##make length at least 1 to stop div 0 if seeding/harv periods are set to 0
+    min = np.array([1]).astype('timedelta64[D]')
+    length = np.maximum(min,length)
+
     ##end of period
     end = start + length
 
