@@ -942,16 +942,15 @@ def f_dse(lp_vars, r_vals, method, per_ha, summary=False):
         dse_dams = fun.f_divide(dse_dams, pasture_area)
         dse_offs = fun.f_divide(dse_offs, pasture_area)
 
+    if summary:
+        return np.sum(r_vals['stock']['wg_propn_p6'] * (dse_sire + dse_dams+ dse_offs)).round(2)  #sum SR for all sheep groups in FP0 (to return winter sr)
+
     ##turn to table - rows and cols need to be a list of lists/arrays
     dse_sire = fun.f_produce_df(dse_sire.ravel(), rows=sire_key, columns=[['Sire DSE']])
     dse_dams = fun.f_produce_df(dse_dams.ravel(), rows=dams_key, columns=[['Dams DSE']])
     dse_offs = fun.f_produce_df(dse_offs.ravel(), rows=offs_key, columns=[['Offs DSE']])
 
-    if summary:
-        #todo rather than just selecting p6[0] this input should be used: pinp.sheep['i_wg_propn_p6']. Would need to make this input an r_val then simply multiple the dse and sum.
-        return (dse_sire.iloc[0, 0] + dse_dams.iloc[0, 0] + dse_offs.iloc[0, 0]).round(2)  #sum SR for all sheep groups in FP0 (to return winter sr)
-    else:
-        return dse_sire, dse_dams, dse_offs
+    return dse_sire, dse_dams, dse_offs
 
 
 def f_profitloss_table(lp_vars, r_vals):

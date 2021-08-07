@@ -353,21 +353,24 @@ def f1_boundarypyomo_local(params, model):
             ### set bound - carry cap of each ha of each pasture
             for t, pasture in enumerate(sinp.general['pastures'][pinp.general['pas_inc']]):
                 pasture_dse_carry[pasture] = pinp.sheep['i_sr_constraint_t'][t]
+            ###param - propn of each fp used in the SR
             ###constraint
-            def SR_bound(model, p6, z):
-                return(
-                - sum(model.v_phase_area[z, r, l] * model.p_pasture_area[r, t] * pasture_dse_carry[t] for r in model.s_phases for l in model.s_lmus for t in model.s_pastures)
-                + sum(model.v_sire[z, g0] * model.p_dse_sire[p6,z,g0] for g0 in model.s_groups_sire if pe.value(model.p_dse_sire[p6,z,g0])!=0)
-                + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_dse_dams[k2,p6,t1,v1,a,n1,w1,z,i,y1,g1]
-                          for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
-                          for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
-                          if pe.value(model.p_dse_dams[k2,p6,t1,v1,a,n1,w1,z,i,y1,g1])!=0)
-                    + sum(model.v_offs[k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_dse_offs[k3,k5,p6,t3,v3,n3,w3,z,i,a,x,y3,g3]
-                          for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
-                          for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
-                          if pe.value(model.p_dse_offs[k3,k5,p6,t3,v3,n3,w3,z,i,a,x,y3,g3])!=0)
-               for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol) ==0)
-            model.con_SR_bound = pe.Constraint(model.s_feed_periods, model.s_season_types, rule=SR_bound,
+            def SR_bound(model, z):
+                rhs_dse = sum(model.v_phase_area[z, r, l] * model.p_pasture_area[r, t] * pasture_dse_carry[t] for r in model.s_phases for l in model.s_lmus for t in model.s_pastures)
+                dse = sum((sum(model.v_sire[z, g0] * model.p_dse_sire[p6,z,g0] for g0 in model.s_groups_sire if pe.value(model.p_dse_sire[p6,z,g0])!=0)
+                         + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_dse_dams[k2,p6,t1,v1,a,n1,w1,z,i,y1,g1]
+                                   for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
+                                   for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
+                                   if pe.value(model.p_dse_dams[k2,p6,t1,v1,a,n1,w1,z,i,y1,g1])!=0)
+                              + sum(model.v_offs[k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_dse_offs[k3,k5,p6,t3,v3,n3,w3,z,i,a,x,y3,g3]
+                                    for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
+                                    for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
+                                    if pe.value(model.p_dse_offs[k3,k5,p6,t3,v3,n3,w3,z,i,a,x,y3,g3])!=0)
+                             for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol))
+                        * params['p_wg_propn_p6']
+                        for p6 in model.s_feed_periods)
+                return dse == rhs_dse
+            model.con_SR_bound = pe.Constraint(model.s_season_types, rule=SR_bound,
                                                 doc='stocking rate bound for each feed period')
 
 

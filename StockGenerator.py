@@ -7057,8 +7057,9 @@ def generator(params,r_vals,nv,plots = False):
     else:
         params['p_dse_offs'] =dict(zip(tup_k3k5p6tvnwziaxyg3, dsenw_dams_k3k5p6tvnwziaxyg3))
 
-
-
+    ##winter grazed propn - indicates the propn of the DSE in each FP that is used to calculate total DSE for SR
+    wg_propn_p6 = pinp.sheep['i_wg_propn_p6']
+    params['p_wg_propn_p6'] = dict(zip(keys_p6,wg_propn_p6))
 
     ###############
     # REV         #
@@ -7274,6 +7275,7 @@ def generator(params,r_vals,nv,plots = False):
     r_vals['dsemj_k2p6tva1nwziyg1'] = dsemj_k2p6tva1e1b1nwzida0e0b0xyg1.reshape(k2p6tva1nwziyg1_shape)
     r_vals['dsenw_k3k5p6tvnwziaxyg3'] = dsenw_k3k5p6tva1e1b1nwzida0e0b0xyg3.reshape(k3k5p6tvnwziaxyg3_shape)
     r_vals['dsemj_k3k5p6tvnwziaxyg3'] = dsemj_k3k5p6tva1e1b1nwzida0e0b0xyg3.reshape(k3k5p6tvnwziaxyg3_shape)
+    r_vals['wg_propn_p6'] = wg_propn_p6
 
     ###stock days
     r_vals['stock_days_p6fzg0'] = stock_days_p6fa1e1b1nwzida0e0b0xyg0.reshape(p6fzg0_shape)
