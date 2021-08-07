@@ -10,6 +10,7 @@ where:
 * :math:`s` is scenario s∈S, 3 season types (Good, average and poor)
 * :math:`x_ins` are the decision variables in the DSP, xin in the deterministic model (with only 1 scenario).
 * :math:`c_ins` are the objective function weights for the decision variables
+* :math:`i` is the set of decision variables in each stage (or at each node)
 * :math:`J` is the set of constraints and j are the individual constraints j∈J
 * :math:`a_ijn` are the coefficients/parameters in the matrix
 * :math:`b_j` are the RHS coefficients
