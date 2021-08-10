@@ -33,40 +33,39 @@ na = np.newaxis
 def fixed(params):
     ###inputs
     labour_period = per.p_dates_df()
+    lp_p5z = labour_period.values
     keys_p5 = labour_period.index[:-1]
     keys_z = pinp.f_keys_z()
-    labour_period_start_p5z = labour_period.values[:-1]
-    labour_period_end_p5z = labour_period.values[1:]
 
     ##super
     super_dates_p8 = pinp.labour['super'].index.values
-    super_labour_p8 = pinp.labour['super'].squeeze().values
-    alloc_p5zp8 = np.logical_and(labour_period_start_p5z[...,na] <= super_dates_p8,
-                                 super_dates_p8 < labour_period_end_p5z[...,na])
+    super_length_p8 = pinp.labour['super']['days'].values.astype('timedelta64[D]')
+    super_labour_p8 = pinp.labour['super']['hours'].values
+    alloc_p5zp8 = fun.range_allocation_np(lp_p5z[...,na], super_dates_p8, super_length_p8, True)[:-1,:,:]
     super_p5z = np.sum(alloc_p5zp8 * super_labour_p8, axis=-1) #get rid of p8 axis
     super = pd.DataFrame(super_p5z, index=keys_p5, columns=keys_z)
 
     ##bas
     bas_dates_p8 = pinp.labour['bas'].index.values
-    bas_labour_p8 = pinp.labour['bas'].squeeze().values
-    alloc_p5zp8 = np.logical_and(labour_period_start_p5z[...,na] <= bas_dates_p8,
-                                 bas_dates_p8 < labour_period_end_p5z[...,na])
+    bas_length_p8 = pinp.labour['bas']['days'].values.astype('timedelta64[D]')
+    bas_labour_p8 = pinp.labour['bas']['hours'].values
+    alloc_p5zp8 = fun.range_allocation_np(lp_p5z[...,na], bas_dates_p8, bas_length_p8, True)[:-1,:,:]
     bas_p5z = np.sum(alloc_p5zp8 * bas_labour_p8, axis=-1) #get rid of p8 axis
     bas = pd.DataFrame(bas_p5z, index=keys_p5, columns=keys_z)
 
     ##planning
     planning_dates_p8 = pinp.labour['planning'].index.values
-    planning_labour_p8 = pinp.labour['planning'].squeeze().values
-    alloc_p5zp8 = np.logical_and(labour_period_start_p5z[...,na] <= planning_dates_p8,
-                                 planning_dates_p8 < labour_period_end_p5z[...,na])
+    planning_length_p8 = pinp.labour['planning']['days'].values.astype('timedelta64[D]')
+    planning_labour_p8 = pinp.labour['planning']['hours'].values
+    alloc_p5zp8 = fun.range_allocation_np(lp_p5z[...,na], planning_dates_p8, planning_length_p8, True)[:-1,:,:]
     planning_p5z = np.sum(alloc_p5zp8 * planning_labour_p8, axis=-1) #get rid of p8 axis
     planning = pd.DataFrame(planning_p5z, index=keys_p5, columns=keys_z)
 
     ##tax
     tax_dates_p8 = pinp.labour['tax'].index.values
-    tax_labour_p8 = pinp.labour['tax'].squeeze().values
-    alloc_p5zp8 = np.logical_and(labour_period_start_p5z[...,na] <= tax_dates_p8,
-                                 tax_dates_p8 < labour_period_end_p5z[...,na])
+    tax_length_p8 = pinp.labour['tax']['days'].values.astype('timedelta64[D]')
+    tax_labour_p8 = pinp.labour['tax']['hours'].values
+    alloc_p5zp8 = fun.range_allocation_np(lp_p5z[...,na], tax_dates_p8, tax_length_p8, True)[:-1,:,:]
     tax_p5z = np.sum(alloc_p5zp8 * tax_labour_p8, axis=-1) #get rid of p8 axis
     tax = pd.DataFrame(tax_p5z, index=keys_p5, columns=keys_z)
 

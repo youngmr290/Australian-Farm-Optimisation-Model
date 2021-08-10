@@ -975,19 +975,16 @@ def period_allocation2(start_df, length_df, p_dates, p_name):
 def range_allocation_np(period_dates, start, length, opposite=None, shape=None):
     ''' Numpy version - The proportion of each period that falls in the tested date range or proportion of date range in each period.
 
-    Parameters.
-    period_dates: the start of the periods - in a Numpy array np.datetime64. This array must be broadcastable with start
+    :param period_dates: the start of the periods - in a Numpy array np.datetime64. This array must be broadcastable with start
                   (therefore may need to add new axis if start has a dimension).
-    start: the date of the beginning of the date range to test - a numpy array of dates (np.datetime64)
-    length: the length of the date range to test - an array of timedelta.
-          : must be broadcastable into start.
-    opposite: input True returns the proportion of date range in each period.
-       :       None returns the proportion of the period in the date range (2nd arg).
-    shape: this is the shape of returned array required if both period_dates & start have more than 1 dim
+    :param start: the date of the beginning of the date range to test - a numpy array of dates (np.datetime64)
+    :param length: the length of the date range to test - an array of timedelta. Must be broadcastable to start.
+    :param opposite: Controls the proportion calculated. True returns the proportion of date range in each period.
+                     None returns the proportion of the period in the date range (2nd arg).
+    :param shape: this is the shape of returned array, required if both period_dates & start have more than 1 dim
 
-    Returns.
-    a Numpy array with shape(period_dates, start array).
-    Containing the proportion of the respective period for that test date.
+    :return: Numpy array with shape(period_dates, start array). Containing the proportion of the
+             respective period for that test date.
     '''
     ##make length at least 1 to stop div 0 if seeding/harv periods are set to 0
     min = np.array([1]).astype('timedelta64[D]')

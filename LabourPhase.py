@@ -43,37 +43,36 @@ def f_prep_labour():
     '''
     ##inputs
     labour_period = per.p_dates_df()
+    lp_p5z = labour_period.values
     keys_p5 = labour_period.index[:-1]
     keys_z = pinp.f_keys_z()
-    labour_period_start_p5z = labour_period.values[:-1]
-    labour_period_end_p5z = labour_period.values[1:]
 
     ##harvest_prep
     harvest_prep_dates_p8 = pinp.labour['harvest_prep'].index.values
-    harvest_prep_labour_p8 = pinp.labour['harvest_prep'].squeeze().values
-    alloc_p5zp8 = np.logical_and(labour_period_start_p5z[...,na] <= harvest_prep_dates_p8,
-                                 harvest_prep_dates_p8 < labour_period_end_p5z[...,na])
+    harvest_prep_length_p8 = pinp.labour['harvest_prep']['days'].values.astype('timedelta64[D]')
+    harvest_prep_labour_p8 = pinp.labour['harvest_prep']['hours'].values
+    alloc_p5zp8 = fun.range_allocation_np(lp_p5z[...,na], harvest_prep_dates_p8, harvest_prep_length_p8, True)[:-1,:,:]
     harvest_prep_p5z = np.sum(alloc_p5zp8 * harvest_prep_labour_p8, axis=-1) #get rid of p8 axis
 
     ##fert_prep
     fert_prep_dates_p8 = pinp.labour['fert_prep'].index.values
-    fert_prep_labour_p8 = pinp.labour['fert_prep'].squeeze().values
-    alloc_p5zp8 = np.logical_and(labour_period_start_p5z[...,na] <= fert_prep_dates_p8,
-                                 fert_prep_dates_p8 < labour_period_end_p5z[...,na])
+    fert_prep_length_p8 = pinp.labour['fert_prep']['days'].values.astype('timedelta64[D]')
+    fert_prep_labour_p8 = pinp.labour['fert_prep']['hours'].values
+    alloc_p5zp8 = fun.range_allocation_np(lp_p5z[...,na], fert_prep_dates_p8, fert_prep_length_p8, True)[:-1,:,:]
     fert_prep_p5z = np.sum(alloc_p5zp8 * fert_prep_labour_p8, axis=-1) #get rid of p8 axis
 
     ##spray_prep
     spray_prep_dates_p8 = pinp.labour['spray_prep'].index.values
-    spray_prep_labour_p8 = pinp.labour['spray_prep'].squeeze().values
-    alloc_p5zp8 = np.logical_and(labour_period_start_p5z[...,na] <= spray_prep_dates_p8,
-                                 spray_prep_dates_p8 < labour_period_end_p5z[...,na])
+    spray_prep_length_p8 = pinp.labour['spray_prep']['days'].values.astype('timedelta64[D]')
+    spray_prep_labour_p8 = pinp.labour['spray_prep']['hours'].values
+    alloc_p5zp8 = fun.range_allocation_np(lp_p5z[...,na], spray_prep_dates_p8, spray_prep_length_p8, True)[:-1,:,:]
     spray_prep_p5z = np.sum(alloc_p5zp8 * spray_prep_labour_p8, axis=-1) #get rid of p8 axis
 
     ##seed_prep
     seed_prep_dates_p8 = pinp.labour['seed_prep'].index.values
-    seed_prep_labour_p8 = pinp.labour['seed_prep'].squeeze().values
-    alloc_p5zp8 = np.logical_and(labour_period_start_p5z[...,na] <= seed_prep_dates_p8,
-                                 seed_prep_dates_p8 < labour_period_end_p5z[...,na])
+    seed_prep_length_p8 = pinp.labour['seed_prep']['days'].values.astype('timedelta64[D]')
+    seed_prep_labour_p8 = pinp.labour['seed_prep']['hours'].values
+    alloc_p5zp8 = fun.range_allocation_np(lp_p5z[...,na], seed_prep_dates_p8, seed_prep_length_p8, True)[:-1,:,:]
     seed_prep_p5z = np.sum(alloc_p5zp8 * seed_prep_labour_p8, axis=-1) #get rid of p8 axis
 
     ##sum all and make df
