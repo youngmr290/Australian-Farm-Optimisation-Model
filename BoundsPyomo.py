@@ -340,7 +340,7 @@ def f1_boundarypyomo_local(params, model):
                                         for w in model.s_lw_dams for y in model.s_gen_merit_dams) * sum(model.v_dams[k2,'t0',v,a,n,w,i,y,g1]
                                         for k2 in model.s_k2_birth_dams for a in model.s_wean_times for n in model.s_nut_dams
                                         for w in model.s_lw_dams for y in model.s_gen_merit_dams
-                                        if k2!='00-0' and pe.value(model.p_mask_dams['00-0','t0',v,w,g1]) == 1) #sums the k2 axis except for drys.
+                                        if pe.value(model.p_mask_dams['00-0','t0',v,w,g1]) == 1) #sums the k2 axis except for drys.
 
             model.con_retention_drys = pe.Constraint(model.s_dvp_dams, model.s_season_types, model.s_tol, model.s_groups_dams, rule=f_retention_drys,
                                                        doc='force the retention of drys until other dams are sold')
