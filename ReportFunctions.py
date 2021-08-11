@@ -1102,12 +1102,14 @@ def f_stock_pasture_summary(lp_vars, r_vals, build_df=True, keys=None, type=None
     :key index (optional, default = []): list: axis you want as the index of pandas df (order of list is the index level order).
     :key cols (optional, default = []): list: axis you want as the cols of pandas df (order of list is the col level order).
     :key arith (optional, default = 0): int: arithmetic operation used.
-                option 0: return production param averaged across all axis that are not reported.
-                option 1: return weighted average of production param (using denominator weight return production per day the animal is on hand)
-                option 2: weighted total production summed across all axis that are not reported.
-                option 3: weighted total production for each  (axis not reported are disregarded)
-                option 4: return weighted average of production param using prod>0 as the weights
-                option 5: return the maximum value across all axis that are not reported.
+
+                - option 0: return production param averaged across all axis that are not reported.
+                - option 1: return weighted average of production param (using denominator weight return production per day the animal is on hand)
+                - option 2: weighted total production summed across all axis that are not reported.
+                - option 3: weighted total production for each  (axis not reported are disregarded)
+                - option 4: return weighted average of production param using prod>0 as the weights
+                - option 5: return the maximum value across all axis that are not reported.
+
     :key prod (optional, default = 1): str/int/float: if it is a string then it is used as a key for stock_vars, if it is an number that number is used as the prod value
     :key na_prod (optional, default = []): list: position to add new axis
     :key weights (optional, default = None): str: weights to be used in arith (typically a lp variable eg numbers). Only required when arith>0
@@ -1261,7 +1263,12 @@ def f_numpy2df_error(prod, weights, arith_axis, index, cols):
     if arith_occur and arith_error:  # if arith is happening and there is an error in selected axis
         raise exc.ArithError('''Arith error: can't preform operation along an axis that is going to be reported as the index or col''')
 
-    ##error handle 2: once arith has been completed all axis that are not singleton must be used in either the index or cols
+    ##error handle 2: can report an axis as index and col
+    axis_error = any(col in index for col in cols)
+    if axis_error:  # if cols and index have any overlapping axis.
+        raise exc.ArithError('''Arith error: can't have the same axis in index and cols''')
+
+    ##error handle 3: once arith has been completed all axis that are not singleton must be used in either the index or cols
     if arith_occur:
         nonzero_idx = arith_axis + index + cols  # join lists
     else:
@@ -1270,7 +1277,7 @@ def f_numpy2df_error(prod, weights, arith_axis, index, cols):
     if any(error):
         raise exc.AxisError('''Axis error: active axes exist that are not used in arith or being reported as index or columns''')
 
-    ##error 3: preforming arith with no weights
+    ##error 4: preforming arith with no weights
     if arith_occur and weights is None:
         raise exc.ArithError('''Arith error: weights are not included''')
     return
