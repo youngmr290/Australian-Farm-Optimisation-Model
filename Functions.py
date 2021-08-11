@@ -991,7 +991,7 @@ def range_allocation_np(period_dates, start, length, opposite=None, shape=None):
     length = np.maximum(min,length)
 
     ##end of period
-    end = start + length
+    end = np.minimum(start + length, period_dates[-1]) #minimum ensures that the assigned date range is within the period date range.
 
     #start empty array to assign to
     if shape==None:
@@ -999,7 +999,7 @@ def range_allocation_np(period_dates, start, length, opposite=None, shape=None):
     else:
         allocation_period=np.zeros(shape,dtype=np.float64)
 
-    ##checks if user wants to the proportion of each period that falls in the tested date range or proportion of date range in each period
+    ##checks if user wants the proportion of each period that falls in the tested date range or proportion of date range in each period
     if opposite:
         #check how much of each date range falls within the period
         for i in range(len(period_dates)-1):
