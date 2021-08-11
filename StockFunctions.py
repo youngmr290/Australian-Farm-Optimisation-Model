@@ -1920,8 +1920,9 @@ def f_sale_value(cu0, cx, o_rc, o_ffcfw_pg, dressp_adj_yg, dresspercent_adj_s6pg
     ###Mask the grids based on the maximum age, minimun age and the gender for each grid
     sale_value_s7pg = sale_value_s7pg * mask_s7x_s7pg * (age_end_p5g1/30 <= sale_agemax_s7pg1) * (age_end_p5g1/30 >= sale_agemin_s7pg1) #divide 30 to convert to months
     ###Select the maximum value across the grids
-    sale_value = np.max(sale_value_s7pg, axis=0) #take max on s6 axis as well to remove it (it is singleton so no effect)
-    return sale_value
+    sale_value = np.max(sale_value_s7pg, axis=0)
+    sale_grid = np.argmax(sale_value_s7pg, axis=0)
+    return sale_value, sale_grid
 
 def f1_animal_trigger_levels(index_pg, age_start, period_is_shearing_pg, period_is_wean_pg, gender, o_ebg_p, wool_genes,
                             period_is_joining_pg, animal_mated, scan_option, period_is_endmating_pg):

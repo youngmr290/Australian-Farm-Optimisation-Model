@@ -90,6 +90,9 @@ def f_report(processor, trials, non_exist_trials):
     stacked_pnl = pd.DataFrame()  # profit and loss statement
     stacked_profitarea = pd.DataFrame()  # profit by land area
     stacked_saleprice = pd.DataFrame()  # sale price
+    stacked_salegrid_dams = pd.DataFrame()  # sale grid
+    stacked_salegrid_yatf = pd.DataFrame()  # sale grid
+    stacked_salegrid_offs = pd.DataFrame()  # sale grid
     stacked_salevalue_dams = pd.DataFrame()  # average sale value dams
     stacked_salevalue_offs = pd.DataFrame()  # average sale value offs
     stacked_woolvalue_dams = pd.DataFrame()  # average wool value dams
@@ -188,6 +191,42 @@ def f_report(processor, trials, non_exist_trials):
             saleprice = rep.f_price_summary(lp_vars, r_vals, option=option, grid=grid, weight=weight, fs=fs)
             saleprice = pd.concat([saleprice],keys=[trial_name],names=['Trial'])  # add trial name as index level
             stacked_saleprice = rep.f_append_dfs(stacked_saleprice, saleprice)
+
+        if report_run.loc['run_salegrid_dams', 'Run']:
+            type = 'stock'
+            prod = 'salegrid_tva1e1b1nwziyg1'
+            keys = 'dams_keys_tva1e1b1nwziyg1'
+            arith = 0
+            index =[1]
+            cols = [0,4,6,10] #t,b,w,g
+            salegrid_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, 
+                                   keys=keys, arith=arith, index=index, cols=cols)
+            salegrid_dams = pd.concat([salegrid_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_salegrid_dams = rep.f_append_dfs(stacked_salegrid_dams, salegrid_dams)
+
+        if report_run.loc['run_salegrid_yatf', 'Run']:
+            type = 'stock'
+            prod = 'salegrid_va1e1b1nwzixyg2'
+            keys = 'yatf_keys_vaebnwzixy1g2'
+            arith = 0
+            index =[0]
+            cols = [3,5,8,10] #b,w,x,g
+            salegrid_yatf = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, 
+                                   keys=keys, arith=arith, index=index, cols=cols)
+            salegrid_yatf = pd.concat([salegrid_yatf],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_salegrid_yatf = rep.f_append_dfs(stacked_salegrid_yatf, salegrid_yatf)
+
+        if report_run.loc['run_salegrid_offs', 'Run']:
+            type = 'stock'
+            prod = 'salegrid_tvnwzida0e0b0xyg3'
+            keys = 'offs_keys_tvnwzida0e0b0xyg3'
+            arith = 0
+            index =[1]
+            cols = [0,3,8,9,10,12] #t,w,e,b,x,g
+            salegrid_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, 
+                                   keys=keys, arith=arith, index=index, cols=cols)
+            salegrid_offs = pd.concat([salegrid_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
+            stacked_salegrid_offs = rep.f_append_dfs(stacked_salegrid_offs, salegrid_offs)
 
         if report_run.loc['run_salevalue_dams', 'Run']:
             type = 'stock'
@@ -1024,6 +1063,12 @@ def f_report(processor, trials, non_exist_trials):
         plot.savefig('Output/profitarea_curve.png')
     if report_run.loc['run_saleprice', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_saleprice, 'saleprice', df_settings, option=1)
+    if report_run.loc['run_salegrid_dams', 'Run']:
+        df_settings = rep.f_df2xl(writer, stacked_salegrid_dams, 'salegrid_dams', df_settings, option=1)
+    if report_run.loc['run_salegrid_yatf', 'Run']:
+        df_settings = rep.f_df2xl(writer, stacked_salegrid_yatf, 'salegrid_yatf', df_settings, option=1)
+    if report_run.loc['run_salegrid_offs', 'Run']:
+        df_settings = rep.f_df2xl(writer, stacked_salegrid_offs, 'salegrid_offs', df_settings, option=1)
     if report_run.loc['run_salevalue_offs', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_salevalue_offs, 'salevalue_offs', df_settings, option=1)
     if report_run.loc['run_salevalue_dams', 'Run']:

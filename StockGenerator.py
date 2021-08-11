@@ -319,6 +319,7 @@ def generator(params,r_vals,nv,plots = False):
     o_ebg_psire = np.zeros(pg0, dtype =dtype)
     ###arrays for report variables
     r_compare_q0q1q2psire = np.zeros(qg0, dtype = dtype) #empty arrays to store different return values from the equation systems in the p loop.
+    r_salegrid_pa1e1b1nwzida0e0b0xyg0 = np.zeros(pg0, dtype =dtype)
 
     ##dams
     ###array for generator
@@ -360,6 +361,7 @@ def generator(params,r_vals,nv,plots = False):
     r_mp2_pdams = np.zeros(pg1, dtype = dtype)
     r_d_cfw_pdams =  np.zeros(pg1, dtype = dtype)
     r_wbe_pdams = np.zeros(pg1, dtype = dtype)
+    r_salegrid_pa1e1b1nwzida0e0b0xyg1 = np.zeros(pg1, dtype =dtype)
 
     ##yatf
     ###array for generator
@@ -394,6 +396,7 @@ def generator(params,r_vals,nv,plots = False):
     r_mp2_pyatf = np.zeros(pg2, dtype = dtype)
     r_intake_f_pyatf = np.zeros(pg2, dtype = dtype)
     r_nw_start_pyatf = np.zeros(pg2, dtype = dtype)
+    r_salegrid_pa1e1b1nwzida0e0b0xyg2 = np.zeros(pg2, dtype = dtype)
 
 
     ##offs
@@ -425,6 +428,7 @@ def generator(params,r_vals,nv,plots = False):
     ###arrays for report variables
     r_compare_q0q1q2poffs = np.zeros(qg3, dtype = dtype) #empty arrays to store different return values from the equation systems in the p loop.
     r_wbe_poffs = np.zeros(pg3, dtype =dtype)
+    r_salegrid_pa1e1b1nwzida0e0b0xyg3 = np.zeros(pg3, dtype =dtype)
 
 
 
@@ -5085,7 +5089,7 @@ def generator(params,r_vals,nv,plots = False):
     ffcfw_p9a1e1b1nwzida0e0b0xyg2 = o_ffcfw_start_pyatf[sale_mask_p2]
     ffcfw_p9a1e1b1nwzida0e0b0xyg3 = o_ffcfw_poffs[sale_mask_p3]
 
-    salevalue_pa1e1b1nwzida0e0b0xyg0[sale_mask_p0] = sfun.f_sale_value(
+    salevalue_pa1e1b1nwzida0e0b0xyg0[sale_mask_p0], r_salegrid_pa1e1b1nwzida0e0b0xyg0[sale_mask_p0] = sfun.f_sale_value(
         cu0_sire.astype(dtype), cx_sire[:,0:1,...].astype(dtype), rc_start_sire_p9, ffcfw_p9a1e1b1nwzida0e0b0xyg0
         , dresspercent_adj_yg0, dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg, dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg
         , grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg, month_scalar_s7p9a1e1b1nwzida0e0b0xyg0
@@ -5094,7 +5098,7 @@ def generator(params,r_vals,nv,plots = False):
         , age_end_p9a1e1b1nwzida0e0b0xyg0, discount_age_s7pa1e1b1nwzida0e0b0xyg
         , sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg
         , mask_s7x_s7pa1e1b1nwzida0e0b0xyg[...,0:1,:,:], sale_agemax_s7pa1e1b1nwzida0e0b0xyg0, sale_agemin_s7pa1e1b1nwzida0e0b0xyg0, dtype)
-    salevalue_pa1e1b1nwzida0e0b0xyg1[sale_mask_p1] = sfun.f_sale_value(
+    salevalue_pa1e1b1nwzida0e0b0xyg1[sale_mask_p1], r_salegrid_pa1e1b1nwzida0e0b0xyg1[sale_mask_p1] = sfun.f_sale_value(
         cu0_dams.astype(dtype), cx_dams[:,1:2,...].astype(dtype), rc_start_dams_p9, ffcfw_p9a1e1b1nwzida0e0b0xyg1
         , dresspercent_adj_yg1, dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg
         , grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg, month_scalar_s7p9a1e1b1nwzida0e0b0xyg1
@@ -5103,7 +5107,7 @@ def generator(params,r_vals,nv,plots = False):
         , age_end_p9a1e1b1nwzida0e0b0xyg1, discount_age_s7pa1e1b1nwzida0e0b0xyg
         , sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg
         , mask_s7x_s7pa1e1b1nwzida0e0b0xyg[...,1:2,:,:], sale_agemax_s7pa1e1b1nwzida0e0b0xyg1, sale_agemin_s7pa1e1b1nwzida0e0b0xyg1, dtype)
-    salevalue_p9a1e1b1nwzida0e0b0xyg2 = sfun.f_sale_value(                                                #keep it as a condensed p axis
+    salevalue_p9a1e1b1nwzida0e0b0xyg2, r_salegrid_pa1e1b1nwzida0e0b0xyg2[sale_mask_p2] = sfun.f_sale_value(                                                #keep it as a condensed p axis
         cu0_yatf.astype(dtype), cx_yatf[:,mask_x,...].astype(dtype), rc_start_yatf_p9, ffcfw_p9a1e1b1nwzida0e0b0xyg2
         , dresspercent_adj_yg2, dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg
         , grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg, month_scalar_s7p9a1e1b1nwzida0e0b0xyg2
@@ -5112,7 +5116,7 @@ def generator(params,r_vals,nv,plots = False):
         , age_end_p9a1e1b1nwzida0e0b0xyg2, discount_age_s7pa1e1b1nwzida0e0b0xyg
         , sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg
         , mask_s7x_s7pa1e1b1nwzida0e0b0xyg3, sale_agemax_s7pa1e1b1nwzida0e0b0xyg2, sale_agemin_s7pa1e1b1nwzida0e0b0xyg2, dtype)
-    salevalue_pa1e1b1nwzida0e0b0xyg3[sale_mask_p3] = sfun.f_sale_value(
+    salevalue_pa1e1b1nwzida0e0b0xyg3[sale_mask_p3], r_salegrid_pa1e1b1nwzida0e0b0xyg3[sale_mask_p3] = sfun.f_sale_value(
         cu0_offs, cx_offs[:,mask_x,...].astype(dtype), rc_start_offs_p9, ffcfw_p9a1e1b1nwzida0e0b0xyg3
         , dresspercent_adj_yg3, dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg
         , grid_price_s7s5s6pa1e1b1nwzida0e0b0xyg, month_scalar_s7p9a1e1b1nwzida0e0b0xyg3
@@ -5167,6 +5171,7 @@ def generator(params,r_vals,nv,plots = False):
     assetvalue_pa1e1b1nwzida0e0b0xyg0 =  ((salevalue_pa1e1b1nwzida0e0b0xyg0 + woolvalue_pa1e1b1nwzida0e0b0xyg0) #calc asset value before adjusting by period is sale and shearing
                                             * period_is_assetvalue_pa1e1b1nwzida0e0b0xyg)
     salevalue_pa1e1b1nwzida0e0b0xyg0 = salevalue_pa1e1b1nwzida0e0b0xyg0 * period_is_sale_pa1e1b1nwzida0e0b0xyg0
+    r_salegrid_pa1e1b1nwzida0e0b0xyg0 = r_salegrid_pa1e1b1nwzida0e0b0xyg0 * period_is_sale_pa1e1b1nwzida0e0b0xyg0
     woolvalue_pa1e1b1nwzida0e0b0xyg0 = woolvalue_pa1e1b1nwzida0e0b0xyg0 * period_is_shearing_pa1e1b1nwzida0e0b0xyg0
     cashflow_pa1e1b1nwzida0e0b0xyg0 =  (salevalue_pa1e1b1nwzida0e0b0xyg0 + woolvalue_pa1e1b1nwzida0e0b0xyg0
                                          - husbandry_cost_pg0)
@@ -5174,13 +5179,17 @@ def generator(params,r_vals,nv,plots = False):
     assetvalue_pa1e1b1nwzida0e0b0xyg1 =  ((salevalue_pa1e1b1nwzida0e0b0xyg1 + woolvalue_pa1e1b1nwzida0e0b0xyg1) #calc asset value before adjusting by period is sale and shearing
                                             * period_is_assetvalue_pa1e1b1nwzida0e0b0xyg)
     salevalue_tpa1e1b1nwzida0e0b0xyg1 = salevalue_pa1e1b1nwzida0e0b0xyg1 * period_is_sale_tpa1e1b1nwzida0e0b0xyg1
+    r_salegrid_tpa1e1b1nwzida0e0b0xyg1 = r_salegrid_pa1e1b1nwzida0e0b0xyg1 * period_is_sale_tpa1e1b1nwzida0e0b0xyg1
     woolvalue_pa1e1b1nwzida0e0b0xyg1 = woolvalue_pa1e1b1nwzida0e0b0xyg1 * period_is_shearing_pa1e1b1nwzida0e0b0xyg1
     cashflow_tpa1e1b1nwzida0e0b0xyg1 =  (salevalue_tpa1e1b1nwzida0e0b0xyg1 + woolvalue_pa1e1b1nwzida0e0b0xyg1
                                          - husbandry_cost_pg1)
+    ###yatf
+    r_salegrid_pa1e1b1nwzida0e0b0xyg2 = r_salegrid_pa1e1b1nwzida0e0b0xyg2 * period_is_sale_t0_pa1e1b1nwzida0e0b0xyg2
     ###offs
     assetvalue_tpa1e1b1nwzida0e0b0xyg3 =  ((salevalue_pa1e1b1nwzida0e0b0xyg3 + woolvalue_tpa1e1b1nwzida0e0b0xyg3) #calc asset value before adjusting by period is sale and shearing
                                             * period_is_assetvalue_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p])
     salevalue_tpa1e1b1nwzida0e0b0xyg3 = salevalue_pa1e1b1nwzida0e0b0xyg3 * period_is_sale_tpa1e1b1nwzida0e0b0xyg3
+    r_salegrid_tpa1e1b1nwzida0e0b0xyg3 = r_salegrid_pa1e1b1nwzida0e0b0xyg3 * period_is_sale_tpa1e1b1nwzida0e0b0xyg3
     woolvalue_tpa1e1b1nwzida0e0b0xyg3 = woolvalue_tpa1e1b1nwzida0e0b0xyg3 * period_is_shearing_tpa1e1b1nwzida0e0b0xyg3
     cashflow_tpa1e1b1nwzida0e0b0xyg3 =  (salevalue_tpa1e1b1nwzida0e0b0xyg3 + woolvalue_tpa1e1b1nwzida0e0b0xyg3
                                          - husbandry_cost_tpg3)
@@ -6055,14 +6064,20 @@ def generator(params,r_vals,nv,plots = False):
     ##cashflow stuff
     r_salevalue_ctva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(salevalue_pa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_psire,
                                               on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0, a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg,index_any1tvp=index_ctpa1e1b1nwzida0e0b0xyg)
+    r_salegrid_va1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(r_salegrid_pa1e1b1nwzida0e0b0xyg0, on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0)
     r_woolvalue_ctva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(woolvalue_pa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_psire,
                                               on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0, a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg,index_any1tvp=index_ctpa1e1b1nwzida0e0b0xyg)
     r_salevalue_ctva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(salevalue_tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_pdams,
                                               on_hand_tpa1e1b1nwzida0e0b0xyg1, a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg,index_any1tp=index_ctpa1e1b1nwzida0e0b0xyg)
+    r_salegrid_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(r_salegrid_tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1,
+                                                    on_hand_tpa1e1b1nwzida0e0b0xyg1)
+    r_salegrid_va1e1b1nwzida0e0b0xyg2 = sfun.f1_p2v(r_salegrid_pa1e1b1nwzida0e0b0xyg2, a_v_pa1e1b1nwzida0e0b0xyg1)
     r_woolvalue_ctva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(woolvalue_pa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_pdams,
                                               on_hand_tpa1e1b1nwzida0e0b0xyg1, a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg,index_any1tp=index_ctpa1e1b1nwzida0e0b0xyg)
     r_salevalue_ctva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(salevalue_tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_poffs,
                                               on_hand_tpa1e1b1nwzida0e0b0xyg3, a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p],index_any1tp=index_ctpa1e1b1nwzida0e0b0xyg)
+    r_salegrid_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(r_salegrid_tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3,
+                                                     on_hand_tpa1e1b1nwzida0e0b0xyg3)
     r_woolvalue_ctva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(woolvalue_tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_poffs,
                                               on_hand_tpa1e1b1nwzida0e0b0xyg3, a_any1_p=a_c_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p],index_any1tp=index_ctpa1e1b1nwzida0e0b0xyg)
 
@@ -7188,7 +7203,7 @@ def generator(params,r_vals,nv,plots = False):
     keys_p = np.array(['p%s'%i for i in range(len_p)])
     keys_p3 = keys_p[mask_p_offs_p]
 
-    r_vals['sire_keys_g0'] = [keys_g0]
+    r_vals['sire_keys_zg0'] = [keys_z, keys_g0]
     r_vals['sire_keys_p6fg0'] = [keys_p6, keys_f, keys_g0]
     r_vals['dams_keys_k2tvanwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
                                              , keys_z, keys_i, keys_y1, keys_g1]
@@ -7197,6 +7212,8 @@ def generator(params,r_vals,nv,plots = False):
     r_vals['dams_keys_k2tvaeb9nwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_a, keys_e, keys_b9, keys_n1, keys_lw1
                                              , keys_z, keys_i, keys_y1, keys_g1]
     r_vals['dams_keys_k2tvaebnwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_a, keys_e, keys_b, keys_n1, keys_lw1
+                                             , keys_z, keys_i, keys_y1, keys_g1]
+    r_vals['dams_keys_tva1e1b1nwziyg1'] = [keys_t1, keys_v1, keys_a, keys_e, keys_b, keys_n1, keys_lw1
                                              , keys_z, keys_i, keys_y1, keys_g1]
     r_vals['dams_keys_k2tvpanwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_n1, keys_lw1
                                             , keys_z, keys_i, keys_y1, keys_g1]
@@ -7207,7 +7224,9 @@ def generator(params,r_vals,nv,plots = False):
     r_vals['dams_keys_paebnwziy1g1'] = [keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1
                                             , keys_z, keys_i, keys_y1, keys_g1]
     r_vals['yatf_keys_k2tvpaebnwzixy1g1'] = [keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1
-                                            , keys_z, keys_i, keys_x, keys_y1, keys_g1]
+                                            , keys_z, keys_i, keys_x, keys_y1, keys_g2]
+    r_vals['yatf_keys_vaebnwzixy1g2'] = [keys_v1, keys_a, keys_e, keys_b, keys_n1, keys_lw1
+                                            , keys_z, keys_i, keys_x, keys_y1, keys_g2]
 
     r_vals['prog_keys_k3k5twzia0xg2'] = [keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i
                                             , keys_a, keys_x, keys_g2]
@@ -7220,6 +7239,8 @@ def generator(params,r_vals,nv,plots = False):
                                             , keys_a, keys_x, keys_y3, keys_g3]
     r_vals['offs_keys_k3k5tvpnwziaxyg3'] = [keys_k3, keys_k5, keys_t3, keys_v3, keys_p3, keys_n3, keys_lw3, keys_z
                                             , keys_i, keys_a, keys_x, keys_y3, keys_g3]
+    r_vals['offs_keys_tvnwzida0e0b0xyg3'] = [keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_d, keys_a, keys_e0
+                                            , keys_b0, keys_x, keys_y3, keys_g3]
     r_vals['offs_keys_k3k5tvpnwzidaebxyg3'] = [keys_k3, keys_k5, keys_t3, keys_v3, keys_p3, keys_n3, keys_lw3, keys_z
                                             , keys_i, keys_d, keys_a, keys_e0, keys_b0, keys_x, keys_y3, keys_g3]
     r_vals['offs_keys_k3k5p6ftvnwziaxyg3'] = [keys_k3, keys_k5, keys_p6, keys_f, keys_t3, keys_v3, keys_n3
@@ -7233,6 +7254,11 @@ def generator(params,r_vals,nv,plots = False):
     k2tva1nwziyg1_shape = len_k2, len_t1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
     k5twzidaxyg2_shape = len_k5, len_t2, len_w_prog, len_z, len_i, len_d, len_a1, len_x, len_g2
     k3k5tvnwziaxyg3_shape = len_k3, len_k5, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
+
+    ####std
+    tva1e1b1nwziyg1_shape = len_t1, len_v1, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
+    va1e1b1nwzixyg2_shape = len_v1, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_x, len_y1, len_g2
+    tvnwzidaebxyg3_shape = len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3
 
     ####kv with no t axis
     k2va1nwziyg1_shape = len_k2, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
@@ -7263,6 +7289,7 @@ def generator(params,r_vals,nv,plots = False):
     k2p6ftva1nwziyg1_shape = len_k2, len_p6, len_f, len_t1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
     k3k5p6ftvnwziaxyg3_shape = len_k3, len_k5, len_p6, len_f, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
+    ####cg
     czg0_shape = len_c, len_z, len_g0
     k2ctva1nwziyg1_shape = len_k2, len_c, len_t1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
     k3k5ctwziaxyg2_shape = len_k3, len_k5, len_c, len_t2, len_w_prog, len_z, len_i, len_a1, len_x, len_g2
@@ -7293,6 +7320,11 @@ def generator(params,r_vals,nv,plots = False):
     r_vals['salevalue_k2ctva1nwziyg1'] = r_salevalue_k2ctva1e1b1nwzida0e0b0xyg1.reshape(k2ctva1nwziyg1_shape)
     r_vals['salevalue_k3k5ctwzia0xg2'] = salevalue_prog_k3k5ctva1e1b1nwzida0e0b0xyg2.reshape(k3k5ctwziaxyg2_shape)
     r_vals['salevalue_k3k5ctvnwziaxyg3'] = r_salevalue_k3k5ctva1e1b1nwzida0e0b0xyg3.reshape(k3k5ctvnwziaxyg3_shape)
+
+    r_vals['salegrid_zg0'] = r_salegrid_va1e1b1nwzida0e0b0xyg0.reshape(zg0_shape)
+    r_vals['salegrid_tva1e1b1nwziyg1'] = r_salegrid_tva1e1b1nwzida0e0b0xyg1.reshape(tva1e1b1nwziyg1_shape)
+    r_vals['salegrid_va1e1b1nwzixyg2'] = r_salegrid_va1e1b1nwzida0e0b0xyg2.reshape(va1e1b1nwzixyg2_shape)
+    r_vals['salegrid_tvnwzida0e0b0xyg3'] = r_salegrid_tva1e1b1nwzida0e0b0xyg3.reshape(tvnwzidaebxyg3_shape)
 
     r_vals['woolvalue_czg0'] = r_woolvalue_ctva1e1b1nwzida0e0b0xyg0.reshape(czg0_shape)
     r_vals['woolvalue_k2ctva1nwziyg1'] = r_woolvalue_k2ctva1e1b1nwzida0e0b0xyg1.reshape(k2ctva1nwziyg1_shape)
