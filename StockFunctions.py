@@ -1864,7 +1864,7 @@ def f_sale_value(cu0, cx, o_rc, o_ffcfw_pg, dressp_adj_yg, dresspercent_adj_s6pg
                  dresspercent_adj_s7pg, grid_price_s7s5s6pg, month_scalar_s7pg,
                  month_discount_s7pg, price_type_s7pg, cvlw_s7s5pg, cvscore_s7s6pg,
                  grid_weightrange_s7s5pg, grid_scorerange_s7s6pg, age_end_p5g1, discount_age_s7pg,sale_cost_pc_s7pg,
-                 sale_cost_hd_s7pg, mask_s7x_s7pg, sale_agemax_s7pg1, dtype=None):
+                 sale_cost_hd_s7pg, mask_s7x_s7pg, sale_agemax_s7pg1, sale_agemin_s7pg1, dtype=None):
     ##Calculate condition score from relative condition
     cs_pg = f1_condition_score(o_rc, cu0)
     ##Calculate fat score from relative condition
@@ -1917,8 +1917,8 @@ def f_sale_value(cu0, cx, o_rc, o_ffcfw_pg, dressp_adj_yg, dresspercent_adj_s6pg
     sale_value_s7pg = sale_value_s7pg * (1 - sale_cost_pc_s7pg) - sale_cost_hd_s7pg
 
     ## Select the best net sale price from the relevant grids
-    ###Mask the grids based on the maximum age and the gender for each grid
-    sale_value_s7pg = sale_value_s7pg * mask_s7x_s7pg * (age_end_p5g1/30 <= sale_agemax_s7pg1) #divide 30 to convert to months
+    ###Mask the grids based on the maximum age, minimun age and the gender for each grid
+    sale_value_s7pg = sale_value_s7pg * mask_s7x_s7pg * (age_end_p5g1/30 <= sale_agemax_s7pg1) * (age_end_p5g1/30 >= sale_agemin_s7pg1) #divide 30 to convert to months
     ###Select the maximum value across the grids
     sale_value = np.max(sale_value_s7pg, axis=0) #take max on s6 axis as well to remove it (it is singleton so no effect)
     return sale_value

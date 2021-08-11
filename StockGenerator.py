@@ -4635,6 +4635,8 @@ def generator(params,r_vals,nv,plots = False):
     mask_s7x_s7pa1e1b1nwzida0e0b0xyg3 = fun.f_expand(uinp.sheep['i_mask_s7x'], x_pos, left_pos2=p_pos-1, right_pos2=x_pos, condition=mask_x, axis=x_pos)
     sale_agemax_s7pa1e1b1nwzida0e0b0xyg0, sale_agemax_s7pa1e1b1nwzida0e0b0xyg1, sale_agemax_s7pa1e1b1nwzida0e0b0xyg2  \
         , sale_agemax_s7pa1e1b1nwzida0e0b0xyg3 = sfun.f1_c2g(uinp.parameters['i_agemax_s7c2'],uinp.parameters['i_agemax_s7y'],p_pos-1, dtype=dtype)
+    sale_agemin_s7pa1e1b1nwzida0e0b0xyg0, sale_agemin_s7pa1e1b1nwzida0e0b0xyg1, sale_agemin_s7pa1e1b1nwzida0e0b0xyg2  \
+        , sale_agemin_s7pa1e1b1nwzida0e0b0xyg3 = sfun.f1_c2g(uinp.parameters['i_agemin_s7c2'],uinp.parameters['i_agemin_s7y'],p_pos-1, dtype=dtype)
     dresspercent_adj_yg0, dresspercent_adj_yg1, dresspercent_adj_yg2, dresspercent_adj_yg3 = sfun.f1_c2g(uinp.parameters['i_dressp_adj_c2'],uinp.parameters['i_dressp_adj_y'], dtype=dtype)
     ##husbandry
     wool_genes_yg0, wool_genes_yg1, wool_genes_yg2, wool_genes_yg3 = sfun.f1_c2g(uinp.parameters['i_wool_genes_c2'],uinp.parameters['i_wool_genes_y'], dtype=dtype)
@@ -5091,7 +5093,7 @@ def generator(params,r_vals,nv,plots = False):
         , cvscore_s7s6pa1e1b1nwzida0e0b0xyg, grid_weightrange_s7s5pa1e1b1nwzida0e0b0xyg, grid_scorerange_s7s6pa1e1b1nwzida0e0b0xyg
         , age_end_p9a1e1b1nwzida0e0b0xyg0, discount_age_s7pa1e1b1nwzida0e0b0xyg
         , sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg
-        , mask_s7x_s7pa1e1b1nwzida0e0b0xyg[...,0:1,:,:], sale_agemax_s7pa1e1b1nwzida0e0b0xyg0, dtype)
+        , mask_s7x_s7pa1e1b1nwzida0e0b0xyg[...,0:1,:,:], sale_agemax_s7pa1e1b1nwzida0e0b0xyg0, sale_agemin_s7pa1e1b1nwzida0e0b0xyg0, dtype)
     salevalue_pa1e1b1nwzida0e0b0xyg1[sale_mask_p1] = sfun.f_sale_value(
         cu0_dams.astype(dtype), cx_dams[:,1:2,...].astype(dtype), rc_start_dams_p9, ffcfw_p9a1e1b1nwzida0e0b0xyg1
         , dresspercent_adj_yg1, dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg
@@ -5100,7 +5102,7 @@ def generator(params,r_vals,nv,plots = False):
         , cvscore_s7s6pa1e1b1nwzida0e0b0xyg, grid_weightrange_s7s5pa1e1b1nwzida0e0b0xyg, grid_scorerange_s7s6pa1e1b1nwzida0e0b0xyg
         , age_end_p9a1e1b1nwzida0e0b0xyg1, discount_age_s7pa1e1b1nwzida0e0b0xyg
         , sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg
-        , mask_s7x_s7pa1e1b1nwzida0e0b0xyg[...,1:2,:,:], sale_agemax_s7pa1e1b1nwzida0e0b0xyg1, dtype)
+        , mask_s7x_s7pa1e1b1nwzida0e0b0xyg[...,1:2,:,:], sale_agemax_s7pa1e1b1nwzida0e0b0xyg1, sale_agemin_s7pa1e1b1nwzida0e0b0xyg1, dtype)
     salevalue_p9a1e1b1nwzida0e0b0xyg2 = sfun.f_sale_value(                                                #keep it as a condensed p axis
         cu0_yatf.astype(dtype), cx_yatf[:,mask_x,...].astype(dtype), rc_start_yatf_p9, ffcfw_p9a1e1b1nwzida0e0b0xyg2
         , dresspercent_adj_yg2, dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg
@@ -5109,7 +5111,7 @@ def generator(params,r_vals,nv,plots = False):
         , cvscore_s7s6pa1e1b1nwzida0e0b0xyg, grid_weightrange_s7s5pa1e1b1nwzida0e0b0xyg, grid_scorerange_s7s6pa1e1b1nwzida0e0b0xyg
         , age_end_p9a1e1b1nwzida0e0b0xyg2, discount_age_s7pa1e1b1nwzida0e0b0xyg
         , sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg
-        , mask_s7x_s7pa1e1b1nwzida0e0b0xyg3, sale_agemax_s7pa1e1b1nwzida0e0b0xyg2, dtype)
+        , mask_s7x_s7pa1e1b1nwzida0e0b0xyg3, sale_agemax_s7pa1e1b1nwzida0e0b0xyg2, sale_agemin_s7pa1e1b1nwzida0e0b0xyg2, dtype)
     salevalue_pa1e1b1nwzida0e0b0xyg3[sale_mask_p3] = sfun.f_sale_value(
         cu0_offs, cx_offs[:,mask_x,...].astype(dtype), rc_start_offs_p9, ffcfw_p9a1e1b1nwzida0e0b0xyg3
         , dresspercent_adj_yg3, dresspercent_adj_s6pa1e1b1nwzida0e0b0xyg,dresspercent_adj_s7pa1e1b1nwzida0e0b0xyg
@@ -5118,7 +5120,7 @@ def generator(params,r_vals,nv,plots = False):
         , cvscore_s7s6pa1e1b1nwzida0e0b0xyg, grid_weightrange_s7s5pa1e1b1nwzida0e0b0xyg, grid_scorerange_s7s6pa1e1b1nwzida0e0b0xyg
         , age_end_p9a1e1b1nwzida0e0b0xyg3, discount_age_s7pa1e1b1nwzida0e0b0xyg
         , sale_cost_pc_s7pa1e1b1nwzida0e0b0xyg, sale_cost_hd_s7pa1e1b1nwzida0e0b0xyg
-        , mask_s7x_s7pa1e1b1nwzida0e0b0xyg3, sale_agemax_s7pa1e1b1nwzida0e0b0xyg3, dtype)
+        , mask_s7x_s7pa1e1b1nwzida0e0b0xyg3, sale_agemax_s7pa1e1b1nwzida0e0b0xyg3, sale_agemin_s7pa1e1b1nwzida0e0b0xyg3, dtype)
 
     sale_finish= time.time()
 
