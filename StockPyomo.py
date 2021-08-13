@@ -284,26 +284,8 @@ def f1_stockpyomo_local(params, model):
     # print('params time: ',end_params-param_start)
 
     ########################
-    ### set up constraints #
+    #call local constraint #
     ########################
-    '''pyomo summary:
-            - if a set has a 9 on the end of it, it is a special constraint set. And it is used to link with a decision variable set (the corresponding letter without 9 eg g? and g9). The
-              set without a 9 must be summed.
-            - if a given set doesnt have a corresponding 9 set, then you have two options
-                1. transfer from one decision variable to another 1:1 (or at another ratio determined be the param - but it means that it transfers to the same set eg x1_dams transfers to x1_prog)
-                2. treat all decision variable in a set the same. Done by summing. eg the npw provided by each dam t slice can be treated the same because it doesnt make a difference
-                   if the progeny came from a dam that gets sold vs retained. (for most of the livestock it has been built in a way that doesnt need summing except for the sets which have a corresponding 9 set).
-    
-    speed info:
-    - constraint.skip is fast, the trick is designing the code efficiently so that is knows when to skip.
-    - in method 2 i use the param to determine when the constraint should be skipped, this still requires looping through the param
-    - in method 3 i use the numpy array to determine when the constraint should be skipped. This is messier and requires some extra code but it is much more efficient reducing time 2x.
-    - you can use set filter to build filtered sets instead od skipping the constraint however this made little speed difference. 
-    - using if statements to save summing 0 values is faster but it still takes time to evaluate the if therefore it saves time to select the minimum number of if statements
-    - constraints can only be skipped on based on the req param. if the provide side is 0 and you skip the constraint then that would mean there would be no restriction for the require variable.
-    '''
-
-
     ##turn sets into list so they can be indexed (required for advanced method to save time)
     l_k29 = list(model.s_k2_birth_dams)
     l_v1 = list(model.s_dvp_dams)
@@ -320,9 +302,42 @@ def f1_stockpyomo_local(params, model):
     l_g3 = list(model.s_groups_offs)
     l_w9_offs = list(model.s_lw_offs)
 
+    ##call local constraint functions
+    f_con_offR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9_offs)
+    f_con_damR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w9)
+    f_con_progR(model)
+    f_con_prog2damsR(model,l_v1)
+    f_con_prog2offsR(model,l_v3)
+    f_con_matingR(model)
+    f_con_stockinfra(model)
 
+########################
+# local constraints    #
+########################
+'''pyomo summary:
+        - if a set has a 9 on the end of it, it is a special constraint set. And it is used to link with a decision variable set (the corresponding letter without 9 eg g? and g9). The
+          set without a 9 must be summed.
+        - if a given set doesnt have a corresponding 9 set, then you have two options
+            1. transfer from one decision variable to another 1:1 (or at another ratio determined be the param - but it means that it transfers to the same set eg x1_dams transfers to x1_prog)
+            2. treat all decision variable in a set the same. Done by summing. eg the npw provided by each dam t slice can be treated the same because it doesnt make a difference
+               if the progeny came from a dam that gets sold vs retained. (for most of the livestock it has been built in a way that doesnt need summing except for the sets which have a corresponding 9 set).
+
+speed info:
+- constraint.skip is fast, the trick is designing the code efficiently so that is knows when to skip.
+- in method 2 i use the param to determine when the constraint should be skipped, this still requires looping through the param
+- in method 3 i use the numpy array to determine when the constraint should be skipped. This is messier and requires some extra code but it is much more efficient reducing time 2x.
+- you can use set filter to build filtered sets instead od skipping the constraint however this made little speed difference. 
+- using if statements to save summing 0 values is faster but it still takes time to evaluate the if therefore it saves time to select the minimum number of if statements
+- constraints can only be skipped on based on the req param. if the provide side is 0 and you skip the constraint then that would mean there would be no restriction for the require variable.
+'''
+
+def f_con_offR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9_offs):
+    '''
+    Numbers/transfers of offspring to offspring in the following decision variable period.
+
+    '''
     def offR(model,k3,k5,v3,a,z,i,x,y3,g3,w9):
-        v3_prev = l_v1[l_v3.index(v3) - 1]  #used to get the activity number from the last period
+        v3_prev = l_v3[l_v3.index(v3) - 1]  #used to get the activity number from the last period
         ##skip constraint if the require param is 0 - using the numpy array because it is 2x faster because don't need to loop through activity keys eg k28
         ###get the index number - required so numpy array can be indexed
         t_k3 = l_k3.index(k3)
@@ -346,6 +361,15 @@ def f1_stockpyomo_local(params, model):
     end_con_offR=time.time()
     # print('con_offR: ',end_con_offR - start_con_offR)
 
+def f_con_damR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w9):
+    '''
+    Numbers/transfers of
+
+    a) Dams to dams in the current decision variable period (only selected when a dam is changing its sire
+       group e.g. BBB to BBT).
+    b) Dams to dams in the following decision variable period.
+
+    '''
     def damR(model,k29,v1,a,z,i,y1,g9,w9):
         v1_prev = l_v1[l_v1.index(v1) - 1]  #used to get the activity number from the last period - to determine the number of dam provided into this period
         ##skip constraint if the require param is 0 - using the numpy array because it is 2x faster because don't need to loop through activity keys eg k28
@@ -377,6 +401,12 @@ def f1_stockpyomo_local(params, model):
     end_con_damR=time.time()
     # print('con_damR: ',end_con_damR-start_con_damR)
 
+def f_con_progR(model):
+    '''
+    Numbers/transfer of dam yatf to progeny. At weaning yatf are weaned from the dams and temporarily transferred to
+    a progeny variable before being transferred to either offspring or dam variables (see prog2dams and prog2offs).
+
+    '''
     def progR(model, k3, k5, a, z, i9, x, y1, g1, w9):
         if any(model.p_npw_req[k3, t2, x, g1] for t2 in model.s_sale_prog):
             return (- sum(model.v_dams[k5, t1, v1, a, n1, w18, z, i, y1, g1]  * model.p_npw[k3, k5, t1, v1, a, n1, w18, z, i, x, y1, g1, w9, i9] #pass in the k5 set to dams - each slice of k5 aligns with a slice in k2 eg 11 and 22. we don't need other k2 slices eg nm
@@ -393,8 +423,45 @@ def f1_stockpyomo_local(params, model):
     end_con_progR = time.time()
     # print('con_progR: ',end_con_progR-start_con_progR)
 
+def f_con_prog2damsR(model, l_v1):
+    '''
+    Numbers/transfer of progeny to dams. This transfer only happens in dvp0.
+
+    .. note:: Originally this constraint was made such that a dam required a certain proportion of single, twin &
+        triplet progeny. However the requirement was the same for all initial lw patterns of the dams at weaning, this
+        caused problems when scanning for multiples (which has the effect of differentiating the prog) because the
+        multiples are too light to provide sufficient numbers of the high dam starting weight and the single prog are
+        too heavy to provide sufficient numbers of the low dam starting weight. It would be possible to reduce the
+        maximum initial dam weight and increase the minimum so it works but if we reduce the maximum weight to the
+        highest weight that can be provided by triplets and increase the minimum weight to the lightest
+        of the singles then we will have reduced the weight range significantly. So that removes the benefit of improving
+        nutrition of dams to increase progeny weaning weight and the light progeny (that are below the lowest dam initial
+        weight) can not be distributed and are therefore dropped altogether.
+        The alternative implemented (3 May 21) is to sum the k2 axis for the progreq_dams constraint so that the
+        total number of dams required can be supplied by progeny of any BTRT. The impact of this design is that the
+        optimisation is able to select to sell the heavy singles and retain only the lighter twins as the replacements
+        without incurring a lifetime penalty for the extra twin born lambs that are retained. This is not represented
+        because the dams are generated using a predetermined mix of birth type - although the proportion can be altered
+        prior to running the generator so you can calibrate the dams to represent a high proportion of twin birth type.
+        The impact of this error will be offset by the expected higher reproductive rate of the twin born progeny.
+        A further option might be to calculate the proportion of single, twins and trips required for each of the w slices
+        separately based on an average of the progeny providing to each of those slices.
+
+    .. note:: the k3 axis is summed (same as k5 discussed above) so that the proportion of replacements selected from
+        maidens and adults is not fixed. However, the input on the proportion of the flock replaced is still used to mask
+        whether that age group of dams (particularly the yearlings) can provide replacements.
+
+    .. note:: A similar problem doesn’t exist for the offspring because the offspring have a k5 axis which is the
+        BTRT of the animals. Therefore, the twin born progeny distribute only to twin born offspring (provided that
+        the dams have been scanned to identify the twins) and there is not the problem associated with pre-determined
+        proportions. However, this is not possible for the dams due to model size, including a k5 axis for the dams
+        would require generating the dams with an active b0 axis and including a k5 axis in pyomo, both of which would
+        significantly increase model size.
+
+
+    '''
     ##k5 is a set which contains the common k slices (11,22,33) between prog and dams. It is being summed which means any b0 prog can provide a dam.
-    ## the same happens for k3. See google doc for further explanation.
+    ## the same happens for k3. See doc string for further explanation.
     def prog2damR(model, v1, z, i, y1, g9, w9):
         if v1==l_v1[0] and any(model.p_progreq_dams[k2, k3, k5, t1, w18, z, i, y1, g1, g9, w9] for k5 in model.s_k5_birth_offs
                                for k3 in model.s_k3_damage_offs for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams
@@ -415,6 +482,11 @@ def f1_stockpyomo_local(params, model):
     end_con_prog2damsR = time.time()
     # print('con_prog2damsR: ',end_con_prog2damsR-start_con_prog2damsR)
 
+def f_con_prog2offsR(model, l_v3):
+    '''
+    Numbers/transfer of progeny to offs. This transfer only happens in dvp0.
+
+    '''
     def prog2offsR(model, k3, k5, v3, z, i, a, x, y3, g3, w9):
         if v3==l_v3[0] and any(model.p_progreq_offs[k3, v3, w38, z, i, x, g3, w9] for w38 in model.s_lw_offs):
             return (sum(- model.v_prog[k3, k5, t2, w28, z, i, a, x, g3] * model.p_progprov_offs[k3, k5, t2, w28, z, i, a, x, y3, g3, w9] #use g3 (same as g2)
@@ -432,6 +504,15 @@ def f1_stockpyomo_local(params, model):
     end_con_prog2offR = time.time()
     # print('con_prog2offR: ',end_con_prog2offR-start_con_prog2offR)
 
+def f_con_matingR(model):
+    '''
+    Sire requirements for mating. Links the number of dams being joined during each mating period with the sire activities.
+    The mating periods are necessary to represent because sires may be able to mate with more than one group of
+    dams if joining of different groups is sufficiently dispersed. However, if the mating periods are close together
+    the same sires may not be ready to use again. These constraints are the link between the number of sires and
+    the availability of those sires in multiple periods.
+
+    '''
     def mating(model,z,g0,p8):
         return - model.v_sire[z,g0] * model.p_nsires_prov[z,g0,p8] + sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_nsires_req[k2,t1,v1,a,n1,w1,z,i,y1,g1,g0,p8]
                   for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for a in model.s_wean_times for n1 in model.s_nut_dams
@@ -439,6 +520,10 @@ def f1_stockpyomo_local(params, model):
                    if pe.value(model.p_nsires_req[k2,t1,v1,a,n1,w1,z,i,y1,g1,g0,p8])!=0) <=0
     model.con_matingR = pe.Constraint(model.s_season_types, model.s_groups_sire, model.s_sire_periods, rule=mating, doc='sire requirement for mating')
 
+def f_con_stockinfra(model):
+    '''
+    Ensures enough infrastructure exists for all the animals and the associated events (eg mustering, shearing, etc).
+    '''
     def stockinfra(model,h1,z):
         return -model.v_infrastructure[h1,z] + sum(model.v_sire[z,g0] * model.p_infra_sire[h1,z,g0] for g0 in model.s_groups_sire if model.p_infra_sire[h1,z,g0]!=0)  \
                + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_infra_dams[k2,h1,t1,v1,a,n1,w1,z,i,y1,g1]
@@ -468,6 +553,12 @@ def f1_stockpyomo_local(params, model):
 ##################################
 
 def f_stock_me(model,p6,f,z):
+    '''
+    Calculate the total energy required by livestock in each nv pool in each feed period.
+
+    Used in global constraint (con_me). See CorePyomo
+    '''
+
     return sum(model.v_sire[z,g0] * model.p_mei_sire[p6,f,z,g0] for g0 in model.s_groups_sire)\
            + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_mei_dams[k2,p6,f,t1,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
@@ -481,6 +572,12 @@ def f_stock_me(model,p6,f,z):
 
 
 def f_stock_pi(model,p6,f,z):
+    '''
+    Calculate the total volume provided by livestock in each nv pool in each feed period.
+
+    Used in global constraint (con_vol). See CorePyomo
+    '''
+
     return sum(model.v_sire[z,g0] * model.p_pi_sire[p6,f,z,g0] for g0 in model.s_groups_sire)\
            + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_pi_dams[k2,p6,f,t1,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
@@ -493,6 +590,12 @@ def f_stock_pi(model,p6,f,z):
                for a in model.s_wean_times for i in model.s_tol)
 
 def f_stock_cashflow(model,c,z):
+    '''
+    Calculate the net cashflow (income - expenses) of livestock and their associated activities.
+
+    Used in global constraint (con_cashflow). See CorePyomo
+    '''
+
     infrastructure = sum(model.p_rm_stockinfra_fix[h1,c] + model.p_rm_stockinfra_var[h1,c] * model.v_infrastructure[h1,z]
                          for h1 in model.s_infrastructure)
     stock = sum(model.v_sire[z,g0] * model.p_cashflow_sire[c,z,g0] for g0 in model.s_groups_sire) \
@@ -519,6 +622,12 @@ def f_stock_cashflow(model,c,z):
 
 
 def f_stock_cost(model,z):
+    '''
+    Calculate the total cost of livestock (husbandry & infrastructure).
+
+    Used in global constraint (con_minroe). See CorePyomo
+    '''
+
     infrastructure = sum(model.p_rm_stockinfra_fix[h1,c] + model.p_rm_stockinfra_var[h1,c] * model.v_infrastructure[h1,z]
                          for h1 in model.s_infrastructure for c in model.s_cashflow_periods)
     stock = sum(model.v_sire[z,g0] * model.p_cost_sire[z,g0] for g0 in model.s_groups_sire) \
@@ -536,6 +645,12 @@ def f_stock_cost(model,z):
 #
 #
 def f_stock_labour_anyone(model,p5,z):
+    '''
+    Calculate the total 'anyone' labour required for livestock activities.
+
+    Used in global constraint (con_labour_any). See CorePyomo
+    '''
+
     # infrastructure = sum(model.p_lab_stockinfra[h1,p5] * model.v_infrastructure[h1,p5] for h1 in model.s_infrastructure)
     stock = sum(model.v_sire[z,g0] * model.p_lab_anyone_sire[p5,z,g0] for g0 in model.s_groups_sire)\
             + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_lab_anyone_dams[k2,p5,t1,v1,a,n1,w1,z,i,y1,g1]
@@ -550,6 +665,12 @@ def f_stock_labour_anyone(model,p5,z):
     return stock
 
 def f_stock_labour_perm(model,p5,z):
+    '''
+    Calculate the total 'permanent' labour required for livestock activities.
+
+    Used in global constraint (con_labour_any). See CorePyomo
+    '''
+
     # infrastructure = sum(model.p_lab_stockinfra[h1,p5] * model.v_infrastructure[h1,p5] for h1 in model.s_infrastructure)
     stock = sum(model.v_sire[z,g0] * model.p_lab_perm_sire[p5,z,g0] for g0 in model.s_groups_sire)\
             + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_lab_perm_dams[k2,p5,t1,v1,a,n1,w1,z,i,y1,g1]
@@ -564,6 +685,12 @@ def f_stock_labour_perm(model,p5,z):
     return stock
 
 def f_stock_labour_manager(model,p5,z):
+    '''
+    Calculate the total 'manager' labour required for livestock activities.
+
+    Used in global constraint (con_labour_any). See CorePyomo
+    '''
+
     # infrastructure = sum(model.p_lab_stockinfra[h1,p5] * model.v_infrastructure[h1,p5] for h1 in model.s_infrastructure)
     stock = sum(model.v_sire[z,g0] * model.p_lab_manager_sire[p5,z,g0] for g0 in model.s_groups_sire)\
             + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_lab_manager_dams[k2,p5,t1,v1,a,n1,w1,z,i,y1,g1]
@@ -580,6 +707,12 @@ def f_stock_labour_manager(model,p5,z):
 
 
 def f_stock_asset(model, z):
+    '''
+    Calculate the total asset value of livestock.
+
+    Used in global constraint (con_asset). See CorePyomo
+    '''
+
     infrastructure = sum(model.p_asset_stockinfra[h1] for h1 in model.s_infrastructure)
     stock = sum(model.v_sire[z,g0] * model.p_asset_sire[z,g0] for g0 in model.s_groups_sire) \
             + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_asset_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1]
