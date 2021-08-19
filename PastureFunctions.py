@@ -359,7 +359,8 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
     quality of the high quality component of the sward when animals have capacity to graze selectively
     (25% grazing intensity). At higher grazing intensity the reduction in diet quality depends on the (input)
     range of digestibility within the sward. The reduction in digestibility for the 100% grazing intensity
-    decision variable is half the range of digestibility within the sward.
+    decision variable is half the range of digestibility within the sward. If the nutritive value of the feed
+    is greater than the livestock's requirement the quality is reduced by a given factor (see fsfun.f_effective_mei).
 
     When the pasture senesces, it is removed from the green pasture pool and allocated into the dry pasture pool.
     The calculation of senescence is done in 2 parts. The first part relates to the older leaves of the plant
@@ -534,7 +535,8 @@ def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_
     Dry pasture is represented by a low- and high-quality decision variable. When green feed senesces a proportion
     of the feed enters each pool based on the digestibility of the senescing feed. This representation allows some
     diet selection to occur, with the higher quality component grazed by different sheep than the lower quality.
-    The ‘high’ pool has digestibility of the 25th percentile and the ‘low’ group the 75th percentile.
+    The ‘high’ pool has digestibility of the 25th percentile and the ‘low’ group the 75th percentile. If the nutritive
+    value of the feed is greater than the livestock's requirement the quality is reduced by a given factor (see fsfun.f_effective_mei).
 
     Non arable area on crop paddocks grow pasture all season, calculated as an ungrazed green annual pasture
     (see f_grn_pas). After harvest pasture on non-arable areas can be consumed. All pasture grown on the
