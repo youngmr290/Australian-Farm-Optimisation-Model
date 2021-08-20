@@ -49,11 +49,7 @@ def f1_croppyomo_local(params, model):
     
     model.p_cropsow = pe.Param(model.s_phases, model.s_crops, model.s_lmus, initialize=params['crop_sow'], default = 0.0, doc='ha of sow activity required by each rot phase')
     
-    ##only used in croplabour pyomo to determine labour per tonne of fert
-    model.p_phasefert = pe.Param(model.s_phases, model.s_season_types, model.s_lmus, model.s_fert_type, initialize=params['fert_req'], default = 0.0, mutable=False, doc='fert required by 1 unit of phase')
-   
-    
-    
+
 #######################################################################################################################################################
 #######################################################################################################################################################
 #functions used in global constraints

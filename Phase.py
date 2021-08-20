@@ -862,7 +862,6 @@ def f1_crop_params(params,r_vals):
     propn = f_grain_pool_proportions()
     grain_price = f_grain_price(r_vals)
     cropsow = f_crop_sow()
-    fert_total = f1_total_fert_req()
 
     ##create params
     params['grain_pool_proportions'] = propn.to_dict()
@@ -870,7 +869,6 @@ def f1_crop_params(params,r_vals):
     params['crop_sow'] = cropsow.to_dict()
     params['rot_cost'] = cost.to_dict()
     params['rot_yield'] = yields.to_dict()
-    params['fert_req'] = fert_total.to_dict()
 
 
 

@@ -43,6 +43,8 @@ def f1_labcrppyomo_local(params, model):
 
     model.p_fixed_crop_monitor = pe.Param(model.s_labperiods, model.s_season_types, initialize= params['fixed_crop_monitor'], default = 0.0, mutable=False, doc='fixed time required for crop monitoring (hr/period)')
 
+    model.p_phasefert = pe.Param(model.s_phases, model.s_season_types, model.s_lmus, model.s_fert_type, initialize=params['fert_req'], default = 0.0, mutable=False, doc='fert required by 1 unit of phase')
+
 
 ###################################
 #functions for core model         #

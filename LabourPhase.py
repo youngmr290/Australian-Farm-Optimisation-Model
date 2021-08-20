@@ -274,6 +274,7 @@ def f1_labcrop_params(params,r_vals):
     fert_app_time_ha = f_fert_app_time_ha().stack()
     chem_app_time_ha = f_chem_app_time_ha().stack()
     variable_crop_monitor, fixed_crop_monitor = f_crop_monitoring()
+    fert_total = phs.f1_total_fert_req()
 
     ##add params which are inputs
     params['harvest_helper'] = pinp.labour['harvest_helper'].squeeze().to_dict()
@@ -285,6 +286,7 @@ def f1_labcrop_params(params,r_vals):
     params['chem_app_time_ha'] = chem_app_time_ha.to_dict()
     params['variable_crop_monitor'] = variable_crop_monitor.to_dict()
     params['fixed_crop_monitor'] = fixed_crop_monitor.to_dict()
+    params['fert_req'] = fert_total.to_dict()
 
 
 
