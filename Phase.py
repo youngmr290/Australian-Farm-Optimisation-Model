@@ -864,7 +864,7 @@ def f1_crop_params(params,r_vals):
     cropsow = f_crop_sow()
     fert_total = f1_total_fert_req()
 
-    ##create non seasonal params
+    ##create params
     params['grain_pool_proportions'] = propn.to_dict()
     params['grain_price'] = grain_price.to_dict()
     params['crop_sow'] = cropsow.to_dict()

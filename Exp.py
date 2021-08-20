@@ -42,6 +42,7 @@ import StubblePyomo as stubpy
 import StockPyomo as spy
 import CorePyomo as core
 import MVF as mvf
+import CropGrazingPyomo as cgzpy
 
 #report the clock time that the experiment was started
 print(f'Experiment commenced at: {time.ctime()}')
@@ -129,30 +130,32 @@ for row in range(len(exp_data)):
     ##create empty dicts - have to do it here because need the trial as the first key, so whole trial can be compared when determining if pyomo needs to be run
     ###params
     params={}
-    params['pas']={}
     params['rot']={}
     params['crop']={}
+    params['crpgrz']={}
     params['mach']={}
     params['fin']={}
     params['labfx']={}
     params['lab']={}
     params['crplab']={}
     params['sup']={}
-    params['stub']={}
     params['stock']={}
+    params['stub']={}
+    params['pas']={}
     ###report values
     r_vals={}
-    r_vals['pas']={}
     r_vals['rot']={}
     r_vals['crop']={}
+    r_vals['crpgrz']={}
     r_vals['mach']={}
     r_vals['fin']={}
     r_vals['labfx']={}
     r_vals['lab']={}
     r_vals['crplab']={}
     r_vals['sup']={}
-    r_vals['stub']={}
     r_vals[ 'stock']={}
+    r_vals['stub']={}
+    r_vals['pas']={}
     nv = {} #dict to store nv params from stockgen to be used in pasture
     ##call precalcs
     precalc_start = time.time()
@@ -165,6 +168,7 @@ for row in range(len(exp_data)):
     lphspy.crplab_precalcs(params['crplab'],r_vals['crplab'])
     suppy.sup_precalcs(params['sup'],r_vals['sup'])
     spy.stock_precalcs(params['stock'],r_vals['stock'],nv)
+    cgzpy.cropgraze_precalcs(params['crpgrz'],r_vals['crpgrz'], nv) #cropgraze must be after stock because it uses nv dict which is populated in stock.py
     stubpy.stub_precalcs(params['stub'],r_vals['stub'], nv) #stub must be after stock because it uses nv dict which is populated in stock.py
     paspy.paspyomo_precalcs(params['pas'],r_vals['pas'], nv) #pas must be after stock because it uses nv dict which is populated in stock.py
     precalc_end = time.time()
@@ -179,6 +183,7 @@ for row in range(len(exp_data)):
         crtmod.sets(model, nv) #certain sets have to be updated each iteration of exp
         rotpy.f1_rotationpyomo(params['rot'], model)
         phspy.f1_croppyomo_local(params['crop'], model)
+        cgzpy.f1_cropgrazepyomo_local(params['crpgrz'], model)
         macpy.f1_machpyomo_local(params['mach'], model)
         finpy.f1_finpyomo_local(params['fin'], model)
         lfixpy.f1_labfxpyomo_local(params['labfx'], model)

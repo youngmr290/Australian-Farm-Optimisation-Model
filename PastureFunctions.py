@@ -475,6 +475,7 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
         grn_ri_quality_gop6lzt = fsfun.f_rq_cs(dmd_diet_grnha_gop6lzt, i_legume_zt)
     grn_ri_gop6lzt = fsfun.f_rel_intake(grn_ri_availability_gop6lzt, grn_ri_quality_gop6lzt, i_legume_zt)
 
+    ###reduce me if nv is above diet requirement
     me_cons_grnha_fgop6lzt = fsfun.f_effective_mei(cons_grnha_t_gop6lzt
                                                   , grn_md_grnha_gop6lzt
                                                   , me_threshold_fp6zt[:, na, na, :, na, ...]

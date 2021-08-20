@@ -58,6 +58,9 @@ if inputs_from_pickle == False:
         crop_inp = fun.xl_all_named_ranges(property_xl_path,"Crop")
         pkl.dump(crop_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
+        cropgraze_inp = fun.xl_all_named_ranges(property_xl_path,"CropGrazing", numpy=True)
+        pkl.dump(cropgraze_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
+
         mach_inp = fun.xl_all_named_ranges(property_xl_path,"Mach")
         pkl.dump(mach_inp, f, protocol=pkl.HIGHEST_PROTOCOL)
 
@@ -99,6 +102,8 @@ else:
 
         crop_inp = pkl.load(f)
 
+        cropgraze_inp = pkl.load(f)
+
         mach_inp = pkl.load(f)
 
         stubble_inp = pkl.load(f)
@@ -118,6 +123,7 @@ else:
         pasture_inp = pkl.load(f)
 
 print('- finished')
+
 ##reshape required inputs
 ###lengths
 len_d = len(sheep_inp['i_d_idx'])
@@ -126,6 +132,7 @@ len_h5 = sheep_inp['i_h5_len']
 len_h7 = sheep_inp['i_husb_operations_triggerlevels_h5h7h2'].shape[-1]
 len_i = sheep_inp['i_i_len']
 len_j0 = feedsupply_inp['i_j0_len']
+len_k = len(cropgraze_inp['i_cropgraze_landuse_idx'])
 len_k0 = sheep_inp['i_k0_len']
 len_k1 = sheep_inp['i_k1_len']
 len_k2 = sheep_inp['i_k2_len']
@@ -145,6 +152,7 @@ len_z = len(general_inp['i_mask_z'])
 
 ###shapes
 zp6 = (len_z, len_p6)
+zkp6 = (len_z, len_k, len_p6)
 zp6l = (len_z, len_p6, len_l)
 zp6j0 = (len_z, len_p6, len_j0)
 h2h5h7 = (len_h2, len_h5, len_h7)
@@ -174,6 +182,9 @@ for t,pasture in enumerate(sinp.general['pastures'][sinp.general['pastures_exist
     inp['LowPGR'] = np.reshape(inp['LowPGR'], zp6l)
     inp['MedPGR'] = np.reshape(inp['MedPGR'], zp6l)
     inp['DigGrn'] = np.reshape(inp['DigGrn'], zp6l)
+
+###crop grazing
+cropgraze_inp['i_crop_growth_zkp6'] = np.reshape(cropgraze_inp['i_crop_growth_zkp6'], zkp6)
 
 ###stock
 sheep_inp['i_pasture_stage_p6z'] = np.reshape(sheep_inp['i_pasture_stage_p6z'], zp6)
@@ -211,6 +222,7 @@ general = copy.deepcopy(general_inp)
 rep = copy.deepcopy(rep_inp)
 labour = copy.deepcopy(labour_inp)
 crop = copy.deepcopy(crop_inp)
+cropgraze = copy.deepcopy(cropgraze_inp)
 mach = copy.deepcopy(mach_inp)
 stubble = copy.deepcopy(stubble_inp)
 finance = copy.deepcopy(finance_inp)
@@ -346,6 +358,11 @@ def property_inp_sa():
     sheep['i_mobsize_dams_p6zi'] = np.take_along_axis(sheep['i_mobsize_dams_p6i'][:,na,:], a_p6std_p6z[:,:,na], axis=0)
     sheep['i_mobsize_offs_p6zi'] = np.take_along_axis(sheep['i_mobsize_offs_p6i'][:,na,:], a_p6std_p6z[:,:,na], axis=0)
     sheep['i_dse_group'] = np.take_along_axis(sheep['i_dse_group'][:,:,na], a_p6std_p6z[na,:,:], axis=1)
+
+    ####crop grazing
+    cropgraze['i_crop_dmd_kp6z'] = np.take_along_axis(cropgraze['i_crop_dmd_kp6'][...,na], a_p6std_p6z[na,...], axis=1)
+    cropgraze['i_crop_growth_zkp6'] = np.take_along_axis(cropgraze['i_crop_growth_zkp6'], a_p6_std_zp6[:,na,:], axis=2)
+
 
     ####pasture
     for pasture in sinp.general['pastures'][general['pas_inc']]:

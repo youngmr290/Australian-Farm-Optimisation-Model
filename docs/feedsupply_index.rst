@@ -118,6 +118,26 @@ Pyomo
    PasturePyomo
 
 
+Crop grazing
+-------------
+
+Precalcs
+^^^^^^^^^^^^
+
+.. toctree::
+   :maxdepth: 1
+
+   CropGrazing
+
+Pyomo
+^^^^^^^^^
+
+.. toctree::
+   :maxdepth: 1
+
+   CropGrazingPyomo
+
+
 Stubble
 -------------
 

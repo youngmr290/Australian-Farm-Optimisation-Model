@@ -28,6 +28,7 @@ import StockPyomo as stkpy
 import MVF as mvf
 import Sensitivity as sen
 import Finance as fin
+import CropGrazingPyomo as cgzpy
 
 
 def coremodel_all(params,trial_name,model):
@@ -66,6 +67,8 @@ def coremodel_all(params,trial_name,model):
     f_con_poc_available(model)
     f_con_vol(model)
     f_con_me(model)
+    #crop grazing
+    f_con_cropgraze_area(model)
     #grain
     f_con_grain_transfer(model)
     #cashflow
@@ -233,6 +236,19 @@ def f_con_labour_sheep_manager(model):
                                                    doc='link between labour supply and requirement by sheep jobs for manager labour sources')
 
 
+def f_con_cropgraze_area(model):
+    '''
+    Constrains the area of crop grazed to the amount provided by the selected rotations.
+    '''
+    if pinp.cropgraze['i_cropgrazing_inc']:
+        def cropgraze_area(model,k,l,z):
+            return -sum(model.v_phase_area[z,r,l] * model.p_cropgrazing_area[r,k,l] for r in model.s_phases if pe.value(model.p_cropgrazing_area[r,k,l])!=0)\
+                   + model.v_grazecrop_ha[k,z,l] <= 0
+
+        model.con_cropgraze_area = pe.Constraint(model.s_crops, model.s_lmus, model.s_season_types, rule=cropgraze_area,
+                                                       doc='link rotation area to the area of crop that can be grazed')
+
+
 def f_con_harv_stub_nap_cons(model):
     '''
     Constrains the ME from stubble and non arable pasture in the feed period that harvest occurs. To consume ME from
@@ -263,7 +279,8 @@ def f_con_stubble_a(model):
     def stubble_a(model,k,s,z):
         if model.p_rot_stubble[k] != 0:
             return -phspy.f1_total_rot_yield(model,k,z) * model.p_rot_stubble[k]  \
-                   + macpy.f_stubble_penalty(model,k,z) + stubpy.f_stubble_req_a(model,z,k,s) <= 0
+                   + macpy.f_stubble_penalty(model,k,z) + cgzpy.f_grazecrop_stubble_penalty(model,k,z) \
+                   + stubpy.f_stubble_req_a(model,z,k,s) <= 0
         else:
             return pe.Constraint.Skip
 
@@ -342,8 +359,8 @@ def f_con_grain_transfer(model):
     '''
     ##combines rotation yield, on-farm sup feed and yield penalties from untimely sowing and crop grazing. Then passes to cashflow constraint.
     def grain_transfer(model,g,k,z):
-        return -phspy.f_rotation_yield_transfer(model,g,k,z) + macpy.f_late_seed_penalty(model,g,k,z) + sum(
-            model.v_sup_con[z,k,g,f,p6] * 1000 for f in model.s_feed_pools for p6 in model.s_feed_periods) \
+        return -phspy.f_rotation_yield_transfer(model,g,k,z) + macpy.f_late_seed_penalty(model,g,k,z) \
+               + cgzpy.f_grazecrop_yield_penalty(model,g,k,z) + sum(model.v_sup_con[z,k,g,f,p6] * 1000 for f in model.s_feed_pools for p6 in model.s_feed_periods) \
                - model.v_buy_grain[z,k,g] * 1000 + model.v_sell_grain[z,k,g] * 1000 <= 0
 
     model.con_grain_transfer = pe.Constraint(model.s_grain_pools,model.s_crops,model.s_season_types,rule=grain_transfer,
@@ -388,9 +405,8 @@ def f_con_me(model):
 
     '''
     def me(model,p6,f,z):
-        return -paspy.f_pas_me(model,p6,f,z) - paspy.f_nappas_me(model,p6,f,z) - suppy.f_sup_me(model,p6,f,
-                                                                                          z) - stubpy.f_stubble_me(model,
-                                                                                                                 p6,f,z) \
+        return -paspy.f_pas_me(model,p6,f,z) - paspy.f_nappas_me(model,p6,f,z) - suppy.f_sup_me(model,p6,f,z) \
+               - stubpy.f_stubble_me(model,p6,f,z) - cgzpy.f_grazecrop_me(model,p6,f,z) \
                + stkpy.f_stock_me(model,p6,f,z) - mvf.f_mvf_me(model,p6,f) <= 0
 
     model.con_me = pe.Constraint(model.s_feed_periods,model.s_feed_pools,model.s_season_types,rule=me,
@@ -410,6 +426,7 @@ def f_con_vol(model):
     '''
     def vol(model,p6,f,z):
         return paspy.f_pas_vol(model,p6,f,z) + suppy.f_sup_vol(model,p6,f,z) + stubpy.f_stubble_vol(model,p6,f,z) \
+               + cgzpy.f_grazecrop_vol(model,p6,f,z) \
                - stkpy.f_stock_pi(model,p6,f,z) \
                + mvf.f_mvf_vol(model,p6,f) <= 0
 

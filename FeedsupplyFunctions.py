@@ -82,6 +82,26 @@ def f_effective_mei(dmi, md, threshold, ri=1, eff_above=0.5):
     return mei_effective
 
 
+def f_hf(hr, cr=None):
+    '''
+    Calculate height factor of feed.
+
+    :param hr: the height of feed relative to 3cm per t/ha.
+    :param cr: cr12 effect of pasture height
+    :return: Height factor
+    '''
+    ##create scalar cr if not passed in
+    if cr is None:
+        ###Scalar version of cr[1,…] using c2[0] (finewool merino)
+        cr12 = uinp.parameters['i_cr_c2'][12,0]
+    else:
+        cr12=cr[12, ...]
+
+    ##calc hf
+    hf = 1 + cr12 * (hr - 1)
+    return hf
+
+
 def f_foo_convert(cu3, cu4, foo, pasture_stage, legume=0, cr=None, z_pos=-1, treat_z=False):
     '''
     Adjust FOO for measurement method.
@@ -100,12 +120,6 @@ def f_foo_convert(cu3, cu4, foo, pasture_stage, legume=0, cr=None, z_pos=-1, tre
     :param cu3: this parameter should already be slice on the c4 axis.
     :param cu4: this parameter should already be slice on the c4 axis.
     '''
-    ##create scalar cr if not passed in
-    if cr is None:
-        ###Scalar version of cr[1,…] using c2[0] (finewool merino)
-        cr12 = uinp.parameters['i_cr_c2'][12,0]
-    else:
-        cr12=cr[12, ...]
     ##pasture conversion scenario (convert the region and pasture stage to an index
     ### because the second axis of cu3 is a combination of region & stage)
     conversion_scenario = pinp.sheep['i_region'] * uinp.pastparameters['i_n_pasture_stage'] + pasture_stage
@@ -121,7 +135,7 @@ def f_foo_convert(cu3, cu4, foo, pasture_stage, legume=0, cr=None, z_pos=-1, tre
     ##height ratio
     hr = pinp.sheep['i_hr_scalar'] * hd / uinp.pastparameters['i_hd_std']
     ##calc hf
-    hf = 1 + cr12 * (hr -1)
+    hf = f_hf(hr, cr)
     ##apply z treatment
     if treat_z:
         foo_shears = pinp.f_seasonal_inp(foo_shears,numpy=True,axis=z_pos)
@@ -136,6 +150,13 @@ def f_ra_cs(foo, hf, cr=None, zf=1):
     components; relative rate of eating (RR) and relative time spent grazing (RT).
 
     NOTE: Only pass cr parameter if called from Stock_generator that have a g axis
+
+    :param foo: feed on offer (kg/ha dry matter)
+    :param hf: height factor
+    :param cr: parameters for prediction of relative intake
+    :param zf: mouth size factor. Accommodates the smaller mouth size of young animals, allowing them to achieve
+               their potential intake at a lower level of herbage availability than would be needed by adults.
+    :return: Relative availability
     '''
     ##create scalar cr if not passed in
     if cr is None:
@@ -152,11 +173,11 @@ def f_ra_cs(foo, hf, cr=None, zf=1):
     ##Relative rate of eating (rr) & Relative time spent grazing (rt)
     try:
         ###Scalar version
-        rr = 1 - math.exp(-(1 + cr13 * 1) * cr4 * hf * zf * foo) #*1 is a reminder that this formula could be improved in a future version
+        rr = 1 - math.exp(-(1 + cr13 * 1) * cr4 * hf * zf * foo) #todo *1 is a reminder that this formula could be improved in a future version
         rt = 1 + cr5 * math.exp(-(1 + cr13 * 1) * (cr6 * hf * zf * foo)**2)
     except:
         ###Numpy version
-        rr = 1 - np.exp(-(1 + cr13 * 1) * cr4 * hf * zf * foo) #*1 is a reminder that this formula could be improved in a future version
+        rr = 1 - np.exp(-(1 + cr13 * 1) * cr4 * hf * zf * foo) #todo *1 is a reminder that this formula could be improved in a future version
         rt = 1 + cr5 * np.exp(-(1 + cr13 * 1) * (cr6 * hf * zf * foo)**2)
     ##Relative availability
     ra = rr * rt
@@ -169,6 +190,12 @@ def f_rq_cs(dmd, legume, cr=None, sf=0):
 
     NOTE: Only pass cr parameter if called from Stock_generator that have a g axis
     NOTE 2: sf is currently not used. Will be required if using tropical species
+
+    :param dmd: feed digestibility
+    :param legume: legume proportion.
+    :param cr: parameters for prediction of relative intake
+    :param sf: species factor. It is making an adjustment for the intake of C4 grasses being higher than C3 grasses if measured at the same digestibility.
+    :return: Relative ingestibility
     '''
     ##To work for DMD as a % or a proportion
     try:
@@ -200,6 +227,13 @@ def f_ra_mu(foo, hf, zf=1, cu0=None):
     Relative availability is the availability of a feed to livestock.
 
     NOTE: Only pass cr parameter if called from Stock_generator that have a g axis
+
+    :param foo: feed on offer (kg/ha dry matter)
+    :param hf: height factor
+    :param zf: mouth size factor. Accommodates the smaller mouth size of young animals, allowing them to achieve
+               their potential intake at a lower level of herbage availability than would be needed by adults.
+    :param cu0:
+    :return: Relative availability
     '''
     ##create scalar cr if not passed in
     if cu0 is None:
