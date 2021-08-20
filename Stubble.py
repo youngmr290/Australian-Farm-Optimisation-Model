@@ -27,7 +27,7 @@ def f_stubble_production():
     This is a separate function because it is used in CropGrazing.py and Mach.py to calculate stubble penalties.
     '''
     stubble_prod_data = 1 / (pinp.stubble['harvest_index'] * pinp.stubble['proportion_grain_harv']) - 1  # subtract 1 to account for the tonne of grain that was harvested
-    stubble = pd.Series(data=stubble_prod_data, index=pinp.crop['start_harvest_crops'].index)
+    stubble = pd.Series(data=stubble_prod_data, index=pinp.stubble['i_stub_landuse_idx'])
     return stubble
 
 
