@@ -64,6 +64,8 @@ def f1_machpyomo_local(params, model):
     
     model.p_yield_penalty = pe.Param(model.s_labperiods, model.s_crops, model.s_season_types, initialize=params['yield_penalty'], default = 0.0, mutable=False, doc='kg/ha/day penalty for late sowing in each period')
     
+    model.p_stubble_penalty = pe.Param(model.s_labperiods, model.s_crops, model.s_season_types, initialize=params['stubble_penalty'], default = 0.0, mutable=False, doc='kg/ha/day penalty for late sowing in each period')
+
     model.p_seeding_grazingdays = pe.Param(model.s_feed_periods, model.s_labperiods, model.s_season_types, initialize=params['grazing_days'], default = 0.0, mutable=False, doc='pasture grazing days per feed period provided by 1ha of seeding in each seed period')
 
     model.p_fixed_dep = pe.Param(initialize=params['fixed_dep'],default=0.0, doc='fixed depreciation of all machinery for 1 yr')
@@ -168,19 +170,19 @@ def f_late_seed_penalty(model,g,k,z):
     return farmer_penalty + contract_penalty
 
 #function to determine late seeding stubble penalty, this will be passed to core model
-def f_stubble_penalty(model,k,s,z):
+def f_stubble_penalty(model,k,z):
     '''
     Calculate the stubble production penalty based on the timeliness of the selected contract and farmer seeding activities.
 
     Used in global constraint (con_stubble_a). See CorePyomo
     '''
-    farmer_penalty = sum(sum(model.p_seeding_rate[k,l] * model.v_seeding_machdays[z,p,k,l] * model.p_yield_penalty[p,k,z]
-                             * model.p_rot_stubble[k,s] for l in model.s_lmus) for p in model.s_labperiods
-                         if pe.value(model.p_rot_stubble[k,s]) != 0)
+    farmer_penalty = sum(model.p_seeding_rate[k,l] * model.v_seeding_machdays[z,p,k,l] * model.p_stubble_penalty[p,k,z]
+                         for l in model.s_lmus for p in model.s_labperiods
+                         if pe.value(model.p_stubble_penalty[p,k,z]) != 0)
 
-    contract_penalty = sum(sum(model.v_contractseeding_ha[z,p,k,l] * model.p_yield_penalty[p,k,z] * model.p_rot_stubble[k,s]
-                               for l in model.s_lmus) for p in model.s_labperiods
-                           if pe.value(model.p_rot_stubble[k,s]) != 0)
+    contract_penalty = sum(model.v_contractseeding_ha[z,p,k,l] * model.p_stubble_penalty[p,k,z]
+                           for l in model.s_lmus for p in model.s_labperiods
+                           if pe.value(model.p_stubble_penalty[p,k,z]) != 0)
 
     return farmer_penalty + contract_penalty
     

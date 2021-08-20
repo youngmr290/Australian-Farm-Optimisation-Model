@@ -47,8 +47,6 @@ def f1_croppyomo_local(params, model):
     
     model.p_grain_price = pe.Param(model.s_crops, model.s_cashflow_periods, model.s_grain_pools, initialize=params['grain_price'],default = 0.0, doc='farm gate price per tonne of each grain')
     
-    model.p_rot_stubble = pe.Param(model.s_crops, model.s_stub_cat, initialize=params['stubble_production'], default = 0.0, doc='stubble category A produced per kg grain harvested')
-    
     model.p_cropsow = pe.Param(model.s_phases, model.s_crops, model.s_lmus, initialize=params['crop_sow'], default = 0.0, doc='ha of sow activity required by each rot phase')
     
     ##only used in croplabour pyomo to determine labour per tonne of fert
@@ -65,10 +63,20 @@ def f1_croppyomo_local(params, model):
 ##############
 #yield       #
 ##############
-##total grain transfer for each crop, separated so it can be combined with untimely sowing and crop grazing penalty before converting to cashflow
+##total grain transfer for each crop. This is initially separated from cashflow so it can be combined with untimely sowing and crop grazing penalty.
 ### slightly more complicated because i have to have rotation yield in disaggregated format and the rotation variable is aggregated.
 ### yield needs to be disaggregated so that it returns the grain transfer for each crop - this is so it is compatible with yield penalty and sup feed activities.
 ###alternative would have been to add another key/index/set to the yield parameter that was k, although i suspect this would make it a bit slower due to being bigger but it might be tidier
+
+def f1_total_rot_yield(model,k,z):
+    '''
+    Calculate the total crop yield before allocating to grain pools.
+
+    Used below and also in core pyomo to calculate total stubble production.
+    '''
+    return sum(model.p_rotation_yield[r,k,z,l]*model.v_phase_area[z,r,l] for r in model.s_phases for l in model.s_lmus
+                     if pe.value(model.p_rotation_yield[r,k,z,l]) != 0)
+
 
 def f_rotation_yield_transfer(model,g,k,z):
     '''
@@ -76,11 +84,8 @@ def f_rotation_yield_transfer(model,g,k,z):
 
     Used in global constraint (con_grain_transfer). See CorePyomo
     '''
+    return f1_total_rot_yield(model,k,z) * model.p_grainpool_proportion[k,g]
 
-    ##h is a disaggregated version of r, it can be indexed. h[0:i] is the rotation history. Have to check if k==h otherwise when h[0:i] is combined with k you can get the wrong rotation
-    return sum(sum(model.p_rotation_yield[r,k,z,l]*model.v_phase_area[z,r,l] * model.p_grainpool_proportion[k,g] for r in model.s_phases
-                   if pe.value(model.p_rotation_yield[r,k,z,l]) != 0)for l in model.s_lmus) \
-                   
 
 
 ##############
@@ -95,8 +100,8 @@ def f_cropsow(model,k,l,z):
     Used in global constraint (con_sow). See CorePyomo
     '''
     if any(model.p_cropsow[r,k,l] for r in model.s_phases):
-        return sum(model.p_cropsow[r,k,l]*model.v_phase_area[z,r,l]  for r in model.s_phases
-                   if pe.value(model.p_cropsow[r,k,l]) != 0) #+ model.x[k] >=0 # if ((r,)+(k,)+(l,)) in model.p_cropsow
+        return sum(model.p_cropsow[r,k,l]*model.v_phase_area[z,r,l] for r in model.s_phases
+                   if pe.value(model.p_cropsow[r,k,l]) != 0)
     else:
         return 0
 
@@ -113,21 +118,8 @@ def f_rotation_cost(model,c,z):
     '''
 
     return sum(sum(model.p_rotation_cost[r,z,l,c]*model.v_phase_area[z,r,l] for r in model.s_phases
-                   if pe.value(model.p_rotation_cost[r,z,l,c]) != 0) for l in model.s_lmus )#+ model.x[c] >=0 #0.10677s
-   
-##############
-#stubble     #
-##############
-def f_rot_stubble(model,k,s,z):
-    '''
-    Calculate the total volume of stubble provide directly after harvest from the selected rotation phases.
+                   if pe.value(model.p_rotation_cost[r,z,l,c]) != 0) for l in model.s_lmus )
 
-    Used in global constraint (con_stubble). See CorePyomo
-    '''
-
-    return sum(sum(model.p_rotation_yield[r,k,z,l]*model.v_phase_area[z,r,l] * model.p_rot_stubble[k,s] for r in model.s_phases
-                     if pe.value(model.p_rotation_yield[r,k,z,l]) != 0)for l in model.s_lmus if pe.value(model.p_rot_stubble[k,s]) !=0 ) \
-                      
 
 
 

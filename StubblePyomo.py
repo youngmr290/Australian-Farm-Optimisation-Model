@@ -29,7 +29,7 @@ def f1_stubpyomo_local(params, model):
     ###################
     ##stubble consumption
     model.v_stub_con = pe.Var(model.s_feed_pools, model.s_feed_periods, model.s_season_types, model.s_crops, model.s_stub_cat,bounds=(0.0,None),
-                              doc='consumption of stubble')
+                              doc='consumption of 1t of stubble')
     ##stubble transfer
     model.v_stub_transfer = pe.Var(model.s_feed_periods, model.s_season_types, model.s_crops, model.s_stub_cat,bounds=(0.0,None),
                                    doc='transfer of 1t of stubble to following period')
@@ -37,19 +37,29 @@ def f1_stubpyomo_local(params, model):
     ####################
     #define parameters #
     ####################
-    model.p_harv_prop = pe.Param(model.s_feed_periods, model.s_season_types, model.s_crops, initialize=params['cons_prop'], default = 0.0, mutable=False, doc='proportion of the way through each fp harvest occurs (0 if harv doesnt occur in given period)')
-    
-    model.p_stub_md = pe.Param(model.s_feed_pools, model.s_feed_periods, model.s_season_types, model.s_crops, model.s_stub_cat, initialize=params['md'], default = 0.0, mutable=False, doc='md from 1t of each stubble categories for each crop')
+    model.p_rot_stubble = pe.Param(model.s_crops,initialize=params['stubble_production'],default=0.0,
+                                   doc='stubble produced per kg grain harvested')
 
-    model.p_stub_vol = pe.Param(model.s_feed_periods, model.s_season_types, model.s_crops, model.s_stub_cat, initialize=params['vol'], default = 0.0, mutable=False, doc='amount of intake volume required by 1t of each stubble category for each crop')
+    model.p_harv_prop = pe.Param(model.s_feed_periods, model.s_season_types, model.s_crops, initialize=params['cons_prop'],
+                                 default = 0.0, mutable=False, doc='proportion of the way through each fp harvest occurs (0 if harv doesnt occur in given period)')
     
-    model.p_a_req = pe.Param(model.s_feed_periods, model.s_season_types, model.s_crops, model.s_stub_cat, initialize=params['cat_a_st_req'], default = 0.0, mutable=False, doc='stubble required in each feed periods in order to consume 1t of cat A')
+    model.p_stub_md = pe.Param(model.s_feed_pools, model.s_feed_periods, model.s_season_types, model.s_crops, model.s_stub_cat, initialize=params['md'],
+                               default = 0.0, mutable=False, doc='md from 1t of each stubble categories for each crop')
+
+    model.p_stub_vol = pe.Param(model.s_feed_periods, model.s_season_types, model.s_crops, model.s_stub_cat, initialize=params['vol'],
+                                default = 0.0, mutable=False, doc='amount of intake volume required by 1t of each stubble category for each crop')
     
-    model.p_bc_prov = pe.Param(model.s_crops, model.s_stub_cat, initialize=params['transfer_prov'], default = 0.0, doc='stubble B provided from 1t of cat A and stubble C provided from 1t of cat B')
+    model.p_a_req = pe.Param(model.s_feed_periods, model.s_season_types, model.s_crops, model.s_stub_cat, initialize=params['cat_a_st_req'],
+                             default = 0.0, mutable=False, doc='stubble required in each feed periods in order to consume 1t of cat A')
     
-    model.p_bc_req = pe.Param(model.s_crops, model.s_stub_cat, initialize=params['transfer_req'], default = 0.0, doc='stubble required from the row inorder to consume cat B or cat C')
+    model.p_bc_prov = pe.Param(model.s_crops, model.s_stub_cat, initialize=params['transfer_prov'], default = 0.0,
+                               doc='stubble B provided from 1t of cat A and stubble C provided from 1t of cat B')
     
-    model.p_fp_transfer = pe.Param(model.s_feed_periods, model.s_season_types, model.s_crops, initialize=params['per_transfer'], default = 0.0, mutable=False, doc='stubble cat B or cat C transferred to the next feed period')
+    model.p_bc_req = pe.Param(model.s_crops, model.s_stub_cat, initialize=params['transfer_req'], default = 0.0,
+                              doc='stubble required from the row inorder to consume cat B or cat C')
+    
+    model.p_fp_transfer = pe.Param(model.s_feed_periods, model.s_season_types, model.s_crops, initialize=params['per_transfer'],
+                                   default = 0.0, mutable=False, doc='stubble cat B or cat C transferred to the next feed period')
     
 
     ########################

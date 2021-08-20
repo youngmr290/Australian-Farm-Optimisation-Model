@@ -19,6 +19,19 @@ import Periods as per
 
 na = np.newaxis
 
+
+def f_stubble_production():
+    '''
+    Stubble produced by each rotation phase (kgs of dry matter).
+
+    This is a separate function because it is used in CropGrazing.py and Mach.py to calculate stubble penalties.
+    '''
+    stubble_prod_data = 1 / (pinp.stubble['harvest_index'] * pinp.stubble['proportion_grain_harv']) - 1  # subtract 1 to account for the tonne of grain that was harvested
+    stubble = pd.Series(data=stubble_prod_data, index=pinp.crop['start_harvest_crops'].index)
+    return stubble
+
+
+
 def stubble_all(params, report, nv):
     '''
     Calculates the stubble available, MD provided, volume required and the proportion of the way through
@@ -84,7 +97,7 @@ def stubble_all(params, report, nv):
     #########################
     #dmd deterioration      #
     #########################
-    stubble_per_grain = phs.f_stubble_production() #produces dict with stubble production per kg of yield for each grain used in the ri.availability section
+    stubble_per_grain = f_stubble_production().to_dict() #produces dict with stubble production per kg of yield for each grain used in the ri.availability section
 
     ##days since harvest (calculated from the end date of each fp)
     days_since_harv_p6zk = fp_end_p6z[...,na] - harv_date_zk.astype('datetime64[D]')
@@ -139,7 +152,7 @@ def stubble_all(params, report, nv):
     stub_foo_harv_zk = np.zeros((n_seasons, n_crops))
     for crop, crop_idx in zip(pinp.crop['start_harvest_crops'].index, range(len(pinp.crop['start_harvest_crops']))):
         try:
-            stub_foo_harv_zk[:,crop_idx] = base_yields.loc[crop].mean() * stubble_per_grain[(crop,'a')]
+            stub_foo_harv_zk[:,crop_idx] = base_yields.loc[crop].mean() * stubble_per_grain[crop]
         except KeyError: #if the crop is not in any of the rotations assign average foo to stop error - this is not used so could assign any value.
             stub_foo_harv_zk[:,crop_idx] = base_yields.mean()
     ###adjust the foo for each category because the good stuff is eaten first therefore there is less foo when the sheep start eating the poorer stubble
@@ -236,6 +249,10 @@ def stubble_all(params, report, nv):
     ################
     ##pyomo params #
     ################
+
+    ##stubble produced per tonne of grain yield
+    stubble_production = f_stubble_production()
+    params['stubble_production'] = stubble_production.to_dict()
 
     ##'require' params ie consuming 1t of stubble B requires 1.002t from the constraint (0.002 accounts for trampling)
     stub_req_ks1 = np.stack([cat_b_st_req_k, cat_c_st_req_k], 1)

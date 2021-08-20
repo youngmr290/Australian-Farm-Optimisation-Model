@@ -261,9 +261,9 @@ def f_con_stubble_a(model):
     stubble produced from each rotation.
     '''
     def stubble_a(model,k,s,z):
-        if model.p_rot_stubble[k,s] != 0:
-            return -phspy.f_rot_stubble(model,k,s,z) + macpy.f_stubble_penalty(model,k,s,z) + stubpy.f_stubble_req_a(model,z,
-                                                                                                               k,s) <= 0
+        if model.p_rot_stubble[k] != 0:
+            return -phspy.f1_total_rot_yield(model,k,z) * model.p_rot_stubble[k]  \
+                   + macpy.f_stubble_penalty(model,k,z) + stubpy.f_stubble_req_a(model,z,k,s) <= 0
         else:
             return pe.Constraint.Skip
 

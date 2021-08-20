@@ -415,8 +415,15 @@ def f_yield_penalty():
     return penalty.stack(1)
 
 
-
-
+def f_stubble_penalty():
+    '''
+    Calculates the stubble penalty in each mach period (wet and dry seeding) due to sowing timeliness- kg/ha/period/crop.
+    '''
+    import Stubble as stub
+    yield_penalty_p5k_z = f_yield_penalty() #late sowing yield reduction kg/ha/period
+    stub_production_k = stub.f_stubble_production() #stubble production per kg of grain yield
+    stub_penalty = yield_penalty_p5k_z.mul(stub_production_k, axis=0, level=1)
+    return stub_penalty.stack()
 
 #######################################################################################################################################################
 #######################################################################################################################################################
@@ -953,6 +960,7 @@ def f_mach_params(params,r_vals):
     contract_harvest_cost = f_contract_harvest_cost_period(r_vals).stack()
     hay_making_cost = f_hay_making_cost()
     yield_penalty = f_yield_penalty().stack()
+    stubble_penalty = f_stubble_penalty()
     grazing_days = f_grazing_days().stack()
     fixed_dep = f_fix_dep()
     harv_dep = f_harvest_dep()
@@ -987,6 +995,7 @@ def f_mach_params(params,r_vals):
     params['max_harv_hours'] = max_harv_hours.to_dict()
     params['contract_harvest_cost'] = contract_harvest_cost.to_dict()
     params['yield_penalty'] = yield_penalty.to_dict()
+    params['stubble_penalty'] = stubble_penalty.to_dict()
     params['grazing_days'] = grazing_days.to_dict()
 
 

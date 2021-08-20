@@ -830,20 +830,6 @@ def f1_rot_cost(r_vals):
     return cost
 
 
-#########################
-#stubble                #
-#########################
-#stubble produced per kg grain harvested, used in stubble.py as well
-def f_stubble_production():
-    '''
-    Stubble produced by each rotation phase (kgs of dry matter).
-    '''
-    stubble = pd.DataFrame(index=pinp.crop['start_harvest_crops'].index, columns=['a'])
-    stubble['a'] = 1 / (pinp.stubble['harvest_index'] * pinp.stubble['proportion_grain_harv']) - 1  # subtract 1 to account for the tonne of grain that was harvested
-    return stubble.stack().to_dict()
-#print (stubble_production())
-
-
 #################
 #sow            #
 #################
@@ -875,14 +861,12 @@ def f1_crop_params(params,r_vals):
     yields = f_rot_yield()
     propn = f_grain_pool_proportions()
     grain_price = f_grain_price(r_vals)
-    stubble_production = f_stubble_production()
     cropsow = f_crop_sow()
     fert_total = f1_total_fert_req()
 
     ##create non seasonal params
     params['grain_pool_proportions'] = propn.to_dict()
     params['grain_price'] = grain_price.to_dict()
-    params['stubble_production'] = stubble_production #already a dict
     params['crop_sow'] = cropsow.to_dict()
     params['rot_cost'] = cost.to_dict()
     params['rot_yield'] = yields.to_dict()
