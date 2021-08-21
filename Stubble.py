@@ -83,7 +83,7 @@ def stubble_all(params, report, nv):
     ##nv stuff
     len_nv = nv['len_nv']
     nv_is_not_confinement_f = np.full(len_nv, True)
-    nv_is_not_confinement_f[-1] = np.logical_not(nv['confinement_inc']) #if confinement period is included the last fev pool is confinement.
+    nv_is_not_confinement_f[-1] = np.logical_not(nv['confinement_inc']) #if confinement is included the last nv pool is confinement.
 
 
 

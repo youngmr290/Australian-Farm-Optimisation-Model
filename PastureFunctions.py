@@ -483,7 +483,7 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
                                                   , i_me_eff_gainlose_p6zt[:, na, :, :])
     #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
     me_cons_grnha_fgop6lzt = me_cons_grnha_fgop6lzt * mask_greenfeed_exists_p6zt[:, na, ...]
-    #me from pasture is 0 in the confinement pool
+    ## Pasture can't be grazed in confinement so ME is 0
     me_cons_grnha_fgop6lzt = me_cons_grnha_fgop6lzt * nv_is_not_confinement_f[:, na, na, na, na, na, na]
 
     # parameters for the growth/grazing activities: Total volume of feed consumed from the hectare
@@ -599,15 +599,14 @@ def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_
 
     ## dry, ME consumed per kg consumed
     dry_md_dp6zt        = fsfun.dmd_to_md(dry_dmd_dp6zt)
-    dry_md_fdp6zt       = np.stack([dry_md_dp6zt] * n_feed_pools, axis = 0)
+    # dry_md_fdp6zt       = np.stack([dry_md_dp6zt] * n_feed_pools, axis = 0)
     ## convert to effective quality per tonne
-    dry_mecons_t_fdp6zt = fsfun.f_effective_mei( 1000                                    # parameters for the dry feed grazing activities: Total ME of the tonne consumed
-                               ,          dry_md_fdp6zt
-                               ,     me_threshold_fp6zt[:, na, ...]
-                               ,           dry_ri_dp6zt
-                               , i_me_eff_gainlose_p6zt)
-    dry_mecons_t_fdp6zt = dry_mecons_t_fdp6zt * mask_dryfeed_exists_p6zt  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
-    dry_mecons_t_fdp6zt = dry_mecons_t_fdp6zt * nv_is_not_confinement_f[:,na,na,na,na] #me from pasture is 0 in the confinement pool
+    ### parameters for the dry feed grazing activities: Total ME of the tonne consumed
+    dry_mecons_t_fdp6zt = fsfun.f_effective_mei( 1000, dry_md_dp6zt, me_threshold_fp6zt[:, na, ...]
+                                                , dry_ri_dp6zt, i_me_eff_gainlose_p6zt)
+    dry_mecons_t_fdp6zt = dry_mecons_t_fdp6zt * mask_dryfeed_exists_p6zt  #apply mask - this masks out consuming dry foo in periods when dry pas doesnt exist.
+    #Can't graze dry pasture while in confinement so ME is 0
+    dry_mecons_t_fdp6zt = dry_mecons_t_fdp6zt * nv_is_not_confinement_f[:,na,na,na,na]
     return dry_mecons_t_fdp6zt, dry_volume_t_dp6zt, dry_dmd_dp6zt, dry_foo_dp6zt
 
 

@@ -51,21 +51,31 @@ def md_to_dmd(md):
     return (md+2)/17
 
 
-def f_effective_mei(dmi, md, threshold, ri=1, eff_above=0.5):
-    """Calculate MEI and scale for reduced efficiency if feed quality is above the animal requirements and the
-       voluntary feed intake would be greater than that required to meet the target LW profile.
-       This would then necessitate rationing the animal or switching to a lower quality feed source for a period
-       while the animal lost weight.
-       Rationing would not reduce the efficiency of utilising the high quality feed source. AN example of this is
-       offering limited quantities of supplementary feed, or using strip grazing to ration intake on green pasture.
-       Whereas allowing weight gain and then following with a period of LW loss reduces efficiency because the
-       efficiency of LW gain (kg) is lower than the efficiency of maintenance (km).
-       The effective mei varies for each feed pool (v) because the feed quality required to meet the target profile
-       varies between pools. The target profile is based on the mid-point of the feed pool.
+def f_effective_mei(dmi, md, threshold_f, ri=1, eff_above=0.5):
+    """According to the Australian Feeding Standards (Freer et al 2007) an animal that is gaining weight then
+       losing weight is less efficient than an animal that is maintaining weight on a constant diet. Therefore,
+       switching between a high quality diet and a low quality diet to maintain weight requires more MJ of ME
+       than using a consistent medium quality diet.
+       This is represented by scaling the MEI that is above that required to meet the animal target with the
+       animal target being based on the mid-point of the feed pool (hence effective mei varies for each feed
+       pool (v) because the target profile varies between pools).
+       This would be important to represent in the model for animals with a liveweight target set to reduce MEI and
+       maximise SR. This occurs when animals are being retained on-farm over summer, and extra MEI with weight
+       gain would not increase profit. However, for animals that are being fed to gain weight to achieve a target
+       for turnoff, better quality feed with increased weight gain would increase profit due to faster growth with
+       earlier turnoff.
+       In situations where a animal decision variable with faster growth would be selected, if it were available, it
+       would be better to not represent the reduced efficiency, whereas if that decision variable would not be selected
+       then the reduction should be represented.
+       Working conclusion: All feedstuffs should go through f_effective_mei. However, the highest nv pool should not
+       be reduced even if the feed quality is greater than then animal demand, on the assumption that the target for
+       these animals is growth and that faster growth would be better.
+       The exception to the above is supplement because the quantity of supplement can be controlled so as not to
+       result in LWG followed by a period of LWL.
 
     :param dmi: value or array - Dry matter intake of the feed decision variable (kg).
     :param md: value or array - M/D of the feed (MJ of ME / kg of DM).
-    :param threshold: value or array - Diet quality (ME/Vol) required by animals. Below the threshold: effective m/d == m/d
+    :param threshold_f: value or array - Diet quality (ME/Vol) required by animals (with a f axis). Below the threshold: effective m/d == m/d
     :param ri: value or array, optional (1.0) - Relative intake of the feed (quality and quantity).
     :param eff_above: value or array, optional (0.5) - Efficiency that energy is used if above required quality, and
                       animals are gaining then losing weight.
@@ -76,10 +86,12 @@ def f_effective_mei(dmi, md, threshold, ri=1, eff_above=0.5):
 
     """
     nv = md * ri
-    nv_effective  = np.minimum(nv, threshold + (nv - threshold) * eff_above)
-    md_effective = nv_effective / ri
-    mei_effective = dmi * md_effective
-    return mei_effective
+    nv_effective_f  = np.minimum(nv, threshold_f + (nv - threshold_f) * eff_above)
+    ## no reduction in efficiency in the highest nv pool on the assumption that LWG is the target for these animals.
+    nv_effective_f[-1,...] = nv   #todo this only works in the absence of a confinement nv pool
+    md_effective_f = nv_effective_f / ri
+    mei_effective_f = dmi * md_effective_f
+    return mei_effective_f
 
 
 def f_hf(hr, cr=None):
