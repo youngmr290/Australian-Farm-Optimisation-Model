@@ -476,11 +476,10 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
     grn_ri_gop6lzt = fsfun.f_rel_intake(grn_ri_availability_gop6lzt, grn_ri_quality_gop6lzt, i_legume_zt)
 
     ###reduce me if nv is above diet requirement
-    me_cons_grnha_fgop6lzt = fsfun.f_effective_mei(cons_grnha_t_gop6lzt
-                                                  , grn_md_grnha_gop6lzt
-                                                  , me_threshold_fp6zt[:, na, na, :, na, ...]
-                                                  , grn_ri_gop6lzt
-                                                  , i_me_eff_gainlose_p6zt[:, na, :, :])
+    confinement_inc = np.any(np.logical_not(nv_is_not_confinement_f))
+    me_cons_grnha_fgop6lzt = fsfun.f_effective_mei(cons_grnha_t_gop6lzt, grn_md_grnha_gop6lzt
+                                                  , me_threshold_fp6zt[:, na, na, :, na, ...], confinement_inc
+                                                  , grn_ri_gop6lzt, i_me_eff_gainlose_p6zt[:, na, :, :])
     #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
     me_cons_grnha_fgop6lzt = me_cons_grnha_fgop6lzt * mask_greenfeed_exists_p6zt[:, na, ...]
     ## Pasture can't be grazed in confinement so ME is 0
@@ -604,8 +603,9 @@ def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_
     dry_md_dp6zt        = fsfun.dmd_to_md(dry_dmd_dp6zt)
     ## convert to effective quality per tonne
     ### parameters for the dry feed grazing activities: Total ME of the tonne consumed
+    confinement_inc = np.any(np.logical_not(nv_is_not_confinement_f))
     dry_mecons_t_fdp6zt = fsfun.f_effective_mei( 1000, dry_md_dp6zt, me_threshold_fp6zt[:, na, ...]
-                                                , dry_ri_dp6zt, i_me_eff_gainlose_p6zt)
+                                                , confinement_inc, dry_ri_dp6zt, i_me_eff_gainlose_p6zt)
     dry_mecons_t_fdp6zt = dry_mecons_t_fdp6zt * mask_dryfeed_exists_p6zt  #apply mask - this masks out consuming dry foo in periods when dry pas doesnt exist.
     #Can't graze dry pasture while in confinement so ME is 0
     dry_mecons_t_fdp6zt = dry_mecons_t_fdp6zt * nv_is_not_confinement_f[:,na,na,na,na]

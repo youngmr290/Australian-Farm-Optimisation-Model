@@ -51,7 +51,7 @@ def md_to_dmd(md):
     return (md+2)/17
 
 
-def f_effective_mei(dmi, md, threshold_f, ri=1, eff_above=0.5):
+def f_effective_mei(dmi, md, threshold_f, confinement_inc, ri=1, eff_above=0.5):
     """According to the Australian Feeding Standards (Freer et al 2007) an animal that is gaining weight then
        losing weight is less efficient than an animal that is maintaining weight on a constant diet. Therefore,
        switching between a high quality diet and a low quality diet to maintain weight requires more MJ of ME
@@ -76,6 +76,7 @@ def f_effective_mei(dmi, md, threshold_f, ri=1, eff_above=0.5):
     :param dmi: value or array - Dry matter intake of the feed decision variable (kg).
     :param md: value or array - M/D of the feed (MJ of ME / kg of DM).
     :param threshold_f: value or array - Diet quality (ME/Vol) required by animals (with a f axis). Below the threshold: effective m/d == m/d
+    :param confinement_inc: boolean stating if the confinement feed pool is included.
     :param ri: value or array, optional (1.0) - Relative intake of the feed (quality and quantity).
     :param eff_above: value or array, optional (0.5) - Efficiency that energy is used if above required quality, and
                       animals are gaining then losing weight.
@@ -87,8 +88,9 @@ def f_effective_mei(dmi, md, threshold_f, ri=1, eff_above=0.5):
     """
     nv = md * ri
     nv_effective_f  = np.minimum(nv, threshold_f + (nv - threshold_f) * eff_above)
-    ## no reduction in efficiency in the highest nv pool on the assumption that LWG is the target for these animals.
-    nv_effective_f[-1,...] = nv   #todo this only works in the absence of a confinement nv pool
+    ## no reduction in efficiency in the highest nv pool (excluding confinement pool) on the assumption that LWG is the target for these animals.
+    f_high_idx = -1 - confinement_inc #highest pool is -1 unless confinement is included then it is -2.
+    nv_effective_f[f_high_idx,...] = nv
     md_effective_f = nv_effective_f / ri
     mei_effective_f = dmi * md_effective_f
     return mei_effective_f
