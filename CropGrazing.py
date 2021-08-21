@@ -110,7 +110,7 @@ def crop_md_vol(nv):
     ##nv stuff
     len_nv = nv['len_nv']
     nv_is_not_confinement_f = np.full(len_nv, True)
-    nv_is_not_confinement_f[-1] = np.logical_not(nv['confinement_inc']) #if confinement period is included the last fev pool is confinement.
+    nv_is_not_confinement_f[-1] = np.logical_not(nv['confinement_inc']) #if confinement is included the last nv pool is confinement.
 
     ## vol
     ### calc relative quality - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
@@ -130,17 +130,15 @@ def crop_md_vol(nv):
 
     ## md per tonne
     crop_md_kp6z = fsfun.dmd_to_md(crop_dmd_kp6z)
-    crop_md_fkp6z = crop_md_kp6z * nv_is_not_confinement_f[:,na,na,na] #me from crop is 0 in the confinement pool
-    ###reduce me if nv is higher than livestock diet requirement.
-    crop_md_fkp6zl = fsfun.f_effective_mei(1000
-                                         , crop_md_fkp6z[...,na]
-                                         , me_threshold_fp6z[:,na,...,na]
-                                         , crop_ri_kp6zl
-                                         , crop_me_eff_gainlose)
+    ##reduce me if nv is higher than livestock diet requirement.
+    crop_md_fkp6zl = fsfun.f_effective_mei(1000, crop_md_kp6z[...,na], me_threshold_fp6z[:,na,...,na]
+                                           , crop_ri_kp6zl, crop_me_eff_gainlose)
+    ##crop cannot be grazed in the confinement pool hence me is 0
+    crop_md_fkp6zl = crop_md_fkp6zl * nv_is_not_confinement_f[:,na,na,na,na]
 
     return crop_md_fkp6zl, crop_vol_fkp6zl
 
-def cropgraze_yeild_penalty():
+def cropgraze_yield_penalty():
     '''
     Yield and stubble penalty associated with grazing 1ha of each crop on each lmu.
 
@@ -179,7 +177,7 @@ def cropgraze_yeild_penalty():
 def f1_cropgraze_params(params, r_vals, nv):
     grazecrop_area_rkl = f_graze_crop_area()
     crop_foo_provided_kp6zl, crop_foo_required_k = f_cropgraze_foo()
-    yield_penalty_kzl, stubble_penalty_kzl = cropgraze_yeild_penalty()
+    yield_penalty_kzl, stubble_penalty_kzl = cropgraze_yield_penalty()
     crop_md_fkp6zl, crop_vol_fkp6zl = crop_md_vol(nv)
 
     ##keys
