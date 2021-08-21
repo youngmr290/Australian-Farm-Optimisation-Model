@@ -612,7 +612,8 @@ def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_
     return dry_mecons_t_fdp6zt, dry_volume_t_fdp6zt, dry_dmd_dp6zt, dry_foo_dp6zt
 
 
-def f_poc(cu3, cu4, i_poc_intake_daily_p6lzt, i_poc_dmd_p6zt, i_poc_foo_p6zt, i_legume_zt, i_pasture_stage_p6z, nv_is_not_confinement_f):
+def f_poc(cu3, cu4, i_poc_intake_daily_p6lzt, i_poc_dmd_p6zt, i_poc_foo_p6zt, i_legume_zt, i_pasture_stage_p6z, nv_is_not_confinement_f
+          , me_threshold_fp6zt, i_me_eff_gainlose_p6zt):
     '''
     Calculate energy, volume and consumption parameters for pasture consumed on crop paddocks before seeding.
 
@@ -645,15 +646,11 @@ def f_poc(cu3, cu4, i_poc_intake_daily_p6lzt, i_poc_dmd_p6zt, i_poc_foo_p6zt, i_
     ### poc is assumed to be annual hence the 0 slice in the last axis
     ## con
     poc_con_p6lz = i_poc_intake_daily_p6lzt[..., 0] / 1000 #divide 1000 to convert to tonnes of foo per ha
-    ## md per tonne
-    poc_md_p6z = fsfun.dmd_to_md(i_poc_dmd_p6zt[..., 0]) * 1000 #times 1000 to convert to mj per tonne
-    poc_md_fp6z = poc_md_p6z * nv_is_not_confinement_f[:,na,na] #me from pasture is 0 in the confinement pool
 
     ## vol
     ### calc relative quality - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
     if uinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
         poc_ri_qual_p6z = fsfun.f_rq_cs(i_poc_dmd_p6zt[..., :, 0], i_legume_zt[..., 0])
-
     ### adjust foo and calc hf
     i_poc_foo_p6z, hf = fsfun.f_foo_convert(cu3, cu4, i_poc_foo_p6zt[:,:,0], i_pasture_stage_p6z, i_legume_zt[...,0], z_pos=-1)
     ### calc relative availability - note that the equation system used is the one selected for dams in p1 - need to hook up mu function
@@ -665,6 +662,15 @@ def f_poc(cu3, cu4, i_poc_intake_daily_p6lzt, i_poc_dmd_p6zt, i_poc_foo_p6zt, i_
     poc_ri_p6z = fsfun.f_rel_intake(poc_ri_quan_p6z, poc_ri_qual_p6z, i_legume_zt[..., 0])
     poc_vol_p6z = fun.f_divide(1000, poc_ri_p6z)  # 1000 to convert to vol per tonne
     poc_vol_fp6z = poc_vol_p6z * nv_is_not_confinement_f[:,na,na]  # me from pasture is 0 in the confinement pool
+
+    ## md per tonne
+    poc_md_p6z = fsfun.dmd_to_md(i_poc_dmd_p6zt[..., 0])
+    ##reduce me if nv is higher than livestock diet requirement.
+    confinement_inc = np.any(np.logical_not(nv_is_not_confinement_f))
+    poc_md_fp6z = fsfun.f_effective_mei(1000, poc_md_p6z, me_threshold_fp6zt[...,0]
+                                           , confinement_inc, poc_ri_p6z, i_me_eff_gainlose_p6zt[...,0])
+    ###Can't graze poc pasture while in confinement so ME is 0
+    poc_md_fp6z = poc_md_fp6z * nv_is_not_confinement_f[:,na,na] #me from pasture is 0 in the confinement pool
 
     return poc_con_p6lz, poc_md_fp6z, poc_vol_fp6z
 

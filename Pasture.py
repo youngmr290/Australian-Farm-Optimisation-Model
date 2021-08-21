@@ -480,7 +480,8 @@ def f_pasture(params, r_vals, nv):
     ######
     ##call poc function - info about poc can be found in function doc string.
     poc_con_p6lz, poc_md_fp6z, poc_vol_fp6z = pfun.f_poc(cu3, cu4, i_poc_intake_daily_p6lzt, i_poc_dmd_p6zt, i_poc_foo_p6zt
-                                                              , i_legume_zt, i_pasture_stage_p6z, nv_is_not_confinement_f)
+                                                         , i_legume_zt, i_pasture_stage_p6z, nv_is_not_confinement_f
+                                                         , me_threshold_fp6zt, i_me_eff_gainlose_p6zt)
     poc_vol_fp6z = poc_vol_fp6z/ (1 + sen.sap['pi'])
 
     ###########
