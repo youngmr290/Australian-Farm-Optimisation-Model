@@ -84,7 +84,8 @@ def stubble_all(params, report, nv):
     len_nv = nv['len_nv']
     nv_is_not_confinement_f = np.full(len_nv, True)
     nv_is_not_confinement_f[-1] = np.logical_not(nv['confinement_inc']) #if confinement is included the last nv pool is confinement.
-
+    me_threshold_fp6z = np.swapaxes(nv['nv_cutoff_ave_p6fz'], axis1=0, axis2=1)
+    stub_me_eff_gainlose = pinp.stubble['i_stub_me_eff_gainlose']
 
 
     ##create mask which is stubble available. Stubble is available from the period harvest starts to the beginning of the following growing season.
@@ -164,10 +165,11 @@ def stubble_all(params, report, nv):
     ###adjust for quantity delcine due to deterioration
     stubble_foo_p6zks1 = stubble_foo_zks1 * quant_declined_p6zk[..., na]
     ###ri availability
+    hf = fsfun.f_hf(pinp.stubble['i_hr'])  # height factor
     if uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used - note that the equation system used is the one selected for dams in p1
-        ri_availability_p6zks1 = fsfun.f_ra_cs(stubble_foo_p6zks1, pinp.stubble['i_hf'])
+        ri_availability_p6zks1 = fsfun.f_ra_cs(stubble_foo_p6zks1, hf)
     elif uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==1: #Murdoch function used - note that the equation system used is the one selected for dams in p1
-        ri_availability_p6zks1 = fsfun.f_ra_mu(stubble_foo_p6zks1, pinp.stubble['i_hf'])
+        ri_availability_p6zks1 = fsfun.f_ra_mu(stubble_foo_p6zks1, hf)
 
     ##combine ri quality and ri availability to calc overall vol (potential intake)
     ri_p6zks1 = fsfun.f_rel_intake(ri_availability_p6zks1, ri_quality_p6zks1, pinp.stubble['clover_propn_in_sward_stubble'])
@@ -178,9 +180,13 @@ def stubble_all(params, report, nv):
     ##convert dmd to M/D
     ## Stubble doesn't include calculation of effective mei because stubble is generally low quality feed with a wide variation in quality within the sward.
     ## Therefore, there is scope to alter average diet quality by altering the grazing time and the proportion of the stubble consumed.
-    md_p6zks1 = np.clip(fsfun.dmd_to_md(dmd_cat_p6zks1) * 1000, 0, np.inf) #mul to convert to tonnes
+    md_p6zks1 = np.clip(fsfun.dmd_to_md(dmd_cat_p6zks1), 0, np.inf)
     md_p6zks1 = md_p6zks1 * mask_stubble_exists_p6zk[...,na] #stop md being provided if stubble doesnt exist
-    md_fp6zks1 = md_p6zks1 * nv_is_not_confinement_f[:,na,na,na,na] #me from stubble is 0 in the confinement pool
+    ##reduce me if nv is higher than livestock diet requirement.
+    md_fp6zks1 = fsfun.f_effective_mei(1000, md_p6zks1, me_threshold_fp6z[...,na,na]
+                                       , nv['confinement_inc'], ri_p6zks1, stub_me_eff_gainlose)
+
+    md_fp6zks1 = md_fp6zks1 * nv_is_not_confinement_f[:,na,na,na,na] #me from stubble is 0 in the confinement pool
 
     ###########
     #trampling#
