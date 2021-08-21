@@ -490,7 +490,9 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
     volume_grnha_gop6lzt = cons_grnha_t_gop6lzt / grn_ri_gop6lzt
     #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
     volume_grnha_gop6lzt = volume_grnha_gop6lzt * mask_greenfeed_exists_p6zt[:, na,...]
-    return (me_cons_grnha_fgop6lzt, volume_grnha_gop6lzt, foo_start_grnha_op6lzt, foo_end_grnha_gop6lzt
+    #me from pasture is 0 in the confinement pool
+    volume_grnha_fgop6lzt = volume_grnha_gop6lzt * nv_is_not_confinement_f[:, na, na, na, na, na, na]
+    return (me_cons_grnha_fgop6lzt, volume_grnha_fgop6lzt, foo_start_grnha_op6lzt, foo_end_grnha_gop6lzt
            , senesce_period_grnha_gop6lzt, senesce_eos_grnha_gop6lzt, dmd_sward_end_grnha_gop6lzt, pgr_grnha_gop6lzt
            , foo_endprior_grnha_gop6lzt, cons_grnha_t_gop6lzt, foo_ave_grnha_gop6lzt, dmd_diet_grnha_gop6lzt)
 
@@ -596,6 +598,7 @@ def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_
 
     dry_volume_t_dp6zt = 1000 / dry_ri_dp6zt                 # parameters for the dry feed grazing activities: Total volume of the tonne consumed
     dry_volume_t_dp6zt = dry_volume_t_dp6zt * mask_dryfeed_exists_p6zt  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
+    dry_volume_t_fdp6zt = dry_volume_t_dp6zt * nv_is_not_confinement_f[:,na,na,na,na] #me from pasture is 0 in the confinement pool
 
     ## dry, ME consumed per kg consumed
     dry_md_dp6zt        = fsfun.dmd_to_md(dry_dmd_dp6zt)
@@ -608,7 +611,7 @@ def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_
                                , i_me_eff_gainlose_p6zt)
     dry_mecons_t_fdp6zt = dry_mecons_t_fdp6zt * mask_dryfeed_exists_p6zt  #apply mask - this masks out any green foo at the end of period in periods when green pas doesnt exist.
     dry_mecons_t_fdp6zt = dry_mecons_t_fdp6zt * nv_is_not_confinement_f[:,na,na,na,na] #me from pasture is 0 in the confinement pool
-    return dry_mecons_t_fdp6zt, dry_volume_t_dp6zt, dry_dmd_dp6zt, dry_foo_dp6zt
+    return dry_mecons_t_fdp6zt, dry_volume_t_fdp6zt, dry_dmd_dp6zt, dry_foo_dp6zt
 
 
 def f_poc(cu3, cu4, i_poc_intake_daily_p6lzt, i_poc_dmd_p6zt, i_poc_foo_p6zt, i_legume_zt, i_pasture_stage_p6z, nv_is_not_confinement_f):
@@ -663,9 +666,9 @@ def f_poc(cu3, cu4, i_poc_intake_daily_p6lzt, i_poc_dmd_p6zt, i_poc_foo_p6zt, i_
 
     poc_ri_p6z = fsfun.f_rel_intake(poc_ri_quan_p6z, poc_ri_qual_p6z, i_legume_zt[..., 0])
     poc_vol_p6z = fun.f_divide(1000, poc_ri_p6z)  # 1000 to convert to vol per tonne
+    poc_vol_fp6z = poc_vol_p6z * nv_is_not_confinement_f[:,na,na]  # me from pasture is 0 in the confinement pool
 
-
-    return poc_con_p6lz, poc_md_fp6z, poc_vol_p6z
+    return poc_con_p6lz, poc_md_fp6z, poc_vol_fp6z
 
 
 def f1_calc_foo_profile(germination_p6lzt, dry_decay_p6zt, length_of_periods_fzt

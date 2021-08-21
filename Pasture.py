@@ -243,12 +243,7 @@ def f_pasture(params, r_vals, nv):
     index_fdp6zt=fun.cartesian_product_simple_transpose(arrays)
     index_fdp6zt=tuple(map(tuple, index_fdp6zt)) #create a tuple rather than a list because tuples are faster
 
-    ### dp6zt
-    arrays=[keys_d, keys_p6, keys_z, keys_t]
-    index_dp6zt=fun.cartesian_product_simple_transpose(arrays)
-    index_dp6zt=tuple(map(tuple, index_dp6zt)) #create a tuple rather than a list because tuples are faster
-
-    ### fp6
+    ### fp6z
     arrays=[keys_f, keys_p6, keys_z]
     index_fp6z=fun.cartesian_product_simple_transpose(arrays)
     index_fp6z=tuple(map(tuple, index_fp6z)) #create a tuple rather than a list because tuples are faster
@@ -262,11 +257,6 @@ def f_pasture(params, r_vals, nv):
     arrays=[keys_p6, keys_z, keys_t]
     index_p6zt=fun.cartesian_product_simple_transpose(arrays)
     index_p6zt=tuple(map(tuple, index_p6zt)) #create a tuple rather than a list because tuples are faster
-
-    ### p6z
-    arrays=[keys_p6, keys_z]
-    index_p6z=fun.cartesian_product_simple_transpose(arrays)
-    index_p6z=tuple(map(tuple, index_p6z)) #create a tuple rather than a list because tuples are faster
 
     ###########
     #map_excel#
@@ -457,7 +447,7 @@ def f_pasture(params, r_vals, nv):
                                            * (1-np.sum(pasture_rt[:, na, :], axis=-1)))    # sum pasture proportion across the t axis to get area of crop
 
     ## Pasture growth, consumption of green feed.
-    me_cons_grnha_fgop6lzt, volume_grnha_gop6lzt, foo_start_grnha_op6lzt, foo_end_grnha_gop6lzt, senesce_period_grnha_gop6lzt \
+    me_cons_grnha_fgop6lzt, volume_grnha_fgop6lzt, foo_start_grnha_op6lzt, foo_end_grnha_gop6lzt, senesce_period_grnha_gop6lzt \
     , senesce_eos_grnha_gop6lzt, dmd_sward_grnha_gop6lzt, pgr_grnha_gop6lzt, foo_endprior_grnha_gop6lzt, cons_grnha_t_gop6lzt \
     , foo_ave_grnha_gop6lzt, dmd_diet_grnha_gop6lzt = pfun.f_grn_pasture(
         cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_gp6zt, grn_foo_start_ungrazed_p6lzt
@@ -465,14 +455,14 @@ def f_pasture(params, r_vals, nv):
         , i_base_p6zt, i_grn_trampling_p6t, i_grn_dig_p6lzt, i_grn_dmd_range_p6zt, i_pasture_stage_p6z
         , i_legume_zt, me_threshold_fp6zt, i_me_eff_gainlose_p6zt, mask_greenfeed_exists_p6zt
         , length_fz, nv_is_not_confinement_f)
-    volume_grnha_gop6lzt = volume_grnha_gop6lzt / (1 + sen.sap['pi'])
+    volume_grnha_fgop6lzt = volume_grnha_fgop6lzt / (1 + sen.sap['pi'])
 
 
     ## dry, dmd & foo of feed consumed
-    dry_mecons_t_fdp6zt, dry_volume_t_dp6zt, dry_dmd_dp6zt, dry_foo_dp6zt = pfun.f_dry_pasture(
+    dry_mecons_t_fdp6zt, dry_volume_t_fdp6zt, dry_dmd_dp6zt, dry_foo_dp6zt = pfun.f_dry_pasture(
         cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_high_p6zt, me_threshold_fp6zt, i_me_eff_gainlose_p6zt
         , mask_dryfeed_exists_p6zt, i_pasture_stage_p6z, nv_is_not_confinement_f, i_legume_zt, n_feed_pools)
-    dry_volume_t_dp6zt = dry_volume_t_dp6zt / (1 + sen.sap['pi'])
+    dry_volume_t_fdp6zt = dry_volume_t_fdp6zt / (1 + sen.sap['pi'])
 
     ## dry, animal removal, mask consumption in periods where dry doesnt exist to remove the decision variable in pyomo.
     dry_removal_t_p6zt  = (1000 * (1 + i_dry_trampling_p6t[:,na,:])
@@ -489,9 +479,9 @@ def f_pasture(params, r_vals, nv):
     #poc #
     ######
     ##call poc function - info about poc can be found in function doc string.
-    poc_con_p6lz, poc_md_fp6z, poc_vol_p6z = pfun.f_poc(cu3, cu4, i_poc_intake_daily_p6lzt, i_poc_dmd_p6zt, i_poc_foo_p6zt
+    poc_con_p6lz, poc_md_fp6z, poc_vol_fp6z = pfun.f_poc(cu3, cu4, i_poc_intake_daily_p6lzt, i_poc_dmd_p6zt, i_poc_foo_p6zt
                                                               , i_legume_zt, i_pasture_stage_p6z, nv_is_not_confinement_f)
-    poc_vol_p6z = poc_vol_p6z/ (1 + sen.sap['pi'])
+    poc_vol_fp6z = poc_vol_fp6z/ (1 + sen.sap['pi'])
 
     ###########
     #params   #
@@ -542,13 +532,13 @@ def f_pasture(params, r_vals, nv):
 
     params['p_dry_mecons_t_fdp6zt'] = dict(zip(index_fdp6zt, dry_mecons_t_fdp6zt.ravel()))
 
-    params['p_volume_grnha_gop6lzt'] = dict(zip(index_gop6lzt, volume_grnha_gop6lzt.ravel()))
+    params['p_volume_grnha_fgop6lzt'] = dict(zip(index_fgop6lzt, volume_grnha_fgop6lzt.ravel()))
 
-    params['p_dry_volume_t_dp6zt'] = dict(zip(index_dp6zt, dry_volume_t_dp6zt.ravel()))
+    params['p_dry_volume_t_fdp6zt'] = dict(zip(index_fdp6zt, dry_volume_t_fdp6zt.ravel()))
 
     params['p_senesce_grnha_dgop6lzt'] = dict(zip(index_dgop6lzt, senesce_grnha_dgop6lzt.ravel()))
 
-    params['p_poc_vol_p6z'] = dict(zip(index_p6z, poc_vol_p6z.ravel()))
+    params['p_poc_vol_fp6z'] = dict(zip(index_fp6z, poc_vol_fp6z.ravel()))
 
     ###########
     #report   #
@@ -573,8 +563,8 @@ def f_pasture(params, r_vals, nv):
     r_vals['pgr_grnha_gop6lzt'] = pgr_grnha_gop6lzt
     r_vals['foo_end_grnha_gop6lzt'] = foo_endprior_grnha_gop6lzt #Green FOO prior to eos senescence
     r_vals['cons_grnha_t_gop6lzt'] = cons_grnha_t_gop6lzt
-    r_vals['nv_grnha_fgop6lzt'] = fun.f_divide(me_cons_grnha_fgop6lzt, volume_grnha_gop6lzt)
-    r_vals['nv_dry_fdp6zt'] = fun.f_divide(dry_mecons_t_fdp6zt, dry_volume_t_dp6zt)
+    r_vals['nv_grnha_fgop6lzt'] = fun.f_divide(me_cons_grnha_fgop6lzt, volume_grnha_fgop6lzt)
+    r_vals['nv_dry_fdp6zt'] = fun.f_divide(dry_mecons_t_fdp6zt, dry_volume_t_fdp6zt)
     r_vals['foo_ave_grnha_gop6lzt'] = foo_ave_grnha_gop6lzt
     r_vals['dmd_diet_grnha_gop6lzt'] = dmd_diet_grnha_gop6lzt
     r_vals['dry_foo_dp6zt'] = dry_foo_dp6zt

@@ -60,11 +60,11 @@ def f1_paspyomo_local(params, model):
     
     model.p_me_cons_grnha = pe.Param(model.s_feed_pools, model.s_grazing_int, model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_season_types, model.s_pastures, initialize=params['p_me_cons_grnha_fgop6lzt'], default=0, mutable=False, doc='Total ME from grazing a hectare')
     
-    model.p_volume_grnha = pe.Param(model.s_grazing_int, model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_season_types, model.s_pastures, initialize=params['p_volume_grnha_gop6lzt'], default=0, mutable=False, doc='Total Vol from grazing a hectare')
+    model.p_volume_grnha = pe.Param(model.s_feed_pools, model.s_grazing_int, model.s_foo_levels, model.s_feed_periods, model.s_lmus, model.s_season_types, model.s_pastures, initialize=params['p_volume_grnha_fgop6lzt'], default=0, mutable=False, doc='Total Vol from grazing a hectare')
     
     model.p_dry_mecons_t = pe.Param(model.s_feed_pools, model.s_dry_groups, model.s_feed_periods, model.s_season_types, model.s_pastures, initialize=params['p_dry_mecons_t_fdp6zt'], default=0, mutable=False, doc='Total ME from grazing a tonne of dry feed')
     
-    model.p_dry_volume_t = pe.Param(model.s_dry_groups, model.s_feed_periods, model.s_season_types, model.s_pastures, initialize=params['p_dry_volume_t_dp6zt'], default=0, mutable=False, doc='Total Vol from grazing a tonne of dry feed')
+    model.p_dry_volume_t = pe.Param(model.s_feed_pools, model.s_dry_groups, model.s_feed_periods, model.s_season_types, model.s_pastures, initialize=params['p_dry_volume_t_fdp6zt'], default=0, mutable=False, doc='Total Vol from grazing a tonne of dry feed')
     
     model.p_dry_transfer_prov_t = pe.Param(model.s_feed_periods, model.s_season_types, model.s_pastures, initialize=params['p_dry_transfer_prov_t_p6zt'], default=0, mutable=False, doc='quantity of dry feed transferred out of the previous period to the current (allows for decay)')
 
@@ -86,7 +86,7 @@ def f1_paspyomo_local(params, model):
 
     model.p_poc_md = pe.Param(model.s_feed_pools, model.s_feed_periods, model.s_season_types, initialize=params['p_poc_md_fp6z'],default=0, doc='md of pasture on crop paddocks for each feed period')
     
-    model.p_poc_vol = pe.Param(model.s_feed_periods, model.s_season_types, initialize=params['p_poc_vol_p6z'],default=0, mutable=False, doc='vol (ri intake) of pasture on crop paddocks for each feed period')
+    model.p_poc_vol = pe.Param(model.s_feed_pools, model.s_feed_periods, model.s_season_types, initialize=params['p_poc_vol_fp6z'],default=0, mutable=False, doc='vol (ri intake) of pasture on crop paddocks for each feed period')
     
     
     ########################
@@ -229,7 +229,7 @@ def f_pas_vol(model,p6,f,z):
 
     Used in global constraint (con_vol). See CorePyomo
     '''
-    return sum(sum(model.v_greenpas_ha[f,g,o,p6,l,z,t] * model.p_volume_grnha[g,o,p6,l,z,t] for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus) \
-               + sum(model.v_drypas_consumed[f,d,p6,z,t] * model.p_dry_volume_t[d,p6,z,t] \
-               + model.v_nap_consumed[f,d,p6,z,t] * model.p_dry_volume_t[d,p6,z,t] for d in model.s_dry_groups) for t in model.s_pastures)\
-               + sum(model.v_poc[f,p6,l,z] * model.p_poc_vol[p6,z] for l in model.s_lmus) #have to sum lmu here again, otherwise other axis will broadcast
+    return sum(sum(model.v_greenpas_ha[f,g,o,p6,l,z,t] * model.p_volume_grnha[f,g,o,p6,l,z,t] for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus) \
+               + sum(model.v_drypas_consumed[f,d,p6,z,t] * model.p_dry_volume_t[f,d,p6,z,t] \
+               +     model.v_nap_consumed[f,d,p6,z,t] * model.p_dry_volume_t[f,d,p6,z,t] for d in model.s_dry_groups) for t in model.s_pastures)\
+               + sum(model.v_poc[f,p6,l,z] * model.p_poc_vol[f,p6,z] for l in model.s_lmus) #have to sum lmu here again, otherwise other axis will broadcast
