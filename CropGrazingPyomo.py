@@ -64,7 +64,7 @@ def f1_cropgrazepyomo_local(params,model):
                                          initialize=params['crop_md_fkp6zl'], default=0, mutable=False,
                                          doc='Energy provided from 1t of crop grazing')
 
-        model.p_crop_vol = pe.Param(model.s_crops, model.s_feed_periods, model.s_season_types, model.s_lmus,
+        model.p_crop_vol = pe.Param(model.s_feed_pools, model.s_crops, model.s_feed_periods, model.s_season_types, model.s_lmus,
                                          initialize=params['crop_vol_kp6zl'], default=0, mutable=False,
                                          doc='Volume required to consume 1t of crop grazing')
 
@@ -140,6 +140,6 @@ def f_grazecrop_vol(model,p6,f,z):
     Used in global constraint (con_vol). See CorePyomo
     '''
     if pinp.cropgraze['i_cropgrazing_inc']:
-        return sum(model.v_tonnes_crop_consumed[f,k,p6,z] * model.p_crop_vol[k,p6,z,l] for k in model.s_crops for l in model.s_lmus)
+        return sum(model.v_tonnes_crop_consumed[f,k,p6,z] * model.p_crop_vol[f,k,p6,z,l] for k in model.s_crops for l in model.s_lmus)
     else:
         return 0

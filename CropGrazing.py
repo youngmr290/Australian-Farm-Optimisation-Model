@@ -112,10 +112,6 @@ def crop_md_vol(nv):
     nv_is_not_confinement_f = np.full(len_nv, True)
     nv_is_not_confinement_f[-1] = np.logical_not(nv['confinement_inc']) #if confinement period is included the last fev pool is confinement.
 
-    ## md per tonne
-    crop_md_kp6z = fsfun.dmd_to_md(crop_dmd_kp6z)
-    crop_md_fkp6z = crop_md_kp6z * nv_is_not_confinement_f[:,na,na,na] #me from crop is 0 in the confinement pool
-
     ## vol
     ### calc relative quality - note that the equation system used is the one selected for dams in p1 - currently only cs function exists
     if uinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
@@ -130,15 +126,19 @@ def crop_md_vol(nv):
 
     crop_ri_kp6zl = fsfun.f_rel_intake(crop_ri_quan_kp6zl, crop_ri_qual_kp6z[...,na], legume=0)
     crop_vol_kp6zl = fun.f_divide(1000, crop_ri_kp6zl)  # 1000 to convert to vol per tonne
+    crop_vol_fkp6zl = crop_vol_kp6zl * nv_is_not_confinement_f[:,na,na,na,na] #me from crop is 0 in the confinement pool
 
-    ##reduce me if nv is higher than livestock diet requirement.
+    ## md per tonne
+    crop_md_kp6z = fsfun.dmd_to_md(crop_dmd_kp6z)
+    crop_md_fkp6z = crop_md_kp6z * nv_is_not_confinement_f[:,na,na,na] #me from crop is 0 in the confinement pool
+    ###reduce me if nv is higher than livestock diet requirement.
     crop_md_fkp6zl = fsfun.f_effective_mei(1000
                                          , crop_md_fkp6z[...,na]
                                          , me_threshold_fp6z[:,na,...,na]
                                          , crop_ri_kp6zl
                                          , crop_me_eff_gainlose)
 
-    return crop_md_fkp6zl, crop_vol_kp6zl
+    return crop_md_fkp6zl, crop_vol_fkp6zl
 
 def cropgraze_yeild_penalty():
     '''
@@ -180,7 +180,7 @@ def f1_cropgraze_params(params, r_vals, nv):
     grazecrop_area_rkl = f_graze_crop_area()
     crop_foo_provided_kp6zl, crop_foo_required_k = f_cropgraze_foo()
     yield_penalty_kzl, stubble_penalty_kzl = cropgraze_yeild_penalty()
-    crop_md_fkp6zl, crop_vol_kp6zl = crop_md_vol(nv)
+    crop_md_fkp6zl, crop_vol_fkp6zl = crop_md_vol(nv)
 
     ##keys
     keys_r = np.array(sinp.f_phases().index).astype('str')
@@ -217,5 +217,5 @@ def f1_cropgraze_params(params, r_vals, nv):
     params['yield_penalty_kzl'] =dict(zip(tup_kzl, yield_penalty_kzl.ravel()))
     params['stubble_penalty_kzl'] =dict(zip(tup_kzl, stubble_penalty_kzl.ravel()))
     params['crop_md_fkp6zl'] =dict(zip(tup_fkp6zl, crop_md_fkp6zl.ravel()))
-    params['crop_vol_kp6zl'] =dict(zip(tup_kp6zl, crop_vol_kp6zl.ravel()))
+    params['crop_vol_kp6zl'] =dict(zip(tup_fkp6zl, crop_vol_fkp6zl.ravel()))
 
