@@ -173,13 +173,14 @@ def stubble_all(params, report, nv):
     ri_p6zks1 = fsfun.f_rel_intake(ri_availability_p6zks1, ri_quality_p6zks1, pinp.stubble['clover_propn_in_sward_stubble'])
     vol_p6zks1 = (1000 / ri_p6zks1) / (1 + SA.sap['pi'])
     vol_p6zks1 = vol_p6zks1 * mask_stubble_exists_p6zk[..., na] #stop md being provided if stubble doesnt exist
+    vol_fp6zks1 = vol_p6zks1 * nv_is_not_confinement_f[:,na,na,na,na] #me from stubble is 0 in the confinement pool
 
     ##convert dmd to M/D
     ## Stubble doesn't include calculation of effective mei because stubble is generally low quality feed with a wide variation in quality within the sward.
     ## Therefore, there is scope to alter average diet quality by altering the grazing time and the proportion of the stubble consumed.
     md_p6zks1 = np.clip(fsfun.dmd_to_md(dmd_cat_p6zks1) * 1000, 0, np.inf) #mul to convert to tonnes
     md_p6zks1 = md_p6zks1 * mask_stubble_exists_p6zk[...,na] #stop md being provided if stubble doesnt exist
-    md_vp6zks1 = md_p6zks1 * nv_is_not_confinement_f[:,na,na,na,na] #me from stubble is 0 in the confinement pool
+    md_fp6zks1 = md_p6zks1 * nv_is_not_confinement_f[:,na,na,na,na] #me from stubble is 0 in the confinement pool
 
     ###########
     #trampling#
@@ -237,11 +238,8 @@ def stubble_all(params, report, nv):
     arrays = [keys_p6, keys_z, keys_k, keys_s1_cut2]
     index_a_p6zks1 = fun.cartesian_product_simple_transpose(arrays)
     ###p6zks1 - md & vol
-    arrays = [keys_p6, keys_z, keys_k, keys_s1]
-    index_p6zks1 = fun.cartesian_product_simple_transpose(arrays)
-    ###p6zks1 - md & vol
     arrays = [keys_f, keys_p6, keys_z, keys_k, keys_s1]
-    index_vp6zks1 = fun.cartesian_product_simple_transpose(arrays)
+    index_fp6zks1 = fun.cartesian_product_simple_transpose(arrays)
     ###p6zk - p7con & feed period transfer
     arrays = [keys_p6, keys_z, keys_k]
     index_p6zk = fun.cartesian_product_simple_transpose(arrays)
@@ -279,11 +277,10 @@ def stubble_all(params, report, nv):
     params['cat_a_st_req'] =dict(zip(tup_p6zks1, cat_a_st_req_p6zk.ravel()))
 
     ##md
-    tup_vp6zks1 = tuple(map(tuple, index_vp6zks1))
-    params['md'] =dict(zip(tup_vp6zks1, md_vp6zks1.ravel()))
+    tup_fp6zks1 = tuple(map(tuple, index_fp6zks1))
+    params['md'] =dict(zip(tup_fp6zks1, md_fp6zks1.ravel()))
 
     ##vol
-    tup_p6zks1 = tuple(map(tuple, index_p6zks1))
-    params['vol'] =dict(zip(tup_p6zks1, vol_p6zks1.ravel()))
+    params['vol'] =dict(zip(tup_fp6zks1, vol_fp6zks1.ravel()))
 
 

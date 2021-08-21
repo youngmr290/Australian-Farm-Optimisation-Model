@@ -46,7 +46,7 @@ def f1_stubpyomo_local(params, model):
     model.p_stub_md = pe.Param(model.s_feed_pools, model.s_feed_periods, model.s_season_types, model.s_crops, model.s_stub_cat, initialize=params['md'],
                                default = 0.0, mutable=False, doc='md from 1t of each stubble categories for each crop')
 
-    model.p_stub_vol = pe.Param(model.s_feed_periods, model.s_season_types, model.s_crops, model.s_stub_cat, initialize=params['vol'],
+    model.p_stub_vol = pe.Param(model.s_feed_pools, model.s_feed_periods, model.s_season_types, model.s_crops, model.s_stub_cat, initialize=params['vol'],
                                 default = 0.0, mutable=False, doc='amount of intake volume required by 1t of each stubble category for each crop')
     
     model.p_a_req = pe.Param(model.s_feed_periods, model.s_season_types, model.s_crops, model.s_stub_cat, initialize=params['cat_a_st_req'],
@@ -118,4 +118,4 @@ def f_stubble_vol(model,p6,f,z):
 
     Used in global constraint (con_vol). See CorePyomo
     '''
-    return sum(model.v_stub_con[f,p6,z,k,s] * model.p_stub_vol[p6,z,k,s] for k in model.s_crops for s in model.s_stub_cat)
+    return sum(model.v_stub_con[f,p6,z,k,s] * model.p_stub_vol[f,p6,z,k,s] for k in model.s_crops for s in model.s_stub_cat)
