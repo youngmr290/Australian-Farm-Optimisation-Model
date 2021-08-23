@@ -353,11 +353,11 @@ def f_contract_seed_cost(r_vals):
 #late seeding & dry seeding penalty    #
 ########################################
 
-def f_yield_penalty():
+def f_sowing_timeliness_penalty():
     '''
     Calculates the yield penalty in each mach period (wet and dry seeding) due to sowing timeliness- kg/ha/period/crop.
 
-    The timeliness of sowing can have a large impact on crop yields AFO accounts for this using a
+    The timeliness of sowing can have a large impact on crop yields. AFO accounts for this using a
     yield penalty.
     There are risks associated with dry sowing such as less effective weed control (i.e. crops germinate at
     the same time as the weeds so you miss out on a knock down spray opportunity), poor crop emergence (if
@@ -366,7 +366,7 @@ def f_yield_penalty():
     in the model by including a yield penalty for dry seeding. The level of the penalty is specified by the
     user for each crop and applies to all dry seeding activities.
 
-    Late sowing also receive a yield reduction because the crop has less time to mature (e.g. shorter
+    Late sowing also receives a yield reduction because the crop has less time to mature (e.g. shorter
     growing season) and grain filling often occurs during hotter drier conditions :cite:p:`RN121, RN122`.
     The user can specify the length of time after the beginning of wet seeding that no penalty applies
     after that a penalty is applied. The yield reduction is cumulative per day, so the longer sowing is
@@ -374,7 +374,7 @@ def f_yield_penalty():
 
     Yield penalty reduces grain available to sell and reduces stubble production.
 
-    The assumption is that; seeding is done evenly throughout a given period. In reality this is wrong eg if a
+    The assumption is that seeding is done evenly throughout a given period. In reality this is wrong eg if a
     period is 5 days long but the farmer only has to sow 20ha they will do it on the first day of the period not
     4ha each day of the period. Therefore, the calculation overestimates the yield penalty.
 
@@ -420,7 +420,7 @@ def f_stubble_penalty():
     Calculates the stubble penalty in each mach period (wet and dry seeding) due to sowing timeliness- kg/ha/period/crop.
     '''
     import Stubble as stub
-    yield_penalty_p5k_z = f_yield_penalty() #late sowing yield reduction kg/ha/period
+    yield_penalty_p5k_z = f_sowing_timeliness_penalty() #late sowing yield reduction kg/ha/period
     stub_production_k = stub.f_stubble_production() #stubble production per kg of grain yield
     stub_penalty = yield_penalty_p5k_z.mul(stub_production_k, axis=0, level=1)
     return stub_penalty.stack()
@@ -959,7 +959,7 @@ def f_mach_params(params,r_vals):
     harvest_cost = f_harvest_cost(r_vals).stack()
     contract_harvest_cost = f_contract_harvest_cost_period(r_vals).stack()
     hay_making_cost = f_hay_making_cost()
-    yield_penalty = f_yield_penalty().stack()
+    yield_penalty = f_sowing_timeliness_penalty().stack()
     stubble_penalty = f_stubble_penalty()
     grazing_days = f_grazing_days().stack()
     fixed_dep = f_fix_dep()
