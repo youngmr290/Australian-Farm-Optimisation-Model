@@ -71,7 +71,7 @@ def f_cropgraze_foo(foo=False):
     growth_kp6z = pinp.f_seasonal_inp(np.moveaxis(pinp.cropgraze['i_crop_growth_zkp6'], source=0, destination=-1),numpy=True,axis=-1)
     wastage_k = pinp.cropgraze['i_cropgraze_wastage']
     growth_lmu_factor_kl = pinp.cropgraze['i_cropgrowth_lmu_factor_kl'][:,lmu_mask]
-    consumption_factor_p6 = pinp.cropgraze['i_cropgraze_consumption_factor_p6']
+    consumption_factor_p6z = pinp.f_seasonal_inp(pinp.cropgraze['i_cropgraze_consumption_factor_zp6'],numpy=True,axis=0).T
     feed_period_lengths_p6z = per.f_feed_periods(option=1)
 
     ##adjust crop growth for lmu
@@ -82,7 +82,7 @@ def f_cropgraze_foo(foo=False):
 
     if not foo:
         ##calc dry matter available for consumption provided by 1ha of crop
-        crop_foo_provided_kp6zl = total_dm_kp6zl * consumption_factor_p6[:,na,na]
+        crop_foo_provided_kp6zl = total_dm_kp6zl * consumption_factor_p6z[:,na]
 
         ##calc foo required for animals to consume 1t - accounts for wastage
         crop_foo_required_k = 1000 * (1 + wastage_k)
@@ -92,7 +92,7 @@ def f_cropgraze_foo(foo=False):
     else:
         ##crop foo mid way through feed peirod after consumption - used to calc vol in the next function.
         ##foo = cumulative sum of foo in previous periods minus foo consumed. Minus half the foo in the current period to get the foo in the middle of the period.
-        crop_foo_kp6zl = np.cumsum(total_dm_kp6zl * (1-consumption_factor_p6[:,na,na]), axis=1) - total_dm_kp6zl/2 * (1-consumption_factor_p6[:,na,na])
+        crop_foo_kp6zl = np.cumsum(total_dm_kp6zl * (1-consumption_factor_p6z[:,na]), axis=1) - total_dm_kp6zl/2 * (1-consumption_factor_p6z[:,na])
         return crop_foo_kp6zl
 
 def crop_md_vol(nv):
