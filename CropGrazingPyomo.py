@@ -38,6 +38,9 @@ def f1_cropgrazepyomo_local(params,model):
         model.v_tonnes_crop_consumed = pe.Var(model.s_feed_pools, model.s_crops, model.s_feed_periods, model.s_season_types,
                                               bounds=(0,None), doc='tonnes of crop consumed by livestock')
 
+        model.v_tonnes_crop_transfer = pe.Var(model.s_crops, model.s_feed_periods, model.s_season_types,
+                                              bounds=(0,None), doc='tonnes of crop DM transferred to next feed period')
+
         #########
         # param #
         #########
@@ -45,12 +48,16 @@ def f1_cropgrazepyomo_local(params,model):
                                          initialize=params['grazecrop_area_rkl'], default=0, mutable=False,
                                          doc='area of crop grazing provided by 1ha of rotation')
 
-        model.p_crop_foo_provided = pe.Param(model.s_crops, model.s_feed_periods, model.s_season_types, model.s_lmus,
-                                         initialize=params['crop_foo_provided_kp6zl'], default=0, mutable=False,
+        model.p_crop_DM_provided = pe.Param(model.s_crops, model.s_feed_periods, model.s_season_types, model.s_lmus,
+                                         initialize=params['crop_DM_provided_kp6zl'], default=0, mutable=False,
                                          doc='Grazeable FOO provided by 1ha of rotation')
 
-        model.p_crop_foo_required = pe.Param(model.s_crops, initialize=params['crop_foo_required_k'], default=0, mutable=False,
+        model.p_crop_DM_required = pe.Param(model.s_crops, initialize=params['crop_DM_required_k'], default=0, mutable=False,
                                          doc='FOO required for livestock to consume 1t of crop feed (this accounts for wastage)')
+
+        model.p_transfer_exists = pe.Param(model.s_feed_periods, model.s_season_types,
+                                         initialize=params['transfer_exists_p6z'], default=0, mutable=False,
+                                         doc='transfer exists into current feed period')
 
         model.p_cropgraze_yield_penalty = pe.Param(model.s_crops, model.s_season_types, model.s_lmus,
                                          initialize=params['yield_penalty_kzl'], default=0, mutable=False,
@@ -71,18 +78,23 @@ def f1_cropgrazepyomo_local(params,model):
         ###################################
         #call local constraints           #
         ###################################
-        f_con_crop_foo_transfer(model)
+        f_con_crop_DM_transfer(model)
 
 
 
-def f_con_crop_foo_transfer(model):
+def f_con_crop_DM_transfer(model):
     '''
-    Transfer FOO from grazing 1ha of crop to the livestock crop consumption activity.
+    Transfer FOO from grazing 1ha of crop to the livestock crop consumption activity. DM that is not consumed is
+    transferred into the following feed period.
     '''
-    def crop_foo_transfer(model,k,p6,z):
-        return sum(- model.v_grazecrop_ha[k,z,l] * model.p_crop_foo_provided[k,p6,z,l] for l in model.s_lmus)    \
-               + sum(model.v_tonnes_crop_consumed[f,k,p6,z] * model.p_crop_foo_required[k] for f in model.s_feed_pools) <=0
-    model.con_crop_foo_transfer = pe.Constraint(model.s_crops, model.s_feed_periods, model.s_season_types, rule=crop_foo_transfer,
+    def crop_DM_transfer(model,k,p6,z):
+        p6s = list(model.s_feed_periods)[list(model.s_feed_periods).index(p6) - 1]  #previous feedperiod - have to convert to a list first because indexing of an ordered set starts at 1
+        return sum(- model.v_grazecrop_ha[k,z,l] * model.p_crop_DM_provided[k,p6,z,l] for l in model.s_lmus)    \
+             + sum(model.v_tonnes_crop_consumed[f,k,p6,z] * model.p_crop_DM_required[k] for f in model.s_feed_pools) \
+             + model.v_tonnes_crop_transfer[k,p6s,z]*1000 \
+             - model.v_tonnes_crop_transfer[k,p6,z]*1000*model.p_transfer_exists[p6,z] <=0
+
+    model.con_crop_DM_transfer = pe.Constraint(model.s_crops, model.s_feed_periods, model.s_season_types, rule=crop_DM_transfer,
                                                 doc='transfer FOO from the grazing grazing 1ha activity to the consumption activity')
 
 

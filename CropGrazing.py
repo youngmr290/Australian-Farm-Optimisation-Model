@@ -55,16 +55,33 @@ def f_graze_crop_area():
     cropgraze_area_rkl = graze_area_kl * a_r_k_rk[...,na]
     return cropgraze_area_rkl
 
-def f_cropgraze_foo(foo=False):
+def f_cropgraze_DM(total_DM=False):
     '''
-    Calculates the FOO available for grazing on crop paddocks.
+    Calculates the dry matter (DM) available for grazing on crop paddocks and the total DM used to calculate relative
+    availability.
+
+    The total DM is calculated from the initial DM plus growth minus the consumption. The initial DM is an inputted amount
+    which represents germination and first growth over an establishing period. No grazing can occur during the establishing
+    period. After the establishing period the crop grows at an inputted rate per day and a proportion of this growth
+    becomes available for consumption. The total DM and the DM available for consumption are calculated assuming that
+    the crop is sown on the first day of seeding however, this may not be the case. To account for this a FOO reduction is
+    included that is linked to the crop sowing activity (see f_DM_reduction_seeding_time). It is not possible to adjust
+    the DM used in the relative availability (volume) calculation. Thus it assumes that seeding occurs on the
+    first day of seeding period (potentially overestimating DM) and the maximum DM is consumed in each
+    period (potentially underestimating DM). These two limitations somewhat balance each other out.
+
+    If DM is not consumed in the period is grows it is transferred to the following feed period. Currently, it
+    doesn't incur a growth rate (e.g. 1t that isn't consumed in fp0 transfers to 1t in fp1). A possible improvement would
+    be to include growth in the transfer activity.
 
     Crop growth rate is an input for each feed period, LMU and land use.
     There are two main limitations of the representation:
 
         #. Impacts of rotation are not included in the estimation of crop growth.
-        #. Impacts of grazing intensity are not included in the estimation of crop growth. This is likely not a big
-           issue because crop tend to be grazed lightly and thus the rate of crop growth is likely to remain similar.
+        #. Growth rate remains the same independent of selected grazing management (e.g. if AFO opt to graze less
+           crop in the first period the growth rate does.
+
+    :param DM: boolean when set to True calculates the total crop DM used to calculate relative availability.
     '''
     ##read inputs
     lmu_mask = pinp.general['i_lmu_area'] > 0
@@ -78,22 +95,47 @@ def f_cropgraze_foo(foo=False):
     growth_kp6zl = growth_kp6z[...,na] * growth_lmu_factor_kl[:,na,na,:]
 
     ##calc total dry matter in each feed period
-    total_dm_kp6zl = growth_kp6zl * feed_period_lengths_p6z[:,na].astype('float')
+    total_dm_growth_kp6zl = growth_kp6zl * feed_period_lengths_p6z[:,na].astype('float')
 
-    if not foo:
+    if not total_DM:
         ##calc dry matter available for consumption provided by 1ha of crop
-        crop_foo_provided_kp6zl = total_dm_kp6zl * consumption_factor_p6z[:,na]
+        crop_DM_provided_kp6zl = total_dm_growth_kp6zl * consumption_factor_p6z[:,na]
 
         ##calc foo required for animals to consume 1t - accounts for wastage
-        crop_foo_required_k = 1000 * (1 + wastage_k)
+        crop_DM_required_k = 1000 * (1 + wastage_k)
 
-        return crop_foo_provided_kp6zl, crop_foo_required_k
+        ##calc mask if DM can be transferred to following period (can only be transferred to periods when consumption is greater than 0)
+        transfer_exists_p6z = (consumption_factor_p6z > 0)*1
+
+        return crop_DM_provided_kp6zl, crop_DM_required_k, transfer_exists_p6z
 
     else:
         ##crop foo mid way through feed peirod after consumption - used to calc vol in the next function.
         ##foo = cumulative sum of foo in previous periods minus foo consumed. Minus half the foo in the current period to get the foo in the middle of the period.
-        crop_foo_kp6zl = np.cumsum(total_dm_kp6zl * (1-consumption_factor_p6z[:,na]), axis=1) - total_dm_kp6zl/2 * (1-consumption_factor_p6z[:,na])
-        return crop_foo_kp6zl
+        # initial_DM +
+        crop_DM_kp6zl =  np.cumsum(total_dm_growth_kp6zl * (1-consumption_factor_p6z[:,na]), axis=1) - total_dm_growth_kp6zl/2 * (1-consumption_factor_p6z[:,na])
+        return crop_DM_kp6zl
+
+def f_DM_reduction_seeding_time():
+    '''
+    Reduction in crop grazing DM available for consumption due to seeding time.
+
+    Crop DM provided by each hectare of rotation is calculated assuming that seeding occurs on the first day of the
+    seedig window. However, if seeding occurs later in the period there will be less DM. This function calculates the
+    reduction in DM due to sowing later in the sowing period.
+    '''
+    ##inputs
+    date_feed_periods = per.f_feed_periods().astype('datetime64')
+    date_start_p6z = date_feed_periods[:-1]
+    date_end_p6z = date_feed_periods[1:]
+    mach_periods = per.p_dates_df()
+    date_start_p5z = mach_periods.values[:-1]
+    date_end_p5z = mach_periods.values[1:]
+
+    deffer = 5
+
+
+
 
 def crop_md_vol(nv):
     '''
@@ -102,7 +144,7 @@ def crop_md_vol(nv):
 
     ##inputs
     crop_dmd_kp6z = pinp.f_seasonal_inp(pinp.cropgraze['i_crop_dmd_kp6z'],numpy=True,axis=-1)
-    crop_foo_kp6zl = f_cropgraze_foo(foo=True)
+    crop_DM_kp6zl = f_cropgraze_DM(total_DM=True)
     hr = pinp.cropgraze['i_hr_crop']
     me_threshold_fp6z = np.swapaxes(nv['nv_cutoff_ave_p6fz'], axis1=0, axis2=1)
     crop_me_eff_gainlose = pinp.cropgraze['i_crop_me_eff_gainlose']
@@ -120,9 +162,9 @@ def crop_md_vol(nv):
     ### calc relative availability - note that the equation system used is the one selected for dams in p1 - need to hook up mu function
     hf= fsfun.f_hf(hr) #height factor
     if uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used
-        crop_ri_quan_kp6zl = fsfun.f_ra_cs(crop_foo_kp6zl, hf)
+        crop_ri_quan_kp6zl = fsfun.f_ra_cs(crop_DM_kp6zl, hf)
     elif uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==1: #Murdoch function used
-        crop_ri_quan_kp6zl = fsfun.f_ra_mu(crop_foo_kp6zl, hf)
+        crop_ri_quan_kp6zl = fsfun.f_ra_mu(crop_DM_kp6zl, hf)
 
     crop_ri_kp6zl = fsfun.f_rel_intake(crop_ri_quan_kp6zl, crop_ri_qual_kp6z[...,na], legume=0)
     crop_vol_kp6zl = fun.f_divide(1000, crop_ri_kp6zl)  # 1000 to convert to vol per tonne
@@ -176,7 +218,7 @@ def cropgraze_yield_penalty():
 
 def f1_cropgraze_params(params, r_vals, nv):
     grazecrop_area_rkl = f_graze_crop_area()
-    crop_foo_provided_kp6zl, crop_foo_required_k = f_cropgraze_foo()
+    crop_DM_provided_kp6zl, crop_DM_required_k, transfer_exists_p6z = f_cropgraze_DM()
     yield_penalty_kzl, stubble_penalty_kzl = cropgraze_yield_penalty()
     crop_md_fkp6zl, crop_vol_fkp6zl = crop_md_vol(nv)
 
@@ -198,6 +240,10 @@ def f1_cropgraze_params(params, r_vals, nv):
     arrays = [keys_k, keys_z, keys_l]
     index_kzl = fun.cartesian_product_simple_transpose(arrays)
     tup_kzl = tuple(map(tuple, index_kzl))
+    ###p6z
+    arrays = [keys_p6, keys_z]
+    index_p6z = fun.cartesian_product_simple_transpose(arrays)
+    tup_p6z = tuple(map(tuple, index_p6z))
     ###kp6zl
     arrays = [keys_k, keys_p6, keys_z, keys_l]
     index_kp6zl = fun.cartesian_product_simple_transpose(arrays)
@@ -210,8 +256,9 @@ def f1_cropgraze_params(params, r_vals, nv):
 
     ##create params
     params['grazecrop_area_rkl'] =dict(zip(tup_rkl, grazecrop_area_rkl.ravel()))
-    params['crop_foo_provided_kp6zl'] =dict(zip(tup_kp6zl, crop_foo_provided_kp6zl.ravel()))
-    params['crop_foo_required_k'] =dict(zip(keys_k, crop_foo_required_k))
+    params['crop_DM_provided_kp6zl'] =dict(zip(tup_kp6zl, crop_DM_provided_kp6zl.ravel()))
+    params['crop_DM_required_k'] =dict(zip(keys_k, crop_DM_required_k))
+    params['transfer_exists_p6z'] =dict(zip(tup_p6z, transfer_exists_p6z.ravel()))
     params['yield_penalty_kzl'] =dict(zip(tup_kzl, yield_penalty_kzl.ravel()))
     params['stubble_penalty_kzl'] =dict(zip(tup_kzl, stubble_penalty_kzl.ravel()))
     params['crop_md_fkp6zl'] =dict(zip(tup_fkp6zl, crop_md_fkp6zl.ravel()))
