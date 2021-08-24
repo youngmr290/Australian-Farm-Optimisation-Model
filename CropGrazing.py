@@ -121,8 +121,6 @@ def f_cropgraze_DM(total_DM=False):
     else:
         ##crop foo mid way through feed period after consumption - used to calc vol in the next function.
         ##DM = initial DM plus cumulative sum of DM in previous periods minus DM consumed. Minus half the DM in the current period to get the DM in the middle of the period.
-        # period_is_end_establishment_p6z = np.logical_and((end_establishment_z>=date_start_p6z), (end_establishment_z<=date_end_p6z))
-        # initial_DM_p6z = initial_DM * period_is_end_establishment_p6z
         initial_DM_p6z = initial_DM * (end_establishment_z <= date_end_p6z)
         crop_DM_kp6zl =  initial_DM_p6z[...,na] + np.cumsum(total_dm_growth_kp6zl * (1-consumption_factor_p6z[:,na])
                                                             , axis=1) - total_dm_growth_kp6zl/2 * (1-consumption_factor_p6z[:,na])
