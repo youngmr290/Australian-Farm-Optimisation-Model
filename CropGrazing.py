@@ -150,7 +150,7 @@ def f_DM_reduction_seeding_time():
 
 
     crop_grazing_start_z = seeding_start_z + establishment_days
-    seed_days_p5z = date_end_p5z - date_start_p5z
+    seed_days_p5z = (date_end_p5z - date_start_p5z).astype('timedelta64[D]').astype(int)
 
     ##grazing days rectangle component (for p5) and allocation to feed periods (p6)
     base_p6p5z = (np.minimum(date_end_p6z[:,na,:], date_start_p5z + establishment_days) \
@@ -162,7 +162,7 @@ def f_DM_reduction_seeding_time():
     start_p6p5z = np.maximum(date_start_p6z[:,na,:], np.maximum(crop_grazing_start_z, date_start_p5z + establishment_days))
     end_p6p5z = np.minimum(date_end_p6z[:,na,:], date_end_p5z + establishment_days)
     base_p6p5z = (end_p6p5z - start_p6p5z)/ np.timedelta64(1, 'D')
-    height_start_p6p5z = np.maximum(0, 1 - fun.f_divide(((date_end_p5z + establishment_days) - start_p6p5z)/ np.timedelta64(1, 'D')
+    height_start_p6p5z = np.maximum(0, fun.f_divide(((date_end_p5z + establishment_days) - start_p6p5z)/ np.timedelta64(1, 'D')
                                                         , seed_days_p5z))
     height_end_p6p5z = fun.f_divide(np.maximum(0,((date_end_p5z + establishment_days) - end_p6p5z)/ np.timedelta64(1, 'D'))
                                     , seed_days_p5z)

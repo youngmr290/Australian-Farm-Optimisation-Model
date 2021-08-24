@@ -52,7 +52,7 @@ def f1_cropgrazepyomo_local(params,model):
                                          initialize=params['crop_DM_provided_kp6zl'], default=0, mutable=False,
                                          doc='Grazeable FOO provided by 1ha of rotation')
 
-        model.p_crop_DM_reduction = pe.Param(model.s_crops, model.s_feed_periods, model.s_labour_periods, model.s_season_types, model.s_lmus,
+        model.p_crop_DM_reduction = pe.Param(model.s_crops, model.s_feed_periods, model.s_labperiods, model.s_season_types, model.s_lmus,
                                          initialize=params['DM_reduction_kp6p5zl'], default=0, mutable=False,
                                          doc='Reduction in DM due to sowing timing (late sowing means less growth)')
 
