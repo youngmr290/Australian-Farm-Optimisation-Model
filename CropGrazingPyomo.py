@@ -91,8 +91,8 @@ def f_con_crop_DM_transfer(model):
         p6s = list(model.s_feed_periods)[list(model.s_feed_periods).index(p6) - 1]  #previous feedperiod - have to convert to a list first because indexing of an ordered set starts at 1
         return sum(- model.v_grazecrop_ha[k,z,l] * model.p_crop_DM_provided[k,p6,z,l] for l in model.s_lmus)    \
              + sum(model.v_tonnes_crop_consumed[f,k,p6,z] * model.p_crop_DM_required[k] for f in model.s_feed_pools) \
-             + model.v_tonnes_crop_transfer[k,p6s,z]*1000 \
-             - model.v_tonnes_crop_transfer[k,p6,z]*1000*model.p_transfer_exists[p6,z] <=0
+             - model.v_tonnes_crop_transfer[k,p6s,z]*1000*model.p_transfer_exists[p6,z] \
+             + model.v_tonnes_crop_transfer[k,p6,z]*1000 <=0
 
     model.con_crop_DM_transfer = pe.Constraint(model.s_crops, model.s_feed_periods, model.s_season_types, rule=crop_DM_transfer,
                                                 doc='transfer FOO from the grazing grazing 1ha activity to the consumption activity')
