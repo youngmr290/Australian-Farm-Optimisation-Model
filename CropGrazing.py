@@ -89,13 +89,22 @@ def f_cropgraze_DM(total_DM=False):
     wastage_k = pinp.cropgraze['i_cropgraze_wastage']
     growth_lmu_factor_kl = pinp.cropgraze['i_cropgrowth_lmu_factor_kl'][:,lmu_mask]
     consumption_factor_p6z = pinp.f_seasonal_inp(pinp.cropgraze['i_cropgraze_consumption_factor_zp6'],numpy=True,axis=0).T
-    feed_period_lengths_p6z = per.f_feed_periods(option=1)
+    date_feed_periods = per.f_feed_periods().astype('datetime64')
+    date_start_p6z = date_feed_periods[:-1]
+    date_end_p6z = date_feed_periods[1:]
+    seeding_start_z = per.wet_seeding_start_date().astype(np.datetime64)
+    initial_DM = pinp.cropgraze['i_cropgraze_initial_dm'] #used to calc total DM for relative availability (vol). The initial DM cant be consumed.
+    establishment_days = pinp.cropgraze['i_cropgraze_defer_days'] #days between sowing and grazing
 
     ##adjust crop growth for lmu
     growth_kp6zl = growth_kp6z[...,na] * growth_lmu_factor_kl[:,na,na,:]
 
-    ##calc total dry matter in each feed period
-    total_dm_growth_kp6zl = growth_kp6zl * feed_period_lengths_p6z[:,na].astype('float')
+    ##calc total dry matter in each feed period - have to adjust the length of the feed period to account for
+    # establishment period (growth is not calculated during the establishment period there is just an inputted initial DM)
+    end_establishment_z = seeding_start_z + establishment_days
+    date_start_adj_p6z = np.maximum(date_start_p6z, end_establishment_z)
+    feed_period_lengths_p6z = np.maximum(0,(date_end_p6z - date_start_adj_p6z).astype('timedelta64[D]').astype('float'))
+    total_dm_growth_kp6zl = growth_kp6zl * feed_period_lengths_p6z[:,na]
 
     if not total_DM:
         ##calc dry matter available for consumption provided by 1ha of crop
@@ -111,9 +120,11 @@ def f_cropgraze_DM(total_DM=False):
 
     else:
         ##crop foo mid way through feed peirod after consumption - used to calc vol in the next function.
-        ##foo = cumulative sum of foo in previous periods minus foo consumed. Minus half the foo in the current period to get the foo in the middle of the period.
-        # initial_DM +
-        crop_DM_kp6zl =  np.cumsum(total_dm_growth_kp6zl * (1-consumption_factor_p6z[:,na]), axis=1) - total_dm_growth_kp6zl/2 * (1-consumption_factor_p6z[:,na])
+        ##DM = initial DM plus cumulative sum of DM in previous periods minus DM consumed. Minus half the DM in the current period to get the DM in the middle of the period.
+        period_is_end_establishment_p6z = np.logical_and((end_establishment_z>=date_start_p6z), (end_establishment_z<=date_end_p6z))
+        initial_DM_p6z = initial_DM * period_is_end_establishment_p6z
+        crop_DM_kp6zl =  initial_DM_p6z[...,na] + np.cumsum(total_dm_growth_kp6zl * (1-consumption_factor_p6z[:,na])
+                                                            , axis=1) - total_dm_growth_kp6zl/2 * (1-consumption_factor_p6z[:,na])
         return crop_DM_kp6zl
 
 def f_DM_reduction_seeding_time():
@@ -255,12 +266,12 @@ def f1_cropgraze_params(params, r_vals, nv):
 
 
     ##create params
-    params['grazecrop_area_rkl'] =dict(zip(tup_rkl, grazecrop_area_rkl.ravel()))
-    params['crop_DM_provided_kp6zl'] =dict(zip(tup_kp6zl, crop_DM_provided_kp6zl.ravel()))
-    params['crop_DM_required_k'] =dict(zip(keys_k, crop_DM_required_k))
-    params['transfer_exists_p6z'] =dict(zip(tup_p6z, transfer_exists_p6z.ravel()))
-    params['yield_penalty_kzl'] =dict(zip(tup_kzl, yield_penalty_kzl.ravel()))
-    params['stubble_penalty_kzl'] =dict(zip(tup_kzl, stubble_penalty_kzl.ravel()))
-    params['crop_md_fkp6zl'] =dict(zip(tup_fkp6zl, crop_md_fkp6zl.ravel()))
-    params['crop_vol_kp6zl'] =dict(zip(tup_fkp6zl, crop_vol_fkp6zl.ravel()))
+    params['grazecrop_area_rkl'] = dict(zip(tup_rkl, grazecrop_area_rkl.ravel()))
+    params['crop_DM_provided_kp6zl'] = dict(zip(tup_kp6zl, crop_DM_provided_kp6zl.ravel()))
+    params['crop_DM_required_k'] = dict(zip(keys_k, crop_DM_required_k))
+    params['transfer_exists_p6z'] = dict(zip(tup_p6z, transfer_exists_p6z.ravel()))
+    params['yield_penalty_kzl'] = dict(zip(tup_kzl, yield_penalty_kzl.ravel()))
+    params['stubble_penalty_kzl'] = dict(zip(tup_kzl, stubble_penalty_kzl.ravel()))
+    params['crop_md_fkp6zl'] = dict(zip(tup_fkp6zl, crop_md_fkp6zl.ravel()))
+    params['crop_vol_kp6zl'] = dict(zip(tup_fkp6zl, crop_vol_fkp6zl.ravel()))
 
