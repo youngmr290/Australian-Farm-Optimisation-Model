@@ -66,7 +66,7 @@ def f1_machpyomo_local(params, model):
     
     model.p_stubble_penalty = pe.Param(model.s_labperiods, model.s_crops, model.s_season_types, initialize=params['stubble_penalty'], default = 0.0, mutable=False, doc='kg/ha/day penalty for late sowing in each period')
 
-    model.p_seeding_grazingdays = pe.Param(model.s_feed_periods, model.s_labperiods, model.s_season_types, initialize=params['grazing_days'], default = 0.0, mutable=False, doc='pasture grazing days per feed period provided by 1ha of seeding in each seed period')
+    model.p_poc_grazingdays = pe.Param(model.s_feed_periods, model.s_labperiods, model.s_season_types, initialize=params['poc_grazing_days'], default = 0.0, mutable=False, doc='pasture grazing days per feed period provided by 1ha of seeding in each seed period')
 
     model.p_fixed_dep = pe.Param(initialize=params['fixed_dep'],default=0.0, doc='fixed depreciation of all machinery for 1 yr')
 
@@ -148,9 +148,9 @@ def f_ha_days_pasture_crop_paddocks(model,f,l,z):
     '''
 
     ##number of grazable pasture ha provided by contract seeding
-    ha_days_contract= sum(sum(model.p_seeding_grazingdays[f,p,z] * model.v_contractseeding_ha[z,p,k,l] for k in model.s_crops) for p in model.s_labperiods)
+    ha_days_contract= sum(sum(model.p_poc_grazingdays[f,p,z] * model.v_contractseeding_ha[z,p,k,l] for k in model.s_crops) for p in model.s_labperiods)
     ##number of grazable pasture ha provided by farmer seeding
-    ha_days_personal= sum(sum(model.p_seeding_grazingdays[f,p,z] * model.p_seeding_rate[k,l] * model.v_seeding_machdays[z,p,k,l] for k in model.s_crops) for p in model.s_labperiods)
+    ha_days_personal= sum(sum(model.p_poc_grazingdays[f,p,z] * model.p_seeding_rate[k,l] * model.v_seeding_machdays[z,p,k,l] for k in model.s_crops) for p in model.s_labperiods)
     return ha_days_contract + ha_days_personal
 
 #function to determine late seeding penalty, this will be passed to core model
