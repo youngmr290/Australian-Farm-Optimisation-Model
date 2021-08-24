@@ -131,41 +131,57 @@ def f_contractseeding_occurs():
     # params['contractseeding_occur'] = (mach_periods==contract_start).squeeze().to_dict()
 
 
-def f_grazing_days():
+def f_poc_grazing_days():
     '''
     Grazing days provided by wet seeding activity (days/ha sown in each mach period/feed period).
 
-    Grazing days is the number of days a hectare can be grazed in each feed period for each seeding period.
-    For example if seeding occurs early less grazing can occur beforehand whereas if seeding occurs in a
-    later machine period more grazing can occur.
+    This section represents the grazing achieved from crop paddocks before seeding. The longer seeding is
+    delayed the more grazing is achieved. The calculations also account for a gap between when pasture
+    germinates (the pasture break) and when seeding can begin (the seeding break). Dry seeding doesn’t
+    provide any grazing, so the calculations are only done using the wet seeding days. The calculations
+    allow for destocking a certain number of days before seeding (termed the defer period) to allow the pasture
+    leaf area to increase so that the knock down spray is effective.
 
-    The grazing days in each feed period per hectare sown in each seeding
-    period is made up of two parts. Firstly, a rectangular component which represents the each hectare
-    being grazed each day from the break of season up until the beginning of the machine period (or destocking
-    date if that is before).
-    Secondly, a triangle component which represents the grazing during the seeding period.
-    The area grazed each day diminishes associated with the area sown being spread across the seeding period.
-    For example at the start of the period all area can be grazed but by the end of the period once
-    all the area has been sown no grazing can occur.
+    Grazing days is the sum of, the area grazed multiplied by the number of days of grazing. As such it is
+    dependent on both the area that is being grazed and the duration of grazing. The number of grazing days
+    is calculated for each seeding decision variable in each machinery period (p5). However, the number
+    of grazing days must be calculated for each feed period (p6) so that the
+    feed supply will align with the feed demand of the animals (that are calculated for feed periods).
 
-    Rectangular component: The base of the rectangle is defined by the later of the break and the
+    The grazing days associated with the seeding decision variable (per hectare sown) is made up of two parts:
+    A 'rectangular' component which represents the area being grazed each day from the break of season up
+    until the destocking date for the beginning of the machine period.
+    A 'triangle' component which represents the grazing during the seeding period. The area grazed each day
+    diminishes associated with destocking the area that is soon to be sown. For example at the start
+    of the period all area can be grazed but by the end of the period once all the area has been destocked
+    no grazing can occur.
+
+    These 2 components must then be allocated to the feed periods.
+
+    'Rectangular' component: The base of the rectangle is defined by the later of the break and the
     start of the feed period through to the earlier of the end of the feed period or the start of
     the machine period.
 
     Triangular component: The base of the triangle starts at the latter of the start of the feed period,
     the break of season and the start of the machinery period minus the defer period. It ends at the
     earlier of the end of the feed period and the end of the machinery period minus the defer period.
-    The height at the start is the length of the machinery period reduced by 1 for each day after the
-    start of the machinery period. The end height is the number of days prior to the end of the
-    machinery period. The height is the average of the start and the finish.
+    This triangular component is then allocated to the feed periods and this is calculated using a height
+    at the start and a height at the end to calculate an average height. The average 'height' is the average
+    area grazed per day for that feed period, when multiplied by the number of days is the number of grazing
+    days for that feed period.
+    The height at the start is 100% of the area to be sown reduced by (1 / the length of the machinery period)
+    for each day after the start of the machinery period. This reduction is to represent that the definition of the
+    decision variable is 1 hectare sown, spread evenly over the seeding period, so if the seeding period is 10 days
+    long one tenth of the area is sown each day. The end height is the area per day multiplied by the number of
+    days prior to the end of the machinery period.
 
-    The above returns the number of hectare days that ‘1ha of seeding in each seed period’ provides,
-    which can then just be multiplied by the rate of seeding and the number of days seeded in each
-    period to get the total number of hectare days. The last step happens in pyomo.
+    The above returns the number of grazing days provided by ‘1ha of seeding in each machine period spread across
+    the duration of the machine period’, which can then just be multiplied by the rate of seeding and the number
+    of days seeded in each period to get the total number of grazing days. This last step happens in pyomo.
 
     The assumption is that; seeding is done evenly throughout a given period. In reality this is wrong eg if a
     period is 5 days long but the farmer only has to sow 20ha they will do it on the first day of the period not
-    4ha each day of the period. Therefore, the calculation overestimates the amount of grazing achieved.
+    4ha each day of the period. Therefore, the calculation slightly overestimates the amount of grazing achieved.
 
     '''
     ##inputs
@@ -179,27 +195,30 @@ def f_grazing_days():
     defer_period = np.array([pinp.crop['poc_destock']]).astype('timedelta64[D]') #days between seeding and destocking
     season_break_z = date_start_p6z[0]
 
-    ##grazing days rectangle
-    base_p6p5z = (np.minimum(date_end_p6z[:,na,:], date_start_p5z - defer_period) - np.maximum(season_break_z, date_start_p6z[:,na,:]))/ np.timedelta64(1, 'D')
+    ##grazing days rectangle component (for p5) and allocation to feed periods (p6)
+    base_p6p5z = (np.minimum(date_end_p6z[:,na,:], date_start_p5z - defer_period) \
+                  - np.maximum(season_break_z, date_start_p6z[:,na,:]))/ np.timedelta64(1, 'D')
     height_p5z = 1
-    grazing_days_rect_p6p5z = np.maximum(0, base_p6p5z * height_p5z)
+    poc_grazing_days_rect_p6p5z = np.maximum(0, base_p6p5z * height_p5z)
 
-    ##triangular component
+    ##grazing days triangular component (for p5) and allocation to feed periods (p6)
     start_p6p5z = np.maximum(date_start_p6z[:,na,:], np.maximum(season_break_z, date_start_p5z - defer_period))
     end_p6p5z = np.minimum(date_end_p6z[:,na,:], date_end_p5z - defer_period)
     base_p6p5z = (end_p6p5z - start_p6p5z)/ np.timedelta64(1, 'D')
-    height_start_p6p5z = np.maximum(0, 1 - fun.f_divide((start_p6p5z - (date_start_p5z - defer_period))/ np.timedelta64(1, 'D'), seed_days_p5z))
-    height_end_p6p5z = fun.f_divide(np.maximum(0,((date_end_p5z - defer_period) - end_p6p5z)/ np.timedelta64(1, 'D')), seed_days_p5z)
-    grazing_days_tri_p6p5z = np.maximum(0,base_p6p5z * (height_start_p6p5z + height_end_p6p5z) / 2)
+    height_start_p6p5z = np.maximum(0, 1 - fun.f_divide((start_p6p5z - (date_start_p5z - defer_period))/ np.timedelta64(1, 'D')
+                                                        , seed_days_p5z))
+    height_end_p6p5z = fun.f_divide(np.maximum(0,((date_end_p5z - defer_period) - end_p6p5z)/ np.timedelta64(1, 'D'))
+                                    , seed_days_p5z)
+    poc_grazing_days_tri_p6p5z = np.maximum(0,base_p6p5z * (height_start_p6p5z + height_end_p6p5z) / 2)
 
     ##total grazing days & convert to df
-    total_grazing_days_p6p5z = grazing_days_tri_p6p5z + grazing_days_rect_p6p5z
+    total_poc_grazing_days_p6p5z = poc_grazing_days_tri_p6p5z + poc_grazing_days_rect_p6p5z
 
-    total_grazing_days_p6p5z = total_grazing_days_p6p5z.reshape(total_grazing_days_p6p5z.shape[0], -1)
+    total_poc_grazing_days_p6p5z = total_poc_grazing_days_p6p5z.reshape(total_poc_grazing_days_p6p5z.shape[0], -1)
     keys_z = pinp.f_keys_z()
     cols = pd.MultiIndex.from_product([mach_periods.index[:-1], keys_z])
-    total_grazing_days = pd.DataFrame(total_grazing_days_p6p5z, index=pinp.period['i_fp_idx'], columns=cols)
-    return total_grazing_days.stack(0)
+    total_poc_grazing_days = pd.DataFrame(total_poc_grazing_days_p6p5z, index=pinp.period['i_fp_idx'], columns=cols)
+    return total_poc_grazing_days.stack(0)
 
 #################################################
 #seeding ha/day for each crop on each lmu  type #
@@ -961,7 +980,7 @@ def f_mach_params(params,r_vals):
     hay_making_cost = f_hay_making_cost()
     yield_penalty = f_yield_penalty().stack()
     stubble_penalty = f_stubble_penalty()
-    grazing_days = f_grazing_days().stack()
+    poc_grazing_days = f_poc_grazing_days().stack()
     fixed_dep = f_fix_dep()
     harv_dep = f_harvest_dep()
     seeding_gear_clearing_value = f_seeding_gear_clearing_value()
@@ -996,6 +1015,6 @@ def f_mach_params(params,r_vals):
     params['contract_harvest_cost'] = contract_harvest_cost.to_dict()
     params['yield_penalty'] = yield_penalty.to_dict()
     params['stubble_penalty'] = stubble_penalty.to_dict()
-    params['grazing_days'] = grazing_days.to_dict()
+    params['poc_grazing_days'] = poc_grazing_days.to_dict()
 
 
