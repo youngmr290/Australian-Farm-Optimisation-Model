@@ -52,6 +52,10 @@ def f1_cropgrazepyomo_local(params,model):
                                          initialize=params['crop_DM_provided_kp6zl'], default=0, mutable=False,
                                          doc='Grazeable FOO provided by 1ha of rotation')
 
+        model.p_crop_DM_reduction = pe.Param(model.s_crops, model.s_feed_periods, model.s_labour_periods, model.s_season_types, model.s_lmus,
+                                         initialize=params['DM_reduction_kp6p5zl'], default=0, mutable=False,
+                                         doc='Reduction in DM due to sowing timing (late sowing means less growth)')
+
         model.p_crop_DM_required = pe.Param(model.s_crops, initialize=params['crop_DM_required_k'], default=0, mutable=False,
                                          doc='FOO required for livestock to consume 1t of crop feed (this accounts for wastage)')
 
@@ -92,7 +96,11 @@ def f_con_crop_DM_transfer(model):
         return sum(- model.v_grazecrop_ha[k,z,l] * model.p_crop_DM_provided[k,p6,z,l] for l in model.s_lmus)    \
              + sum(model.v_tonnes_crop_consumed[f,k,p6,z] * model.p_crop_DM_required[k] for f in model.s_feed_pools) \
              - model.v_tonnes_crop_transfer[k,p6s,z]*1000*model.p_transfer_exists[p6,z] \
-             + model.v_tonnes_crop_transfer[k,p6,z]*1000 <=0
+             + model.v_tonnes_crop_transfer[k,p6,z]*1000 \
+             + sum(model.p_crop_DM_reduction[k,p6,p5,z,l] * model.v_contractseeding_ha[z,p5,k,l]
+                   for p5 in model.s_labperiods for l in model.s_lmus) \
+             + sum(model.p_crop_DM_reduction[k,p6,p5,z,l] * model.p_seeding_rate[k,l] * model.v_seeding_machdays[z,p5,k,l]
+                   for p5 in model.s_labperiods for l in model.s_lmus) <=0
 
     model.con_crop_DM_transfer = pe.Constraint(model.s_crops, model.s_feed_periods, model.s_season_types, rule=crop_DM_transfer,
                                                 doc='transfer FOO from the grazing grazing 1ha activity to the consumption activity')
