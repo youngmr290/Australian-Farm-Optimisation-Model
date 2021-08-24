@@ -59,13 +59,13 @@ def f1_cropgrazepyomo_local(params,model):
                                          initialize=params['transfer_exists_p6z'], default=0, mutable=False,
                                          doc='transfer exists into current feed period')
 
-        model.p_cropgraze_yield_penalty = pe.Param(model.s_crops, model.s_season_types, model.s_lmus,
-                                         initialize=params['yield_penalty_kzl'], default=0, mutable=False,
-                                         doc='yield penalty (kg) from grazing 1ha of crop rotation')
+        model.p_cropgraze_yield_penalty = pe.Param(model.s_crops, model.s_feed_periods, model.s_season_types,
+                                                   initialize=params['yield_reduction_propn_kp6z'], default=0, mutable=False,
+                                                   doc='yield penalty as a proportion of crop consumed')
 
-        model.p_cropgraze_stubble_penalty = pe.Param(model.s_crops, model.s_season_types, model.s_lmus,
-                                         initialize=params['stubble_penalty_kzl'], default=0, mutable=False,
-                                         doc='stubble penalty (kg) from grazing 1ha of crop rotation')
+        model.p_cropgraze_stubble_penalty = pe.Param(model.s_crops, model.s_feed_periods, model.s_season_types,
+                                                     initialize=params['stubble_reduction_propn_kp6z'], default=0, mutable=False,
+                                                     doc='stubble penalty as a proportion of crop consumed')
 
         model.p_crop_md = pe.Param(model.s_feed_pools, model.s_crops, model.s_feed_periods, model.s_season_types, model.s_lmus,
                                          initialize=params['crop_md_fkp6zl'], default=0, mutable=False,
@@ -106,25 +106,25 @@ def f_con_crop_DM_transfer(model):
 
 def f_grazecrop_yield_penalty(model,g,k,z):
     '''
-    Calculate the yield penalty from grazing crops.
+    Calculate the yield penalty from grazing crops (kg).
 
     Used in global constraint (con_grain_transfer). See CorePyomo
     '''
     if pinp.cropgraze['i_cropgrazing_inc']:
-        return sum(model.v_grazecrop_ha[k,z,l] * model.p_cropgraze_yield_penalty[k,z,l]
-                                 for l in model.s_lmus) * model.p_grainpool_proportion[k,g]
+        return sum(model.v_tonnes_crop_consumed[f,k,p6,z] * model.p_cropgraze_yield_penalty[k,p6,z] * 1000
+                   for f in model.s_feed_pools for p6 in model.s_feed_periods) * model.p_grainpool_proportion[k,g]
     else:
         return 0
 
 def f_grazecrop_stubble_penalty(model,k,z):
     '''
-    Calculate the stubble penalty from grazing crops.
+    Calculate the stubble penalty from grazing crops (kg).
 
     Used in global constraint (con_grain_transfer). See CorePyomo
     '''
     if pinp.cropgraze['i_cropgrazing_inc']:
-        return sum(model.v_grazecrop_ha[k,z,l] * model.p_cropgraze_stubble_penalty[k,z,l]
-                                 for l in model.s_lmus)
+        return sum(model.v_tonnes_crop_consumed[f,k,p6,z] * model.p_cropgraze_stubble_penalty[k,p6,z] * 1000
+                   for f in model.s_feed_pools for p6 in model.s_feed_periods)
     else:
         return 0
 

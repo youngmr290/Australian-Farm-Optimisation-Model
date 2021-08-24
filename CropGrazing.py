@@ -193,7 +193,7 @@ def crop_md_vol(nv):
 
 def cropgraze_yield_penalty():
     '''
-    Yield and stubble penalty associated with grazing 1ha of each crop on each lmu.
+    Yield and stubble penalty associated with the amount of crop consumed.
 
     The yield penalty is an inputted percentage of the average yield for each crop. The average yield calculated from
     all rotation phase. The stubble penalty is calculated from the yield
@@ -203,34 +203,22 @@ def cropgraze_yield_penalty():
     import Phase as phs
     ##inputs
     cropgraze_landuse_idx_k = pinp.cropgraze['i_cropgraze_landuse_idx']
-    base_yield_k1z = phs.f_base_yield().mean(axis=0, level=1)
-    lmu_adj_k2l = phs.f1_mask_lmu(pinp.crop['yield_by_lmu'], axis=1)
     stubble_per_grain_k3 = stub.f_stubble_production()
-    yield_reduction_propn = pinp.cropgraze['i_cropgraze_yield_reduction']
+    yield_reduction_propn_kp6z = pinp.cropgraze['i_cropgraze_yield_reduction_kp6z']
 
-    ##give base yields and lmu_adj the correct k axis (k axis needs to be in the correct order and contain all crops so that numpy arrays align).
-    ###yield
-    yield_idx_bool_k1k = base_yield_k1z.index.values[:,na]==cropgraze_landuse_idx_k
-    base_yield_kz = np.sum(base_yield_k1z.values[:,na,:] * yield_idx_bool_k1k[...,na], axis=0)
-    ###lmu factor
-    lmu_idx_bool_k2k = lmu_adj_k2l.index.values[:,na]==cropgraze_landuse_idx_k
-    lmu_adj_kl = np.sum(lmu_adj_k2l.values[:,na,:] * lmu_idx_bool_k2k[...,na], axis=0)
-    ###stubble
+    ##correct stubble k axis (k axis needs to be in the correct order and contain all crops so that numpy arrays align).
     stub_idx_bool_k3k = stubble_per_grain_k3.index.values[:,na]==cropgraze_landuse_idx_k
     stubble_per_grain_k = np.sum(stubble_per_grain_k3.values[:,na] * stub_idx_bool_k3k, axis=0)
-    ##calc yield penalty for grazing 1ha of crop (note the penalty is allocated into grain pools in pyomo)
-    crp_yield_kzl = base_yield_kz[...,na] * lmu_adj_kl[:,na,:]
-    yield_penalty_kzl = crp_yield_kzl * yield_reduction_propn
 
     ##calc stubble reduction
-    stubble_penalty_kzl = yield_penalty_kzl * stubble_per_grain_k[:,na,na]
-    return yield_penalty_kzl, stubble_penalty_kzl
+    stubble_reduction_propn_kp6z = yield_reduction_propn_kp6z * stubble_per_grain_k[:,na,na]
+    return yield_reduction_propn_kp6z, stubble_reduction_propn_kp6z
 
 
 def f1_cropgraze_params(params, r_vals, nv):
     grazecrop_area_rkl = f_graze_crop_area()
     crop_DM_provided_kp6zl, crop_DM_required_k, transfer_exists_p6z = f_cropgraze_DM()
-    yield_penalty_kzl, stubble_penalty_kzl = cropgraze_yield_penalty()
+    yield_reduction_propn_kp6z, stubble_reduction_propn_kp6z = cropgraze_yield_penalty()
     crop_md_fkp6zl, crop_vol_fkp6zl = crop_md_vol(nv)
 
     ##keys
@@ -247,10 +235,10 @@ def f1_cropgraze_params(params, r_vals, nv):
     arrays = [keys_r, keys_k, keys_l]
     index_rkl = fun.cartesian_product_simple_transpose(arrays)
     tup_rkl = tuple(map(tuple, index_rkl))
-    ###kzl
-    arrays = [keys_k, keys_z, keys_l]
-    index_kzl = fun.cartesian_product_simple_transpose(arrays)
-    tup_kzl = tuple(map(tuple, index_kzl))
+    ###kp6z
+    arrays = [keys_k, keys_p6, keys_z]
+    index_kp6z = fun.cartesian_product_simple_transpose(arrays)
+    tup_kp6z = tuple(map(tuple, index_kp6z))
     ###p6z
     arrays = [keys_p6, keys_z]
     index_p6z = fun.cartesian_product_simple_transpose(arrays)
@@ -270,8 +258,8 @@ def f1_cropgraze_params(params, r_vals, nv):
     params['crop_DM_provided_kp6zl'] = dict(zip(tup_kp6zl, crop_DM_provided_kp6zl.ravel()))
     params['crop_DM_required_k'] = dict(zip(keys_k, crop_DM_required_k))
     params['transfer_exists_p6z'] = dict(zip(tup_p6z, transfer_exists_p6z.ravel()))
-    params['yield_penalty_kzl'] = dict(zip(tup_kzl, yield_penalty_kzl.ravel()))
-    params['stubble_penalty_kzl'] = dict(zip(tup_kzl, stubble_penalty_kzl.ravel()))
+    params['yield_reduction_propn_kp6z'] = dict(zip(tup_kp6z, yield_reduction_propn_kp6z.ravel()))
+    params['stubble_reduction_propn_kp6z'] = dict(zip(tup_kp6z, stubble_reduction_propn_kp6z.ravel()))
     params['crop_md_fkp6zl'] = dict(zip(tup_fkp6zl, crop_md_fkp6zl.ravel()))
     params['crop_vol_kp6zl'] = dict(zip(tup_fkp6zl, crop_vol_fkp6zl.ravel()))
 

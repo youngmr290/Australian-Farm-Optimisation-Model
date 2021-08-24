@@ -156,7 +156,7 @@ def f_ha_days_pasture_crop_paddocks(model,f,l,z):
 #function to determine late seeding penalty, this will be passed to core model
 def f_late_seed_penalty(model,g,k,z):
     '''
-    Calculate the yield penalty based on the timeliness of the selected contract and farmer seeding activities.
+    Calculate the yield penalty (kg) based on the timeliness of the selected contract and farmer seeding activities.
 
     Used in global constraint (con_grain_transfer). See CorePyomo
     '''
@@ -172,7 +172,7 @@ def f_late_seed_penalty(model,g,k,z):
 #function to determine late seeding stubble penalty, this will be passed to core model
 def f_stubble_penalty(model,k,z):
     '''
-    Calculate the stubble production penalty based on the timeliness of the selected contract and farmer seeding activities.
+    Calculate the stubble production penalty (kg) based on the timeliness of the selected contract and farmer seeding activities.
 
     Used in global constraint (con_stubble_a). See CorePyomo
     '''

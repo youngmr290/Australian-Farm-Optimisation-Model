@@ -76,7 +76,7 @@ def f1_total_rot_yield(model,k,z):
 
 def f_rotation_yield_transfer(model,g,k,z):
     '''
-    Calculate the total of each grain produced from selected rotation phases.
+    Calculate the total (kg) of each grain produced from selected rotation phases.
 
     Used in global constraint (con_grain_transfer). See CorePyomo
     '''
