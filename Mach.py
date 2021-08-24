@@ -135,9 +135,9 @@ def f_poc_grazing_days():
     '''
     Grazing days provided by wet seeding activity (days/ha sown in each mach period/feed period).
 
-    This section represents the grazing achieved from crop paddocks before seeding. The longer seeding is
+    This section represents the grazing achieved on crop paddocks before seeding. The longer seeding is
     delayed the more grazing is achieved. The calculations also account for a gap between when pasture
-    germinates (the pasture break) and when seeding can begin (the seeding break). Dry seeding doesn’t
+    germinates (the pasture break) and when seeding can begin (the seeding break). Dry seeding doesn't
     provide any grazing, so the calculations are only done using the wet seeding days. The calculations
     allow for destocking a certain number of days before seeding (termed the defer period) to allow the pasture
     leaf area to increase so that the knock down spray is effective.
@@ -154,9 +154,7 @@ def f_poc_grazing_days():
     A 'triangle' component which represents the grazing during the seeding period. The area grazed each day
     diminishes associated with destocking the area that is soon to be sown. For example at the start
     of the period all area can be grazed but by the end of the period once all the area has been destocked
-    no grazing can occur.
-
-    These 2 components must then be allocated to the feed periods.
+    no grazing can occur. These 2 components must then be allocated to the feed periods.
 
     'Rectangular' component: The base of the rectangle is defined by the later of the break and the
     start of the feed period through to the earlier of the end of the feed period or the start of
@@ -183,6 +181,7 @@ def f_poc_grazing_days():
     period is 5 days long but the farmer only has to sow 20ha they will do it on the first day of the period not
     4ha each day of the period. Therefore, the calculation slightly overestimates the amount of grazing achieved.
 
+    See poc section in google doc for diagram.
     '''
     ##inputs
     date_feed_periods = per.f_feed_periods().astype('datetime64')
