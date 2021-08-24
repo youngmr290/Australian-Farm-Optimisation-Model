@@ -111,7 +111,7 @@ def f_cropgraze_DM(total_DM=False):
         crop_DM_provided_kp6zl = total_dm_growth_kp6zl * consumption_factor_p6z[:,na]
 
         ##calc foo required for animals to consume 1t - accounts for wastage
-        crop_DM_required_k = 1000 * (1 + wastage_k)
+        crop_DM_required_k = 1000 / (1 - wastage_k)
 
         ##calc mask if DM can be transferred to following period (can only be transferred to periods when consumption is greater than 0)
         transfer_exists_p6z = (consumption_factor_p6z > 0)*1
@@ -119,10 +119,11 @@ def f_cropgraze_DM(total_DM=False):
         return crop_DM_provided_kp6zl, crop_DM_required_k, transfer_exists_p6z
 
     else:
-        ##crop foo mid way through feed peirod after consumption - used to calc vol in the next function.
+        ##crop foo mid way through feed period after consumption - used to calc vol in the next function.
         ##DM = initial DM plus cumulative sum of DM in previous periods minus DM consumed. Minus half the DM in the current period to get the DM in the middle of the period.
-        period_is_end_establishment_p6z = np.logical_and((end_establishment_z>=date_start_p6z), (end_establishment_z<=date_end_p6z))
-        initial_DM_p6z = initial_DM * period_is_end_establishment_p6z
+        # period_is_end_establishment_p6z = np.logical_and((end_establishment_z>=date_start_p6z), (end_establishment_z<=date_end_p6z))
+        # initial_DM_p6z = initial_DM * period_is_end_establishment_p6z
+        initial_DM_p6z = initial_DM * (end_establishment_z <= date_end_p6z)
         crop_DM_kp6zl =  initial_DM_p6z[...,na] + np.cumsum(total_dm_growth_kp6zl * (1-consumption_factor_p6z[:,na])
                                                             , axis=1) - total_dm_growth_kp6zl/2 * (1-consumption_factor_p6z[:,na])
         return crop_DM_kp6zl
@@ -161,7 +162,7 @@ def f_DM_reduction_seeding_time():
 
     ##grazing days triangular component (for p5) and allocation to feed periods (p6)
     start_p6p5z = np.maximum(date_start_p6z[:,na,:], np.maximum(crop_grazing_start_z, date_start_p5z + establishment_days))
-    end_p6p5z = np.minimum(date_end_p6z[:,na,:], date_end_p5z)
+    end_p6p5z = np.minimum(date_end_p6z[:,na,:], date_end_p5z + establishment_days)
     base_p6p5z = (end_p6p5z - start_p6p5z)/ np.timedelta64(1, 'D')
     height_start_p6p5z = np.maximum(0, 1 - fun.f_divide(((date_end_p5z + establishment_days) - start_p6p5z)/ np.timedelta64(1, 'D')
                                                         , seed_days_p5z))
