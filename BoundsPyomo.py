@@ -30,7 +30,7 @@ note:
 def f1_boundarypyomo_local(params, model):
 
     ##set bounds to include
-    bounds_inc = True #controls all bounds (typically on)
+    bounds_inc = False #controls all bounds (typically on)
     rot_lobound_inc = True #controls rot bound
     sup_lobound_inc = False #controls sup feed bound
     dams_lobound_inc = fun.f_sa(False, sen.sav['bnd_lower_dam_inc'], 5) #lower bound dams
