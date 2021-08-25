@@ -155,8 +155,8 @@ def f_grain_price(r_vals):
     ##calc farm gate grain price for each cashflow period - accounts for tols and other fees
     start = uinp.price['grain_income_date']
     length = dt.timedelta(days=uinp.price['grain_income_length'])
-    p_dates = per.cashflow_periods()['start date']
-    p_name = per.cashflow_periods()['cash period']
+    p_dates = per.f_cashflow_periods()['start date']
+    p_name = per.f_cashflow_periods()['cash period']
     farm_gate_price=f_farmgate_grain_price(r_vals)
     allocation=fun.period_allocation(p_dates, p_name, start, length).set_index('period').squeeze()
     cols = pd.MultiIndex.from_product([allocation.index, farm_gate_price.columns])
@@ -284,8 +284,8 @@ def f1_fert_cost_allocation():
     '''
     start_df = pinp.crop['fert_info']['app_date'] #needed for allocation func
     length_df = pinp.crop['fert_info']['app_len'].astype('timedelta64[D]') #needed for allocation func
-    p_dates = per.cashflow_periods()['start date'] #needed for allocation func
-    p_name = per.cashflow_periods()['cash period'] #needed for allocation func
+    p_dates = per.f_cashflow_periods()['start date'] #needed for allocation func
+    p_name = per.f_cashflow_periods()['cash period'] #needed for allocation func
     return fun.period_allocation2(start_df, length_df, p_dates, p_name)
 # t_allocation=f1_fert_cost_allocation()
 
@@ -608,8 +608,8 @@ def f1_chem_cost_allocation():
     '''
     start_df = pinp.crop['chem_info']['app_date'] #needed for allocation func
     length_df = pinp.crop['chem_info']['app_len'].astype('timedelta64[D]') #needed for allocation func
-    p_dates = per.cashflow_periods()['start date'] #needed for allocation func
-    p_name = per.cashflow_periods()['cash period'] #needed for allocation func
+    p_dates = per.f_cashflow_periods()['start date'] #needed for allocation func
+    p_name = per.f_cashflow_periods()['cash period'] #needed for allocation func
     return fun.period_allocation2(start_df, length_df, p_dates, p_name)
 # t_allocation=f1_chem_cost_allocation()
     
@@ -763,10 +763,10 @@ def f_seedcost(r_vals):
     ##add cost for cont pasture
     phase_cost = f_cont_pas(phase_cost)
     ##cost allocation
-    start_z = per.wet_seeding_start_date().astype(np.datetime64)
+    start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
     length_z = np.sum(seed_period_lengths, axis=0).astype('timedelta64[D]')
-    p_dates_c = per.cashflow_periods()['start date'].values
-    p_name_c = per.cashflow_periods()['cash period'].iloc[:-1]
+    p_dates_c = per.f_cashflow_periods()['start date'].values
+    p_name_c = per.f_cashflow_periods()['cash period'].iloc[:-1]
     allocation_cz = fun.range_allocation_np(p_dates_c[...,None], start_z, length_z, True)[:-1,...] #drop last row because that is just the end date of last period
     allocation_cz = pd.DataFrame(allocation_cz, index=p_name_c, columns=i_z_idx).stack()
     ##mul cost by allocation - need to align column headers first
@@ -798,8 +798,8 @@ def f_insurance(r_vals):
     rot_insurance = rot_insurance.droplevel(1).unstack()
     ##cost allocation
     start = uinp.price['crp_insurance_date']
-    p_dates = per.cashflow_periods()['start date']
-    p_name = per.cashflow_periods()['cash period']
+    p_dates = per.f_cashflow_periods()['start date']
+    p_name = per.f_cashflow_periods()['cash period']
     allocation=fun.period_allocation(p_dates, p_name, start)
     ##add cashflow period to col index
     rot_insurance.columns = pd.MultiIndex.from_product([rot_insurance.columns, [allocation]])

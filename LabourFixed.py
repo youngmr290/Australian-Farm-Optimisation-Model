@@ -32,7 +32,7 @@ na = np.newaxis
 
 def fixed(params):
     ###inputs
-    labour_period = per.p_dates_df()
+    labour_period = per.f_p_dates_df()
     lp_p5z = labour_period.values
     keys_p5 = labour_period.index[:-1]
     keys_z = pinp.f_keys_z()

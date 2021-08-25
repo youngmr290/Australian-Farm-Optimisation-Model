@@ -258,7 +258,7 @@ def f_pas_sow(i_reseeding_date_start_zt, i_reseeding_date_end_zt, resown_rt, ara
     ### sow param determination
     ### determine the labour periods pas seeding occurs
     i_seeding_length_zt = i_reseeding_date_end_zt - i_reseeding_date_start_zt
-    period_dates_p5z = per.p_dates_df().values
+    period_dates_p5z = per.f_p_dates_df().values
     shape_p5zt = period_dates_p5z.shape + (i_seeding_length_zt.shape[-1],)
     reseeding_machperiod_p5zt  = fun.range_allocation_np(        period_dates_p5z[...,na]
                                                         ,i_reseeding_date_start_zt

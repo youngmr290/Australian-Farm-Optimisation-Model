@@ -4595,14 +4595,14 @@ def generator(params,r_vals,nv,plots = False):
     index_p6 = np.arange(len_p6)
     index_p6pa1e1b1nwzida0e0b0xyg = fun.f_expand(index_p6, p_pos-1).astype(dtypeint)
     ###cash period
-    cash_period_dates = per.cashflow_periods().iloc[:-1,0].to_numpy().astype('datetime64[D]') #don't include last cash period date because it is just the end date of the last period
+    cash_period_dates = per.f_cashflow_periods().iloc[:-1,0].to_numpy().astype('datetime64[D]') #don't include last cash period date because it is just the end date of the last period
     cash_period_dates_cy = cash_period_dates + (np.arange(np.ceil(sim_years)) * np.timedelta64(365,'D'))[:,na] #expand from single yr to all length of generator
     cash_period_dates_c = cash_period_dates_cy.ravel()
     a_c_p = fun.f_next_prev_association(cash_period_dates_c, date_end_p, 1,'right') % len(cash_period_dates) #% len required to convert association back to only the number of cash periods
     a_c_pa1e1b1nwzida0e0b0xyg = fun.f_expand(a_c_p, p_pos).astype(dtype)
     index_ctpa1e1b1nwzida0e0b0xyg = fun.f_expand(np.arange(len(cash_period_dates)), p_pos-2)
     ###labour period
-    labour_periods = per.p_date2_df().to_numpy().astype('datetime64[D]') #convert from df to numpy
+    labour_periods = per.f_p_date2_df().to_numpy().astype('datetime64[D]') #convert from df to numpy
     labour_periods_yp5z = labour_periods + (np.arange(np.ceil(sim_years)) * np.timedelta64(365,'D'))[:,na,na] #expand from single yr to all length of generator
     labour_periods_p5z = labour_periods_yp5z.reshape((-1, len_z))
     a_p5_pz = np.apply_along_axis(fun.f_next_prev_association, 0, labour_periods_p5z, date_end_p, 1, 'right') % len(labour_periods)
@@ -6493,7 +6493,7 @@ def generator(params,r_vals,nv,plots = False):
     # keys_n0 = sinp.stock['i_n_idx_sire']
     keys_n1 = np.array(['n%s'%i for i in range(sinp.structuralsa['i_n1_matrix_len'])])
     keys_n3 = np.array(['n%s'%i for i in range(sinp.structuralsa['i_n3_matrix_len'])])
-    keys_p5 = np.array(per.p_date2_df().index).astype('str')
+    keys_p5 = np.array(per.f_p_date2_df().index).astype('str')
     keys_p6 = pinp.period['i_fp_idx']
     keys_p8 = np.array(['g0p%s'%i for i in range(len_p8)])
     keys_t1 = np.array(['t%s'%i for i in range(len_t1)])

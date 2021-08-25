@@ -72,9 +72,9 @@ def labour_general(params,r_vals):
     harv_date_z = pinp.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0)
 
     ##initialise period data
-    lp_p5z = per.p_dates_df().values
-    lp_start_p5z = per.p_dates_df().iloc[:-1].values#.astype('datetime64[D]')
-    lp_end_p5z = per.p_dates_df().iloc[1:].values#.astype('datetime64[D]')
+    lp_p5z = per.f_p_dates_df().values
+    lp_start_p5z = per.f_p_dates_df().iloc[:-1].values#.astype('datetime64[D]')
+    lp_end_p5z = per.f_p_dates_df().iloc[1:].values#.astype('datetime64[D]')
     lp_len_p5z = (lp_end_p5z - lp_start_p5z).astype('timedelta64[D]').astype(float)
 
     ########
@@ -117,7 +117,7 @@ def labour_general(params,r_vals):
 
     ##set up stuff to calc hours work per period be each source
     seed_period_lengths_pz = pinp.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
-    seeding_start_z = per.wet_seeding_start_date().astype(np.datetime64)
+    seeding_start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
     seeding_end_z = seeding_start_z + np.sum(seed_period_lengths_pz, axis=0).astype('timedelta64[D]')
     seeding_occur_p5z =  np.logical_and(seeding_start_z <= lp_start_p5z, lp_start_p5z < seeding_end_z)
     harv_period_lengths_pz = pinp.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1)
@@ -196,10 +196,10 @@ def labour_general(params,r_vals):
 
     ##determine cashflow period each labour period aligns with
     ###get cashflow period dates and names - used in the following loop
-    p_dates = per.cashflow_periods()['start date']#get cashflow period dates
+    p_dates = per.f_cashflow_periods()['start date']#get cashflow period dates
     p_dates_start_c = p_dates.values[:-1]
     p_dates_end_c = p_dates.values[1:]
-    p_name = per.cashflow_periods()['cash period'].values[:-1].astype(str)#gets the period name
+    p_name = per.f_cashflow_periods()['cash period'].values[:-1].astype(str)#gets the period name
     ###determine cashflow allocation
     # index_c = np.arange(len(p_dates_start_c))
     length_c = p_dates_end_c - p_dates_start_c
@@ -224,7 +224,7 @@ def labour_general(params,r_vals):
     #########
     ##keys
     keys_c = np.array(sinp.general['cashflow_periods'])
-    keys_p5 = np.asarray(per.p_dates_df().index[:-1]).astype('str')
+    keys_p5 = np.asarray(per.f_p_dates_df().index[:-1]).astype('str')
     keys_z = pinp.f_keys_z()
 
     ##index

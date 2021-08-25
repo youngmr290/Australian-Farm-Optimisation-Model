@@ -187,7 +187,7 @@ def f_pasture(params, r_vals, nv):
     keys_g  = np.asarray(sinp.general['grazing_int'])
     keys_l  = pinp.general['i_lmu_idx'][lmu_mask_l]   # lmu index description
     keys_o  = np.asarray(sinp.general['foo_levels'])
-    keys_p5  = np.array(per.p_date2_df().index).astype('str')
+    keys_p5  = np.array(per.f_p_date2_df().index).astype('str')
     keys_r  = np.array(phases_rotn_df.index).astype('str')
     keys_t  = np.asarray(pastures)                                      # pasture type index description
     keys_k  = np.asarray(list(sinp.landuse['All']))                     #landuse

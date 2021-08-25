@@ -58,8 +58,8 @@ def f_buy_grain_price(r_vals):
     ##calc farm gate grain price for each cashflow period - accounts for tolls and other fees
     start = uinp.price['grain_income_date']
     length = dt.timedelta(days=uinp.price['grain_income_length'])
-    p_dates = per.cashflow_periods()['start date']
-    p_name = per.cashflow_periods()['cash period']
+    p_dates = per.f_cashflow_periods()['start date']
+    p_name = per.f_cashflow_periods()['cash period']
     allocation=fun.period_allocation(p_dates, p_name, start, length).set_index('period').squeeze()
     allocation = allocation.fillna(0)
     cols = pd.MultiIndex.from_product([allocation.index, price_df.columns])
@@ -107,7 +107,7 @@ def f_sup_cost(r_vals):
     grain_info=grain_info.droplevel(1,axis=1) #drop silo type index
 
     ##data to determine cash period
-    cashflow_df = per.cashflow_periods()
+    cashflow_df = per.f_cashflow_periods()
     p_dates = cashflow_df['start date']
     p_dates_c = p_dates.values #np version
     p_name_c = cashflow_df['cash period'].values[:-1]
@@ -247,7 +247,7 @@ def f_sup_labour():
     total_time=transport_tonne+fill_empty_tonne
     ##determine time in each labour period
     ###determine the time taken to feed a tonne of feed in each labour period - this depends on the allocation of the labour periods into the entered sup feed dates
-    lp_dates_p5z = per.p_dates_df()
+    lp_dates_p5z = per.f_p_dates_df()
     start_p8 = total_time.index.values
     end_p8 = np.roll(start_p8, -1)
     end_p8[-1] = end_p8[-1] + np.timedelta64(365, 'D') #increment the first date by 1yr so it becomes the end date for the last period

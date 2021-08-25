@@ -92,7 +92,7 @@ def f_cropgraze_DM(total_DM=False):
     date_feed_periods = per.f_feed_periods().astype('datetime64')
     date_start_p6z = date_feed_periods[:-1]
     date_end_p6z = date_feed_periods[1:]
-    seeding_start_z = per.wet_seeding_start_date().astype(np.datetime64)
+    seeding_start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
     initial_DM = pinp.cropgraze['i_cropgraze_initial_dm'] #used to calc total DM for relative availability (vol). The initial DM cant be consumed.
     establishment_days = pinp.cropgraze['i_cropgraze_defer_days'] #days between sowing and grazing
 
@@ -138,10 +138,10 @@ def f_DM_reduction_seeding_time():
     date_feed_periods = per.f_feed_periods().astype('datetime64')
     date_start_p6z = date_feed_periods[:-1]
     date_end_p6z = date_feed_periods[1:]
-    mach_periods = per.p_dates_df()
+    mach_periods = per.f_p_dates_df()
     date_start_p5z = mach_periods.values[:-1]
     date_end_p5z = mach_periods.values[1:]
-    seeding_start_z = per.wet_seeding_start_date().astype(np.datetime64)
+    seeding_start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
     establishment_days = pinp.cropgraze['i_cropgraze_defer_days'] #days between sowing and grazing
     lmu_mask = pinp.general['i_lmu_area'] > 0
     growth_kp6z = pinp.f_seasonal_inp(np.moveaxis(pinp.cropgraze['i_crop_growth_zkp6'], source=0, destination=-1),numpy=True,axis=-1)
@@ -259,7 +259,7 @@ def f1_cropgraze_params(params, r_vals, nv):
     keys_l = pinp.general['i_lmu_idx'][lmu_mask]
     keys_k = pinp.cropgraze['i_cropgraze_landuse_idx']
     keys_p6 = pinp.period['i_fp_idx']
-    keys_p5 = np.asarray(per.p_dates_df().index[:-1]).astype('str')
+    keys_p5 = np.asarray(per.f_p_dates_df().index[:-1]).astype('str')
     keys_f  = np.array(['nv{0}' .format(i) for i in range(nv['len_nv'])])
     keys_z = pinp.f_keys_z()
 

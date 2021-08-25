@@ -102,14 +102,14 @@ def sup_mach_cost():
 #seed days per period #
 #######################
 ##create a copy of periods df - so it doesn't alter the original period df that is used for labour stuff
-# mach_periods = per.p_dates_df()#periods.copy()
+# mach_periods = per.f_p_dates_df()#periods.copy()
 
 def f_seed_days():
     '''
     Determines the number of wet and dry seeding days in each period.
     '''
     dry_seed_start = np.datetime64(pinp.crop['dry_seed_start'])
-    mach_periods = per.p_dates_df()
+    mach_periods = per.f_p_dates_df()
     start_pz = np.maximum(dry_seed_start, mach_periods.values[:-1])
     end_pz = mach_periods.values[1:]
     length_pz = np.maximum(0,(end_pz - start_pz).astype('timedelta64[D]').astype(int))
@@ -122,8 +122,8 @@ def f_contractseeding_occurs():
     Contract seeding is not hooked up to yield penalty because if your going to hire someone you will hire
     them at the optimum time. Contract seeding is hooked up to poc so this param stops the model having late seeding.
     '''
-    contract_start_z = per.wet_seeding_start_date().astype(np.datetime64)
-    mach_periods = per.p_dates_df()
+    contract_start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
+    mach_periods = per.f_p_dates_df()
     start_pz = mach_periods.values[:-1]
     end_pz = mach_periods.values[1:]
     contractseeding_occur_pz = np.logical_and(start_pz <= contract_start_z, contract_start_z < end_pz)
@@ -188,7 +188,7 @@ def f_poc_grazing_days():
     date_feed_periods = per.f_feed_periods().astype('datetime64')
     date_start_p6z = date_feed_periods[:-1]
     date_end_p6z = date_feed_periods[1:]
-    mach_periods = per.p_dates_df()
+    mach_periods = per.f_p_dates_df()
     date_start_p5z = mach_periods.values[:-1]
     date_end_p5z = mach_periods.values[1:]
     seed_days_p5z = f_seed_days().values
@@ -325,10 +325,10 @@ def f_seed_cost_alloc():
     seed_period_lengths_p5z = pinp.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
     length_z = np.sum(seed_period_lengths_p5z, axis=0)
     ##gets the cost allocation
-    p_dates_c = per.cashflow_periods()['start date'].values
-    p_name_c = per.cashflow_periods()['cash period']
+    p_dates_c = per.f_cashflow_periods()['start date'].values
+    p_name_c = per.f_cashflow_periods()['cash period']
     length_z = length_z.astype('timedelta64[D]')
-    start_z = per.wet_seeding_start_date().astype(np.datetime64)
+    start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
     alloc_cz = fun.range_allocation_np(p_dates_c[...,None], start_z, length_z, True)
     keys_z = pinp.f_keys_z()
     alloc_cz = pd.DataFrame(alloc_cz, index=p_name_c, columns=keys_z)
@@ -405,7 +405,7 @@ def f_sowing_timeliness_penalty():
     wet_seeding_penalty_k_z = pinp.f_seasonal_inp(pinp.crop['yield_penalty_wet'], axis=1)
 
     ##general info
-    mach_periods = per.p_dates_df()
+    mach_periods = per.f_p_dates_df()
     mach_periods_start_pz = mach_periods.values[:-1]
     mach_periods_end_pz = mach_periods.values[1:]
 
@@ -416,7 +416,7 @@ def f_sowing_timeliness_penalty():
     dry_penalty_pzk = period_is_dry_seeding_pz[...,na] * dry_seeding_penalty_k_z.T.values
 
     ##wet seeding penalty - penalty = average penalty of period (= (start day + end day) / 2 * penalty)
-    seed_start_z = per.wet_seeding_start_date().astype(np.datetime64)
+    seed_start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
     penalty_free_days_z = seed_period_lengths_pz[0].astype('timedelta64[D]')
     start_day_pz = 1 + (mach_periods_start_pz - (seed_start_z + penalty_free_days_z))/ np.timedelta64(1, 'D')
     end_day_pz = (mach_periods_end_pz - (seed_start_z + penalty_free_days_z))/ np.timedelta64(1, 'D')
@@ -496,15 +496,15 @@ def f_harv_rate_period():
     start_harvest_crops_kz = pinp.f_seasonal_inp(start_harvest_crops.values, numpy=True, axis=1).astype(np.datetime64) #start harvest for each crop
 
     ##harv occur - note: some crops are not harvested in the early harv period
-    mach_periods_start_pz = per.p_dates_df().values[:-1]
-    mach_periods_end_pz = per.p_dates_df().values[1:]
+    mach_periods_start_pz = per.f_p_dates_df().values[:-1]
+    mach_periods_end_pz = per.f_p_dates_df().values[1:]
     harv_occur_pkz = np.logical_and(mach_periods_start_pz[:,na,:] < harv_end_z,
                                     mach_periods_end_pz[:,na,:] > start_harvest_crops_kz)
     ##make df
     keys_z = pinp.f_keys_z()
     col = pd.MultiIndex.from_product([start_harvest_crops.index, keys_z])
     harv_occur = harv_occur_pkz.reshape(harv_occur_pkz.shape[0],-1)
-    harv_occur = pd.DataFrame(harv_occur, index=per.p_date2_df().index, columns=col)
+    harv_occur = pd.DataFrame(harv_occur, index=per.f_p_date2_df().index, columns=col)
 
     ##Grain harvested per hr (t/hr) for each crop.
     harv_rate = (uinp.mach_general['harvest_yield'] * (1 / harv_time_ha())).squeeze()
@@ -533,8 +533,8 @@ def f_max_harv_hours():
     harv_end_z = harv_start_z.astype('datetime64') + harv_period_lengths_z.astype('timedelta64[D]') #when all harv is done
 
     ##does any harvest occur in given period
-    mach_periods_start_pz = per.p_dates_df()[:-1]
-    mach_periods_end_pz = per.p_dates_df()[1:]
+    mach_periods_start_pz = per.f_p_dates_df()[:-1]
+    mach_periods_end_pz = per.f_p_dates_df()[1:]
     harv_occur_pz = np.logical_and(harv_start_z <= mach_periods_start_pz, mach_periods_start_pz < harv_end_z)
 
     ##max harv hour per period
@@ -547,12 +547,12 @@ def f_harv_cost_alloc():
     ##allocation of harvest cost into cashflow period
 
     ##gets the cost allocation
-    p_dates_c = per.cashflow_periods()['start date'].values
+    p_dates_c = per.f_cashflow_periods()['start date'].values
     harv_start_z = pinp.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0).astype('datetime64')
     harv_lengths_z = np.sum(pinp.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1), axis=0).astype('timedelta64[D]')
     alloc_cz = fun.range_allocation_np(p_dates_c[...,None],harv_start_z,harv_lengths_z,True)
     ###make it a df
-    p_name_c = per.cashflow_periods()['cash period']
+    p_name_c = per.f_cashflow_periods()['cash period']
     keys_z = pinp.f_keys_z()
     alloc_cz = pd.DataFrame(alloc_cz,index=p_name_c,columns=keys_z)
     ### drop last row, because it has na because it only contains the end date, therefore not a period
@@ -641,8 +641,8 @@ def f_hay_making_cost():
     Note: Currently it is assumed that hay is allocated into the same cashflow periods in all seasons.
     '''
     ##cost allocation
-    p_dates = per.cashflow_periods()['start date'] #gets the date column of the cashflow periods df
-    p_name = per.cashflow_periods()['cash period'] #gets the period name
+    p_dates = per.f_cashflow_periods()['start date'] #gets the date column of the cashflow periods df
+    p_name = per.f_cashflow_periods()['cash period'] #gets the period name
     start = pinp.crop['hay_making_date']
     length = dt.timedelta(days = pinp.crop['hay_making_len'])
     allocation = fun.period_allocation(p_dates, p_name, start,length).set_index('period')    ##convert from ha to tonne (cost per ha divide approx yield)
@@ -673,8 +673,8 @@ def stubble_cost_ha():
     '''
     start = pinp.mach['stub_handling_date'] #needed for allocation func
     length = dt.timedelta(days =pinp.mach['stub_handling_length']) #needed for allocation func
-    p_dates = per.cashflow_periods()['start date'] #needed for allocation func
-    p_name = per.cashflow_periods()['cash period'] #needed for allocation func
+    p_dates = per.f_cashflow_periods()['start date'] #needed for allocation func
+    p_name = per.f_cashflow_periods()['cash period'] #needed for allocation func
     allocation=fun.period_allocation(p_dates, p_name, start, length).set_index('period')
     ##tractor costs = fuel + r&m + oil&grease
     tractor_fuel = uinp.mach[pinp.mach['option']]['stubble_fuel_consumption']*fuel_price()
@@ -950,8 +950,8 @@ def f_insurance(r_vals):
     insurance = value_all_mach * uinp.finance['equip_insurance']
     ##determine cash period
     length = dt.timedelta(days=1) #assume all insurance is paid on 1 day
-    p_dates = per.cashflow_periods()['start date']
-    p_name = per.cashflow_periods()['cash period']
+    p_dates = per.f_cashflow_periods()['start date']
+    p_name = per.f_cashflow_periods()['cash period']
     start = uinp.mach_general['insurance_date']
     allocation = fun.period_allocation(p_dates, p_name,start,length).replace(np.nan,0).set_index('period').squeeze()
     insurance_c = allocation * insurance

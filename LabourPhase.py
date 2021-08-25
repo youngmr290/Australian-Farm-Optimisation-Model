@@ -42,7 +42,7 @@ def f_prep_labour():
 
     '''
     ##inputs
-    labour_period = per.p_dates_df()
+    labour_period = per.f_p_dates_df()
     lp_p5z = labour_period.values
     keys_p5 = labour_period.index[:-1]
     keys_z = pinp.f_keys_z()
@@ -96,8 +96,8 @@ def f_lab_allocation():
     fert_info = pinp.crop['fert_info']
     fert_date_f = fert_info['app_date'].values
     fert_length_f = fert_info['app_len'].values.astype('timedelta64[D]')
-    p_dates_p5z = per.p_dates_df()
-    keys_p5 = per.p_dates_df().index[:-1]
+    p_dates_p5z = per.f_p_dates_df()
+    keys_p5 = per.f_p_dates_df().index[:-1]
     shape_p5zf = p_dates_p5z.shape+fert_date_f.shape
     alloc_p5zf = fun.range_allocation_np(p_dates_p5z.values[...,na], fert_date_f, fert_length_f, True, shape=shape_p5zf)[:-1,...]
     ##put in df
@@ -171,8 +171,8 @@ def f_chem_lab_allocation():
     chem_info = pinp.crop['chem_info']
     chem_date_f = chem_info['app_date'].values
     chem_length_f = chem_info['app_len'].values.astype('timedelta64[D]')
-    p_dates_p5z = per.p_dates_df()
-    keys_p5 = per.p_dates_df().index[:-1]
+    p_dates_p5z = per.f_p_dates_df()
+    keys_p5 = per.f_p_dates_df().index[:-1]
     shape_p5zf = p_dates_p5z.shape+chem_date_f.shape
     alloc_p5zf = fun.range_allocation_np(p_dates_p5z.values[...,na], chem_date_f, chem_length_f, True, shape=shape_p5zf)[:-1,...]
     ##put in df
@@ -229,7 +229,7 @@ def f_crop_monitoring():
     ##allocation
     fixed_crop_monitor = pinp.labour['fixed_crop_monitoring']
     variable_crop_monitor = pinp.labour['variable_crop_monitoring']
-    labour_periods_pz = per.p_dates_df().values
+    labour_periods_pz = per.f_p_dates_df().values
     date_start_d = fixed_crop_monitor.columns.values.astype('datetime64[D]')
     date_end_d = np.roll(date_start_d, -1)
     date_end_d[-1] = date_end_d[-1] + 365 #increment the first date by 1yr so it becomes the end date for the last period
@@ -250,7 +250,7 @@ def f_crop_monitoring():
     ###convert to dict and expand landuse to rotation
     variable_crop_monitor_kpz = variable_crop_monitor_kpz.reshape(variable_crop_monitor_kpz.shape[0], -1)
     keys_z = pinp.f_keys_z()
-    keys_p5 = per.p_dates_df().index[:-1]
+    keys_p5 = per.f_p_dates_df().index[:-1]
     cols = pd.MultiIndex.from_product([keys_p5, keys_z])
     variable_crop_monitor = pd.DataFrame(variable_crop_monitor_kpz, index=variable_crop_monitor.index, columns=cols)
     phases_df = sinp.f_phases()

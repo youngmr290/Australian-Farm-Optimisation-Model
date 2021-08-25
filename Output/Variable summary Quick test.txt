@@ -17,16 +17,16 @@ Variable v_sell_grain
 Variable v_seeding_machdays
    ('typ', 'P04', 'b', 'lmu2') 0.8531048796033915
    ('typ', 'P04', 'b', 'lmu3') 0.04475698657697487
+   ('typ', 'P05', 'of', 'lmu3') 0.09957152814093517
    ('typ', 'P05', 'b', 'lmu3') 5.456764211946927
    ('typ', 'P05', 'b', 'lmu4') 3.4153004430883156
-   ('typ', 'P05', 'of', 'lmu3') 0.09957152814093517
 Variable v_seeding_pas
 Variable v_seeding_crop
    ('P04', 'b', 'lmu2', 'typ') 74.93673600887223
    ('P04', 'b', 'lmu3', 'typ') 3.9314538784852004
+   ('P05', 'of', 'lmu3', 'typ') 8.74636342692839
    ('P05', 'b', 'lmu3', 'typ') 479.32219002595775
    ('P05', 'b', 'lmu4', 'typ') 300.00000447034836
-   ('P05', 'of', 'lmu3', 'typ') 8.74636342692839
 Variable v_contractseeding_ha
 Variable v_harv_hours
    ('typ', 'P15', 'b') 144.23922259328933
