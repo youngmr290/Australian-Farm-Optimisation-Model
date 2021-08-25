@@ -138,8 +138,8 @@ Pyomo
    CropGrazingPyomo
 
 
-Crop residue
--------------
+Crop residue (fodder & stubble)
+-------------------------------
 
 Precalcs
 ^^^^^^^^^^^^

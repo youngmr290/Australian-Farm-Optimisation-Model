@@ -234,6 +234,7 @@ The following feed management decisions that are optimised can include:
 #. level of supplementary feeding
 #. Timing of stubble consumption
 #. Crop grazing
+#. Fodder crops
 #. Pasture area and rotation selection
 
 Additional aspects that can be tested but not optimised include:
