@@ -129,7 +129,8 @@ def f_con_sow_supply(model):
     rate of seeding per day.
     '''
     def sow_supply(model,p,k1,l,z):
-        return -model.v_contractseeding_ha[z,p,k1,l] * model.p_contractseeding_occur[p,z] - model.p_seeding_rate[k1,l] * model.v_seeding_machdays[z,p,k1,l]   \
+        return - model.v_contractseeding_ha[z,p,k1,l] * model.p_contractseeding_occur[p,z] \
+               - model.v_seeding_machdays[z,p,k1,l] * model.p_seeding_rate[k1,l]     \
                 + model.v_seeding_pas[p,k1,l,z] + model.v_seeding_crop[p,k1,l,z] <=0
     model.con_sow_supply = pe.Constraint(model.s_labperiods, model.s_landuses, model.s_lmus, model.s_season_types, rule=sow_supply, doc='link sow supply to crop and pas variable')
 

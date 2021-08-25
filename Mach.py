@@ -108,10 +108,11 @@ def f_seed_days():
     '''
     Determines the number of wet and dry seeding days in each period.
     '''
+    dry_seed_start = np.datetime64(pinp.crop['dry_seed_start'])
     mach_periods = per.p_dates_df()
-    start_pz = mach_periods.values[:-1]
+    start_pz = np.maximum(dry_seed_start, mach_periods.values[:-1])
     end_pz = mach_periods.values[1:]
-    length_pz = (end_pz - start_pz).astype('timedelta64[D]').astype(int)
+    length_pz = np.maximum(0,(end_pz - start_pz).astype('timedelta64[D]').astype(int))
     days = pd.DataFrame(length_pz, index=mach_periods.index[:-1], columns=mach_periods.columns)
     return days
 
