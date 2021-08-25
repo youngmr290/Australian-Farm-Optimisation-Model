@@ -56,17 +56,20 @@ for crp in range(len(index_k)):
     #sim #
     ######   
         
-    #proportin of grain is determined by hi and harv proportion
-    #first determine the proportion of grain per straw and leaf
-    #then convert to grain proportin of stubble (note stubble definition includes grain but HI is just the ratio of biomass to grain harvested ie doesn't include grain spilt)
     def grain_prop():
+        '''calc grain propn in stubble
+
+        HI = total grain / total biomass (total biomass includes grain as well)
+        stubble = leaf and stalk plus split grain
+        '''
         hi = hi_k[crp]
         harv_prop = proportion_grain_harv_k[crp]
-        split_grain_straw = hi*(1-harv_prop)/(1-hi)*100
-        return split_grain_straw/(1+split_grain_straw/100)
+        splitgrain_propn_totalbiomass = hi*(1-harv_prop) #split grain as a propn of total biomass
+        leafstalk_propn_totalbiomass = (1-hi) #leaf & stalk as a propn of total biomass
+        stubble_propn_totalbiomass = splitgrain_propn_totalbiomass + leafstalk_propn_totalbiomass #stubble as a propn of total biomass
+        return splitgrain_propn_totalbiomass/stubble_propn_totalbiomass * 100 #split grain as propn of stubble
 
-          
-    #quantity of each stubble component at harvest  
+    #quantity of each stubble component at harvest
     def stubble_sim(x):
         #variables to be solved for (this is new to this version of the sim)
         z,w,q, g, b, s, c = x
