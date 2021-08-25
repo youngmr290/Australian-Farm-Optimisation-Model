@@ -169,40 +169,16 @@ def f_grain_price(r_vals):
 #########################
 #yield                  #
 #########################
-def f_base_yield():
-    '''
-    Yield for each rotation on the base LMU before adjusting for arable area and frost. This is also used
-    in stubble.py to calc FOO for relative availability.
-
-    The crop yield for each rotation phase, on the base LMU [#]_, before frost adjustment, is entered as an input.
-    As mentioned, the yield input considers the history of the land ues and hence the current level of soil
-    fertility, weed burden, and disease prominence, and how the current land use is affected by the existing
-    levels of each.
-
-    This function essentially just reads in the yield inputs from either the simulation output or
-    from Property.xl depending on what the user has specified to do.
-
-    .. [#] Base LMU – standardise LMU to which other LMUs are compared against.
-    '''
-    ##read phases
-    phases_df = sinp.f_phases()
-
-    ##read in yields
-    if pinp.crop['user_crop_rot']:
-        ### User defined
-        base_yields = pinp.crop['yields']
-        base_yields = pinp.f_seasonal_inp(base_yields, axis=1)
-        base_yields = base_yields.set_index([phases_df.index, phases_df.iloc[:,-1]])
-    else:
-        ### AusFarm ^need to add code for ausfarm inputs
-        base_yields
-    # base_yields = pd.Series(base_yields, index = phases_df.iloc[:,-1])
-    return base_yields
-
 def f_rot_yield(for_stub=False):
     '''
-    Adjusts the base yield returning the crop yield for each rotation phase on each LMU if seeding was completed
-    on time.
+    Calculates the yield for each rotation. Accounting for LMU, arable area, frost and harvested proportion.
+
+    The crop yield for each rotation phase, on the base LMU [#]_, before frost and harvested proportion adjustment,
+    is entered as an input. The yield is inputted assuming seeding was completed at the optimal time.
+    The base yield inputs are read in from either the simulation output or
+    from Property.xl depending on what the user has specified to do. The yield input is dependant on the
+    rotation history and hence accounts for the level of soil fertility, weed burden, disease prominence,
+    and how the current land use is affected by the existing levels of each in the rotation.
 
     To extrapolate the inputs from the base LMU to the other LMUs an LMU adjustment factor is
     applied which determines the yield on each other LMU as a proportion of the base LMU. The LMU adjustment
@@ -220,21 +196,35 @@ def f_rot_yield(for_stub=False):
     the LMU topography and soil type. For example, sandy soils are more affected by frost because the lower
     moisture holding capacity reduces the heat buffering from the soil.
 
-    .. note:: Potentailly frost can be accounted for in the inputs (particularly if the simulation model accounts
-        for frost). The LMU yield factor must then capture the difference of yield on different LMUS.
+    .. note:: Potentially frost can be accounted for in the inputs (particularly if the simulation model accounts
+        for frost). The LMU yield factor must then capture the difference of frost across LMUS.
 
     Furthermore, as detailed in the machinery chapter, sowing timeliness can also impact yield. Dry sowing tends [#]_
     to incur a yield reduction due to forgoing an initial knockdown spray. While later sowing incurs a yield
-    loss due to a reduced growing season.
+    loss due to a reduced growing season. Additionally, during the harvesting process a small proportion of grain
+    is split/spilt. This is accounted for by adjusting the yield by a harvest proportion factor.
 
+    .. [#] Base LMU – standardise LMU to which other LMUs are compared against.
     .. [#] Dry sowing may not incur a yield penalty in seasons with a late break.
 
     :param for_stub: Boolean set to true when calculating the yield that is used to calculate total stubble production.
     :return: Dataframe of rotation yields - passed to pyomo and used to calc grain insurance & stubble handling cost
 
     '''
-    ##base yields
-    base_yields = f_base_yield().stack()
+    ##read phases
+    phases_df = sinp.f_phases()
+
+    ##read in base yields
+    if pinp.crop['user_crop_rot']:
+        ### User defined
+        base_yields = pinp.crop['yields']
+        base_yields = pinp.f_seasonal_inp(base_yields, axis=1)
+        base_yields = base_yields.set_index([phases_df.index, phases_df.iloc[:,-1]])
+    else:
+        ### AusFarm ^need to add code for ausfarm inputs
+        base_yields
+    base_yields = base_yields.stack()
+
     ##colate other info
     yields_lmus = f1_mask_lmu(pinp.crop['yield_by_lmu'], axis=1) #soil yield factor
     seeding_rate = pinp.crop['seeding_rate'].mul(pinp.crop['own_seed'],axis=0)#seeding rate adjusted by if the farmer is using their own seed from last yr
