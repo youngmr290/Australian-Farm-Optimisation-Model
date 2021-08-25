@@ -31,7 +31,7 @@ def f1_boundarypyomo_local(params, model):
 
     ##set bounds to include
     bounds_inc = True #controls all bounds (typically on)
-    rot_lobound_inc = False #controls rot bound
+    rot_lobound_inc = True #controls rot bound
     sup_lobound_inc = False #controls sup feed bound
     dams_lobound_inc = fun.f_sa(False, sen.sav['bnd_lower_dam_inc'], 5) #lower bound dams
     dams_lobound_w_inc = False #lower bound dams with w axis
@@ -71,14 +71,15 @@ def f1_boundarypyomo_local(params, model):
             ###build array
             rot_lobound_rl = np.zeros((len(model.s_phases), len(model.s_lmus)))
             ###set the bound
-            rot_lobound_rl[0,0] = 150
-            rot_lobound_rl[0,2] = 13
-            rot_lobound_rl[2,1] = 570
-            rot_lobound_rl[2,2] = 20
-            rot_lobound_rl[9,1] = 11
-            rot_lobound_rl[9,2] = 87
-            rot_lobound_rl[15,1] = 11
-            rot_lobound_rl[15,2] = 87
+            rot_lobound_rl[4,0] = 70 #fodder lmu2
+            # rot_lobound_rl[0,0] = 150
+            # rot_lobound_rl[0,2] = 13
+            # rot_lobound_rl[2,1] = 570
+            # rot_lobound_rl[2,2] = 20
+            # rot_lobound_rl[9,1] = 11
+            # rot_lobound_rl[9,2] = 87
+            # rot_lobound_rl[15,1] = 11
+            # rot_lobound_rl[15,2] = 87
             ###ravel and zip bound and dict
             rot_lobound = rot_lobound_rl.ravel()
             tup_rl = tuple(map(tuple, index_rl))

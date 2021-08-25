@@ -592,7 +592,7 @@ def f_phase_stubble_cost(r_vals):
         ie yield x 0.8 / threshold x cost == yield / threshold x cost x 0.8)
     '''
     ##first calculate the probability of a rotation phase needing stubble handling
-    base_yields = f_rot_yield()
+    base_yields = f_rot_yield(for_stub=True).stack()
     stub_handling_threshold = pd.Series(pinp.stubble['stubble_handling'], index=pinp.crop['start_harvest_crops'].index)*1000  #have to convert to kg to match base yield
     probability_handling = base_yields.div(stub_handling_threshold, level = 1) #divide here then account for lmu factor next - because either way is mathematically sound and this saves some manipulation.
     probability_handling = probability_handling.droplevel(1).unstack()
