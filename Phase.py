@@ -199,7 +199,7 @@ def f_base_yield():
     # base_yields = pd.Series(base_yields, index = phases_df.iloc[:,-1])
     return base_yields
 
-def f_rot_yield():
+def f_rot_yield(for_stub=False):
     '''
     Adjusts the base yield returning the crop yield for each rotation phase on each LMU if seeding was completed
     on time.
@@ -229,6 +229,7 @@ def f_rot_yield():
 
     .. [#] Dry sowing may not incur a yield penalty in seasons with a late break.
 
+    :param for_stub: Boolean set to true when calculating the yield that is used to calculate total stubble production.
     :return: Dataframe of rotation yields - passed to pyomo and used to calc grain insurance & stubble handling cost
 
     '''
@@ -237,14 +238,21 @@ def f_rot_yield():
     ##colate other info
     yields_lmus = f1_mask_lmu(pinp.crop['yield_by_lmu'], axis=1) #soil yield factor
     seeding_rate = pinp.crop['seeding_rate'].mul(pinp.crop['own_seed'],axis=0)#seeding rate adjusted by if the farmer is using their own seed from last yr
-    frost = pinp.crop['frost'] #frost
+    frost = f1_mask_lmu(pinp.crop['frost'], axis=1)  #frost
+    proportion_grain_harv = pd.Series(pinp.stubble['proportion_grain_harv'], index=pinp.stubble['i_stub_landuse_idx'])
     arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0) #read in arable area df
-    ##calculate yield - base yield * arable area * frost * lmu factor - seeding rate
-    yield_arable_by_soil = yields_lmus.mul(arable).mul(1-frost) #mul arable area to the the lmu factor (easy because dfs have the same axis's). THen mul frost
+    ##calculate yield - base yield * arable area * harv_propn * frost * lmu factor - seeding rate
+    yield_arable_by_soil = yields_lmus.mul(arable) #mul arable area to the the lmu factor (easy because dfs have the same axis's).
     yields=yield_arable_by_soil.reindex(base_yields.index, axis=0, level=1).mul(base_yields,axis=0) #reindes and mul with base yields
-    seeding_rate=seeding_rate.reindex(yields.index, axis=0, level=1) #minus seeding rate
-    yields=yields.sub(seeding_rate,axis=0).clip(lower=0) #we don't want negative yields so clip at 0 (if any values are neg they become 0)
-    return yields.stack()
+    if for_stub:
+        ###return yield for stubble before accounting for frost, seed rate and harv propn
+        return yields
+    else:
+        frost_harv_factor = (1-frost).mul(proportion_grain_harv, axis=0) #mul these two fisrt because they have same index so its easy.
+        yields=frost_harv_factor.reindex(yields.index, axis=0, level=1).mul(yields,axis=0) #reindes and mul with base yields
+        seeding_rate=seeding_rate.reindex(yields.index, axis=0, level=1) #minus seeding rate
+        yields=yields.sub(seeding_rate,axis=0).clip(lower=0) #we don't want negative yields so clip at 0 (if any values are neg they become 0)
+        return yields.stack()
 
 
 def f_grain_pool_proportions():

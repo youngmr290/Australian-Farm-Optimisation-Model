@@ -437,9 +437,9 @@ def f_stubble_penalty():
     '''
     Calculates the stubble penalty in each mach period (wet and dry seeding) due to sowing timeliness- kg/ha/period/crop.
     '''
-    import Stubble as stub
+    import CropResidue as stub
     yield_penalty_p5k_z = f_sowing_timeliness_penalty() #late sowing yield reduction kg/ha/period
-    stub_production_k = stub.f_stubble_production() #stubble production per kg of grain yield
+    stub_production_k = stub.f_cropresidue_production() #stubble production per kg of grain yield
     stub_penalty = yield_penalty_p5k_z.mul(stub_production_k, axis=0, level=1)
     return stub_penalty.stack()
 

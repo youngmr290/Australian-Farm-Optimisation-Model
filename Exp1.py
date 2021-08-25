@@ -39,7 +39,7 @@ import LabourPyomo as labpy
 import LabourPhasePyomo as lphspy
 import PasturePyomo as paspy
 import SupFeedPyomo as suppy
-import StubblePyomo as stubpy
+import CropResiduePyomo as stubpy
 import StockPyomo as spy
 import CorePyomo as core
 import MVF as mvf

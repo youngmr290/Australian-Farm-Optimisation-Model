@@ -7,7 +7,7 @@ author: young
 import pyomo.environ as pe
 
 #AFO modules
-import Stubble as stub
+import CropResidue as stub
 import PropertyInputs as pinp
 
 def stub_precalcs(params, report, nv):
@@ -18,7 +18,7 @@ def stub_precalcs(params, report, nv):
     :param report: dictionary which stores all report values.
 
     '''
-    stub.stubble_all(params, report, nv)
+    stub.crop_residue_all(params, report, nv)
     
     
     
@@ -37,8 +37,8 @@ def f1_stubpyomo_local(params, model):
     ####################
     #define parameters #
     ####################
-    model.p_rot_stubble = pe.Param(model.s_crops,initialize=params['stubble_production'],default=0.0,
-                                   doc='stubble produced per kg grain harvested')
+    model.p_rot_stubble = pe.Param(model.s_phases, model.s_crops, model.s_season_types, model.s_lmus,
+                                   initialize=params['rot_stubble'], default=0.0, doc='stubble produced per ha of each rotation')
 
     model.p_harv_prop = pe.Param(model.s_feed_periods, model.s_season_types, model.s_crops, initialize=params['cons_prop'],
                                  default = 0.0, mutable=False, doc='proportion of the way through each fp harvest occurs (0 if harv doesnt occur in given period)')

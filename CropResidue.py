@@ -20,52 +20,52 @@ import Periods as per
 na = np.newaxis
 
 
-def f_stubble_production():
+def f_cropresidue_production():
     '''
-    Stubble produced by each rotation phase (kgs of dry matter).
+    Stubble produced per kg of total grain (kgs of dry matter).
 
     This is a separate function because it is used in CropGrazing.py and Mach.py to calculate stubble penalties.
     '''
-    stubble_prod_data = 1 / (pinp.stubble['harvest_index'] * pinp.stubble['proportion_grain_harv']) - 1  # subtract 1 to account for the tonne of grain that was harvested
+    stubble_prod_data = 1 / pinp.stubble['harvest_index'] - 1 * pinp.stubble['proportion_grain_harv']  # subtract 1*harv propn to account for the tonne of grain that was harvested and doesnt become stubble.
     stubble = pd.Series(data=stubble_prod_data, index=pinp.stubble['i_stub_landuse_idx'])
     return stubble
 
 
 
-def stubble_all(params, report, nv):
+def crop_residue_all(params, report, nv):
     '''
-    Calculates the stubble available, MD provided, volume required and the proportion of the way through
-    the harvest period that stubble becomes available.
+    Calculates the crop residue available, MD provided, volume required and the proportion of the way through
+    the feed period that crop residue becomes available.
 
-    Stubble is a key feed source for sheep during the summer months. In general sheep graze stubbles
+    Crop residue represents crop stubble and fodder crops (unharvested crops).
+    Stubble and fodder are a key feed source for sheep during the summer months. In general sheep graze crop residues
     selectively, preferring the higher quality components.  Thus, they tend to eat grain first followed
-    by leaf and finally stem.  In AFO, total stubble is split into four categories (A, B, C & D) to
+    by leaf and finally stem.  In AFO, total crop residues is split into four categories (A, B, C & D) to
     reflect the selectivity of grazing.  For cereals, category A is mainly grain and leaf blade,
     category B is mainly leaf blade, leaf sheath and cocky chaff, category C is mainly cocky chaff and
-    stem and category D is the remaining fraction that is not grazed. The total mass of stubble at harvest
-    time is calculated as a product of the grain yield. Overtime if the stubble is not consumed it
-    deteriorates in quality and quantity due to adverse effects of weather and the impact of sheep trampling.
+    stem and category D is the remaining fraction that is not grazed. The total mass of crop residues at first
+    grazing (harvest for stubble and an inputted date for fodder) is calculated as a product of the grain yield.
+    Overtime if the feed is not consumed it deteriorates in quality and quantity due to adverse effects of
+    weather and the impact of sheep trampling.
 
-    To represent stubble in AFO requires the proportion of each category, the DMD of each category and the
-    proportion of each component in each category. The DMD of each component has been determined by other
-    work :cite:p:`RN108` and can be used to determine the proportion of each component in each category based
-    on the DMD of each category. The quantity and DMD of each stubble category were determined using the AFO
+    To represent crop residues in AFO requires the proportion of each category, the DMD of each category and the
+    proportion of each component in each category. The DMD of each component (grain , leaf, sheath, stalk) has been
+    determined by other work :cite:p:`RN108` and can be used to determine the proportion of each component in each category based
+    on the DMD of each category. The quantity and DMD of each crop residue category were determined using the AFO
     sheep generator (documented in a future section). The DMD of the feed was altered until the liveweight of
     the sheep in the simulation matched the that of an equivalent sheep in a stubble trial (Riggall 2017 pers comm).
     This provided the feed DMD and the intake required to achieve the given liveweight. Based on the number of
-    sheep and the total stubble available in the trial the simulation results can be extrapolated to provide
-    the stubble DMD for different levels of intake. These results can be summaries into the 4 stubble categories
-    providing the DMD and proportion of the total stubble in each.
+    sheep and the total crop residue available in the trial the simulation results can be extrapolated to provide
+    the crop residue DMD for different levels of intake. These results can be summaries into the 4 crop residue categories
+    providing the DMD and proportion of the total crop residue in each.
 
-    The energy provided from consuming each stubble category is calculated from DMD. Like pasture, stubble
+    The energy provided from consuming each crop residue category is calculated from DMD. Like pasture, crop residue
     FOO is expressed in units of dry matter (excluding moisture) therefore feed energy is expressed as M/D
-    (does not require dry matter content conversion). The volume of each stubble category is calculated
+    (does not require dry matter content conversion). The volume of each crop residue category is calculated
     based on both the quality and availability of the feed.
 
-    Farmer often rake and burn stubbles in preparation for the following seeding. This is represented as a
+    Farmer often rake and burn crop residue in preparation for the following seeding. This is represented as a
     cost see Phase.py for further information.
-
-
 
     '''
     '''
@@ -87,7 +87,6 @@ def stubble_all(params, report, nv):
     me_threshold_fp6z = np.swapaxes(nv['nv_cutoff_ave_p6fz'], axis1=0, axis2=1)
     stub_me_eff_gainlose = pinp.stubble['i_stub_me_eff_gainlose']
 
-
     ##create mask which is stubble available. Stubble is available from the period harvest starts to the beginning of the following growing season.
     ##if the end date of the fp is after harvest then stubble is available.
     fp_end_p6z = per.f_feed_periods()[1:].astype('datetime64[D]')
@@ -95,11 +94,18 @@ def stubble_all(params, report, nv):
     harv_date_zk = pinp.f_seasonal_inp(pinp.crop['start_harvest_crops'].values, numpy=True, axis=1).swapaxes(0,1).astype(np.datetime64)
     mask_stubble_exists_p6zk = fp_end_p6z[...,na] > harv_date_zk  #need to use the full fp array that has the end date of the last period.
 
+    #############################
+    # Total stubble production  #
+    #############################
+    ##calc yield - frost and seeding rate not accounted for becasue they dont effect stubble.
+    rot_yield = phs.f_rot_yield(for_stub=True)
+    ##calc stubble
+    residue_per_grain = f_cropresidue_production()
+    rot_stubble = rot_yield.mul(residue_per_grain, axis=0, level=1)
+
     #########################
     #dmd deterioration      #
     #########################
-    stubble_per_grain = f_stubble_production().to_dict() #produces dict with stubble production per kg of yield for each grain used in the ri.availability section
-
     ##days since harvest (calculated from the end date of each fp)
     days_since_harv_p6zk = fp_end_p6z[...,na] - harv_date_zk.astype('datetime64[D]')
     days_since_harv_p6zk[days_since_harv_p6zk.astype(int)<0] = days_since_harv_p6zk[days_since_harv_p6zk.astype(int)<0] + 365  #add 365 to the periods at the start of the year because as far as stubble goes they are after harvest
@@ -128,13 +134,13 @@ def stubble_all(params, report, nv):
     
     '''
     ##load in data from stubble sim spreadsheet.
-    n_crops = len(pinp.crop['start_harvest_crops'])
+    n_crops = len(pinp.stubble['i_stub_landuse_idx'])
     n_comp = dmd_component_harv_ks0.shape[1]
     n_cat = 4
     n_seasons = pinp.f_keys_z().shape[0]
     ks0s1 = (n_crops, n_comp, n_cat)
     stub_cat_component_proportion_ks0s1 = np.zeros(ks0s1)
-    for crop, crop_idx in zip(pinp.crop['start_harvest_crops'].index, range(len(pinp.crop['start_harvest_crops']))):
+    for crop, crop_idx in zip(pinp.stubble['i_stub_landuse_idx'], range(n_crops)):
         try: #required if the crop does not have stubble sim inputs
             stub_cat_component_proportion_ks0s1[crop_idx,...] = pd.read_excel('stubble sim.xlsx',sheet_name=crop,header=None, engine='openpyxl')
         except (KeyError, ValueError) as e: #todo once everyone has updated to new packages keyerror can be removed since new version of read_excel throws valueerror.
@@ -147,15 +153,17 @@ def stubble_all(params, report, nv):
     if uinp.sheep['i_eqn_used_g1_q1p7'][6,0]==0: #csiro function used
         ri_quality_p6zks1 = fsfun.f_rq_cs(dmd_cat_p6zks1, pinp.stubble['clover_propn_in_sward_stubble'])
 
-    ##ri availability - first calc stubble foo (stub available) this is the average from all rotations because we just need one value for foo
+    ##ri availability - first calc stubble foo (stub available) this is the average from all rotations and lmus because we just need one value for foo (crop residue volume is assumed to be the same across lmu - the extra detail could be added)
     ###try calc the base yield for each crop but if the crop is not one of the rotation phases then assign the average foo (this is only to stop error. it doesnt matter because the crop doesnt exist so the stubble is never used)
-    base_yields = phs.f_base_yield().droplevel(0, axis=0) #drop rotation index
+    base_yields = rot_yield.droplevel(0, axis=0) #drop rotation index
+    base_yields = base_yields.replace(0,np.NaN) #replace 0 with nan so if yield inputs are missing (eg set to 0) the foo is still correct (nan gets skipped in pd.mean)
     stub_foo_harv_zk = np.zeros((n_seasons, n_crops))
-    for crop, crop_idx in zip(pinp.crop['start_harvest_crops'].index, range(len(pinp.crop['start_harvest_crops']))):
+    for crop, crop_idx in zip(pinp.stubble['i_stub_landuse_idx'], range(n_crops)):
         try:
-            stub_foo_harv_zk[:,crop_idx] = base_yields.loc[crop].mean() * stubble_per_grain[crop]
+            stub_foo_harv_zk[:, crop_idx] = base_yields.loc[crop].mean(axis=0, level=0).mean(axis=1) * residue_per_grain.loc[crop]
         except KeyError: #if the crop is not in any of the rotations assign average foo to stop error - this is not used so could assign any value.
-            stub_foo_harv_zk[:,crop_idx] = base_yields.mean()
+            stub_foo_harv_zk[:,crop_idx] = base_yields.mean(axis=0, level=1).mean(axis=1) * residue_per_grain.mean()
+    stub_foo_harv_zk = np.nan_to_num(stub_foo_harv_zk) #replace nan with 0 (only wanted nan for the mean)
     ###adjust the foo for each category because the good stuff is eaten first therefore there is less foo when the sheep start eating the poorer stubble
     cat_propn_ks1 = pinp.stubble['stub_cat_prop']
     cat_propn_rolled_ks1 = np.roll(cat_propn_ks1, shift=1, axis=1) #roll along the cat axis. So that the previous cat lines up with the current cat
@@ -223,7 +231,7 @@ def stubble_all(params, report, nv):
     ##keys  #
     #########
     ##keys
-    keys_k = np.array(pinp.crop['start_harvest_crops'].index)
+    keys_k = np.array(pinp.stubble['i_stub_landuse_idx'])
     keys_p6 = pinp.period['i_fp_idx']
     keys_s1_bc_cut = np.array(['b', 'c'])
     keys_s1_ab_cut = np.array(['a', 'b'])
@@ -254,9 +262,8 @@ def stubble_all(params, report, nv):
     ##pyomo params #
     ################
 
-    ##stubble produced per tonne of grain yield
-    stubble_production = f_stubble_production()
-    params['stubble_production'] = stubble_production.to_dict()
+    ##stubble produced per tonne of grain yield - this is df so dont need to build index.
+    params['rot_stubble'] = rot_stubble.stack().to_dict()
 
     ##'require' params ie consuming 1t of stubble B requires 1.002t from the constraint (0.002 accounts for trampling)
     stub_req_ks1 = np.stack([cat_b_st_req_k, cat_c_st_req_k], 1)

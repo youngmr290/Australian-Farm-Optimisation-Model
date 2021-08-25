@@ -23,7 +23,7 @@ import LabourPyomo as labpy
 import LabourPhasePyomo as lphspy
 import PasturePyomo as paspy
 import SupFeedPyomo as suppy
-import StubblePyomo as stubpy
+import CropResiduePyomo as stubpy
 import StockPyomo as stkpy
 import MVF as mvf
 import Sensitivity as sen
@@ -277,12 +277,10 @@ def f_con_stubble_a(model):
     stubble produced from each rotation.
     '''
     def stubble_a(model,k,s,z):
-        if model.p_rot_stubble[k] != 0:
-            return -phspy.f1_total_rot_yield(model,k,z) * model.p_rot_stubble[k]  \
-                   + macpy.f_stubble_penalty(model,k,z) + cgzpy.f_grazecrop_stubble_penalty(model,k,z) \
-                   + stubpy.f_stubble_req_a(model,z,k,s) <= 0
-        else:
-            return pe.Constraint.Skip
+        return -sum(model.v_phase_area[z,r,l] * model.p_rot_stubble[r,k,z,l] for r in model.s_phases for l in model.s_lmus
+                    if pe.value(model.p_rot_stubble[r,k,z,l]) != 0)   \
+               + macpy.f_stubble_penalty(model,k,z) + cgzpy.f_grazecrop_stubble_penalty(model,k,z) \
+               + stubpy.f_stubble_req_a(model,z,k,s) <= 0
 
     model.con_stubble_a = pe.Constraint(model.s_crops,model.s_stub_cat,model.s_season_types,rule=stubble_a,
                                         doc='links rotation stubble production with consumption of cat A')
@@ -296,8 +294,7 @@ def f_con_cropsow(model):
     No p5 set because model can optimise crop sowing time
     '''
     def cropsow_link(model,k,l,z):
-        if type(phspy.f_cropsow(model,k,l,
-                              z)) == int:  # if crop sow param is zero this will be int (can't do if==0 because when it is not 0 it is a complex pyomo object which can't be evaluated)
+        if type(phspy.f_cropsow(model,k,l,z)) == int:  # if crop sow param is zero this will be int (can't do if==0 because when it is not 0 it is a complex pyomo object which can't be evaluated)
             return pe.Constraint.Skip  # skip constraint if no crop is being sown on given rotation
         else:
             return sum(-model.v_seeding_crop[p,k,l,z] for p in model.s_labperiods) + phspy.f_cropsow(model,k,l,z) <= 0

@@ -229,13 +229,13 @@ def cropgraze_yield_penalty():
 
     The yield penalty is an inputted percentage of the average yield for each crop. The average yield calculated from
     all rotation phase. The stubble penalty is calculated from the yield
-    using f_stubble_production.
+    using f_cropresidue_production.
     '''
-    import Stubble as stub
+    import CropResidue as stub
     import Phase as phs
     ##inputs
     cropgraze_landuse_idx_k = pinp.cropgraze['i_cropgraze_landuse_idx']
-    stubble_per_grain_k3 = stub.f_stubble_production()
+    stubble_per_grain_k3 = stub.f_cropresidue_production()
     yield_reduction_propn_kp6z = pinp.cropgraze['i_cropgraze_yield_reduction_kp6z']
 
     ##correct stubble k axis (k axis needs to be in the correct order and contain all crops so that numpy arrays align).

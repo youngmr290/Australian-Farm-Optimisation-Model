@@ -21,8 +21,8 @@ the voluntary feed intake capacities of sheep are sufficient to consume the quan
 selected. The volume of each feed source (kg of intake capacity / kg of feed DM) varies depending on
 the feed quality (relative ingestibility) and feed availability (relative availability) :cite:p:`Freer2007`.
 
-The main sources of feed considered in the model are; pasture, stubble and supplement. See below
-for more information.
+The main sources of feed considered in the model are; pasture, crop residue (stubble and fodder) and supplement.
+See below for more information.
 
 .. [#]  Volume - livestock intake capacity required to consume specific mass of a given feed.
 
@@ -138,7 +138,7 @@ Pyomo
    CropGrazingPyomo
 
 
-Stubble
+Crop residue
 -------------
 
 Precalcs
@@ -147,7 +147,7 @@ Precalcs
 .. toctree::
    :maxdepth: 1
 
-   Stubble
+   CropResidue
 
 Pyomo
 ^^^^^^^^^
@@ -155,7 +155,7 @@ Pyomo
 .. toctree::
    :maxdepth: 1
 
-   StubblePyomo
+   CropResiduePyomo
 
 Supplement
 -------------

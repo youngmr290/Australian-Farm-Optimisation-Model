@@ -7,7 +7,6 @@ Possible model errors
 
     - Symptoms:
         - Run one trial and it works fine, run multiple trials that are the same and they do not result in the same answer.
-        -
     - Solution:
         - You may be altering the original inputs because you have operated on a view not a copy.
           Create a copy() the problematic input or array. In some cases with co plex data structures you may need a deepcopy()
@@ -43,6 +42,14 @@ Possible model errors
           You need to make sure constrains are being deleted between trials or being re-built correctly.
         - This may be because a variable has been deleted and rebuilt but a constraint referencing that
           variable was not rebuilt. To fix this the constraint will also need to be deleted and rebuilt.
+
+5. CPLEX> CPLEX Error  1615: Line 33271: Expected number, found 'n'
+
+    - Symptoms:
+        - CPLEX throws an error and doesnt solve.
+    - Solution:
+        - A parameter with nan value has been introduced.
+        - Search the .lp file to find which parameter.
 
 Process to debug
 ----------------

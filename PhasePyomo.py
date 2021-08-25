@@ -64,23 +64,14 @@ def f1_croppyomo_local(params, model):
 ### yield needs to be disaggregated so that it returns the grain transfer for each crop - this is so it is compatible with yield penalty and sup feed activities.
 ###alternative would have been to add another key/index/set to the yield parameter that was k, although i suspect this would make it a bit slower due to being bigger but it might be tidier
 
-def f1_total_rot_yield(model,k,z):
-    '''
-    Calculate the total crop yield before allocating to grain pools.
-
-    Used below and also in core pyomo to calculate total stubble production.
-    '''
-    return sum(model.p_rotation_yield[r,k,z,l]*model.v_phase_area[z,r,l] for r in model.s_phases for l in model.s_lmus
-                     if pe.value(model.p_rotation_yield[r,k,z,l]) != 0)
-
-
 def f_rotation_yield_transfer(model,g,k,z):
     '''
-    Calculate the total (kg) of each grain produced from selected rotation phases.
+    Calculate the total (kg) of each grain harvested from selected rotation phases.
 
     Used in global constraint (con_grain_transfer). See CorePyomo
     '''
-    return f1_total_rot_yield(model,k,z) * model.p_grainpool_proportion[k,g]
+    return sum(model.p_rotation_yield[r,k,z,l]*model.v_phase_area[z,r,l] for r in model.s_phases for l in model.s_lmus
+                     if pe.value(model.p_rotation_yield[r,k,z,l]) != 0) * model.p_grainpool_proportion[k,g]
 
 
 
