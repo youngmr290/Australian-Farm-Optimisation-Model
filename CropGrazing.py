@@ -78,8 +78,8 @@ def f_cropgraze_DM(total_DM=False):
     There are two main limitations of the representation:
 
         #. Impacts of rotation are not included in the estimation of crop growth.
-        #. Growth rate remains the same independent of selected grazing management (e.g. if AFO opt to graze less
-           crop in the first period the growth rate does.
+        #. Growth rate is independent of selected grazing management (e.g. if the crop isn't grazed in the
+           first period then the subsequent growth rate does not change).
 
     :param DM: boolean when set to True calculates the total crop DM used to calculate relative availability.
     '''
@@ -99,8 +99,8 @@ def f_cropgraze_DM(total_DM=False):
     ##adjust crop growth for lmu
     growth_kp6zl = growth_kp6z[...,na] * growth_lmu_factor_kl[:,na,na,:]
 
-    ##calc total dry matter in each feed period - have to adjust the length of the feed period to account for
-    # establishment period (growth is not calculated during the establishment period there is just an inputted initial DM)
+    ##calc total dry matter accumulation in each feed period - the duration of growth in each feed period is adjusted to
+    # account for the establishment period because the DM available at the end of the establishment period is an input.
     end_establishment_z = seeding_start_z + establishment_days
     date_start_adj_p6z = np.maximum(date_start_p6z, end_establishment_z)
     feed_period_lengths_p6z = np.maximum(0,(date_end_p6z - date_start_adj_p6z).astype('timedelta64[D]').astype('float'))
@@ -110,7 +110,7 @@ def f_cropgraze_DM(total_DM=False):
         ##calc dry matter available for consumption provided by 1ha of crop
         crop_DM_provided_kp6zl = total_dm_growth_kp6zl * consumption_factor_p6z[:,na]
 
-        ##calc foo required for animals to consume 1t - accounts for wastage
+        ##calc DM removal when animals consume 1t - accounts for wastage and trampling
         crop_DM_required_k = 1000 / (1 - wastage_k)
 
         ##calc mask if DM can be transferred to following period (can only be transferred to periods when consumption is greater than 0)
@@ -122,9 +122,9 @@ def f_cropgraze_DM(total_DM=False):
         ##crop foo mid way through feed period after consumption - used to calc vol in the next function.
         ##DM = initial DM plus cumulative sum of DM in previous periods minus DM consumed. Minus half the DM in the current period to get the DM in the middle of the period.
         initial_DM_p6z = initial_DM * (end_establishment_z <= date_end_p6z)
-        crop_DM_kp6zl =  initial_DM_p6z[...,na] + np.cumsum(total_dm_growth_kp6zl * (1-consumption_factor_p6z[:,na])
+        crop_foo_kp6zl =  initial_DM_p6z[...,na] + np.cumsum(total_dm_growth_kp6zl * (1-consumption_factor_p6z[:,na])
                                                             , axis=1) - total_dm_growth_kp6zl/2 * (1-consumption_factor_p6z[:,na])
-        return crop_DM_kp6zl
+        return crop_foo_kp6zl
 
 def f_DM_reduction_seeding_time():
     '''
@@ -163,15 +163,15 @@ def f_DM_reduction_seeding_time():
     end_p6p5z = np.minimum(date_end_p6z[:,na,:], date_end_p5z + establishment_days)
     base_p6p5z = (end_p6p5z - start_p6p5z)/ np.timedelta64(1, 'D')
     height_start_p6p5z = np.maximum(0, fun.f_divide(((date_end_p5z + establishment_days) - start_p6p5z)/ np.timedelta64(1, 'D')
-                                                        , seed_days_p5z))
-    height_end_p6p5z = fun.f_divide(np.maximum(0,((date_end_p5z + establishment_days) - end_p6p5z)/ np.timedelta64(1, 'D'))
-                                    , seed_days_p5z)
+                                                    , seed_days_p5z))
+    height_end_p6p5z = np.maximum(0,fun.f_divide(((date_end_p5z + establishment_days) - end_p6p5z)/ np.timedelta64(1, 'D')
+                                                    , seed_days_p5z))
     grazing_days_tri_p6p5z = np.maximum(0,base_p6p5z * (height_start_p6p5z + height_end_p6p5z) / 2)
 
-    ##total grazing days crop growth couldnt occur due to seeding after the first day
+    ##reduction in total grazing days due to seeding after the first day
     total_grazing_days_reduction_p6p5z = grazing_days_tri_p6p5z + grazing_days_rect_p6p5z
 
-    ##reduction in DM available for consumption per day sowing occurs after seeding start
+    ##reduction in DM available for consumption due to seeding after the first day
     ###adjust crop growth for lmu
     growth_kp6zl = growth_kp6z[...,na] * growth_lmu_factor_kl[:,na,na,:]
     DM_reduction_kp6p5zl = total_grazing_days_reduction_p6p5z[...,na] * growth_kp6zl[:,:,na,...] * consumption_factor_p6z[:,na,:,na]
@@ -187,7 +187,7 @@ def crop_md_vol(nv):
 
     ##inputs
     crop_dmd_kp6z = pinp.f_seasonal_inp(pinp.cropgraze['i_crop_dmd_kp6z'],numpy=True,axis=-1)
-    crop_DM_kp6zl = f_cropgraze_DM(total_DM=True)
+    crop_foo_kp6zl = f_cropgraze_DM(total_DM=True)
     hr = pinp.cropgraze['i_hr_crop']
     me_threshold_fp6z = np.swapaxes(nv['nv_cutoff_ave_p6fz'], axis1=0, axis2=1)
     crop_me_eff_gainlose = pinp.cropgraze['i_crop_me_eff_gainlose']
@@ -205,9 +205,9 @@ def crop_md_vol(nv):
     ### calc relative availability - note that the equation system used is the one selected for dams in p1 - need to hook up mu function
     hf= fsfun.f_hf(hr) #height factor
     if uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==0: #csiro function used
-        crop_ri_quan_kp6zl = fsfun.f_ra_cs(crop_DM_kp6zl, hf)
+        crop_ri_quan_kp6zl = fsfun.f_ra_cs(crop_foo_kp6zl, hf)
     elif uinp.sheep['i_eqn_used_g1_q1p7'][5,0]==1: #Murdoch function used
-        crop_ri_quan_kp6zl = fsfun.f_ra_mu(crop_DM_kp6zl, hf)
+        crop_ri_quan_kp6zl = fsfun.f_ra_mu(crop_foo_kp6zl, hf)
 
     crop_ri_kp6zl = fsfun.f_rel_intake(crop_ri_quan_kp6zl, crop_ri_qual_kp6z[...,na], legume=0)
     crop_vol_kp6zl = fun.f_divide(1000, crop_ri_kp6zl)  # 1000 to convert to vol per tonne
@@ -223,13 +223,12 @@ def crop_md_vol(nv):
 
     return crop_md_fkp6zl, crop_vol_fkp6zl
 
-def cropgraze_yield_penalty():
+def f_cropgraze_yield_penalty():
     '''
     Yield and stubble penalty associated with the amount of crop consumed.
 
-    The yield penalty is an inputted percentage of the average yield for each crop. The average yield calculated from
-    all rotation phase. The stubble penalty is calculated from the yield
-    using f_cropresidue_production.
+    The yield penalty is an inputted proportion of the dry matter consumed. The stubble penalty is calculated
+    from the yield using f_cropresidue_production.
     '''
     import CropResidue as stub
     import Phase as phs
@@ -250,7 +249,7 @@ def cropgraze_yield_penalty():
 def f1_cropgraze_params(params, r_vals, nv):
     grazecrop_area_rkl = f_graze_crop_area()
     crop_DM_provided_kp6zl, crop_DM_required_k, transfer_exists_p6z = f_cropgraze_DM()
-    yield_reduction_propn_kp6z, stubble_reduction_propn_kp6z = cropgraze_yield_penalty()
+    yield_reduction_propn_kp6z, stubble_reduction_propn_kp6z = f_cropgraze_yield_penalty()
     crop_md_fkp6zl, crop_vol_fkp6zl = crop_md_vol(nv)
     DM_reduction_kp6p5zl = f_DM_reduction_seeding_time()
 

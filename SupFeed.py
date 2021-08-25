@@ -164,8 +164,8 @@ def f_sup_md_vol():
     a protein deficiency and therefore acting as a 'true' supplement and increasing intake. If this was represented it
     would likely make low rate lupin supplementation optimal in early summer/autumn to overcome a protein deficiency.
 
-    .. note:: Supplement md does not go through f_effective_mei because the quantity of Sup feed is controlled so
-              the sheep aren't gaining and losing weight.
+    .. note:: Supplement md does not go through f_effective_mei because the quantity of Sup feed can be controlled
+              so the animals achieve their target weight profile and aren't gaining then losing weight.
     '''
     #todo review the volume of supplementary feed, especially the max RI==1 and non-inclusion of protein supplementation.
     ##calc vol

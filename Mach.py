@@ -205,9 +205,9 @@ def f_poc_grazing_days():
     end_p6p5z = np.minimum(date_end_p6z[:,na,:], date_end_p5z - defer_period)
     base_p6p5z = (end_p6p5z - start_p6p5z)/ np.timedelta64(1, 'D')
     height_start_p6p5z = np.maximum(0, fun.f_divide(((date_end_p5z - defer_period) - start_p6p5z)/ np.timedelta64(1, 'D')
-                                                        , seed_days_p5z))
-    height_end_p6p5z = fun.f_divide(np.maximum(0,((date_end_p5z - defer_period) - end_p6p5z)/ np.timedelta64(1, 'D'))
-                                    , seed_days_p5z)
+                                                    , seed_days_p5z))
+    height_end_p6p5z = np.maximum(0, fun.f_divide(((date_end_p5z - defer_period) - end_p6p5z)/ np.timedelta64(1, 'D')
+                                                    , seed_days_p5z))
     poc_grazing_days_tri_p6p5z = np.maximum(0,base_p6p5z * (height_start_p6p5z + height_end_p6p5z) / 2)
 
     ##total grazing days & convert to df

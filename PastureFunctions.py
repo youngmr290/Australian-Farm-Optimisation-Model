@@ -631,7 +631,7 @@ def f_poc(cu3, cu4, i_poc_intake_daily_p6lzt, i_poc_dmd_p6zt, i_poc_foo_p6zt, i_
     are calculated in mach.py and depend on the time between the break of season and destocking prior to seeding.
 
     The main assumption/limitation of the poc representation is that the pasture consumption per lmu per day per ha
-    is a fixed value per feed period. This means AFO can not optimise grazing management of POC.
+    is a fixed value per feed period. This means grazing management of POC isn't optimised.
 
     :param cu3: params used to convert foo for rel availability.
     :param cu4: params used to convert height for rel availability.

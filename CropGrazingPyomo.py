@@ -89,7 +89,7 @@ def f1_cropgrazepyomo_local(params,model):
 def f_con_crop_DM_transfer(model):
     '''
     Transfer FOO from grazing 1ha of crop to the livestock crop consumption activity. DM that is not consumed is
-    transferred into the following feed period.
+    transferred into the following feed period (without changing the growth rate of the crop).
     '''
     def crop_DM_transfer(model,k,p6,z):
         p6s = list(model.s_feed_periods)[list(model.s_feed_periods).index(p6) - 1]  #previous feedperiod - have to convert to a list first because indexing of an ordered set starts at 1
