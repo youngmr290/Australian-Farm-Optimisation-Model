@@ -14,6 +14,7 @@ Model Logic
    labour_index
    livestock_index
    machinery_index
+   seasonality_index
    CorePyomo
    bibliography
 
