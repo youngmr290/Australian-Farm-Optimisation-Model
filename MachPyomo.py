@@ -26,7 +26,9 @@ def f1_machpyomo_local(params, model):
     #number of ha seeded for each pasture
     model.v_seeding_pas = pe.Var(model.s_labperiods, model.s_landuses, model.s_lmus, model.s_season_types, bounds=(0,None), doc='number of ha of pasture seeded')
     #number of ha seeded for each crop
-    model.v_seeding_crop = pe.Var(model.s_labperiods, model.s_landuses, model.s_lmus, model.s_season_types, bounds=(0,None), doc='number of ha of crop seeded')
+    model.v_wet_seeding_crop = pe.Var(model.s_labperiods, model.s_landuses, model.s_lmus, model.s_season_types, bounds=(0,None), doc='number of ha of crop wet sown')
+    #number of ha seeded for each crop
+    model.v_dry_seeding_crop = pe.Var(model.s_labperiods, model.s_landuses, model.s_lmus, model.s_season_types, bounds=(0,None), doc='number of ha of crop dry sown')
     #number of ha seeded using contractor
     model.v_contractseeding_ha = pe.Var(model.s_season_types, model.s_labperiods, model.s_landuses, model.s_lmus, bounds=(0,None), doc='number of ha contract seeding for each crop')
     #number of hours harvesting for each crop - there is a constraint to limit this to the hours available in the harvest period
@@ -128,10 +130,12 @@ def f_con_sow_supply(model):
     contract services. The amount supplied from the farmers equipment is limited by the seeding days and the
     rate of seeding per day.
     '''
-    def sow_supply(model,p,k1,l,z):
-        return - model.v_contractseeding_ha[z,p,k1,l] * model.p_contractseeding_occur[p,z] \
-               - model.v_seeding_machdays[z,p,k1,l] * model.p_seeding_rate[k1,l]     \
-                + model.v_seeding_pas[p,k1,l,z] + model.v_seeding_crop[p,k1,l,z] <=0
+    def sow_supply(model,p5,k,l,z):
+        return - model.v_contractseeding_ha[z,p5,k,l] * model.p_contractseeding_occur[p5,z] \
+               - model.v_seeding_machdays[z,p5,k,l] * model.p_seeding_rate[k,l]    \
+               + model.v_seeding_pas[p5,k,l,z]        \
+               + model.v_wet_seeding_crop[p5,k,l,z]   \
+               + model.v_dry_seeding_crop[p5,k,l,z]  <=0
     model.con_sow_supply = pe.Constraint(model.s_labperiods, model.s_landuses, model.s_lmus, model.s_season_types, rule=sow_supply, doc='link sow supply to crop and pas variable')
 
 ###################################

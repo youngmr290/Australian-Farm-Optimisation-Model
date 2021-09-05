@@ -194,9 +194,9 @@ def f_pasture(params, r_vals, nv):
     keys_z  = pinp.f_keys_z()
 
     ### plrkz
-    arrays=[keys_p5, keys_l, keys_r, keys_k, keys_z]
-    index_plrkz=fun.cartesian_product_simple_transpose(arrays)
-    index_plrkz=tuple(map(tuple, index_plrkz)) #create a tuple rather than a list because tuples are faster
+    arrays=[keys_p5, keys_k, keys_z]
+    index_pkz=fun.cartesian_product_simple_transpose(arrays)
+    index_pkz=tuple(map(tuple, index_pkz)) #create a tuple rather than a list because tuples are faster
 
     ### rt
     arrays=[keys_r, keys_t]
@@ -408,7 +408,7 @@ def f_pasture(params, r_vals, nv):
         , length_fz, n_feed_periods, p6lrzt, p6zt, t_idx, z_idx, l_idx)
 
     ## sow param determination
-    pas_sow_p5lrkz = pfun.f_pas_sow(i_reseeding_date_start_zt, i_reseeding_date_end_zt, resown_rt, arable_l, phases_rotn_df)
+    pas_sow_prov_p5kz = pfun.f_pas_sow(i_reseeding_date_start_zt, i_reseeding_date_end_zt, resown_rt, arable_l, phases_rotn_df, pastures)
 
     ## area of green pasture being grazed and growing
     phase_area_p6lrzt = pfun.f1_green_area(resown_rt, pasture_rt, periods_destocked_p6zt, arable_l)
@@ -513,7 +513,7 @@ def f_pasture(params, r_vals, nv):
     params['p_foo_dry_reseeding_dp6lrzt'] = dict(zip(index_dp6lrzt, foo_dry_reseeding_dp6lrzt.ravel()))
     params['p_foo_grn_reseeding_p6lrzt'] = dict(zip(index_p6lrzt, foo_grn_reseeding_p6lrzt.ravel()))
 
-    params['p_pas_sow_p5lrkz'] = dict(zip(index_plrkz, pas_sow_p5lrkz.ravel()))
+    params['p_pas_sow_prov_p5kz'] = dict(zip(index_pkz, pas_sow_prov_p5kz.ravel()))
 
     params['p_phase_area_p6lrzt'] = dict(zip(index_p6lrzt, phase_area_p6lrzt.ravel()))
 

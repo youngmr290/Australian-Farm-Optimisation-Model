@@ -832,9 +832,11 @@ def f1_rot_cost(r_vals):
 #sow            #
 #################
     
-def f_crop_sow():
+def f_phase_sow_req():
     '''
-    Crop sow (wet or dry or spring) requirement for each rot phase.
+    Area of seeding required for 1ha of each rotation.
+
+    This accounts for arable area and includes any seeding (wet or dry or pasture).
 
     '''
     ##read phases
@@ -842,13 +844,58 @@ def f_crop_sow():
 
     ##sow = arable area
     arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0)
-    cropsow = arable.reindex(pd.MultiIndex.from_product([sinp.landuse['C'],arable.index]), axis=0, level=1)
+    seeding_landuses = uinp.mach[pinp.mach['option']]['seeder_speed_crop_adj'].index
+    phasesow = arable.reindex(pd.MultiIndex.from_product([seeding_landuses, arable.index]), axis=0, level=1)
     ##merge to rot phases
-    cropsow = pd.merge(phases_df, cropsow.unstack(), how='left', left_on=sinp.end_col(), right_index = True)
+    phasesow = pd.merge(phases_df, phasesow.unstack(), how='left', left_on=sinp.end_col(), right_index = True)
     ##add current crop to index
-    cropsow.set_index(sinp.end_col(), append=True, inplace=True)
-    crop_sow = cropsow.drop(list(range(sinp.general['phase_len']-1)), axis=1).stack()
-    return crop_sow
+    phasesow.set_index(sinp.end_col(), append=True, inplace=True)
+    phase_sow = phasesow.drop(list(range(sinp.general['phase_len']-1)), axis=1).stack()
+    return phase_sow
+
+def f_sow_prov():
+    '''
+    Creates provide param for wet and dry sowing activities:
+
+        - Area of wet seeding provided by 1ha of the wet seeding activity.
+        - Area of dry seeding provided by 1ha of the dry seeding activity.
+
+    This accounts for period and crop eg wet seeding activity only provides sowing to crop after the break.
+
+    '''
+    ##machine periods
+    labour_period_p5z = per.f_p_dates_df()
+    labour_period_start_p5z = labour_period_p5z.values[:-1]
+    labour_period_end_p5z = labour_period_p5z.values[1:]
+
+    ##wet sowing periods
+    seed_period_lengths_pz = pinp.f_seasonal_inp(pinp.period['seed_period_lengths'],numpy=True,axis=1)
+    wet_seed_start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
+    wet_seed_len_z = np.sum(seed_period_lengths_pz, axis=0).astype('timedelta64[D]')
+    wet_seed_end_z = wet_seed_start_z + wet_seed_len_z
+    period_is_wetseeding_p5z = (labour_period_start_p5z < wet_seed_end_z) * (labour_period_end_p5z > wet_seed_start_z)
+
+    ##dry sowing periods
+    dry_seed_start_z = np.datetime64(pinp.crop['dry_seed_start'])
+    date_feed_periods = per.f_feed_periods().astype('datetime64')
+    date_start_p6z = date_feed_periods[:-1]
+    season_break_z = date_start_p6z[0]
+    period_is_dryseeding_p5z = (labour_period_start_p5z < season_break_z) * (labour_period_end_p5z > dry_seed_start_z)
+
+    ##make df
+    keys_z = pinp.f_keys_z()
+    keys_p5 = labour_period_p5z.index[:-1]
+    wetseeding_prov_p5z = pd.DataFrame(period_is_wetseeding_p5z, index=keys_p5, columns=keys_z) * 1 # *1 to convert bool to number
+    dryseeding_prov_p5z = pd.DataFrame(period_is_dryseeding_p5z, index=keys_p5, columns=keys_z) * 1 # *1 to convert bool to number
+
+    ##add wet sow landuse axis
+    dry_sown_landuses = sinp.landuse['dry_sown']
+    wet_sown_landuses = sinp.landuse['C'] - dry_sown_landuses #can subtract sets to return differences
+    wetseeding_prov_p5kz = wetseeding_prov_p5z.reindex(pd.MultiIndex.from_product([keys_p5, wet_sown_landuses]),axis=0, level=0)
+    dryseeding_prov_p5kz = dryseeding_prov_p5z.reindex(pd.MultiIndex.from_product([keys_p5, dry_sown_landuses]),axis=0, level=0)
+    return wetseeding_prov_p5kz.stack(), dryseeding_prov_p5kz.stack()
+
+
 
 #########
 #params #
@@ -859,12 +906,15 @@ def f1_crop_params(params,r_vals):
     yields = f_rot_yield()
     propn = f_grain_pool_proportions()
     grain_price = f_grain_price(r_vals)
-    cropsow = f_crop_sow()
+    phasesow_req = f_phase_sow_req()
+    wetseeding_prov_p5kz, dryseeding_prov_p5kz = f_sow_prov()
 
     ##create params
     params['grain_pool_proportions'] = propn.to_dict()
     params['grain_price'] = grain_price.to_dict()
-    params['crop_sow'] = cropsow.to_dict()
+    params['phase_sow_req'] = phasesow_req.to_dict()
+    params['wet_sow_prov'] = wetseeding_prov_p5kz.to_dict()
+    params['dry_sow_prov'] = dryseeding_prov_p5kz.to_dict()
     params['rot_cost'] = cost.to_dict()
     params['rot_yield'] = yields.to_dict()
 

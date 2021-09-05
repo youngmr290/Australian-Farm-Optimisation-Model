@@ -58,8 +58,7 @@ def coremodel_all(params,trial_name,model):
     # stubble
     f_con_stubble_a(model)
     # sow landuse
-    f_con_cropsow(model)
-    f_con_passow(model)
+    f_con_phasesow(model)
     # harvest and make hay
     f_con_harv(model)
     f_con_makehay(model)
@@ -286,42 +285,48 @@ def f_con_stubble_a(model):
                                         doc='links rotation stubble production with consumption of cat A')
 
 
-def f_con_cropsow(model):
+def f_con_phasesow(model):
     '''
-    Ensures that the seeding requirements for each crop rotation selected can be met by the capacity of the
+    Ensures that the seeding requirements for each rotation phase selected can be met by the capacity of the
     machinery and/or with the help of contract work.
 
-    No p5 set because model can optimise crop sowing time
+    Links seeding requirement with machinery sowing activity (which accounts for machinery use and labour
+    needed to sow pasture).
+    No p5 set in the constraint because model can optimise sowing time (can only optimise within the periods provided eg
+    dry sowing activity only provides sowing capacity before the break).
     '''
-    def cropsow_link(model,k,l,z):
-        if type(phspy.f_cropsow(model,k,l,z)) == int:  # if crop sow param is zero this will be int (can't do if==0 because when it is not 0 it is a complex pyomo object which can't be evaluated)
+    def sow_link(model,k,l,z):
+        if type(phspy.f_phasesow_req(model,k,l,z)) == int:  # if crop sow param is zero this will be int (can't do if==0 because when it is not 0 it is a complex pyomo object which can't be evaluated)
             return pe.Constraint.Skip  # skip constraint if no crop is being sown on given rotation
         else:
-            return sum(-model.v_seeding_crop[p,k,l,z] for p in model.s_labperiods) + phspy.f_cropsow(model,k,l,z) <= 0
+            return - sum(model.v_wet_seeding_crop[p5,k,l,z] * model.p_wet_sow_prov[p5,k,z] for p5 in model.s_labperiods)  \
+                   - sum(model.v_dry_seeding_crop[p5,k,l,z] * model.p_dry_sow_prov[p5,k,z] for p5 in model.s_labperiods) \
+                   - sum(model.v_seeding_pas[p5,k,l,z] * model.p_pas_sow_prov[p5,k,z] for p5 in model.s_labperiods) \
+                   + phspy.f_phasesow_req(model,k,l,z) <= 0
 
-    model.con_cropsow = pe.Constraint(model.s_crops,model.s_lmus,model.s_season_types,rule=cropsow_link,
+    model.con_phasesow = pe.Constraint(model.s_crops,model.s_lmus,model.s_season_types,rule=sow_link,
                                       doc='link between mach sow provide and rotation crop sow require')
 
 
-def f_con_passow(model):
-    '''
-    Links pasture seeding requirement with machinery sowing activity (which accounts for machinery use and labour
-    needed to sow pasture). Requires a p set because the timing of sowing pasture is not optimisable (pasture
-    sowing can occur in any period so the user specifies the periods when a given pasture must be sown)
-
-    Pasture sow has separate constraint from crop sow because pas sow has a p axis so that user can specify period
-    when pasture is sown (pasture has no yield penalty so model doesnt optimise seeding time like it does for crop)
-    '''
-
-    def passow_link(model,p5,k,l,z):
-        if type(paspy.f_passow(model,p5,k,l,
-                             z)) == int:  # if crop sow param is zero this will be int (can't do if==0 because when it is not 0 it is a complex pyomo object which can't be evaluated)
-            return pe.Constraint.Skip  # skip constraint if no pasture is being sown
-        else:
-            return -model.v_seeding_pas[p5,k,l,z] + paspy.f_passow(model,p5,k,l,z) <= 0
-
-    model.con_passow = pe.Constraint(model.s_labperiods,model.s_landuses,model.s_lmus,model.s_season_types,
-                                     rule=passow_link,doc='link between mach sow provide and rotation pas sow require')
+# def f_con_passow(model):
+#     '''
+#     Links pasture seeding requirement with machinery sowing activity (which accounts for machinery use and labour
+#     needed to sow pasture). Requires a p set because the timing of sowing pasture is not optimisable (pasture
+#     sowing can occur in any period so the user specifies the periods when a given pasture must be sown)
+#
+#     Pasture sow has separate constraint from crop sow because pas sow has a p axis so that user can specify period
+#     when pasture is sown (pasture has no yield penalty so model doesnt optimise seeding time like it does for crop)
+#     '''
+#
+#     def passow_link(model,p5,k,l,z):
+#         if type(paspy.f_passow(model,p5,k,l,
+#                              z)) == int:  # if crop sow param is zero this will be int (can't do if==0 because when it is not 0 it is a complex pyomo object which can't be evaluated)
+#             return pe.Constraint.Skip  # skip constraint if no pasture is being sown
+#         else:
+#             return -model.v_seeding_pas[p5,k,l,z] + paspy.f_passow(model,p5,k,l,z) <= 0
+#
+#     model.con_passow = pe.Constraint(model.s_labperiods,model.s_landuses,model.s_lmus,model.s_season_types,
+#                                      rule=passow_link,doc='link between mach sow provide and rotation pas sow require')
 
 
 def f_con_harv(model):

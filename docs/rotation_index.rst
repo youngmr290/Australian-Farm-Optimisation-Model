@@ -143,6 +143,8 @@ sequences are removed. See RotGeneration_ for the full list of rules.
      - Annual resown
    * - b
      - Barley
+   * - bd
+     - Dry sown Barley
    * - f
      - Faba
    * - h
@@ -163,10 +165,14 @@ sequences are removed. See RotGeneration_ for the full list of rules.
      - Annual (manipulated in winter)
    * - o
      - Oats
+   * - od
+     - Dry sown Oats
    * - of
      - Oats fodder crop
    * - r
      - Canola (RoundUp Ready)
+   * - rd
+     - Dry sown Canola (RoundUp Ready)
    * - s
      - Annual (spray-topped)
    * - sr
@@ -187,6 +193,8 @@ sequences are removed. See RotGeneration_ for the full list of rules.
      - Vetch
    * - w
      - Wheat
+   * - wd
+     - Dry sown Wheat
    * - x
      - Lucerne (monoculture)
    * - xc
@@ -195,6 +203,8 @@ sequences are removed. See RotGeneration_ for the full list of rules.
      - Lucerne resown (monoculture)
    * - z
      - Canola (Triazine Tolerant)
+   * - zd
+     - Dry sown Canola (Triazine Tolerant)
 
 
 .. _Table 2:

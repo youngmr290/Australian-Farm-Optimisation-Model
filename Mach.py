@@ -374,18 +374,12 @@ def f_contract_seed_cost(r_vals):
 
 def f_sowing_timeliness_penalty():
     '''
-    Calculates the yield penalty in each mach period (wet and dry seeding) due to sowing timeliness- kg/ha/period/crop.
+    Calculates the yield penalty in each mach period due to wet sowing timeliness- kg/ha/period/crop.
 
     The timeliness of sowing can have a large impact on crop yields. AFO accounts for this using a
     yield penalty.
-    There are risks associated with dry sowing such as less effective weed control (i.e. crops germinate at
-    the same time as the weeds so you miss out on a knock down spray opportunity), poor crop emergence (if
-    opening rains are spasmodic patchy crop germination is possible and early crop vigour may be absent without
-    adequate follow up rain) and increased chance of frost :cite:p:`RN119`. These risks are represented
-    in the model by including a yield penalty for dry seeding. The level of the penalty is specified by the
-    user for each crop and applies to all dry seeding activities.
 
-    Late sowing also receives a yield reduction because the crop has less time to mature (e.g. shorter
+    Late sowing receives a yield reduction because the crop has less time to mature (e.g. shorter
     growing season) and grain filling often occurs during hotter drier conditions :cite:p:`RN121, RN122`.
     The user can specify the length of time after the beginning of wet seeding that no penalty applies
     after that a penalty is applied. The yield reduction is cumulative per day, so the longer sowing is
@@ -397,23 +391,22 @@ def f_sowing_timeliness_penalty():
     period is 5 days long but the farmer only has to sow 20ha they will do it on the first day of the period not
     4ha each day of the period. Therefore, the calculation overestimates the yield penalty.
 
+    .. note:: There are also risks associated with dry sowing such as less effective weed control (i.e. crops germinate at
+        the same time as the weeds so you miss out on a knock down spray opportunity), poor crop emergence (if
+        opening rains are spasmodic patchy crop germination is possible and early crop vigour may be absent without
+        adequate follow up rain) and increased chance of frost :cite:p:`RN119`. These risks are represented
+        in the model via the yield inputs because dry sown crop are separate landuses.
+
 
     '''
     ##inputs
     seed_period_lengths_pz = pinp.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
-    dry_seeding_penalty_k_z = pinp.f_seasonal_inp(pinp.crop['yield_penalty_dry'], axis=1)
     wet_seeding_penalty_k_z = pinp.f_seasonal_inp(pinp.crop['yield_penalty_wet'], axis=1)
 
     ##general info
     mach_periods = per.f_p_dates_df()
     mach_periods_start_pz = mach_periods.values[:-1]
     mach_periods_end_pz = mach_periods.values[1:]
-
-    ##dry seeding penalty
-    dry_seed_start = np.datetime64(pinp.crop['dry_seed_start'])
-    dry_seed_end_z = per.f_feed_periods()[0].astype('datetime64') #dry seeding finishes when the season breaks
-    period_is_dry_seeding_pz = np.logical_and(dry_seed_start <= mach_periods_start_pz, mach_periods_start_pz < dry_seed_end_z)
-    dry_penalty_pzk = period_is_dry_seeding_pz[...,na] * dry_seeding_penalty_k_z.T.values
 
     ##wet seeding penalty - penalty = average penalty of period (= (start day + end day) / 2 * penalty)
     seed_start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
@@ -424,7 +417,7 @@ def f_sowing_timeliness_penalty():
     wet_penalty_pzk = np.clip(wet_penalty_pzk, 0, np.inf)
 
     ##combine dry and wet penalty
-    penalty_pzk = dry_penalty_pzk + wet_penalty_pzk
+    penalty_pzk = wet_penalty_pzk
 
     ##put into df
     penalty_pzk = penalty_pzk.reshape(penalty_pzk.shape[0], -1)

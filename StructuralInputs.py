@@ -182,7 +182,7 @@ landuse['pasture_sets']={'annual': {'a', 'ar'
                         ,'tedera':{'j','jc', 't','tc', 'jr', 'tr'}
                        }
 ##G and C1 are just used in pas.py for germination ^can be removed when germination is calculated from sim
-landuse['G']={'b', 'h', 'o','of', 'w', 'f','i', 'k', 'l', 'v', 'z','r'
+landuse['G']={'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'v', 'z', 'zd', 'r', 'rd'
                 , 'a', 'ar'
                 , 's', 'sr'
                 , 'm'
@@ -196,20 +196,15 @@ landuse['G']={'b', 'h', 'o','of', 'w', 'f','i', 'k', 'l', 'v', 'z','r'
                 , 'U'
                 , 'X'
                 , 'T', 'J'} #all landuses
-landuse['C1']={'E', 'N', 'P', 'OF', 'b', 'h', 'o', 'of', 'w', 'f','i', 'k', 'l', 'v', 'z','r'} #had to create a separate set because don't want the capital in the crop set above as it is used to create pyomo set
+##G and C1 are just used in pas.py for germination ^can be removed when germination is calculated from sim
+landuse['C1']={'E', 'N', 'P', 'OF', 'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'v', 'z', 'zd', 'r', 'rd'} #all crops - had to create a separate set because don't want the capital in the crop set above as it is used to create pyomo set
 
 
-landuse['All']={'b', 'h', 'o', 'of', 'w', 'f','i', 'k', 'l', 'v', 'z','r', 'a', 'ar', 's', 'sr', 'm', 'u', 'uc', 'ur', 'x', 'xc', 'xr', 'j','jc', 't','tc', 'jr', 'tr'} #used in reporting and bounds
-landuse['C']={'b', 'h', 'o', 'of', 'w', 'f','i', 'k', 'l', 'v', 'z','r'} #all crops, used in stubble and mach (not used for rotations)
+landuse['All']={'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'v', 'z', 'zd', 'r', 'rd', 'a', 'ar', 's', 'sr', 'm', 'u', 'uc', 'ur', 'x', 'xc', 'xr', 'j','jc', 't','tc', 'jr', 'tr'} #used in reporting and bounds
+landuse['C']={'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'v', 'z', 'zd', 'r', 'rd'} #all crops, used in stubble and mach (not used for rotations)
+landuse['dry_sown'] = {'bd', 'od', 'wd', 'zd','rd'} #dry sown crops, used in phase.py for seeding param (not used for building rotations)
 landuse['Hay']={'h'} #all crops that produce hay - used in machpyomo/coremodel for hay con
-##special sets used in crop sim
-landuse['Ys'] = {'Y'}
-landuse['As'] = {'A','a'}
-landuse['JR'] = {'jr'}
-landuse['TR'] = {'tr'}
-landuse['UR'] = {'ur'}
-landuse['XR'] = {'xr'}
-landuse['PAS'] = {'A', 'AR', 'S', 'SR', 'M','T','J','U','X', 'tc', 'jc', 'uc', 'xc'}
+
 ##sets used in to build rotations
 landuse['A']={'a', 'ar','s', 'sr', 'm'
                 , 'A', 'AR'
@@ -217,11 +212,11 @@ landuse['A']={'a', 'ar','s', 'sr', 'm'
                 , 'M'} #annual
 landuse['A1']={'a',  's', 'm'} #annual not resown - special set used in pasture germ and con2 when determining if a rotation provides a rotation because in yr1 we don't want ar to provide an A because we need to distinguish between them
 landuse['AR']={'ar', 'AR'} #resown annual
-landuse['E']={'E', 'E1', 'OF', 'b', 'h', 'o', 'of', 'w'} #cereals
-landuse['E1']={'E', 'b', 'h', 'o', 'w'} #harvested cereals
+landuse['E']={'E', 'E1', 'OF', 'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd'} #cereals
+landuse['E1']={'E', 'b', 'bd', 'h', 'o', 'od', 'w', 'wd'} #harvested cereals
 landuse['J']={'J', 'j', 'jr'} #tedera
 landuse['M']={'m', 'M'} #manipulated pasture
-landuse['N']={'N', 'z','r'} #canolas
+landuse['N']={'N', 'z', 'zd', 'r', 'rd'} #canolas
 landuse['OF']={'OF', 'of'} #oats fodder
 landuse['P']={'P', 'f','i', 'k', 'l', 'v'} #pulses
 landuse['S']={'s','sr', 'S', 'SR'} #spray topped pasture
@@ -229,7 +224,7 @@ landuse['SR']={'sr', 'SR'} #spray topped pasture
 landuse['T']={'T', 't', 'tr','J', 'j', 'jr'} #tedera - also includes manipulated tedera because it is combined in yrs 3,4,5
 landuse['U']={'u', 'ur', 'U','x', 'xr', 'X'} #lucerne
 landuse['X']={'x', 'xr', 'X'} #lucerne
-landuse['Y']={'b', 'h', 'o','of', 'w', 'f','i', 'k', 'l', 'v', 'z','r'
+landuse['Y']={'b', 'bd', 'h', 'o', 'od', 'of', 'w', 'wd', 'f','i', 'k', 'l', 'v', 'z', 'zd', 'r', 'rd'
                 , 'Y', 'E', 'E1', 'N', 'P', 'OF'} #anything not pasture
 
 
@@ -237,6 +232,7 @@ landuse['Y']={'b', 'h', 'o','of', 'w', 'f','i', 'k', 'l', 'v', 'z','r'
 landuse['a']={'a'}
 landuse['ar']={'ar'}
 landuse['b']={'b'}
+landuse['bd']={'bd'}
 landuse['f']={'f'}
 landuse['h']={'h'}
 landuse['i']={'i'}
@@ -247,8 +243,10 @@ landuse['k']={'k'}
 landuse['l']={'l'}
 landuse['m']={'m'}
 landuse['o']={'o'}
+landuse['od']={'od'}
 landuse['of']={'of'}
 landuse['r']={'r'}
+landuse['rd']={'rd'}
 landuse['s']={'s'}
 landuse['sr']={'sr'}
 landuse['t']={'t'}
@@ -259,14 +257,24 @@ landuse['uc']={'uc'}
 landuse['ur']={'ur'}
 landuse['v']={'v'}
 landuse['w']={'w'}
+landuse['wd']={'wd'}
 landuse['x']={'x'}
 landuse['xc']={'xc'}
 landuse['xr']={'xr'}
 landuse['z']={'z'}
+landuse['zd']={'zd'}
 
 
 
 
+##special sets used in crop sim
+# landuse['Ys'] = {'Y'}
+# landuse['As'] = {'A','a'}
+# landuse['JR'] = {'jr'}
+# landuse['TR'] = {'tr'}
+# landuse['UR'] = {'ur'}
+# landuse['XR'] = {'xr'}
+# landuse['PAS'] = {'A', 'AR', 'S', 'SR', 'M','T','J','U','X', 'tc', 'jc', 'uc', 'xc'}
 
 
 #########################################################################################################################################################################################################

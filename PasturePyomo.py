@@ -80,7 +80,7 @@ def f1_paspyomo_local(params, model):
     
     model.p_phase_area = pe.Param(model.s_feed_periods, model.s_lmus, model.s_phases, model.s_season_types, model.s_pastures, initialize=params['p_phase_area_p6lrzt'], default=0, mutable=False, doc='pasture area in each rotation for each feed period')
     
-    model.p_pas_sow = pe.Param(model.s_labperiods, model.s_lmus, model.s_phases, model.s_landuses, model.s_season_types, initialize=params['p_pas_sow_p5lrkz'], default=0, mutable=False, doc='pasture sown for each rotation')
+    model.p_pas_sow_prov = pe.Param(model.s_labperiods, model.s_landuses, model.s_season_types, initialize=params['p_pas_sow_prov_p5kz'], default=0, mutable=False, doc='sowing provided for each landuse from the pasture sow activity')
     
     model.p_poc_con = pe.Param(model.s_feed_periods ,model.s_lmus, model.s_season_types, initialize=params['p_poc_con_p6lz'],default=0, doc='available consumption of pasture on 1ha of a crop paddock each day for each lmu in each feed period')
 
@@ -191,17 +191,17 @@ def f_con_erosion(model):
 ###################
 #constraint global#
 ###################
-##sow
-def f_passow(model,p5,k,l,z):
-    '''
-    Calculate the hectares of pasture that are resown.
-
-    Used in global constraint (con_passow). See CorePyomo.
-    '''
-    if any(model.p_pas_sow[p5,l,r,k,z] for r in model.s_phases):
-        return sum(model.p_pas_sow[p5,l,r,k,z]*model.v_phase_area[z,r,l] for r in model.s_phases if pe.value(model.p_pas_sow[p5,l,r,k,z]) != 0)
-    else:
-        return 0
+# ##sow
+# def f_passow(model,p5,k,l,z):
+#     '''
+#     Calculate the hectares of pasture that are resown.
+#
+#     Used in global constraint (con_passow). See CorePyomo.
+#     '''
+#     if any(model.p_pas_sow[p5,l,r,k,z] for r in model.s_phases):
+#         return sum(model.p_pas_sow[p5,l,r,k,z]*model.v_phase_area[z,r,l] for r in model.s_phases if pe.value(model.p_pas_sow[p5,l,r,k,z]) != 0)
+#     else:
+#         return 0
 
 ##ME
 def f_pas_me(model,p6,f,z):

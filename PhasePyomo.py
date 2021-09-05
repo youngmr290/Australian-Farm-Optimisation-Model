@@ -47,8 +47,12 @@ def f1_croppyomo_local(params, model):
     
     model.p_grain_price = pe.Param(model.s_crops, model.s_cashflow_periods, model.s_grain_pools, initialize=params['grain_price'],default = 0.0, doc='farm gate price per tonne of each grain')
     
-    model.p_cropsow = pe.Param(model.s_phases, model.s_crops, model.s_lmus, initialize=params['crop_sow'], default = 0.0, doc='ha of sow activity required by each rot phase')
+    model.p_phasesow_req = pe.Param(model.s_phases, model.s_crops, model.s_lmus, initialize=params['phase_sow_req'], default = 0.0, doc='ha of sow activity required by each rot phase')
     
+    model.p_wet_sow_prov = pe.Param(model.s_labperiods, model.s_landuses, model.s_season_types, initialize=params['wet_sow_prov'], default = 0.0, doc='amount of sowing provided to each landuse by the wet sow activity')
+
+    model.p_dry_sow_prov = pe.Param(model.s_labperiods, model.s_landuses, model.s_season_types, initialize=params['dry_sow_prov'], default = 0.0, doc='amount of sowing provided to each landuse by the dry sow activity')
+
 
 #######################################################################################################################################################
 #######################################################################################################################################################
@@ -80,15 +84,15 @@ def f_rotation_yield_transfer(model,g,k,z):
 ##############
 ##similar to yield - this is more complex because we want to mul with phase area variable then sum based on the current landuse (k)
 ##returns a tuple, the boolean part indicates if the constraint needs to exist
-def f_cropsow(model,k,l,z):
+def f_phasesow_req(model,k,l,z):
     '''
-    Calculate the seeding requirement for each crop from the selected rotation phases.
+    Calculate the seeding requirement for each rotation phase.
 
     Used in global constraint (con_sow). See CorePyomo
     '''
-    if any(model.p_cropsow[r,k,l] for r in model.s_phases):
-        return sum(model.p_cropsow[r,k,l]*model.v_phase_area[z,r,l] for r in model.s_phases
-                   if pe.value(model.p_cropsow[r,k,l]) != 0)
+    if any(model.p_phasesow_req[r,k,l] for r in model.s_phases):
+        return sum(model.p_phasesow_req[r,k,l]*model.v_phase_area[z,r,l] for r in model.s_phases
+                   if pe.value(model.p_phasesow_req[r,k,l]) != 0)
     else:
         return 0
 
