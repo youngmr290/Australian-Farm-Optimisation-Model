@@ -1,7 +1,7 @@
 
 """
 author: young
-
+#todo need to update this.
 To capture debit and credit interest the year is split into bi-monthly cashflow periods. Activities with a
 cost or income add to or remove from the cashflow balance. To support the sporadic nature of farming income
 finance is often drawn from the bank throughout the year to fund costly operations such as seeding. This
@@ -81,22 +81,119 @@ import PropertyInputs as pinp
 interest
 '''
 
-##########################
-#debit & credit interest #
-##########################
 
-#If it's compound interest, which it generally is, take the annual interest rate (r) and raise it to the reciprocal of 12 to get your monthly rate.
-#Why? Because there are 12 months in a year, and compound interest means exponential growth. Taking an exponent accounts for this.
-#Converting yearly compound r to some shorter period m, use the following formula:
-#[(1 + r)^(1/m)] - 1
+def f_cashflow_allocation(amount,start,enterprise,length=1):
+    '''
+    This function calculate the interest earned on cashflow item, tallies up the total cashflow including interest
+    and tallies up the working capital from a cashflow item.
 
-#convert pa interest into per cashflow period
-def debit_interest():
-    return (1 + uinp.finance['debit_interest']) ** (1 / len(sinp.general['cashflow_periods']))
+    This function is complicated by the fact that some cashflow items occur over a date range. This is treated such that
+    an proportion of the cashflow is received each day.
 
+    :param amount:
+    :param start: date when cashflow starts
+    :param enterprise:
+    :param peak_debt_date_c0:
+    :param p_dates_c0p7:
+    :param rate:
+    :param length: time over which the cashflow is incurred
+    :return:
+    '''
 
-def credit_interest():
-    return (1 + uinp.finance['credit_interest']) ** (1 / len(sinp.general['cashflow_periods']))
+    pandas = isinstance(amount,pd.DataFrame) or isinstance(amount,pd.Series)
+    p_dates_c0p7z = f_cashflow_periods(pandas)
+
+    ##inputs
+    date_peakdebt_stock = np.average(pinp.sheep['i_date_peakdebt_stock_i'][i_mask_i])
+    date_peakdebt_crop = np.array([pinp.crop['i_date_peakdebt_crop']])
+    peakdebt_date_c0 = np.concatenate([date_peakdebt_stock,date_peakdebt_crop])
+
+    rate = uinp.finance['interest']
+
+    ##adjust yr of cashflow occurence #todo check this is working
+    add_yrs = np.ceil(np.maximum(0,(p_dates_c0p7z[:,0] - start) / 365))
+    sub_yrs = np.ceil(np.maximum(0,(start - p_dates_c0p7z[:,-1]) / 365))
+    start = start + add_yrs - sub_yrs
+
+    ##create final array
+    if pandas:
+        new_index = pd.MultiIndex.from_product([keys_c0,keys_p7,amount.index])
+        cols = amount.columns
+        amount = amount.values
+        final_cashflow = np.zeros((len(new_index),len(cols)))
+        final_wc = np.zeros((len(new_index),len(cols)))
+    else:
+        final_cashflow = np.zeros(p_dates_c0p7.shape + amount.shape)
+        final_wc = np.zeros(p_dates_c0p7.shape + amount.shape)
+
+    principal_end = 0
+    daily_payment = amount / length
+
+    ##start and end dates for the cashflow periods
+    for p in len_p7:
+        ##cashflow period dates
+        date_start_c0z = p_dates_c0p7z[...,p]
+        date_end_c0z = p_dates_c0p7z[...,p + 1]
+
+        ##princiapal at the begining of the p7 period (amount of cash at the begining of the period, inc interest from previous periods)
+        principal_start = total_principal_end
+
+        #
+        # cashflow - principal and interest
+        #
+        ##calculate interest druing incur period (incur period is the time between the cashflow start and end)
+        ###end date of incur period
+        incur_end = start + length
+        ###length of incur period (days)
+        incur_days = np.minimum(date_end_c0,incur_end) - np.maximum(date_start_c0,start)
+        ###interest on starting balance during the incur period - using formula: A = P (1 + r/n)**(t)
+        principal_interest = principal_start * ((1 + rate / 365) ** incur_days - 1)
+        ###daily payments plus interest on daily payments during the incur period - Using formula: Payment × ( ( ( (1 + r/n)^(t) ) - 1 ) / (r/n) )
+        daily_interest = daily_payment * (((1 + rate / 365) ** incur_days - 1) / (rate / 365))
+
+        ##calc interest over the period after payment incur has finished
+        ###days from the end of incur to the end of the period
+        post_incur_days = np.maximum(date_start_c0,incur_end) - date_end_c0
+        ###balance at start of non incur period
+        post_incurum_start_balance = principal_start + principal_interest + daily_interest
+        ###interest on balance after the incur period - using formula: A = P (1 + r/n)**(t)
+        post_incurum_interest = post_incurum_start_balance * ((1 + rate / 365) ** post_incur_days - 1)
+
+        ##cash at the end of the period
+        cashflow_n_interest = post_incurum_start_balance + post_incurum_interest
+        total_principal_end = principal_start + post_incurum_start_balance + post_incurum_interest
+
+        #
+        # working capital constraint except that income or expense incurred after the peak debt date is excluded
+        #
+        ##calculate interest druing incur period (incur period is the time between the cashflow start and end)
+        ###end date of incur period
+        incur_end = start + length
+        ###length of incur period (days)
+        incur_days = np.minimum(date_end_c0,np.minimum(incur_end,peak_debt_date_c0)) - np.maximum(date_start_c0,start)
+        ###interest on starting balance during the incur period - using formula: A = P (1 + r/n)**(t)
+        wc_principal_interest = principal_start * ((1 + rate / 365) ** incur_days - 1)
+        ###daily payments plus interest on daily payments during the incur period - Using formula: Payment × ( ( ( (1 + r/n)^(t) ) - 1 ) / (r/n) )
+        wc_daily_interest = daily_payment * (((1 + rate / 365) ** incur_days - 1) / (rate / 365))
+
+        ##calc interest over the period after payment incur has finished
+        ###days from the end of incur to the end of the period
+        post_incur_days = np.maximum(date_start_c0,incur_end) - np.minimum(date_end_c0,peak_debt_date_c0)
+        ###balance at start of non incur period
+        wc_post_incurum_start_balance = principal_start + wc_principal_interest + wc_daily_interest
+        ###interest on balance after the incur period - using formula: A = P (1 + r/n)**(t)
+        wc_post_incurum_interest = wc_post_incurum_start_balance * ((1 + rate / 365) ** post_incur_days - 1)
+
+        ##cash at the end of the period
+        wc = wc_post_incurum_start_balance + wc_post_incurum_interest
+
+        ##assign to final array
+        final_cashflow[:,p,...] = cashflow_n_interest
+        final_wc[:,p,...] = wc
+
+    if pandas:
+        final_cashflow = pd.DataFrame(final_cashflow,index=new_index,columns=cols)
+    return final_cashflow,final_wc
 
 
 #################
@@ -104,15 +201,25 @@ def credit_interest():
 #################
 def overheads(params, r_vals):
     '''
-    Calculate overhead costs in each cashflow period.
+    Calculate overhead costs in each cashflow period and the associated interest.
 
     Overheads are ongoing business expenses that are not directly attributed to creating a product
     or service. In AFO the user has the discretion to add, remove or alter the overheads that are
     including. Examples of overhead costs include; electricity, gas, shire rates, licenses,
     professional services, insurance and household expense.
     '''
+    length = 365 #overheads are incurred equally each day
+    start_cashflow_stock = np.average(pinp.sheep['i_date_cashflow_stock_i'][i_mask_i])
+    start_cashflow_crop = np.array([pinp.crop['i_date_cashflow_crop']])
+
     overheads = pinp.general['i_overheads']
-    overheads = overheads.sum()/ len(sinp.general['cashflow_periods'])
+    overheads = overheads.sum()
+    overheads_stock = overheads/2
+    overheads_crop = overheads/2
+
+    f_cashflow_allocation(overheads_stock,start_cashflow_stock,'stk', length)
+    f_cashflow_allocation(overheads_crop,start_cashflow_crop,'crp', length)
+#need to add c0
     overheads = dict.fromkeys(sinp.general['cashflow_periods'], overheads)
     params['overheads'] = overheads
     r_vals['overheads'] = pd.Series(overheads)
