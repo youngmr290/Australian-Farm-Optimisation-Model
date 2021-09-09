@@ -31,31 +31,36 @@ import StructuralInputs as sinp
 import PropertyInputs as pinp
 import Functions as fun
 
-
+na = np.newaxis
 
 #####################################
 #define dates of cashflow periods   #
 #####################################
 
-def f_cashflow_periods():
-    #index for cash periods
-    i = 0
-    #empty list
-    cashflow_period_dates = []
-    #start date of the current cashflow period (ie start of year)
-    start = sinp.general['i_date_assetvalue']
-    cashflow_period_dates.append(start)
-    date = start
-    #upper date of the current cashflow period (ie end of year)
-    #upper = lower + relativedelta(days=(365 / len(inp.structure['cashflow_periods'])))
-    while i < len(sinp.general['cashflow_periods']):
-        cash_period_length = relativedelta(days=(365 / len(sinp.general['cashflow_periods'])))
-        date += cash_period_length
-        cashflow_period_dates.append(date)
-        i += 1
-    #made df this way so the columns could be diff len
-    cashflow_dates = pd.DataFrame({'start date' : pd.Series(cashflow_period_dates),'cash period' : pd.Series(sinp.general['cashflow_periods'])})
-    return cashflow_dates
+def f_cashflow_periods(pandas=False):
+    '''cashflow periods begin at the minimum of the break of season or the cashflow date.'''
+    ##create c0 axis
+    date_cashflow_stock = np.average(pinp.sheep['i_date_cashflow_stock_i'][i_mask_i])
+    date_cashflow_crop = np.array([pinp.crop['i_date_cashflow_crop']])
+    cashflow_date_c0 = np.concatenate([date_cashflow_stock, date_cashflow_crop])
+
+    p_std_p6z = pinp.period['i_dsp_fp_date'].astype('datetime64')
+
+    ###add node dates as feed peirods if dsp
+    if pinp.general['i_inc_node_periods'] or np.logical_not(pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1):
+        date_node_mz = pinp.general['i_date_node_zm'].astype('datetime64').T
+        date_node_c0mz = date_node_mz + (np.timedelta64(365, 'D') * (date_node_mz < cashflow_date_c0[:,na,na]))
+        breaks_of_season_b = np.unique(p_std_p6z[0,:]) #need all the different breaks
+        breaks_of_season_b = breaks_of_season_b + (np.timedelta64(365, 'D') * (breaks_of_season_b < cashflow_date_c0[:,na,na])) #adjust the year
+        cashflow_dates_c0p7z = np.concatenate([cashflow_date_c0[:,na,na], breaks_of_season_b[:,na], date_node_mz[1:]]) #[1:] becasue first node is break of season which already exists in fp array.
+        cashflow_dates_c0p7z = np.sort(cashflow_dates_c0p7z, axis=1)
+    else: #if nodes are not added then the adjusted fps are the same as the std fp.
+        cashflow_date_c0p7z = cashflow_date_c0.astype('datetime64')[:,na,na]
+
+    #make df
+    if pandas:
+        cashflow_date_c0p7z = pd.DataFrame(cashflow_date_c0p7z, index=, columns=)
+    return cashflow_date_c0p7z
 
 
 '''

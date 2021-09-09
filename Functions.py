@@ -652,6 +652,114 @@ def f_sa(value, sa, sa_type=0, target=0, value_min=-np.inf,pandas=False, axis=0)
 
     return value
 
+
+def f_cashflow_allocation(amount,start,enterprise,peak_debt_date_c0,rate,length=1):
+    '''
+    This function calculate the interest earned on cashflow item, tallies up the total cashflow including interest
+    and tallies up the working capital from a cashflow item.
+
+    This function is complicated by the fact that some cashflow items occur over a date range. This is treated such that
+    an proportion of the cashflow is received each day.
+
+    :param amount:
+    :param start: date when cashflow starts
+    :param enterprise:
+    :param peak_debt_date_c0:
+    :param p_dates_c0p7:
+    :param rate:
+    :param length: time over which the cashflow is incurred
+    :return:
+    '''
+
+    pandas = isinstance(amount, pd.DataFrame) or isinstance(amount, pd.Series)
+    p_dates_c0p7z = f_cashflow_periods(pandas)
+
+    ##adjust yr of cashflow occurence #todo check this is working
+    add_yrs = np.ceil(np.maximum(0,(p_dates_c0p7z[:,0] - start) / 365))
+    sub_yrs = np.ceil(np.maximum(0,(start - p_dates_c0p7z[:,-1]) / 365))
+    start = start + add_yrs - sub_yrs
+
+    ##create final array
+    if pandas:
+        new_index = pd.MultiIndex.from_product([keys_c0,keys_p7,amount.index])
+        cols = amount.columns
+        amount = amount.values
+        final_cashflow = np.zeros((len(new_index),len(cols)))
+        final_wc = np.zeros((len(new_index),len(cols)))
+    else:
+        final_cashflow = np.zeros(p_dates_c0p7.shape + amount.shape)
+        final_wc = np.zeros(p_dates_c0p7.shape + amount.shape)
+
+    principal_end = 0
+    daily_payment = amount / length
+
+    ##start and end dates for the cashflow periods
+    for p in len_p7:
+        ##cashflow period dates
+        date_start_c0z = p_dates_c0p7z[...,p]
+        date_end_c0z = p_dates_c0p7z[...,p + 1]
+
+        ##princiapal at the begining of the p7 period (amount of cash at the begining of the period, inc interest from previous periods)
+        principal_start = total_principal_end
+
+        #
+        # cashflow - principal and interest
+        #
+        ##calculate interest druing incur period (incur period is the time between the cashflow start and end)
+        ###end date of incur period
+        incur_end = start + length
+        ###length of incur period (days)
+        incur_days = np.minimum(date_end_c0,incur_end) - np.maximum(date_start_c0,start)
+        ###interest on starting balance during the incur period - using formula: A = P (1 + r/n)**(t)
+        principal_interest = principal_start * ((1 + rate / 365) ** incur_days - 1)
+        ###daily payments plus interest on daily payments during the incur period - Using formula: Payment × ( ( ( (1 + r/n)^(t) ) - 1 ) / (r/n) )
+        daily_interest = daily_payment * (((1 + rate / 365) ** incur_days - 1) / (rate / 365))
+
+        ##calc interest over the period after payment incur has finished
+        ###days from the end of incur to the end of the period
+        post_incur_days = np.maximum(date_start_c0,incur_end) - date_end_c0
+        ###balance at start of non incur period
+        post_incurum_start_balance = principal_start + principal_interest + daily_interest
+        ###interest on balance after the incur period - using formula: A = P (1 + r/n)**(t)
+        post_incurum_interest = post_incurum_start_balance * ((1 + rate / 365) ** post_incur_days - 1)
+
+        ##cash at the end of the period
+        cashflow_n_interest = post_incurum_start_balance + post_incurum_interest
+        total_principal_end = principal_start + post_incurum_start_balance + post_incurum_interest
+
+        #
+        # working capital constraint except that income or expense incurred after the peak debt date is excluded
+        #
+        ##calculate interest druing incur period (incur period is the time between the cashflow start and end)
+        ###end date of incur period
+        incur_end = start + length
+        ###length of incur period (days)
+        incur_days = np.minimum(date_end_c0,np.minimum(incur_end,peak_debt_date_c0)) - np.maximum(date_start_c0,start)
+        ###interest on starting balance during the incur period - using formula: A = P (1 + r/n)**(t)
+        wc_principal_interest = principal_start * ((1 + rate / 365) ** incur_days - 1)
+        ###daily payments plus interest on daily payments during the incur period - Using formula: Payment × ( ( ( (1 + r/n)^(t) ) - 1 ) / (r/n) )
+        wc_daily_interest = daily_payment * (((1 + rate / 365) ** incur_days - 1) / (rate / 365))
+
+        ##calc interest over the period after payment incur has finished
+        ###days from the end of incur to the end of the period
+        post_incur_days = np.maximum(date_start_c0,incur_end) - np.minimum(date_end_c0,peak_debt_date_c0)
+        ###balance at start of non incur period
+        wc_post_incurum_start_balance = principal_start + wc_principal_interest + wc_daily_interest
+        ###interest on balance after the incur period - using formula: A = P (1 + r/n)**(t)
+        wc_post_incurum_interest = wc_post_incurum_start_balance * ((1 + rate / 365) ** post_incur_days - 1)
+
+        ##cash at the end of the period
+        wc = wc_post_incurum_start_balance + wc_post_incurum_interest
+
+        ##assign to final array
+        final_cashflow[:,p,...] = cashflow_n_interest
+        final_wc[:,p,...] = wc
+
+    if pandas:
+        final_cashflow = pd.DataFrame(final_cashflow,index=new_index,columns=cols)
+    return final_cashflow,final_wc
+
+
 def f_run_required(exp_data1):
     '''
     here we check if precalcs and pyomo need to be recalculated. this is slightly complicated by the fact that columns and rows can be added to exp.xls
@@ -941,7 +1049,7 @@ def period_allocation(period_dates,periods,start_d,length=None):
                 break
         return allocation_p
 
-def period_allocation2(start_df, length_df, p_dates, p_name):
+def period_allocation2(start_df, length_df, p_dates, p_name): #todo i think this function is not going to be used once the cashflow stuff is done.
     '''
     Parameters
     ----------
