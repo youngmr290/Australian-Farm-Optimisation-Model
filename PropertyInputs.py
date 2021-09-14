@@ -258,6 +258,7 @@ def property_inp_sa():
     fun.f_dict_reset(rep, rep_inp)
     fun.f_dict_reset(labour, labour_inp)
     fun.f_dict_reset(crop, crop_inp)
+    fun.f_dict_reset(cropgraze, cropgraze_inp)
     fun.f_dict_reset(mach, mach_inp)
     fun.f_dict_reset(stubble, stubble_inp)
     fun.f_dict_reset(finance, finance_inp)
