@@ -369,7 +369,7 @@ def f_seeding_cost(r_vals):
     seeding_cost_c0p7zl = seeding_cost_allocation_c0p7zl.mul(seeding_cost_l, level=3)
     seeding_wc_c0p7zl = seeding_wc_allocation_c0p7zl.mul(seeding_cost_l, level=3)
     r_vals['seeding_cost'] = seeding_cost_c0p7zl
-    return seeding_cost_c0p7zl
+    return seeding_cost_c0p7zl, seeding_wc_c0p7zl
 
 def f_contract_seed_cost(r_vals):
     '''
@@ -383,7 +383,7 @@ def f_contract_seed_cost(r_vals):
     contract_seeding_cost_c0p7z = seeding_cost_allocation_c0p7z * seed_cost
     contract_seeding_wc_c0p7z = seeding_wc_allocation_c0p7z * seed_cost
     r_vals['contractseed_cost'] = contract_seeding_cost_c0p7z
-    return contract_seeding_cost_c0p7z
+    return contract_seeding_cost_c0p7z, contract_seeding_wc_c0p7z
 
 ########################################
 #late seeding & dry seeding penalty    #
@@ -626,7 +626,7 @@ def f_harvest_cost(r_vals):
     harv_wc_c0p7zk = harv_wc_allocation_c0p7zk.mul(harv_cost_k, level=3)
 
     r_vals['harvest_cost'] = harv_cost_c0p7zk
-    return harv_cost_c0p7zk
+    return harv_cost_c0p7zk, harv_wc_c0p7zk
 
 
 #########################
@@ -670,7 +670,7 @@ def f_contract_harvest_cost(r_vals):
     contract_harv_wc_c0p7zk = contract_harv_wc_allocation_c0p7zk.mul(contract_harv_cost_k, level=3)
 
     r_vals['contract_harvest_cost'] = contract_harv_cost_c0p7zk
-    return contract_harv_cost_c0p7zk
+    return contract_harv_cost_c0p7zk, contract_harv_wc_c0p7zk
 
 
 #########################
@@ -715,7 +715,7 @@ def f_hay_making_cost():
     hay_cost_c0p7z = hay_cost_allocation_c0p7z * total_cost
     hay_wc_c0p7z = hay_wc_allocation_c0p7z * total_cost
 
-    return hay_cost_c0p7z
+    return hay_cost_c0p7z, hay_wc_c0p7z
 
 #######################################################################################################################################################
 #######################################################################################################################################################
@@ -1029,7 +1029,7 @@ def f_insurance(r_vals):
     insurance_wc_c0p7z = insurance_wc_allocation_c0p7z * insurance_cost
 
     r_vals['mach_insurance'] = insurance_cost_c0p7z
-    return insurance_cost_c0p7z.to_dict()
+    return insurance_cost_c0p7z.to_dict(), insurance_wc_c0p7z.to_dict()
 
 
 #######################################################################################################################################################
@@ -1043,14 +1043,14 @@ def f_mach_params(params,r_vals):
     seed_days = f_seed_days().stack()
     contractseeding_occur = f_contractseeding_occurs().stack()
     seedrate = f_overall_seed_rate(r_vals)
-    seeding_cost = f_seeding_cost(r_vals)
-    contract_seed_cost = f_contract_seed_cost(r_vals)
+    seeding_cost, seeding_wc = f_seeding_cost(r_vals)
+    contract_seed_cost, contract_seed_wc = f_contract_seed_cost(r_vals)
     harv_rate_period = f_harv_rate_period().stack()
     contract_harv_rate = f_contract_harv_rate()
     max_harv_hours = f_max_harv_hours().stack()
-    harvest_cost = f_harvest_cost(r_vals)
-    contract_harvest_cost = f_contract_harvest_cost(r_vals)
-    hay_making_cost = f_hay_making_cost()
+    harvest_cost, harvest_wc = f_harvest_cost(r_vals)
+    contract_harvest_cost, contract_harvest_wc = f_contract_harvest_cost(r_vals)
+    hay_making_cost, hay_making_wc  = f_hay_making_cost()
     yield_penalty = f_sowing_timeliness_penalty().stack()
     stubble_penalty = f_stubble_penalty()
     poc_grazing_days = f_poc_grazing_days().stack()
@@ -1058,7 +1058,7 @@ def f_mach_params(params,r_vals):
     harv_dep = f_harvest_dep()
     seeding_gear_clearing_value = f_seeding_gear_clearing_value()
     seeding_dep = f_seeding_dep()
-    insurance = f_insurance(r_vals)
+    insurance_cost, insurance_wc = f_insurance(r_vals)
     mach_asset_value = f_total_clearing_value()
 
     ##add inputs that are params to dict
@@ -1079,15 +1079,21 @@ def f_mach_params(params,r_vals):
     params['seed_days'] = seed_days.to_dict()
     params['contractseeding_occur'] = contractseeding_occur.to_dict()
     params['seeding_cost'] = seeding_cost.to_dict()
+    params['seeding_wc'] = seeding_wc.to_dict()
     params['contract_seed_cost'] = contract_seed_cost.to_dict()
+    params['contract_seed_wc'] = contract_seed_wc.to_dict()
     params['harv_rate_period'] = harv_rate_period.to_dict()
     params['harvest_cost'] = harvest_cost.to_dict()
+    params['harvest_wc'] = harvest_wc.to_dict()
     params['hay_making_cost'] = hay_making_cost.to_dict()
+    params['hay_making_wc'] = hay_making_wc.to_dict()
     params['max_harv_hours'] = max_harv_hours.to_dict()
     params['contract_harvest_cost'] = contract_harvest_cost.to_dict()
+    params['contract_harvest_wc'] = contract_harvest_wc.to_dict()
     params['yield_penalty'] = yield_penalty.to_dict()
     params['stubble_penalty'] = stubble_penalty.to_dict()
     params['poc_grazing_days'] = poc_grazing_days.to_dict()
-    params['insurance'] = insurance
+    params['insurance'] = insurance_cost
+    params['insurance_wc'] = insurance_wc
 
 

@@ -72,6 +72,7 @@ def coremodel_all(params,trial_name,model):
     f_con_grain_transfer(model)
     #cashflow
     # f_con_cashflow(model)
+    f_con_workingcap(params,model)
     f_con_dep(model)
     f_con_asset(model)
     f_con_minroe(model)
@@ -375,6 +376,12 @@ def f1_grain_income(model,c0,p7,z):
         model.v_sell_grain[z,k,g] * model.p_grain_price[c0,p7,z,g,k] - model.v_buy_grain[z,k,g] * model.p_buy_grain_price[
             c0,p7,z,g,k] for k in model.s_crops for g in model.s_grain_pools)
 
+def f1_grain_wc(model,c0,p7,z):
+    ##combined grain sold and purchased to get a $ amount which is added to the cashflow constrain
+    return sum(
+        model.v_sell_grain[z,k,g] * model.p_grain_wc[c0,p7,z,g,k] - model.v_buy_grain[z,k,g] * model.p_buy_grain_wc[
+            c0,p7,z,g,k] for k in model.s_crops for g in model.s_grain_pools)
+
 
 def f_con_poc_available(model):
     '''
@@ -456,7 +463,22 @@ def f_con_vol(model):
     #             ) <= 0
     #
     # model.con_cashflow = pe.Constraint(range(len(model.s_cashflow_periods)),model.s_season_types,rule=cash_flow,
-    #                                    doc='cashflow')
+
+def f_con_workingcap(params, model):
+    '''
+    Tallies working capital and ensures overdraw limit is not exceeded.
+
+    This ensures the model draws a realistic level of money from the bank. The user can specify the
+    maximum overdraw level.
+
+    '''
+    def working_cap(model,c0,p7,z):
+        return (-f1_grain_wc(model,c0,p7,z) + phspy.f_rotation_wc(model,c0,p7,z) + labpy.f_labour_wc(model,c0,p7,z)
+                + macpy.f_mach_wc(model,c0,p7,z) + suppy.f_sup_wc(model,c0,p7,z) + model.p_overhead_wc[c0,p7,z]
+                - stkpy.f_stock_wc(model,c0,p7,z)) <= params['fin']['overdraw']
+
+    model.con_workingcap = pe.Constraint(model.s_enterprises, model.s_cashflow_periods, model.s_season_types,rule=working_cap,
+                                       doc='overdraw limit')
 
 
 def cash_flow(model,z):

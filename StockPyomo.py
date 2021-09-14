@@ -169,6 +169,18 @@ def f1_stockpyomo_local(params, model):
     model.p_cashflow_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_enterprises, model.s_cashflow_periods, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
                              model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender, model.s_gen_merit_offs, model.s_groups_offs,
                              initialize=params['p_cashflow_offs'], default=0.0, mutable=False, doc='cashflow offs')
+    ##cashflow
+    model.p_wc_sire = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_groups_sire, initialize=params['p_cashflow_sire'],
+                                  default=0.0, mutable=False, doc='wc sire')
+    model.p_wc_dams = pe.Param(model.s_k2_birth_dams, model.s_enterprises, model.s_cashflow_periods, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams,
+                                  model.s_lw_dams, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams,
+                                  initialize=params['p_wc_dams'], default=0.0, mutable=False, doc='wc dams')
+    model.p_wc_prog = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_enterprises, model.s_cashflow_periods, model.s_sale_prog, model.s_lw_prog,
+                                     model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender, model.s_groups_dams,
+                                  initialize=params['p_wc_prog'], default=0.0, mutable=False, doc='wc prog - made up from just sale value')
+    model.p_wc_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_enterprises, model.s_cashflow_periods, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
+                             model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender, model.s_gen_merit_offs, model.s_groups_offs,
+                             initialize=params['p_wc_offs'], default=0.0, mutable=False, doc='wc offs')
     ##cost - minroe
     model.p_cost_sire = pe.Param(model.s_enterprises, model.s_season_types, model.s_groups_sire, initialize=params['p_cost_sire'],
                                   default=0.0, mutable=False, doc='husbandry cost sire')
@@ -247,6 +259,8 @@ def f1_stockpyomo_local(params, model):
     ##purchases
     model.p_cost_purch_sire = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_groups_sire,
                                    initialize=params['p_purchcost_sire'], default=0.0, mutable=False, doc='cost of purchased sires')
+    model.p_wc_purch_sire = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_groups_sire,
+                                   initialize=params['p_purchcost_wc_sire'], default=0.0, mutable=False, doc='working capital cost of purchased sires')
     # model.p_numberpurch_dam = Param(model.s_dvp_dams, model.s_wean_times, model.s_k2_birth_dams, model.s_lw_dams,
     #                           model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_co_conception,
     #                           model.s_co_bw, model.s_co_ww, model.s_co_cfw, model.s_co_fd, model.s_co_min_fd, model.s_co_fl, initialize=, default=0.0, doc='purchase transfer - ie how a purchased dam is allocated into damR')
@@ -619,6 +633,37 @@ def f_stock_cashflow(model,c0,p7,z):
 #     purchases = sum(model.v_sire[g0] * model.p_cost_purch_sire[g0,c] for g0 in model.s_groups_sire)  \
 #                 + sum(sum(model.v_purchase_dams[v1,w1,i,g1] * model.p_cost_purch_dam[v1,w1,i,g1,c] for v1 in model.s_dvp_dams for w1 in model.s_lw_dams for g1 in model.s_groups_dams)
 #                     + sum(model.v_purchase_offs[v3,w3,i,g3] * model.p_cost_purch_offs[v3,w3,i,g3,c] for v3 in model.s_dvp_offs for w3 in model.s_lw_offs for g3 in model.s_groups_offs)
+#                     for z in model.s_season_types for i in model.s_tol)
+#     return stock - infrastructure - purchases
+
+def f_stock_wc(model,c0,p7,z):
+    '''
+    Calculate the net wc (income - expenses) of livestock and their associated activities.
+
+    Used in global constraint (con_wc). See CorePyomo
+    '''
+
+    infrastructure = sum(model.p_rm_stockinfra_fix[h1,c0,p7,z] + model.p_rm_stockinfra_var[h1,c0,p7,z] * model.v_infrastructure[h1,z]
+                         for h1 in model.s_infrastructure)
+    stock = sum(model.v_sire[z,g0] * model.p_wc_sire[c0,p7,z,g0] for g0 in model.s_groups_sire) \
+           + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_wc_dams[k2,c0,p7,t1,v1,a,n1,w1,z,i,y1,g1]
+                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
+                      for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
+                     if pe.value(model.p_wc_dams[k2,c0,p7,t1,v1,a,n1,w1,z,i,y1,g1]) != 0)
+                + sum(model.v_prog[k3, k5, t2, w2, z, i, a, x, g2] * model.p_wc_prog[k3, k5, c0,p7, t2, w2, z, i, a, x, g2]
+                      for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t2 in model.s_sale_prog for w2 in model.s_lw_prog
+                      for x in model.s_gender for g2 in model.s_groups_prog if model.p_wc_prog[k3, k5, c0,p7, t2, w2, z, i, a, x, g2] != 0)
+                + sum(model.v_offs[k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_wc_offs[k3,k5,c0,p7,t3,v3,n3,w3,z,i,a,x,y3,g3]
+                      for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
+                      for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
+                      if pe.value(model.p_wc_offs[k3,k5,c0,p7,t3,v3,n3,w3,z,i,a,x,y3,g3]) != 0)
+               for a in model.s_wean_times for i in model.s_tol)
+    purchases = sum(model.v_sire[z,g0] * model.p_wc_purch_sire[c0,p7,z,g0] for g0 in model.s_groups_sire)
+    return stock - infrastructure - purchases
+
+#     purchases = sum(model.v_sire[g0] * model.p_wc_purch_sire[g0,c] for g0 in model.s_groups_sire)  \
+#                 + sum(sum(model.v_purchase_dams[v1,w1,i,g1] * model.p_wc_purch_dam[v1,w1,i,g1,c] for v1 in model.s_dvp_dams for w1 in model.s_lw_dams for g1 in model.s_groups_dams)
+#                     + sum(model.v_purchase_offs[v3,w3,i,g3] * model.p_wc_purch_offs[v3,w3,i,g3,c] for v3 in model.s_dvp_offs for w3 in model.s_lw_offs for g3 in model.s_groups_offs)
 #                     for z in model.s_season_types for i in model.s_tol)
 #     return stock - infrastructure - purchases
 

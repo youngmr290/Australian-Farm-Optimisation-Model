@@ -254,8 +254,10 @@ def overheads(params, r_vals):
     overheads_c0 = overheads * overheads_c0_alloc_c0
     overheads_c0 = pd.Series(overheads_c0, index=keys_c0)
     overhead_cost_c0p7z = overhead_cost_allocation_c0p7z.mul(overheads_c0, level=0)
+    overhead_wc_c0p7z = overhead_wc_allocation_c0p7z.mul(overheads_c0, level=0)
 
-    params['overheads'] = overhead_cost_c0p7z.to_dict()
+    params['overheads_cost'] = overhead_cost_c0p7z.to_dict()
+    params['overheads_wc'] = overhead_wc_c0p7z.to_dict()
     r_vals['overheads'] = overhead_cost_c0p7z
 
 #################

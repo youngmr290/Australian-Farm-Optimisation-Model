@@ -50,7 +50,11 @@ def f1_machpyomo_local(params, model):
 
     model.p_seeding_cost = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_lmus, initialize=params['seeding_cost'], default = 0.0, mutable=False, doc='cost of seeding 1ha')
     
+    model.p_seeding_wc = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_lmus, initialize=params['seeding_wc'], default = 0.0, mutable=False, doc='wc of seeding 1ha')
+    
     model.p_contract_seeding_cost = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, initialize=params['contract_seed_cost'], default = 0.0, mutable=False, doc='cost of contract seeding 1ha')
+    
+    model.p_contract_seeding_wc = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, initialize=params['contract_seed_wc'], default = 0.0, mutable=False, doc='wc of contract seeding 1ha')
     
     model.p_harv_rate = pe.Param(model.s_labperiods, model.s_crops, model.s_season_types, initialize=params['harv_rate_period'], default = 0.0, mutable=False, doc='rate of harv t/hr provided by one crop gear each period')
     
@@ -60,9 +64,15 @@ def f1_machpyomo_local(params, model):
     
     model.p_harv_cost = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_crops, initialize=params['harvest_cost'], default = 0.0, mutable=False, doc='cost of harvesting 1hr')
     
+    model.p_harv_wc = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_crops, initialize=params['harvest_wc'], default = 0.0, mutable=False, doc='wc of harvesting 1hr')
+    
     model.p_contractharv_cost = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_crops, initialize=params['contract_harvest_cost'], default = 0.0, mutable=False, doc='cost of contract harvesting 1hr')
     
+    model.p_contractharv_wc = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_crops, initialize=params['contract_harvest_wc'], default = 0.0, mutable=False, doc='wc of contract harvesting 1hr')
+    
     model.p_contracthay_cost = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, initialize=params['hay_making_cost'], default = 0.0, doc='cost of contract making hay $/t')
+    
+    model.p_contracthay_wc = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, initialize=params['hay_making_wc'], default = 0.0, doc='wc of contract making hay $/t')
     
     model.p_yield_penalty = pe.Param(model.s_labperiods, model.s_crops, model.s_season_types, initialize=params['yield_penalty'], default = 0.0, mutable=False, doc='kg/ha/day penalty for late sowing in each period')
     
@@ -81,6 +91,8 @@ def f1_machpyomo_local(params, model):
 
     model.p_mach_insurance = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, initialize=params['insurance'], default = 0.0, doc='insurance paid on all machinery')
     
+    model.p_mach_insurance_wc = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, initialize=params['insurance_wc'], default = 0.0, doc='insurance wc on all machinery')
+
     model.p_number_seeding_gear = pe.Param(initialize=params['number_seeding_gear'], default = 0.0, doc='number of crop gear')
     
     model.p_number_harv_gear = pe.Param(initialize=params['number_harv_gear'], default = 0.0, doc='number of harvest gear')
@@ -205,7 +217,7 @@ def f_harv_supply(model,k,z):
     contract_harv = model.v_contractharv_hours[z,k] * model.p_contractharv_rate[k]
     return farmer_harv + contract_harv
 
-#function to determine seeding cost, this will be passed to core model
+#function to determine seeding cost
 def f1_seeding_cost(model,c0,p7,z):
     #contract cost
     contract_cost = sum(sum(sum(model.v_contractseeding_ha[z,p,k1,l] * model.p_contract_seeding_cost[c0,p7,z] for l in model.s_lmus) for p in model.s_labperiods) for k1 in model.s_landuses)
@@ -213,10 +225,23 @@ def f1_seeding_cost(model,c0,p7,z):
     seeding_cost = sum(sum(sum(model.p_seeding_cost[c0,p7,z,l] * model.v_seeding_machdays[z,p,k1,l] * model.p_seeding_rate[k1,l] for l in model.s_lmus) for p in model.s_labperiods) for k1 in model.s_landuses)
     return contract_cost + seeding_cost
  
-#function to determine harv cost, this will be passed to core model
+#function to determine seeding wc
+def f1_seeding_wc(model,c0,p7,z):
+    #contract wc
+    contract_wc = sum(sum(sum(model.v_contractseeding_ha[z,p,k1,l] * model.p_contract_seeding_wc[c0,p7,z] for l in model.s_lmus) for p in model.s_labperiods) for k1 in model.s_landuses)
+    #wc per ha x number of days seeding x ha per day
+    seeding_wc = sum(sum(sum(model.p_seeding_wc[c0,p7,z,l] * model.v_seeding_machdays[z,p,k1,l] * model.p_seeding_rate[k1,l] for l in model.s_lmus) for p in model.s_labperiods) for k1 in model.s_landuses)
+    return contract_wc + seeding_wc
+
+#function to determine harv cost
 def f1_harvesting_cost(model,c0,p7,z):
     ##contract cost and owner cost (cost per hr x number of hours)
     return sum(model.v_contractharv_hours[z,k] * model.p_contractharv_cost[c0,p7,z,k] + sum(model.p_harv_cost[c0,p7,z,k] * model.v_harv_hours[z, p, k] for p in model.s_labperiods) for k in model.s_harvcrops)
+
+#function to determine harv wc
+def f1_harvesting_wc(model,c0,p7,z):
+    ##contract wc and owner wc (wc per hr x number of hours)
+    return sum(model.v_contractharv_hours[z,k] * model.p_contractharv_wc[c0,p7,z,k] + sum(model.p_harv_wc[c0,p7,z,k] * model.v_harv_hours[z, p, k] for p in model.s_labperiods) for k in model.s_harvcrops)
 
 #includes hay cost
 def f_mach_cost(model,c0,p7,z):
@@ -229,6 +254,18 @@ def f_mach_cost(model,c0,p7,z):
 
     hay_cost = model.v_hay_made[z] * model.p_contracthay_cost[c0,p7,z]
     return f1_harvesting_cost(model,c0,p7,z) + f1_seeding_cost(model,c0,p7,z) + hay_cost + model.p_mach_insurance[c0,p7,z]
+
+#includes hay wc
+def f_mach_wc(model,c0,p7,z):
+    '''
+    Calculate the wc of machinery for insurance, seeding, harvesting and making hay based on the level
+    of machinery activities selected.
+
+    Used in global constraint (con_workingcap). See CorePyomo
+    '''
+
+    hay_wc = model.v_hay_made[z] * model.p_contracthay_wc[c0,p7,z]
+    return f1_harvesting_wc(model,c0,p7,z) + f1_seeding_wc(model,c0,p7,z) + hay_wc + model.p_mach_insurance_wc[c0,p7,z]
 
 #function to determine derpriciation cost, this will be passed to core model
 #equals seeding dep plus harv dep plus fixed dep

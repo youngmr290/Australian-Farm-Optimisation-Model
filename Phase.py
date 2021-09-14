@@ -178,7 +178,7 @@ def f_grain_price(r_vals):
     grain_price_wc =  farm_gate_price_k_g.mul(grain_wc_allocation_c0p7zg,axis=1, level=3)
 
     r_vals['grain_price'] =  grain_price
-    return grain_price.unstack()
+    return grain_price.unstack(), grain_price_wc.unstack()
 # a=grain_price()
 
 #########################
@@ -471,7 +471,11 @@ def f_fert_cost(r_vals):
     ##combine all costs - fert, app per ha and app per tonne
     fert_cost_total = phase_fert_cost_rl_c0p7z + fert_app_cost_ha_rl_c0p7z + fert_app_cost_tonne_rl_c0p7z
     fert_cost_total = fert_cost_total.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
-    return fert_cost_total.unstack()
+    
+    ##combine all wc - fert, app per ha and app per tonne
+    fert_wc_total = phase_fert_wc_rl_c0p7z + fert_app_wc_ha_rl_c0p7z + fert_app_wc_tonne_rl_c0p7z
+    fert_wc_total = fert_wc_total.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
+    return fert_cost_total.unstack(), fert_wc_total.unstack()
 
 def f_nap_fert_req():
     '''
@@ -551,10 +555,15 @@ def f_nap_fert_cost(r_vals):
     total_app_cost_rl_c0p7z = total_app_cost_rl_c0p7zn.mul(fert_cost_allocation_c0p7zn, axis=1).sum(axis=1, level=(0,1,2))  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
     total_app_wc_rl_c0p7z = total_app_cost_rl_c0p7zn.mul(fert_wc_allocation_c0p7zn, axis=1).sum(axis=1, level=(0,1,2))  # sum the cost of all the ferts (have to do that after allocation and interest becaus ferts are applied at different times)
     r_vals['nap_fert_app_cost'] = total_app_cost_rl_c0p7z
+    
     ##total fert and app cost
     nap_fert_cost = phase_fert_cost_rl_c0p7z + total_app_cost_rl_c0p7z
     nap_fert_cost = nap_fert_cost.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
-    return nap_fert_cost.unstack()
+    
+    ##total fert and app wc
+    nap_fert_wc = phase_fert_wc_rl_c0p7z + total_app_wc_rl_c0p7z
+    nap_fert_wc = nap_fert_wc.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
+    return nap_fert_cost.unstack(), nap_fert_wc.unstack()
 
 def f1_total_fert_req():
     '''returns the total fert req after accounting for arable area.
@@ -659,7 +668,8 @@ def f_phase_stubble_cost(r_vals):
     rot_stub_wc_rl_c0p7z = stub_cost_rl_z.mul(stub_wc_allocation_c0p7z, axis=1, level=2)
     r_vals['stub_cost'] = rot_stub_cost_rl_c0p7z
     rot_stub_cost_rl_c0p7z = rot_stub_cost_rl_c0p7z.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
-    return rot_stub_cost_rl_c0p7z.unstack()
+    rot_stub_wc_rl_c0p7z = rot_stub_wc_rl_c0p7z.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
+    return rot_stub_cost_rl_c0p7z.unstack(), rot_stub_wc_rl_c0p7z.unstack()
 # t_stubcost=f_phase_stubble_cost()
 
 #print(timeit.timeit(fert_cost,number=10)/10)
@@ -799,10 +809,15 @@ def f_chem_cost(r_vals):
 
     r_vals['chem_cost'] = phase_chem_cost_rl_c0p7z
     r_vals['chem_app_cost_ha'] = chem_app_cost_rl_c0p7z
+    
     ##add application cost and chem cost
     total_cost = phase_chem_cost_rl_c0p7z + chem_app_cost_rl_c0p7z
     total_cost = total_cost.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
-    return total_cost.unstack()
+    
+    ##add application wc and chem wc
+    total_wc = phase_chem_wc_rl_c0p7z + chem_app_wc_rl_c0p7z
+    total_wc = total_wc.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
+    return total_cost.unstack(), total_wc.unstack()
 
 
 #########################
@@ -877,7 +892,8 @@ def f_seedcost(r_vals):
     seed_wc_rl_c0p7z = phase_seed_wc_r_c0p7zl.drop(list(range(sinp.general['phase_len'])), axis=1).stack()
     r_vals['seedcost'] = seedcost_rl_c0p7z
     seedcost_rl_c0p7z = seedcost_rl_c0p7z.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
-    return seedcost_rl_c0p7z.unstack()
+    seed_wc_rl_c0p7z = seed_wc_rl_c0p7z.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
+    return seedcost_rl_c0p7z.unstack(), seed_wc_rl_c0p7z.unstack()
 
 def f_insurance(r_vals):
     '''
@@ -914,7 +930,8 @@ def f_insurance(r_vals):
     rot_insurance_wc_rl_c0p7z = rot_insurance_rl_z.mul(insurance_wc_allocation_c0p7z, axis=1, level=2)
     r_vals['insurance_cost'] = rot_insurance_cost_rl_c0p7z
     rot_insurance_cost_rl_c0p7z = rot_insurance_cost_rl_c0p7z.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
-    return rot_insurance_cost_rl_c0p7z.unstack()
+    rot_insurance_wc_rl_c0p7z = rot_insurance_wc_rl_c0p7z.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
+    return rot_insurance_cost_rl_c0p7z.unstack(), rot_insurance_wc_rl_c0p7z.unstack()
 
 
 
@@ -936,15 +953,33 @@ def f1_rot_cost(r_vals):
     # cost = pd.concat([f_fert_cost(r_vals).unstack(0,1),f_nap_fert_cost(r_vals).unstack(0,1),f_chem_cost(r_vals).unstack(0,1)
     #                      ,f_seedcost(r_vals).unstack(0,1), f_insurance(r_vals).unstack(0,1),f_phase_stubble_cost(r_vals).unstack(0,1)],axis=1).sum(axis=1,level=(0))
 
+    fert_cost, fert_wc = f_fert_cost(r_vals)
+    nap_fert_cost, nap_fert_wc = f_nap_fert_cost(r_vals)
+    chem_cost, chem_wc = f_chem_cost(r_vals)
+    seedcost, seedwc = f_seedcost(r_vals)
+    insurance_cost, insurance_wc = f_insurance(r_vals)
+    phase_stubble_cost, phase_stubble_wc = f_phase_stubble_cost(r_vals)
+
+    ##reindex so they all have the same r index so that they can be added
     index_r = sinp.f_phases().index
-    fert_cost = f_fert_cost(r_vals).reindex(index_r, axis=0).fillna(0)
-    nap_fert_cost = f_nap_fert_cost(r_vals).reindex(index_r, axis=0).fillna(0)
-    chem_cost = f_chem_cost(r_vals).reindex(index_r, axis=0).fillna(0)
-    seedcost = f_seedcost(r_vals).reindex(index_r, axis=0).fillna(0)
-    insurance = f_insurance(r_vals).reindex(index_r, axis=0).fillna(0)
-    phase_stubble_cost = f_phase_stubble_cost(r_vals).reindex(index_r, axis=0).fillna(0)
-    cost = fert_cost + nap_fert_cost + chem_cost + seedcost +  insurance + phase_stubble_cost
-    return cost
+    fert_cost = fert_cost.reindex(index_r, axis=0).fillna(0)
+    nap_fert_cost = nap_fert_cost.reindex(index_r, axis=0).fillna(0)
+    chem_cost = chem_cost.reindex(index_r, axis=0).fillna(0)
+    seedcost = seedcost.reindex(index_r, axis=0).fillna(0)
+    insurance_cost = insurance_cost.reindex(index_r, axis=0).fillna(0)
+    phase_stubble_cost = phase_stubble_cost.reindex(index_r, axis=0).fillna(0)
+    ###reindex wc
+    fert_wc = fert_wc.reindex(index_r, axis=0).fillna(0)
+    nap_fert_wc = nap_fert_wc.reindex(index_r, axis=0).fillna(0)
+    chem_wc = chem_wc.reindex(index_r, axis=0).fillna(0)
+    seedwc = seedwc.reindex(index_r, axis=0).fillna(0)
+    insurance_wc = insurance_wc.reindex(index_r, axis=0).fillna(0)
+    phase_stubble_wc = phase_stubble_wc.reindex(index_r, axis=0).fillna(0)
+
+    ##add all phase costs
+    cost = fert_cost + nap_fert_cost + chem_cost + seedcost +  insurance_cost + phase_stubble_cost
+    wc = fert_wc + nap_fert_wc + chem_wc + seedwc +  insurance_wc + phase_stubble_wc
+    return cost.unstack(), wc.unstack()
 
 
 #################
@@ -1021,20 +1056,22 @@ def f_sow_prov():
 #########
 ##collates all the params
 def f1_crop_params(params,r_vals):
-    cost = f1_rot_cost(r_vals).unstack()
+    cost, wc = f1_rot_cost(r_vals)
     yields = f_rot_yield()
     propn = f_grain_pool_proportions()
-    grain_price = f_grain_price(r_vals)
+    grain_price, grain_wc = f_grain_price(r_vals)
     phasesow_req = f_phase_sow_req()
     wetseeding_prov_p5kz, dryseeding_prov_p5kz = f_sow_prov()
 
     ##create params
     params['grain_pool_proportions'] = propn.to_dict()
     params['grain_price'] = grain_price.to_dict()
+    params['grain_wc'] = grain_wc.to_dict()
     params['phase_sow_req'] = phasesow_req.to_dict()
     params['wet_sow_prov'] = wetseeding_prov_p5kz.to_dict()
     params['dry_sow_prov'] = dryseeding_prov_p5kz.to_dict()
     params['rot_cost'] = cost.to_dict()
+    params['rot_wc'] = wc.to_dict()
     params['rot_yield'] = yields.to_dict()
 
 

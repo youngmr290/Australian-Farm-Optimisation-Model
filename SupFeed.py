@@ -78,7 +78,7 @@ def f_buy_grain_price(r_vals):
     buy_grain_price =  price_k_g.mul(grain_income_allocation_c0p7zg,axis=1, level=3)
     buy_grain_price_wc =  price_k_g.mul(grain_wc_allocation_c0p7zg,axis=1, level=3)
     r_vals['buy_grain_price'] = buy_grain_price
-    return buy_grain_price.unstack()
+    return buy_grain_price.unstack(), buy_grain_price_wc.unstack()
 
 def f_sup_cost(r_vals):
     '''
@@ -169,6 +169,7 @@ def f_sup_cost(r_vals):
 
     ##total cost = feeding cost plus storage cost
     total_sup_cost_c0p7zp6k = feeding_cost_c0p7zp6k + storage_cost_c0p7zp6k
+    total_sup_wc_c0p7zp6k = feeding_wc_c0p7zp6k + storage_wc_c0p7zp6k
     r_vals['total_sup_cost_ckp6_z'] = total_sup_cost_c0p7zp6k
 
     ##dep
@@ -176,7 +177,7 @@ def f_sup_cost(r_vals):
     ##asset
     storage_asset = grain_info.loc['asset']
     ##return cost, dep and asset value
-    return total_sup_cost_c0p7zp6k, storage_dep, storage_asset
+    return total_sup_cost_c0p7zp6k, total_sup_wc_c0p7zp6k, storage_dep, storage_asset
 
     
 def f_sup_md_vol():
@@ -316,10 +317,10 @@ def f_sup_labour():
 
 ##collates all the params
 def f_sup_params(params,r_vals):
-    total_sup_cost, storage_dep, storage_asset = f_sup_cost(r_vals)
+    total_sup_cost, total_sup_wc, storage_dep, storage_asset = f_sup_cost(r_vals)
     vol_tonne, md_tonne = f_sup_md_vol()
     sup_labour = f_sup_labour()
-    buy_grain_price = f_buy_grain_price(r_vals)
+    buy_grain_price, buy_grain_wc = f_buy_grain_price(r_vals)
 
 
     ##create non seasonal params
@@ -328,8 +329,10 @@ def f_sup_params(params,r_vals):
     params['vol_tonne'] = vol_tonne.to_dict()
     params['md_tonne'] = md_tonne.to_dict()
     params['buy_grain_price'] = buy_grain_price.to_dict()
+    params['buy_grain_wc'] = buy_grain_wc.to_dict()
 
     ##create season params
     params['total_sup_cost'] = total_sup_cost.to_dict()
+    params['total_sup_wc'] = total_sup_wc.to_dict()
     params['sup_labour'] = sup_labour.stack().to_dict()
 

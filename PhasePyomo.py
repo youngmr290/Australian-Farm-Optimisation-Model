@@ -41,11 +41,15 @@ def f1_croppyomo_local(params, model):
 
     model.p_rotation_cost = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_lmus, model.s_phases, initialize=params['rot_cost'], default=0, mutable=False, doc='total cost for 1 unit of rotation')
        
+    model.p_rotation_wc = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_lmus, model.s_phases, initialize=params['rot_wc'], default=0, mutable=False, doc='total wc for 1 unit of rotation')
+       
     model.p_rotation_yield = pe.Param(model.s_phases, model.s_crops, model.s_season_types, model.s_lmus, initialize=params['rot_yield'], default = 0.0, mutable=False, doc='grain production for all crops for 1 unit of rotation')
 
     model.p_grainpool_proportion = pe.Param(model.s_crops, model.s_grain_pools, initialize=params['grain_pool_proportions'], default = 0.0, doc='proportion of grain in each pool')
     
     model.p_grain_price = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_grain_pools, model.s_crops, initialize=params['grain_price'],default = 0.0, doc='farm gate price per tonne of each grain')
+    
+    model.p_grain_wc = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_grain_pools, model.s_crops, initialize=params['grain_wc'],default = 0.0, doc='farm gate wc per tonne of each grain')
     
     model.p_phasesow_req = pe.Param(model.s_phases, model.s_crops, model.s_lmus, initialize=params['phase_sow_req'], default = 0.0, doc='ha of sow activity required by each rot phase')
     
@@ -105,11 +109,21 @@ def f_rotation_cost(model,c0,p7,z):
     '''
     Calculate the total cost of the selected rotation phases.
 
-    Used in global constraint (con_cashflow). See CorePyomo
+    Used in objective. See CorePyomo
     '''
 
     return sum(sum(model.p_rotation_cost[c0,p7,z,l,r]*model.v_phase_area[z,r,l] for r in model.s_phases
                    if pe.value(model.p_rotation_cost[c0,p7,z,l,r]) != 0) for l in model.s_lmus )
+
+def f_rotation_wc(model,c0,p7,z):
+    '''
+    Calculate the total wc of the selected rotation phases.
+
+    Used in global constraint (con_workingcap). See CorePyomo
+    '''
+
+    return sum(sum(model.p_rotation_wc[c0,p7,z,l,r]*model.v_phase_area[z,r,l] for r in model.s_phases
+                   if pe.value(model.p_rotation_wc[c0,p7,z,l,r]) != 0) for l in model.s_lmus )
 
 
 

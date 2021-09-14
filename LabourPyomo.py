@@ -119,7 +119,11 @@ def f1_labpyomo_local(params, model):
     
     model.p_perm_cost = Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, initialize = params['perm_cost'], default = 0.0, doc = 'cost of a permanent staff for 1 yr')
     
+    model.p_perm_wc = Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, initialize = params['perm_wc'], default = 0.0, doc = 'wc of a permanent staff for 1 yr')
+    
     model.p_casual_cost = Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_labperiods, initialize = params['casual_cost'], mutable=True, default = 0.0, doc = 'cost of a casual staff for each labour period')
+    
+    model.p_casual_wc = Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_labperiods, initialize = params['casual_wc'], mutable=True, default = 0.0, doc = 'wc of a casual staff for each labour period')
     
     model.p_casual_hours = Param(model.s_labperiods, model.s_season_types, initialize= params['casual hours'], mutable=True, doc='hours worked by a casual staff in each period')
     
@@ -128,6 +132,8 @@ def f1_labpyomo_local(params, model):
     model.p_manager_hours = Param(model.s_labperiods, model.s_season_types, initialize= params['manager hours'], mutable=True, doc='hours worked by a manager in each period')
     
     model.p_manager_cost = Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, initialize = params['manager_cost'], doc = 'cost of a manager for 1 yr')
+    
+    model.p_manager_wc = Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, initialize = params['manager_wc'], doc = 'wc of a manager for 1 yr')
     
     model.p_casual_upper = Param(model.s_labperiods, model.s_season_types, initialize = params['casual ub'], mutable=True,  doc = 'casual availability upper bound')
     
@@ -212,6 +218,15 @@ def f_labour_cost(model,c0,p7,z):
     enterprise based on the fixed cost allocation proportion.
 
     Used in global constraint (con_cashflow). See CorePyomo
+    '''
+    return f1_casual(model,c0,p7,z) + f1_perm(model,c0,p7,z) + f1_manager(model,c0,p7,z)
+
+def f_labour_wc(model,c0,p7,z):
+    '''
+    Calculate the total wc of the selected labour activities. Perm and manager labour wc is allocated to each
+    enterprise based on the fixed wc allocation proportion.
+
+    Used in global constraint (con_workingcap). See CorePyomo
     '''
     return f1_casual(model,c0,p7,z) + f1_perm(model,c0,p7,z) + f1_manager(model,c0,p7,z)
 

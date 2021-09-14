@@ -208,6 +208,7 @@ def f_labour_general(params,r_vals):
                                                                                   p_dates_c0p7z[...,na],
                                                                                   peakdebt_date_c0p7zp5, length=lp_len_p5z.T)
     casual_cost_c0p7zp5 = casual_cost_c0zp5[:,na,...] * labour_cost_allocation_c0p7zp5
+    casual_wc_c0p7zp5 = casual_cost_c0zp5[:,na,...] * labour_wc_allocation_c0p7zp5
 
 
     #########
@@ -239,6 +240,7 @@ def f_labour_general(params,r_vals):
     params['casual lb'] = dict(zip(tup_p5z, lb_cas_pz.ravel()))
 
     params['casual_cost'] =dict(zip(tup_c0p7zp5, casual_cost_c0p7zp5.ravel()))
+    params['casual_wc'] =dict(zip(tup_c0p7zp5, casual_wc_c0p7zp5.ravel()))
 
     ##report values that are not season affected
     r_vals['keys_p5'] = keys_p5
@@ -269,10 +271,10 @@ def f_perm_cost(params, r_vals):
                                                                                   p_dates_c0p7z,
                                                                                   peakdebt_date_c0p7z, length=labour_length)
 
-    perm_cost_c0p7z = perm_cost_c0[:,na,na,na] * labour_cost_allocation_c0p7z
-    perm_wc_c0p7z = perm_cost_c0[:,na,na,na] * labour_wc_allocation_c0p7z
-    manager_cost_c0p7z = manager_cost_c0[:,na,na,na] * labour_cost_allocation_c0p7z
-    manager_wc_c0p7z = manager_cost_c0[:,na,na,na] * labour_wc_allocation_c0p7z
+    perm_cost_c0p7z = perm_cost_c0[:,na,na] * labour_cost_allocation_c0p7z
+    perm_wc_c0p7z = perm_cost_c0[:,na,na] * labour_wc_allocation_c0p7z
+    manager_cost_c0p7z = manager_cost_c0[:,na,na] * labour_cost_allocation_c0p7z
+    manager_wc_c0p7z = manager_cost_c0[:,na,na] * labour_wc_allocation_c0p7z
 
     ##keys
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
@@ -285,9 +287,11 @@ def f_perm_cost(params, r_vals):
 
     ##params and report vals
     params['perm_cost'] = dict(zip(tup_c0p7z, perm_cost_c0p7z.ravel()))
+    params['perm_wc'] = dict(zip(tup_c0p7z, perm_wc_c0p7z.ravel()))
     r_vals['perm_cost_c'] = perm_cost_c0p7z
 
     params['manager_cost'] = dict(zip(tup_c0p7z, manager_cost_c0p7z.ravel()))
+    params['manager_wc'] = dict(zip(tup_c0p7z, manager_wc_c0p7z.ravel()))
     r_vals['manager_cost_c'] = manager_cost_c0p7z
 
 
