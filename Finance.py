@@ -1,12 +1,16 @@
 
 """
 author: young
-#todo need to update this.
-To capture debit and credit interest the year is split into bi-monthly cashflow periods. Activities with a
-cost or income add to or remove from the cashflow balance. To support the sporadic nature of farming income
+
+To support the sporadic nature of farming income
 finance is often drawn from the bank throughout the year to fund costly operations such as seeding. This
-is also represented in AFO however a user input exist which sets the maximum overdraw limit. At the end
-of a period the positive or negative bank balance plus interest is transferred to the next period.
+is also represented by working capital in AFO. A working capital constraint tracks the bank balance throughout the year
+and ensures that the maximum overdraw is below a user specified limit. This ensure the model doesnt overdraw an unrealistic
+level of capital from the bank.
+
+The interest cost of working capital is calculated from when the expense is incurred through to when the income associated
+with that cost is received. This has an impact on total objective function value but also ensures that
+expenditure is only incurred if the return exceeds the cost of interest.
 
 There is no representation of a starting cash balance. If it is included the model just selects the
 highest amount because that earns the most interest. The model can get loan from bank if it needs
@@ -35,9 +39,6 @@ Asset value
     For livestock this ensures that the flock structure optimisation accounts for the opportunity cost
     of interest foregone from holding an animal for an extra year.
 
-.. note:: To ensure accurate representation of asset opportunity cost the date when the assets are valued
-    must be the date when the cashflow periods begin.
-
 The cashflow operates in conjunction with the asset value in representing the opportunity cost of holding assets.
 Livestock flock structure is the main 'decision' that is altered by the inclusion of an asset value. Without
 interest if animals are sold early in the year there would not be an offsetting value that would
@@ -46,8 +47,8 @@ that the animal was valued should be an ‘equal’ outcome solution, but this o
 interest ‘earned’ in the cashflow.
 
 The interest rate for credit & debit are different for farmers ‘real money’ in the bank.
-However, in the model very similar debit and credit interest rates are used (this can be changed by the user).
-The reason equal interest rates are set as the default are:
+However, in the AFO the same interest rate is used to represent debit and credit.
+The reasons are:
 
 #. Many farmers often have a core debt, so the farm cash position is usually negative even though
    their short term operating account may occasionally be positive. The differential interest
@@ -77,8 +78,8 @@ import UniversalInputs as uinp
 import StructuralInputs as sinp
 import PropertyInputs as pinp
 import Periods as per
-import Functions as fun
 
+na = np.newaxis
 '''
 interest
 '''
@@ -229,21 +230,33 @@ def overheads(params, r_vals):
     including. Examples of overhead costs include; electricity, gas, shire rates, licenses,
     professional services, insurance and household expense.
     '''
-    length = 365 #overheads are incurred equally each day
-    start_cashflow_stock = np.average(pinp.sheep['i_date_cashflow_stock_i'][i_mask_i])
-    start_cashflow_crop = np.array([pinp.crop['i_date_cashflow_crop']])
+    ##cost allocation
+    p_dates_c0p7z = per.f_cashflow_periods()
+    overhead_length = 365 #overheads are incurred equally each day
+    overhead_start_c0p7z = p_dates_c0p7z[:,0:1,:]
+    keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
+    keys_c0 = sinp.general['i_enterprises_c0']
+    keys_z = pinp.f_keys_z()
+    peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
+    ###call allocation/interset function - needs to be numpy
+    overhead_cost_allocation_c0p7z, overhead_wc_allocation_c0p7z = f_cashflow_allocation(np.array([1]), overhead_start_c0p7z,
+                                                                                  p_dates_c0p7z,
+                                                                                  peakdebt_date_c0p7z, length=overhead_length)
+    ###convert to df
+    new_index_c0p7z = pd.MultiIndex.from_product([keys_c0,keys_p7,keys_z])
+    overhead_cost_allocation_c0p7z = pd.Series(overhead_cost_allocation_c0p7z.ravel(),index=new_index_c0p7z)
+    overhead_wc_allocation_c0p7z = pd.Series(overhead_wc_allocation_c0p7z.ravel(),index=new_index_c0p7z)
 
+    ##cost
     overheads = pinp.general['i_overheads']
+    overheads_c0_alloc_c0 = pinp.finance['i_fixed_cost_enterprise_allocation_c0']
     overheads = overheads.sum()
-    overheads_stock = overheads/2
-    overheads_crop = overheads/2
+    overheads_c0 = overheads * overheads_c0_alloc_c0
+    overheads_c0 = pd.Series(overheads_c0, index=keys_c0)
+    overhead_cost_c0p7z = overhead_cost_allocation_c0p7z.mul(overheads_c0, level=0)
 
-    f_cashflow_allocation(overheads_stock,start_cashflow_stock,'stk', length)
-    f_cashflow_allocation(overheads_crop,start_cashflow_crop,'crp', length)
-#need to add c0
-    overheads = dict.fromkeys(sinp.general['cashflow_periods'], overheads)
-    params['overheads'] = overheads
-    r_vals['overheads'] = pd.Series(overheads)
+    params['overheads'] = overhead_cost_c0p7z.to_dict()
+    r_vals['overheads'] = overhead_cost_c0p7z
 
 #################
 #Min ROE        #
@@ -264,10 +277,12 @@ def f_min_roe():
 #################
 
 def finance_rep(r_vals):
-    keys_c = sinp.general['cashflow_periods']
-    r_vals['keys_c'] = keys_c
+    keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
+    keys_c0 = sinp.general['i_enterprises_c0']
+    r_vals['keys_c'] = keys_p7
+    r_vals['keys_c0'] = keys_c0
     r_vals['opportunity_cost_capital'] = uinp.finance['opportunity_cost_capital']
-    r_vals['interest_rate'] = debit_interest()
+    r_vals['interest_rate'] = uinp.finance['i_interest']
 
 
 

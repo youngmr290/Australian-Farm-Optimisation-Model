@@ -942,36 +942,36 @@ def period_allocation(period_dates,periods,start_d,length=None):
                 break
         return allocation_p
 
-def period_allocation2(start_df, length_df, p_dates, p_name): #todo i think this function is not going to be used once the cashflow stuff is done.
-    '''
-    Parameters
-    ----------
-    start_df : Datetime series
-        Contains the activity start dates ie start date of fert spreading for each fert.
-    length_df : Datetime series
-        Length of the df activity ie length of fert spreading for each fert.
-    p_dates : List
-        Dates of the period you are matching ie cashflow or labour. Includes the end date of the last period
-    p_name : List
-        Names of the period you are matching ie cashflow or labour. Includes the a name for the last date which is not a period (it is just the end date of the last period)
-
-    Returns
-    -------
-    Dataframe 2D
-        index = period names you are matching within ie cashflow
-        column names = activities ie fertilisers
-        This function is used when multiple activities have different period allocation.
-        - this func basically just calls the main allocation multiple times and adds the results to one df.
-        eg the cost of fert spreading could be in different periods depending what time of yr that fertiliser is applied
-    '''
-    start_df=start_df.squeeze() #should be a series but in case it is a 1d df
-    length_df=length_df.squeeze() #should be a series but in case it is a 1d df
-    df = pd.DataFrame()
-    for col, start, length in zip(start_df.index, start_df, length_df):
-        allocation = period_allocation(p_dates,p_name,start,length)
-        df[col]=allocation['allocation']
-    df.index=allocation['period']
-    return df
+# def period_allocation2(start_df, length_df, p_dates, p_name): #todo i think this function is not going to be used once the cashflow stuff is done.
+#     '''
+#     Parameters
+#     ----------
+#     start_df : Datetime series
+#         Contains the activity start dates ie start date of fert spreading for each fert.
+#     length_df : Datetime series
+#         Length of the df activity ie length of fert spreading for each fert.
+#     p_dates : List
+#         Dates of the period you are matching ie cashflow or labour. Includes the end date of the last period
+#     p_name : List
+#         Names of the period you are matching ie cashflow or labour. Includes the a name for the last date which is not a period (it is just the end date of the last period)
+#
+#     Returns
+#     -------
+#     Dataframe 2D
+#         index = period names you are matching within ie cashflow
+#         column names = activities ie fertilisers
+#         This function is used when multiple activities have different period allocation.
+#         - this func basically just calls the main allocation multiple times and adds the results to one df.
+#         eg the cost of fert spreading could be in different periods depending what time of yr that fertiliser is applied
+#     '''
+#     start_df=start_df.squeeze() #should be a series but in case it is a 1d df
+#     length_df=length_df.squeeze() #should be a series but in case it is a 1d df
+#     df = pd.DataFrame()
+#     for col, start, length in zip(start_df.index, start_df, length_df):
+#         allocation = period_allocation(p_dates,p_name,start,length)
+#         df[col]=allocation['allocation']
+#     df.index=allocation['period']
+#     return df
 
 def range_allocation_np(period_dates, start, length, opposite=None, shape=None):
     ''' Numpy version - The proportion of each period that falls in the tested date range or proportion of date range in each period.

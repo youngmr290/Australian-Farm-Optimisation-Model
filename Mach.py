@@ -49,8 +49,10 @@ import numpy as np
 #AFO modules
 import UniversalInputs as uinp
 import PropertyInputs as pinp
+import StructuralInputs as sinp
 import Periods as per
 import Functions as fun
+import Finance as fin
 
 na = np.newaxis
 
@@ -319,22 +321,26 @@ def maint_cost_seeder():
     tillage_lmu_df = uinp.mach[pinp.mach['option']]['tillage_maint'] * tillage_maint_lmu_adj
     return  tillage_lmu_df
 
-def f_seed_cost_alloc():
+def f1_seed_cost_alloc():
     '''period allocation for seeding costs'''
-    ##put inputs through season function
+    ##inputs
+    start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
     seed_period_lengths_p5z = pinp.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
     length_z = np.sum(seed_period_lengths_p5z, axis=0)
-    ##gets the cost allocation
-    p_dates_c = per.f_cashflow_periods()['start date'].values
-    p_name_c = per.f_cashflow_periods()['cash period']
-    length_z = length_z.astype('timedelta64[D]')
-    start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
-    alloc_cz = fun.range_allocation_np(p_dates_c[...,None], start_z, length_z, True)
+    keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
+    keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = pinp.f_keys_z()
-    alloc_cz = pd.DataFrame(alloc_cz, index=p_name_c, columns=keys_z)
-    ## drop last row, because it has na because it only contains the end date, therefore not a period
-    alloc_cz.drop(alloc_cz.tail(1).index,inplace=True)
-    return alloc_cz
+    peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
+    p_dates_c0p7z = per.f_cashflow_periods()
+    
+    ##calc interest and allocate to cash period - needs to be numpy
+    seeding_cost_allocation_c0p7z, seeding_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]), start_z, p_dates_c0p7z, peakdebt_date_c0p7z, 'crp', length_z)
+    ###convert to df
+    new_index_c0p7z = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z])
+    seeding_cost_allocation_c0p7z = pd.Series(seeding_cost_allocation_c0p7z.ravel(), index=new_index_c0p7z)
+    seeding_wc_allocation_c0p7z = pd.Series(seeding_wc_allocation_c0p7z.ravel(), index=new_index_c0p7z)
+    return seeding_cost_allocation_c0p7z, seeding_wc_allocation_c0p7z
+
 
 def f_seeding_cost(r_vals):
     '''
@@ -347,26 +353,37 @@ def f_seeding_cost(r_vals):
     ##Total cost seeding on each lmu $/ha.
     seeding_cost_l = tractor_cost_seeding() + maint_cost_seeder()
     seeding_cost_l = seeding_cost_l.squeeze()
-    ##gets the cost allocation
-    alloc_cz = f_seed_cost_alloc()
+
+    ##gets the cost allocation (includes interest)
+    seeding_cost_allocation_c0p7z, seeding_wc_allocation_c0p7z = f1_seed_cost_alloc()
+
     ##reindex with lmu so alloc can be mul with seeding_cost_l
-    columns = pd.MultiIndex.from_product([seeding_cost_l.index, alloc_cz.columns])
-    alloc_czl = alloc_cz.reindex(columns, axis=1, level=1)
-    seeding_cost_czl = alloc_czl.mul(seeding_cost_l, axis=1, level=0)
-    r_vals['seeding_cost'] = seeding_cost_czl
-    return seeding_cost_czl
+    keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
+    keys_c0 = sinp.general['i_enterprises_c0']
+    keys_z = pinp.f_keys_z()
+    columns = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, seeding_cost_l.index])
+    seeding_cost_allocation_c0p7zl = seeding_cost_allocation_c0p7z.reindex(columns, axis=1)
+    seeding_wc_allocation_c0p7zl = seeding_wc_allocation_c0p7z.reindex(columns, axis=1)
+
+    ##mul costs and allocation
+    seeding_cost_c0p7zl = seeding_cost_allocation_c0p7zl.mul(seeding_cost_l, level=3)
+    seeding_wc_c0p7zl = seeding_wc_allocation_c0p7zl.mul(seeding_cost_l, level=3)
+    r_vals['seeding_cost'] = seeding_cost_c0p7zl
+    return seeding_cost_c0p7zl
 
 def f_contract_seed_cost(r_vals):
     '''
     Contract seeding cost in each cashflow period. Currently, contract cost is the same for all lmus and crops.
     '''
-    ##gets the cost allocation
-    alloc_cz = f_seed_cost_alloc()
+    ##gets the cost allocation (includes interest)
+    seeding_cost_allocation_c0p7z, seeding_wc_allocation_c0p7z = f1_seed_cost_alloc()
+
     ##cost to contract seed 1ha
     seed_cost = uinp.price['contract_seed_cost']
-    contract_seed_cost = alloc_cz * seed_cost
-    r_vals['contractseed_cost'] = contract_seed_cost
-    return contract_seed_cost
+    contract_seeding_cost_c0p7z = seeding_cost_allocation_c0p7z * seed_cost
+    contract_seeding_wc_c0p7z = seeding_wc_allocation_c0p7z * seed_cost
+    r_vals['contractseed_cost'] = contract_seeding_cost_c0p7z
+    return contract_seeding_cost_c0p7z
 
 ########################################
 #late seeding & dry seeding penalty    #
@@ -536,21 +553,39 @@ def f_max_harv_hours():
     return max_hours_pz
 
 
-def f_harv_cost_alloc():
-    ##allocation of harvest cost into cashflow period
+def f1_harv_cost_alloc():
+    '''allocation of harvest cost into cashflow period'''
 
-    ##gets the cost allocation
-    p_dates_c = per.f_cashflow_periods()['start date'].values
+    ##inputs
     harv_start_z = pinp.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0).astype('datetime64')
-    harv_lengths_z = np.sum(pinp.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1), axis=0).astype('timedelta64[D]')
-    alloc_cz = fun.range_allocation_np(p_dates_c[...,None],harv_start_z,harv_lengths_z,True)
-    ###make it a df
-    p_name_c = per.f_cashflow_periods()['cash period']
+    harv_lengths_z = np.sum(pinp.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1), axis=0)
+    keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
+    keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = pinp.f_keys_z()
-    alloc_cz = pd.DataFrame(alloc_cz,index=p_name_c,columns=keys_z)
-    ### drop last row, because it has na because it only contains the end date, therefore not a period
-    alloc_cz.drop(alloc_cz.tail(1).index,inplace=True)
-    return alloc_cz
+    peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
+    p_dates_c0p7z = per.f_cashflow_periods()
+
+    ##calc interest and allocate to cash period - needs to be numpy
+    harv_cost_allocation_c0p7z,harv_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]),harv_start_z,
+                                                                                          p_dates_c0p7z,
+                                                                                          peakdebt_date_c0p7z,'crp',
+                                                                                          harv_lengths_z)
+    ###convert to df
+    new_index_c0p7z = pd.MultiIndex.from_product([keys_c0,keys_p7,keys_z])
+    harv_cost_allocation_c0p7z = pd.Series(harv_cost_allocation_c0p7z.ravel(),index=new_index_c0p7z)
+    harv_wc_allocation_c0p7z = pd.Series(harv_wc_allocation_c0p7z.ravel(),index=new_index_c0p7z)
+    return harv_cost_allocation_c0p7z,harv_wc_allocation_c0p7z
+
+    # ##gets the cost allocation
+    # p_dates_c = per.f_cashflow_periods()['start date'].values
+    # alloc_cz = fun.range_allocation_np(p_dates_c[...,None],harv_start_z,harv_lengths_z,True)
+    # ###make it a df
+    # p_name_c = per.f_cashflow_periods()['cash period']
+    # keys_z = pinp.f_keys_z()
+    # alloc_cz = pd.DataFrame(alloc_cz,index=p_name_c,columns=keys_z)
+    # ### drop last row, because it has na because it only contains the end date, therefore not a period
+    # alloc_cz.drop(alloc_cz.tail(1).index,inplace=True)
+    # return alloc_cz
 
 
 def f_harvest_cost(r_vals):
@@ -564,7 +599,7 @@ def f_harvest_cost(r_vals):
 
     '''
     ##allocation
-    alloc_cz = f_harv_cost_alloc()
+    harv_cost_allocation_c0p7z,harv_wc_allocation_c0p7z = f1_harv_cost_alloc()
 
     ##cost
     ##fuel used L/hr - same for each crop
@@ -576,14 +611,22 @@ def f_harvest_cost(r_vals):
     fuel_oil_cost_hr = fuel_cost_hr + oil_cost_hr
     ##return fuel and oil cost plus r & m ($/hr)
     cost_harv = fuel_oil_cost_hr + uinp.mach[pinp.mach['option']]['harvest_maint']
-
-    ##reindex with lmu so alloc can be mul with seeding_cost_l
     harv_cost_k = cost_harv.squeeze()
-    columns = pd.MultiIndex.from_product([harv_cost_k.index, alloc_cz.columns])
-    alloc_czk = alloc_cz.reindex(columns, axis=1, level=1)
-    harv_cost_czk = alloc_czk.mul(harv_cost_k, axis=1, level=0)
-    r_vals['harvest_cost'] = harv_cost_czk
-    return harv_cost_czk.stack(0)
+    
+    ##reindex with lmu so alloc can be mul with harv_cost
+    keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
+    keys_c0 = sinp.general['i_enterprises_c0']
+    keys_z = pinp.f_keys_z()
+    columns = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, harv_cost_k.index])
+    harv_cost_allocation_c0p7zk = harv_cost_allocation_c0p7z.reindex(columns, axis=1)
+    harv_wc_allocation_c0p7zk = harv_wc_allocation_c0p7z.reindex(columns, axis=1)
+
+    ##mul costs and allocation
+    harv_cost_c0p7zk = harv_cost_allocation_c0p7zk.mul(harv_cost_k, level=3)
+    harv_wc_c0p7zk = harv_wc_allocation_c0p7zk.mul(harv_cost_k, level=3)
+
+    r_vals['harvest_cost'] = harv_cost_c0p7zk
+    return harv_cost_c0p7zk
 
 
 #########################
@@ -604,20 +647,30 @@ def f_contract_harv_rate():
 #print(contract_harv_rate())
 
 
-def f_contract_harvest_cost_period(r_vals):
+def f_contract_harvest_cost(r_vals):
     '''
     Cost of contract harvest in each cashflow period ($/hr).
     '''
     ##allocation
-    alloc_cz = f_harv_cost_alloc()
+    harv_cost_allocation_c0p7z,harv_wc_allocation_c0p7z = f1_harv_cost_alloc()
 
-    ##reindex with lmu so alloc can be mul with seeding_cost_l
+    ##contract harv cost
     contract_harv_cost_k = uinp.price['contract_harv_cost'].squeeze() #contract harvesting cost for each crop ($/hr)
-    columns = pd.MultiIndex.from_product([contract_harv_cost_k.index, alloc_cz.columns])
-    alloc_czk = alloc_cz.reindex(columns, axis=1, level=1)
-    contract_harv_cost_czk = alloc_czk.mul(contract_harv_cost_k, axis=1, level=0)
-    r_vals['contract_harvest_cost'] = contract_harv_cost_czk
-    return contract_harv_cost_czk.stack(0)
+    
+    ##reindex with lmu so alloc can be mul with harv_cost
+    keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
+    keys_c0 = sinp.general['i_enterprises_c0']
+    keys_z = pinp.f_keys_z()
+    columns = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, contract_harv_cost_k.index])
+    contract_harv_cost_allocation_c0p7zk = harv_cost_allocation_c0p7z.reindex(columns, axis=1)
+    contract_harv_wc_allocation_c0p7zk = harv_wc_allocation_c0p7z.reindex(columns, axis=1)
+
+    ##mul costs and allocation
+    contract_harv_cost_c0p7zk = contract_harv_cost_allocation_c0p7zk.mul(contract_harv_cost_k, level=3)
+    contract_harv_wc_c0p7zk = contract_harv_wc_allocation_c0p7zk.mul(contract_harv_cost_k, level=3)
+
+    r_vals['contract_harvest_cost'] = contract_harv_cost_c0p7zk
+    return contract_harv_cost_c0p7zk
 
 
 #########################
@@ -634,17 +687,35 @@ def f_hay_making_cost():
     Note: Currently it is assumed that hay is allocated into the same cashflow periods in all seasons.
     '''
     ##cost allocation
-    p_dates = per.f_cashflow_periods()['start date'] #gets the date column of the cashflow periods df
-    p_name = per.f_cashflow_periods()['cash period'] #gets the period name
-    start = pinp.crop['hay_making_date']
-    length = dt.timedelta(days = pinp.crop['hay_making_len'])
-    allocation = fun.period_allocation(p_dates, p_name, start,length).set_index('period')    ##convert from ha to tonne (cost per ha divide approx yield)
-    mow_cost =  uinp.price['contract_mow_hay'] \
-    / uinp.mach_general['approx_hay_yield'] 
+    hay_start = np.array([pinp.crop['hay_making_date']]).astype('datetime64')
+    hay_length = pinp.crop['hay_making_len']
+    keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
+    keys_c0 = sinp.general['i_enterprises_c0']
+    keys_z = pinp.f_keys_z()
+    peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
+    p_dates_c0p7z = per.f_cashflow_periods()
+    ###call allocation/interset function - needs to be numpy
+    hay_cost_allocation_c0p7z,hay_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]),hay_start,
+                                                                                          p_dates_c0p7z,
+                                                                                          peakdebt_date_c0p7z,'crp',
+                                                                                          hay_length)
+    ###convert to df
+    new_index_c0p7z = pd.MultiIndex.from_product([keys_c0,keys_p7,keys_z])
+    hay_cost_allocation_c0p7z = pd.Series(hay_cost_allocation_c0p7z.ravel(),index=new_index_c0p7z)
+    hay_wc_allocation_c0p7z = pd.Series(hay_wc_allocation_c0p7z.ravel(),index=new_index_c0p7z)
+
+
+    ##hay making cost $/t
+    mow_cost =  uinp.price['contract_mow_hay'] / uinp.mach_general['approx_hay_yield']
     bail_cost =  uinp.price['contract_bail'] 
     cart_cost = uinp.price['cart_hay']
     total_cost = mow_cost + bail_cost + cart_cost
-    return (allocation * total_cost).stack().droplevel(1) #drop level because i stacked to get it to a series but it was already 1d and i didn't want the col name as a key
+
+    ##calc interest and allocate to cash period
+    hay_cost_c0p7z = hay_cost_allocation_c0p7z * total_cost
+    hay_wc_c0p7z = hay_wc_allocation_c0p7z * total_cost
+
+    return hay_cost_c0p7z
 
 #######################################################################################################################################################
 #######################################################################################################################################################
@@ -655,27 +726,22 @@ def f_hay_making_cost():
 ##############################
 #cost per ha stubble handling#
 ##############################
-def stubble_cost_ha():
+def f_stubble_cost_ha():
     '''
-    Cost to handle stubble for 1 ha.
+    Tractor cost to handle stubble for 1 ha.
 
     Stubble handling cost per hectare includes tractor costs and rack costs. Tractor costs consist of fuel, oil,
-    grease and r&m. Rack costs consist of just repairs and maintenance. This cost is adjusted rotation
+    grease and r&m. Rack costs consist of just repairs and maintenance. This cost is adjusted for rotation
     phase and LMU cost in Phase.py.
 
     '''
-    start = pinp.mach['stub_handling_date'] #needed for allocation func
-    length = dt.timedelta(days =pinp.mach['stub_handling_length']) #needed for allocation func
-    p_dates = per.f_cashflow_periods()['start date'] #needed for allocation func
-    p_name = per.f_cashflow_periods()['cash period'] #needed for allocation func
-    allocation=fun.period_allocation(p_dates, p_name, start, length).set_index('period')
     ##tractor costs = fuel + r&m + oil&grease
     tractor_fuel = uinp.mach[pinp.mach['option']]['stubble_fuel_consumption']*fuel_price()
     tractor_rm = uinp.mach[pinp.mach['option']]['stubble_fuel_consumption']*fuel_price() * uinp.mach[pinp.mach['option']]['repair_maint_factor_tractor']
     tractor_oilgrease = uinp.mach[pinp.mach['option']]['stubble_fuel_consumption']*fuel_price() * uinp.mach[pinp.mach['option']]['oil_grease_factor_tractor']
     ##cost/hr= tractor costs + stubble rake(r&m) 
     cost = tractor_fuel + tractor_rm + tractor_oilgrease + uinp.mach[pinp.mach['option']]['stubble_maint']
-    return (allocation*cost).dropna()
+    return cost
 #cc=stubble_cost_ha()
 
 #######################################################################################################################################################
@@ -940,16 +1006,30 @@ def f_insurance(r_vals):
     '''
     ##determine the insurance paid
     value_all_mach = f_total_clearing_value()
-    insurance = value_all_mach * uinp.finance['equip_insurance']
+    insurance_cost = value_all_mach * uinp.finance['equip_insurance']
+    
     ##determine cash period
-    length = dt.timedelta(days=1) #assume all insurance is paid on 1 day
-    p_dates = per.f_cashflow_periods()['start date']
-    p_name = per.f_cashflow_periods()['cash period']
-    start = uinp.mach_general['insurance_date']
-    allocation = fun.period_allocation(p_dates, p_name,start,length).replace(np.nan,0).set_index('period').squeeze()
-    insurance_c = allocation * insurance
-    r_vals['mach_insurance'] = insurance_c
-    return insurance_c.squeeze().to_dict()
+    start = np.array([uinp.mach_general['insurance_date']]).astype('datetime64')
+    keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
+    keys_c0 = sinp.general['i_enterprises_c0']
+    keys_z = pinp.f_keys_z()
+    peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
+    p_dates_c0p7z = per.f_cashflow_periods()
+    ###call allocation/interset function - needs to be numpy
+    insurance_cost_allocation_c0p7z,insurance_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]),start,
+                                                                                          p_dates_c0p7z,
+                                                                                          peakdebt_date_c0p7z,'crp')
+    ###convert to df
+    new_index_c0p7z = pd.MultiIndex.from_product([keys_c0,keys_p7,keys_z])
+    insurance_cost_allocation_c0p7z = pd.Series(insurance_cost_allocation_c0p7z.ravel(),index=new_index_c0p7z)
+    insurance_wc_allocation_c0p7z = pd.Series(insurance_wc_allocation_c0p7z.ravel(),index=new_index_c0p7z)
+    
+    ##calc interest and allocate to cash period
+    insurance_cost_c0p7z = insurance_cost_allocation_c0p7z * insurance_cost
+    insurance_wc_c0p7z = insurance_wc_allocation_c0p7z * insurance_cost
+
+    r_vals['mach_insurance'] = insurance_cost_c0p7z
+    return insurance_cost_c0p7z.to_dict()
 
 
 #######################################################################################################################################################
@@ -963,13 +1043,13 @@ def f_mach_params(params,r_vals):
     seed_days = f_seed_days().stack()
     contractseeding_occur = f_contractseeding_occurs().stack()
     seedrate = f_overall_seed_rate(r_vals)
-    seeding_cost = f_seeding_cost(r_vals).stack([0,1])
-    contract_seed_cost = f_contract_seed_cost(r_vals).stack()
+    seeding_cost = f_seeding_cost(r_vals)
+    contract_seed_cost = f_contract_seed_cost(r_vals)
     harv_rate_period = f_harv_rate_period().stack()
     contract_harv_rate = f_contract_harv_rate()
     max_harv_hours = f_max_harv_hours().stack()
-    harvest_cost = f_harvest_cost(r_vals).stack()
-    contract_harvest_cost = f_contract_harvest_cost_period(r_vals).stack()
+    harvest_cost = f_harvest_cost(r_vals)
+    contract_harvest_cost = f_contract_harvest_cost(r_vals)
     hay_making_cost = f_hay_making_cost()
     yield_penalty = f_sowing_timeliness_penalty().stack()
     stubble_penalty = f_stubble_penalty()
@@ -989,25 +1069,25 @@ def f_mach_params(params,r_vals):
     ##create non seasonal params
     params['seed_rate'] = seedrate.to_dict()
     params['contract_harv_rate'] = contract_harv_rate.to_dict()
-    params['hay_making_cost'] = hay_making_cost.to_dict()
     params['fixed_dep'] = fixed_dep
     params['harv_dep'] = harv_dep
     params['seeding_gear_clearing_value'] = seeding_gear_clearing_value
     params['seeding_dep'] = seeding_dep.to_dict()
     params['mach_asset_value'] = mach_asset_value
-    params['insurance'] = insurance
 
-    ##create season params 
+    ##create season params
     params['seed_days'] = seed_days.to_dict()
     params['contractseeding_occur'] = contractseeding_occur.to_dict()
     params['seeding_cost'] = seeding_cost.to_dict()
     params['contract_seed_cost'] = contract_seed_cost.to_dict()
     params['harv_rate_period'] = harv_rate_period.to_dict()
     params['harvest_cost'] = harvest_cost.to_dict()
+    params['hay_making_cost'] = hay_making_cost.to_dict()
     params['max_harv_hours'] = max_harv_hours.to_dict()
     params['contract_harvest_cost'] = contract_harvest_cost.to_dict()
     params['yield_penalty'] = yield_penalty.to_dict()
     params['stubble_penalty'] = stubble_penalty.to_dict()
     params['poc_grazing_days'] = poc_grazing_days.to_dict()
+    params['insurance'] = insurance
 
 

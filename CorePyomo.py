@@ -71,7 +71,7 @@ def coremodel_all(params,trial_name,model):
     #grain
     f_con_grain_transfer(model)
     #cashflow
-    f_con_cashflow(model)
+    # f_con_cashflow(model)
     f_con_dep(model)
     f_con_asset(model)
     f_con_minroe(model)
@@ -369,11 +369,11 @@ def f_con_grain_transfer(model):
                                              doc='constrain grain transfer between rotation and sup feeding')
 
 
-def f1_grain_income(model,c,z):
+def f1_grain_income(model,c0,p7,z):
     ##combined grain sold and purchased to get a $ amount which is added to the cashflow constrain
     return sum(
-        model.v_sell_grain[z,k,g] * model.p_grain_price[k,c,g] - model.v_buy_grain[z,k,g] * model.p_buy_grain_price[
-            k,c,g] for k in model.s_crops for g in model.s_grain_pools)
+        model.v_sell_grain[z,k,g] * model.p_grain_price[c0,p7,z,g,k] - model.v_buy_grain[z,k,g] * model.p_buy_grain_price[
+            c0,p7,z,g,k] for k in model.s_crops for g in model.s_grain_pools)
 
 
 def f_con_poc_available(model):
@@ -436,27 +436,33 @@ def f_con_vol(model):
                                   doc='constraint between me available and consumed')
 
 
-def f_con_cashflow(model):
-    '''
-    Tallies all cashflow in each bi-monthly period from each module. If the balance is positive interest is earned.
-    If the balance is negitive interest is paid.
-    '''
-    def cash_flow(model,i,z):
-        c = sinp.general['cashflow_periods']
-        ##j becomes a list which has 0 as first value and 1 after that. this is then indexed by i and multiplied by previous periods debit and credit.
-        ##this means the first period doesn't include the previous debit or credit (because it doesn't exist, because it is the first period)
-        j = [1] * len(c)
-        j[0] = 0
-        # todo Revisit the interest calculation at some stage because it didn't tally with the back of envelope estimate by $1000
-        return (-f1_grain_income(model,c[i],z) + phspy.f_rotation_cost(model,c[i],z) + labpy.f_labour_cost(model,c[i],z)
-                + macpy.f_mach_cost(model,c[i],z) + suppy.f_sup_cost(model,c[i],z) + model.p_overhead_cost[c[i]]
-                - stkpy.f_stock_cashflow(model,c[i],z)
-                - model.v_debit[c[i]] + model.v_credit[c[i]]
-                + (model.v_debit[c[i - 1]] * fin.debit_interest() - model.v_credit[c[i - 1]] * fin.credit_interest()) * j[i] # mul by j so that credit in ND doesnt provide into JF otherwise it will be unbounded because it will get interest
-                ) <= 0
+#  def f_con_cashflow(model):
+#     '''
+#     Tallies all cashflow in each bi-monthly period from each module. If the balance is positive interest is earned.
+#     If the balance is negitive interest is paid.
+#     '''
+    # def cash_flow(model,i,z):
+    #     c = sinp.general['cashflow_periods']
+    #     ##j becomes a list which has 0 as first value and 1 after that. this is then indexed by i and multiplied by previous periods debit and credit.
+    #     ##this means the first period doesn't include the previous debit or credit (because it doesn't exist, because it is the first period)
+    #     j = [1] * len(c)
+    #     j[0] = 0
+    #     # todo Revisit the interest calculation at some stage because it didn't tally with the back of envelope estimate by $1000
+    #     return (-f1_grain_income(model,c[i],z) + phspy.f_rotation_cost(model,c0,p7,z) + labpy.f_labour_cost(model,c[i],z)
+    #             + macpy.f_mach_cost(model,c[i],z) + suppy.f_sup_cost(model,c[i],z) + model.p_overhead_cost[c0,p7,z]
+    #             - stkpy.f_stock_cashflow(model,c[i],z)
+    #             - model.v_debit[c[i]] + model.v_credit[c[i]]
+    #             + (model.v_debit[c[i - 1]] * fin.debit_interest() - model.v_credit[c[i - 1]] * fin.credit_interest()) * j[i] # mul by j so that credit in ND doesnt provide into JF otherwise it will be unbounded because it will get interest
+    #             ) <= 0
+    #
+    # model.con_cashflow = pe.Constraint(range(len(model.s_cashflow_periods)),model.s_season_types,rule=cash_flow,
+    #                                    doc='cashflow')
 
-    model.con_cashflow = pe.Constraint(range(len(model.s_cashflow_periods)),model.s_season_types,rule=cash_flow,
-                                       doc='cashflow')
+
+def cash_flow(model,z):
+    return sum(f1_grain_income(model,c0,p7,z) - phspy.f_rotation_cost(model,c0,p7,z) - labpy.f_labour_cost(model,c0,p7,z)
+            - macpy.f_mach_cost(model,c0,p7,z) - suppy.f_sup_cost(model,c0,p7,z) - model.p_overhead_cost[c0,p7,z]
+            + stkpy.f_stock_cashflow(model,c0,p7,z) for p7 in model.s_cashflow_periods for c0 in model.s_enterprises)
 
 
 def f_con_dep(model):
@@ -484,8 +490,9 @@ def f_con_asset(model):
 def f_con_minroe(model):
     '''Tallies the total expenditure to ensure that there is a minimum ROI on cash expenditure.'''
     def minroe(model,z):
-        return (sum(phspy.f_rotation_cost(model,c,z) + labpy.f_labour_cost(model,c,z) + macpy.f_mach_cost(model,c,z)
-                    + suppy.f_sup_cost(model,c,z) for c in model.s_cashflow_periods) + stkpy.f_stock_cost(model,z)) * fin.f_min_roe() \
+        return sum(sum(phspy.f_rotation_cost(model,c0,p7,z) + labpy.f_labour_cost(model,c0,p7,z) + macpy.f_mach_cost(model,c0,p7,z)
+                       + suppy.f_sup_cost(model,c0,p7,z) for p7 in model.s_cashflow_periods) + stkpy.f_stock_cost(model,c0,z)
+                   for c0 in model.s_enterprises) * fin.f_min_roe() \
                - model.v_minroe[z] <= 0
 
     model.con_minroe = pe.Constraint(model.s_season_types,rule=minroe,
@@ -499,8 +506,12 @@ def f_objective(model):
     the cost of depreciation and the opportunity cost on the farm assets (total value of all assets times the discount
     rate  (to ensure that the assets generate a minimum ROI)).
     '''
-    c = sinp.general['cashflow_periods']
-    i = len(c) - 1  # minus one because index starts from 0
-    return model.v_credit[c[i]] - model.v_debit[c[i]] - sum(
-        model.v_dep[z] + model.v_minroe[z] + model.v_asset[z] for z in
-        model.s_season_types)  # have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.
+    # c = sinp.general['cashflow_periods']
+    # i = len(c) - 1  # minus one because index starts from 0
+    # return model.v_credit[c[i]] - model.v_debit[c[i]] - sum(
+    #     model.v_dep[z] + model.v_minroe[z] + model.v_asset[z] for z in
+    #     model.s_season_types)  # have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.
+
+    return sum(cash_flow(model,z) - model.v_dep[z] - model.v_minroe[z] - model.v_asset[z]
+         for z in model.s_season_types)  # have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.
+

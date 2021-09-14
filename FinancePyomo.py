@@ -44,7 +44,7 @@ def f1_finpyomo_local(params, model):
     ####################
     #params            #
     ####################
-    model.p_overhead_cost = Param(model.s_cashflow_periods, initialize = params['overheads'], doc = 'cost of overheads each period')
+    model.p_overhead_cost = Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, initialize = params['overheads'], doc = 'cost of overheads each period')
 
     #########################
     #call Local constrain   #

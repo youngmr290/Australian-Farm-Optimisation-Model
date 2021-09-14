@@ -111,7 +111,7 @@ def f_cropgraze_DM(total_DM=False):
         crop_DM_provided_kp6zl = total_dm_growth_kp6zl * consumption_factor_p6z[:,na]
 
         ##calc DM removal when animals consume 1t - accounts for wastage and trampling
-        crop_DM_required_k = 1000 / (1 - wastage_k)
+        crop_DM_required_k = 1000 / (1 - wastage_k) #todo this needs transfer exists mask (use the cod in the line below eg move this line after it)
 
         ##calc mask if DM can be transferred to following period (can only be transferred to periods when consumption is greater than 0)
         transfer_exists_p6z = (consumption_factor_p6z > 0)*1

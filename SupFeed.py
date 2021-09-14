@@ -30,9 +30,11 @@ import FeedsupplyFunctions as fsfun
 import Periods as per
 import PropertyInputs as pinp
 import UniversalInputs as uinp
+import StructuralInputs as sinp
 import Phase as phs
 import Mach as mac
 import Sensitivity as sen
+import Finance as fin
 
 na = np.newaxis
 
@@ -54,19 +56,29 @@ def f_buy_grain_price(r_vals):
     price_df = phs.f_farmgate_grain_price()
     cartage=uinp.price['sup_cartage']
     transaction_fee=uinp.price['sup_transaction']
-    price_df = price_df + cartage + transaction_fee
-    ##calc farm gate grain price for each cashflow period - accounts for tolls and other fees
-    start = uinp.price['grain_income_date']
-    length = dt.timedelta(days=uinp.price['grain_income_length'])
-    p_dates = per.f_cashflow_periods()['start date']
-    p_name = per.f_cashflow_periods()['cash period']
-    allocation=fun.period_allocation(p_dates, p_name, start, length).set_index('period').squeeze()
-    allocation = allocation.fillna(0)
-    cols = pd.MultiIndex.from_product([allocation.index, price_df.columns])
-    price_df = price_df.reindex(cols, axis=1,level=1)#adds level to header so i can mul in the next step
-    buy_grain_price = price_df.mul(allocation,axis=1,level=0)
-    r_vals['buy_grain_price'] = buy_grain_price.T
-    return buy_grain_price.stack([0,1])
+    price_k_g = price_df + cartage + transaction_fee
+
+    ##allocate farm gate grain price for each cashflow period and calc interest
+    start = np.array([uinp.price['grain_income_date']]).astype('datetime64')
+    length = uinp.price['grain_income_length']
+    keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
+    keys_c0 = sinp.general['i_enterprises_c0']
+    keys_z = pinp.f_keys_z()
+    peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
+    p_dates_c0p7z = per.f_cashflow_periods()
+    grain_cost_allocation_c0p7z, grain_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]), start, p_dates_c0p7z, peakdebt_date_c0p7z, 'stk', length)
+    ###convert to df
+    new_index_c0p7z = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z])
+    grain_income_allocation_c0p7z = pd.Series(grain_cost_allocation_c0p7z.ravel(), index=new_index_c0p7z)
+    grain_wc_allocation_c0p7z = pd.Series(grain_wc_allocation_c0p7z.ravel(), index=new_index_c0p7z)
+
+    cols_c0p7zg = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, price_k_g.columns])
+    grain_income_allocation_c0p7zg = grain_income_allocation_c0p7z.reindex(cols_c0p7zg, axis=1)#adds level to header so i can mul in the next step
+    grain_wc_allocation_c0p7zg = grain_wc_allocation_c0p7z.reindex(cols_c0p7zg, axis=1)#adds level to header so i can mul in the next step
+    buy_grain_price =  price_k_g.mul(grain_income_allocation_c0p7zg,axis=1, level=3)
+    buy_grain_price_wc =  price_k_g.mul(grain_wc_allocation_c0p7zg,axis=1, level=3)
+    r_vals['buy_grain_price'] = buy_grain_price
+    return buy_grain_price.unstack()
 
 def f_sup_cost(r_vals):
     '''
@@ -106,48 +118,66 @@ def f_sup_cost(r_vals):
     grain_info.loc['asset'] =  silo_info.loc['asset'].div(grain_info.loc['capacity'], level=1)
     grain_info=grain_info.droplevel(1,axis=1) #drop silo type index
 
-    ##data to determine cash period
-    cashflow_df = per.f_cashflow_periods()
-    p_dates = cashflow_df['start date']
-    p_dates_c = p_dates.values #np version
-    p_name_c = cashflow_df['cash period'].values[:-1]
-
-    ##feed period data - need to convert all dates to the same year
-    start_p6z = fun.f_baseyr(per.f_feed_periods())[:-1,:]
-    length_p6z = per.f_feed_periods(option=1)
-
-    ##deterimine cashflow allocation
-    alloc_cpz=fun.range_allocation_np(p_dates_c[...,na], start_p6z, length_p6z, True)[:-1] #drop last c row because it is just the end date of last period.
-    alloc_cpz = alloc_cpz.reshape(alloc_cpz.shape[0], -1)
-    keys_z = pinp.f_keys_z()
-    keys_p6 = pinp.period['i_fp_idx']
-    cols = pd.MultiIndex.from_product([keys_p6, keys_z])
-    alloc_cpz = pd.DataFrame(alloc_cpz, index=p_name_c, columns=cols)
+    # ##data to determine cash period
+    # cashflow_df = per.f_cashflow_periods()
+    # p_dates = cashflow_df['start date']
+    # p_dates_c = p_dates.values #np version
+    # p_name_c = cashflow_df['cash period'].values[:-1]
 
     ##determine cost of feeding in each feed period and cashflow period
     feeding_cost_k = mac.sup_mach_cost()
-    alloc_cpz = alloc_cpz.stack(0)
-    cols = pd.MultiIndex.from_product([alloc_cpz.columns, feeding_cost_k.index])
-    alloc_cpz = alloc_cpz.reindex(cols,axis=1,level=0)
-    feeding_cost_cpzk = alloc_cpz.mul(feeding_cost_k, axis=1, level=1)
-    start = np.datetime64(pinp.supfeed['storage_cost_date'])
-    alloc_c = np.logical_and(p_dates_c[:-1]<=start, start<p_dates_c[1:])
-    storage_cost_k = grain_info.loc['cost'].values
-    storage_cost_ck = storage_cost_k * alloc_c[:,na]
-    storage_cost_ck = pd.DataFrame(storage_cost_ck, index=p_name_c, columns=grain_info.columns)
+    storage_cost_k = grain_info.loc['cost']
+
+    ##feeding cost allocaion
+    start_p6z = per.f_feed_periods()[:-1,:].astype('datetime64')
+    length_p6z = per.f_feed_periods(option=1).astype(int)
+    keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
+    keys_c0 = sinp.general['i_enterprises_c0']
+    keys_z = pinp.f_keys_z()
+    keys_p6 = pinp.period['i_fp_idx']
+    peakdebt_date_c0p7zp6 = per.f_peak_debt_date()[:,na,na,na]
+    p_dates_c0p7z = per.f_cashflow_periods()
+    feeding_cost_allocation_c0p7zp6, feeding_wc_allocation_c0p7zp6 = fin.f_cashflow_allocation(np.array([1]), start_p6z.T,
+                                                                                               p_dates_c0p7z[...,na], peakdebt_date_c0p7zp6,
+                                                                                               'stk', length_p6z.T)
+    ###convert to df
+    new_index_c0p7zp6 = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, keys_p6])
+    feeding_cost_allocation_c0p7zp6 = pd.Series(feeding_cost_allocation_c0p7zp6.ravel(), index=new_index_c0p7zp6)
+    feeding_wc_allocation_c0p7zp6 = pd.Series(feeding_wc_allocation_c0p7zp6.ravel(), index=new_index_c0p7zp6)
+    ###reindex
+    cols_c0p7zp6k = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, keys_p6, feeding_cost_k.index])
+    feeding_cost_allocation_c0p7zp6k = feeding_cost_allocation_c0p7zp6.reindex(cols_c0p7zp6k)
+    feeding_wc_allocation_c0p7zp6k = feeding_wc_allocation_c0p7zp6.reindex(cols_c0p7zp6k)
+
+    ##storage cost allocaion
+    storage_cost_allocation_c0p7zp6, storage_wc_allocation_c0p7zp6 = fin.f_cashflow_allocation(np.array([1]), start_p6z.T,
+                                                                                               p_dates_c0p7z[...,na], peakdebt_date_c0p7zp6,
+                                                                                               'stk', length_p6z.T)
+    ###convert to df
+    new_index_c0p7zp6 = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, keys_p6])
+    storage_cost_allocation_c0p7zp6 = pd.Series(storage_cost_allocation_c0p7zp6.ravel(), index=new_index_c0p7zp6)
+    storage_wc_allocation_c0p7zp6 = pd.Series(storage_wc_allocation_c0p7zp6.ravel(), index=new_index_c0p7zp6)
+    ###reindex
+    storage_cost_allocation_c0p7zp6k = storage_cost_allocation_c0p7zp6.reindex(cols_c0p7zp6k)
+    storage_wc_allocation_c0p7zp6k = storage_wc_allocation_c0p7zp6.reindex(cols_c0p7zp6k)
+
+    ##adjust cost for allocation and interest
+    feeding_cost_c0p7zp6k = feeding_cost_allocation_c0p7zp6k.mul(feeding_cost_k, level=4)
+    feeding_wc_c0p7zp6k = feeding_wc_allocation_c0p7zp6k.mul(feeding_cost_k, level=4)
+    storage_cost_c0p7zp6k = storage_cost_allocation_c0p7zp6k.mul(storage_cost_k, level=4)
+    storage_wc_c0p7zp6k = storage_wc_allocation_c0p7zp6k.mul(storage_cost_k, level=4)
 
     ##total cost = feeding cost plus storage cost
-    feeding_cost_cpzk = feeding_cost_cpzk.stack().unstack(1)
-    total_sup_cost = feeding_cost_cpzk.add(storage_cost_ck.stack().sort_index(),axis=0).stack(1)
-    r_vals['total_sup_cost_ckp6_z'] = total_sup_cost
+    total_sup_cost_c0p7zp6k = feeding_cost_c0p7zp6k + storage_cost_c0p7zp6k
+    r_vals['total_sup_cost_ckp6_z'] = total_sup_cost_c0p7zp6k
 
     ##dep
     storage_dep = grain_info.loc['dep']
     ##asset
     storage_asset = grain_info.loc['asset']
     ##return cost, dep and asset value
-    return total_sup_cost, storage_dep, storage_asset
-    
+    return total_sup_cost_c0p7zp6k, storage_dep, storage_asset
+
     
 def f_sup_md_vol():
     '''
@@ -300,6 +330,6 @@ def f_sup_params(params,r_vals):
     params['buy_grain_price'] = buy_grain_price.to_dict()
 
     ##create season params
-    params['total_sup_cost'] = total_sup_cost.stack().to_dict()
+    params['total_sup_cost'] = total_sup_cost.to_dict()
     params['sup_labour'] = sup_labour.stack().to_dict()
 

@@ -40,9 +40,9 @@ na = np.newaxis
 def f_cashflow_periods(pandas=False, return_keys_p7=False):
     '''cashflow periods begin at the minimum of the break of season or the cashflow date.'''
     ##create c0 axis
-    cash_date = pinp.sheep['i_date_cashflow_stock_i'][pinp.sheep['i_mask_i']]
-    date_cashflow_stock = cash_date.astype('datetime64').view('i8').mean(keepdims=True).astype('datetime64[us]')
-    date_cashflow_crop = np.array([pinp.crop['i_date_cashflow_crop']])
+    cash_date = pinp.sheep['i_date_cashflow_stock_i'][pinp.sheep['i_mask_i']].astype('datetime64')
+    date_cashflow_stock = cash_date.view('i8').mean(keepdims=True).astype(cash_date.dtype) #take mean incase multiple tol included
+    date_cashflow_crop = np.array([pinp.crop['i_date_cashflow_crop']]).astype('datetime64')
     cashflow_date_c0 = np.concatenate([date_cashflow_stock, date_cashflow_crop]) #have to stack this in the same order as the enterprise input in sinp.
 
     p_std_p6z = pinp.period['i_dsp_fp_date'].astype('datetime64')
@@ -53,15 +53,18 @@ def f_cashflow_periods(pandas=False, return_keys_p7=False):
         date_node_c0mz = date_node_mz + (np.timedelta64(365, 'D') * (date_node_mz < cashflow_date_c0[:,na,na]))
         breaks_of_season_b = np.unique(p_std_p6z[0,:]) #need all the different breaks
         breaks_of_season_c0b = breaks_of_season_b + (np.timedelta64(365, 'D') * (breaks_of_season_b < cashflow_date_c0[:,na])) #adjust the year
-        cashflow_date_c0cz = np.broadcast_to(cashflow_date_c0[:,na], (cashflow_date_c0.shape + (date_node_c0mz.shape[-1],)))[:,na,:]
+        cashflow_date_start_c0cz = np.broadcast_to(cashflow_date_c0[:,na], (cashflow_date_c0.shape + (date_node_c0mz.shape[-1],)))[:,na,:]
+        cashflow_date_end_c0cz = cashflow_date_start_c0cz + np.timedelta64(365, 'D') #end date of the last casflow period
         breaks_of_season_c0bz = np.broadcast_to(breaks_of_season_c0b[:,:,na], (breaks_of_season_c0b.shape + (date_node_c0mz.shape[-1],)))
-        cashflow_dates_c0p7z = np.concatenate([cashflow_date_c0cz, breaks_of_season_c0bz, date_node_c0mz], axis=1) #[1:] becasue first node is break of season which already exists in fp array.
+        cashflow_dates_c0p7z = np.concatenate([cashflow_date_start_c0cz, cashflow_date_end_c0cz, breaks_of_season_c0bz, date_node_c0mz[:,1:,...]], axis=1) #[1:] becasue first node is break of season which already exists in break array.
         cashflow_dates_c0p7z = np.sort(cashflow_dates_c0p7z, axis=1)
     else: #if nodes are not added then the adjusted fps are the same as the std fp.
-        cashflow_dates_c0p7z = cashflow_date_c0.astype('datetime64')[:,na,na]
+        cashflow_date_start_c0p7z = cashflow_date_c0.astype('datetime64')[:,na,na]
+        cashflow_date_end_c0p7z = cashflow_date_start_c0p7z + np.timedelta64(365, 'D') #end date of the last casflow period
+        cashflow_dates_c0p7z = np.concatenate([cashflow_date_start_c0p7z, cashflow_date_end_c0p7z], axis=1)
 
     ##keys
-    keys_p7 = np.array(['cf%02d'%i for i in range(cashflow_dates_c0p7z.shape[1])])
+    keys_p7 = np.array(['cf%02d'%i for i in range(cashflow_dates_c0p7z.shape[1]-1)]) #-1 becasue the last date is just the date of the end period
     if return_keys_p7:
         return keys_p7
     keys_c0 = sinp.general['i_enterprises_c0']
@@ -71,6 +74,13 @@ def f_cashflow_periods(pandas=False, return_keys_p7=False):
         index_c0p7 = pd.MultiIndex.from_product([keys_c0, keys_p7])
         cashflow_dates_c0p7z = pd.DataFrame(cashflow_dates_c0p7z.reshape(len(index_c0p7),-1), index=index_c0p7, columns=keys_z)
     return cashflow_dates_c0p7z
+
+def f_peak_debt_date():
+    date_peakdebt_stock = pinp.sheep['i_date_peakdebt_stock_i'][pinp.sheep['i_mask_i']].astype('datetime64')
+    date_peakdebt_stock = date_peakdebt_stock.view('i8').mean(keepdims=True).astype(date_peakdebt_stock.dtype) #take mean incase multiple tol included
+    date_peakdebt_crop = np.array([pinp.crop['i_date_peakdebt_crop']]).astype('datetime64')
+    peakdebt_date_c0 = np.concatenate([date_peakdebt_stock,date_peakdebt_crop])
+    return peakdebt_date_c0
 
 
 '''

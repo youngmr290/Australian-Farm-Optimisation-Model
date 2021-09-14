@@ -34,10 +34,9 @@ def lab_precalcs(params, r_vals):
     :param report: dictionary which stores all report values.
 
     '''
-    lab.labour_general(params, r_vals)
-    lab.perm_cost(params, r_vals)
-    lab.manager_cost(params, r_vals)
-    params['min_perm'] = pinp.labour['min_perm'] 
+    lab.f_labour_general(params, r_vals)
+    lab.f_perm_cost(params, r_vals)
+    params['min_perm'] = pinp.labour['min_perm']
     params['max_perm'] = pinp.labour['max_perm']
     params['min_managers'] = pinp.labour['min_managers'] 
     params['max_managers'] = pinp.labour['max_managers']
@@ -118,9 +117,9 @@ def f1_labpyomo_local(params, model):
     
     model.p_perm_supervision = Param(model.s_labperiods, model.s_season_types, initialize= params['permanent supervision'], mutable=True, doc='hours of supervision required by a permanent staff in each period')
     
-    model.p_perm_cost = Param(model.s_cashflow_periods, initialize = params['perm_cost'], default = 0.0, doc = 'cost of a permanent staff for 1 yr')
+    model.p_perm_cost = Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, initialize = params['perm_cost'], default = 0.0, doc = 'cost of a permanent staff for 1 yr')
     
-    model.p_casual_cost = Param(model.s_labperiods, model.s_season_types, model.s_cashflow_periods,  initialize = params['casual_cost'], mutable=True, default = 0.0, doc = 'cost of a casual staff for each labour period')
+    model.p_casual_cost = Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_labperiods, initialize = params['casual_cost'], mutable=True, default = 0.0, doc = 'cost of a casual staff for each labour period')
     
     model.p_casual_hours = Param(model.s_labperiods, model.s_season_types, initialize= params['casual hours'], mutable=True, doc='hours worked by a casual staff in each period')
     
@@ -128,7 +127,7 @@ def f1_labpyomo_local(params, model):
     
     model.p_manager_hours = Param(model.s_labperiods, model.s_season_types, initialize= params['manager hours'], mutable=True, doc='hours worked by a manager in each period')
     
-    model.p_manager_cost = Param(model.s_cashflow_periods, initialize = params['manager_cost'], doc = 'cost of a manager for 1 yr')
+    model.p_manager_cost = Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, initialize = params['manager_cost'], doc = 'cost of a manager for 1 yr')
     
     model.p_casual_upper = Param(model.s_labperiods, model.s_season_types, initialize = params['casual ub'], mutable=True,  doc = 'casual availability upper bound')
     
@@ -198,19 +197,23 @@ def f_con_labour_transfer_casual(model):
 #######################
 
 #sum the cost of perm, casual and manager labour. When i tried to do it all in one function it didn't work (it should be possible though )
-def f1_casual(model,c,z):
-    return sum( model.v_quantity_casual[p,z] * model.p_casual_cost[p,z,c] for p in model.s_labperiods) 
-def f1_perm(model,c):
-    return model.v_quantity_perm * model.p_perm_cost[c] 
-def f1_manager(model,c):
-    return model.v_quantity_manager * model.p_manager_cost[c] 
-def f_labour_cost(model,c,z):
+def f1_casual(model,c0,p7,z):
+    return sum(model.v_quantity_casual[p5,z] * model.p_casual_cost[c0,p7,z,p5] for p5 in model.s_labperiods)
+
+def f1_perm(model,c0,p7,z):
+    return model.v_quantity_perm * model.p_perm_cost[c0,p7,z]
+
+def f1_manager(model,c0,p7,z):
+    return model.v_quantity_manager * model.p_manager_cost[c0,p7,z]
+
+def f_labour_cost(model,c0,p7,z):
     '''
-    Calculate the total cost of the selected labour activities.
+    Calculate the total cost of the selected labour activities. Perm and manager labour cost is allocated to each
+    enterprise based on the fixed cost allocation proportion.
 
     Used in global constraint (con_cashflow). See CorePyomo
     '''
-    return f1_casual(model,c,z) + f1_perm(model,c) + f1_manager(model,c)
+    return f1_casual(model,c0,p7,z) + f1_perm(model,c0,p7,z) + f1_manager(model,c0,p7,z)
 
 
 

@@ -50,10 +50,16 @@ def sets(model, nv):
 
 
     #######################
+    #enterprises          #
+    #######################
+    ##cashflow periods
+    model.s_enterprises = Set(initialize=sinp.general['i_enterprises_c0'], doc='enterprises')
+
+    #######################
     #cash                 #
     #######################
     ##cashflow periods
-    model.s_cashflow_periods = Set(initialize=sinp.general['cashflow_periods'], doc='cashflow periods')
+    model.s_cashflow_periods = Set(initialize=per.f_cashflow_periods(return_keys_p7=True), doc='cashflow periods')
 
     #######################
     #stubble              #

@@ -15,6 +15,7 @@ import UniversalInputs as uinp
 import StructuralInputs as sinp
 import Periods as per
 import Functions as fun
+import Finance as fin
 
 
 ###################################################################
@@ -23,7 +24,7 @@ import Functions as fun
 na = np.newaxis
 
 
-def labour_general(params,r_vals):
+def f_labour_general(params,r_vals):
     '''
     Calculates labour supply, labour cost and supervision requirements.
 
@@ -194,47 +195,38 @@ def labour_general(params,r_vals):
     lb_cas_pz[seedharv_mask_pz] = pinp.labour['min_casual_seedharv']
     lb_cas_pz[np.logical_not(seedharv_mask_pz)] = pinp.labour['min_casual']
 
-    ##determine cashflow period each labour period aligns with
-    ###get cashflow period dates and names - used in the following loop
-    p_dates = per.f_cashflow_periods()['start date']#get cashflow period dates
-    p_dates_start_c = p_dates.values[:-1]
-    p_dates_end_c = p_dates.values[1:]
-    p_name = per.f_cashflow_periods()['cash period'].values[:-1].astype(str)#gets the period name
-    ###determine cashflow allocation
-    # index_c = np.arange(len(p_dates_start_c))
-    length_c = p_dates_end_c - p_dates_start_c
-    alloc_pzc = fun.range_allocation_np(lp_p5z[...,None],p_dates_start_c,length_c)[:-1]
-    # cash_period_idx_pz = np.sum(alloc_pzc * index_c, axis=-1)
-    # cashflow_alloc_p5z = p_name[cash_period_idx_pz]
-
-    # p_name = np.broadcast_to(p_name[:,na], (p_name.shape + (lp_start_p5z.shape[-1],)))
-    # cashflow_alloc_p5z = np.empty(lp_start_p5z.shape, dtype='S2')
-    # for lp_date_z, lp_idx in zip(lp_start_p5z, np.arange(len(lp_start_p5z))):
-    #     alloc_cz = np.logical_and(p_dates_start_c[:,na] <= lp_date_z, lp_date_z < p_dates_end_c[:,na])
-    #     cashflow_alloc_p5z[lp_idx] = p_name[alloc_cz]
-
     ##cost of casual for each labour period - wage plus super plus workers comp (multiplied by wage because super and others are %)
     ##differect to perm and manager because they are at a fixed level throughout the year ie same number of perm staff all yr.
     casual_cost_p5z = cas_hrs_total_p5z * (uinp.price['casual_cost'] + uinp.price['casual_cost'] * uinp.price['casual_super'] + uinp.price['casual_cost'] * uinp.price['casual_workers_comp'])
-    casual_cost_p5zc = casual_cost_p5z[...,na] * alloc_pzc
+    casual_cost_c0_alloc_c0 = pinp.finance['i_fixed_cost_enterprise_allocation_c0']
+    casual_cost_c0zp5 = casual_cost_p5z.T * casual_cost_c0_alloc_c0[:,na,na]
+
+    ##labour cost cashflow period allocation and interest
+    p_dates_c0p7z = per.f_cashflow_periods()
+    peakdebt_date_c0p7zp5 = per.f_peak_debt_date()[:,na,na,na]
+    labour_cost_allocation_c0p7zp5, labour_wc_allocation_c0p7zp5 = fin.f_cashflow_allocation(np.array([1]), lp_start_p5z.T,
+                                                                                  p_dates_c0p7z[...,na],
+                                                                                  peakdebt_date_c0p7zp5, length=lp_len_p5z.T)
+    casual_cost_c0p7zp5 = casual_cost_c0zp5[:,na,...] * labour_cost_allocation_c0p7zp5
 
 
     #########
     ##keys  #
     #########
     ##keys
-    keys_c = np.array(sinp.general['cashflow_periods'])
-    keys_p5 = np.asarray(per.f_p_dates_df().index[:-1]).astype('str')
+    keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
+    keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = pinp.f_keys_z()
+    keys_p5 = np.asarray(per.f_p_dates_df().index[:-1]).astype('str')
 
     ##index
     arrays = [keys_p5, keys_z]
     index_p5z = fun.cartesian_product_simple_transpose(arrays)
     tup_p5z = tuple(map(tuple, index_p5z))
 
-    arrays = [keys_p5, keys_z, keys_c]
-    index_p5zc = fun.cartesian_product_simple_transpose(arrays)
-    tup_p5zc = tuple(map(tuple, index_p5zc))
+    arrays = [keys_c0, keys_p7, keys_z, keys_p5]
+    index_c0p7zp5 = fun.cartesian_product_simple_transpose(arrays)
+    tup_c0p7zp5 = tuple(map(tuple, index_c0p7zp5))
 
     ################
     ##pyomo params #
@@ -246,28 +238,59 @@ def labour_general(params,r_vals):
     params['casual ub'] = dict(zip(tup_p5z, ub_cas_pz.ravel()))
     params['casual lb'] = dict(zip(tup_p5z, lb_cas_pz.ravel()))
 
-    params['casual_cost'] =dict(zip(tup_p5zc, casual_cost_p5zc.ravel()))
+    params['casual_cost'] =dict(zip(tup_c0p7zp5, casual_cost_c0p7zp5.ravel()))
 
     ##report values that are not season affected
     r_vals['keys_p5'] = keys_p5
-    r_vals['casual_cost_p5zc'] = casual_cost_p5zc
+    r_vals['casual_cost_c0p7zp5'] = casual_cost_c0p7zp5
 
 
-#permanent cost per cashflow period - wage plus super plus workers comp and leave ls (multiplied by wage because super and others are %)
-def perm_cost(params, r_vals):
+def f_perm_cost(params, r_vals):
+    '''
+    Permanent and manager staff cost.
+
+    Costs include bank interest.
+    Permanent cost includes wage plus super plus workers comp and leave ls (multiplied by wage because super and others are %)
+    '''
+    ##cost
+    cost_c0_alloc_c0 = pinp.finance['i_fixed_cost_enterprise_allocation_c0']
     perm_cost = (uinp.price['permanent_cost'] + uinp.price['permanent_cost'] * uinp.price['permanent_super'] \
-    + uinp.price['permanent_cost'] * uinp.price['permanent_workers_comp'] + uinp.price['permanent_cost'] * uinp.price['permanent_ls_leave']) / len(sinp.general['cashflow_periods'])
-    perm_cost=dict.fromkeys(sinp.general['cashflow_periods'], perm_cost)
-    params['perm_cost']=perm_cost
-    r_vals['perm_cost_c']=np.array(list(perm_cost.values()))
+    + uinp.price['permanent_cost'] * uinp.price['permanent_workers_comp'] + uinp.price['permanent_cost'] * uinp.price['permanent_ls_leave'])
+    perm_cost_c0 = perm_cost * cost_c0_alloc_c0
+    manager_cost_c0 = uinp.price['manager_cost'] * cost_c0_alloc_c0
+
+    ##cost allocation
+    p_dates_c0p7z = per.f_cashflow_periods()
+    labour_length = 365 #perm labour cost is incurred equally each day
+    labour_start_c0p7z = p_dates_c0p7z[:,0:1,:]
+    peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
+    ###call allocation/interset function - needs to be numpy
+    labour_cost_allocation_c0p7z, labour_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]), labour_start_c0p7z,
+                                                                                  p_dates_c0p7z,
+                                                                                  peakdebt_date_c0p7z, length=labour_length)
+
+    perm_cost_c0p7z = perm_cost_c0[:,na,na,na] * labour_cost_allocation_c0p7z
+    perm_wc_c0p7z = perm_cost_c0[:,na,na,na] * labour_wc_allocation_c0p7z
+    manager_cost_c0p7z = manager_cost_c0[:,na,na,na] * labour_cost_allocation_c0p7z
+    manager_wc_c0p7z = manager_cost_c0[:,na,na,na] * labour_wc_allocation_c0p7z
+
+    ##keys
+    keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
+    keys_c0 = sinp.general['i_enterprises_c0']
+    keys_z = pinp.f_keys_z()
+
+    arrays = [keys_c0, keys_p7, keys_z]
+    index_c0p7z = fun.cartesian_product_simple_transpose(arrays)
+    tup_c0p7z = tuple(map(tuple, index_c0p7z))
+
+    ##params and report vals
+    params['perm_cost'] = dict(zip(tup_c0p7z, perm_cost_c0p7z.ravel()))
+    r_vals['perm_cost_c'] = perm_cost_c0p7z
+
+    params['manager_cost'] = dict(zip(tup_c0p7z, manager_cost_c0p7z.ravel()))
+    r_vals['manager_cost_c'] = manager_cost_c0p7z
 
 
-#manager cost per cashflow period
-def manager_cost(params, r_vals):
-    manager_cost = uinp.price['manager_cost'] / len(sinp.general['cashflow_periods'])
-    manager_cost=dict.fromkeys(sinp.general['cashflow_periods'], manager_cost)
-    params['manager_cost']=manager_cost
-    r_vals['manager_cost_c'] = np.array(list(manager_cost.values()))
 
 
 
