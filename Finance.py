@@ -116,8 +116,10 @@ def f_cashflow_allocation(amount,start,p_dates_c0p7,peakdebt_date,enterprise=Non
     peakdebt_date = np.broadcast_to(peakdebt_date, p_dates_c0p7.shape) #broadcast so that it can be indexed on p7
 
     ##build final arrays
-    amount_shape = np.expand_dims(amount, tuple(range(-p_dates_c0p7.ndim,-amount.ndim))).shape
-    start_shape = np.expand_dims(start, tuple(range(-p_dates_c0p7.ndim,-start.ndim))).shape
+    amount = np.expand_dims(amount, tuple(range(-p_dates_c0p7.ndim,-amount.ndim)))
+    amount_shape = amount.shape
+    start = np.expand_dims(start, tuple(range(-p_dates_c0p7.ndim,-start.ndim)))
+    start_shape = start.shape
     p_dates_c0p7_shape = list(p_dates_c0p7.shape) #has to be a list because cant change tuple.
     p_dates_c0p7_shape[1] = p_dates_c0p7_shape[1] -1 #remove the last cashflow peirod because it is not a real period. It is just the end date.
     shape = np.maximum.reduce([amount_shape, start_shape, p_dates_c0p7_shape]) #create shape which has the max size, this is used for o array
@@ -128,16 +130,18 @@ def f_cashflow_allocation(amount,start,p_dates_c0p7,peakdebt_date,enterprise=Non
     # length = np.broadcast_to(length, shape)
     # p_dates_c0p7 = np.broadcast_to(p_dates_c0p7, shape)
 
-    ##adjust yr of cashflow occurence
-    add_yrs = np.ceil(np.maximum(0,(p_dates_c0p7[:,0,...] - start).astype('timedelta64[D]').astype(int) / 365))
-    sub_yrs = np.ceil(np.maximum(0,(start - p_dates_c0p7[:,-1,...]).astype('timedelta64[D]').astype(int) / 365))
-    start = start + add_yrs * np.timedelta64(365, 'D') - sub_yrs * np.timedelta64(365, 'D')
+    ##adjust yr of cashflow occurence - this removes the singleton p7 axis from start
+    add_yrs = np.ceil(np.maximum(0,(p_dates_c0p7[:,0,...] - start[:,0,...]).astype('timedelta64[D]').astype(int) / 365))
+    sub_yrs = np.ceil(np.maximum(0,(start[:,0,...] - p_dates_c0p7[:,-1,...]).astype('timedelta64[D]').astype(int) / 365))
+    start = start[:,0,...] + add_yrs * np.timedelta64(365, 'D') - sub_yrs * np.timedelta64(365, 'D')
+    ###little check to ensure that all cashflow is all starting at least 1 day before the end cashflow date
+    start = start - np.maximum(0, (start - (p_dates_c0p7[:,-1,...] - np.timedelta64(1, 'D'))).astype('timedelta64[D]').astype(int))
 
     ##handle cases where cost date + length is after the end of cashflow. in this situation length gets reduced
     length = np.minimum(length, (p_dates_c0p7[:,-1,...] - start).astype('timedelta64[D]').astype(int))
 
     total_principal_end = 0
-    daily_payment = amount / length
+    daily_payment = amount[:,0,...] / length #[:,0,...] to remove the singlton p7 axis
 
     ##start and end dates for the cashflow periods
     for p in range(p_dates_c0p7.shape[1]-1):
