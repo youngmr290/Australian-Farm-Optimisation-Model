@@ -311,6 +311,12 @@ def f_update(existing_value, new_value, mask_for_new):
         dtype = new_value.dtype
     elif isinstance(existing_value,np.ndarray):
         dtype = existing_value.dtype
+    elif isinstance(mask_for_new,np.ndarray):
+        pass #if both values are int/float and mask is numpy then just ignor dtype
+    elif type(existing_value)==type(new_value):
+        dtype = type(existing_value)
+    elif isinstance(new_value, str): #if it is '-' (used in exp) then retain the origional dtype
+        dtype = type(existing_value)
 
 
     ##convert '-' to 0 (because '-' * False == '' which causes and error when you add to existing value)
@@ -334,6 +340,14 @@ def f_update(existing_value, new_value, mask_for_new):
         pass
     except UnboundLocalError:
         pass
+    ###used for core python dtype eg floats/int/str
+    try:
+        updated = dtype(updated)
+    except TypeError:
+        pass
+    except UnboundLocalError:
+        pass
+    ###error check
     try:
         if updated.dtype == object:
             print('dtype error in f_update (type object is being returned)') #will give warning if ever returning a numpy object
@@ -427,6 +441,7 @@ def f_bilinear_interpolate(im, x_im, y_im, x, y):
 def np_extrap(x, xp, yp):
     ## np.interp function with linear extrapolation if x is beyond the input date (xp)
     ### from https://stackoverflow.com/questions/2745329/how-to-make-scipy-interpolate-give-an-extrapolated-result-beyond-the-input-range"""
+    x = np.array(x) #convert x to array so that it can be masked
     y = np.array(np.interp(x, xp, yp))  #convert y to array so that it can be masked (required if x is a scalar)
     ##use a mask to adjust values if extrapolating x below the lowest input value in xp
     y[x < xp[0]] = yp[0] + (x[x<xp[0]]-xp[0]) * (yp[0]-yp[1]) / (xp[0]-xp[1])
