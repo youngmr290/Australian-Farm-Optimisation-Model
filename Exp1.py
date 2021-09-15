@@ -132,9 +132,13 @@ def exp(row):  # called with command: pool.map(exp, dataset)
     fun.f_update_sen(row,exp_data,sen.sam,sen.saa,sen.sap,sen.sar,sen.sat,sen.sav)
 
     ##call sa functions - assigns sa variables to relevant inputs
-    sinp.structural_inp_sa()
-    uinp.universal_inp_sa()
-    pinp.property_inp_sa()
+    sinp.f_structural_inp_sa()
+    uinp.f_universal_inp_sa()
+    pinp.f_property_inp_sa()
+    ##expand p6 axis to include nodes
+    sinp.f1_expand_p6()
+    pinp.f1_expand_p6()
+
     ##create empty dicts - have to do it here because need the trial as the first key, so whole trial can be compared when determining if pyomo needs to be run
     ###params
     params={}
