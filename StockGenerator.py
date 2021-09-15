@@ -6495,9 +6495,9 @@ def generator(params,r_vals,nv,plots = False):
     ####account for b1 axis effect on dse & select the dse group (note sire and offs don't have b1 axis so simple slice)
     dse_group_dp6tva1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_dse_group'], z_pos, left_pos2=p_pos - 2, right_pos2=z_pos)
     dse_group_dp6tva1e1b1nwzida0e0b0xyg = pinp.f_seasonal_inp(dse_group_dp6tva1e1b1nwzida0e0b0xyg, numpy=True, axis=z_pos)
-    dams_dsegroup_b1p6tva1e1bnwzida0e0b0xyg = fun.f_expand(sinp.stock['ia_dams_dsegroup_b1'], p_pos-3) #put the b1 axis in the same place as the dse group axis
+    a_dams_dsegroup_b1nwzida0e0b0xyg = fun.f_expand(sinp.stock['ia_dams_dsegroup_b1'], b1_pos)
     dsenw_p6tva1e1b1nwzida0e0b0xyg0 = dsehd_p6tva1e1b1nwzida0e0b0xyg0 * dse_group_dp6tva1e1b1nwzida0e0b0xyg[sinp.stock['ia_sire_dsegroup']]
-    dsenw_p6tva1e1b1nwzida0e0b0xyg1 = dsehd_p6tva1e1b1nwzida0e0b0xyg1 * np.moveaxis(np.take_along_axis(dse_group_dp6tva1e1b1nwzida0e0b0xyg, dams_dsegroup_b1p6tva1e1bnwzida0e0b0xyg,0)[...,0], 0, b1_pos) #take along the dse group axis, remove the last axis, then move b1 axis into place
+    dsenw_p6tva1e1b1nwzida0e0b0xyg1 = dsehd_p6tva1e1b1nwzida0e0b0xyg1 * np.take_along_axis(dse_group_dp6tva1e1b1nwzida0e0b0xyg, a_dams_dsegroup_b1nwzida0e0b0xyg[na,na,na,na,na,na],0)[0,...] #take along the dse group axis and remove the d axis from the front
     dsenw_p6tva1e1b1nwzida0e0b0xyg3 = dsehd_p6tva1e1b1nwzida0e0b0xyg3 * dse_group_dp6tva1e1b1nwzida0e0b0xyg[sinp.stock['ia_offs_dsegroup']]
     ##cluster and account for numbers/mortality
     dsenw_p6tva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', dsenw_p6tva1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
