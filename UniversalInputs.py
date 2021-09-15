@@ -175,7 +175,7 @@ mach = copy.deepcopy(machine_options_dict_inp)
 #######################
 #apply SA             #
 #######################
-def universal_inp_sa():
+def f_universal_inp_sa():
     '''
     Applies sensitivity adjustment to each input.
     This function gets called at the beginning of each loop in the exp.py module.
