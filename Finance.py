@@ -115,6 +115,7 @@ def f_cashflow_allocation(amount,start,p_dates_c0p7,peakdebt_date,enterprise=Non
     # date_peakdebt_crop = np.array([pinp.crop['i_date_peakdebt_crop']]).astype('datetime64[us]')
     # peakdebt_date_c0 = np.concatenate([date_peakdebt_stock,date_peakdebt_crop])
     peakdebt_date = np.broadcast_to(peakdebt_date, p_dates_c0p7.shape) #broadcast so that it can be indexed on p7
+    peakdebt_date = peakdebt_date + np.timedelta64(365,'D') * (p_dates_c0p7[:,0:1,...]>peakdebt_date[:,0:1,...]) # peak debt is after the start of the cashflow
 
     ##build final arrays
     amount = np.expand_dims(amount, tuple(range(-p_dates_c0p7.ndim,-amount.ndim)))
@@ -197,7 +198,7 @@ def f_cashflow_allocation(amount,start,p_dates_c0p7,peakdebt_date,enterprise=Non
 
         ##calc interest over the period after payment incur has finished
         ###days from the end of incur to the end of the period
-        post_incur_days = (np.maximum(date_start_c0,incur_end) - np.minimum(date_end_c0, peakdebt_date_c0)).astype('timedelta64[D]').astype(int)
+        post_incur_days = (np.minimum(date_end_c0, peakdebt_date_c0) - np.maximum(date_start_c0,incur_end)).astype('timedelta64[D]').astype(int)
         post_incur_days = np.maximum(0, post_incur_days)
         ###balance at start of non incur period
         wc_post_incur_start_balance = principal_start + wc_principal_interest + wc_daily_interest

@@ -7004,8 +7004,8 @@ def generator(params,r_vals,nv,plots = False):
     tup_k2c0p7tvanwziyg1 = tuple(map(tuple, index_cut_k2c0p7tvanwziyg1))
     params['p_wc_dams'] =dict(zip(tup_k2c0p7tvanwziyg1, wc_dams_k2c0p7tva1nwziyg))
     ###wc - prog - only consists of sale value
-    mask=salevalue_prog_k3k5c0p7tva1e1b1nwzida0e0b0xyg2!=0
-    wc_prog_k3k5c0p7twzia0xg2 = salevalue_prog_k3k5c0p7tva1e1b1nwzida0e0b0xyg2[mask] #applying the mask does the raveling and squeezing of array
+    mask=salevalue_wc_prog_k3k5c0p7tva1e1b1nwzida0e0b0xyg2!=0
+    wc_prog_k3k5c0p7twzia0xg2 = salevalue_wc_prog_k3k5c0p7tva1e1b1nwzida0e0b0xyg2[mask] #applying the mask does the raveling and squeezing of array
     mask=mask.ravel()
     index_cut_k3k5c0p7twzia0xg2=index_k3k5c0p7twzia0xg2[mask,:]
     tup_k3k5c0p7twzia0xg2 = tuple(map(tuple, index_cut_k3k5c0p7twzia0xg2))
@@ -7045,7 +7045,7 @@ def generator(params,r_vals,nv,plots = False):
     purchcost_sire_c0p7zg0 = purchcost_c0p7va1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
     mask=mask.ravel()
     index_cut_c0p7zg0=index_c0p7zg0[mask,:]
-    tup_czg0 = tuple(map(tuple, index_cut_c0p7zg0))
+    tup_c0p7zg0 = tuple(map(tuple, index_cut_c0p7zg0))
     params['p_purchcost_sire'] =dict(zip(tup_c0p7zg0, purchcost_sire_c0p7zg0))
 
     ###purchcost wc - sire
@@ -7053,7 +7053,7 @@ def generator(params,r_vals,nv,plots = False):
     purchcost_wc_sire_c0p7zg0 = purchcost_wc_c0p7va1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
     mask=mask.ravel()
     index_cut_c0p7zg0=index_c0p7zg0[mask,:]
-    tup_czg0 = tuple(map(tuple, index_cut_c0p7zg0))
+    tup_c0p7zg0 = tuple(map(tuple, index_cut_c0p7zg0))
     params['p_purchcost_wc_sire'] =dict(zip(tup_c0p7zg0, purchcost_wc_sire_c0p7zg0))
 
     ###assetvalue - sire
