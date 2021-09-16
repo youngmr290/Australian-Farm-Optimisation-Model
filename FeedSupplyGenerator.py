@@ -64,7 +64,7 @@ def feed_generator():
     ######################
     na=np.newaxis
     ## define the periods - default (dams and sires)
-    date_start_pz = per.f_feed_periods()[0:-1].astype('datetime64') #remove last date because that is the end date of the last period (not required)
+    date_start_pz = per.f_feed_periods()[0:-1] #remove last date because that is the end date of the last period (not required)
     date_start_p = date_start_pz[:, 0] # to take only the first slice of the z axis. The Feed supply calculator.xlsx is not set to handle different seasons
     n_sim_periods = len(date_start_pz)+1  #number of feed periods + 1
     # date_start_pa1e1b1nwzida0e0b0xyg = np.expand_dims(date_start_p, axis = tuple(range(sinp.stock['i_p_pos']+1, 0)))
@@ -645,7 +645,7 @@ def period_generator():
     ##beginning - first day of generator
     fvp_begin_start_ba1e1b1nwzida0e0b0xyg1 = date_start_pa1e1b1nwzida0e0b0xyg[0:1]
     ##season start is the earliest of dry seeding start and earliest break of season.
-    season_start = np.minimum(np.datetime64(pinp.crop['dry_seed_start']), np.min(per.f_feed_periods().astype(np.datetime64)[0,:]))
+    season_start = np.minimum(np.datetime64(pinp.crop['dry_seed_start']), np.min(per.f_feed_periods()[0,:]))
     startseason_y = season_start + (np.arange(np.ceil(sim_years)) * np.timedelta64(365,'D'))
     seasonstart_ya1e1b1nwzida0e0b0xyg = fun.f_expand(startseason_y, left_pos=p_pos)
     idx_ya1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, seasonstart_ya1e1b1nwzida0e0b0xyg, 'right')-1 #gets the sim period index for the period when season breaks (eg break of season fvp starts at the beginning of the sim period when season breaks), side=right so that if the date is already the start of a period it remains in that period.

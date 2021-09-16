@@ -187,7 +187,7 @@ def f_poc_grazing_days():
     See poc section in google doc for diagram.
     '''
     ##inputs
-    date_feed_periods = per.f_feed_periods().astype('datetime64')
+    date_feed_periods = per.f_feed_periods()
     date_start_p6z = date_feed_periods[:-1]
     date_end_p6z = date_feed_periods[1:]
     mach_periods = per.f_p_dates_df()

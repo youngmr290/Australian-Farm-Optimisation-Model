@@ -455,8 +455,8 @@ def f_seasonal_inp(inp, numpy=False, axis=0, level=0):
             except TypeError:
                 n_inp = inp.astype("datetime64[ns]").astype(np.int64)
                 n_inp = np.expand_dims(np.average(n_inp, axis=axis, weights=z_prob), axis)
-                n_inp = n_inp.astype("datetime64[ns]")
-                inp = n_inp.astype('M8[us]').astype('O') #converts to datetime
+                inp = n_inp.astype("datetime64[ns]")
+                # inp = n_inp.astype('M8[us]').astype('O') #converts to datetime
 
     else:
         ##mask the season types
@@ -494,7 +494,7 @@ def f_seasonal_inp(inp, numpy=False, axis=0, level=0):
                 n_inp = inp.values.astype(np.int64)
                 n_inp = np.average(n_inp, axis=axis, weights=z_prob)
                 n_inp = n_inp.astype("datetime64[ns]")
-                n_inp = n_inp.astype('M8[us]').astype('O') #converts to datetime
+                # n_inp = n_inp.astype('M8[us]').astype('O') #converts to datetime
                 col = pd.MultiIndex.from_tuples([inp.columns[0]])
                 inp = pd.DataFrame(n_inp, index=inp.index, columns=col)
     return inp

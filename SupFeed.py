@@ -129,7 +129,7 @@ def f_sup_cost(r_vals):
     storage_cost_k = grain_info.loc['cost']
 
     ##feeding cost allocaion
-    start_p6z = per.f_feed_periods()[:-1,:].astype('datetime64')
+    start_p6z = per.f_feed_periods()[:-1,:]
     length_p6z = per.f_feed_periods(option=1).astype(int)
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0']

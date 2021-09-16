@@ -89,7 +89,7 @@ def f_cropgraze_DM(total_DM=False):
     wastage_k = pinp.cropgraze['i_cropgraze_wastage']
     growth_lmu_factor_kl = pinp.cropgraze['i_cropgrowth_lmu_factor_kl'][:,lmu_mask]
     consumption_factor_p6z = pinp.f_seasonal_inp(pinp.cropgraze['i_cropgraze_consumption_factor_zp6'],numpy=True,axis=0).T
-    date_feed_periods = per.f_feed_periods().astype('datetime64')
+    date_feed_periods = per.f_feed_periods()
     date_start_p6z = date_feed_periods[:-1]
     date_end_p6z = date_feed_periods[1:]
     seeding_start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
@@ -135,7 +135,7 @@ def f_DM_reduction_seeding_time():
     reduction in DM due to sowing later in the sowing period.
     '''
     ##inputs
-    date_feed_periods = per.f_feed_periods().astype('datetime64')
+    date_feed_periods = per.f_feed_periods()
     date_start_p6z = date_feed_periods[:-1]
     date_end_p6z = date_feed_periods[1:]
     mach_periods = per.f_p_dates_df()

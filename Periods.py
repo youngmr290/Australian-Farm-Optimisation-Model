@@ -97,8 +97,8 @@ labour periods and length
 #also used in mach sheet
 def f_wet_seeding_start_date():
     seeding_after_season_start_z = pinp.f_seasonal_inp(pinp.period['seeding_after_season_start'], numpy=True, axis=0)
-    seeding_after_season_start_z = (seeding_after_season_start_z * 24).astype('timedelta64[h]')
-    seeding_after_season_start_z = seeding_after_season_start_z.astype(datetime.datetime)
+    seeding_after_season_start_z = seeding_after_season_start_z.astype('timedelta64[D]')
+    # seeding_after_season_start_z = seeding_after_season_start_z.astype(datetime.datetime)
     # seeding_after_season_start_z = pd.to_timedelta(seeding_after_season_start_z,unit='D')
     ##wet seeding starts a specified number of days after season break
     return f_feed_periods()[0] +  seeding_after_season_start_z
@@ -131,10 +131,10 @@ def f_period_end_date(start, length):
 def f_p_dates_df():
     if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1:
         ##put season inputs through season input function
-        harv_date = pinp.f_seasonal_inp(pinp.period['harv_date'],numpy=True,axis=0)[0]
+        harv_date = pd.to_datetime(pinp.f_seasonal_inp(pinp.period['harv_date'],numpy=True,axis=0)[0])
         seed_period_lengths = pinp.f_seasonal_inp(pinp.period['seed_period_lengths'],numpy=True,axis=1)[...,0]
         harv_period_lengths = pinp.f_seasonal_inp(pinp.period['harv_period_lengths'],numpy=True,axis=1)[...,0]
-        wet_seeding_start = f_wet_seeding_start_date()[0]
+        wet_seeding_start = pd.to_datetime(f_wet_seeding_start_date()[0])
 
         ##calc period
         keys_z = pinp.f_keys_z()
@@ -142,7 +142,7 @@ def f_p_dates_df():
         #create empty list of dates to be filled by this function
         period_start_dates = []
         #determine the start of the first period, this references feed periods so it has the same yr.
-        start_date_period_0 = f_feed_periods()[0,0] + relativedelta(day=1,month=1,hour=0, minute=0, second=0, microsecond=0)
+        start_date_period_0 = pd.to_datetime(f_feed_periods()[0,0]) + relativedelta(day=1,month=1,hour=0, minute=0, second=0, microsecond=0)
         #end date of all labour periods, simply one yr after start date.
         date_last_period = start_date_period_0 + relativedelta(years=1)
         #start point for the loop counter.
