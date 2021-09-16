@@ -341,7 +341,7 @@ def f_fert_req():
     if pinp.crop['user_crop_rot']:
         ### User defined
         base_fert = pinp.crop['fert']
-        base_fert = base_fert.T.set_index(['fert'], append=True).T
+        base_fert = base_fert.T.set_index(['fert'], append=True).T.astype(float)
         base_fert = pinp.f_seasonal_inp(base_fert, axis=1)
         base_fert=base_fert.set_index([phases_df.index,phases_df.iloc[:,-1]])
     else:        
@@ -386,7 +386,7 @@ def f_fert_passes():
     if pinp.crop['user_crop_rot']:
         ### User defined
         fert_passes = pinp.crop['fert_passes']
-        fert_passes = fert_passes.T.set_index(['passes'], append=True).T
+        fert_passes = fert_passes.T.set_index(['passes'], append=True).T.astype(float)
         fert_passes = pinp.f_seasonal_inp(fert_passes, axis=1)
         fert_passes = fert_passes.set_index([phases_df.index, phases_df.iloc[:,-1]])  #make the rotation and current landuse the index
     else:
@@ -475,7 +475,7 @@ def f_fert_cost(r_vals):
     ##combine all wc - fert, app per ha and app per tonne
     fert_wc_total = phase_fert_wc_rl_c0p7z + fert_app_wc_ha_rl_c0p7z + fert_app_wc_tonne_rl_c0p7z
     fert_wc_total = fert_wc_total.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
-    return fert_cost_total.unstack(), fert_wc_total.unstack()
+    return fert_cost_total, fert_wc_total
 
 def f_nap_fert_req():
     '''
@@ -563,7 +563,7 @@ def f_nap_fert_cost(r_vals):
     ##total fert and app wc
     nap_fert_wc = phase_fert_wc_rl_c0p7z + total_app_wc_rl_c0p7z
     nap_fert_wc = nap_fert_wc.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
-    return nap_fert_cost.unstack(), nap_fert_wc.unstack()
+    return nap_fert_cost, nap_fert_wc
 
 def f1_total_fert_req():
     '''returns the total fert req after accounting for arable area.
@@ -643,7 +643,7 @@ def f_phase_stubble_cost(r_vals):
 
     ##calculate the probability of a rotation phase needing stubble handling
     base_yields = f_rot_yield(for_stub=True).stack()
-    stub_handling_threshold = pd.Series(pinp.stubble['stubble_handling'], index=pinp.crop['start_harvest_crops'].index)*1000  #have to convert to kg to match base yield
+    stub_handling_threshold = pd.Series(pinp.stubble['stubble_handling'], index=pinp.crop['start_harvest_crops'].index, dtype=float)*1000  #have to convert to kg to match base yield
     probability_handling = base_yields.div(stub_handling_threshold, level = 1) #divide here then account for lmu factor next - because either way is mathematically sound and this saves some manipulation.
     probability_handling = probability_handling.droplevel(1).unstack(1)
 
@@ -669,7 +669,7 @@ def f_phase_stubble_cost(r_vals):
     r_vals['stub_cost'] = rot_stub_cost_rl_c0p7z
     rot_stub_cost_rl_c0p7z = rot_stub_cost_rl_c0p7z.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
     rot_stub_wc_rl_c0p7z = rot_stub_wc_rl_c0p7z.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
-    return rot_stub_cost_rl_c0p7z.unstack(), rot_stub_wc_rl_c0p7z.unstack()
+    return rot_stub_cost_rl_c0p7z, rot_stub_wc_rl_c0p7z
 # t_stubcost=f_phase_stubble_cost()
 
 #print(timeit.timeit(fert_cost,number=10)/10)
@@ -727,7 +727,7 @@ def f_chem_application():
     if pinp.crop['user_crop_rot']:
         ### User defined
         base_chem = pinp.crop['chem']
-        base_chem = base_chem.T.set_index(['chem'], append=True).T
+        base_chem = base_chem.T.set_index(['chem'], append=True).T.astype(float)
         base_chem = pinp.f_seasonal_inp(base_chem, axis=1)
         base_chem = base_chem.set_index([phases_df.index, phases_df.iloc[:,-1]])  #make the current landuse the index
     else:
@@ -817,7 +817,7 @@ def f_chem_cost(r_vals):
     ##add application wc and chem wc
     total_wc = phase_chem_wc_rl_c0p7z + chem_app_wc_rl_c0p7z
     total_wc = total_wc.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
-    return total_cost.unstack(), total_wc.unstack()
+    return total_cost, total_wc
 
 
 #########################
@@ -893,7 +893,7 @@ def f_seedcost(r_vals):
     r_vals['seedcost'] = seedcost_rl_c0p7z
     seedcost_rl_c0p7z = seedcost_rl_c0p7z.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
     seed_wc_rl_c0p7z = seed_wc_rl_c0p7z.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
-    return seedcost_rl_c0p7z.unstack(), seed_wc_rl_c0p7z.unstack()
+    return seedcost_rl_c0p7z, seed_wc_rl_c0p7z
 
 def f_insurance(r_vals):
     '''
@@ -931,7 +931,7 @@ def f_insurance(r_vals):
     r_vals['insurance_cost'] = rot_insurance_cost_rl_c0p7z
     rot_insurance_cost_rl_c0p7z = rot_insurance_cost_rl_c0p7z.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
     rot_insurance_wc_rl_c0p7z = rot_insurance_wc_rl_c0p7z.loc[:,('crp',slice(None),slice(None),slice(None))] #take the crop slice of c0 - this just reduces the size of the param and thus save times creating dict and pyomo param
-    return rot_insurance_cost_rl_c0p7z.unstack(), rot_insurance_wc_rl_c0p7z.unstack()
+    return rot_insurance_cost_rl_c0p7z, rot_insurance_wc_rl_c0p7z
 
 
 
@@ -950,8 +950,6 @@ includes
 '''
 def f1_rot_cost(r_vals):
     '''collates all the rotation costs'''
-    # cost = pd.concat([f_fert_cost(r_vals).unstack(0,1),f_nap_fert_cost(r_vals).unstack(0,1),f_chem_cost(r_vals).unstack(0,1)
-    #                      ,f_seedcost(r_vals).unstack(0,1), f_insurance(r_vals).unstack(0,1),f_phase_stubble_cost(r_vals).unstack(0,1)],axis=1).sum(axis=1,level=(0))
 
     fert_cost, fert_wc = f_fert_cost(r_vals)
     nap_fert_cost, nap_fert_wc = f_nap_fert_cost(r_vals)
@@ -960,26 +958,11 @@ def f1_rot_cost(r_vals):
     insurance_cost, insurance_wc = f_insurance(r_vals)
     phase_stubble_cost, phase_stubble_wc = f_phase_stubble_cost(r_vals)
 
-    ##reindex so they all have the same r index so that they can be added
-    index_r = sinp.f_phases().index
-    fert_cost = fert_cost.reindex(index_r, axis=0).fillna(0)
-    nap_fert_cost = nap_fert_cost.reindex(index_r, axis=0).fillna(0)
-    chem_cost = chem_cost.reindex(index_r, axis=0).fillna(0)
-    seedcost = seedcost.reindex(index_r, axis=0).fillna(0)
-    insurance_cost = insurance_cost.reindex(index_r, axis=0).fillna(0)
-    phase_stubble_cost = phase_stubble_cost.reindex(index_r, axis=0).fillna(0)
-    ###reindex wc
-    fert_wc = fert_wc.reindex(index_r, axis=0).fillna(0)
-    nap_fert_wc = nap_fert_wc.reindex(index_r, axis=0).fillna(0)
-    chem_wc = chem_wc.reindex(index_r, axis=0).fillna(0)
-    seedwc = seedwc.reindex(index_r, axis=0).fillna(0)
-    insurance_wc = insurance_wc.reindex(index_r, axis=0).fillna(0)
-    phase_stubble_wc = phase_stubble_wc.reindex(index_r, axis=0).fillna(0)
+    #note if any array has dtype object then pandas throws error (No axis named 1 for object type Series)
+    cost = pd.concat([fert_cost, nap_fert_cost, chem_cost, seedcost, insurance_cost, phase_stubble_cost],axis=1).sum(axis=1,level=(0,1,2))
+    wc = pd.concat([fert_wc, nap_fert_wc, chem_wc, seedwc, insurance_wc, phase_stubble_wc],axis=1).sum(axis=1,level=(0,1,2))
 
-    ##add all phase costs
-    cost = fert_cost + nap_fert_cost + chem_cost + seedcost +  insurance_cost + phase_stubble_cost
-    wc = fert_wc + nap_fert_wc + chem_wc + seedwc +  insurance_wc + phase_stubble_wc
-    return cost.unstack(), wc.unstack()
+    return cost.unstack([1,0]), wc.unstack([1,0])
 
 
 #################
