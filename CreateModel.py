@@ -33,11 +33,20 @@ pyomo sets
 '''
 ##define sets - sets are redefined for each exp in case they change due to SA
 def sets(model, nv):
+
+    #######################
+    #season               #
+    #######################
     ##season types - set only has one season if steady state model is being used
     if pinp.general['steady_state']:
-        model.s_season_types = Set(initialize=[pinp.general['i_z_idx'][pinp.general['i_mask_z']][0]], doc='season types')
+        z_keys = [pinp.general['i_z_idx'][pinp.general['i_mask_z']][0]]
     else:
-        model.s_season_types = Set(initialize=pinp.general['i_z_idx'][pinp.general['i_mask_z']], doc='season types') #mask season types by the ones included
+        z_keys = pinp.general['i_z_idx'][pinp.general['i_mask_z']] #mask season types by the ones included
+    model.s_season_types = Set(initialize=z_keys, doc='season types')
+
+    ##season prob - this is used in lots of modules so just built here
+    z_prob = dict(zip(z_keys, pinp.f_z_prob()))
+    model.p_z_prob = Param(model.s_season_types, initialize=z_prob, default=0.0, mutable=False, doc='probability of each season')
 
     #######################
     #labour               #

@@ -195,7 +195,7 @@ def exp(row):  # called with command: pool.map(exp, dataset)
         ##call core model function, must call them in the correct order (core must be last)
         pyomocalc_start = time.time()
         model = pe.ConcreteModel() #create pyomo model - done each loop because memory was being leaked when just deleting and re adding the components.
-        crtmod.sets(model, nv) #certain sets have to be updated each iteration of exp
+        crtmod.sets(model, nv) #certain sets have to be updated each iteration of exp - has to be first since other modules use the sets
         rotpy.f1_rotationpyomo(params['rot'], model)
         phspy.f1_croppyomo_local(params['crop'], model)
         macpy.f1_machpyomo_local(params['mach'], model)
@@ -216,93 +216,56 @@ def exp(row):  # called with command: pool.map(exp, dataset)
         obj = core.coremodel_all(params, trial_name, model)
         print(f'{trial_description}, time for corepyomo: {time.time() - pyomocalc_end:.2f} finished at {time.ctime()}')
 
-        if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1:
-            ##This writes variable summary each iteration with generic file name - it is overwritten each iteration and is created so the run progress can be monitored
-            fun.write_variablesummary(model, row, exp_data, obj, 1)
+        ##This writes variable summary each iteration with generic file name - it is overwritten each iteration and is created so the run progress can be monitored
+        fun.write_variablesummary(model, row, exp_data, obj, 1)
 
-            ##check if user wants full solution
-            if exp_data.index[row][1] == True:
-                ##make lp file
-                model.write('Output/%s.lp' %trial_name,io_options={'symbolic_solver_labels':True})  #file name has to have capital
+        ##check if user wants full solution
+        if exp_data.index[row][1] == True:
+            ##make lp file
+            model.write('Output/%s.lp' %trial_name,io_options={'symbolic_solver_labels':True})  #file name has to have capital
 
-                ##This writes variable summary for full solution (same file as the temporary version created above)
-                fun.write_variablesummary(model, row, exp_data, obj)
+            ##This writes variable summary for full solution (same file as the temporary version created above)
+            fun.write_variablesummary(model, row, exp_data, obj)
 
-                ##prints what you see from pprint to txt file - you can see the slack on constraints but not the rc or dual
-                with open('Output/Full model - %s.txt' %trial_name, 'w') as f:  #file name has to have capital
-                    f.write("My description of the instance!\n")
-                    model.display(ostream=f)
+            ##prints what you see from pprint to txt file - you can see the slack on constraints but not the rc or dual
+            with open('Output/Full model - %s.txt' %trial_name, 'w') as f:  #file name has to have capital
+                f.write("My description of the instance!\n")
+                model.display(ostream=f)
 
-                ##write rc, duals and slacks to txt file. Duals are slow to write so that option must be turn on
-                write_duals = True
-                with open('Output/Rc and Duals - %s.txt' %trial_name,'w') as f:  #file name has to have capital
-                    f.write('RC\n')
-                    for v in model.component_objects(pe.Var, active=True):
-                        f.write("Variable %s\n" %v)   
-                        for index in v:
-                            try: #in case variable has no index
-                                print("      ", index, model.rc[v[index]], file=f)
-                            except: pass
-                    f.write('Slacks (no entry means no slack)\n')  # this can be used in search to find the start of this in the txt file
-                    for c in model.component_objects(pe.Constraint,active=True):
-                        f.write("Constraint %s\n" % c)
+            ##write rc, duals and slacks to txt file. Duals are slow to write so that option must be turn on
+            write_duals = True
+            with open('Output/Rc and Duals - %s.txt' %trial_name,'w') as f:  #file name has to have capital
+                f.write('RC\n')
+                for v in model.component_objects(pe.Var, active=True):
+                    f.write("Variable %s\n" %v)
+                    for index in v:
+                        try: #in case variable has no index
+                            print("      ", index, model.rc[v[index]], file=f)
+                        except: pass
+                f.write('Slacks (no entry means no slack)\n')  # this can be used in search to find the start of this in the txt file
+                for c in model.component_objects(pe.Constraint,active=True):
+                    f.write("Constraint %s\n" % c)
+                    for index in c:
+                        if c[index].lslack() != 0 and c[index].lslack() != np.inf:
+                            print("  L   ",index,c[index].lslack(),file=f)
+                        if c[index].uslack() != 0 and c[index].lslack() != np.inf:
+                            print("  U   ",index,c[index].uslack(),file=f)
+                if write_duals:
+                    f.write('Dual\n')   #this can be used in search to find the start of this in the txt file
+                    for c in model.component_objects(pe.Constraint, active=True):
+                        f.write("Constraint %s\n" %c)
                         for index in c:
-                            if c[index].lslack() != 0 and c[index].lslack() != np.inf:
-                                print("  L   ",index,c[index].lslack(),file=f)
-                            if c[index].uslack() != 0 and c[index].lslack() != np.inf:
-                                print("  U   ",index,c[index].uslack(),file=f)
-                    if write_duals:
-                        f.write('Dual\n')   #this can be used in search to find the start of this in the txt file
-                        for c in model.component_objects(pe.Constraint, active=True):
-                            f.write("Constraint %s\n" %c)
-                            for index in c:
-                                print("      ", index, model.dual[c[index]], file=f)
+                            print("      ", index, model.dual[c[index]], file=f)
 
-            season = pinp.f_keys_z()[0]
-            lp_vars = {}
-            variables=model.component_objects(pe.Var, active=True)
-            lp_vars[season] = {str(v):{s:v[s].value for s in v} for v in variables}     #creates dict with variable in it. This is tricky since pyomo returns a generator object
-            lp_vars[season]['scenario_profit'] = obj
-            ##store profit
-            lp_vars['profit'] = obj
-
-        ## if DSP version
-        else:
-            ##Note: to get full lp file for DSP model it needs to be run via the terminal (or in runef.py) see google doc for more info.
-
-            ## load json (dsp solution) back in
-            with open('ef_solution.json') as f:
-                data = json.load(f)
-
-            ##store pyomo variable output as a dict
-            lp_vars = {}
-            for season in pinp.f_keys_z():
-                variables = data['scenario solutions'][season]['variables']
-                lp_vars[season] = {}
-                ###get dict into correct format for lp_vars
-                for key in variables.keys():
-                    var_name = key.split('[', 1)[0]
-                    try:
-                        sets = key.split('[', 1)[1].split(']',1)[0]
-                        sets = tuple(sets.split(','))
-                    except IndexError: #handle variables with no sets
-                        sets = None #set to None because this happens in steady state version.
-                    value = variables[key]['value']
-                    try:
-                        lp_vars[season][var_name][sets] = value
-                    except KeyError:
-                        lp_vars[season][var_name] = {} #create empty dict once for each variable name
-                        lp_vars[season][var_name][sets] = value
-
-                ##store scenario profit
-                lp_vars[season]['scenario_profit'] = data['scenario solutions'][season]['objective']
-            ##store overall expected profit
-            lp_vars['profit'] = obj
+        variables=model.component_objects(pe.Var, active=True)
+        lp_vars = {str(v):{s:v[s].value for s in v} for v in variables}     #creates dict with variable in it. This is tricky since pyomo returns a generator object
+        ##store profit
+        lp_vars['profit'] = obj
 
         ##pickle lp info - only if pyomo is run
         with open('pkl/pkl_lp_vars_{0}.pkl'.format(trial_name),"wb") as f:
             pkl.dump(lp_vars,f,protocol=pkl.HIGHEST_PROTOCOL)
-    ##pickle report values - every time a trial is run
+    ##pickle report values - every time a trial is run (even if pyomo not run)
     with open('pkl/pkl_r_vals_{0}.pkl'.format(trial_name),"wb") as f:
         pkl.dump(r_vals,f,protocol=pkl.HIGHEST_PROTOCOL)
 

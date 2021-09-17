@@ -30,10 +30,10 @@ def f1_finpyomo_local(params, model):
     #variables #
     ############
 
-    # credit for a given time period (time period defined by cashflow set)
-    # model.v_credit = Var(model.s_cashflow_periods, bounds = (0.0, None), doc = 'amount of net positive cashflow in a given period')
-    # #debit for a given time period (time period defined by cashflow set)
-    # model.v_debit = Var(model.s_cashflow_periods, bounds = (0.0, None), doc = 'amount of net negative cashflow in a given period')
+    ##credit for a given time period (time period defined by cashflow set)
+    model.v_credit = Var(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, bounds = (0.0, None), doc = 'amount of net positive cashflow in a given period')
+    ##debit for a given time period (time period defined by cashflow set)
+    model.v_debit = Var(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, bounds = (0.0, None), doc = 'amount of net negative cashflow in a given period')
     ##dep
     model.v_dep = Var(model.s_season_types, bounds = (0.0, None), doc = 'transfers total dep to objective')
     ##dep
