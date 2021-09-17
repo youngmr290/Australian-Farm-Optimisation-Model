@@ -493,14 +493,18 @@ def f_con_workingcap(params, model):
     Tallies working capital and ensures overdraw limit is not exceeded.
 
     This ensures the model draws a realistic level of money from the bank. The user can specify the
-    maximum overdraw level.
-
+    maximum overdraw level. Periods transfer (rather than just summing p7) exist so that a transfer can
+    exist between parent and child seasons.
     '''
     def working_cap(model,c0,p7,z):
+        cf1 = list(model.s_cashflow_periods)[0]
+        p7s = list(model.s_cashflow_periods)[list(model.s_cashflow_periods).index(p7) - 1]  # previous cashperiod - have to convert to a list first because indexing of an ordered set starts at 1
         return (-f1_grain_wc(model,c0,p7,z) + phspy.f_rotation_wc(model,c0,p7,z) + labpy.f_labour_wc(model,c0,p7,z)
                 + macpy.f_mach_wc(model,c0,p7,z) + suppy.f_sup_wc(model,c0,p7,z) + model.p_overhead_wc[c0,p7,z]
-                - stkpy.f_stock_wc(model,c0,p7,z)) <= params['fin']['overdraw']
-
+                - stkpy.f_stock_wc(model,c0,p7,z)
+                - model.v_wc_debit[c0,p7,z] + model.v_wc_credit[c0,p7,z]
+                + (model.v_wc_debit[c0,p7s,z] - model.v_wc_credit[c0,p7s,z]) * (p7!=cf1) #end working capital doesnot provide start else unbounded.
+                ) <= params['fin']['overdraw']
     model.con_workingcap = pe.Constraint(model.s_enterprises, model.s_cashflow_periods, model.s_season_types,rule=working_cap,
                                        doc='overdraw limit')
 
