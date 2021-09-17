@@ -137,9 +137,9 @@ def generator(params,r_vals,nv,plots = False):
     mask_o_dams = np.max(date_born1st_oa1e1b1nwzida0e0b0xyg2<=date_end_p[-1], axis=tuple(range(p_pos+1, 0))) #compare each birth opp with the end date of the sim and make the mask - the mask is of the longest axis (ie to handle situations where say bbb and bbm have birth at different times so one has 6 opp and the other has 5 opp)
     mask_d_offs = np.max(date_born1st_oa1e1b1nwzida0e0b0xyg2<=date_end_p[-1], axis=tuple(range(p_pos+1, 0))) #compare each birth opp with the end date of the sim and make the mask - the mask is of the longest axis (ie to handle situations where say bbb and bbm have birth at different times so one has 6 opp and the other has 5 opp)
     mask_x = pinp.sheep['i_gender_propn_x']>0
+    bool_steady_state = pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1
     mask_node_is_fvp = pinp.general['i_node_is_fvp'] * (pinp.general['i_inc_node_periods']
-                                                        or np.logical_not(pinp.general['steady_state']
-                                                                          or np.count_nonzero(pinp.general['i_mask_z'])==1)) #node fvp/dvp are not included if it is steadystate.
+                                                        or np.logical_not(bool_steady_state)) #node fvp/dvp are not included if it is steadystate.
     fvp_mask_dams = np.concatenate([sinp.stock['i_fixed_fvp_mask_dams'], sinp.structuralsa['i_fvp_mask_dams'], mask_node_is_fvp])
     fvp_mask_offs = np.concatenate([sinp.structuralsa['i_fvp_mask_offs'], mask_node_is_fvp])
 
@@ -188,7 +188,7 @@ def generator(params,r_vals,nv,plots = False):
     len_y1 = np.count_nonzero(uinp.parameters['i_mask_y'])
     len_y2 = np.count_nonzero(uinp.parameters['i_mask_y'])
     len_y3 = np.count_nonzero(uinp.parameters['i_mask_y'])
-    if pinp.general['steady_state']:
+    if bool_steady_state:
         len_z = 1
     else:
         len_z = np.count_nonzero(pinp.general['i_mask_z'])
@@ -665,7 +665,7 @@ def generator(params,r_vals,nv,plots = False):
                                                        right_pos3=n_pos)  # p6 axis converted to p axis later (association section), axis order doesnt matter because sliced when used
     paststd_dmd_p6a1e1b1j0wzida0e0b0xyg = pinp.f_seasonal_inp(paststd_dmd_p6a1e1b1j0wzida0e0b0xyg,numpy=True,axis=z_pos)
     ##season type probability
-    if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1:
+    if bool_steady_state:
         i_season_propn_z = fun.f_expand(np.ones_like(pinp.general['i_season_propn_z']),z_pos)
         season_propn_zida0e0b0xyg = pinp.f_seasonal_inp(i_season_propn_z,numpy=True,axis=z_pos)
     else:
@@ -862,7 +862,7 @@ def generator(params,r_vals,nv,plots = False):
     node_fvp_type_m = np.zeros_like(node_fvp_m)
     for m in range(len_m):
         ##season start dvp/fvp needs its own type because it needs to be distinguishable so that dvp can get distributed (only if dsp model).
-        if m==0 and np.logical_not(pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1):
+        if m==0 and np.logical_not(bool_steady_state):
             node_fvp_type_m[m] = np.full(node_fvp_m[m].shape, season_vtype1)
         else:
             node_fvp_type_m[m] = np.full(node_fvp_m[m].shape, other_ftype1)
@@ -983,7 +983,7 @@ def generator(params,r_vals,nv,plots = False):
     fvp_2_type_va1e1b1nwzida0e0b0xyg3 = np.full(fvp_2_start_sa1e1b1nwzida0e0b0xyg3.shape, other_vtype3)
     for m in range(len_m):
         ##season start dvp/fvp needs its own type because it needs to be distinguishable so that dvp can get distributed (only if dsp model).
-        if m==0 and np.logical_not(pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1):
+        if m==0 and np.logical_not(bool_steady_state):
             node_fvp_type_m[m] = np.full(node_fvp_m[m].shape, season_vtype3)
         else:
             node_fvp_type_m[m] = np.full(node_fvp_m[m].shape, other_vtype3)
@@ -4732,8 +4732,7 @@ def generator(params,r_vals,nv,plots = False):
     slices_to_add = ~slices_to_add * np.arange(len_g1)
     a_g1_tpa1e1b1nwzida0e0b0xyg1 = np.concatenate([slices_to_add, a_g1_tpa1e1b1nwzida0e0b0xyg1],0)
     ###build dvps from fvps
-    mask_node_is_dvp = np.full(len_m, True) * (pinp.general['i_inc_node_periods'] or
-                                               np.logical_not(pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1)) #node fvp/dvp are not included if it is steadystate.
+    mask_node_is_dvp = np.full(len_m, True) * (pinp.general['i_inc_node_periods'] or np.logical_not(bool_steady_state)) #node fvp/dvp are not included if it is steadystate.
     dvp_mask_f1 = np.concatenate([sinp.stock['i_fixed_dvp_mask_f1'], sinp.structuralsa['i_dvp_mask_f1'], mask_node_is_dvp])
     dvp1_inc = np.concatenate([np.array([True]), dvp_mask_f1]) #True at start is to count for the period from the start of the sim (this is not included in fvp mask because it is not a real fvp as it doesnt occur each year)
     dvp_date_inc_v1 = fvp_date_all_f1[dvp1_inc]
@@ -5781,7 +5780,7 @@ def generator(params,r_vals,nv,plots = False):
     date_nodes_va1e1b1nwzida0e0b0xyg1 = dvp_start_va1e1b1nwzida0e0b0xyg1 + add_yrs * np.timedelta64(365, 'D') - sub_yrs * np.timedelta64(365, 'D')
     ###mask when season is identified
     #todo this mask should be applied to all params with an active v & z axis (same as mask_w8vars_va1e1b1nw8zida0e0b0xyg1)
-    mask_z8var_va1e1b1nwzida0e0b0xyg1 = date_initiate_zidaebxyg <= date_nodes_va1e1b1nwzida0e0b0xyg1
+    mask_z8var_va1e1b1nwzida0e0b0xyg1 = np.logical_or(date_initiate_zidaebxyg <= date_nodes_va1e1b1nwzida0e0b0xyg1, bool_steady_state) #if it is steadystate then the z8 mask is just true.
 
     ###dams numbers prov mask. Parent seasons provide to child season until the child season is identified.
     prov_self_va1e1b1nwzida0e0b0xyg1z9 = mask_z8var_va1e1b1nwzida0e0b0xyg1[...,na] * identity_z8ida0e0b0xygz9
@@ -5789,10 +5788,12 @@ def generator(params,r_vals,nv,plots = False):
     mask_z9var_va1e1b1nwzida0e0b0xyg1z = np.swapaxes(mask_z8var_va1e1b1nwzida0e0b0xyg1[...,na], z_pos-1, -1)
     prov_child_va1e1b1nwzida0e0b0xyg1z9 = prov_child_va1e1b1nwzida0e0b0xyg1z9 * np.logical_not(mask_z9var_va1e1b1nwzida0e0b0xyg1z) #parent seasons only provide to child until child is identified
     mask_param_provz8z9_va1e1b1nwzida0e0b0xyg1z9 = np.logical_or(prov_self_va1e1b1nwzida0e0b0xyg1z9, prov_child_va1e1b1nwzida0e0b0xyg1z9)
+    ###this needs to be rolled 1 becasue the param is accessed using v_prev (cant use v because it gets k2 axis)
+    mask_param_provz8z9_va1e1b1nwzida0e0b0xyg1z9 = np.roll(mask_param_provz8z9_va1e1b1nwzida0e0b0xyg1z9, axis=0, shift=-1)
     ###cluster e and b (e axis is active from the dvp dates)
-    mask_param_provz8z9_k2tva1e1b1nwzida0e0b0xyg1z9 = np.sum(mask_param_provz8z9_va1e1b1nwzida0e0b0xyg1z9
-                                                          * (a_k2cluster_va1e1b1nwzida0e0b0xyg1==index_k2tva1e1b1nwzida0e0b0xyg1)[...,na],
-                                                          axis=(e1_pos-1,b1_pos-1), keepdims=True)
+    mask_param_provz8z9_k2tva1e1b1nwzida0e0b0xyg1z9 = 1 * (np.sum(mask_param_provz8z9_va1e1b1nwzida0e0b0xyg1z9
+                                                                  * (a_k2cluster_va1e1b1nwzida0e0b0xyg1==index_k2tva1e1b1nwzida0e0b0xyg1)[...,na],
+                                                                  axis=(e1_pos-1,b1_pos-1), keepdims=True) > 0)
 
     ##offs child parent transfer
     ###adjust dvp start dates to the base yr (dates must be between break of current season and break of next season)
@@ -5801,17 +5802,19 @@ def generator(params,r_vals,nv,plots = False):
     date_nodes_va1e1b1nwzida0e0b0xyg3 = dvp_start_va1e1b1nwzida0e0b0xyg3 + add_yrs * np.timedelta64(365, 'D') - sub_yrs * np.timedelta64(365, 'D')
     ###mask when season is identified
     #todo this mask should be applied to all params with an active v & z axis (same as mask_w8vars_va1e1b1nw8zida0e0b0xyg3)
-    mask_z8var_va1e1b1nwzida0e0b0xyg3 = date_initiate_zidaebxyg <= date_nodes_va1e1b1nwzida0e0b0xyg3
+    mask_z8var_va1e1b1nwzida0e0b0xyg3 = np.logical_or(date_initiate_zidaebxyg <= date_nodes_va1e1b1nwzida0e0b0xyg3, bool_steady_state) #if it is steadystate then the z8 mask is just true.
     ###offs numbers prov mask. Parent seasons provide to child season until the child season is identified.
     prov_self_va1e1b1nwzida0e0b0xyg3z9 = mask_z8var_va1e1b1nwzida0e0b0xyg3[...,na] * identity_z8ida0e0b0xygz9
     prov_child_va1e1b1nwzida0e0b0xyg3z9 = mask_z8var_va1e1b1nwzida0e0b0xyg3[...,na] * (index_zidaebxyg[...,na] == parent_idaebxygz9)
     mask_z9var_va1e1b1nwzida0e0b0xyg3z = np.swapaxes(mask_z8var_va1e1b1nwzida0e0b0xyg3[...,na], z_pos-1, -1)
     prov_child_va1e1b1nwzida0e0b0xyg3z9 = prov_child_va1e1b1nwzida0e0b0xyg3z9 * np.logical_not(mask_z9var_va1e1b1nwzida0e0b0xyg3z) #parent seasons only provide to child until child is identified
     mask_param_provz8z9_va1e1b1nwzida0e0b0xyg3z9 = np.logical_or(prov_self_va1e1b1nwzida0e0b0xyg3z9, prov_child_va1e1b1nwzida0e0b0xyg3z9)
+    ###this needs to be rolled 1 becasue the param is accessed using v_prev (cant use v because it gets k3 axis)
+    mask_param_provz8z9_va1e1b1nwzida0e0b0xyg3z9 = np.roll(mask_param_provz8z9_va1e1b1nwzida0e0b0xyg3z9, axis=0, shift=-1)
     ###cluster d (d axis is active from the dvp dates)
-    mask_param_provz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9 = np.sum(mask_param_provz8z9_va1e1b1nwzida0e0b0xyg3z9
-                                                          * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na],
-                                                          axis=d_pos-1, keepdims=True)
+    mask_param_provz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9 = 1 * (np.sum(mask_param_provz8z9_va1e1b1nwzida0e0b0xyg3z9
+                                                                  * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na],
+                                                                    axis=d_pos-1, keepdims=True) > 0)
 
 
 
@@ -6210,10 +6213,10 @@ def generator(params,r_vals,nv,plots = False):
     ###cluster e&b (e axis is active from the dvp dates)
     currentdvp_is_seasonstart_va1e1b1nwzida0e0b0xyg1 = np.sum(dvp_type_va1e1b1nwzida0e0b0xyg1 == season_vtype1
                                                           * (a_k2cluster_va1e1b1nwzida0e0b0xyg1==index_k2tva1e1b1nwzida0e0b0xyg1),
-                                                          axis=(e1_pos,b1_pos), keepdims=True)
+                                                          axis=(e1_pos,b1_pos), keepdims=True) > 0
     nextdvp_is_seasonstart_va1e1b1nwzida0e0b0xyg1 = np.sum(dvp_type_next_va1e1b1nwzida0e0b0xyg1 == season_vtype1
                                                           * (a_k2cluster_va1e1b1nwzida0e0b0xyg1==index_k2tva1e1b1nwzida0e0b0xyg1),
-                                                          axis=(e1_pos,b1_pos), keepdims=True)
+                                                          axis=(e1_pos,b1_pos), keepdims=True) > 0
 
     ###within season transfer
     numbers_reqwithin_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 * np.logical_not(currentdvp_is_seasonstart_va1e1b1nwzida0e0b0xyg1[...,na,na])
@@ -6228,10 +6231,10 @@ def generator(params,r_vals,nv,plots = False):
     ###cluster d (d axis is active from the dvp dates)
     currentdvp_is_seasonstart_k3k5tva1e1b1nwzida0e0b0xyg3 = np.sum(dvp_type_va1e1b1nwzida0e0b0xyg3 == season_vtype3
                                                                * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3),
-                                                               axis=d_pos,keepdims=True)
+                                                               axis=d_pos,keepdims=True) > 0
     nextdvp_is_seasonstart_k3k5tva1e1b1nwzida0e0b0xyg3 = np.sum(dvp_type_next_va1e1b1nwzida0e0b0xyg3 == season_vtype3
                                                                * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3),
-                                                               axis=d_pos,keepdims=True)
+                                                               axis=d_pos,keepdims=True) > 0
 
     ###within season transfer
     numbers_reqwithin_offs_k3k5tva1e1b1nw8zida0e0b0xygw9 = numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9 * np.logical_not(currentdvp_is_seasonstart_k3k5tva1e1b1nwzida0e0b0xyg3[...,na])
@@ -6836,6 +6839,9 @@ def generator(params,r_vals,nv,plots = False):
     arrays = [keys_h1, keys_c0, keys_p7, keys_z]
     index_h1c0p7z = fun.cartesian_product_simple_transpose(arrays)
 
+    ###z8z9 - season req numbers transfer
+    arrays = [keys_z, keys_z]
+    index_z8z9 = fun.cartesian_product_simple_transpose(arrays)
     ###k2vz8g1z9 - season transfer dams
     arrays = [keys_k2, keys_v1, keys_z, keys_g1, keys_z]
     index_k2vz8g1z9 = fun.cartesian_product_simple_transpose(arrays)
@@ -7340,7 +7346,7 @@ def generator(params,r_vals,nv,plots = False):
     params['p_parentchildz_transfer_offs'] =dict(zip(tup_k3vz8xg3z9, mask_param_provz8z9_k3vz8xg3z9))
 
 
-    p_wyear_inc = i_wyear_inc_qsz #todo need to add this input and hook up (not sure what it needs to look like)
+    # p_wyear_inc = i_wyear_inc_qsz #todo need to add this input and hook up (not sure what it needs to look like)
 
 
     ###############
@@ -7454,7 +7460,7 @@ def generator(params,r_vals,nv,plots = False):
     r_vals['keys_p6'] = keys_p6
 
     ##season prob
-    if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1:
+    if bool_steady_state:
         r_vals['prob_z'] = 1
     else:
         r_vals['prob_z'] = i_season_propn_z
