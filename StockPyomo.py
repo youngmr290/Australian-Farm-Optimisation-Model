@@ -412,9 +412,10 @@ def f_con_dam_withinR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w
                    for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams
                    for z8 in model.s_season_types for w8 in model.s_lw_dams for g1 in model.s_groups_dams
                    if pe.value(model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, z8, i, y1, g1,g9, w9]) != 0
+                   or pe.value(model.p_childz_req[z8,z9]) != 0
                    or pe.value(model.p_numbers_prov_dams[k28, k29, t1, v1_prev, a, n1, w8, z8, i, y1, g1, g9, w9]) != 0
                    or pe.value(model.p_numbers_provthis_dams[k28, k29, t1, v1, a, n1, w8, z8, i, y1, g1, g9, w9]) != 0) <=0
-        #todo will need to tweak the if statement. remove prov from if and add the z8z9 req
+        #todo i should be able to remove the prov bit from if statement but i cant why?? i thought maybe due to z8 providing multiple z9 but that doesnt seem to be the reason.
 
     start_con_damR=time.time()
     model.con_dam_withinR = pe.Constraint(model.s_k2_birth_dams, model.s_dvp_dams, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gen_merit_dams,
