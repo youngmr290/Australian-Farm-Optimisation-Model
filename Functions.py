@@ -881,6 +881,49 @@ def write_variablesummary(model, row, exp_data, obj, option=0):
     file.close()
 
 
+def f_season_transfer_mask(period_dates, date_node_zm, date_initiate_z, index_z, bool_steady_state, z_pos):
+    '''
+
+    :param period_dates: period dates (eg dvp or cashflow)
+    :param date_node_zm: dates of the season nodes
+    :param date_initiate_z: date when each season is identified
+    :param index_z: z index
+    :param bool_steady_state: boolean stating if the trial is steady state or not
+    :param z_pos: z axis position
+    :return: within season transfer (z8z9) masks for require and provide.
+    '''
+
+    ##parent z
+    date_prev_node_zm = np.roll(date_node_zm, axis=-1, shift=1)
+    existing_season_prev_zm = np.maximum.accumulate((date_prev_node_zm==date_initiate_z[...,na]) * index_z[...,na], axis=0)
+    existing_season_prev_zm[:,...,0] = np.maximum.accumulate((date_node_zm==date_initiate_z[...,na]) * index_z[...,na], axis=0)[:,...,0] #the parent at the first node are the seasons identified by break
+    parent_z = np.max(np.maximum.accumulate(existing_season_prev_zm * (date_node_zm==date_initiate_z[...,na]), axis=0),axis=-1)
+    parent_z9 = np.moveaxis(parent_z, source=0, destination=-1)
+
+    ##req mask. Each z8 always requires from the same z9 season eg z8[1] requires from z9[1]
+    identity_z8z9 = f_expand(np.identity(parent_z.shape[0]),z_pos-1, right_pos=-1)
+    mask_param_reqz8z9_z8z9 = identity_z8z9
+
+    ##adjust period start dates to the base yr (dates must be between break of current season and break of next season)
+    start_of_season_z = date_node_zm[...,0]
+    end_of_season_z = start_of_season_z + np.timedelta64(364,'D') #use 364 because end date is the day before brk.
+    add_yrs = np.ceil(np.maximum(0,(start_of_season_z - period_dates).astype('timedelta64[D]').astype(int) / 365))
+    sub_yrs = np.ceil(np.maximum(0,(period_dates - end_of_season_z).astype('timedelta64[D]').astype(int) / 365))
+    adj_period_dates = period_dates + add_yrs * np.timedelta64(365, 'D') - sub_yrs * np.timedelta64(365, 'D')
+
+    ##z8 mask when season is identified
+    mask_z8var_z = np.logical_or(date_initiate_z <= adj_period_dates, bool_steady_state) #if it is steadystate then the z8 mask is just true.
+
+    ##prov mask. Parent seasons provide to child season until the child season is identified.
+    prov_self_z8z9 = mask_z8var_z[...,na] * identity_z8z9
+    prov_child_z8z9 = mask_z8var_z[...,na] * (index_z[...,na] == parent_z9)
+    mask_z9var_z9 = np.swapaxes(mask_z8var_z[...,na], z_pos-1, -1)
+    prov_child_z8z9 = prov_child_z8z9 * np.logical_not(mask_z9var_z9) #parent seasons only provide to child until child is identified
+    mask_param_provz8z9_z8z9 = np.logical_or(prov_self_z8z9, prov_child_z8z9)
+
+    return mask_param_provz8z9_z8z9, mask_z8var_z, mask_param_reqz8z9_z8z9
+
+
 ##########################
 # period calculators     #
 ##########################

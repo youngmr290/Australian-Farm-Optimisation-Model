@@ -5759,35 +5759,12 @@ def generator(params,r_vals,nv,plots = False):
     date_initiate_z = pinp.f_seasonal_inp(pinp.general['i_date_initiate_z'], numpy=True, axis=0).astype('datetime64')
     date_initiate_zidaebxyg = fun.f_expand(date_initiate_z, z_pos)
     index_zidaebxyg = fun.f_expand(index_z, z_pos)
-    start_of_season_zidaebxyg = date_node_zidaebxygm[...,0]
-    end_of_season_zidaebxyg = start_of_season_zidaebxyg + np.timedelta64(364,'D') #use 364 because end date is the day before brk.
-
-    ##parent z
-    date_prev_node_zidaebxygm = np.roll(date_node_zidaebxygm, axis=-1, shift=1)
-    existing_season_prev_zidaebxygm = np.maximum.accumulate((date_prev_node_zidaebxygm==date_initiate_zidaebxyg[...,na]) * index_zidaebxyg[...,na], axis=0)
-    existing_season_prev_zidaebxygm[:,...,0] = np.maximum.accumulate((date_node_zidaebxygm==date_initiate_zidaebxyg[...,na]) * index_zidaebxyg[...,na], axis=0)[:,...,0] #the perent at the first node are the seasons identified by break
-    parent_zidaebxyg = np.max(np.maximum.accumulate(existing_season_prev_zidaebxygm * (date_node_zidaebxygm==date_initiate_zidaebxyg[...,na]), axis=0),axis=-1)
-    parent_idaebxygz9 = np.moveaxis(parent_zidaebxyg, source=0, destination=-1)
-
-    ##number req mask. Each z8 always requires from the same z9 season eg z8[1] requires from z9[1]
-    identity_z8ida0e0b0xygz9 = fun.f_expand(np.identity(len_z),z_pos-1, right_pos=-1)
-    mask_param_reqz8z9_z8z9 = identity_z8ida0e0b0xygz9
 
     ##dams child parent transfer
-    ###adjust dvp start dates to the base yr (dates must be between break of current season and break of next season)
-    add_yrs = np.ceil(np.maximum(0,(start_of_season_zidaebxyg - dvp_start_va1e1b1nwzida0e0b0xyg1).astype('timedelta64[D]').astype(int) / 365))
-    sub_yrs = np.ceil(np.maximum(0,(dvp_start_va1e1b1nwzida0e0b0xyg1 - end_of_season_zidaebxyg).astype('timedelta64[D]').astype(int) / 365))
-    date_nodes_va1e1b1nwzida0e0b0xyg1 = dvp_start_va1e1b1nwzida0e0b0xyg1 + add_yrs * np.timedelta64(365, 'D') - sub_yrs * np.timedelta64(365, 'D')
-    ###mask when season is identified
-    #todo this mask should be applied to all params with an active v & z axis (same as mask_w8vars_va1e1b1nw8zida0e0b0xyg1)
-    mask_z8var_va1e1b1nwzida0e0b0xyg1 = np.logical_or(date_initiate_zidaebxyg <= date_nodes_va1e1b1nwzida0e0b0xyg1, bool_steady_state) #if it is steadystate then the z8 mask is just true.
+    #todo mask_z8var_va1e1b1nwzida0e0b0xyg1 should be applied to all params with an active v & z axis (same as mask_w8vars_va1e1b1nw8zida0e0b0xyg1)
+    mask_param_provz8z9_va1e1b1nwzida0e0b0xyg1z9,mask_z8var_va1e1b1nwzida0e0b0xyg1,mask_param_reqz8z9_z8z9 = \
+    fun.f_season_transfer_mask(dvp_start_va1e1b1nwzida0e0b0xyg1, date_node_zidaebxygm, date_initiate_zidaebxyg, index_zidaebxyg, bool_steady_state, z_pos)
 
-    ###dams numbers prov mask. Parent seasons provide to child season until the child season is identified.
-    prov_self_va1e1b1nwzida0e0b0xyg1z9 = mask_z8var_va1e1b1nwzida0e0b0xyg1[...,na] * identity_z8ida0e0b0xygz9
-    prov_child_va1e1b1nwzida0e0b0xyg1z9 = mask_z8var_va1e1b1nwzida0e0b0xyg1[...,na] * (index_zidaebxyg[...,na] == parent_idaebxygz9)
-    mask_z9var_va1e1b1nwzida0e0b0xyg1z = np.swapaxes(mask_z8var_va1e1b1nwzida0e0b0xyg1[...,na], z_pos-1, -1)
-    prov_child_va1e1b1nwzida0e0b0xyg1z9 = prov_child_va1e1b1nwzida0e0b0xyg1z9 * np.logical_not(mask_z9var_va1e1b1nwzida0e0b0xyg1z) #parent seasons only provide to child until child is identified
-    mask_param_provz8z9_va1e1b1nwzida0e0b0xyg1z9 = np.logical_or(prov_self_va1e1b1nwzida0e0b0xyg1z9, prov_child_va1e1b1nwzida0e0b0xyg1z9)
     ###this needs to be rolled 1 becasue the param is accessed using v_prev (cant use v because it gets k2 axis)
     mask_param_provz8z9_va1e1b1nwzida0e0b0xyg1z9 = np.roll(mask_param_provz8z9_va1e1b1nwzida0e0b0xyg1z9, axis=0, shift=-1)
     ###cluster e and b (e axis is active from the dvp dates)
@@ -5796,19 +5773,9 @@ def generator(params,r_vals,nv,plots = False):
                                                                   axis=(e1_pos-1,b1_pos-1), keepdims=True) > 0)
 
     ##offs child parent transfer
-    ###adjust dvp start dates to the base yr (dates must be between break of current season and break of next season)
-    add_yrs = np.ceil(np.maximum(0,(start_of_season_zidaebxyg - dvp_start_va1e1b1nwzida0e0b0xyg3).astype('timedelta64[D]').astype(int) / 365))
-    sub_yrs = np.ceil(np.maximum(0,(dvp_start_va1e1b1nwzida0e0b0xyg3 - end_of_season_zidaebxyg).astype('timedelta64[D]').astype(int) / 365))
-    date_nodes_va1e1b1nwzida0e0b0xyg3 = dvp_start_va1e1b1nwzida0e0b0xyg3 + add_yrs * np.timedelta64(365, 'D') - sub_yrs * np.timedelta64(365, 'D')
-    ###mask when season is identified
-    #todo this mask should be applied to all params with an active v & z axis (same as mask_w8vars_va1e1b1nw8zida0e0b0xyg3)
-    mask_z8var_va1e1b1nwzida0e0b0xyg3 = np.logical_or(date_initiate_zidaebxyg <= date_nodes_va1e1b1nwzida0e0b0xyg3, bool_steady_state) #if it is steadystate then the z8 mask is just true.
-    ###offs numbers prov mask. Parent seasons provide to child season until the child season is identified.
-    prov_self_va1e1b1nwzida0e0b0xyg3z9 = mask_z8var_va1e1b1nwzida0e0b0xyg3[...,na] * identity_z8ida0e0b0xygz9
-    prov_child_va1e1b1nwzida0e0b0xyg3z9 = mask_z8var_va1e1b1nwzida0e0b0xyg3[...,na] * (index_zidaebxyg[...,na] == parent_idaebxygz9)
-    mask_z9var_va1e1b1nwzida0e0b0xyg3z = np.swapaxes(mask_z8var_va1e1b1nwzida0e0b0xyg3[...,na], z_pos-1, -1)
-    prov_child_va1e1b1nwzida0e0b0xyg3z9 = prov_child_va1e1b1nwzida0e0b0xyg3z9 * np.logical_not(mask_z9var_va1e1b1nwzida0e0b0xyg3z) #parent seasons only provide to child until child is identified
-    mask_param_provz8z9_va1e1b1nwzida0e0b0xyg3z9 = np.logical_or(prov_self_va1e1b1nwzida0e0b0xyg3z9, prov_child_va1e1b1nwzida0e0b0xyg3z9)
+    #todo mask_z8var_va1e1b1nwzida0e0b0xyg1 should be applied to all params with an active v & z axis (same as mask_w8vars_va1e1b1nw8zida0e0b0xyg1)
+    mask_param_provz8z9_va1e1b1nwzida0e0b0xyg3z9,mask_z8var_va1e1b1nwzida0e0b0xyg3,mask_param_reqz8z9_z8z9 = \
+    fun.f_season_transfer_mask(dvp_start_va1e1b1nwzida0e0b0xyg3, date_node_zidaebxygm, date_initiate_zidaebxyg, index_zidaebxyg, bool_steady_state, z_pos)
     ###this needs to be rolled 1 becasue the param is accessed using v_prev (cant use v because it gets k3 axis)
     mask_param_provz8z9_va1e1b1nwzida0e0b0xyg3z9 = np.roll(mask_param_provz8z9_va1e1b1nwzida0e0b0xyg3z9, axis=0, shift=-1)
     ###cluster d (d axis is active from the dvp dates)
