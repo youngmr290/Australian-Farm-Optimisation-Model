@@ -7291,7 +7291,7 @@ def generator(params,r_vals,nv,plots = False):
 
     ##winter grazed propn - indicates the propn of the DSE in each FP that is used to calculate total DSE for SR
     tup_p6z = tuple(map(tuple, index_p6z))
-    wg_propn_p6z = pinp.sheep['i_wg_propn_p6z']
+    wg_propn_p6z = pinp.f_seasonal_inp(pinp.sheep['i_wg_propn_p6z'], numpy=True, axis=-1)
     params['p_wg_propn_p6z'] = dict(zip(tup_p6z,wg_propn_p6z))
 
     ##season transfer masks
