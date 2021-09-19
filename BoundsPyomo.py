@@ -368,7 +368,7 @@ def f1_boundarypyomo_local(params, model):
                                     for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
                                     if pe.value(model.p_dse_offs[k3,k5,p6,t3,v3,n3,w3,z,i,a,x,y3,g3])!=0)
                              for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol))
-                        * params['p_wg_propn_p6']
+                        * model.p_wg_propn_p6z[p6,z]
                         for p6 in model.s_feed_periods)
                 return dse == rhs_dse
             model.con_SR_bound = pe.Constraint(model.s_season_types, rule=SR_bound,

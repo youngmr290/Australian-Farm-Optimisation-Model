@@ -6739,6 +6739,9 @@ def generator(params,r_vals,nv,plots = False):
     arrays = [keys_k3, keys_k5, keys_p6, keys_f, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
     index_k3k5p6ftvnwziaxyg3 = fun.cartesian_product_simple_transpose(arrays)
 
+    ###p6z - winter grazed propn
+    arrays = [keys_p6, keys_z]
+    index_p6z = fun.cartesian_product_simple_transpose(arrays)
     ###p6zg0 - dse sire
     arrays = [keys_p6, keys_z, keys_g0]
     index_p6zg0 = fun.cartesian_product_simple_transpose(arrays)
@@ -7287,8 +7290,9 @@ def generator(params,r_vals,nv,plots = False):
         params['p_dse_offs'] =dict(zip(tup_k3k5p6tvnwziaxyg3, dsenw_dams_k3k5p6tvnwziaxyg3))
 
     ##winter grazed propn - indicates the propn of the DSE in each FP that is used to calculate total DSE for SR
-    wg_propn_p6 = pinp.sheep['i_wg_propn_p6']
-    params['p_wg_propn_p6'] = dict(zip(keys_p6,wg_propn_p6))
+    tup_p6z = tuple(map(tuple, index_p6z))
+    wg_propn_p6z = pinp.sheep['i_wg_propn_p6z']
+    params['p_wg_propn_p6z'] = dict(zip(tup_p6z,wg_propn_p6z))
 
     ##season transfer masks
     mask=mask_param_reqz8z9_z8z9!=0
@@ -7542,7 +7546,7 @@ def generator(params,r_vals,nv,plots = False):
     r_vals['dsemj_k2p6tva1nwziyg1'] = dsemj_k2p6tva1e1b1nwzida0e0b0xyg1.reshape(k2p6tva1nwziyg1_shape)
     r_vals['dsenw_k3k5p6tvnwziaxyg3'] = dsenw_k3k5p6tva1e1b1nwzida0e0b0xyg3.reshape(k3k5p6tvnwziaxyg3_shape)
     r_vals['dsemj_k3k5p6tvnwziaxyg3'] = dsemj_k3k5p6tva1e1b1nwzida0e0b0xyg3.reshape(k3k5p6tvnwziaxyg3_shape)
-    r_vals['wg_propn_p6'] = wg_propn_p6
+    r_vals['wg_propn_p6z'] = wg_propn_p6z
 
     ###stock days
     r_vals['stock_days_p6fzg0'] = stock_days_p6fa1e1b1nwzida0e0b0xyg0.reshape(p6fzg0_shape)

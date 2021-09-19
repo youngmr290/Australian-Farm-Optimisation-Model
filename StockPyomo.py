@@ -253,6 +253,9 @@ def f1_stockpyomo_local(params, model):
                              model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender, model.s_gen_merit_offs, model.s_groups_offs,
                              initialize=params['p_dse_offs'], default=0.0, mutable=False, doc='number of dse for each offs activity')
 
+    model.p_wg_propn_p6z = pe.Param(model.s_feed_periods, model.s_season_types, initialize=params['p_wg_propn_p6z'],
+                                    default=0.0, mutable=False, doc='proportion of each feed period used to calc dse')
+
     ##asset value
     model.p_asset_stockinfra = pe.Param(model.s_infrastructure, initialize=params['p_infra'], default=0.0, doc='Asset value of infra')
 
