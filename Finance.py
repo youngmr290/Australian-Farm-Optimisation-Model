@@ -324,7 +324,7 @@ def f_cashflow_z8z9_transfer(params, mask=False):
 def finance_rep(r_vals):
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0']
-    r_vals['keys_c'] = keys_p7
+    r_vals['keys_p7'] = keys_p7
     r_vals['keys_c0'] = keys_c0
     r_vals['opportunity_cost_capital'] = uinp.finance['opportunity_cost_capital']
     r_vals['interest_rate'] = uinp.finance['i_interest']

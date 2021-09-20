@@ -170,7 +170,7 @@ def f_sup_cost(r_vals):
     ##total cost = feeding cost plus storage cost
     total_sup_cost_c0p7zp6k = feeding_cost_c0p7zp6k + storage_cost_c0p7zp6k
     total_sup_wc_c0p7zp6k = feeding_wc_c0p7zp6k + storage_wc_c0p7zp6k
-    r_vals['total_sup_cost_ckp6_z'] = total_sup_cost_c0p7zp6k
+    r_vals['total_sup_cost_c0p7zp6k'] = total_sup_cost_c0p7zp6k
 
     ##dep
     storage_dep = grain_info.loc['dep']

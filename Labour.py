@@ -288,11 +288,11 @@ def f_perm_cost(params, r_vals):
     ##params and report vals
     params['perm_cost'] = dict(zip(tup_c0p7z, perm_cost_c0p7z.ravel()))
     params['perm_wc'] = dict(zip(tup_c0p7z, perm_wc_c0p7z.ravel()))
-    r_vals['perm_cost_c'] = perm_cost_c0p7z
+    r_vals['perm_cost_c0p7z'] = perm_cost_c0p7z
 
     params['manager_cost'] = dict(zip(tup_c0p7z, manager_cost_c0p7z.ravel()))
     params['manager_wc'] = dict(zip(tup_c0p7z, manager_wc_c0p7z.ravel()))
-    r_vals['manager_cost_c'] = manager_cost_c0p7z
+    r_vals['manager_cost_c0p7z'] = manager_cost_c0p7z
 
 
 

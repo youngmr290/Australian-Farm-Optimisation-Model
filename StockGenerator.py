@@ -7427,10 +7427,7 @@ def generator(params,r_vals,nv,plots = False):
     r_vals['keys_p6'] = keys_p6
 
     ##season prob
-    if bool_steady_state:
-        r_vals['prob_z'] = 1
-    else:
-        r_vals['prob_z'] = i_season_propn_z
+    r_vals['prob_z'] = i_season_propn_z
 
     ##key lists used to form table headers and indexs
     keys_e = ['e%s'%i for i in range(len_e1)]
@@ -7550,7 +7547,7 @@ def generator(params,r_vals,nv,plots = False):
     r_vals['stock_days_k3k5p6ftvnwziaxyg3'] = stock_days_k3k5p6ftva1e1b1nwzida0e0b0xyg3.reshape(k3k5p6ftvnwziaxyg3_shape)
 
     ###cashflow
-    r_vals['sire_cost_czg0'] = cost_c0p7va1e1b1nwzida0e0b0xyg0.reshape(c0p7zg0_shape)
+    r_vals['sire_cost_c0p7zg0'] = cost_c0p7va1e1b1nwzida0e0b0xyg0.reshape(c0p7zg0_shape)
     r_vals['dams_cost_k2c0p7tva1nwziyg1'] = cost_k2c0p7tva1e1b1nwzida0e0b0xyg1.reshape(k2c0p7tva1nwziyg1_shape)
     r_vals['offs_cost_k3k5c0p7tvnwziaxyg3'] =cost_k3k5c0p7tva1e1b1nwzida0e0b0xyg3.reshape(k3k5c0p7tvnwziaxyg3_shape)
 
@@ -7572,7 +7569,7 @@ def generator(params,r_vals,nv,plots = False):
     r_vals['rm_stockinfra_fix_h1c0p7z'] = rm_stockinfra_fix_h1c0p7z
 
     ###purchase costs
-    r_vals['purchcost_sire_cg0'] = purchcost_c0p7va1e1b1nwzida0e0b0xyg0.reshape(c0p7zg0_shape)
+    r_vals['purchcost_sire_c0p7zg0'] = purchcost_c0p7va1e1b1nwzida0e0b0xyg0.reshape(c0p7zg0_shape)
 
     ###sale date
     r_vals['saledate_k3k5tvnwziaxyg3'] = r_saledate_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)

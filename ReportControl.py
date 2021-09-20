@@ -230,13 +230,15 @@ def f_report(processor, trials, non_exist_trials):
 
         if report_run.loc['run_salevalue_dams', 'Run']:
             type = 'stock'
-            prod = 'salevalue_k2ctva1nwziyg1'
+            prod = 'salevalue_k2c0p7tva1nwziyg1'
             weights = 'dams_numbers_k2tvanwziy1g1'
-            na_weights = 1
-            keys = 'dams_keys_k2ctvanwziy1g1'
+            na_weights = [1,2]
+            keys = 'dams_keys_k2c0p7tvanwziy1g1'
             arith = 1
-            index =[3]
-            cols =[0,1,2]
+            index =[4]
+            cols =[0,2,3]
+            axis_slice = {}
+            axis_slice[1] = [0, 1, 1]   #c0: stk
             salevalue_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
                                    na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
             salevalue_dams = pd.concat([salevalue_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
@@ -244,13 +246,15 @@ def f_report(processor, trials, non_exist_trials):
 
         if report_run.loc['run_salevalue_offs', 'Run']:
             type = 'stock'
-            prod = 'salevalue_k3k5ctvnwziaxyg3'
+            prod = 'salevalue_k3k5c0p7tvnwziaxyg3'
             weights = 'offs_numbers_k3k5tvnwziaxyg3'
-            na_weights = 2
-            keys = 'offs_keys_k3k5ctvnwziaxyg3'
+            na_weights = [2,3]
+            keys = 'offs_keys_k3k5c0p7tvnwziaxyg3'
             arith = 1
-            index = [4, 10]     #DVP, gender
-            cols = [2, 12, 3]   #cashflow period, g3, t
+            index = [5, 11]     #DVP, gender
+            cols = [3, 13, 4]   #cashflow period, g3, t
+            axis_slice = {}
+            axis_slice[2] = [0, 1, 1]   #c0: stk
             salevalue_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
                                    na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
             salevalue_offs = pd.concat([salevalue_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
@@ -258,13 +262,15 @@ def f_report(processor, trials, non_exist_trials):
 
         if report_run.loc['run_woolvalue_dams', 'Run']:
             type = 'stock'
-            prod = 'woolvalue_k2ctva1nwziyg1'
+            prod = 'woolvalue_k2c0p7tva1nwziyg1'
             weights = 'dams_numbers_k2tvanwziy1g1'
-            na_weights = 1
-            keys = 'dams_keys_k2ctvanwziy1g1'
+            na_weights = [1,2]
+            keys = 'dams_keys_k2c0p7tvanwziy1g1'
             arith = 1
-            index =[3]
-            cols =[1, 2]
+            index =[4]
+            cols =[2, 3]
+            axis_slice = {}
+            axis_slice[1] = [0, 1, 1]   #c0: stk
             woolvalue_dams = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
                                    na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
             woolvalue_dams = pd.concat([woolvalue_dams],keys=[trial_name],names=['Trial'])  # add trial name as index level
@@ -272,13 +278,15 @@ def f_report(processor, trials, non_exist_trials):
 
         if report_run.loc['run_woolvalue_offs', 'Run']:
             type = 'stock'
-            prod = 'woolvalue_k3k5ctvnwziaxyg3'
+            prod = 'woolvalue_k3k5c0p7tvnwziaxyg3'
             weights = 'offs_numbers_k3k5tvnwziaxyg3'
-            na_weights = 2
-            keys = 'offs_keys_k3k5ctvnwziaxyg3'
+            na_weights = [2,3]
+            keys = 'offs_keys_k3k5c0p7tvnwziaxyg3'
             arith = 1
-            index = [4, 10]     #DVP, gender
-            cols = [2, 12, 3]   #cashflow period, g3, t
+            index = [5, 11]     #DVP, gender
+            cols = [3, 13, 4]   #cashflow period, g3, t
+            axis_slice = {}
+            axis_slice[2] = [0, 1, 1]   #c0: stk
             woolvalue_offs = rep.f_stock_pasture_summary(lp_vars, r_vals, type=type, prod=prod, weights=weights,
                                    na_weights=na_weights, keys=keys, arith=arith, index=index, cols=cols)
             woolvalue_offs = pd.concat([woolvalue_offs],keys=[trial_name],names=['Trial'])  # add trial name as index level
