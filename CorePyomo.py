@@ -469,17 +469,17 @@ def f_con_cashflow(model):
     Tallies all cashflow in each period and transfers to the next period. Cashflow periods exist so that a transfer can
     exist between parent and child seasons.
     '''
-    def cash_flow(model,c0,p7,z):
+    def cash_flow(model,c0,p7,z9):
         cf1 = list(model.s_cashflow_periods)[0]
         p7s = list(model.s_cashflow_periods)[list(model.s_cashflow_periods).index(p7) - 1]  # previous cashperiod - have to convert to a list first because indexing of an ordered set starts at 1
-        return (-f1_grain_income(model,c0,p7,z) + phspy.f_rotation_cost(model,c0,p7,z) + labpy.f_labour_cost(model,c0,p7,z)
-                + macpy.f_mach_cost(model,c0,p7,z) + suppy.f_sup_cost(model,c0,p7,z) + model.p_overhead_cost[c0,p7,z]
-                - stkpy.f_stock_cashflow(model,c0,p7,z)
-                - model.v_debit[c0,p7,z] + model.v_credit[c0,p7,z]
-                + (model.v_debit[c0,p7s,z] - model.v_credit[c0,p7s,z]) * (p7!=cf1) #end cashflow doesnot provide start cashflow else unbounded.
-                ) <= 0
+        return sum((-f1_grain_income(model,c0,p7,z8) + phspy.f_rotation_cost(model,c0,p7,z8) + labpy.f_labour_cost(model,c0,p7,z8)
+                + macpy.f_mach_cost(model,c0,p7,z8) + suppy.f_sup_cost(model,c0,p7,z8) + model.p_overhead_cost[c0,p7,z8]
+                - stkpy.f_stock_cashflow(model,c0,p7,z8)
+                - model.v_debit[c0,p7,z8] + model.v_credit[c0,p7,z8]) * model.p_childz_req_cashflow[z8,z9]
+                + (model.v_debit[c0,p7s,z8] - model.v_credit[c0,p7s,z8]) * model.p_parentchildz_transfer_cashflow[c0,p7,z8,z9] * (p7!=cf1)  #end cashflow doesnot provide start cashflow else unbounded.
+                for z8 in model.s_season_types) <= 0
 
-    model.con_cashflow_transfer = pe.Constraint(model.s_enterprises, model.s_cashflow_periods,model.s_season_types,rule=cash_flow,
+    model.con_cashflow_transfer = pe.Constraint(model.s_enterprises, model.s_cashflow_periods, model.s_season_types,rule=cash_flow,
                                                 doc='transfer of cash between periods')
 
 # def cash_flow(model,z):

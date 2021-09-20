@@ -78,11 +78,12 @@ import UniversalInputs as uinp
 import StructuralInputs as sinp
 import PropertyInputs as pinp
 import Periods as per
+import Functions as fun
 
 na = np.newaxis
-'''
-interest
-'''
+#######################
+# cashflow & interest #
+#######################
 
 
 def f_cashflow_allocation(amount,start,p_dates_c0p7,peakdebt_date,enterprise=None,length=1):
@@ -273,7 +274,48 @@ def f_min_roe():
         min_roe = uinp.finance['minroe_dsp']
     return min_roe
 
+###################
+#Season transfer  #
+###################
+def f_cashflow_z8z9_transfer(params, mask=False):
+    '''If a season is not identified then it does not transfer any parameters. Therefore to reduce size we can mask
+    all parameters with a z8 axis. We also require a z8z9 mask which controls transfer params'''
 
+    ##inputs
+    date_initiate_z = pinp.f_seasonal_inp(pinp.general['i_date_initiate_z'], numpy=True, axis=0).astype('datetime64')
+    bool_steady_state = pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1
+    if bool_steady_state:
+        len_z = 1
+    else:
+        len_z = np.count_nonzero(pinp.general['i_mask_z'])
+    index_z = np.arange(len_z)
+    p_dates_c0p7z = per.f_cashflow_periods()[:,:-1,:] #slice off the end date slice
+    date_node_zm = pinp.f_seasonal_inp(pinp.general['i_date_node_zm'],numpy=True,axis=0).astype(
+        'datetime64')  # treat z axis
+
+    ##dams child parent transfer
+    #todo mask_cashflow_z8var_c0p7z should be applied to all cashflow params
+    mask_cashflow_provz8z9_c0p7z8z9, mask_cashflow_z8var_c0p7z, mask_cashflow_reqz8z9_z8z9 = \
+    fun.f_season_transfer_mask(p_dates_c0p7z, date_node_zm, date_initiate_z, index_z, bool_steady_state, z_pos=-1)
+
+    if mask:
+        return mask_cashflow_z8var_c0p7z
+
+    ##build params
+    keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
+    keys_c0 = sinp.general['i_enterprises_c0']
+    keys_z = pinp.f_keys_z()
+
+    arrays = [keys_c0, keys_p7, keys_z, keys_z]
+    index_c0p7z8z9 = fun.cartesian_product_simple_transpose(arrays)
+    tup_c0p7z8z9 = tuple(map(tuple,index_c0p7z8z9))
+
+    arrays = [keys_z, keys_z]
+    index_z8z9 = fun.cartesian_product_simple_transpose(arrays)
+    tup_z8z9 = tuple(map(tuple,index_z8z9))
+
+    params['p_childz_req_cashflow'] =dict(zip(tup_z8z9, mask_cashflow_reqz8z9_z8z9.ravel()*1))
+    params['p_parentchildz_transfer_cashflow'] =dict(zip(tup_c0p7z8z9, mask_cashflow_provz8z9_c0p7z8z9.ravel()*1))
 
 #################
 # report vals   #
