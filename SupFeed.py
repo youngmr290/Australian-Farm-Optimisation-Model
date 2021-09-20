@@ -59,8 +59,8 @@ def f_buy_grain_price(r_vals):
     price_k_g = price_df + cartage + transaction_fee
 
     ##allocate farm gate grain price for each cashflow period and calc interest
-    start = np.array([uinp.price['grain_income_date']]).astype('datetime64')
-    length = uinp.price['grain_income_length']
+    start = np.array([pinp.crop['i_grain_income_date']]).astype('datetime64')
+    length = pinp.crop['i_grain_income_length']
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = pinp.f_keys_z()
