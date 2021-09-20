@@ -665,12 +665,8 @@ def generator(params,r_vals,nv,plots = False):
                                                        right_pos3=n_pos)  # p6 axis converted to p axis later (association section), axis order doesnt matter because sliced when used
     paststd_dmd_p6a1e1b1j0wzida0e0b0xyg = pinp.f_seasonal_inp(paststd_dmd_p6a1e1b1j0wzida0e0b0xyg,numpy=True,axis=z_pos)
     ##season type probability
-    if bool_steady_state:
-        i_season_propn_z = fun.f_expand(np.ones_like(pinp.general['i_season_propn_z']),z_pos)
-        season_propn_zida0e0b0xyg = pinp.f_seasonal_inp(i_season_propn_z,numpy=True,axis=z_pos)
-    else:
-        i_season_propn_z = pinp.f_z_prob()
-        season_propn_zida0e0b0xyg = fun.f_expand(i_season_propn_z, z_pos)
+    i_season_propn_z = pinp.f_z_prob()
+    season_propn_zida0e0b0xyg = fun.f_expand(i_season_propn_z, z_pos)
 
     ##wind speed
     #todo add a distribution to the windspeed (after checking the importance for chill_index)

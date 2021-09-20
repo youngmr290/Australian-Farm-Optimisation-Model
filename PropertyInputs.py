@@ -408,14 +408,21 @@ def f1_expand_p6():
 
 
 
-def f_z_prob():
-    '''Calc the prob of each active season'''
-    ##season mask - controls which seasons are included
-    z_mask = general['i_mask_z']
-    ##adjust season prob accounting for the seasons which are not included
-    z_prob = np.array(general['i_season_propn_z'])
-    z_prob = z_prob[z_mask]
-    z_prob = z_prob / sum(z_prob)
+def f_z_prob(keep_z=False):
+    '''Calc the prob of each active season.
+
+    :param keep_z: True means the z axis is kept even in steady state model. This is used for the season input handling.
+    '''
+    steady_state_bool = general['steady_state'] or np.count_nonzero(general['i_mask_z']) == 1
+    if steady_state_bool and not keep_z:
+        z_prob = np.array([1])
+    else:
+        ##season mask - controls which seasons are included
+        z_mask = general['i_mask_z']
+        ##adjust season prob accounting for the seasons which are not included
+        z_prob = np.array(general['i_season_propn_z'])
+        z_prob = z_prob[z_mask]
+        z_prob = z_prob / sum(z_prob)
     return z_prob
 
 
@@ -443,7 +450,7 @@ def f_seasonal_inp(inp, numpy=False, axis=0, level=0):
     ##season mask - controls which seasons are included
     z_mask = general['i_mask_z']
     ##calc season prob accounting for the seasons which are not included
-    z_prob = f_z_prob()
+    z_prob = f_z_prob(keep_z=True)
 
     if numpy:
         ##mask the season types
