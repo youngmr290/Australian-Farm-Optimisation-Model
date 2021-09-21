@@ -235,14 +235,24 @@ def f_cropgraze_yield_penalty():
     ##inputs
     cropgraze_landuse_idx_k = pinp.cropgraze['i_cropgraze_landuse_idx']
     stubble_per_grain_k3 = stub.f_cropresidue_production()
-    yield_reduction_propn_kp6z = pinp.cropgraze['i_cropgraze_yield_reduction_kp6z']
+    yield_reduction_propn_kp6z = pinp.f_seasonal_inp(pinp.cropgraze['i_cropgraze_yield_reduction_kp6z'], numpy=True, axis=-1)
+    proportion_grain_harv_k = pd.Series(pinp.stubble['proportion_grain_harv'], index=pinp.stubble['i_stub_landuse_idx'])
 
     ##correct stubble k axis (k axis needs to be in the correct order and contain all crops so that numpy arrays align).
     stub_idx_bool_k3k = stubble_per_grain_k3.index.values[:,na]==cropgraze_landuse_idx_k
     stubble_per_grain_k = np.sum(stubble_per_grain_k3.values[:,na] * stub_idx_bool_k3k, axis=0)
 
+    ##adjust seeding penalty - crops that are not harvested eg fodder dont have yield penalty. But do have a stubble penalty
+    ###correct stubble k axis (k axis needs to be in the correct order and contain all crops so that numpy arrays align).
+    stub_idx_bool_k3k = proportion_grain_harv_k.index.values[:,na]==cropgraze_landuse_idx_k
+    proportion_grain_harv_k = np.sum(proportion_grain_harv_k.values[:,na] * stub_idx_bool_k3k, axis=0)
+    ###if calculating yield penalty for stubble then include all crop (eg include fodders)
+    stub_yield_reduction_propn_kp6z = yield_reduction_propn_kp6z
+    ###if calculating yield penalty for grain transfer then only include harvested crops (eg dont include fodders)
+    yield_reduction_propn_kp6z = yield_reduction_propn_kp6z * (proportion_grain_harv_k>0)[:,na,na]
+
     ##calc stubble reduction
-    stubble_reduction_propn_kp6z = yield_reduction_propn_kp6z * stubble_per_grain_k[:,na,na]
+    stubble_reduction_propn_kp6z = stub_yield_reduction_propn_kp6z * stubble_per_grain_k[:,na,na]
     return yield_reduction_propn_kp6z, stubble_reduction_propn_kp6z
 
 

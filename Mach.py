@@ -389,7 +389,7 @@ def f_contract_seed_cost(r_vals):
 #late seeding & dry seeding penalty    #
 ########################################
 
-def f_sowing_timeliness_penalty():
+def f_sowing_timeliness_penalty(stub=False):
     '''
     Calculates the yield penalty in each mach period due to wet sowing timeliness- kg/ha/period/crop.
 
@@ -414,11 +414,21 @@ def f_sowing_timeliness_penalty():
         adequate follow up rain) and increased chance of frost :cite:p:`RN119`. These risks are represented
         in the model via the yield inputs because dry sown crop are separate landuses.
 
+    :param stub: boolean: set to True when calculating yield penalty for stubble penalty.
 
     '''
     ##inputs
     seed_period_lengths_pz = pinp.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
     wet_seeding_penalty_k_z = pinp.f_seasonal_inp(pinp.crop['yield_penalty_wet'], axis=1)
+
+    ##adjust seeding penalty - crops that are not harvested eg fodder dont have yield penalty. But do have a stubble penalty
+    if stub:
+        ###if calculating yield penalty for stubble then include all crop (eg include fodders)
+        pass
+    else:
+        ###if calculating yield penalty for grain transfer then only include harvested crops (eg dont include fodders)
+        proportion_grain_harv_k = pd.Series(pinp.stubble['proportion_grain_harv'], index=pinp.stubble['i_stub_landuse_idx'])
+        wet_seeding_penalty_k_z = wet_seeding_penalty_k_z.mul(proportion_grain_harv_k>0, axis=0)
 
     ##general info
     mach_periods = per.f_p_dates_df()
@@ -449,7 +459,7 @@ def f_stubble_penalty():
     Calculates the stubble penalty in each mach period (wet and dry seeding) due to sowing timeliness- kg/ha/period/crop.
     '''
     import CropResidue as stub
-    yield_penalty_p5k_z = f_sowing_timeliness_penalty() #late sowing yield reduction kg/ha/period
+    yield_penalty_p5k_z = f_sowing_timeliness_penalty(stub=True) #late sowing yield reduction kg/ha/period
     stub_production_k = stub.f_cropresidue_production() #stubble production per kg of grain yield
     stub_penalty = yield_penalty_p5k_z.mul(stub_production_k, axis=0, level=1)
     return stub_penalty.stack()
