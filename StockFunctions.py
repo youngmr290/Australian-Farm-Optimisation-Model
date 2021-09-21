@@ -1540,7 +1540,7 @@ def f1_period_start_nums(numbers, prejoin_tup, season_tup, period_is_startseason
                         , numbers_initial_repro=0, gender_propn_x=1, period_is_prejoin=0, period_is_birth=False):
     ##a) reallocate for season type
     if np.any(period_is_startseason):
-        temporary = np.sum(numbers, axis = season_tup, keepdims=True)  * season_propn_z  #Calculate temporary values as if period_is_break
+        temporary = np.sum(numbers * season_propn_z, axis = season_tup, keepdims=True) #Calculate temporary values as if period_is_break
         numbers = fun.f_update(numbers, temporary, period_is_startseason)  #Set values where it is beginning of FVP
     ##b)things for dams - prejoining and moving between classes
     if group==1 and np.any(period_is_prejoin):
