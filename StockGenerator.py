@@ -5820,10 +5820,11 @@ def generator(params,r_vals,nv,plots = False):
                     * mask_numbers_provdry_k28k29tva1e1b1nwzida0e0b0xyg1[...,na,na]
                     * distribution_tva1e1b1nw8zida0e0b0xyg1w9[:,:,:,:,b1:b1+1,..., na,:]
                     * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,:,:,b1:b1+1,...] == index_k28k29tva1e1b1nwzida0e0b0xyg1)[..., na,na]                #The numerator has both k2 with g9 axis and without. One to reflect the decision variable (k28) and one for the constraint (k29). So I think this is all good
-                    * (a_k2cluster_next_tva1e1b1nwzida0e0b0xyg1g9[:,:,:,:,b1:b1+1,...] == index_k29tva1e1b1nwzida0e0b0xyg1g9)[..., na],
-                    axis=(e1_pos - 2), keepdims=True))
-        denominator += (np.sum(numbers_start_va1e1b1nwzida0e0b0xyg1[:,:,:,b1:b1+1,...] * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,:,:,b1:b1+1,...] == index_k28k29tva1e1b1nwzida0e0b0xyg1),
-                    axis=e1_pos, keepdims=True)[..., na,na]) #na for w9 and g9 (use standard cluster without t/g9 axis because the denominator is (the clustering for) the decision variable as at the start of the DVP)
+                    * (a_k2cluster_next_tva1e1b1nwzida0e0b0xyg1g9[:,:,:,:,b1:b1+1,...] == index_k29tva1e1b1nwzida0e0b0xyg1g9)[..., na]
+                    , axis=(e1_pos - 2), keepdims=True))
+        denominator += (np.sum(numbers_start_va1e1b1nwzida0e0b0xyg1[:,:,:,b1:b1+1,...]
+                               * (a_k2cluster_va1e1b1nwzida0e0b0xyg1[:,:,:,b1:b1+1,...] == index_k28k29tva1e1b1nwzida0e0b0xyg1)
+                               , axis=e1_pos, keepdims=True)[..., na,na]) #na for w9 and g9 (use standard cluster without t/g9 axis because the denominator is (the clustering for) the decision variable as at the start of the DVP)
     numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = fun.f_divide(numerator,denominator, dtype=dtype)
 
     ####dams transferring between ram groups in the same DVP.
@@ -6389,7 +6390,7 @@ def generator(params,r_vals,nv,plots = False):
     mj_ave_k2p6ftva1e1b1nwzida0e0b0xyg1 = mei_k2p6ftva1e1b1nwzida0e0b0xyg1 / days_p6_p6tva1e1b1nwzida0e0b0xyg[:,na,...]
     mj_ave_k3k5p6ftva1e1b1nwzida0e0b0xyg3 = mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3 / days_p6_p6tva1e1b1nwzida0e0b0xyg[:,na,...]
     ####returns the number of dse of each animal in each dvp - this is combined with the variable numbers in reporting to get the total dse
-    # note: sires have a single long DVP and are on-hand for multiple years. Therefore, mj_ave is higher (becasue the decision variable is representing multiple sires)
+    # note: sires have a single long DVP and are on-hand for multiple years. Therefore, mj_ave is higher (because the decision variable is representing multiple sires)
     dsemj_p6tva1e1b1nwzida0e0b0xyg0 = np.sum(mj_ave_p6ftva1e1b1nwzida0e0b0xyg0 / pinp.sheep['i_dse_mj'], axis = 1)
     dsemj_k2p6tva1e1b1nwzida0e0b0xyg1 = np.sum(mj_ave_k2p6ftva1e1b1nwzida0e0b0xyg1 / pinp.sheep['i_dse_mj'], axis = 2)
     dsemj_k3k5p6tva1e1b1nwzida0e0b0xyg3 = np.sum(mj_ave_k3k5p6ftva1e1b1nwzida0e0b0xyg3 / pinp.sheep['i_dse_mj'], axis = 3)
@@ -6406,7 +6407,7 @@ def generator(params,r_vals,nv,plots = False):
                                         on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg3, days_period_p=days_period_cut_pa1e1b1nwzida0e0b0xyg3,
                                         a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p], index_any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,...])
     ####returns the average nw for each animal for the each feed period (cum nw accounts for if the animal is on hand - if the animal is sold the average nw will be lower in that feed period)
-    # note: sires have a single long DVP and are on-hand for multiple years of the same p6. Therefore, nw_ave is higher (becasue the decision variable is representing multiple sires)
+    # note: sires have a single long DVP and are on-hand for multiple years of the same p6. Therefore, nw_ave is higher (because the decision variable is representing multiple sires)
     nw_ave_p6tva1e1b1nwzida0e0b0xyg0 = nw_cum_p6a1e1b1nwzida0e0b0xyg0[:,na,na,...] / days_p6_p6tva1e1b1nwzida0e0b0xyg
     nw_ave_p6tva1e1b1nwzida0e0b0xyg1 = nw_cum_p6tva1e1b1nwzida0e0b0xyg1 / days_p6_p6tva1e1b1nwzida0e0b0xyg
     nw_ave_p6tva1e1b1nwzida0e0b0xyg3 = nw_cum_p6tva1e1b1nwzida0e0b0xyg3 / days_p6_p6tva1e1b1nwzida0e0b0xyg

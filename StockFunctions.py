@@ -1414,12 +1414,12 @@ def f1_season_wa(numbers, var, season, mask_min_lw_z, period_is_startseason):
     temporary = fun.f_weighted_average(var,numbers,season,keepdims=True, non_zero=True)  # gets the weighted average of production in the different seasons
     ###adjust production for min lw: the w slices with the minimum lw get assigned the production associated with the animal from the season with the lightest animal (this is so the light animals in the poor seasons are not disregarded when distributing in PP).
     ###use masked array to average the production from the z slices with the lightest animal (this is required in case multiple z slices have the same weight animals)
-    masked_var = np.ma.masked_array(var,np.logical_not(mask_min_lw_z))
-    mean_var = np.mean(masked_var ,axis=season,keepdims=True) #take the mean in case multiple season slices have the same weight light animal.
-    temporary[np.any(mask_min_lw_z,axis=season, keepdims=True)] = mean_var[np.any(mask_min_lw_z,axis=season, keepdims=True)]
+    masked_var = np.ma.masked_array(var, np.logical_not(mask_min_lw_z))
+    mean_var = np.mean(masked_var, axis=season, keepdims=True) #take the mean in case multiple season slices have the same weight light animal.
+    temporary[np.any(mask_min_lw_z, axis=season, keepdims=True)] = mean_var[np.any(mask_min_lw_z, axis=season, keepdims=True)]
 
     ###Set values where it is beginning of FVP
-    var = fun.f_update(var,temporary,period_is_startseason)
+    var = fun.f_update(var, temporary, period_is_startseason)
     return var
 
 
@@ -1540,6 +1540,7 @@ def f1_period_start_nums(numbers, prejoin_tup, season_tup, period_is_startseason
                         , numbers_initial_repro=0, gender_propn_x=1, period_is_prejoin=0, period_is_birth=False):
     ##a) reallocate for season type
     if np.any(period_is_startseason):
+        #todo should the next line be = np.sum(numbers * season_propn_z, axis = season_tup, keepdims=True) so that the current numbers are weighted by the season probability before they are summed.
         temporary = np.sum(numbers, axis = season_tup, keepdims=True)  * season_propn_z  #Calculate temporary values as if period_is_break
         numbers = fun.f_update(numbers, temporary, period_is_startseason)  #Set values where it is beginning of FVP
     ##b)things for dams - prejoining and moving between classes
@@ -1816,7 +1817,7 @@ def f_sale_value(cu0, cx, o_rc, o_ffcfw_pg, dressp_adj_yg, dresspercent_adj_s6pg
     sale_value_s7pg = sale_value_s7pg * (1 - sale_cost_pc_s7pg) - sale_cost_hd_s7pg
 
     ## Select the best net sale price from the relevant grids
-    ###Mask the grids based on the maximum age, minimun age and the gender for each grid
+    ###Mask the grids based on the maximum age, minimum age and the gender for each grid
     sale_value_s7pg = sale_value_s7pg * mask_s7x_s7pg * (age_end_p5g1/30 <= sale_agemax_s7pg1) * (age_end_p5g1/30 >= sale_agemin_s7pg1) #divide 30 to convert to months
     ###Select the maximum value across the grids
     sale_value = np.max(sale_value_s7pg, axis=0)
