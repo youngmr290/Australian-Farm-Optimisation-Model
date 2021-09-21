@@ -251,7 +251,7 @@ def f_cropgraze_yield_penalty():
     ###if calculating yield penalty for grain transfer then only include harvested crops (eg dont include fodders)
     yield_reduction_propn_kp6z = yield_reduction_propn_kp6z * (proportion_grain_harv_k>0)[:,na,na]
 
-    ##calc stubble reduction
+    ##calc stubble reduction (kg of stubble per kg of crop DM consumed)
     stubble_reduction_propn_kp6z = stub_yield_reduction_propn_kp6z * stubble_per_grain_k[:,na,na]
     return yield_reduction_propn_kp6z, stubble_reduction_propn_kp6z
 
