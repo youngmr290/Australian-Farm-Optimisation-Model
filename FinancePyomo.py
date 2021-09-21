@@ -63,22 +63,22 @@ def f1_finpyomo_local(params, model):
     #########################
     #call Local constrain   #
     #########################
-    # f_con_overdraw(params, model)
+    f_con_overdraw(params, model)
 
 
 
 ############
 #Contraints#
 ############
-# def f_con_overdraw(params, model):
-#     '''
-#     Constrains the level of overdraw in each cashflow period.
-#
-#     This ensures the model draws a realistic level of money from the bank. The user can specify the
-#     maximum overdraw level.
-#     '''
-#     ##debit can't be more than a specified amount ie farmers will draw a maximum from the bank throughout yr
-#     def overdraw(model,c):
-#         return model.v_debit[c] <= params['overdraw']
-#     model.con_overdraw = Constraint(model.s_cashflow_periods, rule=overdraw, doc='overdraw limit')
+def f_con_overdraw(params, model):
+    '''
+    Constrains the level of overdraw in each cashflow period.
+
+    This ensures the model draws a realistic level of money from the bank. The user can specify the
+    maximum overdraw level.
+    '''
+    ##debit can't be more than a specified amount ie farmers will draw a maximum from the bank throughout yr
+    def overdraw(model,c0,p7,z):
+        return model.v_wc_debit[c0,p7,z] <= params['overdraw']
+    model.con_overdraw = Constraint(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, rule=overdraw, doc='overdraw limit')
 
