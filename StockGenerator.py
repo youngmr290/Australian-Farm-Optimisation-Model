@@ -176,6 +176,7 @@ def generator(params,r_vals,nv,plots = False):
     len_p6 = len(per.f_feed_periods()) - 1 #-1 because the end feed period date is included
     len_p7 = len(per.f_cashflow_periods(return_keys_p7=True))
     len_p8 = np.count_nonzero(pinp.sheep['i_mask_p8'])
+    len_q = pinp.general['i_len_q'] #length of season sequence
     len_q0	 = uinp.sheep['i_eqn_exists_q0q1'].shape[1]
     len_q1	 = len(uinp.sheep['i_eqn_reportvars_q1'])
     len_q2	 = np.max(uinp.sheep['i_eqn_reportvars_q1'])
@@ -5779,10 +5780,23 @@ def generator(params,r_vals,nv,plots = False):
                                                                   * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na],
                                                                     axis=d_pos-1, keepdims=True) > 0)
 
+    ##sequence mask
+    # index_q = np.arange(len_q)
+    # ###The number of ‘s’ that are grouped together for each ‘q’
+    # step_sparam_q = np.power(len_z,len_q - 1 - index_q)
+    # ###The number of ‘z’ that are grouped together for each ‘q’
+    # step_zparam_q = np.power(len_z,len_q - 2 - index_q)
+    # ###Only the first ‘s’ in the group is active (not masked)
+    # mask_s8vars_qs = (index_s8 % step_sparam_q == 0)
+    # mask_provqs8z8s9_qs8z8s9 = (mask_s8vars_qs
+    # *(np.trunc(index_s8 / step_sparam_q) == np.trunc(index_s9 / step_sparam_q))
+    # *(index_z8 == np.trunc(index_s9 / step_zparam_q) % len_z)
+    # season_seq_prob_qsz = np.cumprod(np.sum(season_propn_z * mask_s8vars_qs,axis=z),
+    #                                  axis=q))  # todo as above, work needed to represent sequence of interest. Currently z axis is not active.
+    # p_wyear_inc = mask_s8vars_qs  # todo work needed to allow masking ‘sequence of interest’ (with a z8 axis).
+    # p_season_prob = season_seq_prob_qsz
 
-
-
-    ###########################
+###########################
     #create production params #
     ###########################
     '''some sire params don't go through here because no associations are required'''
