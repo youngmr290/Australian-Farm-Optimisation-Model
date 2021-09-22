@@ -16,7 +16,7 @@ params={}
 r_vals={}
 
 #call this to adjust inputs with p6 axis for season nodes
-pinp.property_inp_sa()
+pinp.f_property_inp_sa()
 
 ##Populate the nv dict with the input values for the nv cutoffs (normally are from StockGenerator)
 ### create nv dict
