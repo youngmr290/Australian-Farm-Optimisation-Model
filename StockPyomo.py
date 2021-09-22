@@ -406,18 +406,52 @@ def f_con_dam_withinR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w
             return pe.Constraint.Skip
         ##need to use both provide & require in this if statement (even though it is slower) because there are situations eg dvp4 (prejoining) where prov will have a value and req will not.
         ##but the prov parameter is necessary as it allows other dam permutations on this constraint
-        return sum(model.v_dams[k28,t1,v1,a,n1,w8,z8,i,y1,g1] * model.p_numbers_req_dams[k28,k29,t1,v1,a,n1,w8,z8,i,y1,g1,g9,w9]
-                   * model.p_childz_req[z8,z9]
-                   - model.v_dams[k28,t1,v1_prev,a,n1,w8,z8,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z8,i,y1,g1,g9,w9]
-                   * model.p_parentchildz_transfer_dams[k28,v1_prev,z8,g1,z9]
-                   - model.v_dams[k28,t1,v1,a,n1,w8,z8,i,y1,g1] * model.p_numbers_provthis_dams[k28,k29,t1,v1,a,n1,w8,z8,i,y1,g1,g9,w9]
-                   * model.p_parentchildz_transfer_dams[k28,v1_prev,z8,g1,z9]
+        # return sum(model.v_dams[k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_req_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
+        #            - sum(model.v_dams[k28,t1,v1_prev,a,n1,w8,z8,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z8,i,y1,g1,g9,w9]
+        #                * model.p_parentchildz_transfer_dams[k28,v1_prev,z8,g1,z9] for z8 in model.s_season_types)
+        #            - model.v_dams[k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_provthis_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
+        #            for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams
+        #            for w8 in model.s_lw_dams for g1 in model.s_groups_dams
+        #            if pe.value(model.p_numbers_req_dams[k29, k29, t1, v1, a, n1, w9, z9, i, y1, g1,g9, w9]) != 0
+        #            ) <=0
+
+
+        # return sum(model.v_dams[k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_req_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
+        #            - model.v_dams[k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_provthis_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
+        #            - sum(model.v_dams[k28,t1,v1_prev,a,n1,w8,z8,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z8,i,y1,g1,g9,w9]
+        #               * model.p_parentchildz_transfer_dams[k28,v1_prev,z8,g1,z9] for z8 in model.s_season_types )
+        #            for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams
+        #            for w8 in model.s_lw_dams for g1 in model.s_groups_dams
+        #            if pe.value(model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1,g9, w9]) != 0
+        #            or pe.value(model.p_numbers_prov_dams[k28, k29, t1, v1_prev, a, n1, w8, z9, i, y1, g1, g9, w9]) != 0
+        #            or pe.value(model.p_numbers_provthis_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1, g9, w9]) != 0) <=0
+
+        return sum(model.v_dams[k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_req_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
                    for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams
-                   for z8 in model.s_season_types for w8 in model.s_lw_dams for g1 in model.s_groups_dams
-                   if pe.value(model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, z8, i, y1, g1,g9, w9]) != 0
-                   or pe.value(model.p_childz_req[z8,z9]) != 0
-                   or pe.value(model.p_numbers_prov_dams[k28, k29, t1, v1_prev, a, n1, w8, z8, i, y1, g1, g9, w9]) != 0
-                   or pe.value(model.p_numbers_provthis_dams[k28, k29, t1, v1, a, n1, w8, z8, i, y1, g1, g9, w9]) != 0) <=0
+                   for w8 in model.s_lw_dams for g1 in model.s_groups_dams
+                   if pe.value(model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1,g9, w9]) != 0) \
+               - sum(model.v_dams[k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_provthis_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
+                       for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams
+                       for w8 in model.s_lw_dams for g1 in model.s_groups_dams
+                       or pe.value(model.p_numbers_provthis_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1, g9, w9]) != 0) \
+               - sum(model.v_dams[k28,t1,v1_prev,a,n1,w8,z8,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z8,i,y1,g1,g9,w9]
+                     * model.p_parentchildz_transfer_dams[k28,v1_prev,z8,g1,z9]
+                       for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams
+                       for z8 in model.s_season_types for w8 in model.s_lw_dams for g1 in model.s_groups_dams
+                       or pe.value(model.p_numbers_prov_dams[k28, k29, t1, v1_prev, a, n1, w8, z8, i, y1, g1, g9, w9]) != 0
+                    ) <=0
+
+        # return sum(model.v_dams[k28,t1,v1,a,n1,w8,z8,i,y1,g1] * model.p_numbers_req_dams[k28,k29,t1,v1,a,n1,w8,z8,i,y1,g1,g9,w9]
+        #            * model.p_childz_req[z8,z9]
+        #            - model.v_dams[k28,t1,v1,a,n1,w8,z8,i,y1,g1] * model.p_numbers_provthis_dams[k28,k29,t1,v1,a,n1,w8,z8,i,y1,g1,g9,w9]
+        #            * model.p_childz_req[z8,z9]
+        #            - model.v_dams[k28,t1,v1_prev,a,n1,w8,z8,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z8,i,y1,g1,g9,w9]
+        #            * model.p_parentchildz_transfer_dams[k28,v1_prev,z8,g1,z9]
+        #            for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams
+        #            for z8 in model.s_season_types for w8 in model.s_lw_dams for g1 in model.s_groups_dams
+        #            if pe.value(model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, z8, i, y1, g1,g9, w9]) != 0
+        #            or pe.value(model.p_numbers_prov_dams[k28, k29, t1, v1_prev, a, n1, w8, z8, i, y1, g1, g9, w9]) != 0
+        #            or pe.value(model.p_numbers_provthis_dams[k28, k29, t1, v1, a, n1, w8, z8, i, y1, g1, g9, w9]) != 0) <=0
         #todo i should be able to remove the prov bit from if statement but i cant why?? i thought maybe due to z8 providing multiple z9 but that doesnt seem to be the reason.
 
     start_con_damR=time.time()
