@@ -6,8 +6,10 @@ time_list.append(timer()) ; time_was.append("start")
 
 import StructuralInputs as sinp
 import PropertyInputs as pinp
+import UniversalInputs as uinp
 import Periods as per
-
+import Functions as fun
+import Sensitivity as sen
 import CropGrazing as cgz
 
 
@@ -15,8 +17,17 @@ import CropGrazing as cgz
 params={}
 r_vals={}
 
-#call this to adjust inputs with p6 axis for season nodes
+exp_data, exp_group_bool = fun.f_read_exp()
+exp_data = fun.f_group_exp(exp_data, exp_group_bool)
+##update sensitivity values
+fun.f_update_sen(4,exp_data,sen.sam,sen.saa,sen.sap,sen.sar,sen.sat,sen.sav) #4 is quick test
+##call sa functions - assigns sa variables to relevant inputs
+sinp.f_structural_inp_sa()
+uinp.f_universal_inp_sa()
 pinp.f_property_inp_sa()
+##expand p6 axis to include nodes
+sinp.f1_expand_p6()
+pinp.f1_expand_p6()
 
 ##Populate the nv dict with the input values for the nv cutoffs (normally are from StockGenerator)
 ### create nv dict
