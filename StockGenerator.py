@@ -5750,7 +5750,9 @@ def generator(params,r_vals,nv,plots = False):
     # Create Season transfer mask #
     ###############################
     '''If a season is not identified then it does not transfer any parameters. Therefore to reduce size we can mask
-    all parameters with a z8 axis. We also require a z8z9 mask which controls transfer params'''
+    all parameters with a z8 axis. We also require a z8z9 mask which controls transfer params.
+    z8z9 is required for parameters from the previous period that provide/require in the current period because 
+    if a season is identified in a given dvp it provides to multiple z slices in the next dvp.'''
 
     ##inputs
     date_initiate_z = pinp.f_seasonal_inp(pinp.general['i_date_initiate_z'], numpy=True, axis=0).astype('datetime64')
@@ -5759,7 +5761,7 @@ def generator(params,r_vals,nv,plots = False):
 
     ##dams child parent transfer
     #todo mask_z8var_va1e1b1nwzida0e0b0xyg1 should be applied to all params with an active v & z axis (same as mask_w8vars_va1e1b1nw8zida0e0b0xyg1)
-    mask_param_provz8z9_va1e1b1nwzida0e0b0xyg1z9,mask_z8var_va1e1b1nwzida0e0b0xyg1,mask_param_reqz8z9_z8z9 = \
+    mask_param_provz8z9_va1e1b1nwzida0e0b0xyg1z9, mask_z8var_va1e1b1nwzida0e0b0xyg1 = \
     fun.f_season_transfer_mask(dvp_start_va1e1b1nwzida0e0b0xyg1, date_node_zidaebxygm, date_initiate_zidaebxyg, index_zidaebxyg, bool_steady_state, z_pos)
 
     ###this needs to be rolled 1 becasue the param is accessed using v_prev (cant use v because it gets k2 axis)
@@ -5771,7 +5773,7 @@ def generator(params,r_vals,nv,plots = False):
 
     ##offs child parent transfer
     #todo mask_z8var_va1e1b1nwzida0e0b0xyg1 should be applied to all params with an active v & z axis (same as mask_w8vars_va1e1b1nw8zida0e0b0xyg1)
-    mask_param_provz8z9_va1e1b1nwzida0e0b0xyg3z9,mask_z8var_va1e1b1nwzida0e0b0xyg3,mask_param_reqz8z9_z8z9 = \
+    mask_param_provz8z9_va1e1b1nwzida0e0b0xyg3z9, mask_z8var_va1e1b1nwzida0e0b0xyg3 = \
     fun.f_season_transfer_mask(dvp_start_va1e1b1nwzida0e0b0xyg3, date_node_zidaebxygm, date_initiate_zidaebxyg, index_zidaebxyg, bool_steady_state, z_pos)
     ###this needs to be rolled 1 becasue the param is accessed using v_prev (cant use v because it gets k3 axis)
     mask_param_provz8z9_va1e1b1nwzida0e0b0xyg3z9 = np.roll(mask_param_provz8z9_va1e1b1nwzida0e0b0xyg3z9, axis=0, shift=-1)
@@ -5796,7 +5798,7 @@ def generator(params,r_vals,nv,plots = False):
     # p_wyear_inc = mask_s8vars_qs  # todo work needed to allow masking ‘sequence of interest’ (with a z8 axis).
     # p_season_prob = season_seq_prob_qsz
 
-###########################
+    ###########################
     #create production params #
     ###########################
     '''some sire params don't go through here because no associations are required'''
@@ -7305,12 +7307,12 @@ def generator(params,r_vals,nv,plots = False):
     params['p_wg_propn_p6z'] = dict(zip(tup_p6z,wg_propn_p6z))
 
     ##season transfer masks
-    mask=mask_param_reqz8z9_z8z9!=0
-    mask_param_reqz8z9_z8z9 = mask_param_reqz8z9_z8z9[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_z8z9=index_z8z9[mask,:]
-    tup_z8z9 = tuple(map(tuple, index_cut_z8z9))
-    params['p_childz_req'] =dict(zip(tup_z8z9, mask_param_reqz8z9_z8z9))
+    # mask=mask_param_reqz8z9_z8z9!=0
+    # mask_param_reqz8z9_z8z9 = mask_param_reqz8z9_z8z9[mask] #applying the mask does the raveling and squeezing of array
+    # mask=mask.ravel()
+    # index_cut_z8z9=index_z8z9[mask,:]
+    # tup_z8z9 = tuple(map(tuple, index_cut_z8z9))
+    # params['p_childz_req'] =dict(zip(tup_z8z9, mask_param_reqz8z9_z8z9))
     ###dams prov
     mask=mask_param_provz8z9_k2tva1e1b1nwzida0e0b0xyg1z9!=0
     mask_param_provz8z9_k2vz8g1z9 = mask_param_provz8z9_k2tva1e1b1nwzida0e0b0xyg1z9[mask] #applying the mask does the raveling and squeezing of array

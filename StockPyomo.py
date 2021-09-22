@@ -276,15 +276,15 @@ def f1_stockpyomo_local(params, model):
     #                                initialize=, default=0.0, doc='cost of purchased offs')
 
     ##season
-    model.p_childz_req = pe.Param(model.s_season_types, model.s_season_types, initialize=params['p_childz_req'],
-                                  default=0.0, mutable=False, doc='z8z9 numbers required')
+    # model.p_childz_req = pe.Param(model.s_season_types, model.s_season_types, initialize=params['p_childz_req'],
+    #                               default=0.0, mutable=False, doc='z8z9 numbers required')
     model.p_parentchildz_transfer_dams = pe.Param(model.s_k2_birth_dams, model.s_dvp_dams, model.s_season_types, model.s_groups_dams,
                                   model.s_season_types, initialize=params['p_parentchildz_transfer_dams'], default=0.0,
-                                  mutable=False, doc='number of dse for each dam activity')
+                                  mutable=False, doc='Transfer of z8 dv in the previous dvp to z9 constraint in the current dvp')
     model.p_parentchildz_transfer_offs = pe.Param(model.s_k3_damage_offs, model.s_dvp_offs, model.s_season_types,
                                                   model.s_gender, model.s_groups_offs, model.s_season_types,
                                                   initialize=params['p_parentchildz_transfer_offs'], default=0.0,
-                                                  mutable=False, doc='number of dse for each offs activity')
+                                                  mutable=False, doc='Transfer of z8 dv in the previous dvp to z9 constraint in the current dvp')
 
     ##write param to text file.
     # textbuffer = StringIO()
@@ -416,30 +416,30 @@ def f_con_dam_withinR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w
         #            ) <=0
 
 
-        # return sum(model.v_dams[k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_req_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
-        #            - model.v_dams[k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_provthis_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
-        #            - sum(model.v_dams[k28,t1,v1_prev,a,n1,w8,z8,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z8,i,y1,g1,g9,w9]
-        #               * model.p_parentchildz_transfer_dams[k28,v1_prev,z8,g1,z9] for z8 in model.s_season_types )
-        #            for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams
-        #            for w8 in model.s_lw_dams for g1 in model.s_groups_dams
-        #            if pe.value(model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1,g9, w9]) != 0
-        #            or pe.value(model.p_numbers_prov_dams[k28, k29, t1, v1_prev, a, n1, w8, z9, i, y1, g1, g9, w9]) != 0
-        #            or pe.value(model.p_numbers_provthis_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1, g9, w9]) != 0) <=0
-
         return sum(model.v_dams[k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_req_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
+                   - model.v_dams[k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_provthis_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
+                   - sum(model.v_dams[k28,t1,v1_prev,a,n1,w8,z8,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z8,i,y1,g1,g9,w9]
+                      * model.p_parentchildz_transfer_dams[k28,v1_prev,z8,g1,z9] for z8 in model.s_season_types )
                    for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams
                    for w8 in model.s_lw_dams for g1 in model.s_groups_dams
-                   if pe.value(model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1,g9, w9]) != 0) \
-               - sum(model.v_dams[k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_provthis_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
-                       for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams
-                       for w8 in model.s_lw_dams for g1 in model.s_groups_dams
-                       or pe.value(model.p_numbers_provthis_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1, g9, w9]) != 0) \
-               - sum(model.v_dams[k28,t1,v1_prev,a,n1,w8,z8,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z8,i,y1,g1,g9,w9]
-                     * model.p_parentchildz_transfer_dams[k28,v1_prev,z8,g1,z9]
-                       for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams
-                       for z8 in model.s_season_types for w8 in model.s_lw_dams for g1 in model.s_groups_dams
-                       or pe.value(model.p_numbers_prov_dams[k28, k29, t1, v1_prev, a, n1, w8, z8, i, y1, g1, g9, w9]) != 0
-                    ) <=0
+                   if pe.value(model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1,g9, w9]) != 0
+                   or pe.value(model.p_numbers_prov_dams[k28, k29, t1, v1_prev, a, n1, w8, z9, i, y1, g1, g9, w9]) != 0
+                   or pe.value(model.p_numbers_provthis_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1, g9, w9]) != 0) <=0
+
+        # return sum(model.v_dams[k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_req_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
+        #            for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams
+        #            for w8 in model.s_lw_dams for g1 in model.s_groups_dams
+        #            if pe.value(model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1,g9, w9]) != 0) \
+        #        - sum(model.v_dams[k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_provthis_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
+        #                for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams
+        #                for w8 in model.s_lw_dams for g1 in model.s_groups_dams
+        #                if pe.value(model.p_numbers_provthis_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1, g9, w9]) != 0) \
+        #        - sum(model.v_dams[k28,t1,v1_prev,a,n1,w8,z8,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z8,i,y1,g1,g9,w9]
+        #              * model.p_parentchildz_transfer_dams[k28,v1_prev,z8,g1,z9]
+        #                for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams
+        #                for z8 in model.s_season_types for w8 in model.s_lw_dams for g1 in model.s_groups_dams
+        #                if pe.value(model.p_numbers_prov_dams[k28, k29, t1, v1_prev, a, n1, w8, z8, i, y1, g1, g9, w9]) != 0
+        #             ) <=0
 
         # return sum(model.v_dams[k28,t1,v1,a,n1,w8,z8,i,y1,g1] * model.p_numbers_req_dams[k28,k29,t1,v1,a,n1,w8,z8,i,y1,g1,g9,w9]
         #            * model.p_childz_req[z8,z9]

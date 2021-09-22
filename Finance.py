@@ -295,7 +295,7 @@ def f_cashflow_z8z9_transfer(params, mask=False):
 
     ##dams child parent transfer
     #todo mask_cashflow_z8var_c0p7z should be applied to all cashflow params
-    mask_cashflow_provz8z9_c0p7z8z9, mask_cashflow_z8var_c0p7z, mask_cashflow_reqz8z9_z8z9 = \
+    mask_cashflow_provz8z9_c0p7z8z9, mask_cashflow_z8var_c0p7z = \
     fun.f_season_transfer_mask(p_dates_c0p7z, date_node_zm, date_initiate_z, index_z, bool_steady_state, z_pos=-1)
 
     if mask:
@@ -310,11 +310,11 @@ def f_cashflow_z8z9_transfer(params, mask=False):
     index_c0p7z8z9 = fun.cartesian_product_simple_transpose(arrays)
     tup_c0p7z8z9 = tuple(map(tuple,index_c0p7z8z9))
 
-    arrays = [keys_z, keys_z]
-    index_z8z9 = fun.cartesian_product_simple_transpose(arrays)
-    tup_z8z9 = tuple(map(tuple,index_z8z9))
+    # arrays = [keys_z, keys_z]
+    # index_z8z9 = fun.cartesian_product_simple_transpose(arrays)
+    # tup_z8z9 = tuple(map(tuple,index_z8z9))
 
-    params['p_childz_req_cashflow'] =dict(zip(tup_z8z9, mask_cashflow_reqz8z9_z8z9.ravel()*1))
+    # params['p_childz_req_cashflow'] =dict(zip(tup_z8z9, mask_cashflow_reqz8z9_z8z9.ravel()*1))
     params['p_parentchildz_transfer_cashflow'] =dict(zip(tup_c0p7z8z9, mask_cashflow_provz8z9_c0p7z8z9.ravel()*1))
 
 #################
