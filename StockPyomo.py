@@ -275,15 +275,23 @@ def f1_stockpyomo_local(params, model):
     # model.p_cost_purch_offs = Param(model.s_dvp_offs, model.s_lw_offs, model.s_tol, model.s_groups_offs, model.s_cashflow_periods,
     #                                initialize=, default=0.0, doc='cost of purchased offs')
 
-    ##season
+    ##season - current and prev versions of the param are required becasue in the numbers constraint they are indexed by v_prev and in the prog constraints they are indexed by v.
     # model.p_childz_req = pe.Param(model.s_season_types, model.s_season_types, initialize=params['p_childz_req'],
     #                               default=0.0, mutable=False, doc='z8z9 numbers required')
     model.p_parentchildz_transfer_dams = pe.Param(model.s_k2_birth_dams, model.s_dvp_dams, model.s_season_types, model.s_groups_dams,
                                   model.s_season_types, initialize=params['p_parentchildz_transfer_dams'], default=0.0,
+                                  mutable=False, doc='Transfer of z8 dv in the current dvp to z9 constraint in the current dvp')
+    model.p_parentchildz_transfer_dams_vprev = pe.Param(model.s_k2_birth_dams, model.s_dvp_dams, model.s_season_types, model.s_groups_dams,
+                                  model.s_season_types, initialize=params['p_parentchildz_transfer_dams_vprev'], default=0.0,
                                   mutable=False, doc='Transfer of z8 dv in the previous dvp to z9 constraint in the current dvp')
+    #todo this one isnt used anywhere atm for offs - once prog is hooked up i can probably remove this (remove in sgen also)
     model.p_parentchildz_transfer_offs = pe.Param(model.s_k3_damage_offs, model.s_dvp_offs, model.s_season_types,
                                                   model.s_gender, model.s_groups_offs, model.s_season_types,
                                                   initialize=params['p_parentchildz_transfer_offs'], default=0.0,
+                                                  mutable=False, doc='Transfer of z8 dv in the current dvp to z9 constraint in the current dvp')
+    model.p_parentchildz_transfer_offs_vprev = pe.Param(model.s_k3_damage_offs, model.s_dvp_offs, model.s_season_types,
+                                                  model.s_gender, model.s_groups_offs, model.s_season_types,
+                                                  initialize=params['p_parentchildz_transfer_offs_vprev'], default=0.0,
                                                   mutable=False, doc='Transfer of z8 dv in the previous dvp to z9 constraint in the current dvp')
 
     ##write param to text file.
@@ -323,7 +331,7 @@ def f1_stockpyomo_local(params, model):
     l_w9_offs = list(model.s_lw_offs)
 
     ##call local constraint functions
-    f_con_offR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9_offs)
+    f_con_off_withinR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9_offs)
     f_con_dam_withinR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w9)
     f_con_progR(model)
     f_con_prog2damsR(model,l_v1)
@@ -351,30 +359,32 @@ speed info:
 - constraints can only be skipped on based on the req param. if the provide side is 0 and you skip the constraint then that would mean there would be no restriction for the require variable.
 '''
 
-def f_con_offR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9_offs):
+def f_con_off_withinR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9_offs):
     '''
     Numbers/transfers of offspring to offspring in the following decision variable period.
 
     '''
-    def offR(model,k3,k5,v3,a,z,i,x,y3,g3,w9):
+    def offR(model,k3,k5,v3,a,z9,i,x,y3,g3,w9):
         v3_prev = l_v3[l_v3.index(v3) - 1]  #used to get the activity number from the last period
         ##skip constraint if the require param is 0 - using the numpy array because it is 2x faster because don't need to loop through activity keys eg k28
         ###get the index number - required so numpy array can be indexed
         t_k3 = l_k3.index(k3)
         t_k5 = l_k5.index(k5)
         t_v3 = l_v3.index(v3)
-        t_z = l_z.index(z)
+        t_z = l_z.index(z9)
         t_i = l_i.index(i)
         t_x = l_x.index(x)
         t_g3 = l_g3.index(g3)
         t_w9 = l_w9_offs.index(w9)
         if not np.any(params['numbers_req_numpyversion_k3k5vw8zixg3w9'][t_k3,t_k5,t_v3,:,t_z,t_i,t_x,t_g3,t_w9]):
             return pe.Constraint.Skip
-        return sum(model.v_offs[k3,k5,t3,v3,n3,w8,z,i,a,x,y3,g3] * model.p_numbers_req_offs[k3,k5,v3,w8,z,i,x,g3,w9]
-                   - model.v_offs[k3,k5,t3,v3_prev,n3,w8,z,i,a,x,y3,g3] * model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z,i,a,x,y3,g3,w9]
-                    for t3 in model.s_sale_offs for n3 in model.s_nut_offs for w8 in model.s_lw_offs
-                   if pe.value(model.p_numbers_req_offs[k3,k5,v3,w8,z,i,x,g3,w9]) != 0
-                   or pe.value(model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z,i,a,x,y3,g3,w9]) != 0) <=0 #need to use both in the if statement (even though it is slower) because there are situations eg dvp4 (prejoining) where prov will have a value and req will not.
+        return sum(model.v_offs[k3,k5,t3,v3,n3,w8,z9,i,a,x,y3,g3] * model.p_numbers_req_offs[k3,k5,v3,w8,z9,i,x,g3,w9]
+                   - sum(model.v_offs[k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3] * model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3,w9]
+                      * model.p_parentchildz_transfer_offs_vprev[k3,v3_prev,z8,x,g3,z9] for z8 in model.s_season_types)
+                   for t3 in model.s_sale_offs for n3 in model.s_nut_offs for w8 in model.s_lw_offs
+                   if pe.value(model.p_numbers_req_offs[k3,k5,v3,w8,z9,i,x,g3,w9]) != 0
+                   or pe.value(model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z9,i,a,x,y3,g3,w9]) != 0) <=0 #need to use both in the if statement (even though it is slower) because there are situations eg dvp4 (prejoining) where prov will have a value and req will not.
+
     start_con_offR=time.time()
     model.con_offR = pe.Constraint(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_dvp_offs, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gender,
                                    model.s_gen_merit_dams, model.s_groups_offs, model.s_lw_offs, rule=offR, doc='transfer off to off from last dvp to current dvp.')
@@ -404,11 +414,13 @@ def f_con_dam_withinR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w
         t_w9 = l_w9.index(w9)
         if not np.any(params['numbers_req_numpyversion_k2k2tva1nw8ziyg1g9w9'][:,t_k29,:,t_v1,t_a,:,:,t_z,t_i,t_y1,:,t_g9,t_w9]):
             return pe.Constraint.Skip
+
+        #todo finish timing the constraints. Does adding an if using parentchildz make it faster?
         ##need to use both provide & require in this if statement (even though it is slower) because there are situations eg dvp4 (prejoining) where prov will have a value and req will not.
         ##but the prov parameter is necessary as it allows other dam permutations on this constraint
         # return sum(model.v_dams[k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_req_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
         #            - sum(model.v_dams[k28,t1,v1_prev,a,n1,w8,z8,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z8,i,y1,g1,g9,w9]
-        #                * model.p_parentchildz_transfer_dams[k28,v1_prev,z8,g1,z9] for z8 in model.s_season_types)
+        #                * model.p_parentchildz_transfer_dams_vprev[k28,v1_prev,z8,g1,z9] for z8 in model.s_season_types)
         #            - model.v_dams[k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_provthis_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
         #            for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams
         #            for w8 in model.s_lw_dams for g1 in model.s_groups_dams
@@ -419,7 +431,7 @@ def f_con_dam_withinR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w
         return sum(model.v_dams[k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_req_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
                    - model.v_dams[k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_provthis_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
                    - sum(model.v_dams[k28,t1,v1_prev,a,n1,w8,z8,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z8,i,y1,g1,g9,w9]
-                      * model.p_parentchildz_transfer_dams[k28,v1_prev,z8,g1,z9] for z8 in model.s_season_types )
+                      * model.p_parentchildz_transfer_dams_vprev[k28,v1_prev,z8,g1,z9] for z8 in model.s_season_types)
                    for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams
                    for w8 in model.s_lw_dams for g1 in model.s_groups_dams
                    if pe.value(model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1,g9, w9]) != 0
@@ -435,7 +447,7 @@ def f_con_dam_withinR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w
         #                for w8 in model.s_lw_dams for g1 in model.s_groups_dams
         #                if pe.value(model.p_numbers_provthis_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1, g9, w9]) != 0) \
         #        - sum(model.v_dams[k28,t1,v1_prev,a,n1,w8,z8,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z8,i,y1,g1,g9,w9]
-        #              * model.p_parentchildz_transfer_dams[k28,v1_prev,z8,g1,z9]
+        #              * model.p_parentchildz_transfer_dams_vprev[k28,v1_prev,z8,g1,z9]
         #                for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams
         #                for z8 in model.s_season_types for w8 in model.s_lw_dams for g1 in model.s_groups_dams
         #                if pe.value(model.p_numbers_prov_dams[k28, k29, t1, v1_prev, a, n1, w8, z8, i, y1, g1, g9, w9]) != 0
@@ -446,13 +458,12 @@ def f_con_dam_withinR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w
         #            - model.v_dams[k28,t1,v1,a,n1,w8,z8,i,y1,g1] * model.p_numbers_provthis_dams[k28,k29,t1,v1,a,n1,w8,z8,i,y1,g1,g9,w9]
         #            * model.p_childz_req[z8,z9]
         #            - model.v_dams[k28,t1,v1_prev,a,n1,w8,z8,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z8,i,y1,g1,g9,w9]
-        #            * model.p_parentchildz_transfer_dams[k28,v1_prev,z8,g1,z9]
+        #            * model.p_parentchildz_transfer_dams_vprev[k28,v1_prev,z8,g1,z9]
         #            for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams
         #            for z8 in model.s_season_types for w8 in model.s_lw_dams for g1 in model.s_groups_dams
         #            if pe.value(model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, z8, i, y1, g1,g9, w9]) != 0
         #            or pe.value(model.p_numbers_prov_dams[k28, k29, t1, v1_prev, a, n1, w8, z8, i, y1, g1, g9, w9]) != 0
         #            or pe.value(model.p_numbers_provthis_dams[k28, k29, t1, v1, a, n1, w8, z8, i, y1, g1, g9, w9]) != 0) <=0
-        #todo i should be able to remove the prov bit from if statement but i cant why?? i thought maybe due to z8 providing multiple z9 but that doesnt seem to be the reason.
 
     start_con_damR=time.time()
     model.con_dam_withinR = pe.Constraint(model.s_k2_birth_dams, model.s_dvp_dams, model.s_wean_times, model.s_season_types, model.s_tol, model.s_gen_merit_dams,
@@ -466,12 +477,14 @@ def f_con_progR(model):
     a progeny variable before being transferred to either offspring or dam variables (see prog2dams and prog2offs).
 
     '''
-    def progR(model, k3, k5, a, z, i9, x, y1, g1, w9):
+    def progR(model, k3, k5, a, z9, i9, x, y1, g1, w9):
         if any(model.p_npw_req[k3, t2, x, g1] for t2 in model.s_sale_prog):
-            return (- sum(model.v_dams[k5, t1, v1, a, n1, w18, z, i, y1, g1]  * model.p_npw[k3, k5, t1, v1, a, n1, w18, z, i, x, y1, g1, w9, i9] #pass in the k5 set to dams - each slice of k5 aligns with a slice in k2 eg 11 and 22. we don't need other k2 slices eg nm
-                        for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams for w18 in model.s_lw_dams for i in model.s_tol
-                             if pe.value(model.p_npw[k3, k5, t1, v1, a, n1, w18, z, i, x, y1, g1, w9, i9])!=0)
-                    + sum(model.v_prog[k3, k5, t2, w9, z, i9, a, x, g1] * model.p_npw_req[k3, t2, x, g1] for t2 in model.s_sale_prog
+            return (- sum(model.v_dams[k5, t1, v1, a, n1, w18, z8, i, y1, g1] * model.p_npw[k3, k5, t1, v1, a, n1, w18, z8, i, x, y1, g1, w9, i9] #pass in the k5 set to dams - each slice of k5 aligns with a slice in k2 eg 11 and 22. we don't need other k2 slices eg nm
+                              * model.p_parentchildz_transfer_dams_vprev[k5,v1,z8,g1,z9]
+                          for z8 in model.s_season_types for t1 in model.s_sale_dams for v1 in model.s_dvp_dams
+                          for n1 in model.s_nut_dams for w18 in model.s_lw_dams for i in model.s_tol
+                          if pe.value(model.p_npw[k3, k5, t1, v1, a, n1, w18, z9, i, x, y1, g1, w9, i9])!=0)
+                    + sum(model.v_prog[k3, k5, t2, w9, z9, i9, a, x, g1] * model.p_npw_req[k3, t2, x, g1] for t2 in model.s_sale_prog
                           if pe.value(model.p_npw_req[k3, t2,x,g1])!=0))<=0
         else:
             return pe.Constraint.Skip
