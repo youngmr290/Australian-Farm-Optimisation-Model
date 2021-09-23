@@ -4596,10 +4596,11 @@ def generator(params,r_vals,nv,plots = False):
     ###cash period allocation
     p7_dates_c0p7pa1e1b1nwzida0e0b0xyg = fun.f_expand(per.f_cashflow_periods(), left_pos=z_pos, left_pos2=p_pos-1, right_pos2=z_pos)
     peakdebt_date_c0p7pa1e1b1nwzida0e0b0xyg = fun.f_expand(per.f_peak_debt_date(), left_pos=p_pos-2)
+    mask_cashflow_z8var_c0p7pa1e1b1nwzida0e0b0xyg = fun.f_expand(fin.f_cashflow_z8z9_transfer(mask=True), left_pos=z_pos, left_pos2=p_pos-1, right_pos2=z_pos)
     ###call allocation/interset function - assumption is that cashflow happens on the first day of the generator period.
     cash_allocation_c0p7pa1e1b1nwzida0e0b0xyg, wc_allocation_c0p7pa1e1b1nwzida0e0b0xyg = fin.f_cashflow_allocation(
         np.array([1]), date_start_pa1e1b1nwzida0e0b0xyg, p7_dates_c0p7pa1e1b1nwzida0e0b0xyg,
-        peakdebt_date_c0p7pa1e1b1nwzida0e0b0xyg, 'stk')
+        peakdebt_date_c0p7pa1e1b1nwzida0e0b0xyg, mask_cashflow_z8var_c0p7pa1e1b1nwzida0e0b0xyg, 'stk')
 
     ###labour period
     labour_periods = per.f_p_date2_df().to_numpy().astype('datetime64[D]') #convert from df to numpy
@@ -5176,9 +5177,11 @@ def generator(params,r_vals,nv,plots = False):
     rm_start_c0p7z = p7_dates_c0p7z[:,0:1,:]
     rm_length = 365  # rm is incurred equally each day
     peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
+    mask_cashflow_z8var_c0p7z = fin.f_cashflow_z8z9_transfer(mask=True)
     ###call allocation/interset function - assumption is that cashflow happens on the first day of the generator period.
-    rm_cash_allocation_c0p7z, rm_wc_allocation_c0p7z = fin.f_cashflow_allocation(
-        np.array([1]), rm_start_c0p7z, p7_dates_c0p7z, peakdebt_date_c0p7z, 'stk', rm_length)
+    rm_cash_allocation_c0p7z, rm_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]), rm_start_c0p7z,
+                                                                                 p7_dates_c0p7z, peakdebt_date_c0p7z,
+                                                                                 mask_cashflow_z8var_c0p7z, 'stk', rm_length)
 
     rm_stockinfra_var_h1 = uinp.sheep['i_infrastructure_costvariable_h1']
     rm_stockinfra_var_h1c0p7z = rm_stockinfra_var_h1[:,na,na,na] * rm_cash_allocation_c0p7z

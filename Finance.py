@@ -86,7 +86,7 @@ na = np.newaxis
 #######################
 
 
-def f_cashflow_allocation(amount,start,p_dates_c0p7,peakdebt_date,enterprise=None,length=1):
+def f_cashflow_allocation(amount,start,p_dates_c0p7,peakdebt_date,z8mask_c0p7,enterprise=None,length=1):
     '''
     This function calculate the interest earned on cashflow item, tallies up the total cashflow including interest
     and tallies up the working capital from a cashflow item.
@@ -105,16 +105,9 @@ def f_cashflow_allocation(amount,start,p_dates_c0p7,peakdebt_date,enterprise=Non
     :param length: int - time over which the cashflow is incurred
     '''
 
-    # pandas = isinstance(amount,pd.DataFrame) or isinstance(amount,pd.Series)
-
     ##inputs
     rate = uinp.finance['i_interest']
     keys_c0 = np.expand_dims(sinp.general['i_enterprises_c0'], tuple(range(1, p_dates_c0p7.ndim)))
-    # p_dates_c0p7z = per.f_cashflow_periods(pandas)
-    # date_peakdebt_stock = pinp.sheep['i_date_peakdebt_stock_i'][pinp.sheep['i_mask_i']]
-    # date_peakdebt_stock = date_peakdebt_stock.astype('datetime64').view('i8').mean(keepdims=True).astype('datetime64[us]') #take mean incase multiple tol included
-    # date_peakdebt_crop = np.array([pinp.crop['i_date_peakdebt_crop']]).astype('datetime64[us]')
-    # peakdebt_date_c0 = np.concatenate([date_peakdebt_stock,date_peakdebt_crop])
     peakdebt_date = np.broadcast_to(peakdebt_date, p_dates_c0p7.shape) #broadcast so that it can be indexed on p7
     peakdebt_date = peakdebt_date + np.timedelta64(365,'D') * (p_dates_c0p7[:,0:1,...]>peakdebt_date[:,0:1,...]) # peak debt is after the start of the cashflow
 
@@ -217,7 +210,7 @@ def f_cashflow_allocation(amount,start,p_dates_c0p7,peakdebt_date,enterprise=Non
     if enterprise is not None:
         final_cashflow = final_cashflow * (keys_c0==enterprise)
 
-    return final_cashflow, final_wc
+    return final_cashflow * z8mask_c0p7, final_wc * z8mask_c0p7
 
 
 #################
@@ -240,10 +233,11 @@ def overheads(params, r_vals):
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = pinp.f_keys_z()
     peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
+    mask_cashflow_z8var_c0p7z = f_cashflow_z8z9_transfer(mask=True)
     ###call allocation/interset function - needs to be numpy
     overhead_cost_allocation_c0p7z, overhead_wc_allocation_c0p7z = f_cashflow_allocation(np.array([1]), overhead_start_c0p7z,
-                                                                                  p_dates_c0p7z,
-                                                                                  peakdebt_date_c0p7z, length=overhead_length)
+                                                                                  p_dates_c0p7z, peakdebt_date_c0p7z,
+                                                                                  mask_cashflow_z8var_c0p7z, length=overhead_length)
     ###convert to df
     new_index_c0p7z = pd.MultiIndex.from_product([keys_c0,keys_p7,keys_z])
     overhead_cost_allocation_c0p7z = pd.Series(overhead_cost_allocation_c0p7z.ravel(),index=new_index_c0p7z)
@@ -277,7 +271,7 @@ def f_min_roe():
 ###################
 #Season transfer  #
 ###################
-def f_cashflow_z8z9_transfer(params, mask=False):
+def f_cashflow_z8z9_transfer(params=None, mask=False):
     '''If a season is not identified then it does not transfer any parameters. Therefore to reduce size we can mask
     all parameters with a z8 axis. We also require a z8z9 mask which controls transfer params'''
 

@@ -66,7 +66,10 @@ def f_buy_grain_price(r_vals):
     keys_z = pinp.f_keys_z()
     peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
     p_dates_c0p7z = per.f_cashflow_periods()
-    grain_cost_allocation_c0p7z, grain_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]), start, p_dates_c0p7z, peakdebt_date_c0p7z, 'stk', length)
+    mask_cashflow_z8var_c0p7z = fin.f_cashflow_z8z9_transfer(mask=True)
+    grain_cost_allocation_c0p7z, grain_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]), start, p_dates_c0p7z,
+                                                                                       peakdebt_date_c0p7z, mask_cashflow_z8var_c0p7z,
+                                                                                       'stk', length)
     ###convert to df
     new_index_c0p7z = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z])
     grain_income_allocation_c0p7z = pd.Series(grain_cost_allocation_c0p7z.ravel(), index=new_index_c0p7z)
@@ -137,35 +140,24 @@ def f_sup_cost(r_vals):
     keys_p6 = pinp.period['i_fp_idx']
     peakdebt_date_c0p7zp6 = per.f_peak_debt_date()[:,na,na,na]
     p_dates_c0p7z = per.f_cashflow_periods()
-    feeding_cost_allocation_c0p7zp6, feeding_wc_allocation_c0p7zp6 = fin.f_cashflow_allocation(np.array([1]), start_p6z.T,
+    mask_cashflow_z8var_c0p7zp6 = fin.f_cashflow_z8z9_transfer(mask=True)[...,na]
+    sup_cost_allocation_c0p7zp6, sup_wc_allocation_c0p7zp6 = fin.f_cashflow_allocation(np.array([1]), start_p6z.T,
                                                                                                p_dates_c0p7z[...,na], peakdebt_date_c0p7zp6,
-                                                                                               'stk', length_p6z.T)
+                                                                                               mask_cashflow_z8var_c0p7zp6, 'stk', length_p6z.T)
     ###convert to df
     new_index_c0p7zp6 = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, keys_p6])
-    feeding_cost_allocation_c0p7zp6 = pd.Series(feeding_cost_allocation_c0p7zp6.ravel(), index=new_index_c0p7zp6)
-    feeding_wc_allocation_c0p7zp6 = pd.Series(feeding_wc_allocation_c0p7zp6.ravel(), index=new_index_c0p7zp6)
+    sup_cost_allocation_c0p7zp6 = pd.Series(sup_cost_allocation_c0p7zp6.ravel(), index=new_index_c0p7zp6)
+    sup_wc_allocation_c0p7zp6 = pd.Series(sup_wc_allocation_c0p7zp6.ravel(), index=new_index_c0p7zp6)
     ###reindex
     cols_c0p7zp6k = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, keys_p6, feeding_cost_k.index])
-    feeding_cost_allocation_c0p7zp6k = feeding_cost_allocation_c0p7zp6.reindex(cols_c0p7zp6k)
-    feeding_wc_allocation_c0p7zp6k = feeding_wc_allocation_c0p7zp6.reindex(cols_c0p7zp6k)
-
-    ##storage cost allocaion
-    storage_cost_allocation_c0p7zp6, storage_wc_allocation_c0p7zp6 = fin.f_cashflow_allocation(np.array([1]), start_p6z.T,
-                                                                                               p_dates_c0p7z[...,na], peakdebt_date_c0p7zp6,
-                                                                                               'stk', length_p6z.T)
-    ###convert to df
-    new_index_c0p7zp6 = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, keys_p6])
-    storage_cost_allocation_c0p7zp6 = pd.Series(storage_cost_allocation_c0p7zp6.ravel(), index=new_index_c0p7zp6)
-    storage_wc_allocation_c0p7zp6 = pd.Series(storage_wc_allocation_c0p7zp6.ravel(), index=new_index_c0p7zp6)
-    ###reindex
-    storage_cost_allocation_c0p7zp6k = storage_cost_allocation_c0p7zp6.reindex(cols_c0p7zp6k)
-    storage_wc_allocation_c0p7zp6k = storage_wc_allocation_c0p7zp6.reindex(cols_c0p7zp6k)
+    sup_cost_allocation_c0p7zp6k = sup_cost_allocation_c0p7zp6.reindex(cols_c0p7zp6k)
+    sup_wc_allocation_c0p7zp6k = sup_wc_allocation_c0p7zp6.reindex(cols_c0p7zp6k)
 
     ##adjust cost for allocation and interest
-    feeding_cost_c0p7zp6k = feeding_cost_allocation_c0p7zp6k.mul(feeding_cost_k, level=4)
-    feeding_wc_c0p7zp6k = feeding_wc_allocation_c0p7zp6k.mul(feeding_cost_k, level=4)
-    storage_cost_c0p7zp6k = storage_cost_allocation_c0p7zp6k.mul(storage_cost_k, level=4)
-    storage_wc_c0p7zp6k = storage_wc_allocation_c0p7zp6k.mul(storage_cost_k, level=4)
+    feeding_cost_c0p7zp6k = sup_cost_allocation_c0p7zp6k.mul(feeding_cost_k, level=4)
+    feeding_wc_c0p7zp6k = sup_wc_allocation_c0p7zp6k.mul(feeding_cost_k, level=4)
+    storage_cost_c0p7zp6k = sup_cost_allocation_c0p7zp6k.mul(storage_cost_k, level=4)
+    storage_wc_c0p7zp6k = sup_wc_allocation_c0p7zp6k.mul(storage_cost_k, level=4)
 
     ##total cost = feeding cost plus storage cost
     total_sup_cost_c0p7zp6k = feeding_cost_c0p7zp6k + storage_cost_c0p7zp6k

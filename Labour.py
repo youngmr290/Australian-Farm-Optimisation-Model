@@ -204,9 +204,10 @@ def f_labour_general(params,r_vals):
     ##labour cost cashflow period allocation and interest
     p_dates_c0p7z = per.f_cashflow_periods()
     peakdebt_date_c0p7zp5 = per.f_peak_debt_date()[:,na,na,na]
+    mask_cashflow_z8var_c0p7zp5 = fin.f_cashflow_z8z9_transfer(mask=True)[...,na]
     labour_cost_allocation_c0p7zp5, labour_wc_allocation_c0p7zp5 = fin.f_cashflow_allocation(np.array([1]), lp_start_p5z.T,
-                                                                                  p_dates_c0p7z[...,na],
-                                                                                  peakdebt_date_c0p7zp5, length=lp_len_p5z.T)
+                                                                                  p_dates_c0p7z[...,na], peakdebt_date_c0p7zp5,
+                                                                                  mask_cashflow_z8var_c0p7zp5, length=lp_len_p5z.T)
     casual_cost_c0p7zp5 = casual_cost_c0zp5[:,na,...] * labour_cost_allocation_c0p7zp5
     casual_wc_c0p7zp5 = casual_cost_c0zp5[:,na,...] * labour_wc_allocation_c0p7zp5
 
@@ -266,10 +267,11 @@ def f_perm_cost(params, r_vals):
     labour_length = 365 #perm labour cost is incurred equally each day
     labour_start_c0p7z = p_dates_c0p7z[:,0:1,:]
     peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
+    mask_cashflow_z8var_c0p7z = fin.f_cashflow_z8z9_transfer(mask=True)
     ###call allocation/interset function - needs to be numpy
     labour_cost_allocation_c0p7z, labour_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]), labour_start_c0p7z,
-                                                                                  p_dates_c0p7z,
-                                                                                  peakdebt_date_c0p7z, length=labour_length)
+                                                                                  p_dates_c0p7z, peakdebt_date_c0p7z,
+                                                                                  mask_cashflow_z8var_c0p7z, length=labour_length)
 
     perm_cost_c0p7z = perm_cost_c0[:,na,na] * labour_cost_allocation_c0p7z
     perm_wc_c0p7z = perm_cost_c0[:,na,na] * labour_wc_allocation_c0p7z

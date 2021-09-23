@@ -165,7 +165,10 @@ def f_grain_price(r_vals):
     keys_z = pinp.f_keys_z()
     peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
     p_dates_c0p7z = per.f_cashflow_periods()
-    grain_cost_allocation_c0p7z, grain_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]), start, p_dates_c0p7z, peakdebt_date_c0p7z, 'crp', length)
+    mask_cashflow_z8var_c0p7z = fin.f_cashflow_z8z9_transfer(mask=True)
+    grain_cost_allocation_c0p7z, grain_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]), start, p_dates_c0p7z,
+                                                                                       peakdebt_date_c0p7z, mask_cashflow_z8var_c0p7z,
+                                                                                       'crp', length)
     ###convert to df
     new_index_c0p7z = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z])
     grain_income_allocation_c0p7z = pd.Series(grain_cost_allocation_c0p7z.ravel(), index=new_index_c0p7z)
@@ -305,7 +308,11 @@ def f1_fert_cost_allocation():
     peakdebt_date_c0p7zn = per.f_peak_debt_date()[:,na,na,na]
     ##calc interest and allocate to cash period - needs to be numpy
     p_dates_c0p7z = per.f_cashflow_periods()
-    fert_cost_allocation_c0p7zn, fert_wc_allocation_c0p7zn = fin.f_cashflow_allocation(np.array([1]), start_df.values, p_dates_c0p7z[...,na], peakdebt_date_c0p7zn, 'crp', length_df.values)
+    mask_cashflow_z8var_c0p7zn = fin.f_cashflow_z8z9_transfer(mask=True)[...,na]
+    fert_cost_allocation_c0p7zn, fert_wc_allocation_c0p7zn = fin.f_cashflow_allocation(np.array([1]), start_df.values,
+                                                                                       p_dates_c0p7z[...,na], peakdebt_date_c0p7zn,
+                                                                                       mask_cashflow_z8var_c0p7zn, 'crp',
+                                                                                       length_df.values)
     ###convert to df
     new_index_c0p7zn = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, start_df.index])
     fert_cost_allocation_c0p7zn = pd.Series(fert_cost_allocation_c0p7zn.ravel(), index=new_index_c0p7zn)
@@ -658,7 +665,10 @@ def f_phase_stubble_cost(r_vals):
     keys_z = pinp.f_keys_z()
     peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
     p_dates_c0p7z = per.f_cashflow_periods()
-    stub_cost_allocation_c0p7z, stub_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]), start, p_dates_c0p7z, peakdebt_date_c0p7z, 'crp', length)
+    mask_cashflow_z8var_c0p7z = fin.f_cashflow_z8z9_transfer(mask=True)
+    stub_cost_allocation_c0p7z, stub_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]), start, p_dates_c0p7z,
+                                                                                     peakdebt_date_c0p7z, mask_cashflow_z8var_c0p7z,
+                                                                                     'crp', length)
     ###convert to df
     new_index_c0p7z = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z])
     stub_cost_allocation_c0p7z = pd.Series(stub_cost_allocation_c0p7z.ravel(), index=new_index_c0p7z)
@@ -691,7 +701,10 @@ def f1_chem_cost_allocation():
     peakdebt_date_c0p7zn = per.f_peak_debt_date()[:,na,na,na]
     ##calc interest and allocate to cash period - needs to be numpy
     p_dates_c0p7z = per.f_cashflow_periods()
-    chem_cost_allocation_c0p7zn, chem_wc_allocation_c0p7zn = fin.f_cashflow_allocation(np.array([1]), start_df.values, p_dates_c0p7z[...,na], peakdebt_date_c0p7zn, 'crp', length_df.values)
+    mask_cashflow_z8var_c0p7zn = fin.f_cashflow_z8z9_transfer(mask=True)[...,na]
+    chem_cost_allocation_c0p7zn, chem_wc_allocation_c0p7zn = fin.f_cashflow_allocation(np.array([1]), start_df.values,
+                                                                                       p_dates_c0p7z[...,na], peakdebt_date_c0p7zn,
+                                                                                       mask_cashflow_z8var_c0p7zn, 'crp', length_df.values)
     ###convert to df
     new_index_c0p7zn = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, start_df.index])
     chem_cost_allocation_c0p7zn = pd.Series(chem_cost_allocation_c0p7zn.ravel(), index=new_index_c0p7zn)
@@ -873,7 +886,10 @@ def f_seedcost(r_vals):
     keys_z = pinp.f_keys_z()
     peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
     p_dates_c0p7z = per.f_cashflow_periods()
-    seed_cost_allocation_c0p7z, seed_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]), start_z, p_dates_c0p7z, peakdebt_date_c0p7z, 'crp', length_z)
+    mask_cashflow_z8var_c0p7z = fin.f_cashflow_z8z9_transfer(mask=True)
+    seed_cost_allocation_c0p7z, seed_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]), start_z, p_dates_c0p7z,
+                                                                                     peakdebt_date_c0p7z, mask_cashflow_z8var_c0p7z,
+                                                                                     'crp', length_z)
     ###convert to df
     new_index_c0p7z = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z])
     seed_cost_allocation_c0p7z = pd.Series(seed_cost_allocation_c0p7z.ravel(), index=new_index_c0p7z)
@@ -919,7 +935,10 @@ def f_insurance(r_vals):
     keys_z = pinp.f_keys_z()
     peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
     p_dates_c0p7z = per.f_cashflow_periods()
-    insurance_cost_allocation_c0p7z, insurance_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]), start, p_dates_c0p7z, peakdebt_date_c0p7z, 'crp')
+    mask_cashflow_z8var_c0p7z = fin.f_cashflow_z8z9_transfer(mask=True)
+    insurance_cost_allocation_c0p7z, insurance_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]), start, p_dates_c0p7z,
+                                                                                               peakdebt_date_c0p7z, mask_cashflow_z8var_c0p7z,
+                                                                                               'crp')
     ###convert to df
     new_index_c0p7z = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z])
     insurance_cost_allocation_c0p7z = pd.Series(insurance_cost_allocation_c0p7z.ravel(), index=new_index_c0p7z)
