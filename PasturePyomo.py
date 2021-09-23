@@ -6,6 +6,7 @@ from pyomo import environ as pe
 
 ##AFO modules
 import Pasture as pas
+import FeedsupplyFunctions as fsfun
 
 
 def paspyomo_precalcs(params, r_vals, nv):
@@ -19,7 +20,7 @@ def paspyomo_precalcs(params, r_vals, nv):
     '''
 
     pas.f_pasture(params, r_vals, nv)
-    pas.f_fp_z8z9_transfer(params)
+    fsfun.f_fp_z8z9_transfer(params)
 
 def f1_paspyomo_local(params, model):
     ''' Builds pyomo variables, parameters and constraints'''

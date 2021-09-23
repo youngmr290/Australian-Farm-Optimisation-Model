@@ -91,15 +91,16 @@ def f_con_crop_DM_transfer(model):
     Transfer FOO from grazing 1ha of crop to the livestock crop consumption activity. DM that is not consumed is
     transferred into the following feed period (without changing the growth rate of the crop).
     '''
-    def crop_DM_transfer(model,k,p6,z):
+    def crop_DM_transfer(model,k,p6,z9):
         p6s = list(model.s_feed_periods)[list(model.s_feed_periods).index(p6) - 1]  #previous feedperiod - have to convert to a list first because indexing of an ordered set starts at 1
-        return sum(- model.v_grazecrop_ha[k,z,l] * model.p_crop_DM_provided[k,p6,z,l] for l in model.s_lmus)    \
-             + sum(model.v_tonnes_crop_consumed[f,k,p6,z] * model.p_crop_DM_required[k] for f in model.s_feed_pools) \
-             - model.v_tonnes_crop_transfer[k,p6s,z]*1000*model.p_transfer_exists[p6,z] \
-             + model.v_tonnes_crop_transfer[k,p6,z]*1000 \
-             + sum(model.p_crop_DM_reduction[k,p6,p5,z,l] * model.v_contractseeding_ha[z,p5,k,l]
+        return sum(- model.v_grazecrop_ha[k,z9,l] * model.p_crop_DM_provided[k,p6,z9,l] for l in model.s_lmus)    \
+             + sum(model.v_tonnes_crop_consumed[f,k,p6,z9] * model.p_crop_DM_required[k] for f in model.s_feed_pools) \
+             - sum(model.v_tonnes_crop_transfer[k,p6s,z8]*1000*model.p_transfer_exists[p6,z8]
+                   * model.p_parentchildz_transfer_fp[p6,z8,z9] for z8 in model.s_season_types)        \
+             + model.v_tonnes_crop_transfer[k,p6,z9]*1000 \
+             + sum(model.p_crop_DM_reduction[k,p6,p5,z9,l] * model.v_contractseeding_ha[z9,p5,k,l]
                    for p5 in model.s_labperiods for l in model.s_lmus) \
-             + sum(model.p_crop_DM_reduction[k,p6,p5,z,l] * model.p_seeding_rate[k,l] * model.v_seeding_machdays[z,p5,k,l]
+             + sum(model.p_crop_DM_reduction[k,p6,p5,z9,l] * model.p_seeding_rate[k,l] * model.v_seeding_machdays[z9,p5,k,l]
                    for p5 in model.s_labperiods for l in model.s_lmus) <=0
 
     model.con_crop_DM_transfer = pe.Constraint(model.s_crops, model.s_feed_periods, model.s_season_types, rule=crop_DM_transfer,

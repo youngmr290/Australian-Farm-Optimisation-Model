@@ -9,6 +9,7 @@ import math
 import Functions as fun
 import PropertyInputs as pinp
 import UniversalInputs as uinp
+import Periods as per
 
 
 #######################################
@@ -293,3 +294,48 @@ def f_rel_intake(ra, rq, legume, cr=None):
         ###Numpy version of formula
         ri = np.maximum(0.05, ra * rq * (1 + cr2 * ra**2 * legume))
     return ri
+
+###################
+#Season transfer  #
+###################
+def f_fp_z8z9_transfer(params=None, mask=False):
+    '''
+    Mask transfer within a given season.
+
+    Seasons are masked out until the point in the year when they are identified. At the point of identification
+    the parent season provides the transfer parameters to the child season. This transfering method ensures the
+    model has the same management across seasons until they are identified. For example, if there are two seasons, a
+    good and a bad, that are identified in spring. Both seasons must have the same management through the beginning of
+    the year until spring (becasue the farmer doesnt know if they are having the good or bad year until spring).
+
+    The mask and params built in this function are generic to all constraints that transfer between feed periods.
+    Thus these params get used in pasture, stubble and crop grazing.'''
+
+    ##inputs
+    date_initiate_z = pinp.f_seasonal_inp(pinp.general['i_date_initiate_z'], numpy=True, axis=0).astype('datetime64')
+    bool_steady_state = pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1
+    if bool_steady_state:
+        len_z = 1
+    else:
+        len_z = np.count_nonzero(pinp.general['i_mask_z'])
+    index_z = np.arange(len_z)
+    fp_dates_p6z = per.f_feed_periods()[:-1,:] #slice off the end date slice
+    date_node_zm = pinp.f_seasonal_inp(pinp.general['i_date_node_zm'],numpy=True,axis=0).astype(
+        'datetime64')  # treat z axis
+
+    ##dams child parent transfer
+    mask_fp_provz8z9_p6z8z9, mask_fp_z8var_p6z = \
+    fun.f_season_transfer_mask(fp_dates_p6z, date_node_zm, date_initiate_z, index_z, bool_steady_state, z_pos=-1)
+
+    if mask:
+        return mask_fp_z8var_p6z
+
+    ##build params
+    keys_p6 = np.asarray(pinp.period['i_fp_idx'])
+    keys_z = pinp.f_keys_z()
+
+    arrays = [keys_p6, keys_z, keys_z]
+    index_p6z8z9 = fun.cartesian_product_simple_transpose(arrays)
+    tup_p6z8z9 = tuple(map(tuple,index_p6z8z9))
+
+    params['p_parentchildz_transfer_fp'] =dict(zip(tup_p6z8z9, mask_fp_provz8z9_p6z8z9.ravel()*1))

@@ -10,7 +10,7 @@ import pyomo.environ as pe
 import CropResidue as stub
 import PropertyInputs as pinp
 
-def stub_precalcs(params, report, nv):
+def stub_precalcs(params, r_vals, nv):
     '''
     Call crop precalc functions.
 
@@ -18,7 +18,7 @@ def stub_precalcs(params, report, nv):
     :param report: dictionary which stores all report values.
 
     '''
-    stub.crop_residue_all(params, report, nv)
+    stub.crop_residue_all(params, r_vals, nv)
     
     
     
@@ -78,14 +78,17 @@ def f_con_stubble_bcd(model):
     consumed (hence providing cat C) or transferred to the following period.
     '''
     ##stubble transter from category to category and period to period
-    def stubble_transfer(model,p6,z,k,s):
+    def stubble_transfer(model,p6,z9,k,s):
         if s == 'a':# or model.p_bc_req[k,s]==0: #this constraint is only for cat b and c
             return pe.Param.Skip
         else:
             ss = list(model.s_stub_cat)[list(model.s_stub_cat).index(s)-1] #previous stubble cat - used to transfer from current cat to the next, list is required because indexing of an ordered set starts at 1 which means index of 0 chucks error
             p6s = list(model.s_feed_periods)[list(model.s_feed_periods).index(p6)-1] #have to convert to a list first because indexing of an ordered set starts at 1
-            return  - model.v_stub_transfer[p6s,z,k,s] * model.p_fp_transfer[p6s,z,k]  + model.v_stub_transfer[p6,z,k,s] * 1000 \
-                    + sum(-model.v_stub_con[f,p6,z,k,ss] * model.p_bc_prov[k,ss] + model.v_stub_con[f,p6,z,k,s] * model.p_bc_req[k,s] for f in model.s_feed_pools) <=0
+            return  - sum(model.v_stub_transfer[p6s,z8,k,s] * model.p_fp_transfer[p6s,z8,k]
+                          * model.p_parentchildz_transfer_fp[p6,z8,z9] for z8 in model.s_season_types)  \
+                    + model.v_stub_transfer[p6,z9,k,s] * 1000 \
+                    + sum(-model.v_stub_con[f,p6,z9,k,ss] * model.p_bc_prov[k,ss] + model.v_stub_con[f,p6,z9,k,s] * model.p_bc_req[k,s]
+                          for f in model.s_feed_pools) <=0
     model.con_stubble_bcd = pe.Constraint(model.s_feed_periods, model.s_season_types, model.s_crops, model.s_stub_cat, rule = stubble_transfer, doc='links rotation stubble production with consumption of cat A')
 
 ###################

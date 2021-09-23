@@ -272,8 +272,15 @@ def f_min_roe():
 #Season transfer  #
 ###################
 def f_cashflow_z8z9_transfer(params=None, mask=False):
-    '''If a season is not identified then it does not transfer any parameters. Therefore to reduce size we can mask
-    all parameters with a z8 axis. We also require a z8z9 mask which controls transfer params'''
+    '''
+    Mask transfer within a given season.
+
+    Seasons are masked out until the point in the year when they are identified. At the point of identification
+    the parent season provides the transfer parameters to the child season. This transfering method ensures the
+    model has the same management across seasons until they are identified. For example, if there are two seasons, a
+    good and a bad, that are identified in spring. Both seasons must have the same management through the beginning of
+    the year until spring (becasue the farmer doesnt know if they are having the good or bad year until spring).
+    '''
 
     ##inputs
     date_initiate_z = pinp.f_seasonal_inp(pinp.general['i_date_initiate_z'], numpy=True, axis=0).astype('datetime64')

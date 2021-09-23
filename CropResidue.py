@@ -32,7 +32,7 @@ def f_cropresidue_production():
 
 
 
-def crop_residue_all(params, report, nv):
+def crop_residue_all(params, r_vals, nv):
     '''
     Calculates the crop residue available, MD provided, volume required and the proportion of the way through
     the feed period that crop residue becomes available.
@@ -226,6 +226,19 @@ def crop_residue_all(params, report, nv):
     fp_len_p6z = fp_end_p6z - fp_start_p6z
     cons_propn_p6zk = np.clip((fp_len_p6z[...,na] - (fp_end_p6z[...,na] - harv_date_zk)) / fp_len_p6z[...,na],0, np.inf)
     cons_propn_p6zk[cons_propn_p6zk>1] = 0
+
+    ######################
+    #apply season mask   #
+    ######################
+    ##mask
+    mask_fp_z8var_p6z = fsfun.f_fp_z8z9_transfer(mask=True)
+
+    ##apply mask
+    cons_propn_p6zk = cons_propn_p6zk * mask_fp_z8var_p6z[...,na]
+    per_transfer_p6zk = per_transfer_p6zk * mask_fp_z8var_p6z[...,na]
+    cat_a_st_req_p6zk = cat_a_st_req_p6zk * mask_fp_z8var_p6z[...,na]
+    md_fp6zks1 = md_fp6zks1 * mask_fp_z8var_p6z[...,na,na]
+    vol_fp6zks1 = vol_fp6zks1 * mask_fp_z8var_p6z[...,na,na]
 
     #########
     ##keys  #

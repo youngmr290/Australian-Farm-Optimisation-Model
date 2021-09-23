@@ -106,15 +106,22 @@ def f_cropgraze_DM(total_DM=False):
     feed_period_lengths_p6z = np.maximum(0,(date_end_p6z - date_start_adj_p6z).astype('timedelta64[D]').astype('float'))
     total_dm_growth_kp6zl = growth_kp6zl * feed_period_lengths_p6z[:,na]
 
+    ##season mask
+    mask_fp_z8var_p6z = fsfun.f_fp_z8z9_transfer(mask=True)
+
     if not total_DM:
         ##calc dry matter available for consumption provided by 1ha of crop
-        crop_DM_provided_kp6zl = total_dm_growth_kp6zl * consumption_factor_p6z[:,na]
+        crop_DM_provided_kp6zl = total_dm_growth_kp6zl * consumption_factor_p6z[:,:,na]
 
         ##calc DM removal when animals consume 1t - accounts for wastage and trampling
         crop_DM_required_k = 1000 / (1 - wastage_k) #todo this needs transfer exists mask (use the cod in the line below eg move this line after it)
 
         ##calc mask if DM can be transferred to following period (can only be transferred to periods when consumption is greater than 0)
         transfer_exists_p6z = (consumption_factor_p6z > 0)*1
+
+        ##apply season mask (only apply here because these become params the other part of the 'if' statement goes to another function)
+        crop_DM_provided_kp6zl = crop_DM_provided_kp6zl * mask_fp_z8var_p6z[:,:,na]
+        transfer_exists_p6z = transfer_exists_p6z * mask_fp_z8var_p6z
 
         return crop_DM_provided_kp6zl, crop_DM_required_k, transfer_exists_p6z
 
@@ -175,6 +182,11 @@ def f_DM_reduction_seeding_time():
     ###adjust crop growth for lmu
     growth_kp6zl = growth_kp6z[...,na] * growth_lmu_factor_kl[:,na,na,:]
     DM_reduction_kp6p5zl = total_grazing_days_reduction_p6p5z[...,na] * growth_kp6zl[:,:,na,...] * consumption_factor_p6z[:,na,:,na]
+
+    ##apply season mask
+    mask_fp_z8var_p6z = fsfun.f_fp_z8z9_transfer(mask=True)
+    DM_reduction_kp6p5zl = DM_reduction_kp6p5zl * mask_fp_z8var_p6z[:,na,:,na]
+
     return DM_reduction_kp6p5zl
 
 
@@ -221,6 +233,11 @@ def crop_md_vol(nv):
     ##crop cannot be grazed in the confinement pool hence me is 0
     crop_md_fkp6zl = crop_md_fkp6zl * nv_is_not_confinement_f[:,na,na,na,na]
 
+    ##apply season mask
+    mask_fp_z8var_p6z = fsfun.f_fp_z8z9_transfer(mask=True)
+    crop_md_fkp6zl = crop_md_fkp6zl * mask_fp_z8var_p6z[:,:,na]
+    crop_vol_fkp6zl = crop_vol_fkp6zl * mask_fp_z8var_p6z[:,:,na]
+
     return crop_md_fkp6zl, crop_vol_fkp6zl
 
 def f_cropgraze_yield_penalty():
@@ -253,6 +270,12 @@ def f_cropgraze_yield_penalty():
 
     ##calc stubble reduction (kg of stubble per kg of crop DM consumed)
     stubble_reduction_propn_kp6z = stub_yield_reduction_propn_kp6z * stubble_per_grain_k[:,na,na]
+
+    ##apply season mask
+    mask_fp_z8var_p6z = fsfun.f_fp_z8z9_transfer(mask=True)
+    yield_reduction_propn_kp6z = yield_reduction_propn_kp6z * mask_fp_z8var_p6z
+    stubble_reduction_propn_kp6z = stubble_reduction_propn_kp6z * mask_fp_z8var_p6z
+
     return yield_reduction_propn_kp6z, stubble_reduction_propn_kp6z
 
 

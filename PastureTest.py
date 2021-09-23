@@ -24,6 +24,7 @@ import UniversalInputs as uinp
 import Periods as per
 import Functions as fun
 import Sensitivity as sen
+import FeedsupplyFunctions as fsfun
 
 time_list.append(timer()) ; time_was.append("import Universal")
 
@@ -82,7 +83,7 @@ nv['len_nv'] = n_non_confinement_pools+confinement_inc
 
 ##call pasture module
 pas.f_pasture(params, r_vals, nv)
-pas.f_fp_z8z9_transfer(params)
+fsfun.f_fp_z8z9_transfer(params)
 
 
 time_list.append(timer()) ; time_was.append("Pasture complete")

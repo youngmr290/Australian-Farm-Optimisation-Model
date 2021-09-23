@@ -488,7 +488,7 @@ def f_pasture(params, r_vals, nv):
     #apply season mask   #
     ######################
     ##mask
-    mask_fp_z8var_p6z = f_fp_z8z9_transfer(mask=True)
+    mask_fp_z8var_p6z = fsfun.f_fp_z8z9_transfer(mask=True)
     mask_fp_z8var_p6lrzt = mask_fp_z8var_p6z[:,na,na,:,na]
     mask_fp_z8var_p6lzt = mask_fp_z8var_p6z[:,na,:,na]
     mask_fp_z8var_p6zt = mask_fp_z8var_p6z[:,:,na]
@@ -603,41 +603,3 @@ def f_pasture(params, r_vals, nv):
     r_vals['dry_dmd_dp6zt'] = dry_dmd_dp6zt
 
 
-###################
-#Season transfer  #
-###################
-def f_fp_z8z9_transfer(params=None, mask=False):
-    '''If a season is not identified then it does not transfer any parameters. Therefore to reduce size we can mask
-    all parameters with a z8 axis. We also require a z8z9 mask which controls transfer params
-
-    The mask and params built in this function are generic to all constraints that transfer between feed periods.
-    Thus these params also get used in stubble and crop grazing.'''
-
-    ##inputs
-    date_initiate_z = pinp.f_seasonal_inp(pinp.general['i_date_initiate_z'], numpy=True, axis=0).astype('datetime64')
-    bool_steady_state = pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1
-    if bool_steady_state:
-        len_z = 1
-    else:
-        len_z = np.count_nonzero(pinp.general['i_mask_z'])
-    index_z = np.arange(len_z)
-    fp_dates_p6z = per.f_feed_periods()[:-1,:] #slice off the end date slice
-    date_node_zm = pinp.f_seasonal_inp(pinp.general['i_date_node_zm'],numpy=True,axis=0).astype(
-        'datetime64')  # treat z axis
-
-    ##dams child parent transfer
-    mask_fp_provz8z9_p6z8z9, mask_fp_z8var_p6z = \
-    fun.f_season_transfer_mask(fp_dates_p6z, date_node_zm, date_initiate_z, index_z, bool_steady_state, z_pos=-1)
-
-    if mask:
-        return mask_fp_z8var_p6z
-
-    ##build params
-    keys_p6 = np.asarray(pinp.period['i_fp_idx'])
-    keys_z = pinp.f_keys_z()
-
-    arrays = [keys_p6, keys_z, keys_z]
-    index_p6z8z9 = fun.cartesian_product_simple_transpose(arrays)
-    tup_p6z8z9 = tuple(map(tuple,index_p6z8z9))
-
-    params['p_parentchildz_transfer_fp'] =dict(zip(tup_p6z8z9, mask_fp_provz8z9_p6z8z9.ravel()*1))
