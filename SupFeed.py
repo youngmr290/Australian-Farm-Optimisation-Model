@@ -293,19 +293,13 @@ def f_sup_labour():
     total_time_p5p6zk = total_time_p5zk[:,na,...] * alloc_p5p6z[...,na]
 
     ##build df
-    total_time_p5p6zk = total_time_p5p6zk.reshape(total_time_p5p6zk.shape[0],-1)
+    total_time_p5_p6zk = total_time_p5p6zk.reshape(total_time_p5p6zk.shape[0],-1)
     keys_z = pinp.f_keys_z()
     keys_p6 = pinp.period['i_fp_idx']
     cols = pd.MultiIndex.from_product([keys_p6, keys_z, total_time.columns])
-    total_time_p5zk = pd.DataFrame(total_time_p5p6zk, index=lp_dates_p5z.index[:-1], columns=cols).stack([0,2])
-    return total_time_p5zk
+    total_time_p5p6k_z = pd.DataFrame(total_time_p5_p6zk, index=lp_dates_p5z.index[:-1], columns=cols).stack([0,2])
+    return total_time_p5p6k_z
 
-
-    # ###get the time taken in each labour period to feed 1t of feed in each feed period
-    # time_lab_period=time_lab_period.stack()
-    # time_lab_feed_period=allocation.reindex(time_lab_period.index, level=1).mul(time_lab_period, axis=0)
-    # params['sup_labour'] = time_lab_feed_period.stack().to_dict()
-    
 
 ##collates all the params
 def f_sup_params(params,r_vals):
