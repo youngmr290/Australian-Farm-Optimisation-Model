@@ -85,7 +85,7 @@ def f_con_stubble_bcd(model):
             ss = list(model.s_stub_cat)[list(model.s_stub_cat).index(s)-1] #previous stubble cat - used to transfer from current cat to the next, list is required because indexing of an ordered set starts at 1 which means index of 0 chucks error
             p6s = list(model.s_feed_periods)[list(model.s_feed_periods).index(p6)-1] #have to convert to a list first because indexing of an ordered set starts at 1
             return  - sum(model.v_stub_transfer[p6s,z8,k,s] * model.p_fp_transfer[p6s,z8,k]
-                          * model.p_parentchildz_transfer_fp[p6,z8,z9] for z8 in model.s_season_types)  \
+                          * model.p_parentchildz_transfer_fp[p6s,z8,z9] for z8 in model.s_season_types)  \
                     + model.v_stub_transfer[p6,z9,k,s] * 1000 \
                     + sum(-model.v_stub_con[f,p6,z9,k,ss] * model.p_bc_prov[k,ss] + model.v_stub_con[f,p6,z9,k,s] * model.p_bc_req[k,s]
                           for f in model.s_feed_pools) <=0

@@ -96,7 +96,7 @@ def f_con_crop_DM_transfer(model):
         return sum(- model.v_grazecrop_ha[k,z9,l] * model.p_crop_DM_provided[k,p6,z9,l] for l in model.s_lmus)    \
              + sum(model.v_tonnes_crop_consumed[f,k,p6,z9] * model.p_crop_DM_required[k] for f in model.s_feed_pools) \
              - sum(model.v_tonnes_crop_transfer[k,p6s,z8]*1000*model.p_transfer_exists[p6,z8]
-                   * model.p_parentchildz_transfer_fp[p6,z8,z9] for z8 in model.s_season_types)        \
+                   * model.p_parentchildz_transfer_fp[p6s,z8,z9] for z8 in model.s_season_types)        \
              + model.v_tonnes_crop_transfer[k,p6,z9]*1000 \
              + sum(model.p_crop_DM_reduction[k,p6,p5,z9,l] * model.v_contractseeding_ha[z9,p5,k,l]
                    for p5 in model.s_labperiods for l in model.s_lmus) \

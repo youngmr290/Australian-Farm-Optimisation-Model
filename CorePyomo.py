@@ -476,7 +476,7 @@ def f_con_cashflow(model):
                 + macpy.f_mach_cost(model,c0,p7,z9) + suppy.f_sup_cost(model,c0,p7,z9) + model.p_overhead_cost[c0,p7,z9]
                 - stkpy.f_stock_cashflow(model,c0,p7,z9)
                 - model.v_debit[c0,p7,z9] + model.v_credit[c0,p7,z9])
-                + sum((model.v_debit[c0,p7s,z8] - model.v_credit[c0,p7s,z8]) * model.p_parentchildz_transfer_cashflow[c0,p7,z8,z9] * (p7!=cf0)  #end cashflow doesnot provide start cashflow else unbounded.
+                + sum((model.v_debit[c0,p7s,z8] - model.v_credit[c0,p7s,z8]) * model.p_parentchildz_transfer_cashflow[c0,p7s,z8,z9] * (p7!=cf0)  #end cashflow doesnot provide start cashflow else unbounded.
                       for z8 in model.s_season_types)) <= 0
 
     model.con_cashflow_transfer = pe.Constraint(model.s_enterprises, model.s_cashflow_periods, model.s_season_types,rule=cash_flow,
@@ -501,7 +501,7 @@ def f_con_workingcap(params, model):
                 + macpy.f_mach_wc(model,c0,p7,z9) + suppy.f_sup_wc(model,c0,p7,z9) + model.p_overhead_wc[c0,p7,z9]
                 - stkpy.f_stock_wc(model,c0,p7,z9)
                 - model.v_wc_debit[c0,p7,z9] + model.v_wc_credit[c0,p7,z9]
-                + sum((model.v_wc_debit[c0,p7s,z8] - model.v_wc_credit[c0,p7s,z8]) * model.p_parentchildz_transfer_cashflow[c0,p7,z8,z9] * (p7!=cf0) #end working capital doesnot provide start else unbounded.
+                + sum((model.v_wc_debit[c0,p7s,z8] - model.v_wc_credit[c0,p7s,z8]) * model.p_parentchildz_transfer_cashflow[c0,p7s,z8,z9] * (p7!=cf0) #end working capital doesnot provide start else unbounded.
                      for z8 in model.s_season_types)) <= 0
     model.con_workingcap = pe.Constraint(model.s_enterprises, model.s_cashflow_periods, model.s_season_types,rule=working_cap,
                                        doc='overdraw limit')

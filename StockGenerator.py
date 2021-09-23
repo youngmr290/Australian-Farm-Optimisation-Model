@@ -5770,13 +5770,6 @@ def generator(params,r_vals,nv,plots = False):
     mask_param_provz8z9_k2tva1e1b1nwzida0e0b0xyg1z9 = 1 * (np.sum(mask_param_provz8z9_va1e1b1nwzida0e0b0xyg1z9
                                                                   * (a_k2cluster_va1e1b1nwzida0e0b0xyg1==index_k2tva1e1b1nwzida0e0b0xyg1)[...,na],
                                                                   axis=(e1_pos-1,b1_pos-1), keepdims=True) > 0)
-    ###create z8z9 param that is index with v_prev
-    ###this needs to be rolled 1 becasue the param is accessed using v_prev (cant use v because it gets k2 axis)
-    mask_param_provz8z9_vprev_va1e1b1nwzida0e0b0xyg1z9 = np.roll(mask_param_provz8z9_va1e1b1nwzida0e0b0xyg1z9, axis=0, shift=-1)
-    ####cluster e and b (e axis is active from the dvp dates)
-    mask_param_provz8z9_vprev_k2tva1e1b1nwzida0e0b0xyg1z9 = 1 * (np.sum(mask_param_provz8z9_vprev_va1e1b1nwzida0e0b0xyg1z9
-                                                                  * (a_k2cluster_va1e1b1nwzida0e0b0xyg1==index_k2tva1e1b1nwzida0e0b0xyg1)[...,na],
-                                                                  axis=(e1_pos-1,b1_pos-1), keepdims=True) > 0)
 
     ##offs child parent transfer
     mask_param_provz8z9_va1e1b1nwzida0e0b0xyg3z9, mask_z8var_va1e1b1nwzida0e0b0xyg3 = \
@@ -5784,13 +5777,6 @@ def generator(params,r_vals,nv,plots = False):
     ###create z8z9 param that is index with v
     ####cluster d (d axis is active from the dvp dates)
     mask_param_provz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9 = 1 * (np.sum(mask_param_provz8z9_va1e1b1nwzida0e0b0xyg3z9
-                                                                  * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na],
-                                                                    axis=d_pos-1, keepdims=True) > 0)
-    ###create z8z9 param that is index with v_prev
-    ###this needs to be rolled 1 becasue the param is accessed using v_prev (cant use v because it gets k3 axis)
-    mask_param_provz8z9_vprev_va1e1b1nwzida0e0b0xyg3z9 = np.roll(mask_param_provz8z9_va1e1b1nwzida0e0b0xyg3z9, axis=0, shift=-1)
-    ####cluster d (d axis is active from the dvp dates)
-    mask_param_provz8z9_vprev_k3k5tva1e1b1nwzida0e0b0xyg3z9 = 1 * (np.sum(mask_param_provz8z9_vprev_va1e1b1nwzida0e0b0xyg3z9
                                                                   * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na],
                                                                     axis=d_pos-1, keepdims=True) > 0)
 
@@ -7345,12 +7331,6 @@ def generator(params,r_vals,nv,plots = False):
     index_cut_k2vz8g1z9=index_k2vz8g1z9[mask,:]
     tup_k2vz8g1z9 = tuple(map(tuple, index_cut_k2vz8g1z9))
     params['p_parentchildz_transfer_dams'] =dict(zip(tup_k2vz8g1z9, mask_param_provz8z9_k2vz8g1z9))
-    mask=mask_param_provz8z9_vprev_k2tva1e1b1nwzida0e0b0xyg1z9!=0
-    mask_param_provz8z9_vprev_k2vz8g1z9 = mask_param_provz8z9_vprev_k2tva1e1b1nwzida0e0b0xyg1z9[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k2vz8g1z9=index_k2vz8g1z9[mask,:]
-    tup_k2vz8g1z9 = tuple(map(tuple, index_cut_k2vz8g1z9))
-    params['p_parentchildz_transfer_dams_vprev'] =dict(zip(tup_k2vz8g1z9, mask_param_provz8z9_vprev_k2vz8g1z9))
     ###offs prov
     mask=mask_param_provz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9!=0
     mask_param_provz8z9_k3vz8xg3z9 = mask_param_provz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9[mask] #applying the mask does the raveling and squeezing of array
@@ -7358,12 +7338,6 @@ def generator(params,r_vals,nv,plots = False):
     index_cut_k3vz8xg3z9=index_k3vz8xg3z9[mask,:]
     tup_k3vz8xg3z9 = tuple(map(tuple, index_cut_k3vz8xg3z9))
     params['p_parentchildz_transfer_offs'] =dict(zip(tup_k3vz8xg3z9, mask_param_provz8z9_k3vz8xg3z9))
-    mask=mask_param_provz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9!=0
-    mask_param_provz8z9_vprev_k3vz8xg3z9 = mask_param_provz8z9_vprev_k3k5tva1e1b1nwzida0e0b0xyg3z9[mask] #applying the mask does the raveling and squeezing of array
-    mask=mask.ravel()
-    index_cut_k3vz8xg3z9=index_k3vz8xg3z9[mask,:]
-    tup_k3vz8xg3z9 = tuple(map(tuple, index_cut_k3vz8xg3z9))
-    params['p_parentchildz_transfer_offs_vprev'] =dict(zip(tup_k3vz8xg3z9, mask_param_provz8z9_vprev_k3vz8xg3z9))
 
 
     # p_wyear_inc = i_wyear_inc_qsz #todo need to add this input and hook up (not sure what it needs to look like)

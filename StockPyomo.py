@@ -280,18 +280,10 @@ def f1_stockpyomo_local(params, model):
     #                               default=0.0, mutable=False, doc='z8z9 numbers required')
     model.p_parentchildz_transfer_dams = pe.Param(model.s_k2_birth_dams, model.s_dvp_dams, model.s_season_types, model.s_groups_dams,
                                   model.s_season_types, initialize=params['p_parentchildz_transfer_dams'], default=0.0,
-                                  mutable=False, doc='Transfer of z8 dv in the current dvp to z9 constraint in the current dvp')
-    model.p_parentchildz_transfer_dams_vprev = pe.Param(model.s_k2_birth_dams, model.s_dvp_dams, model.s_season_types, model.s_groups_dams,
-                                  model.s_season_types, initialize=params['p_parentchildz_transfer_dams_vprev'], default=0.0,
                                   mutable=False, doc='Transfer of z8 dv in the previous dvp to z9 constraint in the current dvp')
-    #todo this one isnt used anywhere atm for offs - once prog is hooked up i can probably remove this (remove in sgen also)
     model.p_parentchildz_transfer_offs = pe.Param(model.s_k3_damage_offs, model.s_dvp_offs, model.s_season_types,
                                                   model.s_gender, model.s_groups_offs, model.s_season_types,
                                                   initialize=params['p_parentchildz_transfer_offs'], default=0.0,
-                                                  mutable=False, doc='Transfer of z8 dv in the current dvp to z9 constraint in the current dvp')
-    model.p_parentchildz_transfer_offs_vprev = pe.Param(model.s_k3_damage_offs, model.s_dvp_offs, model.s_season_types,
-                                                  model.s_gender, model.s_groups_offs, model.s_season_types,
-                                                  initialize=params['p_parentchildz_transfer_offs_vprev'], default=0.0,
                                                   mutable=False, doc='Transfer of z8 dv in the previous dvp to z9 constraint in the current dvp')
 
     ##write param to text file.
@@ -380,7 +372,7 @@ def f_con_off_withinR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w9
             return pe.Constraint.Skip
         return sum(model.v_offs[k3,k5,t3,v3,n3,w8,z9,i,a,x,y3,g3] * model.p_numbers_req_offs[k3,k5,v3,w8,z9,i,x,g3,w9]
                    - sum(model.v_offs[k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3] * model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3,w9]
-                      * model.p_parentchildz_transfer_offs_vprev[k3,v3_prev,z8,x,g3,z9] for z8 in model.s_season_types)
+                      * model.p_parentchildz_transfer_offs[k3,v3_prev,z8,x,g3,z9] for z8 in model.s_season_types)
                    for t3 in model.s_sale_offs for n3 in model.s_nut_offs for w8 in model.s_lw_offs
                    if pe.value(model.p_numbers_req_offs[k3,k5,v3,w8,z9,i,x,g3,w9]) != 0
                    or pe.value(model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z9,i,a,x,y3,g3,w9]) != 0) <=0 #need to use both in the if statement (even though it is slower) because there are situations eg dvp4 (prejoining) where prov will have a value and req will not.
@@ -420,7 +412,7 @@ def f_con_dam_withinR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w
         ##but the prov parameter is necessary as it allows other dam permutations on this constraint
         # return sum(model.v_dams[k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_req_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
         #            - sum(model.v_dams[k28,t1,v1_prev,a,n1,w8,z8,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z8,i,y1,g1,g9,w9]
-        #                * model.p_parentchildz_transfer_dams_vprev[k28,v1_prev,z8,g1,z9] for z8 in model.s_season_types)
+        #                * model.p_parentchildz_transfer_dams[k28,v1_prev,z8,g1,z9] for z8 in model.s_season_types)
         #            - model.v_dams[k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_provthis_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
         #            for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams
         #            for w8 in model.s_lw_dams for g1 in model.s_groups_dams
@@ -431,7 +423,7 @@ def f_con_dam_withinR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w
         return sum(model.v_dams[k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_req_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
                    - model.v_dams[k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_provthis_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
                    - sum(model.v_dams[k28,t1,v1_prev,a,n1,w8,z8,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z8,i,y1,g1,g9,w9]
-                      * model.p_parentchildz_transfer_dams_vprev[k28,v1_prev,z8,g1,z9] for z8 in model.s_season_types)
+                      * model.p_parentchildz_transfer_dams[k28,v1_prev,z8,g1,z9] for z8 in model.s_season_types)
                    for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams
                    for w8 in model.s_lw_dams for g1 in model.s_groups_dams
                    if pe.value(model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1,g9, w9]) != 0
@@ -447,7 +439,7 @@ def f_con_dam_withinR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w
         #                for w8 in model.s_lw_dams for g1 in model.s_groups_dams
         #                if pe.value(model.p_numbers_provthis_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1, g9, w9]) != 0) \
         #        - sum(model.v_dams[k28,t1,v1_prev,a,n1,w8,z8,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z8,i,y1,g1,g9,w9]
-        #              * model.p_parentchildz_transfer_dams_vprev[k28,v1_prev,z8,g1,z9]
+        #              * model.p_parentchildz_transfer_dams[k28,v1_prev,z8,g1,z9]
         #                for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams
         #                for z8 in model.s_season_types for w8 in model.s_lw_dams for g1 in model.s_groups_dams
         #                if pe.value(model.p_numbers_prov_dams[k28, k29, t1, v1_prev, a, n1, w8, z8, i, y1, g1, g9, w9]) != 0
@@ -458,7 +450,7 @@ def f_con_dam_withinR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w
         #            - model.v_dams[k28,t1,v1,a,n1,w8,z8,i,y1,g1] * model.p_numbers_provthis_dams[k28,k29,t1,v1,a,n1,w8,z8,i,y1,g1,g9,w9]
         #            * model.p_childz_req[z8,z9]
         #            - model.v_dams[k28,t1,v1_prev,a,n1,w8,z8,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z8,i,y1,g1,g9,w9]
-        #            * model.p_parentchildz_transfer_dams_vprev[k28,v1_prev,z8,g1,z9]
+        #            * model.p_parentchildz_transfer_dams[k28,v1_prev,z8,g1,z9]
         #            for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams
         #            for z8 in model.s_season_types for w8 in model.s_lw_dams for g1 in model.s_groups_dams
         #            if pe.value(model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, z8, i, y1, g1,g9, w9]) != 0

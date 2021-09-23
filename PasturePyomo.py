@@ -124,7 +124,7 @@ def f_con_greenpas_within(model):
                        if pe.value(model.p_germination[p6,l,r,z9,t])!=0 or model.p_foo_grn_reseeding[p6,l,r,z9,t]!=0)         \
                    + sum(model.v_greenpas_ha[f,g,o,p6,l,z9,t] * model.p_foo_start_grnha[o,p6,l,z9,t]   \
                          - sum(model.v_greenpas_ha[f,g,o,p6s,l,z8,t] * model.p_foo_end_grnha[g,o,p6s,l,z8,t]
-                               * model.p_parentchildz_transfer_fp[p6,z8,z9] for z8 in model.s_season_types)
+                               * model.p_parentchildz_transfer_fp[p6s,z8,z9] for z8 in model.s_season_types)
                          for f in model.s_feed_pools for g in model.s_grazing_int for o in model.s_foo_levels) <=0
         else:
             return pe.Constraint.Skip
@@ -146,11 +146,11 @@ def f_con_drypas(model):
             return pe.Constraint.Skip
         else:
             return sum(sum(-sum(model.v_greenpas_ha[f,g,o,p6s,l,z8,t] * model.p_senesce_grnha[d,g,o,p6s,l,z8,t]
-                                * model.p_parentchildz_transfer_fp[p6,z8,z9] for z8 in model.s_season_types)
+                                * model.p_parentchildz_transfer_fp[p6s,z8,z9] for z8 in model.s_season_types)
                            for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus)
                        + model.v_drypas_consumed[f,d,p6,z9,t] * model.p_dry_removal_t[p6,z9,t] for f in model.s_feed_pools) \
                    - sum(model.v_drypas_transfer[d,p6s,z8,t] * model.p_dry_transfer_prov_t[p6s,z8,t]
-                         * model.p_parentchildz_transfer_fp[p6,z8,z9] for z8 in model.s_season_types) \
+                         * model.p_parentchildz_transfer_fp[p6s,z8,z9] for z8 in model.s_season_types) \
                    + model.v_drypas_transfer[d,p6,z9,t] * model.p_dry_transfer_req_t[p6,z9,t] <=0
     model.con_drypas = pe.Constraint(model.s_dry_groups, model.s_feed_periods, model.s_season_types, model.s_pastures, rule = drypas, doc='High and low quality dry pasture of each type available in each period')
 
@@ -174,7 +174,7 @@ def f_con_nappas(model):
             return sum(sum(- model.v_phase_area[z9,r,l] * model.p_nap[d,p6,l,r,z9,t] for r in model.s_phases for l in model.s_lmus if pe.value(model.p_nap[d,p6,l,r,z9,t]) != 0)
                        + model.v_nap_consumed[f,d,p6,z9,t] * model.p_dry_removal_t[p6,z9,t] for f in model.s_feed_pools) \
                    - sum(model.v_nap_transfer[d,p6s,z8,t] * model.p_dry_transfer_prov_t[p6s,z8,t]
-                         * model.p_parentchildz_transfer_fp[p6,z8,z9] for z8 in model.s_season_types)   \
+                         * model.p_parentchildz_transfer_fp[p6s,z8,z9] for z8 in model.s_season_types)   \
                    + model.v_nap_transfer[d,p6,z9,t] * model.p_dry_transfer_req_t[p6,z9,t] <=0
     model.con_nappas = pe.Constraint(model.s_dry_groups, model.s_feed_periods, model.s_season_types, model.s_pastures, rule = nappas, doc='High and low quality dry pasture of each type available in each period')
 
