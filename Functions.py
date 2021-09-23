@@ -312,10 +312,10 @@ def f_update(existing_value, new_value, mask_for_new):
     elif isinstance(existing_value,np.ndarray):
         dtype = existing_value.dtype
     elif isinstance(mask_for_new,np.ndarray):
-        pass #if both values are int/float and mask is numpy then just ignor dtype
+        pass #if both values are int/float and mask is numpy then just ignore dtype
     elif type(existing_value)==type(new_value):
         dtype = type(existing_value)
-    elif isinstance(new_value, str): #if it is '-' (used in exp) then retain the origional dtype
+    elif isinstance(new_value, str): #if it is '-' (used in exp) then retain the original dtype
         dtype = type(existing_value)
 
 
@@ -698,7 +698,7 @@ def f_run_required(exp_data1):
 
         ##update prev_exp run column
         ###if the trial was run the last time the model was run (r_vals are newer than exp.pkl) this trial doesnt need to be re-run unless code or inputs have changed.
-        ###if r_vals dont exist the trial needs to be re-run (this allows the user to delete r_vals to re-run a trial).
+        ###if r_vals don't exist the trial needs to be re-run (this allows the user to delete r_vals to re-run a trial).
         run_last = []
         no_r_vals = []
         for trial in prev_exp.index.get_level_values(3):
@@ -712,8 +712,8 @@ def f_run_required(exp_data1):
             except FileNotFoundError:
                 run_last.append(False)
                 no_r_vals.append(True)
-        prev_exp.loc[run_last, ('run_req', '', '', '')] = False #set run req to false if trial was run last itteration of the model.
-        prev_exp.loc[no_r_vals, ('run_req', '', '', '')] = True #set run req to True if r_vals dont exist
+        prev_exp.loc[run_last, ('run_req', '', '', '')] = False #set run req to false if trial was run last iteration of the model.
+        prev_exp.loc[no_r_vals, ('run_req', '', '', '')] = True #set run req to True if r_vals don't exist
 
         ##if headers are the same, code is the same and the excel inputs are the same then test if the values in exp.xls are the same
         if (keys_current==keys_hist and os.path.getmtime('pkl/pkl_exp.pkl') >= os.path.getmtime(newest)
@@ -918,7 +918,8 @@ def f_season_transfer_mask(period_dates, date_node_zm, date_initiate_z, index_z,
     prov_self_z8z9 = mask_z8var_z[...,na] * identity_z8z9
     prov_child_z8z9 = mask_z8var_z[...,na] * (index_z[...,na] == parent_z9)
     mask_z9var_z9 = np.swapaxes(mask_z8var_z[...,na], z_pos-1, -1)
-    prov_child_z8z9 = prov_child_z8z9 * np.logical_not(mask_z9var_z9) #parent seasons only provide to child until child is identified
+    ###parent seasons only provide to child in the period prior to the child being identified
+    prov_child_z8z9 = prov_child_z8z9 * np.logical_and(np.logical_not(mask_z9var_z9), np.roll(mask_z9var_z9, shift=-1, axis=1))
     mask_param_provz8z9_z8z9 = np.logical_or(prov_self_z8z9, prov_child_z8z9)
 
     return mask_param_provz8z9_z8z9, mask_z8var_z
