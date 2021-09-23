@@ -477,14 +477,12 @@ def f_con_progR(model):
     a progeny variable before being transferred to either offspring or dam variables (see prog2dams and prog2offs).
 
     '''
-    def progR(model, k3, k5, a, z9, i9, x, y1, g1, w9):
+    def progR(model, k3, k5, a, z, i9, x, y1, g1, w9):
         if any(model.p_npw_req[k3, t2, x, g1] for t2 in model.s_sale_prog):
-            return (- sum(model.v_dams[k5, t1, v1, a, n1, w18, z8, i, y1, g1] * model.p_npw[k3, k5, t1, v1, a, n1, w18, z8, i, x, y1, g1, w9, i9] #pass in the k5 set to dams - each slice of k5 aligns with a slice in k2 eg 11 and 22. we don't need other k2 slices eg nm
-                              * model.p_parentchildz_transfer_dams_vprev[k5,v1,z8,g1,z9]
-                          for z8 in model.s_season_types for t1 in model.s_sale_dams for v1 in model.s_dvp_dams
-                          for n1 in model.s_nut_dams for w18 in model.s_lw_dams for i in model.s_tol
-                          if pe.value(model.p_npw[k3, k5, t1, v1, a, n1, w18, z9, i, x, y1, g1, w9, i9])!=0)
-                    + sum(model.v_prog[k3, k5, t2, w9, z9, i9, a, x, g1] * model.p_npw_req[k3, t2, x, g1] for t2 in model.s_sale_prog
+            return (- sum(model.v_dams[k5, t1, v1, a, n1, w18, z, i, y1, g1] * model.p_npw[k3, k5, t1, v1, a, n1, w18, z, i, x, y1, g1, w9, i9] #pass in the k5 set to dams - each slice of k5 aligns with a slice in k2 eg 11 and 22. we don't need other k2 slices eg nm
+                          for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams for w18 in model.s_lw_dams for i in model.s_tol
+                          if pe.value(model.p_npw[k3, k5, t1, v1, a, n1, w18, z, i, x, y1, g1, w9, i9])!=0)
+                    + sum(model.v_prog[k3, k5, t2, w9, z, i9, a, x, g1] * model.p_npw_req[k3, t2, x, g1] for t2 in model.s_sale_prog
                           if pe.value(model.p_npw_req[k3, t2,x,g1])!=0))<=0
         else:
             return pe.Constraint.Skip
