@@ -411,7 +411,7 @@ def f1_expand_p6():
 def f_z_prob(keep_z=False):
     '''Calc the prob of each active season.
 
-    :param keep_z: True means the z axis is kept even in steady state model. This is used for the season input handling.
+    :param keep_z: True means the active z axis is kept even in steady state model. This is used for the season input handling.
     '''
     steady_state_bool = general['steady_state'] or np.count_nonzero(general['i_mask_z']) == 1
     if steady_state_bool and not keep_z:
