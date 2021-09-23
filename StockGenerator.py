@@ -5796,6 +5796,10 @@ def generator(params,r_vals,nv,plots = False):
     # p_wyear_inc = mask_s8vars_qs  # todo work needed to allow masking ‘sequence of interest’ (with a z8 axis).
     # p_season_prob = season_seq_prob_qsz
 
+    ##p6z mask - this is only for masking sire becasuse they dont have a v axis
+    mask_fp_z8var_p6fva1e1b1nwzida0e0b0xyg = fun.f_expand(fsfun.f_fp_z8z9_transfer(mask=True), left_pos=z_pos, left_pos2=p_pos-2, right_pos2=z_pos)
+
+
     ###########################
     #create production params #
     ###########################
@@ -5803,7 +5807,9 @@ def generator(params,r_vals,nv,plots = False):
     production_param_start = time.time()
 
     ##mei
-    mei_p6fa1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', mei_p6fa1e1b1nwzida0e0b0xyg0,numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
+    mei_p6fva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', mei_p6fa1e1b1nwzida0e0b0xyg0[:,:,na,...],
+                                                                   numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0,
+                                                                   mask_vg=mask_fp_z8var_p6fva1e1b1nwzida0e0b0xyg)
     mei_k2p6ftva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', mei_p6ftva1e1b1nwzida0e0b0xyg1
                                                                       , a_k2cluster_va1e1b1nwzida0e0b0xyg1
                                                                       , index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,...]
@@ -5820,7 +5826,9 @@ def generator(params,r_vals,nv,plots = False):
                                                                         , mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
 
     ##pi
-    pi_p6fa1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', pi_p6fa1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
+    pi_p6fva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', pi_p6fa1e1b1nwzida0e0b0xyg0[:,:,na,...],
+                                                                  numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0,
+                                                                  mask_vg=mask_fp_z8var_p6fva1e1b1nwzida0e0b0xyg)
     pi_k2p6ftva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', pi_p6ftva1e1b1nwzida0e0b0xyg1, a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,...],
                                                                  numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1,
                                                                  mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1*mask_z8var_va1e1b1nwzida0e0b0xyg1*mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[:,na,na,...]))
@@ -5910,7 +5918,9 @@ def generator(params,r_vals,nv,plots = False):
     ###########################
     number_param_start = time.time()
     ##number of sires available at mating - sire
-    numbers_startp8_va1e1b1nwzida0e0b0xyg0p8 = sfun.f1_create_production_param('sire', numbers_startp8_va1e1b1nwzida0e0b0xyg0p8, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0[...,na])
+    numbers_startp8_va1e1b1nwzida0e0b0xyg0p8 = sfun.f1_create_production_param('sire', numbers_startp8_va1e1b1nwzida0e0b0xyg0p8,
+                                                                               numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0[...,na],
+                                                                               pos_offset=1)
     ##number of sires for required for mating - dams
     ### mask the dams for w8 vars, t_vars. Also not mated if they are being transferred to another ram group. A transfer in the mating period (a_g1_tg1!=index_g1) indicates that the dam is going to be mated to another sire at a later date within the same DVP
     t_mask_k2tva1e1b1nw8zida0e0b0xyg1g0p8 = (mask_w8vars_va1e1b1nw8zida0e0b0xyg1* mask_z8var_va1e1b1nwzida0e0b0xyg1 * mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1
@@ -6562,7 +6572,7 @@ def generator(params,r_vals,nv,plots = False):
     days_p6_p6tva1e1b1nwzida0e0b0xyg = fun.f_expand(days_p6z, z_pos,  left_pos2=p_pos-2, right_pos2=z_pos)
     ###DSE based on MJ/d
     ####returns the average mj/d for each animal for the each feed period (mei accounts for if the animal is on hand - if the animal is sold the average mei/d will be lower in that dvp)
-    mj_ave_p6ftva1e1b1nwzida0e0b0xyg0 = mei_p6fa1e1b1nwzida0e0b0xyg0[:,:,na,na,...] / days_p6_p6tva1e1b1nwzida0e0b0xyg[:,na,...]
+    mj_ave_p6ftva1e1b1nwzida0e0b0xyg0 = mei_p6fva1e1b1nwzida0e0b0xyg0[:,:,na,...] / days_p6_p6tva1e1b1nwzida0e0b0xyg[:,na,...]
     mj_ave_k2p6ftva1e1b1nwzida0e0b0xyg1 = mei_k2p6ftva1e1b1nwzida0e0b0xyg1 / days_p6_p6tva1e1b1nwzida0e0b0xyg[:,na,...]
     mj_ave_k3k5p6ftva1e1b1nwzida0e0b0xyg3 = mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3 / days_p6_p6tva1e1b1nwzida0e0b0xyg[:,na,...]
     ####returns the number of dse of each animal in each dvp - this is combined with the variable numbers in reporting to get the total dse
@@ -6625,7 +6635,7 @@ def generator(params,r_vals,nv,plots = False):
                                             a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p], index_any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,na,...])
 
     ##cluster and account for numbers/mortality
-    stock_days_p6fa1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', stock_days_p6fa1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
+    stock_days_p6fva1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', stock_days_p6fa1e1b1nwzida0e0b0xyg0[:,:,na,...], numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
     stock_days_k2p6ftva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', stock_days_p6ftva1e1b1nwzida0e0b0xyg1, a_k2cluster_va1e1b1nwzida0e0b0xyg1,
                                                 index_k2tva1e1b1nwzida0e0b0xyg1[:,na,na,...], numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1,
                                                 mask_vg = mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_z8var_va1e1b1nwzida0e0b0xyg1)
@@ -6710,9 +6720,9 @@ def generator(params,r_vals,nv,plots = False):
     arrays = [keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1, keys_g0, keys_p8]
     index_k2tvanwziyg1g0p8 = fun.cartesian_product_simple_transpose(arrays)
 
-    ###zg0p8 - nsire
-    arrays = [keys_z, keys_g0, keys_p8]
-    index_zg0p8 = fun.cartesian_product_simple_transpose(arrays)
+    ###g0p8 - nsire
+    arrays = [keys_g0, keys_p8]
+    index_g0p8 = fun.cartesian_product_simple_transpose(arrays)
 
     # ###k5tvanwidxyg1w9i9 - npw
     # arrays = [keys_k5, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_i, keys_d, keys_x, keys_y1, keys_g1, keys_lw_prog, keys_i]
@@ -6752,9 +6762,9 @@ def generator(params,r_vals,nv,plots = False):
     arrays = [keys_k3, keys_k5, keys_v3, keys_lw3, keys_z, keys_i, keys_x, keys_g3, keys_lw3]
     index_k3k5vw8zixg3w9 = fun.cartesian_product_simple_transpose(arrays)
 
-    ###p6fzg0 - mei sire
-    arrays = [keys_p6, keys_f, keys_z, keys_g0]
-    index_p6fzg0 = fun.cartesian_product_simple_transpose(arrays)
+    ###p6fg0 - mei sire
+    arrays = [keys_p6, keys_f, keys_g0]
+    index_p6fg0 = fun.cartesian_product_simple_transpose(arrays)
     ###k2p6ftva1nw8iyg1 - mei dams
     arrays = [keys_k2, keys_p6, keys_f, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
     index_k2p6ftva1nwziyg1 = fun.cartesian_product_simple_transpose(arrays)
@@ -6765,9 +6775,9 @@ def generator(params,r_vals,nv,plots = False):
     ###p6z - winter grazed propn
     arrays = [keys_p6, keys_z]
     index_p6z = fun.cartesian_product_simple_transpose(arrays)
-    ###p6zg0 - dse sire
-    arrays = [keys_p6, keys_z, keys_g0]
-    index_p6zg0 = fun.cartesian_product_simple_transpose(arrays)
+    ###p6g0 - dse sire
+    arrays = [keys_p6, keys_g0]
+    index_p6g0 = fun.cartesian_product_simple_transpose(arrays)
     ###k2p6tva1nwziyg1 - dse dams
     arrays = [keys_k2, keys_p6, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
     index_k2p6tva1nwziyg1 = fun.cartesian_product_simple_transpose(arrays)
@@ -6775,9 +6785,9 @@ def generator(params,r_vals,nv,plots = False):
     arrays = [keys_k3, keys_k5, keys_p6, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
     index_k3k5p6tvnwziaxyg3 = fun.cartesian_product_simple_transpose(arrays)
 
-    ###c0p7zg0 - cashflow sire
-    arrays = [keys_c0, keys_p7, keys_z, keys_g0]
-    index_c0p7zg0 = fun.cartesian_product_simple_transpose(arrays)
+    ###c0p7g0 - cashflow sire
+    arrays = [keys_c0, keys_p7, keys_g0]
+    index_c0p7g0 = fun.cartesian_product_simple_transpose(arrays)
     ###k2c0p7tvanwziyg1 - cashflow dams
     arrays = [keys_k2, keys_c0, keys_p7, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
     index_k2c0p7tvanwziyg1 = fun.cartesian_product_simple_transpose(arrays)
@@ -6789,8 +6799,8 @@ def generator(params,r_vals,nv,plots = False):
     index_k3k5c0p7tvnwziaxyg3 = fun.cartesian_product_simple_transpose(arrays)
 
     ###g0 - cost sire
-    arrays = [keys_c0, keys_z, keys_g0]
-    index_c0zg0 = fun.cartesian_product_simple_transpose(arrays)
+    arrays = [keys_c0, keys_g0]
+    index_c0g0 = fun.cartesian_product_simple_transpose(arrays)
     ###k2c0tvanwziyg1 - cost dams
     arrays = [keys_k2, keys_c0, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
     index_k2c0tvanwziyg1 = fun.cartesian_product_simple_transpose(arrays)
@@ -6799,8 +6809,8 @@ def generator(params,r_vals,nv,plots = False):
     index_k3k5c0tvnwziaxyg3 = fun.cartesian_product_simple_transpose(arrays)
 
     ###g0 - asset sire
-    arrays = [keys_z, keys_g0]
-    index_zg0 = fun.cartesian_product_simple_transpose(arrays)
+    arrays = [keys_g0]
+    index_g0 = fun.cartesian_product_simple_transpose(arrays)
     ###k2tvanwziyg1 - asset dams
     arrays = [keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
     index_k2tvanwziyg1 = fun.cartesian_product_simple_transpose(arrays)
@@ -6808,9 +6818,9 @@ def generator(params,r_vals,nv,plots = False):
     arrays = [keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
     index_k3k5tvnwziaxyg3 = fun.cartesian_product_simple_transpose(arrays)
 
-    ###p5zg0 - labour sire
-    arrays = [keys_p5, keys_z, keys_g0]
-    index_p5zg0 = fun.cartesian_product_simple_transpose(arrays)
+    ###p5g0 - labour sire
+    arrays = [keys_p5, keys_g0]
+    index_p5g0 = fun.cartesian_product_simple_transpose(arrays)
     ###k2p5tvanwziyg1 - labour dams
     arrays = [keys_k2, keys_p5, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
     index_k2p5tvanwziyg1 = fun.cartesian_product_simple_transpose(arrays)
@@ -6819,8 +6829,8 @@ def generator(params,r_vals,nv,plots = False):
     index_k3k5p5tvnwziaxyg3 = fun.cartesian_product_simple_transpose(arrays)
 
     ###h1g0 - infrastructure dams
-    arrays = [keys_h1, keys_z, keys_g0]
-    index_h1zg0 = fun.cartesian_product_simple_transpose(arrays)
+    arrays = [keys_h1, keys_g0]
+    index_h1g0 = fun.cartesian_product_simple_transpose(arrays)
     ###k2h1tvanwziyg1 - infrastructure dams
     arrays = [keys_k2, keys_h1, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
     index_k2h1tvanwziyg1 = fun.cartesian_product_simple_transpose(arrays)
@@ -6849,6 +6859,8 @@ def generator(params,r_vals,nv,plots = False):
     '''
     ravel and zip params with keys. This step removes 0's first using a mask because this saves considerable time.
     note: need to do the tups each time even if same keys because the mask may be different
+    
+    For sire colapse the z axis by taking wa (because we are assuming that sire management is the same across seasons)
     '''
 
     ##non seasonal
@@ -6872,12 +6884,13 @@ def generator(params,r_vals,nv,plots = False):
 
     ##seasonal
     ###nsire_sire
+    numbers_startp8_va1e1b1nwzida0e0b0xyg0p8 = fun.f_weighted_average(numbers_startp8_va1e1b1nwzida0e0b0xyg0p8,season_propn_zida0e0b0xyg[...,na],z_pos-1,keepdims=True)
     mask = numbers_startp8_va1e1b1nwzida0e0b0xyg0p8 != 0
-    nsire_zg0p8 = numbers_startp8_va1e1b1nwzida0e0b0xyg0p8[mask]  # applying the mask does the raveling and squeezing of singleton axis
+    nsire_g0p8 = numbers_startp8_va1e1b1nwzida0e0b0xyg0p8[mask]  # applying the mask does the raveling and squeezing of singleton axis
     mask = mask.ravel()
-    index_cut_zg0p8 = index_zg0p8[mask,:]
-    tup_zg0p8 = tuple(map(tuple,index_cut_zg0p8))
-    params['p_nsire_prov_sire'] = dict(zip(tup_zg0p8,nsire_zg0p8))
+    index_cut_g0p8 = index_g0p8[mask,:]
+    tup_g0p8 = tuple(map(tuple,index_cut_g0p8))
+    params['p_nsire_prov_sire'] = dict(zip(tup_g0p8,nsire_g0p8))
 
     ###nsire_dams
     mask=nsire_k2tva1e1b1nwzida0e0b0xyg1g0p8!=0
@@ -7029,12 +7042,13 @@ def generator(params,r_vals,nv,plots = False):
     params['p_numbers_prov_offs'] =dict(zip(tup_k3k5tvnw8ziaxyg3w9, numbers_prov_offs_k3k5tvnw8zia0xyg3w9))
 
     ###mei - sire
-    mask=mei_p6fa1e1b1nwzida0e0b0xyg0!=0
-    mei_sire_p6fzg0 = mei_p6fa1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
+    mei_p6fva1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(mei_p6fva1e1b1nwzida0e0b0xyg0,season_propn_zida0e0b0xyg,z_pos,keepdims=True)
+    mask=mei_p6fva1e1b1nwzida0e0b0xyg0!=0
+    mei_sire_p6fg0 = mei_p6fva1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
     mask=mask.ravel()
-    index_cut_p6fzg0=index_p6fzg0[mask,:]
-    tup_p6fzg0 = tuple(map(tuple, index_cut_p6fzg0))
-    params['p_mei_sire'] =dict(zip(tup_p6fzg0, mei_sire_p6fzg0))
+    index_cut_p6fg0=index_p6fg0[mask,:]
+    tup_p6fg0 = tuple(map(tuple, index_cut_p6fg0))
+    params['p_mei_sire'] =dict(zip(tup_p6fg0, mei_sire_p6fg0))
     ###mei - dams
     mask=mei_k2p6ftva1e1b1nwzida0e0b0xyg1!=0
     mei_dams_k2p6ftva1nwziyg1 = mei_k2p6ftva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
@@ -7051,12 +7065,13 @@ def generator(params,r_vals,nv,plots = False):
     params['p_mei_offs'] =dict(zip(tup_k3k5p6ftvnwziaxyg3, mei_offs_k3k5p6ftvnwziaxyg3))
 
     ###pi - sire
-    mask=pi_p6fa1e1b1nwzida0e0b0xyg0!=0
-    pi_sire_p6fzg0 = pi_p6fa1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
+    pi_p6fva1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(pi_p6fva1e1b1nwzida0e0b0xyg0,season_propn_zida0e0b0xyg,z_pos,keepdims=True)
+    mask=pi_p6fva1e1b1nwzida0e0b0xyg0!=0
+    pi_sire_p6fg0 = pi_p6fva1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
     mask=mask.ravel()
-    index_cut_p6fzg0=index_p6fzg0[mask,:]
-    tup_p6fzg0 = tuple(map(tuple, index_cut_p6fzg0))
-    params['p_pi_sire'] =dict(zip(tup_p6fzg0, pi_sire_p6fzg0))
+    index_cut_p6fg0=index_p6fg0[mask,:]
+    tup_p6fg0 = tuple(map(tuple, index_cut_p6fg0))
+    params['p_pi_sire'] =dict(zip(tup_p6fg0, pi_sire_p6fg0))
     ###pi - dams
     mask=pi_k2p6ftva1e1b1nwzida0e0b0xyg1!=0
     pi_dams_k2p6ftva1nwziyg1 = pi_k2p6ftva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
@@ -7073,12 +7088,13 @@ def generator(params,r_vals,nv,plots = False):
     params['p_pi_offs'] =dict(zip(tup_k3k5p6ftvnwziaxyg3, pi_offs_k3k5p6ftvnwziaxyg3))
 
     ###cashflow - sire
+    cashflow_c0p7va1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(cashflow_c0p7va1e1b1nwzida0e0b0xyg0,season_propn_zida0e0b0xyg,z_pos,keepdims=True)
     mask=cashflow_c0p7va1e1b1nwzida0e0b0xyg0!=0
-    cashflow_sire_c0p7zg0 = cashflow_c0p7va1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
+    cashflow_sire_c0p7g0 = cashflow_c0p7va1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
     mask=mask.ravel()
-    index_cut_c0p7zg0=index_c0p7zg0[mask,:]
-    tup_c0p7zg0 = tuple(map(tuple, index_cut_c0p7zg0))
-    params['p_cashflow_sire'] =dict(zip(tup_c0p7zg0, cashflow_sire_c0p7zg0))
+    index_cut_c0p7g0=index_c0p7g0[mask,:]
+    tup_c0p7g0 = tuple(map(tuple, index_cut_c0p7g0))
+    params['p_cashflow_sire'] =dict(zip(tup_c0p7g0, cashflow_sire_c0p7g0))
     ###cashflow - dams
     mask=cashflow_k2c0p7tva1e1b1nwzida0e0b0xyg1!=0
     cashflow_dams_k2c0p7tva1nwziyg = cashflow_k2c0p7tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
@@ -7102,12 +7118,13 @@ def generator(params,r_vals,nv,plots = False):
     params['p_cashflow_offs'] =dict(zip(tup_k3k5c0p7tvnwziaxyg3, cashflow_offs_k3k5c0p7tvnwziaxyg3))
 
     ###wc - sire
+    wc_c0p7va1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(wc_c0p7va1e1b1nwzida0e0b0xyg0,season_propn_zida0e0b0xyg,z_pos,keepdims=True)
     mask=wc_c0p7va1e1b1nwzida0e0b0xyg0!=0
-    wc_sire_c0p7zg0 = wc_c0p7va1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
+    wc_sire_c0p7g0 = wc_c0p7va1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
     mask=mask.ravel()
-    index_cut_c0p7zg0=index_c0p7zg0[mask,:]
-    tup_c0p7zg0 = tuple(map(tuple, index_cut_c0p7zg0))
-    params['p_wc_sire'] =dict(zip(tup_c0p7zg0, wc_sire_c0p7zg0))
+    index_cut_c0p7g0=index_c0p7g0[mask,:]
+    tup_c0p7g0 = tuple(map(tuple, index_cut_c0p7g0))
+    params['p_wc_sire'] =dict(zip(tup_c0p7g0, wc_sire_c0p7g0))
     ###wc - dams
     mask=wc_k2c0p7tva1e1b1nwzida0e0b0xyg1!=0
     wc_dams_k2c0p7tva1nwziyg = wc_k2c0p7tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
@@ -7131,12 +7148,13 @@ def generator(params,r_vals,nv,plots = False):
     params['p_wc_offs'] =dict(zip(tup_k3k5c0p7tvnwziaxyg3, wc_offs_k3k5c0p7tvnwziaxyg3))
 
     ###cost - sire
+    cost_c0va1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(cost_c0va1e1b1nwzida0e0b0xyg0,season_propn_zida0e0b0xyg,z_pos,keepdims=True)
     mask=cost_c0va1e1b1nwzida0e0b0xyg0!=0
-    cost_sire_c0zg0 = cost_c0va1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
+    cost_sire_c0g0 = cost_c0va1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
     mask=mask.ravel()
-    index_cut_c0zg0=index_c0zg0[mask,:]
-    tup_c0zg0 = tuple(map(tuple, index_cut_c0zg0))
-    params['p_cost_sire'] =dict(zip(tup_c0zg0, cost_sire_c0zg0))
+    index_cut_c0g0=index_c0g0[mask,:]
+    tup_c0g0 = tuple(map(tuple, index_cut_c0g0))
+    params['p_cost_sire'] =dict(zip(tup_c0g0, cost_sire_c0g0))
     ###cost - dams
     mask=cost_k2c0tva1e1b1nwzida0e0b0xyg1!=0
     cost_dams_k2c0tva1nwziyg = cost_k2c0tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
@@ -7153,28 +7171,31 @@ def generator(params,r_vals,nv,plots = False):
     params['p_cost_offs'] =dict(zip(tup_k3k5c0tvnwziaxyg3, cost_offs_k3k5c0tvnwziaxyg3))
 
     ###purchcost - sire
+    purchcost_c0p7va1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(purchcost_c0p7va1e1b1nwzida0e0b0xyg0,season_propn_zida0e0b0xyg,z_pos,keepdims=True)
     mask=purchcost_c0p7va1e1b1nwzida0e0b0xyg0!=0
-    purchcost_sire_c0p7zg0 = purchcost_c0p7va1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
+    purchcost_sire_c0p7g0 = purchcost_c0p7va1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
     mask=mask.ravel()
-    index_cut_c0p7zg0=index_c0p7zg0[mask,:]
-    tup_c0p7zg0 = tuple(map(tuple, index_cut_c0p7zg0))
-    params['p_purchcost_sire'] =dict(zip(tup_c0p7zg0, purchcost_sire_c0p7zg0))
+    index_cut_c0p7g0=index_c0p7g0[mask,:]
+    tup_c0p7g0 = tuple(map(tuple, index_cut_c0p7g0))
+    params['p_purchcost_sire'] =dict(zip(tup_c0p7g0, purchcost_sire_c0p7g0))
 
     ###purchcost wc - sire
+    purchcost_wc_c0p7va1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(purchcost_wc_c0p7va1e1b1nwzida0e0b0xyg0,season_propn_zida0e0b0xyg,z_pos,keepdims=True)
     mask=purchcost_wc_c0p7va1e1b1nwzida0e0b0xyg0!=0
-    purchcost_wc_sire_c0p7zg0 = purchcost_wc_c0p7va1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
+    purchcost_wc_sire_c0p7g0 = purchcost_wc_c0p7va1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
     mask=mask.ravel()
-    index_cut_c0p7zg0=index_c0p7zg0[mask,:]
-    tup_c0p7zg0 = tuple(map(tuple, index_cut_c0p7zg0))
-    params['p_purchcost_wc_sire'] =dict(zip(tup_c0p7zg0, purchcost_wc_sire_c0p7zg0))
+    index_cut_c0p7g0=index_c0p7g0[mask,:]
+    tup_c0p7g0 = tuple(map(tuple, index_cut_c0p7g0))
+    params['p_purchcost_wc_sire'] =dict(zip(tup_c0p7g0, purchcost_wc_sire_c0p7g0))
 
     ###assetvalue - sire
+    assetvalue_va1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(assetvalue_va1e1b1nwzida0e0b0xyg0,season_propn_zida0e0b0xyg,z_pos,keepdims=True)
     mask=assetvalue_va1e1b1nwzida0e0b0xyg0!=0
-    assetvalue_sire_zg0 = assetvalue_va1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
+    assetvalue_sire_g0 = assetvalue_va1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
     mask=mask.ravel()
-    index_cut_zg0=index_zg0[mask,:]
-    tup_zg0 = tuple(map(tuple, index_cut_zg0))
-    params['p_assetvalue_sire'] =dict(zip(tup_zg0, assetvalue_sire_zg0))
+    index_cut_g0=index_g0[mask,:]
+    tup_g0 = tuple(map(tuple, index_cut_g0))
+    params['p_assetvalue_sire'] =dict(zip(tup_g0, assetvalue_sire_g0))
     ###assetvalue - dams
     mask=assetvalue_k2tva1e1b1nwzida0e0b0xyg1!=0
     assetvalue_dams_k2tva1nwziyg = assetvalue_k2tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
@@ -7191,26 +7212,29 @@ def generator(params,r_vals,nv,plots = False):
     params['p_assetvalue_offs'] =dict(zip(tup_k3k5tvnwziaxyg3, assetvalue_offs_k3k5tvnwziaxyg3))
 
     ###anyone labour - sire
+    lab_anyone_p5tva1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(lab_anyone_p5tva1e1b1nwzida0e0b0xyg0,season_propn_zida0e0b0xyg,z_pos,keepdims=True)
     mask=lab_anyone_p5tva1e1b1nwzida0e0b0xyg0!=0
-    lab_any_sire_p5zg0 = lab_anyone_p5tva1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
+    lab_any_sire_p5g0 = lab_anyone_p5tva1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
     mask=mask.ravel()
-    index_cut_p5zg0=index_p5zg0[mask,:]
-    tup_p5zg0 = tuple(map(tuple, index_cut_p5zg0))
-    params['p_labour_anyone_sire'] =dict(zip(tup_p5zg0, lab_any_sire_p5zg0))
+    index_cut_p5g0=index_p5g0[mask,:]
+    tup_p5g0 = tuple(map(tuple, index_cut_p5g0))
+    params['p_labour_anyone_sire'] =dict(zip(tup_p5g0, lab_any_sire_p5g0))
     ###perm labour - sire
+    lab_perm_p5tva1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(lab_perm_p5tva1e1b1nwzida0e0b0xyg0,season_propn_zida0e0b0xyg,z_pos,keepdims=True)
     mask=lab_perm_p5tva1e1b1nwzida0e0b0xyg0!=0
-    lab_perm_sire_p5zg0 = lab_perm_p5tva1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
+    lab_perm_sire_p5g0 = lab_perm_p5tva1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
     mask=mask.ravel()
-    index_cut_p5zg0=index_p5zg0[mask,:]
-    tup_p5zg0 = tuple(map(tuple, index_cut_p5zg0))
-    params['p_labour_perm_sire'] =dict(zip(tup_p5zg0, lab_perm_sire_p5zg0))
+    index_cut_p5g0=index_p5g0[mask,:]
+    tup_p5g0 = tuple(map(tuple, index_cut_p5g0))
+    params['p_labour_perm_sire'] =dict(zip(tup_p5g0, lab_perm_sire_p5g0))
     ###manager labour - sire
+    lab_manager_p5tva1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(lab_manager_p5tva1e1b1nwzida0e0b0xyg0,season_propn_zida0e0b0xyg,z_pos,keepdims=True)
     mask=lab_manager_p5tva1e1b1nwzida0e0b0xyg0!=0
-    lab_manager_sire_p5zg0 = lab_manager_p5tva1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
+    lab_manager_sire_p5g0 = lab_manager_p5tva1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
     mask=mask.ravel()
-    index_cut_p5zg0=index_p5zg0[mask,:]
-    tup_p5zg0 = tuple(map(tuple, index_cut_p5zg0))
-    params['p_labour_manager_sire'] =dict(zip(tup_p5zg0, lab_manager_sire_p5zg0))
+    index_cut_p5g0=index_p5g0[mask,:]
+    tup_p5g0 = tuple(map(tuple, index_cut_p5g0))
+    params['p_labour_manager_sire'] =dict(zip(tup_p5g0, lab_manager_sire_p5g0))
 
     ###anyone labour - dams
     mask=lab_anyone_k2p5tva1e1b1nwzida0e0b0xyg1!=0
@@ -7257,12 +7281,13 @@ def generator(params,r_vals,nv,plots = False):
     params['p_labour_manager_offs'] =dict(zip(tup_k3k5p5tvnwziaxyg3, lab_manager_offs_k3k5p5tvnwziaxyg3))
 
     ###infrastructure - sire
+    infrastructure_h1va1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(infrastructure_h1va1e1b1nwzida0e0b0xyg0,season_propn_zida0e0b0xyg,z_pos,keepdims=True)
     mask=infrastructure_h1va1e1b1nwzida0e0b0xyg0!=0
-    infrastructure_sire_h1zg0 = infrastructure_h1va1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
+    infrastructure_sire_h1g0 = infrastructure_h1va1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
     mask=mask.ravel()
-    index_cut_h1zg0=index_h1zg0[mask,:]
-    tup_h1zg0 = tuple(map(tuple, index_cut_h1zg0))
-    params['p_infrastructure_sire'] =dict(zip(tup_h1zg0, infrastructure_sire_h1zg0))
+    index_cut_h1g0=index_h1g0[mask,:]
+    tup_h1g0 = tuple(map(tuple, index_cut_h1g0))
+    params['p_infrastructure_sire'] =dict(zip(tup_h1g0, infrastructure_sire_h1g0))
     ###infrastructure - dams
     mask=infrastructure_k2h1tva1e1b1nwzida0e0b0xyg1!=0
     infrastructure_dams_k2h1tva1nwziyg = infrastructure_k2h1tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
@@ -7279,16 +7304,18 @@ def generator(params,r_vals,nv,plots = False):
     params['p_infrastructure_offs'] =dict(zip(tup_k3k5h1tvnwziaxyg3, infrastructure_offs_k3k5h1tvnwziaxyg3))
 
     ##DSE - sire
+    dsemj_p6tva1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(dsemj_p6tva1e1b1nwzida0e0b0xyg0,season_propn_zida0e0b0xyg,z_pos,keepdims=True)
+    dsenw_p6tva1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(dsenw_p6tva1e1b1nwzida0e0b0xyg0,season_propn_zida0e0b0xyg,z_pos,keepdims=True)
     mask=dsemj_p6tva1e1b1nwzida0e0b0xyg0!=0
-    dsemj_sire_p6zg0 = dsemj_p6tva1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
-    dsenw_sire_p6zg0 = dsenw_p6tva1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
+    dsemj_sire_p6g0 = dsemj_p6tva1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
+    dsenw_sire_p6g0 = dsenw_p6tva1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
     mask=mask.ravel()
-    index_cut_p6zg0=index_p6zg0[mask,:]
-    tup_p6zg0 = tuple(map(tuple, index_cut_p6zg0))
+    index_cut_p6g0=index_p6g0[mask,:]
+    tup_p6g0 = tuple(map(tuple, index_cut_p6g0))
     if pinp.sheep['i_dse_type'] == 0:
-        params['p_dse_sire'] =dict(zip(tup_p6zg0, dsemj_sire_p6zg0))
+        params['p_dse_sire'] =dict(zip(tup_p6g0, dsemj_sire_p6g0))
     else:
-        params['p_dse_sire'] =dict(zip(tup_p6zg0, dsenw_sire_p6zg0))
+        params['p_dse_sire'] =dict(zip(tup_p6g0, dsenw_sire_p6g0))
     ##DSE - dams
     mask=dsemj_k2p6tva1e1b1nwzida0e0b0xyg1!=0
     dsemj_dams_k2p6tva1nwziyg1 = dsemj_k2p6tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
@@ -7465,7 +7492,7 @@ def generator(params,r_vals,nv,plots = False):
     keys_p = np.array(['p%s'%i for i in range(len_p)])
     keys_p3 = keys_p[mask_p_offs_p]
 
-    r_vals['sire_keys_zg0'] = [keys_z, keys_g0]
+    r_vals['sire_keys_g0'] = [keys_g0]
     r_vals['sire_keys_p6fg0'] = [keys_p6, keys_f, keys_g0]
     r_vals['dams_keys_k2tvanwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
                                              , keys_z, keys_i, keys_y1, keys_g1]
@@ -7512,7 +7539,7 @@ def generator(params,r_vals,nv,plots = False):
                                             , keys_x, keys_y3, keys_g3]
 
     ####std
-    zg0_shape = len_z, len_g0
+    g0_shape = len_g0
     k2tva1nwziyg1_shape = len_k2, len_t1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
     k5twzidaxyg2_shape = len_k5, len_t2, len_w_prog, len_z, len_i, len_d, len_a1, len_x, len_g2
     k3k5tvnwziaxyg3_shape = len_k3, len_k5, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
@@ -7530,29 +7557,29 @@ def generator(params,r_vals,nv,plots = False):
     k2tva1e1b1nwziyg1_shape = len_k2, len_t1, len_v1, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
 
     ####kvpeb
-    pzg0_shape = len_p, len_z, len_g0
+    pg0_shape = len_p, len_g0
     k2vpa1e1b1nwziyg1_shape = len_k2, len_v1, len_p, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
     k2vpa1e1b1nwzixyg1_shape = len_k2, len_v1, len_p, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, len_x, len_y1, len_g1
     k3k5wzida0e0b0xyg2_shape = len_k3, len_k5, len_w_prog, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y2,  len_g2
     k3k5vpnwzidae0b0xyg3_shape = len_k3, len_k5, len_v3, lenoffs_p, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3
 
     ####ktvp
-    pzg0_shape = len_p, len_z, len_g0
+    pg0_shape = len_p, len_g0
     k2tvpa1nwziyg1_shape = len_k2, len_t1, len_v1, len_p, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
     k3k5tvpnwziaxyg3_shape = len_k3, len_k5, len_t3, len_v3, lenoffs_p, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
     ####p6
-    p6zg0_shape = len_p6, len_z, len_g0
+    p6g0_shape = len_p6, len_g0
     k2p6tva1nwziyg1_shape = len_k2, len_p6, len_t1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
     k3k5p6tvnwziaxyg3_shape = len_k3, len_k5, len_p6, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
     ####p6f
-    p6fzg0_shape = len_p6, len_f, len_z, len_g0
+    p6fg0_shape = len_p6, len_f, len_g0
     k2p6ftva1nwziyg1_shape = len_k2, len_p6, len_f, len_t1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
     k3k5p6ftvnwziaxyg3_shape = len_k3, len_k5, len_p6, len_f, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
 
     ####cg
-    c0p7zg0_shape = len_c0, len_p7, len_z, len_g0
+    c0p7g0_shape = len_c0, len_p7, len_g0
     k2c0p7tva1nwziyg1_shape = len_k2, len_c0, len_p7, len_t1, len_v1, len_a1, len_n1, len_w1, len_z, len_i, len_y1, len_g1
     k3k5c0p7twziaxyg2_shape = len_k3, len_k5, len_c0, len_p7, len_t2, len_w_prog, len_z, len_i, len_a1, len_x, len_g2
     k3k5c0p7tvnwziaxyg3_shape = len_k3, len_k5, len_c0, len_p7, len_t3, len_v3, len_n3, len_w3, len_z, len_i, len_a0, len_x, len_y3, len_g3
@@ -7560,8 +7587,8 @@ def generator(params,r_vals,nv,plots = False):
 
 
     ###dse
-    r_vals['dsenw_p6zg0'] = dsenw_p6tva1e1b1nwzida0e0b0xyg0.reshape(p6zg0_shape)
-    r_vals['dsemj_p6zg0'] = dsemj_p6tva1e1b1nwzida0e0b0xyg0.reshape(p6zg0_shape)
+    r_vals['dsenw_p6g0'] = dsenw_p6tva1e1b1nwzida0e0b0xyg0.reshape(p6g0_shape)
+    r_vals['dsemj_p6g0'] = dsemj_p6tva1e1b1nwzida0e0b0xyg0.reshape(p6g0_shape)
     r_vals['dsenw_k2p6tva1nwziyg1'] = dsenw_k2p6tva1e1b1nwzida0e0b0xyg1.reshape(k2p6tva1nwziyg1_shape)
     r_vals['dsemj_k2p6tva1nwziyg1'] = dsemj_k2p6tva1e1b1nwzida0e0b0xyg1.reshape(k2p6tva1nwziyg1_shape)
     r_vals['dsenw_k3k5p6tvnwziaxyg3'] = dsenw_k3k5p6tva1e1b1nwzida0e0b0xyg3.reshape(k3k5p6tvnwziaxyg3_shape)
@@ -7569,26 +7596,31 @@ def generator(params,r_vals,nv,plots = False):
     r_vals['wg_propn_p6z'] = wg_propn_p6z
 
     ###stock days
-    r_vals['stock_days_p6fzg0'] = stock_days_p6fa1e1b1nwzida0e0b0xyg0.reshape(p6fzg0_shape)
+    r_vals['stock_days_p6fg0'] = fun.f_weighted_average(stock_days_p6fva1e1b1nwzida0e0b0xyg0,season_propn_zida0e0b0xyg,
+                                                        z_pos,keepdims=True).reshape(p6fg0_shape)
     r_vals['stock_days_k2p6ftva1nwziyg1'] = stock_days_k2p6ftva1e1b1nwzida0e0b0xyg1.reshape(k2p6ftva1nwziyg1_shape)
     r_vals['stock_days_k3k5p6ftvnwziaxyg3'] = stock_days_k3k5p6ftva1e1b1nwzida0e0b0xyg3.reshape(k3k5p6ftvnwziaxyg3_shape)
 
     ###cashflow
-    r_vals['sire_cost_c0p7zg0'] = cost_c0p7va1e1b1nwzida0e0b0xyg0.reshape(c0p7zg0_shape)
+    r_vals['sire_cost_c0p7g0'] = fun.f_weighted_average(cost_c0p7va1e1b1nwzida0e0b0xyg0,season_propn_zida0e0b0xyg,
+                                                        z_pos,keepdims=True).reshape(c0p7g0_shape)
     r_vals['dams_cost_k2c0p7tva1nwziyg1'] = cost_k2c0p7tva1e1b1nwzida0e0b0xyg1.reshape(k2c0p7tva1nwziyg1_shape)
     r_vals['offs_cost_k3k5c0p7tvnwziaxyg3'] =cost_k3k5c0p7tva1e1b1nwzida0e0b0xyg3.reshape(k3k5c0p7tvnwziaxyg3_shape)
 
-    r_vals['salevalue_c0p7zg0'] = r_salevalue_c0p7va1e1b1nwzida0e0b0xyg0.reshape(c0p7zg0_shape)
+    r_vals['salevalue_c0p7g0'] = fun.f_weighted_average(r_salevalue_c0p7va1e1b1nwzida0e0b0xyg0,season_propn_zida0e0b0xyg,
+                                                        z_pos,keepdims=True).reshape(c0p7g0_shape)
     r_vals['salevalue_k2c0p7tva1nwziyg1'] = r_salevalue_k2c0p7tva1e1b1nwzida0e0b0xyg1.reshape(k2c0p7tva1nwziyg1_shape)
     r_vals['salevalue_k3k5c0p7twzia0xg2'] = salevalue_prog_k3k5c0p7tva1e1b1nwzida0e0b0xyg2.reshape(k3k5c0p7twziaxyg2_shape)
     r_vals['salevalue_k3k5c0p7tvnwziaxyg3'] = r_salevalue_k3k5c0p7tva1e1b1nwzida0e0b0xyg3.reshape(k3k5c0p7tvnwziaxyg3_shape)
 
-    r_vals['salegrid_zg0'] = r_salegrid_va1e1b1nwzida0e0b0xyg0.reshape(zg0_shape)
+    r_vals['salegrid_g0'] = fun.f_weighted_average(r_salegrid_va1e1b1nwzida0e0b0xyg0,season_propn_zida0e0b0xyg,
+                                                        z_pos,keepdims=True).reshape(g0_shape)
     r_vals['salegrid_tva1e1b1nwziyg1'] = r_salegrid_tva1e1b1nwzida0e0b0xyg1.reshape(tva1e1b1nwziyg1_shape)
     r_vals['salegrid_va1e1b1nwzixyg2'] = r_salegrid_va1e1b1nwzida0e0b0xyg2.reshape(va1e1b1nwzixyg2_shape)
     r_vals['salegrid_tvnwzida0e0b0xyg3'] = r_salegrid_tva1e1b1nwzida0e0b0xyg3.reshape(tvnwzidaebxyg3_shape)
 
-    r_vals['woolvalue_c0p7zg0'] = r_woolvalue_c0p7va1e1b1nwzida0e0b0xyg0.reshape(c0p7zg0_shape)
+    r_vals['woolvalue_c0p7g0'] = fun.f_weighted_average(r_woolvalue_c0p7va1e1b1nwzida0e0b0xyg0,season_propn_zida0e0b0xyg,
+                                                        z_pos,keepdims=True).reshape(c0p7g0_shape)
     r_vals['woolvalue_k2c0p7tva1nwziyg1'] = r_woolvalue_k2c0p7tva1e1b1nwzida0e0b0xyg1.reshape(k2c0p7tva1nwziyg1_shape)
     r_vals['woolvalue_k3k5c0p7tvnwziaxyg3'] =r_woolvalue_k3k5c0p7tva1e1b1nwzida0e0b0xyg3.reshape(k3k5c0p7tvnwziaxyg3_shape)
 
@@ -7596,7 +7628,7 @@ def generator(params,r_vals,nv,plots = False):
     r_vals['rm_stockinfra_fix_h1c0p7z'] = rm_stockinfra_fix_h1c0p7z
 
     ###purchase costs
-    r_vals['purchcost_sire_c0p7zg0'] = purchcost_c0p7va1e1b1nwzida0e0b0xyg0.reshape(c0p7zg0_shape)
+    r_vals['purchcost_sire_c0p7zg0'] = purchcost_c0p7va1e1b1nwzida0e0b0xyg0.reshape(c0p7g0_shape)
 
     ###sale date
     r_vals['saledate_k3k5tvnwziaxyg3'] = r_saledate_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
@@ -7606,29 +7638,33 @@ def generator(params,r_vals,nv,plots = False):
     r_vals['wbe_k3k5vnwziaxyg3'] = r_wbe_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5vnwziaxyg3_shape)
 
     ###cfw
-    r_vals['cfw_hdmob_zg0'] = r_cfw_hdmob_tva1e1b1nwzida0e0b0xyg0.reshape(zg0_shape)
+    r_vals['cfw_hdmob_g0'] = fun.f_weighted_average(r_cfw_hdmob_tva1e1b1nwzida0e0b0xyg0,season_propn_zida0e0b0xyg,
+                                                        z_pos,keepdims=True).reshape(g0_shape)
     r_vals['cfw_hdmob_k2tva1nwziyg1'] = r_cfw_hdmob_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
     r_vals['cfw_hdmob_k3k5tvnwziaxyg3'] = r_cfw_hdmob_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
 
-    r_vals['cfw_hd_zg0'] = r_cfw_hd_tva1e1b1nwzida0e0b0xyg0.reshape(zg0_shape)
+    r_vals['cfw_hd_g0'] = fun.f_weighted_average(r_cfw_hd_tva1e1b1nwzida0e0b0xyg0,season_propn_zida0e0b0xyg,
+                                                        z_pos,keepdims=True).reshape(g0_shape)
     r_vals['cfw_hd_k2tva1nwziyg1'] = r_cfw_hd_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
     r_vals['cfw_hd_k3k5tvnwziaxyg3'] = r_cfw_hd_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
 
     ###fd
-    r_vals['fd_hdmob_zg0'] = r_fd_hdmob_tva1e1b1nwzida0e0b0xyg0.reshape(zg0_shape)
+    r_vals['fd_hdmob_g0'] = fun.f_weighted_average(r_fd_hdmob_tva1e1b1nwzida0e0b0xyg0,season_propn_zida0e0b0xyg,
+                                                        z_pos,keepdims=True).reshape(g0_shape)
     r_vals['fd_hdmob_k2tva1nwziyg1'] = r_fd_hdmob_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
     r_vals['fd_hdmob_k3k5tvnwziaxyg3'] = r_fd_hdmob_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
 
-    r_vals['fd_hd_zg0'] = r_fd_hd_tva1e1b1nwzida0e0b0xyg0.reshape(zg0_shape)
+    r_vals['fd_hd_g0'] = fun.f_weighted_average(r_fd_hd_tva1e1b1nwzida0e0b0xyg0,season_propn_zida0e0b0xyg,
+                                                        z_pos,keepdims=True).reshape(g0_shape)
     r_vals['fd_hd_k2tva1nwziyg1'] = r_fd_hd_k2tva1e1b1nwzida0e0b0xyg1.reshape(k2tva1nwziyg1_shape)
     r_vals['fd_hd_k3k5tvnwziaxyg3'] = r_fd_hd_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
 
     ###mei and pi and NV (nutritive value)
-    r_vals['mei_sire_p6fzg0'] = mei_p6fa1e1b1nwzida0e0b0xyg0.reshape(p6fzg0_shape)
+    r_vals['mei_sire_p6fg0'] = mei_p6fva1e1b1nwzida0e0b0xyg0.reshape(p6fg0_shape)
     r_vals['mei_dams_k2p6ftva1nw8ziyg1'] = mei_k2p6ftva1e1b1nwzida0e0b0xyg1.reshape(k2p6ftva1nwziyg1_shape)
     r_vals['mei_offs_k3k5p6ftvnw8ziaxyg3'] = mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3.reshape(k3k5p6ftvnwziaxyg3_shape)
 
-    r_vals['pi_sire_p6fzg0'] = pi_p6fa1e1b1nwzida0e0b0xyg0.reshape(p6fzg0_shape)
+    r_vals['pi_sire_p6fg0'] = pi_p6fva1e1b1nwzida0e0b0xyg0.reshape(p6fg0_shape)
     r_vals['pi_dams_k2p6ftva1nw8ziyg1'] = pi_k2p6ftva1e1b1nwzida0e0b0xyg1.reshape(k2p6ftva1nwziyg1_shape)
     r_vals['pi_offs_k3k5p6ftvnw8ziaxyg3'] = pi_k3k5p6ftva1e1b1nwzida0e0b0xyg3.reshape(k3k5p6ftvnwziaxyg3_shape)
 
@@ -7691,13 +7727,15 @@ def generator(params,r_vals,nv,plots = False):
 
     ###lw - with p, e, b
     if pinp.rep['i_store_lw_rep']:
-        r_vals['lw_sire_pzg0'] = r_lw_sire_psire.reshape(pzg0_shape)
+        r_vals['lw_sire_pg0'] = fun.f_weighted_average(r_lw_sire_psire,season_propn_zida0e0b0xyg,
+                                                        z_pos,keepdims=True).reshape(pg0_shape)
         r_vals['lw_dams_k2vpa1e1b1nw8ziyg1'] = r_lw_dams_k2tvpdams.reshape(k2vpa1e1b1nwziyg1_shape)
         r_vals['lw_offs_k3k5vpnw8zida0e0b0xyg3'] = r_lw_offs_k3k5tvpoffs.reshape(k3k5vpnwzidae0b0xyg3_shape)
 
     ###ffcfw - with p, e, b
     if pinp.rep['i_store_ffcfw_rep']:
-        r_vals['ffcfw_sire_pzg0'] = r_ffcfw_sire_psire.reshape(pzg0_shape)
+        r_vals['ffcfw_sire_pg0'] = fun.f_weighted_average(r_ffcfw_sire_psire,season_propn_zida0e0b0xyg,
+                                                        z_pos,keepdims=True).reshape(pg0_shape)
         r_vals['ffcfw_dams_k2vpa1e1b1nw8ziyg1'] = r_ffcfw_dams_k2tvpdams.reshape(k2vpa1e1b1nwziyg1_shape)
         r_vals['ffcfw_yatf_k2vpa1e1b1nw8zixyg1'] = r_ffcfw_yatf_k2tvpyatf.reshape(k2vpa1e1b1nwzixyg1_shape)
         r_vals['ffcfw_prog_k3k5wzida0e0b0xyg2'] = r_ffcfw_prog_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5wzida0e0b0xyg2_shape) #no p axis
@@ -7705,7 +7743,8 @@ def generator(params,r_vals,nv,plots = False):
 
     ###NV - with p, e, b
     if pinp.rep['i_store_nv_rep']:
-        r_vals['nv_sire_pzg0'] = r_nv_sire_pg.reshape(pzg0_shape)
+        r_vals['nv_sire_pg0'] = fun.f_weighted_average(r_nv_sire_pg,season_propn_zida0e0b0xyg,
+                                                        z_pos,keepdims=True).reshape(pg0_shape)
         r_vals['nv_dams_k2vpa1e1b1nw8ziyg1'] = r_nv_dams_k2tvpg.reshape(k2vpa1e1b1nwziyg1_shape)
         r_vals['nv_offs_k3k5vpnw8zida0e0b0xyg3'] = r_nv_offs_k3k5tvpg.reshape(k3k5vpnwzidae0b0xyg3_shape)
 

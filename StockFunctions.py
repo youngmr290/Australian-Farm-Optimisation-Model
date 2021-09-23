@@ -2349,7 +2349,7 @@ def f1_create_production_param(group, production_vg, a_kcluster_vg_1=1, index_kt
     Apply the k clustering and collapse the e, b & d axes
     If numbers_start are not included then only applies k clustering - this is usually done if production is already per head'''
     if group=='sire':
-        return fun.f_divide(production_vg, numbers_start_vg, dtype=production_vg.dtype)
+        return fun.f_divide(production_vg, numbers_start_vg, dtype=production_vg.dtype) * mask_vg
     elif group=='dams':
         return fun.f_divide(np.sum(production_vg * (a_kcluster_vg_1 == index_ktvg_1) * mask_vg
                                   , axis = (sinp.stock['i_b1_pos']-pos_offset, sinp.stock['i_e1_pos']-pos_offset), keepdims=True)

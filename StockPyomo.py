@@ -48,7 +48,7 @@ def f1_stockpyomo_local(params, model):
     ##  setup variables # #variables that use dynamic sets must be defined each iteration of exp
     #####################
     ##animals
-    model.v_sire = pe.Var(model.s_season_types, model.s_groups_sire, bounds = (0,None) , doc='number of sire animals')
+    model.v_sire = pe.Var(model.s_groups_sire, bounds = (0,None) , doc='number of sire animals') #assumption is that no tactical management of numbers of dams mated and hence sires across seasons so no z axis.
     model.v_dams = pe.Var(model.s_k2_birth_dams, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams,
                           model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, bounds = (0,None) , doc='number of dam animals')
     model.v_offs = pe.Var(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
@@ -77,7 +77,7 @@ def f1_stockpyomo_local(params, model):
                                   model.s_groups_sire, model.s_sire_periods, initialize=params['p_nsire_req_dams'], 
                                   default=0.0, mutable=False, doc='requirement for sires for mating')
 
-    model.p_nsires_prov = pe.Param(model.s_season_types, model.s_groups_sire, model.s_sire_periods,
+    model.p_nsires_prov = pe.Param(model.s_groups_sire, model.s_sire_periods,
                                initialize=params['p_nsire_prov_sire'], default=0.0, mutable=False, doc='sires available for mating')
 
     ##progeny
@@ -131,7 +131,7 @@ def f1_stockpyomo_local(params, model):
                                         initialize=params['p_numbers_req_offs'], default=0.0, doc='requirement of off in the current period')
 
     ##energy intake
-    model.p_mei_sire = pe.Param(model.s_feed_periods, model.s_feed_pools, model.s_season_types, model.s_groups_sire, 
+    model.p_mei_sire = pe.Param(model.s_feed_periods, model.s_feed_pools, model.s_groups_sire, 
                                 initialize=params['p_mei_sire'],
                                   default=0.0, mutable=False, doc='energy requirement sire')
     model.p_mei_dams = pe.Param(model.s_k2_birth_dams, model.s_feed_periods, model.s_feed_pools, model.s_sale_dams,
@@ -144,7 +144,7 @@ def f1_stockpyomo_local(params, model):
                                 default=0.0, mutable=False, doc='energy requirement offs')
 
     ##potential intake
-    model.p_pi_sire = pe.Param(model.s_feed_periods, model.s_feed_pools, model.s_season_types, model.s_groups_sire, 
+    model.p_pi_sire = pe.Param(model.s_feed_periods, model.s_feed_pools, model.s_groups_sire, 
                                initialize=params['p_pi_sire'],
                                   default=0.0, mutable=False, doc='pi sire')
     model.p_pi_dams = pe.Param(model.s_k2_birth_dams, model.s_feed_periods, model.s_feed_pools, model.s_sale_dams,
@@ -157,7 +157,7 @@ def f1_stockpyomo_local(params, model):
                                default=0.0, mutable=False, doc='pi offs')
 
     ##cashflow
-    model.p_cashflow_sire = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_groups_sire, initialize=params['p_cashflow_sire'],
+    model.p_cashflow_sire = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_groups_sire, initialize=params['p_cashflow_sire'],
                                   default=0.0, mutable=False, doc='cashflow sire')
     model.p_cashflow_dams = pe.Param(model.s_k2_birth_dams, model.s_enterprises, model.s_cashflow_periods, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams,
                                   model.s_lw_dams, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams,
@@ -170,7 +170,7 @@ def f1_stockpyomo_local(params, model):
                              initialize=params['p_cashflow_offs'], default=0.0, mutable=False, doc='cashflow offs')
 
     ##working capital
-    model.p_wc_sire = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_groups_sire, initialize=params['p_cashflow_sire'],
+    model.p_wc_sire = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_groups_sire, initialize=params['p_cashflow_sire'],
                                   default=0.0, mutable=False, doc='wc sire')
     model.p_wc_dams = pe.Param(model.s_k2_birth_dams, model.s_enterprises, model.s_cashflow_periods, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams,
                                   model.s_lw_dams, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams,
@@ -183,7 +183,7 @@ def f1_stockpyomo_local(params, model):
                              initialize=params['p_wc_offs'], default=0.0, mutable=False, doc='wc offs')
 
     ##cost - minroe
-    model.p_cost_sire = pe.Param(model.s_enterprises, model.s_season_types, model.s_groups_sire, initialize=params['p_cost_sire'],
+    model.p_cost_sire = pe.Param(model.s_enterprises, model.s_groups_sire, initialize=params['p_cost_sire'],
                                   default=0.0, mutable=False, doc='husbandry cost sire')
     model.p_cost_dams = pe.Param(model.s_k2_birth_dams, model.s_enterprises, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams,
                                   model.s_lw_dams, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams,
@@ -193,7 +193,7 @@ def f1_stockpyomo_local(params, model):
                              initialize=params['p_cost_offs'], default=0.0, mutable=False, doc='husbandry cost offs')
 
     ##asset value stock
-    model.p_asset_sire = pe.Param(model.s_season_types, model.s_groups_sire, initialize=params['p_assetvalue_sire'], default=0.0, mutable=False, doc='Asset value of sire')
+    model.p_asset_sire = pe.Param(model.s_groups_sire, initialize=params['p_assetvalue_sire'], default=0.0, mutable=False, doc='Asset value of sire')
     model.p_asset_dams = pe.Param(model.s_k2_birth_dams, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams,
                                   model.s_lw_dams, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams,
                                   initialize=params['p_assetvalue_dams'], default=0.0, mutable=False, doc='Asset value of dams')
@@ -202,9 +202,9 @@ def f1_stockpyomo_local(params, model):
                                  initialize=params['p_assetvalue_offs'], default=0.0, mutable=False, doc='Asset value of offs')
 
     ##labour - sire
-    model.p_lab_anyone_sire = pe.Param(model.s_labperiods, model.s_season_types, model.s_groups_sire,  initialize=params['p_labour_anyone_sire'], default=0.0, mutable=False, doc='labour requirement sire that can be done by anyone')
-    model.p_lab_perm_sire = pe.Param(model.s_labperiods, model.s_season_types, model.s_groups_sire, initialize=params['p_labour_perm_sire'], default=0.0, mutable=False, doc='labour requirement sire that can be done by perm staff')
-    model.p_lab_manager_sire = pe.Param(model.s_labperiods, model.s_season_types, model.s_groups_sire, initialize=params['p_labour_manager_sire'], default=0.0, mutable=False, doc='labour requirement sire that can be done by manager')
+    model.p_lab_anyone_sire = pe.Param(model.s_labperiods, model.s_groups_sire,  initialize=params['p_labour_anyone_sire'], default=0.0, mutable=False, doc='labour requirement sire that can be done by anyone')
+    model.p_lab_perm_sire = pe.Param(model.s_labperiods, model.s_groups_sire, initialize=params['p_labour_perm_sire'], default=0.0, mutable=False, doc='labour requirement sire that can be done by perm staff')
+    model.p_lab_manager_sire = pe.Param(model.s_labperiods, model.s_groups_sire, initialize=params['p_labour_manager_sire'], default=0.0, mutable=False, doc='labour requirement sire that can be done by manager')
     
     ##labour - dams
     model.p_lab_anyone_dams = pe.Param(model.s_k2_birth_dams, model.s_labperiods, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams,
@@ -229,7 +229,7 @@ def f1_stockpyomo_local(params, model):
                              initialize=params['p_labour_manager_offs'], default=0.0, mutable=False, doc='labour requirement offs - manager')
 
     ##infrastructure
-    model.p_infra_sire = pe.Param(model.s_infrastructure, model.s_season_types, model.s_groups_sire, initialize=params['p_infrastructure_sire'],
+    model.p_infra_sire = pe.Param(model.s_infrastructure, model.s_groups_sire, initialize=params['p_infrastructure_sire'],
                                   default=0.0, mutable=False, doc='sire requirement for infrastructure (based on number of times yarded and shearing activity)')
     model.p_infra_dams = pe.Param(model.s_k2_birth_dams, model.s_infrastructure, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams,
                                   model.s_lw_dams, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams,
@@ -244,7 +244,7 @@ def f1_stockpyomo_local(params, model):
     # model.p_lab_stockinfra = Param(model.s_infrastructure, model.s_labperiods, initialize=, default=0.0, doc='Labour required for R&M of the infrastructure (per animal mustered/shorn)')
 
     ##dse
-    model.p_dse_sire = pe.Param(model.s_feed_periods, model.s_season_types, model.s_groups_sire, initialize=params['p_dse_sire'],
+    model.p_dse_sire = pe.Param(model.s_feed_periods, model.s_groups_sire, initialize=params['p_dse_sire'],
                                   default=0.0, mutable=False, doc='number of dse for each sire activity')
     model.p_dse_dams = pe.Param(model.s_k2_birth_dams, model.s_feed_periods, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams,
                                   model.s_lw_dams, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams,
@@ -260,9 +260,9 @@ def f1_stockpyomo_local(params, model):
     model.p_asset_stockinfra = pe.Param(model.s_infrastructure, initialize=params['p_infra'], default=0.0, doc='Asset value of infra')
 
     ##purchases
-    model.p_cost_purch_sire = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_groups_sire,
+    model.p_cost_purch_sire = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_groups_sire,
                                    initialize=params['p_purchcost_sire'], default=0.0, mutable=False, doc='cost of purchased sires')
-    model.p_wc_purch_sire = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_groups_sire,
+    model.p_wc_purch_sire = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_groups_sire,
                                    initialize=params['p_purchcost_wc_sire'], default=0.0, mutable=False, doc='working capital cost of purchased sires')
     # model.p_numberpurch_dam = Param(model.s_dvp_dams, model.s_wean_times, model.s_k2_birth_dams, model.s_lw_dams,
     #                           model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, model.s_co_conception,
@@ -576,7 +576,7 @@ def f_con_matingR(model):
 
     '''
     def mating(model,z,g0,p8):
-        return - model.v_sire[z,g0] * model.p_nsires_prov[z,g0,p8] + sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_nsires_req[k2,t1,v1,a,n1,w1,z,i,y1,g1,g0,p8]
+        return - model.v_sire[g0] * model.p_nsires_prov[g0,p8] + sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_nsires_req[k2,t1,v1,a,n1,w1,z,i,y1,g1,g0,p8]
                   for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for a in model.s_wean_times for n1 in model.s_nut_dams
                    for w1 in model.s_lw_dams for i in model.s_tol for y1 in model.s_gen_merit_dams  for g1 in model.s_groups_dams
                    if pe.value(model.p_nsires_req[k2,t1,v1,a,n1,w1,z,i,y1,g1,g0,p8])!=0) <=0
@@ -587,7 +587,7 @@ def f_con_stockinfra(model):
     Ensures enough infrastructure exists for all the animals and the associated events (eg mustering, shearing, etc).
     '''
     def stockinfra(model,h1,z):
-        return -model.v_infrastructure[h1,z] + sum(model.v_sire[z,g0] * model.p_infra_sire[h1,z,g0] for g0 in model.s_groups_sire if model.p_infra_sire[h1,z,g0]!=0)  \
+        return -model.v_infrastructure[h1,z] + sum(model.v_sire[g0] * model.p_infra_sire[h1,g0] for g0 in model.s_groups_sire if model.p_infra_sire[h1,g0]!=0)  \
                + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_infra_dams[k2,h1,t1,v1,a,n1,w1,z,i,y1,g1]
                          for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                          for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
@@ -621,7 +621,7 @@ def f_stock_me(model,p6,f,z):
     Used in global constraint (con_me). See CorePyomo
     '''
 
-    return sum(model.v_sire[z,g0] * model.p_mei_sire[p6,f,z,g0] for g0 in model.s_groups_sire)\
+    return sum(model.v_sire[g0] * model.p_mei_sire[p6,f,g0] for g0 in model.s_groups_sire)\
            + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_mei_dams[k2,p6,f,t1,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                      for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
@@ -640,7 +640,7 @@ def f_stock_pi(model,p6,f,z):
     Used in global constraint (con_vol). See CorePyomo
     '''
 
-    return sum(model.v_sire[z,g0] * model.p_pi_sire[p6,f,z,g0] for g0 in model.s_groups_sire)\
+    return sum(model.v_sire[g0] * model.p_pi_sire[p6,f,g0] for g0 in model.s_groups_sire)\
            + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_pi_dams[k2,p6,f,t1,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                      for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
@@ -660,7 +660,7 @@ def f_stock_cashflow(model,c0,p7,z):
 
     infrastructure = sum(model.p_rm_stockinfra_fix[h1,c0,p7,z] + model.p_rm_stockinfra_var[h1,c0,p7,z] * model.v_infrastructure[h1,z]
                          for h1 in model.s_infrastructure)
-    stock = sum(model.v_sire[z,g0] * model.p_cashflow_sire[c0,p7,z,g0] for g0 in model.s_groups_sire) \
+    stock = sum(model.v_sire[g0] * model.p_cashflow_sire[c0,p7,g0] for g0 in model.s_groups_sire) \
            + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_cashflow_dams[k2,c0,p7,t1,v1,a,n1,w1,z,i,y1,g1]
                       for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                       for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
@@ -673,7 +673,7 @@ def f_stock_cashflow(model,c0,p7,z):
                       for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
                       if pe.value(model.p_cashflow_offs[k3,k5,c0,p7,t3,v3,n3,w3,z,i,a,x,y3,g3]) != 0)
                for a in model.s_wean_times for i in model.s_tol)
-    purchases = sum(model.v_sire[z,g0] * model.p_cost_purch_sire[c0,p7,z,g0] for g0 in model.s_groups_sire)
+    purchases = sum(model.v_sire[g0] * model.p_cost_purch_sire[c0,p7,g0] for g0 in model.s_groups_sire)
     return stock - infrastructure - purchases
 
 #     purchases = sum(model.v_sire[g0] * model.p_cost_purch_sire[g0,c] for g0 in model.s_groups_sire)  \
@@ -691,7 +691,7 @@ def f_stock_wc(model,c0,p7,z):
 
     infrastructure = sum(model.p_rm_stockinfra_fix[h1,c0,p7,z] + model.p_rm_stockinfra_var[h1,c0,p7,z] * model.v_infrastructure[h1,z]
                          for h1 in model.s_infrastructure)
-    stock = sum(model.v_sire[z,g0] * model.p_wc_sire[c0,p7,z,g0] for g0 in model.s_groups_sire) \
+    stock = sum(model.v_sire[g0] * model.p_wc_sire[c0,p7,g0] for g0 in model.s_groups_sire) \
            + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_wc_dams[k2,c0,p7,t1,v1,a,n1,w1,z,i,y1,g1]
                       for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                       for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
@@ -704,7 +704,7 @@ def f_stock_wc(model,c0,p7,z):
                       for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
                       if pe.value(model.p_wc_offs[k3,k5,c0,p7,t3,v3,n3,w3,z,i,a,x,y3,g3]) != 0)
                for a in model.s_wean_times for i in model.s_tol)
-    purchases = sum(model.v_sire[z,g0] * model.p_wc_purch_sire[c0,p7,z,g0] for g0 in model.s_groups_sire)
+    purchases = sum(model.v_sire[g0] * model.p_wc_purch_sire[c0,p7,g0] for g0 in model.s_groups_sire)
     return stock - infrastructure - purchases
 
 #     purchases = sum(model.v_sire[g0] * model.p_wc_purch_sire[g0,c] for g0 in model.s_groups_sire)  \
@@ -723,7 +723,7 @@ def f_stock_cost(model,c0,z):
 
     infrastructure = sum(model.p_rm_stockinfra_fix[h1,c0,p7,z] + model.p_rm_stockinfra_var[h1,c0,p7,z] * model.v_infrastructure[h1,z]
                          for h1 in model.s_infrastructure for c0 in model.s_enterprises for p7 in model.s_cashflow_periods)
-    stock = sum(model.v_sire[z,g0] * model.p_cost_sire[c0, z,g0] for g0 in model.s_groups_sire) \
+    stock = sum(model.v_sire[g0] * model.p_cost_sire[c0, g0] for g0 in model.s_groups_sire) \
             + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_cost_dams[k2,c0,t1,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                      for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
@@ -733,7 +733,7 @@ def f_stock_cost(model,c0,z):
                       for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
                       if pe.value(model.p_cost_offs[k3,k5,c0,t3,v3,n3,w3,z,i,a,x,y3,g3]) != 0)
                for a in model.s_wean_times for i in model.s_tol)
-    purchases = sum(model.v_sire[z,g0] * model.p_cost_purch_sire[c0,p7,z,g0]
+    purchases = sum(model.v_sire[g0] * model.p_cost_purch_sire[c0,p7,g0]
                     for g0 in model.s_groups_sire for c0 in model.s_enterprises for p7 in model.s_cashflow_periods)
     return  stock + infrastructure + purchases
 #
@@ -746,7 +746,7 @@ def f_stock_labour_anyone(model,p5,z):
     '''
 
     # infrastructure = sum(model.p_lab_stockinfra[h1,p5] * model.v_infrastructure[h1,p5] for h1 in model.s_infrastructure)
-    stock = sum(model.v_sire[z,g0] * model.p_lab_anyone_sire[p5,z,g0] for g0 in model.s_groups_sire)\
+    stock = sum(model.v_sire[g0] * model.p_lab_anyone_sire[p5,g0] for g0 in model.s_groups_sire)\
             + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_lab_anyone_dams[k2,p5,t1,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                      for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
@@ -766,7 +766,7 @@ def f_stock_labour_perm(model,p5,z):
     '''
 
     # infrastructure = sum(model.p_lab_stockinfra[h1,p5] * model.v_infrastructure[h1,p5] for h1 in model.s_infrastructure)
-    stock = sum(model.v_sire[z,g0] * model.p_lab_perm_sire[p5,z,g0] for g0 in model.s_groups_sire)\
+    stock = sum(model.v_sire[g0] * model.p_lab_perm_sire[p5,g0] for g0 in model.s_groups_sire)\
             + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_lab_perm_dams[k2,p5,t1,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                      for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
@@ -786,7 +786,7 @@ def f_stock_labour_manager(model,p5,z):
     '''
 
     # infrastructure = sum(model.p_lab_stockinfra[h1,p5] * model.v_infrastructure[h1,p5] for h1 in model.s_infrastructure)
-    stock = sum(model.v_sire[z,g0] * model.p_lab_manager_sire[p5,z,g0] for g0 in model.s_groups_sire)\
+    stock = sum(model.v_sire[g0] * model.p_lab_manager_sire[p5,g0] for g0 in model.s_groups_sire)\
             + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_lab_manager_dams[k2,p5,t1,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                      for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
@@ -808,7 +808,7 @@ def f_stock_asset(model, z):
     '''
 
     infrastructure = sum(model.p_asset_stockinfra[h1] for h1 in model.s_infrastructure)
-    stock = sum(model.v_sire[z,g0] * model.p_asset_sire[z,g0] for g0 in model.s_groups_sire) \
+    stock = sum(model.v_sire[g0] * model.p_asset_sire[g0] for g0 in model.s_groups_sire) \
             + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_asset_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                      for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
