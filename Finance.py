@@ -288,7 +288,6 @@ def f_cashflow_z8z9_transfer(params=None, mask=False):
         'datetime64')  # treat z axis
 
     ##dams child parent transfer
-    #todo mask_cashflow_z8var_c0p7z should be applied to all cashflow params
     mask_cashflow_provz8z9_c0p7z8z9, mask_cashflow_z8var_c0p7z = \
     fun.f_season_transfer_mask(p_dates_c0p7z, date_node_zm, date_initiate_z, index_z, bool_steady_state, z_pos=-1)
 
