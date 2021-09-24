@@ -275,7 +275,7 @@ def f1_stockpyomo_local(params, model):
     # model.p_cost_purch_offs = Param(model.s_dvp_offs, model.s_lw_offs, model.s_tol, model.s_groups_offs, model.s_cashflow_periods,
     #                                initialize=, default=0.0, doc='cost of purchased offs')
 
-    ##season - current and prev versions of the param are required becasue in the numbers constraint they are indexed by v_prev and in the prog constraints they are indexed by v.
+    ##season - current and prev versions of the param are required because in the numbers constraint they are indexed by v_prev and in the prog constraints they are indexed by v.
     # model.p_childz_req = pe.Param(model.s_season_types, model.s_season_types, initialize=params['p_childz_req'],
     #                               default=0.0, mutable=False, doc='z8z9 numbers required')
     model.p_parentchildz_transfer_dams = pe.Param(model.s_k2_birth_dams, model.s_dvp_dams, model.s_season_types, model.s_groups_dams,
