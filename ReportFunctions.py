@@ -923,22 +923,24 @@ def f_dse(lp_vars, r_vals, method, per_ha, summary=False):
 
     if method == 0:
         ##sire
-        dse_sire = fun.f_reduce_skipfew(np.sum, stock_vars['sire_numbers_zg0'] * r_vals['stock']['dsenw_p6zg0'], preserveAxis=sire_preserve_ax)  # sum all axis except preserveAxis
+        dse_sire = fun.f_reduce_skipfew(np.sum, stock_vars['sire_numbers_zg0']
+                                        * r_vals['stock']['dsenw_p6zg0'], preserveAxis=sire_preserve_ax)  # sum all axis except preserveAxis
         ##dams
         dse_dams = fun.f_reduce_skipfew(np.sum, stock_vars['dams_numbers_k2tvanwziy1g1'][:, na, ...]
                                         * r_vals['stock']['dsenw_k2p6tva1nwziyg1'], preserveAxis=dams_preserve_ax)  # sum all axis except preserveAxis
         ##offs
-        dse_offs = fun.f_reduce_skipfew(np.sum, stock_vars['offs_numbers_k3k5tvnwziaxyg3'][:, :, na, ...] * r_vals['stock'][
-            'dsenw_k3k5p6tvnwziaxyg3'], preserveAxis=offs_preserve_ax)  # sum all axis except preserveAxis
+        dse_offs = fun.f_reduce_skipfew(np.sum, stock_vars['offs_numbers_k3k5tvnwziaxyg3'][:, :, na, ...]
+                                        * r_vals['stock']['dsenw_k3k5p6tvnwziaxyg3'], preserveAxis=offs_preserve_ax)  # sum all axis except preserveAxis
     else:
         ##sire
-        dse_sire = fun.f_reduce_skipfew(np.sum, stock_vars['sire_numbers_zg0'] * r_vals['stock']['dsemj_p6zg0'], preserveAxis=sire_preserve_ax)  # sum all axis except preserveAxis
+        dse_sire = fun.f_reduce_skipfew(np.sum, stock_vars['sire_numbers_zg0']
+                                        * r_vals['stock']['dsemj_p6zg0'], preserveAxis=sire_preserve_ax)  # sum all axis except preserveAxis
         ##dams
-        dse_dams = fun.f_reduce_skipfew(np.sum, stock_vars['dams_numbers_k2tvanwziy1g1'][:, na, ...] * r_vals['stock'][
-            'dsemj_k2p6tva1nwziyg1'], preserveAxis=dams_preserve_ax)  # sum all axis except preserveAxis
+        dse_dams = fun.f_reduce_skipfew(np.sum, stock_vars['dams_numbers_k2tvanwziy1g1'][:, na, ...]
+                                        * r_vals['stock']['dsemj_k2p6tva1nwziyg1'], preserveAxis=dams_preserve_ax)  # sum all axis except preserveAxis
         ##offs
-        dse_offs = fun.f_reduce_skipfew(np.sum, stock_vars['offs_numbers_k3k5tvnwziaxyg3'][:, :, na, ...] * r_vals['stock'][
-            'dsemj_k3k5p6tvnwziaxyg3'], preserveAxis=offs_preserve_ax)  # sum all axis except preserveAxis
+        dse_offs = fun.f_reduce_skipfew(np.sum, stock_vars['offs_numbers_k3k5tvnwziaxyg3'][:, :, na, ...]
+                                        * r_vals['stock']['dsemj_k3k5p6tvnwziaxyg3'], preserveAxis=offs_preserve_ax)  # sum all axis except preserveAxis
 
     ##dse per ha if user opts for this level of detail
     if per_ha:

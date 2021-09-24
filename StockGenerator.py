@@ -7286,9 +7286,9 @@ def generator(params,r_vals,nv,plots = False):
     index_cut_p6zg0=index_p6zg0[mask,:]
     tup_p6zg0 = tuple(map(tuple, index_cut_p6zg0))
     if pinp.sheep['i_dse_type'] == 0:
-        params['p_dse_sire'] =dict(zip(tup_p6zg0, dsemj_sire_p6zg0))
-    else:
         params['p_dse_sire'] =dict(zip(tup_p6zg0, dsenw_sire_p6zg0))
+    else:
+        params['p_dse_sire'] =dict(zip(tup_p6zg0, dsemj_sire_p6zg0))
     ##DSE - dams
     mask=dsemj_k2p6tva1e1b1nwzida0e0b0xyg1!=0
     dsemj_dams_k2p6tva1nwziyg1 = dsemj_k2p6tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
@@ -7297,9 +7297,9 @@ def generator(params,r_vals,nv,plots = False):
     index_cut_k2p6tva1nwziyg1=index_k2p6tva1nwziyg1[mask,:]
     tup_k2p6tva1nwziyg1 = tuple(map(tuple, index_cut_k2p6tva1nwziyg1))
     if pinp.sheep['i_dse_type'] == 0:
-        params['p_dse_dams'] =dict(zip(tup_k2p6tva1nwziyg1, dsemj_dams_k2p6tva1nwziyg1))
-    else:
         params['p_dse_dams'] =dict(zip(tup_k2p6tva1nwziyg1, dsenw_dams_k2p6tva1nwziyg1))
+    else:
+        params['p_dse_dams'] =dict(zip(tup_k2p6tva1nwziyg1, dsemj_dams_k2p6tva1nwziyg1))
     ##DSE - offs
     mask=dsemj_k3k5p6tva1e1b1nwzida0e0b0xyg3!=0
     dsemj_dams_k3k5p6tvnwziaxyg3 = dsemj_k3k5p6tva1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
@@ -7308,9 +7308,9 @@ def generator(params,r_vals,nv,plots = False):
     index_cut_k3k5p6tvnwziaxyg3=index_k3k5p6tvnwziaxyg3[mask,:]
     tup_k3k5p6tvnwziaxyg3 = tuple(map(tuple, index_cut_k3k5p6tvnwziaxyg3))
     if pinp.sheep['i_dse_type'] == 0:
-        params['p_dse_offs'] =dict(zip(tup_k3k5p6tvnwziaxyg3, dsemj_dams_k3k5p6tvnwziaxyg3))
-    else:
         params['p_dse_offs'] =dict(zip(tup_k3k5p6tvnwziaxyg3, dsenw_dams_k3k5p6tvnwziaxyg3))
+    else:
+        params['p_dse_offs'] =dict(zip(tup_k3k5p6tvnwziaxyg3, dsemj_dams_k3k5p6tvnwziaxyg3))
 
     ##winter grazed propn - indicates the propn of the DSE in each FP that is used to calculate total DSE for SR
     tup_p6z = tuple(map(tuple, index_p6z))
