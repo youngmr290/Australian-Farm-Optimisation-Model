@@ -1001,43 +1001,13 @@ def period_allocation(period_dates,periods,start_d,length=None):
                 break
         return allocation_p
 
-# def period_allocation2(start_df, length_df, p_dates, p_name): #todo i think this function is not going to be used once the cashflow stuff is done.
-#     '''
-#     Parameters
-#     ----------
-#     start_df : Datetime series
-#         Contains the activity start dates ie start date of fert spreading for each fert.
-#     length_df : Datetime series
-#         Length of the df activity ie length of fert spreading for each fert.
-#     p_dates : List
-#         Dates of the period you are matching ie cashflow or labour. Includes the end date of the last period
-#     p_name : List
-#         Names of the period you are matching ie cashflow or labour. Includes the a name for the last date which is not a period (it is just the end date of the last period)
-#
-#     Returns
-#     -------
-#     Dataframe 2D
-#         index = period names you are matching within ie cashflow
-#         column names = activities ie fertilisers
-#         This function is used when multiple activities have different period allocation.
-#         - this func basically just calls the main allocation multiple times and adds the results to one df.
-#         eg the cost of fert spreading could be in different periods depending what time of yr that fertiliser is applied
-#     '''
-#     start_df=start_df.squeeze() #should be a series but in case it is a 1d df
-#     length_df=length_df.squeeze() #should be a series but in case it is a 1d df
-#     df = pd.DataFrame()
-#     for col, start, length in zip(start_df.index, start_df, length_df):
-#         allocation = period_allocation(p_dates,p_name,start,length)
-#         df[col]=allocation['allocation']
-#     df.index=allocation['period']
-#     return df
 
-def range_allocation_np(period_dates, start, length, opposite=None, shape=None):
+def range_allocation_np(period_dates, item_start, length, opposite=None, shape=None):
     ''' Numpy version - The proportion of each period that falls in the tested date range or proportion of date range in each period.
 
-    :param period_dates: the start of the periods - in a Numpy array np.datetime64. This array must be broadcastable with start
-                  (therefore may need to add new axis if start has a dimension).
-    :param start: the date of the beginning of the date range to test - a numpy array of dates (np.datetime64)
+    :param period_dates: the start of the periods (including end date of last period) - in a Numpy array np.datetime64. This array must be broadcastable with start
+                  (therefore may need to add new axis if start has a dimension). Period axis must be in pos=0.
+    :param item_start: the date of the beginning of the date range to test - a numpy array of dates (np.datetime64)
     :param length: the length of the date range to test - an array of timedelta. Must be broadcastable to start.
     :param opposite: Controls the proportion calculated. True returns the proportion of date range in each period.
                      None returns the proportion of the period in the date range (2nd arg).
@@ -1050,41 +1020,42 @@ def range_allocation_np(period_dates, start, length, opposite=None, shape=None):
     min = np.array([1]).astype('timedelta64[D]')
     length = np.maximum(min,length)
 
-    ##end of period
-    end = np.minimum(start + length, period_dates[-1]) #minimum ensures that the assigned date range is within the period date range.
-
     #start empty array to assign to
     if shape==None:
-        allocation_period=np.zeros((period_dates.shape[:-1] + start.shape),dtype=np.float64)
+        allocation_period=np.zeros((period_dates.shape[:-1] + item_start.shape),dtype=np.float64)
     else:
         allocation_period=np.zeros(shape,dtype=np.float64)
+
+    ##adjust yr of item occurence
+    start_of_periods = period_dates[0,...]
+    end_of_periods = period_dates[-1,...]
+    add_yrs = np.ceil(np.maximum(0,(start_of_periods - item_start).astype('timedelta64[D]').astype(int) / 365))
+    sub_yrs = np.ceil(np.maximum(0,(item_start - end_of_periods).astype('timedelta64[D]').astype(int) / 365))
+    item_start = item_start + add_yrs * np.timedelta64(365, 'D') - sub_yrs * np.timedelta64(365, 'D')
+    ###little check to ensure that all cashflow is all starting at least 1 day before the end cashflow date
+    item_start = item_start - np.maximum(0, (item_start - (period_dates[-1,...] - np.timedelta64(1, 'D'))).astype('timedelta64[D]').astype(int))
+    ###handle cases where cost date + length is after the end of cashflow. in this situation length gets reduced
+    length = np.minimum(length, (period_dates[-1,...] - item_start).astype('timedelta64[D]'))
+
+    ##end of period
+    item_end = np.minimum(item_start + length, period_dates[-1]) #minimum ensures that the assigned date range is within the period date range.
 
     ##checks if user wants the proportion of each period that falls in the tested date range or proportion of date range in each period
     if opposite:
         #check how much of each date range falls within the period
         for i in range(len(period_dates)-1):
             per_start = period_dates[i, ...] #[i:i+1] #to keep dim
-            per_end = period_dates[i+1, ...].copy() #[i+1:i+2].copy() #so original date array isn't altered when updating year in next step
-            ###to handle situations where base yr version of feed period is used. In these case the year does not increment
-            ###at the start of a new year eg at the start of the ny it goes back to 2019 instead of 2020
-            ###in these cases when the end date is less than start it means a ny has started so we temporarily increase end date by 1yr.
-            mask = per_end < per_start
-            per_end[mask] = per_end[mask] + np.timedelta64(365, 'D')
-            calc_start = np.maximum(per_start,start).astype('datetime64[D]')       #select the later of the period start or the start of the range
-            calc_end = np.minimum(per_end,end).astype('datetime64[D]')             #select earlier of the period end and the end of the range
-            allocation_period[i,...] = np.maximum(0, (calc_end - calc_start) / (end - start)) #days between calc_end and calc_start (0 if end before start) divided by length of the range
+            per_end = period_dates[i+1, ...]
+            calc_start = np.maximum(per_start,item_start).astype('datetime64[D]')       #select the later of the period start or the start of the range
+            calc_end = np.minimum(per_end,item_end).astype('datetime64[D]')             #select earlier of the period end and the end of the range
+            allocation_period[i,...] = np.maximum(0, (calc_end - calc_start) / (item_end - item_start)) #days between calc_end and calc_start (0 if end before start) divided by length of the range
     else:
         #check how much of each period falls within the date range
         for i in range(len(period_dates)-1):
             per_start = period_dates[i, ...] #[i:i+1]
-            per_end = period_dates[i+1, ...].copy() #[i+1:i+2].copy() #so original date array isn't altered when updating year in next step
-            ###to handle situations where base yr version of feed period is used. In these case the year does not increment
-            ###at the start of a new year eg at the start of the ny it goes back to 2019 instead of 2020
-            ###in these cases when the end date is less than start it means a ny has started so we temporarily increase end date by 1yr.
-            mask = per_end < per_start
-            per_end[mask] = per_end[mask] + np.timedelta64(365, 'D')
-            calc_start = np.maximum(per_start,start).astype('datetime64[D]')       #select the later of the period start or the start of the range
-            calc_end = np.minimum(per_end,end).astype('datetime64[D]')             #select earlier of the period end and the end of the range
+            per_end = period_dates[i+1, ...]
+            calc_start = np.maximum(per_start,item_start).astype('datetime64[D]')       #select the later of the period start or the start of the range
+            calc_end = np.minimum(per_end,item_end).astype('datetime64[D]')             #select earlier of the period end and the end of the range
             allocation_period[i,...] = np.maximum(0, (calc_end - calc_start) / (per_end - per_start)) #days between calc_end and calc_start (0 if end before start) divided by length of the period, use f_divide in case any period lengths are 0 (this is likely to occur in season version)
     return allocation_period
 
@@ -1116,11 +1087,14 @@ def period_proportion_np(period_dates, date_array):
     dates_start = period_dates[:-1]
     dates_end = period_dates[1:].copy() #so original date array isn't altered when updating year in next step
 
-    ##to handle situations where base yr version of feed period is used. In these case the year does not increment
-    ##at the start of a new year eg at the start of the ny it goes back to 2019 instead of 2020
-    ##in these cases when the end date is less than start it means a ny has started so we temporarily increase end date by 1yr.
-    mask = dates_end < dates_start
-    dates_end[mask] = dates_end[mask] + np.timedelta64(365,'D')
+    ##adjust yr of item occurence
+    start_of_periods = period_dates[0,...]
+    end_of_periods = period_dates[-1,...]
+    add_yrs = np.ceil(np.maximum(0,(start_of_periods - date_array).astype('timedelta64[D]').astype(int) / 365))
+    sub_yrs = np.ceil(np.maximum(0,(date_array - end_of_periods).astype('timedelta64[D]').astype(int) / 365))
+    date_array = date_array + add_yrs * np.timedelta64(365, 'D') - sub_yrs * np.timedelta64(365, 'D')
+    ###little check to ensure that all cashflow is all starting at least 1 day before the end cashflow date
+    date_array = date_array - np.maximum(0, (date_array - (period_dates[-1,...] - np.timedelta64(1, 'D'))).astype('timedelta64[D]').astype(int))
 
     ##calc the period each value in the date array falls within (can't use np.searchsorted because date array has z axis)
     ###occur is bool array which is true for the period that the date array fall into
@@ -1209,24 +1183,4 @@ def f_next_prev_association(datearray_slice,*args):
     idx_next = np.searchsorted(datearray_slice, date, side)
     idx = np.clip(idx_next - offset, 0, len(datearray_slice)-1) #makes the max value equal to the length of joining array, because if the period date is after the last lambing opportunity there is no 'next'
     return idx
-
-
-def f_baseyr(periods, base_year=None):
-    """convert all dates to the same year
-    :param periods: array of period dates
-    :param base_year: datetime[Y] - year to convert periods to. If None it takes the year from the first period in array.
-    """
-    ##convert to np datetime
-    periods  = periods.astype('datetime64')
-
-    ##If None it takes the year from the first period in array
-    if base_year==None:
-        base_year = periods[0,0].astype('datetime64[Y]')
-
-    ##bring year back to base yr
-    period_year = periods.astype('datetime64[Y]').astype(int)
-    year_offset = period_year - base_year.astype(int)
-    periods = periods - (np.timedelta64(365, 'D') * year_offset)
-    return periods
-
 

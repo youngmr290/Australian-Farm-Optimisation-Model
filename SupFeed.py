@@ -133,7 +133,7 @@ def f_sup_cost(r_vals):
 
     ##feeding cost allocaion
     start_p6z = per.f_feed_periods()[:-1,:]
-    length_p6z = per.f_feed_periods(option=1).astype(int)
+    length_p6z = per.f_feed_periods(option=1)
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = pinp.f_keys_z()
@@ -284,8 +284,8 @@ def f_sup_labour():
     total_time_p5zk = np.sum(total_time_p5zp8k, axis=-2)
 
     ##link feed periods to labour periods, ie determine the proportion of each feed period in each labour period so the time taken to sup feed can be divided up accordingly
-    start_p6z = fun.f_baseyr(per.f_feed_periods())[:-1,:]
-    length_p6z = per.f_feed_periods(option=1)
+    start_p6z = per.f_feed_periods()[:-1,:]
+    length_p6z = per.f_feed_periods(option=1).astype('timedelta64[D]')
     shape_p5p6z = (lp_dates_p5z.shape[0],) + length_p6z.shape
     alloc_p5p6z = fun.range_allocation_np(lp_dates_p5z.values[:,na,:], start_p6z, length_p6z, True, shape=shape_p5p6z)[:-1]
 

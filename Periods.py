@@ -235,7 +235,7 @@ def f_feed_periods(option=0):
 
     ### return length
     if option==1:
-        fp_len = (fp_p6z[1:,:] - fp_p6z[:-1,:]).astype('timedelta64[D]')
+        fp_len = (fp_p6z[1:,:] - fp_p6z[:-1,:]).astype('timedelta64[D]').astype(float)
         return fp_len
 
 
