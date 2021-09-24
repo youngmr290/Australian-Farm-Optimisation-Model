@@ -1028,12 +1028,10 @@ def range_allocation_np(period_dates, item_start, length, opposite=None, shape=N
 
     ##adjust yr of item occurence
     start_of_periods = period_dates[0,...]
-    end_of_periods = period_dates[-1,...]
+    end_of_periods = start_of_periods + np.timedelta64(364, 'D') #use 364 because end date is the day before the end otherwise can get item that starts on the last day of periods.
     add_yrs = np.ceil(np.maximum(0,(start_of_periods - item_start).astype('timedelta64[D]').astype(int) / 365))
     sub_yrs = np.ceil(np.maximum(0,(item_start - end_of_periods).astype('timedelta64[D]').astype(int) / 365))
     item_start = item_start + add_yrs * np.timedelta64(365, 'D') - sub_yrs * np.timedelta64(365, 'D')
-    ###little check to ensure that all cashflow is all starting at least 1 day before the end cashflow date
-    item_start = item_start - np.maximum(0, (item_start - (period_dates[-1,...] - np.timedelta64(1, 'D'))).astype('timedelta64[D]').astype(int))
     ###handle cases where cost date + length is after the end of cashflow. in this situation length gets reduced
     length = np.minimum(length, (period_dates[-1,...] - item_start).astype('timedelta64[D]'))
 
