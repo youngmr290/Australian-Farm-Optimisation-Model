@@ -545,7 +545,7 @@ def f_crop_summary(lp_vars, r_vals, option=0):
     seedcost_rl_c0p7z = r_vals['crop']['seedcost']
     misc_exp_ha_rl_c0p7z = pd.concat([stub_cost_rl_c0p7z, insurance_cost_rl_c0p7z, seedcost_rl_c0p7z], axis=1).sum(axis=1, level=(0,1,2))  # stubble, seed & insurance
     misc_exp_ha_zrl_c0p7 = misc_exp_ha_rl_c0p7z.stack().reorder_levels([2,0,1], axis=0)
-    misc_exp_ha_zr_c0p7 = misc_exp_ha_zrl_c0p7.reindex(rot_area_zrl.index).mul(rot_area_zrl, axis=0).sum(axis=0, level=(0,1))  # mul area and sum lmu, need to reindex becasue some rotations have been dropped
+    misc_exp_ha_zr_c0p7 = misc_exp_ha_zrl_c0p7.reindex(rot_area_zrl.index).mul(rot_area_zrl, axis=0).sum(axis=0, level=(0,1))  # mul area and sum lmu, need to reindex because some rotations have been dropped
     misc_exp_k_c0p7z = misc_exp_ha_zr_c0p7.unstack(0).reindex(phases_rk.index, axis=0, level=0).sum(axis=0,
                                                                             level=1)  # reindex to include landuse and sum rot
 
@@ -923,22 +923,24 @@ def f_dse(lp_vars, r_vals, method, per_ha, summary=False):
 
     if method == 0:
         ##sire
-        dse_sire = fun.f_reduce_skipfew(np.sum, stock_vars['sire_numbers_zg0'] * r_vals['stock']['dsenw_p6zg0'], preserveAxis=sire_preserve_ax)  # sum all axis except preserveAxis
+        dse_sire = fun.f_reduce_skipfew(np.sum, stock_vars['sire_numbers_zg0']
+                                        * r_vals['stock']['dsenw_p6zg0'], preserveAxis=sire_preserve_ax)  # sum all axis except preserveAxis
         ##dams
         dse_dams = fun.f_reduce_skipfew(np.sum, stock_vars['dams_numbers_k2tvanwziy1g1'][:, na, ...]
                                         * r_vals['stock']['dsenw_k2p6tva1nwziyg1'], preserveAxis=dams_preserve_ax)  # sum all axis except preserveAxis
         ##offs
-        dse_offs = fun.f_reduce_skipfew(np.sum, stock_vars['offs_numbers_k3k5tvnwziaxyg3'][:, :, na, ...] * r_vals['stock'][
-            'dsenw_k3k5p6tvnwziaxyg3'], preserveAxis=offs_preserve_ax)  # sum all axis except preserveAxis
+        dse_offs = fun.f_reduce_skipfew(np.sum, stock_vars['offs_numbers_k3k5tvnwziaxyg3'][:, :, na, ...]
+                                        * r_vals['stock']['dsenw_k3k5p6tvnwziaxyg3'], preserveAxis=offs_preserve_ax)  # sum all axis except preserveAxis
     else:
         ##sire
-        dse_sire = fun.f_reduce_skipfew(np.sum, stock_vars['sire_numbers_zg0'] * r_vals['stock']['dsemj_p6zg0'], preserveAxis=sire_preserve_ax)  # sum all axis except preserveAxis
+        dse_sire = fun.f_reduce_skipfew(np.sum, stock_vars['sire_numbers_zg0']
+                                        * r_vals['stock']['dsemj_p6zg0'], preserveAxis=sire_preserve_ax)  # sum all axis except preserveAxis
         ##dams
-        dse_dams = fun.f_reduce_skipfew(np.sum, stock_vars['dams_numbers_k2tvanwziy1g1'][:, na, ...] * r_vals['stock'][
-            'dsemj_k2p6tva1nwziyg1'], preserveAxis=dams_preserve_ax)  # sum all axis except preserveAxis
+        dse_dams = fun.f_reduce_skipfew(np.sum, stock_vars['dams_numbers_k2tvanwziy1g1'][:, na, ...]
+                                        * r_vals['stock']['dsemj_k2p6tva1nwziyg1'], preserveAxis=dams_preserve_ax)  # sum all axis except preserveAxis
         ##offs
-        dse_offs = fun.f_reduce_skipfew(np.sum, stock_vars['offs_numbers_k3k5tvnwziaxyg3'][:, :, na, ...] * r_vals['stock'][
-            'dsemj_k3k5p6tvnwziaxyg3'], preserveAxis=offs_preserve_ax)  # sum all axis except preserveAxis
+        dse_offs = fun.f_reduce_skipfew(np.sum, stock_vars['offs_numbers_k3k5tvnwziaxyg3'][:, :, na, ...]
+                                        * r_vals['stock']['dsemj_k3k5p6tvnwziaxyg3'], preserveAxis=offs_preserve_ax)  # sum all axis except preserveAxis
 
     ##dse per ha if user opts for this level of detail
     if per_ha:
@@ -997,7 +999,7 @@ def f_profitloss_table(lp_vars, r_vals):
     ##income
     rev_grain_c0p7_z = rev_grain_k_c0p7z.sum(axis=0).unstack()  # sum landuse axis
     ###add to p/l table each as a new row
-    pnl.loc[idx[:,'Revenue','grain'],:] = rev_grain_c0p7_z.T.reindex(pnl_cols, axis=1).values #reindex becasue c0 has been sorted alphabetically
+    pnl.loc[idx[:,'Revenue','grain'],:] = rev_grain_c0p7_z.T.reindex(pnl_cols, axis=1).values #reindex because c0 has been sorted alphabetically
     pnl.loc[idx[:, 'Revenue', 'sheep sales'], :] = stocksale_c0p7z.reshape(len_c0p7, len_z).T
     pnl.loc[idx[:, 'Revenue', 'wool'], :] = wool_c0p7z.reshape(len_c0p7, len_z).T
     pnl.loc[idx[:, 'Revenue', 'Total Revenue'], :] = pnl.loc[pnl.index.get_level_values(1) == 'Revenue'].sum(axis=0,level=0).values
@@ -1020,14 +1022,14 @@ def f_profitloss_table(lp_vars, r_vals):
     ####fixed overhead expenses
     exp_fix_c0p7_z = f_overhead_summary(r_vals).unstack()
     ###add to p/l table each as a new row
-    pnl.loc[idx[:, 'Expense', 'crop'], :] = crop_c0p7_z.T.reindex(pnl_cols, axis=1).values #reindex becasue c0 has been sorted alphabetically
-    pnl.loc[idx[:, 'Expense', 'pasture'], :] = pas_c0p7_z.T.reindex(pnl_cols, axis=1).values #reindex becasue c0 has been sorted alphabetically
+    pnl.loc[idx[:, 'Expense', 'crop'], :] = crop_c0p7_z.T.reindex(pnl_cols, axis=1).values #reindex because c0 has been sorted alphabetically
+    pnl.loc[idx[:, 'Expense', 'pasture'], :] = pas_c0p7_z.T.reindex(pnl_cols, axis=1).values #reindex because c0 has been sorted alphabetically
     pnl.loc[idx[:, 'Expense', 'stock husb'], :] = husbcost_c0p7z.reshape(len_c0p7, len_z).T
-    pnl.loc[idx[:, 'Expense', 'stock sup'], :] = supcost_c0p7z.unstack().T.reindex(pnl_cols, axis=1).values #reindex becasue c0 has been sorted alphabetically
+    pnl.loc[idx[:, 'Expense', 'stock sup'], :] = supcost_c0p7z.unstack().T.reindex(pnl_cols, axis=1).values #reindex because c0 has been sorted alphabetically
     pnl.loc[idx[:, 'Expense', 'stock purchase'], :] = purchasecost_c0p7z.reshape(len_c0p7, len_z).T
-    pnl.loc[idx[:, 'Expense', 'machinery'], :] = mach_c0p7_z.T.reindex(pnl_cols, axis=1).values #reindex becasue c0 has been sorted alphabetically
+    pnl.loc[idx[:, 'Expense', 'machinery'], :] = mach_c0p7_z.T.reindex(pnl_cols, axis=1).values #reindex because c0 has been sorted alphabetically
     pnl.loc[idx[:, 'Expense', 'labour'], :] = labour_c0p7z.reshape(len_c0p7, len_z).T
-    pnl.loc[idx[:, 'Expense', 'fixed'], :] = exp_fix_c0p7_z.T.reindex(pnl_cols, axis=1).values #reindex becasue c0 has been sorted alphabetically
+    pnl.loc[idx[:, 'Expense', 'fixed'], :] = exp_fix_c0p7_z.T.reindex(pnl_cols, axis=1).values #reindex because c0 has been sorted alphabetically
     pnl.loc[idx[:, 'Expense', 'Total expenses'], :] = pnl.loc[pnl.index.get_level_values(1) == 'Expense'].sum(axis=0,level=0).values
 
     ##EBIT

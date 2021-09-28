@@ -97,7 +97,7 @@ def crop_residue_all(params, r_vals, nv):
     #############################
     # Total stubble production  #
     #############################
-    ##calc yield - frost and seeding rate not accounted for becasue they dont effect stubble.
+    ##calc yield - frost and seeding rate not accounted for because they dont effect stubble.
     rot_yields_rkl_mz = phs.f_rot_yield(for_stub=True)
     ##calc stubble
     residue_per_grain_k = f_cropresidue_production()

@@ -278,7 +278,7 @@ def f_cashflow_z8z9_transfer(params=None, mask=False):
     the parent season provides the transfer parameters to the child season. This transfering method ensures the
     model has the same management across seasons until they are identified. For example, if there are two seasons, a
     good and a bad, that are identified in spring. Both seasons must have the same management through the beginning of
-    the year until spring (becasue the farmer doesnt know if they are having the good or bad year until spring).
+    the year until spring (because the farmer doesnt know if they are having the good or bad year until spring).
     '''
 
     ##inputs

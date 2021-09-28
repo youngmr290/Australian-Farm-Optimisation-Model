@@ -4611,7 +4611,7 @@ def generator(params,r_vals,nv,plots = False):
     index_p5tpa1e1b1nwzida0e0b0xyg = fun.f_expand(np.arange(len(labour_periods)), p_pos-2)
     ###asset value timing - the date when the asset value is tallied
     assetvalue_timing = pinp.sheep['i_date_cashflow_stock_i'][pinp.sheep['i_mask_i']].astype('datetime64')
-    assetvalue_timing = assetvalue_timing.view('i8').mean(keepdims=True).astype(assetvalue_timing.dtype) #take mean incase multiple tol included
+    assetvalue_timing = assetvalue_timing.view('i8').mean(keepdims=True).astype(assetvalue_timing.dtype) #take mean in case multiple tol included
     assetvalue_timing_y = assetvalue_timing + (np.arange(np.ceil(sim_years)) * np.timedelta64(365,'D')) #timing of asset value calculation each yr
     a_assetvalue_p = fun.f_next_prev_association(assetvalue_timing_y, date_end_p, 1,'right')
     a_assetvalue_pa1e1b1nwzida0e0b0xyg = fun.f_expand(a_assetvalue_p, p_pos)
@@ -6576,7 +6576,7 @@ def generator(params,r_vals,nv,plots = False):
     mj_ave_k2p6ftva1e1b1nwzida0e0b0xyg1 = mei_k2p6ftva1e1b1nwzida0e0b0xyg1 / days_p6_p6tva1e1b1nwzida0e0b0xyg[:,na,...]
     mj_ave_k3k5p6ftva1e1b1nwzida0e0b0xyg3 = mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3 / days_p6_p6tva1e1b1nwzida0e0b0xyg[:,na,...]
     ####returns the number of dse of each animal in each dvp - this is combined with the variable numbers in reporting to get the total dse
-    # note: sires have a single long DVP and are on-hand for multiple years. Therefore, mj_ave is higher (becasue the decision variable is representing multiple sires)
+    # note: sires have a single long DVP and are on-hand for multiple years. Therefore, mj_ave is higher (because the decision variable is representing multiple sires)
     dsemj_p6tva1e1b1nwzida0e0b0xyg0 = np.sum(mj_ave_p6ftva1e1b1nwzida0e0b0xyg0 / pinp.sheep['i_dse_mj'], axis = 1)
     dsemj_k2p6tva1e1b1nwzida0e0b0xyg1 = np.sum(mj_ave_k2p6ftva1e1b1nwzida0e0b0xyg1 / pinp.sheep['i_dse_mj'], axis = 2)
     dsemj_k3k5p6tva1e1b1nwzida0e0b0xyg3 = np.sum(mj_ave_k3k5p6ftva1e1b1nwzida0e0b0xyg3 / pinp.sheep['i_dse_mj'], axis = 3)
@@ -6593,7 +6593,7 @@ def generator(params,r_vals,nv,plots = False):
                                         on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg3, days_period_p=days_period_cut_pa1e1b1nwzida0e0b0xyg3,
                                         a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p], index_any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,...])
     ####returns the average nw for each animal for the each feed period (cum nw accounts for if the animal is on hand - if the animal is sold the average nw will be lower in that feed period)
-    # note: sires have a single long DVP and are on-hand for multiple years of the same p6. Therefore, nw_ave is higher (becasue the decision variable is representing multiple sires)
+    # note: sires have a single long DVP and are on-hand for multiple years of the same p6. Therefore, nw_ave is higher (because the decision variable is representing multiple sires)
     nw_ave_p6tva1e1b1nwzida0e0b0xyg0 = nw_cum_p6a1e1b1nwzida0e0b0xyg0[:,na,na,...] / days_p6_p6tva1e1b1nwzida0e0b0xyg
     nw_ave_p6tva1e1b1nwzida0e0b0xyg1 = nw_cum_p6tva1e1b1nwzida0e0b0xyg1 / days_p6_p6tva1e1b1nwzida0e0b0xyg
     nw_ave_p6tva1e1b1nwzida0e0b0xyg3 = nw_cum_p6tva1e1b1nwzida0e0b0xyg3 / days_p6_p6tva1e1b1nwzida0e0b0xyg
@@ -7313,9 +7313,9 @@ def generator(params,r_vals,nv,plots = False):
     index_cut_p6g0=index_p6g0[mask,:]
     tup_p6g0 = tuple(map(tuple, index_cut_p6g0))
     if pinp.sheep['i_dse_type'] == 0:
-        params['p_dse_sire'] =dict(zip(tup_p6g0, dsemj_sire_p6g0))
-    else:
         params['p_dse_sire'] =dict(zip(tup_p6g0, dsenw_sire_p6g0))
+    else:
+        params['p_dse_sire'] =dict(zip(tup_p6g0, dsemj_sire_p6g0))
     ##DSE - dams
     mask=dsemj_k2p6tva1e1b1nwzida0e0b0xyg1!=0
     dsemj_dams_k2p6tva1nwziyg1 = dsemj_k2p6tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
@@ -7324,9 +7324,9 @@ def generator(params,r_vals,nv,plots = False):
     index_cut_k2p6tva1nwziyg1=index_k2p6tva1nwziyg1[mask,:]
     tup_k2p6tva1nwziyg1 = tuple(map(tuple, index_cut_k2p6tva1nwziyg1))
     if pinp.sheep['i_dse_type'] == 0:
-        params['p_dse_dams'] =dict(zip(tup_k2p6tva1nwziyg1, dsemj_dams_k2p6tva1nwziyg1))
-    else:
         params['p_dse_dams'] =dict(zip(tup_k2p6tva1nwziyg1, dsenw_dams_k2p6tva1nwziyg1))
+    else:
+        params['p_dse_dams'] =dict(zip(tup_k2p6tva1nwziyg1, dsemj_dams_k2p6tva1nwziyg1))
     ##DSE - offs
     mask=dsemj_k3k5p6tva1e1b1nwzida0e0b0xyg3!=0
     dsemj_dams_k3k5p6tvnwziaxyg3 = dsemj_k3k5p6tva1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
@@ -7335,9 +7335,9 @@ def generator(params,r_vals,nv,plots = False):
     index_cut_k3k5p6tvnwziaxyg3=index_k3k5p6tvnwziaxyg3[mask,:]
     tup_k3k5p6tvnwziaxyg3 = tuple(map(tuple, index_cut_k3k5p6tvnwziaxyg3))
     if pinp.sheep['i_dse_type'] == 0:
-        params['p_dse_offs'] =dict(zip(tup_k3k5p6tvnwziaxyg3, dsemj_dams_k3k5p6tvnwziaxyg3))
-    else:
         params['p_dse_offs'] =dict(zip(tup_k3k5p6tvnwziaxyg3, dsenw_dams_k3k5p6tvnwziaxyg3))
+    else:
+        params['p_dse_offs'] =dict(zip(tup_k3k5p6tvnwziaxyg3, dsemj_dams_k3k5p6tvnwziaxyg3))
 
     ##winter grazed propn - indicates the propn of the DSE in each FP that is used to calculate total DSE for SR
     tup_p6z = tuple(map(tuple, index_p6z))
