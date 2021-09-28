@@ -89,8 +89,8 @@ def f_prep_labour():
 # 1- time to drive around 1ha
 # 2- time per cubic metre ie to represent filling up and driving to and from paddock
 
-#allocation of fert costs into each cash period for each fert ie depending on the date diff ferts are in diff cash periods
-def f_lab_allocation():
+#allocation of fert costs into each lab period for each fert ie depending on the date diff ferts are in diff lab periods
+def f_fert_lab_allocation():
     '''Allocation of fertiliser applications into each labour period'''
 
     fert_info = pinp.crop['fert_info']
@@ -106,6 +106,20 @@ def f_lab_allocation():
     cols = pd.MultiIndex.from_product([keys_z, fert_info.index])
     alloc_p5zf = pd.DataFrame(alloc_p5zf, index=keys_p5, columns=cols)
     return alloc_p5zf
+
+def f_fert_rotperiod_allocation():
+    '''Allocation of fertiliser applications into each rotation period'''
+
+    fert_info = pinp.crop['fert_info']
+    fert_date_n = fert_info['app_date'].values
+    fert_length_n = fert_info['app_len'].values.astype('timedelta64[D]')
+    alloc_mzn = phs.f1_rot_period_alloc(fert_date_n[na,na,:], fert_length_n[na,na,:], z_pos=-2)
+    ###convert to df
+    keys_z = pinp.f_keys_z()
+    keys_m = phs.f1_rot_period_alloc(keys=True)
+    new_index_mzn = pd.MultiIndex.from_product([keys_m, keys_z, fert_info.index])
+    alloc_mzn = pd.Series(alloc_mzn.ravel(), index=new_index_mzn)
+    return alloc_mzn
 
 
 #time/per ha - needs to be multiplied by the number of phases and then added to phases df because the previous phases can effect number of passes and hence time
@@ -127,15 +141,22 @@ def f_fert_app_time_ha():
     passes_na = phs.f_nap_fert_passes() #on pasture phases only
     ##add fert for arable area and fert for nonarable area, na_fert doesnt have season axis so need to reindex first
     passes_na = passes_na.unstack().reindex(passes_arable.unstack().index, axis=0, level=0).stack()
-    total_passes = pd.concat([passes_arable, passes_na], axis=1).sum(axis=1, level=0)
+    total_passes_rzln = pd.concat([passes_arable, passes_na], axis=1).sum(axis=1, level=0).stack()
+    ##time taken to cover 1ha whilw spreading
+    time_ha_n = mac.time_ha().squeeze()
     ##adjust fert labour across each labour period
-    time = f_lab_allocation().mul(mac.time_ha().squeeze(), axis=1, level=1) #time for 1 pass for each chem.
+    p5_allocation_p5_zn = f_fert_lab_allocation()
+    time_p5n_z = p5_allocation_p5_zn.mul(time_ha_n, axis=1, level=1).stack() #time for 1 pass for each chem.
+    ##adjust for m axis
+    m_allocation_mz_n = f_fert_rotperiod_allocation().unstack(2)
+    time_p5n_mz = time_p5n_z.reindex(m_allocation_mz_n.index,axis=1,level=1)
+    time_p5n_mz = (time_p5n_mz.unstack(1).mul(m_allocation_mz_n.stack(),axis=1)).stack(2)
     ##adjust for passes
-    time = time.stack(1)
-    total_passes = total_passes.reindex(time.index, axis=1, level=1).unstack(1)
-    time = total_passes.mul(time.stack(), axis=1) #total time
-    time=time.sum(level=[0,2], axis=1).stack(0) #sum across fert type
-    return time
+    time_rln_mzp5 = time_p5n_mz.unstack(0).reindex(total_passes_rzln.unstack(1).index, axis=0, level=2)
+    time_rzln_mp5 = time_rln_mzp5.stack(1).reorder_levels([0,3,1,2])
+    fert_app_time_ha_rzln_p5m = time_rzln_mp5.mul(total_passes_rzln, axis=0)
+    fert_app_time_ha_rzl_p5m = fert_app_time_ha_rzln_p5m.sum(axis=0, level=(0,1,2)) #sum fert type
+    return fert_app_time_ha_rzl_p5m.stack([0,1])
 
 #f=fert_app_time_ha()
 #print(timeit.timeit(fert_app_time_ha,number=20)/20)
@@ -152,13 +173,28 @@ def f_fert_app_time_t():
 
 
     '''
+    ##fert used in each rotation phase
+    fert_total_rzln = phs.f1_total_fert_req()/1000 #convert to tonnes
 
+    ##allocation time per tonne in each p5 and m period
     spreader_proportion = pd.DataFrame([pinp.crop['fert_info']['spreader_proportion']])
     conversion = pd.DataFrame([pinp.crop['fert_info']['fert_density']])
-    time = (mac.time_cubic() / conversion).mul(spreader_proportion.squeeze(),axis=1)
-    allocation = f_lab_allocation()
-    return allocation.mul(time.squeeze(), axis=1, level=1).stack(1)
-#print(fert_app_time_t())    
+    time_n = ((mac.time_cubic() / conversion).mul(spreader_proportion.squeeze(),axis=1)).squeeze()
+    p5_allocation_p5_zn = f_fert_lab_allocation()
+    time_p5n_z = p5_allocation_p5_zn.mul(time_n, axis=1, level=1).stack(1)
+    m_allocation_mz_n = f_fert_rotperiod_allocation().unstack(2)
+    time_p5n_mz = time_p5n_z.reindex(m_allocation_mz_n.index, axis=1, level=1)
+    time_p5n_mz = (time_p5n_mz.unstack(1).mul(m_allocation_mz_n.stack(), axis=1)).stack(2)
+
+    ##combine with rotation fert
+    time_rln_mzp5 = time_p5n_mz.unstack(0).reindex(fert_total_rzln.unstack(1).index, axis=0, level=2)
+    time_rzln_mp5 = time_rln_mzp5.stack(1).reorder_levels([0,3,1,2])
+    fert_app_time_tonne_rzln_p5m = time_rzln_mp5.mul(fert_total_rzln, axis=0)
+    fert_app_time_tonne_rzl_p5m = fert_app_time_tonne_rzln_p5m.sum(axis=0,level=(0,1,2))  # sum fert type
+    return fert_app_time_tonne_rzl_p5m.stack([0,1])
+
+
+#print(fert_app_time_t())
     
 
 
@@ -183,6 +219,21 @@ def f_chem_lab_allocation():
     return alloc_p5zf
 
 
+def f_chem_rotperiod_allocation():
+    '''Allocation of fertiliser applications into each rotation period'''
+
+    chem_info = pinp.crop['chem_info']
+    chem_date_n = chem_info['app_date'].values
+    chem_length_n = chem_info['app_len'].values.astype('timedelta64[D]')
+    alloc_mzn = phs.f1_rot_period_alloc(chem_date_n[na,na,:], chem_length_n[na,na,:], z_pos=-2)
+    ###convert to df
+    keys_z = pinp.f_keys_z()
+    keys_m = phs.f1_rot_period_alloc(keys=True)
+    new_index_mzn = pd.MultiIndex.from_product([keys_m, keys_z, chem_info.index])
+    alloc_mzn = pd.Series(alloc_mzn.ravel(), index=new_index_mzn)
+    return alloc_mzn
+
+
 def f_chem_app_time_ha():
     '''
 
@@ -196,15 +247,21 @@ def f_chem_app_time_ha():
     ##note arable area accounted for in crop.py
 
     ##passes
-    passes = phs.f_chem_application()
+    passes_rzln = phs.f_chem_application().stack()
+    ##time for 1 pass for each chem
+    time = mac.spray_time_ha()
     ##adjust chem labour across each labour period
-    time = f_chem_lab_allocation() * mac.spray_time_ha() #time for 1 pass for each chem.
+    time_p5n_z = f_chem_lab_allocation().stack() * time
+    ##adjust for m axis
+    m_allocation_mz_n = f_chem_rotperiod_allocation().unstack(2)
+    time_p5n_mz = time_p5n_z.reindex(m_allocation_mz_n.index,axis=1,level=1)
+    time_p5n_mz = (time_p5n_mz.unstack(1).mul(m_allocation_mz_n.stack(),axis=1)).stack(2)
     ##adjust for passes
-    time = time.stack(1)
-    passes = passes.reindex(time.index, axis=1, level=1).unstack(1)
-    time = passes.mul(time.stack(), axis=1) #total time
-    time = time.stack(0).sum(level=[1], axis=1) #sum across fert type
-    return time
+    time_rln_mzp5 = time_p5n_mz.unstack(0).reindex(passes_rzln.unstack(1).index, axis=0, level=2)
+    time_rzln_mp5 = time_rln_mzp5.stack(1).reorder_levels([0,3,1,2])
+    chem_app_time_rzln_p5m = time_rzln_mp5.mul(passes_rzln, axis=0)
+    chem_app_time_rzl_p5m = chem_app_time_rzln_p5m.sum(axis=0, level=(0,1,2)) #sum chem type
+    return chem_app_time_rzl_p5m.stack([0,1])
 
 
 
@@ -226,7 +283,7 @@ def f_crop_monitoring():
     paddocks much faster.
 
     '''
-    ##allocation
+    ##p5 allocation
     fixed_crop_monitor = pinp.labour['fixed_crop_monitoring']
     variable_crop_monitor = pinp.labour['variable_crop_monitoring']
     labour_periods_pz = per.f_p_dates_df().values
@@ -241,22 +298,28 @@ def f_crop_monitoring():
     ## drop last row, because it has na because it only contains the end date, therefore not a period
     monitoring_allocation_pzd = monitoring_allocation_pzd[:-1]
 
+    ##adjust for m (rotation period) axis
+    alloc_mzd = phs.f1_rot_period_alloc(date_start_d[na,na,:],length_d[na,na,:],z_pos=-2)
+
     ##variable monitoring
     ###adjust to monitoring time per ha
     variable_crop_monitor_kd = variable_crop_monitor.values #convert to numpy
     variable_crop_monitor_kd = variable_crop_monitor_kd/pinp.general['pad_size'] * length_d.astype(float)/7
     ###convert date range to labour periods
-    variable_crop_monitor_kpz = np.sum(variable_crop_monitor_kd[:,na,na,:] * monitoring_allocation_pzd, axis=-1) #sum the d axis (monitoring date axis)
-    ###convert to dict and expand landuse to rotation
-    variable_crop_monitor_kpz = variable_crop_monitor_kpz.reshape(variable_crop_monitor_kpz.shape[0], -1)
+    variable_crop_monitor_kpmz = np.sum(variable_crop_monitor_kd[:,na,na,na,:] * monitoring_allocation_pzd[:,na,:,:] * alloc_mzd, axis=-1) #sum the d axis (monitoring date axis)
+    ###convert to df and expand landuse to rotation
+    variable_crop_monitor_k_pmz = variable_crop_monitor_kpmz.reshape(variable_crop_monitor_kpmz.shape[0], -1)
     keys_z = pinp.f_keys_z()
     keys_p5 = per.f_p_dates_df().index[:-1]
-    cols = pd.MultiIndex.from_product([keys_p5, keys_z])
-    variable_crop_monitor = pd.DataFrame(variable_crop_monitor_kpz, index=variable_crop_monitor.index, columns=cols)
+    keys_m = phs.f1_rot_period_alloc(keys=True)
+    keys_k = variable_crop_monitor.index
+    cols_p5mz = pd.MultiIndex.from_product([keys_p5, keys_m, keys_z])
+    variable_crop_monitor = pd.DataFrame(variable_crop_monitor_k_pmz, index=keys_k, columns=cols_p5mz)
     phases_df = sinp.f_phases()
-    phases_df.columns = pd.MultiIndex.from_product([phases_df.columns,['']])
+    phases_df.columns = pd.MultiIndex.from_product([phases_df.columns,[''],['']])
     variable_crop_monitor = pd.merge(phases_df, variable_crop_monitor, how='left', left_on=sinp.end_col(), right_index = True) #merge with all the phases
-    variable_crop_monitor = variable_crop_monitor.drop(list(range(sinp.general['phase_len'])), axis=1).stack(0)
+    variable_crop_monitor_r_p5mz = variable_crop_monitor.drop(list(range(sinp.general['phase_len'])), axis=1)
+    variable_crop_monitor_p5mzr = variable_crop_monitor_r_p5mz.unstack()
 
     ##fixed monitoring
     ###adjust from hrs/week to hrs/period
@@ -265,16 +328,16 @@ def f_crop_monitoring():
     ###convert date range to labour periods
     fixed_crop_monitor_pz = np.sum(fixed_crop_monitor_d * monitoring_allocation_pzd, axis=-1) #sum the d axis (monitoring date axis)
     fixed_crop_monitor = pd.DataFrame(fixed_crop_monitor_pz, index=keys_p5, columns=keys_z)
-    return variable_crop_monitor.stack(), fixed_crop_monitor.stack()
+    return variable_crop_monitor_p5mzr, fixed_crop_monitor.stack()
 
 ##collates all the params
 def f1_labcrop_params(params,r_vals):
     prep_labour = f_prep_labour().stack()
-    fert_app_time_t = f_fert_app_time_t().stack()
-    fert_app_time_ha = f_fert_app_time_ha().stack()
-    chem_app_time_ha = f_chem_app_time_ha().stack()
+    fert_app_time_t = f_fert_app_time_t()
+    fert_app_time_ha = f_fert_app_time_ha()
+    chem_app_time_ha = f_chem_app_time_ha()
     variable_crop_monitor, fixed_crop_monitor = f_crop_monitoring()
-    fert_total = phs.f1_total_fert_req()
+
 
     ##add params which are inputs
     params['harvest_helper'] = pinp.labour['harvest_helper'].squeeze().to_dict()
@@ -286,7 +349,7 @@ def f1_labcrop_params(params,r_vals):
     params['chem_app_time_ha'] = chem_app_time_ha.to_dict()
     params['variable_crop_monitor'] = variable_crop_monitor.to_dict()
     params['fixed_crop_monitor'] = fixed_crop_monitor.to_dict()
-    params['fert_req'] = fert_total.to_dict()
+    # params['fert_req'] = fert_total.to_dict()
 
 
 

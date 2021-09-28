@@ -85,9 +85,9 @@ def f1_boundarypyomo_local(params, model):
             tup_rl = tuple(map(tuple, index_rl))
             rot_lobound = dict(zip(tup_rl, rot_lobound))
             ###constraint
-            def rot_lo_bound(model, r, l, z):
-                return model.v_phase_area[z, r, l] >= rot_lobound[r,l]
-            model.con_rotation_lobound = pe.Constraint(model.s_phases, model.s_lmus, model.s_season_types, rule=rot_lo_bound,
+            def rot_lo_bound(model, m, r, l, z):
+                return model.v_phase_area[m, z, r, l] >= rot_lobound[r,l]
+            model.con_rotation_lobound = pe.Constraint(model.s_rot_periods, model.s_phases, model.s_lmus, model.s_season_types, rule=rot_lo_bound,
                                                     doc='lo bound for the number of each phase')
 
         ##bound on livestock supplementary feed.
@@ -357,8 +357,8 @@ def f1_boundarypyomo_local(params, model):
                 pasture_dse_carry[pasture] = pinp.sheep['i_sr_constraint_t'][t]
             ###param - propn of each fp used in the SR
             ###constraint
-            def SR_bound(model, z):
-                rhs_dse = sum(model.v_phase_area[z, r, l] * model.p_pasture_area[r, t] * pasture_dse_carry[t] for r in model.s_phases for l in model.s_lmus for t in model.s_pastures)
+            def SR_bound(model, m, z):
+                rhs_dse = sum(model.v_phase_area[m, z, r, l] * model.p_pasture_area[r, t] * pasture_dse_carry[t] for r in model.s_phases for l in model.s_lmus for t in model.s_pastures)
                 dse = sum((sum(model.v_sire[z, g0] * model.p_dse_sire[p6,z,g0] for g0 in model.s_groups_sire if pe.value(model.p_dse_sire[p6,z,g0])!=0)
                          + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_dse_dams[k2,p6,t1,v1,a,n1,w1,z,i,y1,g1]
                                    for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
@@ -372,7 +372,7 @@ def f1_boundarypyomo_local(params, model):
                         * model.p_wg_propn_p6z[p6,z]
                         for p6 in model.s_feed_periods)
                 return dse == rhs_dse
-            model.con_SR_bound = pe.Constraint(model.s_season_types, rule=SR_bound,
+            model.con_SR_bound = pe.Constraint(model.s_rot_periods, model.s_season_types, rule=SR_bound,
                                                 doc='stocking rate bound for each feed period')
 
 
@@ -386,14 +386,14 @@ def f1_boundarypyomo_local(params, model):
             ###dict
             landuse_area_bound = dict(landuse_bound_k)
             ###constraint
-            def k_bound(model, k, z):
+            def k_bound(model, m, k, z):
                 if landuse_area_bound[k]!=0:  #bound will not be built if param == 0
                     return(
-                           sum(model.v_phase_area[z, r, l] * model.p_landuse_area[r, k] for r in model.s_phases for l in model.s_lmus for t in model.s_pastures)
+                           sum(model.v_phase_area[m, z, r, l] * model.p_landuse_area[r, k] for r in model.s_phases for l in model.s_lmus for t in model.s_pastures)
                            == landuse_area_bound[k])
                 else:
                     pe.Constraint.Skip
-            model.con_pas_bound = pe.Constraint(model.s_landuses, model.s_season_types, rule=k_bound, doc='bound on total pasture area')
+            model.con_pas_bound = pe.Constraint(model.s_rot_periods, model.s_landuses, model.s_season_types, rule=k_bound, doc='bound on total pasture area')
 
         ##total pasture area - hence also total crop area
         ###build bound if turned on
@@ -401,12 +401,12 @@ def f1_boundarypyomo_local(params, model):
             ###setbound
             total_pas_area = sen.sav['bnd_total_pas_area']
             ###constraint
-            def pas_bound(model, z):
+            def pas_bound(model, m, z):
                 return (
-                        sum(model.v_phase_area[z,r,l] * model.p_pasture_area[r,t] for r in model.s_phases for l in
+                        sum(model.v_phase_area[m,z,r,l] * model.p_pasture_area[r,t] for r in model.s_phases for l in
                             model.s_lmus for t in model.s_pastures)
                         == total_pas_area)
-            model.con_pas_bound = pe.Constraint(model.s_season_types, rule=pas_bound,doc='bound on total pasture area')
+            model.con_pas_bound = pe.Constraint(model.s_rot_periods, model.s_season_types, rule=pas_bound,doc='bound on total pasture area')
 
 
 

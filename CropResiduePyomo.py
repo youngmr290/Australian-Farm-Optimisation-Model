@@ -37,7 +37,7 @@ def f1_stubpyomo_local(params, model):
     ####################
     #define parameters #
     ####################
-    model.p_rot_stubble = pe.Param(model.s_phases, model.s_crops, model.s_season_types, model.s_lmus,
+    model.p_rot_stubble = pe.Param(model.s_phases, model.s_crops, model.s_lmus, model.s_rot_periods, model.s_season_types,
                                    initialize=params['rot_stubble'], default=0.0, doc='stubble produced per ha of each rotation')
 
     model.p_harv_prop = pe.Param(model.s_feed_periods, model.s_season_types, model.s_crops, initialize=params['cons_prop'],

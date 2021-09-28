@@ -21,6 +21,7 @@ import UniversalInputs as uinp
 import Periods as per
 import FeedsupplyFunctions as fsfun
 import Functions as fun
+import Phase as phs
 
 
 na = np.newaxis
@@ -92,6 +93,7 @@ def f_cropgraze_DM(total_DM=False):
     date_feed_periods = per.f_feed_periods()
     date_start_p6z = date_feed_periods[:-1]
     date_end_p6z = date_feed_periods[1:]
+    length_p6z = date_end_p6z - date_start_p6z
     seeding_start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
     initial_DM = pinp.cropgraze['i_cropgraze_initial_dm'] #used to calc total DM for relative availability (vol). The initial DM cant be consumed.
     establishment_days = pinp.cropgraze['i_cropgraze_defer_days'] #days between sowing and grazing
@@ -112,6 +114,9 @@ def f_cropgraze_DM(total_DM=False):
     if not total_DM:
         ##calc dry matter available for consumption provided by 1ha of crop
         crop_DM_provided_kp6zl = total_dm_growth_kp6zl * consumption_factor_p6z[:,:,na]
+        ###add m axis (rotation period) - this is used to ensure the same rotation in each m slice only provides the ability to graze crops in the corresponding p6
+        alloc_mp6z = phs.f1_rot_period_alloc(date_start_p6z[na,:,:], length_p6z[na,:,:], z_pos=-1)
+        crop_DM_provided_mkp6zl = crop_DM_provided_kp6zl * alloc_mp6z[:,na,:,:,na]
 
         ##calc DM removal when animals consume 1t - accounts for wastage and trampling
         crop_DM_required_k = 1000 / (1 - wastage_k) #todo this needs transfer exists mask (use the cod in the line below eg move this line after it)
@@ -120,10 +125,10 @@ def f_cropgraze_DM(total_DM=False):
         transfer_exists_p6z = (consumption_factor_p6z > 0)*1
 
         ##apply season mask (only apply here because these become params the other part of the 'if' statement goes to another function)
-        crop_DM_provided_kp6zl = crop_DM_provided_kp6zl * mask_fp_z8var_p6z[:,:,na]
+        crop_DM_provided_mkp6zl = crop_DM_provided_mkp6zl * mask_fp_z8var_p6z[:,:,na]
         transfer_exists_p6z = transfer_exists_p6z * mask_fp_z8var_p6z
 
-        return crop_DM_provided_kp6zl, crop_DM_required_k, transfer_exists_p6z
+        return crop_DM_provided_mkp6zl, crop_DM_required_k, transfer_exists_p6z
 
     else:
         ##crop foo mid way through feed period after consumption - used to calc vol in the next function.
@@ -281,7 +286,7 @@ def f_cropgraze_yield_penalty():
 
 def f1_cropgraze_params(params, r_vals, nv):
     grazecrop_area_rkl = f_graze_crop_area()
-    crop_DM_provided_kp6zl, crop_DM_required_k, transfer_exists_p6z = f_cropgraze_DM()
+    crop_DM_provided_mkp6zl, crop_DM_required_k, transfer_exists_p6z = f_cropgraze_DM()
     yield_reduction_propn_kp6z, stubble_reduction_propn_kp6z = f_cropgraze_yield_penalty()
     crop_md_fkp6zl, crop_vol_fkp6zl = crop_md_vol(nv)
     DM_reduction_kp6p5zl = f_DM_reduction_seeding_time()
@@ -291,6 +296,7 @@ def f1_cropgraze_params(params, r_vals, nv):
     lmu_mask = pinp.general['i_lmu_area'] > 0
     keys_l = pinp.general['i_lmu_idx'][lmu_mask]
     keys_k = pinp.cropgraze['i_cropgraze_landuse_idx']
+    keys_m = phs.f1_rot_period_alloc(keys=True)
     keys_p6 = pinp.period['i_fp_idx']
     keys_p5 = np.asarray(per.f_p_dates_df().index[:-1]).astype('str')
     keys_f  = np.array(['nv{0}' .format(i) for i in range(nv['len_nv'])])
@@ -310,9 +316,9 @@ def f1_cropgraze_params(params, r_vals, nv):
     index_p6z = fun.cartesian_product_simple_transpose(arrays)
     tup_p6z = tuple(map(tuple, index_p6z))
     ###kp6zl
-    arrays = [keys_k, keys_p6, keys_z, keys_l]
+    arrays = [keys_m, keys_k, keys_p6, keys_z, keys_l]
     index_kp6zl = fun.cartesian_product_simple_transpose(arrays)
-    tup_kp6zl = tuple(map(tuple, index_kp6zl))
+    tup_mkp6zl = tuple(map(tuple, index_kp6zl))
     ###kp6p5zl
     arrays = [keys_k, keys_p6, keys_p5, keys_z, keys_l]
     index_kp6p5zl = fun.cartesian_product_simple_transpose(arrays)
@@ -325,7 +331,7 @@ def f1_cropgraze_params(params, r_vals, nv):
 
     ##create params
     params['grazecrop_area_rkl'] = dict(zip(tup_rkl, grazecrop_area_rkl.ravel()))
-    params['crop_DM_provided_kp6zl'] = dict(zip(tup_kp6zl, crop_DM_provided_kp6zl.ravel()))
+    params['crop_DM_provided_mkp6zl'] = dict(zip(tup_mkp6zl, crop_DM_provided_mkp6zl.ravel()))
     params['DM_reduction_kp6p5zl'] = dict(zip(tup_kp6p5zl, DM_reduction_kp6p5zl.ravel()))
     params['crop_DM_required_k'] = dict(zip(keys_k, crop_DM_required_k))
     params['transfer_exists_p6z'] = dict(zip(tup_p6z, transfer_exists_p6z.ravel()))

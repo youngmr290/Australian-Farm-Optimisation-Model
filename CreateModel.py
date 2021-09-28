@@ -102,6 +102,13 @@ def sets(model, nv):
     #rotation #
     ###########
 
+    ##nodes
+    if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1:
+        len_m = 1 #if steady state then m axis is singleton.
+    else:
+        len_m = pinp.general['i_date_node_zm'].shape[-1] + 1 #+1 to account for dummy dry seeding period
+    model.s_rot_periods = Set(initialize=np.array(['m{0}'.format(i) for i in range(len_m)]),doc='season nodes')
+
     ##lmus
     lmu_mask = pinp.general['i_lmu_area'] > 0
     model.s_lmus = Set(initialize=pinp.general['i_lmu_idx'][lmu_mask],doc='defined the soil type a given rotation is on')

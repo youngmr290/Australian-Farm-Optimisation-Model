@@ -47,7 +47,7 @@ import timeit
 import datetime as dt
 import sys
 
-#AFO modules
+#AFO modules - cant import pasture or stubble or cropgrazing
 import UniversalInputs as uinp
 import StructuralInputs as sinp
 import PropertyInputs as pinp
@@ -55,6 +55,10 @@ import Functions as fun
 import Periods as per
 import Mach as mac
 import Finance as fin
+
+####################
+#general functions #
+####################
 
 na = np.newaxis
 
@@ -95,6 +99,41 @@ def f1_rot_check():
                    2. the named ranges in for the user defined rotations and inputs are all correct''')
             sys.exit()
 
+def f1_rot_period_alloc(item_start=0, item_length=np.timedelta64(1, 'D'), z_pos=0, keys=False):
+    '''
+    Allocation of item into rotation periods (m).
+
+    - Arrays must be numpy and broadcastable.
+    - M axis must be in pos 0
+    - item start must contain all axes (including z and m)
+
+    :param item_start: datetime64 item dates which are allocated into rotation periods. MUST contain all axis of the final array (singleton is fine)
+    :param item_length: datetime64
+    :param z_pos:
+    :param keys: Boolean if True this returns the m keys
+    :return:
+    '''
+    date_node_zm = pinp.f_seasonal_inp(pinp.general['i_date_node_zm'],numpy=True,axis=0).astype('datetime64')  # treat z axis
+    if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1:
+        date_node_zm = date_node_zm[:,0] #if steady state then m axis is singleton (start and finish at the break of season).
+    ###add end date of last node period - required for the allocation function
+    end_zm = date_node_zm[:,0:1] + np.timedelta64(365, 'D')  # increment the first date by 1yr so it becomes the end date for the last period
+    ###add dummy period - this is a 0 day period that exists for dry seeding. Nothing is allocated into it.
+    start_zm = date_node_zm[:,0:1]
+    date_node_mz = np.concatenate([start_zm, date_node_zm, end_zm], axis=1).T #put m in pos 0 because that how the allocation function requires
+    len_m = date_node_mz.shape[0] - 1 #minus one because end date is not a period
+
+    ##return keys if wanted
+    if keys:
+        keys_m = np.array(['m%s' % i for i in range(len_m)])
+        return keys_m
+
+    ##align axes
+    m_pos = -item_start.ndim
+    date_node_metc = fun.f_expand(date_node_mz, left_pos=z_pos, right_pos2=z_pos, left_pos2=m_pos)
+    shape = (len_m,) + tuple(np.maximum.reduce([date_node_metc.shape[1:], item_start.shape[1:]]))  # create shape which has the max size, this is used for o array
+    alloc_metc = fun.range_allocation_np(date_node_metc, item_start, item_length, opposite=True, shape=shape)
+    return alloc_metc
 
 
 ########################
@@ -245,22 +284,39 @@ def f_rot_yield(for_stub=False):
 
     ##colate other info
     yields_lmus = f1_mask_lmu(pinp.crop['yield_by_lmu'], axis=1) #soil yield factor
-    seeding_rate = pinp.crop['seeding_rate'].mul(pinp.crop['own_seed'],axis=0)#seeding rate adjusted by if the farmer is using their own seed from last yr
+    seeding_rate_k_l = f1_mask_lmu(pinp.crop['seeding_rate'].mul(pinp.crop['own_seed'],axis=0), axis=1) #seeding rate adjusted by if the farmer is using their own seed from last yr
     frost = f1_mask_lmu(pinp.crop['frost'], axis=1)  #frost
     proportion_grain_harv = pd.Series(pinp.stubble['proportion_grain_harv'], index=pinp.stubble['i_stub_landuse_idx'])
     arable = f1_mask_lmu(pinp.crop['arable'].squeeze(), axis=0) #read in arable area df
     ##calculate yield - base yield * arable area * harv_propn * frost * lmu factor - seeding rate
     yield_arable_by_soil = yields_lmus.mul(arable) #mul arable area to the the lmu factor (easy because dfs have the same axis's).
-    yields=yield_arable_by_soil.reindex(base_yields.index, axis=0, level=1).mul(base_yields,axis=0) #reindes and mul with base yields
+    yields_rkz_l=yield_arable_by_soil.reindex(base_yields.index, axis=0, level=1).mul(base_yields,axis=0) #reindes and mul with base yields
+    yields_rkl_z = yields_rkz_l.stack().unstack(2)
+
+    ##add rotation period axis - if a rotation exists at the begining of harvest it provides grain and requires harvesting.
+    harv_start_date_z = pinp.f_seasonal_inp(pinp.period['harv_date'],numpy=True,axis=0).astype('datetime64')
+    alloc_mz = f1_rot_period_alloc(harv_start_date_z[na,...], z_pos=-1)
+    ###convert to df
+    keys_z = pinp.f_keys_z()
+    keys_m = f1_rot_period_alloc(keys=True)
+    new_index_mz = pd.MultiIndex.from_product([keys_m, keys_z])
+    alloc_mz = pd.Series(alloc_mz.ravel(), index=new_index_mz)
+    ###mul m allocation with cost
+    yields_rkl_mz = yields_rkl_z.mul(alloc_mz, axis=1,level=1)
+
     if for_stub:
         ###return yield for stubble before accounting for frost, seed rate and harv propn
-        return yields
+        return yields_rkl_mz
     else:
-        frost_harv_factor = (1-frost).mul(proportion_grain_harv, axis=0) #mul these two fisrt because they have same index so its easy.
-        yields=frost_harv_factor.reindex(yields.index, axis=0, level=1).mul(yields,axis=0) #reindes and mul with base yields
-        seeding_rate=seeding_rate.reindex(yields.index, axis=0, level=1) #minus seeding rate
-        yields=yields.sub(seeding_rate,axis=0).clip(lower=0) #we don't want negative yields so clip at 0 (if any values are neg they become 0)
-        return yields.stack()
+        ###doing this in a particular order to keep r and k always on the same axis (so that size is kept small since r vs k is big)
+        yields_rk_mzl = yields_rkl_mz.unstack(2)
+        frost_harv_factor_k_l = (1-frost).mul(proportion_grain_harv, axis=0) #mul these two fisrt because they have same index so its easy.
+        frost_harv_factor_rkl = frost_harv_factor_k_l.reindex(yields_rk_mzl.index, axis=0, level=1).stack()
+        seeding_rate_rkl = seeding_rate_k_l.reindex(yields_rk_mzl.index, axis=0, level=1).stack()
+        yields_rkl_mz = yields_rk_mzl.stack(2).mul(frost_harv_factor_rkl, axis=0)
+        yields_rkl_mz = yields_rkl_mz.sub(seeding_rate_rkl,axis=0) #minus seeding rate
+        yields_rkl_mz = yields_rkl_mz.clip(lower=0) #we don't want negative yields so clip at 0 (if any values are neg they become 0). Note crops that dont produce harvest yield require seed as an input.
+        return yields_rkl_mz.stack([0,1])
 
 
 def f_grain_pool_proportions():
@@ -649,13 +705,13 @@ def f_phase_stubble_cost(r_vals):
     stub_cost=mac.f_stubble_cost_ha()
 
     ##calculate the probability of a rotation phase needing stubble handling
-    base_yields = f_rot_yield(for_stub=True).stack()
+    base_yields_rkl_z = f_rot_yield(for_stub=True).sum(axis=1,level=1) #sum the m axis. Just want the total yield. M axis is added later for costs.
     stub_handling_threshold = pd.Series(pinp.stubble['stubble_handling'], index=pinp.crop['start_harvest_crops'].index, dtype=float)*1000  #have to convert to kg to match base yield
-    probability_handling = base_yields.div(stub_handling_threshold, level = 1) #divide here then account for lmu factor next - because either way is mathematically sound and this saves some manipulation.
-    probability_handling = probability_handling.droplevel(1).unstack(1)
+    probability_handling_rkl_z = base_yields_rkl_z.div(stub_handling_threshold, axis=0, level=1) #divide here then account for lmu factor next - because either way is mathematically sound and this saves some manipulation.
+    probability_handling_rl_z = probability_handling_rkl_z.droplevel(1)
 
     ##adjust the cost of stubble handling by the probability of needing to handle stubble
-    stub_cost_rl_z = probability_handling * stub_cost
+    stub_cost_rl_z = probability_handling_rl_z * stub_cost
 
     ##allocate the cash period and calc interest and working capital
     start = np.array([pinp.mach['stub_handling_date']]).astype('datetime64') #needed for allocation func
@@ -926,8 +982,9 @@ def f_insurance(r_vals):
     grain_pool_proportions = f_grain_pool_proportions()
     ave_price = f_farmgate_grain_price().mul(grain_pool_proportions.unstack()).sum(axis=1)
     insurance=ave_price*uinp.price['grain_price_info']['insurance']/100  #div by 100 because insurance is a percent
-    rot_insurance = f_rot_yield().mul(insurance, axis=0, level = 1)/1000 #divide by 1000 to convert yield to tonnes
-    rot_insurance_rl_z = rot_insurance.droplevel(1).unstack(1)
+    yields_rklz = f_rot_yield().sum(axis=0, level=(0,1,2,4)) #sum the m axis. Just want the total yield. M axis is added later for costs.
+    yields_rklz = yields_rklz.mul(insurance, axis=0, level=1)/1000 #divide by 1000 to convert yield to tonnes
+    rot_insurance_rl_z = yields_rklz.droplevel(1).unstack(2)
     ##cost allocation
     start = np.array([uinp.price['crp_insurance_date']]).astype('datetime64')
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
@@ -980,6 +1037,24 @@ def f1_rot_cost(r_vals):
     #note if any array has dtype object then pandas throws error (No axis named 1 for object type Series)
     cost = pd.concat([fert_cost, nap_fert_cost, chem_cost, seedcost, insurance_cost, phase_stubble_cost],axis=1).sum(axis=1,level=(0,1,2))
     wc = pd.concat([fert_wc, nap_fert_wc, chem_wc, seedwc, insurance_wc, phase_stubble_wc],axis=1).sum(axis=1,level=(0,1,2))
+
+    ##add rotation period axis
+    p7_dates_c0p7z = per.f_cashflow_periods()
+    p7_start_dates_c0p7z = p7_dates_c0p7z[:,0:-1,:]
+    p7_len_c0p7z = p7_dates_c0p7z[:,1:,:] - p7_dates_c0p7z[:,0:-1,:]
+    alloc_mc0p7z = f1_rot_period_alloc(p7_start_dates_c0p7z[na,...], p7_len_c0p7z[na,...], z_pos=-1)
+    alloc_c0p7zm = np.moveaxis(alloc_mc0p7z[:,1:2,...],source=0, destination=-1) #take crp slice & move axis so m axis is at the end (required for reindeing below)
+    ###convert to df
+    keys_z = pinp.f_keys_z()
+    keys_m = f1_rot_period_alloc(keys=True)
+    keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
+    keys_c0 = sinp.general['i_enterprises_c0'][1:2] #take crp slice (keeping the dim so that line below works since it mult index needs iterables)
+    new_index_c0p7zm = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, keys_m])
+    alloc_c0p7zm = pd.Series(alloc_c0p7zm.ravel(), index=new_index_c0p7zm)
+
+    ##mul m allocation with cost
+    cost = cost.reindex(new_index_c0p7zm, axis=1).mul(alloc_c0p7zm, axis=1)
+    wc = wc.reindex(new_index_c0p7zm, axis=1).mul(alloc_c0p7zm, axis=1)
 
     return cost.unstack([1,0]), wc.unstack([1,0])
 
