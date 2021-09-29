@@ -29,7 +29,10 @@ def f1_rotationpyomo(params, model):
     #variables  #
     #############
     ##Amount of each phase on each soil, Positive Variable.
-    model.v_phase_area = Var(model.s_rot_periods, model.s_season_types, model.s_phases,model.s_lmus, bounds=(0,None),doc='number of ha of each phase')
+    model.v_phase_area = Var(model.s_rot_periods, model.s_season_types, model.s_phases,model.s_lmus, bounds=(0,None),doc='cumulative total area (ha) of phase, selected up to and including the current m period')
+
+    ##Amount of each phase added in each rotation period on each soil, Positive Variable.
+    model.v_phase_increment = Var(model.s_rot_periods, model.s_season_types, model.s_phases,model.s_lmus, bounds=(0,None),doc='Increased area (ha) of phase, selected in the current m period')
 
     if not pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1: #only needed for dsp version.
         model.v_root_hist = Var(model.s_rotconstraints, model.s_lmus, bounds=(0,None),doc='rotation history provided in the root stage')
@@ -136,7 +139,9 @@ def f_con_rotation_within(model):
     def rot_phase_link_within(model,m,l,r,z):
         l_m = list(model.s_rot_periods)
         m_prev = l_m[l_m.index(m) - 1] #need the activity level from last feed period
-        return model.v_phase_area[m,z,r,l] - model.v_phase_area[m_prev,z,r,l] <=0
+        return model.v_phase_area[m,z,r,l] \
+               - model.v_phase_increment[m,z,r,l]\
+               - model.v_phase_area[m_prev,z,r,l] * (m!='m0') ==0 #end of the previous yr is controlled by between constraint
     model.con_rotationcon1 = Constraint(model.s_rot_periods, model.s_lmus, model.s_phases, model.s_season_types, rule=rot_phase_link_within, doc='rotation phases constraint')
 
 

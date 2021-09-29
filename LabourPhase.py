@@ -156,7 +156,12 @@ def f_fert_app_time_ha():
     time_rzln_mp5 = time_rln_mzp5.stack(1).reorder_levels([0,3,1,2])
     fert_app_time_ha_rzln_p5m = time_rzln_mp5.mul(total_passes_rzln, axis=0)
     fert_app_time_ha_rzl_p5m = fert_app_time_ha_rzln_p5m.sum(axis=0, level=(0,1,2)) #sum fert type
-    return fert_app_time_ha_rzl_p5m.stack([0,1])
+    fert_app_time_ha_rzlp5_m = fert_app_time_ha_rzl_p5m.stack(0)
+
+    ##create params for v_phase_increment
+    increment_fert_app_time_ha_rzlp5_m = phs.f_v_phase_increment_adj(fert_app_time_ha_rzlp5_m,m_pos=1)
+
+    return fert_app_time_ha_rzlp5_m.stack(), increment_fert_app_time_ha_rzlp5_m.stack()
 
 #f=fert_app_time_ha()
 #print(timeit.timeit(fert_app_time_ha,number=20)/20)
@@ -191,7 +196,12 @@ def f_fert_app_time_t():
     time_rzln_mp5 = time_rln_mzp5.stack(1).reorder_levels([0,3,1,2])
     fert_app_time_tonne_rzln_p5m = time_rzln_mp5.mul(fert_total_rzln, axis=0)
     fert_app_time_tonne_rzl_p5m = fert_app_time_tonne_rzln_p5m.sum(axis=0,level=(0,1,2))  # sum fert type
-    return fert_app_time_tonne_rzl_p5m.stack([0,1])
+    fert_app_time_tonne_rzlp5_m = fert_app_time_tonne_rzl_p5m.stack(0)
+
+    ##create params for v_phase_increment
+    increment_fert_app_time_tonne_rzlp5_m = phs.f_v_phase_increment_adj(fert_app_time_tonne_rzlp5_m,m_pos=1)
+
+    return fert_app_time_tonne_rzlp5_m.stack(), increment_fert_app_time_tonne_rzlp5_m.stack()
 
 
 #print(fert_app_time_t())
@@ -261,7 +271,12 @@ def f_chem_app_time_ha():
     time_rzln_mp5 = time_rln_mzp5.stack(1).reorder_levels([0,3,1,2])
     chem_app_time_rzln_p5m = time_rzln_mp5.mul(passes_rzln, axis=0)
     chem_app_time_rzl_p5m = chem_app_time_rzln_p5m.sum(axis=0, level=(0,1,2)) #sum chem type
-    return chem_app_time_rzl_p5m.stack([0,1])
+    chem_app_time_rzlp5_m = chem_app_time_rzl_p5m.stack(0)
+
+    ##create params for v_phase_increment
+    increment_chem_app_time_rzlp5_m = phs.f_v_phase_increment_adj(chem_app_time_rzlp5_m,m_pos=1)
+
+    return chem_app_time_rzlp5_m.stack(), increment_chem_app_time_rzlp5_m.stack()
 
 
 
@@ -320,6 +335,8 @@ def f_crop_monitoring():
     variable_crop_monitor = pd.merge(phases_df, variable_crop_monitor, how='left', left_on=sinp.end_col(), right_index = True) #merge with all the phases
     variable_crop_monitor_r_p5mz = variable_crop_monitor.drop(list(range(sinp.general['phase_len'])), axis=1)
     variable_crop_monitor_p5mzr = variable_crop_monitor_r_p5mz.unstack()
+    ###create params for v_phase_increment
+    increment_variable_crop_monitor_p5mzr = phs.f_v_phase_increment_adj(variable_crop_monitor_p5mzr.unstack(1),m_pos=1).stack()
 
     ##fixed monitoring
     ###adjust from hrs/week to hrs/period
@@ -328,15 +345,15 @@ def f_crop_monitoring():
     ###convert date range to labour periods
     fixed_crop_monitor_pz = np.sum(fixed_crop_monitor_d * monitoring_allocation_pzd, axis=-1) #sum the d axis (monitoring date axis)
     fixed_crop_monitor = pd.DataFrame(fixed_crop_monitor_pz, index=keys_p5, columns=keys_z)
-    return variable_crop_monitor_p5mzr, fixed_crop_monitor.stack()
+    return variable_crop_monitor_p5mzr, increment_variable_crop_monitor_p5mzr, fixed_crop_monitor.stack()
 
 ##collates all the params
 def f1_labcrop_params(params,r_vals):
     prep_labour = f_prep_labour().stack()
-    fert_app_time_t = f_fert_app_time_t()
-    fert_app_time_ha = f_fert_app_time_ha()
-    chem_app_time_ha = f_chem_app_time_ha()
-    variable_crop_monitor, fixed_crop_monitor = f_crop_monitoring()
+    fert_app_time_t, increment_fert_app_time_t = f_fert_app_time_t()
+    fert_app_time_ha, increment_fert_app_time_ha = f_fert_app_time_ha()
+    chem_app_time_ha, increment_chem_app_time_ha = f_chem_app_time_ha()
+    variable_crop_monitor, increment_variable_crop_monitor, fixed_crop_monitor = f_crop_monitoring()
 
 
     ##add params which are inputs
@@ -345,9 +362,13 @@ def f1_labcrop_params(params,r_vals):
     params['seeding_helper'] = pinp.labour['seeding_helper']
     params['prep_labour'] = prep_labour.to_dict()
     params['fert_app_time_t'] = fert_app_time_t.to_dict()
+    params['increment_fert_app_time_t'] = increment_fert_app_time_t.to_dict()
     params['fert_app_time_ha'] = fert_app_time_ha.to_dict()
+    params['increment_fert_app_time_ha'] = increment_fert_app_time_ha.to_dict()
     params['chem_app_time_ha'] = chem_app_time_ha.to_dict()
+    params['increment_chem_app_time_ha'] = increment_chem_app_time_ha.to_dict()
     params['variable_crop_monitor'] = variable_crop_monitor.to_dict()
+    params['increment_variable_crop_monitor'] = increment_variable_crop_monitor.to_dict()
     params['fixed_crop_monitor'] = fixed_crop_monitor.to_dict()
     # params['fert_req'] = fert_total.to_dict()
 

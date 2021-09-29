@@ -136,6 +136,36 @@ def f1_rot_period_alloc(item_start=0, item_length=np.timedelta64(1, 'D'), z_pos=
     return alloc_metc
 
 
+def f_v_phase_increment_adj(param, m_pos, numpy=False):
+    '''
+    Adjust v_phase param for v_phase_increment.
+
+    v_phase_increment must incur the requirement to date for labour and cash for the phase.
+    This is making the assumption that any jobs carried out and any expenditure
+    (fertiliser or chemical applied) will be applied even though the phase is selected later in the year.
+    This stops the optimisation selecting the phase in the last node and receiving the income without
+    incurring any costs. Note: Yield and stubble do not require increment params because it is not possible to harvest a
+    rotation before the rotation is selected.
+
+    '''
+
+    param_increment = np.roll(np.cumsum(param.values, axis=m_pos),1, axis=m_pos) #include .values incase df is passed.
+    slc = [slice(None)] * len(param_increment.shape)
+    slc[m_pos] = slice(0,1)
+    param_increment[tuple(slc)] = 0
+
+    if not numpy:
+        index = param.index
+        cols = param.columns
+        param_increment = pd.DataFrame(param_increment, index=index, columns=cols)
+
+    return param_increment
+
+
+
+
+
+
 ########################
 #price                 #
 ########################
@@ -226,7 +256,7 @@ def f_grain_price(r_vals):
 #########################
 #yield                  #
 #########################
-def f_rot_yield(for_stub=False):
+def f_rot_yield(for_stub=False, for_insurance=False):
     '''
     Calculates the yield for each rotation. Accounting for LMU, arable area, frost and harvested proportion.
 
@@ -307,17 +337,21 @@ def f_rot_yield(for_stub=False):
     if for_stub:
         ###return yield for stubble before accounting for frost, seed rate and harv propn
         return yields_rkl_mz
-    else:
-        ###doing this in a particular order to keep r and k always on the same axis (so that size is kept small since r vs k is big)
-        yields_rk_mzl = yields_rkl_mz.unstack(2)
-        frost_harv_factor_k_l = (1-frost).mul(proportion_grain_harv, axis=0) #mul these two fisrt because they have same index so its easy.
-        frost_harv_factor_rkl = frost_harv_factor_k_l.reindex(yields_rk_mzl.index, axis=0, level=1).stack()
-        seeding_rate_rkl = seeding_rate_k_l.reindex(yields_rk_mzl.index, axis=0, level=1).stack()
-        yields_rkl_mz = yields_rk_mzl.stack(2).mul(frost_harv_factor_rkl, axis=0)
-        yields_rkl_mz = yields_rkl_mz.sub(seeding_rate_rkl,axis=0) #minus seeding rate
-        yields_rkl_mz = yields_rkl_mz.clip(lower=0) #we don't want negative yields so clip at 0 (if any values are neg they become 0). Note crops that dont produce harvest yield require seed as an input.
-        return yields_rkl_mz.stack([0,1])
 
+    ##account for frost, seed rate and harv propn
+    ###doing this in a particular order to keep r and k always on the same axis (so that size is kept small since r vs k is big)
+    yields_rk_mzl = yields_rkl_mz.unstack(2)
+    frost_harv_factor_k_l = (1-frost).mul(proportion_grain_harv, axis=0) #mul these two fisrt because they have same index so its easy.
+    frost_harv_factor_rkl = frost_harv_factor_k_l.reindex(yields_rk_mzl.index, axis=0, level=1).stack()
+    seeding_rate_rkl = seeding_rate_k_l.reindex(yields_rk_mzl.index, axis=0, level=1).stack()
+    yields_rkl_mz = yields_rk_mzl.stack(2).mul(frost_harv_factor_rkl, axis=0)
+    yields_rkl_mz = yields_rkl_mz.sub(seeding_rate_rkl,axis=0) #minus seeding rate
+    yields_rkl_mz = yields_rkl_mz.clip(lower=0) #we don't want negative yields so clip at 0 (if any values are neg they become 0). Note crops that dont produce harvest yield require seed as an input.
+    if for_insurance:
+        return yields_rkl_mz.sum(axis=1, level=1).stack() #sum the m axis. Just want the total yield. M axis is added later for costs.
+    else:
+        ###yield for pyomo yield param
+        return yields_rkl_mz.stack([1,0])
 
 def f_grain_pool_proportions():
     '''Calculate the proportion of grain in each pool.
@@ -982,7 +1016,7 @@ def f_insurance(r_vals):
     grain_pool_proportions = f_grain_pool_proportions()
     ave_price = f_farmgate_grain_price().mul(grain_pool_proportions.unstack()).sum(axis=1)
     insurance=ave_price*uinp.price['grain_price_info']['insurance']/100  #div by 100 because insurance is a percent
-    yields_rklz = f_rot_yield().sum(axis=0, level=(0,1,2,4)) #sum the m axis. Just want the total yield. M axis is added later for costs.
+    yields_rklz = f_rot_yield(for_insurance=True)
     yields_rklz = yields_rklz.mul(insurance, axis=0, level=1)/1000 #divide by 1000 to convert yield to tonnes
     rot_insurance_rl_z = yields_rklz.droplevel(1).unstack(2)
     ##cost allocation
@@ -1053,10 +1087,14 @@ def f1_rot_cost(r_vals):
     alloc_c0p7zm = pd.Series(alloc_c0p7zm.ravel(), index=new_index_c0p7zm)
 
     ##mul m allocation with cost
-    cost = cost.reindex(new_index_c0p7zm, axis=1).mul(alloc_c0p7zm, axis=1)
-    wc = wc.reindex(new_index_c0p7zm, axis=1).mul(alloc_c0p7zm, axis=1)
+    cost_c0p7zmlr = cost.reindex(new_index_c0p7zm, axis=1).mul(alloc_c0p7zm, axis=1).unstack([1,0])
+    wc_c0p7zmlr = wc.reindex(new_index_c0p7zm, axis=1).mul(alloc_c0p7zm, axis=1).unstack([1,0])
 
-    return cost.unstack([1,0]), wc.unstack([1,0])
+    ##create params for v_phase_increment
+    increment_cost_c0p7zlrm = f_v_phase_increment_adj(cost_c0p7zmlr.unstack(3),m_pos=1).stack()
+    increment_wc_c0p7zlrm = f_v_phase_increment_adj(wc_c0p7zmlr.unstack(3),m_pos=1).stack()
+
+    return cost_c0p7zmlr, increment_cost_c0p7zlrm, wc_c0p7zmlr, increment_wc_c0p7zlrm
 
 
 #################
@@ -1133,7 +1171,7 @@ def f_sow_prov():
 #########
 ##collates all the params
 def f1_crop_params(params,r_vals):
-    cost, wc = f1_rot_cost(r_vals)
+    cost, increment_cost, wc, increment_wc = f1_rot_cost(r_vals)
     yields = f_rot_yield()
     propn = f_grain_pool_proportions()
     grain_price, grain_wc = f_grain_price(r_vals)
@@ -1148,7 +1186,9 @@ def f1_crop_params(params,r_vals):
     params['wet_sow_prov'] = wetseeding_prov_p5kz.to_dict()
     params['dry_sow_prov'] = dryseeding_prov_p5kz.to_dict()
     params['rot_cost'] = cost.to_dict()
+    params['increment_rot_cost'] = cost.to_dict()
     params['rot_wc'] = wc.to_dict()
+    params['increment_rot_wc'] = wc.to_dict()
     params['rot_yield'] = yields.to_dict()
 
 
