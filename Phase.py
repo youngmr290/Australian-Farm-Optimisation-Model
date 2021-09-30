@@ -1137,12 +1137,21 @@ def f_sow_prov():
     labour_period_start_p5z = labour_period_p5z.values[:-1]
     labour_period_end_p5z = labour_period_p5z.values[1:]
 
+    ##general info
+    keys_k = np.asarray(list(sinp.landuse['All']))
+    keys_z = pinp.f_keys_z()
+    keys_p5 = labour_period_p5z.index[:-1]
+    dry_sown_landuses = sinp.landuse['dry_sown']
+    wet_sown_landuses = sinp.landuse['C'] - dry_sown_landuses #can subtract sets to return differences
+
     ##wet sowing periods
     seed_period_lengths_pz = pinp.f_seasonal_inp(pinp.period['seed_period_lengths'],numpy=True,axis=1)
     wet_seed_start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
     wet_seed_len_z = np.sum(seed_period_lengths_pz, axis=0).astype('timedelta64[D]')
     wet_seed_end_z = wet_seed_start_z + wet_seed_len_z
     period_is_wetseeding_p5z = (labour_period_start_p5z < wet_seed_end_z) * (labour_period_end_p5z > wet_seed_start_z)
+    ###add k axis
+    period_is_wetseeding_p5z = period_is_wetseeding_p5z[...,na] * np.sum(keys_k[:,na] == list(wet_sown_landuses), axis=-1)
 
     ##dry sowing periods
     dry_seed_start_z = np.datetime64(pinp.crop['dry_seed_start'])
@@ -1150,20 +1159,34 @@ def f_sow_prov():
     date_start_p6z = date_feed_periods[:-1]
     season_break_z = date_start_p6z[0]
     period_is_dryseeding_p5z = (labour_period_start_p5z < season_break_z) * (labour_period_end_p5z > dry_seed_start_z)
+    ###add k axis
+    period_is_dryseeding_p5zk = period_is_dryseeding_p5z[...,na] * np.sum(keys_k[:,na] == list(dry_sown_landuses), axis=-1)
+
+    ##pasture seeding
+    pastures = sinp.general['pastures'][pinp.general['pas_inc']]
+    zt = (len(keys_z),len(pastures))
+    i_reseeding_date_start_zt = np.zeros(zt, dtype = 'datetime64[D]')
+    i_reseeding_date_end_zt = np.zeros(zt, dtype = 'datetime64[D]')
+    for t,pasture in enumerate(pastures):
+        i_reseeding_date_start_zt[...,t] = pinp.f_seasonal_inp(pinp.pasture_inputs[pasture]['Date_Seeding'],numpy=True)
+        i_reseeding_date_end_zt[...,t] = pinp.f_seasonal_inp(pinp.pasture_inputs[pasture]['pas_seeding_end'],numpy=True)
+    period_is_passeeding_p5zt = (labour_period_start_p5z[:,:,na] < i_reseeding_date_end_zt) * (labour_period_end_p5z[:,:,na] > i_reseeding_date_start_zt)
+    ###convert t axis to k
+    kt = (len(keys_k), len(pastures))
+    seeding_landuses = uinp.mach[pinp.mach['option']]['seeder_speed_crop_adj'].index
+    resown_kt = np.zeros(kt)
+    for t,pasture in enumerate(pastures):
+        pasture_landuses = list(sinp.landuse['pasture_sets'][pasture])
+        resown_kt[:,t] = np.logical_and(np.in1d(keys_k, seeding_landuses), np.in1d(keys_k, pasture_landuses)) #resown if landuse is a pasture and is a sown landuse
+    period_is_passeeding_p5zk = np.sum(resown_kt * period_is_passeeding_p5zt[:,:,na,:], -1) #sum t axis - t is counted for in the k axis
+
+    ##combine wet, dry and pas
+    period_is_seeding_p5zk = np.minimum(1,period_is_wetseeding_p5z + period_is_dryseeding_p5zk + period_is_passeeding_p5zk)
 
     ##make df
-    keys_z = pinp.f_keys_z()
-    keys_p5 = labour_period_p5z.index[:-1]
-    wetseeding_prov_p5z = pd.DataFrame(period_is_wetseeding_p5z, index=keys_p5, columns=keys_z) * 1 # *1 to convert bool to number
-    dryseeding_prov_p5z = pd.DataFrame(period_is_dryseeding_p5z, index=keys_p5, columns=keys_z) * 1 # *1 to convert bool to number
-
-    ##add wet sow landuse axis
-    dry_sown_landuses = sinp.landuse['dry_sown']
-    wet_sown_landuses = sinp.landuse['C'] - dry_sown_landuses #can subtract sets to return differences
-    wetseeding_prov_p5kz = wetseeding_prov_p5z.reindex(pd.MultiIndex.from_product([keys_p5, wet_sown_landuses]),axis=0, level=0)
-    dryseeding_prov_p5kz = dryseeding_prov_p5z.reindex(pd.MultiIndex.from_product([keys_p5, dry_sown_landuses]),axis=0, level=0)
-    return wetseeding_prov_p5kz.stack(), dryseeding_prov_p5kz.stack()
-
+    index_p5zk = pd.MultiIndex.from_product([keys_p5,keys_z,keys_k])
+    period_is_seeding_p5zk = pd.Series(period_is_seeding_p5zk.ravel(), index=index_p5zk)
+    return period_is_seeding_p5zk
 
 
 #########
@@ -1176,15 +1199,14 @@ def f1_crop_params(params,r_vals):
     propn = f_grain_pool_proportions()
     grain_price, grain_wc = f_grain_price(r_vals)
     phasesow_req = f_phase_sow_req()
-    wetseeding_prov_p5kz, dryseeding_prov_p5kz = f_sow_prov()
+    sow_prov_p5zk = f_sow_prov()
 
     ##create params
     params['grain_pool_proportions'] = propn.to_dict()
     params['grain_price'] = grain_price.to_dict()
     params['grain_wc'] = grain_wc.to_dict()
     params['phase_sow_req'] = phasesow_req.to_dict()
-    params['wet_sow_prov'] = wetseeding_prov_p5kz.to_dict()
-    params['dry_sow_prov'] = dryseeding_prov_p5kz.to_dict()
+    params['sow_prov'] = sow_prov_p5zk.to_dict()
     params['rot_cost'] = cost.to_dict()
     params['increment_rot_cost'] = cost.to_dict()
     params['rot_wc'] = wc.to_dict()

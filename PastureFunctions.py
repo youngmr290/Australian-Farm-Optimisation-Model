@@ -245,36 +245,36 @@ def f_reseeding(i_destock_date_zt, i_restock_date_zt, i_destock_foo_zt, i_restoc
     return foo_grn_reseeding_p6lrzt, foo_dry_reseeding_dp6lrzt, periods_destocked_p6zt
 
 
-def f_pas_sow(i_reseeding_date_start_zt, i_reseeding_date_end_zt, resown_rt, arable_l, phases_rotn_df, pastures):
-    '''
-    Calculate the sowing provided by the pas_sow activity in each machinery period for each pasture landuse.
-
-    The sow activity only provides seeding during the machinery periods that align with reseeding date and only provides
-    sowing for the resown pasture landuses.
-
-    :param i_reseeding_date_start_zt: Date reseeding begins.
-    :param i_reseeding_date_end_zt: Date reseeding ends.
-    :param resown_rt: Boolean array denoting which rotations phases are resown.
-    :param arable_l: Proportion of arable land on each LMU.
-    :return: Pasture sowing requirement for all rotation phases.
-    '''
-    ### sow param determination
-    ### determine the labour periods pas seeding occurs
-    labour_period_p5z = per.f_p_dates_df()
-    labour_period_start_p5z = labour_period_p5z.values[:-1]
-    labour_period_end_p5z = labour_period_p5z.values[1:]
-    period_is_passeeding_p5zt = (labour_period_start_p5z[:,:,na] < i_reseeding_date_end_zt) * (labour_period_end_p5z[:,:,na] > i_reseeding_date_start_zt)
-
-    ## add k (landuse axis) - this is required for sow param
-    keys_k = np.asarray(list(sinp.landuse['All']))
-    kt = (len(keys_k), len(pastures))
-    seeding_landuses = uinp.mach[pinp.mach['option']]['seeder_speed_crop_adj'].index
-    resown_kt = np.zeros(kt)
-    for t,pasture in enumerate(pastures):
-        pasture_landuses = list(sinp.landuse['pasture_sets'][pasture])
-        resown_kt[:,t] = np.logical_and(np.in1d(keys_k, seeding_landuses), np.in1d(keys_k, pasture_landuses)) #resown if landuse is a pasture and is a sown landuse
-    pas_sow_prov_pkz = np.sum(resown_kt[:,na,:] * period_is_passeeding_p5zt[:,na,...], -1) #sum t axis - t is counted for in the k axis
-    return pas_sow_prov_pkz
+# def f_pas_sow(i_reseeding_date_start_zt, i_reseeding_date_end_zt, resown_rt, arable_l, phases_rotn_df, pastures):
+#     '''
+#     Calculate the sowing provided by the pas_sow activity in each machinery period for each pasture landuse.
+#
+#     The sow activity only provides seeding during the machinery periods that align with reseeding date and only provides
+#     sowing for the resown pasture landuses.
+#
+#     :param i_reseeding_date_start_zt: Date reseeding begins.
+#     :param i_reseeding_date_end_zt: Date reseeding ends.
+#     :param resown_rt: Boolean array denoting which rotations phases are resown.
+#     :param arable_l: Proportion of arable land on each LMU.
+#     :return: Pasture sowing requirement for all rotation phases.
+#     '''
+#     ### sow param determination
+#     ### determine the labour periods pas seeding occurs
+#     labour_period_p5z = per.f_p_dates_df()
+#     labour_period_start_p5z = labour_period_p5z.values[:-1]
+#     labour_period_end_p5z = labour_period_p5z.values[1:]
+#     period_is_passeeding_p5zt = (labour_period_start_p5z[:,:,na] < i_reseeding_date_end_zt) * (labour_period_end_p5z[:,:,na] > i_reseeding_date_start_zt)
+#
+#     ## add k (landuse axis) - this is required for sow param
+#     keys_k = np.asarray(list(sinp.landuse['All']))
+#     kt = (len(keys_k), len(pastures))
+#     seeding_landuses = uinp.mach[pinp.mach['option']]['seeder_speed_crop_adj'].index
+#     resown_kt = np.zeros(kt)
+#     for t,pasture in enumerate(pastures):
+#         pasture_landuses = list(sinp.landuse['pasture_sets'][pasture])
+#         resown_kt[:,t] = np.logical_and(np.in1d(keys_k, seeding_landuses), np.in1d(keys_k, pasture_landuses)) #resown if landuse is a pasture and is a sown landuse
+#     pas_sow_prov_pkz = np.sum(resown_kt[:,na,:] * period_is_passeeding_p5zt[:,na,...], -1) #sum t axis - t is counted for in the k axis
+#     return pas_sow_prov_pkz
 
 
 def f1_green_area(resown_rt, pasture_rt, periods_destocked_p6zt, arable_l):

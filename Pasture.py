@@ -159,8 +159,6 @@ def f_pasture(params, r_vals, nv):
     # grn_senesce_startfoo_p6t     = np.zeros(p6t,  dtype = 'float64')  # proportion of the FOO at the start of the period that senesces during the period
     # grn_senesce_pgrcons_p6t      = np.zeros(p6t,  dtype = 'float64')  # proportion of the (total or average daily) PGR that senesces during the period (consumption leads to a reduction in senescence)
 
-    i_reseeding_date_start_zt   = np.zeros(zt, dtype = 'datetime64[D]')         # start date of seeding this pasture type
-    i_reseeding_date_end_zt     = np.zeros(zt, dtype = 'datetime64[D]')         # end date of the pasture seeding window for this pasture type
     i_destock_date_zt           = np.zeros(zt, dtype = 'datetime64[D]')         # date of destocking this pasture type prior to reseeding
     i_destock_foo_zt            = np.zeros(zt, dtype = 'float64')               # kg of FOO that was not grazed prior to destocking for spraying prior to reseeding pasture (if spring sown)
     i_restock_date_zt           = np.zeros(zt, dtype = 'datetime64[D]')         # date of first grazing of reseeded pasture
@@ -294,8 +292,6 @@ def f_pasture(params, r_vals, nv):
 
         i_lmu_conservation_p6lzt[...,t]       = pinp.f_seasonal_inp(exceldata['ErosionLimit'][:, lmu_mask_l], numpy=True, axis=2)
 
-        i_reseeding_date_start_zt[...,t]    = pinp.f_seasonal_inp(exceldata['Date_Seeding'], numpy=True)
-        i_reseeding_date_end_zt[...,t]      = pinp.f_seasonal_inp(exceldata['pas_seeding_end'], numpy=True)
         i_destock_date_zt[...,t]            = pinp.f_seasonal_inp(exceldata['Date_Destocking'], numpy=True)
         i_destock_foo_zt[...,t]             = pinp.f_seasonal_inp(exceldata['FOOatSeeding'], numpy=True) #ungrazed foo when destocked for reseeding
         i_restock_date_zt[...,t]            = pinp.f_seasonal_inp(exceldata['Date_ResownGrazing'], numpy=True)
@@ -409,9 +405,6 @@ def f_pasture(params, r_vals, nv):
         , i_restock_fooscalar_lt, i_restock_foo_arable_t, dry_decay_period_p6zt, i_fxg_foo_op6lzt, c_fxg_a_op6lzt
         , c_fxg_b_op6lzt, i_grn_senesce_eos_p6zt, grn_senesce_startfoo_p6zt, grn_senesce_pgrcons_p6zt, max_germination_flz
         , length_p6z, n_feed_periods, p6lrzt, p6zt, t_idx, z_idx, l_idx)
-
-    ## sow param determination
-    pas_sow_prov_p5kz = pfun.f_pas_sow(i_reseeding_date_start_zt, i_reseeding_date_end_zt, resown_rt, arable_l, phases_rotn_df, pastures)
 
     ## area of green pasture being grazed and growing
     phase_area_p6lrzt = pfun.f1_green_area(resown_rt, pasture_rt, periods_destocked_p6zt, arable_l)
@@ -561,8 +554,6 @@ def f_pasture(params, r_vals, nv):
     ##convert the change in dry and green FOO at destocking and restocking into a pyomo param (for the area that is resown)
     params['p_foo_dry_reseeding_mdp6lrzt'] = dict(zip(index_mdp6lrzt, foo_dry_reseeding_mdp6lrzt.ravel()))
     params['p_foo_grn_reseeding_mp6lrzt'] = dict(zip(index_mp6lrzt, foo_grn_reseeding_mp6lrzt.ravel()))
-
-    params['p_pas_sow_prov_p5kz'] = dict(zip(index_pkz, pas_sow_prov_p5kz.ravel()))
 
     params['p_phase_area_mp6lrzt'] = dict(zip(index_mp6lrzt, phase_area_mp6lrzt.ravel()))
 

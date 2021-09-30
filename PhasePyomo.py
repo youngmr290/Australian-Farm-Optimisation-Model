@@ -64,9 +64,11 @@ def f1_croppyomo_local(params, model):
     
     model.p_phasesow_req = pe.Param(model.s_phases, model.s_crops, model.s_lmus, initialize=params['phase_sow_req'], default = 0.0, doc='ha of sow activity required by each rot phase')
     
-    model.p_wet_sow_prov = pe.Param(model.s_labperiods, model.s_landuses, model.s_season_types, initialize=params['wet_sow_prov'], default = 0.0, doc='amount of sowing provided to each landuse by the wet sow activity')
+    model.p_sow_prov = pe.Param(model.s_labperiods, model.s_season_types, model.s_landuses, initialize=params['sow_prov'], default = 0.0, doc='states which landuses can be sown in each p5 period')
 
-    model.p_dry_sow_prov = pe.Param(model.s_labperiods, model.s_landuses, model.s_season_types, initialize=params['dry_sow_prov'], default = 0.0, doc='amount of sowing provided to each landuse by the dry sow activity')
+    # model.p_wet_sow_prov = pe.Param(model.s_labperiods, model.s_landuses, model.s_season_types, initialize=params['wet_sow_prov'], default = 0.0, doc='amount of sowing provided to each landuse by the wet sow activity')
+    #
+    # model.p_dry_sow_prov = pe.Param(model.s_labperiods, model.s_landuses, model.s_season_types, initialize=params['dry_sow_prov'], default = 0.0, doc='amount of sowing provided to each landuse by the dry sow activity')
 
 
 #######################################################################################################################################################

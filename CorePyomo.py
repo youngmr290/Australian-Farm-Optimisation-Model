@@ -296,16 +296,29 @@ def f_con_phasesow(model):
     needed to sow pasture).
     No p5 set in the constraint because model can optimise sowing time (can only optimise within the periods provided eg
     dry sowing activity only provides sowing capacity before the break).
+
+    p_sow_prov links k and p5 so that:
+
+        #. dry sown landuses are sown before the break.
+        #. pasture is sown in the correct p5 periods based on the inputted reseeding date.
+        #. wet sown crops are sown after the break of season.
+
+    v_seeding_machdays is bound in con_seed_period_days to ensure that the correct days of seeding are provided in
+    each m and p5 period.
     '''
     def sow_link(model,k,l,z):
         if type(phspy.f_phasesow_req(model,k,l,z)) == int:  # if crop sow param is zero this will be int (can't do if==0 because when it is not 0 it is a complex pyomo object which can't be evaluated)
             return pe.Constraint.Skip  # skip constraint if no crop is being sown on given rotation
         else:
-            return - sum(model.v_wet_seeding_crop[p5,k,l,z] * model.p_wet_sow_prov[p5,k,z] for p5 in model.s_labperiods)  \
-                   - sum(model.v_dry_seeding_crop[p5,k,l,z] * model.p_dry_sow_prov[p5,k,z] for p5 in model.s_labperiods) \
-                   - sum(model.v_seeding_pas[p5,k,l,z] * model.p_pas_sow_prov[p5,k,z] for p5 in model.s_labperiods) \
+            return - sum(model.v_contractseeding_ha[z,p5,k,l] * model.p_contractseeding_occur[p5,z] * model.p_sow_prov[p5,z,k] for p5 in model.s_labperiods) \
+                   - sum(model.v_seeding_machdays[z,p5,k,l] * model.p_seeding_rate[k,l] * model.p_sow_prov[p5,z,k] for p5 in model.s_labperiods) \
                    + phspy.f_phasesow_req(model,k,l,z) <= 0
 
+            # return - sum(model.v_wet_seeding_crop[p5,k,l,z] * model.p_wet_sow_prov[p5,k,z] for p5 in model.s_labperiods)  \
+            #        - sum(model.v_dry_seeding_crop[p5,k,l,z] * model.p_dry_sow_prov[p5,k,z] for p5 in model.s_labperiods) \
+            #        - sum(model.v_seeding_pas[p5,k,l,z] * model.p_pas_sow_prov[p5,k,z] for p5 in model.s_labperiods) \
+            #        + phspy.f_phasesow_req(model,k,l,z) <= 0
+            #
     model.con_phasesow = pe.Constraint(model.s_crops,model.s_lmus,model.s_season_types,rule=sow_link,
                                       doc='link between mach sow provide and rotation crop sow require')
 

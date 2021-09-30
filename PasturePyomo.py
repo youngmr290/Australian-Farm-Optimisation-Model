@@ -113,9 +113,6 @@ def f1_paspyomo_local(params, model):
     model.p_phase_area = pe.Param(model.s_rot_periods, model.s_feed_periods, model.s_lmus, model.s_phases, model.s_season_types, model.s_pastures,
                                   initialize=params['p_phase_area_mp6lrzt'], default=0, mutable=False, doc='pasture area in each rotation for each feed period')
     
-    model.p_pas_sow_prov = pe.Param(model.s_labperiods, model.s_landuses, model.s_season_types, initialize=params['p_pas_sow_prov_p5kz'],
-                                    default=0, mutable=False, doc='sowing provided for each landuse from the pasture sow activity')
-    
     model.p_poc_con = pe.Param(model.s_feed_periods ,model.s_lmus, model.s_season_types, initialize=params['p_poc_con_p6lz'],
                                default=0, doc='available consumption of pasture on 1ha of a crop paddock each day for each lmu in each feed period')
 
