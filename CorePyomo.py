@@ -495,6 +495,8 @@ def f_con_workingcap(params, model):
     exist between parent and child seasons.
 
     '''
+    #todo needs between year constraint because this needs to pass between cashflow years (different to the cashflow constraint which ends at the end of the cashflow yr)
+    # maybe the boolean at the end will need to be removed.
     def working_cap(model,c0,p7,z9):
         cf0 = list(model.s_cashflow_periods)[0]
         p7s = list(model.s_cashflow_periods)[list(model.s_cashflow_periods).index(p7) - 1]  # previous cashperiod - have to convert to a list first because indexing of an ordered set starts at 1
