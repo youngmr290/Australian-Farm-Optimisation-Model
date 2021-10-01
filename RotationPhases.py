@@ -21,7 +21,7 @@ import SeasonalFunctions as zfun
 
 
 
-def f1_rot_period_alloc(item_start=0, item_length=np.timedelta64(1, 'D'), z_pos=0, keys=False):
+def f1_rot_period_alloc(item_start=0, item_length=np.timedelta64(1, 'D'), z_pos=0, keys=False, periods=False):
     '''
     Allocation of item into rotation periods (m).
 
@@ -33,6 +33,7 @@ def f1_rot_period_alloc(item_start=0, item_length=np.timedelta64(1, 'D'), z_pos=
     :param item_length: datetime64
     :param z_pos:
     :param keys: Boolean if True this returns the m keys
+    :param periods: Boolean if True this returns the m period dates
     :return:
     '''
     date_node_zm = zfun.f_seasonal_inp(pinp.general['i_date_node_zm'],numpy=True,axis=0).astype('datetime64')  # treat z axis
@@ -40,10 +41,15 @@ def f1_rot_period_alloc(item_start=0, item_length=np.timedelta64(1, 'D'), z_pos=
         date_node_zm = date_node_zm[:,0] #if steady state then m axis is singleton (start and finish at the break of season).
     ###add end date of last node period - required for the allocation function
     end_zm = date_node_zm[:,0:1] + np.timedelta64(365, 'D')  # increment the first date by 1yr so it becomes the end date for the last period
-    ###add dummy period - this is a 0 day period that exists for dry seeding. Nothing is allocated into it.
-    start_zm = date_node_zm[:,0:1]
-    date_node_mz = np.concatenate([start_zm, date_node_zm, end_zm], axis=1).T #put m in pos 0 because that how the allocation function requires
-    len_m = date_node_mz.shape[0] - 1 #minus one because end date is not a period
+    ###add dry seeding period
+    dry_seed_start_m = np.array([pinp.crop['dry_seed_start']], dtype='datetime64')
+    dry_seed_start_zm = np.broadcast_to(dry_seed_start_m[na,:], end_zm.shape) #expand z axis
+    date_phase_node_mz = np.concatenate([date_node_zm, dry_seed_start_zm, end_zm], axis=1).T #put m in pos 0 because that how the allocation function requires
+    len_m = date_phase_node_mz.shape[0] - 1 #minus one because end date is not a period
+
+    ##return keys if wanted
+    if periods:
+        return date_phase_node_mz
 
     ##return keys if wanted
     if keys:
@@ -52,11 +58,10 @@ def f1_rot_period_alloc(item_start=0, item_length=np.timedelta64(1, 'D'), z_pos=
 
     ##align axes
     m_pos = -item_start.ndim
-    date_node_metc = fun.f_expand(date_node_mz, left_pos=z_pos, right_pos2=z_pos, left_pos2=m_pos)
+    date_node_metc = fun.f_expand(date_phase_node_mz, left_pos=z_pos, right_pos2=z_pos, left_pos2=m_pos)
     shape = (len_m,) + tuple(np.maximum.reduce([date_node_metc.shape[1:], item_start.shape[1:]]))  # create shape which has the max size, this is used for o array
     alloc_metc = fun.range_allocation_np(date_node_metc, item_start, item_length, opposite=True, shape=shape)
     return alloc_metc
-
 
 def f_v_phase_increment_adj(param, m_pos, numpy=False):
     '''

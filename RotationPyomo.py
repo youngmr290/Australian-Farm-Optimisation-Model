@@ -52,7 +52,7 @@ def f1_rotationpyomo(params, model):
     ###################
     #call constraints #
     ###################
-    f_con_rotation(params, model)
+    f_con_rotation_between(params, model)
     f_con_rotation_within(model)
     f_con_area(model)
 
@@ -71,9 +71,10 @@ def f1_rotationpyomo(params, model):
 
     #todo i might not need the root hist variable and whatnot with new season structure
 
-def f_con_rotation(params, model):
+def f_con_rotation_between(params, model):
     '''
-    Creates the constraint between history provided and required for each rotation phase on each LMU.
+    Creates the constraint between history provided at the end of the year and the history required at the beginning
+    of the year for each rotation phase on each LMU.
 
     The rotation constraints are to ensure that the rotation phases that are selected in the optimisation can
     be arranged into an actual rotation. All phases except the continuous rotations require at least one other
@@ -81,38 +82,13 @@ def f_con_rotation(params, model):
     this requires ensuring that each rotaion phase selected has a preceding phase that has landuses in the same
     order as the target rotation phase (except for year 0). This is called the history required and history required.
 
-    For steady state model each rotation requires and provides a rotation history.
-    For DSP the process is slight more complicated because the history that provides the rotations must be the same for
-    each season. because each season needs to start in a common place. Therefore a history variable is created which
-    can be assigned to the root stage. This means an additional constraint is required.
-
-    .. note:: the DSP structure will work fine for steady state however just increases the size, but for debugging you can
-        use the DSP structure with the steady state model (just comment out the steady state stuff)
-
     '''
 
-    if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1:
+    def rot_phase_link(model,m,l,h,z):
+        return sum(model.v_phase_area[m,z,r,l]*model.p_hist_prov[r,h] for r in model.s_phases if ((r,)+(h,)) in params['hist_prov'].keys()) \
+                   + sum(model.v_phase_area[m,z,r,l]*model.p_hist_req[r,h] for r in model.s_phases if ((r,)+(h,)) in params['hist_req'].keys())<=0
+    model.con_rotationcon2 = Constraint(model.s_rot_periods, model.s_lmus, model.s_rotconstraints, model.s_season_types, rule=rot_phase_link, doc='rotation phases constraint')
 
-        ##steady state rotation constraint
-        def rot_phase_link(model,m,l,h,z):
-            return sum(model.v_phase_area[m,z,r,l]*model.p_hist_prov[r,h] for r in model.s_phases if ((r,)+(h,)) in params['hist_prov'].keys()) \
-                       + sum(model.v_phase_area[m,z,r,l]*model.p_hist_req[r,h] for r in model.s_phases if ((r,)+(h,)) in params['hist_req'].keys())<=0
-        model.con_rotationcon1 = Constraint(model.s_rot_periods, model.s_lmus, model.s_rotconstraints, model.s_season_types, rule=rot_phase_link, doc='rotation phases constraint')
-
-    else:
-
-        ##DSP rotation constraint
-        ##constraint for history provided to history root. This is only required in the stochastic model so that each season starts from a common place.
-        def rot_hist(model,m,l,h,z):
-            return model.v_root_hist[h,l] + sum(model.v_phase_area[m,z,r,l]*model.p_hist_prov[r,h]
-                        for r in model.s_phases if ((r,)+(h,)) in params['hist_prov'].keys())<=0
-        model.con_rot_hist = Constraint(model.s_rot_periods, model.s_lmus, model.s_rotconstraints, model.s_season_types, rule=rot_hist, doc='constraint between rotation history provided and root history')
-
-        ##constraint for history provided to history root. This is only required in the stochastic model so that each season starts from a common place.
-        def rot_phase_link(model,m,l,h,z):
-            return - model.v_root_hist[h,l] + sum(model.v_phase_area[m,z,r,l]*model.p_hist_req[r,h]
-                        for r in model.s_phases if ((r,)+(h,)) in params['hist_req'].keys())<=0
-        model.con_root2rotation = Constraint(model.s_rot_periods, model.s_lmus, model.s_rotconstraints, model.s_season_types, rule=rot_phase_link, doc='constraint between rotation history root and rotation')
 
 
 
