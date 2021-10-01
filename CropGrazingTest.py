@@ -9,6 +9,7 @@ import PropertyInputs as pinp
 import UniversalInputs as uinp
 import Periods as per
 import Functions as fun
+import SeasonalFunctions as zfun
 import Sensitivity as sen
 import CropGrazing as cgz
 
@@ -49,9 +50,9 @@ sinp.structuralsa['i_nv_upper_p6z'] = np.take_along_axis(sinp.structuralsa['i_nv
 sinp.structuralsa['i_nv_lower_p6z'] = np.take_along_axis(sinp.structuralsa['i_nv_lower_p6'][:,None],a_p6std_p6z,axis=0)
 
 nv_upper_p6fz = sinp.structuralsa['i_nv_upper_p6z'][:,None,:]
-nv_upper_p6fz = pinp.f_seasonal_inp(nv_upper_p6fz,numpy=True,axis=-1)
+nv_upper_p6fz = zfun.f_seasonal_inp(nv_upper_p6fz,numpy=True,axis=-1)
 nv_lower_p6fz = sinp.structuralsa['i_nv_lower_p6z'][:,None,:]
-nv_lower_p6fz = pinp.f_seasonal_inp(nv_lower_p6fz,numpy=True,axis=-1)
+nv_lower_p6fz = zfun.f_seasonal_inp(nv_lower_p6fz,numpy=True,axis=-1)
 nv_cutoff_lower_p6fz = nv_lower_p6fz + (
             nv_upper_p6fz - nv_lower_p6fz) / n_non_confinement_pools * index_f[:,None]
 nv_cutoff_upper_p6fz = nv_lower_p6fz + (nv_upper_p6fz - nv_lower_p6fz) / n_non_confinement_pools * (

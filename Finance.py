@@ -79,6 +79,7 @@ import StructuralInputs as sinp
 import PropertyInputs as pinp
 import Periods as per
 import Functions as fun
+import SeasonalFunctions as zfun
 
 na = np.newaxis
 #######################
@@ -230,7 +231,7 @@ def overheads(params, r_vals):
     overhead_start_c0p7z = p_dates_c0p7z[:,0:1,:]
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0']
-    keys_z = pinp.f_keys_z()
+    keys_z = zfun.f_keys_z()
     peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
     mask_cashflow_z8var_c0p7z = f_cashflow_z8z9_transfer(mask=True)
     ###call allocation/interset function - needs to be numpy
@@ -282,7 +283,7 @@ def f_cashflow_z8z9_transfer(params=None, mask=False):
     '''
 
     ##inputs
-    date_initiate_z = pinp.f_seasonal_inp(pinp.general['i_date_initiate_z'], numpy=True, axis=0).astype('datetime64')
+    date_initiate_z = zfun.f_seasonal_inp(pinp.general['i_date_initiate_z'], numpy=True, axis=0).astype('datetime64')
     bool_steady_state = pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1
     if bool_steady_state:
         len_z = 1
@@ -290,12 +291,12 @@ def f_cashflow_z8z9_transfer(params=None, mask=False):
         len_z = np.count_nonzero(pinp.general['i_mask_z'])
     index_z = np.arange(len_z)
     p_dates_c0p7z = per.f_cashflow_periods()[:,:-1,:] #slice off the end date slice
-    date_node_zm = pinp.f_seasonal_inp(pinp.general['i_date_node_zm'],numpy=True,axis=0).astype(
+    date_node_zm = zfun.f_seasonal_inp(pinp.general['i_date_node_zm'],numpy=True,axis=0).astype(
         'datetime64')  # treat z axis
 
     ##dams child parent transfer
     mask_cashflow_provz8z9_c0p7z8z9, mask_cashflow_z8var_c0p7z = \
-    fun.f_season_transfer_mask(p_dates_c0p7z, date_node_zm, date_initiate_z, index_z, bool_steady_state, z_pos=-1)
+    zfun.f_season_transfer_mask(p_dates_c0p7z, date_node_zm, date_initiate_z, index_z, bool_steady_state, z_pos=-1)
 
     if mask:
         return mask_cashflow_z8var_c0p7z
@@ -303,7 +304,7 @@ def f_cashflow_z8z9_transfer(params=None, mask=False):
     ##build params
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0']
-    keys_z = pinp.f_keys_z()
+    keys_z = zfun.f_keys_z()
 
     arrays = [keys_c0, keys_p7, keys_z, keys_z]
     index_c0p7z8z9 = fun.cartesian_product_simple_transpose(arrays)

@@ -9,6 +9,7 @@ pd.set_option('mode.chained_assignment', 'raise')
 
 #AFO modules
 import Functions as fun
+import SeasonalFunctions as zfun
 import FeedsupplyFunctions as fsfun
 import PropertyInputs as pinp
 import UniversalInputs as uinp
@@ -91,7 +92,7 @@ def crop_residue_all(params, r_vals, nv):
     ##if the end date of the fp is after harvest then stubble is available.
     fp_end_p6z = per.f_feed_periods()[1:].astype('datetime64[D]')
     fp_start_p6z = per.f_feed_periods()[:-1].astype('datetime64[D]')
-    harv_date_zk = pinp.f_seasonal_inp(pinp.crop['start_harvest_crops'].values, numpy=True, axis=1).swapaxes(0,1).astype(np.datetime64)
+    harv_date_zk = zfun.f_seasonal_inp(pinp.crop['start_harvest_crops'].values, numpy=True, axis=1).swapaxes(0,1).astype(np.datetime64)
     mask_stubble_exists_p6zk = fp_end_p6z[...,na] > harv_date_zk  #need to use the full fp array that has the end date of the last period.
 
     #############################
@@ -137,7 +138,7 @@ def crop_residue_all(params, r_vals, nv):
     n_crops = len(pinp.stubble['i_stub_landuse_idx'])
     n_comp = dmd_component_harv_ks0.shape[1]
     n_cat = 4
-    n_seasons = pinp.f_keys_z().shape[0]
+    n_seasons = zfun.f_keys_z().shape[0]
     ks0s1 = (n_crops, n_comp, n_cat)
     stub_cat_component_proportion_ks0s1 = np.zeros(ks0s1)
     for crop, crop_idx in zip(pinp.stubble['i_stub_landuse_idx'], range(n_crops)):
@@ -251,7 +252,7 @@ def crop_residue_all(params, r_vals, nv):
     keys_s1_cut2 = np.array(['a'])
     keys_s1 = pinp.stubble['stub_cat_idx']
     keys_f  = np.array(['nv{0}' .format(i) for i in range(len_nv)])
-    keys_z = pinp.f_keys_z()
+    keys_z = zfun.f_keys_z()
 
 
     ##array indexes

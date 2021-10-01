@@ -26,6 +26,7 @@ from dateutil import relativedelta as rdelta
 
 #AFO modules
 import Functions as fun
+import SeasonalFunctions as zfun
 import FeedsupplyFunctions as fsfun
 import Periods as per
 import PropertyInputs as pinp
@@ -63,7 +64,7 @@ def f_buy_grain_price(r_vals):
     length = pinp.crop['i_grain_income_length']
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0']
-    keys_z = pinp.f_keys_z()
+    keys_z = zfun.f_keys_z()
     peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
     p_dates_c0p7z = per.f_cashflow_periods()
     mask_cashflow_z8var_c0p7z = fin.f_cashflow_z8z9_transfer(mask=True)
@@ -136,7 +137,7 @@ def f_sup_cost(r_vals):
     length_p6z = per.f_feed_periods(option=1)
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0']
-    keys_z = pinp.f_keys_z()
+    keys_z = zfun.f_keys_z()
     keys_p6 = pinp.period['i_fp_idx']
     peakdebt_date_c0p7zp6 = per.f_peak_debt_date()[:,na,na,na]
     p_dates_c0p7z = per.f_cashflow_periods()
@@ -294,7 +295,7 @@ def f_sup_labour():
 
     ##build df
     total_time_p5_p6zk = total_time_p5p6zk.reshape(total_time_p5p6zk.shape[0],-1)
-    keys_z = pinp.f_keys_z()
+    keys_z = zfun.f_keys_z()
     keys_p6 = pinp.period['i_fp_idx']
     cols = pd.MultiIndex.from_product([keys_p6, keys_z, total_time.columns])
     total_time_p5p6k_z = pd.DataFrame(total_time_p5_p6zk, index=lp_dates_p5z.index[:-1], columns=cols).stack([0,2])

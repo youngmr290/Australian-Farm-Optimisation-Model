@@ -15,6 +15,7 @@ import UniversalInputs as uinp
 import StructuralInputs as sinp
 import Periods as per
 import Functions as fun
+import SeasonalFunctions as zfun
 import Finance as fin
 
 
@@ -70,7 +71,7 @@ def f_labour_general(params,r_vals):
     ###########################
     
     ##season inputs through input func
-    harv_date_z = pinp.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0)
+    harv_date_z = zfun.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0)
 
     ##initialise period data
     lp_p5z = per.f_p_dates_df().values
@@ -117,11 +118,11 @@ def f_labour_general(params,r_vals):
     cas_weekend_p5z = (lp_len_p5z) * 2/7
 
     ##set up stuff to calc hours work per period be each source
-    seed_period_lengths_pz = pinp.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
+    seed_period_lengths_pz = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
     seeding_start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
     seeding_end_z = seeding_start_z + np.sum(seed_period_lengths_pz, axis=0).astype('timedelta64[D]')
     seeding_occur_p5z =  np.logical_and(seeding_start_z <= lp_start_p5z, lp_start_p5z < seeding_end_z)
-    harv_period_lengths_pz = pinp.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1)
+    harv_period_lengths_pz = zfun.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1)
     harv_start_z = harv_date_z.astype(np.datetime64)
     harv_end_z = harv_start_z + np.sum(harv_period_lengths_pz, axis=0).astype('timedelta64[D]')
     harv_occur_p5z =  np.logical_and(harv_start_z <= lp_start_p5z, lp_start_p5z < harv_end_z)
@@ -218,7 +219,7 @@ def f_labour_general(params,r_vals):
     ##keys
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0']
-    keys_z = pinp.f_keys_z()
+    keys_z = zfun.f_keys_z()
     keys_p5 = np.asarray(per.f_p_dates_df().index[:-1]).astype('str')
 
     ##index
@@ -281,7 +282,7 @@ def f_perm_cost(params, r_vals):
     ##keys
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0']
-    keys_z = pinp.f_keys_z()
+    keys_z = zfun.f_keys_z()
 
     arrays = [keys_c0, keys_p7, keys_z]
     index_c0p7z = fun.cartesian_product_simple_transpose(arrays)

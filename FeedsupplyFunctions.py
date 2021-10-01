@@ -7,6 +7,7 @@ import numpy as np
 import math
 
 import Functions as fun
+import SeasonalFunctions as zfun
 import PropertyInputs as pinp
 import UniversalInputs as uinp
 import Periods as per
@@ -153,8 +154,8 @@ def f_foo_convert(cu3, cu4, foo, pasture_stage, legume=0, cr=None, z_pos=-1, tre
     hf = f_hf(hr, cr)
     ##apply z treatment
     if treat_z:
-        foo_shears = pinp.f_seasonal_inp(foo_shears,numpy=True,axis=z_pos)
-        hf = pinp.f_seasonal_inp(hf,numpy=True,axis=z_pos)
+        foo_shears = zfun.f_seasonal_inp(foo_shears,numpy=True,axis=z_pos)
+        hf = zfun.f_seasonal_inp(hf,numpy=True,axis=z_pos)
     return foo_shears, hf
 
 def f_ra_cs(foo, hf, cr=None, zf=1):
@@ -312,7 +313,7 @@ def f_fp_z8z9_transfer(params=None, mask=False):
     Thus these params get used in pasture, stubble and crop grazing.'''
 
     ##inputs
-    date_initiate_z = pinp.f_seasonal_inp(pinp.general['i_date_initiate_z'], numpy=True, axis=0).astype('datetime64')
+    date_initiate_z = zfun.f_seasonal_inp(pinp.general['i_date_initiate_z'], numpy=True, axis=0).astype('datetime64')
     bool_steady_state = pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1
     if bool_steady_state:
         len_z = 1
@@ -320,19 +321,19 @@ def f_fp_z8z9_transfer(params=None, mask=False):
         len_z = np.count_nonzero(pinp.general['i_mask_z'])
     index_z = np.arange(len_z)
     fp_dates_p6z = per.f_feed_periods()[:-1,:] #slice off the end date slice
-    date_node_zm = pinp.f_seasonal_inp(pinp.general['i_date_node_zm'],numpy=True,axis=0).astype(
+    date_node_zm = zfun.f_seasonal_inp(pinp.general['i_date_node_zm'],numpy=True,axis=0).astype(
         'datetime64')  # treat z axis
 
     ##dams child parent transfer
     mask_fp_provz8z9_p6z8z9, mask_fp_z8var_p6z = \
-    fun.f_season_transfer_mask(fp_dates_p6z, date_node_zm, date_initiate_z, index_z, bool_steady_state, z_pos=-1)
+    zfun.f_season_transfer_mask(fp_dates_p6z, date_node_zm, date_initiate_z, index_z, bool_steady_state, z_pos=-1)
 
     if mask:
         return mask_fp_z8var_p6z
 
     ##build params
     keys_p6 = np.asarray(pinp.period['i_fp_idx'])
-    keys_z = pinp.f_keys_z()
+    keys_z = zfun.f_keys_z()
 
     arrays = [keys_p6, keys_z, keys_z]
     index_p6z8z9 = fun.cartesian_product_simple_transpose(arrays)

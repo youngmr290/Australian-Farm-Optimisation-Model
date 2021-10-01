@@ -35,6 +35,7 @@ import collections
 import sys,traceback
 
 import Functions as fun
+import SeasonalFunctions as zfun
 import Finance as fin
 import FeedsupplyFunctions as fsfun
 import Sensitivity as sen
@@ -222,7 +223,7 @@ def generator(params,r_vals,nv,plots = False):
     fvp2_offset_ida0e0b0xyg3 = sfun.f1_g2g(pinp.sheep['i_fvp2_offset_ig3'], 'offs', i_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
 
     ##season nodes - dvp must be added for each node (fvp is optional)
-    date_node_zm = pinp.f_seasonal_inp(pinp.general['i_date_node_zm'], numpy=True, axis=0).astype('datetime64') #treat z axis
+    date_node_zm = zfun.f_seasonal_inp(pinp.general['i_date_node_zm'], numpy=True, axis=0).astype('datetime64') #treat z axis
     date_node_zidaebxygm = fun.f_expand(date_node_zm, z_pos-1, right_pos=-1)
     len_m = date_node_zidaebxygm.shape[-1]
 
@@ -658,15 +659,15 @@ def generator(params,r_vals,nv,plots = False):
                                                                                      cr_offs,
                                                                                      z_pos=sinp.stock['i_z_pos'], treat_z=True)
     ##treat z axis (have to do it after adjusting foo)
-    legume_p6a1e1b1nwzida0e0b0xyg = pinp.f_seasonal_inp(legume_p6a1e1b1nwzida0e0b0xyg,numpy=True,axis=z_pos)
+    legume_p6a1e1b1nwzida0e0b0xyg = zfun.f_seasonal_inp(legume_p6a1e1b1nwzida0e0b0xyg,numpy=True,axis=z_pos)
     ##dmd
     paststd_dmd_p6a1e1b1j0wzida0e0b0xyg = fun.f_expand(pinp.sheep['i_paststd_dmd_p6zj0'],z_pos,move=True,source=0,
                                                        dest=2,
                                                        left_pos2=n_pos,right_pos2=z_pos,left_pos3=p_pos,
                                                        right_pos3=n_pos)  # p6 axis converted to p axis later (association section), axis order doesnt matter because sliced when used
-    paststd_dmd_p6a1e1b1j0wzida0e0b0xyg = pinp.f_seasonal_inp(paststd_dmd_p6a1e1b1j0wzida0e0b0xyg,numpy=True,axis=z_pos)
+    paststd_dmd_p6a1e1b1j0wzida0e0b0xyg = zfun.f_seasonal_inp(paststd_dmd_p6a1e1b1j0wzida0e0b0xyg,numpy=True,axis=z_pos)
     ##season type probability
-    i_season_propn_z = pinp.f_z_prob()
+    i_season_propn_z = zfun.f_z_prob()
     season_propn_zida0e0b0xyg = fun.f_expand(i_season_propn_z, z_pos)
 
     ##wind speed
@@ -677,7 +678,7 @@ def generator(params,r_vals,nv,plots = False):
     ##expected stocking density
     density_p6a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_density_p6z'], z_pos, move=True, source=0, dest=-1,
                                                   left_pos2=p_pos, right_pos2=z_pos)  # p6 axis converted to p axis later (association section)
-    density_p6a1e1b1nwzida0e0b0xyg = pinp.f_seasonal_inp(density_p6a1e1b1nwzida0e0b0xyg,numpy=True,axis=z_pos).astype(
+    density_p6a1e1b1nwzida0e0b0xyg = zfun.f_seasonal_inp(density_p6a1e1b1nwzida0e0b0xyg,numpy=True,axis=z_pos).astype(
         int)
     ##nutrition adjustment for expected stocking density
     density_nwzida0e0b0xyg1 = fun.f_expand(sinp.structuralsa['i_density_n1'][0:n_fs_dams],n_pos) # cut to the correct length based on number of nutrition options (i_len_n structural input)
@@ -1813,17 +1814,17 @@ def generator(params,r_vals,nv,plots = False):
     ##1)	Compile the standard pattern from the inputs and handle the z axis (need to apply z treatment here because a_r_zida0e0b0xyg0 didn't get the season treatment)
     ###sire
     t_feedsupply_pj0zida0e0b0xyg0 = np.moveaxis(np.moveaxis(feedsupply_options_r1j0p[a_r_zida0e0b0xyg0],-1,0),-1,1) #had to rollaxis twice once for p and once for j0 (couldn't find a way to do both at the same time)
-    t_feedsupply_pj0zida0e0b0xyg0 = pinp.f_seasonal_inp(t_feedsupply_pj0zida0e0b0xyg0,numpy=True,axis=z_pos)
+    t_feedsupply_pj0zida0e0b0xyg0 = zfun.f_seasonal_inp(t_feedsupply_pj0zida0e0b0xyg0,numpy=True,axis=z_pos)
     t_feedsupply_pa1e1b1j0wzida0e0b0xyg0 = fun.f_expand(t_feedsupply_pj0zida0e0b0xyg0, left_pos=n_pos, right_pos=z_pos, left_pos2=p_pos,right_pos2=n_pos) #add  a1,e1,b1,w axis. Note n and j are the same thing (as far a position goes)
 
     ###dams
     t_feedsupply_pj0zida0e0b0xyg1 = np.moveaxis(np.moveaxis(feedsupply_options_r1j0p[a_r_zida0e0b0xyg1],-1,0),-1,1) #had to rollaxis twice once for p and once for j0 (couldn't find a way to do both at the same time)
-    t_feedsupply_pj0zida0e0b0xyg1 = pinp.f_seasonal_inp(t_feedsupply_pj0zida0e0b0xyg1,numpy=True,axis=z_pos)
+    t_feedsupply_pj0zida0e0b0xyg1 = zfun.f_seasonal_inp(t_feedsupply_pj0zida0e0b0xyg1,numpy=True,axis=z_pos)
     t_feedsupply_pa1e1b1j0wzida0e0b0xyg1 = fun.f_expand(t_feedsupply_pj0zida0e0b0xyg1, left_pos=n_pos, right_pos=z_pos, left_pos2=p_pos,right_pos2=n_pos) #add  a1,e1,b1,w axis. Note n and j are the same thing (as far a position goes)
 
     ###offs
     t_feedsupply_pj0zida0e0b0xyg3 = np.moveaxis(np.moveaxis(feedsupply_options_r1j0p[a_r_zida0e0b0xyg3],-1,0),-1,1) #had to rollaxis twice once for p and once for j0 (couldn't find a way to do both at the same time)
-    t_feedsupply_pj0zida0e0b0xyg3 = pinp.f_seasonal_inp(t_feedsupply_pj0zida0e0b0xyg3,numpy=True,axis=z_pos)
+    t_feedsupply_pj0zida0e0b0xyg3 = zfun.f_seasonal_inp(t_feedsupply_pj0zida0e0b0xyg3,numpy=True,axis=z_pos)
     t_feedsupply_pa1e1b1j0wzida0e0b0xyg3 = fun.f_expand(t_feedsupply_pj0zida0e0b0xyg3, left_pos=n_pos, right_pos=z_pos, left_pos2=p_pos,right_pos2=n_pos, condition=mask_p_offs_p, axis=0) #add  a1,e1,b1,w axis. Note n and j are the same thing (as far a position goes), mask p axis for offs
 
     ##2) calc lsln management association based on sheep identification options (scanning vs no scanning), management practise (differential management once identifying different groups) & time of the year (eg even if you scan you still need to manage sheep the same before scanning)
@@ -4647,13 +4648,13 @@ def generator(params,r_vals,nv,plots = False):
     ##husbandry
     wool_genes_yg0, wool_genes_yg1, wool_genes_yg2, wool_genes_yg3 = sfun.f1_c2g(uinp.parameters['i_wool_genes_c2'],uinp.parameters['i_wool_genes_y'], dtype=dtype)
     mobsize_p6a1e1b1nwzida0e0b0xyg0 = fun.f_expand(pinp.sheep['i_mobsize_sire_p6zi'], i_pos, left_pos2=p_pos, right_pos2=z_pos, condition=pinp.sheep['i_masksire_i'], axis=i_pos)
-    mobsize_p6a1e1b1nwzida0e0b0xyg0 = pinp.f_seasonal_inp(mobsize_p6a1e1b1nwzida0e0b0xyg0,numpy=True,axis=z_pos)
+    mobsize_p6a1e1b1nwzida0e0b0xyg0 = zfun.f_seasonal_inp(mobsize_p6a1e1b1nwzida0e0b0xyg0,numpy=True,axis=z_pos)
     mobsize_pa1e1b1nwzida0e0b0xyg0 = np.take_along_axis(mobsize_p6a1e1b1nwzida0e0b0xyg0, a_p6_pa1e1b1nwzida0e0b0xyg,0)
     mobsize_p6a1e1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_mobsize_dams_p6zi'], i_pos, left_pos2=p_pos, right_pos2=z_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
-    mobsize_p6a1e1b1nwzida0e0b0xyg1 = pinp.f_seasonal_inp(mobsize_p6a1e1b1nwzida0e0b0xyg1,numpy=True,axis=z_pos)
+    mobsize_p6a1e1b1nwzida0e0b0xyg1 = zfun.f_seasonal_inp(mobsize_p6a1e1b1nwzida0e0b0xyg1,numpy=True,axis=z_pos)
     mobsize_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(mobsize_p6a1e1b1nwzida0e0b0xyg1,a_p6_pa1e1b1nwzida0e0b0xyg,0)
     mobsize_p6a1e1b1nwzida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_mobsize_offs_p6zi'], i_pos, left_pos2=p_pos, right_pos2=z_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
-    mobsize_p6a1e1b1nwzida0e0b0xyg3 = pinp.f_seasonal_inp(mobsize_p6a1e1b1nwzida0e0b0xyg3,numpy=True,axis=z_pos)
+    mobsize_p6a1e1b1nwzida0e0b0xyg3 = zfun.f_seasonal_inp(mobsize_p6a1e1b1nwzida0e0b0xyg3,numpy=True,axis=z_pos)
     mobsize_pa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(mobsize_p6a1e1b1nwzida0e0b0xyg3, a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p], 0)
     animal_mated_b1g1 = fun.f_expand(sinp.stock['i_mated_b1'], b1_pos)
     operations_triggerlevels_h5h7h2pg = fun.f_convert_to_inf(fun.f_expand(pinp.sheep['i_husb_operations_triggerlevels_h5h7h2'], p_pos-1,
@@ -5273,9 +5274,9 @@ def generator(params,r_vals,nv,plots = False):
 
     ##create the upper and lower cutoffs. If there is a confinement slice then it will be populated with values but they never get used.
     nv_upper_p6fpzg = fun.f_expand(sinp.structuralsa['i_nv_upper_p6z'], left_pos=z_pos, left_pos2=p_pos-2, right_pos2=z_pos)
-    nv_upper_p6fpzg = pinp.f_seasonal_inp(nv_upper_p6fpzg,numpy=True,axis=z_pos)
+    nv_upper_p6fpzg = zfun.f_seasonal_inp(nv_upper_p6fpzg,numpy=True,axis=z_pos)
     nv_lower_p6fpzg = fun.f_expand(sinp.structuralsa['i_nv_lower_p6z'], left_pos=z_pos, left_pos2=p_pos-2, right_pos2=z_pos)
-    nv_lower_p6fpzg = pinp.f_seasonal_inp(nv_lower_p6fpzg,numpy=True,axis=z_pos)
+    nv_lower_p6fpzg = zfun.f_seasonal_inp(nv_lower_p6fpzg,numpy=True,axis=z_pos)
     nv_cutoff_lower_p6fpzg = nv_lower_p6fpzg + (nv_upper_p6fpzg - nv_lower_p6fpzg)/n_non_confinement_pools * index_fpa1e1b1nwzida0e0b0xyg
     nv_cutoff_upper_p6fpzg = nv_lower_p6fpzg + (nv_upper_p6fpzg - nv_lower_p6fpzg)/n_non_confinement_pools * (index_fpa1e1b1nwzida0e0b0xyg + 1)
     ###Average these values to be passed to Pasture.py for efficiency of utilising ME and add to the dict
@@ -5758,13 +5759,13 @@ def generator(params,r_vals,nv,plots = False):
     if a season is identified in a given dvp it provides to multiple z slices in the next dvp.'''
 
     ##inputs
-    date_initiate_z = pinp.f_seasonal_inp(pinp.general['i_date_initiate_z'], numpy=True, axis=0).astype('datetime64')
+    date_initiate_z = zfun.f_seasonal_inp(pinp.general['i_date_initiate_z'], numpy=True, axis=0).astype('datetime64')
     date_initiate_zidaebxyg = fun.f_expand(date_initiate_z, z_pos)
     index_zidaebxyg = fun.f_expand(index_z, z_pos)
 
     ##dams child parent transfer
     mask_param_provz8z9_va1e1b1nwzida0e0b0xyg1z9, mask_z8var_va1e1b1nwzida0e0b0xyg1 = \
-    fun.f_season_transfer_mask(dvp_start_va1e1b1nwzida0e0b0xyg1, date_node_zidaebxygm, date_initiate_zidaebxyg, index_zidaebxyg, bool_steady_state, z_pos)
+    zfun.f_season_transfer_mask(dvp_start_va1e1b1nwzida0e0b0xyg1, date_node_zidaebxygm, date_initiate_zidaebxyg, index_zidaebxyg, bool_steady_state, z_pos)
     ###create z8z9 param that is index with v
     ####cluster e and b (e axis is active from the dvp dates)
     mask_param_provz8z9_k2tva1e1b1nwzida0e0b0xyg1z9 = 1 * (np.sum(mask_param_provz8z9_va1e1b1nwzida0e0b0xyg1z9
@@ -5773,7 +5774,7 @@ def generator(params,r_vals,nv,plots = False):
 
     ##offs child parent transfer
     mask_param_provz8z9_va1e1b1nwzida0e0b0xyg3z9, mask_z8var_va1e1b1nwzida0e0b0xyg3 = \
-    fun.f_season_transfer_mask(dvp_start_va1e1b1nwzida0e0b0xyg3, date_node_zidaebxygm, date_initiate_zidaebxyg, index_zidaebxyg, bool_steady_state, z_pos)
+    zfun.f_season_transfer_mask(dvp_start_va1e1b1nwzida0e0b0xyg3, date_node_zidaebxygm, date_initiate_zidaebxyg, index_zidaebxyg, bool_steady_state, z_pos)
     ###create z8z9 param that is index with v
     ####cluster d (d axis is active from the dvp dates)
     mask_param_provz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9 = 1 * (np.sum(mask_param_provz8z9_va1e1b1nwzida0e0b0xyg3z9
@@ -6603,7 +6604,7 @@ def generator(params,r_vals,nv,plots = False):
     dsehd_p6tva1e1b1nwzida0e0b0xyg3 = nw_ave_p6tva1e1b1nwzida0e0b0xyg3 / pinp.sheep['i_dse_nw']**0.75
     ####account for b1 axis effect on dse & select the dse group (note sire and offs don't have b1 axis so simple slice)
     dse_group_dp6tva1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_dse_group'], z_pos, left_pos2=p_pos - 2, right_pos2=z_pos)
-    dse_group_dp6tva1e1b1nwzida0e0b0xyg = pinp.f_seasonal_inp(dse_group_dp6tva1e1b1nwzida0e0b0xyg, numpy=True, axis=z_pos)
+    dse_group_dp6tva1e1b1nwzida0e0b0xyg = zfun.f_seasonal_inp(dse_group_dp6tva1e1b1nwzida0e0b0xyg, numpy=True, axis=z_pos)
     a_dams_dsegroup_b1nwzida0e0b0xyg = fun.f_expand(sinp.stock['ia_dams_dsegroup_b1'], b1_pos)
     dsenw_p6tva1e1b1nwzida0e0b0xyg0 = dsehd_p6tva1e1b1nwzida0e0b0xyg0 * dse_group_dp6tva1e1b1nwzida0e0b0xyg[sinp.stock['ia_sire_dsegroup']]
     dsenw_p6tva1e1b1nwzida0e0b0xyg1 = dsehd_p6tva1e1b1nwzida0e0b0xyg1 * np.take_along_axis(dse_group_dp6tva1e1b1nwzida0e0b0xyg, a_dams_dsegroup_b1nwzida0e0b0xyg[na,na,na,na,na,na],0)[0,...] #take along the dse group axis and remove the d axis from the front
@@ -6693,7 +6694,7 @@ def generator(params,r_vals,nv,plots = False):
     keys_y1 = uinp.parameters['i_y_idx_dams'][uinp.parameters['i_mask_y']]
     keys_y3 = uinp.parameters['i_y_idx_offs'][uinp.parameters['i_mask_y']]
     keys_x = pinp.sheep['i_x_idx'][mask_x]
-    keys_z = pinp.f_keys_z()
+    keys_z = zfun.f_keys_z()
     ##save k2 set for pyomo - required because this can't easily be built without information in this module
     params['a_idx'] = keys_a
     params['d_idx'] = keys_d
@@ -7341,7 +7342,7 @@ def generator(params,r_vals,nv,plots = False):
 
     ##winter grazed propn - indicates the propn of the DSE in each FP that is used to calculate total DSE for SR
     tup_p6z = tuple(map(tuple, index_p6z))
-    wg_propn_p6z = pinp.f_seasonal_inp(pinp.sheep['i_wg_propn_p6z'], numpy=True, axis=-1)
+    wg_propn_p6z = zfun.f_seasonal_inp(pinp.sheep['i_wg_propn_p6z'], numpy=True, axis=-1)
     params['p_wg_propn_p6z'] = dict(zip(tup_p6z,wg_propn_p6z))
 
     ##season transfer masks

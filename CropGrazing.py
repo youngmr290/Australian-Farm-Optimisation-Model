@@ -21,7 +21,8 @@ import UniversalInputs as uinp
 import Periods as per
 import FeedsupplyFunctions as fsfun
 import Functions as fun
-import Phase as phs
+import SeasonalFunctions as zfun
+import RotationPhases as rps
 
 
 na = np.newaxis
@@ -86,10 +87,10 @@ def f_cropgraze_DM(total_DM=False):
     '''
     ##read inputs
     lmu_mask = pinp.general['i_lmu_area'] > 0
-    growth_kp6z = pinp.f_seasonal_inp(np.moveaxis(pinp.cropgraze['i_crop_growth_zkp6'], source=0, destination=-1),numpy=True,axis=-1)
+    growth_kp6z = zfun.f_seasonal_inp(np.moveaxis(pinp.cropgraze['i_crop_growth_zkp6'], source=0, destination=-1),numpy=True,axis=-1)
     wastage_k = pinp.cropgraze['i_cropgraze_wastage']
     growth_lmu_factor_kl = pinp.cropgraze['i_cropgrowth_lmu_factor_kl'][:,lmu_mask]
-    consumption_factor_p6z = pinp.f_seasonal_inp(pinp.cropgraze['i_cropgraze_consumption_factor_zp6'],numpy=True,axis=0).T
+    consumption_factor_p6z = zfun.f_seasonal_inp(pinp.cropgraze['i_cropgraze_consumption_factor_zp6'],numpy=True,axis=0).T
     date_feed_periods = per.f_feed_periods()
     date_start_p6z = date_feed_periods[:-1]
     date_end_p6z = date_feed_periods[1:]
@@ -115,7 +116,7 @@ def f_cropgraze_DM(total_DM=False):
         ##calc dry matter available for consumption provided by 1ha of crop
         crop_DM_provided_kp6zl = total_dm_growth_kp6zl * consumption_factor_p6z[:,:,na]
         ###add m axis (rotation period) - this is used to ensure the same rotation in each m slice only provides the ability to graze crops in the corresponding p6
-        alloc_mp6z = phs.f1_rot_period_alloc(date_start_p6z[na,:,:], length_p6z[na,:,:], z_pos=-1)
+        alloc_mp6z = rps.f1_rot_period_alloc(date_start_p6z[na,:,:], length_p6z[na,:,:], z_pos=-1)
         crop_DM_provided_mkp6zl = crop_DM_provided_kp6zl * alloc_mp6z[:,na,:,:,na]
 
         ##calc DM removal when animals consume 1t - accounts for wastage and trampling
@@ -156,9 +157,9 @@ def f_DM_reduction_seeding_time():
     seeding_start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
     establishment_days = pinp.cropgraze['i_cropgraze_defer_days'] #days between sowing and grazing
     lmu_mask = pinp.general['i_lmu_area'] > 0
-    growth_kp6z = pinp.f_seasonal_inp(np.moveaxis(pinp.cropgraze['i_crop_growth_zkp6'], source=0, destination=-1),numpy=True,axis=-1)
+    growth_kp6z = zfun.f_seasonal_inp(np.moveaxis(pinp.cropgraze['i_crop_growth_zkp6'], source=0, destination=-1),numpy=True,axis=-1)
     growth_lmu_factor_kl = pinp.cropgraze['i_cropgrowth_lmu_factor_kl'][:,lmu_mask]
-    consumption_factor_p6z = pinp.f_seasonal_inp(pinp.cropgraze['i_cropgraze_consumption_factor_zp6'],numpy=True,axis=0).T
+    consumption_factor_p6z = zfun.f_seasonal_inp(pinp.cropgraze['i_cropgraze_consumption_factor_zp6'],numpy=True,axis=0).T
 
 
     crop_grazing_start_z = seeding_start_z + establishment_days
@@ -203,7 +204,7 @@ def crop_md_vol(nv):
     '''
 
     ##inputs
-    crop_dmd_kp6z = pinp.f_seasonal_inp(pinp.cropgraze['i_crop_dmd_kp6z'],numpy=True,axis=-1)
+    crop_dmd_kp6z = zfun.f_seasonal_inp(pinp.cropgraze['i_crop_dmd_kp6z'],numpy=True,axis=-1)
     crop_foo_kp6zl = f_cropgraze_DM(total_DM=True)
     hr = pinp.cropgraze['i_hr_crop']
     me_threshold_fp6z = np.swapaxes(nv['nv_cutoff_ave_p6fz'], axis1=0, axis2=1)
@@ -257,7 +258,7 @@ def f_cropgraze_yield_penalty():
     ##inputs
     cropgraze_landuse_idx_k = pinp.cropgraze['i_cropgraze_landuse_idx']
     stubble_per_grain_k3 = stub.f_cropresidue_production()
-    yield_reduction_propn_kp6z = pinp.f_seasonal_inp(pinp.cropgraze['i_cropgraze_yield_reduction_kp6z'], numpy=True, axis=-1)
+    yield_reduction_propn_kp6z = zfun.f_seasonal_inp(pinp.cropgraze['i_cropgraze_yield_reduction_kp6z'], numpy=True, axis=-1)
     proportion_grain_harv_k = pd.Series(pinp.stubble['proportion_grain_harv'], index=pinp.stubble['i_stub_landuse_idx'])
 
     ##correct stubble k axis (k axis needs to be in the correct order and contain all crops so that numpy arrays align).
@@ -296,11 +297,11 @@ def f1_cropgraze_params(params, r_vals, nv):
     lmu_mask = pinp.general['i_lmu_area'] > 0
     keys_l = pinp.general['i_lmu_idx'][lmu_mask]
     keys_k = pinp.cropgraze['i_cropgraze_landuse_idx']
-    keys_m = phs.f1_rot_period_alloc(keys=True)
+    keys_m = rps.f1_rot_period_alloc(keys=True)
     keys_p6 = pinp.period['i_fp_idx']
     keys_p5 = np.asarray(per.f_p_dates_df().index[:-1]).astype('str')
     keys_f  = np.array(['nv{0}' .format(i) for i in range(nv['len_nv'])])
-    keys_z = pinp.f_keys_z()
+    keys_z = zfun.f_keys_z()
 
     ##array indexes
     ###rkl

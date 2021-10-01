@@ -26,6 +26,7 @@ import UniversalInputs as uinp
 import StructuralInputs as sinp
 import PropertyInputs as pinp
 import Periods as per
+import SeasonalFunctions as zfun
 
 
 '''
@@ -45,7 +46,7 @@ def sets(model, nv):
     model.s_season_types = Set(initialize=z_keys, doc='season types')
 
     ##season prob - this is used in lots of modules so just built here
-    z_prob = dict(zip(z_keys, pinp.f_z_prob()))
+    z_prob = dict(zip(z_keys, zfun.f_z_prob()))
     model.p_z_prob = Param(model.s_season_types, initialize=z_prob, default=0.0, mutable=False, doc='probability of each season')
 
     #######################

@@ -29,6 +29,7 @@ import functions from other modules
 import numpy as np
 
 import Functions as fun
+import SeasonalFunctions as zfun
 import FeedsupplyFunctions as fsfun
 import PropertyInputs as pinp
 import StockFunctions as sfun
@@ -162,22 +163,22 @@ def feed_generator():
                                                                                      cr_dams,
                                                                                      z_pos=sinp.stock['i_z_pos'], treat_z=True)
     ##treat z axis (have to do it after adjusting foo)
-    legume_p6a1e1b1nwzida0e0b0xyg = pinp.f_seasonal_inp(legume_p6a1e1b1nwzida0e0b0xyg,numpy=True,axis=z_pos)
+    legume_p6a1e1b1nwzida0e0b0xyg = zfun.f_seasonal_inp(legume_p6a1e1b1nwzida0e0b0xyg,numpy=True,axis=z_pos)
     ##dmd
     paststd_dmd_p6a1e1b1j0wzida0e0b0xyg = fun.f_expand(pinp.sheep['i_paststd_dmd_p6zj0'],z_pos,move=True,source=0,
                                                        dest=2,
                                                        left_pos2=n_pos,right_pos2=z_pos,left_pos3=p_pos,
                                                        right_pos3=n_pos)  # p6 axis converted to p axis later (association section), axis order doesnt matter because sliced when used
-    paststd_dmd_p6a1e1b1j0wzida0e0b0xyg = pinp.f_seasonal_inp(paststd_dmd_p6a1e1b1j0wzida0e0b0xyg,numpy=True,axis=z_pos)
+    paststd_dmd_p6a1e1b1j0wzida0e0b0xyg = zfun.f_seasonal_inp(paststd_dmd_p6a1e1b1j0wzida0e0b0xyg,numpy=True,axis=z_pos)
     ##season type probability - prob and z mask are accounted for in f_season
 #    i_season_propn_z = fun.f_expand(np.ones_like(pinp.general['i_season_propn_z']),z_pos)
-#    season_propn_zida0e0b0xyg = pinp.f_seasonal_inp(i_season_propn_z,numpy=True,axis=z_pos)
+#    season_propn_zida0e0b0xyg = zfun.f_seasonal_inp(i_season_propn_z,numpy=True,axis=z_pos)
     ##wind speed
 #    ws_p4a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_ws_p4'],p_pos)
     ##expected stocking density
 #    density_p6a1e1b1nwzida0e0b0xyg = fun.f_expand(pinp.sheep['i_density_p6z'],z_pos,source=0,dest=-1,
 #                                                  left_pos2=p_pos, right_pos2=z_pos)  # p6 axis converted to p axis later (association section)
-#    density_p6a1e1b1nwzida0e0b0xyg = pinp.f_seasonal_inp(density_p6a1e1b1nwzida0e0b0xyg,numpy=True,axis=z_pos).astype(int)
+#    density_p6a1e1b1nwzida0e0b0xyg = zfun.f_seasonal_inp(density_p6a1e1b1nwzida0e0b0xyg,numpy=True,axis=z_pos).astype(int)
     ##nutrition adjustment for expected stocking density
 #    density_nwzida0e0b0xyg1 = fun.f_expand(sinp.stock['i_density_n1'],n_pos)
 #    density_nwzida0e0b0xyg3 = fun.f_expand(sinp.stock['i_density_n3'],n_pos)

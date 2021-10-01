@@ -52,9 +52,11 @@ import UniversalInputs as uinp
 import StructuralInputs as sinp
 import PropertyInputs as pinp
 import Functions as fun
+import SeasonalFunctions as zfun
 import Periods as per
-import Mach as mac
 import Finance as fin
+import Mach as mac
+import RotationPhases as rps
 
 ####################
 #general functions #
@@ -98,72 +100,6 @@ def f1_rot_check():
                    1. if you have generated new rotations have you re-run AusFarm?
                    2. the named ranges in for the user defined rotations and inputs are all correct''')
             sys.exit()
-
-def f1_rot_period_alloc(item_start=0, item_length=np.timedelta64(1, 'D'), z_pos=0, keys=False):
-    '''
-    Allocation of item into rotation periods (m).
-
-    - Arrays must be numpy and broadcastable.
-    - M axis must be in pos 0
-    - item start must contain all axes (including z and m)
-
-    :param item_start: datetime64 item dates which are allocated into rotation periods. MUST contain all axis of the final array (singleton is fine)
-    :param item_length: datetime64
-    :param z_pos:
-    :param keys: Boolean if True this returns the m keys
-    :return:
-    '''
-    date_node_zm = pinp.f_seasonal_inp(pinp.general['i_date_node_zm'],numpy=True,axis=0).astype('datetime64')  # treat z axis
-    if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1:
-        date_node_zm = date_node_zm[:,0] #if steady state then m axis is singleton (start and finish at the break of season).
-    ###add end date of last node period - required for the allocation function
-    end_zm = date_node_zm[:,0:1] + np.timedelta64(365, 'D')  # increment the first date by 1yr so it becomes the end date for the last period
-    ###add dummy period - this is a 0 day period that exists for dry seeding. Nothing is allocated into it.
-    start_zm = date_node_zm[:,0:1]
-    date_node_mz = np.concatenate([start_zm, date_node_zm, end_zm], axis=1).T #put m in pos 0 because that how the allocation function requires
-    len_m = date_node_mz.shape[0] - 1 #minus one because end date is not a period
-
-    ##return keys if wanted
-    if keys:
-        keys_m = np.array(['m%s' % i for i in range(len_m)])
-        return keys_m
-
-    ##align axes
-    m_pos = -item_start.ndim
-    date_node_metc = fun.f_expand(date_node_mz, left_pos=z_pos, right_pos2=z_pos, left_pos2=m_pos)
-    shape = (len_m,) + tuple(np.maximum.reduce([date_node_metc.shape[1:], item_start.shape[1:]]))  # create shape which has the max size, this is used for o array
-    alloc_metc = fun.range_allocation_np(date_node_metc, item_start, item_length, opposite=True, shape=shape)
-    return alloc_metc
-
-
-def f_v_phase_increment_adj(param, m_pos, numpy=False):
-    '''
-    Adjust v_phase param for v_phase_increment.
-
-    v_phase_increment must incur the requirement to date for labour and cash for the phase.
-    This is making the assumption that any jobs carried out and any expenditure
-    (fertiliser or chemical applied) will be applied even though the phase is selected later in the year.
-    This stops the optimisation selecting the phase in the last node and receiving the income without
-    incurring any costs. Note: Yield and stubble do not require increment params because it is not possible to harvest a
-    rotation before the rotation is selected.
-
-    '''
-
-    param_increment = np.roll(np.cumsum(param.values, axis=m_pos),1, axis=m_pos) #include .values incase df is passed.
-    slc = [slice(None)] * len(param_increment.shape)
-    slc[m_pos] = slice(0,1)
-    param_increment[tuple(slc)] = 0
-
-    if not numpy:
-        index = param.index
-        cols = param.columns
-        param_increment = pd.DataFrame(param_increment, index=index, columns=cols)
-
-    return param_increment
-
-
-
-
 
 
 ########################
@@ -231,7 +167,7 @@ def f_grain_price(r_vals):
     length = pinp.crop['i_grain_income_length']
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0']
-    keys_z = pinp.f_keys_z()
+    keys_z = zfun.f_keys_z()
     peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
     p_dates_c0p7z = per.f_cashflow_periods()
     mask_cashflow_z8var_c0p7z = fin.f_cashflow_z8z9_transfer(mask=True)
@@ -305,7 +241,7 @@ def f_rot_yield(for_stub=False, for_insurance=False):
     if pinp.crop['user_crop_rot']:
         ### User defined
         base_yields = pinp.crop['yields']
-        base_yields = pinp.f_seasonal_inp(base_yields, axis=1)
+        base_yields = zfun.f_seasonal_inp(base_yields, axis=1)
         base_yields = base_yields.set_index([phases_df.index, phases_df.iloc[:,-1]])
     else:
         ### AusFarm ^need to add code for ausfarm inputs
@@ -324,11 +260,11 @@ def f_rot_yield(for_stub=False, for_insurance=False):
     yields_rkl_z = yields_rkz_l.stack().unstack(2)
 
     ##add rotation period axis - if a rotation exists at the begining of harvest it provides grain and requires harvesting.
-    harv_start_date_z = pinp.f_seasonal_inp(pinp.period['harv_date'],numpy=True,axis=0).astype('datetime64')
-    alloc_mz = f1_rot_period_alloc(harv_start_date_z[na,...], z_pos=-1)
+    harv_start_date_z = zfun.f_seasonal_inp(pinp.period['harv_date'],numpy=True,axis=0).astype('datetime64')
+    alloc_mz = rps.f1_rot_period_alloc(harv_start_date_z[na,...], z_pos=-1)
     ###convert to df
-    keys_z = pinp.f_keys_z()
-    keys_m = f1_rot_period_alloc(keys=True)
+    keys_z = zfun.f_keys_z()
+    keys_m = rps.f1_rot_period_alloc(keys=True)
     new_index_mz = pd.MultiIndex.from_product([keys_m, keys_z])
     alloc_mz = pd.Series(alloc_mz.ravel(), index=new_index_mz)
     ###mul m allocation with cost
@@ -394,7 +330,7 @@ def f1_fert_cost_allocation():
     length_df = pinp.crop['fert_info']['app_len'] #needed for allocation func
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0']
-    keys_z = pinp.f_keys_z()
+    keys_z = zfun.f_keys_z()
     peakdebt_date_c0p7zn = per.f_peak_debt_date()[:,na,na,na]
     ##calc interest and allocate to cash period - needs to be numpy
     p_dates_c0p7z = per.f_cashflow_periods()
@@ -439,7 +375,7 @@ def f_fert_req():
         ### User defined
         base_fert = pinp.crop['fert']
         base_fert = base_fert.T.set_index(['fert'], append=True).T.astype(float)
-        base_fert = pinp.f_seasonal_inp(base_fert, axis=1)
+        base_fert = zfun.f_seasonal_inp(base_fert, axis=1)
         base_fert=base_fert.set_index([phases_df.index,phases_df.iloc[:,-1]])
     else:        
         ### AusFarm ^need to add code for ausfarm inputs
@@ -449,7 +385,7 @@ def f_fert_req():
     base_fert.index.rename(['rot','landuse'],inplace=True)
     ##add the fixed fert - currently this does not have season axis so need to reindex to add season axis
     fixed_fert = pinp.crop['fixed_fert']
-    keys_z = pinp.f_keys_z()
+    keys_z = zfun.f_keys_z()
     columns = pd.MultiIndex.from_product([keys_z, fixed_fert.columns])
     fixed_fert = fixed_fert.reindex(columns, axis=1, level=1)
     base_fert = pd.merge(base_fert, fixed_fert, how='left', left_on='landuse', right_index = True)
@@ -484,7 +420,7 @@ def f_fert_passes():
         ### User defined
         fert_passes = pinp.crop['fert_passes']
         fert_passes = fert_passes.T.set_index(['passes'], append=True).T.astype(float)
-        fert_passes = pinp.f_seasonal_inp(fert_passes, axis=1)
+        fert_passes = zfun.f_seasonal_inp(fert_passes, axis=1)
         fert_passes = fert_passes.set_index([phases_df.index, phases_df.iloc[:,-1]])  #make the rotation and current landuse the index
     else:
         ### AusFarm
@@ -494,7 +430,7 @@ def f_fert_passes():
     fert_passes.index.rename(['rot','landuse'],inplace=True)
     ####add the fixed fert
     fixed_fert_passes = pinp.crop['fixed_fert_passes']
-    keys_z = pinp.f_keys_z()
+    keys_z = zfun.f_keys_z()
     columns = pd.MultiIndex.from_product([keys_z, fixed_fert_passes.columns])
     fixed_fert_passes = fixed_fert_passes.reindex(columns, axis=1, level=1)
     fert_passes = pd.merge(fert_passes, fixed_fert_passes, how='left', left_on='landuse', right_index = True)
@@ -752,7 +688,7 @@ def f_phase_stubble_cost(r_vals):
     length = pinp.mach['stub_handling_length'] #needed for allocation func
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0']
-    keys_z = pinp.f_keys_z()
+    keys_z = zfun.f_keys_z()
     peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
     p_dates_c0p7z = per.f_cashflow_periods()
     mask_cashflow_z8var_c0p7z = fin.f_cashflow_z8z9_transfer(mask=True)
@@ -787,7 +723,7 @@ def f1_chem_cost_allocation():
     length_df = pinp.crop['chem_info']['app_len'] #needed for allocation func
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0']
-    keys_z = pinp.f_keys_z()
+    keys_z = zfun.f_keys_z()
     peakdebt_date_c0p7zn = per.f_peak_debt_date()[:,na,na,na]
     ##calc interest and allocate to cash period - needs to be numpy
     p_dates_c0p7z = per.f_cashflow_periods()
@@ -831,7 +767,7 @@ def f_chem_application():
         ### User defined
         base_chem = pinp.crop['chem']
         base_chem = base_chem.T.set_index(['chem'], append=True).T.astype(float)
-        base_chem = pinp.f_seasonal_inp(base_chem, axis=1)
+        base_chem = zfun.f_seasonal_inp(base_chem, axis=1)
         base_chem = base_chem.set_index([phases_df.index, phases_df.iloc[:,-1]])  #make the current landuse the index
     else:
         ### AusFarm ^need to add code for ausfarm inputs
@@ -941,8 +877,7 @@ def f_seedcost(r_vals):
     phases_df3.columns = pd.MultiIndex.from_product([phases_df3.columns,[''],[''],['']])  # make the df multi index so that when it merges with other df below the indexs remanin separate (otherwise it turn into a one leveled tuple)
 
     ##seasonal inputs
-    seed_period_lengths = pinp.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
-    i_z_idx = pinp.f_keys_z()
+    seed_period_lengths = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
     ##inputs
     seeding_rate = pinp.crop['seeding_rate']
     seeding_cost = pinp.crop['seed_info']['Seed cost'] #this is 0 if the seed is sourced from last yrs crop ie cost is accounted for by minusing from the yield
@@ -973,7 +908,7 @@ def f_seedcost(r_vals):
     length_z = np.sum(seed_period_lengths, axis=0)
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0']
-    keys_z = pinp.f_keys_z()
+    keys_z = zfun.f_keys_z()
     peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
     p_dates_c0p7z = per.f_cashflow_periods()
     mask_cashflow_z8var_c0p7z = fin.f_cashflow_z8z9_transfer(mask=True)
@@ -1023,7 +958,7 @@ def f_insurance(r_vals):
     start = np.array([uinp.price['crp_insurance_date']]).astype('datetime64')
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0']
-    keys_z = pinp.f_keys_z()
+    keys_z = zfun.f_keys_z()
     peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
     p_dates_c0p7z = per.f_cashflow_periods()
     mask_cashflow_z8var_c0p7z = fin.f_cashflow_z8z9_transfer(mask=True)
@@ -1076,11 +1011,11 @@ def f1_rot_cost(r_vals):
     p7_dates_c0p7z = per.f_cashflow_periods()
     p7_start_dates_c0p7z = p7_dates_c0p7z[:,0:-1,:]
     p7_len_c0p7z = p7_dates_c0p7z[:,1:,:] - p7_dates_c0p7z[:,0:-1,:]
-    alloc_mc0p7z = f1_rot_period_alloc(p7_start_dates_c0p7z[na,...], p7_len_c0p7z[na,...], z_pos=-1)
+    alloc_mc0p7z = rps.f1_rot_period_alloc(p7_start_dates_c0p7z[na,...], p7_len_c0p7z[na,...], z_pos=-1)
     alloc_c0p7zm = np.moveaxis(alloc_mc0p7z[:,1:2,...],source=0, destination=-1) #take crp slice & move axis so m axis is at the end (required for reindeing below)
     ###convert to df
-    keys_z = pinp.f_keys_z()
-    keys_m = f1_rot_period_alloc(keys=True)
+    keys_z = zfun.f_keys_z()
+    keys_m = rps.f1_rot_period_alloc(keys=True)
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0'][1:2] #take crp slice (keeping the dim so that line below works since it mult index needs iterables)
     new_index_c0p7zm = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, keys_m])
@@ -1091,8 +1026,8 @@ def f1_rot_cost(r_vals):
     wc_c0p7zmlr = wc.reindex(new_index_c0p7zm, axis=1).mul(alloc_c0p7zm, axis=1).unstack([1,0])
 
     ##create params for v_phase_increment
-    increment_cost_c0p7zlrm = f_v_phase_increment_adj(cost_c0p7zmlr.unstack(3),m_pos=1).stack()
-    increment_wc_c0p7zlrm = f_v_phase_increment_adj(wc_c0p7zmlr.unstack(3),m_pos=1).stack()
+    increment_cost_c0p7zlrm = rps.f_v_phase_increment_adj(cost_c0p7zmlr.unstack(3),m_pos=1).stack()
+    increment_wc_c0p7zlrm = rps.f_v_phase_increment_adj(wc_c0p7zmlr.unstack(3),m_pos=1).stack()
 
     return cost_c0p7zmlr, increment_cost_c0p7zlrm, wc_c0p7zmlr, increment_wc_c0p7zlrm
 
@@ -1139,13 +1074,13 @@ def f_sow_prov():
 
     ##general info
     keys_k = np.asarray(list(sinp.landuse['All']))
-    keys_z = pinp.f_keys_z()
+    keys_z = zfun.f_keys_z()
     keys_p5 = labour_period_p5z.index[:-1]
     dry_sown_landuses = sinp.landuse['dry_sown']
     wet_sown_landuses = sinp.landuse['C'] - dry_sown_landuses #can subtract sets to return differences
 
     ##wet sowing periods
-    seed_period_lengths_pz = pinp.f_seasonal_inp(pinp.period['seed_period_lengths'],numpy=True,axis=1)
+    seed_period_lengths_pz = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'],numpy=True,axis=1)
     wet_seed_start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
     wet_seed_len_z = np.sum(seed_period_lengths_pz, axis=0).astype('timedelta64[D]')
     wet_seed_end_z = wet_seed_start_z + wet_seed_len_z
@@ -1154,11 +1089,11 @@ def f_sow_prov():
     period_is_wetseeding_p5z = period_is_wetseeding_p5z[...,na] * np.sum(keys_k[:,na] == list(wet_sown_landuses), axis=-1)
 
     ##dry sowing periods
-    dry_seed_start_z = np.datetime64(pinp.crop['dry_seed_start'])
+    dry_seed_start = np.datetime64(pinp.crop['dry_seed_start'])
     date_feed_periods = per.f_feed_periods()
     date_start_p6z = date_feed_periods[:-1]
     season_break_z = date_start_p6z[0]
-    period_is_dryseeding_p5z = (labour_period_start_p5z < season_break_z) * (labour_period_end_p5z > dry_seed_start_z)
+    period_is_dryseeding_p5z = (labour_period_start_p5z < season_break_z) * (labour_period_end_p5z > dry_seed_start)
     ###add k axis
     period_is_dryseeding_p5zk = period_is_dryseeding_p5z[...,na] * np.sum(keys_k[:,na] == list(dry_sown_landuses), axis=-1)
 
@@ -1168,8 +1103,8 @@ def f_sow_prov():
     i_reseeding_date_start_zt = np.zeros(zt, dtype = 'datetime64[D]')
     i_reseeding_date_end_zt = np.zeros(zt, dtype = 'datetime64[D]')
     for t,pasture in enumerate(pastures):
-        i_reseeding_date_start_zt[...,t] = pinp.f_seasonal_inp(pinp.pasture_inputs[pasture]['Date_Seeding'],numpy=True)
-        i_reseeding_date_end_zt[...,t] = pinp.f_seasonal_inp(pinp.pasture_inputs[pasture]['pas_seeding_end'],numpy=True)
+        i_reseeding_date_start_zt[...,t] = zfun.f_seasonal_inp(pinp.pasture_inputs[pasture]['Date_Seeding'],numpy=True)
+        i_reseeding_date_end_zt[...,t] = zfun.f_seasonal_inp(pinp.pasture_inputs[pasture]['pas_seeding_end'],numpy=True)
     period_is_passeeding_p5zt = (labour_period_start_p5z[:,:,na] < i_reseeding_date_end_zt) * (labour_period_end_p5z[:,:,na] > i_reseeding_date_start_zt)
     ###convert t axis to k
     kt = (len(keys_k), len(pastures))

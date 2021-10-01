@@ -1,37 +1,12 @@
-# -*- coding: utf-8 -*-
 """
-Created on Mon Nov 18 11:29:17 2019
-
-module: functions module - contains all the core functions that we have made
-
-Version Control:
-Version     Date        Person  Change
-1.1         10Dec19     John    xl_all_named_ranges: Commented the updates made
-                                                     removed cells temporary variable and parameters dict is updated directly from the cells read
-1.2         11Dec19     John    xl_all_named_ranges: Added handling of rangename errors. Pass over index errors that are associated with 'bad' range names
-                                                     IndexError handles when a sheet with names has been deleted (ie a sheet_name error)
-                                                     TypeError handles a name in the target sheet is #REF (ie a cell_range error)
-1.3         12Dec19     MRY     phases: Altered the phase filter to compare the landuse in the following pairs (0,1),(1,2)...(len_phase-2,len_phase-1) so the first and last year are not compared
-1.4         13Dec19     MRY     added cartesian_product_simple_transpose - a fast func for making every possibility of multiple lists
-1.5         22Dec19     John    period_allocation: simplify the function so that it doesn't redefine variable from the parameters passed
-                                range_allocation: added this function fashioned from period_allocation
-1.6         26Dec19     JMY     xl_all_named_ranges: altered 2 comments that were in the wrong position
-1.7         19Jan20     MRY     altered cost period function to handle df with undefined title - because now inputs are read in from excel the column name can vary, which it couldn't before because the df was built from dict hence column name was always 0
-
-
-Known problems:
-Fixed   Date    ID by   Problem
-
+Functions used across the model (multi module functions). These functions dont import other AFO modules
+(hence don't initialise inputs inside the function). All function parameters are passed in when calling the function.
 
 @author: young
 """
 import pandas as pd
-# import timeit
 import numpy as np
 import pickle as pkl
-# from dateutil.parser import parse
-# import itertools
-import datetime as dt
 from dateutil import relativedelta as rdelta
 import os.path
 import glob
@@ -880,49 +855,6 @@ def write_variablesummary(model, row, exp_data, obj, option=0):
                 pass
     file.close()
 
-
-def f_season_transfer_mask(period_dates, date_node_zm, date_initiate_z, index_z, bool_steady_state, z_pos):
-    '''
-
-    :param period_dates: period dates (eg dvp or cashflow)
-    :param date_node_zm: dates of the season nodes
-    :param date_initiate_z: date when each season is identified
-    :param index_z: z index
-    :param bool_steady_state: boolean stating if the trial is steady state or not
-    :param z_pos: z axis position
-    :return: within season transfer (z8z9) masks for require and provide.
-    '''
-
-    ##parent z
-    date_prev_node_zm = np.roll(date_node_zm, axis=-1, shift=1)
-    existing_season_prev_zm = np.maximum.accumulate((date_prev_node_zm==date_initiate_z[...,na]) * index_z[...,na], axis=0)
-    existing_season_prev_zm[:,...,0] = np.maximum.accumulate((date_node_zm==date_initiate_z[...,na]) * index_z[...,na], axis=0)[:,...,0] #the parent at the first node are the seasons identified by break
-    parent_z = np.max(np.maximum.accumulate(existing_season_prev_zm * (date_node_zm==date_initiate_z[...,na]), axis=0),axis=-1)
-    parent_z9 = np.moveaxis(parent_z, source=0, destination=-1)
-    identity_z8z9 = f_expand(np.identity(parent_z.shape[0]),z_pos-1, right_pos=-1)
-
-    # ##req mask. Each z8 always requires from the same z9 season eg z8[1] requires from z9[1]
-    # mask_param_reqz8z9_z8z9 = identity_z8z9
-
-    ##adjust period start dates to the base yr (dates must be between break of current season and break of next season)
-    start_of_season_z = date_node_zm[...,0]
-    end_of_season_z = start_of_season_z + np.timedelta64(364,'D') #use 364 because end date is the day before brk.
-    add_yrs = np.ceil(np.maximum(0,(start_of_season_z - period_dates).astype('timedelta64[D]').astype(int) / 365))
-    sub_yrs = np.ceil(np.maximum(0,(period_dates - end_of_season_z).astype('timedelta64[D]').astype(int) / 365))
-    adj_period_dates = period_dates + add_yrs * np.timedelta64(365, 'D') - sub_yrs * np.timedelta64(365, 'D')
-
-    ##z8 mask when season is identified
-    mask_z8var_z = np.logical_or(date_initiate_z <= adj_period_dates, bool_steady_state) #if it is steadystate then the z8 mask is just true.
-
-    ##prov mask. Parent seasons provide to child season until the child season is identified.
-    prov_self_z8z9 = mask_z8var_z[...,na] * identity_z8z9
-    prov_child_z8z9 = mask_z8var_z[...,na] * (index_z[...,na] == parent_z9)
-    mask_z9var_z9 = np.swapaxes(mask_z8var_z[...,na], z_pos-1, -1)
-    ###parent seasons only provide to child in the period prior to the child being identified
-    prov_child_z8z9 = prov_child_z8z9 * np.logical_and(np.logical_not(mask_z9var_z9), np.roll(mask_z9var_z9, shift=-1, axis=1))
-    mask_param_provz8z9_z8z9 = np.logical_or(prov_self_z8z9, prov_child_z8z9)
-
-    return mask_param_provz8z9_z8z9, mask_z8var_z
 
 
 ##########################

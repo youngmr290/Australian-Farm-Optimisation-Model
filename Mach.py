@@ -52,6 +52,7 @@ import PropertyInputs as pinp
 import StructuralInputs as sinp
 import Periods as per
 import Functions as fun
+import SeasonalFunctions as zfun
 import Finance as fin
 
 na = np.newaxis
@@ -217,7 +218,7 @@ def f_poc_grazing_days():
     total_poc_grazing_days_p6p5z = poc_grazing_days_tri_p6p5z + poc_grazing_days_rect_p6p5z
 
     total_poc_grazing_days_p6p5z = total_poc_grazing_days_p6p5z.reshape(total_poc_grazing_days_p6p5z.shape[0], -1)
-    keys_z = pinp.f_keys_z()
+    keys_z = zfun.f_keys_z()
     cols = pd.MultiIndex.from_product([mach_periods.index[:-1], keys_z])
     total_poc_grazing_days = pd.DataFrame(total_poc_grazing_days_p6p5z, index=pinp.period['i_fp_idx'], columns=cols)
     return total_poc_grazing_days.stack(0)
@@ -325,11 +326,11 @@ def f1_seed_cost_alloc():
     '''period allocation for seeding costs'''
     ##inputs
     start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
-    seed_period_lengths_p5z = pinp.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
+    seed_period_lengths_p5z = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
     length_z = np.sum(seed_period_lengths_p5z, axis=0)
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0']
-    keys_z = pinp.f_keys_z()
+    keys_z = zfun.f_keys_z()
     peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
     p_dates_c0p7z = per.f_cashflow_periods()
     mask_cashflow_z8var_c0p7z = fin.f_cashflow_z8z9_transfer(mask=True)
@@ -362,7 +363,7 @@ def f_seeding_cost(r_vals):
     ##reindex with lmu so alloc can be mul with seeding_cost_l
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0']
-    keys_z = pinp.f_keys_z()
+    keys_z = zfun.f_keys_z()
     columns = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, seeding_cost_l.index])
     seeding_cost_allocation_c0p7zl = seeding_cost_allocation_c0p7z.reindex(columns, axis=1)
     seeding_wc_allocation_c0p7zl = seeding_wc_allocation_c0p7z.reindex(columns, axis=1)
@@ -420,8 +421,8 @@ def f_sowing_timeliness_penalty(stub=False):
 
     '''
     ##inputs
-    seed_period_lengths_pz = pinp.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
-    wet_seeding_penalty_k_z = pinp.f_seasonal_inp(pinp.crop['yield_penalty_wet'], axis=1)
+    seed_period_lengths_pz = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
+    wet_seeding_penalty_k_z = zfun.f_seasonal_inp(pinp.crop['yield_penalty_wet'], axis=1)
 
     ##adjust seeding penalty - crops that are not harvested eg fodder dont have yield penalty. But do have a stubble penalty
     if stub:
@@ -450,7 +451,7 @@ def f_sowing_timeliness_penalty(stub=False):
 
     ##put into df
     penalty_pzk = penalty_pzk.reshape(penalty_pzk.shape[0], -1)
-    keys_z = pinp.f_keys_z()
+    keys_z = zfun.f_keys_z()
     cols = pd.MultiIndex.from_product([keys_z, wet_seeding_penalty_k_z.index])
     penalty = pd.DataFrame(penalty_pzk, index=mach_periods.index[:-1], columns=cols)
     return penalty.stack(1)
@@ -511,11 +512,11 @@ def f_harv_rate_period():
 
     '''
     ##season inputs through function
-    harv_start_z = pinp.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0).astype(np.datetime64) #when the first crop begins to be harvested (eg when harv periods start)
-    harv_period_lengths_z = np.sum(pinp.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1), axis=0)
+    harv_start_z = zfun.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0).astype(np.datetime64) #when the first crop begins to be harvested (eg when harv periods start)
+    harv_period_lengths_z = np.sum(zfun.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1), axis=0)
     harv_end_z = harv_start_z + harv_period_lengths_z.astype('timedelta64[D]') #when all harv is done
     start_harvest_crops = pinp.crop['start_harvest_crops']
-    start_harvest_crops_kz = pinp.f_seasonal_inp(start_harvest_crops.values, numpy=True, axis=1).astype(np.datetime64) #start harvest for each crop
+    start_harvest_crops_kz = zfun.f_seasonal_inp(start_harvest_crops.values, numpy=True, axis=1).astype(np.datetime64) #start harvest for each crop
 
     ##harv occur - note: some crops are not harvested in the early harv period
     mach_periods_start_pz = per.f_p_dates_df().values[:-1]
@@ -523,7 +524,7 @@ def f_harv_rate_period():
     harv_occur_pkz = np.logical_and(mach_periods_start_pz[:,na,:] < harv_end_z,
                                     mach_periods_end_pz[:,na,:] > start_harvest_crops_kz)
     ##make df
-    keys_z = pinp.f_keys_z()
+    keys_z = zfun.f_keys_z()
     col = pd.MultiIndex.from_product([start_harvest_crops.index, keys_z])
     harv_occur = harv_occur_pkz.reshape(harv_occur_pkz.shape[0],-1)
     harv_occur = pd.DataFrame(harv_occur, index=per.f_p_date2_df().index, columns=col)
@@ -550,8 +551,8 @@ def f_max_harv_hours():
     '''
 
     ##inputs
-    harv_start_z = pinp.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0)
-    harv_period_lengths_z = np.sum(pinp.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1), axis=0)
+    harv_start_z = zfun.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0)
+    harv_period_lengths_z = np.sum(zfun.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1), axis=0)
     harv_end_z = harv_start_z.astype('datetime64') + harv_period_lengths_z.astype('timedelta64[D]') #when all harv is done
 
     ##does any harvest occur in given period
@@ -569,11 +570,11 @@ def f1_harv_cost_alloc():
     '''allocation of harvest cost into cashflow period'''
 
     ##inputs
-    harv_start_z = pinp.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0).astype('datetime64')
-    harv_lengths_z = np.sum(pinp.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1), axis=0)
+    harv_start_z = zfun.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0).astype('datetime64')
+    harv_lengths_z = np.sum(zfun.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1), axis=0)
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0']
-    keys_z = pinp.f_keys_z()
+    keys_z = zfun.f_keys_z()
     peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
     p_dates_c0p7z = per.f_cashflow_periods()
     mask_cashflow_z8var_c0p7z = fin.f_cashflow_z8z9_transfer(mask=True)
@@ -594,7 +595,7 @@ def f1_harv_cost_alloc():
     # alloc_cz = fun.range_allocation_np(p_dates_c[...,None],harv_start_z,harv_lengths_z,True)
     # ###make it a df
     # p_name_c = per.f_cashflow_periods()['cash period']
-    # keys_z = pinp.f_keys_z()
+    # keys_z = zfun.f_keys_z()
     # alloc_cz = pd.DataFrame(alloc_cz,index=p_name_c,columns=keys_z)
     # ### drop last row, because it has na because it only contains the end date, therefore not a period
     # alloc_cz.drop(alloc_cz.tail(1).index,inplace=True)
@@ -629,7 +630,7 @@ def f_harvest_cost(r_vals):
     ##reindex with lmu so alloc can be mul with harv_cost
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0']
-    keys_z = pinp.f_keys_z()
+    keys_z = zfun.f_keys_z()
     columns = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, harv_cost_k.index])
     harv_cost_allocation_c0p7zk = harv_cost_allocation_c0p7z.reindex(columns, axis=1)
     harv_wc_allocation_c0p7zk = harv_wc_allocation_c0p7z.reindex(columns, axis=1)
@@ -673,7 +674,7 @@ def f_contract_harvest_cost(r_vals):
     ##reindex with lmu so alloc can be mul with harv_cost
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0']
-    keys_z = pinp.f_keys_z()
+    keys_z = zfun.f_keys_z()
     columns = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, contract_harv_cost_k.index])
     contract_harv_cost_allocation_c0p7zk = harv_cost_allocation_c0p7z.reindex(columns, axis=1)
     contract_harv_wc_allocation_c0p7zk = harv_wc_allocation_c0p7z.reindex(columns, axis=1)
@@ -704,7 +705,7 @@ def f_hay_making_cost():
     hay_length = pinp.crop['hay_making_len']
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0']
-    keys_z = pinp.f_keys_z()
+    keys_z = zfun.f_keys_z()
     peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
     p_dates_c0p7z = per.f_cashflow_periods()
     mask_cashflow_z8var_c0p7z = fin.f_cashflow_z8z9_transfer(mask=True)
@@ -1026,7 +1027,7 @@ def f_insurance(r_vals):
     start = np.array([uinp.mach_general['insurance_date']]).astype('datetime64')
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0']
-    keys_z = pinp.f_keys_z()
+    keys_z = zfun.f_keys_z()
     peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
     p_dates_c0p7z = per.f_cashflow_periods()
     mask_cashflow_z8var_c0p7z = fin.f_cashflow_z8z9_transfer(mask=True)

@@ -30,6 +30,7 @@ import UniversalInputs as uinp
 import StructuralInputs as sinp
 import PropertyInputs as pinp
 import Functions as fun
+import SeasonalFunctions as zfun
 
 na = np.newaxis
 
@@ -49,7 +50,7 @@ def f_cashflow_periods(pandas=False, return_keys_p7=False):
 
     ###add node dates as feed periods if dsp
     if pinp.general['i_inc_node_periods'] or np.logical_not(pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1):
-        date_node_mz = pinp.f_seasonal_inp(pinp.general['i_date_node_zm'].T, numpy=True, axis=1).astype('datetime64')
+        date_node_mz = zfun.f_seasonal_inp(pinp.general['i_date_node_zm'].T, numpy=True, axis=1).astype('datetime64')
         date_node_c0mz = date_node_mz + (np.timedelta64(365, 'D') * (date_node_mz < cashflow_date_c0[:,na,na]))
         breaks_of_season_b = np.unique(p_std_p6z[0,:]) #need all the different breaks
         breaks_of_season_c0b = breaks_of_season_b + (np.timedelta64(365, 'D') * (breaks_of_season_b < cashflow_date_c0[:,na])) #adjust the year
@@ -68,7 +69,7 @@ def f_cashflow_periods(pandas=False, return_keys_p7=False):
     if return_keys_p7:
         return keys_p7
     keys_c0 = sinp.general['i_enterprises_c0']
-    keys_z = pinp.f_keys_z()
+    keys_z = zfun.f_keys_z()
     #make df
     if pandas:
         index_c0p7 = pd.MultiIndex.from_product([keys_c0, keys_p7])
@@ -96,7 +97,7 @@ labour periods and length
 #function to determine seeding start - starts a specified number of days after season break
 #also used in mach sheet
 def f_wet_seeding_start_date():
-    seeding_after_season_start_z = pinp.f_seasonal_inp(pinp.period['seeding_after_season_start'], numpy=True, axis=0)
+    seeding_after_season_start_z = zfun.f_seasonal_inp(pinp.period['seeding_after_season_start'], numpy=True, axis=0)
     seeding_after_season_start_z = seeding_after_season_start_z.astype('timedelta64[D]')
     # seeding_after_season_start_z = seeding_after_season_start_z.astype(datetime.datetime)
     # seeding_after_season_start_z = pd.to_timedelta(seeding_after_season_start_z,unit='D')
@@ -131,13 +132,13 @@ def f_period_end_date(start, length):
 def f_p_dates_df():
     if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1:
         ##put season inputs through season input function
-        harv_date = pd.to_datetime(pinp.f_seasonal_inp(pinp.period['harv_date'],numpy=True,axis=0)[0])
-        seed_period_lengths = pinp.f_seasonal_inp(pinp.period['seed_period_lengths'],numpy=True,axis=1)[...,0]
-        harv_period_lengths = pinp.f_seasonal_inp(pinp.period['harv_period_lengths'],numpy=True,axis=1)[...,0]
+        harv_date = pd.to_datetime(zfun.f_seasonal_inp(pinp.period['harv_date'],numpy=True,axis=0)[0])
+        seed_period_lengths = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'],numpy=True,axis=1)[...,0]
+        harv_period_lengths = zfun.f_seasonal_inp(pinp.period['harv_period_lengths'],numpy=True,axis=1)[...,0]
         wet_seeding_start = pd.to_datetime(f_wet_seeding_start_date()[0])
 
         ##calc period
-        keys_z = pinp.f_keys_z()
+        keys_z = zfun.f_keys_z()
         periods = pd.DataFrame(columns=keys_z)
         #create empty list of dates to be filled by this function
         period_start_dates = []
@@ -227,7 +228,7 @@ def f_feed_periods(option=0):
         return a_p6std_p6z[:-1,:] #drop the last period since that is just the end of the final fp (not a real period)
 
     ###handle z axis
-    fp_p6z = pinp.f_seasonal_inp(fp_p6z, numpy=True, axis=1)
+    fp_p6z = zfun.f_seasonal_inp(fp_p6z, numpy=True, axis=1)
 
     ### return array of fp dates
     if option==0:
@@ -242,7 +243,7 @@ def f_feed_periods(option=0):
     # else:
     #     # fp = fp.loc[:fp.index[-2], idx[:, 'length']] #last row not included because that only contains the end date of last period
     #     fp = pinp.period['i_dsp_fp_len']
-    #     fp = pinp.f_seasonal_inp(fp, numpy=True, axis=1)
+    #     fp = zfun.f_seasonal_inp(fp, numpy=True, axis=1)
     #     return fp
 
     #     if pinp.general['steady_state']:

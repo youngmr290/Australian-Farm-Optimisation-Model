@@ -19,8 +19,9 @@ def rotation_precalcs(params, report):
     :param report: dictionary which stores all report values.
 
     '''
-    rps.rot_params(params)
-    rps.landuses_phases(params,report)
+    rps.f_rot_lmu_params(params)
+    rps.f_rot_hist_params(params)
+    rps.f_landuses_phases(params,report)
     
 def f1_rotationpyomo(params, model):
     ''' Builds pyomo variables, parameters and constraints'''
