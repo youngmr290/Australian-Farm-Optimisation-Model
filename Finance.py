@@ -282,7 +282,7 @@ def f1_cashflow_z8z9_transfer(params):
     '''
     ##get param
     p7_start_dates_c0p7z = per.f_cashflow_periods()[:,:-1,:]  # slice off the end date slice
-    mask_cashflow_provz8z9_c0p7z8z9 = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1)
+    mask_cashflow_provz8z9_c0p7z8z9 = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, period_axis_pos=1, z_pos=-1)
 
     ##build param
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)

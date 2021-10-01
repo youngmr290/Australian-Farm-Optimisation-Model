@@ -139,7 +139,7 @@ def f_parent_z(season_start_z8, date_initiate_z8, index_z8):
     return parent_z
 
 
-def f_season_transfer_mask(period_dates, z_pos, mask=False):
+def f_season_transfer_mask(period_dates, z_pos, period_axis_pos=0, mask=False):
     '''
     Seasons are masked out until the point in the year when they are identified. At the point of identification
     the parent season provides the transfer parameters to the child season. This transfering method ensures the
@@ -149,6 +149,7 @@ def f_season_transfer_mask(period_dates, z_pos, mask=False):
 
     :param period_dates: period dates (eg dvp or cashflow) without end date of last period
     :param z_pos: z axis position
+    :param period_axis_pos: axis position of the period in the period date array. (argument not required when generating mask)
     :param mask: Boolean if True the function simply returns the z8var mask.
     :return: within season transfer (z8z9) masks for require and provide.
     '''
@@ -192,7 +193,7 @@ def f_season_transfer_mask(period_dates, z_pos, mask=False):
     prov_child_z8z9 = mask_z8var_z[...,na] * (index_z[...,na] == parent_z9)
     mask_z9var_z9 = np.swapaxes(mask_z8var_z[...,na], z_pos-1, -1)
     ###parent seasons only provide to child in the period prior to the child being identified
-    prov_child_z8z9 = prov_child_z8z9 * np.logical_and(np.logical_not(mask_z9var_z9), np.roll(mask_z9var_z9, shift=-1, axis=1))
+    prov_child_z8z9 = prov_child_z8z9 * np.logical_and(np.logical_not(mask_z9var_z9), np.roll(mask_z9var_z9, shift=-1, axis=period_axis_pos))
     mask_param_provz8z9_z8z9 = np.logical_or(prov_self_z8z9, prov_child_z8z9)
 
     return mask_param_provz8z9_z8z9
