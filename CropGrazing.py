@@ -298,7 +298,7 @@ def f1_cropgraze_params(params, r_vals, nv):
     lmu_mask = pinp.general['i_lmu_area'] > 0
     keys_l = pinp.general['i_lmu_idx'][lmu_mask]
     keys_k = pinp.cropgraze['i_cropgraze_landuse_idx']
-    keys_m = rps.f1_rot_period_alloc(keys=True)
+    keys_m = per.f_phase_periods(keys=True)
     keys_p6 = pinp.period['i_fp_idx']
     keys_p5 = np.asarray(per.f_p_dates_df().index[:-1]).astype('str')
     keys_f  = np.array(['nv{0}' .format(i) for i in range(nv['len_nv'])])

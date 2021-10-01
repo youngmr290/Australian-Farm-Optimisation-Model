@@ -48,15 +48,15 @@ def f1_paspyomo_local(params, model):
     model.p_pasture_area = pe.Param(model.s_phases, model.s_pastures, initialize=params['pasture_area_rt'],
                                     default=0, doc='pasture area of each rotation')
     
-    model.p_germination = pe.Param(model.s_rot_periods, model.s_feed_periods, model.s_lmus, model.s_phases,
+    model.p_germination = pe.Param(model.s_phase_periods, model.s_feed_periods, model.s_lmus, model.s_phases,
                                    model.s_season_types, model.s_pastures, initialize=params['p_germination_mp6lrzt'],
                                    default=0, mutable=False, doc='pasture germination for each rotation')
 
-    model.p_foo_grn_reseeding = pe.Param(model.s_rot_periods, model.s_feed_periods, model.s_lmus, model.s_phases,
+    model.p_foo_grn_reseeding = pe.Param(model.s_phase_periods, model.s_feed_periods, model.s_lmus, model.s_phases,
                                          model.s_season_types, model.s_pastures, initialize=params['p_foo_grn_reseeding_mp6lrzt'],
                                          default=0, mutable=False, doc='Change in grn FOO due to destocking and restocking of resown pastures')
     
-    model.p_foo_dry_reseeding = pe.Param(model.s_rot_periods, model.s_dry_groups, model.s_feed_periods, model.s_lmus,
+    model.p_foo_dry_reseeding = pe.Param(model.s_phase_periods, model.s_dry_groups, model.s_feed_periods, model.s_lmus,
                                          model.s_phases, model.s_season_types, model.s_pastures, initialize=params['p_foo_dry_reseeding_mdp6lrzt'],
                                          default=0, mutable=False, doc='Change in dry FOO due to destocking and seeding of pastures')
     
@@ -99,17 +99,17 @@ def f1_paspyomo_local(params, model):
     model.p_dry_removal_t = pe.Param(model.s_feed_periods, model.s_season_types, model.s_pastures, initialize=params['p_dry_removal_t_p6zt'],
                                      default=0, doc='quantity of dry feed removed for sheep to consume 1t, accounts for trampling')
     
-    model.p_nap = pe.Param(model.s_rot_periods, model.s_dry_groups, model.s_feed_periods, model.s_lmus, model.s_phases,
+    model.p_nap = pe.Param(model.s_phase_periods, model.s_dry_groups, model.s_feed_periods, model.s_lmus, model.s_phases,
                            model.s_season_types, model.s_pastures, initialize=params['p_nap_mdp6lrzt'], default=0, mutable=False,
                            doc='pasture on non arable areas in crop paddocks')
     
     model.p_nap_prop = pe.Param(model.s_feed_periods, model.s_season_types, initialize=params['p_harvest_period_prop'],
                                 default=0, mutable=False, doc='proportion of the way through each period nap becomes available')
     
-    model.p_erosion = pe.Param(model.s_rot_periods, model.s_feed_periods, model.s_lmus, model.s_phases, model.s_season_types,
+    model.p_erosion = pe.Param(model.s_phase_periods, model.s_feed_periods, model.s_lmus, model.s_phases, model.s_season_types,
                                model.s_pastures, initialize=params['p_erosion_mp6lrzt'], default=0, doc='erosion limit in each period')
     
-    model.p_phase_area = pe.Param(model.s_rot_periods, model.s_feed_periods, model.s_lmus, model.s_phases, model.s_season_types, model.s_pastures,
+    model.p_phase_area = pe.Param(model.s_phase_periods, model.s_feed_periods, model.s_lmus, model.s_phases, model.s_season_types, model.s_pastures,
                                   initialize=params['p_phase_area_mp6lrzt'], default=0, mutable=False, doc='pasture area in each rotation for each feed period')
     
     model.p_poc_con = pe.Param(model.s_feed_periods ,model.s_lmus, model.s_season_types, initialize=params['p_poc_con_p6lz'],
@@ -151,7 +151,7 @@ def f_con_greenpas_within(model):
         p6s = l_fp[l_fp.index(p6) - 1] #need the activity level from last feed period
         if any(model.p_foo_start_grnha[o,p6,l,z9,t] for o in model.s_foo_levels):
             return sum(model.v_phase_area[m,z9,r,l] * (-model.p_germination[m,p6,l,r,z9,t] - model.p_foo_grn_reseeding[m,p6,l,r,z9,t])
-                       for r in model.s_phases for m in model.s_rot_periods
+                       for r in model.s_phases for m in model.s_phase_periods
                        if pe.value(model.p_germination[m,p6,l,r,z9,t])!=0 or model.p_foo_grn_reseeding[m,p6,l,r,z9,t]!=0)         \
                    + sum(model.v_greenpas_ha[f,g,o,p6,l,z9,t] * model.p_foo_start_grnha[o,p6,l,z9,t]   \
                          - sum(model.v_greenpas_ha[f,g,o,p6s,l,z8,t] * model.p_foo_end_grnha[g,o,p6s,l,z8,t]
@@ -177,7 +177,7 @@ def f_con_drypas(model):
             return pe.Constraint.Skip
         else:
             return sum(model.v_phase_area[m,z9,r,l] * model.p_foo_dry_reseeding[m,d,p6,l,r,z9,t]
-                       for r in model.s_phases for m in model.s_rot_periods for l in model.s_lmus)   \
+                       for r in model.s_phases for m in model.s_phase_periods for l in model.s_lmus)   \
                  + sum(-sum(model.v_greenpas_ha[f,g,o,p6s,l,z8,t] * model.p_senesce_grnha[d,g,o,p6s,l,z8,t]
                             * model.p_parentchildz_transfer_fp[p6s,z8,z9] for z8 in model.s_season_types
                             for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus)
@@ -205,7 +205,7 @@ def f_con_nappas(model):
             return pe.Constraint.Skip
         else:
             return sum(sum(- model.v_phase_area[m,z9,r,l] * model.p_nap[m,d,p6,l,r,z9,t]
-                           for r in model.s_phases for l in model.s_lmus for m in model.s_rot_periods
+                           for r in model.s_phases for l in model.s_lmus for m in model.s_phase_periods
                            if pe.value(model.p_nap[m,d,p6,l,r,z9,t]) != 0)
                        + model.v_nap_consumed[f,d,p6,z9,t] * model.p_dry_removal_t[p6,z9,t] for f in model.s_feed_pools) \
                    - sum(model.v_nap_transfer[d,p6s,z8,t] * model.p_dry_transfer_prov_t[p6s,z8,t]
@@ -220,7 +220,7 @@ def f_con_pasarea(model):
     '''
     def pasarea(model,p6,l,z,t):
         return sum(-model.v_phase_area[m,z,r,l] * model.p_phase_area[m,p6,l,r,z,t]
-                   for r in model.s_phases for m in model.s_rot_periods if pe.value(model.p_phase_area[m,p6,l,r,z,t]) != 0)   \
+                   for r in model.s_phases for m in model.s_phase_periods if pe.value(model.p_phase_area[m,p6,l,r,z,t]) != 0)   \
              + sum(model.v_greenpas_ha[f,g,o,p6,l,z,t] for f in model.s_feed_pools for g in model.s_grazing_int for o in model.s_foo_levels) <=0
     model.con_pasarea = pe.Constraint(model.s_feed_periods, model.s_lmus, model.s_season_types, model.s_pastures, rule = pasarea, doc='Pasture area row for growth constraint of each type on each soil for each feed period (ha)')
 
@@ -235,7 +235,7 @@ def f_con_erosion(model):
                    sum(model.p_senesce_grnha[d,g,o,p6,l,z,t] for d in model.s_dry_groups)) for g in model.s_grazing_int for o in model.s_foo_levels) \
                 -  sum(model.v_drypas_transfer[d,p6,z,t] * 1000 for d in model.s_dry_groups) \
                 + sum(model.v_phase_area[m,z,r,l]  * model.p_erosion[m,p6,l,r,z,t]
-                      for r in model.s_phases for m in model.s_rot_periods if pe.value(model.p_erosion[m,p6,l,r,z,t]) != 0) <=0
+                      for r in model.s_phases for m in model.s_phase_periods if pe.value(model.p_erosion[m,p6,l,r,z,t]) != 0) <=0
     model.con_erosion = pe.Constraint(model.s_feed_periods, model.s_lmus, model.s_season_types, model.s_pastures, rule = erosion, doc='total pasture available of each type on each soil type in each feed period')
 
     

@@ -187,7 +187,7 @@ def f_pasture(params, r_vals, nv):
     keys_p6  = np.asarray(pinp.period['i_fp_idx'])
     keys_g  = np.asarray(sinp.general['grazing_int'])
     keys_l  = pinp.general['i_lmu_idx'][lmu_mask_l]   # lmu index description
-    keys_m = rps.f1_rot_period_alloc(keys=True)
+    keys_m = per.f_phase_periods(keys=True)
     keys_o  = np.asarray(sinp.general['foo_levels'])
     keys_p5  = np.array(per.f_p_date2_df().index).astype('str')
     keys_r  = np.array(phases_rotn_df.index).astype('str')

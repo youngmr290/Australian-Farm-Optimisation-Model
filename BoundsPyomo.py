@@ -87,7 +87,7 @@ def f1_boundarypyomo_local(params, model):
             ###constraint
             def rot_lo_bound(model, m, r, l, z):
                 return model.v_phase_area[m, z, r, l] >= rot_lobound[r,l]
-            model.con_rotation_lobound = pe.Constraint(model.s_rot_periods, model.s_phases, model.s_lmus, model.s_season_types, rule=rot_lo_bound,
+            model.con_rotation_lobound = pe.Constraint(model.s_phase_periods, model.s_phases, model.s_lmus, model.s_season_types, rule=rot_lo_bound,
                                                     doc='lo bound for the number of each phase')
 
         ##bound on livestock supplementary feed.
@@ -372,7 +372,7 @@ def f1_boundarypyomo_local(params, model):
                         * model.p_wg_propn_p6z[p6,z]
                         for p6 in model.s_feed_periods)
                 return dse == rhs_dse
-            model.con_SR_bound = pe.Constraint(model.s_rot_periods, model.s_season_types, rule=SR_bound,
+            model.con_SR_bound = pe.Constraint(model.s_phase_periods, model.s_season_types, rule=SR_bound,
                                                 doc='stocking rate bound for each feed period')
 
 
@@ -393,7 +393,7 @@ def f1_boundarypyomo_local(params, model):
                            == landuse_area_bound[k])
                 else:
                     pe.Constraint.Skip
-            model.con_pas_bound = pe.Constraint(model.s_rot_periods, model.s_landuses, model.s_season_types, rule=k_bound, doc='bound on total pasture area')
+            model.con_pas_bound = pe.Constraint(model.s_phase_periods, model.s_landuses, model.s_season_types, rule=k_bound, doc='bound on total pasture area')
 
         ##total pasture area - hence also total crop area
         ###build bound if turned on
@@ -406,7 +406,7 @@ def f1_boundarypyomo_local(params, model):
                         sum(model.v_phase_area[m,z,r,l] * model.p_pasture_area[r,t] for r in model.s_phases for l in
                             model.s_lmus for t in model.s_pastures)
                         == total_pas_area)
-            model.con_pas_bound = pe.Constraint(model.s_rot_periods, model.s_season_types, rule=pas_bound,doc='bound on total pasture area')
+            model.con_pas_bound = pe.Constraint(model.s_phase_periods, model.s_season_types, rule=pas_bound,doc='bound on total pasture area')
 
 
 

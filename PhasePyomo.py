@@ -39,21 +39,21 @@ def f1_croppyomo_local(params, model):
     #param  #
     #########
 
-    model.p_rotation_cost = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_rot_periods, model.s_lmus, model.s_phases, initialize=params['rot_cost'], default=0, mutable=False, doc='total cost for 1 unit of rotation')
+    model.p_rotation_cost = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_phase_periods, model.s_lmus, model.s_phases, initialize=params['rot_cost'], default=0, mutable=False, doc='total cost for 1 unit of rotation')
        
-    model.p_increment_rotation_cost = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_rot_periods,
+    model.p_increment_rotation_cost = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_phase_periods,
                                                model.s_lmus, model.s_phases, initialize=params['increment_rot_cost'],
                                                default=0, mutable=False, doc='total cost for 1 unit of rotation')
 
-    model.p_rotation_wc = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_rot_periods,
+    model.p_rotation_wc = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_phase_periods,
                                    model.s_lmus, model.s_phases, initialize=params['rot_wc'], default=0, mutable=False,
                                    doc='total wc for 1 unit of rotation')
        
-    model.p_increment_rotation_wc = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_rot_periods,
+    model.p_increment_rotation_wc = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_phase_periods,
                                              model.s_lmus, model.s_phases,initialize=params['increment_rot_wc'],
                                              default=0, mutable=False, doc='total wc for 1 unit of rotation')
 
-    model.p_rotation_yield = pe.Param(model.s_phases, model.s_crops, model.s_lmus, model.s_season_types, model.s_rot_periods,
+    model.p_rotation_yield = pe.Param(model.s_phases, model.s_crops, model.s_lmus, model.s_season_types, model.s_phase_periods,
                                       initialize=params['rot_yield'], default = 0.0, mutable=False, doc='grain production for all crops for 1 unit of rotation')
 
     model.p_grainpool_proportion = pe.Param(model.s_crops, model.s_grain_pools, initialize=params['grain_pool_proportions'], default = 0.0, doc='proportion of grain in each pool')
@@ -92,7 +92,7 @@ def f_rotation_yield_transfer(model,g,k,z):
     Used in global constraint (con_grain_transfer). See CorePyomo
     '''
     return sum(model.p_rotation_yield[r,k,l,z,m]*model.v_phase_area[m,z,r,l]
-               for r in model.s_phases for l in model.s_lmus for m in model.s_rot_periods
+               for r in model.s_phases for l in model.s_lmus for m in model.s_phase_periods
                if pe.value(model.p_rotation_yield[r,k,l,z,m]) != 0) * model.p_grainpool_proportion[k,g]
 
 
@@ -109,7 +109,7 @@ def f_phasesow_req(model,k,l,z):
     Used in global constraint (con_sow). See CorePyomo
     '''
     if any(model.p_phasesow_req[r,k,l] for r in model.s_phases):
-        return sum(model.p_phasesow_req[r,k,l]*model.v_phase_increment[m,z,r,l] for r in model.s_phases for m in model.s_rot_periods
+        return sum(model.p_phasesow_req[r,k,l]*model.v_phase_increment[m,z,r,l] for r in model.s_phases for m in model.s_phase_periods
                    if pe.value(model.p_phasesow_req[r,k,l]) != 0)
     else:
         return 0
@@ -128,7 +128,7 @@ def f_rotation_cost(model,c0,p7,z):
 
     return sum(model.p_rotation_cost[c0,p7,z,m,l,r]*model.v_phase_area[m,z,r,l]
                + model.p_increment_rotation_cost[c0,p7,z,m,l,r]*model.v_phase_increment[m,z,r,l]
-               for r in model.s_phases for l in model.s_lmus for m in model.s_rot_periods
+               for r in model.s_phases for l in model.s_lmus for m in model.s_phase_periods
                    if pe.value(model.p_rotation_cost[c0,p7,z,m,l,r]) != 0)
 
 def f_rotation_wc(model,c0,p7,z):
@@ -140,7 +140,7 @@ def f_rotation_wc(model,c0,p7,z):
 
     return sum(model.p_rotation_wc[c0,p7,z,m,l,r]*model.v_phase_area[m,z,r,l]
                + model.p_increment_rotation_wc[c0,p7,z,m,l,r]*model.v_phase_increment[m,z,r,l]
-               for r in model.s_phases for l in model.s_lmus for m in model.s_rot_periods
+               for r in model.s_phases for l in model.s_lmus for m in model.s_phase_periods
                    if pe.value(model.p_rotation_wc[c0,p7,z,m,l,r]) != 0)
 
 

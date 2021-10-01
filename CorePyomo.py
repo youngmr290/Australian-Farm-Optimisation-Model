@@ -245,7 +245,7 @@ def f_con_cropgraze_area(model):
             return -sum(model.v_phase_area[m,z,r,l] * model.p_cropgrazing_area[r,k,l] for r in model.s_phases if pe.value(model.p_cropgrazing_area[r,k,l])!=0)\
                    + model.v_grazecrop_ha[m,k,z,l] <= 0
 
-        model.con_cropgraze_area = pe.Constraint(model.s_rot_periods, model.s_crops, model.s_lmus, model.s_season_types, rule=cropgraze_area,
+        model.con_cropgraze_area = pe.Constraint(model.s_phase_periods, model.s_crops, model.s_lmus, model.s_season_types, rule=cropgraze_area,
                                                        doc='link rotation area to the area of crop that can be grazed')
 
 
@@ -278,7 +278,7 @@ def f_con_stubble_a(model):
     '''
     def stubble_a(model,k,s,z):
         return -sum(model.v_phase_area[m,z,r,l] * model.p_rot_stubble[r,k,l,m,z]
-                    for r in model.s_phases for l in model.s_lmus for m in model.s_rot_periods
+                    for r in model.s_phases for l in model.s_lmus for m in model.s_phase_periods
                     if pe.value(model.p_rot_stubble[r,k,l,m,z]) != 0)   \
                + macpy.f_stubble_penalty(model,k,z) + cgzpy.f_grazecrop_stubble_penalty(model,k,z) \
                + stubpy.f_stubble_req_a(model,z,k,s) <= 0

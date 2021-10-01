@@ -118,7 +118,7 @@ def f_fert_rotperiod_allocation():
     alloc_mzn = rps.f1_rot_period_alloc(fert_date_n[na,na,:], fert_length_n[na,na,:], z_pos=-2)
     ###convert to df
     keys_z = zfun.f_keys_z()
-    keys_m = rps.f1_rot_period_alloc(keys=True)
+    keys_m = per.f_phase_periods(keys=True)
     new_index_mzn = pd.MultiIndex.from_product([keys_m, keys_z, fert_info.index])
     alloc_mzn = pd.Series(alloc_mzn.ravel(), index=new_index_mzn)
     return alloc_mzn
@@ -240,7 +240,7 @@ def f_chem_rotperiod_allocation():
     alloc_mzn = rps.f1_rot_period_alloc(chem_date_n[na,na,:], chem_length_n[na,na,:], z_pos=-2)
     ###convert to df
     keys_z = zfun.f_keys_z()
-    keys_m = rps.f1_rot_period_alloc(keys=True)
+    keys_m = per.f_phase_periods(keys=True)
     new_index_mzn = pd.MultiIndex.from_product([keys_m, keys_z, chem_info.index])
     alloc_mzn = pd.Series(alloc_mzn.ravel(), index=new_index_mzn)
     return alloc_mzn
@@ -328,7 +328,7 @@ def f_crop_monitoring():
     variable_crop_monitor_k_pmz = variable_crop_monitor_kpmz.reshape(variable_crop_monitor_kpmz.shape[0], -1)
     keys_z = zfun.f_keys_z()
     keys_p5 = per.f_p_dates_df().index[:-1]
-    keys_m = rps.f1_rot_period_alloc(keys=True)
+    keys_m = per.f_phase_periods(keys=True)
     keys_k = variable_crop_monitor.index
     cols_p5mz = pd.MultiIndex.from_product([keys_p5, keys_m, keys_z])
     variable_crop_monitor = pd.DataFrame(variable_crop_monitor_k_pmz, index=keys_k, columns=cols_p5mz)

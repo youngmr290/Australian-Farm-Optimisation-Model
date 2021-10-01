@@ -22,7 +22,8 @@ def rotation_precalcs(params, report):
     rps.f_rot_lmu_params(params)
     rps.f_rot_hist_params(params)
     rps.f_landuses_phases(params,report)
-    
+    rps.f_season_params(params)
+
 def f1_rotationpyomo(params, model):
     ''' Builds pyomo variables, parameters and constraints'''
 
@@ -30,10 +31,10 @@ def f1_rotationpyomo(params, model):
     #variables  #
     #############
     ##Amount of each phase on each soil, Positive Variable.
-    model.v_phase_area = Var(model.s_rot_periods, model.s_season_types, model.s_phases,model.s_lmus, bounds=(0,None),doc='cumulative total area (ha) of phase, selected up to and including the current m period')
+    model.v_phase_area = Var(model.s_phase_periods, model.s_season_types, model.s_phases,model.s_lmus, bounds=(0,None),doc='cumulative total area (ha) of phase, selected up to and including the current m period')
 
     ##Amount of each phase added in each rotation period on each soil, Positive Variable.
-    model.v_phase_increment = Var(model.s_rot_periods, model.s_season_types, model.s_phases,model.s_lmus, bounds=(0,None),doc='Increased area (ha) of phase, selected in the current m period')
+    model.v_phase_increment = Var(model.s_phase_periods, model.s_season_types, model.s_phases,model.s_lmus, bounds=(0,None),doc='Increased area (ha) of phase, selected in the current m period')
 
     if not pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1: #only needed for dsp version.
         model.v_root_hist = Var(model.s_rotconstraints, model.s_lmus, bounds=(0,None),doc='rotation history provided in the root stage')
@@ -42,12 +43,12 @@ def f1_rotationpyomo(params, model):
     #define parameters #
     ####################
     model.p_area = Param(model.s_lmus, initialize=params['lmu_area'], doc='available area on farm for each soil')
-    
     model.p_landuse_area = Param(model.s_phases, model.s_landuses, initialize=params['phases_rk'], doc='landuse in each phase')
-
-    ##only build this param if it doesn't exist already ie the rotation link never changes
     model.p_hist_prov = Param(params['hist_prov'].keys(), initialize=params['hist_prov'], default=0, doc='history provided by  each rotation') #use keys instead of sets to reduce size of param
     model.p_hist_req = Param(params['hist_req'].keys(), initialize=params['hist_req'], default=0, doc='history required by  each rotation') #use keys instead of sets to reduce size of param
+    model.p_parentchildz_transfer_phase = Param(model.s_phase_periods, model.s_season_types, model.s_season_types, initialize=params['p_parentchildz_transfer_phase'],
+                                                doc='Transfer of z8 dv in the previous cash period to z9 constraint in the current phase period')
+    model.p_mask_phases = Param(model.s_phases, model.s_phase_periods, initialize=params['p_mask_phases'], doc='mask phases that transfer in each phase period')
 
     ###################
     #call constraints #
@@ -87,7 +88,7 @@ def f_con_rotation_between(params, model):
     def rot_phase_link(model,m,l,h,z):
         return sum(model.v_phase_area[m,z,r,l]*model.p_hist_prov[r,h] for r in model.s_phases if ((r,)+(h,)) in params['hist_prov'].keys()) \
                    + sum(model.v_phase_area[m,z,r,l]*model.p_hist_req[r,h] for r in model.s_phases if ((r,)+(h,)) in params['hist_req'].keys())<=0
-    model.con_rotationcon2 = Constraint(model.s_rot_periods, model.s_lmus, model.s_rotconstraints, model.s_season_types, rule=rot_phase_link, doc='rotation phases constraint')
+    model.con_rotationcon2 = Constraint(model.s_phase_periods, model.s_lmus, model.s_rotconstraints, model.s_season_types, rule=rot_phase_link, doc='rotation phases constraint')
 
 
 
@@ -113,13 +114,14 @@ def f_con_rotation_within(model):
 
     '''
 
-    def rot_phase_link_within(model,m,l,r,z):
-        l_m = list(model.s_rot_periods)
+    def rot_phase_link_within(model,m,l,r,z9):
+        l_m = list(model.s_phase_periods)
         m_prev = l_m[l_m.index(m) - 1] #need the activity level from last feed period
-        return model.v_phase_area[m,z,r,l] \
-               - model.v_phase_increment[m,z,r,l]\
-               - model.v_phase_area[m_prev,z,r,l] * (m!='m0') ==0 #end of the previous yr is controlled by between constraint
-    model.con_rotationcon1 = Constraint(model.s_rot_periods, model.s_lmus, model.s_phases, model.s_season_types, rule=rot_phase_link_within, doc='rotation phases constraint')
+        return model.v_phase_area[m,z9,r,l] \
+               - model.v_phase_increment[m,z9,r,l]\
+               - sum(model.v_phase_area[m_prev,z8,r,l] * model.p_parentchildz_transfer_phase[m,z8,z9]
+                     for z8 in model.s_season_types) * model.p_mask_phases[r,m_prev] ==0 #end of the previous yr is controlled by between constraint
+    model.con_rotationcon1 = Constraint(model.s_phase_periods, model.s_lmus, model.s_phases, model.s_season_types, rule=rot_phase_link_within, doc='rotation phases constraint')
 
 
 
@@ -137,7 +139,7 @@ def f_con_area(model):
 
     def area_rule(model, m, l, z):
       return sum(model.v_phase_area[m,z,r,l] for r in model.s_phases) <= model.p_area[l]
-    model.con_area = Constraint(model.s_rot_periods, model.s_lmus, model.s_season_types, rule=area_rule, doc='rotation area constraint')
+    model.con_area = Constraint(model.s_phase_periods, model.s_lmus, model.s_season_types, rule=area_rule, doc='rotation area constraint')
     
 
 

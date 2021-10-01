@@ -84,15 +84,9 @@ def f_peak_debt_date():
     return peakdebt_date_c0
 
 
-'''
-labour periods and length
-'''
 ################################
-# make a df containing  period #
+#labour periods and length     #
 ################################
-
-
-
 
 #function to determine seeding start - starts a specified number of days after season break
 #also used in mach sheet
@@ -240,27 +234,36 @@ def f_feed_periods(option=0):
         return fp_len
 
 
-    # else:
-    #     # fp = fp.loc[:fp.index[-2], idx[:, 'length']] #last row not included because that only contains the end date of last period
-    #     fp = pinp.period['i_dsp_fp_len']
-    #     fp = zfun.f_seasonal_inp(fp, numpy=True, axis=1)
-    #     return fp
+################
+#phase periods #
+################
 
-    #     if pinp.general['steady_state']:
-    #         # fp = pinp.period['feed_periods']
-    #
-    #         n_fp = fp.values.astype(np.int64)
-    #         np.average(n_fp, axis=1, weights=z_prob)
-    #         n_fp = pd.to_datetime(n_fp.mean(axis=1))
-    #         fp = pd.DataFrame(n_fp, index=fp.index, columns=fp.columns[0])
-    #
+def f_phase_periods(keys=False):
+    '''
+    :param keys: Boolean if True this returns the m keys
+    :param periods: Boolean if True this returns the m period dates
+    '''
 
-    #
-    #     else:
-    #         fp = pinp.period['i_dsp_fp']
-    #         fp = fp.T.set_index(['period'], append=True).T
-    #         ##apply season mask - more complicated because masking level 0 of multilevel df
-    #         fp = fp.loc[:, idx[:, pinp.general['i_mask_z']]]
+    date_node_zm = zfun.f_seasonal_inp(pinp.general['i_date_node_zm'],numpy=True,axis=0).astype(
+        'datetime64')  # treat z axis
+    if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1:
+        date_node_zm = date_node_zm[:,
+                       0]  # if steady state then m axis is singleton (start and finish at the break of season).
+    ###add end date of last node period - required for the allocation function
+    end_zm = date_node_zm[:,0:1] + np.timedelta64(365,
+                                                  'D')  # increment the first date by 1yr so it becomes the end date for the last period
+    ###add dry seeding period
+    dry_seed_start_m = np.array([pinp.crop['dry_seed_start']],dtype='datetime64')
+    dry_seed_start_zm = np.broadcast_to(dry_seed_start_m[na,:],end_zm.shape)  # expand z axis
+    date_phase_node_mz = np.concatenate([date_node_zm,dry_seed_start_zm,end_zm],
+                                        axis=1).T  # put m in pos 0 because that how the allocation function requires
+    len_m = date_phase_node_mz.shape[0] - 1  # minus one because end date is not a period
 
+    ##return keys if wanted
+    if keys:
+        keys_m = np.array(['m%s' % i for i in range(len_m)])
+        return keys_m
+    else:
+        return date_phase_node_mz
 
 

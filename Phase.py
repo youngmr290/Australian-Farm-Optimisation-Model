@@ -265,7 +265,7 @@ def f_rot_yield(for_stub=False, for_insurance=False):
     alloc_mz = rps.f1_rot_period_alloc(harv_start_date_z[na,...], z_pos=-1)
     ###convert to df
     keys_z = zfun.f_keys_z()
-    keys_m = rps.f1_rot_period_alloc(keys=True)
+    keys_m = per.f_phase_periods(keys=True)
     new_index_mz = pd.MultiIndex.from_product([keys_m, keys_z])
     alloc_mz = pd.Series(alloc_mz.ravel(), index=new_index_mz)
     ###mul m allocation with cost
@@ -1021,7 +1021,7 @@ def f1_rot_cost(r_vals):
     alloc_c0p7zm = np.moveaxis(alloc_mc0p7z[:,1:2,...],source=0, destination=-1) #take crp slice & move axis so m axis is at the end (required for reindeing below)
     ###convert to df
     keys_z = zfun.f_keys_z()
-    keys_m = rps.f1_rot_period_alloc(keys=True)
+    keys_m = per.f_phase_periods(keys=True)
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0'][1:2] #take crp slice (keeping the dim so that line below works since it mult index needs iterables)
     new_index_c0p7zm = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, keys_m])
