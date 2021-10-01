@@ -260,6 +260,11 @@ def f_pasture(params, r_vals, nv):
     index_p6zt=fun.cartesian_product_simple_transpose(arrays)
     index_p6zt=tuple(map(tuple, index_p6zt)) #create a tuple rather than a list because tuples are faster
 
+    arrays = [keys_p6, keys_z, keys_z]
+    index_p6z8z9 = fun.cartesian_product_simple_transpose(arrays)
+    index_p6z8z9 = tuple(map(tuple,index_p6z8z9))
+
+
     ###########
     #map_excel#
     ###########
@@ -484,8 +489,11 @@ def f_pasture(params, r_vals, nv):
     ######################
     #apply season mask   #
     ######################
+    ##season transfer (z8z9) param
+    p_parentchildz_transfer_p6z8z9 = zfun.f_season_transfer_mask(date_start_p6z, z_pos=-1)
+
     ##mask
-    mask_fp_z8var_p6z = fsfun.f_fp_z8z9_transfer(mask=True)
+    mask_fp_z8var_p6z = zfun.f_season_transfer_mask(date_start_p6z, z_pos=-1, mask=True)
     mask_fp_z8var_p6lrzt = mask_fp_z8var_p6z[:,na,na,:,na]
     mask_fp_z8var_p6lzt = mask_fp_z8var_p6z[:,na,:,na]
     mask_fp_z8var_p6zt = mask_fp_z8var_p6z[:,:,na]
@@ -543,16 +551,14 @@ def f_pasture(params, r_vals, nv):
     poc_md_rav_fp6z = poc_md_fp6z.ravel()
     params['p_poc_md_fp6z'] = dict(zip(index_fp6z, poc_md_rav_fp6z))
 
-    ##create season params 
+    ##create season params
 
-    ###create param from dataframe
+    params['p_parentchildz_transfer_fp'] = dict(zip(index_p6z8z9, p_parentchildz_transfer_p6z8z9.ravel() * 1))
+
     params['p_harvest_period_prop'] = harvest_period_prop.stack().to_dict()
-
-    ###create param from numpy
 
     params['p_dry_removal_t_p6zt'] = dict(zip(index_p6zt,dry_removal_t_p6zt.ravel()))
 
-    ##convert the change in dry and green FOO at destocking and restocking into a pyomo param (for the area that is resown)
     params['p_foo_dry_reseeding_mdp6lrzt'] = dict(zip(index_mdp6lrzt, foo_dry_reseeding_mdp6lrzt.ravel()))
     params['p_foo_grn_reseeding_mp6lrzt'] = dict(zip(index_mp6lrzt, foo_grn_reseeding_mp6lrzt.ravel()))
 

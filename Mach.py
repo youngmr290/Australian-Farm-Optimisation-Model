@@ -333,7 +333,8 @@ def f1_seed_cost_alloc():
     keys_z = zfun.f_keys_z()
     peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
     p_dates_c0p7z = per.f_cashflow_periods()
-    mask_cashflow_z8var_c0p7z = fin.f_cashflow_z8z9_transfer(mask=True)
+    p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
+    mask_cashflow_z8var_c0p7z = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)
     
     ##calc interest and allocate to cash period - needs to be numpy
     seeding_cost_allocation_c0p7z, seeding_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]), start_z, p_dates_c0p7z,
@@ -577,7 +578,8 @@ def f1_harv_cost_alloc():
     keys_z = zfun.f_keys_z()
     peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
     p_dates_c0p7z = per.f_cashflow_periods()
-    mask_cashflow_z8var_c0p7z = fin.f_cashflow_z8z9_transfer(mask=True)
+    p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
+    mask_cashflow_z8var_c0p7z = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)
 
     ##calc interest and allocate to cash period - needs to be numpy
     harv_cost_allocation_c0p7z,harv_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]),harv_start_z,
@@ -708,7 +710,8 @@ def f_hay_making_cost():
     keys_z = zfun.f_keys_z()
     peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
     p_dates_c0p7z = per.f_cashflow_periods()
-    mask_cashflow_z8var_c0p7z = fin.f_cashflow_z8z9_transfer(mask=True)
+    p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
+    mask_cashflow_z8var_c0p7z = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)
     ###call allocation/interset function - needs to be numpy
     hay_cost_allocation_c0p7z,hay_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]),hay_start,
                                                                                   p_dates_c0p7z, peakdebt_date_c0p7z,
@@ -1030,7 +1033,8 @@ def f_insurance(r_vals):
     keys_z = zfun.f_keys_z()
     peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
     p_dates_c0p7z = per.f_cashflow_periods()
-    mask_cashflow_z8var_c0p7z = fin.f_cashflow_z8z9_transfer(mask=True)
+    p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
+    mask_cashflow_z8var_c0p7z = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)
     ###call allocation/interset function - needs to be numpy
     insurance_cost_allocation_c0p7z,insurance_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]),start,
                                                                                           p_dates_c0p7z, peakdebt_date_c0p7z,

@@ -84,7 +84,6 @@ nv['len_nv'] = n_non_confinement_pools+confinement_inc
 
 ##call pasture module
 pas.f_pasture(params, r_vals, nv)
-fsfun.f_fp_z8z9_transfer(params)
 
 
 time_list.append(timer()) ; time_was.append("Pasture complete")

@@ -4597,7 +4597,8 @@ def generator(params,r_vals,nv,plots = False):
     ###cash period allocation
     p7_dates_c0p7pa1e1b1nwzida0e0b0xyg = fun.f_expand(per.f_cashflow_periods(), left_pos=z_pos, left_pos2=p_pos-1, right_pos2=z_pos)
     peakdebt_date_c0p7pa1e1b1nwzida0e0b0xyg = fun.f_expand(per.f_peak_debt_date(), left_pos=p_pos-2)
-    mask_cashflow_z8var_c0p7pa1e1b1nwzida0e0b0xyg = fun.f_expand(fin.f_cashflow_z8z9_transfer(mask=True), left_pos=z_pos, left_pos2=p_pos-1, right_pos2=z_pos)
+    p7_start_dates_c0p7pa1e1b1nwzida0e0b0xyg= p7_dates_c0p7pa1e1b1nwzida0e0b0xyg[:,:-1,...]  # slice off the end date slice
+    mask_cashflow_z8var_c0p7pa1e1b1nwzida0e0b0xyg = zfun.f_season_transfer_mask(p7_start_dates_c0p7pa1e1b1nwzida0e0b0xyg, z_pos=z_pos, mask=True)
     ###call allocation/interset function - assumption is that cashflow happens on the first day of the generator period.
     cash_allocation_c0p7pa1e1b1nwzida0e0b0xyg, wc_allocation_c0p7pa1e1b1nwzida0e0b0xyg = fin.f_cashflow_allocation(
         np.array([1]), date_start_pa1e1b1nwzida0e0b0xyg, p7_dates_c0p7pa1e1b1nwzida0e0b0xyg,
@@ -5178,7 +5179,8 @@ def generator(params,r_vals,nv,plots = False):
     rm_start_c0p7z = p7_dates_c0p7z[:,0:1,:]
     rm_length = 365  # rm is incurred equally each day
     peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
-    mask_cashflow_z8var_c0p7z = fin.f_cashflow_z8z9_transfer(mask=True)
+    p7_start_dates_c0p7z = p7_dates_c0p7z[:,:-1,:]  # slice off the end date slice
+    mask_cashflow_z8var_c0p7z = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)
     ###call allocation/interset function - assumption is that cashflow happens on the first day of the generator period.
     rm_cash_allocation_c0p7z, rm_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]), rm_start_c0p7z,
                                                                                  p7_dates_c0p7z, peakdebt_date_c0p7z,
@@ -5764,8 +5766,8 @@ def generator(params,r_vals,nv,plots = False):
     index_zidaebxyg = fun.f_expand(index_z, z_pos)
 
     ##dams child parent transfer
-    mask_param_provz8z9_va1e1b1nwzida0e0b0xyg1z9, mask_z8var_va1e1b1nwzida0e0b0xyg1 = \
-    zfun.f_season_transfer_mask(dvp_start_va1e1b1nwzida0e0b0xyg1, date_node_zidaebxygm, date_initiate_zidaebxyg, index_zidaebxyg, bool_steady_state, z_pos)
+    mask_param_provz8z9_va1e1b1nwzida0e0b0xyg1z9 = zfun.f_season_transfer_mask(dvp_start_va1e1b1nwzida0e0b0xyg1, z_pos=z_pos)
+    mask_z8var_va1e1b1nwzida0e0b0xyg1 = zfun.f_season_transfer_mask(dvp_start_va1e1b1nwzida0e0b0xyg1, z_pos=z_pos, mask=True)
     ###create z8z9 param that is index with v
     ####cluster e and b (e axis is active from the dvp dates)
     mask_param_provz8z9_k2tva1e1b1nwzida0e0b0xyg1z9 = 1 * (np.sum(mask_param_provz8z9_va1e1b1nwzida0e0b0xyg1z9
@@ -5773,8 +5775,8 @@ def generator(params,r_vals,nv,plots = False):
                                                                   axis=(e1_pos-1,b1_pos-1), keepdims=True) > 0)
 
     ##offs child parent transfer
-    mask_param_provz8z9_va1e1b1nwzida0e0b0xyg3z9, mask_z8var_va1e1b1nwzida0e0b0xyg3 = \
-    zfun.f_season_transfer_mask(dvp_start_va1e1b1nwzida0e0b0xyg3, date_node_zidaebxygm, date_initiate_zidaebxyg, index_zidaebxyg, bool_steady_state, z_pos)
+    mask_param_provz8z9_va1e1b1nwzida0e0b0xyg3z9 = zfun.f_season_transfer_mask(dvp_start_va1e1b1nwzida0e0b0xyg3, z_pos=z_pos)
+    mask_z8var_va1e1b1nwzida0e0b0xyg3 = zfun.f_season_transfer_mask(dvp_start_va1e1b1nwzida0e0b0xyg3, z_pos=z_pos, mask=True)
     ###create z8z9 param that is index with v
     ####cluster d (d axis is active from the dvp dates)
     mask_param_provz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9 = 1 * (np.sum(mask_param_provz8z9_va1e1b1nwzida0e0b0xyg3z9
@@ -5798,7 +5800,8 @@ def generator(params,r_vals,nv,plots = False):
     # p_season_prob = season_seq_prob_qsz
 
     ##p6z mask - this is only for masking sire becasuse they dont have a v axis
-    mask_fp_z8var_p6fva1e1b1nwzida0e0b0xyg = fun.f_expand(fsfun.f_fp_z8z9_transfer(mask=True), left_pos=z_pos, left_pos2=p_pos-2, right_pos2=z_pos)
+    mask_fp_z8var_p6fva1e1b1nwzida0e0b0xyg = fun.f_expand(zfun.f_season_transfer_mask(per.f_feed_periods()[:-1], z_pos=-1, mask=True),
+                                                          left_pos=z_pos, left_pos2=p_pos-2, right_pos2=z_pos)
 
 
     ###########################

@@ -232,7 +232,7 @@ def crop_residue_all(params, r_vals, nv):
     #apply season mask   #
     ######################
     ##mask
-    mask_fp_z8var_p6z = fsfun.f_fp_z8z9_transfer(mask=True)
+    mask_fp_z8var_p6z = zfun.f_season_transfer_mask(fp_start_p6z, z_pos=-1, mask=True)
 
     ##apply mask
     cons_propn_p6zk = cons_propn_p6zk * mask_fp_z8var_p6z[...,na]

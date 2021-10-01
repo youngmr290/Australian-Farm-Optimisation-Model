@@ -110,7 +110,7 @@ def f_cropgraze_DM(total_DM=False):
     total_dm_growth_kp6zl = growth_kp6zl * feed_period_lengths_p6z[:,na]
 
     ##season mask
-    mask_fp_z8var_p6z = fsfun.f_fp_z8z9_transfer(mask=True)
+    mask_fp_z8var_p6z = zfun.f_season_transfer_mask(date_start_p6z, z_pos=-1, mask=True)
 
     if not total_DM:
         ##calc dry matter available for consumption provided by 1ha of crop
@@ -190,7 +190,7 @@ def f_DM_reduction_seeding_time():
     DM_reduction_kp6p5zl = total_grazing_days_reduction_p6p5z[...,na] * growth_kp6zl[:,:,na,...] * consumption_factor_p6z[:,na,:,na]
 
     ##apply season mask
-    mask_fp_z8var_p6z = fsfun.f_fp_z8z9_transfer(mask=True)
+    mask_fp_z8var_p6z = zfun.f_season_transfer_mask(date_start_p6z, z_pos=-1, mask=True)
     DM_reduction_kp6p5zl = DM_reduction_kp6p5zl * mask_fp_z8var_p6z[:,na,:,na]
 
     return DM_reduction_kp6p5zl
@@ -240,7 +240,8 @@ def crop_md_vol(nv):
     crop_md_fkp6zl = crop_md_fkp6zl * nv_is_not_confinement_f[:,na,na,na,na]
 
     ##apply season mask
-    mask_fp_z8var_p6z = fsfun.f_fp_z8z9_transfer(mask=True)
+    date_start_p6z = per.f_feed_periods()[:-1]
+    mask_fp_z8var_p6z = zfun.f_season_transfer_mask(date_start_p6z, z_pos=-1, mask=True)
     crop_md_fkp6zl = crop_md_fkp6zl * mask_fp_z8var_p6z[:,:,na]
     crop_vol_fkp6zl = crop_vol_fkp6zl * mask_fp_z8var_p6z[:,:,na]
 
@@ -278,7 +279,7 @@ def f_cropgraze_yield_penalty():
     stubble_reduction_propn_kp6z = stub_yield_reduction_propn_kp6z * stubble_per_grain_k[:,na,na]
 
     ##apply season mask
-    mask_fp_z8var_p6z = fsfun.f_fp_z8z9_transfer(mask=True)
+    mask_fp_z8var_p6z = zfun.f_season_transfer_mask(per.f_feed_periods()[:-1], z_pos=-1, mask=True)
     yield_reduction_propn_kp6z = yield_reduction_propn_kp6z * mask_fp_z8var_p6z
     stubble_reduction_propn_kp6z = stubble_reduction_propn_kp6z * mask_fp_z8var_p6z
 

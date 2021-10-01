@@ -122,7 +122,24 @@ def f_keys_z():
     return keys_z
 
 
-def f_season_transfer_mask(period_dates, date_node_zm, date_initiate_z, index_z, bool_steady_state, z_pos):
+def f_parent_z(season_start_z8, date_initiate_z8, index_z8):
+    '''
+    Create an association pointing at each seasons parent season
+
+    '''
+    # create z9 versions of params (move z8 to the end) - this is required for situations when other axis exist
+    index_z9 = np.moveaxis(index_z8, source=0, destination=-1)
+    date_initiate_z9 = np.moveaxis(date_initiate_z8, source=0, destination=-1)
+
+    # Identify the highest weather-year previous to this one that is initiated earlier.
+    parent_z8 = np.max(index_z9 * (date_initiate_z9 < date_initiate_z8[...,na])
+                      * (index_z9 < index_z8[...,na]),axis=-1)
+    # if this weather-year is initiated at the break then it is it’s own parent (index_z)
+    parent_z = fun.f_update(parent_z8, index_z8, date_initiate_z8 == season_start_z8)
+    return parent_z
+
+
+def f_season_transfer_mask(period_dates, z_pos, mask=False):
     '''
     Seasons are masked out until the point in the year when they are identified. At the point of identification
     the parent season provides the transfer parameters to the child season. This transfering method ensures the
@@ -131,19 +148,28 @@ def f_season_transfer_mask(period_dates, date_node_zm, date_initiate_z, index_z,
     the year until spring (because the farmer doesnt know if they are having the good or bad year until spring).
 
     :param period_dates: period dates (eg dvp or cashflow) without end date of last period
-    :param date_node_zm: dates of the season nodes
-    :param date_initiate_z: date when each season is identified
-    :param index_z: z index
-    :param bool_steady_state: boolean stating if the trial is steady state or not
     :param z_pos: z axis position
+    :param mask: Boolean if True the function simply returns the z8var mask.
     :return: within season transfer (z8z9) masks for require and provide.
     '''
+    ##inputs
+    date_initiate_z = f_seasonal_inp(pinp.general['i_date_initiate_z'], numpy=True, axis=0).astype('datetime64')
+    bool_steady_state = pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1
+    if bool_steady_state:
+        len_z = 1
+    else:
+        len_z = np.count_nonzero(pinp.general['i_mask_z'])
+    index_z = np.arange(len_z)
+    date_node_zm = f_seasonal_inp(pinp.general['i_date_node_zm'],numpy=True,axis=0).astype('datetime64')  # treat z axis
+
+    ##expand inputs to line z axis to the correct position
+    date_node_zm = fun.f_expand(date_node_zm, z_pos-1, right_pos=-1)
+    index_z = fun.f_expand(index_z, z_pos)
+    date_initiate_z = fun.f_expand(date_initiate_z, z_pos)
 
     ##parent z
-    date_prev_node_zm = np.roll(date_node_zm, axis=-1, shift=1)
-    existing_season_prev_zm = np.maximum.accumulate((date_prev_node_zm==date_initiate_z[...,na]) * index_z[...,na], axis=0)
-    existing_season_prev_zm[:,...,0] = np.maximum.accumulate((date_node_zm==date_initiate_z[...,na]) * index_z[...,na], axis=0)[:,...,0] #the parent at the first node are the seasons identified by break
-    parent_z = np.max(np.maximum.accumulate(existing_season_prev_zm * (date_node_zm==date_initiate_z[...,na]), axis=0),axis=-1)
+    start_of_season_z = date_node_zm[...,0]
+    parent_z = f_parent_z(start_of_season_z, date_initiate_z, index_z)
     parent_z9 = np.moveaxis(parent_z, source=0, destination=-1)
     identity_z8z9 = fun.f_expand(np.identity(parent_z.shape[0]),z_pos-1, right_pos=-1)
 
@@ -151,7 +177,6 @@ def f_season_transfer_mask(period_dates, date_node_zm, date_initiate_z, index_z,
     # mask_param_reqz8z9_z8z9 = identity_z8z9
 
     ##adjust period start dates to the base yr (dates must be between break of current season and break of next season)
-    start_of_season_z = date_node_zm[...,0]
     end_of_season_z = start_of_season_z + np.timedelta64(364,'D') #use 364 because end date is the day before brk.
     add_yrs = np.ceil(np.maximum(0,(start_of_season_z - period_dates).astype('timedelta64[D]').astype(int) / 365))
     sub_yrs = np.ceil(np.maximum(0,(period_dates - end_of_season_z).astype('timedelta64[D]').astype(int) / 365))
@@ -159,6 +184,8 @@ def f_season_transfer_mask(period_dates, date_node_zm, date_initiate_z, index_z,
 
     ##z8 mask when season is identified
     mask_z8var_z = np.logical_or(date_initiate_z <= adj_period_dates, bool_steady_state) #if it is steadystate then the z8 mask is just true.
+    if mask:
+        return mask_z8var_z
 
     ##prov mask. Parent seasons provide to child season until the child season is identified.
     prov_self_z8z9 = mask_z8var_z[...,na] * identity_z8z9
@@ -168,7 +195,7 @@ def f_season_transfer_mask(period_dates, date_node_zm, date_initiate_z, index_z,
     prov_child_z8z9 = prov_child_z8z9 * np.logical_and(np.logical_not(mask_z9var_z9), np.roll(mask_z9var_z9, shift=-1, axis=1))
     mask_param_provz8z9_z8z9 = np.logical_or(prov_self_z8z9, prov_child_z8z9)
 
-    return mask_param_provz8z9_z8z9, mask_z8var_z
+    return mask_param_provz8z9_z8z9
 
 
 

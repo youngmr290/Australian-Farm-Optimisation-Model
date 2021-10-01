@@ -67,7 +67,8 @@ def f_buy_grain_price(r_vals):
     keys_z = zfun.f_keys_z()
     peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
     p_dates_c0p7z = per.f_cashflow_periods()
-    mask_cashflow_z8var_c0p7z = fin.f_cashflow_z8z9_transfer(mask=True)
+    p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
+    mask_cashflow_z8var_c0p7z = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)
     grain_cost_allocation_c0p7z, grain_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]), start, p_dates_c0p7z,
                                                                                        peakdebt_date_c0p7z, mask_cashflow_z8var_c0p7z,
                                                                                        'stk', length)
@@ -141,7 +142,8 @@ def f_sup_cost(r_vals):
     keys_p6 = pinp.period['i_fp_idx']
     peakdebt_date_c0p7zp6 = per.f_peak_debt_date()[:,na,na,na]
     p_dates_c0p7z = per.f_cashflow_periods()
-    mask_cashflow_z8var_c0p7zp6 = fin.f_cashflow_z8z9_transfer(mask=True)[...,na]
+    p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
+    mask_cashflow_z8var_c0p7zp6 = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)[...,na]
     sup_cost_allocation_c0p7zp6, sup_wc_allocation_c0p7zp6 = fin.f_cashflow_allocation(np.array([1]), start_p6z.T,
                                                                                                p_dates_c0p7z[...,na], peakdebt_date_c0p7zp6,
                                                                                                mask_cashflow_z8var_c0p7zp6, 'stk', length_p6z.T)

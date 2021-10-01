@@ -20,7 +20,7 @@ def fin_precalcs(params, r_vals):
     '''
     fin.overheads(params, r_vals)
     fin.finance_rep(r_vals)
-    fin.f_cashflow_z8z9_transfer(params)
+    fin.f1_cashflow_z8z9_transfer(params)
     params['overdraw'] = pinp.finance['overdraw_limit']
 
 

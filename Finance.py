@@ -85,8 +85,6 @@ na = np.newaxis
 #######################
 # cashflow & interest #
 #######################
-
-
 def f_cashflow_allocation(amount,start,p_dates_c0p7,peakdebt_date,z8mask_c0p7,enterprise=None,length=1):
     '''
     This function calculate the interest earned on cashflow item, tallies up the total cashflow including interest
@@ -233,7 +231,8 @@ def overheads(params, r_vals):
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
     peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
-    mask_cashflow_z8var_c0p7z = f_cashflow_z8z9_transfer(mask=True)
+    p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
+    mask_cashflow_z8var_c0p7z = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)
     ###call allocation/interset function - needs to be numpy
     overhead_cost_allocation_c0p7z, overhead_wc_allocation_c0p7z = f_cashflow_allocation(np.array([1]), overhead_start_c0p7z,
                                                                                   p_dates_c0p7z, peakdebt_date_c0p7z,
@@ -271,9 +270,9 @@ def f_min_roe():
 ###################
 #Season transfer  #
 ###################
-def f_cashflow_z8z9_transfer(params=None, mask=False):
+def f1_cashflow_z8z9_transfer(params):
     '''
-    Mask transfer within a given season.
+    Create pyomo param whcih masks cashflow transfer within a given season.
 
     Seasons are masked out until the point in the year when they are identified. At the point of identification
     the parent season provides the transfer parameters to the child season. This transfering method ensures the
@@ -281,27 +280,11 @@ def f_cashflow_z8z9_transfer(params=None, mask=False):
     good and a bad, that are identified in spring. Both seasons must have the same management through the beginning of
     the year until spring (because the farmer doesnt know if they are having the good or bad year until spring).
     '''
+    ##get param
+    p7_start_dates_c0p7z = per.f_cashflow_periods()[:,:-1,:]  # slice off the end date slice
+    mask_cashflow_provz8z9_c0p7z8z9 = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1)
 
-    ##inputs
-    date_initiate_z = zfun.f_seasonal_inp(pinp.general['i_date_initiate_z'], numpy=True, axis=0).astype('datetime64')
-    bool_steady_state = pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1
-    if bool_steady_state:
-        len_z = 1
-    else:
-        len_z = np.count_nonzero(pinp.general['i_mask_z'])
-    index_z = np.arange(len_z)
-    p_dates_c0p7z = per.f_cashflow_periods()[:,:-1,:] #slice off the end date slice
-    date_node_zm = zfun.f_seasonal_inp(pinp.general['i_date_node_zm'],numpy=True,axis=0).astype(
-        'datetime64')  # treat z axis
-
-    ##dams child parent transfer
-    mask_cashflow_provz8z9_c0p7z8z9, mask_cashflow_z8var_c0p7z = \
-    zfun.f_season_transfer_mask(p_dates_c0p7z, date_node_zm, date_initiate_z, index_z, bool_steady_state, z_pos=-1)
-
-    if mask:
-        return mask_cashflow_z8var_c0p7z
-
-    ##build params
+    ##build param
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()

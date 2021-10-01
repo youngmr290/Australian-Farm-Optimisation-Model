@@ -170,7 +170,8 @@ def f_grain_price(r_vals):
     keys_z = zfun.f_keys_z()
     peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
     p_dates_c0p7z = per.f_cashflow_periods()
-    mask_cashflow_z8var_c0p7z = fin.f_cashflow_z8z9_transfer(mask=True)
+    p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
+    mask_cashflow_z8var_c0p7z = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)
     grain_cost_allocation_c0p7z, grain_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]), start, p_dates_c0p7z,
                                                                                        peakdebt_date_c0p7z, mask_cashflow_z8var_c0p7z,
                                                                                        'crp', length)
@@ -334,7 +335,8 @@ def f1_fert_cost_allocation():
     peakdebt_date_c0p7zn = per.f_peak_debt_date()[:,na,na,na]
     ##calc interest and allocate to cash period - needs to be numpy
     p_dates_c0p7z = per.f_cashflow_periods()
-    mask_cashflow_z8var_c0p7zn = fin.f_cashflow_z8z9_transfer(mask=True)[...,na]
+    p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
+    mask_cashflow_z8var_c0p7zn = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)[...,na]
     fert_cost_allocation_c0p7zn, fert_wc_allocation_c0p7zn = fin.f_cashflow_allocation(np.array([1]), start_df.values,
                                                                                        p_dates_c0p7z[...,na], peakdebt_date_c0p7zn,
                                                                                        mask_cashflow_z8var_c0p7zn, 'crp',
@@ -691,7 +693,8 @@ def f_phase_stubble_cost(r_vals):
     keys_z = zfun.f_keys_z()
     peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
     p_dates_c0p7z = per.f_cashflow_periods()
-    mask_cashflow_z8var_c0p7z = fin.f_cashflow_z8z9_transfer(mask=True)
+    p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
+    mask_cashflow_z8var_c0p7z = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)
     stub_cost_allocation_c0p7z, stub_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]), start, p_dates_c0p7z,
                                                                                      peakdebt_date_c0p7z, mask_cashflow_z8var_c0p7z,
                                                                                      'crp', length)
@@ -727,7 +730,8 @@ def f1_chem_cost_allocation():
     peakdebt_date_c0p7zn = per.f_peak_debt_date()[:,na,na,na]
     ##calc interest and allocate to cash period - needs to be numpy
     p_dates_c0p7z = per.f_cashflow_periods()
-    mask_cashflow_z8var_c0p7zn = fin.f_cashflow_z8z9_transfer(mask=True)[...,na]
+    p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
+    mask_cashflow_z8var_c0p7zn = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)[...,na]
     chem_cost_allocation_c0p7zn, chem_wc_allocation_c0p7zn = fin.f_cashflow_allocation(np.array([1]), start_df.values,
                                                                                        p_dates_c0p7z[...,na], peakdebt_date_c0p7zn,
                                                                                        mask_cashflow_z8var_c0p7zn, 'crp', length_df.values)
@@ -911,7 +915,8 @@ def f_seedcost(r_vals):
     keys_z = zfun.f_keys_z()
     peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
     p_dates_c0p7z = per.f_cashflow_periods()
-    mask_cashflow_z8var_c0p7z = fin.f_cashflow_z8z9_transfer(mask=True)
+    p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
+    mask_cashflow_z8var_c0p7z = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)
     seed_cost_allocation_c0p7z, seed_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]), start_z, p_dates_c0p7z,
                                                                                      peakdebt_date_c0p7z, mask_cashflow_z8var_c0p7z,
                                                                                      'crp', length_z)
@@ -961,7 +966,8 @@ def f_insurance(r_vals):
     keys_z = zfun.f_keys_z()
     peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
     p_dates_c0p7z = per.f_cashflow_periods()
-    mask_cashflow_z8var_c0p7z = fin.f_cashflow_z8z9_transfer(mask=True)
+    p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
+    mask_cashflow_z8var_c0p7z = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)
     insurance_cost_allocation_c0p7z, insurance_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]), start, p_dates_c0p7z,
                                                                                                peakdebt_date_c0p7z, mask_cashflow_z8var_c0p7z,
                                                                                                'crp')
