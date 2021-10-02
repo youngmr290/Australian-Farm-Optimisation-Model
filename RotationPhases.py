@@ -45,7 +45,7 @@ def f1_rot_period_alloc(item_start=0, item_length=np.timedelta64(1, 'D'), z_pos=
     return alloc_metc
 
 
-def f_v_phase_increment_adj(param, m_pos, numpy=False):
+def f_v_phase_increment_adj(param, m_pos, r_pos, numpy=False):
     '''
     Adjust v_phase param for v_phase_increment.
 
@@ -55,6 +55,13 @@ def f_v_phase_increment_adj(param, m_pos, numpy=False):
     This stops the optimisation selecting the phase in the last node and receiving the income without
     incurring any costs. Note: Yield and stubble do not require increment params because it is not possible to harvest a
     rotation before the rotation is selected.
+
+    Note dry sown rotations are excluded because they are selected in the final m period and passed to the starting m.
+
+    :param param: parameter with m axis and r axis that is being adjusted.
+    :param m_pos: axis position of m
+    :param r_pos: for pandas this is r axis level, for numpy this is r axis pos
+    :param numpy: Boolean, stating if param is numpy.
     '''
 
     param_increment = np.roll(np.cumsum(param.values, axis=m_pos),1, axis=m_pos) #include .values incase df is passed.
@@ -62,10 +69,21 @@ def f_v_phase_increment_adj(param, m_pos, numpy=False):
     slc[m_pos] = slice(0,1)
     param_increment[tuple(slc)] = 0
 
-    if not numpy:
+    ##remove cumulative for dry sown phases
+    phases_df = sinp.f_phases()
+    landuse_r = phases_df.iloc[:,-1].values
+    dry_sown_landuses = sinp.landuse['dry_sown']
+    phase_is_not_drysown_r = np.logical_not(np.any(landuse_r[:,na]==list(dry_sown_landuses), axis=-1))
+
+    if numpy:
+        phase_is_not_drysown_r = fun.f_expand(phase_is_not_drysown_r, r_pos)
+        param_increment = param_increment * phase_is_not_drysown_r
+    else:
+        phase_is_not_drysown_r = pd.Series(phase_is_not_drysown_r, index=phases_df.index)
         index = param.index
         cols = param.columns
         param_increment = pd.DataFrame(param_increment, index=index, columns=cols)
+        param_increment = param_increment.mul(phase_is_not_drysown_r, axis=1-m_pos, level=r_pos)
 
     return param_increment
 
