@@ -336,7 +336,7 @@ def f_crop_monitoring():
     phases_df.columns = pd.MultiIndex.from_product([phases_df.columns,[''],['']])
     variable_crop_monitor = pd.merge(phases_df, variable_crop_monitor, how='left', left_on=sinp.end_col(), right_index = True) #merge with all the phases
     variable_crop_monitor_r_p5mz = variable_crop_monitor.drop(list(range(sinp.general['phase_len'])), axis=1)
-    variable_crop_monitor_p5mzr = variable_crop_monitor_r_p5mz.unstack()
+    variable_crop_monitor_p5mzr = variable_crop_monitor_r_p5mz.unstack().dropna()
     ###create params for v_phase_increment
     increment_variable_crop_monitor_p5mzr = rps.f_v_phase_increment_adj(variable_crop_monitor_p5mzr.unstack(1),m_pos=1).stack()
 
