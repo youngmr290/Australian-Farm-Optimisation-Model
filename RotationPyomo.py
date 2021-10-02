@@ -49,6 +49,9 @@ def f1_rotationpyomo(params, model):
     model.p_parentchildz_transfer_phase = Param(model.s_phase_periods, model.s_season_types, model.s_season_types, initialize=params['p_parentchildz_transfer_phase'],
                                                 doc='Transfer of z8 dv in the previous cash period to z9 constraint in the current phase period')
     model.p_mask_phases = Param(model.s_phases, model.s_phase_periods, initialize=params['p_mask_phases'], doc='mask phases that transfer in each phase period')
+    model.p_mask_childreqz = Param(model.s_phase_periods, model.s_season_types, initialize=params['p_mask_childreqz'], doc='mask for active seasons in each phase period')
+    model.p_dryz_link = Param(model.s_phases, model.s_season_types, model.s_season_types, initialize=params['p_dryz_link'], doc='dry link between seasons (only occurs between m[-1])')
+    model.p_dryz_link2 = Param(model.s_phases, model.s_season_types, model.s_season_types, initialize=params['p_dryz_link2'], doc='dry link between seasons (only occurs between m[-1])')
 
     ###################
     #call constraints #
@@ -56,6 +59,7 @@ def f1_rotationpyomo(params, model):
     f_con_rotation_between(params, model)
     f_con_rotation_within(model)
     f_con_area(model)
+    f_con_dry_link(model)
 
 
 
@@ -91,8 +95,6 @@ def f_con_rotation_between(params, model):
     model.con_rotationcon2 = Constraint(model.s_phase_periods, model.s_lmus, model.s_rotconstraints, model.s_season_types, rule=rot_phase_link, doc='rotation phases constraint')
 
 
-
-
 def f_con_rotation_within(model):
     '''
     Transfer of rotation phase within a year.
@@ -117,11 +119,52 @@ def f_con_rotation_within(model):
     def rot_phase_link_within(model,m,l,r,z9):
         l_m = list(model.s_phase_periods)
         m_prev = l_m[l_m.index(m) - 1] #need the activity level from last feed period
+        # return model.v_phase_area[m,z9,r,l] * model.p_mask_childreqz[m,z9]\ #if i include the req mask the profit is the same but then cplex chooses variable which makes the summary hard to read
         return model.v_phase_area[m,z9,r,l] \
                - model.v_phase_increment[m,z9,r,l]\
-               - sum(model.v_phase_area[m_prev,z8,r,l] * model.p_parentchildz_transfer_phase[m,z8,z9]
+               - sum(model.v_phase_area[m_prev,z8,r,l] * model.p_parentchildz_transfer_phase[m_prev,z8,z9]
                      for z8 in model.s_season_types) * model.p_mask_phases[r,m_prev] ==0 #end of the previous yr is controlled by between constraint
-    model.con_rotationcon1 = Constraint(model.s_phase_periods, model.s_lmus, model.s_phases, model.s_season_types, rule=rot_phase_link_within, doc='rotation phases constraint')
+    model.con_phase_link_within = Constraint(model.s_phase_periods, model.s_lmus, model.s_phases, model.s_season_types, rule=rot_phase_link_within, doc='rotation phases constraint')
+
+
+def f_con_dry_link(model):
+    '''
+    Link between dry seeding in different breaks.
+
+    If dry seeding occurs in a given season it must also occur in all other seasons that have not yet broken.
+    For example, if dry sowing occurs before the earliest break then at least the same amount must occur in all
+    other seasons. However, if dry seeding occurs in a season with a medium break it doesn't need to happen in a season
+    with an early break but it must happen in a season with a later break.
+
+    This constraint only occurs for m[-1] because that is the period when dry sowing phases are selected.
+    This constraint is required because in m[-1] all seasons are identified so nothing forces dry seeding to be
+    the same across seasons.
+
+    '''
+    #todo i couldnt make this work as one constraint. Dad to review and see if there is a better way.
+    #this one forces the current season to have at least as much dry seeding as the previous season
+    def dry_phase_link1(model,m,l,r,z9):
+        l_m = list(model.s_phase_periods)
+        ##only build the constraint for m[-1]
+        if m == l_m[-1] or any(model.p_dryz_link[r,z8,z9] for z8 in model.s_season_types):
+            return - model.v_phase_increment[m,z9,r,l] \
+                   + sum(model.v_phase_increment[m,z8,r,l] * model.p_dryz_link[r,z8,z9]
+                         for z8 in model.s_season_types) <= 0
+        else:
+            return Constraint.Skip
+    model.con_dry_link1 = Constraint(model.s_phase_periods, model.s_lmus, model.s_phases, model.s_season_types, rule=dry_phase_link1, doc='link dry seeding between season types')
+
+    #this one forces each season with the same break to have the same amount of dry seeding (by forcing the end to equal the start)
+    def dry_phase_link2(model,m,l,r,z9):
+        l_m = list(model.s_phase_periods)
+        ##only build the constraint for m[-1]
+        if m == l_m[-1] or any(model.p_dryz_link2[r,z8,z9] for z8 in model.s_season_types):
+            return - model.v_phase_increment[m,z9,r,l] \
+                   + sum(model.v_phase_increment[m,z8,r,l] * model.p_dryz_link2[r,z8,z9]
+                         for z8 in model.s_season_types) <= 0
+        else:
+            return Constraint.Skip
+    model.con_dry_link2 = Constraint(model.s_phase_periods, model.s_lmus, model.s_phases, model.s_season_types, rule=dry_phase_link2, doc='link dry seeding between season types')
 
 
 

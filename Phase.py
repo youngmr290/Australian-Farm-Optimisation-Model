@@ -1032,8 +1032,8 @@ def f1_rot_cost(r_vals):
     wc_c0p7zmlr = wc.reindex(new_index_c0p7zm, axis=1).mul(alloc_c0p7zm, axis=1).unstack([1,0])
 
     ##create params for v_phase_increment
-    increment_cost_c0p7zlrm = rps.f_v_phase_increment_adj(cost_c0p7zmlr.unstack(3),m_pos=1).stack()
-    increment_wc_c0p7zlrm = rps.f_v_phase_increment_adj(wc_c0p7zmlr.unstack(3),m_pos=1).stack()
+    increment_cost_c0p7zlrm = rps.f_v_phase_increment_adj(cost_c0p7zmlr.unstack(3),m_pos=1, r_pos=4).stack()
+    increment_wc_c0p7zlrm = rps.f_v_phase_increment_adj(wc_c0p7zmlr.unstack(3),m_pos=1, r_pos=4).stack()
 
     return cost_c0p7zmlr, increment_cost_c0p7zlrm, wc_c0p7zmlr, increment_wc_c0p7zlrm
 
