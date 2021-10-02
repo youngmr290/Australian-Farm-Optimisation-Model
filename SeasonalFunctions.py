@@ -130,7 +130,7 @@ def f_initiating_parent_z():
     date_node_zm = f_seasonal_inp(pinp.general['i_date_node_zm'],numpy=True,axis=0).astype('datetime64')  # treat z axis
     date_initiate_z = f_seasonal_inp(pinp.general['i_date_initiate_z'],numpy=True,axis=0).astype('datetime64')
     index_z = np.arange(len(date_initiate_z))
-    initiating_parent_z = np.min(index_z * (date_initiate_z == date_node_zm[...,0,na])
+    initiating_parent_z = np.max(index_z * (date_initiate_z == date_node_zm[...,0,na])
                                  * (index_z <= index_z[:,na]),axis=-1)
     return initiating_parent_z
 
