@@ -161,9 +161,9 @@ def crop_residue_all(params, r_vals, nv):
     stub_foo_harv_zk = np.zeros((n_seasons, n_crops))
     for crop, crop_idx in zip(pinp.stubble['i_stub_landuse_idx'], range(n_crops)):
         try:
-            stub_foo_harv_zk[:, crop_idx] = base_yields.loc[crop].mean(axis=0, level=0).mean(axis=1) * residue_per_grain_k.loc[crop]
+            stub_foo_harv_zk[:, crop_idx] = base_yields.loc[crop].mean(axis=0, level=0).mean(axis=0) * residue_per_grain_k.loc[crop]
         except KeyError: #if the crop is not in any of the rotations assign average foo to stop error - this is not used so could assign any value.
-            stub_foo_harv_zk[:,crop_idx] = base_yields.mean(axis=0, level=1).mean(axis=1) * residue_per_grain_k.mean()
+            stub_foo_harv_zk[:,crop_idx] = base_yields.mean(axis=0, level=1).mean(axis=0) * residue_per_grain_k.mean()
     stub_foo_harv_zk = np.nan_to_num(stub_foo_harv_zk) #replace nan with 0 (only wanted nan for the mean)
     ###adjust the foo for each category because the good stuff is eaten first therefore there is less foo when the sheep start eating the poorer stubble
     cat_propn_ks1 = pinp.stubble['stub_cat_prop']

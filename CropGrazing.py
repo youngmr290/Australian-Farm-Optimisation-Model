@@ -107,7 +107,7 @@ def f_cropgraze_DM(total_DM=False):
     end_establishment_z = seeding_start_z + establishment_days
     date_start_adj_p6z = np.maximum(date_start_p6z, end_establishment_z)
     feed_period_lengths_p6z = np.maximum(0,(date_end_p6z - date_start_adj_p6z).astype('timedelta64[D]').astype('float'))
-    total_dm_growth_kp6zl = growth_kp6zl * feed_period_lengths_p6z[:,na]
+    total_dm_growth_kp6zl = growth_kp6zl * feed_period_lengths_p6z[...,na]
 
     ##season mask
     mask_fp_z8var_p6z = zfun.f_season_transfer_mask(date_start_p6z, z_pos=-1, mask=True)
@@ -135,8 +135,8 @@ def f_cropgraze_DM(total_DM=False):
         ##crop foo mid way through feed period after consumption - used to calc vol in the next function.
         ##DM = initial DM plus cumulative sum of DM in previous periods minus DM consumed. Minus half the DM in the current period to get the DM in the middle of the period.
         initial_DM_p6z = initial_DM * (end_establishment_z <= date_end_p6z)
-        crop_foo_kp6zl =  initial_DM_p6z[...,na] + np.cumsum(total_dm_growth_kp6zl * (1-consumption_factor_p6z[:,na])
-                                                            , axis=1) - total_dm_growth_kp6zl/2 * (1-consumption_factor_p6z[:,na])
+        crop_foo_kp6zl =  initial_DM_p6z[...,na] + np.cumsum(total_dm_growth_kp6zl * (1-consumption_factor_p6z[:,:,na])
+                                                            , axis=1) - total_dm_growth_kp6zl/2 * (1-consumption_factor_p6z[:,:,na])
         return crop_foo_kp6zl
 
 def f_DM_reduction_seeding_time():
