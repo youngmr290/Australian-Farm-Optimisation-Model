@@ -1149,9 +1149,9 @@ def f1_crop_params(params,r_vals):
     params['phase_sow_req'] = phasesow_req.to_dict()
     params['sow_prov'] = sow_prov_p5zk.to_dict()
     params['rot_cost'] = cost.to_dict()
-    params['increment_rot_cost'] = cost.to_dict()
+    params['increment_rot_cost'] = increment_cost.to_dict()
     params['rot_wc'] = wc.to_dict()
-    params['increment_rot_wc'] = wc.to_dict()
+    params['increment_rot_wc'] = increment_wc.to_dict()
     params['rot_yield'] = yields.to_dict()
 
 
