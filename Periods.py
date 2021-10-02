@@ -246,17 +246,21 @@ def f_phase_periods(keys=False):
 
     date_node_zm = zfun.f_seasonal_inp(pinp.general['i_date_node_zm'],numpy=True,axis=0).astype(
         'datetime64')  # treat z axis
+    ##if steady state then m axis is singleton (start and finish at the break of season).
     if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1:
-        date_node_zm = date_node_zm[:,
-                       0]  # if steady state then m axis is singleton (start and finish at the break of season).
-    ###add end date of last node period - required for the allocation function
-    end_zm = date_node_zm[:,0:1] + np.timedelta64(365,
-                                                  'D')  # increment the first date by 1yr so it becomes the end date for the last period
-    ###add dry seeding period
-    dry_seed_start_m = np.array([pinp.crop['dry_seed_start']],dtype='datetime64')
-    dry_seed_start_zm = np.broadcast_to(dry_seed_start_m[na,:],end_zm.shape)  # expand z axis
-    date_phase_node_mz = np.concatenate([date_node_zm,dry_seed_start_zm,end_zm],
-                                        axis=1).T  # put m in pos 0 because that how the allocation function requires
+        date_node_zm = date_node_zm[:,0:1]
+        ###add end date of last node period - required for the allocation function
+        end_zm = date_node_zm[:,0:1] + np.timedelta64(365,'D')  # increment the first date by 1yr so it becomes the end date for the last period
+        date_phase_node_mz = np.concatenate([date_node_zm,end_zm],axis=1).T  # put m in pos 0 because that how the allocation function requires
+    ##if DSP then all season node included plus a node for dry seeding
+    else:
+        ###add end date of last node period - required for the allocation function
+        end_zm = date_node_zm[:,0:1] + np.timedelta64(365,'D')  # increment the first date by 1yr so it becomes the end date for the last period
+        ###add dry seeding period
+        dry_seed_start_m = np.array([pinp.crop['dry_seed_start']],dtype='datetime64')
+        dry_seed_start_zm = np.broadcast_to(dry_seed_start_m[na,:],end_zm.shape)  # expand z axis
+        date_phase_node_mz = np.concatenate([date_node_zm,dry_seed_start_zm,end_zm],
+                                            axis=1).T  # put m in pos 0 because that how the allocation function requires
     len_m = date_phase_node_mz.shape[0] - 1  # minus one because end date is not a period
 
     ##return keys if wanted
