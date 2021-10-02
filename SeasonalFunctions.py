@@ -122,6 +122,19 @@ def f_keys_z():
     return keys_z
 
 
+def f_initiating_parent_z():
+    '''
+    Identify the highest weather-year that breaks on the same date that is this weather-year or earlier.
+
+    '''
+    date_node_zm = f_seasonal_inp(pinp.general['i_date_node_zm'],numpy=True,axis=0).astype('datetime64')  # treat z axis
+    date_initiate_z = f_seasonal_inp(pinp.general['i_date_initiate_z'],numpy=True,axis=0).astype('datetime64')
+    index_z = np.arange(len(date_initiate_z))
+    initiating_parent_z = np.min(index_z * (date_initiate_z == date_node_zm[...,0,na])
+                                 * (index_z <= index_z[:,na]),axis=-1)
+    return initiating_parent_z
+
+
 def f_parent_z(season_start_z8, date_initiate_z8, index_z8):
     '''
     Create an association pointing at each seasons parent season
