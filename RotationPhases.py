@@ -20,7 +20,7 @@ import Periods as per
 import SeasonalFunctions as zfun
 
 
-def f1_rot_period_alloc(item_start=0, item_length=np.timedelta64(1, 'D'), z_pos=0, keys=False, periods=False):
+def f1_rot_period_alloc(item_start=0, item_length=np.timedelta64(1, 'D'), z_pos=0):
     '''
     Allocation of item into rotation periods (m).
 
