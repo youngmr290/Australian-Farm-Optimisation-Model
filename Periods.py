@@ -257,7 +257,7 @@ def f_phase_periods(keys=False):
         ###add end date of last node period - required for the allocation function
         end_zm = date_node_zm[:,0:1] + np.timedelta64(365,'D')  # increment the first date by 1yr so it becomes the end date for the last period
         ###add dry seeding period
-        dry_seed_start_m = np.array([pinp.crop['dry_seed_start']],dtype='datetime64')
+        dry_seed_start_m = np.array([pinp.crop['dry_seed_start']],dtype='datetime64') + np.timedelta64(365,'D') #add 365 because dry seeding is essentially at the end of the season (because start of season is the brk)
         dry_seed_start_zm = np.broadcast_to(dry_seed_start_m[na,:],end_zm.shape)  # expand z axis
         date_phase_node_mz = np.concatenate([date_node_zm,dry_seed_start_zm,end_zm],
                                             axis=1).T  # put m in pos 0 because that how the allocation function requires
