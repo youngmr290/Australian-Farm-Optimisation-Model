@@ -326,8 +326,6 @@ def f1_seed_cost_alloc():
     '''period allocation for seeding costs'''
     ##inputs
     start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
-    seed_period_lengths_p5z = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
-    length_z = np.sum(seed_period_lengths_p5z, axis=0)
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
@@ -572,7 +570,6 @@ def f1_harv_cost_alloc():
 
     ##inputs
     harv_start_z = zfun.f_seasonal_inp(pinp.period['harv_date'], numpy=True, axis=0).astype('datetime64')
-    harv_lengths_z = np.sum(zfun.f_seasonal_inp(pinp.period['harv_period_lengths'], numpy=True, axis=1), axis=0)
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
@@ -703,7 +700,6 @@ def f_hay_making_cost():
     '''
     ##cost allocation
     hay_start = np.array([pinp.crop['hay_making_date']]).astype('datetime64')
-    hay_length = pinp.crop['hay_making_len']
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()

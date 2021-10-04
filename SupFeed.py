@@ -61,7 +61,6 @@ def f_buy_grain_price(r_vals):
 
     ##allocate farm gate grain price for each cashflow period and calc interest
     start = np.array([pinp.crop['i_grain_income_date']]).astype('datetime64')
-    length = pinp.crop['i_grain_income_length']
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
@@ -135,7 +134,6 @@ def f_sup_cost(r_vals):
 
     ##feeding cost allocaion
     start_p6z = per.f_feed_periods()[:-1,:]
-    length_p6z = per.f_feed_periods(option=1)
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
