@@ -337,8 +337,8 @@ def f1_seed_cost_alloc():
     mask_cashflow_z8var_c0p7z = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)
     
     ##calc interest and allocate to cash period - needs to be numpy
-    seeding_cost_allocation_c0p7z, seeding_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]), start_z, p_dates_c0p7z,
-                                                                     peakdebt_date_c0p7z, mask_cashflow_z8var_c0p7z, 'crp', length_z)
+    seeding_cost_allocation_c0p7z, seeding_wc_allocation_c0p7z = fin.f_cashflow_allocation(start_z, p_dates_c0p7z,
+                                                                     peakdebt_date_c0p7z, mask_cashflow_z8var_c0p7z, 'crp')
     ###convert to df
     new_index_c0p7z = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z])
     seeding_cost_allocation_c0p7z = pd.Series(seeding_cost_allocation_c0p7z.ravel(), index=new_index_c0p7z)
@@ -582,10 +582,9 @@ def f1_harv_cost_alloc():
     mask_cashflow_z8var_c0p7z = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)
 
     ##calc interest and allocate to cash period - needs to be numpy
-    harv_cost_allocation_c0p7z,harv_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]),harv_start_z,
+    harv_cost_allocation_c0p7z,harv_wc_allocation_c0p7z = fin.f_cashflow_allocation(harv_start_z,
                                                                                     p_dates_c0p7z, peakdebt_date_c0p7z,
-                                                                                    mask_cashflow_z8var_c0p7z, 'crp',
-                                                                                    harv_lengths_z)
+                                                                                    mask_cashflow_z8var_c0p7z, 'crp')
     ###convert to df
     new_index_c0p7z = pd.MultiIndex.from_product([keys_c0,keys_p7,keys_z])
     harv_cost_allocation_c0p7z = pd.Series(harv_cost_allocation_c0p7z.ravel(),index=new_index_c0p7z)
@@ -713,10 +712,9 @@ def f_hay_making_cost():
     p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
     mask_cashflow_z8var_c0p7z = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)
     ###call allocation/interset function - needs to be numpy
-    hay_cost_allocation_c0p7z,hay_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]),hay_start,
+    hay_cost_allocation_c0p7z,hay_wc_allocation_c0p7z = fin.f_cashflow_allocation(hay_start,
                                                                                   p_dates_c0p7z, peakdebt_date_c0p7z,
-                                                                                  mask_cashflow_z8var_c0p7z, 'crp',
-                                                                                          hay_length)
+                                                                                  mask_cashflow_z8var_c0p7z, 'crp')
     ###convert to df
     new_index_c0p7z = pd.MultiIndex.from_product([keys_c0,keys_p7,keys_z])
     hay_cost_allocation_c0p7z = pd.Series(hay_cost_allocation_c0p7z.ravel(),index=new_index_c0p7z)
@@ -1036,7 +1034,7 @@ def f_insurance(r_vals):
     p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
     mask_cashflow_z8var_c0p7z = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)
     ###call allocation/interset function - needs to be numpy
-    insurance_cost_allocation_c0p7z,insurance_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]),start,
+    insurance_cost_allocation_c0p7z,insurance_wc_allocation_c0p7z = fin.f_cashflow_allocation(start,
                                                                                           p_dates_c0p7z, peakdebt_date_c0p7z,
                                                                                           mask_cashflow_z8var_c0p7z, 'crp')
     ###convert to df

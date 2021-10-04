@@ -172,9 +172,9 @@ def f_grain_price(r_vals):
     p_dates_c0p7z = per.f_cashflow_periods()
     p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
     mask_cashflow_z8var_c0p7z = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)
-    grain_cost_allocation_c0p7z, grain_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]), start, p_dates_c0p7z,
+    grain_cost_allocation_c0p7z, grain_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, p_dates_c0p7z,
                                                                                        peakdebt_date_c0p7z, mask_cashflow_z8var_c0p7z,
-                                                                                       'crp', length)
+                                                                                       'crp')
     ###convert to df
     new_index_c0p7z = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z])
     grain_income_allocation_c0p7z = pd.Series(grain_cost_allocation_c0p7z.ravel(), index=new_index_c0p7z)
@@ -337,10 +337,9 @@ def f1_fert_cost_allocation():
     p_dates_c0p7z = per.f_cashflow_periods()
     p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
     mask_cashflow_z8var_c0p7zn = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)[...,na]
-    fert_cost_allocation_c0p7zn, fert_wc_allocation_c0p7zn = fin.f_cashflow_allocation(np.array([1]), start_df.values,
+    fert_cost_allocation_c0p7zn, fert_wc_allocation_c0p7zn = fin.f_cashflow_allocation(start_df.values,
                                                                                        p_dates_c0p7z[...,na], peakdebt_date_c0p7zn,
-                                                                                       mask_cashflow_z8var_c0p7zn, 'crp',
-                                                                                       length_df.values)
+                                                                                       mask_cashflow_z8var_c0p7zn, 'crp')
     ###convert to df
     new_index_c0p7zn = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, start_df.index])
     fert_cost_allocation_c0p7zn = pd.Series(fert_cost_allocation_c0p7zn.ravel(), index=new_index_c0p7zn)
@@ -695,9 +694,9 @@ def f_phase_stubble_cost(r_vals):
     p_dates_c0p7z = per.f_cashflow_periods()
     p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
     mask_cashflow_z8var_c0p7z = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)
-    stub_cost_allocation_c0p7z, stub_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]), start, p_dates_c0p7z,
+    stub_cost_allocation_c0p7z, stub_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, p_dates_c0p7z,
                                                                                      peakdebt_date_c0p7z, mask_cashflow_z8var_c0p7z,
-                                                                                     'crp', length)
+                                                                                     'crp')
     ###convert to df
     new_index_c0p7z = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z])
     stub_cost_allocation_c0p7z = pd.Series(stub_cost_allocation_c0p7z.ravel(), index=new_index_c0p7z)
@@ -732,9 +731,9 @@ def f1_chem_cost_allocation():
     p_dates_c0p7z = per.f_cashflow_periods()
     p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
     mask_cashflow_z8var_c0p7zn = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)[...,na]
-    chem_cost_allocation_c0p7zn, chem_wc_allocation_c0p7zn = fin.f_cashflow_allocation(np.array([1]), start_df.values,
+    chem_cost_allocation_c0p7zn, chem_wc_allocation_c0p7zn = fin.f_cashflow_allocation(start_df.values,
                                                                                        p_dates_c0p7z[...,na], peakdebt_date_c0p7zn,
-                                                                                       mask_cashflow_z8var_c0p7zn, 'crp', length_df.values)
+                                                                                       mask_cashflow_z8var_c0p7zn, 'crp')
     ###convert to df
     new_index_c0p7zn = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, start_df.index])
     chem_cost_allocation_c0p7zn = pd.Series(chem_cost_allocation_c0p7zn.ravel(), index=new_index_c0p7zn)
@@ -917,9 +916,9 @@ def f_seedcost(r_vals):
     p_dates_c0p7z = per.f_cashflow_periods()
     p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
     mask_cashflow_z8var_c0p7z = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)
-    seed_cost_allocation_c0p7z, seed_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]), start_z, p_dates_c0p7z,
+    seed_cost_allocation_c0p7z, seed_wc_allocation_c0p7z = fin.f_cashflow_allocation(start_z, p_dates_c0p7z,
                                                                                      peakdebt_date_c0p7z, mask_cashflow_z8var_c0p7z,
-                                                                                     'crp', length_z)
+                                                                                     'crp')
     ###convert to df
     new_index_c0p7z = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z])
     seed_cost_allocation_c0p7z = pd.Series(seed_cost_allocation_c0p7z.ravel(), index=new_index_c0p7z)
@@ -968,7 +967,7 @@ def f_insurance(r_vals):
     p_dates_c0p7z = per.f_cashflow_periods()
     p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
     mask_cashflow_z8var_c0p7z = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)
-    insurance_cost_allocation_c0p7z, insurance_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]), start, p_dates_c0p7z,
+    insurance_cost_allocation_c0p7z, insurance_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, p_dates_c0p7z,
                                                                                                peakdebt_date_c0p7z, mask_cashflow_z8var_c0p7z,
                                                                                                'crp')
     ###convert to df

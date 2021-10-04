@@ -4601,7 +4601,7 @@ def generator(params,r_vals,nv,plots = False):
     mask_cashflow_z8var_c0p7pa1e1b1nwzida0e0b0xyg = zfun.f_season_transfer_mask(p7_start_dates_c0p7pa1e1b1nwzida0e0b0xyg, z_pos=z_pos, mask=True)
     ###call allocation/interset function - assumption is that cashflow happens on the first day of the generator period.
     cash_allocation_c0p7pa1e1b1nwzida0e0b0xyg, wc_allocation_c0p7pa1e1b1nwzida0e0b0xyg = fin.f_cashflow_allocation(
-        np.array([1]), date_start_pa1e1b1nwzida0e0b0xyg, p7_dates_c0p7pa1e1b1nwzida0e0b0xyg,
+        date_start_pa1e1b1nwzida0e0b0xyg, p7_dates_c0p7pa1e1b1nwzida0e0b0xyg,
         peakdebt_date_c0p7pa1e1b1nwzida0e0b0xyg, mask_cashflow_z8var_c0p7pa1e1b1nwzida0e0b0xyg, 'stk')
 
     ###labour period
@@ -5182,9 +5182,9 @@ def generator(params,r_vals,nv,plots = False):
     p7_start_dates_c0p7z = p7_dates_c0p7z[:,:-1,:]  # slice off the end date slice
     mask_cashflow_z8var_c0p7z = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)
     ###call allocation/interset function - assumption is that cashflow happens on the first day of the generator period.
-    rm_cash_allocation_c0p7z, rm_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]), rm_start_c0p7z,
+    rm_cash_allocation_c0p7z, rm_wc_allocation_c0p7z = fin.f_cashflow_allocation(rm_start_c0p7z,
                                                                                  p7_dates_c0p7z, peakdebt_date_c0p7z,
-                                                                                 mask_cashflow_z8var_c0p7z, 'stk', rm_length)
+                                                                                 mask_cashflow_z8var_c0p7z, 'stk')
 
     rm_stockinfra_var_h1 = uinp.sheep['i_infrastructure_costvariable_h1']
     rm_stockinfra_var_h1c0p7z = rm_stockinfra_var_h1[:,na,na,na] * rm_cash_allocation_c0p7z

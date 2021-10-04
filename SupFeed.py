@@ -69,9 +69,9 @@ def f_buy_grain_price(r_vals):
     p_dates_c0p7z = per.f_cashflow_periods()
     p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
     mask_cashflow_z8var_c0p7z = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)
-    grain_cost_allocation_c0p7z, grain_wc_allocation_c0p7z = fin.f_cashflow_allocation(np.array([1]), start, p_dates_c0p7z,
+    grain_cost_allocation_c0p7z, grain_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, p_dates_c0p7z,
                                                                                        peakdebt_date_c0p7z, mask_cashflow_z8var_c0p7z,
-                                                                                       'stk', length)
+                                                                                       'stk')
     ###convert to df
     new_index_c0p7z = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z])
     grain_income_allocation_c0p7z = pd.Series(grain_cost_allocation_c0p7z.ravel(), index=new_index_c0p7z)
@@ -144,9 +144,9 @@ def f_sup_cost(r_vals):
     p_dates_c0p7z = per.f_cashflow_periods()
     p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
     mask_cashflow_z8var_c0p7zp6 = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)[...,na]
-    sup_cost_allocation_c0p7zp6, sup_wc_allocation_c0p7zp6 = fin.f_cashflow_allocation(np.array([1]), start_p6z.T,
+    sup_cost_allocation_c0p7zp6, sup_wc_allocation_c0p7zp6 = fin.f_cashflow_allocation(start_p6z.T,
                                                                                                p_dates_c0p7z[...,na], peakdebt_date_c0p7zp6,
-                                                                                               mask_cashflow_z8var_c0p7zp6, 'stk', length_p6z.T)
+                                                                                               mask_cashflow_z8var_c0p7zp6, 'stk')
     ###convert to df
     new_index_c0p7zp6 = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, keys_p6])
     sup_cost_allocation_c0p7zp6 = pd.Series(sup_cost_allocation_c0p7zp6.ravel(), index=new_index_c0p7zp6)

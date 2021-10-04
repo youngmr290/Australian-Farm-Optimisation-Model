@@ -85,124 +85,55 @@ na = np.newaxis
 #######################
 # cashflow & interest #
 #######################
-def f_cashflow_allocation(amount,start,p_dates_c0p7,peakdebt_date,z8mask_c0p7,enterprise=None,length=1):
+def f_cashflow_allocation(date_incurred,p_dates_c0p7,peakdebt_date,z8mask_c0p7,enterprise=None):
     '''
-    This function calculate the interest earned on cashflow item, tallies up the total cashflow including interest
-    and tallies up the working capital from a cashflow item.
+    Allocates cashflow and wc to a cashflow period with an additional interest component.
 
-    This function is complicated by the fact that some cashflow items occur over a date range. This is treated such that
-    an proportion of the cashflow is received each day.
+    Cashflow allocation always has a length of 1. Meaning that cost is allocated based on the start date when it is
+    incurred. Interest is calculated from this date until the end of the cashflow periods. The reason for not
+    including a length is that cashflow for a give decision variable can not cross a season junction
+    otherwise some seasons do not incur the cashflow.
 
     All inputs must be broadcastable.
 
-    :param amount: cost or income amount (pass in 1 to get just the allocation).
-    :param start: datetime64 date when cashflow starts
+    :param date_incurred: datetime64 date when cashflow is incurred
     :param enterprise: enterprise
     :param peak_debt_date_c0: datetime64 date peak debt occurs
     :param p_dates_c0p7: datetime64 cashflow dates with c0 and p7 in position 0 and 1 respectively. Other axis can be included after p7.
-    :param rate: yearly interest rate.
-    :param length: int - time over which the cashflow is incurred
     '''
 
     ##inputs
     rate = uinp.finance['i_interest']
     keys_c0 = np.expand_dims(sinp.general['i_enterprises_c0'], tuple(range(1, p_dates_c0p7.ndim)))
-    peakdebt_date = np.broadcast_to(peakdebt_date, p_dates_c0p7.shape) #broadcast so that it can be indexed on p7
     peakdebt_date = peakdebt_date + np.timedelta64(365,'D') * (p_dates_c0p7[:,0:1,...]>peakdebt_date[:,0:1,...]) # peak debt is after the start of the cashflow
 
-    ##build final arrays
-    amount = np.expand_dims(amount, tuple(range(-p_dates_c0p7.ndim,-amount.ndim)))
-    amount_shape = amount.shape
-    start = np.expand_dims(start, tuple(range(-p_dates_c0p7.ndim,-start.ndim)))
-    start_shape = start.shape
-    p_dates_c0p7_shape = list(p_dates_c0p7.shape) #has to be a list because cant change tuple.
-    p_dates_c0p7_shape[1] = p_dates_c0p7_shape[1] -1 #remove the last cashflow peirod because it is not a real period. It is just the end date.
-    shape = np.maximum.reduce([amount_shape, start_shape, p_dates_c0p7_shape]) #create shape which has the max size, this is used for o array
-    final_cashflow = np.zeros(shape)
-    final_wc = np.zeros(shape)
-    # amount = np.broadcast_to(amount, shape)
-    # start = np.broadcast_to(start, shape)
-    # length = np.broadcast_to(length, shape)
-    # p_dates_c0p7 = np.broadcast_to(p_dates_c0p7, shape)
-
-    ##adjust yr of cashflow occurence - this removes the singleton p7 axis from start
-    start_of_cash = p_dates_c0p7[:,0,...]
+    ##adjust yr of cashflow occurence so it occurs within the cashflow periods
+    start_of_cash = p_dates_c0p7[:,0:1,...]
     end_of_cash = start_of_cash + np.timedelta64(364,'D') #use 364 because end date is the day before before the end otherwise can get item that starts on the last day of periods.
-    add_yrs = np.ceil(np.maximum(0,(start_of_cash - start[:,0,...]).astype('timedelta64[D]').astype(int) / 365))
-    sub_yrs = np.ceil(np.maximum(0,(start[:,0,...] - end_of_cash).astype('timedelta64[D]').astype(int) / 365))
-    start = start[:,0,...] + add_yrs * np.timedelta64(365, 'D') - sub_yrs * np.timedelta64(365, 'D')
-    ###handle cases where cost date + length is after the end of cashflow. in this situation length gets reduced
-    length = np.minimum(length, (p_dates_c0p7[:,-1,...] - start).astype('timedelta64[D]').astype(int))
+    add_yrs = np.ceil(np.maximum(0,(start_of_cash - date_incurred).astype('timedelta64[D]').astype(int) / 365))
+    sub_yrs = np.ceil(np.maximum(0,(date_incurred - end_of_cash).astype('timedelta64[D]').astype(int) / 365))
+    date_incurred = date_incurred + add_yrs * np.timedelta64(365, 'D') - sub_yrs * np.timedelta64(365, 'D')
 
-    total_principal_end = 0
-    daily_payment = amount[:,0,...] / length #[:,0,...] to remove the singlton p7 axis
+    ##calc interest
+    cashflow_incur_days = (end_of_cash - date_incurred).astype('timedelta64[D]').astype(int)
+    wc_incur_days = (peakdebt_date - date_incurred).astype('timedelta64[D]').astype(int)
+    cashflow_interest = (1 + rate / 365) ** cashflow_incur_days
+    wc_interest = (1 + rate / 365) ** wc_incur_days
 
-    ##start and end dates for the cashflow periods
-    for p in range(p_dates_c0p7.shape[1]-1):
-        ##cashflow period dates
-        date_start_c0 = p_dates_c0p7[:,p,...]
-        date_end_c0 = p_dates_c0p7[:,p + 1,...]
-        peakdebt_date_c0 = peakdebt_date[:,p,...]
+    ##allocate to cashflow period
+    p_dates_p7c0 = np.swapaxes(p_dates_c0p7, 0, 1) #period axis need to be first for allocation function
+    date_incurred_p7c0 = np.swapaxes(date_incurred, 0, 1) #period axis need to be first for allocation function
+    # date_incurred = np.expand_dims(date_incurred, tuple(range(-p_dates_c0p7.ndim,-date_incurred.ndim)))
+    date_incurred_shape = date_incurred_p7c0.shape
+    p_dates_p7c0_shape = list(p_dates_p7c0.shape) #has to be a list because cant change tuple.
+    p_dates_p7c0_shape[0] = p_dates_p7c0_shape[0] -1 #remove the last cashflow peirod because it is not a real period. It is just the end date.
+    shape = np.maximum.reduce([date_incurred_shape, p_dates_p7c0_shape]) #create shape which has the max size, this is used for alloc array
+    p7_alloc_p7c0 = fun.range_allocation_np(p_dates_p7c0, date_incurred_p7c0, opposite=True, shape=tuple(shape))
+    p7_alloc_c0p7 = np.swapaxes(p7_alloc_p7c0, 0, 1) #get axis back into correct order
 
-        ##princiapal at the begining of the p7 period (amount of cash at the begining of the period, inc interest from previous periods)
-        principal_start = total_principal_end
-
-        #
-        # cashflow - principal and interest
-        #
-        ##calculate interest druing incur period (incur period is the time between the cashflow start and end)
-        ###end date of incur period
-        incur_end = start + length.astype('timedelta64[D]')
-        ###length of incur period (days)
-        incur_days = (np.minimum(date_end_c0, incur_end) - np.maximum(date_start_c0, start)).astype('timedelta64[D]').astype(int)
-        incur_days = np.maximum(0, incur_days)
-        ###interest on starting balance during the incur period - using formula: A = P (1 + r/n)**(t)
-        principal_interest = principal_start * ((1 + rate / 365) ** incur_days - 1)
-        ###daily payments plus interest on daily payments during the incur period - Using formula: Payment × ( ( ( (1 + r/n)^(t) ) - 1 ) / (r/n) )
-        incur_amount = daily_payment * (((1 + rate / 365) ** incur_days - 1) / (rate / 365))
-
-        ##calc interest over the period after payment incur has finished
-        ###days from the end of incur to the end of the period
-        post_incur_days = (date_end_c0 - np.maximum(date_start_c0, incur_end)).astype('timedelta64[D]').astype(int)
-        post_incur_days = np.maximum(0, post_incur_days)
-        ###balance at start of non incur period
-        post_incur_start_balance = principal_start + principal_interest + incur_amount
-        ###interest on balance after the incur period - using formula: A = P (1 + r/n)**(t)
-        post_incur_interest = post_incur_start_balance * ((1 + rate / 365) ** post_incur_days - 1)
-
-        ##cash at the end of the period
-        cashflow_n_interest = principal_interest + incur_amount + post_incur_interest
-        total_principal_end = post_incur_start_balance + post_incur_interest
-
-        #
-        # working capital constraint except that income or expense incurred after the peak debt date is excluded
-        #
-        ##calculate interest druing incur period (incur period is the time between the cashflow start and end)
-        ###end date of incur period
-        incur_end = start + length.astype('timedelta64[D]')
-        ###length of incur period (days)
-        incur_days = (np.minimum(date_end_c0, np.minimum(incur_end,peakdebt_date_c0)) - np.maximum(date_start_c0, start)).astype('timedelta64[D]').astype(int)
-        incur_days = np.maximum(0, incur_days)
-        ###interest on starting balance during the incur period - using formula: A = P (1 + r/n)**(t)
-        wc_principal_interest = principal_start * ((1 + rate / 365) ** incur_days - 1)
-        ###daily payments plus interest on daily payments during the incur period - Using formula: Payment × ( ( ( (1 + r/n)^(t) ) - 1 ) / (r/n) )
-        wc_daily_interest = daily_payment * (((1 + rate / 365) ** incur_days - 1) / (rate / 365))
-
-        ##calc interest over the period after payment incur has finished
-        ###days from the end of incur to the end of the period
-        post_incur_days = (np.minimum(date_end_c0, peakdebt_date_c0) - np.maximum(date_start_c0,incur_end)).astype('timedelta64[D]').astype(int)
-        post_incur_days = np.maximum(0, post_incur_days)
-        ###balance at start of non incur period
-        wc_post_incur_start_balance = principal_start + wc_principal_interest + wc_daily_interest
-        ###interest on balance after the incur period - using formula: A = P (1 + r/n)**(t)
-        wc_post_incur_interest = wc_post_incur_start_balance * ((1 + rate / 365) ** post_incur_days - 1)
-
-        ##cash at the end of the period
-        wc = wc_principal_interest + wc_daily_interest + wc_post_incur_interest
-
-        ##assign to final array
-        final_cashflow[:,p,...] = cashflow_n_interest
-        final_wc[:,p,...] = wc
+    ##add interest adjustment
+    final_cashflow = cashflow_interest * p7_alloc_c0p7
+    final_wc = wc_interest * p7_alloc_c0p7
 
     ##adjust for enterprise
     if enterprise is not None:
@@ -234,9 +165,9 @@ def overheads(params, r_vals):
     p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
     mask_cashflow_z8var_c0p7z = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)
     ###call allocation/interset function - needs to be numpy
-    overhead_cost_allocation_c0p7z, overhead_wc_allocation_c0p7z = f_cashflow_allocation(np.array([1]), overhead_start_c0p7z,
+    overhead_cost_allocation_c0p7z, overhead_wc_allocation_c0p7z = f_cashflow_allocation(overhead_start_c0p7z,
                                                                                   p_dates_c0p7z, peakdebt_date_c0p7z,
-                                                                                  mask_cashflow_z8var_c0p7z, length=overhead_length)
+                                                                                  mask_cashflow_z8var_c0p7z)
     ###convert to df
     new_index_c0p7z = pd.MultiIndex.from_product([keys_c0,keys_p7,keys_z])
     overhead_cost_allocation_c0p7z = pd.Series(overhead_cost_allocation_c0p7z.ravel(),index=new_index_c0p7z)

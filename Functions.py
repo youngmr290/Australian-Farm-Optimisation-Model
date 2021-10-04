@@ -934,7 +934,7 @@ def period_allocation(period_dates,periods,start_d,length=None):
         return allocation_p
 
 
-def range_allocation_np(period_dates, item_start, length, opposite=None, shape=None):
+def range_allocation_np(period_dates, item_start, length=np.array([1]).astype('timedelta64[D]'), opposite=None, shape=None):
     ''' Numpy version - The proportion of each period that falls in the tested date range or proportion of date range in each period.
 
     :param period_dates: the start of the periods (including end date of last period) - in a Numpy array np.datetime64. This array must be broadcastable with start
