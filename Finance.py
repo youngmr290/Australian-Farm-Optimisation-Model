@@ -123,7 +123,6 @@ def f_cashflow_allocation(date_incurred,p_dates_c0p7,peakdebt_date,z8mask_c0p7,e
     ##allocate to cashflow period
     p_dates_p7c0 = np.swapaxes(p_dates_c0p7, 0, 1) #period axis need to be first for allocation function
     date_incurred_p7c0 = np.swapaxes(date_incurred, 0, 1) #period axis need to be first for allocation function
-    # date_incurred = np.expand_dims(date_incurred, tuple(range(-p_dates_c0p7.ndim,-date_incurred.ndim)))
     date_incurred_shape = date_incurred_p7c0.shape
     p_dates_p7c0_shape = list(p_dates_p7c0.shape) #has to be a list because cant change tuple.
     p_dates_p7c0_shape[0] = p_dates_p7c0_shape[0] -1 #remove the last cashflow peirod because it is not a real period. It is just the end date.
@@ -154,10 +153,9 @@ def overheads(params, r_vals):
     including. Examples of overhead costs include; electricity, gas, shire rates, licenses,
     professional services, insurance and household expense.
     '''
-    ##cost allocation
+    ##cost allocation - incurred at the beginning of each cash period
     p_dates_c0p7z = per.f_cashflow_periods()
-    overhead_length = 365 #overheads are incurred equally each day
-    overhead_start_c0p7z = p_dates_c0p7z[:,0:1,:]
+    overhead_start_c0p7oz = p_dates_c0p7z[:,na,:-1,:] #o axis is overheads
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
@@ -165,22 +163,27 @@ def overheads(params, r_vals):
     p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
     mask_cashflow_z8var_c0p7z = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)
     ###call allocation/interset function - needs to be numpy
-    overhead_cost_allocation_c0p7z, overhead_wc_allocation_c0p7z = f_cashflow_allocation(overhead_start_c0p7z,
-                                                                                  p_dates_c0p7z, peakdebt_date_c0p7z,
-                                                                                  mask_cashflow_z8var_c0p7z)
-    ###convert to df
-    new_index_c0p7z = pd.MultiIndex.from_product([keys_c0,keys_p7,keys_z])
-    overhead_cost_allocation_c0p7z = pd.Series(overhead_cost_allocation_c0p7z.ravel(),index=new_index_c0p7z)
-    overhead_wc_allocation_c0p7z = pd.Series(overhead_wc_allocation_c0p7z.ravel(),index=new_index_c0p7z)
+    overhead_cost_allocation_c0p7oz, overhead_wc_allocation_c0p7oz = f_cashflow_allocation(overhead_start_c0p7oz,
+                                                                                  p_dates_c0p7z[:,:,na,:], peakdebt_date_c0p7z[:,:,na,:],
+                                                                                  mask_cashflow_z8var_c0p7z[:,:,na,:])
+    ###remove o axis - o axis is the same as p7 so just take max (allocation is 1 but we needed to call allocation function to get interest)
+    overhead_cost_allocation_c0p7z = np.max(overhead_cost_allocation_c0p7oz, axis=2)
+    overhead_wc_allocation_c0p7z = np.max(overhead_wc_allocation_c0p7oz, axis=2)
 
-    ##cost
+    ##cost - the amount incurred in each cash period is dependent on the period length.
     overheads = pinp.general['i_overheads']
-    overheads_c0_alloc_c0 = pinp.finance['i_fixed_cost_enterprise_allocation_c0']
     overheads = overheads.sum()
-    overheads_c0 = overheads * overheads_c0_alloc_c0
-    overheads_c0 = pd.Series(overheads_c0, index=keys_c0)
-    overhead_cost_c0p7z = overhead_cost_allocation_c0p7z.mul(overheads_c0, level=0)
-    overhead_wc_c0p7z = overhead_wc_allocation_c0p7z.mul(overheads_c0, level=0)
+    daily_overheads = overheads/365
+    overheads_c0p7z = daily_overheads * (p_dates_c0p7z[:,1:,:] - p_dates_c0p7z[:,:-1,:]).astype('timedelta64[D]').astype(int)
+    overheads_c0_alloc_c0 = pinp.finance['i_fixed_cost_enterprise_allocation_c0']
+    overheads_c0p7z = overheads_c0p7z * overheads_c0_alloc_c0[:,na,na]
+    overhead_cost_c0p7z = overhead_cost_allocation_c0p7z * overheads_c0p7z
+    overhead_wc_c0p7z = overhead_wc_allocation_c0p7z * overheads_c0p7z
+
+    ##convert to df
+    new_index_c0p7z = pd.MultiIndex.from_product([keys_c0,keys_p7,keys_z])
+    overhead_cost_c0p7z = pd.Series(overhead_cost_c0p7z.ravel(),index=new_index_c0p7z)
+    overhead_wc_c0p7z = pd.Series(overhead_wc_c0p7z.ravel(),index=new_index_c0p7z)
 
     params['overheads_cost'] = overhead_cost_c0p7z.to_dict()
     params['overheads_wc'] = overhead_wc_c0p7z.to_dict()

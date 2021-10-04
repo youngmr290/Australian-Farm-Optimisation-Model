@@ -5176,20 +5176,28 @@ def generator(params,r_vals,nv,plots = False):
 
     ##infra r&m cost - cost allocated equally into each cashflow period (therefore needs different allocation than other costs)
     p7_dates_c0p7z = per.f_cashflow_periods()
-    rm_start_c0p7z = p7_dates_c0p7z[:,0:1,:]
-    rm_length = 365  # rm is incurred equally each day
-    peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
+    rm_start_c0p7oz = p7_dates_c0p7z[:,na,:-1,:] #o axis is overheads
+    peakdebt_date_c0p7oz = per.f_peak_debt_date()[:,na,na,na]
     p7_start_dates_c0p7z = p7_dates_c0p7z[:,:-1,:]  # slice off the end date slice
     mask_cashflow_z8var_c0p7z = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)
-    ###call allocation/interset function - assumption is that cashflow happens on the first day of the generator period.
-    rm_cash_allocation_c0p7z, rm_wc_allocation_c0p7z = fin.f_cashflow_allocation(rm_start_c0p7z,
-                                                                                 p7_dates_c0p7z, peakdebt_date_c0p7z,
-                                                                                 mask_cashflow_z8var_c0p7z, 'stk')
+    ###call allocation/interset function
+    rm_cash_allocation_c0p7oz, rm_wc_allocation_c0p7oz = fin.f_cashflow_allocation(rm_start_c0p7oz,
+                                                                                 p7_dates_c0p7z[:,:,na,:], peakdebt_date_c0p7oz,
+                                                                                 mask_cashflow_z8var_c0p7z[:,:,na,:], 'stk')
+    ###remove o axis - o axis is the same as p7 so just take max (allocation is 1 but we needed to call allocation function to get interest)
+    rm_cash_allocation_c0p7z = np.max(rm_cash_allocation_c0p7oz, axis=2)
+    rm_wc_allocation_c0p7z = np.max(rm_wc_allocation_c0p7oz, axis=2)
 
+    ###cost - the amount incurred in each cash period is dependent on the period length.
+    p7_len_c0p7z = (p7_dates_c0p7z[:,1:,:] - p7_dates_c0p7z[:,:-1,:]).astype('timedelta64[D]').astype(int)
     rm_stockinfra_var_h1 = uinp.sheep['i_infrastructure_costvariable_h1']
-    rm_stockinfra_var_h1c0p7z = rm_stockinfra_var_h1[:,na,na,na] * rm_cash_allocation_c0p7z
-    rm_stockinfra_var_wc_h1c0p7z = rm_stockinfra_var_h1[:,na,na,na] * rm_wc_allocation_c0p7z
+    rm_stockinfra_var_daily_h1 = rm_stockinfra_var_h1/365
+    rm_stockinfra_var_h1c0p7z = rm_stockinfra_var_daily_h1[:,na,na,na] * p7_len_c0p7z
+    rm_stockinfra_var_h1c0p7z = rm_stockinfra_var_h1c0p7z * rm_cash_allocation_c0p7z
+    rm_stockinfra_var_wc_h1c0p7z = rm_stockinfra_var_h1c0p7z * rm_wc_allocation_c0p7z
     rm_stockinfra_fix_h1 = uinp.sheep['i_infrastructure_costfixed_h1']
+    rm_stockinfra_fix_daily_h1 = rm_stockinfra_fix_h1/365
+    rm_stockinfra_fix_h1c0p7z = rm_stockinfra_fix_daily_h1[:,na,na,na] * p7_len_c0p7z
     rm_stockinfra_fix_h1c0p7z = rm_stockinfra_fix_h1[:,na,na,na] * rm_cash_allocation_c0p7z
     rm_stockinfra_fix_wc_h1c0p7z = rm_stockinfra_fix_h1[:,na,na,na] * rm_wc_allocation_c0p7z
 

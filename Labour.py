@@ -257,29 +257,38 @@ def f_perm_cost(params, r_vals):
     Costs include bank interest.
     Permanent cost includes wage plus super plus workers comp and leave ls (multiplied by wage because super and others are %)
     '''
-    ##cost
-    cost_c0_alloc_c0 = pinp.finance['i_fixed_cost_enterprise_allocation_c0']
-    perm_cost = (uinp.price['permanent_cost'] + uinp.price['permanent_cost'] * uinp.price['permanent_super'] \
-    + uinp.price['permanent_cost'] * uinp.price['permanent_workers_comp'] + uinp.price['permanent_cost'] * uinp.price['permanent_ls_leave'])
-    perm_cost_c0 = perm_cost * cost_c0_alloc_c0
-    manager_cost_c0 = uinp.price['manager_cost'] * cost_c0_alloc_c0
 
     ##cost allocation
     p_dates_c0p7z = per.f_cashflow_periods()
-    labour_length = 365 #perm labour cost is incurred equally each day
-    labour_start_c0p7z = p_dates_c0p7z[:,0:1,:]
-    peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
+    labour_start_c0p7oz = p_dates_c0p7z[:,na,:-1,:]
+    peakdebt_date_c0p7oz = per.f_peak_debt_date()[:,na,na,na]
     p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
     mask_cashflow_z8var_c0p7z = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)
     ###call allocation/interset function - needs to be numpy
-    labour_cost_allocation_c0p7z, labour_wc_allocation_c0p7z = fin.f_cashflow_allocation(labour_start_c0p7z,
-                                                                                  p_dates_c0p7z, peakdebt_date_c0p7z,
-                                                                                  mask_cashflow_z8var_c0p7z)
+    labour_cost_allocation_c0p7oz, labour_wc_allocation_c0p7oz = fin.f_cashflow_allocation(labour_start_c0p7oz,
+                                                                                  p_dates_c0p7z[:,:,na,:], peakdebt_date_c0p7oz,
+                                                                                  mask_cashflow_z8var_c0p7z[:,:,na,:])
+    ###remove o axis - o axis is the same as p7 so just take max (allocation is 1 but we needed to call allocation function to get interest)
+    labour_cost_allocation_c0p7z = np.max(labour_cost_allocation_c0p7oz, axis=2)
+    labour_wc_allocation_c0p7z = np.max(labour_wc_allocation_c0p7oz, axis=2)
 
-    perm_cost_c0p7z = perm_cost_c0[:,na,na] * labour_cost_allocation_c0p7z
-    perm_wc_c0p7z = perm_cost_c0[:,na,na] * labour_wc_allocation_c0p7z
-    manager_cost_c0p7z = manager_cost_c0[:,na,na] * labour_cost_allocation_c0p7z
-    manager_wc_c0p7z = manager_cost_c0[:,na,na] * labour_wc_allocation_c0p7z
+    ##cost - the amount incurred in each cash period is dependent on the period length.
+    p7_len_c0p7z = (p_dates_c0p7z[:,1:,:] - p_dates_c0p7z[:,:-1,:]).astype('timedelta64[D]').astype(int)
+    cost_c0_alloc_c0 = pinp.finance['i_fixed_cost_enterprise_allocation_c0']
+    perm_cost = (uinp.price['permanent_cost'] + uinp.price['permanent_cost'] * uinp.price['permanent_super'] \
+    + uinp.price['permanent_cost'] * uinp.price['permanent_workers_comp'] + uinp.price['permanent_cost'] * uinp.price['permanent_ls_leave'])
+    perm_cost_daily = perm_cost/365
+    perm_cost_c0p7z = perm_cost_daily * p7_len_c0p7z
+    perm_cost_c0p7z = perm_cost_c0p7z * cost_c0_alloc_c0[:,na,na]
+    manager_cost = uinp.price['manager_cost']
+    manager_cost_daily = manager_cost/365
+    manager_cost_c0p7z = manager_cost_daily * p7_len_c0p7z
+    manager_cost_c0p7z = manager_cost_c0p7z * cost_c0_alloc_c0[:,na,na]
+
+    perm_cost_c0p7z = perm_cost_c0p7z * labour_cost_allocation_c0p7z
+    perm_wc_c0p7z = perm_cost_c0p7z * labour_wc_allocation_c0p7z
+    manager_cost_c0p7z = manager_cost_c0p7z * labour_cost_allocation_c0p7z
+    manager_wc_c0p7z = manager_cost_c0p7z * labour_wc_allocation_c0p7z
 
     ##keys
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
