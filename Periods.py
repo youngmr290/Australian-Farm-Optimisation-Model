@@ -31,6 +31,7 @@ import StructuralInputs as sinp
 import PropertyInputs as pinp
 import Functions as fun
 import SeasonalFunctions as zfun
+import Exceptions as exc
 
 na = np.newaxis
 
@@ -181,6 +182,13 @@ def f_p_dates_df():
         ##apply season mask
         mask_z = pinp.general['i_mask_z'][1:] #need to slice off 'typical' because no labour period inputs for typical because it is automatically generated
         periods = periods.loc[:, mask_z]
+        ##error check: node dates must be included in the lab periods
+        date_node_zm = zfun.f_seasonal_inp(pinp.general['i_date_node_zm'], numpy=True, axis=0).astype('datetime64')
+        if np.all(np.any(periods.values[:,:,na]==date_node_zm, axis=0)):
+            pass
+        else:
+            raise exc.LabourPeriodError('''Season nodes are not all included in labour periods''')
+
     return periods
 
 # drop last row, because it only contains the end date, this version of the df is used for creating the period set and when determining labour allocation
