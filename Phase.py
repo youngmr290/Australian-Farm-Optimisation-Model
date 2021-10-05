@@ -1045,6 +1045,7 @@ def f_phase_sow_req():
     This accounts for arable area and includes any seeding (wet or dry or pasture).
 
     '''
+    #todo need to make cont tedera and lucern only require a bit of seeding (probably just enter an input somewhere which says the frequency of reseeding for each landuse)
     ##read phases
     phases_df = sinp.f_phases()
 
