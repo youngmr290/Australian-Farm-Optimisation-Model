@@ -130,6 +130,7 @@ def f_p_dates_df():
         harv_date = pd.to_datetime(zfun.f_seasonal_inp(pinp.period['harv_date'],numpy=True,axis=0)[0])
         seed_period_lengths = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'],numpy=True,axis=1)[...,0]
         harv_period_lengths = zfun.f_seasonal_inp(pinp.period['harv_period_lengths'],numpy=True,axis=1)[...,0]
+        dry_seeding_start = np.datetime64(pinp.crop['dry_seed_start'])
         wet_seeding_start = pd.to_datetime(f_wet_seeding_start_date()[0])
 
         ##calc period
@@ -146,7 +147,7 @@ def f_p_dates_df():
         #loop that runs until the loop counter reached the end date.
         while date <= date_last_period:
             #if not a seed period then
-            if date < wet_seeding_start or date > f_period_end_date(wet_seeding_start,seed_period_lengths):
+            if date < dry_seeding_start or date > f_period_end_date(wet_seeding_start,seed_period_lengths):
                 #if not a harvest period then just simply add 1 month and append that date to the list
                 if date < harv_date or date > f_period_end_date(harv_date,harv_period_lengths):
                     period_start_dates.append(date)
@@ -162,6 +163,7 @@ def f_p_dates_df():
                     date = f_period_end_date(start, length) + relativedelta(months=sinp.general['labour_period_len']) + relativedelta(day=1)
             #if seed period then append the seed dates to the list and adjust the loop counter (date) to the start of the following time period (time period is determined by standard period length in the input sheet).
             else:
+                period_start_dates.append(dry_seeding_start) #add dry seeding period before wet seeding periods.
                 start = wet_seeding_start
                 length = seed_period_lengths
                 for i in range(len(f_period_dates(start, length))):
