@@ -67,7 +67,7 @@ def coremodel_all(params,trial_name,model):
     f_con_vol(model)
     f_con_me(model)
     #crop grazing
-    f_con_cropgraze_area(model)
+    # f_con_cropgraze_area(model)
     #grain
     f_con_grain_transfer(model)
     #cashflow
@@ -236,17 +236,17 @@ def f_con_labour_sheep_manager(model):
                                                    doc='link between labour supply and requirement by sheep jobs for manager labour sources')
 
 
-def f_con_cropgraze_area(model):
-    '''
-    Constrains the area of crop grazed to the amount provided by the selected rotations.
-    '''
-    if pinp.cropgraze['i_cropgrazing_inc']:
-        def cropgraze_area(model,m,k,l,z):
-            return -sum(model.v_phase_area[m,z,r,l] * model.p_cropgrazing_area[r,k,l] for r in model.s_phases if pe.value(model.p_cropgrazing_area[r,k,l])!=0)\
-                   + model.v_grazecrop_ha[m,k,z,l] <= 0
-
-        model.con_cropgraze_area = pe.Constraint(model.s_phase_periods, model.s_crops, model.s_lmus, model.s_season_types, rule=cropgraze_area,
-                                                       doc='link rotation area to the area of crop that can be grazed')
+# def f_con_cropgraze_area(model):
+#     '''
+#     Constrains the area of crop grazed to the amount provided by the selected rotations.
+#     '''
+#     if pinp.cropgraze['i_cropgrazing_inc']:
+#         def cropgraze_area(model,m,k,l,z):
+#             return -sum(model.v_phase_area[m,z,r,l] * model.p_cropgrazing_area[r,k,l] for r in model.s_phases if pe.value(model.p_cropgrazing_area[r,k,l])!=0)\
+#                    + model.v_grazecrop_ha[m,k,z,l] <= 0
+#
+#         model.con_cropgraze_area = pe.Constraint(model.s_phase_periods, model.s_crops, model.s_lmus, model.s_season_types, rule=cropgraze_area,
+#                                                        doc='link rotation area to the area of crop that can be grazed')
 
 
 def f_con_harv_stub_nap_cons(model):

@@ -27,35 +27,34 @@ import RotationPhases as rps
 
 na = np.newaxis
 
-#todo this module will need some postprocessing season clustering
 
-def f_graze_crop_area():
-    '''
-    The area of each crop that can be grazed for 1ha each rotation phase.
-    Each rotation phase only provide crop grazing for one crop on the arable areas.
-
-    '''
-    ##read phases
-    phases_rh = sinp.f_phases().values
-
-    ##lmu mask
-    lmu_mask = pinp.general['i_lmu_area'] > 0
-
-    ##propn of crop grazing possible for each landuse.
-    landuse_idx_k = pinp.cropgraze['i_cropgraze_landuse_idx']
-    landuse_grazing_kl = pinp.cropgraze['i_cropgrazing_inc_landuse'][:, lmu_mask]
-
-    ##graze = arable area
-    arable_l = pinp.crop['arable'].squeeze().values[lmu_mask]
-
-    ##area of crop grazing that 1ha of each landuse provides
-    graze_area_kl = landuse_grazing_kl * arable_l
-
-    ##merge to rot phases
-    current_landuse_r = phases_rh[:,-1]
-    a_r_k_rk = current_landuse_r[:,na] == landuse_idx_k
-    cropgraze_area_rkl = graze_area_kl * a_r_k_rk[...,na]
-    return cropgraze_area_rkl
+# def f_graze_crop_area():
+#     '''
+#     The area of each crop that can be grazed for 1ha each rotation phase.
+#     Each rotation phase only provide crop grazing for one crop on the arable areas.
+#
+#     '''
+#     ##read phases
+#     phases_rh = sinp.f_phases().values
+#
+#     ##lmu mask
+#     lmu_mask = pinp.general['i_lmu_area'] > 0
+#
+#     ##propn of crop grazing possible for each landuse.
+#     landuse_idx_k = pinp.cropgraze['i_cropgraze_landuse_idx']
+#     landuse_grazing_kl = pinp.cropgraze['i_cropgrazing_inc_landuse'][:, lmu_mask]
+#
+#     ##graze = arable area
+#     arable_l = pinp.crop['arable'].squeeze().values[lmu_mask]
+#
+#     ##area of crop grazing that 1ha of each landuse provides
+#     graze_area_kl = landuse_grazing_kl * arable_l
+#
+#     ##merge to rot phases
+#     current_landuse_r = phases_rh[:,-1]
+#     a_r_k_rk = current_landuse_r[:,na] == landuse_idx_k
+#     cropgraze_area_rkl = graze_area_kl * a_r_k_rk[...,na]
+#     return cropgraze_area_rkl
 
 def f_cropgraze_DM(total_DM=False):
     '''
@@ -72,7 +71,7 @@ def f_cropgraze_DM(total_DM=False):
     first day of seeding period (potentially overestimating DM) and the maximum DM is consumed in each
     period (potentially underestimating DM). These two limitations somewhat balance each other out.
 
-    If DM is not consumed in the period is grows it is transferred to the following feed period. Currently, it
+    If DM is not consumed in the period it grows it is transferred to the following feed period. Currently, it
     doesn't incur a growth rate (e.g. 1t that isn't consumed in fp0 transfers to 1t in fp1). A possible improvement would
     be to include growth in the transfer activity.
 
@@ -83,11 +82,11 @@ def f_cropgraze_DM(total_DM=False):
         #. Growth rate is independent of selected grazing management (e.g. if the crop isn't grazed in the
            first period then the subsequent growth rate does not change).
 
-    :param DM: boolean when set to True calculates the total crop DM used to calculate relative availability.
+    :param total_DM: boolean when set to True calculates the total crop DM used to calculate relative availability.
     '''
     ##read inputs
     lmu_mask = pinp.general['i_lmu_area'] > 0
-    growth_kp6z = zfun.f_seasonal_inp(np.moveaxis(pinp.cropgraze['i_crop_growth_zkp6'], source=0, destination=-1),numpy=True,axis=-1)
+    growth_kp6z = zfun.f_seasonal_inp(np.moveaxis(pinp.cropgraze['i_crop_growth_zkp6'], source=0, destination=-1),numpy=True,axis=-1) #kg/d
     wastage_k = pinp.cropgraze['i_cropgraze_wastage']
     growth_lmu_factor_kl = pinp.cropgraze['i_cropgrowth_lmu_factor_kl'][:,lmu_mask]
     consumption_factor_p6z = zfun.f_seasonal_inp(pinp.cropgraze['i_cropgraze_consumption_factor_zp6'],numpy=True,axis=0).T
@@ -99,7 +98,7 @@ def f_cropgraze_DM(total_DM=False):
     initial_DM = pinp.cropgraze['i_cropgraze_initial_dm'] #used to calc total DM for relative availability (vol). The initial DM cant be consumed.
     establishment_days = pinp.cropgraze['i_cropgraze_defer_days'] #days between sowing and grazing
 
-    ##adjust crop growth for lmu
+    ##adjust crop growth for lmu (kg/d)
     growth_kp6zl = growth_kp6z[...,na] * growth_lmu_factor_kl[:,na,na,:]
 
     ##calc total dry matter accumulation in each feed period - the duration of growth in each feed period is adjusted to
@@ -109,15 +108,24 @@ def f_cropgraze_DM(total_DM=False):
     feed_period_lengths_p6z = np.maximum(0,(date_end_p6z - date_start_adj_p6z).astype('timedelta64[D]').astype('float'))
     total_dm_growth_kp6zl = growth_kp6zl * feed_period_lengths_p6z[...,na]
 
+    ##landuse mask - some crops can't be grazed
+    ###lmu mask
+    lmu_mask = pinp.general['i_lmu_area'] > 0
+    ###propn of crop grazing possible for each landuse.
+    landuse_grazing_kl = pinp.cropgraze['i_cropgrazing_inc_landuse'][:, lmu_mask]
+
+
     ##season mask
     mask_fp_z8var_p6z = zfun.f_season_transfer_mask(date_start_p6z, z_pos=-1, mask=True)
 
     if not total_DM:
         ##calc dry matter available for consumption provided by 1ha of crop
         crop_DM_provided_kp6zl = total_dm_growth_kp6zl * consumption_factor_p6z[:,:,na]
-        ###add m axis (rotation period) - this is used to ensure the same rotation in each m slice only provides the ability to graze crops in the corresponding p6
-        alloc_mp6z = rps.f1_rot_period_alloc(date_start_p6z[na,:,:], length_p6z[na,:,:], z_pos=-1)
-        crop_DM_provided_mkp6zl = crop_DM_provided_kp6zl * alloc_mp6z[:,na,:,:,na]
+        ###add p5 axis so DM can be linked to seeding activity - the later seeding occures the less crop grazing can occur
+        lp_dates_p5z = per.f_p_dates_df()
+        shape_p5p6z = (lp_dates_p5z.shape[0],) + length_p6z.shape
+        alloc_p5p6z = fun.range_allocation_np(lp_dates_p5z.values[:,na,:], date_start_p6z, length_p6z,True,shape=shape_p5p6z)[:-1]
+        crop_DM_provided_p5kp6zl = crop_DM_provided_kp6zl * alloc_p5p6z[:,na,:,:,na]
 
         ##calc DM removal when animals consume 1t - accounts for wastage and trampling
         crop_DM_required_k = 1000 / (1 - wastage_k) #todo this needs transfer exists mask (use the cod in the line below eg move this line after it)
@@ -126,10 +134,10 @@ def f_cropgraze_DM(total_DM=False):
         transfer_exists_p6z = (consumption_factor_p6z > 0)*1
 
         ##apply season mask (only apply here because these become params the other part of the 'if' statement goes to another function)
-        crop_DM_provided_mkp6zl = crop_DM_provided_mkp6zl * mask_fp_z8var_p6z[:,:,na]
+        crop_DM_provided_p5kp6zl = crop_DM_provided_p5kp6zl * mask_fp_z8var_p6z[:,:,na]
         transfer_exists_p6z = transfer_exists_p6z * mask_fp_z8var_p6z
 
-        return crop_DM_provided_mkp6zl, crop_DM_required_k, transfer_exists_p6z
+        return crop_DM_provided_p5kp6zl * landuse_grazing_kl[:,na,na,:], crop_DM_required_k, transfer_exists_p6z
 
     else:
         ##crop foo mid way through feed period after consumption - used to calc vol in the next function.
@@ -137,63 +145,63 @@ def f_cropgraze_DM(total_DM=False):
         initial_DM_p6z = initial_DM * (end_establishment_z <= date_end_p6z)
         crop_foo_kp6zl =  initial_DM_p6z[...,na] + np.cumsum(total_dm_growth_kp6zl * (1-consumption_factor_p6z[:,:,na])
                                                             , axis=1) - total_dm_growth_kp6zl/2 * (1-consumption_factor_p6z[:,:,na])
-        return crop_foo_kp6zl
+        return crop_foo_kp6zl * landuse_grazing_kl[:,na,na,:]
 
-def f_DM_reduction_seeding_time():
-    '''
-    Reduction in crop grazing DM available for consumption due to seeding time.
-
-    Crop DM provided by each hectare of rotation is calculated assuming that seeding occurs on the first day of the
-    seedig window. However, if seeding occurs later in the period there will be less DM. This function calculates the
-    reduction in DM due to sowing later in the sowing period.
-    '''
-    ##inputs
-    date_feed_periods = per.f_feed_periods()
-    date_start_p6z = date_feed_periods[:-1]
-    date_end_p6z = date_feed_periods[1:]
-    mach_periods = per.f_p_dates_df()
-    date_start_p5z = mach_periods.values[:-1]
-    date_end_p5z = mach_periods.values[1:]
-    seeding_start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
-    establishment_days = pinp.cropgraze['i_cropgraze_defer_days'] #days between sowing and grazing
-    lmu_mask = pinp.general['i_lmu_area'] > 0
-    growth_kp6z = zfun.f_seasonal_inp(np.moveaxis(pinp.cropgraze['i_crop_growth_zkp6'], source=0, destination=-1),numpy=True,axis=-1)
-    growth_lmu_factor_kl = pinp.cropgraze['i_cropgrowth_lmu_factor_kl'][:,lmu_mask]
-    consumption_factor_p6z = zfun.f_seasonal_inp(pinp.cropgraze['i_cropgraze_consumption_factor_zp6'],numpy=True,axis=0).T
-
-
-    crop_grazing_start_z = seeding_start_z + establishment_days
-    seed_days_p5z = (date_end_p5z - date_start_p5z).astype('timedelta64[D]').astype(int)
-
-    ##grazing days rectangle component (for p5) and allocation to feed periods (p6)
-    base_p6p5z = (np.minimum(date_end_p6z[:,na,:], date_start_p5z + establishment_days) \
-                  - np.maximum(crop_grazing_start_z, date_start_p6z[:,na,:]))/ np.timedelta64(1, 'D')
-    height_p5z = 1
-    grazing_days_rect_p6p5z = np.maximum(0, base_p6p5z * height_p5z)
-
-    ##grazing days triangular component (for p5) and allocation to feed periods (p6)
-    start_p6p5z = np.maximum(date_start_p6z[:,na,:], np.maximum(crop_grazing_start_z, date_start_p5z + establishment_days))
-    end_p6p5z = np.minimum(date_end_p6z[:,na,:], date_end_p5z + establishment_days)
-    base_p6p5z = (end_p6p5z - start_p6p5z)/ np.timedelta64(1, 'D')
-    height_start_p6p5z = np.maximum(0, fun.f_divide(((date_end_p5z + establishment_days) - start_p6p5z)/ np.timedelta64(1, 'D')
-                                                    , seed_days_p5z))
-    height_end_p6p5z = np.maximum(0,fun.f_divide(((date_end_p5z + establishment_days) - end_p6p5z)/ np.timedelta64(1, 'D')
-                                                    , seed_days_p5z))
-    grazing_days_tri_p6p5z = np.maximum(0,base_p6p5z * (height_start_p6p5z + height_end_p6p5z) / 2)
-
-    ##reduction in total grazing days due to seeding after the first day
-    total_grazing_days_reduction_p6p5z = grazing_days_tri_p6p5z + grazing_days_rect_p6p5z
-
-    ##reduction in DM available for consumption due to seeding after the first day
-    ###adjust crop growth for lmu
-    growth_kp6zl = growth_kp6z[...,na] * growth_lmu_factor_kl[:,na,na,:]
-    DM_reduction_kp6p5zl = total_grazing_days_reduction_p6p5z[...,na] * growth_kp6zl[:,:,na,...] * consumption_factor_p6z[:,na,:,na]
-
-    ##apply season mask
-    mask_fp_z8var_p6z = zfun.f_season_transfer_mask(date_start_p6z, z_pos=-1, mask=True)
-    DM_reduction_kp6p5zl = DM_reduction_kp6p5zl * mask_fp_z8var_p6z[:,na,:,na]
-
-    return DM_reduction_kp6p5zl
+# def f_DM_reduction_seeding_time():
+#     '''
+#     Reduction in crop grazing DM available for consumption due to seeding time.
+#
+#     Crop DM provided by each hectare of rotation is calculated assuming that seeding occurs on the first day of the
+#     seedig window. However, if seeding occurs later in the period there will be less DM. This function calculates the
+#     reduction in DM due to sowing later in the sowing period.
+#     '''
+#     ##inputs
+#     date_feed_periods = per.f_feed_periods()
+#     date_start_p6z = date_feed_periods[:-1]
+#     date_end_p6z = date_feed_periods[1:]
+#     mach_periods = per.f_p_dates_df()
+#     date_start_p5z = mach_periods.values[:-1]
+#     date_end_p5z = mach_periods.values[1:]
+#     seeding_start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
+#     establishment_days = pinp.cropgraze['i_cropgraze_defer_days'] #days between sowing and grazing
+#     lmu_mask = pinp.general['i_lmu_area'] > 0
+#     growth_kp6z = zfun.f_seasonal_inp(np.moveaxis(pinp.cropgraze['i_crop_growth_zkp6'], source=0, destination=-1),numpy=True,axis=-1)
+#     growth_lmu_factor_kl = pinp.cropgraze['i_cropgrowth_lmu_factor_kl'][:,lmu_mask]
+#     consumption_factor_p6z = zfun.f_seasonal_inp(pinp.cropgraze['i_cropgraze_consumption_factor_zp6'],numpy=True,axis=0).T
+#
+#
+#     crop_grazing_start_z = seeding_start_z + establishment_days
+#     seed_days_p5z = (date_end_p5z - date_start_p5z).astype('timedelta64[D]').astype(int)
+#
+#     ##grazing days rectangle component (for p5) and allocation to feed periods (p6)
+#     base_p6p5z = (np.minimum(date_end_p6z[:,na,:], date_start_p5z + establishment_days) \
+#                   - np.maximum(crop_grazing_start_z, date_start_p6z[:,na,:]))/ np.timedelta64(1, 'D')
+#     height_p5z = 1
+#     grazing_days_rect_p6p5z = np.maximum(0, base_p6p5z * height_p5z)
+#
+#     ##grazing days triangular component (for p5) and allocation to feed periods (p6)
+#     start_p6p5z = np.maximum(date_start_p6z[:,na,:], np.maximum(crop_grazing_start_z, date_start_p5z + establishment_days))
+#     end_p6p5z = np.minimum(date_end_p6z[:,na,:], date_end_p5z + establishment_days)
+#     base_p6p5z = (end_p6p5z - start_p6p5z)/ np.timedelta64(1, 'D')
+#     height_start_p6p5z = np.maximum(0, fun.f_divide(((date_end_p5z + establishment_days) - start_p6p5z)/ np.timedelta64(1, 'D')
+#                                                     , seed_days_p5z))
+#     height_end_p6p5z = np.maximum(0,fun.f_divide(((date_end_p5z + establishment_days) - end_p6p5z)/ np.timedelta64(1, 'D')
+#                                                     , seed_days_p5z))
+#     grazing_days_tri_p6p5z = np.maximum(0,base_p6p5z * (height_start_p6p5z + height_end_p6p5z) / 2)
+#
+#     ##reduction in total grazing days due to seeding after the first day
+#     total_grazing_days_reduction_p6p5z = grazing_days_tri_p6p5z + grazing_days_rect_p6p5z
+#
+#     ##reduction in DM available for consumption due to seeding after the first day
+#     ###adjust crop growth for lmu
+#     growth_kp6zl = growth_kp6z[...,na] * growth_lmu_factor_kl[:,na,na,:]
+#     DM_reduction_kp6p5zl = total_grazing_days_reduction_p6p5z[...,na] * growth_kp6zl[:,:,na,...] * consumption_factor_p6z[:,na,:,na]
+#
+#     ##apply season mask
+#     mask_fp_z8var_p6z = zfun.f_season_transfer_mask(date_start_p6z, z_pos=-1, mask=True)
+#     DM_reduction_kp6p5zl = DM_reduction_kp6p5zl * mask_fp_z8var_p6z[:,na,:,na]
+#
+#     return DM_reduction_kp6p5zl
 
 
 
@@ -287,18 +295,18 @@ def f_cropgraze_yield_penalty():
 
 
 def f1_cropgraze_params(params, r_vals, nv):
-    grazecrop_area_rkl = f_graze_crop_area()
-    crop_DM_provided_mkp6zl, crop_DM_required_k, transfer_exists_p6z = f_cropgraze_DM()
+    # grazecrop_area_rkl = f_graze_crop_area()
+    crop_DM_provided_p5kp6zl, crop_DM_required_k, transfer_exists_p6z = f_cropgraze_DM()
     yield_reduction_propn_kp6z, stubble_reduction_propn_kp6z = f_cropgraze_yield_penalty()
     crop_md_fkp6zl, crop_vol_fkp6zl = crop_md_vol(nv)
-    DM_reduction_kp6p5zl = f_DM_reduction_seeding_time()
+    # DM_reduction_kp6p5zl = f_DM_reduction_seeding_time()
 
     ##keys
     keys_r = np.array(sinp.f_phases().index).astype('str')
     lmu_mask = pinp.general['i_lmu_area'] > 0
     keys_l = pinp.general['i_lmu_idx'][lmu_mask]
     keys_k = pinp.cropgraze['i_cropgraze_landuse_idx']
-    keys_m = per.f_phase_periods(keys=True)
+    # keys_m = per.f_phase_periods(keys=True)
     keys_p6 = pinp.period['i_fp_idx']
     keys_p5 = np.asarray(per.f_p_dates_df().index[:-1]).astype('str')
     keys_f  = np.array(['nv{0}' .format(i) for i in range(nv['len_nv'])])
@@ -317,14 +325,14 @@ def f1_cropgraze_params(params, r_vals, nv):
     arrays = [keys_p6, keys_z]
     index_p6z = fun.cartesian_product_simple_transpose(arrays)
     tup_p6z = tuple(map(tuple, index_p6z))
-    ###kp6zl
-    arrays = [keys_m, keys_k, keys_p6, keys_z, keys_l]
-    index_kp6zl = fun.cartesian_product_simple_transpose(arrays)
-    tup_mkp6zl = tuple(map(tuple, index_kp6zl))
-    ###kp6p5zl
-    arrays = [keys_k, keys_p6, keys_p5, keys_z, keys_l]
-    index_kp6p5zl = fun.cartesian_product_simple_transpose(arrays)
-    tup_kp6p5zl = tuple(map(tuple, index_kp6p5zl))
+    ###p5kp6zl
+    arrays = [keys_p5, keys_k, keys_p6, keys_z, keys_l]
+    index_p5kp6zl = fun.cartesian_product_simple_transpose(arrays)
+    tup_p5kp6zl = tuple(map(tuple, index_p5kp6zl))
+    # ###kp6p5zl
+    # arrays = [keys_k, keys_p6, keys_p5, keys_z, keys_l]
+    # index_kp6p5zl = fun.cartesian_product_simple_transpose(arrays)
+    # tup_kp6p5zl = tuple(map(tuple, index_kp6p5zl))
     ###fkp6zl
     arrays = [keys_f, keys_k, keys_p6, keys_z, keys_l]
     index_fkp6zl = fun.cartesian_product_simple_transpose(arrays)
@@ -332,9 +340,9 @@ def f1_cropgraze_params(params, r_vals, nv):
 
 
     ##create params
-    params['grazecrop_area_rkl'] = dict(zip(tup_rkl, grazecrop_area_rkl.ravel()))
-    params['crop_DM_provided_mkp6zl'] = dict(zip(tup_mkp6zl, crop_DM_provided_mkp6zl.ravel()))
-    params['DM_reduction_kp6p5zl'] = dict(zip(tup_kp6p5zl, DM_reduction_kp6p5zl.ravel()))
+    # params['grazecrop_area_rkl'] = dict(zip(tup_rkl, grazecrop_area_rkl.ravel()))
+    params['crop_DM_provided_p5kp6zl'] = dict(zip(tup_p5kp6zl, crop_DM_provided_p5kp6zl.ravel()))
+    # params['DM_reduction_kp6p5zl'] = dict(zip(tup_kp6p5zl, DM_reduction_kp6p5zl.ravel()))
     params['crop_DM_required_k'] = dict(zip(keys_k, crop_DM_required_k))
     params['transfer_exists_p6z'] = dict(zip(tup_p6z, transfer_exists_p6z.ravel()))
     params['yield_reduction_propn_kp6z'] = dict(zip(tup_kp6z, yield_reduction_propn_kp6z.ravel()))

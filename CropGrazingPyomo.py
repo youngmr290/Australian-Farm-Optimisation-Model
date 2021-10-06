@@ -32,8 +32,8 @@ def f1_cropgrazepyomo_local(params,model):
         ############
         # variable #
         ############
-        model.v_grazecrop_ha = pe.Var(model.s_phase_periods, model.s_crops, model.s_season_types, model.s_lmus, bounds=(0,None),
-                                      doc='hectares of crop grazed')
+        # model.v_grazecrop_ha = pe.Var(model.s_phase_periods, model.s_crops, model.s_season_types, model.s_lmus, bounds=(0,None),
+        #                               doc='hectares of crop grazed')
 
         model.v_tonnes_crop_consumed = pe.Var(model.s_feed_pools, model.s_crops, model.s_feed_periods, model.s_season_types,
                                               bounds=(0,None), doc='tonnes of crop consumed by livestock')
@@ -44,17 +44,17 @@ def f1_cropgrazepyomo_local(params,model):
         #########
         # param #
         #########
-        model.p_cropgrazing_area = pe.Param(model.s_phases, model.s_crops, model.s_lmus,
-                                         initialize=params['grazecrop_area_rkl'], default=0, mutable=False,
-                                         doc='area of crop grazing provided by 1ha of rotation')
+        # model.p_cropgrazing_area = pe.Param(model.s_phases, model.s_crops, model.s_lmus,
+        #                                  initialize=params['grazecrop_area_rkl'], default=0, mutable=False,
+        #                                  doc='area of crop grazing provided by 1ha of rotation')
 
-        model.p_crop_DM_provided = pe.Param(model.s_phase_periods, model.s_crops, model.s_feed_periods, model.s_season_types, model.s_lmus,
-                                         initialize=params['crop_DM_provided_mkp6zl'], default=0, mutable=False,
+        model.p_crop_DM_provided = pe.Param(model.s_labperiods, model.s_crops, model.s_feed_periods, model.s_season_types, model.s_lmus,
+                                         initialize=params['crop_DM_provided_p5kp6zl'], default=0, mutable=False,
                                          doc='Grazeable FOO provided by 1ha of rotation')
 
-        model.p_crop_DM_reduction = pe.Param(model.s_crops, model.s_feed_periods, model.s_labperiods, model.s_season_types, model.s_lmus,
-                                         initialize=params['DM_reduction_kp6p5zl'], default=0, mutable=False,
-                                         doc='Reduction in DM due to sowing timing (late sowing means less growth)')
+        # model.p_crop_DM_reduction = pe.Param(model.s_crops, model.s_feed_periods, model.s_labperiods, model.s_season_types, model.s_lmus,
+        #                                  initialize=params['DM_reduction_kp6p5zl'], default=0, mutable=False,
+        #                                  doc='Reduction in DM due to sowing timing (late sowing means less growth)')
 
         model.p_crop_DM_required = pe.Param(model.s_crops, initialize=params['crop_DM_required_k'], default=0, mutable=False,
                                          doc='FOO required for livestock to consume 1t of crop feed (this accounts for wastage)')
@@ -93,16 +93,25 @@ def f_con_crop_DM_transfer(model):
     '''
     def crop_DM_transfer(model,k,p6,z9):
         p6s = list(model.s_feed_periods)[list(model.s_feed_periods).index(p6) - 1]  #previous feedperiod - have to convert to a list first because indexing of an ordered set starts at 1
-        return sum(- model.v_grazecrop_ha[m,k,z9,l] * model.p_crop_DM_provided[m,k,p6,z9,l]
-                   for l in model.s_lmus for m in model.s_phase_periods)    \
-             + sum(model.v_tonnes_crop_consumed[f,k,p6,z9] * model.p_crop_DM_required[k] for f in model.s_feed_pools) \
-             - sum(model.v_tonnes_crop_transfer[k,p6s,z8]*1000*model.p_transfer_exists[p6,z8] #meant to be p6 in transfer_exists because that states if crop can be grazing in current p6 (if not then dont transfer last periods dm)
-                   * model.p_parentchildz_transfer_fp[p6s,z8,z9] for z8 in model.s_season_types)        \
-             + model.v_tonnes_crop_transfer[k,p6,z9]*1000 \
-             + sum(model.p_crop_DM_reduction[k,p6,p5,z9,l] * model.v_contractseeding_ha[z9,p5,k,l]
+        return - sum(model.v_contractseeding_ha[z9,p5,k,l] * model.p_crop_DM_provided[p5,k,p6,z9,l]
                    for p5 in model.s_labperiods for l in model.s_lmus) \
-             + sum(model.p_crop_DM_reduction[k,p6,p5,z9,l] * model.p_seeding_rate[k,l] * model.v_seeding_machdays[z9,p5,k,l]
-                   for p5 in model.s_labperiods for l in model.s_lmus) <=0
+               - sum(model.v_seeding_machdays[z9,p5,k,l] * model.p_seeding_rate[k,l] * model.p_crop_DM_provided[p5,k,p6,z9,l]
+                   for p5 in model.s_labperiods for l in model.s_lmus) \
+               + sum(model.v_tonnes_crop_consumed[f,k,p6,z9] * model.p_crop_DM_required[k] for f in model.s_feed_pools) \
+                   - sum(model.v_tonnes_crop_transfer[k,p6s,z8]*1000*model.p_transfer_exists[p6,z8] #meant to be p6 in transfer_exists because that states if crop can be grazing in current p6 (if not then dont transfer last periods dm)
+                         * model.p_parentchildz_transfer_fp[p6s,z8,z9] for z8 in model.s_season_types)        \
+                   + model.v_tonnes_crop_transfer[k,p6,z9]*1000 \
+               <=0
+        # return sum(- model.v_grazecrop_ha[m,k,z9,l] * model.p_crop_DM_provided[m,k,p6,z9,l]
+        #            for l in model.s_lmus for m in model.s_phase_periods)    \
+        #      + sum(model.v_tonnes_crop_consumed[f,k,p6,z9] * model.p_crop_DM_required[k] for f in model.s_feed_pools) \
+        #      - sum(model.v_tonnes_crop_transfer[k,p6s,z8]*1000*model.p_transfer_exists[p6,z8] #meant to be p6 in transfer_exists because that states if crop can be grazing in current p6 (if not then dont transfer last periods dm)
+        #            * model.p_parentchildz_transfer_fp[p6s,z8,z9] for z8 in model.s_season_types)        \
+        #      + model.v_tonnes_crop_transfer[k,p6,z9]*1000 \
+        #      + sum(model.p_crop_DM_reduction[k,p6,p5,z9,l] * model.v_contractseeding_ha[z9,p5,k,l]
+        #            for p5 in model.s_labperiods for l in model.s_lmus) \
+        #      + sum(model.p_crop_DM_reduction[k,p6,p5,z9,l] * model.p_seeding_rate[k,l] * model.v_seeding_machdays[z9,p5,k,l]
+        #            for p5 in model.s_labperiods for l in model.s_lmus) <=0
 
     model.con_crop_DM_transfer = pe.Constraint(model.s_crops, model.s_feed_periods, model.s_season_types, rule=crop_DM_transfer,
                                                 doc='transfer FOO from the grazing grazing 1ha activity to the consumption activity')
