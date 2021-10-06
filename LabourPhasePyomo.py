@@ -77,9 +77,9 @@ def f_mach_labour_anyone(model,p,z):
     Used in global constraint (con_labour_anyone). See CorePyomo
 
     '''
-    seed_labour = sum(sum(model.v_seeding_machdays[z, p, k, l] for k in model.s_landuses) for l in model.s_lmus)        \
+    seed_labour = sum(model.v_seeding_machdays[z,p,k,l] for k in model.s_landuses for l in model.s_lmus)        \
     * model.p_daily_seed_hours *(1 + model.p_seeding_helper)
-    harv_labour = sum(model.v_harv_hours[z,p,k] * (1 + model.p_harv_helper[k])  for k in model.s_harvcrops)
+    harv_labour = sum(model.v_harv_hours[z,p,k] * (1 + model.p_harv_helper[k]) for k in model.s_harvcrops)
     prep_labour = model.p_prep_pack[p,z]
     fert_t_time = sum(model.v_phase_area[m,z,r,l]*model.p_fert_app_hour_tonne[r,z,l,m,p]
                       + model.v_phase_increment[m,z,r,l]*model.p_increment_fert_app_hour_tonne[r,z,l,m,p]

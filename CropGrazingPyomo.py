@@ -114,26 +114,26 @@ def f_con_crop_DM_transfer(model):
 #functions for core pyomo         #
 ###################################
 
-def f_grazecrop_yield_penalty(model,g,k,z):
+def f_grazecrop_yield_penalty(model,m,g,k,z):
     '''
     Calculate the yield penalty from grazing crops (kg).
 
     Used in global constraint (con_grain_transfer). See CorePyomo
     '''
     if pinp.cropgraze['i_cropgrazing_inc']:
-        return sum(model.v_tonnes_crop_consumed[f,k,p6,z] * model.p_cropgraze_yield_penalty[k,p6,z] * 1000
+        return sum(model.v_tonnes_crop_consumed[f,k,p6,z] * model.p_cropgraze_yield_penalty[k,p6,z] * model.p_a_p6_m[m,p6,z] * 1000
                    for f in model.s_feed_pools for p6 in model.s_feed_periods) * model.p_grainpool_proportion[k,g]
     else:
         return 0
 
-def f_grazecrop_stubble_penalty(model,k,z):
+def f_grazecrop_stubble_penalty(model,m,k,z):
     '''
     Calculate the stubble penalty from grazing crops (kg).
 
     Used in global constraint (con_grain_transfer). See CorePyomo
     '''
     if pinp.cropgraze['i_cropgrazing_inc']:
-        return sum(model.v_tonnes_crop_consumed[f,k,p6,z] * model.p_cropgraze_stubble_penalty[k,p6,z] * 1000
+        return sum(model.v_tonnes_crop_consumed[f,k,p6,z] * model.p_cropgraze_stubble_penalty[k,p6,z] * model.p_a_p6_m[m,p6,z] * 1000
                    for f in model.s_feed_pools for p6 in model.s_feed_periods)
     else:
         return 0

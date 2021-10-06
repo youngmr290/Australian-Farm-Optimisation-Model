@@ -167,6 +167,7 @@ def f_grain_price(r_vals):
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
+    keys_m = per.f_phase_periods(keys=True)
     peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
     p_dates_c0p7z = per.f_cashflow_periods()
     p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
@@ -174,16 +175,22 @@ def f_grain_price(r_vals):
     grain_cost_allocation_c0p7z, grain_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, p_dates_c0p7z,
                                                                                        peakdebt_date_c0p7z, mask_cashflow_z8var_c0p7z,
                                                                                        'crp')
-    ###convert to df
-    new_index_c0p7z = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z])
-    grain_income_allocation_c0p7z = pd.Series(grain_cost_allocation_c0p7z.ravel(), index=new_index_c0p7z)
-    grain_wc_allocation_c0p7z = pd.Series(grain_wc_allocation_c0p7z.ravel(), index=new_index_c0p7z)
 
-    cols_c0p7zg = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, farm_gate_price_k_g.columns])
-    grain_income_allocation_c0p7zg = grain_income_allocation_c0p7z.reindex(cols_c0p7zg, axis=1)#adds level to header so i can mul in the next step
-    grain_wc_allocation_c0p7zg = grain_wc_allocation_c0p7z.reindex(cols_c0p7zg, axis=1)#adds level to header so i can mul in the next step
-    grain_price =  farm_gate_price_k_g.mul(grain_income_allocation_c0p7zg,axis=1, level=3)
-    grain_price_wc =  farm_gate_price_k_g.mul(grain_wc_allocation_c0p7zg,axis=1, level=3)
+    ##add m axis - needed so yield can be required from the same m that it is sold.
+    alloc_mz = rps.f1_rot_period_alloc(start[na], z_pos=-1)
+    grain_cost_allocation_mc0p7z = grain_cost_allocation_c0p7z * alloc_mz[:,na,na,:]
+    grain_wc_allocation_mc0p7z = grain_wc_allocation_c0p7z * alloc_mz[:,na,na,:]
+
+    ##convert to df
+    new_index_mc0p7z = pd.MultiIndex.from_product([keys_m, keys_c0, keys_p7, keys_z])
+    grain_income_allocation_mc0p7z = pd.Series(grain_cost_allocation_mc0p7z.ravel(), index=new_index_mc0p7z)
+    grain_wc_allocation_mc0p7z = pd.Series(grain_wc_allocation_mc0p7z.ravel(), index=new_index_mc0p7z)
+
+    cols_mc0p7zg = pd.MultiIndex.from_product([keys_m, keys_c0, keys_p7, keys_z, farm_gate_price_k_g.columns])
+    grain_income_allocation_mc0p7zg = grain_income_allocation_mc0p7z.reindex(cols_mc0p7zg, axis=1)#adds level to header so i can mul in the next step
+    grain_wc_allocation_mc0p7zg = grain_wc_allocation_mc0p7z.reindex(cols_mc0p7zg, axis=1)#adds level to header so i can mul in the next step
+    grain_price =  farm_gate_price_k_g.mul(grain_income_allocation_mc0p7zg,axis=1, level=-1)
+    grain_price_wc =  farm_gate_price_k_g.mul(grain_wc_allocation_mc0p7zg,axis=1, level=-1)
 
     r_vals['grain_price'] =  grain_price
     return grain_price.unstack(), grain_price_wc.unstack()
@@ -260,7 +267,7 @@ def f_rot_yield(for_stub=False, for_insurance=False):
     yields_rkl_z = yields_rkz_l.stack().unstack(2)
 
     ##add rotation period axis - if a rotation exists at the begining of harvest it provides grain and requires harvesting.
-    harv_start_date_z = zfun.f_seasonal_inp(pinp.period['harv_date'],numpy=True,axis=0).astype('datetime64')
+    harv_start_date_z = zfun.f_seasonal_inp(pinp.period['harv_date'],numpy=True,axis=0).astype('datetime64') #this could be changed to include landuse axis.
     alloc_mz = rps.f1_rot_period_alloc(harv_start_date_z[na,...], z_pos=-1)
     ###convert to df
     keys_z = zfun.f_keys_z()
@@ -1079,6 +1086,7 @@ def f_sow_prov():
     keys_k = np.asarray(list(sinp.landuse['All']))
     keys_z = zfun.f_keys_z()
     keys_p5 = labour_period_p5z.index[:-1]
+    keys_m = per.f_phase_periods(keys=True)
     dry_sown_landuses = sinp.landuse['dry_sown']
     wet_sown_landuses = sinp.landuse['C'] - dry_sown_landuses #can subtract sets to return differences
 
@@ -1121,10 +1129,14 @@ def f_sow_prov():
     ##combine wet, dry and pas
     period_is_seeding_p5zk = np.minimum(1,period_is_wetseeding_p5z + period_is_dryseeding_p5zk + period_is_passeeding_p5zk)
 
+    ##add m axis - needed so machinery can be linked with phases (machinery just has a p5 axis)
+    alloc_mp5z = rps.f1_rot_period_alloc(labour_period_start_p5z[na,:,:], z_pos=-1)
+    sow_prov_mp5zk = period_is_seeding_p5zk * alloc_mp5z[...,na]
+
     ##make df
-    index_p5zk = pd.MultiIndex.from_product([keys_p5,keys_z,keys_k])
-    period_is_seeding_p5zk = pd.Series(period_is_seeding_p5zk.ravel(), index=index_p5zk)
-    return period_is_seeding_p5zk
+    index_mp5zk = pd.MultiIndex.from_product([keys_m,keys_p5,keys_z,keys_k])
+    sow_prov_mp5zk = pd.Series(sow_prov_mp5zk.ravel(), index=index_mp5zk)
+    return sow_prov_mp5zk
 
 
 #########
@@ -1137,14 +1149,14 @@ def f1_crop_params(params,r_vals):
     propn = f_grain_pool_proportions()
     grain_price, grain_wc = f_grain_price(r_vals)
     phasesow_req = f_phase_sow_req()
-    sow_prov_p5zk = f_sow_prov()
+    sow_prov_mp5zk = f_sow_prov()
 
     ##create params
     params['grain_pool_proportions'] = propn.to_dict()
     params['grain_price'] = grain_price.to_dict()
     params['grain_wc'] = grain_wc.to_dict()
     params['phase_sow_req'] = phasesow_req.to_dict()
-    params['sow_prov'] = sow_prov_p5zk.to_dict()
+    params['sow_prov'] = sow_prov_mp5zk.to_dict()
     params['rot_cost'] = cost.to_dict()
     params['increment_rot_cost'] = increment_cost.to_dict()
     params['rot_wc'] = wc.to_dict()

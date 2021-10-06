@@ -28,11 +28,19 @@ def f1_stubpyomo_local(params, model):
     # variable         #
     ###################
     ##stubble consumption
-    model.v_stub_con = pe.Var(model.s_feed_pools, model.s_feed_periods, model.s_season_types, model.s_crops, model.s_stub_cat,bounds=(0.0,None),
+    model.v_stub_con = pe.Var(model.s_feed_pools, model.s_feed_periods, model.s_season_types, model.s_crops, model.s_stub_cat, bounds=(0.0,None),
                               doc='consumption of 1t of stubble')
     ##stubble transfer
     model.v_stub_transfer = pe.Var(model.s_feed_periods, model.s_season_types, model.s_crops, model.s_stub_cat,bounds=(0.0,None),
                                    doc='transfer of 1t of stubble to following period')
+
+    model.v_stub_debit = pe.Var(model.s_phase_periods, model.s_crops, model.s_stub_cat, model.s_season_types, bounds=(0,None),
+                                doc='tonnes of total stub in debt (will need to be provided from harvest)')
+
+    model.v_stub_credit = pe.Var(model.s_phase_periods, model.s_crops, model.s_stub_cat, model.s_season_types, bounds=(0,None),
+                                doc='tonnes of total stub in credit (can be used for feeding)')
+
+
 
     ####################
     #define parameters #
@@ -95,14 +103,15 @@ def f_con_stubble_bcd(model):
 #constraint global#
 ###################
 ##stubble transter from category to category and period to period
-def f_stubble_req_a(model,z,k,s):
+def f_stubble_req_a(model,m,z,k,s):
     '''
     Calculate the total stubble required to consume the selected volume category A stubble in each period.
 
     Used in global constraint (con_stubble_a). See CorePyomo
     '''
 
-    return sum(model.v_stub_con[f,p6,z,k,s] * model.p_a_req[p6,z,k,s] for f in model.s_feed_pools for p6 in model.s_feed_periods if pe.value(model.p_a_req[p6,z,k,s]) !=0)
+    return sum(model.v_stub_con[f,p6,z,k,s] * model.p_a_req[p6,z,k,s] * model.p_a_p6_m[m,p6,z]
+               for f in model.s_feed_pools for p6 in model.s_feed_periods if pe.value(model.p_a_req[p6,z,k,s]) !=0)
 
 
 ##stubble md
