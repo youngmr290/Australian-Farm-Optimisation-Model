@@ -994,7 +994,11 @@ def f_total_clearing_value():
     harv_value = harvest_gear_clearing_value()
     seed_value = f_seeding_gear_clearing_value()
     other_value = sum(uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'value'] * uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'remaining allocation'])
-    return harv_value + seed_value + other_value
+    total_clearing_value = harv_value + seed_value + other_value
+    ##all is incurred in the last m1 period (although it could occur in any period it doesnt make a difference)
+    keys_m1 = per.f_season_periods(keys=True)
+    total_clearing_value = pd.Series(total_clearing_value,index=keys_m1[-1:])
+    return total_clearing_value
 
 #########################
 #fixed depreciation     #
@@ -1008,7 +1012,8 @@ def f_fix_dep():
     Fixed depreciation captures obsolescence costs and is incurred every year independent of equipment uses.
     It is simply calculated based on the total clearing sale value of equipment and the fixed rate of depreciation.
     '''
-    return f_total_clearing_value() * uinp.finance['fixed_dep']
+    fixed_dep = f_total_clearing_value() * uinp.finance['fixed_dep']
+    return fixed_dep
 
 
 ####################################
@@ -1039,7 +1044,19 @@ def f_seeding_dep():
     dep_hourly = seeding_gear_clearing_value * dep_rate / seeding_time
     ##third, convert to dep per ha for each soil type - equals cost per hr x seeding rate per hr
     dep_ha = dep_hourly * seed_rate
-    return dep_ha
+    ##allocate season period based on mach/labour period - so that depreciation can be linked to seeding activity and transferred as seasons uncluster
+    mach_periods = per.f_p_dates_df()
+    date_start_p5z = mach_periods.values[:-1]
+    alloc_m1p5z = zfun.f1_z_period_alloc(date_start_p5z[na,...], z_pos=-1)
+    ###make df
+    keys_p5 = mach_periods.index[:-1]
+    keys_z = zfun.f_keys_z()
+    keys_m1 = per.f_season_periods(keys=True)
+    index_m1p5z = pd.MultiIndex.from_product([keys_m1,keys_p5,keys_z])
+    alloc_m1p5z = pd.Series(alloc_m1p5z.ravel(), index=index_m1p5z)
+    index_m1p5zl = pd.MultiIndex.from_product([keys_m1,keys_p5,keys_z,dep_ha.index])
+    alloc_m1p5zl = alloc_m1p5z.reindex(index_m1p5zl)
+    return alloc_m1p5zl.mul(dep_ha, level=-1)
 
 
 ####################################
@@ -1065,7 +1082,18 @@ def f_harvest_dep():
     ##second, determine dep per hour - equal to harv gear value x dep % / seeding time
     dep_rate = uinp.mach[pinp.mach['option']]['variable_dep'] - uinp.finance['fixed_dep']
     dep_hourly = harvest_gear_clearing_value() * dep_rate / average_harv_time
-    return dep_hourly
+    ##allocate season period based on mach/labour period - so that depreciation can be linked to seeding activity and transferred as seasons uncluster
+    mach_periods = per.f_p_dates_df()
+    date_start_p5z = mach_periods.values[:-1]
+    alloc_m1p5z = zfun.f1_z_period_alloc(date_start_p5z[na,...], z_pos=-1)
+    ###make df
+    keys_p5 = mach_periods.index[:-1]
+    keys_z = zfun.f_keys_z()
+    keys_m1 = per.f_season_periods(keys=True)
+    index_m1p5z = pd.MultiIndex.from_product([keys_m1,keys_p5,keys_z])
+    alloc_m1p5z = pd.Series(alloc_m1p5z.ravel(), index=index_m1p5z)
+
+    return alloc_m1p5z * dep_hourly
 
 
 #######################################################################################################################################################
@@ -1083,7 +1111,7 @@ def f_insurance(r_vals):
 
     '''
     ##determine the insurance paid
-    value_all_mach = f_total_clearing_value()
+    value_all_mach = f_total_clearing_value().squeeze()
     insurance_cost = value_all_mach * uinp.finance['equip_insurance']
     
     ##determine cash period
@@ -1149,11 +1177,11 @@ def f_mach_params(params,r_vals):
     ##create non seasonal params
     params['seed_rate'] = seedrate.to_dict()
     params['contract_harv_rate'] = contract_harv_rate.to_dict()
-    params['fixed_dep'] = fixed_dep
-    params['harv_dep'] = harv_dep
+    params['fixed_dep'] = fixed_dep.to_dict()
+    params['harv_dep'] = harv_dep.to_dict()
     params['seeding_gear_clearing_value'] = seeding_gear_clearing_value
     params['seeding_dep'] = seeding_dep.to_dict()
-    params['mach_asset_value'] = mach_asset_value
+    params['mach_asset_value'] = mach_asset_value.to_dict()
 
     ##create season params
     params['seed_days'] = seed_days.to_dict()

@@ -566,14 +566,18 @@ def f_con_workingcap(params, model):
                                        doc='overdraw limit')
 
 
-
-
 def f_con_dep(model):
     '''Tallies the depreciation of capital, which is then passed to the objective.'''
-    def dep(model,z):
-        return macpy.f_total_dep(model,z) + suppy.f_sup_dep(model,z) - model.v_dep[z] <= 0
+    def dep(model,m1,z9):
+        l_m1 = list(model.s_season_periods)
+        m1_prev = l_m1[l_m1.index(m1) - 1] #need the activity level from last period
+        m1_start = l_m1[0]
+        return (macpy.f_total_dep(model,m1,z9) + suppy.f_sup_dep(model,m1,z9) - model.v_dep[m1,z9]
+                + sum(model.v_dep[m1_prev,z9] * model.p_parentchildz_transfer_season[m1_prev,z8,z9]
+                      for z8 in model.s_season_types) * (m1!=m1_start) #end doesnt carry over
+                <= 0)
 
-    model.con_dep = pe.Constraint(model.s_season_types,rule=dep,
+    model.con_dep = pe.Constraint(model.s_season_periods, model.s_season_types,rule=dep,
                                   doc='tallies depreciation from all activities so it can be transferred to objective')
 
 
@@ -581,12 +585,16 @@ def f_con_asset(model):
     '''Tallies the total asset value to ensure that there is a minimum ROI on farm assets. The asset value multiplied
     by opportunity cost on capital is then passed to the objective.
     '''
-    def asset(model,z):
-        return (suppy.f_sup_asset(model,z) + macpy.f_mach_asset(model) + stkpy.f_stock_asset(model,z)) * uinp.finance[
-            'opportunity_cost_capital'] \
-               - model.v_asset[z] <= 0
+    def asset(model,m1,z9):
+        l_m1 = list(model.s_season_periods)
+        m1_prev = l_m1[l_m1.index(m1) - 1] #need the activity level from last period
+        m1_start = l_m1[0]
+        return (suppy.f_sup_asset(model,m1,z9) + macpy.f_mach_asset(model,m1) + stkpy.f_stock_asset(model,m1,z9)) * uinp.finance['opportunity_cost_capital'] \
+               - model.v_asset[m1,z9] \
+               + sum(model.v_asset[m1_prev,z8] * model.p_parentchildz_transfer_season[m1_prev,z8,z9]
+                     for z8 in model.s_season_types) * (m1!=m1_start) <= 0 #end doesnt carry over
 
-    model.con_asset = pe.Constraint(model.s_season_types,rule=asset,
+    model.con_asset = pe.Constraint(model.s_season_periods, model.s_season_types,rule=asset,
                                     doc='tallies asset from all activities so it can be transferred to objective to represent ROE')
 
 
@@ -611,8 +619,9 @@ def f_objective(model):
     '''
 
     p7 = list(model.s_cashflow_periods)
+    m1_end = list(model.s_season_periods)[-1]
     return sum((sum(model.v_credit[c0, p7[-1], z] - model.v_debit[c0, p7[-1], z] for c0 in model.s_enterprises)
-               - model.v_dep[z] - model.v_minroe[z] - model.v_asset[z]) * model.p_z_prob[z]
+               - model.v_dep[m1_end,z] - model.v_minroe[z] - model.v_asset[m1_end,z]) * model.p_z_prob[z]
                for z in model.s_season_types)  # have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.
 
     # return sum((cash_flow(model,z) - model.v_dep[z] - model.v_minroe[z] - model.v_asset[z]) * model.p_z_prob[z]

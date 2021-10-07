@@ -104,7 +104,10 @@ def sets(model, nv):
     ###########
 
     ##phase periods
-    model.s_phase_periods = Set(initialize=per.f_phase_periods(keys=True),doc='season nodes')
+    model.s_phase_periods = Set(initialize=per.f_phase_periods(keys=True),doc='phase nodes')
+
+    ##season periods
+    model.s_season_periods = Set(initialize=per.f_season_periods(keys=True),doc='season nodes')
 
     ##lmus
     lmu_mask = pinp.general['i_lmu_area'] > 0

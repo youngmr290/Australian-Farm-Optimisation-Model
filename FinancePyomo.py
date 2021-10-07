@@ -20,7 +20,7 @@ def fin_precalcs(params, r_vals):
     '''
     fin.overheads(params, r_vals)
     fin.finance_rep(r_vals)
-    fin.f1_cashflow_z8z9_transfer(params)
+    fin.f1_finance_z8z9_transfers(params)
     params['overdraw'] = pinp.finance['overdraw_limit']
 
 
@@ -40,9 +40,9 @@ def f1_finpyomo_local(params, model):
     ##working capital for a given time period (time period defined by cashflow set)
     model.v_wc_debit = Var(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, bounds = (0.0, None), doc = 'amount of net negative working capital in a given period')
     ##dep
-    model.v_dep = Var(model.s_season_types, bounds = (0.0, None), doc = 'transfers total dep to objective')
+    model.v_dep = Var(model.s_season_periods, model.s_season_types, bounds = (0.0, None), doc = 'transfers total dep to objective')
     ##dep
-    model.v_asset = Var(model.s_season_types, bounds = (0.0, None), doc = 'transfers total value of asset to objective to ensure opportunity cost is represented')
+    model.v_asset = Var(model.s_season_periods, model.s_season_types, bounds = (0.0, None), doc = 'transfers total value of asset to objective to ensure opportunity cost is represented')
     ##minroe
     model.v_minroe = Var(model.s_season_types, bounds = (0.0, None), doc = 'total expenditure, used to ensure min return is met')
 
@@ -56,6 +56,10 @@ def f1_finpyomo_local(params, model):
     model.p_parentchildz_transfer_cashflow = Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types,
                                                    model.s_season_types, initialize=params['p_parentchildz_transfer_cashflow'], default=0.0,
                                                    mutable=False, doc='Transfer of z8 dv in the previous cash period to z9 constraint in the current cash period')
+
+    model.p_parentchildz_transfer_season = Param(model.s_season_periods, model.s_season_types, model.s_season_types,
+                                                 initialize=params['p_parentchildz_transfer_season'], default=0.0,
+                                                 mutable=False, doc='Transfer of z8 dv in the previous season period to z9 constraint in the current season period')
 
     #########################
     #call Local constrain   #

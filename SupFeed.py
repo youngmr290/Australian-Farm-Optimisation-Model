@@ -179,11 +179,23 @@ def f_sup_cost(r_vals):
     r_vals['total_sup_cost_c0p7zp6k'] = total_sup_cost_c0p7zp6k
 
     ##dep
-    storage_dep = grain_info.loc['dep']
+    storage_dep_k = grain_info.loc['dep']
     ##asset
-    storage_asset = grain_info.loc['asset']
+    storage_asset_k = grain_info.loc['asset']
+    ##allocate both dep and asset to season periods so it can be transferred as seasons unfold
+    alloc_m1p6z = zfun.f1_z_period_alloc(start_p6z[na,...], z_pos=-1)
+    ###make df
+    keys_m1 = per.f_season_periods(keys=True)
+    keys_k = storage_dep_k.index
+    index_m1p6z = pd.MultiIndex.from_product([keys_m1,keys_p6,keys_z])
+    alloc_m1p6z = pd.Series(alloc_m1p6z.ravel(), index=index_m1p6z)
+    index_m1p6zk = pd.MultiIndex.from_product([keys_m1,keys_p6,keys_z,keys_k])
+    alloc_m1p6zk = alloc_m1p6z.reindex(index_m1p6zk)
+    storage_dep_m1p6zk = alloc_m1p6zk.mul(storage_dep_k, level=-1)
+    storage_asset_m1p6zk = alloc_m1p6zk.mul(storage_asset_k, level=-1)
+
     ##return cost, dep and asset value
-    return total_sup_cost_c0p7zp6k, total_sup_wc_c0p7zp6k, storage_dep, storage_asset
+    return total_sup_cost_c0p7zp6k, total_sup_wc_c0p7zp6k, storage_dep_m1p6zk, storage_asset_m1p6zk
 
     
 def f_sup_md_vol():

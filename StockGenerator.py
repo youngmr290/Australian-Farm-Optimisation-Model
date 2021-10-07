@@ -4603,6 +4603,8 @@ def generator(params,r_vals,nv,plots = False):
     cash_allocation_c0p7pa1e1b1nwzida0e0b0xyg, wc_allocation_c0p7pa1e1b1nwzida0e0b0xyg = fin.f_cashflow_allocation(
         date_start_pa1e1b1nwzida0e0b0xyg, p7_dates_c0p7pa1e1b1nwzida0e0b0xyg,
         peakdebt_date_c0p7pa1e1b1nwzida0e0b0xyg, mask_cashflow_z8var_c0p7pa1e1b1nwzida0e0b0xyg, 'stk')
+    ###season period allocation - required for asset value
+    alloc_m1pa1e1b1nwzida0e0b0xyg = zfun.f1_z_period_alloc(date_start_pa1e1b1nwzida0e0b0xyg[na,...],z_pos=z_pos)
 
     ###labour period
     labour_periods = per.f_p_date2_df().to_numpy().astype('datetime64[D]') #convert from df to numpy
@@ -5203,8 +5205,8 @@ def generator(params,r_vals,nv,plots = False):
 
     ##combine income and cost from wool, sale and husb.
     ###sire
-    assetvalue_pa1e1b1nwzida0e0b0xyg0 =  ((salevalue_pa1e1b1nwzida0e0b0xyg0 + woolvalue_pa1e1b1nwzida0e0b0xyg0) #calc asset value before adjusting by period is sale and shearing
-                                            * period_is_assetvalue_pa1e1b1nwzida0e0b0xyg)
+    assetvalue_m1pa1e1b1nwzida0e0b0xyg0 =  ((salevalue_pa1e1b1nwzida0e0b0xyg0 + woolvalue_pa1e1b1nwzida0e0b0xyg0) #calc asset value before adjusting by period is sale and shearing
+                                            * period_is_assetvalue_pa1e1b1nwzida0e0b0xyg * alloc_m1pa1e1b1nwzida0e0b0xyg)
     salevalue_pa1e1b1nwzida0e0b0xyg0 = salevalue_pa1e1b1nwzida0e0b0xyg0 * period_is_sale_pa1e1b1nwzida0e0b0xyg0
     salevalue_c0p7pa1e1b1nwzida0e0b0xyg0 = salevalue_pa1e1b1nwzida0e0b0xyg0 * cash_allocation_c0p7pa1e1b1nwzida0e0b0xyg
     salevalue_wc_c0p7pa1e1b1nwzida0e0b0xyg0 = salevalue_pa1e1b1nwzida0e0b0xyg0 * wc_allocation_c0p7pa1e1b1nwzida0e0b0xyg
@@ -5217,8 +5219,8 @@ def generator(params,r_vals,nv,plots = False):
     wc_c0p7pa1e1b1nwzida0e0b0xyg0 =  (salevalue_wc_c0p7pa1e1b1nwzida0e0b0xyg0 + woolvalue_wc_c0p7pa1e1b1nwzida0e0b0xyg0
                                          - husbandry_cost_wc_c0p7pg0)
     ###dams
-    assetvalue_pa1e1b1nwzida0e0b0xyg1 =  ((salevalue_pa1e1b1nwzida0e0b0xyg1 + woolvalue_pa1e1b1nwzida0e0b0xyg1) #calc asset value before adjusting by period is sale and shearing
-                                            * period_is_assetvalue_pa1e1b1nwzida0e0b0xyg)
+    assetvalue_m1pa1e1b1nwzida0e0b0xyg1 =  ((salevalue_pa1e1b1nwzida0e0b0xyg1 + woolvalue_pa1e1b1nwzida0e0b0xyg1) #calc asset value before adjusting by period is sale and shearing
+                                            * period_is_assetvalue_pa1e1b1nwzida0e0b0xyg * alloc_m1pa1e1b1nwzida0e0b0xyg)
     salevalue_tpa1e1b1nwzida0e0b0xyg1 = salevalue_pa1e1b1nwzida0e0b0xyg1 * period_is_sale_tpa1e1b1nwzida0e0b0xyg1
     salevalue_c0p7tpa1e1b1nwzida0e0b0xyg1 = salevalue_tpa1e1b1nwzida0e0b0xyg1 * cash_allocation_c0p7pa1e1b1nwzida0e0b0xyg[:,:,na,...]
     salevalue_wc_c0p7tpa1e1b1nwzida0e0b0xyg1 = salevalue_tpa1e1b1nwzida0e0b0xyg1 * wc_allocation_c0p7pa1e1b1nwzida0e0b0xyg[:,:,na,...]
@@ -5235,8 +5237,8 @@ def generator(params,r_vals,nv,plots = False):
     salevalue_wc_c0p7p9a1e1b1nwzida0e0b0xyg2 = salevalue_p9a1e1b1nwzida0e0b0xyg2 * wc_allocation_c0p7pa1e1b1nwzida0e0b0xyg[:,:,sale_mask_p2,...]
     r_salegrid_pa1e1b1nwzida0e0b0xyg2 = r_salegrid_pa1e1b1nwzida0e0b0xyg2 * period_is_sale_t0_pa1e1b1nwzida0e0b0xyg2
     ###offs
-    assetvalue_tpa1e1b1nwzida0e0b0xyg3 =  ((salevalue_pa1e1b1nwzida0e0b0xyg3 + woolvalue_tpa1e1b1nwzida0e0b0xyg3) #calc asset value before adjusting by period is sale and shearing
-                                            * period_is_assetvalue_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p])
+    assetvalue_tm1pa1e1b1nwzida0e0b0xyg3 =  ((salevalue_pa1e1b1nwzida0e0b0xyg3 + woolvalue_tpa1e1b1nwzida0e0b0xyg3[:,na,...]) #calc asset value before adjusting by period is sale and shearing
+                                            * period_is_assetvalue_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p] * alloc_m1pa1e1b1nwzida0e0b0xyg[:,mask_p_offs_p,...])
     salevalue_tpa1e1b1nwzida0e0b0xyg3 = salevalue_pa1e1b1nwzida0e0b0xyg3 * period_is_sale_tpa1e1b1nwzida0e0b0xyg3
     salevalue_c0p7tpa1e1b1nwzida0e0b0xyg3 = salevalue_tpa1e1b1nwzida0e0b0xyg3 * cash_allocation_c0p7pa1e1b1nwzida0e0b0xyg[:,:,na, mask_p_offs_p]
     salevalue_wc_c0p7tpa1e1b1nwzida0e0b0xyg3 = salevalue_tpa1e1b1nwzida0e0b0xyg3 * wc_allocation_c0p7pa1e1b1nwzida0e0b0xyg[:,:,na, mask_p_offs_p]
@@ -5373,7 +5375,7 @@ def generator(params,r_vals,nv,plots = False):
                                               on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0)
     cost_c0p7va1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(husbandry_cost_c0p7pg0, numbers_p=o_numbers_end_psire,
                                               on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0)
-    assetvalue_va1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(assetvalue_pa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_psire,
+    assetvalue_m1va1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(assetvalue_m1pa1e1b1nwzida0e0b0xyg0, numbers_p=o_numbers_end_psire,
                                               on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0)
     ###dams
     cashflow_c0p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(cashflow_c0p7tpa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_pdams,
@@ -5382,8 +5384,8 @@ def generator(params,r_vals,nv,plots = False):
                                               on_hand_tpa1e1b1nwzida0e0b0xyg1)
     cost_c0p7tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(husbandry_cost_c0p7pg1[:,:,na,...], a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_pdams,
                                               on_hand_tpa1e1b1nwzida0e0b0xyg1)
-    assetvalue_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(assetvalue_pa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_pdams,
-                                              on_hand_tpa1e1b1nwzida0e0b0xyg1)
+    assetvalue_tm1va1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(assetvalue_m1pa1e1b1nwzida0e0b0xyg1, a_v_pa1e1b1nwzida0e0b0xyg1, o_numbers_end_pdams,
+                                              on_hand_tpa1e1b1nwzida0e0b0xyg1[:,na,...])
     ###yatf can be sold as sucker, not shorn therefore only include sale value. husbandry is accounted for with dams so don't need that here.
     salevalue_d_c0p7a1e1b1nwzida0e0b0xyg2 = sfun.f1_p2v_std(salevalue_c0p7p9a1e1b1nwzida0e0b0xyg2, period_is_tvp=period_is_sale_t0_pa1e1b1nwzida0e0b0xyg2[sale_mask_p2]
                                                    , numbers_p=(o_numbers_start_pyatf * o_numbers_start_pdams)[sale_mask_p2]
@@ -5398,8 +5400,8 @@ def generator(params,r_vals,nv,plots = False):
                                               on_hand_tpa1e1b1nwzida0e0b0xyg3)
     cost_c0p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(husbandry_cost_c0p7tpg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_poffs,
                                               on_hand_tpa1e1b1nwzida0e0b0xyg3)
-    assetvalue_tva1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(assetvalue_tpa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_poffs,
-                                              on_hand_tpa1e1b1nwzida0e0b0xyg3)
+    assetvalue_tm1va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(assetvalue_tm1pa1e1b1nwzida0e0b0xyg3, a_v_pa1e1b1nwzida0e0b0xyg3, o_numbers_end_poffs,
+                                              on_hand_tpa1e1b1nwzida0e0b0xyg3[:,na,...])
 
     ##every period - with labour (p5) axis
     labour_l2p5tva1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(husbandry_labour_l2pg0[:,na,na,...], numbers_p=o_numbers_end_psire,
@@ -5878,12 +5880,12 @@ def generator(params,r_vals,nv,plots = False):
     cost_k3k5c0tva1e1b1nwzida0e0b0xyg3 = np.sum(cost_k3k5c0p7tva1e1b1nwzida0e0b0xyg3, axis=3)
 
     ##asset value
-    assetvalue_va1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', assetvalue_va1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
-    assetvalue_k2tva1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', assetvalue_tva1e1b1nwzida0e0b0xyg1, a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1,
+    assetvalue_m1va1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', assetvalue_m1va1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
+    assetvalue_k2tm1va1e1b1nwzida0e0b0xyg1 = sfun.f1_create_production_param('dams', assetvalue_tm1va1e1b1nwzida0e0b0xyg1, a_k2cluster_va1e1b1nwzida0e0b0xyg1, index_k2tva1e1b1nwzida0e0b0xyg1[:,:,na,...],
                                                                  numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg1,
-                                                                 mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1*mask_z8var_va1e1b1nwzida0e0b0xyg1*mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1))
-    assetvalue_k3k5tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', assetvalue_tva1e1b1nwzida0e0b0xyg3, a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3,
-                                                    a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3, numbers_start_va1e1b1nwzida0e0b0xyg3,
+                                                                 mask_vg=(mask_w8vars_va1e1b1nw8zida0e0b0xyg1*mask_z8var_va1e1b1nwzida0e0b0xyg1*mask_tvars_k2tva1e1b1nw8zida0e0b0xyg1[:,:,na,...]))
+    assetvalue_k3k5tm1va1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', assetvalue_tm1va1e1b1nwzida0e0b0xyg3, a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,:,na,...],
+                                                    a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3[:,:,na,...], numbers_start_va1e1b1nwzida0e0b0xyg3,
                                                     mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
 
     ##labour - manager
@@ -6690,6 +6692,7 @@ def generator(params,r_vals,nv,plots = False):
     keys_lw3 = np.array(['w%03d'%i for i in range(len_w3)])
     keys_lw_prog = np.array(['w%03d'%i for i in range(len_w_prog)])
     # keys_n0 = sinp.stock['i_n_idx_sire']
+    keys_m1 = per.f_season_periods(keys=True)
     keys_n1 = np.array(['n%s'%i for i in range(sinp.structuralsa['i_n1_matrix_len'])])
     keys_n3 = np.array(['n%s'%i for i in range(sinp.structuralsa['i_n3_matrix_len'])])
     keys_p5 = np.array(per.f_p_date2_df().index).astype('str')
@@ -6820,15 +6823,15 @@ def generator(params,r_vals,nv,plots = False):
     arrays = [keys_k3, keys_k5, keys_c0, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
     index_k3k5c0tvnwziaxyg3 = fun.cartesian_product_simple_transpose(arrays)
 
-    ###g0 - asset sire
-    arrays = [keys_g0]
-    index_g0 = fun.cartesian_product_simple_transpose(arrays)
-    ###k2tvanwziyg1 - asset dams
-    arrays = [keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
-    index_k2tvanwziyg1 = fun.cartesian_product_simple_transpose(arrays)
-    ###k3k5tvnwziaxyg3 - asset offs
-    arrays = [keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
-    index_k3k5tvnwziaxyg3 = fun.cartesian_product_simple_transpose(arrays)
+    ###m1g0 - asset sire
+    arrays = [keys_m1, keys_g0]
+    index_m1g0 = fun.cartesian_product_simple_transpose(arrays)
+    ###k2tm1vanwziyg1 - asset dams
+    arrays = [keys_k2, keys_t1, keys_m1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
+    index_k2tm1vanwziyg1 = fun.cartesian_product_simple_transpose(arrays)
+    ###k3k5tm1vnwziaxyg3 - asset offs
+    arrays = [keys_k3, keys_k5, keys_t3, keys_m1, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
+    index_k3k5tm1vnwziaxyg3 = fun.cartesian_product_simple_transpose(arrays)
 
     ###p5g0 - labour sire
     arrays = [keys_p5, keys_g0]
@@ -6890,8 +6893,11 @@ def generator(params,r_vals,nv,plots = False):
     params['p_rm_stockinfra_var'] = dict(zip(tup_h1c0p7z, rm_stockinfra_var_h1c0p7z.ravel()))
     params['p_rm_stockinfra_fix'] = dict(zip(tup_h1c0p7z,rm_stockinfra_fix_h1c0p7z.ravel()))
 
-    ###asset value infra
-    params['p_infra'] = dict(zip(keys_h1, assetvalue_infra_h1))
+    ###asset value infra - all in the last season period (doesnt really matter where since it is transferred between each season period)
+    keys_m1_end = keys_m1[-1:]
+    index_m1h1 = fun.cartesian_product_simple_transpose([keys_m1_end,keys_h1])
+    tup_m1h1 = tuple(map(tuple,index_m1h1))
+    params['p_infra'] = dict(zip(tup_m1h1, assetvalue_infra_h1))
 
 
     ##seasonal
@@ -7201,27 +7207,27 @@ def generator(params,r_vals,nv,plots = False):
     params['p_purchcost_wc_sire'] =dict(zip(tup_c0p7g0, purchcost_wc_sire_c0p7g0))
 
     ###assetvalue - sire
-    assetvalue_va1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(assetvalue_va1e1b1nwzida0e0b0xyg0,season_propn_zida0e0b0xyg,z_pos,keepdims=True)
-    mask=assetvalue_va1e1b1nwzida0e0b0xyg0!=0
-    assetvalue_sire_g0 = assetvalue_va1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
+    assetvalue_m1va1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(assetvalue_m1va1e1b1nwzida0e0b0xyg0,season_propn_zida0e0b0xyg,z_pos,keepdims=True)
+    mask=assetvalue_m1va1e1b1nwzida0e0b0xyg0!=0
+    assetvalue_sire_m1g0 = assetvalue_m1va1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
     mask=mask.ravel()
-    index_cut_g0=index_g0[mask,:]
-    tup_g0 = tuple(map(tuple, index_cut_g0))
-    params['p_assetvalue_sire'] =dict(zip(tup_g0, assetvalue_sire_g0))
+    index_cut_m1g0=index_m1g0[mask,:]
+    tup_m1g0 = tuple(map(tuple, index_cut_m1g0))
+    params['p_assetvalue_sire'] =dict(zip(tup_m1g0, assetvalue_sire_m1g0))
     ###assetvalue - dams
-    mask=assetvalue_k2tva1e1b1nwzida0e0b0xyg1!=0
-    assetvalue_dams_k2tva1nwziyg = assetvalue_k2tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
+    mask=assetvalue_k2tm1va1e1b1nwzida0e0b0xyg1!=0
+    assetvalue_dams_k2tm1va1nwziyg = assetvalue_k2tm1va1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
     mask=mask.ravel()
-    index_cut_k2tvanwziyg1=index_k2tvanwziyg1[mask,:]
-    tup_k2tvanwziyg1 = tuple(map(tuple, index_cut_k2tvanwziyg1))
-    params['p_assetvalue_dams'] =dict(zip(tup_k2tvanwziyg1, assetvalue_dams_k2tva1nwziyg))
+    index_cut_k2tm1vanwziyg1=index_k2tm1vanwziyg1[mask,:]
+    tup_k2tm1vanwziyg1 = tuple(map(tuple, index_cut_k2tm1vanwziyg1))
+    params['p_assetvalue_dams'] =dict(zip(tup_k2tm1vanwziyg1, assetvalue_dams_k2tm1va1nwziyg))
     ###assetvalue - offs
-    mask=assetvalue_k3k5tva1e1b1nwzida0e0b0xyg3!=0
-    assetvalue_offs_k3k5tvnwziaxyg3 = assetvalue_k3k5tva1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
+    mask=assetvalue_k3k5tm1va1e1b1nwzida0e0b0xyg3!=0
+    assetvalue_offs_k3k5tm1vnwziaxyg3 = assetvalue_k3k5tm1va1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
     mask=mask.ravel()
-    index_cut_k3k5tvnwziaxyg3=index_k3k5tvnwziaxyg3[mask,:]
-    tup_k3k5tvnwziaxyg3 = tuple(map(tuple, index_cut_k3k5tvnwziaxyg3))
-    params['p_assetvalue_offs'] =dict(zip(tup_k3k5tvnwziaxyg3, assetvalue_offs_k3k5tvnwziaxyg3))
+    index_cut_k3k5tm1vnwziaxyg3=index_k3k5tm1vnwziaxyg3[mask,:]
+    tup_k3k5tm1vnwziaxyg3 = tuple(map(tuple, index_cut_k3k5tm1vnwziaxyg3))
+    params['p_assetvalue_offs'] =dict(zip(tup_k3k5tm1vnwziaxyg3, assetvalue_offs_k3k5tm1vnwziaxyg3))
 
     ###anyone labour - sire
     lab_anyone_p5tva1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(lab_anyone_p5tva1e1b1nwzida0e0b0xyg0,season_propn_zida0e0b0xyg,z_pos,keepdims=True)

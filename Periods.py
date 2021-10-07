@@ -281,3 +281,37 @@ def f_phase_periods(keys=False):
         return date_phase_node_mz
 
 
+#################
+#season periods #
+#################
+
+def f_season_periods(keys=False):
+    '''
+    :param keys: Boolean if True this returns the m keys
+    :param periods: Boolean if True this returns the m period dates
+    '''
+
+    date_node_zm1 = zfun.f_seasonal_inp(pinp.general['i_date_node_zm'],numpy=True,axis=0).astype('datetime64')
+    ##if steady state then m1 axis is singleton (start and finish at the break of season).
+    if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1:
+        date_node_zm1 = date_node_zm1[:,0:1]
+        ###add end date of last node period - required for the allocation function
+        end_zm1 = date_node_zm1[:,0:1] + np.timedelta64(365,'D')  # increment the first date by 1yr so it becomes the end date for the last period
+        date_season_node_m1z = np.concatenate([date_node_zm1,end_zm1],axis=1).T  # put m1 in pos 0 because that how the allocation function requires
+    ##if DSP then all season node included plus a node for dry seeding
+    else:
+        ###add end date of last node period - required for the allocation function
+        end_zm1 = date_node_zm1[:,0:1] + np.timedelta64(365,'D')  # increment the first date by 1yr so it becomes the end date for the last period
+        date_season_node_m1z = np.concatenate([date_node_zm1,end_zm1],
+                                            axis=1).T  # put m1 in pos 0 because that how the allocation function requires
+
+    len_m1 = date_season_node_m1z.shape[0] - 1  # minus one because end date is not a period
+
+    ##return keys if wanted
+    if keys:
+        keys_m1 = np.array(['zm%s' % i for i in range(len_m1)])
+        return keys_m1
+    else:
+        return date_season_node_m1z
+
+

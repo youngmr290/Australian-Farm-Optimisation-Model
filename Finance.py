@@ -204,9 +204,10 @@ def f_min_roe():
 ###################
 #Season transfer  #
 ###################
-def f1_cashflow_z8z9_transfer(params):
+def f1_finance_z8z9_transfers(params):
     '''
-    Create pyomo param whcih masks cashflow transfer within a given season.
+    Create pyomo param which masks cashflow transfer within a given season.
+    Create pyomo param which masks depreciation and asset transfer within a given season.
 
     Seasons are masked out until the point in the year when they are identified. At the point of identification
     the parent season provides the transfer parameters to the child season. This transfering method ensures the
@@ -217,15 +218,22 @@ def f1_cashflow_z8z9_transfer(params):
     ##get param
     p7_start_dates_c0p7z = per.f_cashflow_periods()[:,:-1,:]  # slice off the end date slice
     mask_cashflow_provz8z9_c0p7z8z9 = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, period_axis_pos=1, z_pos=-1)
+    date_season_node_m1z = per.f_season_periods()
+    mask_season_m1z8z9 = zfun.f_season_transfer_mask(date_season_node_m1z[:-1,...],z_pos=-1)  # slice off end date m1
 
     ##build param
     keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
+    keys_m1 = per.f_season_periods(keys=True)
 
     arrays = [keys_c0, keys_p7, keys_z, keys_z]
     index_c0p7z8z9 = fun.cartesian_product_simple_transpose(arrays)
     tup_c0p7z8z9 = tuple(map(tuple,index_c0p7z8z9))
+
+    arrays = [keys_m1, keys_z, keys_z]
+    index_m1z8z9 = fun.cartesian_product_simple_transpose(arrays)
+    tup_m1z8z9 = tuple(map(tuple,index_m1z8z9))
 
     # arrays = [keys_z, keys_z]
     # index_z8z9 = fun.cartesian_product_simple_transpose(arrays)
@@ -233,6 +241,7 @@ def f1_cashflow_z8z9_transfer(params):
 
     # params['p_childz_req_cashflow'] =dict(zip(tup_z8z9, mask_cashflow_reqz8z9_z8z9.ravel()*1))
     params['p_parentchildz_transfer_cashflow'] =dict(zip(tup_c0p7z8z9, mask_cashflow_provz8z9_c0p7z8z9.ravel()*1))
+    params['p_parentchildz_transfer_season'] =dict(zip(tup_m1z8z9, mask_season_m1z8z9.ravel()*1))
 
 #################
 # report vals   #

@@ -80,14 +80,14 @@ def f1_machpyomo_local(params, model):
 
     model.p_poc_grazingdays = pe.Param(model.s_feed_periods, model.s_labperiods, model.s_season_types, initialize=params['poc_grazing_days'], default = 0.0, mutable=False, doc='pasture grazing days per feed period provided by 1ha of seeding in each seed period')
 
-    model.p_fixed_dep = pe.Param(initialize=params['fixed_dep'],default=0.0, doc='fixed depreciation of all machinery for 1 yr')
+    model.p_fixed_dep = pe.Param(model.s_season_periods, initialize=params['fixed_dep'],default=0.0, doc='fixed depreciation of all machinery for 1 yr')
 
-    model.p_seeding_dep = pe.Param(model.s_lmus,initialize=params['seeding_dep'],default=0.0,
+    model.p_seeding_dep = pe.Param(model.s_season_periods, model.s_labperiods, model.s_season_types, model.s_lmus,initialize=params['seeding_dep'],default=0.0,
                                 doc='depreciation cost of seeding 1ha')
 
-    model.p_harv_dep = pe.Param(initialize=params['harv_dep'],default=0.0, doc='depreciation cost of harvesting 1hr')
+    model.p_harv_dep = pe.Param(model.s_season_periods, model.s_labperiods, model.s_season_types, initialize=params['harv_dep'],default=0.0, doc='depreciation cost of harvesting 1hr')
 
-    model.p_mach_asset = pe.Param(initialize=params['mach_asset_value'], default = 0.0, doc='asset value associated with crop gear')
+    model.p_mach_asset = pe.Param(model.s_season_periods, initialize=params['mach_asset_value'], default = 0.0, doc='asset value associated with crop gear')
 
     model.p_mach_insurance = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, initialize=params['insurance'], default = 0.0, doc='insurance paid on all machinery')
     
@@ -276,7 +276,7 @@ def f_mach_wc(model,c0,p7,z):
 
 #function to determine derpriciation cost, this will be passed to core model
 #equals seeding dep plus harv dep plus fixed dep
-def f_total_dep(model,z):
+def f_total_dep(model,m1,z):
     '''
     Calculate the total depreciation of farm machinery.
 
@@ -284,22 +284,23 @@ def f_total_dep(model,z):
     '''
 
     #fixed dep = total sale value of equipment x fixed rate of dep, number of crop fear accounted for before this step
-    fixed_dep = model.p_fixed_dep
+    fixed_dep = model.p_fixed_dep[m1]
     #cost per ha seeding dep x number of days seeding x ha per day
-    seeding_depreciation = sum(model.p_seeding_dep[l] * model.v_seeding_machdays[z,p,k,l] * model.p_seeding_rate[k,l]
-                               for l in model.s_lmus for p in  model.s_labperiods for k in model.s_crops)
+    seeding_depreciation = sum(model.p_seeding_dep[m1,p5,z,l] * model.v_seeding_machdays[z,p5,k,l] * model.p_seeding_rate[k,l]
+                               for l in model.s_lmus for p5 in  model.s_labperiods for k in model.s_crops)
     #cost of harv dep = hourly dep x early and late harv hours 
-    harv_dep = model.p_harv_dep * sum(model.v_harv_hours[z,p,k] for k in model.s_harvcrops for p in model.s_labperiods)
+    harv_dep = sum(model.p_harv_dep[m1,p5,z] * model.v_harv_hours[z,p5,k]
+                   for k in model.s_harvcrops for p5 in model.s_labperiods)
     return seeding_depreciation + fixed_dep + harv_dep
 
-def f_mach_asset(model):
+def f_mach_asset(model,m1):
     '''
     Calculate the total asset value of farm machinery.
 
     Used in global constraint (con_asset). See CorePyomo
     '''
 
-    return model.p_mach_asset
+    return model.p_mach_asset[m1]
 
 
 
