@@ -5874,10 +5874,6 @@ def generator(params,r_vals,nv,plots = False):
     cost_k3k5c0p7tva1e1b1nwzida0e0b0xyg3 = sfun.f1_create_production_param('offs', cost_c0p7tva1e1b1nwzida0e0b0xyg3, a_k3cluster_da0e0b0xyg3, index_k3k5tva1e1b1nwzida0e0b0xyg3[:,:,na,na,...],
                                                     a_k5cluster_da0e0b0xyg3, index_k5tva1e1b1nwzida0e0b0xyg3[:,na,na,...], numbers_start_va1e1b1nwzida0e0b0xyg3,
                                                     mask_vg=mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_z8var_va1e1b1nwzida0e0b0xyg3)
-    ###sum p7 axis for cost param - it must exist for reporting so can only be summed here
-    cost_c0va1e1b1nwzida0e0b0xyg0 = np.sum(cost_c0p7va1e1b1nwzida0e0b0xyg0, axis=1)
-    cost_k2c0tva1e1b1nwzida0e0b0xyg1 = np.sum(cost_k2c0p7tva1e1b1nwzida0e0b0xyg1, axis=2)
-    cost_k3k5c0tva1e1b1nwzida0e0b0xyg3 = np.sum(cost_k3k5c0p7tva1e1b1nwzida0e0b0xyg3, axis=3)
 
     ##asset value
     assetvalue_m1va1e1b1nwzida0e0b0xyg0 = sfun.f1_create_production_param('sire', assetvalue_m1va1e1b1nwzida0e0b0xyg0, numbers_start_vg=numbers_start_va1e1b1nwzida0e0b0xyg0)
@@ -6813,16 +6809,6 @@ def generator(params,r_vals,nv,plots = False):
     arrays = [keys_k3, keys_k5, keys_c0, keys_p7, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
     index_k3k5c0p7tvnwziaxyg3 = fun.cartesian_product_simple_transpose(arrays)
 
-    ###g0 - cost sire
-    arrays = [keys_c0, keys_g0]
-    index_c0g0 = fun.cartesian_product_simple_transpose(arrays)
-    ###k2c0tvanwziyg1 - cost dams
-    arrays = [keys_k2, keys_c0, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_z, keys_i, keys_y1, keys_g1]
-    index_k2c0tvanwziyg1 = fun.cartesian_product_simple_transpose(arrays)
-    ###k3k5c0tvnwziaxyg3 - cost offs
-    arrays = [keys_k3, keys_k5, keys_c0, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
-    index_k3k5c0tvnwziaxyg3 = fun.cartesian_product_simple_transpose(arrays)
-
     ###m1g0 - asset sire
     arrays = [keys_m1, keys_g0]
     index_m1g0 = fun.cartesian_product_simple_transpose(arrays)
@@ -7166,27 +7152,27 @@ def generator(params,r_vals,nv,plots = False):
     params['p_wc_offs'] =dict(zip(tup_k3k5c0p7tvnwziaxyg3, wc_offs_k3k5c0p7tvnwziaxyg3))
 
     ###cost - sire
-    cost_c0va1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(cost_c0va1e1b1nwzida0e0b0xyg0,season_propn_zida0e0b0xyg,z_pos,keepdims=True)
-    mask=cost_c0va1e1b1nwzida0e0b0xyg0!=0
-    cost_sire_c0g0 = cost_c0va1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
+    cost_c0p7va1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(cost_c0p7va1e1b1nwzida0e0b0xyg0,season_propn_zida0e0b0xyg,z_pos,keepdims=True)
+    mask=cost_c0p7va1e1b1nwzida0e0b0xyg0!=0
+    cost_sire_c0p7g0 = cost_c0p7va1e1b1nwzida0e0b0xyg0[mask] #applying the mask does the raveling and squeezing of array
     mask=mask.ravel()
-    index_cut_c0g0=index_c0g0[mask,:]
-    tup_c0g0 = tuple(map(tuple, index_cut_c0g0))
-    params['p_cost_sire'] =dict(zip(tup_c0g0, cost_sire_c0g0))
+    index_cut_c0p7g0=index_c0p7g0[mask,:]
+    tup_c0p7g0 = tuple(map(tuple, index_cut_c0p7g0))
+    params['p_cost_sire'] =dict(zip(tup_c0p7g0, cost_sire_c0p7g0))
     ###cost - dams
-    mask=cost_k2c0tva1e1b1nwzida0e0b0xyg1!=0
-    cost_dams_k2c0tva1nwziyg = cost_k2c0tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
+    mask=cost_k2c0p7tva1e1b1nwzida0e0b0xyg1!=0
+    cost_dams_k2c0p7tva1nwziyg = cost_k2c0p7tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
     mask=mask.ravel()
-    index_cut_k2c0tvanwziyg1=index_k2c0tvanwziyg1[mask,:]
-    tup_k2c0tvanwziyg1 = tuple(map(tuple, index_cut_k2c0tvanwziyg1))
-    params['p_cost_dams'] =dict(zip(tup_k2c0tvanwziyg1, cost_dams_k2c0tva1nwziyg))
+    index_cut_k2c0p7tvanwziyg1=index_k2c0p7tvanwziyg1[mask,:]
+    tup_k2c0p7tvanwziyg1 = tuple(map(tuple, index_cut_k2c0p7tvanwziyg1))
+    params['p_cost_dams'] =dict(zip(tup_k2c0p7tvanwziyg1, cost_dams_k2c0p7tva1nwziyg))
     ###cost - offs
-    mask=cost_k3k5c0tva1e1b1nwzida0e0b0xyg3!=0
-    cost_offs_k3k5c0tvnwziaxyg3 = cost_k3k5c0tva1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
+    mask=cost_k3k5c0p7tva1e1b1nwzida0e0b0xyg3!=0
+    cost_offs_k3k5c0p7tvnwziaxyg3 = cost_k3k5c0p7tva1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
     mask=mask.ravel()
-    index_cut_k3k5c0tvnwziaxyg3=index_k3k5c0tvnwziaxyg3[mask,:]
-    tup_k3k5c0tvnwziaxyg3 = tuple(map(tuple, index_cut_k3k5c0tvnwziaxyg3))
-    params['p_cost_offs'] =dict(zip(tup_k3k5c0tvnwziaxyg3, cost_offs_k3k5c0tvnwziaxyg3))
+    index_cut_k3k5c0p7tvnwziaxyg3=index_k3k5c0p7tvnwziaxyg3[mask,:]
+    tup_k3k5c0p7tvnwziaxyg3 = tuple(map(tuple, index_cut_k3k5c0p7tvnwziaxyg3))
+    params['p_cost_offs'] =dict(zip(tup_k3k5c0p7tvnwziaxyg3, cost_offs_k3k5c0p7tvnwziaxyg3))
 
     ###purchcost - sire
     purchcost_c0p7va1e1b1nwzida0e0b0xyg0 = fun.f_weighted_average(purchcost_c0p7va1e1b1nwzida0e0b0xyg0,season_propn_zida0e0b0xyg,z_pos,keepdims=True)

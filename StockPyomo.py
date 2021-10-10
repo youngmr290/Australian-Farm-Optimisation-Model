@@ -183,14 +183,15 @@ def f1_stockpyomo_local(params, model):
                              initialize=params['p_wc_offs'], default=0.0, mutable=False, doc='wc offs')
 
     ##cost - minroe
-    model.p_cost_sire = pe.Param(model.s_enterprises, model.s_groups_sire, initialize=params['p_cost_sire'],
+    model.p_cost_sire = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_groups_sire, initialize=params['p_cost_sire'],
                                   default=0.0, mutable=False, doc='husbandry cost sire')
-    model.p_cost_dams = pe.Param(model.s_k2_birth_dams, model.s_enterprises, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams,
+    model.p_cost_dams = pe.Param(model.s_k2_birth_dams, model.s_enterprises, model.s_cashflow_periods, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams,
                                   model.s_lw_dams, model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams,
                                   initialize=params['p_cost_dams'], default=0.0, mutable=False, doc='husbandry cost dams')
-    model.p_cost_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_enterprises, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
-                             model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender, model.s_gen_merit_offs, model.s_groups_offs,
-                             initialize=params['p_cost_offs'], default=0.0, mutable=False, doc='husbandry cost offs')
+    model.p_cost_offs = pe.Param(model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_enterprises, model.s_cashflow_periods,
+                                 model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
+                                 model.s_season_types, model.s_tol, model.s_wean_times, model.s_gender, model.s_gen_merit_offs, model.s_groups_offs,
+                                 initialize=params['p_cost_offs'], default=0.0, mutable=False, doc='husbandry cost offs')
 
     ##asset value stock
     model.p_asset_sire = pe.Param(model.s_season_periods, model.s_groups_sire, initialize=params['p_assetvalue_sire'],
@@ -715,7 +716,7 @@ def f_stock_wc(model,c0,p7,z):
 #     return stock - infrastructure - purchases
 
 
-def f_stock_cost(model,c0,z):
+def f_stock_cost(model,c0,p7,z):
     '''
     Calculate the total cost of livestock (husbandry & infrastructure).
 
@@ -723,19 +724,19 @@ def f_stock_cost(model,c0,z):
     '''
 
     infrastructure = sum(model.p_rm_stockinfra_fix[h1,c0,p7,z] + model.p_rm_stockinfra_var[h1,c0,p7,z] * model.v_infrastructure[h1,z]
-                         for h1 in model.s_infrastructure for c0 in model.s_enterprises for p7 in model.s_cashflow_periods)
-    stock = sum(model.v_sire[g0] * model.p_cost_sire[c0, g0] for g0 in model.s_groups_sire) \
-            + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_cost_dams[k2,c0,t1,v1,a,n1,w1,z,i,y1,g1]
+                         for h1 in model.s_infrastructure for c0 in model.s_enterprises)
+    stock = sum(model.v_sire[g0] * model.p_cost_sire[c0,p7,g0] for g0 in model.s_groups_sire) \
+            + sum(sum(model.v_dams[k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_cost_dams[k2,c0,p7,t1,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                      for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
-                      if pe.value(model.p_cost_dams[k2,c0,t1,v1,a,n1,w1,z,i,y1,g1]) != 0)
-                + sum(model.v_offs[k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_cost_offs[k3,k5,c0,t3,v3,n3,w3,z,i,a,x,y3,g3]
+                      if pe.value(model.p_cost_dams[k2,c0,p7,t1,v1,a,n1,w1,z,i,y1,g1]) != 0)
+                + sum(model.v_offs[k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_cost_offs[k3,k5,c0,p7,t3,v3,n3,w3,z,i,a,x,y3,g3]
                       for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
                       for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
-                      if pe.value(model.p_cost_offs[k3,k5,c0,t3,v3,n3,w3,z,i,a,x,y3,g3]) != 0)
+                      if pe.value(model.p_cost_offs[k3,k5,c0,p7,t3,v3,n3,w3,z,i,a,x,y3,g3]) != 0)
                for a in model.s_wean_times for i in model.s_tol)
     purchases = sum(model.v_sire[g0] * model.p_cost_purch_sire[c0,p7,g0]
-                    for g0 in model.s_groups_sire for c0 in model.s_enterprises for p7 in model.s_cashflow_periods)
+                    for g0 in model.s_groups_sire for c0 in model.s_enterprises)
     return  stock + infrastructure + purchases
 #
 #

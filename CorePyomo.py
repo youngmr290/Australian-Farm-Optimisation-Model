@@ -600,9 +600,9 @@ def f_con_asset(model):
 
 def f_con_minroe(model):
     '''Tallies the total expenditure to ensure that there is a minimum ROI on cash expenditure.'''
-    def minroe(model,z):
-        return sum(sum(phspy.f_rotation_cost(model,c0,p7,z) + labpy.f_labour_cost(model,c0,p7,z) + macpy.f_mach_cost(model,c0,p7,z)
-                       + suppy.f_sup_cost(model,c0,p7,z) for p7 in model.s_cashflow_periods) + stkpy.f_stock_cost(model,c0,z)
+    def minroe(model,p7,z):
+        return sum(phspy.f_rotation_cost(model,c0,p7,z) + labpy.f_labour_cost(model,c0,p7,z) + macpy.f_mach_cost(model,c0,p7,z)
+                       + suppy.f_sup_cost(model,c0,p7,z) + stkpy.f_stock_cost(model,c0,z,p7)
                    for c0 in model.s_enterprises) * fin.f_min_roe() \
                - model.v_minroe[z] <= 0
 
