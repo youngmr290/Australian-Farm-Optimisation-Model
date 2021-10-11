@@ -52,6 +52,15 @@ def sets(model, nv):
     ##season periods
     model.s_season_periods = Set(initialize=per.f_season_periods(keys=True),doc='season nodes')
 
+    ##season sequence set
+    len_q = pinp.general['i_len_q']
+    model.s_sequence_year = Set(initialize=np.array(['q%s' % i for i in range(len_q)]), doc='season sequences')
+
+    ##season sequence set
+    len_z = len(z_keys)
+    len_s = np.power(len_z, len_q - 1)
+    model.s_sequence = Set(initialize=np.array(['s%s' % i for i in range(len_s)]), doc='season sequences')
+
     #######################
     #labour               #
     #######################

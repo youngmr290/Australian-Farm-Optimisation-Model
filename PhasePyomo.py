@@ -32,13 +32,13 @@ def f1_croppyomo_local(params, model):
     ############
     # variable #
     ############
-    model.v_sell_grain = pe.Var(model.s_phase_periods, model.s_season_types, model.s_crops, model.s_grain_pools, bounds=(0,None),
+    model.v_sell_grain = pe.Var(model.s_sequence_year, model.s_sequence, model.s_phase_periods, model.s_season_types, model.s_crops, model.s_grain_pools, bounds=(0,None),
                                 doc='tonnes of grain in each pool sold')
 
-    model.v_grain_debit = pe.Var(model.s_phase_periods, model.s_season_types, model.s_crops, model.s_grain_pools, bounds=(0,None),
+    model.v_grain_debit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_phase_periods, model.s_season_types, model.s_crops, model.s_grain_pools, bounds=(0,None),
                                 doc='tonnes of grain in debt (will need to be purchased or provided from harvest)')
 
-    model.v_grain_credit = pe.Var(model.s_phase_periods, model.s_season_types, model.s_crops, model.s_grain_pools, bounds=(0,None),
+    model.v_grain_credit = pe.Var(model.s_sequence_year, model.s_sequence, model.s_phase_periods, model.s_season_types, model.s_crops, model.s_grain_pools, bounds=(0,None),
                                 doc='tonnes of grain in credit (can be used for sup feeding or sold)')
 
     #########
@@ -87,13 +87,13 @@ def f1_croppyomo_local(params, model):
 ### yield needs to be disaggregated so that it returns the grain transfer for each crop - this is so it is compatible with yield penalty and sup feed activities.
 ### alternative would have been to add another key/index/set to the yield parameter that was k, although i suspect this would make it a bit slower due to being bigger but it might be tidier
 
-def f_rotation_yield(model,m,g,k,z):
+def f_rotation_yield(model,q,s,m,g,k,z):
     '''
     Calculate the total (kg) of each grain harvested from selected rotation phases.
 
     Used in global constraint (con_grain_transfer). See CorePyomo
     '''
-    return sum(model.p_rotation_yield[r,k,l,z,m]*model.v_phase_area[m,z,r,l]
+    return sum(model.p_rotation_yield[r,k,l,z,m]*model.v_phase_area[q,s,m,z,r,l]
                for r in model.s_phases for l in model.s_lmus
                if pe.value(model.p_rotation_yield[r,k,l,z,m]) != 0) * model.p_grainpool_proportion[k,g]
 
@@ -104,14 +104,14 @@ def f_rotation_yield(model,m,g,k,z):
 ##############
 ##similar to yield - this is more complex because we want to mul with phase area variable then sum based on the current landuse (k)
 ##returns a tuple, the boolean part indicates if the constraint needs to exist
-def f_phasesow_req(model,m,k,l,z):
+def f_phasesow_req(model,q,s,m,k,l,z):
     '''
     Calculate the seeding requirement for each rotation phase.
 
     Used in global constraint (con_sow). See CorePyomo
     '''
     if any(model.p_phasesow_req[r,k,l] for r in model.s_phases):
-        return sum(model.p_phasesow_req[r,k,l]*model.v_phase_increment[m,z,r,l] for r in model.s_phases
+        return sum(model.p_phasesow_req[r,k,l]*model.v_phase_increment[q,s,m,z,r,l] for r in model.s_phases
                    if pe.value(model.p_phasesow_req[r,k,l]) != 0)
     else:
         return 0
@@ -121,27 +121,27 @@ def f_phasesow_req(model,m,k,l,z):
 # functions used to define cashflow #
 #####################################
 
-def f_rotation_cost(model,c0,p7,z):
+def f_rotation_cost(model,q,s,c0,p7,z):
     '''
     Calculate the total cost of the selected rotation phases.
 
     Used in objective. See CorePyomo
     '''
 
-    return sum(model.p_rotation_cost[c0,p7,z,m,l,r]*model.v_phase_area[m,z,r,l]
-               + model.p_increment_rotation_cost[c0,p7,z,l,r,m]*model.v_phase_increment[m,z,r,l]
+    return sum(model.p_rotation_cost[c0,p7,z,m,l,r]*model.v_phase_area[q,s,m,z,r,l]
+               + model.p_increment_rotation_cost[c0,p7,z,l,r,m]*model.v_phase_increment[q,s,m,z,r,l]
                for r in model.s_phases for l in model.s_lmus for m in model.s_phase_periods
                    if pe.value(model.p_rotation_cost[c0,p7,z,m,l,r]) != 0)
 
-def f_rotation_wc(model,c0,p7,z):
+def f_rotation_wc(model,q,s,c0,p7,z):
     '''
     Calculate the total wc of the selected rotation phases.
 
     Used in global constraint (con_workingcap). See CorePyomo
     '''
 
-    return sum(model.p_rotation_wc[c0,p7,z,m,l,r]*model.v_phase_area[m,z,r,l]
-               + model.p_increment_rotation_wc[c0,p7,z,l,r,m]*model.v_phase_increment[m,z,r,l]
+    return sum(model.p_rotation_wc[c0,p7,z,m,l,r]*model.v_phase_area[q,s,m,z,r,l]
+               + model.p_increment_rotation_wc[c0,p7,z,l,r,m]*model.v_phase_increment[q,s,m,z,r,l]
                for r in model.s_phases for l in model.s_lmus for m in model.s_phase_periods
                    if pe.value(model.p_rotation_wc[c0,p7,z,m,l,r]) != 0)
 

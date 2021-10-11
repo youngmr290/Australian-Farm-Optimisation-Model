@@ -32,19 +32,19 @@ def f1_finpyomo_local(params, model):
     ############
 
     ##credit for a given time period (time period defined by cashflow set)
-    model.v_credit = Var(model.s_enterprises, model.s_season_periods, model.s_season_types, bounds = (0.0, None), doc = 'amount of net positive cashflow in a given period')
+    model.v_credit = Var(model.s_sequence_year, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types, bounds = (0.0, None), doc = 'amount of net positive cashflow in a given period')
     ##debit for a given time period (time period defined by cashflow set)
-    model.v_debit = Var(model.s_enterprises, model.s_season_periods, model.s_season_types, bounds = (0.0, None), doc = 'amount of net negative cashflow in a given period')
+    model.v_debit = Var(model.s_sequence_year, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types, bounds = (0.0, None), doc = 'amount of net negative cashflow in a given period')
     ##working capital credit for a given time period (time period defined by cashflow set)
-    model.v_wc_credit = Var(model.s_enterprises, model.s_season_periods, model.s_season_types, bounds = (0.0, None), doc = 'amount of net positive working capital in a given period')
+    model.v_wc_credit = Var(model.s_sequence_year, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types, bounds = (0.0, None), doc = 'amount of net positive working capital in a given period')
     ##working capital for a given time period (time period defined by cashflow set)
-    model.v_wc_debit = Var(model.s_enterprises, model.s_season_periods, model.s_season_types, bounds = (0.0, None), doc = 'amount of net negative working capital in a given period')
+    model.v_wc_debit = Var(model.s_sequence_year, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types, bounds = (0.0, None), doc = 'amount of net negative working capital in a given period')
     ##dep
-    model.v_dep = Var(model.s_season_periods, model.s_season_types, bounds = (0.0, None), doc = 'transfers total dep to objective')
+    model.v_dep = Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, bounds = (0.0, None), doc = 'transfers total dep to objective')
     ##dep
-    model.v_asset = Var(model.s_season_periods, model.s_season_types, bounds = (0.0, None), doc = 'transfers total value of asset to objective to ensure opportunity cost is represented')
+    model.v_asset = Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, bounds = (0.0, None), doc = 'transfers total value of asset to objective to ensure opportunity cost is represented')
     ##minroe
-    model.v_minroe = Var(model.s_season_periods, model.s_season_types, bounds = (0.0, None), doc = 'total expenditure, used to ensure min return is met')
+    model.v_minroe = Var(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types, bounds = (0.0, None), doc = 'total expenditure, used to ensure min return is met')
 
     ####################
     #params            #
@@ -75,7 +75,7 @@ def f_con_overdraw(params, model):
     maximum overdraw level.
     '''
     ##debit can't be more than a specified amount ie farmers will draw a maximum from the bank throughout yr
-    def overdraw(model,c0,p7,z):
-        return model.v_wc_debit[c0,p7,z] <= params['overdraw']
-    model.con_overdraw = Constraint(model.s_enterprises, model.s_season_periods, model.s_season_types, rule=overdraw, doc='overdraw limit')
+    def overdraw(model,q,s,c0,p7,z):
+        return model.v_wc_debit[q,s,c0,p7,z] <= params['overdraw']
+    model.con_overdraw = Constraint(model.s_sequence_year, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types, rule=overdraw, doc='overdraw limit')
 

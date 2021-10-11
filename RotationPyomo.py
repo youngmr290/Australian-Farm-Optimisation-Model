@@ -31,10 +31,10 @@ def f1_rotationpyomo(params, model):
     #variables  #
     #############
     ##Amount of each phase on each soil, Positive Variable.
-    model.v_phase_area = Var(model.s_phase_periods, model.s_season_types, model.s_phases,model.s_lmus, bounds=(0,None),doc='cumulative total area (ha) of phase, selected up to and including the current m period')
+    model.v_phase_area = Var(model.s_sequence_year, model.s_sequence, model.s_phase_periods, model.s_season_types, model.s_phases,model.s_lmus, bounds=(0,None),doc='cumulative total area (ha) of phase, selected up to and including the current m period')
 
     ##Amount of each phase added in each rotation period on each soil, Positive Variable.
-    model.v_phase_increment = Var(model.s_phase_periods, model.s_season_types, model.s_phases,model.s_lmus, bounds=(0,None),doc='Increased area (ha) of phase, selected in the current m period')
+    model.v_phase_increment = Var(model.s_sequence_year, model.s_sequence, model.s_phase_periods, model.s_season_types, model.s_phases,model.s_lmus, bounds=(0,None),doc='Increased area (ha) of phase, selected in the current m period')
 
     if not pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1: #only needed for dsp version.
         model.v_root_hist = Var(model.s_rotconstraints, model.s_lmus, bounds=(0,None),doc='rotation history provided in the root stage')
@@ -89,10 +89,10 @@ def f_con_rotation_between(params, model):
 
     '''
 
-    def rot_phase_link(model,m,l,h,z):
-        return sum(model.v_phase_area[m,z,r,l]*model.p_hist_prov[r,h] for r in model.s_phases if ((r,)+(h,)) in params['hist_prov'].keys()) \
-                   + sum(model.v_phase_area[m,z,r,l]*model.p_hist_req[r,h] for r in model.s_phases if ((r,)+(h,)) in params['hist_req'].keys())<=0
-    model.con_rotationcon2 = Constraint(model.s_phase_periods, model.s_lmus, model.s_rotconstraints, model.s_season_types, rule=rot_phase_link, doc='rotation phases constraint')
+    def rot_phase_link(model,q,s,m,l,h,z):
+        return sum(model.v_phase_area[q,s,m,z,r,l]*model.p_hist_prov[r,h] for r in model.s_phases if ((r,)+(h,)) in params['hist_prov'].keys()) \
+                   + sum(model.v_phase_area[q,s,m,z,r,l]*model.p_hist_req[r,h] for r in model.s_phases if ((r,)+(h,)) in params['hist_req'].keys())<=0
+    model.con_rotationcon2 = Constraint(model.s_sequence_year, model.s_sequence, model.s_phase_periods, model.s_lmus, model.s_rotconstraints, model.s_season_types, rule=rot_phase_link, doc='rotation phases constraint')
 
 
 def f_con_rotation_within(model):
@@ -116,15 +116,15 @@ def f_con_rotation_within(model):
 
     '''
 
-    def rot_phase_link_within(model,m,l,r,z9):
+    def rot_phase_link_within(model,q,s,m,l,r,z9):
         l_m = list(model.s_phase_periods)
         m_prev = l_m[l_m.index(m) - 1] #need the activity level from last feed period
         # return model.v_phase_area[m,z9,r,l] * model.p_mask_childreqz[m,z9]\ #if i include the req mask the profit is the same but then cplex chooses variable which makes the summary hard to read
-        return model.v_phase_area[m,z9,r,l] \
-               - model.v_phase_increment[m,z9,r,l]\
-               - sum(model.v_phase_area[m_prev,z8,r,l] * model.p_parentchildz_transfer_phase[m_prev,z8,z9]
+        return model.v_phase_area[q,s,m,z9,r,l] \
+               - model.v_phase_increment[q,s,m,z9,r,l]\
+               - sum(model.v_phase_area[q,s,m_prev,z8,r,l] * model.p_parentchildz_transfer_phase[m_prev,z8,z9]
                      for z8 in model.s_season_types) * model.p_mask_phases[r,m_prev] ==0 #end of the previous yr is controlled by between constraint
-    model.con_phase_link_within = Constraint(model.s_phase_periods, model.s_lmus, model.s_phases, model.s_season_types, rule=rot_phase_link_within, doc='rotation phases constraint')
+    model.con_phase_link_within = Constraint(model.s_sequence_year, model.s_sequence, model.s_phase_periods, model.s_lmus, model.s_phases, model.s_season_types, rule=rot_phase_link_within, doc='rotation phases constraint')
 
 
 def f_con_dry_link(model):
@@ -143,28 +143,28 @@ def f_con_dry_link(model):
     '''
     #todo i couldnt make this work as one constraint. Dad to review and see if there is a better way.
     #this one forces the current season to have at least as much dry seeding as the previous season
-    def dry_phase_link1(model,m,l,r,z9):
+    def dry_phase_link1(model,q,s,m,l,r,z9):
         l_m = list(model.s_phase_periods)
         ##only build the constraint for m[-1]
         if m == l_m[-1] or any(model.p_dryz_link[r,z8,z9] for z8 in model.s_season_types):
-            return - model.v_phase_increment[m,z9,r,l] \
-                   + sum(model.v_phase_increment[m,z8,r,l] * model.p_dryz_link[r,z8,z9]
+            return - model.v_phase_increment[q,s,m,z9,r,l] \
+                   + sum(model.v_phase_increment[q,s,m,z8,r,l] * model.p_dryz_link[r,z8,z9]
                          for z8 in model.s_season_types) <= 0
         else:
             return Constraint.Skip
-    model.con_dry_link1 = Constraint(model.s_phase_periods, model.s_lmus, model.s_phases, model.s_season_types, rule=dry_phase_link1, doc='link dry seeding between season types')
+    model.con_dry_link1 = Constraint(model.s_sequence_year, model.s_sequence, model.s_phase_periods, model.s_lmus, model.s_phases, model.s_season_types, rule=dry_phase_link1, doc='link dry seeding between season types')
 
     #this one forces each season with the same break to have the same amount of dry seeding (by forcing the end to equal the start)
-    def dry_phase_link2(model,m,l,r,z9):
+    def dry_phase_link2(model,q,s,m,l,r,z9):
         l_m = list(model.s_phase_periods)
         ##only build the constraint for m[-1]
         if m == l_m[-1] or any(model.p_dryz_link2[r,z8,z9] for z8 in model.s_season_types):
-            return - model.v_phase_increment[m,z9,r,l] \
-                   + sum(model.v_phase_increment[m,z8,r,l] * model.p_dryz_link2[r,z8,z9]
+            return - model.v_phase_increment[q,s,m,z9,r,l] \
+                   + sum(model.v_phase_increment[q,s,m,z8,r,l] * model.p_dryz_link2[r,z8,z9]
                          for z8 in model.s_season_types) <= 0
         else:
             return Constraint.Skip
-    model.con_dry_link2 = Constraint(model.s_phase_periods, model.s_lmus, model.s_phases, model.s_season_types, rule=dry_phase_link2, doc='link dry seeding between season types')
+    model.con_dry_link2 = Constraint(model.s_sequence_year, model.s_sequence, model.s_phase_periods, model.s_lmus, model.s_phases, model.s_season_types, rule=dry_phase_link2, doc='link dry seeding between season types')
 
 
 
@@ -180,9 +180,9 @@ def f_con_area(model):
     The area of rotation on a given soil can't be more than the amount of that soil available on the farm.
     '''
 
-    def area_rule(model, m, l, z):
-      return sum(model.v_phase_area[m,z,r,l] for r in model.s_phases) <= model.p_area[l]
-    model.con_area = Constraint(model.s_phase_periods, model.s_lmus, model.s_season_types, rule=area_rule, doc='rotation area constraint')
+    def area_rule(model, q,s,m, l, z):
+      return sum(model.v_phase_area[q,s,m,z,r,l] for r in model.s_phases) <= model.p_area[l]
+    model.con_area = Constraint(model.s_sequence_year, model.s_sequence, model.s_phase_periods, model.s_lmus, model.s_season_types, rule=area_rule, doc='rotation area constraint')
     
 
 
