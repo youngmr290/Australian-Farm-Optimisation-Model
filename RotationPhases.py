@@ -44,7 +44,7 @@ def f1_rot_period_alloc(item_start=0, item_length=np.timedelta64(1, 'D'), z_pos=
     alloc_metc = fun.range_allocation_np(date_node_metc, item_start, item_length, opposite=True, shape=shape)
 
     ##mask z8
-    mask_season_z8 = zfun.f_season_transfer_mask(date_node_metc[:-1,...],z_pos,mask=True) #slice off end date m1
+    mask_season_z8 = zfun.f_season_transfer_mask(date_node_metc[:-1,...],z_pos,mask=True) #slice off end date p7
 
     return alloc_metc * mask_season_z8
 

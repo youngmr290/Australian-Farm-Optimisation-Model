@@ -262,7 +262,7 @@ def f1_finance_z8z9_transfers(params):
     '''
     ##get param
     date_season_node_p7z = per.f_season_periods()
-    mask_season_p7z8z9 = zfun.f_season_transfer_mask(date_season_node_p7z[:-1,...],z_pos=-1)  # slice off end date m1
+    mask_season_p7z8z9 = zfun.f_season_transfer_mask(date_season_node_p7z[:-1,...],z_pos=-1)  # slice off end date p7
 
     ##build param
     keys_z = zfun.f_keys_z()

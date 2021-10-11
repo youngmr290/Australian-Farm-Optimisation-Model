@@ -978,9 +978,9 @@ def f_total_clearing_value():
     seed_value = f_seeding_gear_clearing_value()
     other_value = sum(uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'value'] * uinp.mach[pinp.mach['option']]['clearing_value'].loc[:,'remaining allocation'])
     total_clearing_value = harv_value + seed_value + other_value
-    ##all is incurred in the last m1 period (although it could occur in any period it doesnt make a difference)
-    keys_m1 = per.f_season_periods(keys=True)
-    total_clearing_value = pd.Series(total_clearing_value,index=keys_m1[-1:])
+    ##all is incurred in the last p7 period (although it could occur in any period it doesnt make a difference)
+    keys_p7 = per.f_season_periods(keys=True)
+    total_clearing_value = pd.Series(total_clearing_value,index=keys_p7[-1:])
     return total_clearing_value
 
 #########################
@@ -1030,16 +1030,16 @@ def f_seeding_dep():
     ##allocate season period based on mach/labour period - so that depreciation can be linked to seeding activity and transferred as seasons uncluster
     mach_periods = per.f_p_dates_df()
     date_start_p5z = mach_periods.values[:-1]
-    alloc_m1p5z = zfun.f1_z_period_alloc(date_start_p5z[na,...], z_pos=-1)
+    alloc_p7p5z = zfun.f1_z_period_alloc(date_start_p5z[na,...], z_pos=-1)
     ###make df
     keys_p5 = mach_periods.index[:-1]
     keys_z = zfun.f_keys_z()
-    keys_m1 = per.f_season_periods(keys=True)
-    index_m1p5z = pd.MultiIndex.from_product([keys_m1,keys_p5,keys_z])
-    alloc_m1p5z = pd.Series(alloc_m1p5z.ravel(), index=index_m1p5z)
-    index_m1p5zl = pd.MultiIndex.from_product([keys_m1,keys_p5,keys_z,dep_ha.index])
-    alloc_m1p5zl = alloc_m1p5z.reindex(index_m1p5zl)
-    return alloc_m1p5zl.mul(dep_ha, level=-1)
+    keys_p7 = per.f_season_periods(keys=True)
+    index_p7p5z = pd.MultiIndex.from_product([keys_p7,keys_p5,keys_z])
+    alloc_p7p5z = pd.Series(alloc_p7p5z.ravel(), index=index_p7p5z)
+    index_p7p5zl = pd.MultiIndex.from_product([keys_p7,keys_p5,keys_z,dep_ha.index])
+    alloc_p7p5zl = alloc_p7p5z.reindex(index_p7p5zl)
+    return alloc_p7p5zl.mul(dep_ha, level=-1)
 
 
 ####################################
@@ -1068,15 +1068,15 @@ def f_harvest_dep():
     ##allocate season period based on mach/labour period - so that depreciation can be linked to seeding activity and transferred as seasons uncluster
     mach_periods = per.f_p_dates_df()
     date_start_p5z = mach_periods.values[:-1]
-    alloc_m1p5z = zfun.f1_z_period_alloc(date_start_p5z[na,...], z_pos=-1)
+    alloc_p7p5z = zfun.f1_z_period_alloc(date_start_p5z[na,...], z_pos=-1)
     ###make df
     keys_p5 = mach_periods.index[:-1]
     keys_z = zfun.f_keys_z()
-    keys_m1 = per.f_season_periods(keys=True)
-    index_m1p5z = pd.MultiIndex.from_product([keys_m1,keys_p5,keys_z])
-    alloc_m1p5z = pd.Series(alloc_m1p5z.ravel(), index=index_m1p5z)
+    keys_p7 = per.f_season_periods(keys=True)
+    index_p7p5z = pd.MultiIndex.from_product([keys_p7,keys_p5,keys_z])
+    alloc_p7p5z = pd.Series(alloc_p7p5z.ravel(), index=index_p7p5z)
 
-    return alloc_m1p5z * dep_hourly
+    return alloc_p7p5z * dep_hourly
 
 
 #######################################################################################################################################################

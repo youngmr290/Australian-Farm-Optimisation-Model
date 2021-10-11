@@ -802,23 +802,23 @@ def f_stock_labour_manager(model,q,s,p5,z):
 #
 
 
-def f_stock_asset(model,q,s,m1,z):
+def f_stock_asset(model,q,s,p7,z):
     '''
     Calculate the total asset value of livestock.
 
     Used in global constraint (con_asset). See CorePyomo
     '''
 
-    infrastructure = sum(model.p_asset_stockinfra[m1,h1] for h1 in model.s_infrastructure)
-    stock = sum(model.v_sire[q,s,g0] * model.p_asset_sire[m1,g0] for g0 in model.s_groups_sire) \
-            + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_asset_dams[k2,t1,m1,v1,a,n1,w1,z,i,y1,g1]
+    infrastructure = sum(model.p_asset_stockinfra[p7,h1] for h1 in model.s_infrastructure)
+    stock = sum(model.v_sire[q,s,g0] * model.p_asset_sire[p7,g0] for g0 in model.s_groups_sire) \
+            + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_asset_dams[k2,t1,p7,v1,a,n1,w1,z,i,y1,g1]
                      for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
                      for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
-                      if pe.value(model.p_asset_dams[k2,t1,m1,v1,a,n1,w1,z,i,y1,g1]) != 0)
-                + sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_asset_offs[k3,k5,t3,m1,v3,n3,w3,z,i,a,x,y3,g3]
+                      if pe.value(model.p_asset_dams[k2,t1,p7,v1,a,n1,w1,z,i,y1,g1]) != 0)
+                + sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_asset_offs[k3,k5,t3,p7,v3,n3,w3,z,i,a,x,y3,g3]
                       for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
                       for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
-                      if pe.value(model.p_asset_offs[k3,k5,t3,m1,v3,n3,w3,z,i,a,x,y3,g3]) != 0)
+                      if pe.value(model.p_asset_offs[k3,k5,t3,p7,v3,n3,w3,z,i,a,x,y3,g3]) != 0)
                for a in model.s_wean_times for i in model.s_tol)
     # purchases = sum(sum(model.v_purchase_dams[q,s,v1,w1,i,g1] * sum(model.p_cost_purch_dam[v1,w1,i,g1,c] for c in model.s_season_periods) for v1 in model.s_dvp_dams for w1 in model.s_lw_dams for g1 in model.s_groups_dams)
     #                 +sum(model.v_purchase_offs[q,s,v3,w3,i,g3] * sum(model.p_cost_purch_offs[v3,w3,i,g3,c] for c in model.s_season_periods) for v3 in model.s_dvp_offs for w3 in model.s_lw_offs for g3 in model.s_groups_offs)

@@ -220,11 +220,11 @@ def f_season_transfer_mask(period_dates, z_pos, period_axis_pos=0, mask=False):
 
 def f1_z_period_alloc(item_start=0, item_length=np.timedelta64(1, 'D'), z_pos=-1):
     '''
-    Allocation of item into season periods (m1).
+    Allocation of item into season periods (p7).
 
     - Arrays must be numpy and broadcastable.
-    - M1 axis must be in pos 0
-    - item start must contain all axes (including z and m1)
+    - p7 axis must be in pos 0
+    - item start must contain all axes (including z and p7)
 
     :param item_start: datetime64 item dates which are allocated into rotation periods. MUST contain all axis of the final array (singleton is fine)
     :param item_length: datetime64
@@ -234,17 +234,17 @@ def f1_z_period_alloc(item_start=0, item_length=np.timedelta64(1, 'D'), z_pos=-1
 
     import Periods as per #import here since periods.py imports this module.
 
-    date_season_node_m1z = per.f_season_periods()
-    len_m = date_season_node_m1z.shape[0] - 1  # minus one because end date is not a period
+    date_season_node_p7z = per.f_season_periods()
+    len_p7 = date_season_node_p7z.shape[0] - 1  # minus one because end date is not a period
 
     ##align axes
-    m_pos = -item_start.ndim
-    date_node_metc = fun.f_expand(date_season_node_m1z, left_pos=z_pos, right_pos2=z_pos, left_pos2=m_pos)
-    shape = (len_m,) + tuple(np.maximum.reduce([date_node_metc.shape[1:], item_start.shape[1:]]))  # create shape which has the max size, this is used for o array
+    p7_pos = -item_start.ndim
+    date_node_metc = fun.f_expand(date_season_node_p7z, left_pos=z_pos, right_pos2=z_pos, left_pos2=p7_pos)
+    shape = (len_p7,) + tuple(np.maximum.reduce([date_node_metc.shape[1:], item_start.shape[1:]]))  # create shape which has the max size, this is used for o array
     alloc_metc = fun.range_allocation_np(date_node_metc, item_start, item_length, opposite=True, shape=shape)
 
     ##mask z8
-    mask_season_z8 = f_season_transfer_mask(date_node_metc[:-1,...],z_pos,mask=True) #slice off end date m1
+    mask_season_z8 = f_season_transfer_mask(date_node_metc[:-1,...],z_pos,mask=True) #slice off end date p7
 
     return alloc_metc * mask_season_z8
 

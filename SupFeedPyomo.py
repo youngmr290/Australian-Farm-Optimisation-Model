@@ -117,27 +117,27 @@ def f_sup_vol(model,q,s,p6,f,z):
 
     return sum(model.v_sup_con[q,s,z,k,g,f,p6] * model.p_sup_vol[k] for g in model.s_grain_pools for k in model.s_crops)
 
-def f_sup_dep(model,q,s,m1,z):
+def f_sup_dep(model,q,s,p7,z):
     '''
     Calculate the total depreciation of silos.
 
     Used in global constraint (con_dep). See CorePyomo
     '''
 
-    return sum(model.v_sup_con[q,s,z,k,g,f,p6] * model.p_sup_dep[m1,p6,z,k]
+    return sum(model.v_sup_con[q,s,z,k,g,f,p6] * model.p_sup_dep[p7,p6,z,k]
                for f in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for p6 in model.s_feed_periods
-               if pe.value(model.p_sup_dep[m1,p6,z,k])!=0)
+               if pe.value(model.p_sup_dep[p7,p6,z,k])!=0)
 
-def f_sup_asset(model,q,s,m1,z):
+def f_sup_asset(model,q,s,p7,z):
     '''
     Calculate the total asset value of silos.
 
     Used in global constraint (con_asset). See CorePyomo
     '''
 
-    return sum(model.v_sup_con[q,s,z,k,g,f,p6] * model.p_sup_asset[m1,p6,z,k]
+    return sum(model.v_sup_con[q,s,z,k,g,f,p6] * model.p_sup_asset[p7,p6,z,k]
                for f in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for p6 in model.s_feed_periods
-               if pe.value(model.p_sup_asset[m1,p6,z,k])!=0)
+               if pe.value(model.p_sup_asset[p7,p6,z,k])!=0)
     
 def f_sup_labour(model,q,s,p5,z):
     '''
