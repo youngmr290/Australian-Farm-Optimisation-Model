@@ -84,7 +84,9 @@ def f_sup_cost(model,c0,p7,z):
     Used in global constraint (con_cashflow). See CorePyomo
     '''
 
-    return sum(model.v_sup_con[z,k,g,f,p6] * model.p_sup_cost[c0,p7,z,p6,k] for f in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for p6 in model.s_feed_periods)
+    return sum(model.v_sup_con[z,k,g,f,p6] * model.p_sup_cost[c0,p7,z,p6,k]
+               for f in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for p6 in model.s_feed_periods
+               if pe.value(model.p_sup_cost[c0,p7,z,p6,k])!=0)
 
 def f_sup_wc(model,c0,p7,z):
     '''
@@ -93,7 +95,9 @@ def f_sup_wc(model,c0,p7,z):
     Used in global constraint (con_workingcap). See CorePyomo
     '''
 
-    return sum(model.v_sup_con[z,k,g,f,p6] * model.p_sup_wc[c0,p7,z,p6,k] for f in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for p6 in model.s_feed_periods)
+    return sum(model.v_sup_con[z,k,g,f,p6] * model.p_sup_wc[c0,p7,z,p6,k]
+               for f in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for p6 in model.s_feed_periods
+               if pe.value(model.p_sup_wc[c0,p7,z,p6,k])!=0)
 
 def f_sup_me(model,p6,f,z):
     '''
@@ -102,7 +106,7 @@ def f_sup_me(model,p6,f,z):
     Used in global constraint (con_me). See CorePyomo
     '''
 
-    return sum(model.v_sup_con[z,k,g,f,p6] * model.p_sup_md[k]for g in model.s_grain_pools for k in model.s_crops)
+    return sum(model.v_sup_con[z,k,g,f,p6] * model.p_sup_md[k] for g in model.s_grain_pools for k in model.s_crops)
 
 def f_sup_vol(model,p6,f,z):
     '''
@@ -121,7 +125,8 @@ def f_sup_dep(model,m1,z):
     '''
 
     return sum(model.v_sup_con[z,k,g,f,p6] * model.p_sup_dep[m1,p6,z,k]
-               for f in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for p6 in model.s_feed_periods)
+               for f in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for p6 in model.s_feed_periods
+               if pe.value(model.p_sup_dep[m1,p6,z,k])!=0)
 
 def f_sup_asset(model,m1,z):
     '''
@@ -131,7 +136,8 @@ def f_sup_asset(model,m1,z):
     '''
 
     return sum(model.v_sup_con[z,k,g,f,p6] * model.p_sup_asset[m1,p6,z,k]
-               for f in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for p6 in model.s_feed_periods)
+               for f in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for p6 in model.s_feed_periods
+               if pe.value(model.p_sup_asset[m1,p6,z,k])!=0)
     
 def f_sup_labour(model,p5,z):
     '''
@@ -140,7 +146,9 @@ def f_sup_labour(model,p5,z):
     Used in global constraint (con_labour_any). See CorePyomo
     '''
 
-    return sum(model.v_sup_con[z,k,g,f,p6] * model.p_sup_labour[p5,p6,k,z] for f in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for p6 in model.s_feed_periods)
+    return sum(model.v_sup_con[z,k,g,f,p6] * model.p_sup_labour[p5,p6,k,z]
+               for f in model.s_feed_pools for g in model.s_grain_pools for k in model.s_crops for p6 in model.s_feed_periods
+               if pe.value(model.p_sup_labour[p5,p6,k,z])!=0)
     
     
     

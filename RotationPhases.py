@@ -42,7 +42,11 @@ def f1_rot_period_alloc(item_start=0, item_length=np.timedelta64(1, 'D'), z_pos=
     date_node_metc = fun.f_expand(date_phase_periods_mz, left_pos=z_pos, right_pos2=z_pos, left_pos2=m_pos)
     shape = (len_m,) + tuple(np.maximum.reduce([date_node_metc.shape[1:], item_start.shape[1:]]))  # create shape which has the max size, this is used for o array
     alloc_metc = fun.range_allocation_np(date_node_metc, item_start, item_length, opposite=True, shape=shape)
-    return alloc_metc
+
+    ##mask z8
+    mask_season_z8 = zfun.f_season_transfer_mask(date_node_metc[:-1,...],z_pos,mask=True) #slice off end date m1
+
+    return alloc_metc * mask_season_z8
 
 
 def f_v_phase_increment_adj(param, m_pos, r_pos, numpy=False):
