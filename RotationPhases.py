@@ -99,6 +99,9 @@ def f_season_params(params):
     keys_r = phases_df.index
     index_z = np.arange(len(keys_z))
     initiating_parent_z = zfun.f_initiating_parent_z()
+    landuse_r = phases_df.iloc[:,-1].values
+    dry_sown_landuses = sinp.landuse['dry_sown']
+    phase_is_drysown_r = np.any(landuse_r[:,na]==list(dry_sown_landuses), axis=-1)
 
     ##z8z9 transfer
     start_phase_periods_mz = per.f_phase_periods()[:-1,:] #remove end date of last period
@@ -111,9 +114,6 @@ def f_season_params(params):
     else:
         ###if dsp no transfer at the end of yr to the start (different for dry sown landuses since m-1 is essentially the start for them)
         mask_phases_rm = np.ones((len(phases_df),len(keys_m)))
-        landuse_r = phases_df.iloc[:,-1].values
-        dry_sown_landuses = sinp.landuse['dry_sown']
-        phase_is_drysown_r = np.any(landuse_r[:,na]==list(dry_sown_landuses), axis=-1)
         mask_phases_rm[:,-1] = phase_is_drysown_r #only dry sown landuse pass from m[-1] to m[0] because m[-1] is the period when dry sown phases are selected.
         mask_phases_rm[:,-2] = np.logical_not(phase_is_drysown_r) #v_phase dry does not provide into m[-1]. if the model wants dry sown phases it can select via v_phase_increment.
 
@@ -122,7 +122,6 @@ def f_season_params(params):
     ##the param below is used on the require side of phase_increment. It says if you want to dry sow in z0 you must
     ## dry sow in z1 and if you want to sow in z1 you must dry sow in z2 etc.
     ## The second part of the mask creation makes it so that the same dry sowing occurs for each season that has the same brk.
-    #todo this requires two r constraints. Dad to review and see if there is a better way
     mask_drynext_z8z9 = index_z[:,na] == index_z-1 #every season must have at least the same amount of dry sowing as the previous season.
     mask_drystart_z8z9 = (initiating_parent_z != np.roll(initiating_parent_z,-1))[:,na]*(index_z==initiating_parent_z[:,na])#each season with the same brk must have the same amount of dry sowiing.
     # mask_dryz8z9_z8z9 = np.logical_or(mask_drynext_z8z9, mask_drystart_z8z9)
