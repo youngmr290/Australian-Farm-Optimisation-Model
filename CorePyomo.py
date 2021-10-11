@@ -516,7 +516,7 @@ def f_con_vol(model):
     #             + (model.v_debit[c[i - 1]] * fin.debit_interest() - model.v_credit[c[i - 1]] * fin.credit_interest()) * j[i] # mul by j so that credit in ND doesnt provide into JF otherwise it will be unbounded because it will get interest
     #             ) <= 0
     #
-    # model.con_cashflow = pe.Constraint(range(len(model.s_cashflow_periods)),model.s_season_types,rule=cash_flow,
+    # model.con_cashflow = pe.Constraint(range(len(model.s_season_periods)),model.s_season_types,rule=cash_flow,
 
 def f_con_cashflow(model):
     '''
@@ -524,22 +524,22 @@ def f_con_cashflow(model):
     exist between parent and child seasons.
     '''
     def cash_flow(model,c0,p7,z9):
-        cf0 = list(model.s_cashflow_periods)[0]
-        p7s = list(model.s_cashflow_periods)[list(model.s_cashflow_periods).index(p7) - 1]  # previous cashperiod - have to convert to a list first because indexing of an ordered set starts at 1
+        p7_start = list(model.s_season_periods)[0]
+        p7_prev = list(model.s_season_periods)[list(model.s_season_periods).index(p7) - 1]  # previous cashperiod - have to convert to a list first because indexing of an ordered set starts at 1
         return ((-f1_grain_income(model,c0,p7,z9) + phspy.f_rotation_cost(model,c0,p7,z9) + labpy.f_labour_cost(model,c0,p7,z9)
                 + macpy.f_mach_cost(model,c0,p7,z9) + suppy.f_sup_cost(model,c0,p7,z9) + model.p_overhead_cost[c0,p7,z9]
                 - stkpy.f_stock_cashflow(model,c0,p7,z9)
                 - model.v_debit[c0,p7,z9] + model.v_credit[c0,p7,z9])
-                + sum((model.v_debit[c0,p7s,z8] - model.v_credit[c0,p7s,z8]) * model.p_parentchildz_transfer_cashflow[c0,p7s,z8,z9] * (p7!=cf0)  #end cashflow doesnot provide start cashflow else unbounded.
+                + sum((model.v_debit[c0,p7_prev,z8] - model.v_credit[c0,p7_prev,z8]) * model.p_parentchildz_transfer_season[p7_prev,z8,z9] * (p7!=p7_start)  #end cashflow doesnot provide start cashflow else unbounded.
                       for z8 in model.s_season_types)) <= 0
 
-    model.con_cashflow_transfer = pe.Constraint(model.s_enterprises, model.s_cashflow_periods, model.s_season_types,rule=cash_flow,
+    model.con_cashflow_transfer = pe.Constraint(model.s_enterprises, model.s_season_periods, model.s_season_types,rule=cash_flow,
                                                 doc='transfer of cash between periods')
 
 # def cash_flow(model,z):
 #     return sum(f1_grain_income(model,c0,p7,z) - phspy.f_rotation_cost(model,c0,p7,z) - labpy.f_labour_cost(model,c0,p7,z)
 #             - macpy.f_mach_cost(model,c0,p7,z) - suppy.f_sup_cost(model,c0,p7,z) - model.p_overhead_cost[c0,p7,z]
-#             + stkpy.f_stock_cashflow(model,c0,p7,z) for p7 in model.s_cashflow_periods for c0 in model.s_enterprises)
+#             + stkpy.f_stock_cashflow(model,c0,p7,z) for p7 in model.s_season_periods for c0 in model.s_enterprises)
 
 
 def f_con_workingcap(params, model):
@@ -551,30 +551,30 @@ def f_con_workingcap(params, model):
     #todo needs between year constraint because this needs to pass between cashflow years (different to the cashflow constraint which ends at the end of the cashflow yr)
     # maybe the boolean at the end will need to be removed.
     def working_cap(model,c0,p7,z9):
-        cf0 = list(model.s_cashflow_periods)[0]
-        cf_end = list(model.s_cashflow_periods)[-1]
-        p7s = list(model.s_cashflow_periods)[list(model.s_cashflow_periods).index(p7) - 1]  # previous cashperiod - have to convert to a list first because indexing of an ordered set starts at 1
+        p7_start = list(model.s_season_periods)[0]
+        p7_end = list(model.s_season_periods)[-1]
+        p7_prev = list(model.s_season_periods)[list(model.s_season_periods).index(p7) - 1]  # previous cashperiod - have to convert to a list first because indexing of an ordered set starts at 1
         return (-f1_grain_wc(model,c0,p7,z9) + phspy.f_rotation_wc(model,c0,p7,z9) + labpy.f_labour_wc(model,c0,p7,z9)
                 + macpy.f_mach_wc(model,c0,p7,z9) + suppy.f_sup_wc(model,c0,p7,z9) + model.p_overhead_wc[c0,p7,z9]
                 - stkpy.f_stock_wc(model,c0,p7,z9)
-                - model.v_wc_debit[c0,p7,z9] * (p7!=cf_end) #end working capital doesnot provide start else unbounded constraint
+                - model.v_wc_debit[c0,p7,z9] * (p7!=p7_end) #end working capital doesnot provide start else unbounded constraint
                 + model.v_wc_credit[c0,p7,z9]
-                + sum((model.v_wc_debit[c0,p7s,z8] - model.v_wc_credit[c0,p7s,z8] * (p7!=cf0)) #end working capital doesnot provide start else unbounded constraint.
-                      * model.p_parentchildz_transfer_cashflow[c0,p7s,z8,z9]
+                + sum((model.v_wc_debit[c0,p7_prev,z8] - model.v_wc_credit[c0,p7_prev,z8] * (p7!=p7_start)) #end working capital doesnot provide start else unbounded constraint.
+                      * model.p_parentchildz_transfer_season[p7_prev,z8,z9]
                      for z8 in model.s_season_types)) <= 0
-    model.con_workingcap = pe.Constraint(model.s_enterprises, model.s_cashflow_periods, model.s_season_types,rule=working_cap,
+    model.con_workingcap = pe.Constraint(model.s_enterprises, model.s_season_periods, model.s_season_types,rule=working_cap,
                                        doc='overdraw limit')
 
 
 def f_con_dep(model):
     '''Tallies the depreciation of capital, which is then passed to the objective.'''
-    def dep(model,m1,z9):
-        l_m1 = list(model.s_season_periods)
-        m1_prev = l_m1[l_m1.index(m1) - 1] #need the activity level from last period
-        m1_start = l_m1[0]
-        return (macpy.f_total_dep(model,m1,z9) + suppy.f_sup_dep(model,m1,z9) - model.v_dep[m1,z9]
-                + sum(model.v_dep[m1_prev,z9] * model.p_parentchildz_transfer_season[m1_prev,z8,z9]
-                      for z8 in model.s_season_types) * (m1!=m1_start) #end doesnt carry over
+    def dep(model,p7,z9):
+        l_p7 = list(model.s_season_periods)
+        p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last period
+        p7_start = l_p7[0]
+        return (macpy.f_total_dep(model,p7,z9) + suppy.f_sup_dep(model,p7,z9) - model.v_dep[p7,z9]
+                + sum(model.v_dep[p7_prev,z9] * model.p_parentchildz_transfer_season[p7_prev,z8,z9]
+                      for z8 in model.s_season_types) * (p7!=p7_start) #end doesnt carry over
                 <= 0)
 
     model.con_dep = pe.Constraint(model.s_season_periods, model.s_season_types,rule=dep,
@@ -585,14 +585,14 @@ def f_con_asset(model):
     '''Tallies the total asset value to ensure that there is a minimum ROI on farm assets. The asset value multiplied
     by opportunity cost on capital is then passed to the objective.
     '''
-    def asset(model,m1,z9):
-        l_m1 = list(model.s_season_periods)
-        m1_prev = l_m1[l_m1.index(m1) - 1] #need the activity level from last period
-        m1_start = l_m1[0]
-        return (suppy.f_sup_asset(model,m1,z9) + macpy.f_mach_asset(model,m1) + stkpy.f_stock_asset(model,m1,z9)) * uinp.finance['opportunity_cost_capital'] \
-               - model.v_asset[m1,z9] \
-               + sum(model.v_asset[m1_prev,z8] * model.p_parentchildz_transfer_season[m1_prev,z8,z9]
-                     for z8 in model.s_season_types) * (m1!=m1_start) <= 0 #end doesnt carry over
+    def asset(model,p7,z9):
+        l_p7 = list(model.s_season_periods)
+        p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last period
+        p7_start = l_p7[0]
+        return (suppy.f_sup_asset(model,p7,z9) + macpy.f_mach_asset(model,p7) + stkpy.f_stock_asset(model,p7,z9)) * uinp.finance['opportunity_cost_capital'] \
+               - model.v_asset[p7,z9] \
+               + sum(model.v_asset[p7_prev,z8] * model.p_parentchildz_transfer_season[p7_prev,z8,z9]
+                     for z8 in model.s_season_types) * (p7!=p7_start) <= 0 #end doesnt carry over
 
     model.con_asset = pe.Constraint(model.s_season_periods, model.s_season_types,rule=asset,
                                     doc='tallies asset from all activities so it can be transferred to objective to represent ROE')
@@ -600,13 +600,18 @@ def f_con_asset(model):
 
 def f_con_minroe(model):
     '''Tallies the total expenditure to ensure that there is a minimum ROI on cash expenditure.'''
-    def minroe(model,p7,z):
-        return sum(phspy.f_rotation_cost(model,c0,p7,z) + labpy.f_labour_cost(model,c0,p7,z) + macpy.f_mach_cost(model,c0,p7,z)
-                       + suppy.f_sup_cost(model,c0,p7,z) + stkpy.f_stock_cost(model,c0,z,p7)
-                   for c0 in model.s_enterprises) * fin.f_min_roe() \
-               - model.v_minroe[z] <= 0
+    def minroe(model,p7,z9):
+        l_p7 = list(model.s_season_periods)
+        p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last period
+        p7_start = l_p7[0]
+        return (sum(phspy.f_rotation_cost(model,c0,p7,z9) + labpy.f_labour_cost(model,c0,p7,z9) + macpy.f_mach_cost(model,c0,p7,z9)
+                       + suppy.f_sup_cost(model,c0,p7,z9) + stkpy.f_stock_cost(model,c0,p7,z9)
+                   for c0 in model.s_enterprises) * fin.f_min_roe()
+              - model.v_minroe[p7,z9]
+              + sum(model.v_minroe[p7_prev,z8] *model.p_parentchildz_transfer_season[p7_prev,z8,z9]
+                    for z8 in model.s_season_types) * (p7 != p7_start)) <= 0  # end doesnt carry over
 
-    model.con_minroe = pe.Constraint(model.s_season_types,rule=minroe,
+    model.con_minroe = pe.Constraint(model.s_season_periods, model.s_season_types,rule=minroe,
                                      doc='tallies total expenditure to ensure minimum roe is met')
 
 
@@ -618,10 +623,9 @@ def f_objective(model):
     rate  (to ensure that the assets generate a minimum ROI)).
     '''
 
-    p7 = list(model.s_cashflow_periods)
-    m1_end = list(model.s_season_periods)[-1]
-    return sum((sum(model.v_credit[c0, p7[-1], z] - model.v_debit[c0, p7[-1], z] for c0 in model.s_enterprises)
-               - model.v_dep[m1_end,z] - model.v_minroe[z] - model.v_asset[m1_end,z]) * model.p_z_prob[z]
+    p7_end = list(model.s_season_periods)[-1]
+    return sum((sum(model.v_credit[c0,p7_end,z] - model.v_debit[c0,p7_end,z] for c0 in model.s_enterprises)
+               - model.v_dep[p7_end,z] - model.v_minroe[p7_end,z] - model.v_asset[p7_end,z]) * model.p_z_prob[z]
                for z in model.s_season_types)  # have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.
 
     # return sum((cash_flow(model,z) - model.v_dep[z] - model.v_minroe[z] - model.v_asset[z]) * model.p_z_prob[z]

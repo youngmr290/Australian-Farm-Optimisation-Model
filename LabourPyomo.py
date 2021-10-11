@@ -117,13 +117,13 @@ def f1_labpyomo_local(params, model):
     
     model.p_perm_supervision = Param(model.s_labperiods, model.s_season_types, initialize= params['permanent supervision'], mutable=True, doc='hours of supervision required by a permanent staff in each period')
     
-    model.p_perm_cost = Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, initialize = params['perm_cost'], default = 0.0, doc = 'cost of a permanent staff for 1 yr')
+    model.p_perm_cost = Param(model.s_enterprises, model.s_season_periods, model.s_season_types, initialize = params['perm_cost'], default = 0.0, doc = 'cost of a permanent staff for 1 yr')
     
-    model.p_perm_wc = Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, initialize = params['perm_wc'], default = 0.0, doc = 'wc of a permanent staff for 1 yr')
+    model.p_perm_wc = Param(model.s_enterprises, model.s_season_periods, model.s_season_types, initialize = params['perm_wc'], default = 0.0, doc = 'wc of a permanent staff for 1 yr')
     
-    model.p_casual_cost = Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_labperiods, initialize = params['casual_cost'], mutable=True, default = 0.0, doc = 'cost of a casual staff for each labour period')
+    model.p_casual_cost = Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_labperiods, initialize = params['casual_cost'], mutable=True, default = 0.0, doc = 'cost of a casual staff for each labour period')
     
-    model.p_casual_wc = Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_labperiods, initialize = params['casual_wc'], mutable=True, default = 0.0, doc = 'wc of a casual staff for each labour period')
+    model.p_casual_wc = Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_labperiods, initialize = params['casual_wc'], mutable=True, default = 0.0, doc = 'wc of a casual staff for each labour period')
     
     model.p_casual_hours = Param(model.s_labperiods, model.s_season_types, initialize= params['casual hours'], mutable=True, doc='hours worked by a casual staff in each period')
     
@@ -131,9 +131,9 @@ def f1_labpyomo_local(params, model):
     
     model.p_manager_hours = Param(model.s_labperiods, model.s_season_types, initialize= params['manager hours'], mutable=True, doc='hours worked by a manager in each period')
     
-    model.p_manager_cost = Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, initialize = params['manager_cost'], doc = 'cost of a manager for 1 yr')
+    model.p_manager_cost = Param(model.s_enterprises, model.s_season_periods, model.s_season_types, initialize = params['manager_cost'], doc = 'cost of a manager for 1 yr')
     
-    model.p_manager_wc = Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, initialize = params['manager_wc'], doc = 'wc of a manager for 1 yr')
+    model.p_manager_wc = Param(model.s_enterprises, model.s_season_periods, model.s_season_types, initialize = params['manager_wc'], doc = 'wc of a manager for 1 yr')
     
     model.p_casual_upper = Param(model.s_labperiods, model.s_season_types, initialize = params['casual ub'], mutable=True,  doc = 'casual availability upper bound')
     

@@ -218,7 +218,7 @@ def f_season_transfer_mask(period_dates, z_pos, period_axis_pos=0, mask=False):
 
 
 
-def f1_z_period_alloc(item_start=0, item_length=np.timedelta64(1, 'D'), z_pos=0):
+def f1_z_period_alloc(item_start=0, item_length=np.timedelta64(1, 'D'), z_pos=-1):
     '''
     Allocation of item into season periods (m1).
 

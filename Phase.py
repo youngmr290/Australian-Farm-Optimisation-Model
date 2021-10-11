@@ -164,17 +164,11 @@ def f_grain_price(r_vals):
 
     ##allocate farm gate grain price for each cashflow period and calc interest
     start = np.array([pinp.crop['i_grain_income_date']]).astype('datetime64')
-    keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
+    keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
     keys_m = per.f_phase_periods(keys=True)
-    peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
-    p_dates_c0p7z = per.f_cashflow_periods()
-    p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
-    mask_cashflow_z8var_c0p7z = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)
-    grain_cost_allocation_c0p7z, grain_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, p_dates_c0p7z,
-                                                                                       peakdebt_date_c0p7z, mask_cashflow_z8var_c0p7z,
-                                                                                       'crp')
+    grain_cost_allocation_c0p7z, grain_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, enterprise='crp', z_pos=-1)
 
     ##add m axis - needed so yield can be required from the same m that it is sold.
     alloc_mz = rps.f1_rot_period_alloc(start[na], z_pos=-1)
@@ -334,17 +328,11 @@ def f1_fert_cost_allocation():
 
     '''
     start_df = pinp.crop['fert_info']['app_date'] #needed for allocation func
-    keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
+    keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
-    peakdebt_date_c0p7zn = per.f_peak_debt_date()[:,na,na,na]
     ##calc interest and allocate to cash period - needs to be numpy
-    p_dates_c0p7z = per.f_cashflow_periods()
-    p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
-    mask_cashflow_z8var_c0p7zn = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)[...,na]
-    fert_cost_allocation_c0p7zn, fert_wc_allocation_c0p7zn = fin.f_cashflow_allocation(start_df.values,
-                                                                                       p_dates_c0p7z[...,na], peakdebt_date_c0p7zn,
-                                                                                       mask_cashflow_z8var_c0p7zn, 'crp')
+    fert_cost_allocation_c0p7zn, fert_wc_allocation_c0p7zn = fin.f_cashflow_allocation(start_df.values[na,:], enterprise='crp', z_pos=-2)
     ###convert to df
     new_index_c0p7zn = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, start_df.index])
     fert_cost_allocation_c0p7zn = pd.Series(fert_cost_allocation_c0p7zn.ravel(), index=new_index_c0p7zn)
@@ -692,16 +680,10 @@ def f_phase_stubble_cost(r_vals):
     ##allocate the cash period and calc interest and working capital
     start = np.array([pinp.mach['stub_handling_date']]).astype('datetime64') #needed for allocation func
     length = pinp.mach['stub_handling_length'] #needed for allocation func
-    keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
+    keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
-    peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
-    p_dates_c0p7z = per.f_cashflow_periods()
-    p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
-    mask_cashflow_z8var_c0p7z = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)
-    stub_cost_allocation_c0p7z, stub_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, p_dates_c0p7z,
-                                                                                     peakdebt_date_c0p7z, mask_cashflow_z8var_c0p7z,
-                                                                                     'crp')
+    stub_cost_allocation_c0p7z, stub_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, enterprise='crp', z_pos=-1)
     ###convert to df
     new_index_c0p7z = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z])
     stub_cost_allocation_c0p7z = pd.Series(stub_cost_allocation_c0p7z.ravel(), index=new_index_c0p7z)
@@ -727,17 +709,11 @@ def f1_chem_cost_allocation():
 
     '''
     start_df = pinp.crop['chem_info']['app_date'] #needed for allocation func
-    keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
+    keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
-    peakdebt_date_c0p7zn = per.f_peak_debt_date()[:,na,na,na]
     ##calc interest and allocate to cash period - needs to be numpy
-    p_dates_c0p7z = per.f_cashflow_periods()
-    p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
-    mask_cashflow_z8var_c0p7zn = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)[...,na]
-    chem_cost_allocation_c0p7zn, chem_wc_allocation_c0p7zn = fin.f_cashflow_allocation(start_df.values,
-                                                                                       p_dates_c0p7z[...,na], peakdebt_date_c0p7zn,
-                                                                                       mask_cashflow_z8var_c0p7zn, 'crp')
+    chem_cost_allocation_c0p7zn, chem_wc_allocation_c0p7zn = fin.f_cashflow_allocation(start_df.values[na,:], enterprise='crp', z_pos=-2)
     ###convert to df
     new_index_c0p7zn = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, start_df.index])
     chem_cost_allocation_c0p7zn = pd.Series(chem_cost_allocation_c0p7zn.ravel(), index=new_index_c0p7zn)
@@ -912,17 +888,10 @@ def f_seedcost(r_vals):
     seed_cost = f_cont_pas(seed_cost)
     ##cost allocation
     start_z = per.f_wet_seeding_start_date().astype(np.datetime64)
-    length_z = np.sum(seed_period_lengths, axis=0)
-    keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
+    keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
-    peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
-    p_dates_c0p7z = per.f_cashflow_periods()
-    p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
-    mask_cashflow_z8var_c0p7z = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)
-    seed_cost_allocation_c0p7z, seed_wc_allocation_c0p7z = fin.f_cashflow_allocation(start_z, p_dates_c0p7z,
-                                                                                     peakdebt_date_c0p7z, mask_cashflow_z8var_c0p7z,
-                                                                                     'crp')
+    seed_cost_allocation_c0p7z, seed_wc_allocation_c0p7z = fin.f_cashflow_allocation(start_z, enterprise='crp', z_pos=-1)
     ###convert to df
     new_index_c0p7z = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z])
     seed_cost_allocation_c0p7z = pd.Series(seed_cost_allocation_c0p7z.ravel(), index=new_index_c0p7z)
@@ -964,16 +933,10 @@ def f_insurance(r_vals):
     rot_insurance_rl_z = yields_rklz.droplevel(1).unstack(2)
     ##cost allocation
     start = np.array([uinp.price['crp_insurance_date']]).astype('datetime64')
-    keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
+    keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
-    peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
-    p_dates_c0p7z = per.f_cashflow_periods()
-    p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
-    mask_cashflow_z8var_c0p7z = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)
-    insurance_cost_allocation_c0p7z, insurance_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, p_dates_c0p7z,
-                                                                                               peakdebt_date_c0p7z, mask_cashflow_z8var_c0p7z,
-                                                                                               'crp')
+    insurance_cost_allocation_c0p7z, insurance_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, enterprise='crp', z_pos=-1)
     ###convert to df
     new_index_c0p7z = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z])
     insurance_cost_allocation_c0p7z = pd.Series(insurance_cost_allocation_c0p7z.ravel(), index=new_index_c0p7z)
@@ -1017,18 +980,19 @@ def f1_rot_cost(r_vals):
     wc = pd.concat([fert_wc, nap_fert_wc, chem_wc, seedwc, insurance_wc, phase_stubble_wc],axis=1).sum(axis=1,level=(0,1,2))
 
     ##add rotation period axis
-    p7_dates_c0p7z = per.f_cashflow_periods()
-    p7_start_dates_c0p7z = p7_dates_c0p7z[:,0:-1,:]
-    p7_len_c0p7z = p7_dates_c0p7z[:,1:,:] - p7_dates_c0p7z[:,0:-1,:]
-    alloc_mc0p7z = rps.f1_rot_period_alloc(p7_start_dates_c0p7z[na,...], p7_len_c0p7z[na,...], z_pos=-1)
-    alloc_c0p7zm = np.moveaxis(alloc_mc0p7z[:,1:2,...],source=0, destination=-1) #take crp slice & move axis so m axis is at the end (required for reindeing below)
+    p7_dates_p7z = per.f_season_periods()
+    p7_start_dates_p7z = p7_dates_p7z[0:-1,:]
+    p7_len_p7z = p7_dates_p7z[1:,:] - p7_dates_p7z[0:-1,:]
+
+    alloc_mp7z = rps.f1_rot_period_alloc(p7_start_dates_p7z[na,...], p7_len_p7z[na,...], z_pos=-1)
+    alloc_p7zm = np.moveaxis(alloc_mp7z,source=0, destination=-1) #move axis so m axis is at the end (required for reindeing below)
     ###convert to df
     keys_z = zfun.f_keys_z()
     keys_m = per.f_phase_periods(keys=True)
-    keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
+    keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0'][1:2] #take crp slice (keeping the dim so that line below works since it mult index needs iterables)
     new_index_c0p7zm = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, keys_m])
-    alloc_c0p7zm = pd.Series(alloc_c0p7zm.ravel(), index=new_index_c0p7zm)
+    alloc_c0p7zm = pd.Series(alloc_p7zm.ravel(), index=new_index_c0p7zm) #c0 is added as singleton
 
     ##mul m allocation with cost
     cost_c0p7zmlr = cost.reindex(new_index_c0p7zm, axis=1).mul(alloc_c0p7zm, axis=1).unstack([1,0])

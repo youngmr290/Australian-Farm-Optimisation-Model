@@ -46,13 +46,13 @@ def f1_machpyomo_local(params, model):
     
     model.p_seed_days = pe.Param(model.s_labperiods, model.s_season_types, initialize=params['seed_days'], default = 0.0, mutable=False, doc='number of seeding days in each period')
 
-    model.p_seeding_cost = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_labperiods, model.s_lmus, initialize=params['seeding_cost'], default = 0.0, mutable=False, doc='cost of seeding 1ha')
+    model.p_seeding_cost = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_labperiods, model.s_lmus, initialize=params['seeding_cost'], default = 0.0, mutable=False, doc='cost of seeding 1ha')
     
-    model.p_seeding_wc = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_labperiods, model.s_lmus, initialize=params['seeding_wc'], default = 0.0, mutable=False, doc='wc of seeding 1ha')
+    model.p_seeding_wc = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_labperiods, model.s_lmus, initialize=params['seeding_wc'], default = 0.0, mutable=False, doc='wc of seeding 1ha')
     
-    model.p_contract_seeding_cost = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_labperiods, initialize=params['contract_seed_cost'], default = 0.0, mutable=False, doc='cost of contract seeding 1ha')
+    model.p_contract_seeding_cost = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_labperiods, initialize=params['contract_seed_cost'], default = 0.0, mutable=False, doc='cost of contract seeding 1ha')
     
-    model.p_contract_seeding_wc = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_labperiods, initialize=params['contract_seed_wc'], default = 0.0, mutable=False, doc='wc of contract seeding 1ha')
+    model.p_contract_seeding_wc = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_labperiods, initialize=params['contract_seed_wc'], default = 0.0, mutable=False, doc='wc of contract seeding 1ha')
     
     model.p_harv_rate = pe.Param(model.s_phase_periods, model.s_labperiods, model.s_crops, model.s_season_types, initialize=params['harv_rate_period'], default = 0.0, mutable=False, doc='rate of harv t/hr provided by one crop gear each period')
     
@@ -60,17 +60,17 @@ def f1_machpyomo_local(params, model):
     
     model.p_harv_hrs_max = pe.Param(model.s_labperiods, model.s_season_types, initialize= params['max_harv_hours'], default = 0.0, mutable=False, doc='max hours of harvest per period')
     
-    model.p_harv_cost = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_labperiods, model.s_crops, initialize=params['harvest_cost'], default = 0.0, mutable=False, doc='cost of harvesting 1hr')
+    model.p_harv_cost = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_labperiods, model.s_crops, initialize=params['harvest_cost'], default = 0.0, mutable=False, doc='cost of harvesting 1hr')
     
-    model.p_harv_wc = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_labperiods, model.s_crops, initialize=params['harvest_wc'], default = 0.0, mutable=False, doc='wc of harvesting 1hr')
+    model.p_harv_wc = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_labperiods, model.s_crops, initialize=params['harvest_wc'], default = 0.0, mutable=False, doc='wc of harvesting 1hr')
     
-    model.p_contractharv_cost = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_labperiods, model.s_crops, initialize=params['contract_harvest_cost'], default = 0.0, mutable=False, doc='cost of contract harvesting 1hr')
+    model.p_contractharv_cost = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_labperiods, model.s_crops, initialize=params['contract_harvest_cost'], default = 0.0, mutable=False, doc='cost of contract harvesting 1hr')
     
-    model.p_contractharv_wc = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_labperiods, model.s_crops, initialize=params['contract_harvest_wc'], default = 0.0, mutable=False, doc='wc of contract harvesting 1hr')
+    model.p_contractharv_wc = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_labperiods, model.s_crops, initialize=params['contract_harvest_wc'], default = 0.0, mutable=False, doc='wc of contract harvesting 1hr')
     
-    model.p_contracthay_cost = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, initialize=params['hay_making_cost'], default = 0.0, doc='cost of contract making hay $/t')
+    model.p_contracthay_cost = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, initialize=params['hay_making_cost'], default = 0.0, doc='cost of contract making hay $/t')
     
-    model.p_contracthay_wc = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, initialize=params['hay_making_wc'], default = 0.0, doc='wc of contract making hay $/t')
+    model.p_contracthay_wc = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, initialize=params['hay_making_wc'], default = 0.0, doc='wc of contract making hay $/t')
     
     model.p_hay_made_prov = pe.Param(model.s_phase_periods, model.s_season_types, initialize=params['hay_made_prov_mz'], default = 0.0, doc='phase period when hay is made (required so that hay is made in the same season stage that the cost is incurred)')
 
@@ -89,9 +89,9 @@ def f1_machpyomo_local(params, model):
 
     model.p_mach_asset = pe.Param(model.s_season_periods, initialize=params['mach_asset_value'], default = 0.0, doc='asset value associated with crop gear')
 
-    model.p_mach_insurance = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, initialize=params['insurance'], default = 0.0, doc='insurance paid on all machinery')
+    model.p_mach_insurance = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, initialize=params['insurance'], default = 0.0, doc='insurance paid on all machinery')
     
-    model.p_mach_insurance_wc = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, initialize=params['insurance_wc'], default = 0.0, doc='insurance wc on all machinery')
+    model.p_mach_insurance_wc = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, initialize=params['insurance_wc'], default = 0.0, doc='insurance wc on all machinery')
 
     model.p_number_seeding_gear = pe.Param(initialize=params['number_seeding_gear'], default = 0.0, doc='number of crop gear')
     

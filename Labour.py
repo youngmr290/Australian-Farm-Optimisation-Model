@@ -203,13 +203,7 @@ def f_labour_general(params,r_vals):
     casual_cost_c0zp5 = casual_cost_p5z.T * casual_cost_c0_alloc_c0[:,na,na]
 
     ##labour cost cashflow period allocation and interest
-    p_dates_c0p7z = per.f_cashflow_periods()
-    peakdebt_date_c0p7zp5 = per.f_peak_debt_date()[:,na,na,na]
-    p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
-    mask_cashflow_z8var_c0p7zp5 = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)[...,na]
-    labour_cost_allocation_c0p7zp5, labour_wc_allocation_c0p7zp5 = fin.f_cashflow_allocation(lp_start_p5z.T,
-                                                                                  p_dates_c0p7z[...,na], peakdebt_date_c0p7zp5,
-                                                                                  mask_cashflow_z8var_c0p7zp5)
+    labour_cost_allocation_c0p7zp5, labour_wc_allocation_c0p7zp5 = fin.f_cashflow_allocation(lp_start_p5z.T, z_pos=-2)
     casual_cost_c0p7zp5 = casual_cost_c0zp5[:,na,...] * labour_cost_allocation_c0p7zp5
     casual_wc_c0p7zp5 = casual_cost_c0zp5[:,na,...] * labour_wc_allocation_c0p7zp5
 
@@ -218,7 +212,7 @@ def f_labour_general(params,r_vals):
     ##keys  #
     #########
     ##keys
-    keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
+    keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
     keys_p5 = np.asarray(per.f_p_dates_df().index[:-1]).astype('str')
@@ -259,39 +253,27 @@ def f_perm_cost(params, r_vals):
     '''
 
     ##cost allocation
-    p_dates_c0p7z = per.f_cashflow_periods()
-    labour_start_c0p7oz = p_dates_c0p7z[:,na,:-1,:]
-    peakdebt_date_c0p7oz = per.f_peak_debt_date()[:,na,na,na]
-    p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
-    mask_cashflow_z8var_c0p7z = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)
+    labour_start_c0 = per.f_cashflow_date() + np.timedelta64(182,'D') #fixed costs are incurred in the middle of the year and incur half a yr interest (in attempt to represent the even spread of fixed costs over the yr)
     ###call allocation/interset function - needs to be numpy
-    labour_cost_allocation_c0p7oz, labour_wc_allocation_c0p7oz = fin.f_cashflow_allocation(labour_start_c0p7oz,
-                                                                                  p_dates_c0p7z[:,:,na,:], peakdebt_date_c0p7oz,
-                                                                                  mask_cashflow_z8var_c0p7z[:,:,na,:])
-    ###remove o axis - o axis is the same as p7 so just take max (allocation is 1 but we needed to call allocation function to get interest)
-    labour_cost_allocation_c0p7z = np.max(labour_cost_allocation_c0p7oz, axis=2)
-    labour_wc_allocation_c0p7z = np.max(labour_wc_allocation_c0p7oz, axis=2)
+    labour_cost_allocation_c0p7z, labour_wc_allocation_c0p7z = fin.f_cashflow_allocation(labour_start_c0[:,na], z_pos=-1, c0_inc=True)
 
-    ##cost - the amount incurred in each cash period is dependent on the period length.
-    p7_len_c0p7z = (p_dates_c0p7z[:,1:,:] - p_dates_c0p7z[:,:-1,:]).astype('timedelta64[D]').astype(int)
+    ##cost - fix costs are incurred in the middle of the year and incur half a yr interest (in attempt to represent the even spread of fixed costs over the yr)
     cost_c0_alloc_c0 = pinp.finance['i_fixed_cost_enterprise_allocation_c0']
+    ###perm
     perm_cost = (uinp.price['permanent_cost'] + uinp.price['permanent_cost'] * uinp.price['permanent_super'] \
     + uinp.price['permanent_cost'] * uinp.price['permanent_workers_comp'] + uinp.price['permanent_cost'] * uinp.price['permanent_ls_leave'])
-    perm_cost_daily = perm_cost/365
-    perm_cost_c0p7z = perm_cost_daily * p7_len_c0p7z
-    perm_cost_c0p7z = perm_cost_c0p7z * cost_c0_alloc_c0[:,na,na]
-    manager_cost = uinp.price['manager_cost']
-    manager_cost_daily = manager_cost/365
-    manager_cost_c0p7z = manager_cost_daily * p7_len_c0p7z
-    manager_cost_c0p7z = manager_cost_c0p7z * cost_c0_alloc_c0[:,na,na]
-
+    perm_cost_c0p7z = perm_cost * cost_c0_alloc_c0[:,na,na]
     perm_cost_c0p7z = perm_cost_c0p7z * labour_cost_allocation_c0p7z
     perm_wc_c0p7z = perm_cost_c0p7z * labour_wc_allocation_c0p7z
+
+    ###manager
+    manager_cost = uinp.price['manager_cost']
+    manager_cost_c0p7z = manager_cost * cost_c0_alloc_c0[:,na,na]
     manager_cost_c0p7z = manager_cost_c0p7z * labour_cost_allocation_c0p7z
     manager_wc_c0p7z = manager_cost_c0p7z * labour_wc_allocation_c0p7z
 
     ##keys
-    keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
+    keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
 

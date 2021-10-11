@@ -37,10 +37,10 @@ def f1_suppyomo_local(params, model):
     ######### 
 
     ##sup cost
-    model.p_sup_cost = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_feed_periods, model.s_crops, initialize=params['total_sup_cost'], default = 0.0, mutable=True, doc='cost of storing and feeding 1t of sup each period')
+    model.p_sup_cost = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_feed_periods, model.s_crops, initialize=params['total_sup_cost'], default = 0.0, mutable=True, doc='cost of storing and feeding 1t of sup each period')
     
     ##sup wc
-    model.p_sup_wc = pe.Param(model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_feed_periods, model.s_crops, initialize=params['total_sup_wc'], default = 0.0, mutable=True, doc='wc of storing and feeding 1t of sup each period')
+    model.p_sup_wc = pe.Param(model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_feed_periods, model.s_crops, initialize=params['total_sup_wc'], default = 0.0, mutable=True, doc='wc of storing and feeding 1t of sup each period')
     
     ##sup dep
     model.p_sup_dep = pe.Param(model.s_season_periods, model.s_feed_periods, model.s_season_types, model.s_crops,
@@ -60,10 +60,10 @@ def f1_suppyomo_local(params, model):
     model.p_sup_md = pe.Param(model.s_crops, initialize=params['md_tonne'] , default = 0.0, doc='md per tonne of grain fed')
     
     ##price buy grain
-    model.p_buy_grain_price = pe.Param(model.s_phase_periods, model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_grain_pools, model.s_crops, initialize=params['buy_grain_price'], default = 0.0, doc='price to buy grain from neighbour')
+    model.p_buy_grain_price = pe.Param(model.s_phase_periods, model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_grain_pools, model.s_crops, initialize=params['buy_grain_price'], default = 0.0, doc='price to buy grain from neighbour')
 
     ##wc buy grain
-    model.p_buy_grain_wc = pe.Param(model.s_phase_periods, model.s_enterprises, model.s_cashflow_periods, model.s_season_types, model.s_grain_pools, model.s_crops, initialize=params['buy_grain_wc'], default = 0.0, doc='wc to buy grain from neighbour')
+    model.p_buy_grain_wc = pe.Param(model.s_phase_periods, model.s_enterprises, model.s_season_periods, model.s_season_types, model.s_grain_pools, model.s_crops, initialize=params['buy_grain_wc'], default = 0.0, doc='wc to buy grain from neighbour')
 
     ##buy_grain_prov_mz
     model.p_buy_grain_prov = pe.Param(model.s_phase_periods, model.s_season_types, initialize=params['buy_grain_prov_mz'], default = 0.0, doc='phase periods when buying grain provides into grain transfer (this param exists so that grain is only provided when it is purchased - otherwise it could provide grain in a peirod when it didnt pay eg get free grain)')

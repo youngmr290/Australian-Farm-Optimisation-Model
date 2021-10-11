@@ -39,43 +39,53 @@ na = np.newaxis
 #define dates of cashflow periods   #
 #####################################
 
-def f_cashflow_periods(pandas=False, return_keys_p7=False):
-    '''cashflow periods begin at the minimum of the break of season or the cashflow date.'''
+# def f_cashflow_periods(pandas=False, return_keys_p7=False):
+#     '''cashflow periods begin at the minimum of the break of season or the cashflow date.'''
+#     ##create c0 axis
+#     cash_date = pinp.sheep['i_date_cashflow_stock_i'][pinp.sheep['i_mask_i']].astype('datetime64')
+#     date_cashflow_stock = cash_date.view('i8').mean(keepdims=True).astype(cash_date.dtype) #take mean in case multiple tol included
+#     date_cashflow_crop = np.array([pinp.crop['i_date_cashflow_crop']]).astype('datetime64')
+#     cashflow_date_c0 = np.concatenate([date_cashflow_stock, date_cashflow_crop]) #have to stack this in the same order as the enterprise input in sinp.
+#
+#     p_std_p6z = pinp.period['i_dsp_fp_date'].astype('datetime64')
+#
+#     ###add node dates as feed periods if dsp
+#     if pinp.general['i_inc_node_periods'] or np.logical_not(pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1):
+#         date_node_mz = zfun.f_seasonal_inp(pinp.general['i_date_node_zm'].T, numpy=True, axis=1).astype('datetime64')
+#         date_node_c0mz = date_node_mz + (np.timedelta64(365, 'D') * (date_node_mz < cashflow_date_c0[:,na,na]))
+#         breaks_of_season_b = np.unique(p_std_p6z[0,:]) #need all the different breaks
+#         breaks_of_season_c0b = breaks_of_season_b + (np.timedelta64(365, 'D') * (breaks_of_season_b < cashflow_date_c0[:,na])) #adjust the year
+#         cashflow_date_start_c0cz = np.broadcast_to(cashflow_date_c0[:,na], (cashflow_date_c0.shape + (date_node_c0mz.shape[-1],)))[:,na,:]
+#         cashflow_date_end_c0cz = cashflow_date_start_c0cz + np.timedelta64(365, 'D') #end date of the last cashflow period
+#         breaks_of_season_c0bz = np.broadcast_to(breaks_of_season_c0b[:,:,na], (breaks_of_season_c0b.shape + (date_node_c0mz.shape[-1],)))
+#         cashflow_dates_c0p7z = np.concatenate([cashflow_date_start_c0cz, cashflow_date_end_c0cz, breaks_of_season_c0bz, date_node_c0mz[:,1:,...]], axis=1) #[1:] because first node is break of season which already exists in break array.
+#         cashflow_dates_c0p7z = np.sort(cashflow_dates_c0p7z, axis=1)
+#     else: #if nodes are not added then the adjusted fps are the same as the std fp.
+#         cashflow_date_start_c0p7z = cashflow_date_c0.astype('datetime64')[:,na,na]
+#         cashflow_date_end_c0p7z = cashflow_date_start_c0p7z + np.timedelta64(365, 'D') #end date of the last cashflow period
+#         cashflow_dates_c0p7z = np.concatenate([cashflow_date_start_c0p7z, cashflow_date_end_c0p7z], axis=1)
+#
+#     ##keys
+#     keys_p7 = np.array(['cf%02d'%i for i in range(cashflow_dates_c0p7z.shape[1]-1)]) #-1 because the last date is just the date of the end period
+#     if return_keys_p7:
+#         return keys_p7
+#     keys_c0 = sinp.general['i_enterprises_c0']
+#     keys_z = zfun.f_keys_z()
+#     #make df
+#     if pandas:
+#         index_c0p7 = pd.MultiIndex.from_product([keys_c0, keys_p7])
+#         cashflow_dates_c0p7z = pd.DataFrame(cashflow_dates_c0p7z.reshape(len(index_c0p7),-1), index=index_c0p7, columns=keys_z)
+#     return cashflow_dates_c0p7z
+
+def f_cashflow_date():
+    '''cashflow date.'''
     ##create c0 axis
     cash_date = pinp.sheep['i_date_cashflow_stock_i'][pinp.sheep['i_mask_i']].astype('datetime64')
     date_cashflow_stock = cash_date.view('i8').mean(keepdims=True).astype(cash_date.dtype) #take mean in case multiple tol included
     date_cashflow_crop = np.array([pinp.crop['i_date_cashflow_crop']]).astype('datetime64')
     cashflow_date_c0 = np.concatenate([date_cashflow_stock, date_cashflow_crop]) #have to stack this in the same order as the enterprise input in sinp.
+    return cashflow_date_c0
 
-    p_std_p6z = pinp.period['i_dsp_fp_date'].astype('datetime64')
-
-    ###add node dates as feed periods if dsp
-    if pinp.general['i_inc_node_periods'] or np.logical_not(pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1):
-        date_node_mz = zfun.f_seasonal_inp(pinp.general['i_date_node_zm'].T, numpy=True, axis=1).astype('datetime64')
-        date_node_c0mz = date_node_mz + (np.timedelta64(365, 'D') * (date_node_mz < cashflow_date_c0[:,na,na]))
-        breaks_of_season_b = np.unique(p_std_p6z[0,:]) #need all the different breaks
-        breaks_of_season_c0b = breaks_of_season_b + (np.timedelta64(365, 'D') * (breaks_of_season_b < cashflow_date_c0[:,na])) #adjust the year
-        cashflow_date_start_c0cz = np.broadcast_to(cashflow_date_c0[:,na], (cashflow_date_c0.shape + (date_node_c0mz.shape[-1],)))[:,na,:]
-        cashflow_date_end_c0cz = cashflow_date_start_c0cz + np.timedelta64(365, 'D') #end date of the last cashflow period
-        breaks_of_season_c0bz = np.broadcast_to(breaks_of_season_c0b[:,:,na], (breaks_of_season_c0b.shape + (date_node_c0mz.shape[-1],)))
-        cashflow_dates_c0p7z = np.concatenate([cashflow_date_start_c0cz, cashflow_date_end_c0cz, breaks_of_season_c0bz, date_node_c0mz[:,1:,...]], axis=1) #[1:] because first node is break of season which already exists in break array.
-        cashflow_dates_c0p7z = np.sort(cashflow_dates_c0p7z, axis=1)
-    else: #if nodes are not added then the adjusted fps are the same as the std fp.
-        cashflow_date_start_c0p7z = cashflow_date_c0.astype('datetime64')[:,na,na]
-        cashflow_date_end_c0p7z = cashflow_date_start_c0p7z + np.timedelta64(365, 'D') #end date of the last cashflow period
-        cashflow_dates_c0p7z = np.concatenate([cashflow_date_start_c0p7z, cashflow_date_end_c0p7z], axis=1)
-
-    ##keys
-    keys_p7 = np.array(['cf%02d'%i for i in range(cashflow_dates_c0p7z.shape[1]-1)]) #-1 because the last date is just the date of the end period
-    if return_keys_p7:
-        return keys_p7
-    keys_c0 = sinp.general['i_enterprises_c0']
-    keys_z = zfun.f_keys_z()
-    #make df
-    if pandas:
-        index_c0p7 = pd.MultiIndex.from_product([keys_c0, keys_p7])
-        cashflow_dates_c0p7z = pd.DataFrame(cashflow_dates_c0p7z.reshape(len(index_c0p7),-1), index=index_c0p7, columns=keys_z)
-    return cashflow_dates_c0p7z
 
 def f_peak_debt_date():
     date_peakdebt_stock = pinp.sheep['i_date_peakdebt_stock_i'][pinp.sheep['i_mask_i']].astype('datetime64')
@@ -291,27 +301,27 @@ def f_season_periods(keys=False):
     :param periods: Boolean if True this returns the m period dates
     '''
 
-    date_node_zm1 = zfun.f_seasonal_inp(pinp.general['i_date_node_zm'],numpy=True,axis=0).astype('datetime64')
-    ##if steady state then m1 axis is singleton (start and finish at the break of season).
+    date_node_zp7 = zfun.f_seasonal_inp(pinp.general['i_date_node_zm'],numpy=True,axis=0).astype('datetime64')
+    ##if steady state then p7 axis is singleton (start and finish at the break of season).
     if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1:
-        date_node_zm1 = date_node_zm1[:,0:1]
+        date_node_zp7 = date_node_zp7[:,0:1]
         ###add end date of last node period - required for the allocation function
-        end_zm1 = date_node_zm1[:,0:1] + np.timedelta64(365,'D')  # increment the first date by 1yr so it becomes the end date for the last period
-        date_season_node_m1z = np.concatenate([date_node_zm1,end_zm1],axis=1).T  # put m1 in pos 0 because that how the allocation function requires
+        end_zp7 = date_node_zp7[:,0:1] + np.timedelta64(365,'D')  # increment the first date by 1yr so it becomes the end date for the last period
+        date_season_node_p7z = np.concatenate([date_node_zp7,end_zp7],axis=1).T  # put p7 in pos 0 because that how the allocation function requires
     ##if DSP then all season node included plus a node for dry seeding
     else:
         ###add end date of last node period - required for the allocation function
-        end_zm1 = date_node_zm1[:,0:1] + np.timedelta64(365,'D')  # increment the first date by 1yr so it becomes the end date for the last period
-        date_season_node_m1z = np.concatenate([date_node_zm1,end_zm1],
-                                            axis=1).T  # put m1 in pos 0 because that how the allocation function requires
+        end_zp7 = date_node_zp7[:,0:1] + np.timedelta64(365,'D')  # increment the first date by 1yr so it becomes the end date for the last period
+        date_season_node_p7z = np.concatenate([date_node_zp7,end_zp7],
+                                            axis=1).T  # put p7 in pos 0 because that how the allocation function requires
 
-    len_m1 = date_season_node_m1z.shape[0] - 1  # minus one because end date is not a period
+    len_p7 = date_season_node_p7z.shape[0] - 1  # minus one because end date is not a period
 
     ##return keys if wanted
     if keys:
-        keys_m1 = np.array(['zm%s' % i for i in range(len_m1)])
-        return keys_m1
+        keys_p7 = np.array(['zm%s' % i for i in range(len_p7)])
+        return keys_p7
     else:
-        return date_season_node_m1z
+        return date_season_node_p7z
 
 

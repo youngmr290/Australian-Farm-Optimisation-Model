@@ -332,19 +332,14 @@ def f1_seed_cost_alloc():
     periods include season nodes.
     '''
     ##inputs
-    keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
+    keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
     keys_p5 = per.f_p_dates_df().index[:-1]
     p5_start_zp5 = per.f_p_dates_df().values[:-1].T #.T because needs to match other shapes in cash function call below
-    peakdebt_date_c0p7zp5 = per.f_peak_debt_date()[:,na,na,na]
-    p_dates_c0p7z = per.f_cashflow_periods()
-    p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
-    mask_cashflow_z8var_c0p7zp5 = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)[...,na]
-    
+
     ##calc interest and allocate to cash period - needs to be numpy
-    seeding_cost_allocation_c0p7zp5, seeding_wc_allocation_c0p7zp5 = fin.f_cashflow_allocation(p5_start_zp5, p_dates_c0p7z[...,na],
-                                                                     peakdebt_date_c0p7zp5, mask_cashflow_z8var_c0p7zp5, 'crp')
+    seeding_cost_allocation_c0p7zp5, seeding_wc_allocation_c0p7zp5 = fin.f_cashflow_allocation(p5_start_zp5, enterprise='crp', z_pos=-2)
     ###convert to df
     new_index_c0p7zp5 = pd.MultiIndex.from_product([keys_c0, keys_p7, keys_z, keys_p5])
     seeding_cost_allocation_c0p7zp5 = pd.Series(seeding_cost_allocation_c0p7zp5.ravel(), index=new_index_c0p7zp5)
@@ -383,7 +378,7 @@ def f_seeding_cost(r_vals):
     seeding_cost_allocation_c0p7zp5, seeding_wc_allocation_c0p7zp5 = f1_seed_cost_alloc()
 
     ##reindex with lmu so alloc can be mul with seeding_cost_l
-    keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
+    keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
     keys_p5 = per.f_p_dates_df().index[:-1]
@@ -606,19 +601,13 @@ def f1_harv_cost_alloc():
 
     ##inputs
     p5_start_zp5 = per.f_p_dates_df().values[:-1].T  # .T because needs to match other shapes in cash function call below
-    keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
+    keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
     keys_p5 = per.f_p_dates_df().index[:-1]
-    peakdebt_date_c0p7zp5 = per.f_peak_debt_date()[:,na,na,na]
-    p_dates_c0p7z = per.f_cashflow_periods()
-    p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
-    mask_cashflow_z8var_c0p7zp5 = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)[...,na]
 
     ##calc interest and allocate to cash period - needs to be numpy
-    harv_cost_allocation_c0p7zp5, harv_wc_allocation_c0p7zp5 = fin.f_cashflow_allocation(p5_start_zp5,
-                                                                                    p_dates_c0p7z[...,na], peakdebt_date_c0p7zp5,
-                                                                                    mask_cashflow_z8var_c0p7zp5, 'crp')
+    harv_cost_allocation_c0p7zp5, harv_wc_allocation_c0p7zp5 = fin.f_cashflow_allocation(p5_start_zp5, enterprise='crp', z_pos=-2)
     ###convert to df
     new_index_c0p7zp5 = pd.MultiIndex.from_product([keys_c0,keys_p7,keys_z,keys_p5])
     harv_cost_allocation_c0p7zp5 = pd.Series(harv_cost_allocation_c0p7zp5.ravel(), index=new_index_c0p7zp5)
@@ -652,7 +641,7 @@ def f_harvest_cost(r_vals):
     harv_cost_k = cost_harv.squeeze()
     
     ##reindex with lmu so alloc can be mul with harv_cost
-    keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
+    keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
     keys_p5 = per.f_p_dates_df().index[:-1]
@@ -729,7 +718,7 @@ def f_contract_harvest_cost(r_vals):
     contract_harv_cost_k = uinp.price['contract_harv_cost'].squeeze() #contract harvesting cost for each crop ($/hr)
     
     ##reindex with lmu so alloc can be mul with harv_cost
-    keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
+    keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
     keys_p5 = per.f_p_dates_df().index[:-1]
@@ -760,18 +749,12 @@ def f_hay_making_cost():
     '''
     ##cost allocation
     hay_start = np.array([pinp.crop['hay_making_date']]).astype('datetime64')
-    keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
+    keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
     keys_m = per.f_phase_periods(keys=True)
-    peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
-    p_dates_c0p7z = per.f_cashflow_periods()
-    p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
-    mask_cashflow_z8var_c0p7z = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)
     ###call allocation/interset function - needs to be numpy
-    hay_cost_allocation_c0p7z,hay_wc_allocation_c0p7z = fin.f_cashflow_allocation(hay_start,
-                                                                                  p_dates_c0p7z, peakdebt_date_c0p7z,
-                                                                                  mask_cashflow_z8var_c0p7z, 'crp')
+    hay_cost_allocation_c0p7z,hay_wc_allocation_c0p7z = fin.f_cashflow_allocation(hay_start, enterprise='crp', z_pos=-1)
     ###convert to df
     new_index_c0p7z = pd.MultiIndex.from_product([keys_c0,keys_p7,keys_z])
     hay_cost_allocation_c0p7z = pd.Series(hay_cost_allocation_c0p7z.ravel(),index=new_index_c0p7z)
@@ -1116,17 +1099,11 @@ def f_insurance(r_vals):
     
     ##determine cash period
     start = np.array([uinp.mach_general['insurance_date']]).astype('datetime64')
-    keys_p7 = per.f_cashflow_periods(return_keys_p7=True)
+    keys_p7 = per.f_season_periods(keys=True)
     keys_c0 = sinp.general['i_enterprises_c0']
     keys_z = zfun.f_keys_z()
-    peakdebt_date_c0p7z = per.f_peak_debt_date()[:,na,na]
-    p_dates_c0p7z = per.f_cashflow_periods()
-    p7_start_dates_c0p7z = p_dates_c0p7z[:,:-1,:]  # slice off the end date slice
-    mask_cashflow_z8var_c0p7z = zfun.f_season_transfer_mask(p7_start_dates_c0p7z, z_pos=-1, mask=True)
     ###call allocation/interset function - needs to be numpy
-    insurance_cost_allocation_c0p7z,insurance_wc_allocation_c0p7z = fin.f_cashflow_allocation(start,
-                                                                                          p_dates_c0p7z, peakdebt_date_c0p7z,
-                                                                                          mask_cashflow_z8var_c0p7z, 'crp')
+    insurance_cost_allocation_c0p7z,insurance_wc_allocation_c0p7z = fin.f_cashflow_allocation(start, enterprise='crp', z_pos=-1)
     ###convert to df
     new_index_c0p7z = pd.MultiIndex.from_product([keys_c0,keys_p7,keys_z])
     insurance_cost_allocation_c0p7z = pd.Series(insurance_cost_allocation_c0p7z.ravel(),index=new_index_c0p7z)

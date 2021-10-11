@@ -49,6 +49,9 @@ def sets(model, nv):
     z_prob = dict(zip(z_keys, zfun.f_z_prob()))
     model.p_z_prob = Param(model.s_season_types, initialize=z_prob, default=0.0, mutable=False, doc='probability of each season')
 
+    ##season periods
+    model.s_season_periods = Set(initialize=per.f_season_periods(keys=True),doc='season nodes')
+
     #######################
     #labour               #
     #######################
@@ -64,12 +67,6 @@ def sets(model, nv):
     #######################
     ##cashflow periods
     model.s_enterprises = Set(initialize=sinp.general['i_enterprises_c0'], doc='enterprises')
-
-    #######################
-    #cash                 #
-    #######################
-    ##cashflow periods
-    model.s_cashflow_periods = Set(initialize=per.f_cashflow_periods(return_keys_p7=True), doc='cashflow periods')
 
     #######################
     #stubble              #
@@ -105,9 +102,6 @@ def sets(model, nv):
 
     ##phase periods
     model.s_phase_periods = Set(initialize=per.f_phase_periods(keys=True),doc='phase nodes')
-
-    ##season periods
-    model.s_season_periods = Set(initialize=per.f_season_periods(keys=True),doc='season nodes')
 
     ##lmus
     lmu_mask = pinp.general['i_lmu_area'] > 0
