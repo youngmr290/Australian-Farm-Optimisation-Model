@@ -490,7 +490,7 @@ def f_pasture(params, r_vals, nv):
     #apply season mask   #
     ######################
     ##season transfer (z8z9) param
-    p_parentchildz_transfer_p6z8z9 = zfun.f_season_transfer_mask(date_start_p6z, z_pos=-1)
+    p_parentchildz_transfer_p6z8z9, mask_reqz8_p6z8 = zfun.f_season_transfer_mask(date_start_p6z, z_pos=-1)
 
     ##mask
     mask_fp_z8var_p6z = zfun.f_season_transfer_mask(date_start_p6z, z_pos=-1, mask=True)

@@ -201,6 +201,9 @@ def f_season_transfer_mask(period_dates, z_pos, period_axis_pos=0, mask=False):
     if mask:
         return mask_z8var_z
 
+    ##req mask
+    mask_childz_req = mask_z8var_z
+
     ##prov mask. Parent seasons provide to child season until the child season is identified.
     rolled_mask_z8var_z = np.roll(mask_z8var_z,shift=-1,axis=period_axis_pos)
     prov_self_z8z9 = mask_z8var_z[...,na] * identity_z8z9
@@ -214,7 +217,7 @@ def f_season_transfer_mask(period_dates, z_pos, period_axis_pos=0, mask=False):
     ###combine self and child prov
     mask_param_provz8z9_z8z9 = np.logical_or(prov_self_z8z9, prov_child_z8z9)
 
-    return mask_param_provz8z9_z8z9
+    return mask_param_provz8z9_z8z9, mask_childz_req
 
 
 

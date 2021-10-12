@@ -109,7 +109,7 @@ def f_season_params(params):
 
     ##z8z9 transfer
     start_phase_periods_mz = per.f_phase_periods()[:-1,:] #remove end date of last period
-    mask_phase_provz8z9_mz8z9 = zfun.f_season_transfer_mask(start_phase_periods_mz, z_pos=-1)
+    mask_phase_provz8z9_mz8z9, mask_reqz8_mz8 = zfun.f_season_transfer_mask(start_phase_periods_mz, z_pos=-1)
 
     ##mask phases which transfer in each m
     if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1:

@@ -177,7 +177,6 @@ def generator(params,r_vals,nv,plots = False):
     len_p6 = len(per.f_feed_periods()) - 1 #-1 because the end feed period date is included
     len_p7 = len(per.f_season_periods(keys=True))
     len_p8 = np.count_nonzero(pinp.sheep['i_mask_p8'])
-    len_q = pinp.general['i_len_q'] #length of season sequence
     len_q0	 = uinp.sheep['i_eqn_exists_q0q1'].shape[1]
     len_q1	 = len(uinp.sheep['i_eqn_reportvars_q1'])
     len_q2	 = np.max(uinp.sheep['i_eqn_reportvars_q1'])
@@ -5743,9 +5742,9 @@ def generator(params,r_vals,nv,plots = False):
                                                          * (dvp_type_next_va1e1b1nwzida0e0b0xyg1 == prejoin_vtype1)
                                                          * dry_sales_forced_va1e1b1nwzida0e0b0xyg1)
 
-    ###############################
-    # Create Season transfer mask #
-    ###############################
+    ################################
+    # Create Season transfer masks #
+    ################################
     '''If a season is not identified then it does not transfer any parameters. Therefore to reduce size we can mask
     all parameters with a z8 axis. We also require a z8z9 mask which controls transfer params.
     z8z9 is required for parameters from the previous period that provide/require in the current period because 
@@ -5757,38 +5756,58 @@ def generator(params,r_vals,nv,plots = False):
     index_zidaebxyg = fun.f_expand(index_z, z_pos)
 
     ##dams child parent transfer
-    mask_param_provz8z9_va1e1b1nwzida0e0b0xyg1z9 = zfun.f_season_transfer_mask(dvp_start_va1e1b1nwzida0e0b0xyg1, z_pos=z_pos)
+    mask_param_provz8z9_va1e1b1nwzida0e0b0xyg1z9, mask_childz_req_va1e1b1nwzida0e0b0xyg1 = zfun.f_season_transfer_mask(dvp_start_va1e1b1nwzida0e0b0xyg1, z_pos=z_pos)
     mask_z8var_va1e1b1nwzida0e0b0xyg1 = zfun.f_season_transfer_mask(dvp_start_va1e1b1nwzida0e0b0xyg1, z_pos=z_pos, mask=True)
     ###create z8z9 param that is index with v
     ####cluster e and b (e axis is active from the dvp dates)
+    mask_childz_reqz8_k2tva1e1b1nwzida0e0b0xyg1 = 1 * (np.sum(mask_childz_req_va1e1b1nwzida0e0b0xyg1
+                                                                  * (a_k2cluster_va1e1b1nwzida0e0b0xyg1==index_k2tva1e1b1nwzida0e0b0xyg1),
+                                                                  axis=(e1_pos,b1_pos), keepdims=True) > 0)
     mask_param_provz8z9_k2tva1e1b1nwzida0e0b0xyg1z9 = 1 * (np.sum(mask_param_provz8z9_va1e1b1nwzida0e0b0xyg1z9
                                                                   * (a_k2cluster_va1e1b1nwzida0e0b0xyg1==index_k2tva1e1b1nwzida0e0b0xyg1)[...,na],
                                                                   axis=(e1_pos-1,b1_pos-1), keepdims=True) > 0)
 
     ##offs child parent transfer
-    mask_param_provz8z9_va1e1b1nwzida0e0b0xyg3z9 = zfun.f_season_transfer_mask(dvp_start_va1e1b1nwzida0e0b0xyg3, z_pos=z_pos)
+    mask_param_provz8z9_va1e1b1nwzida0e0b0xyg3z9, mask_childz_req_va1e1b1nwzida0e0b0xyg3 = zfun.f_season_transfer_mask(dvp_start_va1e1b1nwzida0e0b0xyg3, z_pos=z_pos)
     mask_z8var_va1e1b1nwzida0e0b0xyg3 = zfun.f_season_transfer_mask(dvp_start_va1e1b1nwzida0e0b0xyg3, z_pos=z_pos, mask=True)
     ###create z8z9 param that is index with v
     ####cluster d (d axis is active from the dvp dates)
+    mask_childz_reqz8_k3k5tva1e1b1nwzida0e0b0xyg3 = 1 * (np.sum(mask_childz_req_va1e1b1nwzida0e0b0xyg3
+                                                               * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3),
+                                                               axis=d_pos, keepdims=True) > 0)
     mask_param_provz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9 = 1 * (np.sum(mask_param_provz8z9_va1e1b1nwzida0e0b0xyg3z9
                                                                   * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na],
                                                                     axis=d_pos-1, keepdims=True) > 0)
 
-    ##sequence mask
-    # index_q = np.arange(len_q)
-    # ###The number of ‘s’ that are grouped together for each ‘q’
-    # step_sparam_q = np.power(len_z,len_q - 1 - index_q)
-    # ###The number of ‘z’ that are grouped together for each ‘q’
-    # step_zparam_q = np.power(len_z,len_q - 2 - index_q)
-    # ###Only the first ‘s’ in the group is active (not masked)
-    # mask_s8vars_qs = (index_s8 % step_sparam_q == 0)
-    # mask_provqs8z8s9_qs8z8s9 = (mask_s8vars_qs
-    # *(np.trunc(index_s8 / step_sparam_q) == np.trunc(index_s9 / step_sparam_q))
-    # *(index_z8 == np.trunc(index_s9 / step_zparam_q) % len_z)
-    # season_seq_prob_qsz = np.cumprod(np.sum(season_propn_z * mask_s8vars_qs,axis=z),
-    #                                  axis=q))  # todo as above, work needed to represent sequence of interest. Currently z axis is not active.
-    # p_wyear_inc = mask_s8vars_qs  # todo work needed to allow masking ‘sequence of interest’ (with a z8 axis).
-    # p_season_prob = season_seq_prob_qsz
+    ##adjust params for season sequence
+    ###dams season start dvp - cluster e&b (e axis is active from the dvp dates)
+    dvp_is_seasonstart_va1e1b1nwzida0e0b0xyg1 = np.any(dvp_start_va1e1b1nwzida0e0b0xyg1==seasonstart_ya1e1b1nwzida0e0b0xyg[:,na,...], axis=0)
+    currentdvp_is_seasonstart_k2tva1e1b1nwzida0e0b0xyg1 = np.sum(dvp_is_seasonstart_va1e1b1nwzida0e0b0xyg1
+                                                          * (a_k2cluster_va1e1b1nwzida0e0b0xyg1==index_k2tva1e1b1nwzida0e0b0xyg1),
+                                                          axis=(e1_pos,b1_pos), keepdims=True) > 0
+    nextdvp_is_seasonstart_k2tva1e1b1nwzida0e0b0xyg1 = np.roll(currentdvp_is_seasonstart_k2tva1e1b1nwzida0e0b0xyg1, -1, axis=p_pos)
+    ###offs season start dvp - cluster d (d axis is active from the dvp dates)
+    dvp_is_seasonstart_va1e1b1nwzida0e0b0xyg3 = np.any(dvp_start_va1e1b1nwzida0e0b0xyg3==seasonstart_ya1e1b1nwzida0e0b0xyg[:,na,...], axis=0)
+    currentdvp_is_seasonstart_k3k5tva1e1b1nwzida0e0b0xyg3 = np.sum(dvp_is_seasonstart_va1e1b1nwzida0e0b0xyg3
+                                                               * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3),
+                                                               axis=d_pos,keepdims=True) > 0
+    nextdvp_is_seasonstart_k3k5tva1e1b1nwzida0e0b0xyg3 = np.roll(currentdvp_is_seasonstart_k3k5tva1e1b1nwzida0e0b0xyg3, -1, axis=p_pos)
+    ###dams within season transfer
+    mask_childz_reqwithin_k2tva1e1b1nwzida0e0b0xyg1 = mask_childz_reqz8_k2tva1e1b1nwzida0e0b0xyg1 * np.logical_not(currentdvp_is_seasonstart_k2tva1e1b1nwzida0e0b0xyg1)
+    mask_provwithinz8z9_k2tva1e1b1nwzida0e0b0xyg1z9 = mask_param_provz8z9_k2tva1e1b1nwzida0e0b0xyg1z9 * np.logical_not(nextdvp_is_seasonstart_k2tva1e1b1nwzida0e0b0xyg1[...,na])
+    ###dams between season transfer
+    mask_childz_reqbetween_k2tva1e1b1nwzida0e0b0xyg1 = mask_childz_reqz8_k2tva1e1b1nwzida0e0b0xyg1 * currentdvp_is_seasonstart_k2tva1e1b1nwzida0e0b0xyg1
+    mask_provbetweenz8z9_k2tva1e1b1nwzida0e0b0xyg1z9 = mask_param_provz8z9_k2tva1e1b1nwzida0e0b0xyg1z9 * nextdvp_is_seasonstart_k2tva1e1b1nwzida0e0b0xyg1[...,na]
+    ###offs within season transfer
+    mask_childz_reqwithin_k3k5tva1e1b1nwzida0e0b0xyg3 = mask_childz_reqz8_k3k5tva1e1b1nwzida0e0b0xyg3 * np.logical_not(currentdvp_is_seasonstart_k3k5tva1e1b1nwzida0e0b0xyg3)
+    mask_provwithinz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9 = mask_param_provz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9 * np.logical_not(nextdvp_is_seasonstart_k3k5tva1e1b1nwzida0e0b0xyg3[...,na])
+    ###offs between season transfer
+    mask_childz_reqbetween_k3k5tva1e1b1nwzida0e0b0xyg3 = mask_childz_reqz8_k3k5tva1e1b1nwzida0e0b0xyg3 * currentdvp_is_seasonstart_k3k5tva1e1b1nwzida0e0b0xyg3
+    mask_provbetweenz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9 = mask_param_provz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9 * nextdvp_is_seasonstart_k3k5tva1e1b1nwzida0e0b0xyg3[...,na]
+
+
+
+
 
     ##p6z mask - this is only for masking sire becasuse they dont have a v axis
     mask_fp_z8var_p6fva1e1b1nwzida0e0b0xyg = fun.f_expand(zfun.f_season_transfer_mask(per.f_feed_periods()[:-1], z_pos=-1, mask=True),
@@ -6189,45 +6208,6 @@ def generator(params,r_vals,nv,plots = False):
 
 
 
-    ####################################
-    #adjust params for season sequence #
-    ####################################
-
-    ##dams numbers req and prov
-    ###cluster e&b (e axis is active from the dvp dates)
-    currentdvp_is_seasonstart_va1e1b1nwzida0e0b0xyg1 = np.sum(dvp_type_va1e1b1nwzida0e0b0xyg1 == season_vtype1
-                                                          * (a_k2cluster_va1e1b1nwzida0e0b0xyg1==index_k2tva1e1b1nwzida0e0b0xyg1),
-                                                          axis=(e1_pos,b1_pos), keepdims=True) > 0
-    nextdvp_is_seasonstart_va1e1b1nwzida0e0b0xyg1 = np.sum(dvp_type_next_va1e1b1nwzida0e0b0xyg1 == season_vtype1
-                                                          * (a_k2cluster_va1e1b1nwzida0e0b0xyg1==index_k2tva1e1b1nwzida0e0b0xyg1),
-                                                          axis=(e1_pos,b1_pos), keepdims=True) > 0
-
-    ###within season transfer
-    numbers_reqwithin_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 * np.logical_not(currentdvp_is_seasonstart_va1e1b1nwzida0e0b0xyg1[...,na,na])
-    numbers_provwithin_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 * np.logical_not(nextdvp_is_seasonstart_va1e1b1nwzida0e0b0xyg1[...,na,na])
-    numbers_provthiswithin_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 * np.logical_not(nextdvp_is_seasonstart_va1e1b1nwzida0e0b0xyg1[...,na,na])
-    ###between season transfer
-    numbers_reqbetween_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = numbers_req_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 * currentdvp_is_seasonstart_va1e1b1nwzida0e0b0xyg1[...,na,na]
-    numbers_provbetween_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 * nextdvp_is_seasonstart_va1e1b1nwzida0e0b0xyg1[...,na,na]
-    numbers_provthisbetween_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 = numbers_prov_dams_k28k29tva1e1b1nw8zida0e0b0xyg1g9w9 * nextdvp_is_seasonstart_va1e1b1nwzida0e0b0xyg1[...,na,na]
-
-    ##offs numbers req and prov
-    ###cluster d (d axis is active from the dvp dates)
-    currentdvp_is_seasonstart_k3k5tva1e1b1nwzida0e0b0xyg3 = np.sum(dvp_type_va1e1b1nwzida0e0b0xyg3 == season_vtype3
-                                                               * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3),
-                                                               axis=d_pos,keepdims=True) > 0
-    nextdvp_is_seasonstart_k3k5tva1e1b1nwzida0e0b0xyg3 = np.sum(dvp_type_next_va1e1b1nwzida0e0b0xyg3 == season_vtype3
-                                                               * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3),
-                                                               axis=d_pos,keepdims=True) > 0
-
-    ###within season transfer
-    numbers_reqwithin_offs_k3k5tva1e1b1nw8zida0e0b0xygw9 = numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9 * np.logical_not(currentdvp_is_seasonstart_k3k5tva1e1b1nwzida0e0b0xyg3[...,na])
-    numbers_provwithin_offs_k3k5tva1e1b1nw8zida0e0b0xygw9 = numbers_prov_offs_k3k5tva1e1b1nw8zida0e0b0xygw9 * np.logical_not(nextdvp_is_seasonstart_k3k5tva1e1b1nwzida0e0b0xyg3[...,na])
-    ###between season transfer
-    numbers_reqbetween_offs_k3k5tva1e1b1nw8zida0e0b0xygw9 = numbers_req_offs_k3k5tva1e1b1nw8zida0e0b0xygw9 * currentdvp_is_seasonstart_k3k5tva1e1b1nwzida0e0b0xyg3[...,na]
-    numbers_provbetween_offs_k3k5tva1e1b1nw8zida0e0b0xygw9 = numbers_prov_offs_k3k5tva1e1b1nw8zida0e0b0xygw9 * nextdvp_is_seasonstart_k3k5tva1e1b1nwzida0e0b0xyg3[...,na]
-
-    #todo do i need to add prog2dams and prog2off here as well? (i think i do)
 
     ###########################
     #  report P2V             #
@@ -6830,9 +6810,15 @@ def generator(params,r_vals,nv,plots = False):
     ###k2vz8g1z9 - season transfer dams
     arrays = [keys_k2, keys_v1, keys_z, keys_g1, keys_z]
     index_k2vz8g1z9 = fun.cartesian_product_simple_transpose(arrays)
+    ###k2vz8g1 - season transfer dams (req)
+    arrays = [keys_k2, keys_v1, keys_z, keys_g1]
+    index_k2vz8g1 = fun.cartesian_product_simple_transpose(arrays)
     ###k3vz8xg3z9 - season transfer offs
     arrays = [keys_k3, keys_v3, keys_z, keys_x, keys_g3, keys_z]
     index_k3vz8xg3z9 = fun.cartesian_product_simple_transpose(arrays)
+    ###k3vz8xg3 - season transfer offs (req)
+    arrays = [keys_k3, keys_v3, keys_z, keys_x, keys_g3]
+    index_k3vz8xg3 = fun.cartesian_product_simple_transpose(arrays)
 
 
     ################
@@ -7330,29 +7316,64 @@ def generator(params,r_vals,nv,plots = False):
     params['p_wg_propn_p6z'] = dict(zip(tup_p6z,wg_propn_p6z))
 
     ##season transfer masks
-    # mask=mask_param_reqz8z9_z8z9!=0
-    # mask_param_reqz8z9_z8z9 = mask_param_reqz8z9_z8z9[mask] #applying the mask does the raveling and squeezing of array
-    # mask=mask.ravel()
-    # index_cut_z8z9=index_z8z9[mask,:]
-    # tup_z8z9 = tuple(map(tuple, index_cut_z8z9))
-    # params['p_childz_req'] =dict(zip(tup_z8z9, mask_param_reqz8z9_z8z9))
-    ###dams prov
-    mask=mask_param_provz8z9_k2tva1e1b1nwzida0e0b0xyg1z9!=0
-    mask_param_provz8z9_k2vz8g1z9 = mask_param_provz8z9_k2tva1e1b1nwzida0e0b0xyg1z9[mask] #applying the mask does the raveling and squeezing of array
+    ###dams req within
+    mask=mask_childz_reqwithin_k2tva1e1b1nwzida0e0b0xyg1!=0
+    mask_reqwithinz8_k2vz8g1 = mask_childz_reqwithin_k2tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
+    mask=mask.ravel()
+    index_cut_k2vz8g1=index_k2vz8g1[mask,:]
+    tup_k2vz8g1 = tuple(map(tuple, index_cut_k2vz8g1))
+    params['p_childz_reqwithin_dams'] =dict(zip(tup_k2vz8g1, mask_reqwithinz8_k2vz8g1))
+    ###dams req between
+    mask=mask_childz_reqbetween_k2tva1e1b1nwzida0e0b0xyg1!=0
+    mask_reqbetweenz8_k2vz8g1 = mask_childz_reqbetween_k2tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
+    mask=mask.ravel()
+    index_cut_k2vz8g1=index_k2vz8g1[mask,:]
+    tup_k2vz8g1 = tuple(map(tuple, index_cut_k2vz8g1))
+    params['p_childz_reqbetween_dams'] =dict(zip(tup_k2vz8g1, mask_reqbetweenz8_k2vz8g1))
+    ###offs req within
+    mask=mask_childz_reqwithin_k3k5tva1e1b1nwzida0e0b0xyg3!=0
+    mask_reqwithinz8_k3vz8xg3 = mask_childz_reqwithin_k3k5tva1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
+    mask=mask.ravel()
+    index_cut_k3vz8xg3=index_k3vz8xg3[mask,:]
+    tup_k3vz8xg3 = tuple(map(tuple, index_cut_k3vz8xg3))
+    params['p_childz_reqwithin_offs'] =dict(zip(tup_k3vz8xg3, mask_reqwithinz8_k3vz8xg3))
+    ###offs req between
+    mask=mask_childz_reqbetween_k3k5tva1e1b1nwzida0e0b0xyg3!=0
+    mask_reqbetweenz8_k3vz8xg3 = mask_childz_reqbetween_k3k5tva1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
+    mask=mask.ravel()
+    index_cut_k3vz8xg3=index_k3vz8xg3[mask,:]
+    tup_k3vz8xg3 = tuple(map(tuple, index_cut_k3vz8xg3))
+    params['p_childz_reqbetween_offs'] =dict(zip(tup_k3vz8xg3, mask_reqbetweenz8_k3vz8xg3))
+
+    ###dams prov within
+    mask=mask_provwithinz8z9_k2tva1e1b1nwzida0e0b0xyg1z9!=0
+    mask_provwithinz8z9_k2vz8g1z9 = mask_provwithinz8z9_k2tva1e1b1nwzida0e0b0xyg1z9[mask] #applying the mask does the raveling and squeezing of array
     mask=mask.ravel()
     index_cut_k2vz8g1z9=index_k2vz8g1z9[mask,:]
     tup_k2vz8g1z9 = tuple(map(tuple, index_cut_k2vz8g1z9))
-    params['p_parentchildz_transfer_dams'] =dict(zip(tup_k2vz8g1z9, mask_param_provz8z9_k2vz8g1z9))
-    ###offs prov
-    mask=mask_param_provz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9!=0
-    mask_param_provz8z9_k3vz8xg3z9 = mask_param_provz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9[mask] #applying the mask does the raveling and squeezing of array
+    params['p_parentz_provwithin_dams'] =dict(zip(tup_k2vz8g1z9, mask_provwithinz8z9_k2vz8g1z9))
+    ###dams prov between
+    mask=mask_provbetweenz8z9_k2tva1e1b1nwzida0e0b0xyg1z9!=0
+    mask_provbetweenz8z9_k2vz8g1z9 = mask_provbetweenz8z9_k2tva1e1b1nwzida0e0b0xyg1z9[mask] #applying the mask does the raveling and squeezing of array
+    mask=mask.ravel()
+    index_cut_k2vz8g1z9=index_k2vz8g1z9[mask,:]
+    tup_k2vz8g1z9 = tuple(map(tuple, index_cut_k2vz8g1z9))
+    params['p_parentz_provbetween_dams'] =dict(zip(tup_k2vz8g1z9, mask_provbetweenz8z9_k2vz8g1z9))
+    ###offs prov within
+    mask=mask_provwithinz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9!=0
+    mask_provwithinz8z9_k3vz8xg3z9 = mask_provwithinz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9[mask] #applying the mask does the raveling and squeezing of array
     mask=mask.ravel()
     index_cut_k3vz8xg3z9=index_k3vz8xg3z9[mask,:]
     tup_k3vz8xg3z9 = tuple(map(tuple, index_cut_k3vz8xg3z9))
-    params['p_parentchildz_transfer_offs'] =dict(zip(tup_k3vz8xg3z9, mask_param_provz8z9_k3vz8xg3z9))
+    params['p_parentz_provwithin_offs'] =dict(zip(tup_k3vz8xg3z9, mask_provwithinz8z9_k3vz8xg3z9))
+    ###offs prov between
+    mask=mask_provbetweenz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9!=0
+    mask_provbetweenz8z9_k3vz8xg3z9 = mask_provbetweenz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9[mask] #applying the mask does the raveling and squeezing of array
+    mask=mask.ravel()
+    index_cut_k3vz8xg3z9=index_k3vz8xg3z9[mask,:]
+    tup_k3vz8xg3z9 = tuple(map(tuple, index_cut_k3vz8xg3z9))
+    params['p_parentz_provbetween_offs'] =dict(zip(tup_k3vz8xg3z9, mask_provbetweenz8z9_k3vz8xg3z9))
 
-
-    # p_wyear_inc = i_wyear_inc_qsz #todo need to add this input and hook up (not sure what it needs to look like)
 
 
     ###############
