@@ -5805,10 +5805,6 @@ def generator(params,r_vals,nv,plots = False):
     mask_childz_reqbetween_k3k5tva1e1b1nwzida0e0b0xyg3 = mask_childz_reqz8_k3k5tva1e1b1nwzida0e0b0xyg3 * currentdvp_is_seasonstart_k3k5tva1e1b1nwzida0e0b0xyg3
     mask_provbetweenz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9 = mask_param_provz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9 * nextdvp_is_seasonstart_k3k5tva1e1b1nwzida0e0b0xyg3[...,na]
 
-
-
-
-
     ##p6z mask - this is only for masking sire becasuse they dont have a v axis
     mask_fp_z8var_p6fva1e1b1nwzida0e0b0xyg = fun.f_expand(zfun.f_season_transfer_mask(per.f_feed_periods()[:-1], z_pos=-1, mask=True),
                                                           left_pos=z_pos, left_pos2=p_pos-2, right_pos2=z_pos)

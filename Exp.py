@@ -43,6 +43,7 @@ import StockPyomo as spy
 import CorePyomo as core
 import MVF as mvf
 import CropGrazingPyomo as cgzpy
+import SeasonPyomo as zgenpy
 
 #report the clock time that the experiment was started
 print(f'Experiment commenced at: {time.ctime()}')
@@ -134,6 +135,7 @@ for row in range(len(exp_data)):
     ##create empty dicts - have to do it here because need the trial as the first key, so whole trial can be compared when determining if pyomo needs to be run
     ###params
     params={}
+    params['zgen']={}
     params['rot']={}
     params['crop']={}
     params['crpgrz']={}
@@ -148,6 +150,7 @@ for row in range(len(exp_data)):
     params['pas']={}
     ###report values
     r_vals={}
+    r_vals['zgen']={}
     r_vals['rot']={}
     r_vals['crop']={}
     r_vals['crpgrz']={}
@@ -163,6 +166,7 @@ for row in range(len(exp_data)):
     nv = {} #dict to store nv params from stockgen to be used in pasture
     ##call precalcs
     precalc_start = time.time()
+    zgenpy.season_precalcs(params['zgen'],r_vals['zgen'])
     rotpy.rotation_precalcs(params['rot'],r_vals['rot'])
     phspy.crop_precalcs(params['crop'],r_vals['crop'])
     macpy.mach_precalcs(params['mach'],r_vals['mach'])
@@ -185,6 +189,7 @@ for row in range(len(exp_data)):
         pyomocalc_start = time.time()
         model = pe.ConcreteModel() #create pyomo model - done each loop because memory was being leaked when just deleting and re adding the components.
         crtmod.sets(model, nv) #certain sets have to be updated each iteration of exp - has to be first since other modules use the sets
+        zgenpy.f1_seasonpyomo_local(params['zgen'], model)  # has to be first since builds params used in other modules
         rotpy.f1_rotationpyomo(params['rot'], model)
         phspy.f1_croppyomo_local(params['crop'], model)
         macpy.f1_machpyomo_local(params['mach'], model)

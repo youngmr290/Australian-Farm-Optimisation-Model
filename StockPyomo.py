@@ -415,8 +415,9 @@ def f_con_off_betweenR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w
     Between year numbers/transfers of offspring to offspring in the following decision variable period.
 
     '''
-    def offbetweenR(model,q,s,k3,k5,v3,a,z9,i,x,y3,g3,w9):
+    def offbetweenR(model,q,s9,k3,k5,v3,a,z9,i,x,y3,g3,w9):
         v3_prev = l_v3[l_v3.index(v3) - 1]  #used to get the activity number from the last period
+        q_prev = list(model.s_sequence_year)[list(model.s_sequence_year).index(q) - 1]  #used to get the activity number from the last period
         ##skip constraint if the require param is 0 - using the numpy array because it is 2x faster because don't need to loop through activity keys eg k28
         ###get the index number - required so numpy array can be indexed
         t_k3 = l_k3.index(k3)
@@ -430,10 +431,14 @@ def f_con_off_betweenR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w
         if not np.any(params['numbers_req_numpyversion_k3k5vw8zixg3w9'][t_k3,t_k5,t_v3,:,t_z,t_i,t_x,t_g3,t_w9]) \
            or not pe.value(model.p_childz_reqbetween_offs[k3,v3,z9,x,g3]):
             return pe.Constraint.Skip
-        return sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w8,z9,i,a,x,y3,g3] * model.p_numbers_req_offs[k3,k5,v3,w8,z9,i,x,g3,w9]
-                   * model.p_childz_reqbetween_offs[k3,v3,z9,x,g3]
-                   - sum(model.v_offs[q,s,k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3] * model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3,w9]
-                      * model.p_parentz_provbetween_offs[k3,v3_prev,z8,x,g3,z9] for z8 in model.s_season_types)
+        return sum(model.v_offs[q,s9,k3,k5,t3,v3,n3,w8,z9,i,a,x,y3,g3] * model.p_numbers_req_offs[k3,k5,v3,w8,z9,i,x,g3,w9]
+                   * model.p_childz_reqbetween_offs[k3,v3,z9,x,g3] * model.p_between_req_qs[q,s9]
+                   - sum(model.v_offs[q_prev,s8,k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3] * model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3,w9]
+                      * model.p_parentz_provbetween_offs[k3,v3_prev,z8,x,g3,z9] * model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9]
+                         for z8 in model.s_season_types for s8 in model.s_sequence)
+                   - sum(model.v_offs[q_prev,s8,k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3] * model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3,w9]
+                      * model.p_parentz_provbetween_offs[k3,v3_prev,z8,x,g3,z9] * model.p_endstart_prov_qsz[q_prev,s8,z8]
+                         for z8 in model.s_season_types for s8 in model.s_sequence)
                    for t3 in model.s_sale_offs for n3 in model.s_nut_offs for w8 in model.s_lw_offs
                    if pe.value(model.p_numbers_req_offs[k3,k5,v3,w8,z9,i,x,g3,w9]) != 0
                    or pe.value(model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z9,i,a,x,y3,g3,w9]) != 0) <=0 #need to use both in the if statement (even though it is slower) because there are situations eg dvp4 (prejoining) where prov will have a value and req will not.
@@ -534,8 +539,9 @@ def f_con_dam_betweenR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_
     b) Dams to dams in the following decision variable period.
 
     '''
-    def dambetweenR(model,q,s,k29,v1,a,z9,i,y1,g9,w9):
+    def dambetweenR(model,q,s9,k29,v1,a,z9,i,y1,g9,w9):
         v1_prev = l_v1[l_v1.index(v1) - 1]  #used to get the activity number from the last period - to determine the number of dam provided into this period
+        q_prev = list(model.s_sequence_year)[list(model.s_sequence_year).index(q) - 1]
         ##skip constraint if the require param is 0 - using the numpy array because it is 2x faster because don't need to loop through activity keys eg k28
         ###get the index number - required so numpy array can be indexed
         t_k29 = l_k29.index(k29)
@@ -549,11 +555,15 @@ def f_con_dam_betweenR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_
         if not np.any(params['numbers_req_numpyversion_k2k2tva1nw8ziyg1g9w9'][:,t_k29,:,t_v1,t_a,:,:,t_z,t_i,t_y1,:,t_g9,t_w9])\
                or not any(pe.value(model.p_childz_reqbetween_dams[k28,v1,z9,g1]) for k28 in model.s_k2_birth_dams for g1 in model.s_groups_dams):
             return pe.Constraint.Skip
-        return sum(model.v_dams[q,s,k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_req_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
-                   * model.p_childz_reqbetween_dams[k28,v1,z9,g1]
-                   - model.v_dams[q,s,k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_provthis_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
-                   - sum(model.v_dams[q,s,k28,t1,v1_prev,a,n1,w8,z8,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z8,i,y1,g1,g9,w9]
-                      * model.p_parentz_provbetween_dams[k28,v1_prev,z8,g1,z9] for z8 in model.s_season_types)
+        return sum(model.v_dams[q,s9,k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_req_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
+                   * model.p_childz_reqbetween_dams[k28,v1,z9,g1] * model.p_between_req_qs[q,s9]
+                   - model.v_dams[q,s9,k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_provthis_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
+                   - sum(model.v_dams[q_prev,s8,k28,t1,v1_prev,a,n1,w8,z8,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z8,i,y1,g1,g9,w9]
+                      * model.p_parentz_provbetween_dams[k28,v1_prev,z8,g1,z9] * model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9]
+                         for z8 in model.s_season_types for s8 in model.s_sequence)
+                   - sum(model.v_dams[q_prev,s8,k28,t1,v1_prev,a,n1,w8,z8,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z8,i,y1,g1,g9,w9]
+                      * model.p_parentz_provbetween_dams[k28,v1_prev,z8,g1,z9] * model.p_endstart_prov_qsz[q_prev,s8,z8]
+                         for z8 in model.s_season_types for s8 in model.s_sequence)
                    for t1 in model.s_sale_dams for k28 in model.s_k2_birth_dams for n1 in model.s_nut_dams
                    for w8 in model.s_lw_dams for g1 in model.s_groups_dams
                    if pe.value(model.p_numbers_req_dams[k28, k29, t1, v1, a, n1, w8, z9, i, y1, g1,g9, w9]) != 0
@@ -656,7 +666,7 @@ def f_con_prog2offsR(model, l_v3):
             return (sum(- model.v_prog[q,s,k3, k5, t2, w28, z, i, a, x, g3] * model.p_progprov_offs[k3, k5, t2, w28, z, i, a, x, y3, g3, w9] #use g3 (same as g2)
                         for w28 in model.s_lw_prog for t2 in model.s_sale_prog
                         if pe.value(model.p_progprov_offs[k3, k5, t2, w28, z, i, a, x, y3, g3, w9])!= 0)
-                       + sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w38, z, i,a,x,y3,g3]  * model.p_progreq_offs[k3, v3, w38, z, i, x, g3, w9]
+                       + sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w38, z, i,a,x,y3,g3] * model.p_progreq_offs[k3, v3, w38, z, i, x, g3, w9]
                         for t3 in model.s_sale_offs for n3 in model.s_nut_dams for w38 in model.s_lw_offs
                              if pe.value(model.p_progreq_offs[k3, v3, w38, z, i, x, g3, w9])!= 0))<=0
         else:
