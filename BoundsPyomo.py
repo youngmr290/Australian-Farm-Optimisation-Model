@@ -85,8 +85,12 @@ def f1_boundarypyomo_local(params, model):
             tup_rl = tuple(map(tuple, index_rl))
             rot_lobound = dict(zip(tup_rl, rot_lobound))
             ###constraint
+            l_m = list(model.s_phase_periods)
             def rot_lo_bound(model, q, s, m, r, l, z):
-                return model.v_phase_area[q, s, m, z, r, l] >= rot_lobound[r,l]
+                if m == l_m[-1]:
+                    return model.v_phase_area[q, s, m, z, r, l] >= rot_lobound[r,l]
+                else:
+                    pe.Constraint.Skip
             model.con_rotation_lobound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_phase_periods, model.s_phases, model.s_lmus, model.s_season_types, rule=rot_lo_bound,
                                                     doc='lo bound for the number of each phase')
 
@@ -357,21 +361,25 @@ def f1_boundarypyomo_local(params, model):
                 pasture_dse_carry[pasture] = pinp.sheep['i_sr_constraint_t'][t]
             ###param - propn of each fp used in the SR
             ###constraint
+            l_m = list(model.s_phase_periods)
             def SR_bound(model, q, s, m, z):
-                rhs_dse = sum(model.v_phase_area[q, s, m, z, r, l] * model.p_pasture_area[r, t] * pasture_dse_carry[t] for r in model.s_phases for l in model.s_lmus for t in model.s_pastures)
-                dse = sum((sum(model.v_sire[q,s, g0] * model.p_dse_sire[p6,z,g0] for g0 in model.s_groups_sire if pe.value(model.p_dse_sire[p6,z,g0])!=0)
-                         + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_dse_dams[k2,p6,t1,v1,a,n1,w1,z,i,y1,g1]
-                                   for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
-                                   for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
-                                   if pe.value(model.p_dse_dams[k2,p6,t1,v1,a,n1,w1,z,i,y1,g1])!=0)
-                              + sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_dse_offs[k3,k5,p6,t3,v3,n3,w3,z,i,a,x,y3,g3]
-                                    for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
-                                    for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
-                                    if pe.value(model.p_dse_offs[k3,k5,p6,t3,v3,n3,w3,z,i,a,x,y3,g3])!=0)
-                             for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol))
-                        * model.p_wg_propn_p6z[p6,z]
-                        for p6 in model.s_feed_periods)
-                return dse == rhs_dse
+                if m == l_m[-1]:
+                    rhs_dse = sum(model.v_phase_area[q, s, m, z, r, l] * model.p_pasture_area[r, t] * pasture_dse_carry[t] for r in model.s_phases for l in model.s_lmus for t in model.s_pastures)
+                    dse = sum((sum(model.v_sire[q,s,g0] * model.p_dse_sire[p6,g0] for g0 in model.s_groups_sire if pe.value(model.p_dse_sire[p6,g0])!=0)
+                             + sum(sum(model.v_dams[q,s,k2,t1,v1,a,n1,w1,z,i,y1,g1] * model.p_dse_dams[k2,p6,t1,v1,a,n1,w1,z,i,y1,g1]
+                                       for k2 in model.s_k2_birth_dams for t1 in model.s_sale_dams for v1 in model.s_dvp_dams for n1 in model.s_nut_dams
+                                       for w1 in model.s_lw_dams for y1 in model.s_gen_merit_dams for g1 in model.s_groups_dams
+                                       if pe.value(model.p_dse_dams[k2,p6,t1,v1,a,n1,w1,z,i,y1,g1])!=0)
+                                  + sum(model.v_offs[q,s,k3,k5,t3,v3,n3,w3,z,i,a,x,y3,g3]  * model.p_dse_offs[k3,k5,p6,t3,v3,n3,w3,z,i,a,x,y3,g3]
+                                        for k3 in model.s_k3_damage_offs for k5 in model.s_k5_birth_offs for t3 in model.s_sale_offs for v3 in model.s_dvp_offs
+                                        for n3 in model.s_nut_offs for w3 in model.s_lw_offs for x in model.s_gender for y3 in model.s_gen_merit_offs for g3 in model.s_groups_offs
+                                        if pe.value(model.p_dse_offs[k3,k5,p6,t3,v3,n3,w3,z,i,a,x,y3,g3])!=0)
+                                 for a in model.s_wean_times for z in model.s_season_types for i in model.s_tol))
+                            * model.p_wg_propn_p6z[p6,z]
+                            for p6 in model.s_feed_periods)
+                    return dse == rhs_dse
+                else:
+                    pe.Constraint.Skip
             model.con_SR_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_phase_periods, model.s_season_types, rule=SR_bound,
                                                 doc='stocking rate bound for each feed period')
 
@@ -386,10 +394,11 @@ def f1_boundarypyomo_local(params, model):
             ###dict
             landuse_area_bound = dict(landuse_bound_k)
             ###constraint
+            l_m = list(model.s_phase_periods)
             def k_bound(model, q, s, m, k, z):
-                if landuse_area_bound[k]!=0:  #bound will not be built if param == 0
+                if m == l_m[-1] and landuse_area_bound[k]!=0:  #bound will not be built if param == 0
                     return(
-                           sum(model.v_phase_area[q,s,m,z,r,l] * model.p_landuse_area[r, k] for r in model.s_phases for l in model.s_lmus for t in model.s_pastures)
+                           sum(model.v_phase_area[q,s,m,z,r,l] * model.p_landuse_area[r, k] for r in model.s_phases for l in model.s_lmus)
                            == landuse_area_bound[k])
                 else:
                     pe.Constraint.Skip
@@ -401,11 +410,14 @@ def f1_boundarypyomo_local(params, model):
             ###setbound
             total_pas_area = sen.sav['bnd_total_pas_area']
             ###constraint
+            l_m = list(model.s_phase_periods)
             def pas_bound(model, q, s, m, z):
-                return (
-                        sum(model.v_phase_area[q,s,m,z,r,l] * model.p_pasture_area[r,t] for r in model.s_phases for l in
-                            model.s_lmus for t in model.s_pastures)
-                        == total_pas_area)
+                if m == l_m[-1]:
+                    return (sum(model.v_phase_area[q,s,m,z,r,l] * model.p_pasture_area[r,t]
+                                for r in model.s_phases for l in model.s_lmus for t in model.s_pastures)
+                            == total_pas_area)
+                else:
+                    pe.Constraint.Skip
             model.con_pas_bound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_phase_periods, model.s_season_types, rule=pas_bound,doc='bound on total pasture area')
 
 
