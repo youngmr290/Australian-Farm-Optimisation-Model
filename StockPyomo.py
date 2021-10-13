@@ -48,7 +48,7 @@ def f1_stockpyomo_local(params, model):
     ##  setup variables # #variables that use dynamic sets must be defined each iteration of exp
     #####################
     ##animals
-    model.v_sire = pe.Var(model.s_sequence_year, model.s_sequence, model.s_groups_sire, bounds = (0,None) , doc='number of sire animals') #assumption is that no tactical management of numbers of dams mated and hence sires across seasons so no z axis.
+    model.v_sire = pe.Var(model.s_sequence_year, model.s_sequence, model.s_groups_sire, bounds = (0,None) , doc='number of sire animals') #assumption is that no tactical management of numbers of dams mated and hence sires across seasons so no z axis. Does need q & s axis though for multiperiod model.
     model.v_dams = pe.Var(model.s_sequence_year, model.s_sequence, model.s_k2_birth_dams, model.s_sale_dams, model.s_dvp_dams, model.s_wean_times, model.s_nut_dams, model.s_lw_dams,
                           model.s_season_types, model.s_tol, model.s_gen_merit_dams, model.s_groups_dams, bounds = (0,None) , doc='number of dam animals')
     model.v_offs = pe.Var(model.s_sequence_year, model.s_sequence, model.s_k3_damage_offs, model.s_k5_birth_offs, model.s_sale_offs, model.s_dvp_offs, model.s_nut_offs, model.s_lw_offs,
