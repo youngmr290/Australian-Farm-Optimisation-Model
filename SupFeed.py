@@ -122,7 +122,7 @@ def f_sup_cost(r_vals):
     silo_info.loc['asset'] = (silo_info.loc['price'] - silo_info.loc['salvage value'])/2 #calculate the average value of the asset - used in the asset ROE constraint
     ##using the capacity of each silo for each grain determine the costs per tonne foe each grain
     grain_info=uinp.supfeed['grain_density'].T.reset_index() #reindex so it can be combined with silo df
-    grain_info=grain_info.set_index(['index','silo type']).T
+    grain_info=grain_info.set_index(['index','silo type']).T.astype(float)
     grain_info.loc['capacity'] =  grain_info.loc['density'].mul(silo_info.loc['capacity'] , level=1)
     grain_info.loc['dep'] =  silo_info.loc['dep'].div(grain_info.loc['capacity'] , level=1)
     grain_info.loc['cost'] =  (silo_info.loc['insurance'] + silo_info.loc['other']).div(grain_info.loc['capacity'] , level=1) #variable cost = insurance + other (cleaning silo etc)

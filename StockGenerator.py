@@ -193,6 +193,8 @@ def generator(params,r_vals,nv,plots = False):
         len_z = 1
     else:
         len_z = np.count_nonzero(pinp.general['i_mask_z'])
+    len_q = pinp.general['i_len_q'] #length of season sequence
+    len_s = np.power(len_z,len_q - 1)
 
     ########################
     #dvp/fvp related inputs #
@@ -6652,15 +6654,17 @@ def generator(params,r_vals,nv,plots = False):
     keys_p6 = pinp.period['i_fp_idx']
     keys_p7 = per.f_season_periods(keys=True)
     keys_p8 = np.array(['g0p%s'%i for i in range(len_p8)])
+    keys_q = np.array(['q%s' % i for i in range(len_q)])
+    keys_s = np.array(['s%s' % i for i in range(len_s)])
     keys_t1 = np.array(['t%s'%i for i in range(len_t1)])
     keys_t2 = np.array(['t%s'%i for i in range(len_t2)])
     keys_t3 = np.array(['t%s'%i for i in range(len_t3)])
     keys_v1 = np.array(['dv%02d'%i for i in range(dvp_type_va1e1b1nwzida0e0b0xyg1.shape[0])])
     keys_v3 = np.array(['dv%02d'%i for i in range(dvp_start_va1e1b1nwzida0e0b0xyg3.shape[0])])
+    keys_x = pinp.sheep['i_x_idx'][mask_x]
     keys_y0 = uinp.parameters['i_y_idx_sire'][uinp.parameters['i_mask_y']]
     keys_y1 = uinp.parameters['i_y_idx_dams'][uinp.parameters['i_mask_y']]
     keys_y3 = uinp.parameters['i_y_idx_offs'][uinp.parameters['i_mask_y']]
-    keys_x = pinp.sheep['i_x_idx'][mask_x]
     keys_z = zfun.f_keys_z()
     ##save k2 set for pyomo - required because this can't easily be built without information in this module
     params['a_idx'] = keys_a
@@ -7479,11 +7483,7 @@ def generator(params,r_vals,nv,plots = False):
     r_vals['keys_y1'] = keys_y1
     r_vals['keys_y3'] = keys_y3
     r_vals['keys_x'] = keys_x
-    r_vals['keys_z'] = keys_z
     r_vals['keys_p6'] = keys_p6
-
-    ##season prob
-    r_vals['prob_z'] = i_season_propn_z
 
     ##key lists used to form table headers and indexs
     keys_e = ['e%s'%i for i in range(len_e1)]
@@ -7494,47 +7494,47 @@ def generator(params,r_vals,nv,plots = False):
     keys_p = np.array(['p%s'%i for i in range(len_p)])
     keys_p3 = keys_p[mask_p_offs_p]
 
-    r_vals['sire_keys_g0'] = [keys_g0]
-    r_vals['sire_keys_p6fg0'] = [keys_p6, keys_f, keys_g0]
-    r_vals['dams_keys_k2tvanwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
+    r_vals['sire_keys_qsg0'] = [keys_q, keys_s, keys_g0]
+    r_vals['sire_keys_qsp6fg0'] = [keys_q, keys_s, keys_p6, keys_f, keys_g0]
+    r_vals['dams_keys_qsk2tvanwziy1g1'] = [keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
                                              , keys_z, keys_i, keys_y1, keys_g1]
-    r_vals['dams_keys_k2c0p7tvanwziy1g1'] = [keys_k2, keys_c0, keys_p7, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
+    r_vals['dams_keys_qsk2c0p7tvanwziy1g1'] = [keys_q, keys_s, keys_k2, keys_c0, keys_p7, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
                                              , keys_z, keys_i, keys_y1, keys_g1]
-    r_vals['dams_keys_k2tvaeb9nwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_a, keys_e, keys_b9, keys_n1, keys_lw1
+    r_vals['dams_keys_qsk2tvaeb9nwziy1g1'] = [keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_a, keys_e, keys_b9, keys_n1, keys_lw1
                                              , keys_z, keys_i, keys_y1, keys_g1]
-    r_vals['dams_keys_k2tvaebnwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_a, keys_e, keys_b, keys_n1, keys_lw1
+    r_vals['dams_keys_qsk2tvaebnwziy1g1'] = [keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_a, keys_e, keys_b, keys_n1, keys_lw1
                                              , keys_z, keys_i, keys_y1, keys_g1]
     r_vals['dams_keys_tva1e1b1nwziyg1'] = [keys_t1, keys_v1, keys_a, keys_e, keys_b, keys_n1, keys_lw1
                                              , keys_z, keys_i, keys_y1, keys_g1]
-    r_vals['dams_keys_k2tvpanwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_n1, keys_lw1
+    r_vals['dams_keys_qsk2tvpanwziy1g1'] = [keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_n1, keys_lw1
                                             , keys_z, keys_i, keys_y1, keys_g1]
-    r_vals['dams_keys_k2tvpaebnwziy1g1'] = [keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1
+    r_vals['dams_keys_qsk2tvpaebnwziy1g1'] = [keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1
                                             , keys_z, keys_i, keys_y1, keys_g1]
-    r_vals['dams_keys_k2p6ftvanwziy1g1'] = [keys_k2, keys_p6, keys_f, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
+    r_vals['dams_keys_qsk2p6ftvanwziy1g1'] = [keys_q, keys_s, keys_k2, keys_p6, keys_f, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1
                                             , keys_z, keys_i, keys_y1, keys_g1]
     r_vals['dams_keys_paebnwziy1g1'] = [keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1
                                             , keys_z, keys_i, keys_y1, keys_g1]
-    r_vals['yatf_keys_k2tvpaebnwzixy1g1'] = [keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1
+    r_vals['yatf_keys_qsk2tvpaebnwzixy1g1'] = [keys_q, keys_s, keys_k2, keys_t1, keys_v1, keys_p, keys_a, keys_e, keys_b, keys_n1, keys_lw1
                                             , keys_z, keys_i, keys_x, keys_y1, keys_g2]
     r_vals['yatf_keys_vaebnwzixy1g2'] = [keys_v1, keys_a, keys_e, keys_b, keys_n1, keys_lw1
                                             , keys_z, keys_i, keys_x, keys_y1, keys_g2]
 
-    r_vals['prog_keys_k3k5twzia0xg2'] = [keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i
+    r_vals['prog_keys_qsk3k5twzia0xg2'] = [keys_q, keys_s, keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i
                                             , keys_a, keys_x, keys_g2]
-    r_vals['prog_keys_k3k5twzida0e0b0xyg2'] = [keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i, keys_d
+    r_vals['prog_keys_qsk3k5twzida0e0b0xyg2'] = [keys_q, keys_s, keys_k3, keys_k5, keys_t2, keys_lw_prog, keys_z, keys_i, keys_d
                                             , keys_a, keys_e0, keys_b0, keys_x, keys_y3, keys_g2]
 
-    r_vals['offs_keys_k3k5tvnwziaxyg3'] = [keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i
+    r_vals['offs_keys_qsk3k5tvnwziaxyg3'] = [keys_q, keys_s, keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i
                                             , keys_a, keys_x, keys_y3, keys_g3]
-    r_vals['offs_keys_k3k5c0p7tvnwziaxyg3'] = [keys_k3, keys_k5, keys_c0, keys_p7, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i
+    r_vals['offs_keys_qsk3k5c0p7tvnwziaxyg3'] = [keys_q, keys_s, keys_k3, keys_k5, keys_c0, keys_p7, keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i
                                             , keys_a, keys_x, keys_y3, keys_g3]
-    r_vals['offs_keys_k3k5tvpnwziaxyg3'] = [keys_k3, keys_k5, keys_t3, keys_v3, keys_p3, keys_n3, keys_lw3, keys_z
+    r_vals['offs_keys_qsk3k5tvpnwziaxyg3'] = [keys_q, keys_s, keys_k3, keys_k5, keys_t3, keys_v3, keys_p3, keys_n3, keys_lw3, keys_z
                                             , keys_i, keys_a, keys_x, keys_y3, keys_g3]
     r_vals['offs_keys_tvnwzida0e0b0xyg3'] = [keys_t3, keys_v3, keys_n3, keys_lw3, keys_z, keys_i, keys_d, keys_a, keys_e0
                                             , keys_b0, keys_x, keys_y3, keys_g3]
-    r_vals['offs_keys_k3k5tvpnwzidaebxyg3'] = [keys_k3, keys_k5, keys_t3, keys_v3, keys_p3, keys_n3, keys_lw3, keys_z
+    r_vals['offs_keys_qsk3k5tvpnwzidaebxyg3'] = [keys_q, keys_s, keys_k3, keys_k5, keys_t3, keys_v3, keys_p3, keys_n3, keys_lw3, keys_z
                                             , keys_i, keys_d, keys_a, keys_e0, keys_b0, keys_x, keys_y3, keys_g3]
-    r_vals['offs_keys_k3k5p6ftvnwziaxyg3'] = [keys_k3, keys_k5, keys_p6, keys_f, keys_t3, keys_v3, keys_n3
+    r_vals['offs_keys_qsk3k5p6ftvnwziaxyg3'] = [keys_q, keys_s, keys_k3, keys_k5, keys_p6, keys_f, keys_t3, keys_v3, keys_n3
                                             , keys_lw3, keys_z, keys_i, keys_a, keys_x, keys_y3, keys_g3]
 
     r_vals['offs_keys_pnwzidaebxyg3'] = [keys_p3, keys_n3, keys_lw3, keys_z, keys_i, keys_d, keys_a, keys_e0, keys_b0
@@ -7630,7 +7630,7 @@ def generator(params,r_vals,nv,plots = False):
     r_vals['rm_stockinfra_fix_h1c0p7z'] = rm_stockinfra_fix_h1c0p7z
 
     ###purchase costs
-    r_vals['purchcost_sire_c0p7zg0'] = purchcost_c0p7va1e1b1nwzida0e0b0xyg0.reshape(c0p7g0_shape)
+    r_vals['purchcost_sire_c0p7g0'] = purchcost_c0p7va1e1b1nwzida0e0b0xyg0.reshape(c0p7g0_shape)
 
     ###sale date
     r_vals['saledate_k3k5tvnwziaxyg3'] = r_saledate_k3k5tva1e1b1nwzida0e0b0xyg3.reshape(k3k5tvnwziaxyg3_shape)
@@ -7753,52 +7753,52 @@ def generator(params,r_vals,nv,plots = False):
 
 
 
-    ###############
-    # season      # todo this can be removed with the new season structure
-    ###############
-    '''
-    stuff needed to allocate variable to stages for dsp
-    stored in params to be accessed in corepyomo when allocating variables to stages
-    '''
-    k2tva1nwiyg1_shape = len_k2, len_t1, len_v1, len_a1, len_n1, len_w1, len_i, len_y1, len_g1
-    k5twidaxg2_shape = len_k5, len_t2, len_w_prog, len_i, len_d, len_a1, len_x, len_g2
-    k3k5tvnwiaxyg3_shape = len_k3, len_k5, len_t3, len_v3, len_n3, len_w3, len_i, len_a0, len_x, len_y3, len_g3
-
-    ##k2tvanwiyg1 - v_dams
-    arrays = [keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_i, keys_y1, keys_g1]
-    index_k2tvanwiyg1 = fun.cartesian_product_simple_transpose(arrays)
-    tup_k2tvanwiyg1 = list(map(tuple,index_k2tvanwiyg1))
-    array_k2tvanwiyg1 = np.zeros(len(tup_k2tvanwiyg1),dtype=object)
-    array_k2tvanwiyg1[...] = tup_k2tvanwiyg1
-    array_k2tvanwiyg1 = array_k2tvanwiyg1.reshape(k2tva1nwiyg1_shape)
-    params['keys_v_dams'] = array_k2tvanwiyg1
-
-    ##k2tvanwiyg1 - v_prog
-    arrays = [keys_k5, keys_t2, keys_lw_prog, keys_i, keys_d, keys_a, keys_x, keys_g2]
-    index_k5twidaxg2 = fun.cartesian_product_simple_transpose(arrays)
-    tup_k5twidaxg2 = list(map(tuple,index_k5twidaxg2))
-    array_k5twidaxg2 = np.zeros(len(tup_k5twidaxg2),dtype=object)
-    array_k5twidaxg2[...] = tup_k5twidaxg2
-    array_k5twidaxg2 = array_k5twidaxg2.reshape(k5twidaxg2_shape)
-    params['keys_v_prog'] = array_k5twidaxg2
-
-    ##k3k5tvnwiaxyg3 - v_offs
-    arrays = [keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_i, keys_a, keys_x, keys_y3, keys_g3]
-    index_k3k5tvnwiaxyg3 = fun.cartesian_product_simple_transpose(arrays)
-    tup_k3k5tvnwiaxyg3 = list(map(tuple,index_k3k5tvnwiaxyg3))
-    array_k3k5tvnwiaxyg3 = np.zeros(len(tup_k3k5tvnwiaxyg3),dtype=object)
-    array_k3k5tvnwiaxyg3[...] = tup_k3k5tvnwiaxyg3
-    array_k3k5tvnwiaxyg3 = array_k3k5tvnwiaxyg3.reshape(k3k5tvnwiaxyg3_shape)
-    params['keys_v_offs'] = array_k3k5tvnwiaxyg3
-
-    ##convert date array into the shape of stock variable.
-    dvp_date_k2tva1nwiyg1 = dvp_start_va1e1b1nwzida0e0b0xyg1[na,na,:,:,0,0,:,:,0,:,0,0,0,0,0,:,:]
-    params['dvp1'] = np.broadcast_to(dvp_date_k2tva1nwiyg1, k2tva1nwiyg1_shape)
-    date_born_k5twidaxg2 = date_born_ida0e0b0xyg3[na,na,na,:,:,:,0,0,:,0,:] #average lamb along e slice
-    params['date_born_prog'] = np.broadcast_to(date_born_k5twidaxg2, k5twidaxg2_shape)
-    dvp_date_k3k5tvnwiaxyg3 = dvp_start_va1e1b1nwzida0e0b0xyg3[na,na,na,:,0,0,0,:,:,0,:,0,:,0,0,:,:,:]
-    params['dvp3'] = np.broadcast_to(dvp_date_k3k5tvnwiaxyg3, k3k5tvnwiaxyg3_shape)
-
+    # ###############
+    # # season      # todo this can be removed with the new season structure
+    # ###############
+    # '''
+    # stuff needed to allocate variable to stages for dsp
+    # stored in params to be accessed in corepyomo when allocating variables to stages
+    # '''
+    # k2tva1nwiyg1_shape = len_k2, len_t1, len_v1, len_a1, len_n1, len_w1, len_i, len_y1, len_g1
+    # k5twidaxg2_shape = len_k5, len_t2, len_w_prog, len_i, len_d, len_a1, len_x, len_g2
+    # k3k5tvnwiaxyg3_shape = len_k3, len_k5, len_t3, len_v3, len_n3, len_w3, len_i, len_a0, len_x, len_y3, len_g3
+    #
+    # ##k2tvanwiyg1 - v_dams
+    # arrays = [keys_k2, keys_t1, keys_v1, keys_a, keys_n1, keys_lw1, keys_i, keys_y1, keys_g1]
+    # index_k2tvanwiyg1 = fun.cartesian_product_simple_transpose(arrays)
+    # tup_k2tvanwiyg1 = list(map(tuple,index_k2tvanwiyg1))
+    # array_k2tvanwiyg1 = np.zeros(len(tup_k2tvanwiyg1),dtype=object)
+    # array_k2tvanwiyg1[...] = tup_k2tvanwiyg1
+    # array_k2tvanwiyg1 = array_k2tvanwiyg1.reshape(k2tva1nwiyg1_shape)
+    # params['keys_v_dams'] = array_k2tvanwiyg1
+    #
+    # ##k2tvanwiyg1 - v_prog
+    # arrays = [keys_k5, keys_t2, keys_lw_prog, keys_i, keys_d, keys_a, keys_x, keys_g2]
+    # index_k5twidaxg2 = fun.cartesian_product_simple_transpose(arrays)
+    # tup_k5twidaxg2 = list(map(tuple,index_k5twidaxg2))
+    # array_k5twidaxg2 = np.zeros(len(tup_k5twidaxg2),dtype=object)
+    # array_k5twidaxg2[...] = tup_k5twidaxg2
+    # array_k5twidaxg2 = array_k5twidaxg2.reshape(k5twidaxg2_shape)
+    # params['keys_v_prog'] = array_k5twidaxg2
+    #
+    # ##k3k5tvnwiaxyg3 - v_offs
+    # arrays = [keys_k3, keys_k5, keys_t3, keys_v3, keys_n3, keys_lw3, keys_i, keys_a, keys_x, keys_y3, keys_g3]
+    # index_k3k5tvnwiaxyg3 = fun.cartesian_product_simple_transpose(arrays)
+    # tup_k3k5tvnwiaxyg3 = list(map(tuple,index_k3k5tvnwiaxyg3))
+    # array_k3k5tvnwiaxyg3 = np.zeros(len(tup_k3k5tvnwiaxyg3),dtype=object)
+    # array_k3k5tvnwiaxyg3[...] = tup_k3k5tvnwiaxyg3
+    # array_k3k5tvnwiaxyg3 = array_k3k5tvnwiaxyg3.reshape(k3k5tvnwiaxyg3_shape)
+    # params['keys_v_offs'] = array_k3k5tvnwiaxyg3
+    #
+    # ##convert date array into the shape of stock variable.
+    # dvp_date_k2tva1nwiyg1 = dvp_start_va1e1b1nwzida0e0b0xyg1[na,na,:,:,0,0,:,:,0,:,0,0,0,0,0,:,:]
+    # params['dvp1'] = np.broadcast_to(dvp_date_k2tva1nwiyg1, k2tva1nwiyg1_shape)
+    # date_born_k5twidaxg2 = date_born_ida0e0b0xyg3[na,na,na,:,:,:,0,0,:,0,:] #average lamb along e slice
+    # params['date_born_prog'] = np.broadcast_to(date_born_k5twidaxg2, k5twidaxg2_shape)
+    # dvp_date_k3k5tvnwiaxyg3 = dvp_start_va1e1b1nwzida0e0b0xyg3[na,na,na,:,0,0,0,:,:,0,:,0,:,0,0,:,:,:]
+    # params['dvp3'] = np.broadcast_to(dvp_date_k3k5tvnwiaxyg3, k3k5tvnwiaxyg3_shape)
+    #
 
 
 

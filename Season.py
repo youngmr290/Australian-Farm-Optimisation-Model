@@ -8,7 +8,7 @@ import SeasonalFunctions as zfun
 
 na = np.newaxis
 
-def f_season_precalcs(params):
+def f_season_precalcs(params, r_vals):
     ##lengths
     bool_steady_state = pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1
     if bool_steady_state:
@@ -82,3 +82,10 @@ def f_season_precalcs(params):
     params['p_endstart_prov_qsz'] = dict(zip(tup_qsz,p_endstart_prov_qsz.ravel()))
     tup_qs8zs9 = tuple(map(tuple,index_qs8zs9))
     params['p_sequence_prov_qs8zs9'] = dict(zip(tup_qs8zs9,p_sequence_prov_qs8zs9.ravel()*1))
+
+
+    ##report
+    r_vals['keys_q'] = keys_q
+    r_vals['keys_s'] = keys_s
+    r_vals['keys_z'] = keys_z
+    r_vals['z_prob_qsz'] = p_season_prob_qsz

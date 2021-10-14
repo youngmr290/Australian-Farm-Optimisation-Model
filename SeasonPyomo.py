@@ -6,7 +6,7 @@ import Season as zgen
 
 
 def season_precalcs(params, r_vals):
-    zgen.f_season_precalcs(params)
+    zgen.f_season_precalcs(params, r_vals)
 
 
 
