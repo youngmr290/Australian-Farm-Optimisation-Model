@@ -205,20 +205,23 @@ def f_season_transfer_mask(period_dates_pz, z_pos, period_axis_pos=0, mask=False
     mask_childz_req_pz = mask_z8var_pz
 
     ##prov mask. Parent seasons provide to child season until the child season is identified.
+    ### set up some general masks that are required to create the prov mask
     rolled_mask_z8var_pz = np.roll(mask_z8var_pz,shift=-1,axis=period_axis_pos)
-    prov_self_pz8z9 = mask_z8var_pz[...,na] * identity_z8z9
-    # prov_self_z8z9 = mask_z8var_z[...,na] * identity_z8z9
-    prov_child_pz8z9 = mask_z8var_pz[...,na] * (index_z[...,na] == parent_z9)
     rolled_mask_z9var_pz9 = np.swapaxes(rolled_mask_z8var_pz[...,na], z_pos-1, -1)
     mask_z9var_pz9 = np.swapaxes(mask_z8var_pz[...,na], z_pos-1, -1)
+
+    ###provides to itself (the identity array) if the weather-year exist during the period
+    prov_self_pz8z9 = mask_z8var_pz[...,na] * identity_z8z9
+    # prov_self_pz8z9 = np.logical_and(prov_self_pz8z9, rolled_mask_z8var_pz[...,na])
     ###parent seasons only provide to child in the period prior to the child being identified
+    prov_child_pz8z9 = mask_z8var_pz[...,na] * (index_z[...,na] == parent_z9)
     prov_child_pz8z9 = prov_child_pz8z9 * np.logical_and(np.logical_not(mask_z9var_pz9), rolled_mask_z9var_pz9)
-    prov_self_pz8z9 = np.logical_and(prov_self_pz8z9, rolled_mask_z8var_pz[...,na])
     ###combine self and child prov
     mask_param_provz8z9_pz8z9 = np.logical_or(prov_self_pz8z9, prov_child_pz8z9)
-    ###all weather years in the final period of the year (p[-1]) can provide to the start of the following year
-    ####the following year can be the next weather-year in the sequence or the next weather-year in the stock generator
-    mask_param_provz8z9_pz8z9[-1, ...] = True
+    ###all weather years in the final period of the year (p[-1]) can provide to the initiating weather-years of the following year
+    ####The following year is the next weather-year in the sequence or the start year for static equilibrium and single year DSP
+    ####The initiating weather-years are those that exist is p[0]
+    mask_param_provz8z9_pz8z9[-1, ...] = mask_z9var_pz9[0, ...]
 
     return mask_param_provz8z9_pz8z9, mask_childz_req_pz
 
