@@ -152,15 +152,15 @@ def f_parent_z(season_start_z8, date_initiate_z8, index_z8):
     return parent_z
 
 
-def f_season_transfer_mask(period_dates, z_pos, period_axis_pos=0, mask=False):
+def f_season_transfer_mask(period_dates_pz, z_pos, period_axis_pos=0, mask=False):
     '''
     Seasons are masked out until the point in the year when they are identified. At the point of identification
-    the parent season provides the transfer parameters to the child season. This transfering method ensures the
+    the parent season provides the transfer parameters to the child season. This transferring method ensures the
     model has the same management across seasons until they are identified. For example, if there are two seasons, a
     good and a bad, that are identified in spring. Both seasons must have the same management through the beginning of
     the year until spring (because the farmer doesnt know if they are having the good or bad year until spring).
 
-    :param period_dates: period dates (eg dvp or cashflow) without end date of last period
+    :param period_dates_pz: period dates (eg dvp or cashflow) without end date of last period
     :param z_pos: z axis position
     :param period_axis_pos: axis position of the period in the period date array. (argument not required when generating mask)
     :param mask: Boolean if True the function simply returns the z8var mask.
@@ -192,32 +192,35 @@ def f_season_transfer_mask(period_dates, z_pos, period_axis_pos=0, mask=False):
 
     ##adjust period start dates to the base yr (dates must be between break of current season and break of next season)
     end_of_season_z = start_of_season_z + np.timedelta64(364,'D') #use 364 because end date is the day before brk.
-    add_yrs = np.ceil(np.maximum(0,(start_of_season_z - period_dates).astype('timedelta64[D]').astype(int) / 365))
-    sub_yrs = np.ceil(np.maximum(0,(period_dates - end_of_season_z).astype('timedelta64[D]').astype(int) / 365))
-    adj_period_dates = period_dates + add_yrs * np.timedelta64(365, 'D') - sub_yrs * np.timedelta64(365, 'D')
+    add_yrs = np.ceil(np.maximum(0,(start_of_season_z - period_dates_pz).astype('timedelta64[D]').astype(int) / 365))
+    sub_yrs = np.ceil(np.maximum(0,(period_dates_pz - end_of_season_z).astype('timedelta64[D]').astype(int) / 365))
+    adj_period_dates_pz = period_dates_pz + add_yrs * np.timedelta64(365, 'D') - sub_yrs * np.timedelta64(365, 'D')
 
     ##z8 mask when season is identified
-    mask_z8var_z = np.logical_or(date_initiate_z <= adj_period_dates, bool_steady_state) #if it is steadystate then the z8 mask is just true.
+    mask_z8var_pz = np.logical_or(date_initiate_z <= adj_period_dates_pz, bool_steady_state) #if it is steadystate then the z8 mask is just true.
     if mask:
-        return mask_z8var_z
+        return mask_z8var_pz
 
     ##req mask
-    mask_childz_req = mask_z8var_z
+    mask_childz_req_pz = mask_z8var_pz
 
     ##prov mask. Parent seasons provide to child season until the child season is identified.
-    rolled_mask_z8var_z = np.roll(mask_z8var_z,shift=-1,axis=period_axis_pos)
-    prov_self_z8z9 = mask_z8var_z[...,na] * identity_z8z9
+    rolled_mask_z8var_pz = np.roll(mask_z8var_pz,shift=-1,axis=period_axis_pos)
+    prov_self_pz8z9 = mask_z8var_pz[...,na] * identity_z8z9
     # prov_self_z8z9 = mask_z8var_z[...,na] * identity_z8z9
-    prov_child_z8z9 = mask_z8var_z[...,na] * (index_z[...,na] == parent_z9)
-    rolled_mask_z9var_z9 = np.swapaxes(rolled_mask_z8var_z[...,na], z_pos-1, -1)
-    mask_z9var_z9 = np.swapaxes(mask_z8var_z[...,na], z_pos-1, -1)
+    prov_child_pz8z9 = mask_z8var_pz[...,na] * (index_z[...,na] == parent_z9)
+    rolled_mask_z9var_pz9 = np.swapaxes(rolled_mask_z8var_pz[...,na], z_pos-1, -1)
+    mask_z9var_pz9 = np.swapaxes(mask_z8var_pz[...,na], z_pos-1, -1)
     ###parent seasons only provide to child in the period prior to the child being identified
-    prov_child_z8z9 = prov_child_z8z9 * np.logical_and(np.logical_not(mask_z9var_z9), rolled_mask_z9var_z9)
-    prov_self_z8z9 = np.logical_and(prov_self_z8z9, rolled_mask_z8var_z[...,na])
+    prov_child_pz8z9 = prov_child_pz8z9 * np.logical_and(np.logical_not(mask_z9var_pz9), rolled_mask_z9var_pz9)
+    prov_self_pz8z9 = np.logical_and(prov_self_pz8z9, rolled_mask_z8var_pz[...,na])
     ###combine self and child prov
-    mask_param_provz8z9_z8z9 = np.logical_or(prov_self_z8z9, prov_child_z8z9)
+    mask_param_provz8z9_pz8z9 = np.logical_or(prov_self_pz8z9, prov_child_pz8z9)
+    ###all weather years in the final period of the year (p[-1]) can provide to the start of the following year
+    ####the following year can be the next weather-year in the sequence or the next weather-year in the stock generator
+    mask_param_provz8z9_pz8z9[-1, ...] = True
 
-    return mask_param_provz8z9_z8z9, mask_childz_req
+    return mask_param_provz8z9_pz8z9, mask_childz_req_pz
 
 
 

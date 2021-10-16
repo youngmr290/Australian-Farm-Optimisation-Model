@@ -39,7 +39,7 @@ def f_season_precalcs(params, r_vals):
     ### 1. the sequences s8 and s9 exist
     ### 2. The sequences s8 & s9 are both in the same 's' step (as determined by trunc() of the step)
     ### 3. The season type within s8 aligns with the position of s9 in the sequence step
-    ### 4. All sequences in q[-1] pass to q[0]
+    ### 4. All seasons in the sequences in q[-1] pass to q[0]
     mask_provqs8z8s9_qs8z8s9 = (mask_s8vars_qs8[:,:,na,na] * mask_s9vars_qs9[:,na,na,:]
                                 * (np.trunc(index_s[:,na,na] / step_sparam_q)
                                    == np.trunc(index_s / step_sparam_q))
