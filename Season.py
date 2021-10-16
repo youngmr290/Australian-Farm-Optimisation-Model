@@ -35,10 +35,16 @@ def f_season_precalcs(params, r_vals):
     mask_s8vars_qs8 = (index_s % step_sparam_q[:,na] == 0)
 
     mask_s9vars_qs9 = (index_s % np.roll(step_sparam_q[:,na],-1,axis=0) == 0)
+    ## mask prov has 4 parts
+    ### 1. the sequences s8 and s9 exist
+    ### 2. The sequences s8 & s9 are both in the same 's' step (as determined by trunc() of the step)
+    ### 3. The season type within s8 aligns with the position of s9 in the sequence step
+    ### 4. All seasons in the sequences in q[-1] pass to q[0]
     mask_provqs8z8s9_qs8z8s9 = (mask_s8vars_qs8[:,:,na,na] * mask_s9vars_qs9[:,na,na,:]
                                 * (np.trunc(index_s[:,na,na] / step_sparam_q)
-                                   == np.trunc(index_s / np.roll(step_sparam_q,-1,axis=0)))
+                                   == np.trunc(index_s / step_sparam_q))
                                 * (index_z[:,na] == np.trunc(index_s / step_zparam_q) % len_z))
+    mask_provqs8z8s9_qs8z8s9[-1, ...] = True
 
     # mask_provqs8z8s9_qs8z8s9 = (mask_s8vars_qs8[:,:,na,na]
     #                             *(np.trunc(index_s[:,na,na] / step_sparam_q[:,na,na,na]) == np.trunc(index_s / step_sparam_q[:,na,na,na]))
@@ -48,7 +54,7 @@ def f_season_precalcs(params, r_vals):
     season_seq_prob_qsz = np.moveaxis(season_seq_prob_qzs9,source=-1,destination=1)  # s9 to s8 so that s9 no longer exists
     # season_seq_prob_qsz = np.cumprod(np.sum(i_season_propn_z * mask_s8vars_qs8[:,:,na],axis=-1, keepdims=True),
     #                                  axis=0)  # todo as above, work needed to represent sequence of interest. Currently z axis is not active.
-    p_wyear_inc_qs = mask_s8vars_qs8  # todo work needed to allow masking ‘sequence of interest’ (with a z8 axis).
+    p_wyear_inc_qs = mask_s8vars_qs8  # todo work needed to allow masking ‘sequence of interest’ (which requires a z8 axis).
     p_season_prob_qsz = season_seq_prob_qsz
 
     p_between_req_qs = mask_s8vars_qs8  # todo work needed to represent the multi-period which requires the final year to be the equilibrium year

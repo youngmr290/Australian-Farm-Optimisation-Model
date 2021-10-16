@@ -228,7 +228,7 @@ def f_feed_periods(option=0):
 
     ###add node dates as feed periods if dsp
     if pinp.general['i_inc_node_periods'] or np.logical_not(pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1):
-        date_node_mz = pinp.general['i_date_node_zm'].astype('datetime64').T
+        date_node_mz = pinp.general['i_date_node_zm'].astype('datetime64').T  #todo Is this correct, the other calculations include f_seasonal_inp()?
         date_node_mz = date_node_mz + (np.timedelta64(365, 'D') * (date_node_mz < fp_std_p6z[0,:]))
         fp_p6z = np.concatenate([fp_std_p6z, date_node_mz[1:]]) #[1:] because first node is break of season which already exists in fp array.
         fp_p6z = np.sort(fp_p6z, axis=0)

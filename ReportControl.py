@@ -1163,6 +1163,10 @@ def f_report(processor, trials, non_exist_trials):
         df_settings = rep.f_df2xl(writer, stacked_daily_mei_dams, 'daily_mei_dams', df_settings, option=1)
     if report_run.loc['run_daily_pi_dams', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_daily_pi_dams, 'daily_pi_dams', df_settings, option=1)
+    if report_run.loc['run_daily_mei_offs', 'Run']:
+        df_settings = rep.f_df2xl(writer, stacked_daily_mei_offs, 'daily_mei_offs', df_settings, option=1)
+    if report_run.loc['run_daily_pi_offs', 'Run']:
+        df_settings = rep.f_df2xl(writer, stacked_daily_pi_offs, 'daily_pi_offs', df_settings, option=1)
     if report_run.loc['run_numbers_dams', 'Run']:
         df_settings = rep.f_df2xl(writer, stacked_numbers_dams, 'numbers_dams', df_settings, option=1)
     if report_run.loc['run_numbers_dams_p', 'Run']:
