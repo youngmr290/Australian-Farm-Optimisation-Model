@@ -9,7 +9,7 @@ and ensures that the maximum overdraw is below a user specified limit. This ensu
 level of capital from the bank.
 
 The interest cost of working capital is calculated from when the expense is incurred through to when the income associated
-with that cost is received. This has an impact on total objective function value but also ensures that
+with that cost is received (cashflow date). This has an impact on total objective function value but also ensures that
 expenditure is only incurred if the return exceeds the cost of interest.
 
 There is no representation of a starting cash balance. If it is included the model just selects the
@@ -29,7 +29,7 @@ Tax is also not represented for several reasons:
 #. AFO is a bioeconomic model with the aim of optimising farm management. It is not a finance model.
 
 Asset value
-    Asset value is the value of all assets on the first day of the cashflow year. It captures the opportunity
+    Asset value is the value of all assets on the cashflow date. It captures the opportunity
     cost of investing in farm assets including livestock, machinery and infrastructure (sheds, yards etc).
     The role of the asset value is to ensure that all assets that are selected have a return more than the
     interest cost, this ensures the optimal solution does not include assets that returns
@@ -39,7 +39,7 @@ Asset value
     For livestock this ensures that the flock structure optimisation accounts for the opportunity cost
     of interest foregone from holding an animal for an extra year.
 
-The cashflow operates in conjunction with the asset value in representing the opportunity cost of holding assets.
+Interest operates in conjunction with the asset value in representing the opportunity cost of holding assets.
 Livestock flock structure is the main 'decision' that is altered by the inclusion of an asset value. Without
 interest if animals are sold early in the year there would not be an offsetting value that would
 make early sale a ‘reasonable’ option. For example, selling the day after the asset is valued for the price
