@@ -1,5 +1,5 @@
 """
-Functions used across the model (multi module functions). These functions dont import other AFO modules
+Functions used across the model (multi module functions). These functions don't import other AFO modules
 (hence don't initialise inputs inside the function). All function parameters are passed in when calling the function.
 
 @author: young

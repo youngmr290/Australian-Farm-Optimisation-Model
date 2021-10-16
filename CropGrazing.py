@@ -274,13 +274,13 @@ def f_cropgraze_yield_penalty():
     stub_idx_bool_k3k = stubble_per_grain_k3.index.values[:,na]==cropgraze_landuse_idx_k
     stubble_per_grain_k = np.sum(stubble_per_grain_k3.values[:,na] * stub_idx_bool_k3k, axis=0)
 
-    ##adjust seeding penalty - crops that are not harvested eg fodder dont have yield penalty. But do have a stubble penalty
+    ##adjust seeding penalty - crops that are not harvested eg fodder don't have yield penalty. But do have a stubble penalty
     ###correct stubble k axis (k axis needs to be in the correct order and contain all crops so that numpy arrays align).
     stub_idx_bool_k3k = proportion_grain_harv_k.index.values[:,na]==cropgraze_landuse_idx_k
     proportion_grain_harv_k = np.sum(proportion_grain_harv_k.values[:,na] * stub_idx_bool_k3k, axis=0)
     ###if calculating yield penalty for stubble then include all crop (eg include fodders)
     stub_yield_reduction_propn_kp6z = yield_reduction_propn_kp6z
-    ###if calculating yield penalty for grain transfer then only include harvested crops (eg dont include fodders)
+    ###if calculating yield penalty for grain transfer then only include harvested crops (eg don't include fodders)
     yield_reduction_propn_kp6z = yield_reduction_propn_kp6z * (proportion_grain_harv_k>0)[:,na,na]
 
     ##calc stubble reduction (kg of stubble per kg of crop DM consumed)

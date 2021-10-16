@@ -442,12 +442,12 @@ def f_sowing_timeliness_penalty(stub=False):
     seed_period_lengths_pz = zfun.f_seasonal_inp(pinp.period['seed_period_lengths'], numpy=True, axis=1)
     wet_seeding_penalty_k_z = zfun.f_seasonal_inp(pinp.crop['yield_penalty_wet'], axis=1)
 
-    ##adjust seeding penalty - crops that are not harvested eg fodder dont have yield penalty. But do have a stubble penalty
+    ##adjust seeding penalty - crops that are not harvested eg fodder don't have yield penalty. But do have a stubble penalty
     if stub:
         ###if calculating yield penalty for stubble then include all crop (eg include fodders)
         pass
     else:
-        ###if calculating yield penalty for grain transfer then only include harvested crops (eg dont include fodders)
+        ###if calculating yield penalty for grain transfer then only include harvested crops (eg don't include fodders)
         proportion_grain_harv_k = pd.Series(pinp.stubble['proportion_grain_harv'], index=pinp.stubble['i_stub_landuse_idx'])
         wet_seeding_penalty_k_z = wet_seeding_penalty_k_z.mul(proportion_grain_harv_k>0, axis=0)
 

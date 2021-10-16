@@ -98,7 +98,7 @@ def crop_residue_all(params, r_vals, nv):
     #############################
     # Total stubble production  #
     #############################
-    ##calc yield - frost and seeding rate not accounted for because they dont effect stubble.
+    ##calc yield - frost and seeding rate not accounted for because they don't effect stubble.
     rot_yields_rkl_mz = phs.f_rot_yield(for_stub=True)
     ##calc stubble
     residue_per_grain_k = f_cropresidue_production()
@@ -276,7 +276,7 @@ def crop_residue_all(params, r_vals, nv):
     ##pyomo params #
     ################
 
-    ##stubble produced per tonne of grain yield - this is df so dont need to build index.
+    ##stubble produced per tonne of grain yield - this is df so don't need to build index.
     params['rot_stubble'] = rot_stubble_rkl_mz.stack([0,1]).to_dict()
 
     ##'require' params ie consuming 1t of stubble B requires 1.002t from the constraint (0.002 accounts for trampling)

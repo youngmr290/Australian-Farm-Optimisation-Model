@@ -283,7 +283,7 @@ def f_rot_yield(for_stub=False, for_insurance=False):
     seeding_rate_rkl = seeding_rate_k_l.reindex(yields_rk_mzl.index, axis=0, level=1).stack()
     yields_rkl_mz = yields_rk_mzl.stack(2).mul(frost_harv_factor_rkl, axis=0)
     yields_rkl_mz = yields_rkl_mz.sub(seeding_rate_rkl,axis=0) #minus seeding rate
-    yields_rkl_mz = yields_rkl_mz.clip(lower=0) #we don't want negative yields so clip at 0 (if any values are neg they become 0). Note crops that dont produce harvest yield require seed as an input.
+    yields_rkl_mz = yields_rkl_mz.clip(lower=0) #we don't want negative yields so clip at 0 (if any values are neg they become 0). Note crops that don't produce harvest yield require seed as an input.
     if for_insurance:
         return yields_rkl_mz.sum(axis=1, level=1).stack() #sum the m axis. Just want the total yield. M axis is added later for costs.
     else:
