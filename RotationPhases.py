@@ -112,7 +112,11 @@ def f_season_params(params):
     season_start_z = per.f_season_periods()[0,:] #slice season node to get season start
     period_is_seasonstart_mz = start_phase_periods_mz==season_start_z
     mask_provwithinz8z9_mz8z9, mask_provbetweenz8z9_mz8z9, mask_reqwithinz8_mz8, mask_reqbetweenz8_mz8 = zfun.f_season_transfer_mask(
-        start_phase_periods_mz, period_is_seasonstart_pz=period_is_seasonstart_mz, z_pos=-1)
+        start_phase_periods_mz, period_is_seasonstart_pz=period_is_seasonstart_mz, z_pos=-1) #the req masks dont do the correct job for rotation and hence are not used.
+    ###for rotation the between and within constraints are acting on different things (history vs the acutal phase) therefore
+    ### the req params above dont work because they have been adjusted for season start. so in the following line i make a
+    ### new req param which doesnt acount for within or between
+    mask_childz8_mz8 = zfun.f_season_transfer_mask(start_phase_periods_mz,z_pos=-1,mask=True)
 
     ##mask phases which transfer in each m
     if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1:
@@ -152,8 +156,7 @@ def f_season_params(params):
     index_rz8z9 = fun.cartesian_product_simple_transpose(arrays)
     tup_rz8z9 = tuple(map(tuple,index_rz8z9))
 
-    params['p_childz_reqwithin_phase'] =dict(zip(tup_mz, mask_reqwithinz8_mz8.ravel()*1))
-    params['p_childz_reqbetween_phase'] =dict(zip(tup_mz, mask_reqbetweenz8_mz8.ravel()*1))
+    params['p_mask_childz_phase'] =dict(zip(tup_mz, mask_childz8_mz8.ravel()*1))
     params['p_parentz_provwithin_phase'] =dict(zip(tup_mz8z9, mask_provwithinz8z9_mz8z9.ravel()*1))
     params['p_parentz_provbetween_phase'] =dict(zip(tup_mz8z9, mask_provbetweenz8z9_mz8z9.ravel()*1))
     params['p_mask_phases'] =dict(zip(tup_rm, mask_phases_rm.ravel()*1))
