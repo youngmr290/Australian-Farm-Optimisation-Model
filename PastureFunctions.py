@@ -549,7 +549,8 @@ def f_dry_pasture(cu3, cu4, i_dry_dmd_ave_p6zt, i_dry_dmd_range_p6zt, i_dry_foo_
     all year without being grazed.
 
     Dry pasture that is not consumed is passed to the same pool in the next period and the average quality
-    and quantity reduces each period as it decays. Consumption of the high quality/high FOO component further
+    and quantity reduces each period as it decays. Dry pasture does not transfer into the new season because once green
+    feed is available stock will not graze old dry feed. Consumption of the high quality/high FOO component further
     reduces the average as the feed available skews towards the low-quality pool.
 
     .. note:: There is not a constraint that ensures that the high-quality pasture pool is grazed prior to the

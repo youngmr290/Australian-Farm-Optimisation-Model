@@ -180,6 +180,9 @@ def f_con_drypas(model):
     in the current period, dry pasture transferred from previous period and livestock consumption. Pasture decay and
     trampling are factored into the consumption and transfer activities (e.g. the transfer activity removes 1000kg
     from the previous period and provides 1000 - decay - trampling kg into the current period).
+
+    Note: Dry pasture does not transfer into the new season because once green
+    feed is available stock will not graze old dry feed. Therefore no 'between' constraint exists.
     '''
     ##convert feed period set to a list so it can be indexed
     l_fp = list(model.s_feed_periods)
@@ -208,6 +211,10 @@ def f_con_nappas(model):
     from the previous period and provides 1000 - decay - trampling kg into the current period).
 
     This has to be a separate constraint from dry_pas so that nap doesn’t provide pasture in the erosion constraint.
+
+    Note: Dry pasture does not transfer into the new season because once green
+    feed is available stock will not graze old dry feed. Therefore no 'between' constraint exists.
+
     '''
     ##convert feed period set to a list so it can be indexed
     l_fp = list(model.s_feed_periods)
