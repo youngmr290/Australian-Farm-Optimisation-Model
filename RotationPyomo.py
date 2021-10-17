@@ -91,9 +91,23 @@ def f_con_rotation_between(params, model):
 
     '''
 
-    def rot_phase_link(model,q,s,m,l,h,z):
-        return sum(model.v_phase_area[q,s,m,z,r,l]*model.p_hist_prov[r,h] for r in model.s_phases if ((r,)+(h,)) in params['hist_prov'].keys()) \
-                   + sum(model.v_phase_area[q,s,m,z,r,l]*model.p_hist_req[r,h] for r in model.s_phases if ((r,)+(h,)) in params['hist_req'].keys())<=0
+    def rot_phase_link(model,q,s9,m,l,h,z9):
+        l_m = list(model.s_phase_periods)
+        m_end = l_m[-1]
+        m_prev = l_m[l_m.index(m) - 1]
+        l_q = list(model.s_sequence_year)
+        q_prev = l_q[l_q.index(q) - 1]
+
+        if pe.value(model.p_wyear_inc_qs[q,s9]) and pe.value(model.p_mask_childz_phase[m,z9]):
+            return sum(model.v_phase_area[q,s9,m_end,z8,r,l]*model.p_hist_prov[r,h] * model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9]
+                        + model.v_phase_area[q,s9,m_end,z8,r,l] * model.p_hist_prov[r,h] * model.p_endstart_prov_qsz[q_prev,s8,z8]
+                       for r in model.s_phases for s8 in model.s_sequence for z8 in model.s_season_types
+                       if ((r,)+(h,)) in params['hist_prov'].keys()) \
+                  + sum(model.v_phase_area[q,s9,m,z9,r,l]*model.p_hist_req[r,h] for r in model.s_phases
+                        if ((r,)+(h,)) in params['hist_req'].keys())<=0
+        else:
+            return pe.Constraint.Skip
+
     model.con_rotationcon2 = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_phase_periods, model.s_lmus, model.s_rotconstraints, model.s_season_types, rule=rot_phase_link, doc='rotation phases constraint')
 
 
