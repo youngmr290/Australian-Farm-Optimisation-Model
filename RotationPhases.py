@@ -109,7 +109,10 @@ def f_season_params(params):
 
     ##z8z9 transfer
     start_phase_periods_mz = per.f_phase_periods()[:-1,:] #remove end date of last period
-    mask_phase_provz8z9_mz8z9, mask_reqz8_mz8 = zfun.f_season_transfer_mask(start_phase_periods_mz, z_pos=-1)
+    season_start_z = per.f_season_periods()[0,:] #slice season node to get season start
+    period_is_seasonstart_mz = start_phase_periods_mz==season_start_z
+    mask_provwithinz8z9_mz8z9, mask_provbetweenz8z9_mz8z9, mask_reqwithinz8_mz8, mask_reqbetweenz8_mz8 = zfun.f_season_transfer_mask(
+        start_phase_periods_mz, period_is_seasonstart_pz=period_is_seasonstart_mz, z_pos=-1)
 
     ##mask phases which transfer in each m
     if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1:
@@ -128,12 +131,9 @@ def f_season_params(params):
     ## The second part of the mask creation makes it so that the same dry sowing occurs for each season that has the same brk.
     mask_drynext_z8z9 = index_z[:,na] == index_z-1 #every season must have at least the same amount of dry sowing as the previous season.
     mask_drystart_z8z9 = (initiating_parent_z != np.roll(initiating_parent_z,-1))[:,na]*(index_z==initiating_parent_z[:,na])#each season with the same brk must have the same amount of dry sowiing.
-    # mask_dryz8z9_z8z9 = np.logical_or(mask_drynext_z8z9, mask_drystart_z8z9)
     ###only for dry sown phases
     mask_drynext_z8z9 = mask_drynext_z8z9 * phase_is_drysown_r[:,na,na]
     mask_drystart_z8z9 = mask_drystart_z8z9 * phase_is_drysown_r[:,na,na]
-    ##mask which seasons are active in each phase period
-    mask_phase_z8_mz8 = zfun.f_season_transfer_mask(start_phase_periods_mz, z_pos=-1, mask=True)
 
     ##build params
     arrays = [keys_m, keys_z, keys_z]
@@ -152,12 +152,13 @@ def f_season_params(params):
     index_rz8z9 = fun.cartesian_product_simple_transpose(arrays)
     tup_rz8z9 = tuple(map(tuple,index_rz8z9))
 
-    # params['p_childz_req_cashflow'] =dict(zip(tup_z8z9, mask_cashflow_reqz8z9_z8z9.ravel()*1))
-    params['p_parentchildz_transfer_phase'] =dict(zip(tup_mz8z9, mask_phase_provz8z9_mz8z9.ravel()*1))
+    params['p_childz_reqwithin_phase'] =dict(zip(tup_mz, mask_reqwithinz8_mz8.ravel()*1))
+    params['p_childz_reqbetween_phase'] =dict(zip(tup_mz, mask_reqbetweenz8_mz8.ravel()*1))
+    params['p_parentz_provwithin_phase'] =dict(zip(tup_mz8z9, mask_provwithinz8z9_mz8z9.ravel()*1))
+    params['p_parentz_provbetween_phase'] =dict(zip(tup_mz8z9, mask_provbetweenz8z9_mz8z9.ravel()*1))
     params['p_mask_phases'] =dict(zip(tup_rm, mask_phases_rm.ravel()*1))
     params['p_dryz_link'] =dict(zip(tup_rz8z9, mask_drynext_z8z9.ravel()*1))
     params['p_dryz_link2'] =dict(zip(tup_rz8z9, mask_drystart_z8z9.ravel()*1))
-    params['p_mask_childreqz'] =dict(zip(tup_mz, mask_phase_z8_mz8.ravel()*1))
 
 
 def f_landuses_phases(params,report):

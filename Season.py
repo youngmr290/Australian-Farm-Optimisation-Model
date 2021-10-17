@@ -5,10 +5,24 @@ import numpy as np
 import PropertyInputs as pinp
 import Functions as fun
 import SeasonalFunctions as zfun
+import Periods as per
 
 na = np.newaxis
 
 def f_season_precalcs(params, r_vals):
+    ################
+    #z8z9 transfer #
+    ################
+    ##get param
+    date_season_node_p7z = per.f_season_periods()[:-1,...]
+    season_start_z = per.f_season_periods()[0,:] #slice season node to get season start
+    period_is_seasonstart_p7z = date_season_node_p7z==season_start_z
+    mask_provwithinz8z9_p7z8z9, mask_provbetweenz8z9_p7z8z9, mask_reqwithinz8_p7z8, mask_reqbetweenz8_p7z8 = zfun.f_season_transfer_mask(
+        date_season_node_p7z, period_is_seasonstart_pz=period_is_seasonstart_p7z, z_pos=-1)  # slice off end date p7
+
+    ###########
+    #sequence #
+    ###########
     ##lengths
     bool_steady_state = pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1
     if bool_steady_state:
@@ -67,26 +81,38 @@ def f_season_precalcs(params, r_vals):
     keys_q = np.array(['q%s' % i for i in range(len_q)])
     keys_s = np.array(['s%s' % i for i in range(len_s)])
     keys_z = zfun.f_keys_z()
+    keys_p7 = per.f_season_periods(keys=True)
 
+    ###p7z8
+    arrays = [keys_p7, keys_z]
+    index_p7z8 = fun.cartesian_product_simple_transpose(arrays)
+    tup_p7z8 = tuple(map(tuple,index_p7z8))
+    ###p7z8z9
+    arrays = [keys_p7, keys_z, keys_z]
+    index_p7z8z9 = fun.cartesian_product_simple_transpose(arrays)
+    tup_p7z8z9 = tuple(map(tuple,index_p7z8z9))
     ###qs - season sequence
     arrays = [keys_q, keys_s]
     index_qs = fun.cartesian_product_simple_transpose(arrays)
+    tup_qs = tuple(map(tuple, index_qs))
     ###qsz - season sequence
     arrays = [keys_q, keys_s, keys_z]
     index_qsz = fun.cartesian_product_simple_transpose(arrays)
+    tup_qsz = tuple(map(tuple,index_qsz))
     ###qs8zs9 - season sequence
     arrays = [keys_q, keys_s, keys_z, keys_s]
     index_qs8zs9 = fun.cartesian_product_simple_transpose(arrays)
+    tup_qs8zs9 = tuple(map(tuple,index_qs8zs9))
 
 
-    ###season sequence
-    tup_qs = tuple(map(tuple, index_qs))
+    params['p_childz_reqwithin_season'] =dict(zip(tup_p7z8, mask_reqwithinz8_p7z8.ravel()*1))
+    params['p_childz_reqbetween_season'] =dict(zip(tup_p7z8, mask_reqbetweenz8_p7z8.ravel()*1))
+    params['p_parentz_provwithin_season'] =dict(zip(tup_p7z8z9, mask_provwithinz8z9_p7z8z9.ravel()*1))
+    params['p_parentz_provbetween_season'] =dict(zip(tup_p7z8z9, mask_provbetweenz8z9_p7z8z9.ravel()*1))
     params['p_wyear_inc_qs'] =dict(zip(tup_qs,p_wyear_inc_qs.ravel()*1))
     params['p_between_req_qs'] = dict(zip(tup_qs,p_between_req_qs.ravel()*1))
-    tup_qsz = tuple(map(tuple,index_qsz))
     params['p_season_prob_qsz'] = dict(zip(tup_qsz,p_season_prob_qsz.ravel()))
     params['p_endstart_prov_qsz'] = dict(zip(tup_qsz,p_endstart_prov_qsz.ravel()))
-    tup_qs8zs9 = tuple(map(tuple,index_qs8zs9))
     params['p_sequence_prov_qs8zs9'] = dict(zip(tup_qs8zs9,p_sequence_prov_qs8zs9.ravel()*1))
 
 

@@ -126,9 +126,16 @@ def f1_paspyomo_local(params, model):
     model.p_poc_vol = pe.Param(model.s_feed_pools, model.s_feed_periods, model.s_season_types, initialize=params['p_poc_vol_fp6z'],
                                default=0, mutable=False, doc='vol (ri intake) of pasture on crop paddocks for each feed period')
     
-    model.p_parentchildz_transfer_fp = pe.Param(model.s_feed_periods, model.s_season_types, model.s_season_types,
-                                                initialize=params['p_parentchildz_transfer_fp'], default=0.0,
-                                                mutable=False, doc='Transfer of z8 dv in the previous fp to z9 constraint in the current fp')
+    model.p_parentz_provwithin_fp = pe.Param(model.s_feed_periods, model.s_season_types, model.s_season_types,
+                                                  initialize=params['p_parentz_provwithin_fp'], default=0.0,
+                                                  mutable=False, doc='Transfer of z8 dv in the previous fp to z9 constraint in the current fp within years')
+    model.p_parentz_provbetween_fp = pe.Param(model.s_feed_periods, model.s_season_types, model.s_season_types,
+                                                  initialize=params['p_parentz_provbetween_fp'], default=0.0,
+                                                  mutable=False, doc='Transfer of z8 dv in the previous fp to z9 constraint in the current fp between years')
+    model.p_childz_reqwithin_fp = pe.Param(model.s_feed_periods, model.s_season_types, initialize=params['p_childz_reqwithin_fp'],
+                                           default=0.0, mutable=False, doc='mask child season require in each fp within year')
+    model.p_childz_reqbetween_fp = pe.Param(model.s_feed_periods, model.s_season_types, initialize=params['p_childz_reqbetween_fp'],
+                                            default=0.0, mutable=False, doc='mask child season require in each fp between years')
 
     
     ########################
@@ -160,7 +167,7 @@ def f_con_greenpas_within(model):
                        if pe.value(model.p_germination[m,p6,l,r,z9,t])!=0 or model.p_foo_grn_reseeding[m,p6,l,r,z9,t]!=0)         \
                    + sum(model.v_greenpas_ha[q,s,f,g,o,p6,l,z9,t] * model.p_foo_start_grnha[o,p6,l,z9,t]   \
                          - sum(model.v_greenpas_ha[q,s,f,g,o,p6s,l,z8,t] * model.p_foo_end_grnha[g,o,p6s,l,z8,t]
-                               * model.p_parentchildz_transfer_fp[p6s,z8,z9] for z8 in model.s_season_types)
+                               * model.p_parentz_provwithin_fp[p6s,z8,z9] for z8 in model.s_season_types)
                          for f in model.s_feed_pools for g in model.s_grazing_int for o in model.s_foo_levels) <=0
         else:
             return pe.Constraint.Skip
@@ -184,11 +191,11 @@ def f_con_drypas(model):
             return sum(model.v_phase_area[q,s,m,z9,r,l] * model.p_foo_dry_reseeding[m,d,p6,l,r,z9,t]
                        for r in model.s_phases for m in model.s_phase_periods for l in model.s_lmus)   \
                  + sum(-sum(model.v_greenpas_ha[q,s,f,g,o,p6s,l,z8,t] * model.p_senesce_grnha[d,g,o,p6s,l,z8,t]
-                            * model.p_parentchildz_transfer_fp[p6s,z8,z9] for z8 in model.s_season_types
+                            * model.p_parentz_provwithin_fp[p6s,z8,z9] for z8 in model.s_season_types
                             for g in model.s_grazing_int for o in model.s_foo_levels for l in model.s_lmus)
                       + model.v_drypas_consumed[q,s,f,d,p6,z9,t] * model.p_dry_removal_t[p6,z9,t] for f in model.s_feed_pools) \
                  - sum(model.v_drypas_transfer[q,s,d,p6s,z8,t] * model.p_dry_transfer_prov_t[p6s,z8,t]
-                       * model.p_parentchildz_transfer_fp[p6s,z8,z9] for z8 in model.s_season_types) \
+                       * model.p_parentz_provwithin_fp[p6s,z8,z9] for z8 in model.s_season_types) \
                  + model.v_drypas_transfer[q,s,d,p6,z9,t] * model.p_dry_transfer_req_t[p6,z9,t] <=0
     model.con_drypas = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_dry_groups, model.s_feed_periods, model.s_season_types, model.s_pastures, rule = drypas, doc='High and low quality dry pasture of each type available in each period')
 
@@ -214,7 +221,7 @@ def f_con_nappas(model):
                            if pe.value(model.p_nap[m,d,p6,l,r,z9,t]) != 0)
                        + model.v_nap_consumed[q,s,f,d,p6,z9,t] * model.p_dry_removal_t[p6,z9,t] for f in model.s_feed_pools) \
                    - sum(model.v_nap_transfer[q,s,d,p6s,z8,t] * model.p_dry_transfer_prov_t[p6s,z8,t]
-                         * model.p_parentchildz_transfer_fp[p6s,z8,z9] for z8 in model.s_season_types)   \
+                         * model.p_parentz_provwithin_fp[p6s,z8,z9] for z8 in model.s_season_types)   \
                    + model.v_nap_transfer[q,s,d,p6,z9,t] * model.p_dry_transfer_req_t[p6,z9,t] <=0
     model.con_nappas = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_dry_groups, model.s_feed_periods, model.s_season_types, model.s_pastures, rule = nappas, doc='High and low quality dry pasture of each type available in each period')
 

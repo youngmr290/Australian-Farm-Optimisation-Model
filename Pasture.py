@@ -260,6 +260,12 @@ def f_pasture(params, r_vals, nv):
     index_p6zt=fun.cartesian_product_simple_transpose(arrays)
     index_p6zt=tuple(map(tuple, index_p6zt)) #create a tuple rather than a list because tuples are faster
 
+    ###p6z
+    arrays = [keys_p6, keys_z]
+    index_p6z8 = fun.cartesian_product_simple_transpose(arrays)
+    index_p6z8 = tuple(map(tuple,index_p6z8))
+
+    ###p6z8z9
     arrays = [keys_p6, keys_z, keys_z]
     index_p6z8z9 = fun.cartesian_product_simple_transpose(arrays)
     index_p6z8z9 = tuple(map(tuple,index_p6z8z9))
@@ -490,7 +496,10 @@ def f_pasture(params, r_vals, nv):
     #apply season mask   #
     ######################
     ##season transfer (z8z9) param
-    p_parentchildz_transfer_p6z8z9, mask_reqz8_p6z8 = zfun.f_season_transfer_mask(date_start_p6z, z_pos=-1)
+    season_start_z = per.f_season_periods()[0,:] #slice season node to get season start
+    period_is_seasonstart_p6z = date_start_p6z==season_start_z
+    mask_provwithinz8z9_p6z8z9, mask_provbetweenz8z9_p6z8z9, mask_reqwithinz8_p6z8, mask_reqbetweenz8_p6z8 = zfun.f_season_transfer_mask(
+        date_start_p6z, period_is_seasonstart_pz=period_is_seasonstart_p6z*False, z_pos=-1)
 
     ##mask
     mask_fp_z8var_p6z = zfun.f_season_transfer_mask(date_start_p6z, z_pos=-1, mask=True)
@@ -553,7 +562,10 @@ def f_pasture(params, r_vals, nv):
 
     ##create season params
 
-    params['p_parentchildz_transfer_fp'] = dict(zip(index_p6z8z9, p_parentchildz_transfer_p6z8z9.ravel() * 1))
+    params['p_childz_reqwithin_fp'] = dict(zip(index_p6z8, mask_reqwithinz8_p6z8.ravel() * 1))
+    params['p_childz_reqbetween_fp'] = dict(zip(index_p6z8, mask_reqbetweenz8_p6z8.ravel() * 1))
+    params['p_parentz_provwithin_fp'] = dict(zip(index_p6z8z9, mask_provwithinz8z9_p6z8z9.ravel() * 1))
+    params['p_parentz_provbetween_fp'] = dict(zip(index_p6z8z9, mask_provbetweenz8z9_p6z8z9.ravel() * 1))
 
     params['p_harvest_period_prop'] = harvest_period_prop.stack().to_dict()
 

@@ -246,36 +246,6 @@ def f_min_roe():
         min_roe = uinp.finance['minroe_dsp']
     return min_roe
 
-###################
-#Season transfer  #
-###################
-def f1_finance_z8z9_transfers(params):
-    '''
-    Create pyomo param which masks cashflow transfer within a given season.
-    Create pyomo param which masks depreciation and asset transfer within a given season.
-
-    Seasons are masked out until the point in the year when they are identified. At the point of identification
-    the parent season provides the transfer parameters to the child season. This transfering method ensures the
-    model has the same management across seasons until they are identified. For example, if there are two seasons, a
-    good and a bad, that are identified in spring. Both seasons must have the same management through the beginning of
-    the year until spring (because the farmer doesnt know if they are having the good or bad year until spring).
-    '''
-    ##get param
-    date_season_node_p7z = per.f_season_periods()
-    mask_season_p7z8z9, mask_reqz8_p7z8 = zfun.f_season_transfer_mask(date_season_node_p7z[:-1,...],z_pos=-1)  # slice off end date p7
-
-    ##build param
-    keys_z = zfun.f_keys_z()
-    keys_p7 = per.f_season_periods(keys=True)
-
-
-    arrays = [keys_p7, keys_z, keys_z]
-    index_p7z8z9 = fun.cartesian_product_simple_transpose(arrays)
-    tup_p7z8z9 = tuple(map(tuple,index_p7z8z9))
-
-
-    # params['p_childz_req_cashflow'] =dict(zip(tup_z8z9, mask_cashflow_reqz8z9_z8z9.ravel()*1))
-    params['p_parentchildz_transfer_season'] =dict(zip(tup_p7z8z9, mask_season_p7z8z9.ravel()*1))
 
 #################
 # report vals   #

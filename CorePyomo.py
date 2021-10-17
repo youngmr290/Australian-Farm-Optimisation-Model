@@ -291,7 +291,7 @@ def f_con_stubble_a(model):
                     - model.v_stub_debit[q,s,m,k,sc,z9] * (m != m_end) # end stub doesnot provide start stub else unbounded.
                     + model.v_stub_credit[q,s,m,k,sc,z9]
                     + sum((model.v_stub_debit[q,s,m_prev,k,sc,z8] * 1000 - model.v_stub_credit[q,s,m_prev,k,sc,z8] * 1000 * (m != m0)) # end stub doesnot provide start stub else unbounded.
-                          * model.p_parentchildz_transfer_phase[m_prev,z8,z9]
+                          * model.p_parentz_provwithin_phase[m_prev,z8,z9]
                           for z8 in model.s_season_types) <= 0)
         else:
             return pe.Param.Skip
@@ -366,7 +366,7 @@ def f_con_harv(model):
         return (-macpy.f_harv_supply(model,q,s,m,k,z9)
                 + sum(phspy.f_rotation_yield(model,q,s,m,g,k,z9) / 1000 for g in model.s_grain_pools)
                 - model.v_unharvested_yield[q,s,m,k,z9] * (m != m_end) #must be harvested before the begining of the next yr - therefore no transfer
-                + sum(model.v_unharvested_yield[q,s,m_prev,k,z8] * model.p_parentchildz_transfer_phase[m_prev,z8,z9]
+                + sum(model.v_unharvested_yield[q,s,m_prev,k,z8] * model.p_parentz_provwithin_phase[m_prev,z8,z9]
                       for z8 in model.s_season_types)
                 <= 0)
 
@@ -388,7 +388,7 @@ def f_con_makehay(model):
                    + phspy.f_rotation_yield(model,q,s,m,g,k,z9) / 1000
                    for g in model.s_grain_pools)
                - model.v_hay_tobe_made[q,s,m,z9] * (m != m_end) #must be harvested before the begining of the next yr - therefore no transfer
-               + sum(model.v_hay_tobe_made[q,s,m_prev,z8] * model.p_parentchildz_transfer_phase[m_prev,z8,z9]
+               + sum(model.v_hay_tobe_made[q,s,m_prev,z8] * model.p_parentz_provwithin_phase[m_prev,z8,z9]
                      for z8 in model.s_season_types)
                <= 0)
 
@@ -415,7 +415,7 @@ def f_con_grain_transfer(model):
                + cgzpy.f_grazecrop_yield_penalty(model,q,s,m,g,k,z9) + sum(model.v_sup_con[q,s,z9,k,g,f,p6] * model.p_a_p6_m[m,p6,z9] * 1000
                                                                        for f in model.s_feed_pools for p6 in model.s_feed_periods) \
                - model.v_grain_debit[q,s,m,z9,k,g] * (m != m_end) + model.v_grain_credit[q,s,m,z9,k,g] \
-               + sum((model.v_grain_debit[q,s,m_prev,z8,k,g] * 1000 - model.v_grain_credit[q,s,m_prev,z8,k,g] * 1000 * (m != m0)) * model.p_parentchildz_transfer_phase[m_prev,z8,z9
+               + sum((model.v_grain_debit[q,s,m_prev,z8,k,g] * 1000 - model.v_grain_credit[q,s,m_prev,z8,k,g] * 1000 * (m != m0)) * model.p_parentz_provwithin_phase[m_prev,z8,z9
                      ]   # m!=m to stop grain tranfer from last yr to current yr else unbounded solution.
                      for z8 in model.s_season_types) \
                - model.v_buy_grain[q,s,m,z9,k,g] * model.p_buy_grain_prov[m,z9] * 1000 + model.v_sell_grain[q,s,m,z9,k,g] * 1000 <= 0
@@ -530,7 +530,7 @@ def f_con_cashflow(model):
                 + macpy.f_mach_cost(model,q,s,c0,p7,z9) + suppy.f_sup_cost(model,q,s,c0,p7,z9) + model.p_overhead_cost[c0,p7,z9]
                 - stkpy.f_stock_cashflow(model,q,s,c0,p7,z9)
                 - model.v_debit[q,s,c0,p7,z9] + model.v_credit[q,s,c0,p7,z9])
-                + sum((model.v_debit[q,s,c0,p7_prev,z8] - model.v_credit[q,s,c0,p7_prev,z8]) * model.p_parentchildz_transfer_season[p7_prev,z8,z9] * (p7!=p7_start)  #end cashflow doesnot provide start cashflow else unbounded.
+                + sum((model.v_debit[q,s,c0,p7_prev,z8] - model.v_credit[q,s,c0,p7_prev,z8]) * model.p_parentz_provwithin_season[p7_prev,z8,z9] * (p7!=p7_start)  #end cashflow doesnot provide start cashflow else unbounded.
                       for z8 in model.s_season_types)) <= 0
 
     model.con_cashflow_transfer = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types,rule=cash_flow,
@@ -560,7 +560,7 @@ def f_con_workingcap(model):
                 - model.v_wc_debit[q,s,c0,p7,z9] * (p7!=p7_end) #end working capital doesnot provide start else unbounded constraint
                 + model.v_wc_credit[q,s,c0,p7,z9]
                 + sum((model.v_wc_debit[q,s,c0,p7_prev,z8] - model.v_wc_credit[q,s,c0,p7_prev,z8] * (p7!=p7_start)) #end working capital doesnot provide start else unbounded constraint.
-                      * model.p_parentchildz_transfer_season[p7_prev,z8,z9]
+                      * model.p_parentz_provwithin_season[p7_prev,z8,z9]
                      for z8 in model.s_season_types)) <= 0
     model.con_workingcap = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types,rule=working_cap,
                                        doc='overdraw limit')
@@ -573,7 +573,7 @@ def f_con_dep(model):
         p7_prev = l_p7[l_p7.index(p7) - 1] #need the activity level from last period
         p7_start = l_p7[0]
         return (macpy.f_total_dep(model,q,s,p7,z9) + suppy.f_sup_dep(model,q,s,p7,z9) - model.v_dep[q,s,p7,z9]
-                + sum(model.v_dep[q,s,p7_prev,z9] * model.p_parentchildz_transfer_season[p7_prev,z8,z9]
+                + sum(model.v_dep[q,s,p7_prev,z9] * model.p_parentz_provwithin_season[p7_prev,z8,z9]
                       for z8 in model.s_season_types) * (p7!=p7_start) #end doesnt carry over
                 <= 0)
 
@@ -591,7 +591,7 @@ def f_con_asset(model):
         p7_start = l_p7[0]
         return (suppy.f_sup_asset(model,q,s,p7,z9) + macpy.f_mach_asset(model,p7) + stkpy.f_stock_asset(model,q,s,p7,z9)) * uinp.finance['opportunity_cost_capital'] \
                - model.v_asset[q,s,p7,z9] \
-               + sum(model.v_asset[q,s,p7_prev,z8] * model.p_parentchildz_transfer_season[p7_prev,z8,z9]
+               + sum(model.v_asset[q,s,p7_prev,z8] * model.p_parentz_provwithin_season[p7_prev,z8,z9]
                      for z8 in model.s_season_types) * (p7!=p7_start) <= 0 #end doesnt carry over
 
     model.con_asset = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types,rule=asset,
@@ -608,7 +608,7 @@ def f_con_minroe(model):
                        + suppy.f_sup_cost(model,q,s,c0,p7,z9) + stkpy.f_stock_cost(model,q,s,c0,p7,z9)
                    for c0 in model.s_enterprises) * fin.f_min_roe()
               - model.v_minroe[q,s,p7,z9]
-              + sum(model.v_minroe[q,s,p7_prev,z8] *model.p_parentchildz_transfer_season[p7_prev,z8,z9]
+              + sum(model.v_minroe[q,s,p7_prev,z8] *model.p_parentz_provwithin_season[p7_prev,z8,z9]
                     for z8 in model.s_season_types) * (p7 != p7_start)) <= 0  # end doesnt carry over
 
     model.con_minroe = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_season_periods, model.s_season_types,rule=minroe,

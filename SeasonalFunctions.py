@@ -152,7 +152,7 @@ def f_parent_z(season_start_z8, date_initiate_z8, index_z8):
     return parent_z
 
 
-def f_season_transfer_mask(period_dates_pz, z_pos, period_axis_pos=0, mask=False):
+def f_season_transfer_mask(period_dates_pz, z_pos, period_is_seasonstart_pz=False, period_axis_pos=0, mask=False):
     '''
     Seasons are masked out until the point in the year when they are identified. At the point of identification
     the parent season provides the transfer parameters to the child season. This transferring method ensures the
@@ -162,6 +162,7 @@ def f_season_transfer_mask(period_dates_pz, z_pos, period_axis_pos=0, mask=False
 
     :param period_dates_pz: period dates (eg dvp or cashflow) without end date of last period
     :param z_pos: z axis position
+    :param period_is_seasonstart_pz: boolean array with true for season start period
     :param period_axis_pos: axis position of the period in the period date array. (argument not required when generating mask)
     :param mask: Boolean if True the function simply returns the z8var mask.
     :return: within season transfer (z8z9) masks for require and provide.
@@ -186,9 +187,6 @@ def f_season_transfer_mask(period_dates_pz, z_pos, period_axis_pos=0, mask=False
     parent_z = f_parent_z(start_of_season_z, date_initiate_z, index_z)
     parent_z9 = np.moveaxis(parent_z, source=0, destination=-1)
     identity_z8z9 = fun.f_expand(np.identity(parent_z.shape[0]),z_pos-1, right_pos=-1)
-
-    # ##req mask. Each z8 always requires from the same z9 season eg z8[1] requires from z9[1]
-    # mask_param_reqz8z9_z8z9 = identity_z8z9
 
     ##adjust period start dates to the base yr (dates must be between break of current season and break of next season)
     end_of_season_z = start_of_season_z + np.timedelta64(364,'D') #use 364 because end date is the day before brk.
@@ -218,12 +216,18 @@ def f_season_transfer_mask(period_dates_pz, z_pos, period_axis_pos=0, mask=False
     prov_child_pz8z9 = prov_child_pz8z9 * np.logical_and(np.logical_not(mask_z9var_pz9), rolled_mask_z9var_pz9)
     ###combine self and child prov
     mask_param_provz8z9_pz8z9 = np.logical_or(prov_self_pz8z9, prov_child_pz8z9)
-    ###all weather years in the final period of the year (p[-1]) can provide to the initiating weather-years of the following year
+    ###all weather years in the final period of the year (nextperiod_is_seasonstart) can provide to the initiating weather-years of the following year
     ####The following year is the next weather-year in the sequence or the start year for static equilibrium and single year DSP
-    ####The initiating weather-years are those that exist is p[0]
-    mask_param_provz8z9_pz8z9[-1, ...] = mask_z9var_pz9[0, ...]
+    nextperiod_is_seasonstart_pz = np.roll(period_is_seasonstart_pz,shift=-1,axis=period_axis_pos)
+    mask_param_provz8z9_pz8z9 = fun.f_update(mask_param_provz8z9_pz8z9, rolled_mask_z9var_pz9, nextperiod_is_seasonstart_pz[...,na])
 
-    return mask_param_provz8z9_pz8z9, mask_childz_req_pz
+    ##adjust z8z9 mask for between (only has true for the period that passes to season start) and within (only has true if period is not season start)
+    mask_childz_reqwithin_pz = mask_childz_req_pz * np.logical_not(period_is_seasonstart_pz)
+    mask_childz_reqbetween_pz = mask_childz_req_pz * period_is_seasonstart_pz
+    mask_provwithinz8z9_pz8z9 = mask_param_provz8z9_pz8z9 * np.logical_not(nextperiod_is_seasonstart_pz[...,na])
+    mask_provbetweenz8z9_pz8z9 = mask_param_provz8z9_pz8z9 * nextperiod_is_seasonstart_pz[...,na]
+
+    return mask_provwithinz8z9_pz8z9, mask_provbetweenz8z9_pz8z9, mask_childz_reqwithin_pz, mask_childz_reqbetween_pz
 
 
 

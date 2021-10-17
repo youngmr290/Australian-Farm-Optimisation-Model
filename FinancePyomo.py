@@ -20,7 +20,6 @@ def fin_precalcs(params, r_vals):
     '''
     fin.overheads(params, r_vals)
     fin.finance_rep(r_vals)
-    fin.f1_finance_z8z9_transfers(params)
     params['overdraw'] = pinp.finance['overdraw_limit']
 
 
@@ -52,10 +51,6 @@ def f1_finpyomo_local(params, model):
     model.p_overhead_cost = Param(model.s_enterprises, model.s_season_periods, model.s_season_types, initialize = params['overheads_cost'], doc = 'cost of overheads each period')
 
     model.p_overhead_wc = Param(model.s_enterprises, model.s_season_periods, model.s_season_types, initialize = params['overheads_wc'], doc = 'wc of overheads each period')
-
-    model.p_parentchildz_transfer_season = Param(model.s_season_periods, model.s_season_types, model.s_season_types,
-                                                 initialize=params['p_parentchildz_transfer_season'], default=0.0,
-                                                 mutable=False, doc='Transfer of z8 dv in the previous season period to z9 constraint in the current season period')
 
     #########################
     #call Local constrain   #

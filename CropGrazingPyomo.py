@@ -91,6 +91,8 @@ def f_con_crop_DM_transfer(model):
     '''
     Transfer FOO from grazing 1ha of crop to the livestock crop consumption activity. DM that is not consumed is
     transferred into the following feed period (without changing the growth rate of the crop).
+
+    Note: there is no corresponding 'between' constraint because there is no carry over across the break.
     '''
     def crop_DM_transfer(model,q,s,k,p6,z9):
         p6s = list(model.s_feed_periods)[list(model.s_feed_periods).index(p6) - 1]  #previous feedperiod - have to convert to a list first because indexing of an ordered set starts at 1
@@ -100,14 +102,14 @@ def f_con_crop_DM_transfer(model):
                    for p5 in model.s_labperiods for l in model.s_lmus) \
                + sum(model.v_tonnes_crop_consumed[q,s,f,k,p6,z9] * model.p_crop_DM_required[k] for f in model.s_feed_pools) \
                    - sum(model.v_tonnes_crop_transfer[q,s,k,p6s,z8]*1000*model.p_transfer_exists[p6,z8] #meant to be p6 in transfer_exists because that states if crop can be grazing in current p6 (if not then don't transfer last periods dm)
-                         * model.p_parentchildz_transfer_fp[p6s,z8,z9] for z8 in model.s_season_types)        \
+                         * model.p_parentz_provwithin_fp[p6s,z8,z9] for z8 in model.s_season_types)        \
                    + model.v_tonnes_crop_transfer[q,s,k,p6,z9]*1000 \
                <=0
         # return sum(- model.v_grazecrop_ha[m,k,z9,l] * model.p_crop_DM_provided[m,k,p6,z9,l]
         #            for l in model.s_lmus for m in model.s_phase_periods)    \
         #      + sum(model.v_tonnes_crop_consumed[f,k,p6,z9] * model.p_crop_DM_required[k] for f in model.s_feed_pools) \
         #      - sum(model.v_tonnes_crop_transfer[k,p6s,z8]*1000*model.p_transfer_exists[p6,z8] #meant to be p6 in transfer_exists because that states if crop can be grazing in current p6 (if not then don't transfer last periods dm)
-        #            * model.p_parentchildz_transfer_fp[p6s,z8,z9] for z8 in model.s_season_types)        \
+        #            * model.p_parentz_provwithin_fp[p6s,z8,z9] for z8 in model.s_season_types)        \
         #      + model.v_tonnes_crop_transfer[k,p6,z9]*1000 \
         #      + sum(model.p_crop_DM_reduction[k,p6,p5,z9,l] * model.v_contractseeding_ha[z9,p5,k,l]
         #            for p5 in model.s_labperiods for l in model.s_lmus) \

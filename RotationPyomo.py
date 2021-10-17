@@ -46,12 +46,19 @@ def f1_rotationpyomo(params, model):
     model.p_landuse_area = Param(model.s_phases, model.s_landuses, initialize=params['phases_rk'], doc='landuse in each phase')
     model.p_hist_prov = Param(params['hist_prov'].keys(), initialize=params['hist_prov'], default=0, doc='history provided by  each rotation') #use keys instead of sets to reduce size of param
     model.p_hist_req = Param(params['hist_req'].keys(), initialize=params['hist_req'], default=0, doc='history required by  each rotation') #use keys instead of sets to reduce size of param
-    model.p_parentchildz_transfer_phase = Param(model.s_phase_periods, model.s_season_types, model.s_season_types, initialize=params['p_parentchildz_transfer_phase'],
-                                                doc='Transfer of z8 dv in the previous cash period to z9 constraint in the current phase period')
     model.p_mask_phases = Param(model.s_phases, model.s_phase_periods, initialize=params['p_mask_phases'], doc='mask phases that transfer in each phase period')
-    model.p_mask_childreqz = Param(model.s_phase_periods, model.s_season_types, initialize=params['p_mask_childreqz'], doc='mask for active seasons in each phase period')
     model.p_dryz_link = Param(model.s_phases, model.s_season_types, model.s_season_types, initialize=params['p_dryz_link'], doc='dry link between seasons (only occurs between m[-1])')
     model.p_dryz_link2 = Param(model.s_phases, model.s_season_types, model.s_season_types, initialize=params['p_dryz_link2'], doc='dry link between seasons (only occurs between m[-1])')
+    model.p_parentz_provwithin_phase = Param(model.s_phase_periods, model.s_season_types, model.s_season_types,
+                                             initialize=params['p_parentz_provwithin_phase'], default=0.0, mutable=False,
+                                             doc='Transfer of z8 dv in the previous phase period to z9 constraint in the current phase period within years')
+    model.p_parentz_provbetween_phase = Param(model.s_phase_periods, model.s_season_types, model.s_season_types,
+                                              initialize=params['p_parentz_provbetween_phase'], default=0.0, mutable=False,
+                                              doc='Transfer of z8 dv in the previous phase period to z9 constraint in the current phase period between years')
+    model.p_childz_reqwithin_phase = Param(model.s_phase_periods, model.s_season_types, initialize=params['p_childz_reqwithin_phase'],
+                                           default=0.0, mutable=False, doc='mask child season require in each phase period within year')
+    model.p_childz_reqbetween_phase = Param(model.s_phase_periods, model.s_season_types, initialize=params['p_childz_reqbetween_phase'],
+                                            default=0.0, mutable=False, doc='mask child season require in each phase period between years')
 
     ###################
     #call constraints #
@@ -115,14 +122,14 @@ def f_con_rotation_within(model):
             This is so that dry seeding is not transferred from parent to child in the next period.
 
     '''
-
+    #todo add within req and wyearinc and skip constraints.
     def rot_phase_link_within(model,q,s,m,l,r,z9):
         l_m = list(model.s_phase_periods)
         m_prev = l_m[l_m.index(m) - 1] #need the activity level from last feed period
         # return model.v_phase_area[m,z9,r,l] * model.p_mask_childreqz[m,z9]\ #if i include the req mask the profit is the same but then cplex chooses variable which makes the summary hard to read
         return model.v_phase_area[q,s,m,z9,r,l] \
                - model.v_phase_increment[q,s,m,z9,r,l]\
-               - sum(model.v_phase_area[q,s,m_prev,z8,r,l] * model.p_parentchildz_transfer_phase[m_prev,z8,z9]
+               - sum(model.v_phase_area[q,s,m_prev,z8,r,l] * model.p_parentz_provwithin_phase[m_prev,z8,z9]
                      for z8 in model.s_season_types) * model.p_mask_phases[r,m_prev] ==0 #end of the previous yr is controlled by between constraint
     model.con_phase_link_within = Constraint(model.s_sequence_year, model.s_sequence, model.s_phase_periods, model.s_lmus, model.s_phases, model.s_season_types, rule=rot_phase_link_within, doc='rotation phases constraint')
 
