@@ -20,9 +20,9 @@ def f1_seasonpyomo_local(params, model):
     model.p_parentz_provbetween_season = pe.Param(model.s_season_periods, model.s_season_types, model.s_season_types,
                                                   initialize=params['p_parentz_provbetween_season'], default=0.0,
                                                   mutable=False, doc='Transfer of z8 dv in the previous node to z9 constraint in the current node between years')
-    model.p_childz_reqwithin_season = pe.Param(model.s_season_periods, model.s_season_types, initialize=params['p_childz_reqwithin_season'],
+    model.p_mask_childz_within_season = pe.Param(model.s_season_periods, model.s_season_types, initialize=params['p_mask_childz_within_season'],
                                            default=0.0, mutable=False, doc='mask child season require in each node within year')
-    model.p_childz_reqbetween_season = pe.Param(model.s_season_periods, model.s_season_types, initialize=params['p_childz_reqbetween_season'],
+    model.p_mask_childz_between_season = pe.Param(model.s_season_periods, model.s_season_types, initialize=params['p_mask_childz_between_season'],
                                             default=0.0, mutable=False, doc='mask child season require in each node between years')
     model.p_wyear_inc_qs = pe.Param(model.s_sequence_year, model.s_sequence, initialize=params['p_wyear_inc_qs'], default=0.0,
                                     mutable=False, doc='weather year included in sequence')

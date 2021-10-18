@@ -562,8 +562,8 @@ def f_pasture(params, r_vals, nv):
 
     ##create season params
 
-    params['p_childz_reqwithin_fp'] = dict(zip(index_p6z8, mask_reqwithinz8_p6z8.ravel() * 1))
-    params['p_childz_reqbetween_fp'] = dict(zip(index_p6z8, mask_reqbetweenz8_p6z8.ravel() * 1))
+    params['p_mask_childz_within_fp'] = dict(zip(index_p6z8, mask_reqwithinz8_p6z8.ravel() * 1))
+    params['p_mask_childz_between_fp'] = dict(zip(index_p6z8, mask_reqbetweenz8_p6z8.ravel() * 1))
     params['p_parentz_provwithin_fp'] = dict(zip(index_p6z8z9, mask_provwithinz8z9_p6z8z9.ravel() * 1))
     params['p_parentz_provbetween_fp'] = dict(zip(index_p6z8z9, mask_provbetweenz8z9_p6z8z9.ravel() * 1))
 

@@ -105,8 +105,8 @@ def f_season_precalcs(params, r_vals):
     tup_qs8zs9 = tuple(map(tuple,index_qs8zs9))
 
 
-    params['p_childz_reqwithin_season'] =dict(zip(tup_p7z8, mask_reqwithinz8_p7z8.ravel()*1))
-    params['p_childz_reqbetween_season'] =dict(zip(tup_p7z8, mask_reqbetweenz8_p7z8.ravel()*1))
+    params['p_mask_childz_within_season'] =dict(zip(tup_p7z8, mask_reqwithinz8_p7z8.ravel()*1))
+    params['p_mask_childz_between_season'] =dict(zip(tup_p7z8, mask_reqbetweenz8_p7z8.ravel()*1))
     params['p_parentz_provwithin_season'] =dict(zip(tup_p7z8z9, mask_provwithinz8z9_p7z8z9.ravel()*1))
     params['p_parentz_provbetween_season'] =dict(zip(tup_p7z8z9, mask_provbetweenz8z9_p7z8z9.ravel()*1))
     params['p_wyear_inc_qs'] =dict(zip(tup_qs,p_wyear_inc_qs.ravel()*1))

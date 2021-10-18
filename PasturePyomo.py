@@ -132,9 +132,9 @@ def f1_paspyomo_local(params, model):
     model.p_parentz_provbetween_fp = pe.Param(model.s_feed_periods, model.s_season_types, model.s_season_types,
                                                   initialize=params['p_parentz_provbetween_fp'], default=0.0,
                                                   mutable=False, doc='Transfer of z8 dv in the previous fp to z9 constraint in the current fp between years')
-    model.p_childz_reqwithin_fp = pe.Param(model.s_feed_periods, model.s_season_types, initialize=params['p_childz_reqwithin_fp'],
+    model.p_mask_childz_within_fp = pe.Param(model.s_feed_periods, model.s_season_types, initialize=params['p_mask_childz_within_fp'],
                                            default=0.0, mutable=False, doc='mask child season require in each fp within year')
-    model.p_childz_reqbetween_fp = pe.Param(model.s_feed_periods, model.s_season_types, initialize=params['p_childz_reqbetween_fp'],
+    model.p_mask_childz_between_fp = pe.Param(model.s_feed_periods, model.s_season_types, initialize=params['p_mask_childz_between_fp'],
                                             default=0.0, mutable=False, doc='mask child season require in each fp between years')
 
     
