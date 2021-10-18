@@ -7338,28 +7338,28 @@ def generator(params,r_vals,nv,plots = False):
     mask=mask.ravel()
     index_cut_k2vz8g1=index_k2vz8g1[mask,:]
     tup_k2vz8g1 = tuple(map(tuple, index_cut_k2vz8g1))
-    params['p_childz_reqwithin_dams'] =dict(zip(tup_k2vz8g1, mask_reqwithinz8_k2vz8g1))
+    params['p_mask_childz_within_dams'] =dict(zip(tup_k2vz8g1, mask_reqwithinz8_k2vz8g1))
     ###dams req between
     mask=mask_childz_reqbetween_k2tva1e1b1nwzida0e0b0xyg1!=0
     mask_reqbetweenz8_k2vz8g1 = mask_childz_reqbetween_k2tva1e1b1nwzida0e0b0xyg1[mask] #applying the mask does the raveling and squeezing of array
     mask=mask.ravel()
     index_cut_k2vz8g1=index_k2vz8g1[mask,:]
     tup_k2vz8g1 = tuple(map(tuple, index_cut_k2vz8g1))
-    params['p_childz_reqbetween_dams'] =dict(zip(tup_k2vz8g1, mask_reqbetweenz8_k2vz8g1))
+    params['p_mask_childz_between_dams'] =dict(zip(tup_k2vz8g1, mask_reqbetweenz8_k2vz8g1))
     ###offs req within
     mask=mask_childz_reqwithin_k3k5tva1e1b1nwzida0e0b0xyg3!=0
     mask_reqwithinz8_k3vz8xg3 = mask_childz_reqwithin_k3k5tva1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
     mask=mask.ravel()
     index_cut_k3vz8xg3=index_k3vz8xg3[mask,:]
     tup_k3vz8xg3 = tuple(map(tuple, index_cut_k3vz8xg3))
-    params['p_childz_reqwithin_offs'] =dict(zip(tup_k3vz8xg3, mask_reqwithinz8_k3vz8xg3))
+    params['p_mask_childz_within_offs'] =dict(zip(tup_k3vz8xg3, mask_reqwithinz8_k3vz8xg3))
     ###offs req between
     mask=mask_childz_reqbetween_k3k5tva1e1b1nwzida0e0b0xyg3!=0
     mask_reqbetweenz8_k3vz8xg3 = mask_childz_reqbetween_k3k5tva1e1b1nwzida0e0b0xyg3[mask] #applying the mask does the raveling and squeezing of array
     mask=mask.ravel()
     index_cut_k3vz8xg3=index_k3vz8xg3[mask,:]
     tup_k3vz8xg3 = tuple(map(tuple, index_cut_k3vz8xg3))
-    params['p_childz_reqbetween_offs'] =dict(zip(tup_k3vz8xg3, mask_reqbetweenz8_k3vz8xg3))
+    params['p_mask_childz_between_offs'] =dict(zip(tup_k3vz8xg3, mask_reqbetweenz8_k3vz8xg3))
 
     ###dams prov within
     mask=mask_provwithinz8z9_k2tva1e1b1nwzida0e0b0xyg1z9!=0
