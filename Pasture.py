@@ -499,7 +499,7 @@ def f_pasture(params, r_vals, nv):
     season_start_z = per.f_season_periods()[0,:] #slice season node to get season start
     period_is_seasonstart_p6z = date_start_p6z==season_start_z
     mask_provwithinz8z9_p6z8z9, mask_provbetweenz8z9_p6z8z9, mask_reqwithinz8_p6z8, mask_reqbetweenz8_p6z8 = zfun.f_season_transfer_mask(
-        date_start_p6z, period_is_seasonstart_pz=period_is_seasonstart_p6z*False, z_pos=-1)
+        date_start_p6z, period_is_seasonstart_pz=period_is_seasonstart_p6z, z_pos=-1)
 
     ##mask
     mask_fp_z8var_p6z = zfun.f_season_transfer_mask(date_start_p6z, z_pos=-1, mask=True)
