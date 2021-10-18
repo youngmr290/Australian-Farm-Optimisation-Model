@@ -72,7 +72,8 @@ def coremodel_all(trial_name,model):
     f_con_grain_transfer(model)
     #cashflow
     f_con_cashflow(model)
-    f_con_workingcap(model)
+    f_con_workingcap_within(model)
+    f_con_workingcap_between(model)
     f_con_dep(model)
     f_con_asset(model)
     f_con_minroe(model)
@@ -412,9 +413,11 @@ def f_con_grain_transfer(model):
         m_end = l_m[-1]
 
         return -phspy.f_rotation_yield(model,q,s,m,g,k,z9) + macpy.f_late_seed_penalty(model,q,s,m,g,k,z9) \
-               + cgzpy.f_grazecrop_yield_penalty(model,q,s,m,g,k,z9) + sum(model.v_sup_con[q,s,z9,k,g,f,p6] * model.p_a_p6_m[m,p6,z9] * 1000
-                                                                       for f in model.s_feed_pools for p6 in model.s_feed_periods) \
-               - model.v_grain_debit[q,s,m,z9,k,g] * (m != m_end) + model.v_grain_credit[q,s,m,z9,k,g] \
+               + cgzpy.f_grazecrop_yield_penalty(model,q,s,m,g,k,z9) \
+               + sum(model.v_sup_con[q,s,z9,k,g,f,p6] * model.p_a_p6_m[m,p6,z9] * 1000
+                     for f in model.s_feed_pools for p6 in model.s_feed_periods) \
+               - model.v_grain_debit[q,s,m,z9,k,g] * (m != m_end) \
+               + model.v_grain_credit[q,s,m,z9,k,g] \
                + sum((model.v_grain_debit[q,s,m_prev,z8,k,g] * 1000 - model.v_grain_credit[q,s,m_prev,z8,k,g] * 1000 * (m != m0)) * model.p_parentz_provwithin_phase[m_prev,z8,z9
                      ]   # m!=m to stop grain tranfer from last yr to current yr else unbounded solution.
                      for z8 in model.s_season_types) \
@@ -536,34 +539,56 @@ def f_con_cashflow(model):
     model.con_cashflow_transfer = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types,rule=cash_flow,
                                                 doc='transfer of cash between periods')
 
-# def cash_flow(model,z):
-#     return sum(f1_grain_income(model,c0,p7,z) - phspy.f_rotation_cost(model,c0,p7,z) - labpy.f_labour_cost(model,c0,p7,z)
-#             - macpy.f_mach_cost(model,c0,p7,z) - suppy.f_sup_cost(model,c0,p7,z) - model.p_overhead_cost[c0,p7,z]
-#             + stkpy.f_stock_cashflow(model,c0,p7,z) for p7 in model.s_season_periods for c0 in model.s_enterprises)
 
-
-def f_con_workingcap(model):
+def f_con_workingcap_within(model):
     '''
     Tallies working capital and transfers to the next period. Cashflow periods exist so that a transfer can
     exist between parent and child seasons.
 
     '''
-    #todo needs between year constraint because this needs to pass between cashflow years (different to the cashflow constraint which ends at the end of the cashflow yr)
-    # maybe the boolean at the end will need to be removed.
-    def working_cap(model,q,s,c0,p7,z9):
-        p7_start = list(model.s_season_periods)[0]
-        p7_end = list(model.s_season_periods)[-1]
+    def working_cap_within(model,q,s,c0,p7,z9):
         p7_prev = list(model.s_season_periods)[list(model.s_season_periods).index(p7) - 1]  # previous cashperiod - have to convert to a list first because indexing of an ordered set starts at 1
-        return (-f1_grain_wc(model,q,s,c0,p7,z9) + phspy.f_rotation_wc(model,q,s,c0,p7,z9) + labpy.f_labour_wc(model,q,s,c0,p7,z9)
-                + macpy.f_mach_wc(model,q,s,c0,p7,z9) + suppy.f_sup_wc(model,q,s,c0,p7,z9) + model.p_overhead_wc[c0,p7,z9]
-                - stkpy.f_stock_wc(model,q,s,c0,p7,z9)
-                - model.v_wc_debit[q,s,c0,p7,z9] * (p7!=p7_end) #end working capital doesnot provide start else unbounded constraint
-                + model.v_wc_credit[q,s,c0,p7,z9]
-                + sum((model.v_wc_debit[q,s,c0,p7_prev,z8] - model.v_wc_credit[q,s,c0,p7_prev,z8] * (p7!=p7_start)) #end working capital doesnot provide start else unbounded constraint.
-                      * model.p_parentz_provwithin_season[p7_prev,z8,z9]
-                     for z8 in model.s_season_types)) <= 0
-    model.con_workingcap = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types,rule=working_cap,
-                                       doc='overdraw limit')
+        if pe.value(model.p_mask_childz_within_season[p7,z9]) and pe.value(model.p_wyear_inc_qs[q,s]):
+            return (-f1_grain_wc(model,q,s,c0,p7,z9) + phspy.f_rotation_wc(model,q,s,c0,p7,z9) + labpy.f_labour_wc(model,q,s,c0,p7,z9)
+                    + macpy.f_mach_wc(model,q,s,c0,p7,z9) + suppy.f_sup_wc(model,q,s,c0,p7,z9) + model.p_overhead_wc[c0,p7,z9]
+                    - stkpy.f_stock_wc(model,q,s,c0,p7,z9)
+                    - model.v_wc_debit[q,s,c0,p7,z9]
+                    + model.v_wc_credit[q,s,c0,p7,z9]
+                    + sum((model.v_wc_debit[q,s,c0,p7_prev,z8] - model.v_wc_credit[q,s,c0,p7_prev,z8]) #end working capital doesnot provide start else unbounded constraint.
+                          * model.p_parentz_provwithin_season[p7_prev,z8,z9]
+                         for z8 in model.s_season_types)) <= 0
+        else:
+            return pe.Constraint.Skip
+    model.con_workingcap_within = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types,rule=working_cap_within,
+                                       doc='working capital transfer within year')
+
+
+def f_con_workingcap_between(model):
+    '''
+    Tallies working capital and transfers to the next period. Cashflow periods exist so that a transfer can
+    exist between parent and child seasons.
+
+    Cashflow at the end of the previous yr becomes the starting balance for working capital.
+
+    '''
+    def working_cap_between(model,q,s9,c0,p7,z9):
+        p7_prev = list(model.s_season_periods)[list(model.s_season_periods).index(p7) - 1]  # previous cashperiod - have to convert to a list first because indexing of an ordered set starts at 1
+        q_prev = list(model.s_sequence_year)[list(model.s_sequence_year).index(q) - 1]
+        if pe.value(model.p_mask_childz_between_season[p7,z9]) and pe.value(model.p_wyear_inc_qs[q,s9]):
+            return (-f1_grain_wc(model,q,s9,c0,p7,z9) + phspy.f_rotation_wc(model,q,s9,c0,p7,z9) + labpy.f_labour_wc(model,q,s9,c0,p7,z9)
+                    + macpy.f_mach_wc(model,q,s9,c0,p7,z9) + suppy.f_sup_wc(model,q,s9,c0,p7,z9) + model.p_overhead_wc[c0,p7,z9]
+                    - stkpy.f_stock_wc(model,q,s9,c0,p7,z9)
+                    - model.v_wc_debit[q,s9,c0,p7,z9]
+                    + model.v_wc_credit[q,s9,c0,p7,z9]
+                    + sum((model.v_debit[q,s8,c0,p7_prev,z8] - model.v_credit[q,s8,c0,p7_prev,z8]) #end cashflow become start wc.
+                          * model.p_parentz_provbetween_season[p7_prev,z8,z9] * model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9]
+                        + (model.v_debit[q,s8,c0,p7_prev,z8] - model.v_credit[q,s8,c0,p7_prev,z8]) #end cashflow become start wc.
+                          * model.p_parentz_provbetween_season[p7_prev,z8,z9] * model.p_endstart_prov_qsz[q_prev,s8,z8]
+                          for z8 in model.s_season_types for s8 in model.s_sequence if pe.value(model.p_wyear_inc_qs[q,s8])!=0)) <= 0
+        else:
+            return pe.Constraint.Skip
+    model.con_workingcap_between = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_enterprises, model.s_season_periods, model.s_season_types,rule=working_cap_between,
+                                       doc='working capital transfer between years')
 
 
 def f_con_dep(model):
