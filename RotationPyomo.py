@@ -99,7 +99,7 @@ def f_con_rotation_between(params, model):
 
         if m == m_end or pe.value(model.p_wyear_inc_qs[q,s9]) and pe.value(model.p_mask_childz_phase[m,z9]):
             return sum(model.v_phase_area[q,s9,m_end,z8,r,l]*model.p_hist_prov[r,h] * model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9]
-                        + model.v_phase_area[q,s9,m_end,z8,r,l] * model.p_hist_prov[r,h] * model.p_endstart_prov_qsz[q_prev,s8,z8]
+                       + model.v_phase_area[q,s9,m_end,z8,r,l] * model.p_hist_prov[r,h] * model.p_endstart_prov_qsz[q_prev,s8,z8]
                        for r in model.s_phases for s8 in model.s_sequence for z8 in model.s_season_types
                        if ((r,)+(h,)) in params['hist_prov'].keys()) \
                   + sum(model.v_phase_area[q,s9,m,z9,r,l]*model.p_hist_req[r,h] for r in model.s_phases
