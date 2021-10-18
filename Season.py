@@ -71,7 +71,6 @@ def f_season_precalcs(params, r_vals):
     p_wyear_inc_qs = mask_s8vars_qs8  # todo work needed to allow masking ‘sequence of interest’ (which requires a z8 axis).
     p_season_prob_qsz = season_seq_prob_qsz
 
-    p_between_req_qs = mask_s8vars_qs8  # todo work needed to represent the multi-period which requires the final year to be the equilibrium year
     p_sequence_prov_qs8zs9 = mask_s8vars_qs8[:,:,na,na] * (index_q[:,na,na,na] != (len_q - 1)) * mask_provqs8z8s9_qs8z8s9
     p_endstart_prov_qsz = mask_s8vars_qs8[:,:,na] * (index_q[:,na,na] == (len_q - 1)) * season_seq_prob_qsz
 
@@ -110,7 +109,6 @@ def f_season_precalcs(params, r_vals):
     params['p_parentz_provwithin_season'] =dict(zip(tup_p7z8z9, mask_provwithinz8z9_p7z8z9.ravel()*1))
     params['p_parentz_provbetween_season'] =dict(zip(tup_p7z8z9, mask_provbetweenz8z9_p7z8z9.ravel()*1))
     params['p_wyear_inc_qs'] =dict(zip(tup_qs,p_wyear_inc_qs.ravel()*1))
-    params['p_between_req_qs'] = dict(zip(tup_qs,p_between_req_qs.ravel()*1))
     params['p_season_prob_qsz'] = dict(zip(tup_qsz,p_season_prob_qsz.ravel()))
     params['p_endstart_prov_qsz'] = dict(zip(tup_qsz,p_endstart_prov_qsz.ravel()))
     params['p_sequence_prov_qs8zs9'] = dict(zip(tup_qs8zs9,p_sequence_prov_qs8zs9.ravel()*1))

@@ -436,7 +436,6 @@ def f_con_off_betweenR(model, params, l_v3, l_k3, l_k5, l_z, l_i, l_x, l_g3, l_w
             ###note: dont need to multiply the child params/variables by p_mask_child because the whole constraint is skipped
             ### and the params are already masked by mask_z8 so the only bit missing is the 'between' period which is handled by skipping.
             return sum(model.v_offs[q,s9,k3,k5,t3,v3,n3,w8,z9,i,a,x,y3,g3] * model.p_numbers_req_offs[k3,k5,v3,w8,z9,i,x,g3,w9]
-                       * model.p_between_req_qs[q,s9]
                        - sum(model.v_offs[q_prev,s8,k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3] * model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3,w9]
                            * model.p_parentz_provbetween_offs[k3,v3_prev,z8,x,g3,z9] * model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9]
                            + model.v_offs[q_prev,s8,k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3] * model.p_numbers_prov_offs[k3,k5,t3,v3_prev,n3,w8,z8,i,a,x,y3,g3,w9]
@@ -529,7 +528,6 @@ def f_con_dam_betweenR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_
             ###note: dont need to multiply the child params/variables by p_mask_child because the whole constraint is skipped
             ### and the params are already masked by mask_z8 so the only bit missing is the 'between' period which is handled by skipping.
             return sum(model.v_dams[q,s9,k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_req_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
-                       * model.p_between_req_qs[q,s9]
                        - model.v_dams[q,s9,k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_provthis_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
                        - sum(model.v_dams[q_prev,s8,k28,t1,v1_prev,a,n1,w8,z8,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z8,i,y1,g1,g9,w9]
                            * model.p_parentz_provbetween_dams[k28,v1_prev,z8,g1,z9] * model.p_sequence_prov_qs8zs9[q_prev,s8,z8,s9]
