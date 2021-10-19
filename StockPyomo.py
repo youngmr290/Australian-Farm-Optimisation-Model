@@ -479,9 +479,6 @@ def f_con_dam_withinR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_w
 
             ###note: dont need to multiply the child params/variables by p_mask_child because the whole constraint is skipped
             ### and the params are already masked by mask_z8 so the only bit missing is the 'between' period which is handled by skipping.
-
-            #todo finish timing the constraints. Does adding an if using p_parentz_provwithin_dams make it faster?
-
             return sum(model.v_dams[q,s,k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_req_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
                        - model.v_dams[q,s,k28,t1,v1,a,n1,w8,z9,i,y1,g1] * model.p_numbers_provthis_dams[k28,k29,t1,v1,a,n1,w8,z9,i,y1,g1,g9,w9]
                        - sum(model.v_dams[q,s,k28,t1,v1_prev,a,n1,w8,z8,i,y1,g1] * model.p_numbers_prov_dams[k28,k29,t1,v1_prev,a,n1,w8,z8,i,y1,g1,g9,w9]
