@@ -93,7 +93,8 @@ def crop_residue_all(params, r_vals, nv):
     fp_end_p6z = per.f_feed_periods()[1:].astype('datetime64[D]')
     fp_start_p6z = per.f_feed_periods()[:-1].astype('datetime64[D]')
     harv_date_zk = zfun.f_seasonal_inp(pinp.crop['start_harvest_crops'].values, numpy=True, axis=1).swapaxes(0,1).astype(np.datetime64)
-    mask_stubble_exists_p6zk = fp_end_p6z[...,na] > harv_date_zk  #need to use the full fp array that has the end date of the last period.
+    mask_stubble_exists_p6zk = fp_end_p6z[...,na] > harv_date_zk  #^this may need to become an input to handle chaff piles which may be grazed after the brk
+    peirod_is_harvest_p6zk = np.logical_and(fp_end_p6z[...,na] >= harv_date_zk, fp_start_p6z[...,na] <= harv_date_zk)
 
     #############################
     # Total stubble production  #
@@ -204,21 +205,31 @@ def crop_residue_all(params, r_vals, nv):
     tramp_effect_ks1 = pinp.stubble['trampling'][:,na] * cat_propn_ks1
 
     ################################
-    # allow access to next category#   #^this is a little inflexible ie you would need to add or remove code if a stubble cat was added or removed
+    # allow access to next category#
     ################################
 
-    cat_a_st_req_p6zk = (1/quant_declined_p6zk)*(1+tramp_effect_ks1[:,0])*(1/cat_propn_ks1[:,0])*1000 #*1000 - to convert to tonnes
-    cat_a_st_prov_k = cat_propn_ks1[:,1]/cat_propn_ks1[:,0]*1000 #cat b provided by consuming 1t of cat a.
-    cat_b_st_req_k = 1000*(1+tramp_effect_ks1[:,1])
-    cat_b_st_prov_k = cat_propn_ks1[:,2]/cat_propn_ks1[:,1]*1000
-    cat_c_st_req_k = 1000*(1+tramp_effect_ks1[:,2])
+    ##quantity of cat A stubble provided from 1t of total stubble at harvest
+    cat_a_prov_p6zks1 = 1000 * cat_propn_ks1 * np.logical_and(np.arange(len(pinp.stubble['stub_cat_idx']))==0
+                                                      ,peirod_is_harvest_p6zk[...,na]) #Only cat A is provides at harvest
+
+    ##amount of available stubble required to consume 1t of each cat in each fp
+    stub_req_ks1 = 1000*(1+tramp_effect_ks1)
+
+    ##amount of next category provide by consumption of current category.
+    stub_prov_ks1 = np.roll(cat_propn_ks1, shift=-1,axis=-1)/cat_propn_ks1*1000
+    stub_prov_ks1[:,-1] = 0 #final cat doesnt provide anything
+
 
     ##############################
     #transfers between periods   #
     ##############################
-    ##transfer a given cat to the next period.
-    per_transfer_p6zk = 1000 * np.roll(quant_declined_p6zk, shift=-1, axis=0)/quant_declined_p6zk
-    per_transfer_p6zk = per_transfer_p6zk * mask_stubble_exists_p6zk  #no transfer can occur when stubble doesnt exist
+    ##transfer a given cat to the next period. Only cat A is available at harvest - it comes from the rotation phase.
+    stub_transfer_prov_p6zk = 1000 * np.roll(quant_declined_p6zk, shift=-1, axis=0)/quant_declined_p6zk #divide to capture only the decay during the curent period (quant_decline is the decay since harv)
+    stub_transfer_prov_p6zk = stub_transfer_prov_p6zk * mask_stubble_exists_p6zk  #no transfer can occur when stubble doesnt exist
+    stub_transfer_prov_p6zk = stub_transfer_prov_p6zk * np.roll(np.logical_not(peirod_is_harvest_p6zk), -1, 0) #last yrs stubble doesnt transfer past the following harv.
+
+    ##transfer requirment - mask out harvest period because last years stubble can not be consumed after this years harvest.
+    stub_transfer_req_p6zk = 1000 * mask_stubble_exists_p6zk   # No transfer can occur when stubble doesnt exist or at harvest.
 
     ###############
     #harvest p con# stop sheep consuming more than possible because harvest is not at the start of the period
@@ -236,8 +247,9 @@ def crop_residue_all(params, r_vals, nv):
 
     ##apply mask
     cons_propn_p6zk = cons_propn_p6zk * mask_fp_z8var_p6z[...,na]
-    per_transfer_p6zk = per_transfer_p6zk * mask_fp_z8var_p6z[...,na]
-    cat_a_st_req_p6zk = cat_a_st_req_p6zk * mask_fp_z8var_p6z[...,na]
+    stub_transfer_prov_p6zk = stub_transfer_prov_p6zk * mask_fp_z8var_p6z[...,na]
+    stub_transfer_req_p6zk = stub_transfer_req_p6zk * mask_fp_z8var_p6z[...,na]
+    cat_a_prov_p6zks1 = cat_a_prov_p6zks1 * mask_fp_z8var_p6z[...,na,na]
     md_fp6zks1 = md_fp6zks1 * mask_fp_z8var_p6z[...,na,na]
     vol_fp6zks1 = vol_fp6zks1 * mask_fp_z8var_p6z[...,na,na]
 
@@ -247,9 +259,6 @@ def crop_residue_all(params, r_vals, nv):
     ##keys
     keys_k = np.array(pinp.stubble['i_stub_landuse_idx'])
     keys_p6 = pinp.period['i_fp_idx']
-    keys_s1_bc_cut = np.array(['b', 'c'])
-    keys_s1_ab_cut = np.array(['a', 'b'])
-    keys_s1_cut2 = np.array(['a'])
     keys_s1 = pinp.stubble['stub_cat_idx']
     keys_f  = np.array(['nv{0}' .format(i) for i in range(len_nv)])
     keys_z = zfun.f_keys_z()
@@ -257,14 +266,11 @@ def crop_residue_all(params, r_vals, nv):
 
     ##array indexes
     ###ks1 - stub transfer (cat b & c)
-    arrays = [keys_k, keys_s1_bc_cut]
-    index_bc_ks1 = fun.cartesian_product_simple_transpose(arrays)
-    ###ks1 - stub transfer (cat a & b)
-    arrays = [keys_k, keys_s1_ab_cut]
-    index_ab_ks1 = fun.cartesian_product_simple_transpose(arrays)
+    arrays = [keys_k, keys_s1]
+    index_ks1 = fun.cartesian_product_simple_transpose(arrays)
     ###p6zks1 - category A req
-    arrays = [keys_p6, keys_z, keys_k, keys_s1_cut2]
-    index_a_p6zks1 = fun.cartesian_product_simple_transpose(arrays)
+    arrays = [keys_p6, keys_z, keys_k, keys_s1]
+    index_p6zks1 = fun.cartesian_product_simple_transpose(arrays)
     ###p6zks1 - md & vol
     arrays = [keys_f, keys_p6, keys_z, keys_k, keys_s1]
     index_fp6zks1 = fun.cartesian_product_simple_transpose(arrays)
@@ -280,16 +286,12 @@ def crop_residue_all(params, r_vals, nv):
     params['rot_stubble'] = rot_stubble_rkl_mz.stack([0,1]).to_dict()
 
     ##'require' params ie consuming 1t of stubble B requires 1.002t from the constraint (0.002 accounts for trampling)
-    stub_req_ks1 = np.stack([cat_b_st_req_k, cat_c_st_req_k], 1)
-    stub_req_ks1 = stub_req_ks1.ravel()
-    tup_ks1 = tuple(map(tuple, index_bc_ks1))
-    params['transfer_req'] =dict(zip(tup_ks1, stub_req_ks1))
+    tup_ks1 = tuple(map(tuple, index_ks1))
+    params['transfer_req'] =dict(zip(tup_ks1, stub_req_ks1.ravel()))
 
     ###'provide' from cat to cat ie consuming 1t of cat A provides 2t of cat b
-    stub_prov_ks1 = np.stack([cat_a_st_prov_k, cat_b_st_prov_k], 1)
-    stub_prov_ks1 = stub_prov_ks1.ravel()
-    tup_ks1 = tuple(map(tuple, index_ab_ks1))
-    params['transfer_prov'] =dict(zip(tup_ks1, stub_prov_ks1))
+    tup_ks1 = tuple(map(tuple, index_ks1))
+    params['transfer_prov'] =dict(zip(tup_ks1, stub_prov_ks1.ravel()))
 
     ###p7con
     tup_p6zk = tuple(map(tuple, index_p6zk))
@@ -297,11 +299,12 @@ def crop_residue_all(params, r_vals, nv):
 
     ###feed period transfer
     tup_p6zk = tuple(map(tuple, index_p6zk))
-    params['per_transfer'] =dict(zip(tup_p6zk, per_transfer_p6zk.ravel()))
+    params['stub_transfer_prov'] =dict(zip(tup_p6zk, stub_transfer_prov_p6zk.ravel()))
+    params['stub_transfer_req'] =dict(zip(tup_p6zk, stub_transfer_req_p6zk.ravel()))
 
     ###category A transfer 'require' param
-    tup_p6zks1 = tuple(map(tuple, index_a_p6zks1))
-    params['cat_a_st_req'] =dict(zip(tup_p6zks1, cat_a_st_req_p6zk.ravel()))
+    tup_p6zks1 = tuple(map(tuple, index_p6zks1))
+    params['cat_a_prov'] =dict(zip(tup_p6zks1, cat_a_prov_p6zks1.ravel()))
 
     ##md
     tup_fp6zks1 = tuple(map(tuple, index_fp6zks1))

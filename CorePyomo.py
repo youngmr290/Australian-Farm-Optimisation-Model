@@ -278,27 +278,25 @@ def f_con_stubble_a(model):
     stubble produced from each rotation.
     '''
     ##has to have m axis and transfer because penalties occur at seeding time and have to transfer as seasons are unclustered (same as yield)
-    def stubble_a(model,q,s,m,k,sc,z9):
+    def stubble_a(model,q,s,m,k,z9):
         l_m = list(model.s_phase_periods)
         m_prev = l_m[l_m.index(m) - 1] #need the activity level from last feed period
-        m0 = l_m[0]
         m_end = l_m[-1]
-        if sc == 'a':
+        if pe.value(model.p_wyear_inc_qs[q,s]):
             return (-sum(model.v_phase_area[q,s,m,z9,r,l] * model.p_rot_stubble[r,k,l,m,z9]
                          for r in model.s_phases for l in model.s_lmus
                          if pe.value(model.p_rot_stubble[r,k,l,m,z9]) != 0)
                     + macpy.f_stubble_penalty(model,q,s,m,k,z9) + cgzpy.f_grazecrop_stubble_penalty(model,q,s,m,k,z9)
-                    + stubpy.f_stubble_req_a(model,q,s,m,z9,k,sc)
-                    - model.v_stub_debit[q,s,m,k,sc,z9] * (m != m_end) # end stub doesnot provide start stub else unbounded.
-                    + model.v_stub_credit[q,s,m,k,sc,z9]
-                    + sum((model.v_stub_debit[q,s,m_prev,k,sc,z8] * 1000 - model.v_stub_credit[q,s,m_prev,k,sc,z8] * 1000 * (m != m0)) # end stub doesnot provide start stub else unbounded.
-                          * model.p_parentz_provwithin_phase[m_prev,z8,z9]
+                    + sum(model.v_stub_harv[q,s,p6,z9,k] * 1000 * model.p_a_p6_m[m,p6,z9] for p6 in model.s_feed_periods)
+                    - model.v_stub_debit[q,s,m,k,z9] *1000 * (m != m_end) #cant debit in the final peirod otherwise unlimited stubble.
+
+                    + sum(model.v_stub_debit[q,s,m_prev,k,z8] * 1000 * model.p_parentz_provwithin_phase[m_prev,z8,z9]
                           for z8 in model.s_season_types) <= 0)
         else:
             return pe.Param.Skip
 
-    model.con_stubble_a = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_phase_periods, model.s_crops, model.s_stub_cat, model.s_season_types, rule=stubble_a,
-                                        doc='links rotation stubble production with consumption of cat A')
+    model.con_stubble_a = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_phase_periods, model.s_crops, model.s_season_types, rule=stubble_a,
+                                        doc='Total stubble at harvest. Provides Cat A at harvest.')
 
 
 def f_con_phasesow(model):
