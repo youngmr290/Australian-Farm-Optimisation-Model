@@ -18,7 +18,9 @@ Possible model errors
         - The model becomes infeasible if you force in some livestock without allowing purchasing.
     - Solution:
         - This problem is likely caused by dams not being able to provide enough prog to replace themselves.
-          This is because the weight distributions don't align and prog will be getting lost (eg initial dam weights are not similar enough to the prog weights so the prog are not able to provide dams). To fix this you can alter the initial lw of the dams (property inputs: i_adjp_lw_initial_w1).
+          This is because the weight distributions don't align and prog will be getting lost (eg initial dam
+          weights are not similar enough to the prog weights so the prog are not able to provide dams).
+          To fix this you can alter the initial lw of the dams (structural inputs: i_adjp_lw_initial_w1).
 
 3. Infeasible model for no apparent reason.
 
