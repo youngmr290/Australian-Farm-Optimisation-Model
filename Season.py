@@ -55,9 +55,9 @@ def f_season_precalcs(params, r_vals):
     ### 3. The season type within s8 aligns with the position of s9 in the sequence step
     ### 4. All seasons in the sequences in q[-1] pass to q[0]
     mask_provqs8z8s9_qs8z8s9 = (mask_s8vars_qs8[:,:,na,na] * mask_s9vars_qs9[:,na,na,:]
-                                * (np.trunc(index_s[:,na,na] / step_sparam_q)
-                                   == np.trunc(index_s / step_sparam_q))
-                                * (index_z[:,na] == np.trunc(index_s / step_zparam_q) % len_z))
+                                * (np.trunc(index_s[:,na,na] / step_sparam_q[:,na,na,na])
+                                   == np.trunc(index_s / step_sparam_q[:,na,na,na]))
+                                * (index_z[:,na] == np.trunc(index_s / step_zparam_q[:,na,na,na]) % len_z))
     mask_provqs8z8s9_qs8z8s9[-1, ...] = True
 
     # mask_provqs8z8s9_qs8z8s9 = (mask_s8vars_qs8[:,:,na,na]
