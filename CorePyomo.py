@@ -645,11 +645,14 @@ def f_objective(model):
     the cost of depreciation and the opportunity cost on the farm assets (total value of all assets times the discount
     rate  (to ensure that the assets generate a minimum ROI)).
     '''
+    variables = model.component_objects(pe.Var,active=True)
 
     p7_end = list(model.s_season_periods)[-1]
-    return sum((sum(model.v_credit[q,s,c0,p7_end,z] - model.v_debit[q,s,c0,p7_end,z] for c0 in model.s_enterprises)
+    return (sum((sum(model.v_credit[q,s,c0,p7_end,z] - model.v_debit[q,s,c0,p7_end,z] for c0 in model.s_enterprises)
                - model.v_dep[q,s,p7_end,z] - model.v_minroe[q,s,p7_end,z] - model.v_asset[q,s,p7_end,z]) * model.p_season_prob_qsz[q,s,z]
                for q in model.s_sequence_year for s in model.s_sequence for z in model.s_season_types)  # have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.
+               -0.0001 * sum(sum(v[s] for s in v) for v in variables))
+
 
     # return sum((cash_flow(model,z) - model.v_dep[z] - model.v_minroe[z] - model.v_asset[z]) * model.p_z_prob[z]
     #      for z in model.s_season_types)  # have to include debit otherwise model selects lots of debit to increase credit, hence can't just maximise credit.
