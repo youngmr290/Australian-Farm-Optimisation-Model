@@ -5676,7 +5676,7 @@ def generator(params,r_vals,nv,plots = False):
     ##Mask numbers provided based on the steps (with a t axis) and the next dvp type (with a t axis) (t0&1 are sold and never transfer so the mask doesnt mean anything for them. for t2 animals always transfer to themselves unless dvpnext is 'condense')
     mask_numbers_provw8w9_va1e1b1nw8zida0e0b0xyg3w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg3[...,na] \
                         * (np.trunc((index_wzida0e0b0xyg3[...,na] * (dvp_type_next_va1e1b1nwzida0e0b0xyg3[...,na] !=condense_vtype3)
-                                     + index_w3 * (dvp_type_next_va1e1b1nwzida0e0b0xyg3[...,na] == condense_vtype1))
+                                     + index_w3 * (dvp_type_next_va1e1b1nwzida0e0b0xyg3[...,na] == condense_vtype3))
                                     / step_con_prov_va1e1b1nw8zida0e0b0xyg3w9) == index_w3 / step_con_prov_va1e1b1nw8zida0e0b0xyg3w9)
     ##Mask numbers required from the previous period (broadcast across t axis) - Note: req does not need a t axis because the destination decision variable don’t change for the transfer
     mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg3w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg3[...,na] \
