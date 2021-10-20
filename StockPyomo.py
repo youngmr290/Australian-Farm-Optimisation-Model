@@ -505,6 +505,7 @@ def f_con_dam_betweenR(model, params, l_v1, l_k29, l_a, l_z, l_i, l_y1, l_g9, l_
        group e.g. BBB to BBT).
     b) Dams to dams in the following decision variable period.
 
+    Note: this constraint is only active when season start is included as a dvp (eg not always active in steady state model).
     '''
     def dambetweenR(model,q,s9,k29,v1,a,z9,i,y1,g9,w9):
         v1_prev = l_v1[l_v1.index(v1) - 1]  #used to get the activity number from the last period - to determine the number of dam provided into this period
