@@ -860,8 +860,8 @@ def generator(params,r_vals,nv,plots = False):
     fvp_begin_type_va1e1b1nwzida0e0b0xyg1 = np.full(fvp_begin_start_ba1e1b1nwzida0e0b0xyg1.shape, condense_vtype1)
     node_fvp_type_m = np.zeros_like(node_fvp_m)
     for m in range(len_m):
-        ##season start dvp/fvp needs its own type because it needs to be distinguishable so that dvp can get distributed (only if dsp model).
-        if m==0 and np.logical_not(bool_steady_state):
+        ##season start dvp/fvp needs its own type because it needs to be distinguishable so that dvp can get distributed (only when season nodes included).
+        if m==0:
             node_fvp_type_m[m] = np.full(node_fvp_m[m].shape, season_vtype1)
         else:
             node_fvp_type_m[m] = np.full(node_fvp_m[m].shape, other_ftype1)
@@ -981,8 +981,8 @@ def generator(params,r_vals,nv,plots = False):
     fvp_1_type_va1e1b1nwzida0e0b0xyg3 = np.full(fvp_1_start_sa1e1b1nwzida0e0b0xyg3.shape, other_vtype3)
     fvp_2_type_va1e1b1nwzida0e0b0xyg3 = np.full(fvp_2_start_sa1e1b1nwzida0e0b0xyg3.shape, other_vtype3)
     for m in range(len_m):
-        ##season start dvp/fvp needs its own type because it needs to be distinguishable so that dvp can get distributed (only if dsp model).
-        if m==0 and np.logical_not(bool_steady_state):
+        ##season start dvp/fvp needs its own type because it needs to be distinguishable so that dvp can get distributed (only when season nodes included).
+        if m==0:
             node_fvp_type_m[m] = np.full(node_fvp_m[m].shape, season_vtype3)
         else:
             node_fvp_type_m[m] = np.full(node_fvp_m[m].shape, other_vtype3)
