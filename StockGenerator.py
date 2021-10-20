@@ -5626,9 +5626,11 @@ def generator(params,r_vals,nv,plots = False):
     ## Combine the w8vars mask and the user nutrition mask
     mask_w8vars_va1e1b1nw8zida0e0b0xyg1 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1 * mask_w8nut_va1e1b1nwzida0e0b0xyg1
     ##Mask numbers provided based on the steps (with a t axis) and the next dvp type (with a t axis) (t0&1 are sold and never transfer so the mask doesnt mean anything for them. for t2 animals always transfer to themselves unless dvpnext is 'condense')
+    dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg1 = np.logical_or(dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == condense_vtype1
+                                                               , dvp_type_next_tva1e1b1nwzida0e0b0xyg1 == season_vtype1) #when distribution occurs any w8 can provide w9
     mask_numbers_provw8w9_tva1e1b1nw8zida0e0b0xyg1w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1[...,na] \
-                        * (np.trunc((index_wzida0e0b0xyg1[...,na] * (dvp_type_next_tva1e1b1nwzida0e0b0xyg1[...,na] !=condense_vtype1)
-                                     + index_w1 * (dvp_type_next_tva1e1b1nwzida0e0b0xyg1[...,na] == condense_vtype1))
+                        * (np.trunc((index_wzida0e0b0xyg1[...,na] * np.logical_not(dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg1[...,na])
+                                     + index_w1 * dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg1[...,na])
                                     / step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9) == index_w1 / step_con_prov_tva1e1b1nw8zida0e0b0xyg1w9)
     ##Mask numbers required from the previous period (broadcast across t axis) - Note: req does not need a t axis because the destination decision variable don’t change for the transfer
     mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg1w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg1[...,na] \
@@ -5674,9 +5676,11 @@ def generator(params,r_vals,nv,plots = False):
     ## Combine the w8vars mask and the user nutrition mask
     mask_w8vars_va1e1b1nw8zida0e0b0xyg3 = mask_w8vars_va1e1b1nw8zida0e0b0xyg3 * mask_w8nut_va1e1b1nwzida0e0b0xyg3
     ##Mask numbers provided based on the steps (with a t axis) and the next dvp type (with a t axis) (t0&1 are sold and never transfer so the mask doesnt mean anything for them. for t2 animals always transfer to themselves unless dvpnext is 'condense')
+    dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg3 = np.logical_or(dvp_type_next_va1e1b1nwzida0e0b0xyg3 == condense_vtype3
+                                                               , dvp_type_next_va1e1b1nwzida0e0b0xyg3 == season_vtype3) #when distribution occurs any w8 can provide w9
     mask_numbers_provw8w9_va1e1b1nw8zida0e0b0xyg3w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg3[...,na] \
-                        * (np.trunc((index_wzida0e0b0xyg3[...,na] * (dvp_type_next_va1e1b1nwzida0e0b0xyg3[...,na] !=condense_vtype3)
-                                     + index_w3 * (dvp_type_next_va1e1b1nwzida0e0b0xyg3[...,na] == condense_vtype3))
+                        * (np.trunc((index_wzida0e0b0xyg3[...,na] * np.logical_not(dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg3[...,na])
+                                     + index_w3 * dist_occurs_nextdvp_va1e1b1nwzida0e0b0xyg3[...,na])
                                     / step_con_prov_va1e1b1nw8zida0e0b0xyg3w9) == index_w3 / step_con_prov_va1e1b1nw8zida0e0b0xyg3w9)
     ##Mask numbers required from the previous period (broadcast across t axis) - Note: req does not need a t axis because the destination decision variable don’t change for the transfer
     mask_numbers_reqw8w9_va1e1b1nw8zida0e0b0xyg3w9 = mask_w8vars_va1e1b1nw8zida0e0b0xyg3[...,na] \
