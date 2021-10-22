@@ -5760,13 +5760,10 @@ def generator(params,r_vals,nv,plots = False):
     date_initiate_z = zfun.f_seasonal_inp(pinp.general['i_date_initiate_z'], numpy=True, axis=0).astype('datetime64')
     date_initiate_zidaebxyg = fun.f_expand(date_initiate_z, z_pos)
     index_zidaebxyg = fun.f_expand(index_z, z_pos)
-    dvp_is_seasonstart_va1e1b1nwzida0e0b0xyg1 = np.any(dvp_start_va1e1b1nwzida0e0b0xyg1==seasonstart_ya1e1b1nwzida0e0b0xyg[:,na,...], axis=0)
-    dvp_is_seasonstart_va1e1b1nwzida0e0b0xyg3 = np.any(dvp_start_va1e1b1nwzida0e0b0xyg3==seasonstart_ya1e1b1nwzida0e0b0xyg[:,na,...], axis=0)
-
     ##dams child parent transfer
     mask_provwithinz8z9_va1e1b1nwzida0e0b0xyg1z9, mask_provbetweenz8z9_va1e1b1nwzida0e0b0xyg1z9, \
     mask_childz_reqwithin_va1e1b1nwzida0e0b0xyg1, mask_childz_reqbetween_va1e1b1nwzida0e0b0xyg1 = zfun.f_season_transfer_mask(
-        dvp_start_va1e1b1nwzida0e0b0xyg1, period_is_seasonstart_pz=dvp_is_seasonstart_va1e1b1nwzida0e0b0xyg1, z_pos=z_pos)
+        dvp_start_va1e1b1nwzida0e0b0xyg1, period_is_seasonstart_pz=dvp_type_va1e1b1nwzida0e0b0xyg1==season_vtype1, z_pos=z_pos)
     mask_z8var_va1e1b1nwzida0e0b0xyg1 = zfun.f_season_transfer_mask(dvp_start_va1e1b1nwzida0e0b0xyg1, z_pos=z_pos, mask=True)
     ###create z8z9 param that is index with v
     ####cluster e and b (e axis is active from the dvp dates)
@@ -5786,7 +5783,7 @@ def generator(params,r_vals,nv,plots = False):
     ##offs child parent transfer
     mask_provwithinz8z9_va1e1b1nwzida0e0b0xyg3z9, mask_provbetweenz8z9_va1e1b1nwzida0e0b0xyg3z9, \
     mask_childz_reqwithin_va1e1b1nwzida0e0b0xyg3, mask_childz_reqbetween_va1e1b1nwzida0e0b0xyg3 = zfun.f_season_transfer_mask(
-        dvp_start_va1e1b1nwzida0e0b0xyg3, period_is_seasonstart_pz=dvp_is_seasonstart_va1e1b1nwzida0e0b0xyg3, z_pos=z_pos)
+        dvp_start_va1e1b1nwzida0e0b0xyg3, period_is_seasonstart_pz=dvp_type_va1e1b1nwzida0e0b0xyg3==season_vtype3, z_pos=z_pos)
     mask_z8var_va1e1b1nwzida0e0b0xyg3 = zfun.f_season_transfer_mask(dvp_start_va1e1b1nwzida0e0b0xyg3, z_pos=z_pos, mask=True)
     ###create z8z9 param that is index with v
     ####cluster d (d axis is active from the dvp dates)
@@ -5802,30 +5799,6 @@ def generator(params,r_vals,nv,plots = False):
     mask_provbetweenz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9 = 1 * (np.sum(mask_provbetweenz8z9_va1e1b1nwzida0e0b0xyg3z9
                                                                   * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3)[...,na],
                                                                     axis=d_pos-1, keepdims=True) > 0)
-
-    # ##adjust params for season sequence
-    # ###dams season start dvp - cluster e&b (e axis is active from the dvp dates)
-    # currentdvp_is_seasonstart_k2tva1e1b1nwzida0e0b0xyg1 = np.sum(dvp_is_seasonstart_va1e1b1nwzida0e0b0xyg1
-    #                                                       * (a_k2cluster_va1e1b1nwzida0e0b0xyg1==index_k2tva1e1b1nwzida0e0b0xyg1),
-    #                                                       axis=(e1_pos,b1_pos), keepdims=True) > 0
-    # nextdvp_is_seasonstart_k2tva1e1b1nwzida0e0b0xyg1 = np.roll(currentdvp_is_seasonstart_k2tva1e1b1nwzida0e0b0xyg1, -1, axis=p_pos)
-    # ###offs season start dvp - cluster d (d axis is active from the dvp dates)
-    # currentdvp_is_seasonstart_k3k5tva1e1b1nwzida0e0b0xyg3 = np.sum(dvp_is_seasonstart_va1e1b1nwzida0e0b0xyg3
-    #                                                            * (a_k3cluster_da0e0b0xyg3 == index_k3k5tva1e1b1nwzida0e0b0xyg3),
-    #                                                            axis=d_pos,keepdims=True) > 0
-    # nextdvp_is_seasonstart_k3k5tva1e1b1nwzida0e0b0xyg3 = np.roll(currentdvp_is_seasonstart_k3k5tva1e1b1nwzida0e0b0xyg3, -1, axis=p_pos)
-    # ###dams within season transfer
-    # mask_childz_reqwithin_k2tva1e1b1nwzida0e0b0xyg1 = mask_childz_reqz8_k2tva1e1b1nwzida0e0b0xyg1 * np.logical_not(currentdvp_is_seasonstart_k2tva1e1b1nwzida0e0b0xyg1)
-    # mask_provwithinz8z9_k2tva1e1b1nwzida0e0b0xyg1z9 = mask_param_provz8z9_k2tva1e1b1nwzida0e0b0xyg1z9 * np.logical_not(nextdvp_is_seasonstart_k2tva1e1b1nwzida0e0b0xyg1[...,na])
-    # ###dams between season transfer
-    # mask_childz_reqbetween_k2tva1e1b1nwzida0e0b0xyg1 = mask_childz_reqz8_k2tva1e1b1nwzida0e0b0xyg1 * currentdvp_is_seasonstart_k2tva1e1b1nwzida0e0b0xyg1
-    # mask_provbetweenz8z9_k2tva1e1b1nwzida0e0b0xyg1z9 = mask_param_provz8z9_k2tva1e1b1nwzida0e0b0xyg1z9 * nextdvp_is_seasonstart_k2tva1e1b1nwzida0e0b0xyg1[...,na]
-    # ###offs within season transfer
-    # mask_childz_reqwithin_k3k5tva1e1b1nwzida0e0b0xyg3 = mask_childz_reqz8_k3k5tva1e1b1nwzida0e0b0xyg3 * np.logical_not(currentdvp_is_seasonstart_k3k5tva1e1b1nwzida0e0b0xyg3)
-    # mask_provwithinz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9 = mask_param_provz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9 * np.logical_not(nextdvp_is_seasonstart_k3k5tva1e1b1nwzida0e0b0xyg3[...,na])
-    # ###offs between season transfer
-    # mask_childz_reqbetween_k3k5tva1e1b1nwzida0e0b0xyg3 = mask_childz_reqz8_k3k5tva1e1b1nwzida0e0b0xyg3 * currentdvp_is_seasonstart_k3k5tva1e1b1nwzida0e0b0xyg3
-    # mask_provbetweenz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9 = mask_param_provz8z9_k3k5tva1e1b1nwzida0e0b0xyg3z9 * nextdvp_is_seasonstart_k3k5tva1e1b1nwzida0e0b0xyg3[...,na]
 
     ##p6z mask - this is only for masking sire because they don't have a v axis
     mask_fp_z8var_p6fva1e1b1nwzida0e0b0xyg = fun.f_expand(zfun.f_season_transfer_mask(per.f_feed_periods()[:-1], z_pos=-1, mask=True),
