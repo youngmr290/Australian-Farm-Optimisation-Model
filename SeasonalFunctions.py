@@ -168,14 +168,14 @@ def f_season_transfer_mask(period_dates_pz, z_pos, period_is_seasonstart_pz=Fals
     :return: within season transfer (z8z9) masks for require and provide.
     '''
     ##inputs
-    date_initiate_z = f_seasonal_inp(pinp.general['i_date_initiate_z'], numpy=True, axis=0).astype('datetime64')
+    date_initiate_z = f_seasonal_inp(pinp.general['i_date_initiate_z'], numpy=True, axis=0).astype('datetime64[D]')
     bool_steady_state = pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1
     if bool_steady_state:
         len_z = 1
     else:
         len_z = np.count_nonzero(pinp.general['i_mask_z'])
     index_z = np.arange(len_z)
-    date_node_zm = f_seasonal_inp(pinp.general['i_date_node_zm'],numpy=True,axis=0).astype('datetime64')  # treat z axis
+    date_node_zm = f_seasonal_inp(pinp.general['i_date_node_zm'],numpy=True,axis=0).astype('datetime64[D]')  # treat z axis
 
     ##expand inputs to line z axis to the correct position
     date_node_zm = fun.f_expand(date_node_zm, z_pos-1, right_pos=-1)
@@ -187,6 +187,9 @@ def f_season_transfer_mask(period_dates_pz, z_pos, period_is_seasonstart_pz=Fals
     parent_z = f_parent_z(start_of_season_z, date_initiate_z, index_z)
     parent_z9 = np.moveaxis(parent_z, source=0, destination=-1)
     identity_z8z9 = fun.f_expand(np.identity(parent_z.shape[0]),z_pos-1, right_pos=-1)
+
+    ##get dtype consistent
+    period_dates_pz = period_dates_pz.astype('datetime64[D]')
 
     ##adjust period start dates to the base yr (dates must be between break of current season and break of next season)
     end_of_season_z = start_of_season_z + np.timedelta64(364,'D') #use 364 because end date is the day before brk.

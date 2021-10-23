@@ -958,6 +958,10 @@ def range_allocation_np(period_dates, item_start, length=np.array([1]).astype('t
     else:
         allocation_period=np.zeros(shape,dtype=np.float64)
 
+    ##get dtype consistent
+    period_dates = period_dates.astype('datetime64[D]')
+    item_start = item_start.astype('datetime64[D]')
+
     ##adjust yr of item occurence
     start_of_periods = period_dates[0,...]
     end_of_periods = start_of_periods + np.timedelta64(364, 'D') #use 364 because end date is the day before the end otherwise can get item that starts on the last day of periods.
@@ -1012,6 +1016,10 @@ def period_proportion_np(period_dates, date_array):
     ##broadcast period_dates so that it has same size axis as date_array - so slicing works
     shape = (period_dates.shape[0],) + date_array.shape
     period_dates = np.broadcast_to(period_dates, shape)
+
+    ##get dtype consistent
+    period_dates = period_dates.astype('datetime64[D]')
+    date_array = date_array.astype('datetime64[D]')
 
     ##dates
     dates_start = period_dates[:-1]
