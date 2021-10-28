@@ -5566,38 +5566,37 @@ def generator(params,r_vals,nv,plots = False):
         '''
     allocation_start = time.time()
     ##dams
-    # n_fvps_va1e1b1nwzida0e0b0xyg1 = np.zeros(n_prior_fvps_va1e1b1nwzida0e0b0xyg1.shape)
-    # n_fvps_cum_va1e1b1nwzida0e0b0xyg1 = np.zeros(dvp_type_va1e1b1nwzida0e0b0xyg1.shape)
-    # cum_index_va1e1b1nwzida0e0b0xyg1 = np.maximum.accumulate((dvp_type_va1e1b1nwzida0e0b0xyg1==condense_vtype1)
-    #                                                          * index_va1e1b1nwzida0e0b0xyg1, axis=0)  # return index which is the same for dvps in the same condense cycle
-    # for i in range(n_prior_fvps_va1e1b1nwzida0e0b0xyg1.shape[0]):
-    #     if i==n_prior_fvps_va1e1b1nwzida0e0b0xyg1.shape[0]-1:
-    #         n_fvp=1 #only one fvp in the last dvp because nothing follows it
-    #     else:
-    #         dvp_start = dvp_start_va1e1b1nwzida0e0b0xyg1[i,...]
-    #         dvp_end = dvp_start_va1e1b1nwzida0e0b0xyg1[i+1,...]
-    #         n_fvp = ((fvp_start_fa1e1b1nwzida0e0b0xyg1 >= dvp_start) & (fvp_start_fa1e1b1nwzida0e0b0xyg1 < dvp_end)).sum(axis=0)
-    #     n_fvps_va1e1b1nwzida0e0b0xyg1[i,...] = n_fvp
-    #     ### number of fvps since condensing.
-    #     cum_idx_cut_va1e1b1nwzida0e0b0xyg1 = cum_index_va1e1b1nwzida0e0b0xyg1[i:i+1]
-    #     n_fvps_cum_va1e1b1nwzida0e0b0xyg1[i] = np.cumsum(n_fvps_va1e1b1nwzida0e0b0xyg1 *
-    #                                                      (cum_index_va1e1b1nwzida0e0b0xyg1==cum_idx_cut_va1e1b1nwzida0e0b0xyg1),
-    #                                                      axis=0)[i]
-    # n_prior_fvps_va1e1b1nwzida0e0b0xyg1 = n_fvps_cum_va1e1b1nwzida0e0b0xyg1 - n_fvps_va1e1b1nwzida0e0b0xyg1
-
-    # n_fvps_va1e1b1nwzida0e0b0xyg1 =  np.take_along_axis(n_prior_fvps_va1e1b1nwzida0e0b0xyg1, -1, axis=0) - n_prior_fvps_va1e1b1nwzida0e0b0xyg1
-    # n_fvps_va1e1b1nwzida0e0b0xyg1 =  np.roll(n_prior_fvps_va1e1b1nwzida0e0b0xyg1, -1, axis=0) - n_prior_fvps_va1e1b1nwzida0e0b0xyg1
-
-    n_prior_fvps_va1e1b1nwzida0e0b0xyg1 = np.take_along_axis(n_prior_fvps_pa1e1b1nwzida0e0b0xyg1, a_p_va1e1b1nwzida0e0b0xyg1, axis=0)
-    n_fvps_va1e1b1nwzida0e0b0xyg1 = np.zeros(n_prior_fvps_va1e1b1nwzida0e0b0xyg1.shape)
-    for i in range(n_prior_fvps_va1e1b1nwzida0e0b0xyg1.shape[0]):
-        if i==n_prior_fvps_va1e1b1nwzida0e0b0xyg1.shape[0]-1:
-            n_fvp=1 #only one fvp in the last dvp because nothing follows it
+    n_fvps_va1e1b1nwzida0e0b0xyg1 = np.zeros(dvp_start_va1e1b1nwzida0e0b0xyg1.shape)
+    n_prior_fvps_va1e1b1nwzida0e0b0xyg1 = np.zeros(dvp_start_va1e1b1nwzida0e0b0xyg1.shape)
+    prev_dvp_is_fvp_start_va1e1b1nwzida0e0b0xyg1 = dvp_start_va1e1b1nwzida0e0b0xyg1.copy()
+    prev_dvp_is_fvp_end_va1e1b1nwzida0e0b0xyg1 = dvp_start_va1e1b1nwzida0e0b0xyg1.copy()
+    prev_condense_date_va1e1b1nwzida0e0b0xyg1 = dvp_start_va1e1b1nwzida0e0b0xyg1.copy()
+    ###adjust dates to only include dvps which are also fvps (extra dvps just get the same values)
+    dvp_is_fvp_va1e1b1nwzida0e0b0xyg1 = np.any(dvp_start_va1e1b1nwzida0e0b0xyg1==fvp_start_fa1e1b1nwzida0e0b0xyg1[:,na,...], axis=0)
+    prev_dvp_is_fvp_start_va1e1b1nwzida0e0b0xyg1[~dvp_is_fvp_va1e1b1nwzida0e0b0xyg1] = 0 #set dvp dates which are not fvps to the start dvp date, these get overwritten in the next step
+    prev_dvp_is_fvp_start_va1e1b1nwzida0e0b0xyg1 = np.maximum.accumulate(prev_dvp_is_fvp_start_va1e1b1nwzida0e0b0xyg1) #start of prev dvp that is also an fvp
+    prev_dvp_is_fvp_end_va1e1b1nwzida0e0b0xyg1[~dvp_is_fvp_va1e1b1nwzida0e0b0xyg1] = np.max(fvp_start_fa1e1b1nwzida0e0b0xyg1) #set dvp dates which are not fvps to the start dvp date, these get overwritten in the next step
+    prev_dvp_is_fvp_end_va1e1b1nwzida0e0b0xyg1 = np.flip(np.minimum.accumulate(np.flip(prev_dvp_is_fvp_end_va1e1b1nwzida0e0b0xyg1, axis=0)), axis=0) #start of prev dvp that is also an fvp
+    ###previous condense date - used to calc number of fvps since last condensing
+    prev_condense_date_va1e1b1nwzida0e0b0xyg1[~(dvp_type_va1e1b1nwzida0e0b0xyg1==condense_vtype1)] = 0
+    prev_condense_date_va1e1b1nwzida0e0b0xyg1 = np.maximum.accumulate(prev_condense_date_va1e1b1nwzida0e0b0xyg1, axis=0)
+    for i in range(dvp_start_va1e1b1nwzida0e0b0xyg1.shape[0]):
+        if i == dvp_start_va1e1b1nwzida0e0b0xyg1.shape[0] - 1:
+            dvp_start = prev_dvp_is_fvp_start_va1e1b1nwzida0e0b0xyg1[i,...]
+            prev_condense_date = prev_condense_date_va1e1b1nwzida0e0b0xyg1[i,...]
+            n_fvp = ((fvp_start_fa1e1b1nwzida0e0b0xyg1 >= dvp_start)).sum(axis=0)
+            n_fvp_since_condense = ((fvp_start_fa1e1b1nwzida0e0b0xyg1 >= prev_condense_date) & (
+                        fvp_start_fa1e1b1nwzida0e0b0xyg1 < dvp_start)).sum(axis=0)
         else:
-            dvp_start = dvp_start_va1e1b1nwzida0e0b0xyg1[i,...]
-            dvp_end = dvp_start_va1e1b1nwzida0e0b0xyg1[i+1,...]
-            n_fvp = ((fvp_start_fa1e1b1nwzida0e0b0xyg1 >= dvp_start) & (fvp_start_fa1e1b1nwzida0e0b0xyg1 < dvp_end)).sum(axis=0)
+            dvp_start = prev_dvp_is_fvp_start_va1e1b1nwzida0e0b0xyg1[i,...]
+            prev_condense_date = prev_condense_date_va1e1b1nwzida0e0b0xyg1[i,...]
+            dvp_end = prev_dvp_is_fvp_end_va1e1b1nwzida0e0b0xyg1[i + 1,...]
+            n_fvp = ((fvp_start_fa1e1b1nwzida0e0b0xyg1 >= dvp_start) & (
+                        fvp_start_fa1e1b1nwzida0e0b0xyg1 < dvp_end)).sum(axis=0)
+            n_fvp_since_condense = ((fvp_start_fa1e1b1nwzida0e0b0xyg1 >= prev_condense_date) & (
+                        fvp_start_fa1e1b1nwzida0e0b0xyg1 < dvp_start)).sum(axis=0)
         n_fvps_va1e1b1nwzida0e0b0xyg1[i,...] = n_fvp
+        n_prior_fvps_va1e1b1nwzida0e0b0xyg1[i,...] = n_fvp_since_condense
 
     ###Steps for ‘Numbers Requires’ constraint is determined by the number of prior FVPs
     step_con_req_va1e1b1nw8zida0e0b0xyg1 = np.power(n_fs_dams, (n_fvp_periods_dams
@@ -5638,7 +5637,6 @@ def generator(params,r_vals,nv,plots = False):
                            / step_con_req_va1e1b1nw8zida0e0b0xyg1[...,na])
 
     ##offs
-    # n_prior_fvps_va1e1b1nwzida0e0b0xyg3 = np.take_along_axis(n_prior_fvps_pa1e1b1nwzida0e0b0xyg3, a_p_va1e1b1nwzida0e0b0xyg3, axis=0)
     ###create arrays
     n_fvps_va1e1b1nwzida0e0b0xyg3 = np.zeros(dvp_start_va1e1b1nwzida0e0b0xyg3.shape)
     n_prior_fvps_va1e1b1nwzida0e0b0xyg3 = np.zeros(dvp_start_va1e1b1nwzida0e0b0xyg3.shape)
