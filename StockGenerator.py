@@ -164,10 +164,11 @@ def generator(params,r_vals,nv,plots = False):
     lensire_i = np.count_nonzero(pinp.sheep['i_masksire_i'])
     len_j0 = pinp.feedsupply['i_j0_len']
     len_k3 = len(pinp.sheep['i_k3_idx_offs'])
-    len_n0 = sinp.structuralsa['i_n0_matrix_len']
-    len_n1 = sinp.structuralsa['i_n1_matrix_len']
-    len_n2 = sinp.structuralsa['i_n1_matrix_len'] #same as dams
-    len_n3 = sinp.structuralsa['i_n3_matrix_len']
+    len_n = 2
+    # len_n0 = sinp.structuralsa['i_n0_matrix_len']
+    # len_n1 = sinp.structuralsa['i_n1_matrix_len']
+    # len_n2 = sinp.structuralsa['i_n1_matrix_len'] #same as dams
+    # len_n3 = sinp.structuralsa['i_n3_matrix_len']
     len_p1 = int(step / np.timedelta64(1, 'D')) #convert timedelta to float by dividing by one day
     len_p2 = sinp.stock['i_lag_wool']
     len_p3 = sinp.stock['i_lag_organs']
@@ -277,22 +278,22 @@ def generator(params,r_vals,nv,plots = False):
     ############################
     '''only if assigned with a slice'''
     ##unique array shapes required to initialise arrays
-    qg0 = (len_q0, len_q1, len_q2, len_p, 1, 1, 1, 1, 1, len_z, lensire_i, 1, 1, 1, 1, 1, 1, len_g0)
-    qg1 = (len_q0, len_q1, len_q2, len_p, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, 1, 1, 1, 1, 1, len_y1, len_g1)
-    qg2 = (len_q0, len_q1, len_q2, len_p, len_a1, len_e1, len_b1, len_n2, len_w2, len_z, len_i, 1, 1, 1, 1, len_x, len_y2, len_g1)
-    qg3 = (len_q0, len_q1, len_q2, lenoffs_p, 1, 1, 1, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3)
-    pg0 = (len_p, 1, 1, 1, 1, 1, len_z, lensire_i, 1, 1, 1, 1, 1, 1, len_g0)
-    pg1 = (len_p, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, 1, 1, 1, 1, 1, len_y1, len_g1)
-    pg2 = (len_p, len_a1, len_e1, len_b1, len_n2, len_w2, len_z, len_i, 1, 1, 1, 1, len_x, len_y2, len_g1)
-    pg3 = (lenoffs_p, 1, 1, 1, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3)
-    p2g0 = (len_p2, 1, 1, 1, 1, 1, len_z, lensire_i, 1, 1, 1, 1, 1, 1, len_g0)
-    p2g1 = (len_p2, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, 1, 1, 1, 1, 1, len_y1, len_g1)
-    p2g2 = (len_p2, len_a1, len_e1, len_b1, len_n2, len_w2, len_z, len_i, 1, 1, 1, 1, len_x, len_y2, len_g2)
-    p2g3 = (len_p2, 1, 1, 1, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3)
-    p3g0 = (len_p3, 1, 1, 1, 1, 1, len_z, lensire_i, 1, 1, 1, 1, 1, 1, len_g0)
-    p3g1 = (len_p3, len_a1, len_e1, len_b1, len_n1, len_w1, len_z, len_i, 1, 1, 1, 1, 1, len_y1, len_g1)
-    p3g2 = (len_p3, len_a1, len_e1, len_b1, len_n2, len_w2, len_z, len_i, 1, 1, 1, 1, len_x, len_y2, len_g2)
-    p3g3 = (len_p3, 1, 1, 1, len_n3, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3)
+    qg0 = (len_q0, len_q1, len_q2, len_p, 1, 1, 1, len_n, 1, len_z, lensire_i, 1, 1, 1, 1, 1, 1, len_g0)
+    qg1 = (len_q0, len_q1, len_q2, len_p, len_a1, len_e1, len_b1, len_n, len_w1, len_z, len_i, 1, 1, 1, 1, 1, len_y1, len_g1)
+    qg2 = (len_q0, len_q1, len_q2, len_p, len_a1, len_e1, len_b1, len_n, len_w2, len_z, len_i, 1, 1, 1, 1, len_x, len_y2, len_g1)
+    qg3 = (len_q0, len_q1, len_q2, lenoffs_p, 1, 1, 1, len_n, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3)
+    pg0 = (len_p, 1, 1, 1, len_n, 1, len_z, lensire_i, 1, 1, 1, 1, 1, 1, len_g0)
+    pg1 = (len_p, len_a1, len_e1, len_b1, len_n, len_w1, len_z, len_i, 1, 1, 1, 1, 1, len_y1, len_g1)
+    pg2 = (len_p, len_a1, len_e1, len_b1, len_n, len_w2, len_z, len_i, 1, 1, 1, 1, len_x, len_y2, len_g1)
+    pg3 = (lenoffs_p, 1, 1, 1, len_n, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3)
+    p2g0 = (len_p2, 1, 1, 1, len_n, 1, len_z, lensire_i, 1, 1, 1, 1, 1, 1, len_g0)
+    p2g1 = (len_p2, len_a1, len_e1, len_b1, len_n, len_w1, len_z, len_i, 1, 1, 1, 1, 1, len_y1, len_g1)
+    p2g2 = (len_p2, len_a1, len_e1, len_b1, len_n, len_w2, len_z, len_i, 1, 1, 1, 1, len_x, len_y2, len_g2)
+    p2g3 = (len_p2, 1, 1, 1, len_n, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3)
+    p3g0 = (len_p3, 1, 1, 1, len_n, 1, len_z, lensire_i, 1, 1, 1, 1, 1, 1, len_g0)
+    p3g1 = (len_p3, len_a1, len_e1, len_b1, len_n, len_w1, len_z, len_i, 1, 1, 1, 1, 1, len_y1, len_g1)
+    p3g2 = (len_p3, len_a1, len_e1, len_b1, len_n, len_w2, len_z, len_i, 1, 1, 1, 1, len_x, len_y2, len_g2)
+    p3g3 = (len_p3, 1, 1, 1, len_n, len_w3, len_z, len_i, len_d, len_a0, len_e0, len_b0, len_x, len_y3, len_g3)
 
 
     ##output variables for postprocessing & reporting
@@ -2012,7 +2013,43 @@ def generator(params,r_vals,nv,plots = False):
     feedsupplyw_pa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(feedsupply_std_pa1e1b1nwzida0e0b0xyg3, a_n_pa1e1b1nwzida0e0b0xyg3, axis=n_pos)
 
 
+    ####################################
+    #populate n axis for dsp feedsupply#
+    ####################################
+    '''
+    In the dsp model, at the season junctions seasons pass to themselves and also to the other seasons. Therefore,
+    animals in seasons with an early break need to continue to be generated until the later breaks.
+    This requires using an axis with 2 slices, one slice for consecutive seasons of the 
+    same type (i.e. as per the steady state model) and one with the extended dry feed phase i.e. the weather-year 
+    followed by a late break season. The axis to be used is the ‘n’ axis.
+    The nutritive value of the feed in n[1] between the break of the earliest season to the break of the latest 
+    season needs to be the quality of the dry feed, whereas n[0] is the quality of the green feed in the period 
+    after the season break for each season. Because the calculation of the distribution of animals between z8 and z9 
+    has been simplified to reduced model size this requires that the feed periods and the nutritive value in the 
+    time between the earliest break and the latest break need to be the same for the dry feed.
+    '''
 
+    if not bool_steady_state: # only add if dsp
+        ##create bool array used to update feedsupply during the season junction.
+        period_within_junction_n0_pa1e1b1nwzida0e0b0xyg = sfun.f1_period_is_('period_is_between', date_prev_seasonstart_pa1e1b1nwzida0e0b0xyg[:,:,:,:,0:1,...]
+        , date_start_pa1e1b1nwzida0e0b0xyg, date_prev_seasonstart_pa1e1b1nwzida0e0b0xyg, date_end_pa1e1b1nwzida0e0b0xyg)
+        period_within_junction_n1_pa1e1b1nwzida0e0b0xyg = sfun.f1_period_is_('period_is_between', date_prev_seasonstart_pa1e1b1nwzida0e0b0xyg[:,:,:,:,0:1,...]
+        , date_start_pa1e1b1nwzida0e0b0xyg, date_prev_seasonstart_pa1e1b1nwzida0e0b0xyg[:,:,:,:,-1:,...], date_end_pa1e1b1nwzida0e0b0xyg)
+        ##stack to activate n axis
+        period_within_junction_n_pa1e1b1nwzida0e0b0xyg = np.concatenate([period_within_junction_n0_pa1e1b1nwzida0e0b0xyg,
+                                                                   period_within_junction_n1_pa1e1b1nwzida0e0b0xyg], axis=n_pos)
+        ##update fs
+        feedsupplyw_pa1e1b1nwzida0e0b0xyg0 = fun.f_update(feedsupplyw_pa1e1b1nwzida0e0b0xyg0, feedsupplyw_pa1e1b1nwzida0e0b0xyg0[:,:,:,:,0:1,:,-1:,...]
+                                                      , period_within_junction_n_pa1e1b1nwzida0e0b0xyg)
+        feedsupplyw_pa1e1b1nwzida0e0b0xyg1 = fun.f_update(feedsupplyw_pa1e1b1nwzida0e0b0xyg1, feedsupplyw_pa1e1b1nwzida0e0b0xyg1[:,:,:,:,0:1,:,-1:,...]
+                                                      , period_within_junction_n_pa1e1b1nwzida0e0b0xyg)
+        feedsupplyw_pa1e1b1nwzida0e0b0xyg3 = fun.f_update(feedsupplyw_pa1e1b1nwzida0e0b0xyg3, feedsupplyw_pa1e1b1nwzida0e0b0xyg3[:,:,:,:,0:1,:,-1:,...]
+                                                      , period_within_junction_n_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p])
+
+
+    #######################
+    #start generator loops#
+    #######################
     ##Start the LTW loop here so that the arrays are reinitialised from the inputs
     ### set the LTW adjustments to zero for the first loop. Sires do not have a LTW adjust because they are born off farm
     sfw_ltwadj_g0 = 1
