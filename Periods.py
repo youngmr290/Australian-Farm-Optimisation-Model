@@ -223,9 +223,6 @@ def f_feed_periods(option=0):
     ##calc feed period dates from inputs plus adjust for node dates.
     fp_std_p6z = pinp.period['i_dsp_fp_date'].astype('datetime64')
 
-    ##adjust end date of the last period (needs to be the date of the latest break so that pasture season junction has the correct length of the final fp)
-    #todo add this when doing season stuff.
-
     ###add node dates as feed periods if dsp
     if pinp.general['i_inc_node_periods'] or np.logical_not(pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1):
         date_node_mz = pinp.general['i_date_node_zm'].astype('datetime64').T
@@ -241,8 +238,11 @@ def f_feed_periods(option=0):
         a_p6std_p6z = fun.searchsort_multiple_dim(fp_std_p6z, fp_p6z, 1, 1, side='right')-1
         return a_p6std_p6z[:-1,:] #drop the last period since that is just the end of the final fp (not a real period)
 
-    ###handle z axis
+    ##handle z axis
     fp_p6z = zfun.f_seasonal_inp(fp_p6z, numpy=True, axis=1)
+
+    ##adjust end date of the last period (needs to be the date of the latest break so that pasture season junction has the correct length of the final fp)
+    fp_p6z[-1,:] = np.max(fp_p6z[0,:]) + np.timedelta64(365, 'D')
 
     ### return array of fp dates
     if option==0:
