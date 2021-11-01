@@ -419,6 +419,33 @@ def f1_feedsupply_adjust(attempts,feedsupply,itn):
     return feedsupply
 
 
+def f1_add_n(arr,period_within_junction,n_pos,z_pos):
+    '''
+    Update n axis for inputs with p6 axis.
+
+    During the season junction feedsupply params need to remain as per the old season until the lastest brk for n[1].
+    n[0] rolls over to the new season at the brk of the current season.
+
+    In the dsp model, at the season junctions seasons pass to themselves and also to the other seasons. Therefore,
+    animals in seasons with an early break need to continue to be generated until the later breaks.
+    This requires using an axis with 2 slices, one slice for consecutive seasons of the
+    same type (i.e. as per the steady state model) and one with the extended dry feed phase i.e. the weather-year
+    followed by a late break season. The axis to be used is the ‘n’ axis.
+    The nutritive value of the feed in n[1] between the break of the earliest season to the break of the latest
+    season needs to be the quality of the dry feed, whereas n[0] is the quality of the green feed in the period
+    after the season break for each season. Because the calculation of the distribution of animals between z8 and z9
+    has been simplified to reduced model size this requires that the feed periods and the nutritive value in the
+    time between the earliest break and the latest break need to be the same for the dry feed.
+
+    '''
+    if not pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1:  # only add if dsp
+        sl = [slice(None)] * arr.ndim
+        sl[n_pos] = slice(0,1)
+        sl[z_pos] = slice(-1,None)
+        arr = fun.f_update(arr,arr[tuple(sl)],period_within_junction)
+    return arr
+
+
 def f1_rev_update(trait_name, trait_value, rev_trait_value):
     trait_idx = sinp.structuralsa['rev_trait_name'].tolist().index(trait_name)
     if sinp.structuralsa['rev_trait_inc'][trait_idx]:
@@ -945,7 +972,8 @@ def f1_convert_nv2fs(nv_input, nv_p6f, feedsupply_f, a_p6_pz):
 
 
 def f1_feedsupply(feedsupply_std_a1e1b1nwzida0e0b0xyg, paststd_foo_a1e1b1j0wzida0e0b0xyg, paststd_dmd_a1e1b1j0wzida0e0b0xyg
-                 , paststd_hf_a1e1b1j0wzida0e0b0xyg, pi):
+                 , paststd_hf_a1e1b1j0wzida0e0b0xyg, pi, period_within_junction_n_a1e1b1nwzida0e0b0xyg):
+    '''This is done in the gen loop so that fs can be adjusted to hit lw targets.'''
     ##level of pasture
     level_a1e1b1nwzida0e0b0xyg = np.trunc(np.minimum(2, feedsupply_std_a1e1b1nwzida0e0b0xyg)).astype('int') #note np.trunc rounds down to the nearest int (need to specify int type for the take along axis function below)
     ##next level up of pasture
@@ -964,6 +992,14 @@ def f1_feedsupply(feedsupply_std_a1e1b1nwzida0e0b0xyg, paststd_foo_a1e1b1j0wzida
     paststd_hf_a1e1b1nwzida0e0b0xyg = np.take_along_axis(paststd_hf_a1e1b1j0wzida0e0b0xyg, level_a1e1b1nwzida0e0b0xyg, sinp.stock['i_n_pos'])
     paststd_hf_next_a1e1b1nwzida0e0b0xyg = np.take_along_axis(paststd_hf_a1e1b1j0wzida0e0b0xyg, next_level_a1e1b1nwzida0e0b0xyg, sinp.stock['i_n_pos'])
     hf_a1e1b1nwzida0e0b0xyg = paststd_hf_a1e1b1nwzida0e0b0xyg + proportion_a1e1b1nwzida0e0b0xyg * (paststd_hf_next_a1e1b1nwzida0e0b0xyg - paststd_hf_a1e1b1nwzida0e0b0xyg)
+
+    ##update n axis
+    n_pos = sinp.stock['i_n_pos']
+    z_pos = sinp.stock['i_z_pos']
+    foo_a1e1b1nwzida0e0b0xyg = f1_add_n(foo_a1e1b1nwzida0e0b0xyg, period_within_junction_n_a1e1b1nwzida0e0b0xyg,n_pos,z_pos)
+    dmd_a1e1b1nwzida0e0b0xyg = f1_add_n(dmd_a1e1b1nwzida0e0b0xyg, period_within_junction_n_a1e1b1nwzida0e0b0xyg,n_pos,z_pos)
+    hf_a1e1b1nwzida0e0b0xyg = f1_add_n(hf_a1e1b1nwzida0e0b0xyg, period_within_junction_n_a1e1b1nwzida0e0b0xyg,n_pos,z_pos)
+
     ##proportion of PI that is offered as supp
     supp_propn_a1e1b1nwzida0e0b0xyg = proportion_a1e1b1nwzida0e0b0xyg * (feedsupply_std_a1e1b1nwzida0e0b0xyg > 2) + (feedsupply_std_a1e1b1nwzida0e0b0xyg == 4)   # the proportion of diet if the value is above 2 and equal to 1.0 if fs==4 (at fs 3 sheep have 0 sup and 0 fodder at fs4 sheep have 100% of pi is sup)
     intake_s = pi * supp_propn_a1e1b1nwzida0e0b0xyg

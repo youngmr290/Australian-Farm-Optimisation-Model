@@ -1203,6 +1203,24 @@ def generator(params,r_vals,nv,plots = False):
     a_n_pa1e1b1nwzida0e0b0xyg3 = (np.trunc(index_wzida0e0b0xyg3 / (n_fs_offs ** ((n_fvp_periods_offs-1) - n_prior_fvps_pa1e1b1nwzida0e0b0xyg3))) % n_fs_offs).astype(int) #needs to be int so it can be an indice
 
 
+    #####################
+    #set up n axis stuff#
+    #####################
+    ##only gets done if dsp (if statement inside f1_add_n
+    ##create bool array used to update feedsupply during the season junction.
+    period_within_junction_n0_pa1e1b1nwzida0e0b0xyg = sfun.f1_period_is_('period_is_between', date_prev_seasonstart_pa1e1b1nwzida0e0b0xyg[:,:,:,:,0:1,...]
+    , date_start_pa1e1b1nwzida0e0b0xyg, date_prev_seasonstart_pa1e1b1nwzida0e0b0xyg, date_end_pa1e1b1nwzida0e0b0xyg)
+    period_within_junction_n1_pa1e1b1nwzida0e0b0xyg = sfun.f1_period_is_('period_is_between', date_prev_seasonstart_pa1e1b1nwzida0e0b0xyg[:,:,:,:,0:1,...]
+    , date_start_pa1e1b1nwzida0e0b0xyg, date_prev_seasonstart_pa1e1b1nwzida0e0b0xyg[:,:,:,:,-1:,...], date_end_pa1e1b1nwzida0e0b0xyg)
+    ##stack to activate n axis
+    period_within_junction_n_pa1e1b1nwzida0e0b0xyg = np.concatenate([period_within_junction_n0_pa1e1b1nwzida0e0b0xyg,
+                                                               period_within_junction_n1_pa1e1b1nwzida0e0b0xyg], axis=n_pos)
+
+    ##update n axis for arrays already built. mobsize and nv are done in pp & feedsupply stuff is done in f1_feedsupply()
+    legume_pa1e1b1nwzida0e0b0xyg = sfun.f1_add_n(legume_pa1e1b1nwzida0e0b0xyg, period_within_junction_n_pa1e1b1nwzida0e0b0xyg,n_pos,z_pos)
+    density_pa1e1b1nwzida0e0b0xyg = sfun.f1_add_n(density_pa1e1b1nwzida0e0b0xyg, period_within_junction_n_pa1e1b1nwzida0e0b0xyg,n_pos,z_pos)
+
+
     ######################
     #adjust sensitivities#
     ######################
@@ -2013,40 +2031,6 @@ def generator(params,r_vals,nv,plots = False):
     feedsupplyw_pa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(feedsupply_std_pa1e1b1nwzida0e0b0xyg3, a_n_pa1e1b1nwzida0e0b0xyg3, axis=n_pos)
 
 
-    ####################################
-    #populate n axis for dsp feedsupply#
-    ####################################
-    '''
-    In the dsp model, at the season junctions seasons pass to themselves and also to the other seasons. Therefore,
-    animals in seasons with an early break need to continue to be generated until the later breaks.
-    This requires using an axis with 2 slices, one slice for consecutive seasons of the 
-    same type (i.e. as per the steady state model) and one with the extended dry feed phase i.e. the weather-year 
-    followed by a late break season. The axis to be used is the ‘n’ axis.
-    The nutritive value of the feed in n[1] between the break of the earliest season to the break of the latest 
-    season needs to be the quality of the dry feed, whereas n[0] is the quality of the green feed in the period 
-    after the season break for each season. Because the calculation of the distribution of animals between z8 and z9 
-    has been simplified to reduced model size this requires that the feed periods and the nutritive value in the 
-    time between the earliest break and the latest break need to be the same for the dry feed.
-    '''
-
-    if not bool_steady_state: # only add if dsp
-        ##create bool array used to update feedsupply during the season junction.
-        period_within_junction_n0_pa1e1b1nwzida0e0b0xyg = sfun.f1_period_is_('period_is_between', date_prev_seasonstart_pa1e1b1nwzida0e0b0xyg[:,:,:,:,0:1,...]
-        , date_start_pa1e1b1nwzida0e0b0xyg, date_prev_seasonstart_pa1e1b1nwzida0e0b0xyg, date_end_pa1e1b1nwzida0e0b0xyg)
-        period_within_junction_n1_pa1e1b1nwzida0e0b0xyg = sfun.f1_period_is_('period_is_between', date_prev_seasonstart_pa1e1b1nwzida0e0b0xyg[:,:,:,:,0:1,...]
-        , date_start_pa1e1b1nwzida0e0b0xyg, date_prev_seasonstart_pa1e1b1nwzida0e0b0xyg[:,:,:,:,-1:,...], date_end_pa1e1b1nwzida0e0b0xyg)
-        ##stack to activate n axis
-        period_within_junction_n_pa1e1b1nwzida0e0b0xyg = np.concatenate([period_within_junction_n0_pa1e1b1nwzida0e0b0xyg,
-                                                                   period_within_junction_n1_pa1e1b1nwzida0e0b0xyg], axis=n_pos)
-        ##update fs
-        feedsupplyw_pa1e1b1nwzida0e0b0xyg0 = fun.f_update(feedsupplyw_pa1e1b1nwzida0e0b0xyg0, feedsupplyw_pa1e1b1nwzida0e0b0xyg0[:,:,:,:,0:1,:,-1:,...]
-                                                      , period_within_junction_n_pa1e1b1nwzida0e0b0xyg)
-        feedsupplyw_pa1e1b1nwzida0e0b0xyg1 = fun.f_update(feedsupplyw_pa1e1b1nwzida0e0b0xyg1, feedsupplyw_pa1e1b1nwzida0e0b0xyg1[:,:,:,:,0:1,:,-1:,...]
-                                                      , period_within_junction_n_pa1e1b1nwzida0e0b0xyg)
-        feedsupplyw_pa1e1b1nwzida0e0b0xyg3 = fun.f_update(feedsupplyw_pa1e1b1nwzida0e0b0xyg3, feedsupplyw_pa1e1b1nwzida0e0b0xyg3[:,:,:,:,0:1,:,-1:,...]
-                                                      , period_within_junction_n_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p])
-
-
     #######################
     #start generator loops#
     #######################
@@ -2461,17 +2445,17 @@ def generator(params,r_vals,nv,plots = False):
                     foo_sire, hf_sire, dmd_sire, intake_s_sire, md_herb_sire  \
                         = sfun.f1_feedsupply(feedsupplyw_pa1e1b1nwzida0e0b0xyg0[p]
                                             , paststd_foo_pa1e1b1j0wzida0e0b0xyg0[p], paststd_dmd_pa1e1b1j0wzida0e0b0xyg[p]
-                                            , paststd_hf_pa1e1b1j0wzida0e0b0xyg0[p], pi_sire)
+                                            , paststd_hf_pa1e1b1j0wzida0e0b0xyg0[p], pi_sire, period_within_junction_n_pa1e1b1nwzida0e0b0xyg[p])
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg1[p,...] >0):
                     foo_dams, hf_dams, dmd_dams, intake_s_dams, md_herb_dams  \
                         = sfun.f1_feedsupply(feedsupplyw_pa1e1b1nwzida0e0b0xyg1[p]
                                             , paststd_foo_pa1e1b1j0wzida0e0b0xyg1[p], paststd_dmd_pa1e1b1j0wzida0e0b0xyg[p]
-                                            , paststd_hf_pa1e1b1j0wzida0e0b0xyg1[p], pi_dams)
+                                            , paststd_hf_pa1e1b1j0wzida0e0b0xyg1[p], pi_dams, period_within_junction_n_pa1e1b1nwzida0e0b0xyg[p])
                 if np.any(days_period_pa1e1b1nwzida0e0b0xyg3[p,...] >0):
                     foo_offs, hf_offs, dmd_offs, intake_s_offs, md_herb_offs  \
                         = sfun.f1_feedsupply(feedsupplyw_pa1e1b1nwzida0e0b0xyg3[p]
                                             , paststd_foo_pa1e1b1j0wzida0e0b0xyg3[p], paststd_dmd_pa1e1b1j0wzida0e0b0xyg[p]
-                                            , paststd_hf_pa1e1b1j0wzida0e0b0xyg3[p], pi_offs)
+                                            , paststd_hf_pa1e1b1j0wzida0e0b0xyg3[p], pi_offs, period_within_junction_n_pa1e1b1nwzida0e0b0xyg[p])
 
                 ##relative availability
                 eqn_group = 5
@@ -3032,7 +3016,9 @@ def generator(params,r_vals,nv,plots = False):
 
             ##feedsupply
             if np.any(days_period_pa1e1b1nwzida0e0b0xyg2[p,...] >0):
-                foo_yatf, hf_yatf, dmd_yatf, intake_s_yatf, md_herb_yatf = sfun.f1_feedsupply(feedsupplyw_pa1e1b1nwzida0e0b0xyg1[p], paststd_foo_pa1e1b1j0wzida0e0b0xyg2[p], paststd_dmd_pa1e1b1j0wzida0e0b0xyg[p], paststd_hf_pa1e1b1j0wzida0e0b0xyg2[p], pi_yatf) #yatf use dam feedsupply_std because they are on same pasture (foo and hf may be different due to cr param)
+                foo_yatf, hf_yatf, dmd_yatf, intake_s_yatf, md_herb_yatf = sfun.f1_feedsupply(
+                    feedsupplyw_pa1e1b1nwzida0e0b0xyg1[p], paststd_foo_pa1e1b1j0wzida0e0b0xyg2[p], paststd_dmd_pa1e1b1j0wzida0e0b0xyg[p],
+                    paststd_hf_pa1e1b1j0wzida0e0b0xyg2[p], pi_yatf, period_within_junction_n_pa1e1b1nwzida0e0b0xyg[p]) #yatf use dam feedsupply_std because they are on same pasture (foo and hf may be different due to cr param)
 
 
             ##relative availability - yatf
@@ -4686,12 +4672,18 @@ def generator(params,r_vals,nv,plots = False):
     mobsize_p6a1e1b1nwzida0e0b0xyg0 = fun.f_expand(pinp.sheep['i_mobsize_sire_p6zi'], i_pos, left_pos2=p_pos, right_pos2=z_pos, condition=pinp.sheep['i_masksire_i'], axis=i_pos)
     mobsize_p6a1e1b1nwzida0e0b0xyg0 = zfun.f_seasonal_inp(mobsize_p6a1e1b1nwzida0e0b0xyg0,numpy=True,axis=z_pos)
     mobsize_pa1e1b1nwzida0e0b0xyg0 = np.take_along_axis(mobsize_p6a1e1b1nwzida0e0b0xyg0, a_p6_pa1e1b1nwzida0e0b0xyg,0)
+    mobsize_pa1e1b1nwzida0e0b0xyg0 = sfun.f1_add_n(mobsize_pa1e1b1nwzida0e0b0xyg0, period_within_junction_n_pa1e1b1nwzida0e0b0xyg,
+                                                  n_pos, z_pos)
     mobsize_p6a1e1b1nwzida0e0b0xyg1 = fun.f_expand(pinp.sheep['i_mobsize_dams_p6zi'], i_pos, left_pos2=p_pos, right_pos2=z_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
     mobsize_p6a1e1b1nwzida0e0b0xyg1 = zfun.f_seasonal_inp(mobsize_p6a1e1b1nwzida0e0b0xyg1,numpy=True,axis=z_pos)
     mobsize_pa1e1b1nwzida0e0b0xyg1 = np.take_along_axis(mobsize_p6a1e1b1nwzida0e0b0xyg1,a_p6_pa1e1b1nwzida0e0b0xyg,0)
+    mobsize_pa1e1b1nwzida0e0b0xyg1 = sfun.f1_add_n(mobsize_pa1e1b1nwzida0e0b0xyg1, period_within_junction_n_pa1e1b1nwzida0e0b0xyg,
+                                                  n_pos, z_pos)
     mobsize_p6a1e1b1nwzida0e0b0xyg3 = fun.f_expand(pinp.sheep['i_mobsize_offs_p6zi'], i_pos, left_pos2=p_pos, right_pos2=z_pos, condition=pinp.sheep['i_mask_i'], axis=i_pos)
     mobsize_p6a1e1b1nwzida0e0b0xyg3 = zfun.f_seasonal_inp(mobsize_p6a1e1b1nwzida0e0b0xyg3,numpy=True,axis=z_pos)
     mobsize_pa1e1b1nwzida0e0b0xyg3 = np.take_along_axis(mobsize_p6a1e1b1nwzida0e0b0xyg3, a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p], 0)
+    mobsize_pa1e1b1nwzida0e0b0xyg3 = sfun.f1_add_n(mobsize_pa1e1b1nwzida0e0b0xyg3, period_within_junction_n_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p],
+                                                  n_pos, z_pos)
     animal_mated_b1g1 = fun.f_expand(sinp.stock['i_mated_b1'], b1_pos)
     operations_triggerlevels_h5h7h2pg = fun.f_convert_to_inf(fun.f_expand(pinp.sheep['i_husb_operations_triggerlevels_h5h7h2'], p_pos-1,
                                                                                   swap=True, swap2=True)).astype(dtype)  # convert -- and ++ to inf
@@ -5322,8 +5314,11 @@ def generator(params,r_vals,nv,plots = False):
 
     ##convert p6 to p - this reduces the final array size to save memory (otherwise final array would have p and p6 axis)
     nv_cutoff_upper_fpzg = np.sum(nv_cutoff_upper_p6fpzg * (a_p6_pa1e1b1nwzida0e0b0xyg==index_p6pa1e1b1nwzida0e0b0xyg[:,na,...]), axis=0)
+    nv_cutoff_upper_fpzg = sfun.f1_add_n(nv_cutoff_upper_fpzg, period_within_junction_n_pa1e1b1nwzida0e0b0xyg, n_pos, z_pos)
     nv_cutoff_lower_fpzg = np.sum(nv_cutoff_lower_p6fpzg * (a_p6_pa1e1b1nwzida0e0b0xyg==index_p6pa1e1b1nwzida0e0b0xyg[:,na,...]), axis=0)
+    nv_cutoff_lower_fpzg = sfun.f1_add_n(nv_cutoff_lower_fpzg, period_within_junction_n_pa1e1b1nwzida0e0b0xyg, n_pos, z_pos)
     nv_cutoffs_sd_fpzg = np.sum(nv_cutoffs_sd_p6fpzg * (a_p6_pa1e1b1nwzida0e0b0xyg==index_p6pa1e1b1nwzida0e0b0xyg[:,na,...]), axis=0)
+    nv_cutoffs_sd_fpzg = sfun.f1_add_n(nv_cutoffs_sd_fpzg, period_within_junction_n_pa1e1b1nwzida0e0b0xyg, n_pos, z_pos)
 
     ##So that no animals are excluded the lowest cutoff[0] is set to -np.inf and the highest cutoff (excluding confinement pool) is set to np.inf
     nv_cutoff_lower_fpzg[0, ...] = -np.inf
