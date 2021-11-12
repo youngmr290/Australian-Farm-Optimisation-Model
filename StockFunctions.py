@@ -2127,7 +2127,7 @@ def f1_p2v_std(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_t
     return np.sum(production_ftvpany, axis=sinp.stock['i_p_pos']-sumadj)
 
 
-##Method 2 (fastest)- sum sections of p axis to leave v (almost like sum if) this is fast because don't need p and v axis in same array
+# ##Method 2 (fastest)- sum sections of p axis to leave v (almost like sum if) this is fast because don't need p and v axis in same array
 # def f1_p2v(production_p, dvp_pointer_p=1, numbers_p=1, on_hand_tp=True, days_period_p=1, period_is_tp=True, a_any1_p=1, index_any1tp=1, a_any2_p=1, index_any2any1tp=1):
 #     #convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it can't be converted to float (because int object is not numpy)
 #     try:
@@ -2204,7 +2204,7 @@ def f1_p2v(production_p, dvp_pointer_p, numbers_p=np.array([1]), on_hand_tp=True
     numbers_p = np.broadcast_to(numbers_p, np.broadcast(numbers_p, dvp_pointer_p).shape)
     days_period_p = np.broadcast_to(days_period_p, np.broadcast(days_period_p, dvp_pointer_p).shape)
     on_hand_tp = np.broadcast_to(on_hand_tp, np.broadcast(on_hand_tp, dvp_pointer_p).shape) #bit more complex because need to account for axes that 'shape' doesnt have.
-    period_is_tp = np.broadcast_to(a_any1_p, np.broadcast(period_is_tp, dvp_pointer_p).shape)
+    period_is_tp = np.broadcast_to(period_is_tp, np.broadcast(period_is_tp, dvp_pointer_p).shape)
 
     ##loop over each axis in dvp_pointer. Loop over all axis because active axis change for dams and offs. So this will handle if other axis get activated at a later date.
     for v in range(np.max(dvp_pointer_p)+1):
