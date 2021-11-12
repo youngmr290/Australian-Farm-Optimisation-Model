@@ -2123,63 +2123,181 @@ def f1_p2v_std(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_t
     production_ftvpany = (production_p * numbers_p * days_period_p * period_is_tvp
                           * on_hand_tvp * (dvp_pointer_p == index_vp) * (a_any1_p == index_any1tvp)
                           * (a_any2_p == index_any2any1tvp))
-    ## sum along p axis to leave just a v axis (sumadj is to handle nsire that has a p8 axis at the end)
+    ## sum along p axis to leave just v axis (sumadj is to handle nsire that has a p8 axis at the end)
     return np.sum(production_ftvpany, axis=sinp.stock['i_p_pos']-sumadj)
 
 
 ##Method 2 (fastest)- sum sections of p axis to leave v (almost like sum if) this is fast because don't need p and v axis in same array
-def f1_p2v(production_p, dvp_pointer_p=1, numbers_p=1, on_hand_tp=True, days_period_p=1, period_is_tp=True, a_any1_p=1, index_any1tp=1, a_any2_p=1, index_any2any1tp=1):
-    #convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it can't be converted to float (because int object is not numpy)
-    try:
-        days_period_p = days_period_p.astype('float32')
+# def f1_p2v(production_p, dvp_pointer_p=1, numbers_p=1, on_hand_tp=True, days_period_p=1, period_is_tp=True, a_any1_p=1, index_any1tp=1, a_any2_p=1, index_any2any1tp=1):
+#     #convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it can't be converted to float (because int object is not numpy)
+#     try:
+#         days_period_p = days_period_p.astype('float32')
+#     except AttributeError:
+#         pass
+#     ##mul everything - add t,f and p6 axis
+#     production_ftpany = (production_p * numbers_p * days_period_p * period_is_tp
+#                         * on_hand_tp * (a_any1_p==index_any1tp)
+#                         * (a_any2_p==index_any2any1tp))
+#     ##convert p to v - info at this link https://stackoverflow.com/questions/50121980/numpy-conditional-sum
+#     ##basically we are summing the p axis for each dvp. the tricky part (which has caused the requirement for the loops) is that dvp pointer is not the same for each axis eg dvp is effected by e axis.
+#     ##so we need to loop though all the axis in the dvp and sum p and assign to a final array.
+#     ##if the axis is size 1 (ie singleton) then we want to take all of that axis ie ':' because just because the dvp pointer has singleton doesnt mean param array has singleton so need to take all slice of the param (unless that is an active dvp axis because that means dvp timing may differ for different slices along that axis so it must be summed in the loop)
+#     shape = production_ftpany.shape[0:sinp.stock['i_p_pos']] + (np.max(dvp_pointer_p)+1,) + production_ftpany.shape[sinp.stock['i_p_pos']+1:]  # bit messy because need v t and all the other axis (but not p)
+#     result=np.zeros(shape).astype('float32')
+#     shape = dvp_pointer_p.shape
+#     #todo referring to axes positions using a constant rather than using the variable
+#     for a1 in range(shape[-14]):
+#         a1_slc = slice(a1,a1+1) if shape[-14]>1 else slice(0,None) #used for param because we want to keep axis
+#         for e1 in range(shape[-13]):
+#             e1_slc = slice(e1, e1 + 1) if shape[-13] > 1 else slice(0, None)
+#             for b1 in range(shape[-12]):
+#                 b1_slc = slice(b1, b1 + 1) if shape[-12] > 1 else slice(0, None)
+#                 for n in range(shape[-11]):
+#                     n_slc = slice(n, n + 1) if shape[-11] > 1 else slice(0, None)
+#                     for w in range(shape[-10]):
+#                         w_slc = slice(w, w + 1) if shape[-10] > 1 else slice(0, None)
+#                         for z in range(shape[-9]):
+#                             z_slc = slice(z, z + 1) if shape[-9] > 1 else slice(0, None)
+#                             for i in range(shape[-8]):
+#                                 i_slc = slice(i, i + 1) if shape[-8] > 1 else slice(0, None)
+#                                 for d in range(shape[-7]):
+#                                     d_slc = slice(d, d + 1) if shape[-7] > 1 else slice(0, None)
+#                                     for a0 in range(shape[-6]):
+#                                         a0_slc = slice(a0, a0 + 1) if shape[-6] > 1 else slice(0, None)
+#                                         for e0 in range(shape[-5]):
+#                                             e0_slc = slice(e0, e0 + 1) if shape[-5] > 1 else slice(0, None)
+#                                             for b0 in range(shape[-4]):
+#                                                 b0_slc = slice(b0, b0 + 1) if shape[-4] > 1 else slice(0, None)
+#                                                 for x in range(shape[-3]):
+#                                                     x_slc = slice(x, x + 1) if shape[-3] > 1 else slice(0, None)
+#                                                     for y in range(shape[-2]):
+#                                                         y_slc = slice(y, y + 1) if shape[-2] > 1 else slice(0, None)
+#                                                         for g in range(shape[-1]):
+#                                                             g_slc = slice(g, g + 1) if shape[-1] > 1 else slice(0, None)
+#                                                             #calc the v length and only assign to that
+#                                                             len_v = len(np.unique(dvp_pointer_p[:, a1, e1, b1, n, w, z, i, d, a0, e0, b0, x, y, g]))
+#                                                             result[..., :len_v, a1_slc, e1_slc, b1_slc, n_slc, w_slc, z_slc, i_slc, d_slc, a0_slc, e0_slc, b0_slc, x_slc, y_slc, g_slc] \
+#                                                                 = np.add.reduceat(production_ftpany[..., a1_slc, e1_slc, b1_slc, n_slc, w_slc, z_slc, i_slc, d_slc, a0_slc, e0_slc, b0_slc, x_slc, y_slc, g_slc]
+#                                                                                   , np.r_[0, np.where(np.diff(dvp_pointer_p[:, a1, e1, b1, n, w, z, i, d, a0, e0, b0, x, y, g]))[0] + 1], axis=sinp.stock['i_p_pos']) #np.r_ basically concats two 1d arrays (so here we are just adding 0 to the start of the array)
+#     return result
+
+##Method 2b - (similar speed to method 2) loop over v and other axis active in dvp pointer, mask p for the current v and sum. This method
+# has replaced method 2 because this handles 0 day dvps.
+def f1_p2v(production_p, dvp_pointer_p, numbers_p=1, on_hand_tp=True, days_period_p=np.array([1]),
+            period_is_tp=np.array([True]), a_any1_p=np.array([1]), index_any1tp=1, a_any2_p=np.array([1]), index_any2any1tp=1):
+    try: days_period_p = days_period_p.astype('float32')  #convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it can't be converted to float (because int object is not numpy)
     except AttributeError:
         pass
-    ##mul everything - add t,f and p6 axis
-    production_ftpany = (production_p * numbers_p * days_period_p * period_is_tp
-                        * on_hand_tp * (a_any1_p==index_any1tp)
-                        * (a_any2_p==index_any2any1tp))
-    ##convert p to v - info at this link https://stackoverflow.com/questions/50121980/numpy-conditional-sum
-    ##basically we are summing the p axis for each dvp. the tricky part (which has caused the requirement for the loops) is that dvp pointer is not the same for each axis eg dvp is effected by e axis.
-    ##so we need to loop though all the axis in the dvp and sum p and assign to a final array.
-    ##if the axis is size 1 (ie singleton) then we want to take all of that axis ie ':' because just because the dvp pointer has singleton doesnt mean param array has singleton so need to take all slice of the param (unless that is an active dvp axis because that means dvp timing may differ for different slices along that axis so it must be summed in the loop)
-    shape = production_ftpany.shape[0:sinp.stock['i_p_pos']] + (np.max(dvp_pointer_p)+1,) + production_ftpany.shape[sinp.stock['i_p_pos']+1:]  # bit messy because need v t and all the other axis (but not p)
-    result=np.zeros(shape).astype('float32')
+    p_pos=sinp.stock['i_p_pos']
+    ##broadcast everything - so that i can create final array and mask p
+    final_shape_vp = np.broadcast(production_p, index_any1tp, index_any2any1tp, on_hand_tp, period_is_tp).shape
+    ###remove p axis
+    final_shape = final_shape_vp[:p_pos] + (np.max(dvp_pointer_p)+1,) + final_shape_vp[p_pos+1:]  # bit messy because need v t and all the other axis (but not p)
+    ##initilise final array - it is assigned to by slice
+    final=np.zeros(final_shape).astype('float32')
+
+    ##broadcast arrays to dvp shape - needs all the axis that are active in the loop
     shape = dvp_pointer_p.shape
-    #todo referring to axes positions using a constant rather than using the variable
-    for a1 in range(shape[-14]):
-        a1_slc = slice(a1,a1+1) if shape[-14]>1 else slice(0,None) #used for param because we want to keep axis
-        for e1 in range(shape[-13]):
-            e1_slc = slice(e1, e1 + 1) if shape[-13] > 1 else slice(0, None)
-            for b1 in range(shape[-12]):
-                b1_slc = slice(b1, b1 + 1) if shape[-12] > 1 else slice(0, None)
-                for n in range(shape[-11]):
-                    n_slc = slice(n, n + 1) if shape[-11] > 1 else slice(0, None)
-                    for w in range(shape[-10]):
-                        w_slc = slice(w, w + 1) if shape[-10] > 1 else slice(0, None)
-                        for z in range(shape[-9]):
-                            z_slc = slice(z, z + 1) if shape[-9] > 1 else slice(0, None)
-                            for i in range(shape[-8]):
-                                i_slc = slice(i, i + 1) if shape[-8] > 1 else slice(0, None)
-                                for d in range(shape[-7]):
-                                    d_slc = slice(d, d + 1) if shape[-7] > 1 else slice(0, None)
-                                    for a0 in range(shape[-6]):
-                                        a0_slc = slice(a0, a0 + 1) if shape[-6] > 1 else slice(0, None)
-                                        for e0 in range(shape[-5]):
-                                            e0_slc = slice(e0, e0 + 1) if shape[-5] > 1 else slice(0, None)
-                                            for b0 in range(shape[-4]):
-                                                b0_slc = slice(b0, b0 + 1) if shape[-4] > 1 else slice(0, None)
-                                                for x in range(shape[-3]):
-                                                    x_slc = slice(x, x + 1) if shape[-3] > 1 else slice(0, None)
-                                                    for y in range(shape[-2]):
-                                                        y_slc = slice(y, y + 1) if shape[-2] > 1 else slice(0, None)
-                                                        for g in range(shape[-1]):
-                                                            g_slc = slice(g, g + 1) if shape[-1] > 1 else slice(0, None)
-                                                            #calc the v length and only assign to that
-                                                            len_v = len(np.unique(dvp_pointer_p[:, a1, e1, b1, n, w, z, i, d, a0, e0, b0, x, y, g]))
-                                                            result[..., :len_v, a1_slc, e1_slc, b1_slc, n_slc, w_slc, z_slc, i_slc, d_slc, a0_slc, e0_slc, b0_slc, x_slc, y_slc, g_slc] \
-                                                                = np.add.reduceat(production_ftpany[..., a1_slc, e1_slc, b1_slc, n_slc, w_slc, z_slc, i_slc, d_slc, a0_slc, e0_slc, b0_slc, x_slc, y_slc, g_slc]
-                                                                                  , np.r_[0, np.where(np.diff(dvp_pointer_p[:, a1, e1, b1, n, w, z, i, d, a0, e0, b0, x, y, g]))[0] + 1], axis=sinp.stock['i_p_pos']) #np.r_ basically concats two 1d arrays (so here we are just adding 0 to the start of the array)
-    return result
+    a_any1_p = np.broadcast_to(a_any1_p, shape)
+    a_any2_p = np.broadcast_to(a_any2_p, shape)
+    on_hand_tp = np.broadcast_to(on_hand_tp, np.broadcast(on_hand_tp, dvp_pointer_p).shape) #bit more complex than above because need to account for t axis but only if it exists hence broadcast before getting shape.
+    period_is_tp = np.broadcast_to(a_any1_p, np.broadcast(period_is_tp, dvp_pointer_p).shape)
+
+    ##loop over each axis in dvp_pointer. Loop over all axis because active axis change for dams and offs. So this will handle if other axis get activated at a later date.
+    for v in range(np.max(dvp_pointer_p)+1):
+        for a1 in range(shape[-14]):
+            a1_slc = slice(a1,a1 + 1) if shape[-14] > 1 else slice(0,None)  # used for param because we want to keep axis
+            for e1 in range(shape[-13]):
+                e1_slc = slice(e1,e1 + 1) if shape[-13] > 1 else slice(0,None)
+                for b1 in range(shape[-12]):
+                    b1_slc = slice(b1,b1 + 1) if shape[-12] > 1 else slice(0,None)
+                    for n in range(shape[-11]):
+                        n_slc = slice(n,n + 1) if shape[-11] > 1 else slice(0,None)
+                        for w in range(shape[-10]):
+                            w_slc = slice(w,w + 1) if shape[-10] > 1 else slice(0,None)
+                            for z in range(shape[-9]):
+                                z_slc = slice(z,z + 1) if shape[-9] > 1 else slice(0,None)
+                                for i in range(shape[-8]):
+                                    i_slc = slice(i,i + 1) if shape[-8] > 1 else slice(0,None)
+                                    for d in range(shape[-7]):
+                                        d_slc = slice(d,d + 1) if shape[-7] > 1 else slice(0,None)
+                                        for a0 in range(shape[-6]):
+                                            a0_slc = slice(a0,a0 + 1) if shape[-6] > 1 else slice(0,None)
+                                            for e0 in range(shape[-5]):
+                                                e0_slc = slice(e0,e0 + 1) if shape[-5] > 1 else slice(0,None)
+                                                for b0 in range(shape[-4]):
+                                                    b0_slc = slice(b0,b0 + 1) if shape[-4] > 1 else slice(0,None)
+                                                    for x in range(shape[-3]):
+                                                        x_slc = slice(x,x + 1) if shape[-3] > 1 else slice(0,None)
+                                                        for y in range(shape[-2]):
+                                                            y_slc = slice(y,y + 1) if shape[-2] > 1 else slice(0,None)
+                                                            for g in range(shape[-1]):
+                                                                g_slc = slice(g,g + 1) if shape[-1] > 1 else slice(0,None)
+                                                                ##build mask - which p's in current v
+                                                                mask_p = dvp_pointer_p[:, a1, e1, b1, n, w, z, i, d, a0, e0, b0, x, y, g]==v
+                                                                ##calculation - using mask_p to make it faster.
+                                                                final[...,v, a1_slc, e1_slc, b1_slc, n_slc, w_slc, z_slc, i_slc, d_slc, a0_slc, e0_slc, b0_slc, x_slc, y_slc, g_slc]\
+                                                                    = np.sum(production_p[...,mask_p, a1_slc, e1_slc, b1_slc, n_slc, w_slc, z_slc, i_slc, d_slc, a0_slc, e0_slc, b0_slc, x_slc, y_slc, g_slc]
+                                                                             * numbers_p[..., mask_p, a1_slc, e1_slc, b1_slc, n_slc, w_slc, z_slc, i_slc, d_slc, a0_slc, e0_slc, b0_slc, x_slc, y_slc, g_slc]
+                                                                             * days_period_p[mask_p] #only ever has active p axis.
+                                                                             * period_is_tp[...,mask_p, a1_slc, e1_slc, b1_slc, n_slc, w_slc, z_slc, i_slc, d_slc, a0_slc, e0_slc, b0_slc, x_slc, y_slc, g_slc]
+                                                                             * on_hand_tp[...,mask_p, a1_slc, e1_slc, b1_slc, n_slc, w_slc, z_slc, i_slc, d_slc, a0_slc, e0_slc, b0_slc, x_slc, y_slc, g_slc]
+                                                                             * (a_any1_p[...,mask_p, a1_slc, e1_slc, b1_slc, n_slc, w_slc, z_slc, i_slc, d_slc, a0_slc, e0_slc, b0_slc, x_slc, y_slc, g_slc]==index_any1tp)
+                                                                             * (a_any2_p[...,mask_p, a1_slc, e1_slc, b1_slc, n_slc, w_slc, z_slc, i_slc, d_slc, a0_slc, e0_slc, b0_slc, x_slc, y_slc, g_slc]==index_any2any1tp)
+                                                                             , axis=p_pos)
+    return final
+
+##method 6 - masked arrays (slow)
+# def f1_p2v_loop2(production_p, dvp_pointer_p, numbers_p=1, on_hand_tp=True, days_period_p=np.array([1]),
+#             period_is_tp=np.array([True]), a_any1_p=np.array([1]), index_any1tp=1, a_any2_p=np.array([1]), index_any2any1tp=1):
+#     try: days_period_p = days_period_p.astype('float32')  #convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it can't be converted to float (because int object is not numpy)
+#     except AttributeError:
+#         pass
+#     p_pos=sinp.stock['i_p_pos']
+#     ##broadcast everything - so that i can create final array and mask p
+#     final_shape_vp = np.broadcast(production_p, index_any1tp, index_any2any1tp, on_hand_tp, period_is_tp).shape
+#     ###remove p axis
+#     final_shape = final_shape_vp[:p_pos] + (np.max(dvp_pointer_p)+1,) + final_shape_vp[p_pos+1:]  # bit messy because need v t and all the other axis (but not p)
+#
+#     ##broadcast arrays to dvp shape - needs all the axis that are active in the loop
+#     shape = dvp_pointer_p.shape
+#     a_any1_p = np.broadcast_to(a_any1_p, shape)
+#     a_any2_p = np.broadcast_to(a_any2_p, shape)
+#     days_period_p = np.broadcast_to(days_period_p, shape)
+#     on_hand_tp = np.broadcast_to(on_hand_tp, np.broadcast(on_hand_tp, dvp_pointer_p).shape) #bit more complex than above because need to account for t axis but only if it exists hence broadcast before getting shape.
+#     period_is_tp = np.broadcast_to(a_any1_p, np.broadcast(period_is_tp, dvp_pointer_p).shape)
+#
+#     ##initilise final array - it is assigned to by slice
+#     final=np.zeros(final_shape).astype('float32')
+#
+#     ##loop over each axis in dvp_pointer. Loop over all axis because active axis change for dams and offs. So this will handle if other axis get activated at a later date.
+#     for v in range(np.max(dvp_pointer_p)+1):
+#         ##build mask - which p's in current v
+#         mask_p = dvp_pointer_p==v
+#         ##build masked arrays
+#         mask_production_p = np.broadcast_to(mask_p, production_p.shape)
+#         ma_production_p = np.ma.masked_array(production_p, mask_production_p)
+#         mask_numbers_p = np.broadcast_to(mask_p, numbers_p.shape)
+#         ma_numbers_p = np.ma.masked_array(numbers_p, mask_numbers_p)
+#         mask_days_period_p = np.broadcast_to(mask_p, days_period_p.shape)
+#         ma_days_period_p = np.ma.masked_array(days_period_p, mask_days_period_p)
+#         mask_on_hand_tp = np.broadcast_to(mask_p, on_hand_tp.shape)
+#         ma_on_hand_tp = np.ma.masked_array(on_hand_tp, mask_on_hand_tp)
+#         mask_a_any1_p = np.broadcast_to(mask_p, a_any1_p.shape)
+#         ma_a_any1_p = np.ma.masked_array(a_any1_p, mask_a_any1_p)
+#
+#         ##calculation - using mask_p to make it faster.
+#         final\
+#                 = np.ma.sum(ma_production_p
+#                      * ma_numbers_p
+#                      * ma_days_period_p
+#                      # * period_is_tp
+#                      * ma_on_hand_tp
+#                      * (ma_a_any1_p==index_any1tp)
+#                      # * (a_any2_p==index_any2any1tp)
+#                      , axis=sinp.stock['i_p_pos'])
+#     return final
+
 
 # ##Method 5 numexpr (slow - even with fv33n33 it is much slower than the current method
 # import numexpr as ne
@@ -2202,14 +2320,15 @@ def f1_p2v(production_p, dvp_pointer_p=1, numbers_p=1, on_hand_tp=True, days_per
 
 
 # ##Method 4 - loop over v and sum p - this save p and v axis being on the same array but requires lots of looping so isn't much faster
-# def f1_p2v_loop(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tvp=True, days_period_p=1, period_is_tvp=True, a_ev_p=1, index_ftvp=1, a_p6_p=1, index_p6ftvp=1):
+# def f1_p2v_loop(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_tvp=True, days_period_p=1,
+#             period_is_tvp=True, a_any1_p=1, index_any1tvp=1, a_any2_p=1, index_any2any1tvp=1, sumadj=0):
 #     try: days_period_p = days_period_p.astype('float32')  #convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it can't be converted to float (because int object is not numpy)
 #     except AttributeError:
 #         pass
 #     ##mul everything
 #     production_ftpany = (production_p * numbers_p * days_period_p * period_is_tvp
-#                         * on_hand_tvp * (a_ev_p==index_ftvp)
-#                         * (a_p6_p==index_p6ftvp))
+#                         * on_hand_tvp * (a_any1_p==index_any1tvp)
+#                         * (a_any2_p==index_any2any1tvp))
 #
 #     shape = production_ftpany.shape[0:3] + (np.max(dvp_pointer_p)+1,) + production_ftpany.shape[4:]  # bit messy because need v t and all the other axis (but not p)
 #     final=np.zeros(shape).astype('float32')
