@@ -2183,14 +2183,14 @@ def f1_p2v_std(production_p, dvp_pointer_p=1, index_vp=1, numbers_p=1, on_hand_t
 
 ##Method 2b - (similar speed to method 2) loop over v and other axis active in dvp pointer, mask p for the current v and sum. This method
 # has replaced method 2 because this handles 0 day dvps.
-def f1_p2v(production_p, dvp_pointer_p, numbers_p=1, on_hand_tp=True, days_period_p=np.array([1]),
+def f1_p2v(production_p, dvp_pointer_p, numbers_p=np.array([1]), on_hand_tp=True, days_period_p=np.array([1]),
             period_is_tp=np.array([True]), a_any1_p=np.array([1]), index_any1tp=1, a_any2_p=np.array([1]), index_any2any1tp=1):
     try: days_period_p = days_period_p.astype('float32')  #convert int to float because float32 * int32 results in float64. Need the try/except because when days period is the default 1 it can't be converted to float (because int object is not numpy)
     except AttributeError:
         pass
     p_pos=sinp.stock['i_p_pos']
     ##broadcast everything - so that i can create final array and mask p
-    final_shape_vp = np.broadcast(production_p, index_any1tp, index_any2any1tp, on_hand_tp, period_is_tp).shape
+    final_shape_vp = np.broadcast(production_p, numbers_p, index_any1tp, index_any2any1tp, on_hand_tp, period_is_tp).shape
     ###remove p axis
     final_shape = final_shape_vp[:p_pos] + (np.max(dvp_pointer_p)+1,) + final_shape_vp[p_pos+1:]  # bit messy because need v t and all the other axis (but not p)
     ##initilise final array - it is assigned to by slice
@@ -2200,7 +2200,10 @@ def f1_p2v(production_p, dvp_pointer_p, numbers_p=1, on_hand_tp=True, days_perio
     shape = dvp_pointer_p.shape
     a_any1_p = np.broadcast_to(a_any1_p, shape)
     a_any2_p = np.broadcast_to(a_any2_p, shape)
-    on_hand_tp = np.broadcast_to(on_hand_tp, np.broadcast(on_hand_tp, dvp_pointer_p).shape) #bit more complex than above because need to account for t axis but only if it exists hence broadcast before getting shape.
+    production_p = np.broadcast_to(production_p, np.broadcast(production_p, dvp_pointer_p).shape)
+    numbers_p = np.broadcast_to(numbers_p, np.broadcast(numbers_p, dvp_pointer_p).shape)
+    days_period_p = np.broadcast_to(days_period_p, np.broadcast(days_period_p, dvp_pointer_p).shape)
+    on_hand_tp = np.broadcast_to(on_hand_tp, np.broadcast(on_hand_tp, dvp_pointer_p).shape) #bit more complex because need to account for axes that 'shape' doesnt have.
     period_is_tp = np.broadcast_to(a_any1_p, np.broadcast(period_is_tp, dvp_pointer_p).shape)
 
     ##loop over each axis in dvp_pointer. Loop over all axis because active axis change for dams and offs. So this will handle if other axis get activated at a later date.
@@ -2239,7 +2242,7 @@ def f1_p2v(production_p, dvp_pointer_p, numbers_p=1, on_hand_tp=True, days_perio
                                                                 final[...,v, a1_slc, e1_slc, b1_slc, n_slc, w_slc, z_slc, i_slc, d_slc, a0_slc, e0_slc, b0_slc, x_slc, y_slc, g_slc]\
                                                                     = np.sum(production_p[...,mask_p, a1_slc, e1_slc, b1_slc, n_slc, w_slc, z_slc, i_slc, d_slc, a0_slc, e0_slc, b0_slc, x_slc, y_slc, g_slc]
                                                                              * numbers_p[..., mask_p, a1_slc, e1_slc, b1_slc, n_slc, w_slc, z_slc, i_slc, d_slc, a0_slc, e0_slc, b0_slc, x_slc, y_slc, g_slc]
-                                                                             * days_period_p[mask_p] #only ever has active p axis.
+                                                                             * days_period_p[..., mask_p, a1_slc, e1_slc, b1_slc, n_slc, w_slc, z_slc, i_slc, d_slc, a0_slc, e0_slc, b0_slc, x_slc, y_slc, g_slc]
                                                                              * period_is_tp[...,mask_p, a1_slc, e1_slc, b1_slc, n_slc, w_slc, z_slc, i_slc, d_slc, a0_slc, e0_slc, b0_slc, x_slc, y_slc, g_slc]
                                                                              * on_hand_tp[...,mask_p, a1_slc, e1_slc, b1_slc, n_slc, w_slc, z_slc, i_slc, d_slc, a0_slc, e0_slc, b0_slc, x_slc, y_slc, g_slc]
                                                                              * (a_any1_p[...,mask_p, a1_slc, e1_slc, b1_slc, n_slc, w_slc, z_slc, i_slc, d_slc, a0_slc, e0_slc, b0_slc, x_slc, y_slc, g_slc]==index_any1tp)
