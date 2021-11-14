@@ -381,6 +381,46 @@ def f1_btrt0(dstwtr_propn,lss,lstw,lstr): #^this function is inflexible ie if yo
 
 
 
+####################
+#DVP/FVP functions #
+####################
+def f1_fvpdvp_adj(fvp_start_fa1e1b1nwzida0e0b0xyg, fvp_type_fa1e1b1nwzida0e0b0xyg, date_weaned_ida0e0b0xyg, date_start_p,
+                  other_vtype, condense_vtype, step):
+    '''
+    Handle dvps and fvps that fall before weaning or after the end of the generator. If the dvp/fvp falls before weaning
+    or after the end of the gen for all axis then it can be removed. If it only occurs for some axis then the period
+    is kept but moved to either weaning date or end of generator. Because each fvp needs to exist for all axis.
+    '''
+    ##handle pre weaning fvps
+    ###mask any that occur before weaning (except the start fvp) and set to last date of generator and type to 0 so they are essentially ignored.
+    pre_wean_fvp_mask = np.logical_and(fvp_start_fa1e1b1nwzida0e0b0xyg <= date_weaned_ida0e0b0xyg, fvp_start_fa1e1b1nwzida0e0b0xyg > date_start_p[0])
+    duplicate_fvp_mask_f = np.logical_not(fun.f_reduce_skipfew(np.all, pre_wean_fvp_mask,preserveAxis=0)) #pre wean mask across all axis
+    fvp_start_fa1e1b1nwzida0e0b0xyg = fvp_start_fa1e1b1nwzida0e0b0xyg[duplicate_fvp_mask_f] #remove fvps that are before weaning for all axis
+    fvp_type_fa1e1b1nwzida0e0b0xyg = fvp_type_fa1e1b1nwzida0e0b0xyg[duplicate_fvp_mask_f] #remove fvps that are before weaning for all axis
+    ###fvps that are before weaning for only some axis get set to weaning date plus 1 period offset if there are multiple
+    pre_wean_fvp_mask = np.logical_and(fvp_start_fa1e1b1nwzida0e0b0xyg <= date_weaned_ida0e0b0xyg, fvp_start_fa1e1b1nwzida0e0b0xyg > date_start_p[0])
+    new_fvp_prewean_fa1e1b1nwzida0e0b0xyg = date_weaned_ida0e0b0xyg + (np.cumsum(pre_wean_fvp_mask, axis=0)-1) * np.timedelta64(step,'D') #if multiple fvps occur at weaning they need to be incremented by 7 days
+    idx_fa1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, new_fvp_prewean_fa1e1b1nwzida0e0b0xyg, 'right')-1 #gets the sim period index for the new period, side=right so that if the date is already the start of a period it remains in that period.
+    new_fvp_prewean_fa1e1b1nwzida0e0b0xyg = date_start_p[idx_fa1e1b1nwzida0e0b0xyg]
+    fvp_start_fa1e1b1nwzida0e0b0xyg[pre_wean_fvp_mask] = new_fvp_prewean_fa1e1b1nwzida0e0b0xyg[pre_wean_fvp_mask] #fvps that occur before weaning for some axis are set to wean date plus offset if multiple fvps.
+    fvp_type_fa1e1b1nwzida0e0b0xyg[pre_wean_fvp_mask] = other_vtype #fvps that occur before weaning for some axis are set to type other - so that nothing is triggered.
+
+    ##handle post gen fvps
+    ###mask any that occur on the last day of the generator.
+    post_fvp_mask = fvp_start_fa1e1b1nwzida0e0b0xyg >= date_start_p[-1]
+    duplicate_fvp_mask_f = np.logical_not(fun.f_reduce_skipfew(np.all, post_fvp_mask,preserveAxis=0)) #post gen mask across all axis
+    fvp_start_fa1e1b1nwzida0e0b0xyg = fvp_start_fa1e1b1nwzida0e0b0xyg[duplicate_fvp_mask_f] #remove fvps that are on the last period of the generator
+    fvp_type_fa1e1b1nwzida0e0b0xyg = fvp_type_fa1e1b1nwzida0e0b0xyg[duplicate_fvp_mask_f] #remove fvps that are on the last period of the generator
+    ###if multiple fvps occur on the last period of the gen (only fo some axis and hance arent removed) date gets offset by 1 period.
+    post_fvp_mask = fvp_start_fa1e1b1nwzida0e0b0xyg >= date_start_p[-1]
+    new_fvp_post_fa1e1b1nwzida0e0b0xyg = date_start_p[-1] - (np.cumsum(post_fvp_mask, axis=0)-1) * np.timedelta64(step,'D') #if multiple fvps occur at weaning they need to be incremented by 7 days
+    idx_fa1e1b1nwzida0e0b0xyg = np.searchsorted(date_start_p, new_fvp_post_fa1e1b1nwzida0e0b0xyg, 'right')-1 #gets the sim period index for the new period, side=right so that if the date is already the start of a period it remains in that period.
+    new_fvp_post_fa1e1b1nwzida0e0b0xyg = date_start_p[idx_fa1e1b1nwzida0e0b0xyg]
+    fvp_start_fa1e1b1nwzida0e0b0xyg[post_fvp_mask] = new_fvp_post_fa1e1b1nwzida0e0b0xyg[post_fvp_mask] #fvps that occur before weaning for some axis are set to wean date plus offset if multiple fvps.
+    fvp_type_fa1e1b1nwzida0e0b0xyg[post_fvp_mask] = condense_vtype #set to condense type to make sure extra dvps don't cause issues with masking or feed supply
+
+    return fvp_start_fa1e1b1nwzida0e0b0xyg, fvp_type_fa1e1b1nwzida0e0b0xyg
+
 ################
 #Sim functions #
 ################
