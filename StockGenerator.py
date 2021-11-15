@@ -5463,19 +5463,30 @@ def generator(params,r_vals,nv,plots = False):
 
     ##intermittent
     ###numbers
+    ####sires - dont need any special treatment because they dont have dvps
     numbers_start_va1e1b1nwzida0e0b0xyg0 = sfun.f1_p2v_std(o_numbers_start_psire, on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0,
                                                           period_is_tvp=period_is_startdvp_purchase_pa1e1b1nwzida0e0b0xyg0) #sires only have one dvp which essentially starts when the activity is purchased
     numbers_startp8_va1e1b1nwzida0e0b0xyg0p8 = sfun.f1_p2v_std(o_numbers_start_psire[...,na], on_hand_tvp=on_hand_pa1e1b1nwzida0e0b0xyg0[...,na],
                                                           period_is_tvp=period_is_startp8_pa1e1b1nwzida0e0b0xyg0p8, sumadj=1) #sires only have one dvp which essentially starts when the activity is purchased
+    ####dams - need special dvp treatment for 0 day dvp. Essentially just set the start and end number to the same so that 1:1 transfefr can occur.
+    numbers_start_va1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_numbers_start_pdams, a_v_pa1e1b1nwzida0e0b0xyg1,period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
+    numbers_start_va1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(numbers_start_va1e1b1nwzida0e0b0xyg1,a_p_va1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1)
     numbers_end_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_numbers_end_pdams, a_v_pa1e1b1nwzida0e0b0xyg1, on_hand_tp=on_hand_tpa1e1b1nwzida0e0b0xyg1,
                                                      period_is_tp=np.logical_or(period_is_transfer_tpa1e1b1nwzida0e0b0xyg1, nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg1))  #t axis so that the early termination of a dvp is accounted for when transferring between ram groups
-    numbers_start_va1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_numbers_start_pdams, a_v_pa1e1b1nwzida0e0b0xyg1,period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1)
+    numbers_end_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(numbers_end_tva1e1b1nwzida0e0b0xyg1,a_p_va1e1b1nwzida0e0b0xyg1,
+                                                          a_v_pa1e1b1nwzida0e0b0xyg1,numbers_start_va1e1b1nwzida0e0b0xyg1) #intentionally numbers start - want numbers start and end to be the same for 0 day dvp so that 1:1 transfer happens.
     numbers_start_d_va1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_numbers_start_pdams, a_v_pa1e1b1nwzida0e0b0xyg1,period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg1
                                                          , a_any1_p=a_prevbirth_d_pa1e1b1nwzida0e0b0xyg2, index_any1tp=index_da0e0b0xyg) #with a d axis.
-    # r_numbers_join_va1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_numbers_join_pdams, a_v_pa1e1b1nwzida0e0b0xyg1,period_is_tp=period_is_join_pa1e1b1nwzida0e0b0xyg1) #used to calc wean %
-    # r_numbers_birth_va1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_numbers_end_pdams, a_v_pa1e1b1nwzida0e0b0xyg1,period_is_tp=period_is_birth_pa1e1b1nwzida0e0b0xyg1) #need to use numbers end so that the numbers represent the different b1 slices after birth
-    numbers_end_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_numbers_end_poffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg3)
+    numbers_start_d_va1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(numbers_start_d_va1e1b1nwzida0e0b0xyg1,a_p_va1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1)
+
+    ####offs - need special dvp treatment for 0 day dvp. Essentially just set the start and end number to the same so that 1:1 transfefr can occur.
     numbers_start_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_numbers_start_poffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=period_is_startdvp_pa1e1b1nwzida0e0b0xyg3)
+    numbers_start_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v_adj(numbers_start_va1e1b1nwzida0e0b0xyg3,a_p_va1e1b1nwzida0e0b0xyg3,a_v_pa1e1b1nwzida0e0b0xyg3)
+    numbers_end_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_numbers_end_poffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=nextperiod_is_startdvp_pa1e1b1nwzida0e0b0xyg3)
+    numbers_end_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v_adj(numbers_end_va1e1b1nwzida0e0b0xyg3,a_p_va1e1b1nwzida0e0b0xyg3,
+                                                          a_v_pa1e1b1nwzida0e0b0xyg3,numbers_start_va1e1b1nwzida0e0b0xyg3) #intentionally numbers start - want numbers start and end to be the same for 0 day dvp so that 1:1 transfer happens.
+
+    ###yatf - no 0 day dvp adjustment because yatf have no dvps
     numbers_start_d_yatf_a1e1b1nwzida0e0b0xyg2 = sfun.f1_p2v_std(o_numbers_start_pyatf * o_numbers_start_pdams
                                                                 , period_is_tvp=period_is_wean_pa1e1b1nwzida0e0b0xyg2
                                                                 , a_any1_p=a_prevbirth_d_pa1e1b1nwzida0e0b0xyg2
@@ -5483,6 +5494,8 @@ def generator(params,r_vals,nv,plots = False):
 
     #### Return the weight of the yatf in the period in which they are weaned - with active dam v axis
     ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_ffcfw_start_pyatf, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_wean_pa1e1b1nwzida0e0b0xyg2)
+    ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(ffcfw_start_v_yatf_va1e1b1nwzida0e0b0xyg1,a_p_va1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1)
+
     #### Return the weight of the yatf in the period in which they are weaned - with active d axis
     ffcfw_start_d_yatf_a1e1b1nwzida0e0b0xyg2 = sfun.f1_p2v_std(o_ffcfw_start_pyatf, period_is_tvp=period_is_wean_pa1e1b1nwzida0e0b0xyg2,
                                                            a_any1_p=a_prevbirth_d_pa1e1b1nwzida0e0b0xyg2, index_any1tvp=index_da0e0b0xyg)
@@ -5518,10 +5531,14 @@ def generator(params,r_vals,nv,plots = False):
     ## calc the ‘source’ weight of the animal at the end of each period in which they can be transferred
     ###dams - the period is based on period_is_transfer which points at the nextperiod_is_prejoin for the destination g1 slice
     ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_ffcfw_pdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_transfer_tpa1e1b1nwzida0e0b0xyg1) #numbers not required for ffcfw
+    ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(ffcfw_source_condense_tva1e1b1nwzida0e0b0xyg1,a_p_va1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1)
     ffcfw_source_season_va1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_ffcfw_pdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg) #numbers not required for ffcfw
+    ffcfw_source_season_va1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(ffcfw_source_season_va1e1b1nwzida0e0b0xyg1,a_p_va1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1)
     ###offs
     ffcfw_source_condense_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ffcfw_poffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=nextperiod_is_condense_pa1e1b1nwzida0e0b0xyg3) #numbers not required for ffcfw
+    ffcfw_source_condense_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v_adj(ffcfw_source_condense_va1e1b1nwzida0e0b0xyg3,a_p_va1e1b1nwzida0e0b0xyg3,a_v_pa1e1b1nwzida0e0b0xyg3)
     ffcfw_source_season_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ffcfw_poffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg3) #numbers not required for ffcfw
+    ffcfw_source_season_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v_adj(ffcfw_source_season_va1e1b1nwzida0e0b0xyg3,a_p_va1e1b1nwzida0e0b0xyg3,a_v_pa1e1b1nwzida0e0b0xyg3)
 
     ## calc the ‘destination’ weight of each group of animal at the end of the period prior to the transfer (transfer is next period is prejoining for the destination animal)
     ### for dams select the ‘destination’ condensed weight for the ‘source’ slices using a_g1_tg1
@@ -5529,10 +5546,14 @@ def generator(params,r_vals,nv,plots = False):
     ### Convert from p to v.
     #### for dams the period is based on period_is_transfer which points at the nextperiod_is_prejoin for the destination g1 slice
     ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(ffcfw_condensed_tdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=period_is_transfer_tpa1e1b1nwzida0e0b0xyg1)  #numbers not required for ffcfw
+    ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(ffcfw_dest_condense_tva1e1b1nwzida0e0b0xyg1,a_p_va1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1)
     ffcfw_dest_season_va1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v(o_ffcfw_season_pdams, a_v_pa1e1b1nwzida0e0b0xyg1, period_is_tp=nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg)  #numbers not required for ffcfw
+    ffcfw_dest_season_va1e1b1nwzida0e0b0xyg1 = sfun.f1_p2v_adj(ffcfw_dest_season_va1e1b1nwzida0e0b0xyg1,a_p_va1e1b1nwzida0e0b0xyg1,a_v_pa1e1b1nwzida0e0b0xyg1)
     ###offs
     ffcfw_dest_condense_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ffcfw_condensed_poffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=nextperiod_is_condense_pa1e1b1nwzida0e0b0xyg3) #numbers not required for ffcfw
+    ffcfw_dest_condense_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v_adj(ffcfw_dest_condense_va1e1b1nwzida0e0b0xyg3,a_p_va1e1b1nwzida0e0b0xyg3,a_v_pa1e1b1nwzida0e0b0xyg3)
     ffcfw_dest_season_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v(o_ffcfw_season_poffs, a_v_pa1e1b1nwzida0e0b0xyg3, period_is_tp=nextperiod_is_startseason_pa1e1b1nwzida0e0b0xyg3)  #numbers not required for ffcfw
+    ffcfw_dest_season_va1e1b1nwzida0e0b0xyg3 = sfun.f1_p2v_adj(ffcfw_dest_season_va1e1b1nwzida0e0b0xyg3,a_p_va1e1b1nwzida0e0b0xyg3,a_v_pa1e1b1nwzida0e0b0xyg3)
 
     ##distributing at condensing - all lws back to starting number of LWs and dams to different sires at prejoining
     ###t0 and t1 are distributed however this is not used because t0 and t1 don't transfer to next dvp

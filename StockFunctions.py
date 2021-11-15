@@ -2400,6 +2400,38 @@ def f1_p2v(production_p, dvp_pointer_p, numbers_p=np.array([1]), on_hand_tp=True
 #                                                                     production_ftpany[:, :, :, :, :, e1:e1+1, :, :, :, :, :, :, :, :, :, :, :, g:g+1], axis=sinp.stock['i_p_pos'])[1]
 #     return result
 
+def f1_p2v_adj(production_v, a_p_v, a_v_p,update_production_v=None):
+    """
+    Adjustment for 0 day dvps.
+
+    Mostly when a dvp is 0 days long (clashes with another dvp) we want it to have 0 production (e.g. 0 mei).
+    This is how it works in the p2v function. However, in some cases (numbers and ffcfw) we want values in the
+    0 day dvps because we need the animals to transfer to the next dvp. ffcfw is used in the numbers distribution
+    so it needs numbers incase season start or condense dvp clash with another dvp.
+    Numbers need to do a 1:1 transfer so the start and end numbers are the same.
+    ffcfw needs to allow distribution to work correctly. So the condense dvp is always first in a clash (this is
+    handled in the construction of the dvps) and the non 0 day dvp weights are used to populate the 0 day dvp.
+
+    :param production_v: production param to update
+    :param update_production_v: array used to update production array (if this is not provided then it uses the production array)
+    :param a_p_v: association between p and v with v axis
+    :param a_v_p: association between p and v with p axis
+    """
+    p_pos = sinp.stock['i_p_pos']
+    ##if no array to update from then use the production array. This exists because numbers end are updated using numbers start to ensure numbers have a 1:1 transfer
+    if type(update_production_v) == type(None):
+        update_production_v = production_v
+    ##work out which dvps are 0 day length
+    dvp_0days_mask_va1e1b1nwzida0e0b0xyg1 = np.roll(a_p_v, shift=-1, axis=p_pos)==a_p_v
+    ##build association to the dvp that fills each blank dvp
+    a_v_v = np.take_along_axis(a_v_p, a_p_v, axis=p_pos)
+    a_v_v = np.broadcast_to(a_v_v, update_production_v.shape) #handle cases where production has a t axis.
+    ##update production in the 0 day dvps.
+    production_v = fun.f_update(production_v, np.take_along_axis(update_production_v, a_v_v, axis=p_pos),
+                                dvp_0days_mask_va1e1b1nwzida0e0b0xyg1) #intentionally numbers start - want numbers start and end to be the same for 0 day dvp so that 1:1 transfer happens.
+    return production_v
+
+
 
 def f1_cum_dvp(arr,dvp_pointer,axis=0,shift=0):
     '''This function does accumulative max but it resets at each dvp.
