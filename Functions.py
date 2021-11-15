@@ -374,7 +374,7 @@ def f_divide(numerator, denominator, dtype='float64', option=0):
     numerator, denominator = np.broadcast_arrays(numerator, denominator)
     result = np.zeros(numerator.shape, dtype=dtype) #make it a float in case the numerator is int
     ##use ~np.isclose to capture when the denominator is 0 within rounding tolerances
-    mask = ~np.isclose(denominator, 0)
+    mask = ~np.isclose(denominator.astype(float), 0) #astype float to handle timedeltas. timdelata / timedelta is a float so the final product needs to be a float anyway
     result[mask] = numerator[mask]/denominator[mask]
 
     ##If option is 1 then return 1 if the numerator and the denominator are the same (both 0 or both inf)
@@ -990,7 +990,8 @@ def range_allocation_np(period_dates, item_start, length=np.array([1]).astype('t
             per_end = period_dates[i+1, ...]
             calc_start = np.maximum(per_start,item_start).astype('datetime64[D]')       #select the later of the period start or the start of the range
             calc_end = np.minimum(per_end,item_end).astype('datetime64[D]')             #select earlier of the period end and the end of the range
-            allocation_period[i,...] = np.maximum(0, (calc_end - calc_start) / (per_end - per_start)) #days between calc_end and calc_start (0 if end before start) divided by length of the period, use f_divide in case any period lengths are 0 (this is likely to occur in season version)
+            allocation_period[i,...] = np.maximum(0, f_divide(calc_end - calc_start
+                                                              , per_end - per_start)) #days between calc_end and calc_start (0 if end before start) divided by length of the period, use f_divide in case any period lengths are 0 (this is likely to occur in season version)
     return allocation_period
 
 

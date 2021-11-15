@@ -365,9 +365,9 @@ def f_pasture(params, r_vals, nv):
     ### scales total removal to allow for an equal portion of the feed being grazed each day
     #### can use f_divide because consumption is masked for the periods in which dry_decay_daily is 1 which should lead to infinite removal scalar (which causes error)
     removal_scalar_dry_decay_daily_p6zt = fun.f_divide(1, 1 - dry_decay_daily_p6zt)
-    removal_scalar_dry_decay_p6zt = ((1 - removal_scalar_dry_decay_daily_p6zt ** length_p6z[..., na])
+    removal_scalar_dry_decay_p6zt = fun.f_divide((1 - removal_scalar_dry_decay_daily_p6zt ** length_p6z[..., na])
                                      / (1 - removal_scalar_dry_decay_daily_p6zt)
-                                     / length_p6z[..., na])
+                                     , length_p6z[..., na])
     ## dry, DM decline (high = low pools)
     ###dry transfer prov is the amount of dry feed that is transferred into the current period from the previous (1000 - decay)
     dry_transfer_prov_t_p6zt = 1000 * (1-dry_decay_period_p6zt) * mask_dryfeed_exists_next_p6zt #if no dry feed exists in the next period then we don't need the transfer prov DV.
@@ -388,8 +388,8 @@ def f_pasture(params, r_vals, nv):
     grn_senesce_startfoo_p6zt = 1 - ((1 - i_grn_senesce_daily_p6zt) **  length_p6z[...,na])
 
     ## change of senescence over the period due to growth and consumption
-    grn_senesce_pgrcons_p6zt = 1 - ((1 -(1 - i_grn_senesce_daily_p6zt) ** (length_p6z[...,na]+1))
-                                   /        i_grn_senesce_daily_p6zt-1) / length_p6z[...,na]
+    grn_senesce_pgrcons_p6zt = 1 - fun.f_divide(((1 -(1 - i_grn_senesce_daily_p6zt) ** (length_p6z[...,na]+1))
+                                   / i_grn_senesce_daily_p6zt-1), length_p6z[...,na])
 
 
 

@@ -6635,9 +6635,9 @@ def generator(params,r_vals,nv,plots = False):
     days_p6_p6tva1e1b1nwzida0e0b0xyg = fun.f_expand(days_p6z, z_pos,  left_pos2=p_pos-2, right_pos2=z_pos)
     ###DSE based on MJ/d
     ####returns the average mj/d for each animal for the each feed period (mei accounts for if the animal is on hand - if the animal is sold the average mei/d will be lower in that dvp)
-    mj_ave_p6ftva1e1b1nwzida0e0b0xyg0 = mei_p6fva1e1b1nwzida0e0b0xyg0[:,:,na,...] / days_p6_p6tva1e1b1nwzida0e0b0xyg[:,na,...]
-    mj_ave_k2p6ftva1e1b1nwzida0e0b0xyg1 = mei_k2p6ftva1e1b1nwzida0e0b0xyg1 / days_p6_p6tva1e1b1nwzida0e0b0xyg[:,na,...]
-    mj_ave_k3k5p6ftva1e1b1nwzida0e0b0xyg3 = mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3 / days_p6_p6tva1e1b1nwzida0e0b0xyg[:,na,...]
+    mj_ave_p6ftva1e1b1nwzida0e0b0xyg0 = fun.f_divide(mei_p6fva1e1b1nwzida0e0b0xyg0[:,:,na,...], days_p6_p6tva1e1b1nwzida0e0b0xyg[:,na,...])
+    mj_ave_k2p6ftva1e1b1nwzida0e0b0xyg1 = fun.f_divide(mei_k2p6ftva1e1b1nwzida0e0b0xyg1, days_p6_p6tva1e1b1nwzida0e0b0xyg[:,na,...])
+    mj_ave_k3k5p6ftva1e1b1nwzida0e0b0xyg3 = fun.f_divide(mei_k3k5p6ftva1e1b1nwzida0e0b0xyg3, days_p6_p6tva1e1b1nwzida0e0b0xyg[:,na,...])
     ####returns the number of dse of each animal in each dvp - this is combined with the variable numbers in reporting to get the total dse
     # note: sires have a single long DVP and are on-hand for multiple years. Therefore, mj_ave is higher (because the decision variable is representing multiple sires)
     dsemj_p6tva1e1b1nwzida0e0b0xyg0 = np.sum(mj_ave_p6ftva1e1b1nwzida0e0b0xyg0 / pinp.sheep['i_dse_mj'], axis = 1)
@@ -6657,9 +6657,9 @@ def generator(params,r_vals,nv,plots = False):
                                         a_any1_p=a_p6_pa1e1b1nwzida0e0b0xyg[mask_p_offs_p], index_any1tp=index_p6pa1e1b1nwzida0e0b0xyg[:,na,...])
     ####returns the average nw for each animal for the each feed period (cum nw accounts for if the animal is on hand - if the animal is sold the average nw will be lower in that feed period)
     # note: sires have a single long DVP and are on-hand for multiple years of the same p6. Therefore, nw_ave is higher (because the decision variable is representing multiple sires)
-    nw_ave_p6tva1e1b1nwzida0e0b0xyg0 = nw_cum_p6a1e1b1nwzida0e0b0xyg0[:,na,na,...] / days_p6_p6tva1e1b1nwzida0e0b0xyg
-    nw_ave_p6tva1e1b1nwzida0e0b0xyg1 = nw_cum_p6tva1e1b1nwzida0e0b0xyg1 / days_p6_p6tva1e1b1nwzida0e0b0xyg
-    nw_ave_p6tva1e1b1nwzida0e0b0xyg3 = nw_cum_p6tva1e1b1nwzida0e0b0xyg3 / days_p6_p6tva1e1b1nwzida0e0b0xyg
+    nw_ave_p6tva1e1b1nwzida0e0b0xyg0 = fun.f_divide(nw_cum_p6a1e1b1nwzida0e0b0xyg0[:,na,na,...], days_p6_p6tva1e1b1nwzida0e0b0xyg)
+    nw_ave_p6tva1e1b1nwzida0e0b0xyg1 = fun.f_divide(nw_cum_p6tva1e1b1nwzida0e0b0xyg1, days_p6_p6tva1e1b1nwzida0e0b0xyg)
+    nw_ave_p6tva1e1b1nwzida0e0b0xyg3 = fun.f_divide(nw_cum_p6tva1e1b1nwzida0e0b0xyg3, days_p6_p6tva1e1b1nwzida0e0b0xyg)
     ####convert nw to dse
     dsehd_p6tva1e1b1nwzida0e0b0xyg0 = nw_ave_p6tva1e1b1nwzida0e0b0xyg0 / pinp.sheep['i_dse_nw']**0.75
     dsehd_p6tva1e1b1nwzida0e0b0xyg1 = nw_ave_p6tva1e1b1nwzida0e0b0xyg1 / pinp.sheep['i_dse_nw']**0.75

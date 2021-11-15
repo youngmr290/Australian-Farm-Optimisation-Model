@@ -433,10 +433,10 @@ def f_grn_pasture(cu3, cu4, i_fxg_foo_op6lzt, i_fxg_pgr_op6lzt, c_pgr_gi_scalar_
 
     ## green, removal & dmi
     ### divide by (1 - grn_senesce_pgrcons) to allows for consuming feed reducing senescence
-    removal_grnha_gop6lzt = np.maximum(0, (foo_start_grnha_op6lzt * (1 - grn_senesce_startfoo_p6zt[:, na, ...])
-                                          + pgr_grnha_gop6lzt * (1 - grn_senesce_pgrcons_p6zt[:, na, :])
-                                          - foo_endprior_grnha_gop6lzt)
-                                      / (1 - grn_senesce_pgrcons_p6zt[:, na, :]))
+    removal_grnha_gop6lzt = np.maximum(0, fun.f_divide((foo_start_grnha_op6lzt * (1 - grn_senesce_startfoo_p6zt[:, na, ...])
+                                                        + pgr_grnha_gop6lzt * (1 - grn_senesce_pgrcons_p6zt[:, na, :])
+                                                        - foo_endprior_grnha_gop6lzt)
+                                                       , (1 - grn_senesce_pgrcons_p6zt[:, na, :])))
     cons_grnha_t_gop6lzt = removal_grnha_gop6lzt / (1 + i_grn_trampling_ft[:, na, na, :])
 
     ## green, dmd & md from input values and impact of foo & grazing intensity
