@@ -228,9 +228,14 @@ def f_feed_periods(option=0):
 
     ###add node dates as feed periods if dsp
     if pinp.general['i_inc_node_periods'] or np.logical_not(pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z'])==1):
-        date_node_mz = pinp.general['i_date_node_zm'].astype('datetime64').T  #todo Is this correct, the other calculations include f_seasonal_inp()?
+        date_node_mz = pinp.general['i_date_node_zm'].astype('datetime64').T
         date_node_mz = date_node_mz + (np.timedelta64(365, 'D') * (date_node_mz < fp_std_p6z[0,:]))
-        fp_p6z = np.concatenate([fp_std_p6z, date_node_mz[1:]]) #[1:] because first node is break of season which already exists in fp array.
+        fp_p6z = np.concatenate([fp_std_p6z, date_node_mz])
+        ###remove duplicate periods
+        duplicate_mask_p6 = []
+        for p6 in range(fp_p6z.shape[0]):  # maybe there is a way to do this without a loop.
+            duplicate_mask_p6.append(np.all(np.any(fp_p6z[p6,...] == fp_p6z[0:p6,...], axis=0, keepdims=True)))
+        fp_p6z = fp_p6z[np.logical_not(duplicate_mask_p6)]
         fp_p6z = np.sort(fp_p6z, axis=0)
     else: #if nodes are not added then the adjusted fps are the same as the std fp.
         fp_p6z = pinp.period['i_dsp_fp_date'].astype('datetime64')
@@ -257,16 +262,15 @@ def f_feed_periods(option=0):
 ################
 #phase periods #
 ################
-
+#todo phase periods are now exactly the same as season peirods (because there is no longer a dry seeding period) - not sure if they should get conglomerated
 def f_phase_periods(keys=False):
     '''
     :param keys: Boolean if True this returns the m keys
     :param periods: Boolean if True this returns the m period dates
     '''
 
-    date_node_zm = zfun.f_seasonal_inp(pinp.general['i_date_node_zm'],numpy=True,axis=0).astype(
-        'datetime64')  # treat z axis
-    ##if steady state then m axis is singleton (start and finish at the break of season).
+    date_node_zm = zfun.f_seasonal_inp(pinp.general['i_date_node_zm'],numpy=True,axis=0).astype('datetime64')  # treat z axis
+    ##if steady state then m axis is singleton (start and finish at the start of season).
     if pinp.general['steady_state'] or np.count_nonzero(pinp.general['i_mask_z']) == 1:
         date_node_zm = date_node_zm[:,0:1]
         ###add end date of last node period - required for the allocation function
@@ -276,10 +280,7 @@ def f_phase_periods(keys=False):
     else:
         ###add end date of last node period - required for the allocation function
         end_zm = date_node_zm[:,0:1] + np.timedelta64(365,'D')  # increment the first date by 1yr so it becomes the end date for the last period
-        ###add dry seeding period
-        dry_seed_start_m = np.array([pinp.crop['dry_seed_start']],dtype='datetime64') + np.timedelta64(365,'D') #add 365 because dry seeding is essentially at the end of the season (because start of season is the brk)
-        dry_seed_start_zm = np.broadcast_to(dry_seed_start_m[na,:],end_zm.shape)  # expand z axis
-        date_phase_node_mz = np.concatenate([date_node_zm,dry_seed_start_zm,end_zm],
+        date_phase_node_mz = np.concatenate([date_node_zm, end_zm],
                                             axis=1).T  # put m in pos 0 because that how the allocation function requires
     len_m = date_phase_node_mz.shape[0] - 1  # minus one because end date is not a period
 

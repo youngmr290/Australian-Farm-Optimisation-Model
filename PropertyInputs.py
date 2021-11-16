@@ -339,12 +339,29 @@ def f_property_inp_sa():
     rep['i_store_on_hand_mort'] = fun.f_sa(rep['i_store_on_hand_mort'], sen.sav['onhand_mort_p_inc'], 5)
     rep['i_store_mort'] = fun.f_sa(rep['i_store_mort'], sen.sav['mort_inc'], 5)
 
+    ##mask out unrequired nodes dates - nodes are removed if there are double ups or if a season is not identified at the node (and node is not used as fvp)
+    ###test for duplicate
+    duplicate_mask_m = []
+    for m in range(general['i_date_node_zm'].shape[1]):  # maybe there is a way to do this without a loop.
+        duplicate_mask_m.append(np.all(np.any(general['i_date_node_zm'][:,m:m+1] == general['i_date_node_zm'][:,0:m],axis=1,keepdims=True)))
+    duplicate_mask_m = np.logical_not(duplicate_mask_m)
+    ###test if any season is identified at the node
+    import SeasonalFunctions as zfun #have to import here since zfun imports pinp.
+    date_initiate_z = zfun.f_seasonal_inp(general['i_date_initiate_z'],numpy=True,axis=0)
+    i_date_node_zm = zfun.f_seasonal_inp(general['i_date_node_zm'],numpy=True,axis=0)
+    mask_m = np.any(np.logical_or(date_initiate_z[:,na]==i_date_node_zm, general['i_node_is_fvp']), axis=0)
+    mask_m = np.logical_and(duplicate_mask_m, mask_m)
+    general['i_date_node_zm'] = general['i_date_node_zm'][:,mask_m]
+    general['i_node_is_fvp'] = general['i_node_is_fvp'][mask_m]
+
 ##############################
 # handle inputs with p6 axis #
 ##############################
 def f1_expand_p6():
-    ##When using DSP, expand inputs with a p6 axis for each season node.
-    ##has to be a seperate function to the sa because values altered in SA impact a_p6std_p6z
+    '''
+    When using DSP, expand inputs with a p6 axis for each season node.
+    Has to be a separate function to the sa because values altered in SA impact a_p6std_p6z
+    '''
     ##have to import it here since sen.py imports this module
     import Periods as per
 
