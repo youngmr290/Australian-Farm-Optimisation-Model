@@ -67,7 +67,7 @@ def f_v_phase_increment_adj(param, m_pos, r_pos, numpy=False):
     :param r_pos: for pandas this is r axis level, for numpy this is r axis pos
     :param numpy: Boolean, stating if param is numpy.
     '''
-
+    ##calc cost to date - occurs 0 in the current period because v_phase incurs current period cost.
     param_increment = np.roll(np.cumsum(param.values, axis=m_pos),1, axis=m_pos) #include .values incase df is passed.
     slc = [slice(None)] * len(param_increment.shape)
     slc[m_pos] = slice(0,1)
