@@ -71,9 +71,10 @@ def f1_boundarypyomo_local(params, model):
             ###build array
             rot_lobound_rl = np.zeros((len(model.s_phases), len(model.s_lmus)))
             ###set the bound
-            rot_lobound_rl[4,0] = 70 #fodder lmu2
-            # rot_lobound_rl[0,0] = 150
-            # rot_lobound_rl[0,2] = 13
+            # rot_lobound_rl[4,0] = 70 #fodder lmu2
+            rot_lobound_rl[0,0] = 150 #AAAAAa
+            rot_lobound_rl[0,1] = 1230 #AAAAAa
+            rot_lobound_rl[0,2] = 750 #AAAAAa
             # rot_lobound_rl[2,1] = 570
             # rot_lobound_rl[2,2] = 20
             # rot_lobound_rl[9,1] = 11
@@ -90,7 +91,7 @@ def f1_boundarypyomo_local(params, model):
                 if m == l_m[-1]:
                     return model.v_phase_area[q, s, m, z, r, l] >= rot_lobound[r,l]
                 else:
-                    pe.Constraint.Skip
+                    return pe.Constraint.Skip
             model.con_rotation_lobound = pe.Constraint(model.s_sequence_year, model.s_sequence, model.s_phase_periods, model.s_phases, model.s_lmus, model.s_season_types, rule=rot_lo_bound,
                                                     doc='lo bound for the number of each phase')
 
