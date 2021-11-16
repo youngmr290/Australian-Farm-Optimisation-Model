@@ -161,7 +161,7 @@ def f_fert_app_time_ha():
     fert_app_time_ha_rzlp5_m = fert_app_time_ha_rzl_mp5.stack()
 
     ##create params for v_phase_increment
-    increment_fert_app_time_ha_rzlp5_m = rps.f_v_phase_increment_adj(fert_app_time_ha_rzlp5_m,m_pos=1, r_pos=0)
+    increment_fert_app_time_ha_rzlp5_m = rps.f_v_phase_increment_adj(fert_app_time_ha_rzlp5_m,m_pos=1)
 
     return fert_app_time_ha_rzlp5_m.stack(), increment_fert_app_time_ha_rzlp5_m.stack()
 
@@ -201,7 +201,7 @@ def f_fert_app_time_t():
     fert_app_time_tonne_rzlp5_m = fert_app_time_tonne_rzl_mp5.stack()
 
     ##create params for v_phase_increment
-    increment_fert_app_time_tonne_rzlp5_m = rps.f_v_phase_increment_adj(fert_app_time_tonne_rzlp5_m,m_pos=1, r_pos=0)
+    increment_fert_app_time_tonne_rzlp5_m = rps.f_v_phase_increment_adj(fert_app_time_tonne_rzlp5_m,m_pos=1)
 
     return fert_app_time_tonne_rzlp5_m.stack(), increment_fert_app_time_tonne_rzlp5_m.stack()
 
@@ -276,7 +276,7 @@ def f_chem_app_time_ha():
     chem_app_time_rzlp5_m = chem_app_time_rzl_mp5.stack()
 
     ##create params for v_phase_increment
-    increment_chem_app_time_rzlp5_m = rps.f_v_phase_increment_adj(chem_app_time_rzlp5_m,m_pos=1, r_pos=0)
+    increment_chem_app_time_rzlp5_m = rps.f_v_phase_increment_adj(chem_app_time_rzlp5_m,m_pos=1)
 
     return chem_app_time_rzlp5_m.stack(), increment_chem_app_time_rzlp5_m.stack()
 
@@ -338,7 +338,7 @@ def f_crop_monitoring():
     variable_crop_monitor_r_p5mz = variable_crop_monitor.drop(list(range(sinp.general['phase_len'])), axis=1)
     variable_crop_monitor_p5mzr = variable_crop_monitor_r_p5mz.unstack().dropna()
     ###create params for v_phase_increment
-    increment_variable_crop_monitor_p5mzr = rps.f_v_phase_increment_adj(variable_crop_monitor_p5mzr.unstack(1),m_pos=1, r_pos=2).stack()
+    increment_variable_crop_monitor_p5mzr = rps.f_v_phase_increment_adj(variable_crop_monitor_p5mzr.unstack(1),m_pos=1).stack()
 
     ##fixed monitoring
     ###adjust from hrs/week to hrs/period
