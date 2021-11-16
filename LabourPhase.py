@@ -156,9 +156,9 @@ def f_fert_app_time_ha():
     ##adjust for passes
     time_rln_mzp5 = time_p5n_mz.unstack(0).reindex(total_passes_rzln.unstack(1).index, axis=0, level=2)
     time_rzln_mp5 = time_rln_mzp5.stack(1).reorder_levels([0,3,1,2])
-    fert_app_time_ha_rzln_p5m = time_rzln_mp5.mul(total_passes_rzln, axis=0)
-    fert_app_time_ha_rzl_p5m = fert_app_time_ha_rzln_p5m.sum(axis=0, level=(0,1,2)) #sum fert type
-    fert_app_time_ha_rzlp5_m = fert_app_time_ha_rzl_p5m.stack(0)
+    fert_app_time_ha_rzln_mp5 = time_rzln_mp5.mul(total_passes_rzln, axis=0)
+    fert_app_time_ha_rzl_mp5 = fert_app_time_ha_rzln_mp5.sum(axis=0, level=(0,1,2)) #sum fert type
+    fert_app_time_ha_rzlp5_m = fert_app_time_ha_rzl_mp5.stack()
 
     ##create params for v_phase_increment
     increment_fert_app_time_ha_rzlp5_m = rps.f_v_phase_increment_adj(fert_app_time_ha_rzlp5_m,m_pos=1, r_pos=0)
@@ -196,9 +196,9 @@ def f_fert_app_time_t():
     ##combine with rotation fert
     time_rln_mzp5 = time_p5n_mz.unstack(0).reindex(fert_total_rzln.unstack(1).index, axis=0, level=2)
     time_rzln_mp5 = time_rln_mzp5.stack(1).reorder_levels([0,3,1,2])
-    fert_app_time_tonne_rzln_p5m = time_rzln_mp5.mul(fert_total_rzln, axis=0)
-    fert_app_time_tonne_rzl_p5m = fert_app_time_tonne_rzln_p5m.sum(axis=0,level=(0,1,2))  # sum fert type
-    fert_app_time_tonne_rzlp5_m = fert_app_time_tonne_rzl_p5m.stack(0)
+    fert_app_time_tonne_rzln_mp5 = time_rzln_mp5.mul(fert_total_rzln, axis=0)
+    fert_app_time_tonne_rzl_mp5 = fert_app_time_tonne_rzln_mp5.sum(axis=0,level=(0,1,2))  # sum fert type
+    fert_app_time_tonne_rzlp5_m = fert_app_time_tonne_rzl_mp5.stack()
 
     ##create params for v_phase_increment
     increment_fert_app_time_tonne_rzlp5_m = rps.f_v_phase_increment_adj(fert_app_time_tonne_rzlp5_m,m_pos=1, r_pos=0)
@@ -271,9 +271,9 @@ def f_chem_app_time_ha():
     ##adjust for passes
     time_rln_mzp5 = time_p5n_mz.unstack(0).reindex(passes_rzln.unstack(1).index, axis=0, level=2)
     time_rzln_mp5 = time_rln_mzp5.stack(1).reorder_levels([0,3,1,2])
-    chem_app_time_rzln_p5m = time_rzln_mp5.mul(passes_rzln, axis=0)
-    chem_app_time_rzl_p5m = chem_app_time_rzln_p5m.sum(axis=0, level=(0,1,2)) #sum chem type
-    chem_app_time_rzlp5_m = chem_app_time_rzl_p5m.stack(0)
+    chem_app_time_rzln_mp5 = time_rzln_mp5.mul(passes_rzln, axis=0)
+    chem_app_time_rzl_mp5 = chem_app_time_rzln_mp5.sum(axis=0, level=(0,1,2)) #sum chem type
+    chem_app_time_rzlp5_m = chem_app_time_rzl_mp5.stack()
 
     ##create params for v_phase_increment
     increment_chem_app_time_rzlp5_m = rps.f_v_phase_increment_adj(chem_app_time_rzlp5_m,m_pos=1, r_pos=0)

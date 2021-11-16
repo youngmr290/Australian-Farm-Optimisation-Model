@@ -131,7 +131,7 @@ def f_rotation_cost(model,q,s,c0,p7,z):
     return sum(model.p_rotation_cost[c0,p7,z,m,l,r]*model.v_phase_area[q,s,m,z,r,l]
                + model.p_increment_rotation_cost[c0,p7,z,l,r,m]*model.v_phase_increment[q,s,m,z,r,l]
                for r in model.s_phases for l in model.s_lmus for m in model.s_phase_periods
-                   if pe.value(model.p_rotation_cost[c0,p7,z,m,l,r]) != 0)
+                   if pe.value(model.p_rotation_cost[c0,p7,z,m,l,r]) != 0 or pe.value(model.p_increment_rotation_cost[c0,p7,z,l,r,m]) != 0)
 
 def f_rotation_wc(model,q,s,c0,p7,z):
     '''
@@ -143,7 +143,7 @@ def f_rotation_wc(model,q,s,c0,p7,z):
     return sum(model.p_rotation_wc[c0,p7,z,m,l,r]*model.v_phase_area[q,s,m,z,r,l]
                + model.p_increment_rotation_wc[c0,p7,z,l,r,m]*model.v_phase_increment[q,s,m,z,r,l]
                for r in model.s_phases for l in model.s_lmus for m in model.s_phase_periods
-                   if pe.value(model.p_rotation_wc[c0,p7,z,m,l,r]) != 0)
+                   if pe.value(model.p_rotation_wc[c0,p7,z,m,l,r]) != 0 or pe.value(model.p_increment_rotation_wc[c0,p7,z,l,r,m]) != 0)
 
 
 
